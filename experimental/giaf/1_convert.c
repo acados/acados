@@ -21,8 +21,8 @@ int main()
 	{
 
 	// architecture-dependent quantities
-	const int bs = D_MR;
-	const int ncl = D_NCL;
+	const int bs = D_MR; // number of rows in a panel
+	const int ncl = D_NCL; // number of columns to make the following panel cache-aligned
 
 
 

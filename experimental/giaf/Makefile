@@ -1,7 +1,8 @@
 CC = gcc
 CFLAGS = -O2 -march=native
 
-OBJS = test_hpmpc_blas.o
+#OBJS = 1_convert.o
+OBJS = 2_submatrix.o
 
 test_problem: $(OBJS)
 	$(CC) -o test.out $(OBJS) -lhpmpc -lm
