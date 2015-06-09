@@ -107,7 +107,7 @@ int main()
 
 
 	// transpose a submatrix into a submatrix
-	// pC(1:5,3:9) = (pAB(2:6,1:7))'
+	// pC(1:7,3:7) = (pAB(2:6,1:7))'
 	// dgetr_lib( int rows, int cols, int offsetA, double *pA, int sda, int offsetC, double *C, int sdc);
 	// rows and cols are referred to pA
 	dgetr_lib(4, 6, 2, pAB+2/bs*bs*c2n+2%bs+1*bs, c2n, 1, pD+1/bs*bs*cn+1%bs+3*bs, cn);
