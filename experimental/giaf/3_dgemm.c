@@ -66,7 +66,7 @@ int main()
 	d_print_pmat(n, n, bs, pA, cn);
 	d_print_pmat(n, n, bs, pB, cn);
 
-	// void dgemm_nt_lib(int m, int n, int k, double *pA, int sda, double *pB, int sdb, double *pC, int sdc, double *pD, int sdd, int alg, int tc, int td)
+	// void dgemm_nt_lib(int m, int n, int k, double *pA, int sda, double *pB, int sdb, int alg, double *pC, int sdc, double *pD, int sdd, int tc, int td)
 	//
 	// Compared to the dgemm in BLAS, here the pA matrix is always normal and the pB matrix is always transposed: this gives optimal performance.
 	// There are 4 matrix arguments (that may be useful to avoid a matrix copy), and there are only 3 combinations of alpha and beta (controlled by 'alg'):
@@ -88,15 +88,15 @@ int main()
 	// Changes to this would require a lot of programming work and performance loss: therefore the best option is probably the combination of dgemm + dgecp.
 	//
 	for(ii=0; ii<cn*pn; ii++) pD[ii] = 0.0;
-	dgemm_nt_lib(5, 7, n, pA, cn, pB, cn, pC, cn, pD+1*bs, cn, 0, 0, 0);
+	dgemm_nt_lib(5, 7, n, pA, cn, pB, cn, 0, pC, cn, pD+1*bs, cn, 0, 0);
 	d_print_pmat(n, n, bs, pD, cn);
 
 	for(ii=0; ii<cn*pn; ii++) pD[ii] = 0.0;
-	dgemm_nt_lib(5, 7, n, pA, cn, pB, cn, pC, cn, pD+1*bs, cn, 0, 0, 1);
+	dgemm_nt_lib(5, 7, n, pA, cn, pB, cn, 0, pC, cn, pD+1*bs, cn, 0, 1);
 	d_print_pmat(n, n, bs, pD, cn);
 
 	for(ii=0; ii<cn*pn; ii++) pD[ii] = 0.0;
-	dgemm_nt_lib(5, 7, n, pB, cn, pA, cn, pC, cn, pD+1*bs, cn, -1, 0, 0);
+	dgemm_nt_lib(5, 7, n, pB, cn, pA, cn, -1, pC, cn, pD+1*bs, cn, 0, 0);
 	d_print_pmat(n, n, bs, pD, cn);
 
 
@@ -108,7 +108,7 @@ int main()
 	// XXX Pull the latest HPMPC version !!!
 	//
 	for(ii=0; ii<cn*pn; ii++) pD[ii] = 0.0;
-	dgemm_nn_lib(5, 7, n, pB, cn, pA, cn, pC, cn, pD+1*bs, cn, -1, 0, 0);
+	dgemm_nn_lib(5, 7, n, pB, cn, pA, cn, -1, pC, cn, pD+1*bs, cn, 0, 0);
 	d_print_pmat(n, n, bs, pD, cn);
 
 
