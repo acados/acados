@@ -30,7 +30,8 @@ int ocp_qp_interface(
     double **Q, double **S, double **R, double **q, double **r, 
     int **idxb, double **bl, double **bu, 
     double **C, double **D, double **ld, double **ud, 
-    double **x, double **u);
+    double **x, double **u,
+    struct *ocp_qp_solver_args args, double *work);
 \end{verbatim}
 where
 \begin{description}
@@ -75,6 +76,16 @@ The vector referenced by the pointer {\tt ud[n]} is stored in a vector of {\tt n
 The vector referenced by the pointer {\tt x[n]} is stored in a vector of {\tt nx[n]$\times$1} double-precision floating-point numbers.
 \item[u] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_n$, such that {\tt u[n]} is the pointer to the first element of the vector $u_n$, and {\tt u[n][0]} is the first element of the vector $u_n$.
 The vector referenced by the pointer {\tt u[n]} is stored in a vector of {\tt nu[n]$\times$1} double-precision floating-point numbers.
+\item[args] [input] is the pointer to a structure of type {\tt ocp\_qp\_solver\_args} that defines the arguments (as e.g. maximum number of iterations, minimum step size, ... ) passed to the specific solver.
+\item[work] [workspace] is the pointer to the working space used by the specific solver.
+The working space size (in doubles) is returned by a call to the function {\tt ocp\_qp\_SOLVERNAME\_workspace\_double(int N, int *nx, int *nu, int *nb, int *ng)}, where {\tt SOLVERNAME} is the name of the specific solver.
+\end{description}
+
+Furthermore, the function returns an int, that is defined in the following enum (TODO change the names to something better!!!):
+\begin{description}
+\item[ACADOS\_OK] Solution successfully found.
+\item[ACADOS\_MAXITER] Maximum number of iterations reached.
+\item[ACADOS\_MINSTEP] Minumum step size reached (in IPs, probably unfeasible problem).
 \end{description}
 
 \subsection{Examples}
