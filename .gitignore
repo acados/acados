@@ -1,0 +1,6 @@
+*.o
+*.out
+*.doc
+*.aux
+*.log
+*.swp
