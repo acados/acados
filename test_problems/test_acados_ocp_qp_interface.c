@@ -26,16 +26,16 @@
 // define problems size
 #define NX 8
 #define NU 3
-#define NN 10
+#define NN 20
 #define NB 11
 #define NG 0
 #define NGN 8
 
 // define IP solver arguments && number of repetitions
-#define NREP 100
-#define ITMAX 10
-#define TOL 1e-6
-#define STEPMIN 1e-8
+#define NREP 1000
+#define MAXITER 10
+#define TOL 1e-8
+#define MINSTEP 1e-8
 
 // system headers
 #include <stdlib.h>
@@ -68,6 +68,15 @@ struct ocp_qp_solver_args
 
 // header of the TODO function returning the work space size
 	int ocp_qp_hpmpc_workspace_double(int N, int *nxx, int *nuu, int *nbb, int *ngg, struct ocp_qp_solver_args *args);
+
+
+
+// enum of return values
+enum return_values{
+	ACADOS_SUCCESS,
+	ACADOS_MAXITER,
+	ACADOS_MINSTEP
+	};
 
 
 
@@ -222,7 +231,7 @@ int main()
 	printf("\n");
 	printf(" MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box constraints, %d two-sided general constraints.\n", nx, nu, N, nb, ng);
 	printf("\n");
-	printf(" IP method parameters: predictor-corrector IP, double precision, %d maximum iterations, %5.1e exit tolerance in duality measure.\n", ITMAX, TOL);
+	printf(" IP method parameters: predictor-corrector IP, double precision, %d maximum iterations, %5.1e exit tolerance in duality measure.\n", MAXITER, TOL);
 	printf("\n");
 #if defined(TARGET_X64_AVX2)
 	printf(" HPMPC built for the AVX2 architecture\n");
@@ -276,44 +285,44 @@ int main()
 * box constraints
 ************************************************/	
 
-	int *idx0; i_zeros(&idx0, nbb[0], 1);
+	int *idxb0; i_zeros(&idxb0, nbb[0], 1);
 	double *lb0; d_zeros(&lb0, nbb[0], 1);
 	double *ub0; d_zeros(&ub0, nbb[0], 1);
 	for(jj=0; jj<nbu; jj++)
 		{
 		lb0[jj] = - 0.5;   //   umin
 		ub0[jj] =   0.5;   //   umax
-		idx0[jj] = jj;
+		idxb0[jj] = jj;
 		}
-//	i_print_mat(nbb[0], 1, idx0, nbb[0]);
+//	i_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
-	int *idx1; i_zeros(&idx1, nbb[1], 1);
+	int *idxb1; i_zeros(&idxb1, nbb[1], 1);
 	double *lb1; d_zeros(&lb1, nbb[1], 1);
 	double *ub1; d_zeros(&ub1, nbb[1], 1);
 	for(jj=0; jj<nbu; jj++)
 		{
 		lb1[jj] = - 0.5;   //   umin
 		ub1[jj] =   0.5;   //   umax
-		idx1[jj] = jj;
+		idxb1[jj] = jj;
 		}
 	for(; jj<nb; jj++)
 		{
 		lb1[jj] = - 4.0;   //   umin
 		ub1[jj] =   4.0;   //   umax
-		idx1[jj] = jj;
+		idxb1[jj] = jj;
 		}
-//	i_print_mat(nbb[1], 1, idx1, nbb[1]);
+//	i_print_mat(nbb[1], 1, idxb1, nbb[1]);
 
-	int *idxN; i_zeros(&idxN, nbb[N], 1);
+	int *idxbN; i_zeros(&idxbN, nbb[N], 1);
 	double *lbN; d_zeros(&lbN, nbb[N], 1);
 	double *ubN; d_zeros(&ubN, nbb[N], 1);
 	for(jj=0; jj<nbx; jj++)
 		{
 		lbN[jj] = - 4.0;   //   umin
 		ubN[jj] =   4.0;   //   umax
-		idxN[jj] = jj;
+		idxbN[jj] = jj;
 		}
-//	i_print_mat(nbb[N], 1, idx1, nbb[N]);
+//	i_print_mat(nbb[N], 1, idxb1, nbb[N]);
 	
 /************************************************
 * general constraints
@@ -376,7 +385,7 @@ int main()
 	double *hr[N];
 	double *hlb[N+1];
 	double *hub[N+1];
-	int *hidx[N+1];
+	int *hidxb[N+1];
 	double *hC[N+1];
 	double *hD[N];
 	double *hlg[N+1];
@@ -392,7 +401,7 @@ int main()
 	hr[0] = r0;
 	hlb[0] = lb0;
 	hub[0] = ub0;
-	hidx[0] = idx0;
+	hidxb[0] = idxb0;
 	hC[0] = C;
 	hD[0] = D;
 	hlg[0] = lg;
@@ -409,7 +418,7 @@ int main()
 		hr[ii] = r;
 		hlb[ii] = lb1;
 		hub[ii] = ub1;
-		hidx[ii] = idx1;
+		hidxb[ii] = idxb1;
 		hC[ii] = C;
 		hD[ii] = D;
 		hlg[ii] = lg;
@@ -419,7 +428,7 @@ int main()
 	hq[N] = q; // or maybe initialize to the solution of the DARE???
 	hlb[N] = lbN;
 	hub[N] = ubN;
-	hidx[N] = idxN;
+	hidxb[N] = idxbN;
 	hC[N] = CN;
 	hlg[N] = lgN;
 	hug[N] = ugN;
@@ -444,9 +453,9 @@ int main()
 
 	// solver arguments
 	struct ocp_qp_solver_args args;
-	args.tol = 1e-6;
-	args.max_iter = 10;
-	args.min_step = 1e-8;
+	args.tol = TOL;
+	args.max_iter = MAXITER;
+	args.min_step = MINSTEP;
 	args.mu0 = 0.0;
 	args.sigma_min = 1e-3;
 
@@ -454,9 +463,10 @@ int main()
 * work space
 ************************************************/	
 
-//	int work_space_size = ocp_qp_hpmpc_workspace_double(N, nxx, nuu, nbb, ngg, args);
+	int work_space_size = ocp_qp_hpmpc_workspace_double(N, nxx, nuu, nbb, ngg, &args);
+	printf("\nwork space size: %d doubles\n", work_space_size);
 
-//	double *work; d_zeros_align(&work, work_space_size, 1); // aligned memory allocation
+	double *work; d_zeros(&work, work_space_size, 1); // aligned memory allocation
 
 /************************************************
 * call the solver
@@ -472,11 +482,30 @@ int main()
 		{
 
 		// call the QP OCP solver
-//		return_value = ocp_qp_solver(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS, hR, hq, hr, hidx, hlb, hub, hC, hD, hld, hud, hx, hu, args, work);	
+		return_value = ocp_qp_solver(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hx, hu, &args, work);	
 		
 		}
 
 	gettimeofday(&tv1, NULL); // stop
+
+	
+	if(return_value==ACADOS_SUCCESS)
+		printf("\nACADOS status: solution found\n");
+
+	if(return_value==ACADOS_MAXITER)
+		printf("\nACADOS status: maximum number of iterations reached\n");
+
+	if(return_value==ACADOS_MINSTEP)
+		printf("\nACADOS status: below minimum step size length\n");
+
+
+	printf("\nu = \n");
+	for(ii=0; ii<N; ii++)
+		d_print_mat(1, nuu[ii], hu[ii], 1);
+
+	printf("\nx = \n");
+	for(ii=0; ii<=N; ii++)
+		d_print_mat(1, nxx[ii], hx[ii], 1);
 
 
 	double time = (tv1.tv_sec-tv0.tv_sec)/(nrep+0.0)+(tv1.tv_usec-tv0.tv_usec)/(nrep*1e6);
@@ -504,13 +533,13 @@ int main()
 	d_free(S0);
 	d_free(q0);
 	d_free(r0);
-	i_free(idx0);
+	i_free(idxb0);
 	d_free(lb0);
 	d_free(ub0);
-	i_free(idx1);
+	i_free(idxb1);
 	d_free(lb1);
 	d_free(ub1);
-	i_free(idxN);
+	i_free(idxbN);
 	d_free(lbN);
 	d_free(ubN);
 	d_free(C);
@@ -528,7 +557,7 @@ int main()
 		}
 	d_free(hx[N]);
 
-//	d_free_align(work); // aligned memory free
+	d_free(work);
 	
 	return 0;
 	
