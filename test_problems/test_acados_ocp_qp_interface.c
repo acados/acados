@@ -243,7 +243,7 @@ int main()
 	double *A; d_zeros(&A, nx, nx); // states update matrix
 	double *B; d_zeros(&B, nx, nu); // inputs matrix
 	double *b; d_zeros(&b, nx, 1); // states offset
-	double *x0; d_zeros_align(&x0, nx, 1); // initial state
+	double *x0; d_zeros(&x0, nx, 1); // initial state
 
 	// mass-spring system
 	double Ts = 0.5; // sampling time
@@ -369,18 +369,18 @@ int main()
 	double *hA[N];
 	double *hB[N];
 	double *hb[N];
-	double *hQ[N];
+	double *hQ[N+1];
 	double *hS[N];
 	double *hR[N];
-	double *hq[N];
+	double *hq[N+1];
 	double *hr[N];
-	double *hlb[N];
-	double *hub[N];
-	int *hidx[N];
-	double *hC[N];
+	double *hlb[N+1];
+	double *hub[N+1];
+	int *hidx[N+1];
+	double *hC[N+1];
 	double *hD[N];
-	double *hlg[N];
-	double *hug[N];
+	double *hlg[N+1];
+	double *hug[N+1];
 
 	hA[0] = A0;
 	hB[0] = B;
