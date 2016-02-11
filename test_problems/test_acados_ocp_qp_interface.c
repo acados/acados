@@ -56,8 +56,8 @@
 #include <xmmintrin.h> // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
 #endif
 
-// structure of solver arguments
-struct ocp_qp_solver_args
+// structure of hpmpc solver arguments
+struct ocp_qp_hpmpc_args
 	{
 	double tol;
 	int max_iter;
@@ -66,8 +66,10 @@ struct ocp_qp_solver_args
 	double sigma_min;
 	};
 
-// header of the TODO function returning the work space size
-	int ocp_qp_hpmpc_workspace_double(int N, int *nxx, int *nuu, int *nbb, int *ngg, struct ocp_qp_solver_args *args);
+
+
+// header of the hpmpc solver workworkspace 
+int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg, struct ocp_qp_hpmpc_args *args);
 
 
 
@@ -452,7 +454,7 @@ int main()
 ************************************************/	
 
 	// solver arguments
-	struct ocp_qp_solver_args args;
+	struct ocp_qp_hpmpc_args args;
 	args.tol = TOL;
 	args.max_iter = MAXITER;
 	args.min_step = MINSTEP;
@@ -463,10 +465,10 @@ int main()
 * work space
 ************************************************/	
 
-	int work_space_size = ocp_qp_hpmpc_workspace_double(N, nxx, nuu, nbb, ngg, &args);
-	printf("\nwork space size: %d doubles\n", work_space_size);
+	int work_space_size = ocp_qp_hpmpc_workspace_size(N, nxx, nuu, nbb, ngg, &args);
+	printf("\nwork space size: %d bytes\n", work_space_size);
 
-	double *work; d_zeros(&work, work_space_size, 1); // aligned memory allocation
+	double *work = (double *) malloc(work_space_size);
 
 /************************************************
 * call the solver
@@ -482,7 +484,7 @@ int main()
 		{
 
 		// call the QP OCP solver
-		return_value = ocp_qp_solver(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hx, hu, &args, work);	
+		return_value = ocp_qp_hpmpc(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, hx, hu, &args, work);	
 		
 		}
 
@@ -557,7 +559,7 @@ int main()
 		}
 	d_free(hx[N]);
 
-	d_free(work);
+	free(work);
 	
 	return 0;
 	
