@@ -23,13 +23,27 @@
 #                                                                                                 #
 ###################################################################################################
 
+include ./Makefile.rule
+
+ifeq ($(QP_SOLVER), HPMPC)
 OBJS = tools.o test_acados_ocp_qp_interface.o
+else
+OBJS = dummy_main.o
+endif
 
 CC = gcc
-CFLAGS = -O2 -I/opt/hpmpc/include
+ifeq ($(QP_SOLVER), HPMPC)
+CFLAGS = -O2 -I/opt/hpmpc/include -DHPMPC
+else
+CFLAGS = -O2 
+endif
 
 obj: $(OBJS)
+ifeq ($(QP_SOLVER), HPMPC)
 	$(CC) -o test.out $(OBJS) -L. /opt/hpmpc/lib/libhpmpc.a -lm
+else
+	$(CC) -o test.out $(OBJS) -lm
+endif
 
 run:
 	./test.out
