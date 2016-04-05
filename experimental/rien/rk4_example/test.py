@@ -42,7 +42,7 @@ for i in range(N):
 	xs[i+1,:] = sim_out.xn
 	Sxs.append(sim_out.Sx)
 	Sus.append(sim_out.Su)
- 
+
 	sim_in2.x = xs[i,:]
 	erk.integrate(sim_in2, sim_out2)
 	xs2[i+1,:] = sim_out2.xn
@@ -104,12 +104,12 @@ for i in range(len(steps)):
     xs3[i,:] = sim_out.xn
     err[i] = max(abs(xs3[i,:]-x_ex))
     timings[i] = 1e6*sim_out.cpuTime
-    
+
     sim_in2.step = steps[i]
     sim_in2.nSteps = nSteps[i]
     erk.integrate(sim_in2, sim_out2);
     timings2[i] = 1e6*sim_out2.cpuTime
-    
+
     sim_in3.step = steps[i]
     sim_in3.nSteps = nSteps[i]
     serk.integrate(sim_in3, sim_out3);

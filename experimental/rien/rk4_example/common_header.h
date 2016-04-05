@@ -16,7 +16,7 @@ typedef double real_t;
 
 #if FIXED_STEP_SIZE == 1
 /** Integration step size. */
-real_t H_INT = 1/100;
+real_t H_INT = 1.0/100;
 /** Number of integration steps. */
 #define NSTEPS  10
 #endif
