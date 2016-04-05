@@ -1,0 +1,3 @@
+[submodule "hpmpc"]
+	path = hpmpc
+	url = https://github.com/giaf/hpmpc.git
