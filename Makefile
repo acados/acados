@@ -9,20 +9,20 @@ hpmpc/test_d_ip_hard.o:
 	( cd hpmpc; $(MAKE) test_problem)
 
 # build acados test executable
-test_problems/test.out:
-	( cd test_problems; $(MAKE))
+acados/test/test.out:
+	( cd acados/test; $(MAKE))
 
 # run the tests
 .PHONY: test
-test: hpmpc/test_d_ip_hard.o test_problems/test.out
+test: hpmpc/test_d_ip_hard.o acados/test/test.out
 	( cd hpmpc; $(MAKE) run)
-	./test_problems/test.out
+	./acados/test/test.out
 
 
 .PHONY: clean
 clean:
 	( cd hpmpc; $(MAKE) clean)
-	( cd test_problems; $(MAKE) clean)
+	( cd acados/test; $(MAKE) clean)
 
 
 # run a linter
