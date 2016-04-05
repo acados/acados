@@ -6,6 +6,7 @@ Fast optimal control problem solvers.
 
 ### getting started
 
+    ./install_packages.sh
     git submodule init
     git submodule update
     make

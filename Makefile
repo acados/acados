@@ -53,6 +53,7 @@ ACADOS_STYLE_FILTER = \
 .PHONY: lint-acados
 lint-acados: $(ACADOS_LINT_SRC)
 	./cpplint.py --filter="$(ACADOS_STYLE_FILTER)" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 $(ACADOS_LINT_SRC)
+	cppcheck acados
 
 # TODO: use CPPLINT.cfg files in subdirectories if hpmpc becomes part of acados
 HPMPC_LINT_SRC = $(shell find hpmpc -type f -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp')
@@ -86,3 +87,8 @@ HPMPC_STYLE_FILTER = \
 .PHONY: lint-hpmpc
 lint-hpmpc: $(HPMPC_LINT_SRC)
 	./cpplint.py --filter="$(HPMPC_STYLE_FILTER)" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 $(HPMPC_LINT_SRC)
+
+# TODO: once these warnings are fixed, put it in lint-hpmpc and have travis run it
+.PHONY: check-hpmpc
+check-hpmpc:
+	cppcheck hpmpc

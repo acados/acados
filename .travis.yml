@@ -11,6 +11,7 @@ addons:
     packages:
     - libgsl0-dev
     - liblapack-dev
+    - cppcheck
 
 script:
  - git submodule init
