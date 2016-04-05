@@ -42,13 +42,11 @@ ACADOS_STYLE_FILTER = \
 	-whitespace/braces, \
 	-whitespace/comma, \
 	-whitespace/comments, \
-	-whitespace/end_of_line, \
 	-whitespace/line_length, \
 	-whitespace/newline, \
 	-whitespace/operators, \
 	-whitespace/parens, \
 	-whitespace/semicolon, \
-	-whitespace/tab, \
 
 .PHONY: lint-acados
 lint-acados: $(ACADOS_LINT_SRC)

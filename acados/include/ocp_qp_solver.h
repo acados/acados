@@ -1,19 +1,19 @@
 // enum of return values
 enum return_values{
-	ACADOS_SUCCESS,
-	ACADOS_MAXITER,
-	ACADOS_MINSTEP
-	};
+    ACADOS_SUCCESS,
+    ACADOS_MAXITER,
+    ACADOS_MINSTEP
+};
 
 // OCP QP interface
 // struct of arguments to the solver
 struct ocp_qp_hpmpc_args{
-	double tol;
-	int max_iter;
-	double min_step;
-	double mu0;
-	double sigma_min;
-	};
+    double tol;
+    int max_iter;
+    double min_step;
+    double mu0;
+    double sigma_min;
+};
 
 // struct ocp_qpStruct {}
 
