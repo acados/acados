@@ -4,7 +4,9 @@
 Fast optimal control problem solvers.
 
 
-# build and test:
+### getting started
 
+    git submodule init
+    git submodule update
     make
     make test
