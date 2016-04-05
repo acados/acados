@@ -29,7 +29,7 @@ clean:
 .PHONY: lint
 lint: lint-acados lint-hpmpc
 
-ACADOS_LINT_SRC = $(shell find test_problems -type f -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp')
+ACADOS_LINT_SRC = $(shell find acados -type f -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp')
 
 # TODO: remove these and clean them up
 ACADOS_STYLE_FILTER = \
@@ -37,6 +37,7 @@ ACADOS_STYLE_FILTER = \
 	-build/include, \
 	-legal/copyright, \
 	-readability/casting, \
+	-readability/todo, \
 	-whitespace/blank_line, \
 	-whitespace/braces, \
 	-whitespace/comma, \
