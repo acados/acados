@@ -15,5 +15,5 @@ addons:
 script:
  - git submodule init
  - git submodule update
- - ./build.sh
- - ./test.sh
+ - make
+ - make test
