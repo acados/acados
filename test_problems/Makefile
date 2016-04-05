@@ -33,14 +33,14 @@ endif
 
 CC = gcc
 ifeq ($(QP_SOLVER), HPMPC)
-CFLAGS = -O2 -I/opt/hpmpc/include -DHPMPC
+CFLAGS = -O2 -I../hpmpc/include -DHPMPC
 else
 CFLAGS = -O2 
 endif
 
 obj: $(OBJS)
 ifeq ($(QP_SOLVER), HPMPC)
-	$(CC) -o test.out $(OBJS) -L. /opt/hpmpc/lib/libhpmpc.a -lm
+	$(CC) -o test.out $(OBJS) -L. ../hpmpc/libhpmpc.a -lm
 else
 	$(CC) -o test.out $(OBJS) -lm
 endif
