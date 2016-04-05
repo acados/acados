@@ -37,6 +37,7 @@ CFLAGS = -O2 -I../../hpmpc/include -DHPMPC
 else
 CFLAGS = -O2
 endif
+CFLAGS += -std=c99 -Wall -Wextra -Werror
 
 obj: $(OBJS)
 ifeq ($(QP_SOLVER), HPMPC)
