@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "aux_d.h"
 
 /************************************************
  matrix-matrix multiplication
@@ -276,7 +277,7 @@ void dtrsm_l_u_n_n_3l(int m, int n, double *A, int lda, double *B, int ldb) {
 }
 
 void dgetrs_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
-               int ldb, int *info) {
+               int ldb) {
     if (n == 0 || nrhs == 0) return;
 
     // solve A * X = B
@@ -300,7 +301,7 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
 
     if (*info == 0) {
         // solve the system A*X = B, overwriting B with X
-        dgetrs_3l(n, nrhs, A, lda, ipiv, B, ldb, info);
+        dgetrs_3l(n, nrhs, A, lda, ipiv, B, ldb);
     }
 
     return;
@@ -312,9 +313,9 @@ double onenorm(int row, int col, double *ptrA) {
     int i, j;
     temp = 0;
     for (j = 0; j < col; j++) {
-        temp = abs(*(ptrA + j * row));
+        temp = fabs(*(ptrA + j * row));
         for (i = 1; i < row; i++) {
-            temp += abs(*(ptrA + j * row + i));
+            temp += fabs(*(ptrA + j * row + i));
         }
         if (j == 0)
             max = temp;

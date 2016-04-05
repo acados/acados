@@ -66,7 +66,7 @@ Mass-spring system: nx/2 masses connected each other with springs (in a row),
 and the first and the last one to walls. nu (<=nx) controls act on the first nu
 masses. The system is sampled with sampling time Ts.
 ************************************************/
-void mass_spring_system(double Ts, int nx, int nu, int N, double *A, double *B,
+void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
                         double *b, double *x0) {
     int nx2 = nx * nx;
 
@@ -232,8 +232,6 @@ int main() {
 #endif
     printf("\n");
 
-    int info = 0;
-
     /************************************************
     * dynamical system
     ************************************************/
@@ -250,7 +248,7 @@ int main() {
 
     // mass-spring system
     double Ts = 0.5;  // sampling time
-    mass_spring_system(Ts, nx, nu, N, A, B, b, x0);
+    mass_spring_system(Ts, nx, nu, A, B, b, x0);
 
     for (jj = 0; jj < nx; jj++) b[jj] = 0.1;
 
@@ -486,7 +484,7 @@ int main() {
 
     int return_value;
 
-    struct timeval tv0, tv1, tv2;
+    struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
     for (rep = 0; rep < nrep; rep++) {
