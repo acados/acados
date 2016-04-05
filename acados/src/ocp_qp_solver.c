@@ -80,7 +80,7 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
                           args->sigma_min};  // control primal-dual IP behaviour
     double mu0 = args->mu0;
     int warm_start = 0;
-    int compute_mult = 1;  // compute multipliers TODO set to zero
+    int compute_mult = 1;  // compute multipliers TODO(giaf): set to zero
     int kk = -1;
 
     int info = 0;
@@ -107,7 +107,7 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
     double *stat;
     double *work;
 
-    // matrices size // TODO pass them to the solver !!!!!
+    // matrices size // TODO(giaf): pass them to the solver !!!!!
     int pnx[N + 1];
     for (ii = 0; ii <= N; ii++) pnx[ii] = (nx[ii] + bs - 1) / bs * bs;
     int pnz[N + 1];
@@ -267,10 +267,10 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
     ptr += 2 * pnb[ii] + 2 * png[ii];
     d_copy_mat(nb[ii], 1, hlb[ii], 1, hd[ii], 1);
     dax_mat(nb[ii], 1, -1.0, hub[ii], 1, hd[ii] + pnb[ii],
-            1);  // TODO change in solver
+            1);  // TODO(giaf): change in solver
     d_copy_mat(ng[ii], 1, hlg[ii], 1, hd[ii] + 2 * pnb[ii], 1);
     dax_mat(ng[ii], 1, -1.0, hug[ii], 1, hd[ii] + 2 * pnb[ii] + png[ii],
-            1);  // TODO change in solver
+            1);  // TODO(giaf): change in solver
                  //    d_print_mat(1, 2*pnb[ii]+2*png[ii], hd[ii], 1);
     for (ii = 1; ii < N; ii++) {
         if (hlb[ii] == hlb[ii - 1] && hub[ii] == hub[ii - 1] &&
@@ -283,10 +283,10 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
             ptr += 2 * pnb[ii] + 2 * png[ii];
             d_copy_mat(nb[ii], 1, hlb[ii], 1, hd[ii], 1);
             dax_mat(nb[ii], 1, -1.0, hub[ii], 1, hd[ii] + pnb[ii],
-                    1);  // TODO change in solver
+                    1);  // TODO(giaf): change in solver
             d_copy_mat(ng[ii], 1, hlg[ii], 1, hd[ii] + 2 * pnb[ii], 1);
             dax_mat(ng[ii], 1, -1.0, hug[ii], 1, hd[ii] + 2 * pnb[ii] + png[ii],
-                    1);  // TODO change in solver
+                    1);  // TODO(giaf): change in solver
         }
         //        d_print_mat(1, 2*pnb[ii]+2*png[ii], hd[ii], 1);
     }
@@ -295,10 +295,10 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
     ptr += 2 * pnb[ii] + 2 * png[ii];
     d_copy_mat(nb[ii], 1, hlb[ii], 1, hd[ii], 1);
     dax_mat(nb[ii], 1, -1.0, hub[ii], 1, hd[ii] + pnb[ii],
-            1);  // TODO change in solver
+            1);  // TODO(giaf): change in solver
     d_copy_mat(ng[ii], 1, hlg[ii], 1, hd[ii] + 2 * pnb[ii], 1);
     dax_mat(ng[ii], 1, -1.0, hug[ii], 1, hd[ii] + 2 * pnb[ii] + png[ii],
-            1);  // TODO change in solver
+            1);  // TODO(giaf): change in solver
                  //    d_print_mat(1, 2*pnb[ii]+2*png[ii], hd[ii], 1);
 
     for (ii = 0; ii <= N; ii++) {
@@ -369,7 +369,7 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
         for (jj = 0; jj < nx[ii]; jj++) mu0 = fmax(mu0, abs(hq[ii][jj]));
     }
 
-    // TODO check for equality constraints in the inputs
+    // TODO(giaf): check for equality constraints in the inputs
 
     // call the solver
     int hpmpc_status = d_ip2_hard_mpc_tv(
@@ -395,9 +395,9 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
                stat[2+ii*5], stat[3+ii*5], stat[4+ii*5]);
 #endif
 
-    // TODO check for equality constraints in the inputs
+    // TODO(giaf): check for equality constraints in the inputs
 
-    // TODO compute residuals ?????
+    // TODO(giaf): compute residuals ?????
 
     // return
 

@@ -1,3 +1,6 @@
+#ifndef TEST_TOOLS_H_
+#define TEST_TOOLS_H_
+
 /**************************************************************************************************
 *                                                                                                 *
 * This file is part of HPMPC.                                                                     *
@@ -37,3 +40,5 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb
 
 /* matrix exponential */
 void expm(int row, double *A);
+
+#endif  // TEST_TOOLS_H_

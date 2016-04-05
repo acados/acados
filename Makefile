@@ -37,7 +37,6 @@ ACADOS_STYLE_FILTER = \
 	-build/include, \
 	-legal/copyright, \
 	-readability/casting, \
-	-readability/todo, \
 
 .PHONY: lint-acados
 lint-acados: $(ACADOS_LINT_SRC)

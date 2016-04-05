@@ -1,3 +1,6 @@
+#ifndef OCP_QP_SOLVER_H_
+#define OCP_QP_SOLVER_H_
+
 // enum of return values
 enum return_values{
     ACADOS_SUCCESS,
@@ -31,3 +34,6 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, \
 
 int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg,
                                 struct ocp_qp_hpmpc_args *args);
+
+
+#endif  // OCP_QP_SOLVER_H_
