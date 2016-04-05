@@ -1,0 +1,19 @@
+# explicitly request container-based infrastructure
+sudo: false
+
+env:
+ # currently unused
+ - CC=gcc
+
+addons:
+  apt:
+#    sources:
+    packages:
+    - libgsl0-dev
+    - liblapack-dev
+
+script:
+ - git submodule init
+ - git submodule update
+ - ./build.sh
+ - ./test.sh
