@@ -18,7 +18,70 @@ test: hpmpc/test_d_ip_hard.o test_problems/test.out
 	( cd hpmpc; $(MAKE) run)
 	./test_problems/test.out
 
+
 .PHONY: clean
 clean:
 	( cd hpmpc; $(MAKE) clean)
 	( cd test_problems; $(MAKE) clean)
+
+
+# run a linter
+.PHONY: lint
+lint: lint-acados lint-hpmpc
+
+ACADOS_LINT_SRC = $(shell find test_problems -type f -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp')
+
+# TODO: remove these and clean them up
+ACADOS_STYLE_FILTER = \
+	-build/header_guard, \
+	-build/include, \
+	-legal/copyright, \
+	-readability/casting, \
+	-whitespace/blank_line, \
+	-whitespace/braces, \
+	-whitespace/comma, \
+	-whitespace/comments, \
+	-whitespace/end_of_line, \
+	-whitespace/line_length, \
+	-whitespace/newline, \
+	-whitespace/operators, \
+	-whitespace/parens, \
+	-whitespace/semicolon, \
+	-whitespace/tab, \
+
+.PHONY: lint-acados
+lint-acados: $(ACADOS_LINT_SRC)
+	./cpplint.py --filter="$(ACADOS_STYLE_FILTER)" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 $(ACADOS_LINT_SRC)
+
+# TODO: use CPPLINT.cfg files in subdirectories if hpmpc becomes part of acados
+HPMPC_LINT_SRC = $(shell find hpmpc -type f -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp')
+
+# TODO: remove these and clean them up
+HPMPC_STYLE_FILTER = \
+	-build/header_guard, \
+	-build/include, \
+	-build/include_order, \
+	-legal/copyright, \
+	-readability/braces, \
+	-readability/casting, \
+	-readability/fn_size, \
+	-readability/multiline_comment, \
+	-readability/todo, \
+	-runtime/int, \
+	-whitespace/blank_line, \
+	-whitespace/braces, \
+	-whitespace/comma, \
+	-whitespace/comments, \
+	-whitespace/end_of_line, \
+	-whitespace/indent, \
+	-whitespace/line_length, \
+	-whitespace/newline, \
+	-whitespace/operators, \
+	-whitespace/parens, \
+	-whitespace/semicolon, \
+	-whitespace/tab, \
+	-whitespace/todo, \
+
+.PHONY: lint-hpmpc
+lint-hpmpc: $(HPMPC_LINT_SRC)
+	./cpplint.py --filter="$(HPMPC_STYLE_FILTER)" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 $(HPMPC_LINT_SRC)
