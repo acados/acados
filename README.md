@@ -1,4 +1,5 @@
 # OCPgen-private
+[![Build Status](https://secure.travis-ci.org/acados/acados.png?branch=master)](http://travis-ci.org/acados/acados)
 Initial discussion and proof of concept for the new tool
 
 
