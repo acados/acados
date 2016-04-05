@@ -38,15 +38,6 @@ ACADOS_STYLE_FILTER = \
 	-legal/copyright, \
 	-readability/casting, \
 	-readability/todo, \
-	-whitespace/blank_line, \
-	-whitespace/braces, \
-	-whitespace/comma, \
-	-whitespace/comments, \
-	-whitespace/line_length, \
-	-whitespace/newline, \
-	-whitespace/operators, \
-	-whitespace/parens, \
-	-whitespace/semicolon, \
 
 .PHONY: lint-acados
 lint-acados: $(ACADOS_LINT_SRC)

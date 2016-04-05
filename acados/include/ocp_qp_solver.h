@@ -29,4 +29,5 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, \
 
 // int ocp_qp_hpmpc(qpStruct *qp, args *args,double *work)
 
-int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg, struct ocp_qp_hpmpc_args *args);
+int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg,
+                                struct ocp_qp_hpmpc_args *args);
