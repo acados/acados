@@ -1,0 +1,24 @@
+# explicitly request container-based infrastructure
+sudo: false
+
+env:
+ # currently unused
+ - CC=gcc
+
+addons:
+  apt:
+#    sources:
+    packages:
+    - libgsl0-dev
+    - liblapack-dev
+    - cppcheck
+    - cmake
+
+script:
+ - git submodule init
+ - git submodule update
+ - mkdir build
+ - cd build
+ - make test_acados
+ - ./test_acados
+ - make lint
