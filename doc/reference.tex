@@ -1,6 +1,7 @@
 \documentclass{report}
 
 \usepackage{amsmath}
+\usepackage{color}
 
 \title{ACADOS / ACADO 2.0 / ??? \\ Reference}
 
@@ -97,5 +98,95 @@ This is modelled by choosinig {\tt nx[0]=0}, i.e. not considering the initial st
 As a consequence, e.g. the matrix {\tt A[0]} has size {\tt nx[1]$\times$0}, the matrix {\tt Q[0]} has size {\tt 0$\times$0}, and the vector {\tt q[0]} has size {\tt 0$\times$1}.
 The information about the known value of $x_0$ and the matrix $A_0$ are used to compute the value of the vector {\tt b[0]}, that is initialized to $b_0 + A_0 \cdot x_0$.
 
+\section{Integrator Interface with Sensitivity Propagation}
+
+The C code interface looks like
+\begin{verbatim}
+int ocp_qp_SOLVERNAME(integrator_in *input, 
+      struct integrator_SOLVERNAME_opts *opts, double *work);
+\end{verbatim}
+where the input struct is defined as:
+\begin{verbatim}
+typedef struct integrator_in_{
+    int nSteps, int nSystems, int nX, int nXA, int nP, int nOD, 
+    double *steps, int *nx, int *nxa, double **S0, double *mu,
+    double **x, double **xa, double *p, double *od, double **xOut, 
+    double **sensOut, double *muOut, double *hessOut, int nOutputs,
+    int *nGridOutputs, double **gridOutputs, double **muOutputs, 
+    double **valOutputs, double **sensOutputs, function_call *sys, 
+    function_call *out, double *variables} integrator_in;
+\end{verbatim}
+where {\tt SOLVERNAME} is the name of the specific solver. Additionally, a function struct has been defined as:
+\begin{verbatim}
+typedef struct function_call_{
+    int dimIn, int dimOut, bool *sparsity, bool linear, 
+    void (*fun)(double*,double*), void (*jac)(double*,double*), 
+    bool forward, bool backward, bool hessian,
+    void (*vde_forw)(double*,double*), void (*vde_adj)(double*,double*),
+    void (*vde_hess)(double*,double*)} function_call;
+\end{verbatim}
+If we like the latter embedding of structs, we can avoid some of the fields in the $integrator\_in$ struct by moving them somewhere else!
+
+\begin{description}
+\item[] \textcolor{red}{For fixed step integrators:}
+\item[{\tt nSteps}] [input] is the number of integration steps (in case of no step size control).
+\item[{\tt steps}] [input] is the vector of size $nSteps$, containing the step size for each integration step.
+\item[] \textcolor{red}{Dimensions of the dynamic system(s):}
+\item[{\tt nSystems}] [input] is the number of dynamic subsystems in order of dependency (states of subsystem $k$ only depend on subsystems $1,2,\ldots, k-1$ etc).
+\item[{\tt flag\_linear}] [input] is the vector of size $nSystems$, containing the flag whether the subsystem is linear or not ($0$ or $1$, should be part of options OR see the function\_call struct).
+\item[{\tt nx}] [input] is the vector of size $nSystems$, containing the number of differential states for this integrator.
+\item[{\tt nxa}] [input] is the vector of size $nSystems$, containing the number of algebraic states for this integrator.
+\item[{\tt nX}] [input] is the {\bf total} number of differential states for this integrator.
+\item[{\tt nXA}] [input] is the {\bf total} number of algebraic states for this integrator.
+\item[{\tt nP}] [input] is the number of free parameters for this integrator (sensitivities with respect to these parameters are computed).
+\item[{\tt nOD}] [input] is the number of online data, i.e. fixed parameters for this integrator (no sensitivities are computed).
+\item[] \textcolor{red}{Sensitivity analysis for the integrator:}
+\item[{\tt S0}] [input] is the vector of size $nSystems$ of the pointers to the matrices containing the forward seeds (the dimensions of these matrices are $nx[0] \times (nx[0]+np)$, $nx[1] \times (nx[0]+nx[1]+np)$, $\ldots$ etc).
+\item[{\tt mu}] [input] is the vector of dimension $nX$, containing the backward seed.
+\item[{\tt flag\_forward}] [input] is the flag for first order forward sensitivity propagation ($0$ or $1$, should be part of options OR see the function\_call struct).
+\item[{\tt flag\_backward}] [input] is the flag for first order backward sensitivity propagation ($0$ or $1$, should be part of options OR see the function\_call struct).
+\item[{\tt flag\_hessian}] [input] is the flag for second order Hessian propagation ($0$ or $1$, should be part of options OR see the function\_call struct).
+\item[] \textcolor{red}{Input and output data to the integrator:}
+\item[{\tt x}] [input] is the vector of size $nSystems$ of the pointers to the initial values of the differential states for this integrator.
+\item[{\tt xOut}] [output] is the vector of size $nSystems$ of the pointers to the end values of the differential states as a result of calling this integrator.
+\item[{\tt sensOut}] [output] is the vector of size $nSystems$ of the pointers to the end values of the forward sensitivities as a result of calling this integrator.
+\item[{\tt muOut}] [output] is the vector of size $nX+nP$ containing the backward derivatives as a result of calling this integrator.
+\item[{\tt hessOut}] [output] is the matrix of size $(nX+nP) \times (nX+nP)p$ containing the second order derivatives as a result of calling this integrator.
+\item[{\tt xa}] [input,output] is the vector of size $nSystems$ of the pointers to the initial {\bf guess} of the algebraic states for this integrator (the guess can be updated by the integrator).
+\item[{\tt p}] [input] is the vector of size $nP$ containing the free parameters for this integrator (sensitivities can be computed).
+\item[{\tt od}] [input] is the vector of size $nOD$ containing the online data, i.e. fixed parameters for this integrator (no sensitivities are computed).
+\item[] \textcolor{red}{Extra outputs to be evaluated:}
+\item[{\tt nOutputs}] [input] is the number of extra output functions (with each their own dimension).
+\item[{\tt dimOutputs}] [input] is the vector of size $nOutputs$, containing the dimension for each of the output functions (moved to function\_call struct!).
+\item[{\tt sparsityOutputs}] [input] is the matrix of dimension $nOutputs \times (nX+nXA+nX)$, defining the sparsity pattern for each output function with respect to the differential states, the algebraic variables and the state derivatives (moved to function\_call struct!).
+\item[{\tt nGridOutputs}] [input] is the vector of size $nOutputs$, containing the number of grid points on which each output function should be evaluated.
+\item[{\tt gridOutputs}] [input] is the vector of size $nOutputs$ of the pointers to the grid points on which each output function should be evaluated.
+\item[{\tt muOutputs}] [input] is the vector of size $nOutputs$ of the pointers to the backward seeds for each of the grid points defined by $gridOutputs$.
+\item[{\tt valOutputs}] [output] is the vector of size $nOutputs$ of the pointers to the outputs evaluated on the grid points defined by $gridOutputs$.
+\item[{\tt sensOutputs}] [output] is the vector of size $nOutputs$ of the pointers to the forward sensitivities of the outputs evaluated on the grid points defined by $gridOutputs$.
+\item[] \textcolor{red}{The functions (including AD) to be evaluated:}
+\item[] (This changed using the  function\_call struct!!)
+\item[{\tt rhs}] [input] the function pointer to evaluate the right-hand side.
+\item[{\tt jac}] [input] the function pointer to evaluate the full Jacobian.
+\item[{\tt vde\_forw}] [input] the function pointer to evaluate the forward variational differential equations.
+\item[{\tt vde\_adj}] [input] the function pointer to evaluate the adjoint equations.
+\item[{\tt vde\_hess}] [input] the function pointer to evaluate the second order sensitivity equations.
+\item[{\tt out\_vde\_forw}] [input] is the vector of size $nOutputs$, containing the function pointers to evaluate the forward sensitivity equations for the outputs.
+\item[{\tt out\_vde\_adj}] [input] is the vector of size $nOutputs$, containing the function pointers to evaluate the adjoint equations for the output functions.
+\item[{\tt out\_vde\_hess}] [input] is the vector of size $nOutputs$, containing the function pointers to evaluate the second order sensitivity equations for the outputs.
+\item[] \textcolor{red}{Other memory:}
+\item[variables] [input,output] is the pointer to the warm variables space used by the specific solver from one call to the other.
+The variables space size (in doubles) is returned by a call to the function \\{\tt integrator\_SOLVERNAME\_variables\_double(integrator\_in *input, struct integrator\_solver\_opts *opts)}. 
+\item[opts] [input] is the pointer to a structure of type {\tt integrator\_SOLVERNAME\_opts} that defines the arguments (as e.g. maximum number of steps, minimum step size, desired tolerance, ... ) passed to the specific solver.
+\item[work] [workspace] is the pointer to the working space used by the specific solver.
+The working space size (in doubles) is returned by a call to the function {\tt integrator\_SOLVERNAME\_workspace\_double(integrator\_in *input, struct integrator\_solver\_opts *opts)}. 
+\end{description}
+
+Furthermore, the function returns an int, that is defined in the following enum (TODO change the names to something better!!!):
+\begin{description}
+\item[ACADOS\_SUCCESS] Solution successfully found.
+\item[ACADOS\_MAXITER] Maximum number of integration steps reached.
+\item[ACADOS\_MINSTEP] Minumum step size reached.
+\end{description}
 
 \end{document}
