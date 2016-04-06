@@ -26,14 +26,14 @@
 include ./Makefile.rule
 
 ifeq ($(QP_SOLVER), HPMPC)
-OBJS = tools.o test_ocp_qp_solver.o
+OBJS = test_ocp_qp_solver.o
 else
 OBJS = dummy_main.o
 endif
 
 CC = gcc
 ifeq ($(QP_SOLVER), HPMPC)
-CFLAGS = -O2 -I../../hpmpc/include -DHPMPC
+CFLAGS = -O2 -I../hpmpc/include -I../acados/include -DHPMPC
 else
 CFLAGS = -O2
 endif
@@ -41,9 +41,9 @@ CFLAGS += -std=c99 -Wall -Wextra -Werror
 
 obj: $(OBJS)
 ifeq ($(QP_SOLVER), HPMPC)
-	$(CC) -o test.out $(OBJS) -L. ../../hpmpc/libhpmpc.a -lm
+	$(CC) -o test.out $(OBJS) $(CFLAGS) -L. ../hpmpc/libhpmpc.a ../acados/libacados.a -lm
 else
-	$(CC) -o test.out $(OBJS) -lm
+	$(CC) -o test.out $(OBJS) $(CFLAGS) -lm
 endif
 
 run:

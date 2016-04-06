@@ -44,7 +44,7 @@
 #include <sys/time.h>
 
 // ACADOS headers
-#include "../include/ocp_qp_solver.h"
+#include "acados/include/ocp_qp_solver.h"
 
 // HPMPC headers
 #include "aux_d.h"

@@ -2,4 +2,3 @@
 
 # QP solver
 QP_SOLVER = HPMPC
-#QP_SOLVER =

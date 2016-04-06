@@ -43,6 +43,9 @@
 #include <math.h>
 #include <sys/time.h>
 
+// ACADOS headers
+#include "ocp_qp_solver.h"
+
 // HPMPC headers
 #include "aux_d.h"
 #include "mpc_solvers.h"
@@ -58,28 +61,12 @@
 #include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
 #endif
 
-// structure of hpmpc solver arguments
-struct ocp_qp_hpmpc_args {
-    double tol;
-    int max_iter;
-    double min_step;
-    double mu0;
-    double sigma_min;
-};
-
-// header of the hpmpc solver workworkspace
-int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg,
-                                struct ocp_qp_hpmpc_args *args);
-
-// enum of return values
-enum return_values { ACADOS_SUCCESS, ACADOS_MAXITER, ACADOS_MINSTEP };
-
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
 and the first and the last one to walls. nu (<=nx) controls act on the first nu
 masses. The system is sampled with sampling time Ts.
 ************************************************/
-void mass_spring_system(double Ts, int nx, int nu, int N, double *A, double *B,
+void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
                         double *b, double *x0) {
     int nx2 = nx * nx;
 
@@ -245,8 +232,6 @@ int main() {
 #endif
     printf("\n");
 
-    int info = 0;
-
     /************************************************
     * dynamical system
     ************************************************/
@@ -263,7 +248,7 @@ int main() {
 
     // mass-spring system
     double Ts = 0.5;  // sampling time
-    mass_spring_system(Ts, nx, nu, N, A, B, b, x0);
+    mass_spring_system(Ts, nx, nu, A, B, b, x0);
 
     for (jj = 0; jj < nx; jj++) b[jj] = 0.1;
 
@@ -499,7 +484,7 @@ int main() {
 
     int return_value;
 
-    struct timeval tv0, tv1, tv2;
+    struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
     for (rep = 0; rep < nrep; rep++) {

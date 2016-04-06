@@ -1,4 +1,4 @@
-all: hpmpc/libhpmpc.a
+all: hpmpc/libhpmpc.a acados/libacados.a
 
 # build HPMPC library
 hpmpc/libhpmpc.a:
@@ -8,22 +8,25 @@ hpmpc/libhpmpc.a:
 hpmpc/test_d_ip_hard.o:
 	( cd hpmpc; $(MAKE) test_problem)
 
+# build ACADOS library
+acados/libacados.a:
+	( cd acados; $(MAKE) static_library)
+
 # build acados test executable
-acados/test/test.out:
-	( cd acados/test; $(MAKE))
+test/test.out:
+	( cd test; $(MAKE))
 
 # run the tests
 .PHONY: test
-test: hpmpc/test_d_ip_hard.o acados/test/test.out
+test: hpmpc/test_d_ip_hard.o test/test.out
 	( cd hpmpc; $(MAKE) run)
-	./acados/test/test.out
-
+	./test/test.out
 
 .PHONY: clean
 clean:
 	( cd hpmpc; $(MAKE) clean)
-	( cd acados/test; $(MAKE) clean)
-
+	( cd acados; $(MAKE) clean)
+	( cd test; $(MAKE) clean)
 
 # run a linter
 .PHONY: lint

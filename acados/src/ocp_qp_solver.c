@@ -1,12 +1,15 @@
+#include <stdlib.h>
+#include <math.h>
+
 #include "ocp_qp_solver.h"
 
-#include "../../hpmpc/include/target.h"
-#include "../../hpmpc/include/block_size.h"
-#include "../../hpmpc/include/aux_d.h"
-#include "../../hpmpc/include/aux_s.h"
-#include "../../hpmpc/include/blas_d.h"
-#include "../../hpmpc/include/lqcp_solvers.h"
-#include "../../hpmpc/include/mpc_solvers.h"
+#include "target.h"
+#include "block_size.h"
+#include "aux_d.h"
+#include "aux_s.h"
+#include "blas_d.h"
+#include "lqcp_solvers.h"
+#include "mpc_solvers.h"
 
 // work space size
 int ocp_qp_hpmpc_workspace_size(int N, int *nx, int *nu, int *ng, int *nb,
@@ -83,9 +86,7 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
     int compute_mult = 1;  // compute multipliers TODO(giaf): set to zero
     int kk = -1;
 
-    int info = 0;
-
-    int i, ii, jj, ll;
+    int ii, jj, ll;
 
     // align work space (assume cache line <= 64 byte)
     size_t addr = (((size_t)work0) + 63) / 64 * 64;
@@ -100,10 +101,10 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
     double *(hpi[N + 1]);
     double *(hlam[N + 1]);
     double *(ht[N + 1]);
-    double *(hqq[N + 1]);
-    double *(hrb[N]);
-    double *(hrq[N + 1]);
-    double *(hrd[N + 1]);
+    // double *(hqq[N + 1]);
+    // double *(hrb[N]);
+    // double *(hrq[N + 1]);
+    // double *(hrd[N + 1]);
     double *stat;
     double *work;
 
@@ -332,15 +333,15 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
         ii = 0;
         for (jj = 0; jj < nu[ii]; jj++)
             for (ll = 0; ll < nu[ii]; ll++)
-                mu0 = fmax(mu0, abs(hR[ii][jj * nu[ii] + ll]));
+                mu0 = fmax(mu0, fabs(hR[ii][jj * nu[ii] + ll]));
         for (jj = 0; jj < nx[ii]; jj++)
             for (ll = 0; ll < nu[ii]; ll++)
-                mu0 = fmax(mu0, abs(hS[ii][jj * nu[ii] + ll]));
+                mu0 = fmax(mu0, fabs(hS[ii][jj * nu[ii] + ll]));
         for (jj = 0; jj < nx[ii]; jj++)
             for (ll = 0; ll < nx[ii]; ll++)
-                mu0 = fmax(mu0, abs(hQ[ii][jj * nx[ii] + ll]));
-        for (jj = 0; jj < nu[ii]; jj++) mu0 = fmax(mu0, abs(hr[ii][jj]));
-        for (jj = 0; jj < nx[ii]; jj++) mu0 = fmax(mu0, abs(hq[ii][jj]));
+                mu0 = fmax(mu0, fabs(hQ[ii][jj * nx[ii] + ll]));
+        for (jj = 0; jj < nu[ii]; jj++) mu0 = fmax(mu0, fabs(hr[ii][jj]));
+        for (jj = 0; jj < nx[ii]; jj++) mu0 = fmax(mu0, fabs(hq[ii][jj]));
         // middle stages
         for (jj = 1; jj < N; jj++) {
             if (hq[ii] == hq[ii - 1] && hr[ii] == hr[ii - 1] &&
@@ -348,25 +349,25 @@ int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, double **hA,
                 hR[ii] == hR[ii - 1]) {
                 for (jj = 0; jj < nu[ii]; jj++)
                     for (ll = 0; ll < nu[ii]; ll++)
-                        mu0 = fmax(mu0, abs(hR[ii][jj * nu[ii] + ll]));
+                        mu0 = fmax(mu0, fabs(hR[ii][jj * nu[ii] + ll]));
                 for (jj = 0; jj < nx[ii]; jj++)
                     for (ll = 0; ll < nu[ii]; ll++)
-                        mu0 = fmax(mu0, abs(hS[ii][jj * nu[ii] + ll]));
+                        mu0 = fmax(mu0, fabs(hS[ii][jj * nu[ii] + ll]));
                 for (jj = 0; jj < nx[ii]; jj++)
                     for (ll = 0; ll < nx[ii]; ll++)
-                        mu0 = fmax(mu0, abs(hQ[ii][jj * nx[ii] + ll]));
+                        mu0 = fmax(mu0, fabs(hQ[ii][jj * nx[ii] + ll]));
                 for (jj = 0; jj < nu[ii]; jj++)
-                    mu0 = fmax(mu0, abs(hr[ii][jj]));
+                    mu0 = fmax(mu0, fabs(hr[ii][jj]));
                 for (jj = 0; jj < nx[ii]; jj++)
-                    mu0 = fmax(mu0, abs(hq[ii][jj]));
+                    mu0 = fmax(mu0, fabs(hq[ii][jj]));
             }
         }
         // last stage
         ii = N;
         for (jj = 0; jj < nx[ii]; jj++)
             for (ll = 0; ll < nx[ii]; ll++)
-                mu0 = fmax(mu0, abs(hQ[ii][jj * nx[ii] + ll]));
-        for (jj = 0; jj < nx[ii]; jj++) mu0 = fmax(mu0, abs(hq[ii][jj]));
+                mu0 = fmax(mu0, fabs(hQ[ii][jj * nx[ii] + ll]));
+        for (jj = 0; jj < nx[ii]; jj++) mu0 = fmax(mu0, fabs(hq[ii][jj]));
     }
 
     // TODO(giaf): check for equality constraints in the inputs
