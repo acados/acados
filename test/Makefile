@@ -33,7 +33,7 @@ endif
 
 CC = gcc
 ifeq ($(QP_SOLVER), HPMPC)
-CFLAGS = -O2 -I../hpmpc/include -I../acados/include -DHPMPC
+CFLAGS = -O2 -I../hpmpc/include -I.. -DHPMPC
 else
 CFLAGS = -O2
 endif
