@@ -12,13 +12,10 @@ addons:
     - libgsl0-dev
     - liblapack-dev
     - cppcheck
-    - cmake
 
 script:
  - git submodule init
  - git submodule update
- - mkdir build
- - cd build
- - make test_acados
- - ./test_acados
+ - make
+ - make test
  - make lint
