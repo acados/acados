@@ -44,15 +44,15 @@
 #include <sys/time.h>
 
 // ACADOS headers
-#include "ocp_qp_solver.h"
+#include "acados/ocp_qp_solver.h"
+#include "acados/tools.h"
 
 // HPMPC headers
-#include "aux_d.h"
-#include "mpc_solvers.h"
-#include "target.h"
-#include "block_size.h"
-#include "tools.h"
-#include "c_interface.h"
+#include "hpmpc/include/aux_d.h"
+#include "hpmpc/include/mpc_solvers.h"
+#include "hpmpc/include/target.h"
+#include "hpmpc/include/block_size.h"
+#include "hpmpc/include/c_interface.h"
 
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \

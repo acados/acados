@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "ocp_qp_solver.h"
+#include "acados/ocp_qp_solver.h"
 
 #include "target.h"
 #include "block_size.h"
