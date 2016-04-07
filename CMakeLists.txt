@@ -21,7 +21,7 @@ set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/hp
 
 # Add test
 add_executable ( test_acados ${TEST_SRC} )
-target_link_libraries ( test_acados acados hpmpc )
+target_link_libraries ( test_acados acados hpmpc m )
 
 # Set up cpplint
 find_package ( PythonInterp )
