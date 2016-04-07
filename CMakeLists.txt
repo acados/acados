@@ -19,11 +19,11 @@ add_library ( acados STATIC ${ACADOS_SRC} )
 add_library ( hpmpc STATIC IMPORTED )
 set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/hpmpc/libhpmpc.a")
 
-# Add test
+# Define test
 add_executable ( test_acados ${TEST_SRC} )
 target_link_libraries ( test_acados acados hpmpc m )
 
-# Set up cpplint
+# Lint acados
 find_package ( PythonInterp )
 if ( PYTHONINTERP_FOUND )
     set ( ACADOS_STYLE_FILTER
@@ -31,11 +31,11 @@ if ( PYTHONINTERP_FOUND )
     	"-build/include,"
     	"-legal/copyright,"
     	"-readability/casting" )
-    set ( FIND_ACADOS find acados -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )
-    set ( FIND_LINT_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_ACADOS} )
-    execute_process ( COMMAND ${FIND_LINT_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE ACADOS_LINT_SRC )
-    string ( REPLACE "\n" " " ACADOS_LINT_SRC ${ACADOS_LINT_SRC} )
-    separate_arguments ( ACADOS_LINT_SRC )
-    set ( RUN_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --filter="${ACADOS_STYLE_FILTER}" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 ${ACADOS_LINT_SRC} )
-    add_custom_target ( lint ${RUN_LINT} )
+    set ( FIND_COMMAND find acados -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )
+    set ( FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND} )
+    execute_process ( COMMAND ${FIND_ACADOS_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE ACADOS_FILES_TO_LINT )
+    string ( REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT} )
+    separate_arguments ( ACADOS_FILES_TO_LINT )
+    set ( LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --filter="${ACADOS_STYLE_FILTER}" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 ${ACADOS_FILES_TO_LINT} )
+    add_custom_target ( lint ${LINT_COMMAND} )
 endif()
