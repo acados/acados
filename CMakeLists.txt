@@ -1,21 +1,27 @@
 cmake_minimum_required ( VERSION 2.6 )
 project ( ACADOS )
 
+set ( CMAKE_VERBOSE_MAKEFILE ON )
 set ( CMAKE_C_FLAGS "-std=c99 -O2 -Wall -Wextra -Werror" )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )
 
 # Define .c source files
+file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 set ( TEST_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_solver.c" )
 
+# Make hpmpc
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
+
 # Define libraries
-set ( ACADOS_LIB "${PROJECT_SOURCE_DIR}/acados/libacados.a" )
-set ( HPMPC_LIB "${PROJECT_SOURCE_DIR}/hpmpc/libhpmpc.a" )
+add_library ( acados STATIC ${ACADOS_SRC} )
+add_library ( hpmpc STATIC IMPORTED )
+set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/hpmpc/libhpmpc.a")
 
 # Add test
 add_executable ( test_acados ${TEST_SRC} )
-target_link_libraries ( test_acados ${ACADOS_LIB} ${HPMPC_LIB} )
+target_link_libraries ( test_acados acados hpmpc )
 
 # Set up cpplint
 find_package ( PythonInterp )

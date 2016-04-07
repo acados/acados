@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "aux_d.h"
+#include "hpmpc/include/aux_d.h"
 
 /************************************************
  matrix-matrix multiplication

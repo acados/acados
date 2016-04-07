@@ -1,15 +1,15 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "ocp_qp_solver.h"
+#include "acados/ocp_qp_solver.h"
 
-#include "target.h"
-#include "block_size.h"
-#include "aux_d.h"
-#include "aux_s.h"
-#include "blas_d.h"
-#include "lqcp_solvers.h"
-#include "mpc_solvers.h"
+#include "hpmpc/include/target.h"
+#include "hpmpc/include/block_size.h"
+#include "hpmpc/include/aux_d.h"
+#include "hpmpc/include/aux_s.h"
+#include "hpmpc/include/blas_d.h"
+#include "hpmpc/include/lqcp_solvers.h"
+#include "hpmpc/include/mpc_solvers.h"
 
 // work space size
 int ocp_qp_hpmpc_workspace_size(int N, int *nx, int *nu, int *ng, int *nb,
