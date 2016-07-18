@@ -1,16 +1,16 @@
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #include "ocp_qp_condensing_qpoases.h"
 #include "condensing.h"
 
 /* qpOASES specifics */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wtypedef-redefinition"
-#pragma GCC diagnostic ignored "-Wtautological-pointer-compare"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtypedef-redefinition"
+#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wunused-function"
 #include "qpOASES_e/QProblem.h"
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 #define     NWSR_MAX    1000
 #define     LB_MIN      -10000
 #define     UB_MAX      10000
@@ -191,4 +191,4 @@ void initialise_ocp_qp_solver() {
     QProblemCON(&QP, NVC, NNN*NX, HST_UNKNOWN);
     QProblem_setPrintLevel(&QP, PL_TABULAR);
 }
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
