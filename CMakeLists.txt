@@ -6,10 +6,11 @@ set ( CMAKE_C_FLAGS "-std=c99 -O2 -Wall -Wextra -Werror" )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )
+include_directories ( "${PROJECT_SOURCE_DIR}/qpOASES/include/" )
 
 # Define .c source files
 file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
-set ( TEST_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_solver.c" )
+set ( TEST_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_hpmpc" )
 
 # Make hpmpc
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
