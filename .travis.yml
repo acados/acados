@@ -1,9 +1,12 @@
 # explicitly request container-based infrastructure
 sudo: false
 
+compiler: 
+ - clang
+
 env:
  # currently unused
- - CC=gcc
+ - CC=clang
 
 addons:
   apt:
