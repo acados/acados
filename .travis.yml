@@ -1,7 +1,8 @@
 # explicitly request container-based infrastructure
 sudo: false
 
-compiler: clang
+compiler: 
+ - clang
 
 env:
  # currently unused
