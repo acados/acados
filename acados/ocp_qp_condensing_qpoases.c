@@ -5,8 +5,8 @@
 
 /* qpOASES specifics */
 #pragma GCC diagnostic push
-// #pragma GCC diagnostic ignored "-Wtypedef-redefinition"
-// #pragma GCC diagnostic ignored "-Wtautological-pointer-compare"
+#pragma GCC diagnostic ignored "-Wtypedef-redefinition"
+#pragma GCC diagnostic ignored "-Wtautological-pointer-compare"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-function"
 #include "qpOASES_e/QProblem.h"
