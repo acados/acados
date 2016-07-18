@@ -25,6 +25,7 @@ static void propagateCU(real_t* C_, real_t* A_) {
     }
 }
 
+#if FIXED_INITIAL_STATE == 0
 static void propagateCX(real_t* C_, real_t* A_) {
     int i, j, k;
     for ( j = 0; j < NX; j++ ) {
@@ -49,6 +50,7 @@ static void computeWx(real_t* Q_, real_t* C_, real_t* A_) {
         }
     }
 }
+#endif
 
 static void computeWu(real_t* Q_, real_t* C_, real_t* A_) {
     int i, j , k;
@@ -64,6 +66,7 @@ static void computeWu(real_t* Q_, real_t* C_, real_t* A_) {
     }
 }
 
+#if FIXED_INITIAL_STATE == 0
 static void computeH_offDX(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
     int i, j , k;
     for ( j = 0; j < NX; j++ ) {
@@ -76,6 +79,7 @@ static void computeH_offDX(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
         }
     }
 }
+#endif
 
 static void computeH_offDU(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
     int i, j , k;
@@ -90,6 +94,7 @@ static void computeH_offDU(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
     }
 }
 
+#if FIXED_INITIAL_STATE == 0
 static void computeH_DX() {
     int i, j , k;
     for ( j = 0; j < NX; j++ ) {
@@ -109,6 +114,7 @@ static void computeH_DX() {
         }
     }
 }
+#endif
 
 static void computeH_DU(real_t* Hc_, real_t* R_, real_t* B_) {
     int i, j , k;
@@ -148,6 +154,7 @@ static void computeG_off(real_t* gc_, real_t* r_, real_t* S_, real_t* d_, real_t
     }
 }
 
+#if FIXED_INITIAL_STATE == 0
 static void computeG() {
     int i, j;
     /* x0 */
@@ -165,17 +172,20 @@ static void computeG() {
         }
     }
 }
+#endif
 
-// static void computeG_fixed_initial_state( real_t* Sx0 ) {
-//     int i, j;
-//     /* first control */
-//     for ( i = 0; i < NU; i++ ) data.gc[i] = data.g[NX+i];
-//     for ( j = 0; j < NX; j++ ) {
-//         for ( i = 0; i < NU; i++ ) {
-//             data.gc[i] += data.B[i*NX+j]*data.w2[j] + Sx0[i];
-//         }
-//     }
-// }
+#if FIXED_INITIAL_STATE == 1
+static void computeG_fixed_initial_state( real_t* Sx0 ) {
+    int i, j;
+    /* first control */
+    for ( i = 0; i < NU; i++ ) data.gc[i] = data.g[NX+i];
+    for ( j = 0; j < NX; j++ ) {
+        for ( i = 0; i < NU; i++ ) {
+            data.gc[i] += data.B[i*NX+j]*data.w2[j] + Sx0[i];
+        }
+    }
+}
+#endif
 
 /* This contains an implementation of our block condensing algorithm. */
 void block_condensing() {
@@ -183,6 +193,7 @@ void block_condensing() {
 
     /* Copy bound values */
     #if FIXED_INITIAL_STATE == 1
+    int_t k;
     offset = 0;
     real_t x0[NX] = {0};
     // Read x0 from lower bound (= upper bound)

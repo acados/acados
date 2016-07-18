@@ -1,28 +1,3 @@
-/**************************************************************************************************
-*                                                                                                 *
-* This file is part of HPMPC.                                                                     *
-*                                                                                                 *
-* HPMPC -- Library for High-Performance implementation of solvers for MPC.                        *
-* Copyright (C) 2014-2015 by Technical University of Denmark. All rights reserved.                *
-*                                                                                                 *
-* HPMPC is free software; you can redistribute it and/or                                          *
-* modify it under the terms of the GNU Lesser General Public                                      *
-* License as published by the Free Software Foundation; either                                    *
-* version 2.1 of the License, or (at your option) any later version.                              *
-*                                                                                                 *
-* HPMPC is distributed in the hope that it will be useful,                                        *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of                                  *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                                            *
-* See the GNU Lesser General Public License for more details.                                     *
-*                                                                                                 *
-* You should have received a copy of the GNU Lesser General Public                                *
-* License along with HPMPC; if not, write to the Free Software                                    *
-* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA                  *
-*                                                                                                 *
-* Author: Gianluca Frison, giaf (at) dtu.dk                                                       *
-*                                                                                                 *
-**************************************************************************************************/
-
 // define problems size
 #define NX 8
 #define NU 3
@@ -31,11 +6,8 @@
 #define NG 0
 #define NGN 8
 
-// define IP solver arguments && number of repetitions
-#define NREP 1000
-#define MAXITER 10
-#define TOL 1e-8
-#define MINSTEP 1e-8
+// define number of repetitions
+#define NREP 1
 
 // system headers
 #include <stdlib.h>
@@ -44,22 +16,11 @@
 #include <sys/time.h>
 
 // ACADOS headers
-#include "acados/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp_condensing_qpoases.h"
 #include "acados/tools.h"
 
-// HPMPC headers
+#include "acados/ocp_qp_condensing_qpoases.h"
 #include "hpmpc/include/aux_d.h"
-#include "hpmpc/include/mpc_solvers.h"
-#include "hpmpc/include/target.h"
-#include "hpmpc/include/block_size.h"
-#include "hpmpc/include/c_interface.h"
-
-// flush denormals to zero
-#if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
-    defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
-    defined(TARGET_AMD_SSE3)
-#include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
-#endif
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -150,31 +111,6 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
 }
 
 int main() {
-    printf("\n");
-    printf("\n");
-    printf("\n");
-    printf(
-        " HPMPC -- Library for High-Performance implementation of solvers for "
-        "MPC.\n");
-    printf(
-        " Copyright (C) 2014-2015 by Technical University of Denmark. All "
-        "rights reserved.\n");
-    printf("\n");
-    printf(" HPMPC is distributed in the hope that it will be useful,\n");
-    printf(" but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
-    printf(" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
-    printf(" See the GNU Lesser General Public License for more details.\n");
-    printf("\n");
-    printf("\n");
-    printf("\n");
-
-#if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
-    defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
-    defined(TARGET_AMD_SSE3)
-    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);  // flush to zero subnormals !!!
-                                                 // works only with one thread
-                                                 // !!!
-#endif
 
     int ii, jj;
 
@@ -218,18 +154,6 @@ int main() {
         " MPC problem size: %d states, %d inputs, %d horizon length, %d "
         "two-sided box constraints, %d two-sided general constraints.\n",
         nx, nu, N, nb, ng);
-    printf("\n");
-    printf(
-        " IP method parameters: predictor-corrector IP, double precision, %d "
-        "maximum iterations, %5.1e exit tolerance in duality measure.\n",
-        MAXITER, TOL);
-    printf("\n");
-#if defined(TARGET_X64_AVX2)
-    printf(" HPMPC built for the AVX2 architecture\n");
-#endif
-#if defined(TARGET_X64_AVX)
-    printf(" HPMPC built for the AVX architecture\n");
-#endif
     printf("\n");
 
     /************************************************
@@ -461,41 +385,38 @@ int main() {
     ************************************************/
 
     // solver arguments
-    struct ocp_qp_hpmpc_args args;
-    args.tol = TOL;
-    args.max_iter = MAXITER;
-    args.min_step = MINSTEP;
-    args.mu0 = 0.0;
-    args.sigma_min = 1e-3;
+    struct ocp_qp_condensing_qpoases_args args;
+    args.dummy = 42.0;
 
     /************************************************
     * work space
     ************************************************/
 
-    int work_space_size =
-        ocp_qp_hpmpc_workspace_size(N, nxx, nuu, nbb, ngg, &args);
-    printf("\nwork space size: %d bytes\n", work_space_size);
+    // int work_space_size =
+        // ocp_qp_hpmpc_workspace_size(N, nxx, nuu, nbb, ngg, &args);
+    // printf("\nwork space size: %d bytes\n", work_space_size);
 
-    double *work = (double *)malloc(work_space_size);
+    // double *work = (double *)malloc(work_space_size);
 
     /************************************************
     * call the solver
     ************************************************/
 
     int return_value;
+    initialise_qpoases();
 
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
+        return_value = ocp_qp_condensing_qpoases(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
                                     hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg,
-                                    hug, hx, hu, &args, work);
+                                    hug, hx, hu, &args, NULL);
     }
 
     gettimeofday(&tv1, NULL);  // stop
-
+    printf("%d\n", return_value);
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found\n");
 
@@ -559,8 +480,6 @@ int main() {
         d_free(hu[ii]);
     }
     d_free(hx[N]);
-
-    free(work);
 
     return 0;
 }

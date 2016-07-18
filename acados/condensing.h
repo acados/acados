@@ -3,7 +3,7 @@
 
 #include "acados_types.h"
 
-#define FIXED_INITIAL_STATE 0
+#define FIXED_INITIAL_STATE 1
 #if FIXED_INITIAL_STATE == 1
 #define NVC 60
 #else

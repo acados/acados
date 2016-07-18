@@ -60,6 +60,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, data.lbA, NNN*NX);
     write_array_to_file(outFile, data.ubA, NNN*NX);
     write_array_to_file(outFile, data.C, NNN*NX*NVC);
+    write_array_to_file(outFile, data.d, NNN*NX);
 }
 
 int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng, \
@@ -110,11 +111,11 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         }
         start_of_current_block += nx[i+1]*nx[i+1];
     }
-    data.A[0] = 1;
-    data.A[2] = 1;
-    data.A[3] = 1;
-    data.Q[0] = 1;
-    data.Q[3] = 1;
+
+    //TODO(robin): Are the following 2 lines necessary?
+    for (int_t i = 0; i < nx[1]*nx[1]; i++) data.A[i] = A[0][i];
+    for (int_t i = 0; i < nx[1]*nx[1]; i++) data.Q[i] = Q[0][i];
+
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < nx[i+1]; j++) data.b[i*NX+j] = b[i][j];
     }
@@ -165,10 +166,17 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
             data.Hc[i*num_condensed_vars+j] = data.Hc[j*num_condensed_vars+i];
         }
     }
-    return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
+    write_QP_data_to_file();
+
+    /* return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
                         &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \
-                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL);
+                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL);*/
+    return_flag = QProblem_init(&QP, &(data.Hc[0]), &(data.gc[0]), NULL, NULL, \
+                        NULL, NULL, NULL, \
+                        &nwsr, &cput);
     QProblem_getPrimalSolution(&QP, &(qp_sol[0]));
+
+    for (int_t i = 0; i < NN*NU; i++) printf("%f \n", qp_sol[i]);
     // Recover state trajectory
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++) {
@@ -187,8 +195,8 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
     return return_flag;
 }
 
-void initialise_ocp_qp_solver() {
-    QProblemCON(&QP, NVC, NNN*NX, HST_UNKNOWN);
+void initialise_qpoases() {
+    QProblemCON(&QP, NVC, NNN*NX, HST_POSDEF);
     QProblem_setPrintLevel(&QP, PL_TABULAR);
 }
 #pragma clang diagnostic pop
