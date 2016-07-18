@@ -10,13 +10,14 @@ env:
 
 addons:
   apt:
-#    sources:
+    sources:
+      - llvm-toolchain-precise-3.7
     packages:
-    - libgsl0-dev
-    - liblapack-dev
-    - cppcheck
-    - cmake
-    - clang-3.7
+      - libgsl0-dev
+      - liblapack-dev
+      - cppcheck
+      - cmake
+      - clang-3.7
 
 script:
  - git submodule init
