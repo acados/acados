@@ -112,7 +112,7 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         start_of_current_block += nx[i+1]*nx[i+1];
     }
 
-    //TODO(robin): Are the following 2 lines necessary?
+    // TODO(robin): Are the following 2 lines necessary?
     for (int_t i = 0; i < nx[1]*nx[1]; i++) data.A[i] = A[0][i];
     for (int_t i = 0; i < nx[1]*nx[1]; i++) data.Q[i] = Q[0][i];
 
@@ -170,7 +170,7 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
 
     /* return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
                         &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \
-                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL);*/
+                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL); */
     return_flag = QProblem_init(&QP, &(data.Hc[0]), &(data.gc[0]), NULL, NULL, \
                         NULL, NULL, NULL, \
                         &nwsr, &cput);

@@ -175,7 +175,7 @@ static void computeG() {
 #endif
 
 #if FIXED_INITIAL_STATE == 1
-static void computeG_fixed_initial_state( real_t* Sx0 ) {
+static void computeG_fixed_initial_state(real_t* Sx0) {
     int i, j;
     /* first control */
     for ( i = 0; i < NU; i++ ) data.gc[i] = data.g[NX+i];
