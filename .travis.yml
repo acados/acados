@@ -1,12 +1,12 @@
 # explicitly request container-based infrastructure
 sudo: false
 
-compiler: 
- - clang
+compiler:
+ - clang-3.7
 
 env:
  # currently unused
- - CC=clang
+ - CC=clang-3.7
 
 addons:
   apt:
@@ -16,6 +16,7 @@ addons:
     - liblapack-dev
     - cppcheck
     - cmake
+    - clang-3.7
 
 script:
  - git submodule init

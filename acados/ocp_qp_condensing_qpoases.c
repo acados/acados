@@ -5,7 +5,10 @@
 
 /* qpOASES specifics */
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Weverything"
+#pragma clang diagnostic ignored "-Wtypedef-redefinition"
+#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wunused-function"
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
 #define     NWSR_MAX    1000
