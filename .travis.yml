@@ -6,6 +6,7 @@ compiler:
 
 env:
  # currently unused
+ - CC=clang
 
 addons:
   apt:
