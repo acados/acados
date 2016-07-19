@@ -152,7 +152,7 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
     // SOLVE QP
     int_t num_condensed_vars = get_num_condensed_vars(NN, nx, nu);
     nwsr = NWSR_MAX;
-    cput = 10000000.0;
+    cput = 100.0;
     // Convert C to row major in A
     for (int_t i = 0; i < NN*NX; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
@@ -166,12 +166,9 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         }
     }
 
-    /* return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
+    return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
                         &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \
-                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL); */
-    return_flag = QProblem_init(&QP, &(data.Hc[0]), &(data.gc[0]), NULL, NULL, \
-                        NULL, NULL, NULL, \
-                        &nwsr, &cput);
+                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL);
     QProblem_getPrimalSolution(&QP, &(qp_sol[0]));
 
     // Recover state trajectory
