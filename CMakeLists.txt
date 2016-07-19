@@ -13,7 +13,7 @@ file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_hpmpc" )
 set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_condensing_qpoases" )
 
-# Make static libraries
+# Make libraries
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/qpOASES make )
 
