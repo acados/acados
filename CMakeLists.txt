@@ -2,7 +2,7 @@ cmake_minimum_required ( VERSION 2.6 )
 project ( ACADOS )
 
 set ( CMAKE_VERBOSE_MAKEFILE ON )
-set ( CMAKE_C_FLAGS "-std=c99 -O2 -Wall -Wextra -Werror" )
+set ( CMAKE_C_FLAGS "-std=c99 -g -Wall -Wextra -Werror" )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )

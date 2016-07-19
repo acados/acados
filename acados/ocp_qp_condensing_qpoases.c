@@ -73,7 +73,6 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
 
     int_t return_flag = -1;
     int_t num_opt_vars = get_num_opt_vars(NN, nx, nu);
-    printf("%s%d\n", "Number of optimization variables: ", num_opt_vars);
     /* FILL IN CONDENSING VARIABLES */
     memset(&data, 0, sizeof(data_struct));  // Condensing implicitly assumes zeros initialisation
     // OBJECTIVE
@@ -153,7 +152,7 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
     // SOLVE QP
     int_t num_condensed_vars = get_num_condensed_vars(NN, nx, nu);
     nwsr = NWSR_MAX;
-    cput = 1000.0;
+    cput = 10000000.0;
     // Convert C to row major in A
     for (int_t i = 0; i < NN*NX; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
@@ -166,7 +165,6 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
             data.Hc[i*num_condensed_vars+j] = data.Hc[j*num_condensed_vars+i];
         }
     }
-    write_QP_data_to_file();
 
     /* return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
                         &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \
@@ -176,10 +174,10 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
                         &nwsr, &cput);
     QProblem_getPrimalSolution(&QP, &(qp_sol[0]));
 
-    for (int_t i = 0; i < NN*NU; i++) printf("%f \n", qp_sol[i]);
     // Recover state trajectory
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++) {
+            x[i+1][j] = 0.0;
             for (int_t k = 0; k < NVC; k++) {
                 x[i+1][j] = x[i+1][j] + data.C[i*NX+j+k*NN*NX]*qp_sol[k];
             }
@@ -196,7 +194,8 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
 }
 
 void initialise_qpoases() {
-    QProblemCON(&QP, NVC, NNN*NX, HST_POSDEF);
-    QProblem_setPrintLevel(&QP, PL_TABULAR);
+    QProblemCON(&QP, NVC, 0, HST_POSDEF);
+    QProblem_setPrintLevel(&QP, PL_NONE);
+    QProblem_printProperties(&QP);
 }
 #pragma clang diagnostic pop

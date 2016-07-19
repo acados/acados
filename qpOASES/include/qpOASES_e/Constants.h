@@ -57,10 +57,10 @@ BEGIN_NAMESPACE_QPOASES
 
 #ifndef __EXTERNAL_DIMENSIONS__
 
-  #define QPOASES_NVMAX  50
-  #define QPOASES_NCMAX  100
-  /*#define QPOASES_NVMAX  287
-  #define QPOASES_NCMAX  709*/
+  /*#define QPOASES_NVMAX  50
+  #define QPOASES_NCMAX  100*/
+  #define QPOASES_NVMAX  287
+  #define QPOASES_NCMAX  709
 
 #endif /* __EXTERNAL_DIMENSIONS__ */
 
