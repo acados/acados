@@ -416,7 +416,6 @@ int main() {
     }
 
     gettimeofday(&tv1, NULL);  // stop
-    printf("%d\n", return_value);
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found\n");
 
