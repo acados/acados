@@ -2,8 +2,6 @@
 
 extern data_struct data;
 
-extern void printMatrix(const char* name, real_t* mat, unsigned nRows, unsigned nCols);
-
 static void propagatec(real_t* d_, real_t* A_, real_t* b_) {
     int i, j;
     for ( j = 0; j < NX; j++ ) {

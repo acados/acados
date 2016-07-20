@@ -72,7 +72,6 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
     struct ocp_qp_condensing_qpoases_args *args, double *work) {
 
     int_t return_flag = -1;
-    int_t num_opt_vars = get_num_opt_vars(NN, nx, nu);
     /* FILL IN CONDENSING VARIABLES */
     memset(&data, 0, sizeof(data_struct));  // Condensing implicitly assumes zeros initialisation
     // OBJECTIVE
@@ -111,10 +110,6 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         start_of_current_block += nx[i+1]*nx[i+1];
     }
 
-    // TODO(robin): Are the following 2 lines necessary?
-    for (int_t i = 0; i < nx[1]*nx[1]; i++) data.A[i] = A[0][i];
-    for (int_t i = 0; i < nx[1]*nx[1]; i++) data.Q[i] = Q[0][i];
-
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < nx[i+1]; j++) data.b[i*NX+j] = b[i][j];
     }
@@ -128,23 +123,24 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         start_of_current_block += nu[i]*nx[i+1];
     }
     // BOUNDS
-    for (int_t i = 0; i < num_opt_vars+NX; i++) {
-        data.lb[i] = LB_MIN;
-        data.ub[i] = UB_MAX;
+    for (int_t j = 0; j < nu[0]; j++) {
+        data.lb[NX+idxb[0][j]] = lb[0][idxb[0][j]];
+        data.ub[NX+idxb[0][j]] = ub[0][idxb[0][j]];
     }
-    // for (int_t i = 0; i < NN; i++) {
-    //     for (int_t j = 0; j < nb[i]; j++) {
-    //         // the interface assumes [u,x] ordering
-    //         data.lb[i*(nx[i]+nu[i])+idxb[i][j]] = lb[i][idxb[i][j]];
-    //         data.ub[idxb[i][j]] = lb[i][idxb[i][j]];
-    //     }
-    // }
-    if (nx[0] == 0) {
-        // Initial state fixed
-        for (int_t i = 0; i < nx[1]; i++) {
-            data.lb[i] = 0;
-            data.ub[i] = 0;
+    for (int_t i = 1; i < NN; i++) {
+        for (int_t j = 0; j < nu[i]; j++) {
+            // the interface assumes [u,x] ordering
+            data.lb[NX+i*(nu[i]+nx[i])+idxb[i][j]] = lb[i][idxb[i][j]];
+            data.ub[NX+i*(nu[i]+nx[i])+idxb[i][j]] = ub[i][idxb[i][j]];
         }
+        for (int_t j = nu[i]; j < nb[i]; j++) {
+            data.lb[-NU+i*(nu[i]+nx[i])+idxb[i][j]] = lb[i][idxb[i][j]];
+            data.ub[-NU+i*(nu[i]+nx[i])+idxb[i][j]] = ub[i][idxb[i][j]];
+        }
+    }
+    for (int_t j = 0; j < nb[NN]; j++) {
+        data.lb[NN*(NX+NU)+idxb[NN][j]] = lb[NN][idxb[NN][j]];
+        data.ub[NN*(NX+NU)+idxb[NN][j]] = ub[NN][idxb[NN][j]];
     }
     // POLYTOPIC CONSTRAINTS: TODO
     block_condensing();
@@ -165,6 +161,8 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
             data.Hc[i*num_condensed_vars+j] = data.Hc[j*num_condensed_vars+i];
         }
     }
+
+    write_QP_data_to_file();
 
     return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
                         &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \

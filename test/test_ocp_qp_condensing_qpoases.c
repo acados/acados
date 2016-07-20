@@ -7,7 +7,7 @@
 #define NGN 8
 
 // define number of repetitions
-#define NREP 1000
+#define NREP 1
 
 // system headers
 #include <stdlib.h>
@@ -208,8 +208,8 @@ int main() {
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
     for (jj = 0; jj < nbu; jj++) {
-        lb0[jj] = -0.5e8;  //   umin
-        ub0[jj] = 0.5e8;   //   umax
+        lb0[jj] = -0.5;  //   umin
+        ub0[jj] = 0.5;   //   umax
         idxb0[jj] = jj;
     }
     //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
@@ -221,13 +221,13 @@ int main() {
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
     for (jj = 0; jj < nbu; jj++) {
-        lb1[jj] = -0.5e8;  //   umin
-        ub1[jj] = 0.5e8;   //   umax
+        lb1[jj] = -0.5;  //   umin
+        ub1[jj] = 0.5;   //   umax
         idxb1[jj] = jj;
     }
     for (; jj < nb; jj++) {
-        lb1[jj] = -4.0e8;  //   umin
-        ub1[jj] = 4.0e8;   //   umax
+        lb1[jj] = -4.0;  //   xmin
+        ub1[jj] = 4.0;   //   xmax
         idxb1[jj] = jj;
     }
     //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
@@ -239,8 +239,8 @@ int main() {
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
     for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0e8;  //   umin
-        ubN[jj] = 4.0e8;   //   umax
+        lbN[jj] = -4.0;  //   umin
+        ubN[jj] = 4.0;   //   umax
         idxbN[jj] = jj;
     }
     //    i_print_mat(nbb[N], 1, idxb1, nbb[N]);
@@ -416,14 +416,6 @@ int main() {
     }
 
     gettimeofday(&tv1, NULL);  // stop
-    if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found\n");
-
-    if (return_value == ACADOS_MAXITER)
-        printf("\nACADOS status: maximum number of iterations reached\n");
-
-    if (return_value == ACADOS_MINSTEP)
-        printf("\nACADOS status: below minimum step size length\n");
 
     printf("\nu = \n");
     for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
@@ -437,6 +429,10 @@ int main() {
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
     printf("\n\n");
+
+    if (return_value != 0) {
+        printf("\n qpOASES error ! No. %d\n", return_value);
+    }
 
     /************************************************
     * free memory
