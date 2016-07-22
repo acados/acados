@@ -19,9 +19,9 @@ typedef struct data_struct_ {
     real_t Q[(NNN+1)*NX*NX];
     real_t R[NNN*NU*NU];
     real_t S[NNN*NX*NU];
+    real_t g[NNN*(NX+NU)+NX];
     real_t A[NNN*NX*NX];
     real_t B[NNN*NX*NU];
-    real_t g[NNN*(NX+NU)+NX];
     real_t b[NNN*NX];
     real_t lb[NNN*(NX+NU)+NX];
     real_t ub[NNN*(NX+NU)+NX];
@@ -33,7 +33,7 @@ typedef struct data_struct_ {
     real_t ubA[NNN*NX];
     real_t lbU[NVC];
     real_t ubU[NVC];
-    real_t C[NNN*NX*NVC];
+    real_t G[NNN*NX*NVC];
     real_t d[NNN*NX];
     real_t W1_x[NX*NX];
     real_t W2_x[NX*NX];

@@ -2,13 +2,13 @@
 
 extern data_struct data;
 
-static void propagatec(real_t* d_, real_t* A_, real_t* b_) {
+static void construct_g_row(real_t* g_, real_t* A_, real_t* c_) {
     int i, j;
     for ( j = 0; j < NX; j++ ) {
         for ( i = 0; i < NX; i++ ) {
-            d_[i] += A_[j*NX+i]*d_[j-NX];
+            g_[i] += A_[j*NX+i]*g_[j-NX];
         }
-        d_[j] += b_[j];
+        g_[j] += c_[j];
     }
 }
 
@@ -161,25 +161,33 @@ static void computeG_fixed_initial_state(real_t* x0) {
     }
 }
 
-void propagate_C(int_t j, int_t offset) {
+void construct_G_column(int_t j, int_t offset) {
     for ( int_t c = 0; c < NU; c++ ) {
         for ( int_t r = 0; r < NX; r++ ) {
-            data.C[(offset+j*NU+c)*NNN*NX+j*NX+r] = data.B[j*NX*NU+c*NX+r]; /* B_j */
+            data.G[(offset+j*NU+c)*NNN*NX+j*NX+r] = data.B[j*NX*NU+c*NX+r];
         }
     }
     for ( int_t i = j+1; i < NNN; i++ ) {
         /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
-        propagateCU(&data.C[(offset+j*NU)*NNN*NX+i*NX], &data.A[i*NX*NX]);
+        propagateCU(&data.G[(offset+j*NU)*NNN*NX+i*NX], &data.A[i*NX*NX]);
     }
 }
 
 void set_bounds() {
     /* correct lbA and ubA with d values */
+    int_t NA = 0;
     for ( int_t i = 0; i < NNN; i++ ) {
         for ( int_t j = 0; j < NX; j++ ) {
-            data.lbA[i*NX+j] = data.lb[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
-            data.ubA[i*NX+j] = data.ub[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
+            // State simple bounds
+            data.lbA[i*(NX+NA)+j] = data.lb[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
+            data.ubA[i*(NX+NA)+j] = data.ub[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
         }
+        // Sample code for polytopic constraints
+        // for ( int_t j = 0; j < NA; j++ ) {
+        //     // State simple bounds
+        //     data.lbA[NX+i*(NX+NA)+j] = data.lbA[(i+1)*(NX+NU)+j] - D*data.d[i*NX+j];
+        //     data.ubA[NX+i*(NX+NA)+j] = data.ubA[(i+1)*(NX+NU)+j] - D*data.d[i*NX+j];
+        // }
     }
 }
 
@@ -189,11 +197,11 @@ void propagate_controls_to_H(int_t offset) {
     for ( j = 0; j < NNN; j++ ) {
         for ( i = 0; i < NX*NU; i++ ) data.W2_u[i] = 0.0;
         /* A is unused here because W is zero */
-        computeWu(&data.Q[NNN*NX*NX], &data.C[(offset+j*NU)*NNN*NX+(NNN-1)*NX], &data.A[0]);
+        computeWu(&data.Q[NNN*NX*NX], &data.G[(offset+j*NU)*NNN*NX+(NNN-1)*NX], &data.A[0]);
         for ( i = NNN-1; i > j; i-- ) {
             computeH_offDU(&data.Hc[(offset+j*NU)*NVC+offset+i*NU], &data.S[i*NX*NU], \
-                    &data.C[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.B[i*NX*NU]);
-            computeWu(&data.Q[i*NX*NX], &data.C[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.A[i*NX*NX]);
+                    &data.G[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.B[i*NX*NU]);
+            computeWu(&data.Q[i*NX*NX], &data.G[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.A[i*NX*NX]);
         }
         computeH_DU(&data.Hc[(offset+j*NU)*NVC+offset+j*NU], &data.R[j*NU*NU], &data.B[j*NX*NU]);
     }
@@ -208,14 +216,25 @@ void propagate_to_G(int_t offset) {
     }
 }
 
-void condensingN2_fixed_initial_state() {
-    int_t i, j, offset;
+void calculate_G(int_t offset) {
+    for ( int_t j = 0; j < NNN; j++ ) {
+        construct_G_column(j, offset);
+    }
+}
 
-    /* Copy bound values */
-    int_t k;
-    offset = 0;
+void calculate_g() {
+    for ( int_t k = 0; k < NX; k++ ) data.d[k] = data.b[k];
+    for ( int_t j = 1; j < NNN; j++ ) {
+        construct_g_row(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+        // TODO(robin): for ( i = 0; i < NX; i++ ) data.d[k] += data.A[i*NX+k]*x0[i];
+    }
+}
+
+void condensingN2_fixed_initial_state() {
+    int_t i, j;
+    int_t offset = 0;
     real_t x0[NX] = {0};
-    // Read x0 from lower bound (= upper bound)
+    // Fix x0 to lower bound (== upper bound)
     for ( i = 0; i < NX; i++ ) x0[i] = data.lb[i];
     for ( i = 0; i < NNN; i++ ) {
         for ( j = 0; j < NU; j++ ) {
@@ -224,18 +243,8 @@ void condensingN2_fixed_initial_state() {
         }
     }
 
-    /* propagate controls: */
-    for ( j = 0; j < NNN; j++ ) {
-        propagate_C(j, offset);
-        if ( j > 0 ) {
-            propagatec(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
-        } else {
-            for ( k = 0; k < NX; k++ ) {
-                data.d[k] = data.b[k];
-                for ( i = 0; i < NX; i++ ) data.d[k] += data.A[i*NX+k]*x0[i];
-            }
-        }
-    }
+    calculate_G(offset);
+    calculate_g();
 
     set_bounds();
 
@@ -253,21 +262,21 @@ void propagate_x0_to_G() {
     /* propagate x0: */
     for ( j = 0; j < NX; j++ ) {
         for ( i = 0; i < NX; i++ ) {
-            data.C[j*NNN*NX+i] = data.A[j*NX+i]; /* A_0 */
+            data.G[j*NNN*NX+i] = data.A[j*NX+i]; /* A_0 */
         }
     }
     for ( i = 1; i < NNN; i++ ) {
-        propagateCX(&data.C[i*NX], &data.A[i*NX*NX]); /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
+        propagateCX(&data.G[i*NX], &data.A[i*NX*NX]); /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
     }
 }
 
 void propagate_x0_to_H() {
     /* propagate x0: */
     /* A is unused for this operation because the W's are zero */
-    computeWx(&data.Q[NNN*NX*NX], &data.C[(NNN-1)*NX], &data.A[0]);
+    computeWx(&data.Q[NNN*NX*NX], &data.G[(NNN-1)*NX], &data.A[0]);
     for ( int_t i = NNN-1; i > 0; i-- ) {
-        computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &data.C[(i-1)*NX], &data.B[i*NX*NU]);
-        computeWx(&data.Q[i*NX*NX], &data.C[(i-1)*NX], &data.A[i*NX*NX]);
+        computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &data.G[(i-1)*NX], &data.B[i*NX*NU]);
+        computeWx(&data.Q[i*NX*NX], &data.G[(i-1)*NX], &data.A[i*NX*NX]);
     }
     computeH_DX();
 }
@@ -308,9 +317,9 @@ void condensingN2_free_initial_state() {
     propagate_x0_to_G();
     /* propagate controls: */
     for ( j = 0; j < NNN; j++ ) {
-        propagate_C(j, offset);
+        construct_G_column(j, offset);
         if ( j > 0 ) {
-            propagatec(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+            construct_g_row(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
         } else {
             for ( i = 0; i < NX; i++ ) data.d[i] = data.b[i];
         }

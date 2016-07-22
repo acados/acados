@@ -12,13 +12,12 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
-#define     NWSR_MAX    1000
 QProblem    QP;
 real_t      _A[NNN*NX*NVC] = {0};
 real_t      cput;
 int_t       nwsr;
-real_t      qp_sol[NVC]                     = {0};  // QP primal solution vector
-real_t      y[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solution vector
+real_t      primal_solution[NVC]                     = {0};  // QP primal solution vector
+real_t      dual_solution[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solution vector
 /* condensing specifics */
 data_struct data = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, \
                     {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}};
@@ -58,22 +57,12 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, data.ubU, NVC);
     write_array_to_file(outFile, data.lbA, NNN*NX);
     write_array_to_file(outFile, data.ubA, NNN*NX);
-    write_array_to_file(outFile, data.C, NNN*NX*NVC);
+    write_array_to_file(outFile, data.G, NNN*NX*NVC);
     write_array_to_file(outFile, data.d, NNN*NX);
 }
 
-int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng, \
-    double **A, double **B, double **b, \
-    double **Q, double **S, double **R, double **q, double **r, \
-    int_t **idxb, double **lb, double **ub, \
-    double **C, double **D, double **ld, double **ud, \
-    double **x, double **u, \
-    struct ocp_qp_condensing_qpoases_args *args, double *work) {
-
-    int_t return_flag = -1;
-    /* FILL IN CONDENSING VARIABLES */
-    memset(&data, 0, sizeof(data_struct));  // Condensing implicitly assumes zeros initialisation
-    // OBJECTIVE
+static void fill_in_objective_variables(int_t NN, int_t* nx, int_t* nu,
+    real_t** Q, real_t** S, real_t** R, real_t** q, real_t** r) {
     for (int_t i = 0; i < NN+1; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) data.Q[i*NX*NX+j*NX+k] = Q[i][j*NX+k];
@@ -98,8 +87,11 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         start_of_current_block += (NX + NU);
     }
     for (int_t j = 0; j < nx[NNN]; j++) data.g[NNN*(NX+NU)+j] = q[NNN][j];
-    // DYNAMICS
-    start_of_current_block = 0;
+}
+
+static void fill_in_dynamics(int_t NN, int_t* nx, int_t* nu,
+    real_t** A, real_t** B, real_t** b) {
+    int_t start_of_current_block = 0;
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i+1]; k++) {
@@ -121,7 +113,10 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         }
         start_of_current_block += nu[i]*nx[i+1];
     }
-    // BOUNDS
+}
+
+static void fill_in_bounds(int_t NN, int_t* nx, int_t* nu, int_t* nb,
+    int_t** idxb, real_t** lb, real_t** ub) {
     for (int_t j = 0; j < nu[0]; j++) {
         data.lb[NX+idxb[0][j]] = lb[0][idxb[0][j]];
         data.ub[NX+idxb[0][j]] = ub[0][idxb[0][j]];
@@ -141,47 +136,82 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         data.lb[NN*(NX+NU)+idxb[NN][j]] = lb[NN][idxb[NN][j]];
         data.ub[NN*(NX+NU)+idxb[NN][j]] = ub[NN][idxb[NN][j]];
     }
-    // POLYTOPIC CONSTRAINTS: TODO
+}
+
+static void fill_in_polytopic_constraints() {
+    // TODO(robin):
+}
+
+static void fill_data_for_condensing(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng, \
+    double **A, double **B, double **b, \
+    double **Q, double **S, double **R, double **q, double **r, \
+    int_t **idxb, double **lb, double **ub) {
+    // Condensing implicitly assumes zeros initialisation
+    memset(&data, 0, sizeof(data_struct));
+    fill_in_objective_variables(NN, nx, nu, Q, S, R, q, r);
+    fill_in_dynamics(NN, nx, nu, A, B, b);
+    fill_in_bounds(NN, nx, nu, nb, idxb, lb, ub);
+    fill_in_polytopic_constraints();
+}
+
+static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solution) {
+    nwsr = 1000;
+    cput = 100.0;
+
+    int_t return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]),
+                        &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]),
+                        &nwsr, &cput, NULL, dual_solution, NULL, NULL, NULL);
+    QProblem_getPrimalSolution(&QP, primal_solution);
+    QProblem_getDualSolution(&QP, dual_solution);
+    return return_flag;
+}
+
+static void recover_state_trajectory(int_t NN,
+    real_t** x, real_t** u, real_t* primal_solution) {
+    for (int_t i = 0; i < NN; i++) {
+        for (int_t j = 0; j < NX; j++) {
+            x[i+1][j] = 0.0;
+            for (int_t k = 0; k < NVC; k++) {
+                x[i+1][j] = x[i+1][j] + data.G[i*NX+j+k*NN*NX]*primal_solution[k];
+            }
+            x[i+1][j] = x[i+1][j] + data.d[i*NX+j];
+        }
+        #if FIXED_INITIAL_STATE == 1
+        for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[i*NU+j];
+        #else
+        for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
+        #endif
+    }
+}
+
+int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng,
+    double **A, double **B, double **b,
+    double **Q, double **S, double **R, double **q, double **r,
+    int_t **idxb, double **lb, double **ub,
+    double **C, double **D, double **ld, double **ud,
+    double **x, double **u,
+    struct ocp_qp_condensing_qpoases_args *args, double *work) {
+
+    fill_data_for_condensing(NN, nx, nu, nb, ng, A, B, b,
+    Q, S, R, q, r, idxb, lb, ub);
     condensingN2_fixed_initial_state();
 
-    // SOLVE QP
+    // Symmetrize H
     int_t num_condensed_vars = get_num_condensed_vars(NN, nx, nu);
-    nwsr = NWSR_MAX;
-    cput = 100.0;
-    // Convert C to row major in A
-    for (int_t i = 0; i < NN*NX; i++) {
-        for (int_t j = 0; j < num_condensed_vars; j++) {
-            _A[i*num_condensed_vars+j] = data.C[j*NN*NX+i];
-        }
-    }
-    // Symmetrize Hc
     for (int_t i = 1; i < num_condensed_vars; i++) {
         for (int_t j = 0; j < i; j++) {
             data.Hc[i*num_condensed_vars+j] = data.Hc[j*num_condensed_vars+i];
         }
     }
-
-    return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
-                        &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \
-                        &nwsr, &cput, NULL, &(y[0]), NULL, NULL, NULL);
-    QProblem_getPrimalSolution(&QP, &(qp_sol[0]));
-
-    // Recover state trajectory
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < NX; j++) {
-            x[i+1][j] = 0.0;
-            for (int_t k = 0; k < NVC; k++) {
-                x[i+1][j] = x[i+1][j] + data.C[i*NX+j+k*NN*NX]*qp_sol[k];
-            }
-            x[i+1][j] = x[i+1][j] + data.d[i*NX+j];
+    // Convert C to row major in A
+    for (int_t i = 0; i < NN*NX; i++) {
+        for (int_t j = 0; j < num_condensed_vars; j++) {
+            _A[i*num_condensed_vars+j] = data.G[j*NN*NX+i];
         }
-        #if FIXED_INITIAL_STATE == 1
-        for (int_t j = 0; j < NU; j++) u[i][j] = qp_sol[i*NU+j];
-        #else
-        for (int_t j = 0; j < NU; j++) u[i][j] = qp_sol[NX+i*NU+j];
-        #endif
     }
-    QProblem_getDualSolution(&QP, &(y[0]));
+    int_t return_flag = solve_QP(QP, &(primal_solution[0]), &(dual_solution[0]));
+    recover_state_trajectory(NN, x, u, &(primal_solution[0]));
+
     return return_flag;
 }
 

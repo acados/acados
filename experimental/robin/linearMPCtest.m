@@ -58,3 +58,5 @@ ub = -lb;
 w = quadprog(H,f,[],[],G,-g,lb,ub);
 
 XU = reshape([w;zeros(nu,1)],nx+nu,N+1).'
+
+figure(1);plot(XU(:,1:2:7))
