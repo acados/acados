@@ -180,10 +180,10 @@ int main() {
     x0[0] = 2.5;
     x0[1] = 2.5;
 
-    //    d_print_mat(nx, nx, A, nx);
-    //    d_print_mat(nx, nu, B, nx);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, x0, nx);
+       d_print_mat(nx, nx, A, nx);
+       d_print_mat(nx, nu, B, nx);
+       d_print_mat(nx, 1, b, nx);
+       d_print_mat(nx, 1, x0, nx);
 
     // compute b0 = b + A*x0
     double *b0;

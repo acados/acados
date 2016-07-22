@@ -43,6 +43,8 @@ typedef struct data_struct_ {
     real_t w2[NX];
 } data_struct;
 
-void block_condensing();
+void condensingN2_fixed_initial_state();
+
+void condensingN2_free_initial_state();
 
 #endif  // CONDENSING_H

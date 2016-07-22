@@ -23,7 +23,6 @@ static void propagateCU(real_t* C_, real_t* A_) {
     }
 }
 
-#if FIXED_INITIAL_STATE == 0
 static void propagateCX(real_t* C_, real_t* A_) {
     int i, j, k;
     for ( j = 0; j < NX; j++ ) {
@@ -48,7 +47,6 @@ static void computeWx(real_t* Q_, real_t* C_, real_t* A_) {
         }
     }
 }
-#endif
 
 static void computeWu(real_t* Q_, real_t* C_, real_t* A_) {
     int i, j , k;
@@ -64,7 +62,6 @@ static void computeWu(real_t* Q_, real_t* C_, real_t* A_) {
     }
 }
 
-#if FIXED_INITIAL_STATE == 0
 static void computeH_offDX(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
     int i, j , k;
     for ( j = 0; j < NX; j++ ) {
@@ -77,7 +74,6 @@ static void computeH_offDX(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
         }
     }
 }
-#endif
 
 static void computeH_offDU(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
     int i, j , k;
@@ -92,7 +88,6 @@ static void computeH_offDU(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
     }
 }
 
-#if FIXED_INITIAL_STATE == 0
 static void computeH_DX() {
     int i, j , k;
     for ( j = 0; j < NX; j++ ) {
@@ -112,7 +107,6 @@ static void computeH_DX() {
         }
     }
 }
-#endif
 
 static void computeH_DU(real_t* Hc_, real_t* R_, real_t* B_) {
     int i, j , k;
@@ -152,8 +146,133 @@ static void computeG_off(real_t* gc_, real_t* r_, real_t* S_, real_t* d_, real_t
     }
 }
 
-#if FIXED_INITIAL_STATE == 0
-static void computeG() {
+static void computeG_fixed_initial_state(real_t* x0) {
+    int i, j;
+    real_t Sx0[NU] = {0};
+    for ( j = 0; j < NU; j++ ) {
+        for ( i = 0; i < NX; i++ ) Sx0[j] += data.S[i+j*NX]*x0[i];
+    }
+    /* first control */
+    for ( i = 0; i < NU; i++ ) data.gc[i] = data.g[NX+i];
+    for ( j = 0; j < NX; j++ ) {
+        for ( i = 0; i < NU; i++ ) {
+            data.gc[i] += data.B[i*NX+j]*data.w2[j] + Sx0[i];
+        }
+    }
+}
+
+void propagate_C(int_t j, int_t offset) {
+    for ( int_t c = 0; c < NU; c++ ) {
+        for ( int_t r = 0; r < NX; r++ ) {
+            data.C[(offset+j*NU+c)*NNN*NX+j*NX+r] = data.B[j*NX*NU+c*NX+r]; /* B_j */
+        }
+    }
+    for ( int_t i = j+1; i < NNN; i++ ) {
+        /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
+        propagateCU(&data.C[(offset+j*NU)*NNN*NX+i*NX], &data.A[i*NX*NX]);
+    }
+}
+
+void set_bounds() {
+    /* correct lbA and ubA with d values */
+    for ( int_t i = 0; i < NNN; i++ ) {
+        for ( int_t j = 0; j < NX; j++ ) {
+            data.lbA[i*NX+j] = data.lb[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
+            data.ubA[i*NX+j] = data.ub[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
+        }
+    }
+}
+
+void propagate_controls_to_H(int_t offset) {
+    int_t i, j;
+    /* propagate controls: */
+    for ( j = 0; j < NNN; j++ ) {
+        for ( i = 0; i < NX*NU; i++ ) data.W2_u[i] = 0.0;
+        /* A is unused here because W is zero */
+        computeWu(&data.Q[NNN*NX*NX], &data.C[(offset+j*NU)*NNN*NX+(NNN-1)*NX], &data.A[0]);
+        for ( i = NNN-1; i > j; i-- ) {
+            computeH_offDU(&data.Hc[(offset+j*NU)*NVC+offset+i*NU], &data.S[i*NX*NU], \
+                    &data.C[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.B[i*NX*NU]);
+            computeWu(&data.Q[i*NX*NX], &data.C[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.A[i*NX*NX]);
+        }
+        computeH_DU(&data.Hc[(offset+j*NU)*NVC+offset+j*NU], &data.R[j*NU*NU], &data.B[j*NX*NU]);
+    }
+}
+
+void propagate_to_G(int_t offset) {
+    computeWg(&data.g[NNN*(NX+NU)], &data.Q[NNN*NX*NX], &data.d[(NNN-1)*NX], &data.A[0]);
+    for ( int_t i = NNN-1; i > 0; i-- ) {
+        computeG_off(&data.gc[offset+i*NU], &data.g[i*(NX+NU)+NX], &data.S[i*NX*NU], \
+                    &data.d[(i-1)*NX], &data.B[i*NX*NU]);
+        computeWg(&data.g[i*(NX+NU)], &data.Q[i*NX*NX], &data.d[(i-1)*NX], &data.A[i*NX*NX]);
+    }
+}
+
+void condensingN2_fixed_initial_state() {
+    int_t i, j, offset;
+
+    /* Copy bound values */
+    int_t k;
+    offset = 0;
+    real_t x0[NX] = {0};
+    // Read x0 from lower bound (= upper bound)
+    for ( i = 0; i < NX; i++ ) x0[i] = data.lb[i];
+    for ( i = 0; i < NNN; i++ ) {
+        for ( j = 0; j < NU; j++ ) {
+            data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
+            data.ubU[i*NU+j] = data.ub[i*(NX+NU)+NX+j];
+        }
+    }
+
+    /* propagate controls: */
+    for ( j = 0; j < NNN; j++ ) {
+        propagate_C(j, offset);
+        if ( j > 0 ) {
+            propagatec(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+        } else {
+            for ( k = 0; k < NX; k++ ) {
+                data.d[k] = data.b[k];
+                for ( i = 0; i < NX; i++ ) data.d[k] += data.A[i*NX+k]*x0[i];
+            }
+        }
+    }
+
+    set_bounds();
+
+    /* !! Hessian propagation !! */
+    propagate_controls_to_H(offset);
+
+    /* !! gradient propagation !! */
+    /* A is unused for this operation because the W's are zero */
+    propagate_to_G(offset);
+    computeG_fixed_initial_state(&(x0[0]));
+}
+
+void propagate_x0_to_G() {
+    int_t i, j;
+    /* propagate x0: */
+    for ( j = 0; j < NX; j++ ) {
+        for ( i = 0; i < NX; i++ ) {
+            data.C[j*NNN*NX+i] = data.A[j*NX+i]; /* A_0 */
+        }
+    }
+    for ( i = 1; i < NNN; i++ ) {
+        propagateCX(&data.C[i*NX], &data.A[i*NX*NX]); /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
+    }
+}
+
+void propagate_x0_to_H() {
+    /* propagate x0: */
+    /* A is unused for this operation because the W's are zero */
+    computeWx(&data.Q[NNN*NX*NX], &data.C[(NNN-1)*NX], &data.A[0]);
+    for ( int_t i = NNN-1; i > 0; i-- ) {
+        computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &data.C[(i-1)*NX], &data.B[i*NX*NU]);
+        computeWx(&data.Q[i*NX*NX], &data.C[(i-1)*NX], &data.A[i*NX*NX]);
+    }
+    computeH_DX();
+}
+
+static void compute_G_free_initial_state() {
     int i, j;
     /* x0 */
     for ( i = 0; i < NX; i++ ) data.gc[i] = data.g[i];
@@ -170,39 +289,11 @@ static void computeG() {
         }
     }
 }
-#endif
 
-#if FIXED_INITIAL_STATE == 1
-static void computeG_fixed_initial_state(real_t* Sx0) {
-    int i, j;
-    /* first control */
-    for ( i = 0; i < NU; i++ ) data.gc[i] = data.g[NX+i];
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NU; i++ ) {
-            data.gc[i] += data.B[i*NX+j]*data.w2[j] + Sx0[i];
-        }
-    }
-}
-#endif
-
-/* This contains an implementation of our block condensing algorithm. */
-void block_condensing() {
-    int_t i, j, r, c, offset;
+void condensingN2_free_initial_state() {
+    int_t i, j, offset;
 
     /* Copy bound values */
-    #if FIXED_INITIAL_STATE == 1
-    int_t k;
-    offset = 0;
-    real_t x0[NX] = {0};
-    // Read x0 from lower bound (= upper bound)
-    for ( i = 0; i < NX; i++ ) x0[i] = data.lb[i];
-    for ( i = 0; i < NNN; i++ ) {
-        for ( j = 0; j < NU; j++ ) {
-            data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
-            data.ubU[i*NU+j] = data.ub[i*(NX+NU)+NX+j];
-        }
-    }
-    #else
     offset = NX;
     for ( i = 0; i < NX; i++ ) data.lbU[i] = data.lb[i];
     for ( i = 0; i < NX; i++ ) data.ubU[i] = data.ub[i];
@@ -212,98 +303,27 @@ void block_condensing() {
             data.ubU[NX+i*NU+j] = data.ub[i*(NX+NU)+NX+j];
         }
     }
-    #endif
 
     /* Create matrix G, NOTE: this is a sparse matrix which is currently stored as a dense one! */
-    #if FIXED_INITIAL_STATE == 0
-    /* propagate x0: */
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NX; i++ ) {
-            data.C[j*NNN*NX+i] = data.A[j*NX+i]; /* A_0 */
-        }
-    }
-    for ( i = 1; i < NNN; i++ ) {
-        propagateCX(&data.C[i*NX], &data.A[i*NX*NX]); /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
-    }
-    #endif
-
+    propagate_x0_to_G();
     /* propagate controls: */
     for ( j = 0; j < NNN; j++ ) {
-        for ( c = 0; c < NU; c++ ) {
-            for ( r = 0; r < NX; r++ ) {
-                data.C[(offset+j*NU+c)*NNN*NX+j*NX+r] = data.B[j*NX*NU+c*NX+r]; /* B_j */
-            }
-        }
-        for ( i = j+1; i < NNN; i++ ) {
-            /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
-            propagateCU(&data.C[(offset+j*NU)*NNN*NX+i*NX], &data.A[i*NX*NX]);
-        }
-        #if FIXED_INITIAL_STATE == 1
-        if ( j > 0 ) {
-            propagatec(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
-        } else {
-            for ( k = 0; k < NX; k++ ) {
-                data.d[k] = data.b[k];
-                for ( i = 0; i < NX; i++ ) data.d[k] += data.A[i*NX+k]*x0[i];
-            }
-        }
-        #else
+        propagate_C(j, offset);
         if ( j > 0 ) {
             propagatec(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
         } else {
             for ( i = 0; i < NX; i++ ) data.d[i] = data.b[i];
         }
-        #endif
     }
 
-    /* correct lbA and ubA with d values */
-    for ( i = 0; i < NNN; i++ ) {
-        for ( j = 0; j < NX; j++ ) {
-            data.lbA[i*NX+j] = data.lb[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
-            data.ubA[i*NX+j] = data.ub[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
-        }
-    }
+    set_bounds();
 
     /* !! Hessian propagation !! */
-    #if FIXED_INITIAL_STATE == 0
-    /* propagate x0: */
-    /* A is unused for this operation because the W's are zero */
-    computeWx(&data.Q[NNN*NX*NX], &data.C[(NNN-1)*NX], &data.A[0]);
-    for ( i = NNN-1; i > 0; i-- ) {
-        computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &data.C[(i-1)*NX], &data.B[i*NX*NU]);
-        computeWx(&data.Q[i*NX*NX], &data.C[(i-1)*NX], &data.A[i*NX*NX]);
-    }
-    computeH_DX();
-    #endif
-
-    /* propagate controls: */
-    for ( j = 0; j < NNN; j++ ) {
-        for ( i = 0; i < NX*NU; i++ ) data.W2_u[i] = 0.0;
-        /* A is unused here because W is zero */
-        computeWu(&data.Q[NNN*NX*NX], &data.C[(offset+j*NU)*NNN*NX+(NNN-1)*NX], &data.A[0]);
-        for ( i = NNN-1; i > j; i-- ) {
-            computeH_offDU(&data.Hc[(offset+j*NU)*NVC+offset+i*NU], &data.S[i*NX*NU], \
-                    &data.C[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.B[i*NX*NU]);
-            computeWu(&data.Q[i*NX*NX], &data.C[(offset+j*NU)*NNN*NX+(i-1)*NX], &data.A[i*NX*NX]);
-        }
-        computeH_DU(&data.Hc[(offset+j*NU)*NVC+offset+j*NU], &data.R[j*NU*NU], &data.B[j*NX*NU]);
-    }
+    propagate_x0_to_H();
+    propagate_controls_to_H(offset);
 
     /* !! gradient propagation !! */
     /* A is unused for this operation because the W's are zero */
-    computeWg(&data.g[NNN*(NX+NU)], &data.Q[NNN*NX*NX], &data.d[(NNN-1)*NX], &data.A[0]);
-    for ( i = NNN-1; i > 0; i-- ) {
-        computeG_off(&data.gc[offset+i*NU], &data.g[i*(NX+NU)+NX], &data.S[i*NX*NU], \
-                    &data.d[(i-1)*NX], &data.B[i*NX*NU]);
-        computeWg(&data.g[i*(NX+NU)], &data.Q[i*NX*NX], &data.d[(i-1)*NX], &data.A[i*NX*NX]);
-    }
-    #if FIXED_INITIAL_STATE == 1
-    real_t Sx0[NU] = {0};
-    for ( j = 0; j < NU; j++ ) {
-        for ( i = 0; i < NX; i++ ) Sx0[j] += data.S[i+j*NX]*x0[i];
-    }
-    computeG_fixed_initial_state(&Sx0[0]);
-    #else
-    computeG();
-    #endif
+    propagate_to_G(offset);
+    compute_G_free_initial_state();
 }

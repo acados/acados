@@ -1,5 +1,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wunused-function"
 #include "ocp_qp_condensing_qpoases.h"
 #include "condensing.h"
 
@@ -12,12 +13,10 @@
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
 #define     NWSR_MAX    1000
-#define     LB_MIN      -10000
-#define     UB_MAX      10000
 QProblem    QP;
 real_t      _A[NNN*NX*NVC] = {0};
 real_t      cput;
-int_t         nwsr;
+int_t       nwsr;
 real_t      qp_sol[NVC]                     = {0};  // QP primal solution vector
 real_t      y[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solution vector
 /* condensing specifics */
@@ -143,7 +142,7 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         data.ub[NN*(NX+NU)+idxb[NN][j]] = ub[NN][idxb[NN][j]];
     }
     // POLYTOPIC CONSTRAINTS: TODO
-    block_condensing();
+    condensingN2_fixed_initial_state();
 
     // SOLVE QP
     int_t num_condensed_vars = get_num_condensed_vars(NN, nx, nu);
@@ -161,8 +160,6 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
             data.Hc[i*num_condensed_vars+j] = data.Hc[j*num_condensed_vars+i];
         }
     }
-
-    write_QP_data_to_file();
 
     return_flag = QProblem_initW(&QP, &(data.Hc[0]), &(data.gc[0]), &(_A[0]), &(data.lbU[0]), \
                         &(data.ubU[0]), &(data.lbA[0]), &(data.ubA[0]), \
