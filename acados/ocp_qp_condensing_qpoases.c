@@ -13,14 +13,14 @@
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
 QProblem    QP;
-real_t      _A[NNN*NX*NVC] = {0};
+real_t      _A[(NNN*(NX+NA)+NA)*NVC] = {0};
 real_t      cput;
 int_t       nwsr;
 real_t      primal_solution[NVC]                     = {0};  // QP primal solution vector
 real_t      dual_solution[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solution vector
 /* condensing specifics */
 data_struct data = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, \
-                    {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}};
+                    {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}};
 
 int_t get_num_opt_vars(int_t NN, int_t *nx, int_t *nu) {
     int_t num_opt_vars = 0;
@@ -46,19 +46,20 @@ void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
 }
 
 void write_QP_data_to_file() {
-    FILE *outFile = fopen("QP_data.txt", "w");
+    FILE *outFile = fopen("../experimental/robin/QP_data.txt", "w");
     if (outFile == NULL) {
         fprintf(stderr, "%s\n", "OPEN FILE FAILED!");
     }
     write_array_to_file(outFile, data.Hc, NVC*NVC);
     write_array_to_file(outFile, data.gc, NVC);
-    write_array_to_file(outFile, _A, NNN*NX*NVC);
+    write_array_to_file(outFile, data.Ac, (NNN*(NX+NA)+NA)*NVC);
     write_array_to_file(outFile, data.lbU, NVC);
     write_array_to_file(outFile, data.ubU, NVC);
-    write_array_to_file(outFile, data.lbA, NNN*NX);
-    write_array_to_file(outFile, data.ubA, NNN*NX);
-    write_array_to_file(outFile, data.G, NNN*NX*NVC);
-    write_array_to_file(outFile, data.d, NNN*NX);
+    write_array_to_file(outFile, data.lbA, NNN*(NX+NA)+NA);
+    write_array_to_file(outFile, data.ubA, NNN*(NX+NA)+NA);
+    write_array_to_file(outFile, data.G, NNN*(NX)*NVC);
+    write_array_to_file(outFile, data.g, NNN*NX);
+    write_array_to_file(outFile, data.D, (NNN+1)*NA*NVC);
 }
 
 static void fill_in_objective_variables(int_t NN, int_t* nx, int_t* nu,
@@ -81,12 +82,12 @@ static void fill_in_objective_variables(int_t NN, int_t* nx, int_t* nu,
     int_t start_of_current_block = 0;
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < nx[i]; j++)
-            data.g[start_of_current_block+j] = q[i][j];
+            data.f[start_of_current_block+j] = q[i][j];
         for (int_t j = 0; j < nu[i]; j++)
-            data.g[start_of_current_block+NX+j] = r[i][j];
+            data.f[start_of_current_block+NX+j] = r[i][j];
         start_of_current_block += (NX + NU);
     }
-    for (int_t j = 0; j < nx[NNN]; j++) data.g[NNN*(NX+NU)+j] = q[NNN][j];
+    for (int_t j = 0; j < nx[NNN]; j++) data.f[NNN*(NX+NU)+j] = q[NNN][j];
 }
 
 static void fill_in_dynamics(int_t NN, int_t* nx, int_t* nu,
@@ -143,15 +144,19 @@ static void fill_in_polytopic_constraints() {
 }
 
 static void fill_data_for_condensing(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng, \
-    double **A, double **B, double **b, \
-    double **Q, double **S, double **R, double **q, double **r, \
-    int_t **idxb, double **lb, double **ub) {
+                                double **A, double **B, double **b, \
+                                double **Q, double **S, double **R, double **q, double **r, \
+                                int_t **idxb, double **lb, double **ub) {
+
     // Condensing implicitly assumes zeros initialisation
     memset(&data, 0, sizeof(data_struct));
     fill_in_objective_variables(NN, nx, nu, Q, S, R, q, r);
     fill_in_dynamics(NN, nx, nu, A, B, b);
     fill_in_bounds(NN, nx, nu, nb, idxb, lb, ub);
     fill_in_polytopic_constraints();
+    for (int_t k = 0; k < NX; k++) {
+        data.Dx[NNN*NA*NX+k*(NA+1)] = 1.0;
+    }
 }
 
 static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solution) {
@@ -174,7 +179,7 @@ static void recover_state_trajectory(int_t NN,
             for (int_t k = 0; k < NVC; k++) {
                 x[i+1][j] = x[i+1][j] + data.G[i*NX+j+k*NN*NX]*primal_solution[k];
             }
-            x[i+1][j] = x[i+1][j] + data.d[i*NX+j];
+            x[i+1][j] = x[i+1][j] + data.g[i*NX+j];
         }
         #if FIXED_INITIAL_STATE == 1
         for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[i*NU+j];
@@ -204,11 +209,12 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
         }
     }
     // Convert C to row major in A
-    for (int_t i = 0; i < NN*NX; i++) {
+    for (int_t i = 0; i < NN*(NX+NA)+NA; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
-            _A[i*num_condensed_vars+j] = data.G[j*NN*NX+i];
+            _A[i*num_condensed_vars+j] = data.Ac[j*(NN*(NX+NA)+NA)+i];
         }
     }
+    write_QP_data_to_file();
     int_t return_flag = solve_QP(QP, &(primal_solution[0]), &(dual_solution[0]));
     recover_state_trajectory(NN, x, u, &(primal_solution[0]));
 
@@ -216,7 +222,7 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
 }
 
 void initialise_qpoases() {
-    QProblemCON(&QP, NVC, 0, HST_POSDEF);
+    QProblemCON(&QP, NVC, NCONSTRAINTS, HST_POSDEF);
     QProblem_setPrintLevel(&QP, PL_NONE);
     QProblem_printProperties(&QP);
 }

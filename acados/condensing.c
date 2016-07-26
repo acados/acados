@@ -1,4 +1,9 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wunused-function"
+
 #include "condensing.h"
+#include <stdio.h>
 
 extern data_struct data;
 
@@ -153,7 +158,7 @@ static void computeG_fixed_initial_state(real_t* x0) {
         for ( i = 0; i < NX; i++ ) Sx0[j] += data.S[i+j*NX]*x0[i];
     }
     /* first control */
-    for ( i = 0; i < NU; i++ ) data.gc[i] = data.g[NX+i];
+    for ( i = 0; i < NU; i++ ) data.gc[i] = data.f[NX+i];
     for ( j = 0; j < NX; j++ ) {
         for ( i = 0; i < NU; i++ ) {
             data.gc[i] += data.B[i*NX+j]*data.w2[j] + Sx0[i];
@@ -173,21 +178,35 @@ void construct_G_column(int_t j, int_t offset) {
     }
 }
 
-void set_bounds() {
-    /* correct lbA and ubA with d values */
-    int_t NA = 0;
+void calculate_lbU_ubU() {
+    for ( int_t i = 0; i < NNN; i++ ) {
+        for ( int_t j = 0; j < NU; j++ ) {
+            data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
+            data.ubU[i*NU+j] = data.ub[i*(NX+NU)+NX+j];
+        }
+    }
+}
+
+void calculate_lbA_ubA() {
     for ( int_t i = 0; i < NNN; i++ ) {
         for ( int_t j = 0; j < NX; j++ ) {
             // State simple bounds
-            data.lbA[i*(NX+NA)+j] = data.lb[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
-            data.ubA[i*(NX+NA)+j] = data.ub[(i+1)*(NX+NU)+j] - data.d[i*NX+j];
+            data.lbA[NA+i*(NX+NA)+j] = data.lb[(i+1)*(NX+NU)+j] - data.g[i*NX+j];
+            data.ubA[NA+i*(NX+NA)+j] = data.ub[(i+1)*(NX+NU)+j] - data.g[i*NX+j];
         }
-        // Sample code for polytopic constraints
-        // for ( int_t j = 0; j < NA; j++ ) {
-        //     // State simple bounds
-        //     data.lbA[NX+i*(NX+NA)+j] = data.lbA[(i+1)*(NX+NU)+j] - D*data.d[i*NX+j];
-        //     data.ubA[NX+i*(NX+NA)+j] = data.ubA[(i+1)*(NX+NU)+j] - D*data.d[i*NX+j];
-        // }
+    }
+    for (int_t j = 0; j < NA; j++) {
+        data.lbA[j] = data.lbA[j];
+        data.ubA[j] = data.ubA[j];
+    }
+    for (int_t i = 1; i < NNN+1; i++) {
+        for (int_t j = 0; j < NA; j++) {
+            // State polytopic constraints
+            for (int_t k = 0; k < NX; k++) {
+                data.lbA[i*(NX+NA)+j] = data.lbA[i*(NX+NA)+j] - data.Dx[i*NA*NX+k*NA+j]*data.g[(i-1)*NX+k];
+                data.ubA[i*(NX+NA)+j] = data.ubA[i*(NX+NA)+j] - data.Dx[i*NA*NX+k*NA+j]*data.g[(i-1)*NX+k];
+            }
+        }
     }
 }
 
@@ -208,45 +227,92 @@ void propagate_controls_to_H(int_t offset) {
 }
 
 void propagate_to_G(int_t offset) {
-    computeWg(&data.g[NNN*(NX+NU)], &data.Q[NNN*NX*NX], &data.d[(NNN-1)*NX], &data.A[0]);
+    computeWg(&data.f[NNN*(NX+NU)], &data.Q[NNN*NX*NX], &data.g[(NNN-1)*NX], &data.A[0]);
     for ( int_t i = NNN-1; i > 0; i-- ) {
-        computeG_off(&data.gc[offset+i*NU], &data.g[i*(NX+NU)+NX], &data.S[i*NX*NU], \
-                    &data.d[(i-1)*NX], &data.B[i*NX*NU]);
-        computeWg(&data.g[i*(NX+NU)], &data.Q[i*NX*NX], &data.d[(i-1)*NX], &data.A[i*NX*NX]);
+        computeG_off(&data.gc[offset+i*NU], &data.f[i*(NX+NU)+NX], &data.S[i*NX*NU], \
+                    &data.g[(i-1)*NX], &data.B[i*NX*NU]);
+        computeWg(&data.f[i*(NX+NU)], &data.Q[i*NX*NX], &data.g[(i-1)*NX], &data.A[i*NX*NX]);
     }
 }
 
 void calculate_G(int_t offset) {
     for ( int_t j = 0; j < NNN; j++ ) {
-        construct_G_column(j, offset);
+        for ( int_t c = 0; c < NU; c++ ) {
+            for ( int_t r = 0; r < NX; r++ ) {
+                data.G[(offset+j*NU+c)*NNN*NX+j*NX+r] = data.B[j*NX*NU+c*NX+r];
+            }
+        }
+        for ( int_t i = j+1; i < NNN; i++ ) {
+            /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
+            propagateCU(&data.G[(offset+j*NU)*NNN*NX+i*NX], &data.A[i*NX*NX]);
+        }
     }
 }
 
 void calculate_g() {
-    for ( int_t k = 0; k < NX; k++ ) data.d[k] = data.b[k];
+    for ( int_t k = 0; k < NX; k++ ) data.g[k] = data.b[k];
     for ( int_t j = 1; j < NNN; j++ ) {
-        construct_g_row(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
-        // TODO(robin): for ( i = 0; i < NX; i++ ) data.d[k] += data.A[i*NX+k]*x0[i];
+        construct_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+        // TODO(robin): for ( i = 0; i < NX; i++ ) data.g[k] += data.A[i*NX+k]*x0[i];
+    }
+}
+
+void calculate_Ac() {
+    for (int_t j = 0; j < NVC; j++) {
+        for (int_t k = 0; k < NNN; k++) {
+            for (int_t i = 0; i < NA; i++) {
+                data.Ac[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.D[j*NA*(NNN+1)+k*NA+i];
+            }
+            for (int_t i = 0; i < NX; i++) {
+                data.Ac[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.G[j*(NX*NNN)+k*NX+i];
+            }
+        }
+    }
+    for (int_t j = 0; j < NVC; j++) {
+        for (int_t i = 0; i < NA; i++) {
+            data.Ac[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = data.D[NA*NNN+j*NA*(NNN+1)+i];
+        }
+    }
+}
+
+static void calculate_Dij(real_t* Dx, real_t* Gij, real_t* Dij) {
+    for ( int_t j = 0; j < NU; j++ ) {
+        for ( int_t i = 0; i < NA; i++ ) {
+            for ( int_t k = 0; k < NX; k++ ) {
+                Dij[j*(NNN+1)*NA+i] += Dx[k*NA+i]*Gij[j*NNN*NX+k];
+            }
+        }
+    }
+}
+
+static void calculate_D() {
+    for (int_t k = 0; k < NNN; k++) {
+        for (int_t j = 0; j < NU; j++) {
+            for (int_t i = 0; i < NA; i++) {
+                data.D[(k*NNN+1)*NA*NU+j*NNN*NA+i] = data.Du[k*NA*NU+j*NA+i];
+            }
+        }
+    }
+    for (int_t i = 1; i < NNN+1; i++) {
+        for (int_t j = 0; j < i; j++) {
+            calculate_Dij(&data.Dx[i*NA*NX], &data.G[(i-1)*NX+NNN*NX*NU*j], &data.D[i*NA+(NNN+1)*NA*NU*j]);
+        }
     }
 }
 
 void condensingN2_fixed_initial_state() {
-    int_t i, j;
+    int_t i;
     int_t offset = 0;
     real_t x0[NX] = {0};
     // Fix x0 to lower bound (== upper bound)
     for ( i = 0; i < NX; i++ ) x0[i] = data.lb[i];
-    for ( i = 0; i < NNN; i++ ) {
-        for ( j = 0; j < NU; j++ ) {
-            data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
-            data.ubU[i*NU+j] = data.ub[i*(NX+NU)+NX+j];
-        }
-    }
 
     calculate_G(offset);
+    calculate_D();
     calculate_g();
-
-    set_bounds();
+    calculate_lbU_ubU();
+    calculate_lbA_ubA();
+    calculate_Ac();
 
     /* !! Hessian propagation !! */
     propagate_controls_to_H(offset);
@@ -284,14 +350,14 @@ void propagate_x0_to_H() {
 static void compute_G_free_initial_state() {
     int i, j;
     /* x0 */
-    for ( i = 0; i < NX; i++ ) data.gc[i] = data.g[i];
+    for ( i = 0; i < NX; i++ ) data.gc[i] = data.f[i];
     for ( j = 0; j < NX; j++ ) {
         for ( i = 0; i < NX; i++ ) {
             data.gc[i] += data.A[i*NX+j]*data.w2[j];
         }
     }
     /* first control */
-    for ( i = 0; i < NU; i++ ) data.gc[NX+i] = data.g[NX+i];
+    for ( i = 0; i < NU; i++ ) data.gc[NX+i] = data.f[NX+i];
     for ( j = 0; j < NX; j++ ) {
         for ( i = 0; i < NU; i++ ) {
             data.gc[NX+i] += data.B[i*NX+j]*data.w2[j];
@@ -319,13 +385,13 @@ void condensingN2_free_initial_state() {
     for ( j = 0; j < NNN; j++ ) {
         construct_G_column(j, offset);
         if ( j > 0 ) {
-            construct_g_row(&data.d[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+            construct_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
         } else {
-            for ( i = 0; i < NX; i++ ) data.d[i] = data.b[i];
+            for ( i = 0; i < NX; i++ ) data.g[i] = data.b[i];
         }
     }
 
-    set_bounds();
+    calculate_lbA_ubA();
 
     /* !! Hessian propagation !! */
     propagate_x0_to_H();
@@ -336,3 +402,5 @@ void condensingN2_free_initial_state() {
     propagate_to_G(offset);
     compute_G_free_initial_state();
 }
+
+#pragma clang diagnostic pop
