@@ -3,7 +3,7 @@
 \usepackage{amsmath}
 \usepackage{color}
 
-\title{ACADOS / ACADO 2.0 / ??? \\ Reference}
+\title{\texttt{acados} reference}
 
 \begin{document}
 
@@ -11,75 +11,77 @@
 
 \chapter{Interfaces}
 
-\section{OCP QP Interface}
+\section{OCP QP interface}
 
-The interface describes an Optimal Control Problem (OPC) Quadratic Programming (QP) problem in the form
-\begin{align}
-\min_{x,u} & \quad \sum_{n=0}^{N-1} \frac 1 2 \begin{bmatrix} u_n \\ x_n \\ 1 \end{bmatrix}^T \begin{bmatrix} R_n & S_n & r_n \\ S_n^T & Q_n & q_n \\ r_n^T & q_n^T & \end{bmatrix} \begin{bmatrix} u_n \\ x_n \\ 1 \end{bmatrix} + \frac 1 2 \begin{bmatrix} x_N \\ 1 \end{bmatrix}^T \begin{bmatrix} Q_N & q_N \\ q_N^T & \end{bmatrix} \begin{bmatrix} x_N \\ 1 \end{bmatrix} \\
-s.t. & \quad x_{n+1} = A_n x_n + B_n u_n + b_n \quad , \quad n=0,\dots,N-1 \\
-& \quad \underline u_n \leq u_n \leq \overline u_n \quad , \quad n=0,\dots,N-1 \\
-& \quad \underline x_n \leq x_n \leq \overline x_n \quad , \quad n=0,\dots,N \\
-& \quad \underline d_n \leq C_n x_n + D_n u_n \leq \overline d_n \quad , \quad n=0,\dots,N-1 \\
-& \quad \underline d_N \leq C_N x_N \leq \overline d_N 
-\end{align}
+This interface describes a Quadratic Programming (QP) problem with Optimal Control Problem (OCP) structure, as follows:
+\begin{subequations}
+	\begin{alignat}{3}
+	\underset{\substack{x_0,\ldots,x_k \\ u_0,\ldots,u_{N-1}}}{\mathrm{minimize}} \quad & \sum_{k=0}^{N-1} \frac 1 2 \begin{bmatrix} x_k \\ u_k \end{bmatrix}^\top \begin{bmatrix} Q_k & S_k \\ S_k^\top & R_k \end{bmatrix} \begin{bmatrix} x_k \\ u_k \end{bmatrix} + &&\begin{bmatrix} q_k \\ r_k \end{bmatrix}^\top \begin{bmatrix} x_k \\ u_k \end{bmatrix} \\ & \qquad + \frac 1 2 x_N^\top Q_N x_N + q_N^\top x_N \nonumber \\
+	\mathrm{subject~to} \quad & x_{k+1} = A_k x_k + B_k u_k + b_k, && k=0,\dots,N-1, \\
+	& \underline u_k \leq u_k \leq \overline u_k, && k=0,\dots,N-1, \\
+	& \underline x_k \leq x_k \leq \overline x_k, && k=0,\dots,N, \\
+	& \underline c_k \leq C^x_k x_k + C^u_k u_k \leq \overline c_k, && k=0,\dots,N-1, \\
+	& \underline c_N \leq C^x_N x_k \leq \overline c_N.
+	\end{alignat}
+\end{subequations}
 
-The C code interface looks like
+The \texttt{C} interface looks like
 \begin{verbatim}
 int ocp_qp_SOLVERNAME(
-    int N, int *nx, int *nu, int *nb, int *ng, 
+    int N, int *nx, int *nu, int *nb, int *nc, 
     double **A, double **B, double **b, 
     double **Q, double **S, double **R, double **q, double **r, 
     int **idxb, double **lb, double **ub, 
-    double **C, double **D, double **ld, double **ud, 
+    double **Cx, double **Cu, double **lc, double **uc, 
     double **x, double **u,
     struct ocp_qp_SOLVERNAME_args *args, double *work);
 \end{verbatim}
 where {\tt SOLVERNAME} is the name of the specific solver.
 \begin{description}
 \item[{\tt N}] [input] is the horizon length.
-\item[{\tt nx}] [input] is the vector of the state sizes $n_u$ at the different stages, such that {\tt nx[n]} is the state size at stage {\tt n}.
-\item[{\tt nu}] [input] is the vector of the input sizes $n_x$ at the different stages, such that {\tt nu[n]} is the input size at stage {\tt n}.
-\item[{\tt nb}] [input] is the vector of the bound sizes $n_b$ at the different stages, such that {\tt nb[n]} is the bound size at stage {\tt n}.
-The value of {\tt nb[n]} is smaller or equal to {\tt nx[n]+nu[n]}.
-\item[{\tt ng}] [input] is the vector of the general polytopic constraint sizes $n_g$ at the different stages, such that {\tt ng[n]} is the general polytopic constraint size at stage {\tt n}.
-\item[A] [input] is the vector of size $N$ of the pointers to the first element of the matrices $A_n$, such that {\tt A[n]} is the pointer to the first element of the matrix $A_n$, and {\tt A[n][0]} is the first element of the matrix $A_n$.
-The matrix referenced by the pointer {\tt A[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nx[n+1]$\times$nx[n]} double-precision floating-point numbers.
-\item[B] [input] is the vector of size $N$ of the pointers to the first element of the matrices $B_n$, such that {\tt B[n]} is the pointer to the first element of the matrix $B_n$, and {\tt B[n][0]} is the first element of the matrix $B_n$.
-The matrix referenced by the pointer {\tt B[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nx[n+1]$\times$nu[n]} double-precision floating-point numbers.
-\item[b] [input] is the vector of size $N$ of the pointers to the first element of the vectors $b_n$, such that {\tt b[n]} is the pointer to the first element of the vector $b_n$, and {\tt b[n][0]} is the first element of the vector $b_n$.
-The vector referenced by the pointer {\tt b[n]} is stored in a vector of {\tt nx[n+1]$\times$1} double-precision floating-point numbers.
-\item[Q] [input] is the vector of size $N+1$ of the pointers to the first element of the matrices $Q_n$, such that {\tt Q[n]} is the pointer to the first element of the matrix $Q_n$, and {\tt Q[n][0]} is the first element of the matrix $Q_n$.
-The matrix referenced by the pointer {\tt Q[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nx[n]$\times$nx[n]} double-precision floating-point numbers.
-\item[S] [input] is the vector of size $N$ of the pointers to the first element of the matrices $S_n$, such that {\tt S[n]} is the pointer to the first element of the matrix $S_n$, and {\tt S[n][0]} is the first element of the matrix $S_n$.
-The matrix referenced by the pointer {\tt S[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nu[n]$\times$nx[n]} double-precision floating-point numbers.
-\item[R] [input] is the vector of size $N$ of the pointers to the first element of the matrices $R_n$, such that {\tt R[n]} is the pointer to the first element of the matrix $R_n$, and {\tt R[n][0]} is the first element of the matrix $R_n$.
-The matrix referenced by the pointer {\tt R[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nu[n]$\times$nu[n]} double-precision floating-point numbers.
-\item[q] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $q_n$, such that {\tt q[n]} is the pointer to the first element of the vector $q_n$, and {\tt q[n][0]} is the first element of the vector $q_n$.
-The vector referenced by the pointer {\tt q[n]} is stored in a vector of {\tt nx[n]$\times$1} double-precision floating-point numbers.
-\item[r] [input] is the vector of size $N$ of the pointers to the first element of the vectors $r_n$, such that {\tt r[n]} is the pointer to the first element of the vector $r_n$, and {\tt r[n][0]} is the first element of the vector $r_n$.
-The vector referenced by the pointer {\tt r[n]} is stored in a vector of {\tt nu[n]$\times$1} double-precision floating-point numbers.
-\item[idxb] [input] is the vector of size $N+1$ of the pointers to the first element of the integer vectors $idxb_n$ describing the indexes of the corresponding upper and lower bounds in {\tt lb} and {\tt ub}, such that {\tt idxb[n]} is the pointer to the index of the first bound at stage $n$, and {\tt idxb[n][0]} is index of the first bound at stage $n$.
-The indexes in {\tt idxb[n]} correspond to the position of the constrained components in the variables vector $\begin{bmatrix} u_n \\ x_n \end{bmatrix}$: therefore a bound on the first input component has index {\tt 0}, a bound on the last input component has index {\tt nu[n]-1}, a bound on the first state component has index {\tt nu[n]} and a bound on the last state component has index {\tt nu[n]+nx[n]-1}.
-The vector referenced by the pointer {\tt idxb[n]} is stored in a vector of {\tt nb[n]$\times$1} integer numbers.
-\item[lb] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\begin{bmatrix} \underline u_n \\ \underline x_n \end{bmatrix}$, such that {\tt lb[n]} is the pointer to the first element of the vector $\begin{bmatrix} \underline u_n \\ \underline x_n \end{bmatrix}$, and {\tt lb[n][0]} is the first element of the vector $\begin{bmatrix} \underline u_n \\ \underline x_n \end{bmatrix}$.
-The vector referenced by the pointer {\tt lb[n]} is stored in a vector of {\tt nb[n]$\times$1} double-precision floating-point numbers.
-\item[ub] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\begin{bmatrix} \overline u_n \\ \overline x_n \end{bmatrix}$, such that {\tt ub[n]} is the pointer to the first element of the vector $\begin{bmatrix} \overline u_n \\ \overline x_n \end{bmatrix}$, and {\tt ub[n][0]} is the first element of the vector $\begin{bmatrix} \overline u_n \\ \overline x_n \end{bmatrix}$.
-The vector referenced by the pointer {\tt ub[n]} is stored in a vector of {\tt nb[n]$\times$1} double-precision floating-point numbers.
-\item[C] [input] is the vector of size $N+1$ of the pointers to the first element of the matrices $C_n$, such that {\tt C[n]} is the pointer to the first element of the matrix $C_n$, and {\tt C[n][0]} is the first element of the matrix $C_n$.
-The matrix referenced by the pointer {\tt C[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt ng[n]$\times$nx[n]} double-precision floating-point numbers.
-\item[D] [input] is the vector of size $N$ of the pointers to the first element of the matrices $D_n$, such that {\tt D[n]} is the pointer to the first element of the matrix $D_n$, and {\tt D[n][0]} is the first element of the matrix $D_n$.
-The matrix referenced by the pointer {\tt D[n]} is stored in column-major (or Fortran-like) order, in a vector of {\tt ng[n]$\times$nu[n]} double-precision floating-point numbers.
-\item[ld] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\underline d_n$, such that {\tt ld[n]} is the pointer to the first element of the vector $\underline d_n$, and {\tt ld[n][0]} is the first element of the vector $\underline d_n$.
-The vector referenced by the pointer {\tt ld[n]} is stored in a vector of {\tt ng[n]$\times$1} double-precision floating-point numbers.
-\item[ud] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\overline d_n$, such that {\tt ud[n]} is the pointer to the first element of the vector $\overline d_n$, and {\tt ud[n][0]} is the first element of the vector $\overline d_n$.
-The vector referenced by the pointer {\tt ud[n]} is stored in a vector of {\tt ng[n]$\times$1} double-precision floating-point numbers.
-\item[x] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $x_n$, such that {\tt x[n]} is the pointer to the first element of the vector $x_n$, and {\tt x[n][0]} is the first element of the vector $x_n$.
-The vector referenced by the pointer {\tt x[n]} is stored in a vector of {\tt nx[n]$\times$1} double-precision floating-point numbers.
-\item[u] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_n$, such that {\tt u[n]} is the pointer to the first element of the vector $u_n$, and {\tt u[n][0]} is the first element of the vector $u_n$.
-The vector referenced by the pointer {\tt u[n]} is stored in a vector of {\tt nu[n]$\times$1} double-precision floating-point numbers.
+\item[{\tt nx}] [input] is the vector of the state sizes $n_u$ at the different stages, such that {\tt nx[k]} is the state size at stage {\tt k}.
+\item[{\tt nu}] [input] is the vector of the input sizes $n_x$ at the different stages, such that {\tt nu[k]} is the input size at stage {\tt k}.
+\item[{\tt nb}] [input] is the vector of the bound sizes $n_b$ at the different stages, such that {\tt nb[k]} is the bound size at stage {\tt k}.
+The value of {\tt nb[k]} is smaller or equal to {\tt nx[k]+nu[k]}.
+\item[{\tt nc}] [input] is the vector of the general polytopic constraint sizes $n_c$ at the different stages, such that {\tt nc[k]} is the general polytopic constraint size at stage {\tt k}.
+\item[A] [input] is the vector of size $N$ of the pointers to the first element of the matrices $A_k$, such that {\tt A[k]} is the pointer to the first element of the matrix $A_k$, and {\tt A[k][0]} is the first element of the matrix $A_k$.
+The matrix referenced by the pointer {\tt A[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nx[k+1]$\times$nx[k]} double-precision floating-point numbers.
+\item[B] [input] is the vector of size $N$ of the pointers to the first element of the matrices $B_k$, such that {\tt B[k]} is the pointer to the first element of the matrix $B_k$, and {\tt B[k][0]} is the first element of the matrix $B_k$.
+The matrix referenced by the pointer {\tt B[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nx[k+1]$\times$nu[k]} double-precision floating-point numbers.
+\item[b] [input] is the vector of size $N$ of the pointers to the first element of the vectors $b_k$, such that {\tt b[k]} is the pointer to the first element of the vector $b_k$, and {\tt b[k][0]} is the first element of the vector $b_k$.
+The vector referenced by the pointer {\tt b[k]} is stored in a vector of {\tt nx[k+1]$\times$1} double-precision floating-point numbers.
+\item[Q] [input] is the vector of size $N+1$ of the pointers to the first element of the matrices $Q_k$, such that {\tt Q[k]} is the pointer to the first element of the matrix $Q_k$, and {\tt Q[k][0]} is the first element of the matrix $Q_k$.
+The matrix referenced by the pointer {\tt Q[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nx[k]$\times$nx[k]} double-precision floating-point numbers.
+\item[S] [input] is the vector of size $N$ of the pointers to the first element of the matrices $S_k$, such that {\tt S[k]} is the pointer to the first element of the matrix $S_k$, and {\tt S[k][0]} is the first element of the matrix $S_k$.
+The matrix referenced by the pointer {\tt S[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nu[k]$\times$nx[k]} double-precision floating-point numbers.
+\item[R] [input] is the vector of size $N$ of the pointers to the first element of the matrices $R_k$, such that {\tt R[k]} is the pointer to the first element of the matrix $R_k$, and {\tt R[k][0]} is the first element of the matrix $R_k$.
+The matrix referenced by the pointer {\tt R[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nu[k]$\times$nu[k]} double-precision floating-point numbers.
+\item[q] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $q_k$, such that {\tt q[k]} is the pointer to the first element of the vector $q_k$, and {\tt q[k][0]} is the first element of the vector $q_k$.
+The vector referenced by the pointer {\tt q[k]} is stored in a vector of {\tt nx[k]$\times$1} double-precision floating-point numbers.
+\item[r] [input] is the vector of size $N$ of the pointers to the first element of the vectors $r_k$, such that {\tt r[k]} is the pointer to the first element of the vector $r_k$, and {\tt r[k][0]} is the first element of the vector $r_k$.
+The vector referenced by the pointer {\tt r[k]} is stored in a vector of {\tt nu[k]$\times$1} double-precision floating-point numbers.
+\item[idxb] [input] is the vector of size $N+1$ of the pointers to the first element of the integer vectors $\mathrm{idxb}_k$ describing the indexes of the corresponding upper and lower bounds in {\tt lb} and {\tt ub}, such that {\tt idxb[k]} is the pointer to the index of the first bound at stage $k$, and {\tt idxb[k][0]} is index of the first bound at stage $k$.
+The indexes in {\tt idxb[k]} correspond to the position of the constrained components in the variables vector $\begin{bmatrix} x_k \\ u_k \end{bmatrix}$: therefore a bound on the first state component has index {\tt 0}, a bound on the last state component has index {\tt nx[k]-1}, a bound on the first input component has index {\tt nx[k]} and a bound on the last input component has index {\tt nx[k]+nu[k]-1}.
+The vector referenced by the pointer {\tt idxb[k]} is stored in a vector of {\tt nb[k]$\times$1} integer numbers.
+\item[lb] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\begin{bmatrix} \underline x_k \\ \underline u_k \end{bmatrix}$, such that {\tt lb[k]} is the pointer to the first element of the vector $\begin{bmatrix} \underline x_k \\ \underline u_k \end{bmatrix}$, and {\tt lb[k][0]} is the first element of the vector $\begin{bmatrix} \underline x_k \\ \underline u_k \end{bmatrix}$.
+The vector referenced by the pointer {\tt lb[k]} is stored in a vector of {\tt nb[k]$\times$1} double-precision floating-point numbers.
+\item[ub] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\begin{bmatrix} \overline x_k \\ \overline u_k \end{bmatrix}$, such that {\tt ub[k]} is the pointer to the first element of the vector $\begin{bmatrix} \overline x_k \\ \overline u_k \end{bmatrix}$, and {\tt ub[k][0]} is the first element of the vector $\begin{bmatrix} \overline x_k \\ \overline u_k \end{bmatrix}$.
+The vector referenced by the pointer {\tt ub[k]} is stored in a vector of {\tt nb[k]$\times$1} double-precision floating-point numbers.
+\item[Cx] [input] is the vector of size $N+1$ of the pointers to the first element of the matrices $C^x_k$, such that {\tt Cx[k]} is the pointer to the first element of the matrix $C^x_k$, and {\tt Cx[k][0]} is the first element of the matrix $C^x_k$.
+The matrix referenced by the pointer {\tt Dx[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nc[k]$\times$nx[k]} double-precision floating-point numbers.
+\item[Cu] [input] is the vector of size $N$ of the pointers to the first element of the matrices $C^u_k$, such that {\tt Cu[k]} is the pointer to the first element of the matrix $C^u_k$, and {\tt Cu[k][0]} is the first element of the matrix $C^u_k$.
+The matrix referenced by the pointer {\tt Cu[k]} is stored in column-major (or Fortran-like) order, in a vector of {\tt nc[k]$\times$nu[k]} double-precision floating-point numbers.
+\item[ld] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\underline c_k$, such that {\tt lc[k]} is the pointer to the first element of the vector $\underline c_k$, and {\tt ld[k][0]} is the first element of the vector $\underline c_k$.
+The vector referenced by the pointer {\tt ld[k]} is stored in a vector of {\tt nc[k]$\times$1} double-precision floating-point numbers.
+\item[ud] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\overline c_k$, such that {\tt uc[k]} is the pointer to the first element of the vector $\overline c_k$, and {\tt uc[k][0]} is the first element of the vector $\overline c_k$.
+The vector referenced by the pointer {\tt uc[k]} is stored in a vector of {\tt nc[k]$\times$1} double-precision floating-point numbers.
+\item[x] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $x_k$, such that {\tt x[k]} is the pointer to the first element of the vector $x_k$, and {\tt x[k][0]} is the first element of the vector $x_k$.
+The vector referenced by the pointer {\tt x[k]} is stored in a vector of {\tt nx[k]$\times$1} double-precision floating-point numbers.
+\item[u] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_k$, such that {\tt u[k]} is the pointer to the first element of the vector $u_k$, and {\tt u[k][0]} is the first element of the vector $u_k$.
+The vector referenced by the pointer {\tt u[k]} is stored in a vector of {\tt nu[k]$\times$1} double-precision floating-point numbers.
 \item[args] [input] is the pointer to a structure of type {\tt ocp\_qp\_SOLVERNAME\_args} that defines the arguments (as e.g. maximum number of iterations, minimum step size, ... ) passed to the specific solver.
 \item[work] [workspace] is the pointer to the working space used by the specific solver.
-The working space size (in doubles) is returned by a call to the function {\tt ocp\_qp\_SOLVERNAME\_workspace\_double(int N, int *nx, int *nu, int *nb, int *ng, struct ocp\_qp\_solver\_args *args)}. 
+The working space size (in doubles) is returned by a call to the function {\tt ocp\_qp\_SOLVERNAME\_workspace\_double(int N, int *nx, int *nu, int *nb, int *nc, struct ocp\_qp\_solver\_args *args)}. 
 \end{description}
 
 Furthermore, the function returns an int, that is defined in the following enum (TODO change the names to something better!!!):

@@ -215,7 +215,7 @@ static void recover_state_trajectory(int_t NN,
     }
 }
 
-int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng,
+int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *ng,
     double **A, double **B, double **b,
     double **Q, double **S, double **R, double **q, double **r,
     int_t **idxb, double **lb, double **ub,
@@ -223,26 +223,26 @@ int_t ocp_qp_condensing_qpoases(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t
     double **x, double **u,
     struct ocp_qp_condensing_qpoases_args *args, double *work) {
 
-    fill_data_for_condensing(NN, nx, nu, nb, ng, A, B, b,
+    fill_data_for_condensing(N, nx, nu, nb, ng, A, B, b,
     Q, S, R, q, r, idxb, lb, ub, C, D, ld, ud);
     condensingN2_fixed_initial_state();
 
     // Symmetrize H
-    int_t num_condensed_vars = get_num_condensed_vars(NN, nx, nu);
+    int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
     for (int_t i = 1; i < num_condensed_vars; i++) {
         for (int_t j = 0; j < i; j++) {
             data.Hc[i*num_condensed_vars+j] = data.Hc[j*num_condensed_vars+i];
         }
     }
     // Convert C to row major in A
-    for (int_t i = 0; i < NN*(NX+NA)+NA; i++) {
+    for (int_t i = 0; i < N*(NX+NA)+NA; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
-            _A[i*num_condensed_vars+j] = data.Ac[j*(NN*(NX+NA)+NA)+i];
+            _A[i*num_condensed_vars+j] = data.Ac[j*(N*(NX+NA)+NA)+i];
         }
     }
     write_QP_data_to_file();
     int_t return_flag = solve_QP(QP, &(primal_solution[0]), &(dual_solution[0]));
-    recover_state_trajectory(NN, x, u, &(primal_solution[0]));
+    recover_state_trajectory(N, x, u, &(primal_solution[0]));
 
     return return_flag;
 }
