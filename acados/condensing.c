@@ -196,8 +196,8 @@ void calculate_lbA_ubA() {
         }
     }
     for (int_t j = 0; j < NA; j++) {
-        data.lbA[j] = data.lbA[j];
-        data.ubA[j] = data.ubA[j];
+        data.lbA[j] = data.lb[j];
+        data.ubA[j] = data.ub[j];
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < NA; j++) {

@@ -14,7 +14,7 @@ nu = 3;
 numvars = N*nu;
 [H,f,A,lbU,ubU,lbA,ubA,C,d,D] = arrays_to_read{:};
 H = reshape(H,numvars,numvars);
-A = reshape(A,numvars,N*(nx+nx+nu)).';
+A = reshape(A,N*(nx+nx+nu)+nx+nu,numvars);
 C = reshape(C,N*(nx),numvars);
 D = reshape(D,(N+1)*(nx+nu),numvars);
 
@@ -32,4 +32,4 @@ D = reshape(D,(N+1)*(nx+nu),numvars);
 
 u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
 
-x = C*x+d;
+x = C*u+d;

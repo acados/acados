@@ -260,7 +260,7 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, nx);
-    // for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
+    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
     //    d_print_mat(ngN, nx, CN, ngN);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
