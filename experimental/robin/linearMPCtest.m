@@ -1,3 +1,5 @@
+clear
+
 N = 20;
 nx = 8;
 nu = 3;
@@ -46,17 +48,65 @@ r = 0.2*ones(nu,1);
 H = blkdiag(kron(eye(N),blkdiag(Q,R)),Q);
 f = [repmat([q;r],N,1);q];
 
-G = [-eye(nx),zeros(nx,N*(nx+nu))];
-g = [x0;repmat(b,N,1)];
+C = [-eye(nx),zeros(nx,N*(nx+nu))];
+c = [x0;repmat(b,N,1)];
 for i=0:N-1
-    G = [G;zeros(nx,i*(nx+nu)),A,B,-eye(nx),zeros(nx,(N-i-1)*(nx+nu))];
+    C = [C;zeros(nx,i*(nx+nu)),A,B,-eye(nx),zeros(nx,(N-i-1)*(nx+nu))];
 end
+
 
 lb = [repmat([-4*ones(nx,1);-0.5*ones(nu,1)],N,1);-4*ones(nx,1)];
 ub = -lb;
 
-w = quadprog(H,f,[],[],G,-g,lb,ub);
+sparse.w = quadprog(H,f,[],[],C,-c,lb,ub);
 
-XU = reshape([w;zeros(nu,1)],nx+nu,N+1).'
+XU = reshape([sparse.w;zeros(nu,1)],nx+nu,N+1);
+sparse.x = vec(XU(1:nx,:));
+sparse.u = vec(XU(nx+1:end,1:end-1));
 
-figure(1);plot(XU(:,1:2:7))
+figure(1);clf;plot(XU(1:2:7,:).')
+
+%% Condensing
+
+Abar = [-eye(nx),zeros(nx,N*nx)];
+Bbar = [zeros(nx,N*nu);kron(eye(N),B)];
+for i=0:N-1
+    Abar = [Abar;zeros(nx,i*(nx)),A,-eye(nx),zeros(nx,(N-i-1)*nx)];
+end
+Qbar = kron(eye(N+1),Q);
+Rbar = kron(eye(N),R);
+
+G = -Abar\Bbar;
+g = -Abar\c;
+
+%% Read from file
+file = fopen('QP_data.txt','r');
+num_arrays_to_read = 10;
+arrays_to_read = {};
+for i=1:num_arrays_to_read
+    instr=fgets(file);
+    temp = sscanf(instr,'%g ');
+    arrays_to_read{i} = temp;
+end
+numvars = N*nu;
+[H,f,A,lbU,ubU,lbA,ubA,C,d,D] = arrays_to_read{:};
+H = reshape(H,numvars,numvars);
+A = reshape(A,N*(nx+nx+nu)+nx+nu,numvars);
+C = reshape(C,N*(nx),numvars);
+D = reshape(D,(N+1)*(nx+nu),numvars);
+
+bigA = [];
+for i=0:N-1
+    bigA = [bigA;C(i*nx+1:(i+1)*nx,:);D(i*(nx+nu)+1:(i+1)*(nx+nu),:)];
+end
+bigA = [bigA;D(end-(nx+nu)+1:end,:)];
+
+condensing.u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
+condensing.x = C*condensing.u+d;
+
+norm(condensing.u-sparse.u)
+norm(condensing.x-sparse.x(nx+1:end))
+
+figure(1);hold on;
+condensing.XU = reshape([x0;condensing.x],nx,N+1);
+plot(condensing.XU(1:2:7,:).','o')
