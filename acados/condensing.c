@@ -203,8 +203,10 @@ void calculate_lbA_ubA() {
         for (int_t j = 0; j < NA; j++) {
             // State polytopic constraints
             for (int_t k = 0; k < NX; k++) {
-                data.lbA[i*(NX+NA)+j] = data.lbA[i*(NX+NA)+j] - data.Dx[i*NA*NX+k*NA+j]*data.g[(i-1)*NX+k];
-                data.ubA[i*(NX+NA)+j] = data.ubA[i*(NX+NA)+j] - data.Dx[i*NA*NX+k*NA+j]*data.g[(i-1)*NX+k];
+                data.lbA[i*(NX+NA)+j] = data.lbA[i*(NX+NA)+j]
+                            - data.Dx[i*NA*NX+k*NA+j]*data.g[(i-1)*NX+k];
+                data.ubA[i*(NX+NA)+j] = data.ubA[i*(NX+NA)+j]
+                            - data.Dx[i*NA*NX+k*NA+j]*data.g[(i-1)*NX+k];
             }
         }
     }
@@ -295,7 +297,8 @@ static void calculate_D() {
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
-            calculate_Dij(&data.Dx[i*NA*NX], &data.G[(i-1)*NX+NNN*NX*NU*j], &data.D[i*NA+(NNN+1)*NA*NU*j]);
+            calculate_Dij(&data.Dx[i*NA*NX], &data.G[(i-1)*NX+NNN*NX*NU*j],
+                            &data.D[i*NA+(NNN+1)*NA*NU*j]);
         }
     }
 }

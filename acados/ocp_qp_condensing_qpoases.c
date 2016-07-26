@@ -147,7 +147,6 @@ static void fill_data_for_condensing(int_t NN, int_t *nx, int_t *nu, int_t *nb, 
                                 double **A, double **B, double **b, \
                                 double **Q, double **S, double **R, double **q, double **r, \
                                 int_t **idxb, double **lb, double **ub) {
-
     // Condensing implicitly assumes zeros initialisation
     memset(&data, 0, sizeof(data_struct));
     fill_in_objective_variables(NN, nx, nu, Q, S, R, q, r);

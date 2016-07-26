@@ -22,10 +22,10 @@ typedef struct data_struct_ {
     real_t R[NNN*NU*NU];
     real_t S[NNN*NX*NU];
     real_t f[NNN*(NX+NU)+NX];
-    real_t A[NNN*NX*NX]; // Ax = Bu + b
+    real_t A[NNN*NX*NX];  // Ax = Bu + b
     real_t B[NNN*NX*NU];
     real_t b[NNN*NX];
-    real_t Du[NNN*NA*NU]; // lbA < Dx*x + Du*u < ubA
+    real_t Du[NNN*NA*NU];  // lbA < Dx*x + Du*u < ubA
     real_t Dx[(NNN+1)*NA*NX];
     real_t lb[NNN*(NX+NU)+NX];
     real_t ub[NNN*(NX+NU)+NX];
