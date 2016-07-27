@@ -286,7 +286,7 @@ int main() {
     for (jj = 0; jj < nbu; jj++) {
         lb0[jj] = -0.5;  //   umin
         ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = jj;
+        idxb0[jj] = nx+jj;
     }
     //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
@@ -296,14 +296,14 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-    for (jj = 0; jj < nbu; jj++) {
-        lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
+    for (jj = 0; jj < nbx; jj++) {
+        lb1[jj] = -4.0;  //   xmin
+        ub1[jj] = 4.0;   //   xmax
         idxb1[jj] = jj;
     }
     for (; jj < nb; jj++) {
-        lb1[jj] = -4.0;  //   umin
-        ub1[jj] = 4.0;   //   umax
+        lb1[jj] = -0.5;  //   umin
+        ub1[jj] = 0.5;   //   umax
         idxb1[jj] = jj;
     }
     //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);

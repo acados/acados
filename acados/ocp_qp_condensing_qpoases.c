@@ -119,23 +119,22 @@ static void fill_in_dynamics(int_t NN, int_t* nx, int_t* nu,
 static void fill_in_bounds(int_t NN, int_t* nx, int_t* nu, int_t* nb,
     int_t** idxb, real_t** lb, real_t** ub) {
     for (int_t j = 0; j < nu[0]; j++) {
-        data.lb[NX+idxb[0][j]] = lb[0][idxb[0][j]];
-        data.ub[NX+idxb[0][j]] = ub[0][idxb[0][j]];
+        data.lb[idxb[0][j]] = lb[0][j];
+        data.ub[idxb[0][j]] = ub[0][j];
     }
     for (int_t i = 1; i < NN; i++) {
-        for (int_t j = 0; j < nu[i]; j++) {
-            // the interface assumes [u,x] ordering
-            data.lb[NX+i*(nu[i]+nx[i])+idxb[i][j]] = lb[i][idxb[i][j]];
-            data.ub[NX+i*(nu[i]+nx[i])+idxb[i][j]] = ub[i][idxb[i][j]];
+        for (int_t j = 0; j < nx[i]; j++) {
+            data.lb[i*(nx[i]+nu[i])+idxb[i][j]] = lb[i][j];
+            data.ub[i*(nx[i]+nu[i])+idxb[i][j]] = ub[i][j];
         }
-        for (int_t j = nu[i]; j < nb[i]; j++) {
-            data.lb[-NU+i*(nu[i]+nx[i])+idxb[i][j]] = lb[i][idxb[i][j]];
-            data.ub[-NU+i*(nu[i]+nx[i])+idxb[i][j]] = ub[i][idxb[i][j]];
+        for (int_t j = nx[i]; j < nb[i]; j++) {
+            data.lb[i*(nx[i]+nu[i])+idxb[i][j]] = lb[i][j];
+            data.ub[i*(nx[i]+nu[i])+idxb[i][j]] = ub[i][j];
         }
     }
     for (int_t j = 0; j < nb[NN]; j++) {
-        data.lb[NN*(NX+NU)+idxb[NN][j]] = lb[NN][idxb[NN][j]];
-        data.ub[NN*(NX+NU)+idxb[NN][j]] = ub[NN][idxb[NN][j]];
+        data.lb[NN*(NX+NU)+idxb[NN][j]] = lb[NN][j];
+        data.ub[NN*(NX+NU)+idxb[NN][j]] = ub[NN][j];
     }
 }
 
