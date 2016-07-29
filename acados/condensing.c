@@ -244,7 +244,7 @@ void calculate_gradient(int_t offset, real_t *x0) {
                     &data.g[(i-1)*NX], &data.B[i*NX*NU]);
         computeWg(&data.f[i*(NX+NU)], &data.Q[i*NX*NX], &data.g[(i-1)*NX], &data.A[i*NX*NX]);
     }
-    if(x0 != 0) {
+    if (x0 != 0) {
         correct_gradient_fixed_initial_state(x0);
     }
 }
