@@ -280,7 +280,7 @@ static void calculate_D() {
     for (int_t k = 0; k < NNN; k++) {
         for (int_t j = 0; j < NU; j++) {
             for (int_t i = 0; i < NA; i++) {
-                data.D[(k*NNN+1)*NA*NU+j*NNN*NA+i] = data.Du[k*NA*NU+j*NA+i];
+                data.D[k*((NNN+1)*NA*NU+NA)+j*NNN*NA+i] = data.Du[k*NA*NU+j*NA+i];
             }
         }
     }
