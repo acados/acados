@@ -70,16 +70,19 @@ figure(1);clf;plot(XU(1:2:7,:).')
 
 %% Condensing
 
-Abar = [-eye(nx),zeros(nx,N*nx)];
-Bbar = [zeros(nx,N*nu);kron(eye(N),B)];
-for i=0:N-1
-    Abar = [Abar;zeros(nx,i*(nx)),A,-eye(nx),zeros(nx,(N-i-1)*nx)];
+Abar = [-eye(nx),zeros(nx,(N-1)*nx)];
+Bbar = kron(eye(N),B);
+for i=1:N-1
+    Abar = [Abar;zeros(nx,(i-1)*(nx)),A,-eye(nx),zeros(nx,(N-i-1)*nx)];
 end
 Qbar = kron(eye(N+1),Q);
 Rbar = kron(eye(N),R);
+c = [A*x0+b;repmat(b,N-1,1)];
+Dx = blkdiag(zeros(N*nx,N*nx),eye(nx));
 
-G = -Abar\Bbar;
-g = -Abar\c;
+G = [zeros(nx,N*nu);-Abar\Bbar];
+Ge = [eye(nx);-Abar\[A;zeros((N-1)*nx,nx)]];
+g = [zeros(nx,1);-Abar\c];
 
 Hbar = Rbar + G.'*Qbar*G;
 hbar = repmat(r,N,1) + G.'*(repmat(q,N+1,1)+Qbar*g);

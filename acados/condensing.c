@@ -177,7 +177,7 @@ void construct_G_column(int_t j, int_t offset) {
     }
 }
 
-void calculate_control_bounds() {
+void calculate_simple_bounds() {
     for ( int_t i = 0; i < NNN; i++ ) {
         for ( int_t j = 0; j < NU; j++ ) {
             data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
@@ -186,7 +186,7 @@ void calculate_control_bounds() {
     }
 }
 
-void calculate_g(real_t *x0) {
+void calculate_transition_vector(real_t *x0) {
     for ( int_t k = 0; k < NX; k++ ) {
         data.g[k] = data.b[k];
         for ( int_t i = 0; i < NX; i++ ) {
@@ -199,15 +199,19 @@ void calculate_g(real_t *x0) {
 }
 
 void calculate_constraint_bounds(real_t *x0) {
-    calculate_g(x0);
-    for ( int_t i = 0; i < NNN; i++ ) {
-        for ( int_t j = 0; j < NX; j++ ) {
+    for (int_t i = 0; i < NNN; i++) {
+        for (int_t j = 0; j < NX; j++) {
             // State simple bounds
             data.lbA[NA+i*(NX+NA)+j] = data.lb[(i+1)*(NX+NU)+j] - data.g[i*NX+j];
             data.ubA[NA+i*(NX+NA)+j] = data.ub[(i+1)*(NX+NU)+j] - data.g[i*NX+j];
         }
     }
-    // TODO(robin): polytopic constraints on first stage
+    for (int_t i = 0; i < NA; i++) {
+        for (int_t j = 0; j < NX; j++) {
+            data.lbA[i] = data.lbA[i] - data.Dx[j*NX+i]*x0[j];
+            data.ubA[i] = data.ubA[i] - data.Dx[j*NX+i]*x0[j];
+        }
+    }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < NA; j++) {
             // State polytopic constraints
@@ -226,7 +230,6 @@ void calculate_hessian(int_t offset) {
     /* propagate controls: */
     for ( j = 0; j < NNN; j++ ) {
         for ( i = 0; i < NX*NU; i++ ) data.W2_u[i] = 0.0;
-        /* A is unused here because W is zero */
         computeWu(&data.Q[NNN*NX*NX], &data.G[(offset+j*NU)*NNN*NX+(NNN-1)*NX], &data.A[0]);
         for ( i = NNN-1; i > j; i-- ) {
             computeH_offDU(&data.Hc[(offset+j*NU)*NVC+offset+i*NU], &data.S[i*NX*NU], \
@@ -249,7 +252,7 @@ void calculate_gradient(int_t offset, real_t *x0) {
     }
 }
 
-void calculate_G(int_t offset) {
+void calculate_transition_matrix(int_t offset) {
     for ( int_t j = 0; j < NNN; j++ ) {
         for ( int_t c = 0; c < NU; c++ ) {
             for ( int_t r = 0; r < NX; r++ ) {
@@ -289,8 +292,7 @@ static void calculate_D() {
     }
 }
 
-void calculate_constraint_matrix(int_t offset) {
-    calculate_G(offset);
+void calculate_constraint_matrix() {
     calculate_D();
     for (int_t j = 0; j < NVC; j++) {
         for (int_t k = 0; k < NNN; k++) {
@@ -309,19 +311,17 @@ void calculate_constraint_matrix(int_t offset) {
     }
 }
 
-void condensingN2_fixed_initial_state() {
-    int_t offset = 0;
-    real_t x0[NX] = {0};
-    // Fix x0 to lower bound (== upper bound)
-    for (int_t i = 0; i < NX; i++) x0[i] = data.lb[i];
+void condensingN2_fixed_initial_state(int_t offset, real_t *x0) {
 
-    calculate_constraint_matrix(offset);
-    calculate_control_bounds();
-    calculate_constraint_bounds(&x0[0]);
+    calculate_transition_matrix(offset);
+    calculate_transition_vector(x0);
 
     calculate_hessian(offset);
-    /* A is unused for this operation because the W's are zero */
-    calculate_gradient(offset, &(x0[0]));
+    calculate_gradient(offset, x0);
+
+    calculate_simple_bounds();
+    calculate_constraint_matrix();
+    calculate_constraint_bounds(x0);
 }
 
 void propagate_x0_to_G() {
@@ -339,7 +339,6 @@ void propagate_x0_to_G() {
 
 void propagate_x0_to_H() {
     /* propagate x0: */
-    /* A is unused for this operation because the W's are zero */
     computeWx(&data.Q[NNN*NX*NX], &data.G[(NNN-1)*NX], &data.A[0]);
     for ( int_t i = NNN-1; i > 0; i-- ) {
         computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &data.G[(i-1)*NX], &data.B[i*NX*NU]);
@@ -399,7 +398,6 @@ void condensingN2_free_initial_state() {
     calculate_hessian(offset);
 
     /* !! gradient propagation !! */
-    /* A is unused for this operation because the W's are zero */
     calculate_gradient(offset, 0);
     compute_G_free_initial_state();
 }

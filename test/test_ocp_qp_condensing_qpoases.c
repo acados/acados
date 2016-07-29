@@ -7,7 +7,7 @@
 #define NGN 8
 
 // define number of repetitions
-#define NREP 10
+#define NREP 1
 
 // system headers
 #include <stdlib.h>
@@ -143,6 +143,7 @@ int main() {
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
     ngg[N] = ngN;
+    ngg[0] = 1;
 
     printf(
         " Test problem: mass-spring system with %d masses and %d controls.\n",
@@ -261,6 +262,19 @@ int main() {
     double *ug;
     d_zeros(&ug, ng, 1);
 
+    double *C0;
+    d_zeros(&C0, 1, nx);
+    C0[0] = 1;
+    double *D0;
+    d_zeros(&D0, 1, nu);
+    D0[0] = 1;
+    double *lg0;
+    d_zeros(&lg0, 1, 1);
+    lg0[0] = 2.5;
+    double *ug0;
+    d_zeros(&ug0, 1, 1);
+    ug0[0] = 5.5;
+
     double *CN;
     d_zeros(&CN, ngN, nx);
     for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
@@ -340,10 +354,10 @@ int main() {
     hlb[0] = lb0;
     hub[0] = ub0;
     hidxb[0] = idxb0;
-    hC[0] = C;
-    hD[0] = D;
-    hlg[0] = lg;
-    hug[0] = ug;
+    hC[0] = C0;
+    hD[0] = D0;
+    hlg[0] = lg0;
+    hug[0] = ug0;
     for (ii = 1; ii < N; ii++) {
         hA[ii] = A;
         hB[ii] = B;
@@ -416,17 +430,18 @@ int main() {
         return_value = ocp_qp_condensing_qpoases(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
                                     hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg,
                                     hug, hx, hu, &args, NULL);
-        printf("\nu = \n");
-        for (ii = 0; ii < 5; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
-
-        // printf("\nx = \n");
-        // for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
     }
 
     gettimeofday(&tv1, NULL);  // stop
 
     double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
+
+    printf("\nu = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+
+    printf("\nx = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
@@ -446,6 +461,10 @@ int main() {
     d_free(x0);
     d_free(A0);
     d_free(b0);
+    d_free(C0);
+    d_free(D0);
+    d_free(lg0);
+    d_free(ug0);
     d_free(Q);
     d_free(S);
     d_free(R);
