@@ -7,7 +7,7 @@
 #define NGN 8
 
 // define number of repetitions
-#define NREP 1
+#define NREP 10
 
 // system headers
 #include <stdlib.h>
@@ -178,10 +178,10 @@ int main() {
     x0[0] = 2.5;
     x0[1] = 2.5;
 
-       d_print_mat(nx, nx, A, nx);
-       d_print_mat(nx, nu, B, nx);
-       d_print_mat(nx, 1, b, nx);
-       d_print_mat(nx, 1, x0, nx);
+    //    d_print_mat(nx, nx, A, nx);
+    //    d_print_mat(nx, nu, B, nx);
+    //    d_print_mat(nx, 1, b, nx);
+    //    d_print_mat(nx, 1, x0, nx);
 
     // compute b0 = b + A*x0
     double *b0;
@@ -333,7 +333,7 @@ int main() {
     hB[0] = B;
     hb[0] = b;
     hQ[0] = Q;
-    hS[0] = S0;
+    hS[0] = S;
     hR[0] = R;
     hq[0] = q;
     hr[0] = r0;
@@ -416,15 +416,14 @@ int main() {
         return_value = ocp_qp_condensing_qpoases(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
                                     hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg,
                                     hug, hx, hu, &args, NULL);
+        printf("\nu = \n");
+        for (ii = 0; ii < 5; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+
+        // printf("\nx = \n");
+        // for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
     }
 
     gettimeofday(&tv1, NULL);  // stop
-
-    printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
-
-    printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);

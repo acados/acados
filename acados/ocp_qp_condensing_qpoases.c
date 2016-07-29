@@ -60,6 +60,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, data.G, NNN*(NX)*NVC);
     write_array_to_file(outFile, data.g, NNN*NX);
     write_array_to_file(outFile, data.D, (NNN+1)*NA*NVC);
+    fclose(outFile);
 }
 
 static void fill_in_objective(int_t NN, int_t* nx, int_t* nu,
@@ -235,7 +236,7 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
             _A[i*num_condensed_vars+j] = data.Ac[j*(N*(NX+NA)+NA)+i];
         }
     }
-    write_QP_data_to_file();
+    // write_QP_data_to_file();
     int_t return_flag = solve_QP(QP, &(primal_solution[0]), &(dual_solution[0]));
     recover_state_trajectory(N, x, u, &(primal_solution[0]));
 

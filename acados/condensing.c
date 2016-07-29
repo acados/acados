@@ -3,7 +3,6 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 
 #include "condensing.h"
-#include <stdio.h>
 
 extern data_struct data;
 
@@ -151,7 +150,7 @@ static void computeG_off(real_t* gc_, real_t* r_, real_t* S_, real_t* d_, real_t
     }
 }
 
-static void computeG_fixed_initial_state(real_t* x0) {
+static void correct_gradient_fixed_initial_state(real_t* x0) {
     int i, j;
     real_t Sx0[NU] = {0};
     for ( j = 0; j < NU; j++ ) {
@@ -178,7 +177,7 @@ void construct_G_column(int_t j, int_t offset) {
     }
 }
 
-void calculate_lbU_ubU() {
+void calculate_control_bounds() {
     for ( int_t i = 0; i < NNN; i++ ) {
         for ( int_t j = 0; j < NU; j++ ) {
             data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
@@ -187,7 +186,20 @@ void calculate_lbU_ubU() {
     }
 }
 
-void calculate_lbA_ubA() {
+void calculate_g(real_t *x0) {
+    for ( int_t k = 0; k < NX; k++ ) {
+        data.g[k] = data.b[k];
+        for ( int_t i = 0; i < NX; i++ ) {
+            data.g[k] += data.A[i*NX+k]*x0[i];
+        }
+    }
+    for ( int_t j = 1; j < NNN; j++ ) {
+        construct_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+    }
+}
+
+void calculate_constraint_bounds(real_t *x0) {
+    calculate_g(x0);
     for ( int_t i = 0; i < NNN; i++ ) {
         for ( int_t j = 0; j < NX; j++ ) {
             // State simple bounds
@@ -209,7 +221,7 @@ void calculate_lbA_ubA() {
     }
 }
 
-void propagate_controls_to_H(int_t offset) {
+void calculate_hessian(int_t offset) {
     int_t i, j;
     /* propagate controls: */
     for ( j = 0; j < NNN; j++ ) {
@@ -225,12 +237,15 @@ void propagate_controls_to_H(int_t offset) {
     }
 }
 
-void propagate_to_G(int_t offset) {
+void calculate_gradient(int_t offset, real_t *x0) {
     computeWg(&data.f[NNN*(NX+NU)], &data.Q[NNN*NX*NX], &data.g[(NNN-1)*NX], &data.A[0]);
     for ( int_t i = NNN-1; i > 0; i-- ) {
         computeG_off(&data.gc[offset+i*NU], &data.f[i*(NX+NU)+NX], &data.S[i*NX*NU], \
                     &data.g[(i-1)*NX], &data.B[i*NX*NU]);
         computeWg(&data.f[i*(NX+NU)], &data.Q[i*NX*NX], &data.g[(i-1)*NX], &data.A[i*NX*NX]);
+    }
+    if(x0 != 0) {
+        correct_gradient_fixed_initial_state(x0);
     }
 }
 
@@ -244,36 +259,6 @@ void calculate_G(int_t offset) {
         for ( int_t i = j+1; i < NNN; i++ ) {
             /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
             propagateCU(&data.G[(offset+j*NU)*NNN*NX+i*NX], &data.A[i*NX*NX]);
-        }
-    }
-}
-
-void calculate_g(real_t *x0) {
-    for ( int_t k = 0; k < NX; k++ ) {
-        data.g[k] = data.b[k];
-        for ( int_t i = 0; i < NX; i++ ) {
-            data.g[k] += data.A[i*NX+k]*x0[i];
-        }
-    }
-    for ( int_t j = 1; j < NNN; j++ ) {
-        construct_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
-    }
-}
-
-void calculate_Ac() {
-    for (int_t j = 0; j < NVC; j++) {
-        for (int_t k = 0; k < NNN; k++) {
-            for (int_t i = 0; i < NA; i++) {
-                data.Ac[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.D[j*NA*(NNN+1)+k*NA+i];
-            }
-            for (int_t i = 0; i < NX; i++) {
-                data.Ac[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.G[j*(NX*NNN)+k*NX+i];
-            }
-        }
-    }
-    for (int_t j = 0; j < NVC; j++) {
-        for (int_t i = 0; i < NA; i++) {
-            data.Ac[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = data.D[NA*NNN+j*NA*(NNN+1)+i];
         }
     }
 }
@@ -304,27 +289,39 @@ static void calculate_D() {
     }
 }
 
+void calculate_constraint_matrix(int_t offset) {
+    calculate_G(offset);
+    calculate_D();
+    for (int_t j = 0; j < NVC; j++) {
+        for (int_t k = 0; k < NNN; k++) {
+            for (int_t i = 0; i < NA; i++) {
+                data.Ac[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.D[j*NA*(NNN+1)+k*NA+i];
+            }
+            for (int_t i = 0; i < NX; i++) {
+                data.Ac[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.G[j*(NX*NNN)+k*NX+i];
+            }
+        }
+    }
+    for (int_t j = 0; j < NVC; j++) {
+        for (int_t i = 0; i < NA; i++) {
+            data.Ac[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = data.D[NA*NNN+j*NA*(NNN+1)+i];
+        }
+    }
+}
+
 void condensingN2_fixed_initial_state() {
-    int_t i;
     int_t offset = 0;
     real_t x0[NX] = {0};
     // Fix x0 to lower bound (== upper bound)
-    for ( i = 0; i < NX; i++ ) x0[i] = data.lb[i];
+    for (int_t i = 0; i < NX; i++) x0[i] = data.lb[i];
 
-    calculate_G(offset);
-    calculate_D();
-    calculate_g(&x0[0]);
-    calculate_lbU_ubU();
-    calculate_lbA_ubA();
-    calculate_Ac();
+    calculate_constraint_matrix(offset);
+    calculate_control_bounds();
+    calculate_constraint_bounds(&x0[0]);
 
-    /* !! Hessian propagation !! */
-    propagate_controls_to_H(offset);
-
-    /* !! gradient propagation !! */
+    calculate_hessian(offset);
     /* A is unused for this operation because the W's are zero */
-    propagate_to_G(offset);
-    computeG_fixed_initial_state(&(x0[0]));
+    calculate_gradient(offset, &(x0[0]));
 }
 
 void propagate_x0_to_G() {
@@ -395,15 +392,15 @@ void condensingN2_free_initial_state() {
         }
     }
 
-    calculate_lbA_ubA();
+    calculate_constraint_bounds(0);
 
     /* !! Hessian propagation !! */
     propagate_x0_to_H();
-    propagate_controls_to_H(offset);
+    calculate_hessian(offset);
 
     /* !! gradient propagation !! */
     /* A is unused for this operation because the W's are zero */
-    propagate_to_G(offset);
+    calculate_gradient(offset, 0);
     compute_G_free_initial_state();
 }
 
