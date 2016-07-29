@@ -312,7 +312,6 @@ void calculate_constraint_matrix() {
 }
 
 void condensingN2_fixed_initial_state(int_t offset, real_t *x0) {
-
     calculate_transition_matrix(offset);
     calculate_transition_vector(x0);
 
