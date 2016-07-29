@@ -96,16 +96,25 @@ Furthermore, the function returns an int, that is defined in the following enum 
 \subsubsection{MPC problem}
 
 In the MPC problem, the initial state is fixed.
-This is modelled by choosinig {\tt nx[0]=0}, i.e. not considering the initial state as an optimization variable.
+This can be modeled by choosing {\tt nx[0]=0}, i.e. not considering the initial state as an optimization variable.
 As a consequence, e.g. the matrix {\tt A[0]} has size {\tt nx[1]$\times$0}, the matrix {\tt Q[0]} has size {\tt 0$\times$0}, and the vector {\tt q[0]} has size {\tt 0$\times$1}.
 The information about the known value of $x_0$ and the matrix $A_0$ are used to compute the value of the vector {\tt b[0]}, that is initialized to $b_0 + A_0 \cdot x_0$.
+
+\section{Condensing Interface}
+
+This is the interface to the condensing routine, first discovered in~\cite{Bock1984}. The notation used here is partly based on~\cite{Frasch2014a}.
+
+\begin{verbatim}
+int condensing_NAME(condensing_in *input, condensing_out *output,
+        condensing_memory *mem, condensing_workspace *work);
+\end{verbatim}
 
 \section{Integrator Interface with Sensitivity Propagation}
 
 The C code interface looks like
 \begin{verbatim}
-int ocp_qp_SOLVERNAME(integrator_in *input, 
-      struct integrator_SOLVERNAME_opts *opts, double *work);
+int ocp_qp_NAME(integrator_in *input, 
+      struct integrator_NAME_opts *opts, double *work);
 \end{verbatim}
 where the input struct is defined as:
 \begin{verbatim}
@@ -118,7 +127,7 @@ typedef struct integrator_in_{
     double **valOutputs, double **sensOutputs, function_call *sys, 
     function_call *out, double *variables} integrator_in;
 \end{verbatim}
-where {\tt SOLVERNAME} is the name of the specific solver. Additionally, a function struct has been defined as:
+where {\tt NAME} is the name of the specific integration routine. Additionally, a function struct has been defined as:
 \begin{verbatim}
 typedef struct function_call_{
     int dimIn, int dimOut, bool *sparsity, bool linear, 
@@ -178,10 +187,10 @@ If we like the latter embedding of structs, we can avoid some of the fields in t
 \item[{\tt out\_vde\_hess}] [input] is the vector of size $nOutputs$, containing the function pointers to evaluate the second order sensitivity equations for the outputs.
 \item[] \textcolor{red}{Other memory:}
 \item[variables] [input,output] is the pointer to the warm variables space used by the specific solver from one call to the other.
-The variables space size (in doubles) is returned by a call to the function \\{\tt integrator\_SOLVERNAME\_variables\_double(integrator\_in *input, struct integrator\_solver\_opts *opts)}. 
-\item[opts] [input] is the pointer to a structure of type {\tt integrator\_SOLVERNAME\_opts} that defines the arguments (as e.g. maximum number of steps, minimum step size, desired tolerance, ... ) passed to the specific solver.
+The variables space size (in doubles) is returned by a call to the function \\{\tt integrator\_NAME\_variables\_double(integrator\_in *input, struct integrator\_solver\_opts *opts)}. 
+\item[opts] [input] is the pointer to a structure of type {\tt integrator\_NAME\_opts} that defines the arguments (as e.g. maximum number of steps, minimum step size, desired tolerance, ... ) passed to the specific solver.
 \item[work] [workspace] is the pointer to the working space used by the specific solver.
-The working space size (in doubles) is returned by a call to the function {\tt integrator\_SOLVERNAME\_workspace\_double(integrator\_in *input, struct integrator\_solver\_opts *opts)}. 
+The working space size (in doubles) is returned by a call to the function {\tt integrator\_NAME\_workspace\_double(integrator\_in *input, struct integrator\_solver\_opts *opts)}. 
 \end{description}
 
 Furthermore, the function returns an int, that is defined in the following enum (TODO change the names to something better!!!):
@@ -190,5 +199,9 @@ Furthermore, the function returns an int, that is defined in the following enum 
 \item[ACADOS\_MAXITER] Maximum number of integration steps reached.
 \item[ACADOS\_MINSTEP] Minumum step size reached.
 \end{description}
+
+\bibliographystyle{abbrv}
+\bibliography{./syscop.bib}
+
 
 \end{document}
