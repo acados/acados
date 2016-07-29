@@ -55,8 +55,10 @@ for i=0:N-1
 end
 
 
-lb = inf*[repmat([-4*ones(nx,1);-0.5*ones(nu,1)],N,1);-4*ones(nx,1)];
+lb = [repmat([-4*ones(nx,1);-0.5*ones(nu,1)],N,1);-4*ones(nx,1)];
+lb(end-nx+1:end) = 0;
 ub = -lb;
+
 
 sparse.w = quadprog(H,f,[],[],C,-c,lb,ub);
 
@@ -79,6 +81,8 @@ Rbar = kron(eye(N),R);
 G = -Abar\Bbar;
 g = -Abar\c;
 
+Hbar = Rbar + G.'*Qbar*G;
+hbar = repmat(r,N,1) + G.'*(repmat(q,N+1,1)+Qbar*g);
 %% Read from file
 file = fopen('QP_data.txt','r');
 num_arrays_to_read = 10;
@@ -101,7 +105,7 @@ for i=0:N-1
 end
 bigA = [bigA;D(end-(nx+nu)+1:end,:)];
 
-condensing.u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
+condensing.u = quadprog(H,hbar,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
 condensing.x = C*condensing.u+d;
 
 norm(condensing.u-sparse.u)
