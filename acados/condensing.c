@@ -195,10 +195,7 @@ void calculate_lbA_ubA() {
             data.ubA[NA+i*(NX+NA)+j] = data.ub[(i+1)*(NX+NU)+j] - data.g[i*NX+j];
         }
     }
-    for (int_t j = 0; j < NA; j++) {
-        data.lbA[j] = data.lb[j];
-        data.ubA[j] = data.ub[j];
-    }
+    // TODO(robin): polytopic constraints on first stage
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < NA; j++) {
             // State polytopic constraints
@@ -251,11 +248,15 @@ void calculate_G(int_t offset) {
     }
 }
 
-void calculate_g() {
-    for ( int_t k = 0; k < NX; k++ ) data.g[k] = data.b[k];
+void calculate_g(real_t *x0) {
+    for ( int_t k = 0; k < NX; k++ ) {
+        data.g[k] = data.b[k];
+        for ( int_t i = 0; i < NX; i++ ) {
+            data.g[k] += data.A[i*NX+k]*x0[i];
+        }
+    }
     for ( int_t j = 1; j < NNN; j++ ) {
         construct_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
-        // TODO(robin): for ( i = 0; i < NX; i++ ) data.g[k] += data.A[i*NX+k]*x0[i];
     }
 }
 
@@ -312,7 +313,7 @@ void condensingN2_fixed_initial_state() {
 
     calculate_G(offset);
     calculate_D();
-    calculate_g();
+    calculate_g(&x0[0]);
     calculate_lbU_ubU();
     calculate_lbA_ubA();
     calculate_Ac();

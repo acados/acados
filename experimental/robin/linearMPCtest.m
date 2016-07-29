@@ -55,7 +55,7 @@ for i=0:N-1
 end
 
 
-lb = [repmat([-4*ones(nx,1);-0.5*ones(nu,1)],N,1);-4*ones(nx,1)];
+lb = inf*[repmat([-4*ones(nx,1);-0.5*ones(nu,1)],N,1);-4*ones(nx,1)];
 ub = -lb;
 
 sparse.w = quadprog(H,f,[],[],C,-c,lb,ub);

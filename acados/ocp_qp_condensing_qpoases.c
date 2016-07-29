@@ -62,7 +62,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, data.D, (NNN+1)*NA*NVC);
 }
 
-static void fill_in_objective_variables(int_t NN, int_t* nx, int_t* nu,
+static void fill_in_objective(int_t NN, int_t* nx, int_t* nu,
     real_t** Q, real_t** S, real_t** R, real_t** q, real_t** r) {
     for (int_t i = 0; i < NN+1; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
@@ -118,11 +118,7 @@ static void fill_in_dynamics(int_t NN, int_t* nx, int_t* nu,
 
 static void fill_in_bounds(int_t NN, int_t* nx, int_t* nu, int_t* nb,
     int_t** idxb, real_t** lb, real_t** ub) {
-    for (int_t j = 0; j < nu[0]; j++) {
-        data.lb[idxb[0][j]] = lb[0][j];
-        data.ub[idxb[0][j]] = ub[0][j];
-    }
-    for (int_t i = 1; i < NN; i++) {
+    for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             data.lb[i*(nx[i]+nu[i])+idxb[i][j]] = lb[i][j];
             data.ub[i*(nx[i]+nu[i])+idxb[i][j]] = ub[i][j];
@@ -178,7 +174,7 @@ static void fill_data_for_condensing(int_t NN, int_t *nx, int_t *nu, int_t *nb, 
                                 double **C, double **D, double **ld, double **ud) {
     // Condensing implicitly assumes zeros initialisation
     memset(&data, 0, sizeof(data_struct));
-    fill_in_objective_variables(NN, nx, nu, Q, S, R, q, r);
+    fill_in_objective(NN, nx, nu, Q, S, R, q, r);
     fill_in_dynamics(NN, nx, nu, A, B, b);
     fill_in_bounds(NN, nx, nu, nb, idxb, lb, ub);
     fill_in_polytopic_constraints(NN, nx, nu, ng, C, D, ld, ud);

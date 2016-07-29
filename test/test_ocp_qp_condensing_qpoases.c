@@ -125,21 +125,19 @@ int main() {
     int ng = NG;  // 4;  // number of general constraints
     int ngN = NGN;  // 4;  // number of general constraints at the last stage
 
-    int nbu = nu < nb ? nu : nb;
+    // int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
 
     // stage-wise variant size
     int nxx[N + 1];
-    nxx[0] = 0;
-    for (ii = 1; ii <= N; ii++) nxx[ii] = nx;
+    for (ii = 0; ii <= N; ii++) nxx[ii] = nx;
 
     int nuu[N + 1];
     for (ii = 0; ii < N; ii++) nuu[ii] = nu;
     nuu[N] = 0;
 
     int nbb[N + 1];
-    nbb[0] = nbu;
-    for (ii = 1; ii < N; ii++) nbb[ii] = nb;
+    for (ii = 0; ii < N; ii++) nbb[ii] = nb;
     nbb[N] = nbx;
 
     int ngg[N + 1];
@@ -189,7 +187,7 @@ int main() {
     double *b0;
     d_zeros(&b0, nx, 1);
     dcopy_3l(nx, b, 1, b0, 1);
-    dgemv_n_3l(nx, nx, A, nx, x0, b0);
+    // dgemv_n_3l(nx, nx, A, nx, x0, b0);
     //    d_print_mat(nx, 1, b, nx);
     //    d_print_mat(nx, 1, b0, nx);
 
@@ -207,10 +205,15 @@ int main() {
     d_zeros(&lb0, nbb[0], 1);
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
-    for (jj = 0; jj < nbu; jj++) {
-        lb0[jj] = -0.5;  //   umin
-        ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = nx+jj;
+    for (jj = 0; jj < nx; jj++) {
+        lb0[jj] = x0[jj];   //   xmin
+        ub0[jj] = x0[jj];   //   xmax
+        idxb0[jj] = jj;
+    }
+    for (; jj < nb; jj++) {
+        lb0[jj] = -0.5e8;  //   umin
+        ub0[jj] = 0.5e8;   //   umax
+        idxb0[jj] = jj;
     }
     //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
@@ -221,13 +224,13 @@ int main() {
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
     for (jj = 0; jj < nbx; jj++) {
-        lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = 4.0;   //   xmax
+        lb1[jj] = -4.0e8;  //   xmin
+        ub1[jj] = 4.0e8;   //   xmax
         idxb1[jj] = jj;
     }
     for (; jj < nb; jj++) {
-        lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
+        lb1[jj] = -0.5e8;  //   umin
+        ub1[jj] = 0.5e8;   //   umax
         idxb1[jj] = jj;
     }
     //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
@@ -239,8 +242,8 @@ int main() {
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
     for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0;  //   umin
-        ubN[jj] = 4.0;   //   umax
+        lbN[jj] = -4.0e8;  //   umin
+        ubN[jj] = 4.0e8;   //   umax
         idxbN[jj] = jj;
     }
     //    i_print_mat(nbb[N], 1, idxb1, nbb[N]);
@@ -260,7 +263,7 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, nx);
-    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
+    // for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
     //    d_print_mat(ngN, nx, CN, ngN);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
@@ -326,9 +329,9 @@ int main() {
     double *hlg[N + 1];
     double *hug[N + 1];
 
-    hA[0] = A0;
+    hA[0] = A;
     hB[0] = B;
-    hb[0] = b0;
+    hb[0] = b;
     hQ[0] = Q0;
     hS[0] = S0;
     hR[0] = R;
