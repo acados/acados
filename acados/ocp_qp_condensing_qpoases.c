@@ -135,50 +135,50 @@ static void fill_in_bounds(int_t NN, int_t* nx, int_t* nu, int_t* nb,
     }
 }
 
-static void fill_in_polytopic_constraints(int_t N, int_t *nx, int_t *nu, int_t *ng,
-                                double **C, double **D, double **ld, double **ud) {
+static void fill_in_polytopic_constraints(int_t N, int_t *nx, int_t *nu, int_t *nc,
+                                double **Cx, double **Cu, double **lc, double **uc) {
     int_t start_of_current_block = 0;
     for (int_t k = 0; k < N; k++) {
-        for (int_t i = 0; i < ng[k]; i++) {
-            data.lbA[start_of_current_block + i] = ld[k][i];
-            data.ubA[start_of_current_block + i] = ud[k][i];
+        for (int_t i = 0; i < nc[k]; i++) {
+            data.lbA[start_of_current_block + i] = lc[k][i];
+            data.ubA[start_of_current_block + i] = uc[k][i];
         }
-        start_of_current_block += ng[k] + nx[k];
+        start_of_current_block += nc[k] + nx[k];
     }
     int_t idxx = 0;
     int_t idxu = 0;
     for (int_t k = 0; k < N; k++) {
         for (int_t j = 0; j < nx[k]; j++) {
-            for (int_t i = 0; i < ng[k]; i++) {
-                data.Dx[idxx+j*ng[k]+i] = C[k][j*ng[k]+i];
+            for (int_t i = 0; i < nc[k]; i++) {
+                data.Dx[idxx+j*nc[k]+i] = Cx[k][j*nc[k]+i];
             }
         }
         for (int_t j = 0; j < nu[k]; j++) {
-            for (int_t i = 0; i < ng[k]; i++) {
-                data.Du[idxu+j*ng[k]+i] = D[k][j*ng[k]+i];
+            for (int_t i = 0; i < nc[k]; i++) {
+                data.Du[idxu+j*nc[k]+i] = Cu[k][j*nc[k]+i];
             }
         }
         idxx += NX*NA;
         idxu += NU*NA;
     }
     for (int_t j = 0; j < nx[N]; j++) {
-        for (int_t i = 0; i < ng[N]; i++) {
-            data.Dx[idxx+j*(ng[N]+NU)+i] = C[N][j*ng[N]+i];
+        for (int_t i = 0; i < nc[N]; i++) {
+            data.Dx[idxx+j*(nc[N]+NU)+i] = Cx[N][j*nc[N]+i];
         }
     }
 }
 
-static void fill_data_for_condensing(int_t NN, int_t *nx, int_t *nu, int_t *nb, int_t *ng,
+static void fill_data_for_condensing(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
                                 double **A, double **B, double **b,
                                 double **Q, double **S, double **R, double **q, double **r,
                                 int_t **idxb, double **lb, double **ub,
-                                double **C, double **D, double **ld, double **ud) {
+                                double **Cx, double **Cu, double **lc, double **uc) {
     // Condensing implicitly assumes zeros initialisation
     memset(&data, 0, sizeof(data_struct));
-    fill_in_objective(NN, nx, nu, Q, S, R, q, r);
-    fill_in_dynamics(NN, nx, nu, A, B, b);
-    fill_in_bounds(NN, nx, nu, nb, idxb, lb, ub);
-    fill_in_polytopic_constraints(NN, nx, nu, ng, C, D, ld, ud);
+    fill_in_objective(N, nx, nu, Q, S, R, q, r);
+    fill_in_dynamics(N, nx, nu, A, B, b);
+    fill_in_bounds(N, nx, nu, nb, idxb, lb, ub);
+    fill_in_polytopic_constraints(N, nx, nu, nc, Cx, Cu, lc, uc);
 }
 
 static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solution) {
@@ -211,16 +211,16 @@ static void recover_state_trajectory(int_t NN,
     }
 }
 
-int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *ng,
+int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
     double **A, double **B, double **b,
     double **Q, double **S, double **R, double **q, double **r,
     int_t **idxb, double **lb, double **ub,
-    double **C, double **D, double **ld, double **ud,
+    double **Cx, double **Cu, double **lc, double **uc,
     double **x, double **u,
     struct ocp_qp_condensing_qpoases_args *args, double *work) {
 
-    fill_data_for_condensing(N, nx, nu, nb, ng, A, B, b,
-    Q, S, R, q, r, idxb, lb, ub, C, D, ld, ud);
+    fill_data_for_condensing(N, nx, nu, nb, nc, A, B, b,
+    Q, S, R, q, r, idxb, lb, ub, Cx, Cu, lc, uc);
     condensingN2_fixed_initial_state(0, &lb[0][0]);
 
     // Symmetrize H
