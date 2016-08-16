@@ -181,18 +181,10 @@ int main() {
     x0[0] = 2.5;
     x0[1] = 2.5;
 
-    //    d_print_mat(nx, nx, A, nx);
-    //    d_print_mat(nx, nu, B, nx);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, x0, nx);
-
     // compute b0 = b + A*x0
     double *b0;
     d_zeros(&b0, nx, 1);
     dcopy_3l(nx, b, 1, b0, 1);
-    // dgemv_n_3l(nx, nx, A, nx, x0, b0);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, b0, nx);
 
     // then A0 is a matrix of size 0x0
     double *A0;
@@ -218,7 +210,6 @@ int main() {
         ub0[jj] = 0.5;   //   umax
         idxb0[jj] = jj;
     }
-    //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
     int *idxb1;
     i_zeros(&idxb1, nbb[1], 1);
@@ -236,7 +227,6 @@ int main() {
         ub1[jj] = 0.5;   //   umax
         idxb1[jj] = jj;
     }
-    //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
 
     int *idxbN;
     i_zeros(&idxbN, nbb[N], 1);
@@ -249,7 +239,6 @@ int main() {
         ubN[jj] = 4.0;   //   umax
         idxbN[jj] = jj;
     }
-    //    i_print_mat(nbb[N], 1, idxb1, nbb[N]);
 
     /************************************************
     * general constraints
@@ -280,7 +269,6 @@ int main() {
     double *CN;
     d_zeros(&CN, ngN, nx);
     for (ii = 0; ii < nx; ii++) CN[ii * (ngN + 1)] = 1.0;
-    //    d_print_mat(ngN, nx, CN, ngN);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
     double *ugN;
