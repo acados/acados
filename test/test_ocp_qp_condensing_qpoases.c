@@ -3,7 +3,7 @@
 #define NU 3
 #define NN 20
 #define NB 11
-#define NG 0
+#define NG 11
 #define NGN 8
 
 // define number of repetitions
@@ -57,16 +57,16 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     dmcopy(pp, pp, T, pp, Ac + pp, nx);
     dmcopy(pp, pp, I, pp, Ac + pp * nx, nx);
     dmcopy(pp, pp, Z, pp, Ac + pp * (nx + 1), nx);
-    free(T);
-    free(Z);
-    free(I);
+    d_free(T);
+    d_free(Z);
+    d_free(I);
 
     d_zeros(&I, nu, nu);
     for (ii = 0; ii < nu; ii++) I[ii * (nu + 1)] = 1.0;  // I = eye(nu);
     double *Bc;
     d_zeros(&Bc, nx, nu);
     dmcopy(nu, nu, I, nu, Bc + pp, nx);
-    free(I);
+    d_free(I);
 
     /************************************************
     * compute the discrete time system
@@ -80,20 +80,23 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     dscal_3l(nx2, Ts, A);
     expm(nx, A);
 
-    d_zeros(&T, nx, nx);
-    d_zeros(&I, nx, nx);
-    for (ii = 0; ii < nx; ii++) I[ii * (nx + 1)] = 1.0;  // I = eye(nx);
-    dmcopy(nx, nx, A, nx, T, nx);
-    daxpy_3l(nx2, -1.0, I, T);
-    dgemm_nn_3l(nx, nu, nx, T, nx, Bc, nx, B, nx);
+    double *R, *J;
+    d_zeros(&R, nx, nx);
+    d_zeros(&J, nx, nx);
+    for (ii = 0; ii < nx; ii++) J[ii * (nx + 1)] = 1.0;  // I = eye(nx);
+    dmcopy(nx, nx, A, nx, R, nx);
+    daxpy_3l(nx2, -1.0, J, R);
+    dgemm_nn_3l(nx, nu, nx, R, nx, Bc, nx, B, nx);
 
     int *ipiv = (int *)malloc(nx * sizeof(int));
     dgesv_3l(nx, nu, Ac, nx, ipiv, B, nx, &info);
     free(ipiv);
 
-    free(Ac);
-    free(Bc);
-    free(bb);
+    d_free(Ac);
+    d_free(Bc);
+    d_free(bb);
+    d_free(R);
+    d_free(J);
 
     /************************************************
     * initial state
@@ -263,16 +266,16 @@ int main() {
     d_zeros(&ug, ng, 1);
 
     double *C0;
-    d_zeros(&C0, 1, nx);
+    d_zeros(&C0, ng, nx);
     C0[0] = 1;
     double *D0;
-    d_zeros(&D0, 1, nu);
+    d_zeros(&D0, ng, nu);
     D0[0] = 1;
     double *lg0;
-    d_zeros(&lg0, 1, 1);
+    d_zeros(&lg0, ng, 1);
     lg0[0] = 2.5;
     double *ug0;
-    d_zeros(&ug0, 1, 1);
+    d_zeros(&ug0, ng, 1);
     ug0[0] = 5.5;
 
     double *CN;

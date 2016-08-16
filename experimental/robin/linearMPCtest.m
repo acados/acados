@@ -79,6 +79,7 @@ Qbar = kron(eye(N+1),Q);
 Rbar = kron(eye(N),R);
 c = [A*x0+b;repmat(b,N-1,1)];
 Dx = blkdiag(zeros(N*nx,N*nx),eye(nx));
+Dx(1,1) = 1;
 
 G = [zeros(nx,N*nu);-Abar\Bbar];
 Ge = [eye(nx);-Abar\[A;zeros((N-1)*nx,nx)]];
