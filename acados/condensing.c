@@ -170,7 +170,7 @@ static void calculate_Dij(real_t* Dx, real_t* Gij, real_t* Dij) {
 }
 
 static void calculate_D(condensing_in in, condensing_out out,
-    condensing_workspace ws) {
+                        condensing_workspace ws) {
     for (int_t k = 0; k < NNN; k++) {
         for (int_t j = 0; j < NU; j++) {
             for (int_t i = 0; i < NA; i++) {
@@ -180,17 +180,19 @@ static void calculate_D(condensing_in in, condensing_out out,
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
-            calculate_Dij(&data.Dx[i*NA*NX], &ws.G[(i-1)*NX+NNN*NX*NU*j],
+            calculate_Dij(in.Cx[i], &ws.G[(i-1)*NX+NNN*NX*NU*j],
                             &ws.D[i*NA+(NNN+1)*NA*NU*j]);
         }
     }
 }
 
-void calculate_simple_bounds() {
-    for ( int_t i = 0; i < NNN; i++ ) {
-        for ( int_t j = 0; j < NU; j++ ) {
-            data.lbU[i*NU+j] = data.lb[i*(NX+NU)+NX+j];
-            data.ubU[i*NU+j] = data.ub[i*(NX+NU)+NX+j];
+void calculate_simple_bounds(condensing_in in, condensing_out out) {
+    for (int_t i = 0; i < NNN; i++) {
+        for (int_t j = 0; j < in.nb[i]; j++) {
+            if (NX <= in.idxb[i][j] && in.idxb[i][j] < NX+NU) {
+                out.lb[i*NU-NX+in.idxb[i][j]] = in.lb[i][j];
+                out.ub[i*NU-NX+in.idxb[i][j]] = in.ub[i][j];
+            }
         }
     }
 }
@@ -201,16 +203,16 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
     for (int_t j = 0; j < NVC; j++) {
         for (int_t k = 0; k < NNN; k++) {
             for (int_t i = 0; i < NA; i++) {
-                data.Ac[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.D[j*NA*(NNN+1)+k*NA+i];
+                out.A[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.D[j*NA*(NNN+1)+k*NA+i];
             }
             for (int_t i = 0; i < NX; i++) {
-                data.Ac[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.G[j*(NX*NNN)+k*NX+i];
+                out.A[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.G[j*(NX*NNN)+k*NX+i];
             }
         }
     }
     for (int_t j = 0; j < NVC; j++) {
         for (int_t i = 0; i < NA; i++) {
-            data.Ac[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = ws.D[NA*NNN+j*NA*(NNN+1)+i];
+            out.A[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = ws.D[NA*NNN+j*NA*(NNN+1)+i];
         }
     }
 }
@@ -220,14 +222,14 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
     for (int_t i = 0; i < NNN; i++) {
         for (int_t j = 0; j < NX; j++) {
             // State simple bounds
-            data.lbA[NA+i*(NX+NA)+j] = data.lb[(i+1)*(NX+NU)+j] - ws.g[i*NX+j];
-            data.ubA[NA+i*(NX+NA)+j] = data.ub[(i+1)*(NX+NU)+j] - ws.g[i*NX+j];
+            data.lbA[NA+i*(NX+NA)+j] = in.lb[i+1][j] - ws.g[i*NX+j];
+            data.ubA[NA+i*(NX+NA)+j] = in.ub[i+1][j] - ws.g[i*NX+j];
         }
     }
     for (int_t i = 0; i < NA; i++) {
         for (int_t j = 0; j < NX; j++) {
-            data.lbA[i] = data.lbA[i] - data.Dx[j*NX+i]*x0[j];
-            data.ubA[i] = data.ubA[i] - data.Dx[j*NX+i]*x0[j];
+            data.lbA[i] = data.lbA[i] - in.Cx[0][j*NX+i]*x0[j];
+            data.ubA[i] = data.ubA[i] - in.Cx[0][j*NX+i]*x0[j];
         }
     }
     for (int_t i = 1; i < NNN+1; i++) {
@@ -235,9 +237,9 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
             // State polytopic constraints
             for (int_t k = 0; k < NX; k++) {
                 data.lbA[i*(NX+NA)+j] = data.lbA[i*(NX+NA)+j]
-                            - data.Dx[i*NA*NX+k*NA+j]*ws.g[(i-1)*NX+k];
+                            - in.Cx[i][k*NA+j]*ws.g[(i-1)*NX+k];
                 data.ubA[i*(NX+NA)+j] = data.ubA[i*(NX+NA)+j]
-                            - data.Dx[i*NA*NX+k*NA+j]*ws.g[(i-1)*NX+k];
+                            - in.Cx[i][k*NA+j]*ws.g[(i-1)*NX+k];
             }
         }
     }
@@ -255,7 +257,7 @@ void condensingN2_fixed_initial_state(condensing_in input, condensing_out output
     calculate_hessian(input, output, workspace, offset);
     calculate_gradient(input, output, workspace, offset, x0);
 
-    calculate_simple_bounds();
+    calculate_simple_bounds(input, output);
     calculate_constraint_matrix(input, output, workspace);
     calculate_constraint_bounds(input, output, workspace, x0);
 }

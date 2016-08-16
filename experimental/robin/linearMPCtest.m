@@ -89,7 +89,7 @@ Hbar = Rbar + G.'*Qbar*G;
 hbar = repmat(r,N,1) + G.'*(repmat(q,N+1,1)+Qbar*g);
 %% Read from file
 file = fopen('QP_data.txt','r');
-num_arrays_to_read = 10;
+num_arrays_to_read = 11;
 arrays_to_read = {};
 for i=1:num_arrays_to_read
     instr=fgets(file);
@@ -97,11 +97,12 @@ for i=1:num_arrays_to_read
     arrays_to_read{i} = temp;
 end
 numvars = N*nu;
-[H,f,A,lbU,ubU,lbA,ubA,C,d,D] = arrays_to_read{:};
+[H,f,A,lbU,ubU,lbA,ubA,C,d,D,Cx] = arrays_to_read{:};
 H = reshape(H,numvars,numvars);
 A = reshape(A,N*(nx+nx+nu)+nx+nu,numvars);
 C = reshape(C,N*(nx),numvars);
 D = reshape(D,(N+1)*(nx+nu),numvars);
+Cx = reshape(Cx,nx+nu,nx*(N+1));
 
 bigA = [];
 for i=0:N-1

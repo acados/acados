@@ -126,7 +126,7 @@ int main() {
     int N = NN;   // horizon length
     int nb = NB;  // number of box constrained inputs and states
     int ng = NG;  // 4;  // number of general constraints
-    int ngN = NGN;  // 4;  // number of general constraints at the last stage
+    int ngN = NG;  // 4;  // number of general constraints at the last stage
 
     // int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -146,7 +146,6 @@ int main() {
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
     ngg[N] = ngN;
-    ngg[0] = 1;
 
     printf(
         " Test problem: mass-spring system with %d masses and %d controls.\n",
@@ -280,7 +279,7 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, nx);
-    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
+    for (ii = 0; ii < nx; ii++) CN[ii * (ngN + 1)] = 1.0;
     //    d_print_mat(ngN, nx, CN, ngN);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage

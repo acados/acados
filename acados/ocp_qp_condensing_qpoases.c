@@ -54,16 +54,17 @@ void write_QP_data_to_file() {
     if (outFile == NULL) {
         fprintf(stderr, "%s\n", "OPEN FILE FAILED!");
     }
-    write_array_to_file(outFile, data.Hc, NVC*NVC);
-    write_array_to_file(outFile, data.gc, NVC);
-    write_array_to_file(outFile, data.Ac, (NNN*(NX+NA)+NA)*NVC);
-    write_array_to_file(outFile, data.lbU, NVC);
-    write_array_to_file(outFile, data.ubU, NVC);
-    write_array_to_file(outFile, data.lbA, NNN*(NX+NA)+NA);
-    write_array_to_file(outFile, data.ubA, NNN*(NX+NA)+NA);
-    write_array_to_file(outFile, data.G, NNN*(NX)*NVC);
-    write_array_to_file(outFile, data.g, NNN*NX);
-    write_array_to_file(outFile, data.D, (NNN+1)*NA*NVC);
+    write_array_to_file(outFile, out.H, NVC*NVC);
+    write_array_to_file(outFile, out.h, NVC);
+    write_array_to_file(outFile, out.A, (NNN*(NX+NA)+NA)*NVC);
+    write_array_to_file(outFile, out.lb, NVC);
+    write_array_to_file(outFile, out.ub, NVC);
+    write_array_to_file(outFile, out.lbA, NNN*(NX+NA)+NA);
+    write_array_to_file(outFile, out.ubA, NNN*(NX+NA)+NA);
+    write_array_to_file(outFile, ws.G, NNN*(NX)*NVC);
+    write_array_to_file(outFile, ws.g, NNN*NX);
+    write_array_to_file(outFile, ws.D, (NNN+1)*NA*NVC);
+    write_array_to_file(outFile, data.Dx, (NNN+1)*NA*NX);
     fclose(outFile);
 }
 
@@ -167,7 +168,7 @@ static void fill_in_polytopic_constraints(int_t N, int_t *nx, int_t *nu, int_t *
     }
     for (int_t j = 0; j < nx[N]; j++) {
         for (int_t i = 0; i < nc[N]; i++) {
-            data.Dx[idxx+j*(nc[N]+NU)+i] = Cx[N][j*nc[N]+i];
+            data.Dx[idxx+j*nc[N]+i] = Cx[N][j*nc[N]+i];
         }
     }
 }
@@ -251,8 +252,8 @@ static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solutio
     nwsr = 1000;
     cput = 100.0;
 
-    int_t return_flag = QProblem_initW(&QP, &out.H[0], &out.h[0], &_A[0], &data.lbU[0],
-                        &data.ubU[0], &data.lbA[0], &data.ubA[0],
+    int_t return_flag = QProblem_initW(&QP, out.H, out.h, &_A[0], out.lb,
+                        out.ub, &data.lbA[0], &data.ubA[0],
                         &nwsr, &cput, NULL, dual_solution, NULL, NULL, NULL);
     QProblem_getPrimalSolution(&QP, primal_solution);
     QProblem_getDualSolution(&QP, dual_solution);
@@ -299,7 +300,7 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     // Convert C to row major in A
     for (int_t i = 0; i < N*(NX+NA)+NA; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
-            _A[i*num_condensed_vars+j] = data.Ac[j*(N*(NX+NA)+NA)+i];
+            _A[i*num_condensed_vars+j] = out.A[j*(N*(NX+NA)+NA)+i];
         }
     }
     write_QP_data_to_file();
