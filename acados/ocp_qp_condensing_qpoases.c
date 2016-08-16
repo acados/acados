@@ -22,9 +22,6 @@ real_t      dual_solution[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solut
 condensing_in in;
 condensing_out out;
 condensing_workspace ws;
-/* condensing specifics */
-data_struct data = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, \
-                    {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}};
 
 int_t get_num_opt_vars(int_t NN, int_t *nx, int_t *nu) {
     int_t num_opt_vars = 0;
@@ -64,113 +61,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, ws.G, NNN*(NX)*NVC);
     write_array_to_file(outFile, ws.g, NNN*NX);
     write_array_to_file(outFile, ws.D, (NNN+1)*NA*NVC);
-    write_array_to_file(outFile, data.Dx, (NNN+1)*NA*NX);
     fclose(outFile);
-}
-
-static void fill_in_objective(int_t NN, int_t* nx, int_t* nu,
-    real_t** Q, real_t** S, real_t** R, real_t** q, real_t** r) {
-    for (int_t i = 0; i < NN+1; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
-            for (int_t k = 0; k < nx[i]; k++) data.Q[i*NX*NX+j*NX+k] = Q[i][j*NX+k];
-        }
-    }
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
-            for (int_t k = 0; k < nu[i]; k++) data.S[i*NU*NX+j*NU+k] = S[i][j*NU+k];
-        }
-    }
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nu[i]; j++) {
-            for (int_t k = 0; k < nu[i]; k++) data.R[i*NU*NU+j*NU+k] = R[i][j*NU+k];
-        }
-    }
-    int_t start_of_current_block = 0;
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nx[i]; j++)
-            data.f[start_of_current_block+j] = q[i][j];
-        for (int_t j = 0; j < nu[i]; j++)
-            data.f[start_of_current_block+NX+j] = r[i][j];
-        start_of_current_block += (NX + NU);
-    }
-    for (int_t j = 0; j < nx[NNN]; j++) data.f[NNN*(NX+NU)+j] = q[NNN][j];
-}
-
-static void fill_in_dynamics(int_t NN, int_t* nx, int_t* nu,
-    real_t** A, real_t** B, real_t** b) {
-    int_t start_of_current_block = 0;
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
-            for (int_t k = 0; k < nx[i+1]; k++) {
-                data.A[start_of_current_block+j*nx[i+1]+k] = A[i][j*nx[i+1]+k];
-            }
-        }
-        start_of_current_block += nx[i+1]*nx[i+1];
-    }
-
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nx[i+1]; j++) data.b[i*NX+j] = b[i][j];
-    }
-    start_of_current_block = 0;
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nu[i]; j++) {
-            for (int_t k = 0; k < nx[i+1]; k++) {
-                data.B[start_of_current_block+j*nx[i+1]+k] = B[i][j*nx[i+1]+k];
-            }
-        }
-        start_of_current_block += nu[i]*nx[i+1];
-    }
-}
-
-static void fill_in_bounds(int_t NN, int_t* nx, int_t* nu, int_t* nb,
-    int_t** idxb, real_t** lb, real_t** ub) {
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
-            data.lb[i*(nx[i]+nu[i])+idxb[i][j]] = lb[i][j];
-            data.ub[i*(nx[i]+nu[i])+idxb[i][j]] = ub[i][j];
-        }
-        for (int_t j = nx[i]; j < nb[i]; j++) {
-            data.lb[i*(nx[i]+nu[i])+idxb[i][j]] = lb[i][j];
-            data.ub[i*(nx[i]+nu[i])+idxb[i][j]] = ub[i][j];
-        }
-    }
-    for (int_t j = 0; j < nb[NN]; j++) {
-        data.lb[NN*(NX+NU)+idxb[NN][j]] = lb[NN][j];
-        data.ub[NN*(NX+NU)+idxb[NN][j]] = ub[NN][j];
-    }
-}
-
-static void fill_in_polytopic_constraints(int_t N, int_t *nx, int_t *nu, int_t *nc,
-                                double **Cx, double **Cu, double **lc, double **uc) {
-    int_t start_of_current_block = 0;
-    for (int_t k = 0; k < N; k++) {
-        for (int_t i = 0; i < nc[k]; i++) {
-            data.lbA[start_of_current_block + i] = lc[k][i];
-            data.ubA[start_of_current_block + i] = uc[k][i];
-        }
-        start_of_current_block += nc[k] + nx[k];
-    }
-    int_t idxx = 0;
-    int_t idxu = 0;
-    for (int_t k = 0; k < N; k++) {
-        for (int_t j = 0; j < nx[k]; j++) {
-            for (int_t i = 0; i < nc[k]; i++) {
-                data.Dx[idxx+j*nc[k]+i] = Cx[k][j*nc[k]+i];
-            }
-        }
-        for (int_t j = 0; j < nu[k]; j++) {
-            for (int_t i = 0; i < nc[k]; i++) {
-                data.Du[idxu+j*nc[k]+i] = Cu[k][j*nc[k]+i];
-            }
-        }
-        idxx += NX*NA;
-        idxu += NU*NA;
-    }
-    for (int_t j = 0; j < nx[N]; j++) {
-        for (int_t i = 0; i < nc[N]; i++) {
-            data.Dx[idxx+j*nc[N]+i] = Cx[N][j*nc[N]+i];
-        }
-    }
 }
 
 static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
@@ -233,27 +124,12 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     d_zeros(&ws.w2, NX, 1);
 }
 
-static void fill_data_for_condensing(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-                                double **A, double **B, double **b,
-                                double **Q, double **S, double **R, double **q, double **r,
-                                int_t **idxb, double **lb, double **ub,
-                                double **Cx, double **Cu, double **lc, double **uc) {
-    // Condensing implicitly assumes zeros initialisation
-    memset(&data, 0, sizeof(data_struct));
-    fill_in_objective(N, nx, nu, Q, S, R, q, r);
-    fill_in_dynamics(N, nx, nu, A, B, b);
-    fill_in_bounds(N, nx, nu, nb, idxb, lb, ub);
-    fill_in_polytopic_constraints(N, nx, nu, nc, Cx, Cu, lc, uc);
-    fill_in_condensing_structs(N, nx, nu, nb, nc, A, B, b, Q, S, R, q, r,
-        idxb, lb, ub, Cx, Cu, lc, uc, 0);
-}
-
 static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solution) {
     nwsr = 1000;
     cput = 100.0;
 
     int_t return_flag = QProblem_initW(&QP, out.H, out.h, &_A[0], out.lb,
-                        out.ub, &data.lbA[0], &data.ubA[0],
+                        out.ub, out.lbA, out.ubA,
                         &nwsr, &cput, NULL, dual_solution, NULL, NULL, NULL);
     QProblem_getPrimalSolution(&QP, primal_solution);
     QProblem_getDualSolution(&QP, dual_solution);
@@ -286,8 +162,8 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     double **x, double **u,
     struct ocp_qp_condensing_qpoases_args *args, double *work) {
 
-    fill_data_for_condensing(N, nx, nu, nb, nc, A, B, b,
-    Q, S, R, q, r, idxb, lb, ub, Cx, Cu, lc, uc);
+    fill_in_condensing_structs(N, nx, nu, nb, nc, A, B, b, Q, S, R, q, r,
+        idxb, lb, ub, Cx, Cu, lc, uc, 0);
     condensingN2_fixed_initial_state(in, out, ws);
 
     // Symmetrize H

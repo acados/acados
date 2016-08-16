@@ -4,8 +4,6 @@
 
 #include "condensing.h"
 
-extern data_struct data;
-
 static void A_times_G(real_t* C_, real_t* A_) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NX; i++) {
@@ -218,27 +216,31 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
 }
 
 void calculate_constraint_bounds(condensing_in in, condensing_out out,
-    condensing_workspace ws, real_t *x0) {
+                                condensing_workspace ws, real_t *x0) {
+    // State simple bounds
     for (int_t i = 0; i < NNN; i++) {
         for (int_t j = 0; j < NX; j++) {
-            // State simple bounds
-            data.lbA[NA+i*(NX+NA)+j] = in.lb[i+1][j] - ws.g[i*NX+j];
-            data.ubA[NA+i*(NX+NA)+j] = in.ub[i+1][j] - ws.g[i*NX+j];
+            out.lbA[NA+i*(NX+NA)+j] = in.lb[i+1][j] - ws.g[i*NX+j];
+            out.ubA[NA+i*(NX+NA)+j] = in.ub[i+1][j] - ws.g[i*NX+j];
         }
     }
+    // State polytopic constraints
     for (int_t i = 0; i < NA; i++) {
+        out.lbA[i] = in.lc[0][i];
+        out.ubA[i] = in.uc[0][i];
         for (int_t j = 0; j < NX; j++) {
-            data.lbA[i] = data.lbA[i] - in.Cx[0][j*NX+i]*x0[j];
-            data.ubA[i] = data.ubA[i] - in.Cx[0][j*NX+i]*x0[j];
+            out.lbA[i] = out.lbA[i] - in.Cx[0][j*NX+i]*x0[j];
+            out.ubA[i] = out.ubA[i] - in.Cx[0][j*NX+i]*x0[j];
         }
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < NA; j++) {
-            // State polytopic constraints
+            out.lbA[i*(NX+NA)+j] = in.lc[i][j];
+            out.ubA[i*(NX+NA)+j] = in.uc[i][j];
             for (int_t k = 0; k < NX; k++) {
-                data.lbA[i*(NX+NA)+j] = data.lbA[i*(NX+NA)+j]
+                out.lbA[i*(NX+NA)+j] = out.lbA[i*(NX+NA)+j]
                             - in.Cx[i][k*NA+j]*ws.g[(i-1)*NX+k];
-                data.ubA[i*(NX+NA)+j] = data.ubA[i*(NX+NA)+j]
+                out.ubA[i*(NX+NA)+j] = out.ubA[i*(NX+NA)+j]
                             - in.Cx[i][k*NA+j]*ws.g[(i-1)*NX+k];
             }
         }
@@ -248,7 +250,7 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
 void condensingN2_fixed_initial_state(condensing_in input, condensing_out output,
     condensing_workspace workspace) {
 
-    real_t *x0 = &data.lb[0];
+    real_t *x0 = input.lb[0];
     int_t offset = 0;
 
     calculate_transition_matrix(input, output, workspace, offset);
@@ -262,143 +264,144 @@ void condensingN2_fixed_initial_state(condensing_in input, condensing_out output
     calculate_constraint_bounds(input, output, workspace, x0);
 }
 
-static void propagateCX(real_t* C_, real_t* A_) {
-    int i, j, k;
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NX; i++ ) {
-            for ( k = 0; k < NX; k++ ) {
-                C_[j*NNN*NX+i] += A_[k*NX+i]*C_[j*NNN*NX-NX+k];
-            }
-        }
-    }
-}
-
-void propagate_x0_to_G(condensing_in in, condensing_out out,
-    condensing_workspace ws) {
-    int_t i, j;
-    /* propagate x0: */
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NX; i++ ) {
-            ws.G[j*NNN*NX+i] = data.A[j*NX+i]; /* A_0 */
-        }
-    }
-    for ( i = 1; i < NNN; i++ ) {
-        propagateCX(&ws.G[i*NX], &data.A[i*NX*NX]); /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
-    }
-}
-
-static void computeWx(real_t* Q_, real_t* C_, real_t* A_) {
-    int i, j , k;
-    for ( i = 0; i < NX*NX; i++ ) data.W1_x[i] = data.W2_x[i];
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NX; i++ ) {
-            data.W2_x[j*NX+i] = 0.0;
-            for ( k = 0; k < NX; k++ ) {
-                data.W2_x[j*NX+i] += Q_[k*NX+i]*C_[j*NNN*NX+k];
-                data.W2_x[j*NX+i] += A_[i*NX+k]*data.W1_x[j*NX+k];
-            }
-        }
-    }
-}
-
-static void computeH_DX() {
-    int i, j , k;
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NU; i++ ) {
-            data.Hc[j*NVC+NX+i] = data.S[j*NU+i];
-            for ( k = 0; k < NX; k++ ) {
-                data.Hc[j*NVC+NX+i] += data.B[i*NX+k]*data.W2_x[j*NX+k];
-            }
-        }
-    }
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NX; i++ ) {
-            data.Hc[j*NVC+i] = data.Q[j*NX+i];
-            for ( k = 0; k < NX; k++ ) {
-                data.Hc[j*NVC+i] += data.A[i*NX+k]*data.W2_x[j*NX+k];
-            }
-        }
-    }
-}
-
-static void computeH_offDX(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
-    int i, j , k;
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NU; i++ ) {
-            Hc_[j*NVC+i] = 0.0;
-            for ( k = 0; k < NX; k++ ) {
-                Hc_[j*NVC+i] += S_[k*NU+i]*C_[j*NNN*NX+k];
-                Hc_[j*NVC+i] += B_[i*NX+k]*data.W2_x[j*NX+k];
-            }
-        }
-    }
-}
-
-void propagate_x0_to_H(condensing_in in, condensing_out out,
-    condensing_workspace ws) {
-    /* propagate x0: */
-    computeWx(&data.Q[NNN*NX*NX], &ws.G[(NNN-1)*NX], &data.A[0]);
-    for ( int_t i = NNN-1; i > 0; i-- ) {
-        computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &ws.G[(i-1)*NX], &data.B[i*NX*NU]);
-        computeWx(&data.Q[i*NX*NX], &ws.G[(i-1)*NX], &data.A[i*NX*NX]);
-    }
-    computeH_DX();
-}
-
-static void compute_G_free_initial_state() {
-    int i, j;
-    /* x0 */
-    for ( i = 0; i < NX; i++ ) data.gc[i] = data.f[i];
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NX; i++ ) {
-            data.gc[i] += data.A[i*NX+j]*data.w2[j];
-        }
-    }
-    /* first control */
-    for ( i = 0; i < NU; i++ ) data.gc[NX+i] = data.f[NX+i];
-    for ( j = 0; j < NX; j++ ) {
-        for ( i = 0; i < NU; i++ ) {
-            data.gc[NX+i] += data.B[i*NX+j]*data.w2[j];
-        }
-    }
-}
-
-void condensingN2_free_initial_state(condensing_in input, condensing_out output,
-    condensing_workspace workspace) {
-    int_t i, j, offset;
-
-    /* Copy bound values */
-    offset = NX;
-    for ( i = 0; i < NX; i++ ) data.lbU[i] = data.lb[i];
-    for ( i = 0; i < NX; i++ ) data.ubU[i] = data.ub[i];
-    for ( i = 0; i < NNN; i++ ) {
-        for ( j = 0; j < NU; j++ ) {
-            data.lbU[NX+i*NU+j] = data.lb[i*(NX+NU)+NX+j];
-            data.ubU[NX+i*NU+j] = data.ub[i*(NX+NU)+NX+j];
-        }
-    }
-
-    /* Create matrix G, NOTE: this is a sparse matrix which is currently stored as a dense one! */
-    propagate_x0_to_G(input, output, workspace);
-    /* propagate controls: */
-    for ( j = 0; j < NNN; j++ ) {
-        // calculate_G_column(j, offset);
-        if ( j > 0 ) {
-            // calculate_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
-        } else {
-            for ( i = 0; i < NX; i++ ) data.g[i] = data.b[i];
-        }
-    }
-
-    calculate_constraint_bounds(input, output, workspace, 0);
-
-    /* !! Hessian propagation !! */
-    propagate_x0_to_H(input, output, workspace);
-    calculate_hessian(input, output, workspace, offset);
-
-    /* !! gradient propagation !! */
-    calculate_gradient(input, output, workspace, offset, 0);
-    compute_G_free_initial_state();
-}
+// static void propagateCX(real_t* C_, real_t* A_) {
+//     int i, j, k;
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NX; i++ ) {
+//             for ( k = 0; k < NX; k++ ) {
+//                 C_[j*NNN*NX+i] += A_[k*NX+i]*C_[j*NNN*NX-NX+k];
+//             }
+//         }
+//     }
+// }
+//
+// void propagate_x0_to_G(condensing_in in, condensing_out out,
+//     condensing_workspace ws) {
+//     int_t i, j;
+//     /* propagate x0: */
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NX; i++ ) {
+//             ws.G[j*NNN*NX+i] = data.A[j*NX+i]; /* A_0 */
+//         }
+//     }
+//     for ( i = 1; i < NNN; i++ ) {
+//         propagateCX(&ws.G[i*NX], &data.A[i*NX*NX]); /* G_{i,0} <- A_{i-1}*G_{i-1,0}  */
+//     }
+// }
+//
+// static void computeWx(real_t* Q_, real_t* C_, real_t* A_) {
+//     int i, j , k;
+//     for ( i = 0; i < NX*NX; i++ ) data.W1_x[i] = data.W2_x[i];
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NX; i++ ) {
+//             data.W2_x[j*NX+i] = 0.0;
+//             for ( k = 0; k < NX; k++ ) {
+//                 data.W2_x[j*NX+i] += Q_[k*NX+i]*C_[j*NNN*NX+k];
+//                 data.W2_x[j*NX+i] += A_[i*NX+k]*data.W1_x[j*NX+k];
+//             }
+//         }
+//     }
+// }
+//
+// static void computeH_DX() {
+//     int i, j , k;
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NU; i++ ) {
+//             data.Hc[j*NVC+NX+i] = data.S[j*NU+i];
+//             for ( k = 0; k < NX; k++ ) {
+//                 data.Hc[j*NVC+NX+i] += data.B[i*NX+k]*data.W2_x[j*NX+k];
+//             }
+//         }
+//     }
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NX; i++ ) {
+//             data.Hc[j*NVC+i] = data.Q[j*NX+i];
+//             for ( k = 0; k < NX; k++ ) {
+//                 data.Hc[j*NVC+i] += data.A[i*NX+k]*data.W2_x[j*NX+k];
+//             }
+//         }
+//     }
+// }
+//
+// static void computeH_offDX(real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
+//     int i, j , k;
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NU; i++ ) {
+//             Hc_[j*NVC+i] = 0.0;
+//             for ( k = 0; k < NX; k++ ) {
+//                 Hc_[j*NVC+i] += S_[k*NU+i]*C_[j*NNN*NX+k];
+//                 Hc_[j*NVC+i] += B_[i*NX+k]*data.W2_x[j*NX+k];
+//             }
+//         }
+//     }
+// }
+//
+// void propagate_x0_to_H(condensing_in in, condensing_out out,
+//     condensing_workspace ws) {
+//     /* propagate x0: */
+//     computeWx(&data.Q[NNN*NX*NX], &ws.G[(NNN-1)*NX], &data.A[0]);
+//     for ( int_t i = NNN-1; i > 0; i-- ) {
+//         computeH_offDX(&data.Hc[NX+i*NU], &data.S[i*NX*NU], &ws.G[(i-1)*NX], &data.B[i*NX*NU]);
+//         computeWx(&data.Q[i*NX*NX], &ws.G[(i-1)*NX], &data.A[i*NX*NX]);
+//     }
+//     computeH_DX();
+// }
+//
+// static void compute_G_free_initial_state() {
+//     int i, j;
+//     /* x0 */
+//     for ( i = 0; i < NX; i++ ) data.gc[i] = data.f[i];
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NX; i++ ) {
+//             data.gc[i] += data.A[i*NX+j]*data.w2[j];
+//         }
+//     }
+//     /* first control */
+//     for ( i = 0; i < NU; i++ ) data.gc[NX+i] = data.f[NX+i];
+//     for ( j = 0; j < NX; j++ ) {
+//         for ( i = 0; i < NU; i++ ) {
+//             data.gc[NX+i] += data.B[i*NX+j]*data.w2[j];
+//         }
+//     }
+// }
+//
+// void condensingN2_free_initial_state(condensing_in input, condensing_out output,
+//     condensing_workspace workspace) {
+//     int_t i, j, offset;
+//
+//     /* Copy bound values */
+//     offset = NX;
+//     for ( i = 0; i < NX; i++ ) data.lbU[i] = data.lb[i];
+//     for ( i = 0; i < NX; i++ ) data.ubU[i] = data.ub[i];
+//     for ( i = 0; i < NNN; i++ ) {
+//         for ( j = 0; j < NU; j++ ) {
+//             data.lbU[NX+i*NU+j] = data.lb[i*(NX+NU)+NX+j];
+//             data.ubU[NX+i*NU+j] = data.ub[i*(NX+NU)+NX+j];
+//         }
+//     }
+//
+//     /* Create matrix G, NOTE: this is a sparse matrix which is currently
+//     stored as a dense one! */
+//     propagate_x0_to_G(input, output, workspace);
+//     /* propagate controls: */
+//     for ( j = 0; j < NNN; j++ ) {
+//         // calculate_G_column(j, offset);
+//         if ( j > 0 ) {
+//             // calculate_g_row(&data.g[j*NX], &data.A[j*NX*NX], &data.b[j*NX]);
+//         } else {
+//             for ( i = 0; i < NX; i++ ) data.g[i] = data.b[i];
+//         }
+//     }
+//
+//     calculate_constraint_bounds(input, output, workspace, 0);
+//
+//     /* !! Hessian propagation !! */
+//     propagate_x0_to_H(input, output, workspace);
+//     calculate_hessian(input, output, workspace, offset);
+//
+//     /* !! gradient propagation !! */
+//     calculate_gradient(input, output, workspace, offset, 0);
+//     compute_G_free_initial_state();
+// }
 
 #pragma clang diagnostic pop
