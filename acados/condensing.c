@@ -63,7 +63,8 @@ static void update_W(condensing_workspace ws, real_t* Q_, real_t* C_, real_t* A_
     }
 }
 
-static void offdiag_hess_blk(condensing_workspace ws, real_t* Hc_, real_t* S_, real_t* C_, real_t* B_) {
+static void offdiag_hess_blk(condensing_workspace ws, real_t* Hc_, real_t* S_,
+        real_t* C_, real_t* B_) {
     int i, j , k;
     for ( j = 0; j < NU; j++ ) {
         for ( i = 0; i < NU; i++ ) {
@@ -173,14 +174,14 @@ static void calculate_D(condensing_in in, condensing_out out,
     for (int_t k = 0; k < NNN; k++) {
         for (int_t j = 0; j < NU; j++) {
             for (int_t i = 0; i < NA; i++) {
-                data.D[k*((NNN+1)*NA*NU+NA)+j*NNN*NA+i] = in.Cu[k][j*NA+i];
+                ws.D[k*((NNN+1)*NA*NU+NA)+j*NNN*NA+i] = in.Cu[k][j*NA+i];
             }
         }
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
             calculate_Dij(&data.Dx[i*NA*NX], &ws.G[(i-1)*NX+NNN*NX*NU*j],
-                            &data.D[i*NA+(NNN+1)*NA*NU*j]);
+                            &ws.D[i*NA+(NNN+1)*NA*NU*j]);
         }
     }
 }
@@ -200,7 +201,7 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
     for (int_t j = 0; j < NVC; j++) {
         for (int_t k = 0; k < NNN; k++) {
             for (int_t i = 0; i < NA; i++) {
-                data.Ac[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = data.D[j*NA*(NNN+1)+k*NA+i];
+                data.Ac[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.D[j*NA*(NNN+1)+k*NA+i];
             }
             for (int_t i = 0; i < NX; i++) {
                 data.Ac[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.G[j*(NX*NNN)+k*NX+i];
@@ -209,7 +210,7 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
     }
     for (int_t j = 0; j < NVC; j++) {
         for (int_t i = 0; i < NA; i++) {
-            data.Ac[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = data.D[NA*NNN+j*NA*(NNN+1)+i];
+            data.Ac[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = ws.D[NA*NNN+j*NA*(NNN+1)+i];
         }
     }
 }

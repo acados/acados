@@ -178,7 +178,6 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
         int_t **idxb, real_t **lb, real_t **ub,
         real_t **Cx, real_t **Cu, real_t **lc, real_t **uc,
         int_t initial_state_fixed) {
-
     // Input
     in.N = N;
     in.nx = nx;
@@ -231,7 +230,6 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     d_zeros(&ws.W2_u, NX, NU);
     d_zeros(&ws.w1, NX, 1);
     d_zeros(&ws.w2, NX, 1);
-
 }
 
 static void fill_data_for_condensing(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
