@@ -201,7 +201,13 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     d_free(out.ubA);
 
     d_free(ws.D);
-    d_free(**ws.G);
+    for (int_t i = 0; i < N; i++) {
+        for (int_t j = 0; j < N-i; j++) {
+            d_free(ws.G[i][j]);
+        }
+        free(ws.G[i]);
+    }
+    free(ws.G);
     d_free(ws.g);
     d_free(ws.W1_x);
     d_free(ws.W2_x);
