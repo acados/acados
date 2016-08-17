@@ -3,28 +3,28 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 
 #include "condensing.h"
+#include "hpmpc/include/aux_d.h"
+#include <stdio.h>
 
-static void Ai_times_Gij(real_t *Gij, real_t *Ai) {
+static void offdiag_trans_blk(real_t *A, real_t *G_prev, real_t *G) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NX; i++) {
             for (int_t k = 0; k < NX; k++) {
-                Gij[j*NNN*NX+i] += Ai[k*NX+i]*Gij[j*NNN*NX-NX+k];
+                G[j*NX+i] += A[k*NX+i]*G_prev[j*NX+k];
             }
         }
     }
 }
 
-void calculate_transition_matrix(condensing_in in, condensing_workspace ws,
-    int_t offset) {
-
-    for (int_t k = 0; k < NNN; k++) {
+void calculate_transition_matrix(condensing_in in, condensing_workspace ws) {
+    for (int_t j = 0; j < NNN; j++) {
         for (int_t col = 0; col < NU; col++) {
             for (int_t row = 0; row < NX; row++) {
-                ws.G[(offset+k*NU+col)*NNN*NX+k*NX+row] = in.B[k][col*NX+row];
+                ws.G[j][0][col*NX+row] = in.B[j][col*NX+row];
             }
         }
-        for (int_t i = k+1; i < NNN; i++) {
-            Ai_times_Gij(&ws.G[(offset+k*NU)*NNN*NX+i*NX], in.A[i]);
+        for (int_t i = j+1; i < NNN; i++) {
+            offdiag_trans_blk(in.A[i], ws.G[j][i-j-1], ws.G[j][i-j]);
         }
     }
 }
@@ -52,7 +52,7 @@ static void update_W(condensing_workspace ws, real_t* Qi, real_t* Gij, real_t* A
         for (int_t i = 0; i < NX; i++) {
             ws.W2_u[j*NX+i] = 0.0;
             for (int_t k = 0; k < NX; k++) {
-                ws.W2_u[j*NX+i] += Qi[k*NX+i]*Gij[j*NNN*NX+k];
+                ws.W2_u[j*NX+i] += Qi[k*NX+i]*Gij[j*NX+k];
                 ws.W2_u[j*NX+i] += Ai[i*NX+k]*ws.W1_u[j*NX+k];
             }
         }
@@ -66,7 +66,7 @@ static void offdiag_hess_blk(condensing_workspace ws, real_t* Hc_, real_t* S_,
         for (int_t i = 0; i < NU; i++) {
             Hc_[j*NVC+i] = 0.0;
             for (int_t k = 0; k < NX; k++) {
-                Hc_[j*NVC+i] += S_[k*NU+i]*C_[j*NNN*NX+k];
+                Hc_[j*NVC+i] += S_[k*NU+i]*C_[j*NX+k];
                 Hc_[j*NVC+i] += B_[i*NX+k]*ws.W2_u[j*NX+k];
             }
         }
@@ -89,11 +89,11 @@ void calculate_hessian(condensing_in in, condensing_out out,
 
     for (int_t j = 0; j < NNN; j++) {
         for (int_t i = 0; i < NX*NU; i++) ws.W2_u[i] = 0.0;
-        update_W(ws, in.Q[NNN], &ws.G[(offset+j*NU)*NNN*NX+(NNN-1)*NX], in.A[0]);
+        update_W(ws, in.Q[NNN], ws.G[j][NNN-j-1], in.A[0]);
         for (int_t i = NNN-1; i > j; i--) {
             offdiag_hess_blk(ws, &out.H[(offset+j*NU)*NVC+offset+i*NU], in.S[i],
-                    &ws.G[(offset+j*NU)*NNN*NX+(i-1)*NX], in.B[i]);
-            update_W(ws, in.Q[i], &ws.G[(offset+j*NU)*NNN*NX+(i-1)*NX], in.A[i]);
+                    ws.G[j][i-j-1], in.B[i]);
+            update_W(ws, in.Q[i], ws.G[j][i-j-1], in.A[i]);
         }
         diag_hess_blk(ws, &out.H[(offset+j*NU)*NVC+offset+j*NU], in.R[j], in.B[j]);
     }
@@ -154,11 +154,11 @@ void calculate_gradient(condensing_in in, condensing_out out, condensing_workspa
     corr_grad_fixd_init_state(in, out, ws, x0);
 }
 
-static void calculate_Dij(real_t* Dx, real_t* Gij, real_t* Dij) {
+static void offdiag_D_blk(real_t* Cx, real_t* Gij, real_t* Dij) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NA; i++) {
             for (int_t k = 0; k < NX; k++) {
-                Dij[j*(NNN+1)*NA+i] += Dx[k*NA+i]*Gij[j*NNN*NX+k];
+                Dij[j*(NNN+1)*NA+i] += Cx[k*NA+i]*Gij[j*NX+k];
             }
         }
     }
@@ -176,7 +176,7 @@ static void calculate_D(condensing_in in, condensing_out out,
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
-            calculate_Dij(in.Cx[i], &ws.G[(i-1)*NX+NNN*NX*NU*j],
+            offdiag_D_blk(in.Cx[i], ws.G[j][i-1-j],
                             &ws.D[i*NA+(NNN+1)*NA*NU*j]);
         }
     }
@@ -202,8 +202,15 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
             for (int_t i = 0; i < NA; i++) {
                 out.A[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.D[j*NA*(NNN+1)+k*NA+i];
             }
-            for (int_t i = 0; i < NX; i++) {
-                out.A[NA+j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.G[j*(NX*NNN)+k*NX+i];
+        }
+    }
+    for (int_t j = 0; j < NNN; j++) {
+        for (int_t i = j; i < NNN; i++) {
+            for (int_t k = 0; k < NU; k++) {
+                for (int_t l = 0; l < NX; l++) {
+                    out.A[NA+j*((NX+NA)*NNN+NA)*NU+i*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
+                        = ws.G[j][i-j][k*NX+l];
+                }
             }
         }
     }
@@ -253,7 +260,7 @@ void condensingN2_fixed_initial_state(condensing_in input, condensing_out output
     real_t *x0 = input.lb[0];
     int_t offset = 0;
 
-    calculate_transition_matrix(input, workspace, offset);
+    calculate_transition_matrix(input, workspace);
     calculate_transition_vector(input, workspace, x0);
 
     calculate_hessian(input, output, workspace, offset);

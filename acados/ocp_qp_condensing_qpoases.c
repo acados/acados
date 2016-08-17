@@ -1,6 +1,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wunused-function"
+#include <stdlib.h>
 #include "ocp_qp_condensing_qpoases.h"
 #include "condensing.h"
 #include "hpmpc/include/aux_d.h"
@@ -58,7 +59,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, out.ub, NVC);
     write_array_to_file(outFile, out.lbA, NNN*(NX+NA)+NA);
     write_array_to_file(outFile, out.ubA, NNN*(NX+NA)+NA);
-    write_array_to_file(outFile, ws.G, NNN*(NX)*NVC);
+    write_array_to_file(outFile, ws.G[0][0], NNN*(NX)*NVC);
     write_array_to_file(outFile, ws.g, NNN*NX);
     write_array_to_file(outFile, ws.D, (NNN+1)*NA*NVC);
     fclose(outFile);
@@ -114,8 +115,14 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
 
     // Workspace
     d_zeros(&ws.D, (in.N+1)*num_constraints, num_condensed_vars);
-    d_zeros(&ws.G, in.N*NX, num_condensed_vars);
-    d_zeros(&ws.g, in.N*NX, 1);
+    ws.G = malloc(sizeof(*ws.G) * N);
+    for (int_t i = 0; i < N; i++) {
+        ws.G[i] = malloc(sizeof(*(ws.G[i])) * (N-i));
+        for (int_t j = 0; j < N-i; j++) {
+            d_zeros(&ws.G[i][j], NX, NU);
+        }
+    }
+    d_zeros(&ws.g, N*NX, 1);
     d_zeros(&ws.W1_x, NX, NX);
     d_zeros(&ws.W2_x, NX, NX);
     d_zeros(&ws.W1_u, NX, NU);
@@ -142,7 +149,7 @@ static void recover_state_trajectory(int_t N,
         for (int_t j = 0; j < NX; j++) {
             x[i+1][j] = 0.0;
             for (int_t k = 0; k < NVC; k++) {
-                x[i+1][j] = x[i+1][j] + ws.G[i*NX+j+k*N*NX]*primal_solution[k];
+                // x[i+1][j] = x[i+1][j] + ws.G[i][]i*NX+j+k*N*NX]*primal_solution[k];
             }
             x[i+1][j] = x[i+1][j] + ws.g[i*NX+j];
         }
@@ -192,7 +199,7 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     d_free(out.ubA);
 
     d_free(ws.D);
-    d_free(ws.G);
+    d_free(**ws.G);
     d_free(ws.g);
     d_free(ws.W1_x);
     d_free(ws.W2_x);

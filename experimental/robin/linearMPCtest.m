@@ -4,7 +4,7 @@ N = 20;
 nx = 8;
 nu = 3;
 
-A = [0.76272   0.11488   0.00248   0.00002   0.45961   0.01981   0.00025   0.00000 ;
+A0 = [0.76272   0.11488   0.00248   0.00002   0.45961   0.01981   0.00025   0.00000 ;
   0.11488   0.76520   0.11490   0.00248   0.01981   0.45987   0.01981   0.00025 ;
   0.00248   0.11490   0.76520   0.11488   0.00025   0.01981   0.45987   0.01981 ;
   0.00002   0.00248   0.11488   0.76272   0.00000   0.00025   0.01981   0.45961 ;
@@ -51,7 +51,7 @@ f = [repmat([q;r],N,1);q];
 C = [-eye(nx),zeros(nx,N*(nx+nu))];
 c = [x0;repmat(b,N,1)];
 for i=0:N-1
-    C = [C;zeros(nx,i*(nx+nu)),A,B,-eye(nx),zeros(nx,(N-i-1)*(nx+nu))];
+    C = [C;zeros(nx,i*(nx+nu)),A0,B,-eye(nx),zeros(nx,(N-i-1)*(nx+nu))];
 end
 
 
@@ -73,16 +73,16 @@ figure(1);clf;plot(XU(1:2:7,:).')
 Abar = [-eye(nx),zeros(nx,(N-1)*nx)];
 Bbar = kron(eye(N),B);
 for i=1:N-1
-    Abar = [Abar;zeros(nx,(i-1)*(nx)),A,-eye(nx),zeros(nx,(N-i-1)*nx)];
+    Abar = [Abar;zeros(nx,(i-1)*(nx)),A0,-eye(nx),zeros(nx,(N-i-1)*nx)];
 end
 Qbar = kron(eye(N+1),Q);
 Rbar = kron(eye(N),R);
-c = [A*x0+b;repmat(b,N-1,1)];
+c = [A0*x0+b;repmat(b,N-1,1)];
 Dx = blkdiag(zeros(N*nx,N*nx),eye(nx));
 Dx(1,1) = 1;
 
 G = [zeros(nx,N*nu);-Abar\Bbar];
-Ge = [eye(nx);-Abar\[A;zeros((N-1)*nx,nx)]];
+Ge = [eye(nx);-Abar\[A0;zeros((N-1)*nx,nx)]];
 g = [zeros(nx,1);-Abar\c];
 
 Hbar = Rbar + G.'*Qbar*G;
@@ -100,16 +100,16 @@ numvars = N*nu;
 [H,f,A,lbU,ubU,lbA,ubA,C,d,D] = arrays_to_read{:};
 H = reshape(H,numvars,numvars);
 A = reshape(A,N*(nx+nx+nu)+nx+nu,numvars);
-C = reshape(C,N*(nx),numvars);
+% C = reshape(C,N*(nx),numvars);
 D = reshape(D,(N+1)*(nx+nu),numvars);
 
-bigA = [];
-for i=0:N-1
-    bigA = [bigA;C(i*nx+1:(i+1)*nx,:);D(i*(nx+nu)+1:(i+1)*(nx+nu),:)];
-end
-bigA = [bigA;D(end-(nx+nu)+1:end,:)];
+% bigA = [];
+% for i=0:N-1
+%     bigA = [bigA;C(i*nx+1:(i+1)*nx,:);D(i*(nx+nu)+1:(i+1)*(nx+nu),:)];
+% end
+% bigA = [bigA;D(end-(nx+nu)+1:end,:)];
 
-condensing.u = quadprog(H,hbar,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
+condensing.u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
 condensing.x = C*condensing.u+d;
 
 norm(condensing.u-sparse.u)
