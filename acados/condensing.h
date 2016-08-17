@@ -65,8 +65,8 @@ typedef struct condensing_workspace_ {
     real_t *w2;
 } condensing_workspace;
 
-void condensingN2_fixed_initial_state(condensing_in input, condensing_out output,
-    condensing_workspace workspace);
+void condensingN2_fixed_initial_state(condensing_in *input, condensing_out *output,
+    condensing_workspace *workspace);
 
 void condensingN2_free_initial_state();
 

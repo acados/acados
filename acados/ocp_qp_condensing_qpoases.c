@@ -176,11 +176,11 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     int_t **idxb, double **lb, double **ub,
     double **Cx, double **Cu, double **lc, double **uc,
     double **x, double **u,
-    struct ocp_qp_condensing_qpoases_args *args, double *work) {
+    ocp_qp_condensing_qpoases_args *args, double *work) {
 
     fill_in_condensing_structs(N, nx, nu, nb, nc, A, B, b, Q, S, R, q, r,
         idxb, lb, ub, Cx, Cu, lc, uc);
-    condensingN2_fixed_initial_state(in, out, ws);
+    condensingN2_fixed_initial_state(&in, &out, &ws);
 
     // Process arguments
     args->dummy = 1.0;

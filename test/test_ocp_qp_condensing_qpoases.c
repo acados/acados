@@ -365,7 +365,7 @@ int main() {
     ************************************************/
 
     // solver arguments
-    struct ocp_qp_condensing_qpoases_args args;
+    ocp_qp_condensing_qpoases_args args;
     args.dummy = 42.0;
 
     /************************************************
