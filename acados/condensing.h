@@ -54,9 +54,9 @@ typedef struct condensing_memory_ {
 } condensing_memory;
 
 typedef struct condensing_workspace_ {
-    real_t *D;
     real_t ***G;
     real_t **g;
+    real_t ***D;
     real_t *W1_x;
     real_t *W2_x;
     real_t *W1_u;

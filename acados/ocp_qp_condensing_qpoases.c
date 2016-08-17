@@ -57,7 +57,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, out.ubA, NNN*(NX+NA)+NA);
     write_array_to_file(outFile, ws.G[0][0], NNN*(NX)*NVC);
     write_array_to_file(outFile, ws.g[0], NNN*NX);
-    write_array_to_file(outFile, ws.D, (NNN+1)*NA*NVC);
+    write_array_to_file(outFile, ws.D[0][0], (NNN+1)*NA*NVC);
     fclose(outFile);
 }
 
@@ -110,15 +110,21 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     d_zeros(&out.ubA, num_constraints, 1);
 
     // Workspace
-    d_zeros(&ws.D, (in.N+1)*num_constraints, num_condensed_vars);
     ws.G = malloc(sizeof(*ws.G) * N);
     ws.g = malloc(sizeof(*ws.g) * N);
+    ws.D = malloc(sizeof(*ws.D) * (N+1));
     for (int_t i = 0; i < N; i++) {
         ws.G[i] = malloc(sizeof(*(ws.G[i])) * (i+1));
+        ws.D[i] = malloc(sizeof(*(ws.D[i])) * (i+1));
         d_zeros(&ws.g[i], NX, 1);
         for (int_t j = 0; j <= i; j++) {
             d_zeros(&ws.G[i][j], NX, NU);
+            d_zeros(&ws.D[i][j], NA, NU);
         }
+    }
+    ws.D[N] = malloc(sizeof(*(ws.D[N])) * N);
+    for (int_t i = 0; i < N; i++) {
+        d_zeros(&ws.D[N][i], NA, NU);
     }
     d_zeros(&ws.W1_x, NX, NX);
     d_zeros(&ws.W2_x, NX, NX);
@@ -140,8 +146,13 @@ static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solutio
     return return_flag;
 }
 
-static void recover_state_trajectory(int_t N,
-    real_t** x, real_t** u, real_t* primal_solution) {
+static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
+    real_t *primal_solution, real_t *x0) {
+
+    // Initial state fixed!
+    for (int_t i = 0; i < NX; i++) {
+        x[0][i] = x0[i];
+    }
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < NX; j++) {
             x[i+1][j] = ws.g[i][j];
@@ -189,8 +200,8 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
         }
     }
     write_QP_data_to_file();
-    int_t return_flag = solve_QP(QP, &(primal_solution[0]), &(dual_solution[0]));
-    recover_state_trajectory(N, x, u, &(primal_solution[0]));
+    int_t return_flag = solve_QP(QP, &primal_solution[0], &dual_solution[0]);
+    recover_state_trajectory(N, x, u, &primal_solution[0], lb[0]);
 
     d_free(out.H);
     d_free(out.h);
@@ -200,16 +211,22 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     d_free(out.lbA);
     d_free(out.ubA);
 
-    d_free(ws.D);
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j <= i; j++) {
             d_free(ws.G[i][j]);
+            d_free(ws.D[i][j]);
         }
         free(ws.G[i]);
+        free(ws.D[i]);
         d_free(ws.g[i]);
     }
+    for (int_t i = 0; i < N; i++) {
+        d_free(ws.D[N][i]);
+    }
+    free(ws.D[N]);
     free(ws.G);
     free(ws.g);
+    free(ws.D);
     d_free(ws.W1_x);
     d_free(ws.W2_x);
     d_free(ws.W1_u);

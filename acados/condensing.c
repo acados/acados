@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "condensing.h"
 
 void calculate_transition_vector(condensing_in in, condensing_workspace ws, real_t *x0) {
@@ -200,7 +201,7 @@ static void offdiag_D_blk(real_t* Cx, real_t* Gij, real_t* Dij) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NA; i++) {
             for (int_t k = 0; k < NX; k++) {
-                Dij[j*(NNN+1)*NA+i] += Cx[k*NA+i]*Gij[j*NX+k];
+                Dij[j*NA+i] += Cx[k*NA+i]*Gij[j*NX+k];
             }
         }
     }
@@ -210,14 +211,13 @@ static void calculate_D(condensing_in in, condensing_workspace ws) {
     for (int_t k = 0; k < NNN; k++) {
         for (int_t j = 0; j < NU; j++) {
             for (int_t i = 0; i < NA; i++) {
-                ws.D[k*((NNN+1)*NA*NU+NA)+j*NNN*NA+i] = in.Cu[k][j*NA+i];
+                ws.D[k][k][j*NA+i] = in.Cu[k][j*NA+i];
             }
         }
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
-            offdiag_D_blk(in.Cx[i], ws.G[i-1][j],
-                            &ws.D[i*NA+(NNN+1)*NA*NU*j]);
+            offdiag_D_blk(in.Cx[i], ws.G[i-1][j], ws.D[i][j]);
         }
     }
 }
@@ -226,10 +226,13 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
     condensing_workspace ws) {
 
     calculate_D(in, ws);
-    for (int_t j = 0; j < NVC; j++) {
-        for (int_t k = 0; k < NNN; k++) {
-            for (int_t i = 0; i < NA; i++) {
-                out.A[j*((NX+NA)*NNN+NA)+k*(NX+NA)+i] = ws.D[j*NA*(NNN+1)+k*NA+i];
+    for (int_t j = 0; j < NNN; j++) {
+        for (int_t i = j; i < NNN; i++) {
+            for (int_t k = 0; k < NU; k++) {
+                for (int_t l = 0; l < NX; l++) {
+                    out.A[j*((NX+NA)*NNN+NA)*NU+i*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
+                        = ws.D[i][j][k*NA+l];
+                }
             }
         }
     }
@@ -243,9 +246,12 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
             }
         }
     }
-    for (int_t j = 0; j < NVC; j++) {
-        for (int_t i = 0; i < NA; i++) {
-            out.A[(NX+NA)*NNN+j*(NNN*(NX+NA)+NA)+i] = ws.D[NA*NNN+j*NA*(NNN+1)+i];
+    for (int_t j = 0; j < NNN; j++) {
+        for (int_t k = 0; k < NU; k++) {
+            for (int_t l = 0; l < NX; l++) {
+                out.A[j*((NX+NA)*NNN+NA)*NU+NNN*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
+                    = ws.D[NNN][j][k*NA+l];
+            }
         }
     }
 }
