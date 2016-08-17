@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "condensing.h"
 
 void calculate_transition_vector(condensing_in in, condensing_workspace ws, real_t *x0) {

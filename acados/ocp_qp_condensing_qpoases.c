@@ -12,7 +12,7 @@
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
 QProblem    QP;
-real_t      *_A;
+real_t      *A_row_major;
 real_t      cput;
 int_t       nwsr;
 real_t      primal_solution[NVC]                        = {0};  // QP primal solution vector
@@ -99,7 +99,6 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     // Output
     int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
     int_t num_constraints = get_num_constraints(N, nx, nc);
-    printf("Number of vars, constraints: %d, %d\n", num_condensed_vars, num_constraints);
     d_zeros(&out.H, num_condensed_vars, num_condensed_vars);
     d_zeros(&out.h, num_condensed_vars, 1);
     d_zeros(&out.lb, num_condensed_vars, 1);
@@ -137,7 +136,7 @@ static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solutio
     nwsr = 1000;
     cput = 100.0;
 
-    int_t return_flag = QProblem_initW(&QP, out.H, out.h, &_A[0], out.lb,
+    int_t return_flag = QProblem_initW(&QP, out.H, out.h, A_row_major, out.lb,
                         out.ub, out.lbA, out.ubA,
                         &nwsr, &cput, NULL, dual_solution, NULL, NULL, NULL);
     QProblem_getPrimalSolution(&QP, primal_solution);
@@ -182,8 +181,6 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
         idxb, lb, ub, Cx, Cu, lc, uc);
     condensingN2_fixed_initial_state(in, out, ws);
 
-    printf("%f\n", out.lbA[0]);
-
     // Process arguments
     args->dummy = 1.0;
     work = 0;
@@ -197,10 +194,10 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     }
     // Convert C to row major in A
     int_t num_constraints = get_num_constraints(N, nx, nc);
-    d_zeros(&_A, num_constraints, num_condensed_vars);
+    d_zeros(&A_row_major, num_constraints, num_condensed_vars);
     for (int_t i = 0; i < num_constraints; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
-            _A[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
+            A_row_major[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
         }
     }
     write_QP_data_to_file();
