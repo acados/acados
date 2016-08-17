@@ -1,6 +1,6 @@
 #include "condensing.h"
 
-void calculate_transition_vector(condensing_in in, condensing_workspace ws, real_t *x0) {
+static void calculate_transition_vector(condensing_in in, condensing_workspace ws, real_t *x0) {
     for (int_t k = 0; k < NX; k++) {
         ws.g[0][k] = in.b[0][k];
         for (int_t i = 0; i < NX; i++) {
@@ -35,7 +35,7 @@ static void offdiag_trans_blk(real_t *A, real_t *G_prev, real_t *G) {
     }
 }
 
-void calculate_transition_matrix(condensing_in in, condensing_workspace ws) {
+static void calculate_transition_matrix(condensing_in in, condensing_workspace ws) {
     for (int_t j = 0; j < NNN; j++) {
         diag_trans_blk(in.B[j], ws.G[j][j]);
         for (int_t i = j+1; i < NNN; i++) {
@@ -87,7 +87,7 @@ static void corr_grad_fixd_init_state(condensing_in in, condensing_out out,
     }
 }
 
-void calculate_gradient(condensing_in in, condensing_out out, condensing_workspace ws,
+static void calculate_gradient(condensing_in in, condensing_out out, condensing_workspace ws,
     int_t offset, real_t *x0) {
 
     update_w(ws, in.q[NNN], in.Q[NNN], ws.g[NNN-1], in.A[0]);
@@ -137,7 +137,7 @@ static void diag_hess_blk(condensing_workspace ws, real_t* H, real_t* R, real_t*
     }
 }
 
-void calculate_hessian(condensing_in in, condensing_out out,
+static void calculate_hessian(condensing_in in, condensing_out out,
     condensing_workspace ws, int_t offset) {
 
     for (int_t j = 0; j < NNN; j++) {
@@ -149,10 +149,16 @@ void calculate_hessian(condensing_in in, condensing_out out,
             update_W(ws, in.Q[i], ws.G[i-1][j], in.A[i]);
         }
         diag_hess_blk(ws, &out.H[(offset+j*NU)*NVC+offset+j*NU], in.R[j], in.B[j]);
+        // Symmetrize H
+        for (int_t i = 0; i < NVC; i++) {
+            for (int_t j = 0; j < i; j++) {
+                out.H[i*NVC+j] = out.H[j*NVC+i];
+            }
+        }
     }
 }
 
-void calculate_simple_bounds(condensing_in in, condensing_out out) {
+static void calculate_simple_bounds(condensing_in in, condensing_out out) {
     for (int_t i = 0; i < NNN; i++) {
         for (int_t j = 0; j < in.nb[i]; j++) {
             if (NX <= in.idxb[i][j] && in.idxb[i][j] < NX+NU) {
@@ -163,7 +169,7 @@ void calculate_simple_bounds(condensing_in in, condensing_out out) {
     }
 }
 
-void calculate_constraint_bounds(condensing_in in, condensing_out out,
+static void calculate_constraint_bounds(condensing_in in, condensing_out out,
     condensing_workspace ws, real_t *x0) {
 
     // State simple bounds
@@ -223,7 +229,7 @@ static void calculate_D(condensing_in in, condensing_workspace ws) {
     }
 }
 
-void calculate_constraint_matrix(condensing_in in, condensing_out out,
+static void calculate_constraint_matrix(condensing_in in, condensing_out out,
     condensing_workspace ws) {
 
     int_t ldA = 0;
@@ -232,7 +238,6 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
     }
     ldA += in.nc[NNN];
 
-    calculate_D(in, ws);
     int_t ctr = 0, ctr2 = 0;
     for (int_t i = 0; i < NNN; i++) {
         ctr2 = ctr;
@@ -283,6 +288,7 @@ void condensingN2_fixed_initial_state(condensing_in input, condensing_out output
     calculate_gradient(input, output, workspace, offset, x0);
 
     calculate_simple_bounds(input, output);
+    calculate_D(input, workspace);
     calculate_constraint_matrix(input, output, workspace);
     calculate_constraint_bounds(input, output, workspace, x0);
 }

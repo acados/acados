@@ -22,6 +22,4 @@ int_t ocp_qp_condensing_qpoases_workspace_size(int_t N, int_t *nxx, int_t *nuu,
 
 void initialise_qpoases();
 
-void write_QP_data_to_file();
-
 #endif  // OCP_QP_CONDENSING_QPOASES_H_

@@ -11,12 +11,13 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
+
 QProblem    QP;
 real_t      *A_row_major;
 real_t      cput;
 int_t       nwsr;
-real_t      primal_solution[NVC]                        = {0};  // QP primal solution vector
-real_t      dual_solution[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solution vector
+real_t      primal_solution[NVC]                        = {0};
+real_t      dual_solution[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};
 condensing_in in;
 condensing_out out;
 condensing_workspace ws;
@@ -48,12 +49,12 @@ static int_t get_num_constraints(int_t N, int_t *nx, int_t *nc) {
     return num_constraints;
 }
 
-void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
+static void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
     for (int_t i = 0; i < size; i++) fprintf(outputFile, "%g ", array[i]);
     fprintf(outputFile, "\n");
 }
 
-void write_QP_data_to_file() {
+static void write_QP_data_to_file() {
     FILE *outFile = fopen("../experimental/robin/QP_data.txt", "w");
     if (outFile == NULL) {
         fprintf(stderr, "%s\n", "OPEN FILE FAILED!");
@@ -185,14 +186,8 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     args->dummy = 1.0;
     work = 0;
 
-    // Symmetrize H
+    // Convert A to row major
     int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
-    for (int_t i = 1; i < num_condensed_vars; i++) {
-        for (int_t j = 0; j < i; j++) {
-            out.H[i*num_condensed_vars+j] = out.H[j*num_condensed_vars+i];
-        }
-    }
-    // Convert C to row major in A
     int_t num_constraints = get_num_constraints(N, nx, nc);
     d_zeros(&A_row_major, num_constraints, num_condensed_vars);
     for (int_t i = 0; i < num_constraints; i++) {
