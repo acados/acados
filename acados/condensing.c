@@ -9,9 +9,9 @@ void calculate_transition_vector(condensing_in in, condensing_workspace ws, real
     }
     for (int_t k = 1; k < NNN; k++) {
         for (int_t j = 0; j < NX; j++) {
-            ws.g[k][j] += in.b[k][j];
+            ws.g[k][j] = in.b[k][j];
             for (int_t i = 0; i < NX; i++) {
-                ws.g[k][i] += in.A[k][j*NX+i]*ws.g[k-1][j];
+                ws.g[k][j] += in.A[k][j+i*NX]*ws.g[k-1][i];
             }
         }
     }
