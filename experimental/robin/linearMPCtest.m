@@ -65,6 +65,7 @@ sparse.w = quadprog(H,f,[],[],C,-c,lb,ub);
 XU = reshape([sparse.w;zeros(nu,1)],nx+nu,N+1);
 sparse.x = vec(XU(1:nx,:));
 sparse.u = vec(XU(nx+1:end,1:end-1));
+sparse.U = XU(nx+1:end,1:end-1).';
 
 figure(1);clf;plot(XU(1:2:7,:).')
 
@@ -110,11 +111,16 @@ D = reshape(D,(N+1)*(nx+nu),numvars);
 % bigA = [bigA;D(end-(nx+nu)+1:end,:)];
 
 condensing.u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
-condensing.x = C*condensing.u+d;
+condensing.U = reshape(condensing.u,nu,N).';
+condensing.x = G(nx+1:end,:)*condensing.u+d;
+condensing.X = reshape([x0;condensing.x],nx,N+1);
 
 norm(condensing.u-sparse.u)
 norm(condensing.x-sparse.x(nx+1:end))
 
 figure(1);hold on;
-condensing.XU = reshape([x0;condensing.x],nx,N+1);
-plot(condensing.XU(1:2:7,:).','o')
+plot(condensing.X(1:2:7,:).','o')
+
+figure(2);hold on;
+plot(condensing.U)
+plot(sparse.U,'o')
