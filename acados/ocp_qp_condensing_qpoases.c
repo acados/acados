@@ -15,7 +15,7 @@ QProblem    QP;
 real_t      _A[(NNN*(NX+NA)+NA)*NVC] = {0};
 real_t      cput;
 int_t       nwsr;
-real_t      primal_solution[NVC]                     = {0};  // QP primal solution vector
+real_t      primal_solution[NVC]                        = {0};  // QP primal solution vector
 real_t      dual_solution[(NNN+1)*NX+NNN*(NX+NU)+NX]    = {0};  // QP dual solution vector
 condensing_in in;
 condensing_out out;
@@ -31,7 +31,7 @@ int_t get_num_opt_vars(int_t NN, int_t *nx, int_t *nu) {
 
 int_t get_num_condensed_vars(int_t NN, int_t *nx, int_t *nu) {
     int_t num_condensed_vars = 0;
-    // TODO(robin): MHE!
+    // TODO(robin): this only holds for MPC, not MHE
     num_condensed_vars += 0*nx[1];
     for (int_t i = 0; i < NN; i++)
         num_condensed_vars += nu[i];
@@ -55,9 +55,6 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, out.ub, NVC);
     write_array_to_file(outFile, out.lbA, NNN*(NX+NA)+NA);
     write_array_to_file(outFile, out.ubA, NNN*(NX+NA)+NA);
-    write_array_to_file(outFile, ws.G[0][0], NNN*(NX)*NVC);
-    write_array_to_file(outFile, ws.g[0], NNN*NX);
-    write_array_to_file(outFile, ws.D[0][0], (NNN+1)*NA*NVC);
     fclose(outFile);
 }
 
@@ -149,10 +146,11 @@ static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solutio
 static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
     real_t *primal_solution, real_t *x0) {
 
-    // Initial state fixed!
+    #if FIXED_INITIAL_STATE == 1
     for (int_t i = 0; i < NX; i++) {
         x[0][i] = x0[i];
     }
+    #endif
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < NX; j++) {
             x[i+1][j] = ws.g[i][j];
