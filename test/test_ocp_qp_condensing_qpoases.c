@@ -3,7 +3,7 @@
 #define NU 3
 #define NN 20
 #define NB 11
-#define NG 11
+#define NG 0
 #define NGN 8
 
 // define number of repetitions
@@ -118,7 +118,7 @@ int main() {
     int N = NN;   // horizon length
     int nb = NB;  // number of box constrained inputs and states
     int ng = NG;  // 4;  // number of general constraints
-    int ngN = NG;  // 4;  // number of general constraints at the last stage
+    int ngN = NGN;  // 4;  // number of general constraints at the last stage
 
     // int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -137,6 +137,7 @@ int main() {
 
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
+    ngg[0] = 1;
     ngg[N] = ngN;
 
     printf(
@@ -233,26 +234,26 @@ int main() {
     ************************************************/
 
     double *C0;
-    d_zeros(&C0, ng, nx);
+    d_zeros(&C0, 1, nx);
     C0[0] = 1;
     double *D0;
-    d_zeros(&D0, ng, nu);
+    d_zeros(&D0, 1, nu);
     D0[0] = 1;
     double *lg0;
-    d_zeros(&lg0, ng, 1);
+    d_zeros(&lg0, 1, 1);
     lg0[0] = 2.5;
     double *ug0;
-    d_zeros(&ug0, ng, 1);
+    d_zeros(&ug0, 1, 1);
     ug0[0] = 5.5;
 
     double *C;
-    d_zeros(&C, ng, nx);
+    d_zeros(&C, 0, nx);
     double *D;
-    d_zeros(&D, ng, nu);
+    d_zeros(&D, 0, nu);
     double *lg;
-    d_zeros(&lg, ng, 1);
+    d_zeros(&lg, 0, 1);
     double *ug;
-    d_zeros(&ug, ng, 1);
+    d_zeros(&ug, 0, 1);
 
     double *CN;
     d_zeros(&CN, ngN, nx);

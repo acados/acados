@@ -14,7 +14,7 @@
 #define NU 3
 #define NNN 20
 #define NA 11
-#define NCONSTRAINTS 391
+#define NCONSTRAINTS 169
 
 typedef struct condensing_in_ {
     int_t N;

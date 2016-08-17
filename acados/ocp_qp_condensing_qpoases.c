@@ -12,7 +12,7 @@
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
 QProblem    QP;
-real_t      _A[(NNN*(NX+NA)+NA)*NVC] = {0};
+real_t      *_A;
 real_t      cput;
 int_t       nwsr;
 real_t      primal_solution[NVC]                        = {0};  // QP primal solution vector
@@ -21,21 +21,31 @@ condensing_in in;
 condensing_out out;
 condensing_workspace ws;
 
-int_t get_num_opt_vars(int_t NN, int_t *nx, int_t *nu) {
-    int_t num_opt_vars = 0;
-    for (int_t i = 0; i < NN; i++)
-        num_opt_vars += nx[i] + nu[i];
-    num_opt_vars += nx[NN];
-    return num_opt_vars;
-}
+// static int_t get_num_opt_vars(int_t N, int_t *nx, int_t *nu) {
+//     int_t num_opt_vars = 0;
+//     for (int_t i = 0; i < N; i++)
+//         num_opt_vars += nx[i] + nu[i];
+//     num_opt_vars += nx[N];
+//     return num_opt_vars;
+// }
 
-int_t get_num_condensed_vars(int_t NN, int_t *nx, int_t *nu) {
+static int_t get_num_condensed_vars(int_t N, int_t *nx, int_t *nu) {
     int_t num_condensed_vars = 0;
     // TODO(robin): this only holds for MPC, not MHE
     num_condensed_vars += 0*nx[1];
-    for (int_t i = 0; i < NN; i++)
+    for (int_t i = 0; i < N; i++)
         num_condensed_vars += nu[i];
     return num_condensed_vars;
+}
+
+static int_t get_num_constraints(int_t N, int_t *nx, int_t *nc) {
+    int_t num_constraints = 0;
+    for (int_t i = 0; i < N; i++) {
+        // TODO(robin): count actual simple bounds on states
+        num_constraints += nc[i] + nx[i];
+    }
+    num_constraints += nc[N];
+    return num_constraints;
 }
 
 void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
@@ -50,20 +60,20 @@ void write_QP_data_to_file() {
     }
     write_array_to_file(outFile, out.H, NVC*NVC);
     write_array_to_file(outFile, out.h, NVC);
-    write_array_to_file(outFile, out.A, (NNN*(NX+NA)+NA)*NVC);
+    write_array_to_file(outFile, out.A, 169*NVC);
     write_array_to_file(outFile, out.lb, NVC);
     write_array_to_file(outFile, out.ub, NVC);
-    write_array_to_file(outFile, out.lbA, NNN*(NX+NA)+NA);
-    write_array_to_file(outFile, out.ubA, NNN*(NX+NA)+NA);
+    write_array_to_file(outFile, out.lbA, 169);
+    write_array_to_file(outFile, out.ubA, 169);
     fclose(outFile);
 }
 
 static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-        real_t **A, real_t **B, real_t **b,
-        real_t **Q, real_t **S, real_t **R, real_t **q, real_t **r,
-        int_t **idxb, real_t **lb, real_t **ub,
-        real_t **Cx, real_t **Cu, real_t **lc, real_t **uc,
-        int_t initial_state_fixed) {
+    real_t **A, real_t **B, real_t **b,
+    real_t **Q, real_t **S, real_t **R, real_t **q, real_t **r,
+    int_t **idxb, real_t **lb, real_t **ub,
+    real_t **Cx, real_t **Cu, real_t **lc, real_t **uc) {
+
     // Input
     in.N = N;
     in.nx = nx;
@@ -87,17 +97,9 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     in.uc = uc;
 
     // Output
-    int_t num_condensed_vars = 0;
-    int_t num_constraints = -nx[0];
-    if (initial_state_fixed) {
-        num_condensed_vars += nx[0];
-    }
-    for (int_t i = 0; i < N; i++) {
-        num_condensed_vars += nu[i];
-        // TODO(robin): count the actual number of simple bounds on the states
-        num_constraints += nc[i] + nx[i];
-    }
-    num_constraints += nc[N] + nx[N];
+    int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
+    int_t num_constraints = get_num_constraints(N, nx, nc);
+    printf("Number of vars, constraints: %d, %d\n", num_condensed_vars, num_constraints);
     d_zeros(&out.H, num_condensed_vars, num_condensed_vars);
     d_zeros(&out.h, num_condensed_vars, 1);
     d_zeros(&out.lb, num_condensed_vars, 1);
@@ -116,12 +118,12 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
         d_zeros(&ws.g[i], NX, 1);
         for (int_t j = 0; j <= i; j++) {
             d_zeros(&ws.G[i][j], NX, NU);
-            d_zeros(&ws.D[i][j], NA, NU);
+            d_zeros(&ws.D[i][j], in.nc[i], NU);
         }
     }
     ws.D[N] = malloc(sizeof(*(ws.D[N])) * N);
     for (int_t i = 0; i < N; i++) {
-        d_zeros(&ws.D[N][i], NA, NU);
+        d_zeros(&ws.D[N][i], in.nc[N], NU);
     }
     d_zeros(&ws.W1_x, NX, NX);
     d_zeros(&ws.W2_x, NX, NX);
@@ -177,8 +179,10 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     struct ocp_qp_condensing_qpoases_args *args, double *work) {
 
     fill_in_condensing_structs(N, nx, nu, nb, nc, A, B, b, Q, S, R, q, r,
-        idxb, lb, ub, Cx, Cu, lc, uc, 0);
+        idxb, lb, ub, Cx, Cu, lc, uc);
     condensingN2_fixed_initial_state(in, out, ws);
+
+    printf("%f\n", out.lbA[0]);
 
     // Process arguments
     args->dummy = 1.0;
@@ -192,9 +196,11 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
         }
     }
     // Convert C to row major in A
-    for (int_t i = 0; i < N*(NX+NA)+NA; i++) {
+    int_t num_constraints = get_num_constraints(N, nx, nc);
+    d_zeros(&_A, num_constraints, num_condensed_vars);
+    for (int_t i = 0; i < num_constraints; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
-            _A[i*num_condensed_vars+j] = out.A[j*(N*(NX+NA)+NA)+i];
+            _A[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
         }
     }
     write_QP_data_to_file();

@@ -181,8 +181,8 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
         out.lbA[i] = in.lc[0][i];
         out.ubA[i] = in.uc[0][i];
         for (int_t j = 0; j < NX; j++) {
-            out.lbA[i] -= in.Cx[0][j*NX+i]*x0[j];
-            out.ubA[i] -= in.Cx[0][j*NX+i]*x0[j];
+            out.lbA[i] -= in.Cx[0][j*in.nc[0]+i]*x0[j];
+            out.ubA[i] -= in.Cx[0][j*in.nc[0]+i]*x0[j];
         }
     }
     ctr = NX + in.nc[0];
@@ -232,7 +232,6 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
         ldA += in.nc[i] + NX;
     }
     ldA += in.nc[NNN];
-    printf("%d\n", ldA);
 
     calculate_D(in, ws);
     int_t ctr = 0, ctr2 = 0;

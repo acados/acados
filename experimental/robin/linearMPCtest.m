@@ -100,7 +100,7 @@ end
 numvars = N*nu;
 [H,f,A,lbU,ubU,lbA,ubA] = arrays_to_read{:};
 H = reshape(H,numvars,numvars);
-A = reshape(A,N*(nx+nx+nu)+nx+nu,numvars);
+A = reshape(A,169,numvars);
 
 condensing.u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
 condensing.U = reshape(condensing.u,nu,N).';
@@ -115,5 +115,5 @@ plot(XU(1:2:7,:).')
 plot(condensing.X(1:2:7,:).','o')
 
 figure(2);clf;hold on;
-plot(condensing.U)
-plot(sparse.U,'o')
+plot(sparse.U)
+plot(condensing.U,'o')
