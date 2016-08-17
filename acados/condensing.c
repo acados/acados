@@ -37,9 +37,9 @@ static void offdiag_trans_blk(real_t *A, real_t *G_prev, real_t *G) {
 
 void calculate_transition_matrix(condensing_in in, condensing_workspace ws) {
     for (int_t j = 0; j < NNN; j++) {
-        diag_trans_blk(in.B[j], ws.G[j][0]);
+        diag_trans_blk(in.B[j], ws.G[j][j]);
         for (int_t i = j+1; i < NNN; i++) {
-            offdiag_trans_blk(in.A[i], ws.G[j][i-j-1], ws.G[j][i-j]);
+            offdiag_trans_blk(in.A[i], ws.G[i-1][j], ws.G[i][j]);
         }
     }
 }
@@ -142,11 +142,11 @@ void calculate_hessian(condensing_in in, condensing_out out,
 
     for (int_t j = 0; j < NNN; j++) {
         for (int_t i = 0; i < NX*NU; i++) ws.W2_u[i] = 0.0;
-        update_W(ws, in.Q[NNN], ws.G[j][NNN-j-1], in.A[0]);
+        update_W(ws, in.Q[NNN], ws.G[NNN-1][j], in.A[0]);
         for (int_t i = NNN-1; i > j; i--) {
             offdiag_hess_blk(ws, &out.H[(offset+j*NU)*NVC+offset+i*NU], in.S[i],
-                    ws.G[j][i-j-1], in.B[i]);
-            update_W(ws, in.Q[i], ws.G[j][i-j-1], in.A[i]);
+                    ws.G[i-1][j], in.B[i]);
+            update_W(ws, in.Q[i], ws.G[i-1][j], in.A[i]);
         }
         diag_hess_blk(ws, &out.H[(offset+j*NU)*NVC+offset+j*NU], in.R[j], in.B[j]);
     }
@@ -216,7 +216,7 @@ static void calculate_D(condensing_in in, condensing_workspace ws) {
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
-            offdiag_D_blk(in.Cx[i], ws.G[j][i-1-j],
+            offdiag_D_blk(in.Cx[i], ws.G[i-1][j],
                             &ws.D[i*NA+(NNN+1)*NA*NU*j]);
         }
     }
@@ -238,7 +238,7 @@ void calculate_constraint_matrix(condensing_in in, condensing_out out,
             for (int_t k = 0; k < NU; k++) {
                 for (int_t l = 0; l < NX; l++) {
                     out.A[NA+j*((NX+NA)*NNN+NA)*NU+i*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
-                        = ws.G[j][i-j][k*NX+l];
+                        = ws.G[i][j][k*NX+l];
                 }
             }
         }

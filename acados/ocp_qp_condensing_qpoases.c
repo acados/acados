@@ -114,9 +114,9 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     ws.G = malloc(sizeof(*ws.G) * N);
     ws.g = malloc(sizeof(*ws.g) * N);
     for (int_t i = 0; i < N; i++) {
-        ws.G[i] = malloc(sizeof(*(ws.G[i])) * (N-i));
+        ws.G[i] = malloc(sizeof(*(ws.G[i])) * (i+1));
         d_zeros(&ws.g[i], NX, 1);
-        for (int_t j = 0; j < N-i; j++) {
+        for (int_t j = 0; j <= i; j++) {
             d_zeros(&ws.G[i][j], NX, NU);
         }
     }
@@ -144,13 +144,12 @@ static void recover_state_trajectory(int_t N,
     real_t** x, real_t** u, real_t* primal_solution) {
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < NX; j++) {
-            x[i+1][j] = 0.0;
+            x[i+1][j] = ws.g[i][j];
             for (int_t k = 0; k <= i; k++) {
                 for (int_t l = 0; l < NU; l++) {
-                    x[i+1][j] = x[i+1][j] + ws.G[k][i-k][j+NX*l]*primal_solution[NU*k+l];
+                    x[i+1][j] += ws.G[i][k][j+NX*l]*primal_solution[NU*k+l];
                 }
             }
-            x[i+1][j] = x[i+1][j] + ws.g[i][j];
         }
         #if FIXED_INITIAL_STATE == 1
         for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[i*NU+j];
@@ -203,7 +202,7 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
 
     d_free(ws.D);
     for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < N-i; j++) {
+        for (int_t j = 0; j <= i; j++) {
             d_free(ws.G[i][j]);
         }
         free(ws.G[i]);
