@@ -45,29 +45,29 @@ void calculate_transition_matrix(condensing_in in, condensing_workspace ws) {
     }
 }
 
-static void update_w(condensing_workspace ws, real_t* q_, real_t* Q_,
-    real_t* d_, real_t* A_) {
+static void update_w(condensing_workspace ws, real_t* q, real_t* Q,
+    real_t* g, real_t* A) {
 
     for (int_t i = 0; i < NX; i++) {
         ws.w1[i] = ws.w2[i];
-        ws.w2[i] = q_[i];
+        ws.w2[i] = q[i];
     }
     for (int_t j = 0; j < NX; j++) {
         for (int_t i = 0; i < NX; i++) {
-            ws.w2[i] += Q_[j*NX+i]*d_[j];
-            ws.w2[i] += A_[i*NX+j]*ws.w1[j];
+            ws.w2[i] += Q[j*NX+i]*g[j];
+            ws.w2[i] += A[i*NX+j]*ws.w1[j];
         }
     }
 }
 
-static void calc_gradient_blk(condensing_workspace ws, real_t* gc_, real_t* r_,
-    real_t* S_, real_t* d_, real_t* B_) {
+static void calc_gradient_blk(condensing_workspace ws, real_t* h, real_t* r,
+    real_t* S, real_t* g, real_t* B) {
 
-    for (int_t i = 0; i < NU; i++) gc_[i] = r_[i];
+    for (int_t i = 0; i < NU; i++) h[i] = r[i];
     for (int_t j = 0; j < NX; j++) {
         for (int_t i = 0; i < NU; i++) {
-            gc_[i] += S_[j*NU+i]*d_[j];
-            gc_[i] += B_[i*NX+j]*ws.w2[j];
+            h[i] += S[j*NU+i]*g[j];
+            h[i] += B[i*NX+j]*ws.w2[j];
         }
     }
 }
@@ -100,39 +100,39 @@ void calculate_gradient(condensing_in in, condensing_out out, condensing_workspa
     corr_grad_fixd_init_state(in, out, ws, x0);
 }
 
-static void update_W(condensing_workspace ws, real_t* Qi, real_t* Gij, real_t* Ai) {
+static void update_W(condensing_workspace ws, real_t* Q, real_t* G, real_t* A) {
     for (int_t i = 0; i < NX*NU; i++) ws.W1_u[i] = ws.W2_u[i];
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NX; i++) {
             ws.W2_u[j*NX+i] = 0.0;
             for (int_t k = 0; k < NX; k++) {
-                ws.W2_u[j*NX+i] += Qi[k*NX+i]*Gij[j*NX+k];
-                ws.W2_u[j*NX+i] += Ai[i*NX+k]*ws.W1_u[j*NX+k];
+                ws.W2_u[j*NX+i] += Q[k*NX+i]*G[j*NX+k];
+                ws.W2_u[j*NX+i] += A[i*NX+k]*ws.W1_u[j*NX+k];
             }
         }
     }
 }
 
-static void offdiag_hess_blk(condensing_workspace ws, real_t* Hc_, real_t* S_,
-    real_t* C_, real_t* B_) {
+static void offdiag_hess_blk(condensing_workspace ws, real_t* H, real_t* S,
+    real_t* G, real_t* B) {
 
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NU; i++) {
-            Hc_[j*NVC+i] = 0.0;
+            H[j*NVC+i] = 0.0;
             for (int_t k = 0; k < NX; k++) {
-                Hc_[j*NVC+i] += S_[k*NU+i]*C_[j*NX+k];
-                Hc_[j*NVC+i] += B_[i*NX+k]*ws.W2_u[j*NX+k];
+                H[j*NVC+i] += S[k*NU+i]*G[j*NX+k];
+                H[j*NVC+i] += B[i*NX+k]*ws.W2_u[j*NX+k];
             }
         }
     }
 }
 
-static void diag_hess_blk(condensing_workspace ws, real_t* Hc_, real_t* R_, real_t* B_) {
+static void diag_hess_blk(condensing_workspace ws, real_t* H, real_t* R, real_t* B) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NU; i++) {
-            Hc_[j*NVC+i] = R_[j*NU+i];
+            H[j*NVC+i] = R[j*NU+i];
             for (int_t k = 0; k < NX; k++) {
-                Hc_[j*NVC+i] += B_[i*NX+k]*ws.W2_u[j*NX+k];
+                H[j*NVC+i] += B[i*NX+k]*ws.W2_u[j*NX+k];
             }
         }
     }
@@ -197,11 +197,11 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
     }
 }
 
-static void offdiag_D_blk(real_t* Cx, real_t* Gij, real_t* Dij) {
+static void offdiag_D_blk(real_t* Cx, real_t* G, real_t* D) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NA; i++) {
             for (int_t k = 0; k < NX; k++) {
-                Dij[j*NA+i] += Cx[k*NA+i]*Gij[j*NX+k];
+                D[j*NA+i] += Cx[k*NA+i]*G[j*NX+k];
             }
         }
     }
