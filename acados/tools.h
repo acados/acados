@@ -1,5 +1,5 @@
-#ifndef TEST_TOOLS_H_
-#define TEST_TOOLS_H_
+#ifndef ACADOS_TOOLS_H_
+#define ACADOS_TOOLS_H_
 
 /**************************************************************************************************
 *                                                                                                 *
@@ -41,4 +41,4 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb
 /* matrix exponential */
 void expm(int row, double *A);
 
-#endif  // TEST_TOOLS_H_
+#endif  // ACADOS_TOOLS_H_

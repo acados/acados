@@ -34,7 +34,6 @@ target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
 find_package ( PythonInterp )
 if ( PYTHONINTERP_FOUND )
     set ( ACADOS_STYLE_FILTER
-    	"-build/header_guard,"
     	"-build/include,"
     	"-legal/copyright,"
     	"-readability/casting" )

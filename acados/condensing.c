@@ -1,6 +1,8 @@
 #include "condensing.h"
 
-static void calculate_transition_vector(condensing_in *in, condensing_workspace *ws, real_t *x0) {
+static void calculate_transition_vector(const condensing_in *in,
+    condensing_workspace *ws, real_t *x0) {
+
     for (int_t k = 0; k < NX; k++) {
         ws->g[0][k] = in->b[0][k];
         for (int_t i = 0; i < NX; i++) {
@@ -17,7 +19,7 @@ static void calculate_transition_vector(condensing_in *in, condensing_workspace 
     }
 }
 
-static void diag_trans_blk(real_t *B, real_t *G) {
+static void diag_trans_blk(const real_t *B, real_t *G) {
     for (int_t col = 0; col < NU; col++) {
         for (int_t row = 0; row < NX; row++) {
             G[col*NX+row] = B[col*NX+row];
@@ -60,7 +62,7 @@ static void update_w(condensing_workspace *ws, real_t *q, real_t *Q,
 }
 
 static void calc_gradient_blk(condensing_workspace *ws, real_t *h, real_t *r,
-    real_t *S, real_t *g, real_t *B) {
+    real_t *S, real_t *g, const real_t *B) {
 
     for (int_t i = 0; i < NU; i++) h[i] = r[i];
     for (int_t j = 0; j < NX; j++) {
@@ -113,7 +115,7 @@ static void update_W(condensing_workspace *ws, real_t *Q, real_t *G, real_t *A) 
 }
 
 static void offdiag_hess_blk(condensing_workspace *ws, real_t *H, real_t *S,
-    real_t *G, real_t *B) {
+    real_t *G, const real_t *B) {
 
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NU; i++) {
@@ -126,7 +128,7 @@ static void offdiag_hess_blk(condensing_workspace *ws, real_t *H, real_t *S,
     }
 }
 
-static void diag_hess_blk(condensing_workspace *ws, real_t *H, real_t *R, real_t *B) {
+static void diag_hess_blk(condensing_workspace *ws, real_t *H, real_t *R, const real_t *B) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NU; i++) {
             H[j*NVC+i] = R[j*NU+i];

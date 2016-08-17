@@ -69,37 +69,32 @@ static void write_QP_data_to_file() {
     fclose(outFile);
 }
 
-static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-    real_t **A, real_t **B, real_t **b,
-    real_t **Q, real_t **S, real_t **R, real_t **q, real_t **r,
-    int_t **idxb, real_t **lb, real_t **ub,
-    real_t **Cx, real_t **Cu, real_t **lc, real_t **uc) {
-
+static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     // Input
-    in.N = N;
-    in.nx = nx;
-    in.nu = nu;
-    in.nb = nb;
-    in.nc = nc;
-    in.A = A;
-    in.B = B;
-    in.b = b;
-    in.Q = Q;
-    in.S = S;
-    in.R = R;
-    in.q = q;
-    in.r = r;
-    in.idxb = idxb;
-    in.lb = lb;
-    in.ub = ub;
-    in.Cu = Cu;
-    in.Cx = Cx;
-    in.lc = lc;
-    in.uc = uc;
+    in.N = qp_in->N;
+    in.nx = qp_in->nx;
+    in.nu = qp_in->nu;
+    in.nb = qp_in->nb;
+    in.nc = qp_in->nc;
+    in.A = qp_in->A;
+    in.B = qp_in->B;
+    in.b = qp_in->b;
+    in.Q = qp_in->Q;
+    in.S = qp_in->S;
+    in.R = qp_in->R;
+    in.q = qp_in->q;
+    in.r = qp_in->r;
+    in.idxb = qp_in->idxb;
+    in.lb = qp_in->lb;
+    in.ub = qp_in->ub;
+    in.Cu = qp_in->Cu;
+    in.Cx = qp_in->Cx;
+    in.lc = qp_in->lc;
+    in.uc = qp_in->uc;
 
     // Output
-    int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
-    int_t num_constraints = get_num_constraints(N, nx, nc);
+    int_t num_condensed_vars = get_num_condensed_vars(in.N, in.nx, in.nu);
+    int_t num_constraints = get_num_constraints(in.N, in.nx, in.nc);
     d_zeros(&out.H, num_condensed_vars, num_condensed_vars);
     d_zeros(&out.h, num_condensed_vars, 1);
     d_zeros(&out.lb, num_condensed_vars, 1);
@@ -109,10 +104,10 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     d_zeros(&out.ubA, num_constraints, 1);
 
     // Workspace
-    ws.G = malloc(sizeof(*ws.G) * N);
-    ws.g = malloc(sizeof(*ws.g) * N);
-    ws.D = malloc(sizeof(*ws.D) * (N+1));
-    for (int_t i = 0; i < N; i++) {
+    ws.G = malloc(sizeof(*ws.G) * in.N);
+    ws.g = malloc(sizeof(*ws.g) * in.N);
+    ws.D = malloc(sizeof(*ws.D) * (in.N+1));
+    for (int_t i = 0; i < in.N; i++) {
         ws.G[i] = malloc(sizeof(*(ws.G[i])) * (i+1));
         ws.D[i] = malloc(sizeof(*(ws.D[i])) * (i+1));
         d_zeros(&ws.g[i], NX, 1);
@@ -121,9 +116,9 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
             d_zeros(&ws.D[i][j], in.nc[i], NU);
         }
     }
-    ws.D[N] = malloc(sizeof(*(ws.D[N])) * N);
-    for (int_t i = 0; i < N; i++) {
-        d_zeros(&ws.D[N][i], in.nc[N], NU);
+    ws.D[in.N] = malloc(sizeof(*(ws.D[in.N])) * in.N);
+    for (int_t i = 0; i < in.N; i++) {
+        d_zeros(&ws.D[in.N][i], in.nc[in.N], NU);
     }
     d_zeros(&ws.W1_x, NX, NX);
     d_zeros(&ws.W2_x, NX, NX);
@@ -170,16 +165,10 @@ static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
     }
 }
 
-int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-    double **A, double **B, double **b,
-    double **Q, double **S, double **R, double **q, double **r,
-    int_t **idxb, double **lb, double **ub,
-    double **Cx, double **Cu, double **lc, double **uc,
-    double **x, double **u,
+int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     ocp_qp_condensing_qpoases_args *args, double *work) {
 
-    fill_in_condensing_structs(N, nx, nu, nb, nc, A, B, b, Q, S, R, q, r,
-        idxb, lb, ub, Cx, Cu, lc, uc);
+    fill_in_condensing_structs(qp_in);
     condensingN2_fixed_initial_state(&in, &out, &ws);
 
     // Process arguments
@@ -187,8 +176,8 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     work = 0;
 
     // Convert A to row major
-    int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
-    int_t num_constraints = get_num_constraints(N, nx, nc);
+    int_t num_condensed_vars = get_num_condensed_vars(qp_in->N, qp_in->nx, qp_in->nu);
+    int_t num_constraints = get_num_constraints(qp_in->N, qp_in->nx, qp_in->nc);
     d_zeros(&A_row_major, num_constraints, num_condensed_vars);
     for (int_t i = 0; i < num_constraints; i++) {
         for (int_t j = 0; j < num_condensed_vars; j++) {
@@ -197,7 +186,7 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     }
     write_QP_data_to_file();
     int_t return_flag = solve_QP(QP, &primal_solution[0], &dual_solution[0]);
-    recover_state_trajectory(N, x, u, &primal_solution[0], lb[0]);
+    recover_state_trajectory(qp_in->N, qp_out->x, qp_out->u, &primal_solution[0], qp_in->lb[0]);
 
     d_free(out.H);
     d_free(out.h);
@@ -207,7 +196,7 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
     d_free(out.lbA);
     d_free(out.ubA);
 
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < in.N; i++) {
         for (int_t j = 0; j <= i; j++) {
             d_free(ws.G[i][j]);
             d_free(ws.D[i][j]);
@@ -216,10 +205,10 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
         free(ws.D[i]);
         d_free(ws.g[i]);
     }
-    for (int_t i = 0; i < N; i++) {
-        d_free(ws.D[N][i]);
+    for (int_t i = 0; i < in.N; i++) {
+        d_free(ws.D[in.N][i]);
     }
-    free(ws.D[N]);
+    free(ws.D[in.N]);
     free(ws.G);
     free(ws.g);
     free(ws.D);

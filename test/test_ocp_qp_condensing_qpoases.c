@@ -290,8 +290,11 @@ int main() {
     * problems data
     ************************************************/
 
+    ocp_qp_input qp_in;
+    ocp_qp_output qp_out;
+
     double *hA[N];
-    double *hB[N];
+    const double *hB[N];
     double *hb[N];
     double *hQ[N + 1];
     double *hS[N];
@@ -360,6 +363,30 @@ int main() {
     }
     d_zeros(&hx[N], nxx[N], 1);
 
+    qp_in.N = N;
+    qp_in.nx = nxx;
+    qp_in.nu = nuu;
+    qp_in.nb = nbb;
+    qp_in.nc = ngg;
+    qp_in.A = hA;
+    qp_in.B = hB;
+    qp_in.b = hb;
+    qp_in.Q = hQ;
+    qp_in.S = hS;
+    qp_in.R = hR;
+    qp_in.q = hq;
+    qp_in.r = hr;
+    qp_in.idxb = hidxb;
+    qp_in.lb = hlb;
+    qp_in.ub = hub;
+    qp_in.Cx = hC;
+    qp_in.Cu = hD;
+    qp_in.lc = hlg;
+    qp_in.uc = hug;
+
+    qp_out.x = hx;
+    qp_out.u = hu;
+
     /************************************************
     * solver arguments
     ************************************************/
@@ -390,9 +417,7 @@ int main() {
 
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_condensing_qpoases(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
-                                    hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg,
-                                    hug, hx, hu, &args, NULL);
+        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
     }
 
     gettimeofday(&tv1, NULL);  // stop

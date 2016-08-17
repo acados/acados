@@ -1,5 +1,5 @@
-#ifndef CONDENSING_H
-#define CONDENSING_H
+#ifndef ACADOS_CONDENSING_H_
+#define ACADOS_CONDENSING_H_
 
 #include "acados_types.h"
 
@@ -23,7 +23,7 @@ typedef struct condensing_in_ {
     int_t *nb;
     int_t *nc;
     real_t **A;
-    real_t **B;
+    const real_t **B;
     real_t **b;
     real_t **Q;
     real_t **S;
@@ -70,4 +70,4 @@ void condensingN2_fixed_initial_state(condensing_in *input, condensing_out *outp
 
 void condensingN2_free_initial_state();
 
-#endif  // CONDENSING_H
+#endif  // ACADOS_CONDENSING_H_
