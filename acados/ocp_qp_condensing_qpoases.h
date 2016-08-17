@@ -5,7 +5,7 @@
 
 // OCP QP interface
 // struct of arguments to the solver
-typedef struct ocp_qp_condensing_qpoases_args_{
+typedef struct ocp_qp_condensing_qpoases_args_ {
     real_t dummy;
 } ocp_qp_condensing_qpoases_args;
 
