@@ -19,7 +19,6 @@
 #include "acados/ocp_qp_condensing_qpoases.h"
 #include "acados/tools.h"
 
-#include "acados/ocp_qp_condensing_qpoases.h"
 #include "hpmpc/include/aux_d.h"
 
 /************************************************
@@ -102,22 +101,15 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     * initial state
     ************************************************/
 
-    if (nx == 4) {
-        x0[0] = 5;
-        x0[1] = 10;
-        x0[2] = 15;
-        x0[3] = 20;
-    } else {
-        int jj;
-        for (jj = 0; jj < nx; jj++) x0[jj] = 1;
-    }
+    for (ii = 0; ii < nx; ii++) x0[ii] = 0;
+    x0[0] = 2.5;
+    x0[1] = 2.5;
 }
 
 int main() {
 
     int ii, jj;
-
-    int rep, nrep = NREP;
+    int nrep = NREP;
 
     int nx = NX;  // number of states (it has to be even for the mass-spring
                   // system test problem)
@@ -177,10 +169,6 @@ int main() {
 
     for (jj = 0; jj < nx; jj++) b[jj] = 0.1;
 
-    for (jj = 0; jj < nx; jj++) x0[jj] = 0;
-    x0[0] = 2.5;
-    x0[1] = 2.5;
-
     // compute b0 = b + A*x0
     double *b0;
     d_zeros(&b0, nx, 1);
@@ -207,7 +195,7 @@ int main() {
     }
     for (; jj < nb; jj++) {
         lb0[jj] = -0.5;  //   umin
-        ub0[jj] = 0.5;   //   umax
+        ub0[jj] = +0.5;   //   umax
         idxb0[jj] = jj;
     }
 
@@ -219,12 +207,12 @@ int main() {
     d_zeros(&ub1, nbb[1], 1);
     for (jj = 0; jj < nbx; jj++) {
         lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = 4.0;   //   xmax
+        ub1[jj] = +4.0;   //   xmax
         idxb1[jj] = jj;
     }
     for (; jj < nb; jj++) {
         lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
+        ub1[jj] = +0.5;   //   umax
         idxb1[jj] = jj;
     }
 
@@ -236,22 +224,13 @@ int main() {
     d_zeros(&ubN, nbb[N], 1);
     for (jj = 0; jj < nbx; jj++) {
         lbN[jj] = -4.0;  //   umin
-        ubN[jj] = 4.0;   //   umax
+        ubN[jj] = +4.0;   //   umax
         idxbN[jj] = jj;
     }
 
     /************************************************
     * general constraints
     ************************************************/
-
-    double *C;
-    d_zeros(&C, ng, nx);
-    double *D;
-    d_zeros(&D, ng, nu);
-    double *lg;
-    d_zeros(&lg, ng, 1);
-    double *ug;
-    d_zeros(&ug, ng, 1);
 
     double *C0;
     d_zeros(&C0, ng, nx);
@@ -265,6 +244,15 @@ int main() {
     double *ug0;
     d_zeros(&ug0, ng, 1);
     ug0[0] = 5.5;
+
+    double *C;
+    d_zeros(&C, ng, nx);
+    double *D;
+    d_zeros(&D, ng, nu);
+    double *lg;
+    d_zeros(&lg, ng, 1);
+    double *ug;
+    d_zeros(&ug, ng, 1);
 
     double *CN;
     d_zeros(&CN, ngN, nx);
@@ -297,22 +285,6 @@ int main() {
     d_zeros(&r, nu, 1);
     for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
 
-    // Q0 and q0 are matrices of size 0
-    double *Q0;
-    d_zeros(&Q0, 0, 0);
-    double *q0;
-    d_zeros(&q0, 0, 1);
-
-    // compute r0 = r + S*x0
-    double *r0;
-    d_zeros(&r0, nu, 1);
-    dcopy_3l(nu, r, 1, r0, 1);
-    dgemv_n_3l(nu, nx, S, nu, x0, r0);
-
-    // then S0 is a matrix of size nux0
-    double *S0;
-    d_zeros(&S0, nu, 0);
-
     /************************************************
     * problems data
     ************************************************/
@@ -340,7 +312,7 @@ int main() {
     hS[0] = S;
     hR[0] = R;
     hq[0] = q;
-    hr[0] = r0;
+    hr[0] = r;
     hlb[0] = lb0;
     hub[0] = ub0;
     hidxb[0] = idxb0;
@@ -415,7 +387,7 @@ int main() {
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
-    for (rep = 0; rep < nrep; rep++) {
+    for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
         return_value = ocp_qp_condensing_qpoases(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
                                     hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg,
@@ -460,10 +432,6 @@ int main() {
     d_free(R);
     d_free(q);
     d_free(r);
-    d_free(Q0);
-    d_free(S0);
-    d_free(q0);
-    d_free(r0);
     i_free(idxb0);
     d_free(lb0);
     d_free(ub0);

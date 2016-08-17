@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "condensing.h"
 
 void calculate_transition_vector(condensing_in in, condensing_workspace ws, real_t *x0) {
@@ -167,40 +168,42 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
     condensing_workspace ws, real_t *x0) {
 
     // State simple bounds
+    int ctr = in.nc[0];
     for (int_t i = 0; i < NNN; i++) {
         for (int_t j = 0; j < NX; j++) {
-            out.lbA[NA+i*(NX+NA)+j] = in.lb[i+1][j] - ws.g[i][j];
-            out.ubA[NA+i*(NX+NA)+j] = in.ub[i+1][j] - ws.g[i][j];
+            out.lbA[ctr+j] = in.lb[i+1][j] - ws.g[i][j];
+            out.ubA[ctr+j] = in.ub[i+1][j] - ws.g[i][j];
         }
+        ctr += NX + in.nc[i+1];
     }
     // State polytopic constraints
-    for (int_t i = 0; i < NA; i++) {
+    for (int_t i = 0; i < in.nc[0]; i++) {
         out.lbA[i] = in.lc[0][i];
         out.ubA[i] = in.uc[0][i];
         for (int_t j = 0; j < NX; j++) {
-            out.lbA[i] = out.lbA[i] - in.Cx[0][j*NX+i]*x0[j];
-            out.ubA[i] = out.ubA[i] - in.Cx[0][j*NX+i]*x0[j];
+            out.lbA[i] -= in.Cx[0][j*NX+i]*x0[j];
+            out.ubA[i] -= in.Cx[0][j*NX+i]*x0[j];
         }
     }
-    for (int_t i = 1; i < NNN+1; i++) {
-        for (int_t j = 0; j < NA; j++) {
-            out.lbA[i*(NX+NA)+j] = in.lc[i][j];
-            out.ubA[i*(NX+NA)+j] = in.uc[i][j];
+    ctr = NX + in.nc[0];
+    for (int_t i = 1; i <= NNN; i++) {
+        for (int_t j = 0; j < in.nc[i]; j++) {
+            out.lbA[ctr+j] = in.lc[i][j];
+            out.ubA[ctr+j] = in.uc[i][j];
             for (int_t k = 0; k < NX; k++) {
-                out.lbA[i*(NX+NA)+j] = out.lbA[i*(NX+NA)+j]
-                            - in.Cx[i][k*NA+j]*ws.g[i-1][k];
-                out.ubA[i*(NX+NA)+j] = out.ubA[i*(NX+NA)+j]
-                            - in.Cx[i][k*NA+j]*ws.g[i-1][k];
+                out.lbA[ctr+j] -= in.Cx[i][k*in.nc[i]+j]*ws.g[i-1][k];
+                out.ubA[ctr+j] -= in.Cx[i][k*in.nc[i]+j]*ws.g[i-1][k];
             }
         }
+        ctr += NX + in.nc[i];
     }
 }
 
-static void offdiag_D_blk(real_t* Cx, real_t* G, real_t* D) {
+static void offdiag_D_blk(int_t nc, real_t* Cx, real_t* G, real_t* D) {
     for (int_t j = 0; j < NU; j++) {
-        for (int_t i = 0; i < NA; i++) {
+        for (int_t i = 0; i < nc; i++) {
             for (int_t k = 0; k < NX; k++) {
-                D[j*NA+i] += Cx[k*NA+i]*G[j*NX+k];
+                D[j*nc+i] += Cx[k*nc+i]*G[j*NX+k];
             }
         }
     }
@@ -209,14 +212,14 @@ static void offdiag_D_blk(real_t* Cx, real_t* G, real_t* D) {
 static void calculate_D(condensing_in in, condensing_workspace ws) {
     for (int_t k = 0; k < NNN; k++) {
         for (int_t j = 0; j < NU; j++) {
-            for (int_t i = 0; i < NA; i++) {
-                ws.D[k][k][j*NA+i] = in.Cu[k][j*NA+i];
+            for (int_t i = 0; i < in.nc[k]; i++) {
+                ws.D[k][k][j*in.nc[k]+i] = in.Cu[k][j*in.nc[k]+i];
             }
         }
     }
     for (int_t i = 1; i < NNN+1; i++) {
         for (int_t j = 0; j < i; j++) {
-            offdiag_D_blk(in.Cx[i], ws.G[i-1][j], ws.D[i][j]);
+            offdiag_D_blk(in.nc[i], in.Cx[i], ws.G[i-1][j], ws.D[i][j]);
         }
     }
 }
@@ -224,32 +227,46 @@ static void calculate_D(condensing_in in, condensing_workspace ws) {
 void calculate_constraint_matrix(condensing_in in, condensing_out out,
     condensing_workspace ws) {
 
-    calculate_D(in, ws);
-    for (int_t j = 0; j < NNN; j++) {
-        for (int_t i = j; i < NNN; i++) {
-            for (int_t k = 0; k < NU; k++) {
-                for (int_t l = 0; l < NX; l++) {
-                    out.A[j*((NX+NA)*NNN+NA)*NU+i*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
-                        = ws.D[i][j][k*NA+l];
-                }
-            }
-        }
+    int_t ldA = 0;
+    for (int_t i = 0; i < NNN; i++) {
+        ldA += in.nc[i] + NX;
     }
-    for (int_t j = 0; j < NNN; j++) {
-        for (int_t i = j; i < NNN; i++) {
+    ldA += in.nc[NNN];
+    printf("%d\n", ldA);
+
+    calculate_D(in, ws);
+    int_t ctr = 0, ctr2 = 0;
+    for (int_t i = 0; i < NNN; i++) {
+        ctr2 = ctr;
+        for (int_t j = 0; j <= i; j++) {
             for (int_t k = 0; k < NU; k++) {
                 for (int_t l = 0; l < NX; l++) {
-                    out.A[NA+j*((NX+NA)*NNN+NA)*NU+i*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
-                        = ws.G[i][j][k*NX+l];
+                    out.A[ctr2+k*ldA+l] = ws.D[i][j][k*in.nc[i]+l];
                 }
             }
+            ctr2 += ldA*NU;
         }
+        ctr += in.nc[i] + NX;
+    }
+    ctr = 0;
+    ctr2 = 0;
+    for (int_t i = 0; i < NNN; i++) {
+        ctr += in.nc[i];
+        ctr2 = ctr;
+        for (int_t j = 0; j <= i; j++) {
+            for (int_t k = 0; k < NU; k++) {
+                for (int_t l = 0; l < NX; l++) {
+                    out.A[ctr2+k*ldA+l] = ws.G[i][j][k*NX+l];
+                }
+            }
+            ctr2 += ldA*NU;
+        }
+        ctr += NX;
     }
     for (int_t j = 0; j < NNN; j++) {
         for (int_t k = 0; k < NU; k++) {
             for (int_t l = 0; l < NX; l++) {
-                out.A[j*((NX+NA)*NNN+NA)*NU+NNN*(NX+NA)+k*((NX+NA)*NNN+NA)+l]
-                    = ws.D[NNN][j][k*NA+l];
+                out.A[ctr+j*ldA*NU+k*ldA+l] = ws.D[NNN][j][k*in.nc[NNN]+l];
             }
         }
     }

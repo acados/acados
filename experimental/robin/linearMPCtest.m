@@ -59,15 +59,15 @@ lb = [repmat([-4*ones(nx,1);-0.5*ones(nu,1)],N,1);-4*ones(nx,1)];
 lb(end-nx+1:end) = 0;
 ub = -lb;
 
+D = -[1, zeros(1,nx-1), 1, zeros(1,nu-1), zeros(1,(N-1)*(nx+nu)+nx)];
 
-sparse.w = quadprog(H,f,[],[],C,-c,lb,ub);
+sparse.w = quadprog(H,f,D,-2.5,C,-c,lb,ub);
 
 XU = reshape([sparse.w;zeros(nu,1)],nx+nu,N+1);
-sparse.x = vec(XU(1:nx,:));
-sparse.u = vec(XU(nx+1:end,1:end-1));
+sparse.X = XU(1:nx,:);
+sparse.x = vec(sparse.X);
 sparse.U = XU(nx+1:end,1:end-1).';
-
-figure(1);clf;plot(XU(1:2:7,:).')
+sparse.u = vec(sparse.U);
 
 %% Condensing
 
@@ -90,7 +90,7 @@ Hbar = Rbar + G.'*Qbar*G;
 hbar = repmat(r,N,1) + G.'*(repmat(q,N+1,1)+Qbar*g);
 %% Read from file
 file = fopen('QP_data.txt','r');
-num_arrays_to_read = 10;
+num_arrays_to_read = 7;
 arrays_to_read = {};
 for i=1:num_arrays_to_read
     instr=fgets(file);
@@ -98,29 +98,22 @@ for i=1:num_arrays_to_read
     arrays_to_read{i} = temp;
 end
 numvars = N*nu;
-[H,f,A,lbU,ubU,lbA,ubA,C,d,D] = arrays_to_read{:};
+[H,f,A,lbU,ubU,lbA,ubA] = arrays_to_read{:};
 H = reshape(H,numvars,numvars);
 A = reshape(A,N*(nx+nx+nu)+nx+nu,numvars);
-% C = reshape(C,N*(nx),numvars);
-D = reshape(D,(N+1)*(nx+nu),numvars);
-
-% bigA = [];
-% for i=0:N-1
-%     bigA = [bigA;C(i*nx+1:(i+1)*nx,:);D(i*(nx+nu)+1:(i+1)*(nx+nu),:)];
-% end
-% bigA = [bigA;D(end-(nx+nu)+1:end,:)];
 
 condensing.u = quadprog(H,f,[A;-A],[ubA;-lbA],[],[],lbU,ubU);
 condensing.U = reshape(condensing.u,nu,N).';
-condensing.x = G(nx+1:end,:)*condensing.u+d;
+condensing.x = G(nx+1:end,:)*condensing.u+g(nx+1:end);
 condensing.X = reshape([x0;condensing.x],nx,N+1);
 
 norm(condensing.u-sparse.u)
 norm(condensing.x-sparse.x(nx+1:end))
 
-figure(1);hold on;
+figure(1);clf;hold on
+plot(XU(1:2:7,:).')
 plot(condensing.X(1:2:7,:).','o')
 
-figure(2);hold on;
+figure(2);clf;hold on;
 plot(condensing.U)
 plot(sparse.U,'o')
