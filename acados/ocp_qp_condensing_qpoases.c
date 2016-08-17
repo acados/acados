@@ -56,7 +56,7 @@ void write_QP_data_to_file() {
     write_array_to_file(outFile, out.lbA, NNN*(NX+NA)+NA);
     write_array_to_file(outFile, out.ubA, NNN*(NX+NA)+NA);
     write_array_to_file(outFile, ws.G[0][0], NNN*(NX)*NVC);
-    write_array_to_file(outFile, ws.g, NNN*NX);
+    write_array_to_file(outFile, ws.g[0], NNN*NX);
     write_array_to_file(outFile, ws.D, (NNN+1)*NA*NVC);
     fclose(outFile);
 }
@@ -112,13 +112,14 @@ static void fill_in_condensing_structs(int_t N, int_t *nx, int_t *nu, int_t *nb,
     // Workspace
     d_zeros(&ws.D, (in.N+1)*num_constraints, num_condensed_vars);
     ws.G = malloc(sizeof(*ws.G) * N);
+    ws.g = malloc(sizeof(*ws.g) * N);
     for (int_t i = 0; i < N; i++) {
         ws.G[i] = malloc(sizeof(*(ws.G[i])) * (N-i));
+        d_zeros(&ws.g[i], NX, 1);
         for (int_t j = 0; j < N-i; j++) {
             d_zeros(&ws.G[i][j], NX, NU);
         }
     }
-    d_zeros(&ws.g, N*NX, 1);
     d_zeros(&ws.W1_x, NX, NX);
     d_zeros(&ws.W2_x, NX, NX);
     d_zeros(&ws.W1_u, NX, NU);
@@ -149,7 +150,7 @@ static void recover_state_trajectory(int_t N,
                     x[i+1][j] = x[i+1][j] + ws.G[k][i-k][j+NX*l]*primal_solution[NU*k+l];
                 }
             }
-            x[i+1][j] = x[i+1][j] + ws.g[i*NX+j];
+            x[i+1][j] = x[i+1][j] + ws.g[i][j];
         }
         #if FIXED_INITIAL_STATE == 1
         for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[i*NU+j];
@@ -206,9 +207,10 @@ int_t ocp_qp_condensing_qpoases(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
             d_free(ws.G[i][j]);
         }
         free(ws.G[i]);
+        d_free(ws.g[i]);
     }
     free(ws.G);
-    d_free(ws.g);
+    free(ws.g);
     d_free(ws.W1_x);
     d_free(ws.W2_x);
     d_free(ws.W1_u);

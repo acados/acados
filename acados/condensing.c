@@ -2,16 +2,16 @@
 
 void calculate_transition_vector(condensing_in in, condensing_workspace ws, real_t *x0) {
     for (int_t k = 0; k < NX; k++) {
-        ws.g[k] = in.b[0][k];
+        ws.g[0][k] = in.b[0][k];
         for (int_t i = 0; i < NX; i++) {
-            ws.g[k] += in.A[0][i*NX+k]*x0[i];
+            ws.g[0][k] += in.A[0][k+i*NX]*x0[i];
         }
     }
     for (int_t k = 1; k < NNN; k++) {
         for (int_t j = 0; j < NX; j++) {
-            ws.g[k*NX+j] += in.b[k][j];
+            ws.g[k][j] += in.b[k][j];
             for (int_t i = 0; i < NX; i++) {
-                ws.g[k*NX+i] += in.A[k][j*NX+i]*ws.g[k*NX+j-NX];
+                ws.g[k][i] += in.A[k][j*NX+i]*ws.g[k-1][j];
             }
         }
     }
@@ -90,11 +90,11 @@ static void corr_grad_fixd_init_state(condensing_in in, condensing_out out,
 void calculate_gradient(condensing_in in, condensing_out out, condensing_workspace ws,
     int_t offset, real_t *x0) {
 
-    update_w(ws, in.q[NNN], in.Q[NNN], &ws.g[(NNN-1)*NX], in.A[0]);
+    update_w(ws, in.q[NNN], in.Q[NNN], ws.g[NNN-1], in.A[0]);
     for (int_t i = NNN-1; i > 0; i--) {
         calc_gradient_blk(ws, &out.h[offset+i*NU], in.r[i], in.S[i],
-                    &ws.g[(i-1)*NX], in.B[i]);
-        update_w(ws, in.q[i], in.Q[i], &ws.g[(i-1)*NX], in.A[i]);
+                    ws.g[i-1], in.B[i]);
+        update_w(ws, in.q[i], in.Q[i], ws.g[i-1], in.A[i]);
     }
     corr_grad_fixd_init_state(in, out, ws, x0);
 }
@@ -169,8 +169,8 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
     // State simple bounds
     for (int_t i = 0; i < NNN; i++) {
         for (int_t j = 0; j < NX; j++) {
-            out.lbA[NA+i*(NX+NA)+j] = in.lb[i+1][j] - ws.g[i*NX+j];
-            out.ubA[NA+i*(NX+NA)+j] = in.ub[i+1][j] - ws.g[i*NX+j];
+            out.lbA[NA+i*(NX+NA)+j] = in.lb[i+1][j] - ws.g[i][j];
+            out.ubA[NA+i*(NX+NA)+j] = in.ub[i+1][j] - ws.g[i][j];
         }
     }
     // State polytopic constraints
@@ -188,9 +188,9 @@ void calculate_constraint_bounds(condensing_in in, condensing_out out,
             out.ubA[i*(NX+NA)+j] = in.uc[i][j];
             for (int_t k = 0; k < NX; k++) {
                 out.lbA[i*(NX+NA)+j] = out.lbA[i*(NX+NA)+j]
-                            - in.Cx[i][k*NA+j]*ws.g[(i-1)*NX+k];
+                            - in.Cx[i][k*NA+j]*ws.g[i-1][k];
                 out.ubA[i*(NX+NA)+j] = out.ubA[i*(NX+NA)+j]
-                            - in.Cx[i][k*NA+j]*ws.g[(i-1)*NX+k];
+                            - in.Cx[i][k*NA+j]*ws.g[i-1][k];
             }
         }
     }
