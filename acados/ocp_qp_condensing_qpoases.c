@@ -47,27 +47,27 @@ static int_t get_num_constraints(ocp_qp_input *in) {
     return num_constraints;
 }
 
-static void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
-    for (int_t i = 0; i < size; i++) fprintf(outputFile, "%g ", array[i]);
-    fprintf(outputFile, "\n");
-}
-
-static void write_condensed_QP_to_file(const int_t ncv, const int_t nc,
-    condensing_output *out) {
-
-    FILE *outFile = fopen("../experimental/robin/QP_data.txt", "w");
-    if (outFile == NULL) {
-        fprintf(stderr, "%s\n", "OPEN FILE FAILED!");
-    }
-    write_array_to_file(outFile, out->H, ncv*ncv);
-    write_array_to_file(outFile, out->h, ncv);
-    write_array_to_file(outFile, out->A, nc*ncv);
-    write_array_to_file(outFile, out->lb, ncv);
-    write_array_to_file(outFile, out->ub, ncv);
-    write_array_to_file(outFile, out->lbA, nc);
-    write_array_to_file(outFile, out->ubA, nc);
-    fclose(outFile);
-}
+// static void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
+//     for (int_t i = 0; i < size; i++) fprintf(outputFile, "%g ", array[i]);
+//     fprintf(outputFile, "\n");
+// }
+//
+// static void write_condensed_QP_to_file(const int_t ncv, const int_t nc,
+//     condensing_output *out) {
+//
+//     FILE *outFile = fopen("../experimental/robin/QP_data.txt", "w");
+//     if (outFile == NULL) {
+//         fprintf(stderr, "%s\n", "OPEN FILE FAILED!");
+//     }
+//     write_array_to_file(outFile, out->H, ncv*ncv);
+//     write_array_to_file(outFile, out->h, ncv);
+//     write_array_to_file(outFile, out->A, nc*ncv);
+//     write_array_to_file(outFile, out->lb, ncv);
+//     write_array_to_file(outFile, out->ub, ncv);
+//     write_array_to_file(outFile, out->lbA, nc);
+//     write_array_to_file(outFile, out->ubA, nc);
+//     fclose(outFile);
+// }
 
 static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     // Input
@@ -164,7 +164,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
             A_row_major[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
         }
     }
-    write_condensed_QP_to_file(num_condensed_vars, num_constraints, &out);
+    // write_condensed_QP_to_file(num_condensed_vars, num_constraints, &out);
     d_zeros(&primal_solution, num_condensed_vars, 1);
     d_zeros(&dual_solution, num_condensed_vars+num_constraints, 1);
     int_t return_flag = solve_condensed_QP(QP, primal_solution, dual_solution);
