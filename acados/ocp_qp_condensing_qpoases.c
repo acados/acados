@@ -30,7 +30,7 @@ condensing_workspace ws;
 //     return num_opt_vars;
 // }
 
-static int_t get_num_condensed_vars(int_t N, int_t *nx, int_t *nu) {
+static int_t get_num_condensed_vars(int_t N, const int_t *nx, const int_t *nu) {
     int_t num_condensed_vars = 0;
     // TODO(robin): this only holds for MPC, not MHE
     num_condensed_vars += 0*nx[1];
@@ -39,7 +39,7 @@ static int_t get_num_condensed_vars(int_t N, int_t *nx, int_t *nu) {
     return num_condensed_vars;
 }
 
-static int_t get_num_constraints(int_t N, int_t *nx, int_t *nc) {
+static int_t get_num_constraints(int_t N, const int_t *nx, const int_t *nc) {
     int_t num_constraints = 0;
     for (int_t i = 0; i < N; i++) {
         // TODO(robin): count actual simple bounds on states
@@ -70,31 +70,15 @@ static void write_QP_data_to_file() {
 }
 
 static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
-    // Input
-    in.N = qp_in->N;
-    in.nx = qp_in->nx;
-    in.nu = qp_in->nu;
-    in.nb = qp_in->nb;
-    in.nc = qp_in->nc;
-    in.A = qp_in->A;
-    in.B = qp_in->B;
-    in.b = qp_in->b;
-    in.Q = qp_in->Q;
-    in.S = qp_in->S;
-    in.R = qp_in->R;
-    in.q = qp_in->q;
-    in.r = qp_in->r;
-    in.idxb = qp_in->idxb;
-    in.lb = qp_in->lb;
-    in.ub = qp_in->ub;
-    in.Cu = qp_in->Cu;
-    in.Cx = qp_in->Cx;
-    in.lc = qp_in->lc;
-    in.uc = qp_in->uc;
+    in.qp_input = qp_in;
+    int_t N = qp_in->N;
+    const int_t *nx = qp_in->nx;
+    const int_t *nu = qp_in->nu;
+    const int_t *nc = qp_in->nc;
 
     // Output
-    int_t num_condensed_vars = get_num_condensed_vars(in.N, in.nx, in.nu);
-    int_t num_constraints = get_num_constraints(in.N, in.nx, in.nc);
+    int_t num_condensed_vars = get_num_condensed_vars(N, nx, nu);
+    int_t num_constraints = get_num_constraints(N, nx, nc);
     d_zeros(&out.H, num_condensed_vars, num_condensed_vars);
     d_zeros(&out.h, num_condensed_vars, 1);
     d_zeros(&out.lb, num_condensed_vars, 1);
@@ -104,21 +88,21 @@ static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     d_zeros(&out.ubA, num_constraints, 1);
 
     // Workspace
-    ws.G = malloc(sizeof(*ws.G) * in.N);
-    ws.g = malloc(sizeof(*ws.g) * in.N);
-    ws.D = malloc(sizeof(*ws.D) * (in.N+1));
-    for (int_t i = 0; i < in.N; i++) {
+    ws.G = malloc(sizeof(*ws.G) * N);
+    ws.g = malloc(sizeof(*ws.g) * N);
+    ws.D = malloc(sizeof(*ws.D) * (N+1));
+    for (int_t i = 0; i < N; i++) {
         ws.G[i] = malloc(sizeof(*(ws.G[i])) * (i+1));
         ws.D[i] = malloc(sizeof(*(ws.D[i])) * (i+1));
         d_zeros(&ws.g[i], NX, 1);
         for (int_t j = 0; j <= i; j++) {
             d_zeros(&ws.G[i][j], NX, NU);
-            d_zeros(&ws.D[i][j], in.nc[i], NU);
+            d_zeros(&ws.D[i][j], nc[i], NU);
         }
     }
-    ws.D[in.N] = malloc(sizeof(*(ws.D[in.N])) * in.N);
-    for (int_t i = 0; i < in.N; i++) {
-        d_zeros(&ws.D[in.N][i], in.nc[in.N], NU);
+    ws.D[N] = malloc(sizeof(*(ws.D[N])) * N);
+    for (int_t i = 0; i < N; i++) {
+        d_zeros(&ws.D[N][i], nc[N], NU);
     }
     d_zeros(&ws.W1_x, NX, NX);
     d_zeros(&ws.W2_x, NX, NX);
@@ -141,7 +125,7 @@ static int_t solve_QP(QProblem QP, real_t* primal_solution, real_t* dual_solutio
 }
 
 static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
-    real_t *primal_solution, real_t *x0) {
+    real_t *primal_solution, const real_t *x0) {
 
     #if FIXED_INITIAL_STATE == 1
     for (int_t i = 0; i < NX; i++) {
@@ -196,7 +180,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     d_free(out.lbA);
     d_free(out.ubA);
 
-    for (int_t i = 0; i < in.N; i++) {
+    for (int_t i = 0; i < qp_in->N; i++) {
         for (int_t j = 0; j <= i; j++) {
             d_free(ws.G[i][j]);
             d_free(ws.D[i][j]);
@@ -205,10 +189,10 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
         free(ws.D[i]);
         d_free(ws.g[i]);
     }
-    for (int_t i = 0; i < in.N; i++) {
-        d_free(ws.D[in.N][i]);
+    for (int_t i = 0; i < qp_in->N; i++) {
+        d_free(ws.D[qp_in->N][i]);
     }
-    free(ws.D[in.N]);
+    free(ws.D[qp_in->N]);
     free(ws.G);
     free(ws.g);
     free(ws.D);

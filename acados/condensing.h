@@ -2,6 +2,7 @@
 #define ACADOS_CONDENSING_H_
 
 #include "acados_types.h"
+#include "ocp_qp_common.h"
 
 #define FIXED_INITIAL_STATE 1
 #if FIXED_INITIAL_STATE == 1
@@ -17,26 +18,7 @@
 #define NCONSTRAINTS 169
 
 typedef struct condensing_in_ {
-    int_t N;
-    int_t *nx;
-    int_t *nu;
-    int_t *nb;
-    int_t *nc;
-    real_t **A;
-    const real_t **B;
-    real_t **b;
-    real_t **Q;
-    real_t **S;
-    real_t **R;
-    real_t **q;
-    real_t **r;
-    int_t **idxb;
-    real_t **lb;
-    real_t **ub;
-    real_t **Cu;
-    real_t **Cx;
-    real_t **lc;
-    real_t **uc;
+    ocp_qp_input *qp_input;
 } condensing_in;
 
 typedef struct condensing_out_ {

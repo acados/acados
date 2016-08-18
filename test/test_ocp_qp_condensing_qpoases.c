@@ -293,21 +293,21 @@ int main() {
     ocp_qp_input qp_in;
     ocp_qp_output qp_out;
 
-    double *hA[N];
+    const double *hA[N];
     const double *hB[N];
-    double *hb[N];
-    double *hQ[N + 1];
-    double *hS[N];
-    double *hR[N];
-    double *hq[N + 1];
-    double *hr[N];
-    double *hlb[N + 1];
-    double *hub[N + 1];
-    int *hidxb[N + 1];
-    double *hC[N + 1];
-    double *hD[N];
-    double *hlg[N + 1];
-    double *hug[N + 1];
+    const double *hb[N];
+    const double *hQ[N + 1];
+    const double *hS[N];
+    const double *hR[N];
+    const double *hq[N + 1];
+    const double *hr[N];
+    const double *hlb[N + 1];
+    const double *hub[N + 1];
+    const int *hidxb[N + 1];
+    const double *hC[N + 1];
+    const double *hD[N];
+    const double *hlg[N + 1];
+    const double *hug[N + 1];
 
     hA[0] = A;
     hB[0] = B;
