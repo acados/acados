@@ -1,8 +1,17 @@
 cmake_minimum_required ( VERSION 2.6 )
 project ( ACADOS )
 
-set ( CMAKE_VERBOSE_MAKEFILE ON )
-set ( CMAKE_C_FLAGS "-std=c99 -g -Wall -Wextra -Werror" )
+set ( CMAKE_VERBOSE_MAKEFILE OFF )
+
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
+
+if ( NOT CMAKE_BUILD_TYPE )
+    set( CMAKE_BUILD_TYPE Debug )
+endif ( NOT CMAKE_BUILD_TYPE )
+
+if ( CMAKE_BUILD_TYPE MATCHES Debug )
+    add_definitions ( -DDEBUG )
+endif ( CMAKE_BUILD_TYPE MATCHES Debug )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )
@@ -13,21 +22,21 @@ file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_hpmpc" )
 set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_condensing_qpoases" )
 
-# Make libraries
+# Define external libraries
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/qpOASES make )
-
-# Define libraries
-add_library ( acados STATIC ${ACADOS_SRC} )
 add_library ( hpmpc STATIC IMPORTED )
 set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/hpmpc/libhpmpc.a")
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/qpOASES make )
 add_library ( qpoases STATIC IMPORTED )
 set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/qpOASES/bin/libqpOASES_e.a")
 
+# Define acados library
+add_library ( acados STATIC ${ACADOS_SRC} )
+
 # Define test
 add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
-add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_hpmpc acados hpmpc m )
+add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
 
 # Lint acados

@@ -122,6 +122,7 @@ static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
     }
 }
 
+#ifdef DEBUG
 static void print_condensed_QP(const int_t ncv, const int_t nc,
     condensing_output *out) {
 
@@ -133,6 +134,7 @@ static void print_condensed_QP(const int_t ncv, const int_t nc,
     print_array("../experimental/robin/lb.txt", out->lb, ncv);
     print_array("../experimental/robin/ub.txt", out->ub, ncv);
 }
+#endif
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     ocp_qp_condensing_qpoases_args *args, double *workspace) {
@@ -153,7 +155,9 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
             A_row_major[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
         }
     }
+    #ifdef DEBUG
     print_condensed_QP(num_condensed_vars, num_constraints, &out);
+    #endif
     d_zeros(&primal_solution, num_condensed_vars, 1);
     d_zeros(&dual_solution, num_condensed_vars+num_constraints, 1);
     int_t return_flag = solve_condensed_QP(QP, primal_solution, dual_solution);
