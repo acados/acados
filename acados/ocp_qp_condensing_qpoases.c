@@ -2,6 +2,7 @@
 #include "ocp_qp_condensing_qpoases.h"
 #include "condensing.h"
 #include "hpmpc/include/aux_d.h"
+#include "print.h"
 
 /* qpOASES specifics */
 #pragma clang diagnostic push
@@ -19,14 +20,6 @@ real_t *dual_solution;
 condensing_input in;
 condensing_output out;
 condensing_workspace work;
-
-// static int_t get_num_opt_vars(int_t N, int_t *nx, int_t *nu) {
-//     int_t num_opt_vars = 0;
-//     for (int_t i = 0; i < N; i++)
-//         num_opt_vars += nx[i] + nu[i];
-//     num_opt_vars += nx[N];
-//     return num_opt_vars;
-// }
 
 static int_t get_num_condensed_vars(ocp_qp_input *in) {
     int_t num_condensed_vars = 0;
@@ -46,28 +39,6 @@ static int_t get_num_constraints(ocp_qp_input *in) {
     num_constraints += in->nc[in->N];
     return num_constraints;
 }
-
-// static void write_array_to_file(FILE *outputFile, real_t *array, int_t size) {
-//     for (int_t i = 0; i < size; i++) fprintf(outputFile, "%g ", array[i]);
-//     fprintf(outputFile, "\n");
-// }
-//
-// static void write_condensed_QP_to_file(const int_t ncv, const int_t nc,
-//     condensing_output *out) {
-//
-//     FILE *outFile = fopen("../experimental/robin/QP_data.txt", "w");
-//     if (outFile == NULL) {
-//         fprintf(stderr, "%s\n", "OPEN FILE FAILED!");
-//     }
-//     write_array_to_file(outFile, out->H, ncv*ncv);
-//     write_array_to_file(outFile, out->h, ncv);
-//     write_array_to_file(outFile, out->A, nc*ncv);
-//     write_array_to_file(outFile, out->lb, ncv);
-//     write_array_to_file(outFile, out->ub, ncv);
-//     write_array_to_file(outFile, out->lbA, nc);
-//     write_array_to_file(outFile, out->ubA, nc);
-//     fclose(outFile);
-// }
 
 static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     // Input
@@ -140,8 +111,21 @@ static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
             }
         }
         for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[i*NU+j];
+        // TODO(robin): this only holds for MPC, not MHE
         // for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
     }
+}
+
+static void print_condensed_QP(const int_t ncv, const int_t nc,
+    condensing_output *out) {
+
+    print_matrix("../experimental/robin/H.txt", out->H, ncv, ncv);
+    print_array("../experimental/robin/h.txt", out->h, ncv);
+    print_matrix("../experimental/robin/A.txt", out->A, nc, ncv);
+    print_array("../experimental/robin/lbA.txt", out->lbA, nc);
+    print_array("../experimental/robin/ubA.txt", out->ubA, nc);
+    print_array("../experimental/robin/lb.txt", out->lb, ncv);
+    print_array("../experimental/robin/ub.txt", out->ub, ncv);
 }
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
@@ -163,7 +147,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
             A_row_major[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
         }
     }
-    // write_condensed_QP_to_file(num_condensed_vars, num_constraints, &out);
+    print_condensed_QP(num_condensed_vars, num_constraints, &out);
     d_zeros(&primal_solution, num_condensed_vars, 1);
     d_zeros(&dual_solution, num_condensed_vars+num_constraints, 1);
     int_t return_flag = solve_condensed_QP(QP, primal_solution, dual_solution);
@@ -211,6 +195,6 @@ void initialise_qpoases(ocp_qp_input *in) {
     int_t ncv = get_num_condensed_vars(in);
     int_t nconstraints = get_num_constraints(in);
     QProblemCON(&QP, ncv, nconstraints, HST_POSDEF);
-    QProblem_setPrintLevel(&QP, PL_TABULAR);
+    QProblem_setPrintLevel(&QP, PL_NONE);
     QProblem_printProperties(&QP);
 }
