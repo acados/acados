@@ -4,7 +4,7 @@
 #include "acados/condensing.h"
 #include "acados/print.h"
 
-/* qpOASES specifics */
+/* Ignore compiler warnings from qpOASES */
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
@@ -20,6 +20,20 @@ real_t *dual_solution;
 condensing_input in;
 condensing_output out;
 condensing_workspace work;
+
+#ifdef DEBUG
+static void print_condensed_QP(const int_t ncv, const int_t nc,
+    condensing_output *out) {
+
+    print_matrix("../experimental/robin/H.txt", out->H, ncv, ncv);
+    print_array("../experimental/robin/h.txt", out->h, ncv);
+    print_matrix("../experimental/robin/A.txt", out->A, nc, ncv);
+    print_array("../experimental/robin/lbA.txt", out->lbA, nc);
+    print_array("../experimental/robin/ubA.txt", out->ubA, nc);
+    print_array("../experimental/robin/lb.txt", out->lb, ncv);
+    print_array("../experimental/robin/ub.txt", out->ub, ncv);
+}
+#endif
 
 static int_t get_num_condensed_vars(ocp_qp_input *in) {
     int_t num_condensed_vars = 0;
@@ -92,10 +106,10 @@ static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
 
 static int_t solve_condensed_QP(QProblem QP, real_t* primal_solution, real_t* dual_solution) {
     int_t nwsr = 1000;
-    real_t cput = 100.0;
+    real_t cpu_time = 100.0;
 
     int_t return_flag = QProblem_init(&QP, out.H, out.h, A_row_major, out.lb,
-                        out.ub, out.lbA, out.ubA, &nwsr, &cput);
+                        out.ub, out.lbA, out.ubA, &nwsr, &cpu_time);
     QProblem_getPrimalSolution(&QP, primal_solution);
     QProblem_getDualSolution(&QP, dual_solution);
     return return_flag;
@@ -122,19 +136,15 @@ static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
     }
 }
 
-#ifdef DEBUG
-static void print_condensed_QP(const int_t ncv, const int_t nc,
-    condensing_output *out) {
+static void convert_to_row_major(const real_t *input, real_t *output, const int_t nrows,
+    const int_t ncols) {
 
-    print_matrix("../experimental/robin/H.txt", out->H, ncv, ncv);
-    print_array("../experimental/robin/h.txt", out->h, ncv);
-    print_matrix("../experimental/robin/A.txt", out->A, nc, ncv);
-    print_array("../experimental/robin/lbA.txt", out->lbA, nc);
-    print_array("../experimental/robin/ubA.txt", out->ubA, nc);
-    print_array("../experimental/robin/lb.txt", out->lb, ncv);
-    print_array("../experimental/robin/ub.txt", out->ub, ncv);
+    for (int_t i = 0; i < nrows; i++) {
+        for (int_t j = 0; j < ncols; j++) {
+            output[i*ncols+j] = input[j*nrows+i];
+        }
+    }
 }
-#endif
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     ocp_qp_condensing_qpoases_args *args, double *workspace) {
@@ -146,20 +156,15 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     args->dummy = 1.0;
     workspace = 0;
 
-    // Convert A to row major
-    int_t num_condensed_vars = get_num_condensed_vars(qp_in);
-    int_t num_constraints = get_num_constraints(qp_in);
-    d_zeros(&A_row_major, num_constraints, num_condensed_vars);
-    for (int_t i = 0; i < num_constraints; i++) {
-        for (int_t j = 0; j < num_condensed_vars; j++) {
-            A_row_major[i*num_condensed_vars+j] = out.A[j*num_constraints+i];
-        }
-    }
+    d_zeros(&A_row_major, work.nconstraints, work.nconvars);
+    convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);
+
     #ifdef DEBUG
-    print_condensed_QP(num_condensed_vars, num_constraints, &out);
+    print_condensed_QP(work.nconvars, work.nconstraints, &out);
     #endif
-    d_zeros(&primal_solution, num_condensed_vars, 1);
-    d_zeros(&dual_solution, num_condensed_vars+num_constraints, 1);
+
+    d_zeros(&primal_solution, work.nconvars, 1);
+    d_zeros(&dual_solution, work.nconvars+work.nconstraints, 1);
     int_t return_flag = solve_condensed_QP(QP, primal_solution, dual_solution);
     recover_state_trajectory(qp_in->N, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
 
