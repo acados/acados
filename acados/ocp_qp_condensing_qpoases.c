@@ -32,8 +32,14 @@ static int_t get_num_condensed_vars(ocp_qp_input *in) {
 
 static int_t get_num_constraints(ocp_qp_input *in) {
     int_t num_constraints = 0;
+    int_t num_state_bounds;
     for (int_t i = 0; i < in->N; i++) {
-        // TODO(robin): count actual simple bounds on states
+        num_state_bounds = 0;
+        for (int_t j = 0; j < in->nb[i]; j++) {
+            num_state_bounds = in->idxb[i][j] < in->nx[i]
+                                ? num_state_bounds+1
+                                : num_state_bounds;
+        }
         num_constraints += in->nc[i] + in->nx[i];
     }
     num_constraints += in->nc[in->N];
