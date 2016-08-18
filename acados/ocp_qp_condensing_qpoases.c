@@ -117,9 +117,8 @@ static int_t solve_condensed_QP(QProblem QP, real_t* primal_solution, real_t* du
     int_t nwsr = 1000;
     real_t cput = 100.0;
 
-    int_t return_flag = QProblem_initW(&QP, out.H, out.h, A_row_major, out.lb,
-                        out.ub, out.lbA, out.ubA,
-                        &nwsr, &cput, NULL, dual_solution, NULL, NULL, NULL);
+    int_t return_flag = QProblem_init(&QP, out.H, out.h, A_row_major, out.lb,
+                        out.ub, out.lbA, out.ubA, &nwsr, &cput);
     QProblem_getPrimalSolution(&QP, primal_solution);
     QProblem_getDualSolution(&QP, dual_solution);
     return return_flag;
@@ -212,6 +211,6 @@ void initialise_qpoases(ocp_qp_input *in) {
     int_t ncv = get_num_condensed_vars(in);
     int_t nconstraints = get_num_constraints(in);
     QProblemCON(&QP, ncv, nconstraints, HST_POSDEF);
-    QProblem_setPrintLevel(&QP, PL_NONE);
+    QProblem_setPrintLevel(&QP, PL_TABULAR);
     QProblem_printProperties(&QP);
 }
