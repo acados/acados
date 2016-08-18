@@ -1,6 +1,3 @@
-#ifndef ACADOS_TOOLS_H_
-#define ACADOS_TOOLS_H_
-
 /**************************************************************************************************
 *                                                                                                 *
 * This file is part of HPMPC.                                                                     *
@@ -25,6 +22,8 @@
 * Author: Gianluca Frison, giaf (at) dtu.dk                                                       *
 *                                                                                                 *
 **************************************************************************************************/
+#ifndef ACADOS_TOOLS_H_
+#define ACADOS_TOOLS_H_
 
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda , double *B, int ldb, double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
