@@ -201,6 +201,10 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     d_free(work.w1);
     d_free(work.w2);
 
+    d_free(A_row_major);
+    d_free(primal_solution);
+    d_free(dual_solution);
+
     return return_flag;
 }
 

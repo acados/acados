@@ -252,7 +252,7 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
         ctr2 = ctr;
         for (int_t j = 0; j <= i; j++) {
             for (int_t k = 0; k < NU; k++) {
-                for (int_t l = 0; l < NX; l++) {
+                for (int_t l = 0; l < in->nc[i]; l++) {
                     out->A[ctr2+k*ldA+l] = ws->D[i][j][k*in->nc[i]+l];
                 }
             }

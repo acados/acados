@@ -7,7 +7,7 @@
 #define NGN 8
 
 // define number of repetitions
-#define NREP 10
+#define NREP 1
 
 // system headers
 #include <stdlib.h>
