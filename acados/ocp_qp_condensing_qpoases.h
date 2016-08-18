@@ -14,6 +14,6 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *input, ocp_qp_output *output,
 int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *input,
     ocp_qp_condensing_qpoases_args *args);
 
-void initialise_qpoases();
+void initialise_qpoases(ocp_qp_input *input);
 
 #endif  // ACADOS_OCP_QP_CONDENSING_QPOASES_H_

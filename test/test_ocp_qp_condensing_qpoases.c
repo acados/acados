@@ -7,7 +7,7 @@
 #define NGN 8
 
 // define number of repetitions
-#define NREP 10
+#define NREP 1000
 
 // system headers
 #include <stdlib.h>
@@ -410,7 +410,7 @@ int main() {
     ************************************************/
 
     int return_value;
-    initialise_qpoases();
+    initialise_qpoases(&qp_in);
 
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
