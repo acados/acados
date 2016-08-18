@@ -1,4 +1,4 @@
-#include "condensing.h"
+#include "acados/condensing.h"
 
 static void calculate_transition_vector(ocp_qp_input *in,
     condensing_workspace *ws, const real_t *x0) {

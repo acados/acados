@@ -1,8 +1,8 @@
 #ifndef ACADOS_OCP_QP_CONDENSING_QPOASES_H_
 #define ACADOS_OCP_QP_CONDENSING_QPOASES_H_
 
-#include "acados_types.h"
-#include "ocp_qp_common.h"
+#include "acados/acados_types.h"
+#include "acados/ocp_qp_common.h"
 
 typedef struct ocp_qp_condensing_qpoases_args_ {
     real_t dummy;

@@ -1,7 +1,7 @@
 #ifndef ACADOS_PRINT_H_
 #define ACADOS_PRINT_H_
 
-#include "acados_types.h"
+#include "acados/acados_types.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
     const int_t ncols);

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "print.h"
+#include "acados/print.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
     const int_t ncols) {

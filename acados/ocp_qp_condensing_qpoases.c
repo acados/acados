@@ -1,8 +1,8 @@
 #include <stdlib.h>
-#include "ocp_qp_condensing_qpoases.h"
-#include "condensing.h"
 #include "hpmpc/include/aux_d.h"
-#include "print.h"
+#include "acados/ocp_qp_condensing_qpoases.h"
+#include "acados/condensing.h"
+#include "acados/print.h"
 
 /* qpOASES specifics */
 #pragma clang diagnostic push

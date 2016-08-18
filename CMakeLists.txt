@@ -43,7 +43,6 @@ target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
 find_package ( PythonInterp )
 if ( PYTHONINTERP_FOUND )
     set ( ACADOS_STYLE_FILTER
-    	"-build/include,"
     	"-legal/copyright,"
     	"-readability/casting" )
     set ( FIND_COMMAND find acados -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )

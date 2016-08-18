@@ -1,8 +1,8 @@
 #ifndef ACADOS_CONDENSING_H_
 #define ACADOS_CONDENSING_H_
 
-#include "acados_types.h"
-#include "ocp_qp_common.h"
+#include "acados/acados_types.h"
+#include "acados/ocp_qp_common.h"
 
 #define NNN 20
 #define NX 8
