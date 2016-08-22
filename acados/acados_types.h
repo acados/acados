@@ -5,9 +5,9 @@ typedef double real_t;
 typedef unsigned int uint;
 typedef int int_t;
 
-#define NNN 13
-#define NX 2
-#define NU 1
+#define NNN 20
+#define NX 8
+#define NU 3
 
 // enum of return values
 enum return_values{

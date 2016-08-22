@@ -45,19 +45,24 @@ static int_t get_num_condensed_vars(ocp_qp_input *in) {
     return num_condensed_vars;
 }
 
-static int_t get_num_constraints(ocp_qp_input *in) {
-    int_t num_constraints = 0;
+static void calculate_num_state_bounds(ocp_qp_input *in) {
+    i_zeros(&work.nstate_bounds, in->N+1, 1);
     int_t num_state_bounds;
-    for (int_t i = 0; i < in->N; i++) {
+    for (int_t i = 1; i <= in->N; i++) {
         num_state_bounds = 0;
         for (int_t j = 0; j < in->nb[i]; j++) {
-            num_state_bounds = in->idxb[i][j] < in->nx[i]
-                                ? num_state_bounds+1
-                                : num_state_bounds;
+            if (in->idxb[i][j] < in->nx[i])
+                num_state_bounds++;
         }
-        num_constraints += in->nc[i] + in->nx[i];
+        work.nstate_bounds[i] = num_state_bounds;
     }
-    num_constraints += in->nc[in->N];
+}
+
+static int_t get_num_constraints(ocp_qp_input *in) {
+    int_t num_constraints = in->nc[0];
+    for (int_t i = 1; i <= in->N; i++) {
+        num_constraints += in->nc[i] + work.nstate_bounds[i];
+    }
     return num_constraints;
 }
 
@@ -237,6 +242,7 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *in,
 
 void initialise_qpoases(ocp_qp_input *in) {
     int_t ncv = get_num_condensed_vars(in);
+    calculate_num_state_bounds(in);
     int_t nconstraints = get_num_constraints(in);
     QProblemCON(&QP, ncv, nconstraints, HST_POSDEF);
     QProblem_setPrintLevel(&QP, PL_NONE);

@@ -25,6 +25,7 @@ typedef struct condensing_memory_ {
 typedef struct condensing_workspace_ {
     int_t nconvars;
     int_t nconstraints;
+    int_t *nstate_bounds;
     real_t ***G;
     real_t **g;
     real_t ***D;

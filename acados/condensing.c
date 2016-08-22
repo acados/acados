@@ -182,13 +182,17 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
     condensing_workspace *ws, const real_t *x0) {
 
     // State simple bounds
-    int ctr = in->nc[0];
+    int_t idx;
+    int_t ctr = in->nc[0];
     for (int_t i = 0; i < NNN; i++) {
-        for (int_t j = 0; j < in->nb[0]; j++) {
-            out->lbA[ctr+j] = in->lb[i+1][j] - ws->g[i][j];
-            out->ubA[ctr+j] = in->ub[i+1][j] - ws->g[i][j];
+        for (int_t j = 0; j < ws->nstate_bounds[i+1]; j++) {
+            idx = in->idxb[i+1][j];
+            if (idx < in->nx[i+1]) {
+                out->lbA[ctr+idx] = in->lb[i+1][j] - ws->g[i][idx];
+                out->ubA[ctr+idx] = in->ub[i+1][j] - ws->g[i][idx];
+            }
         }
-        ctr += NX + in->nc[i+1];
+        ctr += ws->nstate_bounds[i+1] + in->nc[i+1];
     }
     // State polytopic constraints
     for (int_t i = 0; i < in->nc[0]; i++) {
@@ -199,8 +203,9 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
             out->ubA[i] -= in->Cx[0][j*in->nc[0]+i]*x0[j];
         }
     }
-    ctr = NX + in->nc[0];
+    ctr = 0;
     for (int_t i = 1; i <= NNN; i++) {
+        ctr += ws->nstate_bounds[i] + in->nc[i-1];
         for (int_t j = 0; j < in->nc[i]; j++) {
             out->lbA[ctr+j] = in->lc[i][j];
             out->ubA[ctr+j] = in->uc[i][j];
@@ -209,7 +214,6 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
                 out->ubA[ctr+j] -= in->Cx[i][k*in->nc[i]+j]*ws->g[i-1][k];
             }
         }
-        ctr += NX + in->nc[i];
     }
 }
 
@@ -243,11 +247,7 @@ static void calculate_D(ocp_qp_input *in, condensing_workspace *ws) {
 static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out,
     condensing_workspace *ws) {
 
-    int_t ldA = 0;
-    for (int_t i = 0; i < NNN; i++) {
-        ldA += in->nc[i] + NX;
-    }
-    ldA += in->nc[NNN];
+    int_t ldA = ws->nconstraints;
 
     int_t ctr = 0, ctr2 = 0;
     for (int_t i = 0; i < NNN; i++) {
@@ -260,7 +260,7 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
             }
             ctr2 += ldA*NU;
         }
-        ctr += in->nc[i] + NX;
+        ctr += in->nc[i] + ws->nstate_bounds[i+1];
     }
     ctr = 0;
     ctr2 = 0;
@@ -275,7 +275,7 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
             }
             ctr2 += ldA*NU;
         }
-        ctr += NX;
+        ctr += ws->nstate_bounds[i+1];
     }
     for (int_t j = 0; j < NNN; j++) {
         for (int_t k = 0; k < NU; k++) {
