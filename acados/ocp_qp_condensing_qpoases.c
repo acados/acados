@@ -10,6 +10,7 @@
 #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wunused-function"
+#include "qpOASES_e/Constants.h"
 #include "qpOASES_e/QProblem.h"
 #pragma clang diagnostic pop
 
@@ -25,8 +26,8 @@ condensing_workspace work;
 static void print_condensed_QP(const int_t ncv, const int_t nc,
     condensing_output *out) {
 
-    print_matrix("../experimental/robin/H.txt", out->H, ncv, ncv);
-    print_array("../experimental/robin/h.txt", out->h, ncv);
+    print_matrix("../experimental/robin/hessian.txt", out->H, ncv, ncv);
+    print_array("../experimental/robin/gradient.txt", out->h, ncv);
     print_matrix("../experimental/robin/A.txt", out->A, nc, ncv);
     print_array("../experimental/robin/lbA.txt", out->lbA, nc);
     print_array("../experimental/robin/ubA.txt", out->ubA, nc);
@@ -61,12 +62,13 @@ static int_t get_num_constraints(ocp_qp_input *in) {
 }
 
 static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
-    // Input
-    in.qp_input = qp_in;
     int_t N = qp_in->N;
     const int_t *nc = qp_in->nc;
 
-    // Output
+    // condensing input
+    in.qp_input = qp_in;
+
+    // condensing output
     int_t nconvars = get_num_condensed_vars(qp_in);
     int_t nconstraints = get_num_constraints(qp_in);
     d_zeros(&out.H, nconvars, nconvars);
@@ -77,7 +79,17 @@ static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     d_zeros(&out.lbA, nconstraints, 1);
     d_zeros(&out.ubA, nconstraints, 1);
 
-    // Workspace
+    for (int_t i = 0; i < nconvars; i++) {
+        out.lb[i] = -QPOASES_INFTY;
+        out.ub[i] = +QPOASES_INFTY;
+    }
+
+    for (int_t i = 0; i < nconstraints; i++) {
+        out.lbA[i] = -QPOASES_INFTY;
+        out.ubA[i] = +QPOASES_INFTY;
+    }
+
+    // condensing workspace
     work.nconvars = nconvars;
     work.nconstraints = nconstraints;
     work.G = malloc(sizeof(*work.G) * N);
@@ -204,6 +216,23 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     d_free(dual_solution);
 
     return return_flag;
+}
+
+int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *in,
+    ocp_qp_condensing_qpoases_args *args) {
+
+    int_t ws_size = 0;
+    args->dummy = 0.0;
+
+    int_t N = in->N;
+    int_t ncv = get_num_condensed_vars(in);
+    int_t ncs = get_num_constraints(in);
+
+    ws_size += 0*(ncv*ncv + ncv + ncv + ncv + ncs*ncv + ncs + ncs);  // condensing output
+    ws_size += sizeof(*work.G)*N + sizeof(*(work.G[0]))*(N+1)*N/2
+                + NX*NU*sizeof(*(work.G[0][0]))*(N+1)*N/2;
+
+    return ws_size;
 }
 
 void initialise_qpoases(ocp_qp_input *in) {

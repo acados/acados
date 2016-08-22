@@ -21,6 +21,7 @@ include_directories ( "${PROJECT_SOURCE_DIR}/qpOASES/include/" )
 file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_hpmpc" )
 set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_condensing_qpoases" )
+set ( TEST_SQP_SRC "${PROJECT_SOURCE_DIR}/test/test_sqp" )
 
 # Define external libraries
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
@@ -38,6 +39,8 @@ add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
 target_link_libraries ( test_hpmpc acados hpmpc m )
 add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
+add_executable ( test_sqp ${TEST_SQP_SRC} )
+target_link_libraries ( test_sqp acados qpoases hpmpc )
 
 # Lint acados
 find_package ( PythonInterp )

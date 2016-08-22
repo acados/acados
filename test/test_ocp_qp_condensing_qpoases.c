@@ -1,11 +1,3 @@
-// define problems size
-#define NX 8
-#define NU 3
-#define NN 20
-#define NB 11
-#define NG 0
-#define NGN 8
-
 // define number of repetitions
 #define NREP 10
 
@@ -111,14 +103,14 @@ int main() {
     int ii, jj;
     int nrep = NREP;
 
-    int nx = NX;  // number of states (it has to be even for the mass-spring
+    int nx = 8;  // number of states (it has to be even for the mass-spring
                   // system test problem)
-    int nu = NU;  // number of inputs (controllers) (it has to be at least 1 and
+    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = NN;   // horizon length
-    int nb = NB;  // number of box constrained inputs and states
-    int ng = NG;  // 4;  // number of general constraints
-    int ngN = NGN;  // 4;  // number of general constraints at the last stage
+    int N = 20;   // horizon length
+    int nb = 11;  // number of box constrained inputs and states
+    int ng = 0;  // 4;  // number of general constraints
+    int ngN = 8;  // 4;  // number of general constraints at the last stage
 
     // int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -293,21 +285,21 @@ int main() {
     ocp_qp_input qp_in;
     ocp_qp_output qp_out;
 
-    const double *hA[N];
-    const double *hB[N];
-    const double *hb[N];
-    const double *hQ[N + 1];
-    const double *hS[N];
-    const double *hR[N];
-    const double *hq[N + 1];
-    const double *hr[N];
-    const double *hlb[N + 1];
-    const double *hub[N + 1];
-    const int *hidxb[N + 1];
-    const double *hC[N + 1];
-    const double *hD[N];
-    const double *hlg[N + 1];
-    const double *hug[N + 1];
+    double *hA[N];
+    double *hB[N];
+    double *hb[N];
+    double *hQ[N + 1];
+    double *hS[N];
+    double *hR[N];
+    double *hq[N + 1];
+    double *hr[N];
+    double *hlb[N + 1];
+    double *hub[N + 1];
+    int *hidxb[N + 1];
+    double *hC[N + 1];
+    double *hD[N];
+    double *hlg[N + 1];
+    double *hug[N + 1];
 
     hA[0] = A;
     hB[0] = B;
@@ -399,8 +391,7 @@ int main() {
     * work space
     ************************************************/
 
-    // int work_space_size =
-        // ocp_qp_hpmpc_workspace_size(N, nxx, nuu, nbb, ngg, &args);
+    // int work_space_size = ocp_qp_condensing_qpoases_workspace_size(&qp_in, &args);
     // printf("\nwork space size: %d bytes\n", work_space_size);
 
     // double *work = (double *)malloc(work_space_size);

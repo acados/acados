@@ -184,7 +184,7 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
     // State simple bounds
     int ctr = in->nc[0];
     for (int_t i = 0; i < NNN; i++) {
-        for (int_t j = 0; j < NX; j++) {
+        for (int_t j = 0; j < in->nb[0]; j++) {
             out->lbA[ctr+j] = in->lb[i+1][j] - ws->g[i][j];
             out->ubA[ctr+j] = in->ub[i+1][j] - ws->g[i][j];
         }
@@ -232,8 +232,10 @@ static void calculate_D(ocp_qp_input *in, condensing_workspace *ws) {
         }
     }
     for (int_t i = 1; i < NNN+1; i++) {
-        for (int_t j = 0; j < i; j++) {
-            offdiag_D_blk(in->nc[i], in->Cx[i], ws->G[i-1][j], ws->D[i][j]);
+        if (in->nc[i] > 0) {
+            for (int_t j = 0; j < i; j++) {
+                offdiag_D_blk(in->nc[i], in->Cx[i], ws->G[i-1][j], ws->D[i][j]);
+            }
         }
     }
 }

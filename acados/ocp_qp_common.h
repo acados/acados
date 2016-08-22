@@ -3,25 +3,25 @@
 
 typedef struct ocp_qp_input_ {
     int_t N;
-    const int_t *nx;
-    const int_t *nu;
-    const int_t *nb;
-    const int_t *nc;
-    const real_t **A;
-    const real_t **B;
-    const real_t **b;
-    const real_t **Q;
-    const real_t **S;
-    const real_t **R;
-    const real_t **q;
-    const real_t **r;
-    const int_t **idxb;
-    const real_t **lb;
-    const real_t **ub;
-    const real_t **Cx;
-    const real_t **Cu;
-    const real_t **lc;
-    const real_t **uc;
+    int_t *nx;
+    int_t *nu;
+    int_t *nb;
+    int_t *nc;
+    real_t **A;
+    real_t **B;
+    real_t **b;
+    real_t **Q;
+    real_t **S;
+    real_t **R;
+    real_t **q;
+    real_t **r;
+    int_t **idxb;
+    real_t **lb;
+    real_t **ub;
+    real_t **Cx;
+    real_t **Cu;
+    real_t **lc;
+    real_t **uc;
 } ocp_qp_input;
 
 typedef struct ocp_qp_output_ {

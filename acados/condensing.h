@@ -4,10 +4,6 @@
 #include "acados/acados_types.h"
 #include "acados/ocp_qp_common.h"
 
-#define NNN 20
-#define NX 8
-#define NU 3
-
 typedef struct condensing_in_ {
     ocp_qp_input *qp_input;
 } condensing_input;

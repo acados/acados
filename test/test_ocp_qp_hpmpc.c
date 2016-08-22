@@ -23,14 +23,6 @@
 *                                                                                                 *
 **************************************************************************************************/
 
-// define problems size
-#define NX 8
-#define NU 3
-#define NN 20
-#define NB 11
-#define NG 0
-#define NGN 8
-
 // define IP solver arguments && number of repetitions
 #define NREP 1000
 #define MAXITER 10
@@ -180,14 +172,14 @@ int main() {
 
     int rep, nrep = NREP;
 
-    int nx = NX;  // number of states (it has to be even for the mass-spring
+    int nx = 8;  // number of states (it has to be even for the mass-spring
                   // system test problem)
-    int nu = NU;  // number of inputs (controllers) (it has to be at least 1 and
+    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = NN;   // horizon length
-    int nb = NB;  // number of box constrained inputs and states
-    int ng = NG;  // 4;  // number of general constraints
-    int ngN = NGN;  // 4;  // number of general constraints at the last stage
+    int N = 20;   // horizon length
+    int nb = 11;  // number of box constrained inputs and states
+    int ng = 0;  // 4;  // number of general constraints
+    int ngN = 8;  // 4;  // number of general constraints at the last stage
 
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
