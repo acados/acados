@@ -12,4 +12,4 @@ Fast optimal control problem solvers.
     cd build
     cmake ..
     make
-    ./test_condensing_qpoases
+    ./test_nmpc
