@@ -10,7 +10,7 @@ if ( NOT CMAKE_BUILD_TYPE )
 endif ( NOT CMAKE_BUILD_TYPE )
 
 if ( CMAKE_BUILD_TYPE MATCHES Debug )
-    add_definitions ( -DDEBUG )
+#    add_definitions ( -DDEBUG )
 endif ( CMAKE_BUILD_TYPE MATCHES Debug )
 
 # Define include folders

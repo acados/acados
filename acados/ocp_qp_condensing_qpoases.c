@@ -11,10 +11,10 @@
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #pragma clang diagnostic ignored "-Wunused-function"
 #include "qpOASES_e/Constants.h"
-#include "qpOASES_e/QProblem.h"
+#include "qpOASES_e/QProblemB.h"
 #pragma clang diagnostic pop
 
-QProblem QP;
+QProblemB QP;
 real_t *A_row_major;
 real_t *primal_solution;
 real_t *dual_solution;
@@ -121,15 +121,21 @@ static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     d_zeros(&work.w2, NX, 1);
 }
 
-static int_t solve_condensed_QP(QProblem QP, real_t* primal_solution, real_t* dual_solution) {
+static int_t solve_condensed_QP(const int_t ncv, QProblemB *QP,
+    real_t* primal_solution, real_t* dual_solution) {
+
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
 
-    int_t return_flag = QProblem_initW(&QP, out.H, out.h, A_row_major, out.lb,
-                        out.ub, out.lbA, out.ubA, &nwsr, &cpu_time, NULL,
-                        dual_solution, NULL, NULL, NULL);
-    QProblem_getPrimalSolution(&QP, primal_solution);
-    QProblem_getDualSolution(&QP, dual_solution);
+    QProblemBCON(QP, ncv, HST_POSDEF);
+    QProblemB_setPrintLevel(QP, PL_NONE);
+    QProblemB_printProperties(QP);
+
+    int_t return_flag = QProblemB_initW(QP, out.H, out.h, out.lb,
+                        out.ub, &nwsr, &cpu_time, NULL,
+                        dual_solution, NULL, NULL);
+    QProblemB_getPrimalSolution(QP, primal_solution);
+    QProblemB_getDualSolution(QP, dual_solution);
     return return_flag;
 }
 
@@ -181,7 +187,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     print_condensed_QP(work.nconvars, work.nconstraints, &out);
     #endif
 
-    int_t return_flag = solve_condensed_QP(QP, primal_solution, dual_solution);
+    int_t return_flag = solve_condensed_QP(work.nconvars, &QP, primal_solution, dual_solution);
     recover_state_trajectory(qp_in->N, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
 
     d_free(out.H);
@@ -245,7 +251,4 @@ void initialise_qpoases(ocp_qp_input *in) {
     int_t nconstraints = get_num_constraints(in);
     d_zeros(&primal_solution, ncv, 1);
     d_zeros(&dual_solution, ncv+nconstraints, 1);
-    QProblemCON(&QP, ncv, nconstraints, HST_POSDEF);
-    QProblem_setPrintLevel(&QP, PL_NONE);
-    QProblem_printProperties(&QP);
 }

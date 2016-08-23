@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "acados/acados_types.h"
 #include "acados/erk_integrator.h"
 #include "acados/ocp_qp_condensing_qpoases.h"
@@ -73,7 +72,7 @@ int main() {
     real_t  xref[NX]        = {0};          // State reference
     real_t  uref[NX]        = {0};          // Control reference
     int_t   max_sqp_iters   = 1;           // Number of SQP iterations
-    int_t   max_iters       = 10;           // Number of NMPC samples
+    int_t   max_iters       = 10000;      // Number of NMPC samples
     real_t  x_end[NX]       = {0};
     real_t  u_end[NU]       = {0};
 
@@ -145,8 +144,8 @@ int main() {
 
     initialise_qpoases(&qp_in);
 
-    real_t timings[max_iters];
     acado_timer timer;
+    real_t timings = 0;
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
         acado_tic(&timer);
@@ -187,15 +186,13 @@ int main() {
             }
             for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
         }
-        // print_states_controls(&w[0]);
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         shift_states(w, x_end);
         shift_controls(w, u_end);
-        timings[iter] = acado_toc(&timer);
+        timings += acado_toc(&timer);
     }
-    for (int_t iter = 0; iter < max_iters; iter++) {
-        printf("%d:\t%f\tms\n", iter, 1e3*timings[iter]);
-    }
+    // print_states_controls(&w[0]);
+    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
 
     return 0;
 }
