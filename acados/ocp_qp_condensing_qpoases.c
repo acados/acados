@@ -125,8 +125,9 @@ static int_t solve_condensed_QP(QProblem QP, real_t* primal_solution, real_t* du
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
 
-    int_t return_flag = QProblem_init(&QP, out.H, out.h, A_row_major, out.lb,
-                        out.ub, out.lbA, out.ubA, &nwsr, &cpu_time);
+    int_t return_flag = QProblem_initW(&QP, out.H, out.h, A_row_major, out.lb,
+                        out.ub, out.lbA, out.ubA, &nwsr, &cpu_time, NULL,
+                        dual_solution, NULL, NULL, NULL);
     QProblem_getPrimalSolution(&QP, primal_solution);
     QProblem_getDualSolution(&QP, dual_solution);
     return return_flag;
@@ -180,8 +181,6 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     print_condensed_QP(work.nconvars, work.nconstraints, &out);
     #endif
 
-    d_zeros(&primal_solution, work.nconvars, 1);
-    d_zeros(&dual_solution, work.nconvars+work.nconstraints, 1);
     int_t return_flag = solve_condensed_QP(QP, primal_solution, dual_solution);
     recover_state_trajectory(qp_in->N, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
 
@@ -217,8 +216,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     d_free(work.w2);
 
     d_free(A_row_major);
-    d_free(primal_solution);
-    d_free(dual_solution);
+    // d_free(primal_solution);
+    // d_free(dual_solution);
 
     return return_flag;
 }
@@ -244,6 +243,8 @@ void initialise_qpoases(ocp_qp_input *in) {
     int_t ncv = get_num_condensed_vars(in);
     calculate_num_state_bounds(in);
     int_t nconstraints = get_num_constraints(in);
+    d_zeros(&primal_solution, ncv, 1);
+    d_zeros(&dual_solution, ncv+nconstraints, 1);
     QProblemCON(&QP, ncv, nconstraints, HST_POSDEF);
     QProblem_setPrintLevel(&QP, PL_NONE);
     QProblem_printProperties(&QP);

@@ -1,7 +1,7 @@
 cmake_minimum_required ( VERSION 2.6 )
 project ( ACADOS )
 
-set ( CMAKE_VERBOSE_MAKEFILE OFF )
+set ( CMAKE_VERBOSE_MAKEFILE ON )
 
 set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
 
@@ -21,7 +21,7 @@ include_directories ( "${PROJECT_SOURCE_DIR}/qpOASES/include/" )
 file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_hpmpc" )
 set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_condensing_qpoases" )
-set ( TEST_SQP_SRC "${PROJECT_SOURCE_DIR}/test/test_sqp" )
+set ( TEST_NMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_nmpc" )
 
 # Define external libraries
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
@@ -39,8 +39,8 @@ add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
 target_link_libraries ( test_hpmpc acados hpmpc m )
 add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
-add_executable ( test_sqp ${TEST_SQP_SRC} )
-target_link_libraries ( test_sqp acados qpoases hpmpc )
+add_executable ( test_nmpc ${TEST_NMPC_SRC} )
+target_link_libraries ( test_nmpc acados qpoases hpmpc )
 
 # Lint acados
 find_package ( PythonInterp )
