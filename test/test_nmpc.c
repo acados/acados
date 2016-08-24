@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "acados/acados_types.h"
+#include "acados/types.h"
 #include "acados/erk_integrator.h"
 #include "acados/ocp_qp_condensing_qpoases.h"
 #include "hpmpc/include/aux_d.h"

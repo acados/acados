@@ -10,12 +10,13 @@ if ( NOT CMAKE_BUILD_TYPE )
 endif ( NOT CMAKE_BUILD_TYPE )
 
 if ( CMAKE_BUILD_TYPE MATCHES Debug )
-#    add_definitions ( -DDEBUG )
+    add_definitions ( -DDEBUG )
 endif ( CMAKE_BUILD_TYPE MATCHES Debug )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )
-include_directories ( "${PROJECT_SOURCE_DIR}/qpOASES/include/" )
+include_directories ( "${PROJECT_SOURCE_DIR}/external/" )
+include_directories ( "${PROJECT_SOURCE_DIR}/external/qpOASES/include/" )
 
 # Define .c source files
 file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
@@ -24,12 +25,12 @@ set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_conden
 set ( TEST_NMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_nmpc" )
 
 # Define external libraries
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/hpmpc make )
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc make )
 add_library ( hpmpc STATIC IMPORTED )
-set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/hpmpc/libhpmpc.a")
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/qpOASES make )
+set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/hpmpc/libhpmpc.a")
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/qpOASES make )
 add_library ( qpoases STATIC IMPORTED )
-set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/qpOASES/bin/libqpOASES_e.a")
+set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/qpOASES/bin/libqpOASES_e.a")
 
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} )

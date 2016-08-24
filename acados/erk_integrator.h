@@ -1,7 +1,7 @@
 #ifndef ACADOS_ERK_INTEGRATOR_H_
 #define ACADOS_ERK_INTEGRATOR_H_
 
-#include "acados/acados_types.h"
+#include "acados/types.h"
 
 #define FIXED_STEP_SIZE 0
 

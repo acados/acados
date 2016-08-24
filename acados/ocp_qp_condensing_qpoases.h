@@ -1,7 +1,7 @@
 #ifndef ACADOS_OCP_QP_CONDENSING_QPOASES_H_
 #define ACADOS_OCP_QP_CONDENSING_QPOASES_H_
 
-#include "acados/acados_types.h"
+#include "acados/types.h"
 #include "acados/ocp_qp_common.h"
 
 typedef struct ocp_qp_condensing_qpoases_args_ {

@@ -1,7 +1,7 @@
 #ifndef ACADOS_CONDENSING_H_
 #define ACADOS_CONDENSING_H_
 
-#include "acados/acados_types.h"
+#include "acados/types.h"
 #include "acados/ocp_qp_common.h"
 
 typedef struct condensing_in_ {
