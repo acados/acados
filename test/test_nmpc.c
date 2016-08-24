@@ -8,7 +8,6 @@
 #include "unistd.h"
 #include <mach/mach_time.h>
 
-/** A structure for keeping internal timer data. */
 typedef struct acado_timer_
 {
 	uint64_t tic;
@@ -38,14 +37,16 @@ static real_t acado_toc( acado_timer* t )
     return (real_t)duration / 1e9;
 }
 
-// static void print_states_controls(real_t *w) {
-//     int_t   N = NNN;
-//     printf("node\tx\t\t\t\tu\n");
-//     for (int_t i = 0; i < N; i++) {
-//         printf("%4d\t%+e %+e\t%+e\n", i, w[i*(NX+NU)],w[i*(NX+NU)+1],w[i*(NX+NU)+2]);
-//     }
-//     printf("%4d\t%+e %+e\n", N, w[N*(NX+NU)],w[N*(NX+NU)+1]);
-// }
+#ifdef DEBUG
+static void print_states_controls(real_t *w) {
+    int_t   N = NNN;
+    printf("node\tx\t\t\t\tu\n");
+    for (int_t i = 0; i < N; i++) {
+        printf("%4d\t%+e %+e\t%+e\n", i, w[i*(NX+NU)],w[i*(NX+NU)+1],w[i*(NX+NU)+2]);
+    }
+    printf("%4d\t%+e %+e\n", N, w[N*(NX+NU)],w[N*(NX+NU)+1]);
+}
+#endif  // DEBUG
 
 static void shift_states(real_t *w, real_t *x_end) {
     for (int_t i = 0; i < NNN; i++) {
@@ -96,51 +97,57 @@ int main() {
     }
     nx[N] = NX;
 
+    real_t *pA[N];
+    real_t *pB[N];
+    real_t *pb[N];
+    real_t *pQ[N+1];
+    real_t *pS[N];
+    real_t *pR[N];
+    real_t *pq[N+1];
+    real_t *pr[N];
+    real_t *px[N+1];
+    real_t *pu[N];
+    real_t *px0[1];
+    d_zeros(&px0[0], nx[0], 1);
+    for (int_t i = 0; i < N; i++) {
+        d_zeros(&pA[i], nx[i+1], nx[i]);
+        d_zeros(&pB[i], nx[i+1], nu[i]);
+        d_zeros(&pb[i], nx[i+1], 1);
+        d_zeros(&pS[i], nu[i], nx[i]);
+        d_zeros(&pq[i], nx[i], 1);
+        d_zeros(&pr[i], nu[i], 1);
+        d_zeros(&px[i], nx[i], 1);
+        d_zeros(&pu[i], nu[i], 1);
+    }
+    d_zeros(&pq[N], nx[N], 1);
+    d_zeros(&px[N], nx[N], 1);
+
     // Allocate OCP QP variables
     ocp_qp_input qp_in;
     qp_in.N = N;
     ocp_qp_output qp_out;
     ocp_qp_condensing_qpoases_args args;
     real_t *work = NULL;
-
-    // Fill in dimensions
     qp_in.nx = nx;
     qp_in.nu = nu;
     qp_in.nb = nb;
     qp_in.nc = nc;
-
-    qp_in.A = malloc(sizeof(*qp_in.A) * N);
-    qp_in.B = malloc(sizeof(*qp_in.B) * N);
-    qp_in.b = malloc(sizeof(*qp_in.b) * N);
-    qp_in.Q = malloc(sizeof(*qp_in.Q) * (N+1));
-    qp_in.S = malloc(sizeof(*qp_in.S) * N);
-    qp_in.R = malloc(sizeof(*qp_in.R) * N);
-    qp_in.q = malloc(sizeof(*qp_in.q) * (N+1));
-    qp_in.r = malloc(sizeof(*qp_in.r) * N);
-    qp_out.x = malloc(sizeof(*qp_out.x) * (N+1));
-    qp_out.u = malloc(sizeof(*qp_out.u) * N);
     for (int_t i = 0; i < N; i++) {
-        d_zeros(&qp_in.A[i], nx[i+1], nx[i]);
-        d_zeros(&qp_in.B[i], nx[i+1], nu[i]);
-        d_zeros(&qp_in.b[i], nx[i+1], 1);
-        d_zeros(&qp_in.S[i], nu[i], nx[i]);
-        d_zeros(&qp_in.q[i], nx[i], 1);
-        d_zeros(&qp_in.r[i], nu[i], 1);
-        d_zeros(&qp_out.x[i], nx[i], 1);
-        d_zeros(&qp_out.u[i], nu[i], 1);
+        pQ[i] = Q;
+        pR[i] = R;
     }
-    d_zeros(&qp_in.q[N], nx[N], 1);
-    d_zeros(&qp_out.x[N], nx[N], 1);
-
-    // Fill in objective
-    for (int_t i = 0; i < N; i++) {
-        qp_in.Q[i] = Q;
-        qp_in.R[i] = R;
-    }
-    qp_in.Q[N] = Q;
-
-    qp_in.lb = malloc(sizeof(*qp_in.lb));
-    d_zeros(&qp_in.lb[0], nx[0], 1);
+    pQ[N] = Q;
+    qp_in.Q = (const real_t **) pQ;
+    qp_in.S = (const real_t **) pS;
+    qp_in.R = (const real_t **) pR;
+    qp_in.q = (const real_t **) pq;
+    qp_in.r = (const real_t **) pr;
+    qp_in.A = (const real_t **) pA;
+    qp_in.B = (const real_t **) pB;
+    qp_in.b = (const real_t **) pb;
+    qp_in.lb = (const real_t **) px0;
+    qp_out.x = px;
+    qp_out.u = pu;
 
     initialise_qpoases(&qp_in);
 
@@ -157,23 +164,23 @@ int main() {
                 integrate(&in, &out);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
-                    qp_in.q[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
+                    pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
                 }
                 for (int_t j = 0; j < NU; j++) {
-                    qp_in.r[i][j] = R[j*(NX+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
+                    pr[i][j] = R[j*(NX+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
                 }
                 for (int_t j = 0; j < NX; j++) {
-                    qp_in.b[i][j] = out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < NX; k++) qp_in.A[i][j*NX+k] = out.Sx[k*NX+j];
+                    pb[i][j] = out.xn[j] - w[(i+1)*(NX+NU)+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = out.Sx[k*NX+j];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) qp_in.B[i][j*NX+k] = out.Su[k*NU+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = out.Su[k*NU+j];
             }
             for (int_t j = 0; j < NX; j++) {
-                qp_in.lb[0][j] = (x0[j]-w[j]);
+                px0[0][j] = (x0[j]-w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                qp_in.q[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
             }
             int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
             if (status) {
@@ -191,7 +198,9 @@ int main() {
         shift_controls(w, u_end);
         timings += acado_toc(&timer);
     }
-    // print_states_controls(&w[0]);
+    #ifdef DEBUG
+    print_states_controls(&w[0]);
+    #endif  // DEBUG
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
 
     return 0;
