@@ -1,29 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <mach/mach_time.h>
 #include "acados/types.h"
 #include "acados/erk_integrator.h"
 #include "acados/ocp_qp_condensing_qpoases.h"
 #include "hpmpc/include/aux_d.h"
 
-#include "unistd.h"
-#include <mach/mach_time.h>
-
-typedef struct acado_timer_
-{
-	uint64_t tic;
-	uint64_t toc;
-	mach_timebase_info_data_t tinfo;
+typedef struct acado_timer_ {
+    uint64_t tic;
+    uint64_t toc;
+    mach_timebase_info_data_t tinfo;
 } acado_timer;
 
-static void acado_tic( acado_timer* t )
-{
+static void acado_tic(acado_timer* t) {
     /* read current clock cycles */
     t->tic = mach_absolute_time();
 }
 
-static real_t acado_toc( acado_timer* t )
-{
-
+static real_t acado_toc(acado_timer* t) {
     uint64_t duration; /* elapsed time in clock cycles*/
 
     t->toc = mach_absolute_time();
@@ -42,9 +36,9 @@ static void print_states_controls(real_t *w) {
     int_t   N = NNN;
     printf("node\tx\t\t\t\tu\n");
     for (int_t i = 0; i < N; i++) {
-        printf("%4d\t%+e %+e\t%+e\n", i, w[i*(NX+NU)],w[i*(NX+NU)+1],w[i*(NX+NU)+2]);
+        printf("%4d\t%+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1], w[i*(NX+NU)+2]);
     }
-    printf("%4d\t%+e %+e\n", N, w[N*(NX+NU)],w[N*(NX+NU)+1]);
+    printf("%4d\t%+e %+e\n", N, w[N*(NX+NU)], w[N*(NX+NU)+1]);
 }
 #endif  // DEBUG
 
@@ -66,7 +60,7 @@ static void shift_controls(real_t *w, real_t *u_end) {
 int main() {
     // Problem data
     int_t   N               = NNN;
-    real_t  x0[NX]          = {0.5,0};      // Initial states
+    real_t  x0[NX]          = {0.5, 0};      // Initial states
     real_t  w[NNN*(NX+NU)+NX] = {0};        // States and controls stacked
     real_t  Q[NX*NX]        = {0};          // Weight on the states
     real_t  R[NU*NU]        = {0};          // Weight on the controls

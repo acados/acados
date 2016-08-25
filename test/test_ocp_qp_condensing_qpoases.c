@@ -99,7 +99,6 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
 }
 
 int main() {
-
     int ii, jj;
     int nrep = NREP;
 
