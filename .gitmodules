@@ -3,4 +3,4 @@
 	url = https://github.com/giaf/hpmpc.git
 [submodule "external/casadi"]
 	path = external/casadi
-	url = https://github.com/casadi/casadi.git
+	url = git@github.com:acados/casadi.git
