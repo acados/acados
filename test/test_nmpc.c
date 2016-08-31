@@ -1,11 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(__APPLE__)
 #include <mach/mach_time.h>
+#else
+#include <sys/stat.h>
+#include <sys/time.h>
+#endif
 #include "acados/types.h"
 #include "acados/erk_integrator.h"
 #include "acados/ocp_qp_condensing_qpoases.h"
 #include "hpmpc/include/aux_d.h"
 
+#if defined(__APPLE__)
 typedef struct acado_timer_ {
     uint64_t tic;
     uint64_t toc;
@@ -30,6 +36,34 @@ static real_t acado_toc(acado_timer* t) {
 
     return (real_t)duration / 1e9;
 }
+#else
+
+typedef struct acado_timer_ {
+    struct timeval tic;
+    struct timeval toc;
+} acado_timer;
+
+static void acado_tic(acado_timer* t) {
+    /* read current clock cycles */
+    gettimeofday(&t->tic, 0);
+}
+
+static real_t acado_toc(acado_timer* t) {
+    struct timeval temp;
+
+    gettimeofday(&t->toc, 0);
+
+    if ((t->toc.tv_usec - t->tic.tv_usec) < 0) {
+        temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec - 1;
+        temp.tv_usec = 1000000 + t->toc.tv_usec - t->tic.tv_usec;
+    } else {
+        temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec;
+        temp.tv_usec = t->toc.tv_usec - t->tic.tv_usec;
+    }
+
+    return (real_t)temp.tv_sec + (real_t)temp.tv_usec / 1e6;
+}
+#endif
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w) {
