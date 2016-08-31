@@ -31,6 +31,7 @@ set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/ex
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/qpOASES make )
 add_library ( qpoases STATIC IMPORTED )
 set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/qpOASES/bin/libqpOASES_e.a")
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build make )
 
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} )
@@ -49,7 +50,7 @@ if ( PYTHONINTERP_FOUND )
     set ( ACADOS_STYLE_FILTER
     	"-legal/copyright,"
     	"-readability/casting" )
-    set ( FIND_COMMAND find acados test -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )
+    set ( FIND_COMMAND find acados test external/casadi/casadi/interfaces/acados -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )
     set ( FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND} )
     execute_process ( COMMAND ${FIND_ACADOS_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE ACADOS_FILES_TO_LINT )
     string ( REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT} )

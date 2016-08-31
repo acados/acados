@@ -5,6 +5,7 @@
 #include "acados/print.h"
 
 /* Ignore compiler warnings from qpOASES */
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wtypedef-redefinition"
 #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
@@ -13,6 +14,15 @@
 #include "qpOASES_e/Constants.h"
 #include "qpOASES_e/QProblemB.h"
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#include "qpOASES_e/Constants.h"
+#include "qpOASES_e/QProblemB.h"
+#pragma GCC diagnostic pop
+#endif
 
 QProblemB QP;
 real_t *A_row_major;
@@ -178,6 +188,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
 
     // Process arguments
     args->dummy = 1.0;
+    workspace++;
     workspace = 0;
 
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
