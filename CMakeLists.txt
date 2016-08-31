@@ -42,7 +42,7 @@ target_link_libraries ( test_hpmpc acados hpmpc m )
 add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
 add_executable ( test_nmpc ${TEST_NMPC_SRC} )
-target_link_libraries ( test_nmpc acados qpoases hpmpc )
+target_link_libraries ( test_nmpc acados qpoases hpmpc m )
 
 # Lint acados
 find_package ( PythonInterp )
