@@ -1,5 +1,5 @@
-#ifndef ACADOS_PRINT_H_
-#define ACADOS_PRINT_H_
+#ifndef ACADOS_UTILS_PRINT_H_
+#define ACADOS_UTILS_PRINT_H_
 
 #include "acados/utils/types.h"
 
@@ -8,4 +8,4 @@ void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
 
 void print_array(char *file_name, real_t *array, int_t size);
 
-#endif  // ACADOS_PRINT_H_
+#endif  // ACADOS_UTILS_PRINT_H_

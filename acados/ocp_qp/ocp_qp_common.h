@@ -1,5 +1,5 @@
-#ifndef ACADOS_OCP_QP_COMMON_H_
-#define ACADOS_OCP_QP_COMMON_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_COMMON_H_
+#define ACADOS_OCP_QP_OCP_QP_COMMON_H_
 
 typedef struct ocp_qp_input_ {
     int_t N;
@@ -29,4 +29,4 @@ typedef struct ocp_qp_output_ {
     real_t **u;
 } ocp_qp_output;
 
-#endif  // ACADOS_OCP_QP_COMMON_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_

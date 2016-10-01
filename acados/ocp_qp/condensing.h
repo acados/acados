@@ -1,5 +1,5 @@
-#ifndef ACADOS_CONDENSING_H_
-#define ACADOS_CONDENSING_H_
+#ifndef ACADOS_OCP_QP_CONDENSING_H_
+#define ACADOS_OCP_QP_CONDENSING_H_
 
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -42,4 +42,4 @@ void condensingN2_fixed_initial_state(condensing_input *in, condensing_output *o
 
 void condensingN2_free_initial_state();
 
-#endif  // ACADOS_CONDENSING_H_
+#endif  // ACADOS_OCP_QP_CONDENSING_H_

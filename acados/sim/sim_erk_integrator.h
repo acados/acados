@@ -1,5 +1,5 @@
-#ifndef ACADOS_ERK_INTEGRATOR_H_
-#define ACADOS_ERK_INTEGRATOR_H_
+#ifndef ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#define ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
 
 #include "acados/utils/types.h"
 
@@ -22,4 +22,4 @@ typedef struct sim_out_s {
 
 void integrate(const sim_in *in, sim_out *out);
 
-#endif  // ACADOS_ERK_INTEGRATOR_H_
+#endif  // ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
