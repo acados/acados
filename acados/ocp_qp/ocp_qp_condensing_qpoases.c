@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include "hpmpc/include/aux_d.h"
-#include "acados/ocp_qp_condensing_qpoases.h"
-#include "acados/condensing.h"
-#include "acados/print.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/condensing.h"
+#include "acados/utils/print.h"
 
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)

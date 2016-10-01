@@ -1,5 +1,5 @@
 /* The model comes from \cite{Chen1998} */
-#include "acados/model.h"
+#include "acados/sim/model.h"
 
 #define LINEAR_MODEL 0
 

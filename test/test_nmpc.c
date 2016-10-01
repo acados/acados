@@ -6,10 +6,10 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #endif
-#include "acados/types.h"
-#include "acados/erk_integrator.h"
-#include "acados/ocp_qp_condensing_qpoases.h"
-#include "hpmpc/include/aux_d.h"
+#include "acados/utils/types.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "external/hpmpc/include/aux_d.h"
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {

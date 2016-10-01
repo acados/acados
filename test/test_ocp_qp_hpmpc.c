@@ -36,8 +36,8 @@
 #include <sys/time.h>
 
 // ACADOS headers
-#include "acados/ocp_qp_hpmpc.h"
-#include "acados/tools.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/utils/tools.h"
 
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"

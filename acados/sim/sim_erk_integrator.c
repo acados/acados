@@ -1,5 +1,5 @@
-#include "acados/erk_integrator.h"
-#include "acados/model.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/model.h"
 
 // Fixed number of stages for the Explicit Runge-Kutta method.
 #define NUM_STAGES 4

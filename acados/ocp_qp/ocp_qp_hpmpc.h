@@ -1,7 +1,7 @@
 #ifndef ACADOS_OCP_QP_HPMPC_H_
 #define ACADOS_OCP_QP_HPMPC_H_
 
-#include "acados/types.h"
+#include "acados/utils/types.h"
 
 // OCP QP interface
 // struct of arguments to the solver
