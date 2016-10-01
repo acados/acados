@@ -8,6 +8,9 @@
 typedef struct sim_in_s {
     real_t x[NX];
     real_t u[NU];
+
+    void (*VDE_fun)(const real_t*, real_t*);
+
 #if FIXED_STEP_SIZE == 0
     real_t step;
     unsigned int nSteps;

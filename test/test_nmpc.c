@@ -10,6 +10,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "external/hpmpc/include/aux_d.h"
+#include "acados/model.h"
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {
@@ -114,6 +115,7 @@ int main() {
     sim_out out;
     in.nSteps = 10;
     in.step = T/in.nSteps;
+    in.VDE_fun = &VDE_fun;
 
     int_t nx[NNN+1] = {0};
     int_t nu[NNN] = {0};

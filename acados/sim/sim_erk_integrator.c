@@ -1,5 +1,4 @@
 #include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/model.h"
 
 // Fixed number of stages for the Explicit Runge-Kutta method.
 #define NUM_STAGES 4
@@ -44,7 +43,7 @@ void integrate(const sim_in *in, sim_out *out) {
                     }
                 }
             }
-            VDE_fun(vec, &(K_tmp[s*NX*(1+NX+NU)]));  // k evaluation
+            in->VDE_fun(vec, &(K_tmp[s*NX*(1+NX+NU)]));  // k evaluation
         }
         for (s = 0; s < NUM_STAGES; s++) {
             for (i = 0; i < NX*(1+NX+NU); i++) {

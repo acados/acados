@@ -19,6 +19,7 @@ include_directories ( "${PROJECT_SOURCE_DIR}/external/" )
 include_directories ( "${PROJECT_SOURCE_DIR}/external/qpOASES/include/" )
 
 # Define .c source files
+file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 file (GLOB ACADOS_SRC_SIM "${PROJECT_SOURCE_DIR}/acados/sim/*.c")
 file (GLOB ACADOS_SRC_QP "${PROJECT_SOURCE_DIR}/acados/ocp_qp/*.c")
 file (GLOB ACADOS_SRC_UTILS "${PROJECT_SOURCE_DIR}/acados/utils/*.c")
@@ -36,7 +37,7 @@ set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build make )
 
 # Define acados library
-add_library ( acados STATIC ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
+add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
 
 # Define test
 add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
