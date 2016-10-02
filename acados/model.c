@@ -48,3 +48,17 @@ void VDE_fun(const real_t* in, real_t* out) {
     out[7] = 1;
 #endif
 }
+
+void jac_fun(const real_t* in, real_t* out) {
+    const real_t* x = in;
+    const real_t* u = in + NX;
+
+    /* Compute outputs: */
+    out[0] = (u[0]*(real_t)(0.5));
+    out[1] = (real_t)(1.0);
+    out[2] = ((real_t)(0.5)+((real_t)(0.5)*x[0]));
+    out[3] = (real_t)(1.0);
+    out[4] = (u[0]*(-(real_t)(2.0)));
+    out[5] = ((real_t)(0.5)-((real_t)(2.0)*x[1]));
+}
+
