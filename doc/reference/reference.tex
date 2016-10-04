@@ -33,8 +33,8 @@ int ocp_qp_SOLVERNAME(
     double **Q, double **S, double **R, double **q, double **r, 
     int **idxb, double **lb, double **ub, 
     double **Cx, double **Cu, double **lc, double **uc, 
-    double **x, double **u,
-    struct ocp_qp_SOLVERNAME_args *args, double *work);
+    double **x, double **u, double **pi, double **lam,
+    struct ocp_qp_SOLVERNAME_args *args, void *work);
 \end{verbatim}
 where {\tt SOLVERNAME} is the name of the specific solver.
 \begin{description}
@@ -75,13 +75,17 @@ The matrix referenced by the pointer {\tt Cu[k]} is stored in column-major (or F
 The vector referenced by the pointer {\tt ld[k]} is stored in a vector of {\tt nc[k]$\times$1} double-precision floating-point numbers.
 \item[uc] [input] is the vector of size $N+1$ of the pointers to the first element of the vectors $\overline c_k$, such that {\tt uc[k]} is the pointer to the first element of the vector $\overline c_k$, and {\tt uc[k][0]} is the first element of the vector $\overline c_k$.
 The vector referenced by the pointer {\tt uc[k]} is stored in a vector of {\tt nc[k]$\times$1} double-precision floating-point numbers.
-\item[x] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $x_k$, such that {\tt x[k]} is the pointer to the first element of the vector $x_k$, and {\tt x[k][0]} is the first element of the vector $x_k$.
+\item[x] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $x_k$ (states), such that {\tt x[k]} is the pointer to the first element of the vector $x_k$, and {\tt x[k][0]} is the first element of the vector $x_k$.
 The vector referenced by the pointer {\tt x[k]} is stored in a vector of {\tt nx[k]$\times$1} double-precision floating-point numbers.
-\item[u] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_k$, such that {\tt u[k]} is the pointer to the first element of the vector $u_k$, and {\tt u[k][0]} is the first element of the vector $u_k$.
+\item[u] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_k$ (controls or inputs), such that {\tt u[k]} is the pointer to the first element of the vector $u_k$, and {\tt u[k][0]} is the first element of the vector $u_k$.
 The vector referenced by the pointer {\tt u[k]} is stored in a vector of {\tt nu[k]$\times$1} double-precision floating-point numbers.
+\item[pi] [output] is the vector of size $N$ of the pointers to the first element of the vectors $\pi_k$ (Lagrange multipliers of the (state space system) equality constraints), such that {\tt pi[k]} is the pointer to the first element of the vector $\pi_k$, and {\tt pi[k][0]} is the first element of the vector $\pi_k$.
+The vector referenced by the pointer {\tt pi[k]} is stored in a vector of {\tt nx[k+1]$\times$1} double-precision floating-point numbers.
+\item[lam] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $\lambda_k$ (Lagrange multipliers of the inequality constraints), such that {\tt lam[k]} is the pointer to the first element of the vector $\lambda_k$, and {\tt lam[k][0]} is the first element of the vector $\lambda_k$.
+The vector referenced by the pointer {\tt lam[k]} is stored in a vector of {\tt (2*nb[k]+2*ng[k])$\times$1} double-precision floating-point numbers, corresponding to (in the same order) {\tt lb}, {\tt ub}, {\tt lc}, {\tt uc}..
 \item[args] [input] is the pointer to a structure of type {\tt ocp\_qp\_SOLVERNAME\_args} that defines the arguments (as e.g. maximum number of iterations, minimum step size, ... ) passed to the specific solver.
 \item[work] [workspace] is the pointer to the working space used by the specific solver.
-The working space size (in doubles) is returned by a call to the function {\tt ocp\_qp\_SOLVERNAME\_workspace\_double(int N, int *nx, int *nu, int *nb, int *nc, struct ocp\_qp\_solver\_args *args)}. 
+The working space size (in bytes) is returned by a call to the function {\tt ocp\_qp\_SOLVERNAME\_workspace\_size\_bytes(int N, int *nx, int *nu, int *nb, int *nc, int **idxb, struct ocp\_qp\_solver\_args *args)}. 
 \end{description}
 
 Furthermore, the function returns an int, that is defined in the following enum (TODO change the names to something better!!!):

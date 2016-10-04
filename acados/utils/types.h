@@ -1,5 +1,5 @@
-#ifndef ACADOS_TYPES_H_
-#define ACADOS_TYPES_H_
+#ifndef ACADOS_UTILS_TYPES_H_
+#define ACADOS_UTILS_TYPES_H_
 
 typedef double real_t;
 typedef unsigned int uint;
@@ -15,4 +15,4 @@ enum return_values{
     ACADOS_MINSTEP
 };
 
-#endif  // ACADOS_TYPES_H_
+#endif  // ACADOS_UTILS_TYPES_H_

@@ -1,7 +1,7 @@
-#ifndef ACADOS_OCP_QP_HPMPC_H_
-#define ACADOS_OCP_QP_HPMPC_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_HPMPC_H_
+#define ACADOS_OCP_QP_OCP_QP_HPMPC_H_
 
-#include "acados/types.h"
+#include "acados/utils/types.h"
 
 // OCP QP interface
 // struct of arguments to the solver
@@ -29,4 +29,4 @@ int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg,
                                 struct ocp_qp_hpmpc_args *args);
 
 
-#endif  // ACADOS_OCP_QP_HPMPC_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_

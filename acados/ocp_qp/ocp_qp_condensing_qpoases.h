@@ -1,8 +1,8 @@
-#ifndef ACADOS_OCP_QP_CONDENSING_QPOASES_H_
-#define ACADOS_OCP_QP_CONDENSING_QPOASES_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
+#define ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
 
-#include "acados/types.h"
-#include "acados/ocp_qp_common.h"
+#include "acados/utils/types.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 
 typedef struct ocp_qp_condensing_qpoases_args_ {
     real_t dummy;
@@ -16,4 +16,4 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *input,
 
 void initialise_qpoases(ocp_qp_input *input);
 
-#endif  // ACADOS_OCP_QP_CONDENSING_QPOASES_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_

@@ -22,8 +22,8 @@
 * Author: Gianluca Frison, giaf (at) dtu.dk                                                       *
 *                                                                                                 *
 **************************************************************************************************/
-#ifndef ACADOS_TOOLS_H_
-#define ACADOS_TOOLS_H_
+#ifndef ACADOS_UTILS_TOOLS_H_
+#define ACADOS_UTILS_TOOLS_H_
 
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda , double *B, int ldb, double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
@@ -40,4 +40,4 @@ void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb
 /* matrix exponential */
 void expm(int row, double *A);
 
-#endif  // ACADOS_TOOLS_H_
+#endif  // ACADOS_UTILS_TOOLS_H_

@@ -6,10 +6,11 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #endif
-#include "acados/types.h"
-#include "acados/erk_integrator.h"
-#include "acados/ocp_qp_condensing_qpoases.h"
-#include "hpmpc/include/aux_d.h"
+#include "acados/utils/types.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "external/hpmpc/include/aux_d.h"
+#include "acados/model.h"
 
 #define NN 13
 
@@ -111,10 +112,25 @@ int main() {
 
     // Integrator structs
     real_t T = 0.1;
-    sim_in  in;
-    sim_out out;
-    in.nSteps = 10;
-    in.step = T/in.nSteps;
+    sim_in  sim_in;
+    sim_out sim_out;
+    sim_in.nSteps = 10;
+    sim_in.step = T/sim_in.nSteps;
+    sim_in.VDE_fun = &VDE_fun;
+    sim_in.nx = NX;
+    sim_in.nu = NU;
+
+    sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
+    sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
+
+    sim_out.xn = malloc(sizeof(*sim_out.xn) * (NX));
+    sim_out.Sx = malloc(sizeof(*sim_out.Sx) * (NX*NX));
+    sim_out.Su = malloc(sizeof(*sim_out.Su) * (NX*NU));
+
+    sim_erk_workspace erk_work;
+    sim_RK_opts rk_opts;
+    sim_erk_create_opts(4, &rk_opts);
+    sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN] = {0};
@@ -188,9 +204,9 @@ int main() {
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
-                for (int_t j = 0; j < NX; j++) in.x[j] = w[i*(NX+NU)+j];
-                for (int_t j = 0; j < NU; j++) in.u[j] = w[i*(NX+NU)+NX+j];
-                integrate(&in, &out);
+                for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
+                for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
+                integrate(&sim_in, &sim_out, &rk_opts, &erk_work);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -199,11 +215,11 @@ int main() {
                     pr[i][j] = R[j*(NX+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
                 }
                 for (int_t j = 0; j < NX; j++) {
-                    pb[i][j] = out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = out.Sx[k*NX+j];
+                    pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.Sx[k*NX+j];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = out.Su[k*NU+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.Su[k*NU+j];
             }
             for (int_t j = 0; j < NX; j++) {
                 px0[0][j] = (x0[j]-w[j]);

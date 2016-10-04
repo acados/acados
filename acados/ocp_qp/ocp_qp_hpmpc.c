@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "acados/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
 #include "hpmpc/include/target.h"
 #include "hpmpc/include/block_size.h"
