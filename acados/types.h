@@ -5,7 +5,6 @@ typedef double real_t;
 typedef unsigned int uint;
 typedef int int_t;
 
-#define NNN 13
 #define NX 2
 #define NU 1
 

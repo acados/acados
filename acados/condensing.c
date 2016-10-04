@@ -9,7 +9,7 @@ static void calculate_transition_vector(ocp_qp_input *in,
             ws->g[0][k] += in->A[0][k+i*NX]*x0[i];
         }
     }
-    for (int_t k = 1; k < NNN; k++) {
+    for (int_t k = 1; k < in->N; k++) {
         for (int_t j = 0; j < NX; j++) {
             ws->g[k][j] = in->b[k][j];
             for (int_t i = 0; i < NX; i++) {
@@ -38,9 +38,9 @@ static void offdiag_trans_blk(const real_t *A, const real_t *G_prev, real_t *G) 
 }
 
 static void calculate_transition_matrix(ocp_qp_input *in, condensing_workspace *ws) {
-    for (int_t j = 0; j < NNN; j++) {
+    for (int_t j = 0; j < in->N; j++) {
         diag_trans_blk(in->B[j], ws->G[j][j]);
-        for (int_t i = j+1; i < NNN; i++) {
+        for (int_t i = j+1; i < in->N; i++) {
             offdiag_trans_blk(in->A[i], ws->G[i-1][j], ws->G[i][j]);
         }
     }
@@ -92,8 +92,8 @@ static void corr_grad_fixd_init_state(ocp_qp_input *in, condensing_output *out,
 static void calculate_gradient(ocp_qp_input *in, condensing_output *out, condensing_workspace *ws,
     int_t offset, const real_t *x0) {
 
-    update_w(ws, in->q[NNN], in->Q[NNN], ws->g[NNN-1], in->A[0]);
-    for (int_t i = NNN-1; i > 0; i--) {
+    update_w(ws, in->q[in->N], in->Q[in->N], ws->g[in->N-1], in->A[0]);
+    for (int_t i = in->N-1; i > 0; i--) {
         calc_gradient_blk(ws, &out->h[offset+i*NU], in->r[i], in->S[i],
                     ws->g[i-1], in->B[i]);
         update_w(ws, in->q[i], in->Q[i], ws->g[i-1], in->A[i]);
@@ -149,10 +149,10 @@ static void calculate_hessian(ocp_qp_input *in, condensing_output *out,
     condensing_workspace *ws, int_t offset) {
 
     int_t ncv = ws->nconvars;
-    for (int_t j = 0; j < NNN; j++) {
+    for (int_t j = 0; j < in->N; j++) {
         for (int_t i = 0; i < NX*NU; i++) ws->W2_u[i] = 0.0;
-        update_W(ws, in->Q[NNN], ws->G[NNN-1][j], in->A[0]);
-        for (int_t i = NNN-1; i > j; i--) {
+        update_W(ws, in->Q[in->N], ws->G[in->N-1][j], in->A[0]);
+        for (int_t i = in->N-1; i > j; i--) {
             offdiag_hess_blk(ws, &out->H[(offset+j*NU)*ncv+offset+i*NU],
                 in->S[i], ws->G[i-1][j], in->B[i]);
             update_W(ws, in->Q[i], ws->G[i-1][j], in->A[i]);
@@ -168,7 +168,7 @@ static void calculate_hessian(ocp_qp_input *in, condensing_output *out,
 }
 
 static void calculate_simple_bounds(ocp_qp_input *in, condensing_output *out) {
-    for (int_t i = 0; i < NNN; i++) {
+    for (int_t i = 0; i < in->N; i++) {
         for (int_t j = 0; j < in->nb[i]; j++) {
             if (NX <= in->idxb[i][j] && in->idxb[i][j] < NX+NU) {
                 out->lb[i*NU-NX+in->idxb[i][j]] = in->lb[i][j];
@@ -184,7 +184,7 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
     // State simple bounds
     int_t idx;
     int_t ctr = in->nc[0];
-    for (int_t i = 0; i < NNN; i++) {
+    for (int_t i = 0; i < in->N; i++) {
         for (int_t j = 0; j < ws->nstate_bounds[i+1]; j++) {
             idx = in->idxb[i+1][j];
             if (idx < in->nx[i+1]) {
@@ -204,7 +204,7 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
         }
     }
     ctr = 0;
-    for (int_t i = 1; i <= NNN; i++) {
+    for (int_t i = 1; i <= in->N; i++) {
         ctr += ws->nstate_bounds[i] + in->nc[i-1];
         for (int_t j = 0; j < in->nc[i]; j++) {
             out->lbA[ctr+j] = in->lc[i][j];
@@ -228,14 +228,14 @@ static void offdiag_D_blk(int_t nc, const real_t *Cx, const real_t *G, real_t *D
 }
 
 static void calculate_D(ocp_qp_input *in, condensing_workspace *ws) {
-    for (int_t k = 0; k < NNN; k++) {
+    for (int_t k = 0; k < in->N; k++) {
         for (int_t j = 0; j < NU; j++) {
             for (int_t i = 0; i < in->nc[k]; i++) {
                 ws->D[k][k][j*in->nc[k]+i] = in->Cu[k][j*in->nc[k]+i];
             }
         }
     }
-    for (int_t i = 1; i < NNN+1; i++) {
+    for (int_t i = 1; i < in->N+1; i++) {
         if (in->nc[i] > 0) {
             for (int_t j = 0; j < i; j++) {
                 offdiag_D_blk(in->nc[i], in->Cx[i], ws->G[i-1][j], ws->D[i][j]);
@@ -250,7 +250,7 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
     int_t ldA = ws->nconstraints;
 
     int_t ctr = 0, ctr2 = 0;
-    for (int_t i = 0; i < NNN; i++) {
+    for (int_t i = 0; i < in->N; i++) {
         ctr2 = ctr;
         for (int_t j = 0; j <= i; j++) {
             for (int_t k = 0; k < NU; k++) {
@@ -264,7 +264,7 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
     }
     ctr = 0;
     ctr2 = 0;
-    for (int_t i = 0; i < NNN; i++) {
+    for (int_t i = 0; i < in->N; i++) {
         ctr += in->nc[i];
         ctr2 = ctr;
         for (int_t j = 0; j <= i; j++) {
@@ -277,10 +277,10 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
         }
         ctr += ws->nstate_bounds[i+1];
     }
-    for (int_t j = 0; j < NNN; j++) {
+    for (int_t j = 0; j < in->N; j++) {
         for (int_t k = 0; k < NU; k++) {
             for (int_t l = 0; l < NX; l++) {
-                out->A[ctr+j*ldA*NU+k*ldA+l] = ws->D[NNN][j][k*in->nc[NNN]+l];
+                out->A[ctr+j*ldA*NU+k*ldA+l] = ws->D[in->N][j][k*in->nc[in->N]+l];
             }
         }
     }

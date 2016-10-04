@@ -11,6 +11,8 @@
 #include "acados/ocp_qp_condensing_qpoases.h"
 #include "hpmpc/include/aux_d.h"
 
+#define NN 13
+
 #if defined(__APPLE__)
 typedef struct acado_timer_ {
     uint64_t tic;
@@ -66,8 +68,7 @@ static real_t acado_toc(acado_timer* t) {
 #endif
 
 #ifdef DEBUG
-static void print_states_controls(real_t *w) {
-    int_t   N = NNN;
+static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\tu\n");
     for (int_t i = 0; i < N; i++) {
         printf("%4d\t%+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1], w[i*(NX+NU)+2]);
@@ -76,34 +77,34 @@ static void print_states_controls(real_t *w) {
 }
 #endif  // DEBUG
 
-static void shift_states(real_t *w, real_t *x_end) {
-    for (int_t i = 0; i < NNN; i++) {
+static void shift_states(real_t *w, real_t *x_end, int_t N) {
+    for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
     }
-    for (int_t j = 0; j < NX; j++) w[NNN*(NX+NU)+j] = x_end[j];
+    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
 }
 
-static void shift_controls(real_t *w, real_t *u_end) {
-    for (int_t i = 0; i < NNN-1; i++) {
+static void shift_controls(real_t *w, real_t *u_end, int_t N) {
+    for (int_t i = 0; i < N-1; i++) {
         for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
     }
-    for (int_t j = 0; j < NU; j++) w[(NNN-1)*(NX+NU)+NX+j] = u_end[j];
+    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
 }
 
 // Simple SQP example for acados
 int main() {
     // Problem data
-    int_t   N               = NNN;
-    real_t  x0[NX]          = {0.5, 0};      // Initial states
-    real_t  w[NNN*(NX+NU)+NX] = {0};        // States and controls stacked
-    real_t  Q[NX*NX]        = {0};          // Weight on the states
-    real_t  R[NU*NU]        = {0};          // Weight on the controls
-    real_t  xref[NX]        = {0};          // State reference
-    real_t  uref[NX]        = {0};          // Control reference
-    int_t   max_sqp_iters   = 1;           // Number of SQP iterations
-    int_t   max_iters       = 10000;      // Number of NMPC samples
-    real_t  x_end[NX]       = {0};
-    real_t  u_end[NU]       = {0};
+    int_t   N                   = NN;
+    real_t  x0[NX]              = {0.5, 0};
+    real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
+    real_t  Q[NX*NX]            = {0};
+    real_t  R[NU*NU]            = {0};
+    real_t  xref[NX]            = {0};
+    real_t  uref[NX]            = {0};
+    int_t   max_sqp_iters       = 1;
+    int_t   max_iters           = 10;
+    real_t  x_end[NX]           = {0};
+    real_t  u_end[NU]           = {0};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
@@ -115,10 +116,10 @@ int main() {
     in.nSteps = 10;
     in.step = T/in.nSteps;
 
-    int_t nx[NNN+1] = {0};
-    int_t nu[NNN] = {0};
-    int_t nb[NNN+1] = {0};
-    int_t nc[NNN+1] = {0};
+    int_t nx[NN+1] = {0};
+    int_t nu[NN] = {0};
+    int_t nb[NN+1] = {0};
+    int_t nc[NN+1] = {0};
     for (int_t i = 0; i < N; i++) {
         nx[i] = NX;
         nu[i] = NU;
@@ -222,12 +223,12 @@ int main() {
             for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
         }
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-        shift_states(w, x_end);
-        shift_controls(w, u_end);
+        shift_states(w, x_end, N);
+        shift_controls(w, u_end, N);
         timings += acado_toc(&timer);
     }
     #ifdef DEBUG
-    print_states_controls(&w[0]);
+    print_states_controls(&w[0], N);
     #endif  // DEBUG
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
 
