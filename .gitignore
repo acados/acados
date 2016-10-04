@@ -57,3 +57,4 @@ Thumbs.db
 *.doc
 *.swp
 build/
+local/
