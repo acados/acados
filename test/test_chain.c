@@ -382,5 +382,5 @@ int main() {
     print_matrix("stdout", w, NX+NU, N);
     #endif  // DEBUG
     }
-    return nil;
+    return 0*nil;
 }
