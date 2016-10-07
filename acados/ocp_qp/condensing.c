@@ -27,7 +27,8 @@ static void diag_trans_blk(const real_t *B, real_t *G, int_t NX, int_t NU) {
     }
 }
 
-static void offdiag_trans_blk(const real_t *A, const real_t *G_prev, real_t *G, int_t NX, int_t NU) {
+static void offdiag_trans_blk(const real_t *A, const real_t *G_prev,
+        real_t *G, int_t NX, int_t NU) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < NX; i++) {
             for (int_t k = 0; k < NX; k++) {
@@ -157,7 +158,8 @@ static void calculate_hessian(ocp_qp_input *in, condensing_output *out,
                 in->S[i], ws->G[i-1][j], in->B[i], in->nx[i], in->nu[i]);
             update_W(ws, in->Q[i], ws->G[i-1][j], in->A[i], in->nx[i], in->nu[i]);
         }
-        diag_hess_blk(ws, &out->H[(offset+j*in->nu[0])*ncv+offset+j*in->nu[0]], in->R[j], in->B[j], in->nx[j], in->nu[j]);
+        diag_hess_blk(ws, &out->H[(offset+j*in->nu[0])*ncv+offset+j*in->nu[0]],
+                in->R[j], in->B[j], in->nx[j], in->nu[j]);
         // Symmetrize H
         for (int_t i = 0; i < ncv; i++) {
             for (int_t j = 0; j < i; j++) {
@@ -217,7 +219,8 @@ static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out
     }
 }
 
-static void offdiag_D_blk(int_t nc, const real_t *Cx, const real_t *G, real_t *D, int_t NX, int_t NU) {
+static void offdiag_D_blk(int_t nc, const real_t *Cx, const real_t *G,
+        real_t *D, int_t NX, int_t NU) {
     for (int_t j = 0; j < NU; j++) {
         for (int_t i = 0; i < nc; i++) {
             for (int_t k = 0; k < NX; k++) {
@@ -238,7 +241,8 @@ static void calculate_D(ocp_qp_input *in, condensing_workspace *ws) {
     for (int_t i = 1; i < in->N+1; i++) {
         if (in->nc[i] > 0) {
             for (int_t j = 0; j < i; j++) {
-                offdiag_D_blk(in->nc[i], in->Cx[i], ws->G[i-1][j], ws->D[i][j], in->nx[i], in->nu[i]);
+                offdiag_D_blk(in->nc[i], in->Cx[i], ws->G[i-1][j], ws->D[i][j],
+                        in->nx[i], in->nu[i]);
             }
         }
     }
