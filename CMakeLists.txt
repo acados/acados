@@ -28,6 +28,9 @@ set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/test/test_ocp_qp_conden
 set ( TEST_NMPC_SRC "${PROJECT_SOURCE_DIR}/test/test_nmpc" )
 
 # Define external libraries
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo make )
+add_library ( blasfeo STATIC IMPORTED )
+set_property ( TARGET blasfeo PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/blasfeo/blasfeo.a")
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc make )
 add_library ( hpmpc STATIC IMPORTED )
 set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/hpmpc/libhpmpc.a")
