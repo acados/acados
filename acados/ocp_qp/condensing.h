@@ -35,6 +35,8 @@ typedef struct condensing_workspace_ {
     real_t *W2_u;
     real_t *w1;
     real_t *w2;
+
+    real_t *Sx0;
 } condensing_workspace;
 
 void condensingN2_fixed_initial_state(condensing_input *in, condensing_output *out,

@@ -5,9 +5,6 @@ typedef double real_t;
 typedef unsigned int uint;
 typedef int int_t;
 
-#define NX 2
-#define NU 1
-
 // enum of return values
 enum return_values{
     ACADOS_SUCCESS,

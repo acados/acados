@@ -113,22 +113,23 @@ static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
     for (int_t i = 0; i < N; i++) {
         work.G[i] = malloc(sizeof(*(work.G[i])) * (i+1));
         work.D[i] = malloc(sizeof(*(work.D[i])) * (i+1));
-        d_zeros(&work.g[i], NX, 1);
+        d_zeros(&work.g[i], qp_in->nx[i], 1);
         for (int_t j = 0; j <= i; j++) {
-            d_zeros(&work.G[i][j], NX, NU);
-            d_zeros(&work.D[i][j], nc[i], NU);
+            d_zeros(&work.G[i][j], qp_in->nx[i], qp_in->nu[j]);
+            d_zeros(&work.D[i][j], nc[i], qp_in->nu[j]);
         }
     }
     work.D[N] = malloc(sizeof(*(work.D[N])) * N);
     for (int_t i = 0; i < N; i++) {
-        d_zeros(&work.D[N][i], nc[N], NU);
+        d_zeros(&work.D[N][i], nc[N], qp_in->nu[i]);
     }
-    d_zeros(&work.W1_x, NX, NX);
-    d_zeros(&work.W2_x, NX, NX);
-    d_zeros(&work.W1_u, NX, NU);
-    d_zeros(&work.W2_u, NX, NU);
-    d_zeros(&work.w1, NX, 1);
-    d_zeros(&work.w2, NX, 1);
+    d_zeros(&work.W1_x, qp_in->nx[0], qp_in->nx[0]);
+    d_zeros(&work.W2_x, qp_in->nx[0], qp_in->nx[0]);
+    d_zeros(&work.W1_u, qp_in->nx[0], qp_in->nu[0]);
+    d_zeros(&work.W2_u, qp_in->nx[0], qp_in->nu[0]);
+    d_zeros(&work.w1, qp_in->nx[0], 1);
+    d_zeros(&work.w2, qp_in->nx[0], 1);
+    d_zeros(&work.Sx0, qp_in->nu[0], 1);
 }
 
 static int_t solve_condensed_QP(const int_t ncv, QProblemB *QP,
@@ -149,22 +150,22 @@ static int_t solve_condensed_QP(const int_t ncv, QProblemB *QP,
     return return_flag;
 }
 
-static void recover_state_trajectory(int_t N, real_t **x, real_t **u,
+static void recover_state_trajectory(ocp_qp_input *qp_in, real_t **x, real_t **u,
     real_t *primal_solution, const real_t *x0) {
 
-    for (int_t i = 0; i < NX; i++) {
+    for (int_t i = 0; i < qp_in->nx[0]; i++) {
         x[0][i] = x0[i];
     }
-    for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < NX; j++) {
+    for (int_t i = 0; i < qp_in->N; i++) {
+        for (int_t j = 0; j < qp_in->nx[0]; j++) {
             x[i+1][j] = work.g[i][j];
             for (int_t k = 0; k <= i; k++) {
-                for (int_t l = 0; l < NU; l++) {
-                    x[i+1][j] += work.G[i][k][j+NX*l]*primal_solution[NU*k+l];
+                for (int_t l = 0; l < qp_in->nu[0]; l++) {
+                    x[i+1][j] += work.G[i][k][j+qp_in->nx[0]*l]*primal_solution[qp_in->nu[0]*k+l];
                 }
             }
         }
-        for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[i*NU+j];
+        for (int_t j = 0; j < qp_in->nu[0]; j++) u[i][j] = primal_solution[i*qp_in->nu[0]+j];
         // TODO(robin): this only holds for MPC, not MHE
         // for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
     }
@@ -199,7 +200,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     #endif
 
     int_t return_flag = solve_condensed_QP(work.nconvars, &QP, primal_solution, dual_solution);
-    recover_state_trajectory(qp_in->N, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
+    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
 
     d_free(out.H);
     d_free(out.h);
@@ -251,7 +252,7 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *in,
 
     ws_size += 0*(ncv*ncv + ncv + ncv + ncv + ncs*ncv + ncs + ncs);  // condensing output
     ws_size += sizeof(*work.G)*N + sizeof(*(work.G[0]))*(N+1)*N/2
-                + NX*NU*sizeof(*(work.G[0][0]))*(N+1)*N/2;
+                + in->nx[0]*in->nu[0]*sizeof(*(work.G[0][0]))*(N+1)*N/2;
 
     return ws_size;
 }

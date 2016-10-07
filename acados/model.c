@@ -2,6 +2,8 @@
 #include "acados/model.h"
 
 #define LINEAR_MODEL 0
+#define NX 2
+#define NU 1
 
 real_t aux[12];
 

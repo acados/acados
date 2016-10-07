@@ -13,6 +13,8 @@
 #include "acados/model.h"
 
 #define NN 13
+#define NX 2
+#define NU 1
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {
