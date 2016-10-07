@@ -71,19 +71,19 @@ static real_t acado_toc(acado_timer* t) {
 }
 #endif
 
-//static void shift_states(real_t *w, real_t *x_end, int_t N) {
+// static void shift_states(real_t *w, real_t *x_end, int_t N) {
 //    for (int_t i = 0; i < N; i++) {
 //        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
 //    }
 //    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
-//}
+// }
 //
-//static void shift_controls(real_t *w, real_t *u_end, int_t N) {
+// static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 //    for (int_t i = 0; i < N-1; i++) {
 //        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
 //    }
 //    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
-//}
+// }
 
 // Simple SQP example for acados
 int main() {
@@ -118,7 +118,7 @@ int main() {
     d_zeros(&Q, NX, NX);
     d_zeros(&R, NU, NU);
 
-    switch(NMF) {
+    switch (NMF) {
     case 1:
         initStates = fopen("../test/casadi_chain/x0_nm2.txt", "r");
         break;
@@ -149,7 +149,7 @@ int main() {
     }
     fclose(initStates);
 
-    switch(NMF) {
+    switch (NMF) {
     case 1:
         refStates = fopen("../test/casadi_chain/xN_nm2.txt", "r");
         break;
@@ -197,7 +197,7 @@ int main() {
     sim_in.nx = NX;
     sim_in.nu = NU;
 
-    switch(NMF) {
+    switch (NMF) {
     case 1:
         sim_in.VDE_fun = &VDE_fun_nm2;
         break;
@@ -380,7 +380,6 @@ int main() {
 //    }
 
     printf("\nAverage of %.3f ms per iteration.\n\n", 1e3*timings/max_iters);
-
     }
     return nil;
 }
