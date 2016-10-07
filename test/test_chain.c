@@ -89,7 +89,7 @@ static real_t acado_toc(acado_timer* t) {
 int main() {
     int_t nil;
 
-    for (int_t NMF = 1; NMF < 10; NMF++) {
+    for (int_t NMF = 1; NMF < 9; NMF++) {
         printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n", NMF);
     int_t NX = 6*NMF;
     int_t NU = 3;
