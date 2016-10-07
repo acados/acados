@@ -10,7 +10,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "external/hpmpc/include/aux_d.h"
-#include "acados/model.h"
+#include "test/Chen/Chen_model.h"
 
 #define NN 13
 #define NX 2

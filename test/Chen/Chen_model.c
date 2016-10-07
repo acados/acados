@@ -1,5 +1,5 @@
 /* The model comes from \cite{Chen1998} */
-#include "acados/model.h"
+#include "test/Chen/Chen_model.h"
 
 #define LINEAR_MODEL 0
 #define NX 2
