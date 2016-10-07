@@ -376,7 +376,7 @@ int main() {
         timings += acado_toc(&timer);
 //    }
 
-    printf("\nAverage of %.3f ms per iteration.\n\n", 1e3*timings/max_iters);
+    printf("\nAverage of %.3f ms per iteration.\n\n", 1e3*timings/(max_sqp_iters*max_iters));
 
     #ifdef DEBUG
     print_matrix("stdout", w, NX+NU, N);
