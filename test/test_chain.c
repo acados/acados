@@ -102,7 +102,7 @@ int main() {
     real_t  *R;
     real_t  *xref;
     real_t  *uref;
-    int_t   max_sqp_iters       = 10;
+    int_t   max_sqp_iters       = 20;
     int_t   max_iters           = 1;
     real_t  *x_end;
     real_t  *u_end;
@@ -310,9 +310,6 @@ int main() {
             printf("--- ITERATION %d, ", sqp_iter);
 
             feas = -1e10; stepX = -1e10; stepU = -1e10;
-            #ifdef DEBUG
-                print_matrix("stdout", w, NX+NU, N);
-            #endif  // DEBUG
 
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
@@ -380,6 +377,10 @@ int main() {
 //    }
 
     printf("\nAverage of %.3f ms per iteration.\n\n", 1e3*timings/max_iters);
+
+    #ifdef DEBUG
+    print_matrix("stdout", w, NX+NU, N);
+    #endif  // DEBUG
     }
     return nil;
 }
