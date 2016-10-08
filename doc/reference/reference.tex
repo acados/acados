@@ -87,17 +87,17 @@ The function returns an integer number, that is defined in the following enumera
 	\end{description}
 	\item[ocp\_qp\_out] The struct of OCP QP output data contains the following fields:
 	\begin{description}
-		\item[x] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $x_k$ (states), such that \texttt{x[k]} is the pointer to the first element of the vector $x_k$, and \texttt{x[k][0]} is the first element of the vector $x_k$.
+		\item[x] is the vector of size $N+1$ of the pointers to the first element of the vectors $x_k$ (states), such that \texttt{x[k]} is the pointer to the first element of the vector $x_k$, and \texttt{x[k][0]} is the first element of the vector $x_k$.
 		The vector referenced by the pointer \texttt{x[k]} is stored in a vector of \texttt{nx[k]$\times$1} floating-point numbers.
-		\item[u] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_k$ (controls or inputs), such that \texttt{u[k]} is the pointer to the first element of the vector $u_k$, and \texttt{u[k][0]} is the first element of the vector $u_k$.
+		\item[u] is the vector of size $N+1$ of the pointers to the first element of the vectors $u_k$ (controls or inputs), such that \texttt{u[k]} is the pointer to the first element of the vector $u_k$, and \texttt{u[k][0]} is the first element of the vector $u_k$.
 		The vector referenced by the pointer \texttt{u[k]} is stored in a vector of \texttt{nu[k]$\times$1} floating-point numbers.
-		\item[pi] [output] is the vector of size $N$ of the pointers to the first element of the vectors $\pi_k$ (Lagrange multipliers of the equality constraints), such that \texttt{pi[k]} is the pointer to the first element of the vector $\pi_k$, and \texttt{pi[k][0]} is the first element of the vector $\pi_k$.
+		\item[pi] is the vector of size $N$ of the pointers to the first element of the vectors $\pi_k$ (Lagrange multipliers of the equality constraints), such that \texttt{pi[k]} is the pointer to the first element of the vector $\pi_k$, and \texttt{pi[k][0]} is the first element of the vector $\pi_k$.
 		The vector referenced by the pointer \texttt{pi[k]} is stored in a vector of \texttt{nx[k+1]$\times$1} floating-point numbers.
-		\item[lam] [output] is the vector of size $N+1$ of the pointers to the first element of the vectors $\lambda_k$ (Lagrange multipliers of the inequality constraints), such that \texttt{lam[k]} is the pointer to the first element of the vector $\lambda_k$, and \texttt{lam[k][0]} is the first element of the vector $\lambda_k$.
+		\item[lam] is the vector of size $N+1$ of the pointers to the first element of the vectors $\lambda_k$ (Lagrange multipliers of the inequality constraints), such that \texttt{lam[k]} is the pointer to the first element of the vector $\lambda_k$, and \texttt{lam[k][0]} is the first element of the vector $\lambda_k$.
 		The vector referenced by the pointer \texttt{lam[k]} is stored in a vector of \texttt{(2*nb[k]+2*ng[k])$\times$1} floating-point numbers, corresponding to (in the same order) \texttt{lb}, \texttt{ub}, \texttt{lc}, \texttt{uc}, \ldots
 	\end{description}
 	\item[args] is the pointer to a structure of type \texttt{ocp\_qp\_NAME\_args} that defines the arguments (as e.g. maximum number of iterations, minimum step size, \ldots) passed to the specific solver.
-	\item[work] [workspace] is the pointer to the working space used by the specific solver.
+	\item[work] is the pointer to the working space used by the specific solver.
 The working space size (in bytes) is returned by a call to the function 
 \begin{verbatim}
 ocp_qp_NAME_workspace_size_bytes(int N, int *nx, int *nu, 
