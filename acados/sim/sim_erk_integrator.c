@@ -91,12 +91,12 @@ void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
         opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
 
         memcpy(opts->A_mat,
-                (real_t[]) {0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+                ((real_t[]) {0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
                 sizeof(*opts->A_mat) * (num_stages*num_stages));
         memcpy(opts->b_vec,
-                (real_t[]) {1.0/6, 2.0/6, 2.0/6, 1.0/6}, sizeof(*opts->b_vec) * (num_stages));
+                ((real_t[]) {1.0/6, 2.0/6, 2.0/6, 1.0/6}), sizeof(*opts->b_vec) * (num_stages));
         memcpy(opts->c_vec,
-                (real_t[]) {0.0, 0.5, 0.5, 1.0}, sizeof(*opts->c_vec) * (num_stages));
+                ((real_t[]) {0.0, 0.5, 0.5, 1.0}), sizeof(*opts->c_vec) * (num_stages));
     } else {
         // throw error somehow?
     }
