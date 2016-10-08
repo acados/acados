@@ -5,8 +5,8 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 typedef struct condensing_in_ {
-    ocp_qp_input *qp_input;
-} condensing_input;
+    ocp_qp_in *qp_input;
+} condensing_in;
 
 typedef struct condensing_out_ {
     real_t *H;
@@ -16,7 +16,7 @@ typedef struct condensing_out_ {
     real_t *A;
     real_t *lbA;
     real_t *ubA;
-} condensing_output;
+} condensing_out;
 
 typedef struct condensing_memory_ {
     real_t dummy;
@@ -35,11 +35,10 @@ typedef struct condensing_workspace_ {
     real_t *W2_u;
     real_t *w1;
     real_t *w2;
-
     real_t *Sx0;
 } condensing_workspace;
 
-void condensingN2_fixed_initial_state(condensing_input *in, condensing_output *out,
+void condensing_N2_fixed_initial_state(condensing_in *in, condensing_out *out,
     condensing_workspace *work);
 
 void condensingN2_free_initial_state();

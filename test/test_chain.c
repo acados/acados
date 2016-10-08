@@ -327,9 +327,9 @@ int main() {
     }
 
     // Allocate OCP QP variables
-    ocp_qp_input qp_in;
+    ocp_qp_in qp_in;
     qp_in.N = N;
-    ocp_qp_output qp_out;
+    ocp_qp_out qp_out;
     ocp_qp_condensing_qpoases_args args;
     real_t *work = NULL;
     qp_in.nx = nx;

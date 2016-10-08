@@ -1,7 +1,7 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_COMMON_H_
 #define ACADOS_OCP_QP_OCP_QP_COMMON_H_
 
-typedef struct ocp_qp_input_ {
+typedef struct ocp_qp_in_ {
     int_t N;
     const int_t *nx;
     const int_t *nu;
@@ -22,11 +22,11 @@ typedef struct ocp_qp_input_ {
     const real_t **Cu;
     const real_t **lc;
     const real_t **uc;
-} ocp_qp_input;
+} ocp_qp_in;
 
-typedef struct ocp_qp_output_ {
+typedef struct ocp_qp_out_ {
     real_t **x;
     real_t **u;
-} ocp_qp_output;
+} ocp_qp_out;
 
 #endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_

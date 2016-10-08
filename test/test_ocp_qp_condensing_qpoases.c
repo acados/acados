@@ -281,8 +281,8 @@ int main() {
     * problems data
     ************************************************/
 
-    ocp_qp_input qp_in;
-    ocp_qp_output qp_out;
+    ocp_qp_in qp_in;
+    ocp_qp_out qp_out;
 
     double *hA[N];
     double *hB[N];

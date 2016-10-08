@@ -28,13 +28,13 @@ QProblemB QP;
 real_t *A_row_major;
 real_t *primal_solution;
 real_t *dual_solution;
-condensing_input in;
-condensing_output out;
+condensing_in in;
+condensing_out out;
 condensing_workspace work;
 
 #ifdef DEBUG
 static void print_condensed_QP(const int_t ncv, const int_t nc,
-    condensing_output *out) {
+    condensing_out *out) {
 
     print_matrix("../experimental/robin/hessian.txt", out->H, ncv, ncv);
     print_array("../experimental/robin/gradient.txt", out->h, ncv);
@@ -46,7 +46,7 @@ static void print_condensed_QP(const int_t ncv, const int_t nc,
 }
 #endif
 
-static int_t get_num_condensed_vars(ocp_qp_input *in) {
+static int_t get_num_condensed_vars(ocp_qp_in *in) {
     int_t num_condensed_vars = 0;
     // TODO(robin): this only holds for MPC, not MHE
     num_condensed_vars += 0*(in->nx[1]);
@@ -55,7 +55,7 @@ static int_t get_num_condensed_vars(ocp_qp_input *in) {
     return num_condensed_vars;
 }
 
-static void calculate_num_state_bounds(ocp_qp_input *in) {
+static void calculate_num_state_bounds(ocp_qp_in *in) {
     i_zeros(&work.nstate_bounds, in->N+1, 1);
     int_t num_state_bounds;
     for (int_t i = 1; i <= in->N; i++) {
@@ -68,7 +68,7 @@ static void calculate_num_state_bounds(ocp_qp_input *in) {
     }
 }
 
-static int_t get_num_constraints(ocp_qp_input *in) {
+static int_t get_num_constraints(ocp_qp_in *in) {
     int_t num_constraints = in->nc[0];
     for (int_t i = 1; i <= in->N; i++) {
         num_constraints += in->nc[i] + work.nstate_bounds[i];
@@ -76,7 +76,7 @@ static int_t get_num_constraints(ocp_qp_input *in) {
     return num_constraints;
 }
 
-static void fill_in_condensing_structs(ocp_qp_input *qp_in) {
+static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
     int_t N = qp_in->N;
     const int_t *nc = qp_in->nc;
 
@@ -150,7 +150,7 @@ static int_t solve_condensed_QP(const int_t ncv, QProblemB *QP,
     return return_flag;
 }
 
-static void recover_state_trajectory(ocp_qp_input *qp_in, real_t **x, real_t **u,
+static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u,
     real_t *primal_solution, const real_t *x0) {
 
     for (int_t i = 0; i < qp_in->nx[0]; i++) {
@@ -181,11 +181,11 @@ static void convert_to_row_major(const real_t *input, real_t *output, const int_
     }
 }
 
-int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
+int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ocp_qp_condensing_qpoases_args *args, double *workspace) {
 
     fill_in_condensing_structs(qp_in);
-    condensingN2_fixed_initial_state(&in, &out, &work);
+    condensing_N2_fixed_initial_state(&in, &out, &work);
 
     // Process arguments
     args->dummy = 1.0;
@@ -240,7 +240,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_input *qp_in, ocp_qp_output *qp_out,
     return return_flag;
 }
 
-int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *in,
+int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *in,
     ocp_qp_condensing_qpoases_args *args) {
 
     int_t ws_size = 0;
@@ -257,7 +257,7 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_input *in,
     return ws_size;
 }
 
-void initialise_qpoases(ocp_qp_input *in) {
+void initialise_qpoases(ocp_qp_in *in) {
     int_t ncv = get_num_condensed_vars(in);
     calculate_num_state_bounds(in);
     int_t nconstraints = get_num_constraints(in);

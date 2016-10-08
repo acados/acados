@@ -1,6 +1,6 @@
 #include "acados/ocp_qp/condensing.h"
 
-static void calculate_transition_vector(ocp_qp_input *in,
+static void calculate_transition_vector(ocp_qp_in *in,
     condensing_workspace *ws, const real_t *x0) {
 
     for (int_t k = 0; k < in->nx[0]; k++) {
@@ -38,7 +38,7 @@ static void offdiag_trans_blk(const real_t *A, const real_t *G_prev,
     }
 }
 
-static void calculate_transition_matrix(ocp_qp_input *in, condensing_workspace *ws) {
+static void calculate_transition_matrix(ocp_qp_in *in, condensing_workspace *ws) {
     for (int_t j = 0; j < in->N; j++) {
         diag_trans_blk(in->B[j], ws->G[j][j], in->nx[j], in->nu[j]);
         for (int_t i = j+1; i < in->N; i++) {
@@ -74,7 +74,7 @@ static void calc_gradient_blk(condensing_workspace *ws, real_t *h, const real_t 
     }
 }
 
-static void corr_grad_fixd_init_state(ocp_qp_input *in, condensing_output *out,
+static void corr_grad_fixd_init_state(ocp_qp_in *in, condensing_out *out,
     condensing_workspace *ws, const real_t *x0) {
 
     for (int_t j = 0; j < in->nu[0]; j++) ws->Sx0[j] = 0;
@@ -90,7 +90,7 @@ static void corr_grad_fixd_init_state(ocp_qp_input *in, condensing_output *out,
     }
 }
 
-static void calculate_gradient(ocp_qp_input *in, condensing_output *out, condensing_workspace *ws,
+static void calculate_gradient(ocp_qp_in *in, condensing_out *out, condensing_workspace *ws,
     int_t offset, const real_t *x0) {
 
     update_w(ws, in->q[in->N], in->Q[in->N], ws->g[in->N-1], in->A[0], in->nx[0]);
@@ -146,7 +146,7 @@ static void diag_hess_blk(condensing_workspace *ws, real_t *H,
     }
 }
 
-static void calculate_hessian(ocp_qp_input *in, condensing_output *out,
+static void calculate_hessian(ocp_qp_in *in, condensing_out *out,
     condensing_workspace *ws, int_t offset) {
 
     int_t ncv = ws->nconvars;
@@ -169,7 +169,7 @@ static void calculate_hessian(ocp_qp_input *in, condensing_output *out,
     }
 }
 
-static void calculate_simple_bounds(ocp_qp_input *in, condensing_output *out) {
+static void calculate_simple_bounds(ocp_qp_in *in, condensing_out *out) {
     for (int_t i = 0; i < in->N; i++) {
         for (int_t j = 0; j < in->nb[i]; j++) {
             if (in->nx[0] <= in->idxb[i][j] && in->idxb[i][j] < in->nx[0]+in->nu[0]) {
@@ -180,7 +180,7 @@ static void calculate_simple_bounds(ocp_qp_input *in, condensing_output *out) {
     }
 }
 
-static void calculate_constraint_bounds(ocp_qp_input *in, condensing_output *out,
+static void calculate_constraint_bounds(ocp_qp_in *in, condensing_out *out,
     condensing_workspace *ws, const real_t *x0) {
 
     // State simple bounds
@@ -230,7 +230,7 @@ static void offdiag_D_blk(int_t nc, const real_t *Cx, const real_t *G,
     }
 }
 
-static void calculate_D(ocp_qp_input *in, condensing_workspace *ws) {
+static void calculate_D(ocp_qp_in *in, condensing_workspace *ws) {
     for (int_t k = 0; k < in->N; k++) {
         for (int_t j = 0; j < in->nu[0]; j++) {
             for (int_t i = 0; i < in->nc[k]; i++) {
@@ -248,7 +248,7 @@ static void calculate_D(ocp_qp_input *in, condensing_workspace *ws) {
     }
 }
 
-static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out,
+static void calculate_constraint_matrix(ocp_qp_in *in, condensing_out *out,
     condensing_workspace *ws) {
 
     int_t ldA = ws->nconstraints;
@@ -292,7 +292,7 @@ static void calculate_constraint_matrix(ocp_qp_input *in, condensing_output *out
     }
 }
 
-void condensingN2_fixed_initial_state(condensing_input *input, condensing_output *output,
+void condensing_N2_fixed_initial_state(condensing_in *input, condensing_out *output,
     condensing_workspace *workspace) {
 
     const real_t *x0 = input->qp_input->lb[0];
@@ -321,7 +321,7 @@ void condensingN2_fixed_initial_state(condensing_input *input, condensing_output
 //     }
 // }
 //
-// void propagate_x0_to_G(condensing_input **in, condensing_output *out,
+// void propagate_x0_to_G(condensing_in **in, condensing_out *out,
 //     condensing_workspace *ws) {
 //     int_t i, j;
 //     /* propagate x0: */
@@ -382,7 +382,7 @@ void condensingN2_fixed_initial_state(condensing_input *input, condensing_output
 //     }
 // }
 //
-// void propagate_x0_to_H(condensing_input *in, condensing_output *out,
+// void propagate_x0_to_H(condensing_in *in, condensing_out *out,
 //     condensing_workspace *ws) {
 //     /* propagate x0: */
 //     computeWx(&data.Q[NNN*NX*NX], &ws->G[(NNN-1)*NX], &data.A[0]);
@@ -411,7 +411,7 @@ void condensingN2_fixed_initial_state(condensing_input *input, condensing_output
 //     }
 // }
 //
-// void condensingN2_free_initial_state(condensing_input *input, condensing_output *output,
+// void condensingN2_free_initial_state(condensing_in *input, condensing_out *output,
 //     condensing_workspace *workspace) {
 //     int_t i, j, offset;
 //
