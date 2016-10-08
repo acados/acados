@@ -26,8 +26,6 @@ script:
  - mkdir build
  - cd build
  - cmake ..
- - make test_hpmpc
- - ./test_hpmpc
  - make test_condensing_qpoases
  - ./test_condensing_qpoases
  - make test_nmpc
