@@ -39,12 +39,19 @@ set ( TEST_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/test/casadi_chain/ode_chain_nm9" )
 set ( TEST_CHAIN_OCP_SRC "${PROJECT_SOURCE_DIR}/test/test_chain" )
 
 # Define external libraries
+<<<<<<< HEAD
 # BLASFEO
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo make )
 add_library ( blasfeo STATIC IMPORTED )
 set_property ( TARGET blasfeo PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/blasfeo/blasfeo.a")
 # HPMPC
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc make )
+=======
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo make static_library )
+add_library ( blasfeo STATIC IMPORTED )
+set_property ( TARGET blasfeo PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/blasfeo/libblasfeo.a")
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc make static_library )
+>>>>>>> b32553a38dafb593c5c5cde4d534b9f1666bc0bb
 add_library ( hpmpc STATIC IMPORTED )
 set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/hpmpc/libhpmpc.a")
 # QPOASES
@@ -61,8 +68,8 @@ execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/extern
 add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
 
 # Define test
-add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
-target_link_libraries ( test_hpmpc acados hpmpc m )
+#add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
+#target_link_libraries ( test_hpmpc acados hpmpc blasfeo m )
 add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc m )
 add_executable ( test_nmpc ${TEST_NMPC_SRC} ${TEST_CHEN_SRC} )

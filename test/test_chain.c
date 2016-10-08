@@ -15,7 +15,8 @@
 #include "external/hpmpc/include/aux_d.h"
 #include "test/casadi_chain/Chain_model.h"
 
-#define NN 20
+#define NN 10
+#define UMAX 2
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {
@@ -89,10 +90,11 @@ static real_t acado_toc(acado_timer* t) {
 int main() {
     int_t nil;
 
-    for (int_t NMF = 1; NMF < 9; NMF++) {
+    for (int_t NMF = 1; NMF < 8; NMF++) {
         printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n", NMF);
     int_t NX = 6*NMF;
     int_t NU = 3;
+    int_t jj;
 
     // Problem data
     int_t   N                   = NN;
@@ -186,10 +188,10 @@ int main() {
     for (int_t j = 0; j < NX; j++) w[NN*(NX+NU)+j] = xref[j];
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
-    for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 25;
+    for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.01;
 
     // Integrator structs
-    real_t T = 0.1;
+    real_t T = 0.2;
     sim_in  sim_in;
     sim_out sim_out;
     sim_in.nSteps = 10;
@@ -246,6 +248,47 @@ int main() {
     }
     nx[N] = NX;
 
+    /************************************************
+    * box constraints
+    ************************************************/
+
+    int *idxb0;
+    i_zeros(&idxb0, NX+NU, 1);
+    real_t *lb0;
+    d_zeros(&lb0, NX+NU, 1);
+    real_t *ub0;
+    d_zeros(&ub0, NX+NU, 1);
+    for (jj = 0; jj < NX; jj++) {
+        lb0[jj] = x0[jj];   //   xmin
+        ub0[jj] = x0[jj];   //   xmax
+        idxb0[jj] = jj;
+    }
+    for (; jj < NX+NU; jj++) {
+        lb0[jj] = -UMAX;  //   umin
+        ub0[jj] = UMAX;   //   umax
+        idxb0[jj] = jj;
+    }
+    nb[0] = NX+NU;
+
+    int *idxb1;
+    i_zeros(&idxb1, NU, 1);
+    double *lb1[N-1];
+    double *ub1[N-1];
+    for (int_t i = 0; i < N-1; i++) {
+    d_zeros(&lb1[i], NU, 1);
+    d_zeros(&ub1[i], NU, 1);
+//    for (jj = 0; jj < nbx; jj++) {
+//        lb1[jj] = -4.0;  //   xmin
+//        ub1[jj] = +4.0;   //   xmax
+//        idxb1[jj] = jj;
+//    }
+    for (jj = 0; jj < NU; jj++) {
+        lb1[i][jj] = -UMAX;  //   umin
+        ub1[i][jj] = UMAX;   //   umax
+        idxb1[jj] = NX+jj;
+    }
+    }
+
     real_t *pA[N];
     real_t *pB[N];
     real_t *pb[N];
@@ -256,8 +299,6 @@ int main() {
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
-    real_t *px0[1];
-    d_zeros(&px0[0], nx[0], 1);
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
@@ -270,6 +311,20 @@ int main() {
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
+
+    real_t *hlb[N+1];
+    real_t *hub[N+1];
+    int *hidxb[N+1];
+
+    hlb[0] = lb0;
+    hub[0] = ub0;
+    hidxb[0] = idxb0;
+    for (int_t i = 1; i < N; i++) {
+        hlb[i] = lb1[i-1];
+        hub[i] = ub1[i-1];
+        hidxb[i] = idxb1;
+        nb[i] = NU;
+    }
 
     // Allocate OCP QP variables
     ocp_qp_input qp_in;
@@ -294,7 +349,9 @@ int main() {
     qp_in.A = (const real_t **) pA;
     qp_in.B = (const real_t **) pB;
     qp_in.b = (const real_t **) pb;
-    qp_in.lb = (const real_t **) px0;
+    qp_in.lb = (const real_t **) hlb;
+    qp_in.ub = (const real_t **) hub;
+    qp_in.idxb = (const int **) hidxb;
     qp_out.x = px;
     qp_out.u = pu;
 
@@ -323,6 +380,19 @@ int main() {
 //                print_matrix("stdout", sim_out.Su, NX, NU);
 //                #endif  // DEBUG
 
+                // Update bounds:
+                if ( i == 0 ) {
+                    for (int_t j = 0; j < NU; j++) {
+                        lb0[NX+j] = -UMAX - w[NX+j];
+                        ub0[NX+j] = UMAX - w[NX+j];
+                    }
+                } else {
+                    for (int_t j = 0; j < NU; j++) {
+                        lb1[i-1][j] = -UMAX - w[i*(NX+NU)+NX+j];
+                        ub1[i-1][j] = UMAX - w[i*(NX+NU)+NX+j];
+                    }
+                }
+
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -341,11 +411,20 @@ int main() {
                         pB[i][j*NX+k] = sim_out.Su[j*NX+k];  // COLUMN MAJOR FROM CASADI
             }
             for (int_t j = 0; j < NX; j++) {
-                px0[0][j] = (x0[j]-w[j]);
+                lb0[j] = (x0[j]-w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
             }
+
+            // Set updated bounds:
+            hlb[0] = lb0;
+            hub[0] = ub0;
+            for (int_t i = 1; i < N; i++) {
+                hlb[i] = lb1[i-1];
+                hub[i] = ub1[i-1];
+            }
+
             int status = 0;
             status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
             if (status) {
