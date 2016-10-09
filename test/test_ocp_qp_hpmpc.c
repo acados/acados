@@ -35,16 +35,14 @@
 #include <math.h>
 #include <sys/time.h>
 
-// ACADOS headers
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/utils/tools.h"
-
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"
-#include "hpmpc/include/mpc_solvers.h"
-#include "hpmpc/include/target.h"
-#include "hpmpc/include/block_size.h"
-#include "hpmpc/include/c_interface.h"
+
+// ACADOS headers
+#include "acados/utils/types.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/utils/tools.h"
 
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
@@ -278,7 +276,7 @@ int main() {
     for (jj = 0; jj < nbu; jj++) {
         lb0[jj] = -0.5;  //   umin
         ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = nx+jj;
+        idxb0[jj] = nxx[0]+jj;
     }
     //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
@@ -440,35 +438,75 @@ int main() {
     ************************************************/
 
     double *hx[N + 1];
-    double *hu[N + 1];
+    double *hu[N];
+	double *hpi[N];
+	double *hlam[N+1];
 
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++) 
+		{
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
-    }
-    d_zeros(&hx[N], nxx[N], 1);
+        d_zeros(&hpi[ii], nxx[ii+1], 1);
+        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1);
+		}
+	d_zeros(&hx[N], nxx[N], 1);
+	d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
 
     /************************************************
     * solver arguments
     ************************************************/
 
     // solver arguments
-    struct ocp_qp_hpmpc_args args;
-    args.tol = TOL;
-    args.max_iter = MAXITER;
-    args.min_step = MINSTEP;
-    args.mu0 = 0.0;
-    args.sigma_min = 1e-3;
+    ocp_qp_hpmpc_args hpmpc_args;
+    hpmpc_args.tol = TOL;
+    hpmpc_args.max_iter = MAXITER;
+//    hpmpc_args.min_step = MINSTEP;
+    hpmpc_args.mu0 = 0.0;
+//    hpmpc_args.sigma_min = 1e-3;
+	hpmpc_args.warm_start = 0;
+ 	hpmpc_args.N2 = N;
 
     /************************************************
     * work space
     ************************************************/
 
     int work_space_size =
-        ocp_qp_hpmpc_workspace_size(N, nxx, nuu, nbb, ngg, &args);
+        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
 
-    double *work = (double *)malloc(work_space_size);
+    void *workspace = malloc(work_space_size);
+
+    /************************************************
+    * create the in and out struct
+    ************************************************/
+
+	ocp_qp_in qp_in;
+	qp_in.N = N;
+	qp_in.nx = (const int *) nxx;
+	qp_in.nu = (const int *) nuu;
+	qp_in.nb = (const int *) nbb;
+	qp_in.nc = (const int *) ngg;
+	qp_in.A = (const double **) hA;
+	qp_in.B = (const double **) hB;
+	qp_in.b = (const double **) hb;
+	qp_in.Q = (const double **) hQ;
+	qp_in.S = (const double **) hS;
+	qp_in.R = (const double **) hR;
+	qp_in.q = (const double **) hq;
+	qp_in.r = (const double **) hr;
+	qp_in.idxb = (const int **) hidxb;
+	qp_in.lb = (const double **) hlb;
+	qp_in.ub = (const double **) hub;
+	qp_in.Cx = (const double **) hC;
+	qp_in.Cu = (const double **) hD;
+	qp_in.lc = (const double **) hlg;
+	qp_in.uc = (const double **) hug;
+
+	ocp_qp_out qp_out;
+	qp_out.x = hx;
+	qp_out.u = hu;
+	qp_out.pi = hpi;
+	qp_out.lam = hlam;
 
     /************************************************
     * call the solver
@@ -481,9 +519,7 @@ int main() {
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(N, nxx, nuu, nbb, ngg, hA, hB, hb, hQ, hS,
-                                    hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg,
-                                    hug, hx, hu, &args, work);
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop
@@ -552,7 +588,7 @@ int main() {
     }
     d_free(hx[N]);
 
-    free(work);
+    free(workspace);
 
     return 0;
 }

@@ -2,31 +2,24 @@
 #define ACADOS_OCP_QP_OCP_QP_HPMPC_H_
 
 #include "acados/utils/types.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 
 // OCP QP interface
 // struct of arguments to the solver
-struct ocp_qp_hpmpc_args{
-    double tol;
-    int max_iter;
-    double min_step;
-    double mu0;
-    double sigma_min;
-};
+typedef struct ocp_qp_hpmpc_args_
+	{
+	double tol;
+	int max_iter;
+//	double min_step;
+	double mu0;
+//	double sigma_min;
+	int warm_start;
+	int N2; // horizion length of the partially condensed problem
+	} ocp_qp_hpmpc_args;
 
-// struct ocp_qpStruct {}
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, void *workspace);
 
-int ocp_qp_hpmpc(int N, int *nx, int *nu, int *nb, int *ng, \
-    double **A, double **B, double **b, \
-    double **Q, double **S, double **R, double **q, double **r, \
-    int **idxb, double **lb, double **ub, \
-    double **C, double **D, double **lg, double **ug, \
-    double **x, double **u, \
-    struct ocp_qp_hpmpc_args *args, double *work);
-
-// int ocp_qp_hpmpc(qpStruct *qp, args *args,double *work)
-
-int ocp_qp_hpmpc_workspace_size(int N, int *nxx, int *nuu, int *nbb, int *ngg,
-                                struct ocp_qp_hpmpc_args *args);
+int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, ocp_qp_hpmpc_args *hpmpc_args);
 
 
 #endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_
