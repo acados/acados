@@ -48,11 +48,11 @@ The function returns an integer number, that is defined in the following enumera
 	\item[ocp\_qp\_in] The struct of OCP QP input data contains the following fields:
 	\begin{description}
 		\item[N] is the number of control intervals.
-		\item[nx] is the vector of the state sizes $n_u$ at the different stages, such that \texttt{nx[k]} is the state size at stage \texttt{k}.
-		\item[nu] is the vector of the input sizes $n_x$ at the different stages, such that \texttt{nu[k]} is the input size at stage \texttt{k}.
-		\item[nb] is the vector of the bound sizes $n_b$ at the different stages, such that \texttt{nb[k]} is the bound size at stage \texttt{k}.
+		\item[nx] is the vector of size $N+1$ of the state sizes $n_x$ at the different stages, such that \texttt{nx[k]} is the state size at stage \texttt{k}.
+		\item[nu] is the vector of size $N$ of the input sizes $n_u$ at the different stages, such that \texttt{nu[k]} is the input size at stage \texttt{k}.
+		\item[nb] is the vector of size $N$ of the bound sizes $n_b$ at the different stages, such that \texttt{nb[k]} is the bound size at stage \texttt{k}.
 		The value of \texttt{nb[k]} is smaller or equal to \texttt{nx[k]+nu[k]}.
-		\item[nc] is the vector of the general polytopic constraint sizes $n_c$ at the different stages, such that \texttt{nc[k]} is the general polytopic constraint size at stage \texttt{k}.
+		\item[nc] is the vector of size $N+1$ of the general polytopic constraint sizes $n_c$ at the different stages, such that \texttt{nc[k]} is the general polytopic constraint size at stage \texttt{k}.
 		\item[A] is the vector of size $N$ of the pointers to the first element of the matrices $A_k$, such that \texttt{A[k]} is the pointer to the first element of the matrix $A_k$, and \texttt{A[k][0]} is the first element of the matrix $A_k$.
 		The matrix referenced by the pointer \texttt{A[k]} is stored in column-major order, in a vector of \texttt{nx[k+1]$\times$nx[k]} floating-point numbers.
 		\item[B] is the vector of size $N$ of the pointers to the first element of the matrices $B_k$, such that \texttt{B[k]} is the pointer to the first element of the matrix $B_k$, and \texttt{B[k][0]} is the first element of the matrix $B_k$.
