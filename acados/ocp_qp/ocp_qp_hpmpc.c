@@ -81,7 +81,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
     // memory for stat
-    size_t addr = ( ( (size_t) workspace) + 7 ) / 8 * 8;  // align to 8-byte boundaries
+    size_t addr = ( ( (size_t) workspace) + 7) / 8 * 8;  // align to 8-byte boundaries
     double *ptr_double = (double *) addr;
     double *stat = ptr_double;
     ptr_double += 5*k_max;
