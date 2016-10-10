@@ -439,18 +439,17 @@ int main() {
 
     double *hx[N + 1];
     double *hu[N];
-	double *hpi[N];
-	double *hlam[N+1];
+    double *hpi[N];
+    double *hlam[N+1];
 
-    for (ii = 0; ii < N; ii++) 
-		{
+    for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
         d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1);
-		}
-	d_zeros(&hx[N], nxx[N], 1);
-	d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
+    }
+    d_zeros(&hx[N], nxx[N], 1);
+    d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
 
     /************************************************
     * solver arguments
@@ -460,11 +459,11 @@ int main() {
     ocp_qp_hpmpc_args hpmpc_args;
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAXITER;
-//    hpmpc_args.min_step = MINSTEP;
+//  hpmpc_args.min_step = MINSTEP;
     hpmpc_args.mu0 = 0.0;
-//    hpmpc_args.sigma_min = 1e-3;
-	hpmpc_args.warm_start = 0;
- 	hpmpc_args.N2 = N;
+//  hpmpc_args.sigma_min = 1e-3;
+    hpmpc_args.warm_start = 0;
+    hpmpc_args.N2 = N;
 
     /************************************************
     * work space
@@ -480,33 +479,33 @@ int main() {
     * create the in and out struct
     ************************************************/
 
-	ocp_qp_in qp_in;
-	qp_in.N = N;
-	qp_in.nx = (const int *) nxx;
-	qp_in.nu = (const int *) nuu;
-	qp_in.nb = (const int *) nbb;
-	qp_in.nc = (const int *) ngg;
-	qp_in.A = (const double **) hA;
-	qp_in.B = (const double **) hB;
-	qp_in.b = (const double **) hb;
-	qp_in.Q = (const double **) hQ;
-	qp_in.S = (const double **) hS;
-	qp_in.R = (const double **) hR;
-	qp_in.q = (const double **) hq;
-	qp_in.r = (const double **) hr;
-	qp_in.idxb = (const int **) hidxb;
-	qp_in.lb = (const double **) hlb;
-	qp_in.ub = (const double **) hub;
-	qp_in.Cx = (const double **) hC;
-	qp_in.Cu = (const double **) hD;
-	qp_in.lc = (const double **) hlg;
-	qp_in.uc = (const double **) hug;
+    ocp_qp_in qp_in;
+    qp_in.N = N;
+    qp_in.nx = (const int *) nxx;
+    qp_in.nu = (const int *) nuu;
+    qp_in.nb = (const int *) nbb;
+    qp_in.nc = (const int *) ngg;
+    qp_in.A = (const double **) hA;
+    qp_in.B = (const double **) hB;
+    qp_in.b = (const double **) hb;
+    qp_in.Q = (const double **) hQ;
+    qp_in.S = (const double **) hS;
+    qp_in.R = (const double **) hR;
+    qp_in.q = (const double **) hq;
+    qp_in.r = (const double **) hr;
+    qp_in.idxb = (const int **) hidxb;
+    qp_in.lb = (const double **) hlb;
+    qp_in.ub = (const double **) hub;
+    qp_in.Cx = (const double **) hC;
+    qp_in.Cu = (const double **) hD;
+    qp_in.lc = (const double **) hlg;
+    qp_in.uc = (const double **) hug;
 
-	ocp_qp_out qp_out;
-	qp_out.x = hx;
-	qp_out.u = hu;
-	qp_out.pi = hpi;
-	qp_out.lam = hlam;
+    ocp_qp_out qp_out;
+    qp_out.x = hx;
+    qp_out.u = hu;
+    qp_out.pi = hpi;
+    qp_out.lam = hlam;
 
     /************************************************
     * call the solver
