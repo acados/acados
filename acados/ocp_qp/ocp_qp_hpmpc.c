@@ -78,22 +78,22 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     //  other solver arguments
     int kk = -1;  // actual number of iterations
     double inf_norm_res[4];  // inf norm of residuals
-    for(ii=0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
+    for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
     // memory for stat
-    size_t addr = (( (size_t) workspace ) + 7 ) / 8 * 8;  // align to 8-byte boundaries
+    size_t addr = ( ( (size_t) workspace) + 7 ) / 8 * 8;  // align to 8-byte boundaries
     double *ptr_double = (double *) addr;
-	double *stat = ptr_double;
-	ptr_double += 5*k_max;
+    double *stat = ptr_double;
+    ptr_double += 5*k_max;
     for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
 
     // memory for idxb
     int *hidxb[N+1];
 //  size_t addr = (( (size_t) workspace ) + 3 ) / 4 * 4;  // align to 4-byte boundaries
     int *ptr_int = (int *) ptr_double;
-    for(ii=0; ii <= N; ii++) {
+    for (ii = 0; ii <= N; ii++) {
         hidxb[ii] = ptr_int;
-        ptr_int += nb[ii]; // XXX
+        ptr_int += nb[ii];
     }
     workspace = (void *) ptr_int;
 
@@ -101,10 +101,9 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     for (ii = 0; ii <= N; ii++) {
         jj = 0;
         for (; jj < nb[ii]; jj++) {
-            if(hidxb_swp[ii][jj] < nx[ii]) {  // state
+            if (hidxb_swp[ii][jj] < nx[ii]) {  // state
                 hidxb[ii][jj] = hidxb_swp[ii][jj]+nu[ii];
-            }
-            else {  // input
+            } else {  // input
                 hidxb[ii][jj] = hidxb_swp[ii][jj]-nx[ii];
             }
         }
