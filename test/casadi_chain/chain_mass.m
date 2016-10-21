@@ -93,8 +93,12 @@ vdeP = vdeP + jtimes(dae.ode,dae.x,Sp);
 
 vdeFun = Function('vdeFun',{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX,vdeP});
 
+jacX = SX.zeros(nx,nx) + jacobian(dae.ode,dae.x);
+jacFun = Function('jacFun',{dae.x,dae.p},{dae.ode,jacX});
+
 opts = struct('mex', false);
-vdeFun.generate(['ode_chain_nm' num2str(Nm)], opts);
+vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);
+jacFun.generate(['jac_chain_nm' num2str(Nm)], opts);
 
 out = odeFun({x0_guess,u_guess});
 while norm(full(out{1})) > 1e-10

@@ -3,6 +3,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/condensing.h"
 #include "acados/utils/print.h"
+#include "blasfeo/include/blasfeo_i_aux.h"
 
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
@@ -56,7 +57,7 @@ static int_t get_num_condensed_vars(ocp_qp_in *in) {
 }
 
 static void calculate_num_state_bounds(ocp_qp_in *in) {
-    i_zeros(&work.nstate_bounds, in->N+1, 1);
+    int_zeros(&work.nstate_bounds, in->N+1, 1);
     int_t num_state_bounds;
     for (int_t i = 1; i <= in->N; i++) {
         num_state_bounds = 0;

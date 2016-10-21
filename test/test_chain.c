@@ -7,13 +7,19 @@
 #include <sys/time.h>
 #endif
 #include <math.h>
-#include "hpmpc/include/aux_d.h"
 #include "acados/utils/types.h"
 #include "acados/utils/print.h"
 #include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "external/hpmpc/include/aux_d.h"
 #include "test/casadi_chain/Chain_model.h"
+
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_i_aux.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_kernel.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 
 #define NN 10
 #define UMAX 2
@@ -89,6 +95,17 @@ static real_t acado_toc(acado_timer* t) {
 // Simple SQP example for acados
 int main() {
     int_t nil;
+
+    for (int_t implicit = 0; implicit < 4; implicit++) {
+        if (implicit == 0) {
+            printf("\n\n------------------------------------------------------------------------\n");
+            printf("-------------------- Explicit Runge-Kutta of order 4 -------------------\n");
+            printf("------------------------------------------------------------------------\n");
+        } else {
+            printf("\n\n------------------------------------------------------------------------\n");
+            printf("---------------- Lifted Implicit Runge-Kutta of order %d ----------------\n", implicit);
+            printf("------------------------------------------------------------------------\n");
+        }
 
     for (int_t NMF = 1; NMF < 8; NMF++) {
         printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n", NMF);
@@ -194,7 +211,7 @@ int main() {
     real_t T = 0.2;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 10;
+    sim_in.nSteps = 4;
     sim_in.step = T/sim_in.nSteps;
     sim_in.nx = NX;
     sim_in.nu = NU;
@@ -202,27 +219,35 @@ int main() {
     switch (NMF) {
     case 1:
         sim_in.VDE_fun = &VDE_fun_nm2;
+        sim_in.jac_fun = &jac_fun_nm2;
         break;
     case 2:
         sim_in.VDE_fun = &VDE_fun_nm3;
+        sim_in.jac_fun = &jac_fun_nm3;
         break;
     case 3:
         sim_in.VDE_fun = &VDE_fun_nm4;
+        sim_in.jac_fun = &jac_fun_nm4;
         break;
     case 4:
         sim_in.VDE_fun = &VDE_fun_nm5;
+        sim_in.jac_fun = &jac_fun_nm5;
         break;
     case 5:
         sim_in.VDE_fun = &VDE_fun_nm6;
+        sim_in.jac_fun = &jac_fun_nm6;
         break;
     case 6:
         sim_in.VDE_fun = &VDE_fun_nm7;
+        sim_in.jac_fun = &jac_fun_nm7;
         break;
     case 7:
         sim_in.VDE_fun = &VDE_fun_nm8;
+        sim_in.jac_fun = &jac_fun_nm8;
         break;
     default:
         sim_in.VDE_fun = &VDE_fun_nm9;
+        sim_in.jac_fun = &jac_fun_nm9;
         break;
     }
 
@@ -233,10 +258,27 @@ int main() {
     sim_out.Sx = malloc(sizeof(*sim_out.Sx) * (NX*NX));
     sim_out.Su = malloc(sizeof(*sim_out.Su) * (NX*NU));
 
-    sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
-    sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
+    sim_erk_workspace erk_work;
+    sim_lifted_irk_workspace irk_work;
+    sim_lifted_irk_memory irk_mem[NN];
+
+    // TODO(rien): can I move this somewhere inside the integrator?
+    struct d_strmat str_mat;
+    irk_work.str_mat = &str_mat;
+    struct d_strmat str_sol;
+    irk_work.str_sol = &str_sol;
+    if (implicit > 0 ) {
+        sim_irk_create_opts(implicit, "Gauss", &rk_opts);
+
+        sim_lifted_irk_create_workspace(&sim_in, &rk_opts, &irk_work);
+        for (int_t i = 0; i < NN; i++) {
+            sim_lifted_irk_create_memory(&sim_in, &rk_opts, &irk_mem[i]);
+        }
+    } else {
+        sim_erk_create_opts(4, &rk_opts);
+        sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
+    }
 
     int_t nx[NN+1] = {0};
     int_t nu[NN] = {0};
@@ -253,7 +295,7 @@ int main() {
     ************************************************/
 
     int *idxb0;
-    i_zeros(&idxb0, NX+NU, 1);
+    int_zeros(&idxb0, NX+NU, 1);
     real_t *lb0;
     d_zeros(&lb0, NX+NU, 1);
     real_t *ub0;
@@ -271,7 +313,7 @@ int main() {
     nb[0] = NX+NU;
 
     int *idxb1;
-    i_zeros(&idxb1, NU, 1);
+    int_zeros(&idxb1, NU, 1);
     double *lb1[N-1];
     double *ub1[N-1];
     for (int_t i = 0; i < N-1; i++) {
@@ -364,7 +406,6 @@ int main() {
 
         acado_tic(&timer);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
-            printf("--- ITERATION %d, ", sqp_iter);
 
             feas = -1e10; stepX = -1e10; stepU = -1e10;
 
@@ -372,12 +413,16 @@ int main() {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                integrate(&sim_in, &sim_out, &rk_opts, &erk_work);
+                if (implicit > 0 ) {
+                    sim_lifted_irk(&sim_in, &sim_out, &rk_opts, &irk_mem[i], &irk_work);
+                } else {
+                    sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
+                }
 
 //                #ifdef DEBUG
-//                print_matrix("stdout", sim_out.xn, 1, NX);
-//                print_matrix("stdout", sim_out.Sx, NX, NX);
-//                print_matrix("stdout", sim_out.Su, NX, NU);
+//                print_matrix_name("stdout", "sim_xn", sim_out.xn, 1, NX);
+//                print_matrix_name("stdout", "sim_Sx", sim_out.Sx, NX, NX);
+//                print_matrix_name("stdout", "sim_Su", sim_out.Su, NX, NU);
 //                #endif  // DEBUG
 
                 // Update bounds:
@@ -446,8 +491,10 @@ int main() {
                 if (fabs(qp_out.x[N][j]) > stepX) stepX = fabs(qp_out.x[N][j]);
             }
 
-            fprintf(stdout, " Infeasibility: %+.3e , step X: %+.3e, step U: %+.3e \n",
-                    feas, stepX, stepU);
+            if (sqp_iter == max_sqp_iters-1) {
+                fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, step U: %+.3e \n",
+                        sqp_iter, feas, stepX, stepU);
+            }
         }
 //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
 //        shift_states(w, x_end, N);
@@ -455,11 +502,12 @@ int main() {
         timings += acado_toc(&timer);
 //    }
 
-    printf("\nAverage of %.3f ms per iteration.\n\n", 1e3*timings/(max_sqp_iters*max_iters));
+    printf("\nAverage of %.3f ms per iteration.\n", 1e3*timings/(max_sqp_iters*max_iters));
 
-    #ifdef DEBUG
-    print_matrix("stdout", w, NX+NU, N);
-    #endif  // DEBUG
+//    #ifdef DEBUG
+//    print_matrix_name("stdout", "sol", w, NX+NU, N);
+//    #endif  // DEBUG
+    }
     }
     return 0*nil;
 }

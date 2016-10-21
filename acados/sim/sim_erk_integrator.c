@@ -12,7 +12,7 @@ real_t H_INT = 1.0/100;
 #define NSTEPS  10
 #endif
 
-void integrate(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_workspace *work) {
+void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t num_stages = opts->num_stages;

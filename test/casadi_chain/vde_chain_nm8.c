@@ -8,7 +8,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) ode_chain_nm8_ ## ID
+  #define CASADI_PREFIX(ID) vde_chain_nm8_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>
@@ -43,9 +43,8 @@ static const int CASADI_PREFIX(s2)[] = {42, 3, 0, 42, 84, 126, 0, 1, 2, 3, 4, 5,
 static const int CASADI_PREFIX(s3)[] = {3, 1, 0, 3, 0, 1, 2};
 #define s3 CASADI_PREFIX(s3)
 /* vdeFun */
-int ode_chain_nm8(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w) {
-    mem = 0; iw = 0; w = 0;
-    mem += 0; iw += 0; w += 0;
+int vde_chain_nm8(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w) {
+    mem = 0; mem += 0; w = 0; w += 0; iw = 0; iw += 0;
   real_t a0=arg[0] ? arg[0][3] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][4] : 0;
@@ -11598,7 +11597,7 @@ int ode_chain_nm8(void* mem, const real_t** arg, real_t** res, int* iw, real_t* 
   return 0;
 }
 
-int ode_chain_nm8_init(int* n_in, int* n_out, int* n_int, int* n_real) {
+int vde_chain_nm8_init(int* n_in, int* n_out, int* n_int, int* n_real) {
   if (n_in) *n_in = 4;
   if (n_out) *n_out = 3;
   if (n_int) *n_int = 0;
@@ -11606,19 +11605,19 @@ int ode_chain_nm8_init(int* n_in, int* n_out, int* n_int, int* n_real) {
   return 0;
 }
 
-int ode_chain_nm8_alloc(void** mem, const int* idata, const double* rdata) {
+int vde_chain_nm8_alloc(void** mem, const int* idata, const double* rdata) {
   if (mem) *mem = 0;
   (void)idata;
   (void)rdata;
   return 0;
 }
 
-int ode_chain_nm8_free(void* mem) {
+int vde_chain_nm8_free(void* mem) {
   (void)mem;
   return 0;
 }
 
-int ode_chain_nm8_sparsity(int i, int *nrow, int *ncol, const int **colind, const int **row) {
+int vde_chain_nm8_sparsity(int i, int *nrow, int *ncol, const int **colind, const int **row) {
   const int* s;
   switch (i) {
     case 0:
@@ -11643,7 +11642,7 @@ int ode_chain_nm8_sparsity(int i, int *nrow, int *ncol, const int **colind, cons
   return 0;
 }
 
-int ode_chain_nm8_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+int vde_chain_nm8_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 3;
   if (sz_iw) *sz_iw = 0;

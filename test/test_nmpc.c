@@ -208,7 +208,7 @@ int main() {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                integrate(&sim_in, &sim_out, &rk_opts, &erk_work);
+                sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
