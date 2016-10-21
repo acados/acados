@@ -98,13 +98,14 @@ int main() {
 
     for (int_t implicit = 0; implicit < 4; implicit++) {
         if (implicit == 0) {
-            printf("\n\n------------------------------------------------------------------------\n");
-            printf("-------------------- Explicit Runge-Kutta of order 4 -------------------\n");
-            printf("------------------------------------------------------------------------\n");
+            printf("\n\n--------------------------------------------------------------------\n");
+            printf("------------------ Explicit Runge-Kutta of order 4 -----------------\n");
+            printf("--------------------------------------------------------------------\n");
         } else {
-            printf("\n\n------------------------------------------------------------------------\n");
-            printf("---------------- Lifted Implicit Runge-Kutta of order %d ----------------\n", implicit);
-            printf("------------------------------------------------------------------------\n");
+            printf("\n\n--------------------------------------------------------------------\n");
+            printf("-------------- Lifted Implicit Runge-Kutta of order %d --------------\n",
+                    implicit);
+            printf("--------------------------------------------------------------------\n");
         }
 
     for (int_t NMF = 1; NMF < 8; NMF++) {
@@ -268,7 +269,7 @@ int main() {
     irk_work.str_mat = &str_mat;
     struct d_strmat str_sol;
     irk_work.str_sol = &str_sol;
-    if (implicit > 0 ) {
+    if (implicit > 0) {
         sim_irk_create_opts(implicit, "Gauss", &rk_opts);
 
         sim_lifted_irk_create_workspace(&sim_in, &rk_opts, &irk_work);
@@ -406,14 +407,13 @@ int main() {
 
         acado_tic(&timer);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
-
             feas = -1e10; stepX = -1e10; stepU = -1e10;
 
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                if (implicit > 0 ) {
+                if (implicit > 0) {
                     sim_lifted_irk(&sim_in, &sim_out, &rk_opts, &irk_mem[i], &irk_work);
                 } else {
                     sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
@@ -492,8 +492,8 @@ int main() {
             }
 
             if (sqp_iter == max_sqp_iters-1) {
-                fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, step U: %+.3e \n",
-                        sqp_iter, feas, stepX, stepU);
+                fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
+                        "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
             }
         }
 //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];

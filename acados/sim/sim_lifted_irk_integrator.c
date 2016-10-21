@@ -110,10 +110,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
                 str_mat, 0, 0);  // mat2strmat
         dgetrf_libstr(num_stages*nx, num_stages*nx, str_mat, 0, 0, str_mat, 0,
                 0, ipiv);  // Gauss elimination
-//#ifdef DEBUG
-//        d_print_strmat(num_stages*nx, num_stages*nx, str_mat, 0, 0);
-//        int_print_mat(1, num_stages*nx, ipiv, 1);
-//#endif  // DEBUG
         // ---- BLASFEO: LU factorization ----
 
         for (s1 = 0; s1 < num_stages; s1++) {
@@ -279,9 +275,4 @@ void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *
     } else {
         // throw error somehow?
     }
-//#ifdef DEBUG
-//    print_matrix_name("stdout", "A_mat", opts->A_mat, num_stages, num_stages);
-//    print_matrix_name("stdout", "b_vec", opts->b_vec, 1, num_stages);
-//    print_matrix_name("stdout", "c_vec", opts->c_vec, 1, num_stages);
-//#endif  // DEBUG
 }

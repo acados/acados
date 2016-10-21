@@ -26,7 +26,6 @@ void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
 
 void print_matrix_name(char *file_name, char *name, const real_t *matrix,
         const int_t nrows, const int_t ncols) {
-
     FILE *output;
     if (strcmp(file_name, "stdout") == 0) {
         output = stdout;
