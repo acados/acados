@@ -23,7 +23,7 @@
 
 #define NN 10
 #define UMAX 2
-#define PARALLEL 1
+#define PARALLEL 0
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {
@@ -224,7 +224,7 @@ int main() {
     struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
-        sim_in[jj].nSteps = 5;
+        sim_in[jj].nSteps = 2;
         sim_in[jj].step = T/sim_in[jj].nSteps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
