@@ -23,6 +23,7 @@
 
 #define NN 10
 #define UMAX 2
+#define PARALLEL 1
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {
@@ -210,75 +211,77 @@ int main() {
 
     // Integrator structs
     real_t T = 0.2;
-    sim_in  sim_in;
-    sim_out sim_out;
-    sim_in.nSteps = 4;
-    sim_in.step = T/sim_in.nSteps;
-    sim_in.nx = NX;
-    sim_in.nu = NU;
+    sim_in  sim_in[NN];
+    sim_out sim_out[NN];
 
-    switch (NMF) {
-    case 1:
-        sim_in.VDE_fun = &VDE_fun_nm2;
-        sim_in.jac_fun = &jac_fun_nm2;
-        break;
-    case 2:
-        sim_in.VDE_fun = &VDE_fun_nm3;
-        sim_in.jac_fun = &jac_fun_nm3;
-        break;
-    case 3:
-        sim_in.VDE_fun = &VDE_fun_nm4;
-        sim_in.jac_fun = &jac_fun_nm4;
-        break;
-    case 4:
-        sim_in.VDE_fun = &VDE_fun_nm5;
-        sim_in.jac_fun = &jac_fun_nm5;
-        break;
-    case 5:
-        sim_in.VDE_fun = &VDE_fun_nm6;
-        sim_in.jac_fun = &jac_fun_nm6;
-        break;
-    case 6:
-        sim_in.VDE_fun = &VDE_fun_nm7;
-        sim_in.jac_fun = &jac_fun_nm7;
-        break;
-    case 7:
-        sim_in.VDE_fun = &VDE_fun_nm8;
-        sim_in.jac_fun = &jac_fun_nm8;
-        break;
-    default:
-        sim_in.VDE_fun = &VDE_fun_nm9;
-        sim_in.jac_fun = &jac_fun_nm9;
-        break;
-    }
-
-    sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
-    sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
-
-    sim_out.xn = malloc(sizeof(*sim_out.xn) * (NX));
-    sim_out.Sx = malloc(sizeof(*sim_out.Sx) * (NX*NX));
-    sim_out.Su = malloc(sizeof(*sim_out.Su) * (NX*NU));
-
-    sim_RK_opts rk_opts;
-    sim_erk_workspace erk_work;
-    sim_lifted_irk_workspace irk_work;
+    sim_RK_opts rk_opts[NN];
+    sim_erk_workspace erk_work[NN];
+    sim_lifted_irk_workspace irk_work[NN];
     sim_lifted_irk_memory irk_mem[NN];
 
     // TODO(rien): can I move this somewhere inside the integrator?
-    struct d_strmat str_mat;
-    irk_work.str_mat = &str_mat;
-    struct d_strmat str_sol;
-    irk_work.str_sol = &str_sol;
-    if (implicit > 0) {
-        sim_irk_create_opts(implicit, "Gauss", &rk_opts);
+    struct d_strmat str_mat[NN];
+    struct d_strmat str_sol[NN];
 
-        sim_lifted_irk_create_workspace(&sim_in, &rk_opts, &irk_work);
-        for (int_t i = 0; i < NN; i++) {
-            sim_lifted_irk_create_memory(&sim_in, &rk_opts, &irk_mem[i]);
+    for (jj = 0; jj < NN; jj++) {
+        sim_in[jj].nSteps = 5;
+        sim_in[jj].step = T/sim_in[jj].nSteps;
+        sim_in[jj].nx = NX;
+        sim_in[jj].nu = NU;
+
+        switch (NMF) {
+        case 1:
+            sim_in[jj].VDE_fun = &VDE_fun_nm2;
+            sim_in[jj].jac_fun = &jac_fun_nm2;
+            break;
+        case 2:
+            sim_in[jj].VDE_fun = &VDE_fun_nm3;
+            sim_in[jj].jac_fun = &jac_fun_nm3;
+            break;
+        case 3:
+            sim_in[jj].VDE_fun = &VDE_fun_nm4;
+            sim_in[jj].jac_fun = &jac_fun_nm4;
+            break;
+        case 4:
+            sim_in[jj].VDE_fun = &VDE_fun_nm5;
+            sim_in[jj].jac_fun = &jac_fun_nm5;
+            break;
+        case 5:
+            sim_in[jj].VDE_fun = &VDE_fun_nm6;
+            sim_in[jj].jac_fun = &jac_fun_nm6;
+            break;
+        case 6:
+            sim_in[jj].VDE_fun = &VDE_fun_nm7;
+            sim_in[jj].jac_fun = &jac_fun_nm7;
+            break;
+        case 7:
+            sim_in[jj].VDE_fun = &VDE_fun_nm8;
+            sim_in[jj].jac_fun = &jac_fun_nm8;
+            break;
+        default:
+            sim_in[jj].VDE_fun = &VDE_fun_nm9;
+            sim_in[jj].jac_fun = &jac_fun_nm9;
+            break;
         }
-    } else {
-        sim_erk_create_opts(4, &rk_opts);
-        sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
+
+        sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));
+        sim_in[jj].u = malloc(sizeof(*sim_in[jj].u) * (NU));
+
+        sim_out[jj].xn = malloc(sizeof(*sim_out[jj].xn) * (NX));
+        sim_out[jj].Sx = malloc(sizeof(*sim_out[jj].Sx) * (NX*NX));
+        sim_out[jj].Su = malloc(sizeof(*sim_out[jj].Su) * (NX*NU));
+
+        irk_work[jj].str_mat = &str_mat[jj];
+        irk_work[jj].str_sol = &str_sol[jj];
+        if (implicit > 0) {
+            sim_irk_create_opts(implicit, "Gauss", &rk_opts[jj]);
+
+            sim_lifted_irk_create_workspace(&sim_in[jj], &rk_opts[jj], &irk_work[jj]);
+            sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
+        } else {
+            sim_erk_create_opts(4, &rk_opts[jj]);
+            sim_erk_create_workspace(&sim_in[jj], &rk_opts[jj], &erk_work[jj]);
+        }
     }
 
     int_t nx[NN+1] = {0};
@@ -409,22 +412,30 @@ int main() {
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             feas = -1e10; stepX = -1e10; stepU = -1e10;
 
+#if PARALLEL
+    #pragma omp parallel for
+#endif
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
-                for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
-                for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
+                for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
+                for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
                 if (implicit > 0) {
-                    sim_lifted_irk(&sim_in, &sim_out, &rk_opts, &irk_mem[i], &irk_work);
+                    sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[i], &irk_mem[i], &irk_work[i]);
                 } else {
-                    sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
+                    sim_erk(&sim_in[i], &sim_out[i], &rk_opts[i], &erk_work[i]);
                 }
 
-//                #ifdef DEBUG
-//                print_matrix_name("stdout", "sim_xn", sim_out.xn, 1, NX);
-//                print_matrix_name("stdout", "sim_Sx", sim_out.Sx, NX, NX);
-//                print_matrix_name("stdout", "sim_Su", sim_out.Su, NX, NU);
-//                #endif  // DEBUG
-
+                for (int_t j = 0; j < NX; j++) {
+                    pb[i][j] = sim_out[i].xn[j] - w[(i+1)*(NX+NU)+j];
+                    if (fabs(pb[i][j]) > feas) feas = fabs(pb[i][j]);
+                    for (int_t k = 0; k < NX; k++)
+                        pA[i][j*NX+k] = sim_out[i].Sx[j*NX+k];  // COLUMN MAJOR FROM CASADI
+                }
+                for (int_t j = 0; j < NU; j++)
+                    for (int_t k = 0; k < NX; k++)
+                        pB[i][j*NX+k] = sim_out[i].Su[j*NX+k];  // COLUMN MAJOR FROM CASADI
+            }
+            for (int_t i = 0; i < N; i++) {
                 // Update bounds:
                 if ( i == 0 ) {
                     for (int_t j = 0; j < NU; j++) {
@@ -445,15 +456,6 @@ int main() {
                 for (int_t j = 0; j < NU; j++) {
                     pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
                 }
-                for (int_t j = 0; j < NX; j++) {
-                    pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    if (fabs(pb[i][j]) > feas) feas = fabs(pb[i][j]);
-                    for (int_t k = 0; k < NX; k++)
-                        pA[i][j*NX+k] = sim_out.Sx[j*NX+k];  // COLUMN MAJOR FROM CASADI
-                }
-                for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++)
-                        pB[i][j*NX+k] = sim_out.Su[j*NX+k];  // COLUMN MAJOR FROM CASADI
             }
             for (int_t j = 0; j < NX; j++) {
                 lb0[j] = (x0[j]-w[j]);

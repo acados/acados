@@ -3,7 +3,7 @@ project ( ACADOS )
 
 set ( CMAKE_VERBOSE_MAKEFILE ON )
 
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fopenmp -std=c99 -Wall -Wextra -Werror" )
 
 if ( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Debug )
