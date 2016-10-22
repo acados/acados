@@ -58,7 +58,7 @@
 int main() {
     int_t nil;
 
-    for (int_t implicit = 0; implicit < 4; implicit++) {
+    for (int_t implicit = 0; implicit < 5; implicit++) {
         if (implicit == 0) {
             printf("\n\n--------------------------------------------------------------------\n");
             printf("------------------ Explicit Runge-Kutta of order 4 -----------------\n");
@@ -66,7 +66,7 @@ int main() {
         } else {
             printf("\n\n--------------------------------------------------------------------\n");
             printf("-------------- Lifted Implicit Runge-Kutta of order %d --------------\n",
-                    implicit);
+                    2*implicit);
             printf("--------------------------------------------------------------------\n");
         }
 

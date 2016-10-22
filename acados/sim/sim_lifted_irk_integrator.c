@@ -285,6 +285,42 @@ void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *
             memcpy(opts->c_vec,
                     ((real_t[]) {1.0/2.0-sqrt(15.0)/10.0, 1.0/2.0, 1.0/2.0+sqrt(15.0)/10.0}),
                     sizeof(*opts->c_vec) * (num_stages));
+        } else if ( num_stages == 4 ) {
+            opts->num_stages = 4;       // GL8
+            opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
+            opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
+            opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
+
+            memcpy(opts->A_mat,
+                    ((real_t[]) {(1/144)*sqrt(30)+1/8, (1/840)*sqrt(525-70*sqrt(30))*sqrt(30)
+                +(1/144)*sqrt(30)+(1/105)*sqrt(525-70*sqrt(30))+1/8,
+                -(1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)-(1/1680)*sqrt(525+70*sqrt(30))
+                *sqrt(30)+(1/1470)*sqrt(525-70*sqrt(30))+1/8-(1/420)*sqrt(525+70*sqrt(30)),
+                -(1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)+(1/1680)*sqrt(525+70*sqrt(30))
+                *sqrt(30)+(1/1470)*sqrt(525-70*sqrt(30))+1/8+(1/420)*sqrt(525+70*sqrt(30)),
+                -(1/840)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)-(1/105)*sqrt(525-70*sqrt(30))+1/8,
+                (1/144)*sqrt(30)+1/8, (1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)
+                +(1/144)*sqrt(30)-(1/1680)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/1470)*sqrt(525-70*sqrt(30))
+                +1/8-(1/420)*sqrt(525+70*sqrt(30)), (1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)
+                +(1/1680)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/1470)*sqrt(525-70*sqrt(30))+1/8+
+                (1/420)*sqrt(525+70*sqrt(30)), (1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)
+                +(1/1680)*sqrt(525-70*sqrt(30))*sqrt(30)+1/8+(1/1470)*sqrt(525+70*sqrt(30))-(1/420)
+                *sqrt(525-70*sqrt(30)), (1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)-(1/1680)
+                *sqrt(525-70*sqrt(30))*sqrt(30)+1/8+(1/1470)*sqrt(525+70*sqrt(30))+(1/420)*sqrt(525-70*sqrt(30)),
+                -(1/144)*sqrt(30)+1/8, -(1/840)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)+(1/105)
+                *sqrt(525+70*sqrt(30))+1/8, -(1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)+(1/1680)
+                *sqrt(525-70*sqrt(30))*sqrt(30)+1/8-(1/1470)*sqrt(525+70*sqrt(30))-(1/420)*sqrt(525-70*sqrt(30)),
+                -(1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)-(1/1680)*sqrt(525-70*sqrt(30))*sqrt(30)
+                +1/8-(1/1470)*sqrt(525+70*sqrt(30))+(1/420)*sqrt(525-70*sqrt(30)), (1/840)*sqrt(525+70*sqrt(30))
+                *sqrt(30)-(1/144)*sqrt(30)-(1/105)*sqrt(525+70*sqrt(30))+1/8, -(1/144)*sqrt(30)+1/8}),
+                    sizeof(*opts->A_mat) * (num_stages*num_stages));
+            memcpy(opts->b_vec,
+                    ((real_t[]) {(1/72)*sqrt(30)+1/4, (1/72)*sqrt(30)+1/4, -(1/72)*sqrt(30)+1/4, -(1/72)*sqrt(30)+1/4}),
+                    sizeof(*opts->b_vec) * (num_stages));
+            memcpy(opts->c_vec,
+                    ((real_t[]) {1/2-(1/70)*sqrt(525-70*sqrt(30)), 1/2+(1/70)*sqrt(525-70*sqrt(30)),
+                1/2-(1/70)*sqrt(525+70*sqrt(30)), 1/2+(1/70)*sqrt(525+70*sqrt(30))}),
+                    sizeof(*opts->c_vec) * (num_stages));
         } else {
             // throw error somehow?
         }
