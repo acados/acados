@@ -1,13 +1,28 @@
+/*
+ *    This file is part of ACADOS.
+ *
+ *    ACADOS is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    ACADOS is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#else
-#include <sys/stat.h>
-#include <sys/time.h>
-#endif
+
 #include <math.h>
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/print.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
@@ -24,60 +39,6 @@
 #define NN 10
 #define UMAX 2
 #define PARALLEL 0
-
-#if defined(__APPLE__)
-typedef struct acado_timer_ {
-    uint64_t tic;
-    uint64_t toc;
-    mach_timebase_info_data_t tinfo;
-} acado_timer;
-
-static void acado_tic(acado_timer* t) {
-    /* read current clock cycles */
-    t->tic = mach_absolute_time();
-}
-
-static real_t acado_toc(acado_timer* t) {
-    uint64_t duration; /* elapsed time in clock cycles*/
-
-    t->toc = mach_absolute_time();
-    duration = t->toc - t->tic;
-
-    /*conversion from clock cycles to nanoseconds*/
-    mach_timebase_info(&(t->tinfo));
-    duration *= t->tinfo.numer;
-    duration /= t->tinfo.denom;
-
-    return (real_t)duration / 1e9;
-}
-#else
-
-typedef struct acado_timer_ {
-    struct timeval tic;
-    struct timeval toc;
-} acado_timer;
-
-static void acado_tic(acado_timer* t) {
-    /* read current clock cycles */
-    gettimeofday(&t->tic, 0);
-}
-
-static real_t acado_toc(acado_timer* t) {
-    struct timeval temp;
-
-    gettimeofday(&t->toc, 0);
-
-    if ((t->toc.tv_usec - t->tic.tv_usec) < 0) {
-        temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec - 1;
-        temp.tv_usec = 1000000 + t->toc.tv_usec - t->tic.tv_usec;
-    } else {
-        temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec;
-        temp.tv_usec = t->toc.tv_usec - t->tic.tv_usec;
-    }
-
-    return (real_t)temp.tv_sec + (real_t)temp.tv_usec / 1e6;
-}
-#endif
 
 // static void shift_states(real_t *w, real_t *x_end, int_t N) {
 //    for (int_t i = 0; i < N; i++) {
@@ -109,7 +70,7 @@ int main() {
             printf("--------------------------------------------------------------------\n");
         }
 
-    for (int_t NMF = 1; NMF < 8; NMF++) {
+    for (int_t NMF = 1; NMF < 9; NMF++) {
         printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n", NMF);
     int_t NX = 6*NMF;
     int_t NU = 3;
@@ -213,6 +174,7 @@ int main() {
     real_t T = 0.2;
     sim_in  sim_in[NN];
     sim_out sim_out[NN];
+    sim_info info[NN];
 
     sim_RK_opts rk_opts[NN];
     sim_erk_workspace erk_work[NN];
@@ -270,6 +232,7 @@ int main() {
         sim_out[jj].xn = malloc(sizeof(*sim_out[jj].xn) * (NX));
         sim_out[jj].Sx = malloc(sizeof(*sim_out[jj].Sx) * (NX*NX));
         sim_out[jj].Su = malloc(sizeof(*sim_out[jj].Su) * (NX*NU));
+        sim_out[jj].info = &info[jj];
 
         irk_work[jj].str_mat = &str_mat[jj];
         irk_work[jj].str_sol = &str_sol[jj];
@@ -405,6 +368,9 @@ int main() {
 
     acado_timer timer;
     real_t timings = 0;
+    real_t timings_sim = 0;
+    real_t timings_la = 0;
+    real_t timings_ad = 0;
 //    for (int_t iter = 0; iter < max_iters; iter++) {
 //        printf("\n------ TIME STEP %d ------\n", iter);
 
@@ -434,6 +400,10 @@ int main() {
                 for (int_t j = 0; j < NU; j++)
                     for (int_t k = 0; k < NX; k++)
                         pB[i][j*NX+k] = sim_out[i].Su[j*NX+k];  // COLUMN MAJOR FROM CASADI
+
+                timings_sim += sim_out[i].info->CPUtime;
+                timings_la += sim_out[i].info->LAtime;
+                timings_ad += sim_out[i].info->ADtime;
             }
             for (int_t i = 0; i < N; i++) {
                 // Update bounds:
@@ -504,7 +474,14 @@ int main() {
         timings += acado_toc(&timer);
 //    }
 
-    printf("\nAverage of %.3f ms per iteration.\n", 1e3*timings/(max_sqp_iters*max_iters));
+        printf("\nAverage of %.3f ms in the integrator,\n",
+                1e3*timings_sim/(max_sqp_iters*max_iters));
+        printf("  of which %.3f ms spent in CasADi and\n",
+                1e3*timings_ad/(max_sqp_iters*max_iters));
+        printf("  of which %.3f ms spent in BLASFEO.\n",
+                1e3*timings_la/(max_sqp_iters*max_iters));
+        printf("--Total of %.3f ms per SQP iteration.--\n",
+                1e3*timings/(max_sqp_iters*max_iters));
 
 //    #ifdef DEBUG
 //    print_matrix_name("stdout", "sol", w, NX+NU, N);

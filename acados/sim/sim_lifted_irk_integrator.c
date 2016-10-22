@@ -49,6 +49,12 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     struct d_strmat *str_mat = work->str_mat;
     struct d_strmat *str_sol = work->str_sol;
 
+    acado_timer timer, timer_la, timer_ad;
+    real_t timing_la = 0.0;
+    real_t timing_ad = 0.0;
+
+    acado_tic(&timer);
+
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
     for (i = 0; i < nx*(nx+nu); i++) out_tmp[nx+i] = 0.0;  // sensitivities
     for (i = 0; i < nx; i++) out_tmp[nx+i*nx+i] = 1.0;     // sensitivities wrt x
@@ -92,7 +98,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
                     rhs_in[i] += H_INT*A_mat[s2*num_stages+s1]*K_traj[istep*num_stages*nx+s2*nx+i];
                 }
             }
+            acado_tic(&timer_ad);
             in->jac_fun(rhs_in, VDE_tmp);  // k evaluation
+            timing_ad += acado_toc(&timer_ad);
 
             // put VDE_tmp in sys_mat:
             for (s2 = 0; s2 < num_stages; s2++) {
@@ -105,12 +113,14 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
             }
         }
 
+        acado_tic(&timer_la);
         // ---- BLASFEO: LU factorization ----
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
         dgetrf_libstr(num_stages*nx, num_stages*nx, str_mat, 0, 0, str_mat, 0,
                 0, ipiv);  // Gauss elimination
         // ---- BLASFEO: LU factorization ----
+        timing_la += acado_toc(&timer_la);
 
         for (s1 = 0; s1 < num_stages; s1++) {
             for (i = 0; i < nx*(1+nx+nu); i++) {
@@ -121,7 +131,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
                     rhs_in[i] += H_INT*A_mat[s2*num_stages+s1]*K_traj[istep*num_stages*nx+s2*nx+i];
                 }
             }
+            acado_tic(&timer_ad);
             in->VDE_fun(rhs_in, VDE_tmp);  // k evaluation
+            timing_ad += acado_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:
             for (j = 0; j < nx+nu+1; j++) {
@@ -134,6 +146,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
             }
         }
 
+        acado_tic(&timer_la);
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
                 str_sol, 0, 0);  // mat2strmat
@@ -145,6 +158,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         d_cvt_strmat2mat(num_stages*nx, nx+nu+1, str_sol, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
+        timing_la += acado_toc(&timer_la);
 
         // Newton step of the collocation variables
         for (i = 0; i < num_stages*nx; i++) {
@@ -175,6 +189,10 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     for (i = 0; i < nx; i++)    out->xn[i] = out_tmp[i];
     for (i = 0; i < nx*nx; i++) out->Sx[i] = out_tmp[nx+i];
     for (i = 0; i < nx*nu; i++) out->Su[i] = out_tmp[nx+nx*nx+i];
+
+    out->info->CPUtime = acado_toc(&timer);
+    out->info->LAtime = timing_la;
+    out->info->ADtime = timing_ad;
 }
 
 

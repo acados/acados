@@ -1,3 +1,22 @@
+/*
+ *    This file is part of ACADOS.
+ *
+ *    ACADOS is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    ACADOS is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,6 +51,10 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
     real_t *out_tmp = work->out_tmp;
     real_t *rhs_in = work->rhs_in;
 
+    acado_timer timer, timer_ad;
+    acado_tic(&timer);
+    real_t timing_ad = 0.0;
+
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
     for (i = 0; i < nx*(nx+nu); i++) out_tmp[nx+i] = 0.0;  // sensitivities
     for (i = 0; i < nx; i++) out_tmp[nx+i*nx+i] = 1.0;     // sensitivities wrt x
@@ -50,7 +73,9 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
                     }
                 }
             }
+            acado_tic(&timer_ad);
             in->VDE_fun(rhs_in, &(K_tmp[s*nx*(1+nx+nu)]));  // k evaluation
+            timing_ad += acado_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++) {
             for (i = 0; i < nx*(1+nx+nu); i++) {
@@ -58,9 +83,13 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
             }
         }
     }
-    for (i = 0; i < nx; i++)      out->xn[i] = out_tmp[i];
+    for (i = 0; i < nx; i++)    out->xn[i] = out_tmp[i];
     for (i = 0; i < nx*nx; i++) out->Sx[i] = out_tmp[nx+i];
     for (i = 0; i < nx*nu; i++) out->Su[i] = out_tmp[nx+nx*nx+i];
+
+    out->info->CPUtime = acado_toc(&timer);
+    out->info->LAtime = 0.0;
+    out->info->ADtime = timing_ad;
 }
 
 

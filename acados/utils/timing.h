@@ -17,18 +17,32 @@
  *
  */
 
-#ifndef ACADOS_UTILS_TYPES_H_
-#define ACADOS_UTILS_TYPES_H_
+#ifndef ACADOS_UTILS_TIMING_H_
+#define ACADOS_UTILS_TIMING_H_
 
-typedef double real_t;
-typedef unsigned int uint;
-typedef int int_t;
+#include "acados/utils/types.h"
 
-// enum of return values
-enum return_values{
-    ACADOS_SUCCESS,
-    ACADOS_MAXITER,
-    ACADOS_MINSTEP
-};
+#if defined(__APPLE__)
+#include <mach/mach_time.h>
+#else
+#include <sys/stat.h>
+#include <sys/time.h>
+#endif
 
-#endif  // ACADOS_UTILS_TYPES_H_
+#if defined(__APPLE__)
+typedef struct acado_timer_ {
+    uint64_t tic;
+    uint64_t toc;
+    mach_timebase_info_data_t tinfo;
+} acado_timer;
+#else
+typedef struct acado_timer_ {
+    struct timeval tic;
+    struct timeval toc;
+} acado_timer;
+#endif
+
+void acado_tic(acado_timer* t);
+real_t acado_toc(acado_timer* t);
+
+#endif  // ACADOS_UTILS_TIMING_H_
