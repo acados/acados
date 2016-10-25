@@ -12,6 +12,98 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
 
+#ifdef CODE_GENERATION
+#define DIM 18       // num_stages*NX
+#define DIM_RHS 21   // NX+NU
+
+real_t LU_system_ACADO(real_t* const A, int* const perm) {
+    real_t det;
+    real_t swap;
+    real_t valueMax;
+
+    int i, j, k;
+    int indexMax;
+    int intSwap;
+
+    for (i = 0; i < DIM; ++i) {
+        perm[i] = i;
+    }
+    det = 1.0000000000000000e+00;
+    for (i=0; i < (DIM-1); i++) {
+        indexMax = i;
+        valueMax = fabs(A[i*DIM+i]);
+        for (j=(i+1); j < DIM; j++) {
+            swap = fabs(A[i*DIM+j]);
+            if (swap > valueMax) {
+                indexMax = j;
+                valueMax = swap;
+            }
+        }
+        if (indexMax > i) {
+            for (k = 0; k < DIM; ++k) {
+                swap = A[k*DIM+i];
+                A[k*DIM+i] = A[k*DIM+indexMax];
+                A[k*DIM+indexMax] = swap;
+            }
+            intSwap = perm[i];
+            perm[i] = perm[indexMax];
+            perm[indexMax] = intSwap;
+        }
+//        det *= A[i*DIM+i];
+        for (j=i+1; j < DIM; j++) {
+            A[i*DIM+j] = -A[i*DIM+j]/A[i*DIM+i];
+            for (k=i+1; k < DIM; k++) {
+                A[k*DIM+j] += A[i*DIM+j] * A[k*DIM+i];
+            }
+        }
+    }
+//    det *= A[DIM*DIM-1];
+//    det = fabs(det);
+    return det;
+}
+
+real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm) {
+    int i, j, k;
+    int index1;
+    real_t bPerm[DIM*DIM_RHS];
+
+    real_t tmp_var;
+
+    for (i = 0; i < DIM; ++i) {
+        index1 = perm[i];
+        for (j = 0; j < DIM_RHS; ++j) {
+            bPerm[j*DIM+i] = b[j*DIM+index1];
+        }
+    }
+    for (j = 1; j < DIM; ++j) {
+        for (i = 0; i < j; ++i) {
+            tmp_var = A[i*DIM+j];
+            for (k = 0; k < DIM_RHS; ++k) {
+                bPerm[k*DIM+j] += tmp_var*bPerm[k*DIM+i];
+            }
+        }
+    }
+    for (i = DIM-1; -1 < i; --i) {
+        for (j = DIM-1; i < j; --j) {
+            tmp_var = A[j*DIM+i];
+            for (k = 0; k < DIM_RHS; ++k) {
+                bPerm[k*DIM+i] -= tmp_var*bPerm[k*DIM+j];
+            }
+        }
+        tmp_var = 1.0/A[i*(DIM+1)];
+        for (k = 0; k < DIM_RHS; ++k) {
+            bPerm[k*DIM+i] = tmp_var*bPerm[k*DIM+i];
+        }
+    }
+    for (k = 0; k < DIM*DIM_RHS; ++k) {
+        b[k] = bPerm[k];
+    }
+    return 0;
+}
+
+
+#endif
+
 #if FIXED_STEP_SIZE == 1
 // Integration step size.
 real_t H_INT = 1.0/100;
@@ -46,8 +138,10 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     int *ipiv = work->ipiv;  // pivoting vector
     real_t *sys_mat = work->sys_mat;
     real_t *sys_sol = work->sys_sol;
+#ifndef CODE_GENERATION
     struct d_strmat *str_mat = work->str_mat;
     struct d_strmat *str_sol = work->str_sol;
+#endif
 
     acado_timer timer, timer_la, timer_ad;
     real_t timing_la = 0.0;
@@ -114,12 +208,16 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         }
 
         acado_tic(&timer_la);
+#ifdef CODE_GENERATION
+        LU_system_ACADO(sys_mat, ipiv);
+#else
         // ---- BLASFEO: LU factorization ----
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
         dgetrf_libstr(num_stages*nx, num_stages*nx, str_mat, 0, 0, str_mat, 0,
                 0, ipiv);  // Gauss elimination
         // ---- BLASFEO: LU factorization ----
+#endif
         timing_la += acado_toc(&timer_la);
 
         for (s1 = 0; s1 < num_stages; s1++) {
@@ -147,6 +245,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         }
 
         acado_tic(&timer_la);
+#ifdef CODE_GENERATION
+        solve_system_ACADO(sys_mat, sys_sol, ipiv);
+#else
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
                 str_sol, 0, 0);  // mat2strmat
@@ -158,6 +259,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         d_cvt_strmat2mat(num_stages*nx, nx+nu+1, str_sol, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
+#endif
         timing_la += acado_toc(&timer_la);
 
         // Newton step of the collocation variables
@@ -209,6 +311,7 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     work->sys_mat = malloc(sizeof(*work->sys_mat) * (num_stages*nx)*(num_stages*nx));
     work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+nx+nu));
 
+#ifndef CODE_GENERATION
     // matrices in matrix struct format:
     int size_strmat = d_size_strmat(num_stages*nx, num_stages*nx)
             + d_size_strmat(num_stages*nx, 1+nx+nu);
@@ -221,6 +324,7 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 
     d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol->memory_size;
+#endif
 }
 
 
@@ -284,42 +388,6 @@ void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *
                     sizeof(*opts->b_vec) * (num_stages));
             memcpy(opts->c_vec,
                     ((real_t[]) {1.0/2.0-sqrt(15.0)/10.0, 1.0/2.0, 1.0/2.0+sqrt(15.0)/10.0}),
-                    sizeof(*opts->c_vec) * (num_stages));
-        } else if ( num_stages == 4 ) {
-            opts->num_stages = 4;       // GL8
-            opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-            opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-            opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
-
-            memcpy(opts->A_mat,
-                    ((real_t[]) {(1/144)*sqrt(30)+1/8, (1/840)*sqrt(525-70*sqrt(30))*sqrt(30)
-                +(1/144)*sqrt(30)+(1/105)*sqrt(525-70*sqrt(30))+1/8,
-                -(1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)-(1/1680)*sqrt(525+70*sqrt(30))
-                *sqrt(30)+(1/1470)*sqrt(525-70*sqrt(30))+1/8-(1/420)*sqrt(525+70*sqrt(30)),
-                -(1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)+(1/1680)*sqrt(525+70*sqrt(30))
-                *sqrt(30)+(1/1470)*sqrt(525-70*sqrt(30))+1/8+(1/420)*sqrt(525+70*sqrt(30)),
-                -(1/840)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)-(1/105)*sqrt(525-70*sqrt(30))+1/8,
-                (1/144)*sqrt(30)+1/8, (1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)
-                +(1/144)*sqrt(30)-(1/1680)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/1470)*sqrt(525-70*sqrt(30))
-                +1/8-(1/420)*sqrt(525+70*sqrt(30)), (1/2352)*sqrt(525-70*sqrt(30))*sqrt(30)+(1/144)*sqrt(30)
-                +(1/1680)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/1470)*sqrt(525-70*sqrt(30))+1/8+
-                (1/420)*sqrt(525+70*sqrt(30)), (1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)
-                +(1/1680)*sqrt(525-70*sqrt(30))*sqrt(30)+1/8+(1/1470)*sqrt(525+70*sqrt(30))-(1/420)
-                *sqrt(525-70*sqrt(30)), (1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)-(1/1680)
-                *sqrt(525-70*sqrt(30))*sqrt(30)+1/8+(1/1470)*sqrt(525+70*sqrt(30))+(1/420)*sqrt(525-70*sqrt(30)),
-                -(1/144)*sqrt(30)+1/8, -(1/840)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)+(1/105)
-                *sqrt(525+70*sqrt(30))+1/8, -(1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)+(1/1680)
-                *sqrt(525-70*sqrt(30))*sqrt(30)+1/8-(1/1470)*sqrt(525+70*sqrt(30))-(1/420)*sqrt(525-70*sqrt(30)),
-                -(1/2352)*sqrt(525+70*sqrt(30))*sqrt(30)-(1/144)*sqrt(30)-(1/1680)*sqrt(525-70*sqrt(30))*sqrt(30)
-                +1/8-(1/1470)*sqrt(525+70*sqrt(30))+(1/420)*sqrt(525-70*sqrt(30)), (1/840)*sqrt(525+70*sqrt(30))
-                *sqrt(30)-(1/144)*sqrt(30)-(1/105)*sqrt(525+70*sqrt(30))+1/8, -(1/144)*sqrt(30)+1/8}),
-                    sizeof(*opts->A_mat) * (num_stages*num_stages));
-            memcpy(opts->b_vec,
-                    ((real_t[]) {(1/72)*sqrt(30)+1/4, (1/72)*sqrt(30)+1/4, -(1/72)*sqrt(30)+1/4, -(1/72)*sqrt(30)+1/4}),
-                    sizeof(*opts->b_vec) * (num_stages));
-            memcpy(opts->c_vec,
-                    ((real_t[]) {1/2-(1/70)*sqrt(525-70*sqrt(30)), 1/2+(1/70)*sqrt(525-70*sqrt(30)),
-                1/2-(1/70)*sqrt(525+70*sqrt(30)), 1/2+(1/70)*sqrt(525+70*sqrt(30))}),
                     sizeof(*opts->c_vec) * (num_stages));
         } else {
             // throw error somehow?
