@@ -23,6 +23,7 @@ addons:
 
 script:
  - set -e
+ - c++ --version
  - git submodule init
  - git submodule update
  - mkdir build
