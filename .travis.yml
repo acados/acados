@@ -5,8 +5,8 @@ compiler:
  - gcc
  - clang-3.7
 
-env:
- - CXX=gcc
+install:
+- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 addons:
   apt:
@@ -19,7 +19,9 @@ addons:
       - cppcheck
       - cmake
       - clang-3.7
-      - gcc-6
+      - gcc-4.8
+      - g++-4.8
+      - clang
 
 script:
  - set -e
