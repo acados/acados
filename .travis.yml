@@ -25,6 +25,7 @@ addons:
 
 script:
  - set -e
+ - echo $CC
  - CC --version
  - CXX --version
  - git submodule init
