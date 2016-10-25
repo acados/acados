@@ -32,6 +32,7 @@ typedef struct sim_lifted_irk_workspace_ {
     real_t *sys_sol;
     struct d_strmat *str_mat;
     struct d_strmat *str_sol;
+    struct d_strmat *str_sol_t;
 } sim_lifted_irk_workspace;
 
 typedef struct sim_lifted_irk_memory_ {

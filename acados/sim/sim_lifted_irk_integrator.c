@@ -12,6 +12,8 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
 
+#define TRANSPOSED 0
+
 #ifdef CODE_GENERATION
 #define DIM 18       // num_stages*NX
 #define DIM_RHS 21   // NX+NU
@@ -140,7 +142,11 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     real_t *sys_sol = work->sys_sol;
 #ifndef CODE_GENERATION
     struct d_strmat *str_mat = work->str_mat;
+#if !TRANSPOSED
     struct d_strmat *str_sol = work->str_sol;
+#else
+    struct d_strmat *str_sol_t = work->str_sol_t;
+#endif
 #endif
 
     acado_timer timer, timer_la, timer_ad;
@@ -248,6 +254,19 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 #ifdef CODE_GENERATION
         solve_system_ACADO(sys_mat, sys_sol, ipiv);
 #else
+#if TRANSPOSED
+        // ---- BLASFEO: row transformations + backsolve ----
+        d_cvt_tran_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
+                str_sol_t, 0, 0);  // mat2strmat
+        dcolpe_libstr(num_stages*nx, ipiv, str_sol_t);  // col permutations
+        dtrsm_rltu_libstr(nx+nu+1, num_stages*nx, 1.0, str_mat, 0, 0, str_sol_t,
+                0, 0, str_sol_t, 0, 0);  // L backsolve
+        dtrsm_rutn_libstr(nx+nu+1, num_stages*nx, 1.0, str_mat, 0, 0, str_sol_t,
+                0, 0, str_sol_t, 0, 0);  // U backsolve
+        d_cvt_tran_strmat2mat(nx+nu+1, num_stages*nx, str_sol_t, 0, 0, sys_sol,
+                num_stages*nx);  // strmat2mat
+        // ---- BLASFEO: row transformations + backsolve ----
+#else
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
                 str_sol, 0, 0);  // mat2strmat
@@ -259,6 +278,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         d_cvt_strmat2mat(num_stages*nx, nx+nu+1, str_sol, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
+#endif
 #endif
         timing_la += acado_toc(&timer_la);
 
@@ -314,7 +334,8 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 #ifndef CODE_GENERATION
     // matrices in matrix struct format:
     int size_strmat = d_size_strmat(num_stages*nx, num_stages*nx)
-            + d_size_strmat(num_stages*nx, 1+nx+nu);
+            + d_size_strmat(num_stages*nx, 1+nx+nu)
+            + d_size_strmat(1+nx+nu, num_stages*nx);
     void *memory_strmat;
     v_zeros_align(&memory_strmat, size_strmat);
     char *ptr_memory_strmat = (char *) memory_strmat;
@@ -324,6 +345,9 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 
     d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol->memory_size;
+
+    d_create_strmat(1+nx+nu, num_stages*nx, work->str_sol_t, ptr_memory_strmat);
+    ptr_memory_strmat += work->str_sol_t->memory_size;
 #endif
 }
 
