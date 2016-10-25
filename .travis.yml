@@ -26,10 +26,10 @@ script:
  - mkdir build
  - cd build
  - cmake ..
+ - make lint
  - make test_condensing_qpoases
  - ./test_condensing_qpoases
  - make test_nmpc
  - ./test_nmpc
  - make test_chain
  - ./test_chain
- - make lint

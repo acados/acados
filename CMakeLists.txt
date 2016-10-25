@@ -6,7 +6,7 @@ set ( CMAKE_VERBOSE_MAKEFILE ON )
 set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -O3 -Wall -Wextra -Werror" )
 
 if ( NOT CMAKE_BUILD_TYPE )
-    set( CMAKE_BUILD_TYPE Debug )
+    set( CMAKE_BUILD_TYPE Release )
 endif ( NOT CMAKE_BUILD_TYPE )
 
 if ( CMAKE_BUILD_TYPE MATCHES Debug )
@@ -48,17 +48,29 @@ set ( TEST_CHAIN_OCP_SRC "${PROJECT_SOURCE_DIR}/test/test_chain" )
 
 # Define external libraries
 # BLASFEO
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo make static_library )
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
+    make static_library RESULT_VARIABLE blasfeo_built )
+if ( NOT "${blasfeo_built}" STREQUAL "0")
+    message( FATAL_ERROR "build of blasfeo failed with status ${blasfeo_built}!" )
+endif ( )
 add_library ( blasfeo STATIC IMPORTED )
 set_property ( TARGET blasfeo PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/blasfeo/libblasfeo.a")
 
 # HPMPC
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc make static_library )
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc
+    make static_library RESULT_VARIABLE hpmpc_built )
+if ( NOT "${hpmpc_built}" STREQUAL "0")
+    message( FATAL_ERROR "build of hpmpc failed with status ${hpmpc_built}!" )
+endif ( )
 add_library ( hpmpc STATIC IMPORTED )
 set_property ( TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/hpmpc/libhpmpc.a")
 
 # qpOASES
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/qpOASES make )
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/qpOASES
+    make RESULT_VARIABLE qpoases_built )
+if ( NOT "${qpoases_built}" STREQUAL "0")
+    message( FATAL_ERROR "build of qpoases failed with status ${qpoases_built}!" )
+endif ( )
 add_library ( qpoases STATIC IMPORTED )
 set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/qpOASES/bin/libqpOASES_e.a")
 
@@ -66,7 +78,11 @@ set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi mkdir build )
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi cd build )
 execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build cmake .. )
-execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build make )
+execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build
+    make RESULT_VARIABLE casadi_built )
+if ( NOT "${casadi_built}" STREQUAL "0")
+    message( FATAL_ERROR "build of casadi failed with status ${casadi_built}!" )
+endif ( )
 
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
@@ -94,4 +110,4 @@ if ( PYTHONINTERP_FOUND )
     separate_arguments ( ACADOS_FILES_TO_LINT )
     set ( LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --filter="${ACADOS_STYLE_FILTER}" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 ${ACADOS_FILES_TO_LINT} )
     add_custom_target ( lint ${LINT_COMMAND} )
-endif()
+endif ( )
