@@ -96,6 +96,9 @@ int main() {
     sim_out.Sx = malloc(sizeof(*sim_out.Sx) * (NX*NX));
     sim_out.Su = malloc(sizeof(*sim_out.Su) * (NX*NU));
 
+    sim_info erk_info;
+    sim_out.info = &erk_info;
+
     sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
     sim_erk_create_opts(4, &rk_opts);
