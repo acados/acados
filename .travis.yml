@@ -2,11 +2,10 @@
 sudo: false
 
 compiler:
- - clang-3.7
+ - clang-3.9
 
 env:
  # currently unused
- - CC=clang-3.7
 
 addons:
   apt:
@@ -21,6 +20,7 @@ addons:
       - clang-3.7
 
 script:
+ - set -e
  - git submodule init
  - git submodule update
  - mkdir build
