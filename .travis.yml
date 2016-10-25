@@ -6,18 +6,21 @@ compiler:
 
 env:
  # currently unused
+ - CC=clang-3.9
+ - CXX=clang-3.9
 
 addons:
   apt:
     sources:
-      - llvm-toolchain-precise-3.7
+      - llvm-toolchain-precise-3.9
       - ubuntu-toolchain-r-test
     packages:
       - libgsl0-dev
       - liblapack-dev
       - cppcheck
       - cmake
-      - clang-3.7
+      - clang-3.9
+      - gcc-6
 
 script:
  - set -e
