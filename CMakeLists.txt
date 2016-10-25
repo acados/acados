@@ -3,15 +3,21 @@ project ( ACADOS )
 
 set ( CMAKE_VERBOSE_MAKEFILE ON )
 
-set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -O3 -fprofile-use -funroll-loops -Wall -Wextra -Werror" )
+set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
 
 if ( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )
+	set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops")
 endif ( NOT CMAKE_BUILD_TYPE )
 
 if ( CMAKE_BUILD_TYPE MATCHES Debug )
     add_definitions ( -DDEBUG )
 endif ( CMAKE_BUILD_TYPE MATCHES Debug )
+
+if ( CMAKE_BUILD_TYPE MATCHES Profile )
+    set( CMAKE_BUILD_TYPE Release )
+	set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fprofile-use" )
+endif ( CMAKE_BUILD_TYPE MATCHES Profile )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )
