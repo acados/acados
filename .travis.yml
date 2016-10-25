@@ -2,11 +2,11 @@
 sudo: false
 
 compiler:
- - gcc-6
+ - gcc
  - clang-3.7
 
 env:
- - CXX=gcc-6
+ - CXX=gcc
 
 addons:
   apt:
