@@ -2,14 +2,8 @@
 sudo: false
 
 compiler:
- - gcc
- - clang
-
-install:
- - if [ "$CC" = "gcc" ]; then export CC="gcc-6"; fi
- - if [ "$CC" = "clang" ]; then export CC="clang-3.7"; fi
- - if [ "$CXX" = "g++" ]; then export CXX="g++-6"; fi
- - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7"; fi
+ - gcc-6
+ - clang-3.7
 
 addons:
   apt:
