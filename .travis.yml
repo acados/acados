@@ -1,15 +1,9 @@
 # explicitly request container-based infrastructure
 sudo: false
-
-compiler:
- - gcc
- - clang-3.7
  
 env:
- - CXX=g++-4.8
-
-install:
-- if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+ - CC=clang-3.7 CXX=clang++-3.7
+ - CC=gcc-6 CXX=g++-6
 
 addons:
   apt:
@@ -22,13 +16,11 @@ addons:
       - cppcheck
       - cmake
       - clang-3.7
-      - gcc-4.8
-      - g++-4.8
-      - clang
+      - gcc-6
+      - g++-6
 
 script:
  - set -e
- - gcc --version
  - git submodule init
  - git submodule update
  - mkdir build
