@@ -25,7 +25,8 @@ addons:
 
 script:
  - set -e
- - gcc --version
+ - CC --version
+ - CXX --version
  - git submodule init
  - git submodule update
  - mkdir build
