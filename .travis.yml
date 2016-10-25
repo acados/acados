@@ -6,7 +6,6 @@ compiler:
  - clang-3.7
 
 env:
- # currently unused
  - CXX=gcc-6
 
 addons:
@@ -24,7 +23,7 @@ addons:
 
 script:
  - set -e
- - c++ --version
+ - gcc --version
  - git submodule init
  - git submodule update
  - mkdir build
