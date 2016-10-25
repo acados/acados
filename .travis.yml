@@ -2,12 +2,11 @@
 sudo: false
 
 compiler:
+ - gcc-6
  - clang-3.7
 
 env:
  # currently unused
- - CC=clang-3.7
- - CXX=clang-3.7
 
 addons:
   apt:
@@ -20,6 +19,7 @@ addons:
       - cppcheck
       - cmake
       - clang-3.7
+      - gcc-6
 
 script:
  - set -e
