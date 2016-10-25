@@ -1,9 +1,9 @@
 # explicitly request container-based infrastructure
 sudo: false
-
-compiler:
- - gcc-6
- - clang-3.7
+ 
+env:
+ - CC=clang-3.7 CXX=clang++-3.7
+ - CC=gcc-6 CXX=g++-6
 
 addons:
   apt:
