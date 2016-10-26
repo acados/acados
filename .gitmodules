@@ -6,4 +6,7 @@
 	url = https://github.com/acados/casadi.git
 [submodule "blasfeo"]
 	path = external/blasfeo
-	url = https://github.com/giaf/blasfeo
+	url = https://github.com/giaf/blasfeo.git
+[submodule "external/catch"]
+	path = external/catch
+	url = https://github.com/philsquared/Catch.git

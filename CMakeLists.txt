@@ -51,6 +51,7 @@ set ( TEST_JAC_CHAIN7_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain
 set ( TEST_JAC_CHAIN8_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm8" )
 set ( TEST_JAC_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm9" )
 set ( TEST_CHAIN_OCP_SRC "${PROJECT_SOURCE_DIR}/examples/test_chain" )
+set ( UNIT_TESTS_SRC "${PROJECT_SOURCE_DIR}/test/all_tests" )
 
 # Define external libraries
 # BLASFEO
@@ -90,18 +91,28 @@ set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/
     # message( FATAL_ERROR "build of casadi failed with status ${casadi_built}!" )
 # endif ( )
 
+# catch
+add_library ( catch STATIC IMPORTED )
+set_property ( TARGET catch PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/catch" )
+
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
 
-# Define test
+# Define tests
 add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
 target_link_libraries ( test_hpmpc acados hpmpc blasfeo m )
+
 add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc blasfeo m )
+
 add_executable ( test_nmpc ${TEST_NMPC_SRC} ${TEST_CHEN_SRC} )
 target_link_libraries ( test_nmpc acados qpoases blasfeo m )
+
 add_executable ( test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN2_SRC} ${TEST_VDE_CHAIN3_SRC} ${TEST_VDE_CHAIN4_SRC} ${TEST_VDE_CHAIN5_SRC} ${TEST_VDE_CHAIN6_SRC} ${TEST_VDE_CHAIN7_SRC} ${TEST_VDE_CHAIN8_SRC} ${TEST_VDE_CHAIN9_SRC} ${TEST_JAC_CHAIN2_SRC} ${TEST_JAC_CHAIN3_SRC} ${TEST_JAC_CHAIN4_SRC} ${TEST_JAC_CHAIN5_SRC} ${TEST_JAC_CHAIN6_SRC} ${TEST_JAC_CHAIN7_SRC} ${TEST_JAC_CHAIN8_SRC} ${TEST_JAC_CHAIN9_SRC} )
 target_link_libraries ( test_chain acados qpoases blasfeo m )
+
+add_executable ( test ${UNIT_TESTS_SRC} )
+target_link_libraries ( test acados qpoases blasfeo m )
 
 # Lint acados
 find_package ( PythonInterp )
@@ -109,7 +120,7 @@ if ( PYTHONINTERP_FOUND )
     set ( ACADOS_STYLE_FILTER
     	"-legal/copyright,"
     	"-readability/casting" )
-    set ( FIND_COMMAND find acados examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! -path "examples/casadi_chain/*" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )
+    set ( FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! -path "examples/casadi_chain/*" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" )
     set ( FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND} )
     execute_process ( COMMAND ${FIND_ACADOS_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE ACADOS_FILES_TO_LINT )
     string ( REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT} )
