@@ -57,3 +57,4 @@ Thumbs.db
 *.swp
 build/
 local/
+*.dat

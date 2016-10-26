@@ -1,8 +1,10 @@
 cmake_minimum_required ( VERSION 2.6 )
 project ( ACADOS )
 
-set ( CMAKE_VERBOSE_MAKEFILE ON )
+set ( CMAKE_INSTALL_PREFIX "$ENV{HOME}/local")
+set ( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
+set ( CMAKE_VERBOSE_MAKEFILE ON )
 set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
 
 if ( NOT CMAKE_BUILD_TYPE )
@@ -91,6 +93,14 @@ set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/
     # message( FATAL_ERROR "build of casadi failed with status ${casadi_built}!" )
 # endif ( )
 
+# eigen
+find_package ( Eigen3 )
+if ( NOT EIGEN3_FOUND )
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen mkdir build)
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen/build cmake ..)
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen/build make install)
+endif ( )
+
 # catch
 add_library ( catch STATIC IMPORTED )
 set_property ( TARGET catch PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/catch" )
@@ -111,8 +121,8 @@ target_link_libraries ( test_nmpc acados qpoases blasfeo m )
 add_executable ( test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN2_SRC} ${TEST_VDE_CHAIN3_SRC} ${TEST_VDE_CHAIN4_SRC} ${TEST_VDE_CHAIN5_SRC} ${TEST_VDE_CHAIN6_SRC} ${TEST_VDE_CHAIN7_SRC} ${TEST_VDE_CHAIN8_SRC} ${TEST_VDE_CHAIN9_SRC} ${TEST_JAC_CHAIN2_SRC} ${TEST_JAC_CHAIN3_SRC} ${TEST_JAC_CHAIN4_SRC} ${TEST_JAC_CHAIN5_SRC} ${TEST_JAC_CHAIN6_SRC} ${TEST_JAC_CHAIN7_SRC} ${TEST_JAC_CHAIN8_SRC} ${TEST_JAC_CHAIN9_SRC} )
 target_link_libraries ( test_chain acados qpoases blasfeo m )
 
-add_executable ( test ${UNIT_TESTS_SRC} )
-target_link_libraries ( test acados qpoases blasfeo m )
+add_executable ( unit_tests ${UNIT_TESTS_SRC} )
+target_link_libraries ( unit_tests acados qpoases blasfeo m )
 
 # Lint acados
 find_package ( PythonInterp )
