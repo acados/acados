@@ -1,9 +1,9 @@
 # explicitly request container-based infrastructure
 sudo: false
  
-env:
- - CC=clang-3.7 CXX=clang++-3.7
- - CC=gcc-6 CXX=g++-6
+compiler:
+ - clang
+ - gcc
 
 addons:
   apt:
@@ -18,6 +18,10 @@ addons:
       - clang-3.7
       - gcc-6
       - g++-6
+      
+install:
+ - if [ "$CXX" = "g++" ]; then export CXX="g++-6" export CC="gcc-6"; fi
+ - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" export CC="clang-3.7"; fi
 
 script:
  - set -e
