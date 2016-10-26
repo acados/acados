@@ -1,5 +1,5 @@
-#ifndef TEST_CASADI_CHAIN_CHAIN_MODEL_H_
-#define TEST_CASADI_CHAIN_CHAIN_MODEL_H_
+#ifndef EXAMPLES_CASADI_CHAIN_CHAIN_MODEL_H_
+#define EXAMPLES_CASADI_CHAIN_CHAIN_MODEL_H_
 
 #include "acados/utils/types.h"
 
@@ -21,4 +21,4 @@ void jac_fun_nm7(const real_t* in, real_t* out);
 void jac_fun_nm8(const real_t* in, real_t* out);
 void jac_fun_nm9(const real_t* in, real_t* out);
 
-#endif  // TEST_CASADI_CHAIN_CHAIN_MODEL_H_
+#endif  // EXAMPLES_CASADI_CHAIN_CHAIN_MODEL_H_
