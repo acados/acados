@@ -13,15 +13,26 @@
 #include "acados/utils/print.h"
 
 #define TRANSPOSED 0
+#define TRIPLE_LOOP 0
+#define CODE_GENERATION 0
 
-#ifdef CODE_GENERATION
-#define DIM 18       // num_stages*NX
-#define DIM_RHS 21   // NX+NU
+#if TRIPLE_LOOP
 
-real_t LU_system_ACADO(real_t* const A, int* const perm) {
+#if CODE_GENERATION
+#define DIM 6       // num_stages*NX
+#define DIM_RHS 9   // NX+NU
+#endif
+
+real_t LU_system_ACADO(real_t* const A, int* const perm, int dim) {
     real_t det;
     real_t swap;
     real_t valueMax;
+
+#if !CODE_GENERATION
+    int DIM = dim;
+#else
+    dim += 0;
+#endif
 
     int i, j, k;
     int indexMax;
@@ -64,11 +75,18 @@ real_t LU_system_ACADO(real_t* const A, int* const perm) {
     return det;
 }
 
-real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm) {
+real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int dim, int dim2) {
     int i, j, k;
     int index1;
-    real_t bPerm[DIM*DIM_RHS];
 
+#if !CODE_GENERATION
+    int DIM = dim;
+    int DIM_RHS = dim2;
+#else
+    dim += 0;
+    dim2 += 0;
+#endif
+    real_t bPerm[DIM*DIM_RHS];
     real_t tmp_var;
 
     for (i = 0; i < DIM; ++i) {
@@ -140,7 +158,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     int *ipiv = work->ipiv;  // pivoting vector
     real_t *sys_mat = work->sys_mat;
     real_t *sys_sol = work->sys_sol;
-#ifndef CODE_GENERATION
+#if !TRIPLE_LOOP
     struct d_strmat *str_mat = work->str_mat;
 #if !TRANSPOSED
     struct d_strmat *str_sol = work->str_sol;
@@ -214,8 +232,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         }
 
         acado_tic(&timer_la);
-#ifdef CODE_GENERATION
-        LU_system_ACADO(sys_mat, ipiv);
+#if TRIPLE_LOOP
+        LU_system_ACADO(sys_mat, ipiv, num_stages*nx);
 #else
         // ---- BLASFEO: LU factorization ----
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
@@ -251,8 +269,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         }
 
         acado_tic(&timer_la);
-#ifdef CODE_GENERATION
-        solve_system_ACADO(sys_mat, sys_sol, ipiv);
+#if TRIPLE_LOOP
+        solve_system_ACADO(sys_mat, sys_sol, ipiv, num_stages*nx, nx+nu+1);
 #else
 #if TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
@@ -331,7 +349,7 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     work->sys_mat = malloc(sizeof(*work->sys_mat) * (num_stages*nx)*(num_stages*nx));
     work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+nx+nu));
 
-#ifndef CODE_GENERATION
+#if !TRIPLE_LOOP
     // matrices in matrix struct format:
     int size_strmat = d_size_strmat(num_stages*nx, num_stages*nx)
             + d_size_strmat(num_stages*nx, 1+nx+nu)
