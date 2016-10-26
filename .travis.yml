@@ -19,6 +19,14 @@ addons:
       - gcc-6
       - g++-6
 
+install:
+ - pushd
+ - cd acados/external
+ - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
+ - mkdir eigen
+ - tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
+ - popd
+
 script:
  - set -e
  - git submodule init
