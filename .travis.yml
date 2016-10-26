@@ -36,8 +36,6 @@ script:
  - cmake ..
  - set +e
  - make lint
- - make test
- - ./test
  - make test_condensing_qpoases
  - ./test_condensing_qpoases
  - make test_nmpc
