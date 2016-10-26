@@ -40,6 +40,7 @@ typedef struct sim_lifted_irk_memory_ {
     real_t *DK_traj;
     real_t *x;
     real_t *u;
+    int_t nswaps;
 } sim_lifted_irk_memory;
 
 
