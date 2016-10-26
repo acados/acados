@@ -1,9 +1,9 @@
 [submodule "hpmpc"]
 	path = external/hpmpc
 	url = https://github.com/giaf/hpmpc.git
-[submodule "external/casadi"]
+[submodule "casadi"]
 	path = external/casadi
 	url = https://github.com/acados/casadi.git
-[submodule "external/blasfeo"]
+[submodule "blasfeo"]
 	path = external/blasfeo
 	url = https://github.com/giaf/blasfeo
