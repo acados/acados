@@ -20,8 +20,7 @@ addons:
       - g++-6
 
 install:
- - pwd
- - cd $/acados/acados/external
+ - cd external
  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
  - mkdir eigen
  - tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
