@@ -20,10 +20,11 @@ addons:
       - g++-6
 
 install:
- - cd external
+ - pushd external
  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
  - mkdir eigen
  - tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
+ - popd
 
 script:
  - set -e

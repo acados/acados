@@ -27,10 +27,12 @@ include_directories ( "${PROJECT_SOURCE_DIR}/external/" )
 include_directories ( "${PROJECT_SOURCE_DIR}/external/qpOASES/include/" )
 
 # Define .c source files
-file (GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
-file (GLOB ACADOS_SRC_SIM "${PROJECT_SOURCE_DIR}/acados/sim/*.c")
-file (GLOB ACADOS_SRC_QP "${PROJECT_SOURCE_DIR}/acados/ocp_qp/*.c")
-file (GLOB ACADOS_SRC_UTILS "${PROJECT_SOURCE_DIR}/acados/utils/*.c")
+file ( GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c" )
+file ( GLOB ACADOS_SRC_SIM "${PROJECT_SOURCE_DIR}/acados/sim/*.c" )
+file ( GLOB ACADOS_SRC_QP "${PROJECT_SOURCE_DIR}/acados/ocp_qp/*.c" )
+file ( GLOB ACADOS_SRC_UTILS "${PROJECT_SOURCE_DIR}/acados/utils/*.c" )
+file ( GLOB UNIT_TESTS_SRC_TEST_UTILS "${PROJECT_SOURCE_DIR}/test/test_utils/*.cpp" )
+set ( UNIT_TESTS_SRC "${PROJECT_SOURCE_DIR}/test/all_tests" )
 set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc" )
 set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases" )
 set ( TEST_CHEN_SRC "${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model" )
@@ -53,7 +55,6 @@ set ( TEST_JAC_CHAIN7_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain
 set ( TEST_JAC_CHAIN8_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm8" )
 set ( TEST_JAC_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm9" )
 set ( TEST_CHAIN_OCP_SRC "${PROJECT_SOURCE_DIR}/examples/test_chain" )
-set ( UNIT_TESTS_SRC "${PROJECT_SOURCE_DIR}/test/all_tests" )
 
 # Define external libraries
 # BLASFEO
@@ -95,6 +96,9 @@ set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/
 
 # eigen
 find_package ( Eigen3 )
+if ( EIGEN3_FOUND )
+    include_directories ( "${PROJECT_SOURCE_DIR}/external/eigen/" )
+endif ( )
 if ( NOT EIGEN3_FOUND )
 	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen mkdir build)
 	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen/build cmake ..)
@@ -121,7 +125,7 @@ target_link_libraries ( test_nmpc acados qpoases blasfeo m )
 add_executable ( test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN2_SRC} ${TEST_VDE_CHAIN3_SRC} ${TEST_VDE_CHAIN4_SRC} ${TEST_VDE_CHAIN5_SRC} ${TEST_VDE_CHAIN6_SRC} ${TEST_VDE_CHAIN7_SRC} ${TEST_VDE_CHAIN8_SRC} ${TEST_VDE_CHAIN9_SRC} ${TEST_JAC_CHAIN2_SRC} ${TEST_JAC_CHAIN3_SRC} ${TEST_JAC_CHAIN4_SRC} ${TEST_JAC_CHAIN5_SRC} ${TEST_JAC_CHAIN6_SRC} ${TEST_JAC_CHAIN7_SRC} ${TEST_JAC_CHAIN8_SRC} ${TEST_JAC_CHAIN9_SRC} )
 target_link_libraries ( test_chain acados qpoases blasfeo m )
 
-add_executable ( unit_tests ${UNIT_TESTS_SRC} )
+add_executable ( unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_TEST_UTILS} )
 target_link_libraries ( unit_tests acados qpoases blasfeo m )
 
 # Lint acados
