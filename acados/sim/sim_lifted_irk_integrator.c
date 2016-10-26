@@ -23,7 +23,7 @@
 #define DIM_RHS 9   // NX+NU
 #endif
 
-real_t LU_system_ACADO(real_t* const A, int* const perm, int dim, int nswaps) {
+real_t LU_system_ACADO(real_t* const A, int* const perm, int dim, int* nswaps) {
     real_t det;
     real_t swap;
     real_t valueMax;
@@ -53,7 +53,7 @@ real_t LU_system_ACADO(real_t* const A, int* const perm, int dim, int nswaps) {
             }
         }
         if (indexMax > i) {
-            nswaps += 1;
+            nswaps[0] += 1;
             for (k = 0; k < DIM; ++k) {
                 swap = A[k*DIM+i];
                 A[k*DIM+i] = A[k*DIM+indexMax];
@@ -235,7 +235,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 
         acado_tic(&timer_la);
 #if TRIPLE_LOOP
-        LU_system_ACADO(sys_mat, ipiv, num_stages*nx, mem->nswaps);
+        LU_system_ACADO(sys_mat, ipiv, num_stages*nx, &mem->nswaps);
 #else
         // ---- BLASFEO: LU factorization ----
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
