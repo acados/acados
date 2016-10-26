@@ -9,9 +9,13 @@ nx = 4;
 nu = 2;
 
 x0 = randn(nx, 1);
+save('x0.dat', 'x0', '-ascii', '-double')
 A = randn(nx, nx);
+save('A.dat', 'A', '-ascii', '-double')
 B = randn(nx, nu);
+save('B.dat', 'B', '-ascii', '-double')
 c = randn(nx, 1);
+save('c.dat', 'c', '-ascii', '-double')
 
 A_bar = [-eye(nx),zeros(nx,(N-1)*nx)];
 for i=1:N-1
