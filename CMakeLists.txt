@@ -1,8 +1,7 @@
 cmake_minimum_required ( VERSION 2.6 )
 project ( ACADOS )
 
-set ( CMAKE_INSTALL_PREFIX "$ENV{HOME}/local")
-set ( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+set ( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set ( CMAKE_VERBOSE_MAKEFILE ON )
 set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
@@ -25,36 +24,19 @@ endif ( CMAKE_BUILD_TYPE MATCHES Profile )
 include_directories ( "${PROJECT_SOURCE_DIR}" )
 include_directories ( "${PROJECT_SOURCE_DIR}/external/" )
 include_directories ( "${PROJECT_SOURCE_DIR}/external/qpOASES/include/" )
+if ( CMAKE_BUILD_TYPE MATCHES Test )
+    if ( NOT EXISTS "${PROJECT_SOURCE_DIR}/external/eigen/Eigen" )
+        message ( FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but Eigen can not be found" )
+    endif ( )
+    include_directories ( "${PROJECT_SOURCE_DIR}/external/eigen/" )
+endif ( )
 
-# Define .c source files
-file ( GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c" )
-file ( GLOB ACADOS_SRC_SIM "${PROJECT_SOURCE_DIR}/acados/sim/*.c" )
-file ( GLOB ACADOS_SRC_QP "${PROJECT_SOURCE_DIR}/acados/ocp_qp/*.c" )
-file ( GLOB ACADOS_SRC_UTILS "${PROJECT_SOURCE_DIR}/acados/utils/*.c" )
-file ( GLOB UNIT_TESTS_SRC_TEST_UTILS "${PROJECT_SOURCE_DIR}/test/test_utils/*.cpp" )
-set ( UNIT_TESTS_SRC "${PROJECT_SOURCE_DIR}/test/all_tests" )
-set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc" )
-set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases" )
-set ( TEST_CHEN_SRC "${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model" )
-set ( TEST_NMPC_SRC "${PROJECT_SOURCE_DIR}/examples/test_nmpc" )
-set ( TEST_CHAIN_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/Chain_model" )
-set ( TEST_VDE_CHAIN2_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm2" )
-set ( TEST_VDE_CHAIN3_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm3" )
-set ( TEST_VDE_CHAIN4_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm4" )
-set ( TEST_VDE_CHAIN5_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm5" )
-set ( TEST_VDE_CHAIN6_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm6" )
-set ( TEST_VDE_CHAIN7_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm7" )
-set ( TEST_VDE_CHAIN8_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm8" )
-set ( TEST_VDE_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm9" )
-set ( TEST_JAC_CHAIN2_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm2" )
-set ( TEST_JAC_CHAIN3_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm3" )
-set ( TEST_JAC_CHAIN4_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm4" )
-set ( TEST_JAC_CHAIN5_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm5" )
-set ( TEST_JAC_CHAIN6_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm6" )
-set ( TEST_JAC_CHAIN7_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm7" )
-set ( TEST_JAC_CHAIN8_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm8" )
-set ( TEST_JAC_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm9" )
-set ( TEST_CHAIN_OCP_SRC "${PROJECT_SOURCE_DIR}/examples/test_chain" )
+# Define source files
+include ( acados_sources )
+if ( CMAKE_BUILD_TYPE MATCHES Test )
+    file ( GLOB UNIT_TESTS_SRC_TEST_UTILS "${PROJECT_SOURCE_DIR}/test/test_utils/*.cpp" )
+    set ( UNIT_TESTS_SRC "${PROJECT_SOURCE_DIR}/test/all_tests" )
+endif ( )
 
 # Define external libraries
 # BLASFEO
@@ -94,21 +76,6 @@ set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/
     # message( FATAL_ERROR "build of casadi failed with status ${casadi_built}!" )
 # endif ( )
 
-# eigen
-find_package ( Eigen3 )
-if ( EIGEN3_FOUND )
-    include_directories ( "${PROJECT_SOURCE_DIR}/external/eigen/" )
-endif ( )
-if ( NOT EIGEN3_FOUND )
-	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen mkdir build)
-	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen/build cmake ..)
-	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/eigen/build make install)
-endif ( )
-
-# catch
-add_library ( catch STATIC IMPORTED )
-set_property ( TARGET catch PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/catch" )
-
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
 
@@ -125,8 +92,10 @@ target_link_libraries ( test_nmpc acados qpoases blasfeo m )
 add_executable ( test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN2_SRC} ${TEST_VDE_CHAIN3_SRC} ${TEST_VDE_CHAIN4_SRC} ${TEST_VDE_CHAIN5_SRC} ${TEST_VDE_CHAIN6_SRC} ${TEST_VDE_CHAIN7_SRC} ${TEST_VDE_CHAIN8_SRC} ${TEST_VDE_CHAIN9_SRC} ${TEST_JAC_CHAIN2_SRC} ${TEST_JAC_CHAIN3_SRC} ${TEST_JAC_CHAIN4_SRC} ${TEST_JAC_CHAIN5_SRC} ${TEST_JAC_CHAIN6_SRC} ${TEST_JAC_CHAIN7_SRC} ${TEST_JAC_CHAIN8_SRC} ${TEST_JAC_CHAIN9_SRC} )
 target_link_libraries ( test_chain acados qpoases blasfeo m )
 
-add_executable ( unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_TEST_UTILS} )
-target_link_libraries ( unit_tests acados qpoases blasfeo m )
+if ( CMAKE_BUILD_TYPE MATCHES Test )
+    add_executable ( unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_TEST_UTILS} )
+    target_link_libraries ( unit_tests acados qpoases blasfeo m )
+endif ( )
 
 # Lint acados
 find_package ( PythonInterp )
