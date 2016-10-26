@@ -1,5 +1,5 @@
 /* The model comes from \cite{Wirsching2006} */
-#include "test/casadi_chain/Chain_model.h"
+#include "examples/casadi_chain/Chain_model.h"
 
 extern int vde_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
 extern int vde_chain_nm3(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
@@ -480,4 +480,3 @@ void jac_fun_nm9(const real_t* in, real_t* out) {
 
     jac_chain_nm9(casadi_mem, casadi_arg, casadi_res, casadi_iw, casadi_w);
 }
-

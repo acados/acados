@@ -1,5 +1,5 @@
 /* The model comes from \cite{Chen1998} */
-#include "test/Chen/Chen_model.h"
+#include "examples/Chen/Chen_model.h"
 
 #define LINEAR_MODEL 0
 #define NX 2
@@ -63,4 +63,3 @@ void jac_fun(const real_t* in, real_t* out) {
     out[4] = (u[0]*(-(real_t)(2.0)));
     out[5] = ((real_t)(0.5)-((real_t)(2.0)*x[1]));
 }
-

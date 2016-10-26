@@ -27,7 +27,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "test/casadi_chain/Chain_model.h"
+#include "examples/casadi_chain/Chain_model.h"
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -102,28 +102,28 @@ int main() {
 
     switch (NMF) {
     case 1:
-        initStates = fopen("../test/casadi_chain/x0_nm2.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm2.txt", "r");
         break;
     case 2:
-        initStates = fopen("../test/casadi_chain/x0_nm3.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm3.txt", "r");
         break;
     case 3:
-        initStates = fopen("../test/casadi_chain/x0_nm4.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm4.txt", "r");
         break;
     case 4:
-        initStates = fopen("../test/casadi_chain/x0_nm5.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm5.txt", "r");
         break;
     case 5:
-        initStates = fopen("../test/casadi_chain/x0_nm6.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm6.txt", "r");
         break;
     case 6:
-        initStates = fopen("../test/casadi_chain/x0_nm7.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm7.txt", "r");
         break;
     case 7:
-        initStates = fopen("../test/casadi_chain/x0_nm8.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm8.txt", "r");
         break;
     default:
-        initStates = fopen("../test/casadi_chain/x0_nm9.txt", "r");
+        initStates = fopen("../examples/casadi_chain/x0_nm9.txt", "r");
         break;
     }
     for (int_t i = 0; i < NX; i++) {
@@ -133,28 +133,28 @@ int main() {
 
     switch (NMF) {
     case 1:
-        refStates = fopen("../test/casadi_chain/xN_nm2.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm2.txt", "r");
         break;
     case 2:
-        refStates = fopen("../test/casadi_chain/xN_nm3.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm3.txt", "r");
         break;
     case 3:
-        refStates = fopen("../test/casadi_chain/xN_nm4.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm4.txt", "r");
         break;
     case 4:
-        refStates = fopen("../test/casadi_chain/xN_nm5.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm5.txt", "r");
         break;
     case 5:
-        refStates = fopen("../test/casadi_chain/xN_nm6.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm6.txt", "r");
         break;
     case 6:
-        refStates = fopen("../test/casadi_chain/xN_nm7.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm7.txt", "r");
         break;
     case 7:
-        refStates = fopen("../test/casadi_chain/xN_nm8.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm8.txt", "r");
         break;
     default:
-        refStates = fopen("../test/casadi_chain/xN_nm9.txt", "r");
+        refStates = fopen("../examples/casadi_chain/xN_nm9.txt", "r");
         break;
     }
     for (int_t i = 0; i < NX; i++) {
