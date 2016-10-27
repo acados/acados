@@ -1,6 +1,8 @@
 #ifndef TEST_TEST_UTILS_READ_MATRIX_HPP_
 #define TEST_TEST_UTILS_READ_MATRIX_HPP_
 
+#include <string>
+
 /* Ignore compiler warnings from Eigen */
 #if defined(__clang__)
 #include <Eigen/Dense>
@@ -11,7 +13,6 @@
 #pragma GCC diagnostic pop
 #endif
 
-
-Eigen::MatrixXd readMatrix(const char *filename);
+Eigen::MatrixXd readMatrix(const std::string filename);
 
 #endif  // TEST_TEST_UTILS_READ_MATRIX_HPP_

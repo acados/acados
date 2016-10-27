@@ -29,7 +29,7 @@ static inline void trim(std::string *s) {
 }
 
 // Read space delimited file into Eigen matrix
-Eigen::MatrixXd readMatrix(const char *filename) {
+Eigen::MatrixXd readMatrix(const std::string filename) {
     int cols = 0, rows = 0;
     double buff[MAXBUFSIZE];
 
