@@ -5,6 +5,9 @@
 
 #define EPS 1.0e-15
 
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+
 static void i_zeros(int_t **pA, int_t row, int_t col) {
     void *temp = malloc((row*col)*sizeof(int_t));
     *pA = (int_t *) temp;
@@ -121,15 +124,15 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
     int_t N = (int_t) readMatrix("N.dat")(0, 0);
     int_t nx = (int_t) readMatrix("nx.dat")(0, 0);
     int_t nu = (int_t) readMatrix("nu.dat")(0, 0);
-    Eigen::MatrixXd A = readMatrix("A.dat");
+    MatrixXd A = readMatrix("A.dat");
     REQUIRE(A.rows() == nx);
     REQUIRE(A.cols() == nx);
-    Eigen::MatrixXd B = readMatrix("B.dat");
+    MatrixXd B = readMatrix("B.dat");
     REQUIRE(B.rows() == nx);
     REQUIRE(B.cols() == nu);
-    Eigen::VectorXd b = readMatrix("c.dat");
+    VectorXd b = readMatrix("c.dat");
     REQUIRE(b.rows() == nx);
-    Eigen::VectorXd x0 = readMatrix("x0.dat");
+    VectorXd x0 = readMatrix("x0.dat");
     REQUIRE(x0.rows() == nx);
 
     // Fill in data
@@ -177,21 +180,21 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
 
     SECTION("Transition vector") {
         calculate_transition_vector(&qp, &work, x0.data());
-        Eigen::VectorXd true_g = readMatrix("transition_vector.dat");
-        Eigen::VectorXd acados_g = Eigen::VectorXd(true_g).setZero();
+        VectorXd true_g = readMatrix("transition_vector.dat");
+        VectorXd acados_g = VectorXd(true_g).setZero();
         for (int_t i = 0; i < N; i++) {
-            acados_g.block(i*nx, 0, nx, 1) = Eigen::Map<Eigen::MatrixXd>(work.g[i], nx, 1);
+            acados_g.block(i*nx, 0, nx, 1) = Eigen::Map<MatrixXd>(work.g[i], nx, 1);
         }
         REQUIRE(acados_g.isApprox(true_g, EPS));
     }
 
     SECTION("Transition matrix") {
         calculate_transition_matrix(&qp, &work);
-        Eigen::MatrixXd true_G = readMatrix("transition_matrix.dat");
-        Eigen::MatrixXd acados_G = Eigen::MatrixXd(true_G).setZero();
+        MatrixXd true_G = readMatrix("transition_matrix.dat");
+        MatrixXd acados_G = MatrixXd(true_G).setZero();
         for (int_t i = 0; i < N; i++) {
             for (int_t j = 0; j <= i; j++) {
-                acados_G.block(i*nx, j*nu, nx, nu) = Eigen::Map<Eigen::MatrixXd>(work.G[i][j], nx, nu);
+                acados_G.block(i*nx, j*nu, nx, nu) = Eigen::Map<MatrixXd>(work.G[i][j], nx, nu);
             }
         }
         REQUIRE(acados_G.isApprox(true_G));
