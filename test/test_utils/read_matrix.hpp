@@ -6,7 +6,7 @@
 #include <Eigen/Dense>
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Werror=misleading-indentation"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 #include <Eigen/Dense>
 #pragma GCC diagnostic pop
 #endif
