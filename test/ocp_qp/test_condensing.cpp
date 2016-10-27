@@ -25,11 +25,11 @@ static VectorXd readVectorFromFile(std::string filename, int_t length) {
 
 static void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
     *N = (int_t) readMatrix("N.dat")(0, 0);
-    REQUIRE(N > 0);
+    REQUIRE(*N > 0);
     *nx = (int_t) readMatrix("nx.dat")(0, 0);
-    REQUIRE(nx > 0);
+    REQUIRE(*nx > 0);
     *nu = (int_t) readMatrix("nu.dat")(0, 0);
-    REQUIRE(nu > 0);
+    REQUIRE(*nu > 0);
 }
 
 static void readInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, MatrixXd *B,

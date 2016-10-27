@@ -35,7 +35,7 @@ Eigen::MatrixXd readMatrix(const std::string filename) {
 
     // Read numbers from file into buffer.
     std::ifstream infile;
-    infile.open(filename);
+    infile.open(filename.c_str());
     if (!infile.is_open()) {
         std::string err_message;
         err_message + "Unable to open file " + filename;
