@@ -18,6 +18,7 @@ addons:
       - clang-3.7
       - gcc-6
       - g++-6
+      - octave
 
 install:
  - pushd external
@@ -32,7 +33,7 @@ script:
  - git submodule update
  - mkdir build
  - cd build
- - cmake -CMAKE_BUILD_TYPE=Test ..
+ - cmake -D CMAKE_BUILD_TYPE=Test ..
  - set +e
  - make lint
  - make unit_tests
