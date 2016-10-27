@@ -28,6 +28,7 @@ install:
  - popd
 
 script:
+ - pwd
  - set -e
  - git submodule init
  - git submodule update
