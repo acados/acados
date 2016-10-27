@@ -136,8 +136,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     int_t i, s1, s2, j, istep;
 #if WARM_SWAP
     int_t iswap;
-    int *ipiv_old = mem->ipiv;  // pivoting vector
-    int_t ipiv_tmp[num_stages*nx];
+    int_t *ipiv_old = mem->ipiv;  // pivoting vector
+    int_t *ipiv_tmp = work->ipiv_tmp;
 #endif
 #if FIXED_STEP_SIZE == 0
     real_t H_INT = in->step;
@@ -206,9 +206,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     mem->nswaps += 0;
     for (istep = 0; istep < NSTEPS; istep++) {
         // form exact linear system matrix (explicit ODE case):
-        for (i = 0; i < num_stages*nx*num_stages*nx; i++ ) sys_mat[i] = 0.0;
+        for (i = 0; i < num_stages*nx*num_stages*nx; i++) sys_mat[i] = 0.0;
 #if WARM_SWAP
-        for (i = 0; i < num_stages*nx; i++ ) {
+        for (i = 0; i < num_stages*nx; i++) {
             iswap = ipiv_old[i];
             sys_mat[i*num_stages*nx+iswap] = 1.0;  // identity matrix
         }
@@ -409,6 +409,10 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     work->ipiv = malloc(sizeof(*work->ipiv) * (num_stages*nx));
     work->sys_mat = malloc(sizeof(*work->sys_mat) * (num_stages*nx)*(num_stages*nx));
     work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+nx+nu));
+
+#if WARM_SWAP
+    work->ipiv_tmp = malloc(sizeof(*work->ipiv_tmp) * (num_stages*nx));
+#endif
 
 #if !TRIPLE_LOOP
     // matrices in matrix struct format:

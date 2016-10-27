@@ -32,7 +32,8 @@ typedef struct sim_lifted_irk_workspace_ {
     real_t *rhs_in;
     real_t *VDE_tmp;
     real_t *out_tmp;
-    int *ipiv;
+    int_t *ipiv;
+    int_t *ipiv_tmp;
     real_t *sys_mat;
     real_t *sys_sol;
     struct d_strmat *str_mat;
