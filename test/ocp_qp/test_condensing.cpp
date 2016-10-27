@@ -122,10 +122,15 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
     int_t nx = (int_t) readMatrix("nx.dat")(0, 0);
     int_t nu = (int_t) readMatrix("nu.dat")(0, 0);
     Eigen::MatrixXd A = readMatrix("A.dat");
+    REQUIRE(A.rows() == nx);
+    REQUIRE(A.cols() == nx);
     Eigen::MatrixXd B = readMatrix("B.dat");
-    Eigen::MatrixXd b = readMatrix("b.dat");
-    Eigen::MatrixXd x0 = readMatrix("x0.dat");
-    Eigen::MatrixXd G = readMatrix("transition_matrix.dat");
+    REQUIRE(B.rows() == nx);
+    REQUIRE(B.cols() == nu);
+    Eigen::VectorXd b = readMatrix("c.dat");
+    REQUIRE(b.rows() == nx);
+    Eigen::VectorXd x0 = readMatrix("x0.dat");
+    REQUIRE(x0.rows() == nx);
 
     // Fill in data
     int_t nx_vector[N+1];
@@ -171,12 +176,24 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
     fill_in_condensing_structs(&qp, &input, &output, &work);
 
     SECTION("Transition vector") {
-        Eigen::MatrixXd g = readMatrix("transition_vector.dat");
         calculate_transition_vector(&qp, &work, x0.data());
+        Eigen::VectorXd true_g = readMatrix("transition_vector.dat");
+        Eigen::VectorXd acados_g = Eigen::VectorXd(true_g).setZero();
         for (int_t i = 0; i < N; i++) {
-            Eigen::MatrixXd acados_g_block = Eigen::Map<Eigen::MatrixXd>(work.g[i], nx, 1);
-            Eigen::MatrixXd octave_g_block = g.block(i*nx, 0, nx, 1);
-            REQUIRE(acados_g_block.isApprox(octave_g_block, EPS));
+            acados_g.block(i*nx, 0, nx, 1) = Eigen::Map<Eigen::MatrixXd>(work.g[i], nx, 1);
         }
+        REQUIRE(acados_g.isApprox(true_g, EPS));
+    }
+
+    SECTION("Transition matrix") {
+        calculate_transition_matrix(&qp, &work);
+        Eigen::MatrixXd true_G = readMatrix("transition_matrix.dat");
+        Eigen::MatrixXd acados_G = Eigen::MatrixXd(true_G).setZero();
+        for (int_t i = 0; i < N; i++) {
+            for (int_t j = 0; j <= i; j++) {
+                acados_G.block(i*nx, j*nu, nx, nu) = Eigen::Map<Eigen::MatrixXd>(work.G[i][j], nx, nu);
+            }
+        }
+        REQUIRE(acados_G.isApprox(true_G));
     }
 }
