@@ -18,6 +18,7 @@ addons:
       - clang-3.7
       - gcc-6
       - g++-6
+      - octave
 
 install:
  - pushd external
