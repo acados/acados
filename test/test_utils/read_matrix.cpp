@@ -1,4 +1,4 @@
-#include <Eigen/Dense>
+#include "read_matrix.hpp"
 #include <cctype>
 #include <iostream>
 #include <fstream>
