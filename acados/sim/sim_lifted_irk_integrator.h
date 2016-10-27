@@ -23,6 +23,11 @@
 #include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
 
+#define TRANSPOSED 0
+#define TRIPLE_LOOP 0
+#define CODE_GENERATION 0
+#define WARM_SWAP 1
+
 typedef struct sim_lifted_irk_workspace_ {
     real_t *rhs_in;
     real_t *VDE_tmp;
@@ -41,6 +46,9 @@ typedef struct sim_lifted_irk_memory_ {
     real_t *x;
     real_t *u;
     int_t nswaps;
+#if WARM_SWAP
+    int *ipiv;
+#endif
 } sim_lifted_irk_memory;
 
 

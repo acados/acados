@@ -12,10 +12,6 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
 
-#define TRANSPOSED 0
-#define TRIPLE_LOOP 0
-#define CODE_GENERATION 0
-
 #if TRIPLE_LOOP
 
 #if CODE_GENERATION
@@ -138,6 +134,11 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     int_t nu = in->nu;
     int_t num_stages = opts->num_stages;
     int_t i, s1, s2, j, istep;
+#if WARM_SWAP
+    int_t iswap;
+    int *ipiv_old = mem->ipiv;  // pivoting vector
+    int_t ipiv_tmp[num_stages*nx];
+#endif
 #if FIXED_STEP_SIZE == 0
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
@@ -206,7 +207,14 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     for (istep = 0; istep < NSTEPS; istep++) {
         // form exact linear system matrix (explicit ODE case):
         for (i = 0; i < num_stages*nx*num_stages*nx; i++ ) sys_mat[i] = 0.0;
+#if WARM_SWAP
+        for (i = 0; i < num_stages*nx; i++ ) {
+            iswap = ipiv_old[i];
+            sys_mat[i*num_stages*nx+iswap] = 1.0;  // identity matrix
+        }
+#else
         for (i = 0; i < num_stages*nx; i++ ) sys_mat[i*(num_stages*nx+1)] = 1.0;  // identity matrix
+#endif
 
         for (s1 = 0; s1 < num_stages; s1++) {
             for (i = 0; i < nx; i++) {
@@ -224,12 +232,22 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 
             // put VDE_tmp in sys_mat:
             for (s2 = 0; s2 < num_stages; s2++) {
+#if WARM_SWAP
+                for (i = 0; i < nx; i++) {
+                    iswap = ipiv_old[s1*nx+i];
+                    for (j = 0; j < nx; j++) {
+                        sys_mat[(s2*nx+j)*num_stages*nx+iswap] -=
+                                H_INT*A_mat[s2*num_stages+s1]*VDE_tmp[nx+j*nx+i];
+                    }
+                }
+#else
                 for (j = 0; j < nx; j++) {
                     for (i = 0; i < nx; i++) {
                         sys_mat[(s2*nx+j)*num_stages*nx+s1*nx+i] -=
                                 H_INT*A_mat[s2*num_stages+s1]*VDE_tmp[nx+j*nx+i];
                     }
                 }
+#endif
             }
         }
 
@@ -260,6 +278,15 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
             timing_ad += acado_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:
+#if WARM_SWAP
+            for (i = 0; i < nx; i++) {
+                iswap = ipiv_old[s1*nx+i];
+                for (j = 0; j < nx+nu+1; j++) {
+                    sys_sol[j*num_stages*nx+iswap] = VDE_tmp[j*nx+i];
+                }
+                sys_sol[iswap] -= K_traj[istep*num_stages*nx+s1*nx+i];
+            }
+#else
             for (j = 0; j < nx+nu+1; j++) {
                 for (i = 0; i < nx; i++) {
                     sys_sol[j*num_stages*nx+s1*nx+i] = VDE_tmp[j*nx+i];
@@ -268,6 +295,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
             for (i = 0; i < nx; i++) {
                 sys_sol[s1*nx+i] -= K_traj[istep*num_stages*nx+s1*nx+i];
             }
+#endif
         }
 
         acado_tic(&timer_la);
@@ -299,6 +327,37 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
 #endif
+#endif
+#if WARM_SWAP
+#if TRIPLE_LOOP
+        for (i = 0; i < num_stages*nx; i++) ipiv_tmp[i] = ipiv[i];
+#else
+        for (i = 0; i < num_stages*nx; i++) ipiv_tmp[i] = i;
+        for (i = 0; i < num_stages*nx; i++) {
+            j = ipiv[i];
+            if (j != i) {
+                iswap = ipiv_tmp[i];
+                ipiv_tmp[i] = ipiv_tmp[j];
+                ipiv_tmp[j] = iswap;
+            }
+        }
+#endif
+
+//        fprintf(stdout, "ipiv_old: ");
+//        for (i = 0; i < num_stages*nx; i++) fprintf(stdout, "%d ", ipiv_old[i]);
+//        fprintf(stdout, "\n");
+//        fprintf(stdout, "ipiv: ");
+//        for (i = 0; i < num_stages*nx; i++) fprintf(stdout, "%d ", ipiv_tmp[i]);
+//        fprintf(stdout, "\n");
+        for (i = 0; i < num_stages*nx; i++) {
+            ipiv_tmp[i] = ipiv_old[ipiv_tmp[i]];
+        }
+//        fprintf(stdout, "ipiv_tmp: ");
+//        for (i = 0; i < num_stages*nx; i++) fprintf(stdout, "%d ", ipiv_tmp[i]);
+//        fprintf(stdout, "\n");
+        for (i = 0; i < num_stages*nx; i++) {
+            ipiv_old[i] = ipiv_tmp[i];
+        }
 #endif
         timing_la += acado_toc(&timer_la);
 
@@ -384,6 +443,11 @@ void sim_lifted_irk_create_memory(const sim_in *in, sim_RK_opts *opts,
     mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*(nx+nu)));
     mem->x = malloc(sizeof(*mem->x) * nx);
     mem->u = malloc(sizeof(*mem->u) * nu);
+
+#if WARM_SWAP
+    mem->ipiv = malloc(sizeof(*mem->ipiv) * (num_stages*nx));
+    for ( i = 0; i < num_stages*nx; i++ ) mem->ipiv[i] = i;
+#endif
 
     for ( i = 0; i < nSteps*num_stages*nx; i++ ) mem->K_traj[i] = 0.0;
     for ( i = 0; i < nSteps*num_stages*nx*(nx+nu); i++ ) mem->DK_traj[i] = 0.0;
