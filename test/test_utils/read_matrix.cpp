@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <functional>
 #include <locale>
+#include <exception>
 
 #define MAXBUFSIZE  ((int) 1e6)
 
@@ -36,7 +37,10 @@ Eigen::MatrixXd readMatrix(const char *filename) {
     std::ifstream infile;
     infile.open(filename);
     if (!infile.is_open()) {
-        return Eigen::MatrixXd(1, 1);
+        std::string err_message;
+        err_message + "Unable to open file " + filename;
+        std::cout << err_message << std::endl;
+        throw new std::runtime_error(err_message);
     }
     while (infile.is_open() && !infile.eof()) {
         std::string line;

@@ -11,6 +11,8 @@ if ( NOT CMAKE_BUILD_TYPE )
 	set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops")
 endif ( NOT CMAKE_BUILD_TYPE )
 
+message ( "\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n" )
+
 if ( CMAKE_BUILD_TYPE MATCHES Debug )
     add_definitions ( -DDEBUG )
 endif ( CMAKE_BUILD_TYPE MATCHES Debug )
@@ -67,14 +69,16 @@ add_library ( qpoases STATIC IMPORTED )
 set_property ( TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/qpOASES/bin/libqpOASES_e.a")
 
 # CasADi
-# execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi mkdir build )
-# execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi cd build )
-# execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build cmake .. )
-# execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build
-    # make RESULT_VARIABLE casadi_built )
-# if ( NOT "${casadi_built}" STREQUAL "0")
-    # message( FATAL_ERROR "build of casadi failed with status ${casadi_built}!" )
-# endif ( )
+if ( BUILD_WITH_CASADI )
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi mkdir build )
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi cd build )
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build cmake .. )
+	execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build
+	    make RESULT_VARIABLE casadi_built )
+	if ( NOT "${casadi_built}" STREQUAL "0")
+	    message( FATAL_ERROR "build of casadi failed with status ${casadi_built}!" )
+	endif ( )
+endif ( )
 
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
@@ -93,11 +97,28 @@ add_executable ( test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_C
 target_link_libraries ( test_chain acados qpoases blasfeo m )
 
 if ( CMAKE_BUILD_TYPE MATCHES Test )
+    # Find test data generation files
+	set ( FIND_COMMAND find test -type f -name "generate_*.m")
+	set ( FIND_GENERATION_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND}  )
+	execute_process ( COMMAND ${FIND_GENERATION_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE TEST_DATA_GENERATION_FILES )
+	string ( REPLACE "\n" " " TEST_DATA_GENERATION_FILES ${TEST_DATA_GENERATION_FILES} )
+	separate_arguments ( TEST_DATA_GENERATION_FILES )
+	# Generate the test data
+	foreach ( GENERATION_FILE IN ITEMS ${TEST_DATA_GENERATION_FILES} )
+		set ( GENERATION_FILE "../../${GENERATION_FILE}" )
+		message ( "Current file: ${GENERATION_FILE}" )
+		if ( NOT EXISTS ${PROJECT_BINARY_DIR}/test )
+			execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} mkdir test )
+		endif ( )
+		set ( GENERATE_TEST_DATA octave ${GENERATION_FILE} )
+		execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR}/test ${GENERATE_TEST_DATA} )
+	endforeach ( )
     add_executable ( unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_TEST_UTILS} )
     target_link_libraries ( unit_tests acados qpoases blasfeo m )
+	set_target_properties ( unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test )
 endif ( )
 
-# Lint acados
+# Linter
 find_package ( PythonInterp )
 if ( PYTHONINTERP_FOUND )
     set ( ACADOS_STYLE_FILTER
