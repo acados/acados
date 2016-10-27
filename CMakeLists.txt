@@ -5,22 +5,27 @@ set ( CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set ( CMAKE_VERBOSE_MAKEFILE ON )
 set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror" )
+set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror" )
 
 if ( NOT CMAKE_BUILD_TYPE )
     set( CMAKE_BUILD_TYPE Release )
 	set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops")
-endif ( NOT CMAKE_BUILD_TYPE )
+endif ( )
 
 message ( "\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n" )
 
 if ( CMAKE_BUILD_TYPE MATCHES Debug )
     add_definitions ( -DDEBUG )
-endif ( CMAKE_BUILD_TYPE MATCHES Debug )
+endif ( )
 
 if ( CMAKE_BUILD_TYPE MATCHES Profile )
-    set( CMAKE_BUILD_TYPE Release )
 	set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fprofile-use" )
-endif ( CMAKE_BUILD_TYPE MATCHES Profile )
+endif ( )
+
+if ( CMAKE_BUILD_TYPE MATCHES Test )
+	set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g" )
+	set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g" )
+endif ( )
 
 # Define include folders
 include_directories ( "${PROJECT_SOURCE_DIR}" )
@@ -114,7 +119,7 @@ if ( CMAKE_BUILD_TYPE MATCHES Test )
 		execute_process ( COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR}/test ${GENERATE_TEST_DATA} )
 	endforeach ( )
     add_executable ( unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_TEST_UTILS} )
-    target_link_libraries ( unit_tests acados qpoases blasfeo m )
+    target_link_libraries ( unit_tests acados qpoases blasfeo hpmpc m )
 	set_target_properties ( unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test )
 endif ( )
 

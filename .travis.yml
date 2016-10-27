@@ -32,12 +32,9 @@ script:
  - git submodule update
  - mkdir build
  - cd build
- - cmake ..
+ - cmake -CMAKE_BUILD_TYPE=Test ..
  - set +e
  - make lint
- - make test_condensing_qpoases
- - ./test_condensing_qpoases
- - make test_nmpc
- - ./test_nmpc
- - make test_chain
- - ./test_chain
+ - make unit_tests
+ - cd test
+ - ./unit_tests
