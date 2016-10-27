@@ -28,13 +28,12 @@ install:
  - popd
 
 script:
- - pwd
  - set -e
  - git submodule init
  - git submodule update
  - mkdir build
  - cd build
- - cmake -CMAKE_BUILD_TYPE=Test ..
+ - cmake -D CMAKE_BUILD_TYPE=Test ..
  - set +e
  - make lint
  - make unit_tests
