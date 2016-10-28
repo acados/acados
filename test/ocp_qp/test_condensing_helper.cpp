@@ -1,3 +1,4 @@
+#include <string>
 #include "Eigen/Dense"
 
 using Eigen::MatrixXd;
@@ -125,11 +126,6 @@ static void readUnconstrainedInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, 
     *q = readVectorFromFile("qv.dat", nx);
     *r = readVectorFromFile("rv.dat", nu);
 }
-
-// static void readBoundsInputDataFromFile(int_t N, int_t nx, int_t nu, VectorXd *lb, VectorXd *ub) {
-//     *lb = readVectorFromFile("lower_bound.dat", N*(nx+nu)+nx);
-//     *ub = readVectorFromFile("upper_bound.dat", N*(nx+nu)+nx);
-// }
 
 static void fillWithUnconstrainedData(ocp_qp_in *qp, condensing_in *input,
     condensing_out *output, condensing_workspace *work, VectorXd *x0) {
