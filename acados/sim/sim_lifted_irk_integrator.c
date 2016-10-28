@@ -416,9 +416,12 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 
 #if !TRIPLE_LOOP
     // matrices in matrix struct format:
-    int size_strmat = d_size_strmat(num_stages*nx, num_stages*nx)
-            + d_size_strmat(num_stages*nx, 1+nx+nu)
-            + d_size_strmat(1+nx+nu, num_stages*nx);
+    int size_strmat = 0;
+    size_strmat += d_size_strmat(num_stages*nx, num_stages*nx);
+    size_strmat += d_size_strmat(num_stages*nx, 1+nx+nu);
+#if TRANSPOSED
+    size_strmat += d_size_strmat(1+nx+nu, num_stages*nx);
+#endif  // TRANSPOSED
     void *memory_strmat;
     v_zeros_align(&memory_strmat, size_strmat);
     char *ptr_memory_strmat = (char *) memory_strmat;
@@ -429,9 +432,11 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol->memory_size;
 
+#if TRANSPOSED
     d_create_strmat(1+nx+nu, num_stages*nx, work->str_sol_t, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol_t->memory_size;
-#endif
+#endif  // TRANSPOSED
+#endif  // !TRIPLE_LOOP
 }
 
 
