@@ -1,5 +1,5 @@
 # explicitly request container-based infrastructure
-sudo: false
+sudo: true
  
 env:
  - CXX="g++-6" CC="gcc-6"
@@ -19,6 +19,11 @@ addons:
       - gcc-6
       - g++-6
       - octave
+
+before_install:
+ - sudo add-apt-repository -y ppa:octave/stable
+ - sudo apt-get update -qq
+ - sudo apt-get install octave
 
 install:
  - pushd external
