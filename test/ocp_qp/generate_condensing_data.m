@@ -22,15 +22,20 @@ B = randn(nx, nu);
 save('B.dat', 'B', '-ascii', '-double');
 b = randn(nx, 1);
 save('bv.dat', 'b', '-ascii', '-double');
-Q = randn(nx, nx);
+do
+    Q = 3*eye(nx);randn(nx, nx);
+    Q = Q.'*Q;
+    S = 1*eye(nu, nx);randn(nu, nx);
+    R = eye(nu);randn(nu, nu);
+    R = 2*R.'*R;
+until(all(eig([Q, S.'; S, R]) > 1e-2))
+
 save('Q.dat', 'Q', '-ascii', '-double');
-S = 0*randn(nu, nx);
 save('S.dat', 'S', '-ascii', '-double');
-R = 0.01*eye(nu);randn(nu, nu);
 save('R.dat', 'R', '-ascii', '-double');
-q = 0*randn(nx, 1);
+q = randn(nx, 1);
 save('qv.dat', 'q', '-ascii', '-double');
-r = 0*randn(nu, 1);
+r = randn(nu, 1);
 save('rv.dat', 'r', '-ascii', '-double');
 
 A_bar = [-eye(nx),zeros(nx,(N-1)*nx)];
@@ -39,9 +44,8 @@ for i=1:N-1
 end
 B_bar = kron(eye(N),B);
 b_bar = repmat(b, N, 1);
-b_bar(1:nx) = b_bar(1:nx) + A*x0;
 
-g = -A_bar \ b_bar;
+g = -A_bar \ (b_bar + [A*x0; zeros((N-1)*nx,1)]);
 save('transition_vector.dat', 'g', '-ascii', '-double');
 G = -A_bar \ B_bar;
 save('transition_matrix.dat', 'G', '-ascii', '-double');
@@ -52,25 +56,70 @@ R_bar = kron(eye(N), R);
 q_bar = repmat(q, N, 1);
 r_bar = repmat(r, N, 1);
 
-h_bar = r_bar + transpose(G)*(q_bar + Q_bar*g) + S_bar.'*[g(1:end-nu);zeros(nu,1)];
-h_bar = r_bar + G.'*(q_bar + Q_bar*g); + S_bar.'*g;
-save('condensed_gradient.dat', 'h_bar', '-ascii', '-double');
-H_bar = R_bar + G.'*Q_bar*G + S_bar.'*G + G.'*S_bar;
-save('condensed_hessian.dat', 'H_bar', '-ascii', '-double');
-
 % Test condensing
-% H = blkdiag(kron(eye(N), [Q, S.'; S, R]), Q);
-% h = [repmat([q;r], N, 1);q];
-% G_bar = [-eye(nx),zeros(nx,N*(nx+nu))];
-% for i=1:N
-%     G_bar = [G_bar; zeros(nx, (i-1)*(nx+nu)), A, B, -eye(nx), zeros(nx, (N-i)*(nx+nu))];
-% end
-% g_bar = [-x0; zeros(N*nx, 1)];
-% w_star_ocp = qp([], H, h, G_bar, g_bar);
-% XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);
-% u_star_ocp = XU(nx+1:end, 1:end-1);
-% u_star_ocp = u_star_ocp(:);
-% w_star_condensed = qp([], H_bar, h_bar);
-%
-% [u_star_ocp w_star_condensed]
-% norm(u_star_ocp - w_star_condensed)
+H = blkdiag(kron(eye(N), [Q, S.'; S, R]), Q);
+h = [repmat([q;r], N, 1);q];
+G_bar = [-eye(nx),zeros(nx,N*(nx+nu))];
+for i=1:N
+    G_bar = [G_bar; zeros(nx, (i-1)*(nx+nu)), A, B, -eye(nx), zeros(nx, (N-i)*(nx+nu))];
+end
+g_bar = [x0; b_bar];
+
+[w_star_ocp, ~, info_struct, lambda_star_ocp] = qp([], H, h, G_bar, -g_bar);
+if(~(info_struct.info == 0))
+    Z = null(G_bar);
+    all(eig(Z.'*H*Z) > 1e-4)
+    error(['Something wrong with QP: ', num2str(info_struct.info)]);
+end
+lambda_star_ocp = -lambda_star_ocp;
+
+KKT_system_ocp = [];
+for i=0:N-1
+    xk = w_star_ocp(i*(nx+nu)+1:i*(nx+nu)+nx);
+    uk = w_star_ocp(i*(nx+nu)+nx+1:(i+1)*(nx+nu));
+    lambdak = lambda_star_ocp(i*nx+1:(i+1)*nx);
+    lambdak_1 = lambda_star_ocp((i+1)*nx+1:(i+2)*nx);
+    KKT_system_ocp = [KKT_system_ocp; Q*xk + q + S.'*uk - lambdak + A.'*lambdak_1];
+    KKT_system_ocp = [KKT_system_ocp; R*uk + r + S*xk + B.'*lambdak_1];
+end
+lambdaN = lambda_star_ocp(N*(nx)+1:end);
+xN = w_star_ocp(N*(nx+nu)+1:end);
+KKT_system_ocp = [KKT_system_ocp; Q*xN + q - lambdaN];
+norm(KKT_system_ocp)
+
+h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*[g(1:end-nx);zeros(nx,1)];
+% h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*g;
+% save('condensed_gradient.dat', 'h_bar', '-ascii', '-double');
+S_cut = blkdiag(kron(eye(N-1), S.'), zeros(nx, nu));
+G_cut = [G(1:end-nx, :); zeros(nx, N*nu)];
+H_bar = R_bar + G.'*Q_bar*G + S_cut.'*G + G.'*S_cut;
+% save('condensed_hessian.dat', 'H_bar', '-ascii', '-double');
+
+% Janicks' way
+c = b_bar;
+L = [A; zeros((N-1)*nx, nx)];
+G2 = [zeros(nx, N*(nu)); -A_bar \ B_bar];
+g2 = [zeros(nx, 1); -A_bar \ c];
+Ge = [eye(nx); -A_bar \ L];
+Q_all = kron(eye(N+1), Q);
+S_all = [kron(eye(N), S), zeros(N*nu, nx)];
+R_all = kron(eye(N), R);
+r_all = repmat(r, N, 1);
+q_all = repmat(q, N+1, 1);
+Se = G2.'*Q_all*Ge + S_all*Ge;
+
+r_condensed = r_all + G2.'*(q_all + Q_all*g2) + S_all*g2 + Se*x0;
+R_condensed = R_all + G2.'*Q_all*G2 + S_all*G2 + G2.'*S_all.';
+save('condensed_gradient.dat', 'r_condensed', '-ascii', '-double');
+save('condensed_hessian.dat', 'R_condensed', '-ascii', '-double');
+
+XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);
+u_star_ocp = XU(nx+1:end, 1:end-1);
+u_star_ocp = u_star_ocp(:);
+w_star_condensed = qp([], H_bar, h_bar);
+w_star_condensed = qp([], R_condensed, r_condensed);
+
+[u_star_ocp w_star_condensed]
+norm(u_star_ocp - w_star_condensed)
+
+disp(Se*x0)

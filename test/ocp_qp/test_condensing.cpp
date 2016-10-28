@@ -136,6 +136,7 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
         for (int_t i = 0; i < N; i++) {
             acados_h.block(i*nu, 0, nu, 1) = Eigen::Map<VectorXd>(&output.h[i*nu], nu);
         }
+        std::cout << acados_h.block(0, 0, nu, 1) - true_h.block(0, 0, nu, 1) << std::endl;
         REQUIRE(acados_h.isApprox(true_h, COMPARISON_TOLERANCE));
     }
 }
