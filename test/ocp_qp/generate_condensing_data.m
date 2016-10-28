@@ -23,11 +23,11 @@ save('B.dat', 'B', '-ascii', '-double');
 b = randn(nx, 1);
 save('bv.dat', 'b', '-ascii', '-double');
 do
-    Q = 3*eye(nx);randn(nx, nx);
+    Q = randn(nx, nx);
     Q = Q.'*Q;
-    S = 1*eye(nu, nx);randn(nu, nx);
-    R = eye(nu);randn(nu, nu);
-    R = 2*R.'*R;
+    S = randn(nu, nx);
+    R = randn(nu, nu);
+    R = R.'*R;
 until(all(eig([Q, S.'; S, R]) > 1e-2))
 
 save('Q.dat', 'Q', '-ascii', '-double');
@@ -68,9 +68,10 @@ g_bar = [x0; b_bar];
 [w_star_ocp, ~, info_struct, lambda_star_ocp] = qp([], H, h, G_bar, -g_bar);
 if(~(info_struct.info == 0))
     Z = null(G_bar);
-    all(eig(Z.'*H*Z) > 1e-4)
-    error(['Something wrong with QP: ', num2str(info_struct.info)]);
+    disp(['convex QP? : ', num2str(all(eig(Z.'*H*Z) > 1e-4))])
+    error(['QP solution failed with code: ', num2str(info_struct.info)]);
 end
+% Octave follows a different convention from us
 lambda_star_ocp = -lambda_star_ocp;
 
 KKT_system_ocp = [];
@@ -85,14 +86,14 @@ end
 lambdaN = lambda_star_ocp(N*(nx)+1:end);
 xN = w_star_ocp(N*(nx+nu)+1:end);
 KKT_system_ocp = [KKT_system_ocp; Q*xN + q - lambdaN];
-norm(KKT_system_ocp)
 
-h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*[g(1:end-nx);zeros(nx,1)];
+% There is a bug somewhere in the following lines
+% h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*[g(1:end-nx);zeros(nx,1)];
 % h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*g;
 % save('condensed_gradient.dat', 'h_bar', '-ascii', '-double');
-S_cut = blkdiag(kron(eye(N-1), S.'), zeros(nx, nu));
-G_cut = [G(1:end-nx, :); zeros(nx, N*nu)];
-H_bar = R_bar + G.'*Q_bar*G + S_cut.'*G + G.'*S_cut;
+% S_cut = blkdiag(kron(eye(N-1), S.'), zeros(nx, nu));
+% G_cut = [G(1:end-nx, :); zeros(nx, N*nu)];
+% H_bar = R_bar + G.'*Q_bar*G + S_cut.'*G + G.'*S_cut;
 % save('condensed_hessian.dat', 'H_bar', '-ascii', '-double');
 
 % Janicks' way
@@ -116,10 +117,7 @@ save('condensed_hessian.dat', 'R_condensed', '-ascii', '-double');
 XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);
 u_star_ocp = XU(nx+1:end, 1:end-1);
 u_star_ocp = u_star_ocp(:);
-w_star_condensed = qp([], H_bar, h_bar);
+% w_star_condensed = qp([], H_bar, h_bar);
 w_star_condensed = qp([], R_condensed, r_condensed);
 
-[u_star_ocp w_star_condensed]
-norm(u_star_ocp - w_star_condensed)
-
-disp(Se*x0)
+disp(['Difference between condensed and sparse solution: ', num2str(norm(u_star_ocp - w_star_condensed))])
