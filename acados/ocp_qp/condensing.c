@@ -98,14 +98,17 @@ static void corr_grad_fixd_init_state(ocp_qp_in *in, condensing_out *out,
 
     for (int_t j = 0; j < in->nu[0]; j++) ws->Sx0[j] = 0;
     for (int_t j = 0; j < in->nu[0]; j++) {
-        for (int_t i = 0; i < in->nx[0]; i++) ws->Sx0[j] += in->S[0][i+j*in->nx[0]]*x0[i];
+        for (int_t i = 0; i < in->nx[0]; i++) ws->Sx0[j] += in->S[0][j+i*in->nu[0]]*x0[i];
     }
     /* first control */
     for (int_t i = 0; i < in->nu[0]; i++) out->h[i] = in->r[0][i];
     for (int_t j = 0; j < in->nx[0]; j++) {
         for (int_t i = 0; i < in->nu[0]; i++) {
-            out->h[i] += in->B[0][i*in->nx[0]+j]*ws->w2[j] + ws->Sx0[i];
+            out->h[i] += in->B[0][i*in->nx[0]+j]*ws->w2[j];
         }
+    }
+    for (int_t i = 0; i < in->nu[0]; i++) {
+        out->h[i] += ws->Sx0[i];
     }
 }
 

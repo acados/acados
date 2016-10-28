@@ -132,10 +132,16 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
         calculate_transition_matrix(&qp, &work);
         calculate_gradient(&qp, &output, &work, 0, x0.data());
         VectorXd true_h = readVectorFromFile("condensed_gradient.dat", N*nu);
-        VectorXd acados_h = VectorXd(true_h).setZero();
-        for (int_t i = 0; i < N; i++) {
-            acados_h.block(i*nu, 0, nu, 1) = Eigen::Map<VectorXd>(&output.h[i*nu], nu);
-        }
+        VectorXd acados_h = Eigen::Map<VectorXd>(&output.h[0], N*nu);
         REQUIRE(acados_h.isApprox(true_h, COMPARISON_TOLERANCE));
+    }
+
+    SECTION("Condensed Hessian") {
+        calculate_transition_vector(&qp, &work, x0.data());
+        calculate_transition_matrix(&qp, &work);
+        calculate_hessian(&qp, &output, &work, 0);
+        MatrixXd true_H = readMatrixFromFile("condensed_hessian.dat", N*nu, N*nu);
+        MatrixXd acados_H = Eigen::Map<MatrixXd>(&output.H[0], N*nu, N*nu);
+        REQUIRE(acados_H.isApprox(true_H, COMPARISON_TOLERANCE));
     }
 }
