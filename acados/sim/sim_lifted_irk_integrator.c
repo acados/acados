@@ -162,12 +162,16 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     real_t *sys_sol = work->sys_sol;
 #if !TRIPLE_LOOP
     struct d_strmat *str_mat = work->str_mat;
-#if !TRANSPOSED
-    struct d_strmat *str_sol = work->str_sol;
-#else
+#if defined(LA_BLASFEO)
+#if TRANSPOSED
     struct d_strmat *str_sol_t = work->str_sol_t;
-#endif
-#endif
+#else  // NOT TRANSPOSED
+    struct d_strmat *str_sol = work->str_sol;
+#endif  // TRANSPOSED
+#else   // LA_BLAS | LA_REFERENCE
+    struct d_strmat *str_sol = work->str_sol;
+#endif  // LA_BLASEO
+#endif  // !TRIPLE_LOOP
 
     acado_timer timer, timer_la, timer_ad;
     real_t timing_la = 0.0;
@@ -254,14 +258,16 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         acado_tic(&timer_la);
 #if TRIPLE_LOOP
         LU_system_ACADO(sys_mat, ipiv, num_stages*nx, &mem->nswaps);
-#else
+#else   // TRIPLE_LOOP
         // ---- BLASFEO: LU factorization ----
+#if defined(LA_BLASFEO)
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
+#endif  // LA_BLAFEO
         dgetrf_libstr(num_stages*nx, num_stages*nx, str_mat, 0, 0, str_mat, 0,
                 0, ipiv);  // Gauss elimination
         // ---- BLASFEO: LU factorization ----
-#endif
+#endif   // TRIPLE_LOOP
         timing_la += acado_toc(&timer_la);
 
         for (s1 = 0; s1 < num_stages; s1++) {
@@ -301,7 +307,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         acado_tic(&timer_la);
 #if TRIPLE_LOOP
         solve_system_ACADO(sys_mat, sys_sol, ipiv, num_stages*nx, nx+nu+1);
-#else
+#else  // TRIPLE_LOOP
+#if defined(LA_BLASFEO)
 #if TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_tran_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
@@ -314,7 +321,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         d_cvt_tran_strmat2mat(nx+nu+1, num_stages*nx, str_sol_t, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
-#else
+#else   // NOT TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
                 str_sol, 0, 0);  // mat2strmat
@@ -326,8 +333,17 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         d_cvt_strmat2mat(num_stages*nx, nx+nu+1, str_sol, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
-#endif
-#endif
+#endif  // TRANSPOSED
+#else   // LA_BLAS | LA_REFERENCE
+        // ---- BLASFEO: row transformations + backsolve ----
+        drowpe_libstr(num_stages*nx, ipiv, str_sol);  // row permutations
+        dtrsm_llnu_libstr(num_stages*nx, nx+nu+1, 1.0, str_mat, 0, 0, str_sol,
+                0, 0, str_sol, 0, 0);  // L backsolve
+        dtrsm_lunn_libstr(num_stages*nx, nx+nu+1, 1.0, str_mat, 0, 0, str_sol,
+                0, 0, str_sol, 0, 0);  // U backsolve
+        // ---- BLASFEO: row transformations + backsolve ----
+#endif  // LA_BLAFEO
+#endif  // TRIPLE_LOOP
 #if WARM_SWAP
 #if TRIPLE_LOOP
         for (i = 0; i < num_stages*nx; i++) ipiv_tmp[i] = ipiv[i];
@@ -415,27 +431,40 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 #endif
 
 #if !TRIPLE_LOOP
+
+#if defined(LA_BLASFEO)
     // matrices in matrix struct format:
     int size_strmat = 0;
     size_strmat += d_size_strmat(num_stages*nx, num_stages*nx);
-    size_strmat += d_size_strmat(num_stages*nx, 1+nx+nu);
 #if TRANSPOSED
     size_strmat += d_size_strmat(1+nx+nu, num_stages*nx);
+#else   // NOT TRANSPOSED
+    size_strmat += d_size_strmat(num_stages*nx, 1+nx+nu);
 #endif  // TRANSPOSED
+
+	// accocate memory
     void *memory_strmat;
     v_zeros_align(&memory_strmat, size_strmat);
     char *ptr_memory_strmat = (char *) memory_strmat;
 
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, ptr_memory_strmat);
     ptr_memory_strmat += work->str_mat->memory_size;
-
-    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, ptr_memory_strmat);
-    ptr_memory_strmat += work->str_sol->memory_size;
-
 #if TRANSPOSED
     d_create_strmat(1+nx+nu, num_stages*nx, work->str_sol_t, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol_t->memory_size;
+#else   // NOT TRANSPOSED
+    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, ptr_memory_strmat);
+    ptr_memory_strmat += work->str_sol->memory_size;
 #endif  // TRANSPOSED
+
+#else  // LA_BLAS | LA_REFERENCE
+
+	// not allocate new memory: point to column-major matrix
+    d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
+    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, work->sys_sol);
+
+#endif  // LA_BLASFEO
+
 #endif  // !TRIPLE_LOOP
 }
 
