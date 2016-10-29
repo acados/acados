@@ -2,6 +2,7 @@
 #define TEST_TEST_UTILS_READ_MATRIX_HPP_
 
 #include <string>
+#include "acados/utils/types.h"
 
 /* Ignore compiler warnings from Eigen */
 #if defined(__clang__)
@@ -14,5 +15,9 @@
 #endif
 
 Eigen::MatrixXd readMatrix(const std::string filename);
+
+Eigen::MatrixXd readMatrixFromFile(std::string filename, int_t rows, int_t cols);
+
+Eigen::VectorXd readVectorFromFile(std::string filename, int_t length);
 
 #endif  // TEST_TEST_UTILS_READ_MATRIX_HPP_

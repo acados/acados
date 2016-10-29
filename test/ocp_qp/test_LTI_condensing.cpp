@@ -2,24 +2,11 @@
 
 #include "catch/include/catch.hpp"
 #include "test/test_utils/read_matrix.hpp"
-#include "acados/ocp_qp/condensing.c"
 #include "test_condensing_helper.cpp"
+#include "acados/ocp_qp/condensing.c"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-
-static MatrixXd readMatrixFromFile(std::string filename, int_t rows, int_t cols) {
-    MatrixXd M = readMatrix(filename);
-    REQUIRE(M.rows() == rows);
-    REQUIRE(M.cols() == cols);
-    return M;
-}
-
-static VectorXd readVectorFromFile(std::string filename, int_t length) {
-    VectorXd v = readMatrix(filename);
-    REQUIRE(v.rows() == length);
-    return v;
-}
 
 static void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
     *N = (int_t) readMatrix("N.dat")(0, 0);
@@ -41,7 +28,6 @@ TEST_CASE("Unconstrained LTI system", "[condensing]") {
     int_t N = qp.N;
     int_t nx = qp.nx[0];
     int_t nu = qp.nu[0];
-    real_t *x0d = x0.data();
 
     fill_in_condensing_structs(&qp, &input, &output, &work);
 
@@ -97,7 +83,6 @@ TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
     int_t N = qp.N;
     int_t nx = qp.nx[0];
     int_t nu = qp.nu[0];
-    real_t *x0d = x0.data();
     fillWithBoundsData(&qp, N, nx, nu);
 
     fill_in_condensing_structs(&qp, &input, &output, &work);
@@ -116,7 +101,7 @@ TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
     }
 
     SECTION("Calculate constraint bounds", "[condensing]") {
-        int_t nA = work.nconstraints;
+        int_t nA = get_num_constraints(&qp, &work);
         calculate_constraint_bounds(&qp, &output, &work, x0.data());
         VectorXd true_lbA = readVectorFromFile("condensed_lower_bound.dat", nA);
         VectorXd acados_lbA = Eigen::Map<VectorXd>(&output.lbA[0], nA);
@@ -127,10 +112,14 @@ TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
     }
 
     SECTION("Calculate constraint matrix", "[condensing]") {
-        int_t nA = work.nconstraints;
+        int_t nA = get_num_constraints(&qp, &work);
         calculate_constraint_matrix(&qp, &output, &work);
         MatrixXd true_A = readMatrixFromFile("condensed_constraint_matrix.dat", nA, N*nu);
         MatrixXd acados_A = Eigen::Map<MatrixXd>(&output.A[0], nA, N*nu);
         REQUIRE(acados_A.isApprox(true_A, COMPARISON_TOLERANCE));
     }
+}
+
+TEST_CASE("Constrained LTI system, general polytopic constraints", "[condensing]") {
+    REQUIRE(true);
 }

@@ -7,6 +7,7 @@
 #include <functional>
 #include <locale>
 #include <exception>
+#include "catch/include/catch.hpp"
 
 #define MAXBUFSIZE  ((int) 1e6)
 
@@ -71,4 +72,17 @@ Eigen::MatrixXd readMatrix(const std::string filename) {
             result(i, j) = buff[ cols*i+j ];
 
     return result;
+}
+
+Eigen::MatrixXd readMatrixFromFile(std::string filename, int_t rows, int_t cols) {
+    Eigen::MatrixXd M = readMatrix(filename);
+    REQUIRE(M.rows() == rows);
+    REQUIRE(M.cols() == cols);
+    return M;
+}
+
+Eigen::VectorXd readVectorFromFile(std::string filename, int_t length) {
+    Eigen::VectorXd v = readMatrix(filename);
+    REQUIRE(v.rows() == length);
+    return v;
 }

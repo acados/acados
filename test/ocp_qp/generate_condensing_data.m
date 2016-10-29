@@ -7,6 +7,9 @@ if(isempty(list))
 end
 pkg load optim
 
+% Tolerance used to determine optimality, to compare matrices, etc.
+TOLERANCE = 1e-12;
+
 % Let randn always return the same output
 randn('state', 0);
 
@@ -80,14 +83,15 @@ save('lower_bound_u.dat', 'lbu', '-ascii', '-double');
 ubw = [repmat([ubx;ubu], N, 1); ubx];
 lbw = [repmat([lbx;lbu], N, 1); lbx];
 
-[w_star_ocp, ~, exit_flag, ~, lambda_star_ocp] = quadprog(H, h, [], [], G_bar, -g_bar, lbw, ubw);
+[w_star_ocp, ~, exit_flag, ~, all_multipliers] = quadprog(H, h, [], [], G_bar, -g_bar, lbw, ubw);
 if(~(exit_flag == 1))
     Z = null(G_bar);
     disp(['convex QP? : ', num2str(all(eig(Z.'*H*Z) > 1e-4))])
     error(['QP solution failed with code: ', num2str(exit_flag)]);
 end
 % Octave follows a different convention from us
-lambda_star_ocp = -lambda_star_ocp.eqlin;
+lambda_star_ocp = all_multipliers.eqlin;
+mu_star_ocp = -all_multipliers.lower + all_multipliers.upper;
 
 KKT_system_ocp = [];
 for i=0:N-1
@@ -95,12 +99,19 @@ for i=0:N-1
     uk = w_star_ocp(i*(nx+nu)+nx+1:(i+1)*(nx+nu));
     lambdak = lambda_star_ocp(i*nx+1:(i+1)*nx);
     lambdak_1 = lambda_star_ocp((i+1)*nx+1:(i+2)*nx);
-    KKT_system_ocp = [KKT_system_ocp; Q*xk + q + S.'*uk - lambdak + A.'*lambdak_1];
-    KKT_system_ocp = [KKT_system_ocp; R*uk + r + S*xk + B.'*lambdak_1];
+    mukx = mu_star_ocp(i*(nx+nu)+1:i*(nx+nu)+nx);
+    muku = mu_star_ocp(i*(nx+nu)+nx+1:(i+1)*(nx+nu));
+    KKT_system_ocp = [KKT_system_ocp; Q*xk + q + S.'*uk - lambdak + A.'*lambdak_1 + mukx];
+    KKT_system_ocp = [KKT_system_ocp; R*uk + r + S*xk + B.'*lambdak_1 + muku];
 end
 lambdaN = lambda_star_ocp(N*(nx)+1:end);
+muN = mu_star_ocp(N*(nx+nu)+1:end);
 xN = w_star_ocp(N*(nx+nu)+1:end);
-KKT_system_ocp = [KKT_system_ocp; Q*xN + q - lambdaN];
+KKT_system_ocp = [KKT_system_ocp; Q*xN + q - lambdaN + muN];
+if(norm(KKT_system_ocp) > TOLERANCE)
+    KKT_system_ocp
+    error(['Solution is not optimal! norm of KKT: ', num2str(norm(KKT_system_ocp))]);
+end
 
 % There is a bug somewhere in the following lines
 % h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*[g(1:end-nx);zeros(nx,1)];
@@ -164,4 +175,6 @@ save('condensed_constraint_matrix.dat', 'A_condensed', '-ascii', '-double');
 XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);
 u_star_ocp = XU(nx+1:end, 1:end-1);
 u_star_ocp = u_star_ocp(:);
-disp(['Difference between condensed and sparse solution: ', num2str(norm(u_star_ocp - w_star_condensed))])
+if (norm(u_star_ocp - w_star_condensed) > TOLERANCE)
+    error(['Difference between condensed and sparse solution: ', num2str()])
+end
