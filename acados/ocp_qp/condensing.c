@@ -18,6 +18,7 @@
  */
 
 #include "acados/ocp_qp/condensing.h"
+#include <stdio.h>
 
 static void calculate_transition_vector(ocp_qp_in *in,
     condensing_workspace *ws, const real_t *x0) {
@@ -306,7 +307,7 @@ static void calculate_constraint_matrix(ocp_qp_in *in, condensing_out *out,
     }
     for (int_t j = 0; j < in->N; j++) {
         for (int_t k = 0; k < in->nu[0]; k++) {
-            for (int_t l = 0; l < in->nx[0]; l++) {
+            for (int_t l = 0; l < in->nc[in->N]; l++) {
                 out->A[ctr+j*ldA*in->nu[0]+k*ldA+l] = ws->D[in->N][j][k*in->nc[in->N]+l];
             }
         }

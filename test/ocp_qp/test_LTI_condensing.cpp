@@ -37,11 +37,13 @@ TEST_CASE("Unconstrained LTI system", "[condensing]") {
     condensing_workspace work;
     VectorXd x0;
 
-    fillWithUnconstrainedData(&qp, &input, &output, &work, &x0);
+    fillWithUnconstrainedData(&qp, &x0);
     int_t N = qp.N;
     int_t nx = qp.nx[0];
     int_t nu = qp.nu[0];
     real_t *x0d = x0.data();
+
+    fill_in_condensing_structs(&qp, &input, &output, &work);
 
     SECTION("Transition vector") {
         calculate_transition_vector(&qp, &work, x0.data());
@@ -85,5 +87,50 @@ TEST_CASE("Unconstrained LTI system", "[condensing]") {
 }
 
 TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
-    REQUIRE(true);
+    ocp_qp_in qp;
+    condensing_in input;
+    condensing_out output;
+    condensing_workspace work;
+    VectorXd x0;
+
+    fillWithUnconstrainedData(&qp, &x0);
+    int_t N = qp.N;
+    int_t nx = qp.nx[0];
+    int_t nu = qp.nu[0];
+    real_t *x0d = x0.data();
+    fillWithBoundsData(&qp, N, nx, nu);
+
+    fill_in_condensing_structs(&qp, &input, &output, &work);
+
+    calculate_transition_vector(&qp, &work, x0.data());
+    calculate_transition_matrix(&qp, &work);
+
+    SECTION("Calculate simple bounds", "[condensing]") {
+        calculate_simple_bounds(&qp, &output);
+        VectorXd true_lb = readVectorFromFile("u_lower_bound.dat", N*nu);
+        VectorXd acados_lb = Eigen::Map<VectorXd>(&output.lb[0], N*nu);
+        REQUIRE(acados_lb.isApprox(true_lb, COMPARISON_TOLERANCE));
+        VectorXd true_ub = readVectorFromFile("u_upper_bound.dat", N*nu);
+        VectorXd acados_ub = Eigen::Map<VectorXd>(&output.ub[0], N*nu);
+        REQUIRE(acados_ub.isApprox(true_ub, COMPARISON_TOLERANCE));
+    }
+
+    SECTION("Calculate constraint bounds", "[condensing]") {
+        int_t nA = work.nconstraints;
+        calculate_constraint_bounds(&qp, &output, &work, x0.data());
+        VectorXd true_lbA = readVectorFromFile("condensed_lower_bound.dat", nA);
+        VectorXd acados_lbA = Eigen::Map<VectorXd>(&output.lbA[0], nA);
+        REQUIRE(acados_lbA.isApprox(true_lbA, COMPARISON_TOLERANCE));
+        VectorXd true_ubA = readVectorFromFile("condensed_upper_bound.dat", nA);
+        VectorXd acados_ubA = Eigen::Map<VectorXd>(&output.ubA[0], nA);
+        REQUIRE(acados_ubA.isApprox(true_ubA, COMPARISON_TOLERANCE));
+    }
+
+    SECTION("Calculate constraint matrix", "[condensing]") {
+        int_t nA = work.nconstraints;
+        calculate_constraint_matrix(&qp, &output, &work);
+        MatrixXd true_A = readMatrixFromFile("condensed_constraint_matrix.dat", nA, N*nu);
+        MatrixXd acados_A = Eigen::Map<MatrixXd>(&output.A[0], nA, N*nu);
+        REQUIRE(acados_A.isApprox(true_A, COMPARISON_TOLERANCE));
+    }
 }

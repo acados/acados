@@ -1,7 +1,7 @@
 % Condensing routine that outputs data against which acados is tested.
 clear
-pkg install -forge struct
-pkg install -forge optim
+% pkg install -forge struct
+% pkg install -forge optim
 pkg load optim
 
 % Let randn always return the same output
@@ -66,29 +66,22 @@ for i=1:N
 end
 g_bar = [x0; b_bar];
 
-lbw = -10*abs(randn(N*(nx+nu)+nx,1));
-lbw(1:nx) = -10*abs(x0);
-save('lower_bound.dat', 'lbw', '-ascii', '-double');
-ubw = +10*abs(randn(N*(nx+nu)+nx,1));
-ubw(1:nx) = +10*abs(x0);
-save('upper_bound.dat', 'ubw', '-ascii', '-double');
-
-% feasible initial guess
-xk = x0;
-uk = zeros(nu,1);
-w_guess = x0;
-for i=1:N
-    xk = A*xk + B*uk + b;
-    w_guess = [w_guess; uk; xk];
-end
-
-norm([G_bar*w_guess+g_bar])
+ubx = 5*(x0 + abs(randn(nx,1)));
+ubu = 5*abs(randn(nu,1));
+lbx = -ubx;
+lbu = -ubu;
+save('upper_bound_x.dat', 'ubx', '-ascii', '-double');
+save('lower_bound_x.dat', 'lbx', '-ascii', '-double');
+save('upper_bound_u.dat', 'ubu', '-ascii', '-double');
+save('lower_bound_u.dat', 'lbu', '-ascii', '-double');
+ubw = [repmat([ubx;ubu], N, 1); ubx];
+lbw = [repmat([lbx;lbu], N, 1); lbx];
 
 [w_star_ocp, ~, exit_flag, ~, lambda_star_ocp] = quadprog(H, h, [], [], G_bar, -g_bar, lbw, ubw);
 if(~(exit_flag == 1))
     Z = null(G_bar);
     disp(['convex QP? : ', num2str(all(eig(Z.'*H*Z) > 1e-4))])
-    error(['QP solution failed with code: ', num2str(info_struct.info)]);
+    error(['QP solution failed with code: ', num2str(exit_flag)]);
 end
 % Octave follows a different convention from us
 lambda_star_ocp = -lambda_star_ocp.eqlin;
@@ -146,7 +139,23 @@ D_bar = Du + Dx*G2;
 d_bar = d - Dx*g2 - Dex0;
 
 % w_star_condensed = qp([], H_bar, h_bar);
-w_star_condensed = quadprog(R_condensed, r_condensed, D_bar, d_bar);
+w_star_condensed_quadprog = quadprog(R_condensed, r_condensed, D_bar, d_bar);
+
+u_lb = repmat(lbu, N, 1);
+u_ub = repmat(ubu, N, 1);
+A_lb = repmat(lbx, N+1, 1) - g2 - Ge*x0;
+A_ub = repmat(ubx, N+1, 1) - g2 - Ge*x0;
+% First nx rows of G2 are zero
+A_lb = A_lb(nx+1:end);
+A_ub = A_ub(nx+1:end);
+A_condensed = G2(nx+1:end,:);
+w_star_condensed = qp([], R_condensed, r_condensed, [], [], u_lb, u_ub, A_lb, A_condensed, A_ub);
+
+save('u_lower_bound.dat', 'u_lb', '-ascii', '-double');
+save('u_upper_bound.dat', 'u_ub', '-ascii', '-double');
+save('condensed_lower_bound.dat', 'A_lb', '-ascii', '-double');
+save('condensed_upper_bound.dat', 'A_ub', '-ascii', '-double');
+save('condensed_constraint_matrix.dat', 'A_condensed', '-ascii', '-double');
 
 % Compare sparse and condensed solution
 XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);

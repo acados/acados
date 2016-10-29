@@ -55,7 +55,7 @@ static int_t get_num_constraints(ocp_qp_in const *in, condensing_workspace *work
     return num_constraints;
 }
 
-static void fill_in_condensing_structs(ocp_qp_in const *qp_in, condensing_in *in,
+static void fill_in_condensing_structs(ocp_qp_in const * const qp_in, condensing_in *in,
     condensing_out *out, condensing_workspace *work) {
     int_t N = qp_in->N;
     const int_t *nc = qp_in->nc;
@@ -127,8 +127,7 @@ static void readUnconstrainedInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, 
     *r = readVectorFromFile("rv.dat", nu);
 }
 
-static void fillWithUnconstrainedData(ocp_qp_in *qp, condensing_in *input,
-    condensing_out *output, condensing_workspace *work, VectorXd *x0) {
+static void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0) {
     int_t N, nx, nu;
     readInputDimensionsFromFile(&N, &nx, &nu);
     MatrixXd A, B, Q, S, R;
@@ -198,6 +197,50 @@ static void fillWithUnconstrainedData(ocp_qp_in *qp, condensing_in *input,
     // Copy the initial constraint
     memcpy((void *) qp->lb[0], (void *) (*x0).data(), sizeof(*qp->lb[0]) * nx);
     memcpy((void *) qp->ub[0], (void *) (*x0).data(), sizeof(*qp->ub[0]) * nx);
+}
 
-    fill_in_condensing_structs(qp, input, output, work);
+static void readBoundsDataFromFile(int_t nx, int_t nu, VectorXd *lbwx,
+    VectorXd *ubwx, VectorXd *lbwu, VectorXd *ubwu) {
+    *lbwx = readVectorFromFile("lower_bound_x.dat", nx);
+    *ubwx = readVectorFromFile("upper_bound_x.dat", nx);
+    *lbwu = readVectorFromFile("lower_bound_u.dat", nu);
+    *ubwu = readVectorFromFile("upper_bound_u.dat", nu);
+}
+
+static void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) {
+    VectorXd lbwx, ubwx, lbwu, ubwu;
+    readBoundsDataFromFile(nx, nu, &lbwx, &ubwx, &lbwu, &ubwu);
+    VectorXd lbw_block(nx+nu);
+    VectorXd ubw_block(nx+nu);
+    int_t nb_vector[N+1];
+    Eigen::VectorXi idxb_vector(nx+nu);
+
+    lbw_block << lbwx, lbwu;
+    ubw_block << ubwx, ubwu;
+    qp->lb = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
+    qp->ub = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
+    qp->idxb = (const int_t **) malloc(sizeof(*qp->idxb) * (N+1));
+    for (int_t i = 0; i < nx+nu; i++) {
+        idxb_vector(i) = i;
+    }
+    for (int_t i = 0; i < N; i++) {
+        nb_vector[i] = nx+nu;
+        i_zeros((int_t **) &qp->idxb[i], nb_vector[i], 1);
+        memcpy((void *) qp->idxb[i], (void *) idxb_vector.data(),
+            sizeof(*qp->idxb[i]) * nb_vector[i]);
+        d_zeros((real_t **) &qp->lb[i], nx+nu, 1);
+        memcpy((void *) qp->lb[i], (void *) lbw_block.data(),
+            sizeof(*qp->lb[i]) * (nx+nu));
+        d_zeros((real_t **) &qp->ub[i], nx+nu, 1);
+        memcpy((void *) qp->ub[i], (void *) ubw_block.data(),
+            sizeof(*qp->ub[i]) * (nx+nu));
+    }
+    nb_vector[N] = nx;
+    i_zeros((int_t **) &qp->idxb[N], nb_vector[N], 1);
+    memcpy((void *) qp->idxb[N], (void *) idxb_vector.data(), sizeof(*qp->idxb[N]) * nb_vector[N]);
+    memcpy((void *) qp->nb, (void *) nb_vector, sizeof(*qp->nb) * (N+1));
+    d_zeros((real_t **) &qp->lb[N], nx+nu, 1);
+    memcpy((void *) qp->lb[N], (void *) lbwx.data(), sizeof(*qp->lb[N]) * nx);
+    d_zeros((real_t **) &qp->ub[N], nx+nu, 1);
+    memcpy((void *) qp->ub[N], (void *) ubwx.data(), sizeof(*qp->ub[N]) * nx);
 }
