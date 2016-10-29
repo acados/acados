@@ -1,7 +1,10 @@
 % Condensing routine that outputs data against which acados is tested.
 clear
-% pkg install -forge struct
-% pkg install -forge optim
+list = pkg('list', 'optim');
+if(isempty(list))
+    pkg install -forge struct
+    pkg install -forge optim
+end
 pkg load optim
 
 % Let randn always return the same output
