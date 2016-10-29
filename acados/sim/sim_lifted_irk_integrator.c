@@ -457,7 +457,24 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     ptr_memory_strmat += work->str_sol->memory_size;
 #endif  // TRANSPOSED
 
-#else  // LA_BLAS | LA_REFERENCE
+#elif defined(LA_REFERENCE)
+
+    //  pointer to column-major matrix
+    d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
+    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, work->sys_sol);
+
+    // allocate new memory only for the diagonal
+    int size_strmat = 0;
+    size_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
+	
+    void *memory_strmat;
+    v_zeros_align(&memory_strmat, size_strmat);
+    char *ptr_memory_strmat = (char *) memory_strmat;
+
+	d_cast_diag_mat2strmat( (double *) ptr_memory_strmat, work->str_mat);
+    ptr_memory_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
+
+#else  // LA_BLAS
 
     // not allocate new memory: point to column-major matrix
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
