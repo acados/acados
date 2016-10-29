@@ -17,7 +17,7 @@ This interface describes a Quadratic Programming (QP) problem with Optimal Contr
 \begin{subequations}
 	\label{eq:OCP_QP}
 	\begin{alignat}{3}
-	\underset{\substack{x_0,\ldots,x_k \\ u_0,\ldots,u_{N-1}}}{\mathrm{minimize}} \quad & \sum_{k=0}^{N-1} \frac 1 2 \begin{bmatrix} x_k \\ u_k \end{bmatrix}^\top \begin{bmatrix} Q_k & S_k \\ S_k^\top & R_k \end{bmatrix} \begin{bmatrix} x_k \\ u_k \end{bmatrix} + &&\begin{bmatrix} q_k \\ r_k \end{bmatrix}^\top \begin{bmatrix} x_k \\ u_k \end{bmatrix} \\ & \qquad + \frac 1 2 x_N^\top Q_N x_N + q_N^\top x_N \nonumber \\
+	\underset{\substack{x_0,\ldots,x_k \\ u_0,\ldots,u_{N-1}}}{\mathrm{minimize}} \quad & \sum_{k=0}^{N-1} \frac 1 2 \begin{bmatrix} x_k \\ u_k \end{bmatrix}^\top \begin{bmatrix} Q_k & S_k^\top \\ S_k & R_k \end{bmatrix} \begin{bmatrix} x_k \\ u_k \end{bmatrix} + &&\begin{bmatrix} q_k \\ r_k \end{bmatrix}^\top \begin{bmatrix} x_k \\ u_k \end{bmatrix} \\ & \qquad + \frac 1 2 x_N^\top Q_N x_N + q_N^\top x_N \nonumber \\
 	\mathrm{subject~to} \quad & x_{k+1} = A_k x_k + B_k u_k + b_k, && k=0,\dots,N-1, \\
 	& \underline u_k \leq u_k \leq \overline u_k, && k=0,\dots,N-1, \\
 	& \underline x_k \leq x_k \leq \overline x_k, && k=0,\dots,N, \\

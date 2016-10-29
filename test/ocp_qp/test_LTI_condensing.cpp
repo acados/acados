@@ -5,8 +5,6 @@
 #include "acados/ocp_qp/condensing.c"
 #include "test_condensing_helper.cpp"
 
-#define COMPARISON_TOLERANCE 1.0e-15
-
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -32,78 +30,18 @@ static void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
     REQUIRE(*nu > 0);
 }
 
-static void readInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, MatrixXd *B,
-    VectorXd *b, VectorXd *x0, MatrixXd *Q, MatrixXd *S, MatrixXd *R, VectorXd *q, VectorXd *r) {
-    *A = readMatrixFromFile("A.dat", nx, nx);
-    *B = readMatrixFromFile("B.dat", nx, nu);
-    *b = readVectorFromFile("bv.dat", nx);
-    *x0 = readVectorFromFile("x0.dat", nx);
-    *Q = readMatrixFromFile("Q.dat", nx, nx);
-    *S = readMatrixFromFile("S.dat", nu, nx);
-    *R = readMatrixFromFile("R.dat", nu, nu);
-    *q = readVectorFromFile("qv.dat", nx);
-    *r = readVectorFromFile("rv.dat", nu);
-}
-
-TEST_CASE("Unconstrained LTV system", "[condensing]") {
+TEST_CASE("Unconstrained LTI system", "[condensing]") {
     ocp_qp_in qp;
     condensing_in input;
     condensing_out output;
     condensing_workspace work;
+    VectorXd x0;
 
-    int_t N, nx, nu;
-    readInputDimensionsFromFile(&N, &nx, &nu);
-    MatrixXd A, B, Q, S, R;
-    VectorXd b, x0, q, r;
-    readInputDataFromFile(nx, nu, &A, &B, &b, &x0, &Q, &S, &R, &q, &r);
-
-    int_t nx_vector[N+1], nu_vector[N], nb_vector[N+1], nc_vector[N+1];
-    real_t *A_vector[N], *B_vector[N], *b_vector[N], *lb_vector[1], *ub_vector[1];
-    real_t *Q_vector[N+1], *S_vector[N], *R_vector[N], *q_vector[N+1], *r_vector[N];
-
-    for (int_t i = 0; i < N; i++) {
-        nx_vector[i] = nx;
-        nu_vector[i] = nu;
-        nb_vector[i] = 0;
-        nc_vector[i] = 0;
-        A_vector[i] = A.data();
-        B_vector[i] = B.data();
-        b_vector[i] = b.data();
-        Q_vector[i] = Q.data();
-        S_vector[i] = S.data();
-        R_vector[i] = R.data();
-        q_vector[i] = q.data();
-        r_vector[i] = r.data();
-    }
-    // Initial state
-    nb_vector[0] = nx;
-    lb_vector[0] = x0.data();
-    ub_vector[0] = x0.data();
-    // Final state
-    nx_vector[N] = nx;
-    nb_vector[N] = 0;
-    nc_vector[N] = 0;
-    Q_vector[N] = Q.data();
-    q_vector[N] = q.data();
-
-    // Finalize the data
-    qp.N = N;
-    qp.nx = (const int_t *) nx_vector;
-    qp.nu = (const int_t *) nu_vector;
-    qp.nb = (const int_t *) nb_vector;
-    qp.nc = (const int_t *) nc_vector;
-    qp.A = (const real_t **) A_vector;
-    qp.B = (const real_t **) B_vector;
-    qp.b = (const real_t **) b_vector;
-    qp.Q = (const real_t **) Q_vector;
-    qp.S = (const real_t **) S_vector;
-    qp.R = (const real_t **) R_vector;
-    qp.q = (const real_t **) q_vector;
-    qp.r = (const real_t **) r_vector;
-    qp.lb = (const real_t **) lb_vector;
-    qp.ub = (const real_t **) ub_vector;
-
-    fill_in_condensing_structs(&qp, &input, &output, &work);
+    fillWithUnconstrainedData(&qp, &input, &output, &work, &x0);
+    int_t N = qp.N;
+    int_t nx = qp.nx[0];
+    int_t nu = qp.nu[0];
+    real_t *x0d = x0.data();
 
     SECTION("Transition vector") {
         calculate_transition_vector(&qp, &work, x0.data());
@@ -144,4 +82,8 @@ TEST_CASE("Unconstrained LTV system", "[condensing]") {
         MatrixXd acados_H = Eigen::Map<MatrixXd>(&output.H[0], N*nu, N*nu);
         REQUIRE(acados_H.isApprox(true_H, COMPARISON_TOLERANCE));
     }
+}
+
+TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
+    REQUIRE(true);
 }

@@ -1,12 +1,13 @@
-#!/usr/bin/octave -qf
-
 % Condensing routine that outputs data against which acados is tested.
 clear
+pkg install -forge struct
+pkg install -forge optim
+pkg load optim
 
 % Let randn always return the same output
 randn('state', 0);
 
-% LTV system
+% LTI system
 N = 20;
 nx = 4;
 nu = 2;
@@ -65,14 +66,32 @@ for i=1:N
 end
 g_bar = [x0; b_bar];
 
-[w_star_ocp, ~, info_struct, lambda_star_ocp] = qp([], H, h, G_bar, -g_bar);
-if(~(info_struct.info == 0))
+lbw = -10*abs(randn(N*(nx+nu)+nx,1));
+lbw(1:nx) = -10*abs(x0);
+save('lower_bound.dat', 'lbw', '-ascii', '-double');
+ubw = +10*abs(randn(N*(nx+nu)+nx,1));
+ubw(1:nx) = +10*abs(x0);
+save('upper_bound.dat', 'ubw', '-ascii', '-double');
+
+% feasible initial guess
+xk = x0;
+uk = zeros(nu,1);
+w_guess = x0;
+for i=1:N
+    xk = A*xk + B*uk + b;
+    w_guess = [w_guess; uk; xk];
+end
+
+norm([G_bar*w_guess+g_bar])
+
+[w_star_ocp, ~, exit_flag, ~, lambda_star_ocp] = quadprog(H, h, [], [], G_bar, -g_bar, lbw, ubw);
+if(~(exit_flag == 1))
     Z = null(G_bar);
     disp(['convex QP? : ', num2str(all(eig(Z.'*H*Z) > 1e-4))])
     error(['QP solution failed with code: ', num2str(info_struct.info)]);
 end
 % Octave follows a different convention from us
-lambda_star_ocp = -lambda_star_ocp;
+lambda_star_ocp = -lambda_star_ocp.eqlin;
 
 KKT_system_ocp = [];
 for i=0:N-1
@@ -114,10 +133,23 @@ R_condensed = R_all + G2.'*Q_all*G2 + S_all*G2 + G2.'*S_all.';
 save('condensed_gradient.dat', 'r_condensed', '-ascii', '-double');
 save('condensed_hessian.dat', 'R_condensed', '-ascii', '-double');
 
+Dx = blkdiag(kron(eye(N), [eye(nx); zeros(nu, nx)]), eye(nx));
+Du = [kron(eye(N), [zeros(nx, nu); eye(nu)]); zeros(nx, N*nu)];
+
+% Stack bound constraints
+d = [ubw; -lbw];
+Dx = [Dx; -Dx];
+Du = [Du; -Du];
+Dex0 = Dx*Ge*x0;
+
+D_bar = Du + Dx*G2;
+d_bar = d - Dx*g2 - Dex0;
+
+% w_star_condensed = qp([], H_bar, h_bar);
+w_star_condensed = quadprog(R_condensed, r_condensed, D_bar, d_bar);
+
+% Compare sparse and condensed solution
 XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);
 u_star_ocp = XU(nx+1:end, 1:end-1);
 u_star_ocp = u_star_ocp(:);
-% w_star_condensed = qp([], H_bar, h_bar);
-w_star_condensed = qp([], R_condensed, r_condensed);
-
 disp(['Difference between condensed and sparse solution: ', num2str(norm(u_star_ocp - w_star_condensed))])
