@@ -23,7 +23,7 @@
 #include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
 
-#define TRANSPOSED 0
+#define TRANSPOSED 1
 #define TRIPLE_LOOP 0
 #define CODE_GENERATION 0
 #define WARM_SWAP 1
