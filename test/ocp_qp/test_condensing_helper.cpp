@@ -42,6 +42,7 @@ static int_t get_num_constraints(const ocp_qp_in *in, condensing_workspace *work
 
 static void fill_in_condensing_structs(const ocp_qp_in * const qp_in, condensing_in *in,
     condensing_out *out, condensing_workspace *work) {
+
     int_t N = qp_in->N;
     const int_t *nc = qp_in->nc;
 
@@ -101,6 +102,7 @@ static void fill_in_condensing_structs(const ocp_qp_in * const qp_in, condensing
 
 static void readUnconstrainedInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, MatrixXd *B,
     VectorXd *b, VectorXd *x0, MatrixXd *Q, MatrixXd *S, MatrixXd *R, VectorXd *q, VectorXd *r) {
+
     *A = readMatrixFromFile("A.dat", nx, nx);
     *B = readMatrixFromFile("B.dat", nx, nu);
     *b = readVectorFromFile("bv.dat", nx);
@@ -232,6 +234,7 @@ static void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) {
 
 static void readGeneralConstraintsDataFromFile(int_t nx, int_t nu, MatrixXd *Cx,
     MatrixXd *Cu, VectorXd *lbc, VectorXd *ubc) {
+
     *Cx = readMatrixFromFile("general_constraint_x.dat", nx+nu, nx);
     *Cu = readMatrixFromFile("general_constraint_u.dat", nx+nu, nu);
     *lbc = readVectorFromFile("general_constraint_lb.dat", nx+nu);

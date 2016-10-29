@@ -149,4 +149,12 @@ TEST_CASE("Constrained LTI system, general polytopic constraints", "[condensing]
         VectorXd acados_ubA = Eigen::Map<VectorXd>(&output.ubA[0], nA);
         REQUIRE(acados_ubA.isApprox(true_ubA, COMPARISON_TOLERANCE));
     }
+
+    SECTION("Calculate constraint matrix", "[condensing]") {
+        int_t nA = get_num_constraints(&qp, &work);
+        calculate_constraint_matrix(&qp, &output, &work);
+        MatrixXd true_A = readMatrixFromFile("condensed_general_constraint_matrix.dat", nA, N*nu);
+        MatrixXd acados_A = Eigen::Map<MatrixXd>(&output.A[0], nA, N*nu);
+        REQUIRE(acados_A.isApprox(true_A, COMPARISON_TOLERANCE));
+    }
 }

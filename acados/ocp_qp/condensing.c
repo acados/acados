@@ -18,7 +18,6 @@
  */
 
 #include "acados/ocp_qp/condensing.h"
-#include <stdio.h>
 
 static void calculate_transition_vector(ocp_qp_in *in,
     condensing_workspace *ws, const real_t *x0) {
@@ -261,11 +260,11 @@ static void calculate_D(ocp_qp_in *in, condensing_workspace *ws) {
             }
         }
     }
-    for (int_t i = 1; i < in->N+1; i++) {
+    for (int_t i = 0; i <= in->N; i++) {
         if (in->nc[i] > 0) {
             for (int_t j = 0; j < i; j++) {
                 offdiag_D_blk(in->nc[i], in->Cx[i], ws->G[i-1][j], ws->D[i][j],
-                        in->nx[i], in->nu[i]);
+                        in->nx[i], in->nu[j]);
             }
         }
     }
@@ -275,43 +274,43 @@ static void calculate_constraint_matrix(ocp_qp_in *in, condensing_out *out,
     condensing_workspace *ws) {
 
     int_t ldA = ws->nconstraints;
-
     if (ldA) {
-    int_t ctr = 0, ctr2 = 0;
-    for (int_t i = 0; i < in->N; i++) {
-        ctr2 = ctr;
-        for (int_t j = 0; j <= i; j++) {
+        calculate_D(in, ws);
+        int_t block_row = 0, block_col = 0;
+        for (int_t i = 0; i < in->N; i++) {
+            block_col = block_row;
+            for (int_t j = 0; j <= i; j++) {
+                for (int_t k = 0; k < in->nu[0]; k++) {
+                    for (int_t l = 0; l < in->nc[i]; l++) {
+                        out->A[block_col+k*ldA+l] = ws->D[i][j][k*in->nc[i]+l];
+                    }
+                }
+                block_col += ldA * in->nu[0];
+            }
+            block_row += in->nc[i] + ws->nstate_bounds[i+1];
+        }
+        block_row = 0;
+        block_col = 0;
+        for (int_t i = 0; i < in->N; i++) {
+            block_row += in->nc[i];
+            block_col = block_row;
+            for (int_t j = 0; j <= i; j++) {
+                for (int_t k = 0; k < in->nu[0]; k++) {
+                    for (int_t l = 0; l < in->nx[0]; l++) {
+                        out->A[block_col+k*ldA+l] = ws->G[i][j][k*in->nx[0]+l];
+                    }
+                }
+                block_col += ldA*in->nu[0];
+            }
+            block_row += ws->nstate_bounds[i+1];
+        }
+        for (int_t j = 0; j < in->N; j++) {
             for (int_t k = 0; k < in->nu[0]; k++) {
-                for (int_t l = 0; l < in->nc[i]; l++) {
-                    out->A[ctr2+k*ldA+l] = ws->D[i][j][k*in->nc[i]+l];
+                for (int_t l = 0; l < in->nc[in->N]; l++) {
+                    out->A[block_row+j*ldA*in->nu[0]+k*ldA+l] = ws->D[in->N][j][k*in->nc[in->N]+l];
                 }
             }
-            ctr2 += ldA*in->nu[0];
         }
-        ctr += in->nc[i] + ws->nstate_bounds[i+1];
-    }
-    ctr = 0;
-    ctr2 = 0;
-    for (int_t i = 0; i < in->N; i++) {
-        ctr += in->nc[i];
-        ctr2 = ctr;
-        for (int_t j = 0; j <= i; j++) {
-            for (int_t k = 0; k < in->nu[0]; k++) {
-                for (int_t l = 0; l < in->nx[0]; l++) {
-                    out->A[ctr2+k*ldA+l] = ws->G[i][j][k*in->nx[0]+l];
-                }
-            }
-            ctr2 += ldA*in->nu[0];
-        }
-        ctr += ws->nstate_bounds[i+1];
-    }
-    for (int_t j = 0; j < in->N; j++) {
-        for (int_t k = 0; k < in->nu[0]; k++) {
-            for (int_t l = 0; l < in->nc[in->N]; l++) {
-                out->A[ctr+j*ldA*in->nu[0]+k*ldA+l] = ws->D[in->N][j][k*in->nc[in->N]+l];
-            }
-        }
-    }
     }
 }
 
@@ -328,7 +327,6 @@ void condensing_N2_fixed_initial_state(condensing_in *input, condensing_out *out
     calculate_hessian(input->qp_input, output, workspace, offset);
 
     calculate_simple_bounds(input->qp_input, output);
-    calculate_D(input->qp_input, workspace);
     calculate_constraint_bounds(input->qp_input, output, workspace, x0);
     calculate_constraint_matrix(input->qp_input, output, workspace);
 }
