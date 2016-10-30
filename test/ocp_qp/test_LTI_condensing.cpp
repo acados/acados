@@ -114,7 +114,7 @@ TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
     SECTION("Calculate constraint matrix", "[condensing]") {
         int_t nA = get_num_constraints(&qp, &work);
         calculate_constraint_matrix(&qp, &output, &work);
-        MatrixXd true_A = readMatrixFromFile("condensed_bound_matrix.dat", nA, N*nu);
+        MatrixXd true_A = readMatrixFromFile("transition_matrix.dat", nA, N*nu);
         MatrixXd acados_A = Eigen::Map<MatrixXd>(&output.A[0], nA, N*nu);
         REQUIRE(acados_A.isApprox(true_A, COMPARISON_TOLERANCE));
     }

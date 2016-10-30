@@ -2,10 +2,11 @@
 % Let randn always return the same output
 randn('state', 0);
 
-function [N, nx, nu, nc] = generate_dimensions()
+function [N, nx, nu, nb, nc] = generate_dimensions()
     N = 20;
     nx = 4;
     nu = 2;
+    nb = nx+nu;
     nc = nx+nu;
 endfunction
 
@@ -33,7 +34,7 @@ function [Q, S, R, q, r] = generate_cost_function()
 endfunction
 
 function [xl, xu, ul, uu] = generate_bounds(x0)
-    [~, nx, nu] = generate_dimensions();
+    [~, nx, nu, nb] = generate_dimensions();
     xl = -5*(abs(x0) + abs(randn(nx,1)));
     xu = +5*(abs(x0) + abs(randn(nx,1)));
     ul = -10*abs(randn(nu,1));
@@ -41,9 +42,9 @@ function [xl, xu, ul, uu] = generate_bounds(x0)
 endfunction
 
 function [Cx, Cu, cl, cu] = generate_general_constraints()
-    [~, nx, nu] = generate_dimensions();
-    Cx = randn(nx+nu, nx);
-    Cu = randn(nx+nu, nu);
-    cl = -10*abs(randn(nx+nu, 1));
-    cu = +10*abs(randn(nx+nu, 1));
+    [~, nx, nu, ~, nc] = generate_dimensions();
+    Cx = randn(nc, nx);
+    Cu = randn(nc, nu);
+    cl = -10*abs(randn(nc, 1));
+    cu = +10*abs(randn(nc, 1));
 endfunction
