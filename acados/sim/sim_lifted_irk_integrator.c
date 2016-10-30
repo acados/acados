@@ -137,7 +137,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 #if WARM_SWAP
     int_t *ipiv_old = mem->ipiv;  // pivoting vector
 #endif
+#if !TRIPLE_LOOP || WARM_SWAP
     int_t iswap;
+#endif
     int_t *ipiv_tmp = work->ipiv_tmp;
 #if FIXED_STEP_SIZE == 0
     real_t H_INT = in->step;
