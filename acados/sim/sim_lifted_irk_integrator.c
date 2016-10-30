@@ -135,10 +135,10 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     int_t num_stages = opts->num_stages;
     int_t i, s1, s2, j, istep;
 #if WARM_SWAP
-    int_t iswap;
     int_t *ipiv_old = mem->ipiv;  // pivoting vector
-    int_t *ipiv_tmp = work->ipiv_tmp;
 #endif
+    int_t iswap;
+    int_t *ipiv_tmp = work->ipiv_tmp;
 #if FIXED_STEP_SIZE == 0
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
@@ -207,7 +207,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         }
     }
 
-    mem->nswaps += 0;
     for (istep = 0; istep < NSTEPS; istep++) {
         // form exact linear system matrix (explicit ODE case):
         for (i = 0; i < num_stages*nx*num_stages*nx; i++) sys_mat[i] = 0.0;
@@ -344,7 +343,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         // ---- BLASFEO: row transformations + backsolve ----
 #endif  // LA_BLAFEO
 #endif  // TRIPLE_LOOP
-#if WARM_SWAP
+//#if WARM_SWAP
 #if TRIPLE_LOOP
         for (i = 0; i < num_stages*nx; i++) ipiv_tmp[i] = ipiv[i];
 #else
@@ -352,12 +351,15 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         for (i = 0; i < num_stages*nx; i++) {
             j = ipiv[i];
             if (j != i) {
+                mem->nswaps += 1;
                 iswap = ipiv_tmp[i];
                 ipiv_tmp[i] = ipiv_tmp[j];
                 ipiv_tmp[j] = iswap;
             }
         }
 #endif
+
+#if WARM_SWAP
 
 //        fprintf(stdout, "ipiv_old: ");
 //        for (i = 0; i < num_stages*nx; i++) fprintf(stdout, "%d ", ipiv_old[i]);
@@ -426,9 +428,9 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     work->sys_mat = malloc(sizeof(*work->sys_mat) * (num_stages*nx)*(num_stages*nx));
     work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+nx+nu));
 
-#if WARM_SWAP
+//#if WARM_SWAP
     work->ipiv_tmp = malloc(sizeof(*work->ipiv_tmp) * (num_stages*nx));
-#endif
+//#endif
 
 #if !TRIPLE_LOOP
 
