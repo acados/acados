@@ -1,5 +1,7 @@
 % Condensing routine that outputs data against which acados is tested.
 clear
+
+% Check if package 'optim' is installed, used for quadprog
 list = pkg('list', 'optim');
 if(isempty(list))
     pkg install -forge struct
@@ -7,44 +9,45 @@ if(isempty(list))
 end
 pkg load optim
 
+LTI_generation_functions;
+
 % Tolerance used to determine optimality, to compare matrices, etc.
 TOLERANCE = 1e-10;
 
-% Let randn always return the same output
-randn('state', 0);
-
 % LTI system
-N = 20;
-nx = 4;
-nu = 2;
+[N, nx, nu, nc] = generate_dimensions();
+[A, B, b, x0] = generate_dynamics();
+[Q, S, R, q, r] = generate_cost_function();
+[xl, xu, ul, uu] = generate_bounds(x0);
+[Cx, Cu, cl, cu] = generate_general_constraints();
 
 save('N.dat', 'N', '-ascii', '-double');
 save('nx.dat', 'nx', '-ascii', '-double');
 save('nu.dat', 'nu', '-ascii', '-double');
-x0 = randn(nx, 1);
+save('nc.dat', 'nc', '-ascii', '-double')
+
 save('x0.dat', 'x0', '-ascii', '-double');
-A = randn(nx, nx);
 save('A.dat', 'A', '-ascii', '-double');
-B = randn(nx, nu);
 save('B.dat', 'B', '-ascii', '-double');
-b = randn(nx, 1);
 save('bv.dat', 'b', '-ascii', '-double');
-do
-    Q = randn(nx, nx);
-    Q = Q.'*Q;
-    S = randn(nu, nx);
-    R = randn(nu, nu);
-    R = R.'*R;
-until(all(eig([Q, S.'; S, R]) > 1e-2))
 
 save('Q.dat', 'Q', '-ascii', '-double');
 save('S.dat', 'S', '-ascii', '-double');
 save('R.dat', 'R', '-ascii', '-double');
-q = randn(nx, 1);
 save('qv.dat', 'q', '-ascii', '-double');
-r = randn(nu, 1);
 save('rv.dat', 'r', '-ascii', '-double');
 
+save('upper_bound_x.dat', 'xu', '-ascii', '-double');
+save('lower_bound_x.dat', 'xl', '-ascii', '-double');
+save('upper_bound_u.dat', 'uu', '-ascii', '-double');
+save('lower_bound_u.dat', 'ul', '-ascii', '-double');
+
+save('general_constraint_x.dat', 'Cx', '-ascii', '-double');
+save('general_constraint_u.dat', 'Cu', '-ascii', '-double');
+save('general_constraint_ub.dat', 'cu', '-ascii', '-double');
+save('general_constraint_lb.dat', 'cl', '-ascii', '-double');
+
+% Do condensing
 A_bar = [-eye(nx),zeros(nx,(N-1)*nx)];
 for i=1:N-1
     A_bar = [A_bar; zeros(nx, (i-1)*(nx)), A, -eye(nx), zeros(nx, (N-i-1)*nx)];
@@ -72,29 +75,12 @@ for i=1:N
 end
 g_bar = [x0; b_bar];
 
-ubx = 5*(x0 + abs(randn(nx,1)));
-ubu = 5*abs(randn(nu,1));
-lbx = -5*(x0 + abs(randn(nx,1)));
-lbu = -5*abs(randn(nu,1));
-save('upper_bound_x.dat', 'ubx', '-ascii', '-double');
-save('lower_bound_x.dat', 'lbx', '-ascii', '-double');
-save('upper_bound_u.dat', 'ubu', '-ascii', '-double');
-save('lower_bound_u.dat', 'lbu', '-ascii', '-double');
-ubw = [repmat([ubx;ubu], N, 1); ubx];
-lbw = [repmat([lbx;lbu], N, 1); lbx];
+lbw = [repmat([xl;ul], N, 1); xl];
+ubw = [repmat([xu;uu], N, 1); xu];
 
-Dx = randn(nx+nu, nx);
-Du = randn(nx+nu, nu);
-dub = 50*abs(randn(nx+nu, 1));
-dlb = -50*abs(randn(nx+nu, 1));
-save('general_constraint_x.dat', 'Dx', '-ascii', '-double');
-save('general_constraint_u.dat', 'Du', '-ascii', '-double');
-save('general_constraint_ub.dat', 'dub', '-ascii', '-double');
-save('general_constraint_lb.dat', 'dlb', '-ascii', '-double');
-
-lin_ineq = blkdiag(kron(eye(N), [Dx, Du]), Dx);
+lin_ineq = blkdiag(kron(eye(N), [Cx, Cu]), Cx);
 A_ineq = [lin_ineq; -lin_ineq];
-b_ineq = [repmat(dub, N+1, 1); -repmat(dlb, N+1, 1)];
+b_ineq = [repmat(cu, N+1, 1); -repmat(cl, N+1, 1)];
 
 [w_star_ocp, ~, exit_flag, ~, all_multipliers] = quadprog(H, h, A_ineq, b_ineq, G_bar, -g_bar, lbw, ubw);
 if(~(exit_flag == 1))
@@ -107,7 +93,7 @@ lambda_star_ocp = all_multipliers.eqlin;
 mu_star_ocp = -all_multipliers.lower + all_multipliers.upper;
 nu_star_ocp = all_multipliers.ineqlin;
 
-nc = (N+1)*(nx+nu);
+nc_all = (N+1)*(nx+nu);
 KKT_system_ocp = [];
 for i=0:N-1
     xk = w_star_ocp(i*(nx+nu)+1:i*(nx+nu)+nx);
@@ -117,31 +103,22 @@ for i=0:N-1
     mukx = mu_star_ocp(i*(nx+nu)+1:i*(nx+nu)+nx);
     muku = mu_star_ocp(i*(nx+nu)+nx+1:(i+1)*(nx+nu));
     nuk_ub = nu_star_ocp(i*(nx+nu)+1:(i+1)*(nx+nu));
-    nuk_lb = nu_star_ocp(nc+i*(nx+nu)+1:nc+(i+1)*(nx+nu));
-    KKT_system_ocp = [KKT_system_ocp; Q*xk + q + S.'*uk - lambdak + A.'*lambdak_1 + mukx + Dx.'*nuk_ub - Dx.'*nuk_lb];
-    KKT_system_ocp = [KKT_system_ocp; R*uk + r + S*xk + B.'*lambdak_1 + muku + Du.'*nuk_ub - Du.'*nuk_lb];
+    nuk_lb = nu_star_ocp(nc_all+i*(nx+nu)+1:nc_all+(i+1)*(nx+nu));
+    KKT_system_ocp = [KKT_system_ocp; Q*xk + q + S.'*uk - lambdak + A.'*lambdak_1 + mukx + Cx.'*nuk_ub - Cx.'*nuk_lb];
+    KKT_system_ocp = [KKT_system_ocp; R*uk + r + S*xk + B.'*lambdak_1 + muku + Cu.'*nuk_ub - Cu.'*nuk_lb];
 end
 lambdaN = lambda_star_ocp(N*(nx)+1:end);
 muN = mu_star_ocp(N*(nx+nu)+1:end);
 nuN_ub = nu_star_ocp(N*(nx+nu)+1:(N+1)*(nx+nu));
-nuN_lb = nu_star_ocp(nc+N*(nx+nu)+1:nc+(N+1)*(nx+nu));
+nuN_lb = nu_star_ocp(nc_all+N*(nx+nu)+1:nc_all+(N+1)*(nx+nu));
 xN = w_star_ocp(N*(nx+nu)+1:end);
-KKT_system_ocp = [KKT_system_ocp; Q*xN + q - lambdaN + muN + Dx.'*nuN_ub - Dx.'*nuN_lb];
+KKT_system_ocp = [KKT_system_ocp; Q*xN + q - lambdaN + muN + Cx.'*nuN_ub - Cx.'*nuN_lb];
 if(norm(KKT_system_ocp) > TOLERANCE)
     KKT_system_ocp
     error(['Solution is not optimal! norm of KKT: ', num2str(norm(KKT_system_ocp))]);
 end
 
-% There is a bug somewhere in the following lines
-% h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*[g(1:end-nx);zeros(nx,1)];
-% h_bar = r_bar + G.'*(q_bar + Q_bar*g) + S_bar.'*g;
-% save('condensed_gradient.dat', 'h_bar', '-ascii', '-double');
-% S_cut = blkdiag(kron(eye(N-1), S.'), zeros(nx, nu));
-% G_cut = [G(1:end-nx, :); zeros(nx, N*nu)];
-% H_bar = R_bar + G.'*Q_bar*G + S_cut.'*G + G.'*S_cut;
-% save('condensed_hessian.dat', 'H_bar', '-ascii', '-double');
-
-% Janicks' way
+% Computations based on Frasch2014a
 c = b_bar;
 L = [A; zeros((N-1)*nx, nx)];
 G2 = [zeros(nx, N*(nu)); -A_bar \ B_bar];
@@ -159,8 +136,8 @@ R_condensed = R_all + G2.'*Q_all*G2 + S_all*G2 + G2.'*S_all.';
 save('condensed_gradient.dat', 'r_condensed', '-ascii', '-double');
 save('condensed_hessian.dat', 'R_condensed', '-ascii', '-double');
 
-Dx_bar = kron(eye(N+1), Dx);
-Du_bar = [kron(eye(N), Du); zeros(nx+nu, N*nu)];
+Dx_bar = kron(eye(N+1), Cx);
+Du_bar = [kron(eye(N), Cu); zeros(nx+nu, N*nu)];
 
 % Stack bound constraints
 d = b_ineq;
@@ -171,16 +148,20 @@ Dex0 = Dx_bar*Ge*x0;
 D_bar = Du_bar + Dx_bar*G2;
 d_bar = d - Dx_bar*g2 - Dex0;
 
-u_lb = repmat(lbu, N, 1);
-u_ub = repmat(ubu, N, 1);
-A_lb = repmat(lbx, N+1, 1) - g2 - Ge*x0;
-A_ub = repmat(ubx, N+1, 1) - g2 - Ge*x0;
+u_lb = repmat(ul, N, 1);
+u_ub = repmat(uu, N, 1);
+A_lb = repmat(xl, N+1, 1) - g2 - Ge*x0;
+A_ub = repmat(xu, N+1, 1) - g2 - Ge*x0;
 % First nx rows of G2 are zero
 A_lb = A_lb(nx+1:end);
 A_ub = A_ub(nx+1:end);
 A_condensed = G2(nx+1:end,:);
-% w_star_condensed = qp([], R_condensed, r_condensed, [], [], u_lb, u_ub, A_lb, A_condensed, A_ub);
-w_star_condensed_quadprog = quadprog(R_condensed, r_condensed, [D_bar; A_condensed; -A_condensed], [d_bar; A_ub; -A_lb], [], [], u_lb, u_ub);
+[w_star_condensed_quadprog, ~, exit_flag, ~, condensed_multipliers] = quadprog(R_condensed, r_condensed, [D_bar; A_condensed; -A_condensed], [d_bar; A_ub; -A_lb], [], [], u_lb, u_ub);
+if(~(exit_flag == 1))
+    Z = null(G_bar);
+    disp(['convex QP? : ', num2str(all(eig(Z.'*H*Z) > 1e-4))])
+    error(['QP solution failed with code: ', num2str(exit_flag)]);
+end
 
 save('u_lower_bound.dat', 'u_lb', '-ascii', '-double');
 save('u_upper_bound.dat', 'u_ub', '-ascii', '-double');
@@ -190,7 +171,7 @@ save('condensed_bound_matrix.dat', 'A_condensed', '-ascii', '-double');
 
 condensed_general_constraint_matrix = D_bar(1:nx+nu, :);
 condensed_general_constraint_ub = d_bar(1:nx+nu);
-condensed_general_constraint_lb = -d_bar(nc+1:nc+nx+nu);
+condensed_general_constraint_lb = -d_bar(nc_all+1:nc_all+nx+nu);
 for k=1:N
     G2k = G2(k*nx+1:(k+1)*nx, :);
     D_bark = D_bar(k*(nx+nu)+1:(k+1)*(nx+nu), :);
@@ -199,7 +180,7 @@ for k=1:N
     condensed_general_constraint_ub = [condensed_general_constraint_ub; ...
         A_ub((k-1)*nx+1:k*nx); d_bar(k*(nx+nu)+1:(k+1)*(nx+nu))];
     condensed_general_constraint_lb = [condensed_general_constraint_lb; ...
-        A_lb((k-1)*nx+1:k*nx); -d_bar(nc+k*(nx+nu)+1:nc+(k+1)*(nx+nu))];
+        A_lb((k-1)*nx+1:k*nx); -d_bar(nc_all+k*(nx+nu)+1:nc_all+(k+1)*(nx+nu))];
 end
 save('condensed_general_constraint_matrix.dat', 'condensed_general_constraint_matrix', '-ascii', '-double');
 save('condensed_general_constraint_lb.dat', 'condensed_general_constraint_lb', '-ascii', '-double');
@@ -207,8 +188,11 @@ save('condensed_general_constraint_ub.dat', 'condensed_general_constraint_ub', '
 
 % Compare sparse and condensed solution
 XU = reshape([w_star_ocp;zeros(nu,1)], nx+nu, N+1);
+x_star_ocp = XU(1:nx, :);
+x_star_ocp = x_star_ocp(:);
 u_star_ocp = XU(nx+1:end, 1:end-1);
 u_star_ocp = u_star_ocp(:);
 if (norm(u_star_ocp - w_star_condensed_quadprog) > TOLERANCE)
-    error(['Difference between condensed and sparse solution: ', num2str(norm(u_star_ocp - w_star_condensed))])
+    [u_star_ocp w_star_condensed_quadprog]
+    error(['Difference between condensed and sparse solution: ', num2str(norm(u_star_ocp - w_star_condensed_quadprog))])
 end
