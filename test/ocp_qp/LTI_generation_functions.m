@@ -3,7 +3,7 @@
 randn('state', 0);
 
 function [N, nx, nu, nb, nc] = generate_dimensions()
-    N = 20;
+    N = 2;
     nx = 4;
     nu = 2;
     nb = nx+nu;
@@ -25,7 +25,7 @@ function [Q, S, R, q, r] = generate_cost_function()
     do
         Q = randn(nx, nx);
         Q = Q.'*Q;
-        S = randn(nu, nx);
+        S = eye(nu, nx);randn(nu, nx);
         R = randn(nu, nu);
         R = R.'*R;
     until(all(eig([Q, S.'; S, R]) > 1e-2)) % Implies a convex QP

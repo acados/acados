@@ -2,8 +2,9 @@
 1;
 
 function w_star = solve_structured_ocp(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
-    Cx, Cu, cl, cu, TOLERANCE)
+    Cx, Cu, cl, cu)
 
+    global TOLERANCE;
     % Cost function: min 0.5 * w^T H w + h^T w
     H = blkdiag(kron(eye(N), [Q, S.'; S, R]), Q);
     h = [repmat([q; r], N, 1); q];
@@ -78,9 +79,21 @@ function [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B,
     g = -A_bar \ (b_bar + [A*x0; zeros((N-1)*nx,1)]);
 endfunction
 
-function [R_condensed, r_condensed] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, q, r,
-    G2, g2, Gex0)
+function [H_bar, h_bar] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, q, r, A, B, b, x0)
+    global TOLERANCE;
 
+    [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B, b, x0);
+    h_bar = repmat(r, N, 1) + G.' * (repmat(q, N, 1) + kron(eye(N), Q) * g) + kron(eye(N), S) * [x0; g(1:end-nx)];
+    S_cut = [zeros(nu, N*nx); [kron(eye(N-1), S), zeros(nu, nx)]];
+    H_bar = kron(eye(N), R) + G.'*kron(eye(N), Q)*G + S_cut*G + G.'*S_cut.';
+
+    % As a check, do condensing based on Frasch2014a
+    c = repmat(b, N, 1);
+    L = [A; zeros((N-1)*nx, nx)];
+    G2 = [zeros(nx, N*(nu)); -A_bar \ B_bar];
+    g2 = [zeros(nx, 1); -A_bar \ c];
+    Ge = [eye(nx); -A_bar \ L];
+    Gex0 = Ge*x0;
     Q_all = kron(eye(N+1), Q);
     S_all = [kron(eye(N), S), zeros(N*nu, nx)];
     R_all = kron(eye(N), R);
@@ -89,6 +102,9 @@ function [R_condensed, r_condensed] = calculate_condensed_cost_function(N, nx, n
     Sex0 = (G2.'*Q_all + S_all)*Gex0;
     R_condensed = R_all + G2.'*Q_all*G2 + S_all*G2 + G2.'*S_all.';
     r_condensed = r_all + G2.'*(q_all + Q_all*g2) + S_all*g2 + Sex0;
+    if(norm(H_bar - R_condensed) > TOLERANCE || norm(h_bar - r_condensed) > TOLERANCE)
+        error('Condensing methods do not match!')
+    end
 endfunction
 
 function [u_lb, u_ub, G_lb, G_ub] = calculate_condensed_bounds(N, ul, uu, xl, xu, g)

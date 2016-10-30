@@ -13,7 +13,7 @@ LTI_generation_functions;
 LTI_condensing_functions;
 
 % Tolerance used to determine optimality, to compare matrices, etc.
-TOLERANCE = 1e-10;
+global TOLERANCE = 1e-10;
 
 % LTI system
 [N, nx, nu, nb, nc] = generate_dimensions();
@@ -54,23 +54,14 @@ w_star_ocp = solve_structured_ocp(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu,
 
 % Do condensing based on Andersson2013b
 [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B, b, x0);
-
-% Do condensing based on Frasch2014a
-c = repmat(b, N, 1);
-L = [A; zeros((N-1)*nx, nx)];
-G2 = [zeros(nx, N*(nu)); -A_bar \ B_bar];
-g2 = [zeros(nx, 1); -A_bar \ c];
-Ge = [eye(nx); -A_bar \ L];
-
-[R_condensed, r_condensed] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, q, r,
-    G2, g2, Ge*x0);
+[H_bar, h_bar] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, q, r, A, B, b, x0);
 [u_lb, u_ub, G_lb, G_ub] = calculate_condensed_bounds(N, ul, uu, xl, xu, g);
 [C_bar, c_bar_lb, c_bar_ub] = calculate_condensed_general_constraints(N, nx, nu, nc,
     Cx, Cu, cl, cu, x0, G, g, G_lb, G_ub);
 
 % Solve condensed QP
-[w_star_condensed_quadprog, ~, exit_flag, ~, condensed_multipliers] = quadprog(
-    R_condensed, r_condensed, [C_bar; -C_bar], [c_bar_ub; -c_bar_lb], [], [], u_lb, u_ub);
+[w_star_condensed_quadprog, ~, exit_flag, ~, condensed_multipliers] = quadprog(H_bar, h_bar,
+    [C_bar; -C_bar], [c_bar_ub; -c_bar_lb], [], [], u_lb, u_ub);
 if(~(exit_flag == 1))
     error(['Condensed QP solution failed with code: ', num2str(exit_flag)]);
 end
@@ -89,8 +80,8 @@ end
 
 save('transition_vector.dat', 'g', '-ascii', '-double');
 save('transition_matrix.dat', 'G', '-ascii', '-double');
-save('condensed_hessian.dat', 'R_condensed', '-ascii', '-double');
-save('condensed_gradient.dat', 'r_condensed', '-ascii', '-double');
+save('condensed_hessian.dat', 'H_bar', '-ascii', '-double');
+save('condensed_gradient.dat', 'h_bar', '-ascii', '-double');
 save('u_lower_bound.dat', 'u_lb', '-ascii', '-double');
 save('u_upper_bound.dat', 'u_ub', '-ascii', '-double');
 save('condensed_lower_bound.dat', 'G_lb', '-ascii', '-double');
