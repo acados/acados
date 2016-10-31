@@ -84,7 +84,7 @@ function [H_bar, h_bar] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, 
 
     [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B, b, x0);
     h_bar = repmat(r, N, 1) + G.' * (repmat(q, N, 1) + kron(eye(N), Q) * g) + kron(eye(N), S) * [x0; g(1:end-nx)];
-    S_cut = [zeros(nu, N*nx); [kron(eye(N-1), S), zeros(nu, nx)]];
+    S_cut = [zeros(nu, N*nx); [kron(eye(N-1), S), zeros((N-1)*nu, nx)]];
     H_bar = kron(eye(N), R) + G.'*kron(eye(N), Q)*G + S_cut*G + G.'*S_cut.';
 
     % As a check, do condensing based on Frasch2014a
