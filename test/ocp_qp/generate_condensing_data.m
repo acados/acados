@@ -14,9 +14,10 @@ global TOLERANCE = 1e-10;
 
 for mode = {'LTI', 'LTV'}
 
-    load_generation_functions = [mode{1},'_generation_functions'];
+    prefix = mode{1};
+    load_generation_functions = [prefix,'_generation_functions'];
     eval(load_generation_functions);
-    load_condensing_functions = [mode{1},'_condensing_functions'];
+    load_condensing_functions = [prefix,'_condensing_functions'];
     eval(load_condensing_functions);
 
     [N, nx, nu, nb, nc] = generate_dimensions();
@@ -25,6 +26,8 @@ for mode = {'LTI', 'LTV'}
     [xl, xu, ul, uu] = generate_bounds(x0);
     [Cx, Cu, cl, cu] = generate_general_constraints();
 
+    mkdir(prefix);
+    cd(prefix);
     save('N.dat', 'N', '-ascii', '-double');
     save('nx.dat', 'nx', '-ascii', '-double');
     save('nu.dat', 'nu', '-ascii', '-double');
@@ -93,4 +96,5 @@ for mode = {'LTI', 'LTV'}
     save('condensed_general_constraint_matrix.dat', 'C_bar', '-ascii', '-double');
     save('condensed_general_constraint_lb.dat', 'c_bar_lb', '-ascii', '-double');
     save('condensed_general_constraint_ub.dat', 'c_bar_ub', '-ascii', '-double');
+    cd('..');
 end

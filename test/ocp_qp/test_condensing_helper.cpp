@@ -103,15 +103,15 @@ static void fill_in_condensing_structs(const ocp_qp_in * const qp_in, condensing
 static void readUnconstrainedInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, MatrixXd *B,
     VectorXd *b, VectorXd *x0, MatrixXd *Q, MatrixXd *S, MatrixXd *R, VectorXd *q, VectorXd *r) {
 
-    *A = readMatrixFromFile("A.dat", nx, nx);
-    *B = readMatrixFromFile("B.dat", nx, nu);
-    *b = readVectorFromFile("bv.dat", nx);
-    *x0 = readVectorFromFile("x0.dat", nx);
-    *Q = readMatrixFromFile("Q.dat", nx, nx);
-    *S = readMatrixFromFile("S.dat", nu, nx);
-    *R = readMatrixFromFile("R.dat", nu, nu);
-    *q = readVectorFromFile("qv.dat", nx);
-    *r = readVectorFromFile("rv.dat", nu);
+    *A = readMatrixFromFile("LTI/A.dat", nx, nx);
+    *B = readMatrixFromFile("LTI/B.dat", nx, nu);
+    *b = readVectorFromFile("LTI/bv.dat", nx);
+    *x0 = readVectorFromFile("LTI/x0.dat", nx);
+    *Q = readMatrixFromFile("LTI/Q.dat", nx, nx);
+    *S = readMatrixFromFile("LTI/S.dat", nu, nx);
+    *R = readMatrixFromFile("LTI/R.dat", nu, nu);
+    *q = readVectorFromFile("LTI/qv.dat", nx);
+    *r = readVectorFromFile("LTI/rv.dat", nu);
 }
 
 static void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0) {
@@ -188,16 +188,16 @@ static void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0) {
 
 static void readBoundsDataFromFile(int_t nx, int_t nu, VectorXd *lbwx,
     VectorXd *ubwx, VectorXd *lbwu, VectorXd *ubwu) {
-    *lbwx = readVectorFromFile("lower_bound_x.dat", nx);
-    *ubwx = readVectorFromFile("upper_bound_x.dat", nx);
-    *lbwu = readVectorFromFile("lower_bound_u.dat", nu);
-    *ubwu = readVectorFromFile("upper_bound_u.dat", nu);
+    *lbwx = readVectorFromFile("LTI/lower_bound_x.dat", nx);
+    *ubwx = readVectorFromFile("LTI/upper_bound_x.dat", nx);
+    *lbwu = readVectorFromFile("LTI/lower_bound_u.dat", nu);
+    *ubwu = readVectorFromFile("LTI/upper_bound_u.dat", nu);
 }
 
 static void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) {
     VectorXd lbwx, ubwx, lbwu, ubwu;
     int_t nb_vector[N+1];
-    int_t nb = (int_t) readMatrix("nb.dat")(0, 0);
+    int_t nb = (int_t) readMatrix("LTI/nb.dat")(0, 0);
     VectorXd lbw_block(nb);
     VectorXd ubw_block(nb);
     Eigen::VectorXi idxb_vector(nb);
@@ -236,17 +236,17 @@ static void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) {
 static void readGeneralConstraintsDataFromFile(int_t nx, int_t nu, int_t nc,
     MatrixXd *Cx, MatrixXd *Cu, VectorXd *lbc, VectorXd *ubc) {
 
-    *Cx = readMatrixFromFile("general_constraint_x.dat", nc, nx);
-    *Cu = readMatrixFromFile("general_constraint_u.dat", nc, nu);
-    *lbc = readVectorFromFile("general_constraint_lb.dat", nc);
-    *ubc = readVectorFromFile("general_constraint_ub.dat", nc);
+    *Cx = readMatrixFromFile("LTI/general_constraint_x.dat", nc, nx);
+    *Cu = readMatrixFromFile("LTI/general_constraint_u.dat", nc, nu);
+    *lbc = readVectorFromFile("LTI/general_constraint_lb.dat", nc);
+    *ubc = readVectorFromFile("LTI/general_constraint_ub.dat", nc);
 }
 
 static void fillWithGeneralConstraintsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) {
     MatrixXd Cx, Cu;
     VectorXd lbc, ubc;
     int_t nc_vector[N+1];
-    int_t nc = (int_t) readMatrix("nc.dat")(0, 0);
+    int_t nc = (int_t) readMatrix("LTI/nc.dat")(0, 0);
 
     readGeneralConstraintsDataFromFile(nx, nu, nc, &Cx, &Cu, &lbc, &ubc);
     qp->Cx = (const real_t **) malloc(sizeof(*qp->Cx) * (N+1));
