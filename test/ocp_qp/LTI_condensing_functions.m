@@ -1,7 +1,7 @@
 
 1;
 
-function w_star = solve_structured_ocp(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
+function w_star = solve_structured_ocp(N, nx, nu, ~, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
     Cx, Cu, cl, cu)
 
     global TOLERANCE;
@@ -107,7 +107,7 @@ function [H_bar, h_bar] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, 
     end
 endfunction
 
-function [u_lb, u_ub, G_lb, G_ub] = calculate_condensed_bounds(N, ul, uu, xl, xu, g)
+function [u_lb, u_ub, G_lb, G_ub] = calculate_condensed_bounds(N, ~, ul, uu, xl, xu, g)
     u_lb = repmat(ul, N, 1);
     u_ub = repmat(uu, N, 1);
     G_lb = repmat(xl, N, 1) - g;
