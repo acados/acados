@@ -345,7 +345,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         // ---- BLASFEO: row transformations + backsolve ----
 #endif  // LA_BLAFEO
 #endif  // TRIPLE_LOOP
-//#if WARM_SWAP
+// #if WARM_SWAP
 #if TRIPLE_LOOP
         for (i = 0; i < num_stages*nx; i++) ipiv_tmp[i] = ipiv[i];
 #else
@@ -430,9 +430,9 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     work->sys_mat = malloc(sizeof(*work->sys_mat) * (num_stages*nx)*(num_stages*nx));
     work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+nx+nu));
 
-//#if WARM_SWAP
+// #if WARM_SWAP
     work->ipiv_tmp = malloc(sizeof(*work->ipiv_tmp) * (num_stages*nx));
-//#endif
+// #endif
 
 #if !TRIPLE_LOOP
 
