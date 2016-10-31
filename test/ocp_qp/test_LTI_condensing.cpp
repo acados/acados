@@ -1,14 +1,13 @@
-#include <string>
-
 #include "catch/include/catch.hpp"
 #include "test/test_utils/read_matrix.hpp"
-#include "test_condensing_helper.cpp"
+#include "test/ocp_qp/LTI_condensing_test_helper.hpp"
+#include "test/ocp_qp/condensing_test_helper.hpp"
 #include "acados/ocp_qp/condensing.c"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-static void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
+void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
     *N = (int_t) readMatrix("LTI/N.dat")(0, 0);
     REQUIRE(*N > 0);
     *nx = (int_t) readMatrix("LTI/nx.dat")(0, 0);
