@@ -1,4 +1,4 @@
-#include "Eigen/Dense"
+#include "test/test_utils/eigen.h"
 #include "acados/ocp_qp/condensing.h"
 
 void readUnconstrainedInputDataFromFile(int_t nx, int_t nu,

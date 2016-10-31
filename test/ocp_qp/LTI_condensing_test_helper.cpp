@@ -1,7 +1,6 @@
-#include "Eigen/Dense"
-#include "test/test_utils/zeros.hpp"
-#include "test/test_utils/read_matrix.hpp"
-#include "acados/ocp_qp/condensing.h"
+#include "test/ocp_qp/LTI_condensing_test_helper.h"
+#include "test/test_utils/read_matrix.h"
+#include "test/test_utils/zeros.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;

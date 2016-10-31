@@ -1,4 +1,4 @@
-#include "zeros.hpp"
+#include "test/test_utils/zeros.h"
 #include <cstdlib>
 
 void i_zeros(int_t **pA, int_t row, int_t col) {

@@ -1,7 +1,7 @@
 #include "catch/include/catch.hpp"
-#include "test/test_utils/read_matrix.h"
-#include "test/ocp_qp/LTI_condensing_test_helper.h"
-#include "test/ocp_qp/condensing_test_helper.h"
+#include "test/test_utils/read_matrix.hpp"
+#include "test/ocp_qp/LTV_condensing_test_helper.hpp"
+#include "test/ocp_qp/condensing_test_helper.hpp"
 #include "acados/ocp_qp/condensing.c"
 
 using Eigen::MatrixXd;
