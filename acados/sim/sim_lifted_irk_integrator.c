@@ -264,7 +264,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 #if defined(LA_BLASFEO)
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
-#endif  // LA_BLAFEO
+#endif  // LA_BLAS | LA_REFERENCE
         dgetrf_libstr(num_stages*nx, num_stages*nx, str_mat, 0, 0, str_mat, 0,
                 0, ipiv);  // Gauss elimination
         // ---- BLASFEO: LU factorization ----
@@ -471,12 +471,13 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     int size_strmat = 0;
     size_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
 
-    void *memory_strmat;
-    v_zeros_align(&memory_strmat, size_strmat);
+    void *memory_strmat = malloc(size_strmat);
+//    void *memory_strmat;
+//    v_zeros_align(&memory_strmat, size_strmat);
     char *ptr_memory_strmat = (char *) memory_strmat;
 
     d_cast_diag_mat2strmat((double *) ptr_memory_strmat, work->str_mat);
-    ptr_memory_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
+//    ptr_memory_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
 
 #else  // LA_BLAS
 
