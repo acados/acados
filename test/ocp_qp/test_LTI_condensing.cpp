@@ -1,13 +1,15 @@
 #include "catch/include/catch.hpp"
 #include "test/test_utils/read_matrix.h"
-#include "test/ocp_qp/LTI_condensing_test_helper.h"
 #include "test/ocp_qp/condensing_test_helper.h"
-#include "acados/ocp_qp/condensing.c"
+#include "test/ocp_qp/LTI_condensing_test_helper.h"
+#include "acados/ocp_qp/condensing_helper_functions.c"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
+extern real_t COMPARISON_TOLERANCE;
+
+void readLTIInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu) {
     *N = (int_t) readMatrix("LTI/N.dat")(0, 0);
     REQUIRE(*N > 0);
     *nx = (int_t) readMatrix("LTI/nx.dat")(0, 0);
@@ -28,7 +30,7 @@ TEST_CASE("Unconstrained LTI system", "[condensing]") {
     int_t nx = qp.nx[0];
     int_t nu = qp.nu[0];
 
-    fill_in_condensing_structs(&qp, &input, &output, &work);
+    allocateForCondensingData(&qp, &input, &output, &work);
 
     SECTION("Transition vector") {
         calculate_transition_vector(&qp, &work, x0.data());
@@ -84,7 +86,7 @@ TEST_CASE("Constrained LTI system, simple bounds", "[condensing]") {
     int_t nu = qp.nu[0];
     fillWithBoundsData(&qp, N, nx, nu);
 
-    fill_in_condensing_structs(&qp, &input, &output, &work);
+    allocateForCondensingData(&qp, &input, &output, &work);
 
     calculate_transition_vector(&qp, &work, x0.data());
     calculate_transition_matrix(&qp, &work);
@@ -133,7 +135,7 @@ TEST_CASE("Constrained LTI system, general polytopic constraints", "[condensing]
     fillWithBoundsData(&qp, N, nx, nu);
     fillWithGeneralConstraintsData(&qp, N, nx, nu);
 
-    fill_in_condensing_structs(&qp, &input, &output, &work);
+    allocateForCondensingData(&qp, &input, &output, &work);
 
     calculate_transition_vector(&qp, &work, x0.data());
     calculate_transition_matrix(&qp, &work);

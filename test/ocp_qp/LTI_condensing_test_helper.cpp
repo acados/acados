@@ -1,11 +1,12 @@
 #include "test/ocp_qp/LTI_condensing_test_helper.h"
+#include "test/ocp_qp/condensing_test_helper.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/zeros.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-extern void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu);
+extern void readLTIInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu);
 
 void readUnconstrainedInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, MatrixXd *B,
     VectorXd *b, VectorXd *x0, MatrixXd *Q, MatrixXd *S, MatrixXd *R, VectorXd *q, VectorXd *r) {
@@ -23,43 +24,14 @@ void readUnconstrainedInputDataFromFile(int_t nx, int_t nu, MatrixXd *A, MatrixX
 
 void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0) {
     int_t N, nx, nu;
-    readInputDimensionsFromFile(&N, &nx, &nu);
     MatrixXd A, B, Q, S, R;
     VectorXd b, q, r;
+
+    readLTIInputDimensionsFromFile(&N, &nx, &nu);
     readUnconstrainedInputDataFromFile(nx, nu, &A, &B, &b, x0, &Q, &S, &R, &q, &r);
+    allocateForUnconstrainedQPData(N, nx, nu, qp);
 
     int_t nx_vector[N+1], nu_vector[N], nb_vector[N+1], nc_vector[N+1];
-
-    qp->N = N;
-    i_zeros((int_t **) &qp->nx, N+1, 1);
-    i_zeros((int_t **) &qp->nu, N, 1);
-    i_zeros((int_t **) &qp->nb, N+1, 1);
-    i_zeros((int_t **) &qp->nc, N+1, 1);
-    qp->lb = (const real_t **) malloc(sizeof(*qp->lb));
-    d_zeros((real_t **) &qp->lb[0], nx, 1);
-    qp->ub = (const real_t **) malloc(sizeof(*qp->ub));
-    d_zeros((real_t **) &qp->ub[0], nx, 1);
-    qp->A = (const real_t **) malloc(sizeof(*qp->A) * N);
-    qp->B = (const real_t **) malloc(sizeof(*qp->B) * N);
-    qp->b = (const real_t **) malloc(sizeof(*qp->b) * N);
-    qp->Q = (const real_t **) malloc(sizeof(*qp->Q) * (N+1));
-    qp->S = (const real_t **) malloc(sizeof(*qp->S) * N);
-    qp->R = (const real_t **) malloc(sizeof(*qp->R) * N);
-    qp->q = (const real_t **) malloc(sizeof(*qp->q) * (N+1));
-    qp->r = (const real_t **) malloc(sizeof(*qp->r) * N);
-    for (int_t i = 0; i < N; i++) {
-        d_zeros((real_t **) &qp->A[i], nx, nx);
-        d_zeros((real_t **) &qp->B[i], nx, nu);
-        d_zeros((real_t **) &qp->b[i], nx, 1);
-        d_zeros((real_t **) &qp->Q[i], nx, nx);
-        d_zeros((real_t **) &qp->S[i], nu, nx);
-        d_zeros((real_t **) &qp->R[i], nu, nu);
-        d_zeros((real_t **) &qp->q[i], nx, 1);
-        d_zeros((real_t **) &qp->r[i], nu, 1);
-    }
-    d_zeros((real_t **) &qp->Q[N], nx, nx);
-    d_zeros((real_t **) &qp->q[N], nx, 1);
-
     // Initial state
     nb_vector[0] = nx;
     for (int_t i = 0; i < N; i++) {
@@ -157,10 +129,10 @@ void fillWithGeneralConstraintsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) 
 
     readGeneralConstraintsDataFromFile(nx, nu, nc, &Cx, &Cu, &lbc, &ubc);
     qp->Cx = (const real_t **) malloc(sizeof(*qp->Cx) * (N+1));
-    qp->Cu = (const real_t **) malloc(sizeof(*qp->Cu) * (N+1));
+    qp->Cu = (const real_t **) malloc(sizeof(*qp->Cu) * N);
     qp->lc = (const real_t **) malloc(sizeof(*qp->lc) * (N+1));
     qp->uc = (const real_t **) malloc(sizeof(*qp->uc) * (N+1));
-    for (int_t i = 0; i <= N; i++) {
+    for (int_t i = 0; i < N; i++) {
         nc_vector[i] = nc;
         d_zeros((real_t **) &qp->Cx[i], nc, nx);
         memcpy((void *) qp->Cx[i], (void *) Cx.data(), sizeof(*qp->Cx[i]) * (nc*nx));
@@ -171,5 +143,12 @@ void fillWithGeneralConstraintsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu) 
         d_zeros((real_t **) &qp->uc[i], nc, 1);
         memcpy((void *) qp->uc[i], (void *) ubc.data(), sizeof(*qp->uc[i]) * nc);
     }
+    nc_vector[N] = nc;
+    d_zeros((real_t **) &qp->Cx[N], nc, nx);
+    memcpy((void *) qp->Cx[N], (void *) Cx.data(), sizeof(*qp->Cx[N]) * (nc*nx));
+    d_zeros((real_t **) &qp->lc[N], nc, 1);
+    memcpy((void *) qp->lc[N], (void *) lbc.data(), sizeof(*qp->lc[N]) * nc);
+    d_zeros((real_t **) &qp->uc[N], nc, 1);
+    memcpy((void *) qp->uc[N], (void *) ubc.data(), sizeof(*qp->uc[N]) * nc);
     memcpy((void *) qp->nc, (void *) nc_vector, sizeof(*qp->nc) * N+1);
 }

@@ -37,7 +37,39 @@ int_t get_num_constraints(const ocp_qp_in *in, condensing_workspace *work) {
     return num_constraints;
 }
 
-void fill_in_condensing_structs(const ocp_qp_in * const qp_in, condensing_in *in,
+void allocateForUnconstrainedQPData(int_t N, int_t nx, int_t nu, ocp_qp_in * const qp) {
+    qp->N = N;
+    i_zeros((int_t **) &qp->nx, N+1, 1);
+    i_zeros((int_t **) &qp->nu, N, 1);
+    i_zeros((int_t **) &qp->nb, N+1, 1);
+    i_zeros((int_t **) &qp->nc, N+1, 1);
+    qp->lb = (const real_t **) malloc(sizeof(*qp->lb));
+    d_zeros((real_t **) &qp->lb[0], nx, 1);
+    qp->ub = (const real_t **) malloc(sizeof(*qp->ub));
+    d_zeros((real_t **) &qp->ub[0], nx, 1);
+    qp->A = (const real_t **) malloc(sizeof(*qp->A) * N);
+    qp->B = (const real_t **) malloc(sizeof(*qp->B) * N);
+    qp->b = (const real_t **) malloc(sizeof(*qp->b) * N);
+    qp->Q = (const real_t **) malloc(sizeof(*qp->Q) * (N+1));
+    qp->S = (const real_t **) malloc(sizeof(*qp->S) * N);
+    qp->R = (const real_t **) malloc(sizeof(*qp->R) * N);
+    qp->q = (const real_t **) malloc(sizeof(*qp->q) * (N+1));
+    qp->r = (const real_t **) malloc(sizeof(*qp->r) * N);
+    for (int_t i = 0; i < N; i++) {
+        d_zeros((real_t **) &qp->A[i], nx, nx);
+        d_zeros((real_t **) &qp->B[i], nx, nu);
+        d_zeros((real_t **) &qp->b[i], nx, 1);
+        d_zeros((real_t **) &qp->Q[i], nx, nx);
+        d_zeros((real_t **) &qp->S[i], nu, nx);
+        d_zeros((real_t **) &qp->R[i], nu, nu);
+        d_zeros((real_t **) &qp->q[i], nx, 1);
+        d_zeros((real_t **) &qp->r[i], nu, 1);
+    }
+    d_zeros((real_t **) &qp->Q[N], nx, nx);
+    d_zeros((real_t **) &qp->q[N], nx, 1);
+}
+
+void allocateForCondensingData(const ocp_qp_in * const qp_in, condensing_in *in,
     condensing_out *out, condensing_workspace *work) {
 
     int_t N = qp_in->N;
