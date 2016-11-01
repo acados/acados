@@ -89,18 +89,25 @@ endif ( )
 # Define acados library
 add_library ( acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_QP} ${ACADOS_SRC_UTILS} )
 
+# OpenBLAS installation directory
+#link_directories( /opt/openblas )
+
 # Define tests
 add_executable ( test_hpmpc ${TEST_HPMPC_SRC} )
 target_link_libraries ( test_hpmpc acados hpmpc blasfeo m )
+#target_link_libraries ( test_hpmpc acados hpmpc blasfeo openblas m )
 
 add_executable ( test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC} )
 target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc blasfeo m )
+#target_link_libraries ( test_condensing_qpoases acados qpoases hpmpc blasfeo openblas m )
 
 add_executable ( test_nmpc ${TEST_NMPC_SRC} ${TEST_CHEN_SRC} )
 target_link_libraries ( test_nmpc acados qpoases blasfeo m )
+#target_link_libraries ( test_nmpc acados qpoases blasfeo openblas m )
 
 add_executable ( test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN2_SRC} ${TEST_VDE_CHAIN3_SRC} ${TEST_VDE_CHAIN4_SRC} ${TEST_VDE_CHAIN5_SRC} ${TEST_VDE_CHAIN6_SRC} ${TEST_VDE_CHAIN7_SRC} ${TEST_VDE_CHAIN8_SRC} ${TEST_VDE_CHAIN9_SRC} ${TEST_JAC_CHAIN2_SRC} ${TEST_JAC_CHAIN3_SRC} ${TEST_JAC_CHAIN4_SRC} ${TEST_JAC_CHAIN5_SRC} ${TEST_JAC_CHAIN6_SRC} ${TEST_JAC_CHAIN7_SRC} ${TEST_JAC_CHAIN8_SRC} ${TEST_JAC_CHAIN9_SRC} )
 target_link_libraries ( test_chain acados qpoases blasfeo m )
+#target_link_libraries ( test_chain acados qpoases blasfeo openblas m )
 
 if ( CMAKE_BUILD_TYPE MATCHES Test )
     # Find test data generation files
