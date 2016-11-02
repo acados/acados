@@ -1,0 +1,18 @@
+# Find test data generation files
+function(generate_test_data)
+    set(FIND_COMMAND find test -type f -name "generate_*.m")
+    set(FIND_GENERATION_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND} )
+    execute_process(COMMAND ${FIND_GENERATION_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE TEST_DATA_GENERATION_FILES)
+    string(REPLACE "\n" " " TEST_DATA_GENERATION_FILES ${TEST_DATA_GENERATION_FILES})
+    separate_arguments(TEST_DATA_GENERATION_FILES)
+    # Generate the test data
+    foreach(GENERATION_FILE IN ITEMS ${TEST_DATA_GENERATION_FILES})
+        set(GENERATION_FILE "${PROJECT_SOURCE_DIR}/${GENERATION_FILE}")
+        message("Current file: ${GENERATION_FILE}")
+        if(NOT EXISTS ${PROJECT_BINARY_DIR}/test)
+            execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} mkdir test)
+        endif()
+        set(GENERATE_TEST_DATA octave --no-gui --path "${PROJECT_SOURCE_DIR}/test/ocp_qp/octave" ${GENERATION_FILE})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR}/test ${GENERATE_TEST_DATA})
+    endforeach()
+endfunction()
