@@ -38,7 +38,7 @@ typedef struct sim_in_ {
     bool sens_hess;
     int_t nsens_forw;
 
-    void (*VDE_fun)(const real_t*, real_t*);
+    void (*VDE_forw)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
 
     real_t step;
