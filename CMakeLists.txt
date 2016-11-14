@@ -123,7 +123,7 @@ if(PYTHONINTERP_FOUND)
     set(ACADOS_STYLE_FILTER
     	"-legal/copyright,"
     	"-readability/casting")
-    set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! -path "examples/casadi_chain/*" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
+    set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! \( -path "examples/casadi_chain/*" -o -path "test/sim/pendulum/casadi/*" \) -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
     set(FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND})
     execute_process(COMMAND ${FIND_ACADOS_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
     string(REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT})

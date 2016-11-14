@@ -1,4 +1,4 @@
-#include "test/sim/pendulum/casadi_pendulum.h"
+#include "test/sim/pendulum/casadi/casadi_pendulum.h"
 
 extern int vde_forw_pendulum(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
 

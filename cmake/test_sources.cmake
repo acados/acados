@@ -12,7 +12,7 @@ file(GLOB UNIT_TESTS_SRC_OCP_QP
 )
 
 file(GLOB UNIT_TESTS_SRC_SIM
-    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/*.c
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/*.c
     ${PROJECT_SOURCE_DIR}/test/sim/pendulum/test_pendulum.cpp
 )
 

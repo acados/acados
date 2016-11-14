@@ -1,5 +1,5 @@
 #include "catch/include/catch.hpp"
-#include "test/sim/pendulum/casadi_pendulum.h"
+#include "test/sim/pendulum/casadi/casadi_pendulum.h"
 #include "acados/utils/types.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
