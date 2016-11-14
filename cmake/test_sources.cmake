@@ -11,4 +11,9 @@ file(GLOB UNIT_TESTS_SRC_OCP_QP
     ${PROJECT_SOURCE_DIR}/test/ocp_qp/LTV_condensing_test_helper.cpp
 )
 
+file(GLOB UNIT_TESTS_SRC_SIM
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/*.c
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/test_pendulum.cpp
+)
+
 set(UNIT_TESTS_SRC ${PROJECT_SOURCE_DIR}/test/all_tests.cpp)

@@ -91,28 +91,28 @@ endif()
 add_library(acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_OCP_QP} ${ACADOS_SRC_UTILS})
 
 # OpenBLAS installation directory
-# link_directories(/opt/openblas)
+link_directories(/opt/openblas/lib)
 
 # Define tests
 add_executable(test_hpmpc ${TEST_HPMPC_SRC})
-target_link_libraries(test_hpmpc acados hpmpc blasfeo m)
-#target_link_libraries(test_hpmpc acados hpmpc blasfeo openblas m)
+#target_link_libraries(test_hpmpc acados hpmpc blasfeo m)
+target_link_libraries(test_hpmpc acados hpmpc blasfeo openblas m)
 
 add_executable(test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC})
-target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo m)
-#target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo openblas m)
+#target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo m)
+target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo openblas m)
 
 add_executable(test_nmpc ${TEST_NMPC_SRC} ${TEST_CHEN_SRC})
-target_link_libraries(test_nmpc acados qpoases blasfeo m)
-#target_link_libraries(test_nmpc acados qpoases blasfeo openblas m)
+#target_link_libraries(test_nmpc acados qpoases blasfeo m)
+target_link_libraries(test_nmpc acados qpoases blasfeo openblas m)
 
 add_executable(test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN_SRC} ${TEST_JAC_CHAIN_SRC})
-target_link_libraries(test_chain acados qpoases blasfeo m)
-#target_link_libraries(test_chain acados qpoases blasfeo openblas m)
+#target_link_libraries(test_chain acados qpoases blasfeo m)
+target_link_libraries(test_chain acados qpoases blasfeo openblas m)
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
     generate_test_data()
-    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_TEST_UTILS})
+    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_TEST_UTILS})
     target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
 	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
