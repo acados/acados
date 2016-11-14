@@ -29,6 +29,7 @@ typedef struct sim_erk_workspace_ {
     real_t *rhs_forw_in;
     real_t *out_forw_traj;
 
+    real_t *adj_traj;
     real_t *rhs_adj_in;
     real_t *out_adj_tmp;
 } sim_erk_workspace;
