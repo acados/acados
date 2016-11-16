@@ -24,22 +24,14 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/print.h"
 
-#if FIXED_STEP_SIZE == 1
-// Integration step size.
-real_t H_INT = 1.0/100;
-// Number of integration steps.
-#define NSTEPS  10
-#endif
-
 void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t num_stages = opts->num_stages;
     int_t i, s, j, istep;
-#if FIXED_STEP_SIZE == 0
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
-#endif
+    int_t NF = in->nsens_forw;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
@@ -56,36 +48,34 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
     real_t timing_ad = 0.0;
 
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
-    for (i = 0; i < nx*(nx+nu); i++) out_tmp[nx+i] = 0.0;  // sensitivities
-    for (i = 0; i < nx; i++) out_tmp[nx+i*nx+i] = 1.0;     // sensitivities wrt x
+    for (i = 0; i < nx*NF; i++) out_tmp[nx+i] = in->S_forw[i];  // sensitivities
 
-    for (i = 0; i < nu; i++) rhs_in[nx*(1+nx+nu)+i] = in->u[i];
+    for (i = 0; i < nu; i++) rhs_in[nx*(1+NF)+i] = in->u[i];
 
     for (istep = 0; istep < NSTEPS; istep++) {
         for (s = 0; s < num_stages; s++) {
-            for (i = 0; i < nx*(1+nx+nu); i++) {
+            for (i = 0; i < nx*(1+NF); i++) {
                 rhs_in[i] = out_tmp[i];
             }
             for (j = 0; j < s; j++) {
                 if (A_mat[j*num_stages+s] != 0) {
-                    for (i = 0; i < nx*(1+nx+nu); i++) {
-                        rhs_in[i] += H_INT*A_mat[j*num_stages+s]*K_tmp[j*nx*(1+nx+nu)+i];
+                    for (i = 0; i < nx*(1+NF); i++) {
+                        rhs_in[i] += H_INT*A_mat[j*num_stages+s]*K_tmp[j*nx*(1+NF)+i];
                     }
                 }
             }
             acado_tic(&timer_ad);
-            in->VDE_fun(rhs_in, &(K_tmp[s*nx*(1+nx+nu)]));  // k evaluation
+            in->VDE_fun(rhs_in, &(K_tmp[s*nx*(1+NF)]));  // k evaluation
             timing_ad += acado_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++) {
-            for (i = 0; i < nx*(1+nx+nu); i++) {
-                out_tmp[i] += H_INT*b_vec[s]*K_tmp[s*nx*(1+nx+nu)+i];  // ERK step
+            for (i = 0; i < nx*(1+NF); i++) {
+                out_tmp[i] += H_INT*b_vec[s]*K_tmp[s*nx*(1+NF)+i];  // ERK step
             }
         }
     }
     for (i = 0; i < nx; i++)    out->xn[i] = out_tmp[i];
-    for (i = 0; i < nx*nx; i++) out->Sx[i] = out_tmp[nx+i];
-    for (i = 0; i < nx*nu; i++) out->Su[i] = out_tmp[nx+nx*nx+i];
+    for (i = 0; i < nx*NF; i++) out->S_forw[i] = out_tmp[nx+i];
 
     out->info->CPUtime = acado_toc(&timer);
     out->info->LAtime = 0.0;
@@ -97,10 +87,11 @@ void sim_erk_create_workspace(const sim_in *in, sim_RK_opts *opts, sim_erk_works
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t num_stages = opts->num_stages;
+    int_t NF = in->nsens_forw;
 
-    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+nx+nu)+nu));
-    work->K_tmp = malloc(sizeof(*work->K_tmp) * (num_stages*nx*(1+nx+nu)));
-    work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+nx+nu)));
+    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+NF)+nu));
+    work->K_tmp = malloc(sizeof(*work->K_tmp) * (num_stages*nx*(1+NF)));
+    work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+NF)));
 }
 
 

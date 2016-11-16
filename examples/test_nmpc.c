@@ -89,12 +89,17 @@ int main() {
     sim_in.nx = NX;
     sim_in.nu = NU;
 
+    sim_in.sens_forw = true;
+    sim_in.nsens_forw = NX+NU;
+
     sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
     sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
+    sim_in.S_forw = malloc(sizeof(*sim_in.S_forw) * (NX*(NX+NU)));
+    for (int_t i = 0; i < NX*(NX+NU); i++) sim_in.S_forw[i] = 0.0;
+    for (int_t i = 0; i < NX; i++) sim_in.S_forw[i*(NX+1)] = 1.0;
 
     sim_out.xn = malloc(sizeof(*sim_out.xn) * (NX));
-    sim_out.Sx = malloc(sizeof(*sim_out.Sx) * (NX*NX));
-    sim_out.Su = malloc(sizeof(*sim_out.Su) * (NX*NU));
+    sim_out.S_forw = malloc(sizeof(*sim_out.S_forw) * (NX*(NX+NU)));
 
     sim_info erk_info;
     sim_out.info = &erk_info;
@@ -188,10 +193,10 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.Sx[k*NX+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.Su[k*NU+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
             }
             for (int_t j = 0; j < NX; j++) {
                 px0[0][j] = (x0[j]-w[j]);
