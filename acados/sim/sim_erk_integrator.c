@@ -107,6 +107,7 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
         if (in->sens_hess) {
             nForw = nx*(1+NF);
             nAdj = nx+nu+nhess;
+            for (i = 0; i < nhess; i++) adj_tmp[nx+nu+i] = 0.0;
         }
         for (i = 0; i < nu; i++) rhs_adj_in[nForw+nx+i] = in->u[i];
 

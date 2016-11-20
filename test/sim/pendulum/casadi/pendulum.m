@@ -55,8 +55,20 @@ adj = jtimes(f_expl,[x;u],lambdaX,true);
 
 adjFun = Function('adjFun',{x,lambdaX,u},{adj});
 
+S_forw = [Sx Sp; zeros(nu,nx) eye(nu)];
+hess = S_forw.'*jtimes(adj,[x;u],S_forw);
+hess2 = [];
+for j = 1:nx+nu
+    for i = j:nx+nu
+        hess2 = [hess2; hess(i,j)];
+    end
+end
+
+hessFun = Function('adjFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
+
 opts = struct('mex', false);
 vdeFun.generate(['vde_forw_pendulum'], opts);
 jacFun.generate(['jac_pendulum'], opts);
 adjFun.generate(['vde_adj_pendulum'], opts);
+hessFun.generate(['vde_hess_pendulum'], opts);
 
