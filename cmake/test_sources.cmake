@@ -12,8 +12,11 @@ file(GLOB UNIT_TESTS_SRC_OCP_QP
 )
 
 file(GLOB UNIT_TESTS_SRC_SIM
-    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/*.c
     ${PROJECT_SOURCE_DIR}/test/sim/pendulum/test_pendulum.cpp
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/casadi_pendulum.c
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/jac_pendulum.c
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/vde_forw_pendulum.c
+    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/vde_adj_pendulum.c
 )
 
 set(UNIT_TESTS_SRC ${PROJECT_SOURCE_DIR}/test/all_tests.cpp)
