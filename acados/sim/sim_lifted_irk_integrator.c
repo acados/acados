@@ -274,7 +274,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
                 }
             }
             acado_tic(&timer_ad);
-            in->VDE_fun(rhs_in, VDE_tmp);  // k evaluation
+            in->VDE_forw(rhs_in, VDE_tmp);  // k evaluation
             timing_ad += acado_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:
