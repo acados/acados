@@ -51,8 +51,8 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
     real_t *adj_traj = work->adj_traj;
     real_t *rhs_adj_in = work->rhs_adj_in;
 
-    acado_timer timer, timer_ad;
-    acado_tic(&timer);
+    // acado_timer timer, timer_ad;
+    // acado_tic(&timer);
     real_t timing_ad = 0.0;
 
     for (i = 0; i < nx; i++) forw_traj[i] = in->x[i];
@@ -83,9 +83,9 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
                     }
                 }
             }
-            acado_tic(&timer_ad);
+            // acado_tic(&timer_ad);
             in->VDE_forw(rhs_forw_in, &(K_traj[s*nx*(1+NF)]));  // k evaluation
-            timing_ad += acado_toc(&timer_ad);
+            // timing_ad += acado_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++) {
             for (i = 0; i < nx*(1+NF); i++) {
@@ -139,9 +139,9 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
                     }
                 }
 
-                acado_tic(&timer_ad);
+                // acado_tic(&timer_ad);
                 in->VDE_adj(rhs_adj_in, &(adj_traj[s*nAdj]));  // adjoint VDE evaluation
-                timing_ad += acado_toc(&timer_ad);
+                // timing_ad += acado_toc(&timer_ad);
             }
             for (s = 0; s < num_stages; s++) {
                 for (i = 0; i < nAdj; i++) {
@@ -155,7 +155,7 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
         }
     }
 
-    out->info->CPUtime = acado_toc(&timer);
+    // out->info->CPUtime = acado_toc(&timer);
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
 }

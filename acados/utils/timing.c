@@ -22,21 +22,23 @@
 #if defined(__APPLE__)
 void acado_tic(acado_timer* t) {
     /* read current clock cycles */
-    t->tic = mach_absolute_time();
+    // t->tic = mach_absolute_time();
 }
 
 real_t acado_toc(acado_timer* t) {
-    uint64_t duration; /* elapsed time in clock cycles*/
+    // uint64_t duration; /* elapsed time in clock cycles*/
 
-    t->toc = mach_absolute_time();
-    duration = t->toc - t->tic;
+    // t->toc = mach_absolute_time();
+    // duration = t->toc - t->tic;
+    //
+    // /*conversion from clock cycles to nanoseconds*/
+    // mach_timebase_info(&(t->tinfo));
+    // duration *= t->tinfo.numer;
+    // duration /= t->tinfo.denom;
 
-    /*conversion from clock cycles to nanoseconds*/
-    mach_timebase_info(&(t->tinfo));
-    duration *= t->tinfo.numer;
-    duration /= t->tinfo.denom;
+    // return (real_t)duration / 1e9;
+    return (real_t)0.0 / 1e9;
 
-    return (real_t)duration / 1e9;
 }
 #else
 void acado_tic(acado_timer* t) {

@@ -17,6 +17,7 @@ message("\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
+    set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Wno-unused-function")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Profile)
@@ -97,6 +98,10 @@ link_directories(/opt/openblas/lib)
 add_executable(test_hpmpc ${TEST_HPMPC_SRC})
 #target_link_libraries(test_hpmpc acados hpmpc blasfeo m)
 target_link_libraries(test_hpmpc acados hpmpc blasfeo openblas m)
+
+add_executable(test_hpnmpc ${TEST_HPNMPC_SRC} ${TEST_CHEN_SRC})
+#target_link_libraries(test_hpnmpc acados hpmpc blasfeo m)
+target_link_libraries(test_hpnmpc acados hpmpc blasfeo openblas m)
 
 add_executable(test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC})
 #target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo m)
