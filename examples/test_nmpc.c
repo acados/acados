@@ -65,22 +65,23 @@ static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 int main() {
     // Problem data
     int_t   N                   = NN;
-    real_t  x0[NX]              = {0.05, 0};
+    real_t  x0[NX]              = {0.5, 0};
     real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
     real_t  Q[NX*NX]            = {0};
     real_t  R[NU*NU]            = {0};
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
-    int_t   max_sqp_iters       = 5;
+    int_t   max_sqp_iters       = 1;
     int_t   max_iters           = 10;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
+    for (int_t i = 0; i < NX; i++) w[0*(NX+NU) + i] = x0[i];
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
 
     // Integrator structs
-    real_t T = 0.01;
+    real_t T = 0.1;
     sim_in  sim_in;
     sim_out sim_out;
     sim_in.nSteps = 10;
@@ -170,7 +171,7 @@ int main() {
     qp_in.B = (const real_t **) pB;
     qp_in.b = (const real_t **) pb;
     qp_in.lb = (const real_t **) px0;
-    qp_in.ub = (const real_t **) px0;
+    qp_in.ub = (const real_t **) px0; //Andrea: we need to set the lower bound too here, right?
     qp_out.x = px;
     qp_out.u = pu;
 
@@ -202,7 +203,7 @@ int main() {
                     for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
             }
             for (int_t j = 0; j < NX; j++) {
-                px0[0][j] = (x0[j]);
+                px0[0][j] = (x0[j] - w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);

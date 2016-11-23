@@ -325,6 +325,14 @@ double onenorm(int row, int col, double *ptrA) {
     return temp;
 }
 
+/* two norm of a vector */
+double twonormv(int n, double *ptrv) {
+    double temp;
+    temp = 0;
+    for (int i = 0; i < n; i++) temp += ptrv[i]*ptrv[i];
+    return (double)sqrt(temp);
+}
+
 /* computes the Pade approximation of degree m of the matrix A */
 void padeapprox(int m, int row, double *A) {
     int row2 = row * row;

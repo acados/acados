@@ -446,7 +446,7 @@ int main() {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1);
+        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1); //Andrea: why do we have 4*nb here?
     }
     d_zeros(&hx[N], nxx[N], 1);
     d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
