@@ -16,7 +16,8 @@ file(GLOB ACADOS_SRC_UTILS
 )
 
 set(TEST_HPMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc.c)
-set(TEST_HPNMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc_hpnmpc.c)
+set(TEST_OCP_NLP_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_nlp.c)
+set(TEST_OCP_NLP_HPNMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_nlp_hpnmpc.c)
 set(TEST_CONDENSING_QPOASES_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases.c)
 set(TEST_CHEN_SRC ${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model.c)
 set(TEST_NMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc.c)

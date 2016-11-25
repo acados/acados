@@ -59,6 +59,18 @@ void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
     return;
 }
 
+void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
+    int ii, jj;
+
+    for (jj = 0; jj < n; jj++) {
+        for (ii = 0; ii < m; ii++) {
+            y[ii] += A[jj + lda * ii] * x[jj];
+        }
+    }
+
+    return;
+}
+
 void dcopy_3l(int n, double *x, int incx, double *y, int incy) {
     int ii;
 

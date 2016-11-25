@@ -76,7 +76,7 @@ int main() {
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
-    for (int_t i = 0; i < NX; i++) w[0*(NX+NU) + i] = x0[i];
+    for (int_t i = 0; i < NX; i++) w[i] = x0[i];
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
 
@@ -171,7 +171,6 @@ int main() {
     qp_in.B = (const real_t **) pB;
     qp_in.b = (const real_t **) pb;
     qp_in.lb = (const real_t **) px0;
-    qp_in.ub = (const real_t **) px0; //Andrea: we need to set the lower bound too here, right?
     qp_out.x = px;
     qp_out.u = pu;
 
@@ -197,16 +196,16 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NU*j+k];
             }
             for (int_t j = 0; j < NX; j++) {
-                px0[0][j] = (x0[j] - w[j]);
+                px0[0][j] = (x0[j]-w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
             int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
             if (status) {
@@ -228,12 +227,6 @@ int main() {
     print_states_controls(&w[0], N);
     #endif  // DEBUG
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
-
-    free(sim_in.x);
-    free(sim_in.u);
-    free(sim_in.S_forw);
-    free(sim_out.xn);
-    free(sim_out.S_forw);
 
     return 0;
 }

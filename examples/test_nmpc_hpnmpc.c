@@ -91,7 +91,7 @@ int main() {
 
     // Problem data
     int_t   N                         = NN;
-    real_t  x0[NX]                    = {0.5, 0};
+    real_t  x0[NX]                    = {0.05, 0};
     // real_t  w[NN*(NX+NU)+NX]          = {0};  // nlp states and controls stacked
     // real_t  pi_n[(NN)*(NX)]           = {0};  // nlp eq. mult
     // real_t  lam_n[NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. mult
@@ -99,8 +99,8 @@ int main() {
     real_t  R[NU*NU]                  = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
-    int_t   max_ip_iters              = 1;
-    int_t   max_iters                 = 10;
+    int_t   max_ip_iters              = 30;
+    int_t   timing_iters                 = 10;
     real_t  x_end[NX]                 = {0};
     real_t  u_end[NU]                 = {0};
 
@@ -371,7 +371,7 @@ int main() {
     d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constriantsin hpmpc?
     d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constriantsin hpmpc?
 
-    for (int_t iter = 0; iter < max_iters; iter++) {
+    for (int_t iter = 0; iter < timing_iters; iter++) {
         printf("\n------ ITERATION %d ------\n", iter);
         acado_tic(&timer);
         for (int_t ip_iter = 0; ip_iter < max_ip_iters; ip_iter++) {
@@ -390,7 +390,6 @@ int main() {
                     pr[i][j] = R[j*(NX+1)]*(w[i][j+NX]-uref[j]);
                 }
                 for (int_t j = 0; j < NX; j++) {
-                    printf("i=%i, j=%i\n",i,j);
                     pb[i][j] = sim_out.xn[j] - w[i+1][j];
                     for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
                 }
@@ -466,19 +465,16 @@ int main() {
             // printf("checkpoint=%i\n",status);
 
         }
-        // for (int_t i = 0; i < NX; i++) x0[i] = w[N][i];
-        // shift_states(w, x_end, N);
-        // shift_controls(w, u_end, N);
         timings += acado_toc(&timer);
     }
     #ifdef DEBUG
-    // print_states_controls(&w[0], N);
+    print_states_controls(&w[0], N);
     for(int_t i = 0; i < N; i++)
     {
 
     }
     #endif  // DEBUG
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    printf("Average of %.3f ms per iteration.\n", 1e3*timings/timing_iters);
     // free(workspace);
     return 0;
 }

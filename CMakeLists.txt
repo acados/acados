@@ -99,9 +99,9 @@ add_executable(test_hpmpc ${TEST_HPMPC_SRC})
 #target_link_libraries(test_hpmpc acados hpmpc blasfeo m)
 target_link_libraries(test_hpmpc acados hpmpc blasfeo openblas m)
 
-add_executable(test_hpnmpc ${TEST_HPNMPC_SRC} ${TEST_CHEN_SRC})
-#target_link_libraries(test_hpnmpc acados hpmpc blasfeo m)
-target_link_libraries(test_hpnmpc acados hpmpc blasfeo openblas m)
+add_executable(test_ocp_nlp_hpnmpc ${TEST_OCP_NLP_HPNMPC_SRC} ${TEST_CHEN_SRC})
+#target_link_libraries(test_ocp_nlp_hpnmpc acados hpmpc blasfeo m)
+target_link_libraries(test_ocp_nlp_hpnmpc acados hpmpc blasfeo openblas m)
 
 add_executable(test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC})
 #target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo m)
@@ -110,6 +110,10 @@ target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo openb
 add_executable(test_nmpc ${TEST_NMPC_SRC} ${TEST_CHEN_SRC})
 #target_link_libraries(test_nmpc acados qpoases blasfeo m)
 target_link_libraries(test_nmpc acados qpoases blasfeo openblas m)
+
+add_executable(test_ocp_nlp ${TEST_OCP_NLP_SRC} ${TEST_CHEN_SRC})
+#target_link_libraries(test_ocp_nlp acados qpoases blasfeo m)
+target_link_libraries(test_ocp_nlp acados qpoases hpmpc blasfeo openblas m)
 
 add_executable(test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN_SRC} ${TEST_JAC_CHAIN_SRC})
 #target_link_libraries(test_chain acados qpoases blasfeo m)
