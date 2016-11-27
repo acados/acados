@@ -67,7 +67,7 @@ int main() {
     real_t  u_end[NU]           = {0};
 
     real_t  *w[NN+1]; //[NN*(NX+NU)+NX]          = {0};  // nlp states and controls stacked
-    real_t  *pi_n[NN];  // nlp eq. mult
+    real_t  *pi_n[NN+1];  // nlp eq. mult
     real_t  *lam_n[NN+1];//NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. mult
 
     for( int_t i = 0; i < NN; i++)
@@ -78,6 +78,7 @@ int main() {
     }
 
     d_zeros(&w[NN], NX, 1);
+    d_zeros(&pi_n[NN], NX, 1);
     d_zeros(&lam_n[NN], NBX, 1);
 
     for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
@@ -240,17 +241,17 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[i+1][j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NU*j+k];
             }
 
             for (int_t j = 0; j < NX; j++) {
                 px0[0][j] = (x0[j] - w[0][j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j]*(w[N][j]-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N][j]-xref[j]);
             }
 
             // Compute residuals
@@ -284,6 +285,8 @@ int main() {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;
             }
+            i = 0;
+
             for (int_t j = 0; j < NU; j++) w[i][j+NX] += qp_out.u[i][j];
             for (int_t j = 0; j < NX; j++) pi_n[i][j] += qp_out.pi[i][j];
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] += qp_out.lam[i][j];
