@@ -160,6 +160,8 @@ int main() {
     real_t *pu[N];
     real_t *px0[1];
     int    *hidxb[N+1];
+    real_t *hlb[N + 1];
+    real_t *hub[N + 1];
     real_t *pC[N + 1];
     real_t *pD[N];
     real_t *plg[N + 1];
@@ -171,25 +173,69 @@ int main() {
     int ii, jj;
 
     nb[0] = NBU;
-    for (ii = 1; ii < N; ii++) nb[ii] = NBX;
-    nb[N] = NBX;
+    for (ii = 1; ii < N; ii++) nb[ii] = NBU;
+    nb[N] = 0;
 
     int *idxb0;
     i_zeros(&idxb0, nb[0], 1);
-    idxb0[0] = 0;
-    idxb0[1] = 1;
 
+    real_t  *lb[NN+1];
+    real_t  *lb[NN+1];
+    for (ii = 0; ii < N+1; ii++){
+      d_zeros(lb[ii], nb[ii], 1);
+      d_zeros(ub[ii], nb[ii], 1);
+    }
+
+    double *lb0;
+    d_zeros(&lb0, nb[0], 1);
+    double *ub0;
+    d_zeros(&ub0, nb[0], 1);
+    for (jj = 0; jj < nb[0]; jj++) {
+        lb0[jj] = -0.5;  //   umin
+        ub0[jj] = 0.5;   //   umax
+        idxb0[jj] = nx[0]+jj;
+    }
 
     int *idxb1;
     i_zeros(&idxb1, nb[1], 1);
+    double *lb1;
+    d_zeros(&lb1, nb[1], 1);
+    double *ub1;
+    d_zeros(&ub1, nb[1], 1);
+    for (jj = 0; jj < NBX; jj++) {
+        lb1[jj] = -4.0;  //   xmin
+        ub1[jj] = 4.0;   //   xmax
+        idxb1[jj] = jj;
+    }
+    for (; jj < nb[1]; jj++) {
+        lb1[jj] = -0.5;  //   umin
+        ub1[jj] = 0.5;   //   umax
+        idxb1[jj] = jj;
+    }
 
     int *idxbN;
     i_zeros(&idxbN, nb[N], 1);
-
-    for (ii = 1; ii < N; ii++) {
-        hidxb[ii] = idxb1;
+    double *lbN;
+    d_zeros(&lbN, nb[N], 1);
+    double *ubN;
+    d_zeros(&ubN, nb[N], 1);
+    for (jj = 0; jj < NBX; jj++) {
+        lbN[jj] = -4.0;  //   umin
+        ubN[jj] = 4.0;   //   umax
+        idxbN[jj] = jj;
     }
 
+
+    hidxb[0] = idxb0;
+    hlb[0] = lb0;
+    hub[0] = ub0;
+    for (ii = 1; ii < N; ii++) {
+        hidxb[ii] = idxb1;
+        hlb[ii] = lb1;
+        hub[ii] = ub1;
+    }
+    hlb[N] = lbN;
+    hub[N] = ubN;
     hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
@@ -205,11 +251,8 @@ int main() {
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
-    // hidxb[N] = idxbN;
 
     nx[0] = 0;
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, b0, nx);
 
     // then A0 is a matrix of size 0x0
     double *A0;
@@ -320,9 +363,9 @@ int main() {
     qp_in.A = (const real_t **) pA;
     qp_in.B = (const real_t **) pB;
     qp_in.b = (const real_t **) pb;
-    // qp_in.lb = (const real_t **) px0;
-    // qp_in.ub = (const real_t **) px0;
-    // qp_in.idxb = (const int_t **) hidxb;
+    qp_in.lb = (const real_t **) lb;
+    qp_in.ub = (const real_t **) ub;
+    qp_in.idxb = (const int_t **) hidxb;
     qp_in.Cx = (const real_t **) pC;
     qp_in.Cu = (const real_t **) pD;
     qp_in.lc = (const real_t **) plg;
@@ -380,6 +423,15 @@ int main() {
                 }
                 for (int_t j = 0; j < NU; j++)
                     for (int_t k = 0; k < NX; k++) pB[i][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
+            }
+
+            for (int_t j = 0; j < NBX; j++) lb[0][j] = x_min-w[0][j];
+            for (int_t j = NBX; j < nb[0]; j++) lb[0][j+NX] = u_min-w[0][j];
+            for (int_t j = 0; j < NBX; j++) ub[0][j] = u_min-w[0][j];
+            for (int_t j = NBX; j < nb[0]; j++) ub[0][j+NX] = u_max-w[0][j];
+
+            for (int_t i = 1; i < N-1; i++) {
+
             }
 
             for (int_t k = 0; k < nx[0]; k++) pb[0][k] = 0.0; // Andrea: can we keep x0 in hpmpc? Eliminating will not work if we do line-search
