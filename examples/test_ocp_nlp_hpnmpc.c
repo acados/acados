@@ -58,7 +58,7 @@
 #define NX 2
 #define NU 1
 #define NBX 0
-#define NBU 0
+#define NBU 1
 
 #include "acados/utils/timing.h"
 
@@ -78,14 +78,11 @@ int main() {
     // Problem data
     int_t   N                         = NN;
     real_t  x0[NX]                    = {0.5, 0};
-    // real_t  w[NN*(NX+NU)+NX]          = {0};  // nlp states and controls stacked
-    // real_t  pi_n[(NN)*(NX)]           = {0};  // nlp eq. mult
-    // real_t  lam_n[NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. mult
     real_t  Q[NX*NX]                  = {0};
     real_t  R[NU*NU]                  = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
-    int_t   max_ip_iters              = 50;
+    int_t   max_ip_iters              = 10;
     int_t   timing_iters              = 1;
     real_t  x_end[NX]                 = {0};
     real_t  u_end[NU]                 = {0};
@@ -350,13 +347,13 @@ int main() {
     {
       d_zeros(&res_stat[ii], nx[ii]+nu[ii], 1);
       d_zeros(&res_eq[ii],   nx[ii+1], 1);
-      d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constriantsin hpmpc?
-      d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constriantsin hpmpc?
+      d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
+      d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
     }
     ii = N;
     d_zeros(&res_stat[ii], nx[ii]+nu[ii], 1);
-    d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constriantsin hpmpc?
-    d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constriantsin hpmpc?
+    d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
+    d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
 
     for (int_t iter = 0; iter < timing_iters; iter++) {
         for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
@@ -398,30 +395,41 @@ int main() {
             // Barrier strategy
             // Compute residuals
             int_t i;
-            for ( i = 0; i < N-1; i++ )
-            {
-                for (int_t j = 0; j < nx[i]+nu[i]; j++) res_stat[i][j] = -pi_n[i][j];
-                dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
-                dgemv_t_3l(NX, NX, pA[i], NX, pi_n[i+1], res_stat[i]);
-                double temp_stat[NX];
-                for (int_t j = 0; j < nx[i]; j++) temp_stat[j] = 0.0;
-                daxpy_3l(NX,-1.0, lam_n[i],temp_stat);
-                dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
 
-                // Print residuals
-                printf("Stationarity residuals = %f\n",twonormv(NX,&res_stat[i][0]));
+            i = 0; //on stage 0 we have no states
+
+            // Stationarity residuals
+            for (int_t j = 0; j < NU; j++) res_stat[0][j] = 0.0;
+            dgemv_n_3l(NU, NU, pR[0], NU, &w[0][0+NX], res_stat[0]);
+            dgemv_t_3l(NX, NU, pB[0], NU, pi_n[0], res_stat[0]);
+            // printf("Stationarity residuals = %f\n",twonormv(NU,&res_stat[i][0]));
+            double temp_stat[NX];
+
+            for ( i = 1; i < N-1; i++ )
+            {
+                // Stationarity residuals
+                for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -1.0*pi_n[i-1][j];
+                dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
+                dgemv_t_3l(NX, NX, pA[i], NX, pi_n[i], res_stat[i]);
+                // printf("Stationarity residuals = %f\n",twonormv(NX,&res_stat[i][0]));
+                // Eq. feasibility residuals
+                for (int_t j = 0; j < NU; j++) res_eq[i][j] = pb[i][j];
+                printf("Eq residuals = %f\n",twonormv(NX,&res_eq[i][0]));
+
+                // for (int_t j = 0; j < nx[i]; j++) temp_stat[j] = 0.0;
+                // daxpy_3l(NX,-1.0, lam_n[i],temp_stat);
+                // dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
+
             }
             i = N;
-            for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -pi_n[i][j];
+            // Stationarity residuals
+            for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -1.0*pi_n[i-1][j];
             dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
-            double temp_stat[NX];
-            for (int_t j = 0; j < nx[i]; j++) temp_stat[j] = 0.0;
-            daxpy_3l(NX,-1.0, lam_n[i],temp_stat);
-            dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
+            // for (int_t j = 0; j < nx[i]; j++) temp_stat[j] = 0.0;
+            // daxpy_3l(NX,-1.0, lam_n[i],temp_stat);
+            // dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
 
-            // Print residuals
-            printf("Stationarity residuals = %f\n",twonormv(NX,res_stat[i]));
-
+            // printf("Stationarity residuals = %f\n",twonormv(NX,res_stat[i]));
 
             // Adjust barrier parameter
             int status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
@@ -452,12 +460,16 @@ int main() {
             printf("x_step=%f\n",qp_out.x[i][0]);
 
             // printf("checkpoint=%i\n",status);
-
         }
         timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
+    for(int_t i = 0; i < N+1; i++)
+    {
+      for(int_t j = 0; j < 2; j++)
+          printf("pi_n[%i][%i]= %f\n",i,j,pi_n[i][j]);
+    }
     for(int_t i = 0; i < N; i++)
     {
 
