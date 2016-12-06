@@ -62,8 +62,8 @@ void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
 void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
     int ii, jj;
 
-    for (jj = 0; jj < n; jj++) {
-        for (ii = 0; ii < m; ii++) {
+    for (ii = 0; ii < n; ii++) {
+        for (jj = 0; jj < m; jj++) {
             y[ii] += A[jj + lda * ii] * x[jj];
         }
     }
