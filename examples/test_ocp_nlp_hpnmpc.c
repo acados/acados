@@ -407,7 +407,7 @@ int main() {
             }
 
             // Barrier strategy
-            // Compute residuals TODO: add support for general constraints
+            // Compute residuals TODO: Add support for general constraints
             int_t i;
 
             i = 0; // On stage 0 we have no states
