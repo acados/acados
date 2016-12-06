@@ -70,8 +70,8 @@ for k=0:N-1
     % New NLP variable for the control
     Uk = MX.sym(['U_' num2str(k)],1);
     w = {w{:}, Uk};
-    lbw = [lbw; -Inf];
-    ubw = [ubw;  Inf];
+    lbw = [lbw; -1];
+    ubw = [ubw;  1];
     w0 = [w0;  0];
 
     % Integrate till the end of the interval
@@ -130,6 +130,8 @@ sol_x = [x1_opt x2_opt]
 sol_u = u1_opt
 
 sol_pi  = full(sol.lam_g)
+
+sol_lam_x  = full(sol.lam_x)
 
 sol_pi = reshape(full(sol.lam_g),nx,N);
 % Compute residuals
