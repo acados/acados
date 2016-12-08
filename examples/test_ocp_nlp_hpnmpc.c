@@ -426,6 +426,7 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j];
+                    res_eq[i][j] = sim_out.xn[j] - w[i+1][j];
                     for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
@@ -493,8 +494,7 @@ int main() {
                 for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]-=lam_n[i][NBX+NBU+j];
                 printf("Stationarity residuals = %f\n",twonormv(NX,&res_stat[i][0]));
 
-                // Eq. feasibility residuals
-                for (int_t j = 0; j < NX; j++) res_eq[i][j] = pb[i][j];
+                // Eq. feasibility residuals (computed while building the matrices)
                 printf("Eq residuals = %f\n",twonormv(NX,&res_eq[i][0]));
 
                 // Ineq. feasibility residuals
@@ -585,8 +585,8 @@ int main() {
             for (i = 1; i < N; i++) {
                 for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++) w[i][j+NX] = qp_out.u[i][j];
-                printf("x_step=%f\n",qp_out.x[i][0]);
-                printf("u_step=%f\n",qp_out.u[i][0]);
+                printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
+                printf("u_step=%f\n",qp_out.u[i][0] - w[i][0+NX]);
 
                 for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
                 for (int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
@@ -594,7 +594,7 @@ int main() {
             i = N;
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
             for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
-            printf("x_step=%f\n",qp_out.x[i][0]);
+            printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
 
             #ifdef DEBUG
             print_states_controls(&w[0], N);
