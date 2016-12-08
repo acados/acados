@@ -33,6 +33,10 @@ typedef struct ocp_qp_hpmpc_args_ {
     //  double sigma_min;
     int warm_start;
     int N2;  // horizion length of the partially condensed problem
+    double **ux0;
+    double **pi0;
+    double **lam0;
+    double **t0;
 } ocp_qp_hpmpc_args;
 
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \

@@ -47,8 +47,6 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
     return workspace_size;
 }
 
-
-
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args, \
     void *workspace) {
 
@@ -89,7 +87,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
     int k_max = hpmpc_args->max_iter;
-//  double alpha = hpmpc_args->min_step; // fixed in the solver
     double mu0 = hpmpc_args->mu0;
     int warm_start = hpmpc_args->warm_start;
     int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
@@ -180,10 +177,14 @@ int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
     int k_max = hpmpc_args->max_iter;
-//  double alpha = hpmpc_args->min_step; // fixed in the solver
     double mu0 = hpmpc_args->mu0;
     int warm_start = hpmpc_args->warm_start;
     int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
+
+    double **ux0 = hpmpc_args->ux0;
+    double **pi0 = hpmpc_args->pi0;
+    double **lam0 = hpmpc_args->lam0;
+    double **t0 = hpmpc_args->t0;
 
     //  other solver arguments
     int kk = -1;  // actual number of iterations
@@ -221,7 +222,7 @@ int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc
 
     int hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk, k_max, mu0, mu_tol, N, nx, nu, nb, \
         hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug, \
-        hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
+        hx, hu, hpi, hlam, inf_norm_res, workspace, stat, ux0, pi0, lam0, t0);
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
 

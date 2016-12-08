@@ -360,57 +360,12 @@ int main() {
     d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
     d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
 
-    // Define initializations
-    real_t **ux0[N+1];
-    real_t **pi0[N];
-    real_t **lam0[N+1];
-    real_t **t0[N+1];
-
-    // Allocate memory for the initializations
-    for(ii = N-1; ii < N; ii ++)
-    {
-      d_zeros(&ux0[ii],  nx[ii]+nu[ii], 1);
-      d_zeros(&pi0[ii],  nx[ii], 1);
-      d_zeros(&lam0[ii], 2*nb[ii], 1);
-      d_zeros(&t0[ii],   2*nb[ii], 1);
-    }
-
-    ii = N;
-    d_zeros(&ux0[ii],  nx[ii]+nu[ii], 1);
-    d_zeros(&pi0[ii],  nx[ii], 1);
-    d_zeros(&lam0[ii], 2*nb[ii], 1);
-    d_zeros(&t0[ii],   2*nb[ii], 1);
-
     for (int_t iter = 0; iter < timing_iters; iter++) {
         for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
         acado_tic(&timer);
         for (int_t ip_iter = 0; ip_iter < max_ip_iters; ip_iter++) {
             printf("\n------ ITERATION %d ------\n", ip_iter);
-
-            // Pass state and control to integrator
-            for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[0][j];
-            for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[0][j+NX];
-            sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
-
-            // Construct QP matrices
-            for (int_t j = 0; j < NX; j++) {
-                pq[0][j] = Q[j*(NX+1)]*(-xref[j]);
-            }
-            for (int_t j = 0; j < NU; j++) {
-                pr[0][j] = R[j*(NX+1)]*(-uref[j]);
-            }
-            for (int_t j = 0; j < NX; j++) {
-                pb[0][j] = sim_out.xn[j];
-                for (int_t k = 0; k < NX; k++) pA[0][j*NX+k] = sim_out.S_forw[j*(NX)+k];
-            }
-            for (int_t j = 0; j < NU; j++)
-                for (int_t k = 0; k < NX; k++) pB[0][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
-
-            double temp_u[NU];
-            for (int_t j = 0; j < NU; j++) temp_u[j] = -w[0][j+NX];
-            dgemv_n_3l(NX, NU, pB[0], NX, temp_u, pb[0]);
-
-            for (int_t i = 1; i < N; i++) {
+            for (int_t i = 0; i < N; i++) {
 
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i][j];
@@ -419,44 +374,36 @@ int main() {
 
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
-                    pq[i][j] = Q[j*(NX+1)]*(-xref[j]);
+                    pq[i][j] = Q[j*(NX+1)]*(w[i][j]-xref[j]);
                 }
                 for (int_t j = 0; j < NU; j++) {
-                    pr[i][j] = R[j*(NX+1)]*(-uref[j]);
+                    pr[i][j] = R[j*(NX+1)]*(w[i][j+NX]-uref[j]);
                 }
                 for (int_t j = 0; j < NX; j++) {
-                    pb[i][j] = sim_out.xn[j];
+                    pb[i][j] = sim_out.xn[j] - w[i+1][j];
                     for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
                     for (int_t k = 0; k < NX; k++) pB[i][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
-
-                double temp_x[NX];
-                for (int_t j = 0; j < NX; j++) temp_x[j] = -w[i][j];
-                dgemv_n_3l(NX, NX, pA[i], NX, temp_x, pb[i]);
-                double temp_u[NU];
-                for (int_t j = 0; j < NU; j++) temp_u[j] = -w[i][j+NX];
-                dgemv_n_3l(NX, NU, pB[i], NX, temp_u, pb[i]);
-
             }
 
-            for (int_t j = 0; j < NBU; j++) hlb[0][j+NBX] = u_min[j];
-            for (int_t j = 0; j < NBU; j++) hub[0][j+NBX] = u_max[j];
+            for (int_t j = 0; j < NBU; j++) hlb[0][j+NBX] = u_min[j]-w[0][j+NX];
+            for (int_t j = 0; j < NBU; j++) hub[0][j+NBX] = u_max[j]-w[0][j+NX];
 
             for (int_t i = 1; i < N; i++) {
-              for (int_t j = 0; j < NBX; j++) hlb[i][j] = x_min[j];
-              for (int_t j = 0; j < NBX; j++) hub[i][j] = x_max[j];
-              for (int_t j = 0; j < NBU; j++) hlb[i][j+NBX] = u_min[j];
-              for (int_t j = 0; j < NBU; j++) hub[i][j+NBX] = u_max[j];
+              for (int_t j = 0; j < NBX; j++) hlb[i][j] = x_min[j]-w[i][j];
+              for (int_t j = 0; j < NBX; j++) hub[i][j] = x_max[j]-w[i][j];
+              for (int_t j = 0; j < NBU; j++) hlb[i][j+NBX] = u_min[j]-w[i][j+NX];
+              for (int_t j = 0; j < NBU; j++) hub[i][j+NBX] = u_max[j]-w[i][j+NX];
             }
 
-            for (int_t j = 0; j < NBX; j++) hlb[N][j] = x_min[j];
-            for (int_t j = 0; j < NBX; j++) hub[N][j] = x_max[j];
+            for (int_t j = 0; j < NBX; j++) hlb[N][j] = x_min[j]-w[N][j];
+            for (int_t j = 0; j < NBX; j++) hub[N][j] = x_max[j]-w[N][j];
 
             for (int_t k = 0; k < nx[0]; k++) pb[0][k] = 0.0; // Andrea: can we keep x0 in hpmpc? Eliminating will not work if we do line-search
 
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j*(NX+1)]*(-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N][j]-xref[j]);
             }
 
             // Barrier strategy
@@ -571,20 +518,14 @@ int main() {
             // Adjust barrier parameter
             hpmpc_args.mu0 = hpmpc_args.mu0;
 
-            int status = ocp_qp_hpnmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
-
-
-            if (status == 1) printf("status = ACADOS_MAXITER\n");
-
-            if (status == 2) printf("status = ACADOS_MINSTEP\n");
-
+            // Initialize
             i = 0;
-            for (int_t j = 0; j < NU; j++) w[i][j+NX] = qp_out.u[i][j];
+            for (int_t j = 0; j < NU; j++) w[i][j+NX] += qp_out.u[i][j];
             for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
             for (i = 1; i < N; i++) {
-                for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
-                for (int_t j = 0; j < NU; j++) w[i][j+NX] = qp_out.u[i][j];
+                for (int_t j = 0; j < NX; j++) w[i][j] += qp_out.x[i][j];
+                for (int_t j = 0; j < NU; j++) w[i][j+NX] += qp_out.u[i][j];
                 printf("x_step=%f\n",qp_out.x[i][0]);
                 printf("u_step=%f\n",qp_out.u[i][0]);
 
@@ -593,7 +534,32 @@ int main() {
             }
             i = N;
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
-            for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
+            for (int_t j = 0; j < NX; j++) w[i][j] += qp_out.x[i][j];
+            printf("x_step=%f\n",qp_out.x[i][0]);
+
+            int status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+
+
+            if (status == 1) printf("status = ACADOS_MAXITER\n");
+
+            if (status == 2) printf("status = ACADOS_MINSTEP\n");
+
+            i = 0;
+            for (int_t j = 0; j < NU; j++) w[i][j+NX] += qp_out.u[i][j];
+            for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
+            for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
+            for (i = 1; i < N; i++) {
+                for (int_t j = 0; j < NX; j++) w[i][j] += qp_out.x[i][j];
+                for (int_t j = 0; j < NU; j++) w[i][j+NX] += qp_out.u[i][j];
+                printf("x_step=%f\n",qp_out.x[i][0]);
+                printf("u_step=%f\n",qp_out.u[i][0]);
+
+                for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
+                for (int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
+            }
+            i = N;
+            for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
+            for (int_t j = 0; j < NX; j++) w[i][j] += qp_out.x[i][j];
             printf("x_step=%f\n",qp_out.x[i][0]);
 
             #ifdef DEBUG
