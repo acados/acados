@@ -38,6 +38,9 @@ typedef struct ocp_qp_hpmpc_args_ {
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
     void *workspace);
 
+int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
+        void *workspace);
+
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
     ocp_qp_hpmpc_args *hpmpc_args);
 

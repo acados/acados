@@ -286,7 +286,7 @@ int main() {
     // solver arguments
     ocp_qp_hpmpc_args hpmpc_args;
     hpmpc_args.tol = TOL;
-    hpmpc_args.max_iter = 1;
+    hpmpc_args.max_iter = 10;
 //  hpmpc_args.min_step = MINSTEP;
     hpmpc_args.mu0 = 0.1;
 //  hpmpc_args.sigma_min = 1e-3;
@@ -496,22 +496,32 @@ int main() {
                 if (inf_res_stat < res_stat[i][j]) inf_res_stat=res_stat[i][j];
               }
               for (int_t j = 0; j < NX; j++) {
-                if (inf_res_eq < res_eq[i][j]) tot_res_eq+=res_eq[i][j];
+                if (inf_res_eq < res_eq[i][j]) inf_res_eq+=res_eq[i][j];
               }
-              for (int_t j = 0; j < 2*(NBX+NBU); j++) tot_res_ineq+=res_ineq[i][j];
-              for (int_t j = 0; j < 2*(NBX+NBU); j++) tot_res_compl+=res_compl[i][j];
+
+              for (int_t j = 0; j < 2*(NBX+NBU); j++){
+                 if (inf_res_eq < res_eq[i][j]) inf_res_ineq=res_ineq[i][j];
+                 if (inf_res_compl < res_compl[i][j]) inf_res_compl=res_compl[i][j];
+               }
             }
 
             i = N;
-            for (int_t j = 0; j < NU+NX; j++) tot_res_stat+=res_stat[i][j];
-            for (int_t j = 0; j < 2*(NBX+NBU); j++) tot_res_ineq+=res_ineq[i][j];
-            for (int_t j = 0; j < 2*(NBX+NBU); j++) tot_res_compl+=res_compl[i][j];
+            for (int_t j = 0; j < NX; j++) {
+              if (inf_res_stat < res_stat[i][j]) inf_res_stat=res_stat[i][j];
+            }
+
+            for (int_t j = 0; j < 2*(NBX); j++){
+               if (inf_res_eq < res_eq[i][j]) inf_res_ineq=res_ineq[i][j];
+               if (inf_res_compl < res_compl[i][j]) inf_res_compl=res_compl[i][j];
+            }
 
             // Adjust barrier parameter
 
-            hpmpc_args.mu0 = hpmpc_args.mu0*kappa;
+            hpmpc_args.mu0 = hpmpc_args.mu0;
 
-            int status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+            // int status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+            int status = ocp_qp_hpnmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+
 
             if (status == 1) printf("status = ACADOS_MAXITER\n");
 
