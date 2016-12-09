@@ -62,6 +62,7 @@
 
 #include "acados/utils/timing.h"
 
+// #define DEBUG_ANDREA
 #ifdef DEBUG
 static void print_states_controls(real_t **w, int_t N) {
     printf("node\tx\t\t\t\tu\n");
@@ -406,8 +407,6 @@ int main() {
         for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
         acado_tic(&timer);
         for (int_t ip_iter = 0; ip_iter < max_ip_iters; ip_iter++) {
-            printf("\n------ ITERATION %d ------\n", ip_iter);
-
             // Pass state and control to integrator
             for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[0][j];
             for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[0][j+NX];
@@ -494,53 +493,72 @@ int main() {
             double temp_stat[NX];
             for (int_t j = 0; j < NBU; j++) res_stat[0][hidxb[0][j]]-=lam_n[0][j];
             for (int_t j = 0; j < NBU; j++) res_stat[0][hidxb[0][j]]+=lam_n[0][NBU+j];
-            printf("Stationarity residuals = %f\n",twonormv(NU,&res_stat[i][0]));
+
+            #ifdef DEBUG_ANDREA
+            printf("Stationarity residuals = %f\n",twonormv(NU+NX,&res_stat[i][0]));
+            #endif
 
             // Ineq. feasibility residuals
             for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]+NX],0);
             for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]+NX],0);
+            #ifdef DEBUG_ANDREA
             printf("Ineq. feas. residuals = %f\n",twonormv(2*NU,&res_ineq[i][0]));
+            #endif
 
             // Complementarity residuals
             for ( int_t j = 0; j < NBU; j++) res_compl[i][j] = ( u_min[j] - w[i][hidxb[i][j]+NX])*lam_n[i][j];
             for ( int_t j = 0; j < NBU; j++) res_compl[i][j+NBU] = (-u_max[j] + w[i][hidxb[i][j]+NX])*lam_n[i][j+NBU];
+            #ifdef DEBUG_ANDREA
             printf("Complementarity residuals = %f\n",twonormv(2*NU,&res_compl[i][0]));
-
+            #endif
             for ( i = 1; i < N; i++ ) {
                 // Stationarity residuals
                 for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -1.0*pi_n[i-1][j];
+                for (int_t j = nx[i]; j < nx[i]+nu[i]; j++) res_stat[i][j] = 0;
                 dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
                 dgemv_t_3l(NX, NX, pA[i], NX, pi_n[i], res_stat[i]);
-                for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]+=lam_n[i][j];
-                for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]-=lam_n[i][NBX+NBU+j];
-                printf("Stationarity residuals = %f\n",twonormv(NX,&res_stat[i][0]));
+                dgemv_n_3l(NU, NU, pR[i], NU, &w[i][nx[i]], &res_stat[i][nx[i]]);
+                dgemv_t_3l(NX, NU, pB[i], NX, pi_n[i], &res_stat[i][nx[i]]);
+                for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
+                for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]+=lam_n[i][NBX+NBU+j];
+
+                #ifdef DEBUG_ANDREA
+                printf("Stationarity residuals = %f\n",twonormv(NX+NU,&res_stat[i][0]));
+                #endif
 
                 // Eq. feasibility residuals (computed while building the matrices)
+                #ifdef DEBUG_ANDREA
                 printf("Eq residuals = %f\n",twonormv(NX,&res_eq[i][0]));
+                #endif
 
                 // Ineq. feasibility residuals
                 for ( int_t j = 0; j < NBX; j++) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]],0);
                 for ( int_t j = 0; j < NBX; j++) res_ineq[i][j+NBX+NBU] = fmax(-x_max[j] + w[i][hidxb[i][j]],0);
                 for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]],0);
                 for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]],0);
+                #ifdef DEBUG_ANDREA
                 printf("Ineq. feas. residuals = %f\n",twonormv(NU,&res_stat[i][0]));
-
+                #endif
                 // Complementarity residuals
                 for ( int_t j = 0; j < NBX; j++) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
                 for ( int_t j = 0; j < NBX; j++) res_compl[i][j+NBX+NBU] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
                 for ( int_t j = NBX; j < NBX+NBU; j++) res_compl[i][j] = ( u_min[j-NBX] - w[i][hidxb[i][j]])*lam_n[i][j];
                 for ( int_t j = NBX; j < NBX+NBU; j++) res_compl[i][j+NBX+NBU] = (-u_max[j-NBX] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
+                #ifdef DEBUG_ANDREA
                 printf("Complementarity residuals = %f\n",twonormv(NU,&res_compl[i][0]));
+                #endif
             }
 
             i = N;
             // Stationarity residuals
             for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -1.0*pi_n[i-1][j];
             dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
-            for (int_t j = 0; j < NBX; j++) res_stat[i][hidxb[i][j]]+=lam_n[i][j];
-            for (int_t j = 0; j < NBX; j++) res_stat[hidxb[i][j]][j]-=lam_n[i][NBX+j];
+            for (int_t j = 0; j < NBX; j++) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
+            for (int_t j = 0; j < NBX; j++) res_stat[hidxb[i][j]][j]+=lam_n[i][NBX+j];
 
-            printf("Stationarity residuals = %f\n",twonormv(NX,res_stat[i]));
+            #ifdef DEBUG_ANDREA
+            printf("Stationarity residuals = %f\n",twonormv(NX,&res_stat[i][0]));
+            #endif
 
             // Ineq. feasibility residuals
             for (int_t j = 0; j < NBX; j++) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]],0);
@@ -549,7 +567,9 @@ int main() {
             // Complementarity residuals
             for ( int_t j = 0; j < NBX; j++) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
             for ( int_t j = 0; j < NBX; j++) res_compl[i][j+NBX] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX];
-            printf("Complementarity residuals = %f\n",twonormv(NU,&res_compl[i][0]));
+            #ifdef DEBUG_ANDREA
+            printf("Complementarity residuals = %f\n",twonormv(NBX,&res_compl[i][0]));
+            #endif
 
             // Infinity norm of the residuals
             double inf_res_stat = 0;
@@ -561,7 +581,7 @@ int main() {
               if (inf_res_stat < abs(res_stat[0][j])) inf_res_stat = res_stat[0][j];
             }
             for (int_t j = 0; j < 2*NU; j++) {
-              if (inf_res_stat < res_ineq[0][j]) inf_res_ineq=res_ineq[0][j];
+              if (inf_res_ineq < res_ineq[0][j]) inf_res_ineq=res_ineq[0][j];
               if (inf_res_compl < res_compl[0][j]) inf_res_compl=res_compl[0][j];
             }
 
@@ -589,8 +609,16 @@ int main() {
                if (inf_res_compl < res_compl[i][j]) inf_res_compl=res_compl[i][j];
             }
 
+
+            if ((int)(ip_iter/10)*10 == ip_iter) {
+              printf("-----------------------------------------------------------------\n");
+              printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\n");
+              printf("-----------------------------------------------------------------\n");
+            }
+
+            printf("%i\t%f\t%f\t%f\t%f\n",ip_iter,inf_res_stat, inf_res_eq, inf_res_ineq, inf_res_compl);
             // Adjust barrier parameter
-            double kappa = 0.3;
+            double kappa = 0.1;
             hpmpc_args.mu0 = kappa*hpmpc_args.mu0;
 
             // Initialize primal-dual variables
@@ -613,9 +641,6 @@ int main() {
 
             int status = ocp_qp_hpnmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
 
-
-            if (status == 1) printf("status = ACADOS_MAXITER\n");
-
             if (status == 2) printf("status = ACADOS_MINSTEP\n");
 
             i = 0;
@@ -626,9 +651,10 @@ int main() {
             for (i = 1; i < N; i++) {
                 for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++) w[i][j+NX] = qp_out.u[i][j];
+                #ifdef DEBUG_ANDREA
                 printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
                 printf("u_step=%f\n",qp_out.u[i][0] - w[i][0+NX]);
-
+                #endif
                 for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
                 for (int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
                 for (int_t j = 0; j < 2*(NBX + NBU); j++) t_n[i][j] = qp_out.t[i][j];
@@ -637,27 +663,27 @@ int main() {
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
             for (int_t j = 0; j < 2*(NBU); j++) t_n[i][j] = qp_out.t[i][j];
             for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
+            #ifdef DEBUG_ANDREA
             printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
-
-            #ifdef DEBUG
+            #endif
+            #ifdef DEBUG_ANDREA
             print_states_controls(&w[0], N);
             #endif
         }
         timings += acado_toc(&timer);
     }
     #ifdef DEBUG
+    printf("\n\nPrimal solution:\n\n");
     print_states_controls(&w[0], N);
+    printf("\n\nEquality multipliers:\n\n");
     for(int_t i = 0; i < N+1; i++)
     {
       for(int_t j = 0; j < 2; j++)
           printf("pi_n[%i][%i]= %f\n",i,j,pi_n[i][j]);
     }
-    for(int_t i = 0; i < N; i++)
-    {
 
-    }
     #endif  // DEBUG
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/timing_iters);
+    printf("\n\nAverage of %.3f ms per iteration.\n", 1e3*timings/timing_iters);
     // free(workspace);
     return 0;
 }
