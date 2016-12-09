@@ -48,6 +48,7 @@ typedef struct ocp_qp_out_ {
     real_t **u;
     real_t **pi;
     real_t **lam;
+    real_t **t;
 } ocp_qp_out;
 
 #endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_

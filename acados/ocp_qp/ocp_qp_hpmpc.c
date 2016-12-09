@@ -173,6 +173,7 @@ int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc
     double **hu = qp_out->u;
     double **hpi = qp_out->pi;
     double **hlam = qp_out->lam;
+    double **ht = qp_out->t;
 
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
@@ -222,7 +223,7 @@ int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc
 
     int hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk, k_max, mu0, mu_tol, N, nx, nu, nb, \
         hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug, \
-        hx, hu, hpi, hlam, inf_norm_res, workspace, stat, ux0, pi0, lam0, t0);
+        hx, hu, hpi, hlam, ht, inf_norm_res, workspace, stat, ux0, pi0, lam0, t0);
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
 

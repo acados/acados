@@ -50,7 +50,7 @@
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
-#define MAXITER 10
+#define MAXITER 1
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
@@ -82,7 +82,7 @@ int main() {
     real_t  R[NU*NU]                  = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
-    int_t   max_ip_iters              = 10;
+    int_t   max_ip_iters              = 100;
     int_t   timing_iters              = 1;
     real_t  x_end[NX]                 = {0};
     real_t  u_end[NU]                 = {0};
@@ -90,20 +90,30 @@ int main() {
     real_t  u_max[NU]                 = {1};
     real_t  x_min[NX]                 = {-100,-100};
     real_t  x_max[NX]                 = {100,100};
-    real_t  *w[NN+1]; //[NN*(NX+NU)+NX]          = {0};  // nlp states and controls stacked
+    real_t  *w[NN+1];     //[NN*(NX+NU)+NX]          = {0};  // nlp states and controls stacked
     real_t  *pi_n[NN+1];  // nlp eq. mult
-    real_t  *lam_n[NN+1];//NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. mult
+    real_t  *lam_n[NN+1]; //NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. mult
+    real_t  *t_n[NN+1];   //NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. slacks
+
+    real_t lam_init = 1.0;
+    real_t t_init = 1.0;
 
     for( int_t i = 0; i < NN; i++)
     {
       d_zeros(&w[i], NX+NU, 1);
       d_zeros(&pi_n[i], NX, 1);
       d_zeros(&lam_n[i], 2*(NBX + NBU), 1);
+      for(int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = lam_init;
+      d_zeros(&t_n[i], 2*(NBX + NBU), 1);
+      for(int_t j = 0; j < 2*(NBX + NBU); j++) t_n[i][j] = t_init;
     }
 
     d_zeros(&w[NN], NX, 1);
     d_zeros(&pi_n[NN], NX, 1);
-    d_zeros(&lam_n[NN], NBX, 1);
+    d_zeros(&lam_n[NN], 2*NBX, 1);
+    for(int_t j = 0; j < 2*NBX; j++) lam_n[NN][j] = lam_init;
+    d_zeros(&t_n[NN], 2*NBX, 1);
+    for(int_t j = 0; j < 2*NBX; j++) t_n[NN][j] = t_init;
 
     for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
@@ -262,10 +272,12 @@ int main() {
     pug[0] = ug0;
     real_t *ppi[N];
     real_t *plam[N+1];
+    real_t *pt[N+1];
 
     ii = 0;
     d_zeros(&ppi[ii], nx[ii+1], 1);
     d_zeros(&plam[ii], 2*nb[ii], 1);
+    d_zeros(&pt[ii], 2*nb[ii], 1);
     for (ii = 1; ii < N; ii++) {
         pC[ii] = C;
         pD[ii] = D;
@@ -273,8 +285,10 @@ int main() {
         pug[ii] = ug;
         d_zeros(&ppi[ii], nx[ii+1], 1);
         d_zeros(&plam[ii], 2*nb[ii], 1);
+        d_zeros(&pt[ii], 2*nb[ii], 1);
     }
     d_zeros(&plam[N], 2*nb[N], 1);
+    d_zeros(&pt[N], 2*nb[N], 1);
     pC[N] = CN;
     plg[N] = lgN;
     pug[N] = ugN;
@@ -337,6 +351,7 @@ int main() {
     qp_out.u = pu;
     qp_out.pi = ppi;
     qp_out.lam = plam;
+    qp_out.t = pt;
 
     acado_timer timer;
     real_t timings = 0;
@@ -361,13 +376,13 @@ int main() {
     d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
 
     // Define initializations
-    real_t **ux0[N+1];
-    real_t **pi0[N];
-    real_t **lam0[N+1];
-    real_t **t0[N+1];
+    real_t *ux0[N+1];
+    real_t *pi0[N];
+    real_t *lam0[N+1];
+    real_t *t0[N+1];
 
     // Allocate memory for the initializations
-    for(ii = N-1; ii < N; ii ++)
+    for(ii = 0; ii < N; ii ++)
     {
       d_zeros(&ux0[ii],  nx[ii]+nu[ii], 1);
       d_zeros(&pi0[ii],  nx[ii], 1);
@@ -380,6 +395,12 @@ int main() {
     d_zeros(&pi0[ii],  nx[ii], 1);
     d_zeros(&lam0[ii], 2*nb[ii], 1);
     d_zeros(&t0[ii],   2*nb[ii], 1);
+
+    // hpmpc init arguments point to initializations
+    hpmpc_args.ux0 = ux0;
+    hpmpc_args.pi0 = pi0;
+    hpmpc_args.lam0 = lam0;
+    hpmpc_args.t0 = t0;
 
     for (int_t iter = 0; iter < timing_iters; iter++) {
         for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
@@ -569,7 +590,26 @@ int main() {
             }
 
             // Adjust barrier parameter
-            hpmpc_args.mu0 = hpmpc_args.mu0;
+            double kappa = 0.3;
+            hpmpc_args.mu0 = kappa*hpmpc_args.mu0;
+
+            // Initialize primal-dual variables
+            i = 0;
+            for (int_t j = 0; j < NU; j++) ux0[i][j+NX] = w[i][j+NX];
+            for (int_t j = 0; j < NX; j++) pi0[i][j] = pi_n[i][j];
+            for (int_t j = 0; j < 2*(NBU); j++) lam0[i][j] = lam_n[i][j];
+            for (int_t j = 0; j < 2*(NBU); j++) t0[i][j] = t_n[i][j];
+            for (i = 1; i < N; i++) {
+                for (int_t j = 0; j < NX; j++) ux0[i][j] = w[i][j];
+                for (int_t j = 0; j < NU; j++) ux0[i][j+NX] = w[i][j+NX];
+                for (int_t j = 0; j < NX; j++) pi0[i][j] = pi_n[i][j];
+                for (int_t j = 0; j < 2*(NBX + NBU); j++) lam0[i][j] = lam_n[i][j];
+                for (int_t j = 0; j < 2*(NBX + NBU); j++) t0[i][j] = t_n[i][j];
+            }
+            i = N;
+            for (int_t j = 0; j < 2*(NBX); j++) lam0[i][j] = lam_n[i][j];
+            for (int_t j = 0; j < 2*(NBX); j++) t0[i][j] = t_n[i][j];
+            for (int_t j = 0; j < NX; j++) w[i][j] = w[i][j];
 
             int status = ocp_qp_hpnmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
 
@@ -582,6 +622,7 @@ int main() {
             for (int_t j = 0; j < NU; j++) w[i][j+NX] = qp_out.u[i][j];
             for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
+            for (int_t j = 0; j < 2*(NBU); j++) t_n[i][j] = qp_out.t[i][j];
             for (i = 1; i < N; i++) {
                 for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++) w[i][j+NX] = qp_out.u[i][j];
@@ -590,9 +631,11 @@ int main() {
 
                 for (int_t j = 0; j < NX; j++) pi_n[i][j] = qp_out.pi[i][j];
                 for (int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
+                for (int_t j = 0; j < 2*(NBX + NBU); j++) t_n[i][j] = qp_out.t[i][j];
             }
             i = N;
             for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = qp_out.lam[i][j];
+            for (int_t j = 0; j < 2*(NBU); j++) t_n[i][j] = qp_out.t[i][j];
             for (int_t j = 0; j < NX; j++) w[i][j] = qp_out.x[i][j];
             printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
 
