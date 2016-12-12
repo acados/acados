@@ -26,12 +26,6 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "examples/Chen/Chen_model.h"
 
-// system headers
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include <sys/time.h>
-
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"
 
@@ -66,7 +60,7 @@
 #ifdef DEBUG
 static void print_states_controls(real_t **w, int_t N) {
     printf("node\tx\t\t\t\tu\n");
-    for (int_t i = 0; i < N; i++) {
+    for ( int_t i = 0; i < N; i++ ) {
         printf("%4d\t%+e %+e\t%+e\n", i, w[i][0], w[i][1], w[i][2]);
     }
     printf("%4d\t%+e %+e\n", N, w[N][0], w[N][1]);
@@ -75,7 +69,6 @@ static void print_states_controls(real_t **w, int_t N) {
 
 // Simple SQP example for acados
 int main() {
-
     // Problem data
     int_t   N                         = NN;
     real_t  x0[NX]                    = {0.5, 0};
@@ -89,36 +82,35 @@ int main() {
     real_t  u_end[NU]                 = {0};
     real_t  u_min[NU]                 = {-1};
     real_t  u_max[NU]                 = {1};
-    real_t  x_min[NX]                 = {-100,-100};
-    real_t  x_max[NX]                 = {100,100};
-    real_t  *w[NN+1];     //[NN*(NX+NU)+NX]          = {0};  // nlp states and controls stacked
-    real_t  *pi_n[NN+1];  // nlp eq. mult
-    real_t  *lam_n[NN+1]; //NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. mult
-    real_t  *t_n[NN+1];   //NN*2*(NBX+NBU)+NBU] = {0};  // nlp ineq. slacks
+    real_t  x_min[NX]                 = {-100, -100};
+    real_t  x_max[NX]                 = {100, 100};
+    real_t  *w[NN+1];      // nlp states and controls stacked
+    real_t  *pi_n[NN+1];   // nlp eq. mult
+    real_t  *lam_n[NN+1];  // nlp ineq. mult
+    real_t  *t_n[NN+1];    // nlp ineq. slacks
 
     real_t lam_init = 1.0;
     real_t t_init = 1.0;
 
-    for( int_t i = 0; i < NN; i++)
-    {
+    for ( int_t i = 0; i < NN; i++ ) {
       d_zeros(&w[i], NX+NU, 1);
       d_zeros(&pi_n[i], NX, 1);
       d_zeros(&lam_n[i], 2*(NBX + NBU), 1);
-      for(int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = lam_init;
+      for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) lam_n[i][j] = lam_init;
       d_zeros(&t_n[i], 2*(NBX + NBU), 1);
-      for(int_t j = 0; j < 2*(NBX + NBU); j++) t_n[i][j] = t_init;
+      for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) t_n[i][j] = t_init;
     }
 
     d_zeros(&w[NN], NX, 1);
     d_zeros(&pi_n[NN], NX, 1);
     d_zeros(&lam_n[NN], 2*NBX, 1);
-    for(int_t j = 0; j < 2*NBX; j++) lam_n[NN][j] = lam_init;
+    for ( int_t j = 0; j < 2*NBX; j++ ) lam_n[NN][j] = lam_init;
     d_zeros(&t_n[NN], 2*NBX, 1);
-    for(int_t j = 0; j < 2*NBX; j++) t_n[NN][j] = t_init;
+    for ( int_t j = 0; j < 2*NBX; j++ ) t_n[NN][j] = t_init;
 
-    for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
-    for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
-    for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
+    for ( int_t i = 0; i < NX; i++ ) w[0][i] = x0[i];
+    for ( int_t i = 0; i < NX; i++ ) Q[i*(NX+1)] = 1.0;
+    for ( int_t i = 0; i < NU; i++ ) R[i*(NU+1)] = 0.05;
 
     // Integrator structs
     real_t T = 0.1;
@@ -138,8 +130,8 @@ int main() {
     sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
     sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
     sim_in.S_forw = malloc(sizeof(*sim_in.S_forw) * (NX*(NX+NU)));
-    for (int_t i = 0; i < NX*(NX+NU); i++) sim_in.S_forw[i] = 0.0;
-    for (int_t i = 0; i < NX; i++) sim_in.S_forw[i*(NX+1)] = 1.0;
+    for ( int_t i = 0; i < NX*(NX+NU); i++ ) sim_in.S_forw[i] = 0.0;
+    for ( int_t i = 0; i < NX; i++ ) sim_in.S_forw[i*(NX+1)] = 1.0;
 
     sim_out.xn = malloc(sizeof(*sim_out.xn) * (NX));
     sim_out.S_forw = malloc(sizeof(*sim_out.S_forw) * (NX*(NX+NU)));
@@ -156,13 +148,13 @@ int main() {
     int_t nu[NN] = {0};
     int_t nb[NN+1] = {0};
     int_t nc[NN+1] = {0};
-    for (int_t i = 0; i < N; i++) {
+    for ( int_t i = 0; i < N; i++ ) {
         nx[i] = NX;
         nu[i] = NU;
     }
     nx[N] = NX;
 
-    real_t *pA[N];
+    real_t *pA[N]
     real_t *pB[N];
     real_t *pb[N];
     real_t *pQ[N+1];
@@ -186,31 +178,31 @@ int main() {
     ************************************************/
     int ii, jj;
     nb[0] = NBU;
-    for (ii = 1; ii < N; ii++) nb[ii] = NBU;
+    for (ii = 1; ii < N; ii++ ) nb[ii] = NBU;
     nb[N] = 0;
 
     int *idxb0;
     i_zeros(&idxb0, nb[0], 1);
-    for (jj = 0; jj < NBX+NBU; jj++) idxb0[jj] = jj;
+    for (jj = 0; jj < NBX+NBU; jj++ ) idxb0[jj] = jj;
 
     int *idxb1;
     i_zeros(&idxb1, nb[1], 1);
-    for (jj = 0; jj < NBX; jj++) idxb1[jj] = jj;
-    for (; jj < NBX+NBU; jj++) idxb1[jj] = NX+jj;
+    for (jj = 0; jj < NBX; jj++ ) idxb1[jj] = jj;
+    for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NX+jj;
 
     int *idxbN;
     i_zeros(&idxbN, nb[N], 1);
-    for (jj = 0; jj < NBX; jj++) idxbN[jj] = jj;
-    for (; jj < NBX+NBU; jj++) idxbN[jj] = NX+jj;
+    for (jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
+    for (; jj < NBX+NBU; jj++ ) idxbN[jj] = NX+jj;
 
     hidxb[0] = idxb0;
-    for (ii = 1; ii < N; ii++) hidxb[ii] = idxb1;
+    for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
     hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
-    d_zeros(&hlb[0], (NBU+NBX),1);
-    d_zeros(&hub[0], (NBU+NBX),1);
-    for (int_t i = 0; i < N; i++) {
+    d_zeros(&hlb[0], (NBU+NBX), 1);
+    d_zeros(&hub[0], (NBU+NBX), 1);
+    for ( int_t i = 0; i < N; i++ ) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
         d_zeros(&pb[i], nx[i+1], 1);
@@ -219,8 +211,8 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
-        d_zeros(&hlb[i+1], (NBU+NBX),1);
-        d_zeros(&hub[i+1], (NBU+NBX),1);
+        d_zeros(&hlb[i+1], (NBU+NBX), 1);
+        d_zeros(&hub[i+1], (NBU+NBX), 1);
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
@@ -235,7 +227,7 @@ int main() {
     int ngN = 0;  // 4;  // number of general constraints at the last stage
 
     int ngg[N + 1];
-    for (ii = 0; ii < N; ii++) ngg[ii] = ng;
+    for ( ii = 0; ii < N; ii++ ) ngg[ii] = ng;
     ngg[N] = ngN;
 
     /************************************************
@@ -279,7 +271,7 @@ int main() {
     d_zeros(&ppi[ii], nx[ii+1], 1);
     d_zeros(&plam[ii], 2*nb[ii], 1);
     d_zeros(&pt[ii], 2*nb[ii], 1);
-    for (ii = 1; ii < N; ii++) {
+    for ( ii = 1; ii < N; ii++ ) {
         pC[ii] = C;
         pD[ii] = D;
         plg[ii] = lg;
@@ -312,7 +304,8 @@ int main() {
     * work space
     ************************************************/
 
-    // int work_space_size = ocp_qp_hpmpc_workspace_size_bytes(N, nx, nu, nb, ngg, hidxb, &hpmpc_args);
+    // int work_space_size = ocp_qp_hpmpc_workspace_size_bytes(N, nx,
+    // nu, nb, ngg, hidxb, &hpmpc_args);
     // printf("\nwork space size: %d bytes\n", work_space_size);
 
     // void *workspace = malloc(work_space_size);
@@ -327,7 +320,7 @@ int main() {
     qp_in.nu = nu;
     qp_in.nb = nb;
     qp_in.nc = nc;
-    for (int_t i = 0; i < N; i++) {
+    for ( int_t i = 0; i < N; i++ ) {
         pQ[i] = Q;
         pR[i] = R;
     }
@@ -359,22 +352,21 @@ int main() {
 
     // Define residuals
     real_t *res_stat[N+1];
-    real_t *res_eq[N]; // TODO: what if we have terminal equality constraints for example?
+    real_t *res_eq[N];
     real_t *res_ineq[N+1];
     real_t *res_compl[N+1];
 
     // Allocate memory for the residuals
-    for(ii = 0; ii < N; ii ++)
-    {
+    for ( ii = 0; ii < N; ii++ )  {
       d_zeros(&res_stat[ii], nx[ii]+nu[ii], 1);
       d_zeros(&res_eq[ii],   nx[ii+1], 1);
-      d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
-      d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
+      d_zeros(&res_ineq[ii], 2*nb[ii], 1);
+      d_zeros(&res_compl[ii], 2*nb[ii], 1);
     }
     ii = N;
     d_zeros(&res_stat[ii], nx[ii]+nu[ii], 1);
-    d_zeros(&res_ineq[ii], 2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
-    d_zeros(&res_compl[ii],2*nb[ii], 1); //TODO: what happens to the general ineqs constraints in hpmpc?
+    d_zeros(&res_ineq[ii], 2*nb[ii], 1);
+    d_zeros(&res_compl[ii], 2*nb[ii], 1);
 
     // Define initializations
     real_t *ux0[N+1];
@@ -383,8 +375,7 @@ int main() {
     real_t *t0[N+1];
 
     // Allocate memory for the initializations
-    for(ii = 0; ii < N; ii ++)
-    {
+    for ( ii = 0; ii < N; ii++ ) {
       d_zeros(&ux0[ii],  nx[ii]+nu[ii], 1);
       d_zeros(&pi0[ii],  nx[ii], 1);
       d_zeros(&lam0[ii], 2*nb[ii], 1);
@@ -412,79 +403,76 @@ int main() {
     double compl_tol = 1e-6;
     double mu_tol = 1e-6;
 
-    for (int_t i = 0; i < NX; i++) w[0][i] = x0[i];
+    for ( int_t i = 0; i < NX; i++ ) w[0][i] = x0[i];
     acado_tic(&timer);
     while ( ip_iter < max_ip_iters &&  (!sol_found) ) {
         // Pass state and control to integrator
-        for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[0][j];
-        for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[0][j+NX];
+        for ( int_t j = 0; j < NX; j++ ) sim_in.x[j] = w[0][j];
+        for ( int_t j = 0; j < NU; j++ ) sim_in.u[j] = w[0][j+NX];
         sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
 
         // Construct QP matrices
-        for (int_t j = 0; j < NX; j++) {
+        for ( int_t j = 0; j < NX; j++ ) {
             pq[0][j] = Q[j*(NX+1)]*(-xref[j]);
         }
-        for (int_t j = 0; j < NU; j++) {
+        for ( int_t j = 0; j < NU; j++ ) {
             pr[0][j] = R[j*(NX+1)]*(-uref[j]);
         }
-        for (int_t j = 0; j < NX; j++) {
+        for ( int_t j = 0; j < NX; j++ ) {
             pb[0][j] = sim_out.xn[j];
-            for (int_t k = 0; k < NX; k++) pA[0][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+            for ( int_t k = 0; k < NX; k++ ) pA[0][j*NX+k] = sim_out.S_forw[j*(NX)+k];
         }
-        for (int_t j = 0; j < NU; j++)
-            for (int_t k = 0; k < NX; k++) pB[0][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
+        for ( int_t j = 0; j < NU; j++ )
+            for ( int_t k = 0; k < NX; k++ ) pB[0][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
 
         double temp_u[NU];
-        for (int_t j = 0; j < NU; j++) temp_u[j] = -w[0][j+NX];
+        for ( int_t j = 0; j < NU; j++ ) temp_u[j] = -w[0][j+NX];
         dgemv_n_3l(NX, NU, pB[0], NX, temp_u, pb[0]);
-
-        for (int_t i = 1; i < N; i++) {
-
+        for ( int_t i = 1; i < N; i++ ) {
             // Pass state and control to integrator
-            for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i][j];
-            for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i][j+NX];
+            for ( int_t j = 0; j < NX; j++ ) sim_in.x[j] = w[i][j];
+            for ( int_t j = 0; j < NU; j++ ) sim_in.u[j] = w[i][j+NX];
             sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
 
             // Construct QP matrices
-            for (int_t j = 0; j < NX; j++) {
+            for ( int_t j = 0; j < NX; j++ ) {
                 pq[i][j] = Q[j*(NX+1)]*(-xref[j]);
             }
-            for (int_t j = 0; j < NU; j++) {
+            for ( int_t j = 0; j < NU; j++ ) {
                 pr[i][j] = R[j*(NX+1)]*(-uref[j]);
             }
-            for (int_t j = 0; j < NX; j++) {
+            for ( int_t j = 0; j < NX; j++ ) {
                 pb[i][j] = sim_out.xn[j];
                 res_eq[i][j] = sim_out.xn[j] - w[i+1][j];
-                for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+                for ( int_t k = 0; k < NX; k++ ) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
             }
-            for (int_t j = 0; j < NU; j++)
-                for (int_t k = 0; k < NX; k++) pB[i][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
+            for ( int_t j = 0; j < NU; j++ )
+                for ( int_t k = 0; k < NX; k++ ) pB[i][j*NU+k] = sim_out.S_forw[NX*NX + NU*j+k];
 
             double temp_x[NX];
-            for (int_t j = 0; j < NX; j++) temp_x[j] = -w[i][j];
+            for ( int_t j = 0; j < NX; j++ ) temp_x[j] = -w[i][j];
             dgemv_n_3l(NX, NX, pA[i], NX, temp_x, pb[i]);
             double temp_u[NU];
-            for (int_t j = 0; j < NU; j++) temp_u[j] = -w[i][j+NX];
+            for ( int_t j = 0; j < NU; j++ ) temp_u[j] = -w[i][j+NX];
             dgemv_n_3l(NX, NU, pB[i], NX, temp_u, pb[i]);
-
         }
 
-        for (int_t j = 0; j < NBU; j++) hlb[0][j+NBX] = u_min[j];
-        for (int_t j = 0; j < NBU; j++) hub[0][j+NBX] = u_max[j];
+        for ( int_t j = 0; j < NBU; j++ ) hlb[0][j+NBX] = u_min[j];
+        for ( int_t j = 0; j < NBU; j++ ) hub[0][j+NBX] = u_max[j];
 
-        for (int_t i = 1; i < N; i++) {
-          for (int_t j = 0; j < NBX; j++) hlb[i][j] = x_min[j];
-          for (int_t j = 0; j < NBX; j++) hub[i][j] = x_max[j];
-          for (int_t j = 0; j < NBU; j++) hlb[i][j+NBX] = u_min[j];
-          for (int_t j = 0; j < NBU; j++) hub[i][j+NBX] = u_max[j];
+        for ( int_t i = 1; i < N; i++ ) {
+          for ( int_t j = 0; j < NBX; j++ ) hlb[i][j] = x_min[j];
+          for ( int_t j = 0; j < NBX; j++ ) hub[i][j] = x_max[j];
+          for ( int_t j = 0; j < NBU; j++ ) hlb[i][j+NBX] = u_min[j];
+          for ( int_t j = 0; j < NBU; j++ ) hub[i][j+NBX] = u_max[j];
         }
 
-        for (int_t j = 0; j < NBX; j++) hlb[N][j] = x_min[j];
-        for (int_t j = 0; j < NBX; j++) hub[N][j] = x_max[j];
+        for ( int_t j = 0; j < NBX; j++ ) hlb[N][j] = x_min[j];
+        for ( int_t j = 0; j < NBX; j++ ) hub[N][j] = x_max[j];
 
-        for (int_t k = 0; k < nx[0]; k++) pb[0][k] = 0.0; // Andrea: can we keep x0 in hpmpc? Eliminating will not work if we do line-search
+        for ( int_t k = 0; k < nx[0]; k++ ) pb[0][k] = 0.0;  // Andrea: can we keep x0 in hpmpc? Eliminating will not work if we do line-search
 
-        for (int_t j = 0; j < NX; j++) {
+        for ( int_t j = 0; j < NX; j++ ) {
             pq[N][j] = Q[j*(NX+1)]*(-xref[j]);
         }
 
@@ -492,91 +480,91 @@ int main() {
         // Compute residuals TODO: Add support for general constraints
         int_t i;
 
-        i = 0; // On stage 0 we have no states
+        i = 0;  // On stage 0 we have no states
 
         // Stationarity residuals
-        for (int_t j = 0; j < NU; j++) res_stat[0][j] = 0.0;
+        for ( int_t j = 0; j < NU; j++ ) res_stat[0][j] = 0.0;
         dgemv_n_3l(NU, NU, pR[0], NU, &w[0][0+NX], res_stat[0]);
         dgemv_t_3l(NX, NU, pB[0], NU, pi_n[0], res_stat[0]);
         double temp_stat[NX];
-        for (int_t j = 0; j < NBU; j++) res_stat[0][hidxb[0][j]]-=lam_n[0][j];
-        for (int_t j = 0; j < NBU; j++) res_stat[0][hidxb[0][j]]+=lam_n[0][NBU+j];
+        for ( int_t j = 0; j < NBU; j++ ) res_stat[0][hidxb[0][j]]-=lam_n[0][j];
+        for ( int_t j = 0; j < NBU; j++ ) res_stat[0][hidxb[0][j]]+=lam_n[0][NBU+j];
 
         #ifdef DEBUG_ANDREA
-        printf("Stationarity residuals = %f\n",twonormv(NU+NX,&res_stat[i][0]));
+        printf("Stationarity residuals = %f\n", twonormv(NU+NX, &res_stat[i][0]));
         #endif
 
         // Ineq. feasibility residuals
-        for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]+NX],0);
-        for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]+NX],0);
+        for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]+NX], 0);
+        for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]+NX], 0);
         #ifdef DEBUG_ANDREA
-        printf("Ineq. feas. residuals = %f\n",twonormv(2*NU,&res_ineq[i][0]));
+        printf("Ineq. feas. residuals = %f\n", twonormv(2*NU, &res_ineq[i][0]));
         #endif
 
         // Complementarity residuals
-        for ( int_t j = 0; j < NBU; j++) res_compl[i][j] = ( u_min[j] - w[i][hidxb[i][j]+NX])*lam_n[i][j];
-        for ( int_t j = 0; j < NBU; j++) res_compl[i][j+NBU] = (-u_max[j] + w[i][hidxb[i][j]+NX])*lam_n[i][j+NBU];
+        for ( int_t j = 0; j < NBU; j++ ) res_compl[i][j] = ( u_min[j] - w[i][hidxb[i][j]+NX])*lam_n[i][j];
+        for ( int_t j = 0; j < NBU; j++ ) res_compl[i][j+NBU] = (-u_max[j] + w[i][hidxb[i][j]+NX])*lam_n[i][j+NBU];
         #ifdef DEBUG_ANDREA
-        printf("Complementarity residuals = %f\n",twonormv(2*NU,&res_compl[i][0]));
+        printf("Complementarity residuals = %f\n", twonormv(2*NU, &res_compl[i][0]));
         #endif
         for ( i = 1; i < N; i++ ) {
             // Stationarity residuals
-            for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -1.0*pi_n[i-1][j];
-            for (int_t j = nx[i]; j < nx[i]+nu[i]; j++) res_stat[i][j] = 0;
+            for ( int_t j = 0; j < nx[i]; j++ ) res_stat[i][j] = -1.0*pi_n[i-1][j];
+            for ( int_t j = nx[i]; j < nx[i]+nu[i]; j++ ) res_stat[i][j] = 0;
             dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
             dgemv_t_3l(NX, NX, pA[i], NX, pi_n[i], res_stat[i]);
             dgemv_n_3l(NU, NU, pR[i], NU, &w[i][nx[i]], &res_stat[i][nx[i]]);
             dgemv_t_3l(NX, NU, pB[i], NX, pi_n[i], &res_stat[i][nx[i]]);
-            for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
-            for (int_t j = 0; j < NBX+NBU; j++) res_stat[i][hidxb[i][j]]+=lam_n[i][NBX+NBU+j];
+            for ( int_t j = 0; j < NBX+NBU; j++ ) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
+            for ( int_t j = 0; j < NBX+NBU; j++ ) res_stat[i][hidxb[i][j]]+=lam_n[i][NBX+NBU+j];
 
             #ifdef DEBUG_ANDREA
-            printf("Stationarity residuals = %f\n",twonormv(NX+NU,&res_stat[i][0]));
+            printf("Stationarity residuals = %f\n", twonormv(NX+NU, &res_stat[i][0]));
             #endif
 
             // Eq. feasibility residuals (computed while building the matrices)
             #ifdef DEBUG_ANDREA
-            printf("Eq residuals = %f\n",twonormv(NX,&res_eq[i][0]));
+            printf("Eq residuals = %f\n", twonormv(NX, &res_eq[i][0]));
             #endif
 
             // Ineq. feasibility residuals
-            for ( int_t j = 0; j < NBX; j++) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]],0);
-            for ( int_t j = 0; j < NBX; j++) res_ineq[i][j+NBX+NBU] = fmax(-x_max[j] + w[i][hidxb[i][j]],0);
-            for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]],0);
-            for ( int_t j = NBX; j < NBX+NBU; j++) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]],0);
+            for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]], 0);
+            for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j+NBX+NBU] = fmax(-x_max[j] + w[i][hidxb[i][j]], 0);
+            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]], 0);
+            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]], 0);
             #ifdef DEBUG_ANDREA
-            printf("Ineq. feas. residuals = %f\n",twonormv(NU,&res_stat[i][0]));
+            printf("Ineq. feas. residuals = %f\n", twonormv(NU, &res_stat[i][0]));
             #endif
             // Complementarity residuals
-            for ( int_t j = 0; j < NBX; j++) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
-            for ( int_t j = 0; j < NBX; j++) res_compl[i][j+NBX+NBU] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
-            for ( int_t j = NBX; j < NBX+NBU; j++) res_compl[i][j] = ( u_min[j-NBX] - w[i][hidxb[i][j]])*lam_n[i][j];
-            for ( int_t j = NBX; j < NBX+NBU; j++) res_compl[i][j+NBX+NBU] = (-u_max[j-NBX] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
+            for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
+            for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j+NBX+NBU] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
+            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_compl[i][j] = ( u_min[j-NBX] - w[i][hidxb[i][j]])*lam_n[i][j];
+            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_compl[i][j+NBX+NBU] = (-u_max[j-NBX] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
             #ifdef DEBUG_ANDREA
-            printf("Complementarity residuals = %f\n",twonormv(NU,&res_compl[i][0]));
+            printf("Complementarity residuals = %f\n", twonormv(NU, &res_compl[i][0]));
             #endif
         }
 
         i = N;
         // Stationarity residuals
-        for (int_t j = 0; j < nx[i]; j++) res_stat[i][j] = -1.0*pi_n[i-1][j];
+        for ( int_t j = 0; j < nx[i]; j++ ) res_stat[i][j] = -1.0*pi_n[i-1][j];
         dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
-        for (int_t j = 0; j < NBX; j++) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
-        for (int_t j = 0; j < NBX; j++) res_stat[hidxb[i][j]][j]+=lam_n[i][NBX+j];
+        for ( int_t j = 0; j < NBX; j++ ) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
+        for ( int_t j = 0; j < NBX; j++ ) res_stat[hidxb[i][j]][j]+=lam_n[i][NBX+j];
 
         #ifdef DEBUG_ANDREA
-        printf("Stationarity residuals = %f\n",twonormv(NX,&res_stat[i][0]));
+        printf("Stationarity residuals = %f\n", twonormv(NX, &res_stat[i][0]));
         #endif
 
         // Ineq. feasibility residuals
-        for (int_t j = 0; j < NBX; j++) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]],0);
-        for (int_t j = 0; j < NBX; j++) res_ineq[i][j] = fmax(-x_max[j] + w[i][hidxb[i][j]],0);
+        for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]], 0);
+        for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j] = fmax(-x_max[j] + w[i][hidxb[i][j]], 0);
 
         // Complementarity residuals
-        for ( int_t j = 0; j < NBX; j++) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
-        for ( int_t j = 0; j < NBX; j++) res_compl[i][j+NBX] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX];
+        for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
+        for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j+NBX] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX];
         #ifdef DEBUG_ANDREA
-        printf("Complementarity residuals = %f\n",twonormv(NBX,&res_compl[i][0]));
+        printf("Complementarity residuals = %f\n", twonormv(NBX, &res_compl[i][0]));
         #endif
 
         // Infinity norm of the residuals
@@ -585,34 +573,34 @@ int main() {
         double inf_res_ineq = 0;
         double inf_res_compl = 0;
 
-        for (int_t j = 0; j < NU; j++) {
+        for ( int_t j = 0; j < NU; j++ ) {
           if (inf_res_stat < fabs(res_stat[0][j])) inf_res_stat = fabs(res_stat[0][j]);
         }
-        for (int_t j = 0; j < 2*NU; j++) {
+        for ( int_t j = 0; j < 2*NU; j++ ) {
           if (inf_res_ineq < fabs(res_ineq[0][j])) inf_res_ineq=fabs(res_ineq[0][j]);
           if (inf_res_compl < fabs(res_compl[0][j])) inf_res_compl=fabs(res_compl[0][j]);
         }
 
-        for (int_t i = 1; i < N; i++) {
-          for (int_t j = 0; j < NU+NX; j++) {
+        for ( int_t i = 1; i < N; i++ ) {
+          for ( int_t j = 0; j < NU+NX; j++ ) {
             if (inf_res_stat < fabs(res_stat[i][j])) inf_res_stat=fabs(res_stat[i][j]);
           }
-          for (int_t j = 0; j < NX; j++) {
+          for ( int_t j = 0; j < NX; j++ ) {
             if (inf_res_eq < fabs(res_eq[i][j])) inf_res_eq=fabs(res_eq[i][j]);
           }
 
-          for (int_t j = 0; j < 2*(NBX+NBU); j++){
+          for ( int_t j = 0; j < 2*(NBX+NBU); j++ ) {
              if (inf_res_ineq < fabs(res_ineq[i][j])) inf_res_ineq=fabs(res_ineq[i][j]);
              if (inf_res_compl < fabs(res_compl[i][j])) inf_res_compl=fabs(res_compl[i][j]);
            }
         }
 
         i = N;
-        for (int_t j = 0; j < NX; j++) {
+        for ( int_t j = 0; j < NX; j++ ) {
           if (inf_res_stat < fabs(res_stat[i][j])) inf_res_stat=fabs(res_stat[i][j]);
         }
 
-        for (int_t j = 0; j < 2*(NBX); j++){
+        for ( int_t j = 0; j < 2*(NBX); j++ ) {
            if (inf_res_ineq < fabs(res_ineq[i][j])) inf_res_ineq=fabs(res_ineq[i][j]);
            if (inf_res_compl < fabs(res_compl[i][j])) inf_res_compl=fabs(res_compl[i][j]);
         }
@@ -627,21 +615,21 @@ int main() {
         }
         // Initialize primal-dual variables
         i = 0;
-        for (int_t j = 0; j < NU; j++) ux0[i][j+NX] = w[i][j+NX];
-        for (int_t j = 0; j < NX; j++) pi0[i][j] = pi_n[i][j];
-        for (int_t j = 0; j < 2*(NBU); j++) lam0[i][j] = lam_n[i][j];
-        for (int_t j = 0; j < 2*(NBU); j++) t0[i][j] = t_n[i][j];
-        for (i = 1; i < N; i++) {
-            for (int_t j = 0; j < NX; j++) ux0[i][j] = w[i][j];
-            for (int_t j = 0; j < NU; j++) ux0[i][j+NX] = w[i][j+NX];
-            for (int_t j = 0; j < NX; j++) pi0[i][j] = pi_n[i][j];
-            for (int_t j = 0; j < 2*(NBX + NBU); j++) lam0[i][j] = lam_n[i][j];
-            for (int_t j = 0; j < 2*(NBX + NBU); j++) t0[i][j] = t_n[i][j];
+        for ( int_t j = 0; j < NU; j++ ) ux0[i][j+NX] = w[i][j+NX];
+        for ( int_t j = 0; j < NX; j++ ) pi0[i][j] = pi_n[i][j];
+        for ( int_t j = 0; j < 2*(NBU); j++ ) lam0[i][j] = lam_n[i][j];
+        for ( int_t j = 0; j < 2*(NBU); j++ ) t0[i][j] = t_n[i][j];
+        for ( i = 1; i < N; i++ ) {
+            for ( int_t j = 0; j < NX; j++ ) ux0[i][j] = w[i][j];
+            for ( int_t j = 0; j < NU; j++ ) ux0[i][j+NX] = w[i][j+NX];
+            for ( int_t j = 0; j < NX; j++ ) pi0[i][j] = pi_n[i][j];
+            for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) lam0[i][j] = lam_n[i][j];
+            for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) t0[i][j] = t_n[i][j];
         }
         i = N;
-        for (int_t j = 0; j < 2*(NBX); j++) lam0[i][j] = lam_n[i][j];
-        for (int_t j = 0; j < 2*(NBX); j++) t0[i][j] = t_n[i][j];
-        for (int_t j = 0; j < NX; j++) w[i][j] = w[i][j];
+        for ( int_t j = 0; j < 2*(NBX); j++ ) lam0[i][j] = lam_n[i][j];
+        for ( int_t j = 0; j < 2*(NBX); j++ ) t0[i][j] = t_n[i][j];
+        for ( int_t j = 0; j < NX; j++ ) w[i][j] = w[i][j];
 
         int status = ocp_qp_hpnmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
 
@@ -653,55 +641,55 @@ int main() {
         double min_alpha = 1e-6;
         double pos_feas = 0;
 
-        while ( !pos_feas  && alpha > min_alpha) {
+        while ( !pos_feas  && alpha > min_alpha ) {
           pos_feas = 1;
           i = 0;
-          for (int_t j = 0; j < 2*(NBU); j++) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) pos_feas = 0;
-          for (int_t j = 0; j < 2*(NBU); j++) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) pos_feas = 0;
-          for (i = 1; i < N; i++) {
-            for (int_t j = 0; j < 2*(NBU+NBX); j++) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) pos_feas = 0;
-            for (int_t j = 0; j < 2*(NBU+NBX); j++) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) pos_feas = 0;
+          for ( int_t j = 0; j < 2*(NBU); j++ ) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
+          for ( int_t j = 0; j < 2*(NBU); j++ ) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
+          for ( i = 1; i < N; i++ ) {
+            for ( int_t j = 0; j < 2*(NBU+NBX); j++ ) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
+            for ( int_t j = 0; j < 2*(NBU+NBX); j++ ) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
           }
           i = N;
-          for (int_t j = 0; j < 2*(NBX); j++) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) pos_feas = 0;
-          for (int_t j = 0; j < 2*(NBX); j++) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) pos_feas = 0;
+          for ( int_t j = 0; j < 2*(NBX); j++ ) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
+          for ( int_t j = 0; j < 2*(NBX); j++ ) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
         }
 
         // Print some info before updating
-        if ((int)(ip_iter/10)*10 == ip_iter) {
+        if (<int>(ip_iter/10)*10 == ip_iter) {
           printf("--------------------------------------------------------------------------------------------------\n");
           printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tmu\t\talpha\n");
           printf("--------------------------------------------------------------------------------------------------\n");
         }
 
-        printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n",ip_iter,inf_res_stat, inf_res_eq, inf_res_ineq, inf_res_compl,hpmpc_args.mu0,alpha);
-        if ( inf_res_stat < stat_tol && inf_res_eq < eq_tol && inf_res_ineq < ineq_tol && inf_res_compl < compl_tol && hpmpc_args.mu0 < mu_tol) {
+        printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ip_iter, inf_res_stat, inf_res_eq, inf_res_ineq, inf_res_compl, hpmpc_args.mu0, alpha);
+        if ( inf_res_stat < stat_tol && inf_res_eq < eq_tol && inf_res_ineq < ineq_tol && inf_res_compl < compl_tol && hpmpc_args.mu0 < mu_tol ) {
           sol_found = 1;
-          printf("\n\n-> Solution found.\n\n");
+          printf("\n-> Solution found.\n");
         }
 
         i = 0;
-        for (int_t j = 0; j < NU; j++) w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
-        for (int_t j = 0; j < NX; j++) pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
-        for (int_t j = 0; j < 2*(NBU); j++) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
-        for (int_t j = 0; j < 2*(NBU); j++) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
-        for (i = 1; i < N; i++) {
-            for (int_t j = 0; j < NX; j++) w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
-            for (int_t j = 0; j < NU; j++) w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
+        for ( int_t j = 0; j < NU; j++ ) w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
+        for ( int_t j = 0; j < NX; j++ ) pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
+        for ( int_t j = 0; j < 2*(NBU); j++ ) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
+        for ( int_t j = 0; j < 2*(NBU); j++ ) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+        for ( i = 1; i < N; i++ ) {
+            for ( int_t j = 0; j < NX; j++ ) w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
+            for ( int_t j = 0; j < NU; j++ ) w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
             #ifdef DEBUG_ANDREA
-            printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
-            printf("u_step=%f\n",qp_out.u[i][0] - w[i][0+NX]);
+            printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
+            printf("u_step=%f\n", qp_out.u[i][0] - w[i][0+NX]);
             #endif
-            for (int_t j = 0; j < NX; j++) pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
-            for (int_t j = 0; j < 2*(NBX + NBU); j++) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
-            for (int_t j = 0; j < 2*(NBX + NBU); j++) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+            for ( int_t j = 0; j < NX; j++ ) pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
+            for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
+            for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
         }
         i = N;
-        for (int_t j = 0; j < 2*(NBX); j++) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
-        for (int_t j = 0; j < 2*(NBX); j++) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
-        for (int_t j = 0; j < NX; j++) w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
+        for ( int_t j = 0; j < 2*(NBX); j++ ) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
+        for ( int_t j = 0; j < 2*(NBX); j++ ) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+        for ( int_t j = 0; j < NX; j++ ) w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
         #ifdef DEBUG_ANDREA
-        printf("x_step=%f\n",qp_out.x[i][0] - w[i][0]);
+        printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
         #endif
         #ifdef DEBUG_ANDREA
         print_states_controls(&w[0], N);
@@ -715,10 +703,9 @@ int main() {
     printf("\n\nPrimal solution:\n\n");
     print_states_controls(&w[0], N);
     printf("\n\nEquality multipliers:\n\n");
-    for(int_t i = 0; i < N+1; i++)
-    {
-      for(int_t j = 0; j < 2; j++)
-          printf("pi_n[%i][%i]= %f\n",i,j,pi_n[i][j]);
+    for ( int_t i = 0; i < N+1; i++ ) {
+      for ( int_t j = 0; j < 2; j++ )
+          printf("pi_n[%i][%i]= %f\n", i, j, pi_n[i][j]);
     }
 
     #endif  // DEBUG
