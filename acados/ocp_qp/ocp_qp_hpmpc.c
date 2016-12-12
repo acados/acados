@@ -196,7 +196,15 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       d_allocate_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii+1]);
   		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB, nx[ii+1], &hsBAbt[ii+1], 0, 0);
   		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA, nx[ii+1], &hsBAbt[ii+1], nu[ii], 0);
-  		d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
+
+      struct d_strvec b_strmat;
+      d_allocate_strvec(nx[ii+1], &b_strmat );
+      d_cvt_vec2strvec(nx[ii+1], hb[ii], &b_strmat, 0);
+    	d_cvt_tran_mat2strmat(nx[ii+1], 1, &b_strmat, 0, &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
+
+      d_allocate_strvec(nx[ii+1], &hsb[ii+1]);
+      d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii+1], 0);
+      // drowin_libstr(nx[ii+1], 1.0, &b_strmat, 0, &hsBAbt[ii+1], nu[ii] +nx[ii], 0);
   		// d_print_strmat(nu[ii]+nx[ii]+1, nx[ii+1], hsBAbt[ii+1], 0, 0);
 
       d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii]);
@@ -210,7 +218,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       d_allocate_strvec(nu[ii]+nx[ii], &hsrq[ii]);
       d_cvt_vec2strvec(nu[ii], hr, &hsrq[ii], 0);
       d_cvt_vec2strvec(nx[ii], hq, &hsrq[ii], nu[ii]);
-      d_print_tran_strvec(nu[1]+nx[1], &hsrq[ii], 0);
+      // d_print_tran_strvec(nu[1]+nx[1], &hsrq[ii], 0);
 
       d_allocate_strmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii]);
       d_cvt_tran_mat2strmat(ng[ii], nu[ii], hD[ii], ng[ii], &hsDCt[ii], 0, 0);
@@ -283,27 +291,24 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
       // max sizes
       int ngM = 0;
-      for(ii=0; ii<=N; ii++)
-        {
+      for ( ii=0; ii<=N; ii++ ) {
         ngM = ng[ii]>ngM ? ng[ii] : ngM;
-        }
+      }
 
       int nzM  = 0;
-      for(ii=0; ii<=N; ii++)
-        {
+      for( ii=0; ii<=N; ii++ ) {
         nzM = nu[ii]+nx[ii]+1>nzM ? nu[ii]+nx[ii]+1 : nzM;
-        }
+      }
 
       int nxgM = ng[N];
-      for(ii=0; ii<N; ii++)
-        {
+      for(ii=0; ii<N; ii++) {
         nxgM = nx[ii+1]+ng[ii]>nxgM ? nx[ii+1]+ng[ii] : nxgM;
-        }
+      }
 
     	d_allocate_strvec(ngM, &hswork[0]);
     	d_allocate_strvec(ngM, &hswork[1]);
 
-    int hpmpc_status = 	d_res_res_mpc_hard_libstr(N, nx, nu, nb, hsidxb, ng,
+    int hpmpc_status = 	d_res_res_mpc_hard_libstr(N-1, nx, nu, nb, hsidxb, ng,
     		hsBAbt, hsb, hsRSQrq, hsrq, hsux, hsDCt, hsd,
     		hspi, hslam, hst, hswork, hsrrq, hsrb, hsrd, hsrm, &mu);
 
