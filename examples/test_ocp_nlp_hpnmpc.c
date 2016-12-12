@@ -154,7 +154,7 @@ int main() {
     }
     nx[N] = NX;
 
-    real_t *pA[N]
+    real_t *pA[N];
     real_t *pB[N];
     real_t *pb[N];
     real_t *pQ[N+1];
@@ -656,7 +656,7 @@ int main() {
         }
 
         // Print some info before updating
-        if (<int>(ip_iter/10)*10 == ip_iter) {
+        if ((int)(ip_iter/10)*10 == ip_iter) {
           printf("--------------------------------------------------------------------------------------------------\n");
           printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tmu\t\talpha\n");
           printf("--------------------------------------------------------------------------------------------------\n");

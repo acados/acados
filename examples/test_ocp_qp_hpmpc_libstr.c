@@ -518,7 +518,7 @@ int main() {
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+        return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop

@@ -99,6 +99,10 @@ add_executable(test_hpmpc ${TEST_HPMPC_SRC})
 #target_link_libraries(test_hpmpc acados hpmpc blasfeo m)
 target_link_libraries(test_hpmpc acados hpmpc blasfeo openblas m)
 
+add_executable(test_hpmpc_libstr ${TEST_HPMPC_LIBSTR_SRC})
+#target_link_libraries(test_hpmpc_libstr acados hpmpc blasfeo m)
+target_link_libraries(test_hpmpc_libstr acados hpmpc blasfeo openblas m)
+
 add_executable(test_ocp_nlp_hpnmpc ${TEST_OCP_NLP_HPNMPC_SRC} ${TEST_CHEN_SRC})
 #target_link_libraries(test_ocp_nlp_hpnmpc acados hpmpc blasfeo m)
 target_link_libraries(test_ocp_nlp_hpnmpc acados hpmpc blasfeo openblas m)
