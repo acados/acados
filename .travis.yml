@@ -3,7 +3,7 @@ sudo: true
 
 env:
  - CXX="g++-6" CC="gcc-6"
- - CXX="g++-4" CC="gcc-4"
+ - CXX="g++-4.4" CC="gcc-4.4"
  - CXX="clang++-3.7" CC="clang-3.7"
 
 addons:
@@ -18,8 +18,8 @@ addons:
       - cmake
       - g++-6
       - gcc-6
-      - g++-4
-      - gcc-4
+      - g++-4.4
+      - gcc-4.4
       - clang-3.7
 
 before_install:
