@@ -194,18 +194,18 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
     for( ii=0; ii<N; ii++ ) {
       d_allocate_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii+1]);
-  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB, nx[ii+1], &hsBAbt[ii+1], 0, 0);
-  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA, nx[ii+1], &hsBAbt[ii+1], nu[ii], 0);
+  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii+1], 0, 0);
+  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii], 0);
 
-      struct d_strvec b_strmat;
-      d_allocate_strvec(nx[ii+1], &b_strmat );
-      d_cvt_vec2strvec(nx[ii+1], hb[ii], &b_strmat, 0);
-    	d_cvt_tran_mat2strmat(nx[ii+1], 1, &b_strmat, 0, &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
+      // struct d_strvec b_strmat;
+      // d_allocate_strvec(nx[ii+1], &b_strmat );
+      // d_cvt_vec2strvec(nx[ii+1], hb[ii], &b_strmat, 0);
+    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
 
       d_allocate_strvec(nx[ii+1], &hsb[ii+1]);
       d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii+1], 0);
       // drowin_libstr(nx[ii+1], 1.0, &b_strmat, 0, &hsBAbt[ii+1], nu[ii] +nx[ii], 0);
-  		// d_print_strmat(nu[ii]+nx[ii]+1, nx[ii+1], hsBAbt[ii+1], 0, 0);
+  		// d_print_strmat(nu[ii]+nx[ii]+1,nx[ii+1], &hsBAbt[ii+1], 0, 0);
 
       d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii]);
       d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
@@ -301,16 +301,33 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       }
 
       int nxgM = ng[N];
-      for(ii=0; ii<N; ii++) {
+      for ( ii=0; ii<N; ii++ ) {
         nxgM = nx[ii+1]+ng[ii]>nxgM ? nx[ii+1]+ng[ii] : nxgM;
       }
 
     	d_allocate_strvec(ngM, &hswork[0]);
     	d_allocate_strvec(ngM, &hswork[1]);
 
-    int hpmpc_status = 	d_res_res_mpc_hard_libstr(N-1, nx, nu, nb, hsidxb, ng,
-    		hsBAbt, hsb, hsRSQrq, hsrq, hsux, hsDCt, hsd,
-    		hspi, hslam, hst, hswork, hsrrq, hsrb, hsrd, hsrm, &mu);
+      // IPM constants
+      int hpmpc_status;
+      int kk_avg;
+      double alpha_min = 1e-8;
+      double *stat; d_zeros(&stat, k_max, 5);
+      int compute_res = 1;
+      int compute_mult = 1;
+
+      void *work_memory;
+      v_zeros_align(&work_memory, d_ip2_res_mpc_hard_tv_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+
+      hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
+        warm_start, stat, N-1, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
+        hsd, hsux, compute_mult, hspi, hslam, hst, work_memory);
+
+    // copy result to qp_out
+    for ( ii = 0; ii<=N; ii++ ) {
+      hu[ii] = hsux[ii].pa;
+      // hx[ii] = hsux[ii].pa + nu[ii]*sizeof(double);
+    }
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
 

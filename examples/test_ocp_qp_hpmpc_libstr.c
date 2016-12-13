@@ -24,7 +24,7 @@
 **************************************************************************************************/
 
 // define IP solver arguments && number of repetitions
-#define NREP 1000
+#define NREP 1
 #define MAXITER 10
 #define TOL 1e-8
 #define MINSTEP 1e-8
@@ -175,13 +175,14 @@ int main() {
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
     int N = 20;   // horizon length
-    int nb = 11;  // number of box constrained inputs and states
+    // int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
-    int ngN = 8;  // 4;  // number of general constraints at the last stage
+    int ngN = 0;  // 4;  // number of general constraints at the last stage
 
-    int nbu = nu < nb ? nu : nb;
-    int nbx = nb - nu > 0 ? nb - nu : 0;
-
+    // int nbu = nu < nb ? nu : nb;
+    // int nbx = nb - nu > 0 ? nb - nu : 0;
+    int nbu = 3;
+    int nbx = 4;
     // stage-wise variant size
     int nxx[N + 1];
     nxx[0] = 0;
@@ -192,9 +193,15 @@ int main() {
     nuu[N] = 0;
 
     int nbb[N + 1];
-    nbb[0] = nbu;
-    for (ii = 1; ii < N; ii++) nbb[ii] = nb;
-    nbb[N] = nbx;
+    // nbb[0] = nbu;
+    // for (ii = 1; ii < N; ii++) nbb[ii] = nb;
+    // nbb[N] = nbx;
+
+    // Andrea XXX change this back to 11 bounds, changed to debug the strmat interface
+    for(ii=0; ii<N; ii++) // XXX not M !!!
+      nbb[ii] = nuu[ii];// + nxx[ii]/2;
+  //		nb[ii] = 0;
+    nbb[N] = 0;
 
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
@@ -207,7 +214,7 @@ int main() {
     printf(
         " MPC problem size: %d states, %d inputs, %d horizon length, %d "
         "two-sided box constraints, %d two-sided general constraints.\n",
-        nx, nu, N, nb, ng);
+        nx, nu, N, 7, ng);
     printf("\n");
     printf(
         " IP method parameters: predictor-corrector IP, double precision, %d "
@@ -263,53 +270,53 @@ int main() {
     double *A0;
     d_zeros(&A0, 0, 0);
 
-    /************************************************
-    * box constraints
-    ************************************************/
-
-    int *idxb0;
-    i_zeros(&idxb0, nbb[0], 1);
-    double *lb0;
-    d_zeros(&lb0, nbb[0], 1);
-    double *ub0;
-    d_zeros(&ub0, nbb[0], 1);
-    for (jj = 0; jj < nbu; jj++) {
-        lb0[jj] = -0.5;  //   umin
-        ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = nxx[0]+jj;
-    }
-    //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
-
-    int *idxb1;
-    i_zeros(&idxb1, nbb[1], 1);
-    double *lb1;
-    d_zeros(&lb1, nbb[1], 1);
-    double *ub1;
-    d_zeros(&ub1, nbb[1], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = 4.0;   //   xmax
-        idxb1[jj] = jj;
-    }
-    for (; jj < nb; jj++) {
-        lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
-        idxb1[jj] = jj;
-    }
-    //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
-
-    int *idxbN;
-    i_zeros(&idxbN, nbb[N], 1);
-    double *lbN;
-    d_zeros(&lbN, nbb[N], 1);
-    double *ubN;
-    d_zeros(&ubN, nbb[N], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0;  //   umin
-        ubN[jj] = 4.0;   //   umax
-        idxbN[jj] = jj;
-    }
-    //    i_print_mat(nbb[N], 1, idxb1, nbb[N]);
+    // /************************************************
+    // * box constraints
+    // ************************************************/
+    //
+    // int *idxb0;
+    // i_zeros(&idxb0, nbb[0], 1);
+    // double *lb0;
+    // d_zeros(&lb0, nbb[0], 1);
+    // double *ub0;
+    // d_zeros(&ub0, nbb[0], 1);
+    // for (jj = 0; jj < nbu; jj++) {
+    //     lb0[jj] = -0.5;  //   umin
+    //     ub0[jj] = 0.5;   //   umax
+    //     idxb0[jj] = nxx[0]+jj;
+    // }
+    // //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
+    //
+    // int *idxb1;
+    // i_zeros(&idxb1, nbb[1], 1);
+    // double *lb1;
+    // d_zeros(&lb1, nbb[1], 1);
+    // double *ub1;
+    // d_zeros(&ub1, nbb[1], 1);
+    // for (jj = 0; jj < nbx; jj++) {
+    //     lb1[jj] = -4.0;  //   xmin
+    //     ub1[jj] = 4.0;   //   xmax
+    //     idxb1[jj] = jj;
+    // }
+    // for (; jj < nbx + nbu; jj++) {
+    //     lb1[jj] = -0.5;  //   umin
+    //     ub1[jj] = 0.5;   //   umax
+    //     idxb1[jj] = jj;
+    // }
+    // //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
+    //
+    // int *idxbN;
+    // i_zeros(&idxbN, nbb[N], 1);
+    // double *lbN;
+    // d_zeros(&lbN, nbb[N], 1);
+    // double *ubN;
+    // d_zeros(&ubN, nbb[N], 1);
+    // for (jj = 0; jj < nbx; jj++) {
+    //     lbN[jj] = -4.0;  //   umin
+    //     ubN[jj] = 4.0;   //   umax
+    //     idxbN[jj] = jj;
+    // }
+    // //    i_print_mat(nbb[N], 1, idxb1, nbb[N]);
 
     /************************************************
     * general constraints
@@ -332,6 +339,96 @@ int main() {
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
     double *ugN;
     d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
+
+    /************************************************
+    * box & general constraints
+    ************************************************/
+
+    	int *idxb0; i_zeros(&idxb0, nbb[0], 1);
+    	// double *d0; d_zeros(&d0, 2*nb[0]+2*ng[0], 1);
+      double *lb0;
+      d_zeros(&lb0, nbb[1], 1);
+      double *ub0;
+      d_zeros(&ub0, nbb[1], 1);
+    	for(ii=0; ii<nbb[0]; ii++)
+    		{
+    		if(ii<nuu[0]) // input
+    			{
+    			lb0[ii] = - 5; // umin
+    			ub0[ii] =   5; // umax
+    			}
+    		else // state
+    			{
+    			lb0[ii] = - 4.0; // xmin
+    			ub0[ii] =   4.0; // xmax
+    			}
+    		idxb0[ii] = ii;
+    		}
+    	// for(ii=0; ii<ng; ii++)  //Andrea: no general constraints atm
+    	// 	{
+    	// 	// d0[2*nb[0]+ii]       = - 100.0; // dmin
+    	// 	// d0[2*nb[0]+ng[0]+ii] =   100.0; // dmax
+    	// 	}
+    	// i_print_mat(1, nb[0], idxb0, 1);
+    	// d_print_mat(1, 2*nb[0]+2*ng[0], d0, 1);
+
+    	int *idxb1; i_zeros(&idxb1, nbb[1], 1);
+    	// double *d1; d_zeros(&d1, 2*nb[1]+2*ng[1], 1);
+      i_zeros(&idxb1, nbb[1], 1);
+      double *lb1;
+      d_zeros(&lb1, nbb[1], 1);
+      double *ub1;
+      d_zeros(&ub1, nbb[1], 1);
+    	for(ii=0; ii<nbb[1]; ii++)
+    		{
+    		if(ii<nuu[1]) // input
+    			{
+    			lb1[ii] = - 5; // umin
+    			ub1[ii] =   5; // umax
+    			}
+    		else // state
+    			{
+    			lb1[ii] = - 4.0; // xmin
+    			ub1[ii] =   4.0; // xmax
+    			}
+    		idxb1[ii] = ii;
+    		}
+    	// for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
+    	// 	{
+    	// 	// d1[2*nb[1]+ii]       = - 100.0; // dmin
+    	// 	// d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
+    	// 	}
+    	// i_print_mat(1, nb[1], idxb1, 1);
+    	// d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
+
+    	int *idxbN; i_zeros(&idxbN, nbb[N], 1);
+    	// double *dN; d_zeros(&dN, 2*nb[N]+2*ng[N], 1);
+      i_zeros(&idxbN, nbb[N], 1);
+      double *lbN;
+      d_zeros(&lbN, nbb[N], 1);
+      double *ubN;
+      d_zeros(&ubN, nbb[N], 1);
+    	for(ii=0; ii<nbb[N]; ii++)
+    		{
+    		if(ii<nuu[N]) // input
+    			{
+    			lbN[ii]       = - 5; // umin
+    			ubN[ii] =   5; // umax
+    			}
+    		else // state
+    			{
+    			lbN[ii]       = - 4.0; // xmin
+    			ubN[ii] =   4.0; // xmax
+    			}
+    		idxbN[ii] = ii;
+    		}
+    	// for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
+    	// 	{
+    	// 	// dN[2*nb[N]+ii]       = - 100.0; // dmin
+    	// 	// dN[2*nb[N]+ng[N]+ii] =   100.0; // dmax
+    	// 	}
+    	// i_print_mat(1, nb[N], idxbN, 1);
+    	// d_print_mat(1, 2*nb[N]+2*ng[N], dN, 1);
 
     /************************************************
     * cost function
@@ -460,7 +557,7 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAXITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 0.0;
+    hpmpc_args.mu0 = 0.1;
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
@@ -536,7 +633,7 @@ int main() {
     for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (ii = 1; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
