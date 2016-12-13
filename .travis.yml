@@ -16,9 +16,11 @@ addons:
       - liblapack-dev
       - cppcheck
       - cmake
-      - clang-3.7
-      - gcc-6
       - g++-6
+      - gcc-6
+      - g++-4
+      - gcc-4
+      - clang-3.7
 
 before_install:
  - sudo add-apt-repository -y ppa:octave/stable
