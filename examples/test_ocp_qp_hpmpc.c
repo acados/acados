@@ -471,6 +471,8 @@ int main() {
 
     int work_space_size =
         ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+
+
     printf("\nwork space size: %d bytes\n", work_space_size);
 
     void *workspace = malloc(work_space_size);

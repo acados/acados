@@ -354,8 +354,8 @@ int main() {
     		{
     		if(ii<nuu[0]) // input
     			{
-    			lb0[ii] = - 5; // umin
-    			ub0[ii] =   5; // umax
+    			lb0[ii] = - 1; // umin
+    			ub0[ii] =   1; // umax
     			}
     		else // state
     			{
@@ -379,21 +379,19 @@ int main() {
       d_zeros(&lb1, nbb[1], 1);
       double *ub1;
       d_zeros(&ub1, nbb[1], 1);
-    	for(ii=0; ii<nbb[1]; ii++)
-    		{
-    		if(ii<nuu[1]) // input
-    			{
-    			lb1[ii] = - 5; // umin
-    			ub1[ii] =   5; // umax
-    			}
-    		else // state
-    			{
+    	for(ii=0; ii<nbb[1]; ii++) {
+    		if(ii<nuu[1]) { // input
+    			lb1[ii] = - 1; // umin
+    			ub1[ii] =   1; // umax
+    		}
+    		else { // state
     			lb1[ii] = - 4.0; // xmin
     			ub1[ii] =   4.0; // xmax
-    			}
-    		idxb1[ii] = ii;
     		}
-    	// for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
+    		idxb1[ii] = ii;
+    	}
+
+      // for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
     	// 	{
     	// 	// d1[2*nb[1]+ii]       = - 100.0; // dmin
     	// 	// d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
@@ -408,12 +406,11 @@ int main() {
       d_zeros(&lbN, nbb[N], 1);
       double *ubN;
       d_zeros(&ubN, nbb[N], 1);
-    	for(ii=0; ii<nbb[N]; ii++)
-    		{
+    	for(ii=0; ii<nbb[N]; ii++) {
     		if(ii<nuu[N]) // input
     			{
-    			lbN[ii]       = - 5; // umin
-    			ubN[ii] =   5; // umax
+    			lbN[ii]       = - 1; // umin
+    			ubN[ii] =   1; // umax
     			}
     		else // state
     			{
@@ -421,7 +418,7 @@ int main() {
     			ubN[ii] =   4.0; // xmax
     			}
     		idxbN[ii] = ii;
-    		}
+    	}
     	// for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
     	// 	{
     	// 	// dN[2*nb[N]+ii]       = - 100.0; // dmin
@@ -549,7 +546,7 @@ int main() {
     d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
 
     /************************************************
-    * solver arguments
+    * Solver arguments
     ************************************************/
 
     // solver arguments
@@ -566,11 +563,29 @@ int main() {
     * work space
     ************************************************/
 
-    int work_space_size =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size);
+    int work_space_size = d_ip2_res_mpc_hard_tv_work_space_size_bytes_libstr(N,
+      nxx, nuu, nbb, ngg);
 
-    void *workspace = malloc(work_space_size);
+    // Adding memory for data
+    for ( int ii=0; ii <N; ii++ ) {
+
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1,nxx[ii+1]);
+        work_space_size+= d_size_strvec(nxx[ii+1]);
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nuu[ii]+nxx[ii]);
+        work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
+        work_space_size+= d_size_strvec(nxx[ii+1]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+    }
+
+    work_space_size += 10*sizeof(double)*N;
+    void *workspace;
+    v_zeros_align(&workspace, work_space_size);
+
+    // printf("\nwork space size: %d bytes\n", work_space_size);
 
     /************************************************
     * create the in and out struct
@@ -646,37 +661,37 @@ int main() {
     * free memory
     ************************************************/
 
-    d_free(A);
-    d_free(B);
-    d_free(b);
-    d_free(x0);
-    d_free(A0);
-    d_free(b0);
-    d_free(Q);
-    d_free(S);
-    d_free(R);
-    d_free(q);
-    d_free(r);
-    d_free(Q0);
-    d_free(S0);
-    d_free(q0);
-    d_free(r0);
-    i_free(idxb0);
-    d_free(lb0);
-    d_free(ub0);
-    i_free(idxb1);
-    d_free(lb1);
-    d_free(ub1);
-    i_free(idxbN);
-    d_free(lbN);
-    d_free(ubN);
-    d_free(C);
-    d_free(D);
-    d_free(lg);
-    d_free(ug);
-    d_free(CN);
-    d_free(lgN);
-    d_free(ugN);
+    // d_free(A);
+    // d_free(B);
+    // d_free(b);
+    // d_free(x0);
+    // d_free(A0);
+    // d_free(b0);
+    // d_free(Q);
+    // d_free(S);
+    // d_free(R);
+    // d_free(q);
+    // d_free(r);
+    // d_free(Q0);
+    // d_free(S0);
+    // d_free(q0);
+    // d_free(r0);
+    // i_free(idxb0);
+    // d_free(lb0);
+    // d_free(ub0);
+    // i_free(idxb1);
+    // d_free(lb1);
+    // d_free(ub1);
+    // i_free(idxbN);
+    // d_free(lbN);
+    // d_free(ubN);
+    // d_free(C);
+    // d_free(D);
+    // d_free(lg);
+    // d_free(ug);
+    // d_free(CN);
+    // d_free(lgN);
+    // d_free(ugN);
 
     for (ii = 0; ii < N; ii++) {
         d_free(hx[ii]);
@@ -684,7 +699,7 @@ int main() {
     }
     d_free(hx[N]);
 
-    free(workspace);
+    // free(workspace);
 
     return 0;
 }
