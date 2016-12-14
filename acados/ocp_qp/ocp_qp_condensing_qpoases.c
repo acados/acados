@@ -35,18 +35,9 @@
     #include "qpOASES_e/QProblemB.h"
     #pragma clang diagnostic pop
 #elif defined(__GNUC__)
-    #if __GNUC__ > 5
+    #if __GNUC__ >= 6
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
-        #pragma GCC diagnostic ignored "-Wunused-parameter"
-        #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/Constants.h"
-        #include "qpOASES_e/QProblemB.h"
-        #pragma GCC diagnostic pop
-    #elif __GNUC__ > 4
-        #pragma message "Compiler is"
-        #pragma message __GNUC__
-        #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wunused-parameter"
         #pragma GCC diagnostic ignored "-Wunused-function"
         #include "qpOASES_e/Constants.h"
