@@ -26,7 +26,7 @@
 #define TRANSPOSED 1
 #define TRIPLE_LOOP 0
 #define CODE_GENERATION 0
-#define WARM_SWAP 1
+#define WARM_SWAP 2
 
 typedef struct sim_lifted_irk_workspace_ {
     real_t *rhs_in;
@@ -47,9 +47,7 @@ typedef struct sim_lifted_irk_memory_ {
     real_t *x;
     real_t *u;
     int_t nswaps;
-#if WARM_SWAP
     int *ipiv;
-#endif
 } sim_lifted_irk_memory;
 
 

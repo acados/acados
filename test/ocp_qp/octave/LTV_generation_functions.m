@@ -3,7 +3,7 @@
 randn('state', 0);
 
 function [N, nx, nu, nb, nc] = generate_dimensions()
-    N = 20;
+    N = 5;
     nx = 4;
     nu = 2;
     nb = nx+nu;
@@ -76,10 +76,13 @@ function [Cx_all, Cu_all, cl_all, cu_all] = generate_general_constraints()
     Cu_all = [];
     cl_all = [];
     cu_all = [];
-    for k=0:N
+    for k=1:N
         Cx_all = [Cx_all, randn(nc, nx)];
         Cu_all = [Cu_all, randn(nc, nu)];
         cl_all = [cl_all, -20000*abs(randn(nc, 1))];
         cu_all = [cu_all, +20000*abs(randn(nc, 1))];
     end
+    Cx_all = [Cx_all, randn(nc, nx)];
+    cl_all = [cl_all, -20000*abs(randn(nc, 1))];
+    cu_all = [cu_all, +20000*abs(randn(nc, 1))];
 endfunction

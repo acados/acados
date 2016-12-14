@@ -121,13 +121,6 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
 
 #endif
 
-#if FIXED_STEP_SIZE == 1
-// Integration step size.
-real_t H_INT = 1.0/100;
-// Number of integration steps.
-#define NSTEPS  10
-#endif
-
 void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work ) {
     int_t nx = in->nx;
@@ -141,10 +134,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     int_t iswap;
 #endif
     int_t *ipiv_tmp = work->ipiv_tmp;
-#if FIXED_STEP_SIZE == 0
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
-#endif
+    int_t NF = in->nsens_forw;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
@@ -182,29 +174,30 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     acado_tic(&timer);
 
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
-    for (i = 0; i < nx*(nx+nu); i++) out_tmp[nx+i] = 0.0;  // sensitivities
-    for (i = 0; i < nx; i++) out_tmp[nx+i*nx+i] = 1.0;     // sensitivities wrt x
+    for (i = 0; i < nx*NF; i++) out_tmp[nx+i] = in->S_forw[i];  // sensitivities
 
-    for (i = 0; i < nu; i++) rhs_in[nx*(1+nx+nu)+i] = in->u[i];
+    for (i = 0; i < nu; i++) rhs_in[nx*(1+NF)+i] = in->u[i];
 
     // Newton step of the collocation variables with respect to the inputs:
-    for (istep = 0; istep < NSTEPS; istep++) {
-        for (s1 = 0; s1 < num_stages; s1++) {
-            for (j = 0; j < nx; j++) {  // step in X
-                for (i = 0; i < nx; i++) {
-                    K_traj[(istep*num_stages+s1)*nx+i] +=
-                            DK_traj[(istep*num_stages+s1)*nx*(nx+nu)+j*nx+i]*
-                            (in->x[j]-mem->x[j]);  // RK step
+    if (NF == (nx+nu)) {
+        for (istep = 0; istep < NSTEPS; istep++) {
+            for (s1 = 0; s1 < num_stages; s1++) {
+                for (j = 0; j < nx; j++) {  // step in X
+                    for (i = 0; i < nx; i++) {
+                        K_traj[(istep*num_stages+s1)*nx+i] +=
+                                DK_traj[(istep*num_stages+s1)*nx*(nx+nu)+j*nx+i]*
+                                (in->x[j]-mem->x[j]);  // RK step
+                    }
+                    mem->x[j] = in->x[j];
                 }
-                mem->x[j] = in->x[j];
-            }
-            for (j = 0; j < nu; j++) {  // step in U
-                for (i = 0; i < nx; i++) {
-                    K_traj[(istep*num_stages+s1)*nx+i] +=
-                            DK_traj[(istep*num_stages+s1)*nx*(nx+nu)+(nx+j)*nx+i]*
-                            (in->u[j]-mem->u[j]);  // RK step
+                for (j = 0; j < nu; j++) {  // step in U
+                    for (i = 0; i < nx; i++) {
+                        K_traj[(istep*num_stages+s1)*nx+i] +=
+                                DK_traj[(istep*num_stages+s1)*nx*(nx+nu)+(nx+j)*nx+i]*
+                                (in->u[j]-mem->u[j]);  // RK step
+                    }
+                    mem->u[j] = in->u[j];
                 }
-                mem->u[j] = in->u[j];
             }
         }
     }
@@ -264,7 +257,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 #if defined(LA_BLASFEO)
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
-#endif  // LA_BLAFEO
+#endif  // LA_BLAS | LA_REFERENCE
         dgetrf_libstr(num_stages*nx, num_stages*nx, str_mat, 0, 0, str_mat, 0,
                 0, ipiv);  // Gauss elimination
         // ---- BLASFEO: LU factorization ----
@@ -272,7 +265,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         timing_la += acado_toc(&timer_la);
 
         for (s1 = 0; s1 < num_stages; s1++) {
-            for (i = 0; i < nx*(1+nx+nu); i++) {
+            for (i = 0; i < nx*(1+NF); i++) {
                 rhs_in[i] = out_tmp[i];
             }
             for (s2 = 0; s2 < num_stages; s2++) {
@@ -281,20 +274,20 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
                 }
             }
             acado_tic(&timer_ad);
-            in->VDE_fun(rhs_in, VDE_tmp);  // k evaluation
+            in->VDE_forw(rhs_in, VDE_tmp);  // k evaluation
             timing_ad += acado_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:
 #if WARM_SWAP
             for (i = 0; i < nx; i++) {
                 iswap = ipiv_old[s1*nx+i];
-                for (j = 0; j < nx+nu+1; j++) {
+                for (j = 0; j < 1+NF; j++) {
                     sys_sol[j*num_stages*nx+iswap] = VDE_tmp[j*nx+i];
                 }
                 sys_sol[iswap] -= K_traj[istep*num_stages*nx+s1*nx+i];
             }
 #else
-            for (j = 0; j < nx+nu+1; j++) {
+            for (j = 0; j < 1+NF; j++) {
                 for (i = 0; i < nx; i++) {
                     sys_sol[j*num_stages*nx+s1*nx+i] = VDE_tmp[j*nx+i];
                 }
@@ -307,45 +300,45 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 
         acado_tic(&timer_la);
 #if TRIPLE_LOOP
-        solve_system_ACADO(sys_mat, sys_sol, ipiv, num_stages*nx, nx+nu+1);
+        solve_system_ACADO(sys_mat, sys_sol, ipiv, num_stages*nx, 1+NF);
 #else  // TRIPLE_LOOP
 #if defined(LA_BLASFEO)
 #if TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
-        d_cvt_tran_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
+        d_cvt_tran_mat2strmat(num_stages*nx, 1+NF, sys_sol, num_stages*nx,
                 str_sol_t, 0, 0);  // mat2strmat
         dcolpe_libstr(num_stages*nx, ipiv, str_sol_t);  // col permutations
-        dtrsm_rltu_libstr(nx+nu+1, num_stages*nx, 1.0, str_mat, 0, 0, str_sol_t,
+        dtrsm_rltu_libstr(1+NF, num_stages*nx, 1.0, str_mat, 0, 0, str_sol_t,
                 0, 0, str_sol_t, 0, 0);  // L backsolve
-        dtrsm_rutn_libstr(nx+nu+1, num_stages*nx, 1.0, str_mat, 0, 0, str_sol_t,
+        dtrsm_rutn_libstr(1+NF, num_stages*nx, 1.0, str_mat, 0, 0, str_sol_t,
                 0, 0, str_sol_t, 0, 0);  // U backsolve
-        d_cvt_tran_strmat2mat(nx+nu+1, num_stages*nx, str_sol_t, 0, 0, sys_sol,
+        d_cvt_tran_strmat2mat(1+NF, num_stages*nx, str_sol_t, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
 #else   // NOT TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
-        d_cvt_mat2strmat(num_stages*nx, nx+nu+1, sys_sol, num_stages*nx,
+        d_cvt_mat2strmat(num_stages*nx, 1+NF, sys_sol, num_stages*nx,
                 str_sol, 0, 0);  // mat2strmat
         drowpe_libstr(num_stages*nx, ipiv, str_sol);  // row permutations
-        dtrsm_llnu_libstr(num_stages*nx, nx+nu+1, 1.0, str_mat, 0, 0, str_sol,
+        dtrsm_llnu_libstr(num_stages*nx, 1+NF, 1.0, str_mat, 0, 0, str_sol,
                 0, 0, str_sol, 0, 0);  // L backsolve
-        dtrsm_lunn_libstr(num_stages*nx, nx+nu+1, 1.0, str_mat, 0, 0, str_sol,
+        dtrsm_lunn_libstr(num_stages*nx, 1+NF, 1.0, str_mat, 0, 0, str_sol,
                 0, 0, str_sol, 0, 0);  // U backsolve
-        d_cvt_strmat2mat(num_stages*nx, nx+nu+1, str_sol, 0, 0, sys_sol,
+        d_cvt_strmat2mat(num_stages*nx, 1+NF, str_sol, 0, 0, sys_sol,
                 num_stages*nx);  // strmat2mat
         // ---- BLASFEO: row transformations + backsolve ----
 #endif  // TRANSPOSED
 #else   // LA_BLAS | LA_REFERENCE
         // ---- BLASFEO: row transformations + backsolve ----
         drowpe_libstr(num_stages*nx, ipiv, str_sol);  // row permutations
-        dtrsm_llnu_libstr(num_stages*nx, nx+nu+1, 1.0, str_mat, 0, 0, str_sol,
+        dtrsm_llnu_libstr(num_stages*nx, 1+NF, 1.0, str_mat, 0, 0, str_sol,
                 0, 0, str_sol, 0, 0);  // L backsolve
-        dtrsm_lunn_libstr(num_stages*nx, nx+nu+1, 1.0, str_mat, 0, 0, str_sol,
+        dtrsm_lunn_libstr(num_stages*nx, 1+NF, 1.0, str_mat, 0, 0, str_sol,
                 0, 0, str_sol, 0, 0);  // U backsolve
         // ---- BLASFEO: row transformations + backsolve ----
 #endif  // LA_BLAFEO
 #endif  // TRIPLE_LOOP
-//#if WARM_SWAP
+// #if WARM_SWAP
 #if TRIPLE_LOOP
         for (i = 0; i < num_stages*nx; i++) ipiv_tmp[i] = ipiv[i];
 #else
@@ -393,23 +386,22 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 
         // Sensitivities collocation variables
         for (s1 = 0; s1 < num_stages; s1++) {
-            for (j = 0; j < (nx+nu); j++) {
+            for (j = 0; j < NF; j++) {
                 for (i = 0; i < nx; i++) {
-                    DK_traj[(istep*num_stages+s1)*nx*(nx+nu)+j*nx+i] =
+                    DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] =
                             sys_sol[(j+1)*num_stages*nx+s1*nx+i];
                 }
             }
         }
         for (s1 = 0; s1 < num_stages; s1++) {
-            for (i = 0; i < nx*(nx+nu); i++) {
+            for (i = 0; i < nx*NF; i++) {
                 out_tmp[nx+i] += H_INT*b_vec[s1]*
-                        DK_traj[(istep*num_stages+s1)*nx*(nx+nu)+i];  // RK step
+                        DK_traj[(istep*num_stages+s1)*nx*NF+i];  // RK step
             }
         }
     }
     for (i = 0; i < nx; i++)    out->xn[i] = out_tmp[i];
-    for (i = 0; i < nx*nx; i++) out->Sx[i] = out_tmp[nx+i];
-    for (i = 0; i < nx*nu; i++) out->Su[i] = out_tmp[nx+nx*nx+i];
+    for (i = 0; i < nx*NF; i++) out->S_forw[i] = out_tmp[nx+i];
 
     out->info->CPUtime = acado_toc(&timer);
     out->info->LAtime = timing_la;
@@ -422,17 +414,18 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t num_stages = opts->num_stages;
+    int_t NF = in->nsens_forw;
 
-    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+nx+nu)+nu));
-    work->VDE_tmp = malloc(sizeof(*work->VDE_tmp) * (nx*(1+nx+nu)));
-    work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+nx+nu)));
+    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+NF)+nu));
+    work->VDE_tmp = malloc(sizeof(*work->VDE_tmp) * (nx*(1+NF)));
+    work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+NF)));
     work->ipiv = malloc(sizeof(*work->ipiv) * (num_stages*nx));
     work->sys_mat = malloc(sizeof(*work->sys_mat) * (num_stages*nx)*(num_stages*nx));
-    work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+nx+nu));
+    work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+NF));
 
-//#if WARM_SWAP
+// #if WARM_SWAP
     work->ipiv_tmp = malloc(sizeof(*work->ipiv_tmp) * (num_stages*nx));
-//#endif
+// #endif
 
 #if !TRIPLE_LOOP
 
@@ -441,9 +434,9 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     int size_strmat = 0;
     size_strmat += d_size_strmat(num_stages*nx, num_stages*nx);
 #if TRANSPOSED
-    size_strmat += d_size_strmat(1+nx+nu, num_stages*nx);
+    size_strmat += d_size_strmat(1+NF, num_stages*nx);
 #else   // NOT TRANSPOSED
-    size_strmat += d_size_strmat(num_stages*nx, 1+nx+nu);
+    size_strmat += d_size_strmat(num_stages*nx, 1+NF);
 #endif  // TRANSPOSED
 
     // accocate memory
@@ -454,10 +447,10 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, ptr_memory_strmat);
     ptr_memory_strmat += work->str_mat->memory_size;
 #if TRANSPOSED
-    d_create_strmat(1+nx+nu, num_stages*nx, work->str_sol_t, ptr_memory_strmat);
+    d_create_strmat(1+NF, num_stages*nx, work->str_sol_t, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol_t->memory_size;
 #else   // NOT TRANSPOSED
-    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, ptr_memory_strmat);
+    d_create_strmat(num_stages*nx, 1+NF, work->str_sol, ptr_memory_strmat);
     ptr_memory_strmat += work->str_sol->memory_size;
 #endif  // TRANSPOSED
 
@@ -465,24 +458,25 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 
     //  pointer to column-major matrix
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
-    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, work->sys_sol);
+    d_create_strmat(num_stages*nx, 1+NF, work->str_sol, work->sys_sol);
 
     // allocate new memory only for the diagonal
     int size_strmat = 0;
     size_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
 
-    void *memory_strmat;
-    v_zeros_align(&memory_strmat, size_strmat);
+    void *memory_strmat = malloc(size_strmat);
+//    void *memory_strmat;
+//    v_zeros_align(&memory_strmat, size_strmat);
     char *ptr_memory_strmat = (char *) memory_strmat;
 
     d_cast_diag_mat2strmat((double *) ptr_memory_strmat, work->str_mat);
-    ptr_memory_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
+//    ptr_memory_strmat += d_size_diag_strmat(num_stages*nx, num_stages*nx);
 
 #else  // LA_BLAS
 
     // not allocate new memory: point to column-major matrix
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
-    d_create_strmat(num_stages*nx, 1+nx+nu, work->str_sol, work->sys_sol);
+    d_create_strmat(num_stages*nx, 1+NF, work->str_sol, work->sys_sol);
 
 #endif  // LA_BLASFEO
 
@@ -497,9 +491,10 @@ void sim_lifted_irk_create_memory(const sim_in *in, sim_RK_opts *opts,
     int_t nu = in->nu;
     int_t nSteps = in->nSteps;
     int_t num_stages = opts->num_stages;
+    int_t NF = in->nsens_forw;
 
     mem->K_traj = malloc(sizeof(*mem->K_traj) * (nSteps*num_stages*nx));
-    mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*(nx+nu)));
+    mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*NF));
     mem->x = malloc(sizeof(*mem->x) * nx);
     mem->u = malloc(sizeof(*mem->u) * nu);
 
@@ -509,7 +504,7 @@ void sim_lifted_irk_create_memory(const sim_in *in, sim_RK_opts *opts,
 #endif
 
     for ( i = 0; i < nSteps*num_stages*nx; i++ ) mem->K_traj[i] = 0.0;
-    for ( i = 0; i < nSteps*num_stages*nx*(nx+nu); i++ ) mem->DK_traj[i] = 0.0;
+    for ( i = 0; i < nSteps*num_stages*nx*NF; i++ ) mem->DK_traj[i] = 0.0;
 }
 
 

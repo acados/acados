@@ -20,10 +20,9 @@
 #ifndef ACADOS_SIM_SIM_COMMON_H_
 #define ACADOS_SIM_SIM_COMMON_H_
 
+#include <stdbool.h>
 #include "acados/utils/types.h"
 #include "acados/utils/timing.h"
-
-#define FIXED_STEP_SIZE 0
 
 typedef struct sim_in_ {
     int_t nx;   // NX
@@ -31,13 +30,20 @@ typedef struct sim_in_ {
     real_t *x;  // x[NX]
     real_t *u;  // u[NU]
 
-    void (*VDE_fun)(const real_t*, real_t*);
+    real_t *S_forw;     // forward seed
+    real_t *S_adj;      // backward seed
+
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+    int_t nsens_forw;
+
+    void (*VDE_forw)(const real_t*, real_t*);
+    void (*VDE_adj)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
 
-#if FIXED_STEP_SIZE == 0
     real_t step;
     unsigned int nSteps;
-#endif
 } sim_in;
 
 typedef struct sim_info_ {
@@ -47,9 +53,10 @@ typedef struct sim_info_ {
 } sim_info;
 
 typedef struct sim_out_ {
-    real_t *xn;     // xn[NX]
-    real_t *Sx;     // Sx[NX*NX]
-    real_t *Su;     // Su[NX*NU]
+    real_t *xn;         // xn[NX]
+    real_t *S_forw;     // S_forw[NX*(NX+NU)]
+    real_t *S_adj;      //
+    real_t *S_hess;     //
 
     sim_info *info;
 } sim_out;

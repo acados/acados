@@ -1,8 +1,10 @@
 # explicitly request container-based infrastructure
 sudo: true
- 
+
 env:
  - CXX="g++-6" CC="gcc-6"
+ - CXX="g++-5" CC="gcc-5"
+ - CXX="g++-4.9" CC="gcc-4.9"
  - CXX="clang++-3.7" CC="clang-3.7"
 
 addons:
@@ -15,9 +17,13 @@ addons:
       - liblapack-dev
       - cppcheck
       - cmake
-      - clang-3.7
-      - gcc-6
       - g++-6
+      - gcc-6
+      - g++-4.9
+      - gcc-4.9
+      - g++-5
+      - gcc-5
+      - clang-3.7
 
 before_install:
  - sudo add-apt-repository -y ppa:octave/stable

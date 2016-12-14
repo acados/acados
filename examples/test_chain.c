@@ -192,47 +192,54 @@ int main() {
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
 
+        sim_in[jj].sens_forw = true;
+        sim_in[jj].sens_adj = false;
+        sim_in[jj].sens_hess = false;
+        sim_in[jj].nsens_forw = NX+NU;
+
         switch (NMF) {
         case 1:
-            sim_in[jj].VDE_fun = &VDE_fun_nm2;
+            sim_in[jj].VDE_forw = &VDE_fun_nm2;
             sim_in[jj].jac_fun = &jac_fun_nm2;
             break;
         case 2:
-            sim_in[jj].VDE_fun = &VDE_fun_nm3;
+            sim_in[jj].VDE_forw = &VDE_fun_nm3;
             sim_in[jj].jac_fun = &jac_fun_nm3;
             break;
         case 3:
-            sim_in[jj].VDE_fun = &VDE_fun_nm4;
+            sim_in[jj].VDE_forw = &VDE_fun_nm4;
             sim_in[jj].jac_fun = &jac_fun_nm4;
             break;
         case 4:
-            sim_in[jj].VDE_fun = &VDE_fun_nm5;
+            sim_in[jj].VDE_forw = &VDE_fun_nm5;
             sim_in[jj].jac_fun = &jac_fun_nm5;
             break;
         case 5:
-            sim_in[jj].VDE_fun = &VDE_fun_nm6;
+            sim_in[jj].VDE_forw = &VDE_fun_nm6;
             sim_in[jj].jac_fun = &jac_fun_nm6;
             break;
         case 6:
-            sim_in[jj].VDE_fun = &VDE_fun_nm7;
+            sim_in[jj].VDE_forw = &VDE_fun_nm7;
             sim_in[jj].jac_fun = &jac_fun_nm7;
             break;
         case 7:
-            sim_in[jj].VDE_fun = &VDE_fun_nm8;
+            sim_in[jj].VDE_forw = &VDE_fun_nm8;
             sim_in[jj].jac_fun = &jac_fun_nm8;
             break;
         default:
-            sim_in[jj].VDE_fun = &VDE_fun_nm9;
+            sim_in[jj].VDE_forw = &VDE_fun_nm9;
             sim_in[jj].jac_fun = &jac_fun_nm9;
             break;
         }
 
         sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));
         sim_in[jj].u = malloc(sizeof(*sim_in[jj].u) * (NU));
+        sim_in[jj].S_forw = malloc(sizeof(*sim_in[jj].S_forw) * (NX*(NX+NU)));
+        for (int_t i = 0; i < NX*(NX+NU); i++) sim_in[jj].S_forw[i] = 0.0;
+        for (int_t i = 0; i < NX; i++) sim_in[jj].S_forw[i*(NX+1)] = 1.0;
 
         sim_out[jj].xn = malloc(sizeof(*sim_out[jj].xn) * (NX));
-        sim_out[jj].Sx = malloc(sizeof(*sim_out[jj].Sx) * (NX*NX));
-        sim_out[jj].Su = malloc(sizeof(*sim_out[jj].Su) * (NX*NU));
+        sim_out[jj].S_forw = malloc(sizeof(*sim_out[jj].S_forw) * (NX*(NX+NU)));
         sim_out[jj].info = &info[jj];
 
         irk_work[jj].str_mat = &str_mat[jj];
@@ -397,11 +404,11 @@ int main() {
                     pb[i][j] = sim_out[i].xn[j] - w[(i+1)*(NX+NU)+j];
                     if (fabs(pb[i][j]) > feas) feas = fabs(pb[i][j]);
                     for (int_t k = 0; k < NX; k++)
-                        pA[i][j*NX+k] = sim_out[i].Sx[j*NX+k];  // COLUMN MAJOR FROM CASADI
+                        pA[i][j*NX+k] = sim_out[i].S_forw[j*NX+k];  // COLUMN MAJOR FROM CASADI
                 }
                 for (int_t j = 0; j < NU; j++)
                     for (int_t k = 0; k < NX; k++)
-                        pB[i][j*NX+k] = sim_out[i].Su[j*NX+k];  // COLUMN MAJOR FROM CASADI
+                        pB[i][j*NX+k] = sim_out[i].S_forw[(NX+j)*NX+k];  // COLUMN MAJOR FROM CASADI
 
                 timings_sim += sim_out[i].info->CPUtime;
                 timings_la += sim_out[i].info->LAtime;

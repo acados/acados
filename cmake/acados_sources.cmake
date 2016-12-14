@@ -1,26 +1,32 @@
-file ( GLOB ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c" )
-file ( GLOB ACADOS_SRC_SIM "${PROJECT_SOURCE_DIR}/acados/sim/*.c" )
-file ( GLOB ACADOS_SRC_QP "${PROJECT_SOURCE_DIR}/acados/ocp_qp/*.c" )
-file ( GLOB ACADOS_SRC_UTILS "${PROJECT_SOURCE_DIR}/acados/utils/*.c" )
-set ( TEST_HPMPC_SRC "${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc" )
-set ( TEST_CONDENSING_QPOASES_SRC "${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases" )
-set ( TEST_CHEN_SRC "${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model" )
-set ( TEST_NMPC_SRC "${PROJECT_SOURCE_DIR}/examples/test_nmpc" )
-set ( TEST_CHAIN_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/Chain_model" )
-set ( TEST_VDE_CHAIN2_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm2" )
-set ( TEST_VDE_CHAIN3_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm3" )
-set ( TEST_VDE_CHAIN4_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm4" )
-set ( TEST_VDE_CHAIN5_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm5" )
-set ( TEST_VDE_CHAIN6_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm6" )
-set ( TEST_VDE_CHAIN7_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm7" )
-set ( TEST_VDE_CHAIN8_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm8" )
-set ( TEST_VDE_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde_chain_nm9" )
-set ( TEST_JAC_CHAIN2_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm2" )
-set ( TEST_JAC_CHAIN3_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm3" )
-set ( TEST_JAC_CHAIN4_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm4" )
-set ( TEST_JAC_CHAIN5_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm5" )
-set ( TEST_JAC_CHAIN6_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm6" )
-set ( TEST_JAC_CHAIN7_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm7" )
-set ( TEST_JAC_CHAIN8_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm8" )
-set ( TEST_JAC_CHAIN9_SRC "${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac_chain_nm9" )
-set ( TEST_CHAIN_OCP_SRC "${PROJECT_SOURCE_DIR}/examples/test_chain" )
+file(GLOB ACADOS_SRC_SIM
+    ${PROJECT_SOURCE_DIR}/acados/sim/sim_erk_integrator.c
+    ${PROJECT_SOURCE_DIR}/acados/sim/sim_lifted_irk_integrator.c
+)
+
+file(GLOB ACADOS_SRC_OCP_QP
+    ${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing.c
+    ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_condensing_qpoases.c
+    ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c
+)
+
+file(GLOB ACADOS_SRC_UTILS
+    ${PROJECT_SOURCE_DIR}/acados/utils/print.c
+    ${PROJECT_SOURCE_DIR}/acados/utils/timing.c
+    ${PROJECT_SOURCE_DIR}/acados/utils/tools.c
+)
+
+set(TEST_HPMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc.c)
+set(TEST_CONDENSING_QPOASES_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases.c)
+set(TEST_CHEN_SRC ${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model.c)
+set(TEST_NMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc.c)
+set(TEST_CHAIN_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_chain/Chain_model.c)
+
+file(GLOB TEST_VDE_CHAIN_SRC
+    ${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde*.c
+)
+
+file(GLOB TEST_JAC_CHAIN_SRC
+    ${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac*.c
+)
+
+set(TEST_CHAIN_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_chain.c)
