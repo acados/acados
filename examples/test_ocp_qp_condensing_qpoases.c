@@ -7,7 +7,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-// ACADOS headers
+// acados headers
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/utils/tools.h"
 
