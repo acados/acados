@@ -5,7 +5,7 @@
 #if defined(__clang__)
     #include <Eigen/Dense>
 #elif defined(__GNUC__)
-    #if __GNUC__ > 4
+    #if __GNUC__ > 5
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wmisleading-indentation"
         #include <Eigen/Dense>
