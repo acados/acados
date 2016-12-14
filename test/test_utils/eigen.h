@@ -10,6 +10,8 @@
         #pragma GCC diagnostic ignored "-Wmisleading-indentation"
         #include <Eigen/Dense>
         #pragma GCC diagnostic pop
+    #elif
+        #include <Eigen/Dense>
     #endif
 #endif
 
