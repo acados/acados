@@ -44,7 +44,9 @@
         #include "qpOASES_e/QProblemB.h"
         #pragma GCC diagnostic pop
     #elif __GNUC__ == 4
-        #pragma GCC diagnostic ignored "-Wtypedef-redefinition"
+        // #pragma GCC diagnostic ignored "-Wtypedef-redefinition"
+        #pragma GCC diagnostic ignored "-Wunused-parameter"
+        #pragma GCC diagnostic ignored "-Wunused-function"
         #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
         #pragma GCC diagnostic error "-Wtypedef-redefinition"
