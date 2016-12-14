@@ -40,8 +40,6 @@
         #pragma GCC diagnostic ignored "-Wunused-function"
         #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
-        #pragma GCC diagnostic error "-Wunused-parameter"
-        #pragma GCC diagnostic error "-Wunused-function"
     #elif __GNUC__ == 6
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
