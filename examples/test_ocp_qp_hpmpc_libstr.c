@@ -174,7 +174,7 @@ int main() {
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 10;   // horizon length
+    int N = 20;   // horizon length
     // int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 0;  // 4;  // number of general constraints at the last stage
@@ -307,8 +307,8 @@ int main() {
     		{
     		if(ii<nuu[0]) // input
     			{
-    			lb0[ii] = - 1; // umin
-    			ub0[ii] =   1; // umax
+    			lb0[ii] = - 0.5; // umin
+    			ub0[ii] =   0.5; // umax
     			}
     		else // state
     			{
@@ -334,8 +334,8 @@ int main() {
       d_zeros(&ub1, nbb[1], 1);
     	for(ii=0; ii<nbb[1]; ii++) {
     		if(ii<nuu[1]) { // input
-    			lb1[ii] = - 1; // umin
-    			ub1[ii] =   1; // umax
+    			lb1[ii] = - 0.5; // umin
+    			ub1[ii] =   0.5; // umax
     		}
     		else { // state
     			lb1[ii] = - 4.0; // xmin
@@ -362,8 +362,8 @@ int main() {
     	for(ii=0; ii<nbb[N]; ii++) {
     		if(ii<nuu[N]) // input
     			{
-    			lbN[ii]       = - 1; // umin
-    			ubN[ii] =   1; // umax
+    			lbN[ii] = - 0.5; // umin
+    			ubN[ii] =   0.5; // umax
     			}
     		else // state
     			{
