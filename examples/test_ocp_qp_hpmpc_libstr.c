@@ -25,7 +25,7 @@
 
 // define IP solver arguments && number of repetitions
 #define NREP 1
-#define MAXITER 10
+#define MAXITER 50
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
@@ -174,7 +174,7 @@ int main() {
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 20;   // horizon length
+    int N = 10;   // horizon length
     // int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 0;  // 4;  // number of general constraints at the last stage
@@ -270,53 +270,6 @@ int main() {
     double *A0;
     d_zeros(&A0, 0, 0);
 
-    // /************************************************
-    // * box constraints
-    // ************************************************/
-    //
-    // int *idxb0;
-    // i_zeros(&idxb0, nbb[0], 1);
-    // double *lb0;
-    // d_zeros(&lb0, nbb[0], 1);
-    // double *ub0;
-    // d_zeros(&ub0, nbb[0], 1);
-    // for (jj = 0; jj < nbu; jj++) {
-    //     lb0[jj] = -0.5;  //   umin
-    //     ub0[jj] = 0.5;   //   umax
-    //     idxb0[jj] = nxx[0]+jj;
-    // }
-    // //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
-    //
-    // int *idxb1;
-    // i_zeros(&idxb1, nbb[1], 1);
-    // double *lb1;
-    // d_zeros(&lb1, nbb[1], 1);
-    // double *ub1;
-    // d_zeros(&ub1, nbb[1], 1);
-    // for (jj = 0; jj < nbx; jj++) {
-    //     lb1[jj] = -4.0;  //   xmin
-    //     ub1[jj] = 4.0;   //   xmax
-    //     idxb1[jj] = jj;
-    // }
-    // for (; jj < nbx + nbu; jj++) {
-    //     lb1[jj] = -0.5;  //   umin
-    //     ub1[jj] = 0.5;   //   umax
-    //     idxb1[jj] = jj;
-    // }
-    // //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
-    //
-    // int *idxbN;
-    // i_zeros(&idxbN, nbb[N], 1);
-    // double *lbN;
-    // d_zeros(&lbN, nbb[N], 1);
-    // double *ubN;
-    // d_zeros(&ubN, nbb[N], 1);
-    // for (jj = 0; jj < nbx; jj++) {
-    //     lbN[jj] = -4.0;  //   umin
-    //     ubN[jj] = 4.0;   //   umax
-    //     idxbN[jj] = jj;
-    // }
-    // //    i_print_mat(nbb[N], 1, idxb1, nbb[N]);
 
     /************************************************
     * general constraints
@@ -567,8 +520,7 @@ int main() {
       nxx, nuu, nbb, ngg);
 
     // Adding memory for data
-    for ( int ii=0; ii <N; ii++ ) {
-
+    for ( int ii=0; ii <=N; ii++ ) {
         work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1,nxx[ii+1]);
         work_space_size+= d_size_strvec(nxx[ii+1]);
         work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nuu[ii]+nxx[ii]);
@@ -581,11 +533,10 @@ int main() {
         work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
     }
 
-    work_space_size += 10*sizeof(double)*N;
+    work_space_size += 10000*sizeof(double)*(N+1);
     void *workspace;
-    v_zeros_align(&workspace, work_space_size);
 
-    // printf("\nwork space size: %d bytes\n", work_space_size);
+    v_zeros_align(&workspace, work_space_size);
 
     /************************************************
     * create the in and out struct
@@ -648,7 +599,7 @@ int main() {
     for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 1; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
@@ -693,11 +644,11 @@ int main() {
     // d_free(lgN);
     // d_free(ugN);
 
-    for (ii = 0; ii < N; ii++) {
-        d_free(hx[ii]);
-        d_free(hu[ii]);
-    }
-    d_free(hx[N]);
+    // for (ii = 0; ii < N; ii++) {
+    //     d_free(hx[ii]);
+    //     d_free(hu[ii]);
+    // }
+    // d_free(hx[N]);
 
     // free(workspace);
 

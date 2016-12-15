@@ -516,7 +516,7 @@ int main()
 	d_allocate_strvec(nx[1], &hsPb[1]);
 	d_allocate_strmat(nu[0]+nx[0]+1, nu[0]+nx[0], &hsL[0]);
 	d_allocate_strmat(nx[0], nx[0], &hsLxt[0]);
-  
+
 	for(ii=1; ii<N; ii++)
 		{
 		hsBAbt[ii+1] = sBAbt1;
@@ -534,6 +534,7 @@ int main()
 		d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
 		d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
 		}
+    
 	hsRSQrq[N] = sRSQrqN;
 	hsrq[N] = srqN;
 	hsDCt[N] = sDCtN;

@@ -195,23 +195,14 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     for( ii=0; ii<N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii+1], ptr_memory);
       ptr_memory += (&hsBAbt[ii+1])->memory_size;
-      // d_allocate_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii+1]);
   		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii+1], 0, 0);
   		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii], 0);
-
-      // struct d_strvec b_strmat;
-      // d_allocate_strvec(nx[ii+1], &b_strmat );
-      // d_cvt_vec2strvec(nx[ii+1], hb[ii], &b_strmat, 0);
     	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
 
-      // d_allocate_strvec(nx[ii+1], &hsb[ii+1]);
       d_create_strvec(nx[ii+1], &hsb[ii+1], ptr_memory);
       ptr_memory += (&hsb[ii+1])->memory_size;
       d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii+1], 0);
-      // drowin_libstr(nx[ii+1], 1.0, &b_strmat, 0, &hsBAbt[ii+1], nu[ii] +nx[ii], 0);
-  		// d_print_strmat(nu[ii]+nx[ii]+1,nx[ii+1], &hsBAbt[ii+1], 0, 0);
 
-      // d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii]);
       d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
       ptr_memory += (&hsRSQrq[ii])->memory_size;
       d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
@@ -219,23 +210,17 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       d_cvt_mat2strmat(nx[ii], nx[ii], hQ[ii], nx[ii], &hsRSQrq[ii], nu[ii], nu[ii]);
       d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
       d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
-      // d_print_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], hsRSQrq[ii], 0, 0);
 
-      // d_allocate_strvec(nu[ii]+nx[ii], &hsrq[ii]);
       d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], ptr_memory);
       ptr_memory += (&hsrq[ii])->memory_size;
       d_cvt_vec2strvec(nu[ii], hr, &hsrq[ii], 0);
       d_cvt_vec2strvec(nx[ii], hq, &hsrq[ii], nu[ii]);
-      // d_print_tran_strvec(nu[1]+nx[1], &hsrq[ii], 0);
 
-      // d_allocate_strmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii]);
       d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], ptr_memory);
       ptr_memory += (&hsDCt[ii])->memory_size;
       d_cvt_tran_mat2strmat(ng[ii], nu[ii], hD[ii], ng[ii], &hsDCt[ii], 0, 0);
       d_cvt_tran_mat2strmat(ng[ii], nx[ii], hC[ii], ng[ii], &hsDCt[ii], nu[ii], 0);
-      // d_print_strmat(nu[0]+nx[0], ng[0], &sDCt0, 0, 0);
 
-      // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsd[ii]);
       d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], ptr_memory);
       ptr_memory += (&hsd[ii])->memory_size;
       d_cvt_vec2strvec(nb[ii], hlb[ii], &hsd[ii], 0);
@@ -243,19 +228,47 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       d_cvt_vec2strvec(ng[ii], hlg[ii], &hsd[ii], 2*nb[ii]);
       d_cvt_vec2strvec(ng[ii], hug[ii], &hsd[ii], 2*nb[ii] + ng[ii]);
 
-  		// d_allocate_strvec(nu[ii]+nx[ii], &hsux[ii]);
       d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
       ptr_memory += (&hsux[ii])->memory_size;
-  		// d_allocate_strvec(nx[ii+1], &hspi[ii+1]);
+
       d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
       ptr_memory += (&hspi[ii+1])->memory_size;
-  		// d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslam[ii]);
+
       d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
       ptr_memory += (&hslam[ii])->memory_size;
-  		// d_allocate_strvec(2*nb[ii]+2*ng[ii], &hst[ii]);
+
       d_create_strvec(2*nb[ii]+2*ng[ii], &hst[ii], ptr_memory);
       ptr_memory += (&hst[ii])->memory_size;
     }
+
+    ii = N;
+
+    d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
+    ptr_memory += (&hsRSQrq[ii])->memory_size;
+    d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
+    d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS, nu[ii], &hsRSQrq[ii], nu[ii], 0);
+    d_cvt_mat2strmat(nx[ii], nx[ii], hQ[ii], nx[ii], &hsRSQrq[ii], nu[ii], nu[ii]);
+    d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
+    d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
+
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], ptr_memory);
+    ptr_memory += (&hsd[ii])->memory_size;
+    d_cvt_vec2strvec(nb[ii], hlb[ii], &hsd[ii], 0);
+    d_cvt_vec2strvec(nb[ii], hub[ii], &hsd[ii], nb[ii]);
+    d_cvt_vec2strvec(ng[ii], hlg[ii], &hsd[ii], 2*nb[ii]);
+    d_cvt_vec2strvec(ng[ii], hug[ii], &hsd[ii], 2*nb[ii] + ng[ii]);
+
+    d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
+    ptr_memory += (&hsux[ii])->memory_size;
+
+    // d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
+    // ptr_memory += (&hspi[ii+1])->memory_size;
+
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
+    ptr_memory += (&hslam[ii])->memory_size;
+
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hst[ii], ptr_memory);
+    ptr_memory += (&hst[ii])->memory_size;
 
     // TODO: LAST STAGE?
 
@@ -277,71 +290,47 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     double inf_norm_res[4];  // inf norm of residuals
     for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
-    /************************************************
-    * libstr ip2 residuals
-    ************************************************/
-      //
-    	// struct d_strvec hsrrq[N+1];
-    	// struct d_strvec hsrb[N+1];
-    	// struct d_strvec hsrd[N+1];
-    	// struct d_strvec hsrm[N+1];
-    	double mu;
+  	double mu;
+  	struct d_strvec hswork[2];
 
-    	// d_allocate_strvec(nu[0]+nx[0], &hsrrq[0]);
-    	// d_allocate_strvec(nx[0], &hsrb[0]);
-    	// d_allocate_strvec(2*nb[0]+2*ng[0], &hsrd[0]);
-    	// d_allocate_strvec(2*nb[0]+2*ng[0], &hsrm[0]);
-    	// for(ii=1; ii<N; ii++)
-    	// 	{
-    	// 	d_allocate_strvec(nu[ii]+nx[ii], &hsrrq[ii]);
-    	// 	d_allocate_strvec(nx[ii], &hsrb[ii]);
-    	// 	d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsrd[ii]);
-    	// 	d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsrm[ii]);
-    	// 	}
-    	// d_allocate_strvec(nu[N]+nx[N], &hsrrq[N]);
-    	// d_allocate_strvec(nx[N], &hsrb[N]);
-    	// d_allocate_strvec(2*nb[N]+2*ng[N], &hsrd[N]);
-    	// d_allocate_strvec(2*nb[N]+2*ng[N], &hsrm[N]);
+    // max sizes
+    int ngM = 0;
+    for ( ii=0; ii<=N; ii++ ) {
+      ngM = ng[ii]>ngM ? ng[ii] : ngM;
+    }
 
-    	struct d_strvec hswork[2];
+    int nzM  = 0;
+    for( ii=0; ii<=N; ii++ ) {
+      nzM = nu[ii]+nx[ii]+1>nzM ? nu[ii]+nx[ii]+1 : nzM;
+    }
 
-      // max sizes
-      int ngM = 0;
-      for ( ii=0; ii<=N; ii++ ) {
-        ngM = ng[ii]>ngM ? ng[ii] : ngM;
-      }
+    int nxgM = ng[N];
+    for ( ii=0; ii<N; ii++ ) {
+      nxgM = nx[ii+1]+ng[ii]>nxgM ? nx[ii+1]+ng[ii] : nxgM;
+    }
 
-      int nzM  = 0;
-      for( ii=0; ii<=N; ii++ ) {
-        nzM = nu[ii]+nx[ii]+1>nzM ? nu[ii]+nx[ii]+1 : nzM;
-      }
+    // IPM constants
+    int hpmpc_status;
+    int kk_avg;
+    double alpha_min = 1e-8;
+    double *stat; d_zeros(&stat, k_max, 5);
+    int compute_res = 1;
+    int compute_mult = 1;
 
-      int nxgM = ng[N];
-      for ( ii=0; ii<N; ii++ ) {
-        nxgM = nx[ii+1]+ng[ii]>nxgM ? nx[ii+1]+ng[ii] : nxgM;
-      }
+    void *work_memory;
+    // v_zeros_align(&work_memory,
+      // d_ip2_res_mpc_hard_tv_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
-      // IPM constants
-      int hpmpc_status;
-      int kk_avg;
-      double alpha_min = 1e-8;
-      double *stat; d_zeros(&stat, k_max, 5);
-      int compute_res = 1;
-      int compute_mult = 1;
+    hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
+      warm_start, stat, N, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
+      hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);
 
-      void *work_memory;
-      v_zeros_align(&work_memory,
-        d_ip2_res_mpc_hard_tv_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
-
-      hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
-        warm_start, stat, N-1, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
-        hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);
-        // );
-
+    double **temp_u;
     // copy result to qp_out
     for ( ii = 0; ii<=N; ii++ ) {
       hu[ii] = hsux[ii].pa;
-      // hx[ii] = hsux[ii].pa + nu[ii]*sizeof(double);
+      temp_u = &hsux[ii].pa;
+      hx[ii] = &temp_u[0][nu[ii]];
     }
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
