@@ -3,7 +3,7 @@
 randn('state', 0);
 
 function [N, nx, nu, nb, nc] = generate_dimensions()
-    N = 20;
+    N = 5;
     nx = 4;
     nu = 2;
     nb = nx+nu;

@@ -15,10 +15,8 @@ global TOLERANCE = 1e-10;
 for mode = {'LTI', 'LTV'}
 
     prefix = mode{1};
-    load_generation_functions = [prefix,'_generation_functions'];
-    eval(load_generation_functions);
-    load_condensing_functions = [prefix,'_condensing_functions'];
-    eval(load_condensing_functions);
+    eval([prefix, '_generation_functions']);
+    eval('condensing_functions');
 
     [N, nx, nu, nb, nc] = generate_dimensions();
     [A, B, b, x0] = generate_dynamics();

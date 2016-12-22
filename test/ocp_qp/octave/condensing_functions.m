@@ -2,7 +2,7 @@
 1;
 
 function [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r)
-    % Cost function: min 0.5 * w^T H w + h^T w
+    % cost function: min 0.5 * w^T H w + h^T w
     H = [];
     h = [];
     for k=1:N
@@ -17,7 +17,7 @@ function [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r)
 endfunction
 
 function [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0)
-    % Equality constraint: G * w + g = 0
+    % equality constraint: G * w + g = 0
     G = [-eye(nx), zeros(nx, N*(nx+nu))];
     g = x0;
     for k=1:N
@@ -29,7 +29,7 @@ function [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0)
 endfunction
 
 function [lbw, ubw] = ocp_simple_bounds(N, nx, nu, xl, ul, xu, uu)
-    % Simple bounds: lbw <= w <= ubw
+    % simple bounds: lbw <= w <= ubw
     lbxu = [xl; ul, zeros(nu, 1)];
     lbw = lbxu(1 : end-nu).';
     ubxu = [xu; uu, zeros(nu, 1)];
@@ -73,7 +73,7 @@ function w_star = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r
     mu_star = -all_multipliers.lower + all_multipliers.upper;
     nu_star = all_multipliers.ineqlin;
 
-    nc_all = (N+1)*length(nc);
+    nc_all = (N+1)*nc;
     KKT_system = [];
     for k=1:N
         xk = w_star((k-1)*(nx+nu)+1 : (k-1)*(nx+nu)+nx);
