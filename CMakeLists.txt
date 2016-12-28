@@ -88,7 +88,7 @@ if(BUILD_WITH_CASADI)
 endif()
 
 # Define acados library
-add_library(acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_OCP_QP} ${ACADOS_SRC_UTILS})
+add_library(acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_OCP_QP} ${ACADOS_SRC_OCP_NLP} ${ACADOS_SRC_UTILS})
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)

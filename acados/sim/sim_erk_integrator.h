@@ -39,9 +39,9 @@ typedef struct sim_erk_workspace_ {
 } sim_erk_workspace;
 
 
-void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_workspace *work);
+void sim_erk(const sim_in *in, sim_out *out, void *mem, sim_erk_workspace *work);
 
-void sim_erk_create_workspace(const sim_in *in, sim_RK_opts *opts, sim_erk_workspace *work);
+void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work);
 
 void sim_erk_create_opts(int_t num_stages, sim_RK_opts *opts);
 

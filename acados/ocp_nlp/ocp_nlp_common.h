@@ -17,23 +17,25 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_COMMON_H_
-#define ACADOS_OCP_QP_OCP_QP_COMMON_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
+#define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
-typedef struct ocp_qp_in_ {
+
+
+typedef struct ocp_nlp_ls_cost_ {
+    // TODO(rien): only for least squares cost with state and control reference atm
+//    void *fun;
+    real_t **W;
+    real_t **y_ref;
+} ocp_nlp_ls_cost;
+
+
+typedef struct ocp_nlp_in_ {
     int_t N;
     const int_t *nx;
     const int_t *nu;
     const int_t *nb;
     const int_t *nc;
-    const real_t **A;
-    const real_t **B;
-    const real_t **b;
-    const real_t **Q;
-    const real_t **S;
-    const real_t **R;
-    const real_t **q;
-    const real_t **r;
     const int_t **idxb;
     const real_t **lb;
     const real_t **ub;
@@ -41,21 +43,48 @@ typedef struct ocp_qp_in_ {
     const real_t **Cu;
     const real_t **lc;
     const real_t **uc;
-} ocp_qp_in;
 
-typedef struct ocp_qp_out_ {
+    ocp_nlp_ls_cost *cost;
+    sim_solver *sim;
+
+    int_t maxIter;
+} ocp_nlp_in;
+
+
+typedef struct ocp_nlp_mem_ {
     real_t **x;
     real_t **u;
-    real_t **pi;
+//    real_t **pi;  // TODO(rien): what is pi?
     real_t **lam;
-} ocp_qp_out;
+} ocp_nlp_mem;
 
-typedef struct qp_solver_ {
-    int_t (*fun)(const ocp_qp_in*, ocp_qp_out*, void*, void*);
-    ocp_qp_in *in;
-    ocp_qp_out *out;
-    void *mem;
-    void *work;
-} qp_solver;
 
-#endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_
+typedef struct ocp_nlp_work_ {
+    real_t *w;
+
+    real_t **A;
+    real_t **B;
+    real_t **b;
+    real_t **Q;
+    real_t **S;
+    real_t **R;
+    real_t **q;
+    real_t **r;
+    real_t **lb;
+    real_t **ub;
+    real_t **lc;
+    real_t **uc;
+
+    qp_solver *solver;
+} ocp_nlp_work;
+
+
+typedef struct ocp_nlp_out_ {
+    real_t **x;
+    real_t **u;
+//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **lam;
+} ocp_nlp_out;
+
+
+#endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

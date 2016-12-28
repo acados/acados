@@ -24,9 +24,10 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/print.h"
 
-void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_workspace *work) {
+void sim_erk(const sim_in *in, sim_out *out, void *mem, sim_erk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;
+    sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     int_t i, s, j, istep;
     real_t H_INT = in->step;
@@ -36,6 +37,8 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
         NF = 0;
     }
     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
+
+    mem = 0; mem += 0;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
@@ -161,9 +164,10 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
 }
 
 
-void sim_erk_create_workspace(const sim_in *in, sim_RK_opts *opts, sim_erk_workspace *work) {
+void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;
+    sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
     int_t nSteps = in->nSteps;

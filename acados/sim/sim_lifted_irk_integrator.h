@@ -51,13 +51,13 @@ typedef struct sim_lifted_irk_memory_ {
 } sim_lifted_irk_memory;
 
 
-void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
+void sim_lifted_irk(const sim_in *in, sim_out *out,
         sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work);
 
-void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
+void sim_lifted_irk_create_workspace(const sim_in *in,
         sim_lifted_irk_workspace *work);
 
-void sim_lifted_irk_create_memory(const sim_in *in, sim_RK_opts *opts,
+void sim_lifted_irk_create_memory(const sim_in *in,
         sim_lifted_irk_memory *mem);
 
 void sim_irk_create_opts(int_t num_stages, const char* name, sim_RK_opts *opts);

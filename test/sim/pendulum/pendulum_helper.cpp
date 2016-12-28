@@ -13,6 +13,7 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         sim_in->nx = NX;
         sim_in->nu = NU;
 
+        sim_in->opts = rk_opts;
         int_t nhess = (int_t)(NX+NU+1)*(real_t)(NX+NU)/2.0;
 
         sim_in->sens_forw = true;
@@ -44,5 +45,5 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         sim_out->info = info;
 
         sim_erk_create_opts(4, rk_opts);
-        sim_erk_create_workspace(sim_in, rk_opts, erk_work);
+        sim_erk_create_workspace(sim_in, erk_work);
 }

@@ -44,6 +44,8 @@ typedef struct sim_in_ {
 
     real_t step;
     unsigned int nSteps;
+
+    void *opts;
 } sim_in;
 
 typedef struct sim_info_ {
@@ -61,5 +63,12 @@ typedef struct sim_out_ {
     sim_info *info;
 } sim_out;
 
+typedef struct sim_solver_ {
+    void (*fun)(const sim_in*, sim_out*, void*, void*);
+    sim_in *in;
+    sim_out *out;
+    void *mem;
+    void *work;
+} sim_solver;
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

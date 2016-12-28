@@ -192,6 +192,8 @@ int main() {
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
 
+        sim_in[jj].opts = &rk_opts[jj];
+
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;
         sim_in[jj].sens_hess = false;
@@ -248,11 +250,11 @@ int main() {
         if (implicit > 0) {
             sim_irk_create_opts(implicit, "Gauss", &rk_opts[jj]);
 
-            sim_lifted_irk_create_workspace(&sim_in[jj], &rk_opts[jj], &irk_work[jj]);
-            sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
+            sim_lifted_irk_create_workspace(&sim_in[jj], &irk_work[jj]);
+            sim_lifted_irk_create_memory(&sim_in[jj], &irk_mem[jj]);
         } else {
             sim_erk_create_opts(4, &rk_opts[jj]);
-            sim_erk_create_workspace(&sim_in[jj], &rk_opts[jj], &erk_work[jj]);
+            sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
         }
     }
 
@@ -395,9 +397,9 @@ int main() {
                 for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
                 if (implicit > 0) {
-                    sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[i], &irk_mem[i], &irk_work[i]);
+                    sim_lifted_irk(&sim_in[i], &sim_out[i], &irk_mem[i], &irk_work[i]);
                 } else {
-                    sim_erk(&sim_in[i], &sim_out[i], &rk_opts[i], &erk_work[i]);
+                    sim_erk(&sim_in[i], &sim_out[i], 0, &erk_work[i]);
                 }
 
                 for (int_t j = 0; j < NX; j++) {
@@ -440,7 +442,7 @@ int main() {
                 lb0[j] = (x0[j]-w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
 
             // Set updated bounds:
