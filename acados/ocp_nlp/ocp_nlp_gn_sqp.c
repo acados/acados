@@ -39,6 +39,7 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     const int_t *nu = nlp_in->nu;
     real_t *w = work->w;
     sim_solver *sim = nlp_in->sim;
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
 
     real_t **qp_lb = work->lb;
     real_t **qp_ub = work->ub;
@@ -72,19 +73,19 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     work->solver->in->b = (const real_t **) work->b;
 
     // TODO(rien): only for least squares cost with state and control reference atm
-    real_t **y_ref = nlp_in->cost->y_ref;
+    real_t **y_ref = cost->y_ref;
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) {
-                qp_Q[i][j*nx[i]+k] = nlp_in->cost->W[i][j*(nx[i]+nu[i])+k];
+                qp_Q[i][j*nx[i]+k] = cost->W[i][j*(nx[i]+nu[i])+k];
             }
             for (int_t k = 0; k < nu[i]; k++) {
-                qp_S[i][j*nu[i]+k] = nlp_in->cost->W[i][j*(nx[i]+nu[i])+nx[i]+k];
+                qp_S[i][j*nu[i]+k] = cost->W[i][j*(nx[i]+nu[i])+nx[i]+k];
             }
         }
         for (int_t j = 0; j < nu[i]; j++) {
             for (int_t k = 0; k < nu[i]; k++) {
-                qp_R[i][j*nu[i]+k] = nlp_in->cost->W[i][(nx[i]+j)*(nx[i]+nu[i])+nx[i]+k];
+                qp_R[i][j*nu[i]+k] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i])+nx[i]+k];
             }
         }
     }
@@ -152,15 +153,15 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             // TODO(rien): only for least squares cost with state and control reference atm
             if (i < N) {
                 for (int_t j = 0; j < nx[i]; j++) {
-                    qp_q[i][j] = nlp_in->cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
+                    qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
                 }
                 for (int_t j = 0; j < nu[i]; j++) {
-                    qp_r[i][j] = nlp_in->cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]
+                    qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]
                                                     *(w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
                 }
             } else {
                 for (int_t j = 0; j < nx[i]; j++) {
-                    qp_q[N][j] = nlp_in->cost->W[N][j*(nx[i]+1)]*(w[w_idx+j]-y_ref[N][j]);
+                    qp_q[N][j] = cost->W[N][j*(nx[i]+1)]*(w[w_idx+j]-y_ref[N][j]);
                 }
             }
             w_idx += nx[i]+nu[i];

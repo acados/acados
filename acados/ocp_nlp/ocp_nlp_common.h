@@ -21,6 +21,12 @@
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
 
+typedef struct ocp_nlp_function_ {
+    void (*fun)(const real_t*, real_t*);
+    void (*jac_fun)(const real_t*, real_t*);
+    // TODO(rien): other directional and second order derivatives
+} ocp_nlp_function;
+
 
 typedef struct ocp_nlp_ls_cost_ {
     // TODO(rien): only for least squares cost with state and control reference atm
@@ -30,12 +36,18 @@ typedef struct ocp_nlp_ls_cost_ {
 } ocp_nlp_ls_cost;
 
 
+typedef struct ocp_nlp_stage_cost_ {
+    ocp_nlp_function *fun;
+} ocp_nlp_stage_cost;
+
+
 typedef struct ocp_nlp_in_ {
     int_t N;
     const int_t *nx;
     const int_t *nu;
     const int_t *nb;
     const int_t *nc;
+    const int_t *ng;
     const int_t **idxb;
     const real_t **lb;
     const real_t **ub;
@@ -43,8 +55,11 @@ typedef struct ocp_nlp_in_ {
     const real_t **Cu;
     const real_t **lc;
     const real_t **uc;
+    const real_t **lg;
+    const real_t **ug;
 
-    ocp_nlp_ls_cost *cost;
+    ocp_nlp_function *g;  // nonlinear constraints
+    void *cost;
     sim_solver *sim;
 
     int_t maxIter;
