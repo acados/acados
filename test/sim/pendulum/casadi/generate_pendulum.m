@@ -2,7 +2,7 @@ clc;
 clear all;
 close all;
 
-addpath('/mnt/HDD-home/rien/casadi-octave')
+addpath('../../../casadi-octave-v3.1.1')
 import casadi.*
 
 % constants

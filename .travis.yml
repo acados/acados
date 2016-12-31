@@ -41,6 +41,8 @@ install:
 
 script:
  - set -e
+ - \wget "http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz"
+ - tar -xvzf casadi-octave-v3.1.1.tar.gz -C /casadi-octave-v3.1.1/
  - git submodule init
  - git submodule update
  - mkdir build
