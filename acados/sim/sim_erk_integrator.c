@@ -24,7 +24,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/print.h"
 
-void sim_erk(const sim_in *in, sim_out *out, void *mem, sim_erk_workspace *work) {
+void sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     sim_RK_opts *opts = in->opts;
@@ -33,6 +33,7 @@ void sim_erk(const sim_in *in, sim_out *out, void *mem, sim_erk_workspace *work)
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
     int_t NF = in->nsens_forw;
+    sim_erk_workspace *work = (sim_erk_workspace*) work_;
     if (!in->sens_forw) {
         NF = 0;
     }

@@ -122,12 +122,14 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
 #endif
 
 void sim_lifted_irk(const sim_in *in, sim_out *out,
-        sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work ) {
+        void *mem_, void *work_ ) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     int_t i, s1, s2, j, istep;
+    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory*) mem_;
+    sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace*) work_;
 #if WARM_SWAP
     int_t *ipiv_old = mem->ipiv;  // pivoting vector
 #endif

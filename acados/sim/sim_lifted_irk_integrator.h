@@ -20,6 +20,10 @@
 #ifndef ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 #define ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
 
@@ -52,7 +56,7 @@ typedef struct sim_lifted_irk_memory_ {
 
 
 void sim_lifted_irk(const sim_in *in, sim_out *out,
-        sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work);
+        void *mem, void *work);
 
 void sim_lifted_irk_create_workspace(const sim_in *in,
         sim_lifted_irk_workspace *work);
@@ -61,5 +65,9 @@ void sim_lifted_irk_create_memory(const sim_in *in,
         sim_lifted_irk_memory *mem);
 
 void sim_irk_create_opts(int_t num_stages, const char* name, sim_RK_opts *opts);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
