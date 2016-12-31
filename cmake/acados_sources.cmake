@@ -10,6 +10,7 @@ file(GLOB ACADOS_SRC_OCP_QP
 )
 
 file(GLOB ACADOS_SRC_OCP_NLP
+    ${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_common.c
     ${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_gn_sqp.c
 )
 

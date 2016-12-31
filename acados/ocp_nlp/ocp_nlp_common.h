@@ -20,8 +20,15 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
+#include "acados/utils/types.h"
+#include "acados/sim/sim_common.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 
 typedef struct ocp_nlp_function_ {
+    //    const int_t *sparsity;
+    //    const int_t *idx_in;
+    const int_t dim_in;
+    const int_t dim_out;
     void (*fun)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
     // TODO(rien): other directional and second order derivatives
@@ -31,6 +38,7 @@ typedef struct ocp_nlp_function_ {
 typedef struct ocp_nlp_ls_cost_ {
     // TODO(rien): only for least squares cost with state and control reference atm
 //    void *fun;
+//    const int_t *ny;
     real_t **W;
     real_t **y_ref;
 } ocp_nlp_ls_cost;
@@ -101,6 +109,9 @@ typedef struct ocp_nlp_out_ {
 //    real_t **pi;  // TODO(rien): what is pi?
     real_t **lam;
 } ocp_nlp_out;
+
+
+void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem);
 
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
