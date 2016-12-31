@@ -27,7 +27,7 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
-int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in,ocp_nlp_out *nlp_out,void *nlp_mem, void *work);
+int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_mem, void *work);
 
 void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work);
 

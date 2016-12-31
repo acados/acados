@@ -213,7 +213,6 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 }
 
 void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
-
     int_t num_vars = 0;
     work->A = (real_t **) malloc(sizeof(*work->A) * (in->N));
     work->B = (real_t **) malloc(sizeof(*work->B) * (in->N));
@@ -241,11 +240,11 @@ void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
         work->R[i] = (real_t *) malloc(sizeof(*work->R[i]) * (in->nu[i]*in->nu[i]));
         work->r[i] = (real_t *) malloc(sizeof(*work->r[i]) * (in->nu[i]));
 
-        if(in->nb[i]) {
+        if (in->nb[i]) {
             work->lb[i] = (real_t *) malloc(sizeof(*work->lb[i]) * (in->nb[i]));
             work->ub[i] = (real_t *) malloc(sizeof(*work->ub[i]) * (in->nb[i]));
         }
-        if(in->nc[i]) {
+        if (in->nc[i]) {
             work->lc[i] = (real_t *) malloc(sizeof(*work->lc[i]) * (in->nc[i]));
             work->uc[i] = (real_t *) malloc(sizeof(*work->uc[i]) * (in->nc[i]));
         }
@@ -255,11 +254,11 @@ void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
     num_vars += in->nx[in->N];
     work->Q[in->N] = (real_t *) malloc(sizeof(*work->Q[in->N]) * (in->nx[in->N]*in->nx[in->N]));
     work->q[in->N] = (real_t *) malloc(sizeof(*work->q[in->N]) * (in->nx[in->N]));
-    if(in->nb[in->N]) {
+    if (in->nb[in->N]) {
         work->lb[in->N] = (real_t *) malloc(sizeof(*work->lb[in->N]) * (in->nb[in->N]));
         work->ub[in->N] = (real_t *) malloc(sizeof(*work->ub[in->N]) * (in->nb[in->N]));
     }
-    if(in->nc[in->N]) {
+    if (in->nc[in->N]) {
         work->lc[in->N] = (real_t *) malloc(sizeof(*work->lc[in->N]) * (in->nc[in->N]));
         work->uc[in->N] = (real_t *) malloc(sizeof(*work->uc[in->N]) * (in->nc[in->N]));
     }
@@ -295,5 +294,6 @@ void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
         work->solver->out->x[i] = (real_t *) malloc(sizeof(*work->solver->out->x[i]) * (in->nx[i]));
         work->solver->out->u[i] = (real_t *) malloc(sizeof(*work->solver->out->u[i]) * (in->nu[i]));
     }
-    work->solver->out->x[in->N] = (real_t *) malloc(sizeof(*work->solver->out->x[in->N]) * (in->nx[in->N]));
+    work->solver->out->x[in->N] = (real_t *)
+            malloc(sizeof(*work->solver->out->x[in->N]) * (in->nx[in->N]));
 }

@@ -1,3 +1,5 @@
+#include <string>
+#include <iostream>   // std::cout
 #include "catch/include/catch.hpp"
 #include "test/ocp_nlp/chain/Chain_model.h"
 #include "acados/utils/types.h"
@@ -12,8 +14,6 @@
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/zeros.h"
-#include <string>
-#include <iostream>   // std::cout
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -157,7 +157,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 //                sim_erk_create_opts(4, &rk_opts[jj]);
 //                sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
 //            }
-
         }
 
         int_t nx[NN+1] = {0};
@@ -279,7 +278,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_work.solver->mem = &args;
         nlp_work.solver->work = qpoases_work;
         nlp_work.solver->fun = &ocp_qp_condensing_qpoases;
-        ocp_nlp_sqp_create_workspace(&nlp_in,&nlp_work);
+        ocp_nlp_sqp_create_workspace(&nlp_in, &nlp_work);
 
         ocp_nlp_mem nlp_mem;
         ocp_nlp_create_memory(&nlp_in, &nlp_mem);
@@ -287,7 +286,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         int_t status;
         status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_mem, &nlp_work);
 
-        REQUIRE(status==0);
+        REQUIRE(status == 0);
 
         real_t out_x[NX*(N+1)];
         real_t out_u[NU*N];
