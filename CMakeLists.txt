@@ -112,6 +112,7 @@ target_link_libraries(test_chain acados qpoases blasfeo openblas m)
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
     generate_test_data()
+    include(test_sources)
     execute_process(COMMAND sed -i "s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;\\nreal_t\ a0/g" ${UNIT_TESTS_SRC_CASADI})
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
