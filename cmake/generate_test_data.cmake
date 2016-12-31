@@ -1,5 +1,6 @@
 # Find test data generation files
 function(generate_test_data)
+    # Octave
     set(FIND_COMMAND find test -type f -name "generate_*.m")
     set(FIND_GENERATION_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND} )
     execute_process(COMMAND ${FIND_GENERATION_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE TEST_DATA_GENERATION_FILES)
@@ -12,7 +13,9 @@ function(generate_test_data)
         if(NOT EXISTS ${PROJECT_BINARY_DIR}/test)
             execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR} mkdir test)
         endif()
-        set(GENERATE_TEST_DATA octave --no-gui --path "${PROJECT_SOURCE_DIR}/test/ocp_qp/octave" ${GENERATION_FILE})
+	get_filename_component(GENERATION_DIR ${GENERATION_FILE} DIRECTORY)
+        message("Current directory: ${GENERATION_DIR}")
+        set(GENERATE_TEST_DATA octave --no-gui --path "${GENERATION_DIR}" ${GENERATION_FILE})
         execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_BINARY_DIR}/test ${GENERATE_TEST_DATA})
     endforeach()
 endfunction()

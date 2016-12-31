@@ -11,10 +11,38 @@ file(GLOB UNIT_TESTS_SRC_OCP_QP
 file(GLOB UNIT_TESTS_SRC_SIM
     ${PROJECT_SOURCE_DIR}/test/sim/pendulum/test_pendulum.cpp
     ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/casadi_pendulum.c
-    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/jac_pendulum.c
-    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/vde_forw_pendulum.c
-    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/vde_adj_pendulum.c
-    ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/vde_hess_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_forw_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_adj_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_hess_pendulum.c
+)
+
+file(GLOB UNIT_TESTS_SRC_OCP_NLP
+    ${PROJECT_SOURCE_DIR}/test/ocp_nlp/chain/test_chain.cpp
+    ${PROJECT_SOURCE_DIR}/test/ocp_nlp/chain/Chain_model.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm2.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm3.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm4.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm5.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm2.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm3.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm4.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm5.c
+)
+
+file(GLOB UNIT_TESTS_SRC_CASADI
+    ${PROJECT_SOURCE_DIR}/build/test/jac_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_forw_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_adj_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_hess_pendulum.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm2.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm3.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm4.c
+    ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm5.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm2.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm3.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm4.c
+    ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm5.c
 )
 
 set(UNIT_TESTS_SRC ${PROJECT_SOURCE_DIR}/test/all_tests.cpp)
