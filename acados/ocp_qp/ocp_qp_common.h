@@ -20,6 +20,10 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_COMMON_H_
 #define ACADOS_OCP_QP_OCP_QP_COMMON_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ocp_qp_in_ {
     int_t N;
     const int_t *nx;
@@ -51,11 +55,15 @@ typedef struct ocp_qp_out_ {
 } ocp_qp_out;
 
 typedef struct qp_solver_ {
-    int_t (*fun)(const ocp_qp_in*, ocp_qp_out*, void*, void*);
+    int_t (*fun)(ocp_qp_in*, ocp_qp_out*, void*, void*);
     ocp_qp_in *in;
     ocp_qp_out *out;
     void *mem;
     void *work;
 } qp_solver;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_

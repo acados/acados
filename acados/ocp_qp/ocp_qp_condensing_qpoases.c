@@ -209,8 +209,10 @@ static void convert_to_row_major(const real_t *input, real_t *output, const int_
 }
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-    ocp_qp_condensing_qpoases_args *args, double *workspace) {
+    void *args_, void *workspace_) {
 
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
+    double *workspace = (double*) workspace_;
     fill_in_condensing_structs(qp_in);
     condensing_N2_fixed_initial_state(&in, &out, &work);
 
