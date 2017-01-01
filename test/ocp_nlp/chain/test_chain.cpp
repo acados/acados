@@ -18,26 +18,25 @@
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
-real_t COMPARISON_TOLERANCE_IPOPT = 1e-8;
+real_t COMPARISON_TOLERANCE_IPOPT = 1e-2;
 #define NN 20
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
-    for (int NMF = 1; NMF < 5; NMF++) {
+    for (int NMF = 1; NMF < 2; NMF++) {
         printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n", NMF);
         int_t NX = 6*NMF;
         int_t NU = 3;
         int_t jj;
-        int_t d = 3;
+        int_t d = 2;
 
         real_t wall_pos = -0.01;
         int_t UMAX = 10;
 
         // Problem data
         int_t   N                   = NN;
-        real_t  *w;  // States and controls stacked
         ocp_nlp_ls_cost ls_cost;
         real_t  *W, *WN;
         real_t  *uref;
@@ -50,7 +49,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         d_zeros(&uref, NU, 1);
         d_zeros(&x_end, NX, 1);
         d_zeros(&u_end, NU, 1);
-        d_zeros(&w, NN*(NX+NU)+NX, 1);
 
         std::string NMFdat = std::to_string(NMF+1) + ".dat";
         VectorXd x0 = readMatrix("chain/x0_nm" + NMFdat);
@@ -59,14 +57,9 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         MatrixXd resX = readMatrix("chain/resX_nm" + NMFdat);
         MatrixXd resU = readMatrix("chain/resU_nm" + NMFdat);
 
-        for (int_t i = 0; i < NN; i++) {
-            for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = xref(j);
-        }
-        for (int_t j = 0; j < NX; j++) w[NN*(NX+NU)+j] = xref(j);
-
-        for (int_t i = 0; i < NX; i++) W[i*(NX+NU+1)] = 1e-10;
+        for (int_t i = 0; i < NX; i++) W[i*(NX+NU+1)] = 1e-1;
         for (int_t i = 0; i < NU; i++) W[(NX+i)*(NX+NU+1)] = 1.0;
-        for (int_t i = 0; i < NX; i++) WN[i*(NX+1)] = 1e-10;
+        for (int_t i = 0; i < NX; i++) WN[i*(NX+1)] = 1e-1;
 
         ls_cost.W = (real_t **) malloc(sizeof(*ls_cost.W) * (N+1));
         for (int_t i = 0; i < NN; i++) ls_cost.W[i] = W;
@@ -81,7 +74,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         for (int_t j = 0; j < NX; j++) ls_cost.y_ref[N][j] = xref(j);
 
         // Integrator structs
-        real_t T = 5.0/NN;
+        real_t Ts = 2.0/NN;
         sim_in  sim_in[NN];
         sim_out sim_out[NN];
         sim_info info[NN];
@@ -104,8 +97,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             integrators[jj].mem = &irk_mem[jj];
             integrators[jj].work = &irk_work[jj];
 
-            sim_in[jj].nSteps = 2;
-            sim_in[jj].step = T/sim_in[jj].nSteps;
+            sim_in[jj].nSteps = 1;
+            sim_in[jj].step = Ts/sim_in[jj].nSteps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
 //
@@ -193,7 +186,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nb[0] = NX+NU;
 
         int *idxb1;
-        i_zeros(&idxb1, NU, 1);
+        i_zeros(&idxb1, NMF+NU, 1);
         double *lb1[N-1];
         double *ub1[N-1];
         for (int_t i = 0; i < N-1; i++) {
@@ -282,22 +275,35 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
         ocp_nlp_mem nlp_mem;
         ocp_nlp_create_memory(&nlp_in, &nlp_mem);
+        for (int_t i = 0; i < NN; i++) {
+            for (int_t j = 0; j < NX; j++) nlp_mem.x[i][j] = xref(j);
+        }
+        for (int_t j = 0; j < NX; j++) nlp_mem.x[NN][j] = xref(j);
 
         int_t status;
         status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_mem, &nlp_work);
 
         REQUIRE(status == 0);
 
-        real_t out_x[NX*(N+1)];
-        real_t out_u[NU*N];
+        real_t out_x[NX*(N+1)], err_x[NX*(N+1)];
+        real_t out_u[NU*N], err_u[NU*N];
         for (int_t i = 0; i < NN; i++) {
             for (int_t j = 0; j < NX; j++) out_x[i*NX+j] = nlp_out.x[i][j];
             for (int_t j = 0; j < NU; j++) out_u[i*NU+j] = nlp_out.u[i][j];
         }
         for (int_t j = 0; j < NX; j++) out_x[N*NX+j] = nlp_out.x[N][j];
 
-        print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX, N+1);
-        print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU, N);
+        for (int_t i = 0; i < NN; i++) {
+            for (int_t j = 0; j < NX; j++) err_x[i*NX+j] = fabs(out_x[i*NX+j] - resX(j,i));
+            for (int_t j = 0; j < NU; j++) err_u[i*NU+j] = fabs(out_u[i*NU+j] - resU(j,i));
+        }
+        for (int_t j = 0; j < NX; j++) err_x[N*NX+j] = fabs(out_x[N*NX+j] - resX(j,N));
+
+//        print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX, N+1);
+//        print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU, N);
+
+        print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
+        print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);

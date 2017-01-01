@@ -7,7 +7,7 @@ import casadi.*
 mkdir('chain');
 
 % Get collocation points
-d = 3;
+d = 2;
 method = '';
 Ns = 1; % NUMBER OF INTEGRATION STEPS
 
@@ -27,7 +27,7 @@ xN = [1 0 0].';
 
 wall_pos = -0.01;
 
-T = 5.0;
+T = 2.0;
 N = 20;
 
 % Number of variables
@@ -241,9 +241,9 @@ lbx = {lbx{:} x_lb};
 ubx = {ubx{:} x_ub};
 
 % Objective function
-% fun_ref = (vertcat(Xs{:})-repmat(xN_term,N+1,1));
+fun_ref = (vertcat(Xs{:})-repmat(xN_term,N+1,1));
 controls = vertcat(Us{:});
-effort = 1/2*controls.'*controls;
+effort = 1/2*(controls.'*controls + 1e-1*fun_ref.'*fun_ref);
 
 nlp = struct('x',vertcat(V{:}), 'f',effort, 'g', vertcat(g{:}));
 
