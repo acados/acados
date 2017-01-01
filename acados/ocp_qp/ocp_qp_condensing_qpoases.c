@@ -33,6 +33,7 @@
     #pragma clang diagnostic ignored "-Wunused-function"
     #include "qpOASES_e/Constants.h"
     #include "qpOASES_e/QProblemB.h"
+    #include "qpOASES_e/QProblem.h"
     #pragma clang diagnostic pop
 #elif defined(__GNUC__)
     #if __GNUC__ >= 6
@@ -42,16 +43,19 @@
         #pragma GCC diagnostic ignored "-Wunused-function"
         #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
+        #include "qpOASES_e/QProblem.h"
         #pragma GCC diagnostic pop
     #else
         #pragma GCC diagnostic ignored "-Wunused-parameter"
         #pragma GCC diagnostic ignored "-Wunused-function"
         #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
+        #include "qpOASES_e/QProblem.h"
     #endif
 #endif
 
-QProblemB QP;
+QProblemB QPB;
+QProblem QP;
 real_t *A_row_major;
 real_t *primal_solution;
 real_t *dual_solution;
@@ -63,13 +67,13 @@ condensing_workspace work;
 static void print_condensed_QP(const int_t ncv, const int_t nc,
     condensing_out *out) {
 
-    print_matrix("../experimental/robin/hessian.txt", out->H, ncv, ncv);
-    print_array("../experimental/robin/gradient.txt", out->h, ncv);
-    print_matrix("../experimental/robin/A.txt", out->A, nc, ncv);
-    print_array("../experimental/robin/lbA.txt", out->lbA, nc);
-    print_array("../experimental/robin/ubA.txt", out->ubA, nc);
-    print_array("../experimental/robin/lb.txt", out->lb, ncv);
-    print_array("../experimental/robin/ub.txt", out->ub, ncv);
+    print_matrix("hessian.txt", out->H, ncv, ncv);
+    print_array("gradient.txt", out->h, ncv);
+    print_matrix("A.txt", out->A, nc, ncv);
+    print_array("lbA.txt", out->lbA, nc);
+    print_array("ubA.txt", out->ubA, nc);
+    print_array("lb.txt", out->lb, ncv);
+    print_array("ub.txt", out->ub, ncv);
 }
 #endif
 
@@ -92,6 +96,7 @@ static void calculate_num_state_bounds(ocp_qp_in *in) {
                 num_state_bounds++;
         }
         work.nstate_bounds[i] = num_state_bounds;
+//        printf("work.nstate_bounds[%d]: %d \n", i, work.nstate_bounds[i]);
     }
 }
 
@@ -120,6 +125,7 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
     d_zeros(&out.A, nconstraints, nconvars);
     d_zeros(&out.lbA, nconstraints, 1);
     d_zeros(&out.ubA, nconstraints, 1);
+//    printf("nconstraints: %d \n", nconstraints);
 
     for (int_t i = 0; i < nconvars; i++) {
         out.lb[i] = -QPOASES_INFTY;
@@ -159,21 +165,39 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
     d_zeros(&work.Sx0, qp_in->nu[0], 1);
 }
 
-static int_t solve_condensed_QP(const int_t ncv, QProblemB *QP,
+static int_t solve_condensed_QPB(const int_t ncv, QProblemB *QP,
     real_t* primal_solution, real_t* dual_solution) {
 
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
 
     QProblemBCON(QP, ncv, HST_POSDEF);
-    QProblemB_setPrintLevel(QP, PL_NONE);
+    QProblemB_setPrintLevel(QP, PL_MEDIUM);
     QProblemB_printProperties(QP);
 
     int_t return_flag = QProblemB_initW(QP, out.H, out.h, out.lb,
-                        out.ub, &nwsr, &cpu_time, NULL,
-                        dual_solution, NULL, NULL);
+            out.ub, &nwsr, &cpu_time, NULL,
+            dual_solution, NULL, NULL);
     QProblemB_getPrimalSolution(QP, primal_solution);
     QProblemB_getDualSolution(QP, dual_solution);
+    return return_flag;
+}
+
+static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
+    real_t* primal_solution, real_t* dual_solution) {
+
+    int_t nwsr = 1000;
+    real_t cpu_time = 100.0;
+
+    QProblemCON(QP, ncv, ncon, HST_POSDEF);
+    QProblem_setPrintLevel(QP, PL_MEDIUM);
+    QProblem_printProperties(QP);
+
+    int_t return_flag = QProblem_initW(QP, out.H, out.h, A_row_major, out.lb,
+            out.ub, out.lbA, out.ubA, &nwsr, &cpu_time, NULL,
+            dual_solution, NULL, NULL, NULL);
+    QProblem_getPrimalSolution(QP, primal_solution);
+    QProblem_getDualSolution(QP, dual_solution);
     return return_flag;
 }
 
@@ -228,7 +252,12 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     print_condensed_QP(work.nconvars, work.nconstraints, &out);
     #endif
 
-    int_t return_flag = solve_condensed_QP(work.nconvars, &QP, primal_solution, dual_solution);
+    int_t return_flag;
+    if (work.nconstraints) {
+        return_flag = solve_condensed_QP(work.nconvars, work.nconstraints, &QP, primal_solution, dual_solution);
+    } else {
+        return_flag = solve_condensed_QPB(work.nconvars, &QPB, primal_solution, dual_solution);
+    }
     recover_state_trajectory(qp_in, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
 
     d_free(out.H);
