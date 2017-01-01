@@ -254,7 +254,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     int_t return_flag;
     if (work.nconstraints) {
-        return_flag = solve_condensed_QP(work.nconvars, work.nconstraints, &QP, primal_solution, dual_solution);
+        return_flag = solve_condensed_QP(work.nconvars, work.nconstraints, &QP,
+                primal_solution, dual_solution);
     } else {
         return_flag = solve_condensed_QPB(work.nconvars, &QPB, primal_solution, dual_solution);
     }

@@ -117,13 +117,8 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             }
             for (int_t j = 0; j < nu[i]; j++)
                 for (int_t k = 0; k < nx[i]; k++)
-                    work->B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];  // COLUMN MAJOR
+                    work->B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];  // COLUMN MAJO
 
-//            print_matrix_name((char*)"stdout", (char*)"work->b[i]: ", work->b[i], 1, nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"sim[i].out->xn: ", &sim[i].out->xn[0], 1, nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"xnext: ", &w[w_idx+nx[i]+nu[i]], 1, nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"work->A[i]: ", work->A[i], nx[i], nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"work->B[i]: ", work->B[i], nx[i], nu[i]);
             timings_sim += sim[i].out->info->CPUtime;
             timings_la += sim[i].out->info->LAtime;
             timings_ad += sim[i].out->info->ADtime;
@@ -136,11 +131,15 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                 qp_lb[i][j] = nlp_in->lb[i][j] - w[w_idx+nlp_in->idxb[i][j]];
                 qp_ub[i][j] = nlp_in->ub[i][j] - w[w_idx+nlp_in->idxb[i][j]];
             }
-//            print_matrix_name((char*)"stdout", (char*)"qp_lb: ", work->solver->in->lb[i], 1, work->solver->in->nb[i]);
-//            print_matrix_name((char*)"stdout", (char*)"qp_ub: ", work->solver->in->ub[i], 1, work->solver->in->nb[i]);
+//            print_matrix_name((char*)"stdout", (char*)"qp_lb: ", work->solver->in->lb[i],
+//            1, work->solver->in->nb[i]);
+//            print_matrix_name((char*)"stdout", (char*)"qp_ub: ", work->solver->in->ub[i],
+//            1, work->solver->in->nb[i]);
 //
-//            print_matrix_name((char*)"stdout", (char*)"nlp_lb: ", nlp_in->lb[i], 1, nlp_in->nb[i]);
-//            print_matrix_name((char*)"stdout", (char*)"nlp_ub: ", nlp_in->ub[i], 1, nlp_in->nb[i]);
+//            print_matrix_name((char*)"stdout", (char*)"nlp_lb: ", nlp_in->lb[i],
+//            1, nlp_in->nb[i]);
+//            print_matrix_name((char*)"stdout", (char*)"nlp_ub: ", nlp_in->ub[i],
+//            1, nlp_in->nb[i]);
 
 
             // Update gradients: TODO(rien): only for diagonal Q, R matrices atm
@@ -185,14 +184,17 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                     stepU = fabs(work->solver->out->u[i][j]);
             }
             w_idx += nx[i]+nu[i];
-//            print_matrix_name((char*)"stdout", (char*)"solver->out->x[i]: ", work->solver->out->x[i], 1, nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"solver->out->u[i]: ", work->solver->out->u[i], 1, nu[i]);
+//            print_matrix_name((char*)"stdout", (char*)"solver->out->x[i]: ",
+//            work->solver->out->x[i], 1, nx[i]);
+//            print_matrix_name((char*)"stdout", (char*)"solver->out->u[i]: ",
+//            work->solver->out->u[i], 1, nu[i]);
         }
         for (int_t j = 0; j < nx[N]; j++) {
             w[w_idx+j] += work->solver->out->x[N][j];
             if (fabs(work->solver->out->x[N][j]) > stepX) stepX = fabs(work->solver->out->x[N][j]);
         }
-//        print_matrix_name((char*)"stdout", (char*)"solver->out->x[N]: ", work->solver->out->x[N], 1, nx[N]);
+//        print_matrix_name((char*)"stdout", (char*)"solver->out->x[N]: ",
+//        work->solver->out->x[N], 1, nx[N]);
 //        w_idx += nx[N];
 //        print_matrix_name((char*)"stdout", (char*)"w_cur: ", w, 1, w_idx);
 
