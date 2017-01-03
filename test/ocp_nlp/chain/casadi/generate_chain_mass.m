@@ -143,11 +143,11 @@ set(0,'DefaultAxesFontSize',Fontsize)
 
  x0 = [];
  for k = 1:N
-     x0 = [x0;repmat(x0_init,Ns*d+1,1);zeros(nu,1)];
+     x0 = [x0;repmat(x0_guess,Ns*d+1,1);zeros(nu,1)];
  end
  x0 = [x0;x0_guess];
 
-rho = 1;
+rho = 0;
 %% Optimal Control Problem
 Xs = {};
 for i=1:N+1

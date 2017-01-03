@@ -27,8 +27,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
-    for (int d = 0; d < 0; d++) {  // RK4 in case d == 0
-    for (int NMF = 1; NMF < 1; NMF++) {
+    for (int d = 0; d < 2; d++) {  // RK4 in case d == 0
+    for (int NMF = 1; NMF < 5; NMF++) {
         printf("\n----- NUMBER OF FREE MASSES = %d, d = %d -----\n", NMF, d);
         int_t NX = 6*NMF;
         int_t NU = 3;
