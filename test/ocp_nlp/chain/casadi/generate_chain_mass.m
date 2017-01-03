@@ -7,15 +7,12 @@ import casadi.*
 mkdir('chain');
 
 % Get collocation points
-%d = 2;
 method = '';
 Ns = 1; % NUMBER OF INTEGRATION STEPS
 
-SOLVE = 1;
-
 resX = []; resU = [];
 for d = 0:3
-for Nm = 2:4
+for Nm = 2:5
     disp(['---- Nm value = ' num2str(Nm) '----']);
 
 % Environment
@@ -29,7 +26,7 @@ xN = [1 0 0].';
 wall_pos = -0.01;
 
 T = 2.0;
-N = 20;
+N = 10;
 
 % Number of variables
 nx = (Nm-1)*2*3;
@@ -144,42 +141,13 @@ x0_mat = [zeros(6,1) reshape(x0_init,6,Nm-1)];
 Fontsize = 20;
 set(0,'DefaultAxesFontSize',Fontsize)
 
-%figure(1); set(gcf, 'Color','white');
-%plot3(x0_mat2(1,:), x0_mat2(2,:), x0_mat2(3,:), '--ro', 'MarkerSize', 10); hold on;
-%plot3(x0_mat(1,:), x0_mat(2,:), x0_mat(3,:), '--bo', 'MarkerSize', 10);
-%p = patch([0, 1, 1, 0], [wall_pos, wall_pos, wall_pos, wall_pos], [-4, -4, 1, 1], 'g');
-%xlabel( 'x [m]');
-%ylabel( 'y [m]');
-%zlabel( 'z [m]');
-%xlim([0 1]);
-%ylim([-0.1 2]);
-%zlim([-4 1]);
-%title('Initial and reference point');
-%legend('reference', 'initial','wall')
-%view([145 25]);
-%grid on;
-%% set(gca, 'Box', 'on');
-%% pause
-
-%x0 = [repmat([x0_guess;zeros(nx*Ns*d,1);u_guess],N,1);x0_guess];
-% load(['../data_ME_' num2str(Nm) method '.mat'],'res');
-% x0 = res;
-
  x0 = [];
  for k = 1:N
- %     x0 = [x0;repmat(resX(:,k),Ns*d+1,1);resU(:,k)];
-     x0 = [x0;repmat(x0_guess,Ns*d+1,1);zeros(nu,1)];
+     x0 = [x0;repmat(x0_init,Ns*d+1,1);zeros(nu,1)];
  end
- % x0 = [x0;resX(:,N+1)];
  x0 = [x0;x0_guess];
 
-if SOLVE
-
-for rho = [0]
-% for rho = [0.9 0.5 0.25 0]
-    disp(['-- rho value = ' num2str(rho) '--']);
-
-
+rho = 1;
 %% Optimal Control Problem
 Xs = {};
 for i=1:N+1
@@ -232,12 +200,12 @@ for k=1:N
   % Obtain collocation expressions
   Xcur = Xs{k};
   if d > 0
-  for i = 1:Ns
-		[Xcur,coll_out] = collfun(Xcur,XCs{k}(:,1+(i-1)*d:i*d),Us{k});
-		g = {g{:} coll_out};         % collocation constraints
-  end
+    for i = 1:Ns
+		  [Xcur,coll_out] = collfun(Xcur,XCs{k}(:,1+(i-1)*d:i*d),Us{k});
+		  g = {g{:} coll_out};         % collocation constraints
+    end
   else
-	Xcur = RK4fun(Xcur,Us{k},T/N);
+	  Xcur = RK4fun(Xcur,Us{k},T/N);
   end
   g = {g{:} Xs{k+1}-Xcur}; % gap closing
 end
@@ -253,7 +221,7 @@ ubx = {ubx{:} x_ub};
 % Objective function
 fun_ref = (vertcat(Xs{:})-repmat(xN_term,N+1,1));
 controls = vertcat(Us{:});
-effort = 1/2*(controls.'*controls + 1e-1*fun_ref.'*fun_ref);
+effort = 1/2*(controls.'*controls + 1e-12*fun_ref.'*fun_ref);
 
 nlp = struct('x',vertcat(V{:}), 'f',effort, 'g', vertcat(g{:}));
 
@@ -304,44 +272,16 @@ for r=res_split(1:end-1)
 end
 res_X = {res_X{:} res_split{end}};
 
-%% Visualization solution
-%figure(2); set(gcf, 'Color','white');
-%plot3(x0_mat2(1,:), x0_mat2(2,:), x0_mat2(3,:), '--ro', 'MarkerSize', 14); hold on;
-%plot3(x0_mat(1,:), x0_mat(2,:), x0_mat(3,:), '--bo', 'MarkerSize', 14);
-%p = patch([0, 1, 1, 0], [wall_pos, wall_pos, wall_pos, wall_pos], [-4, -4, 1, 1], 'g');
-%for k = 1:N+1
-%    x_mat = [zeros(6,1) reshape(full(res_X{k}),6,Nm-1)];
-%    plot3(x_mat(1,:), x_mat(2,:), x_mat(3,:), ':k+', 'MarkerSize', 6);
-%end
-%xlabel( 'x [m]');
-%ylabel( 'y [m]');
-%zlabel( 'z [m]');
-%xlim([0 1]);
-%ylim([-0.1 2]);
-%zlim([-4 1]);
-%title('Initial and reference point');
-%legend('reference','initial','wall','solution')
-%view([145 25]);
-%grid on;
-%% set(gca, 'Box', 'on');
-
 resX = vertcat(res_X{:});
-resX = full(reshape(resX,nx,N+1))
+resX = full(reshape(resX,nx,N+1));
 
 resU = vertcat(res_U{:});
-resU = full(reshape(resU,nu,N))
+resU = full(reshape(resU,nu,N));
 
 res = full(res.x);
-
-%if rho == 0
-%    save(['../data_ME_' num2str(Nm) method '.mat'],'x0_init','xN_term','resX','resU','resK','res','lam','mu');
-%end
-
 
 save(['chain/resX_nm' num2str(Nm) '_d' num2str(d) '.dat'], 'resX', '-ascii', '-double');
 save(['chain/resU_nm' num2str(Nm) '_d' num2str(d) '.dat'], 'resU', '-ascii', '-double');
 
-end
-end
 end
 end
