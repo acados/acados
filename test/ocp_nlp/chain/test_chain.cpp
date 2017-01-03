@@ -18,19 +18,19 @@
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
-real_t COMPARISON_TOLERANCE_IPOPT = 1e-2;
+real_t COMPARISON_TOLERANCE_IPOPT = 1e-7;
 #define NN 20
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
-    for (int NMF = 1; NMF < 2; NMF++) {
-        printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n", NMF);
+    for (int d = 0; d < 4; d++) {  // RK4 in case d == 0
+    for (int NMF = 1; NMF < 4; NMF++) {
+        printf("\n----- NUMBER OF FREE MASSES = %d, d = %d -----\n", NMF, d);
         int_t NX = 6*NMF;
         int_t NU = 3;
         int_t jj;
-        int_t d = 2;
 
         real_t wall_pos = -0.01;
         int_t UMAX = 10;
@@ -50,7 +50,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         d_zeros(&x_end, NX, 1);
         d_zeros(&u_end, NU, 1);
 
-        std::string NMFdat = std::to_string(NMF+1) + ".dat";
+        std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
         VectorXd x0 = readMatrix("chain/x0_nm" + NMFdat);
         VectorXd xref = readMatrix("chain/xN_nm" + NMFdat);
 
@@ -81,7 +81,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         sim_solver integrators[NN];
 
         sim_RK_opts rk_opts[NN];
-//        sim_erk_workspace erk_work[NN];
+        sim_erk_workspace erk_work[NN];
         sim_lifted_irk_workspace irk_work[NN];
         sim_lifted_irk_memory irk_mem[NN];
 
@@ -91,11 +91,17 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         struct d_strmat str_sol_t[NN];
 
         for (jj = 0; jj < NN; jj++) {
-            integrators[jj].fun = &sim_lifted_irk;
             integrators[jj].in = &sim_in[jj];
             integrators[jj].out = &sim_out[jj];
-            integrators[jj].mem = &irk_mem[jj];
-            integrators[jj].work = &irk_work[jj];
+            if (d > 0) {
+                integrators[jj].fun = &sim_lifted_irk;
+                integrators[jj].mem = &irk_mem[jj];
+                integrators[jj].work = &irk_work[jj];
+            } else {
+                integrators[jj].fun = &sim_erk;
+                integrators[jj].mem = 0;
+                integrators[jj].work = &erk_work[jj];
+            }
 
             sim_in[jj].nSteps = 1;
             sim_in[jj].step = Ts/sim_in[jj].nSteps;
@@ -141,15 +147,15 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             irk_work[jj].str_mat = &str_mat[jj];
             irk_work[jj].str_sol = &str_sol[jj];
             irk_work[jj].str_sol_t = &str_sol_t[jj];
-//            if (implicit > 0) {
+            if (d > 0) {
                 sim_irk_create_opts(d, "Gauss", &rk_opts[jj]);
 
                 sim_lifted_irk_create_workspace(&sim_in[jj], &irk_work[jj]);
                 sim_lifted_irk_create_memory(&sim_in[jj], &irk_mem[jj]);
-//            } else {
-//                sim_erk_create_opts(4, &rk_opts[jj]);
-//                sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
-//            }
+            } else {
+                sim_erk_create_opts(4, &rk_opts[jj]);
+                sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
+            }
         }
 
         int_t nx[NN+1] = {0};
@@ -309,5 +315,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
         REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));
+    }
     }
 }

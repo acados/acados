@@ -7,14 +7,15 @@ import casadi.*
 mkdir('chain');
 
 % Get collocation points
-d = 2;
+%d = 2;
 method = '';
 Ns = 1; % NUMBER OF INTEGRATION STEPS
 
 SOLVE = 1;
 
 resX = []; resU = [];
-for Nm = 2:5
+for d = 0:3
+for Nm = 2:4
     disp(['---- Nm value = ' num2str(Nm) '----']);
 
 % Environment
@@ -69,10 +70,15 @@ for i = 1:Nm-2
 end
 dae.ode = [dae.ode; casadi_vec(x_struct,'p',states(end).v,'v',u)];
 
+if d > 0
 tau_root = collocation_points(d,'legendre');
 
 collfun = simpleColl(dae,tau_root,T/(Ns*N));
 collfun = collfun.expand();
+else
+expl_ode = Function('ode',{dae.x,dae.p},{dae.ode});
+RK4fun = simpleRK(expl_ode, Ns, 4);
+end
 
 %% Find rest position
 Xpoints = linspace(0,1,Nm);
@@ -130,8 +136,8 @@ end
 % x0_init
 err_rest = norm(full(val))
 
-save(['chain/x0_nm' num2str(Nm) '.dat'], 'x0_init', '-ascii', '-double');
-save(['chain/xN_nm' num2str(Nm) '.dat'], 'xN_term', '-ascii', '-double');
+save(['chain/x0_nm' num2str(Nm) '_d' num2str(d) '.dat'], 'x0_init', '-ascii', '-double');
+save(['chain/xN_nm' num2str(Nm) '_d' num2str(d) '.dat'], 'xN_term', '-ascii', '-double');
 
 x0_mat = [zeros(6,1) reshape(x0_init,6,Nm-1)];
 
@@ -225,9 +231,13 @@ for k=1:N
   end
   % Obtain collocation expressions
   Xcur = Xs{k};
+  if d > 0
   for i = 1:Ns
-    [Xcur,coll_out] = collfun(Xcur,XCs{k}(:,1+(i-1)*d:i*d),Us{k});
-    g = {g{:} coll_out};         % collocation constraints
+		[Xcur,coll_out] = collfun(Xcur,XCs{k}(:,1+(i-1)*d:i*d),Us{k});
+		g = {g{:} coll_out};         % collocation constraints
+  end
+  else
+	Xcur = RK4fun(Xcur,Us{k},T/N);
   end
   g = {g{:} Xs{k+1}-Xcur}; % gap closing
 end
@@ -328,9 +338,10 @@ res = full(res.x);
 %end
 
 
-save(['chain/resX_nm' num2str(Nm) '.dat'], 'resX', '-ascii', '-double');
-save(['chain/resU_nm' num2str(Nm) '.dat'], 'resU', '-ascii', '-double');
+save(['chain/resX_nm' num2str(Nm) '_d' num2str(d) '.dat'], 'resX', '-ascii', '-double');
+save(['chain/resU_nm' num2str(Nm) '_d' num2str(d) '.dat'], 'resU', '-ascii', '-double');
 
+end
 end
 end
 end
