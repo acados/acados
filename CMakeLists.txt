@@ -50,7 +50,7 @@ endif()
 # Define external libraries
 # BLASFEO
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
-    make static_library RESULT_VARIABLE blasfeo_built)
+    make static_library TARGET=GENERIC RESULT_VARIABLE blasfeo_built)
 if(NOT "${blasfeo_built}" STREQUAL "0")
     message(FATAL_ERROR "build of blasfeo failed with status ${blasfeo_built}!")
 endif()
