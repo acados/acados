@@ -50,10 +50,10 @@ endif()
 # Define external libraries
 # BLASFEO
 if(NOT DEFINED TARGET)
-	set(TARGET GENERIC)
+	set(TARGET X64_INTEL_SANDY_BRIDGE)
 endif()
 if(NOT DEFINED LA)
-	set(LA BLAS)
+	set(LA BLASFEO)
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
     make static_library TARGET=${TARGET} LA=${LA} RESULT_VARIABLE blasfeo_built)
