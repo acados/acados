@@ -18,17 +18,17 @@
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
-real_t COMPARISON_TOLERANCE_IPOPT = 1e-7;
-#define NN 10
-#define TT 2.0
-#define Ns 1
+real_t COMPARISON_TOLERANCE_IPOPT = 1e-8;
+#define NN 15
+#define TT 3.0
+#define Ns 2
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
-    for (int d = 0; d < 2; d++) {  // RK4 in case d == 0
-    for (int NMF = 1; NMF < 5; NMF++) {
+    for (int d = 0; d < 4; d++) {  // RK4 in case d == 0
+    for (int NMF = 1; NMF < 4; NMF++) {
         printf("\n----- NUMBER OF FREE MASSES = %d, d = %d -----\n", NMF, d);
         int_t NX = 6*NMF;
         int_t NU = 3;
@@ -59,9 +59,9 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         MatrixXd resX = readMatrix("chain/resX_nm" + NMFdat);
         MatrixXd resU = readMatrix("chain/resU_nm" + NMFdat);
 
-        for (int_t i = 0; i < NX; i++) W[i*(NX+NU+1)] = 1e-12;
+        for (int_t i = 0; i < NX; i++) W[i*(NX+NU+1)] = 1e-2;
         for (int_t i = 0; i < NU; i++) W[(NX+i)*(NX+NU+1)] = 1.0;
-        for (int_t i = 0; i < NX; i++) WN[i*(NX+1)] = 1e-12;
+        for (int_t i = 0; i < NX; i++) WN[i*(NX+1)] = 1e-2;
 
         ls_cost.W = (real_t **) malloc(sizeof(*ls_cost.W) * (N+1));
         for (int_t i = 0; i < NN; i++) ls_cost.W[i] = W;
@@ -109,7 +109,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             sim_in[jj].step = Ts/sim_in[jj].nSteps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
-//
+
             sim_in[jj].opts = &rk_opts[jj];
 
             sim_in[jj].sens_forw = true;
@@ -131,8 +131,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 sim_in[jj].jac_fun = &jac_fun_nm4;
                 break;
             default:
-                sim_in[jj].VDE_forw = &VDE_fun_nm5;
-                sim_in[jj].jac_fun = &jac_fun_nm5;
+                REQUIRE(1 == 0);
                 break;
             }
 
