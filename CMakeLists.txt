@@ -53,7 +53,7 @@ if(NOT DEFINED TARGET)
 	set(TARGET GENERIC)
 endif()
 if(NOT DEFINED LA)
-	set(LA BLASFEO)
+	set(LA BLAS)
 endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
     make static_library TARGET=${TARGET} LA=${LA} RESULT_VARIABLE blasfeo_built)
