@@ -49,6 +49,12 @@ endif()
 
 # Define external libraries
 # BLASFEO
+if(NOT DEFINED TARGET)
+	set(TARGET GENERIC)
+endif()
+if(NOT DEFINED LA)
+	set(LA BLAS)
+endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
     make static_library TARGET=GENERIC RESULT_VARIABLE blasfeo_built)
 if(NOT "${blasfeo_built}" STREQUAL "0")
