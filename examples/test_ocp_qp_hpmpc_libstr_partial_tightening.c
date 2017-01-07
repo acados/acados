@@ -1,3 +1,4 @@
+
 /**************************************************************************************************
 *                                                                                                 *
 * This file is part of HPMPC.                                                                     *
@@ -175,6 +176,7 @@ int main() {
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
     int N = 20;   // horizon length
+    int M = 2;
     // int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 0;  // 4;  // number of general constraints at the last stage
@@ -198,10 +200,11 @@ int main() {
     // nbb[N] = nbx;
 
     // Andrea XXX change this back to 11 bounds, changed to debug the strmat interface
-    for(ii=0; ii<N; ii++) // XXX not M !!!
+    for(ii=0; ii<M; ii++) // XXX not M !!!
       nbb[ii] = nuu[ii] + nxx[ii]/2;
-  //		nb[ii] = 0;
-    nbb[N] = 0;
+
+    for(; ii<=N; ii++)
+      nbb[ii] = 0;
 
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
@@ -579,10 +582,10 @@ int main() {
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
-    for (rep = 0; rep < nrep; rep++) {
-        // call the QP OCP solver
-        return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
-    }
+    // call the QP OCP solver
+    // return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
+    return_value = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args,
+       M, 0.1, workspace);
 
     gettimeofday(&tv1, NULL);  // stop
 
