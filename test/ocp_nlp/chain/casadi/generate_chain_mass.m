@@ -2,7 +2,7 @@ clc;
 clear all;
 close all;
 
-addpath('../../casadi-octave-v3.1.1')
+addpath('../casadi-octave-v3.1.1')
 import casadi.*
 mkdir('chain');
 
@@ -177,7 +177,7 @@ V = {};
 for k=1:N
   % Add decision variables
   V = {V{:} casadi_vec(V_block,'X',Xs{k},'XC',XCs{k},'U',Us{k})};
-  
+
   if k==1
     % Bounds at t=0
     x_lb = x0_init;
@@ -209,7 +209,7 @@ for k=1:N
   end
   g = {g{:} Xs{k+1}-Xcur}; % gap closing
 end
-  
+
 V = {V{:} Xs{end}};
 
 % Bounds for final t
@@ -244,11 +244,11 @@ struct_res = res;
 
 mu = [];
 for k = 1:N
-   mu = [mu; full(res.lam_g((k-1)*(Ns*nx*d+nx)+1:(k-1)*(Ns*nx*d+nx)+Ns*nx*d))]; 
+   mu = [mu; full(res.lam_g((k-1)*(Ns*nx*d+nx)+1:(k-1)*(Ns*nx*d+nx)+Ns*nx*d))];
 end
 lam = [];
 for k = 1:N
-   lam = [lam; full(res.lam_g((k-1)*(Ns*nx*d+nx)+Ns*nx*d+1:k*(Ns*nx*d+nx)))]; 
+   lam = [lam; full(res.lam_g((k-1)*(Ns*nx*d+nx)+Ns*nx*d+1:k*(Ns*nx*d+nx)))];
 end
 
 dim = size(casadi_struct2vec(V_block));
@@ -258,7 +258,7 @@ res_U = {}; resK = [];
 for r=res_split(1:end-1)
     rs = casadi_vec2struct(V_block,r{1});
     res_U = {res_U{:} rs.U};
-    
+
     k_mat = full(rs.XC);
     for i = 1:Ns
         resK = [resK; k_mat(:,1+(i-1)*d:i*d)];

@@ -2,7 +2,7 @@ clc;
 clear all;
 close all;
 
-addpath('../../casadi-octave-v3.1.1')
+addpath('../casadi-octave-v3.1.1')
 import casadi.*
 
 % constants
@@ -36,7 +36,7 @@ f_expl = [   v1; ...
              (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
              (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
 
-         
+
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
@@ -72,4 +72,3 @@ vdeFun.generate('vde_forw_pendulum', opts);
 jacFun.generate('jac_pendulum', opts);
 adjFun.generate('vde_adj_pendulum', opts);
 hessFun.generate('vde_hess_pendulum', opts);
-
