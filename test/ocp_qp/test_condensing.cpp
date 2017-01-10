@@ -158,7 +158,6 @@ TEST_CASE("Constrained LTV system, general polytopic constraints", "[condensing]
             VectorXd true_ubA = readVectorFromFile(scenario +
                 "/condensed_general_constraint_ub.dat", nA);
             VectorXd acados_ubA = Eigen::Map<VectorXd>(&output.ubA[0], nA);
-
             REQUIRE(acados_ubA.isApprox(true_ubA, COMPARISON_TOLERANCE));
         }
 

@@ -32,6 +32,7 @@ typedef struct ocp_nlp_function_ {
     void (*fun)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
     // TODO(rien): other directional and second order derivatives
+    // TODO(rien): define the overlapping 'sets' of functions, jacobians, hessians etc..
 } ocp_nlp_function;
 
 
