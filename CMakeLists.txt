@@ -111,7 +111,7 @@ add_executable(test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHA
 target_link_libraries(test_chain acados qpoases blasfeo openblas m)
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
-    # generate_test_data()
+    generate_test_data()
     include(test_sources)
     message("${UNIT_TESTS_SRC_CASADI}")
     foreach(CASADI_UNIT_TEST IN ITEMS ${UNIT_TESTS_SRC_CASADI})
