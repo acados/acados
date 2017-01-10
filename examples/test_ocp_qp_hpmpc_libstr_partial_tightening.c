@@ -491,15 +491,35 @@ int main() {
     double *hu[N];
     double *hpi[N];
     double *hlam[N+1];
+    double *ht[N+1];
+
+    double *lam_in[N+1];
+    double *t_in[N+1];
 
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1); //Andrea: why do we have 4*nb here?
+        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&lam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&t_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        // Init multipliers and slacks
+        for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
+          lam_in[ii][jj] = 1.0;
+          t_in[ii][jj] = 1.0;
+        }
     }
     d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
+    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&lam_in[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&t_in[N], 2*nbb[N]+2*ngg[N], 1);
+    // Init multipliers and slacks
+    for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
+      lam_in[ii][jj] = 1.0;
+      t_in[ii][jj] = 1.0;
+    }
 
     /************************************************
     * Solver arguments
@@ -514,6 +534,8 @@ int main() {
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
+    hpmpc_args.lam0 = lam_in;
+    hpmpc_args.t0 = t_in;
 
     /************************************************
     * work space
@@ -532,6 +554,8 @@ int main() {
         work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
         work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
         work_space_size+= d_size_strvec(nxx[ii+1]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
         work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
         work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
     }
