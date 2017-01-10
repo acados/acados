@@ -10,12 +10,10 @@ extern "C" {
 void VDE_fun_nm2(const real_t* in, real_t* out);
 void VDE_fun_nm3(const real_t* in, real_t* out);
 void VDE_fun_nm4(const real_t* in, real_t* out);
-void VDE_fun_nm5(const real_t* in, real_t* out);
 
 void jac_fun_nm2(const real_t* in, real_t* out);
 void jac_fun_nm3(const real_t* in, real_t* out);
 void jac_fun_nm4(const real_t* in, real_t* out);
-void jac_fun_nm5(const real_t* in, real_t* out);
 
 #ifdef __cplusplus
 } /* extern "C" */

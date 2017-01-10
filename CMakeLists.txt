@@ -49,8 +49,14 @@ endif()
 
 # Define external libraries
 # BLASFEO
+if(NOT DEFINED TARGET)
+	set(TARGET X64_INTEL_SANDY_BRIDGE)
+endif()
+if(NOT DEFINED LA)
+	set(LA BLASFEO)
+endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
-    make static_library RESULT_VARIABLE blasfeo_built)
+    make static_library TARGET=${TARGET} LA=${LA} RESULT_VARIABLE blasfeo_built)
 if(NOT "${blasfeo_built}" STREQUAL "0")
     message(FATAL_ERROR "build of blasfeo failed with status ${blasfeo_built}!")
 endif()
