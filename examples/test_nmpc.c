@@ -1,18 +1,18 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
@@ -109,7 +109,8 @@ int main() {
     sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
     sim_erk_create_opts(4, &rk_opts);
-    sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
+    sim_erk_create_workspace(&sim_in, &erk_work);
+    sim_in.opts = &rk_opts;
 
     int_t nx[NN+1] = {0};
     int_t nu[NN] = {0};
@@ -185,7 +186,7 @@ int main() {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
+                sim_erk(&sim_in, &sim_out, 0, &erk_work);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -195,16 +196,16 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NU*j+k];
             }
             for (int_t j = 0; j < NX; j++) {
                 px0[0][j] = (x0[j]-w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
             int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
             if (status) {

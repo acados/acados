@@ -1,18 +1,18 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
@@ -39,9 +39,9 @@ typedef struct sim_erk_workspace_ {
 } sim_erk_workspace;
 
 
-void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_workspace *work);
+void sim_erk(const sim_in *in, sim_out *out, void *mem, void *work);
 
-void sim_erk_create_workspace(const sim_in *in, sim_RK_opts *opts, sim_erk_workspace *work);
+void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work);
 
 void sim_erk_create_opts(int_t num_stages, sim_RK_opts *opts);
 

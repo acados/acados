@@ -1,18 +1,18 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
@@ -44,6 +44,8 @@ typedef struct sim_in_ {
 
     real_t step;
     unsigned int nSteps;
+
+    void *opts;
 } sim_in;
 
 typedef struct sim_info_ {
@@ -61,5 +63,12 @@ typedef struct sim_out_ {
     sim_info *info;
 } sim_out;
 
+typedef struct sim_solver_ {
+    void (*fun)(const sim_in*, sim_out*, void*, void*);
+    sim_in *in;
+    sim_out *out;
+    void *mem;
+    void *work;
+} sim_solver;
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

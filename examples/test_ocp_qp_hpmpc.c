@@ -38,7 +38,7 @@
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"
 
-// ACADOS headers
+// acados headers
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"

@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.11)
 project(acados)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fdiagnostics-show-option")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -49,8 +49,14 @@ endif()
 
 # Define external libraries
 # BLASFEO
+if(NOT DEFINED TARGET)
+	set(TARGET X64_INTEL_SANDY_BRIDGE)
+endif()
+if(NOT DEFINED LA)
+	set(LA BLASFEO)
+endif()
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
-    make static_library RESULT_VARIABLE blasfeo_built)
+    make static_library TARGET=${TARGET} LA=${LA} RESULT_VARIABLE blasfeo_built)
 if(NOT "${blasfeo_built}" STREQUAL "0")
     message(FATAL_ERROR "build of blasfeo failed with status ${blasfeo_built}!")
 endif()
@@ -88,7 +94,7 @@ if(BUILD_WITH_CASADI)
 endif()
 
 # Define acados library
-add_library(acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_OCP_QP} ${ACADOS_SRC_UTILS})
+add_library(acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_OCP_QP} ${ACADOS_SRC_OCP_NLP} ${ACADOS_SRC_UTILS})
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)
@@ -112,7 +118,13 @@ target_link_libraries(test_chain acados qpoases blasfeo openblas m)
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
     generate_test_data()
-    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_TEST_UTILS})
+    include(test_sources)
+    message("${UNIT_TESTS_SRC_CASADI}")
+    foreach(CASADI_UNIT_TEST IN ITEMS ${UNIT_TESTS_SRC_CASADI})
+        message(${CASADI_UNIT_TEST})
+        execute_process(COMMAND sed  -i .bak -e "s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;\\\n  real_t\ a0/g" ${CASADI_UNIT_TEST})
+    endforeach()
+    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
 	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
