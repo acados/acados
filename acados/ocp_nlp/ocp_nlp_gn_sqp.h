@@ -17,18 +17,22 @@
  *
  */
 
-#ifndef ACADOS_UTILS_TYPES_H_
-#define ACADOS_UTILS_TYPES_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_GN_SQP_H_
+#define ACADOS_OCP_NLP_OCP_NLP_GN_SQP_H_
 
-typedef double real_t;
-typedef unsigned int uint;
-typedef int int_t;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// enum of return values
-enum return_values{
-    ACADOS_SUCCESS,
-    ACADOS_MAXITER,
-    ACADOS_MINSTEP
-};
+#include "acados/utils/types.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 
-#endif  // ACADOS_UTILS_TYPES_H_
+int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_mem, void *work);
+
+void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+#endif  // ACADOS_OCP_NLP_OCP_NLP_GN_SQP_H_

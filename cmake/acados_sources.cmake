@@ -9,6 +9,11 @@ file(GLOB ACADOS_SRC_OCP_QP
     ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c
 )
 
+file(GLOB ACADOS_SRC_OCP_NLP
+    ${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_common.c
+    ${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_gn_sqp.c
+)
+
 file(GLOB ACADOS_SRC_UTILS
     ${PROJECT_SOURCE_DIR}/acados/utils/print.c
     ${PROJECT_SOURCE_DIR}/acados/utils/timing.c
