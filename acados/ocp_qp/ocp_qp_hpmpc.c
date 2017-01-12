@@ -193,15 +193,15 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     char *ptr_memory = (char *) workspace;
 
     for( ii=0; ii<N; ii++ ) {
-      d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii+1], ptr_memory);
-      ptr_memory += (&hsBAbt[ii+1])->memory_size;
-  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii+1], 0, 0);
-  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii], 0);
-    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
+      d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
+      ptr_memory += (&hsBAbt[ii])->memory_size;
+  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
+  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
+    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
 
-      d_create_strvec(nx[ii+1], &hsb[ii+1], ptr_memory);
+      d_create_strvec(nx[ii+1], &hsb[ii], ptr_memory);
       ptr_memory += (&hsb[ii+1])->memory_size;
-      d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii+1], 0);
+      d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii], 0);
 
       d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
       ptr_memory += (&hsRSQrq[ii])->memory_size;
@@ -412,15 +412,15 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     char *ptr_memory = (char *) workspace;
 
     for( ii=0; ii<N; ii++ ) {
-      d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii+1], ptr_memory);
+      d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
       ptr_memory += (&hsBAbt[ii+1])->memory_size;
-  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii+1], 0, 0);
-  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii], 0);
-    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii+1], nu[ii]+nx[ii], 0);
+  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
+  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
+    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
 
-      d_create_strvec(nx[ii+1], &hsb[ii+1], ptr_memory);
+      d_create_strvec(nx[ii+1], &hsb[ii], ptr_memory);
       ptr_memory += (&hsb[ii+1])->memory_size;
-      d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii+1], 0);
+      d_cvt_vec2strvec(nx[ii+1], hb[ii], &hsb[ii], 0);
 
       d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
       ptr_memory += (&hsRSQrq[ii])->memory_size;
