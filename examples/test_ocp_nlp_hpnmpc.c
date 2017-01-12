@@ -182,16 +182,16 @@ int main() {
     nb[N] = 0;
 
     int *idxb0;
-    i_zeros(&idxb0, nb[0], 1);
+    int_zeros(&idxb0, nb[0], 1);
     for (jj = 0; jj < NBX+NBU; jj++ ) idxb0[jj] = jj;
 
     int *idxb1;
-    i_zeros(&idxb1, nb[1], 1);
+    int_zeros(&idxb1, nb[1], 1);
     for (jj = 0; jj < NBX; jj++ ) idxb1[jj] = jj;
     for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NX+jj;
 
     int *idxbN;
-    i_zeros(&idxbN, nb[N], 1);
+    int_zeros(&idxbN, nb[N], 1);
     for (jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
     for (; jj < NBX+NBU; jj++ ) idxbN[jj] = NX+jj;
 

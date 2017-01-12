@@ -268,7 +268,7 @@ int main() {
     ************************************************/
 
     int *idxb0;
-    i_zeros(&idxb0, nbb[0], 1);
+    int_zeros(&idxb0, nbb[0], 1);
     double *lb0;
     d_zeros(&lb0, nbb[0], 1);
     double *ub0;
@@ -281,7 +281,7 @@ int main() {
     //    i_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
     int *idxb1;
-    i_zeros(&idxb1, nbb[1], 1);
+    int_zeros(&idxb1, nbb[1], 1);
     double *lb1;
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
@@ -299,7 +299,7 @@ int main() {
     //    i_print_mat(nbb[1], 1, idxb1, nbb[1]);
 
     int *idxbN;
-    i_zeros(&idxbN, nbb[N], 1);
+    int_zeros(&idxbN, nbb[N], 1);
     double *lbN;
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
@@ -566,13 +566,13 @@ int main() {
     d_free(S0);
     d_free(q0);
     d_free(r0);
-    i_free(idxb0);
+    int_free(idxb0);
     d_free(lb0);
     d_free(ub0);
-    i_free(idxb1);
+    int_free(idxb1);
     d_free(lb1);
     d_free(ub1);
-    i_free(idxbN);
+    int_free(idxbN);
     d_free(lbN);
     d_free(ubN);
     d_free(C);

@@ -300,7 +300,7 @@ int main() {
     * box & general constraints
     ************************************************/
 
-    	int *idxb0; i_zeros(&idxb0, nbb[0], 1);
+    	int *idxb0; int_zeros(&idxb0, nbb[0], 1);
     	// double *d0; d_zeros(&d0, 2*nb[0]+2*ng[0], 1);
       double *lb0;
       d_zeros(&lb0, nbb[1], 1);
@@ -328,9 +328,9 @@ int main() {
     	// i_print_mat(1, nb[0], idxb0, 1);
     	// d_print_mat(1, 2*nb[0]+2*ng[0], d0, 1);
 
-    	int *idxb1; i_zeros(&idxb1, nbb[1], 1);
+    	int *idxb1; int_zeros(&idxb1, nbb[1], 1);
     	// double *d1; d_zeros(&d1, 2*nb[1]+2*ng[1], 1);
-      i_zeros(&idxb1, nbb[1], 1);
+      int_zeros(&idxb1, nbb[1], 1);
       double *lb1;
       d_zeros(&lb1, nbb[1], 1);
       double *ub1;
@@ -355,9 +355,9 @@ int main() {
     	// i_print_mat(1, nb[1], idxb1, 1);
     	// d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
 
-    	int *idxbN; i_zeros(&idxbN, nbb[N], 1);
+    	int *idxbN; int_zeros(&idxbN, nbb[N], 1);
     	// double *dN; d_zeros(&dN, 2*nb[N]+2*ng[N], 1);
-      i_zeros(&idxbN, nbb[N], 1);
+      int_zeros(&idxbN, nbb[N], 1);
       double *lbN;
       d_zeros(&lbN, nbb[N], 1);
       double *ubN;
@@ -519,7 +519,7 @@ int main() {
     * work space
     ************************************************/
 
-    int work_space_size = d_ip2_res_mpc_hard_tv_work_space_size_bytes_libstr(N,
+    int work_space_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
       nxx, nuu, nbb, ngg);
 
     // Adding memory for data
