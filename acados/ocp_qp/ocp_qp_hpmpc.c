@@ -412,8 +412,9 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     char *ptr_memory = (char *) workspace;
 
     for( ii=0; ii<N; ii++ ) {
+      printf("%i\n",ii);
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
-      ptr_memory += (&hsBAbt[ii+1])->memory_size;
+      ptr_memory += (&hsBAbt[ii])->memory_size;
   		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
   		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
     	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
@@ -515,32 +516,18 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
     d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
 
-    // max sizes
-    int ngM = 0;
-    for ( ii=0; ii<=N; ii++ ) {
-      ngM = ng[ii]>ngM ? ng[ii] : ngM;
-    }
-
-    int nzM  = 0;
-    for( ii=0; ii<=N; ii++ ) {
-      nzM = nu[ii]+nx[ii]+1>nzM ? nu[ii]+nx[ii]+1 : nzM;
-    }
-
-    int nxgM = ng[N];
-    for ( ii=0; ii<N; ii++ ) {
-      nxgM = nx[ii+1]+ng[ii]>nxgM ? nx[ii+1]+ng[ii] : nxgM;
-    }
-
     d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
     d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
     d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
     d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
+    d_allocate_strmat(nx[M]+1, nx[M], &sLxM);
+    d_allocate_strmat(nx[M]+1, nx[M], &sPpM);
 
     // riccati work space
-    d_allocate_strmat(nzM, nxgM, &hsric_work_mat[0]);
-    d_allocate_strmat(nzM, nxgM, &hsric_work_mat[1]);
+    // d_allocate_strmat(nzM, nxgM, &hsric_work_mat[0]);
+    // d_allocate_strmat(nzM, nxgM, &hsric_work_mat[1]);
 
-    d_allocate_strvec(nzM, &hsric_work_vec[0]);
+    // d_allocate_strvec(nzM, &hsric_work_vec[0]);
 
     struct d_strmat hstmpmat0;
     struct d_strvec hstmpvec0;
@@ -574,16 +561,21 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     int compute_res = 1;
     int compute_mult = 1;
 
+    // riccati work space
+  	void *work_ric;
+  	v_zeros_align(&work_ric, d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+
+  	// v_zeros_align(&work_memory, d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+
     //update cost function matrices and vectors (box constraints)
     double sigma_mu = 1.0;
-    // d_update_hessian_mpc_hard_libstr(N-M, nx, nu, nb, ng, hsd, sigma_mu, hst,
-    //   hstinv, hslam, hslamt, hsdlam, hsQx, hsqx);
+    d_update_hessian_mpc_hard_libstr(N-M, nx, nu, nb, ng, hsd, sigma_mu, hst,
+       hstinv, hslam, hslamt, hsdlam, hsQx, hsqx);
 
     // backward riccati factorization and solution at the end
-    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], //Andrea: TODO: gian has changed this interface...
-      &ng[M], 0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], hsvecdummy, hsmatdummy,
-      hsvecdummy, hsvecdummy, &hsux[M], 1, &hspi[M],  &hsPb[M], 1 , &hsL[M],
-      &hsLxt[M], hsric_work_mat, hsric_work_vec);
+    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
+      0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], hsvecdummy, hsmatdummy, hsvecdummy,
+      hsvecdummy, &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], &hsLxt[M], work_ric);
 
     // extract chol factor of [P p; p' *]
     d_print_strmat(nu[M]+nx[M]+1, nu[M]+nx[M], &hsL[M], 0, 0);
@@ -591,7 +583,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0); // TODO have m and n !!!!!
     dgecp_libstr(1, nx[M], 1.0, &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
 
-    d_print_strmat(nx[M]+1, nx[M], &sLxM, 0, 0);
+    // d_print_strmat(nx[M]+1, nx[M], &sLxM, 0, 0);
 
     // recover [P p; p' *]
     dsyrk_ln_libstr(nx[M]+1, nx[M], nx[M], 1.0, &sLxM, 0, 0, &sLxM, 0, 0, 0.0,
@@ -725,7 +717,7 @@ int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc
             }
         }
     }
-
+//
     int hpmpc_status;
     // hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk, k_max, mu0, mu_tol, N, nx, nu, nb, \
         hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug, \
