@@ -55,7 +55,11 @@ for mode = {'LTI', 'LTV'}
 
     w_star_ocp = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
         Cx, Cu, cl, cu);
-
+     
+    % TODO(dimitris-robin): update solve_structured_ocp function to allow for empty bounds/constraints and eliminate functions below 
+    w_star_ocp_unconstrained = solve_structured_ocp_unconstrained(N, nx, nu, A, B, b, x0, Q, S, R, q, r);
+    w_star_ocp_bounds = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu);
+        
     % Do condensing
     [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B, b, x0);
     [H_bar, h_bar] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, q, r, A, B, b, x0);
@@ -82,6 +86,12 @@ for mode = {'LTI', 'LTV'}
             num2str(norm(u_star_ocp - w_star_condensed_quadprog))])
     end
 
+    % Calculate unconstrained solution
+    [w_star_condensed_quadprog_unconstrained, ~, exit_flag] = quadprog(H_bar, h_bar);
+    if(~(exit_flag == 1))
+        error(['Unconstrained condensed QP solution failed with code: ', num2str(exit_flag)]);
+    end
+     
     % Save data to file
     save('transition_vector.dat', 'g', '-ascii', '-double');
     save('transition_matrix.dat', 'G', '-ascii', '-double');
@@ -94,5 +104,8 @@ for mode = {'LTI', 'LTV'}
     save('condensed_general_constraint_matrix.dat', 'C_bar', '-ascii', '-double');
     save('condensed_general_constraint_lb.dat', 'c_bar_lb', '-ascii', '-double');
     save('condensed_general_constraint_ub.dat', 'c_bar_ub', '-ascii', '-double');
+    save('w_star_ocp_constrained.dat', 'w_star_ocp', '-ascii', '-double');
+    save('w_star_ocp_bounds.dat', 'w_star_ocp_bounds', '-ascii', '-double');
+    save('w_star_ocp_unconstrained.dat', 'w_star_ocp_unconstrained', '-ascii', '-double');
     cd('..');
 end
