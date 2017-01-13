@@ -32,7 +32,7 @@ typedef struct ocp_qp_ooqp_args_ {
 } ocp_qp_ooqp_args;
 
 int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output,
-   void *args, void *work);
+    void *args, void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

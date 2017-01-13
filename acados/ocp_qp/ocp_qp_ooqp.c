@@ -22,11 +22,9 @@
 
 
 int_t ocp_qp_ooqp(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-   void *args_, void *workspace_) {
+    void *args_, void *workspace_) {
 
 int_t return_flag;
 
-
-return return_flag; 
-
+return return_flag;
 }
