@@ -122,6 +122,16 @@ function w_star = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q
     
 endfunction
 
+function w_star = solve_structured_ocp_no_bounds(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, Cx, Cu, cl, cu)
+
+    [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
+    [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
+    [A_ineq, b_ineq] = ocp_general_constraints(N, nx, nu, nc, Cx, Cu, cl, cu);
+
+    % Solve OCP
+    [w_star, ~, exit_flag] = quadprog(H, h, A_ineq, b_ineq, G, -g, [], []);
+endfunction
+
 function w_star = solve_structured_ocp_unconstrained(N, nx, nu, A, B, b, x0, Q, S, R, q, r)
 
     [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);

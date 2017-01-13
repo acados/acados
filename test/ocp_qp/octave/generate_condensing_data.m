@@ -59,7 +59,8 @@ for mode = {'LTI', 'LTV'}
     % TODO(dimitris-robin): update solve_structured_ocp function to allow for empty bounds/constraints and eliminate functions below 
     w_star_ocp_unconstrained = solve_structured_ocp_unconstrained(N, nx, nu, A, B, b, x0, Q, S, R, q, r);
     w_star_ocp_bounds = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu);
-        
+    w_star_ocp_no_bounds = solve_structured_ocp_no_bounds(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, Cx, Cu, cl, cu);   
+   
     % Do condensing
     [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B, b, x0);
     [H_bar, h_bar] = calculate_condensed_cost_function(N, nx, nu, Q, S, R, q, r, A, B, b, x0);
@@ -97,6 +98,7 @@ for mode = {'LTI', 'LTV'}
     save('transition_matrix.dat', 'G', '-ascii', '-double');
     save('condensed_hessian.dat', 'H_bar', '-ascii', '-double');
     save('condensed_gradient.dat', 'h_bar', '-ascii', '-double');
+    % TODO(dimitris-robin): why do we save both this and the lower_bound_xu?
     save('u_lower_bound.dat', 'u_lb', '-ascii', '-double');
     save('u_upper_bound.dat', 'u_ub', '-ascii', '-double');
     save('condensed_lower_bound.dat', 'g_lb', '-ascii', '-double');
@@ -106,6 +108,7 @@ for mode = {'LTI', 'LTV'}
     save('condensed_general_constraint_ub.dat', 'c_bar_ub', '-ascii', '-double');
     save('w_star_ocp_constrained.dat', 'w_star_ocp', '-ascii', '-double');
     save('w_star_ocp_bounds.dat', 'w_star_ocp_bounds', '-ascii', '-double');
+    save('w_star_ocp_no_bounds.dat', 'w_star_ocp_no_bounds', '-ascii', '-double'); % only with affine constraints
     save('w_star_ocp_unconstrained.dat', 'w_star_ocp_unconstrained', '-ascii', '-double');
     cd('..');
 end
