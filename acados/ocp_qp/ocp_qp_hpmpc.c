@@ -94,7 +94,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     double mu0 = hpmpc_args->mu0;
     int warm_start = hpmpc_args->warm_start;
     int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
-    int out_iter = -1;  // number of performed iterations 
+    int out_iter = -1;  // number of performed iterations
     double *inf_norm_res = hpmpc_args->inf_norm_res;
 
     // memory for stat
@@ -126,11 +126,11 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
         }
     }
 
-    int hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0, mu_tol, N, nx, nu, nb, \
-        hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug, \
-        hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
+    int hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0, mu_tol, N, nx, nu, \
+        nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, \
+        hug, hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
 
-    hpmpc_args->out_iter = out_iter;  // number of performed iterations 
+    hpmpc_args->out_iter = out_iter;  // number of performed iterations
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
 

@@ -546,8 +546,8 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], inf_norm_res[2],
-	                                          inf_norm_res[3], inf_norm_res[4]);
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
+        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
     printf("\n\n");
@@ -601,8 +601,8 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], inf_norm_res[2],
-	                                          inf_norm_res[3], inf_norm_res[4]);
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
+        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
     printf("\n");
     printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, time_part_cond);
     printf("\n\n");
