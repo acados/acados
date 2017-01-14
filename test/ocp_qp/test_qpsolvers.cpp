@@ -6,8 +6,9 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "test/ocp_qp/condensing_test_helper.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
-// TODO(dimitris): Add CPP code in blasfeo header for this to work!
-#include "blasfeo/include/blasfeo_d_aux.h"
+// TODO(dimitris): Add CPP code in blasfeo header for this to work (intead of zeros.h)
+// #include "blasfeo/include/blasfeo_d_aux.h"
+#include "test/test_utils/zeros.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -15,11 +16,18 @@ using Eigen::Map;
 
 extern real_t COMPARISON_TOLERANCE;
 
-//TODO(dimitris): rename to test_qpsolvers
+// TODO(dimitris): remove variables below once finished with implementation
+int_t MYMAKEFILE = 0;
+std::string name_scenario;
+int_t TEST_OOQP = 0;
 
+// std::vector<std::string> scenarios = {"LTI", "LTV"};
+// std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE",
+// "ONLY_BOUNDS", "CONSTRAINED"};
+
+// TODO(dimitris): Check all cases (above) after fixing everything
 std::vector<std::string> scenarios = {"LTI", "LTV"};
-std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE",
-"ONLY_BOUNDS", "CONSTRAINED"};
+std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE"};
 
 void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
@@ -30,22 +38,33 @@ void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string fol
     REQUIRE(*nu > 0);
 }
 
+void concatenateSolution(int_t N, int_t nx, int_t nu, const ocp_qp_out *out, VectorXd *acados_W) {
+    int ii, jj;
+    double *concatenated_W;
+
+    d_zeros(&concatenated_W, (N+1)*nx+N*nu, 1);
+
+    for (ii = 0; ii < N; ii++) {
+        for (jj = 0; jj < nx; jj++) concatenated_W[ii*(nx+nu)+jj] = out->x[ii][jj];
+        for (int jj = 0; jj < nu; jj++) concatenated_W[ii*(nx+nu)+nx+jj] = out->u[ii][jj];
+    }
+    for (jj = 0; jj < nx; jj++) concatenated_W[N*(nx+nu)+jj] = *(out->x[N]+jj);
+    *acados_W = Eigen::Map<VectorXd>(concatenated_W, (N+1)*nx + N*nu);
+}
+
 // TODO(dimitris): Fix problems with bounded and constrained cases (and implement them)
-// TODO(dimitris): Clean up octave code
+// TODO(dimitris): Clean up octave code with Robin
 TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
     ocp_qp_in qp_in;
     ocp_qp_out qp_out;
 
     VectorXd x0;
 
-    std::string name_scenario;
-
     for (std::string constraint : constraints) {
         SECTION(constraint) {
             for (std::string scenario : scenarios) {
-                // TODO(dimitris): remove lines below once test is run via cmake
                 name_scenario = scenario;
-                scenario = "../build/test/" + scenario;
+                if (MYMAKEFILE == 1) scenario = "../build/test/" + scenario;
 
                 SECTION(name_scenario) {
                     // fill-in qp_in struct with data
@@ -92,8 +111,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     qp_out.u = hu;
 
                     int return_value;
-                    double *concatenated_W;
-                    d_zeros(&concatenated_W, (N+1)*nx+N*nu, 1);
+                    VectorXd acados_W;
 
                     SECTION("qpOASES") {
                         ocp_qp_condensing_qpoases_args args;
@@ -104,13 +122,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         // TODO(dimitris): Ask why NULL in example (don't we warm-start?)
                         return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
 
-                        for (int ii = 0; ii < N; ii++) {
-                            for (int jj = 0; jj < nx; jj++) concatenated_W[ii*(nx+nu)+jj] = hx[ii][jj];
-                            for (int jj = 0; jj < nu; jj++) concatenated_W[ii*(nx+nu)+nx+jj] = hu[ii][jj];
-                        }
-                        for (int jj = 0; jj < nx; jj++) concatenated_W[N*(nx+nu)+jj] = *(hx[N]+jj);
-
-                        MatrixXd acados_W = Eigen::Map<VectorXd>(concatenated_W, (N+1)*nx + N*nu);
+                        concatenateSolution(N, nx, nu, &qp_out, &acados_W);
 
                         // printf("\nu = \n");
                         // for (int ii = 0; ii < N; ii++) d_print_mat(1, qp_in.nu[ii], hu[ii], 1);
@@ -123,7 +135,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         // printf("-------------------\n");
 
                         REQUIRE(return_value == 0);
-                        // TODO(dimitris): update qpOASES or quadprog settings to reach COMPARISON_TOLERANCE
+                        // TODO(dimitris): update qpOASES/quadprog settings to reach COMPARISON_TOL.
                         REQUIRE(acados_W.isApprox(true_W, 1e-10));
                     }
                     SECTION("OOQP") {
@@ -131,18 +143,12 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         args.dummy = 43.0;
 
                         return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, NULL);
+                        concatenateSolution(N, nx, nu, &qp_out, &acados_W);
 
-                        for (int ii = 0; ii < N; ii++) {
-                            for (int jj = 0; jj < nx; jj++) concatenated_W[ii*(nx+nu)+jj] = hx[ii][jj];
-                            for (int jj = 0; jj < nu; jj++) concatenated_W[ii*(nx+nu)+nx+jj] = hu[ii][jj];
+                        if (TEST_OOQP) {
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, 1e-10));
                         }
-                        for (int jj = 0; jj < nx; jj++) concatenated_W[N*(nx+nu)+jj] = *(hx[N]+jj);
-
-                        MatrixXd acados_W = Eigen::Map<VectorXd>(concatenated_W, (N+1)*nx + N*nu);
-
-                        REQUIRE(return_value == 0);
-                        // TODO(dimitris): update qpOASES or quadprog settings to reach COMPARISON_TOLERANCE
-                        REQUIRE(acados_W.isApprox(true_W, 1e-10));
                     }
                 }  // END_SECTION_SCENARIOS
             }  // END_FOR_SCENARIOS

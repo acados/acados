@@ -20,7 +20,6 @@
 
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 
-
 int_t ocp_qp_ooqp(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     void *args_, void *workspace_) {
 
