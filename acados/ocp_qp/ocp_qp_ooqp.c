@@ -39,7 +39,7 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
         work->nnzQ += (in->nx[ii]*in->nx[ii] - in->nx[ii])/2 + in->nx[ii];
         work->nnzQ += (in->nu[ii]*in->nu[ii] - in->nu[ii])/2 + in->nu[ii];
         work->nnzQ += in->nx[ii]*in->nu[ii];
-        work->my += N*in->nx[ii+1]; // TODO(dimitris): double check this
+        work->my += N*in->nx[ii+1];  // TODO(dimitris): double check this
         work->mz += in->nb[ii];
     }
     work->nx += in->nx[N];
@@ -49,7 +49,6 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
     // TODO(dimitris): Check with giaf how x0 constr. is handled
 
     // initialization
-    printf("nnzQ = %d\n", work->nnzQ);
     newQpGenSparse(&work->c, work->nx,
         &work->irowQ, work->nnzQ, &work->jcolQ, &work->dQ,
         &work->xlow, &work->ixlow, &work->xupp, &work->ixupp,
@@ -57,13 +56,57 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
         &work-> bA, work->my,
         &work->irowC, work->nnzC, &work->jcolC, &work->dC,
         &work->clow, work->mz, &work->iclow, &work->cupp, &work->icupp, &work->ierr);
-    // printf("flag = %d\n", work->ierr);
+
+    return work->ierr;
 }
 
-int_t ocp_qp_ooqp(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-    void *args_, void *workspace_) {
+void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work) {
+    freeQpGenSparse(&work->c,
+        &work->irowQ, &work->jcolQ, &work->dQ,
+        &work->xlow, &work->ixlow, &work->xupp, &work->ixupp,
+        &work->irowA, &work->jcolA, &work->dA,
+        &work-> bA,
+        &work->irowC, &work->jcolC, &work->dC,
+        &work->clow, &work->iclow, &work->cupp, &work->icupp);
+}
 
-int_t return_flag;
+static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
+    int ii, jj, kk, nn;
+    int offset = 0;
+    // printf("Number of ineq. constraints = %d\n", work->mz);
 
-return return_flag;
+    work->my = 0;  // TEMP TO CHECK UNCONSTRAINED QP!!!!!
+
+    // TODO(dimitris): For the moment I assume full matrices Q,R etc (we need to def. sparsities)
+    for (kk = 0; kk < in->N; kk++) {
+        for (jj = 0; jj< in->nx[kk]; jj++) {
+            for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
+                work->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
+                work->irowQ[nn] = offset + ii;
+                work->jcolQ[nn] = offset + jj;
+                nn += 1;
+            }
+        }
+        offset += kk*(in->nx[kk]+in->nu[kk]);
+    }
+
+    // TODO(dimitris): call doubleLexSort to order elements in sparse matrices in row major!
+}
+
+int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
+    ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
+    fill_in_workspace(in, work);
+
+    // call sparse OOQP
+    qpsolvesp(work->c, work->nx,
+        work->irowQ, work->nnzQ, work->jcolQ, work->dQ,
+        work->xlow, work->ixlow, work->xupp, work->ixupp,
+        work->irowA, work->nnzA, work->jcolA, work->dA,
+        work->bA, work->my,
+        work->irowC, work->nnzC, work->jcolC, work->dC,
+        work->clow, work->mz, work->iclow, work->cupp, work->icupp,
+        work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
+        work->objectiveValue, work->print_level, &work->ierr);
+
+return work->ierr;
 }

@@ -19,7 +19,7 @@ using Eigen::Map;
 extern real_t COMPARISON_TOLERANCE;
 
 // TODO(dimitris): remove variables below once finished with implementation
-int_t MYMAKEFILE = 1;
+int_t MYMAKEFILE = 0;
 std::string name_scenario;
 int_t TEST_OOQP = 0;
 
@@ -28,8 +28,8 @@ int_t TEST_OOQP = 0;
 // "ONLY_BOUNDS", "CONSTRAINED"};
 
 // TODO(dimitris): Check all cases (above) after fixing everything
-std::vector<std::string> scenarios = {"LTI", "LTV"};
-std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE"};
+std::vector<std::string> scenarios = {"LTI"};
+std::vector<std::string> constraints = {"UNCONSTRAINED"};
 
 void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
@@ -140,18 +140,20 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         // TODO(dimitris): update qpOASES/quadprog settings to reach COMPARISON_TOL.
                         REQUIRE(acados_W.isApprox(true_W, 1e-10));
                     }
-                    SECTION("OOQP") {
-                        ocp_qp_ooqp_args args;
-                        args.dummy = 32.0;
+                    if (TEST_OOQP) {
+                        SECTION("OOQP") {
+                            ocp_qp_ooqp_args args;
+                            args.dummy = 32.0;
+                            ocp_qp_ooqp_workspace work;
 
-                        ocp_qp_ooqp_workspace work;
-                        int init_return_value = ocp_qp_ooqp_create_workspace(&qp_in, &work);
-                        printf("Number of primal vars =%d\n",work.nx);
+                            int init_return_value = ocp_qp_ooqp_create_workspace(&qp_in, &work);
+                            REQUIRE(init_return_value == 0);
 
-                        return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, NULL);
-                        concatenateSolution(N, nx, nu, &qp_out, &acados_W);
+                            return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &work);
+                            concatenateSolution(N, nx, nu, &qp_out, &acados_W);
 
-                        if (TEST_OOQP) {
+                            ocp_qp_ooqp_free_workspace(&work);
+
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, 1e-10));
                         }

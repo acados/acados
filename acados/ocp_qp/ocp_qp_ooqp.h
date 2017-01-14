@@ -65,15 +65,17 @@ typedef struct ocp_qp_ooqp_workspace_ {
     real_t *lambda;
     real_t *pi;
     real_t *objectiveValue;
-    int_t print_level;  //TODO(dimitris): copy from args?
+    int_t print_level;  // TODO(dimitris): probably move to args
     int_t ierr;
 } ocp_qp_ooqp_workspace;
 
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,
-   ocp_qp_ooqp_workspace *work);
+    ocp_qp_ooqp_workspace *work);
+
+void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work);
 
 int_t ocp_qp_ooqp(ocp_qp_in *input,
-  ocp_qp_out *output, void *args, void *work);
+  ocp_qp_out *output, void *args_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
