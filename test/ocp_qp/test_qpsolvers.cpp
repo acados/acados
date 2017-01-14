@@ -6,6 +6,8 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "test/ocp_qp/condensing_test_helper.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "OOQP/include/cQpGenSparse.h"
+
 // TODO(dimitris): Add CPP code in blasfeo header for this to work (intead of zeros.h)
 // #include "blasfeo/include/blasfeo_d_aux.h"
 #include "test/test_utils/zeros.h"
@@ -17,7 +19,7 @@ using Eigen::Map;
 extern real_t COMPARISON_TOLERANCE;
 
 // TODO(dimitris): remove variables below once finished with implementation
-int_t MYMAKEFILE = 0;
+int_t MYMAKEFILE = 1;
 std::string name_scenario;
 int_t TEST_OOQP = 0;
 
@@ -140,7 +142,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     }
                     SECTION("OOQP") {
                         ocp_qp_ooqp_args args;
-                        args.dummy = 43.0;
+                        args.dummy = 32.0;
+
+                        ocp_qp_ooqp_workspace work;
+                        int init_return_value = ocp_qp_ooqp_create_workspace(&qp_in, &work);
+                        printf("Number of primal vars =%d\n",work.nx);
 
                         return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, NULL);
                         concatenateSolution(N, nx, nu, &qp_out, &acados_W);

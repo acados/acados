@@ -31,8 +31,49 @@ typedef struct ocp_qp_ooqp_args_ {
     real_t dummy;
 } ocp_qp_ooqp_args;
 
-int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output,
-    void *args, void *work);
+typedef struct ocp_qp_ooqp_workspace_ {
+    real_t *c;
+    int_t nx;
+    int_t *irowQ;
+    int_t nnzQ;
+    int_t *jcolQ;
+    real_t *dQ;
+    real_t *xlow;
+    char *ixlow;
+    real_t *xupp;
+    char *ixupp;
+    int_t *irowA;
+    int_t nnzA;
+    int_t *jcolA;
+    real_t *dA;
+    real_t *bA;
+    int_t my;
+    int_t *irowC;
+    int_t nnzC;
+    int_t *jcolC;
+    real_t *dC;
+    real_t *clow;
+    int_t mz;
+    char *iclow;
+    real_t *cupp;
+    char *icupp;
+    real_t *x;
+    real_t *gamma;
+    real_t *phi;
+    real_t *y;
+    real_t *z;
+    real_t *lambda;
+    real_t *pi;
+    real_t *objectiveValue;
+    int_t print_level;  //TODO(dimitris): copy from args?
+    int_t ierr;
+} ocp_qp_ooqp_workspace;
+
+int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,
+   ocp_qp_ooqp_workspace *work);
+
+int_t ocp_qp_ooqp(ocp_qp_in *input,
+  ocp_qp_out *output, void *args, void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */
