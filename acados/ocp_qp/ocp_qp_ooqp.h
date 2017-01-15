@@ -64,10 +64,13 @@ typedef struct ocp_qp_ooqp_workspace_ {
     real_t *z;
     real_t *lambda;
     real_t *pi;
-    real_t *objectiveValue;
+    real_t objectiveValue;
     int_t print_level;  // TODO(dimitris): probably move to args
     int_t ierr;
 } ocp_qp_ooqp_workspace;
+
+// This is an OOQP function, to re-arrange elements of sparse matrix
+void doubleLexSort(int first[], int n, int second[], double data[]);
 
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,
     ocp_qp_ooqp_workspace *work);

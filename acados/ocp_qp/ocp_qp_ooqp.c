@@ -26,7 +26,7 @@
 
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
     int_t ii;
-    int N = in->N;
+    int_t N = in->N;
     work->nx = 0;    // # of primal optimization variables
     work->nnzQ = 0;  // # non-zeros in lower part of Hessian
     work->nnzA = 0;  // TODO(dimitris): # non-zeros in matrix of equality constraints
@@ -48,7 +48,7 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
 
     // TODO(dimitris): Check with giaf how x0 constr. is handled
 
-    // initialization
+    // memory allocation
     newQpGenSparse(&work->c, work->nx,
         &work->irowQ, work->nnzQ, &work->jcolQ, &work->dQ,
         &work->xlow, &work->ixlow, &work->xupp, &work->ixupp,
@@ -56,6 +56,13 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
         &work-> bA, work->my,
         &work->irowC, work->nnzC, &work->jcolC, &work->dC,
         &work->clow, work->mz, &work->iclow, &work->cupp, &work->icupp, &work->ierr);
+
+    work->x = malloc(sizeof(*work->x)*work->nx);
+    work->y = malloc(sizeof(*work->y)*work->my);
+    work->lambda = malloc(sizeof(*work->lambda)*work->mz);
+    work->pi = malloc(sizeof(*work->pi)*work->mz);
+    work->gamma = malloc(sizeof(*work->gamma)*work->nx);
+    work->phi = malloc(sizeof(*work->phi)*work->nx);
 
     return work->ierr;
 }
@@ -71,31 +78,71 @@ void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work) {
 }
 
 static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
-    int ii, jj, kk, nn;
-    int offset = 0;
-    // printf("Number of ineq. constraints = %d\n", work->mz);
+    int_t ii, jj, kk, nn;
+    int_t offset = 0;  // offset on row/column index of Hessian
 
-    work->my = 0;  // TEMP TO CHECK UNCONSTRAINED QP!!!!!
+    nn = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk]; ii++) work->c[nn++] = in->q[kk][ii];
+        for (ii = 0; ii < in->nu[kk]; ii++) work->c[nn++] = in->r[kk][ii];
+    }
+    for (ii = 0; ii < in->nx[in->N]; ii++) work->c[nn++] = in->q[in->N][ii];
 
+    nn = 0;
     // TODO(dimitris): For the moment I assume full matrices Q,R etc (we need to def. sparsities)
     for (kk = 0; kk < in->N; kk++) {
+        // printf("===== @stage %d\n", kk);
         for (jj = 0; jj< in->nx[kk]; jj++) {
+            // printf("===== @column %d of Q\n", jj);
             for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
+                // printf("===== @row %d of Q\n", jj);
                 work->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
                 work->irowQ[nn] = offset + ii;
                 work->jcolQ[nn] = offset + jj;
+                // printf("===== Q[%d, %d] = %f\n", work->irowQ[nn]+1, work->jcolQ[nn]+1,work->dQ[nn]);
+                nn += 1;
+            }
+        }
+        for (jj = 0; jj< in->nx[kk]; jj++) {
+            for (ii = 0; ii < in->nu[kk]; ii++) {
+                work->dQ[nn] = in->S[kk][jj*in->nu[kk]+ii];
+                work->irowQ[nn] = offset + in->nx[kk] + ii;
+                work->jcolQ[nn] = offset + jj;
+                nn += 1;
+            }
+        }
+        for (jj = 0; jj< in->nu[kk]; jj++) {
+            for (ii = jj; ii < in->nu[kk]; ii++) {
+                work->dQ[nn] = in->R[kk][jj*in->nu[kk]+ii];
+                work->irowQ[nn] = offset + in->nx[kk] + ii;
+                work->jcolQ[nn] = offset + in->nx[kk] + jj;
                 nn += 1;
             }
         }
         offset += kk*(in->nx[kk]+in->nu[kk]);
     }
+    for (jj = 0; jj< in->nx[in->N]; jj++) {
+        for (ii = jj; ii < in->nx[in->N]; ii++) {
+            work->dQ[nn] = in->Q[in->N][jj*in->nx[in->N]+ii];
+            work->irowQ[nn] = offset + ii;
+            work->jcolQ[nn] = offset + jj;
+            nn += 1;
+        }
+    }
+    doubleLexSort( work->irowQ, work->nnzQ, work->jcolQ, work-> dQ);
+    // for (ii = 0; ii < nn; ii++) {
+    //     printf("===== Q[%d, %d] = %f\n", work->irowQ[ii]+1, work->jcolQ[ii]+1,work->dQ[ii]);
+    // }
+    // printf("===== c:\n");
+    // for(ii = 0; ii < work->nx; ii++) printf("%f\n", work->c[ii]);
 
-    // TODO(dimitris): call doubleLexSort to order elements in sparse matrices in row major!
+    work->print_level = 20;  // TODO(dimitris): set to zero when no debugging
 }
 
 int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
     fill_in_workspace(in, work);
+    // printf("WORKSPACE FILLED IN++++++++++++++++++++++++\n");
 
     // call sparse OOQP
     qpsolvesp(work->c, work->nx,
@@ -106,7 +153,12 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
         work->irowC, work->nnzC, work->jcolC, work->dC,
         work->clow, work->mz, work->iclow, work->cupp, work->icupp,
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
-        work->objectiveValue, work->print_level, &work->ierr);
+        &work->objectiveValue, work->print_level, &work->ierr);
+
+    printf("===================== OOQP FLAG: %d\n", work->ierr);
+    printf("===================== OOQP SOLUTION:\n");
+    for (int ii=0; ii<work->nx;ii++) printf("%f\n",work->x[ii]);
+
 
 return work->ierr;
 }
