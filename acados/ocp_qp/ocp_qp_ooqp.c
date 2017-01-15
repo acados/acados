@@ -22,10 +22,9 @@
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/utils/print.h"
 #include "OOQP/include/cQpGenSparse.h"
-// #include "blasfeo/include/blasfeo_i_aux.h"
 
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
-    int_t ii;
+    int_t kk;
     int_t N = in->N;
     work->nx = 0;    // # of primal optimization variables
     work->nnzQ = 0;  // # non-zeros in lower part of Hessian
@@ -34,19 +33,20 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
     work->my = 0;    // # of equality constraints
     work->mz = 0;    // # of inequality constraints
 
-    for (ii = 0; ii < N; ii++) {
-        work->nx += in->nx[ii] + in->nu[ii];
-        work->nnzQ += (in->nx[ii]*in->nx[ii] - in->nx[ii])/2 + in->nx[ii];
-        work->nnzQ += (in->nu[ii]*in->nu[ii] - in->nu[ii])/2 + in->nu[ii];
-        work->nnzQ += in->nx[ii]*in->nu[ii];
-        work->my += N*in->nx[ii+1];  // TODO(dimitris): double check this
-        work->mz += in->nb[ii];
+    for (kk = 0; kk < N; kk++) {
+        work->nx += in->nx[kk] + in->nu[kk];
+        work->nnzQ += (in->nx[kk]*in->nx[kk] - in->nx[kk])/2 + in->nx[kk];
+        work->nnzQ += (in->nu[kk]*in->nu[kk] - in->nu[kk])/2 + in->nu[kk];
+        work->nnzQ += in->nx[kk]*in->nu[kk];
+        work->nnzA += in->nx[kk+1]*(in->nx[kk] + in->nu[kk] + 1);
+        work->my += in->nx[kk+1];
+        work->mz += in->nb[kk];
     }
     work->nx += in->nx[N];
     work->nnzQ += (in->nx[N]*in->nx[N] -in->nx[N])/2 + in->nx[N];
     work->mz += in->nb[N];
 
-    // TODO(dimitris): Check with giaf how x0 constr. is handled
+    // TODO(dimitris): Discuss with giaf how  to handle x0 constr.
 
     // memory allocation
     newQpGenSparse(&work->c, work->nx,
@@ -77,12 +77,17 @@ void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work) {
         &work->clow, &work->iclow, &work->cupp, &work->icupp);
 
         // TODO(dimitris): free rest of workspace! (outputs)
+        // TODO(dimitris): ask gianf why all these warnings
+        // d_free(work->x);
 }
 
 static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
     int_t ii, jj, kk, nn;
-    int_t offset = 0;  // offset on row/column index of Hessian
+    int_t offset, offsetRows, offsetCols;
 
+    // TODO(dimitris): For the moment I assume full matrices Q,R,A,B... (we need to def. sparsities)
+
+    // ------- Build objective
     nn = 0;
     for (kk = 0; kk < in->N; kk++) {
         for (ii = 0; ii < in->nx[kk]; ii++) work->c[nn++] = in->q[kk][ii];
@@ -90,18 +95,13 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
     }
     for (ii = 0; ii < in->nx[in->N]; ii++) work->c[nn++] = in->q[in->N][ii];
 
-    nn = 0;
-    // TODO(dimitris): For the moment I assume full matrices Q,R etc (we need to def. sparsities)
+    nn = 0; offset = 0;
     for (kk = 0; kk < in->N; kk++) {
-        // printf("===== @stage %d\n", kk);
         for (jj = 0; jj< in->nx[kk]; jj++) {
-            // printf("===== @column %d of Q\n", jj);
             for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
-                // printf("===== @row %d of Q\n", jj);
                 work->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
                 work->irowQ[nn] = offset + ii;
                 work->jcolQ[nn] = offset + jj;
-                // printf("===== Q[%d, %d] = %f\n", work->irowQ[nn]+1, work->jcolQ[nn]+1,work->dQ[nn]);
                 nn += 1;
             }
         }
@@ -139,11 +139,56 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
     // printf("===== c:\n");
     // for(ii = 0; ii < work->nx; ii++) printf("%f\n", work->c[ii]);
 
-    work->print_level = 20;  // TODO(dimitris): set to zero when no debugging
+    // ------- Build equality  constraints
+    nn = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk+1]; ii++) work->bA[nn++] = -in->b[kk][ii];
+    }
+
+    nn = 0; offsetRows = 0; offsetCols = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        // write matrix A[kk] (nx[k+1] x nx[k])
+        for (jj = 0; jj< in->nx[kk]; jj++) {
+            for (ii = 0; ii < in->nx[kk+1]; ii++) {
+                // printf("writing A_%d[%d,%d]\n", kk, ii, jj);
+                work->dA[nn] = in->A[kk][jj*in->nx[kk+1]+ii];
+                work->irowA[nn] = offsetRows + ii;
+                work->jcolA[nn] = offsetCols + jj;
+                nn += 1;
+            }
+        }
+        // write matrix B[kk] (nx[k+1] x nu[k])
+        for (jj = 0; jj< in->nu[kk]; jj++) {
+            for (ii = 0; ii < in->nx[kk+1]; ii++) {
+                work->dA[nn] = in->B[kk][jj*in->nx[kk+1]+ii];
+                work->irowA[nn] = offsetRows + ii;
+                work->jcolA[nn] = offsetCols + in->nx[kk] + jj;
+                nn += 1;
+            }
+        }
+        // write -I (nx[k+1] x nx[k+1])
+        for (jj = 0; jj< in->nx[kk+1]; jj++) {
+            work->dA[nn] = -1;
+            work->irowA[nn] = offsetRows + jj;
+            work->jcolA[nn] = offsetCols + in->nx[kk] + in->nu[kk] + jj;
+            nn += 1;
+        }
+        offsetCols += in->nx[kk] + in->nu[kk];
+        offsetRows += in->nx[kk+1];
+    }
+    doubleLexSort( work->irowA, work->nnzA, work->jcolA, work-> dA);
+    // for (ii = 0; ii < nn; ii++) {
+    //     printf("===== A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1,work->dA[ii]);
+    // }
+    // printf("===== bA:\n");
+    // for(ii = 0; ii < work->my; ii++) printf("%f\n", work->bA[ii]);
+
+    // TODO(dimitris): add x0 constr. in bounds!
+
+    work->print_level = 0;  // TODO(dimitris): set to zero when no debugging
 }
 
 static void print_ooqp_inputs(ocp_qp_ooqp_workspace *work) {
-
     printf("\n----------> OOQP INPUTS <----------\n\n");
     printf("NUMBER OF PRIMAL VARIABLES: %d\n", work->nx);
     printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", work->nnzQ);
@@ -152,14 +197,23 @@ static void print_ooqp_inputs(ocp_qp_ooqp_workspace *work) {
     printf("NUMBER OF INEQUALITY CONSTRAINTS: %d\n", work->mz);
     printf("NUMBER OF NON-ZEROS in INEQUALITIES: %d\n", work->nnzC);
     printf("PRINT LEVEL: %d", work->print_level);
-    // TODO(dimitris): complete this list and write also outputs
+    // TODO(dimitris): complete this list
     printf("\n-----------------------------------\n\n");
+}
+
+static void print_ooqp_outputs(ocp_qp_ooqp_workspace *work) {
+        printf("\n----------> OOQP OUTPUTS <---------\n\n");
+        printf("RETURN STATUS: %d\n", work->ierr);
+        printf("OBJECTIVE VALUE: %f\n", work->objectiveValue);
+        printf("FIRST AND LAST ELEMENT OF SOLUTION:\n");
+        printf("x[0] = %f\n", work->x[0]);
+        printf("x[%d] = %f\n", work->nx, work->x[work->nx-1]);
+        printf("\n----------------------------------\n\n");
 }
 
 int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
     fill_in_workspace(in, work);
-    printf("WORKSPACE FILLED IN++++++++++++++++++++++++\n");
 
     printf("!!!!!!!! TEMPORARY REMOVING ALL CONSTRAINTS !!!!!!!!\n");
     //TODO(dimitris): WHERE DO THE BOUND VALUES COME FROM?!
@@ -177,7 +231,6 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
         work->clow[ii] = 0.0;
         work->cupp[ii] = 0.0;
     }
-    work->my = 0;
     work->mz = 0;
 
     print_ooqp_inputs(work);
@@ -193,10 +246,9 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
         &work->objectiveValue, work->print_level, &work->ierr);
 
-    printf("===================== OOQP FLAG: %d\n", work->ierr);
-    printf("===================== OOQP OBJ: %f\n", work->objectiveValue);
-    printf("===================== OOQP SOLUTION:\n");
-    for (int ii=0; ii<work->nx;ii++) printf("%f\n",work->x[ii]);
+    print_ooqp_outputs(work);
+    // printf("===================== OOQP SOLUTION:\n");
+    // for (int ii=0; ii<work->nx;ii++) printf("%f\n",work->x[ii]);
 
 
 return work->ierr;
