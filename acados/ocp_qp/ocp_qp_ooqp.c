@@ -45,6 +45,8 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
     work->nx += in->nx[N];
     work->nnzQ += (in->nx[N]*in->nx[N] -in->nx[N])/2 + in->nx[N];
     work->mz += in->nb[N];
+    work->my += in->nx[0];  // constraint on x0
+    work->nnzA += in->nx[0];
 
     // TODO(dimitris): Discuss with giaf how  to handle x0 constr.
 
@@ -76,9 +78,13 @@ void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work) {
         &work->irowC, &work->jcolC, &work->dC,
         &work->clow, &work->iclow, &work->cupp, &work->icupp);
 
-        // TODO(dimitris): free rest of workspace! (outputs)
-        // TODO(dimitris): ask gianf why all these warnings
-        // d_free(work->x);
+        free(work->x);
+        free(work->gamma);
+        free(work->phi);
+        free(work->y);
+        free(work->z);
+        free(work->lambda);
+        free(work->pi);
 }
 
 static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
@@ -131,21 +137,23 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
             nn += 1;
         }
     }
-
     doubleLexSort( work->irowQ, work->nnzQ, work->jcolQ, work-> dQ);
-    // for (ii = 0; ii < nn; ii++) {
-    //     printf("===== Q[%d, %d] = %f\n", work->irowQ[ii]+1, work->jcolQ[ii]+1,work->dQ[ii]);
-    // }
-    // printf("===== c:\n");
-    // for(ii = 0; ii < work->nx; ii++) printf("%f\n", work->c[ii]);
 
     // ------- Build equality  constraints
-    nn = 0;
+    nn = in->nx[0];
     for (kk = 0; kk < in->N; kk++) {
         for (ii = 0; ii < in->nx[kk+1]; ii++) work->bA[nn++] = -in->b[kk][ii];
     }
 
-    nn = 0; offsetRows = 0; offsetCols = 0;
+    nn = 0;
+    // write I on first nx[0] rows/cols
+    for (ii = 0; ii < in->nx[0]; ii++) {
+        work->dA[nn] = 1;
+        work->irowA[nn] = ii;
+        work->jcolA[nn] = ii;
+        nn += 1;
+    }
+    offsetRows = in->nx[0];
     for (kk = 0; kk < in->N; kk++) {
         // write matrix A[kk] (nx[k+1] x nx[k])
         for (jj = 0; jj< in->nx[kk]; jj++) {
@@ -178,17 +186,14 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
     }
     doubleLexSort( work->irowA, work->nnzA, work->jcolA, work-> dA);
     // for (ii = 0; ii < nn; ii++) {
-    //     printf("===== A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1,work->dA[ii]);
+    //     printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1,work->dA[ii]);
     // }
-    // printf("===== bA:\n");
-    // for(ii = 0; ii < work->my; ii++) printf("%f\n", work->bA[ii]);
+    // for(ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
 
-    // TODO(dimitris): add x0 constr. in bounds!
-
-    work->print_level = 0;  // TODO(dimitris): set to zero when no debugging
+    work->print_level = 0;
 }
 
-static void print_ooqp_inputs(ocp_qp_ooqp_workspace *work) {
+static void print_inputs(ocp_qp_ooqp_workspace *work) {
     printf("\n----------> OOQP INPUTS <----------\n\n");
     printf("NUMBER OF PRIMAL VARIABLES: %d\n", work->nx);
     printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", work->nnzQ);
@@ -201,7 +206,7 @@ static void print_ooqp_inputs(ocp_qp_ooqp_workspace *work) {
     printf("\n-----------------------------------\n\n");
 }
 
-static void print_ooqp_outputs(ocp_qp_ooqp_workspace *work) {
+static void print_outputs(ocp_qp_ooqp_workspace *work) {
         printf("\n----------> OOQP OUTPUTS <---------\n\n");
         printf("RETURN STATUS: %d\n", work->ierr);
         printf("OBJECTIVE VALUE: %f\n", work->objectiveValue);
@@ -211,9 +216,34 @@ static void print_ooqp_outputs(ocp_qp_ooqp_workspace *work) {
         printf("\n----------------------------------\n\n");
 }
 
+// TODO(dimitris): change order of functions
+static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace *work) {
+    int kk, ii, nn;
+
+    nn = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk]; ii++) out->x[kk][ii] = work->x[nn++];
+        for (ii = 0; ii < in->nu[kk]; ii++) out->u[kk][ii] = work->x[nn++];
+    }
+    for (ii = 0; ii < in->nx[in->N]; ii++) out->x[in->N][ii] = work->x[nn++];
+
+    //TODO(dimitris): fill-in all qp_out fields
+}
+
+// TODO(dimitris): We probably need this outside for linear MPC..
+static void embed_x0(const real_t *x0, int_t nx, ocp_qp_ooqp_workspace *work) {
+    int ii;
+    // printf("X0 = [ ");
+    // for (ii = 0; ii < nx; ii++) printf("%f ", x0[ii]);
+    // printf("]\n");
+    for (ii = 0; ii < nx; ii++) work->bA[ii] = x0[ii];
+}
+
 int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
     fill_in_workspace(in, work);
+
+    int kk;
 
     printf("!!!!!!!! TEMPORARY REMOVING ALL CONSTRAINTS !!!!!!!!\n");
     //TODO(dimitris): WHERE DO THE BOUND VALUES COME FROM?!
@@ -233,7 +263,10 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     }
     work->mz = 0;
 
-    print_ooqp_inputs(work);
+    print_inputs(work);
+
+    // here I assume that x0 is already encoded in ub/lb
+    embed_x0(in->lb[0], in->nx[0], work);
 
     // call sparse OOQP
     qpsolvesp(work->c, work->nx,
@@ -246,10 +279,8 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
         &work->objectiveValue, work->print_level, &work->ierr);
 
-    print_ooqp_outputs(work);
-    // printf("===================== OOQP SOLUTION:\n");
-    // for (int ii=0; ii<work->nx;ii++) printf("%f\n",work->x[ii]);
-
+    print_outputs(work);
+    fill_in_qp_out(in, out, work);
 
 return work->ierr;
 }
