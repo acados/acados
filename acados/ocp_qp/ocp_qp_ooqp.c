@@ -75,6 +75,8 @@ void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work) {
         &work-> bA,
         &work->irowC, &work->jcolC, &work->dC,
         &work->clow, &work->iclow, &work->cupp, &work->icupp);
+
+        // TODO(dimitris): free rest of workspace! (outputs)
 }
 
 static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) {
@@ -119,7 +121,7 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
                 nn += 1;
             }
         }
-        offset += kk*(in->nx[kk]+in->nu[kk]);
+        offset += in->nx[kk]+in->nu[kk];
     }
     for (jj = 0; jj< in->nx[in->N]; jj++) {
         for (ii = jj; ii < in->nx[in->N]; ii++) {
@@ -129,6 +131,7 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
             nn += 1;
         }
     }
+
     doubleLexSort( work->irowQ, work->nnzQ, work->jcolQ, work-> dQ);
     // for (ii = 0; ii < nn; ii++) {
     //     printf("===== Q[%d, %d] = %f\n", work->irowQ[ii]+1, work->jcolQ[ii]+1,work->dQ[ii]);
@@ -139,10 +142,45 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
     work->print_level = 20;  // TODO(dimitris): set to zero when no debugging
 }
 
+static void print_ooqp_inputs(ocp_qp_ooqp_workspace *work) {
+
+    printf("\n----------> OOQP INPUTS <----------\n\n");
+    printf("NUMBER OF PRIMAL VARIABLES: %d\n", work->nx);
+    printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", work->nnzQ);
+    printf("NUMBER OF EQUALITY CONSTRAINTS: %d\n", work->my);
+    printf("NUMBER OF NON-ZEROS in EQUALITIES: %d\n", work->nnzA);
+    printf("NUMBER OF INEQUALITY CONSTRAINTS: %d\n", work->mz);
+    printf("NUMBER OF NON-ZEROS in INEQUALITIES: %d\n", work->nnzC);
+    printf("PRINT LEVEL: %d", work->print_level);
+    // TODO(dimitris): complete this list and write also outputs
+    printf("\n-----------------------------------\n\n");
+}
+
 int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
     fill_in_workspace(in, work);
-    // printf("WORKSPACE FILLED IN++++++++++++++++++++++++\n");
+    printf("WORKSPACE FILLED IN++++++++++++++++++++++++\n");
+
+    printf("!!!!!!!! TEMPORARY REMOVING ALL CONSTRAINTS !!!!!!!!\n");
+    //TODO(dimitris): WHERE DO THE BOUND VALUES COME FROM?!
+    for (int ii=0; ii < work->nx; ii++) {
+        // printf("xlow[%d] before %f\n", ii, work->xlow[ii]);
+        work->ixlow[ii] = (char)0;  // TODO(dimitris): cast prob. not needed
+        work->ixupp[ii] = (char)0;
+        work->xlow[ii] = 0.0;
+        work->xupp[ii] = 0.0;
+        // printf("xlow[%d] after %f\n", ii, work->xlow[ii]);
+    }
+    for (int ii=0; ii < work->mz; ii++) {
+        work->iclow[ii] = (char)0;
+        work->icupp[ii] = (char)0;
+        work->clow[ii] = 0.0;
+        work->cupp[ii] = 0.0;
+    }
+    work->my = 0;
+    work->mz = 0;
+
+    print_ooqp_inputs(work);
 
     // call sparse OOQP
     qpsolvesp(work->c, work->nx,
@@ -156,6 +194,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
         &work->objectiveValue, work->print_level, &work->ierr);
 
     printf("===================== OOQP FLAG: %d\n", work->ierr);
+    printf("===================== OOQP OBJ: %f\n", work->objectiveValue);
     printf("===================== OOQP SOLUTION:\n");
     for (int ii=0; ii<work->nx;ii++) printf("%f\n",work->x[ii]);
 
