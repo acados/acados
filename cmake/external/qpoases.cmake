@@ -4,7 +4,7 @@ ExternalProject_Add(
     qpoases_project
 
     CONFIGURE_COMMAND ""
-    SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/qpoases"
+    SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/qpOASES"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make
     INSTALL_COMMAND ""
