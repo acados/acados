@@ -23,7 +23,7 @@ endforeach()
 # Postprocess Casadi generated files
 include(../cmake/test_sources.cmake)
 foreach(CASADI_UNIT_TEST IN ITEMS ${UNIT_TESTS_SRC_CASADI})
-    execute_process(COMMAND sed  -i .bak -e "s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;\\\n  real_t\ a0/g" ${CASADI_UNIT_TEST} RESULT_VARIABLE SED_OKAY)
+    execute_process(COMMAND sed -i.bak -e "s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;\\\n  real_t\ a0/g" ${CASADI_UNIT_TEST} RESULT_VARIABLE SED_OKAY)
     if(NOT ${SED_OKAY} EQUAL 0)
         message(FATAL_ERROR "sed failed!")
     endif()
