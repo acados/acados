@@ -12,6 +12,7 @@ addons:
     sources:
       - llvm-toolchain-precise-3.7
       - ubuntu-toolchain-r-test
+      - kalakris-cmake
     packages:
       - libgsl0-dev
       - liblapack-dev
