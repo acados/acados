@@ -159,7 +159,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
     real_t *sys_sol = work->sys_sol;
 #if !TRIPLE_LOOP
     struct d_strmat *str_mat = work->str_mat;
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
 #if TRANSPOSED
     struct d_strmat *str_sol_t = work->str_sol_t;
 #else  // NOT TRANSPOSED
@@ -257,7 +257,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
         LU_system_ACADO(sys_mat, ipiv, num_stages*nx, &mem->nswaps);
 #else   // TRIPLE_LOOP
         // ---- BLASFEO: LU factorization ----
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
 #endif  // LA_BLAS | LA_REFERENCE
@@ -305,7 +305,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
 #if TRIPLE_LOOP
         solve_system_ACADO(sys_mat, sys_sol, ipiv, num_stages*nx, 1+NF);
 #else  // TRIPLE_LOOP
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
 #if TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_tran_mat2strmat(num_stages*nx, 1+NF, sys_sol, num_stages*nx,
@@ -433,7 +433,7 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
 
 #if !TRIPLE_LOOP
 
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
     // matrices in matrix struct format:
     int size_strmat = 0;
     size_strmat += d_size_strmat(num_stages*nx, num_stages*nx);
@@ -482,7 +482,7 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
     d_create_strmat(num_stages*nx, 1+NF, work->str_sol, work->sys_sol);
 
-#endif  // LA_BLASFEO
+#endif  // LA_HIGH_PERFORMANCE
 
 #endif  // !TRIPLE_LOOP
 }

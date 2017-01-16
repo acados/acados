@@ -174,10 +174,12 @@ int main() {
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 20;   // horizon length
+    int N = 15;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
-    int ngN = 8;  // 4;  // number of general constraints at the last stage
+    int ngN = 4;  // 4;  // number of general constraints at the last stage
+
+    int N2 = 3;   // horizon length
 
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -326,7 +328,7 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, nx);
-    // for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
+    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
     //    d_print_mat(ngN, nx, CN, ngN);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
@@ -452,30 +454,6 @@ int main() {
     d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
 
     /************************************************
-    * solver arguments
-    ************************************************/
-
-    // solver arguments
-    ocp_qp_hpmpc_args hpmpc_args;
-    hpmpc_args.tol = TOL;
-    hpmpc_args.max_iter = MAXITER;
-//  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 0.0;
-//  hpmpc_args.sigma_min = 1e-3;
-    hpmpc_args.warm_start = 0;
-    hpmpc_args.N2 = N;
-
-    /************************************************
-    * work space
-    ************************************************/
-
-    int work_space_size =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size);
-
-    void *workspace = malloc(work_space_size);
-
-    /************************************************
     * create the in and out struct
     ************************************************/
 
@@ -508,7 +486,33 @@ int main() {
     qp_out.lam = hlam;
 
     /************************************************
-    * call the solver
+    * solver arguments (fully sparse)
+    ************************************************/
+
+    // solver arguments
+    ocp_qp_hpmpc_args hpmpc_args;
+    hpmpc_args.tol = TOL;
+    hpmpc_args.max_iter = MAXITER;
+//  hpmpc_args.min_step = MINSTEP;
+    hpmpc_args.mu0 = 0.0;
+//  hpmpc_args.sigma_min = 1e-3;
+    hpmpc_args.warm_start = 0;
+    hpmpc_args.N2 = N;
+    double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    hpmpc_args.inf_norm_res = &inf_norm_res[0];
+
+    /************************************************
+    * work space (fully sparse)
+    ************************************************/
+
+    int work_space_size =
+        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    printf("\nwork space size: %d bytes\n", work_space_size);
+
+    void *workspace = malloc(work_space_size);
+
+    /************************************************
+    * call the solver (fully sparse)
     ************************************************/
 
     int return_value;
@@ -524,7 +528,7 @@ int main() {
     gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found\n");
+        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
 
     if (return_value == ACADOS_MAXITER)
         printf("\nACADOS status: maximum number of iterations reached\n");
@@ -542,7 +546,66 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
+        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
+    printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
+    printf("\n\n");
+
+    /************************************************
+    * solver arguments (partial condensing)
+    ************************************************/
+
+    // solver arguments
+    hpmpc_args.N2 = N2;
+
+    /************************************************
+    * work space (partial condensing)
+    ************************************************/
+
+    int work_space_size_part_cond =
+        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    printf("\nwork space size: %d bytes\n", work_space_size_part_cond);
+
+    void *workspace_part_cond = malloc(work_space_size_part_cond);
+
+    /************************************************
+    * call the solver (partial condensing)
+    ************************************************/
+
+    gettimeofday(&tv0, NULL);  // stop
+
+    for (rep = 0; rep < nrep; rep++) {
+        // call the QP OCP solver
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace_part_cond);
+    }
+
+    gettimeofday(&tv1, NULL);  // stop
+
+    if (return_value == ACADOS_SUCCESS)
+        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
+
+    if (return_value == ACADOS_MAXITER)
+        printf("\nACADOS status: maximum number of iterations reached\n");
+
+    if (return_value == ACADOS_MINSTEP)
+        printf("\nACADOS status: below minimum step size length\n");
+
+    printf("\nu = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+
+    printf("\nx = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+
+    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
+                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
+
+    printf("\n");
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
+        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
+    printf("\n");
+    printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, \
+        time_part_cond);
     printf("\n\n");
 
     /************************************************
@@ -588,6 +651,7 @@ int main() {
     d_free(hx[N]);
 
     free(workspace);
+    free(workspace_part_cond);
 
     return 0;
 }
