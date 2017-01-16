@@ -39,7 +39,7 @@ The function returns an integer number, that is defined in the following enumera
 \begin{description}
 	\item[ACADOS\_SUCCESS] Solution successfully found.
 	\item[ACADOS\_MAXITER] Maximum number of iterations reached.
-	\item[ACADOS\_MINSTEP] Minumum step size reached (in IPs, probably unfeasible problem).
+	\item[ACADOS\_MINSTEP] Minumum step size reached (in IPs, probably infeasible problem).
 \end{description}
 
 \subsection{Data}
@@ -72,9 +72,9 @@ The function returns an integer number, that is defined in the following enumera
 		\item[idxb] is the vector of size $N+1$ of the pointers to the first element of the integer vectors $\mathrm{idxb}_k$ describing the indexes of the corresponding upper and lower bounds in \texttt{lb} and \texttt{ub}, such that \texttt{idxb[k]} is the pointer to the index of the first bound at stage $k$, and \texttt{idxb[k][0]} is index of the first bound at stage $k$.
 		The indexes in \texttt{idxb[k]} correspond to the position of the constrained components in the variables vector $\begin{bmatrix} x_k \\ u_k \end{bmatrix}$: therefore a bound on the first state component has index \texttt{0}, a bound on the last state component has index \texttt{nx[k]-1}, a bound on the first input component has index \texttt{nx[k]} and a bound on the last input component has index \texttt{nx[k]+nu[k]-1}.
 		The vector referenced by the pointer \texttt{idxb[k]} is stored in a vector of \texttt{nb[k]$\times$1} integer numbers.
-		\item[lb] is the vector of size $N+1$ of the pointers to the first element of the vectors $\begin{bmatrix} \underline x_k \\ \underline u_k \end{bmatrix}$, such that \texttt{lb[k]} is the pointer to the first element of the vector $\begin{bmatrix} \underline x_k \\ \underline u_k \end{bmatrix}$, and \texttt{lb[k][0]} is the first element of the vector $\begin{bmatrix} \underline x_k \\ \underline u_k \end{bmatrix}$.
+		\item[lb] is the vector of size $N+1$ of the pointers to the first element of the vectors of lower bounds, such that \texttt{lb[k]} is the pointer to the first element of the vector $\begin{bmatrix} \underline x_{k, \mathrm{idxb}_k} \\ \underline u_{k, \mathrm{idxb}_k} \end{bmatrix}$, and \texttt{lb[k][0]} is the first element of the vector $\begin{bmatrix} \underline x_{k, \mathrm{idxb}_k} \\ \underline u_{k, \mathrm{idxb}_k} \end{bmatrix}$.
 		The vector referenced by the pointer \texttt{lb[k]} is stored in a vector of \texttt{nb[k]$\times$1} floating-point numbers.
-		\item[ub] is the vector of size $N+1$ of the pointers to the first element of the vectors $\begin{bmatrix} \overline x_k \\ \overline u_k \end{bmatrix}$, such that \texttt{ub[k]} is the pointer to the first element of the vector $\begin{bmatrix} \overline x_k \\ \overline u_k \end{bmatrix}$, and \texttt{ub[k][0]} is the first element of the vector $\begin{bmatrix} \overline x_k \\ \overline u_k \end{bmatrix}$.
+		\item[ub] is the vector of size $N+1$ of the pointers to the first element of the vectors of lower bounds, such that \texttt{ub[k]} is the pointer to the first element of the vector $\begin{bmatrix} \overline x_{k, \mathrm{idxb}_k} \\ \overline u_{k, \mathrm{idxb}_k} \end{bmatrix}$, and \texttt{ub[k][0]} is the first element of the vector $\begin{bmatrix} \overline x_{k, \mathrm{idxb}_k} \\ \overline u_{k, \mathrm{idxb}_k} \end{bmatrix}$.
 		The vector referenced by the pointer \texttt{ub[k]} is stored in a vector of \texttt{nb[k]$\times$1} floating-point numbers.
 		\item[Cx] is the vector of size $N+1$ of the pointers to the first element of the matrices $C^x_k$, such that \texttt{Cx[k]} is the pointer to the first element of the matrix $C^x_k$, and \texttt{Cx[k][0]} is the first element of the matrix $C^x_k$.
 		The matrix referenced by the pointer \texttt{Dx[k]} is stored in column-major order, in a vector of \texttt{nc[k]$\times$nx[k]} floating-point numbers.
