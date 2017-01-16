@@ -1,4 +1,5 @@
 # explicitly request container-based infrastructure
+dist: precise
 sudo: true
 
 env:
@@ -12,12 +13,10 @@ addons:
     sources:
       - llvm-toolchain-precise-3.7
       - ubuntu-toolchain-r-test
-      - kalakris-cmake
     packages:
       - libgsl0-dev
       - liblapack-dev
       - cppcheck
-      - cmake
       - g++-6
       - gcc-6
       - g++-4.9
@@ -27,11 +26,9 @@ addons:
       - clang-3.7
 
 before_install:
- - sudo add-apt-repository -y ppa:octave/stable
- - echo "yes" | sudo add-apt-repository ppa:kalakris/cmake
+ - sudo add-apt-repository -y ppa:octave/stable ppa:george-edison55/precise-backports
  - sudo apt-get update -qq
- - sudo apt-get install octave liboctave-dev
- - sudo apt-get install cmake
+ - sudo apt-get install octave liboctave-dev cmake cmake-data
 
 install:
  - pushd external
