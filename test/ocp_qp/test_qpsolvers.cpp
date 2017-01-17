@@ -16,6 +16,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
+// TODO(dimitris): Check QPs with varying dimensions once condensing implemented
+
 extern real_t COMPARISON_TOLERANCE;
 
 // TODO(dimitris): remove variables below once finished with implementation
@@ -28,8 +30,8 @@ int_t TEST_OOQP = 0;
 // "ONLY_BOUNDS", "CONSTRAINED"};
 
 // TODO(dimitris): Check all cases (above) after fixing everything
-std::vector<std::string> scenarios = {"LTI"};
-std::vector<std::string> constraints = {"UNCONSTRAINED"};
+std::vector<std::string> scenarios = {"LTI",};
+std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS"};
 
 void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
@@ -75,12 +77,26 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     int_t nx = qp_in.nx[0];
                     int_t nu = qp_in.nu[0];
 
-                    // TODO(dimitris): fix bug in fillBounds
+                    // store x0 before overwritten from fillWithBoundsData
+                    // TODO(dimitris): Me or Robin should fix this to avoid the workaround..
+                    real_t *x0val = (real_t *) malloc(sizeof(real_t)*qp_in.nx[0]);
+                    for (int ii = 0; ii < qp_in.nx[0]; ii++) {
+                        x0val[ii] = qp_in.lb[0][ii];
+                    }
+
                     if (constraint == "ONLY_BOUNDS" || constraint == "CONSTRAINED") {
                         fillWithBoundsData(&qp_in, N, nx, nu, scenario);
                     }
                     if (constraint == "ONLY_AFFINE" || constraint == "CONSTRAINED") {
                         fillWithGeneralConstraintsData(&qp_in, N, nx, nu, scenario);
+                    }
+
+                    // fix overwritten x0...
+                    real_t *lb0 = (real_t *) qp_in.lb[0];
+                    real_t *ub0 = (real_t *) qp_in.ub[0];
+                    for (int ii = 0; ii < qp_in.nx[0]; ii++) {
+                        lb0[ii] = x0val[ii];
+                        ub0[ii] = x0val[ii];
                     }
 
                     // load optimal solution from quadprog
@@ -116,32 +132,21 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     VectorXd acados_W;
 
                     SECTION("qpOASES") {
+                        std::cout <<"---> TESTING qpOASES with QP: "<< name_scenario <<
+                            ", " << constraint << std::endl;
+
                         ocp_qp_condensing_qpoases_args args;
                         args.dummy = 42.0;
 
                         initialise_qpoases(&qp_in);
 
-                        // TODO(dimitris): Ask why NULL in example (don't we warm-start?)
                         return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
-
-                        concatenateSolution(N, nx, nu, &qp_out, &acados_W);
-
-                        // printf("\nu = \n");
-                        // for (int ii = 0; ii < N; ii++) d_print_mat(1, qp_in.nu[ii], hu[ii], 1);
-
-                        // std::cout << "ACADOS output:\n" << acados_W << std::endl;
-                        // printf("-------------------\n");
-                        // std::cout << "OCTAVE output:\n" << true_W << std::endl;
-                        // printf("-------------------\n");
-                        // printf("return value = %d\n", return_value);
-                        // printf("-------------------\n");
-
-                        REQUIRE(return_value == 0);
-                        // TODO(dimitris): update qpOASES/quadprog settings to reach COMPARISON_TOL.
-                        REQUIRE(acados_W.isApprox(true_W, 1e-10));
                     }
                     if (TEST_OOQP) {
                         SECTION("OOQP") {
+                            std::cout <<"---> TESTING OOQP with QP: "<< name_scenario <<
+                                ", " << constraint << std::endl;
+
                             ocp_qp_ooqp_args args;
                             args.dummy = 32.0;
                             ocp_qp_ooqp_workspace work;
@@ -150,13 +155,19 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             REQUIRE(init_return_value == 0);
 
                             return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &work);
-                            concatenateSolution(N, nx, nu, &qp_out, &acados_W);
-
                             ocp_qp_ooqp_free_workspace(&work);
-
-                            REQUIRE(return_value == 0);
-                            REQUIRE(acados_W.isApprox(true_W, 1e-10));
                         }
+                        concatenateSolution(N, nx, nu, &qp_out, &acados_W);
+                        // std::cout << "ACADOS output:\n" << acados_W << std::endl;
+                        // printf("-------------------\n");
+                        // std::cout << "OCTAVE output:\n" << true_W << std::endl;
+                        // printf("-------------------\n");
+                        // printf("return value = %d\n", return_value);
+                        // printf("-------------------\n");
+                        REQUIRE(return_value == 0);
+                        // TODO(dimitris): update qpOASES/quadprog accuracy to reach COMPARISON_TOL.
+                        REQUIRE(acados_W.isApprox(true_W, 1e-10));
+                        std::cout <<"---> PASSED " << std::endl;
                     }
                 }  // END_SECTION_SCENARIOS
             }  // END_FOR_SCENARIOS

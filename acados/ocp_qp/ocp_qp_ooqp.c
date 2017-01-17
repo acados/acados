@@ -86,7 +86,6 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
     work->z = malloc(sizeof(*work->z)*work->mz);
     work->lambda = malloc(sizeof(*work->lambda)*work->mz);
     work->pi = malloc(sizeof(*work->pi)*work->mz);
-
     return work->ierr;
 }
 
@@ -158,7 +157,7 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
             nn += 1;
         }
     }
-    doubleLexSort( work->irowQ, work->nnzQ, work->jcolQ, work-> dQ);
+    doubleLexSort(work->irowQ, work->nnzQ, work->jcolQ, work-> dQ);
 
     // ------- Build equality  constraints
     nn = in->nx[0];
@@ -206,22 +205,26 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
         offsetCols += in->nx[kk] + in->nu[kk];
         offsetRows += in->nx[kk+1];
     }
-    doubleLexSort( work->irowA, work->nnzA, work->jcolA, work-> dA);
+    doubleLexSort(work->irowA, work->nnzA, work->jcolA, work-> dA);
     // for (ii = 0; ii < nn; ii++) {
     //     printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1,work->dA[ii]);
     // }
     // for(ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
 
     // ------- Build bounds
+    // TODO(dimitris): perharps remove first nx bounds for MPC since x0 is fixed.
     offset = 0;
     for (kk = 0; kk < in->N+1; kk++) {
         nn = 0;
-        if (kk < in->N) lim = in->nx[kk]+in->nu[kk]; else lim = in->nx[kk];
+        if (kk < in->N) {
+            lim = in->nx[kk]+in->nu[kk];
+        } else {
+            lim = in->nx[kk];
+        }
         for (ii = 0; ii < lim; ii++) {
             if (in->nb[kk] > 0) {
                 if (in->idxb[kk][nn] == ii) {  // element has bounds
-                    // TODO(dimitris): so we always have bounds in pairs?
-                    work->ixlow[offset+ii] = (char)1; // TODO(dimitris): check if cast is redundant
+                    work->ixlow[offset+ii] = (char)1;  // TODO(dimitris): check if cast is redundant
                     work->xlow[offset+ii] = in->lb[kk][nn];
                     work->ixupp[offset+ii] = (char)1;
                     work->xupp[offset+ii] = in->ub[kk][nn];
@@ -237,10 +240,10 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
         offset += lim;
     }
 
-    for (ii = 0; ii < work->nx; ii++){
-        printf("ixlow[%d] = %d \t xlow[%d] = %f \t ixupp[%d] = %d \t xupp[%d] = %f\n",
-        ii, work->ixlow[ii], ii, work->xlow[ii],ii, work->ixupp[ii], ii, work->xupp[ii]);
-    }
+    // for (ii = 0; ii < work->nx; ii++){
+    //     printf("ixlow[%d] = %d \t xlow[%d] = %f \t ixupp[%d] = %d \t xupp[%d] = %f\n",
+    //     ii, work->ixlow[ii], ii, work->xlow[ii],ii, work->ixupp[ii], ii, work->xupp[ii]);
+    // }
 
     work->print_level = 0;
 }
@@ -260,21 +263,21 @@ static void print_inputs(ocp_qp_ooqp_workspace *work) {
 
     printf("\nEQUALITY CONSTRAINTS:\n");
     for (ii = 0; ii < work->nnzA; ii++) {
-        printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1,work->dA[ii]);
+        printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1, work->dA[ii]);
     }
-    for(ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
+    for (ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
 
     printf("\nBOUNDS:\n");
     for (ii = 0; ii < work->nx; ii++) {
         printf("ixlow[%d] = %d \t xlow[%d] = %4.2f \t ixupp[%d] = %d \t xupp[%d] = %4.2f\n",
-            ii, work->ixlow[ii], ii, work->xlow[ii],ii, work->ixupp[ii], ii, work->xupp[ii]);
+            ii, work->ixlow[ii], ii, work->xlow[ii], ii, work->ixupp[ii], ii, work->xupp[ii]);
     }
 
     printf("\nINEQUALITY CONSTRAINTS:\n");
     for (ii = 0; ii < work->nnzC; ii++) {
-        printf("=====> C[%d, %d] = %f\n", work->irowC[ii]+1, work->jcolC[ii]+1,work->dC[ii]);
+        printf("=====> C[%d, %d] = %f\n", work->irowC[ii]+1, work->jcolC[ii]+1, work->dC[ii]);
     }
-    for(ii = 0; ii < work->mz; ii++) {
+    for (ii = 0; ii < work->mz; ii++) {
         printf("===> clow[%d] = %4.2f \t cupp[%d] = %4.2f\n",
         ii+1, work->clow[ii], ii+1, work->cupp[ii]);
     }
@@ -301,7 +304,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
     }
     for (ii = 0; ii < in->nx[in->N]; ii++) out->x[in->N][ii] = work->x[nn++];
 
-    //TODO(dimitris): fill-in all qp_out fields
+    // TODO(dimitris): fill-in all qp_out fields
 }
 
 // TODO(dimitris): We probably need this outside for linear MPC..
@@ -317,7 +320,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
     fill_in_workspace(in, work);
 
-    printf("!!!!!!!! TEMPORARY REMOVING ALL CONSTRAINTS !!!!!!!!\n");
+    // TODO(dimitris): remove temp code below
     for (int ii=0; ii < work->mz; ii++) {
         work->iclow[ii] = (char)0;
         work->icupp[ii] = (char)0;
@@ -329,7 +332,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     // here I assume that x0 is already encoded in ub/lb
     embed_x0(in->lb[0], in->nx[0], work);
 
-    print_inputs(work);
+    // print_inputs(work);
 
     // call sparse OOQP
     qpsolvesp(work->c, work->nx,
@@ -342,7 +345,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
         &work->objectiveValue, work->print_level, &work->ierr);
 
-    print_outputs(work);
+    // print_outputs(work);
     fill_in_qp_out(in, out, work);
 
 return work->ierr;
