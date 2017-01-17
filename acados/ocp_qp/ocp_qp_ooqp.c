@@ -29,7 +29,7 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
     work->nx = 0;    // # of primal optimization variables
     work->nnzQ = 0;  // # non-zeros in lower part of Hessian
     work->nnzA = 0;  // # non-zeros in matrix of equality constraints
-    work->nnzC = 0;  // TODO(dimitris): # non-zeros in matrix of inequality constraints
+    work->nnzC = 0;  // # non-zeros in matrix of inequality constraints
     work->my = 0;    // # of equality constraints
     work->mz = 0;    // # of inequality constraints
 
@@ -39,14 +39,16 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *w
         work->nnzQ += (in->nu[kk]*in->nu[kk] - in->nu[kk])/2 + in->nu[kk];
         work->nnzQ += in->nx[kk]*in->nu[kk];
         work->nnzA += in->nx[kk+1]*(in->nx[kk] + in->nu[kk] + 1);
+        work->nnzC += in->nc[kk]*(in->nx[kk] + in->nu[kk]);
         work->my += in->nx[kk+1];
-        work->mz += in->nb[kk];
+        work->mz += in->nc[kk];
     }
     work->nx += in->nx[N];
     work->nnzQ += (in->nx[N]*in->nx[N] -in->nx[N])/2 + in->nx[N];
-    work->mz += in->nb[N];
+    work->mz += in->nc[N];
     work->my += in->nx[0];  // constraint on x0
     work->nnzA += in->nx[0];
+    work->nnzC += in->nx[N]*in->nc[N];
 
     // TODO(dimitris): Discuss with giaf how  to handle x0 constr.
 
@@ -173,8 +175,7 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
         work->jcolA[nn] = ii;
         nn += 1;
     }
-    offsetRows = in->nx[0];
-    offsetCols = 0;
+    offsetRows = in->nx[0]; offsetCols = 0;
     for (kk = 0; kk < in->N; kk++) {
         // write matrix A[kk] (nx[k+1] x nx[k])
         for (jj = 0; jj< in->nx[kk]; jj++) {
@@ -206,10 +207,6 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
         offsetRows += in->nx[kk+1];
     }
     doubleLexSort(work->irowA, work->nnzA, work->jcolA, work-> dA);
-    // for (ii = 0; ii < nn; ii++) {
-    //     printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1,work->dA[ii]);
-    // }
-    // for(ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
 
     // ------- Build bounds
     // TODO(dimitris): perharps remove first nx bounds for MPC since x0 is fixed.
@@ -244,6 +241,47 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
     //     printf("ixlow[%d] = %d \t xlow[%d] = %f \t ixupp[%d] = %d \t xupp[%d] = %f\n",
     //     ii, work->ixlow[ii], ii, work->xlow[ii],ii, work->ixupp[ii], ii, work->xupp[ii]);
     // }
+
+    // ------- Build inequality constraints
+    nn = 0;
+    for (kk = 0; kk < in->N+1; kk++) {
+        for (ii = 0; ii < in->nc[kk]; ii++) {
+            work->iclow[nn] = (char) 1;
+            work->clow[nn] = in->lc[kk][ii];
+            work->icupp[nn] = (char) 1;
+            work->cupp[nn] = in->uc[kk][ii];
+            nn += 1;
+        }
+    }
+
+    nn = 0;
+    offsetRows = 0; offsetCols = 0;
+    for (kk = 0; kk < in->N+1; kk++) {
+        // write matrix Cx[k] (nc[k] x nx[k])
+        for (jj = 0; jj< in->nx[kk]; jj++) {
+            for (ii = 0; ii < in->nc[kk]; ii++) {
+                // printf("writing C_%d[%d,%d]\n", kk, ii, jj);
+                work->dC[nn] = in->Cx[kk][jj*in->nc[kk]+ii];
+                work->irowC[nn] = offsetRows + ii;
+                work->jcolC[nn] = offsetCols + jj;
+                nn += 1;
+            }
+        }
+        if (kk < in->N) {
+            // write matrix Cu[k] (nc[k] x nu[k])
+            for (jj = 0; jj< in->nu[kk]; jj++) {
+                for (ii = 0; ii < in->nc[kk]; ii++) {
+                    work->dC[nn] = in->Cu[kk][jj*in->nc[kk]+ii];
+                    work->irowC[nn] = offsetRows + ii;
+                    work->jcolC[nn] = offsetCols + in->nx[kk] + jj;
+                    nn += 1;
+                }
+            }
+        }
+        offsetCols += in->nx[kk] + in->nu[kk];
+        offsetRows += in->nc[kk];
+    }
+    doubleLexSort(work->irowC, work->nnzC, work->jcolC, work-> dC);
 
     work->print_level = 0;
 }
@@ -319,15 +357,6 @@ static void embed_x0(const real_t *x0, int_t nx, ocp_qp_ooqp_workspace *work) {
 int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
     fill_in_workspace(in, work);
-
-    // TODO(dimitris): remove temp code below
-    for (int ii=0; ii < work->mz; ii++) {
-        work->iclow[ii] = (char)0;
-        work->icupp[ii] = (char)0;
-        work->clow[ii] = 0.0;
-        work->cupp[ii] = 0.0;
-    }
-    work->mz = 0;
 
     // here I assume that x0 is already encoded in ub/lb
     embed_x0(in->lb[0], in->nx[0], work);

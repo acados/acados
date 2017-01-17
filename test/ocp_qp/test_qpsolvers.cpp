@@ -25,13 +25,13 @@ int_t MYMAKEFILE = 0;
 std::string name_scenario;
 int_t TEST_OOQP = 0;
 
-// std::vector<std::string> scenarios = {"LTI", "LTV"};
-// std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE",
-// "ONLY_BOUNDS", "CONSTRAINED"};
+std::vector<std::string> scenarios = {"LTI", "LTV"};
+std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE",
+"ONLY_BOUNDS", "CONSTRAINED"};
 
-// TODO(dimitris): Check all cases (above) after fixing everything
-std::vector<std::string> scenarios = {"LTI",};
-std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS"};
+// // TODO(dimitris): Check all cases (above) after fixing everything
+// std::vector<std::string> scenarios = {"LTI"};
+// std::vector<std::string> constraints = {"CONSTRAINED"};
 
 void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
@@ -165,9 +165,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         // printf("return value = %d\n", return_value);
                         // printf("-------------------\n");
                         REQUIRE(return_value == 0);
-                        // TODO(dimitris): update qpOASES/quadprog accuracy to reach COMPARISON_TOL.
-                        REQUIRE(acados_W.isApprox(true_W, 1e-10));
+                        // TODO(dimitris): update qpOASES/quadprog/OOQP accuracies
+                        // to reach COMPARISON_TOL.
+                        REQUIRE(acados_W.isApprox(true_W, 1e-8));
                         std::cout <<"---> PASSED " << std::endl;
+                        // TODO(dimitris): also test that qp_in has not changed!!
                     }
                 }  // END_SECTION_SCENARIOS
             }  // END_FOR_SCENARIOS
