@@ -209,7 +209,6 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
     doubleLexSort(work->irowA, work->nnzA, work->jcolA, work-> dA);
 
     // ------- Build bounds
-    // TODO(dimitris): perharps remove first nx bounds for MPC since x0 is fixed.
     offset = 0;
     for (kk = 0; kk < in->N+1; kk++) {
         nn = 0;
@@ -235,6 +234,14 @@ static void fill_in_workspace(const ocp_qp_in *in, ocp_qp_ooqp_workspace *work) 
             }
         }
         offset += lim;
+    }
+    // remove bounds on x0 since it is constrained in the equality constraints
+    // TODO(dimitris): skip this for MHE
+    for (ii = 0; ii < in->nx[0]; ii++) {
+        work->ixlow[ii] = (char)0;
+        work->ixupp[ii] = (char)0;
+        work->xlow[ii] = 0.0;
+        work->xupp[ii] = 0.0;
     }
 
     // for (ii = 0; ii < work->nx; ii++){
@@ -296,29 +303,28 @@ static void print_inputs(ocp_qp_ooqp_workspace *work) {
     printf("NUMBER OF INEQUALITY CONSTRAINTS: %d\n", work->mz);
     printf("NUMBER OF NON-ZEROS in INEQUALITIES: %d\n", work->nnzC);
     printf("PRINT LEVEL: %d", work->print_level);
-    // TODO(dimitris): complete this list
     printf("\n-----------------------------------\n\n");
 
-    printf("\nEQUALITY CONSTRAINTS:\n");
-    for (ii = 0; ii < work->nnzA; ii++) {
-        printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1, work->dA[ii]);
-    }
-    for (ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
-
-    printf("\nBOUNDS:\n");
-    for (ii = 0; ii < work->nx; ii++) {
-        printf("ixlow[%d] = %d \t xlow[%d] = %4.2f \t ixupp[%d] = %d \t xupp[%d] = %4.2f\n",
-            ii, work->ixlow[ii], ii, work->xlow[ii], ii, work->ixupp[ii], ii, work->xupp[ii]);
-    }
-
-    printf("\nINEQUALITY CONSTRAINTS:\n");
-    for (ii = 0; ii < work->nnzC; ii++) {
-        printf("=====> C[%d, %d] = %f\n", work->irowC[ii]+1, work->jcolC[ii]+1, work->dC[ii]);
-    }
-    for (ii = 0; ii < work->mz; ii++) {
-        printf("===> clow[%d] = %4.2f \t cupp[%d] = %4.2f\n",
-        ii+1, work->clow[ii], ii+1, work->cupp[ii]);
-    }
+    // printf("\nEQUALITY CONSTRAINTS:\n");
+    // for (ii = 0; ii < work->nnzA; ii++) {
+    //     printf("=====> A[%d, %d] = %f\n", work->irowA[ii]+1, work->jcolA[ii]+1, work->dA[ii]);
+    // }
+    // for (ii = 0; ii < work->my; ii++) printf("===> bA[%d] = %f\n", ii+1, work->bA[ii]);
+    //
+    // printf("\nBOUNDS:\n");
+    // for (ii = 0; ii < work->nx; ii++) {
+    //     printf("ixlow[%d] = %d \t xlow[%d] = %4.2f \t ixupp[%d] = %d \t xupp[%d] = %4.2f\n",
+    //         ii, work->ixlow[ii], ii, work->xlow[ii], ii, work->ixupp[ii], ii, work->xupp[ii]);
+    // }
+    //
+    // printf("\nINEQUALITY CONSTRAINTS:\n");
+    // for (ii = 0; ii < work->nnzC; ii++) {
+    //     printf("=====> C[%d, %d] = %f\n", work->irowC[ii]+1, work->jcolC[ii]+1, work->dC[ii]);
+    // }
+    // for (ii = 0; ii < work->mz; ii++) {
+    //     printf("===> clow[%d] = %4.2f \t cupp[%d] = %4.2f\n",
+    //     ii+1, work->clow[ii], ii+1, work->cupp[ii]);
+    // }
 }
 
 static void print_outputs(ocp_qp_ooqp_workspace *work) {
