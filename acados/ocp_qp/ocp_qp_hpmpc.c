@@ -412,7 +412,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     char *ptr_memory = (char *) workspace;
 
     for( ii=0; ii<N; ii++ ) {
-      printf("%i\n",ii);
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
       ptr_memory += (&hsBAbt[ii])->memory_size;
   		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
@@ -522,12 +521,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
     d_allocate_strmat(nx[M]+1, nx[M], &sLxM);
     d_allocate_strmat(nx[M]+1, nx[M], &sPpM);
-
-    // riccati work space
-    // d_allocate_strmat(nzM, nxgM, &hsric_work_mat[0]);
-    // d_allocate_strmat(nzM, nxgM, &hsric_work_mat[1]);
-
-    // d_allocate_strvec(nzM, &hsric_work_vec[0]);
 
     struct d_strmat hstmpmat0;
     struct d_strvec hstmpvec0;
