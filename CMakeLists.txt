@@ -42,89 +42,42 @@ endif()
 
 # Define source files
 include(acados_sources)
-if(CMAKE_BUILD_TYPE MATCHES Test)
-    include(generate_test_data)
-    include(test_sources)
-endif()
 
-# Define external libraries
-# BLASFEO
-if(NOT DEFINED TARGET)
-	set(TARGET X64_INTEL_SANDY_BRIDGE)
-endif()
-if(NOT DEFINED LA)
-	set(LA BLASFEO)
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/blasfeo
-    make static_library TARGET=${TARGET} LA=${LA} RESULT_VARIABLE blasfeo_built)
-if(NOT "${blasfeo_built}" STREQUAL "0")
-    message(FATAL_ERROR "build of blasfeo failed with status ${blasfeo_built}!")
-endif()
-add_library(blasfeo STATIC IMPORTED)
-set_property(TARGET blasfeo PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/blasfeo/libblasfeo.a")
-
-# HPMPC
-execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/hpmpc
-    make static_library RESULT_VARIABLE hpmpc_built)
-if(NOT "${hpmpc_built}" STREQUAL "0")
-    message(FATAL_ERROR "build of hpmpc failed with status ${hpmpc_built}!")
-endif()
-add_library(hpmpc STATIC IMPORTED)
-set_property(TARGET hpmpc PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/hpmpc/libhpmpc.a")
-
-# qpOASES
-execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/qpOASES
-    make RESULT_VARIABLE qpoases_built)
-if(NOT "${qpoases_built}" STREQUAL "0")
-    message(FATAL_ERROR "build of qpoases failed with status ${qpoases_built}!")
-endif()
-add_library(qpoases STATIC IMPORTED)
-set_property(TARGET qpoases PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/qpOASES/bin/libqpOASES_e.a")
-
-# CasADi
-if(BUILD_WITH_CASADI)
-	execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi mkdir build)
-	execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi cd build)
-	execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build cmake ..)
-	execute_process(COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR}/external/casadi/build
-	    make RESULT_VARIABLE casadi_built)
-	if(NOT "${casadi_built}" STREQUAL "0")
-	    message(FATAL_ERROR "build of casadi failed with status ${casadi_built}!")
-	endif()
-endif()
+# Process external libraries
+include(external/blasfeo)
+include(external/hpmpc)
+include(external/qpoases)
 
 # Define acados library
-add_library(acados STATIC ${ACADOS_SRC} ${ACADOS_SRC_SIM} ${ACADOS_SRC_OCP_QP} ${ACADOS_SRC_OCP_NLP} ${ACADOS_SRC_UTILS})
+add_library(acados STATIC ${ACADOS_SRC})
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)
 
-# Define tests
-add_executable(test_hpmpc ${TEST_HPMPC_SRC})
-#target_link_libraries(test_hpmpc acados hpmpc blasfeo m)
-target_link_libraries(test_hpmpc acados hpmpc blasfeo openblas m)
+# Define examples
+add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})
+target_link_libraries(hpmpc_example acados hpmpc blasfeo openblas m)
 
-add_executable(test_condensing_qpoases ${TEST_CONDENSING_QPOASES_SRC})
-#target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo m)
-target_link_libraries(test_condensing_qpoases acados qpoases hpmpc blasfeo openblas m)
+add_executable(condensing_qpoases_example ${CONDENSING_QPOASES_EXAMPLE_SRC})
+target_link_libraries(condensing_qpoases_example acados qpoases blasfeo hpmpc m)
 
-add_executable(test_nmpc ${TEST_NMPC_SRC} ${TEST_CHEN_SRC})
-#target_link_libraries(test_nmpc acados qpoases blasfeo m)
-target_link_libraries(test_nmpc acados qpoases blasfeo openblas m)
+add_executable(nmpc_example ${NMPC_EXAMPLE_SRC} ${CHEN_MODEL_SRC})
+target_link_libraries(nmpc_example acados qpoases blasfeo m)
 
-add_executable(test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHAIN_SRC} ${TEST_JAC_CHAIN_SRC})
-#target_link_libraries(test_chain acados qpoases blasfeo m)
-target_link_libraries(test_chain acados qpoases blasfeo openblas m)
+add_executable(chain_example ${CHAIN_EXAMPLE_SRC})
+target_link_libraries(chain_example acados qpoases blasfeo openblas m)
 
+# Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
-    generate_test_data()
     include(test_sources)
-    message("${UNIT_TESTS_SRC_CASADI}")
-    foreach(CASADI_UNIT_TEST IN ITEMS ${UNIT_TESTS_SRC_CASADI})
-        message(${CASADI_UNIT_TEST})
-        execute_process(COMMAND sed  -i .bak -e "s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;\\\n  real_t\ a0/g" ${CASADI_UNIT_TEST})
-    endforeach()
+    add_custom_command(OUTPUT ${UNIT_TESTS_SRC_CASADI}
+        COMMAND ${CMAKE_COMMAND} -P ../cmake/generate_test_data.cmake
+        COMMENT "Generating unit testing files")
+    add_custom_target(generate_test_data
+        DEPENDS ${UNIT_TESTS_SRC_CASADI}
+        COMMENT "Checking if regeneration of test data is needed")
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
+    add_dependencies(unit_tests generate_test_data)
     target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
 	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
@@ -137,7 +90,7 @@ if(PYTHONINTERP_FOUND)
     	"-readability/casting")
     set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! \( -path "examples/casadi_chain/*" -o -path "test/sim/pendulum/casadi/*" \) -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
     set(FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND})
-    execute_process(COMMAND ${FIND_ACADOS_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
+    execute_process(COMMAND ${FIND_ACADOS_FILES} OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
     string(REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT})
     separate_arguments(ACADOS_FILES_TO_LINT)
     set(LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --filter="${ACADOS_STYLE_FILTER}" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 ${ACADOS_FILES_TO_LINT})
