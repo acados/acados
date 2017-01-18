@@ -29,9 +29,9 @@ extern "C" {
 
 typedef struct ocp_qp_ooqp_args_ {
     int_t printLevel;
-    int_t fixHessianSparsity;   // TODO(dimitris):implement option
-    int_t fixHessianValues;     // TODO(dimitris):implement option
-    int_t useDiagonalWeights;   // TODO(dimitris):implement option
+    int_t fixHessianSparsity;   // TODO(dimitris): implement option
+    int_t fixHessianValues;     // TODO(dimitris): implement option
+    int_t useDiagonalWeights;   // TODO(dimitris): implement option
 } ocp_qp_ooqp_args;
 
 typedef struct ocp_qp_ooqp_workspace_ {

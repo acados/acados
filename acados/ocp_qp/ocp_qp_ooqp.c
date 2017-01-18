@@ -29,6 +29,9 @@ static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, 
         int_t kk;
         int_t N = in->N;
 
+        // dummy command
+        if (args->fixHessianSparsity) kk = 0;
+
         *nx = 0;    // # of primal optimization variables
         *nnzQ = 0;  // # non-zeros in lower part of Hessian
         *nnzA = 0;  // # non-zeros in matrix of equality constraints
