@@ -28,10 +28,26 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 typedef struct ocp_qp_ooqp_args_ {
-    real_t dummy;
+    int_t printLevel;
+    int_t fixHessianSparsity;   // TODO(dimitris):implement option
+    int_t fixHessianValues;     // TODO(dimitris):implement option
+    int_t useDiagonalWeights;   // TODO(dimitris):implement option
 } ocp_qp_ooqp_args;
 
 typedef struct ocp_qp_ooqp_workspace_ {
+    real_t *x;
+    real_t *gamma;
+    real_t *phi;
+    real_t *y;
+    real_t *z;
+    real_t *lambda;
+    real_t *pi;
+    real_t objectiveValue;
+    // int_t ierr;
+} ocp_qp_ooqp_workspace;
+
+typedef struct ocp_qp_ooqp_memory_ {
+    int_t firstRun;
     real_t *c;
     int_t nx;
     int_t *irowQ;
@@ -57,28 +73,21 @@ typedef struct ocp_qp_ooqp_workspace_ {
     char *iclow;
     real_t *cupp;
     char *icupp;
-    real_t *x;
-    real_t *gamma;
-    real_t *phi;
-    real_t *y;
-    real_t *z;
-    real_t *lambda;
-    real_t *pi;
-    real_t objectiveValue;
-    int_t print_level;  // TODO(dimitris): probably move to args
-    int_t ierr;
-} ocp_qp_ooqp_workspace;
+    int_t print_level;
+} ocp_qp_ooqp_memory;
 
 // This is an OOQP function, to re-arrange elements of sparse matrix
+// TODO(dimitris): check how to compile this properly
 void doubleLexSort(int first[], int n, int second[], double data[]);
 
-int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,
-    ocp_qp_ooqp_workspace *work);
+int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
+int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,  void *args_,  void *work_);
 
-void ocp_qp_ooqp_free_workspace(ocp_qp_ooqp_workspace *work);
+void ocp_qp_ooqp_free_memory(void *mem_);
+void ocp_qp_ooqp_free_workspace(void *work_);
 
-int_t ocp_qp_ooqp(ocp_qp_in *input,
-  ocp_qp_out *output, void *args_, void *work_);
+int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output,
+    void *args_, void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
