@@ -7,31 +7,25 @@
 #include "test/ocp_qp/condensing_test_helper.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "OOQP/include/cQpGenSparse.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
 
-// TODO(dimitris): Add CPP code in blasfeo header for this to work (intead of zeros.h)
-// #include "blasfeo/include/blasfeo_d_aux.h"
-#include "test/test_utils/zeros.h"
-
+using std::vector;
+using std::string;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
-// TODO(dimitris): Check QPs with varying dimensions once condensing implemented
-
+// TODO(dimitris): update qpOASES/quadprog/OOQP accuracies
+// to reach COMPARISON_TOLERANCE in the tests (currently 1e-5, possibly also a bug in OOQP?)
 extern real_t COMPARISON_TOLERANCE;
 
 // TODO(dimitris): remove variables below once finished with implementation
 int_t MYMAKEFILE = 0;
-std::string name_scenario;
+string name_scenario;
 int_t TEST_OOQP = 0;
 
-std::vector<std::string> scenarios = {"LTI", "LTV"};
-std::vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE",
-"ONLY_BOUNDS", "CONSTRAINED"};
-
-// // TODO(dimitris): Check all cases (above) after fixing everything
-// std::vector<std::string> scenarios = {"LTI"};
-// std::vector<std::string> constraints = {"CONSTRAINED"};
+vector<string> scenarios = {"LTI", "LTV"};
+vector<string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE", "ONLY_BOUNDS", "CONSTRAINED"};
 
 void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
@@ -56,7 +50,6 @@ void concatenateSolution(int_t N, int_t nx, int_t nu, const ocp_qp_out *out, Vec
     *acados_W = Eigen::Map<VectorXd>(concatenated_W, (N+1)*nx + N*nu);
 }
 
-// TODO(dimitris): Fix problems with bounded and constrained cases (and implement them)
 // TODO(dimitris): Clean up octave code with Robin
 TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
     ocp_qp_in qp_in;
@@ -169,8 +162,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                         // printf("return value = %d\n", return_value);
                         // printf("-------------------\n");
                         REQUIRE(return_value == 0);
-                        // TODO(dimitris): update qpOASES/quadprog/OOQP accuracies
-                        // to reach COMPARISON_TOL. Possibly also an OOQP bug?
                         REQUIRE(acados_W.isApprox(true_W, 1e-5));
                         std::cout <<"---> PASSED " << std::endl;
                         // TODO(dimitris): also test that qp_in has not changed!!
