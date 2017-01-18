@@ -19,8 +19,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <math.h>
+
 #include "acados/utils/types.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/print.h"
@@ -33,7 +33,8 @@
 
 // Simple fixed-step Gauss-Newton based SQP code
 int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-        void *nlp_mem_, void *nlp_work_) {
+    void *nlp_mem_, void *nlp_work_) {
+
     ocp_nlp_mem *nlp_mem = (ocp_nlp_mem*) nlp_mem_;
     ocp_nlp_work *work = (ocp_nlp_work*) nlp_work_;
     real_t feas, stepX, stepU;
@@ -111,7 +112,8 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             // TODO(rien): transition functions for changing dimensions not yet implemented!
             for (int_t j = 0; j < nx[i]; j++) {
                 work->b[i][j] = sim[i].out->xn[j] - w[w_idx+nx[i]+nu[i]+j];
-                if (fabs(work->b[i][j]) > feas) feas = fabs(work->b[i][j]);
+                if (fabs(work->b[i][j]) > feas)
+                    feas = fabs(work->b[i][j]);
                 for (int_t k = 0; k < nx[i]; k++)
                     work->A[i][j*nx[i]+k] = sim[i].out->S_forw[j*nx[i]+k];  // COLUMN MAJOR
             }
@@ -191,17 +193,16 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
         }
         for (int_t j = 0; j < nx[N]; j++) {
             w[w_idx+j] += work->solver->out->x[N][j];
-            if (fabs(work->solver->out->x[N][j]) > stepX) stepX = fabs(work->solver->out->x[N][j]);
+            if (fabs(work->solver->out->x[N][j]) > stepX)
+                stepX = fabs(work->solver->out->x[N][j]);
         }
 //        print_matrix_name((char*)"stdout", (char*)"solver->out->x[N]: ",
 //        work->solver->out->x[N], 1, nx[N]);
 //        w_idx += nx[N];
 //        print_matrix_name((char*)"stdout", (char*)"w_cur: ", w, 1, w_idx);
 
-//        if (sqp_iter == nlp_in->maxIter-1) {
-            fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
-                    "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
-//        }
+        fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
+                        "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
     }
     timings += acado_toc(&timer);
 
@@ -213,7 +214,6 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             1e3*timings_la/(nlp_in->maxIter));
     printf("--Total of %.3f ms per SQP iteration.--\n",
             1e3*timings/(nlp_in->maxIter));
-
 
     // Store trajectories:
     w_idx = 0;

@@ -14,8 +14,6 @@
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/zeros.h"
-
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-8;
