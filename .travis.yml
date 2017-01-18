@@ -35,7 +35,10 @@ install:
  - pushd external
  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
  - mkdir eigen
- - tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
+ - tar -xvf 3.2.10.tar.gz --strip-components=1 -C eigen
+ - wget http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz
+ - mkdir casadi-octave-v3.1.1
+ - tar -xvf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1
  - popd
 
 script:
@@ -44,9 +47,6 @@ script:
  - git submodule update
  - mkdir build
  - cd build
- - \wget "http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz"
- - mkdir casadi-octave-v3.1.1
- - tar -xvzf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1/
  - cmake -D CMAKE_BUILD_TYPE=Test ..
  - set +e
  - make lint
