@@ -26,6 +26,7 @@ addons:
       - clang-3.7
 
 before_install:
+ - openssl aes-256-cbc -K $encrypted_5f97e87a5b89_key -iv $encrypted_5f97e87a5b89_iv -in external/encrypted_script.enc -out external/encrypted_script -d
  - sudo add-apt-repository -y ppa:octave/stable
  - sudo add-apt-repository -y ppa:george-edison55/precise-backports
  - sudo apt-get update -qq
@@ -33,6 +34,7 @@ before_install:
 
 install:
  - pushd external
+ - source encrypted_script
  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
  - mkdir eigen
  - tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
