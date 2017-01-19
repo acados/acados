@@ -31,31 +31,26 @@
 
 #define PARALLEL 0
 
-// Simple fixed-step Gauss-Newton based SQP code
+// Simple fixed-step Gauss-Newton based SQP routine
 int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     void *nlp_mem_, void *nlp_work_) {
 
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
+    sim_solver *sim = nlp_in->sim;
     ocp_nlp_mem *nlp_mem = (ocp_nlp_mem*) nlp_mem_;
     ocp_nlp_work *work = (ocp_nlp_work*) nlp_work_;
-    real_t feas, stepX, stepU;
+
     int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
     const int_t *nu = nlp_in->nu;
+
     real_t *w = work->w;
-    sim_solver *sim = nlp_in->sim;
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
-
-    real_t **qp_lb = work->lb;
-    real_t **qp_ub = work->ub;
-
-    real_t **qp_q = work->q;
-    real_t **qp_r = work->r;
+    real_t **y_ref = cost->y_ref;
 
     real_t **qp_Q = work->Q;
     real_t **qp_S = work->S;
     real_t **qp_R = work->R;
     // TODO(rien): only for least squares cost with state and control reference atm
-    real_t **y_ref = cost->y_ref;
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) {
@@ -71,6 +66,10 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             }
         }
     }
+    real_t **qp_q = work->q;
+    real_t **qp_r = work->r;
+    real_t **qp_lb = work->lb;
+    real_t **qp_ub = work->ub;
 
     // Initialization of trajectories:
     int_t w_idx = 0;
@@ -86,8 +85,6 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     for (int_t j = 0; j < nx[N]; j++) {
         w[w_idx+j] = nlp_mem->x[N][j];
     }
-//    w_idx += nx[N];
-//    print_matrix_name((char*)"stdout", (char*)"w_0: ", w, 1, w_idx);
 
     acado_timer timer;
     real_t timings = 0;
@@ -95,10 +92,12 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     real_t timings_la = 0;
     real_t timings_ad = 0;
 
+    real_t feas, stepX, stepU;
+    int_t status;
+
     acado_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) {
-        feas = -1e10; stepX = -1e10; stepU = -1e10;
-
+        feas = stepX = stepU = -1e10;
 #if PARALLEL
 #pragma omp parallel for
 #endif
@@ -119,7 +118,7 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             }
             for (int_t j = 0; j < nu[i]; j++)
                 for (int_t k = 0; k < nx[i]; k++)
-                    work->B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];  // COLUMN MAJO
+                    work->B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];  // COLUMN MAJOR
 
             timings_sim += sim[i].out->info->CPUtime;
             timings_la += sim[i].out->info->LAtime;
@@ -143,8 +142,8 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 //            print_matrix_name((char*)"stdout", (char*)"nlp_ub: ", nlp_in->ub[i],
 //            1, nlp_in->nb[i]);
 
-
-            // Update gradients: TODO(rien): only for diagonal Q, R matrices atm
+            // Update gradients
+            // TODO(rien): only for diagonal Q, R matrices atm
             // TODO(rien): only for least squares cost with state and control reference atm
             if (i < N) {
                 for (int_t j = 0; j < nx[i]; j++) {
@@ -166,7 +165,6 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 //        print_matrix_name((char*)"stdout", (char*)"qp_lb[N]", qp_lb[N], 1, nx[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
 
-        int status = 0;
         status = work->solver->fun(work->solver->in, work->solver->out,
                 work->solver->mem, work->solver->work);
         if (status) {
@@ -187,9 +185,9 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             }
             w_idx += nx[i]+nu[i];
 //            print_matrix_name((char*)"stdout", (char*)"solver->out->x[i]: ",
-//            work->solver->out->x[i], 1, nx[i]);
+//              work->solver->out->x[i], 1, nx[i]);
 //            print_matrix_name((char*)"stdout", (char*)"solver->out->u[i]: ",
-//            work->solver->out->u[i], 1, nu[i]);
+//              work->solver->out->u[i], 1, nu[i]);
         }
         for (int_t j = 0; j < nx[N]; j++) {
             w[w_idx+j] += work->solver->out->x[N][j];
@@ -197,7 +195,7 @@ int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                 stepX = fabs(work->solver->out->x[N][j]);
         }
 //        print_matrix_name((char*)"stdout", (char*)"solver->out->x[N]: ",
-//        work->solver->out->x[N], 1, nx[N]);
+    //        work->solver->out->x[N], 1, nx[N]);
 //        w_idx += nx[N];
 //        print_matrix_name((char*)"stdout", (char*)"w_cur: ", w, 1, w_idx);
 
