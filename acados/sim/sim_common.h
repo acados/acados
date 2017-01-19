@@ -43,7 +43,7 @@ typedef struct sim_in_ {
     void (*jac_fun)(const real_t*, real_t*);
 
     real_t step;
-    unsigned int nSteps;
+    uint nSteps;
 
     void *opts;
 } sim_in;

@@ -32,7 +32,7 @@
 #define PARALLEL 0
 
 // Simple fixed-step Gauss-Newton based SQP routine
-int ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     void *nlp_mem_, void *nlp_work_) {
 
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
