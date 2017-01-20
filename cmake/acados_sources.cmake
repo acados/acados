@@ -23,6 +23,7 @@ set(TEST_OCP_NLP_HPNMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_nlp_hpnmpc.c
 set(TEST_CONDENSING_QPOASES_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases.c)
 set(TEST_CHEN_SRC ${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model.c)
 set(TEST_NMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc.c)
+set(TEST_NMPC_HPMPC_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc_hpmpc.c)
 set(TEST_CHAIN_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_chain/Chain_model.c)
 
 file(GLOB TEST_VDE_CHAIN_SRC
@@ -34,3 +35,15 @@ file(GLOB TEST_JAC_CHAIN_SRC
 )
 
 set(TEST_CHAIN_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_chain.c)
+
+set(TEST_PENDULUM_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c)
+
+file(GLOB TEST_VDE_PENDULUM_SRC
+    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde*.c
+)
+
+file(GLOB TEST_PENDULUM_SRC
+    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac*.c
+)
+
+set(TEST_PENDULUM_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc_libstr_partial_tightening2.c)
