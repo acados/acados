@@ -58,6 +58,9 @@
 #define NN 20
 #define NX 4
 #define NU 1
+#define NBU 0
+#define NBX 0
+
 
 #include "acados/utils/timing.h"
 
@@ -158,6 +161,8 @@ int main() {
     real_t *pu[N];
     real_t *px0[1];
     int    *hidxb[N+1];
+    real_t *pub[N+1];
+    real_t *plb[N+1];
     real_t *pC[N + 1];
     real_t *pD[N];
     real_t *plg[N + 1];
@@ -191,6 +196,8 @@ int main() {
     hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
+    d_zeros(&plb[0], (NBU+NBX), 1);
+    d_zeros(&pub[0], (NBU+NBX), 1);
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
@@ -200,6 +207,8 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
+        d_zeros(&plb[i+1], (NBU+NBX), 1);
+        d_zeros(&pub[i+1], (NBU+NBX), 1);
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
@@ -267,6 +276,9 @@ int main() {
         d_zeros(&ppi[ii], nx[ii+1], 1);
         d_zeros(&plam[ii], 2*nb[ii]+2*nb[ii], 1);
     }
+
+    d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
+
     pC[N] = CN;
     plg[N] = lgN;
     pug[N] = ugN;
@@ -338,8 +350,8 @@ int main() {
     qp_in.A = (const real_t **) pA;
     qp_in.B = (const real_t **) pB;
     qp_in.b = (const real_t **) pb;
-    // qp_in.lb = (const real_t **) px0;
-    // qp_in.ub = (const real_t **) px0;
+    qp_in.lb = (const real_t **) plb;
+    qp_in.ub = (const real_t **) pub;
     // qp_in.idxb = (const int_t **) hidxb;
     qp_in.Cx = (const real_t **) pC;
     qp_in.Cu = (const real_t **) pD;
