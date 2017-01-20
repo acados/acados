@@ -36,14 +36,17 @@ file(GLOB TEST_JAC_CHAIN_SRC
 
 set(TEST_CHAIN_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_chain.c)
 
+
+
+
 set(TEST_PENDULUM_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c)
 
 file(GLOB TEST_VDE_PENDULUM_SRC
-    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde*.c
+    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde_forw_pendulum.c
 )
 
-file(GLOB TEST_PENDULUM_SRC
-    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac*.c
+file(GLOB TEST_JAC_PENDULUM_SRC
+    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
 )
 
 set(TEST_PENDULUM_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc_libstr_partial_tightening2.c)

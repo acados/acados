@@ -160,7 +160,6 @@ void sim_erk(const sim_in *in, sim_out *out, const sim_RK_opts *opts, sim_erk_wo
     out->info->ADtime = timing_ad;
 }
 
-
 void sim_erk_create_workspace(const sim_in *in, sim_RK_opts *opts, sim_erk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;

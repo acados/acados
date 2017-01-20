@@ -172,16 +172,16 @@ int main() {
     nb[N] = 0;
 
     int *idxb0;
-    i_zeros(&idxb0, nb[0], 1);
+    int_zeros(&idxb0, nb[0], 1);
     idxb0[0] = 0;
     idxb0[1] = 1;
 
 
     int *idxb1;
-    i_zeros(&idxb1, nb[1], 1);
+    int_zeros(&idxb1, nb[1], 1);
 
     int *idxbN;
-    i_zeros(&idxbN, nb[N], 1);
+    int_zeros(&idxbN, nb[N], 1);
 
     for (ii = 1; ii < N; ii++) {
         hidxb[ii] = idxb1;
@@ -291,8 +291,8 @@ int main() {
     int work_space_size = ocp_qp_hpmpc_workspace_size_bytes(N, nx, nu, nb, ngg, hidxb, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
 
-    void *workspace = malloc(work_space_size);
-    // workspace = malloc(500000);
+    // void *workspace = malloc(work_space_size);
+    void *workspace = malloc(500000);
 
     // double workspace[500000];
     // Allocate OCP QP variables
