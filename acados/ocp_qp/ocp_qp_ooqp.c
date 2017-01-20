@@ -340,13 +340,13 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_
     // TODO(dimitris): do not call the function twice if memory already initialized before
     calculate_problem_size(in, args, &nx, &my, &mz, &nnzQ, &nnzA, &nnzC);
 
-    work->x = malloc(sizeof(*work->x)*nx);
-    work->gamma = malloc(sizeof(*work->gamma)*nx);
-    work->phi = malloc(sizeof(*work->phi)*nx);
-    work->y = malloc(sizeof(*work->y)*my);
-    work->z = malloc(sizeof(*work->z)*mz);
-    work->lambda = malloc(sizeof(*work->lambda)*mz);
-    work->pi = malloc(sizeof(*work->pi)*mz);
+    work->x = (real_t*)malloc(sizeof(*work->x)*nx);
+    work->gamma = (real_t*)malloc(sizeof(*work->gamma)*nx);
+    work->phi = (real_t*)malloc(sizeof(*work->phi)*nx);
+    work->y = (real_t*)malloc(sizeof(*work->y)*my);
+    work->z = (real_t*)malloc(sizeof(*work->z)*mz);
+    work->lambda = (real_t*)malloc(sizeof(*work->lambda)*mz);
+    work->pi = (real_t*)malloc(sizeof(*work->pi)*mz);
 
     // TODO(dimitris): implement this
     return 0;

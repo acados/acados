@@ -47,6 +47,7 @@ include(acados_sources)
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
+include(external/ooqp)
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
@@ -78,7 +79,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         COMMENT "Checking if regeneration of test data is needed")
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
-    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
+    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas gfortran m)
 	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
 

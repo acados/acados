@@ -1,3 +1,6 @@
+# Force compilation with C++ for OOQP
+SET_SOURCE_FILES_PROPERTIES(${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c PROPERTIES LANGUAGE CXX)
+
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/*.c)
 # Exclude helper files

@@ -20,6 +20,9 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_OOQP_H_
 #define ACADOS_OCP_QP_OCP_QP_OOQP_H_
 
+// An OOQP function, to re-arrange elements of sparse matrix
+void doubleLexSort(int first[], int n, int second[], double data[]);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -75,10 +78,6 @@ typedef struct ocp_qp_ooqp_memory_ {
     char *icupp;
     int_t print_level;
 } ocp_qp_ooqp_memory;
-
-// This is an OOQP function, to re-arrange elements of sparse matrix
-// TODO(dimitris): check how to compile this properly
-void doubleLexSort(int first[], int n, int second[], double data[]);
 
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,  void *args_,  void *work_);

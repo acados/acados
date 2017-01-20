@@ -18,20 +18,20 @@ using Eigen::Map;
 // to reach COMPARISON_TOLERANCE in the tests (currently 1e-5, possibly also a bug in OOQP?)
 extern real_t COMPARISON_TOLERANCE;
 
-// TODO(dimitris): remove variables below once finished with implementation
 int_t TEST_OOQP = 1;
+int_t TEST_QPOASES = 0;
 
-vector<std::string> scenarios = {"LTI", "LTV"};
+static vector<std::string> scenarios = {"LTI", "LTV"};
 vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_AFFINE", "ONLY_BOUNDS", "CONSTRAINED"};
 
-void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
-    *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
-    REQUIRE(*N > 0);
-    *nx = (int_t) readMatrix(folder + "/nx.dat")(0, 0);
-    REQUIRE(*nx > 0);
-    *nu = (int_t) readMatrix(folder + "/nu.dat")(0, 0);
-    REQUIRE(*nu > 0);
-}
+// void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
+//     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
+//     REQUIRE(*N > 0);
+//     *nx = (int_t) readMatrix(folder + "/nx.dat")(0, 0);
+//     REQUIRE(*nx > 0);
+//     *nu = (int_t) readMatrix(folder + "/nu.dat")(0, 0);
+//     REQUIRE(*nu > 0);
+// }
 
 void concatenateSolution(int_t N, int_t nx, int_t nu, const ocp_qp_out *out, VectorXd *acados_W) {
     int ii, jj;
@@ -118,16 +118,18 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     int return_value;
                     VectorXd acados_W;
 
-                    SECTION("qpOASES") {
-                        std::cout <<"---> TESTING qpOASES with QP: "<< scenario <<
-                            ", " << constraint << std::endl;
+                    if (TEST_QPOASES) {
+                        SECTION("qpOASES") {
+                            std::cout <<"---> TESTING qpOASES with QP: "<< scenario <<
+                                ", " << constraint << std::endl;
 
-                        ocp_qp_condensing_qpoases_args args;
-                        args.dummy = 42.0;
+                            ocp_qp_condensing_qpoases_args args;
+                            args.dummy = 42.0;
 
-                        initialise_qpoases(&qp_in);
+                            initialise_qpoases(&qp_in);
 
-                        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
+                            return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
+                    }
                     }
                     if (TEST_OOQP) {
                         SECTION("OOQP") {
@@ -149,17 +151,19 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             ocp_qp_ooqp_free_workspace(&work);
                         }
                     }
-                    concatenateSolution(N, nx, nu, &qp_out, &acados_W);
-                    // std::cout << "ACADOS output:\n" << acados_W << std::endl;
-                    // printf("-------------------\n");
-                    // std::cout << "OCTAVE output:\n" << true_W << std::endl;
-                    // printf("-------------------\n");
-                    // printf("return value = %d\n", return_value);
-                    // printf("-------------------\n");
-                    REQUIRE(return_value == 0);
-                    REQUIRE(acados_W.isApprox(true_W, 1e-5));
-                    std::cout <<"---> PASSED " << std::endl;
-                    // TODO(dimitris): also test that qp_in has not changed!!
+                    if (TEST_QPOASES | TEST_OOQP) {
+                        concatenateSolution(N, nx, nu, &qp_out, &acados_W);
+                        // std::cout << "ACADOS output:\n" << acados_W << std::endl;
+                        // printf("-------------------\n");
+                        // std::cout << "OCTAVE output:\n" << true_W << std::endl;
+                        // printf("-------------------\n");
+                        // printf("return value = %d\n", return_value);
+                        // printf("-------------------\n");
+                        REQUIRE(return_value == 0);
+                        REQUIRE(acados_W.isApprox(true_W, 1e-5));
+                        std::cout <<"---> PASSED " << std::endl;
+                        // TODO(dimitris): also test that qp_in has not changed!!
+                    }
                 }  // END_SECTION_SCENARIOS
             }  // END_FOR_SCENARIOS
         }  // END_SECTION_CONSTRAINTS
