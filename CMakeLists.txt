@@ -54,6 +54,11 @@ endif ()
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
+add_dependencies(acados qpoases hpmpc blasfeo)
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    add_dependencies(acados ooqp)
+endif ()
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)
@@ -82,10 +87,11 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         COMMENT "Checking if regeneration of test data is needed")
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
+
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas gfortran m)
     else ()
-        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc blas gfortran m)
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
     endif ()
     set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
