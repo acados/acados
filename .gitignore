@@ -53,6 +53,8 @@ Thumbs.db
 # External #
 ############
 *external/OOQP
+*external/coinhsl
+*external/download
 *encrypted_script
 
 # Misc #

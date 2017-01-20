@@ -49,6 +49,7 @@ include(external/hpmpc)
 include(external/qpoases)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    include(external/ma27)
     include(external/ooqp)
 endif ()
 
@@ -57,8 +58,8 @@ add_library(acados STATIC ${ACADOS_SRC})
 add_dependencies(acados qpoases hpmpc blasfeo)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    add_dependencies(ooqpbase ma27)
     add_dependencies(acados ooqpbase)
-    # TODO(dimitris) add dependency of OOQP from ma27
 endif ()
 
 # OpenBLAS installation directory
@@ -90,6 +91,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_dependencies(unit_tests generate_test_data)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+        # TODO(dimitris): if this works for fortran, add if cases
         target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas /usr/lib/gcc/x86_64-linux-gnu/5/libgfortran.so m)
     else ()
         target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
