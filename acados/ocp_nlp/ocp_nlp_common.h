@@ -67,10 +67,10 @@ typedef struct ocp_nlp_in_ {
     const real_t **lg;
     const real_t **ug;
 
-    ocp_nlp_function *g;  // nonlinear constraints
-    // TODO(rien): what about invariants, e.g., algebraic constraints?
     void *cost;
     sim_solver *sim;
+    ocp_nlp_function *g;  // nonlinear constraints
+    // TODO(rien): what about invariants, e.g., algebraic constraints?
 
     int_t maxIter;
 } ocp_nlp_in;

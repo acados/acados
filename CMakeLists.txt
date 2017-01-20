@@ -50,6 +50,7 @@ include(external/qpoases)
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
+add_dependencies(acados qpoases hpmpc blasfeo)
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)
