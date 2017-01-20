@@ -26,6 +26,8 @@ addons:
       - clang-3.7
 
 before_install:
+ - sudo apt-get install gfortran-4.9
+ - ls /usr/lib/gcc/x86_64-linux-gnu/4.9
  - openssl aes-256-cbc -K $encrypted_5f97e87a5b89_key -iv $encrypted_5f97e87a5b89_iv -in external/encrypted_script.enc -out external/encrypted_script -d
  - sudo add-apt-repository -y ppa:octave/stable
  - sudo add-apt-repository -y ppa:george-edison55/precise-backports
