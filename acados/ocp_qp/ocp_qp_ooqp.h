@@ -20,8 +20,7 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_OOQP_H_
 #define ACADOS_OCP_QP_OCP_QP_OOQP_H_
 
-// An OOQP function, to re-arrange elements of sparse matrix
-void doubleLexSort(int first[], int n, int second[], double data[]);
+void doubleLexSortC(int first[], int n, int second[], double data[]);
 
 #ifdef __cplusplus
 extern "C" {

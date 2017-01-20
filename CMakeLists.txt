@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(acados)
 
+# SET (CMAKE_C_COMPILER "/usr/bin/clang")
+# SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -92,7 +95,9 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         # TODO(dimitris): if this works for fortran, add if cases
-        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas /usr/lib/gcc/x86_64-linux-gnu/5/libgfortran.so m)
+        link_directories(/usr/lib/gcc/x86_64-linux-gnu/5)
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas gfortran m)
+        # target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas /usr/lib/gcc/x86_64-linux-gnu/5/libgfortran.so m)
     else ()
         target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
     endif ()

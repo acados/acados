@@ -110,7 +110,7 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
             nn += 1;
         }
     }
-    doubleLexSort(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
+    doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
 
     // ------- Build equality  constraints
     nn = in->nx[0];
@@ -157,7 +157,7 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
         offsetCols += in->nx[kk] + in->nu[kk];
         offsetRows += in->nx[kk+1];
     }
-    doubleLexSort(mem->irowA, mem->nnzA, mem->jcolA, mem-> dA);
+    doubleLexSortC(mem->irowA, mem->nnzA, mem->jcolA, mem-> dA);
 
     // ------- Build bounds
     offset = 0;
@@ -234,7 +234,7 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
         offsetCols += in->nx[kk] + in->nu[kk];
         offsetRows += in->nc[kk];
     }
-    doubleLexSort(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
+    doubleLexSortC(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
 
     mem->print_level = args->printLevel;
 
