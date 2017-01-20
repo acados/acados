@@ -3,9 +3,9 @@ dist: precise
 sudo: true
 
 env:
- - CXX="g++-6" CC="gcc-6"
- - CXX="g++-5" CC="gcc-5"
- - CXX="g++-4.9" CC="gcc-4.9"
+ - CXX="g++-6" CC="gcc-6" FC="gfortran-6"
+ - CXX="g++-5" CC="gcc-5" FC="gfortran-5"
+ - CXX="g++-4.9" CC="gcc-4.9" FC="gfortran-4.9"
  - CXX="clang++-3.7" CC="clang-3.7"
 
 addons:
@@ -35,8 +35,6 @@ before_install:
 
 install:
  - pushd external
- - gcc --version
- - gfortran --version
  - source encrypted_script
  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
  - mkdir eigen
