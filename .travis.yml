@@ -30,11 +30,13 @@ before_install:
  - sudo add-apt-repository -y ppa:octave/stable
  - sudo add-apt-repository -y ppa:george-edison55/precise-backports
  - sudo apt-get update -qq
- - sudo apt-get install r-base-dev
+ - sudo apt-get install r-base-dev # TODO(dimitris): maybe not needed?
  - sudo apt-get install octave liboctave-dev cmake-data cmake
 
 install:
  - pushd external
+ - gcc --version
+ - gfortran --version
  - source encrypted_script
  - wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
  - mkdir eigen
