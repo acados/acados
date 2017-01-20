@@ -49,4 +49,5 @@ file(GLOB TEST_JAC_PENDULUM_SRC
     ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
 )
 
-set(TEST_PENDULUM_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc_libstr_partial_tightening2.c)
+set(TEST_PENDULUM_PT_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr_pt.c)
+set(TEST_PENDULUM_OCP_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr.c)

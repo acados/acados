@@ -164,7 +164,7 @@ int main() {
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
-    real_t *px0[1];
+    real_t *px0[1]; // TODO (Andrea): px0 unused
     int    *hidxb[N+1];
     real_t *hlb[N + 1];
     real_t *hub[N + 1];
@@ -199,7 +199,7 @@ int main() {
     for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
     hidxb[N] = idxbN;
 
-    d_zeros(&px0[0], nx[0], 1);
+    d_zeros(&px0[0], nx[0], 1); // TODO (Andrea): px0 unused
     d_zeros(&hlb[0], (NBU+NBX), 1);
     d_zeros(&hub[0], (NBU+NBX), 1);
     for ( int_t i = 0; i < N; i++ ) {

@@ -131,9 +131,13 @@ add_executable(test_chain ${TEST_CHAIN_OCP_SRC} ${TEST_CHAIN_SRC} ${TEST_VDE_CHA
 #target_link_libraries(test_chain acados qpoases blasfeo m)
 target_link_libraries(test_chain acados qpoases blasfeo openblas m)
 
-add_executable(test_hpmpc_pt2 ${TEST_PENDULUM_OCP_SRC} ${TEST_PENDULUM_SRC} ${TEST_VDE_PENDULUM_SRC} ${TEST_JAC_PENDULUM_SRC})
-#target_link_libraries(test_hpmpc_pt2 acados hpmpc blasfeo m)
-target_link_libraries(test_hpmpc_pt2 acados hpmpc blasfeo openblas m)
+add_executable(test_nmpc_pendulum_hpmpc_libstr ${TEST_PENDULUM_OCP_SRC} ${TEST_PENDULUM_SRC} ${TEST_VDE_PENDULUM_SRC} ${TEST_JAC_PENDULUM_SRC})
+#target_link_libraries(test_nmpc_pendulum_hpmpc_libstr_libstr acados hpmpc blasfeo m)
+target_link_libraries(test_nmpc_pendulum_hpmpc_libstr acados hpmpc blasfeo openblas m)
+
+add_executable(test_nmpc_pendulum_hpmpc_libstr_pt ${TEST_PENDULUM_PT_OCP_SRC} ${TEST_PENDULUM_SRC} ${TEST_VDE_PENDULUM_SRC} ${TEST_JAC_PENDULUM_SRC})
+#target_link_libraries(test_nmpc_pendulum_hpmpc_libstr_pt acados hpmpc blasfeo m)
+target_link_libraries(test_nmpc_pendulum_hpmpc_libstr_pt acados hpmpc blasfeo openblas m)
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
     generate_test_data()
