@@ -29,5 +29,5 @@ add_dependencies(ooqpgondzio ooqp_project)
 set_property(TARGET ooqpgondzio PROPERTY IMPORTED_LOCATION "${source_dir}/lib/libooqpgondzio.a")
 
 add_library(ooqpbase STATIC IMPORTED)
-add_dependencies(ooqpbase ooqp_project)
+add_dependencies(ooqpbase ma27 ooqp_project)
 set_property(TARGET ooqpbase PROPERTY IMPORTED_LOCATION "${source_dir}/lib/libooqpbase.a")
