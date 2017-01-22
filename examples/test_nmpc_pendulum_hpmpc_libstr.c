@@ -216,7 +216,6 @@ int main() {
     d_zeros(&px[N], nx[N], 1);
     // hidxb[N] = idxbN;
 
-    nx[0] = 0;
     //    d_print_mat(nx, 1, b, nx);
     //    d_print_mat(nx, 1, b0, nx);
 
@@ -395,7 +394,7 @@ int main() {
             // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
 
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
             int status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
             // int status = 0;
