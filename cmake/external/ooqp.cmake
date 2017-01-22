@@ -12,11 +12,7 @@ ExternalProject_Add(
 
 ExternalProject_Get_Property(ooqp_project source_dir)
 
-add_dependencies(ooqp_project ma27_project)
-
-add_library(ma27 STATIC IMPORTED)
-add_dependencies(ma27 ooqp_project)
-set_property(TARGET ma27 PROPERTY IMPORTED_LOCATION "${source_dir}/libma27.a")
+# add_dependencies(ooqp_project ma27_project)
 
 add_library(ooqpgensparse STATIC IMPORTED)
 add_dependencies(ooqpgensparse ooqp_project)
