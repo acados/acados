@@ -7,8 +7,6 @@ Ts = 0.1;
 Q = diag([1, 1]);
 R = 0.05;
 x0 = [0.5; 0].';
-x_ref = 0*[-2 100].';
-u_ref = [0 0].';
 
 % Declare model variables
 x1 = MX.sym('x1');
@@ -70,8 +68,8 @@ for k=0:N-1
     % New NLP variable for the control
     Uk = MX.sym(['U_' num2str(k)],1);
     w = {w{:}, Uk};
-    lbw = [lbw; -1];
-    ubw = [ubw;  1];
+    lbw = [lbw; -Inf];
+    ubw = [ubw;  Inf];
     w0 = [w0;  0];
 
     % Integrate till the end of the interval

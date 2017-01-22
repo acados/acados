@@ -391,10 +391,10 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[i+1][j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
+                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j]; //Andrea: ++ this is WRONG
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j]; //Andrea: ++ this is WRONG
             }
 
             for (int_t k = 0; k < nx[0]; k++) pb[0][k] = 0.0; // Andrea: can we keep x0 in hpmpc? Eliminating will not work if we do line-search

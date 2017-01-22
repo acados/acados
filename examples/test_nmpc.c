@@ -199,7 +199,7 @@ int main() {
                     for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NU*j+k];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
             }
             for (int_t j = 0; j < NX; j++) {
                 px0[0][j] = (x0[j]-w[j]);
