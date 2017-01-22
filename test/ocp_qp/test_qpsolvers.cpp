@@ -142,13 +142,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             args.printLevel = 0;
 
-                            int_t mem_return = ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
-                            REQUIRE(mem_return == 0);
-                            int_t work_return = ocp_qp_ooqp_create_workspace(&qp_in, &args, &work);
-                            REQUIRE(work_return == 0);
+                            int_t init_return = ocp_qp_ooqp_initialize(&qp_in, &args, &mem, &work);
+                            REQUIRE(init_return == 0);
 
                             return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
-                            ocp_qp_ooqp_free_workspace(&work);
+                            ocp_qp_ooqp_free(&mem, &work);
                         }
                     }
                     if (TEST_QPOASES | TEST_OOQP) {
