@@ -193,8 +193,8 @@ static void calculate_constraint_bounds(ocp_qp_in *in, condensing_out *out,
         for (int_t j = 0; j < ws->nstate_bounds[i+1]; j++) {
             idx = in->idxb[i+1][j];
             if (idx < in->nx[i+1]) {
-                out->lbA[ctr+idx] = in->lb[i+1][j] - ws->g[i][idx];
-                out->ubA[ctr+idx] = in->ub[i+1][j] - ws->g[i][idx];
+                out->lbA[ctr+j] = in->lb[i+1][j] - ws->g[i][idx];
+                out->ubA[ctr+j] = in->ub[i+1][j] - ws->g[i][idx];
             }
         }
         ctr += ws->nstate_bounds[i+1] + in->nc[i+1];
@@ -255,6 +255,7 @@ static void calculate_constraint_matrix(ocp_qp_in *in, condensing_out *out,
     condensing_workspace *ws) {
 
     int_t ldA = ws->nconstraints;
+    int_t idx;
     if (ldA) {
         calculate_D(in, ws);
         int_t block_row = 0, block_col = 0;
@@ -277,8 +278,9 @@ static void calculate_constraint_matrix(ocp_qp_in *in, condensing_out *out,
             block_col = block_row;
             for (int_t j = 0; j <= i; j++) {
                 for (int_t k = 0; k < in->nu[0]; k++) {
-                    for (int_t l = 0; l < in->nx[0]; l++) {
-                        out->A[block_col+k*ldA+l] = ws->G[i][j][k*in->nx[0]+l];
+                    for (int_t l = 0; l < ws->nstate_bounds[i+1]; l++) {
+                        idx = in->idxb[i+1][l];
+                        out->A[block_col+k*ldA+l] = ws->G[i][j][k*in->nx[0]+idx];
                     }
                 }
                 block_col += ldA*in->nu[0];

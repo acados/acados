@@ -1,9 +1,9 @@
 #include "test/sim/pendulum/casadi/casadi_pendulum.h"
 
-extern int vde_forw_pendulum(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
-extern int vde_adj_pendulum(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
-extern int vde_hess_pendulum(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
-extern int jac_pendulum(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int vde_forw_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+extern int vde_adj_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+extern int vde_hess_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+extern int jac_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 // The auto-generated VDE functions from CasADi:
 void VDE_forw_pendulum(const real_t* in, real_t* out) {
@@ -18,7 +18,7 @@ void VDE_forw_pendulum(const real_t* in, real_t* out) {
     real_t* Sx_out = out + NX;
     real_t* Su_out = out + NX + NX*NX;
 
-    void *casadi_mem = 0;
+    int casadi_mem = 0;
     int *casadi_iw = 0;
     real_t *casadi_w = 0;
 
@@ -34,7 +34,7 @@ void VDE_forw_pendulum(const real_t* in, real_t* out) {
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
 
-    vde_forw_pendulum(casadi_mem, casadi_arg, casadi_res, casadi_iw, casadi_w);
+    vde_forw_pendulum(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
 
@@ -51,7 +51,7 @@ void VDE_hess_pendulum(const real_t* in, real_t* out) {
     real_t* adj_out = out;
     real_t* hess_out = out+NX+NU;
 
-    void *casadi_mem = 0;
+    int casadi_mem = 0;
     int *casadi_iw = 0;
     real_t *casadi_w = 0;
 
@@ -67,7 +67,7 @@ void VDE_hess_pendulum(const real_t* in, real_t* out) {
     casadi_res[0] = adj_out;
     casadi_res[1] = hess_out;
 
-    vde_hess_pendulum(casadi_mem, casadi_arg, casadi_res, casadi_iw, casadi_w);
+    vde_hess_pendulum(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
 
@@ -80,7 +80,7 @@ void VDE_adj_pendulum(const real_t* in, real_t* out) {
 
     real_t* adj_out = out;
 
-    void *casadi_mem = 0;
+    int casadi_mem = 0;
     int *casadi_iw = 0;
     real_t *casadi_w = 0;
 
@@ -93,7 +93,7 @@ void VDE_adj_pendulum(const real_t* in, real_t* out) {
 
     casadi_res[0] = adj_out;
 
-    vde_adj_pendulum(casadi_mem, casadi_arg, casadi_res, casadi_iw, casadi_w);
+    vde_adj_pendulum(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
 
@@ -106,7 +106,7 @@ void jac_fun_pendulum(const real_t* in, real_t* out) {
     real_t* x_out = out;
     real_t* jac_out = out + NX;
 
-    void *casadi_mem = 0;
+    int casadi_mem = 0;
     int *casadi_iw = 0;
     real_t *casadi_w = 0;
 
@@ -119,6 +119,6 @@ void jac_fun_pendulum(const real_t* in, real_t* out) {
     casadi_res[0] = x_out;
     casadi_res[1] = jac_out;
 
-    jac_pendulum(casadi_mem, casadi_arg, casadi_res, casadi_iw, casadi_w);
+    jac_pendulum(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 

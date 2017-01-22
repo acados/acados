@@ -2,6 +2,7 @@ clc;
 clear all;
 close all;
 
+addpath('../../external/casadi-octave-v3.1.1')
 import casadi.*
 
 % constants
@@ -35,7 +36,7 @@ f_expl = [   v1; ...
              (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
              (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
 
-         
+
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
@@ -46,16 +47,16 @@ vdeX = vdeX + jtimes(f_expl,x,Sx);
 vdeP = SX.zeros(nx,nu) + jacobian(f_expl,u);
 vdeP = vdeP + jtimes(f_expl,x,Sp);
 
-vdeFun = Function('vdeFun',{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
+vdeFun = Function('vde_forw_pendulum',{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
 
 jacX = SX.zeros(nx,nx) + jacobian(f_expl,x);
-jacFun = Function('jacFun',{x,u},{f_expl,jacX});
+jacFun = Function('jac_pendulum',{x,u},{f_expl,jacX});
 
 adj = jtimes(f_expl,[x;u],lambdaX,true);
 
-adjFun = Function('adjFun',{x,lambdaX,u},{adj});
+adjFun = Function('vde_adj_pendulum',{x,lambdaX,u},{adj});
 
-S_forw = [Sx Sp; zeros(nu,nx) eye(nu)];
+S_forw = [Sx Sp; DM([zeros(nu,nx) eye(nu)])];
 hess = S_forw.'*jtimes(adj,[x;u],S_forw);
 hess2 = [];
 for j = 1:nx+nu
@@ -64,11 +65,10 @@ for j = 1:nx+nu
     end
 end
 
-hessFun = Function('adjFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
+hessFun = Function('vde_hess_pendulum',{x,Sx,Sp,lambdaX,u},{adj,hess2});
 
 opts = struct('mex', false);
-vdeFun.generate(['vde_forw_pendulum'], opts);
-jacFun.generate(['jac_pendulum'], opts);
-adjFun.generate(['vde_adj_pendulum'], opts);
-hessFun.generate(['vde_hess_pendulum'], opts);
-
+vdeFun.generate('vde_forw_pendulum', opts);
+jacFun.generate('jac_pendulum', opts);
+adjFun.generate('vde_adj_pendulum', opts);
+hessFun.generate('vde_hess_pendulum', opts);

@@ -121,12 +121,15 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
 
 #endif
 
-void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
-        sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work ) {
+void sim_lifted_irk(const sim_in *in, sim_out *out,
+        void *mem_, void *work_ ) {
     int_t nx = in->nx;
     int_t nu = in->nu;
+    sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     int_t i, s1, s2, j, istep;
+    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory*) mem_;
+    sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace*) work_;
 #if WARM_SWAP
     int_t *ipiv_old = mem->ipiv;  // pivoting vector
 #endif
@@ -156,7 +159,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
     real_t *sys_sol = work->sys_sol;
 #if !TRIPLE_LOOP
     struct d_strmat *str_mat = work->str_mat;
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
 #if TRANSPOSED
     struct d_strmat *str_sol_t = work->str_sol_t;
 #else  // NOT TRANSPOSED
@@ -254,7 +257,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
         LU_system_ACADO(sys_mat, ipiv, num_stages*nx, &mem->nswaps);
 #else   // TRIPLE_LOOP
         // ---- BLASFEO: LU factorization ----
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
         d_cvt_mat2strmat(num_stages*nx, num_stages*nx, sys_mat, num_stages*nx,
                 str_mat, 0, 0);  // mat2strmat
 #endif  // LA_BLAS | LA_REFERENCE
@@ -302,7 +305,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 #if TRIPLE_LOOP
         solve_system_ACADO(sys_mat, sys_sol, ipiv, num_stages*nx, 1+NF);
 #else  // TRIPLE_LOOP
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
 #if TRANSPOSED
         // ---- BLASFEO: row transformations + backsolve ----
         d_cvt_tran_mat2strmat(num_stages*nx, 1+NF, sys_sol, num_stages*nx,
@@ -409,10 +412,11 @@ void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
 }
 
 
-void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
+void sim_lifted_irk_create_workspace(const sim_in *in,
         sim_lifted_irk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;
+    sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
 
@@ -429,7 +433,7 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
 
 #if !TRIPLE_LOOP
 
-#if defined(LA_BLASFEO)
+#if defined(LA_HIGH_PERFORMANCE)
     // matrices in matrix struct format:
     int size_strmat = 0;
     size_strmat += d_size_strmat(num_stages*nx, num_stages*nx);
@@ -478,18 +482,19 @@ void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
     d_create_strmat(num_stages*nx, num_stages*nx, work->str_mat, work->sys_mat);
     d_create_strmat(num_stages*nx, 1+NF, work->str_sol, work->sys_sol);
 
-#endif  // LA_BLASFEO
+#endif  // LA_HIGH_PERFORMANCE
 
 #endif  // !TRIPLE_LOOP
 }
 
 
-void sim_lifted_irk_create_memory(const sim_in *in, sim_RK_opts *opts,
+void sim_lifted_irk_create_memory(const sim_in *in,
         sim_lifted_irk_memory *mem) {
     int_t i;
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t nSteps = in->nSteps;
+    sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
 

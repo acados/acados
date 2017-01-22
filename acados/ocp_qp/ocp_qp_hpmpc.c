@@ -1,23 +1,24 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -93,11 +94,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     double mu0 = hpmpc_args->mu0;
     int warm_start = hpmpc_args->warm_start;
     int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
-
-    //  other solver arguments
-    int kk = -1;  // actual number of iterations
-    double inf_norm_res[4];  // inf norm of residuals
-    for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
+    int out_iter = -1;  // number of performed iterations
+    double *inf_norm_res = hpmpc_args->inf_norm_res;
 
     // memory for stat
     size_t addr = ( ( (size_t) workspace) + 7) / 8 * 8;  // align to 8-byte boundaries
@@ -128,9 +126,11 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
         }
     }
 
-    int hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&kk, k_max, mu0, mu_tol, N, nx, nu, nb, \
-        hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug, \
-        hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
+    int hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0, mu_tol, N, nx, nu, \
+        nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, \
+        hug, hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
+
+    hpmpc_args->out_iter = out_iter;  // number of performed iterations
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
 

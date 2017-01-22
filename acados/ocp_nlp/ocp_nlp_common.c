@@ -17,18 +17,19 @@
  *
  */
 
-#ifndef ACADOS_UTILS_TYPES_H_
-#define ACADOS_UTILS_TYPES_H_
+#include <stdlib.h>
+#include <string.h>
 
-typedef double real_t;
-typedef unsigned int uint;
-typedef int int_t;
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 
-// enum of return values
-enum return_values{
-    ACADOS_SUCCESS,
-    ACADOS_MAXITER,
-    ACADOS_MINSTEP
-};
-
-#endif  // ACADOS_UTILS_TYPES_H_
+void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem) {
+    mem->x = (real_t **) malloc(sizeof(*mem->x) * (in->N+1));
+    mem->u = (real_t **) malloc(sizeof(*mem->u) * in->N);
+    mem->lam = (real_t **) malloc(sizeof(*mem->lam) * in->N);
+    for (int_t i = 0; i < in->N; i++) {
+        mem->x[i] = (real_t *) malloc(sizeof(*mem->x[i]) * (in->nx[i]));
+        mem->u[i] = (real_t *) malloc(sizeof(*mem->u[i]) * (in->nu[i]));
+        mem->lam[i] = (real_t *) malloc(sizeof(*mem->lam[i]) * (in->nx[i]));
+    }
+    mem->x[in->N] = (real_t *) malloc(sizeof(*mem->x[in->N]) * (in->nx[in->N]));
+}

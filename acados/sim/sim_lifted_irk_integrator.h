@@ -1,18 +1,18 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
@@ -20,13 +20,17 @@
 #ifndef ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 #define ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
 
 #define TRANSPOSED 1
 #define TRIPLE_LOOP 0
 #define CODE_GENERATION 0
-#define WARM_SWAP 2
+#define WARM_SWAP 0
 
 typedef struct sim_lifted_irk_workspace_ {
     real_t *rhs_in;
@@ -51,15 +55,19 @@ typedef struct sim_lifted_irk_memory_ {
 } sim_lifted_irk_memory;
 
 
-void sim_lifted_irk(const sim_in *in, sim_out *out, const sim_RK_opts *opts,
-        sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work);
+void sim_lifted_irk(const sim_in *in, sim_out *out,
+        void *mem, void *work);
 
-void sim_lifted_irk_create_workspace(const sim_in *in, sim_RK_opts *opts,
+void sim_lifted_irk_create_workspace(const sim_in *in,
         sim_lifted_irk_workspace *work);
 
-void sim_lifted_irk_create_memory(const sim_in *in, sim_RK_opts *opts,
+void sim_lifted_irk_create_memory(const sim_in *in,
         sim_lifted_irk_memory *mem);
 
 void sim_irk_create_opts(int_t num_stages, const char* name, sim_RK_opts *opts);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SIM_SIM_LIFTED_IRK_INTEGRATOR_H_
