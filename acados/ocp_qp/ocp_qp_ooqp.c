@@ -309,10 +309,9 @@ static void embed_x0(const real_t *x0, int_t nx, ocp_qp_ooqp_memory *mem) {
 }
 
 
-int_t ocp_qp_ooqp_initialize(const ocp_qp_in *in, void *args_, void *mem_, void *work_) {
+int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
-    ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
 
     // TODO(dimitris): only perform actions if firstRun
     int_t return_value;
@@ -328,22 +327,46 @@ int_t ocp_qp_ooqp_initialize(const ocp_qp_in *in, void *args_, void *mem_, void 
         &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
         &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp, &return_value);
 
-    work->x = (real_t*)malloc(sizeof(*work->x)*mem->nx);
-    work->gamma = (real_t*)malloc(sizeof(*work->gamma)*mem->nx);
-    work->phi = (real_t*)malloc(sizeof(*work->phi)*mem->nx);
-    work->y = (real_t*)malloc(sizeof(*work->y)*mem->my);
-    work->z = (real_t*)malloc(sizeof(*work->z)*mem->mz);
-    work->lambda = (real_t*)malloc(sizeof(*work->lambda)*mem->mz);
-    work->pi = (real_t*)malloc(sizeof(*work->pi)*mem->mz);
-
-    // TODO(dimitris): take also into account malloc in return value
     return return_value;
 }
 
 
-void ocp_qp_ooqp_free(void *mem_, void *work_) {
-    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
+int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_) {
+    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
+
+    int nx, my, mz, nnzQ, nnzA, nnzC;
+
+    // TODO(dimitris): do not call the function twice if memory already initialized before
+    calculate_problem_size(in, args, &nx, &my, &mz, &nnzQ, &nnzA, &nnzC);
+
+    work->x = (real_t*)malloc(sizeof(*work->x)*nx);
+    work->gamma = (real_t*)malloc(sizeof(*work->gamma)*nx);
+    work->phi = (real_t*)malloc(sizeof(*work->phi)*nx);
+    work->y = (real_t*)malloc(sizeof(*work->y)*my);
+    work->z = (real_t*)malloc(sizeof(*work->z)*mz);
+    work->lambda = (real_t*)malloc(sizeof(*work->lambda)*mz);
+    work->pi = (real_t*)malloc(sizeof(*work->pi)*mz);
+
+    // TODO(dimitris): implement this
+    return 0;
+}
+
+
+void ocp_qp_ooqp_free_workspace(void *work_) {
+    ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
+        free(work->x);
+        free(work->gamma);
+        free(work->phi);
+        free(work->y);
+        free(work->z);
+        free(work->lambda);
+        free(work->pi);
+}
+
+
+void ocp_qp_ooqp_free_memory(void *mem_) {
+    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
 
     freeQpGenSparse(&mem->c,
         &mem->irowQ, &mem->jcolQ, &mem->dQ,
@@ -352,14 +375,6 @@ void ocp_qp_ooqp_free(void *mem_, void *work_) {
         &mem-> bA,
         &mem->irowC, &mem->jcolC, &mem->dC,
         &mem->clow, &mem->iclow, &mem->cupp, &mem->icupp);
-
-    free(work->x);
-    free(work->gamma);
-    free(work->phi);
-    free(work->y);
-    free(work->z);
-    free(work->lambda);
-    free(work->pi);
 }
 
 

@@ -78,11 +78,14 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t print_level;
 } ocp_qp_ooqp_memory;
 
-int_t ocp_qp_ooqp_initialize(const ocp_qp_in *input, void *args_, void *mem_, void *work_);
+int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
+int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,  void *args_,  void *work_);
 
-void ocp_qp_ooqp_free(void *mem_, void *work);
+void ocp_qp_ooqp_free_memory(void *mem_);
+void ocp_qp_ooqp_free_workspace(void *work_);
 
-int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_, void *work_);
+int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output,
+    void *args_, void *memory_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
