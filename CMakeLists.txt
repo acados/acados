@@ -93,10 +93,10 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_dependencies(unit_tests generate_test_data)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-        # TODO(dimitris): if this works for fortran, add if cases
+        find_library(FLIB gfortran HINTS /usr/local/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
         # target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas gfortran m)
-        # target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas /usr/lib/gcc/x86_64-linux-gnu/5/libgfortran.so m)
-        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas /usr/lib/gcc/x86_64-linux-gnu/4.9/libgfortran.so m)
+        # target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas /usr/lib/gcc/x86_64-linux-gnu/4.9/libgfortran.so m)
     else ()
         target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
     endif ()
