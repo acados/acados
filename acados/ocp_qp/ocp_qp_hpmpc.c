@@ -314,8 +314,8 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     int kk_avg;
     double alpha_min = 1e-8;
     double *stat; d_zeros(&stat, k_max, 5);
-    int compute_res = 1;
-    int compute_mult = 1;
+    int compute_res = 0;
+    int compute_mult = 0;
 
     void *work_memory;
     // v_zeros_align(&work_memory,

@@ -51,11 +51,11 @@
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
-#define MAXITER 10
+#define MAX_IP_ITER 50
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 100
+#define NN 10
 #define NX 4
 #define NU 1
 #define NBU 0
@@ -68,9 +68,9 @@
 static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\t\t\tu\n");
     for (int_t i = 0; i < N; i++) {
-        printf("%4d\t%+e %+e %+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1], w[i*(NX+NU)+2], w[i*(NX+NU)+3], w[i*(NX+NU)+5]);
+        printf("%4d\t%+e %+e %+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1], w[i*(NX+NU)+2], w[i*(NX+NU)+3], w[i*(NX+NU)+4]);
     }
-    printf("%4d\t%+e %+e %+e %+e \n", N, w[N*(NX+NU)], w[N*(NX+NU)+1], w[N*(NX+NU)+4], w[N*(NX+NU)+3]);
+    printf("%4d\t%+e %+e %+e %+e \n", N, w[N*(NX+NU)], w[N*(NX+NU)+1], w[N*(NX+NU)+2], w[N*(NX+NU)+3]);
 }
 #endif  // DEBUG
 
@@ -93,19 +93,19 @@ int main() {
 
     // Problem data
     int_t   N                   = NN;
-    real_t  x0[NX]              = {-0.1, 0, 0, 0};
+    real_t  x0[NX]              = {0.0, 1.0, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
     real_t  Q[NX*NX]            = {0};
     real_t  R[NU*NU]            = {0};
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10;
+    int_t   max_iters           = 100;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
-    for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 10.0;
-    for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
+    for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
+    for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
 
     // Integrator structs
     real_t T = 0.01;
@@ -140,14 +140,16 @@ int main() {
     sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN+1] = {0};
-    int_t nu[NN] = {0};
+    int_t nu[NN+1] = {0};
     int_t nb[NN+1] = {0};
     int_t nc[NN+1] = {0};
     for (int_t i = 0; i < N; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
+    nx[0] = 0; // x0 is eliminated
     nx[N] = NX;
+    nu[N] = 0;
 
     real_t *pA[N];
     real_t *pB[N];
@@ -214,7 +216,6 @@ int main() {
     d_zeros(&px[N], nx[N], 1);
     // hidxb[N] = idxbN;
 
-    nx[0] = 0;
     //    d_print_mat(nx, 1, b, nx);
     //    d_print_mat(nx, 1, b0, nx);
 
@@ -290,7 +291,7 @@ int main() {
     // solver arguments
     ocp_qp_hpmpc_args hpmpc_args;
     hpmpc_args.tol = TOL;
-    hpmpc_args.max_iter = MAXITER;
+    hpmpc_args.max_iter = MAX_IP_ITER;
 //  hpmpc_args.min_step = MINSTEP;
     hpmpc_args.mu0 = 0.0;
 //  hpmpc_args.sigma_min = 1e-3;
@@ -384,33 +385,36 @@ int main() {
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+j];
+                    for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
                 }
                 for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[k*(NX+NU)+NX+j];
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
             }
 
             // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
 
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
             int status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
             // int status = 0;
-            // printf("hpmpc_status=%i\n",status);
+            printf("hpmpc_status=%i\n",status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
 
             if (status == 2) printf("status = ACADOS_MINSTEP\n");
 
-            for (int_t i = 0; i < N; i++) {
+            // there is no x0 in the first stage
+            for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += qp_out.u[0][j];
+
+            for (int_t i = 1; i < N; i++) {
                 for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
             }
             for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
         }
-        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-        shift_states(w, x_end, N);
-        shift_controls(w, u_end, N);
+        // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
+        // shift_states(w, x_end, N);
+        // shift_controls(w, u_end, N);
         timings += acado_toc(&timer);
     }
     #ifdef DEBUG
