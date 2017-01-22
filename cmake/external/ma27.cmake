@@ -7,7 +7,6 @@ ExternalProject_Add(
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/coinhsl"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make
-    INSTALL_COMMAND ""
 )
 
 ExternalProject_Add_Step(ma27_project cp_lib
