@@ -149,6 +149,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
                             ocp_qp_ooqp_free_workspace(&work);
+                            // ocp_qp_ooqp_free_memory(&mem);
                         }
                     }
                     if (TEST_QPOASES | TEST_OOQP) {
