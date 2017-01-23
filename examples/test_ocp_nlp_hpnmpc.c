@@ -163,7 +163,7 @@ int main() {
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
-    real_t *px0[1]; // TODO (Andrea): px0 unused
+    real_t *px0[1];  // TODO(Andrea): px0 unused
     int    *hidxb[N+1];
     real_t *hlb[N + 1];
     real_t *hub[N + 1];
@@ -469,7 +469,8 @@ int main() {
         for ( int_t j = 0; j < NBX; j++ ) hlb[N][j] = x_min[j];
         for ( int_t j = 0; j < NBX; j++ ) hub[N][j] = x_max[j];
 
-        for ( int_t k = 0; k < nx[0]; k++ ) pb[0][k] = 0.0;  // Andrea: can we keep x0 in hpmpc? Eliminating will not work if we do line-search
+        for ( int_t k = 0; k < nx[0]; k++ ) pb[0][k] = 0.0;  // Andrea: can we
+        // keep x0 in hpmpc? Eliminating will not work if we do line-search
 
         for ( int_t j = 0; j < NX; j++ ) {
             pq[N][j] = Q[j*(NX+1)]*(-xref[j]);
@@ -494,15 +495,20 @@ int main() {
         #endif
 
         // Ineq. feasibility residuals
-        for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]+NX], 0);
-        for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]+NX], 0);
+        for ( int_t j = NBX; j < NBX+NBU; j++ )
+          res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]+NX], 0);
+        for ( int_t j = NBX; j < NBX+NBU; j++ )
+          res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]+NX], 0);
+
         #ifdef DEBUG_ANDREA
         printf("Ineq. feas. residuals = %f\n", twonormv(2*NU, &res_ineq[i][0]));
         #endif
 
         // Complementarity residuals
-        for ( int_t j = 0; j < NBU; j++ ) res_compl[i][j] = ( u_min[j] - w[i][hidxb[i][j]+NX])*lam_n[i][j];
-        for ( int_t j = 0; j < NBU; j++ ) res_compl[i][j+NBU] = (-u_max[j] + w[i][hidxb[i][j]+NX])*lam_n[i][j+NBU];
+        for ( int_t j = 0; j < NBU; j++ )
+          res_compl[i][j] = (u_min[j] - w[i][hidxb[i][j]+NX])*lam_n[i][j];
+        for ( int_t j = 0; j < NBU; j++ )
+          res_compl[i][j+NBU] = (-u_max[j] + w[i][hidxb[i][j]+NX])*lam_n[i][j+NBU];
         #ifdef DEBUG_ANDREA
         printf("Complementarity residuals = %f\n", twonormv(2*NU, &res_compl[i][0]));
         #endif
@@ -527,18 +533,32 @@ int main() {
             #endif
 
             // Ineq. feasibility residuals
-            for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]], 0);
-            for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j+NBX+NBU] = fmax(-x_max[j] + w[i][hidxb[i][j]], 0);
-            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]], 0);
-            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]], 0);
+            for ( int_t j = 0; j < NBX; j++ )
+              res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]], 0);
+
+            for ( int_t j = 0; j < NBX; j++ )
+              res_ineq[i][j+NBX+NBU] = fmax(-x_max[j] + w[i][hidxb[i][j]], 0);
+
+            for ( int_t j = NBX; j < NBX+NBU; j++ )
+              res_ineq[i][j] = fmax(u_min[j-NBX] - w[i][hidxb[i][j]], 0);
+
+            for ( int_t j = NBX; j < NBX+NBU; j++ )
+              res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]], 0);
+
             #ifdef DEBUG_ANDREA
             printf("Ineq. feas. residuals = %f\n", twonormv(NU, &res_stat[i][0]));
             #endif
+
             // Complementarity residuals
-            for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
-            for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j+NBX+NBU] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
-            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_compl[i][j] = ( u_min[j-NBX] - w[i][hidxb[i][j]])*lam_n[i][j];
-            for ( int_t j = NBX; j < NBX+NBU; j++ ) res_compl[i][j+NBX+NBU] = (-u_max[j-NBX] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
+            for ( int_t j = 0; j < NBX; j++ )
+              res_compl[i][j] = (x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
+            for ( int_t j = 0; j < NBX; j++ )
+              res_compl[i][j+NBX+NBU] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
+            for ( int_t j = NBX; j < NBX+NBU; j++ )
+              res_compl[i][j] = (u_min[j-NBX] - w[i][hidxb[i][j]])*lam_n[i][j];
+            for ( int_t j = NBX; j < NBX+NBU; j++ )
+              res_compl[i][j+NBX+NBU] = (-u_max[j-NBX] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
+
             #ifdef DEBUG_ANDREA
             printf("Complementarity residuals = %f\n", twonormv(NU, &res_compl[i][0]));
             #endif
@@ -560,8 +580,12 @@ int main() {
         for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j] = fmax(-x_max[j] + w[i][hidxb[i][j]], 0);
 
         // Complementarity residuals
-        for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j] = ( x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
-        for ( int_t j = 0; j < NBX; j++ ) res_compl[i][j+NBX] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX];
+        for ( int_t j = 0; j < NBX; j++ )
+          res_compl[i][j] = (x_min[j] - w[i][hidxb[i][j]])*lam_n[i][j];
+
+        for ( int_t j = 0; j < NBX; j++ )
+          res_compl[i][j+NBX] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX];
+
         #ifdef DEBUG_ANDREA
         printf("Complementarity residuals = %f\n", twonormv(NBX, &res_compl[i][0]));
         #endif
@@ -643,50 +667,85 @@ int main() {
         while ( !pos_feas  && alpha > min_alpha ) {
           pos_feas = 1;
           i = 0;
-          for ( int_t j = 0; j < 2*(NBU); j++ ) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
-          for ( int_t j = 0; j < 2*(NBU); j++ ) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
+
+          for ( int_t j = 0; j < 2*(NBU); j++ )
+            if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
+
+          for ( int_t j = 0; j < 2*(NBU); j++ )
+            if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
+
           for ( i = 1; i < N; i++ ) {
-            for ( int_t j = 0; j < 2*(NBU+NBX); j++ ) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
-            for ( int_t j = 0; j < 2*(NBU+NBX); j++ ) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
+            for ( int_t j = 0; j < 2*(NBU+NBX); j++ )
+              if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
+
+            for ( int_t j = 0; j < 2*(NBU+NBX); j++ )
+              if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
           }
           i = N;
-          for ( int_t j = 0; j < 2*(NBX); j++ ) if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
-          for ( int_t j = 0; j < 2*(NBX); j++ ) if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
+
+          for ( int_t j = 0; j < 2*(NBX); j++ )
+            if ( lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]) <= 0) { pos_feas = 0; }
+
+          for ( int_t j = 0; j < 2*(NBX); j++ )
+            if ( t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]) <= 0) { pos_feas = 0; }
         }
 
         // Print some info before updating
         if ((int)(ip_iter/10)*10 == ip_iter) {
-          printf("--------------------------------------------------------------------------------------------------\n");
+          printf("------------------------------------------------------------")
+          pritnf("------------------------------------\n");
           printf("iter\tres_stat\tres_eq\t\tres_ineq\tres_comp\tmu\t\talpha\n");
-          printf("--------------------------------------------------------------------------------------------------\n");
+          printf("------------------------------------------------------------")
+          printf("------------------------------------\n");
         }
 
-        printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ip_iter, inf_res_stat, inf_res_eq, inf_res_ineq, inf_res_compl, hpmpc_args.mu0, alpha);
-        if ( inf_res_stat < stat_tol && inf_res_eq < eq_tol && inf_res_ineq < ineq_tol && inf_res_compl < compl_tol && hpmpc_args.mu0 < mu_tol ) {
+        printf("%i\t%f\t%f\t%f\t%f\t%f\t%f\n", ip_iter, inf_res_stat,
+        inf_res_eq, inf_res_ineq, inf_res_compl, hpmpc_args.mu0, alpha);
+
+        if ( inf_res_stat < stat_tol && inf_res_eq < eq_tol && inf_res_ineq < ineq_tol
+          && inf_res_compl < compl_tol && hpmpc_args.mu0 < mu_tol ) {
           sol_found = 1;
           printf("\n-> Solution found.\n");
         }
 
         i = 0;
-        for ( int_t j = 0; j < NU; j++ ) w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
-        for ( int_t j = 0; j < NX; j++ ) pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
-        for ( int_t j = 0; j < 2*(NBU); j++ ) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
-        for ( int_t j = 0; j < 2*(NBU); j++ ) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+        for ( int_t j = 0; j < NU; j++ )
+          w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
+
+        for ( int_t j = 0; j < NX; j++ )
+          pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
+
+        for ( int_t j = 0; j < 2*(NBU); j++ )
+          lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
+
+        for ( int_t j = 0; j < 2*(NBU); j++ )
+          t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+
         for ( i = 1; i < N; i++ ) {
-            for ( int_t j = 0; j < NX; j++ ) w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
-            for ( int_t j = 0; j < NU; j++ ) w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
+            for ( int_t j = 0; j < NX; j++ )
+              w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
+            for ( int_t j = 0; j < NU; j++ )
+              w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
             #ifdef DEBUG_ANDREA
             printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
             printf("u_step=%f\n", qp_out.u[i][0] - w[i][0+NX]);
             #endif
-            for ( int_t j = 0; j < NX; j++ ) pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
-            for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
-            for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+            for ( int_t j = 0; j < NX; j++ )
+              pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
+
+            for ( int_t j = 0; j < 2*(NBX + NBU); j++ )
+              lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
+
+            for ( int_t j = 0; j < 2*(NBX + NBU); j++ )
+              t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
         }
         i = N;
-        for ( int_t j = 0; j < 2*(NBX); j++ ) lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
-        for ( int_t j = 0; j < 2*(NBX); j++ ) t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
-        for ( int_t j = 0; j < NX; j++ ) w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
+        for ( int_t j = 0; j < 2*(NBX); j++ )
+          lam_n[i][j] = lam_n[i][j] + alpha*(qp_out.lam[i][j] - lam_n[i][j]);
+        for ( int_t j = 0; j < 2*(NBX); j++ )
+          t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
+        for ( int_t j = 0; j < NX; j++ )
+          w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
         #ifdef DEBUG_ANDREA
         printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
         #endif

@@ -200,10 +200,10 @@ int main() {
     // nbb[N] = nbx;
 
     // Andrea XXX change this back to 11 bounds, changed to debug the strmat interface
-    for(ii=0; ii<M; ii++) // XXX not M !!!
+    for ( ii = 0; ii < M; ii++ )  // XXX not M !!!
       nbb[ii] = nuu[ii] + nxx[ii]/2;
 
-    for(; ii<=N; ii++)
+    for ( ; ii <= N; ii++ )
       nbb[ii] = 0;
 
     int ngg[N + 1];
@@ -300,92 +300,85 @@ int main() {
     * box & general constraints
     ************************************************/
 
-    	int *idxb0; int_zeros(&idxb0, nbb[0], 1);
-    	// double *d0; d_zeros(&d0, 2*nb[0]+2*ng[0], 1);
-      double *lb0;
-      d_zeros(&lb0, nbb[1], 1);
-      double *ub0;
-      d_zeros(&ub0, nbb[1], 1);
-    	for(ii=0; ii<nbb[0]; ii++)
-    		{
-    		if(ii<nuu[0]) // input
-    			{
-    			lb0[ii] = - 0.5; // umin
-    			ub0[ii] =   0.5; // umax
-    			}
-    		else // state
-    			{
-    			lb0[ii] = - 4.0; // xmin
-    			ub0[ii] =   4.0; // xmax
-    			}
-    		idxb0[ii] = ii;
-    		}
-    	// for(ii=0; ii<ng; ii++)  //Andrea: no general constraints atm
-    	// 	{
-    	// 	// d0[2*nb[0]+ii]       = - 100.0; // dmin
-    	// 	// d0[2*nb[0]+ng[0]+ii] =   100.0; // dmax
-    	// 	}
-    	// i_print_mat(1, nb[0], idxb0, 1);
-    	// d_print_mat(1, 2*nb[0]+2*ng[0], d0, 1);
+    int *idxb0; int_zeros(&idxb0, nbb[0], 1);
+    // double *d0; d_zeros(&d0, 2*nb[0]+2*ng[0], 1);
+    double *lb0;
+    d_zeros(&lb0, nbb[1], 1);
+    double *ub0;
+    d_zeros(&ub0, nbb[1], 1);
+    for ( ii = 0; ii < nbb[0]; ii++ ) {
+      if ( ii < nuu[0] ) {
+        lb0[ii] = - 0.5;  // umin
+        ub0[ii] =   0.5;  // umax
+      } else {
+        lb0[ii] = - 4.0;  // xmin
+        ub0[ii] =   4.0;  // xmax
+      }
+      idxb0[ii] = ii;
+    }
 
-    	int *idxb1; int_zeros(&idxb1, nbb[1], 1);
-    	// double *d1; d_zeros(&d1, 2*nb[1]+2*ng[1], 1);
-      int_zeros(&idxb1, nbb[1], 1);
-      double *lb1;
-      d_zeros(&lb1, nbb[1], 1);
-      double *ub1;
-      d_zeros(&ub1, nbb[1], 1);
-    	for(ii=0; ii<nbb[1]; ii++) {
-    		if(ii<nuu[1]) { // input
-    			lb1[ii] = - 0.5; // umin
-    			ub1[ii] =   0.5; // umax
-    		}
-    		else { // state
-    			lb1[ii] = - 4.0; // xmin
-    			ub1[ii] =   4.0; // xmax
-    		}
-    		idxb1[ii] = ii;
-    	}
+    // for(ii=0; ii<ng; ii++)  //Andrea: no general constraints atm
+    // {
+    // // d0[2*nb[0]+ii]       = - 100.0; // dmin
+    // // d0[2*nb[0]+ng[0]+ii] =   100.0; // dmax
+    // }
+    // i_print_mat(1, nb[0], idxb0, 1);
+    // d_print_mat(1, 2*nb[0]+2*ng[0], d0, 1);
 
-      // for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
-    	// 	{
-    	// 	// d1[2*nb[1]+ii]       = - 100.0; // dmin
-    	// 	// d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
-    	// 	}
-    	// i_print_mat(1, nb[1], idxb1, 1);
-    	// d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
+    int *idxb1; int_zeros(&idxb1, nbb[1], 1);
+    // double *d1; d_zeros(&d1, 2*nb[1]+2*ng[1], 1);
+    int_zeros(&idxb1, nbb[1], 1);
+    double *lb1;
+    d_zeros(&lb1, nbb[1], 1);
+    double *ub1;
+    d_zeros(&ub1, nbb[1], 1);
+    for ( ii = 0; ii < nbb[1]; ii++ ) {
+      if ( ii < nuu[1] ) {  // input
+        lb1[ii] = - 0.5;  // umin
+        ub1[ii] =   0.5;  // umax
+      } else {  // state
+        lb1[ii] = - 4.0;  // xmin
+        ub1[ii] =   4.0;  // xmax
+      }
+      idxb1[ii] = ii;
+     }
 
-    	int *idxbN; int_zeros(&idxbN, nbb[N], 1);
-    	// double *dN; d_zeros(&dN, 2*nb[N]+2*ng[N], 1);
-      int_zeros(&idxbN, nbb[N], 1);
-      double *lbN;
-      d_zeros(&lbN, nbb[N], 1);
-      double *ubN;
-      d_zeros(&ubN, nbb[N], 1);
-    	for(ii=0; ii<nbb[N]; ii++) {
-    		if(ii<nuu[N]) // input
-    			{
-    			lbN[ii] = - 0.5; // umin
-    			ubN[ii] =   0.5; // umax
-    			}
-    		else // state
-    			{
-    			lbN[ii]       = - 4.0; // xmin
-    			ubN[ii] =   4.0; // xmax
-    			}
-    		idxbN[ii] = ii;
-    	}
-    	// for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
-    	// 	{
-    	// 	// dN[2*nb[N]+ii]       = - 100.0; // dmin
-    	// 	// dN[2*nb[N]+ng[N]+ii] =   100.0; // dmax
-    	// 	}
-    	// i_print_mat(1, nb[N], idxbN, 1);
-    	// d_print_mat(1, 2*nb[N]+2*ng[N], dN, 1);
+     // for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
+     // {
+     // // d1[2*nb[1]+ii]       = - 100.0; // dmin
+     // // d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
+     // }
+     // i_print_mat(1, nb[1], idxb1, 1);
+     // d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
 
-    /************************************************
-    * cost function
-    ************************************************/
+    int *idxbN; int_zeros(&idxbN, nbb[N], 1);
+    // double *dN; d_zeros(&dN, 2*nb[N]+2*ng[N], 1);
+    int_zeros(&idxbN, nbb[N], 1);
+    double *lbN;
+    d_zeros(&lbN, nbb[N], 1);
+    double *ubN;
+    d_zeros(&ubN, nbb[N], 1);
+    for ( ii = 0; ii < nbb[N]; ii++ ) {
+      if ( ii < nuu[N] ) {
+        lbN[ii] = - 0.5;  // umin
+        ubN[ii] =   0.5;  // umax
+      } else {
+        lbN[ii] = - 4.0;  // xmin
+        ubN[ii] =   4.0;  // xmax
+        }
+      idxbN[ii] = ii;
+    }
+    // for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
+    // 	{
+    // 	// dN[2*nb[N]+ii]       = - 100.0; // dmin
+    // 	// dN[2*nb[N]+ng[N]+ii] =   100.0; // dmax
+    // 	}
+    // i_print_mat(1, nb[N], idxbN, 1);
+    // d_print_mat(1, 2*nb[N]+2*ng[N], dN, 1);
+
+  /************************************************
+  * cost function
+  ************************************************/
 
     double *Q;
     d_zeros(&Q, nx, nx);

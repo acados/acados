@@ -58,7 +58,7 @@
 #define NN 10
 #define NX 4
 #define NU 1
-#define NBU 0
+#define NBU 1
 #define NBX 0
 
 
@@ -90,7 +90,6 @@ static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 
 // Simple SQP example for acados
 int main() {
-
     // Problem data
     int_t   N                   = NN;
     real_t  x0[NX]              = {0.0, 1.0, 0.0, 0.0};
@@ -103,6 +102,10 @@ int main() {
     int_t   max_iters           = 100;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
+    real_t  x_min[NBX]          = {-100, -100, -100, -100};
+    real_t  x_max[NBX]          = {100, 100, 100, 100};
+    real_t  u_min[NBU]          = {-1.0};
+    real_t  u_max[NBU]          = {1.0};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
@@ -147,7 +150,7 @@ int main() {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[0] = 0; // x0 is eliminated
+    nx[0] = 0;  // x0 is eliminated
     nx[N] = NX;
     nu[N] = 0;
 
@@ -174,32 +177,49 @@ int main() {
     * box constraints
     ************************************************/
     int ii, jj;
+    nb[0] = NBU;
+    for (ii = 1; ii < N; ii++ ) nb[ii] = NBU + NBX;
+    nb[N] = NBX;
 
-    nb[0] = 0;
-    for (ii = 1; ii < N; ii++) nb[ii] = 0;
-    nb[N] = 0;
+    // int *idxb0;
+    // int_zeros(&idxb0, nb[0], 1);
+    // for (jj = 0; jj < NBX+NBU; jj++ ) idxb0[jj] = jj;
+    //
+    // int *idxb1;
+    // int_zeros(&idxb1, nb[1], 1);
+    // for (jj = 0; jj < NBX; jj++ ) idxb1[jj] = jj;
+    // for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NX+jj;
+    //
+    // int *idxbN;
+    // int_zeros(&idxbN, nb[N], 1);
+    // for (jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
+    // for (; jj < NBX+NBU; jj++ ) idxbN[jj] = NX+jj;
+    //
+    // hidxb[0] = idxb0;
+    // for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
+    // hidxb[N] = idxbN;
 
-    int *idxb0;
+    int *idxb0;  // TODO(Andrea): need to swap these guys in the interface...
     int_zeros(&idxb0, nb[0], 1);
-    idxb0[0] = 0;
-    idxb0[1] = 1;
-
+    for (jj = 0; jj < NBU; jj++ ) idxb0[jj] = jj;
 
     int *idxb1;
     int_zeros(&idxb1, nb[1], 1);
+    for (jj = 0; jj < NBU; jj++ ) idxb1[jj] = jj;
+    for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NU+jj;
 
     int *idxbN;
     int_zeros(&idxbN, nb[N], 1);
+    for (jj = 0; jj < NBU; jj++ ) idxbN[jj] = jj;
+    for (; jj < NBX+NBU; jj++ ) idxbN[jj] = NU+jj;
 
-    for (ii = 1; ii < N; ii++) {
-        hidxb[ii] = idxb1;
-    }
-
+    hidxb[0] = idxb0;
+    for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
     hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
-    d_zeros(&plb[0], (NBU+NBX), 1);
-    d_zeros(&pub[0], (NBU+NBX), 1);
+    d_zeros(&plb[0], (NBU), 1);
+    d_zeros(&pub[0], (NBU), 1);
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
@@ -212,6 +232,8 @@ int main() {
         d_zeros(&plb[i+1], (NBU+NBX), 1);
         d_zeros(&pub[i+1], (NBU+NBX), 1);
     }
+    d_zeros(&plb[N], (NBX), 1);
+    d_zeros(&pub[N], (NBX), 1);
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
     // hidxb[N] = idxbN;
@@ -293,7 +315,7 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAX_IP_ITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 0.0;
+    hpmpc_args.mu0 = 0.1;
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
@@ -307,7 +329,7 @@ int main() {
 
     // Adding memory for data
     for ( int ii=0; ii <=N; ii++ ) {
-        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1,nx[ii+1]);
+        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
         work_space_size+= d_size_strvec(nx[ii+1]);
         work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
         work_space_size+= d_size_strvec(nu[ii]+nx[ii]);
@@ -321,10 +343,7 @@ int main() {
 
     work_space_size += 10000*sizeof(double)*(N+1);
 
-    work_space_size = 500000*sizeof(double)*(N+1); //TODO (Andrea)
-    // d_ip2_res_mpc_hard_work_space_size_bytes_libstr returns a negative number
-    // for N = 10....
-
+    work_space_size = 500000*sizeof(double)*(N+1);
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
@@ -353,7 +372,7 @@ int main() {
     qp_in.b = (const real_t **) pb;
     qp_in.lb = (const real_t **) plb;
     qp_in.ub = (const real_t **) pub;
-    // qp_in.idxb = (const int_t **) hidxb;
+    qp_in.idxb = (const int_t **) hidxb;
     qp_in.Cx = (const real_t **) pC;
     qp_in.Cu = (const real_t **) pD;
     qp_in.lc = (const real_t **) plg;
@@ -389,7 +408,19 @@ int main() {
                 }
                 for (int_t j = 0; j < NU; j++)
                     for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
+
+
+                for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
+                for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
+                for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
+                for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
             }
+
+            for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
+            for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
+
+            for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
+            for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
 
             // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
 
@@ -398,7 +429,7 @@ int main() {
             }
             int status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
             // int status = 0;
-            printf("hpmpc_status=%i\n",status);
+            printf("hpmpc_status=%i\n", status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
 
             if (status == 2) printf("status = ACADOS_MINSTEP\n");

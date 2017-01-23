@@ -90,7 +90,6 @@ static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 
 // Simple SQP example for acados
 int main() {
-
     // Problem data
     int_t   N                   = NN;
     real_t  x0[NX]              = {0.0, 1.0, 0.0, 0.0};
@@ -103,8 +102,8 @@ int main() {
     int_t   max_iters           = 100;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
-    real_t  x_min[NBX]          = {-100,-100,-100,-100};
-    real_t  x_max[NBX]          = {100,100,100,100};
+    real_t  x_min[NBX]          = {-100, -100, -100, -100};
+    real_t  x_max[NBX]          = {100, 100, 100, 100};
     real_t  u_min[NBU]          = {-1.0};
     real_t  u_max[NBU]          = {1.0};
 
@@ -151,7 +150,7 @@ int main() {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[0] = 0; // x0 is eliminated
+    nx[0] = 0;  // x0 is eliminated
     nx[N] = NX;
     nu[N] = 0;
 
@@ -200,7 +199,7 @@ int main() {
     // for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
     // hidxb[N] = idxbN;
 
-    int *idxb0; //TODO (Andrea): need to swap these guys in the interface...
+    int *idxb0;  // TODO(Andrea): need to swap these guys in the interface...
     int_zeros(&idxb0, nb[0], 1);
     for (jj = 0; jj < NBU; jj++ ) idxb0[jj] = jj;
 
@@ -330,7 +329,7 @@ int main() {
 
     // Adding memory for data
     for ( int ii=0; ii <=N; ii++ ) {
-        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1,nx[ii+1]);
+        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
         work_space_size+= d_size_strvec(nx[ii+1]);
         work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
         work_space_size+= d_size_strvec(nu[ii]+nx[ii]);
@@ -344,10 +343,7 @@ int main() {
 
     work_space_size += 10000*sizeof(double)*(N+1);
 
-    work_space_size = 500000*sizeof(double)*(N+1); //TODO (Andrea)
-    // d_ip2_res_mpc_hard_work_space_size_bytes_libstr returns a negative number
-    // for N = 10....
-
+    work_space_size = 500000*sizeof(double)*(N+1);
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
@@ -418,8 +414,6 @@ int main() {
                 for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
                 for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
                 for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
-
-
             }
 
             for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
@@ -435,7 +429,7 @@ int main() {
             }
             int status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
             // int status = 0;
-            printf("hpmpc_status=%i\n",status);
+            printf("hpmpc_status=%i\n", status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
 
             if (status == 2) printf("status = ACADOS_MINSTEP\n");

@@ -195,11 +195,11 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
     char *ptr_memory = (char *) workspace;
 
-    for ( ii=0; ii<N; ii++ ) {
+    for ( ii = 0; ii < N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
       ptr_memory += (&hsBAbt[ii])->memory_size;
       d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
-  	  d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
+      d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
       d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
 
       d_create_strvec(nx[ii+1], &hsb[ii], ptr_memory);
@@ -303,7 +303,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     }
 
     int nzM  = 0;
-    for( ii=0; ii <= N; ii++ ) {
+    for( ii =  0; ii <= N; ii++ ) {
       nzM = nu[ii]+nx[ii]+1 > nzM ? nu[ii]+nx[ii]+1 : nzM;
     }
 
@@ -375,7 +375,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // double **hlam_in = hpmpc_args->lam0; //TODO(Andrea): not using input multipliers
     // double **ht_in = hpmpc_args->t0; //TODO(Andrea): not using input slacks
-
 
     struct d_strmat *hsmatdummy = NULL;
     struct d_strvec *hsvecdummy = NULL;
