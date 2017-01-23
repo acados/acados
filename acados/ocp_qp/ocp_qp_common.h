@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include "acados/utils/types.h"
+
 typedef struct ocp_qp_in_ {
     int_t N;
     const int_t *nx;
