@@ -23,14 +23,15 @@
 #else
 #include <sys/stat.h>
 #endif
-#include "acados/sim/sim_erk_integrator.h"
-#include "examples/Chen/Chen_model.h"
 
 // system headers
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <sys/time.h>
+
+#include "acados/sim/sim_erk_integrator.h"
+#include "examples/Chen/Chen_model.h"
 
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"
@@ -86,7 +87,6 @@ static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 
 // Simple SQP example for acados
 int main() {
-
     // Problem data
     int_t   N                   = NN;
     real_t  x0[NX]              = {0.05, 0};
@@ -336,7 +336,6 @@ int main() {
         acado_tic(&timer);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
-
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];

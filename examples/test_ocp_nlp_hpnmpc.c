@@ -88,8 +88,7 @@ int main() {
     real_t  *lam_n[NN+1];  // nlp ineq. mult
     real_t  *t_n[NN+1];    // nlp ineq. slacks
 
-    real_t lam_init = 1.0;
-    real_t t_init = 1.0;
+    real_t lam_init = 1.0; real_t t_init = 1.0;
 
     for ( int_t i = 0; i < NN; i++ ) {
       d_zeros(&w[i], NX+NU, 1);
@@ -100,9 +99,7 @@ int main() {
       for ( int_t j = 0; j < 2*(NBX + NBU); j++ ) t_n[i][j] = t_init;
     }
 
-    d_zeros(&w[NN], NX, 1);
-    d_zeros(&pi_n[NN], NX, 1);
-    d_zeros(&lam_n[NN], 2*NBX, 1);
+    d_zeros(&w[NN], NX, 1); d_zeros(&pi_n[NN], NX, 1); d_zeros(&lam_n[NN], 2*NBX, 1);
     for ( int_t j = 0; j < 2*NBX; j++ ) lam_n[NN][j] = lam_init;
     d_zeros(&t_n[NN], 2*NBX, 1);
     for ( int_t j = 0; j < 2*NBX; j++ ) t_n[NN][j] = t_init;
@@ -112,11 +109,8 @@ int main() {
     for ( int_t i = 0; i < NU; i++ ) R[i*(NU+1)] = 0.05;
 
     // Integrator structs
-    real_t T = 0.1;
-    sim_in  sim_in;
-    sim_out sim_out;
-    sim_in.nSteps = 100;
-    sim_in.step = T/sim_in.nSteps;
+    real_t T = 0.1; sim_in  sim_in; sim_out sim_out;
+    sim_in.nSteps = 100; sim_in.step = T/sim_in.nSteps;
     sim_in.VDE_forw = &VDE_fun;
     sim_in.nx = NX;
     sim_in.nu = NU;
@@ -198,7 +192,7 @@ int main() {
     for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
     hidxb[N] = idxbN;
 
-    d_zeros(&px0[0], nx[0], 1); // TODO (Andrea): px0 unused
+    d_zeros(&px0[0], nx[0], 1);  // TODO(Andrea): px0 unused
     d_zeros(&hlb[0], (NBU+NBX), 1);
     d_zeros(&hub[0], (NBU+NBX), 1);
     for ( int_t i = 0; i < N; i++ ) {
@@ -490,9 +484,9 @@ int main() {
         for ( int_t j = 0; j < NBU; j++ ) res_stat[0][hidxb[0][j]]-=lam_n[0][j];
         for ( int_t j = 0; j < NBU; j++ ) res_stat[0][hidxb[0][j]]+=lam_n[0][NBU+j];
 
-        #ifdef DEBUG_ANDREA
-        printf("Stationarity residuals = %f\n", twonormv(NU+NX, &res_stat[i][0]));
-        #endif
+        // #ifdef DEBUG_ANDREA
+        // printf("Stationarity residuals = %f\n", twonormv(NU+NX, &res_stat[i][0]));
+        // #endif
 
         // Ineq. feasibility residuals
         for ( int_t j = NBX; j < NBX+NBU; j++ )
@@ -500,18 +494,20 @@ int main() {
         for ( int_t j = NBX; j < NBX+NBU; j++ )
           res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]+NX], 0);
 
-        #ifdef DEBUG_ANDREA
-        printf("Ineq. feas. residuals = %f\n", twonormv(2*NU, &res_ineq[i][0]));
-        #endif
+        // #ifdef DEBUG_ANDREA
+        // printf("Ineq. feas. residuals = %f\n", twonormv(2*NU, &res_ineq[i][0]));
+        // #endif
 
         // Complementarity residuals
         for ( int_t j = 0; j < NBU; j++ )
           res_compl[i][j] = (u_min[j] - w[i][hidxb[i][j]+NX])*lam_n[i][j];
         for ( int_t j = 0; j < NBU; j++ )
           res_compl[i][j+NBU] = (-u_max[j] + w[i][hidxb[i][j]+NX])*lam_n[i][j+NBU];
-        #ifdef DEBUG_ANDREA
-        printf("Complementarity residuals = %f\n", twonormv(2*NU, &res_compl[i][0]));
-        #endif
+
+        // #ifdef DEBUG_ANDREA
+        // printf("Complementarity residuals = %f\n", twonormv(2*NU, &res_compl[i][0]));
+        // #endif
+
         for ( i = 1; i < N; i++ ) {
             // Stationarity residuals
             for ( int_t j = 0; j < nx[i]; j++ ) res_stat[i][j] = -1.0*pi_n[i-1][j];
@@ -523,14 +519,14 @@ int main() {
             for ( int_t j = 0; j < NBX+NBU; j++ ) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
             for ( int_t j = 0; j < NBX+NBU; j++ ) res_stat[i][hidxb[i][j]]+=lam_n[i][NBX+NBU+j];
 
-            #ifdef DEBUG_ANDREA
-            printf("Stationarity residuals = %f\n", twonormv(NX+NU, &res_stat[i][0]));
-            #endif
+            // #ifdef DEBUG_ANDREA
+            // printf("Stationarity residuals = %f\n", twonormv(NX+NU, &res_stat[i][0]));
+            // #endif
 
             // Eq. feasibility residuals (computed while building the matrices)
-            #ifdef DEBUG_ANDREA
-            printf("Eq residuals = %f\n", twonormv(NX, &res_eq[i][0]));
-            #endif
+            // #ifdef DEBUG_ANDREA
+            // printf("Eq residuals = %f\n", twonormv(NX, &res_eq[i][0]));
+            // #endif
 
             // Ineq. feasibility residuals
             for ( int_t j = 0; j < NBX; j++ )
@@ -545,9 +541,9 @@ int main() {
             for ( int_t j = NBX; j < NBX+NBU; j++ )
               res_ineq[i][j+NBX+NBU] = fmax(-u_max[j-NBX] + w[i][hidxb[i][j]], 0);
 
-            #ifdef DEBUG_ANDREA
-            printf("Ineq. feas. residuals = %f\n", twonormv(NU, &res_stat[i][0]));
-            #endif
+            // #ifdef DEBUG_ANDREA
+            // printf("Ineq. feas. residuals = %f\n", twonormv(NU, &res_stat[i][0]));
+            // #endif
 
             // Complementarity residuals
             for ( int_t j = 0; j < NBX; j++ )
@@ -559,9 +555,9 @@ int main() {
             for ( int_t j = NBX; j < NBX+NBU; j++ )
               res_compl[i][j+NBX+NBU] = (-u_max[j-NBX] + w[i][hidxb[i][j]])*lam_n[i][j+NBX+NBU];
 
-            #ifdef DEBUG_ANDREA
-            printf("Complementarity residuals = %f\n", twonormv(NU, &res_compl[i][0]));
-            #endif
+            // #ifdef DEBUG_ANDREA
+            // printf("Complementarity residuals = %f\n", twonormv(NU, &res_compl[i][0]));
+            // #endif
         }
 
         i = N;
@@ -571,9 +567,9 @@ int main() {
         for ( int_t j = 0; j < NBX; j++ ) res_stat[i][hidxb[i][j]]-=lam_n[i][j];
         for ( int_t j = 0; j < NBX; j++ ) res_stat[hidxb[i][j]][j]+=lam_n[i][NBX+j];
 
-        #ifdef DEBUG_ANDREA
-        printf("Stationarity residuals = %f\n", twonormv(NX, &res_stat[i][0]));
-        #endif
+        // #ifdef DEBUG_ANDREA
+        // printf("Stationarity residuals = %f\n", twonormv(NX, &res_stat[i][0]));
+        // #endif
 
         // Ineq. feasibility residuals
         for ( int_t j = 0; j < NBX; j++ ) res_ineq[i][j] = fmax(x_min[j] - w[i][hidxb[i][j]], 0);
@@ -586,9 +582,9 @@ int main() {
         for ( int_t j = 0; j < NBX; j++ )
           res_compl[i][j+NBX] = (-x_max[j] + w[i][hidxb[i][j]])*lam_n[i][j+NBX];
 
-        #ifdef DEBUG_ANDREA
-        printf("Complementarity residuals = %f\n", twonormv(NBX, &res_compl[i][0]));
-        #endif
+        // #ifdef DEBUG_ANDREA
+        // printf("Complementarity residuals = %f\n", twonormv(NBX, &res_compl[i][0]));
+        // #endif
 
         // Infinity norm of the residuals
         double inf_res_stat = 0;
@@ -726,10 +722,10 @@ int main() {
               w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
             for ( int_t j = 0; j < NU; j++ )
               w[i][j+NX] = w[i][j+NX] + alpha*(qp_out.u[i][j] - w[i][j+NX]);
-            #ifdef DEBUG_ANDREA
-            printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
-            printf("u_step=%f\n", qp_out.u[i][0] - w[i][0+NX]);
-            #endif
+            // #ifdef DEBUG_ANDREA
+            // printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
+            // printf("u_step=%f\n", qp_out.u[i][0] - w[i][0+NX]);
+            // #endif
             for ( int_t j = 0; j < NX; j++ )
               pi_n[i][j] = pi_n[i][j] + alpha*(qp_out.pi[i][j] - pi_n[i][j]);
 
@@ -746,12 +742,12 @@ int main() {
           t_n[i][j] = t_n[i][j] + alpha*(qp_out.t[i][j] - t_n[i][j]);
         for ( int_t j = 0; j < NX; j++ )
           w[i][j] = w[i][j] + alpha*(qp_out.x[i][j] - w[i][j]);
-        #ifdef DEBUG_ANDREA
-        printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
-        #endif
-        #ifdef DEBUG_ANDREA
-        print_states_controls(&w[0], N);
-        #endif
+        // #ifdef DEBUG_ANDREA
+        // printf("x_step=%f\n", qp_out.x[i][0] - w[i][0]);
+        // #endif
+        // #ifdef DEBUG_ANDREA
+        // print_states_controls(&w[0], N);
+        // #endif
 
         timings += acado_toc(&timer);
         ip_iter+=1;

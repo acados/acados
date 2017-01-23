@@ -67,7 +67,7 @@ int main() {
 
     real_t  *w[NN+1];  // nlp states and controls stacked
     real_t  *pi_n[NN+1];  // nlp eq. mult
-    real_t  *lam_n[NN+1]; // nlp ineq. mult
+    real_t  *lam_n[NN+1];  // nlp ineq. mult
 
     for ( int_t i = 0; i < NN; i++ ) {
       d_zeros(&w[i], NX+NU, 1);
@@ -157,7 +157,7 @@ int main() {
     ii = 0;
     d_zeros(&ppi[ii], nx[ii+1], 1);
     d_zeros(&plam[ii], 2*nb[ii], 1);
-    for (ii = 1; ii < N; ii++ ) {
+    for ( ii = 1; ii < N; ii++ ) {
         d_zeros(&ppi[ii], nx[ii+1], 1);
         d_zeros(&plam[ii], 2*nb[ii], 1);
     }

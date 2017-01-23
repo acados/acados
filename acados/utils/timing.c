@@ -38,7 +38,6 @@ real_t acado_toc(acado_timer* t) {
 
     // return (real_t)duration / 1e9;
     return (real_t)0.0 / 1e9;
-
 }
 #else
 void acado_tic(acado_timer* t) {
