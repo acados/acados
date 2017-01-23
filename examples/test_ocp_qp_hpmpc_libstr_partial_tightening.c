@@ -369,10 +369,10 @@ int main() {
       idxbN[ii] = ii;
     }
     // for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
-    // 	{
-    // 	// dN[2*nb[N]+ii]       = - 100.0; // dmin
-    // 	// dN[2*nb[N]+ng[N]+ii] =   100.0; // dmax
-    // 	}
+    // {
+    // // dN[2*nb[N]+ii]       = - 100.0; // dmin
+    // // dN[2*nb[N]+ng[N]+ii] =   100.0; // dmax
+    // }
     // i_print_mat(1, nb[N], idxbN, 1);
     // d_print_mat(1, 2*nb[N]+2*ng[N], dN, 1);
 
@@ -539,7 +539,7 @@ int main() {
 
     // Adding memory for data
     for ( int ii=0; ii <=N; ii++ ) {
-        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1,nxx[ii+1]);
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nxx[ii+1]);
         work_space_size+= d_size_strvec(nxx[ii+1]);
         work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nuu[ii]+nxx[ii]);
         work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
