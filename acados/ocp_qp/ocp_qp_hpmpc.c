@@ -192,12 +192,12 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
     char *ptr_memory = (char *) workspace;
 
-    for( ii=0; ii<N; ii++ ) {
+    for ( ii=0; ii<N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
       ptr_memory += (&hsBAbt[ii])->memory_size;
-  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
-  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
-    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
+      d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
+  	  d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
+      d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
 
       d_create_strvec(nx[ii+1], &hsb[ii], ptr_memory);
       ptr_memory += (&hsb[ii])->memory_size;
@@ -270,7 +270,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hst[ii], ptr_memory);
     ptr_memory += (&hst[ii])->memory_size;
 
-    // TODO: LAST STAGE?
+    // TODO(Andrea): LAST STAGE?
 
     // extract output struct members
     double **hx = qp_out->x;
@@ -290,23 +290,23 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     double inf_norm_res[4];  // inf norm of residuals
     for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
-  	double mu;
-  	struct d_strvec hswork[2];
+    double mu;
+    struct d_strvec hswork[2];
 
     // max sizes
     int ngM = 0;
-    for ( ii=0; ii<=N; ii++ ) {
-      ngM = ng[ii]>ngM ? ng[ii] : ngM;
+    for ( ii=0; ii <= N; ii++ ) {
+      ngM = ng[ii] > ngM ? ng[ii] : ngM;
     }
 
     int nzM  = 0;
-    for( ii=0; ii<=N; ii++ ) {
-      nzM = nu[ii]+nx[ii]+1>nzM ? nu[ii]+nx[ii]+1 : nzM;
+    for( ii=0; ii <= N; ii++ ) {
+      nzM = nu[ii]+nx[ii]+1 > nzM ? nu[ii]+nx[ii]+1 : nzM;
     }
 
     int nxgM = ng[N];
-    for ( ii=0; ii<N; ii++ ) {
-      nxgM = nx[ii+1]+ng[ii]>nxgM ? nx[ii+1]+ng[ii] : nxgM;
+    for ( ii=0; ii < N; ii++ ) {
+      nxgM = nx[ii+1]+ng[ii] > nxgM ? nx[ii+1]+ng[ii] : nxgM;
     }
 
     // IPM constants
@@ -327,7 +327,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
     double **temp_u;
     // copy result to qp_out
-    for ( ii = 0; ii<=N; ii++ ) {
+    for ( ii = 0; ii <= N; ii++ ) {
       hu[ii] = hsux[ii].pa;
       temp_u = &hsux[ii].pa;
       hx[ii] = &temp_u[0][nu[ii]];
@@ -343,7 +343,6 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
 int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
   ocp_qp_hpmpc_args *hpmpc_args, int M, double mu_pt, void *workspace) {
-
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
 
@@ -377,7 +376,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 
     struct d_strmat *hsmatdummy;
-  	struct d_strvec *hsvecdummy;
+    struct d_strvec *hsvecdummy;
 
     struct d_strmat hsBAbt[N+1];
     struct d_strvec hsb[N+1];
@@ -398,25 +397,25 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strmat hsric_work_mat[2];
     struct d_strvec hsric_work_vec[1];
 
-    struct d_strvec hsdlam[N+1]; // to be checked
-    struct d_strvec hslamt[N+1]; // to be checked
+    struct d_strvec hsdlam[N+1];  // to be checked
+    struct d_strvec hslamt[N+1];  // to be checked
 
     int nuM;
-  	int nbM;
-  	struct d_strmat sRSQrqM;
-  	struct d_strvec srqM;
-  	struct d_strvec srqM_tmp;
-  	struct d_strmat sLxM;
-  	struct d_strmat sPpM;
+    int nbM;
+    struct d_strmat sRSQrqM;
+    struct d_strvec srqM;
+    struct d_strvec srqM_tmp;
+    struct d_strmat sLxM;
+    struct d_strmat sPpM;
 
     char *ptr_memory = (char *) workspace;
 
-    for( ii=0; ii<N; ii++ ) {
+    for( ii = 0; ii < N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
       ptr_memory += (&hsBAbt[ii])->memory_size;
-  		d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
-  		d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
-    	d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
+      d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
+      d_cvt_tran_mat2strmat(nx[ii+1], nx[ii], hA[ii], nx[ii+1], &hsBAbt[ii], nu[ii], 0);
+      d_cvt_tran_mat2strmat(nx[ii+1], 1, hb[ii], nx[ii+1], &hsBAbt[ii], nu[ii]+nx[ii], 0);
 
       d_create_strvec(nx[ii+1], &hsb[ii], ptr_memory);
       ptr_memory += (&hsb[ii])->memory_size;
@@ -463,7 +462,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_cvt_vec2strvec(2*nb[ii]+2*ng[ii], hpmpc_args->t0[ii], &hst[ii], 0);
       ptr_memory += (&hst[ii])->memory_size;
 
-      // TODO remove memory allocation here
+      // TODO(Andrea): remove memory allocation here
       d_allocate_strvec(nx[ii+1], &hsPb[ii+1]);
       d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
       d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
@@ -473,7 +472,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
       d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
       d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
-
 
     }
 
@@ -505,9 +503,9 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_create_strvec(2*nb[ii]+2*ng[ii], &hst[ii], ptr_memory);
     ptr_memory += (&hst[ii])->memory_size;
 
-    // TODO: remove memory allocation
+    // TODO(Andrea): remove memory allocation
     d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
-  	d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
+    d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
 
     d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
     d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
@@ -543,8 +541,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double inf_norm_res[4];  // inf norm of residuals
     for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
-  	double mu;
-  	struct d_strvec hswork[2];
+    double mu;
+    struct d_strvec hswork[2];
 
     // IPM constants
     int hpmpc_status;
@@ -555,12 +553,12 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     int compute_mult = 1;
 
     // riccati work space
-  	void *work_ric;
-  	v_zeros_align(&work_ric, d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+    void *work_ric;
+    v_zeros_align(&work_ric, d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
-  	// v_zeros_align(&work_memory, d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+    // v_zeros_align(&work_memory, d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
-    //update cost function matrices and vectors (box constraints)
+    // update cost function matrices and vectors (box constraints)
     double sigma_mu = 1.0;
     d_update_hessian_mpc_hard_libstr(N-M, nx, nu, nb, ng, hsd, sigma_mu, hst,
        hstinv, hslam, hslamt, hsdlam, hsQx, hsqx);
@@ -573,7 +571,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // extract chol factor of [P p; p' *]
     d_print_strmat(nu[M]+nx[M]+1, nu[M]+nx[M], &hsL[M], 0, 0);
 
-    dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0); // TODO have m and n !!!!!
+    dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0);  // TODO(Andrea): have m and n !!!!!
     dgecp_libstr(1, nx[M], 1.0, &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
 
     // d_print_strmat(nx[M]+1, nx[M], &sLxM, 0, 0);
