@@ -48,13 +48,13 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
         void *workspace);
 
 int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-  ocp_qp_hpmpc_args *qp_args, int M, double mu_pt, void *workspace);
+  ocp_qp_hpmpc_args *qp_args, int M, void *workspace);
 
-int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
-        void *workspace);
+//TODO(Andrea): need to merge hpmpc in order to use this... (Body is ready)
+// int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
+//   void *workspace);
 
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
     ocp_qp_hpmpc_args *hpmpc_args);
-
 
 #endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_

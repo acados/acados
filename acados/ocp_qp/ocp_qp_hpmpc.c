@@ -24,12 +24,15 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
-#include "hpmpc/include/c_interface.h"
-
 #include <blasfeo/include/blasfeo_target.h>
 #include <blasfeo/include/blasfeo_common.h>
 #include <blasfeo/include/blasfeo_d_blas.h>
 #include <blasfeo/include/blasfeo_d_aux.h>
+
+#include "hpmpc/include/c_interface.h"
+#include "hpmpc/include/mpc_solvers.h"
+#include "hpmpc/include/lqcp_solvers.h"
+#include "hpmpc/include/mpc_aux.h"
 
 // work space size
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
@@ -147,7 +150,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     int acados_status = ACADOS_SUCCESS;
 
     // loop index
-    int ii, jj;
+    int ii;
 
     // extract input struct members
     int N = qp_in->N;
@@ -181,14 +184,14 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     struct d_strvec hspi[N+1];
     struct d_strvec hslam[N+1];
     struct d_strvec hst[N+1];
-    struct d_strvec hsPb[N+1];
-    struct d_strmat hsL[N+1];
-    struct d_strmat hsLxt[N+1];
-    struct d_strmat hsric_work_mat[2];
-    struct d_strvec hsric_work_vec[1];
+    // struct d_strvec hsPb[N+1];
+    // struct d_strmat hsL[N+1];
+    // struct d_strmat hsLxt[N+1];
+    // struct d_strmat hsric_work_mat[2];
+    // struct d_strvec hsric_work_vec[1];
 
-    int nuM;
-    int nbM;
+    // int nuM;
+    // int nbM;
 
     char *ptr_memory = (char *) workspace;
 
@@ -206,15 +209,15 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
       ptr_memory += (&hsRSQrq[ii])->memory_size;
       d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
-      d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS, nu[ii], &hsRSQrq[ii], nu[ii], 0);
+      d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS[ii], nu[ii], &hsRSQrq[ii], nu[ii], 0);
       d_cvt_mat2strmat(nx[ii], nx[ii], hQ[ii], nx[ii], &hsRSQrq[ii], nu[ii], nu[ii]);
       d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
       d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
 
       d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], ptr_memory);
       ptr_memory += (&hsrq[ii])->memory_size;
-      d_cvt_vec2strvec(nu[ii], hr, &hsrq[ii], 0);
-      d_cvt_vec2strvec(nx[ii], hq, &hsrq[ii], nu[ii]);
+      d_cvt_vec2strvec(nu[ii], hr[ii], &hsrq[ii], 0);
+      d_cvt_vec2strvec(nx[ii], hq[ii], &hsrq[ii], nu[ii]);
 
       d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], ptr_memory);
       ptr_memory += (&hsDCt[ii])->memory_size;
@@ -246,7 +249,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
     ptr_memory += (&hsRSQrq[ii])->memory_size;
     d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
-    d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS, nu[ii], &hsRSQrq[ii], nu[ii], 0);
+    d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS[ii], nu[ii], &hsRSQrq[ii], nu[ii], 0);
     d_cvt_mat2strmat(nx[ii], nx[ii], hQ[ii], nx[ii], &hsRSQrq[ii], nu[ii], nu[ii]);
     d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
     d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
@@ -275,23 +278,23 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     // extract output struct members
     double **hx = qp_out->x;
     double **hu = qp_out->u;
-    double **hpi = qp_out->pi;
-    double **hlam = qp_out->lam;
+    // double **hpi = qp_out->pi; //TODO(Andrea): multiplers not returned at the moment
+    // double **hlam = qp_out->lam; //TODO(Andrea): multiplers not returned at the moment
 
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
     int k_max = hpmpc_args->max_iter;
     double mu0 = hpmpc_args->mu0;
     int warm_start = hpmpc_args->warm_start;
-    int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
+    // int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
 
     //  other solver arguments
     int kk = -1;  // actual number of iterations
-    double inf_norm_res[4];  // inf norm of residuals
-    for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
+    // double inf_norm_res[4];  // inf norm of residuals
+    // for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
-    double mu;
-    struct d_strvec hswork[2];
+    // double mu;
+    // struct d_strvec hswork[2];
 
     // max sizes
     int ngM = 0;
@@ -311,13 +314,12 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
     // IPM constants
     int hpmpc_status;
-    int kk_avg;
     double alpha_min = 1e-8;
     double *stat; d_zeros(&stat, k_max, 5);
-    int compute_res = 0;
-    int compute_mult = 0;
+    // int compute_res = 0;
+    int compute_mult = 1;
 
-    void *work_memory;
+    // void *work_memory;
     // v_zeros_align(&work_memory,
       // d_ip2_res_mpc_hard_tv_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
@@ -342,12 +344,12 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 }
 
 int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-  ocp_qp_hpmpc_args *hpmpc_args, int M, double mu_pt, void *workspace) {
+  ocp_qp_hpmpc_args *hpmpc_args, int M, void *workspace) {
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
 
     // loop index
-    int ii, jj;
+    int ii;
 
     // extract input struct members
     int N = qp_in->N;
@@ -371,12 +373,12 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hlg = (double **) qp_in->lc;
     double **hug = (double **) qp_in->uc;
 
-    double **hlam_in = hpmpc_args->lam0;
-    double **ht_in = hpmpc_args->t0;
+    // double **hlam_in = hpmpc_args->lam0; //TODO(Andrea): not using input multipliers
+    // double **ht_in = hpmpc_args->t0; //TODO(Andrea): not using input slacks
 
 
-    struct d_strmat *hsmatdummy;
-    struct d_strvec *hsvecdummy;
+    struct d_strmat *hsmatdummy = NULL;
+    struct d_strvec *hsvecdummy = NULL;
 
     struct d_strmat hsBAbt[N+1];
     struct d_strvec hsb[N+1];
@@ -395,16 +397,16 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strmat hsL[N+1];
     struct d_strmat hsLxt[N+1];
     struct d_strmat hsric_work_mat[2];
-    struct d_strvec hsric_work_vec[1];
+    // struct d_strvec hsric_work_vec[1];
 
     struct d_strvec hsdlam[N+1];  // to be checked
     struct d_strvec hslamt[N+1];  // to be checked
 
     int nuM;
     int nbM;
-    struct d_strmat sRSQrqM;
-    struct d_strvec srqM;
-    struct d_strvec srqM_tmp;
+    // struct d_strmat sRSQrqM;
+    // struct d_strvec srqM;
+    // struct d_strvec srqM_tmp;
     struct d_strmat sLxM;
     struct d_strmat sPpM;
 
@@ -424,15 +426,15 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
       ptr_memory += (&hsRSQrq[ii])->memory_size;
       d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
-      d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS, nu[ii], &hsRSQrq[ii], nu[ii], 0);
+      d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS[ii], nu[ii], &hsRSQrq[ii], nu[ii], 0);
       d_cvt_mat2strmat(nx[ii], nx[ii], hQ[ii], nx[ii], &hsRSQrq[ii], nu[ii], nu[ii]);
       d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
       d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
 
       d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], ptr_memory);
       ptr_memory += (&hsrq[ii])->memory_size;
-      d_cvt_vec2strvec(nu[ii], hr, &hsrq[ii], 0);
-      d_cvt_vec2strvec(nx[ii], hq, &hsrq[ii], nu[ii]);
+      d_cvt_vec2strvec(nu[ii], hr[ii], &hsrq[ii], 0);
+      d_cvt_vec2strvec(nx[ii], hq[ii], &hsrq[ii], nu[ii]);
 
       d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], ptr_memory);
       ptr_memory += (&hsDCt[ii])->memory_size;
@@ -479,7 +481,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], ptr_memory);
     ptr_memory += (&hsRSQrq[ii])->memory_size;
     d_cvt_mat2strmat(nu[ii], nu[ii], hR[ii], nu[ii], &hsRSQrq[ii], 0, 0);
-    d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS, nu[ii], &hsRSQrq[ii], nu[ii], 0);
+    d_cvt_tran_mat2strmat(nu[ii], nx[ii], hS[ii], nu[ii], &hsRSQrq[ii], nu[ii], 0);
     d_cvt_mat2strmat(nx[ii], nx[ii], hQ[ii], nx[ii], &hsRSQrq[ii], nu[ii], nu[ii]);
     d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
     d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
@@ -521,35 +523,35 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_allocate_strmat(nx[M]+1, nx[M], &sPpM);
 
     struct d_strmat hstmpmat0;
-    struct d_strvec hstmpvec0;
+    // struct d_strvec hstmpvec0;
 
     // extract output struct members
     double **hx = qp_out->x;
     double **hu = qp_out->u;
-    double **hpi = qp_out->pi;
-    double **hlam = qp_out->lam;
+    // double **hpi = qp_out->pi; //TODO(Andrea): not returning multiplers atm
+    // double **hlam = qp_out->lam; //TODO(Andrea): not returning multiplers atm
 
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
     int k_max = hpmpc_args->max_iter;
     double mu0 = hpmpc_args->mu0;
     int warm_start = hpmpc_args->warm_start;
-    int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
+    // int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
 
     //  other solver arguments
     int kk = -1;  // actual number of iterations
-    double inf_norm_res[4];  // inf norm of residuals
-    for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
+    // double inf_norm_res[4];  // inf norm of residuals
+    // for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
 
-    double mu;
-    struct d_strvec hswork[2];
+    // double mu;
+    // struct d_strvec hswork[2];
 
     // IPM constants
     int hpmpc_status;
-    int kk_avg;
+    // int kk_avg;
     double alpha_min = 1e-8;
     double *stat; d_zeros(&stat, k_max, 5);
-    int compute_res = 1;
+    // int compute_res = 1;
     int compute_mult = 1;
 
     // riccati work space
@@ -607,7 +609,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
       0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], hsvecdummy, hsmatdummy,
       hsvecdummy, hsvecdummy, &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
-      &hsLxt[M], hsric_work_mat, hsric_work_vec);
+      &hsLxt[M], hsric_work_mat);
 
     double **temp_u;
     // copy result to qp_out
@@ -625,99 +627,100 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     return acados_status;
 }
 
-int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args, \
-    void *workspace) {
-
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
-
-    // loop index
-    int ii, jj;
-
-    // extract input struct members
-    int N = qp_in->N;
-    int *nx = (int *) qp_in->nx;
-    int *nu = (int *) qp_in->nu;
-    int *nb = (int *) qp_in->nb;
-    int **hidxb_swp = (int **) qp_in->idxb;
-    int *ng = (int *) qp_in->nc;
-    double **hA = (double **) qp_in->A;
-    double **hB = (double **) qp_in->B;
-    double **hb = (double **) qp_in->b;
-    double **hQ = (double **) qp_in->Q;
-    double **hS = (double **) qp_in->S;
-    double **hR = (double **) qp_in->R;
-    double **hq = (double **) qp_in->q;
-    double **hr = (double **) qp_in->r;
-    double **hlb = (double **) qp_in->lb;
-    double **hub = (double **) qp_in->ub;
-    double **hC = (double **) qp_in->Cx;
-    double **hD = (double **) qp_in->Cu;
-    double **hlg = (double **) qp_in->lc;
-    double **hug = (double **) qp_in->uc;
-
-    // extract output struct members
-    double **hx = qp_out->x;
-    double **hu = qp_out->u;
-    double **hpi = qp_out->pi;
-    double **hlam = qp_out->lam;
-    double **ht = qp_out->t;
-
-    // extract args struct members
-    double mu_tol = hpmpc_args->tol;
-    int k_max = hpmpc_args->max_iter;
-    double mu0 = hpmpc_args->mu0;
-    int warm_start = hpmpc_args->warm_start;
-    int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
-
-    double **ux0 = hpmpc_args->ux0;
-    double **pi0 = hpmpc_args->pi0;
-    double **lam0 = hpmpc_args->lam0;
-    double **t0 = hpmpc_args->t0;
-
-    //  other solver arguments
-    int kk = -1;  // actual number of iterations
-    double inf_norm_res[4];  // inf norm of residuals
-    for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
-
-    // memory for stat
-    size_t addr = ( ( (size_t) workspace) + 7) / 8 * 8;  // align to 8-byte boundaries
-    double *ptr_double = (double *) addr;
-    double *stat = ptr_double;
-    ptr_double += 5*k_max;
-    for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
-
-    // memory for idxb
-    int *hidxb[N+1];
-//  size_t addr = (( (size_t) workspace ) + 3 ) / 4 * 4;  // align to 4-byte boundaries
-    int *ptr_int = (int *) ptr_double;
-    for (ii = 0; ii <= N; ii++) {
-        hidxb[ii] = ptr_int;
-        ptr_int += nb[ii];
-    }
-    workspace = (void *) ptr_int;
-
-    //  swap x and u in bounds (by updating their indeces)
-    for (ii = 0; ii <= N; ii++) {
-        jj = 0;
-        for (; jj < nb[ii]; jj++) {
-            if (hidxb_swp[ii][jj] < nx[ii]) {  // state
-                hidxb[ii][jj] = hidxb_swp[ii][jj]+nu[ii];
-            } else {  // input
-                hidxb[ii][jj] = hidxb_swp[ii][jj]-nx[ii];
-            }
-        }
-    }
+//TODO(Andrea): need to merge hpmpc in order to use this...
+// int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args,
+//     void *workspace) {
 //
-    int hpmpc_status;
-    // hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk, k_max, mu0, mu_tol, N, nx, nu, nb, \
-        hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug, \
-        hx, hu, hpi, hlam, ht, inf_norm_res, workspace, stat, ux0, pi0, lam0, t0);
-
-    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
-
-    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
-
-    // return
-    return acados_status;
-}
+//     // initialize return code
+//     int acados_status = ACADOS_SUCCESS;
+//
+//     // loop index
+//     int ii, jj;
+//
+//     // extract input struct members
+//     int N = qp_in->N;
+//     int *nx = (int *) qp_in->nx;
+//     int *nu = (int *) qp_in->nu;
+//     int *nb = (int *) qp_in->nb;
+//     int **hidxb_swp = (int **) qp_in->idxb;
+//     int *ng = (int *) qp_in->nc;
+//     double **hA = (double **) qp_in->A;
+//     double **hB = (double **) qp_in->B;
+//     double **hb = (double **) qp_in->b;
+//     double **hQ = (double **) qp_in->Q;
+//     double **hS = (double **) qp_in->S;
+//     double **hR = (double **) qp_in->R;
+//     double **hq = (double **) qp_in->q;
+//     double **hr = (double **) qp_in->r;
+//     double **hlb = (double **) qp_in->lb;
+//     double **hub = (double **) qp_in->ub;
+//     double **hC = (double **) qp_in->Cx;
+//     double **hD = (double **) qp_in->Cu;
+//     double **hlg = (double **) qp_in->lc;
+//     double **hug = (double **) qp_in->uc;
+//
+//     // extract output struct members
+//     double **hx = qp_out->x;
+//     double **hu = qp_out->u;
+//     double **hpi = qp_out->pi;
+//     double **hlam = qp_out->lam;
+//     double **ht = qp_out->t;
+//
+//     // extract args struct members
+//     // double mu_tol = hpmpc_args->tol;
+//     int k_max = hpmpc_args->max_iter;
+//     double mu0 = hpmpc_args->mu0;
+//     int warm_start = hpmpc_args->warm_start;
+//     int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
+//
+//     double **ux0 = hpmpc_args->ux0;
+//     double **pi0 = hpmpc_args->pi0;
+//     double **lam0 = hpmpc_args->lam0;
+//     double **t0 = hpmpc_args->t0;
+//
+//     //  other solver arguments
+//     int kk = -1;  // actual number of iterations
+//     // double inf_norm_res[4];  // inf norm of residuals
+//     // for (ii = 0; ii < 4; ii++) inf_norm_res[ii] = 0.0;  // zero
+//
+//     // memory for stat
+//     size_t addr = ( ( (size_t) workspace) + 7) / 8 * 8;  // align to 8-byte boundaries
+//     double *ptr_double = (double *) addr;
+//     double *stat = ptr_double;
+//     ptr_double += 5*k_max;
+//     for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
+//
+//     // memory for idxb
+//     int *hidxb[N+1];
+// //  size_t addr = (( (size_t) workspace ) + 3 ) / 4 * 4;  // align to 4-byte boundaries
+//     int *ptr_int = (int *) ptr_double;
+//     for (ii = 0; ii <= N; ii++) {
+//         hidxb[ii] = ptr_int;
+//         ptr_int += nb[ii];
+//     }
+//     workspace = (void *) ptr_int;
+//
+//     //  swap x and u in bounds (by updating their indeces)
+//     for (ii = 0; ii <= N; ii++) {
+//         jj = 0;
+//         for (; jj < nb[ii]; jj++) {
+//             if (hidxb_swp[ii][jj] < nx[ii]) {  // state
+//                 hidxb[ii][jj] = hidxb_swp[ii][jj]+nu[ii];
+//             } else {  // input
+//                 hidxb[ii][jj] = hidxb_swp[ii][jj]-nx[ii];
+//             }
+//         }
+//     }
+// //
+//     int hpmpc_status;
+//     // hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk, k_max, mu0, mu_tol, N, nx, nu, nb,
+//     // hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug,
+//     // hx, hu, hpi, hlam, ht, inf_norm_res, workspace, stat, ux0, pi0, lam0, t0);
+//
+//     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
+//
+//     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
+//
+//     // return
+//     return acados_status;
+// }
