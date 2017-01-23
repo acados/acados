@@ -1,8 +1,8 @@
 /* The model comes from \cite{Wirsching2006} */
 #include "examples/casadi_pendulum/pendulum_model.h"
 
-extern int vdeFun(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
-extern int jacFun(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jacFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+extern int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 // The auto-generated VDE functions from CasADi:
 
@@ -48,7 +48,7 @@ void jac_fun_pendulum(const real_t* in, real_t* out) {
     real_t* x_out = out;
     real_t* jac_out = out + NX;
 
-    void *casadi_mem = 0;
+    int casadi_mem = 0;
     int *casadi_iw = 0;
     real_t *casadi_w = 0;
 
@@ -61,5 +61,5 @@ void jac_fun_pendulum(const real_t* in, real_t* out) {
     casadi_res[0] = x_out;
     casadi_res[1] = jac_out;
 
-    jacFun(casadi_mem, casadi_arg, casadi_res, casadi_iw, casadi_w);
+    jacFun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }

@@ -59,8 +59,7 @@
 #define NX 4
 #define NU 1
 #define NBU 1
-#define NBX 0
-
+#define NBX 0 // TODO(Andrea): adding bounds gives MIN_STEP
 
 #include "acados/utils/timing.h"
 
@@ -76,19 +75,19 @@ static void print_states_controls(real_t *w, int_t N) {
 }
 #endif  // DEBUG
 
-static void shift_states(real_t *w, real_t *x_end, int_t N) {
-    for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
-    }
-    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
-}
+// static void shift_states(real_t *w, real_t *x_end, int_t N) {
+//     for (int_t i = 0; i < N; i++) {
+//         for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
+//     }
+//     for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
+// }
 
-static void shift_controls(real_t *w, real_t *u_end, int_t N) {
-    for (int_t i = 0; i < N-1; i++) {
-        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
-    }
-    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
-}
+// static void shift_controls(real_t *w, real_t *u_end, int_t N) {
+//     for (int_t i = 0; i < N-1; i++) {
+//         for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
+//     }
+//     for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
+// }
 
 // Simple SQP example for acados
 int main() {
@@ -104,8 +103,8 @@ int main() {
     int_t   max_iters           = 100;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
-    real_t  x_min[NBX]          = {-100, -100, -100, -100};
-    real_t  x_max[NBX]          = {100, 100, 100, 100};
+    real_t  x_min[NBX]          = {-10, -10, -10, -10};
+    real_t  x_max[NBX]          = {10, 10, 10, 10};
     real_t  u_min[NBU]          = {-1.0};
     real_t  u_max[NBU]          = {1.0};
 
