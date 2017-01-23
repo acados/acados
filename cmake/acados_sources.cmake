@@ -14,3 +14,10 @@ file(GLOB CHAIN_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_chain/Chain_mo
     ${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac*.c
     ${PROJECT_SOURCE_DIR}/examples/test_chain.c
 )
+
+file(GLOB PENDULUM_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c
+
+    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde_forw_pendulum.c
+    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
+    ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr.c
+)
