@@ -16,18 +16,19 @@
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 
 #include "acados/utils/types.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
-#include <blasfeo/include/blasfeo_target.h>
-#include <blasfeo/include/blasfeo_common.h>
-#include <blasfeo/include/blasfeo_d_blas.h>
-#include <blasfeo/include/blasfeo_d_aux.h>
+#include "acados/ocp_qp/ocp_qp_common.h"
+
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
 
 #include "hpmpc/include/c_interface.h"
 #include "hpmpc/include/mpc_solvers.h"
@@ -303,7 +304,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     }
 
     int nzM  = 0;
-    for( ii =  0; ii <= N; ii++ ) {
+    for ( ii =  0; ii <= N; ii++ ) {
       nzM = nu[ii]+nx[ii]+1 > nzM ? nu[ii]+nx[ii]+1 : nzM;
     }
 
@@ -411,7 +412,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     char *ptr_memory = (char *) workspace;
 
-    for( ii = 0; ii < N; ii++ ) {
+    for ( ii = 0; ii < N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
       ptr_memory += (&hsBAbt[ii])->memory_size;
       d_cvt_tran_mat2strmat(nx[ii+1], nu[ii], hB[ii], nx[ii+1], &hsBAbt[ii], 0, 0);
@@ -473,7 +474,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
       d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
       d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
-
     }
 
     ii = N;
@@ -612,7 +612,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     double **temp_u;
     // copy result to qp_out
-    for ( ii = 0; ii<=N; ii++ ) {
+    for ( ii = 0; ii <= N; ii++ ) {
       hu[ii] = hsux[ii].pa;
       temp_u = &hsux[ii].pa;
       hx[ii] = &temp_u[0][nu[ii]];
@@ -626,7 +626,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     return acados_status;
 }
 
-//TODO(Andrea): need to merge hpmpc in order to use this...
+// TODO(Andrea): need to merge hpmpc in order to use this...
 // int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args,
 //     void *workspace) {
 //

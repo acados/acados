@@ -23,7 +23,6 @@
 #else
 #include <sys/stat.h>
 #endif
-#include "acados/sim/sim_erk_integrator.h"
 
 // system headers
 #include <stdlib.h>
@@ -40,6 +39,7 @@
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/tools.h"
 
+#include "acados/sim/sim_erk_integrator.h"
 #include "examples/casadi_pendulum/pendulum_model.h"
 
 // flush denormals to zero
@@ -68,9 +68,11 @@
 static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\t\t\tu\n");
     for (int_t i = 0; i < N; i++) {
-        printf("%4d\t%+e %+e %+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1], w[i*(NX+NU)+2], w[i*(NX+NU)+3], w[i*(NX+NU)+4]);
+        printf("%4d\t%+e %+e %+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1],
+        w[i*(NX+NU)+2], w[i*(NX+NU)+3], w[i*(NX+NU)+4]);
     }
-    printf("%4d\t%+e %+e %+e %+e \n", N, w[N*(NX+NU)], w[N*(NX+NU)+1], w[N*(NX+NU)+2], w[N*(NX+NU)+3]);
+    printf("%4d\t%+e %+e %+e %+e \n", N, w[N*(NX+NU)],
+    w[N*(NX+NU)+1], w[N*(NX+NU)+2], w[N*(NX+NU)+3]);
 }
 #endif  // DEBUG
 
