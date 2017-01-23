@@ -118,6 +118,54 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
     return 0;
 }
 
+real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
+        int* const perm, int dim, int dim2) {
+    int i, j, k;
+    int index1;
+
+#if !CODE_GENERATION
+    int DIM = dim;
+    int DIM_RHS = dim2;
+#else
+    dim += 0;
+    dim2 += 0;
+#endif
+    real_t bPerm[DIM*DIM_RHS];
+    real_t tmp_var;
+
+
+    for (k = 0; k < DIM*DIM_RHS; ++k) {
+        bPerm[k] = b[k];
+    }
+    for (i = 0; i < DIM; i++) {
+        for (j = 0; j < i; j++) {
+            tmp_var = A[i*DIM+j];
+            for (k = 0; k < DIM_RHS; ++k) {
+                bPerm[k*DIM+i] -= tmp_var*bPerm[k*DIM+j];
+            }
+        }
+        tmp_var = 1.0/A[i*(DIM+1)];
+        for (k = 0; k < DIM_RHS; ++k) {
+            bPerm[k*DIM+i] = tmp_var*bPerm[k*DIM+i];
+        }
+    }
+    for (j = DIM-1; j > -1; --j) {
+        for (i = DIM-1; i > j; --i) {
+            tmp_var = A[j*DIM+i];
+            for (k = 0; k < DIM_RHS; ++k) {
+                bPerm[k*DIM+j] += tmp_var*bPerm[k*DIM+i];
+            }
+        }
+    }
+    for (i = 0; i < DIM; ++i) {
+        index1 = perm[i];
+        for (j = 0; j < DIM_RHS; ++j) {
+            b[j*DIM+index1] = bPerm[j*DIM+i];
+        }
+    }
+    return 0;
+}
+
 
 #endif
 
@@ -529,4 +577,5 @@ void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *
     } else {
         // throw error somehow?
     }
+//    print_matrix("stdout", opts->c_vec, 1, num_stages);
 }
