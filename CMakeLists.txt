@@ -69,11 +69,11 @@ target_link_libraries(nmpc_example acados qpoases blasfeo m)
 add_executable(chain_example ${CHAIN_EXAMPLE_SRC})
 target_link_libraries(chain_example acados qpoases blasfeo openblas m)
 
-add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
-target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
+#add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
+#target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
 
-add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
-target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
+#add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
+#target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
 
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
