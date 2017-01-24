@@ -61,7 +61,7 @@ static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, 
 }
 
 
-// TODO(dimitris): split in sub-functions
+// TODO(dimitris): split in subfunctions
 static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
     ocp_qp_ooqp_memory *mem) {
 
