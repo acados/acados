@@ -557,7 +557,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     void *work_ric;
     v_zeros_align(&work_ric, d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
-    // v_zeros_align(&work_memory, d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+    // v_zeros_align(&work_memory,
+    // d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
     // update cost function matrices and vectors (box constraints)
     double sigma_mu = 1.0;
@@ -572,7 +573,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // extract chol factor of [P p; p' *]
     d_print_strmat(nu[M]+nx[M]+1, nu[M]+nx[M], &hsL[M], 0, 0);
 
-    dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0);  // TODO(Andrea): have m and n !!!!!
+    // TODO(Andrea): have m and n !!!!!
+    dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0);
     dgecp_libstr(1, nx[M], 1.0, &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
 
     // d_print_strmat(nx[M]+1, nx[M], &sLxM, 0, 0);
@@ -712,7 +714,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 //     }
 // //
 //     int hpmpc_status;
-//     // hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk, k_max, mu0, mu_tol, N, nx, nu, nb,
+//     // hpmpc_status = fortran_order_d_ip_ocp_hard_tv_single_newton_step(&kk,
+//     // k_max, mu0, mu_tol, N, nx, nu, nb,
 //     // hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, hug,
 //     // hx, hu, hpi, hlam, ht, inf_norm_res, workspace, stat, ux0, pi0, lam0, t0);
 //

@@ -59,7 +59,7 @@
 #define NX 4
 #define NU 1
 #define NBU 1
-#define NBX 0 // TODO(Andrea): adding bounds gives MIN_STEP
+#define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
 
 #include "acados/utils/timing.h"
 
