@@ -69,8 +69,8 @@ target_link_libraries(nmpc_example acados qpoases blasfeo m)
 add_executable(chain_example ${CHAIN_EXAMPLE_SRC})
 target_link_libraries(chain_example acados qpoases blasfeo openblas m)
 
-#add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
-#target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
+add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
+target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
 
 #add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
 #target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
@@ -96,7 +96,7 @@ if(PYTHONINTERP_FOUND)
     set(ACADOS_STYLE_FILTER
     	"-legal/copyright,"
     	"-readability/casting")
-    set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! \( -path "examples/casadi_chain/*" -o -path "test/sim/pendulum/casadi/*" \) -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
+    set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! \( -path "examples/casadi_chain/*" -o -path "examples/casadi_pendulum/*" -o -path "test/sim/pendulum/casadi/*" \) -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
     set(FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND})
     execute_process(COMMAND ${FIND_ACADOS_FILES} OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
     string(REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT})

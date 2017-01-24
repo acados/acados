@@ -20,7 +20,7 @@
 
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
-#else
+#elsev
 #include <sys/stat.h>
 #endif
 
@@ -89,6 +89,13 @@ static void print_states_controls(real_t *w, int_t N) {
 //     for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
 // }
 
+// TODO(Andrea): need to fix this stuff below...
+extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
+  int *nu, int *nb, int *ng);
+
+extern  int d_size_strmat(int m, int n);
+extern  int d_size_strvec(int m);
+
 // Simple SQP example for acados
 int main() {
     // Problem data
@@ -101,10 +108,10 @@ int main() {
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
     int_t   max_iters           = 100;
-    real_t  x_end[NX]           = {0};
-    real_t  u_end[NU]           = {0};
-    real_t  x_min[NBX]          = {-10, -10, -10, -10};
-    real_t  x_max[NBX]          = {10, 10, 10, 10};
+    // real_t  x_min[NBX]          = {-10, -10, -10, -10};
+    real_t  x_min[NBX]          = {};
+    // real_t  x_max[NBX]          = {10, 10, 10, 10};
+    real_t  x_max[NBX]          = {};
     real_t  u_min[NBU]          = {-1.0};
     real_t  u_max[NBU]          = {1.0};
 
@@ -431,7 +438,7 @@ int main() {
             }
             int status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
             // int status = 0;
-            printf("hpmpc_status=%i\n", status);
+            // printf("hpmpc_status=%i\n", status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
 
             if (status == 2) printf("status = ACADOS_MINSTEP\n");
