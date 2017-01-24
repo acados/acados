@@ -37,9 +37,14 @@ import_array();
     }
 }
 
-%typemap (out) int * {
-    $result = PyInt_FromLong(*$1);
-}
-
-
 %include "swig/test.h"
+
+%extend my_struct {
+    my_struct(int n) {
+        my_struct *ms;
+        ms = (my_struct *) malloc(sizeof(my_struct));
+        ms->some_int = n;
+        ms->some_int_vector = (int *) calloc(n, sizeof(int));
+        return ms;
+    }
+}
