@@ -33,6 +33,10 @@ typedef struct ocp_qp_hpmpc_args_ {
     //  double sigma_min;
     int warm_start;
     int N2;  // horizion length of the partially condensed problem
+    double **ux0;
+    double **pi0;
+    double **lam0;
+    double **t0;
     int out_iter;  // number of performed iterations
     double *inf_norm_res;  // array of size 5, returning inf norm res
 } ocp_qp_hpmpc_args;
@@ -40,8 +44,17 @@ typedef struct ocp_qp_hpmpc_args_ {
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
     void *workspace);
 
+int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
+        void *workspace);
+
+int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+  ocp_qp_hpmpc_args *qp_args, int M, void *workspace);
+
+// TODO(Andrea): need to merge hpmpc in order to use this... (Body is ready)
+// int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
+//   void *workspace);
+
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
     ocp_qp_hpmpc_args *hpmpc_args);
-
 
 #endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_

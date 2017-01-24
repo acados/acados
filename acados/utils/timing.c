@@ -22,7 +22,7 @@
 #if defined(__APPLE__)
 void acado_tic(acado_timer* t) {
     /* read current clock cycles */
-    t->tic = mach_absolute_time();
+    // t->tic = mach_absolute_time();
 }
 
 real_t acado_toc(acado_timer* t) {
