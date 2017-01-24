@@ -21,3 +21,10 @@ file(GLOB PENDULUM_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pe
     ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
     ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr.c
 )
+
+file(GLOB AIRCRAFT_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
+
+    ${PROJECT_SOURCE_DIR}/../models/ocp_integrate_ode.c
+    ${PROJECT_SOURCE_DIR}/../ocps/test_aircraft.c
+
+)
