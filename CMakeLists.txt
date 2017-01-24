@@ -17,6 +17,7 @@ message("\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
+    #set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Wno-unused-function") #Andrea: this helps a lot while debugging, can we keep it?
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Profile)
@@ -67,6 +68,12 @@ target_link_libraries(nmpc_example acados qpoases blasfeo m)
 
 add_executable(chain_example ${CHAIN_EXAMPLE_SRC})
 target_link_libraries(chain_example acados qpoases blasfeo openblas m)
+
+#add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
+#target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
+
+#add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
+#target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
 
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)

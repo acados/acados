@@ -1,3 +1,4 @@
+
 /**************************************************************************************************
 *                                                                                                 *
 * This file is part of HPMPC.                                                                     *
@@ -24,8 +25,8 @@
 **************************************************************************************************/
 
 // define IP solver arguments && number of repetitions
-#define NREP 1000
-#define MAXITER 10
+#define NREP 1
+#define MAXITER 50
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
@@ -38,7 +39,7 @@
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"
 
-// acados headers
+// ACADOS headers
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
@@ -174,16 +175,16 @@ int main() {
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 15;   // horizon length
-    int nb = 11;  // number of box constrained inputs and states
+    int N = 20;   // horizon length
+    int M = 2;
+    // int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
-    int ngN = 4;  // 4;  // number of general constraints at the last stage
+    int ngN = 0;  // 4;  // number of general constraints at the last stage
 
-    int N2 = 3;   // horizon length
-
-    int nbu = nu < nb ? nu : nb;
-    int nbx = nb - nu > 0 ? nb - nu : 0;
-
+    // int nbu = nu < nb ? nu : nb;
+    // int nbx = nb - nu > 0 ? nb - nu : 0;
+    int nbu = 3;
+    int nbx = 4;
     // stage-wise variant size
     int nxx[N + 1];
     nxx[0] = 0;
@@ -194,9 +195,16 @@ int main() {
     nuu[N] = 0;
 
     int nbb[N + 1];
-    nbb[0] = nbu;
-    for (ii = 1; ii < N; ii++) nbb[ii] = nb;
-    nbb[N] = nbx;
+    // nbb[0] = nbu;
+    // for (ii = 1; ii < N; ii++) nbb[ii] = nb;
+    // nbb[N] = nbx;
+
+    // Andrea XXX change this back to 11 bounds, changed to debug the strmat interface
+    for ( ii = 0; ii < M; ii++ )  // XXX not M !!!
+      nbb[ii] = nuu[ii] + nxx[ii]/2;
+
+    for ( ; ii <= N; ii++ )
+      nbb[ii] = 0;
 
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
@@ -209,7 +217,7 @@ int main() {
     printf(
         " MPC problem size: %d states, %d inputs, %d horizon length, %d "
         "two-sided box constraints, %d two-sided general constraints.\n",
-        nx, nu, N, nb, ng);
+        nx, nu, N, 7, ng);
     printf("\n");
     printf(
         " IP method parameters: predictor-corrector IP, double precision, %d "
@@ -265,53 +273,6 @@ int main() {
     double *A0;
     d_zeros(&A0, 0, 0);
 
-    /************************************************
-    * box constraints
-    ************************************************/
-
-    int *idxb0;
-    int_zeros(&idxb0, nbb[0], 1);
-    double *lb0;
-    d_zeros(&lb0, nbb[0], 1);
-    double *ub0;
-    d_zeros(&ub0, nbb[0], 1);
-    for (jj = 0; jj < nbu; jj++) {
-        lb0[jj] = -0.5;  //   umin
-        ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = nxx[0]+jj;
-    }
-    //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
-
-    int *idxb1;
-    int_zeros(&idxb1, nbb[1], 1);
-    double *lb1;
-    d_zeros(&lb1, nbb[1], 1);
-    double *ub1;
-    d_zeros(&ub1, nbb[1], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = 4.0;   //   xmax
-        idxb1[jj] = jj;
-    }
-    for (; jj < nb; jj++) {
-        lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
-        idxb1[jj] = jj;
-    }
-    //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
-
-    int *idxbN;
-    int_zeros(&idxbN, nbb[N], 1);
-    double *lbN;
-    d_zeros(&lbN, nbb[N], 1);
-    double *ubN;
-    d_zeros(&ubN, nbb[N], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0;  //   umin
-        ubN[jj] = 4.0;   //   umax
-        idxbN[jj] = jj;
-    }
-    //    int_print_mat(nbb[N], 1, idxb1, nbb[N]);
 
     /************************************************
     * general constraints
@@ -328,7 +289,7 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, nx);
-    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
+    // for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
     //    d_print_mat(ngN, nx, CN, ngN);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
@@ -336,8 +297,88 @@ int main() {
     d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
 
     /************************************************
-    * cost function
+    * box & general constraints
     ************************************************/
+
+    int *idxb0; int_zeros(&idxb0, nbb[0], 1);
+    // double *d0; d_zeros(&d0, 2*nb[0]+2*ng[0], 1);
+    double *lb0;
+    d_zeros(&lb0, nbb[1], 1);
+    double *ub0;
+    d_zeros(&ub0, nbb[1], 1);
+    for ( ii = 0; ii < nbb[0]; ii++ ) {
+      if ( ii < nuu[0] ) {
+        lb0[ii] = - 0.5;  // umin
+        ub0[ii] =   0.5;  // umax
+      } else {
+        lb0[ii] = - 4.0;  // xmin
+        ub0[ii] =   4.0;  // xmax
+      }
+      idxb0[ii] = ii;
+    }
+
+    // for(ii=0; ii<ng; ii++)  //Andrea: no general constraints atm
+    // {
+    // // d0[2*nb[0]+ii]       = - 100.0; // dmin
+    // // d0[2*nb[0]+ng[0]+ii] =   100.0; // dmax
+    // }
+    // i_print_mat(1, nb[0], idxb0, 1);
+    // d_print_mat(1, 2*nb[0]+2*ng[0], d0, 1);
+
+    int *idxb1; int_zeros(&idxb1, nbb[1], 1);
+    // double *d1; d_zeros(&d1, 2*nb[1]+2*ng[1], 1);
+    int_zeros(&idxb1, nbb[1], 1);
+    double *lb1;
+    d_zeros(&lb1, nbb[1], 1);
+    double *ub1;
+    d_zeros(&ub1, nbb[1], 1);
+    for ( ii = 0; ii < nbb[1]; ii++ ) {
+      if ( ii < nuu[1] ) {  // input
+        lb1[ii] = - 0.5;  // umin
+        ub1[ii] =   0.5;  // umax
+      } else {  // state
+        lb1[ii] = - 4.0;  // xmin
+        ub1[ii] =   4.0;  // xmax
+      }
+      idxb1[ii] = ii;
+     }
+
+     // for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
+     // {
+     // // d1[2*nb[1]+ii]       = - 100.0; // dmin
+     // // d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
+     // }
+     // i_print_mat(1, nb[1], idxb1, 1);
+     // d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
+
+    int *idxbN; int_zeros(&idxbN, nbb[N], 1);
+    // double *dN; d_zeros(&dN, 2*nb[N]+2*ng[N], 1);
+    int_zeros(&idxbN, nbb[N], 1);
+    double *lbN;
+    d_zeros(&lbN, nbb[N], 1);
+    double *ubN;
+    d_zeros(&ubN, nbb[N], 1);
+    for ( ii = 0; ii < nbb[N]; ii++ ) {
+      if ( ii < nuu[N] ) {
+        lbN[ii] = - 0.5;  // umin
+        ubN[ii] =   0.5;  // umax
+      } else {
+        lbN[ii] = - 4.0;  // xmin
+        ubN[ii] =   4.0;  // xmax
+        }
+      idxbN[ii] = ii;
+    }
+    // for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
+    // {
+    // // dN[2*nb[N]+ii]       = - 100.0; // dmin
+    // // dN[2*nb[N]+ng[N]+ii] =   100.0; // dmax
+    // }
+    // i_print_mat(1, nb[N], idxbN, 1);
+    // d_print_mat(1, 2*nb[N]+2*ng[N], dN, 1);
+
+  /************************************************
+  * cost function
+  ************************************************/
 
     double *Q;
     d_zeros(&Q, nx, nx);
@@ -443,15 +484,79 @@ int main() {
     double *hu[N];
     double *hpi[N];
     double *hlam[N+1];
+    double *ht[N+1];
+
+    double *lam_in[N+1];
+    double *t_in[N+1];
 
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1);  // Andrea: why do we have 4*nb here?
+        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&lam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&t_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        // Init multipliers and slacks
+        for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
+          lam_in[ii][jj] = 1.0;
+          t_in[ii][jj] = 1.0;
+        }
     }
     d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
+    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&lam_in[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&t_in[N], 2*nbb[N]+2*ngg[N], 1);
+    // Init multipliers and slacks
+    for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
+      lam_in[ii][jj] = 1.0;
+      t_in[ii][jj] = 1.0;
+    }
+
+    /************************************************
+    * Solver arguments
+    ************************************************/
+
+    // solver arguments
+    ocp_qp_hpmpc_args hpmpc_args;
+    hpmpc_args.tol = TOL;
+    hpmpc_args.max_iter = MAXITER;
+//  hpmpc_args.min_step = MINSTEP;
+    hpmpc_args.mu0 = 0.1;
+//  hpmpc_args.sigma_min = 1e-3;
+    hpmpc_args.warm_start = 0;
+    hpmpc_args.N2 = N;
+    hpmpc_args.lam0 = lam_in;
+    hpmpc_args.t0 = t_in;
+
+    /************************************************
+    * work space
+    ************************************************/
+
+    int work_space_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
+      nxx, nuu, nbb, ngg);
+
+    // Adding memory for data
+    for ( int ii=0; ii <=N; ii++ ) {
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nxx[ii+1]);
+        work_space_size+= d_size_strvec(nxx[ii+1]);
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nuu[ii]+nxx[ii]);
+        work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
+        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
+        work_space_size+= d_size_strvec(nxx[ii+1]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+    }
+
+    work_space_size += 10000*sizeof(double)*(N+1);
+    void *workspace;
+
+    v_zeros_align(&workspace, work_space_size);
 
     /************************************************
     * create the in and out struct
@@ -486,33 +591,7 @@ int main() {
     qp_out.lam = hlam;
 
     /************************************************
-    * solver arguments (fully sparse)
-    ************************************************/
-
-    // solver arguments
-    ocp_qp_hpmpc_args hpmpc_args;
-    hpmpc_args.tol = TOL;
-    hpmpc_args.max_iter = MAXITER;
-//  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 0.0;
-//  hpmpc_args.sigma_min = 1e-3;
-    hpmpc_args.warm_start = 0;
-    hpmpc_args.N2 = N;
-    double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-    hpmpc_args.inf_norm_res = &inf_norm_res[0];
-
-    /************************************************
-    * work space (fully sparse)
-    ************************************************/
-
-    int work_space_size =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size);
-
-    void *workspace = malloc(work_space_size);
-
-    /************************************************
-    * call the solver (fully sparse)
+    * call the solver
     ************************************************/
 
     int return_value;
@@ -520,15 +599,15 @@ int main() {
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
-    for (rep = 0; rep < nrep; rep++) {
-        // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
-    }
+    // call the QP OCP solver
+    // return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
+    return_value = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args,
+       M, 0.1, workspace);
 
     gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
+        printf("\nACADOS status: solution found\n");
 
     if (return_value == ACADOS_MAXITER)
         printf("\nACADOS status: maximum number of iterations reached\n");
@@ -546,112 +625,52 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
-        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
-    printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
-    printf("\n\n");
-
-    /************************************************
-    * solver arguments (partial condensing)
-    ************************************************/
-
-    // solver arguments
-    hpmpc_args.N2 = N2;
-
-    /************************************************
-    * work space (partial condensing)
-    ************************************************/
-
-    int work_space_size_part_cond =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size_part_cond);
-
-    void *workspace_part_cond = malloc(work_space_size_part_cond);
-
-    /************************************************
-    * call the solver (partial condensing)
-    ************************************************/
-
-    gettimeofday(&tv0, NULL);  // stop
-
-    for (rep = 0; rep < nrep; rep++) {
-        // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace_part_cond);
-    }
-
-    gettimeofday(&tv1, NULL);  // stop
-
-    if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
-
-    if (return_value == ACADOS_MAXITER)
-        printf("\nACADOS status: maximum number of iterations reached\n");
-
-    if (return_value == ACADOS_MINSTEP)
-        printf("\nACADOS status: below minimum step size length\n");
-
-    printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
-
-    printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
-
-    printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
-        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
-    printf("\n");
-    printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, \
-        time_part_cond);
     printf("\n\n");
 
     /************************************************
     * free memory
     ************************************************/
 
-    d_free(A);
-    d_free(B);
-    d_free(b);
-    d_free(x0);
-    d_free(A0);
-    d_free(b0);
-    d_free(Q);
-    d_free(S);
-    d_free(R);
-    d_free(q);
-    d_free(r);
-    d_free(Q0);
-    d_free(S0);
-    d_free(q0);
-    d_free(r0);
-    int_free(idxb0);
-    d_free(lb0);
-    d_free(ub0);
-    int_free(idxb1);
-    d_free(lb1);
-    d_free(ub1);
-    int_free(idxbN);
-    d_free(lbN);
-    d_free(ubN);
-    d_free(C);
-    d_free(D);
-    d_free(lg);
-    d_free(ug);
-    d_free(CN);
-    d_free(lgN);
-    d_free(ugN);
+    // d_free(A);
+    // d_free(B);
+    // d_free(b);
+    // d_free(x0);
+    // d_free(A0);
+    // d_free(b0);
+    // d_free(Q);
+    // d_free(S);
+    // d_free(R);
+    // d_free(q);
+    // d_free(r);
+    // d_free(Q0);
+    // d_free(S0);
+    // d_free(q0);
+    // d_free(r0);
+    // i_free(idxb0);
+    // d_free(lb0);
+    // d_free(ub0);
+    // i_free(idxb1);
+    // d_free(lb1);
+    // d_free(ub1);
+    // i_free(idxbN);
+    // d_free(lbN);
+    // d_free(ubN);
+    // d_free(C);
+    // d_free(D);
+    // d_free(lg);
+    // d_free(ug);
+    // d_free(CN);
+    // d_free(lgN);
+    // d_free(ugN);
 
-    for (ii = 0; ii < N; ii++) {
-        d_free(hx[ii]);
-        d_free(hu[ii]);
-    }
-    d_free(hx[N]);
+    // for (ii = 0; ii < N; ii++) {
+    //     d_free(hx[ii]);
+    //     d_free(hu[ii]);
+    // }
+    // d_free(hx[N]);
 
-    free(workspace);
-    free(workspace_part_cond);
+    // free(workspace);
 
     return 0;
 }
