@@ -21,7 +21,12 @@
 #include <stdlib.h>
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/utils/print.h"
+// #include "acados/utils/tools.h"
 #include "OOQP/include/cQpGenSparse.h"
+// #include "blasfeo/include/blasfeo_target.h"
+// #include "blasfeo/include/blasfeo_common.h"
+// #include "blasfeo/include/blasfeo_d_aux.h"
+// #include "blasfeo/include/blasfeo_i_aux.h"
 
 static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, int_t *nx,
     int_t *my, int_t *mz, int_t *nnzQ, int_t *nnzA, int_t *nnzC) {
@@ -52,12 +57,11 @@ static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, 
         *nx += in->nx[N];
         *nnzQ += (in->nx[N]*in->nx[N] -in->nx[N])/2 + in->nx[N];
         *mz += in->nc[N];
-        *my += in->nx[0];  // constraint on x0
-        *nnzA += in->nx[0];
         *nnzC += in->nx[N]*in->nc[N];
 }
 
 
+// TODO(dimitris): split in sub-functions
 static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
     ocp_qp_ooqp_memory *mem) {
 
@@ -100,7 +104,7 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
                 nn += 1;
             }
         }
-        offset += in->nx[kk]+in->nu[kk];
+        offset += in->nx[kk] + in->nu[kk];
     }
     for (jj = 0; jj< in->nx[in->N]; jj++) {
         for (ii = jj; ii < in->nx[in->N]; ii++) {
@@ -113,20 +117,12 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
     doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
 
     // ------- Build equality  constraints
-    nn = in->nx[0];
+    nn = 0;
     for (kk = 0; kk < in->N; kk++) {
         for (ii = 0; ii < in->nx[kk+1]; ii++) mem->bA[nn++] = -in->b[kk][ii];
     }
 
-    nn = 0;
-    // write I on first nx[0] rows/cols
-    for (ii = 0; ii < in->nx[0]; ii++) {
-        mem->dA[nn] = 1;
-        mem->irowA[nn] = ii;
-        mem->jcolA[nn] = ii;
-        nn += 1;
-    }
-    offsetRows = in->nx[0]; offsetCols = 0;
+    nn = 0; offsetRows = 0; offsetCols = 0;
     for (kk = 0; kk < in->N; kk++) {
         // write matrix A[kk] (nx[k+1] x nx[k])
         for (jj = 0; jj< in->nx[kk]; jj++) {
@@ -169,14 +165,14 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
             lim = in->nx[kk];
         }
         for (ii = 0; ii < lim; ii++) {
-            if (in->nb[kk] > 0) {
-                if (in->idxb[kk][nn] == ii) {  // element has bounds
-                    mem->ixlow[offset+ii] = (char)1;  // TODO(dimitris): check if cast is redundant
-                    mem->xlow[offset+ii] = in->lb[kk][nn];
-                    mem->ixupp[offset+ii] = (char)1;
-                    mem->xupp[offset+ii] = in->ub[kk][nn];
-                    nn += 1;
-                }
+            if ((in->nb[kk] > 0) && (in->idxb[kk][nn] == ii)) {
+                // TODO(dimitris): check if cast is redundant
+                // printf("writing bound in->idxb[%d][%d] at position %d\n", kk, nn, offset+ii);
+                mem->ixlow[offset+ii] = (char)1;
+                mem->xlow[offset+ii] = in->lb[kk][nn];
+                mem->ixupp[offset+ii] = (char)1;
+                mem->xupp[offset+ii] = in->ub[kk][nn];
+                nn += 1;
             } else {
                 mem->ixlow[offset+ii] = (char)0;
                 mem->xlow[offset+ii] = 0.0;
@@ -185,14 +181,6 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
             }
         }
         offset += lim;
-    }
-    // removing bounds on x0 since it is constrained in the equality constraints
-    // TODO(dimitris): skip this for MHE
-    for (ii = 0; ii < in->nx[0]; ii++) {
-        mem->ixlow[ii] = (char)0;
-        mem->ixupp[ii] = (char)0;
-        mem->xlow[ii] = 0.0;
-        mem->xupp[ii] = 0.0;
     }
 
     // ------- Build inequality constraints
@@ -243,7 +231,6 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
 
 
 static void print_inputs(ocp_qp_ooqp_memory *mem) {
-    // int ii;
     printf("\n----------> OOQP INPUTS <----------\n\n");
     printf("NUMBER OF PRIMAL VARIABLES: %d\n", mem->nx);
     printf("NUMBER OF NON-ZEROS in HESSIAN: %d\n", mem->nnzQ);
@@ -254,26 +241,33 @@ static void print_inputs(ocp_qp_ooqp_memory *mem) {
     printf("PRINT LEVEL: %d", mem->print_level);
     printf("\n-----------------------------------\n\n");
 
-    // printf("\nEQUALITY CONSTRAINTS:\n");
-    // for (ii = 0; ii < mem->nnzA; ii++) {
-    //     printf("=====> A[%d, %d] = %f\n", mem->irowA[ii]+1, mem->jcolA[ii]+1, mem->dA[ii]);
-    // }
-    // for (ii = 0; ii < mem->my; ii++) printf("===> bA[%d] = %f\n", ii+1, mem->bA[ii]);
-    //
-    // printf("\nBOUNDS:\n");
-    // for (ii = 0; ii < mem->nx; ii++) {
-    //     printf("ixlow[%d] = %d \t xlow[%d] = %4.2f \t ixupp[%d] = %d \t xupp[%d] = %4.2f\n",
-    //         ii, mem->ixlow[ii], ii, mem->xlow[ii], ii, mem->ixupp[ii], ii, mem->xupp[ii]);
-    // }
-    //
-    // printf("\nINEQUALITY CONSTRAINTS:\n");
-    // for (ii = 0; ii < mem->nnzC; ii++) {
-    //     printf("=====> C[%d, %d] = %f\n", mem->irowC[ii]+1, mem->jcolC[ii]+1, mem->dC[ii]);
-    // }
-    // for (ii = 0; ii < mem->mz; ii++) {
-    //     printf("===> clow[%d] = %4.2f \t cupp[%d] = %4.2f\n",
-    //     ii+1, mem->clow[ii], ii+1, mem->cupp[ii]);
-    // }
+    int ii;
+    printf("\nOBJECTIVE FUNCTION:\n");
+    for (ii = 0; ii < mem->nnzQ; ii++) {
+        printf("=====> Q[%d, %d] = %f\n", mem->irowQ[ii]+1, mem->jcolQ[ii]+1, mem->dQ[ii]);
+    }
+    for (ii = 0; ii < mem->nx; ii++) printf("===> c[%d] = %f\n", ii+1, mem->c[ii]);
+
+    printf("\nEQUALITY CONSTRAINTS:\n");
+    for (ii = 0; ii < mem->nnzA; ii++) {
+        printf("=====> A[%d, %d] = %f\n", mem->irowA[ii]+1, mem->jcolA[ii]+1, mem->dA[ii]);
+    }
+    for (ii = 0; ii < mem->my; ii++) printf("===> bA[%d] = %f\n", ii+1, mem->bA[ii]);
+
+    printf("\nBOUNDS:\n");
+    for (ii = 0; ii < mem->nx; ii++) {
+        printf("ixlow[%d] = %d \t xlow[%d] = %4.2f \t ixupp[%d] = %d \t xupp[%d] = %4.2f\n",
+            ii+1, mem->ixlow[ii], ii+1, mem->xlow[ii], ii+1, mem->ixupp[ii], ii+1, mem->xupp[ii]);
+    }
+
+    printf("\nINEQUALITY CONSTRAINTS:\n");
+    for (ii = 0; ii < mem->nnzC; ii++) {
+        printf("=====> C[%d, %d] = %f\n", mem->irowC[ii]+1, mem->jcolC[ii]+1, mem->dC[ii]);
+    }
+    for (ii = 0; ii < mem->mz; ii++) {
+        printf("===> clow[%d] = %4.2f \t cupp[%d] = %4.2f\n",
+        ii+1, mem->clow[ii], ii+1, mem->cupp[ii]);
+    }
 }
 
 
@@ -285,10 +279,14 @@ static void print_outputs(ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work, 
         printf("x[0] = %f\n", work->x[0]);
         printf("x[%d] = %f\n", mem->nx, work->x[mem->nx-1]);
         printf("\n----------------------------------\n\n");
+
+        printf("\nPRIMAL SOLUTION:\n");
+        for (int ii = 0; ii < mem->nx; ii++) {
+            printf("=====> x[%d] = %f\n", ii+1, work->x[ii]);
+        }
 }
 
 
-// TODO(dimitris): change order of functions
 static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace *work) {
     int kk, ii, nn;
 
@@ -303,17 +301,10 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
 }
 
 
-static void embed_x0(const real_t *x0, int_t nx, ocp_qp_ooqp_memory *mem) {
-    int ii;
-    for (ii = 0; ii < nx; ii++) mem->bA[ii] = x0[ii];
-}
-
-
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
 
-    // TODO(dimitris): only perform actions if firstRun
     int_t return_value;
 
     calculate_problem_size(in, args, &mem->nx, &mem->my, &mem->mz,
@@ -387,15 +378,10 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
 
     fill_in_structs(in, args, mem);
 
-    // here I assume that x0 is already encoded in ub/lb
-    embed_x0(in->lb[0], in->nx[0], mem);
-
     if (0) print_inputs(mem);
 
-    // call sparse OOQP
     // TODO(dimitris): implement dense OOQP
-    // TODO(dimitris): Discuss with giaf how  to handle x0 constr.
-
+    // call sparse OOQP
     qpsolvesp(mem->c, mem->nx,
         mem->irowQ, mem->nnzQ, mem->jcolQ, mem->dQ,
         mem->xlow, mem->ixlow, mem->xupp, mem->ixupp,
