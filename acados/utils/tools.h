@@ -25,6 +25,10 @@
 #ifndef ACADOS_UTILS_TOOLS_H_
 #define ACADOS_UTILS_TOOLS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda , double *B, int ldb, double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
 void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y);
@@ -68,4 +72,9 @@ double twonormv(int n, double *ptrv);
 void padeapprox(int m, int row, double *A);
 
 void expm(int row, double *A);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif  // ACADOS_UTILS_TOOLS_H_
