@@ -25,6 +25,7 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
+      - python-numpy
 
 before_install:
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" && "$TRAVIS_REPO_SLUG" = "acados/acados" ]; then
