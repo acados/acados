@@ -298,6 +298,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
     for (ii = 0; ii < in->nx[in->N]; ii++) out->x[in->N][ii] = work->x[nn++];
 
     // TODO(dimitris): fill-in all qp_out fields
+    // TODO(dimitris): IMPORTANT! DO NOT POINT TO MEMORY, COPY TO OUTPUT!
 }
 
 
