@@ -329,7 +329,7 @@ int main() {
       nx, nu, nb, ngg);
 
     // Adding memory for data
-    for ( int ii=0; ii <=N; ii++ ) {
+    for ( int ii=0; ii <NN; ii++ ) {
         work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
         work_space_size+= d_size_strvec(nx[ii+1]);
         work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
@@ -341,6 +341,12 @@ int main() {
         work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
         work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
     }
+
+    work_space_size+= d_size_strvec(nu[N]+nx[N]);
+    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    work_space_size+= d_size_strvec(nu[N]+nx[N]);
+    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
     work_space_size += 10000*sizeof(double)*(N+1);
 
@@ -453,6 +459,6 @@ int main() {
     print_states_controls(&w[0], N);
     #endif  // DEBUG
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
-    // free(workspace);
+    free(workspace);
     return 0;
 }
