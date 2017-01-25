@@ -212,8 +212,7 @@ int main() {
 
     int *idxbN;
     int_zeros(&idxbN, nb[N], 1);
-    for (jj = 0; jj < NBU; jj++ ) idxbN[jj] = jj;
-    for (; jj < NBX+NBU; jj++ ) idxbN[jj] = NU+jj;
+    for ( jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
 
     hidxb[0] = idxb0;
     for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
