@@ -84,16 +84,10 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 endif()
 
 # Linter
-find_package(PythonInterp)
-if(PYTHONINTERP_FOUND)
-    set(ACADOS_STYLE_FILTER
-    	"-legal/copyright,"
-    	"-readability/casting")
-    set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! \( -path "examples/casadi_chain/*" -o -path "test/sim/pendulum/casadi/*" \) -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
-    set(FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND})
-    execute_process(COMMAND ${FIND_ACADOS_FILES} OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
-    string(REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT})
-    separate_arguments(ACADOS_FILES_TO_LINT)
-    set(LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --filter="${ACADOS_STYLE_FILTER}" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 ${ACADOS_FILES_TO_LINT})
-    add_custom_target(lint ${LINT_COMMAND})
-endif()
+set(FIND_COMMAND find acados examples swig test -type f)
+set(FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND})
+execute_process(COMMAND ${FIND_ACADOS_FILES} OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
+string(REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT})
+separate_arguments(ACADOS_FILES_TO_LINT)
+set(LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --counting=detailed --extensions=c,cpp,h,hpp,i ${ACADOS_FILES_TO_LINT})
+add_custom_target(lint ${LINT_COMMAND})
