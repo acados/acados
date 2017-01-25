@@ -9,8 +9,8 @@ set(PYTHON_LIBRARIES "${python_prefix}/lib/libpython2.7.dylib")
 include(${SWIG_USE_FILE})
 
 # Python
-find_package(PythonInterp 3.6 REQUIRED)
-find_package(PythonLibs 3.6 REQUIRED)
+find_package(PythonInterp 3 REQUIRED)
+find_package(PythonLibs 3 REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(NumPy 1.12 REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
