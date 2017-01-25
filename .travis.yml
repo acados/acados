@@ -25,6 +25,7 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
+      - python-numpy
 
 before_install:
  - sudo add-apt-repository -y ppa:octave/stable
