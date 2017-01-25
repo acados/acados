@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "hpmpc/include/aux_d.h"
+#include "acados/utils/tools.h"
 
 /************************************************
  matrix-matrix multiplication

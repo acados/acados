@@ -187,8 +187,6 @@ void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
         work->out_forw_traj = malloc(sizeof(*work->out_forw_traj) * ((nSteps+1)*nx*(1+NF)));
     }
 
-    if (in->sens_adj) {
-    }
     if (in->sens_hess && in->sens_adj) {
         work->rhs_adj_in = malloc(sizeof(*work->rhs_adj_in) * (nx*(2+NF)+nu));
         work->out_adj_tmp = malloc(sizeof(*work->out_adj_tmp) * (nx+nu+nhess));
