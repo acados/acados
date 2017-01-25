@@ -26,7 +26,7 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-typedef struct ocp_qp_in_ {
+typedef struct {
     int_t N;
     const int_t *nx;
     const int_t *nu;
@@ -49,7 +49,7 @@ typedef struct ocp_qp_in_ {
     const real_t **uc;
 } ocp_qp_in;
 
-typedef struct ocp_qp_out_ {
+typedef struct {
     real_t **x;
     real_t **u;
     real_t **pi;
@@ -57,7 +57,7 @@ typedef struct ocp_qp_out_ {
     real_t **t;
 } ocp_qp_out;
 
-typedef struct qp_solver_ {
+typedef struct {
     int_t (*fun)(ocp_qp_in*, ocp_qp_out*, void*, void*);
     ocp_qp_in *in;
     ocp_qp_out *out;
