@@ -24,6 +24,7 @@ addons:
       - g++-5
       - gcc-5
       - clang-3.7
+      - swig
 
 before_install:
  - sudo add-apt-repository -y ppa:octave/stable
