@@ -13,17 +13,18 @@ addons:
     - llvm-toolchain-precise-3.7
     - ubuntu-toolchain-r-test
     packages:
-    - libgsl0-dev
-    - liblapack-dev
-    - cppcheck
-    - g++-6
-    - gcc-6
-    - g++-4.9
-    - gcc-4.9
-    - gfortran-4.9
-    - g++-5
-    - gcc-5
-    - clang-3.7
+      - libgsl0-dev
+      - liblapack-dev
+      - cppcheck
+      - g++-6
+      - gcc-6
+      - g++-4.9
+      - gcc-4.9
+      - gfortran-4.9
+      - g++-5
+      - gcc-5
+      - clang-3.7
+      - swig
 
 before_install:
   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" && "$TRAVIS_REPO_SLUG" = "acados/acados" ]; then
