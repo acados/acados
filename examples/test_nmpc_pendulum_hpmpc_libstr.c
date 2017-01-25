@@ -63,6 +63,13 @@
 
 #include "acados/utils/timing.h"
 
+#define PLOT_RESULTS
+
+#ifdef PLOT_RESULTS
+#include "external/gnuplot/gnuplot_i.h"
+#endif  // PLOT_RESULTS
+
+
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\t\t\tu\n");
@@ -74,6 +81,39 @@ static void print_states_controls(real_t *w, int_t N) {
     w[N*(NX+NU)+1], w[N*(NX+NU)+2], w[N*(NX+NU)+3]);
 }
 #endif  // DEBUG
+
+#ifdef PLOT_RESULTS
+// static void plot_states_controls(real_t *w, int_t nx, int_t nu, int_t N, real_t T ) {
+static void plot_states_controls(real_t *w, real_t T) {
+      gnuplot_ctrl *h1;
+      h1 = gnuplot_init();
+
+      // Initialize the gnuplot handle
+      h1 = gnuplot_init();
+
+      if ( h1 == NULL )
+      {
+        printf ( "\n" );
+        printf ( "EXAMPLE - Fatal error!\n" );
+        printf ( "GNUPLOT is not available in your path.\n" );
+        exit ( 1 );
+      }
+
+      double t_grid[NN];
+      for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
+
+      double print_x[NN];
+      for (int_t i = 0; i < NN; i++) {
+        print_x[i] = w[i*(NX+NU)];
+      }
+      gnuplot_setstyle(h1, "lines");
+      gnuplot_plot1d_var2v(h1, t_grid, print_x, NN, "State trajectories");
+      //  Slopes
+      // gnuplot_plot_slope(h1, 0.0, 0.0, "unity slope");
+      sleep(3);
+}
+#endif  // PLOT_RESULTS
+
 
 // static void shift_states(real_t *w, real_t *x_end, int_t N) {
 //     for (int_t i = 0; i < N; i++) {
@@ -466,6 +506,11 @@ int main() {
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
+
+    #ifdef PLOT_RESULTS
+    plot_states_controls(w,T);
+    #endif  // PLOT_RESULTS
+
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
     free(workspace);
     return 0;
