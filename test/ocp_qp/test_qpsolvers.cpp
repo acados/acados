@@ -18,7 +18,7 @@ using Eigen::Map;
 // to reach COMPARISON_TOLERANCE in the tests
 extern real_t COMPARISON_TOLERANCE;
 
-int_t TEST_OOQP = 1;
+int_t TEST_OOQP = 0;
 int_t TEST_QPOASES = 0;
 
 // TODO(dimitris): RE-WRITE THESE TESTS AS THEY ARE NOT STABLE!
