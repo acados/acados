@@ -26,6 +26,11 @@
 #include <sys/stat.h>
 #endif
 
+#define PLOT_RESULTS
+
+#ifdef PLOT_RESULTS
+#define _GNU_SOURCE
+#endif  // PLOT_RESULTS
 // system headers
 #include <stdlib.h>
 #include <stdio.h>
@@ -65,13 +70,6 @@
 
 #include "acados/utils/timing.h"
 
-#define PLOT_RESULTS
-
-#ifdef PLOT_RESULTS
-#include "external/gnuplot/gnuplot_i.h"
-#endif  // PLOT_RESULTS
-
-
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\t\t\tu\n");
@@ -87,67 +85,65 @@ static void print_states_controls(real_t *w, int_t N) {
 #ifdef PLOT_RESULTS
 // static void plot_states_controls(real_t *w, int_t nx, int_t nu, int_t N, real_t T ) {
 static void plot_states_controls(real_t *w, real_t T) {
-      gnuplot_ctrl *h1;
-
       double t_grid[NN];
       for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
 
-      FILE *gnuplotPipe,*tempDataFile;
+      FILE *gnuplotPipe, *tempDataFile;
       char *x1_temp_file;
       char *x2_temp_file;
       char *u1_temp_file;
-      double x,y;
+      double x, y;
       int i;
       x1_temp_file = "x1";
-      gnuplotPipe = popen("gnuplot -persist","w");
+      gnuplotPipe = popen("gnuplot -persist", "w");
       if (gnuplotPipe) {
-          fprintf(gnuplotPipe,"set multiplot layout 3,1\n");
+          fprintf(gnuplotPipe, "set multiplot layout 3,1\n");
 
           // Plot x1
-          tempDataFile = fopen(x1_temp_file,"w");
-          fprintf(gnuplotPipe,"set grid ytics\n");
-          fprintf(gnuplotPipe,"set grid xtics\n");
-          fprintf(gnuplotPipe,"plot \"%s\" with lines lt rgb \"blue\"\n",x1_temp_file);
+          tempDataFile = fopen(x1_temp_file, "w");
+          fprintf(gnuplotPipe, "set grid ytics\n");
+          fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
           fflush(gnuplotPipe);
           for (i=0; i < NN; i++) {
               x = t_grid[i];
               y = w[i*(NX+NU)];
-              fprintf(tempDataFile,"%lf %lf\n",x,y);
+              fprintf(tempDataFile, "%lf %lf\n", x, y);
           }
           fclose(tempDataFile);
 
           // Plot x2
           x2_temp_file = "x2";
-          tempDataFile = fopen(x2_temp_file,"w");
-          fprintf(gnuplotPipe,"set grid ytics\n");
-          fprintf(gnuplotPipe,"set grid xtics\n");
-          fprintf(gnuplotPipe,"plot \"%s\" with lines lt rgb \"blue\"\n",x2_temp_file);
+          tempDataFile = fopen(x2_temp_file, "w");
+          fprintf(gnuplotPipe, "set grid ytics\n");
+          fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
           fflush(gnuplotPipe);
           for (i=0; i < NN; i++) {
               x = t_grid[i];
               y = w[i*(NX+NU)+1];
-              fprintf(tempDataFile,"%lf %lf\n",x,y);
+              fprintf(tempDataFile, "%lf %lf\n", x, y);
           }
           fclose(tempDataFile);
 
           // Plot u1
           u1_temp_file = "u1";
-          tempDataFile = fopen(u1_temp_file,"w");
-          fprintf(gnuplotPipe,"set grid ytics\n");
-          fprintf(gnuplotPipe,"set grid xtics\n");
-          fprintf(gnuplotPipe,"plot \"%s\" with steps lt rgb \"red\" \n",u1_temp_file);
+          tempDataFile = fopen(u1_temp_file, "w");
+          fprintf(gnuplotPipe, "set grid ytics\n");
+          fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
           fflush(gnuplotPipe);
           for (i=0; i < NN; i++) {
               x = t_grid[i];
               y = w[i*(NX+NU)+4];
-              fprintf(tempDataFile,"%lf %lf\n",x,y);
+              fprintf(tempDataFile, "%lf %lf\n", x, y);
           }
           fclose(tempDataFile);
 
           printf("Press any key to continue...");
           getchar();
           remove(x1_temp_file);
-          fprintf(gnuplotPipe,"exit \n");
+          fprintf(gnuplotPipe, "exit \n");
       } else {
           printf("gnuplot not found...");
       }
@@ -175,6 +171,7 @@ extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
 
 extern  int d_size_strmat(int m, int n);
 extern  int d_size_strvec(int m);
+// extern FILE *popen(char *command, const char *type);
 
 // Simple SQP example for acados
 int main() {
