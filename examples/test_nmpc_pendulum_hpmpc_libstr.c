@@ -18,7 +18,7 @@
  *
  */
 
-#pragma GCC diagnostic ignored "-Wint-conversion"
+#pragma GCC diagnostic ignored "-Wint-conversion"  // TODO(Andrea): need to fix
 
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
@@ -31,6 +31,7 @@
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
 #endif  // PLOT_RESULTS
+
 // system headers
 #include <stdlib.h>
 #include <stdio.h>
@@ -103,6 +104,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           tempDataFile = fopen(x1_temp_file, "w");
           fprintf(gnuplotPipe, "set grid ytics\n");
           fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
           fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
           fflush(gnuplotPipe);
           for (i=0; i < NN; i++) {
@@ -117,6 +119,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           tempDataFile = fopen(x2_temp_file, "w");
           fprintf(gnuplotPipe, "set grid ytics\n");
           fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
           fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
           fflush(gnuplotPipe);
           for (i=0; i < NN; i++) {
@@ -131,6 +134,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           tempDataFile = fopen(u1_temp_file, "w");
           fprintf(gnuplotPipe, "set grid ytics\n");
           fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
           fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
           fflush(gnuplotPipe);
           for (i=0; i < NN; i++) {
@@ -143,7 +147,10 @@ static void plot_states_controls(real_t *w, real_t T) {
           printf("Press any key to continue...");
           getchar();
           remove(x1_temp_file);
-          fprintf(gnuplotPipe, "exit \n");
+          remove(x2_temp_file);
+          remove(u1_temp_file);
+
+          fprintf(gnuplotPipe, "exit gnuplot\n");
       } else {
           printf("gnuplot not found...");
       }

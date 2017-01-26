@@ -20,7 +20,6 @@ file(GLOB PENDULUM_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pe
     ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde_forw_pendulum.c
     ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
     ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr.c
-    ${PROJECT_SOURCE_DIR}/external/gnuplot/gnuplot_i.c
 )
 
 file(GLOB AIRCRAFT_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
