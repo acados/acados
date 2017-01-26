@@ -8,7 +8,6 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 %}
 
-%include "exception.i"
 %include "numpy.i"
 %init %{
 import_array();
