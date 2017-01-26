@@ -21,7 +21,6 @@
 #include <stdlib.h>
 
 #include "acados/utils/allocate_ocp_qp_in.h"
-#include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "external/blasfeo/include/blasfeo_target.h"
 #include "external/blasfeo/include/blasfeo_common.h"
