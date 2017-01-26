@@ -63,9 +63,6 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(acados ooqpbase)
 endif ()
 
-# OpenBLAS installation directory
-link_directories(/opt/openblas/lib)
-
 # Define examples
 add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})
 target_link_libraries(hpmpc_example acados hpmpc blasfeo openblas m)
