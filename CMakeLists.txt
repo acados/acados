@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(acados)
 
-# SET (CMAKE_C_COMPILER "/usr/bin/clang")
-# SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
-
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -20,7 +17,7 @@ message("\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
-    #set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Wno-unused-function") #Andrea: this helps a lot while debugging, can we keep it?
+    set(CMAKE_C_FLAGS "-g -std=c99 -Wall -Wextra -Wno-unused-function")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Profile)
