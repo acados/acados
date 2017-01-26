@@ -109,7 +109,7 @@ static void plot_states_controls(real_t *w, real_t T) {
       gnuplot_plot1d_var2v(h1, t_grid, print_x, NN, "State trajectories");
       //  Slopes
       // gnuplot_plot_slope(h1, 0.0, 0.0, "unity slope");
-      printf ( "Press any key to proceed:\n" );
+      printf ("Press any key to proceed:\n");
       getchar();
 }
 #endif  // PLOT_RESULTS
@@ -507,7 +507,7 @@ int main() {
     #endif  // DEBUG
 
     #ifdef PLOT_RESULTS
-    plot_states_controls(w,T);
+    plot_states_controls(w, T);
     #endif  // PLOT_RESULTS
 
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
