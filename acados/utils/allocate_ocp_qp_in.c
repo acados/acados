@@ -29,7 +29,7 @@
 #include "acados/utils/allocate_ocp_qp_in.h"
 
 
-static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
+void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
     int_zeros((int_t **) &qp->nx, N+1, 1);
     int_zeros((int_t **) &qp->nu, N, 1);
     int_zeros((int_t **) &qp->nb, N+1, 1);
@@ -63,7 +63,7 @@ static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *c
 }
 
 
-static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
+void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
     int_free((int_t *)qp->nx);
     int_free((int_t *)qp->nu);
     int_free((int_t *)qp->nb);
@@ -93,7 +93,7 @@ static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
 }
 
 
-static void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
+void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
     qp->lb = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
     qp->ub = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
     qp->idxb = (const int_t **) malloc(sizeof(*qp->idxb) * (N+1));
@@ -109,7 +109,7 @@ static void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
 }
 
 
-static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
+void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
     for (int_t ii = 0; ii < qp->N+1; ii++) {
         d_free((real_t*)qp->lb[ii]);
         d_free((real_t*)qp->ub[ii]);
@@ -121,7 +121,7 @@ static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
 }
 
 
-static void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const qp) {
+void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const qp) {
     qp->lc = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
     qp->uc = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
     qp->Cx = (const real_t **) malloc(sizeof(*qp->Cx) * (N+1));
@@ -142,7 +142,7 @@ static void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const q
 }
 
 
-static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
+void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
     for (int_t ii = 0; ii < qp->N; ii++) {
         d_free((real_t*)qp->lc[ii]);
         d_free((real_t*)qp->uc[ii]);
@@ -160,7 +160,7 @@ static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
 }
 
 
-static void allocate_ocp_qp_in_x0(int_t nx0, ocp_qp_in *const qp) {
+void allocate_ocp_qp_in_x0(int_t nx0, ocp_qp_in *const qp) {
     int_t *ptr;
     ptr = (int_t*)&qp->nb[0];
     *ptr = nx0;
@@ -173,7 +173,7 @@ static void allocate_ocp_qp_in_x0(int_t nx0, ocp_qp_in *const qp) {
 }
 
 
-static void free_ocp_qp_in_x0(ocp_qp_in *const qp) {
+void free_ocp_qp_in_x0(ocp_qp_in *const qp) {
     d_free((real_t *)qp->lb[0]);
     d_free((real_t *)qp->ub[0]);
     int_free((int_t *)qp->idxb[0]);

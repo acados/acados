@@ -27,6 +27,8 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+int_t read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath);
+int_t read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath);
 int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath);
 
 #ifdef __cplusplus

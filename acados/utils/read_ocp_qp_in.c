@@ -134,25 +134,16 @@ static int_t read_ocp_qp_in_dimensions(int_t *N, int_t **nx, int_t **nu,  const 
 }
 
 
-int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
-    int_t ii, kk, N;
+int_t read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
+    int_t kk, N;
     int_t status = 0;
     int_t quiet = 1;
-    int_t *nx, *nu, *ptr;
+    int_t *nx, *nu;
     char fname[256];
     char stage[16];
 
     read_ocp_qp_in_dimensions(&N, &nx, &nu, fpath);
-    allocate_ocp_qp_in_unconstrained(N, nx, nu, in);
-
-    // read x0
-    snprintf(fname, sizeof(fname), "%s%s", fpath, "x0.txt");
-    status = read_double_vector_from_txt((real_t*)in->lb[0], in->nx[0], fname);
-    if (status != 0) return status;
-    status = read_double_vector_from_txt((real_t*)in->ub[0], in->nx[0], fname);
-    if (status != 0) return status;
-    ptr = (int_t*) in->idxb[0];
-    for (ii = 0; ii < in->nx[0]; ii++) ptr[ii] = ii;
+    allocate_ocp_qp_in_basic(N, nx, nu, in);
 
     for (kk = 0; kk < in->N; kk++) {
         snprintf(stage, sizeof(stage), "%d", kk);
@@ -163,6 +154,10 @@ int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->q[kk], in->nx[kk], fname);
+        if (status != 0) return status;
+
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "S", kk, ".txt");
+        status = read_double_matrix_from_txt((real_t*)in->S[kk], in->nu[kk], in->nx[kk], fname);
         if (status != 0) return status;
 
         snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "R", kk, ".txt");
@@ -199,6 +194,8 @@ int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
             d_print_mat(in->nx[kk], in->nx[kk], (real_t*)in->Q[kk], in->nx[kk]);
             printf("\nR[%d] =\n", kk);
             d_print_mat(in->nu[kk], in->nu[kk], (real_t*)in->R[kk], in->nu[kk]);
+            printf("\nS[%d] =\n", kk);
+            d_print_mat(in->nu[kk], in->nx[kk], (real_t*)in->S[kk], in->nu[kk]);
             printf("\nq[%d] =\n", kk);
             d_print_mat(in->nx[kk], 1, (real_t*)in->q[kk], in->nx[kk]);
             printf("\nr[%d] =\n", kk);
@@ -219,5 +216,35 @@ int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
 
     free(nx);
     free(nu);
+    return status;
+}
+
+
+int_t read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath) {
+    char fname[256];
+    int ii, status;
+    int *ptr;
+
+    allocate_ocp_qp_in_x0(in->nx[0], in);
+
+    snprintf(fname, sizeof(fname), "%s%s", fpath, "x0.txt");
+    status = read_double_vector_from_txt((real_t*)in->lb[0], in->nx[0], fname);
+    if (status != 0) return status;
+    status = read_double_vector_from_txt((real_t*)in->ub[0], in->nx[0], fname);
+
+    ptr = (int_t*) in->idxb[0];
+    for (ii = 0; ii < in->nx[0]; ii++) ptr[ii] = ii;
+    ptr = (int_t*) &in->nb[0];
+    *ptr = in->nx[0];
+
+    return status;
+}
+
+
+int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
+    int_t status = 0;
+    status = read_ocp_qp_in_basic(in, fpath);
+    if (status != 0) return status;
+    status = read_ocp_qp_in_x0(in, fpath);
     return status;
 }

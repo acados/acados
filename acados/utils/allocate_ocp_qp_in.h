@@ -27,12 +27,28 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-// allocate and free a full QP
+// allocate objective and equality constraints
+void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp);
+void free_ocp_qp_in_basic(ocp_qp_in *const qp);
+
+// allocate upper/lower bounds only
+void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp);
+void free_ocp_qp_in_bounds(ocp_qp_in *const qp);
+
+// allocate polyhedral inequality constraints only
+void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const qp);
+void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp);
+
+// allocate upper/lower bounds of first stage for constraint on x0
+void allocate_ocp_qp_in_x0(int_t nx0, ocp_qp_in *const qp);
+void free_ocp_qp_in_x0(ocp_qp_in *const qp);
+
+// basic + bounds + polyhedral
 void allocate_ocp_qp_in_full(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
     ocp_qp_in *const qp);
 void free_ocp_qp_in_full(ocp_qp_in *const qp);
 
-// allocate and free a QP with only equality constraints and upper/lower bound on x0
+// basic + x0
 void allocate_ocp_qp_in_unconstrained(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp);
 void free_ocp_qp_in_unconstrained(ocp_qp_in *const qp);
 
