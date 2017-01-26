@@ -8,6 +8,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fdiagnostics-show-option")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror")
 
+# set(${CMAKE_LIBRARY_PATH} "/usr/lib:/usr/local/lib:${CMAKE_LIBRARY_PATH}")
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops")
