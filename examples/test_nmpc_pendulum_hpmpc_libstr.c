@@ -110,7 +110,8 @@ static void plot_states_controls(real_t *w, real_t T) {
       gnuplot_plot1d_var2v(h1, t_grid, print_x, NN, "State trajectories");
       //  Slopes
       // gnuplot_plot_slope(h1, 0.0, 0.0, "unity slope");
-      sleep(3);
+      printf ( "Press any key to proceed:\n" );
+      getchar();
 }
 #endif  // PLOT_RESULTS
 
@@ -396,14 +397,13 @@ int main() {
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
-    work_space_size += 10000*sizeof(double)*(N+1);
+    work_space_size += 1000*sizeof(int);  // TODO(Andrea): need to fix this
 
-    work_space_size = 500000*sizeof(double)*(N+1);
+    // work_space_size = 500000*sizeof(double)*(N+1);
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
 
-    // double workspace[500000];
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
     qp_in.N = N;
