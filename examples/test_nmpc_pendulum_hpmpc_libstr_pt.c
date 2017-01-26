@@ -64,7 +64,7 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 3
+#define MM 90
 #define NX 4
 #define NU 1
 #define NBU 1
