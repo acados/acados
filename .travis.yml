@@ -15,6 +15,7 @@ addons:
     packages:
     - libgsl0-dev
     - liblapack-dev
+    - libopenblas-dev
     - cppcheck
     - g++-6
     - gcc-6
