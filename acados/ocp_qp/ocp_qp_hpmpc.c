@@ -562,7 +562,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // update cost function matrices and vectors (box constraints)
     double sigma_mu = 1.0;
-    d_update_hessian_mpc_hard_libstr(N-M, nx, nu, nb, ng, hsd, sigma_mu, hst,
+    d_update_hessian_mpc_hard_libstr(N-M-1, nx, nu, nb, ng, hsd, sigma_mu, hst,
        hstinv, hslam, hslamt, hsdlam, hsQx, hsqx);
 
     // backward riccati factorization and solution at the end

@@ -64,7 +64,7 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 2
+#define MM 3
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -198,8 +198,8 @@ int main() {
     real_t  x_min[NBX]          = {};
     // real_t  x_max[NBX]          = {10, 10, 10, 10};
     real_t  x_max[NBX]          = {};
-    real_t  u_min[NBU]          = {-10.0};
-    real_t  u_max[NBU]          = {10.0};
+    real_t  u_min[NBU]          = {-5.0};
+    real_t  u_max[NBU]          = {5.0};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
@@ -274,8 +274,7 @@ int main() {
     int ii, jj;
     nb[0] = NBU;
     for (ii = 1; ii < M; ii++ ) nb[ii] = NBU + NBX;
-    for (ii = M; ii < N; ii++ ) nb[ii] = 0;  // no bounds from M to N
-    nb[N] = 0;
+    for (ii = M; ii <= N; ii++ ) nb[ii] = 0;  // no bounds from M to N
 
     // int *idxb0;
     // int_zeros(&idxb0, nb[0], 1);
@@ -562,7 +561,7 @@ int main() {
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-            int status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, 1, workspace);
+            int status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, MM, workspace);
             // int status = 0;
             // printf("hpmpc_status=%i\n", status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
