@@ -51,7 +51,7 @@ script:
 - cd build
 - cmake -D CMAKE_BUILD_TYPE=Test ..
 - set +e
+- make
 - make lint
-- make unit_tests
 - cd test
 - "./unit_tests"
