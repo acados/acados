@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(acados)
 
+# SET (CMAKE_C_COMPILER "/usr/bin/clang")
+# SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -49,9 +52,19 @@ include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
 
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    include(external/ma27)
+    include(external/ooqp)
+endif ()
+
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
 add_dependencies(acados qpoases hpmpc blasfeo)
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    add_dependencies(ooqpbase ma27)
+    add_dependencies(acados ooqpbase)
+endif ()
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)
@@ -89,8 +102,14 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         COMMENT "Checking if regeneration of test data is needed")
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
-    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
-	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
+
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+        find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
+    else ()
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
+    endif ()
+    set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
 
 # Linter
