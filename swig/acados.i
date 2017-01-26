@@ -4,7 +4,6 @@
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
         PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
                     data, 0, NPY_ARRAY_FARRAY, NULL)
-/* Put header files here or function declarations like below */
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 %}
@@ -72,11 +71,23 @@ static int_t convert_to_c_array(PyObject *input, int_t * const array, const int_
 }
 %}
 
-%include "acados/ocp_qp/ocp_qp_common.h"
-
-%typemap(out) real_t ** {
-    $result = $input[i];
+%{
+static int_t convert_to_2dim_c_array(PyObject *input, real_t ** const array, const int_t length_of_array, const int_t *sizes) {
+    if (PyArray_Check(input)) {
+        PyArrayObject *input_array = PyArray_GETCONTIGUOUS(reinterpret_cast<PyArrayObject *>(input));
+        for (int_t i = 0; i < length_of_array; i++) {
+            npy_intp dims[2] = {sizes[i+1], sizes[i]};
+            array[i] = (real_t *) PyArray_GetPtr(input_array, dims);
+        }
+    } else {
+        SWIG_Error(SWIG_ValueError, "Expected an array");
+        return 0;
+    }
+    return 1;
 }
+%}
+
+%include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
     ocp_qp_in(int_t num_stages) {
@@ -120,11 +131,15 @@ static int_t convert_to_c_array(PyObject *input, int_t * const array, const int_
     PyObject *get_A() {
         return convert_to_sequence_of_arrays($self->A, $self->N, $self->nx);
     }
+    void set_A(PyObject *input) {
+        convert_to_2dim_c_array(input, (real_t **) $self->A, $self->N, $self->nx);
+    }
     %pythoncode %{
         __swig_getmethods__["nx"] = get_nx
         __swig_setmethods__["nx"] = set_nx
         __swig_getmethods__["A"] = get_A
+        __swig_setmethods__["A"] = set_A
         if _newclass: nx = property(get_nx, set_nx)
-        if _newclass: A = property(get_A)
+        if _newclass: A = property(get_A, set_A)
     %}
 }
