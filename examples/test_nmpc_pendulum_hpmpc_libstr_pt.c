@@ -18,11 +18,19 @@
  *
  */
 
+#pragma GCC diagnostic ignored "-Wint-conversion"  // TODO(Andrea): need to fix
+
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
-#else
+#elsev
 #include <sys/stat.h>
 #endif
+
+#define PLOT_RESULTS
+
+#ifdef PLOT_RESULTS
+#define _GNU_SOURCE
+#endif  // PLOT_RESULTS
 
 // system headers
 #include <stdlib.h>
@@ -55,12 +63,11 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 10
+#define NN 50
 #define NX 4
 #define NU 1
 #define NBU 1
-#define NBX 0
-
+#define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
 
 #include "acados/utils/timing.h"
 
@@ -76,25 +83,108 @@ static void print_states_controls(real_t *w, int_t N) {
 }
 #endif  // DEBUG
 
-static void shift_states(real_t *w, real_t *x_end, int_t N) {
-    for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
-    }
-    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
-}
+#ifdef PLOT_RESULTS
+// static void plot_states_controls(real_t *w, int_t nx, int_t nu, int_t N, real_t T ) {
+static void plot_states_controls(real_t *w, real_t T) {
+      double t_grid[NN];
+      for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
 
-static void shift_controls(real_t *w, real_t *u_end, int_t N) {
-    for (int_t i = 0; i < N-1; i++) {
-        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
-    }
-    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
+      FILE *gnuplotPipe, *tempDataFile;
+      char *x1_temp_file;
+      char *x2_temp_file;
+      char *u1_temp_file;
+      double x, y;
+      int i;
+      x1_temp_file = "x1";
+      gnuplotPipe = popen("gnuplot -persist", "w");
+      if (gnuplotPipe) {
+          fprintf(gnuplotPipe, "set multiplot layout 3,1\n");
+
+          // Plot x1
+          tempDataFile = fopen(x1_temp_file, "w");
+          fprintf(gnuplotPipe, "set grid ytics\n");
+          fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
+          fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
+          fflush(gnuplotPipe);
+          for (i=0; i < NN; i++) {
+              x = t_grid[i];
+              y = w[i*(NX+NU)];
+              fprintf(tempDataFile, "%lf %lf\n", x, y);
+          }
+          fclose(tempDataFile);
+
+          // Plot x2
+          x2_temp_file = "x2";
+          tempDataFile = fopen(x2_temp_file, "w");
+          fprintf(gnuplotPipe, "set grid ytics\n");
+          fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
+          fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
+          fflush(gnuplotPipe);
+          for (i=0; i < NN; i++) {
+              x = t_grid[i];
+              y = w[i*(NX+NU)+1];
+              fprintf(tempDataFile, "%lf %lf\n", x, y);
+          }
+          fclose(tempDataFile);
+
+          // Plot u1
+          u1_temp_file = "u1";
+          tempDataFile = fopen(u1_temp_file, "w");
+          fprintf(gnuplotPipe, "set grid ytics\n");
+          fprintf(gnuplotPipe, "set grid xtics\n");
+          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
+          fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
+          fflush(gnuplotPipe);
+          for (i=0; i < NN; i++) {
+              x = t_grid[i];
+              y = w[i*(NX+NU)+4];
+              fprintf(tempDataFile, "%lf %lf\n", x, y);
+          }
+          fclose(tempDataFile);
+
+          printf("Press any key to continue...");
+          getchar();
+          remove(x1_temp_file);
+          remove(x2_temp_file);
+          remove(u1_temp_file);
+
+          fprintf(gnuplotPipe, "exit gnuplot\n");
+      } else {
+          printf("gnuplot not found...");
+      }
 }
+#endif  // PLOT_RESULTS
+
+
+// static void shift_states(real_t *w, real_t *x_end, int_t N) {
+//     for (int_t i = 0; i < N; i++) {
+//         for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
+//     }
+//     for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
+// }
+
+// static void shift_controls(real_t *w, real_t *u_end, int_t N) {
+//     for (int_t i = 0; i < N-1; i++) {
+//         for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
+//     }
+//     for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
+// }
+
+// TODO(Andrea): need to fix this stuff below...
+extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
+  int *nu, int *nb, int *ng);
+
+extern  int d_size_strmat(int m, int n);
+extern  int d_size_strvec(int m);
+// extern FILE *popen(char *command, const char *type);
 
 // Simple SQP example for acados
 int main() {
     // Problem data
     int_t   N                   = NN;
-    real_t  x0[NX]              = {0.0, 1.0, 0.0, 0.0};
+    real_t  x0[NX]              = {0.0, 0.2, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
     real_t  Q[NX*NX]            = {0};
     real_t  R[NU*NU]            = {0};
@@ -102,18 +192,18 @@ int main() {
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
     int_t   max_iters           = 100;
-    real_t  x_end[NX]           = {0};
-    real_t  u_end[NU]           = {0};
-    real_t  x_min[NBX]          = {-100, -100, -100, -100};
-    real_t  x_max[NBX]          = {100, 100, 100, 100};
-    real_t  u_min[NBU]          = {-1.0};
-    real_t  u_max[NBU]          = {1.0};
+    // real_t  x_min[NBX]          = {-10, -10, -10, -10};
+    real_t  x_min[NBX]          = {};
+    // real_t  x_max[NBX]          = {10, 10, 10, 10};
+    real_t  x_max[NBX]          = {};
+    real_t  u_min[NBU]          = {-10.0};
+    real_t  u_max[NBU]          = {10.0};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
 
     // Integrator structs
-    real_t T = 0.01;
+    real_t T = 0.05;
     sim_in  sim_in;
     sim_out sim_out;
     sim_in.nSteps = 10;
@@ -142,7 +232,8 @@ int main() {
     sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
     sim_erk_create_opts(4, &rk_opts);
-    sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
+    sim_in.opts = &rk_opts;
+    sim_erk_create_workspace(&sim_in, &erk_work);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN+1] = {0};
@@ -212,6 +303,7 @@ int main() {
 
     int *idxbN;
     int_zeros(&idxbN, nb[N], 1);
+    // for (jj = 0; jj < NBU; jj++ ) idxbN[jj] = jj;
     for ( jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
 
     hidxb[0] = idxb0;
@@ -348,14 +440,13 @@ int main() {
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
-    work_space_size += 10000*sizeof(double)*(N+1);
+    work_space_size += 1000*sizeof(int);  // TODO(Andrea): need to fix this
 
-    work_space_size = 500000*sizeof(double)*(N+1);
+    // work_space_size = 500000*sizeof(double)*(N+1);
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
 
-    // double workspace[500000];
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
     qp_in.N = N;
@@ -407,7 +498,7 @@ int main() {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
                 }
                 for (int_t j = 0; j < NU; j++) {
-                    pr[i][j] = R[j*(NX+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
+                    pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
                 }
                 for (int_t j = 0; j < NX; j++) {
                     pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
@@ -434,9 +525,9 @@ int main() {
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-            int status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
+            int status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, 10, workspace);
             // int status = 0;
-            printf("hpmpc_status=%i\n", status);
+            // printf("hpmpc_status=%i\n", status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
 
             if (status == 2) printf("status = ACADOS_MINSTEP\n");
@@ -458,6 +549,11 @@ int main() {
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
+
+    #ifdef PLOT_RESULTS
+    plot_states_controls(w, T);
+    #endif  // PLOT_RESULTS
+
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
     free(workspace);
     return 0;

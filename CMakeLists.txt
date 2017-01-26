@@ -72,6 +72,9 @@ target_link_libraries(chain_example acados qpoases blasfeo openblas m)
 add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
 target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
 
+add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
+target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
+
 #add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
 #target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
 
