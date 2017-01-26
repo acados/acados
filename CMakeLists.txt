@@ -73,6 +73,9 @@ link_directories(/opt/openblas/lib)
 add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})
 target_link_libraries(hpmpc_example acados hpmpc blasfeo openblas m)
 
+add_executable(hpmpc_example_partial_tightening ${HPMPC_EXAMPLE_SRC})
+target_link_libraries(hpmpc_example_partial_tightening acados hpmpc blasfeo openblas m)
+
 add_executable(condensing_qpoases_example ${CONDENSING_QPOASES_EXAMPLE_SRC})
 target_link_libraries(condensing_qpoases_example acados qpoases blasfeo hpmpc m)
 
