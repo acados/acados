@@ -60,6 +60,18 @@ void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
     return;
 }
 
+void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
+    int ii, jj;
+
+    for (ii = 0; ii < n; ii++) {
+        for (jj = 0; jj < m; jj++) {
+            y[ii] += A[jj + lda * ii] * x[jj];
+        }
+    }
+
+    return;
+}
+
 void dcopy_3l(int n, double *x, int incx, double *y, int incy) {
     int ii;
 
@@ -324,6 +336,14 @@ double onenorm(int row, int col, double *ptrA) {
             temp = max;
     }
     return temp;
+}
+
+/* two norm of a vector */
+double twonormv(int n, double *ptrv) {
+    double temp;
+    temp = 0;
+    for (int i = 0; i < n; i++) temp += ptrv[i]*ptrv[i];
+    return (double)sqrt(temp);
 }
 
 /* computes the Pade approximation of degree m of the matrix A */

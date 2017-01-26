@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.11)
 project(acados)
 
+# SET (CMAKE_C_COMPILER "/usr/bin/clang")
+# SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
+
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -17,6 +20,7 @@ message("\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
+    #set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Wno-unused-function") #Andrea: this helps a lot while debugging, can we keep it?
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Profile)
@@ -48,9 +52,19 @@ include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
 
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    include(external/ma27)
+    include(external/ooqp)
+endif ()
+
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
 add_dependencies(acados qpoases hpmpc blasfeo)
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    add_dependencies(ooqpbase ma27)
+    add_dependencies(acados ooqpbase)
+endif ()
 
 # OpenBLAS installation directory
 link_directories(/opt/openblas/lib)
@@ -68,6 +82,12 @@ target_link_libraries(nmpc_example acados qpoases blasfeo m)
 add_executable(chain_example ${CHAIN_EXAMPLE_SRC})
 target_link_libraries(chain_example acados qpoases blasfeo openblas m)
 
+#add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
+#target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
+
+#add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
+#target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
+
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
     include(test_sources)
@@ -79,8 +99,14 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         COMMENT "Checking if regeneration of test data is needed")
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
-    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
-	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
+
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+        find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
+    else ()
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
+    endif ()
+    set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
 
 # Linter

@@ -17,54 +17,23 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_COMMON_H_
-#define ACADOS_OCP_QP_OCP_QP_COMMON_H_
+#ifndef ACADOS_UTILS_ALLOCATE_OCP_QP_IN_H_
+#define ACADOS_UTILS_ALLOCATE_OCP_QP_IN_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct ocp_qp_in_ {
-    int_t N;
-    const int_t *nx;
-    const int_t *nu;
-    const int_t *nb;
-    const int_t *nc;
-    const real_t **A;
-    const real_t **B;
-    const real_t **b;
-    const real_t **Q;
-    const real_t **S;
-    const real_t **R;
-    const real_t **q;
-    const real_t **r;
-    const int_t **idxb;
-    const real_t **lb;
-    const real_t **ub;
-    const real_t **Cx;
-    const real_t **Cu;
-    const real_t **lc;
-    const real_t **uc;
-} ocp_qp_in;
+// allocate a full QP
+void allocate_QP_full(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in *const qp);
+void free_QP_full(ocp_qp_in *const qp);
 
-typedef struct ocp_qp_out_ {
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-    real_t **t;
-} ocp_qp_out;
-
-typedef struct qp_solver_ {
-    int_t (*fun)(ocp_qp_in*, ocp_qp_out*, void*, void*);
-    ocp_qp_in *in;
-    ocp_qp_out *out;
-    void *mem;
-    void *work;
-} qp_solver;
+// allocate only equality constraints and upper/lower bound on x0
+void allocate_QP_unconstrained(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp);
+void free_QP_unconstrained(ocp_qp_in *const qp);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_
+#endif  // ACADOS_UTILS_ALLOCATE_OCP_QP_IN_H_
