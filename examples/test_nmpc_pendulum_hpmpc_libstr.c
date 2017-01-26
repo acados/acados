@@ -18,6 +18,8 @@
  *
  */
 
+#pragma GCC diagnostic ignored "-Wint-conversion"
+
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
 #elsev
@@ -55,7 +57,7 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 10
+#define NN 50
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -86,52 +88,65 @@ static void print_states_controls(real_t *w, int_t N) {
 // static void plot_states_controls(real_t *w, int_t nx, int_t nu, int_t N, real_t T ) {
 static void plot_states_controls(real_t *w, real_t T) {
       gnuplot_ctrl *h1;
-      h1 = gnuplot_init();
-
-      // Initialize the gnuplot handle
-      h1 = gnuplot_init();
-
-      if ( h1 == NULL ) {
-        printf("\n");
-        printf("EXAMPLE - Fatal error!\n");
-        printf("GNUPLOT is not available in your path.\n");
-        exit(1);
-      }
 
       double t_grid[NN];
       for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
 
-      double print_x[NN];
-      for (int_t i = 0; i < NN; i++) {
-        print_x[i] = w[i*(NX+NU)];
-      }
-      gnuplot_setstyle(h1, "lines");
-      gnuplot_plot1d_var2v(h1, t_grid, print_x, NN, "State trajectories");
-      //  Slopes
-      // gnuplot_plot_slope(h1, 0.0, 0.0, "unity slope");
-      printf("Press any key to proceed:\n");
-      getchar();
-
-      void plotResults(double* xData, double* yData, int dataSize) {
       FILE *gnuplotPipe,*tempDataFile;
-      char *tempDataFileName;
+      char *x1_temp_file;
+      char *x2_temp_file;
+      char *u1_temp_file;
       double x,y;
       int i;
-      tempDataFileName = "tempData";
-      gnuplotPipe = popen("c:\\gnuplot\\bin\\pgnuplot -persist","w");
+      x1_temp_file = "x1";
+      gnuplotPipe = popen("gnuplot -persist","w");
       if (gnuplotPipe) {
-          fprintf(gnuplotPipe,"plot \"%s\" with lines\n",tempDataFileName);
+          fprintf(gnuplotPipe,"set multiplot layout 3,1\n");
+
+          // Plot x1
+          tempDataFile = fopen(x1_temp_file,"w");
+          fprintf(gnuplotPipe,"set grid ytics\n");
+          fprintf(gnuplotPipe,"set grid xtics\n");
+          fprintf(gnuplotPipe,"plot \"%s\" with lines lt rgb \"blue\"\n",x1_temp_file);
           fflush(gnuplotPipe);
-          tempDataFile = fopen(tempDataFileName,"w");
-          for (i=0; i <= dataSize; i++) {
-              x = xData[i];
-              y = yData[i];
+          for (i=0; i < NN; i++) {
+              x = t_grid[i];
+              y = w[i*(NX+NU)];
               fprintf(tempDataFile,"%lf %lf\n",x,y);
           }
           fclose(tempDataFile);
-          printf("press enter to continue...");
+
+          // Plot x2
+          x2_temp_file = "x2";
+          tempDataFile = fopen(x2_temp_file,"w");
+          fprintf(gnuplotPipe,"set grid ytics\n");
+          fprintf(gnuplotPipe,"set grid xtics\n");
+          fprintf(gnuplotPipe,"plot \"%s\" with lines lt rgb \"blue\"\n",x2_temp_file);
+          fflush(gnuplotPipe);
+          for (i=0; i < NN; i++) {
+              x = t_grid[i];
+              y = w[i*(NX+NU)+1];
+              fprintf(tempDataFile,"%lf %lf\n",x,y);
+          }
+          fclose(tempDataFile);
+
+          // Plot u1
+          u1_temp_file = "u1";
+          tempDataFile = fopen(u1_temp_file,"w");
+          fprintf(gnuplotPipe,"set grid ytics\n");
+          fprintf(gnuplotPipe,"set grid xtics\n");
+          fprintf(gnuplotPipe,"plot \"%s\" with steps lt rgb \"red\" \n",u1_temp_file);
+          fflush(gnuplotPipe);
+          for (i=0; i < NN; i++) {
+              x = t_grid[i];
+              y = w[i*(NX+NU)+4];
+              fprintf(tempDataFile,"%lf %lf\n",x,y);
+          }
+          fclose(tempDataFile);
+
+          printf("Press any key to continue...");
           getchar();
-          remove(tempDataFileName);
+          remove(x1_temp_file);
           fprintf(gnuplotPipe,"exit \n");
       } else {
           printf("gnuplot not found...");
@@ -165,7 +180,7 @@ extern  int d_size_strvec(int m);
 int main() {
     // Problem data
     int_t   N                   = NN;
-    real_t  x0[NX]              = {0.0, 1.0, 0.0, 0.0};
+    real_t  x0[NX]              = {0.0, 0.2, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
     real_t  Q[NX*NX]            = {0};
     real_t  R[NU*NU]            = {0};
@@ -177,14 +192,14 @@ int main() {
     real_t  x_min[NBX]          = {};
     // real_t  x_max[NBX]          = {10, 10, 10, 10};
     real_t  x_max[NBX]          = {};
-    real_t  u_min[NBU]          = {-1.0};
-    real_t  u_max[NBU]          = {1.0};
+    real_t  u_min[NBU]          = {-10.0};
+    real_t  u_max[NBU]          = {10.0};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
 
     // Integrator structs
-    real_t T = 0.01;
+    real_t T = 0.05;
     sim_in  sim_in;
     sim_out sim_out;
     sim_in.nSteps = 10;
