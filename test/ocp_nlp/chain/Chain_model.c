@@ -1,5 +1,5 @@
 /* The model comes from \cite{Wirsching2006} */
-#include "examples/casadi_chain/Chain_model.h"
+#include "test/ocp_nlp/chain/Chain_model.h"
 
 extern int vde_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int vde_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);

@@ -20,13 +20,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "acados/utils/types.h"
+#include "acados/utils/allocate_ocp_qp_in.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "external/blasfeo/include/blasfeo_target.h"
 #include "external/blasfeo/include/blasfeo_common.h"
 #include "external/blasfeo/include/blasfeo_d_aux.h"
 #include "external/blasfeo/include/blasfeo_i_aux.h"
-
 
 static void allocate_QP_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
     qp->N = N;
