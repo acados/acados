@@ -26,14 +26,6 @@ int_t TEST_QPOASES = 0;
 static vector<std::string> scenarios = {"LTI", "LTV"};
 vector<std::string> constraints = {"CONSTRAINED"};
 
-// void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
-//     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
-//     REQUIRE(*N > 0);
-//     *nx = (int_t) readMatrix(folder + "/nx.dat")(0, 0);
-//     REQUIRE(*nx > 0);
-//     *nu = (int_t) readMatrix(folder + "/nu.dat")(0, 0);
-//     REQUIRE(*nu > 0);
-// }
 
 void concatenateSolution(int_t N, int_t nx, int_t nu, const ocp_qp_out *out, VectorXd *acados_W) {
     int ii, jj;

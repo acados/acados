@@ -35,7 +35,7 @@ static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, 
         int_t N = in->N;
 
         // dummy command
-        if (args->fixHessianSparsity) kk = 0;
+        if (args->printLevel) kk = 0;
 
         *nx = 0;    // # of primal optimization variables
         *nnzQ = 0;  // # non-zeros in lower part of Hessian
@@ -218,9 +218,9 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
                     nn += 1;
                 }
             }
-        }
         offsetCols += in->nx[kk] + in->nu[kk];
         offsetRows += in->nc[kk];
+        }
     }
     doubleLexSortC(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
 
@@ -307,6 +307,8 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
 
     int_t return_value;
+
+    mem->firstRun = 0;
 
     calculate_problem_size(in, args, &mem->nx, &mem->my, &mem->mz,
         &mem->nnzQ, &mem->nnzA, &mem->nnzC);

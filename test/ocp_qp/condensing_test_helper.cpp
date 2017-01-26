@@ -1,4 +1,5 @@
 #include <string>
+#include <cassert>
 #include "test/ocp_qp/condensing_test_helper.h"
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
@@ -7,7 +8,14 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-extern void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder);
+void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
+    *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
+    assert(*N > 0);
+    *nx = (int_t) readMatrix(folder + "/nx.dat")(0, 0);
+    assert(*nx > 0);
+    *nu = (int_t) readMatrix(folder + "/nu.dat")(0, 0);
+    assert(*nu > 0);
+}
 
 void calculate_num_state_bounds(const ocp_qp_in *in, condensing_workspace *work) {
     i_zeros(&work->nstate_bounds, in->N+1, 1);
