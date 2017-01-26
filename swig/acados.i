@@ -72,9 +72,12 @@ static int_t convert_to_c_array(PyObject *input, int_t * const array, const int_
 %}
 
 %{
-static int_t convert_to_2dim_c_array(PyObject *input, real_t ** const array, const int_t length_of_array, const int_t *sizes) {
+static int_t convert_to_2dim_c_array(PyObject * const input, real_t ** const array,
+    const int_t length_of_array, const int_t *sizes) {
+
     if (PyArray_Check(input)) {
-        PyArrayObject *input_array = reinterpret_cast<PyArrayObject *>(PyArray_FROM_OTF(input, NPY_DOUBLE, NPY_ARRAY_F_CONTIGUOUS));
+        PyObject *obj = PyArray_FROM_OTF(input, NPY_DOUBLE, NPY_ARRAY_F_CONTIGUOUS);
+        PyArrayObject *input_array = reinterpret_cast<PyArrayObject *>(obj);
         if (PyArray_NDIM(input_array) != 2) {
             SWIG_Error(SWIG_ValueError, "Expected a 2D array as input");
             return 0;
