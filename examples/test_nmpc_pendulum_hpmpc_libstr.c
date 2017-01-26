@@ -91,12 +91,11 @@ static void plot_states_controls(real_t *w, real_t T) {
       // Initialize the gnuplot handle
       h1 = gnuplot_init();
 
-      if ( h1 == NULL )
-      {
-        printf ( "\n" );
-        printf ( "EXAMPLE - Fatal error!\n" );
-        printf ( "GNUPLOT is not available in your path.\n" );
-        exit ( 1 );
+      if ( h1 == NULL ) {
+        printf("\n");
+        printf("EXAMPLE - Fatal error!\n");
+        printf("GNUPLOT is not available in your path.\n");
+        exit(1);
       }
 
       double t_grid[NN];
