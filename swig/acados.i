@@ -8,6 +8,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 %}
 
+%include "exception.i"
 %include "numpy.i"
 %init %{
 import_array();
@@ -74,13 +75,26 @@ static int_t convert_to_c_array(PyObject *input, int_t * const array, const int_
 %{
 static int_t convert_to_2dim_c_array(PyObject *input, real_t ** const array, const int_t length_of_array, const int_t *sizes) {
     if (PyArray_Check(input)) {
-        PyArrayObject *input_array = PyArray_GETCONTIGUOUS(reinterpret_cast<PyArrayObject *>(input));
+        PyArrayObject *input_array = reinterpret_cast<PyArrayObject *>(PyArray_FROM_OTF(input, NPY_DOUBLE, NPY_ARRAY_F_CONTIGUOUS));
+        if (PyArray_NDIM(input_array) != 2) {
+            SWIG_Error(SWIG_ValueError, "Expected a 2D array as input");
+            return 0;
+        }
+        npy_intp *dims = PyArray_DIMS(input_array);
+        int_t size_of_all_dimensions = sizes[0];
+        if (dims[0] != size_of_all_dimensions || dims[1] != size_of_all_dimensions) {
+            SWIG_Error(SWIG_ValueError, "Input array with wrong dimensions");
+            return 0;
+        }
+        printf("PyArray type: %d\n", PyArray_TYPE(input_array));
+        npy_intp size = PyArray_SIZE(input_array);
+        printf("PyArray size: %lu\n", size);
         for (int_t i = 0; i < length_of_array; i++) {
-            npy_intp dims[2] = {sizes[i+1], sizes[i]};
+            npy_intp dims[2] = {0, 0};
             array[i] = (real_t *) PyArray_GetPtr(input_array, dims);
         }
     } else {
-        SWIG_Error(SWIG_ValueError, "Expected an array");
+        SWIG_Error(SWIG_ValueError, "Expected an array as input");
         return 0;
     }
     return 1;
@@ -111,6 +125,7 @@ static int_t convert_to_2dim_c_array(PyObject *input, real_t ** const array, con
         qp->nx = (int_t *) calloc(qp->N+1, sizeof(int_t));
         PyObject *nx_list = PyDict_GetItemString(dictionary, "nx");
         if (!convert_to_c_array(nx_list, (int_t *) qp->nx, qp->N+1)) {
+            SWIG_Error(SWIG_ValueError, "nx is not a valid input");
             return NULL;
         }
         qp->A = (const real_t **) calloc(qp->N, sizeof(*qp->A));
