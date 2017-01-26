@@ -465,15 +465,35 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       ptr_memory += (&hst[ii])->memory_size;
 
       // TODO(Andrea): remove memory allocation here
-      d_allocate_strvec(nx[ii+1], &hsPb[ii+1]);
-      d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
-      d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
+      // d_allocate_strvec(nx[ii+1], &hsPb[ii+1]);
+      // d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
+      // d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
+      //
+      // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
+      // d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
+      // d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
 
-      d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
-      d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
-      d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
-      d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
-      d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
+      // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
+      // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
+
+      d_create_strvec(nx[ii+1], &hsPb[ii+1], ptr_memory);
+      ptr_memory += (&hsPb[ii+1])->memory_size;
+      d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
+      ptr_memory += (&hsL[ii])->memory_size;
+      d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
+      ptr_memory += (&hsLxt[ii])->memory_size;
+
+      d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
+      ptr_memory += (&hstinv[ii])->memory_size;
+      d_create_strvec(nb[ii]+ng[ii], &hsQx[ii], ptr_memory);
+      ptr_memory += (&hsQx[ii])->memory_size;
+      d_create_strvec(nb[ii]+ng[ii], &hsqx[ii], ptr_memory);
+      ptr_memory += (&hsqx[ii])->memory_size;
+
+      d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
+      ptr_memory += (&hsdlam[ii])->memory_size;
+      d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
+      ptr_memory += (&hslamt[ii])->memory_size;
     }
 
     ii = N;
@@ -505,21 +525,51 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ptr_memory += (&hst[ii])->memory_size;
 
     // TODO(Andrea): remove memory allocation
-    d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
-    d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
+    // d_allocate_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii]);
+    // d_allocate_strmat(nx[ii], nx[ii], &hsLxt[ii]);
+    //
+    // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
+    // d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
+    // d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
+    // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
+    // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
+    //
+    // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
+    // d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
+    // d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
+    // d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
+    // d_allocate_strmat(nx[M]+1, nx[M], &sLxM);
+    // d_allocate_strmat(nx[M]+1, nx[M], &sPpM);
 
-    d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
-    d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
-    d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
-    d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
-    d_allocate_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii]);
+    d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
+    ptr_memory += (&hsL[ii])->memory_size;
+    d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
+    ptr_memory += (&hsLxt[ii])->memory_size;
 
-    d_allocate_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii]);
-    d_allocate_strvec(nb[ii]+ng[ii], &hsQx[ii]);
-    d_allocate_strvec(nb[ii]+ng[ii], &hsqx[ii]);
-    d_allocate_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii]);
-    d_allocate_strmat(nx[M]+1, nx[M], &sLxM);
-    d_allocate_strmat(nx[M]+1, nx[M], &sPpM);
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
+    ptr_memory += (&hstinv[ii])->memory_size;
+    d_create_strvec(nb[ii]+ng[ii], &hsQx[ii], ptr_memory);
+    ptr_memory += (&hsQx[ii])->memory_size;
+    d_create_strvec(nb[ii]+ng[ii], &hsqx[ii], ptr_memory);
+    ptr_memory += (&hsqx[ii])->memory_size;
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
+    ptr_memory += (&hsdlam[ii])->memory_size;
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
+    ptr_memory += (&hslamt[ii])->memory_size;
+
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
+    ptr_memory += (&hstinv[ii])->memory_size;
+    d_create_strvec(nb[ii]+ng[ii], &hsQx[ii], ptr_memory);
+    ptr_memory += (&hsQx[ii])->memory_size;
+    d_create_strvec(nb[ii]+ng[ii], &hsqx[ii], ptr_memory);
+    ptr_memory += (&hsqx[ii])->memory_size;
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
+    ptr_memory += (&hsdlam[ii])->memory_size;
+    d_create_strmat(nx[M]+1, nx[M], &sLxM, ptr_memory);
+    ptr_memory += (&sLxM)->memory_size;
+    d_create_strmat(nx[M]+1, nx[M], &sPpM, ptr_memory);
+    ptr_memory += (&sPpM)->memory_size;
+
 
     struct d_strmat hstmpmat0;
     // struct d_strvec hstmpvec0;
@@ -549,14 +599,17 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     int hpmpc_status;
     // int kk_avg;
     double alpha_min = 1e-8;
-    double *stat; d_zeros(&stat, k_max, 5);
+    double *stat = (double*)ptr_memory;
+    ptr_memory+=sizeof(double)*k_max*6;
     // int compute_res = 1;
     int compute_mult = 1;
 
     // riccati work space
     void *work_ric;
-    v_zeros_align(&work_ric, d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
+    // v_zeros_align(&work_ric, d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
+    work_ric = ptr_memory;
+    ptr_memory+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
     // v_zeros_align(&work_memory,
     // d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 

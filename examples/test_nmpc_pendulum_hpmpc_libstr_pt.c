@@ -36,11 +36,14 @@
 
 // HPMPC headers
 #include "hpmpc/include/aux_d.h"
+#include "hpmpc/include/lqcp_solvers.h"
 
 // ACADOS headers
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+
 #include "acados/utils/tools.h"
 
 #include "acados/sim/sim_erk_integrator.h"
@@ -173,6 +176,9 @@ static void plot_states_controls(real_t *w, real_t T) {
 extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
   int *nu, int *nb, int *ng);
 
+extern int d_back_ric_rec_work_space_size_bytes_libstr(int N, int *nx, int *nu,
+    int *nb, int *ng);  // TODO(Andrea): ask Gian how to fix this
+
 extern  int d_size_strmat(int m, int n);
 extern  int d_size_strvec(int m);
 // extern FILE *popen(char *command, const char *type);
@@ -204,7 +210,7 @@ int main() {
     real_t T = 0.05;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 10;
+    sim_in.nSteps = 1;
     sim_in.step = T/sim_in.nSteps;
     sim_in.VDE_forw = &VDE_fun_pendulum;
     sim_in.nx = NX;
@@ -472,8 +478,45 @@ int main() {
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
-    work_space_size += 1000*sizeof(double);  // TODO(Andrea): need to fix this
+    // Adding memory for extra variables in the Riccati recursion
+    for ( int ii=0; ii <NN; ii++ ) {
+    work_space_size+=d_size_strvec(nx[ii+1]);
+    work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    work_space_size+=d_size_strmat(nx[ii], nx[ii]);
 
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+
+    }
+
+    ii = NN;
+    work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    work_space_size+=d_size_strmat(nx[ii], nx[ii]);
+
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
+    work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
+
+    // work_space_size += 1000000*s izeof(double);  // TODO(Andrea): need to fix this
+
+    // add memory for riccati work space
+    work_space_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
+
+    // add memory for stats
+    work_space_size+=sizeof(double)*MAX_IP_ITER*6;
     // work_space_size = 500000*sizeof(double)*(N+1);
     void *workspace;
 
