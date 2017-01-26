@@ -21,7 +21,6 @@
 *.rar
 *.tar
 *.zip
-*DS_Store
 
 # Logs and databases #
 ######################
@@ -50,6 +49,13 @@ Thumbs.db
 *.bbl
 *.blg
 *.synctex
+
+# External #
+############
+*external/OOQP
+*external/coinhsl
+*external/download
+*encrypted_script
 
 # Misc #
 ########

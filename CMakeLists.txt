@@ -17,7 +17,7 @@ message("\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
-    #set(CMAKE_C_FLAGS "-std=c99 -Wall -Wextra -Wno-unused-function") #Andrea: this helps a lot while debugging, can we keep it?
+    set(CMAKE_C_FLAGS "-g -std=c99 -Wall -Wextra -Wno-unused-function")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Profile)
@@ -45,16 +45,24 @@ endif()
 include(acados_sources)
 
 # Process external libraries
+include(external/openblas)
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    include(external/ma27)
+    include(external/ooqp)
+endif ()
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
 add_dependencies(acados qpoases hpmpc blasfeo)
 
-# OpenBLAS installation directory
-link_directories(/opt/openblas/lib)
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    add_dependencies(ooqpbase ma27)
+    add_dependencies(acados ooqpbase)
+endif ()
 
 # Define examples
 add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})
@@ -86,21 +94,21 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         COMMENT "Checking if regeneration of test data is needed")
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
-    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
-	set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
+
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+        find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
+    else ()
+        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
+    endif ()
+    set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
 
 # Linter
-find_package(PythonInterp)
-if(PYTHONINTERP_FOUND)
-    set(ACADOS_STYLE_FILTER
-    	"-legal/copyright,"
-    	"-readability/casting")
-    set(FIND_COMMAND find acados test examples external/casadi/casadi/interfaces/acados -type f -name "*.c" ! \( -path "external/gnuplot/*" -o -path "examples/casadi_chain/*" -o -path "examples/casadi_pendulum/*" -o -path "test/sim/pendulum/casadi/*" \) -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp")
-    set(FIND_ACADOS_FILES ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_COMMAND})
-    execute_process(COMMAND ${FIND_ACADOS_FILES} OUTPUT_VARIABLE ACADOS_FILES_TO_LINT)
-    string(REPLACE "\n" " " ACADOS_FILES_TO_LINT ${ACADOS_FILES_TO_LINT})
-    separate_arguments(ACADOS_FILES_TO_LINT)
-    set(LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --filter="${ACADOS_STYLE_FILTER}" --counting=detailed --extensions=c,cpp,h,hpp --linelength=100 ${ACADOS_FILES_TO_LINT})
-    add_custom_target(lint ${LINT_COMMAND})
-endif()
+set(FIND_FILES_TO_LINT find acados test examples swig -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.i" )
+set(FIND_FILES_TO_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_FILES_TO_LINT})
+execute_process(COMMAND ${FIND_FILES_TO_LINT} OUTPUT_VARIABLE FILES_TO_LINT)
+string(REPLACE "\n" " " FILES_TO_LINT ${FILES_TO_LINT})
+separate_arguments(FILES_TO_LINT)
+set(LINT_COMMAND ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${PYTHON_EXECUTABLE} ./cpplint.py --counting=detailed --extensions=c,cpp,h,hpp,i ${FILES_TO_LINT})
+add_custom_target(lint ${LINT_COMMAND})

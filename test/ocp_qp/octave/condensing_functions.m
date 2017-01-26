@@ -110,6 +110,38 @@ function w_star = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r
     end
 endfunction
 
+% TODO(dimitris-robin): remove once function above is extended to cover empty constraints
+function w_star = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu)
+
+    [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
+    [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
+    [lbw, ubw] = ocp_simple_bounds(N, nx, nu, xl, ul, xu, uu);
+
+    % Solve OCP
+    [w_star, ~, exit_flag] = quadprog(H, h, [], [], G, -g, lbw, ubw);
+    
+endfunction
+
+function w_star = solve_structured_ocp_no_bounds(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, Cx, Cu, cl, cu)
+
+    [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
+    [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
+    [A_ineq, b_ineq] = ocp_general_constraints(N, nx, nu, nc, Cx, Cu, cl, cu);
+
+    % Solve OCP
+    [w_star, ~, exit_flag] = quadprog(H, h, A_ineq, b_ineq, G, -g, [], []);
+endfunction
+
+function w_star = solve_structured_ocp_unconstrained(N, nx, nu, A, B, b, x0, Q, S, R, q, r)
+
+    [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
+    [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
+
+    % Solve OCP
+    [w_star, ~, exit_flag] = quadprog(H, h, [], [], G, -g, [], []);
+
+ endfunction
+
 function [G, g, A_bar, B_bar] = calculate_transition_quantities(N, nx, nu, A, B, b, x0)
     A_bar = [-eye(nx),zeros(nx, (N-1)*nx)];
     B_bar = B(:, 1 : nu);
