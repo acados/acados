@@ -497,6 +497,7 @@ int main() {
         d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
         d_zeros(&lam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
         d_zeros(&t_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+
         // Init multipliers and slacks
         for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
           lam_in[ii][jj] = 1.0;
@@ -508,10 +509,11 @@ int main() {
     d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
     d_zeros(&lam_in[N], 2*nbb[N]+2*ngg[N], 1);
     d_zeros(&t_in[N], 2*nbb[N]+2*ngg[N], 1);
+
     // Init multipliers and slacks
     for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
-      lam_in[ii][jj] = 1.0;
-      t_in[ii][jj] = 1.0;
+      lam_in[N][jj] = 1.0;
+      t_in[N][jj] = 1.0;
     }
 
     /************************************************

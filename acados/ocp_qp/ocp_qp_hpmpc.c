@@ -527,8 +527,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // extract output struct members
     double **hx = qp_out->x;
     double **hu = qp_out->u;
-    // double **hpi = qp_out->pi; //TODO(Andrea): not returning multiplers atm
-    // double **hlam = qp_out->lam; //TODO(Andrea): not returning multiplers atm
+    // double **hpi = qp_out->pi;  // TODO(Andrea): not returning multiplers atm
+    // double **hlam = qp_out->lam;  // TODO(Andrea): not returning multiplers atm
 
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
@@ -571,7 +571,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       hsvecdummy, &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], &hsLxt[M], work_ric);
 
     // extract chol factor of [P p; p' *]
-    d_print_strmat(nu[M]+nx[M]+1, nu[M]+nx[M], &hsL[M], 0, 0);
+    // d_print_strmat(nu[M]+nx[M]+1, nu[M]+nx[M], &hsL[M], 0, 0);
 
     // TODO(Andrea): have m and n !!!!!
     dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0);
@@ -583,7 +583,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     dsyrk_ln_libstr(nx[M]+1, nx[M], nx[M], 1.0, &sLxM, 0, 0, &sLxM, 0, 0, 0.0,
       &sPpM, 0, 0, &sPpM, 0, 0);
 
-    d_print_strmat(nx[M]+1, nx[M], &sPpM, 0, 0);
+    // d_print_strmat(nx[M]+1, nx[M], &sPpM, 0, 0);
 
     // backup stage M
     nuM = nu[M];

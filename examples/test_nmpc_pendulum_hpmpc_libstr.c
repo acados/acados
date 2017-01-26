@@ -384,7 +384,7 @@ int main() {
     ii = 0;
     d_zeros(&ppi[ii], nx[ii+1], 1);
     d_zeros(&plam[ii], 2*nb[ii]+2*nb[ii], 1);
-    for (ii = 1; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++) {
         pC[ii] = C;
         pD[ii] = D;
         plg[ii] = lg;

@@ -63,7 +63,8 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 50
+#define NN 100
+#define MM 2
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -184,6 +185,7 @@ extern  int d_size_strvec(int m);
 int main() {
     // Problem data
     int_t   N                   = NN;
+    int_t   M                   = MM;
     real_t  x0[NX]              = {0.0, 0.2, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
     real_t  Q[NX*NX]            = {0};
@@ -271,8 +273,9 @@ int main() {
     ************************************************/
     int ii, jj;
     nb[0] = NBU;
-    for (ii = 1; ii < N; ii++ ) nb[ii] = NBU + NBX;
-    nb[N] = NBX;
+    for (ii = 1; ii < M; ii++ ) nb[ii] = NBU + NBX;
+    for (ii = M; ii < N; ii++ ) nb[ii] = 0;  // no bounds from M to N
+    nb[N] = 0;
 
     // int *idxb0;
     // int_zeros(&idxb0, nb[0], 1);
@@ -306,9 +309,13 @@ int main() {
     // for (jj = 0; jj < NBU; jj++ ) idxbN[jj] = jj;
     for ( jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
 
+    int *idxb_tight;
+    int_zeros(&idxb_tight, 0, 1);  // empty index list for tightened stages
+
     hidxb[0] = idxb0;
-    for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
-    hidxb[N] = idxbN;
+    for (ii = 1; ii < M; ii++ ) hidxb[ii] = idxb1;
+    for (ii = M; ii < N; ii++ ) hidxb[ii] = idxb_tight;
+    hidxb[N] = idxb_tight;
 
     d_zeros(&px0[0], nx[0], 1);
     d_zeros(&plb[0], (NBU), 1);
@@ -381,17 +388,45 @@ int main() {
     real_t *ppi[N];
     real_t *plam[N+1];
 
+    double *ht[N+1];
+
+    double *lam_in[N+1];
+    double *t_in[N+1];
+
+
     ii = 0;
     d_zeros(&ppi[ii], nx[ii+1], 1);
     d_zeros(&plam[ii], 2*nb[ii]+2*nb[ii], 1);
-    for (ii = 1; ii < N; ii++) {
+    for (ii = 0; ii < N; ii++) {
         pC[ii] = C;
         pD[ii] = D;
         plg[ii] = lg;
         pug[ii] = ug;
         d_zeros(&ppi[ii], nx[ii+1], 1);
         d_zeros(&plam[ii], 2*nb[ii]+2*nb[ii], 1);
+
+        d_zeros(&ht[ii], 2*nb[ii]+2*ngg[ii], 1);
+        d_zeros(&lam_in[ii], 2*nb[ii]+2*ngg[ii], 1);
+        d_zeros(&t_in[ii], 2*nb[ii]+2*ngg[ii], 1);
+
+        // Init multipliers and slacks
+        for (jj = 0; jj < 2*nb[ii]+2*ngg[ii]; jj++) {
+          lam_in[ii][jj] = 1.0;
+          t_in[ii][jj] = 1.0;
+        }
+
     }
+
+    d_zeros(&ht[N], 2*nb[N]+2*ngg[N], 1);
+    d_zeros(&lam_in[N], 2*nb[N]+2*ngg[N], 1);
+    d_zeros(&t_in[N], 2*nb[N]+2*ngg[N], 1);
+
+    // Init multipliers and slacks
+    for (jj = 0; jj < 2*nb[ii]+2*ngg[ii]; jj++) {
+      lam_in[N][jj] = 1.0;
+      t_in[N][jj] = 1.0;
+    }
+
 
     d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
 
@@ -412,6 +447,8 @@ int main() {
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
+    hpmpc_args.lam0 = lam_in;
+    hpmpc_args.t0 = t_in;
 
     /************************************************
     * work space
@@ -440,7 +477,7 @@ int main() {
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
-    work_space_size += 1000*sizeof(int);  // TODO(Andrea): need to fix this
+    work_space_size += 1000*sizeof(double);  // TODO(Andrea): need to fix this
 
     // work_space_size = 500000*sizeof(double)*(N+1);
     void *workspace;
@@ -525,7 +562,7 @@ int main() {
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-            int status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, 10, workspace);
+            int status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, 1, workspace);
             // int status = 0;
             // printf("hpmpc_status=%i\n", status);
             if (status == 1) printf("status = ACADOS_MAXITER\n");
