@@ -18,8 +18,6 @@
  *
  */
 
-#pragma GCC diagnostic ignored "-Wint-conversion"  // TODO(Andrea): need to fix
-
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
 #endif
