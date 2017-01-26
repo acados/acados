@@ -109,8 +109,33 @@ static void plot_states_controls(real_t *w, real_t T) {
       gnuplot_plot1d_var2v(h1, t_grid, print_x, NN, "State trajectories");
       //  Slopes
       // gnuplot_plot_slope(h1, 0.0, 0.0, "unity slope");
-      printf ("Press any key to proceed:\n");
+      printf("Press any key to proceed:\n");
       getchar();
+
+      void plotResults(double* xData, double* yData, int dataSize) {
+      FILE *gnuplotPipe,*tempDataFile;
+      char *tempDataFileName;
+      double x,y;
+      int i;
+      tempDataFileName = "tempData";
+      gnuplotPipe = popen("c:\\gnuplot\\bin\\pgnuplot -persist","w");
+      if (gnuplotPipe) {
+          fprintf(gnuplotPipe,"plot \"%s\" with lines\n",tempDataFileName);
+          fflush(gnuplotPipe);
+          tempDataFile = fopen(tempDataFileName,"w");
+          for (i=0; i <= dataSize; i++) {
+              x = xData[i];
+              y = yData[i];
+              fprintf(tempDataFile,"%lf %lf\n",x,y);
+          }
+          fclose(tempDataFile);
+          printf("press enter to continue...");
+          getchar();
+          remove(tempDataFileName);
+          fprintf(gnuplotPipe,"exit \n");
+      } else {
+          printf("gnuplot not found...");
+      }
 }
 #endif  // PLOT_RESULTS
 
