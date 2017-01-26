@@ -161,6 +161,9 @@ static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
 
 
 static void allocate_ocp_qp_in_x0(int_t nx0, ocp_qp_in *const qp) {
+    int_t *ptr;
+    ptr = (int_t*)&qp->nb[0];
+    *ptr = nx0;
     qp->lb = (const real_t **) malloc(sizeof(*qp->lb));
     qp->ub = (const real_t **) malloc(sizeof(*qp->ub));
     qp->idxb = (const int_t **) malloc(sizeof(*qp->idxb));

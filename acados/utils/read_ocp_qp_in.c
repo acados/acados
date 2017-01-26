@@ -50,7 +50,7 @@ static void transpose_matrix(real_t *mat, int m, int n) {
 
 
 static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename) {
-    int_t i, c;
+    int_t ii;
     FILE *myFile;
     myFile = fopen(filename, "r");
 
@@ -59,8 +59,8 @@ static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename)
         return -1;
     }
 
-    for (i = 0; i < n; i++) {
-        c = fscanf(myFile, "%d,", &vec[i]);
+    for (ii = 0; ii < n; ii++) {
+        fscanf(myFile, "%d,", &vec[ii]);
     }
 
     fclose(myFile);
@@ -70,7 +70,7 @@ static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename)
 
 
 static int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filename) {
-    int_t i, c;
+    int_t ii;
     FILE *myFile;
     myFile = fopen(filename, "r");
 
@@ -79,8 +79,8 @@ static int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filen
         return -1;
     }
 
-    for (i = 0; i < n; i++) {
-         c = fscanf(myFile, "%lf,", &vec[i]);
+    for (ii = 0; ii < n; ii++) {
+         fscanf(myFile, "%lf,", &vec[ii]);
     }
 
     fclose(myFile);
@@ -137,7 +137,7 @@ static int_t read_ocp_qp_in_dimensions(int_t *N, int_t **nx, int_t **nu,  const 
 int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
     int_t ii, kk, N;
     int_t status = 0;
-    int_t quiet = 0;
+    int_t quiet = 1;
     int_t *nx, *nu, *ptr;
     char fname[256];
     char stage[16];
