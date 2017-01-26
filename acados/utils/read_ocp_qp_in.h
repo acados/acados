@@ -17,20 +17,20 @@
  *
  */
 
- #ifndef UTILS_H_
- #define UTILS_H_
+#ifndef ACADOS_UTILS_READ_OCP_QP_IN_H_
+#define ACADOS_UTILS_READ_OCP_QP_IN_H_
 
- #ifdef __cplusplus
- extern "C" {
- #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
- #include "acados/utils/types.h"
- #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 
 int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath);
 
- #ifdef __cplusplus
- } /* extern "C" */
- #endif
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
- #endif  /* UTILS_H_ */
+#endif  /* ACADOS_UTILS_READ_OCP_QP_IN_H_ */

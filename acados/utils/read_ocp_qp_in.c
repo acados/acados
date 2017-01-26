@@ -30,7 +30,10 @@
 
 
 static void transpose_matrix(real_t *mat, int m, int n) {
-    real_t tmp[m*n];
+    // real_t tmp[m*n];
+    real_t *tmp;
+    d_zeros(&tmp, m, n);
+
     int r, c, i;
 
     for (c = 0; c < n; c++) {
@@ -41,15 +44,9 @@ static void transpose_matrix(real_t *mat, int m, int n) {
     for (i = 1; i < m*n; i++) {
         mat[i] = tmp[i];
     }
+    d_free(tmp);
 }
 
-
-static void form_filename(const char *fpath, char *field, char *stage, char *fname) {
-    strcpy(fname, fpath);
-    strcat(fname, field);
-    strcat(fname, stage);
-    strcat(fname, ".txt");
-}
 
 
 static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename) {
@@ -103,31 +100,25 @@ static int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const ch
 static int_t read_ocp_qp_in_dimensions(int_t *N, int_t **nx, int_t **nu,  const char *fpath) {
     int_t ii;
     int_t status = 0;
-    int_t QUIET = 0;
-    int_t maxLength = 10;
-    char *fname;
+    int_t quiet = 1;
+    char fname[256];
 
-    fname = (char*)malloc(strlen(fpath) + maxLength);
-
-    strcpy(fname, fpath);
-    strcat(fname, "N.txt");
+    snprintf(fname, sizeof(fname), "%s%s", fpath, "N.txt");
     status = read_int_vector_from_txt(N, 1, fname);
     if (status != 0) return status;
 
     *nx = (int_t*)malloc(sizeof(int_t)*(*N+1));
     *nu = (int_t*)malloc(sizeof(int_t)*(*N));
 
-    strcpy(fname, fpath);
-    strcat(fname, "nx.txt");
+    snprintf(fname, sizeof(fname), "%s%s", fpath, "nx.txt");
     status = read_int_vector_from_txt(*nx, *N+1, fname);
     if (status != 0) return status;
 
-    strcpy(fname, fpath);
-    strcat(fname, "nu.txt");
+    snprintf(fname, sizeof(fname), "%s%s", fpath, "nu.txt");
     status = read_int_vector_from_txt(*nu, *N, fname);
     if (status != 0) return status;
 
-    if (!QUIET) {
+    if (!quiet) {
         printf("\nDIMENSIONS:\n");
         printf("\nN = %d\n", *N);
         printf("\nnx = [ ");
@@ -137,7 +128,7 @@ static int_t read_ocp_qp_in_dimensions(int_t *N, int_t **nx, int_t **nu,  const 
         for (ii = 0; ii < *N; ii++) printf("%d ", nu[0][ii]);
         printf("]\n\n");
     }
-    free(fname);
+    // free(fname);
 
     return status;
 }
@@ -146,20 +137,16 @@ static int_t read_ocp_qp_in_dimensions(int_t *N, int_t **nx, int_t **nu,  const 
 int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
     int_t ii, kk, N;
     int_t status = 0;
-    int_t QUIET = 1;
+    int_t quiet = 0;
     int_t *nx, *nu, *ptr;
-    int_t maxLength = 10;
-    char *fname;
-    char stage[10];  // TODO(dimitris): assert stage is not > 1e6...
-
-    fname = (char*)malloc(strlen(fpath) + maxLength);
+    char fname[256];
+    char stage[16];
 
     read_ocp_qp_in_dimensions(&N, &nx, &nu, fpath);
     allocate_ocp_qp_in_unconstrained(N, nx, nu, in);
 
     // read x0
-    strcpy(fname, fpath);
-    strcat(fname, "x0.txt");
+    snprintf(fname, sizeof(fname), "%s%s", fpath, "x0.txt");
     status = read_double_vector_from_txt((real_t*)in->lb[0], in->nx[0], fname);
     if (status != 0) return status;
     status = read_double_vector_from_txt((real_t*)in->ub[0], in->nx[0], fname);
@@ -168,45 +155,45 @@ int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
     for (ii = 0; ii < in->nx[0]; ii++) ptr[ii] = ii;
 
     for (kk = 0; kk < in->N; kk++) {
-        sprintf(stage, "%d", kk);
+        snprintf(stage, sizeof(stage), "%d", kk);
 
-        form_filename(fpath, "Q", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Q", kk, ".txt");
         status = read_double_matrix_from_txt((real_t*)in->Q[kk], in->nx[kk], in->nx[kk], fname);
         if (status != 0) return status;
 
-        form_filename(fpath, "q", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->q[kk], in->nx[kk], fname);
         if (status != 0) return status;
 
-        form_filename(fpath, "R", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "R", kk, ".txt");
         status = read_double_matrix_from_txt((real_t*)in->R[kk], in->nu[kk], in->nu[kk], fname);
         if (status != 0) return status;
 
-        form_filename(fpath, "r", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "r", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->r[kk], in->nu[kk], fname);
         if (status != 0) return status;
 
-        form_filename(fpath, "A", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "A", kk, ".txt");
         status = read_double_matrix_from_txt((real_t*)in->A[kk], in->nx[kk+1], in->nx[kk], fname);
         if (status != 0) return status;
 
-        form_filename(fpath, "B", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "B", kk, ".txt");
         status = read_double_matrix_from_txt((real_t*)in->B[kk], in->nx[kk+1], in->nu[kk], fname);
         if (status != 0) return status;
 
-        form_filename(fpath, "b", stage, fname);
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "b", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->b[kk], in->nx[kk+1], fname);
         if (status != 0) return status;
     }
-    form_filename(fpath, "Q", stage, fname);
+    snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "Q", kk, ".txt");
     status = read_double_matrix_from_txt((real_t*)in->Q[N], in->nx[N], in->nx[N], fname);
     if (status != 0) return status;
 
-    form_filename(fpath, "q", stage, fname);
+    snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
     status = read_double_vector_from_txt((real_t*)in->q[N], in->nx[N], fname);
     if (status != 0) return status;
 
-    if (!QUIET) {
+    if (!quiet) {
         for (kk = 0; kk < in->N; kk++) {
             printf("\nQ[%d] =\n", kk);
             d_print_mat(in->nx[kk], in->nx[kk], (real_t*)in->Q[kk], in->nx[kk]);
@@ -230,7 +217,6 @@ int_t read_ocp_qp_in_unconstrained(ocp_qp_in *const in, const char *fpath) {
         d_print_mat(in->nx[N], 1, (real_t*)in->q[N], in->nx[N]);
     }
 
-    free(fname);
     free(nx);
     free(nu);
     return status;
