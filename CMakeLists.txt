@@ -45,6 +45,7 @@ endif()
 include(acados_sources)
 
 # Process external libraries
+include(external/openblas)
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
@@ -63,9 +64,6 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(ooqpbase ma27)
     add_dependencies(acados ooqpbase)
 endif ()
-
-# OpenBLAS installation directory
-link_directories(/opt/openblas/lib)
 
 # Define examples
 add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})
