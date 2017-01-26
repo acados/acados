@@ -22,8 +22,6 @@
 
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
-#elsev
-#include <sys/stat.h>
 #endif
 
 #define PLOT_RESULTS
