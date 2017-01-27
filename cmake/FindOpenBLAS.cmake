@@ -65,6 +65,7 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
         /usr/local/lib
         /usr/local/lib64
         /opt/OpenBLAS/lib
+        /opt/openblas/lib
         $ENV{OpenBLAS}cd
         $ENV{OpenBLAS}/lib
         $ENV{OpenBLAS_HOME}
