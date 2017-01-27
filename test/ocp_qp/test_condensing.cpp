@@ -12,15 +12,6 @@ extern real_t COMPARISON_TOLERANCE;
 // For each scenario, there must be a corresponding subfolder with test data
 std::vector<std::string> scenarios = {"LTI", "LTV"};
 
-void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
-    *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
-    REQUIRE(*N > 0);
-    *nx = (int_t) readMatrix(folder + "/nx.dat")(0, 0);
-    REQUIRE(*nx > 0);
-    *nu = (int_t) readMatrix(folder + "/nu.dat")(0, 0);
-    REQUIRE(*nu > 0);
-}
-
 TEST_CASE("Unconstrained system", "[condensing]") {
     ocp_qp_in qp;
     condensing_in input;
