@@ -169,3 +169,61 @@ void free_ocp_qp_in(ocp_qp_in *const qp) {
     free_ocp_qp_in_bounds(qp);
     free_ocp_qp_in_polyhedral(qp);
 }
+
+
+void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
+    int_t kk;
+    int_t nPrimalVars = 0;
+    int_t nPis = 0;
+    int_t nLambdas = 0;
+    int_t accPrimal = 0;
+    int_t accPis = 0;
+    int_t accLamdas = 0;
+    int_t N = in->N;
+    real_t *primalVars, *pis, *lambdas;
+
+    for (kk = 0; kk < N; kk++) {
+        nPrimalVars += in->nx[kk] + in->nu[kk];
+        nPis += in->nx[kk+1];
+        nLambdas += 2*(in->nb[kk] + in->nc[kk]);
+    }
+    nLambdas += 2*(in->nb[N] + in->nc[N]);
+    nPrimalVars += in->nx[N];
+    // printf("\nProblem with:\n");
+    // printf("- %d\tprimal variables.\n", nPrimalVars);
+    // printf("- %d\tmultipliers of eq. constraints \n", nPis);
+    // printf("- %d\tmultipliers of ineq. constraints \n", nLambdas);
+
+    d_zeros(&primalVars, nPrimalVars, 1);
+    d_zeros(&pis, nPis, 1);
+    d_zeros(&lambdas, nLambdas, 1);
+
+    // TODO(dimitris): Reference writes N+1 pointers for u, is it already updated?
+    out->x = (real_t **) malloc(sizeof(*out->x)*(N+1));
+    out->u = (real_t **) malloc(sizeof(*out->u)*N);
+    out->pi = (real_t **) malloc(sizeof(*out->pi)*N);
+    out->lam = (real_t **) malloc(sizeof(*out->lam)*(N+1));
+
+    for (kk = 0; kk < N; kk++) {
+        out->x[kk] = &primalVars[accPrimal];
+        out->u[kk] = &primalVars[accPrimal+in->nx[kk]];
+        out->pi[kk] = &pis[accPis];
+        out->lam[kk] = &lambdas[accLamdas];
+        accPrimal += in->nx[kk] + in->nu[kk];
+        accPis += in->nx[kk+1];
+        accLamdas += 2*(in->nb[kk] + in->nc[kk]);
+    }
+    out->x[N] = &primalVars[accPrimal];
+    out->lam[N] = &lambdas[accLamdas];
+}
+
+
+void free_ocp_qp_out(ocp_qp_out *out) {
+    d_free((real_t*)out->x[0]);
+    d_free((real_t*)out->pi[0]);
+    d_free((real_t*)out->lam[0]);
+    free(out->lam);
+    free(out->pi);
+    free(out->u);
+    free(out->x);
+}
