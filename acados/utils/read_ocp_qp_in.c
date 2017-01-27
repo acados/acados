@@ -25,7 +25,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_i_aux.h"
 
-#include "acados/utils/allocate_ocp_qp_in.h"
+#include "acados/utils/allocate_ocp_qp.h"
 #include "acados/utils/read_ocp_qp_in.h"
 
 // TODO(dimitris): IMPORTANT! Add asserts for all the data that are read in

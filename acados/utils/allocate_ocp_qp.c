@@ -26,9 +26,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_i_aux.h"
 
-#include "acados/utils/allocate_ocp_qp_in.h"
-
-// TODO(dimitris): Implement allocate_ocp_qp_out (use continuous memory for optimal solution)
+#include "acados/utils/allocate_ocp_qp.h"
 
 static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
     int_zeros((int_t **) &qp->nx, N+1, 1);
