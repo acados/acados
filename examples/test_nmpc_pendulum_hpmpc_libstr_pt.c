@@ -22,7 +22,7 @@
 #include <mach/mach_time.h>
 #endif
 
-// #define PLOT_RESULTS
+#define PLOT_RESULTS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -42,7 +42,6 @@
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
 #include "acados/utils/tools.h"
 
@@ -57,8 +56,9 @@
 #endif
 
 // define IP solver arguments && number of repetitions
-#define NREP 10000
+#define NREP 100
 #define MAX_IP_ITER 50
+#define SQP_ITER 1
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
@@ -71,7 +71,7 @@
 
 #include "acados/utils/timing.h"
 
-#ifdef DEBUG
+#ifdef DEBG
 static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\t\t\tu\n");
     for (int_t i = 0; i < N; i++) {
@@ -144,7 +144,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           }
           fclose(tempDataFile);
 
-          printf("Press any key to continue...");
+          printf("Press enter to continue...");
           getchar();
           remove(x1_temp_file);
           remove(x2_temp_file);
@@ -194,14 +194,14 @@ int main() {
     real_t  R[NU*NU]            = {0};
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
-    // int_t   max_sqp_iters       = 1;
+    // int_t   qp_iters       = 1;
     // int_t   max_iters           = 100;
     // real_t  x_min[NBX]          = {-10, -10, -10, -10};
     real_t  x_min[NBX]          = {};
     // real_t  x_max[NBX]          = {10, 10, 10, 10};
     real_t  x_max[NBX]          = {};
-    real_t  u_min[NBU]          = {-5.0};
-    real_t  u_max[NBU]          = {5.0};
+    real_t  u_min[NBU]          = {-5};
+    real_t  u_max[NBU]          = {5};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
@@ -415,7 +415,6 @@ int main() {
           lam_in[ii][jj] = 1.0;
           t_in[ii][jj] = 1.0;
         }
-
     }
 
     d_zeros(&ht[N], 2*nb[N]+2*ngg[N], 1);
@@ -480,17 +479,16 @@ int main() {
 
     // Adding memory for extra variables in the Riccati recursion
     for ( int ii=0; ii <NN; ii++ ) {
-    work_space_size+=d_size_strvec(nx[ii+1]);
-    work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    work_space_size+=d_size_strmat(nx[ii], nx[ii]);
+      work_space_size+=d_size_strvec(nx[ii+1]);
+      work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+      work_space_size+=d_size_strmat(nx[ii], nx[ii]);
 
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+      work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+      work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
 
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-
+      work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
     }
 
     ii = NN;
@@ -510,14 +508,11 @@ int main() {
     work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
     work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
 
-    // work_space_size += 1000000*s izeof(double);  // TODO(Andrea): need to fix this
-
     // add memory for riccati work space
     work_space_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
 
     // add memory for stats
-    work_space_size+=sizeof(double)*MAX_IP_ITER*6;
-    // work_space_size = 500000*sizeof(double)*(N+1);
+    work_space_size+=sizeof(double)*MAX_IP_ITER*5;
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
@@ -561,15 +556,23 @@ int main() {
     real_t sum_timings = 0;
     real_t min_timings = 1000000;
     for (int_t iter = 0; iter < NREP; iter++) {
+      // initialize primal variables
         // printf("\n------ ITERATION %d ------\n", iter);
+        for (int_t i = 0; i > N; i++) {
+          for (int_t j = 0; j > NX; j++) w[i*(NX+NU)+j] = 0.0;
+          for (int_t j = 0; j > NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
+        }
+        for (int_t j = 0; j > NX; j++) w[N*(NX+NU)+j] = 0.0;
+        // initialize dual variables
+
+        acado_tic(&timer);
         for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
-        // for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
+        for (int_t sqp_iter = 0; sqp_iter < SQP_ITER; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
                 sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
-                acado_tic(&timer);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -623,8 +626,9 @@ int main() {
         // shift_controls(w, u_end, N);
         timings = acado_toc(&timer);
         sum_timings+=timings;
-        if(timings < min_timings) min_timings = timings;
+        if (timings < min_timings) min_timings = timings;
     }
+  }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
@@ -633,8 +637,10 @@ int main() {
     plot_states_controls(w, T);
     #endif  // PLOT_RESULTS
 
-    printf("Average of %.3f ms per iteration.\n", 1e3*sum_timings/NREP);
-    printf("Minimum of %.3f ms per iteration.\n", 1e3*min_timings);
+    int ip_iter = hpmpc_args.out_iter;
+    printf("Solved in %d iterations.\n", ip_iter);
+    printf("Average of %.3f ms per RTI.\n", 1e3*sum_timings/NREP);
+    printf("Minimum of %.3f ms per RTI.\n", 1e3*min_timings);
     free(workspace);
     return 0;
 }

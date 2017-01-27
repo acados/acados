@@ -340,6 +340,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
 
+    hpmpc_args->out_iter = kk;
     // return
     return acados_status;
 }
@@ -546,16 +547,16 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
     ptr_memory += (&hsLxt[ii])->memory_size;
 
-    d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
-    ptr_memory += (&hstinv[ii])->memory_size;
-    d_create_strvec(nb[ii]+ng[ii], &hsQx[ii], ptr_memory);
-    ptr_memory += (&hsQx[ii])->memory_size;
-    d_create_strvec(nb[ii]+ng[ii], &hsqx[ii], ptr_memory);
-    ptr_memory += (&hsqx[ii])->memory_size;
-    d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
-    ptr_memory += (&hsdlam[ii])->memory_size;
-    d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
-    ptr_memory += (&hslamt[ii])->memory_size;
+    // d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
+    // ptr_memory += (&hstinv[ii])->memory_size;
+    // d_create_strvec(nb[ii]+ng[ii], &hsQx[ii], ptr_memory);
+    // ptr_memory += (&hsQx[ii])->memory_size;
+    // d_create_strvec(nb[ii]+ng[ii], &hsqx[ii], ptr_memory);
+    // ptr_memory += (&hsqx[ii])->memory_size;
+    // d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
+    // ptr_memory += (&hsdlam[ii])->memory_size;
+    // d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
+    // ptr_memory += (&hslamt[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
     ptr_memory += (&hstinv[ii])->memory_size;
@@ -677,6 +678,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
 
+    hpmpc_args->out_iter = kk;
     // return
     return acados_status;
 }
