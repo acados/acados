@@ -520,9 +520,13 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // ptr_memory += (&hspi[ii+1])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
+    // copy multipliers from hpmpc_args
+    d_cvt_vec2strvec(2*nb[ii]+2*ng[ii], hpmpc_args->lam0[ii], &hslam[ii], 0);
     ptr_memory += (&hslam[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hst[ii], ptr_memory);
+    // copy slacks from hpmpc_args
+    d_cvt_vec2strvec(2*nb[ii]+2*ng[ii], hpmpc_args->t0[ii], &hst[ii], 0);
     ptr_memory += (&hst[ii])->memory_size;
 
     // TODO(Andrea): remove memory allocation
