@@ -391,6 +391,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strmat hsDCt[N+1];
     struct d_strvec hsd[N+1];
     struct d_strvec hsux[N+1];
+    struct d_strvec hsdux[N+1];
     struct d_strvec hspi[N+1];
     struct d_strvec hslam[N+1];
     struct d_strvec hst[N+1];
@@ -401,6 +402,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // struct d_strvec hsric_work_vec[1];
 
     struct d_strvec hsdlam[N+1];  // to be checked
+    struct d_strvec hsdt[N+1];
     struct d_strvec hslamt[N+1];  // to be checked
 
     int nuM;
@@ -449,6 +451,10 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_cvt_vec2strvec(ng[ii], hlg[ii], &hsd[ii], 2*nb[ii]);
       d_cvt_vec2strvec(ng[ii], hug[ii], &hsd[ii], 2*nb[ii] + ng[ii]);
 
+      // initialize hsdux to primal input later usx will be subtracted
+      d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
+      d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
+      ptr_memory += (&hsdux[ii])->memory_size;
       d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
       ptr_memory += (&hsux[ii])->memory_size;
 
@@ -493,6 +499,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
       d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
       ptr_memory += (&hsdlam[ii])->memory_size;
+      d_create_strvec(2*nb[ii]+2*ng[ii], &hsdt[ii], ptr_memory);
+      ptr_memory += (&hsdt[ii])->memory_size;
       d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
       ptr_memory += (&hslamt[ii])->memory_size;
     }
@@ -513,6 +521,10 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_cvt_vec2strvec(ng[ii], hlg[ii], &hsd[ii], 2*nb[ii]);
     d_cvt_vec2strvec(ng[ii], hug[ii], &hsd[ii], 2*nb[ii] + ng[ii]);
 
+    // initialize hsdux to primal input later usx will be subtracted
+    d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
+    d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
+    ptr_memory += (&hsdux[ii])->memory_size;
     d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
     ptr_memory += (&hsux[ii])->memory_size;
 
@@ -570,6 +582,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ptr_memory += (&hsqx[ii])->memory_size;
     d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
     ptr_memory += (&hsdlam[ii])->memory_size;
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hsdt[ii], ptr_memory);
+    ptr_memory += (&hsdt[ii])->memory_size;
     d_create_strmat(nx[M]+1, nx[M], &sLxM, ptr_memory);
     ptr_memory += (&sLxM)->memory_size;
     d_create_strmat(nx[M]+1, nx[M], &sPpM, ptr_memory);
@@ -670,7 +684,35 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       hsvecdummy, hsvecdummy, &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
       &hsLxt[M], hsric_work_mat);
 
+    // compute alpha, dlam and dt
+    real_t alpha = 1.0;
+    // compute primal step hsdux for stages M to N
+    real_t *temp_p1, *temp_p2;
+    for (int_t i = M; i < N; i++) {
+      // hsdux is initialized to be equal to hpmpc_args.ux0
+      temp_p1 = hsdux[i].pa;
+      temp_p2 = hsux[i].pa;
+      for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]-=temp_p2[j];
+    }
+
+    d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
+      &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
+      &hsdux[M], &hsDCt[M], &hsd[M]);
+
+    // overwrite alpha (taking full steps and performing line-search in out_iter
+    // level)
+    alpha = 1.0;
+
+    // update stages M to N
+    double mu_scal = 0.0;
+    d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+      &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+      &hsdlam[M], &hspi[M], &hspi[M]);
+    // !!!! TODO(Andrea): equality multipliers are not being updated! need to
+    // define and compute hsdpi (see function prototype)
+
     double **temp_u;
+
     // copy result to qp_out
     for ( ii = 0; ii <= N; ii++ ) {
       hu[ii] = hsux[ii].pa;
