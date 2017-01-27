@@ -564,7 +564,6 @@ int main() {
     // for (int_t i = 1; i < N; i++) v_zeros_align(&hpmpc_args.ux0[i], NX+NU*sizeof(double));
     // v_zeros_align(&hpmpc_args.ux0[N], NX*sizeof(double));
     for (int_t iter = 0; iter < NREP; iter++) {
-
       // initialize nlp primal variables
       for (int_t i = 0; i > N; i++) {
         for (int_t j = 0; j > NX; j++) w[i*(NX+NU)+j] = 0.0;
