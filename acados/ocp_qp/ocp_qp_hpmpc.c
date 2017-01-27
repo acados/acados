@@ -456,6 +456,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
       ptr_memory += (&hsdux[ii])->memory_size;
       d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
+      d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
       ptr_memory += (&hsux[ii])->memory_size;
 
       d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
@@ -526,6 +527,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
     ptr_memory += (&hsdux[ii])->memory_size;
     d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
+    d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
     ptr_memory += (&hsux[ii])->memory_size;
 
     // d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
@@ -708,8 +710,9 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
       &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
       &hsdlam[M], &hspi[M], &hspi[M]);
-    // !!!! TODO(Andrea): equality multipliers are not being updated! need to
-    // define and compute hsdpi (see function prototype)
+
+    // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
+    // define and compute hsdpi (see function prototype).
 
     double **temp_u;
 

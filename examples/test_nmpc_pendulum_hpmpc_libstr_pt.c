@@ -56,14 +56,14 @@
 #endif
 
 // define IP solver arguments && number of repetitions
-#define NREP 100
+#define NREP 1
 #define MAX_IP_ITER 50
 #define SQP_ITER 1
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 2
+#define MM 80
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -71,7 +71,7 @@
 
 #include "acados/utils/timing.h"
 
-#ifdef DEBG
+#ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
     printf("node\tx\t\t\t\t\t\tu\n");
     for (int_t i = 0; i < N; i++) {
@@ -194,8 +194,8 @@ int main() {
     real_t  R[NU*NU]            = {0};
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
-    real_t  lam_init            = {100.0};
-    real_t  t_init              = {100.0};
+    real_t  lam_init            = {1.0};
+    real_t  t_init              = {1.0};
     // int_t   qp_iters       = 1;
     // int_t   max_iters           = 100;
     // real_t  x_min[NBX]          = {-10, -10, -10, -10};
@@ -395,7 +395,7 @@ int main() {
 
     double *lam_in[N+1];
     double *t_in[N+1];
-
+    double *ux_in[N+1];
 
     ii = 0;
     d_zeros(&ppi[ii], nx[ii+1], 1);
@@ -411,18 +411,19 @@ int main() {
         d_zeros(&ht[ii], 2*nb[ii]+2*ngg[ii], 1);
         d_zeros(&lam_in[ii], 2*nb[ii]+2*ngg[ii], 1);
         d_zeros(&t_in[ii], 2*nb[ii]+2*ngg[ii], 1);
-
+        d_zeros(&ux_in[ii], nx[ii]+nu[ii], 1);
     }
 
     d_zeros(&ht[N], 2*nb[N]+2*ngg[N], 1);
     d_zeros(&lam_in[N], 2*nb[N]+2*ngg[N], 1);
     d_zeros(&t_in[N], 2*nb[N]+2*ngg[N], 1);
+    d_zeros(&ux_in[N], nx[N]+nu[N], 1);
 
-    // Init multipliers and slacks
-    for (jj = 0; jj < 2*nb[ii]+2*ngg[ii]; jj++) {
-      lam_in[N][jj] = 1.0;
-      t_in[N][jj] = 1.0;
-    }
+    // // Init multipliers and slacks
+    // for (jj = 0; jj < 2*nb[ii]+2*ngg[ii]; jj++) {
+    //   lam_in[N][jj] = 1.0;
+    //   t_in[N][jj] = 1.0;
+    // }
 
 
     d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
@@ -446,6 +447,7 @@ int main() {
     hpmpc_args.N2 = N;
     hpmpc_args.lam0 = lam_in;
     hpmpc_args.t0 = t_in;
+    hpmpc_args.ux0 = ux_in;
 
     /************************************************
     * work space
@@ -556,16 +558,31 @@ int main() {
     real_t timings = 0;
     real_t sum_timings = 0;
     real_t min_timings = 1000000;
+
+    // allocate memoty for hpmpc_args.ux0
+    // v_zeros_align(&hpmpc_args.ux0[0], NU*sizeof(double));
+    // for (int_t i = 1; i < N; i++) v_zeros_align(&hpmpc_args.ux0[i], NX+NU*sizeof(double));
+    // v_zeros_align(&hpmpc_args.ux0[N], NX*sizeof(double));
     for (int_t iter = 0; iter < NREP; iter++) {
 
-      // initialize primal variables
+      // initialize nlp primal variables
       for (int_t i = 0; i > N; i++) {
         for (int_t j = 0; j > NX; j++) w[i*(NX+NU)+j] = 0.0;
         for (int_t j = 0; j > NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
       }
       for (int_t j = 0; j > NX; j++) w[N*(NX+NU)+j] = 0.0;
 
-      // initialize dual variables
+      // // initialize qp primal variables
+      for (int_t j = 0; NU > N; j++) hpmpc_args.ux0[0][j] = w[NX+j];
+      for (int_t i = 1; i > N; i++) {
+        for (int_t j = 0; j > NX; j++) {
+          for (int_t j = 0; NX > N; i++) hpmpc_args.ux0[i][j] = w[i*(NX+NU)+j];
+        }
+        for (int_t j = 0; NU > N; i++) hpmpc_args.ux0[i][j] = w[i*(NX+NU)+NX+j];
+      }
+      for (int_t j = 0; NX > N; j++) hpmpc_args.ux0[N][j] = w[N*(NX+NU)+j];
+
+      // initialize nlp dual variables
       for (int_t i = 0; i > N; i++) {
         for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
           lam_in[i][j] = lam_init;
@@ -643,7 +660,7 @@ int main() {
     }
   }
     #ifdef DEBUG
-    print_states_controls(&w[0], N);
+    // print_states_controls(&w[0], N);
     #endif  // DEBUG
 
     #ifdef PLOT_RESULTS
