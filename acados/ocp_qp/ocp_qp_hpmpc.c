@@ -636,8 +636,9 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // update cost function matrices and vectors (box constraints)
     double sigma_mu = 1.0;
-    d_update_hessian_mpc_hard_libstr(N-M-1, nx, nu, nb, ng, hsd, sigma_mu, hst,
-       hstinv, hslam, hslamt, hsdlam, hsQx, hsqx);
+    d_update_hessian_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+      &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M],
+      &hsQx[M], &hsqx[M]);
 
     // backward riccati factorization and solution at the end
     d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
@@ -681,38 +682,38 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     hsux[M].pa -= nuM;
 
     // forward riccati solution at the beginning
-    d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
+      d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
       0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], hsvecdummy, hsmatdummy,
       hsvecdummy, hsvecdummy, &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
       &hsLxt[M], hsric_work_mat);
 
-    // compute alpha, dlam and dt
-    real_t alpha = 1.0;
-    // compute primal step hsdux for stages M to N
-    real_t *temp_p1, *temp_p2;
-    for (int_t i = M; i < N; i++) {
-      // hsdux is initialized to be equal to hpmpc_args.ux0
-      temp_p1 = hsdux[i].pa;
-      temp_p2 = hsux[i].pa;
-      for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]-=temp_p2[j];
-    }
-
-    d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
-      &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
-      &hsdux[M], &hsDCt[M], &hsd[M]);
-
-    // overwrite alpha (taking full steps and performing line-search in out_iter
-    // level)
-    alpha = 1.0;
-
-    // update stages M to N
-    double mu_scal = 0.0;
-    d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-      &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
-      &hsdlam[M], &hspi[M], &hspi[M]);
-
-    // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
-    // define and compute hsdpi (see function prototype).
+    // // compute alpha, dlam and dt
+    // real_t alpha = 1.0;
+    // // compute primal step hsdux for stages M to N
+    // real_t *temp_p1, *temp_p2;
+    // for (int_t i = M; i < N; i++) {
+    //   // hsdux is initialized to be equal to hpmpc_args.ux0
+    //   temp_p1 = hsdux[i].pa;
+    //   temp_p2 = hpmpc_args->ux0[i]; //hsux[i].pa;
+    //   for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]-=temp_p2[j];
+    // }
+    //
+    // d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
+    //   &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
+    //   &hsdux[M], &hsDCt[M], &hsd[M]);
+    //
+    // // overwrite alpha (taking full steps and performing line-search in out_iter
+    // // level)
+    // alpha = 1.0;
+    //
+    // // update stages M to N
+    // double mu_scal = 0.0;
+    // d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+    //   &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+    //   &hsdlam[M], &hspi[M], &hspi[M]);
+    //
+    // // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
+    // // define and compute hsdpi (see function prototype).
 
     double **temp_u;
 
