@@ -31,7 +31,7 @@
 // TODO(dimitris): IMPORTANT! Add asserts for all the data that are read in
 
 static void transpose_matrix(real_t *mat, int m, int n) {
-    int_t jj, ii;
+    int_t ii, jj;
     real_t *tmp;
     d_zeros(&tmp, m, n);
 
@@ -40,7 +40,7 @@ static void transpose_matrix(real_t *mat, int m, int n) {
              tmp[ii*n+jj] = mat[jj*m + ii];
         }
     }
-    for (ii = 1; ii < m*n; ii++) mat[ii] = tmp[ii];
+    for (ii = 0; ii < m*n; ii++) mat[ii] = tmp[ii];
     d_free(tmp);
 }
 
@@ -51,7 +51,7 @@ static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename)
     myFile = fopen(filename, "r");
 
     if (myFile == NULL) {
-        printf("Error Reading File ! ! ! ! ! ! ! ! !\n");
+        printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", filename);
         return -1;
     }
 
@@ -71,7 +71,7 @@ static int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filen
     myFile = fopen(filename, "r");
 
     if (myFile == NULL) {
-        printf("Error Reading File ! ! ! ! ! ! ! ! !\n");
+        printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", filename);
         return -1;
     }
 
@@ -88,7 +88,7 @@ static int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filen
 static int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const char *filename) {
     int_t status;
     status = read_double_vector_from_txt(mat, m*n, filename);
-    transpose_matrix(mat, m, n);
+    transpose_matrix(mat, n, m);
     return status;
 }
 
@@ -320,7 +320,7 @@ void print_ocp_qp_in(ocp_qp_in const in) {
         printf("\nB[%d] =\n", kk);
         d_print_mat(in.nx[kk+1], in.nu[kk], (real_t*)in.B[kk], in.nx[kk+1]);
         printf("\nb[%d] =\n", kk);
-        d_print_mat(in.nx[kk+1], 1, (real_t*)in.B[kk], in.nx[kk+1]);
+        d_print_mat(in.nx[kk+1], 1, (real_t*)in.b[kk], in.nx[kk+1]);
     }
     printf("\ninequalities:");
     for (kk = 0; kk < N; kk++) {

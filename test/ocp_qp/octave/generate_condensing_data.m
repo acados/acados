@@ -25,6 +25,58 @@ for mode = {'LTI', 'LTV'}
     [Cx, Cu, cl, cu] = generate_general_constraints();
 
     mkdir(prefix);
+
+    saveIntVector(N,'N',prefix);
+    saveIntVector(repmat(nx,1,N+1),'nx',prefix);
+    saveIntVector(repmat(nu,1,N),'nu',prefix);
+    saveIntVector([repmat(nx+nu,1,N) nx],'nb',prefix);
+    saveIntVector(repmat(nc,1,N+1),'nc',prefix);
+    saveDoubleVector(x0,'x0',prefix);
+
+    for ii = 1:N+1
+    
+      if ii <= N
+        Rloc = R(:,(ii-1)*nu+1:ii*nu);  
+        Sloc = S(:,(ii-1)*nx+1:ii*nx);
+        rloc = r(:,ii);
+        Aloc = A(:,(ii-1)*nx+1:ii*nx);
+        Bloc = B(:,(ii-1)*nu+1:ii*nu);
+        bloc = b(:,ii);
+        Culoc = Cu(:,(ii-1)*nu+1:ii*nu);
+        ubloc = [xu(:,ii); uu(:,ii)];
+        lbloc = [xl(:,ii); ul(:,ii)];
+        idxb = (1:nx+nu)-1;
+        
+        saveDoubleMatrix(Aloc,['A' num2str(ii-1)],prefix);
+        saveDoubleMatrix(Bloc,['B' num2str(ii-1)],prefix);
+        saveDoubleVector(bloc,['b' num2str(ii-1)],prefix);
+        saveDoubleMatrix(Rloc,['R' num2str(ii-1)],prefix);
+        saveDoubleMatrix(Sloc,['S' num2str(ii-1)],prefix);
+        saveDoubleVector(rloc,['r' num2str(ii-1)],prefix);
+        saveDoubleMatrix(Culoc,['Cu' num2str(ii-1)],prefix);  
+      else
+        ubloc = xu(:,ii);
+        lbloc = xl(:,ii);
+        idxb = (1:nx)-1;
+      end
+      
+      Qloc = Q(:,(ii-1)*nx+1:ii*nx);
+      qloc = q(:,ii);
+      Cxloc = Cx(:,(ii-1)*nx+1:ii*nx);
+      ucloc = cu(:,ii);
+      lcloc = cl(:,ii);
+            
+      saveDoubleMatrix(Qloc,['Q' num2str(ii-1)],prefix);
+      saveDoubleVector(qloc,['q' num2str(ii-1)],prefix);
+      saveDoubleMatrix(Cxloc,['Cx' num2str(ii-1)],prefix);
+      saveDoubleVector(ucloc,['uc' num2str(ii-1)],prefix);
+      saveDoubleVector(lcloc,['lc' num2str(ii-1)],prefix);
+      saveDoubleVector(ubloc,['ub' num2str(ii-1)],prefix);
+      saveDoubleVector(lbloc,['lb' num2str(ii-1)],prefix);
+      saveIntVector(idxb,['idxb' num2str(ii-1)],prefix);
+
+    end
+    
     cd(prefix);
     save('N.dat', 'N', '-ascii', '-double');
     save('nx.dat', 'nx', '-ascii', '-double');
@@ -111,4 +163,11 @@ for mode = {'LTI', 'LTV'}
     save('w_star_ocp_no_bounds.dat', 'w_star_ocp_no_bounds', '-ascii', '-double'); % only with affine constraints
     save('w_star_ocp_unconstrained.dat', 'w_star_ocp_unconstrained', '-ascii', '-double');
     cd('..');
+    
+    saveDoubleVector(w_star_ocp,'sol_constrained',prefix);
+    saveDoubleVector(w_star_ocp_bounds,'sol_only_bounds',prefix);
+    saveDoubleVector(w_star_ocp_no_bounds,'sol_only_ineq',prefix);
+    saveDoubleVector(w_star_ocp_unconstrained,'sol_only_x0',prefix);
+
+    
 end
