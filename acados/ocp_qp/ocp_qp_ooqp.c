@@ -158,27 +158,23 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
     // ------- Build bounds
     offset = 0;
     for (kk = 0; kk < in->N+1; kk++) {
-        nn = 0;
         if (kk < in->N) {
             lim = in->nx[kk]+in->nu[kk];
         } else {
             lim = in->nx[kk];
         }
         for (ii = 0; ii < lim; ii++) {
-            if ((in->nb[kk] > 0) && (in->idxb[kk][nn] == ii)) {
-                // TODO(dimitris): check if cast is redundant
-                // printf("writing bound in->idxb[%d][%d] at position %d\n", kk, nn, offset+ii);
-                mem->ixlow[offset+ii] = (char)1;
-                mem->xlow[offset+ii] = in->lb[kk][nn];
-                mem->ixupp[offset+ii] = (char)1;
-                mem->xupp[offset+ii] = in->ub[kk][nn];
-                nn += 1;
-            } else {
-                mem->ixlow[offset+ii] = (char)0;
-                mem->xlow[offset+ii] = 0.0;
-                mem->ixupp[offset+ii] = (char)0;
-                mem->xupp[offset+ii] = 0.0;
-            }
+            mem->ixlow[offset+ii] = (char)0;
+            mem->ixupp[offset+ii] = (char)0;
+            mem->xlow[offset+ii] = 0.0;
+            mem->xupp[offset+ii] = 0.0;
+        }
+        for (ii = 0; ii < in->nb[kk]; ii++) {
+            // TODO(dimitris): check if cast is redundant
+            mem->ixlow[offset+in->idxb[kk][ii]] = (char)1;
+            mem->ixupp[offset+in->idxb[kk][ii]] = (char)1;
+            mem->xlow[offset+in->idxb[kk][ii]] = in->lb[kk][ii];
+            mem->xupp[offset+in->idxb[kk][ii]] = in->ub[kk][ii];
         }
         offset += lim;
     }
@@ -297,8 +293,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
     }
     for (ii = 0; ii < in->nx[in->N]; ii++) out->x[in->N][ii] = work->x[nn++];
 
-    // TODO(dimitris): fill-in all qp_out fields
-    // TODO(dimitris): IMPORTANT! DO NOT POINT TO MEMORY, COPY TO OUTPUT!
+    // TODO(dimitris): fill-in multipliers
 }
 
 
