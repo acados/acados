@@ -16,9 +16,9 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
-int_t TEST_OOQP = 0;
+int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
-int_t TEST_QPOASES = 0;
+int_t TEST_QPOASES = 1;
 real_t TOL_QPOASES = 1e-10;
 
 static vector<std::string> scenarios = {"LTI", "LTV"};
@@ -102,9 +102,10 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            // TODO(dimitris): WHY FREEING MEMORY CRASHES CATCH?!?!?!
-                            // ocp_qp_ooqp_free_workspace(&work);
-                            // ocp_qp_ooqp_free_memory(&mem);
+                            // TODO(dimitris): WHY FREEING MEMORY CRASHES CATCH?!?!
+                            // (IF TEST OCP_QP IS BEFORE OCP_NLP)
+                            ocp_qp_ooqp_free_workspace(&work);
+                            ocp_qp_ooqp_free_memory(&mem);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
                             std::cout <<"---> PASSED " << std::endl;
