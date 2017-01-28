@@ -29,7 +29,7 @@ extern "C" {
 
 void print_ocp_qp_in(ocp_qp_in const in);
 
-int_t read_ocp_qp_in(ocp_qp_in *const in, const char *fpath,
+void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath,
     int_t BOUNDS, int_t INEQUALITIES, int_t MPC, int_t QUIET);
 
 #ifdef __cplusplus
