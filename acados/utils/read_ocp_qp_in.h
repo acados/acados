@@ -27,6 +27,10 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename);
+int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filename);
+int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const char *filename);
+
 void print_ocp_qp_in(ocp_qp_in const in);
 
 void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath,

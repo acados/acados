@@ -45,13 +45,13 @@ static void transpose_matrix(real_t *mat, int m, int n) {
 }
 
 
-static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename) {
+int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
     int_t ii;
     FILE *myFile;
-    myFile = fopen(filename, "r");
+    myFile = fopen(fname, "r");
 
     if (myFile == NULL) {
-        printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", filename);
+        printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", fname);
         return -1;
     }
 
@@ -65,13 +65,13 @@ static int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename)
 }
 
 
-static int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filename) {
+int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
     int_t ii;
     FILE *myFile;
-    myFile = fopen(filename, "r");
+    myFile = fopen(fname, "r");
 
     if (myFile == NULL) {
-        printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", filename);
+        printf("Error Reading File %s ! ! ! ! ! ! ! ! !\n", fname);
         return -1;
     }
 
@@ -85,9 +85,9 @@ static int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filen
 }
 
 
-static int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const char *filename) {
+int_t read_double_matrix_from_txt(real_t *mat, int_t m, int_t n, const char *fname) {
     int_t status;
-    status = read_double_vector_from_txt(mat, m*n, filename);
+    status = read_double_vector_from_txt(mat, m*n, fname);
     transpose_matrix(mat, n, m);
     return status;
 }
