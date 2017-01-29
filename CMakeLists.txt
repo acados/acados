@@ -68,6 +68,9 @@ endif ()
 add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})
 target_link_libraries(hpmpc_example acados hpmpc blasfeo openblas m)
 
+add_executable(hpmpc_example_partial_tightening ${HPMPC_EXAMPLE_SRC})
+target_link_libraries(hpmpc_example_partial_tightening acados hpmpc blasfeo openblas m)
+
 add_executable(condensing_qpoases_example ${CONDENSING_QPOASES_EXAMPLE_SRC})
 target_link_libraries(condensing_qpoases_example acados qpoases blasfeo hpmpc m)
 
@@ -77,8 +80,11 @@ target_link_libraries(nmpc_example acados qpoases blasfeo m)
 add_executable(chain_example ${CHAIN_EXAMPLE_SRC})
 target_link_libraries(chain_example acados qpoases blasfeo openblas m)
 
-#add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
-#target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
+add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
+target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
+
+add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
+target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
 
 #add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
 #target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
@@ -92,7 +98,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_custom_target(generate_test_data
         DEPENDS ${UNIT_TESTS_SRC_CASADI}
         COMMENT "Checking if regeneration of test data is needed")
-    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
+    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
