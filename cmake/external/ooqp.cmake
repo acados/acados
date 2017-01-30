@@ -3,7 +3,7 @@ include(ExternalProject)
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(OOQP_LDFLAGS "-lc++")
 else()
-    set(OOQP_LDFLAGS " ")
+    set(OOQP_LDFLAGS "")
 endif()
 
 ExternalProject_Add(
