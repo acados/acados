@@ -6,7 +6,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND ./configure
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make
+    BUILD_COMMAND make LDFLAGS="-lc++"
     INSTALL_COMMAND ""
 )
 
