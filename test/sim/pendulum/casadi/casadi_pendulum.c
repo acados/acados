@@ -121,4 +121,3 @@ void jac_fun_pendulum(const real_t* in, real_t* out) {
 
     jac_pendulum(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
-

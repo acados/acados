@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_UTILS_ALLOCATE_OCP_QP_IN_H_
-#define ACADOS_UTILS_ALLOCATE_OCP_QP_IN_H_
+#ifndef ACADOS_UTILS_ALLOCATE_OCP_QP_H_
+#define ACADOS_UTILS_ALLOCATE_OCP_QP_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,16 +27,14 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-// allocate a full QP
-void allocate_QP_full(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in *const qp);
-void free_QP_full(ocp_qp_in *const qp);
+void allocate_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in *const qp);
+void free_ocp_qp_in(ocp_qp_in *const qp);
 
-// allocate only equality constraints and upper/lower bound on x0
-void allocate_QP_unconstrained(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp);
-void free_QP_unconstrained(ocp_qp_in *const qp);
+void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out);
+void free_ocp_qp_out(ocp_qp_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_UTILS_ALLOCATE_OCP_QP_IN_H_
+#endif  // ACADOS_UTILS_ALLOCATE_OCP_QP_H_

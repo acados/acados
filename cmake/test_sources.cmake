@@ -2,19 +2,6 @@ set(UNIT_TESTS_SRC_TEST_UTILS ${PROJECT_SOURCE_DIR}/test/test_utils/read_matrix.
     ${PROJECT_SOURCE_DIR}/test/test_utils/zeros.cpp
 ) # TODO (dimitris): eliminate this at some point
 
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
-        ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp_helper.cpp
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
-        ${PROJECT_SOURCE_DIR}/external/OOQP/src/Utilities/sort.C
-    )
-else ()
-    set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
-    )
-endif ()
-
 set(UNIT_TESTS_SRC_SIM ${PROJECT_SOURCE_DIR}/test/sim/pendulum/test_pendulum.cpp
     ${PROJECT_SOURCE_DIR}/test/sim/pendulum/casadi/casadi_pendulum.c
     ${PROJECT_SOURCE_DIR}/build/test/jac_pendulum.c
@@ -44,5 +31,20 @@ set(UNIT_TESTS_SRC_CASADI ${PROJECT_SOURCE_DIR}/build/test/jac_pendulum.c
     ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm3.c
     ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm4.c
 )
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
+        ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
+        ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp_helper.cpp
+        ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
+        # TODO(dimitris): Add these sources even without OOQP
+        ${PROJECT_SOURCE_DIR}/test/test_utils/read_ocp_qp_in.c
+        # ${PROJECT_SOURCE_DIR}/external/OOQP/src/Utilities/sort.C
+    )
+else ()
+    set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
+        ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
+    )
+endif ()
 
 set(UNIT_TESTS_SRC ${PROJECT_SOURCE_DIR}/test/all_tests.cpp)
