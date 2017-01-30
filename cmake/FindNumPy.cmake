@@ -59,7 +59,6 @@ find_path(PYTHON_NUMPY_INCLUDE_DIR numpy/arrayobject.h
 
 if(PYTHON_NUMPY_INCLUDE_DIR)
   set(PYTHON_NUMPY_FOUND 1 CACHE INTERNAL "Python numpy found")
-  message(STATUS "Python include dir: ${PYTHON_NUMPY_INCLUDE_DIR}, version: ${__numpy_version}, ${__numpy_version_error}")
 endif(PYTHON_NUMPY_INCLUDE_DIR)
 
 include(FindPackageHandleStandardArgs)
