@@ -1,5 +1,5 @@
-dist: precise
-sudo: true
+dist: trusty
+sudo: required
 
 env:
   - CXX="g++-6" CC="gcc-6"
@@ -27,7 +27,6 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
-      - python3-numpy
 
 before_install:
   - sudo ln -s /usr/lib/openblas-base/libopenblas.so /usr/lib/libopenblas.so
