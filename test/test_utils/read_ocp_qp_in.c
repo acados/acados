@@ -27,7 +27,7 @@
 #include "blasfeo/include/blasfeo_i_aux.h"
 
 #include "acados/utils/allocate_ocp_qp.h"
-#include "acados/utils/read_ocp_qp_in.h"
+#include "test/test_utils/read_ocp_qp_in.h"
 
 
 static void transpose_matrix(real_t *mat, int m, int n) {
@@ -46,7 +46,7 @@ static void transpose_matrix(real_t *mat, int m, int n) {
 
 
 int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
-    int_t ii;
+    int_t status, ii;
     FILE *myFile;
     myFile = fopen(fname, "r");
 
@@ -56,7 +56,8 @@ int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
     }
 
     for (ii = 0; ii < n; ii++) {
-        fscanf(myFile, "%d,", &vec[ii]);
+        status = fscanf(myFile, "%d,", &vec[ii]);
+        assert(status >= 0);
     }
 
     fclose(myFile);
@@ -66,7 +67,7 @@ int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
 
 
 int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
-    int_t ii;
+    int_t status, ii;
     FILE *myFile;
     myFile = fopen(fname, "r");
 
@@ -76,7 +77,8 @@ int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
     }
 
     for (ii = 0; ii < n; ii++) {
-         fscanf(myFile, "%lf,", &vec[ii]);
+         status = fscanf(myFile, "%lf,", &vec[ii]);
+         assert(status >= 0);
     }
 
     fclose(myFile);

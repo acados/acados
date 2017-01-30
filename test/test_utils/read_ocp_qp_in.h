@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_UTILS_READ_OCP_QP_IN_H_
-#define ACADOS_UTILS_READ_OCP_QP_IN_H_
+#ifndef TEST_TEST_UTILS_READ_OCP_QP_IN_H_
+#define TEST_TEST_UTILS_READ_OCP_QP_IN_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,4 +40,4 @@ void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath,
 } /* extern "C" */
 #endif
 
-#endif  /* ACADOS_UTILS_READ_OCP_QP_IN_H_ */
+#endif  /* TEST_TEST_UTILS_READ_OCP_QP_IN_H_ */
