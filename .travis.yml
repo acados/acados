@@ -37,10 +37,11 @@ before_install:
       -in external/encrypted_script.enc -out external/encrypted_script -d;
     fi'
   - sudo add-apt-repository -y ppa:octave/stable
+  - sudo add-apt-repository ppa:jonathonf/python-3.6
   - sudo apt-get update -yq
 
 install:
-  - sudo apt-get install octave liboctave-dev
+  - sudo apt-get install octave liboctave-dev python3.6
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
       source encrypted_script;

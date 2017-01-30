@@ -2,15 +2,14 @@ cmake_minimum_required(VERSION 2.8.11)
 
 find_package(SWIG REQUIRED)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
-execute_process(COMMAND python-config --prefix OUTPUT_VARIABLE python_prefix)
+execute_process(COMMAND python3-config --prefix OUTPUT_VARIABLE python_prefix)
 string(STRIP ${python_prefix} python_prefix)
-set(PYTHON_LIBRARIES "${python_prefix}/lib/libpython2.7.dylib")
 
 include(${SWIG_USE_FILE})
 
 # Python
-find_package(PythonInterp 3.5 REQUIRED)
-find_package(PythonLibs 3.5 REQUIRED)
+find_package(PythonInterp 3.5 REQUIRED HINTS "${python_prefix}/bin/")
+find_package(PythonLibs 3.5 REQUIRED HINTS "${python_prefix}/lib/")
 include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(NumPy REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
