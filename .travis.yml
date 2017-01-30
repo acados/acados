@@ -27,7 +27,7 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
-      - python3-pip
+      - python3-numpy
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
@@ -40,7 +40,6 @@ before_install:
 
 install:
   - sudo apt-get install octave liboctave-dev
-  - sudo pip3 install numpy scipy
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
       source encrypted_script;
