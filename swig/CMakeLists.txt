@@ -7,8 +7,8 @@ include(${SWIG_USE_FILE})
 
 # Python
 set(Python_ADDITIONAL_VERSIONS 3.6)
-find_package(PythonInterp 3.5 REQUIRED)
-find_package(PythonLibs 3.5 REQUIRED)
+find_package(PythonInterp 3.6 REQUIRED)
+find_package(PythonLibs 3.6 REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(NumPy REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
