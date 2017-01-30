@@ -112,7 +112,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 endif()
 
 # Linter
-find_package(PythonInterp 3.6 REQUIRED)
+find_package(PythonInterp 3 REQUIRED)
 set(FIND_FILES_TO_LINT find acados test examples swig -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.i" )
 set(FIND_FILES_TO_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_FILES_TO_LINT})
 execute_process(COMMAND ${FIND_FILES_TO_LINT} OUTPUT_VARIABLE FILES_TO_LINT)
