@@ -1,7 +1,7 @@
 include(ExternalProject)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(OOQP_LDFLAGS "-lc++")
+    set(OOQP_LDFLAGS "LDFLAGS=\"-lc++\"")
 else()
     set(OOQP_LDFLAGS "")
 endif()
@@ -12,7 +12,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND ./configure
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make LDFLAGS="${OOQP_LDFLAGS}"
+    BUILD_COMMAND make ${OOQP_LDFLAGS}
     INSTALL_COMMAND ""
 )
 
