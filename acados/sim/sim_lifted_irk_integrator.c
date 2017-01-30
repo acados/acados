@@ -577,5 +577,7 @@ void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *
     } else {
         // throw error somehow?
     }
-//    print_matrix("stdout", opts->c_vec, 1, num_stages);
+//    print_matrix("stdout", opts->c_vec, num_stages, 1);
+//    print_matrix("stdout", opts->A_mat, num_stages, num_stages);
+//    print_matrix("stdout", opts->b_vec, num_stages, 1);
 }
