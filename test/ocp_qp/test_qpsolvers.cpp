@@ -5,10 +5,10 @@
 #include "OOQP/include/cQpGenSparse.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "test/test_utils/read_matrix.h"
-#include "acados/utils/allocate_ocp_qp.h"
-#include "acados/utils/read_ocp_qp_in.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "test/test_utils/read_ocp_qp_in.h"
 #include "test/ocp_qp/condensing_test_helper.h"
+#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 
 using std::vector;

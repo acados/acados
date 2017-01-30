@@ -27,7 +27,7 @@
 #include "blasfeo/include/blasfeo_i_aux.h"
 
 #include "acados/utils/allocate_ocp_qp.h"
-#include "acados/utils/read_ocp_qp_in.h"
+#include "test/test_utils/read_ocp_qp_in.h"
 
 
 static void transpose_matrix(real_t *mat, int m, int n) {
@@ -46,7 +46,7 @@ static void transpose_matrix(real_t *mat, int m, int n) {
 
 
 int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
-    int_t ii;
+    int_t status, ii;
     FILE *myFile;
     myFile = fopen(fname, "r");
 
@@ -56,7 +56,8 @@ int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
     }
 
     for (ii = 0; ii < n; ii++) {
-        fscanf(myFile, "%d,", &vec[ii]);
+        status = fscanf(myFile, "%d,", &vec[ii]);
+        assert(status >= 0);
     }
 
     fclose(myFile);
@@ -66,7 +67,7 @@ int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *fname) {
 
 
 int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
-    int_t ii;
+    int_t status, ii;
     FILE *myFile;
     myFile = fopen(fname, "r");
 
@@ -76,7 +77,8 @@ int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *fname) {
     }
 
     for (ii = 0; ii < n; ii++) {
-         fscanf(myFile, "%lf,", &vec[ii]);
+         status = fscanf(myFile, "%lf,", &vec[ii]);
+         assert(status >= 0);
     }
 
     fclose(myFile);
@@ -160,7 +162,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t*)in->Q[kk], in->nx[kk], in->nx[kk], fname);
         assert(status == 0);
 
-        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "qv", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->q[kk], in->nx[kk], fname);
         assert(status == 0);
 
@@ -172,7 +174,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t*)in->R[kk], in->nu[kk], in->nu[kk], fname);
         assert(status == 0);
 
-        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "r", kk, ".txt");
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "rv", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->r[kk], in->nu[kk], fname);
         assert(status == 0);
 
@@ -184,7 +186,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t*)in->B[kk], in->nx[kk+1], in->nu[kk], fname);
         assert(status == 0);
 
-        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "b", kk, ".txt");
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "bv", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->b[kk], in->nx[kk+1], fname);
         assert(status == 0);
     }
@@ -193,7 +195,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
     status = read_double_matrix_from_txt((real_t*)in->Q[N], in->nx[N], in->nx[N], fname);
     assert(status == 0);
 
-    snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
+    snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "qv", kk, ".txt");
     status = read_double_vector_from_txt((real_t*)in->q[N], in->nx[N], fname);
     assert(status == 0);
 }

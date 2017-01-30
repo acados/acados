@@ -37,6 +37,8 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
         ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp_helper.cpp
         ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
+        # TODO(dimitris): Add these sources even without OOQP
+        ${PROJECT_SOURCE_DIR}/test/test_utils/read_ocp_qp_in.c
         # ${PROJECT_SOURCE_DIR}/external/OOQP/src/Utilities/sort.C
     )
 else ()
