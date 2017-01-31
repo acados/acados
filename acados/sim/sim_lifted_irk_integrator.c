@@ -118,6 +118,54 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
     return 0;
 }
 
+real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
+        int* const perm, int dim, int dim2) {
+    int i, j, k;
+    int index1;
+
+#if !CODE_GENERATION
+    int DIM = dim;
+    int DIM_RHS = dim2;
+#else
+    dim += 0;
+    dim2 += 0;
+#endif
+    real_t bPerm[DIM*DIM_RHS];
+    real_t tmp_var;
+
+
+    for (k = 0; k < DIM*DIM_RHS; ++k) {
+        bPerm[k] = b[k];
+    }
+    for (i = 0; i < DIM; i++) {
+        for (j = 0; j < i; j++) {
+            tmp_var = A[i*DIM+j];
+            for (k = 0; k < DIM_RHS; ++k) {
+                bPerm[k*DIM+i] -= tmp_var*bPerm[k*DIM+j];
+            }
+        }
+        tmp_var = 1.0/A[i*(DIM+1)];
+        for (k = 0; k < DIM_RHS; ++k) {
+            bPerm[k*DIM+i] = tmp_var*bPerm[k*DIM+i];
+        }
+    }
+    for (j = DIM-1; j > -1; --j) {
+        for (i = DIM-1; i > j; --i) {
+            tmp_var = A[j*DIM+i];
+            for (k = 0; k < DIM_RHS; ++k) {
+                bPerm[k*DIM+j] += tmp_var*bPerm[k*DIM+i];
+            }
+        }
+    }
+    for (i = 0; i < DIM; ++i) {
+        index1 = perm[i];
+        for (j = 0; j < DIM_RHS; ++j) {
+            b[j*DIM+index1] = bPerm[j*DIM+i];
+        }
+    }
+    return 0;
+}
+
 
 #endif
 
@@ -514,54 +562,22 @@ void sim_lifted_irk_create_memory(const sim_in *in,
 
 
 void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *opts) {
+    opts->num_stages = num_stages;
+    opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
+    opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
+    opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
+
     if ( strcmp(name, "Gauss") == 0 ) {  // GAUSS METHODS
-        if ( num_stages == 1 ) {
-            opts->num_stages = 1;       // GL2
-            opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-            opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-            opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
-            opts->A_mat[0] = 1.0/2.0;
-            opts->b_vec[0] = 1.0;
-            opts->c_vec[0] = 1.0/2.0;
-        } else if ( num_stages == 2 ) {
-            opts->num_stages = 2;       // GL4
-            opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-            opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-            opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
-
-            memcpy(opts->A_mat,
-                    ((real_t[]) {1.0/4.0, (1.0/4.0-sqrt(3.0)/6.0),
-                    (1.0/4.0+sqrt(3.0)/6.0), 1.0/4.0}),
-                    sizeof(*opts->A_mat) * (num_stages*num_stages));
-            memcpy(opts->b_vec,
-                    ((real_t[]) {1.0/2.0, 1.0/2.0}), sizeof(*opts->b_vec) * (num_stages));
-            memcpy(opts->c_vec,
-                    ((real_t[]) {1.0/2.0+sqrt(3.0)/6.0, 1.0/2.0-sqrt(3.0)/6.0}),
-                    sizeof(*opts->c_vec) * (num_stages));
-        } else if ( num_stages == 3 ) {
-            opts->num_stages = 3;       // GL6
-            opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-            opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-            opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
-
-            memcpy(opts->A_mat,
-                    ((real_t[]) {5.0/36.0, 5.0/36.0+1.0/24.0*sqrt(15.0),
-                    5.0/36.0+1.0/30.0*sqrt(15.0), 2.0/9.0-1.0/15.0*sqrt(15.0),
-                    2.0/9.0, 2.0/9.0+1.0/15.0*sqrt(15.0), 5.0/36.0-1.0/30.0*sqrt(15.0),
-                    5.0/36.0-1.0/24.0*sqrt(15.0), 5.0/36.0}),
-                    sizeof(*opts->A_mat) * (num_stages*num_stages));
-            memcpy(opts->b_vec,
-                    ((real_t[]) {5.0/18.0, 4.0/9.0, 5.0/18.0}),
-                    sizeof(*opts->b_vec) * (num_stages));
-            memcpy(opts->c_vec,
-                    ((real_t[]) {1.0/2.0-sqrt(15.0)/10.0, 1.0/2.0, 1.0/2.0+sqrt(15.0)/10.0}),
-                    sizeof(*opts->c_vec) * (num_stages));
-        } else {
-            // throw error somehow?
-        }
+        get_Gauss_nodes(opts->num_stages, opts->c_vec);
+        create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
     } else if ( strcmp(name, "Radau") == 0 ) {
         // TODO(rien): add Radau IIA collocation schemes
+//        get_Radau_nodes(opts->num_stages, opts->c_vec);
+        create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
     } else {
         // throw error somehow?
     }
+//    print_matrix("stdout", opts->c_vec, num_stages, 1);
+//    print_matrix("stdout", opts->A_mat, num_stages, num_stages);
+//    print_matrix("stdout", opts->b_vec, num_stages, 1);
 }
