@@ -162,7 +162,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t*)in->Q[kk], in->nx[kk], in->nx[kk], fname);
         assert(status == 0);
 
-        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "qv", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->q[kk], in->nx[kk], fname);
         assert(status == 0);
 
@@ -174,7 +174,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t*)in->R[kk], in->nu[kk], in->nu[kk], fname);
         assert(status == 0);
 
-        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "r", kk, ".txt");
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "rv", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->r[kk], in->nu[kk], fname);
         assert(status == 0);
 
@@ -186,7 +186,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
         status = read_double_matrix_from_txt((real_t*)in->B[kk], in->nx[kk+1], in->nu[kk], fname);
         assert(status == 0);
 
-        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "b", kk, ".txt");
+        snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "bv", kk, ".txt");
         status = read_double_vector_from_txt((real_t*)in->b[kk], in->nx[kk+1], fname);
         assert(status == 0);
     }
@@ -195,7 +195,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
     status = read_double_matrix_from_txt((real_t*)in->Q[N], in->nx[N], in->nx[N], fname);
     assert(status == 0);
 
-    snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "q", kk, ".txt");
+    snprintf(fname, sizeof(fname), "%s%s%d%s", fpath, "qv", kk, ".txt");
     status = read_double_vector_from_txt((real_t*)in->q[N], in->nx[N], fname);
     assert(status == 0);
 }
