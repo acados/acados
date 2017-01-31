@@ -39,6 +39,10 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but Eigen can not be found")
     endif()
     include_directories("${PROJECT_SOURCE_DIR}/external/eigen/")
+    
+    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1")
+        message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but casadi-octave-v3.1.1 can not be found")
+    endif()
 endif()
 
 # Define source files
