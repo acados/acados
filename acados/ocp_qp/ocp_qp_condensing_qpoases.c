@@ -51,7 +51,6 @@
         #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
         #include "qpOASES_e/QProblem.h"
-        #pragma GCC diagnostic pop
     #endif
 #endif
 
