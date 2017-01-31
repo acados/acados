@@ -1,5 +1,12 @@
 %module acados
 %{
+#if defined(__clang__)
+    #pragma clang diagnostic ignored "-Wmissing-field-initializers"
+    #pragma clang diagnostic ignored "-Wdeprecated-register"
+#elif defined(__GNUC__)
+    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#endif
+
 #define SWIG_FILE_WITH_INIT
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
         PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
