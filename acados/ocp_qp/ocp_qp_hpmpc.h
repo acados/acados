@@ -20,6 +20,10 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_HPMPC_H_
 #define ACADOS_OCP_QP_OCP_QP_HPMPC_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
@@ -56,5 +60,9 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
     ocp_qp_hpmpc_args *hpmpc_args);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_

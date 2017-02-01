@@ -291,7 +291,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_free(work.W2_u);
     d_free(work.w1);
     d_free(work.w2);
-
+    d_free(work.Sx0);
+    // int_free(work.nstate_bounds);
     d_free(A_row_major);
     // d_free(primal_solution);
     // d_free(dual_solution);
