@@ -1,12 +1,5 @@
 %module acados
 %{
-#if defined(__clang__)
-    #pragma clang diagnostic ignored "-Wmissing-field-initializers"
-    #pragma clang diagnostic ignored "-Wdeprecated-register"
-#elif defined(__GNUC__)
-    #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#endif
-
 #define SWIG_FILE_WITH_INIT
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
         PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
@@ -14,6 +7,7 @@
 #include <stdexcept>
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/allocate_ocp_qp.h"
 %}
 
 %include "exception.i"
@@ -55,6 +49,51 @@ static bool is_sequence_with_length(PyObject *input, int_t expected_length) {
 static bool is_valid_2dim_array(PyObject * const input) {
     if (!PyArray_Check(input))
         return false;
+    return true;
+}
+
+static bool key_has_valid_integer_value(PyObject *dictionary, const char *key) {
+    PyObject *value = PyDict_GetItemString(dictionary, key);
+    if (value == NULL) {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Input dictionary must have an '%s' key with as value an \
+            integer number", key);
+        throw std::invalid_argument(err_msg);
+    } else if (!is_valid_integer(value)) {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "'%s' must be an integer number", key);
+        throw std::invalid_argument(err_msg);
+    }
+    return true;
+}
+
+static bool key_has_valid_integer_or_sequence_value(PyObject *dictionary, const char *key, int_t expected_length) {
+    PyObject *value = PyDict_GetItemString(dictionary, key);
+    if (value == NULL) {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Input dictionary must have an '%s' key with as value an \
+            integer number or a list of integer numbers", key);
+        throw std::invalid_argument(err_msg);
+    } else if (!is_valid_integer(value) && !is_sequence_with_length(value, expected_length)) {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "'%s' must be an integer number or a sequence with \
+            length %d", key, expected_length);
+        throw std::invalid_argument(err_msg);
+    }
+    return true;
+}
+
+static bool is_valid_qp_dictionary(PyObject * const input) {
+    if (!PyDict_Check(input))
+        return false;
+    if (!key_has_valid_integer_value(input, "N"))
+        return false;
+    int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(input, "N"));
+    if (!key_has_valid_integer_or_sequence_value(input, "nx", N+1))
+        return false;
+    if (!key_has_valid_integer_or_sequence_value(input, "nu", N))
+        return false;
+
     return true;
 }
 
@@ -145,16 +184,11 @@ static void convert_to_2dim_c_array(PyObject * const input, real_t ** const arra
 %}
 
 %include "acados/ocp_qp/ocp_qp_common.h"
+%include "acados/utils/allocate_ocp_qp.h"
 
 %extend ocp_qp_in {
-    ocp_qp_in(int_t num_stages) {
-        ocp_qp_in *qp = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
-        qp->N = num_stages;
-        qp->nx = (int_t *) calloc(num_stages+1, sizeof(int_t));
-        return qp;
-    }
     ocp_qp_in(PyObject *dictionary) {
-        if (!PyDict_Check(dictionary)) {
+        if (!is_valid_qp_dictionary(dictionary)) {
             throw std::invalid_argument("Input must be a dictionary");
         }
         ocp_qp_in *qp = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
