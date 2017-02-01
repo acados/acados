@@ -49,10 +49,10 @@ for mode = {'LTI', 'LTV'}
         
         saveDoubleMatrix(Aloc,['A' num2str(ii-1)],prefix);
         saveDoubleMatrix(Bloc,['B' num2str(ii-1)],prefix);
-        saveDoubleVector(bloc,['b' num2str(ii-1)],prefix);
+        saveDoubleVector(bloc,['bv' num2str(ii-1)],prefix);
         saveDoubleMatrix(Rloc,['R' num2str(ii-1)],prefix);
         saveDoubleMatrix(Sloc,['S' num2str(ii-1)],prefix);
-        saveDoubleVector(rloc,['r' num2str(ii-1)],prefix);
+        saveDoubleVector(rloc,['rv' num2str(ii-1)],prefix);
         saveDoubleMatrix(Culoc,['Cu' num2str(ii-1)],prefix);  
       else
         ubloc = xu(:,ii);
@@ -67,7 +67,7 @@ for mode = {'LTI', 'LTV'}
       lcloc = cl(:,ii);
             
       saveDoubleMatrix(Qloc,['Q' num2str(ii-1)],prefix);
-      saveDoubleVector(qloc,['q' num2str(ii-1)],prefix);
+      saveDoubleVector(qloc,['qv' num2str(ii-1)],prefix);
       saveDoubleMatrix(Cxloc,['Cx' num2str(ii-1)],prefix);
       saveDoubleVector(ucloc,['uc' num2str(ii-1)],prefix);
       saveDoubleVector(lcloc,['lc' num2str(ii-1)],prefix);

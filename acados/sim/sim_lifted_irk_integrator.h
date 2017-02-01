@@ -26,9 +26,10 @@ extern "C" {
 
 #include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_collocation.h"
 
 #define TRANSPOSED 1
-#define TRIPLE_LOOP 0
+#define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 #define WARM_SWAP 0
 
