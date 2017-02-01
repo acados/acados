@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <memory.h>
 
-// #include "hpmpc/include/aux_d.h"
-
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
