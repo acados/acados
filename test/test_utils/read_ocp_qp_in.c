@@ -361,7 +361,7 @@ void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
 
     read_ocp_qp_in_N(&N, fpath);
 
-    int_zeros(&nu, N, 1);
+    int_zeros(&nu, N+1, 1);
     int_zeros(&nx, N+1, 1);
     int_zeros(&nb, N+1, 1);
     int_zeros(&nc, N+1, 1);
