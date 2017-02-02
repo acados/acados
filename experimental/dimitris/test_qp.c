@@ -17,6 +17,8 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
+#define OOQP_WORK 2  // 1: structs, 2: chunk of memory
+
 int_t main( ) {
     /* code */
     int N, return_value;
@@ -26,8 +28,13 @@ int_t main( ) {
     #if SOLVER == 1
     ocp_qp_ooqp_args args;
     ocp_qp_ooqp_memory mem;
+    #if OOQP_WORK == 1
     ocp_qp_ooqp_workspace work;
+    #elif OOQP_WORK == 2
+    char *work;
+    #endif
     args.printLevel = 0;
+    args.workspaceMode = OOQP_WORK;
     #elif SOLVER == 2
     ocp_qp_condensing_qpoases_args args;
     args.dummy = 42;
@@ -59,7 +66,13 @@ int_t main( ) {
 
     #if SOLVER == 1
     ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
+    #if OOQP_WORK == 1
     ocp_qp_ooqp_create_workspace(&qp_in, &args, &work);
+    #elif OOQP_WORK == 2
+    int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
+    printf("\nwork space size: %d bytes\n", work_space_size);
+    work = (void*)malloc(work_space_size);
+    #endif
     #elif SOLVER == 2
     initialise_qpoases(&qp_in);
     #elif SOLVER == 3
@@ -70,7 +83,11 @@ int_t main( ) {
     #endif
 
     #if SOLVER == 1
+    #if OOQP_WORK == 1
     return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
+    #elif OOQP_WORK == 2
+    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
+    #endif
     #elif SOLVER == 2
     return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
     #elif SOLVER ==3
@@ -84,8 +101,12 @@ int_t main( ) {
     }
 
     #if SOLVER == 1
-    ocp_qp_ooqp_free_workspace(&work);
     ocp_qp_ooqp_free_memory(&mem);
+    #if OOQP_WORK == 1
+    ocp_qp_ooqp_free_workspace(&work);
+    #elif OOQP_WORK == 2
+    free(work);
+    #endif
     #elif SOLVER == 3
     free(work);
     #endif

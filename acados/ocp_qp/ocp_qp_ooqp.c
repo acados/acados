@@ -28,6 +28,38 @@
 // #include "blasfeo/include/blasfeo_d_aux.h"
 // #include "blasfeo/include/blasfeo_i_aux.h"
 
+static int_t get_number_of_primal_vars(const ocp_qp_in *in) {
+    int_t nx = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N; kk++) {
+        nx += in->nx[kk] + in->nu[kk];
+    }
+    nx += in->nx[in->N];
+
+    return nx;
+}
+
+
+static int_t get_number_of_equalities(const ocp_qp_in *in) {
+    int_t my = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N; kk++) {
+        my += in->nx[kk+1];
+    }
+    return my;
+}
+
+
+static int_t get_number_of_inequalities(const ocp_qp_in *in) {
+    int_t mz = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N+1; kk++) {
+        mz += in->nc[kk];
+    }
+    return mz;
+}
+
+
 static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, int_t *nx,
     int_t *my, int_t *mz, int_t *nnzQ, int_t *nnzA, int_t *nnzC) {
 
@@ -62,7 +94,7 @@ static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, 
 
 
 // TODO(dimitris): split in subfunctions
-static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
+static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
     ocp_qp_ooqp_memory *mem) {
 
     int_t ii, jj, kk, nn;
@@ -297,6 +329,26 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
 }
 
 
+static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work, ocp_qp_ooqp_memory *mem) {
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_qp_ooqp_workspace);
+    work->x = (real_t*)ptr;
+    ptr += (mem->nx)*sizeof(real_t);
+    work->gamma = (real_t*)ptr;
+    ptr += (mem->nx)*sizeof(real_t);
+    work->phi = (real_t*)ptr;
+    ptr += (mem->nx)*sizeof(real_t);
+    work->y = (real_t*)ptr;
+    ptr += (mem->my)*sizeof(real_t);
+    work->z = (real_t*)ptr;
+    ptr += (mem->mz)*sizeof(real_t);
+    work->lambda = (real_t*)ptr;
+    ptr += (mem->mz)*sizeof(real_t);
+    work->pi = (real_t*)ptr;
+}
+
+
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
@@ -320,11 +372,29 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
 }
 
 
+int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
+    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
+    args->printLevel += 0;  // dummy command, args will be probably needed later
+
+    int_t size = 0;
+    int_t nx, my, mz;
+
+    nx = get_number_of_primal_vars(in);
+    my = get_number_of_equalities(in);
+    mz = get_number_of_inequalities(in);
+
+    size += sizeof(ocp_qp_ooqp_workspace);
+    size += sizeof(real_t)*(3*nx + my + 3*mz);
+
+    return size;
+}
+
+
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
 
-    int nx, my, mz, nnzQ, nnzA, nnzC;
+    int_t nx, my, mz, nnzQ, nnzA, nnzC;
 
     // TODO(dimitris): do not call the function twice if memory already initialized before
     calculate_problem_size(in, args, &nx, &my, &mz, &nnzQ, &nnzA, &nnzC);
@@ -374,7 +444,12 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
 
     int return_value;
 
-    fill_in_structs(in, args, mem);
+    ocp_qp_update_memory(in, args, mem);
+
+    if (args->workspaceMode == 2) {
+        // NOTE: has to be called after setting up the memory which contains the problem dimensions
+        ocp_qp_ooqp_cast_workspace(work, mem);
+    }
 
     if (0) print_inputs(mem);
 

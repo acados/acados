@@ -23,8 +23,8 @@ LDFLAGS+=-L$(HPMPCLIBDIR)
 
 BLAS     = -lblas
 MA27LIB  = $(OOQP)/libma27.a
-FLIBS    = -lgfortran
-# FLIBS = /usr/lib/gcc/x86_64-linux-gnu/5/libgfortran.so
+# FLIBS    = -lgfortran
+FLIBS = /usr/local/lib/gcc/6/libgfortran.dylib
 OOQP_SPARSE_LIBS = -looqpgensparse -looqpsparse  -looqpgondzio -looqpbase \
                  $(BLAS) $(MA27LIB) $(FLIBS)
 
@@ -43,7 +43,8 @@ ooqp: test_qp.c
 	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 -DSOLVER=1 test_qp.c -o test_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
 	g++ -g -O0 ocp_qp_ooqp.o ocp_qp_ooqp_helper.o allocate_ocp_qp.o read_ocp_qp_in.o test_qp.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
-	valgrind --leak-check=full ./test_qp.exe
+	# valgrind --leak-check=full ./test_qp.exe
+	./test_qp.exe
 
 qpoases: test_qp.c
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_condensing_qpoases.c -o ocp_qp_condensing_qpoases.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPOASESINCLUDEDIR)
@@ -74,6 +75,10 @@ all: test_all_qp_solvers.c
 	g++ -g -O0 ocp_qp_ooqp.o ocp_qp_ooqp_helper.o  ocp_qp_condensing.o ocp_qp_condensing_qpoases.o ocp_qp_hpmpc.o allocate_ocp_qp.o read_ocp_qp_in.o test_all_qp_solvers.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
 	# valgrind --leak-check=full ./test_qp.exe
 	./test_qp.exe
+
+simple: simple.c
+	gcc -g simple.c -o simple.exe -I$(ACADOS)
+	./simple.exe
 
 clean:
 	rm *.exe *.o
