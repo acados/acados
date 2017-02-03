@@ -34,6 +34,8 @@ void print_matrix_name(char *file_name, char *name, const real_t *matrix,
 
 void print_array(char *file_name, real_t *array, int_t size);
 
+void print_int_array(char *file_name, const int_t *array, int_t size);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
