@@ -9,6 +9,7 @@
 
 
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "test/test_utils/read_ocp_qp_in.h"
@@ -35,6 +36,7 @@ int_t main( ) {
     #endif
     args.printLevel = 0;
     args.workspaceMode = OOQP_WORK;
+    args.fixHessian = 0;
     #elif SOLVER == 2
     ocp_qp_condensing_qpoases_args args;
     args.dummy = 42;
@@ -87,6 +89,7 @@ int_t main( ) {
     return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
     #elif OOQP_WORK == 2
     return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
+    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
     #endif
     #elif SOLVER == 2
     return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
@@ -94,7 +97,7 @@ int_t main( ) {
     return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &args, work);
     #endif
 
-    printf("\nRETURN VALUE = %d\n\n", return_value);
+    printf("\nRETURN VALUE = %d LAST ELEMENT OF SOLUTION = %f\n\n", return_value,qp_out.x[0][nPrimalVars-1]);
     if (!QUIET) {
         printf("\nSOLUTION= \n");
         for (int ii=0; ii <nPrimalVars; ii++) printf("%10.8f\n",qp_out.x[0][ii]);

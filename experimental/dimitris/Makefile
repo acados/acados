@@ -39,10 +39,11 @@ toy_memory_allocation: toy_memory_allocation.c
 ooqp: test_qp.c
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_ooqp.c -o ocp_qp_ooqp.o -I$(OOQPINCLUDEDIR) -I$(ACADOS)  -I$(ACADOS_EXT)
 	g++ -c -g ../../acados/ocp_qp/ocp_qp_ooqp_helper.cpp -o ocp_qp_ooqp_helper.o -I$(ACADOS_EXT) -I$(ACADOS)
+	gcc -c -g -O0 ../../acados/utils/timing.c -o timing.o -I$(ACADOS)
 	gcc -c -g -O0 ../../acados/utils/allocate_ocp_qp.c -o allocate_ocp_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 -DSOLVER=1 test_qp.c -o test_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
-	g++ -g -O0 ocp_qp_ooqp.o ocp_qp_ooqp_helper.o allocate_ocp_qp.o read_ocp_qp_in.o test_qp.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
+	g++ -g -O0 ocp_qp_ooqp.o timing.o ocp_qp_ooqp_helper.o allocate_ocp_qp.o read_ocp_qp_in.o test_qp.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
 	# valgrind --leak-check=full ./test_qp.exe
 	./test_qp.exe
 

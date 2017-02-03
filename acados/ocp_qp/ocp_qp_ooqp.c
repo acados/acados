@@ -19,14 +19,19 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
-#include "acados/utils/print.h"
-// #include "acados/utils/tools.h"
 #include "OOQP/include/cQpGenSparse.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/utils/timing.h"
+// #include "acados/utils/print.h"
+// #include "acados/utils/tools.h"
 // #include "blasfeo/include/blasfeo_target.h"
 // #include "blasfeo/include/blasfeo_common.h"
 // #include "blasfeo/include/blasfeo_d_aux.h"
 // #include "blasfeo/include/blasfeo_i_aux.h"
+
+#define TIMINGS 0  // 0: do not print any timings inside here
+                   // 1: print only time to solve QP
+                   // 2: print detailed timings
 
 static int_t get_number_of_primal_vars(const ocp_qp_in *in) {
     int_t nx = 0;
@@ -99,10 +104,10 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
 
     int_t ii, jj, kk, nn;
     int_t offset, offsetRows, offsetCols, lim;
-
-    // TODO(dimitris): For the moment I assume full matrices Q,R,A,B... (we need to def. sparsities)
+    // if (mem->firstRun == 1) printf("\nINITIALIZING OOQP MEMORY...\n\n");
 
     // ------- Build objective
+    // TODO(dimitris): For the moment I assume full matrices Q,R,A,B... (we need to def. sparsities)
     nn = 0;
     for (kk = 0; kk < in->N; kk++) {
         for (ii = 0; ii < in->nx[kk]; ii++) mem->c[nn++] = in->q[kk][ii];
@@ -110,43 +115,45 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
     }
     for (ii = 0; ii < in->nx[in->N]; ii++) mem->c[nn++] = in->q[in->N][ii];
 
-    nn = 0; offset = 0;
-    for (kk = 0; kk < in->N; kk++) {
-        for (jj = 0; jj< in->nx[kk]; jj++) {
-            for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
-                mem->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
+    if (mem->firstRun == 1 || args->fixHessian != 1) {
+        nn = 0; offset = 0;
+        for (kk = 0; kk < in->N; kk++) {
+            for (jj = 0; jj< in->nx[kk]; jj++) {
+                for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
+                    mem->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
+                    mem->irowQ[nn] = offset + ii;
+                    mem->jcolQ[nn] = offset + jj;
+                    nn += 1;
+                }
+            }
+            for (jj = 0; jj< in->nx[kk]; jj++) {
+                for (ii = 0; ii < in->nu[kk]; ii++) {
+                    mem->dQ[nn] = in->S[kk][jj*in->nu[kk]+ii];
+                    mem->irowQ[nn] = offset + in->nx[kk] + ii;
+                    mem->jcolQ[nn] = offset + jj;
+                    nn += 1;
+                }
+            }
+            for (jj = 0; jj< in->nu[kk]; jj++) {
+                for (ii = jj; ii < in->nu[kk]; ii++) {
+                    mem->dQ[nn] = in->R[kk][jj*in->nu[kk]+ii];
+                    mem->irowQ[nn] = offset + in->nx[kk] + ii;
+                    mem->jcolQ[nn] = offset + in->nx[kk] + jj;
+                    nn += 1;
+                }
+            }
+            offset += in->nx[kk] + in->nu[kk];
+        }
+        for (jj = 0; jj< in->nx[in->N]; jj++) {
+            for (ii = jj; ii < in->nx[in->N]; ii++) {
+                mem->dQ[nn] = in->Q[in->N][jj*in->nx[in->N]+ii];
                 mem->irowQ[nn] = offset + ii;
                 mem->jcolQ[nn] = offset + jj;
                 nn += 1;
             }
         }
-        for (jj = 0; jj< in->nx[kk]; jj++) {
-            for (ii = 0; ii < in->nu[kk]; ii++) {
-                mem->dQ[nn] = in->S[kk][jj*in->nu[kk]+ii];
-                mem->irowQ[nn] = offset + in->nx[kk] + ii;
-                mem->jcolQ[nn] = offset + jj;
-                nn += 1;
-            }
-        }
-        for (jj = 0; jj< in->nu[kk]; jj++) {
-            for (ii = jj; ii < in->nu[kk]; ii++) {
-                mem->dQ[nn] = in->R[kk][jj*in->nu[kk]+ii];
-                mem->irowQ[nn] = offset + in->nx[kk] + ii;
-                mem->jcolQ[nn] = offset + in->nx[kk] + jj;
-                nn += 1;
-            }
-        }
-        offset += in->nx[kk] + in->nu[kk];
+        doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
     }
-    for (jj = 0; jj< in->nx[in->N]; jj++) {
-        for (ii = jj; ii < in->nx[in->N]; ii++) {
-            mem->dQ[nn] = in->Q[in->N][jj*in->nx[in->N]+ii];
-            mem->irowQ[nn] = offset + ii;
-            mem->jcolQ[nn] = offset + jj;
-            nn += 1;
-        }
-    }
-    doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
 
     // ------- Build equality  constraints
     nn = 0;
@@ -252,9 +259,7 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
     }
     doubleLexSortC(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
 
-    mem->print_level = args->printLevel;
-
-    if (mem->firstRun == 0) mem->firstRun = 1;
+    mem->firstRun = 0;
 }
 
 
@@ -266,7 +271,6 @@ static void print_inputs(ocp_qp_ooqp_memory *mem) {
     printf("NUMBER OF NON-ZEROS in EQUALITIES: %d\n", mem->nnzA);
     printf("NUMBER OF INEQUALITY CONSTRAINTS: %d\n", mem->mz);
     printf("NUMBER OF NON-ZEROS in INEQUALITIES: %d\n", mem->nnzC);
-    printf("PRINT LEVEL: %d", mem->print_level);
     printf("\n-----------------------------------\n\n");
 
     int ii;
@@ -355,7 +359,7 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
 
     int_t return_value;
 
-    mem->firstRun = 0;
+    mem->firstRun = 1;
 
     calculate_problem_size(in, args, &mem->nx, &mem->my, &mem->mz,
         &mem->nnzQ, &mem->nnzA, &mem->nnzC);
@@ -444,15 +448,38 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
 
     int return_value;
 
-    ocp_qp_update_memory(in, args, mem);
+    #if TIMINGS > 0
+    acado_timer timer;
+    real_t cputime;
+    printf("\n");
+    #endif
 
+    #if TIMINGS > 1
+    acado_tic(&timer);
+    #endif
+    ocp_qp_update_memory(in, args, mem);
+    #if TIMINGS > 1
+    cputime = acado_toc(&timer);
+    printf(">>> OOQP memory initialized in %.3f ms.\n", 1e3*cputime);
+    #endif
+
+    #if TIMINGS > 1
+    acado_tic(&timer);
+    #endif
     if (args->workspaceMode == 2) {
         // NOTE: has to be called after setting up the memory which contains the problem dimensions
         ocp_qp_ooqp_cast_workspace(work, mem);
     }
+    #if TIMINGS > 1
+    cputime = acado_toc(&timer);
+    printf(">>> OOQP workspace casted in %.3f ms.\n", 1e3*cputime);
+    #endif
 
     if (0) print_inputs(mem);
 
+    #if TIMINGS > 0
+    acado_tic(&timer);
+    #endif
     // TODO(dimitris): implement dense OOQP
     // call sparse OOQP
     qpsolvesp(mem->c, mem->nx,
@@ -463,7 +490,11 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
         mem->irowC, mem->nnzC, mem->jcolC, mem->dC,
         mem->clow, mem->mz, mem->iclow, mem->cupp, mem->icupp,
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
-        &work->objectiveValue, mem->print_level, &return_value);
+        &work->objectiveValue, args->printLevel, &return_value);
+    #if TIMINGS > 0
+    cputime = acado_toc(&timer);
+    printf(">>> OOQP problem solved in %.3f ms.\n\n", 1e3*cputime);
+    #endif
 
     if (0) print_outputs(mem, work, return_value);
     fill_in_qp_out(in, out, work);

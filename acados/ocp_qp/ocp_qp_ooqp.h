@@ -20,8 +20,6 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_OOQP_H_
 #define ACADOS_OCP_QP_OCP_QP_OOQP_H_
 
-void doubleLexSortC(int first[], int n, int second[], double data[]);
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,7 +31,7 @@ typedef struct ocp_qp_ooqp_args_ {
     int_t printLevel;
     int_t workspaceMode;        // EXPERIMENTAL: 1 for structs, 2 for chunk of memory
     int_t fixHessianSparsity;   // TODO(dimitris): implement option
-    int_t fixHessianValues;     // TODO(dimitris): implement option
+    int_t fixHessian;
     int_t useDiagonalWeights;   // TODO(dimitris): implement option
 } ocp_qp_ooqp_args;
 
@@ -76,13 +74,13 @@ typedef struct ocp_qp_ooqp_memory_ {
     char *iclow;
     real_t *cupp;
     char *icupp;
-    int_t print_level;
 } ocp_qp_ooqp_memory;
+
+void doubleLexSortC(int first[], int n, int second[], double data[]);
 
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,  void *args_,  void *work_);
 int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_);
-
 
 void ocp_qp_ooqp_free_memory(void *mem_);
 void ocp_qp_ooqp_free_workspace(void *work_);
