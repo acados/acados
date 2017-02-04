@@ -30,7 +30,7 @@
 
 static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
     int_zeros((int_t **) &qp->nx, N+1, 1);
-    int_zeros((int_t **) &qp->nu, N, 1);
+    int_zeros((int_t **) &qp->nu, N+1, 1);
     int_zeros((int_t **) &qp->nb, N+1, 1);
     int_zeros((int_t **) &qp->nc, N+1, 1);
 

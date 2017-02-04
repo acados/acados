@@ -64,6 +64,16 @@ condensing_out out;
 condensing_workspace work;
 
 #ifdef DEBUG
+static void print_ocp_qp(ocp_qp_in *in) {
+    int_t N = in->N;
+    for (int_t i = 0; i < N; i++) {
+        print_int_array("nx.txt", in->nx, N+1);
+        print_int_array("nu.txt", in->nu, N);
+        print_int_array("nb.txt", in->nb, N+1);
+        print_int_array("nc.txt", in->nc, N+1);
+    }
+}
+
 static void print_condensed_QP(const int_t ncv, const int_t nc,
     condensing_out *out) {
 
@@ -238,6 +248,9 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
     double *workspace = (double*) workspace_;
     fill_in_condensing_structs(qp_in);
+    #ifdef DEBUG
+    print_ocp_qp(qp_in);
+    #endif
     condensing_N2_fixed_initial_state(&in, &out, &work);
 
     // Process arguments
@@ -291,7 +304,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_free(work.W2_u);
     d_free(work.w1);
     d_free(work.w2);
-
+    d_free(work.Sx0);
+    // int_free(work.nstate_bounds);
     d_free(A_row_major);
     // d_free(primal_solution);
     // d_free(dual_solution);

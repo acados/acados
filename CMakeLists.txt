@@ -39,7 +39,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but Eigen can not be found")
     endif()
     include_directories("${PROJECT_SOURCE_DIR}/external/eigen/")
-    
+
     if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1")
         message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but casadi-octave-v3.1.1 can not be found")
     endif()
@@ -107,7 +107,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
-        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
+        target_link_libraries(unit_tests acados qpoases hpmpc blasfeo ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
     else ()
         target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
     endif ()

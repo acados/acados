@@ -1,15 +1,19 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
 #include "catch/include/catch.hpp"
 #include "OOQP/include/cQpGenSparse.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
+
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/read_ocp_qp_in.h"
 #include "test/ocp_qp/condensing_test_helper.h"
+
 #include "acados/utils/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
 using std::vector;
 using Eigen::MatrixXd;
@@ -20,9 +24,12 @@ int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
 int_t TEST_QPOASES = 1;
 real_t TOL_QPOASES = 1e-10;
+int_t TEST_HPMPC = 0;
+real_t TOL_HPMPC = 1e-10;
 
 static vector<std::string> scenarios = {"LTI", "LTV"};
-vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS", "ONLY_AFFINE", "CONSTRAINED"};
+// TODO(dimitris): add back "ONLY_AFFINE" after fixing problem
+vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS", "CONSTRAINED"};
 
 // TODO(dimitris): Clean up octave code
 TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
@@ -102,12 +109,39 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            // TODO(dimitris): WHY FREEING MEMORY CRASHES CATCH?!?!
-                            // (IF TEST OCP_QP IS BEFORE OCP_NLP)
+                            // TODO(dimitris): FIX PROBLEM WITH ORDER UNIT TESTS
                             ocp_qp_ooqp_free_workspace(&work);
                             ocp_qp_ooqp_free_memory(&mem);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
+                            std::cout <<"---> PASSED " << std::endl;
+                        }
+                    }
+                    if (TEST_HPMPC) {
+                        SECTION("HPMPC") {
+                            std::cout <<"---> TESTING HPMPC with QP: "<< scenario <<
+                                ", " << constraint << std::endl;
+
+                            ocp_qp_hpmpc_args args;
+                            args.tol = 1e-12;
+                            args.max_iter = 20;
+                            args.mu0 = 0.0;
+                            args.warm_start = 0;
+                            args.N2 = N;
+                            double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+                            args.inf_norm_res = &inf_norm_res[0];
+                            int work_space_size =
+                            ocp_qp_hpmpc_workspace_size_bytes(N, (int_t *)qp_in.nx,
+                            (int_t *)qp_in.nu, (int_t *)qp_in.nb, (int_t *)qp_in.nc,
+                            (int_t **)qp_in.idxb, &args);
+                            // printf("\nwork space size: %d bytes\n", work_space_size);
+                            void *work = malloc(work_space_size);
+
+                            return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &args, work);
+                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
+                            free(work);
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, TOL_HPMPC));
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }

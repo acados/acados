@@ -66,6 +66,11 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             }
         }
     }
+    for (int_t j = 0; j < nx[N]; j++) {
+        for (int_t k = 0; k < nx[N]; k++) {
+            qp_Q[N][j*nx[N]+k] = cost->W[N][j*(nx[N]+nu[N])+k];
+        }
+    }
     real_t **qp_q = work->q;
     real_t **qp_r = work->r;
     real_t **qp_lb = work->lb;
