@@ -33,6 +33,61 @@
                    // 1: print only time to solve QP
                    // 2: print detailed timings
 
+int_t *rows;
+int_t *cols;
+int_t lda;
+
+// comparator for qsort
+static int comparator(const void* p1, const void* p2) {
+    int_t ans1, ans2;
+    int_t ind1 = *((int *)p1);
+    int_t ind2 = *((int *)p2);
+
+    ans1 = rows[ind1]*lda + cols[ind1];
+    ans2 = rows[ind2]*lda + cols[ind2];
+
+    return ans1 - ans2;
+}
+
+
+static void sort_matrix_data_row_major(int_t *order, int_t nnz, real_t *d) {
+    int ii;
+    real_t *tmp = (real_t*)malloc(sizeof(*tmp)*nnz);
+
+    for (ii = 0; ii < nnz; ii++) {
+        tmp[ii] = d[order[ii]];
+    }
+    for (ii = 0; ii < nnz; ii++) {
+        d[ii] = tmp[ii];
+    }
+    free(tmp);  // TODO(dimitris): use workspace instead of dynamic memory allocation
+}
+
+
+static void sort_matrix_row_major(int_t *order, int_t *irow, int_t nnz, int_t *jcol, real_t *d) {
+    int ii;
+    int_t *tmp = (int_t*)malloc(sizeof(*tmp)*nnz);
+
+    for (ii = 0; ii < nnz; ii++) {
+        tmp[ii] = irow[order[ii]];
+    }
+    for (ii = 0; ii < nnz; ii++) {
+        irow[ii] = tmp[ii];
+    }
+
+    for (ii = 0; ii < nnz; ii++) {
+        tmp[ii] = jcol[order[ii]];
+    }
+    for (ii = 0; ii < nnz; ii++) {
+        jcol[ii] = tmp[ii];
+    }
+
+    sort_matrix_data_row_major(order, nnz, d);
+
+    free(tmp);  // TODO(dimitris): use workspace instead of dynamic memory allocation
+}
+
+
 static int_t get_number_of_primal_vars(const ocp_qp_in *in) {
     int_t nx = 0;
     int_t kk;
@@ -106,6 +161,12 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
     int_t offset, offsetRows, offsetCols, lim;
     // if (mem->firstRun == 1) printf("\nINITIALIZING OOQP MEMORY...\n\n");
 
+    if (mem->firstRun == 1) {
+        for (ii = 0; ii < mem->nnzQ; ii++) mem->orderQ[ii] = ii;
+        for (ii = 0; ii < mem->nnzA; ii++) mem->orderA[ii] = ii;
+        for (ii = 0; ii < mem->nnzC; ii++) mem->orderC[ii] = ii;
+    }
+
     // ------- Build objective
     // TODO(dimitris): For the moment I assume full matrices Q,R,A,B... (we need to def. sparsities)
     nn = 0;
@@ -152,7 +213,12 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
                 nn += 1;
             }
         }
-        doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
+        rows = mem->irowQ;
+        cols = mem->jcolQ;
+        lda  = mem->nx;
+        qsort(mem->orderQ, mem->nnzQ, sizeof(*mem->orderQ), comparator);
+        sort_matrix_row_major(mem->orderQ, mem->irowQ, mem->nnzQ, mem->jcolQ, mem->dQ);
+        // doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem->dQ);
     }
 
     // ------- Build equality  constraints
@@ -192,7 +258,12 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
         offsetCols += in->nx[kk] + in->nu[kk];
         offsetRows += in->nx[kk+1];
     }
-    doubleLexSortC(mem->irowA, mem->nnzA, mem->jcolA, mem-> dA);
+    rows = mem->irowA;
+    cols = mem->jcolA;
+    lda  = mem->nx;
+    qsort(mem->orderA, mem->nnzA, sizeof(*mem->orderA), comparator);
+    sort_matrix_row_major(mem->orderA, mem->irowA, mem->nnzA, mem->jcolA, mem->dA);
+    // doubleLexSortC(mem->irowA, mem->nnzA, mem->jcolA, mem-> dA);
 
     // ------- Build bounds
     offset = 0;
@@ -257,7 +328,12 @@ static void ocp_qp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *a
         offsetRows += in->nc[kk];
         }
     }
-    doubleLexSortC(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
+    rows = mem->irowC;
+    cols = mem->jcolC;
+    lda  = mem->nx;
+    qsort(mem->orderC, mem->nnzC, sizeof(*mem->orderC), comparator);
+    sort_matrix_row_major(mem->orderC, mem->irowC, mem->nnzC, mem->jcolC, mem->dC);
+    // doubleLexSortC(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
 
     mem->firstRun = 0;
 }
@@ -372,6 +448,10 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
         &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
         &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp, &return_value);
 
+    mem->orderQ = (int_t*)malloc(sizeof(*mem->orderQ)*mem->nnzQ);
+    mem->orderA = (int_t*)malloc(sizeof(*mem->orderA)*mem->nnzA);
+    mem->orderC = (int_t*)malloc(sizeof(*mem->orderC)*mem->nnzC);
+
     return return_value;
 }
 
@@ -438,6 +518,10 @@ void ocp_qp_ooqp_free_memory(void *mem_) {
         &mem-> bA,
         &mem->irowC, &mem->jcolC, &mem->dC,
         &mem->clow, &mem->iclow, &mem->cupp, &mem->icupp);
+
+    free(mem->orderQ);
+    free(mem->orderA);
+    free(mem->orderC);
 }
 
 

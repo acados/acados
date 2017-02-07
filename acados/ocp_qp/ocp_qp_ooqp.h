@@ -54,6 +54,7 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t *irowQ;
     int_t nnzQ;
     int_t *jcolQ;
+    int_t *orderQ;
     real_t *dQ;
     real_t *xlow;
     char *ixlow;
@@ -62,12 +63,14 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t *irowA;
     int_t nnzA;
     int_t *jcolA;
+    int_t *orderA;
     real_t *dA;
     real_t *bA;
     int_t my;
     int_t *irowC;
     int_t nnzC;
     int_t *jcolC;
+    int_t *orderC;
     real_t *dC;
     real_t *clow;
     int_t mz;
@@ -75,8 +78,6 @@ typedef struct ocp_qp_ooqp_memory_ {
     real_t *cupp;
     char *icupp;
 } ocp_qp_ooqp_memory;
-
-void doubleLexSortC(int first[], int n, int second[], double data[]);
 
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,  void *args_,  void *work_);
