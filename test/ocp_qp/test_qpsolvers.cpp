@@ -24,7 +24,7 @@ int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
 int_t TEST_QPOASES = 1;
 real_t TOL_QPOASES = 1e-10;
-int_t TEST_HPMPC = 1;
+int_t TEST_HPMPC = 0;
 real_t TOL_HPMPC = 1e-10;
 
 static vector<std::string> scenarios = {"LTI", "LTV"};

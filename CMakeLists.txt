@@ -39,7 +39,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
         message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but Eigen can not be found")
     endif()
     include_directories("${PROJECT_SOURCE_DIR}/external/eigen/")
-    
+
     if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1")
         message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but casadi-octave-v3.1.1 can not be found")
     endif()
@@ -102,7 +102,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_custom_target(generate_test_data
         DEPENDS ${UNIT_TESTS_SRC_CASADI}
         COMMENT "Checking if regeneration of test data is needed")
-    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_TEST_UTILS})
+    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
