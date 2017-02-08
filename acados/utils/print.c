@@ -98,7 +98,8 @@ void print_int_array(char *file_name, const int_t *array, int_t size) {
 // Read space delimited file into column-major matrix
 void read_matrix(const char *file_name, real_t* array, const int_t nrows,
         const int_t ncols) {
-    double buff[ncols*nrows];
+    double *buff;
+    d_zeros(&buff, ncols*nrows, 1);
     FILE *file;
     file = fopen(file_name, "r");
 
