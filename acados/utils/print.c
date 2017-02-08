@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "acados/utils/print.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
     const int_t ncols) {
