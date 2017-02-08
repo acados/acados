@@ -98,21 +98,21 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             ocp_qp_ooqp_args args;
                             ocp_qp_ooqp_memory mem;
-                            ocp_qp_ooqp_workspace work;
+                            void *work;
 
                             args.printLevel = 0;
-                            // TODO(dimitris): change for workspaceMode = 2
-                            args.workspaceMode = 1;
+                            args.workspaceMode = 2;  // TODO(dimitris): make this default
+
+                            int_t work_space_size =
+                                ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
+                            work = (void*)malloc(work_space_size);
 
                             int_t mem_return = ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
                             REQUIRE(mem_return == 0);
-                            int_t work_return = ocp_qp_ooqp_create_workspace(&qp_in, &args, &work);
-                            REQUIRE(work_return == 0);
 
-                            return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
+                            return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            // TODO(dimitris): FIX PROBLEM WITH ORDER UNIT TESTS
-                            ocp_qp_ooqp_free_workspace(&work);
+                            free(work);
                             ocp_qp_ooqp_free_memory(&mem);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
