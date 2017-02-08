@@ -19,15 +19,104 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
-#include "acados/utils/print.h"
-// #include "acados/utils/tools.h"
 #include "OOQP/include/cQpGenSparse.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/utils/timing.h"
+// #include "acados/utils/print.h"
+// #include "acados/utils/tools.h"
 // #include "blasfeo/include/blasfeo_target.h"
 // #include "blasfeo/include/blasfeo_common.h"
 // #include "blasfeo/include/blasfeo_d_aux.h"
 // #include "blasfeo/include/blasfeo_i_aux.h"
 
+#define TIMINGS 0  // 0: do not print any timings inside here
+                   // 1: print only time to solve QP
+                   // 2: print detailed timings
+
+int_t *rows;
+int_t *cols;
+int_t lda;
+
+// comparator for qsort
+static int comparator(const void* p1, const void* p2) {
+    int_t ans1, ans2;
+    int_t ind1 = *((int *)p1);
+    int_t ind2 = *((int *)p2);
+
+    ans1 = rows[ind1]*lda + cols[ind1];
+    ans2 = rows[ind2]*lda + cols[ind2];
+
+    return ans1 - ans2;
+}
+
+
+static void sort_matrix_data_row_major(int_t *order, int_t nnz, real_t *d) {
+    int ii;
+    real_t *tmp = (real_t*)malloc(sizeof(*tmp)*nnz);
+
+    for (ii = 0; ii < nnz; ii++) {
+        tmp[ii] = d[order[ii]];
+    }
+    for (ii = 0; ii < nnz; ii++) {
+        d[ii] = tmp[ii];
+    }
+    free(tmp);  // TODO(dimitris): use workspace instead of dynamic memory allocation
+}
+
+
+static void sort_matrix_structure_row_major(int_t *order, int_t *irow, int_t nnz, int_t *jcol) {
+    int ii;
+    int_t *tmp = (int_t*)malloc(sizeof(*tmp)*nnz);
+
+    for (ii = 0; ii < nnz; ii++) {
+        tmp[ii] = irow[order[ii]];
+    }
+    for (ii = 0; ii < nnz; ii++) {
+        irow[ii] = tmp[ii];
+    }
+
+    for (ii = 0; ii < nnz; ii++) {
+        tmp[ii] = jcol[order[ii]];
+    }
+    for (ii = 0; ii < nnz; ii++) {
+        jcol[ii] = tmp[ii];
+    }
+    free(tmp);  // TODO(dimitris): use workspace instead of dynamic memory allocation
+}
+
+
+static int_t get_number_of_primal_vars(const ocp_qp_in *in) {
+    int_t nx = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N; kk++) {
+        nx += in->nx[kk] + in->nu[kk];
+    }
+    nx += in->nx[in->N];
+
+    return nx;
+}
+
+
+static int_t get_number_of_equalities(const ocp_qp_in *in) {
+    int_t my = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N; kk++) {
+        my += in->nx[kk+1];
+    }
+    return my;
+}
+
+
+static int_t get_number_of_inequalities(const ocp_qp_in *in) {
+    int_t mz = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N+1; kk++) {
+        mz += in->nc[kk];
+    }
+    return mz;
+}
+
+// TODO(dimitris): remove maybe?
 static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, int_t *nx,
     int_t *my, int_t *mz, int_t *nnzQ, int_t *nnzA, int_t *nnzC) {
 
@@ -61,44 +150,44 @@ static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, 
 }
 
 
-// TODO(dimitris): split in subfunctions
-static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
-    ocp_qp_ooqp_memory *mem) {
+static void update_gradient(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
+    int ii, kk, nn;
 
-    int_t ii, jj, kk, nn;
-    int_t offset, offsetRows, offsetCols, lim;
-
-    // TODO(dimitris): For the moment I assume full matrices Q,R,A,B... (we need to def. sparsities)
-
-    // ------- Build objective
     nn = 0;
     for (kk = 0; kk < in->N; kk++) {
         for (ii = 0; ii < in->nx[kk]; ii++) mem->c[nn++] = in->q[kk][ii];
         for (ii = 0; ii < in->nu[kk]; ii++) mem->c[nn++] = in->r[kk][ii];
     }
     for (ii = 0; ii < in->nx[in->N]; ii++) mem->c[nn++] = in->q[in->N][ii];
+}
 
+
+static void update_hessian_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
+    int_t ii, jj, kk, nn, offset;
+
+    // TODO(dimitris): For the moment I assume full matrices Q,R,A,B... (we need to def. sparsities)
+    // printf("------------> updating Hessian sparsity\n");
     nn = 0; offset = 0;
     for (kk = 0; kk < in->N; kk++) {
+        // writing Q
         for (jj = 0; jj< in->nx[kk]; jj++) {
             for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
-                mem->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
                 mem->irowQ[nn] = offset + ii;
                 mem->jcolQ[nn] = offset + jj;
                 nn += 1;
             }
         }
+        // writing S
         for (jj = 0; jj< in->nx[kk]; jj++) {
             for (ii = 0; ii < in->nu[kk]; ii++) {
-                mem->dQ[nn] = in->S[kk][jj*in->nu[kk]+ii];
                 mem->irowQ[nn] = offset + in->nx[kk] + ii;
                 mem->jcolQ[nn] = offset + jj;
                 nn += 1;
             }
         }
+        // writing R
         for (jj = 0; jj< in->nu[kk]; jj++) {
             for (ii = jj; ii < in->nu[kk]; ii++) {
-                mem->dQ[nn] = in->R[kk][jj*in->nu[kk]+ii];
                 mem->irowQ[nn] = offset + in->nx[kk] + ii;
                 mem->jcolQ[nn] = offset + in->nx[kk] + jj;
                 nn += 1;
@@ -108,13 +197,78 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
     }
     for (jj = 0; jj< in->nx[in->N]; jj++) {
         for (ii = jj; ii < in->nx[in->N]; ii++) {
-            mem->dQ[nn] = in->Q[in->N][jj*in->nx[in->N]+ii];
             mem->irowQ[nn] = offset + ii;
             mem->jcolQ[nn] = offset + jj;
             nn += 1;
         }
     }
-    doubleLexSortC(mem->irowQ, mem->nnzQ, mem->jcolQ, mem-> dQ);
+    rows = mem->irowQ;
+    cols = mem->jcolQ;
+    lda  = mem->nx;
+    qsort(mem->orderQ, mem->nnzQ, sizeof(*mem->orderQ), comparator);
+    sort_matrix_structure_row_major(mem->orderQ, mem->irowQ, mem->nnzQ, mem->jcolQ);
+}
+
+
+static void update_hessian_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
+    int_t ii, jj, kk, nn, offset;
+
+    // printf("------------> updating Hessian data\n");
+    nn = 0; offset = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (jj = 0; jj< in->nx[kk]; jj++) {
+            for (ii = jj; ii < in->nx[kk]; ii++) {  // we write only the lower triangular part
+                mem->dQ[nn] = in->Q[kk][jj*in->nx[kk]+ii];
+                nn += 1;
+            }
+        }
+        for (jj = 0; jj< in->nx[kk]; jj++) {
+            for (ii = 0; ii < in->nu[kk]; ii++) {
+                mem->dQ[nn] = in->S[kk][jj*in->nu[kk]+ii];
+                nn += 1;
+            }
+        }
+        for (jj = 0; jj< in->nu[kk]; jj++) {
+            for (ii = jj; ii < in->nu[kk]; ii++) {
+                mem->dQ[nn] = in->R[kk][jj*in->nu[kk]+ii];
+                nn += 1;
+            }
+        }
+        offset += in->nx[kk] + in->nu[kk];
+    }
+    for (jj = 0; jj< in->nx[in->N]; jj++) {
+        for (ii = jj; ii < in->nx[in->N]; ii++) {
+            mem->dQ[nn] = in->Q[in->N][jj*in->nx[in->N]+ii];
+            nn += 1;
+        }
+    }
+    sort_matrix_data_row_major(mem->orderQ, mem->nnzQ, mem->dQ);
+}
+
+
+// TODO(dimitris): split in also eq. and ineq. in subfunctions
+static void ocp_qp_ooqp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
+    ocp_qp_ooqp_memory *mem) {
+
+    int_t ii, jj, kk, nn;
+    int_t offset, offsetRows, offsetCols, lim;
+    // if (mem->firstRun == 1) printf("\nINITIALIZING OOQP MEMORY...\n\n");
+
+    if (mem->firstRun == 1) {
+        for (ii = 0; ii < mem->nnzQ; ii++) mem->orderQ[ii] = ii;
+        for (ii = 0; ii < mem->nnzA; ii++) mem->orderA[ii] = ii;
+        for (ii = 0; ii < mem->nnzC; ii++) mem->orderC[ii] = ii;
+    }
+
+    // ------- Build objective
+    update_gradient(in, mem);
+
+    if (mem->firstRun == 1 || (args->fixHessianSparsity == 0 && args->fixHessian == 0)) {
+        update_hessian_structure(in, mem);
+    }
+    if (mem->firstRun == 1 || args->fixHessian == 0) {
+        update_hessian_data(in, mem);
+    }
 
     // ------- Build equality  constraints
     nn = 0;
@@ -153,7 +307,12 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
         offsetCols += in->nx[kk] + in->nu[kk];
         offsetRows += in->nx[kk+1];
     }
-    doubleLexSortC(mem->irowA, mem->nnzA, mem->jcolA, mem-> dA);
+    rows = mem->irowA;
+    cols = mem->jcolA;
+    lda  = mem->nx;
+    qsort(mem->orderA, mem->nnzA, sizeof(*mem->orderA), comparator);
+    sort_matrix_structure_row_major(mem->orderA, mem->irowA, mem->nnzA, mem->jcolA);
+    sort_matrix_data_row_major(mem->orderA, mem->nnzA, mem->dA);
 
     // ------- Build bounds
     offset = 0;
@@ -218,11 +377,14 @@ static void fill_in_structs(const ocp_qp_in *in,  const ocp_qp_ooqp_args *args,
         offsetRows += in->nc[kk];
         }
     }
-    doubleLexSortC(mem->irowC, mem->nnzC, mem->jcolC, mem-> dC);
+    rows = mem->irowC;
+    cols = mem->jcolC;
+    lda  = mem->nx;
+    qsort(mem->orderC, mem->nnzC, sizeof(*mem->orderC), comparator);
+    sort_matrix_structure_row_major(mem->orderC, mem->irowC, mem->nnzC, mem->jcolC);
+    sort_matrix_data_row_major(mem->orderC, mem->nnzC, mem->dC);
 
-    mem->print_level = args->printLevel;
-
-    if (mem->firstRun == 0) mem->firstRun = 1;
+    mem->firstRun = 0;
 }
 
 
@@ -234,7 +396,6 @@ static void print_inputs(ocp_qp_ooqp_memory *mem) {
     printf("NUMBER OF NON-ZEROS in EQUALITIES: %d\n", mem->nnzA);
     printf("NUMBER OF INEQUALITY CONSTRAINTS: %d\n", mem->mz);
     printf("NUMBER OF NON-ZEROS in INEQUALITIES: %d\n", mem->nnzC);
-    printf("PRINT LEVEL: %d", mem->print_level);
     printf("\n-----------------------------------\n\n");
 
     int ii;
@@ -297,13 +458,33 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
 }
 
 
+static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work, ocp_qp_ooqp_memory *mem) {
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_qp_ooqp_workspace);
+    work->x = (real_t*)ptr;
+    ptr += (mem->nx)*sizeof(real_t);
+    work->gamma = (real_t*)ptr;
+    ptr += (mem->nx)*sizeof(real_t);
+    work->phi = (real_t*)ptr;
+    ptr += (mem->nx)*sizeof(real_t);
+    work->y = (real_t*)ptr;
+    ptr += (mem->my)*sizeof(real_t);
+    work->z = (real_t*)ptr;
+    ptr += (mem->mz)*sizeof(real_t);
+    work->lambda = (real_t*)ptr;
+    ptr += (mem->mz)*sizeof(real_t);
+    work->pi = (real_t*)ptr;
+}
+
+
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
 
     int_t return_value;
 
-    mem->firstRun = 0;
+    mem->firstRun = 1;
 
     calculate_problem_size(in, args, &mem->nx, &mem->my, &mem->mz,
         &mem->nnzQ, &mem->nnzA, &mem->nnzC);
@@ -316,7 +497,29 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
         &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
         &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp, &return_value);
 
+    mem->orderQ = (int_t*)malloc(sizeof(*mem->orderQ)*mem->nnzQ);
+    mem->orderA = (int_t*)malloc(sizeof(*mem->orderA)*mem->nnzA);
+    mem->orderC = (int_t*)malloc(sizeof(*mem->orderC)*mem->nnzC);
+
     return return_value;
+}
+
+
+int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
+    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
+    args->printLevel += 0;  // dummy command, args will be probably needed later
+
+    int_t size = 0;
+    int_t nx, my, mz;
+
+    nx = get_number_of_primal_vars(in);
+    my = get_number_of_equalities(in);
+    mz = get_number_of_inequalities(in);
+
+    size += sizeof(ocp_qp_ooqp_workspace);
+    size += sizeof(real_t)*(3*nx + my + 3*mz);
+
+    return size;
 }
 
 
@@ -324,7 +527,7 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
 
-    int nx, my, mz, nnzQ, nnzA, nnzC;
+    int_t nx, my, mz, nnzQ, nnzA, nnzC;
 
     // TODO(dimitris): do not call the function twice if memory already initialized before
     calculate_problem_size(in, args, &nx, &my, &mz, &nnzQ, &nnzA, &nnzC);
@@ -364,6 +567,10 @@ void ocp_qp_ooqp_free_memory(void *mem_) {
         &mem-> bA,
         &mem->irowC, &mem->jcolC, &mem->dC,
         &mem->clow, &mem->iclow, &mem->cupp, &mem->icupp);
+
+    free(mem->orderQ);
+    free(mem->orderA);
+    free(mem->orderC);
 }
 
 
@@ -374,10 +581,38 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
 
     int return_value;
 
-    fill_in_structs(in, args, mem);
+    #if TIMINGS > 0
+    acado_timer timer;
+    real_t cputime;
+    printf("\n");
+    #endif
+
+    #if TIMINGS > 1
+    acado_tic(&timer);
+    #endif
+    ocp_qp_ooqp_update_memory(in, args, mem);
+    #if TIMINGS > 1
+    cputime = acado_toc(&timer);
+    printf(">>> OOQP memory initialized in %.3f ms.\n", 1e3*cputime);
+    #endif
+
+    #if TIMINGS > 1
+    acado_tic(&timer);
+    #endif
+    if (args->workspaceMode == 2) {
+        // NOTE: has to be called after setting up the memory which contains the problem dimensions
+        ocp_qp_ooqp_cast_workspace(work, mem);
+    }
+    #if TIMINGS > 1
+    cputime = acado_toc(&timer);
+    printf(">>> OOQP workspace casted in %.3f ms.\n", 1e3*cputime);
+    #endif
 
     if (0) print_inputs(mem);
 
+    #if TIMINGS > 0
+    acado_tic(&timer);
+    #endif
     // TODO(dimitris): implement dense OOQP
     // call sparse OOQP
     qpsolvesp(mem->c, mem->nx,
@@ -388,7 +623,11 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
         mem->irowC, mem->nnzC, mem->jcolC, mem->dC,
         mem->clow, mem->mz, mem->iclow, mem->cupp, mem->icupp,
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
-        &work->objectiveValue, mem->print_level, &return_value);
+        &work->objectiveValue, args->printLevel, &return_value);
+    #if TIMINGS > 0
+    cputime = acado_toc(&timer);
+    printf(">>> OOQP problem solved in %.3f ms.\n\n", 1e3*cputime);
+    #endif
 
     if (0) print_outputs(mem, work, return_value);
     fill_in_qp_out(in, out, work);
