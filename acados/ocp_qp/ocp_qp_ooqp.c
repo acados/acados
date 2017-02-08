@@ -115,35 +115,47 @@ static int_t get_number_of_inequalities(const ocp_qp_in *in) {
 }
 
 
-// TODO(dimitris): replace maybe?
-static void calculate_problem_size(const ocp_qp_in *in, ocp_qp_ooqp_args *args, int_t *nx,
-    int_t *my, int_t *mz, int_t *nnzQ, int_t *nnzA, int_t *nnzC) {
+static int_t get_nnzQ(const ocp_qp_in *in, const ocp_qp_ooqp_args *args) {
+    int_t kk;
+    int_t nnzQ = 0;
 
-        int_t kk;
-        int_t N = in->N;
+    // dummy command
+    if (args->printLevel) kk = 0;
 
-        // dummy command
-        if (args->printLevel) kk = 0;
+    for (kk = 0; kk < in->N+1; kk++) {
+        nnzQ += (in->nx[kk]*in->nx[kk] - in->nx[kk])/2 + in->nx[kk];
+        nnzQ += (in->nu[kk]*in->nu[kk] - in->nu[kk])/2 + in->nu[kk];
+        nnzQ += in->nx[kk]*in->nu[kk];
+    }
+    return nnzQ;
+}
 
-        *nx = 0;    // # of primal optimization variables
-        *nnzQ = 0;  // # non-zeros in lower part of Hessian
-        *nnzA = 0;  // # non-zeros in matrix of equality constraints
-        *nnzC = 0;  // # non-zeros in matrix of inequality constraints
-        *my = 0;    // # of equality constraints
-        *mz = 0;    // # of inequality constraints
 
-        for (kk = 0; kk < N+1; kk++) {
-            *nx += in->nx[kk] + in->nu[kk];
-            *nnzQ += (in->nx[kk]*in->nx[kk] - in->nx[kk])/2 + in->nx[kk];
-            *nnzQ += (in->nu[kk]*in->nu[kk] - in->nu[kk])/2 + in->nu[kk];
-            *nnzQ += in->nx[kk]*in->nu[kk];
-            *nnzC += in->nc[kk]*(in->nx[kk] + in->nu[kk]);
-            *mz += in->nc[kk];
-            if (kk < N)  {
-                *nnzA += in->nx[kk+1]*(in->nx[kk] + in->nu[kk] + 1);
-                *my += in->nx[kk+1];
-            }
-        }
+static int_t get_nnzA(const ocp_qp_in *in, const ocp_qp_ooqp_args *args) {
+    int_t kk;
+    int_t nnzA = 0;
+
+    // dummy command
+    if (args->printLevel) kk = 0;
+
+    for (kk = 0; kk < in->N; kk++) {
+        nnzA += in->nx[kk+1]*(in->nx[kk] + in->nu[kk] + 1);
+    }
+    return nnzA;
+}
+
+
+static int_t get_nnzC(const ocp_qp_in *in, const ocp_qp_ooqp_args *args) {
+    int_t kk;
+    int_t nnzC = 0;
+
+    // dummy command
+    if (args->printLevel) kk = 0;
+
+    for (kk = 0; kk < in->N+1; kk++) {
+        nnzC += in->nc[kk]*(in->nx[kk] + in->nu[kk]);
+    }
+    return nnzC;
 }
 
 
@@ -336,7 +348,7 @@ static void update_ineq_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     }
 }
 
-// TODO(dimitris): search for kk < in->N
+
 static void update_inequalities_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     int ii, jj, kk, nn, offsetRows, offsetCols;
 
@@ -537,8 +549,12 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
 
     mem->firstRun = 1;
 
-    calculate_problem_size(in, args, &mem->nx, &mem->my, &mem->mz,
-        &mem->nnzQ, &mem->nnzA, &mem->nnzC);
+    mem->nx = get_number_of_primal_vars(in);
+    mem->my = get_number_of_equalities(in);
+    mem->mz = get_number_of_inequalities(in);
+    mem->nnzQ = get_nnzQ(in, args);
+    mem->nnzA = get_nnzA(in, args);
+    mem->nnzC = get_nnzC(in, args);
 
     newQpGenSparse(&mem->c, mem->nx,
         &mem->irowQ, mem->nnzQ, &mem->jcolQ, &mem->dQ,
