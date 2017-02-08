@@ -101,6 +101,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             ocp_qp_ooqp_workspace work;
 
                             args.printLevel = 0;
+                            // TODO(dimitris): change for workspaceMode = 2
+                            args.workspaceMode = 1;
 
                             int_t mem_return = ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
                             REQUIRE(mem_return == 0);
