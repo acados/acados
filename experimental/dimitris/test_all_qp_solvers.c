@@ -10,6 +10,7 @@
 #include "blasfeo/include/blasfeo_i_aux.h"
 
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "test/test_utils/read_ocp_qp_in.h"
@@ -18,7 +19,13 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
+#ifndef max
+    #define max(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
 #define TOL 1e-6
+
+#define OOQP_WORK 2  // 1: structs, 2: chunk of memory
 
 real_t error_in_primal_solution(int_t n, real_t *v1, real_t *v2) {
     real_t error = 0;
@@ -38,29 +45,46 @@ int_t main( ) {
     int_t N, return_value;
     int_t iScenario, iSolver, iProblem, nScenarios, nSolvers, nProblems;
     int_t BOUNDS, CONSTRAINTS, MPC, QUIET;
-    int_t work_space_size;
+    int_t work_space_size, ooqp_work_space_size, hpmpc_work_space_size;
     real_t *sol;
     char fname[256];
+
+    // define input-output
     ocp_qp_in qp_in;
     ocp_qp_out qp_out;
 
+    // define arguments for all solvers
     ocp_qp_ooqp_args ooqp_args;
     ocp_qp_condensing_qpoases_args qpoases_args;
     ocp_qp_hpmpc_args hpmpc_args;
 
-    ocp_qp_ooqp_memory ooqp_mem;
-
-    ocp_qp_ooqp_workspace ooqp_work;
-    void *hpmpc_work;
-
     ooqp_args.printLevel = 0;
+    ooqp_args.workspaceMode = OOQP_WORK;
+    ooqp_args.fixHessian = 0;
+    ooqp_args.fixHessianSparsity = 0;
+    ooqp_args.fixDynamics = 0;
+    ooqp_args.fixDynamicsSparsity = 0;
+    ooqp_args.fixInequalities = 0;
+    ooqp_args.fixInequalitiesSparsity = 0;
+
     qpoases_args.dummy = 42;
+
     hpmpc_args.tol = 1e-15;
     hpmpc_args.max_iter = 20;
     hpmpc_args.mu0 = 0.0;
     hpmpc_args.warm_start = 0;
     double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
     hpmpc_args.inf_norm_res = &inf_norm_res[0];
+
+    // define memory for all solvers (that have it implemented..)
+    ocp_qp_ooqp_memory ooqp_mem;
+
+    // define workspace for all solvers (that have it implemented..)
+    #if OOQP_WORK == 1
+    ocp_qp_ooqp_workspace ooqp_work;
+    #endif
+
+    void *work;
 
     const char *problems[] = {"LTI", "LTV"};
     const char *scenarios[] = {"UNCONSTRAINED", "ONLY_BOUNDS", "ONLY_AFFINE", "CONSTRAINED"};
@@ -88,6 +112,9 @@ int_t main( ) {
                 BOUNDS = 1; CONSTRAINTS = 1;
                 snprintf(fname, sizeof(fname), "%s%s", problems[iProblem], "/sol_constrained.txt");
             }
+
+            int_t NEW_PROBLEM = 1;
+
             for (iSolver = 0; iSolver < nSolvers; iSolver++) {
                 printf(">>>>> SOLVING %s QP (%s) with %s\n", problems[iProblem], scenarios[iScenario], solvers[iSolver]);
 
@@ -108,44 +135,39 @@ int_t main( ) {
                 // printf(">>>>>>>>>>> READING SOLUTION FROM %s\n", fname);
                 read_double_vector_from_txt(sol, nPrimalVars, fname);
 
+                // calculate workspace size for hpmpc and ooqp for the current problem (once) and allocate maximum
+                if (NEW_PROBLEM) {
+                    printf("\n ----- ALLOCATING COMMON WORKSPACE FOR CURRENT PROBLEM ----- \n");
+                    // printf("calculating OOQP workspace size... \n");
+                    ooqp_work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &ooqp_args);
+                    // printf("calculating HPMPC workspace size... \n");
+                    hpmpc_work_space_size = ocp_qp_hpmpc_workspace_size_bytes(N, (int_t *)qp_in.nx,
+                    (int_t *)qp_in.nu, (int_t *)qp_in.nb, (int_t *)qp_in.nc, (int_t **)qp_in.idxb,
+                    &hpmpc_args);
+                    work_space_size = max(ooqp_work_space_size, hpmpc_work_space_size);
+                    // printf("ALLOCATING %d bytes max(%d, %d)\n", work_space_size, ooqp_work_space_size, hpmpc_work_space_size);
+                    work = (void*)malloc(work_space_size);
+                    NEW_PROBLEM = 0;
+                }
+
                 if (strcmp(solvers[iSolver], "qpoases") == 0) {
                     initialise_qpoases(&qp_in);
                     return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, NULL);
 
                 } else if (strcmp(solvers[iSolver], "ooqp") == 0) {
                     ocp_qp_ooqp_create_memory(&qp_in, &ooqp_args, &ooqp_mem);
+                    #if OOQP_WORK == 1
                     ocp_qp_ooqp_create_workspace(&qp_in, &ooqp_args, &ooqp_work);
                     return_value = ocp_qp_ooqp(&qp_in, &qp_out, &ooqp_args, &ooqp_mem, &ooqp_work);
-                    ocp_qp_ooqp_free_workspace(&ooqp_work);
+                    #elif OOQP_WORK == 2
+                    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &ooqp_args, &ooqp_mem, work);
+                    #endif
                     ocp_qp_ooqp_free_memory(&ooqp_mem);
+                    #if OOQP_WORK == 1
+                    ocp_qp_ooqp_free_workspace(&ooqp_work);
+                    #endif
                 } else if (strcmp(solvers[iSolver], "hpmpc") == 0) {
-                    // printf("DATA BEFORE SEG. FAULT:\n");
-                    // printf("N = %d\n", N);
-                    // printf("nx = \n");
-                    // for (int jj = 0; jj < N+1; jj++) printf("%d ", qp_in.nx[jj]);
-                    // printf("\n");
-                    // printf("nu = \n");
-                    // for (int jj = 0; jj < N+1; jj++) printf("%d ", qp_in.nu[jj]);
-                    // printf("\n");
-                    // printf("nb = \n");
-                    // for (int jj = 0; jj < N+1; jj++) printf("%d ", qp_in.nb[jj]);
-                    // printf("\n");
-                    // printf("nc = \n");
-                    // for (int jj = 0; jj < N+1; jj++) printf("%d ", qp_in.nc[jj]);
-                    // printf("\n");
-                    // for (int kk = 0; kk < N+1; kk++) {
-                    //     printf("idxb[%d] = \n", kk);
-                    //     for (int jj = 0; jj < qp_in.nb[kk]; jj++) printf("%d ", qp_in.idxb[kk][jj]);
-                    //     printf("\n");
-                    // }
-                    // printf("-----------------------------\n");
-                    work_space_size =
-                        ocp_qp_hpmpc_workspace_size_bytes(N, (int_t *)qp_in.nx, (int_t *)qp_in.nu,
-                        (int_t *)qp_in.nb, (int_t *)qp_in.nc, (int_t **)qp_in.idxb, &hpmpc_args);
-                    // printf("\nwork space size: %d bytes\n", work_space_size);
-                    hpmpc_work = (void*)malloc(work_space_size);
-                    return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, hpmpc_work);
-                    free(hpmpc_work);
+                    return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, work);
                 }
 
                 printf("\n>>>>>>>>>>> RETURN VALUE = %d\n\n", return_value);
@@ -161,6 +183,7 @@ int_t main( ) {
                 free_ocp_qp_out(&qp_out);
                 free(sol);
             }
+            free(work);
         }
     }
     printf(" >>>>>>>>>>>>>> AWESOME! <<<<<<<<<<<<<<<<\n\n");

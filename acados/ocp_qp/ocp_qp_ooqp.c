@@ -29,7 +29,7 @@
 // #include "blasfeo/include/blasfeo_d_aux.h"
 // #include "blasfeo/include/blasfeo_i_aux.h"
 
-#define TIMINGS 2  // 0: do not print any timings inside here
+#define TIMINGS 0  // 0: do not print any timings inside here
                    // 1: print only time to solve QP
                    // 2: print detailed timings
 
