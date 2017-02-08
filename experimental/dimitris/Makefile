@@ -1,3 +1,5 @@
+OS := $(shell uname)
+
 ACADOS=$(abspath ../../)
 ACADOS_EXT=$(ACADOS)/external
 
@@ -23,8 +25,12 @@ LDFLAGS+=-L$(HPMPCLIBDIR)
 
 BLAS     = -lblas
 MA27LIB  = $(OOQP)/libma27.a
-# FLIBS    = -lgfortran
-FLIBS = /usr/local/lib/gcc/6/libgfortran.dylib
+ifeq ($(OS), Darwin)
+	FLIBS = /usr/local/lib/gcc/6/libgfortran.dylib
+else
+	FLIBS = -lgfortran
+endif
+
 OOQP_SPARSE_LIBS = -looqpgensparse -looqpsparse  -looqpgondzio -looqpbase \
                  $(BLAS) $(MA27LIB) $(FLIBS)
 
@@ -43,8 +49,8 @@ ooqp: test_qp.c
 	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 -DSOLVER=1 test_qp.c -o test_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
 	g++ -g -O0 ocp_qp_ooqp.o timing.o allocate_ocp_qp.o read_ocp_qp_in.o test_qp.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
-	# valgrind --leak-check=full ./test_qp.exe
-	./test_qp.exe
+	valgrind --leak-check=full ./test_qp.exe
+	# ./test_qp.exe
 
 qpoases: test_qp.c
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_condensing_qpoases.c -o ocp_qp_condensing_qpoases.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPOASESINCLUDEDIR)
@@ -55,7 +61,7 @@ qpoases: test_qp.c
 	gcc -g -O0 ocp_qp_condensing.o ocp_qp_condensing_qpoases.o allocate_ocp_qp.o read_ocp_qp_in.o test_qp.o -o test_qp.exe $(LDFLAGS) $(LIBS)
 	valgrind --leak-check=full ./test_qp.exe
 
-hpmpc: test_qp.c # TODO FIX!
+hpmpc: test_qp.c # TODO FIX FOR MAC!
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_hpmpc.c -o ocp_qp_hpmpc.o -I$(ACADOS_EXT) -I$(ACADOS)
 	gcc -c -g -O0 ../../acados/utils/allocate_ocp_qp.c -o allocate_ocp_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)

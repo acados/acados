@@ -37,6 +37,11 @@ int_t main( ) {
     args.printLevel = 0;
     args.workspaceMode = OOQP_WORK;
     args.fixHessian = 0;
+    args.fixHessianSparsity = 0;
+    args.fixDynamics = 0;
+    args.fixDynamicsSparsity = 0;
+    args.fixInequalities = 0;
+    args.fixInequalitiesSparsity = 0;
     #elif SOLVER == 2
     ocp_qp_condensing_qpoases_args args;
     args.dummy = 42;

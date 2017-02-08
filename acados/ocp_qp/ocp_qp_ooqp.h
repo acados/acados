@@ -30,9 +30,13 @@ extern "C" {
 typedef struct ocp_qp_ooqp_args_ {
     int_t printLevel;
     int_t workspaceMode;        // EXPERIMENTAL: 1 for structs, 2 for chunk of memory
+    int_t useDiagonalWeights;   // TODO(dimitris): implement option
     int_t fixHessian;
     int_t fixHessianSparsity;
-    int_t useDiagonalWeights;   // TODO(dimitris): implement option
+    int_t fixDynamics;
+    int_t fixDynamicsSparsity;
+    int_t fixInequalities;
+    int_t fixInequalitiesSparsity;
 } ocp_qp_ooqp_args;
 
 typedef struct ocp_qp_ooqp_workspace_ {
