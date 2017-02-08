@@ -46,15 +46,15 @@ static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *c
     qp->R = (const real_t **) malloc(sizeof(*qp->R) * N);
     qp->q = (const real_t **) malloc(sizeof(*qp->q) * (N+1));
     qp->r = (const real_t **) malloc(sizeof(*qp->r) * N);
-    for (int_t ii = 0; ii < N; ii++) {
-        d_zeros((real_t **) &qp->A[ii], nx[ii], nx[ii]);
-        d_zeros((real_t **) &qp->B[ii], nx[ii], nu[ii]);
-        d_zeros((real_t **) &qp->b[ii], nx[ii], 1);
-        d_zeros((real_t **) &qp->Q[ii], nx[ii], nx[ii]);
-        d_zeros((real_t **) &qp->S[ii], nu[ii], nx[ii]);
-        d_zeros((real_t **) &qp->R[ii], nu[ii], nu[ii]);
-        d_zeros((real_t **) &qp->q[ii], nx[ii], 1);
-        d_zeros((real_t **) &qp->r[ii], nu[ii], 1);
+    for (int_t i = 0; i < N; i++) {
+        d_zeros((real_t **) &qp->A[i], nx[i], nx[i]);
+        d_zeros((real_t **) &qp->B[i], nx[i], nu[i]);
+        d_zeros((real_t **) &qp->b[i], nx[i], 1);
+        d_zeros((real_t **) &qp->Q[i], nx[i], nx[i]);
+        d_zeros((real_t **) &qp->S[i], nu[i], nx[i]);
+        d_zeros((real_t **) &qp->R[i], nu[i], nu[i]);
+        d_zeros((real_t **) &qp->q[i], nx[i], 1);
+        d_zeros((real_t **) &qp->r[i], nu[i], 1);
     }
     d_zeros((real_t **) &qp->Q[N], nx[N], nx[N]);
     d_zeros((real_t **) &qp->q[N], nx[N], 1);
@@ -99,19 +99,19 @@ static void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
     qp-> N = N;
     memcpy((void *) qp->nb, (void *) nb, sizeof(*nb)*(N+1));
 
-    for (int_t ii = 0; ii <= N; ii++) {
-        int_zeros((int_t **) &qp->idxb[ii], nb[ii], 1);
-        d_zeros((real_t **) &qp->lb[ii], nb[ii], 1);
-        d_zeros((real_t **) &qp->ub[ii], nb[ii], 1);
+    for (int_t i = 0; i <= N; i++) {
+        int_zeros((int_t **) &qp->idxb[i], nb[i], 1);
+        d_zeros((real_t **) &qp->lb[i], nb[i], 1);
+        d_zeros((real_t **) &qp->ub[i], nb[i], 1);
     }
 }
 
 
 static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
-    for (int_t ii = 0; ii < qp->N+1; ii++) {
-        d_free((real_t*)qp->lb[ii]);
-        d_free((real_t*)qp->ub[ii]);
-        int_free((int_t*)qp->idxb[ii]);
+    for (int_t i = 0; i < qp->N+1; i++) {
+        d_free((real_t*)qp->lb[i]);
+        d_free((real_t*)qp->ub[i]);
+        int_free((int_t*)qp->idxb[i]);
     }
     free((real_t**)qp->lb);
     free((real_t**)qp->ub);
@@ -128,21 +128,21 @@ static void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const q
     qp-> N = N;
     memcpy((void *) qp->nc, (void *) nc, sizeof(*nc)*(N+1));
 
-    for (int_t ii = 0; ii <= N; ii++) {
-        d_zeros((real_t **) &qp->lc[ii], nc[ii], 1);
-        d_zeros((real_t **) &qp->uc[ii], nc[ii], 1);
-        d_zeros((real_t **) &qp->Cx[ii], nc[ii], qp->nx[ii]);
-        if (ii < N) d_zeros((real_t **) &qp->Cu[ii], nc[ii], qp->nu[ii]);
+    for (int_t i = 0; i <= N; i++) {
+        d_zeros((real_t **) &qp->lc[i], nc[i], 1);
+        d_zeros((real_t **) &qp->uc[i], nc[i], 1);
+        d_zeros((real_t **) &qp->Cx[i], nc[i], qp->nx[i]);
+        if (i < N) d_zeros((real_t **) &qp->Cu[i], nc[i], qp->nu[i]);
     }
 }
 
 
 static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
-    for (int_t ii = 0; ii < qp->N; ii++) {
-        d_free((real_t*)qp->lc[ii]);
-        d_free((real_t*)qp->uc[ii]);
-        d_free((real_t*)qp->Cx[ii]);
-        d_free((real_t*)qp->Cu[ii]);
+    for (int_t i = 0; i < qp->N; i++) {
+        d_free((real_t*)qp->lc[i]);
+        d_free((real_t*)qp->uc[i]);
+        d_free((real_t*)qp->Cx[i]);
+        d_free((real_t*)qp->Cu[i]);
     }
     d_free((real_t*)qp->lc[qp->N]);
     d_free((real_t*)qp->uc[qp->N]);

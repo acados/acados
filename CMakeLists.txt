@@ -5,8 +5,8 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fdiagnostics-show-option")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fdiagnostics-show-option -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -53,6 +53,7 @@ include(external/openblas)
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
+add_subdirectory(swig)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     include(external/ma27)
@@ -102,7 +103,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_custom_target(generate_test_data
         DEPENDS ${UNIT_TESTS_SRC_CASADI}
         COMMENT "Checking if regeneration of test data is needed")
-    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
+    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
@@ -115,6 +116,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 endif()
 
 # Linter
+find_package(PythonInterp 3 REQUIRED)
 set(FIND_FILES_TO_LINT find acados test examples swig -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.i" )
 set(FIND_FILES_TO_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_FILES_TO_LINT})
 execute_process(COMMAND ${FIND_FILES_TO_LINT} OUTPUT_VARIABLE FILES_TO_LINT)
