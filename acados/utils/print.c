@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "acados/utils/print.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
     const int_t ncols) {
@@ -99,28 +98,19 @@ void print_int_array(char *file_name, const int_t *array, int_t size) {
 // Read space delimited file into column-major matrix
 void read_matrix(const char *file_name, real_t* array, const int_t nrows,
         const int_t ncols) {
-    double *buff;
-    d_zeros(&buff, ncols*nrows, 1);
     FILE *file;
     file = fopen(file_name, "r");
 
     // Read numbers from file into buffer.
     for (int i = 0; i < nrows; i++) {
         for (int j = 0; j < ncols; j++) {
-            if (!fscanf(file, "%lf", &buff[ ncols*i+j ])) {
+            if (!fscanf(file, "%lf", &array[nrows*j+i])) {
                 break;
             }
         }
     }
 
     fclose(file);
-
-    // Populate matrix with numbers.
-    for (int i = 0; i < nrows; i++) {
-        for (int j = 0; j < ncols; j++) {
-            array[ nrows*j+i ] = buff[ ncols*i+j ];
-        }
-    }
 }
 
 
