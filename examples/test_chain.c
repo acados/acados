@@ -184,7 +184,6 @@ int main() {
     // TODO(rien): can I move this somewhere inside the integrator?
     struct d_strmat str_mat[NN];
     struct d_strmat str_sol[NN];
-    struct d_strmat str_sol_t[NN];
 
     for (jj = 0; jj < NN; jj++) {
         sim_in[jj].nSteps = 2;
@@ -246,7 +245,6 @@ int main() {
 
         irk_work[jj].str_mat = &str_mat[jj];
         irk_work[jj].str_sol = &str_sol[jj];
-        irk_work[jj].str_sol_t = &str_sol_t[jj];
         if (implicit > 0) {
             sim_irk_create_opts(implicit, "Gauss", &rk_opts[jj]);
 

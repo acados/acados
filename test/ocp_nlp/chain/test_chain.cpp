@@ -89,7 +89,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         // TODO(rien): can I move this somewhere inside the integrator?
         struct d_strmat str_mat[NN];
         struct d_strmat str_sol[NN];
-        struct d_strmat str_sol_t[NN];
 
         for (jj = 0; jj < NN; jj++) {
             integrators[jj].in = &sim_in[jj];
@@ -146,7 +145,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
             irk_work[jj].str_mat = &str_mat[jj];
             irk_work[jj].str_sol = &str_sol[jj];
-            irk_work[jj].str_sol_t = &str_sol_t[jj];
             if (d > 0) {
                 sim_irk_create_opts(d, "Gauss", &rk_opts[jj]);
 
