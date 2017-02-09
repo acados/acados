@@ -20,8 +20,6 @@
 #ifndef ACADOS_OCP_QP_OCP_QP_OOQP_H_
 #define ACADOS_OCP_QP_OCP_QP_OOQP_H_
 
-void doubleLexSortC(int first[], int n, int second[], double data[]);
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,9 +29,14 @@ extern "C" {
 
 typedef struct ocp_qp_ooqp_args_ {
     int_t printLevel;
-    int_t fixHessianSparsity;   // TODO(dimitris): implement option
-    int_t fixHessianValues;     // TODO(dimitris): implement option
+    int_t workspaceMode;        // EXPERIMENTAL: 1 for structs, 2 for chunk of memory
     int_t useDiagonalWeights;   // TODO(dimitris): implement option
+    int_t fixHessian;
+    int_t fixHessianSparsity;
+    int_t fixDynamics;
+    int_t fixDynamicsSparsity;
+    int_t fixInequalities;
+    int_t fixInequalitiesSparsity;
 } ocp_qp_ooqp_args;
 
 typedef struct ocp_qp_ooqp_workspace_ {
@@ -55,6 +58,7 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t *irowQ;
     int_t nnzQ;
     int_t *jcolQ;
+    int_t *orderQ;
     real_t *dQ;
     real_t *xlow;
     char *ixlow;
@@ -63,23 +67,25 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t *irowA;
     int_t nnzA;
     int_t *jcolA;
+    int_t *orderA;
     real_t *dA;
     real_t *bA;
     int_t my;
     int_t *irowC;
     int_t nnzC;
     int_t *jcolC;
+    int_t *orderC;
     real_t *dC;
     real_t *clow;
     int_t mz;
     char *iclow;
     real_t *cupp;
     char *icupp;
-    int_t print_level;
 } ocp_qp_ooqp_memory;
 
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *input,  void *args_,  void *work_);
+int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_);
 
 void ocp_qp_ooqp_free_memory(void *mem_);
 void ocp_qp_ooqp_free_workspace(void *work_);
