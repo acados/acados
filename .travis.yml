@@ -70,5 +70,5 @@ script:
   - pushd test
   - ./unit_tests
   - popd
-  - pushd swig
+  - pushd $VIRTUAL_ENV
   - python3 test_swig.py
