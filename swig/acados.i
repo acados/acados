@@ -454,55 +454,11 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
     $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nc);
 }
 
-%typemap(in) const real_t ** x {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nx);
-}
-
-%typemap(out) const real_t ** x {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nx);
-}
-
-%typemap(in) const real_t ** u {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nu);
-}
-
-%typemap(out) const real_t ** u {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nu);
-}
-
-%typemap(in) const real_t ** pi {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N, &arg1->nx[1]);
-}
-
-%typemap(out) const real_t ** pi {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N, &arg1->nx[1]);
-}
-
-%typemap(in) const real_t ** lam {
-    $1 = ($1_ltype) arg1->$1_name;
-    int_t dim_lam[N+1];
-    for (size_t i = 0; i < N+1; i++) {
-        dim_lam[i] = 2*arg1->nb[i] + 2*arg1->nc[i];
-    }
-    convert_to_1dim_c_array($input, $1, arg1->N+1, dim_lam);
-}
-
-%typemap(out) const real_t ** lam {
-    int_t dim_lam[N+1];
-    for (size_t i = 0; i < N+1; i++) {
-        dim_lam[i] = 2*arg1->nb[i] + 2*arg1->nc[i];
-    }
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, dim_lam);
-}
-
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
     ocp_qp_in(PyObject *dictionary) {
-        ocp_qp_in *qp = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
+        ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_qp_dictionary(dictionary)) {
             SWIG_Error(SWIG_ValueError, "Input must be a dictionary");
         }
@@ -512,8 +468,38 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
         read_array_from_dictionary(dictionary, "nu", nu, N);
         read_array_from_dictionary(dictionary, "nb", nb, N+1);
         read_array_from_dictionary(dictionary, "nc", nc, N+1);
-        allocate_ocp_qp_in(N, nx, nu, nb, nc, qp);
-        return qp;
+        allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        return qp_in;
+    }
+}
+
+%extend ocp_qp_solver {
+    ocp_qp_solver(const char *solver_name, ocp_qp_in *qp_in) {
+        ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
+        if (strcmp(solver_name, "condensing_qpoases")) {
+            SWIG_Error(SWIG_ValueError, "Solver name not known!");
+            return NULL;
+        }
+        solver->fun = ocp_qp_condensing_qpoases;
+        solver->qp_in = qp_in;
+        ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
+        allocate_ocp_qp_out(qp_in, qp_out);
+        solver->qp_out = qp_out;
+        ocp_qp_condensing_qpoases_args *args = \
+            (ocp_qp_condensing_qpoases_args *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
+        solver->mem = args;
+        real_t *qpoases_work = NULL;
+        solver->work = qpoases_work;
+        initialise_qpoases(qp_in);
+        return solver;
+    }
+    PyObject *solve() {
+        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->mem, $self->work);
+        if (return_code != 0) {
+            SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
+        }
+        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
+            $self->qp_in->N+1, $self->qp_in->nx);
     }
 }
 

@@ -13,7 +13,7 @@ env:
 addons:
   apt:
     sources:
-    - llvm-toolchain-precise-3.7
+    - llvm-toolchain-trusty-3.7
     - ubuntu-toolchain-r-test
     packages:
       - libgsl0-dev
@@ -66,6 +66,7 @@ script:
   - make
   - make lint
   - make unit_tests
+  - make install
   - pushd test
   - ./unit_tests
   - popd

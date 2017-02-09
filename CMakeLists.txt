@@ -30,6 +30,15 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     enable_testing(true)
 endif()
 
+set(VIRTUAL_ENV $ENV{VIRTUAL_ENV})
+if(VIRTUAL_ENV)
+    set(CMAKE_INSTALL_PREFIX ${VIRTUAL_ENV})
+    message(STATUS "Detected a python virtualenv in use, setting install prefix to ${VIRTUAL_ENV}")
+else(VIRTUAL_ENV)
+    set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/swig )
+    message(STATUS "Setting install prefix to ${CMAKE_INSTALL_PREFIX}")
+endif(VIRTUAL_ENV)
+
 # Define include folders
 include_directories("${PROJECT_SOURCE_DIR}")
 include_directories("${PROJECT_SOURCE_DIR}/external/")
