@@ -89,6 +89,62 @@ void get_Gauss_nodes(const int_t num_stages, real_t *nodes) {
 //    free(der_lgvm);
 }
 
+void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
+    real_t D[2*num_stages];
+    real_t T[num_stages*num_stages];
+    char simplified[80];
+    int_t *perm;
+    real_t *T_inv;
+
+    snprintf(simplified, 80, "simplified/GL%d_simpl_%s.dat", 2*num_stages, "D");
+    read_matrix(simplified, D, num_stages, 2);
+
+    snprintf(simplified, 80, "simplified/GL%d_simpl_%s.dat", 2*num_stages, "T");
+    read_matrix(simplified, T, num_stages, num_stages);
+
+//    print_matrix("stdout", D, num_stages, 2);
+//    print_matrix("stdout", T, num_stages, num_stages);
+
+    scheme->single = false;
+    scheme->low_tria = 0;
+    for (int_t i = 0; i < num_stages; i++) {
+        scheme->eig[i] = D[i];
+    }
+    for (int_t i = 0; i < num_stages*num_stages; i++) {
+        scheme->transf2[i] = T[i];
+    }
+
+    int_zeros(&perm, num_stages, 1);
+    d_zeros(&T_inv, num_stages, num_stages);
+    for (int_t i = 0; i < num_stages; i++) {
+        T_inv[i*(num_stages+1)] = 1.0;
+    }
+    LU_system_solve(T, T_inv, perm, num_stages, num_stages);
+    for (int_t i = 0; i < num_stages; i++) {
+        if ((i+1) < num_stages) {  // complex conjugate pair of eigenvalues
+            for (int_t i1 = i; i1 < i+2; i1++) {
+                for (int_t i2 = 0; i2 < num_stages; i2++) {
+                    scheme->transf1[i2*num_stages+i1] = 0.0;
+                    for (int_t i3 = 0; i3 < 2; i3++) {
+                        scheme->transf1[i2*num_stages+i1] +=
+                                D[i3*num_stages+i1]*T_inv[i2*num_stages+i+i3];
+                    }
+                }
+            }
+            i++;
+        } else {  // real eigenvalue
+            for (int_t i2 = 0; i2 < num_stages; i2++) {
+                scheme->transf1[i2*num_stages+i] = D[i]*T_inv[i2*num_stages+i];
+            }
+        }
+    }
+
+//    print_matrix("stdout", scheme->transf1, num_stages, num_stages);
+//    print_matrix("stdout", T_inv, 1, 1);
+//    print_matrix("stdout", scheme->transf2, num_stages, num_stages);
+//    print_matrix("stdout", T_inv, 1, 1);
+}
+
 
 void create_Butcher_table(const int_t num_stages, const real_t *nodes,
         real_t *b, real_t *A) {
