@@ -24,5 +24,5 @@ set_source_files_properties(acados.i  PROPERTIES  CPLUSPLUS ON)
 swig_add_module(acados python acados.i)
 swig_link_libraries(acados ${PYTHON_LIBRARIES} acados blasfeo)
 
-file(COPY test.py DESTINATION ${PROJECT_BINARY_DIR}/swig)
+file(COPY test_swig.py DESTINATION ${PROJECT_BINARY_DIR}/swig)
 file(COPY list_of_arrays.py DESTINATION ${PROJECT_BINARY_DIR}/swig)
