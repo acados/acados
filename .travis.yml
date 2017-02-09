@@ -27,7 +27,7 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
-      - python3-pip
+      - python3-numpy
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
