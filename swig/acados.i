@@ -15,8 +15,6 @@
 import_array();
 %}
 
-%include "acados/utils/types.h"
-
 %{
 static bool is_valid_integer(PyObject *input) {
     if (!PyInt_Check(input))
@@ -136,19 +134,38 @@ static void convert_to_c_array(PyObject *input, int_t * const array, const int_t
     }
 }
 
-static PyObject *convert_to_sequence_of_2dim_arrays(real_t **c_array,
+template<typename T>
+int_t get_numpy_type() {
+    if (typeid(T) == typeid(real_t))
+        return NPY_DOUBLE;
+    else if (typeid(T) == typeid(int_t))
+        return NPY_INT;
+    else
+        return NPY_NOTYPE;
+}
+
+template<typename T>
+static PyObject *convert_to_sequence_of_2dim_arrays(T **c_array,
     const int_t length, const int_t *dimensions1, const int_t *dimensions2) {
 
-    PyObject *sequence = PyList_New(length);
+    PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
+    PyObject *pDict = PyModule_GetDict(pModule);
+    PyObject *pClass = PyDict_GetItemString(pDict, "list_of_arrays");
+    PyObject *sequence;
+    if (PyCallable_Check(pClass)) {
+        sequence = PyObject_CallObject(pClass, NULL);
+    }
     for (int_t i = 0; i < length; i++) {
         npy_intp dims[2] = {dimensions1[i], dimensions2[i]};
-        PyObject *py_array = PyArray_SimpleNewFromDataF(2, dims, NPY_DOUBLE, (void*) c_array[i]);
-        PyList_SetItem(sequence, i, py_array);
+        PyObject *py_array = PyArray_SimpleNewFromDataF(2, dims, get_numpy_type<T>(), \
+            (void*) c_array[i]);
+        PyList_Append(sequence, py_array);
     }
     return sequence;
 }
 
-static PyObject *convert_to_sequence_of_1dim_arrays(real_t **c_array,
+template<typename T>
+static PyObject *convert_to_sequence_of_1dim_arrays(T **c_array,
     const int_t length, const int_t *dimensions) {
 
     PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
@@ -160,16 +177,23 @@ static PyObject *convert_to_sequence_of_1dim_arrays(real_t **c_array,
     }
     for (int_t i = 0; i < length; i++) {
         npy_intp dims[1] = {dimensions[i]};
-        PyArrayObject *py_array = (PyArrayObject *) PyArray_SimpleNewFromDataF(1, \
-            dims, NPY_DOUBLE, (void*) c_array[i]);
-        PyList_Append(sequence, (PyObject *) py_array);
+        PyObject *py_array = PyArray_SimpleNewFromDataF(1, dims, get_numpy_type<T>(), \
+            (void*) c_array[i]);
+        PyList_Append(sequence, py_array);
     }
     return sequence;
 }
 
+template<typename T>
+static PyArrayObject *array_with_type(PyObject *input) {
+    PyArrayObject *f_array = (PyArrayObject *) PyArray_FROM_OF(input, NPY_ARRAY_F_CONTIGUOUS);
+    PyObject *obj = PyArray_Cast(f_array, get_numpy_type<T>());
+    return reinterpret_cast<PyArrayObject *>(obj);
+}
+
+template<typename T>
 static PyArrayObject *object_to_2dim_array(PyObject *input, int_t dim1, int_t dim2) {
-    PyObject *obj = PyArray_FROM_OTF(input, NPY_DOUBLE, NPY_ARRAY_F_CONTIGUOUS);
-    PyArrayObject *input_array = reinterpret_cast<PyArrayObject *>(obj);
+    PyArrayObject *input_array = array_with_type<T>(input);
     if (PyArray_NDIM(input_array) != 2) {
         SWIG_Error(SWIG_ValueError, "Expected a 2D array as input");
     }
@@ -180,9 +204,9 @@ static PyArrayObject *object_to_2dim_array(PyObject *input, int_t dim1, int_t di
     return input_array;
 }
 
+template<typename T>
 static PyArrayObject *object_to_1dim_array(PyObject *input, int_t dim) {
-    PyObject *obj = PyArray_FROM_OTF(input, NPY_DOUBLE, NPY_ARRAY_F_CONTIGUOUS);
-    PyArrayObject *input_array = reinterpret_cast<PyArrayObject *>(obj);
+    PyArrayObject *input_array = array_with_type<T>(input);
     if (PyArray_NDIM(input_array) != 1) {
         SWIG_Error(SWIG_ValueError, "Expected a 1D array as input");
     }
@@ -200,10 +224,9 @@ static void convert_to_2dim_c_array(PyObject * const input, T ** const array,
     if (is_valid_2dim_array(input)) {
         int_t dim1 = dimensions1[0];
         int_t dim2 = dimensions2[0];
-        PyArrayObject *input_array = object_to_2dim_array(input, dim1, dim2);
+        PyArrayObject *input_array = object_to_2dim_array<T>(input, dim1, dim2);
         for (int_t i = 0; i < length_of_array; i++) {
-            memcpy((void *) array[i], (real_t *) array_data(input_array), \
-                dim1*dim2*sizeof(real_t));
+            memcpy((void *) array[i], (T *) array_data(input_array), dim1*dim2*sizeof(T));
         }
     } else if (is_sequence_with_length(input, length_of_array)) {
         for (int_t i = 0; i < length_of_array; i++) {
@@ -211,9 +234,8 @@ static void convert_to_2dim_c_array(PyObject * const input, T ** const array,
             if (is_valid_2dim_array(item)) {
                 int_t dim1 = dimensions1[i];
                 int_t dim2 = dimensions2[i];
-                PyArrayObject *input_array = object_to_2dim_array(item, dim1, dim2);
-                memcpy((void *) array[i], (real_t *) array_data(input_array), \
-                    dim1*dim2*sizeof(real_t));
+                PyArrayObject *input_array = object_to_2dim_array<T>(item, dim1, dim2);
+                memcpy((void *) array[i], (T *) array_data(input_array), dim1*dim2*sizeof(T));
             }
         }
     } else {
@@ -226,18 +248,16 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
     const int_t length_of_array, const int_t *dimensions) {
 
     if (is_valid_1dim_array(input)) {
-        PyArrayObject *input_array = object_to_1dim_array(input, dimensions[0]);
+        PyArrayObject *input_array = object_to_1dim_array<T>(input, dimensions[0]);
         for (int_t i = 0; i < length_of_array; i++) {
-            memcpy((void *) array[i], (real_t *) array_data(input_array), \
-                dimensions[0]*sizeof(real_t));
+            memcpy((void *) array[i], (T *) array_data(input_array), dimensions[0]*sizeof(T));
         }
     } else if (is_sequence_with_length(input, length_of_array)) {
         for (int_t i = 0; i < length_of_array; i++) {
             PyObject *item = PySequence_GetItem(input, i);
             if (is_valid_1dim_array(item)) {
-                PyArrayObject *input_array = object_to_1dim_array(item, dimensions[i]);
-                memcpy((void *) array[i], (real_t *) array_data(input_array), \
-                    dimensions[i]*sizeof(real_t));
+                PyArrayObject *input_array = object_to_1dim_array<T>(item, dimensions[i]);
+                memcpy((void *) array[i], (T *) array_data(input_array), dimensions[i]*sizeof(T));
             }
         }
     } else {
@@ -258,6 +278,10 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
 }
 
 %}
+
+%typemap(in) const int_t N {
+    SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
+}
 
 %typemap(in) const int_t * nx {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of state vector");
@@ -363,6 +387,15 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
     $result = convert_to_sequence_of_1dim_arrays($1, arg1->N, arg1->nu);
 }
 
+%typemap(in) const int_t ** idxb {
+    $1 = ($1_ltype) arg1->$1_name;
+    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nb);
+}
+
+%typemap(out) const int_t ** idxb {
+    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nb);
+}
+
 %typemap(in) const real_t ** lb {
     $1 = ($1_ltype) arg1->$1_name;
     convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nb);
@@ -421,10 +454,10 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
 
 %extend ocp_qp_in {
     ocp_qp_in(PyObject *dictionary) {
+        ocp_qp_in *qp = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_qp_dictionary(dictionary)) {
             SWIG_Error(SWIG_ValueError, "Input must be a dictionary");
         }
-        ocp_qp_in *qp = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
         int_t nx[N+1], nu[N], nb[N+1], nc[N+1];
         read_array_from_dictionary(dictionary, "nx", nx, N+1);

@@ -19,6 +19,10 @@ find_package(NumPy REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
 make_directory(${PROJECT_BINARY_DIR}/python/acados)
 set_source_files_properties(acados.i  PROPERTIES  CPLUSPLUS ON)
-set(CMAKE_SWIG_FLAGS "-debug-tmused")
+# SWIG typemaps debug flag
+# set(CMAKE_SWIG_FLAGS "-debug-tmused")
 swig_add_module(acados python acados.i)
 swig_link_libraries(acados ${PYTHON_LIBRARIES} acados blasfeo)
+
+file(COPY test.py DESTINATION ${PROJECT_BINARY_DIR}/swig)
+file(COPY list_of_arrays.py DESTINATION ${PROJECT_BINARY_DIR}/swig)

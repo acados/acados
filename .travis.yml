@@ -63,5 +63,8 @@ script:
   - make
   - make lint
   - make unit_tests
-  - cd test
+  - pushd test
   - ./unit_tests
+  - popd
+  - pushd swig
+  - python3 test.py
