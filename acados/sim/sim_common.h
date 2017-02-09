@@ -60,6 +60,8 @@ typedef struct sim_out_ {
     real_t *S_adj;      //
     real_t *S_hess;     //
 
+    real_t *grad;       // gradient correction
+
     sim_info *info;
 } sim_out;
 
