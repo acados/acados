@@ -230,6 +230,8 @@ static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u,
         // TODO(robin): this only holds for MPC, not MHE
         // for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
     }
+
+    // TODO(rien): recover multipliers
 }
 
 static void convert_to_row_major(const real_t *input, real_t *output, const int_t nrows,
