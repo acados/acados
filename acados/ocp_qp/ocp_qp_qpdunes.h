@@ -34,6 +34,7 @@ typedef struct ocp_qp_qpdunes_args_ {
 
 typedef struct ocp_qp_qpdunes_workspace_ {
     real_t *transMatrixScrap;
+    int tmp;
 } ocp_qp_qpdunes_workspace;
 
 typedef struct ocp_qp_qpdunes_memory_ {

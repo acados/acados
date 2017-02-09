@@ -60,6 +60,11 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     include(external/ooqp)
 endif ()
 
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/qpDUNES)
+    include(external/qpdunes)
+    include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES/include/")
+endif ()
+
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
 add_dependencies(acados qpoases hpmpc blasfeo)
@@ -67,6 +72,10 @@ add_dependencies(acados qpoases hpmpc blasfeo)
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(ooqpbase ma27)
     add_dependencies(acados ooqpbase)
+endif ()
+
+if (EXISTS ${PROJECT_SOURCE_DIR}/external/qpDUNES)
+    add_dependencies(acados qpdunes)
 endif ()
 
 # Define examples

@@ -147,7 +147,11 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, vo
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *) work_;
-    int_t return_value;
+    int_t return_value = 0;
+
+    // dummy commands
+    if (mem->firstRun || args->options.logLevel == 1) work->tmp = 31;
+    if (in->nx[0] == 1) out->x[0][0] = 1;
 
     return return_value;
 }
