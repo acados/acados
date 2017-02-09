@@ -51,16 +51,9 @@ int main(int argc, char const *argv[]) {
 
     qpData = qpdunes_mem.qpData;
 
-    // TODO(dimitris): check isLTI flag
-    statusFlag = qpDUNES_setupAllLocalQPs(&qpData, isLTI=QPDUNES_FALSE); /* determine local QP solvers and set up auxiliary data */
-	if (statusFlag != QPDUNES_OK)
-	{
-		printf("Setup of qpDUNES failed on initialization of stage QPs\n");
-		return (int)statusFlag;
-	}
-
     /* solve problem */
-	statusFlag = qpDUNES_solve(&qpData);
+    printf("BEFORE SOLVE\n---------------------------------------------------------");
+	statusFlag = qpDUNES_solve(&(qpdunes_mem.qpData));
 	if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
 	{
 		printf("qpDUNES failed to solve the QP. Error code: %d\n", statusFlag);
@@ -90,12 +83,6 @@ int main(int argc, char const *argv[]) {
 
     ooqp_args.workspaceMode = 2;
     ooqp_args.printLevel = 0;
-    ooqp_args.fixHessian = 0;
-    ooqp_args.fixHessianSparsity = 0;
-    ooqp_args.fixDynamics = 0;
-    ooqp_args.fixDynamicsSparsity = 0;
-    ooqp_args.fixInequalities = 0;
-    ooqp_args.fixInequalitiesSparsity = 0;
 
     ocp_qp_ooqp_create_memory(&qp_in, &ooqp_args, &ooqp_mem);
     int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &ooqp_args);
