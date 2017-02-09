@@ -55,14 +55,15 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
     int_t nD = 0;  // number of ineq. constraints has to be zero
     real_t *zLow, *zUpp, *g;
 
+    N = in->N;
+    nx = in->nx[0];
+    nu = in->nu[0];
+
     zLow = (real_t*)malloc(sizeof(real_t)*(nx + nu));
     zUpp = (real_t*)malloc(sizeof(real_t)*(nx + nu));
     g = (real_t*)malloc(sizeof(real_t)*(nx + nu));
 
     /* Check for constant dimensions and conditions for qpDUNES+clipping */
-    N = in->N;
-    nx = in->nx[0];
-    nu = in->nu[0];
     for (kk = 1; kk < N; kk++) {
         if ((nx != in->nx[kk]) || (nu != in->nu[kk])) {
             printf("\nqpDUNES does not support varying dimensions!");
@@ -79,7 +80,6 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         return -1;
     }
 
-    printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ALLOCATING MEMORY <<<<<<<<<<<\n");
     /* memory allocation */
     return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
     if (return_value != QPDUNES_OK) {
@@ -104,7 +104,6 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         // TODO(dimitris): copy it somewhere else instead of changing qp_in!!
         transpose_matrix((real_t*)in->A[kk], nx, nx);
         transpose_matrix((real_t*)in->B[kk], nx, nu);
-        printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SETTING INTERVAL %d <<<<<<<<<<<\n", kk);
         return_value = qpDUNES_setupRegularInterval(&(mem->qpData), mem->qpData.intervals[kk], 0,
             in->Q[kk], in->R[kk], 0, g, 0, in->A[kk], in->B[kk], in->b[kk], zLow, zUpp, 0, 0, 0, 0,
             0, 0, 0);
@@ -123,7 +122,6 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         zLow[in->idxb[N][ii]] = in->lb[N][ii];
         zUpp[in->idxb[N][ii]] = in->ub[N][ii];
     }
-    printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SETTING LAST INTERVAL  <<<<<<<<<<<\n");
     return_value =  qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N], in->Q[N],
     in->q[N], zLow, zUpp, 0, 0, 0);
 
@@ -134,14 +132,12 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
 
     /* setup of stage QPs */
     // TODO(dimitris): check isLTI flag
-    printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SETTING STAGE QPS <<<<<<<<<<<\n");
-    return_value = qpDUNES_setupAllLocalQPs(&(mem->qpData), isLTI=QPDUNES_FALSE);
-	if (return_value != QPDUNES_OK) {
-		printf("Setup of qpDUNES failed on initialization of stage QPs\n");
-		return (int)return_value;
-	}
+    return_value = qpDUNES_setupAllLocalQPs(&(mem->qpData), isLTI = QPDUNES_FALSE);
+    if (return_value != QPDUNES_OK) {
+        printf("Setup of qpDUNES failed on initialization of stage QPs\n");
+        return (int)return_value;
+    }
 
-    printf("\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> DONE <<<<<<<<<<<\n");
     free(zLow); free(zUpp); free(g);
 
     return return_value;

@@ -22,7 +22,6 @@ int main(int argc, char const *argv[]) {
     qpData_t qpData;
     boolean_t isLTI;
     qpOptions_t qpOptions = qpDUNES_setupDefaultOptions();
-    real_t *zLow, *zUpp, *g;
 
     ocp_qp_qpdunes_args qpdunes_args;
     ocp_qp_qpdunes_memory qpdunes_mem;
@@ -72,10 +71,8 @@ int main(int argc, char const *argv[]) {
 
 	qpDUNES_cleanup( &qpData );
 
-    // qpDUNES_printf("Default iterations: %d", qpOptions.maxIter);
-    free(zLow); free(zUpp); free(g);
-
     // --------------> SOLVE WITH OOQP TO COMPARE
+    free_ocp_qp_in(&qp_in);
     read_ocp_qp_in(&qp_in, test_problem, BOUNDS, CONSTRAINTS, MPC, QUIET);
 
     ocp_qp_ooqp_args ooqp_args;
