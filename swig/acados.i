@@ -4,6 +4,7 @@
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
         PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
                     data, 0, NPY_ARRAY_FARRAY, NULL)
+#include <typeinfo>
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/allocate_ocp_qp.h"
@@ -140,8 +141,7 @@ int_t get_numpy_type() {
         return NPY_DOUBLE;
     else if (typeid(T) == typeid(int_t))
         return NPY_INT;
-    else
-        return NPY_NOTYPE;
+    return NPY_NOTYPE;
 }
 
 template<typename T>

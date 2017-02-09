@@ -67,5 +67,4 @@ script:
   - ./unit_tests
   - popd
   - pushd swig
-  - ls -la
   - python3 test_swig.py
