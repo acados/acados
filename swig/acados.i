@@ -7,6 +7,7 @@
 #include <typeinfo>
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/utils/allocate_ocp_qp.h"
 %}
 
@@ -15,6 +16,8 @@
 %init %{
 import_array();
 %}
+
+%include "acados/utils/types.h"
 
 %{
 static bool is_valid_integer(PyObject *input) {
@@ -279,7 +282,8 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
 
 %}
 
-%typemap(in) const int_t N {
+%typemap(in) int_t N {
+    $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
 }
 
@@ -450,6 +454,50 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
     $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nc);
 }
 
+%typemap(in) const real_t ** x {
+    $1 = ($1_ltype) arg1->$1_name;
+    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nx);
+}
+
+%typemap(out) const real_t ** x {
+    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nx);
+}
+
+%typemap(in) const real_t ** u {
+    $1 = ($1_ltype) arg1->$1_name;
+    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nu);
+}
+
+%typemap(out) const real_t ** u {
+    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nu);
+}
+
+%typemap(in) const real_t ** pi {
+    $1 = ($1_ltype) arg1->$1_name;
+    convert_to_1dim_c_array($input, $1, arg1->N, &arg1->nx[1]);
+}
+
+%typemap(out) const real_t ** pi {
+    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N, &arg1->nx[1]);
+}
+
+%typemap(in) const real_t ** lam {
+    $1 = ($1_ltype) arg1->$1_name;
+    int_t dim_lam[N+1];
+    for (size_t i = 0; i < N+1; i++) {
+        dim_lam[i] = 2*arg1->nb[i] + 2*arg1->nc[i];
+    }
+    convert_to_1dim_c_array($input, $1, arg1->N+1, dim_lam);
+}
+
+%typemap(out) const real_t ** lam {
+    int_t dim_lam[N+1];
+    for (size_t i = 0; i < N+1; i++) {
+        dim_lam[i] = 2*arg1->nb[i] + 2*arg1->nc[i];
+    }
+    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, dim_lam);
+}
+
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
@@ -469,9 +517,4 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
     }
 }
 
-%extend qp_solver {
-    qp_solver() {
-        qp_solver *solver = (qp_solver *) malloc(sizeof(qp_solver));
-        return solver;
-    }
-}
+%include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"

@@ -1,30 +1,18 @@
-from acados import *
 import numpy
+
+print('Numpy version:')
+print(numpy.version.full_version)
+
+from acados import *
 
 nx = 4
 nu = 2
 nb = 1
 
-qp = ocp_qp_in({'N':5, 'nx':nx, 'nu':nu, 'nb':nb})
+qp_in = ocp_qp_in({'N':5, 'nx':nx, 'nu':nu, 'nb':nb})
+qp_out = ocp_qp_out()
+qp_arg = ocp_qp_condensing_qpoases_args()
+qp_mem = None
 
-print(qp.r)
-
-qp.r = numpy.ones(nu)
-
-print(qp.r)
-
-print(qp.A)
-
-qp.A = numpy.ones([nx,nx])
-
-print(qp.r)
-
-qp.r[0] = numpy.zeros(nu)
-
-print(qp.r)
-
-print(qp.idxb)
-
-qp.idxb = numpy.ones(nb)
-
-print(qp.idxb)
+# initialise_qpoases(qp_in)
+# ocp_qp_condensing_qpoases(qp_in, qp_out, qp_arg, qp_mem)

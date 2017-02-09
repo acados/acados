@@ -22,7 +22,7 @@ set_source_files_properties(acados.i  PROPERTIES  CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 swig_add_module(acados python acados.i)
-swig_link_libraries(acados ${PYTHON_LIBRARIES} acados blasfeo)
+swig_link_libraries(acados ${PYTHON_LIBRARIES} acados qpoases blasfeo)
 
 file(COPY test_swig.py DESTINATION ${PROJECT_BINARY_DIR}/swig)
 file(COPY list_of_arrays.py DESTINATION ${PROJECT_BINARY_DIR}/swig)
