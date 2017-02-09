@@ -1,5 +1,8 @@
 dist: trusty
 sudo: required
+language: python
+python:
+  - 3.6
 
 env:
   - CXX="g++-6" CC="gcc-6"
@@ -27,7 +30,6 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
-      - python3-numpy
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
@@ -39,6 +41,7 @@ before_install:
   - sudo apt-get update -yq
 
 install:
+  - pip install numpy
   - sudo apt-get install octave liboctave-dev
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
