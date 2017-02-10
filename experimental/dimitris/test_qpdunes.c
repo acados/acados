@@ -54,7 +54,7 @@ int main(int argc, char const *argv[]) {
 
     ocp_qp_qpdunes_create_memory(&qp_in, &qpdunes_args, &qpdunes_mem);
 
-    ocp_qp_qpdunes(&qp_in, &qp_out, &qpdunes_args, &qpdunes_mem, &qpdunes_work);
+    ocp_qp_qpdunes(&qp_in, &qp_out, &qpdunes_args, &qpdunes_mem, qpdunes_work);
 
     ocp_qp_qpdunes_free_memory(&qpdunes_mem);
     free(qpdunes_work);
@@ -63,10 +63,6 @@ int main(int argc, char const *argv[]) {
     for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%5.3f\n",qp_out.x[0][ii]);
 
     // --------------> SOLVE WITH OOQP TO COMPARE
-
-    // TODO(dimitris): REMOVE THIS ONCE NOT MODIFYING QP_IN
-    free_ocp_qp_in(&qp_in);
-    read_ocp_qp_in(&qp_in, test_problem, BOUNDS, CONSTRAINTS, MPC, QUIET);
 
     ocp_qp_ooqp_args ooqp_args;
     ocp_qp_ooqp_memory ooqp_mem;

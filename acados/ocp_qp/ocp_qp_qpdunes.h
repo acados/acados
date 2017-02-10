@@ -41,8 +41,10 @@ typedef struct ocp_qp_qpdunes_args_ {
 typedef struct ocp_qp_qpdunes_workspace_ {
     real_t *At;
     real_t *Bt;
-    // TODO(dimitris): zOpt not used in the end
-    real_t *zOpt;
+    real_t *scrap;
+    real_t *zLow;
+    real_t *zUpp;
+    real_t *g;
     int tmp;
 } ocp_qp_qpdunes_workspace;
 
@@ -50,7 +52,8 @@ typedef struct ocp_qp_qpdunes_memory_ {
     int_t firstRun;
     int_t dimA;
     int_t dimB;
-    int_t nPrimalVars;
+    int_t maxDim;
+    int_t dimz;
     qpData_t qpData;
 } ocp_qp_qpdunes_memory;
 
