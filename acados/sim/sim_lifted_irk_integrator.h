@@ -33,7 +33,8 @@ extern "C" {
 
 typedef struct sim_lifted_irk_workspace_ {
     real_t *rhs_in;
-    real_t *VDE_tmp;
+    real_t *jac_tmp;
+    real_t **VDE_tmp;
     real_t *out_tmp;
     int_t *ipiv;
 
@@ -44,6 +45,8 @@ typedef struct sim_lifted_irk_workspace_ {
     real_t *trans;
     struct d_strmat *str_mat;
     struct d_strmat *str_sol;
+
+    real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
 
 typedef struct sim_lifted_irk_memory_ {
@@ -57,6 +60,8 @@ typedef struct sim_lifted_irk_memory_ {
     struct d_strmat **str_sol2;
     int_t **ipiv2;
     real_t *adj_traj;
+
+    real_t **jac_traj;
 
     real_t *x;
     real_t *u;
