@@ -113,6 +113,25 @@ void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
     for (int_t i = 0; i < num_stages*num_stages; i++) {
         scheme->transf2[i] = T[i];
     }
+    // transf1_T:
+    for (int_t i = 0; i < num_stages; i++) {
+        if ((i+1) < num_stages) {  // complex conjugate pair of eigenvalues
+            for (int_t i1 = i; i1 < i+2; i1++) {
+                for (int_t i2 = 0; i2 < num_stages; i2++) {
+                    scheme->transf1_T[i2*num_stages+i1] = 0.0;
+                    for (int_t i3 = 0; i3 < 2; i3++) {
+                        scheme->transf1_T[i2*num_stages+i1] +=
+                                D[(i1-i)*num_stages+(i+i3)]*T[(i+i3)*num_stages+i2];
+                    }
+                }
+            }
+            i++;
+        } else {  // real eigenvalue
+            for (int_t i2 = 0; i2 < num_stages; i2++) {
+                scheme->transf1_T[i2*num_stages+i] = D[i]*T[i*num_stages+i2];
+            }
+        }
+    }
 
     int_zeros(&perm, num_stages, 1);
     d_zeros(&T_inv, num_stages, num_stages);
@@ -120,6 +139,8 @@ void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
         T_inv[i*(num_stages+1)] = 1.0;
     }
     LU_system_solve(T, T_inv, perm, num_stages, num_stages);
+
+    // transf1:
     for (int_t i = 0; i < num_stages; i++) {
         if ((i+1) < num_stages) {  // complex conjugate pair of eigenvalues
             for (int_t i1 = i; i1 < i+2; i1++) {
@@ -138,11 +159,21 @@ void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
             }
         }
     }
+    // transf2_T:
+    for (int_t i = 0; i < num_stages; i++) {
+        for (int_t i2 = 0; i2 < num_stages; i2++) {
+            scheme->transf2_T[i2*num_stages+i] = T_inv[i*num_stages+i2];
+        }
+    }
 
 //    print_matrix("stdout", scheme->transf1, num_stages, num_stages);
 //    print_matrix("stdout", T_inv, 1, 1);
 //    print_matrix("stdout", scheme->transf2, num_stages, num_stages);
 //    print_matrix("stdout", T_inv, 1, 1);
+//        print_matrix("stdout", scheme->transf1_T, num_stages, num_stages);
+//        print_matrix("stdout", T_inv, 1, 1);
+//        print_matrix("stdout", scheme->transf2_T, num_stages, num_stages);
+//        print_matrix("stdout", T_inv, 1, 1);
 }
 
 

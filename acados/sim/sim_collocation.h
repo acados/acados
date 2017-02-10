@@ -44,8 +44,8 @@ typedef struct Newton_scheme_ {
     real_t *transf1;
     real_t *transf2;
 
-//    real_t *transf1_T;
-//    real_t *transf2_T;
+    real_t *transf1_T;
+    real_t *transf2_T;
 } Newton_scheme;
 
 real_t LU_system_solve(real_t* const A, real_t* const b, int* const perm,
