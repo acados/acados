@@ -22,12 +22,6 @@
 #include "OOQP/include/cQpGenSparse.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/utils/timing.h"
-// #include "acados/utils/print.h"
-// #include "acados/utils/tools.h"
-// #include "blasfeo/include/blasfeo_target.h"
-// #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux.h"
-// #include "blasfeo/include/blasfeo_i_aux.h"
 
 #define TIMINGS 0  // 0: do not print any timings inside here
                    // 1: print only time to solve QP
@@ -37,9 +31,8 @@ int_t *rows;
 int_t *cols;
 int_t lda;
 
-// TODO(dimitris): check if it only works for integers
-int max_of_three(int a, int b, int c) {
-     int ans = a;
+int_t max_of_three(int_t a, int_t b, int_t c) {
+     int_t ans = a;
      (void)((ans < b) && (ans = b));
      (void)((ans < c) && (ans = c));
      return ans;
@@ -47,7 +40,7 @@ int max_of_three(int a, int b, int c) {
 
 
 // comparator for qsort
-static int comparator(const void* p1, const void* p2) {
+static int_t comparator(const void* p1, const void* p2) {
     int_t ans1, ans2;
     int_t ind1 = *((int *)p1);
     int_t ind2 = *((int *)p2);
@@ -62,7 +55,7 @@ static int comparator(const void* p1, const void* p2) {
 static void sort_matrix_structure_row_major(int_t *order, int_t *irow, int_t nnz, int_t *jcol,
     int_t *tmp) {
 
-    int ii;
+    int_t ii;
 
     for (ii = 0; ii < nnz; ii++) {
         tmp[ii] = irow[order[ii]];
@@ -81,7 +74,7 @@ static void sort_matrix_structure_row_major(int_t *order, int_t *irow, int_t nnz
 
 
 static void sort_matrix_data_row_major(int_t *order, int_t nnz, real_t *d, real_t *tmp) {
-    int ii;
+    int_t ii;
 
     for (ii = 0; ii < nnz; ii++) {
         tmp[ii] = d[order[ii]];
@@ -167,7 +160,7 @@ static int_t get_nnzC(const ocp_qp_in *in, const ocp_qp_ooqp_args *args) {
 
 
 static void update_gradient(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
-    int ii, kk, nn;
+    int_t ii, kk, nn;
 
     nn = 0;
     for (kk = 0; kk < in->N+1; kk++) {
@@ -352,6 +345,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
 static void update_ineq_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     int_t ii, kk;
     int_t nn = 0;
+
     for (kk = 0; kk < in->N+1; kk++) {
         for (ii = 0; ii < in->nc[kk]; ii++) {
             mem->iclow[nn] = (char) 1;
@@ -367,7 +361,7 @@ static void update_ineq_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
 static void update_inequalities_structure(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
     ocp_qp_ooqp_workspace *work) {
 
-    int ii, jj, kk, nn, offsetRows, offsetCols;
+    int_t ii, jj, kk, nn, offsetRows, offsetCols;
 
     nn = 0; offsetRows = 0; offsetCols = 0;
     for (kk = 0; kk < in->N+1; kk++) {
@@ -402,7 +396,7 @@ static void update_inequalities_structure(const ocp_qp_in *in, ocp_qp_ooqp_memor
 static void update_inequalities_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
     ocp_qp_ooqp_workspace *work) {
 
-    int ii, jj, kk, nn, offsetRows, offsetCols;
+    int_t ii, jj, kk, nn, offsetRows, offsetCols;
 
     nn = 0; offsetRows = 0; offsetCols = 0;
     for (kk = 0; kk < in->N+1; kk++) {
@@ -427,7 +421,6 @@ static void ocp_qp_ooqp_update_memory(const ocp_qp_in *in,  const ocp_qp_ooqp_ar
     ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work) {
 
     int_t ii;
-    // if (mem->firstRun == 1) printf("\nINITIALIZING OOQP MEMORY...\n\n");
 
     if (mem->firstRun == 1) {
         for (ii = 0; ii < mem->nnzQ; ii++) mem->orderQ[ii] = ii;
@@ -482,7 +475,7 @@ static void print_inputs(ocp_qp_ooqp_memory *mem) {
     printf("NUMBER OF NON-ZEROS in INEQUALITIES: %d\n", mem->nnzC);
     printf("\n-----------------------------------\n\n");
 
-    int ii;
+    int_t ii;
     printf("\nOBJECTIVE FUNCTION:\n");
     for (ii = 0; ii < mem->nnzQ; ii++) {
         printf("=====> Q[%d, %d] = %f\n", mem->irowQ[ii]+1, mem->jcolQ[ii]+1, mem->dQ[ii]);
@@ -513,23 +506,25 @@ static void print_inputs(ocp_qp_ooqp_memory *mem) {
 
 
 static void print_outputs(ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work, int return_value) {
-        printf("\n----------> OOQP OUTPUTS <---------\n\n");
-        printf("RETURN STATUS: %d\n", return_value);
-        printf("OBJECTIVE VALUE: %f\n", work->objectiveValue);
-        printf("FIRST AND LAST ELEMENT OF SOLUTION:\n");
-        printf("x[0] = %f\n", work->x[0]);
-        printf("x[%d] = %f\n", mem->nx, work->x[mem->nx-1]);
-        printf("\n----------------------------------\n\n");
+    int_t ii;
 
-        printf("\nPRIMAL SOLUTION:\n");
-        for (int ii = 0; ii < mem->nx; ii++) {
-            printf("=====> x[%d] = %f\n", ii+1, work->x[ii]);
-        }
+    printf("\n----------> OOQP OUTPUTS <---------\n\n");
+    printf("RETURN STATUS: %d\n", return_value);
+    printf("OBJECTIVE VALUE: %f\n", work->objectiveValue);
+    printf("FIRST AND LAST ELEMENT OF SOLUTION:\n");
+    printf("x[0] = %f\n", work->x[0]);
+    printf("x[%d] = %f\n", mem->nx, work->x[mem->nx-1]);
+    printf("\n----------------------------------\n\n");
+
+    printf("\nPRIMAL SOLUTION:\n");
+    for (ii = 0; ii < mem->nx; ii++) {
+        printf("=====> x[%d] = %f\n", ii+1, work->x[ii]);
+    }
 }
 
 
 static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace *work) {
-    int kk, ii, nn;
+    int_t kk, ii, nn;
 
     nn = 0;
     for (kk = 0; kk < in->N+1; kk++) {
@@ -623,9 +618,11 @@ int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
 int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
-    args->printLevel += 0;  // dummy command, args will be probably needed later
 
     int_t nx, my, mz, nnzQ, nnzA, nnzC, nnz;
+
+    // dummy command, args will be probably needed later
+    args->printLevel += 0;
 
     nx = get_number_of_primal_vars(in);
     my = get_number_of_equalities(in);
@@ -652,15 +649,16 @@ int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_
 
 void ocp_qp_ooqp_free_workspace(void *work_) {
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
-        free(work->x);
-        free(work->gamma);
-        free(work->phi);
-        free(work->y);
-        free(work->z);
-        free(work->lambda);
-        free(work->pi);
-        free(work->tmpInt);
-        free(work->tmpReal);
+
+    free(work->x);
+    free(work->gamma);
+    free(work->phi);
+    free(work->y);
+    free(work->z);
+    free(work->lambda);
+    free(work->pi);
+    free(work->tmpInt);
+    free(work->tmpReal);
 }
 
 

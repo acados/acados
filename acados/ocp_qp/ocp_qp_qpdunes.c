@@ -19,14 +19,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
 
-#include "qpDUNES/include/qpDUNES.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/timing.h"
+// #include "qpDUNES/include/qpDUNES.h"
 
 #define qpDUNES_INFTY 1e10
 
@@ -65,9 +61,10 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
 
 static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpdunes_args *args,
     ocp_qp_qpdunes_memory *mem, ocp_qp_qpdunes_workspace *work) {
+
     int_t ii, kk, N, nx, nu;
     boolean_t isLTI;
-    return_t return_value;
+    return_t return_value = 0;
 
     N = in->N;
     nx = in->nx[0];
@@ -79,7 +76,6 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
     if (mem->firstRun == 1) {
         /* setup of intervals */
         for (kk = 0; kk < N; ++kk) {
-            // TODO(dimitris): move to a function
             for (ii = 0; ii < nx; ii++) work->g[ii] = in->q[kk][ii];
             for (ii = 0; ii < nu; ii++) work->g[ii+nx] = in->r[kk][ii];
             for (ii = 0; ii < nx+nu; ii++) {
@@ -104,7 +100,6 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 return (int_t)return_value;
             }
         }
-        // TODO(dimitris): can I merge this above?
         for (ii = 0; ii < nx; ii++) {
             work->zLow[ii] = -qpDUNES_INFTY;
             work->zUpp[ii] = qpDUNES_INFTY;
@@ -187,6 +182,7 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
 int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
+
     int_t N, nx, nu, kk;
     uint_t *nD_ptr = 0;
     int_t nD = 0;  // number of ineq. constraints (NOTE: has to be zero for clipping)
@@ -236,13 +232,12 @@ void ocp_qp_qpdunes_free_memory(void *mem_) {
 }
 
 
-// TODO(dimitris): Move casts after var declarations here and in OOQP
 int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
-    return_t return_value;
-
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *) work_;
+
+    return_t return_value;
 
     ocp_qp_qpdunes_cast_workspace(work, mem);
     ocp_qp_qpdunes_update_memory(in, args, mem, work);

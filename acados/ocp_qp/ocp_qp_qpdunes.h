@@ -27,6 +27,8 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+#include "qpDUNES/include/qpDUNES.h"
+
 typedef enum {
     QPDUNES_DEFAULT_ARGUMENTS,
     QPDUNES_LINEAR_MPC,
