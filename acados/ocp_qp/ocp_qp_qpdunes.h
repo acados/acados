@@ -27,25 +27,39 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+typedef enum {
+    QPDUNES_DEFAULT_ARGUMENTS,
+    QPDUNES_LINEAR_MPC,
+    QPDUNES_NONLINEAR_MPC
+} qpdunes_options_t;
+
 // TODO(dimitris): how come I don't need to include qpDUNES.h here?
 typedef struct ocp_qp_qpdunes_args_ {
     qpOptions_t options;
 } ocp_qp_qpdunes_args;
 
 typedef struct ocp_qp_qpdunes_workspace_ {
-    real_t *transMatrixScrap;
+    real_t *At;
+    real_t *Bt;
+    // TODO(dimitris): zOpt not used in the end
+    real_t *zOpt;
     int tmp;
 } ocp_qp_qpdunes_workspace;
 
 typedef struct ocp_qp_qpdunes_memory_ {
     int_t firstRun;
+    int_t dimA;
+    int_t dimB;
+    int_t nPrimalVars;
     qpData_t qpData;
 } ocp_qp_qpdunes_memory;
 
-int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
+int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
 int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_);
+int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
 
-void ocp_qp_qpdunes_free_workspace(void *work_);
+void ocp_qp_qpdunes_free_memory(void *mem_);
+// void ocp_qp_qpdunes_free_workspace(void *work_);
 
 int_t ocp_qp_qpdunes(ocp_qp_in *input, ocp_qp_out *output,
     void *args_, void *memory_, void *work_);

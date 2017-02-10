@@ -46,14 +46,99 @@ static void transpose_matrix(real_t *mat, int m, int n) {
 }
 
 
+// TODO(dimitris): Also used in OOQP, maybe move to acado utils
+static int_t get_number_of_primal_vars(const ocp_qp_in *in) {
+    int_t nx = 0;
+    int_t kk;
+    for (kk = 0; kk < in->N+1; kk++) {
+        nx += in->nx[kk] + in->nu[kk];
+    }
+    return nx;
+}
+
+
+static void get_max_dimensions(const ocp_qp_in *in, int_t *maxDimA, int_t *maxDimB) {
+    int_t kk, tmp;
+
+    *maxDimA = 0; *maxDimB = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        tmp = in->nx[kk+1]*in->nx[kk];
+        if (tmp > *maxDimA) *maxDimA = tmp;
+        tmp = in->nx[kk+1]*in->nu[kk];
+        if (tmp > *maxDimB) *maxDimB = tmp;
+    }
+}
+
+
+static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem) {
+    int ii, kk;
+
+    for (kk = 0; kk < in->N+1; kk++) {
+        for (ii = 0; ii < in->nx[kk]; ii++) {
+            out->x[kk][ii] = mem->qpData.intervals[kk]->z.data[ii];
+        }
+        for (ii = 0; ii < in->nu[kk]; ii++) {
+            out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[in->nx[kk]+ii];
+        }
+    }
+    // TODO(dimitris): fill-in multipliers
+}
+
+
+static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
+    ocp_qp_qpdunes_memory *mem) {
+        
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_qp_qpdunes_workspace);
+    work->At = (real_t*)ptr;
+    ptr += (mem->dimA)*sizeof(real_t);
+    work->Bt = (real_t*)ptr;
+    ptr += (mem->dimB)*sizeof(real_t);
+    work->zOpt = (real_t*)ptr;
+    // ptr += (mem->nPrimalVars)*sizeof(real_t);
+}
+
+
+int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_) {
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
+    qpdunes_options_t opts = (qpdunes_options_t) opts_;
+
+    if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
+        args->options = qpDUNES_setupDefaultOptions();
+    } else {
+        printf("\nUknown option (%d) for qpDUNES!\n", opts_);
+        return -1;
+    }
+    return 0;
+}
+
+
+int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
+
+    int_t size, maxDimA, maxDimB, nPrimalVars;
+
+    nPrimalVars = get_number_of_primal_vars(in);
+    get_max_dimensions(in, &maxDimA, &maxDimB);
+
+    size = (maxDimA + maxDimB + nPrimalVars)*sizeof(real_t);
+    return size;
+}
+
+
 int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
-    int_t N, nx, nu, return_value, ii, kk;
+    int_t N, nx, nu, ii, kk;
     uint_t *nD_ptr = 0;
     boolean_t isLTI;
     int_t nD = 0;  // number of ineq. constraints has to be zero
     real_t *zLow, *zUpp, *g;
+    return_t return_value;
+
+    mem->nPrimalVars = get_number_of_primal_vars(in);
+    get_max_dimensions(in, &mem->dimA, &mem->dimB);
 
     N = in->N;
     nx = in->nx[0];
@@ -84,8 +169,10 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
     return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
     if (return_value != QPDUNES_OK) {
         printf("Setup of the QP solver failed\n");
-        return (int)return_value;
+        return (int_t)return_value;
     }
+
+    // TODO(dimitris): Move those to update_memory probably...
 
     /* setup of intervals */
     for (kk = 0; kk < N; ++kk) {
@@ -110,7 +197,7 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
 
         if (return_value != QPDUNES_OK) {
             printf("Setup of qpDUNES failed on interval %d\n", kk);
-            return (int)return_value;
+            return (int_t)return_value;
         }
     }
     // TODO(dimitris): can I merge this above?
@@ -122,12 +209,12 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         zLow[in->idxb[N][ii]] = in->lb[N][ii];
         zUpp[in->idxb[N][ii]] = in->ub[N][ii];
     }
-    return_value =  qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N], in->Q[N],
+    return_value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N], in->Q[N],
     in->q[N], zLow, zUpp, 0, 0, 0);
 
     if (return_value != QPDUNES_OK) {
         printf("Setup of qpDUNES failed on last interval\n");
-        return (int)return_value;
+        return (int_t)return_value;
     }
 
     /* setup of stage QPs */
@@ -135,23 +222,43 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
     return_value = qpDUNES_setupAllLocalQPs(&(mem->qpData), isLTI = QPDUNES_FALSE);
     if (return_value != QPDUNES_OK) {
         printf("Setup of qpDUNES failed on initialization of stage QPs\n");
-        return (int)return_value;
+        return (int_t)return_value;
     }
 
     free(zLow); free(zUpp); free(g);
 
-    return return_value;
+    return (int_t)return_value;
 }
 
+
+void ocp_qp_qpdunes_free_memory(void *mem_) {
+    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
+    qpDUNES_cleanup(&(mem->qpData));
+}
+
+// TODO(dimitris): Move casts after var declarations here and in OOQP
 int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
+    return_t return_value;
+
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *) work_;
-    int_t return_value = 0;
 
     // dummy commands
     if (mem->firstRun || args->options.logLevel == 1) work->tmp = 31;
     if (in->nx[0] == 1) out->x[0][0] = 1;
+
+	return_value = qpDUNES_solve(&(mem->qpData));
+	if (return_value != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
+	{
+		printf("qpDUNES failed to solve the QP. Error code: %d\n", return_value);
+		return (int_t)return_value;
+	}
+
+    /* write out solution */
+    // qpDUNES_getPrimalSol(&qpData, zOpt);
+
+    fill_in_qp_out(in, out, mem);
 
     return return_value;
 }

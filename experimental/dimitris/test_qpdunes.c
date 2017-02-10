@@ -19,19 +19,20 @@ int main(int argc, char const *argv[]) {
 
     /* qpDUNES vars */
     return_t statusFlag;
-    qpData_t qpData;
     boolean_t isLTI;
-    qpOptions_t qpOptions = qpDUNES_setupDefaultOptions();
-
-    ocp_qp_qpdunes_args qpdunes_args;
-    ocp_qp_qpdunes_memory qpdunes_mem;
 
     /* acados vars */
     ocp_qp_in qp_in;
     ocp_qp_out qp_out;
 
+    ocp_qp_qpdunes_args qpdunes_args;
+    ocp_qp_qpdunes_memory qpdunes_mem;
+    int_t qpdunes_workspace_size;
+    void *qpdunes_work;
+
+    /* sim vars */
     int_t BOUNDS = 1;
-    int_t CONSTRAINTS = 0;  // always for qpDUNES with clipping
+    int_t CONSTRAINTS = 0;  // always 0 for qpDUNES with clipping
     int_t MPC = 1;
     int_t QUIET = 1;
 
@@ -45,33 +46,25 @@ int main(int argc, char const *argv[]) {
     nx = qp_in.nx[0];
     nu = qp_in.nu[0];
 
-    qpdunes_args.options = qpDUNES_setupDefaultOptions();
+    /* setup QP */
+    ocp_qp_qpdunes_create_arguments(&qpdunes_args, QPDUNES_DEFAULT_ARGUMENTS);
+
+    qpdunes_workspace_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &qpdunes_args);
+    qpdunes_work = (void*)malloc(qpdunes_workspace_size);
+
     ocp_qp_qpdunes_create_memory(&qp_in, &qpdunes_args, &qpdunes_mem);
 
-    qpData = qpdunes_mem.qpData;
+    ocp_qp_qpdunes(&qp_in, &qp_out, &qpdunes_args, &qpdunes_mem, &qpdunes_work);
 
-    /* solve problem */
-    printf("BEFORE SOLVE\n---------------------------------------------------------");
-	statusFlag = qpDUNES_solve(&(qpdunes_mem.qpData));
-	if (statusFlag != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
-	{
-		printf("qpDUNES failed to solve the QP. Error code: %d\n", statusFlag);
-		return (int)statusFlag;
-	}
-
-    /* write out solution */
-    // qpDUNES_getPrimalSol(&qpData, zOpt);
+    ocp_qp_qpdunes_free_memory(&qpdunes_mem);
+    free(qpdunes_work);
 
     printf("\nz_opt (qpDUNES) = \n");
-    for(kk = 0; kk < N; kk++) {
-        for (ii = 0; ii < nx+nu; ii++) printf("%5.3f\n", qpData.intervals[kk]->z.data[ii]);
-    }
-    for (ii = 0; ii < nx; ii++) printf("%5.3f\n", qpData.intervals[kk]->z.data[ii]);
-    printf("\n");
-
-	qpDUNES_cleanup( &qpData );
+    for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%5.3f\n",qp_out.x[0][ii]);
 
     // --------------> SOLVE WITH OOQP TO COMPARE
+
+    // TODO(dimitris): REMOVE THIS ONCE NOT MODIFYING QP_IN
     free_ocp_qp_in(&qp_in);
     read_ocp_qp_in(&qp_in, test_problem, BOUNDS, CONSTRAINTS, MPC, QUIET);
 
