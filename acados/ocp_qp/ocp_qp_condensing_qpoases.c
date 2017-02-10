@@ -211,8 +211,8 @@ static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
     return return_flag;
 }
 
-static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u,
-    real_t *primal_solution, const real_t *x0) {
+static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u, real_t **pi,
+    real_t *primal_solution, real_t *dual_solution, const real_t *x0) {
 
     for (int_t i = 0; i < qp_in->nx[0]; i++) {
         x[0][i] = x0[i];
@@ -231,7 +231,7 @@ static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u,
         // for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
     }
 
-    // TODO(rien): recover multipliers
+    // TODO(rien): recover multipliers in pi
 }
 
 static void convert_to_row_major(const real_t *input, real_t *output, const int_t nrows,
@@ -274,7 +274,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     } else {
         return_flag = solve_condensed_QPB(work.nconvars, &QPB, primal_solution, dual_solution);
     }
-    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
+    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, qp_out->pi, primal_solution, dual_solution, qp_in->lb[0]);
 
     d_free(out.H);
     d_free(out.h);
