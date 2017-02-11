@@ -26,7 +26,6 @@ extern "C" {
 
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-
 #include "qpDUNES/include/qpDUNES.h"
 
 typedef enum {
@@ -35,7 +34,6 @@ typedef enum {
     QPDUNES_NONLINEAR_MPC
 } qpdunes_options_t;
 
-// TODO(dimitris): how come I don't need to include qpDUNES.h here?
 typedef struct ocp_qp_qpdunes_args_ {
     qpOptions_t options;
 } ocp_qp_qpdunes_args;

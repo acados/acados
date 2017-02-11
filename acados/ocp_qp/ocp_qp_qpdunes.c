@@ -22,7 +22,6 @@
 
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/timing.h"
-// #include "qpDUNES/include/qpDUNES.h"
 
 #define qpDUNES_INFTY 1e10
 
@@ -73,6 +72,7 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
     // dummy command
     if (args->options.logLevel == 0) ii = 0;
 
+    // TODO(dimitris): update data if NOT first run!
     if (mem->firstRun == 1) {
         /* setup of intervals */
         for (kk = 0; kk < N; ++kk) {

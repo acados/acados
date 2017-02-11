@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
 
     /* acados vars */
     ocp_qp_in qp_in;
-    ocp_qp_out qp_out;
+    ocp_qp_out qp_out_qpdunes, qp_out_ooqp;
 
     ocp_qp_qpdunes_args qpdunes_args;
     ocp_qp_qpdunes_memory qpdunes_mem;
@@ -36,11 +36,12 @@ int main(int argc, char const *argv[]) {
     int_t MPC = 1;
     int_t QUIET = 1;
 
-    char *test_problem = "LTI_q0";
+    char *test_problem = "LTI/";
 
     /* read and allocate data */
     read_ocp_qp_in(&qp_in, test_problem, BOUNDS, CONSTRAINTS, MPC, QUIET);
-    allocate_ocp_qp_out(&qp_in, &qp_out);
+    allocate_ocp_qp_out(&qp_in, &qp_out_qpdunes);
+    allocate_ocp_qp_out(&qp_in, &qp_out_ooqp);
 
     N  = qp_in.N;
     nx = qp_in.nx[0];
@@ -54,13 +55,14 @@ int main(int argc, char const *argv[]) {
 
     ocp_qp_qpdunes_create_memory(&qp_in, &qpdunes_args, &qpdunes_mem);
 
-    ocp_qp_qpdunes(&qp_in, &qp_out, &qpdunes_args, &qpdunes_mem, qpdunes_work);
+    // qpdunes_args.options.lsType = (lineSearchType_t)5;
+    ocp_qp_qpdunes(&qp_in, &qp_out_qpdunes, &qpdunes_args, &qpdunes_mem, qpdunes_work);
 
     ocp_qp_qpdunes_free_memory(&qpdunes_mem);
     free(qpdunes_work);
 
     printf("\nz_opt (qpDUNES) = \n");
-    for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%5.3f\n",qp_out.x[0][ii]);
+    for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%5.3f\n",qp_out_qpdunes.x[0][ii]);
 
     // --------------> SOLVE WITH OOQP TO COMPARE
 
@@ -74,14 +76,19 @@ int main(int argc, char const *argv[]) {
     int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &ooqp_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
     void *work = (void*)malloc(work_space_size);
-    statusFlag = ocp_qp_ooqp(&qp_in, &qp_out, &ooqp_args, &ooqp_mem, work);
+    statusFlag = ocp_qp_ooqp(&qp_in, &qp_out_ooqp, &ooqp_args, &ooqp_mem, work);
     ocp_qp_ooqp_free_memory(&ooqp_mem);
     free(work);
 
     printf("\nz_opt (OOQP) (FLAG = %d) = \n", statusFlag);
-    for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%5.3f\n",qp_out.x[0][ii]);
+    for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%5.3f\n",qp_out_ooqp.x[0][ii]);
+
+    printf("\nERROR = \n");
+    for (ii = 0; ii < N*(nx+nu)+nx; ii++) printf("%10.9f\n",qp_out_qpdunes.x[0][ii]-qp_out_ooqp.x[0][ii]);
+
 
     free_ocp_qp_in(&qp_in);
-    free_ocp_qp_out(&qp_out);
+    free_ocp_qp_out(&qp_out_qpdunes);
+    free_ocp_qp_out(&qp_out_ooqp);
     return 0;
 }
