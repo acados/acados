@@ -28,11 +28,16 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "qpDUNES/include/qpDUNES.h"
 
-typedef enum {
+typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
     QPDUNES_LINEAR_MPC,
     QPDUNES_NONLINEAR_MPC
 } qpdunes_options_t;
+
+typedef enum qpdunes_stage_qp_solver_t_ {
+    QPDUNES_WITH_QPOASES,
+    QPDUNES_WITH_CLIPPING
+} qpdunes_stage_qp_solver_t;
 
 typedef struct ocp_qp_qpdunes_args_ {
     qpOptions_t options;
@@ -55,6 +60,7 @@ typedef struct ocp_qp_qpdunes_memory_ {
     int_t maxDim;
     int_t dimz;
     qpData_t qpData;
+    qpdunes_stage_qp_solver_t stageQpSolver;
 } ocp_qp_qpdunes_memory;
 
 int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);

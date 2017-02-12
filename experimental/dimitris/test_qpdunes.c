@@ -32,11 +32,11 @@ int main(int argc, char const *argv[]) {
 
     /* sim vars */
     int_t BOUNDS = 1;
-    int_t CONSTRAINTS = 0;  // always 0 for qpDUNES with clipping
+    int_t CONSTRAINTS = 0;
     int_t MPC = 1;
     int_t QUIET = 1;
 
-    char *test_problem = "LTI/";
+    char *test_problem = "LTV/";
 
     /* read and allocate data */
     read_ocp_qp_in(&qp_in, test_problem, BOUNDS, CONSTRAINTS, MPC, QUIET);
@@ -55,7 +55,6 @@ int main(int argc, char const *argv[]) {
 
     ocp_qp_qpdunes_create_memory(&qp_in, &qpdunes_args, &qpdunes_mem);
 
-    // qpdunes_args.options.lsType = (lineSearchType_t)5;
     ocp_qp_qpdunes(&qp_in, &qp_out_qpdunes, &qpdunes_args, &qpdunes_mem, qpdunes_work);
 
     ocp_qp_qpdunes_free_memory(&qpdunes_mem);

@@ -17,13 +17,13 @@
  *
  */
 
+// TODO(dimitris): Fix bug and real_t/int_t types in qpDUNES-dev repo
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/timing.h"
-
-#define qpDUNES_INFTY 1e10
 
 static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
     int_t ii, jj;
@@ -79,8 +79,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
             for (ii = 0; ii < nx; ii++) work->g[ii] = in->q[kk][ii];
             for (ii = 0; ii < nu; ii++) work->g[ii+nx] = in->r[kk][ii];
             for (ii = 0; ii < nx+nu; ii++) {
-                work->zLow[ii] = -qpDUNES_INFTY;
-                work->zUpp[ii] = qpDUNES_INFTY;
+                work->zLow[ii] = -args->options.QPDUNES_INFTY;
+                work->zUpp[ii] = args->options.QPDUNES_INFTY;
             }
             for (ii = 0; ii < in->nb[kk]; ii++) {
                 // TODO(dimitris): what's our infty?
@@ -91,9 +91,16 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
             for (ii = 0; ii < nx*nu; ii++) work->Bt[ii] = in->B[kk][ii];
             transpose_matrix(work->At, nx, nx, work->scrap);
             transpose_matrix(work->Bt, nx, nu, work->scrap);
-            return_value = qpDUNES_setupRegularInterval(&(mem->qpData), mem->qpData.intervals[kk],
-            0, in->Q[kk], in->R[kk], 0, work->g, 0, work->At, work->Bt, in->b[kk], work->zLow,
-            work->zUpp, 0, 0, 0, 0, 0, 0, 0);
+            // TODO(dimitris): pass ineq. constraints if they exist here
+            if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
+                return_value = qpDUNES_setupRegularInterval(&(mem->qpData),
+                mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], in->S[kk], work->g, 0,
+                work->At, work->Bt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
+            } else {  // do not pass S[kk] at all
+                return_value = qpDUNES_setupRegularInterval(&(mem->qpData),
+                mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], 0, work->g, 0,
+                work->At, work->Bt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
+            }
 
             if (return_value != QPDUNES_OK) {
                 printf("Setup of qpDUNES failed on interval %d\n", kk);
@@ -101,8 +108,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
             }
         }
         for (ii = 0; ii < nx; ii++) {
-            work->zLow[ii] = -qpDUNES_INFTY;
-            work->zUpp[ii] = qpDUNES_INFTY;
+            work->zLow[ii] = -args->options.QPDUNES_INFTY;
+            work->zUpp[ii] = args->options.QPDUNES_INFTY;
         }
         for (ii = 0; ii < in->nb[N]; ii++) {
             work->zLow[in->idxb[N][ii]] = in->lb[N][ii];
@@ -143,6 +150,48 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
     // TODO(dimitris): fill-in multipliers
 }
 
+qpdunes_stage_qp_solver_t define_stage_qp_solver(const ocp_qp_in *in) {
+    int_t ii, jj, kk;
+    int_t nD = 0;
+
+    // check for polyhedral constraints
+    for (kk = 0; kk < in->N+1; kk++) nD += in->nc[kk];
+    if (nD != 0) return QPDUNES_WITH_QPOASES;
+
+    // check for non-zero cross terms
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk]*in->nu[kk]; ii++) {
+            if (in->S[kk][ii] != 0 ) {
+                return QPDUNES_WITH_QPOASES;
+            }
+        }
+    }
+
+    // check for non-diagonal Q
+    for (kk = 0; kk < in->N+1; kk++) {
+        for (jj = 0; jj < in->nx[kk]; jj++) {
+            for (ii = 0; ii < in->nx[kk]; ii++) {
+                if ((ii != jj) && (in->Q[kk][jj*in->nx[kk]+ii] != 0)) {
+                    return QPDUNES_WITH_QPOASES;
+                }
+            }
+        }
+    }
+
+    // check for non-diagonal R
+    for (kk = 0; kk < in->N; kk++) {
+        for (jj = 0; jj < in->nu[kk]; jj++) {
+            for (ii = 0; ii < in->nu[kk]; ii++) {
+                if ((ii != jj) && (in->R[kk][jj*in->nu[kk]+ii] != 0)) {
+                    return QPDUNES_WITH_QPOASES;
+                }
+            }
+        }
+    }
+
+    return QPDUNES_WITH_CLIPPING;
+}
+
 
 int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
@@ -168,7 +217,7 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
 
     dimA = in->nx[0]*in->nx[0];
     dimB = in->nx[0]*in->nu[0];
-    dimz = in->nx[0] + in->nu[0];
+    dimz = in->nx[0]+in->nu[0];
 
     maxDim = dimA;
     if (dimB > maxDim) maxDim = dimB;
@@ -199,7 +248,7 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
     mem->maxDim = mem->dimA;
     if (mem->dimB > mem->maxDim) mem->maxDim = mem->dimB;
 
-    /* Check for constant dimensions and conditions for qpDUNES+clipping */
+    /* Check for constant dimensions */
     for (kk = 1; kk < N; kk++) {
         if ((nx != in->nx[kk]) || (nu != in->nu[kk])) {
             printf("\nqpDUNES does not support varying dimensions!");
@@ -210,6 +259,21 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         printf("\nqpDUNES does not support varying dimensions!");
         return -1;
     }
+
+    mem->stageQpSolver = define_stage_qp_solver(in);
+    // if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) printf("\n\n >>>>>> QPDUNES + QPOASES!\n");
+    // if (mem->stageQpSolver == QPDUNES_WITH_CLIPPING) printf("\n\n >>>>>> QPDUNES + CLIPPING!\n");
+
+    if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
+        if ((args->options.lsType != 5) && (args->options.lsType != 7)) {
+            args->options.lsType = 5;
+            // TODO(dimitris): write proper acados warnings and errors
+            printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            printf("WARNING: Changed line-search algorithm for qpDUNES (incompatible with OCP_QP)");
+            printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+        }
+    }
+
     for (kk = 0; kk < N+1; kk++) nD += in->nc[kk];
     if (nD != 0) {
         printf("qpDUNES with clipping does not support inequality constraints!\n");
