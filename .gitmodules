@@ -8,7 +8,10 @@
 [submodule "blasfeo"]
 	path = external/blasfeo
 	url = https://github.com/giaf/blasfeo.git
-[submodule "external/catch"]
+[submodule "qpdunes"]
+	path = external/qpDUNES-dev
+	url = https://github.com/acados/qpDUNES-dev.git
+[submodule "catch"]
 	path = external/catch
 	url = https://github.com/philsquared/Catch.git
 [submodule "external/qpDUNES-dev"]
