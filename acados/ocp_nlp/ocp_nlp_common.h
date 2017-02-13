@@ -79,7 +79,7 @@ typedef struct ocp_nlp_in_ {
 typedef struct ocp_nlp_mem_ {
     real_t **x;
     real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;
     real_t **lam;
 } ocp_nlp_mem;
 
@@ -107,7 +107,7 @@ typedef struct ocp_nlp_work_ {
 typedef struct ocp_nlp_out_ {
     real_t **x;
     real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;  // TODO(rien): what is pi?
     real_t **lam;
 } ocp_nlp_out;
 

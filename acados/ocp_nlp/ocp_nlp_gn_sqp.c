@@ -317,9 +317,11 @@ void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
 
     work->solver->out->x = (real_t **) malloc(sizeof(*work->solver->out->x) * (in->N+1));
     work->solver->out->u = (real_t **) malloc(sizeof(*work->solver->out->u) * (in->N));
+    work->solver->out->pi = (real_t **) malloc(sizeof(*work->solver->out->pi) * (in->N));
     for (int_t i = 0; i < in->N; i++) {
         work->solver->out->x[i] = (real_t *) malloc(sizeof(*work->solver->out->x[i]) * (in->nx[i]));
         work->solver->out->u[i] = (real_t *) malloc(sizeof(*work->solver->out->u[i]) * (in->nu[i]));
+        work->solver->out->pi[i] = (real_t *) malloc(sizeof(*work->solver->out->pi[i]) * (in->nx[i]));
     }
     work->solver->out->x[in->N] = (real_t *)
             malloc(sizeof(*work->solver->out->x[in->N]) * (in->nx[in->N]));
