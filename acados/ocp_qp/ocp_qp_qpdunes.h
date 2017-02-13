@@ -26,7 +26,7 @@ extern "C" {
 
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "qpDUNES/include/qpDUNES.h"
+#include "qpDUNES-dev/include/qpDUNES.h"
 
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,

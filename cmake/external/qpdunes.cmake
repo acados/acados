@@ -3,9 +3,9 @@ include(ExternalProject)
 ExternalProject_Add(
     qpdunes_project
 
-    CONFIGURE_COMMAND ""
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/qpDUNES-dev"
-    BUILD_IN_SOURCE 1
+    BINARY_DIR "${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/build"
+    CONFIGURE_COMMAND cmake ..
     BUILD_COMMAND make
     INSTALL_COMMAND ""
 )

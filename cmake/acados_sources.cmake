@@ -7,10 +7,6 @@ if (NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c)
 endif()
 
-if (NOT EXISTS ${PROJECT_SOURCE_DIR}/external/qpDUNES)
-    list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_qpdunes.c)
-endif()
-
 # Sources for examples
 set(HPMPC_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc.c)
 set(CONDENSING_QPOASES_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases.c)

@@ -60,22 +60,16 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     include(external/ooqp)
 endif ()
 
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/qpDUNES-dev)
-    include(external/qpdunes)
-    include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/")
-endif ()
+include(external/qpdunes)
+include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/")
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
-add_dependencies(acados qpoases hpmpc blasfeo)
+add_dependencies(acados qpoases hpmpc blasfeo qpdunes)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(ooqpbase ma27)
     add_dependencies(acados ooqpbase)
-endif ()
-
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/qpDUNES-dev)
-    add_dependencies(acados qpdunes)
 endif ()
 
 # Define examples
@@ -115,10 +109,8 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
 
-    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
-    if (EXISTS ${PROJECT_SOURCE_DIR}/external/qpDUNES-dev)
-        target_link_libraries(unit_tests qpdunes)
-    endif ()
+    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc qpdunes m)
+
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
         target_link_libraries(unit_tests ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
