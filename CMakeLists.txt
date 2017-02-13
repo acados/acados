@@ -122,7 +122,7 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
 
-    target_link_libraries(unit_tests acados qpoases blasfeo hpmpc qpdunes m)
+    target_link_libraries(unit_tests acados qpoases hpmpc blasfeo qpdunes m)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
