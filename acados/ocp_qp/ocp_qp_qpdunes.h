@@ -46,6 +46,7 @@ typedef struct ocp_qp_qpdunes_args_ {
 typedef struct ocp_qp_qpdunes_workspace_ {
     real_t *At;
     real_t *Bt;
+    real_t *Ct;
     real_t *scrap;
     real_t *zLow;
     real_t *zUpp;
@@ -57,8 +58,10 @@ typedef struct ocp_qp_qpdunes_memory_ {
     int_t firstRun;
     int_t dimA;
     int_t dimB;
-    int_t maxDim;
+    int_t dimC;  // maximum dimension of matrix: [Cx Cu]
+    int_t maxDim;  // maximum dimension of dimA, dimB, dimC needed for scrap (to transpose a mat)
     int_t dimz;
+    int_t nDmax;
     qpData_t qpData;
     qpdunes_stage_qp_solver_t stageQpSolver;
 } ocp_qp_qpdunes_memory;

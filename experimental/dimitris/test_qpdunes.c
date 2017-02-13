@@ -32,7 +32,7 @@ int main(int argc, char const *argv[]) {
 
     /* sim vars */
     int_t BOUNDS = 1;
-    int_t CONSTRAINTS = 0;
+    int_t CONSTRAINTS = 1;
     int_t MPC = 1;
     int_t QUIET = 1;
 
