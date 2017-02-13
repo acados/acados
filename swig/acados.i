@@ -154,7 +154,7 @@ static PyObject *convert_to_sequence_of_2dim_arrays(T **c_array,
     PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
     PyObject *pDict = PyModule_GetDict(pModule);
     PyObject *pClass = PyDict_GetItemString(pDict, "list_of_arrays");
-    PyObject *sequence;
+    PyObject *sequence = NULL;
     if (PyCallable_Check(pClass)) {
         sequence = PyObject_CallObject(pClass, NULL);
     }
@@ -174,7 +174,7 @@ static PyObject *convert_to_sequence_of_1dim_arrays(T **c_array,
     PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
     PyObject *pDict = PyModule_GetDict(pModule);
     PyObject *pClass = PyDict_GetItemString(pDict, "list_of_arrays");
-    PyObject *sequence;
+    PyObject *sequence = NULL;
     if (PyCallable_Check(pClass)) {
         sequence = PyObject_CallObject(pClass, NULL);
     }
