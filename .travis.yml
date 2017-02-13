@@ -8,6 +8,7 @@ env:
   - CXX="g++-6" CC="gcc-6"
   - CXX="g++-5" CC="gcc-5"
   - CXX="g++-4.9" CC="gcc-4.9"
+  - CXX="g++-4.8" CC="gcc-4.8"
   - CXX="clang++-3.7" CC="clang-3.7"
 
 addons:
@@ -72,3 +73,8 @@ script:
   - popd
   - pushd $VIRTUAL_ENV
   - python3 test_swig.py
+  - popd
+  - cmake -D CMAKE_BUILD_TYPE=Release ..
+  - make
+  - cmake -D CMAKE_BUILD_TYPE=Debug ..
+  - make
