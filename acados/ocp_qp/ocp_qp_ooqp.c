@@ -31,7 +31,7 @@ int_t *rows;
 int_t *cols;
 int_t lda;
 
-int_t max_of_three(int_t a, int_t b, int_t c) {
+static int_t max_of_three(int_t a, int_t b, int_t c) {
      int_t ans = a;
      (void)((ans < b) && (ans = b));
      (void)((ans < c) && (ans = c));

@@ -25,6 +25,14 @@
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/timing.h"
 
+static int_t max_of_three(int_t a, int_t b, int_t c) {
+     int_t ans = a;
+     (void)((ans < b) && (ans = b));
+     (void)((ans < c) && (ans = c));
+     return ans;
+}
+
+
 static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
     int_t ii, jj;
 
@@ -85,7 +93,7 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 work->zUpp[ii] = args->options.QPDUNES_INFTY;
             }
             for (ii = 0; ii < in->nb[kk]; ii++) {
-                // TODO(dimitris): what's our infty?
+                // TODO(dimitris): what's our infty in acados?
                 work->zLow[in->idxb[kk][ii]] = in->lb[kk][ii];
                 work->zUpp[in->idxb[kk][ii]] = in->ub[kk][ii];
             }
@@ -94,10 +102,9 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
             transpose_matrix(work->At, nx, nx, work->scrap);
             transpose_matrix(work->Bt, nx, nu, work->scrap);
 
-            // TODO(dimitris): pass ineq. constraints if they exist here
             if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
                 nc = in->nc[kk];
-                if (nc == 0) {  // TODO(dimitris): Check that qpDUNES allows having both
+                if (nc == 0) {
                     return_value = qpDUNES_setupRegularInterval(&(mem->qpData),
                     mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], in->S[kk], work->g, 0,
                     work->At, work->Bt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
@@ -253,11 +260,8 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
     dimz = in->nx[0]+in->nu[0];
     dimC = nDmax*dimz;
 
-    // TODO(dimitris): use max_of_three_ints in OOQP
-    // calculate memory size for scrap memory (to transpose matrices)
-    maxDim = dimA;
-    if (dimB > maxDim) maxDim = dimB;
-    if (dimC > maxDim) maxDim = dimC;
+    // calculate memory size for scrap memory (used to transpose matrices)
+    maxDim = max_of_three(dimA, dimB, dimC);
 
     size = sizeof(ocp_qp_qpdunes_workspace);
     size += (dimA + dimB + dimC + maxDim + 3*dimz)*sizeof(real_t);
@@ -283,9 +287,7 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
     mem->dimz = nx+nu;
     mem->nDmax = get_maximum_number_of_inequality_constraints(in);
     mem->dimC = mem->nDmax*mem->dimz;
-    mem->maxDim = mem->dimA;
-    if (mem->dimB > mem->maxDim) mem->maxDim = mem->dimB;
-    if (mem->dimC > mem->maxDim) mem->maxDim = mem->dimC;
+    mem->maxDim = max_of_three(mem->dimA, mem->dimB, mem->dimC);
 
     /* Check for constant dimensions */
     for (kk = 1; kk < N; kk++) {
@@ -308,9 +310,11 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         if (args->options.lsType != 7) {
             args->options.lsType = 7;
             // TODO(dimitris): write proper acados warnings and errors
-            printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-            printf("WARNING: Changed line-search algorithm for qpDUNES (incompatible with OCP_QP)");
-            printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            if (args->options.printLevel > 0) {
+                printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+                printf("WARNING: Changed line-search algorithm for qpDUNES (incompatible with QP)");
+                printf("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+            }
         }
         if (mem->nDmax > 0) nD_ptr = (uint_t*)in->nc;  // otherwise leave pointer equal to zero
     }
@@ -321,7 +325,7 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
         printf("Setup of the QP solver failed\n");
         return (int_t)return_value;
     }
-    return (int_t)return_value;
+    return 0;
 }
 
 
@@ -352,5 +356,5 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, vo
     }
     fill_in_qp_out(in, out, mem);
 
-    return return_value;
+    return 0;
 }
