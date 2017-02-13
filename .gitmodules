@@ -14,6 +14,3 @@
 [submodule "catch"]
 	path = external/catch
 	url = https://github.com/philsquared/Catch.git
-[submodule "external/qpDUNES-dev"]
-	path = external/qpDUNES-dev
-	url = git@github.com:acados/qpDUNES-dev.git
