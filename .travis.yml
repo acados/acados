@@ -1,10 +1,14 @@
 dist: trusty
 sudo: required
+language: python
+python:
+  - 3.6
 
 env:
   - CXX="g++-6" CC="gcc-6"
   - CXX="g++-5" CC="gcc-5"
   - CXX="g++-4.9" CC="gcc-4.9"
+  - CXX="g++-4.8" CC="gcc-4.8"
   - CXX="clang++-3.7" CC="clang-3.7"
 
 addons:
@@ -27,7 +31,6 @@ addons:
       - gcc-5
       - clang-3.7
       - swig
-      - python3-numpy
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
@@ -39,6 +42,7 @@ before_install:
   - sudo apt-get update -yq
 
 install:
+  - pip install numpy
   - sudo apt-get install octave liboctave-dev
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
@@ -63,5 +67,14 @@ script:
   - make
   - make lint
   - make unit_tests
-  - cd test
+  - make install
+  - pushd test
   - ./unit_tests
+  - popd
+  - pushd $VIRTUAL_ENV
+  - python3 test_swig.py
+  - popd
+  - cmake -D CMAKE_BUILD_TYPE=Release ..
+  - make
+  - cmake -D CMAKE_BUILD_TYPE=Debug ..
+  - make
