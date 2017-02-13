@@ -17,8 +17,6 @@
  *
  */
 
-// TODO(dimitris): Fix bug and real_t/int_t types in qpDUNES-dev repo
-
 #include <stdio.h>
 #include <stdlib.h>
 
