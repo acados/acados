@@ -280,6 +280,29 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
     }
 }
 
+static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
+    if (qp1->N != qp2->N)
+        return false;
+    int_t N = qp1->N;
+    for (int_t i = 0; i < N; i++) {
+        if (qp1->nx[i] != qp2->nx[i])
+            return false;
+        else if (qp1->nu[i] != qp2->nu[i])
+            return false;
+        else if (qp1->nb[i] != qp2->nb[i])
+            return false;
+        else if (qp1->nc[i] != qp2->nc[i])
+            return false;
+    }
+    if (qp1->nx[N] != qp2->nx[N])
+        return false;
+    else if (qp1->nb[N] != qp2->nb[N])
+        return false;
+    else if (qp1->nc[N] != qp2->nc[N])
+        return false;
+    return true;
+}
+
 %}
 
 %typemap(in) int_t N {
@@ -494,6 +517,20 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
         return solver;
     }
     PyObject *solve() {
+        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->mem, $self->work);
+        if (return_code != 0) {
+            SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
+        }
+
+        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
+            $self->qp_in->N+1, $self->qp_in->nx);
+    }
+    PyObject *solve(ocp_qp_in *qp_in) {
+        if(!qp_dimensions_equal(qp_in, $self->qp_in)) {
+            SWIG_Error(SWIG_ValueError, "Not allowed to change dimensions of variables "
+                "between calls to solver");
+        }
+        $self->qp_in = qp_in;
         int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->mem, $self->work);
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
