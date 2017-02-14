@@ -59,6 +59,7 @@ endif()
 
 # Define source files
 include(acados_sources)
+add_definitions(-DUSE_ACADOS_TYPES)
 
 # Process external libraries
 include(external/openblas)

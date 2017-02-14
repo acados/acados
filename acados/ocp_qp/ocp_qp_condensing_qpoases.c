@@ -26,7 +26,6 @@
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
     #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wtypedef-redefinition"
     #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
     #pragma clang diagnostic ignored "-Wunused-parameter"
     #pragma clang diagnostic ignored "-Wunused-function"
