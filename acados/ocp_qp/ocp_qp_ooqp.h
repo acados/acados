@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
 
 typedef struct ocp_qp_ooqp_args_ {
     int_t printLevel;

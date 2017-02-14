@@ -17,17 +17,18 @@
  *
  */
 
+#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-#include "acados/utils/types.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/print.h"
-#include "acados/sim/sim_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/sim/sim_common.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 
 #define PARALLEL 0
 

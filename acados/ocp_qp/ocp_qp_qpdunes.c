@@ -17,10 +17,11 @@
  *
  */
 
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/timing.h"
 
 static int_t max_of_three(int_t a, int_t b, int_t c) {

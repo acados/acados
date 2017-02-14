@@ -17,13 +17,12 @@
  *
  */
 
-#include <stdlib.h>
-#include "hpmpc/include/aux_d.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_qp/condensing.h"
-#include "acados/utils/print.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
 
+#include <stdlib.h>
+
+#include "blasfeo/include/blasfeo_i_aux.h"
+#include "hpmpc/include/aux_d.h"
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
     #pragma clang diagnostic push
@@ -53,6 +52,9 @@
         #include "qpOASES_e/QProblem.h"
     #endif
 #endif
+
+#include "acados/ocp_qp/condensing.h"
+#include "acados/utils/print.h"
 
 QProblemB QPB;
 QProblem QP;
