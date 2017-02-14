@@ -243,7 +243,7 @@ static void convert_to_row_major(const real_t *input, real_t *output, const int_
 }
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-    void *args_, void *workspace_) {
+    void *args_, void *mem_, void *workspace_) {
 
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
     double *workspace = (double*) workspace_;
@@ -257,6 +257,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     args->dummy = 1.0;
     workspace++;
     workspace = 0;
+    mem_ = 0;
 
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
     convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);

@@ -66,15 +66,13 @@ include(external/openblas)
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpoases)
-add_subdirectory(swig)
+include(external/qpdunes)
+include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/")
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     include(external/ma27)
     include(external/ooqp)
 endif ()
-
-include(external/qpdunes)
-include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/")
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
@@ -84,6 +82,8 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(ooqpbase ma27)
     add_dependencies(acados ooqpbase)
 endif ()
+
+add_subdirectory(swig)
 
 # Define examples
 add_executable(hpmpc_example ${HPMPC_EXAMPLE_SRC})

@@ -32,7 +32,7 @@ typedef struct {
 } ocp_qp_condensing_qpoases_args;
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output,
-    void *args, void *work);
+    void *args, void *mem, void *work);
 
 int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *input,
     ocp_qp_condensing_qpoases_args *args);

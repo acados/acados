@@ -24,8 +24,8 @@ qp_in.B = B
 qp_in.Q = diag([1,1])
 qp_in.R = diag([1])
 
-solver = ocp_qp_solver("condensing_qpoases", qp_in)
+solver = ocp_qp_solver("qpdunes", qp_in)
 
 result = solver.solve()
 
-print(result['x'])
+print(result)

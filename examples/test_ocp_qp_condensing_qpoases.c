@@ -408,7 +408,7 @@ int main() {
 
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
+        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, NULL);
     }
 
     gettimeofday(&tv1, NULL);  // stop

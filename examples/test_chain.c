@@ -454,7 +454,7 @@ int main() {
             }
 
             int status = 0;
-            status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
+            status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;

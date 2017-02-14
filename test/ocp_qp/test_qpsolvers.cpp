@@ -87,7 +87,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             initialise_qpoases(&qp_in);
                             // TODO(dimitris): also test that qp_in has not changed
-                            return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
+                            return_value = \
+                                ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, NULL);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_QPOASES));
