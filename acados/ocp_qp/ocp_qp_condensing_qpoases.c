@@ -258,6 +258,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     workspace++;
     workspace = 0;
     mem_ = 0;
+    mem++;
 
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
     convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);
