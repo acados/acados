@@ -231,7 +231,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
 
     for (i = 0; i < nu; i++) rhs_in[nx*(1+NF)+i] = in->u[i];
 
-    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis || opts->scheme.type == approx) {
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
+            || opts->scheme.type == approx) {
         for (i = 0; i < nx; i++) adj_tmp[i] = in->S_adj[i];
     }
 
@@ -258,13 +259,15 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             }
 
             // Newton step of the Lagrange multipliers mu, based on adj_traj:
-            if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis || opts->scheme.type == approx) {
+            if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
+                    || opts->scheme.type == approx) {
                 // TODO(rien): adjoint Newton update
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (i = 0; i < nx; i++) {
                         sys_sol[s1*nx+i] = -mu_traj[istep*num_stages*nx+s1*nx+i];
                         for (s2 = 0; s2 < num_stages; s2++) {
-                            sys_sol[s1*nx+i] += H_INT*A_mat[s1*num_stages+s2]*adj_traj[istep*num_stages*nx+s2*nx+i];
+                            sys_sol[s1*nx+i] += H_INT*A_mat[s1*num_stages+s2]*
+                                    adj_traj[istep*num_stages*nx+s2*nx+i];
                         }
                         sys_sol[s1*nx+i] -= H_INT*b_vec[s1]*adj_tmp[i];
                     }
@@ -275,7 +278,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                     // apply the transf1 operation:
                     for (s1 = 0; s1 < num_stages; s1++) {
                         for (s2 = 0; s2 < num_stages; s2++) {
-                            work->trans[s2*num_stages+s1] = 1.0/H_INT*opts->scheme.transf1_T[s2*num_stages+s1];
+                            work->trans[s2*num_stages+s1] = 1.0/H_INT*
+                                    opts->scheme.transf1_T[s2*num_stages+s1];
                         }
                     }
                     for (s1 = 0; s1 < num_stages; s1++) {
@@ -311,7 +315,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 int_t idx = 0;
                 for (s1 = 0; s1 < num_stages; s1++) {
                     // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE LINEAR SUBSYSTEMS
-                    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
+                    if (opts->scheme.type == simplified_in
+                            || opts->scheme.type == simplified_inis) {
                         sys_mat = sys_mat2[idx];
                         ipiv = ipiv2[idx];
                         sys_sol = sys_sol2[idx];
@@ -365,8 +370,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         for (i = 0; i < nx; i++) {
                             sys_sol[s1*nx+i] = 0.0;
                             for (s2 = 0; s2 < num_stages; s2++) {
-                                sys_sol[s1*nx+i] +=
-                                        opts->scheme.transf2_T[s2*num_stages+s1]*sys_sol_trans[s2*nx+i];
+                                sys_sol[s1*nx+i] += opts->scheme.transf2_T[s2*num_stages+s1]
+                                                                           *sys_sol_trans[s2*nx+i];
                             }
                         }
                     }
@@ -380,11 +385,12 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 }
 
                 // update adj_tmp:
-                // TODO: USE ADJOINT DIFFERENTIATION HERE INSTEAD !!:
+                // TODO(rien): USE ADJOINT DIFFERENTIATION HERE INSTEAD !!:
                 for (j = 0; j < nx; j++) {
                     for (s1 = 0; s1 < num_stages; s1++) {
                         for (i = 0; i < nx; i++) {
-                            adj_tmp[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*jac_traj[istep*num_stages+s1][j*nx+i];
+                            adj_tmp[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*
+                                    jac_traj[istep*num_stages+s1][j*nx+i];
                         }
                     }
                 }
@@ -392,26 +398,28 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
         }
     }
 
-    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis || opts->scheme.type == approx) {
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
+            || opts->scheme.type == approx) {
         for (i = 0; i < NF; i++) out->grad[i] = 0.0;
     }
 
     for (istep = 0; istep < NSTEPS; istep++) {
         // form exact linear system matrix (explicit ODE case):
-        if ((opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) && istep == 0) {
+        if ((opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis)
+                && istep == 0) {
             int idx = 0;
             for (s1 = 0; s1 < num_stages; s1++) {
                 if ((s1+1) == num_stages) {  // real eigenvalue
-                    for (i = 0; i < nx*nx; i++ ) sys_mat2[idx][i] = 0.0;
+                    for (i = 0; i < nx*nx; i++) sys_mat2[idx][i] = 0.0;
                     tmp_eig = 1.0/H_INT*opts->scheme.eig[s1];
-                    for (i = 0; i < nx; i++ ) {
+                    for (i = 0; i < nx; i++) {
                         sys_mat2[idx][i*(nx+1)] = tmp_eig;
                     }
-                } else { // complex conjugate pair of eigenvalues
-                    for (i = 0; i < 4*nx*nx; i++ ) sys_mat2[idx][i] = 0.0;
+                } else {  // complex conjugate pair of eigenvalues
+                    for (i = 0; i < 4*nx*nx; i++) sys_mat2[idx][i] = 0.0;
                     tmp_eig = 1.0/H_INT*opts->scheme.eig[s1];
                     tmp_eig2 = 1.0/H_INT*opts->scheme.eig[s1+1];
-                    for (i = 0; i < nx; i++ ) {
+                    for (i = 0; i < nx; i++) {
                         sys_mat2[idx][i*(2*nx+1)] = tmp_eig;
                         sys_mat2[idx][(nx+i)*(2*nx+1)] = tmp_eig;
 
@@ -424,7 +432,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             }
         } else if (opts->scheme.type == exact || (opts->scheme.type == approx && istep == 0)) {
             for (i = 0; i < num_stages*nx*num_stages*nx; i++) sys_mat[i] = 0.0;
-            for (i = 0; i < num_stages*nx; i++ ) sys_mat[i*(num_stages*nx+1)] = 1.0;  // identity matrix
+            for (i = 0; i < num_stages*nx; i++ ) sys_mat[i*(num_stages*nx+1)] = 1.0;  // identity
         }
 
         int idx = 0;
@@ -443,12 +451,14 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             in->jac_fun(rhs_in, jac_tmp);  // k evaluation
             timing_ad += acado_toc(&timer_ad);
             //                }
-            if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis || opts->scheme.type == approx) {
+            if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
+                    || opts->scheme.type == approx) {
                 for (i = 0; i < nx*nx; i++) jac_traj[istep*num_stages+s1][i] = jac_tmp[nx+i];
             }
 
             // put jac_tmp in sys_mat:
-            if ((opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) && istep == 0) {
+            if ((opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis)
+                    && istep == 0) {
                 if ((s1+1) == num_stages) {  // real eigenvalue
                     for (j = 0; j < nx; j++) {
                         for (i = 0; i < nx; i++) {
@@ -539,7 +549,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 if (opts->scheme.type == simplified_inis) {
                     for (j = 0; j < NF; j++) {
                         for (i = 0; i < nx; i++) {
-                            rhs_in[(j+1)*nx+i] += H_INT*A_mat[s2*num_stages+s1]*DK_traj[(istep*num_stages+s2)*nx*NF+j*nx+i];
+                            rhs_in[(j+1)*nx+i] += H_INT*A_mat[s2*num_stages+s1]*
+                                    DK_traj[(istep*num_stages+s2)*nx*NF+j*nx+i];
                         }
                     }
                 }
@@ -560,7 +571,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             if (opts->scheme.type == simplified_inis) {
                 for (j = 0; j < NF; j++) {
                     for (i = 0; i < nx; i++) {
-                        sys_sol[(j+1)*num_stages*nx+s1*nx+i] -= DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i];
+                        sys_sol[(j+1)*num_stages*nx+s1*nx+i] -=
+                                DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i];
                     }
                 }
             }
@@ -580,7 +592,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             // apply the transf1 operation:
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (s2 = 0; s2 < num_stages; s2++) {
-                    work->trans[s2*num_stages+s1] = 1.0/H_INT*opts->scheme.transf1[s2*num_stages+s1];
+                    work->trans[s2*num_stages+s1] = 1.0/H_INT*
+                            opts->scheme.transf1[s2*num_stages+s1];
                 }
             }
             for (s1 = 0; s1 < num_stages; s1++) {
@@ -589,7 +602,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         sys_sol_trans[j*(num_stages*nx)+s1*nx+i] = 0.0;
                         for (s2 = 0; s2 < num_stages; s2++) {
                             sys_sol_trans[j*(num_stages*nx)+s1*nx+i] +=
-                                    work->trans[s2*num_stages+s1]*sys_sol[j*(num_stages*nx)+s2*nx+i];
+                                    work->trans[s2*num_stages+s1]*
+                                    sys_sol[j*(num_stages*nx)+s2*nx+i];
                         }
                     }
                 }
@@ -705,7 +719,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         sys_sol[j*(num_stages*nx)+s1*nx+i] = 0.0;
                         for (s2 = 0; s2 < num_stages; s2++) {
                             sys_sol[j*(num_stages*nx)+s1*nx+i] +=
-                                    opts->scheme.transf2[s2*num_stages+s1]*sys_sol_trans[j*(num_stages*nx)+s2*nx+i];
+                                    opts->scheme.transf2[s2*num_stages+s1]*
+                                    sys_sol_trans[j*(num_stages*nx)+s2*nx+i];
                         }
                     }
                 }
@@ -742,34 +757,42 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         DK_traj[(istep*num_stages+s1)*nx*NF+i];  // RK step
             }
         }
-        if (opts->scheme.type == simplified_inis || opts->scheme.type == simplified_in || opts->scheme.type == approx) {  // Adjoint derivatives:
+        if (opts->scheme.type == simplified_inis || opts->scheme.type == simplified_in
+                || opts->scheme.type == approx) {  // Adjoint derivatives:
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (j = 0; j < nx; j++) {
                     adj_traj[istep*num_stages*nx+s1*nx+j] = 0.0;
                     for (i = 0; i < nx; i++) {
-                        adj_traj[istep*num_stages*nx+s1*nx+j] += mu_traj[istep*num_stages*nx+s1*nx+i]*jac_traj[istep*num_stages+s1][j*nx+i];
+                        adj_traj[istep*num_stages*nx+s1*nx+j] +=
+                                mu_traj[istep*num_stages*nx+s1*nx+i]*
+                                jac_traj[istep*num_stages+s1][j*nx+i];
                     }
                 }
             }
         }
-        if (opts->scheme.type == simplified_in || opts->scheme.type == approx) {  // Standard Inexact Newton based gradient correction:
+        if (opts->scheme.type == simplified_in || opts->scheme.type == approx) {
+            // Standard Inexact Newton based gradient correction:
             for (j = 0; j < NF; j++) {
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (i = 0; i < nx; i++) {
-                        out->grad[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*VDE_tmp[s1][(j+1)*nx+i];
+                        out->grad[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*
+                                VDE_tmp[s1][(j+1)*nx+i];
                     }
                 }
             }
             for (j = 0; j < NF; j++) {
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (i = 0; i < nx; i++) {
-                        out->grad[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i];
+                        out->grad[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*
+                                DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i];
                     }
                 }
                 for (s2 = 0; s2 < num_stages; s2++) {
                     for (s1 = 0; s1 < num_stages; s1++) {
                         for (i = 0; i < nx; i++) {
-                            out->grad[j] -= H_INT*A_mat[s2*num_stages+s1]*adj_traj[istep*num_stages*nx+s1*nx+i]*DK_traj[(istep*num_stages+s2)*nx*NF+j*nx+i];
+                            out->grad[j] -= H_INT*A_mat[s2*num_stages+s1]*
+                                    adj_traj[istep*num_stages*nx+s1*nx+i]*
+                                    DK_traj[(istep*num_stages+s2)*nx*NF+j*nx+i];
                         }
                     }
                 }
@@ -830,7 +853,8 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
 //        }
     }
 
-    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis || opts->scheme.type == approx) {
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
+            || opts->scheme.type == approx) {
         work->out_adj_tmp = malloc(sizeof(*work->out_adj_tmp) * (nx));
     }
 
@@ -930,7 +954,8 @@ void sim_lifted_irk_create_memory(const sim_in *in,
     mem->x = malloc(sizeof(*mem->x) * nx);
     mem->u = malloc(sizeof(*mem->u) * nu);
 
-    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis || opts->scheme.type == approx) {
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
+            || opts->scheme.type == approx) {
         mem->adj_traj = malloc(sizeof(*mem->adj_traj) * (nSteps*num_stages*nx));
         for ( i = 0; i < nSteps*num_stages*nx; i++ ) mem->adj_traj[i] = 0.0;
 
@@ -994,8 +1019,10 @@ void sim_irk_create_Newton_scheme(const int_t num_stages, const char* name,
             opts->scheme.eig = malloc(sizeof(*opts->scheme.eig) * (num_stages));
             opts->scheme.transf1 = malloc(sizeof(*opts->scheme.transf1) * (num_stages*num_stages));
             opts->scheme.transf2 = malloc(sizeof(*opts->scheme.transf2) * (num_stages*num_stages));
-            opts->scheme.transf1_T = malloc(sizeof(*opts->scheme.transf1_T) * (num_stages*num_stages));
-            opts->scheme.transf2_T = malloc(sizeof(*opts->scheme.transf2_T) * (num_stages*num_stages));
+            opts->scheme.transf1_T =
+                    malloc(sizeof(*opts->scheme.transf1_T) * (num_stages*num_stages));
+            opts->scheme.transf2_T =
+                    malloc(sizeof(*opts->scheme.transf2_T) * (num_stages*num_stages));
             read_Gauss_simplified(opts->num_stages, &opts->scheme);
         }
     } else if ( strcmp(name, "Radau") == 0 ) {
