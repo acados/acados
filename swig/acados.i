@@ -8,6 +8,8 @@
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/allocate_ocp_qp.h"
 %}
 
@@ -280,6 +282,29 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
     }
 }
 
+static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
+    if (qp1->N != qp2->N)
+        return false;
+    int_t N = qp1->N;
+    for (int_t i = 0; i < N; i++) {
+        if (qp1->nx[i] != qp2->nx[i])
+            return false;
+        else if (qp1->nu[i] != qp2->nu[i])
+            return false;
+        else if (qp1->nb[i] != qp2->nb[i])
+            return false;
+        else if (qp1->nc[i] != qp2->nc[i])
+            return false;
+    }
+    if (qp1->nx[N] != qp2->nx[N])
+        return false;
+    else if (qp1->nb[N] != qp2->nb[N])
+        return false;
+    else if (qp1->nc[N] != qp2->nc[N])
+        return false;
+    return true;
+}
+
 %}
 
 %typemap(in) int_t N {
@@ -476,25 +501,64 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
 %extend ocp_qp_solver {
     ocp_qp_solver(const char *solver_name, ocp_qp_in *qp_in) {
         ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
-        if (strcmp(solver_name, "condensing_qpoases")) {
+        void *args = NULL;
+        void *mem = NULL;
+        int_t workspace_size;
+        void *workspace = NULL;
+        if (!strcmp(solver_name, "condensing_qpoases")) {
+            solver->fun = ocp_qp_condensing_qpoases;
+            args = (ocp_qp_condensing_qpoases_args *) \
+                malloc(sizeof(ocp_qp_condensing_qpoases_args));
+#ifdef OOQP
+        } else if (!strcmp(solver_name, "ooqp")) {
+            solver->fun = ocp_qp_ooqp;
+            args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
+            ((ocp_qp_ooqp_args *) args)->workspaceMode = 2;
+            mem = (ocp_qp_ooqp_memory *) malloc(sizeof(ocp_qp_ooqp_memory));
+            ocp_qp_ooqp_create_memory(qp_in, args, mem);
+            workspace_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
+            workspace = (void *) malloc(workspace_size);
+#endif
+        } else if (!strcmp(solver_name, "qpdunes")) {
+            solver->fun = ocp_qp_qpdunes;
+            args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
+            ocp_qp_qpdunes_create_arguments(args, QPDUNES_DEFAULT_ARGUMENTS);
+            mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
+            ocp_qp_qpdunes_create_memory(qp_in, args, mem);
+            workspace_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
+            workspace = (void *) malloc(workspace_size);
+        }  else {
             SWIG_Error(SWIG_ValueError, "Solver name not known!");
             return NULL;
         }
-        solver->fun = ocp_qp_condensing_qpoases;
         solver->qp_in = qp_in;
         ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
         allocate_ocp_qp_out(qp_in, qp_out);
         solver->qp_out = qp_out;
-        ocp_qp_condensing_qpoases_args *args = \
-            (ocp_qp_condensing_qpoases_args *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
-        solver->mem = args;
-        real_t *qpoases_work = NULL;
-        solver->work = qpoases_work;
+        solver->args = args;
+        solver->mem = mem;
+        solver->work = workspace;
         initialise_qpoases(qp_in);
         return solver;
     }
     PyObject *solve() {
-        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->mem, $self->work);
+        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
+            $self->mem, $self->work);
+        if (return_code != 0) {
+            SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
+        }
+
+        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
+            $self->qp_in->N+1, $self->qp_in->nx);
+    }
+    PyObject *solve(ocp_qp_in *qp_in) {
+        if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
+            SWIG_Error(SWIG_ValueError, "Not allowed to change dimensions of variables "
+                "between calls to solver");
+        }
+        $self->qp_in = qp_in;
+        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
+            $self->mem, $self->work);
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
@@ -502,5 +566,3 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
             $self->qp_in->N+1, $self->qp_in->nx);
     }
 }
-
-%include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"

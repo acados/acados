@@ -172,7 +172,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
 
         status = work->solver->fun(work->solver->qp_in, work->solver->qp_out,
-                work->solver->mem, work->solver->work);
+                work->solver->mem, NULL, work->solver->work);
         if (status) {
             printf("qpOASES returned error status %d\n", status);
             return -1;

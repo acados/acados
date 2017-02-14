@@ -58,9 +58,10 @@ typedef struct {
 } ocp_qp_out;
 
 typedef struct {
-    int_t (*fun)(ocp_qp_in*, ocp_qp_out*, void*, void*);
+    int_t (*fun)(ocp_qp_in*, ocp_qp_out*, void *, void*, void*);
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
+    void *args;
     void *mem;
     void *work;
 } ocp_qp_solver;
