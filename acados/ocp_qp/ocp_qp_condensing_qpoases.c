@@ -212,7 +212,8 @@ static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
 }
 
 static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u, real_t **pi,
-    real_t *primal_solution, real_t *dual_solution, const real_t *x0) {
+    real_t *primal_solution, real_t *dual_solution, const real_t *x0,
+    int_t nconstraints, int_t nconvars) {
 
     for (int_t i = 0; i < qp_in->nx[0]; i++) {
         x[0][i] = x0[i];
@@ -231,7 +232,55 @@ static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u, r
         // for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
     }
 
-    // TODO(rien): recover multipliers in pi
+    // Recover multipliers in pi
+    // pi_k = lambda_k + Q_k x_k
+    int_t cindex = nconvars+nconstraints;
+    for (int_t i = qp_in->N; i > 0; i--) {
+        int_t idxb = 0;
+        cindex -= (work.nstate_bounds[i]+qp_in->nc[i]);
+        // pi_k = lambda_k
+        for (int_t j = 0; j < qp_in->nx[0]; j++) {
+            if (qp_in->nb[i] > idxb && qp_in->idxb[i][idxb] == j) {  // bound on x[j]
+                pi[(i-1)][j] = -dual_solution[cindex+idxb];
+                idxb++;
+            } else {
+                pi[(i-1)][j] = 0.0;
+            }
+        }
+        if (qp_in->nc[i] > 0) {
+            // pi_k = pi_k + Cx_k+1^T lambda_k+1
+            for (int_t j = 0; j < qp_in->nx[0]; j++) {
+                for (int_t k = 0; k < qp_in->nc[i]; k++) {
+                    pi[(i-1)][j] -= qp_in->Cx[i][j*qp_in->nc[i]+k]
+                                                 *dual_solution[cindex+work.nstate_bounds[i]+k];
+                }
+            }
+        }
+
+        // pi_k = pi_k + Q_k x_k + q_k
+        for (int_t j = 0; j < qp_in->nx[0]; j++) {
+            pi[(i-1)][j] += qp_in->q[i][j];
+            for (int_t k = 0; k < qp_in->nx[0]; k++) {
+                pi[(i-1)][j] += qp_in->Q[i][k*qp_in->nx[0]+j]*x[i][k];
+            }
+        }
+
+        if (i < qp_in->N) {
+            // pi_k = pi_k + S_k u_k
+            for (int_t j = 0; j < qp_in->nx[0]; j++) {
+                for (int_t k = 0; k < qp_in->nu[0]; k++) {
+                    pi[(i-1)][j] += qp_in->S[i][j*qp_in->nu[0]+k]*u[i][k];
+                }
+            }
+
+            // pi_k = pi_k + A_k^T pi_k+1
+            for (int_t j = 0; j < qp_in->nx[0]; j++) {
+                for (int_t k = 0; k < qp_in->nx[0]; k++) {
+                    pi[(i-1)][j] += qp_in->A[i][j*qp_in->nx[0]+k]*pi[i][k];
+                }
+            }
+        }
+    }
 }
 
 static void convert_to_row_major(const real_t *input, real_t *output, const int_t nrows,
@@ -274,7 +323,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     } else {
         return_flag = solve_condensed_QPB(work.nconvars, &QPB, primal_solution, dual_solution);
     }
-    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, qp_out->pi, primal_solution, dual_solution, qp_in->lb[0]);
+    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, qp_out->pi,
+            primal_solution, dual_solution, qp_in->lb[0], work.nconstraints, work.nconvars);
 
     d_free(out.H);
     d_free(out.h);
