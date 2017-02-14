@@ -48,6 +48,8 @@ typedef struct ocp_qp_ooqp_workspace_ {
     real_t *lambda;
     real_t *pi;
     real_t objectiveValue;
+    int_t *tmpInt;  // temporary vector to sort indicies sparse matrices
+    real_t *tmpReal;  // temporary vector to sort data of sparse matrices
     // int_t ierr;
 } ocp_qp_ooqp_workspace;
 
@@ -81,6 +83,7 @@ typedef struct ocp_qp_ooqp_memory_ {
     char *iclow;
     real_t *cupp;
     char *icupp;
+    int_t nnz;  // max(nnzQ, nnzA, nnzC)
 } ocp_qp_ooqp_memory;
 
 int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);

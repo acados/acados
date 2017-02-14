@@ -13,6 +13,7 @@
 #include "acados/utils/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
 using std::vector;
@@ -24,6 +25,8 @@ int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
 int_t TEST_QPOASES = 1;
 real_t TOL_QPOASES = 1e-10;
+int_t TEST_QPDUNES = 1;
+real_t TOL_QPDUNES = 1e-10;
 int_t TEST_HPMPC = 0;
 real_t TOL_HPMPC = 1e-10;
 
@@ -91,6 +94,34 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
+                    if (TEST_QPDUNES) {
+                        SECTION("qpDUNES") {
+                            std::cout <<"---> TESTING qpDUNES with QP: "<< scenario <<
+                                ", " << constraint << std::endl;
+
+                            ocp_qp_qpdunes_args args;
+                            ocp_qp_qpdunes_memory mem;
+                            void *work;
+
+                            ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
+                            args.options.printLevel = 0;
+
+                            int_t work_space_size =
+                                ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
+                            work = (void*)malloc(work_space_size);
+
+                            int_t mem_return = ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
+                            REQUIRE(mem_return == 0);
+
+                            return_value = ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
+                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
+                            free(work);
+                            ocp_qp_qpdunes_free_memory(&mem);
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
+                            std::cout <<"---> PASSED " << std::endl;
+                        }
+                    }
                     if (TEST_OOQP) {
                         SECTION("OOQP") {
                             std::cout <<"---> TESTING OOQP with QP: "<< scenario <<
@@ -98,19 +129,21 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             ocp_qp_ooqp_args args;
                             ocp_qp_ooqp_memory mem;
-                            ocp_qp_ooqp_workspace work;
+                            void *work;
 
                             args.printLevel = 0;
+                            args.workspaceMode = 2;  // TODO(dimitris): make this default
+
+                            int_t work_space_size =
+                                ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
+                            work = (void*)malloc(work_space_size);
 
                             int_t mem_return = ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
                             REQUIRE(mem_return == 0);
-                            int_t work_return = ocp_qp_ooqp_create_workspace(&qp_in, &args, &work);
-                            REQUIRE(work_return == 0);
 
-                            return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
+                            return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            // TODO(dimitris): FIX PROBLEM WITH ORDER UNIT TESTS
-                            ocp_qp_ooqp_free_workspace(&work);
+                            free(work);
                             ocp_qp_ooqp_free_memory(&mem);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));

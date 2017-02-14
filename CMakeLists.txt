@@ -73,9 +73,12 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     include(external/ooqp)
 endif ()
 
+include(external/qpdunes)
+include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/")
+
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
-add_dependencies(acados qpoases hpmpc blasfeo)
+add_dependencies(acados qpoases hpmpc blasfeo qpdunes)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(ooqpbase ma27)
@@ -90,7 +93,7 @@ add_executable(hpmpc_example_partial_tightening ${HPMPC_EXAMPLE_SRC})
 target_link_libraries(hpmpc_example_partial_tightening acados hpmpc blasfeo openblas m)
 
 add_executable(condensing_qpoases_example ${CONDENSING_QPOASES_EXAMPLE_SRC})
-target_link_libraries(condensing_qpoases_example acados qpoases blasfeo hpmpc m)
+target_link_libraries(condensing_qpoases_example acados qpoases hpmpc blasfeo m)
 
 add_executable(nmpc_example ${NMPC_EXAMPLE_SRC} ${CHEN_MODEL_SRC})
 target_link_libraries(nmpc_example acados qpoases blasfeo m)
@@ -119,12 +122,13 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     add_dependencies(unit_tests generate_test_data)
 
+    target_link_libraries(unit_tests acados qpoases hpmpc blasfeo qpdunes m)
+
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
-        target_link_libraries(unit_tests acados qpoases hpmpc blasfeo ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
-    else ()
-        target_link_libraries(unit_tests acados qpoases blasfeo hpmpc m)
+        target_link_libraries(unit_tests ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
     endif ()
+
     set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 endif()
 
