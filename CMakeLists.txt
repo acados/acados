@@ -69,6 +69,7 @@ include(external/qpdunes)
 include_directories("${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/")
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    add_definitions(-DOOQP)
     include(external/ma27)
     include(external/ooqp)
 endif ()
