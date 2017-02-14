@@ -227,8 +227,9 @@ nlp = struct('x',vertcat(V{:}), 'f',effort, 'g', vertcat(g{:}));
 
 nlpfun = Function('nlp',nlp,char('x','p'),char('f','g'));
 
+solver_opts.ipopt = struct('print_level', 1);
 %opts.ipopt = struct('linear_solver','ma27','acceptable_tol', 1e-12, 'tol', 1e-12);
-solver = nlpsol('solver','ipopt',nlp);
+solver = nlpsol('solver','ipopt',nlp, solver_opts);
 
 %args = struct;
 %args.x0 = x0;
