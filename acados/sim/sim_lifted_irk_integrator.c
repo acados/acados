@@ -169,6 +169,76 @@ real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
 
 #endif
 
+void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
+        const int_t stages, const int_t  n, const int_t m) {
+    for (int_t s1 = 0; s1 < stages; s1++) {
+        for (int_t i = 0; i < n; i++) {
+            for (int_t j = 0; j < m; j++) {
+                mat_trans[j*(stages*n)+s1*n+i] = 0.0;
+                for (int_t s2 = 0; s2 < stages; s2++) {
+                    mat_trans[j*(stages*n)+s1*n+i] +=
+                            trans[s2*stages+s1]*mat[j*(stages*n)+s2*n+i];
+                }
+            }
+        }
+    }
+}
+
+void construct_subsystems(real_t *mat, real_t **mat2,
+        const int_t stages, const int_t n, const int_t m) {
+    int_t idx = 0;
+    for (int_t s1 = 0; s1 < stages; s1++) {
+        if ((s1+1) < stages) {  // complex conjugate pair of eigenvalues
+            for (int_t j = 0; j < m; j++) {
+                for (int_t i = 0; i < n; i++) {
+                    mat2[idx][j*2*n+i] = mat[j*(stages*n)+s1*n+i];
+                }
+            }
+            s1++;
+            for (int_t j = 0; j < m; j++) {
+                for (int_t i = 0; i < n; i++) {
+                    mat2[idx][j*2*n+n+i] = mat[j*(stages*n)+s1*n+i];
+                }
+            }
+        } else {  // real eigenvalue
+            for (int_t j = 0; j < m; j++) {
+                for (int_t i = 0; i < n; i++) {
+                    mat2[idx][j*n+i] = mat[j*(stages*n)+s1*n+i];
+                }
+            }
+        }
+        idx++;
+    }
+}
+
+void destruct_subsystems(real_t *mat, real_t **mat2,
+        const int_t stages, const int_t n, const int_t m) {
+    int_t idx = 0;
+    for (int_t s1 = 0; s1 < stages; s1++) {
+        if ((s1+1) < stages) {  // complex conjugate pair of eigenvalues
+            for (int_t j = 0; j < m; j++) {
+                for (int_t i = 0; i < n; i++) {
+                    mat[j*(stages*n)+s1*n+i] = mat2[idx][j*2*n+i];
+                }
+            }
+            s1++;
+            for (int_t j = 0; j < m; j++) {
+                for (int_t i = 0; i < n; i++) {
+                    mat[j*(stages*n)+s1*n+i] = mat2[idx][j*2*n+n+i];
+                }
+            }
+        } else {  // real eigenvalue
+            for (int_t j = 0; j < m; j++) {
+                for (int_t i = 0; i < n; i++) {
+                    mat[j*(stages*n)+s1*n+i] = mat2[idx][j*n+i];
+                }
+            }
+        }
+        idx++;
+    }
+}
+
+
 void sim_lifted_irk(const sim_in *in, sim_out *out,
         void *mem_, void *work_ ) {
     int_t nx = in->nx;
@@ -282,33 +352,10 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                                     opts->scheme.transf1_T[s2*num_stages+s1];
                         }
                     }
-                    for (s1 = 0; s1 < num_stages; s1++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol_trans[s1*nx+i] = 0.0;
-                            for (s2 = 0; s2 < num_stages; s2++) {
-                                sys_sol_trans[s1*nx+i] +=
-                                        work->trans[s2*num_stages+s1]*sys_sol[s2*nx+i];
-                            }
-                        }
-                    }
+                    transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages, nx, 1);
+
                     // construct sys_sol2 from sys_sol_trans:
-                    int_t idx = 0;
-                    for (s1 = 0; s1 < num_stages; s1++) {
-                        if ((s1+1) < num_stages) {  // complex conjugate pair of eigenvalues
-                            for (i = 0; i < nx; i++) {
-                                sys_sol2[idx][i] = sys_sol_trans[s1*nx+i];
-                            }
-                            s1++;
-                            for (i = 0; i < nx; i++) {
-                                sys_sol2[idx][nx+i] = sys_sol_trans[s1*nx+i];
-                            }
-                        } else {  // real eigenvalue
-                            for (i = 0; i < nx; i++) {
-                                sys_sol2[idx][i] = sys_sol_trans[s1*nx+i];
-                            }
-                        }
-                        idx++;
-                    }
+                    construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
                 }
 
                 acado_tic(&timer_la);
@@ -346,35 +393,12 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 // TRANSFORM using transf2_T:
                 if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
                     // construct sys_sol_trans from sys_sol2:
-                    idx = 0;
-                    for (s1 = 0; s1 < num_stages; s1++) {
-                        if ((s1+1) < num_stages) {  // complex conjugate pair of eigenvalues
-                            for (i = 0; i < nx; i++) {
-                                sys_sol_trans[s1*nx+i] = sys_sol2[idx][i];
-                            }
-                            s1++;
-                            for (i = 0; i < nx; i++) {
-                                sys_sol_trans[s1*nx+i] = sys_sol2[idx][nx+i];
-                            }
-                        } else {  // real eigenvalue
-                            for (i = 0; i < nx; i++) {
-                                sys_sol_trans[s1*nx+i] = sys_sol2[idx][i];
-                            }
-                        }
-                        idx++;
-                    }
+                    destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
 
                     // apply the transf2 operation:
                     sys_sol = work->sys_sol;
-                    for (s1 = 0; s1 < num_stages; s1++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol[s1*nx+i] = 0.0;
-                            for (s2 = 0; s2 < num_stages; s2++) {
-                                sys_sol[s1*nx+i] += opts->scheme.transf2_T[s2*num_stages+s1]
-                                                                           *sys_sol_trans[s2*nx+i];
-                            }
-                        }
-                    }
+                    transform_mat(sys_sol_trans, opts->scheme.transf2_T, sys_sol,
+                            num_stages, nx, 1);
                 }
 
                 // update mu_traj
@@ -596,42 +620,10 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                             opts->scheme.transf1[s2*num_stages+s1];
                 }
             }
-            for (s1 = 0; s1 < num_stages; s1++) {
-                for (i = 0; i < nx; i++) {
-                    for (j = 0; j < 1+NF; j++) {
-                        sys_sol_trans[j*(num_stages*nx)+s1*nx+i] = 0.0;
-                        for (s2 = 0; s2 < num_stages; s2++) {
-                            sys_sol_trans[j*(num_stages*nx)+s1*nx+i] +=
-                                    work->trans[s2*num_stages+s1]*
-                                    sys_sol[j*(num_stages*nx)+s2*nx+i];
-                        }
-                    }
-                }
-            }
+            transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages, nx, 1+NF);
+
             // construct sys_sol2 from sys_sol_trans:
-            idx = 0;
-            for (s1 = 0; s1 < num_stages; s1++) {
-                if ((s1+1) < num_stages) {  // complex conjugate pair of eigenvalues
-                    for (j = 0; j < 1+NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol2[idx][j*2*nx+i] = sys_sol_trans[j*(num_stages*nx)+s1*nx+i];
-                        }
-                    }
-                    s1++;
-                    for (j = 0; j < 1+NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol2[idx][j*2*nx+nx+i] = sys_sol_trans[j*(num_stages*nx)+s1*nx+i];
-                        }
-                    }
-                } else {  // real eigenvalue
-                    for (j = 0; j < 1+NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol2[idx][j*nx+i] = sys_sol_trans[j*(num_stages*nx)+s1*nx+i];
-                        }
-                    }
-                }
-                idx++;
-            }
+            construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1+NF);
         }
 
         acado_tic(&timer_la);
@@ -687,44 +679,11 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
 
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
             // construct sys_sol_trans from sys_sol2:
-            idx = 0;
-            for (s1 = 0; s1 < num_stages; s1++) {
-                if ((s1+1) < num_stages) {  // complex conjugate pair of eigenvalues
-                    for (j = 0; j < 1+NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol_trans[j*(num_stages*nx)+s1*nx+i] = sys_sol2[idx][j*2*nx+i];
-                        }
-                    }
-                    s1++;
-                    for (j = 0; j < 1+NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol_trans[j*(num_stages*nx)+s1*nx+i] = sys_sol2[idx][j*2*nx+nx+i];
-                        }
-                    }
-                } else {  // real eigenvalue
-                    for (j = 0; j < 1+NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_sol_trans[j*(num_stages*nx)+s1*nx+i] = sys_sol2[idx][j*nx+i];
-                        }
-                    }
-                }
-                idx++;
-            }
+            destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1+NF);
 
             // apply the transf2 operation:
             sys_sol = work->sys_sol;
-            for (s1 = 0; s1 < num_stages; s1++) {
-                for (i = 0; i < nx; i++) {
-                    for (j = 0; j < 1+NF; j++) {
-                        sys_sol[j*(num_stages*nx)+s1*nx+i] = 0.0;
-                        for (s2 = 0; s2 < num_stages; s2++) {
-                            sys_sol[j*(num_stages*nx)+s1*nx+i] +=
-                                    opts->scheme.transf2[s2*num_stages+s1]*
-                                    sys_sol_trans[j*(num_stages*nx)+s2*nx+i];
-                        }
-                    }
-                }
-            }
+            transform_mat(sys_sol_trans, opts->scheme.transf2, sys_sol, num_stages, nx, 1+NF);
         }
 
         // Newton step of the collocation variables
