@@ -18,7 +18,12 @@
  *
  */
 
-// system headers
+#define PLOT_RESULTS
+
+#ifdef PLOT_RESULTS
+#define _GNU_SOURCE
+#endif  // PLOT_RESULTS
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,12 +45,6 @@
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
 #include "examples/casadi_pendulum/pendulum_model.h"
-
-#define PLOT_RESULTS
-
-#ifdef PLOT_RESULTS
-#define _GNU_SOURCE
-#endif  // PLOT_RESULTS
 
 // define IP solver arguments && number of repetitions
 #define NREP 1
