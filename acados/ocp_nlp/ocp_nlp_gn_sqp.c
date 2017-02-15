@@ -19,9 +19,9 @@
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"

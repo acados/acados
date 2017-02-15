@@ -1,16 +1,38 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 %module acados
 %{
 #define SWIG_FILE_WITH_INIT
-#define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
-        PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
-                    data, 0, NPY_ARRAY_FARRAY, NULL)
+
 #include <typeinfo>
-#include "acados/utils/types.h"
+
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/allocate_ocp_qp.h"
+#include "acados/utils/types.h"
+
+#define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
+        PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
+                    data, 0, NPY_ARRAY_FARRAY, NULL)
 %}
 
 %include "numpy.i"

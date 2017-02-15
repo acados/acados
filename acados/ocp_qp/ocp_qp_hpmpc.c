@@ -19,8 +19,8 @@
 
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"

@@ -20,14 +20,14 @@
 #ifndef ACADOS_UTILS_TIMING_H_
 #define ACADOS_UTILS_TIMING_H_
 
-#include "acados/utils/types.h"
-
 #if defined(__APPLE__)
 #include <mach/mach_time.h>
 #else
 #include <sys/stat.h>
 #include <sys/time.h>
 #endif
+
+#include "acados/utils/types.h"
 
 #if defined(__APPLE__)
 typedef struct acado_timer_ {

@@ -1,18 +1,36 @@
-// define number of repetitions
-#define NREP 10
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
 // system headers
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
-// acados headers
+#include "blasfeo/include/blasfeo_i_aux.h"
+#include "hpmpc/include/aux_d.h"
+
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/utils/tools.h"
 
-#include "hpmpc/include/aux_d.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
+// define number of repetitions
+#define NREP 10
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
