@@ -35,6 +35,9 @@
 #ifndef QPOASES_TYPES_H
 #define QPOASES_TYPES_H
 
+#ifdef USE_ACADOS_TYPES
+#include "acados/utils/types.h"
+#endif
 
 /* If your compiler does not support the snprintf() function,
  * uncomment the following line and try to compile again. */
