@@ -24,9 +24,9 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
-#include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/utils/types.h"
 
 #define TRANSPOSED 1
 #define TRIPLE_LOOP 1

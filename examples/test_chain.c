@@ -17,17 +17,9 @@
  *
  */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <math.h>
-#include "acados/utils/types.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/print.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "examples/casadi_chain/Chain_model.h"
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -35,6 +27,14 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_kernel.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+#include "examples/casadi_chain/Chain_model.h"
 
 #define NN 10
 #define UMAX 2
@@ -454,7 +454,7 @@ int main() {
             }
 
             int status = 0;
-            status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
+            status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;

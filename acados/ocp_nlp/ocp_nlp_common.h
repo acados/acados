@@ -20,9 +20,9 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
-#include "acados/utils/types.h"
-#include "acados/sim/sim_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/sim_common.h"
+#include "acados/utils/types.h"
 
 typedef struct ocp_nlp_function_ {
     //    const int_t *sparsity;
@@ -100,7 +100,7 @@ typedef struct ocp_nlp_work_ {
     real_t **lc;
     real_t **uc;
 
-    qp_solver *solver;
+    ocp_qp_solver *solver;
 } ocp_nlp_work;
 
 

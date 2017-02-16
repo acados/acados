@@ -1,21 +1,42 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#include <iostream>
 #include <string>
-#include <iostream>   // std::cout
+
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
 #include "catch/include/catch.hpp"
-#include "test/ocp_nlp/chain/Chain_model.h"
-#include "acados/utils/types.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/print.h"
+
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/sim/sim_common.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+#include "test/ocp_nlp/chain/Chain_model.h"
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/zeros.h"
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-7;
 #define NN 15
@@ -266,14 +287,14 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_out.x[N] = (real_t *) malloc(sizeof(*nlp_out.x[N]) * (NX));
 
         ocp_nlp_work nlp_work;
-        qp_solver qpoases;
+        ocp_qp_solver qpoases;
         ocp_qp_in qp_in;
         ocp_qp_out qp_out;
         ocp_qp_condensing_qpoases_args args;
         real_t *qpoases_work = NULL;
         nlp_work.solver = &qpoases;
-        nlp_work.solver->in = &qp_in;
-        nlp_work.solver->out = &qp_out;
+        nlp_work.solver->qp_in = &qp_in;
+        nlp_work.solver->qp_out = &qp_out;
         nlp_work.solver->mem = &args;
         nlp_work.solver->work = qpoases_work;
         nlp_work.solver->fun = &ocp_qp_condensing_qpoases;
