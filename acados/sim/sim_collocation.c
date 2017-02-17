@@ -82,11 +82,11 @@ void get_Gauss_nodes(const int_t num_stages, real_t *nodes) {
     }
     for (uint i = 0; i < N1; i++) nodes[i] = (a*(1-y[i]) + b*(1+y[i]))/2;
 
-//    free(x_init);
-//    free(y);
-//    free(y_prev);
-//    free(lgvm);
-//    free(der_lgvm);
+    free(x_init);
+    free(y);
+    free(y_prev);
+    free(lgvm);
+    free(der_lgvm);
 }
 
 void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
@@ -174,6 +174,9 @@ void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
 //        print_matrix("stdout", T_inv, 1, 1);
 //        print_matrix("stdout", scheme->transf2_T, num_stages, num_stages);
 //        print_matrix("stdout", T_inv, 1, 1);
+
+    free(perm);
+    free(T_inv);
 }
 
 
@@ -215,6 +218,10 @@ void create_Butcher_table(const int_t num_stages, const real_t *nodes,
                 b[i] = b[i]+1.0/(j+1)*rhs[i*num_stages+j];
             }
         }
+
+        free(can_vm);
+        free(rhs);
+        free(perm);
 }
 
 
