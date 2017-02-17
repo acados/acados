@@ -19,7 +19,7 @@
 #define DIM_RHS 9   // NX+NU
 #endif
 
-real_t LU_system_ACADO(real_t* const A, int* const perm, int dim, int* nswaps) {
+real_t LU_system_ACADO(real_t* const A, int* const perm, int dim) {
     real_t det;
     real_t swap;
     real_t valueMax;
@@ -49,7 +49,6 @@ real_t LU_system_ACADO(real_t* const A, int* const perm, int dim, int* nswaps) {
             }
         }
         if (indexMax > i) {
-            nswaps[0] += 1;
             for (k = 0; k < DIM; ++k) {
                 swap = A[k*DIM+i];
                 A[k*DIM+i] = A[k*DIM+indexMax];
@@ -307,7 +306,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
     }
 
     // Newton step of the collocation variables with respect to the inputs:
-    if (NF == (nx+nu)) {
+    if (NF == (nx+nu) && in->sens_adj) {
         for (istep = NSTEPS-1; istep > -1; istep--) {  // ADJOINT update
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (j = 0; j < nx; j++) {  // step in X
@@ -331,7 +330,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             // Newton step of the Lagrange multipliers mu, based on adj_traj:
             if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
                     || opts->scheme.type == approx) {
-                // TODO(rien): adjoint Newton update
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (i = 0; i < nx; i++) {
                         sys_sol[s1*nx+i] = -mu_traj[istep*num_stages*nx+s1*nx+i];
@@ -342,6 +340,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         sys_sol[s1*nx+i] -= H_INT*b_vec[s1]*adj_tmp[i];
                     }
                 }
+//                print_matrix("stdout", sys_sol, 1, num_stages*nx);
+//                print_matrix("stdout", sys_sol, 1, 1);
 
                 // TRANSFORM using transf1_T:
                 if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
@@ -407,6 +407,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         mu_traj[istep*num_stages*nx+s1*nx+i] += sys_sol[s1*nx+i];
                     }
                 }
+//                print_matrix_name("stdout", "mu_traj", &mu_traj[istep*num_stages*nx], 1, num_stages*nx);
 
                 // update adj_tmp:
                 // TODO(rien): USE ADJOINT DIFFERENTIATION HERE INSTEAD !!:
@@ -459,7 +460,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             for (i = 0; i < num_stages*nx; i++ ) sys_mat[i*(num_stages*nx+1)] = 1.0;  // identity
         }
 
-        int idx = 0;
         for (s1 = 0; s1 < num_stages; s1++) {
             //                if (opts->scheme.type == exact || s1 == 0) {
             for (i = 0; i < nx; i++) {
@@ -481,6 +481,21 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             }
 
             // put jac_tmp in sys_mat:
+            if (opts->scheme.type == exact) {
+                for (s2 = 0; s2 < num_stages; s2++) {
+                    for (j = 0; j < nx; j++) {
+                        for (i = 0; i < nx; i++) {
+                            sys_mat[(s2*nx+j)*num_stages*nx+s1*nx+i] -=
+                                    H_INT*A_mat[s2*num_stages+s1]*jac_tmp[nx+j*nx+i];
+                        }
+                    }
+                }
+            }
+        }
+
+        int idx = 0;
+        for (s1 = 0; s1 < num_stages; s1++) {
+            // put jac_traj[0] in sys_mat:
             if ((opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis)
                     && istep == 0) {
                 if ((s1+1) == num_stages) {  // real eigenvalue
@@ -499,15 +514,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                     s1++;  // skip the complex conjugate eigenvalue
                 }
                 idx++;
-            } else if (opts->scheme.type == exact) {
-                for (s2 = 0; s2 < num_stages; s2++) {
-                    for (j = 0; j < nx; j++) {
-                        for (i = 0; i < nx; i++) {
-                            sys_mat[(s2*nx+j)*num_stages*nx+s1*nx+i] -=
-                                    H_INT*A_mat[s2*num_stages+s1]*jac_tmp[nx+j*nx+i];
-                        }
-                    }
-                }
             } else if (opts->scheme.type == approx && istep == 0) {
                 for (s2 = 0; s2 < num_stages; s2++) {
                     for (j = 0; j < nx; j++) {
@@ -543,7 +549,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                     s1 = num_stages;  // break out of for-loop
                 }
 #if TRIPLE_LOOP
-                LU_system_ACADO(sys_mat, ipiv, dim_sys, &mem->nswaps);
+                LU_system_ACADO(sys_mat, ipiv, dim_sys);
 #else   // TRIPLE_LOOP
                 // ---- BLASFEO: LU factorization ----
 #if defined(LA_HIGH_PERFORMANCE)
@@ -611,7 +617,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             }
         }
 
-        idx = 0;
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
             // apply the transf1 operation:
             for (s1 = 0; s1 < num_stages; s1++) {
@@ -729,6 +734,11 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 }
             }
         }
+//        print_matrix_name("stdout", "adj_traj", &adj_traj[0], 1, num_stages*nx);
+//        print_matrix_name("stdout", "mu_traj", &mu_traj[0], 1, num_stages*nx);
+//        print_matrix_name("stdout", "DK_traj", &DK_traj[0], 1, nx*NF);
+//        print_matrix_name("stdout", "VDE_tmp[0]", &VDE_tmp[0][0], 1, nx*(NF+1));
+//        print_matrix_name("stdout", "VDE_tmp[1]", &VDE_tmp[1][0], 1, nx*(NF+1));
         if (opts->scheme.type == simplified_in || opts->scheme.type == approx) {
             // Standard Inexact Newton based gradient correction:
             for (j = 0; j < NF; j++) {
@@ -742,14 +752,14 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
             for (j = 0; j < NF; j++) {
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (i = 0; i < nx; i++) {
-                        out->grad[j] += mu_traj[istep*num_stages*nx+s1*nx+i]*
+                        out->grad[j] -= mu_traj[istep*num_stages*nx+s1*nx+i]*
                                 DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i];
                     }
                 }
                 for (s2 = 0; s2 < num_stages; s2++) {
                     for (s1 = 0; s1 < num_stages; s1++) {
                         for (i = 0; i < nx; i++) {
-                            out->grad[j] -= H_INT*A_mat[s2*num_stages+s1]*
+                            out->grad[j] += H_INT*A_mat[s2*num_stages+s1]*
                                     adj_traj[istep*num_stages*nx+s1*nx+i]*
                                     DK_traj[(istep*num_stages+s2)*nx*NF+j*nx+i];
                         }
@@ -757,6 +767,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 }
             }
         }
+//        print_matrix_name("stdout", "grad", &out->grad[0], 1, NF);
     }
     for (i = 0; i < nx; i++)    out->xn[i] = out_tmp[i];
     for (i = 0; i < nx*NF; i++) out->S_forw[i] = out_tmp[nx+i];
@@ -783,9 +794,11 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
 
     work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+NF)+nu));
     work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+NF)));
-    work->ipiv = malloc(sizeof(*work->ipiv) * (dim_sys));
-    for (int_t i = 0; i < dim_sys; i++) work->ipiv[i] = i;
-    work->sys_mat = malloc(sizeof(*work->sys_mat) * (dim_sys*dim_sys));
+    if (opts->scheme.type == approx || opts->scheme.type == exact) {
+        work->ipiv = malloc(sizeof(*work->ipiv) * (dim_sys));
+        for (int_t i = 0; i < dim_sys; i++) work->ipiv[i] = i;
+        work->sys_mat = malloc(sizeof(*work->sys_mat) * (dim_sys*dim_sys));
+    }
     work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+NF));
     work->VDE_tmp = malloc(sizeof(*work->VDE_tmp) * num_stages);
     for (int_t i = 0; i < num_stages; i++) {
@@ -796,20 +809,6 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
         work->sys_sol_trans = malloc(sizeof(*work->sys_sol_trans) * (num_stages*nx)*(1+NF));
         work->trans = malloc(sizeof(*work->trans) * (num_stages*num_stages));
-//        work->sys_mat2 = malloc(sizeof(*work->sys_mat2) * num_sys);
-//        work->ipiv2 = malloc(sizeof(*work->ipiv2) * num_sys);
-//        work->sys_sol2 = malloc(sizeof(*work->sys_sol2) * num_sys);
-//        for (int_t i = 0; i < num_sys; i++) {
-//            if ((i+1) == num_sys && num_sys != floor(num_stages/2.0)) {  // odd number of stages
-//                work->sys_mat2[i] = malloc(sizeof(*(work->sys_mat2[i])) * (nx*nx));
-//                work->ipiv2[i] = malloc(sizeof(*(work->ipiv2[i])) * (nx));
-//                work->sys_sol2[i] = malloc(sizeof(*(work->sys_sol2[i])) * (nx*(1+NF)));
-//            } else {
-//                work->sys_mat2[i] = malloc(sizeof(*(work->sys_mat2[i])) * (4*nx*nx));
-//                work->ipiv2[i] = malloc(sizeof(*(work->ipiv2[i])) * (2*nx));
-//                work->sys_sol2[i] = malloc(sizeof(*(work->sys_sol2[i])) * (2*nx*(1+NF)));
-//            }
-//        }
     }
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
@@ -906,6 +905,9 @@ void sim_lifted_irk_create_memory(const sim_in *in,
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
     int_t num_sys = ceil(num_stages/2.0);
+//    printf("num_stages: %d \n", num_stages);
+//    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
+//    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
 
     mem->K_traj = malloc(sizeof(*mem->K_traj) * (nSteps*num_stages*nx));
     mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*NF));
@@ -937,10 +939,16 @@ void sim_lifted_irk_create_memory(const sim_in *in,
                 mem->sys_mat2[i] = malloc(sizeof(*(mem->sys_mat2[i])) * (nx*nx));
                 mem->ipiv2[i] = malloc(sizeof(*(mem->ipiv2[i])) * (nx));
                 mem->sys_sol2[i] = malloc(sizeof(*(mem->sys_sol2[i])) * (nx*(1+NF)));
+
+                for (int_t j = 0; j < nx*nx; j++) mem->sys_mat2[i][j] = 0.0;
+                for (int_t j = 0; j < nx; j++) mem->sys_mat2[i][j*(nx+1)] = 1.0;
             } else {
                 mem->sys_mat2[i] = malloc(sizeof(*(mem->sys_mat2[i])) * (4*nx*nx));
                 mem->ipiv2[i] = malloc(sizeof(*(mem->ipiv2[i])) * (2*nx));
                 mem->sys_sol2[i] = malloc(sizeof(*(mem->sys_sol2[i])) * (2*nx*(1+NF)));
+
+                for (int_t j = 0; j < 4*nx*nx; j++) mem->sys_mat2[i][j] = 0.0;
+                for (int_t j = 0; j < 2*nx; j++) mem->sys_mat2[i][j*(2*nx+1)] = 1.0;
             }
         }
     }
