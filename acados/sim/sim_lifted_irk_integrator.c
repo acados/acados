@@ -407,7 +407,6 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                         mu_traj[istep*num_stages*nx+s1*nx+i] += sys_sol[s1*nx+i];
                     }
                 }
-//                print_matrix_name("stdout", "mu_traj", &mu_traj[istep*num_stages*nx], 1, num_stages*nx);
 
                 // update adj_tmp:
                 // TODO(rien): USE ADJOINT DIFFERENTIATION HERE INSTEAD !!:
