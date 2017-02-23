@@ -58,7 +58,8 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 endif()
 
 # external ocps
-include_directories("../ocps/")
+include_directories("../../optimal_control/ocps/")
+include_directories("../../optimal_control/models/")
 
 # Define source files
 include(acados_sources)
@@ -111,14 +112,11 @@ target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
 add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
 target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
 
-#add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
-#target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
+add_library(acados_controller ${ACADOS_CONTROLLER_SRC})
+target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
 
-#add_executable(aircraft_callable ${AIRCRAFT_CALLABLE_SRC})
-#target_link_libraries(aircraft_callable acados hpmpc blasfeo openblas m)
-
-#add_library(aircraft_callable ${AIRCRAFT_CALLABLE_SRC})
-#target_link_libraries(aircraft_callable acados hpmpc blasfeo openblas m)
+#add_executable(acados_controller ${AIRCRAFT2_CALLABLE_SRC})
+#target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
 
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
