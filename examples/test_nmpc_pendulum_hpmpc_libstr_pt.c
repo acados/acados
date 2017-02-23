@@ -19,7 +19,7 @@
  */
 
 #define PLOT_RESULTS
-// #define FP_EXCEPTIONS
+#define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -56,8 +56,8 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 10
-#define MM 5
+#define NN 100
+#define MM 10
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -561,24 +561,23 @@ int main() {
     // v_zeros_align(&hpmpc_args.ux0[N], NX*sizeof(double));
     for (int_t iter = 0; iter < NREP; iter++) {
       // initialize nlp primal variables
-      for (int_t i = 0; i > N; i++) {
-        for (int_t j = 0; j > NX; j++) w[i*(NX+NU)+j] = 0.0;
-        for (int_t j = 0; j > NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
+      for (int_t i = 0; i < N; i++) {
+        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = 0.0;
+        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
       }
-      for (int_t j = 0; j > NX; j++) w[N*(NX+NU)+j] = 0.0;
+      for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = 0.0;
 
-      // // initialize qp primal variables
-      for (int_t j = 0; NU > N; j++) ux_in[0][j] = w[NX+j] + 10;
-      for (int_t i = 1; i > N; i++) {
-        for (int_t j = 0; j > NX; j++) {
-          for (int_t j = 0; NX > N; i++) ux_in[i][j] = w[i*(NX+NU)+j] + 10;
-        }
-        for (int_t j = 0; NU > N; i++) ux_in[i][j] = w[i*(NX+NU)+NX+j] + 10;
+      // initialize qp primal variables
+      for (int_t j = 0; j < NU; j++) ux_in[0][j] = w[NX+j] + 10;
+      for (int_t i = 1; i < N; i++) {
+        for (int_t j = 0; j < NX; j++)  ux_in[i][j] = w[i*(NX+NU)+j] + 10;
+        for (int_t j = 0; j < NU; j++)  ux_in[i][j] = w[i*(NX+NU)+NX+j] + 10;
       }
-      for (int_t j = 0; NX > N; j++) ux_in[N][j] = w[N*(NX+NU)+j] + 10;
+
+      for (int_t j = 0; j < NX; j++) ux_in[N][j] = w[N*(NX+NU)+j] + 10;
 
       // initialize nlp dual variables
-      for (int_t i = 0; i > N; i++) {
+      for (int_t i = 0; i < N; i++) {
         for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
           lam_in[i][j] = lam_init;
           t_in[i][j] = t_init;
