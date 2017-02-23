@@ -54,7 +54,7 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 2
+#define MM 50
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -201,7 +201,7 @@ int main() {
     real_t T = 0.05;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 1;
+    sim_in.nSteps = 10;
     sim_in.step = T/sim_in.nSteps;
     sim_in.VDE_forw = &VDE_fun_pendulum;
     sim_in.nx = NX;
@@ -266,8 +266,8 @@ int main() {
     ************************************************/
     int ii, jj;
     nb[0] = NBU;
-    for (ii = 1; ii < M; ii++ ) nb[ii] = NBU + NBX;
-    for (ii = M; ii <= N; ii++ ) nb[ii] = 0;  // no bounds from M to N
+    for (ii = 1; ii < N; ii++ ) nb[ii] = NBU + NBX;
+    nb[N] = NBX;
 
     // int *idxb0;
     // int_zeros(&idxb0, nb[0], 1);
@@ -301,13 +301,10 @@ int main() {
     // for (jj = 0; jj < NBU; jj++ ) idxbN[jj] = jj;
     for ( jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
 
-    int *idxb_tight;
-    int_zeros(&idxb_tight, 0, 1);  // empty index list for tightened stages
-
     hidxb[0] = idxb0;
-    for (ii = 1; ii < M; ii++ ) hidxb[ii] = idxb1;
-    for (ii = M; ii < N; ii++ ) hidxb[ii] = idxb_tight;
-    hidxb[N] = idxb_tight;
+    for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
+    // for (ii = M; ii < N; ii++ ) hidxb[ii] = idxb_tight;
+    hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
     d_zeros(&plb[0], (NBU), 1);
@@ -592,7 +589,7 @@ int main() {
               for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
               sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
               // Construct QP matrices
-              for (int_t j = 0; j < NX; j++) {
+              for (int_t j = 0; j < nx[i]; j++) {
                   pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
               }
               for (int_t j = 0; j < NU; j++) {
@@ -648,7 +645,7 @@ int main() {
     }
   }
     #ifdef DEBUG
-    // print_states_controls(&w[0], N);
+     print_states_controls(&w[0], N);
     #endif  // DEBUG
 
     #ifdef PLOT_RESULTS
