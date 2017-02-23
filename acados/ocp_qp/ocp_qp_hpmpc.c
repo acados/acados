@@ -378,9 +378,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hlg = (double **) qp_in->lc;
     double **hug = (double **) qp_in->uc;
 
-    // double **hlam_in = hpmpc_args->lam0; //TODO(Andrea): not using input multipliers
-    // double **ht_in = hpmpc_args->t0; //TODO(Andrea): not using input slacks
-
     struct d_strmat *hsmatdummy = NULL;
     struct d_strvec *hsvecdummy = NULL;
 

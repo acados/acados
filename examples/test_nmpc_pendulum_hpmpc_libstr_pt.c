@@ -19,7 +19,7 @@
  */
 
 #define PLOT_RESULTS
-#define FP_EXCEPTIONS
+// #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -56,8 +56,8 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 100
-#define MM 50
+#define NN 10
+#define MM 5
 #define NX 4
 #define NU 1
 #define NBU 1
