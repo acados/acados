@@ -32,7 +32,8 @@ enum Newton_type_collocation {
           exact = 0,
           approx,
           simplified_in,
-          simplified_inis
+          simplified_inis,
+          simplified_inis2
         };
 
 typedef struct Newton_scheme_ {
