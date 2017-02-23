@@ -687,8 +687,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     hsux[M].pa -= nuM;
 
     // forward riccati solution at the beginning
-      d_back_ric_rec_sv_forw_libstr(N-M+1, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
-      0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], &hsrq[M], hsmatdummy,
+      d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
+      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
       &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
       &hsLxt[M], hsric_work_mat);
 
