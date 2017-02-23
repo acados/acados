@@ -19,6 +19,7 @@
  */
 
 #define PLOT_RESULTS
+#define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -28,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <fenv.h>
+
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
     defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
@@ -162,6 +165,7 @@ static void plot_states_controls(real_t *w, real_t T) {
 // }
 
 // TODO(Andrea): need to fix this stuff below...
+
 extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
   int *nu, int *nb, int *ng);
 
@@ -174,6 +178,12 @@ extern  int d_size_strvec(int m);
 
 // Simple SQP example for acados
 int main() {
+
+    #ifdef FP_EXCEPTIONS
+      feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+      // feenableexcept(FE_INVALID);
+    #endif // FP_EXCEPTIONS
+
     // Problem data
     int_t   N                   = NN;
     int_t   M                   = MM;
