@@ -53,6 +53,7 @@ typedef struct sim_lifted_irk_workspace_ {
 typedef struct sim_lifted_irk_memory_ {
     real_t *K_traj;
     real_t *DK_traj;
+    real_t *delta_DK_traj;
     real_t *mu_traj;
 
     real_t **sys_mat2;
@@ -69,7 +70,7 @@ typedef struct sim_lifted_irk_memory_ {
 } sim_lifted_irk_memory;
 
 
-void sim_lifted_irk(const sim_in *in, sim_out *out,
+int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         void *mem, void *work);
 
 void sim_lifted_irk_create_workspace(const sim_in *in,
@@ -79,6 +80,8 @@ void sim_lifted_irk_create_memory(const sim_in *in,
         sim_lifted_irk_memory *mem);
 
 void sim_irk_create_opts(int_t num_stages, const char* name, sim_RK_opts *opts);
+
+void sim_irk_control_collocation(int_t num_stages, const char* name, sim_RK_opts *opts);
 
 void sim_irk_create_Newton_scheme(int_t num_stages, const char* name,
         sim_RK_opts *opts, enum Newton_type_collocation type);

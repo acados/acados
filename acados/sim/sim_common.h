@@ -66,7 +66,7 @@ typedef struct sim_out_ {
 } sim_out;
 
 typedef struct sim_solver_ {
-    void (*fun)(const sim_in*, sim_out*, void*, void*);
+    int_t (*fun)(const sim_in*, sim_out*, void*, void*);
     sim_in *in;
     sim_out *out;
     void *mem;

@@ -331,6 +331,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_mem
     sim_RK_opts *opts = in->opts;
     int_t num_stages = opts->num_stages;
     real_t *A_mat = opts->A_mat;
+    real_t *c_vec = opts->c_vec;
 
     real_t tmp_eig, tmp_eig2, tmp_eig3;
     acado_timer timer_ad;
@@ -380,6 +381,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_mem
             rhs_in[i] = out_tmp[i];
         }
         for (i = 0; i < nu; i++) rhs_in[nx+i] = in->u[i];
+        rhs_in[nx+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
         for (s2 = 0; s2 < num_stages; s2++) {
             for (i = 0; i < nx; i++) {
                 rhs_in[i] += H_INT*A_mat[s2*num_stages+s1]*K_traj[istep*num_stages*nx+s2*nx+i];
@@ -476,7 +478,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_mem
 }
 
 
-void sim_lifted_irk(const sim_in *in, sim_out *out,
+int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         void *mem_, void *work_ ) {
     int_t nx = in->nx;
     int_t nu = in->nu;
@@ -492,7 +494,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
-//    real_t *c_vec = opts->c_vec;
+    real_t *c_vec = opts->c_vec;
 
 //    print_matrix("stdout", A_mat, num_stages, num_stages);
 
@@ -504,6 +506,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
 
     real_t *K_traj = mem->K_traj;
     real_t *DK_traj = mem->DK_traj;
+    real_t *delta_DK_traj = mem->delta_DK_traj;
     real_t *mu_traj = mem->mu_traj;
     real_t *adj_traj = mem->adj_traj;
 
@@ -527,6 +530,9 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
     acado_timer timer, timer_la, timer_ad;
     real_t timing_la = 0.0;
     real_t timing_ad = 0.0;
+
+    if (NF != nx+nu) return -1;  // NOT YET IMPLEMENTED
+//    printf("NU = %d, NF = %d \n", nu, NF);
 
     acado_tic(&timer);
 
@@ -559,6 +565,17 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                                 (in->u[j]-mem->u[j]);  // RK step
                     }
                     mem->u[j] = in->u[j];
+                }
+            }
+            if (opts->scheme.type == simplified_inis
+                    || opts->scheme.type == simplified_inis2) {
+                for (s1 = 0; s1 < num_stages; s1++) {
+                    for (j = 0; j < NF; j++) {
+                        for (i = 0; i < nx; i++) {
+                            DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] +=
+                                    delta_DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i];
+                        }
+                    }
                 }
             }
 
@@ -749,6 +766,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                     }
                 }
             }
+            rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
             acado_tic(&timer_ad);
             in->VDE_forw(rhs_in, VDE_tmp[s1]);  // k evaluation
             timing_ad += acado_toc(&timer_ad);
@@ -888,7 +906,7 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
                 for (i = 0; i < nx; i++) {
                     if (opts->scheme.type == simplified_inis
                             || opts->scheme.type == simplified_inis2) {
-                        DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] +=
+                        delta_DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] =
                             sys_sol[(j+1)*num_stages*nx+s1*nx+i];
                     } else {
                         DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] =
@@ -958,6 +976,8 @@ void sim_lifted_irk(const sim_in *in, sim_out *out,
     out->info->CPUtime = acado_toc(&timer);
     out->info->LAtime = timing_la;
     out->info->ADtime = timing_ad;
+
+    return 0;  // success
 }
 
 
@@ -977,9 +997,10 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
         dim_sys = nx;
     }
 
-    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+NF)+nu));
+    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+NF)+nu+1));
     work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+NF)));
-    if (opts->scheme.type == approx || opts->scheme.type == exact) {
+    if (opts->scheme.type == approx || opts->scheme.type == exact
+            || opts->scheme.type == simplified_inis2) {
         work->ipiv = malloc(sizeof(*work->ipiv) * (dim_sys));
         for (int_t i = 0; i < dim_sys; i++) work->ipiv[i] = i;
         work->sys_mat = malloc(sizeof(*work->sys_mat) * (dim_sys*dim_sys));
@@ -1105,6 +1126,11 @@ void sim_lifted_irk_create_memory(const sim_in *in,
     mem->mu_traj = malloc(sizeof(*mem->mu_traj) * (nSteps*num_stages*nx));
     mem->x = malloc(sizeof(*mem->x) * nx);
     mem->u = malloc(sizeof(*mem->u) * nu);
+    if (opts->scheme.type == simplified_inis
+            || opts->scheme.type == simplified_inis2) {
+        mem->delta_DK_traj = malloc(sizeof(*mem->delta_DK_traj) * (nSteps*num_stages*nx*NF));
+        for ( i = 0; i < nSteps*num_stages*nx*NF; i++ ) mem->delta_DK_traj[i] = 0.0;
+    }
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
             || opts->scheme.type == simplified_inis2

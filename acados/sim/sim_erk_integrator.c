@@ -24,7 +24,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/print.h"
 
-void sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
+int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     sim_RK_opts *opts = in->opts;
@@ -162,6 +162,8 @@ void sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
     out->info->CPUtime = acado_toc(&timer);
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
+
+    return 0;  // success
 }
 
 void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {

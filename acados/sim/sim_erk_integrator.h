@@ -39,7 +39,7 @@ typedef struct sim_erk_workspace_ {
 } sim_erk_workspace;
 
 
-void sim_erk(const sim_in *in, sim_out *out, void *mem, void *work);
+int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work);
 
 void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work);
 
