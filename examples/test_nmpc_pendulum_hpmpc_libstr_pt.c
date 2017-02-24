@@ -19,7 +19,7 @@
  */
 
 #define PLOT_RESULTS
-#define FP_EXCEPTIONS
+// #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -57,7 +57,7 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 10
+#define MM 20
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -193,8 +193,8 @@ int main() {
     real_t  R[NU*NU]            = {0};
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
-    real_t  lam_init            = {0.1};
-    real_t  t_init              = {0.1};
+    real_t  lam_init            = {0.001};
+    real_t  t_init              = {10};
     // int_t   qp_iters       = 1;
     // int_t   max_iters           = 100;
     // real_t  x_min[NBX]          = {-10, -10, -10, -10};
