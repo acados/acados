@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/utils/types.h"
 
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_mem, void *work);
 

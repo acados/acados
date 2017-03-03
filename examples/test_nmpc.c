@@ -19,23 +19,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#else
-#include <sys/stat.h>
-#include <sys/time.h>
-#endif
-#include "acados/utils/types.h"
-#include "acados/sim/sim_erk_integrator.h"
+
+#include "hpmpc/include/aux_d.h"
+
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "external/hpmpc/include/aux_d.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 #include "examples/Chen/Chen_model.h"
 
 #define NN 13
 #define NX 2
 #define NU 1
-
-#include "acados/utils/timing.h"
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -208,7 +203,7 @@ int main() {
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
+            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;

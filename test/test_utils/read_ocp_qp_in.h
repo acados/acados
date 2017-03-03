@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
 
 int_t read_int_vector_from_txt(int_t *vec, int_t n, const char *filename);
 int_t read_double_vector_from_txt(real_t *vec, int_t n, const char *filename);

@@ -17,18 +17,19 @@
  *
  */
 
+#include "test/test_utils/read_ocp_qp_in.h"
+
+#include <assert.h>
+#include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <memory.h>
-#include <assert.h>
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_i_aux.h"
 
 #include "acados/utils/allocate_ocp_qp.h"
-#include "test/test_utils/read_ocp_qp_in.h"
-
 
 static void transpose_matrix(real_t *mat, int m, int n) {
     int_t ii, jj;

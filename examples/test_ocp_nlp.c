@@ -1,44 +1,39 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#else
-#include <sys/stat.h>
-#include <sys/time.h>
-#endif
-#include "acados/utils/types.h"
-#include "acados/sim/sim_erk_integrator.h"
+
+#include "hpmpc/include/aux_d.h"
+
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "external/hpmpc/include/aux_d.h"
-#include "examples/Chen/Chen_model.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
+#include "acados/utils/types.h"
+#include "examples/Chen/Chen_model.h"
 
 #define NN 13
 #define NX 2
 #define NU 1
 #define NBX 0
 #define NBU 0
-
-#include "acados/utils/timing.h"
 
 #ifdef DEBUG
 static void print_states_controls(real_t **w, int_t N) {

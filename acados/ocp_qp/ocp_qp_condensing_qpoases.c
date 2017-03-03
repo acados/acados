@@ -17,21 +17,18 @@
  *
  */
 
-#include <stdlib.h>
-#include "hpmpc/include/aux_d.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_qp/condensing.h"
-#include "acados/utils/print.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
 
+#include <stdlib.h>
+
+#include "blasfeo/include/blasfeo_i_aux.h"
+#include "hpmpc/include/aux_d.h"
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
     #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wtypedef-redefinition"
     #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
     #pragma clang diagnostic ignored "-Wunused-parameter"
     #pragma clang diagnostic ignored "-Wunused-function"
-    #include "qpOASES_e/Constants.h"
     #include "qpOASES_e/QProblemB.h"
     #include "qpOASES_e/QProblem.h"
     #pragma clang diagnostic pop
@@ -41,18 +38,19 @@
         #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
         #pragma GCC diagnostic ignored "-Wunused-parameter"
         #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
         #include "qpOASES_e/QProblem.h"
         #pragma GCC diagnostic pop
     #else
         #pragma GCC diagnostic ignored "-Wunused-parameter"
         #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/Constants.h"
         #include "qpOASES_e/QProblemB.h"
         #include "qpOASES_e/QProblem.h"
     #endif
 #endif
+
+#include "acados/ocp_qp/condensing.h"
+#include "acados/utils/print.h"
 
 QProblemB QPB;
 QProblem QP;
@@ -243,7 +241,7 @@ static void convert_to_row_major(const real_t *input, real_t *output, const int_
 }
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-    void *args_, void *workspace_) {
+    void *args_, void *mem_, void *workspace_) {
 
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
     double *workspace = (double*) workspace_;
@@ -257,6 +255,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     args->dummy = 1.0;
     workspace++;
     workspace = 0;
+    mem_ = 0;
+    mem_++;
 
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
     convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);

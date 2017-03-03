@@ -1,38 +1,21 @@
 /*
- *    This file is part of ACADOS.
+ *    This file is part of acados.
  *
- *    ACADOS is free software; you can redistribute it and/or
+ *    acados is free software; you can redistribute it and/or
  *    modify it under the terms of the GNU Lesser General Public
  *    License as published by the Free Software Foundation; either
  *    version 3 of the License, or (at your option) any later version.
  *
- *    ACADOS is distributed in the hope that it will be useful,
+ *    acados is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  *
  *    You should have received a copy of the GNU Lesser General Public
- *    License along with ACADOS; if not, write to the Free Software Foundation,
+ *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#else
-#include <sys/stat.h>
-#endif
-#include "acados/sim/sim_erk_integrator.h"
-#include "examples/Chen/Chen_model.h"
-
-// HPMPC headers
-#include "hpmpc/include/aux_d.h"
-
-// ACADOS headers
-#include "acados/utils/types.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/utils/tools.h"
 
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
@@ -40,6 +23,16 @@
     defined(TARGET_AMD_SSE3)
 #include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
 #endif
+
+#include "hpmpc/include/aux_d.h"
+
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/tools.h"
+#include "acados/utils/types.h"
+#include "examples/Chen/Chen_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
@@ -52,8 +45,6 @@
 #define NU 1
 #define NBX 0
 #define NBU 1
-
-#include "acados/utils/timing.h"
 
 // #define DEBUG_ANDREA
 #ifdef DEBUG

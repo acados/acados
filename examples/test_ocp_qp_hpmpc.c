@@ -1,55 +1,45 @@
-/**************************************************************************************************
-*                                                                                                 *
-* This file is part of HPMPC.                                                                     *
-*                                                                                                 *
-* HPMPC -- Library for High-Performance implementation of solvers for MPC.                        *
-* Copyright (C) 2014-2015 by Technical University of Denmark. All rights reserved.                *
-*                                                                                                 *
-* HPMPC is free software; you can redistribute it and/or                                          *
-* modify it under the terms of the GNU Lesser General Public                                      *
-* License as published by the Free Software Foundation; either                                    *
-* version 2.1 of the License, or (at your option) any later version.                              *
-*                                                                                                 *
-* HPMPC is distributed in the hope that it will be useful,                                        *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of                                  *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                                            *
-* See the GNU Lesser General Public License for more details.                                     *
-*                                                                                                 *
-* You should have received a copy of the GNU Lesser General Public                                *
-* License along with HPMPC; if not, write to the Free Software                                    *
-* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA                  *
-*                                                                                                 *
-* Author: Gianluca Frison, giaf (at) dtu.dk                                                       *
-*                                                                                                 *
-**************************************************************************************************/
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
-// define IP solver arguments && number of repetitions
-#define NREP 1000
-#define MAXITER 10
-#define TOL 1e-8
-#define MINSTEP 1e-8
-
-// system headers
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
-
-// HPMPC headers
-#include "hpmpc/include/aux_d.h"
-
-// acados headers
-#include "acados/utils/types.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/utils/tools.h"
-
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
     defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
     defined(TARGET_AMD_SSE3)
 #include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
 #endif
+
+#include "hpmpc/include/aux_d.h"
+
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/utils/tools.h"
+#include "acados/utils/types.h"
+
+// define IP solver arguments && number of repetitions
+#define NREP 1000
+#define MAXITER 10
+#define TOL 1e-8
+#define MINSTEP 1e-8
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
