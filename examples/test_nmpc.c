@@ -102,10 +102,10 @@ int main() {
     sim_info erk_info;
     sim_out.info = &erk_info;
 
-    sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
     sim_erk_create_opts(4, &rk_opts);
     sim_in.opts = &rk_opts;
+    sim_erk_workspace erk_work;
     sim_erk_create_workspace(&sim_in, &erk_work);
 
     int_t nx[NN+1] = {0};
@@ -221,6 +221,34 @@ int main() {
     print_states_controls(&w[0], N);
     #endif  // DEBUG
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+
+    free(sim_in.x);
+    free(sim_in.u);
+    free(sim_in.S_forw);
+    free(sim_out.xn);
+    free(sim_out.S_forw);
+
+    d_free(px0[0]);
+    for (int_t i = 0; i < N; i++) {
+        d_free(pA[i]);
+        d_free(pB[i]);
+        d_free(pb[i]);
+        d_free(pS[i]);
+        d_free(pq[i]);
+        d_free(pr[i]);
+        d_free(px[i]);
+        d_free(pu[i]);
+    }
+    d_free(pq[N]);
+    d_free(px[N]);
+
+    free(rk_opts.A_mat);
+    free(rk_opts.b_vec);
+    free(rk_opts.c_vec);
+
+    free(erk_work.rhs_forw_in);
+    free(erk_work.K_traj);
+    free(erk_work.out_forw_traj);
 
     return 0;
 }
