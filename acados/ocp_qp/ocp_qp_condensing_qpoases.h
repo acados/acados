@@ -37,8 +37,6 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output,
 int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *input,
     ocp_qp_condensing_qpoases_args *args);
 
-void initialise_qpoases(ocp_qp_in *input);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

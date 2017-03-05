@@ -170,8 +170,6 @@ int main() {
     qp_out.x = px;
     qp_out.u = pu;
 
-    initialise_qpoases(&qp_in);
-
     acado_timer timer;
     real_t timings = 0;
     for (int_t iter = 0; iter < max_iters; iter++) {

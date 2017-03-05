@@ -375,8 +375,6 @@ int main() {
     qp_out.x = px;
     qp_out.u = pu;
 
-    initialise_qpoases(&qp_in);
-
     acado_timer timer;
     real_t timings = 0;
     real_t timings_sim = 0;
