@@ -173,14 +173,30 @@ real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
 
 void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
         const int_t stages, const int_t  n, const int_t m) {
-    for (int_t s1 = 0; s1 < stages; s1++) {
-        for (int_t i = 0; i < n; i++) {
-            for (int_t j = 0; j < m; j++) {
-                mat_trans[j*(stages*n)+s1*n+i] = 0.0;
-                for (int_t s2 = 0; s2 < stages; s2++) {
-                    mat_trans[j*(stages*n)+s1*n+i] +=
-                            trans[s2*stages+s1]*mat[j*(stages*n)+s2*n+i];
+//    print_matrix_name("stdout", "trans", trans, stages, stages);
+    for (int_t i = 0; i < stages*n*m; i++) mat_trans[i] = 0.0;
+    for (int_t j = 0; j < m; j++) {
+        for (int_t s2 = 0; s2 < stages; s2++) {
+            for (int_t s1 = 0; s1 < stages; s1++) {
+                if (trans[s2*stages+s1]!=0) {
+                    for (int_t i = 0; i < n; i++) {
+                        mat_trans[j*(stages*n)+s1*n+i] +=
+                                trans[s2*stages+s1]*mat[j*(stages*n)+s2*n+i];
+                    }
                 }
+            }
+        }
+    }
+}
+
+void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
+        const int_t stages, const int_t  n) {
+    for (int_t i = 0; i < stages*n; i++) mat_trans[i] = 0.0;
+    for (int_t s2 = 0; s2 < stages; s2++) {
+        for (int_t s1 = 0; s1 < stages; s1++) {
+            for (int_t i = 0; i < n; i++) {
+                mat_trans[s1*n+i] +=
+                        trans[s2*stages+s1]*mat[s2*n+i];
             }
         }
     }
@@ -223,25 +239,32 @@ void construct_subsystems_combined(real_t *mat, real_t **mat2,
     for (int_t s1 = 0; s1 < stages; s1++) {
         if ((s1+1) < stages) {  // complex conjugate pair of eigenvalues
             tmp_eig3 = H_INT/opts->scheme.eig[s1+1];
+            if (!trans) tmp_eig3 = -tmp_eig3;
             for (int_t j = 0; j < m; j++) {
                 for (int_t i = 0; i < n; i++) {
-                    if (trans)  mat2[idx+1][j*n+i] = tmp_eig3*mat[j*(stages*n)+s1*n+i];
-                    else        mat2[idx+1][j*n+i] = -tmp_eig3*mat[j*(stages*n)+s1*n+i];
+                    mat2[idx+1][j*n+i] = tmp_eig3*mat[j*(stages*n)+s1*n+i];
                 }
             }
 //            print_matrix_name("stdout", "transf_mat", transf[idx+1], n, n);
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
-                    mat2[idx][j*n+i] = 0.0;
-                    for (int_t k = 0; k < n; k++) {
-                        if (trans) {
+            if (trans) {
+                for (int_t j = 0; j < m; j++) {
+                    for (int_t i = 0; i < n; i++) {
+                        mat2[idx][j*n+i] = 0.0;
+                        for (int_t k = 0; k < n; k++) {
                             mat2[idx][j*n+i] += transf[idx+1][i*n+k]*mat[j*(stages*n)+s1*n+k];
-                        } else {
+                        }
+                        mat2[idx][j*n+i] -= mat[j*(stages*n)+(s1+1)*n+i];
+                    }
+                }
+            } else {
+                for (int_t j = 0; j < m; j++) {
+                    for (int_t i = 0; i < n; i++) {
+                        mat2[idx][j*n+i] = 0.0;
+                        for (int_t k = 0; k < n; k++) {
                             mat2[idx][j*n+i] += transf[idx+1][k*n+i]*mat[j*(stages*n)+s1*n+k];
                         }
+                        mat2[idx][j*n+i] += mat[j*(stages*n)+(s1+1)*n+i];
                     }
-                    if (trans)  mat2[idx][j*n+i] -= mat[j*(stages*n)+(s1+1)*n+i];
-                    else        mat2[idx][j*n+i] += mat[j*(stages*n)+(s1+1)*n+i];
                 }
             }
             s1++;
@@ -296,14 +319,21 @@ void destruct_subsystems_combined(real_t *mat, real_t **mat2,
                 }
             }
 //            print_matrix_name("stdout", "transf_mat", transf[idx+1], n, n);
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
-                    mat[j*(stages*n)+(s1+1)*n+i] = mat2[idx+1][j*n+i];
-                    for (int_t k = 0; k < n; k++) {
-                        if (trans)  {
+            if (trans)  {
+                for (int_t j = 0; j < m; j++) {
+                    for (int_t i = 0; i < n; i++) {
+                        mat[j*(stages*n)+(s1+1)*n+i] = mat2[idx+1][j*n+i];
+                        for (int_t k = 0; k < n; k++) {
                             mat[j*(stages*n)+(s1+1)*n+i] -=
                                     transf[idx+1][i*n+k]*mat2[idx][j*n+k];
-                        } else {
+                        }
+                    }
+                }
+            } else {
+                for (int_t j = 0; j < m; j++) {
+                    for (int_t i = 0; i < n; i++) {
+                        mat[j*(stages*n)+(s1+1)*n+i] = mat2[idx+1][j*n+i];
+                        for (int_t k = 0; k < n; k++) {
                             mat[j*(stages*n)+(s1+1)*n+i] +=
                                     transf[idx+1][k*n+i]*mat2[idx][j*n+k];
                         }
@@ -590,6 +620,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
                                     adj_traj[istep*num_stages*nx+s2*nx+i];
                         }
                         sys_sol[s1*nx+i] -= H_INT*b_vec[s1]*adj_tmp[i];
+                        sys_sol[s1*nx+i] += in->grad_K[s1*nx+i];
                     }
                 }
 //                print_matrix("stdout", sys_sol, 1, num_stages*nx);
@@ -605,7 +636,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
                                     opts->scheme.transf1_T[s2*num_stages+s1];
                         }
                     }
-                    transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages, nx, 1);
+                    transform_vec(sys_sol, work->trans, sys_sol_trans, num_stages, nx);
 
                     // construct sys_sol2 from sys_sol_trans:
                     if (opts->scheme.type != simplified_inis2) {
@@ -666,8 +697,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 
                     // apply the transf2 operation:
                     sys_sol = work->sys_sol;
-                    transform_mat(sys_sol_trans, opts->scheme.transf2_T, sys_sol,
-                            num_stages, nx, 1);
+                    transform_vec(sys_sol_trans, opts->scheme.transf2_T, sys_sol,
+                            num_stages, nx);
                 }
 
                 // update mu_traj

@@ -45,6 +45,8 @@ typedef struct sim_in_ {
     real_t step;
     uint nSteps;
 
+    real_t *grad_K;       // gradient correction
+
     void *opts;
 } sim_in;
 
