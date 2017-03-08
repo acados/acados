@@ -178,7 +178,7 @@ void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
     for (int_t j = 0; j < m; j++) {
         for (int_t s2 = 0; s2 < stages; s2++) {
             for (int_t s1 = 0; s1 < stages; s1++) {
-                if (trans[s2*stages+s1]!=0) {
+                if (trans[s2*stages+s1] != 0) {
                     for (int_t i = 0; i < n; i++) {
                         mat_trans[j*(stages*n)+s1*n+i] +=
                                 trans[s2*stages+s1]*mat[j*(stages*n)+s2*n+i];
