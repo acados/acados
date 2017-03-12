@@ -4,7 +4,8 @@ project(acados)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -109,14 +110,14 @@ target_link_libraries(nmpc_example acados qpoases blasfeo m)
 add_executable(pendulum_example ${PENDULUM_EXAMPLE_SRC})
 target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
 
-add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
-target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
+#add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
+#target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
 
-#add_library(acados_controller ${ACADOS_CONTROLLER_SRC})
-# target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
+add_library(acados_controller ${ACADOS_CONTROLLER_SRC})
+target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
 
-#add_executable(acados_controller ${AIRCRAFT2_CALLABLE_SRC})
-#target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
+add_executable(acados_controller ${ACADOS_CONTROLLER_SRC})
+target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
 
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
