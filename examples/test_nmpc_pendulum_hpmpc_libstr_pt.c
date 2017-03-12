@@ -19,7 +19,7 @@
  */
 
 #define PLOT_RESULTS
-#define FP_EXCEPTIONS
+// #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -185,24 +185,28 @@ int main() {
     #endif // FP_EXCEPTIONS
 
     // Problem data
-    int_t   N                   = NN;
-    int_t   M                   = MM;
-    real_t  x0[NX]              = {0.0, 0.2, 0.0, 0.0};
-    real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
-    real_t  Q[NX*NX]            = {0};
-    real_t  R[NU*NU]            = {0};
-    real_t  xref[NX]            = {0};
-    real_t  uref[NX]            = {0};
-    real_t  lam_init            = {0.1};
-    real_t  t_init              = {0.1};
-    // int_t   qp_iters       = 1;
-    // int_t   max_iters           = 100;
-    // real_t  x_min[NBX]          = {-10, -10, -10, -10};
-    real_t  x_min[NBX]          = {};
-    // real_t  x_max[NBX]          = {10, 10, 10, 10};
-    real_t  x_max[NBX]          = {};
-    real_t  u_min[NBU]          = {-5};
-    real_t  u_max[NBU]          = {5};
+    int_t   N                         = NN;
+    int_t   M                         = MM;
+    real_t  x0[NX]                    = {0.0, 0.2, 0.0, 0.0};
+    real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
+    // real_t  pi_n[NN*(NX)]             = {0};
+    real_t  t_n[(NBX+NBU)*NN + NBX]   = {0};
+    real_t  lam_n[(NBX+NBU)*NN + NBX] = {0};
+    real_t  Q[NX*NX]                  = {0};
+    real_t  R[NU*NU]                  = {0};
+    real_t  xref[NX]                  = {0};
+    real_t  uref[NX]                  = {0};
+    real_t  lam_init                  = {1};
+    real_t  t_init                    = {0.001};
+    // real_t  pi_init                   = {0.1};
+    // int_t   qp_iters               = 1;
+    // int_t   max_iters               = 100;
+    // real_t  x_min[NBX]              = {-10, -10, -10, -10};
+    real_t  x_min[NBX]                = {};
+    // real_t  x_max[NBX]             = {10, 10, 10, 10};
+    real_t  x_max[NBX]                = {};
+    real_t  u_min[NBU]                = {-5};
+    real_t  u_max[NBU]                = {5};
 
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 100.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.001;
@@ -387,7 +391,7 @@ int main() {
     real_t *ppi[N];
     real_t *plam[N+1];
 
-    double *ht[N+1];
+    double *pt[N+1];
 
     double *lam_in[N+1];
     double *t_in[N+1];
@@ -401,16 +405,20 @@ int main() {
         pD[ii] = D;
         plg[ii] = lg;
         pug[ii] = ug;
+
         d_zeros(&ppi[ii], nx[ii+1], 1);
         d_zeros(&plam[ii], 2*nb[ii]+2*nb[ii], 1);
+        d_zeros(&pt[ii], 2*nb[ii]+2*ngg[ii], 1);
 
-        d_zeros(&ht[ii], 2*nb[ii]+2*ngg[ii], 1);
         d_zeros(&lam_in[ii], 2*nb[ii]+2*ngg[ii], 1);
         d_zeros(&t_in[ii], 2*nb[ii]+2*ngg[ii], 1);
         d_zeros(&ux_in[ii], nx[ii]+nu[ii], 1);
     }
 
-    d_zeros(&ht[N], 2*nb[N]+2*ngg[N], 1);
+    d_zeros(&ppi[N], nx[N+1], 1);
+    d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
+    d_zeros(&pt[N], 2*nb[N]+2*ngg[N], 1);
+
     d_zeros(&lam_in[N], 2*nb[N]+2*ngg[N], 1);
     d_zeros(&t_in[N], 2*nb[N]+2*ngg[N], 1);
     d_zeros(&ux_in[N], nx[N]+nu[N], 1);
@@ -477,7 +485,7 @@ int main() {
     work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
     // Adding memory for extra variables in the Riccati recursion
-    for ( int ii=0; ii <NN; ii++ ) {
+    for ( int ii=0; ii < NN; ii++ ) {
       work_space_size+=d_size_strvec(nx[ii+1]);
       work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
       work_space_size+=d_size_strmat(nx[ii], nx[ii]);
@@ -549,6 +557,8 @@ int main() {
     qp_out.u = pu;
     qp_out.pi = ppi;
     qp_out.lam = plam;
+    qp_out.t = pt;
+
 
     acado_timer timer;
     real_t timings = 0;
@@ -560,12 +570,19 @@ int main() {
     // for (int_t i = 1; i < N; i++) v_zeros_align(&hpmpc_args.ux0[i], NX+NU*sizeof(double));
     // v_zeros_align(&hpmpc_args.ux0[N], NX*sizeof(double));
     for (int_t iter = 0; iter < NREP; iter++) {
+
       // initialize nlp primal variables
       for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = 0.0;
+        for (int_t j = 0; j < NBX+NBU; j++) lam_n[i*(NBX+NBU)+j]  = lam_init;
+        for (int_t j = 0; j < NBX+NBU; j++) t_n[i*(NBX + NBU)+j]  = t_init;
+        // for (int_t j = 0; j < NX; j++) pi_n[i*NX +j]  = pi_init;
         for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
       }
+
       for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = 0.0;
+      for (int_t j = 0; j < NBX; j++) lam_n[N*(NBX+NBU)+j]  = lam_init;
+      for (int_t j = 0; j < NBX; j++) t_n[N*(NBX + NBU)+j]  = t_init;
 
       // initialize qp primal variables
       for (int_t j = 0; j < NU; j++) ux_in[0][j] = w[NX+j] + 10;
@@ -576,22 +593,23 @@ int main() {
 
       for (int_t j = 0; j < NX; j++) ux_in[N][j] = w[N*(NX+NU)+j] + 10;
 
-      // initialize nlp dual variables
-      for (int_t i = 0; i < N; i++) {
-        for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
-          lam_in[i][j] = lam_init;
-          t_in[i][j] = t_init;
-        }
-      }
-
-      for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
-        lam_in[N][j] = lam_init;
-        t_in[N][j] = t_init;
-      }
-
       acado_tic(&timer);
       for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
       for (int_t sqp_iter = 0; sqp_iter < SQP_ITER; sqp_iter++) {
+
+          // initialize nlp dual variables
+          for (int_t i = 0; i < N; i++) {
+            for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
+              lam_in[i][j] = lam_n[(NBX + NBU)*i + j];
+              t_in[i][j] = t_n[(NBX + NBU)*i + j];
+            }
+          }
+
+          for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
+            lam_in[N][j] = lam_n[(NBX + NBU)*N + j];
+            t_in[N][j] = t_n[(NBX + NBU)*N + j];
+          }
+
           for (int_t i = 0; i < N; i++) {
               // Pass state and control to integrator
               for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
@@ -638,12 +656,21 @@ int main() {
 
           // there is no x0 in the first stage
           for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += qp_out.u[0][j];
+          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+          for (int_t j = 0; j < NBX+NBU; j++) lam_n[0*(NBX+NBU)+j] = qp_out.lam[0][j];
+          for (int_t j = 0; j < NBX+NBU; j++) t_n[0*(NBX+NBU)+j] = qp_out.t[0][j];
 
           for (int_t i = 1; i < N; i++) {
               for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
               for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
+              // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+              for (int_t j = 0; j < NBX+NBU; j++) lam_n[i*(NBX+NBU)+j] = qp_out.lam[i][j];
+              for (int_t j = 0; j < NBX+NBU; j++) t_n[i*(NBX+NBU)+j] = qp_out.t[i][j];
           }
           for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
+          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+          for (int_t j = 0; j < NBX; j++) lam_n[N*(NBX+NBU)+j] = qp_out.lam[N][j];
+          for (int_t j = 0; j < NBX; j++) t_n[N*(NBX+NBU)+j] = qp_out.t[N][j];
       // }
       // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
       // shift_states(w, x_end, N);

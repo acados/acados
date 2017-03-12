@@ -604,7 +604,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hx = qp_out->x;
     double **hu = qp_out->u;
     // double **hpi = qp_out->pi;  // TODO(Andrea): not returning multiplers atm
-    // double **hlam = qp_out->lam;  // TODO(Andrea): not returning multiplers atm
+    double **hlam = qp_out->lam;  // TODO(Andrea): not returning multiplers atm
+    double **ht = qp_out->t;  // TODO(Andrea): not returning multiplers atm
 
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
@@ -725,6 +726,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // copy result to qp_out
     for ( ii = 0; ii <= N; ii++ ) {
       hu[ii] = hsux[ii].pa;
+      hlam[ii] = hslam[ii].pa;
+      ht[ii] = hst[ii].pa;
       temp_u = &hsux[ii].pa;
       hx[ii] = &temp_u[0][nu[ii]];
     }
