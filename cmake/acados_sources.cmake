@@ -33,13 +33,6 @@ file(GLOB AIRCRAFT_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
 
 )
 
-file(GLOB AIRCRAFT_CALLABLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
-
-    ${PROJECT_SOURCE_DIR}/../models/ocp_integrate_ode.c
-    ${PROJECT_SOURCE_DIR}/../ocps/test_aircraft_nmpc.c
-
-)
-
 file(GLOB PENDULUM_EXAMPLE_PT_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c
 
     ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde_forw_pendulum.c
