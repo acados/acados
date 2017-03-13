@@ -113,10 +113,10 @@ add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
 target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
 
 #add_library(acados_controller ${ACADOS_CONTROLLER_SRC})
-#target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
+# target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
 
-add_executable(acados_controller ${ACADOS_CONTROLLER_SRC})
-target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
+#add_executable(acados_controller ${AIRCRAFT2_CALLABLE_SRC})
+#target_link_libraries(acados_controller acados hpmpc blasfeo openblas m)
 
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)

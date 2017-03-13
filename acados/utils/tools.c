@@ -40,7 +40,7 @@ void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
 
     for (jj = 0; jj < n; jj++) {
         for (ii = 0; ii < m; ii++) {
-            // C[ii + ldc * jj] = 0;
+            C[ii + ldc * jj] = 0;
             for (kk = 0; kk < k; kk++) {
                 C[ii + ldc * jj] += A[ii + lda * kk] * B[kk + ldb * jj];
             }
