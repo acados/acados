@@ -26,10 +26,18 @@ file(GLOB PENDULUM_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pe
     ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr.c
 )
 
-file(GLOB ACADOS_CONTROLLER_SRC ${PROJECT_SOURCE_DIR}/../../optimal_control/models/aircraft_integrator.c
+file(GLOB AIRCRAFT_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
 
-    ${PROJECT_SOURCE_DIR}/../../optimal_control/models/ocp_integrate_ode2.c
-    ${PROJECT_SOURCE_DIR}/../../optimal_control/ocps/test_aircraft2_nmpc.c
+    ${PROJECT_SOURCE_DIR}/../models/ocp_integrate_ode.c
+    ${PROJECT_SOURCE_DIR}/../ocps/test_aircraft.c
+
+)
+
+file(GLOB AIRCRAFT_CALLABLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
+
+    ${PROJECT_SOURCE_DIR}/../models/ocp_integrate_ode.c
+    ${PROJECT_SOURCE_DIR}/../ocps/test_aircraft_nmpc.c
+
 )
 
 file(GLOB PENDULUM_EXAMPLE_PT_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c
