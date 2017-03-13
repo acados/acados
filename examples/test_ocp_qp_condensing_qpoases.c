@@ -419,8 +419,6 @@ int main() {
     ************************************************/
 
     int return_value;
-    initialise_qpoases(&qp_in);
-
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
