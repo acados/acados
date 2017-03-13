@@ -103,7 +103,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             ocp_qp_condensing_qpoases_args args;
                             args.dummy = 42.0;
 
-                            initialise_qpoases(&qp_in);
                             // TODO(dimitris): also test that qp_in has not changed
                             return_value = \
                                 ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, NULL);
