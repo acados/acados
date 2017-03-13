@@ -28,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <fenv.h>
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
     defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
@@ -166,11 +165,9 @@ extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
 extern  int d_size_strmat(int m, int n);
 extern  int d_size_strvec(int m);
 // extern FILE *popen(char *command, const char *type);
-extern int feenableexcept(int excepts);
+
 // Simple SQP example for acados
 int main() {
-
-    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     // Problem data
     int_t   N                   = NN;
     real_t  x0[NX]              = {0.0, 0.2, 0.0, 0.0};
