@@ -687,13 +687,13 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     hsRSQrq[M] = hstmpmat0;
     hsux[M].pa -= nuM;
 
-    // forward riccati solution at the end
+    // forward riccati solution at the beginning
     d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
       0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
       &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
       &hsLxt[M], hsric_work_mat);
 
-    // // compute alpha, dlam and dt
+    // compute alpha, dlam and dt
     // real_t alpha = 1.0;
     // // compute primal step hsdux for stages M to N
     // real_t *temp_p1, *temp_p2;
@@ -711,8 +711,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // // overwrite alpha (taking full steps and performing line-search in out_iter
     // // level)
     // alpha = 1.0;
-    //
-    // // update stages M to N
+
+    // update stages M to N
     // double mu_scal = 0.0;
     // d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
     //   &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],

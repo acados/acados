@@ -196,8 +196,8 @@ int main() {
     real_t  R[NU*NU]                  = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
-    real_t  lam_init                  = {0.001};
-    real_t  t_init                    = {100};
+    real_t  lam_init                  = {1};
+    real_t  t_init                    = {0.001};
     // real_t  pi_init                   = {0.1};
     // int_t   qp_iters               = 1;
     // int_t   max_iters               = 100;
