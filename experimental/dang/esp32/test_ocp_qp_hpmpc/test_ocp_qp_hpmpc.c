@@ -36,7 +36,7 @@
 #include "types.h"
 
 // define IP solver arguments && number of repetitions
-#define NREP 1000
+#define NREP 10
 #define MAXITER 10
 #define TOL 1e-8
 #define MINSTEP 1e-8

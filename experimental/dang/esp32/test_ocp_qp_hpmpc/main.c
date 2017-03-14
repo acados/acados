@@ -7,43 +7,116 @@
 #include "driver/gpio.h"
 
 /* Begin acados code */
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+// flush denormals to zero
+#if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
+    defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
+    defined(TARGET_AMD_SSE3)
+#include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
+#endif
 
 #include "aux_d.h"
 
-#include "ocp_qp_condensing_qpoases.h"
-#include "sim_erk_integrator.h"
-#include "timing.h"
+#include "ocp_qp_common.h"
+#include "ocp_qp_hpmpc.h"
+#include "tools.h"
 #include "types.h"
-#include "Chen_model.h"
 
-#define NN 13
-#define NX 2
-#define NU 1
+// define IP solver arguments && number of repetitions
+#define NREP 10
+#define MAXITER 10
+#define TOL 1e-8
+#define MINSTEP 1e-8
 
-#ifdef DEBUG
-static void print_states_controls(real_t *w, int_t N) {
-    printf("node\tx\t\t\t\tu\n");
-    for (int_t i = 0; i < N; i++) {
-        printf("%4d\t%+e %+e\t%+e\n", i, w[i*(NX+NU)], w[i*(NX+NU)+1], w[i*(NX+NU)+2]);
+/************************************************
+Mass-spring system: nx/2 masses connected each other with springs (in a row),
+and the first and the last one to walls. nu (<=nx) controls act on the first nu
+masses. The system is sampled with sampling time Ts.
+************************************************/
+void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
+                        double *b, double *x0) {
+    int nx2 = nx * nx;
+
+    int info = 0;
+
+    int pp = nx / 2;  // number of masses
+
+    /************************************************
+    * build the continuous time system
+    ************************************************/
+
+    double *T;
+    d_zeros(&T, pp, pp);
+    int ii;
+    for (ii = 0; ii < pp; ii++) T[ii * (pp + 1)] = -2;
+    for (ii = 0; ii < pp - 1; ii++) T[ii * (pp + 1) + 1] = 1;
+    for (ii = 1; ii < pp; ii++) T[ii * (pp + 1) - 1] = 1;
+
+    double *Z;
+    d_zeros(&Z, pp, pp);
+    double *I;
+    d_zeros(&I, pp, pp);
+    for (ii = 0; ii < pp; ii++) I[ii * (pp + 1)] = 1.0;  // = eye(pp);
+    double *Ac;
+    d_zeros(&Ac, nx, nx);
+    dmcopy(pp, pp, Z, pp, Ac, nx);
+    dmcopy(pp, pp, T, pp, Ac + pp, nx);
+    dmcopy(pp, pp, I, pp, Ac + pp * nx, nx);
+    dmcopy(pp, pp, Z, pp, Ac + pp * (nx + 1), nx);
+    free(T);
+    free(Z);
+    free(I);
+
+    d_zeros(&I, nu, nu);
+    for (ii = 0; ii < nu; ii++) I[ii * (nu + 1)] = 1.0;  // I = eye(nu);
+    double *Bc;
+    d_zeros(&Bc, nx, nu);
+    dmcopy(nu, nu, I, nu, Bc + pp, nx);
+    free(I);
+
+    /************************************************
+    * compute the discrete time system
+    ************************************************/
+
+    double *bb;
+    d_zeros(&bb, nx, 1);
+    dmcopy(nx, 1, bb, nx, b, nx);
+
+    dmcopy(nx, nx, Ac, nx, A, nx);
+    dscal_3l(nx2, Ts, A);
+    expm(nx, A);
+
+    d_zeros(&T, nx, nx);
+    d_zeros(&I, nx, nx);
+    for (ii = 0; ii < nx; ii++) I[ii * (nx + 1)] = 1.0;  // I = eye(nx);
+    dmcopy(nx, nx, A, nx, T, nx);
+    daxpy_3l(nx2, -1.0, I, T);
+    dgemm_nn_3l(nx, nu, nx, T, nx, Bc, nx, B, nx);
+
+    int *ipiv = (int *)malloc(nx * sizeof(int));
+    dgesv_3l(nx, nu, Ac, nx, ipiv, B, nx, &info);
+    free(ipiv);
+
+    free(Ac);
+    free(Bc);
+    free(bb);
+
+    /************************************************
+    * initial state
+    ************************************************/
+
+    if (nx == 4) {
+        x0[0] = 5;
+        x0[1] = 10;
+        x0[2] = 15;
+        x0[3] = 20;
+    } else {
+        int jj;
+        for (jj = 0; jj < nx; jj++) x0[jj] = 1;
     }
-    printf("%4d\t%+e %+e\n", N, w[N*(NX+NU)], w[N*(NX+NU)+1]);
-}
-#endif  // DEBUG
-
-static void shift_states(real_t *w, real_t *x_end, int_t N) {
-    for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
-    }
-    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
-}
-
-static void shift_controls(real_t *w, real_t *u_end, int_t N) {
-    for (int_t i = 0; i < N-1; i++) {
-        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
-    }
-    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
 }
 
 /* End acados code */
@@ -76,94 +149,239 @@ void app_main(void)
     int loopnumber = 0; // for debug
 
     /* Begin acados code */
-    // Problem data
-    int_t   N                   = NN;
-    real_t  x0[NX]              = {0.5, 0};
-    real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
-    real_t  Q[NX*NX]            = {0};
-    real_t  R[NU*NU]            = {0};
-    real_t  xref[NX]            = {0};
-    real_t  uref[NX]            = {0};
-    int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10;
-    real_t  x_end[NX]           = {0};
-    real_t  u_end[NU]           = {0};
+    printf("\n");
+    printf("\n");
+    printf("\n");
+    printf(
+        " HPMPC -- Library for High-Performance implementation of solvers for "
+        "MPC.\n");
+    printf(
+        " Copyright (C) 2014-2015 by Technical University of Denmark. All "
+        "rights reserved.\n");
+    printf("\n");
+    printf(" HPMPC is distributed in the hope that it will be useful,\n");
+    printf(" but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+    printf(" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
+    printf(" See the GNU Lesser General Public License for more details.\n");
+    printf("\n");
+    printf("\n");
+    printf("\n");
 
-    for (int_t i = 0; i < NX; i++) w[i] = x0[i];
-    for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
-    for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
+#if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
+    defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
+    defined(TARGET_AMD_SSE3)
+    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);  // flush to zero subnormals !!!
+                                                 // works only with one thread
+                                                 // !!!
+#endif
 
-    // Integrator structs
-    real_t T = 0.1;
-    sim_in  sim_in;
-    sim_out sim_out;
-    sim_in.nSteps = 10;
-    sim_in.step = T/sim_in.nSteps;
-    sim_in.VDE_forw = &VDE_fun;
-    sim_in.nx = NX;
-    sim_in.nu = NU;
+    int ii, jj;
 
-    sim_in.sens_forw = true;
-    sim_in.sens_adj = false;
-    sim_in.sens_hess = false;
-    sim_in.nsens_forw = NX+NU;
+    int rep, nrep = NREP;
 
-    sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
-    sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
-    sim_in.S_forw = malloc(sizeof(*sim_in.S_forw) * (NX*(NX+NU)));
-    for (int_t i = 0; i < NX*(NX+NU); i++) sim_in.S_forw[i] = 0.0;
-    for (int_t i = 0; i < NX; i++) sim_in.S_forw[i*(NX+1)] = 1.0;
+    int nx = 8;  // number of states (it has to be even for the mass-spring
+                  // system test problem)
+    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
+                  // at most nx/2 for the mass-spring system test problem)
+    int N = 15;   // horizon length
+    int nb = 11;  // number of box constrained inputs and states
+    int ng = 0;  // 4;  // number of general constraints
+    int ngN = 4;  // 4;  // number of general constraints at the last stage
 
-    sim_out.xn = malloc(sizeof(*sim_out.xn) * (NX));
-    sim_out.S_forw = malloc(sizeof(*sim_out.S_forw) * (NX*(NX+NU)));
+    int N2 = 3;   // horizon length
 
-    sim_info erk_info;
-    sim_out.info = &erk_info;
+    int nbu = nu < nb ? nu : nb;
+    int nbx = nb - nu > 0 ? nb - nu : 0;
 
-    sim_erk_workspace erk_work;
-    sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
-    sim_in.opts = &rk_opts;
-    sim_erk_create_workspace(&sim_in, &erk_work);
+    // stage-wise variant size
+    int nxx[N + 1];
+    nxx[0] = 0;
+    for (ii = 1; ii <= N; ii++) nxx[ii] = nx;
 
-    int_t nx[NN+1] = {0};
-    int_t nu[NN] = {0};
-    int_t nb[NN+1] = {0};
-    int_t nc[NN+1] = {0};
-    for (int_t i = 0; i < N; i++) {
-        nx[i] = NX;
-        nu[i] = NU;
+    int nuu[N + 1];
+    for (ii = 0; ii < N; ii++) nuu[ii] = nu;
+    nuu[N] = 0;
+
+    int nbb[N + 1];
+    nbb[0] = nbu;
+    for (ii = 1; ii < N; ii++) nbb[ii] = nb;
+    nbb[N] = nbx;
+
+    int ngg[N + 1];
+    for (ii = 0; ii < N; ii++) ngg[ii] = ng;
+    ngg[N] = ngN;
+
+    printf(
+        " Test problem: mass-spring system with %d masses and %d controls.\n",
+        nx / 2, nu);
+    printf("\n");
+    printf(
+        " MPC problem size: %d states, %d inputs, %d horizon length, %d "
+        "two-sided box constraints, %d two-sided general constraints.\n",
+        nx, nu, N, nb, ng);
+    printf("\n");
+    printf(
+        " IP method parameters: predictor-corrector IP, double precision, %d "
+        "maximum iterations, %5.1e exit tolerance in duality measure.\n",
+        MAXITER, TOL);
+    printf("\n");
+#if defined(TARGET_X64_AVX2)
+    printf(" HPMPC built for the AVX2 architecture\n");
+#endif
+#if defined(TARGET_X64_AVX)
+    printf(" HPMPC built for the AVX architecture\n");
+#endif
+    printf("\n");
+
+    /************************************************
+    * dynamical system
+    ************************************************/
+
+    // state space matrices & initial state
+    double *A;
+    d_zeros(&A, nx, nx);  // states update matrix
+    double *B;
+    d_zeros(&B, nx, nu);  // inputs matrix
+    double *b;
+    d_zeros(&b, nx, 1);  // states offset
+    double *x0;
+    d_zeros(&x0, nx, 1);  // initial state
+
+    // mass-spring system
+    double Ts = 0.5;  // sampling time
+    mass_spring_system(Ts, nx, nu, A, B, b, x0);
+
+    for (jj = 0; jj < nx; jj++) b[jj] = 0.1;
+
+    for (jj = 0; jj < nx; jj++) x0[jj] = 0;
+    x0[0] = 2.5;
+    x0[1] = 2.5;
+
+    //    d_print_mat(nx, nx, A, nx);
+    //    d_print_mat(nx, nu, B, nx);
+    //    d_print_mat(nx, 1, b, nx);
+    //    d_print_mat(nx, 1, x0, nx);
+
+    // compute b0 = b + A*x0
+    double *b0;
+    d_zeros(&b0, nx, 1);
+    dcopy_3l(nx, b, 1, b0, 1);
+    dgemv_n_3l(nx, nx, A, nx, x0, b0);
+    //    d_print_mat(nx, 1, b, nx);
+    //    d_print_mat(nx, 1, b0, nx);
+
+    // then A0 is a matrix of size 0x0
+    double *A0;
+    d_zeros(&A0, 0, 0);
+
+    /************************************************
+    * box constraints
+    ************************************************/
+
+    int *idxb0;
+    int_zeros(&idxb0, nbb[0], 1);
+    double *lb0;
+    d_zeros(&lb0, nbb[0], 1);
+    double *ub0;
+    d_zeros(&ub0, nbb[0], 1);
+    for (jj = 0; jj < nbu; jj++) {
+        lb0[jj] = -0.5;  //   umin
+        ub0[jj] = 0.5;   //   umax
+        idxb0[jj] = nxx[0]+jj;
     }
-    nx[N] = NX;
+    //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
 
-    real_t *pA[N];
-    real_t *pB[N];
-    real_t *pb[N];
-    real_t *pQ[N+1];
-    real_t *pS[N];
-    real_t *pR[N];
-    real_t *pq[N+1];
-    real_t *pr[N];
-    real_t *px[N+1];
-    real_t *pu[N];
-    real_t *px0[1];
-    d_zeros(&px0[0], nx[0], 1);
-    for (int_t i = 0; i < N; i++) {
-        d_zeros(&pA[i], nx[i+1], nx[i]);
-        d_zeros(&pB[i], nx[i+1], nu[i]);
-        d_zeros(&pb[i], nx[i+1], 1);
-        d_zeros(&pS[i], nu[i], nx[i]);
-        d_zeros(&pq[i], nx[i], 1);
-        d_zeros(&pr[i], nu[i], 1);
-        d_zeros(&px[i], nx[i], 1);
-        d_zeros(&pu[i], nu[i], 1);
+    int *idxb1;
+    int_zeros(&idxb1, nbb[1], 1);
+    double *lb1;
+    d_zeros(&lb1, nbb[1], 1);
+    double *ub1;
+    d_zeros(&ub1, nbb[1], 1);
+    for (jj = 0; jj < nbx; jj++) {
+        lb1[jj] = -4.0;  //   xmin
+        ub1[jj] = 4.0;   //   xmax
+        idxb1[jj] = jj;
     }
-    d_zeros(&pq[N], nx[N], 1);
-    d_zeros(&px[N], nx[N], 1);
+    for (; jj < nb; jj++) {
+        lb1[jj] = -0.5;  //   umin
+        ub1[jj] = 0.5;   //   umax
+        idxb1[jj] = jj;
+    }
+    //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
 
-    real_t *work = NULL;
-    real_t timings = 0;
-    int_t status = 0;
+    int *idxbN;
+    int_zeros(&idxbN, nbb[N], 1);
+    double *lbN;
+    d_zeros(&lbN, nbb[N], 1);
+    double *ubN;
+    d_zeros(&ubN, nbb[N], 1);
+    for (jj = 0; jj < nbx; jj++) {
+        lbN[jj] = -4.0;  //   umin
+        ubN[jj] = 4.0;   //   umax
+        idxbN[jj] = jj;
+    }
+    //    int_print_mat(nbb[N], 1, idxb1, nbb[N]);
+
+    /************************************************
+    * general constraints
+    ************************************************/
+
+    double *C;
+    d_zeros(&C, ng, nx);
+    double *D;
+    d_zeros(&D, ng, nu);
+    double *lg;
+    d_zeros(&lg, ng, 1);
+    double *ug;
+    d_zeros(&ug, ng, 1);
+
+    double *CN;
+    d_zeros(&CN, ngN, nx);
+    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
+    //    d_print_mat(ngN, nx, CN, ngN);
+    double *lgN;
+    d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
+    double *ugN;
+    d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
+
+    /************************************************
+    * cost function
+    ************************************************/
+
+    double *Q;
+    d_zeros(&Q, nx, nx);
+    for (ii = 0; ii < nx; ii++) Q[ii * (nx + 1)] = 1.0;
+
+    double *R;
+    d_zeros(&R, nu, nu);
+    for (ii = 0; ii < nu; ii++) R[ii * (nu + 1)] = 2.0;
+
+    double *S;
+    d_zeros(&S, nu, nx);
+
+    double *q;
+    d_zeros(&q, nx, 1);
+    for (ii = 0; ii < nx; ii++) q[ii] = 0.1;
+
+    double *r;
+    d_zeros(&r, nu, 1);
+    for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
+
+    // Q0 and q0 are matrices of size 0
+    double *Q0;
+    d_zeros(&Q0, 0, 0);
+    double *q0;
+    d_zeros(&q0, 0, 1);
+
+    // compute r0 = r + S*x0
+    double *r0;
+    d_zeros(&r0, nu, 1);
+    dcopy_3l(nu, r, 1, r0, 1);
+    dgemv_n_3l(nu, nx, S, nu, x0, r0);
+
+    // then S0 is a matrix of size nux0
+    double *S0;
+    d_zeros(&S0, nu, 0);
 
     /* End acados code */
 
@@ -176,91 +394,285 @@ void app_main(void)
         printf("\n\n New loop %d\n\n",++loopnumber);
 
 /* Begin acados code */
-// Allocate OCP QP variables
-ocp_qp_in qp_in;
-qp_in.N = N;
-ocp_qp_out qp_out;
-ocp_qp_condensing_qpoases_args args;
-// real_t *work = NULL;  // move creator out of the loop
-// *work = NULL;
-qp_in.nx = nx;
-qp_in.nu = nu;
-qp_in.nb = nb;
-qp_in.nc = nc;
-for (int_t i = 0; i < N; i++) {
-    pQ[i] = Q;
-    pR[i] = R;
-}
-pQ[N] = Q;
-qp_in.Q = (const real_t **) pQ;
-qp_in.S = (const real_t **) pS;
-qp_in.R = (const real_t **) pR;
-qp_in.q = (const real_t **) pq;
-qp_in.r = (const real_t **) pr;
-qp_in.A = (const real_t **) pA;
-qp_in.B = (const real_t **) pB;
-qp_in.b = (const real_t **) pb;
-qp_in.lb = (const real_t **) px0;
-qp_out.x = px;
-qp_out.u = pu;
-printf("Free heap size before initializing qpoases: %d\n",esp_get_free_heap_size()); // for debug
 
-acado_timer timer;
-// real_t timings = 0;  // move creator out of the loop
-timings = 0;
+    /************************************************
+    * problems data
+    ************************************************/
 
-for (int_t iter = 0; iter < max_iters; iter++) {
-    // printf("\n------ ITERATION %d ------\n", iter);
-    acado_tic(&timer);
-    for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
-        for (int_t i = 0; i < N; i++) {
-            // Pass state and control to integrator
-            for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
-            for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-            sim_erk(&sim_in, &sim_out, 0, &erk_work);
-            // Construct QP matrices
-            for (int_t j = 0; j < NX; j++) {
-                pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
-            }
-            for (int_t j = 0; j < NU; j++) {
-                pr[i][j] = R[j*(NX+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
-            }
-            for (int_t j = 0; j < NX; j++) {
-                pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                for (int_t k = 0; k < NX; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
-            }
-            for (int_t j = 0; j < NU; j++)
-                for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
-        }
-        for (int_t j = 0; j < NX; j++) {
-            px0[0][j] = (x0[j]-w[j]);
-        }
-        for (int_t j = 0; j < NX; j++) {
-            pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
-        }
-        // int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work); // move creator out of the loop
-        status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
-        if (status) {
-            printf("qpOASES returned error status %d\n", status);
-            // return -1;
-        }
-        for (int_t i = 0; i < N; i++) {
-            for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
-            for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
-        }
-        for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
+    double *hA[N];
+    double *hB[N];
+    double *hb[N];
+    double *hQ[N + 1];
+    double *hS[N];
+    double *hR[N];
+    double *hq[N + 1];
+    double *hr[N];
+    double *hlb[N + 1];
+    double *hub[N + 1];
+    int *hidxb[N + 1];
+    double *hC[N + 1];
+    double *hD[N];
+    double *hlg[N + 1];
+    double *hug[N + 1];
+
+    hA[0] = A0;
+    hB[0] = B;
+    hb[0] = b0;
+    hQ[0] = Q0;
+    hS[0] = S0;
+    hR[0] = R;
+    hq[0] = q0;
+    hr[0] = r0;
+    hlb[0] = lb0;
+    hub[0] = ub0;
+    hidxb[0] = idxb0;
+    hC[0] = C;
+    hD[0] = D;
+    hlg[0] = lg;
+    hug[0] = ug;
+    for (ii = 1; ii < N; ii++) {
+        hA[ii] = A;
+        hB[ii] = B;
+        hb[ii] = b;
+        hQ[ii] = Q;
+        hS[ii] = S;
+        hR[ii] = R;
+        hq[ii] = q;
+        hr[ii] = r;
+        hlb[ii] = lb1;
+        hub[ii] = ub1;
+        hidxb[ii] = idxb1;
+        hC[ii] = C;
+        hD[ii] = D;
+        hlg[ii] = lg;
+        hug[ii] = ug;
     }
-    for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-    shift_states(w, x_end, N);
-    shift_controls(w, u_end, N);
-    timings += acado_toc(&timer);
-}
-printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
+    hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
+    hq[N] = q;  // or maybe initialize to the solution of the DARE???
+    hlb[N] = lbN;
+    hub[N] = ubN;
+    hidxb[N] = idxbN;
+    hC[N] = CN;
+    hlg[N] = lgN;
+    hug[N] = ugN;
 
-#ifdef DEBUG
-print_states_controls(&w[0], N);
-#endif  // DEBUG
-printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    /************************************************
+    * solution
+    ************************************************/
+
+    double *hx[N + 1];
+    double *hu[N];
+    double *hpi[N];
+    double *hlam[N+1];
+
+    for (ii = 0; ii < N; ii++) {
+        d_zeros(&hx[ii], nxx[ii], 1);
+        d_zeros(&hu[ii], nuu[ii], 1);
+        d_zeros(&hpi[ii], nxx[ii+1], 1);
+        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1);  // Andrea: why do we have 4*nb here?
+    }
+    d_zeros(&hx[N], nxx[N], 1);
+    d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
+
+    /************************************************
+    * create the in and out struct
+    ************************************************/
+
+    ocp_qp_in qp_in;
+    qp_in.N = N;
+    qp_in.nx = (const int *) nxx;
+    qp_in.nu = (const int *) nuu;
+    qp_in.nb = (const int *) nbb;
+    qp_in.nc = (const int *) ngg;
+    qp_in.A = (const double **) hA;
+    qp_in.B = (const double **) hB;
+    qp_in.b = (const double **) hb;
+    qp_in.Q = (const double **) hQ;
+    qp_in.S = (const double **) hS;
+    qp_in.R = (const double **) hR;
+    qp_in.q = (const double **) hq;
+    qp_in.r = (const double **) hr;
+    qp_in.idxb = (const int **) hidxb;
+    qp_in.lb = (const double **) hlb;
+    qp_in.ub = (const double **) hub;
+    qp_in.Cx = (const double **) hC;
+    qp_in.Cu = (const double **) hD;
+    qp_in.lc = (const double **) hlg;
+    qp_in.uc = (const double **) hug;
+
+    ocp_qp_out qp_out;
+    qp_out.x = hx;
+    qp_out.u = hu;
+    qp_out.pi = hpi;
+    qp_out.lam = hlam;
+
+    /************************************************
+    * solver arguments (fully sparse)
+    ************************************************/
+
+    // solver arguments
+    ocp_qp_hpmpc_args hpmpc_args;
+    hpmpc_args.tol = TOL;
+    hpmpc_args.max_iter = MAXITER;
+//  hpmpc_args.min_step = MINSTEP;
+    hpmpc_args.mu0 = 0.0;
+//  hpmpc_args.sigma_min = 1e-3;
+    hpmpc_args.warm_start = 0;
+    hpmpc_args.N2 = N;
+    double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
+    hpmpc_args.inf_norm_res = &inf_norm_res[0];
+
+    /************************************************
+    * work space (fully sparse)
+    ************************************************/
+
+    int work_space_size =
+        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    printf("\nwork space size: %d bytes\n", work_space_size);
+
+    void *workspace = malloc(work_space_size);
+
+    /************************************************
+    * call the solver (fully sparse)
+    ************************************************/
+
+    int return_value;
+
+    struct timeval tv0, tv1;
+    gettimeofday(&tv0, NULL);  // stop
+
+    for (rep = 0; rep < nrep; rep++) {
+        // call the QP OCP solver
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+    }
+
+    gettimeofday(&tv1, NULL);  // stop
+
+    if (return_value == ACADOS_SUCCESS)
+        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
+
+    if (return_value == ACADOS_MAXITER)
+        printf("\nACADOS status: maximum number of iterations reached\n");
+
+    if (return_value == ACADOS_MINSTEP)
+        printf("\nACADOS status: below minimum step size length\n");
+
+    printf("\nu = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+
+    printf("\nx = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+
+    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
+                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
+
+    printf("\n");
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
+        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
+    printf("\n");
+    printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
+    printf("\n\n");
+
+    /************************************************
+    * solver arguments (partial condensing)
+    ************************************************/
+
+    // solver arguments
+    hpmpc_args.N2 = N2;
+
+    /************************************************
+    * work space (partial condensing)
+    ************************************************/
+
+    int work_space_size_part_cond =
+        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    printf("\nwork space size: %d bytes\n", work_space_size_part_cond);
+
+    void *workspace_part_cond = malloc(work_space_size_part_cond);
+
+    /************************************************
+    * call the solver (partial condensing)
+    ************************************************/
+
+    gettimeofday(&tv0, NULL);  // stop
+
+    for (rep = 0; rep < nrep; rep++) {
+        // call the QP OCP solver
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace_part_cond);
+    }
+
+    gettimeofday(&tv1, NULL);  // stop
+
+    if (return_value == ACADOS_SUCCESS)
+        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
+
+    if (return_value == ACADOS_MAXITER)
+        printf("\nACADOS status: maximum number of iterations reached\n");
+
+    if (return_value == ACADOS_MINSTEP)
+        printf("\nACADOS status: below minimum step size length\n");
+
+    printf("\nu = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+
+    printf("\nx = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+
+    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
+                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
+
+    printf("\n");
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
+        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
+    printf("\n");
+    printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, \
+        time_part_cond);
+    printf("\n\n");
+
+    /************************************************
+    * free memory
+    ************************************************/
+
+    d_free(A);
+    d_free(B);
+    d_free(b);
+    d_free(x0);
+    d_free(A0);
+    d_free(b0);
+    d_free(Q);
+    d_free(S);
+    d_free(R);
+    d_free(q);
+    d_free(r);
+    d_free(Q0);
+    d_free(S0);
+    d_free(q0);
+    d_free(r0);
+    int_free(idxb0);
+    d_free(lb0);
+    d_free(ub0);
+    int_free(idxb1);
+    d_free(lb1);
+    d_free(ub1);
+    int_free(idxbN);
+    d_free(lbN);
+    d_free(ubN);
+    d_free(C);
+    d_free(D);
+    d_free(lg);
+    d_free(ug);
+    d_free(CN);
+    d_free(lgN);
+    d_free(ugN);
+
+    for (ii = 0; ii < N; ii++) {
+        d_free(hx[ii]);
+        d_free(hu[ii]);
+    }
+    d_free(hx[N]);
+
+    free(workspace);
+    free(workspace_part_cond);
 
 /* End acados code */
 
