@@ -77,10 +77,10 @@ script:
   - make
   - cmake -D CMAKE_BUILD_TYPE=Debug ..
   - make
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./hpmpc_example
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./hpmpc_example_partial_tightening  
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./condensing_qpoases_example
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./nmpc_example
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./chain_example
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./pendulum_example
-  - valgrind --tool=memcheck --errors-for-leak-kinds=definite -q ./pendulum_example_partial_tightening
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./hpmpc_example
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./hpmpc_example_partial_tightening  
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./condensing_qpoases_example
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./nmpc_example
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./chain_example
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./pendulum_example
+  - valgrind --tool=memcheck --errors-for-leak-kinds=definite --track-origins=yes -q ./pendulum_example_partial_tightening
