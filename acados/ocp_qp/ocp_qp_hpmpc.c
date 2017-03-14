@@ -459,8 +459,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
       ptr_memory += (&hsux[ii])->memory_size;
 
-      d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
-      ptr_memory += (&hspi[ii+1])->memory_size;
+      d_create_strvec(nx[ii+1], &hspi[ii], ptr_memory);
+      ptr_memory += (&hspi[ii])->memory_size;
 
       d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
       // copy multipliers from hpmpc_args
@@ -535,8 +535,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
     ptr_memory += (&hsux[ii])->memory_size;
 
-    // d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
-    // ptr_memory += (&hspi[ii+1])->memory_size;
+    d_create_strvec(nx[ii], &hspi[ii], ptr_memory); // Andrea: bug?
+    ptr_memory += (&hspi[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
     // copy multipliers from hpmpc_args

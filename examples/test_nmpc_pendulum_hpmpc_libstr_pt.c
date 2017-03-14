@@ -57,7 +57,7 @@
 #define MINSTEP 1e-8
 
 #define NN 30
-#define MM 20
+#define MM 30
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -520,6 +520,8 @@ int main() {
 
     // add memory for stats
     work_space_size+=sizeof(double)*MAX_IP_ITER*5;
+    work_space_size+=sizeof(double)*1000;  // TODO(Andrea): fix this...
+
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
