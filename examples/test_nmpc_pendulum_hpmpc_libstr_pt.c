@@ -56,7 +56,7 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-#define NN 100
+#define NN 30
 #define MM 20
 #define NX 4
 #define NU 1
@@ -187,7 +187,7 @@ int main() {
     // Problem data
     int_t   N                         = NN;
     int_t   M                         = MM;
-    real_t  x0[NX]                    = {0.0, 0.2, 0.0, 0.0};
+    real_t  x0[NX]                    = {0.0, 0.1, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
     // real_t  pi_n[NN*(NX)]             = {0};
     real_t  t_n[(NBX+NBU)*NN + NBX]   = {0};
@@ -335,8 +335,8 @@ int main() {
         d_zeros(&plb[i+1], (NBU+NBX), 1);
         d_zeros(&pub[i+1], (NBU+NBX), 1);
     }
-    d_zeros(&plb[N], (NBX), 1);
-    d_zeros(&pub[N], (NBX), 1);
+    d_zeros(&plb[N], NBX, 1);
+    d_zeros(&pub[N], NBX, 1);
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
     // hidxb[N] = idxbN;
@@ -415,7 +415,7 @@ int main() {
         d_zeros(&ux_in[ii], nx[ii]+nu[ii], 1);
     }
 
-    d_zeros(&ppi[N], nx[N+1], 1);
+    d_zeros(&ppi[N], nx[N], 1);
     d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
     d_zeros(&pt[N], 2*nb[N]+2*ngg[N], 1);
 
