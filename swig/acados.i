@@ -147,6 +147,14 @@ static PyObject *convert_to_sequence(int_t *array, const int_t length) {
     return sequence;
 }
 
+static PyObject *convert_to_sequence(real_t *array, const int_t length) {
+    PyObject *sequence = PyList_New(length);
+    for (int_t i = 0; i < length; i++) {
+        PyList_SetItem(sequence, i, PyFloat_FromDouble((double) array[i]));
+    }
+    return sequence;
+}
+
 static void convert_to_c_array(PyObject *input, int_t * const array, const int_t length_of_array) {
     if (is_valid_integer(input)) {
         int_t integer_number = (int_t) PyInt_AsLong(input);
@@ -578,9 +586,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-
-        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
-            $self->qp_in->N+1, $self->qp_in->nx);
+        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
     PyObject *solve(ocp_qp_in *qp_in) {
         if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
@@ -593,7 +599,6 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
-            $self->qp_in->N+1, $self->qp_in->nx);
+        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 }
