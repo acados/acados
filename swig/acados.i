@@ -293,7 +293,7 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
 }
 
 template<typename T>
-static void read_array_from_dictionary(PyObject *dictionary, const char *key_name,
+static void initialize_array_from(PyObject *dictionary, const char *key_name,
     T *array, int_t array_length) {
 
     if (PyDict_GetItemString(dictionary, key_name) == NULL) {
@@ -511,11 +511,21 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
         int_t nx[N+1], nu[N], nb[N+1], nc[N+1];
-        read_array_from_dictionary(dictionary, "nx", nx, N+1);
-        read_array_from_dictionary(dictionary, "nu", nu, N);
-        read_array_from_dictionary(dictionary, "nb", nb, N+1);
-        read_array_from_dictionary(dictionary, "nc", nc, N+1);
+        initialize_array_from(dictionary, "nx", nx, N+1);
+        initialize_array_from(dictionary, "nu", nu, N);
+        initialize_array_from(dictionary, "nb", nb, N+1);
+        initialize_array_from(dictionary, "nc", nc, N+1);
+        // Default behavior is that initial state is fixed
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            nb[0] = nx[0];
+        }
         allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            int idxb[nb[0]];
+            for (int_t i = 0; i < nb[0]; i++)
+                idxb[i] = i;
+            memcpy((void *) qp_in->idxb[0], idxb, sizeof(idxb));
+        }
         return qp_in;
     }
 }

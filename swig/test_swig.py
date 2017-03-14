@@ -8,8 +8,7 @@ nb = [nx] + N*[0]
 
 x0 = array([1,1])
 
-qp_in = ocp_qp_in({'N':5, 'nx':nx, 'nu':nu, 'nb':nb})
-qp_in.idxb[0] = array([0, 1])
+qp_in = ocp_qp_in({'N':5, 'nx':2, 'nu':1})
 
 qp_in.lb[0] = x0
 qp_in.ub[0] = x0
