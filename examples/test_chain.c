@@ -58,7 +58,7 @@
 int main() {
     int_t nil;
 
-    for (int_t implicit = 0; implicit < 4; implicit++) {
+    for (int_t implicit = 1; implicit < 4; implicit++) {
         if (implicit == 0) {
             printf("\n\n--------------------------------------------------------------------\n");
             printf("------------------ Explicit Runge-Kutta of order 4 -----------------\n");
