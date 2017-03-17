@@ -21,12 +21,17 @@
 %{
 #define SWIG_FILE_WITH_INIT
 
+#include <dlfcn.h>
+
+#include <cstdlib>
+#include <string>
 #include <typeinfo>
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/allocate_ocp_qp.h"
 #include "acados/utils/types.h"
 
@@ -602,3 +607,43 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 }
+
+%ignore ocp_nlp_create_memory;
+
+%include "acados/ocp_nlp/ocp_nlp_common.h"
+
+%extend ocp_nlp_in {
+    int set_model(char *model_name) {
+        printf("%p\n", $self->nx);
+        char library_name[256];
+        snprintf(library_name, sizeof(library_name), "%s.so", model_name);
+        char command[256];
+        snprintf(command, sizeof(command), "gcc -fPIC -shared -O3 %s.c -o %s", \
+            model_name, library_name);
+        int compilation_failed = system(command);
+        if (compilation_failed)
+            SWIG_Error(SWIG_RuntimeError, "Something went wrong when compiling the model.");
+        void *handle;
+        handle = dlopen(library_name, RTLD_LAZY);
+        if (handle == 0)
+            SWIG_Error(SWIG_RuntimeError, "Something went wrong when loading the model.");
+        typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
+        eval_t eval = (eval_t)dlsym(handle, model_name);
+        const double x_val[] = {1, 2};
+        const double u_val = 3;
+        const double *arg[2];
+        arg[0] = x_val;
+        arg[1] = &u_val;
+        double rhs_val[] = {0};
+        double *res[1];
+        res[0] = rhs_val;
+        if (eval(arg, res, 0, 0, 0))
+            return 1;
+        printf("%f %f\n", res[0][0], res[0][1]);
+        return 0;
+    }
+}
+
+// %extend ocp_nlp_solver {
+//
+// }

@@ -26,7 +26,7 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-typedef struct simplified_form_ {
+typedef struct {
     real_t *eig;
 
     real_t *transf1;
@@ -36,7 +36,7 @@ typedef struct simplified_form_ {
     real_t *transf2_T;
 } simplified_form;
 
-typedef struct single_form {
+typedef struct {
     real_t eig;
     real_t *low_tria;
 

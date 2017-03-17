@@ -18,3 +18,33 @@ qp_in.ub[0] = x0
 solver = ocp_qp_solver("condensing_qpoases", qp_in)
 result = solver.solve()
 print(result)
+
+from casadi import *
+
+# This model comes from Chen1998
+
+nx = 2
+nu = 1
+
+x = SX.sym('x', nx)
+u = SX.sym('u', nu)
+
+mu = 0.5
+rhs = vertcat(x[1] + u*(mu + (1.-mu)*x[0]), x[0] + u*(mu - 4.*(1.-mu)*x[1]))
+
+ode = Function('ode', [x,u], [rhs])
+
+Sx = SX.sym('Sx', nx, nx)
+Su = SX.sym('Su', nx, nu)
+
+vde_x = jtimes(rhs, x, Sx)
+vde_u = jacobian(rhs, u) + jtimes(rhs, x, Su)
+
+vde = Function('vde', [x, Sx, Su, u], [rhs, vde_x, vde_u])
+
+ode.generate('ode.c', {'with_header':True})
+vde.generate('vde.c', {'with_header':True})
+
+nlp = ocp_nlp_in()
+a = nlp.set_model("ode")
+print(a)

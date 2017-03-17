@@ -27,8 +27,8 @@
 typedef struct {
     //    const int_t *sparsity;
     //    const int_t *idx_in;
-    const int_t dim_in;
-    const int_t dim_out;
+    int_t dim_in;
+    int_t dim_out;
     void (*fun)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
     // TODO(rien): other directional and second order derivatives

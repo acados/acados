@@ -33,7 +33,7 @@ extern "C" {
 #define CODE_GENERATION 0
 #define WARM_SWAP 0
 
-typedef struct sim_lifted_irk_workspace_ {
+typedef struct {
     real_t *rhs_in;
     real_t *VDE_tmp;
     real_t *out_tmp;
@@ -46,7 +46,7 @@ typedef struct sim_lifted_irk_workspace_ {
     struct d_strmat *str_sol_t;
 } sim_lifted_irk_workspace;
 
-typedef struct sim_lifted_irk_memory_ {
+typedef struct {
     real_t *K_traj;
     real_t *DK_traj;
     real_t *x;

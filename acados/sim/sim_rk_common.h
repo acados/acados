@@ -23,7 +23,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct sim_RK_opts_ {
+typedef struct {
     int_t num_stages;
     real_t *A_mat;
     real_t *c_vec;
