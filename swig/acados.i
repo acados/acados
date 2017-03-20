@@ -1,14 +1,38 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
 %module acados
 %{
 #define SWIG_FILE_WITH_INIT
+
+#include <typeinfo>
+
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/utils/types.h"
+
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
         PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
                     data, 0, NPY_ARRAY_FARRAY, NULL)
-#include <typeinfo>
-#include "acados/utils/types.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/utils/allocate_ocp_qp.h"
 %}
 
 %include "numpy.i"
@@ -119,6 +143,14 @@ static PyObject *convert_to_sequence(int_t *array, const int_t length) {
     PyObject *sequence = PyList_New(length);
     for (int_t i = 0; i < length; i++) {
         PyList_SetItem(sequence, i, PyInt_FromLong((long) array[i]));
+    }
+    return sequence;
+}
+
+static PyObject *convert_to_sequence(real_t *array, const int_t length) {
+    PyObject *sequence = PyList_New(length);
+    for (int_t i = 0; i < length; i++) {
+        PyList_SetItem(sequence, i, PyFloat_FromDouble((double) array[i]));
     }
     return sequence;
 }
@@ -269,7 +301,7 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
 }
 
 template<typename T>
-static void read_array_from_dictionary(PyObject *dictionary, const char *key_name,
+static void initialize_array_from(PyObject *dictionary, const char *key_name,
     T *array, int_t array_length) {
 
     if (PyDict_GetItemString(dictionary, key_name) == NULL) {
@@ -278,6 +310,29 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
         PyObject *sequence = PyDict_GetItemString(dictionary, key_name);
         convert_to_c_array(sequence, array, array_length);
     }
+}
+
+static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
+    if (qp1->N != qp2->N)
+        return false;
+    int_t N = qp1->N;
+    for (int_t i = 0; i < N; i++) {
+        if (qp1->nx[i] != qp2->nx[i])
+            return false;
+        else if (qp1->nu[i] != qp2->nu[i])
+            return false;
+        else if (qp1->nb[i] != qp2->nb[i])
+            return false;
+        else if (qp1->nc[i] != qp2->nc[i])
+            return false;
+    }
+    if (qp1->nx[N] != qp2->nx[N])
+        return false;
+    else if (qp1->nb[N] != qp2->nb[N])
+        return false;
+    else if (qp1->nc[N] != qp2->nc[N])
+        return false;
+    return true;
 }
 
 %}
@@ -464,11 +519,21 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
         int_t nx[N+1], nu[N], nb[N+1], nc[N+1];
-        read_array_from_dictionary(dictionary, "nx", nx, N+1);
-        read_array_from_dictionary(dictionary, "nu", nu, N);
-        read_array_from_dictionary(dictionary, "nb", nb, N+1);
-        read_array_from_dictionary(dictionary, "nc", nc, N+1);
+        initialize_array_from(dictionary, "nx", nx, N+1);
+        initialize_array_from(dictionary, "nu", nu, N);
+        initialize_array_from(dictionary, "nb", nb, N+1);
+        initialize_array_from(dictionary, "nc", nc, N+1);
+        // Default behavior is that initial state is fixed
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            nb[0] = nx[0];
+        }
         allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            int idxb[nb[0]];
+            for (int_t i = 0; i < nb[0]; i++)
+                idxb[i] = i;
+            memcpy((void *) qp_in->idxb[0], idxb, sizeof(idxb));
+        }
         return qp_in;
     }
 }
@@ -476,31 +541,64 @@ static void read_array_from_dictionary(PyObject *dictionary, const char *key_nam
 %extend ocp_qp_solver {
     ocp_qp_solver(const char *solver_name, ocp_qp_in *qp_in) {
         ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
-        if (strcmp(solver_name, "condensing_qpoases")) {
+        void *args = NULL;
+        void *mem = NULL;
+        int_t workspace_size;
+        void *workspace = NULL;
+        if (!strcmp(solver_name, "condensing_qpoases")) {
+            solver->fun = ocp_qp_condensing_qpoases;
+            args = (ocp_qp_condensing_qpoases_args *) \
+                malloc(sizeof(ocp_qp_condensing_qpoases_args));
+#ifdef OOQP
+        } else if (!strcmp(solver_name, "ooqp")) {
+            solver->fun = ocp_qp_ooqp;
+            args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
+            ((ocp_qp_ooqp_args *) args)->workspaceMode = 2;
+            mem = (ocp_qp_ooqp_memory *) malloc(sizeof(ocp_qp_ooqp_memory));
+            ocp_qp_ooqp_create_memory(qp_in, args, mem);
+            workspace_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
+            workspace = (void *) malloc(workspace_size);
+#endif
+        } else if (!strcmp(solver_name, "qpdunes")) {
+            solver->fun = ocp_qp_qpdunes;
+            args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
+            ocp_qp_qpdunes_create_arguments(args, QPDUNES_DEFAULT_ARGUMENTS);
+            mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
+            ocp_qp_qpdunes_create_memory(qp_in, args, mem);
+            workspace_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
+            workspace = (void *) malloc(workspace_size);
+        }  else {
             SWIG_Error(SWIG_ValueError, "Solver name not known!");
             return NULL;
         }
-        solver->fun = ocp_qp_condensing_qpoases;
         solver->qp_in = qp_in;
         ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
         allocate_ocp_qp_out(qp_in, qp_out);
         solver->qp_out = qp_out;
-        ocp_qp_condensing_qpoases_args *args = \
-            (ocp_qp_condensing_qpoases_args *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
-        solver->mem = args;
-        real_t *qpoases_work = NULL;
-        solver->work = qpoases_work;
-        initialise_qpoases(qp_in);
+        solver->args = args;
+        solver->mem = mem;
+        solver->work = workspace;
         return solver;
     }
     PyObject *solve() {
-        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->mem, $self->work);
+        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
+            $self->mem, $self->work);
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
-            $self->qp_in->N+1, $self->qp_in->nx);
+        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
+    }
+    PyObject *solve(ocp_qp_in *qp_in) {
+        if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
+            SWIG_Error(SWIG_ValueError, "Not allowed to change dimensions of variables "
+                "between calls to solver");
+        }
+        $self->qp_in = qp_in;
+        int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
+            $self->mem, $self->work);
+        if (return_code != 0) {
+            SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
+        }
+        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 }
-
-%include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"

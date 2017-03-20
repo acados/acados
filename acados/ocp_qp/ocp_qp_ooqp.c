@@ -17,10 +17,13 @@
  *
  */
 
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "OOQP/include/cQpGenSparse.h"
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
+
 #include "acados/utils/timing.h"
 
 #define TIMINGS 0  // 0: do not print any timings inside here

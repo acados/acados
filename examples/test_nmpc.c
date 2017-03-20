@@ -19,23 +19,18 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(__APPLE__)
-#include <mach/mach_time.h>
-#else
-#include <sys/stat.h>
-#include <sys/time.h>
-#endif
-#include "acados/utils/types.h"
-#include "acados/sim/sim_erk_integrator.h"
+
+#include "hpmpc/include/aux_d.h"
+
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "external/hpmpc/include/aux_d.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 #include "examples/Chen/Chen_model.h"
 
 #define NN 13
 #define NX 2
 #define NU 1
-
-#include "acados/utils/timing.h"
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -107,10 +102,10 @@ int main() {
     sim_info erk_info;
     sim_out.info = &erk_info;
 
-    sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
     sim_erk_create_opts(4, &rk_opts);
     sim_in.opts = &rk_opts;
+    sim_erk_workspace erk_work;
     sim_erk_create_workspace(&sim_in, &erk_work);
 
     int_t nx[NN+1] = {0};
@@ -175,8 +170,6 @@ int main() {
     qp_out.x = px;
     qp_out.u = pu;
 
-    initialise_qpoases(&qp_in);
-
     acado_timer timer;
     real_t timings = 0;
     for (int_t iter = 0; iter < max_iters; iter++) {
@@ -208,7 +201,7 @@ int main() {
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, work);
+            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;
@@ -228,6 +221,34 @@ int main() {
     print_states_controls(&w[0], N);
     #endif  // DEBUG
     printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+
+    free(sim_in.x);
+    free(sim_in.u);
+    free(sim_in.S_forw);
+    free(sim_out.xn);
+    free(sim_out.S_forw);
+
+    d_free(px0[0]);
+    for (int_t i = 0; i < N; i++) {
+        d_free(pA[i]);
+        d_free(pB[i]);
+        d_free(pb[i]);
+        d_free(pS[i]);
+        d_free(pq[i]);
+        d_free(pr[i]);
+        d_free(px[i]);
+        d_free(pu[i]);
+    }
+    d_free(pq[N]);
+    d_free(px[N]);
+
+    free(rk_opts.A_mat);
+    free(rk_opts.b_vec);
+    free(rk_opts.c_vec);
+
+    free(erk_work.rhs_forw_in);
+    free(erk_work.K_traj);
+    free(erk_work.out_forw_traj);
 
     return 0;
 }

@@ -18,6 +18,7 @@
  */
 
 #include "acados/ocp_qp/condensing.h"
+
 #include "acados/ocp_qp/condensing_helper_functions.c"
 
 void condensing_N2_fixed_initial_state(condensing_in *input, condensing_out *output,

@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
 
 // OCP QP interface
 // struct of arguments to the solver

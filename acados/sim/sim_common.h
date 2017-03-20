@@ -21,8 +21,9 @@
 #define ACADOS_SIM_SIM_COMMON_H_
 
 #include <stdbool.h>
-#include "acados/utils/types.h"
+
 #include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 
 typedef struct sim_in_ {
     int_t nx;   // NX

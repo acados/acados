@@ -24,11 +24,12 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
 #include "qpDUNES-dev/include/qpDUNES.h"
 
-typedef enum {
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
+
+typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
     QPDUNES_LINEAR_MPC,  // TODO(dimitris): implement
     QPDUNES_NONLINEAR_MPC  // TODO(dimitris): implement
