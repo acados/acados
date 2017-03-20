@@ -28,13 +28,13 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "qpDUNES-dev/include/qpDUNES.h"
 
-typedef enum qpdunes_options_t_ {
+typedef enum {
     QPDUNES_DEFAULT_ARGUMENTS,
-    QPDUNES_LINEAR_MPC,
-    QPDUNES_NONLINEAR_MPC
+    QPDUNES_LINEAR_MPC,  // TODO(dimitris): implement
+    QPDUNES_NONLINEAR_MPC  // TODO(dimitris): implement
 } qpdunes_options_t;
 
-typedef enum qpdunes_stage_qp_solver_t_ {
+typedef enum {
     QPDUNES_WITH_QPOASES,
     QPDUNES_WITH_CLIPPING
 } qpdunes_stage_qp_solver_t;

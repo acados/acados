@@ -104,7 +104,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             void *work;
 
                             ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
-                            args.options.printLevel = 0;
 
                             int_t work_space_size =
                                 ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
