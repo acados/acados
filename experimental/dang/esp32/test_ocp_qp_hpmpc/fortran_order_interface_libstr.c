@@ -170,7 +170,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 	size_t addr = (( (size_t) work0 ) + 63 ) / 64 * 64;
 	char *c_ptr = (char *) addr;
 
-
+	printf("fortran_order_d_ip_ocp_hard_tv.c, line 173\n"); // debug
 //printf("\n%d\n", ((size_t) ptr) & 63);
 
 	// data structure
@@ -191,23 +191,27 @@ int fortran_order_d_ip_ocp_hard_tv(
 	void *work_ipm;
 	void *work_res;
 
+	printf("fortran_order_d_ip_ocp_hard_tv.c, line 194\n"); // debug
 	for(ii=0; ii<N; ii++)
 		{
 		d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], (void *) c_ptr);
 		c_ptr += hsBAbt[ii].memory_size;
 		}
+	printf("fortran_order_d_ip_ocp_hard_tv.c, line 200\n"); // debug
 
 	for(ii=0; ii<=N; ii++)
 		{
 		d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], (void *) c_ptr);
 		c_ptr += hsRSQrq[ii].memory_size;
 		}
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 207\n"); // debug
 
 	for(ii=0; ii<=N; ii++)
 		{
 		d_create_strmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii], (void *) c_ptr);
 		c_ptr += hsDCt[ii].memory_size;
 		}
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 214\n"); // debug
 
 	for(ii=0; ii<N; ii++)
 		{
@@ -274,6 +278,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 		d_create_strvec(2*nb[ii]+2*ng[ii], &hsrm[ii], (void *) c_ptr);
 		c_ptr += hsrm[ii].memory_size;
 		}
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 281\n"); // debug
 
 	work_res = (void *) c_ptr;
 	c_ptr += d_res_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
@@ -283,6 +288,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 	// convert matrices
 
 	// TODO use pointers to exploit time invariant !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	printf("fortran_order_d_ip_ocp_hard_tv.c, line 291\n"); // debug
 
 	// dynamic system
 	for(ii=0; ii<N; ii++)
@@ -368,7 +374,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 //	exit(1);
 
 
-
+printf("fortran_order_d_ip_ocp_hard_tv.c, line 377\n"); // debug
 
 
 	if(N2<N) // partial condensing
@@ -379,6 +385,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 		int nu2[N2+1];
 		int nb2[N2+1];
 		int ng2[N2+1];
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 388\n"); // debug
 
 		d_part_cond_compute_problem_size_libstr(N, nx, nu, nb, hidxb, ng, N2, nx2, nu2, nb2, ng2);
 
@@ -411,6 +418,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 
 		memory_part_cond = (void *) c_ptr;
 		c_ptr += d_part_cond_memory_space_size_bytes_libstr(N, nx, nu, nb, hidxb, ng, N2, nx2, nu2, nb2, ng2);
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 421\n"); // debug
 
 		// partial condensing routine (computing also hidxb2) !!!
 		d_part_cond_libstr(N, nx, nu, nb, hidxb, ng, hsBAbt, hsRSQrq, hsDCt, hsd, N2, nx2, nu2, nb2, hidxb2, ng2, hsBAbt2, hsRSQrq2, hsDCt2, hsd2, memory_part_cond, work_part_cond, work_part_cond_sizes);
@@ -422,6 +430,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 //		for(ii=0; ii<=N2; ii++)
 //			d_print_strmat(nu2[ii]+nx2[ii]+1, nu2[ii]+nx2[ii], &hsRSQrq2[ii], 0, 0);
 //		exit(1);
+printf("fortran_order_d_ip_ocp_hard_tv.c, line 433\n"); // debug
 
 		// IPM work space
 		work_ipm = (void *) c_ptr;
@@ -470,6 +479,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 //			d_print_mat(1, nu[ii]+nx[ii], hux[ii], 1);
 //		exit(1);
 
+printf("fortran_order_d_ip_ocp_hard_tv.c, line 482\n"); // debug
 
 		// IPM solver on partially condensed system
 		hpmpc_status = d_ip2_res_mpc_hard_libstr(kk, k_max, mu0, mu_tol, alpha_min, warm_start, stat, N2, nx2, nu2, nb2, hidxb2, ng2, hsBAbt2, hsRSQrq2, hsDCt2, hsd2, hsux2, 1, hspi2, hslam2, hst2, work_ipm);
@@ -487,10 +497,12 @@ int fortran_order_d_ip_ocp_hard_tv(
 		// expand work space
 		work_part_expand = (void *) c_ptr;
 		c_ptr += d_part_expand_work_space_size_bytes_libstr(N, nx, nu, nb, ng, work_part_expand_sizes);
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 500\n"); // debug
 
 
 		// expand solution of full space system
 		d_part_expand_solution_libstr(N, nx, nu, nb, hidxb, ng, hsBAbt, hsb, hsRSQrq, hsrq, hsDCt, hsux, hspi, hslam, hst, N2, nx2, nu2, nb2, hidxb2, ng2, hsux2, hspi2, hslam2, hst2, work_part_expand, work_part_expand_sizes);
+		printf("fortran_order_d_ip_ocp_hard_tv.c, line 505\n"); // debug
 
 //		for(ii=0; ii<=N; ii++)
 //			d_print_tran_strvec(nu[ii]+nx[ii], &hsux[ii], 0);
@@ -503,7 +515,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 		// align (again) to (typical) cache line size
 		addr = (( (size_t) c_ptr ) + 63 ) / 64 * 64;
 		c_ptr = (char *) addr;
-
+printf("fortran_order_d_ip_ocp_hard_tv.c, line 518\n"); // debug
 		// ipm work space
 		work_ipm = (void *) c_ptr;
 		c_ptr += d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
@@ -519,10 +531,10 @@ int fortran_order_d_ip_ocp_hard_tv(
 				d_cvt_vec2strvec(nx[ii], x[ii], &hsux[ii], nu[ii]);
 
 			}
-
+// printf("fortran_order_d_ip_ocp_hard_tv.c, line 534\n"); // debug
 		// IPM solver on full space system
 		hpmpc_status = d_ip2_res_mpc_hard_libstr(kk, k_max, mu0, mu_tol, alpha_min, warm_start, stat, N, nx, nu, nb, hidxb, ng, hsBAbt, hsRSQrq, hsDCt, hsd, hsux, 1, hspi, hslam, hst, work_ipm);
-
+		// printf("fortran_order_d_ip_ocp_hard_tv.c, line 537\n"); // debug
 		}
 
 //	for(ii=0; ii<=N; ii++)
@@ -534,7 +546,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 //	for(ii=0; ii<=N; ii++)
 //		d_print_tran_strvec(2*nb[ii]+2*ng[ii], &hst[ii], 0);
 //	exit(1);
-
+// printf("fortran_order_d_ip_ocp_hard_tv.c, line 549\n"); // debug
 	// copy back inputs and states
 	for(ii=0; ii<N; ii++)
 		d_cvt_strvec2vec(nu[ii], &hsux[ii], 0, u[ii]);
@@ -547,8 +559,10 @@ int fortran_order_d_ip_ocp_hard_tv(
 	// compute infinity norm of residuals on exit
 
 	double mu;
+	// printf("fortran_order_d_ip_ocp_hard_tv.c, line 562\n"); // debug
 
 	d_res_res_mpc_hard_libstr(N, nx, nu, nb, hidxb, ng, hsBAbt, hsb, hsRSQrq, hsrq, hsux, hsDCt, hsd, hspi, hslam, hst, hsrrq, hsrb, hsrd, hsrm, &mu, work_res);
+	// printf("fortran_order_d_ip_ocp_hard_tv.c, line 565\n"); // debug
 
 //	for(ii=0; ii<=N; ii++)
 //		d_print_e_tran_strvec(nu[ii]+nx[ii], &hsrrq[ii], 0);
@@ -618,7 +632,7 @@ int fortran_order_d_ip_ocp_hard_tv(
 		d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, lam[ii]);
 //		d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hst[ii], 0, t[ii]);
 		}
-
+// printf("fortran_order_d_ip_ocp_hard_tv.c, line 635\n"); // debug
 //	printf("\nend of wrapper\n");
 
     return hpmpc_status;

@@ -100,10 +100,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
     int out_iter = -1;  // number of performed iterations
     double *inf_norm_res = hpmpc_args->inf_norm_res;
 
+    printf("ocp_qp_hpmpc.c, line 103 \n"); // debug
     // memory for stat
     size_t addr = ( ( (size_t) workspace) + 7) / 8 * 8;  // align to 8-byte boundaries
+    printf("ocp_qp_hpmpc line 106, k_max= %d \n",k_max);
+    printf("ocp_qp_hpmpc line 107, addr= %d \n",addr);
     double *ptr_double = (double *) addr;
+    printf("Pointer ptr_double: %p \n",ptr_double);
     double *stat = ptr_double;
+    printf("Pointer stat: %p \n",stat);
+    // printf("Value stat[0]: %f \n",stat[0]);
     ptr_double += 5*k_max;
     for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
 
@@ -128,10 +134,12 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_
             }
         }
     }
+    printf("ocp_qp_hpmpc.c, line 132 \n"); // debug
 
     int hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0, mu_tol, N, nx, nu, \
         nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS, hR, hq, hr, hlb, hub, hC, hD, hlg, \
         hug, hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
+    printf("ocp_qp_hpmpc.c, line 137 \n"); // debug
 
     hpmpc_args->out_iter = out_iter;  // number of performed iterations
 

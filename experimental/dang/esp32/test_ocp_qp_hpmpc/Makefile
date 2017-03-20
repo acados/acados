@@ -1,13 +1,13 @@
 # This Makefile helps to compile the acados example
-# test_nmpc on microcontrollers
+# test_ocp_qp_hpmpc on microcontrollers
 
 # Makefile to help compiling acados code in a directory
-# It scan the SRCDIR to find all source files,
-# then make the object for every source file,
-# after that it link all the objects to compile the project
+# It scans the SRCDIR to find all source files,
+# then makes the object for every source file,
+# after that it links all the objects to compile the project
 # Note: PROJECT is the name of the main file to execute
 # Author: Dang Doan
-# Date: 2017.03.08
+# Date: 2017.03.15
 
 # BLASFEO-specific options
 LA = REFERENCE
