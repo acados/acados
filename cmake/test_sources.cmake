@@ -32,17 +32,10 @@ set(UNIT_TESTS_SRC_CASADI ${PROJECT_SOURCE_DIR}/build/test/jac_pendulum.c
     ${PROJECT_SOURCE_DIR}/build/test/vde_chain_nm4.c
 )
 
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
-        # TODO(dimitris): Add these sources even without OOQP
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
-        ${PROJECT_SOURCE_DIR}/test/test_utils/read_ocp_qp_in.c
-    )
-else ()
-    set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
-    )
-endif ()
+set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
+    ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
+    ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
+    ${PROJECT_SOURCE_DIR}/test/test_utils/read_ocp_qp_in.c
+)
 
 set(UNIT_TESTS_SRC ${PROJECT_SOURCE_DIR}/test/all_tests.cpp)
