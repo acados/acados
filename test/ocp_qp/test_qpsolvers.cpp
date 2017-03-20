@@ -23,11 +23,14 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "catch/include/catch.hpp"
+
+#ifdef OOQP
 #include "OOQP/include/cQpGenSparse.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#endif
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/allocate_ocp_qp.h"
 #include "test/ocp_qp/condensing_test_helper.h"
@@ -122,7 +125,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             void *work;
 
                             ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
-                            args.options.printLevel = 0;
 
                             int_t work_space_size =
                                 ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
@@ -140,6 +142,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
+                    #ifdef OOQP
                     if (TEST_OOQP) {
                         SECTION("OOQP") {
                             std::cout <<"---> TESTING OOQP with QP: "<< scenario <<
@@ -168,6 +171,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
+                    #endif
                     if (TEST_HPMPC) {
                         SECTION("HPMPC") {
                             std::cout <<"---> TESTING HPMPC with QP: "<< scenario <<

@@ -31,11 +31,11 @@ extern "C" {
 
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
-    QPDUNES_LINEAR_MPC,
-    QPDUNES_NONLINEAR_MPC
+    QPDUNES_LINEAR_MPC,  // TODO(dimitris): implement
+    QPDUNES_NONLINEAR_MPC  // TODO(dimitris): implement
 } qpdunes_options_t;
 
-typedef enum qpdunes_stage_qp_solver_t_ {
+typedef enum {
     QPDUNES_WITH_QPOASES,
     QPDUNES_WITH_CLIPPING
 } qpdunes_stage_qp_solver_t;
