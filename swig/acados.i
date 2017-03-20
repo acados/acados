@@ -147,6 +147,14 @@ static PyObject *convert_to_sequence(int_t *array, const int_t length) {
     return sequence;
 }
 
+static PyObject *convert_to_sequence(real_t *array, const int_t length) {
+    PyObject *sequence = PyList_New(length);
+    for (int_t i = 0; i < length; i++) {
+        PyList_SetItem(sequence, i, PyFloat_FromDouble((double) array[i]));
+    }
+    return sequence;
+}
+
 static void convert_to_c_array(PyObject *input, int_t * const array, const int_t length_of_array) {
     if (is_valid_integer(input)) {
         int_t integer_number = (int_t) PyInt_AsLong(input);
@@ -293,7 +301,7 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
 }
 
 template<typename T>
-static void read_array_from_dictionary(PyObject *dictionary, const char *key_name,
+static void initialize_array_from(PyObject *dictionary, const char *key_name,
     T *array, int_t array_length) {
 
     if (PyDict_GetItemString(dictionary, key_name) == NULL) {
@@ -511,11 +519,21 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
         int_t nx[N+1], nu[N], nb[N+1], nc[N+1];
-        read_array_from_dictionary(dictionary, "nx", nx, N+1);
-        read_array_from_dictionary(dictionary, "nu", nu, N);
-        read_array_from_dictionary(dictionary, "nb", nb, N+1);
-        read_array_from_dictionary(dictionary, "nc", nc, N+1);
+        initialize_array_from(dictionary, "nx", nx, N+1);
+        initialize_array_from(dictionary, "nu", nu, N);
+        initialize_array_from(dictionary, "nb", nb, N+1);
+        initialize_array_from(dictionary, "nc", nc, N+1);
+        // Default behavior is that initial state is fixed
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            nb[0] = nx[0];
+        }
         allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            int idxb[nb[0]];
+            for (int_t i = 0; i < nb[0]; i++)
+                idxb[i] = i;
+            memcpy((void *) qp_in->idxb[0], idxb, sizeof(idxb));
+        }
         return qp_in;
     }
 }
@@ -560,7 +578,6 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         solver->args = args;
         solver->mem = mem;
         solver->work = workspace;
-        initialise_qpoases(qp_in);
         return solver;
     }
     PyObject *solve() {
@@ -569,9 +586,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-
-        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
-            $self->qp_in->N+1, $self->qp_in->nx);
+        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
     PyObject *solve(ocp_qp_in *qp_in) {
         if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
@@ -584,7 +599,6 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-        return convert_to_sequence_of_1dim_arrays($self->qp_out->x, \
-            $self->qp_in->N+1, $self->qp_in->nx);
+        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 }

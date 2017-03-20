@@ -568,8 +568,8 @@ void sim_lifted_irk_create_memory(const sim_in *in,
 
     mem->K_traj = malloc(sizeof(*mem->K_traj) * (nSteps*num_stages*nx));
     mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*NF));
-    mem->x = malloc(sizeof(*mem->x) * nx);
-    mem->u = malloc(sizeof(*mem->u) * nu);
+    mem->x = calloc(nx, sizeof(*mem->x));
+    mem->u = calloc(nu, sizeof(*mem->u));
 
 #if WARM_SWAP
     mem->ipiv = malloc(sizeof(*mem->ipiv) * (num_stages*nx));
