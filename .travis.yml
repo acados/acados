@@ -56,9 +56,8 @@ install:
   - travis_retry wget http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
   - mkdir casadi-py35-np1.9.1-v3.1.1
   - tar -xvf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
-  - export PYTHONPATH=$HOME/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+  - export PYTHONPATH=./casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
   - echo $PYTHONPATH
-  - echo $HOME
   - pwd
   - ls
   - popd
