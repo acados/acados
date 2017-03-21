@@ -57,6 +57,10 @@ install:
   - mkdir casadi-py35-np1.9.1-v3.1.1
   - tar -xvf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
   - export PYTHONPATH=$HOME/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+  - echo $PYTHONPATH
+  - echo $HOME
+  - pwd
+  - ls
   - popd
 
 script:
@@ -75,6 +79,7 @@ script:
   - ./unit_tests
   - popd
   - pushd $VIRTUAL_ENV
+  - echo $PYTHONPATH
   - python3 test_swig.py
   - popd
   - cmake -D CMAKE_BUILD_TYPE=Release ..
