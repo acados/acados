@@ -81,7 +81,6 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
     // dummy command
     if (args->options.logLevel == 0) ii = 0;
 
-    // TODO(dimitris): update data if NOT first run!
     if (mem->firstRun == 1) {
         /* setup of intervals */
         for (kk = 0; kk < N; ++kk) {
@@ -92,7 +91,6 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 work->zUpp[ii] = args->options.QPDUNES_INFTY;
             }
             for (ii = 0; ii < in->nb[kk]; ii++) {
-                // TODO(dimitris): what's our infty in acados?
                 work->zLow[in->idxb[kk][ii]] = in->lb[kk][ii];
                 work->zUpp[in->idxb[kk][ii]] = in->ub[kk][ii];
             }
@@ -156,13 +154,16 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
             printf("Setup of qpDUNES failed on initialization of stage QPs\n");
             return (int_t)return_value;
         }
+    } else {  // if mem->firstRun == 0
+        // TODO(dimitris): update data if NOT first run!
     }
+
     mem->firstRun = 0;
     return (int_t)return_value;
 }
 
 
-static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem) {
+static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem) {
     int ii, kk;
 
     for (kk = 0; kk < in->N+1; kk++) {
@@ -237,6 +238,7 @@ int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_) {
 
     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
         args->options = qpDUNES_setupDefaultOptions();
+        args->options.printLevel = 0;
     } else {
         printf("\nUknown option (%d) for qpDUNES!\n", opts_);
         return -1;
@@ -343,10 +345,6 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, vo
 
     ocp_qp_qpdunes_cast_workspace(work, mem);
     ocp_qp_qpdunes_update_memory(in, args, mem, work);
-
-    // dummy commands
-    if (mem->firstRun || args->options.logLevel == 1) work->tmp = 31;
-    if (in->nx[0] == 1) out->x[0][0] = 1;
 
     return_value = qpDUNES_solve(&(mem->qpData));
     if (return_value != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) {
