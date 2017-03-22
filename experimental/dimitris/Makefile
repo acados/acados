@@ -18,10 +18,15 @@ QPOASES=$(ACADOS_EXT)/qpOASES
 QPOASESINCLUDEDIR=$(QPOASES)/include
 QPOASESLIBDIR=$(QPOASES)/bin
 
+QPDUNES=$(ACADOS_EXT)/qpDUNES-dev
+QPDUNESINCLUDEDIR=$(QPDUNES)/include
+QPDUNESLIBDIR=$(QPDUNES)/build/lib
+
 LDFLAGS =-L$(OOQPLIBDIR)
 LDFLAGS+=-L$(BLASFEOLIBDIR)
 LDFLAGS+=-L$(QPOASESLIBDIR)
 LDFLAGS+=-L$(HPMPCLIBDIR)
+LDFLAGS+=-L$(QPDUNESLIBDIR)
 
 BLAS     = -lblas
 MA27LIB  = $(OOQP)/libma27.a
@@ -34,13 +39,24 @@ endif
 OOQP_SPARSE_LIBS = -looqpgensparse -looqpsparse  -looqpgondzio -looqpbase \
                  $(BLAS) $(MA27LIB) $(FLIBS)
 
-LIBS= -lqpOASES_e -lhpmpc -lblasfeo
+LIBS= -lqpOASES_e -lhpmpc -lblasfeo -lqpdunes
 LIBS+=$(OOQP_SPARSE_LIBS)
 LIBS+=-lm
 
 toy_memory_allocation: toy_memory_allocation.c
 	gcc -g -O0 toy_memory_allocation.c -o toy_memory_allocation.exe
 	valgrind --leak-check=full ./toy_memory_allocation.exe
+
+qpdunes: test_qpdunes.c
+	gcc -c -g -O0 ../../acados/utils/allocate_ocp_qp.c -o allocate_ocp_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
+	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
+	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_qpdunes.c -o ocp_qp_qpdunes.o -I$(ACADOS) -I$(ACADOS_EXT) -I$(QPDUNESINCLUDEDIR)
+	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_ooqp.c -o ocp_qp_ooqp.o -I$(OOQPINCLUDEDIR) -I$(ACADOS)  -I$(ACADOS_EXT)
+	gcc -c -g -O0 ../../acados/utils/timing.c -o timing.o -I$(ACADOS)
+	gcc -c -g -O0 test_qpdunes.c -o test_qpdunes.o -I$(ACADOS) -I$(ACADOS_EXT) -I$(QPDUNESINCLUDEDIR)
+	g++ -g -O0 timing.o ocp_qp_qpdunes.o ocp_qp_ooqp.o allocate_ocp_qp.o read_ocp_qp_in.o test_qpdunes.o -o qpdunes.exe $(LDFLAGS) $(LIBS)
+	./qpdunes.exe
+	# valgrind --leak-check=full ./qpdunes.exe
 
 ooqp: test_qp.c
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_ooqp.c -o ocp_qp_ooqp.o -I$(OOQPINCLUDEDIR) -I$(ACADOS)  -I$(ACADOS_EXT)

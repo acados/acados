@@ -20,11 +20,11 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
-#include "acados/utils/types.h"
-#include "acados/sim/sim_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/sim_common.h"
+#include "acados/utils/types.h"
 
-typedef struct ocp_nlp_function_ {
+typedef struct {
     //    const int_t *sparsity;
     //    const int_t *idx_in;
     const int_t dim_in;
@@ -36,7 +36,7 @@ typedef struct ocp_nlp_function_ {
 } ocp_nlp_function;
 
 
-typedef struct ocp_nlp_ls_cost_ {
+typedef struct {
     // TODO(rien): only for least squares cost with state and control reference atm
 //    void *fun;
 //    const int_t *ny;
@@ -45,12 +45,12 @@ typedef struct ocp_nlp_ls_cost_ {
 } ocp_nlp_ls_cost;
 
 
-typedef struct ocp_nlp_stage_cost_ {
+typedef struct {
     ocp_nlp_function *fun;
 } ocp_nlp_stage_cost;
 
 
-typedef struct ocp_nlp_in_ {
+typedef struct {
     int_t N;
     const int_t *nx;
     const int_t *nu;
@@ -76,7 +76,7 @@ typedef struct ocp_nlp_in_ {
 } ocp_nlp_in;
 
 
-typedef struct ocp_nlp_mem_ {
+typedef struct {
     real_t **x;
     real_t **u;
 //    real_t **pi;  // TODO(rien): what is pi?
@@ -84,7 +84,7 @@ typedef struct ocp_nlp_mem_ {
 } ocp_nlp_mem;
 
 
-typedef struct ocp_nlp_work_ {
+typedef struct {
     real_t *w;
 
     real_t **A;
@@ -104,15 +104,22 @@ typedef struct ocp_nlp_work_ {
 } ocp_nlp_work;
 
 
-typedef struct ocp_nlp_out_ {
+typedef struct {
     real_t **x;
     real_t **u;
 //    real_t **pi;  // TODO(rien): what is pi?
     real_t **lam;
 } ocp_nlp_out;
 
+typedef struct {
+    int_t (*fun)(ocp_nlp_in *, ocp_nlp_out *, void *, void *, void *);
+    ocp_nlp_in *nlp_in;
+    ocp_nlp_out *nlp_out;
+    void *args;
+    void *mem;
+    void *work;
+} ocp_nlp_solver;
 
 void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem);
-
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

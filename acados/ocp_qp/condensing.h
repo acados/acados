@@ -20,8 +20,8 @@
 #ifndef ACADOS_OCP_QP_CONDENSING_H_
 #define ACADOS_OCP_QP_CONDENSING_H_
 
-#include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
 
 typedef struct condensing_in_ {
     ocp_qp_in *qp_input;

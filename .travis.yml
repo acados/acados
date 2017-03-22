@@ -42,7 +42,7 @@ before_install:
 
 install:
   - pip install numpy
-  - sudo apt-get install octave liboctave-dev
+  - sudo apt-get install octave liboctave-dev valgrind
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
       source encrypted_script;
@@ -72,3 +72,8 @@ script:
   - popd
   - pushd $VIRTUAL_ENV
   - python3 test_swig.py
+  - popd
+  - cmake -D CMAKE_BUILD_TYPE=Release ..
+  - make
+  - cmake -D CMAKE_BUILD_TYPE=Debug ..
+  - make

@@ -1,15 +1,35 @@
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
+
+#include "acados/sim/sim_lifted_irk_integrator.h"
+
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_kernel.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_d_kernel.h"
+#include "blasfeo/include/blasfeo_i_aux.h"
 
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
 
 #if TRIPLE_LOOP
@@ -548,8 +568,8 @@ void sim_lifted_irk_create_memory(const sim_in *in,
 
     mem->K_traj = malloc(sizeof(*mem->K_traj) * (nSteps*num_stages*nx));
     mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*NF));
-    mem->x = malloc(sizeof(*mem->x) * nx);
-    mem->u = malloc(sizeof(*mem->u) * nu);
+    mem->x = calloc(nx, sizeof(*mem->x));
+    mem->u = calloc(nu, sizeof(*mem->u));
 
 #if WARM_SWAP
     mem->ipiv = malloc(sizeof(*mem->ipiv) * (num_stages*nx));

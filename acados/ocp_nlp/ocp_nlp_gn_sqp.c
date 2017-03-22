@@ -17,17 +17,18 @@
  *
  */
 
+#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
-#include "acados/utils/types.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/print.h"
-#include "acados/sim/sim_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/sim/sim_common.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 
 #define PARALLEL 0
 
@@ -171,7 +172,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
 
         status = work->solver->fun(work->solver->qp_in, work->solver->qp_out,
-                work->solver->mem, work->solver->work);
+                work->solver->mem, NULL, work->solver->work);
         if (status) {
             printf("qpOASES returned error status %d\n", status);
             return -1;
@@ -312,8 +313,6 @@ void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
     work->solver->qp_in->A = (const real_t **) work->A;
     work->solver->qp_in->B = (const real_t **) work->B;
     work->solver->qp_in->b = (const real_t **) work->b;
-
-    initialise_qpoases(work->solver->qp_in);
 
     work->solver->qp_out->x = (real_t **) malloc(sizeof(*work->solver->qp_out->x) * (in->N+1));
     work->solver->qp_out->u = (real_t **) malloc(sizeof(*work->solver->qp_out->u) * (in->N));
