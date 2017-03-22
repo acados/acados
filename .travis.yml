@@ -57,9 +57,6 @@ install:
   - mkdir casadi-py35-np1.9.1-v3.1.1
   - tar -xvf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
   - export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
-  - echo $PYTHONPATH
-  - pwd
-  - ls
   - popd
 
 script:
