@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +36,7 @@ static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *c
 
     qp->N = N;
     memcpy((void *) qp->nx, (void *) nx, sizeof(*nx)*(N+1));
+    // TODO(dkouzoup): the next line is wrong if you want u[N] != 0
     memcpy((void *) qp->nu, (void *) nu, sizeof(*nu)*(N));
 
     qp->A = (const real_t **) malloc(sizeof(*qp->A) * N);
@@ -59,7 +60,6 @@ static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *c
     d_zeros((real_t **) &qp->Q[N], nx[N], nx[N]);
     d_zeros((real_t **) &qp->q[N], nx[N], 1);
 }
-
 
 static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
     int_free((int_t *)qp->nx);
@@ -90,7 +90,6 @@ static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
     free((real_t**)qp->r);
 }
 
-
 static void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
     qp->lb = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
     qp->ub = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
@@ -106,7 +105,6 @@ static void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
     }
 }
 
-
 static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
     for (int_t i = 0; i < qp->N+1; i++) {
         d_free((real_t*)qp->lb[i]);
@@ -117,7 +115,6 @@ static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
     free((real_t**)qp->ub);
     free((int_t**)qp->idxb);
 }
-
 
 static void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const qp) {
     qp->lc = (const real_t **) malloc(sizeof(*qp->lc) * (N+1));
@@ -136,7 +133,6 @@ static void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const q
     }
 }
 
-
 static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
     for (int_t i = 0; i < qp->N; i++) {
         d_free((real_t*)qp->lc[i]);
@@ -154,20 +150,17 @@ static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
     free((real_t**)qp->Cu);
 }
 
-
 void allocate_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in *const qp) {
     allocate_ocp_qp_in_basic(N, nx, nu, qp);
     allocate_ocp_qp_in_bounds(N, nb, qp);
     allocate_ocp_qp_in_polyhedral(N, nc, qp);
 }
 
-
 void free_ocp_qp_in(ocp_qp_in *const qp) {
     free_ocp_qp_in_basic(qp);
     free_ocp_qp_in_bounds(qp);
     free_ocp_qp_in_polyhedral(qp);
 }
-
 
 void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     int_t kk;
@@ -214,7 +207,6 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     out->x[N] = &primalVars[accPrimal];
     out->lam[N] = &lambdas[accLamdas];
 }
-
 
 void free_ocp_qp_out(ocp_qp_out *out) {
     d_free((real_t*)out->x[0]);

@@ -29,7 +29,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_i_aux.h"
 
-#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 
 static void transpose_matrix(real_t *mat, int m, int n) {
     int_t ii, jj;

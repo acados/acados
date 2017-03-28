@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_UTILS_ALLOCATE_OCP_QP_H_
-#define ACADOS_UTILS_ALLOCATE_OCP_QP_H_
+#ifndef ACADOS_OCP_QP_ALLOCATE_OCP_QP_H_
+#define ACADOS_OCP_QP_ALLOCATE_OCP_QP_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,4 +37,4 @@ void free_ocp_qp_out(ocp_qp_out *out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_UTILS_ALLOCATE_OCP_QP_H_
+#endif  // ACADOS_OCP_QP_ALLOCATE_OCP_QP_H_

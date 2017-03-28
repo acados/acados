@@ -25,11 +25,11 @@
 #include "catch/include/catch.hpp"
 #include "OOQP/include/cQpGenSparse.h"
 
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "acados/utils/allocate_ocp_qp.h"
 #include "test/ocp_qp/condensing_test_helper.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/read_ocp_qp_in.h"

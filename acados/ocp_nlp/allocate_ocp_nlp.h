@@ -17,28 +17,25 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
-#define ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
+#ifndef ACADOS_OCP_QP_ALLOCATE_OCP_NLP_H_
+#define ACADOS_OCP_QP_ALLOCATE_OCP_NLP_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    real_t dummy;
-} ocp_qp_condensing_qpoases_args;
+void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, int_t *ng, \
+    ocp_nlp_in *const nlp);
+void free_ocp_nlp_in(ocp_nlp_in *const nlp);
 
-int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output,
-    void *args, void *mem, void *work);
-
-int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *input,
-    ocp_qp_condensing_qpoases_args *args);
+void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out);
+void free_ocp_nlp_out(int_t N, ocp_nlp_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
+#endif  // ACADOS_OCP_QP_ALLOCATE_OCP_NLP_H_

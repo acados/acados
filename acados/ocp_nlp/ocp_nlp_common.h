@@ -103,7 +103,6 @@ typedef struct {
     ocp_qp_solver *solver;
 } ocp_nlp_work;
 
-
 typedef struct {
     real_t **x;
     real_t **u;

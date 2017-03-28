@@ -39,7 +39,8 @@ typedef struct {
     bool sens_hess;
     int_t nsens_forw;
 
-    void (*VDE_forw)(const real_t*, real_t*);
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int);
+    void (*VDE_forw)(const real_t*, real_t*, int (*vde)(const real_t**, real_t**, int*, real_t*, int));
     void (*VDE_adj)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
 

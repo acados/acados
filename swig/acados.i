@@ -27,12 +27,14 @@
 #include <string>
 #include <typeinfo>
 
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#include "acados/ocp_nlp/allocate_ocp_nlp.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/sim/model_wrapper.h"
 #include "acados/utils/types.h"
 
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
@@ -116,7 +118,7 @@ static bool key_has_valid_integer_or_sequence_value(PyObject *dictionary,
     return true;
 }
 
-static bool is_valid_qp_dictionary(PyObject * const input) {
+static bool is_valid_ocp_dictionary(PyObject * const input) {
     if (!PyDict_Check(input))
         return false;
     if (!key_has_valid_integer_value(input, "N"))
@@ -519,8 +521,8 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 %extend ocp_qp_in {
     ocp_qp_in(PyObject *dictionary) {
         ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
-        if (!is_valid_qp_dictionary(dictionary)) {
-            SWIG_Error(SWIG_ValueError, "Input must be a dictionary");
+        if (!is_valid_ocp_dictionary(dictionary)) {
+            SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
         int_t nx[N+1], nu[N], nb[N+1], nc[N+1];
@@ -585,6 +587,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         solver->work = workspace;
         return solver;
     }
+
     PyObject *solve() {
         int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
             $self->mem, $self->work);
@@ -593,6 +596,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         }
         return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
+
     PyObject *solve(ocp_qp_in *qp_in) {
         if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
             SWIG_Error(SWIG_ValueError, "Not allowed to change dimensions of variables "
@@ -608,17 +612,44 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 }
 
+%clear int_t N;
+
 %ignore ocp_nlp_create_memory;
 
 %include "acados/ocp_nlp/ocp_nlp_common.h"
 
 %extend ocp_nlp_in {
-    int set_model(char *model_name) {
-        printf("%p\n", $self->nx);
+    ocp_nlp_in(PyObject *dictionary) {
+        ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
+        if (!is_valid_ocp_dictionary(dictionary)) {
+            SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
+        }
+        int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
+        int_t nx[N+1], nu[N], nb[N+1], nc[N+1], ng[N+1];
+        initialize_array_from(dictionary, "nx", nx, N+1);
+        initialize_array_from(dictionary, "nu", nu, N);
+        initialize_array_from(dictionary, "nb", nb, N+1);
+        initialize_array_from(dictionary, "nc", nc, N+1);
+        initialize_array_from(dictionary, "ng", ng, N+1);
+        // Default behavior is that initial state is fixed
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            nb[0] = nx[0];
+        }
+        allocate_ocp_nlp_in(N, nx, nu, nb, nc, ng, nlp_in);
+        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+            int idxb[nb[0]];
+            for (int_t i = 0; i < nb[0]; i++)
+                idxb[i] = i;
+            memcpy((void *) nlp_in->idxb[0], idxb, sizeof(idxb));
+        }
+        return nlp_in;
+    }
+
+    void set_model(char *model_name) {
         char library_name[256];
         snprintf(library_name, sizeof(library_name), "%s.so", model_name);
         char command[256];
-        snprintf(command, sizeof(command), "gcc -fPIC -shared -O3 %s.c -o %s", \
+        snprintf(command, sizeof(command), "CC -fPIC -shared -O3 %s.c -o %s", \
             model_name, library_name);
         int compilation_failed = system(command);
         if (compilation_failed)
@@ -629,18 +660,12 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             SWIG_Error(SWIG_RuntimeError, "Something went wrong when loading the model.");
         typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
         eval_t eval = (eval_t)dlsym(handle, model_name);
-        const double x_val[] = {1, 2};
-        const double u_val = 3;
-        const double *arg[2];
-        arg[0] = x_val;
-        arg[1] = &u_val;
-        double rhs_val[] = {0};
-        double *res[1];
-        res[0] = rhs_val;
-        if (eval(arg, res, 0, 0, 0))
-            return 1;
-        printf("%f %f\n", res[0][0], res[0][1]);
-        return 0;
+        $self->sim = (sim_solver *) calloc($self->N, sizeof(sim_solver));
+        for (int_t i = 0; i < $self->N; i++) {
+            $self->sim[i].in = (sim_in *) malloc(sizeof(sim_in));
+            $self->sim[i].in->vde = eval;
+        }
+        dlclose(handle);
     }
 }
 

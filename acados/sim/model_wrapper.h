@@ -17,28 +17,20 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
-#define ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
+#ifndef ACADOS_SIM_MODEL_WRAPPER_H_
+#define ACADOS_SIM_MODEL_WRAPPER_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    real_t dummy;
-} ocp_qp_condensing_qpoases_args;
-
-int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output,
-    void *args, void *mem, void *work);
-
-int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *input,
-    ocp_qp_condensing_qpoases_args *args);
+void jac_fun(const real_t* in, real_t* out);
+void vde_fun(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int));
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
+#endif  // ACADOS_SIM_MODEL_WRAPPER_H_

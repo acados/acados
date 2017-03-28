@@ -90,7 +90,7 @@ void sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
                 }
             }
             acado_tic(&timer_ad);
-            in->VDE_forw(rhs_forw_in, &(K_traj[s*nx*(1+NF)]));  // k evaluation
+            in->VDE_forw(rhs_forw_in, &(K_traj[s*nx*(1+NF)]), in->vde);  // k evaluation
             timing_ad += acado_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++) {
