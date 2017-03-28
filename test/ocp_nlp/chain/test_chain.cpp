@@ -25,7 +25,7 @@
 #include "catch/include/catch.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -286,30 +286,22 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         }
         nlp_out.x[N] = (real_t *) malloc(sizeof(*nlp_out.x[N]) * (NX));
 
+        ocp_nlp_gn_sqp_args nlp_args;
+        sprintf(nlp_args.qp_solver_name, "qpdunes");
+        ocp_nlp_gn_sqp_memory nlp_mem;
+        ocp_nlp_mem nlp_mem_common;
+        nlp_mem.common = &nlp_mem_common;
         ocp_nlp_work nlp_work;
-        ocp_qp_solver qpoases;
-        ocp_qp_in qp_in;
-        ocp_qp_out qp_out;
-        ocp_qp_condensing_qpoases_args args;
-        real_t *qpoases_work = NULL;
-        nlp_work.solver = &qpoases;
-        nlp_work.solver->qp_in = &qp_in;
-        nlp_work.solver->qp_out = &qp_out;
-        nlp_work.solver->mem = &args;
-        nlp_work.solver->work = qpoases_work;
-        nlp_work.solver->fun = &ocp_qp_condensing_qpoases;
+        ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
         ocp_nlp_sqp_create_workspace(&nlp_in, &nlp_work);
-
-        ocp_nlp_mem nlp_mem;
-        ocp_nlp_create_memory(&nlp_in, &nlp_mem);
         for (int_t i = 0; i < NN; i++) {
-            for (int_t j = 0; j < NX; j++) nlp_mem.x[i][j] = resX(j, i);
-            for (int_t j = 0; j < NU; j++) nlp_mem.u[i][j] = resU(j, i);
+            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = resX(j, i);
+            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = resU(j, i);
         }
-        for (int_t j = 0; j < NX; j++) nlp_mem.x[NN][j] = resX(j, N);
+        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = resX(j, N);
 
         int_t status;
-        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_mem, &nlp_work);
+        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, &nlp_work);
 
         REQUIRE(status == 0);
 
@@ -333,8 +325,13 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
         print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
+        // std::cout << resX << std::endl;
+        std::cout << resU << std::endl;
+
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
+        std::cout << SQP_u << std::endl;
+
         REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));
     }

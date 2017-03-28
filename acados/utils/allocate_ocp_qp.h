@@ -27,7 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-void allocate_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in *const qp);
+void allocate_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc, ocp_qp_in *const qp);
 void free_ocp_qp_in(ocp_qp_in *const qp);
 
 void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out);

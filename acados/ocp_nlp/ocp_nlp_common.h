@@ -75,6 +75,16 @@ typedef struct {
     int_t maxIter;
 } ocp_nlp_in;
 
+typedef struct {
+    real_t **x;
+    real_t **u;
+//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **lam;
+} ocp_nlp_out;
+
+typedef struct {
+    int_t dummy;
+} ocp_nlp_args;
 
 typedef struct {
     real_t **x;
@@ -82,7 +92,6 @@ typedef struct {
 //    real_t **pi;  // TODO(rien): what is pi?
     real_t **lam;
 } ocp_nlp_mem;
-
 
 typedef struct {
     real_t *w;
@@ -99,17 +108,7 @@ typedef struct {
     real_t **ub;
     real_t **lc;
     real_t **uc;
-
-    ocp_qp_solver *solver;
 } ocp_nlp_work;
-
-
-typedef struct {
-    real_t **x;
-    real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
-    real_t **lam;
-} ocp_nlp_out;
 
 typedef struct {
     int_t (*fun)(ocp_nlp_in *, ocp_nlp_out *, void *, void *, void *);

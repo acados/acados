@@ -36,7 +36,7 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
         ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
         # TODO(dimitris): Add these sources even without OOQP
-        ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
+        # ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
         ${PROJECT_SOURCE_DIR}/test/test_utils/read_ocp_qp_in.c
     )
 else ()

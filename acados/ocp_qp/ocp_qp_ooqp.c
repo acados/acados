@@ -740,5 +740,22 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     if (0) print_outputs(mem, work, return_value);
     fill_in_qp_out(in, out, work);
 
-return return_value;
+    return return_value;
+}
+
+void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
+    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
+
+    args->printLevel = 0;
+    args->workspaceMode = 2; 
+
+    ocp_qp_ooqp_create_memory(qp_in, args, mem);
+    int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+void ocp_qp_ooqp_destroy(void *mem, void *work) {
+    free(work);
+    ocp_qp_ooqp_free_memory(mem);
 }
