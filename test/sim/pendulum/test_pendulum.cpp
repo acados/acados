@@ -1,12 +1,31 @@
-#include "catch/include/catch.hpp"
-#include "test/sim/pendulum/casadi/casadi_pendulum.h"
-#include "acados/utils/types.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/print.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "test/test_utils/eigen.h"
+/*
+ *    This file is part of acados.
+ *
+ *    acados is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU Lesser General Public
+ *    License as published by the Free Software Foundation; either
+ *    version 3 of the License, or (at your option) any later version.
+ *
+ *    acados is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    Lesser General Public License for more details.
+ *
+ *    You should have received a copy of the GNU Lesser General Public
+ *    License along with acados; if not, write to the Free Software Foundation,
+ *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ */
 
+#include "catch/include/catch.hpp"
+
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+#include "test/sim/pendulum/casadi/casadi_pendulum.h"
 #include "test/sim/pendulum/pendulum_helper.cpp"
+#include "test/test_utils/eigen.h"
 
 extern real_t COMPARISON_TOLERANCE;
 real_t COMPARISON_TOLERANCE_FD = 1e-5;

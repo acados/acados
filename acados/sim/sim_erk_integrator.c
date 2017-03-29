@@ -17,11 +17,13 @@
  *
  */
 
+#include "acados/sim/sim_erk_integrator.h"
+
 #include <stdlib.h>
 #include <string.h>
 
 #include "hpmpc/include/aux_d.h"
-#include "acados/sim/sim_erk_integrator.h"
+
 #include "acados/utils/print.h"
 
 int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {

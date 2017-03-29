@@ -16,24 +16,23 @@
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
+
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
-#include <stdlib.h>
 #include <stdio.h>
-
-#include "acados/utils/types.h"
-
-#include "acados/ocp_qp/ocp_qp_common.h"
+#include <stdlib.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
-
 #include "hpmpc/include/c_interface.h"
 #include "hpmpc/include/mpc_solvers.h"
 #include "hpmpc/include/lqcp_solvers.h"
 #include "hpmpc/include/mpc_aux.h"
+
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/types.h"
 
 // work space size
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \

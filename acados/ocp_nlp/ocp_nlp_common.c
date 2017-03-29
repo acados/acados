@@ -17,10 +17,10 @@
  *
  */
 
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+
 #include <stdlib.h>
 #include <string.h>
-
-#include "acados/ocp_nlp/ocp_nlp_common.h"
 
 void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem) {
     mem->x = (real_t **) malloc(sizeof(*mem->x) * (in->N+1));

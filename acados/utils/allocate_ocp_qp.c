@@ -17,6 +17,8 @@
  *
  */
 
+#include "acados/utils/allocate_ocp_qp.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,8 +27,6 @@
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_i_aux.h"
-
-#include "acados/utils/allocate_ocp_qp.h"
 
 static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
     int_zeros((int_t **) &qp->nx, N+1, 1);

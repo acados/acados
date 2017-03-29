@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
+#include "acados/utils/types.h"
 
 typedef struct sim_erk_workspace_ {
     real_t *K_traj;
