@@ -27,7 +27,7 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-typedef struct ocp_qp_condensing_qpoases_args_ {
+typedef struct {
     real_t dummy;
 } ocp_qp_condensing_qpoases_args;
 

@@ -100,7 +100,7 @@ typedef struct ocp_nlp_work_ {
     real_t **lc;
     real_t **uc;
 
-    qp_solver *solver;
+    ocp_qp_solver *solver;
 } ocp_nlp_work;
 
 

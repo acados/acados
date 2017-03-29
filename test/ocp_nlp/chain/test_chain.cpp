@@ -264,14 +264,14 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_out.x[N] = (real_t *) malloc(sizeof(*nlp_out.x[N]) * (NX));
 
         ocp_nlp_work nlp_work;
-        qp_solver qpoases;
+        ocp_qp_solver qpoases;
         ocp_qp_in qp_in;
         ocp_qp_out qp_out;
         ocp_qp_condensing_qpoases_args args;
         real_t *qpoases_work = NULL;
         nlp_work.solver = &qpoases;
-        nlp_work.solver->in = &qp_in;
-        nlp_work.solver->out = &qp_out;
+        nlp_work.solver->qp_in = &qp_in;
+        nlp_work.solver->qp_out = &qp_out;
         nlp_work.solver->mem = &args;
         nlp_work.solver->work = qpoases_work;
         nlp_work.solver->fun = &ocp_qp_condensing_qpoases;

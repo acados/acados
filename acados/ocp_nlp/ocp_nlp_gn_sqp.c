@@ -137,10 +137,10 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                 qp_lb[i][j] = nlp_in->lb[i][j] - w[w_idx+nlp_in->idxb[i][j]];
                 qp_ub[i][j] = nlp_in->ub[i][j] - w[w_idx+nlp_in->idxb[i][j]];
             }
-//            print_matrix_name((char*)"stdout", (char*)"qp_lb: ", work->solver->in->lb[i],
-//            1, work->solver->in->nb[i]);
-//            print_matrix_name((char*)"stdout", (char*)"qp_ub: ", work->solver->in->ub[i],
-//            1, work->solver->in->nb[i]);
+//            print_matrix_name((char*)"stdout", (char*)"qp_lb: ", work->solver->qp_in->lb[i],
+//            1, work->solver->qp_in->nb[i]);
+//            print_matrix_name((char*)"stdout", (char*)"qp_ub: ", work->solver->qp_in->ub[i],
+//            1, work->solver->qp_in->nb[i]);
 //
 //            print_matrix_name((char*)"stdout", (char*)"nlp_lb: ", nlp_in->lb[i],
 //            1, nlp_in->nb[i]);
@@ -166,11 +166,11 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                 w_idx += nx[i];
             }
         }
-//        printf("nb[N]: %d \n", work->solver->in->nb[N]);
+//        printf("nb[N]: %d \n", work->solver->qp_in->nb[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_lb[N]", qp_lb[N], 1, nx[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
 
-        status = work->solver->fun(work->solver->in, work->solver->out,
+        status = work->solver->fun(work->solver->qp_in, work->solver->qp_out,
                 work->solver->mem, work->solver->work);
         if (status) {
             printf("qpOASES returned error status %d\n", status);
@@ -179,28 +179,28 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
             for (int_t j = 0; j < nx[i]; j++) {
-                w[w_idx+j] += work->solver->out->x[i][j];
-                if (fabs(work->solver->out->x[i][j]) > stepX)
-                    stepX = fabs(work->solver->out->x[i][j]);
+                w[w_idx+j] += work->solver->qp_out->x[i][j];
+                if (fabs(work->solver->qp_out->x[i][j]) > stepX)
+                    stepX = fabs(work->solver->qp_out->x[i][j]);
             }
             for (int_t j = 0; j < nu[i]; j++) {
-                w[w_idx+nx[i]+j] += work->solver->out->u[i][j];
-                if (fabs(work->solver->out->u[i][j]) > stepU)
-                    stepU = fabs(work->solver->out->u[i][j]);
+                w[w_idx+nx[i]+j] += work->solver->qp_out->u[i][j];
+                if (fabs(work->solver->qp_out->u[i][j]) > stepU)
+                    stepU = fabs(work->solver->qp_out->u[i][j]);
             }
             w_idx += nx[i]+nu[i];
-//            print_matrix_name((char*)"stdout", (char*)"solver->out->x[i]: ",
-//              work->solver->out->x[i], 1, nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"solver->out->u[i]: ",
-//              work->solver->out->u[i], 1, nu[i]);
+//            print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[i]: ",
+//              work->solver->qp_out->x[i], 1, nx[i]);
+//            print_matrix_name((char*)"stdout", (char*)"solver->qp_out->u[i]: ",
+//              work->solver->qp_out->u[i], 1, nu[i]);
         }
         for (int_t j = 0; j < nx[N]; j++) {
-            w[w_idx+j] += work->solver->out->x[N][j];
-            if (fabs(work->solver->out->x[N][j]) > stepX)
-                stepX = fabs(work->solver->out->x[N][j]);
+            w[w_idx+j] += work->solver->qp_out->x[N][j];
+            if (fabs(work->solver->qp_out->x[N][j]) > stepX)
+                stepX = fabs(work->solver->qp_out->x[N][j]);
         }
-//        print_matrix_name((char*)"stdout", (char*)"solver->out->x[N]: ",
-    //        work->solver->out->x[N], 1, nx[N]);
+//        print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[N]: ",
+    //        work->solver->qp_out->x[N], 1, nx[N]);
 //        w_idx += nx[N];
 //        print_matrix_name((char*)"stdout", (char*)"w_cur: ", w, 1, w_idx);
 
@@ -293,37 +293,39 @@ void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
     work->w = (real_t *) malloc(sizeof(*work->w) * num_vars);
 
     // Set OCP QP variables
-    work->solver->in->N = in->N;
-    work->solver->in->nx = in->nx;
-    work->solver->in->nu = in->nu;
-    work->solver->in->nb = in->nb;
-    work->solver->in->nc = in->nc;
+    work->solver->qp_in->N = in->N;
+    work->solver->qp_in->nx = in->nx;
+    work->solver->qp_in->nu = in->nu;
+    work->solver->qp_in->nb = in->nb;
+    work->solver->qp_in->nc = in->nc;
 
-    work->solver->in->lb = (const real_t **) work->lb;
-    work->solver->in->ub = (const real_t **) work->ub;
-    work->solver->in->idxb = in->idxb;
+    work->solver->qp_in->lb = (const real_t **) work->lb;
+    work->solver->qp_in->ub = (const real_t **) work->ub;
+    work->solver->qp_in->idxb = in->idxb;
 
-    work->solver->in->Q = (const real_t **) work->Q;
-    work->solver->in->S = (const real_t **) work->S;
-    work->solver->in->R = (const real_t **) work->R;
-    work->solver->in->q = (const real_t **) work->q;
-    work->solver->in->r = (const real_t **) work->r;
+    work->solver->qp_in->Q = (const real_t **) work->Q;
+    work->solver->qp_in->S = (const real_t **) work->S;
+    work->solver->qp_in->R = (const real_t **) work->R;
+    work->solver->qp_in->q = (const real_t **) work->q;
+    work->solver->qp_in->r = (const real_t **) work->r;
 
-    work->solver->in->A = (const real_t **) work->A;
-    work->solver->in->B = (const real_t **) work->B;
-    work->solver->in->b = (const real_t **) work->b;
+    work->solver->qp_in->A = (const real_t **) work->A;
+    work->solver->qp_in->B = (const real_t **) work->B;
+    work->solver->qp_in->b = (const real_t **) work->b;
 
-    initialise_qpoases(work->solver->in);
+    initialise_qpoases(work->solver->qp_in);
 
-    work->solver->out->x = (real_t **) malloc(sizeof(*work->solver->out->x) * (in->N+1));
-    work->solver->out->u = (real_t **) malloc(sizeof(*work->solver->out->u) * (in->N));
-    work->solver->out->pi = (real_t **) malloc(sizeof(*work->solver->out->pi) * (in->N));
+    work->solver->qp_out->x = (real_t **) malloc(sizeof(*work->solver->qp_out->x) * (in->N+1));
+    work->solver->qp_out->u = (real_t **) malloc(sizeof(*work->solver->qp_out->u) * (in->N));
+    work->solver->qp_out->pi = (real_t **) malloc(sizeof(*work->solver->qp_out->pi) * (in->N));
     for (int_t i = 0; i < in->N; i++) {
-        work->solver->out->x[i] = (real_t *) malloc(sizeof(*work->solver->out->x[i]) * (in->nx[i]));
-        work->solver->out->u[i] = (real_t *) malloc(sizeof(*work->solver->out->u[i]) * (in->nu[i]));
-        work->solver->out->pi[i] =
-                (real_t *) malloc(sizeof(*work->solver->out->pi[i]) * (in->nx[i]));
+        work->solver->qp_out->x[i] = \
+            (real_t *) malloc(sizeof(*work->solver->qp_out->x[i]) * (in->nx[i]));
+        work->solver->qp_out->u[i] = \
+            (real_t *) malloc(sizeof(*work->solver->qp_out->u[i]) * (in->nu[i]));
+        work->solver->qp_out->pi[i] =
+                        (real_t *) malloc(sizeof(*work->solver->qp_out->pi[i]) * (in->nx[i]));
     }
-    work->solver->out->x[in->N] = (real_t *)
-            malloc(sizeof(*work->solver->out->x[in->N]) * (in->nx[in->N]));
+    work->solver->qp_out->x[in->N] = (real_t *)
+            malloc(sizeof(*work->solver->qp_out->x[in->N]) * (in->nx[in->N]));
 }

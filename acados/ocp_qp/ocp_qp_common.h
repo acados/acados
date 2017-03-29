@@ -59,11 +59,11 @@ typedef struct {
 
 typedef struct {
     int_t (*fun)(ocp_qp_in*, ocp_qp_out*, void*, void*);
-    ocp_qp_in *in;
-    ocp_qp_out *out;
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
     void *mem;
     void *work;
-} qp_solver;
+} ocp_qp_solver;
 
 #ifdef __cplusplus
 } /* extern "C" */
