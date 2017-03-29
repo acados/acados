@@ -28,7 +28,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_i_aux.h"
 
-static void allocate_ocp_qp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_qp_in *const qp) {
+static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t *nu, ocp_qp_in *const qp) {
     int_zeros((int_t **) &qp->nx, N+1, 1);
     int_zeros((int_t **) &qp->nu, N+1, 1);
     int_zeros((int_t **) &qp->nb, N+1, 1);
@@ -91,7 +91,7 @@ static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
 }
 
 
-static void allocate_ocp_qp_in_bounds(int_t N, int_t *nb, ocp_qp_in *const qp) {
+static void allocate_ocp_qp_in_bounds(const int_t N, const int_t *nb, ocp_qp_in *const qp) {
     qp->lb = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
     qp->ub = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
     qp->idxb = (const int_t **) malloc(sizeof(*qp->idxb) * (N+1));
@@ -119,7 +119,7 @@ static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
 }
 
 
-static void allocate_ocp_qp_in_polyhedral(int_t N, int_t *nc, ocp_qp_in *const qp) {
+static void allocate_ocp_qp_in_polyhedral(const int_t N, const int_t *nc, ocp_qp_in *const qp) {
     qp->lc = (const real_t **) malloc(sizeof(*qp->lc) * (N+1));
     qp->uc = (const real_t **) malloc(sizeof(*qp->uc) * (N+1));
     qp->Cx = (const real_t **) malloc(sizeof(*qp->Cx) * (N+1));
@@ -155,7 +155,7 @@ static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
 }
 
 
-void allocate_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in *const qp) {
+void allocate_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc, ocp_qp_in *const qp) {
     allocate_ocp_qp_in_basic(N, nx, nu, qp);
     allocate_ocp_qp_in_bounds(N, nb, qp);
     allocate_ocp_qp_in_polyhedral(N, nc, qp);

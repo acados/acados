@@ -269,7 +269,7 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
     return size;
 }
 
-
+// TODO(dimitris): make this static
 int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
@@ -335,7 +335,6 @@ void ocp_qp_qpdunes_free_memory(void *mem_) {
     qpDUNES_cleanup(&(mem->qpData));
 }
 
-
 int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
@@ -354,4 +353,19 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, vo
     fill_in_qp_out(in, out, mem);
 
     return 0;
+}
+
+void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
+    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
+
+    ocp_qp_qpdunes_create_arguments(args, QPDUNES_DEFAULT_ARGUMENTS);
+    ocp_qp_qpdunes_create_memory(qp_in, args, mem);
+    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+void ocp_qp_qpdunes_destroy(void *mem, void *work) {
+    free(work);
+    ocp_qp_qpdunes_free_memory(mem);
 }
