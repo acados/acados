@@ -422,7 +422,8 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_mem
         timing_ad += acado_toc(&timer_ad);
         //                }
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                || opts->scheme.type == approx || opts->scheme.type == simplified_inis2) {
+                || opts->scheme.type == approx || opts->scheme.type == simplified_inis2
+                || opts->scheme.type == simplified_in2) {
             for (i = 0; i < nx*nx; i++) jac_traj[istep*num_stages+s1][i] = jac_tmp[nx+i];
         }
 
@@ -572,7 +573,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
     for (i = 0; i < nu; i++) rhs_in[nx*(1+NF)+i] = in->u[i];
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-            || opts->scheme.type == approx || opts->scheme.type == simplified_inis2) {
+            || opts->scheme.type == approx || opts->scheme.type == simplified_inis2
+            || opts->scheme.type == simplified_in2) {
         for (i = 0; i < nx; i++) adj_tmp[i] = in->S_adj[i];
     }
 
@@ -611,7 +613,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 
             // Newton step of the Lagrange multipliers mu, based on adj_traj:
             if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                    || opts->scheme.type == approx || opts->scheme.type == simplified_inis2) {
+                    || opts->scheme.type == approx || opts->scheme.type == simplified_inis2
+                    || opts->scheme.type == simplified_in2) {
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (i = 0; i < nx; i++) {
                         sys_sol[s1*nx+i] = -mu_traj[istep*num_stages*nx+s1*nx+i];
@@ -628,7 +631,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 
                 // TRANSFORM using transf1_T:
                 if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                        || opts->scheme.type == simplified_inis2) {
+                        || opts->scheme.type == simplified_inis2
+                        || opts->scheme.type == simplified_in2) {
                     // apply the transf1 operation:
                     for (s1 = 0; s1 < num_stages; s1++) {
                         for (s2 = 0; s2 < num_stages; s2++) {
@@ -653,7 +657,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
                     // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE LINEAR SUBSYSTEMS
                     if (opts->scheme.type == simplified_in
                             || opts->scheme.type == simplified_inis
-                            || opts->scheme.type == simplified_inis2) {
+                            || opts->scheme.type == simplified_inis2
+                            || opts->scheme.type == simplified_in2) {
                         sys_mat = sys_mat2[idx];
                         ipiv = ipiv2[idx];
                         sys_sol = sys_sol2[idx];
@@ -686,7 +691,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 
                 // TRANSFORM using transf2_T:
                 if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                        || opts->scheme.type == simplified_inis2) {
+                        || opts->scheme.type == simplified_inis2
+                        || opts->scheme.type == simplified_in2) {
                     // construct sys_sol_trans from sys_sol2:
                     if (opts->scheme.type != simplified_inis2) {
                         destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
@@ -723,7 +729,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
     }
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-            || opts->scheme.type == approx || opts->scheme.type == simplified_inis2) {
+            || opts->scheme.type == approx || opts->scheme.type == simplified_inis2
+            || opts->scheme.type == simplified_in2) {
         for (i = 0; i < NF; i++) out->grad[i] = 0.0;
     }
 
@@ -732,7 +739,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         form_linear_system_matrix(istep, in, mem, work, sys_mat, sys_mat2, timing_ad);
 
         int_t idx;
-        if (opts->scheme.type == exact || istep == 0) {
+        if (opts->scheme.type == exact || (istep == 0 && opts->scheme.type != simplified_in2)) {
             acado_tic(&timer_la);
             idx = 0;
             for (s1 = 0; s1 < num_stages; s1++) {
@@ -776,7 +783,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         }
 
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                || opts->scheme.type == simplified_inis2) {
+                || opts->scheme.type == simplified_inis2 || opts->scheme.type == simplified_in2) {
             sys_sol = work->sys_sol;
             sys_sol_trans = work->sys_sol_trans;
         }
@@ -831,7 +838,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         }
 
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                || opts->scheme.type == simplified_inis2) {
+                || opts->scheme.type == simplified_inis2 || opts->scheme.type == simplified_in2) {
             // apply the transf1 operation:
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (s2 = 0; s2 < num_stages; s2++) {
@@ -839,11 +846,19 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
                             opts->scheme.transf1[s2*num_stages+s1];
                 }
             }
-            transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages, nx, 1+NF);
+            if (opts->scheme.type != simplified_in2) {
+                transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages, nx, 1+NF);
+            } else {
+                transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages, nx, 1);
+            }
 
             // construct sys_sol2 from sys_sol_trans:
             if (opts->scheme.type != simplified_inis2) {
-                construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1+NF);
+                if (opts->scheme.type != simplified_in2) {
+                    construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1+NF);
+                } else {
+                    construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
+                }
             } else {
                 construct_subsystems_combined(sys_sol_trans, sys_sol2,
                         num_stages, nx, 1+NF, sys_mat2, in, false);
@@ -855,7 +870,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         for (s1 = 0; s1 < num_stages; s1++) {
             // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE LINEAR SUBSYSTEMS
             if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                    || opts->scheme.type == simplified_inis2) {
+                    || opts->scheme.type == simplified_inis2
+                    || opts->scheme.type == simplified_in2) {
                 sys_mat = sys_mat2[idx];
                 ipiv = ipiv2[idx];
                 sys_sol = sys_sol2[idx];
@@ -879,7 +895,11 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
                 s1 = num_stages;  // break out of for-loop
             }
 #if TRIPLE_LOOP
-            solve_system_ACADO(sys_mat, sys_sol, ipiv, dim_sys, 1+NF);
+            if (opts->scheme.type != simplified_in2) {
+                solve_system_ACADO(sys_mat, sys_sol, ipiv, dim_sys, 1+NF);
+            } else {
+                solve_system_ACADO(sys_mat, sys_sol, ipiv, dim_sys, 1);
+            }
 #else  // TRIPLE_LOOP
 #if defined(LA_HIGH_PERFORMANCE)
             // ---- BLASFEO: row transformations + backsolve ----
@@ -907,10 +927,14 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         timing_la += acado_toc(&timer_la);
 
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                || opts->scheme.type == simplified_inis2) {
+                || opts->scheme.type == simplified_inis2 || opts->scheme.type == simplified_in2) {
             // construct sys_sol_trans from sys_sol2:
             if (opts->scheme.type != simplified_inis2) {
-                destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1+NF);
+                if (opts->scheme.type != simplified_in2) {
+                    destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1+NF);
+                } else {
+                    destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
+                }
             } else {
                 destruct_subsystems_combined(sys_sol_trans, sys_sol2,
                         num_stages, nx, 1+NF, sys_mat2, false);
@@ -918,7 +942,11 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 
             // apply the transf2 operation:
             sys_sol = work->sys_sol;
-            transform_mat(sys_sol_trans, opts->scheme.transf2, sys_sol, num_stages, nx, 1+NF);
+            if (opts->scheme.type != simplified_in2) {
+                transform_mat(sys_sol_trans, opts->scheme.transf2, sys_sol, num_stages, nx, 1+NF);
+            } else {
+                transform_mat(sys_sol_trans, opts->scheme.transf2, sys_sol, num_stages, nx, 1);
+            }
         }
 
         // Newton step of the collocation variables
@@ -939,7 +967,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
                             || opts->scheme.type == simplified_inis2) {
                         delta_DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] =
                             sys_sol[(j+1)*num_stages*nx+s1*nx+i];
-                    } else {
+                    } else if (opts->scheme.type != simplified_in2) {
                         DK_traj[(istep*num_stages+s1)*nx*NF+j*nx+i] =
                             sys_sol[(j+1)*num_stages*nx+s1*nx+i];
                     }
@@ -953,7 +981,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
             }
         }
         if (opts->scheme.type == simplified_inis || opts->scheme.type == simplified_inis2
-                || opts->scheme.type == simplified_in
+                || opts->scheme.type == simplified_in || opts->scheme.type == simplified_in2
                 || opts->scheme.type == approx) {  // Adjoint derivatives:
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (j = 0; j < nx; j++) {
@@ -971,7 +999,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 //        print_matrix_name("stdout", "DK_traj", &DK_traj[0], 1, nx*NF);
 //        print_matrix_name("stdout", "VDE_tmp[0]", &VDE_tmp[0][0], 1, nx*(NF+1));
 //        print_matrix_name("stdout", "VDE_tmp[1]", &VDE_tmp[1][0], 1, nx*(NF+1));
-        if (opts->scheme.type == simplified_in || opts->scheme.type == approx) {
+        if (opts->scheme.type == simplified_in || opts->scheme.type == approx
+                 || opts->scheme.type == simplified_in2) {
             // Standard Inexact Newton based gradient correction:
             for (j = 0; j < NF; j++) {
                 for (s1 = 0; s1 < num_stages; s1++) {
