@@ -28,8 +28,6 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_collocation.h"
-#include "acados/sim/sim_rk_common.h"
-#include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
