@@ -105,6 +105,7 @@ all: test_all_qp_solvers.c
 chain:
 	# gcc -c -g -O0 $(ACADOS)/test/ocp_nlp/chain/Chain_model.c -o model.o -I$(ACADOS)
 	gcc -c -g -O0 Chain_model_mod.c -o model.o -I$(ACADOS)
+	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 $(ACADOS)/examples/casadi_chain/jac_chain_nm2.c -o jac_chain_nm2.o
 	gcc -c -g -O0 $(ACADOS)/examples/casadi_chain/jac_chain_nm3.c -o jac_chain_nm3.o
 	gcc -c -g -O0 $(ACADOS)/examples/casadi_chain/jac_chain_nm4.c -o jac_chain_nm4.o
@@ -112,8 +113,10 @@ chain:
 	gcc -c -g -O0 $(ACADOS)/examples/casadi_chain/vde_chain_nm3.c -o vde_chain_nm3.o
 	gcc -c -g -O0 $(ACADOS)/examples/casadi_chain/vde_chain_nm4.c -o vde_chain_nm4.o
 	g++ -c -g -O0 read_matrix_mod.cpp -o read_matrix.o -I$(EIGEN) -I$(ACADOS)
-	g++ -c -g -O0 test_chain_mod.cpp -o test_chain.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPDUNESINCLUDEDIR) -I$(ACADOS_EXT)/eigen
-	g++ -g -O0  test_chain.o read_matrix.o model.o jac_chain_nm2.o jac_chain_nm3.o jac_chain_nm4.o  vde_chain_nm2.o vde_chain_nm3.o vde_chain_nm4.o -o test_chain.exe $(LDFLAGS) -lacados -lblasfeo -lqpdunes $(LIBS)
+	g++ -c -g -O0  -std=c++11 test_chain_mod.cpp -o test_chain.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPDUNESINCLUDEDIR) -I$(ACADOS_EXT)/eigen
+	g++ -g -O0  test_chain.o read_matrix.o read_ocp_qp_in.o model.o jac_chain_nm2.o jac_chain_nm3.o jac_chain_nm4.o  vde_chain_nm2.o vde_chain_nm3.o vde_chain_nm4.o -o test_chain.exe $(LDFLAGS) -lacados -lblasfeo -lqpdunes $(LIBS)
+	valgrind --leak-check=full ./test_chain.exe
+	# ./test_chain.exe
 
 simple: simple.c
 	gcc -g simple.c -o simple.exe -I$(ACADOS)

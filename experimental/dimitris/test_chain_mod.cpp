@@ -38,6 +38,7 @@
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/zeros.h"
+#include "test/test_utils/read_ocp_qp_in.h"
 
 #define NN 15
 #define TT 3.0
@@ -73,7 +74,11 @@ int main() {
         d_zeros(&u_end, NU, 1);
 
         std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
+        // real_t *x0_tmp = (real_t*)malloc(sizeof(real_t)*NX);
+        // read_double_vector_from_txt(x0_tmp, NX, "../../build/test/chain/x0_nm2_d0.dat");
+        // VectorXd x0 = Eigen::Map<VectorXd>(x0_tmp, NX);
         VectorXd x0 = readMatrix("../../build/test/chain/x0_nm" + NMFdat);
+    
         VectorXd xref = readMatrix("../../build/test/chain/xN_nm" + NMFdat);
 
         MatrixXd resX = readMatrix("../../build/test/chain/resX_nm" + NMFdat);
