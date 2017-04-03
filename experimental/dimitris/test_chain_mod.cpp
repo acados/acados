@@ -73,16 +73,24 @@ int main() {
         d_zeros(&x_end, NX, 1);
         d_zeros(&u_end, NU, 1);
 
-        std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
-        // real_t *x0_tmp = (real_t*)malloc(sizeof(real_t)*NX);
-        // read_double_vector_from_txt(x0_tmp, NX, "../../build/test/chain/x0_nm2_d0.dat");
-        // VectorXd x0 = Eigen::Map<VectorXd>(x0_tmp, NX);
-        VectorXd x0 = readMatrix("../../build/test/chain/x0_nm" + NMFdat);
-    
-        VectorXd xref = readMatrix("../../build/test/chain/xN_nm" + NMFdat);
+        real_t *x0_tmp = (real_t*)malloc(sizeof(real_t)*NX);
+        real_t *xref_tmp = (real_t*)malloc(sizeof(real_t)*NX);
+        real_t *resX_tmp = (real_t*)malloc(sizeof(real_t)*NX*(NN+1));
+        real_t *resU_tmp = (real_t*)malloc(sizeof(real_t)*NU*(NN+1));
+        read_double_vector_from_txt(x0_tmp, NX, "../../build/test/chain/x0_nm2_d0.dat");
+        read_double_vector_from_txt(xref_tmp, NX, "../../build/test/chain/xN_nm2_d0.dat");
+        read_double_matrix_from_txt(resX_tmp, NX, NN+1, "../../build/test/chain/resX_nm2_d0.dat");
+        read_double_matrix_from_txt(resU_tmp, NU, NN, "../../build/test/chain/resU_nm2_d0.dat");
+        VectorXd x0 = Eigen::Map<VectorXd>(x0_tmp, NX);
+        VectorXd xref = Eigen::Map<VectorXd>(xref_tmp, NX);
+        MatrixXd resX = Eigen::Map<MatrixXd>(resX_tmp, NX, N+1);
+        MatrixXd resU = Eigen::Map<MatrixXd>(resU_tmp, NU, N);
 
-        MatrixXd resX = readMatrix("../../build/test/chain/resX_nm" + NMFdat);
-        MatrixXd resU = readMatrix("../../build/test/chain/resU_nm" + NMFdat);
+        // std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
+        // VectorXd x0 = readMatrix("../../build/test/chain/x0_nm" + NMFdat);
+        // VectorXd xref = readMatrix("../../build/test/chain/xN_nm" + NMFdat);
+        // MatrixXd resX = readMatrix("../../build/test/chain/resX_nm" + NMFdat);
+        // MatrixXd resU = readMatrix("../../build/test/chain/resU_nm" + NMFdat);
 
         for (int_t i = 0; i < NX; i++) W[i*(NX+NU+1)] = 1e-2;
         for (int_t i = 0; i < NU; i++) W[(NX+i)*(NX+NU+1)] = 1.0;
