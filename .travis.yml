@@ -77,3 +77,12 @@ script:
   - make
   - cmake -D CMAKE_BUILD_TYPE=Debug ..
   - make
+  - cd ../experimental/dang/esp32
+  - python3 script_test_nmpc/test_nmpc.py ../../.. test_nmpc
+  - cd test_nmpc
+  - make
+  - cd ..
+  - python3 script_test_ocp_qp_hpmpc/test_ocp_qp_hpmpc.py ../../.. test_ocp_qp_hpmpc
+  - cd test_ocp_qp_hpmpc
+  - make
+  - cd ..
