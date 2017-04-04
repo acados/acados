@@ -78,4 +78,4 @@ script:
   - cmake -D CMAKE_BUILD_TYPE=Debug ..
   - make
   - cd ../experimental/dang/esp32
-  - ./test_all_linux.sh
+  - sh ./test_all_linux.sh
