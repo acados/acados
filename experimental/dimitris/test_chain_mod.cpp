@@ -348,5 +348,5 @@ int main() {
         // REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));
     }
     }
-    return 1;
+    return 0;
 }
