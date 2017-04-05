@@ -203,6 +203,7 @@ void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
 
 
 void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
+    opts->scheme.type = exact;
     if ( num_stages == 1 ) {
         opts->num_stages = 1;       // explicit Euler
         opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));

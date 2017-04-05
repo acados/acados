@@ -116,10 +116,10 @@ void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
     int_t *perm;
     real_t *T_inv;
 
-    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.dat", 2*num_stages, "D");
+    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2*num_stages, "D");
     read_matrix(simplified, D, num_stages, 2);
 
-    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.dat", 2*num_stages, "T");
+    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2*num_stages, "T");
     read_matrix(simplified, T, num_stages, num_stages);
 
 //    print_matrix("stdout", D, num_stages, 2);

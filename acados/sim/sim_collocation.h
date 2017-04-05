@@ -30,11 +30,8 @@ extern "C" {
 
 enum Newton_type_collocation {
           exact = 0,
-          approx,
           simplified_in,
-          simplified_inis,
-          simplified_inis2,
-          simplified_in2
+          simplified_inis
         };
 
 typedef struct Newton_scheme_ {
@@ -42,6 +39,7 @@ typedef struct Newton_scheme_ {
     real_t *eig;
     real_t *low_tria;
     bool single;
+    bool freeze;
 
     real_t *transf1;
     real_t *transf2;
