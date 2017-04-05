@@ -73,6 +73,7 @@ typedef struct {
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
     int_t maxIter;
+    bool freezeSens;
 } ocp_nlp_in;
 
 

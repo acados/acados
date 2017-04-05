@@ -109,9 +109,14 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 #endif
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
+            sim_RK_opts *opts = sim[i].in->opts;
             // Pass state and control to integrator
             for (int_t j = 0; j < nx[i]; j++) sim[i].in->x[j] = w[w_idx+j];
             for (int_t j = 0; j < nu[i]; j++) sim[i].in->u[j] = w[w_idx+nx[i]+j];
+            sim[i].in->sens_adj = (opts->scheme.type != exact && sqp_iter > 0);
+            if (nlp_in->freezeSens) {  // freeze inexact sensitivities after first SQP iteration !!
+                opts->scheme.freeze = sqp_iter > 0;
+            }
             sim[i].fun(sim[i].in, sim[i].out, sim[i].mem, sim[i].work);
 
             // TODO(rien): transition functions for changing dimensions not yet implemented!
@@ -152,12 +157,17 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             // TODO(rien): only for diagonal Q, R matrices atm
             // TODO(rien): only for least squares cost with state and control reference atm
             if (i < N) {
+                sim_RK_opts *opts = sim[i].in->opts;
                 for (int_t j = 0; j < nx[i]; j++) {
                     qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
+                    // adjoint-based gradient correction:
+                    if (opts->scheme.type != exact) qp_q[i][j] += sim[i].out->grad[j];
                 }
                 for (int_t j = 0; j < nu[i]; j++) {
                     qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]
                                                     *(w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
+                    // adjoint-based gradient correction:
+                    if (opts->scheme.type != exact) qp_r[i][j] += sim[i].out->grad[nx[i]+j];
                 }
                 w_idx += nx[i]+nu[i];
             } else {
@@ -179,6 +189,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
         }
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
+            for (int_t j = 0; j < nx[i]; j++) sim[i].in->S_adj[j] = -work->solver->qp_out->pi[i][j];
             for (int_t j = 0; j < nx[i]; j++) {
                 w[w_idx+j] += work->solver->qp_out->x[i][j];
                 if (fabs(work->solver->qp_out->x[i][j]) > stepX)
