@@ -131,6 +131,8 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     endif ()
 
     set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
+    
+    file(COPY "${PROJECT_SOURCE_DIR}/acados/sim/simplified/" DESTINATION "${PROJECT_BINARY_DIR}/test/simplified/")
 endif()
 
 # Linter

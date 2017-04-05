@@ -95,3 +95,23 @@ void print_array(char *file_name, real_t *array, int_t size) {
 void print_int_array(char *file_name, const int_t *array, int_t size) {
     print_int_matrix(file_name, array, size, 1);
 }
+
+// Read space delimited file into column-major matrix
+void read_matrix(const char *file_name, real_t* array, const int_t nrows,
+        const int_t ncols) {
+    FILE *file;
+    file = fopen(file_name, "r");
+
+    // Read numbers from file into buffer.
+    for (int i = 0; i < nrows; i++) {
+        for (int j = 0; j < ncols; j++) {
+            if (!fscanf(file, "%lf", &array[nrows*j+i])) {
+                break;
+            }
+        }
+    }
+
+    fclose(file);
+}
+
+

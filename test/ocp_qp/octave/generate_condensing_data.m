@@ -105,7 +105,7 @@ for mode = {'LTI', 'LTV'}
     save('general_constraint_ub.dat', 'cu', '-ascii', '-double');
     save('general_constraint_lb.dat', 'cl', '-ascii', '-double');
 
-    w_star_ocp = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
+    [w_star_ocp,pi_star_ocp] = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
         Cx, Cu, cl, cu);
      
     % TODO(dimitris-robin): update solve_structured_ocp function to allow for empty bounds/constraints and eliminate functions below 
@@ -159,6 +159,7 @@ for mode = {'LTI', 'LTV'}
     save('condensed_general_constraint_lb.dat', 'c_bar_lb', '-ascii', '-double');
     save('condensed_general_constraint_ub.dat', 'c_bar_ub', '-ascii', '-double');
     save('w_star_ocp_constrained.dat', 'w_star_ocp', '-ascii', '-double');
+    save('pi_star_ocp_constrained.dat', 'pi_star_ocp', '-ascii', '-double');
     save('w_star_ocp_bounds.dat', 'w_star_ocp_bounds', '-ascii', '-double');
     save('w_star_ocp_no_bounds.dat', 'w_star_ocp_no_bounds', '-ascii', '-double'); % only with affine constraints
     save('w_star_ocp_unconstrained.dat', 'w_star_ocp_unconstrained', '-ascii', '-double');
