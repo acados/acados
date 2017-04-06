@@ -114,8 +114,8 @@ chain:
 	g++ -c -g -O0 read_matrix_mod.cpp -o read_matrix.o -I$(EIGEN) -I$(ACADOS)
 	g++ -c -g -O0  -std=c++11 test_chain_mod.cpp -o test_chain.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPDUNESINCLUDEDIR) -I$(ACADOS_EXT)/eigen
 	g++ -g -O0  test_chain.o read_matrix.o read_ocp_qp_in.o model.o jac_chain_nm2.o jac_chain_nm3.o jac_chain_nm4.o  vde_chain_nm2.o vde_chain_nm3.o vde_chain_nm4.o -o test_chain.exe $(LDFLAGS) -lacados -lblasfeo -lqpdunes $(LIBS)
-	# valgrind --leak-check=full ./test_chain.exe
-	./test_chain.exe
+	valgrind --leak-check=full --show-leak-kinds=all ./test_chain.exe
+	# ./test_chain.exe
 
 read:
 	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
