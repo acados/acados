@@ -50,19 +50,20 @@
 #include "examples/casadi_pendulum/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
-#define NREP 1
-#define MAX_IP_ITER 50
-#define TOL 1e-8
+#define NREP 10000
+#define MAX_IP_ITER 30
+#define TOL 1e-100
 #define MINSTEP 1e-8
 
-#define NN 100
-#define MM 100
+#define NN 50
+#define MM 50
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define NSIM 1000
+#define NSIM 1
 #define GAMMA 1e-2
+#define UMAX 20
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -259,7 +260,7 @@ int main() {
     // Problem data
     int_t   N                         = NN;
     int_t   M                         = MM;
-    real_t  x0[NX]                    = {0.0, 1, 0.0, 0.0};
+    real_t  x0[NX]                    = {0.0, 2, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
     real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
     // real_t  pi_n[NN*(NX)]             = {0};
@@ -270,7 +271,7 @@ int main() {
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
     real_t  lam_init                  = {1};
-    real_t  t_init                    = {10};
+    real_t  t_init                    = {1};
     // real_t  pi_init                   = {0.1};
     // int_t   qp_iters               = 1;
     // int_t   max_iters               = 100;
@@ -278,8 +279,13 @@ int main() {
     real_t  x_min[NBX]                = {};
     // real_t  x_max[NBX]             = {10, 10, 10, 10};
     real_t  x_max[NBX]                = {};
-    real_t  u_min[NBU]                = {-10};
-    real_t  u_max[NBU]                = {10};
+    real_t  u_min[NBU]                = {-UMAX};
+    real_t  u_max[NBU]                = {UMAX};
+
+    // Q[0*(NX+1)] = 1e-3;
+    // Q[1*(NX+1)] = 5e-1;
+    // Q[2*(NX+1)] = 1.0;
+    // Q[3*(NX+1)] = 2e-3;
 
     Q[0*(NX+1)] = 1e-3;
     Q[1*(NX+1)] = 5e-1;
@@ -292,7 +298,7 @@ int main() {
     real_t T = 0.01;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 10;
+    sim_in.nSteps = 1;
     sim_in.step = T/sim_in.nSteps;
     sim_in.VDE_forw = &VDE_fun_pendulum;
     sim_in.nx = NX;
@@ -522,7 +528,7 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAX_IP_ITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 100;
+    hpmpc_args.mu0 = 1;
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
