@@ -26,6 +26,8 @@ extern "C" {
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_collocation.h"
 
 typedef struct {
     ocp_nlp_args *common;
