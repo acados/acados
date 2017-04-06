@@ -259,11 +259,12 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     return 0;
 }
 
+// TODO(dimitris): change to initialize
 void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *) args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *) memory_;
 
-    mem->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));;
+    mem->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
     ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
     allocate_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc, qp_in);
     ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));

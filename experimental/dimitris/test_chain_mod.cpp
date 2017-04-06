@@ -49,7 +49,7 @@ using Eigen::VectorXd;
 
 int main() {
     for (int d = 0; d < 1; d++) {  // RK4 in case d == 0
-    for (int NMF = 1; NMF < 2; NMF++) {
+    for (int NMF = 1; NMF < 4; NMF++) {
         printf("\n----- NUMBER OF FREE MASSES = %d, d = %d -----\n", NMF, d);
         int_t NX = 6*NMF;
         int_t NU = 3;
@@ -59,13 +59,13 @@ int main() {
         int_t UMAX = 10;
 
         // Problem data
-        int_t   N                   = NN;
+        int_t N = NN;
         ocp_nlp_ls_cost ls_cost;
-        real_t  *W, *WN;
-        real_t  *uref;
-        int_t   max_sqp_iters       = 20;
-        real_t  *x_end;
-        real_t  *u_end;
+        real_t *W, *WN;
+        real_t *uref;
+        int_t max_sqp_iters = 20;
+        real_t *x_end;
+        real_t *u_end;
 
         d_zeros(&W, NX+NU, NX+NU);
         d_zeros(&WN, NX, NX);
@@ -73,20 +73,25 @@ int main() {
         d_zeros(&x_end, NX, 1);
         d_zeros(&u_end, NU, 1);
 
+        std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
+        std::string x0_str = "../../build/test/chain/x0_nm" + NMFdat;
+        std::string xref_str = "../../build/test/chain/xN_nm" + NMFdat;
+        std::string resX_str = "../../build/test/chain/resX_nm" + NMFdat;
+        std::string resU_str = "../../build/test/chain/resU_nm" + NMFdat;
         real_t *x0_tmp = (real_t*)malloc(sizeof(real_t)*NX);
         real_t *xref_tmp = (real_t*)malloc(sizeof(real_t)*NX);
         real_t *resX_tmp = (real_t*)malloc(sizeof(real_t)*NX*(NN+1));
         real_t *resU_tmp = (real_t*)malloc(sizeof(real_t)*NU*(NN+1));
-        read_double_vector_from_txt(x0_tmp, NX, "../../build/test/chain/x0_nm2_d0.dat");
-        read_double_vector_from_txt(xref_tmp, NX, "../../build/test/chain/xN_nm2_d0.dat");
-        read_double_matrix_from_txt(resX_tmp, NX, NN+1, "../../build/test/chain/resX_nm2_d0.dat");
-        read_double_matrix_from_txt(resU_tmp, NU, NN, "../../build/test/chain/resU_nm2_d0.dat");
+        read_double_vector_from_txt(x0_tmp, NX, x0_str.c_str());
+        read_double_vector_from_txt(xref_tmp, NX, xref_str.c_str());
+        read_double_matrix_from_txt(resX_tmp, NX, NN+1, resX_str.c_str());
+        read_double_matrix_from_txt(resU_tmp, NU, NN, resU_str.c_str());
         VectorXd x0 = Eigen::Map<VectorXd>(x0_tmp, NX);
         VectorXd xref = Eigen::Map<VectorXd>(xref_tmp, NX);
         MatrixXd resX = Eigen::Map<MatrixXd>(resX_tmp, NX, N+1);
         MatrixXd resU = Eigen::Map<MatrixXd>(resU_tmp, NU, N);
 
-        // std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
+        // NOTE: avoiding readMatrix for valgrind
         // VectorXd x0 = readMatrix("../../build/test/chain/x0_nm" + NMFdat);
         // VectorXd xref = readMatrix("../../build/test/chain/xN_nm" + NMFdat);
         // MatrixXd resX = readMatrix("../../build/test/chain/resX_nm" + NMFdat);
@@ -298,8 +303,8 @@ int main() {
         }
         nlp_out.x[N] = (real_t *) malloc(sizeof(*nlp_out.x[N]) * (NX));
 
-        ocp_nlp_args nlp_common_args;
         ocp_nlp_gn_sqp_args nlp_args;
+        ocp_nlp_args nlp_common_args;
         nlp_args.common = &nlp_common_args;
         sprintf(nlp_args.qp_solver_name, "qpdunes");
         ocp_nlp_gn_sqp_memory nlp_mem;
@@ -333,20 +338,20 @@ int main() {
 
 //        print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX, N+1);
 //        print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU, N);
-
+    
         print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
         print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
         // std::cout << resX << std::endl;
-        std::cout << resU << std::endl;
+        // std::cout << resU << std::endl;
 
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
-        std::cout << SQP_u << std::endl;
+        // std::cout << SQP_u << std::endl;
 
         // REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         // REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));
     }
     }
-    return 1;
+    return 0;
 }
