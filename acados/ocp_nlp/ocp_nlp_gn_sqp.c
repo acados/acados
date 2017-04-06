@@ -208,7 +208,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         exit(5);
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
-            for (int_t j = 0; j < nx[i]; j++) sim[i].in->S_adj[j] = -work->solver->qp_out->pi[i][j];
+            for (int_t j = 0; j < nx[i]; j++) sim[i].in->S_adj[j] = -gn_sqp_mem->qp_solver->qp_out->pi[i][j];
             for (int_t j = 0; j < nx[i]; j++) {
                 w[w_idx+j] += gn_sqp_mem->qp_solver->qp_out->x[i][j];
                 if (fabs(gn_sqp_mem->qp_solver->qp_out->x[i][j]) > stepX)
