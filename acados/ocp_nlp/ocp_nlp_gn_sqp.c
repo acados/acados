@@ -33,6 +33,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/allocate_ocp_qp.h"
@@ -295,7 +296,7 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     void *qp_args = NULL, *qp_mem = NULL, *qp_work = NULL;
     if (!strcmp(args->qp_solver_name, "qpdunes")) {
         // TODO(dimitris): Allow varying data in qpdunes
-        printf("not implemented yet\n");
+        printf("QPDUNES WITHIN SQP NOT IMPLEMENTED YET\n");
         exit(1);
         mem->qp_solver->fun = &ocp_qp_qpdunes;
         mem->qp_solver->initialize = &ocp_qp_qpdunes_initialize;
@@ -308,8 +309,13 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
         mem->qp_solver->destroy = &ocp_qp_ooqp_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_ooqp_args));
         qp_mem = (void *) malloc(sizeof(ocp_qp_ooqp_memory));
+    } else if (!strcmp(args->qp_solver_name, "condensing_qpoases")) {
+        mem->qp_solver->fun = &ocp_qp_condensing_qpoases;
+        mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
+        mem->qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
+        qp_args = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
     } else {
-        printf("not implemented yet\n");
+        printf("CHOSEN QP SOLVER FOR SQP METHOD NOT AVAILABLE!\n");
         exit(1);      
     }
     mem->qp_solver->initialize(qp_in, qp_args, qp_mem, &qp_work);    

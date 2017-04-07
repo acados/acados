@@ -248,7 +248,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             d_zeros(&ub1[i], NMF+NU, 1);
             for (jj = 0; jj < NMF; jj++) {
                 lb1[i][jj] = wall_pos;      // wall position
-                ub1[i][jj] = 1e8;  // TODO(dimitris): 1e12 gives wrong results with OOQP 
+                ub1[i][jj] = 1e12;
                 idxb1[jj] = 6*jj+1;
             }
             for (jj = 0; jj < NU; jj++) {
@@ -318,7 +318,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_gn_sqp_args nlp_args;
         ocp_nlp_args nlp_common_args;
         nlp_args.common = &nlp_common_args;
-        sprintf(nlp_args.qp_solver_name, "ooqp");
+        sprintf(nlp_args.qp_solver_name, "condensing_qpoases");
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;
         nlp_mem.common = &nlp_mem_common;
