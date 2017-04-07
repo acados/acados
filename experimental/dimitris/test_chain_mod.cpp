@@ -128,7 +128,6 @@ int main() {
         // TODO(rien): can I move this somewhere inside the integrator?
         struct d_strmat str_mat[NN];
         struct d_strmat str_sol[NN];
-        struct d_strmat str_sol_t[NN];
 
         for (jj = 0; jj < NN; jj++) {
             integrators[jj].in = &sim_in[jj];
@@ -178,13 +177,19 @@ int main() {
             for (int_t i = 0; i < NX*(NX+NU); i++) sim_in[jj].S_forw[i] = 0.0;
             for (int_t i = 0; i < NX; i++) sim_in[jj].S_forw[i*(NX+1)] = 1.0;
 
+            sim_in[jj].S_adj = (real_t *) malloc(sizeof(*sim_in[jj].S_adj) * (NX+NU));
+            for (int_t i = 0; i < NX+NU; i++) sim_in[jj].S_adj[i] = 0.0;
+
+            sim_in[jj].grad_K = (real_t *) malloc(sizeof(*sim_in[jj].grad_K) * (d*NX));
+            for (int_t i = 0; i < d*NX; i++) sim_in[jj].grad_K[i] = 0.0;
+
             sim_out[jj].xn = (real_t *) malloc(sizeof(*sim_out[jj].xn) * (NX));
             sim_out[jj].S_forw = (real_t *) malloc(sizeof(*sim_out[jj].S_forw) * (NX*(NX+NU)));
             sim_out[jj].info = &info[jj];
+            sim_out[jj].grad = (real_t *) malloc(sizeof(*sim_out[jj].grad ) * (NX+NU));
 
             irk_work[jj].str_mat = &str_mat[jj];
             irk_work[jj].str_sol = &str_sol[jj];
-            irk_work[jj].str_sol_t = &str_sol_t[jj];
             if (d > 0) {
                 sim_irk_create_opts(d, "Gauss", &rk_opts[jj]);
 
@@ -238,7 +243,7 @@ int main() {
             d_zeros(&ub1[i], NMF+NU, 1);
             for (jj = 0; jj < NMF; jj++) {
                 lb1[i][jj] = wall_pos;      // wall position
-                ub1[i][jj] = 1e12;
+                ub1[i][jj] = 1e8;  // NOTE: CAN'T BE 1e12 for OOQP ATM!!!!
                 idxb1[jj] = 6*jj+1;
             }
             for (jj = 0; jj < NU; jj++) {
@@ -306,7 +311,7 @@ int main() {
         ocp_nlp_gn_sqp_args nlp_args;
         ocp_nlp_args nlp_common_args;
         nlp_args.common = &nlp_common_args;
-        sprintf(nlp_args.qp_solver_name, "qpdunes");
+        sprintf(nlp_args.qp_solver_name, "ooqp");
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;
         nlp_mem.common = &nlp_mem_common;
@@ -314,10 +319,10 @@ int main() {
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
         ocp_nlp_sqp_create_workspace(&nlp_in, &nlp_work);
         for (int_t i = 0; i < NN; i++) {
-            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = resX(j, i);
-            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = resU(j, i);
+            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = xref(j); // resX(j, i); 
+            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = 0.0; // resU(j, i); 
         }
-        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = resX(j, N);
+        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = xref(j); //resX(j, N); 
 
         int_t status;
         status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, &nlp_work);
@@ -342,12 +347,17 @@ int main() {
         print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
         print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
-        // std::cout << resX << std::endl;
-        // std::cout << resU << std::endl;
+        printf("correct u:\n");
+        std::cout << resU << std::endl;
+        printf("correct x:\n");
+        std::cout << resX << std::endl;
 
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
-        // std::cout << SQP_u << std::endl;
+        printf("sqp u:\n");
+        std::cout << SQP_u << std::endl;
+        printf("sqp x:\n");
+        std::cout << SQP_x << std::endl;
 
         // REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         // REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));

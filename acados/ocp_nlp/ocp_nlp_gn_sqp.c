@@ -24,6 +24,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO(dimitris): remove those includes once debugged all qp solvers
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_i_aux.h"
+
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
@@ -117,7 +123,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     int_t status;
 
     acado_tic(&timer);
-    for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) {
+    for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) { 
         feas = stepX = stepU = -1e10;
 #if PARALLEL
 #pragma omp parallel for
@@ -145,6 +151,13 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             for (int_t j = 0; j < nu[i]; j++)
                 for (int_t k = 0; k < nx[i]; k++)
                     qp_B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];  // COLUMN MAJOR
+
+            // printf("w\n");
+            // d_print_mat(1, nx[i], &w[w_idx], 1);
+            // printf("A[%d]\n",i);
+            // d_print_mat(nx[i], nx[i], qp_A[i], nx[i]);
+            // printf("B[%d]\n",i);
+            // d_print_mat(nx[i], nu[i], qp_B[i], nx[i]);
 
             timings_sim += sim[i].out->info->CPUtime;
             timings_la += sim[i].out->info->LAtime;
@@ -195,7 +208,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 //        printf("nb[N]: %d \n", gn_sqp_mem->qp_solver->qp_in->nb[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_lb[N]", qp_lb[N], 1, nx[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
-
+ 
         status = gn_sqp_mem->qp_solver->fun(gn_sqp_mem->qp_solver->qp_in, gn_sqp_mem->qp_solver->qp_out,
                 gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem, gn_sqp_mem->qp_solver->work);
         if (status) {
@@ -205,7 +218,6 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         for (int_t i = 0; i < nu[0]; i++) {
             printf("u[i]: %f\n", gn_sqp_mem->qp_solver->qp_out->u[0][i]);
         }
-        exit(5);
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
             for (int_t j = 0; j < nx[i]; j++) sim[i].in->S_adj[j] = -gn_sqp_mem->qp_solver->qp_out->pi[i][j];
@@ -282,6 +294,9 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     allocate_ocp_qp_out(qp_in, qp_out);
     void *qp_args = NULL, *qp_mem = NULL, *qp_work = NULL;
     if (!strcmp(args->qp_solver_name, "qpdunes")) {
+        // TODO(dimitris): Allow varying data in qpdunes
+        printf("not implemented yet\n");
+        exit(1);
         mem->qp_solver->fun = &ocp_qp_qpdunes;
         mem->qp_solver->initialize = &ocp_qp_qpdunes_initialize;
         mem->qp_solver->destroy = &ocp_qp_qpdunes_destroy;
@@ -293,8 +308,11 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
         mem->qp_solver->destroy = &ocp_qp_ooqp_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_ooqp_args));
         qp_mem = (void *) malloc(sizeof(ocp_qp_ooqp_memory));
+    } else {
+        printf("not implemented yet\n");
+        exit(1);      
     }
-    mem->qp_solver->initialize(qp_in, qp_args, qp_mem, &qp_work);
+    mem->qp_solver->initialize(qp_in, qp_args, qp_mem, &qp_work);    
     mem->qp_solver->qp_in = qp_in;
     mem->qp_solver->qp_out = qp_out;
     mem->qp_solver->args = qp_args;

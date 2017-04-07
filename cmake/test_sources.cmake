@@ -34,7 +34,7 @@ set(UNIT_TESTS_SRC_CASADI ${PROJECT_SOURCE_DIR}/build/test/jac_pendulum.c
 
 set(UNIT_TESTS_SRC_OCP_QP ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_condensing.cpp
     ${PROJECT_SOURCE_DIR}/test/ocp_qp/condensing_test_helper.cpp
-    # ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
+    ${PROJECT_SOURCE_DIR}/test/ocp_qp/test_qpsolvers.cpp
     ${PROJECT_SOURCE_DIR}/test/test_utils/read_ocp_qp_in.c
 )
 

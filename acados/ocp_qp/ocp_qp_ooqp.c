@@ -17,6 +17,8 @@
  *
  */
 
+// TODO(dimitris): check for "inf" values and eliminate those bounds!!! (wrong results otherwise)
+
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 
 #include <stdio.h>
