@@ -336,10 +336,10 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
         for (ii = 0; ii < in->nb[kk]; ii++) {
             // TODO(dimitris): check if cast is redundant
             // NOTE: OOQP can give wrong results if there are 1e12 bounds
-            if (in->lb[kk][ii] > -1e10) {  // TODO(dimitris): use acados inf 
+            if (in->lb[kk][ii] > -1e10) {  // TODO(dimitris): use acados inf
                 mem->ixlow[offset+in->idxb[kk][ii]] = (char)1;
                 mem->xlow[offset+in->idxb[kk][ii]] = in->lb[kk][ii];
-            } 
+            }
             if (in->ub[kk][ii] < 1e10) {  // TODO(dimitris): same here
                 mem->ixupp[offset+in->idxb[kk][ii]] = (char)1;
                 mem->xupp[offset+in->idxb[kk][ii]] = in->ub[kk][ii];
@@ -753,7 +753,7 @@ void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **wo
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
 
     args->printLevel = 0;
-    args->workspaceMode = 2; 
+    args->workspaceMode = 2;
 
     ocp_qp_ooqp_create_memory(qp_in, args, mem);
     int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);

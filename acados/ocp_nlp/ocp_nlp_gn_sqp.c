@@ -124,7 +124,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     int_t status;
 
     acado_tic(&timer);
-    for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) { 
+    for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
 #if PARALLEL
 #pragma omp parallel for
@@ -172,15 +172,15 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                 qp_lb[i][j] = nlp_in->lb[i][j] - w[w_idx+nlp_in->idxb[i][j]];
                 qp_ub[i][j] = nlp_in->ub[i][j] - w[w_idx+nlp_in->idxb[i][j]];
             }
-//            print_matrix_name((char*)"stdout", (char*)"qp_lb: ", gn_sqp_mem->qp_solver->qp_in->lb[i],
-//            1, gn_sqp_mem->qp_solver->qp_in->nb[i]);
-//            print_matrix_name((char*)"stdout", (char*)"qp_ub: ", gn_sqp_mem->qp_solver->qp_in->ub[i],
-//            1, gn_sqp_mem->qp_solver->qp_in->nb[i]);
-//
-//            print_matrix_name((char*)"stdout", (char*)"nlp_lb: ", nlp_in->lb[i],
-//            1, nlp_in->nb[i]);
-//            print_matrix_name((char*)"stdout", (char*)"nlp_ub: ", nlp_in->ub[i],
-//            1, nlp_in->nb[i]);
+        //    print_matrix_name((char*)"stdout", (char*)"qp_lb: ",
+        //    gn_sqp_mem->qp_solver->qp_in->lb[i], 1, gn_sqp_mem->qp_solver->qp_in->nb[i]);
+        //    print_matrix_name((char*)"stdout", (char*)"qp_ub: ",
+        //    gn_sqp_mem->qp_solver->qp_in->ub[i], 1, gn_sqp_mem->qp_solver->qp_in->nb[i]);
+
+        //    print_matrix_name((char*)"stdout", (char*)"nlp_lb: ", nlp_in->lb[i],
+        //    1, nlp_in->nb[i]);
+        //    print_matrix_name((char*)"stdout", (char*)"nlp_ub: ", nlp_in->ub[i],
+        //    1, nlp_in->nb[i]);
 
             // Update gradients
             // TODO(rien): only for diagonal Q, R matrices atm
@@ -209,9 +209,10 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 //        printf("nb[N]: %d \n", gn_sqp_mem->qp_solver->qp_in->nb[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_lb[N]", qp_lb[N], 1, nx[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
- 
-        status = gn_sqp_mem->qp_solver->fun(gn_sqp_mem->qp_solver->qp_in, gn_sqp_mem->qp_solver->qp_out,
-                gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem, gn_sqp_mem->qp_solver->work);
+
+        status = gn_sqp_mem->qp_solver->fun(gn_sqp_mem->qp_solver->qp_in,
+            gn_sqp_mem->qp_solver->qp_out, gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem,
+            gn_sqp_mem->qp_solver->work);
         if (status) {
             printf("QP solver returned error status %d\n", status);
             return -1;
@@ -221,7 +222,9 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         }
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
-            for (int_t j = 0; j < nx[i]; j++) sim[i].in->S_adj[j] = -gn_sqp_mem->qp_solver->qp_out->pi[i][j];
+            for (int_t j = 0; j < nx[i]; j++) {
+                sim[i].in->S_adj[j] = -gn_sqp_mem->qp_solver->qp_out->pi[i][j];
+            }
             for (int_t j = 0; j < nx[i]; j++) {
                 w[w_idx+j] += gn_sqp_mem->qp_solver->qp_out->x[i][j];
                 if (fabs(gn_sqp_mem->qp_solver->qp_out->x[i][j]) > stepX)
@@ -316,9 +319,9 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
         qp_args = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
     } else {
         printf("CHOSEN QP SOLVER FOR SQP METHOD NOT AVAILABLE!\n");
-        exit(1);      
+        exit(1);
     }
-    mem->qp_solver->initialize(qp_in, qp_args, qp_mem, &qp_work);    
+    mem->qp_solver->initialize(qp_in, qp_args, qp_mem, &qp_work);
     mem->qp_solver->qp_in = qp_in;
     mem->qp_solver->qp_out = qp_out;
     mem->qp_solver->args = qp_args;

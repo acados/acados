@@ -44,7 +44,8 @@ typedef struct {
 //     ocp_nlp_work *common;
 // } ocp_nlp_gn_sqp_work;
 
-int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args, void *nlp_mem, void *work);
+int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args,
+    void *nlp_mem, void *work);
 
 void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_);
 

@@ -318,7 +318,10 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_gn_sqp_args nlp_args;
         ocp_nlp_args nlp_common_args;
         nlp_args.common = &nlp_common_args;
-        sprintf(nlp_args.qp_solver_name, "condensing_qpoases");
+        // sprintf(nlp_args.qp_solver_name, "condensing_qpoases");
+        snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
+            "condensing_qpoases");
+
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;
         nlp_mem.common = &nlp_mem_common;
@@ -326,10 +329,10 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
         ocp_nlp_sqp_create_workspace(&nlp_in, &nlp_work);
         for (int_t i = 0; i < NN; i++) {
-            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = xref(j); // resX(j, i); 
-            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = 0.0; // resU(j, i); 
+            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = xref(j);  // resX(j, i);
+            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = 0.0;  // resU(j, i);
         }
-        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = xref(j); //resX(j, N); 
+        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = xref(j);  // resX(j, N);
 
         int_t status;
         status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, &nlp_work);
