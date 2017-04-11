@@ -25,7 +25,6 @@
 #include "catch/include/catch.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -38,7 +37,7 @@
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/zeros.h"
 
-real_t COMPARISON_TOLERANCE_IPOPT = 1e-7;
+real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define NN 15
 #define TT 3.0
 #define Ns 2
@@ -51,7 +50,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
     int d_start = 0;
     if (INEXACT > 0) d_start = 2;
 
-    for (int d = d_start; d < 4; d++) {  // RK4 in case d == 0
+ for (int d = d_start; d < 4; d++) {  // RK4 in case d == 0
     for (int NMF = 1; NMF < 4; NMF++) {
         if (INEXACT == 0) {
             printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact Newton) -----\n", NMF, d);
@@ -320,7 +319,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_args.common = &nlp_common_args;
         // sprintf(nlp_args.qp_solver_name, "condensing_qpoases");
         snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-            "condensing_qpoases");
+            "qpdunes");  // working with: "condensing_qpoases", "ooqp", "qpdunes"
 
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;
@@ -329,15 +328,17 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
         ocp_nlp_sqp_create_workspace(&nlp_in, &nlp_work);
         for (int_t i = 0; i < NN; i++) {
-            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = xref(j);  // resX(j, i);
-            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = 0.0;  // resU(j, i);
+            for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = xref(j);  // resX(j, i) or xref(j)
+            for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = 0.0;  // resU(j, i) or 0.0
         }
-        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = xref(j);  // resX(j, N);
+        for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = xref(j);  // resX(j, N) or xref(j)
 
         int_t status;
         status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, &nlp_work);
 
         REQUIRE(status == 0);
+
+        ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
         real_t out_x[NX*(N+1)], err_x[NX*(N+1)];
         real_t out_u[NU*N], err_u[NU*N];

@@ -31,7 +31,9 @@
 #include "blasfeo/include/blasfeo_i_aux.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
+#ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
+#endif
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
@@ -210,6 +212,8 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 //        print_matrix_name((char*)"stdout", (char*)"qp_lb[N]", qp_lb[N], 1, nx[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
 
+    //    gn_sqp_mem->qp_solver->initialize(gn_sqp_mem->qp_solver->qp_in, gn_sqp_mem->qp_solver->args,
+    //        gn_sqp_mem->qp_solver->mem, gn_sqp_mem->qp_solver->work);
         status = gn_sqp_mem->qp_solver->fun(gn_sqp_mem->qp_solver->qp_in,
             gn_sqp_mem->qp_solver->qp_out, gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem,
             gn_sqp_mem->qp_solver->work);
@@ -298,20 +302,19 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     allocate_ocp_qp_out(qp_in, qp_out);
     void *qp_args = NULL, *qp_mem = NULL, *qp_work = NULL;
     if (!strcmp(args->qp_solver_name, "qpdunes")) {
-        // TODO(dimitris): Allow varying data in qpdunes
-        printf("QPDUNES WITHIN SQP NOT IMPLEMENTED YET\n");
-        exit(1);
         mem->qp_solver->fun = &ocp_qp_qpdunes;
         mem->qp_solver->initialize = &ocp_qp_qpdunes_initialize;
         mem->qp_solver->destroy = &ocp_qp_qpdunes_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_qpdunes_args));
         qp_mem = (void *) malloc(sizeof(ocp_qp_qpdunes_memory));
+    #ifdef OOQP
     } else if (!strcmp(args->qp_solver_name, "ooqp")) {
-        // mem->qp_solver->fun = &ocp_qp_ooqp;
-        // mem->qp_solver->initialize = &ocp_qp_ooqp_initialize;
-        // mem->qp_solver->destroy = &ocp_qp_ooqp_destroy;
+        mem->qp_solver->fun = &ocp_qp_ooqp;
+        mem->qp_solver->initialize = &ocp_qp_ooqp_initialize;
+        mem->qp_solver->destroy = &ocp_qp_ooqp_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_ooqp_args));
         qp_mem = (void *) malloc(sizeof(ocp_qp_ooqp_memory));
+    #endif
     } else if (!strcmp(args->qp_solver_name, "condensing_qpoases")) {
         mem->qp_solver->fun = &ocp_qp_condensing_qpoases;
         mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
@@ -330,6 +333,17 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
 
     ocp_nlp_create_memory(in, mem->common);
 }
+
+
+void ocp_nlp_gn_sqp_free_memory(void *mem_) {
+    // TODO(dimitris): Free common memory etc!
+    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *) mem_;
+
+    mem->qp_solver->destroy(mem->qp_solver->mem, mem->qp_solver->work);
+
+    // TODO(dimitris): where do we free the integrators?
+}
+
 
 void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
     int_t num_vars = 0;
