@@ -104,7 +104,7 @@ void read_matrix(const char *file_name, real_t* array, const int_t nrows,
     file = fopen(file_name, "r");
 
     if (file == NULL) {
-        printf("Error Reading File %s!\n", file_name);
+        printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", file_name);
         exit(1);
     }
 
