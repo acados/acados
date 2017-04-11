@@ -60,7 +60,7 @@ script:
   - git submodule init
   - git submodule update
   - cmake -E make_directory build
-  - cmake --build build --config Test --clean-first
+  - cmake --build build --config Test
   - set +e
   - make
   - make lint
