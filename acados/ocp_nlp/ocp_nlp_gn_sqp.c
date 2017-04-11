@@ -212,8 +212,8 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 //        print_matrix_name((char*)"stdout", (char*)"qp_lb[N]", qp_lb[N], 1, nx[N]);
 //        print_matrix_name((char*)"stdout", (char*)"qp_ub[N]", qp_ub[N], 1, nx[N]);
 
-    //    gn_sqp_mem->qp_solver->initialize(gn_sqp_mem->qp_solver->qp_in, gn_sqp_mem->qp_solver->args,
-    //        gn_sqp_mem->qp_solver->mem, gn_sqp_mem->qp_solver->work);
+    //    gn_sqp_mem->qp_solver->initialize(gn_sqp_mem->qp_solver->qp_in,
+    //     gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem, gn_sqp_mem->qp_solver->work);
         status = gn_sqp_mem->qp_solver->fun(gn_sqp_mem->qp_solver->qp_in,
             gn_sqp_mem->qp_solver->qp_out, gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem,
             gn_sqp_mem->qp_solver->work);
