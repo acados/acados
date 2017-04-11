@@ -759,6 +759,12 @@ void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **wo
 
     args->printLevel = 0;
     args->workspaceMode = 2;
+    args->fixHessianSparsity = 1;
+    args->fixDynamicsSparsity = 1;
+    args->fixInequalitiesSparsity = 1;
+    args->fixHessian = 0;
+    args->fixDynamics = 0;
+    args->fixInequalities = 0;
 
     ocp_qp_ooqp_create_memory(qp_in, args, mem);
     int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
