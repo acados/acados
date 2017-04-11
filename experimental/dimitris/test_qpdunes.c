@@ -68,7 +68,6 @@ int main(int argc, char const *argv[]) {
     ocp_qp_ooqp_args ooqp_args;
     ocp_qp_ooqp_memory ooqp_mem;
 
-    ooqp_args.workspaceMode = 2;
     ooqp_args.printLevel = 0;
 
     ocp_qp_ooqp_create_memory(&qp_in, &ooqp_args, &ooqp_mem);

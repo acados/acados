@@ -385,3 +385,19 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *in,
 
     return ws_size;
 }
+
+void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
+
+    // TODO(dimitris): replace dummy commands once interface completed
+    args->dummy = 42.0;
+    if (qp_in->nx[0] > 0)
+        mem_++;
+    work++;
+}
+
+void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
+    // TODO(dimitris): replace dummy commands once interface completed
+    mem_++;
+    work++;
+}

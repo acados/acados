@@ -76,6 +76,9 @@ typedef struct {
     bool freezeSens;
 } ocp_nlp_in;
 
+typedef struct {
+    int_t dummy;
+} ocp_nlp_args;
 
 typedef struct {
     real_t **x;
@@ -83,7 +86,6 @@ typedef struct {
     real_t **pi;
     real_t **lam;
 } ocp_nlp_mem;
-
 
 typedef struct {
     real_t *w;
@@ -100,10 +102,7 @@ typedef struct {
     real_t **ub;
     real_t **lc;
     real_t **uc;
-
-    ocp_qp_solver *solver;
 } ocp_nlp_work;
-
 
 typedef struct {
     real_t **x;

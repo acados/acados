@@ -166,7 +166,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             void *work;
 
                             args.printLevel = 0;
-                            args.workspaceMode = 2;  // TODO(dimitris): make this default
 
                             int_t work_space_size =
                                 ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
