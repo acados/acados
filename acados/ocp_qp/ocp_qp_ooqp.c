@@ -539,7 +539,11 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
         for (ii = 0; ii < in->nx[kk]; ii++) out->x[kk][ii] = work->x[nn++];
         for (ii = 0; ii < in->nu[kk]; ii++) out->u[kk][ii] = work->x[nn++];
     }
-    // TODO(dimitris): fill-in multipliers
+    nn = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk+1]; ii++) out->pi[kk][ii] = -work->y[nn++];
+    }
+    // TODO(dimitris): fill-in multipliers of inequalities
 }
 
 
@@ -693,6 +697,8 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
 
     int return_value;
+
+    printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
 
     #if TIMINGS > 0
     acado_timer timer;

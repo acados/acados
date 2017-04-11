@@ -260,7 +260,7 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
 
 
 static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem) {
-    int ii, kk;
+    int ii, kk, nn;
 
     for (kk = 0; kk < in->N+1; kk++) {
         for (ii = 0; ii < in->nx[kk]; ii++) {
@@ -270,7 +270,13 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_
             out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[in->nx[kk]+ii];
         }
     }
-    // TODO(dimitris): fill-in multipliers
+    nn = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk+1]; ii++) {
+            out->pi[kk][ii] = mem->qpData.lambda.data[nn++];
+        }
+    }
+    // TODO(dimitris): fill-in multipliers for inequalities
 }
 
 
