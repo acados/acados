@@ -59,9 +59,8 @@ script:
   - set -e
   - git submodule init
   - git submodule update
-  - mkdir build
-  - cd build
-  - cmake -D CMAKE_BUILD_TYPE=Test ..
+  - cmake -E make_directory build
+  - cmake --build build --config Test --clean-first
   - set +e
   - make
   - make lint
@@ -73,9 +72,7 @@ script:
   - pushd $VIRTUAL_ENV
   - python3 test_swig.py
   - popd
-  - cmake -D CMAKE_BUILD_TYPE=Release ..
-  - make
-  - cmake -D CMAKE_BUILD_TYPE=Debug ..
-  - make
-  - cd ../experimental/dang/esp32
+  - cmake --build build --config Release --clean-first
+  - cmake --build build --config Debug --clean-first
+  - pushd experimental/dang/esp32
   - ./test_all_linux.sh
