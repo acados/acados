@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.2)
 project(acados)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
@@ -7,11 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif()
-
-message("\n\n --- The CMake build type is ${CMAKE_BUILD_TYPE} ---\n\n")
+message("\n\n --- The CMake build type is: ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
@@ -108,9 +104,6 @@ target_link_libraries(pendulum_example acados hpmpc blasfeo openblas m)
 add_executable(pendulum_example_partial_tightening ${PENDULUM_EXAMPLE_PT_SRC})
 target_link_libraries(pendulum_example_partial_tightening acados hpmpc blasfeo openblas m)
 
-#add_executable(aircraft_example ${AIRCRAFT_EXAMPLE_SRC})
-#target_link_libraries(aircraft_example acados hpmpc blasfeo openblas m)
-
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
     include(test_sources)
@@ -120,10 +113,12 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     add_custom_target(generate_test_data
         DEPENDS ${UNIT_TESTS_SRC_CASADI}
         COMMENT "Checking if regeneration of test data is needed")
-    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
-    add_dependencies(unit_tests generate_test_data)
 
+    add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_SRC_OCP_QP} ${UNIT_TESTS_SRC_OCP_NLP} ${UNIT_TESTS_SRC_TEST_UTILS})
     target_link_libraries(unit_tests acados qpoases hpmpc blasfeo qpdunes m)
+    add_test(NAME unit_test_run COMMAND "${CMAKE_COMMAND}" -E chdir test ./unit_tests)
+    set_tests_properties(unit_test_run PROPERTIES DEPENDS generate_test_data)
+    set(CTEST_OUTPUT_ON_FAILURE ON)
 
     if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
         find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
