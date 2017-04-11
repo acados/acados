@@ -56,25 +56,15 @@ install:
   - popd
 
 script:
-  - set -e
   - cmake --version
   - cmake -E make_directory build
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Test ..
-  - cmake --build build
-  - set +e
-  - make
-  - make lint
-  - make unit_tests
-  - make install
-  - pushd test
-  - ./unit_tests
-  - popd
-  - pushd $VIRTUAL_ENV
-  - python3 test_swig.py
-  - popd
+  - cmake --build build --clean-first
+  - cmake --build build --target lint  
+  - cmake --build build --target test
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
-  - cmake --build build
+  - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
-  - cmake --build build
+  - cmake --build build --clean-first
   - pushd experimental/dang/esp32
   - ./test_all_linux.sh
