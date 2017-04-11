@@ -697,8 +697,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
 
     int return_value;
-
-    printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
+    // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
 
     #if TIMINGS > 0
     acado_timer timer;
