@@ -60,6 +60,7 @@ Thumbs.db
 # Auto-generated files #
 ########################
 *experimental/dimitris/*/*.txt
+*experimental/dimitris/*/*.mat
 
 # Misc #
 ########

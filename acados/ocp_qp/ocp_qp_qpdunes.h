@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include "qpDUNES-dev/include/qpDUNES.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -42,16 +44,19 @@ typedef enum {
 
 typedef struct ocp_qp_qpdunes_args_ {
     qpOptions_t options;
+    bool isLinearMPC;
 } ocp_qp_qpdunes_args;
 
 typedef struct ocp_qp_qpdunes_workspace_ {
+    real_t *H;
+    real_t *g;
     real_t *At;
     real_t *Bt;
+    real_t *ABt;
     real_t *Ct;
     real_t *scrap;
     real_t *zLow;
     real_t *zUpp;
-    real_t *g;
     int tmp;
 } ocp_qp_qpdunes_workspace;
 
@@ -59,8 +64,8 @@ typedef struct ocp_qp_qpdunes_memory_ {
     int_t firstRun;
     int_t dimA;
     int_t dimB;
-    int_t dimC;  // maximum dimension of matrix: [Cx Cu]
-    int_t maxDim;  // maximum dimension of dimA, dimB, dimC needed for scrap (to transpose a mat)
+    int_t dimC;  // maximum number of elements of matrix: [Cx Cu]
+    int_t maxDim;  // max(dimA+dimB, dimC) needed for scrap (to transpose matrices)
     int_t dimz;
     int_t nDmax;
     qpData_t qpData;
