@@ -111,7 +111,7 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
-    int_t (*fun)(ocp_nlp_in *, ocp_nlp_out *, void *, void *, void *);
+    int_t (*fun)(ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
     ocp_nlp_in *nlp_in;
     ocp_nlp_out *nlp_out;
     void *args;
