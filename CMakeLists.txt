@@ -28,6 +28,7 @@ if(CMAKE_BUILD_TYPE MATCHES Profile)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
+    enable_testing(true)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
@@ -69,9 +70,9 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(acados ooqpbase)
 endif()
 
-add_subdirectory(swig)
-
 include(examples)
+
+add_subdirectory(swig)
 
 # Automatic generation of unit testing data
 if(CMAKE_BUILD_TYPE MATCHES Test)
@@ -79,4 +80,3 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 endif()
 
 include(lint)
-

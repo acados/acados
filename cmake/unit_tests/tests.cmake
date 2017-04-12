@@ -1,4 +1,3 @@
-enable_testing(true)
 # Check if external libraries are present; these are needed for the unit tests
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/eigen/Eigen")
     message(FATAL_ERROR "The build type is ${CMAKE_BUILD_TYPE} (Test) but Eigen can not be found")
