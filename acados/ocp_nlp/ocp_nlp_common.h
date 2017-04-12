@@ -76,10 +76,12 @@ typedef struct {
 } ocp_nlp_in;
 
 typedef struct {
+    int_t dummy;
     int_t maxIter;
 } ocp_nlp_args;
 
 typedef struct {
+    int_t num_vars;
     real_t **x;
     real_t **u;
     real_t **pi;
@@ -89,18 +91,19 @@ typedef struct {
 typedef struct {
     real_t *w;
 
-    real_t **A;
-    real_t **B;
-    real_t **b;
-    real_t **Q;
-    real_t **S;
-    real_t **R;
-    real_t **q;
-    real_t **r;
-    real_t **lb;
-    real_t **ub;
-    real_t **lc;
-    real_t **uc;
+    // TODO(dimitris): aren't those SQP-related?
+    // real_t **A;
+    // real_t **B;
+    // real_t **b;
+    // real_t **Q;
+    // real_t **S;
+    // real_t **R;
+    // real_t **q;
+    // real_t **r;
+    // real_t **lb;
+    // real_t **ub;
+    // real_t **lc;
+    // real_t **uc;
 } ocp_nlp_work;
 
 typedef struct {
@@ -120,5 +123,8 @@ typedef struct {
 } ocp_nlp_solver;
 
 void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem);
+
+int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
+void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_mem *mem);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

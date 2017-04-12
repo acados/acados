@@ -328,9 +328,11 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;
         nlp_mem.common = &nlp_mem_common;
-        ocp_nlp_work nlp_work;
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
-        ocp_nlp_sqp_create_workspace(&nlp_in, &nlp_work);
+
+        int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, &nlp_args);
+        void *nlp_work = (void*)malloc(work_space_size);
+
         for (int_t i = 0; i < NN; i++) {
             for (int_t j = 0; j < NX; j++) nlp_mem.common->x[i][j] = xref(j);  // resX(j,i)
             for (int_t j = 0; j < NU; j++) nlp_mem.common->u[i][j] = 0.0;  // resU(j, i)
@@ -338,8 +340,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         for (int_t j = 0; j < NX; j++) nlp_mem.common->x[NN][j] = xref(j);  // resX(j, N)
 
         int_t status;
-        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, &nlp_work);
 
+        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
         REQUIRE(status == 0);
 
         ocp_nlp_gn_sqp_free_memory(&nlp_mem);

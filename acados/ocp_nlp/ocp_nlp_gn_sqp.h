@@ -39,10 +39,9 @@ typedef struct {
     ocp_qp_solver *qp_solver;
 } ocp_nlp_gn_sqp_memory;
 
-// TODO(dimitris): use this
-// typedef struct {
-//     ocp_nlp_work *common;
-// } ocp_nlp_gn_sqp_work;
+typedef struct {
+    ocp_nlp_work *common;
+} ocp_nlp_gn_sqp_work;
 
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args,
     void *nlp_mem, void *work);
@@ -50,8 +49,8 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_);
 void ocp_nlp_gn_sqp_free_memory(void *memory_);
 
-// TODO(dimitris): change to calculate_workspace_size convention
-void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work);
+int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
+
 
 #ifdef __cplusplus
 } /* extern "C" */
