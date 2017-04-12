@@ -35,6 +35,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+
 #include "test/ocp_nlp/chain/Chain_model.h"
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
@@ -79,7 +80,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_ls_cost ls_cost;
         real_t *W, *WN;
         real_t *uref;
-        int_t max_sqp_iters = 20;  // TODO(dimitris): add argument to gn_sqp_solver
+        int_t max_sqp_iters = 20;
         real_t *x_end;
         real_t *u_end;
 
@@ -230,13 +231,13 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         real_t *ub0;
         d_zeros(&ub0, NX+NU, 1);
         for (jj = 0; jj < NX; jj++) {
-            lb0[jj] = x0(jj);   //   xmin
-            ub0[jj] = x0(jj);   //   xmax
+            lb0[jj] = x0(jj);  // xmin
+            ub0[jj] = x0(jj);  // xmax
             idxb0[jj] = jj;
         }
         for (; jj < NX+NU; jj++) {
-            lb0[jj] = -UMAX;  //   umin
-            ub0[jj] = UMAX;   //   umax
+            lb0[jj] = -UMAX;  // umin
+            ub0[jj] = UMAX;  // umax
             idxb0[jj] = jj;
         }
         nb[0] = NX+NU;
@@ -249,13 +250,13 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             d_zeros(&lb1[i], NMF+NU, 1);
             d_zeros(&ub1[i], NMF+NU, 1);
             for (jj = 0; jj < NMF; jj++) {
-                lb1[i][jj] = wall_pos;      // wall position
+                lb1[i][jj] = wall_pos;  // wall position
                 ub1[i][jj] = 1e12;
                 idxb1[jj] = 6*jj+1;
             }
             for (jj = 0; jj < NU; jj++) {
-                lb1[i][NMF+jj] = -UMAX;  //   umin
-                ub1[i][NMF+jj] = UMAX;   //   umax
+                lb1[i][NMF+jj] = -UMAX;  // umin
+                ub1[i][NMF+jj] = UMAX;  // umax
                 idxb1[NMF+jj] = NX+jj;
             }
             nb[i+1] = NMF+NU;
@@ -268,8 +269,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         real_t *ubN;
         d_zeros(&ubN, NX, 1);
         for (jj = 0; jj < NX; jj++) {
-            lbN[jj] = xref(jj);   //   xmin
-            ubN[jj] = xref(jj);   //   xmax
+            lbN[jj] = xref(jj);  // xmin
+            ubN[jj] = xref(jj);  // xmax
             idxbN[jj] = jj;
         }
         nb[NN] = NX;
@@ -302,7 +303,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_in.ub = (const real_t **) hub;
         nlp_in.sim = integrators;
         nlp_in.cost = &ls_cost;
-        nlp_in.maxIter = max_sqp_iters;
         nlp_in.freezeSens = false;
         if (INEXACT > 2) nlp_in.freezeSens = true;
 
@@ -320,9 +320,10 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_gn_sqp_args nlp_args;
         ocp_nlp_args nlp_common_args;
         nlp_args.common = &nlp_common_args;
-        // sprintf(nlp_args.qp_solver_name, "condensing_qpoases");
+        nlp_args.common->maxIter = max_sqp_iters;
+
         snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-            "qpdunes");  // working with: "condensing_qpoases", "ooqp", "qpdunes"
+            "qpdunes");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
 
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;

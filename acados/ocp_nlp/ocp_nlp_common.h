@@ -72,12 +72,11 @@ typedef struct {
     ocp_nlp_function *g;  // nonlinear constraints
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
-    int_t maxIter;
     bool freezeSens;
 } ocp_nlp_in;
 
 typedef struct {
-    int_t dummy;
+    int_t maxIter;
 } ocp_nlp_args;
 
 typedef struct {

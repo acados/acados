@@ -52,7 +52,6 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
     sim_solver *sim = nlp_in->sim;
     ocp_nlp_gn_sqp_args *gn_sqp_args = (ocp_nlp_gn_sqp_args *) nlp_args_;
-    gn_sqp_args->common->dummy = 1;
     ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
     ocp_nlp_work *work = (ocp_nlp_work*) nlp_work_;
 
@@ -126,7 +125,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     int_t status;
 
     acado_tic(&timer);
-    for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) {
+    for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
 #if PARALLEL
 #pragma omp parallel for
@@ -261,13 +260,13 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     timings += acado_toc(&timer);
 
     printf("\nAverage of %.3f ms in the integrator,\n",
-            1e3*timings_sim/(nlp_in->maxIter));
+            1e3*timings_sim/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in CasADi and\n",
-            1e3*timings_ad/(nlp_in->maxIter));
+            1e3*timings_ad/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in BLASFEO.\n",
-            1e3*timings_la/(nlp_in->maxIter));
+            1e3*timings_la/(gn_sqp_args->common->maxIter));
     printf("--Total of %.3f ms per SQP iteration.--\n",
-            1e3*timings/(nlp_in->maxIter));
+            1e3*timings/(gn_sqp_args->common->maxIter));
 
     // Store trajectories:
     w_idx = 0;
