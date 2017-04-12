@@ -56,7 +56,6 @@ install:
   - popd
 
 script:
-  - cmake --version
   - cmake -E make_directory build
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Test ..
   - cmake --build build --clean-first

@@ -17,8 +17,10 @@ find_package(PythonLibs 3 REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(NumPy REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
+
+include_directories("${PROJECT_SOURCE_DIR}")
 make_directory(${PROJECT_BINARY_DIR}/python/acados)
-set_source_files_properties(acados.i  PROPERTIES  CPLUSPLUS ON)
+set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 swig_add_module(acados python acados.i)
