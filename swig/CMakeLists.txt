@@ -34,4 +34,3 @@ install(FILES test_swig.py DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(FILES list_of_arrays.py DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 add_test(NAME test_swig COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_INSTALL_PREFIX} python3 test_swig.py)
-set_tests_properties(test_swig PROPERTIES DEPENDS install)

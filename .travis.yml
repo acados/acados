@@ -60,8 +60,9 @@ script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Test ..
   - cmake --build build --clean-first
-  - cmake --build build --target lint  
-  - cmake --build build --target test
+  - cmake --build build --target install
+  - cmake --build build --target lint
+  - cmake -E chdir build ctest --output-on-failure
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
