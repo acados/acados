@@ -560,7 +560,6 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         } else if (!strcmp(solver_name, "ooqp")) {
             solver->fun = ocp_qp_ooqp;
             args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
-            ((ocp_qp_ooqp_args *) args)->workspaceMode = 2;
             mem = (ocp_qp_ooqp_memory *) malloc(sizeof(ocp_qp_ooqp_memory));
             ocp_qp_ooqp_create_memory(qp_in, args, mem);
             workspace_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);

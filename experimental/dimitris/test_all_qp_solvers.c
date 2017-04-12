@@ -25,8 +25,6 @@
 
 #define TOL 1e-6
 
-#define OOQP_WORK 2  // 1: structs, 2: chunk of memory
-
 real_t error_in_primal_solution(int_t n, real_t *v1, real_t *v2) {
     real_t error = 0;
     int_t i;
@@ -59,7 +57,6 @@ int_t main( ) {
     ocp_qp_hpmpc_args hpmpc_args;
 
     ooqp_args.printLevel = 0;
-    ooqp_args.workspaceMode = OOQP_WORK;
     ooqp_args.fixHessian = 0;
     ooqp_args.fixHessianSparsity = 0;
     ooqp_args.fixDynamics = 0;
@@ -78,11 +75,6 @@ int_t main( ) {
 
     // define memory for all solvers (that have it implemented..)
     ocp_qp_ooqp_memory ooqp_mem;
-
-    // define workspace for all solvers (that have it implemented..)
-    #if OOQP_WORK == 1
-    ocp_qp_ooqp_workspace ooqp_work;
-    #endif
 
     void *work;
 
@@ -156,16 +148,8 @@ int_t main( ) {
 
                 } else if (strcmp(solvers[iSolver], "ooqp") == 0) {
                     ocp_qp_ooqp_create_memory(&qp_in, &ooqp_args, &ooqp_mem);
-                    #if OOQP_WORK == 1
-                    ocp_qp_ooqp_create_workspace(&qp_in, &ooqp_args, &ooqp_work);
-                    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &ooqp_args, &ooqp_mem, &ooqp_work);
-                    #elif OOQP_WORK == 2
                     return_value = ocp_qp_ooqp(&qp_in, &qp_out, &ooqp_args, &ooqp_mem, work);
-                    #endif
                     ocp_qp_ooqp_free_memory(&ooqp_mem);
-                    #if OOQP_WORK == 1
-                    ocp_qp_ooqp_free_workspace(&ooqp_work);
-                    #endif
                 } else if (strcmp(solvers[iSolver], "hpmpc") == 0) {
                     return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, work);
                 }

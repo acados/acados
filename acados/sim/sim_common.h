@@ -47,6 +47,8 @@ typedef struct {
     real_t step;
     uint nSteps;
 
+    real_t *grad_K;       // gradient correction
+
     void *opts;
 } sim_in;
 
@@ -62,11 +64,13 @@ typedef struct {
     real_t *S_adj;      //
     real_t *S_hess;     //
 
+    real_t *grad;       // gradient correction
+
     sim_info *info;
 } sim_out;
 
-typedef struct {
-    void (*fun)(const sim_in*, sim_out*, void*, void*);
+typedef struct sim_solver_ {
+    int_t (*fun)(const sim_in*, sim_out*, void*, void*);
     sim_in *in;
     sim_out *out;
     void *mem;

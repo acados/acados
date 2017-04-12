@@ -1,5 +1,7 @@
 include(ExternalProject)
 
+add_definitions(-DUSE_ACADOS_TYPES)
+
 ExternalProject_Add(
     qpdunes_project
 

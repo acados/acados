@@ -184,7 +184,6 @@ int main() {
     // TODO(rien): can I move this somewhere inside the integrator?
     struct d_strmat str_mat[NN];
     struct d_strmat str_sol[NN];
-    struct d_strmat str_sol_t[NN];
 
     for (jj = 0; jj < NN; jj++) {
         sim_in[jj].nSteps = 2;
@@ -246,7 +245,6 @@ int main() {
 
         irk_work[jj].str_mat = &str_mat[jj];
         irk_work[jj].str_sol = &str_sol[jj];
-        irk_work[jj].str_sol_t = &str_sol_t[jj];
         if (implicit > 0) {
             sim_irk_create_opts(implicit, "Gauss", &rk_opts[jj]);
 
@@ -319,6 +317,7 @@ int main() {
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
+    real_t *ppi[N];
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
@@ -328,6 +327,7 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
+        d_zeros(&ppi[i], nx[i+1], 1);
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
@@ -374,6 +374,7 @@ int main() {
     qp_in.idxb = (const int **) hidxb;
     qp_out.x = px;
     qp_out.u = pu;
+    qp_out.pi = ppi;
 
     acado_timer timer;
     real_t timings = 0;

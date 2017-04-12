@@ -26,10 +26,31 @@ extern "C" {
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_collocation.h"
 
-int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_mem, void *work);
+typedef struct {
+    ocp_nlp_args *common;
+    char qp_solver_name[256];
+} ocp_nlp_gn_sqp_args;
 
-void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work);
+typedef struct {
+    ocp_nlp_mem *common;
+    ocp_qp_solver *qp_solver;
+} ocp_nlp_gn_sqp_memory;
+
+typedef struct {
+    ocp_nlp_work *common;
+} ocp_nlp_gn_sqp_work;
+
+int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args,
+    void *nlp_mem, void *work);
+
+void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_);
+void ocp_nlp_gn_sqp_free_memory(void *memory_);
+
+int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
+
 
 #ifdef __cplusplus
 } /* extern "C" */
