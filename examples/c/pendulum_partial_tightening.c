@@ -47,13 +47,13 @@
 #include "examples/c/pendulum_model/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
-#define NREP 10000
+#define NREP 10
 #define MAX_IP_ITER 30
 #define TOL 1e-100
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 2
+#define MM 10
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -248,24 +248,39 @@ extern  int d_size_strvec(int m);
 // Simple SQP example for acados
 int main() {
     // Problem data
-    int_t   N                   = NN;
-    int_t   M                   = MM;
-    real_t  x0[NX]              = {0.0, 0.2, 0.0, 0.0};
-    real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
-    real_t  Q[NX*NX]            = {0};
-    real_t  R[NU*NU]            = {0};
-    real_t  xref[NX]            = {0};
-    real_t  uref[NX]            = {0};
-    real_t  lam_init            = {0.1};
-    real_t  t_init              = {0.1};
-    // int_t   qp_iters       = 1;
-    // int_t   max_iters           = 100;
-    // real_t  x_min[NBX]          = {-10, -10, -10, -10};
-    real_t  x_min[NBX]          = {};
-    // real_t  x_max[NBX]          = {10, 10, 10, 10};
-    real_t  x_max[NBX]          = {};
-    real_t  u_min[NBU]          = {-5};
-    real_t  u_max[NBU]          = {5};
+    int_t   N                         = NN;
+    int_t   M                         = MM;
+    real_t  x0[NX]                    = {0.0, 0.1, 0.0, 0.0};
+    real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
+    real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
+    // real_t  pi_n[NN*(NX)]             = {0};
+    real_t  t_n[(NBX+NBU)*NN + NBX]   = {0};
+    real_t  lam_n[(NBX+NBU)*NN + NBX] = {0};
+    real_t  Q[NX*NX]                  = {0};
+    real_t  R[NU*NU]                  = {0};
+    real_t  xref[NX]                  = {0};
+    real_t  uref[NX]                  = {0};
+    real_t  lam_init                  = {1};
+    real_t  t_init                    = {1000};
+    // real_t  pi_init                   = {0.1};
+    // int_t   qp_iters               = 1;
+    // int_t   max_iters               = 100;
+    // real_t  x_min[NBX]              = {-10, -10, -10, -10};
+    real_t  x_min[NBX]                = {};
+    // real_t  x_max[NBX]             = {10, 10, 10, 10};
+    real_t  x_max[NBX]                = {};
+    real_t  u_min[NBU]                = {-UMAX};
+    real_t  u_max[NBU]                = {UMAX};
+
+    // Q[0*(NX+1)] = 1e-3;
+    // Q[1*(NX+1)] = 5e-1;
+    // Q[2*(NX+1)] = 1.0;
+    // Q[3*(NX+1)] = 2e-3;
+
+    Q[0*(NX+1)] = 1e-3;
+    Q[1*(NX+1)] = 5e1;
+    Q[2*(NX+1)] = 0.01;
+    Q[3*(NX+1)] = 2e-3;
 
     R[0*(NU+1)] = 1e-4;
 
@@ -735,7 +750,7 @@ int main() {
     #endif  // DEBUG
 
     #ifdef PLOT_RESULTS
-    plot_states_controls_cl(w_cl, T);
+    plot_states_controls(w, T);
     #endif  // PLOT_RESULTS
 
     int ip_iter = hpmpc_args.out_iter;
