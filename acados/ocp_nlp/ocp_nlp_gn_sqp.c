@@ -24,12 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO(dimitris): remove those includes once debugged all qp solvers
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
-
 #include "acados/ocp_qp/ocp_qp_common.h"
 #ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
@@ -45,6 +39,28 @@
 
 #define PARALLEL 0
 
+int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
+    ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
+
+    int_t size;
+
+    size = sizeof(ocp_nlp_gn_sqp_work);
+    size += ocp_nlp_calculate_workspace_size(in, args->common);
+    return size;
+}
+
+
+static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
+    ocp_nlp_gn_sqp_memory *mem) {
+
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_nlp_gn_sqp_work);
+    work->common = (ocp_nlp_work*) ptr;
+    ocp_nlp_cast_workspace(work->common, mem->common);
+}
+
+
 // Simple fixed-step Gauss-Newton based SQP routine
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args_,
     void *nlp_mem_, void *nlp_work_) {
@@ -52,15 +68,16 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
     sim_solver *sim = nlp_in->sim;
     ocp_nlp_gn_sqp_args *gn_sqp_args = (ocp_nlp_gn_sqp_args *) nlp_args_;
-    gn_sqp_args->common->dummy = 1;
     ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
-    ocp_nlp_work *work = (ocp_nlp_work*) nlp_work_;
+    ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
+
+    ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
 
     int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
     const int_t *nu = nlp_in->nu;
 
-    real_t *w = work->w;
+    real_t *w = work->common->w;
     real_t **y_ref = cost->y_ref;
 
     int_t **qp_idxb = (int_t **) gn_sqp_mem->qp_solver->qp_in->idxb;
@@ -126,7 +143,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     int_t status;
 
     acado_tic(&timer);
-    for (int_t sqp_iter = 0; sqp_iter < nlp_in->maxIter; sqp_iter++) {
+    for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
 #if PARALLEL
 #pragma omp parallel for
@@ -261,13 +278,13 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     timings += acado_toc(&timer);
 
     printf("\nAverage of %.3f ms in the integrator,\n",
-            1e3*timings_sim/(nlp_in->maxIter));
+            1e3*timings_sim/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in CasADi and\n",
-            1e3*timings_ad/(nlp_in->maxIter));
+            1e3*timings_ad/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in BLASFEO.\n",
-            1e3*timings_la/(nlp_in->maxIter));
+            1e3*timings_la/(gn_sqp_args->common->maxIter));
     printf("--Total of %.3f ms per SQP iteration.--\n",
-            1e3*timings/(nlp_in->maxIter));
+            1e3*timings/(gn_sqp_args->common->maxIter));
 
     // Store trajectories:
     w_idx = 0;
@@ -290,7 +307,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     return 0;
 }
 
-// TODO(dimitris): change to initialize
+
 void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *) args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *) memory_;
@@ -342,14 +359,4 @@ void ocp_nlp_gn_sqp_free_memory(void *mem_) {
     mem->qp_solver->destroy(mem->qp_solver->mem, mem->qp_solver->work);
 
     // TODO(dimitris): where do we free the integrators?
-}
-
-
-void ocp_nlp_sqp_create_workspace(const ocp_nlp_in *in, ocp_nlp_work *work) {
-    int_t num_vars = 0;
-    for (int_t i = 0; i < in->N; i++) {
-        num_vars += in->nx[i] + in->nu[i];
-    }
-    num_vars += in->nx[in->N];
-    work->w = (real_t *) malloc(sizeof(*work->w) * num_vars);
 }
