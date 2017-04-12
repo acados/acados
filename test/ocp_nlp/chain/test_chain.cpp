@@ -22,6 +22,9 @@
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_i_aux.h"
+
 #include "catch/include/catch.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -35,9 +38,9 @@
 #include "test/ocp_nlp/chain/Chain_model.h"
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
-#include "test/test_utils/zeros.h"
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
+
 #define NN 15
 #define TT 3.0
 #define Ns 2
@@ -62,7 +65,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN IN Scheme) -----\n", NMF, d);
         } else if (INEXACT == 4) {
             printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN INIS Scheme) -----\n",
-                    NMF, d);
+                NMF, d);
         }
         int_t NX = 6*NMF;
         int_t NU = 3;
@@ -76,7 +79,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         ocp_nlp_ls_cost ls_cost;
         real_t *W, *WN;
         real_t *uref;
-        int_t max_sqp_iters = 20;
+        int_t max_sqp_iters = 20;  // TODO(dimitris): add argument to gn_sqp_solver
         real_t *x_end;
         real_t *u_end;
 
@@ -221,7 +224,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
          ************************************************/
 
         int *idxb0;
-        i_zeros(&idxb0, NX+NU, 1);
+        int_zeros(&idxb0, NX+NU, 1);
         real_t *lb0;
         d_zeros(&lb0, NX+NU, 1);
         real_t *ub0;
@@ -239,7 +242,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nb[0] = NX+NU;
 
         int *idxb1;
-        i_zeros(&idxb1, NMF+NU, 1);
+        int_zeros(&idxb1, NMF+NU, 1);
         double *lb1[N-1];
         double *ub1[N-1];
         for (int_t i = 0; i < N-1; i++) {
@@ -259,7 +262,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         }
 
         int *idxbN;
-        i_zeros(&idxbN, NX, 1);
+        int_zeros(&idxbN, NX, 1);
         real_t *lbN;
         d_zeros(&lbN, NX, 1);
         real_t *ubN;
