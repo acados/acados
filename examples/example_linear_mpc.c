@@ -39,8 +39,7 @@
 
 // TODO(dimitris): add exec. in cmake
 
-int main( ) {
-
+int main() {
     int_t nMPC = 10;
 
     acado_timer timer;
@@ -197,7 +196,6 @@ int main( ) {
     for (int ii = 0; ii < NX; ii++) xMPC[ii] = x0[ii];
 
     for (int kk = 0; kk < nMPC; kk++) {
-
         // update constraint on x0
         for (int ii = 0; ii < NX; ii++) {
             z0min[ii] = x0[ii];
