@@ -527,11 +527,12 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
-        int_t nx[N+1], nu[N], nb[N+1], nc[N+1];
+        int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1];
         initialize_array_from(dictionary, "nx", nx, N+1);
-        initialize_array_from(dictionary, "nu", nu, N);
+        initialize_array_from(dictionary, "nu", nu, N+1);
         initialize_array_from(dictionary, "nb", nb, N+1);
         initialize_array_from(dictionary, "nc", nc, N+1);
+        nu[N] = 0;
         // Default behavior is that initial state is fixed
         if (PyDict_GetItemString(dictionary, "nb") == NULL) {
             nb[0] = nx[0];
@@ -626,12 +627,13 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
-        int_t nx[N+1], nu[N], nb[N+1], nc[N+1], ng[N+1];
+        int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1], ng[N+1];
         initialize_array_from(dictionary, "nx", nx, N+1);
-        initialize_array_from(dictionary, "nu", nu, N);
+        initialize_array_from(dictionary, "nu", nu, N+1);
         initialize_array_from(dictionary, "nb", nb, N+1);
         initialize_array_from(dictionary, "nc", nc, N+1);
         initialize_array_from(dictionary, "ng", ng, N+1);
+        nu[N] = 0;
         // Default behavior is that initial state is fixed
         if (PyDict_GetItemString(dictionary, "nb") == NULL) {
             nb[0] = nx[0];
@@ -661,9 +663,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             SWIG_Error(SWIG_RuntimeError, "Something went wrong when loading the model.");
         typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
         eval_t eval = (eval_t)dlsym(handle, model_name);
-        $self->sim = (sim_solver *) calloc($self->N, sizeof(sim_solver));
         for (int_t i = 0; i < $self->N; i++) {
-            $self->sim[i].in = (sim_in *) malloc(sizeof(sim_in));
             $self->sim[i].in->vde = eval;
         }
         dlclose(handle);
