@@ -22,7 +22,7 @@
 #define SWIG_FILE_WITH_INIT
 
 #include <dlfcn.h>
-#include <xmmintrin.h>
+// #include <xmmintrin.h>
 
 #include <cstdlib>
 #include <string>
@@ -704,7 +704,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 
     int_t solve() {
-        _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
+        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
             $self->mem, $self->work);
         if (return_code != 0) {
