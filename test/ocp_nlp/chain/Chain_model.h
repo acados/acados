@@ -7,9 +7,12 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-void VDE_fun_nm2(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm3(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm4(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+void VDE_fun_nm2(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+void VDE_fun_nm3(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+void VDE_fun_nm4(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
 
 void jac_fun_nm2(const real_t* in, real_t* out);
 void jac_fun_nm3(const real_t* in, real_t* out);

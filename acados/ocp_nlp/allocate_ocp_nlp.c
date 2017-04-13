@@ -151,7 +151,7 @@ static void free_ocp_nlp_in_cost(ocp_nlp_in *const nlp) {
 }
 
 // static void ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, ) {
-// 
+//
 // }
 
 void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, int_t *ng, \

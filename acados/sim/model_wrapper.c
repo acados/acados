@@ -1,6 +1,7 @@
 #include "acados/sim/model_wrapper.h"
 
-void vde_fun(const real_t *in, real_t *out, int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void vde_fun(const real_t *in, real_t *out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     int_t nx = 2;
     int_t nu = 1;
 

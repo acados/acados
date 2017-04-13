@@ -22,7 +22,6 @@ real_t aux[12];
 
 void VDE_fun(const real_t* in, real_t* out,
     int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
-
     const real_t* x = in;
     const real_t* u  = in + NX + NX*(NX+NU);
 

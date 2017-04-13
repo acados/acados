@@ -11,7 +11,8 @@ extern int jac_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, i
 
 // The auto-generated VDE functions from CasADi:
 
-void VDE_fun_nm2(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun_nm2(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     int_t NMF = 1;
     int_t NX = NMF*6;
     int_t NU = 3;
@@ -44,7 +45,8 @@ void VDE_fun_nm2(const real_t* in, real_t* out, int (*vde)(const real_t**, real_
     vde_chain_nm2(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
-void VDE_fun_nm3(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun_nm3(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     int_t NMF = 2;
     int_t NX = NMF*6;
     int_t NU = 3;
@@ -77,7 +79,8 @@ void VDE_fun_nm3(const real_t* in, real_t* out, int (*vde)(const real_t**, real_
     vde_chain_nm3(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
-void VDE_fun_nm4(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun_nm4(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     int_t NMF = 3;
     int_t NX = NMF*6;
     int_t NU = 3;

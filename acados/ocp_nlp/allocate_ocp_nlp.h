@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_ALLOCATE_OCP_NLP_H_
-#define ACADOS_OCP_QP_ALLOCATE_OCP_NLP_H_
+#ifndef ACADOS_OCP_NLP_ALLOCATE_OCP_NLP_H_
+#define ACADOS_OCP_NLP_ALLOCATE_OCP_NLP_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,4 +38,4 @@ void free_ocp_nlp_out(int_t N, ocp_nlp_out *out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_ALLOCATE_OCP_NLP_H_
+#endif  // ACADOS_OCP_NLP_ALLOCATE_OCP_NLP_H_
