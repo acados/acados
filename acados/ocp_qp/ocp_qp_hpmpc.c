@@ -234,8 +234,8 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
       d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
       ptr_memory += (&hsux[ii])->memory_size;
 
-      d_create_strvec(nx[ii+1], &hspi[ii+1], ptr_memory);
-      ptr_memory += (&hspi[ii+1])->memory_size;
+      d_create_strvec(nx[ii+1], &hspi[ii], ptr_memory);
+      ptr_memory += (&hspi[ii])->memory_size;
 
       d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
       ptr_memory += (&hslam[ii])->memory_size;
