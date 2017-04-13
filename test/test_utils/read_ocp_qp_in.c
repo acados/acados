@@ -388,14 +388,18 @@ void print_ocp_qp_in(ocp_qp_in const in) {
     }
     printf("\ninequalities:");
     for (kk = 0; kk < N; kk++) {
-        printf("\nCx[%d] =\n", kk);
-        d_print_mat(in.nc[kk], in.nx[kk], (real_t*)in.Cx[kk], in.nc[kk]);
-        printf("\nCu[%d] =\n", kk);
-        d_print_mat(in.nc[kk], in.nu[kk], (real_t*)in.Cu[kk], in.nc[kk]);
+        if (in.nc[kk] > 0) {
+            printf("\nCx[%d] =\n", kk);
+            d_print_mat(in.nc[kk], in.nx[kk], (real_t*)in.Cx[kk], in.nc[kk]);
+            printf("\nCu[%d] =\n", kk);
+            d_print_mat(in.nc[kk], in.nu[kk], (real_t*)in.Cu[kk], in.nc[kk]);
+        }
     }
-    printf("\nCx[%d] =\n", kk);
-    d_print_mat(in.nc[N], in.nx[N], (real_t*)in.Cx[N], in.nc[N]);
-    printf("\n----------------------------------\n");
+    if (in.nc[N] > 0) {
+        printf("\nCx[%d] =\n", kk);
+        d_print_mat(in.nc[N], in.nx[N], (real_t*)in.Cx[N], in.nc[N]);
+        printf("\n----------------------------------\n");
+    }
 }
 
 

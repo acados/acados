@@ -406,12 +406,12 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_)
     /* Check for constant dimensions */
     for (kk = 1; kk < N; kk++) {
         if ((nx != in->nx[kk]) || (nu != in->nu[kk])) {
-            printf("\nqpDUNES does not support varying dimensions!");
+            printf("\nqpDUNES does not support varying dimensions!\n");
             return -1;
         }
     }
     if ((nx != in->nx[N]) || (in->nu[N] != 0)) {
-        printf("\nqpDUNES does not support varying dimensions!");
+        printf("\nqpDUNES does not support varying dimensions!\n");
         return -1;
     }
 
