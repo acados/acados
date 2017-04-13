@@ -1,4 +1,4 @@
-# from acados import *
+from acados import *
 # from numpy import array, ones, zeros, diag
 
 # qp_in = ocp_qp_in({'N':5, 'nx':2, 'nu':1})
@@ -51,5 +51,5 @@ nlp = ocp_nlp_in({'N':5, 'nx':2, 'nu':1})
 nlp.set_model('vde')
 
 
-solver = ocp_nlp_solver("gauss-newton", nlp)
+# solver = ocp_nlp_solver("gauss-newton", nlp)
 

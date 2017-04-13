@@ -669,5 +669,5 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 }
 
 // %extend ocp_nlp_solver {
-//
+// 
 // }
