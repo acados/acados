@@ -34,7 +34,8 @@ enum Newton_type_collocation {
         };
 
 typedef struct {
-    real_t eig;
+    enum Newton_type_collocation type;
+    real_t *eig;
     real_t *low_tria;
     bool single;
     bool freeze;
