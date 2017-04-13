@@ -209,42 +209,42 @@ int main() {
 
         switch (NMF) {
         case 1:
-            sim_in[jj].vde = vde_chain_nm2;
+            sim_in[jj].vde = &vde_chain_nm2;
             sim_in[jj].VDE_forw = &VDE_fun_nm2;
             sim_in[jj].jac_fun = &jac_fun_nm2;
             break;
         case 2:
-            sim_in[jj].vde = vde_chain_nm3;
+            sim_in[jj].vde = &vde_chain_nm3;
             sim_in[jj].VDE_forw = &VDE_fun_nm3;
             sim_in[jj].jac_fun = &jac_fun_nm3;
             break;
         case 3:
-            sim_in[jj].vde = vde_chain_nm4;
+            sim_in[jj].vde = &vde_chain_nm4;
             sim_in[jj].VDE_forw = &VDE_fun_nm4;
             sim_in[jj].jac_fun = &jac_fun_nm4;
             break;
         case 4:
-            sim_in[jj].vde = vde_chain_nm5;
+            sim_in[jj].vde = &vde_chain_nm5;
             sim_in[jj].VDE_forw = &VDE_fun_nm5;
             sim_in[jj].jac_fun = &jac_fun_nm5;
             break;
         case 5:
-            sim_in[jj].vde = vde_chain_nm6;
+            sim_in[jj].vde = &vde_chain_nm6;
             sim_in[jj].VDE_forw = &VDE_fun_nm6;
             sim_in[jj].jac_fun = &jac_fun_nm6;
             break;
         case 6:
-            sim_in[jj].vde = vde_chain_nm7;
+            sim_in[jj].vde = &vde_chain_nm7;
             sim_in[jj].VDE_forw = &VDE_fun_nm7;
             sim_in[jj].jac_fun = &jac_fun_nm7;
             break;
         case 7:
-            sim_in[jj].vde = vde_chain_nm8;
+            sim_in[jj].vde = &vde_chain_nm8;
             sim_in[jj].VDE_forw = &VDE_fun_nm8;
             sim_in[jj].jac_fun = &jac_fun_nm8;
             break;
         default:
-            sim_in[jj].vde = vde_chain_nm9;
+            sim_in[jj].vde = &vde_chain_nm9;
             sim_in[jj].VDE_forw = &VDE_fun_nm9;
             sim_in[jj].jac_fun = &jac_fun_nm9;
             break;
