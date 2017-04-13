@@ -336,7 +336,7 @@ int main() {
         nlp_args.common = &nlp_common_args;
         nlp_args.common->maxIter = max_sqp_iters;
 
-        sprintf(nlp_args.qp_solver_name, "qpdunes");
+        sprintf(nlp_args.qp_solver_name, "ooqp");
 
         ocp_nlp_gn_sqp_memory nlp_mem;
         ocp_nlp_mem nlp_mem_common;
@@ -397,6 +397,58 @@ int main() {
 
         // REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         // REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));
+
+        d_free(W);
+        d_free(WN);
+        d_free(uref);
+        d_free(x_end);
+        d_free(u_end);
+
+        int_free(idxb0);
+        d_free(lb0);
+        d_free(ub0);
+        int_free(idxb1);
+        for (jj = 0; jj < N-1; jj++) {
+            d_free(lb1[jj]);
+            d_free(ub1[jj]);
+        }
+        int_free(idxbN);
+        d_free(lbN);
+        d_free(ubN);
+
+        for (jj = 0; jj < NN; jj++) {
+            free(sim_in[jj].x);
+            free(sim_in[jj].u);
+            free(sim_in[jj].S_forw);
+            free(sim_in[jj].S_adj);
+            free(sim_in[jj].grad_K);
+            free(sim_out[jj].xn);
+            free(sim_out[jj].S_forw);
+            free(sim_out[jj].grad);
+            free(ls_cost.y_ref[jj]);
+        }
+        free(ls_cost.y_ref[N]);
+        free(ls_cost.y_ref);
+        free(ls_cost.W);
+
+        for (jj = 0; jj < N; jj++) {
+            free(nlp_out.x[jj]);
+            free(nlp_out.u[jj]);
+            free(nlp_out.lam[jj]);
+        }
+        free(nlp_out.x[N]);
+        free(nlp_out.x);
+        free(nlp_out.u);
+        free(nlp_out.lam);
+
+        free(nlp_work);
+
+        if (1) {
+            free(x0_tmp);
+            free(xref_tmp);
+            free(resX_tmp);
+            free(resU_tmp);
+        }
     }
     }
     }
