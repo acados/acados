@@ -687,29 +687,30 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       &hsLxt[M], hsric_work_mat);
 
     // // compute alpha, dlam and dt
-    // real_t alpha = 1.0;
-    // // compute primal step hsdux for stages M to N
-    // real_t *temp_p1, *temp_p2;
-    // for (int_t i = M; i < N; i++) {
-    //   // hsdux is initialized to be equal to hpmpc_args.ux0
-    //   temp_p1 = hsdux[i].pa;
-    //   temp_p2 = hpmpc_args->ux0[i]; //hsux[i].pa;
-    //   for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]-=temp_p2[j];
-    // }
-    //
-    // d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
-    //   &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
-    //   &hsdux[M], &hsDCt[M], &hsd[M]);
-    //
-    // // overwrite alpha (taking full steps and performing line-search in out_iter
-    // // level)
-    // alpha = 1.0;
-    //
-    // // update stages M to N
-    // double mu_scal = 0.0;
-    // d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-      // &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
-      // &hsdlam[M], &hspi[M], &hspi[M]);
+
+    real_t alpha = 1.0;
+    // compute primal step hsdux for stages M to N
+    real_t *temp_p1, *temp_p2;
+    for (int_t i = M; i <= N; i++) {
+      // hsdux is initialized to be equal to hpmpc_args.ux0
+      temp_p1 = hsdux[i].pa;
+      temp_p2 = hsux[i].pa; //hsux[i].pa;
+      for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
+    }
+
+    d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
+      &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
+      &hsdux[M], &hsDCt[M], &hsd[M]);
+
+    // overwrite alpha (taking full steps and performing line-search in out_iter
+    // level)
+    alpha = 1.0;
+
+    // update stages M to N
+    double mu_scal = 0.0;
+    d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+      &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+      &hsdlam[M], &hspi[M], &hspi[M]);
     //
     // // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
     // // define and compute hsdpi (see function prototype).
