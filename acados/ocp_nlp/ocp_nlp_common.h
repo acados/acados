@@ -122,7 +122,9 @@ typedef struct {
     void *work;
 } ocp_nlp_solver;
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem);
+void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_);
+void ocp_nlp_free_memory(int_t N, void *mem_);
+
 
 int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
 void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_mem *mem);

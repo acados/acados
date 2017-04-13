@@ -353,10 +353,18 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
 
 
 void ocp_nlp_gn_sqp_free_memory(void *mem_) {
-    // TODO(dimitris): Free common memory etc!
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *) mem_;
 
-    mem->qp_solver->destroy(mem->qp_solver->mem, mem->qp_solver->work);
+    int_t N = mem->qp_solver->qp_in->N;
+    ocp_nlp_free_memory(N, mem->common);
 
+    mem->qp_solver->destroy(mem->qp_solver->mem, mem->qp_solver->work);
+    free_ocp_qp_in(mem->qp_solver->qp_in);
+    free_ocp_qp_out(mem->qp_solver->qp_out);
+    free(mem->qp_solver->qp_in);
+    free(mem->qp_solver->qp_out);
+    free(mem->qp_solver->args);
+    free(mem->qp_solver->mem);
+    free(mem->qp_solver);
     // TODO(dimitris): where do we free the integrators?
 }
