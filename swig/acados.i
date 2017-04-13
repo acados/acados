@@ -34,6 +34,7 @@
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_nlp/allocate_ocp_nlp.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/model_wrapper.h"
 #include "acados/utils/types.h"
 
@@ -668,6 +669,45 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 }
 
-// %extend ocp_nlp_solver {
-// 
-// }
+%extend ocp_nlp_solver {
+    ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in) {
+        ocp_nlp_solver *solver = (ocp_nlp_solver *) malloc(sizeof(ocp_nlp_solver));
+        void *args = NULL;
+        void *mem = NULL;
+        int_t workspace_size;
+        void *workspace = NULL;
+        if (!strcmp("gauss-newton-sqp", solver_name)) {
+            solver->fun = ocp_nlp_gn_sqp;
+            args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
+            memcpy(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, "condensing_qpoases", \
+                sizeof("condensing_qpoases"));
+            mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
+            ((ocp_nlp_gn_sqp_memory *) mem)->common = \
+                (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
+            ocp_nlp_gn_sqp_create_memory(nlp_in, args, mem);
+            ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+            workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
+            workspace = (void *) malloc(workspace_size);
+        } else {
+            SWIG_Error(SWIG_ValueError, "Solver name not known!");
+            return NULL;
+        }
+        solver->nlp_in = nlp_in;
+        ocp_nlp_out *nlp_out = (ocp_nlp_out *) malloc(sizeof(ocp_nlp_out));
+        allocate_ocp_nlp_out(nlp_in, nlp_out);
+        solver->nlp_out = nlp_out;
+        solver->args = args;
+        solver->mem = mem;
+        solver->work = workspace;
+        return solver;
+    }
+
+    int_t solve() {
+        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
+            $self->mem, $self->work);
+        if (return_code != 0) {
+            SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
+        }
+        return return_code;
+    }
+}

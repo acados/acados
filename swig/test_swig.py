@@ -50,6 +50,5 @@ vde.generate('vde.c')
 nlp = ocp_nlp_in({'N':5, 'nx':2, 'nu':1})
 nlp.set_model('vde')
 
-
-# solver = ocp_nlp_solver("gauss-newton", nlp)
-
+solver = ocp_nlp_solver("gauss-newton-sqp", nlp)
+print(solver.solve())

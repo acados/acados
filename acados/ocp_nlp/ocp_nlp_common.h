@@ -86,7 +86,7 @@ typedef struct {
     real_t **u;
     real_t **pi;
     real_t **lam;
-} ocp_nlp_mem;
+} ocp_nlp_memory;
 
 typedef struct {
     real_t *w;
@@ -114,7 +114,7 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
-    int_t (*fun)(ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
+    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
     ocp_nlp_in *nlp_in;
     ocp_nlp_out *nlp_out;
     void *args;
@@ -122,9 +122,9 @@ typedef struct {
     void *work;
 } ocp_nlp_solver;
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem);
+void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_memory *mem);
 
 int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
-void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_mem *mem);
+void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

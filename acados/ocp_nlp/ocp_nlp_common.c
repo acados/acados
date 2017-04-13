@@ -34,7 +34,7 @@ static int_t number_of_primal_vars(const ocp_nlp_in *in) {
 }
 
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem) {
+void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_memory *mem) {
     mem->num_vars = number_of_primal_vars(in);
     mem->x = (real_t **) malloc(sizeof(*mem->x) * (in->N+1));
     mem->u = (real_t **) malloc(sizeof(*mem->u) * in->N);
@@ -63,7 +63,7 @@ int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
 }
 
 
-void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_mem *mem) {
+void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem) {
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_nlp_work);
