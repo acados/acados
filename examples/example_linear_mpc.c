@@ -26,6 +26,7 @@
 #include "blasfeo/include/blasfeo_i_aux.h"
 
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
@@ -36,9 +37,15 @@
 #define NX 2
 #define NU 1
 
+// TODO(dimitris): add exec. in cmake
+
 int main( ) {
 
     int_t nMPC = 10;
+
+    acado_timer timer;
+    real_t *cputimes;
+    d_zeros(&cputimes, 1, nMPC);
 
     // MPC trajectories
     real_t *uMPC;
@@ -66,6 +73,12 @@ int main( ) {
 
     for (int ii = 0; ii < NX; ii++) Q[ii*NX+ii] = 1.0;
     for (int ii = 0; ii < NU; ii++) R[ii*NU+ii] = 1.0;
+
+    // NOTE: trick qpDUNES to use qpOASES for subproblems
+    // Q[1] = 0.0000001;
+    // Q[NX] = 0.000001;
+    // S[0] = 0.0000001;
+    // S[1] = 0.0000001;
 
     // Bounds
     real_t umin[NU] = {-1};
@@ -171,8 +184,7 @@ int main( ) {
     ocp_qp_qpdunes_args args;
     ocp_qp_qpdunes_memory mem;
 
-    // TODO(dimitris): use LINEAR_MPC options instead and add timings
-    ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
+    ocp_qp_qpdunes_create_arguments(&args, QPDUNES_LINEAR_MPC);
 
     int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
     void *work = (void*)malloc(work_space_size);
@@ -193,7 +205,9 @@ int main( ) {
         }
 
         // solve QP
+        acado_tic(&timer);
         ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
+        cputimes[kk] = 1000*acado_toc(&timer);
 
         // simulate system
         for (int ii = 0; ii < NX; ii++) {
@@ -212,6 +226,10 @@ int main( ) {
     d_print_mat(NX, nMPC, xMPC, NX);
     printf("control trajectory:\n");
     d_print_mat(NU, nMPC, uMPC, NU);
+    printf("cpu times [ms]:\n");
+    d_print_mat(1, nMPC, cputimes, 1);
+
+    // d_print_mat(NX+NU, NN, &qp_out.x[0][0], NX+NU);
 
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
@@ -224,4 +242,5 @@ int main( ) {
     d_free(Q);
     d_free(xMPC);
     d_free(uMPC);
+    d_free(cputimes);
 }

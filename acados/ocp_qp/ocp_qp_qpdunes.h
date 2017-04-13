@@ -50,8 +50,6 @@ typedef struct ocp_qp_qpdunes_args_ {
 typedef struct ocp_qp_qpdunes_workspace_ {
     real_t *H;
     real_t *g;
-    real_t *At;
-    real_t *Bt;
     real_t *ABt;
     real_t *Ct;
     real_t *scrap;

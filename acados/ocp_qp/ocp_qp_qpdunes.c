@@ -22,7 +22,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #include "blasfeo/include/blasfeo_target.h"
+// #include "blasfeo/include/blasfeo_common.h"
+// #include "blasfeo/include/blasfeo_d_aux.h"
+
 #include "acados/utils/timing.h"
+
+// TODO(dimitris): detect cases where both qpOASES and clipping are detected (qpDUNES crashes)
 
 static int_t max_of_two(int_t a, int_t b) {
      int_t ans = a;
@@ -49,10 +55,6 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_qp_qpdunes_workspace);
-    work->At = (real_t*)ptr;
-    ptr += (mem->dimA)*sizeof(real_t);
-    work->Bt = (real_t*)ptr;
-    ptr += (mem->dimB)*sizeof(real_t);
     work->ABt = (real_t*)ptr;
     ptr += (mem->dimA + mem->dimB)*sizeof(real_t);
     work->Ct = (real_t*)ptr;
@@ -73,26 +75,34 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
 static void form_H(real_t *Hk, int_t nx, const real_t *Qk, int_t nu, const real_t *Rk,
     const real_t *Sk) {
 
-    int_t ii, jj;
-    int_t nz = nx + nu;
+    int_t ii, jj, offset;
+    int_t lda = nx + nu;
 
     for (ii = 0; ii < nx; ii++) {
         for (jj = 0; jj < nx; jj++) {
-            Hk[ii*nz + jj] = Qk[jj*nx + ii];
+            Hk[jj*lda + ii] = Qk[jj*nx + ii];
         }
     }
-
+    offset = nx*(nx+nu) + nx;
     for (ii = 0; ii < nu; ii++) {
         for (jj = 0; jj < nu; jj++) {
-            Hk[(ii+nx)*nz + (jj+nx)] = Rk[jj*nu + ii];
+            Hk[jj*lda + ii + offset] = Rk[jj*nu + ii];
         }
     }
-
-    if (Sk != NULL) {
-        // TODO(dimitris)
-        printf("Error! S terms in Hessian update not implemented yet.\n");
-        exit(1);
+    offset = nx;
+    for (ii = 0; ii < nu; ii++) {
+        for (jj = 0; jj < nx; jj++) {
+            Hk[jj*lda + ii + offset] = Sk[jj*nu + ii];
+        }
     }
+    offset = nx*nx + nx*nu;
+    for (ii = 0; ii < nu; ii++) {
+        for (jj = 0; jj < nx; jj++) {
+            Hk[ii*lda + jj + offset] = Sk[jj*nu + ii];
+        }
+    }
+    // printf("Hessian:\n");
+    // d_print_mat(lda, lda, Hk, lda);
 }
 
 
@@ -118,7 +128,7 @@ static void form_ABt(real_t *ABkt, int_t nx, const real_t *Ak, int_t nu, const r
 static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nbk, const int_t *idxbk,
     const real_t *lbk, const real_t *ubk, real_t infty) {
 
-    int ii;
+    int_t ii;
 
     for (ii = 0; ii < nz; ii++) {
         zLowk[ii] = -infty;
@@ -131,131 +141,132 @@ static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nbk, const
 }
 
 
+static void form_Ct(real_t *Ckt, int_t nc, int_t nx, const real_t *Cxk,
+    int_t nu, const real_t *Cuk, real_t *scrap) {
+
+    int_t ii;
+    for (ii = 0; ii < nc*nx; ii++) Ckt[ii] = Cxk[ii];
+    for (ii = 0; ii < nc*nu; ii++) Ckt[ii+nc*nx] = Cuk[ii];
+    transpose_matrix(Ckt, nc, nx+nu, scrap);
+}
+
+
 static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpdunes_args *args,
     ocp_qp_qpdunes_memory *mem, ocp_qp_qpdunes_workspace *work) {
 
-    int_t ii, kk, N, nx, nu, nc;
+    int_t kk, N, nx, nu, nc;
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
-    return_t return_value = 0;
+    return_t value = 0;
 
     N = in->N;
     nx = in->nx[0];
     nu = in->nu[0];
 
-    // dummy command
-    if (args->options.logLevel == 0) ii = 0;
-
     if (mem->firstRun == 1) {
         /* setup of intervals */
         for (kk = 0; kk < N; ++kk) {
             form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
-            // for (ii = 0; ii < nx; ii++) work->g[ii] = in->q[kk][ii];
-            // for (ii = 0; ii < nu; ii++) work->g[ii+nx] = in->r[kk][ii];
-            form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[kk], in->idxb[kk],
-                in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
-            // for (ii = 0; ii < nx+nu; ii++) {
-            //     work->zLow[ii] = -args->options.QPDUNES_INFTY;
-            //     work->zUpp[ii] = args->options.QPDUNES_INFTY;
-            // }
-            // for (ii = 0; ii < in->nb[kk]; ii++) {
-            //     work->zLow[in->idxb[kk][ii]] = in->lb[kk][ii];
-            //     work->zUpp[in->idxb[kk][ii]] = in->ub[kk][ii];
-            // }
-            for (ii = 0; ii < nx*nx; ii++) work->At[ii] = in->A[kk][ii];
-            for (ii = 0; ii < nx*nu; ii++) work->Bt[ii] = in->B[kk][ii];
-            transpose_matrix(work->At, nx, nx, work->scrap);
-            transpose_matrix(work->Bt, nx, nu, work->scrap);
+            form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[kk], in->idxb[kk], in->lb[kk],
+                in->ub[kk], args->options.QPDUNES_INFTY);
+            form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
 
             if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
                 nc = in->nc[kk];
                 if (nc == 0) {
-                    return_value = qpDUNES_setupRegularInterval(&(mem->qpData),
-                    mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], in->S[kk], work->g, 0,
-                    work->At, work->Bt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
+                    value = qpDUNES_setupRegularInterval(&(mem->qpData),
+                    mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], in->S[kk], work->g,
+                    work->ABt, 0, 0, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
                 } else {
-                    for (ii = 0; ii < nc*nx; ii++) work->Ct[ii] = in->Cx[kk][ii];
-                    for (ii = 0; ii < nc*nu; ii++) work->Ct[ii+nc*nx] = in->Cu[kk][ii];
-                    transpose_matrix(work->Ct, nc, nx+nu, work->scrap);
-                    return_value = qpDUNES_setupRegularInterval(&(mem->qpData),
-                    mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], in->S[kk], work->g, 0,
-                    work->At, work->Bt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0,
+                    form_Ct(work->Ct, nc, nx, in->Cx[kk], nu, in->Cu[kk], work->scrap);
+                    value = qpDUNES_setupRegularInterval(&(mem->qpData),
+                    mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], in->S[kk], work->g,
+                    work->ABt, 0, 0, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0,
                     work->Ct, in->lc[kk], in->uc[kk]);
                 }
             } else {  // do not pass S[kk] or Cx[kk]/Cu[kk] at all
-                return_value = qpDUNES_setupRegularInterval(&(mem->qpData),
-                mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], 0, work->g, 0,
-                work->At, work->Bt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
+                value = qpDUNES_setupRegularInterval(&(mem->qpData),
+                mem->qpData.intervals[kk], 0, in->Q[kk], in->R[kk], 0, work->g, work->ABt,
+                0, 0, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
             }
-            if (return_value != QPDUNES_OK) {
+            if (value != QPDUNES_OK) {
                 printf("Setup of qpDUNES failed on interval %d\n", kk);
-                return (int_t)return_value;
+                return (int_t)value;
             }
         }
-        for (ii = 0; ii < nx; ii++) {
-            work->zLow[ii] = -args->options.QPDUNES_INFTY;
-            work->zUpp[ii] = args->options.QPDUNES_INFTY;
-        }
-        for (ii = 0; ii < in->nb[N]; ii++) {
-            work->zLow[in->idxb[N][ii]] = in->lb[N][ii];
-            work->zUpp[in->idxb[N][ii]] = in->ub[N][ii];
-        }
-        nc = in->nc[N];
-        if (nc == 0) {
-            return_value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N],
+        form_bounds(work->zLow, work->zUpp, nx, in->nb[N], in->idxb[N], in->lb[N],
+            in->ub[N], args->options.QPDUNES_INFTY);
+        if (in->nc[N] == 0) {
+            value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N],
             in->Q[N], in->q[N], work->zLow, work->zUpp, 0, 0, 0);
         } else {
-            for (ii = 0; ii < nc*nx; ii++) work->Ct[ii] = in->Cx[N][ii];
-            transpose_matrix(work->Ct, nc, nx, work->scrap);
-            return_value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N],
+            form_Ct(work->Ct, in->nc[N], nx, in->Cx[N], 0, NULL, work->scrap);
+            value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N],
             in->Q[N], in->q[N], work->zLow, work->zUpp, work->Ct, in->lc[N], in->uc[N]);
         }
-
-        if (return_value != QPDUNES_OK) {
+        if (value != QPDUNES_OK) {
             printf("Setup of qpDUNES failed on last interval\n");
-            return (int_t)return_value;
+            return (int_t)value;
         }
 
         /* setup of stage QPs */
-        return_value = qpDUNES_setupAllLocalQPs(&(mem->qpData), isLTI = QPDUNES_FALSE);
-        if (return_value != QPDUNES_OK) {
+        value = qpDUNES_setupAllLocalQPs(&(mem->qpData), isLTI = QPDUNES_FALSE);
+        if (value != QPDUNES_OK) {
             printf("Setup of qpDUNES failed on initialization of stage QPs\n");
-            return (int_t)return_value;
+            return (int_t)value;
         }
     } else {  // if mem->firstRun == 0
         if (args->isLinearMPC == 0) {
-            if (mem->stageQpSolver == QPDUNES_WITH_CLIPPING) {
-                for (kk = 0; kk < N; kk++) {
-                    form_H(work->H, nx, in->Q[kk], nu, in->R[kk], NULL);
-                    form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
-                    form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
-                    form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[kk], in->idxb[kk],
-                        in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
+            for (kk = 0; kk < N; kk++) {
+                form_H(work->H, nx, in->Q[kk], nu, in->R[kk], in->S[kk]);
+                form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
+                form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
+                form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[kk], in->idxb[kk],
+                    in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
 
-                    // qpDUNES_printMatrixData( work->At, nx, nx, "A[%d]", kk );
-                    // qpDUNES_printMatrixData( work->Bt, nx, nu, "B[%d]", kk );
-                    // qpDUNES_printMatrixData( work->ABt, nx, nx+nu, "AB[%d]", kk );
-
-                    qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[kk],
+                nc = in->nc[kk];
+                if (nc == 0) {
+                    value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[kk],
                         work->H, work->g, work->ABt, in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0);
+                } else {
+                    form_Ct(work->Ct, nc, nx, in->Cx[kk], nu, in->Cu[kk], work->scrap);
+                    value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[kk],
+                        work->H, work->g, work->ABt, in->b[kk], work->zLow, work->zUpp, work->Ct,
+                        in->lc[kk], in->uc[kk], 0);
                 }
-                form_bounds(work->zLow, work->zUpp, nx, in->nb[N], in->idxb[N],
-                    in->lb[N], in->ub[N], args->options.QPDUNES_INFTY);
-                qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[N],
+                if (value != QPDUNES_OK) {
+                    printf("Update of qpDUNES failed on interval %d\n", kk);
+                    return (int_t)value;
+                }
+                // qpDUNES_printMatrixData( work->ABt, nx, nx+nu, "AB[%d]", kk );
+            }
+            form_bounds(work->zLow, work->zUpp, nx, in->nb[N], in->idxb[N],
+                in->lb[N], in->ub[N], args->options.QPDUNES_INFTY);
+            if (in->nc[N] == 0) {
+                value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[N],
                     in->Q[N], in->q[N], 0, 0, work->zLow, work->zUpp, 0, 0, 0, 0);
             } else {
-                // TODO(dimitris)
-                printf("Error! NMPC with qpDUNES+qpOASES not implemented yet.\n");
-                exit(1);
+                form_Ct(work->Ct, in->nc[N], nx, in->Cx[kk], 0, NULL, work->scrap);
+                value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[N],
+                    in->Q[N], in->q[N], 0, 0, work->zLow, work->zUpp, work->Ct,
+                    in->lc[N], in->uc[N], 0);
+            }
+            if (value != QPDUNES_OK) {
+                printf("Update of qpDUNES failed on last interval\n");
+                return (int_t)value;
             }
         } else {  // linear MPC
-            // TODO(dimitris): update only x0
-            printf("Error! Linear MPC with qpDUNES not implemented yet.\n");
-            exit(1);
+            form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[0], in->idxb[0],
+                    in->lb[0], in->ub[0], args->options.QPDUNES_INFTY);
+            value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[0],
+                0, 0, 0, 0, work->zLow, work->zUpp, 0, 0, 0, 0);
+            if (value != QPDUNES_OK) {
+                printf("Update of qpDUNES failed on first interval\n");
+                return (int_t)value;
+            }
         }
     }
-
     mem->firstRun = 0;
-    return (int_t)return_value;
+    return (int_t)value;
 }
 
 
@@ -377,12 +388,12 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
     maxDim = max_of_two(dimA+dimB, dimC);
 
     size = sizeof(ocp_qp_qpdunes_workspace);
-    size += (dimA + dimB + dimC + maxDim + 3*dimz)*sizeof(real_t);  // At, Bt, Ct, scrap, zL/U, g
-    size += (dimz*dimz + dimA + dimB )*sizeof(real_t);  // H, ABt
+    size += (dimA + dimB + dimC + maxDim)*sizeof(real_t);  // ABt, Ct, scrap,
+    size += (dimz*dimz + 3*dimz)*sizeof(real_t);  // H, g, zLow, zUpp
     return size;
 }
 
-// TODO(dimitris): make this static
+
 int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
