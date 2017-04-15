@@ -654,7 +654,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         char library_name[256];
         snprintf(library_name, sizeof(library_name), "%s.so", model_name);
         char command[256];
-        snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
+        snprintf(command, sizeof(command), "cc -v -fPIC -shared -g %s.c -o %s", \
             model_name, library_name);
         int compilation_failed = system(command);
         if (compilation_failed)
