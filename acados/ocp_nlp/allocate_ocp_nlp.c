@@ -150,9 +150,59 @@ static void free_ocp_nlp_in_cost(ocp_nlp_in *const nlp) {
     free(nlp->cost);
 }
 
-// static void ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, ) {
-//
-// }
+static void allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, ocp_nlp_in *const nlp) {
+    nlp->sim = (sim_solver *) calloc(N, sizeof(sim_solver));
+    for (int_t i = 0; i < N; i++) {
+        int_t nx_i = nx[i];
+        int_t nu_i = nu[i];
+        nlp->sim[i].in = (sim_in *) malloc(sizeof(sim_in));
+        nlp->sim[i].in->x = (real_t *) calloc(nx_i, sizeof(*nlp->sim[i].in->x));
+        nlp->sim[i].in->u = (real_t *) calloc(nu_i, sizeof(*nlp->sim[i].in->u));
+
+        nlp->sim[i].in->S_forw = (real_t *) \
+            calloc(nx_i*(nx_i+nu_i), sizeof(*nlp->sim[i].in->S_forw));
+        for (int_t j = 0; j < nx_i*(nx_i+nu_i); j++)
+            nlp->sim[i].in->S_forw[j] = 0.0;
+        for (int_t j = 0; j < nx_i; j++)
+            nlp->sim[i].in->S_forw[j*(nx_i+1)] = 1.0;
+
+        nlp->sim[i].in->S_adj = (real_t *) calloc(nx_i+nu_i, sizeof(*nlp->sim[i].in->S_adj));
+        for (int_t j = 0; j < nx_i+nu_i; j++)
+            nlp->sim[i].in->S_adj[j] = 0.0;
+
+        nlp->sim[i].in->grad_K = (real_t *) calloc(nx_i, sizeof(*nlp->sim[i].in->grad_K));
+        for (int_t j = 0; j < nx_i; j++)
+            nlp->sim[i].in->grad_K[j] = 0.0;
+
+        int_t nx_i1 = nx[i+1];
+        nlp->sim[i].out = (sim_out *) malloc(sizeof(sim_out));
+        nlp->sim[i].out->xn = (real_t *) calloc(nx_i1, sizeof(*nlp->sim[i].out->xn));
+        nlp->sim[i].out->S_forw = (real_t *) \
+            calloc(nx_i1*(nx_i+nu_i), sizeof(*nlp->sim[i].out->S_forw));
+        nlp->sim[i].out->info = (sim_info *) malloc(sizeof(sim_info));
+        nlp->sim[i].out->grad = (real_t *) calloc(nx_i+nu_i, sizeof(*nlp->sim[i].out->grad));
+
+        nlp->sim[i].mem = NULL;
+    }
+}
+
+static void free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
+    for (int_t i = 0; i < nlp->N; i++) {
+        free(nlp->sim[i].in->x);
+        free(nlp->sim[i].in->u);
+        free(nlp->sim[i].in->S_forw);
+        free(nlp->sim[i].in->S_adj);
+        free(nlp->sim[i].in->grad_K);
+        free(nlp->sim[i].in);
+
+        free(nlp->sim[i].out->xn);
+        free(nlp->sim[i].out->S_forw);
+        free(nlp->sim[i].out->info);
+        free(nlp->sim[i].out->grad);
+        free(nlp->sim[i].out);
+    }
+    free(nlp->sim);
+}
 
 void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, int_t *ng, \
     ocp_nlp_in *const nlp) {
@@ -162,6 +212,7 @@ void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, in
     allocate_ocp_nlp_in_polyhedral(N, nc, nlp);
     allocate_ocp_nlp_in_nonlinear_constraints(N, ng, nlp);
     allocate_ocp_nlp_in_cost(N, nx, nu, nlp);
+    allocate_ocp_nlp_in_sim_solver(N, nx, nu, nlp);
 }
 
 void free_ocp_nlp_in(ocp_nlp_in *const nlp) {
@@ -170,6 +221,7 @@ void free_ocp_nlp_in(ocp_nlp_in *const nlp) {
     free_ocp_nlp_in_polyhedral(nlp);
     free_ocp_nlp_in_nonlinear_constraints(nlp);
     free_ocp_nlp_in_cost(nlp);
+    free_ocp_nlp_in_sim_solver(nlp);
 }
 
 void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {

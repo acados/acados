@@ -22,7 +22,7 @@
 #define SWIG_FILE_WITH_INIT
 
 #include <dlfcn.h>
-// #include <xmmintrin.h>
+#include <xmmintrin.h>
 
 #include <cstdlib>
 #include <string>
@@ -37,6 +37,8 @@
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/model_wrapper.h"
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
 
 #define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
@@ -652,7 +654,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         char library_name[256];
         snprintf(library_name, sizeof(library_name), "%s.so", model_name);
         char command[256];
-        snprintf(command, sizeof(command), "cc -fPIC -shared -O3 %s.c -o %s", \
+        snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
             model_name, library_name);
         int compilation_failed = system(command);
         if (compilation_failed)
@@ -665,8 +667,9 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         eval_t eval = (eval_t)dlsym(handle, model_name);
         for (int_t i = 0; i < $self->N; i++) {
             $self->sim[i].in->vde = eval;
+            $self->sim[i].in->VDE_forw = &vde_fun;
         }
-        dlclose(handle);
+        // dlclose(handle);
     }
 }
 
@@ -680,8 +683,9 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (!strcmp("gauss-newton-sqp", solver_name)) {
             solver->fun = ocp_nlp_gn_sqp;
             args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
-            memcpy(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, "condensing_qpoases", \
-                sizeof("condensing_qpoases"));
+            ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+            snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
+                sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "qpdunes");
             mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
             ((ocp_nlp_gn_sqp_memory *) mem)->common = \
                 (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
@@ -689,6 +693,31 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
             workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
             workspace = (void *) malloc(workspace_size);
+            int_t N = nlp_in->N;
+            ((ocp_nlp_gn_sqp_args *) args)->common->maxIter = 1;
+            nlp_in->freezeSens = false;
+            for (int_t i = 0; i <= N; i++) {
+                int_t nx = nlp_in->nx[i];
+                int_t nu = nlp_in->nu[i];
+                for (int_t j = 0; j < nx+nu; j++)
+                    ((ocp_nlp_ls_cost *) nlp_in->cost)->W[i][j*(nx+nu+1)] = 1.0;
+            }
+            for (int_t i = 0; i < N; i++) {
+                nlp_in->sim[i].in->nx = nlp_in->nx[i];
+                nlp_in->sim[i].in->nu = nlp_in->nu[i];
+                nlp_in->sim[i].in->sens_forw = true;
+                nlp_in->sim[i].in->sens_adj = false;
+                nlp_in->sim[i].in->sens_hess = false;
+                nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
+                nlp_in->sim[i].in->nSteps = 2;
+                nlp_in->sim[i].in->step = 0.1;
+                nlp_in->sim[i].in->opts = (sim_RK_opts *) malloc(sizeof(sim_RK_opts));
+                sim_erk_create_opts(4, (sim_RK_opts *) nlp_in->sim[i].in->opts);
+                nlp_in->sim[i].work = (sim_erk_workspace *) malloc(sizeof(sim_erk_workspace));
+                sim_erk_create_workspace(nlp_in->sim[i].in, \
+                    (sim_erk_workspace *) nlp_in->sim[i].work);
+                nlp_in->sim[i].fun = &sim_erk;
+            }
         } else {
             SWIG_Error(SWIG_ValueError, "Solver name not known!");
             return NULL;
@@ -704,7 +733,8 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 
     int_t solve() {
-        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
+        _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
+        // ((ocp_nlp_gn_sqp_memory *) $self->mem)->common->x[0][0] = 1.0;
         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
             $self->mem, $self->work);
         if (return_code != 0) {

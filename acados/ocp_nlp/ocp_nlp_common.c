@@ -36,15 +36,15 @@ static int_t number_of_primal_vars(const ocp_nlp_in *in) {
 
 void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_memory *mem) {
     mem->num_vars = number_of_primal_vars(in);
-    mem->x = (real_t **) malloc(sizeof(*mem->x) * (in->N+1));
-    mem->u = (real_t **) malloc(sizeof(*mem->u) * in->N);
-    mem->lam = (real_t **) malloc(sizeof(*mem->lam) * in->N);
+    mem->x = (real_t **) calloc(in->N+1, sizeof(*mem->x));
+    mem->u = (real_t **) calloc(in->N, sizeof(*mem->u));
+    mem->lam = (real_t **) calloc(in->N, sizeof(*mem->lam));
     for (int_t i = 0; i < in->N; i++) {
-        mem->x[i] = (real_t *) malloc(sizeof(*mem->x[i]) * (in->nx[i]));
-        mem->u[i] = (real_t *) malloc(sizeof(*mem->u[i]) * (in->nu[i]));
-        mem->lam[i] = (real_t *) malloc(sizeof(*mem->lam[i]) * (in->nx[i]));
+        mem->x[i] = (real_t *) calloc(in->nx[i], sizeof(*mem->x[i]));
+        mem->u[i] = (real_t *) calloc(in->nu[i], sizeof(*mem->u[i]));
+        mem->lam[i] = (real_t *) calloc(in->nx[i], sizeof(*mem->lam[i]));
     }
-    mem->x[in->N] = (real_t *) malloc(sizeof(*mem->x[in->N]) * (in->nx[in->N]));
+    mem->x[in->N] = (real_t *) calloc(in->nx[in->N], sizeof(*mem->x[in->N]));
 }
 
 
