@@ -49,9 +49,9 @@ static void free_ocp_nlp_in_basic(ocp_nlp_in *const nlp) {
 }
 
 static void allocate_ocp_nlp_in_bounds(int_t N, int_t *nb, ocp_nlp_in *const nlp) {
-    nlp->lb = (const real_t **) malloc(sizeof(*nlp->lb) * (N+1));
-    nlp->ub = (const real_t **) malloc(sizeof(*nlp->ub) * (N+1));
-    nlp->idxb = (const int_t **) malloc(sizeof(*nlp->idxb) * (N+1));
+    nlp->lb = (const real_t **) calloc(N+1, sizeof(*nlp->lb));
+    nlp->ub = (const real_t **) calloc(N+1, sizeof(*nlp->ub));
+    nlp->idxb = (const int_t **) calloc(N+1, sizeof(*nlp->idxb));
 
     nlp-> N = N;
     memcpy((void *) nlp->nb, (void *) nb, sizeof(*nb)*(N+1));
@@ -75,10 +75,10 @@ static void free_ocp_nlp_in_bounds(ocp_nlp_in *const nlp) {
 }
 
 static void allocate_ocp_nlp_in_polyhedral(int_t N, int_t *nc, ocp_nlp_in *const nlp) {
-    nlp->lc = (const real_t **) malloc(sizeof(*nlp->lc) * (N+1));
-    nlp->uc = (const real_t **) malloc(sizeof(*nlp->uc) * (N+1));
-    nlp->Cx = (const real_t **) malloc(sizeof(*nlp->Cx) * (N+1));
-    nlp->Cu = (const real_t **) malloc(sizeof(*nlp->Cu) * (N));
+    nlp->lc = (const real_t **) calloc(N+1, sizeof(*nlp->lc));
+    nlp->uc = (const real_t **) calloc(N+1, sizeof(*nlp->uc));
+    nlp->Cx = (const real_t **) calloc(N+1, sizeof(*nlp->Cx));
+    nlp->Cu = (const real_t **) calloc(N, sizeof(*nlp->Cu));
 
     nlp->N = N;
     memcpy((void *) nlp->nc, (void *) nc, sizeof(*nc)*(N+1));
@@ -109,8 +109,8 @@ static void free_ocp_nlp_in_polyhedral(ocp_nlp_in *const nlp) {
 }
 
 static void allocate_ocp_nlp_in_nonlinear_constraints(int_t N, int_t *ng, ocp_nlp_in *const nlp) {
-    nlp->lg = (const real_t **) malloc(sizeof(*nlp->lc) * (N+1));
-    nlp->ug = (const real_t **) malloc(sizeof(*nlp->uc) * (N+1));
+    nlp->lg = (const real_t **) calloc(N+1, sizeof(*nlp->lc));
+    nlp->ug = (const real_t **) calloc(N+1, sizeof(*nlp->uc));
 
     nlp->N = N;
     memcpy((void *) nlp->ng, (void *) ng, sizeof(*ng)*(N+1));
@@ -131,8 +131,8 @@ static void free_ocp_nlp_in_nonlinear_constraints(ocp_nlp_in *const nlp) {
 
 static void allocate_ocp_nlp_in_cost(int_t N, int_t *nx, int_t *nu, ocp_nlp_in *const nlp) {
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) malloc(sizeof(ocp_nlp_ls_cost));
-    cost->W = (real_t **) malloc((N+1)*sizeof(*cost->W));
-    cost->y_ref = (real_t **) malloc((N+1)*sizeof(*cost->y_ref));
+    cost->W = (real_t **) calloc(N+1, sizeof(*cost->W));
+    cost->y_ref = (real_t **) calloc(N+1, sizeof(*cost->y_ref));
     for (int_t k = 0; k <= N; k++) {
         d_zeros(&cost->W[k], nx[k]+nu[k], nx[k]+nu[k]);
         d_zeros(&cost->y_ref[k], nx[k]+nu[k], 1);
@@ -156,31 +156,21 @@ static void allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, ocp_nl
         int_t nx_i = nx[i];
         int_t nu_i = nu[i];
         nlp->sim[i].in = (sim_in *) malloc(sizeof(sim_in));
-        nlp->sim[i].in->x = (real_t *) calloc(nx_i, sizeof(*nlp->sim[i].in->x));
-        nlp->sim[i].in->u = (real_t *) calloc(nu_i, sizeof(*nlp->sim[i].in->u));
-
-        nlp->sim[i].in->S_forw = (real_t *) \
-            calloc(nx_i*(nx_i+nu_i), sizeof(*nlp->sim[i].in->S_forw));
-        for (int_t j = 0; j < nx_i*(nx_i+nu_i); j++)
-            nlp->sim[i].in->S_forw[j] = 0.0;
+        d_zeros(&nlp->sim[i].in->x, nx_i, 1);
+        d_zeros(&nlp->sim[i].in->u, nu_i, 1);
+        d_zeros(&nlp->sim[i].in->S_forw, nx_i, nx_i+nu_i);
         for (int_t j = 0; j < nx_i; j++)
             nlp->sim[i].in->S_forw[j*(nx_i+1)] = 1.0;
 
-        nlp->sim[i].in->S_adj = (real_t *) calloc(nx_i+nu_i, sizeof(*nlp->sim[i].in->S_adj));
-        for (int_t j = 0; j < nx_i+nu_i; j++)
-            nlp->sim[i].in->S_adj[j] = 0.0;
-
-        nlp->sim[i].in->grad_K = (real_t *) calloc(nx_i, sizeof(*nlp->sim[i].in->grad_K));
-        for (int_t j = 0; j < nx_i; j++)
-            nlp->sim[i].in->grad_K[j] = 0.0;
+        d_zeros(&nlp->sim[i].in->S_adj, nx_i+nu_i, 1);
+        d_zeros(&nlp->sim[i].in->grad_K, nx_i, 1);
 
         int_t nx_i1 = nx[i+1];
         nlp->sim[i].out = (sim_out *) malloc(sizeof(sim_out));
-        nlp->sim[i].out->xn = (real_t *) calloc(nx_i1, sizeof(*nlp->sim[i].out->xn));
-        nlp->sim[i].out->S_forw = (real_t *) \
-            calloc(nx_i1*(nx_i+nu_i), sizeof(*nlp->sim[i].out->S_forw));
+        d_zeros(&nlp->sim[i].out->xn, nx_i1, 1);
+        d_zeros(&nlp->sim[i].out->S_forw, nx_i1, nx_i+nu_i);
+        d_zeros(&nlp->sim[i].out->grad, nx_i+nu_i, 1);
         nlp->sim[i].out->info = (sim_info *) malloc(sizeof(sim_info));
-        nlp->sim[i].out->grad = (real_t *) calloc(nx_i+nu_i, sizeof(*nlp->sim[i].out->grad));
 
         nlp->sim[i].mem = NULL;
     }
@@ -226,9 +216,9 @@ void free_ocp_nlp_in(ocp_nlp_in *const nlp) {
 
 void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {
     int_t N = in->N;
-    out->x = (real_t **) malloc((N+1)*sizeof(*out->x));
-    out->u = (real_t **) malloc((N+1)*sizeof(*out->u));
-    out->lam = (real_t **) malloc((N+1)*sizeof(*out->lam));
+    out->x = (real_t **) calloc(N+1, sizeof(*out->x));
+    out->u = (real_t **) calloc(N+1, sizeof(*out->u));
+    out->lam = (real_t **) calloc(N+1, sizeof(*out->lam));
     for (int_t k = 0; k <= N; k++) {
         d_zeros(&out->x[k], in->nx[k], 1);
         d_zeros(&out->u[k], in->nu[k], 1);
