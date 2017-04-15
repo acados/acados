@@ -46,7 +46,7 @@ static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t
     qp->b = (const real_t **) calloc(N, sizeof(*qp->b));
     qp->Q = (const real_t **) calloc(N+1, sizeof(*qp->Q));
     qp->S = (const real_t **) calloc(N, sizeof(*qp->S));
-    qp->R = (const real_t **) calloc(N,sizeof(*qp->R));
+    qp->R = (const real_t **) calloc(N, sizeof(*qp->R));
     qp->q = (const real_t **) calloc(N+1, sizeof(*qp->q));
     qp->r = (const real_t **) calloc(N, sizeof(*qp->r));
     for (int_t i = 0; i < N; i++) {

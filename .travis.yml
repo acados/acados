@@ -72,6 +72,8 @@ script:
   - python test_ocp_nlp.py
   - python test_ocp_qp.py
   - popd
+  - find . -type f -name vde.c
+  - find . -type f -name vde.so
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..

@@ -2,9 +2,6 @@ from acados import *
 from casadi import *
 import os
 
-print(os.getcwd())
-print(os.listdir())
-
 nx = 2
 nu = 1
 
@@ -25,6 +22,8 @@ vde_x = jtimes(rhs, x, Sx)
 vde_u = jacobian(rhs, u) + jtimes(rhs, x, Su)
 vde = Function('vde', [x, Sx, Su, u], [rhs, vde_x, vde_u])
 vde.generate('vde.c')
+print(os.getcwd())
+print(os.listdir())
 nlp.set_model('vde')
 
 solver = ocp_nlp_solver("gauss-newton-sqp", nlp)
