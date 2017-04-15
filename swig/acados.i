@@ -661,8 +661,12 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             SWIG_Error(SWIG_RuntimeError, "Something went wrong when compiling the model.");
         void *handle;
         handle = dlopen(library_name, RTLD_LAZY);
-        if (handle == 0)
-            SWIG_Error(SWIG_RuntimeError, "Something went wrong when loading the model.");
+        if (handle == 0) {
+            char err_msg[256];
+            snprintf(err_msg, sizeof(err_msg), \
+                "Something went wrong when loading the model. dlerror(): %s", dlerror());
+            SWIG_Error(SWIG_RuntimeError, err_msg);
+        }
         typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
         eval_t eval = (eval_t)dlsym(handle, model_name);
         for (int_t i = 0; i < $self->N; i++) {
