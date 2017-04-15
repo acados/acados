@@ -65,8 +65,13 @@ script:
   - cmake --build build --clean-first
   - cmake --build build --target install
   - cmake --build build --target lint
-  - cmake -E chdir build ctest --output-on-failure
-  - cat ./build/Testing/Temporary/LastTest.log
+  - pushd build/test
+  - ./unit_tests
+  - popd
+  - pushd local
+  - python test_ocp_nlp.py
+  - python test_ocp_qp.py
+  - popd
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
