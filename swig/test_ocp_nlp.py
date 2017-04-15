@@ -1,5 +1,9 @@
 from acados import *
 from casadi import *
+import os
+
+print(os.getcwd())
+print(os.listdir())
 
 nx = 2
 nu = 1
