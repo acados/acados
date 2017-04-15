@@ -67,6 +67,7 @@ script:
   - cmake --build build --target lint
   - cmake -E chdir build ctest --output-on-failure
   - find . -type f -name vde.c
+  - find . -type f -name vde.so
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
