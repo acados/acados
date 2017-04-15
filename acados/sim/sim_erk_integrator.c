@@ -181,23 +181,23 @@ void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
 
 
-    work->rhs_forw_in = malloc(sizeof(*work->rhs_forw_in) * (nx*(1+NF)+nu));
+    work->rhs_forw_in = calloc(nx*(1+NF)+nu, sizeof(*work->rhs_forw_in));
     if (!in->sens_adj) {
-        work->K_traj = malloc(sizeof(*work->K_traj) * (num_stages*nx*(1+NF)));
-        work->out_forw_traj = malloc(sizeof(*work->out_forw_traj) * (nx*(1+NF)));
+        work->K_traj = calloc(num_stages*nx*(1+NF), sizeof(*work->K_traj));
+        work->out_forw_traj = calloc(nx*(1+NF), sizeof(*work->out_forw_traj));
     } else {
-        work->K_traj = malloc(sizeof(*work->K_traj) * (nSteps*num_stages*nx*(1+NF)));
-        work->out_forw_traj = malloc(sizeof(*work->out_forw_traj) * ((nSteps+1)*nx*(1+NF)));
+        work->K_traj = calloc(nSteps*num_stages*nx*(1+NF), sizeof(*work->K_traj));
+        work->out_forw_traj = calloc((nSteps+1)*nx*(1+NF), sizeof(*work->out_forw_traj));
     }
 
     if (in->sens_hess && in->sens_adj) {
-        work->rhs_adj_in = malloc(sizeof(*work->rhs_adj_in) * (nx*(2+NF)+nu));
-        work->out_adj_tmp = malloc(sizeof(*work->out_adj_tmp) * (nx+nu+nhess));
-        work->adj_traj = malloc(sizeof(*work->adj_traj) * (num_stages*(nx+nu+nhess)));
+        work->rhs_adj_in = calloc((nx*(2+NF)+nu), sizeof(*work->rhs_adj_in));
+        work->out_adj_tmp = calloc((nx+nu+nhess), sizeof(*work->out_adj_tmp));
+        work->adj_traj = calloc(num_stages*(nx+nu+nhess), sizeof(*work->adj_traj));
     } else if (in->sens_adj) {
-        work->rhs_adj_in = malloc(sizeof(*work->rhs_adj_in) * (nx*2+nu));
-        work->out_adj_tmp = malloc(sizeof(*work->out_adj_tmp) * (nx+nu));
-        work->adj_traj = malloc(sizeof(*work->adj_traj) * (num_stages*(nx+nu)));
+        work->rhs_adj_in = calloc(nx*2+nu, sizeof(*work->rhs_adj_in));
+        work->out_adj_tmp = calloc(nx+nu, sizeof(*work->out_adj_tmp));
+        work->adj_traj = calloc(num_stages*(nx+nu), sizeof(*work->adj_traj));
     }
 }
 
@@ -206,17 +206,17 @@ void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
     opts->scheme.type = exact;
     if ( num_stages == 1 ) {
         opts->num_stages = 1;       // explicit Euler
-        opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-        opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-        opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
+        opts->A_mat = calloc(num_stages*num_stages, sizeof(*opts->A_mat));
+        opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
+        opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
         opts->A_mat[0] = 0;
         opts->b_vec[0] = 1.0;
         opts->c_vec[0] = 0;
     } else if ( num_stages == 4 ) {
         opts->num_stages = 4;       // 4-stage, 4th order ERK method
-        opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-        opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-        opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
+        opts->A_mat = calloc(num_stages*num_stages, sizeof(*opts->A_mat));
+        opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
+        opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
 
         memcpy(opts->A_mat,
                 ((real_t[]) {0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),

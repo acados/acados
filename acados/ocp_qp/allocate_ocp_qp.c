@@ -41,14 +41,14 @@ static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t
     // TODO(dkouzoup): the next line is wrong if you want u[N] != 0
     memcpy((void *) qp->nu, (void *) nu, sizeof(*nu)*(N));
 
-    qp->A = (const real_t **) malloc(sizeof(*qp->A) * N);
-    qp->B = (const real_t **) malloc(sizeof(*qp->B) * N);
-    qp->b = (const real_t **) malloc(sizeof(*qp->b) * N);
-    qp->Q = (const real_t **) malloc(sizeof(*qp->Q) * (N+1));
-    qp->S = (const real_t **) malloc(sizeof(*qp->S) * N);
-    qp->R = (const real_t **) malloc(sizeof(*qp->R) * N);
-    qp->q = (const real_t **) malloc(sizeof(*qp->q) * (N+1));
-    qp->r = (const real_t **) malloc(sizeof(*qp->r) * N);
+    qp->A = (const real_t **) calloc(N, sizeof(*qp->A));
+    qp->B = (const real_t **) calloc(N, sizeof(*qp->B));
+    qp->b = (const real_t **) calloc(N, sizeof(*qp->b));
+    qp->Q = (const real_t **) calloc(N+1, sizeof(*qp->Q));
+    qp->S = (const real_t **) calloc(N, sizeof(*qp->S));
+    qp->R = (const real_t **) calloc(N,sizeof(*qp->R));
+    qp->q = (const real_t **) calloc(N+1, sizeof(*qp->q));
+    qp->r = (const real_t **) calloc(N, sizeof(*qp->r));
     for (int_t i = 0; i < N; i++) {
         d_zeros((real_t **) &qp->A[i], nx[i], nx[i]);
         d_zeros((real_t **) &qp->B[i], nx[i], nu[i]);
@@ -93,9 +93,9 @@ static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
 }
 
 static void allocate_ocp_qp_in_bounds(const int_t N, const int_t *nb, ocp_qp_in *const qp) {
-    qp->lb = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
-    qp->ub = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
-    qp->idxb = (const int_t **) malloc(sizeof(*qp->idxb) * (N+1));
+    qp->lb = (const real_t **) calloc(N+1, sizeof(*qp->lb));
+    qp->ub = (const real_t **) calloc(N+1, sizeof(*qp->ub));
+    qp->idxb = (const int_t **) calloc(N+1, sizeof(*qp->idxb));
 
     qp-> N = N;
     memcpy((void *) qp->nb, (void *) nb, sizeof(*nb)*(N+1));
@@ -119,10 +119,10 @@ static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
 }
 
 static void allocate_ocp_qp_in_polyhedral(const int_t N, const int_t *nc, ocp_qp_in *const qp) {
-    qp->lc = (const real_t **) malloc(sizeof(*qp->lc) * (N+1));
-    qp->uc = (const real_t **) malloc(sizeof(*qp->uc) * (N+1));
-    qp->Cx = (const real_t **) malloc(sizeof(*qp->Cx) * (N+1));
-    qp->Cu = (const real_t **) malloc(sizeof(*qp->Cu) * (N));
+    qp->lc = (const real_t **) calloc(N+1, sizeof(*qp->lc));
+    qp->uc = (const real_t **) calloc(N+1, sizeof(*qp->uc));
+    qp->Cx = (const real_t **) calloc(N+1, sizeof(*qp->Cx));
+    qp->Cu = (const real_t **) calloc(N, sizeof(*qp->Cu));
 
     qp-> N = N;
     memcpy((void *) qp->nc, (void *) nc, sizeof(*nc)*(N+1));
@@ -194,10 +194,10 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     d_zeros(&lambdas, nLambdas, 1);
 
     // TODO(dimitris): Reference writes N+1 pointers for u, is it already updated?
-    out->x = (real_t **) malloc(sizeof(*out->x)*(N+1));
-    out->u = (real_t **) malloc(sizeof(*out->u)*N);
-    out->pi = (real_t **) malloc(sizeof(*out->pi)*N);
-    out->lam = (real_t **) malloc(sizeof(*out->lam)*(N+1));
+    out->x = (real_t **) calloc(N+1, sizeof(*out->x));
+    out->u = (real_t **) calloc(N, sizeof(*out->u));
+    out->pi = (real_t **) calloc(N, sizeof(*out->pi));
+    out->lam = (real_t **) calloc(N+1, sizeof(*out->lam));
 
     for (kk = 0; kk < N; kk++) {
         out->x[kk] = &primalVars[accPrimal];
