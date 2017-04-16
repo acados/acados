@@ -651,16 +651,17 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 
     void set_model(char *model_name) {
-        char library_name[256];
+        char library_name[256], path_to_library[256];
         snprintf(library_name, sizeof(library_name), "%s.so", model_name);
+        snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
         char command[256];
-        snprintf(command, sizeof(command), "cc -v -fPIC -shared -g %s.c -o %s", \
+        snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
             model_name, library_name);
         int compilation_failed = system(command);
         if (compilation_failed)
             SWIG_Error(SWIG_RuntimeError, "Something went wrong when compiling the model.");
         void *handle;
-        handle = dlopen(library_name, RTLD_LAZY);
+        handle = dlopen(path_to_library, RTLD_LAZY);
         if (handle == 0) {
             char err_msg[256];
             snprintf(err_msg, sizeof(err_msg), \
