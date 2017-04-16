@@ -18,7 +18,6 @@ addons:
     packages:
       - libgsl0-dev
       - liblapack-dev
-      - libopenblas-base
       - libopenblas-dev
       - cppcheck
       - g++-6
@@ -44,7 +43,7 @@ install:
       source encrypted_script;
     fi'
   - popd
-  - travis_retry ./install_packages.sh
+  - travis_retry source install_packages.sh
 
 script:
   - cmake -E make_directory build

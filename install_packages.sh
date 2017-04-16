@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
-pip install numpy
+sudo apt-get install swig libgsl0-dev liblapack-dev libopenblas-dev cppcheck
+
 sudo add-apt-repository -y ppa:octave/stable
 sudo apt-get update -yq
 sudo apt-get install octave liboctave-dev valgrind
+
+pip install numpy
 
 pushd external
 wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
@@ -17,6 +20,5 @@ tar -xvf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1
 wget http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
 mkdir -p casadi-py35-np1.9.1-v3.1.1
 tar -xvf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
-
 export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
 popd
