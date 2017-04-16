@@ -90,26 +90,12 @@ typedef struct {
 
 typedef struct {
     real_t *w;
-
-    // TODO(dimitris): aren't those SQP-related?
-    // real_t **A;
-    // real_t **B;
-    // real_t **b;
-    // real_t **Q;
-    // real_t **S;
-    // real_t **R;
-    // real_t **q;
-    // real_t **r;
-    // real_t **lb;
-    // real_t **ub;
-    // real_t **lc;
-    // real_t **uc;
 } ocp_nlp_work;
 
 typedef struct {
     real_t **x;
     real_t **u;
-    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;
     real_t **lam;
 } ocp_nlp_out;
 

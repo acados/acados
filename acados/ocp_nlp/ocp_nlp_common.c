@@ -64,9 +64,9 @@ int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
 
 
 void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem) {
-    char *ptr = (char *)work;
+    char *ptr = (char *) work;
 
     ptr += sizeof(ocp_nlp_work);
-    work->w = (real_t*)ptr;
-    ptr += (mem->num_vars)*sizeof(real_t);
+    work->w = (real_t*) ptr;
+    ptr += mem->num_vars*sizeof(real_t);  // TODO(robin): ptr never used again?
 }
