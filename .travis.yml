@@ -44,7 +44,7 @@ install:
       source encrypted_script;
     fi'
   - popd
-  - travis_retry sh install_packages.sh
+  - travis_retry ./install_packages.sh
 
 script:
   - cmake -E make_directory build
