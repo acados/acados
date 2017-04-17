@@ -2,7 +2,6 @@ clc;
 clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.1.1')
 import casadi.*
 
 % constants
@@ -56,7 +55,7 @@ adj = jtimes(f_expl,[x;u],lambdaX,true);
 
 adjFun = Function('adjFun',{x,lambdaX,u},{adj});
 
-S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)));
+S_forw = [Sx Sp; zeros(nu,nx) eye(nu)];
 hess = S_forw.'*jtimes(adj,[x;u],S_forw);
 hess2 = [];
 for j = 1:nx+nu

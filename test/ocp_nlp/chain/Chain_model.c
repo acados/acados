@@ -1,14 +1,17 @@
 /* The model comes from \cite{Wirsching2006} */
 #include "test/ocp_nlp/chain/Chain_model.h"
 
+extern int vde_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+extern int vde_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+extern int vde_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+
 extern int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int jac_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int jac_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 // The auto-generated VDE functions from CasADi:
 
-void VDE_fun_nm2(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun_nm2(const real_t* in, real_t* out) {
     int_t NMF = 1;
     int_t NX = NMF*6;
     int_t NU = 3;
@@ -37,11 +40,10 @@ void VDE_fun_nm2(const real_t* in, real_t* out,
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
 
-    vde(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+    vde_chain_nm2(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
-void VDE_fun_nm3(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun_nm3(const real_t* in, real_t* out) {
     int_t NMF = 2;
     int_t NX = NMF*6;
     int_t NU = 3;
@@ -70,11 +72,10 @@ void VDE_fun_nm3(const real_t* in, real_t* out,
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
 
-    vde(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+    vde_chain_nm3(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
-void VDE_fun_nm4(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun_nm4(const real_t* in, real_t* out) {
     int_t NMF = 3;
     int_t NX = NMF*6;
     int_t NU = 3;
@@ -103,7 +104,7 @@ void VDE_fun_nm4(const real_t* in, real_t* out,
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
 
-    vde(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+    vde_chain_nm4(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
 

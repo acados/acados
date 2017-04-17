@@ -18,7 +18,7 @@ ExternalProject_Add(
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/blasfeo"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make clean static_library -j 2 TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
-    INSTALL_COMMAND cmake -E echo "Skipping install"
+    INSTALL_COMMAND ""
 )
 
 ExternalProject_Get_Property(blasfeo_project source_dir)

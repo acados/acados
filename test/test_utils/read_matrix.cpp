@@ -51,7 +51,7 @@ static inline void trim(std::string *s) {
 }
 
 // Read space delimited file into Eigen matrix
-Eigen::MatrixXd readMatrix(const std::string &filename) {
+Eigen::MatrixXd readMatrix(const std::string filename) {
     int cols = 0, rows = 0;
     double buff[MAXBUFSIZE];
 
@@ -95,14 +95,14 @@ Eigen::MatrixXd readMatrix(const std::string &filename) {
     return result;
 }
 
-Eigen::MatrixXd readMatrixFromFile(const std::string &filename, int_t rows, int_t cols) {
+Eigen::MatrixXd readMatrixFromFile(std::string filename, int_t rows, int_t cols) {
     Eigen::MatrixXd M = readMatrix(filename);
     REQUIRE(M.rows() == rows);
     REQUIRE(M.cols() == cols);
     return M;
 }
 
-Eigen::VectorXd readVectorFromFile(const std::string &filename, int_t length) {
+Eigen::VectorXd readVectorFromFile(std::string filename, int_t length) {
     Eigen::VectorXd v = readMatrix(filename);
     REQUIRE(v.rows() == length);
     return v;
