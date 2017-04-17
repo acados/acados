@@ -73,13 +73,14 @@ typedef struct {
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
     int_t maxIter;
+    bool freezeSens;
 } ocp_nlp_in;
 
 
 typedef struct {
     real_t **x;
     real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;
     real_t **lam;
 } ocp_nlp_mem;
 
@@ -107,7 +108,7 @@ typedef struct {
 typedef struct {
     real_t **x;
     real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;  // TODO(rien): what is pi?
     real_t **lam;
 } ocp_nlp_out;
 

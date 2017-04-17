@@ -37,6 +37,8 @@
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/read_ocp_qp_in.h"
 
+#include "acados/utils/print.h"
+
 using std::vector;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -66,7 +68,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
     int_t QUIET = 1;
 
     int return_value;
-    VectorXd acados_W, true_W;
+    VectorXd acados_W, acados_PI, true_W, true_PI;
 
     for (std::string constraint : constraints) {
         SECTION(constraint) {
@@ -88,15 +90,23 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     if (constraint == "UNCONSTRAINED") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_unconstrained.dat", (N+1)*nx + N*nu, 1);
+//                        true_PI = readMatrixFromFile(scenario +
+//                            "/pi_star_ocp_unconstrained.dat", N*nx, 1);
                     } else if (constraint == "ONLY_BOUNDS") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_bounds.dat", (N+1)*nx + N*nu, 1);
+//                        true_PI = readMatrixFromFile(scenario +
+//                            "/pi_star_ocp_bounds.dat", N*nx, 1);
                     } else if (constraint == "ONLY_AFFINE") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_no_bounds.dat", (N+1)*nx + N*nu, 1);
+//                        true_PI = readMatrixFromFile(scenario +
+//                            "/pi_star_ocp_no_bounds.dat", N*nx, 1);
                     } else if (constraint == "CONSTRAINED") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_constrained.dat", (N+1)*nx + N*nu, 1);
+                        true_PI = readMatrixFromFile(scenario +
+                            "/pi_star_ocp_constrained.dat", N*nx, 1);
                     }
                     if (TEST_QPOASES) {
                         SECTION("qpOASES") {
@@ -110,8 +120,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             return_value = \
                                 ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, NULL);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_QPOASES));
+                            if (constraint == "CONSTRAINED")
+                                REQUIRE(acados_PI.isApprox(true_PI, TOL_QPOASES));
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }

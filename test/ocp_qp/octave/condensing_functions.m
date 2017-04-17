@@ -49,7 +49,7 @@ function [A_ineq, b_ineq] = ocp_general_constraints(N, nx, nu, nc, Cx, Cu, cl, c
     b_ineq = [cu(:); -cl(:)];
 endfunction
 
-function w_star = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
+function [w_star,pi_star] = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu,
     Cx, Cu, cl, cu)
 
     global TOLERANCE;
@@ -72,6 +72,8 @@ function w_star = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r
     lambda_star = all_multipliers.eqlin;
     mu_star = -all_multipliers.lower + all_multipliers.upper;
     nu_star = all_multipliers.ineqlin;
+
+    pi_star = lambda_star(nx+1:end);
 
     nc_all = (N+1)*nc;
     KKT_system = [];
@@ -111,7 +113,7 @@ function w_star = solve_structured_ocp(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r
 endfunction
 
 % TODO(dimitris-robin): remove once function above is extended to cover empty constraints
-function w_star = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu)
+function [w_star] = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q, r, xl, xu, ul, uu)
 
     [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
     [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
@@ -122,7 +124,7 @@ function w_star = solve_structured_ocp_bounds(N, nx, nu, A, B, b, x0, Q, S, R, q
     
 endfunction
 
-function w_star = solve_structured_ocp_no_bounds(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, Cx, Cu, cl, cu)
+function [w_star] = solve_structured_ocp_no_bounds(N, nx, nu, nc, A, B, b, x0, Q, S, R, q, r, Cx, Cu, cl, cu)
 
     [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
     [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
@@ -132,7 +134,7 @@ function w_star = solve_structured_ocp_no_bounds(N, nx, nu, nc, A, B, b, x0, Q, 
     [w_star, ~, exit_flag] = quadprog(H, h, A_ineq, b_ineq, G, -g, [], []);
 endfunction
 
-function w_star = solve_structured_ocp_unconstrained(N, nx, nu, A, B, b, x0, Q, S, R, q, r)
+function [w_star] = solve_structured_ocp_unconstrained(N, nx, nu, A, B, b, x0, Q, S, R, q, r)
 
     [H, h] = ocp_cost_function(N, nx, nu, Q, S, R, q, r);
     [G, g] = ocp_equality_constraints(N, nx, nu, A, B, b, x0);
