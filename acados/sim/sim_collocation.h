@@ -27,13 +27,14 @@ extern "C" {
 #include <stdbool.h>
 #include "acados/utils/types.h"
 
+
 enum Newton_type_collocation {
           exact = 0,
           simplified_in,
           simplified_inis
         };
 
-typedef struct {
+typedef struct Newton_scheme_ {
     enum Newton_type_collocation type;
     real_t *eig;
     real_t *low_tria;

@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/ocp_qp/allocate_ocp_qp.h"
+#include "acados/utils/allocate_ocp_qp.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,17 +38,16 @@ static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t
 
     qp->N = N;
     memcpy((void *) qp->nx, (void *) nx, sizeof(*nx)*(N+1));
-    // TODO(dkouzoup): the next line is wrong if you want u[N] != 0
     memcpy((void *) qp->nu, (void *) nu, sizeof(*nu)*(N));
 
-    qp->A = (const real_t **) calloc(N, sizeof(*qp->A));
-    qp->B = (const real_t **) calloc(N, sizeof(*qp->B));
-    qp->b = (const real_t **) calloc(N, sizeof(*qp->b));
-    qp->Q = (const real_t **) calloc(N+1, sizeof(*qp->Q));
-    qp->S = (const real_t **) calloc(N, sizeof(*qp->S));
-    qp->R = (const real_t **) calloc(N, sizeof(*qp->R));
-    qp->q = (const real_t **) calloc(N+1, sizeof(*qp->q));
-    qp->r = (const real_t **) calloc(N, sizeof(*qp->r));
+    qp->A = (const real_t **) malloc(sizeof(*qp->A) * N);
+    qp->B = (const real_t **) malloc(sizeof(*qp->B) * N);
+    qp->b = (const real_t **) malloc(sizeof(*qp->b) * N);
+    qp->Q = (const real_t **) malloc(sizeof(*qp->Q) * (N+1));
+    qp->S = (const real_t **) malloc(sizeof(*qp->S) * N);
+    qp->R = (const real_t **) malloc(sizeof(*qp->R) * N);
+    qp->q = (const real_t **) malloc(sizeof(*qp->q) * (N+1));
+    qp->r = (const real_t **) malloc(sizeof(*qp->r) * N);
     for (int_t i = 0; i < N; i++) {
         d_zeros((real_t **) &qp->A[i], nx[i], nx[i]);
         d_zeros((real_t **) &qp->B[i], nx[i], nu[i]);
@@ -62,6 +61,7 @@ static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t
     d_zeros((real_t **) &qp->Q[N], nx[N], nx[N]);
     d_zeros((real_t **) &qp->q[N], nx[N], 1);
 }
+
 
 static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
     int_free((int_t *)qp->nx);
@@ -92,10 +92,11 @@ static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
     free((real_t**)qp->r);
 }
 
+
 static void allocate_ocp_qp_in_bounds(const int_t N, const int_t *nb, ocp_qp_in *const qp) {
-    qp->lb = (const real_t **) calloc(N+1, sizeof(*qp->lb));
-    qp->ub = (const real_t **) calloc(N+1, sizeof(*qp->ub));
-    qp->idxb = (const int_t **) calloc(N+1, sizeof(*qp->idxb));
+    qp->lb = (const real_t **) malloc(sizeof(*qp->lb) * (N+1));
+    qp->ub = (const real_t **) malloc(sizeof(*qp->ub) * (N+1));
+    qp->idxb = (const int_t **) malloc(sizeof(*qp->idxb) * (N+1));
 
     qp-> N = N;
     memcpy((void *) qp->nb, (void *) nb, sizeof(*nb)*(N+1));
@@ -106,6 +107,7 @@ static void allocate_ocp_qp_in_bounds(const int_t N, const int_t *nb, ocp_qp_in 
         d_zeros((real_t **) &qp->ub[i], nb[i], 1);
     }
 }
+
 
 static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
     for (int_t i = 0; i < qp->N+1; i++) {
@@ -118,11 +120,12 @@ static void free_ocp_qp_in_bounds(ocp_qp_in *const qp) {
     free((int_t**)qp->idxb);
 }
 
+
 static void allocate_ocp_qp_in_polyhedral(const int_t N, const int_t *nc, ocp_qp_in *const qp) {
-    qp->lc = (const real_t **) calloc(N+1, sizeof(*qp->lc));
-    qp->uc = (const real_t **) calloc(N+1, sizeof(*qp->uc));
-    qp->Cx = (const real_t **) calloc(N+1, sizeof(*qp->Cx));
-    qp->Cu = (const real_t **) calloc(N, sizeof(*qp->Cu));
+    qp->lc = (const real_t **) malloc(sizeof(*qp->lc) * (N+1));
+    qp->uc = (const real_t **) malloc(sizeof(*qp->uc) * (N+1));
+    qp->Cx = (const real_t **) malloc(sizeof(*qp->Cx) * (N+1));
+    qp->Cu = (const real_t **) malloc(sizeof(*qp->Cu) * (N));
 
     qp-> N = N;
     memcpy((void *) qp->nc, (void *) nc, sizeof(*nc)*(N+1));
@@ -134,6 +137,7 @@ static void allocate_ocp_qp_in_polyhedral(const int_t N, const int_t *nc, ocp_qp
         if (i < N) d_zeros((real_t **) &qp->Cu[i], nc[i], qp->nu[i]);
     }
 }
+
 
 static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
     for (int_t i = 0; i < qp->N; i++) {
@@ -152,6 +156,7 @@ static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
     free((real_t**)qp->Cu);
 }
 
+
 void allocate_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
     const int_t *nc, ocp_qp_in *const qp) {
 
@@ -160,11 +165,13 @@ void allocate_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const i
     allocate_ocp_qp_in_polyhedral(N, nc, qp);
 }
 
+
 void free_ocp_qp_in(ocp_qp_in *const qp) {
     free_ocp_qp_in_basic(qp);
     free_ocp_qp_in_bounds(qp);
     free_ocp_qp_in_polyhedral(qp);
 }
+
 
 void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     int_t kk;
@@ -194,10 +201,10 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     d_zeros(&lambdas, nLambdas, 1);
 
     // TODO(dimitris): Reference writes N+1 pointers for u, is it already updated?
-    out->x = (real_t **) calloc(N+1, sizeof(*out->x));
-    out->u = (real_t **) calloc(N, sizeof(*out->u));
-    out->pi = (real_t **) calloc(N, sizeof(*out->pi));
-    out->lam = (real_t **) calloc(N+1, sizeof(*out->lam));
+    out->x = (real_t **) malloc(sizeof(*out->x)*(N+1));
+    out->u = (real_t **) malloc(sizeof(*out->u)*N);
+    out->pi = (real_t **) malloc(sizeof(*out->pi)*N);
+    out->lam = (real_t **) malloc(sizeof(*out->lam)*(N+1));
 
     for (kk = 0; kk < N; kk++) {
         out->x[kk] = &primalVars[accPrimal];
@@ -211,6 +218,7 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     out->x[N] = &primalVars[accPrimal];
     out->lam[N] = &lambdas[accLamdas];
 }
+
 
 void free_ocp_qp_out(ocp_qp_out *out) {
     d_free((real_t*)out->x[0]);

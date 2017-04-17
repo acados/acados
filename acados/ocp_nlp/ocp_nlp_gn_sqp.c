@@ -28,11 +28,11 @@
 #ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_common.h"
+#include "acados/utils/allocate_ocp_qp.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"

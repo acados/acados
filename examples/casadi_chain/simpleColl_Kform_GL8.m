@@ -1,5 +1,4 @@
 function [G] = simpleColl_Kform_GL8(dae,tau_root,h)
-  addpath('../../external/casadi-octave-v3.1.1')
   import casadi.*
   daefun = Function('fun',dae,char('x','p'),char('ode','quad'));
   % Degree of interpolating polynomial
@@ -47,7 +46,8 @@ function [G] = simpleColl_Kform_GL8(dae,tau_root,h)
       xp_jk = xp_jk + h*AA(j,r)*K(:,r);
     end
     % Add collocation equations to the NLP
-    ode = daefun(xp_jk,CVp);
+    out = daefun({xp_jk,CVp});
+    ode = out{1};
     g = {g{:} ode - K(:,j)};
   end
   % Get an expression for the state at the end of the finite element

@@ -1,27 +1,13 @@
 /* The model comes from \cite{Chen1998} */
 #include "examples/Chen/Chen_model.h"
 
-/* Ignore vde */
-#if defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wunused-parameter"
-#elif defined(__GNUC__)
-    #if __GNUC__ >= 6
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wunused-parameter"
-    #else
-        #pragma GCC diagnostic ignored "-Wunused-parameter"
-    #endif
-#endif
-
 #define LINEAR_MODEL 0
 #define NX 2
 #define NU 1
 
 real_t aux[12];
 
-void VDE_fun(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void VDE_fun(const real_t* in, real_t* out) {
     const real_t* x = in;
     const real_t* u  = in + NX + NX*(NX+NU);
 
@@ -77,11 +63,3 @@ void jac_fun(const real_t* in, real_t* out) {
     out[4] = (u[0]*(-(real_t)(2.0)));
     out[5] = ((real_t)(0.5)-((real_t)(2.0)*x[1]));
 }
-
-#if defined(__clang__)
-    #pragma clang diagnostic pop
-#elif defined(__GNUC__)
-    #if __GNUC__ >= 6
-        #pragma GCC diagnostic pop
-    #endif
-#endif
