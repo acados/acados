@@ -44,6 +44,7 @@ install:
     fi'
   - popd
   - travis_retry source install_packages.sh
+  - echo "backend : Agg" > $HOME/.config/matplotlib/matplotlibrc
 
 script:
   - cmake -E make_directory build
