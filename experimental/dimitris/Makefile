@@ -2,6 +2,7 @@ OS := $(shell uname)
 
 ACADOS=$(abspath ../../)
 ACADOS_EXT=$(ACADOS)/external
+ACADOSLIBDIR=$(ACADOS)/build
 
 OOQP=$(ACADOS_EXT)/OOQP
 OOQPINCLUDEDIR=$(OOQP)/include
@@ -13,6 +14,8 @@ BLASFEOLIBDIR=$(BLASFEO)
 
 HPMPC=$(ACADOS_EXT)/hpmpc
 HPMPCLIBDIR=$(HPMPC)
+
+EIGEN=$(ACADOS_EXT)/eigen
 
 QPOASES=$(ACADOS_EXT)/qpOASES
 QPOASESINCLUDEDIR=$(QPOASES)/include
@@ -27,6 +30,7 @@ LDFLAGS+=-L$(BLASFEOLIBDIR)
 LDFLAGS+=-L$(QPOASESLIBDIR)
 LDFLAGS+=-L$(HPMPCLIBDIR)
 LDFLAGS+=-L$(QPDUNESLIBDIR)
+LDFLAGS+=-L$(ACADOSLIBDIR)
 
 BLAS     = -lblas
 MA27LIB  = $(OOQP)/libma27.a
@@ -97,6 +101,26 @@ all: test_all_qp_solvers.c
 	g++ -g -O0 timing.o ocp_qp_ooqp.o ocp_qp_condensing.o ocp_qp_condensing_qpoases.o ocp_qp_hpmpc.o allocate_ocp_qp.o read_ocp_qp_in.o test_all_qp_solvers.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
 	# valgrind --leak-check=full ./test_qp.exe
 	./test_qp.exe
+
+chain:
+	gcc -c -g -O0 $(ACADOS)/test/ocp_nlp/chain/Chain_model.c -o model.o -I$(ACADOS)
+	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
+	gcc -c -g -O0 $(ACADOS)/build/test/jac_chain_nm2.c -o jac_chain_nm2.o
+	gcc -c -g -O0 $(ACADOS)/build/test/jac_chain_nm3.c -o jac_chain_nm3.o
+	gcc -c -g -O0 $(ACADOS)/build/test/jac_chain_nm4.c -o jac_chain_nm4.o
+	gcc -c -g -O0 $(ACADOS)/build/test/vde_chain_nm2.c -o vde_chain_nm2.o
+	gcc -c -g -O0 $(ACADOS)/build/test/vde_chain_nm3.c -o vde_chain_nm3.o
+	gcc -c -g -O0 $(ACADOS)/build/test/vde_chain_nm4.c -o vde_chain_nm4.o
+	g++ -c -g -O0 read_matrix_mod.cpp -o read_matrix.o -I$(EIGEN) -I$(ACADOS)
+	g++ -c -g -O0  -std=c++11 test_chain_mod.cpp -o test_chain.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPDUNESINCLUDEDIR) -I$(ACADOS_EXT)/eigen
+	g++ -g -O0  test_chain.o read_matrix.o read_ocp_qp_in.o model.o jac_chain_nm2.o jac_chain_nm3.o jac_chain_nm4.o  vde_chain_nm2.o vde_chain_nm3.o vde_chain_nm4.o -o test_chain.exe $(LDFLAGS) -lacados -lblasfeo -lqpdunes $(LIBS)
+	# valgrind --leak-check=full --show-leak-kinds=all ./test_chain.exe
+	./test_chain.exe
+
+read:
+	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
+	g++ -c -g -O0 readtst.cpp -o readtst.o -I$(ACADOS)
+	g++ -g -O0 read_ocp_qp_in.o readtst.o -o read.exe $(LDFLAGS) -lacados -lblasfeo
 
 simple: simple.c
 	gcc -g simple.c -o simple.exe -I$(ACADOS)

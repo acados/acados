@@ -20,6 +20,7 @@
 #include "acados/utils/print.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
@@ -101,6 +102,11 @@ void read_matrix(const char *file_name, real_t* array, const int_t nrows,
         const int_t ncols) {
     FILE *file;
     file = fopen(file_name, "r");
+
+    if (file == NULL) {
+        printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", file_name);
+        exit(1);
+    }
 
     // Read numbers from file into buffer.
     for (int i = 0; i < nrows; i++) {

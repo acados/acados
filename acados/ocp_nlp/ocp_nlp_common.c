@@ -22,7 +22,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem) {
+static int_t number_of_primal_vars(const ocp_nlp_in *in) {
+    int_t num_vars = 0;
+
+    for (int_t i = 0; i < in->N; i++) {
+        num_vars += in->nx[i] + in->nu[i];
+    }
+    num_vars += in->nx[in->N];
+
+    return num_vars;
+}
+
+
+void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_) {
+    ocp_nlp_mem *mem = (ocp_nlp_mem *) mem_;
+
+    mem->num_vars = number_of_primal_vars(in);
     mem->x = (real_t **) malloc(sizeof(*mem->x) * (in->N+1));
     mem->u = (real_t **) malloc(sizeof(*mem->u) * in->N);
     mem->lam = (real_t **) malloc(sizeof(*mem->lam) * in->N);
@@ -32,4 +47,43 @@ void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem) {
         mem->lam[i] = (real_t *) malloc(sizeof(*mem->lam[i]) * (in->nx[i]));
     }
     mem->x[in->N] = (real_t *) malloc(sizeof(*mem->x[in->N]) * (in->nx[in->N]));
+}
+
+
+void ocp_nlp_free_memory(int_t N, void *mem_) {
+    ocp_nlp_mem *mem = (ocp_nlp_mem *) mem_;
+
+    for (int_t i = 0; i < N; i++) {
+        free(mem->x[i]);
+        free(mem->u[i]);
+        free(mem->lam[i]);
+    }
+    free(mem->x[N]);
+    free(mem->x);
+    free(mem->u);
+    free(mem->lam);
+}
+
+
+int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
+    ocp_nlp_args *args = (ocp_nlp_args*) args_;
+
+    int_t size;
+    int_t num_vars = number_of_primal_vars(in);
+
+    args->dummy = 1;
+
+    size = sizeof(ocp_nlp_work);
+    size += num_vars*sizeof(real_t);
+
+    return size;
+}
+
+
+void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_mem *mem) {
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_nlp_work);
+    work->w = (real_t*)ptr;
+    ptr += (mem->num_vars)*sizeof(real_t);
 }

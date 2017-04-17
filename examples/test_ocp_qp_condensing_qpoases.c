@@ -366,10 +366,11 @@ int main() {
 
     double *hx[N + 1];
     double *hu[N + 1];
-
+    double *hpi[N + 1];
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
+        d_zeros(&hpi[ii], nxx[ii+1], 1);
     }
     d_zeros(&hx[N], nxx[N], 1);
 
@@ -396,6 +397,7 @@ int main() {
 
     qp_out.x = hx;
     qp_out.u = hu;
+    qp_out.pi = hpi;
 
     /************************************************
     * solver arguments

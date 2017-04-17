@@ -1,16 +1,18 @@
 # Find test data generation files
+# we need to find the source directory, which is not available at build time
 execute_process(COMMAND ${CMAKE_COMMAND} -E chdir .. pwd OUTPUT_VARIABLE PROJECT_SOURCE_DIR)
 string(REPLACE "\n" "" PROJECT_SOURCE_DIR ${PROJECT_SOURCE_DIR})
+
 set(FIND_COMMAND find test -type f -name "generate_*.m")
 set(FIND_GENERATION_FILES ${CMAKE_COMMAND} -E chdir .. ${FIND_COMMAND} )
-execute_process(COMMAND ${FIND_GENERATION_FILES} RESULT_VARIABLE RESULT OUTPUT_VARIABLE TEST_DATA_GENERATION_FILES)
+execute_process(COMMAND ${FIND_GENERATION_FILES} OUTPUT_VARIABLE TEST_DATA_GENERATION_FILES)
 string(REPLACE "\n" " " TEST_DATA_GENERATION_FILES ${TEST_DATA_GENERATION_FILES})
 separate_arguments(TEST_DATA_GENERATION_FILES)
 # Generate the test data
 foreach(GENERATION_FILE IN ITEMS ${TEST_DATA_GENERATION_FILES})
     set(GENERATION_FILE "${PROJECT_SOURCE_DIR}/${GENERATION_FILE}")
     if(NOT EXISTS test)
-        execute_process(COMMAND ${CMAKE_COMMAND} -E chdir . mkdir test)
+        execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory test)
     endif()
     get_filename_component(GENERATION_DIR ${GENERATION_FILE} PATH)
     set(GENERATE_TEST_DATA octave-cli --no-gui --path "${GENERATION_DIR}" ${GENERATION_FILE})
@@ -21,7 +23,7 @@ foreach(GENERATION_FILE IN ITEMS ${TEST_DATA_GENERATION_FILES})
 endforeach()
 
 # Postprocess Casadi generated files
-include(../cmake/test_sources.cmake)
+include(../cmake/unit_tests/test_sources.cmake)
 foreach(CASADI_UNIT_TEST IN ITEMS ${UNIT_TESTS_SRC_CASADI})
     execute_process(COMMAND sed -i.bak -e "s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;\\\n  real_t\ a0/g" ${CASADI_UNIT_TEST} RESULT_VARIABLE SED_OKAY)
     if(NOT ${SED_OKAY} EQUAL 0)

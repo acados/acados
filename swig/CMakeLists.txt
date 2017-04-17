@@ -17,8 +17,10 @@ find_package(PythonLibs 3 REQUIRED)
 include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(NumPy REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
+
+include_directories("${PROJECT_SOURCE_DIR}")
 make_directory(${PROJECT_BINARY_DIR}/python/acados)
-set_source_files_properties(acados.i  PROPERTIES  CPLUSPLUS ON)
+set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 swig_add_module(acados python acados.i)
@@ -32,3 +34,5 @@ install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${CMAKE_INSTALL_PREF
 install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(FILES test_swig.py DESTINATION ${CMAKE_INSTALL_PREFIX})
 install(FILES list_of_arrays.py DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+add_test(NAME test_swig COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_INSTALL_PREFIX} python3 test_swig.py)
