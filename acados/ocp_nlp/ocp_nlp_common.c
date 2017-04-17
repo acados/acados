@@ -35,7 +35,7 @@ static int_t number_of_primal_vars(const ocp_nlp_in *in) {
 
 
 void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_) {
-    ocp_nlp_mem *mem = (ocp_nlp_mem *) mem_;
+    ocp_nlp_memory *mem = (ocp_nlp_memory *) mem_;
     mem->num_vars = number_of_primal_vars(in);
     mem->x = (real_t **) calloc(in->N+1, sizeof(*mem->x));
     mem->u = (real_t **) calloc(in->N, sizeof(*mem->u));
@@ -49,7 +49,7 @@ void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_) {
 }
 
 void ocp_nlp_free_memory(int_t N, void *mem_) {
-    ocp_nlp_mem *mem = (ocp_nlp_mem *) mem_;
+    ocp_nlp_memory *mem = (ocp_nlp_memory *) mem_;
 
     for (int_t i = 0; i < N; i++) {
         free(mem->x[i]);
