@@ -22,7 +22,7 @@
 #define SWIG_FILE_WITH_INIT
 
 #include <dlfcn.h>
-#include <xmmintrin.h>
+// #include <xmmintrin.h>  // for floating point exceptions
 
 #include <cstdlib>
 #include <string>
@@ -51,6 +51,10 @@
 %init %{
 import_array();
 %}
+
+%ignore ACADOS_SUCCESS;
+%ignore ACADOS_MAXITER;
+%ignore ACADOS_MINSTEP;
 
 %include "acados/utils/types.h"
 
@@ -190,22 +194,32 @@ int_t get_numpy_type() {
     return NPY_NOTYPE;
 }
 
-template<typename T>
-static PyObject *convert_to_sequence_of_2dim_arrays(T **c_array,
-    const int_t length, const int_t *dimensions1, const int_t *dimensions2) {
-
+PyObject *new_list_of_arrays() {
     PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
     PyObject *pDict = PyModule_GetDict(pModule);
     PyObject *pClass = PyDict_GetItemString(pDict, "list_of_arrays");
     PyObject *sequence = NULL;
-    if (PyCallable_Check(pClass)) {
+    if (PyCallable_Check(pClass))
         sequence = PyObject_CallObject(pClass, NULL);
-    }
+    else
+        SWIG_Error(SWIG_RuntimeError, "Something went wrong during construction of object");
+    return sequence;
+}
+
+template<typename T>
+static PyObject *convert_to_sequence_of_2dim_arrays(T **c_array,
+    const int_t length, const int_t *dimensions1, const int_t *dimensions2) {
+
+    PyObject *sequence = new_list_of_arrays();
     for (int_t i = 0; i < length; i++) {
         npy_intp dims[2] = {dimensions1[i], dimensions2[i]};
         PyObject *py_array = PyArray_SimpleNewFromDataF(2, dims, get_numpy_type<T>(), \
             (void*) c_array[i]);
-        PyList_Append(sequence, py_array);
+        PyObject *return_array = PyArray_NewCopy((PyArrayObject *) py_array, NPY_FORTRANORDER);
+        if (return_array != NULL)
+            PyList_Append(sequence, return_array);
+        else
+            SWIG_Error(SWIG_RuntimeError, "Something went wrong while copying array");
     }
     return sequence;
 }
@@ -214,18 +228,16 @@ template<typename T>
 static PyObject *convert_to_sequence_of_1dim_arrays(T **c_array,
     const int_t length, const int_t *dimensions) {
 
-    PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
-    PyObject *pDict = PyModule_GetDict(pModule);
-    PyObject *pClass = PyDict_GetItemString(pDict, "list_of_arrays");
-    PyObject *sequence = NULL;
-    if (PyCallable_Check(pClass)) {
-        sequence = PyObject_CallObject(pClass, NULL);
-    }
+    PyObject *sequence = new_list_of_arrays();
     for (int_t i = 0; i < length; i++) {
         npy_intp dims[1] = {dimensions[i]};
         PyObject *py_array = PyArray_SimpleNewFromDataF(1, dims, get_numpy_type<T>(), \
             (void*) c_array[i]);
-        PyList_Append(sequence, py_array);
+        PyObject *return_array = PyArray_NewCopy((PyArrayObject *) py_array, NPY_FORTRANORDER);
+        if (return_array != NULL)
+            PyList_Append(sequence, return_array);
+        else
+            SWIG_Error(SWIG_RuntimeError, "Something went wrong while copying array");
     }
     return sequence;
 }
@@ -270,6 +282,10 @@ static void convert_to_2dim_c_array(PyObject * const input, T ** const array,
     if (is_valid_2dim_array(input)) {
         int_t dim1 = dimensions1[0];
         int_t dim2 = dimensions2[0];
+        for (int_t i = 1; i < length_of_array; i++) {
+            if (dimensions1[i] != dim1 || dimensions2[i] != dim2)
+                SWIG_Error(SWIG_ValueError, "Not all dimensions are equal");
+        }
         PyArrayObject *input_array = object_to_2dim_array<T>(input, dim1, dim2);
         for (int_t i = 0; i < length_of_array; i++) {
             memcpy((void *) array[i], (T *) array_data(input_array), dim1*dim2*sizeof(T));
@@ -294,6 +310,11 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
     const int_t length_of_array, const int_t *dimensions) {
 
     if (is_valid_1dim_array(input)) {
+        int_t dim = dimensions[0];
+        for (int_t i = 1; i < length_of_array; i++) {
+            if (dimensions[i] != dim)
+                SWIG_Error(SWIG_ValueError, "Not all dimensions are equal");
+        }
         PyArrayObject *input_array = object_to_1dim_array<T>(input, dimensions[0]);
         for (int_t i = 0; i < length_of_array; i++) {
             memcpy((void *) array[i], (T *) array_data(input_array), dimensions[0]*sizeof(T));
@@ -520,6 +541,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nc);
 }
 
+%ignore ocp_qp_out;
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
@@ -616,13 +638,47 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 }
 
-%clear int_t N;
+%typemap(in) real_t ** ls_cost_matrix {
+    $1 = ((ocp_nlp_ls_cost *) arg1->cost)->W;
+    int_t W_dimensions[arg1->N+1];
+    for (int_t i = 0; i < arg1->N+1; i++) {
+        W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
+    }
+    convert_to_2dim_c_array($input, $1, arg1->N+1, W_dimensions, W_dimensions);
+}
 
+%typemap(out) real_t ** ls_cost_matrix {
+    int_t W_dimensions[arg1->N+1];
+    for (int_t i = 0; i < arg1->N+1; i++) {
+        W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
+    }
+    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N+1, W_dimensions, W_dimensions);
+}
+
+%ignore ocp_nlp_function;
+%ignore ocp_nlp_ls_cost;
+%ignore ocp_nlp_stage_cost;
+%ignore ocp_nlp_args;
+%ignore ocp_nlp_memory;
+%ignore ocp_nlp_work;
+%ignore ocp_nlp_out;
+%ignore ocp_nlp_calculate_workspace_size;
+%ignore ocp_nlp_cast_workspace;
 %ignore ocp_nlp_create_memory;
-
 %include "acados/ocp_nlp/ocp_nlp_common.h"
 
+%{
+void ocp_nlp_in_ls_cost_matrix_set(ocp_nlp_in *nlp, real_t **matrix) {
+    ((ocp_nlp_ls_cost *) nlp->cost)->W = matrix;
+}
+
+real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
+    return ((ocp_nlp_ls_cost *) nlp->cost)->W;
+}
+%}
+
 %extend ocp_nlp_in {
+    real_t **ls_cost_matrix;
     ocp_nlp_in(PyObject *dictionary) {
         ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
         if (!is_valid_ocp_dictionary(dictionary)) {
@@ -701,12 +757,6 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             int_t N = nlp_in->N;
             ((ocp_nlp_gn_sqp_args *) args)->common->maxIter = 1;
             nlp_in->freezeSens = false;
-            for (int_t i = 0; i <= N; i++) {
-                int_t nx = nlp_in->nx[i];
-                int_t nu = nlp_in->nu[i];
-                for (int_t j = 0; j < nx+nu; j++)
-                    ((ocp_nlp_ls_cost *) nlp_in->cost)->W[i][j*(nx+nu+1)] = 1.0;
-            }
             for (int_t i = 0; i < N; i++) {
                 nlp_in->sim[i].in->nx = nlp_in->nx[i];
                 nlp_in->sim[i].in->nu = nlp_in->nu[i];
@@ -737,14 +787,26 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         return solver;
     }
 
-    int_t solve() {
-        _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
-        // ((ocp_nlp_gn_sqp_memory *) $self->mem)->common->x[0][0] = 1.0;
+    PyObject *solve() {
+        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
             $self->mem, $self->work);
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
         }
-        return return_code;
+        return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
+            $self->nlp_in->nx);
+    }
+
+    PyObject *solve(PyObject *x0) {
+        convert_to_1dim_c_array(x0, $self->nlp_in->lb, 1, $self->nlp_in->nx);
+        convert_to_1dim_c_array(x0, $self->nlp_in->ub, 1, $self->nlp_in->nx);
+        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
+            $self->mem, $self->work);
+        if (return_code != 0) {
+            SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
+        }
+        return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
+            $self->nlp_in->nx);
     }
 }
