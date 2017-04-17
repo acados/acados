@@ -1,12 +1,11 @@
 #include "test/sim/pendulum/casadi/casadi_pendulum.h"
 
-extern int vde_forw_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int vde_adj_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int vde_hess_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int jac_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 // The auto-generated VDE functions from CasADi:
-void VDE_forw_pendulum(const real_t* in, real_t* out) {
+void VDE_forw_pendulum(const real_t* in, real_t* out, int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     int_t NX = 4;
     int_t NU = 1;
     const real_t* x = in;
@@ -33,8 +32,7 @@ void VDE_forw_pendulum(const real_t* in, real_t* out) {
     casadi_res[0] = x_out;
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
-
-    vde_forw_pendulum(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+    vde(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
 
