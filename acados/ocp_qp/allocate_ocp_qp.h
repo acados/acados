@@ -17,20 +17,26 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_RK_COMMON_H_
-#define ACADOS_SIM_SIM_RK_COMMON_H_
+#ifndef ACADOS_OCP_QP_ALLOCATE_OCP_QP_H_
+#define ACADOS_OCP_QP_ALLOCATE_OCP_QP_H_
 
-#include "acados/sim/sim_common.h"
-#include "acados/sim/sim_collocation.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    int_t num_stages;
-    real_t *A_mat;
-    real_t *c_vec;
-    real_t *b_vec;
+void allocate_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+    const int_t *nc, ocp_qp_in *const qp);
 
-    Newton_scheme scheme;
-} sim_RK_opts;
+void free_ocp_qp_in(ocp_qp_in *const qp);
 
-#endif  // ACADOS_SIM_SIM_RK_COMMON_H_
+void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out);
+void free_ocp_qp_out(ocp_qp_out *out);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
+#endif  // ACADOS_OCP_QP_ALLOCATE_OCP_QP_H_

@@ -29,7 +29,7 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, std::string folder) {
+void readInputDimensionsFromFile(int_t *N, int_t *nx, int_t *nu, const std::string &folder) {
     *N = (int_t) readMatrix(folder + "/N.dat")(0, 0);
     assert(*N > 0);
     *nx = (int_t) readMatrix(folder + "/nx.dat")(0, 0);
@@ -161,7 +161,7 @@ void allocateCondensingData(const ocp_qp_in * const qp_in, condensing_in *in,
 
 void readUnconstrainedInputDataFromFile(int_t N, int_t nx, int_t nu, MatrixXd *A, MatrixXd *B,
     MatrixXd *b, VectorXd *x0, MatrixXd *Q, MatrixXd *S, MatrixXd *R, MatrixXd *q, MatrixXd *r,
-    std::string folder) {
+    const std::string &folder) {
 
     *A = readMatrixFromFile(folder + "/A.dat", nx, N*nx);
     *B = readMatrixFromFile(folder + "/B.dat", nx, N*nu);
@@ -174,7 +174,7 @@ void readUnconstrainedInputDataFromFile(int_t N, int_t nx, int_t nu, MatrixXd *A
     *r = readMatrixFromFile(folder + "/rv.dat", nu, N);
 }
 
-void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0, std::string scenario) {
+void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0, const std::string &scenario) {
     int_t N, nx, nu;
     MatrixXd A, B, b, Q, S, R, q, r;
 
@@ -227,14 +227,14 @@ void fillWithUnconstrainedData(ocp_qp_in *qp, VectorXd *x0, std::string scenario
 }
 
 void readBoundsDataFromFile(int_t N, int_t nx, int_t nu, MatrixXd *lbwx,
-    MatrixXd *ubwx, MatrixXd *lbwu, MatrixXd *ubwu, std::string folder) {
+    MatrixXd *ubwx, MatrixXd *lbwu, MatrixXd *ubwu, const std::string &folder) {
     *lbwx = readMatrixFromFile(folder + "/lower_bound_x.dat", nx, N+1);
     *ubwx = readMatrixFromFile(folder + "/upper_bound_x.dat", nx, N+1);
     *lbwu = readMatrixFromFile(folder + "/lower_bound_u.dat", nu, N);
     *ubwu = readMatrixFromFile(folder + "/upper_bound_u.dat", nu, N);
 }
 
-void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu, std::string scenario) {
+void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu, const std::string &scenario) {
     MatrixXd lbwx, ubwx, lbwu, ubwu;
     int_t nb_vector[N+1];
     int_t nb = (int_t) readMatrix(scenario + "/nb.dat")(0, 0);
@@ -278,7 +278,7 @@ void fillWithBoundsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu, std::string 
 }
 
 void readGeneralConstraintsDataFromFile(int_t N, int_t nx, int_t nu, int_t nc,
-    MatrixXd *Cx, MatrixXd *Cu, MatrixXd *lbc, MatrixXd *ubc, std::string folder) {
+    MatrixXd *Cx, MatrixXd *Cu, MatrixXd *lbc, MatrixXd *ubc, const std::string &folder) {
 
     *Cx = readMatrixFromFile(folder + "/general_constraint_x.dat", nc, (N+1)*nx);
     *Cu = readMatrixFromFile(folder + "/general_constraint_u.dat", nc, N*nu);
@@ -287,7 +287,7 @@ void readGeneralConstraintsDataFromFile(int_t N, int_t nx, int_t nu, int_t nc,
 }
 
 void fillWithGeneralConstraintsData(ocp_qp_in *qp, int_t N, int_t nx, int_t nu,
-    std::string scenario) {
+    const std::string &scenario) {
 
     MatrixXd Cx, Cu;
     MatrixXd lbc, ubc;
