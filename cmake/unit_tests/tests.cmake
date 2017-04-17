@@ -25,7 +25,6 @@ add_test(NAME unit_test_run COMMAND "${CMAKE_COMMAND}" -E chdir test ./unit_test
 set_tests_properties(unit_test_run PROPERTIES DEPENDS generate_test_data)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
     target_link_libraries(unit_tests ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
 endif ()
 
