@@ -596,9 +596,9 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
         &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
         &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp, &return_value);
 
-    mem->orderQ = (int_t*)malloc(sizeof(*mem->orderQ)*mem->nnzQ);
-    mem->orderA = (int_t*)malloc(sizeof(*mem->orderA)*mem->nnzA);
-    mem->orderC = (int_t*)malloc(sizeof(*mem->orderC)*mem->nnzC);
+    mem->orderQ = (int_t*) calloc(mem->nnzQ, sizeof(*mem->orderQ));
+    mem->orderA = (int_t*) calloc(mem->nnzA, sizeof(*mem->orderA));
+    mem->orderC = (int_t*) calloc(mem->nnzC, sizeof(*mem->orderC));
 
     return return_value;
 }

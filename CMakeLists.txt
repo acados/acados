@@ -33,14 +33,8 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
 
-set(VIRTUAL_ENV $ENV{VIRTUAL_ENV})
-if(VIRTUAL_ENV)
-    set(CMAKE_INSTALL_PREFIX ${VIRTUAL_ENV})
-    message(STATUS "Detected a python virtualenv in use, setting install prefix to ${VIRTUAL_ENV}")
-else()
-    set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR}/swig )
-    message(STATUS "Setting install prefix to ${CMAKE_INSTALL_PREFIX}")
-endif()
+set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/local")
+message(STATUS "Files will be installed in ${CMAKE_INSTALL_PREFIX}")
 
 # Process external libraries
 include(external/blasfeo)
@@ -49,6 +43,11 @@ include(external/openblas)
 include(external/qpdunes)
 include(external/qpoases)
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    find_library(FLIB gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
+    if (NOT FLIB)
+        message(FATAL_ERROR "Fortran libraries not found")
+    endif()
+    message(STATUS "Found Fortran libraries: ${FLIB}")
     include(external/ma27)
     include(external/ooqp)
 endif()
@@ -74,7 +73,7 @@ include(examples)
 
 add_subdirectory(swig)
 
-# Automatic generation of unit testing data
+# Generate test data and build unit tests
 if(CMAKE_BUILD_TYPE MATCHES Test)
     include(unit_tests/tests)
 endif()

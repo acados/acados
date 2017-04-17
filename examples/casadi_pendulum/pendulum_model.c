@@ -2,11 +2,12 @@
 #include "examples/casadi_pendulum/pendulum_model.h"
 
 extern int jacFun(const real_t** arg, real_t** res);
-extern int vdeFun(const real_t** arg, real_t** res);
 
 // The auto-generated VDE functions from CasADi:
 
-void VDE_fun_pendulum(const real_t* in, real_t* out) {
+void VDE_fun_pendulum(const real_t* in, real_t* out, 
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+
     int_t NX = 4;
     int_t NU = 1;
     const real_t* x = in;
@@ -30,7 +31,11 @@ void VDE_fun_pendulum(const real_t* in, real_t* out) {
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
 
-    vdeFun(casadi_arg, casadi_res);
+    int_t *iw = 0;
+    real_t *w = 0;
+    int_t mem = 0;
+
+    vde(casadi_arg, casadi_res, iw, w, mem);
 }
 
 // The auto-generated Jacobian functions from CasADi:
