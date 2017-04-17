@@ -6,7 +6,7 @@ sudo add-apt-repository -y ppa:octave/stable
 sudo apt-get update -yq
 sudo apt-get install octave liboctave-dev valgrind
 
-pip install numpy
+pip install numpy scipy matplotlib
 
 pushd external
 wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
