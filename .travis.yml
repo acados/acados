@@ -2,7 +2,7 @@ dist: trusty
 sudo: required
 language: python
 python:
-  - 3.5
+  - 3.6
 
 env:
   - CXX="g++-6" CC="gcc-6"
@@ -18,6 +18,7 @@ addons:
     packages:
       - libgsl0-dev
       - liblapack-dev
+      - libopenblas-base
       - libopenblas-dev
       - cppcheck
       - g++-6
@@ -36,15 +37,23 @@ before_install:
       openssl aes-256-cbc -K $encrypted_953dc9b02fae_key -iv $encrypted_953dc9b02fae_iv
       -in external/encrypted_script.enc -out external/encrypted_script -d;
     fi'
+  - sudo add-apt-repository -y ppa:octave/stable
+  - sudo apt-get update -yq
 
 install:
+  - pip install numpy
+  - sudo apt-get install octave liboctave-dev valgrind
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
       source encrypted_script;
     fi'
+  - travis_retry wget http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
+  - mkdir eigen
+  - tar -xvf 3.2.10.tar.gz --strip-components=1 -C eigen
+  - travis_retry wget http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz
+  - mkdir casadi-octave-v3.1.1
+  - tar -xvf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1
   - popd
-  - travis_retry source install_packages.sh
-  - export MPLBACKEND=Agg # For matplotlib
 
 script:
   - cmake -E make_directory build

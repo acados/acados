@@ -25,7 +25,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-typedef struct {
+typedef struct sim_in_ {
     int_t nx;   // NX
     int_t nu;   // NU
     real_t *x;  // x[NX]
@@ -39,9 +39,7 @@ typedef struct {
     bool sens_hess;
     int_t nsens_forw;
 
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int);
-    void (*VDE_forw)(const real_t*, real_t*,
-        int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+    void (*VDE_forw)(const real_t*, real_t*);
     void (*VDE_adj)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
 
@@ -53,13 +51,13 @@ typedef struct {
     void *opts;
 } sim_in;
 
-typedef struct {
+typedef struct sim_info_ {
     real_t CPUtime;
     real_t LAtime;
     real_t ADtime;
 } sim_info;
 
-typedef struct {
+typedef struct sim_out_ {
     real_t *xn;         // xn[NX]
     real_t *S_forw;     // S_forw[NX*(NX+NU)]
     real_t *S_adj;      //

@@ -146,19 +146,19 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
     // condensing workspace
     work.nconvars = nconvars;
     work.nconstraints = nconstraints;
-    work.G = calloc(N, sizeof(*work.G));
-    work.g = calloc(N, sizeof(*work.g));
-    work.D = calloc(N+1, sizeof(*work.D));
+    work.G = malloc(sizeof(*work.G) * N);
+    work.g = malloc(sizeof(*work.g) * N);
+    work.D = malloc(sizeof(*work.D) * (N+1));
     for (int_t i = 0; i < N; i++) {
-        work.G[i] = calloc(i+1, sizeof(*(work.G[i])));
-        work.D[i] = calloc(i+1, sizeof(*(work.D[i])));
+        work.G[i] = malloc(sizeof(*(work.G[i])) * (i+1));
+        work.D[i] = malloc(sizeof(*(work.D[i])) * (i+1));
         d_zeros(&work.g[i], qp_in->nx[i], 1);
         for (int_t j = 0; j <= i; j++) {
             d_zeros(&work.G[i][j], qp_in->nx[i], qp_in->nu[j]);
             d_zeros(&work.D[i][j], nc[i], qp_in->nu[j]);
         }
     }
-    work.D[N] = calloc(N, sizeof(*(work.D[N])));
+    work.D[N] = malloc(sizeof(*(work.D[N])) * N);
     for (int_t i = 0; i < N; i++) {
         d_zeros(&work.D[N][i], nc[N], qp_in->nu[i]);
     }

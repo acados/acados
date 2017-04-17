@@ -40,7 +40,6 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         sim_in->sens_hess = hessian;
         sim_in->nsens_forw = NX+NU;
 
-        sim_in->vde = &vde_forw_pendulum;
         sim_in->VDE_forw = &VDE_forw_pendulum;
         if ( hessian ) {
             sim_in->VDE_adj = &VDE_hess_pendulum;

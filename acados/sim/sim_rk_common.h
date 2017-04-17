@@ -24,7 +24,7 @@
 #include "acados/sim/sim_collocation.h"
 #include "acados/utils/types.h"
 
-typedef struct {
+typedef struct sim_RK_opts_ {
     int_t num_stages;
     real_t *A_mat;
     real_t *c_vec;

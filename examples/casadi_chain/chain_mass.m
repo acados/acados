@@ -1,8 +1,7 @@
 clc;
-%clear all;
+clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.1.1')
 import casadi.*
 
 % Get collocation points
@@ -68,7 +67,7 @@ for i = 1:Nm-2
 end
 dae.ode = [dae.ode; casadi_vec(x_struct,'p',states(end).v,'v',u)];
 
-tau_root = collocation_points(d,'legendre');
+tau_root = collocationPoints(d,'legendre');
 
 % collfun = simpleColl_Kform_GL6(dae,tau_root,T/(Ns*N));
 collfun = simpleColl_Kform_GL8(dae,tau_root,T/(Ns*N));
@@ -101,17 +100,17 @@ opts = struct('mex', false);
 vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);
 jacFun.generate(['jac_chain_nm' num2str(Nm)], opts);
 
-out = odeFun(x0_guess,u_guess);
-while norm(full(out)) > 1e-10
-    [out, out2] = odeFun(x0_guess,u_guess);
-    val = full(out);
-    jac = full(out2);
+out = odeFun({x0_guess,u_guess});
+while norm(full(out{1})) > 1e-10
+    out = odeFun({x0_guess,u_guess});
+    val = full(out{1});
+    jac = full(out{2});
     delta = -jac\val;
     x0_guess = x0_guess + delta(1:nx);
 end
 % x0_guess
 xN_term = x0_guess;
-err_rest = norm(full(out))
+err_rest = norm(full(out{1}))
 
 x0_mat2 = [zeros(6,1) reshape(x0_guess,6,Nm-1)];
 
@@ -122,16 +121,16 @@ x0_init = [zeros(1,Nm-1);Ypoints(2:end);Zpoints(2:end);zeros(3,Nm-1)];
 x0_init = x0_init(:);
 u_init = zeros(3,1);
 
-out = odeFun(x0_init,u_init);
-while norm(full(out)) > 1e-10
-    [out, out2] = odeFun(x0_init,u_init);
-    val = full(out);
-    jac = full(out2);
+out = odeFun({x0_init,u_init});
+while norm(full(out{1})) > 1e-10
+    out = odeFun({x0_init,u_init});
+    val = full(out{1});
+    jac = full(out{2});
     delta = -jac\val;
     x0_init = x0_init + delta(1:nx);
 end
 % x0_init
-err_rest = norm(full(out))
+err_rest = norm(full(out{1}))
 
 fid = fopen(['x0_nm' num2str(Nm) '.txt'],'wt');  
 fprintf(fid,'%e\n',x0_init);  
@@ -146,20 +145,20 @@ x0_mat = [zeros(6,1) reshape(x0_init,6,Nm-1)];
 Fontsize = 20;
 set(0,'DefaultAxesFontSize',Fontsize)
 
-% figure(1); set(gcf, 'Color','white');
-% plot3(x0_mat2(1,:), x0_mat2(2,:), x0_mat2(3,:), '--ro', 'MarkerSize', 10); hold on;
-% plot3(x0_mat(1,:), x0_mat(2,:), x0_mat(3,:), '--bo', 'MarkerSize', 10);
-% p = patch([0, 1, 1, 0], [wall_pos, wall_pos, wall_pos, wall_pos], [-4, -4, 1, 1], 'g');
-% xlabel( 'x [m]');
-% ylabel( 'y [m]');
-% zlabel( 'z [m]');
-% xlim([0 1]);
-% ylim([-0.1 2]);
-% zlim([-4 1]);
-% title('Initial and reference point');
-% legend('reference', 'initial','wall')
-% view([145 25]);
-% grid on;
+figure(1); set(gcf, 'Color','white');
+plot3(x0_mat2(1,:), x0_mat2(2,:), x0_mat2(3,:), '--ro', 'MarkerSize', 10); hold on;
+plot3(x0_mat(1,:), x0_mat(2,:), x0_mat(3,:), '--bo', 'MarkerSize', 10);
+p = patch([0, 1, 1, 0], [wall_pos, wall_pos, wall_pos, wall_pos], [-4, -4, 1, 1], 'g');
+xlabel( 'x [m]');
+ylabel( 'y [m]');
+zlabel( 'z [m]');
+xlim([0 1]);
+ylim([-0.1 2]);
+zlim([-4 1]);
+title('Initial and reference point');
+legend('reference', 'initial','wall')
+view([145 25]);
+grid on;
 % set(gca, 'Box', 'on');
 % pause
 
@@ -234,7 +233,7 @@ for k=1:N
   % Obtain collocation expressions
   Xcur = Xs{k};
   for i = 1:Ns
-    coll_out = collfun(Xcur,XCs{k}(:,1+(i-1)*d:i*d),Us{k});
+    coll_out = collfun({Xcur,XCs{k}(:,1+(i-1)*d:i*d),Us{k}});
     Xcur = coll_out{1};
     g = {g{:} coll_out{2}};         % collocation constraints
   end
