@@ -15,10 +15,10 @@ extern "C" {
 
 #ifndef real_t
 #define real_t double
-#define to_double(x) (double) x
-#define to_int(x) (int) x
 #endif /* real_t */
 
+#define to_double(x) (double) x
+#define to_int(x) (int) x
 /* Pre-c99 compatibility */
 #if __STDC_VERSION__ < 199901L
 real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
@@ -34,17 +34,17 @@ real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
 real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
 #define sign(x) CASADI_PREFIX(sign)(x)
 
-static const int CASADI_PREFIX(s0)[] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s0)[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
 #define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[] = {6, 6, 0, 6, 12, 18, 24, 30, 36, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s1)[45] = {6, 6, 0, 6, 12, 18, 24, 30, 36, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
 #define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[] = {6, 3, 0, 6, 12, 18, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s2)[24] = {6, 3, 0, 6, 12, 18, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
 #define s2 CASADI_PREFIX(s2)
-static const int CASADI_PREFIX(s3)[] = {3, 1, 0, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s3)[7] = {3, 1, 0, 3, 0, 1, 2};
 #define s3 CASADI_PREFIX(s3)
-/* vdeFun */
-int vde_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w) {
-    mem = 0; mem += 0; w = 0; w += 0; iw = 0; iw += 0;
+/* vde_chain_nm2 */
+int vde_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+  mem = 0; mem += 0; w = 0; w += 0; iw = 0; iw += 0;
   real_t a0=arg[0] ? arg[0][3] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][4] : 0;
@@ -143,49 +143,52 @@ int vde_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* 
   return 0;
 }
 
-int vde_chain_nm2_init(int* n_in, int* n_out, int* n_int, int* n_real) {
-  if (n_in) *n_in = 4;
-  if (n_out) *n_out = 3;
-  if (n_int) *n_int = 0;
-  if (n_real) *n_real = 0;
-  return 0;
+void vde_chain_nm2_incref(void) {
 }
 
-int vde_chain_nm2_alloc(void** mem, const int* idata, const double* rdata) {
-  if (mem) *mem = 0;
-  (void)idata;
-  (void)rdata;
-  return 0;
+void vde_chain_nm2_decref(void) {
 }
 
-int vde_chain_nm2_free(void* mem) {
-  (void)mem;
-  return 0;
-}
+int vde_chain_nm2_n_in(void) { return 4;}
 
-int vde_chain_nm2_sparsity(int i, int *nrow, int *ncol, const int **colind, const int **row) {
-  const int* s;
+int vde_chain_nm2_n_out(void) { return 3;}
+
+const char* vde_chain_nm2_name_in(int i){
   switch (i) {
-    case 0:
-    case 4:
-      s = s0; break;
-    case 1:
-    case 5:
-      s = s1; break;
-    case 2:
-    case 6:
-      s = s2; break;
-    case 3:
-      s = s3; break;
-    default:
-      return 1;
+  case 0: return "i0";
+  case 1: return "i1";
+  case 2: return "i2";
+  case 3: return "i3";
+  default: return 0;
   }
+}
 
-  if (nrow) *nrow = s[0];
-  if (ncol) *ncol = s[1];
-  if (colind) *colind = s + 2;
-  if (row) *row = s + 3 + s[1];
-  return 0;
+const char* vde_chain_nm2_name_out(int i){
+  switch (i) {
+  case 0: return "o0";
+  case 1: return "o1";
+  case 2: return "o2";
+  default: return 0;
+  }
+}
+
+const int* vde_chain_nm2_sparsity_in(int i) {
+  switch (i) {
+  case 0: return s0;
+  case 1: return s1;
+  case 2: return s2;
+  case 3: return s3;
+  default: return 0;
+  }
+}
+
+const int* vde_chain_nm2_sparsity_out(int i) {
+  switch (i) {
+  case 0: return s0;
+  case 1: return s1;
+  case 2: return s2;
+  default: return 0;
+  }
 }
 
 int vde_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {

@@ -25,10 +25,10 @@
 #include "acados/utils/types.h"
 #include "test/test_utils/eigen.h"
 
-Eigen::MatrixXd readMatrix(const std::string filename);
+Eigen::MatrixXd readMatrix(const std::string &filename);
 
-Eigen::MatrixXd readMatrixFromFile(std::string filename, int_t rows, int_t cols);
+Eigen::MatrixXd readMatrixFromFile(const std::string &filename, int_t rows, int_t cols);
 
-Eigen::VectorXd readVectorFromFile(std::string filename, int_t length);
+Eigen::VectorXd readVectorFromFile(const std::string &filename, int_t length);
 
 #endif  // TEST_TEST_UTILS_READ_MATRIX_H_

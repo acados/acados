@@ -17,20 +17,21 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_RK_COMMON_H_
-#define ACADOS_SIM_SIM_RK_COMMON_H_
+#ifndef ACADOS_SIM_MODEL_WRAPPER_H_
+#define ACADOS_SIM_MODEL_WRAPPER_H_
 
-#include "acados/sim/sim_common.h"
-#include "acados/sim/sim_collocation.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/utils/types.h"
 
-typedef struct {
-    int_t num_stages;
-    real_t *A_mat;
-    real_t *c_vec;
-    real_t *b_vec;
+void jac_fun(const real_t* in, real_t* out);
+void vde_fun(const real_t* in, real_t* out,
+    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
 
-    Newton_scheme scheme;
-} sim_RK_opts;
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
-#endif  // ACADOS_SIM_SIM_RK_COMMON_H_
+#endif  // ACADOS_SIM_MODEL_WRAPPER_H_
