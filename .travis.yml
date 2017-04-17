@@ -52,10 +52,10 @@ script:
   - cmake --build build --clean-first
   - cmake --build build --target install
   - cmake --build build --target lint
-  - echo env
-  - export LD_DEBUG=symbols
+  - env
+  # - export LD_DEBUG=symbols
   - cd local
-  - python3 -c "from acados import *" | grep _gfortran_transfer_integer_write
+  - python3 -c "from acados import *"
   # - cmake -E chdir build ctest --output-on-failure
   # - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   # - cmake --build build --clean-first
