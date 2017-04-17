@@ -3,7 +3,7 @@ include(ExternalProject)
 ExternalProject_Add(
     ma27_project
 
-    CONFIGURE_COMMAND ./configure "CXXFLAGS=-O3 -fPIC" "CFLAGS=-O3 -fPIC"
+    CONFIGURE_COMMAND ./configure "CPPFLAGS=-O3 -fPIC" "CFLAGS=-O3 -fPIC"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/coinhsl"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make
