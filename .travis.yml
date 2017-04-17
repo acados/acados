@@ -43,7 +43,6 @@ install:
       source encrypted_script;
     fi'
   - popd
-  - cd ..
   - travis_retry source install_packages.sh
   - export MPLBACKEND=Agg # For matplotlib
 
