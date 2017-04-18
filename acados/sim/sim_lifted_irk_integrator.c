@@ -276,8 +276,9 @@ void destruct_subsystems(real_t *mat, real_t **mat2,
     }
 }
 
-void form_linear_system_matrix(int_t istep, const sim_in *in, void *args, sim_lifted_irk_memory *mem,
-        sim_lifted_irk_workspace *work, real_t *sys_mat, real_t **sys_mat2, real_t timing_ad) {
+void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
+        sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work,
+        real_t *sys_mat, real_t **sys_mat2, real_t timing_ad) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     real_t H_INT = in->step;

@@ -27,7 +27,7 @@
 #include "acados/utils/print.h"
 
 
-//static void sim_erk_cast_workspace(sim_erk_workspace *work,
+// static void sim_erk_cast_workspace(sim_erk_workspace *work,
 //    void *mem) {
 //
 //    char *ptr = (char *)work;
@@ -47,7 +47,7 @@
 //    ptr += (mem->dimz*mem->dimz)*sizeof(real_t);
 //    work->g = (real_t*)ptr;
 //    // ptr += (mem->dimz)*sizeof(real_t);
-//}
+// }
 
 int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_) {
     int_t nx = in->nx;
@@ -255,7 +255,7 @@ void sim_erk_create_arguments(void *args, const int_t num_stages) {
 }
 
 
-//void sim_erk_initialize(ocp_qp_in *sim_in, void *args_, void *mem_, void **work) {
+// void sim_erk_initialize(ocp_qp_in *sim_in, void *args_, void *mem_, void **work) {
 //    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
 //    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
 //
@@ -264,9 +264,9 @@ void sim_erk_create_arguments(void *args, const int_t num_stages) {
 //    ocp_qp_qpdunes_create_memory(qp_in, args, mem);
 //    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
 //    *work = (void *) malloc(work_space_size);
-//}
+// }
 //
-//void sim_erk_destroy(void *mem, void *work) {
+// void sim_erk_destroy(void *mem, void *work) {
 //    free(work);
 //    ocp_qp_qpdunes_free_memory(mem);
-//}
+// }

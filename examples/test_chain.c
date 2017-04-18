@@ -411,7 +411,8 @@ int main() {
                 for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
                 if (implicit > 0) {
-                    sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[jj], &irk_mem[i], &irk_work[i]);
+                    sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[jj],
+                            &irk_mem[i], &irk_work[i]);
                 } else {
                     sim_erk(&sim_in[i], &sim_out[i], &rk_opts[jj], 0, &erk_work[i]);
                 }
