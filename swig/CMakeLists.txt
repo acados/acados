@@ -27,7 +27,7 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
 swig_add_module(acados python acados.i)
 swig_link_libraries(acados ${PYTHON_LIBRARIES} acados qpoases blasfeo qpdunes)
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    swig_link_libraries(acados ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FLIB} m)
+    swig_link_libraries(acados ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${Fortran_LIBRARY} m)
 endif()
 
 install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
