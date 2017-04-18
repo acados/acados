@@ -26,10 +26,33 @@
 
 #include "acados/utils/print.h"
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
+
+static void sim_erk_cast_workspace(sim_erk_workspace *work,
+    void *mem) {
+
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_qp_qpdunes_workspace);
+    work->ABt = (real_t*)ptr;
+    ptr += (mem->dimA + mem->dimB)*sizeof(real_t);
+    work->Ct = (real_t*)ptr;
+    ptr += (mem->dimC)*sizeof(real_t);
+    work->scrap = (real_t*)ptr;
+    ptr += (mem->maxDim)*sizeof(real_t);
+    work->zLow = (real_t*)ptr;
+    ptr += (mem->dimz)*sizeof(real_t);
+    work->zUpp = (real_t*)ptr;
+    ptr += (mem->dimz)*sizeof(real_t);
+    work->H = (real_t*)ptr;
+    ptr += (mem->dimz*mem->dimz)*sizeof(real_t);
+    work->g = (real_t*)ptr;
+    // ptr += (mem->dimz)*sizeof(real_t);
+}
+
+int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t i, s, j, istep;
     real_t H_INT = in->step;
@@ -202,7 +225,8 @@ void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
 }
 
 
-void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
+void sim_erk_create_arguments(void *args, const int_t num_stages) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->scheme.type = exact;
     if ( num_stages == 1 ) {
         opts->num_stages = 1;       // explicit Euler
@@ -228,4 +252,21 @@ void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
     } else {
         // throw error somehow?
     }
+}
+
+
+void sim_erk_initialize(ocp_qp_in *sim_in, void *args_, void *mem_, void **work) {
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
+    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
+
+    // TODO(dimitris): opts should be an input to initialize
+    ocp_qp_qpdunes_create_arguments(args, QPDUNES_NONLINEAR_MPC);
+    ocp_qp_qpdunes_create_memory(qp_in, args, mem);
+    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+void sim_erk_destroy(void *mem, void *work) {
+    free(work);
+    ocp_qp_qpdunes_free_memory(mem);
 }

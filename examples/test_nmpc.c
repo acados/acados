@@ -103,7 +103,7 @@ int main() {
     sim_out.info = &erk_info;
 
     sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
+    sim_erk_create_arguments(4, &rk_opts);
     sim_in.opts = &rk_opts;
     sim_erk_workspace erk_work;
     sim_erk_create_workspace(&sim_in, &erk_work);

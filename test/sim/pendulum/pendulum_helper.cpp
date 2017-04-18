@@ -63,6 +63,6 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         }
         sim_out->info = info;
 
-        sim_erk_create_opts(4, rk_opts);
+        sim_erk_create_arguments(4, rk_opts);
         sim_erk_create_workspace(sim_in, erk_work);
 }

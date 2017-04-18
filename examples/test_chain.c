@@ -251,7 +251,7 @@ int main() {
             sim_lifted_irk_create_workspace(&sim_in[jj], &irk_work[jj]);
             sim_lifted_irk_create_memory(&sim_in[jj], &irk_mem[jj]);
         } else {
-            sim_erk_create_opts(4, &rk_opts[jj]);
+            sim_erk_create_arguments(4, &rk_opts[jj]);
             sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
         }
     }
