@@ -156,14 +156,17 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
             switch (NMF) {
             case 1:
+                sim_in[jj].vde = &vde_chain_nm2;
                 sim_in[jj].VDE_forw = &VDE_fun_nm2;
                 sim_in[jj].jac_fun = &jac_fun_nm2;
                 break;
             case 2:
+                sim_in[jj].vde = &vde_chain_nm3;
                 sim_in[jj].VDE_forw = &VDE_fun_nm3;
                 sim_in[jj].jac_fun = &jac_fun_nm3;
                 break;
             case 3:
+                sim_in[jj].vde = &vde_chain_nm4;
                 sim_in[jj].VDE_forw = &VDE_fun_nm4;
                 sim_in[jj].jac_fun = &jac_fun_nm4;
                 break;
@@ -326,7 +329,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             "qpdunes");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
 
         ocp_nlp_gn_sqp_memory nlp_mem;
-        ocp_nlp_mem nlp_mem_common;
+        ocp_nlp_memory nlp_mem_common;
         nlp_mem.common = &nlp_mem_common;
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
 

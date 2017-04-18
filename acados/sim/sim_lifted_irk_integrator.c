@@ -650,7 +650,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
             }
             rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
             acado_tic(&timer_ad);
-            in->VDE_forw(rhs_in, VDE_tmp[s1]);  // k evaluation
+            in->VDE_forw(rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
             timing_ad += acado_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:
@@ -882,34 +882,34 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
         if (num_stages > 1) dim_sys = 2*nx;
     }
 
-    work->rhs_in = malloc(sizeof(*work->rhs_in) * (nx*(1+NF)+nu+1));
-    work->out_tmp = malloc(sizeof(*work->out_tmp) * (nx*(1+NF)));
+    work->rhs_in = calloc(nx*(1+NF)+nu+1, sizeof(*work->rhs_in));
+    work->out_tmp = calloc(nx*(1+NF), sizeof(*work->out_tmp));
     if (opts->scheme.type == exact) {
-        work->ipiv = malloc(sizeof(*work->ipiv) * (dim_sys));
+        work->ipiv = calloc(dim_sys, sizeof(*work->ipiv));
         for (int_t i = 0; i < dim_sys; i++) work->ipiv[i] = i;
-        work->sys_mat = malloc(sizeof(*work->sys_mat) * (dim_sys*dim_sys));
+        work->sys_mat = calloc(dim_sys*dim_sys, sizeof(*work->sys_mat));
     }
-    work->sys_sol = malloc(sizeof(*work->sys_sol) * (num_stages*nx)*(1+NF));
-    work->VDE_tmp = malloc(sizeof(*work->VDE_tmp) * num_stages);
+    work->sys_sol = calloc((num_stages*nx)*(1+NF), sizeof(*work->sys_sol));
+    work->VDE_tmp = calloc(num_stages, sizeof(*work->VDE_tmp));
     for (int_t i = 0; i < num_stages; i++) {
-        work->VDE_tmp[i] = malloc(sizeof(*work->VDE_tmp[i]) * (nx*(1+NF)));
+        work->VDE_tmp[i] = calloc(nx*(1+NF), sizeof(*work->VDE_tmp[i]));
     }
-    work->jac_tmp = malloc(sizeof(*work->jac_tmp) * nx*(nx+1));
+    work->jac_tmp = calloc(nx*(nx+1), sizeof(*work->jac_tmp));
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
-        work->sys_sol_trans = malloc(sizeof(*work->sys_sol_trans) * (num_stages*nx)*(1+NF));
-        work->trans = malloc(sizeof(*work->trans) * (num_stages*num_stages));
+        work->sys_sol_trans = calloc((num_stages*nx)*(1+NF), sizeof(*work->sys_sol_trans));
+        work->trans = calloc(num_stages*num_stages, sizeof(*work->trans));
     }
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
-        work->out_adj_tmp = malloc(sizeof(*work->out_adj_tmp) * (nx));
+        work->out_adj_tmp = calloc(nx, sizeof(*work->out_adj_tmp));
     }
 
 #if !TRIPLE_LOOP
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
             || opts->scheme.type == simplified_inis2) {
-        work->str_mat2 = malloc(sizeof(*work->str_mat2) * num_sys);
-        work->str_sol2 = malloc(sizeof(*work->str_sol2) * num_sys);
+        work->str_mat2 = calloc(num_sys, sizeof(*work->str_mat2));
+        work->str_sol2 = calloc(num_sys, sizeof(*work->str_sol2));
     }
 #if !defined(LA_HIGH_PERFORMANCE)
     real_t *sys_mat, *sys_sol;
@@ -1001,23 +1001,23 @@ void sim_lifted_irk_create_memory(const sim_in *in,
 //    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
 //    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
 
-    mem->K_traj = malloc(sizeof(*mem->K_traj) * (nSteps*num_stages*nx));
-    mem->DK_traj = malloc(sizeof(*mem->DK_traj) * (nSteps*num_stages*nx*NF));
-    mem->mu_traj = malloc(sizeof(*mem->mu_traj) * (nSteps*num_stages*nx));
+    mem->K_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->K_traj));
+    mem->DK_traj = calloc(nSteps*num_stages*nx*NF, sizeof(*mem->DK_traj));
+    mem->mu_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->mu_traj));
     mem->x = calloc(nx, sizeof(*mem->x));
     mem->u = calloc(nu, sizeof(*mem->u));
     if (opts->scheme.type == simplified_inis) {
-        mem->delta_DK_traj = malloc(sizeof(*mem->delta_DK_traj) * (nSteps*num_stages*nx*NF));
+        mem->delta_DK_traj = calloc(nSteps*num_stages*nx*NF, sizeof(*mem->delta_DK_traj));
         for ( i = 0; i < nSteps*num_stages*nx*NF; i++ ) mem->delta_DK_traj[i] = 0.0;
     }
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
-        mem->adj_traj = malloc(sizeof(*mem->adj_traj) * (nSteps*num_stages*nx));
+        mem->adj_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->adj_traj));
         for ( i = 0; i < nSteps*num_stages*nx; i++ ) mem->adj_traj[i] = 0.0;
 
-        mem->jac_traj = malloc(sizeof(*mem->jac_traj) * nSteps*num_stages);
+        mem->jac_traj = calloc(nSteps*num_stages, sizeof(*mem->jac_traj));
         for (int_t i = 0; i < nSteps*num_stages; i++) {
-            mem->jac_traj[i] = malloc(sizeof(*mem->jac_traj[i]) * (nx*nx));
+            mem->jac_traj[i] = calloc(nx*nx, sizeof(*mem->jac_traj[i]));
         }
     }
 
@@ -1026,21 +1026,21 @@ void sim_lifted_irk_create_memory(const sim_in *in,
     for ( i = 0; i < nSteps*num_stages*nx; i++ ) mem->mu_traj[i] = 0.0;
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
-        mem->sys_mat2 = malloc(sizeof(*mem->sys_mat2) * num_sys);
-        mem->ipiv2 = malloc(sizeof(*mem->ipiv2) * num_sys);
-        mem->sys_sol2 = malloc(sizeof(*mem->sys_sol2) * num_sys);
+        mem->sys_mat2 = calloc(num_sys, sizeof(*mem->sys_mat2));
+        mem->ipiv2 = calloc(num_sys, sizeof(*mem->ipiv2));
+        mem->sys_sol2 = calloc(num_sys, sizeof(*mem->sys_sol2));
         for (int_t i = 0; i < num_sys; i++) {
             if ((i+1) == num_sys && num_sys != floor(num_stages/2.0)) {  // odd number of stages
-                mem->sys_mat2[i] = malloc(sizeof(*(mem->sys_mat2[i])) * (nx*nx));
-                mem->ipiv2[i] = malloc(sizeof(*(mem->ipiv2[i])) * (nx));
-                mem->sys_sol2[i] = malloc(sizeof(*(mem->sys_sol2[i])) * (nx*(1+NF)));
+                mem->sys_mat2[i] = calloc(nx*nx, sizeof(*(mem->sys_mat2[i])));
+                mem->ipiv2[i] = calloc(nx, sizeof(*(mem->ipiv2[i])));
+                mem->sys_sol2[i] = calloc(nx*(1+NF), sizeof(*(mem->sys_sol2[i])));
 
                 for (int_t j = 0; j < nx*nx; j++) mem->sys_mat2[i][j] = 0.0;
                 for (int_t j = 0; j < nx; j++) mem->sys_mat2[i][j*(nx+1)] = 1.0;
             } else {
-                mem->sys_mat2[i] = malloc(sizeof(*(mem->sys_mat2[i])) * (4*nx*nx));
-                mem->ipiv2[i] = malloc(sizeof(*(mem->ipiv2[i])) * (2*nx));
-                mem->sys_sol2[i] = malloc(sizeof(*(mem->sys_sol2[i])) * (2*nx*(1+NF)));
+                mem->sys_mat2[i] = calloc(4*nx*nx, sizeof(*(mem->sys_mat2[i])));
+                mem->ipiv2[i] = calloc(2*nx, sizeof(*(mem->ipiv2[i])));
+                mem->sys_sol2[i] = calloc(2*nx*(1+NF), sizeof(*(mem->sys_sol2[i])));
 
                 for (int_t j = 0; j < 4*nx*nx; j++) mem->sys_mat2[i][j] = 0.0;
                 for (int_t j = 0; j < 2*nx; j++) mem->sys_mat2[i][j*(2*nx+1)] = 1.0;
@@ -1052,9 +1052,9 @@ void sim_lifted_irk_create_memory(const sim_in *in,
 
 void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *opts) {
     opts->num_stages = num_stages;
-    opts->A_mat = malloc(sizeof(*opts->A_mat) * (num_stages*num_stages));
-    opts->b_vec = malloc(sizeof(*opts->b_vec) * (num_stages));
-    opts->c_vec = malloc(sizeof(*opts->c_vec) * (num_stages));
+    opts->A_mat = calloc(num_stages*num_stages, sizeof(*opts->A_mat));
+    opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
+    opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
     opts->scheme.type = exact;
 
     if ( strcmp(name, "Gauss") == 0 ) {  // GAUSS METHODS
@@ -1079,13 +1079,13 @@ void sim_irk_create_Newton_scheme(const int_t num_stages, const char* name,
     opts->scheme.freeze = false;
     if ( strcmp(name, "Gauss") == 0 ) {  // GAUSS METHODS
         if (num_stages <= 15 && (type == simplified_in || type == simplified_inis)) {
-            opts->scheme.eig = malloc(sizeof(*opts->scheme.eig) * (num_stages));
-            opts->scheme.transf1 = malloc(sizeof(*opts->scheme.transf1) * (num_stages*num_stages));
-            opts->scheme.transf2 = malloc(sizeof(*opts->scheme.transf2) * (num_stages*num_stages));
+            opts->scheme.eig = calloc(num_stages, sizeof(*opts->scheme.eig));
+            opts->scheme.transf1 = calloc(num_stages*num_stages, sizeof(*opts->scheme.transf1));
+            opts->scheme.transf2 = calloc(num_stages*num_stages, sizeof(*opts->scheme.transf2));
             opts->scheme.transf1_T =
-                    malloc(sizeof(*opts->scheme.transf1_T) * (num_stages*num_stages));
+                    calloc(num_stages*num_stages, sizeof(*opts->scheme.transf1_T));
             opts->scheme.transf2_T =
-                    malloc(sizeof(*opts->scheme.transf2_T) * (num_stages*num_stages));
+                    calloc(num_stages*num_stages, sizeof(*opts->scheme.transf2_T));
             read_Gauss_simplified(opts->num_stages, &opts->scheme);
         } else if (num_stages == 1) {
             opts->scheme.type = exact;
