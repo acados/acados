@@ -70,21 +70,21 @@ typedef struct {
 } sim_lifted_irk_memory;
 
 
-int_t sim_lifted_irk(const sim_in *in, sim_out *out,
+int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
         void *mem, void *work);
 
-void sim_lifted_irk_create_workspace(const sim_in *in,
+void sim_lifted_irk_create_workspace(const sim_in *in, void *args,
         sim_lifted_irk_workspace *work);
 
-void sim_lifted_irk_create_memory(const sim_in *in,
+void sim_lifted_irk_create_memory(const sim_in *in, void *args,
         sim_lifted_irk_memory *mem);
 
-void sim_irk_create_opts(int_t num_stages, const char* name, sim_RK_opts *opts);
+void sim_irk_create_arguments(void *args, int_t num_stages, const char* name);
 
-void sim_irk_control_collocation(int_t num_stages, const char* name, sim_RK_opts *opts);
+void sim_irk_control_collocation(void *args, int_t num_stages, const char* name);
 
-void sim_irk_create_Newton_scheme(int_t num_stages, const char* name,
-        sim_RK_opts *opts, enum Newton_type_collocation type);
+void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
+        enum Newton_type_collocation type);
 
 #ifdef __cplusplus
 } /* extern "C" */

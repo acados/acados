@@ -276,12 +276,12 @@ void destruct_subsystems(real_t *mat, real_t **mat2,
     }
 }
 
-void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_memory *mem,
+void form_linear_system_matrix(int_t istep, const sim_in *in, void *args, sim_lifted_irk_memory *mem,
         sim_lifted_irk_workspace *work, real_t *sys_mat, real_t **sys_mat2, real_t timing_ad) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     real_t H_INT = in->step;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     real_t *A_mat = opts->A_mat;
     real_t *c_vec = opts->c_vec;
@@ -386,11 +386,11 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_mem
 }
 
 
-int_t sim_lifted_irk(const sim_in *in, sim_out *out,
+int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
         void *mem_, void *work_ ) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t dim_sys = num_stages*nx;
     int_t i, s1, s2, j, istep;
@@ -586,7 +586,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 
     for (istep = 0; istep < NSTEPS; istep++) {
         // form linear system matrix (explicit ODE case):
-        form_linear_system_matrix(istep, in, mem, work, sys_mat, sys_mat2, timing_ad);
+        form_linear_system_matrix(istep, in, opts, mem, work, sys_mat, sys_mat2, timing_ad);
 
         int_t idx;
         if (opts->scheme.type == exact || (istep == 0 && !opts->scheme.freeze)) {
@@ -868,11 +868,11 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out,
 }
 
 
-void sim_lifted_irk_create_workspace(const sim_in *in,
+void sim_lifted_irk_create_workspace(const sim_in *in, void *args,
         sim_lifted_irk_workspace *work) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
 //    int_t num_sys = ceil(num_stages/2.0);
@@ -987,13 +987,13 @@ void sim_lifted_irk_create_workspace(const sim_in *in,
 }
 
 
-void sim_lifted_irk_create_memory(const sim_in *in,
+void sim_lifted_irk_create_memory(const sim_in *in, void *args,
         sim_lifted_irk_memory *mem) {
     int_t i;
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t nSteps = in->nSteps;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
     int_t num_sys = ceil(num_stages/2.0);
@@ -1050,7 +1050,8 @@ void sim_lifted_irk_create_memory(const sim_in *in,
 }
 
 
-void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *opts) {
+void sim_irk_create_arguments(void *args, const int_t num_stages, const char* name) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->num_stages = num_stages;
     opts->A_mat = calloc(num_stages*num_stages, sizeof(*opts->A_mat));
     opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
@@ -1073,8 +1074,9 @@ void sim_irk_create_opts(const int_t num_stages, const char* name, sim_RK_opts *
 }
 
 
-void sim_irk_create_Newton_scheme(const int_t num_stages, const char* name,
-        sim_RK_opts *opts, enum Newton_type_collocation type) {
+void sim_irk_create_Newton_scheme(void *args, const int_t num_stages, const char* name,
+        enum Newton_type_collocation type) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->scheme.type = type;
     opts->scheme.freeze = false;
     if ( strcmp(name, "Gauss") == 0 ) {  // GAUSS METHODS

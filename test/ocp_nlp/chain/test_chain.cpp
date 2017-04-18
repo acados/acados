@@ -132,6 +132,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         for (jj = 0; jj < NN; jj++) {
             integrators[jj].in = &sim_in[jj];
             integrators[jj].out = &sim_out[jj];
+            integrators[jj].args = &rk_opts[jj];
             if (d > 0) {
                 integrators[jj].fun = &sim_lifted_irk;
                 integrators[jj].mem = &irk_mem[jj];
@@ -146,8 +147,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             sim_in[jj].step = Ts/sim_in[jj].nSteps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
-
-            sim_in[jj].opts = &rk_opts[jj];
 
             sim_in[jj].sens_forw = true;
             sim_in[jj].sens_adj = false;
@@ -195,20 +194,20 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             irk_work[jj].str_mat = &str_mat[jj];
             irk_work[jj].str_sol = &str_sol[jj];
             if (d > 0) {
-                sim_irk_create_opts(d, "Gauss", &rk_opts[jj]);
+                sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
                 if (INEXACT == 0) {
-                    sim_irk_create_Newton_scheme(d, "Gauss", &rk_opts[jj], exact);
+                    sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
                 } else if (INEXACT == 1 || INEXACT == 3) {
-                    sim_irk_create_Newton_scheme(d, "Gauss", &rk_opts[jj], simplified_in);
+                    sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
                 } else if (INEXACT == 2 || INEXACT == 4) {
-                    sim_irk_create_Newton_scheme(d, "Gauss", &rk_opts[jj], simplified_inis);
+                    sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
                 }
 
-                sim_lifted_irk_create_workspace(&sim_in[jj], &irk_work[jj]);
-                sim_lifted_irk_create_memory(&sim_in[jj], &irk_mem[jj]);
+                sim_lifted_irk_create_workspace(&sim_in[jj], &rk_opts[jj], &irk_work[jj]);
+                sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
             } else {
-                sim_erk_create_arguments(4, &rk_opts[jj]);
-                sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
+                sim_erk_create_arguments(&rk_opts[jj], 4);
+                sim_erk_create_workspace(&sim_in[jj], &rk_opts[jj], &erk_work[jj]);
             }
         }
 
