@@ -17,6 +17,8 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 find_package(NumPy REQUIRED)
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
 
+find_package(Casadi)
+
 # SWIG does not support target_include_directories()
 include_directories("${PROJECT_SOURCE_DIR}")
 set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
