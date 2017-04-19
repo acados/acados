@@ -1,15 +1,18 @@
 # acados
 [![Build Status](https://secure.travis-ci.org/acados/acados.png?branch=master)](http://travis-ci.org/acados/acados)
 
-Fast optimal control problem solvers.
+Fast optimal control problem solvers
 
+### Getting started
+Make sure `cmake` is installed.
+From the `acados` root folder:
 
-### getting started
-
-    git submodule init
-    git submodule update
+    git submodule update --recursive --init
     mkdir build
     cd build
     cmake ..
-    make
-    ./test_nmpc
+    make install
+    cd ..
+    
+    cd examples/python
+    python3 ocp_nlp.py
