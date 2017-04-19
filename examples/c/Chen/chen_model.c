@@ -1,5 +1,5 @@
 /* The model comes from \cite{Chen1998} */
-#include "examples/Chen/Chen_model.h"
+#include "examples/c/Chen/chen_model.h"
 
 /* Ignore vde */
 #if defined(__clang__)

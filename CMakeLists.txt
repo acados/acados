@@ -11,7 +11,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-message("\n\n --- The CMake build type is: ${CMAKE_BUILD_TYPE} ---\n\n")
+message("\n\n --- Configuring acados with build type: ${CMAKE_BUILD_TYPE} ---\n\n")
 
 if(CMAKE_BUILD_TYPE MATCHES Release)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
@@ -33,8 +33,12 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
 
-set(CMAKE_INSTALL_PREFIX "${PROJECT_SOURCE_DIR}/local")
-message(STATUS "Files will be installed in ${CMAKE_INSTALL_PREFIX}")
+if (NOT ACADOS_INSTALL_DIR)
+    set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
+endif ()
+set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
+set(LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib")
+message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
 
 # Process external libraries
 include(external/blasfeo)
@@ -50,6 +54,7 @@ endif()
 # Define acados library
 include(acados_sources)
 add_library(acados STATIC ${ACADOS_SRC})
+install(TARGETS acados DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
 target_include_directories(acados
     PUBLIC
         "${PROJECT_SOURCE_DIR}"

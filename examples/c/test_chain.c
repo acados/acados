@@ -34,7 +34,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "examples/casadi_chain/Chain_model.h"
+#include "examples/c/casadi_chain/chain_model.h"
 
 #define NN 10
 #define UMAX 2

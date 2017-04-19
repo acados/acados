@@ -43,7 +43,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
-#include "examples/casadi_pendulum/pendulum_model.h"
+#include "examples/c/casadi_pendulum/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000

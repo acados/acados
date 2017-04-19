@@ -1,5 +1,5 @@
 /* The model comes from \cite{Wirsching2006} */
-#include "examples/casadi_pendulum/pendulum_model.h"
+#include "examples/c/casadi_pendulum/pendulum_model.h"
 
 extern int jacFun(const real_t** arg, real_t** res);
 

@@ -8,22 +8,22 @@ if (NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
 endif()
 
 # Sources for examples
-set(HPMPC_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_hpmpc.c)
-set(CONDENSING_QPOASES_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/test_ocp_qp_condensing_qpoases.c)
-set(CHEN_MODEL_SRC ${PROJECT_SOURCE_DIR}/examples/Chen/Chen_model.c)
-set(NMPC_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/test_nmpc.c)
-file(GLOB CHAIN_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_chain/Chain_model.c
+set(HPMPC_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/c/test_ocp_qp_hpmpc.c)
+set(CONDENSING_QPOASES_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/c/test_ocp_qp_condensing_qpoases.c)
+set(CHEN_MODEL_SRC ${PROJECT_SOURCE_DIR}/examples/c/Chen/chen_model.c)
+set(NMPC_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/c/test_nmpc.c)
+file(GLOB CHAIN_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/c/casadi_chain/chain_model.c
 
-    ${PROJECT_SOURCE_DIR}/examples/casadi_chain/vde*.c
-    ${PROJECT_SOURCE_DIR}/examples/casadi_chain/jac*.c
-    ${PROJECT_SOURCE_DIR}/examples/test_chain.c
+    ${PROJECT_SOURCE_DIR}/examples/c/casadi_chain/vde*.c
+    ${PROJECT_SOURCE_DIR}/examples/c/casadi_chain/jac*.c
+    ${PROJECT_SOURCE_DIR}/examples/c/test_chain.c
 )
 
-file(GLOB PENDULUM_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c
+file(GLOB PENDULUM_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/examples/c/casadi_pendulum/pendulum_model.c
 
-    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde_forw_pendulum.c
-    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
-    ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr.c
+    ${PROJECT_SOURCE_DIR}/examples/c/casadi_pendulum/vde_forw_pendulum.c
+    ${PROJECT_SOURCE_DIR}/examples/c/casadi_pendulum/jac_pendulum.c
+    ${PROJECT_SOURCE_DIR}/examples/c/test_nmpc_pendulum_hpmpc_libstr.c
 )
 
 file(GLOB AIRCRAFT_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
@@ -33,9 +33,9 @@ file(GLOB AIRCRAFT_EXAMPLE_SRC ${PROJECT_SOURCE_DIR}/../models/aircraft_model.c
 
 )
 
-file(GLOB PENDULUM_EXAMPLE_PT_SRC ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/pendulum_model.c
+file(GLOB PENDULUM_EXAMPLE_PT_SRC ${PROJECT_SOURCE_DIR}/examples/c/casadi_pendulum/pendulum_model.c
 
-    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/vde_forw_pendulum.c
-    ${PROJECT_SOURCE_DIR}/examples/casadi_pendulum/jac_pendulum.c
-    ${PROJECT_SOURCE_DIR}/examples/test_nmpc_pendulum_hpmpc_libstr_pt.c
+    ${PROJECT_SOURCE_DIR}/examples/c/casadi_pendulum/vde_forw_pendulum.c
+    ${PROJECT_SOURCE_DIR}/examples/c/casadi_pendulum/jac_pendulum.c
+    ${PROJECT_SOURCE_DIR}/examples/c/test_nmpc_pendulum_hpmpc_libstr_pt.c
 )
