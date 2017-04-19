@@ -18,7 +18,7 @@
  *
  */
 
-#define PLOT_RESULTS
+// #define PLOT_RESULTS
 
 #ifdef PLOT_RESULTS
 #define _GNU_SOURCE
@@ -43,7 +43,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
-#include "examples/c/casadi_pendulum/pendulum_model.h"
+#include "examples/c/pendulum_model/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
@@ -194,6 +194,7 @@ int main() {
     sim_out sim_out;
     sim_in.nSteps = 10;
     sim_in.step = T/sim_in.nSteps;
+    sim_in.vde = &vdeFun;
     sim_in.VDE_forw = &VDE_fun_pendulum;
     sim_in.nx = NX;
     sim_in.nu = NU;

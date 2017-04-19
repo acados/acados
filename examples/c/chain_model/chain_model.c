@@ -1,5 +1,5 @@
 /* The model comes from \cite{Wirsching2006} */
-#include "examples/c/casadi_chain/chain_model.h"
+#include "examples/c/chain_model/chain_model.h"
 
 extern int jac_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
 extern int jac_chain_nm3(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);

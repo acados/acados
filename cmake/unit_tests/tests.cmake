@@ -21,8 +21,8 @@ target_include_directories(unit_tests
     PRIVATE "${PROJECT_SOURCE_DIR}/external/eigen"
     )
 target_link_libraries(unit_tests acados qpoases hpmpc blasfeo qpdunes m)
-add_test(NAME unit_test_run COMMAND "${CMAKE_COMMAND}" -E chdir test ./unit_tests)
-set_tests_properties(unit_test_run PROPERTIES DEPENDS generate_test_data)
+add_test(NAME unit_tests COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_BINARY_DIR}/test ./unit_tests)
+set_tests_properties(unit_tests PROPERTIES DEPENDS generate_test_data)
 
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     find_package(FortranLibs REQUIRED)

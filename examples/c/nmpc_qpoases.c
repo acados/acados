@@ -26,7 +26,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "examples/c/Chen/chen_model.h"
+#include "examples/c/Chen_model/chen_model.h"
 
 #define NN 13
 #define NX 2
@@ -128,6 +128,8 @@ int main() {
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
+    real_t *ppi[N];
+    real_t *plam[N+1];
     real_t *px0[1];
     d_zeros(&px0[0], nx[0], 1);
     for (int_t i = 0; i < N; i++) {
@@ -139,9 +141,12 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
+        d_zeros(&ppi[i], nx[i], 1);
+        d_zeros(&plam[i], nb[i]+nc[i], 1);
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
+    d_zeros(&plam[N], nb[N]+nc[N], 1);
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
@@ -169,6 +174,8 @@ int main() {
     qp_in.lb = (const real_t **) px0;
     qp_out.x = px;
     qp_out.u = pu;
+    qp_out.pi = ppi;
+    qp_out.lam = plam;
 
     acado_timer timer;
     real_t timings = 0;

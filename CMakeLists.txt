@@ -37,7 +37,8 @@ if (NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
 endif ()
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
-set(LIBRARY_OUTPUT_DIRECTORY "${CMAKE_INSTALL_PREFIX}/lib")
+set(LIBRARY_OUTPUT_PATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
 
 # Process external libraries
@@ -54,7 +55,6 @@ endif()
 # Define acados library
 include(acados_sources)
 add_library(acados STATIC ${ACADOS_SRC})
-install(TARGETS acados DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
 target_include_directories(acados
     PUBLIC
         "${PROJECT_SOURCE_DIR}"
@@ -69,8 +69,8 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     add_dependencies(acados ooqpbase)
 endif()
 
-include(examples)
-
+set(ACADOS_EXAMPLES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+add_subdirectory(${ACADOS_EXAMPLES_DIR})
 add_subdirectory(swig)
 
 # Generate test data and build unit tests
