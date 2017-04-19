@@ -1,3 +1,22 @@
+#
+#    This file is part of acados.
+#
+#    acados is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 3 of the License, or (at your option) any later version.
+#
+#    acados is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with acados; if not, write to the Free Software Foundation,
+#    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+
 cmake_minimum_required(VERSION 2.8.11)
 
 find_package(SWIG REQUIRED)
@@ -27,7 +46,8 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
 swig_add_module(acados python acados.i)
 swig_link_libraries(acados ${PYTHON_LIBRARIES} acados qpoases blasfeo qpdunes)
 if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    swig_link_libraries(acados ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${Fortran_LIBRARY} m)
+    find_package(FortranLibs REQUIRED)
+    swig_link_libraries(acados ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FORTRAN_LIBRARY} m)
 endif()
 
 install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})

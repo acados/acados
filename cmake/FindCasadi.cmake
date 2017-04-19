@@ -34,15 +34,14 @@ if (NOT FOUND_CASADI_3)
 else ()
     execute_process(
         COMMAND "${PYTHON_EXECUTABLE}" -c "import casadi, os, inspect; print(os.path.dirname(inspect.getfile(casadi)))"
-        OUTPUT_VARIABLE Casadi_LIBRARY
-        RESULT_VARIABLE Casadi_OUTPUT
+        OUTPUT_VARIABLE CASADI_LIBRARY
     )
-    string(STRIP "${Casadi_LIBRARY}" Casadi_LIBRARY)
-    get_filename_component(Casadi_BASE_DIR "${Casadi_LIBRARY}/../" ABSOLUTE)
-    find_path(Casadi_INCLUDE_DIR NAMES casadi/casadi.hpp
-        HINTS ${Casadi_BASE_DIR}
-        PATHS ${Casadi_BASE_DIR}/include
+    string(STRIP "${CASADI_LIBRARY}" CASADI_LIBRARY)
+    get_filename_component(CASADI_BASE_DIR "${CASADI_LIBRARY}/../" ABSOLUTE)
+    find_path(CASADI_INCLUDE_DIR NAMES casadi/casadi.hpp
+        HINTS ${CASADI_BASE_DIR}
+        PATHS ${CASADI_BASE_DIR}/include
     )
-    find_package_handle_standard_args(Casadi DEFAULT_MSG Casadi_LIBRARY Casadi_INCLUDE_DIR)
+    find_package_handle_standard_args(Casadi DEFAULT_MSG CASADI_LIBRARY CASADI_INCLUDE_DIR)
 endif ()
 
