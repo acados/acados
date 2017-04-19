@@ -54,5 +54,5 @@ install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${LIBRARY_OUTPUT_PAT
 install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES list_of_arrays.py DESTINATION ${LIBRARY_OUTPUT_PATH})
 
-add_test(NAME ocp_nlp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/test ${PYTHON_EXECUTABLE} ${ACADOS_EXAMPLES_DIR}/python/ocp_nlp.py)
-add_test(NAME ocp_qp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/test ${PYTHON_EXECUTABLE} ${ACADOS_EXAMPLES_DIR}/python/ocp_qp.py)
+add_test(NAME ocp_nlp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/test ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_nlp.py)
+add_test(NAME ocp_qp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/test ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_qp.py)

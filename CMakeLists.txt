@@ -42,6 +42,7 @@ set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
 
 # Process external libraries
+set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/openblas)
@@ -52,25 +53,11 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     include(external/ooqp)
 endif()
 
-# Define acados library
-include(acados_sources)
-add_library(acados STATIC ${ACADOS_SRC})
-target_include_directories(acados
-    PUBLIC
-        "${PROJECT_SOURCE_DIR}"
-        "${PROJECT_SOURCE_DIR}/external/"
-        "${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/include/"
-        "${PROJECT_SOURCE_DIR}/external/qpOASES/include/"
-    )
-add_dependencies(acados qpoases hpmpc blasfeo qpdunes)
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    target_compile_definitions(acados PRIVATE OOQP)
-    add_dependencies(ooqpbase ma27)
-    add_dependencies(acados ooqpbase)
-endif()
+set(ACADOS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/acados)
+add_subdirectory(acados)
 
-set(ACADOS_EXAMPLES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-add_subdirectory(${ACADOS_EXAMPLES_DIR})
+set(EXAMPLES_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
+add_subdirectory(${EXAMPLES_SRC_DIR})
 add_subdirectory(swig)
 
 # Generate test data and build unit tests

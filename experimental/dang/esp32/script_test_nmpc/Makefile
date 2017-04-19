@@ -14,9 +14,6 @@ CC = gcc
 CFLAGS = -std=c99 -Wall -Wextra -Wno-error -fPIC -DDEBUG
 CFLAGS += -Wno-unused-function -Wno-unused-parameter -Wno-implicit-function-declaration
 
-# Project name (binary)
-PROJECT = test_nmpc
-
 # Exclude particular source files
 IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)
 # main.c in the code of ESP32
