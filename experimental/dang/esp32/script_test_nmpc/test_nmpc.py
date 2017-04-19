@@ -44,8 +44,8 @@ target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingcodefiles = [\
-    'examples/test_nmpc.c', \
-    'examples/Chen/Chen_model.c', \
+    'examples/c/test_nmpc.c', \
+    'examples/c/Chen/Chen_model.c', \
 
     'acados/utils/print.c', \
     'acados/utils/timing.c', \
@@ -70,7 +70,7 @@ workingcodefiles = [\
     'external/qpOASES/src/Utils.c' \
     ]
 workingheaderfiles = [\
-    'examples/Chen/Chen_model.h', \
+    'examples/c/Chen/Chen_model.h', \
     'acados/ocp_qp/ocp_qp_common.h', \
     'acados/ocp_qp/condensing.h', \
     'acados/ocp_qp/ocp_qp_condensing_qpoases.h', \
