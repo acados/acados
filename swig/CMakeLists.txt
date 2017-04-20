@@ -22,11 +22,11 @@ cmake_minimum_required(VERSION 3.2)
 find_package(SWIG REQUIRED)
 
 # SWIG wrapper file introduces some warnings
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-register")
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers")
-endif ()
+endif()
 
 include(${SWIG_USE_FILE})
 
@@ -41,7 +41,7 @@ find_package(Casadi)
 
 # SWIG does not support target_include_directories()
 include_directories("${PROJECT_SOURCE_DIR}")
-set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
+set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 swig_add_module(acados python acados.i)
