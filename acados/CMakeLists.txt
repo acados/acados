@@ -28,10 +28,10 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
         PUBLIC 
-            ooqpbase
             ooqpgensparse
             ooqpsparse
             ooqpgondzio
+            ooqpbase
             ma27
             blas
             ${FORTRAN_LIBRARY}
