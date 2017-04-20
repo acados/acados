@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PROJECT=nmpc_qpoases
+PROJECT=chen_nmpc_qpoases
 
 python3 script_test_nmpc/test_nmpc.py ../../.. $PROJECT
 cd $PROJECT

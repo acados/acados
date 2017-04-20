@@ -44,7 +44,7 @@ target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingcodefiles = [\
-    'examples/c/nmpc_qpoases.c', \
+    'examples/c/chen_nmpc_qpoases.c', \
     'examples/c/Chen_model/chen_model.c', \
 
     'acados/utils/print.c', \
@@ -160,7 +160,7 @@ old_text = [\
 # List of new texts to replace old ones,
 #  in corresponding order to old_text:
 new_text = [\
-    'Chen_model.h', \
+    'chen_model.h', \
     'condensing.h', \
     'condensing_helper_functions.c', \
     'ocp_qp_common.h', \
