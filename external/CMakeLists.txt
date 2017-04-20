@@ -1,0 +1,8 @@
+include(external/blasfeo)
+include(external/hpmpc)
+include(external/openblas)
+include(external/qpdunes)
+include(external/qpoases)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/OOQP)
+    include(external/ooqp)
+endif()

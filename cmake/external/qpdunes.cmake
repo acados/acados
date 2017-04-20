@@ -1,7 +1,5 @@
 include(ExternalProject)
 
-add_definitions(-DUSE_ACADOS_TYPES)
-
 ExternalProject_Add(
     qpdunes_project
 
@@ -14,6 +12,6 @@ ExternalProject_Add(
 
 ExternalProject_Get_Property(qpdunes_project source_dir)
 
-add_library(qpdunes STATIC IMPORTED)
+add_library(qpdunes STATIC IMPORTED GLOBAL)
 add_dependencies(qpdunes qpdunes_project)
 set_property(TARGET qpdunes PROPERTY IMPORTED_LOCATION "${source_dir}/build/lib/libqpdunes.a")

@@ -17,16 +17,26 @@ target_include_directories(acados
         "${EXTERNAL_SRC_DIR}/qpOASES/include/"
 )
 target_link_libraries(acados
-    PUBLIC
+    PRIVATE
         qpoases
         hpmpc
         blasfeo
         qpdunes
+        m
 )
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     target_compile_definitions(acados PRIVATE OOQP)
-    add_dependencies(ooqpbase ma27)
     target_link_libraries(acados
-        PUBLIC ooqpbase
+        PUBLIC 
+            ooqpbase
+            ooqpgensparse
+            ooqpsparse
+            ooqpgondzio
+            ma27
+            blas
+            ${FORTRAN_LIBRARY}
+            m
     )
 endif()
+
+target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES

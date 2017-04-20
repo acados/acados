@@ -19,5 +19,6 @@
 
 find_library(FORTRAN_LIBRARY gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
 
+include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FortranLibs FOUND_VAR FORTRANLIBS_FOUND
                                          REQUIRED_VARS FORTRAN_LIBRARY)

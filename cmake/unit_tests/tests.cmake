@@ -20,14 +20,14 @@ add_executable(unit_tests ${UNIT_TESTS_SRC} ${UNIT_TESTS_SRC_SIM} ${UNIT_TESTS_S
 target_include_directories(unit_tests
     PRIVATE "${PROJECT_SOURCE_DIR}/external/eigen"
     )
-target_link_libraries(unit_tests acados qpoases hpmpc blasfeo qpdunes m)
+target_link_libraries(unit_tests acados)
 add_test(NAME unit_tests COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_BINARY_DIR}/test ./unit_tests)
 set_tests_properties(unit_tests PROPERTIES DEPENDS generate_test_data)
 
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    find_package(FortranLibs REQUIRED)
-    target_link_libraries(unit_tests ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FORTRAN_LIBRARY} m)
-endif ()
+# if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+#     find_package(FortranLibs REQUIRED)
+#     target_link_libraries(unit_tests ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FORTRAN_LIBRARY} m)
+# endif ()
 
 set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 
