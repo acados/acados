@@ -25,7 +25,6 @@
 #include "catch/include/catch.hpp"
 
 #ifdef OOQP
-#include "OOQP/include/cQpGenSparse.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
 
