@@ -36,7 +36,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "test/ocp_nlp/chain/Chain_model.h"
+#include "test/ocp_nlp/chain/chain_model.h"
 #include "test/test_utils/eigen.h"
 #include "test/test_utils/read_matrix.h"
 
