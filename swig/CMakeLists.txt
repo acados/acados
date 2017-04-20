@@ -20,6 +20,7 @@
 cmake_minimum_required(VERSION 3.2)
 
 find_package(SWIG REQUIRED)
+
 # SWIG wrapper file introduces some warnings
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-register")
@@ -44,11 +45,7 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON )
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 swig_add_module(acados python acados.i)
-swig_link_libraries(acados ${PYTHON_LIBRARIES} acados qpoases blasfeo qpdunes)
-if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    find_package(FortranLibs REQUIRED)
-    swig_link_libraries(acados ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FORTRAN_LIBRARY} m)
-endif()
+swig_link_libraries(acados ${PYTHON_LIBRARIES} acados)
 
 install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${LIBRARY_OUTPUT_PATH})
 install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${LIBRARY_OUTPUT_PATH})

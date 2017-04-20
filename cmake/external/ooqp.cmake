@@ -1,5 +1,6 @@
 include(ExternalProject)
 
+find_package(OpenBLAS REQUIRED)
 find_package(FortranLibs REQUIRED)
 include(external/ma27)
 

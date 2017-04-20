@@ -15,7 +15,7 @@ target_link_libraries(mass_spring_hpmpc_example acados)
 add_test(NAME mass_spring_hpmpc_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_hpmpc_example)
 
 # add_executable(mass_spring_partial_tightening_example ${EXAMPLES_SRC_DIR}/c/mass_spring_partial_tightening.c)
-# target_link_libraries(mass_spring_partial_tightening_example acados hpmpc blasfeo openblas m)
+# target_link_libraries(mass_spring_partial_tightening_example acados)
 # add_test(NAME mass_spring_partial_tightening_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example)
 
 add_executable(mass_spring_qpoases_example ${EXAMPLES_SRC_DIR}/c/mass_spring_qpoases.c)
