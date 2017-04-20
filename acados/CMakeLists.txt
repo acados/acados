@@ -24,7 +24,7 @@ target_link_libraries(acados
         qpdunes
         m
 )
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
         PUBLIC 

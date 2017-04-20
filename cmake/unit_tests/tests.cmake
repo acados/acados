@@ -24,11 +24,6 @@ target_link_libraries(unit_tests acados)
 add_test(NAME unit_tests COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_BINARY_DIR}/test ./unit_tests)
 set_tests_properties(unit_tests PROPERTIES DEPENDS generate_test_data)
 
-# if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-#     find_package(FortranLibs REQUIRED)
-#     target_link_libraries(unit_tests ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FORTRAN_LIBRARY} m)
-# endif ()
-
 set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
 
 file(COPY "${PROJECT_SOURCE_DIR}/acados/sim/simplified/" DESTINATION "${PROJECT_BINARY_DIR}/test/simplified/")
