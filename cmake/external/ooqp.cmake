@@ -12,6 +12,7 @@ endif()
 ExternalProject_Add(
     ooqp_project
 
+    DEPENDS ma27
     CONFIGURE_COMMAND ./configure "CXXFLAGS=-O2 -fPIC" "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"
     BUILD_IN_SOURCE 1
