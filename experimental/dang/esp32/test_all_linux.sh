@@ -2,7 +2,7 @@
 
 PROJECT=chen_nmpc_qpoases
 
-python3 script_test_nmpc/test_nmpc.py ../../.. $PROJECT
+python3 script_test_nmpc_qpoases/test_nmpc_qpoases.py ../../.. $PROJECT
 cd $PROJECT
 make "PROJECT=$PROJECT"
 bin/$PROJECT.exe
