@@ -31,7 +31,7 @@ using Eigen::VectorXd;
 
 extern real_t COMPARISON_TOLERANCE;
 // For each scenario, there must be a corresponding subfolder with test data
-std::vector<std::string> scenarios = {"LTI", "LTV"};
+std::vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
 
 TEST_CASE("Unconstrained system", "[condensing]") {
     ocp_qp_in qp;

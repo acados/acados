@@ -91,11 +91,11 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         d_zeros(&u_end, NU, 1);
 
         std::string NMFdat = std::to_string(NMF+1) + "_d" + std::to_string(d) + ".dat";
-        VectorXd x0 = readMatrix("chain/x0_nm" + NMFdat);
-        VectorXd xref = readMatrix("chain/xN_nm" + NMFdat);
+        VectorXd x0 = readMatrix("ocp_nlp/chain/x0_nm" + NMFdat);
+        VectorXd xref = readMatrix("ocp_nlp/chain/xN_nm" + NMFdat);
 
-        MatrixXd resX = readMatrix("chain/resX_nm" + NMFdat);
-        MatrixXd resU = readMatrix("chain/resU_nm" + NMFdat);
+        MatrixXd resX = readMatrix("ocp_nlp/chain/resX_nm" + NMFdat);
+        MatrixXd resU = readMatrix("ocp_nlp/chain/resU_nm" + NMFdat);
 
         for (int_t i = 0; i < NX; i++) W[i*(NX+NU+1)] = 1e-2;
         for (int_t i = 0; i < NU; i++) W[(NX+i)*(NX+NU+1)] = 1.0;

@@ -2,7 +2,6 @@ clc;
 clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.1.1')
 import casadi.*
 mkdir('chain');
 

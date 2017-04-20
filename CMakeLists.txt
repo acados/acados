@@ -85,7 +85,7 @@ endif()
 
 # Generate test data and configure unit tests
 if(CMAKE_BUILD_TYPE MATCHES Test)
-    include(unit_tests/tests)
+    add_subdirectory(test)
 endif()
 
 # Cpplint

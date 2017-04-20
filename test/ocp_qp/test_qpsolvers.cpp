@@ -52,7 +52,7 @@ real_t TOL_QPDUNES = 1e-10;
 int_t TEST_HPMPC = 0;
 real_t TOL_HPMPC = 1e-10;
 
-static vector<std::string> scenarios = {"LTI", "LTV"};
+static vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
 // TODO(dimitris): add back "ONLY_AFFINE" after fixing problem
 vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS", "CONSTRAINED"};
 
