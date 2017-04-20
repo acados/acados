@@ -17,7 +17,7 @@
 #
 #
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.2)
 
 find_package(SWIG REQUIRED)
 # SWIG wrapper file introduces some warnings
@@ -50,9 +50,9 @@ if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     swig_link_libraries(acados ooqpgensparse ooqpsparse ooqpgondzio ooqpbase ma27 blas ${FORTRAN_LIBRARY} m)
 endif()
 
-install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
-install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
-install(FILES list_of_arrays.py DESTINATION ${LIBRARY_OUTPUT_DIRECTORY})
+install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${LIBRARY_OUTPUT_PATH})
+install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${LIBRARY_OUTPUT_PATH})
+install(FILES list_of_arrays.py DESTINATION ${LIBRARY_OUTPUT_PATH})
 
-add_test(NAME py_test_ocp_nlp COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/python ${PYTHON_EXECUTABLE} ocp_nlp.py)
-add_test(NAME py_test_ocp_qp COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_SOURCE_DIR}/examples/python ${PYTHON_EXECUTABLE} ocp_qp.py)
+add_test(NAME ocp_nlp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/test ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_nlp.py)
+add_test(NAME ocp_qp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/test ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_qp.py)

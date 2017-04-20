@@ -42,6 +42,7 @@ else ()
         HINTS ${CASADI_BASE_DIR}
         PATHS ${CASADI_BASE_DIR}/include
     )
+    include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(Casadi DEFAULT_MSG CASADI_LIBRARY CASADI_INCLUDE_DIR)
 endif ()
 

@@ -19,9 +19,6 @@ CFLAGS = -std=c99 -Wextra -Wno-error -O2 -fPIC -march=native
 CFLAGS += -Wno-implicit-function-declaration -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-parentheses
 # -Wall
 
-# Project name (binary)
-PROJECT = test_ocp_qp_hpmpc
-
 # Exclude particular source files
 IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)
 # main.c in the code of ESP32

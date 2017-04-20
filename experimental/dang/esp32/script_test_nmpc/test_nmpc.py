@@ -44,8 +44,8 @@ target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingcodefiles = [\
-    'examples/c/test_nmpc.c', \
-    'examples/c/Chen/Chen_model.c', \
+    'examples/c/nmpc_qpoases.c', \
+    'examples/c/Chen_model/chen_model.c', \
 
     'acados/utils/print.c', \
     'acados/utils/timing.c', \
@@ -70,12 +70,13 @@ workingcodefiles = [\
     'external/qpOASES/src/Utils.c' \
     ]
 workingheaderfiles = [\
-    'examples/c/Chen/Chen_model.h', \
+    'examples/c/Chen_model/chen_model.h', \
     'acados/ocp_qp/ocp_qp_common.h', \
     'acados/ocp_qp/condensing.h', \
     'acados/ocp_qp/ocp_qp_condensing_qpoases.h', \
     'acados/sim/sim_common.h', \
     'acados/sim/sim_erk_integrator.h', \
+    'acados/sim/sim_collocation.h', \
     'acados/sim/sim_rk_common.h', \
     'acados/utils/print.h', \
     'acados/utils/types.h', \
@@ -121,7 +122,7 @@ print('Step 1: Necessary files copied.')
 # 2. Modify .h and .c files to adapt to the new code structure:
 # List of texts to be replaced:
 old_text = [\
-    'examples/Chen/Chen_model.h', \
+    'examples/c/Chen_model/chen_model.h', \
     'acados/ocp_qp/condensing.h', \
     'acados/ocp_qp/condensing_helper_functions.c', \
     'acados/ocp_qp/ocp_qp_common.h', \
@@ -129,6 +130,7 @@ old_text = [\
     'acados/ocp_qp/ocp_qp_hpmpc.h', \
     'acados/sim/sim_common.h', \
     'acados/sim/sim_erk_integrator.h', \
+    'acados/sim/sim_collocation.h', \
     'acados/sim/sim_rk_common.h', \
     'acados/utils/print.h', \
     'acados/utils/timing.h', \
@@ -166,6 +168,7 @@ new_text = [\
     'ocp_qp_hpmpc.h', \
     'sim_common.h', \
     'sim_erk_integrator.h', \
+    'sim_collocation.h', \
     'sim_rk_common.h', \
     'print.h', \
     'timing.h', \

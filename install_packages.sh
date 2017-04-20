@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -xe
 
 sudo apt-get install swig libgsl0-dev liblapack-dev libopenblas-dev cppcheck
 

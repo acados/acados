@@ -44,7 +44,7 @@ target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingcodefiles = \
-    ['examples/c/test_ocp_qp_hpmpc.c', \
+    ['examples/c/mass_spring_hpmpc.c', \
     'acados/ocp_qp/ocp_qp_hpmpc.c', \
     'acados/utils/print.c', \
     'acados/utils/timing.c', \

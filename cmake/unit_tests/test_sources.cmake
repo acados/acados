@@ -11,7 +11,7 @@ set(UNIT_TESTS_SRC_SIM ${PROJECT_SOURCE_DIR}/test/sim/pendulum/test_pendulum.cpp
 )
 
 set(UNIT_TESTS_SRC_OCP_NLP ${PROJECT_SOURCE_DIR}/test/ocp_nlp/chain/test_chain.cpp
-    ${PROJECT_SOURCE_DIR}/test/ocp_nlp/chain/Chain_model.c
+    ${PROJECT_SOURCE_DIR}/test/ocp_nlp/chain/chain_model.c
     ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm2.c
     ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm3.c
     ${PROJECT_SOURCE_DIR}/build/test/jac_chain_nm4.c
