@@ -264,7 +264,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
     d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
     ptr_memory += (&hsux[ii])->memory_size;
 
-    d_create_strvec(nx[ii], &hspi[ii], ptr_memory); // TODO(Andrea): bug?
+    d_create_strvec(nx[ii], &hspi[ii], ptr_memory);  // TODO(Andrea): bug?
     ptr_memory += (&hspi[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
@@ -529,7 +529,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
     ptr_memory += (&hsux[ii])->memory_size;
 
-    d_create_strvec(nx[ii], &hspi[ii], ptr_memory); // Andrea: bug?
+    d_create_strvec(nx[ii], &hspi[ii], ptr_memory);  // Andrea: bug?
     ptr_memory += (&hspi[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
@@ -694,7 +694,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     for (int_t i = M; i <= N; i++) {
       // hsdux is initialized to be equal to hpmpc_args.ux0
       temp_p1 = hsdux[i].pa;
-      temp_p2 = hsux[i].pa; //hsux[i].pa;
+      temp_p2 = hsux[i].pa;  // hsux[i].pa;
       for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
     }
 

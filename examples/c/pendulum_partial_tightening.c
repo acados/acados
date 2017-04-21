@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <fenv.h>
+// #include <fenv.h>
 
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
@@ -250,11 +250,10 @@ extern  int d_size_strvec(int m);
 
 // Simple SQP example for acados
 int main() {
-
     #ifdef FP_EXCEPTIONS
       feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
       // feenableexcept(FE_INVALID);
-    #endif // FP_EXCEPTIONS
+    #endif  // FP_EXCEPTIONS
 
     // Problem data
     int_t   N                         = NN;
@@ -769,7 +768,6 @@ int main() {
 
       // update initial condition
       for (int_t j = 0; j < NX; j++) w[j] = w[(NX+NU) + j];
-
     }
     #ifdef DEBUG
     //  print_states_controls(&w[0], N);
