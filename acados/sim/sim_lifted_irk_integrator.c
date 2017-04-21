@@ -290,7 +290,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, sim_lifted_irk_mem
 #ifdef MEASURE_TIMINGS
     acado_timer timer_ad;
 #else
-    timing_ad = 0;
+    timing_ad += 0;
 #endif
     real_t *out_tmp = work->out_tmp;
     real_t *rhs_in = work->rhs_in;

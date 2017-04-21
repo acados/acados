@@ -497,7 +497,7 @@ int main() {
     }
 //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
 //        shift_states(w, x_end, N);
-//        shift_controls(w, u_end, N);        
+//        shift_controls(w, u_end, N);
         timings += acado_toc(&timer);
 //    }
 

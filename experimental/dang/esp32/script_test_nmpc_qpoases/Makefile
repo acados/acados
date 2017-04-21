@@ -14,7 +14,7 @@ PROJECT=chen_nmpc_qpoases
 
 # Compiler
 CC = gcc
-CFLAGS = -std=c99 -Wall -Wextra -Wno-error -fPIC -DDEBUG
+CFLAGS = -std=c99 -Wall -Wextra -Wno-error -fPIC -D__SUPPRESSANYOUTPUT__
 CFLAGS += -Wno-unused-function -Wno-unused-parameter -Wno-implicit-function-declaration
 
 # Exclude particular source files
