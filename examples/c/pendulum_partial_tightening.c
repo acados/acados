@@ -261,7 +261,7 @@ int main() {
     int_t   M                         = MM;
     real_t  x0[NX]                    = {0.0, 0.1, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
-    real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
+    // real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
     // real_t  pi_n[NN*(NX)]             = {0};
     real_t  t_n[2*((NBX+NBU)*NN + NBX)]   = {0};
     real_t  lam_n[2*((NBX+NBU)*NN + NBX)] = {0};
@@ -764,8 +764,8 @@ int main() {
       for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j]+ GAMMA;
       for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j]+ GAMMA;
 
-      for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
-      for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
+      // for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
+      // for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
 
       // update initial condition
       for (int_t j = 0; j < NX; j++) w[j] = w[(NX+NU) + j];
