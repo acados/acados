@@ -67,7 +67,7 @@ int main() {
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10;
+    int_t   max_iters           = 10000;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
@@ -178,10 +178,10 @@ int main() {
     qp_out.lam = plam;
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
+    acado_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
-        acado_tic(&timer);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
@@ -222,12 +222,12 @@ int main() {
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         shift_states(w, x_end, N);
         shift_controls(w, u_end, N);
-        timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    total_time = acado_toc(&timer);  // in seconds
+    printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
 
     free(sim_in.x);
     free(sim_in.u);

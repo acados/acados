@@ -143,6 +143,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     int_t status;
 
     acado_tic(&timer);
+
     for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
 #if PARALLEL
@@ -275,17 +276,18 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
                         "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
     }
-    timings += acado_toc(&timer);
 
+    timings += acado_toc(&timer);
+#ifdef MEASURE_TIMINGS
     printf("\nAverage of %.3f ms in the integrator,\n",
             1e3*timings_sim/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in CasADi and\n",
             1e3*timings_ad/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in BLASFEO.\n",
             1e3*timings_la/(gn_sqp_args->common->maxIter));
+#endif
     printf("--Total of %.3f ms per SQP iteration.--\n",
             1e3*timings/(gn_sqp_args->common->maxIter));
-
     // Store trajectories:
     w_idx = 0;
     for (int_t i = 0; i < N; i++) {

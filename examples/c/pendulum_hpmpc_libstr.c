@@ -469,10 +469,10 @@ int main() {
     qp_out.lam = plam;
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
+    acado_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
-        acado_tic(&timer);
         for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
@@ -531,7 +531,6 @@ int main() {
         // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         // shift_states(w, x_end, N);
         // shift_controls(w, u_end, N);
-        timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
@@ -541,7 +540,8 @@ int main() {
     plot_states_controls(w, T);
     #endif  // PLOT_RESULTS
 
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    total_time += acado_toc(&timer);
+    printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
     free(workspace);
     return 0;
 }
