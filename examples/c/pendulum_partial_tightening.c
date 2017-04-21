@@ -17,7 +17,7 @@
  *
  */
 
-#define PLOT_RESULTS
+// #define PLOT_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
@@ -685,8 +685,8 @@ int main() {
         }
 
         for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
-          lam_in[N][j] = lam_n[2*(NBX + NBU)*N + j];
-          t_in[N][j] = t_n[2*(NBX + NBU)*N + j];
+          lam_in[N][j] = lam_n[2*NBX*N + j];
+          t_in[N][j] = t_n[2*NBX*N + j];
         }
 
         for (int_t i = 0; i < N; i++) {
