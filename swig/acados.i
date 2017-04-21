@@ -194,30 +194,18 @@ int_t get_numpy_type() {
     return NPY_NOTYPE;
 }
 
-PyObject *new_list_of_arrays() {
-    PyObject *pModule = PyImport_Import(PyString_FromString("list_of_arrays"));
-    PyObject *pDict = PyModule_GetDict(pModule);
-    PyObject *pClass = PyDict_GetItemString(pDict, "list_of_arrays");
-    PyObject *sequence = NULL;
-    if (PyCallable_Check(pClass))
-        sequence = PyObject_CallObject(pClass, NULL);
-    else
-        SWIG_Error(SWIG_RuntimeError, "Something went wrong during construction of object");
-    return sequence;
-}
-
 template<typename T>
 static PyObject *convert_to_sequence_of_2dim_arrays(T **c_array,
     const int_t length, const int_t *dimensions1, const int_t *dimensions2) {
 
-    PyObject *sequence = new_list_of_arrays();
+    PyObject *sequence = PyList_New(length);
     for (int_t i = 0; i < length; i++) {
         npy_intp dims[2] = {dimensions1[i], dimensions2[i]};
         PyObject *py_array = PyArray_SimpleNewFromDataF(2, dims, get_numpy_type<T>(), \
             (void*) c_array[i]);
         PyObject *return_array = PyArray_NewCopy((PyArrayObject *) py_array, NPY_FORTRANORDER);
         if (return_array != NULL)
-            PyList_Append(sequence, return_array);
+            PyList_SetItem(sequence, i, return_array);
         else
             SWIG_Error(SWIG_RuntimeError, "Something went wrong while copying array");
     }
@@ -228,14 +216,14 @@ template<typename T>
 static PyObject *convert_to_sequence_of_1dim_arrays(T **c_array,
     const int_t length, const int_t *dimensions) {
 
-    PyObject *sequence = new_list_of_arrays();
+    PyObject *sequence = PyList_New(length);
     for (int_t i = 0; i < length; i++) {
         npy_intp dims[1] = {dimensions[i]};
         PyObject *py_array = PyArray_SimpleNewFromDataF(1, dims, get_numpy_type<T>(), \
             (void*) c_array[i]);
         PyObject *return_array = PyArray_NewCopy((PyArrayObject *) py_array, NPY_FORTRANORDER);
         if (return_array != NULL)
-            PyList_Append(sequence, return_array);
+            PyList_SetItem(sequence, i, return_array);
         else
             SWIG_Error(SWIG_RuntimeError, "Something went wrong while copying array");
     }
