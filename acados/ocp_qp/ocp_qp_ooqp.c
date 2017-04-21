@@ -335,10 +335,15 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
         }
         for (ii = 0; ii < in->nb[kk]; ii++) {
             // TODO(dimitris): check if cast is redundant
-            mem->ixlow[offset+in->idxb[kk][ii]] = (char)1;
-            mem->ixupp[offset+in->idxb[kk][ii]] = (char)1;
-            mem->xlow[offset+in->idxb[kk][ii]] = in->lb[kk][ii];
-            mem->xupp[offset+in->idxb[kk][ii]] = in->ub[kk][ii];
+            // NOTE: OOQP can give wrong results if there are 1e12 bounds
+            if (in->lb[kk][ii] > -1e10) {  // TODO(dimitris): use acados inf
+                mem->ixlow[offset+in->idxb[kk][ii]] = (char)1;
+                mem->xlow[offset+in->idxb[kk][ii]] = in->lb[kk][ii];
+            }
+            if (in->ub[kk][ii] < 1e10) {  // TODO(dimitris): same here
+                mem->ixupp[offset+in->idxb[kk][ii]] = (char)1;
+                mem->xupp[offset+in->idxb[kk][ii]] = in->ub[kk][ii];
+            }
         }
         offset += in->nx[kk]+in->nu[kk];
     }
@@ -534,7 +539,11 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_ooqp_workspace
         for (ii = 0; ii < in->nx[kk]; ii++) out->x[kk][ii] = work->x[nn++];
         for (ii = 0; ii < in->nu[kk]; ii++) out->u[kk][ii] = work->x[nn++];
     }
-    // TODO(dimitris): fill-in multipliers
+    nn = 0;
+    for (kk = 0; kk < in->N; kk++) {
+        for (ii = 0; ii < in->nx[kk+1]; ii++) out->pi[kk][ii] = -work->y[nn++];
+    }
+    // TODO(dimitris): fill-in multipliers of inequalities
 }
 
 
@@ -587,9 +596,9 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
         &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
         &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp, &return_value);
 
-    mem->orderQ = (int_t*)malloc(sizeof(*mem->orderQ)*mem->nnzQ);
-    mem->orderA = (int_t*)malloc(sizeof(*mem->orderA)*mem->nnzA);
-    mem->orderC = (int_t*)malloc(sizeof(*mem->orderC)*mem->nnzC);
+    mem->orderQ = (int_t*) calloc(mem->nnzQ, sizeof(*mem->orderQ));
+    mem->orderA = (int_t*) calloc(mem->nnzA, sizeof(*mem->orderA));
+    mem->orderC = (int_t*) calloc(mem->nnzC, sizeof(*mem->orderC));
 
     return return_value;
 }
@@ -618,53 +627,6 @@ int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
 }
 
 
-int_t ocp_qp_ooqp_create_workspace(const ocp_qp_in *in, void *args_, void *work_) {
-    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
-    ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
-
-    int_t nx, my, mz, nnzQ, nnzA, nnzC, nnz;
-
-    // dummy command, args will be probably needed later
-    args->printLevel += 0;
-
-    nx = get_number_of_primal_vars(in);
-    my = get_number_of_equalities(in);
-    mz = get_number_of_inequalities(in);
-    nnzQ = get_nnzQ(in, args);
-    nnzA = get_nnzA(in, args);
-    nnzC = get_nnzC(in, args);
-    nnz = max_of_three(nnzQ, nnzA, nnzC);
-
-    work->x = (real_t*)malloc(sizeof(*work->x)*nx);
-    work->gamma = (real_t*)malloc(sizeof(*work->gamma)*nx);
-    work->phi = (real_t*)malloc(sizeof(*work->phi)*nx);
-    work->y = (real_t*)malloc(sizeof(*work->y)*my);
-    work->z = (real_t*)malloc(sizeof(*work->z)*mz);
-    work->lambda = (real_t*)malloc(sizeof(*work->lambda)*mz);
-    work->pi = (real_t*)malloc(sizeof(*work->pi)*mz);
-    work->tmpInt = (int_t*)malloc(sizeof(*work->tmpInt)*nnz);
-    work->tmpReal = (real_t*)malloc(sizeof(*work->tmpReal)*nnz);
-
-    // TODO(dimitris): implement this
-    return 0;
-}
-
-
-void ocp_qp_ooqp_free_workspace(void *work_) {
-    ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
-
-    free(work->x);
-    free(work->gamma);
-    free(work->phi);
-    free(work->y);
-    free(work->z);
-    free(work->lambda);
-    free(work->pi);
-    free(work->tmpInt);
-    free(work->tmpReal);
-}
-
-
 void ocp_qp_ooqp_free_memory(void *mem_) {
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
 
@@ -688,6 +650,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *) work_;
 
     int return_value;
+    // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
 
     #if TIMINGS > 0
     acado_timer timer;
@@ -698,10 +661,10 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     #if TIMINGS > 1
     acado_tic(&timer);
     #endif
-    if (args->workspaceMode == 2) {
-        // NOTE: has to be called after setting up the memory which contains the problem dimensions
-        ocp_qp_ooqp_cast_workspace(work, mem);
-    }
+
+    // NOTE: has to be called after setting up the memory which contains the problem dimensions
+    ocp_qp_ooqp_cast_workspace(work, mem);
+
     #if TIMINGS > 1
     cputime = acado_toc(&timer);
     printf(">>> OOQP workspace casted in %.3f ms.\n", 1e3*cputime);
@@ -740,5 +703,27 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     if (0) print_outputs(mem, work, return_value);
     fill_in_qp_out(in, out, work);
 
-return return_value;
+    return return_value;
+}
+
+void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args*) args_;
+    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) mem_;
+
+    args->printLevel = 0;
+    args->fixHessianSparsity = 1;
+    args->fixDynamicsSparsity = 1;
+    args->fixInequalitiesSparsity = 1;
+    args->fixHessian = 0;
+    args->fixDynamics = 0;
+    args->fixInequalities = 0;
+
+    ocp_qp_ooqp_create_memory(qp_in, args, mem);
+    int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+void ocp_qp_ooqp_destroy(void *mem_, void *work) {
+    free(work);
+    ocp_qp_ooqp_free_memory(mem_);
 }

@@ -57,6 +57,11 @@ Thumbs.db
 *external/download
 *encrypted_script
 
+# Auto-generated files #
+########################
+*experimental/dimitris/*/*.txt
+*experimental/dimitris/*/*.mat
+
 # Misc #
 ########
 *.doc
@@ -65,3 +70,7 @@ build/
 local/
 *.dat
 octave-workspace
+.vscode
+notes.txt
+*.dSYM/
+cmakelint

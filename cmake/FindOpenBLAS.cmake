@@ -51,6 +51,7 @@ SET(Open_BLAS_INCLUDE_SEARCH_PATHS
   /usr/local/include/openblas
   /usr/local/include/openblas-base
   /opt/OpenBLAS/include
+  /opt/openblas/include
   $ENV{OpenBLAS_HOME}
   $ENV{OpenBLAS_HOME}/include
 )
@@ -91,8 +92,8 @@ ENDIF()
 
 IF (OpenBLAS_FOUND)
   IF (NOT OpenBLAS_FIND_QUIETLY)
-    MESSAGE(STATUS "Found OpenBLAS libraries: ${OpenBLAS_LIB}")
-    MESSAGE(STATUS "Found OpenBLAS include: ${OpenBLAS_INCLUDE_DIR}")
+    # MESSAGE(STATUS "Found OpenBLAS libraries: ${OpenBLAS_LIB}")
+    # MESSAGE(STATUS "Found OpenBLAS include: ${OpenBLAS_INCLUDE_DIR}")
   ENDIF (NOT OpenBLAS_FIND_QUIETLY)
 ELSE (OpenBLAS_FOUND)
   IF (OpenBLAS_FIND_REQUIRED)

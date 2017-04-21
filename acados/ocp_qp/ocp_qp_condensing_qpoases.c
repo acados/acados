@@ -104,7 +104,6 @@ static void calculate_num_state_bounds(ocp_qp_in *in) {
                 num_state_bounds++;
         }
         work.nstate_bounds[i] = num_state_bounds;
-//        printf("work.nstate_bounds[%d]: %d \n", i, work.nstate_bounds[i]);
     }
 }
 
@@ -133,7 +132,6 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
     d_zeros(&out.A, nconstraints, nconvars);
     d_zeros(&out.lbA, nconstraints, 1);
     d_zeros(&out.ubA, nconstraints, 1);
-//    printf("nconstraints: %d \n", nconstraints);
 
     for (int_t i = 0; i < nconvars; i++) {
         out.lb[i] = -QPOASES_INFTY;
@@ -148,19 +146,19 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
     // condensing workspace
     work.nconvars = nconvars;
     work.nconstraints = nconstraints;
-    work.G = malloc(sizeof(*work.G) * N);
-    work.g = malloc(sizeof(*work.g) * N);
-    work.D = malloc(sizeof(*work.D) * (N+1));
+    work.G = calloc(N, sizeof(*work.G));
+    work.g = calloc(N, sizeof(*work.g));
+    work.D = calloc(N+1, sizeof(*work.D));
     for (int_t i = 0; i < N; i++) {
-        work.G[i] = malloc(sizeof(*(work.G[i])) * (i+1));
-        work.D[i] = malloc(sizeof(*(work.D[i])) * (i+1));
+        work.G[i] = calloc(i+1, sizeof(*(work.G[i])));
+        work.D[i] = calloc(i+1, sizeof(*(work.D[i])));
         d_zeros(&work.g[i], qp_in->nx[i], 1);
         for (int_t j = 0; j <= i; j++) {
             d_zeros(&work.G[i][j], qp_in->nx[i], qp_in->nu[j]);
             d_zeros(&work.D[i][j], nc[i], qp_in->nu[j]);
         }
     }
-    work.D[N] = malloc(sizeof(*(work.D[N])) * N);
+    work.D[N] = calloc(N, sizeof(*(work.D[N])));
     for (int_t i = 0; i < N; i++) {
         d_zeros(&work.D[N][i], nc[N], qp_in->nu[i]);
     }
@@ -209,8 +207,9 @@ static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
     return return_flag;
 }
 
-static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u,
-    real_t *primal_solution, const real_t *x0) {
+static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u, real_t **pi,
+    real_t *primal_solution, real_t *dual_solution, const real_t *x0,
+    int_t nconstraints, int_t nconvars) {
 
     for (int_t i = 0; i < qp_in->nx[0]; i++) {
         x[0][i] = x0[i];
@@ -228,6 +227,56 @@ static void recover_state_trajectory(ocp_qp_in *qp_in, real_t **x, real_t **u,
         // TODO(robin): this only holds for MPC, not MHE
         // for (int_t j = 0; j < NU; j++) u[i][j] = primal_solution[NX+i*NU+j];
     }
+
+    // Recover multipliers in pi
+    // pi_k = lambda_k + Q_k x_k
+    int_t cindex = nconvars+nconstraints;
+    for (int_t i = qp_in->N; i > 0; i--) {
+        int_t idxb = 0;
+        cindex -= (work.nstate_bounds[i]+qp_in->nc[i]);
+        // pi_k = lambda_k
+        for (int_t j = 0; j < qp_in->nx[0]; j++) {
+            if (qp_in->nb[i] > idxb && qp_in->idxb[i][idxb] == j) {  // bound on x[j]
+                pi[(i-1)][j] = -dual_solution[cindex+idxb];
+                idxb++;
+            } else {
+                pi[(i-1)][j] = 0.0;
+            }
+        }
+        if (qp_in->nc[i] > 0) {
+            // pi_k = pi_k + Cx_k+1^T lambda_k+1
+            for (int_t j = 0; j < qp_in->nx[0]; j++) {
+                for (int_t k = 0; k < qp_in->nc[i]; k++) {
+                    pi[(i-1)][j] -= qp_in->Cx[i][j*qp_in->nc[i]+k]
+                                                 *dual_solution[cindex+work.nstate_bounds[i]+k];
+                }
+            }
+        }
+
+        // pi_k = pi_k + Q_k x_k + q_k
+        for (int_t j = 0; j < qp_in->nx[0]; j++) {
+            pi[(i-1)][j] += qp_in->q[i][j];
+            for (int_t k = 0; k < qp_in->nx[0]; k++) {
+                pi[(i-1)][j] += qp_in->Q[i][k*qp_in->nx[0]+j]*x[i][k];
+            }
+        }
+
+        if (i < qp_in->N) {
+            // pi_k = pi_k + S_k u_k
+            for (int_t j = 0; j < qp_in->nx[0]; j++) {
+                for (int_t k = 0; k < qp_in->nu[0]; k++) {
+                    pi[(i-1)][j] += qp_in->S[i][j*qp_in->nu[0]+k]*u[i][k];
+                }
+            }
+
+            // pi_k = pi_k + A_k^T pi_k+1
+            for (int_t j = 0; j < qp_in->nx[0]; j++) {
+                for (int_t k = 0; k < qp_in->nx[0]; k++) {
+                    pi[(i-1)][j] += qp_in->A[i][j*qp_in->nx[0]+k]*pi[i][k];
+                }
+            }
+        }
+    }
 }
 
 static void convert_to_row_major(const real_t *input, real_t *output, const int_t nrows,
@@ -242,6 +291,12 @@ static void convert_to_row_major(const real_t *input, real_t *output, const int_
 
 int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     void *args_, void *mem_, void *workspace_) {
+
+    int_t ncv = get_num_condensed_vars(qp_in);
+    calculate_num_state_bounds(qp_in);
+    int_t nconstraints = get_num_constraints(qp_in);
+    d_zeros(&primal_solution, ncv, 1);
+    d_zeros(&dual_solution, ncv+nconstraints, 1);
 
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
     double *workspace = (double*) workspace_;
@@ -272,7 +327,8 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     } else {
         return_flag = solve_condensed_QPB(work.nconvars, &QPB, primal_solution, dual_solution);
     }
-    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, primal_solution, qp_in->lb[0]);
+    recover_state_trajectory(qp_in, qp_out->x, qp_out->u, qp_out->pi,
+            primal_solution, dual_solution, qp_in->lb[0], work.nconstraints, work.nconvars);
 
     d_free(out.H);
     d_free(out.h);
@@ -305,10 +361,10 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_free(work.w1);
     d_free(work.w2);
     d_free(work.Sx0);
-    // int_free(work.nstate_bounds);
+    int_free(work.nstate_bounds);
     d_free(A_row_major);
-    // d_free(primal_solution);
-    // d_free(dual_solution);
+    d_free(primal_solution);
+    d_free(dual_solution);
 
     return return_flag;
 }
@@ -330,10 +386,18 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *in,
     return ws_size;
 }
 
-void initialise_qpoases(ocp_qp_in *in) {
-    int_t ncv = get_num_condensed_vars(in);
-    calculate_num_state_bounds(in);
-    int_t nconstraints = get_num_constraints(in);
-    d_zeros(&primal_solution, ncv, 1);
-    d_zeros(&dual_solution, ncv+nconstraints, 1);
+void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
+
+    // TODO(dimitris): replace dummy commands once interface completed
+    args->dummy = 42.0;
+    if (qp_in->nx[0] > 0)
+        mem_++;
+    work++;
+}
+
+void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
+    // TODO(dimitris): replace dummy commands once interface completed
+    mem_++;
+    work++;
 }

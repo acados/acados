@@ -40,7 +40,7 @@ void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
 
     for (jj = 0; jj < n; jj++) {
         for (ii = 0; ii < m; ii++) {
-            // C[ii + ldc * jj] = 0;
+            C[ii + ldc * jj] = 0;
             for (kk = 0; kk < k; kk++) {
                 C[ii + ldc * jj] += A[ii + lda * kk] * B[kk + ldb * jj];
             }
@@ -617,7 +617,7 @@ void padeapprox(int m, int row, double *A) {
     dmcopy(row, row, V, row, D, row);
     //    daxpy_(&row2, &dm1, U, &i1, D, &i1);
     daxpy_3l(row2, -1.0, U, D);
-    int *ipiv = (int *)malloc(row * sizeof(int));
+    int *ipiv = (int *) calloc(row, sizeof(int));
     int info = 0;
     //    dgesv_(&row, &row, D, &row, ipiv, A, &row, &info);
     dgesv_3l(row, row, D, row, ipiv, A, row, &info);

@@ -20,6 +20,7 @@
 #include "acados/utils/print.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
@@ -95,3 +96,28 @@ void print_array(char *file_name, real_t *array, int_t size) {
 void print_int_array(char *file_name, const int_t *array, int_t size) {
     print_int_matrix(file_name, array, size, 1);
 }
+
+// Read space delimited file into column-major matrix
+void read_matrix(const char *file_name, real_t* array, const int_t nrows,
+        const int_t ncols) {
+    FILE *file;
+    file = fopen(file_name, "r");
+
+    if (file == NULL) {
+        printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", file_name);
+        exit(1);
+    }
+
+    // Read numbers from file into buffer.
+    for (int i = 0; i < nrows; i++) {
+        for (int j = 0; j < ncols; j++) {
+            if (!fscanf(file, "%lf", &array[nrows*j+i])) {
+                break;
+            }
+        }
+    }
+
+    fclose(file);
+}
+
+

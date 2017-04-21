@@ -36,6 +36,9 @@ void print_array(char *file_name, real_t *array, int_t size);
 
 void print_int_array(char *file_name, const int_t *array, int_t size);
 
+void read_matrix(const char *file_name, real_t* array, const int_t nrows,
+        const int_t ncols);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

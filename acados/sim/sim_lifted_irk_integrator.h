@@ -24,39 +24,53 @@
 extern "C" {
 #endif
 
-#include "acados/sim/sim_collocation.h"
-#include "acados/sim/sim_rk_common.h"
+#include <stdbool.h>
 #include "acados/utils/types.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_collocation.h"
 
-#define TRANSPOSED 1
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
-#define WARM_SWAP 0
 
-typedef struct sim_lifted_irk_workspace_ {
+typedef struct {
     real_t *rhs_in;
-    real_t *VDE_tmp;
+    real_t *jac_tmp;
+    real_t **VDE_tmp;
     real_t *out_tmp;
     int_t *ipiv;
-    int_t *ipiv_tmp;
+
     real_t *sys_mat;
     real_t *sys_sol;
+    real_t *sys_sol_trans;
+
+    real_t *trans;
     struct d_strmat *str_mat;
     struct d_strmat *str_sol;
-    struct d_strmat *str_sol_t;
+
+    real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
 
-typedef struct sim_lifted_irk_memory_ {
+typedef struct {
     real_t *K_traj;
     real_t *DK_traj;
+    real_t *delta_DK_traj;
+    real_t *mu_traj;
+
+    real_t **sys_mat2;
+    real_t **sys_sol2;
+    struct d_strmat **str_mat2;
+    struct d_strmat **str_sol2;
+    int_t **ipiv2;
+    real_t *adj_traj;
+
+    real_t **jac_traj;
+
     real_t *x;
     real_t *u;
-    int_t nswaps;
-    int *ipiv;
 } sim_lifted_irk_memory;
 
 
-void sim_lifted_irk(const sim_in *in, sim_out *out,
+int_t sim_lifted_irk(const sim_in *in, sim_out *out,
         void *mem, void *work);
 
 void sim_lifted_irk_create_workspace(const sim_in *in,
@@ -66,6 +80,11 @@ void sim_lifted_irk_create_memory(const sim_in *in,
         sim_lifted_irk_memory *mem);
 
 void sim_irk_create_opts(int_t num_stages, const char* name, sim_RK_opts *opts);
+
+void sim_irk_control_collocation(int_t num_stages, const char* name, sim_RK_opts *opts);
+
+void sim_irk_create_Newton_scheme(int_t num_stages, const char* name,
+        sim_RK_opts *opts, enum Newton_type_collocation type);
 
 #ifdef __cplusplus
 } /* extern "C" */

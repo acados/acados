@@ -74,7 +74,7 @@ else
 	MEXEXT = mexa64
 endif
 
-CFLAGS = -Wall -pedantic -Wshadow -O3 -finline-functions -fPIC -DLINUX -D__SUPPRESSANYOUTPUT__
+CFLAGS = -w -O3 -finline-functions -fPIC -DLINUX -D__SUPPRESSANYOUTPUT__ #-Wall -pedantic -Wshadow 
 #          -g -D__DEBUG__ -D__NO_COPYRIGHT__ -D__SUPPRESSANYOUTPUT__ -D__USE_SINGLE_PRECISION__
 
 # libraries to link against when building qpOASES_e .so files
