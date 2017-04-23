@@ -121,8 +121,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         sim_solver integrators[NN];
 
         sim_RK_opts rk_opts[NN];
-        sim_erk_workspace erk_work[NN];
-        sim_lifted_irk_workspace irk_work[NN];
+        void *sim_work;
         sim_lifted_irk_memory irk_mem[NN];
 
         // TODO(rien): can I move this somewhere inside the integrator?
@@ -136,11 +135,9 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             if (d > 0) {
                 integrators[jj].fun = &sim_lifted_irk;
                 integrators[jj].mem = &irk_mem[jj];
-                integrators[jj].work = &irk_work[jj];
             } else {
                 integrators[jj].fun = &sim_erk;
                 integrators[jj].mem = 0;
-                integrators[jj].work = &erk_work[jj];
             }
 
             sim_in[jj].nSteps = Ns;
@@ -191,8 +188,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             sim_out[jj].info = &info[jj];
             sim_out[jj].grad = (real_t *) malloc(sizeof(*sim_out[jj].grad ) * (NX+NU));
 
-            irk_work[jj].str_mat = &str_mat[jj];
-            irk_work[jj].str_sol = &str_sol[jj];
+            int_t workspace_size;
             if (d > 0) {
                 sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
                 if (INEXACT == 0) {
@@ -203,12 +199,14 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                     sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
                 }
 
-                sim_lifted_irk_create_workspace(&sim_in[jj], &rk_opts[jj], &irk_work[jj]);
+                workspace_size = sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
                 sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
             } else {
                 sim_erk_create_arguments(&rk_opts[jj], 4);
-                sim_erk_create_workspace(&sim_in[jj], &rk_opts[jj], &erk_work[jj]);
+                workspace_size = sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
             }
+            if (jj == 0) sim_work = (void *) malloc(workspace_size);
+            integrators[jj].work = sim_work;
         }
 
         int_t nx[NN+1] = {0};

@@ -186,13 +186,8 @@ int main() {
     sim_info info[NN];
 
     sim_RK_opts rk_opts[NN];
-    sim_erk_workspace erk_work[NN];
-    sim_lifted_irk_workspace irk_work[NN];
+    void *sim_work;
     sim_lifted_irk_memory irk_mem[NN];
-
-    // TODO(rien): can I move this somewhere inside the integrator?
-    struct d_strmat str_mat[NN];
-    struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
         sim_in[jj].nSteps = 2;
@@ -258,17 +253,17 @@ int main() {
         sim_out[jj].S_forw = malloc(sizeof(*sim_out[jj].S_forw) * (NX*(NX+NU)));
         sim_out[jj].info = &info[jj];
 
-        irk_work[jj].str_mat = &str_mat[jj];
-        irk_work[jj].str_sol = &str_sol[jj];
+        int_t workspace_size;
         if (implicit > 0) {
             sim_irk_create_arguments(&rk_opts[jj], implicit, "Gauss");
 
-            sim_lifted_irk_create_workspace(&sim_in[jj], &rk_opts[jj], &irk_work[jj]);
+            workspace_size = sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
             sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
         } else {
             sim_erk_create_arguments(&rk_opts[jj], 4);
-            sim_erk_create_workspace(&sim_in[jj], &rk_opts[jj], &erk_work[jj]);
+            workspace_size = sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
+        if (jj == 0) sim_work = (void *) malloc(workspace_size);
     }
 
     int_t nx[NN+1] = {0};
@@ -411,9 +406,9 @@ int main() {
             for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
             for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
             if (implicit > 0) {
-                sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[i], &irk_mem[i], &irk_work[i]);
+                sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[i], &irk_mem[i], sim_work);
             } else {
-                sim_erk(&sim_in[i], &sim_out[i], &rk_opts[i], 0, &erk_work[i]);
+                sim_erk(&sim_in[i], &sim_out[i], &rk_opts[i], 0, sim_work);
             }
 
             for (int_t j = 0; j < NX; j++) {

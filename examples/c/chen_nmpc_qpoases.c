@@ -104,8 +104,9 @@ int main() {
 
     sim_RK_opts rk_opts;
     sim_erk_create_arguments(&rk_opts, 4);
-    sim_erk_workspace erk_work;
-    sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
+    void *erk_work;
+    int_t work_space_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
+    erk_work = (void *) malloc(work_space_size);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN] = {0};
@@ -186,7 +187,7 @@ int main() {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                sim_erk(&sim_in, &sim_out, &rk_opts, 0, &erk_work);
+                sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -252,9 +253,7 @@ int main() {
     free(rk_opts.b_vec);
     free(rk_opts.c_vec);
 
-    free(erk_work.rhs_forw_in);
-    free(erk_work.K_traj);
-    free(erk_work.out_forw_traj);
+    free(erk_work);
 
     return 0;
 }

@@ -32,6 +32,92 @@
 
 #include "acados/utils/print.h"
 
+
+ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
+         const sim_in *in, void *args) {
+    int_t nx = in->nx;
+    int_t nu = in->nu;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
+    int_t num_stages = opts->num_stages;
+    int_t NF = in->nsens_forw;
+//    int_t num_sys = ceil(num_stages/2.0);
+    int_t dim_sys = num_stages*nx;
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
+        dim_sys = nx;
+        if (num_stages > 1) dim_sys = 2*nx;
+    }
+
+    char *ptr = (char *)work;
+    ptr += sizeof(sim_lifted_irk_workspace);
+    work->rhs_in = (real_t*)ptr;
+    ptr += (nx*(1+NF)+nu+1)*sizeof(real_t);  // rhs_in
+    work->out_tmp = (real_t*)ptr;
+    ptr += (nx*(1+NF))*sizeof(real_t);  // out_tmp
+    if (opts->scheme.type == exact) {
+        work->ipiv = (int_t*)ptr;
+        ptr += (dim_sys)*sizeof(int_t);  // ipiv
+        work->sys_mat = (real_t*)ptr;
+        ptr += (dim_sys*dim_sys)*sizeof(real_t);  // sys_mat
+    }
+    work->sys_sol = (real_t*)ptr;
+    ptr += ((num_stages*nx)*(1+NF))*sizeof(real_t);  // sys_sol
+    work->VDE_tmp = (real_t**)ptr;
+    ptr += (num_stages)*sizeof(real_t*);  // VDE_tmp
+    for (int_t i = 0; i < num_stages; i++) {
+        work->VDE_tmp[i] = (real_t*)ptr;
+        ptr += (nx*(1+NF))*sizeof(real_t);  // VDE_tmp[i]
+    }
+    work->jac_tmp = (real_t*)ptr;
+    ptr += (nx*(nx+1))*sizeof(real_t);  // jac_tmp
+
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
+        work->sys_sol_trans = (real_t*)ptr;
+        ptr += ((num_stages*nx)*(1+NF))*sizeof(real_t);  // sys_sol_trans
+        work->trans = (real_t*)ptr;
+        ptr += (num_stages*num_stages)*sizeof(real_t);  // trans
+    }
+
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
+        work->out_adj_tmp = (real_t*)ptr;
+        ptr += (nx)*sizeof(real_t);  // out_adj_tmp
+    }
+
+#if !TRIPLE_LOOP
+    work->str_mat = (struct d_strmat*)ptr;
+    ptr += sizeof(struct d_strmat);
+    work->str_sol = (struct d_strmat*)ptr;
+    ptr += sizeof(struct d_strmat);
+#if defined(LA_HIGH_PERFORMANCE)
+        // matrices in matrix struct format:
+        int size_strmat = 0;
+        size_strmat += d_size_strmat(dim_sys, dim_sys);
+        size_strmat += d_size_strmat(dim_sys, 1+NF);
+
+        d_create_strmat(dim_sys, dim_sys, work->str_mat, ptr);
+        ptr += work->str_mat->memory_size;
+        d_create_strmat(dim_sys, 1+NF, work->str_sol, ptr);
+        ptr += work->str_sol->memory_size;
+
+#elif defined(LA_REFERENCE)
+
+        //  pointer to column-major matrix
+        d_create_strmat(dim_sys, dim_sys, work->str_mat, work->sys_mat);
+        d_create_strmat(dim_sys, 1+NF, work->str_sol, work->sys_sol);
+
+        d_cast_diag_mat2strmat((double *) ptr, work->str_mat);
+        ptr += d_size_diag_strmat(dim_sys, dim_sys);
+
+#else  // LA_BLAS
+
+        // not allocate new memory: point to column-major matrix
+        d_create_strmat(dim_sys, dim_sys, work->str_mat, work->sys_mat);
+        d_create_strmat(dim_sys, 1+NF, work->str_sol, work->sys_sol);
+
+#endif  // LA_HIGH_PERFORMANCE
+#endif  // !TRIPLE_LOOP
+}
+
+
 #if TRIPLE_LOOP
 
 #if CODE_GENERATION
@@ -404,6 +490,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
     int_t i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory*) mem_;
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace*) work_;
+    sim_lifted_irk_cast_workspace(work, in, args);
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
     int_t NF = in->nsens_forw;
@@ -556,7 +643,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 #if TRIPLE_LOOP
                     solve_system_trans_ACADO(sys_mat, sys_sol, ipiv, dim_sys, 1);
 #else  // TRIPLE_LOOP
-#error: NOT YET IMPLEMENTED
+//#error: NOT YET IMPLEMENTED
 #endif  // TRIPLE_LOOP
                 }
 #ifdef MEASURE_TIMINGS
@@ -900,8 +987,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 }
 
 
-void sim_lifted_irk_create_workspace(const sim_in *in, void *args,
-        sim_lifted_irk_workspace *work) {
+int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
     int_t nx = in->nx;
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts*) args;
@@ -914,108 +1000,47 @@ void sim_lifted_irk_create_workspace(const sim_in *in, void *args,
         if (num_stages > 1) dim_sys = 2*nx;
     }
 
-    work->rhs_in = calloc(nx*(1+NF)+nu+1, sizeof(*work->rhs_in));
-    work->out_tmp = calloc(nx*(1+NF), sizeof(*work->out_tmp));
+    int_t size = sizeof(sim_lifted_irk_workspace);
+    size += (nx*(1+NF)+nu+1)*sizeof(real_t);  // rhs_in
+    size += (nx*(1+NF))*sizeof(real_t);  // out_tmp
     if (opts->scheme.type == exact) {
-        work->ipiv = calloc(dim_sys, sizeof(*work->ipiv));
-        for (int_t i = 0; i < dim_sys; i++) work->ipiv[i] = i;
-        work->sys_mat = calloc(dim_sys*dim_sys, sizeof(*work->sys_mat));
+        size += (dim_sys)*sizeof(int_t);  // ipiv
+        size += (dim_sys*dim_sys)*sizeof(real_t);  // sys_mat
     }
-    work->sys_sol = calloc((num_stages*nx)*(1+NF), sizeof(*work->sys_sol));
-    work->VDE_tmp = calloc(num_stages, sizeof(*work->VDE_tmp));
-    for (int_t i = 0; i < num_stages; i++) {
-        work->VDE_tmp[i] = calloc(nx*(1+NF), sizeof(*work->VDE_tmp[i]));
-    }
-    work->jac_tmp = calloc(nx*(nx+1), sizeof(*work->jac_tmp));
+    size += ((num_stages*nx)*(1+NF))*sizeof(real_t);  // sys_sol
+    size += (num_stages)*sizeof(real_t*);  // VDE_tmp
+    size += (num_stages*nx*(1+NF))*sizeof(real_t);  // VDE_tmp[...]
+    size += (nx*(nx+1))*sizeof(real_t);  // jac_tmp
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
-        work->sys_sol_trans = calloc((num_stages*nx)*(1+NF), sizeof(*work->sys_sol_trans));
-        work->trans = calloc(num_stages*num_stages, sizeof(*work->trans));
+        size += ((num_stages*nx)*(1+NF))*sizeof(real_t);  // sys_sol_trans
+        size += (num_stages*num_stages)*sizeof(real_t);  // trans
     }
 
     if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
-        work->out_adj_tmp = calloc(nx, sizeof(*work->out_adj_tmp));
+        size += (nx)*sizeof(real_t);  // out_adj_tmp
     }
 
 #if !TRIPLE_LOOP
-    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-            || opts->scheme.type == simplified_inis2) {
-        work->str_mat2 = calloc(num_sys, sizeof(*work->str_mat2));
-        work->str_sol2 = calloc(num_sys, sizeof(*work->str_sol2));
-    }
-#if !defined(LA_HIGH_PERFORMANCE)
-    real_t *sys_mat, *sys_sol;
-#endif
-    for (int_t i = 0; i < num_sys; i++) {
-        if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                || opts->scheme.type == simplified_inis2) {
-#if !defined(LA_HIGH_PERFORMANCE)
-            sys_mat = work->sys_mat2[i];
-            sys_sol = work->sys_sol2[i];
-#endif
-            if ((i+1) == num_sys && num_sys != floor(num_stages/2.0)) {  // odd number of stages
-                dim_sys = nx;
-            } else {
-                dim_sys = 2*nx;
-            }
-        } else {
-#if !defined(LA_HIGH_PERFORMANCE)
-            sys_mat = work->sys_mat;
-            sys_sol = work->sys_sol;
-#endif
-            dim_sys = num_stages*nx;
-            i = num_sys;  // break out of for-loop
-        }
+    size += sizeof(struct d_strmat);  // str_mat
+    size += sizeof(struct d_strmat);  // str_sol
 
+    int size_strmat = 0;
 #if defined(LA_HIGH_PERFORMANCE)
-        // matrices in matrix struct format:
-        int size_strmat = 0;
-        size_strmat += d_size_strmat(dim_sys, dim_sys);
-        size_strmat += d_size_strmat(dim_sys, 1+NF);
-
-        // accocate memory
-        void *memory_strmat;
-        v_zeros_align(&memory_strmat, size_strmat);
-        char *ptr_memory_strmat = (char *) memory_strmat;
-
-        d_create_strmat(dim_sys, dim_sys, work->str_mat, ptr_memory_strmat);
-        ptr_memory_strmat += work->str_mat->memory_size;
-        d_create_strmat(dim_sys, 1+NF, work->str_sol, ptr_memory_strmat);
-        ptr_memory_strmat += work->str_sol->memory_size;
+    // matrices in matrix struct format:
+    size_strmat += d_size_strmat(dim_sys, dim_sys);
+    size_strmat += d_size_strmat(dim_sys, 1+NF);
 
 #elif defined(LA_REFERENCE)
-
-        //  pointer to column-major matrix
-        d_create_strmat(dim_sys, dim_sys, work->str_mat, sys_mat);
-        d_create_strmat(dim_sys, 1+NF, work->str_sol, sys_sol);
-
-        // allocate new memory only for the diagonal
-        int size_strmat = 0;
-        size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
-
-        void *memory_strmat = malloc(size_strmat);
-        //    void *memory_strmat;
-        //    v_zeros_align(&memory_strmat, size_strmat);
-        char *ptr_memory_strmat = (char *) memory_strmat;
-
-        d_cast_diag_mat2strmat((double *) ptr_memory_strmat, work->str_mat);
-        //    ptr_memory_strmat += d_size_diag_strmat(dim_sys, dim_sys);
-
-#else  // LA_BLAS
-
-        // not allocate new memory: point to column-major matrix
-        d_create_strmat(dim_sys, dim_sys, work->str_mat, sys_mat);
-        d_create_strmat(dim_sys, 1+NF, work->str_sol, sys_sol);
+    // allocate new memory only for the diagonal
+    int size_strmat = 0;
+    size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
 
 #endif  // LA_HIGH_PERFORMANCE
-
-        if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis
-                || opts->scheme.type == simplified_inis2) {
-            work->str_mat2[i] = work->str_mat;
-            work->str_sol2[i] = work->str_sol;
-        }
-    }
+    size += size_strmat;
 #endif  // !TRIPLE_LOOP
+
+    return size;
 }
 
 
@@ -1078,7 +1103,67 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
                 for (int_t j = 0; j < 2*nx; j++) mem->sys_mat2[i][j*(2*nx+1)] = 1.0;
             }
         }
+    } else {
+        num_sys = 1;
     }
+
+#if !TRIPLE_LOOP
+    if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
+        mem->str_mat2 = calloc(num_sys, sizeof(*mem->str_mat2));
+        mem->str_sol2 = calloc(num_sys, sizeof(*mem->str_sol2));
+        int_t dim_sys;
+
+    for (int_t i = 0; i < num_sys; i++) {
+        if ((i+1) == num_sys && num_sys != floor(num_stages/2.0)) {  // odd number of stages
+            dim_sys = nx;
+        } else {
+            dim_sys = 2*nx;
+        }
+
+#if defined(LA_HIGH_PERFORMANCE)
+        // matrices in matrix struct format:
+        int size_strmat = 0;
+        size_strmat += d_size_strmat(dim_sys, dim_sys);
+        size_strmat += d_size_strmat(dim_sys, 1+NF);
+
+        // accocate memory
+        void *memory_strmat;
+        v_zeros_align(&memory_strmat, size_strmat);
+        char *ptr_memory_strmat = (char *) memory_strmat;
+
+        d_create_strmat(dim_sys, dim_sys, mem->str_mat2[i], ptr_memory_strmat);
+        ptr_memory_strmat += mem->str_mat2[i]->memory_size;
+        d_create_strmat(dim_sys, 1+NF, mem->str_sol2[i], ptr_memory_strmat);
+        ptr_memory_strmat += mem->str_sol2[i]->memory_size;
+
+#elif defined(LA_REFERENCE)
+
+        //  pointer to column-major matrix
+        d_create_strmat(dim_sys, dim_sys, mem->str_mat2[i], mem->sys_mat2[i]);
+        d_create_strmat(dim_sys, 1+NF, mem->str_sol2[i], mem->sys_sol2[i]);
+
+        // allocate new memory only for the diagonal
+        int size_strmat = 0;
+        size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
+
+        void *memory_strmat = malloc(size_strmat);
+        //    void *memory_strmat;
+        //    v_zeros_align(&memory_strmat, size_strmat);
+        char *ptr_memory_strmat = (char *) memory_strmat;
+
+        d_cast_diag_mat2strmat((double *) ptr_memory_strmat, mem->str_mat2[i]);
+        //    ptr_memory_strmat += d_size_diag_strmat(dim_sys, dim_sys);
+
+#else  // LA_BLAS
+
+        // not allocate new memory: point to column-major matrix
+        d_create_strmat(dim_sys, dim_sys, mem->str_mat2[i], mem->sys_mat2[i]);
+        d_create_strmat(dim_sys, 1+NF, mem->str_sol2[i], mem->sys_sol2[i]);
+
+#endif  // LA_HIGH_PERFORMANCE
+        }
+    }
+#endif  // !TRIPLE_LOOP
 }
 
 

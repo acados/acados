@@ -73,8 +73,7 @@ typedef struct {
 int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
         void *mem, void *work);
 
-void sim_lifted_irk_create_workspace(const sim_in *in, void *args,
-        sim_lifted_irk_workspace *work);
+int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args);
 
 void sim_lifted_irk_create_memory(const sim_in *in, void *args,
         sim_lifted_irk_memory *mem);

@@ -41,7 +41,7 @@ typedef struct {
 
 int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
 
-void sim_erk_create_workspace(const sim_in *in, void *args, sim_erk_workspace *work);
+int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
 
 void sim_erk_create_arguments(void *args, int_t num_stages);
 
