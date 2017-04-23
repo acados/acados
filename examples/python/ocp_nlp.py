@@ -8,7 +8,7 @@ N = 10
 nx = 2
 nu = 1
 
-nlp = ocp_nlp_in({'N':N, 'nx':nx, 'nu':nu})
+nlp = ocp_nlp({'N':N, 'nx':nx, 'nu':nu})
 # Specify initial condition
 current_state = array([0.1, 0.1])
 nlp.lb[0] = current_state

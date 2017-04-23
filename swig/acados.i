@@ -530,6 +530,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 }
 
 %ignore ocp_qp_out;
+%rename(ocp_qp) ocp_qp_in;
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
@@ -654,6 +655,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 %ignore ocp_nlp_cast_workspace;
 %ignore ocp_nlp_create_memory;
 %ignore ocp_nlp_free_memory;
+%rename(ocp_nlp) ocp_nlp_in;
 %include "acados/ocp_nlp/ocp_nlp_common.h"
 
 %{

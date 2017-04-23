@@ -1,7 +1,7 @@
 from acados import *
 from numpy import array, ones, zeros, diag
 
-qp_in = ocp_qp_in({'N':5, 'nx':2, 'nu':1})
+qp_in = ocp_qp({'N':5, 'nx':2, 'nu':1})
 x0 = array([1,1])
 
 # specify OCP
