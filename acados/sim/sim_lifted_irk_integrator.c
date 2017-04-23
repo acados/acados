@@ -1167,6 +1167,11 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
 }
 
 
+void sim_lifted_irk_free_memory(void *mem_) {
+    free(mem_);
+}
+
+
 void sim_irk_create_arguments(void *args, const int_t num_stages, const char* name) {
     sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->num_stages = num_stages;
@@ -1217,3 +1222,26 @@ void sim_irk_create_Newton_scheme(void *args, const int_t num_stages, const char
         // throw error somehow?
     }
 }
+
+
+void sim_lifted_irk_initialize(const sim_in *in, void *args, void *mem_, void **work) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
+    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *) mem_;
+
+    // TODO(dimitris): opts should be an input to initialize
+    if (opts->num_stages > 0) {
+        sim_irk_create_arguments(args, opts->num_stages, "Gauss");
+    } else {
+        sim_irk_create_arguments(args, 2, "Gauss");
+    }
+    sim_lifted_irk_create_memory(in, args, mem);
+    int_t work_space_size = sim_lifted_irk_calculate_workspace_size(in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+
+void sim_lifted_irk_destroy(void *mem, void *work) {
+    free(work);
+    sim_lifted_irk_free_memory(mem);
+}
+

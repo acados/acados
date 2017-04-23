@@ -292,18 +292,20 @@ void sim_erk_create_arguments(void *args, const int_t num_stages) {
 }
 
 
-// void sim_erk_initialize(ocp_qp_in *sim_in, void *args_, void *mem_, void **work) {
-//    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args*) args_;
-//    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) mem_;
-//
-//    // TODO(dimitris): opts should be an input to initialize
-//    ocp_qp_qpdunes_create_arguments(args, QPDUNES_NONLINEAR_MPC);
-//    ocp_qp_qpdunes_create_memory(qp_in, args, mem);
-//    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
-//    *work = (void *) malloc(work_space_size);
-// }
-//
-// void sim_erk_destroy(void *mem, void *work) {
-//    free(work);
-//    ocp_qp_qpdunes_free_memory(mem);
-// }
+void sim_erk_initialize(const sim_in *in, void *args, void **work) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
+
+    // TODO(dimitris): opts should be an input to initialize
+    if (opts->num_stages > 0) {
+        sim_erk_create_arguments(args, opts->num_stages);
+    } else {
+        sim_erk_create_arguments(args, 4);
+    }
+    int_t work_space_size = sim_erk_calculate_workspace_size(in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+
+void sim_erk_destroy(void *work) {
+    free(work);
+}
