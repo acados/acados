@@ -22,6 +22,6 @@ ExternalProject_Add(
 )
 
 ExternalProject_Get_Property(blasfeo_project source_dir)
-add_library(blasfeo STATIC IMPORTED)
+add_library(blasfeo STATIC IMPORTED GLOBAL)
 add_dependencies(blasfeo blasfeo_project)
 set_property(TARGET blasfeo PROPERTY IMPORTED_LOCATION "${source_dir}/libblasfeo.a")

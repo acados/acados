@@ -1,5 +1,5 @@
 /* The model comes from \cite{Wirsching2006} */
-#include "test/ocp_nlp/chain/Chain_model.h"
+#include "test/ocp_nlp/chain/chain_model.h"
 
 extern int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int jac_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);

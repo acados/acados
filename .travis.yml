@@ -45,6 +45,7 @@ install:
   - popd
   - travis_retry source install_packages.sh
   - export MPLBACKEND=Agg # For matplotlib
+  - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH # For acados
 
 script:
   - cmake -E make_directory build

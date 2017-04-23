@@ -29,6 +29,7 @@
 #endif
 
 #include "hpmpc/include/aux_d.h"
+#include "hpmpc/include/mpc_solvers.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"

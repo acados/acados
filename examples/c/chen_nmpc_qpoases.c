@@ -26,7 +26,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "examples/Chen/Chen_model.h"
+#include "examples/c/Chen_model/chen_model.h"
 
 #define NN 13
 #define NX 2
@@ -67,7 +67,7 @@ int main() {
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10;
+    int_t   max_iters           = 10000;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
@@ -127,6 +127,8 @@ int main() {
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
+    real_t *ppi[N];
+    real_t *plam[N+1];
     real_t *px0[1];
     d_zeros(&px0[0], nx[0], 1);
     for (int_t i = 0; i < N; i++) {
@@ -138,9 +140,12 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
+        d_zeros(&ppi[i], nx[i], 1);
+        d_zeros(&plam[i], nb[i]+nc[i], 1);
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
+    d_zeros(&plam[N], nb[N]+nc[N], 1);
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
@@ -168,12 +173,14 @@ int main() {
     qp_in.lb = (const real_t **) px0;
     qp_out.x = px;
     qp_out.u = pu;
+    qp_out.pi = ppi;
+    qp_out.lam = plam;
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
+    acado_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
-        acado_tic(&timer);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
@@ -214,12 +221,12 @@ int main() {
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         shift_states(w, x_end, N);
         shift_controls(w, u_end, N);
-        timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    total_time = acado_toc(&timer);  // in seconds
+    printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
 
     free(sim_in.x);
     free(sim_in.u);

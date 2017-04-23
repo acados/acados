@@ -9,6 +9,9 @@
 # Author: Dang Doan
 # Date: 2017.03.15
 
+# Project name
+PROJECT=ocp_qp_hpmpc
+
 # BLASFEO-specific options
 LA = REFERENCE
 TARGET = GENERIC
@@ -18,9 +21,6 @@ CC = gcc
 CFLAGS = -std=c99 -Wextra -Wno-error -O2 -fPIC -march=native
 CFLAGS += -Wno-implicit-function-declaration -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-parentheses
 # -Wall
-
-# Project name (binary)
-PROJECT = test_ocp_qp_hpmpc
 
 # Exclude particular source files
 IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)

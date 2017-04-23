@@ -2,7 +2,7 @@
 
 # Tested with both Python 2.7.6 and Python 3.4.3
 #
-# This Python code collect the source code for testing acados
+# This Python code collects the source code for testing acados
 # on microcontrollers, putting all the necessary C files in
 # one directory, and header files in the sub-directory include.
 #
@@ -16,9 +16,9 @@
 #
 # Example usage:
 # Assume the source directory of acados is: ~/acados
-# The target folder to be created is: test_ocp_qp_hpmpc
+# The target folder to be created is: ocp_qp_hpmpc
 # This command should be used:
-# python test_ocp_qp_hpmpc.py ~/acados test_ocp_qp_hpmpc
+# python test_ocp_qp_hpmpc.py ~/acados ocp_qp_hpmpc
 #
 # Author: Dang Doan
 # Date: 2017.04.03
@@ -29,13 +29,15 @@ import glob
 from subprocess import call
 from os.path import join
 
+print('Running python script to grab ocp_qp_hpmpc...')
+
 print(sys.version) # get python version, for debugging
 
 if len(sys.argv)!= 3:
-    raise SyntaxError('This script needs exactly 3 arguments: \n \
+    raise SyntaxError('This script needs exactly 2 arguments: \n \
     test_ocp_qp_hpmpc.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
-    test_ocp_qp_hpmpc.py ~/acados test_ocp_qp_hpmpc')
+    test_ocp_qp_hpmpc.py ~/acados ocp_qp_hpmpc')
 
 # 1. Bring all necessary files to one directory.
 
@@ -44,7 +46,7 @@ target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingcodefiles = \
-    ['examples/test_ocp_qp_hpmpc.c', \
+    ['examples/c/mass_spring_hpmpc.c', \
     'acados/ocp_qp/ocp_qp_hpmpc.c', \
     'acados/utils/print.c', \
     'acados/utils/timing.c', \

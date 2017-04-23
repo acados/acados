@@ -21,6 +21,6 @@ ExternalProject_Add(
 )
 
 ExternalProject_Get_Property(hpmpc_project source_dir)
-add_library(hpmpc STATIC IMPORTED)
+add_library(hpmpc STATIC IMPORTED GLOBAL)
 add_dependencies(hpmpc hpmpc_project blasfeo_project)
 set_property(TARGET hpmpc PROPERTY IMPORTED_LOCATION "${source_dir}/libhpmpc.a")

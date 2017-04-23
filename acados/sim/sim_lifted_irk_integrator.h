@@ -81,6 +81,7 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
 
 void sim_irk_create_arguments(void *args, int_t num_stages, const char* name);
 
+
 void sim_irk_control_collocation(void *args, int_t num_stages, const char* name);
 
 void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,

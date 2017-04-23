@@ -332,7 +332,7 @@ int main() {
     qp_out.t = pt;
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
 
     // Define residuals
     real_t *res_stat[N+1];
@@ -740,7 +740,6 @@ int main() {
         // print_states_controls(&w[0], N);
         // #endif
 
-        timings += acado_toc(&timer);
         ip_iter+=1;
     }
 
@@ -754,7 +753,8 @@ int main() {
     }
 
     #endif  // DEBUG
-    printf("\n\nAverage of %.3f ms per iteration.\n", 1e3*timings/timing_iters);
+    total_time = acado_toc(&timer);
+    printf("\n\nAverage of %.3f ms per iteration.\n", 1e3*total_time/timing_iters);
     // free(workspace);
     return 0;
 }

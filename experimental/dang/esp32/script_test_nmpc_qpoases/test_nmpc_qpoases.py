@@ -2,7 +2,7 @@
 
 # Tested with both Python 2.7.6 and Python 3.4.3
 #
-# This Python code collect the source code for testing acados
+# This Python code collects the source code for testing acados
 # on microcontrollers, putting all the necessary C files in
 # one directory, and header files in the sub-directory include.
 #
@@ -16,9 +16,9 @@
 #
 # Example usage:
 # Assume the source directory of acados is: ~/acados
-# The target folder to be created is: test_nmpc
+# The target folder to be created is: chen_nmpc_qpoases
 # This command should be used:
-# python test_nmpc.py ~/acados test_nmpc
+# python test_nmpc_qpoases.py ~/acados chen_nmpc_qpoases
 #
 # Author: Dang Doan
 # Date: 2017.04.03
@@ -29,13 +29,15 @@ import glob
 from subprocess import call
 from os.path import join
 
+print('Running python script to grab chen_nmpc_qpoases...')
+
 print(sys.version) # get python version, for debugging
 
 if len(sys.argv)!= 3:
-    raise SyntaxError('This script needs exactly 3 arguments: \n \
-    test_nmpc.py <acados_top_dir> <new_target_dir>\n \
+    raise SyntaxError('This script needs exactly 2 arguments: \n \
+    test_nmpc_qpoases.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
-    test_nmpc.py ~/acados test_nmpc')
+    test_nmpc_qpoases.py ~/acados chen_nmpc_qpoases')
 
 # 1. Bring all necessary files to one directory.
 
@@ -44,8 +46,8 @@ target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingcodefiles = [\
-    'examples/test_nmpc.c', \
-    'examples/Chen/Chen_model.c', \
+    'examples/c/chen_nmpc_qpoases.c', \
+    'examples/c/Chen_model/chen_model.c', \
 
     'acados/utils/print.c', \
     'acados/utils/timing.c', \
@@ -70,12 +72,13 @@ workingcodefiles = [\
     'external/qpOASES/src/Utils.c' \
     ]
 workingheaderfiles = [\
-    'examples/Chen/Chen_model.h', \
+    'examples/c/Chen_model/chen_model.h', \
     'acados/ocp_qp/ocp_qp_common.h', \
     'acados/ocp_qp/condensing.h', \
     'acados/ocp_qp/ocp_qp_condensing_qpoases.h', \
     'acados/sim/sim_common.h', \
     'acados/sim/sim_erk_integrator.h', \
+    'acados/sim/sim_collocation.h', \
     'acados/sim/sim_rk_common.h', \
     'acados/utils/print.h', \
     'acados/utils/types.h', \
@@ -121,7 +124,7 @@ print('Step 1: Necessary files copied.')
 # 2. Modify .h and .c files to adapt to the new code structure:
 # List of texts to be replaced:
 old_text = [\
-    'examples/Chen/Chen_model.h', \
+    'examples/c/Chen_model/chen_model.h', \
     'acados/ocp_qp/condensing.h', \
     'acados/ocp_qp/condensing_helper_functions.c', \
     'acados/ocp_qp/ocp_qp_common.h', \
@@ -129,6 +132,7 @@ old_text = [\
     'acados/ocp_qp/ocp_qp_hpmpc.h', \
     'acados/sim/sim_common.h', \
     'acados/sim/sim_erk_integrator.h', \
+    'acados/sim/sim_collocation.h', \
     'acados/sim/sim_rk_common.h', \
     'acados/utils/print.h', \
     'acados/utils/timing.h', \
@@ -158,7 +162,7 @@ old_text = [\
 # List of new texts to replace old ones,
 #  in corresponding order to old_text:
 new_text = [\
-    'Chen_model.h', \
+    'chen_model.h', \
     'condensing.h', \
     'condensing_helper_functions.c', \
     'ocp_qp_common.h', \
@@ -166,6 +170,7 @@ new_text = [\
     'ocp_qp_hpmpc.h', \
     'sim_common.h', \
     'sim_erk_integrator.h', \
+    'sim_collocation.h', \
     'sim_rk_common.h', \
     'print.h', \
     'timing.h', \
@@ -245,12 +250,12 @@ for kk in range(len(files)):
 print('Step 3: Common header file included in specific files.')
 
 # 4. Copy Makefile and specific setting files
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_nmpc/Makefile '+target_dir)
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_nmpc/target.h '+target_dir+'/include/')
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_nmpc_qpoases/Makefile '+target_dir)
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_nmpc_qpoases/target.h '+target_dir+'/include/')
 
 print('Step 4: Makefile, and HPMPC target.h replaced.')
 
-# 5. Display further instruction
+# 5. Display further instructions
 print('Please do next steps in terminal:')
 print(' cd '+target_dir)
 print(' make')

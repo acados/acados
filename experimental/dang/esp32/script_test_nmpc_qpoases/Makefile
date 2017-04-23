@@ -1,21 +1,21 @@
 # This Makefile helps to compile the acados example
-# test_nmpc on microcontrollers
+# chen_nmpc_qpoases.c on microcontrollers
 
 # Makefile to help compiling acados code in a directory
-# It scan the SRCDIR to find all source files,
-# then make the object for every source file,
-# after that it link all the objects to compile the project
+# It scans the SRCDIR to find all source files,
+# then makes the object for every source file,
+# after that it links all the objects to compile the project
 # Note: PROJECT is the name of the main file to execute
 # Author: Dang Doan
 # Date: 2017.03.08
 
+# Project name
+PROJECT=chen_nmpc_qpoases
+
 # Compiler
 CC = gcc
-CFLAGS = -std=c99 -Wall -Wextra -Wno-error -fPIC -DDEBUG
+CFLAGS = -std=c99 -Wall -Wextra -Wno-error -fPIC -D__SUPPRESSANYOUTPUT__
 CFLAGS += -Wno-unused-function -Wno-unused-parameter -Wno-implicit-function-declaration
-
-# Project name (binary)
-PROJECT = test_nmpc
 
 # Exclude particular source files
 IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)

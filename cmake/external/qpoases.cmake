@@ -11,6 +11,6 @@ ExternalProject_Add(
 )
 
 ExternalProject_Get_Property(qpoases_project source_dir)
-add_library(qpoases STATIC IMPORTED)
+add_library(qpoases STATIC IMPORTED GLOBAL)
 add_dependencies(qpoases qpoases_project)
 set_property(TARGET qpoases PROPERTY IMPORTED_LOCATION "${source_dir}/bin/libqpOASES_e.a")

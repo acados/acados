@@ -72,3 +72,5 @@ local/
 octave-workspace
 .vscode
 notes.txt
+*.dSYM/
+cmakelint
