@@ -23,16 +23,20 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "catch/include/catch.hpp"
-#include "OOQP/include/cQpGenSparse.h"
 
+#ifdef OOQP
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#endif
+
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "acados/utils/allocate_ocp_qp.h"
 #include "test/ocp_qp/condensing_test_helper.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/read_ocp_qp_in.h"
+
+#include "acados/utils/print.h"
 
 using std::vector;
 using Eigen::MatrixXd;
@@ -48,7 +52,7 @@ real_t TOL_QPDUNES = 1e-10;
 int_t TEST_HPMPC = 0;
 real_t TOL_HPMPC = 1e-10;
 
-static vector<std::string> scenarios = {"LTI", "LTV"};
+static vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
 // TODO(dimitris): add back "ONLY_AFFINE" after fixing problem
 vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS", "CONSTRAINED"};
 
@@ -63,7 +67,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
     int_t QUIET = 1;
 
     int return_value;
-    VectorXd acados_W, true_W;
+    VectorXd acados_W, acados_PI, true_W, true_PI;
 
     for (std::string constraint : constraints) {
         SECTION(constraint) {
@@ -85,15 +89,23 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     if (constraint == "UNCONSTRAINED") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_unconstrained.dat", (N+1)*nx + N*nu, 1);
+//                        true_PI = readMatrixFromFile(scenario +
+//                            "/pi_star_ocp_unconstrained.dat", N*nx, 1);
                     } else if (constraint == "ONLY_BOUNDS") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_bounds.dat", (N+1)*nx + N*nu, 1);
+//                        true_PI = readMatrixFromFile(scenario +
+//                            "/pi_star_ocp_bounds.dat", N*nx, 1);
                     } else if (constraint == "ONLY_AFFINE") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_no_bounds.dat", (N+1)*nx + N*nu, 1);
+//                        true_PI = readMatrixFromFile(scenario +
+//                            "/pi_star_ocp_no_bounds.dat", N*nx, 1);
                     } else if (constraint == "CONSTRAINED") {
                         true_W = readMatrixFromFile(scenario +
                             "/w_star_ocp_constrained.dat", (N+1)*nx + N*nu, 1);
+                        true_PI = readMatrixFromFile(scenario +
+                            "/pi_star_ocp_constrained.dat", N*nx, 1);
                     }
                     if (TEST_QPOASES) {
                         SECTION("qpOASES") {
@@ -103,13 +115,15 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             ocp_qp_condensing_qpoases_args args;
                             args.dummy = 42.0;
 
-                            initialise_qpoases(&qp_in);
                             // TODO(dimitris): also test that qp_in has not changed
                             return_value = \
                                 ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, NULL);
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_QPOASES));
+                            if (constraint == "CONSTRAINED")
+                                REQUIRE(acados_PI.isApprox(true_PI, TOL_QPOASES));
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
@@ -123,7 +137,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             void *work;
 
                             ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
-                            args.options.printLevel = 0;
 
                             int_t work_space_size =
                                 ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
@@ -141,6 +154,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
+                    #ifdef OOQP
                     if (TEST_OOQP) {
                         SECTION("OOQP") {
                             std::cout <<"---> TESTING OOQP with QP: "<< scenario <<
@@ -151,7 +165,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             void *work;
 
                             args.printLevel = 0;
-                            args.workspaceMode = 2;  // TODO(dimitris): make this default
 
                             int_t work_space_size =
                                 ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
@@ -169,6 +182,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
+                    #endif
                     if (TEST_HPMPC) {
                         SECTION("HPMPC") {
                             std::cout <<"---> TESTING HPMPC with QP: "<< scenario <<

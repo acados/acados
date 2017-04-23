@@ -3,7 +3,7 @@ include(ExternalProject)
 ExternalProject_Add(
     ma27_project
 
-    CONFIGURE_COMMAND ./configure
+    CONFIGURE_COMMAND ./configure "CFLAGS=-O2 -fPIC" "FCFLAGS=-O2 -fPIC"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/coinhsl"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make
@@ -16,6 +16,6 @@ ExternalProject_Add_Step(ma27_project cp_lib
 )
 
 ExternalProject_Get_Property(ma27_project source_dir)
-add_library(ma27 STATIC IMPORTED)
+add_library(ma27 STATIC IMPORTED GLOBAL)
 add_dependencies(ma27 ma27_project)
 set_property(TARGET ma27 PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/OOQP/libma27.a")

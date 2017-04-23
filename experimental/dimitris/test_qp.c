@@ -18,7 +18,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
-#define OOQP_WORK 2  // 1: structs, 2: chunk of memory
+#define OOQP_WORK 2  // 1: obsolete, 2: chunk of memory
 
 int_t main( ) {
     /* code */
@@ -35,7 +35,6 @@ int_t main( ) {
     char *work;
     #endif
     args.printLevel = 0;
-    args.workspaceMode = OOQP_WORK;
     args.fixHessian = 0;
     args.fixHessianSparsity = 0;
     args.fixDynamics = 0;

@@ -2,7 +2,6 @@ clc;
 clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.1.1')
 import casadi.*
 mkdir('chain');
 
@@ -227,7 +226,8 @@ nlp = struct('x',vertcat(V{:}), 'f',effort, 'g', vertcat(g{:}));
 
 nlpfun = Function('nlp',nlp,char('x','p'),char('f','g'));
 
-solver_opts.ipopt = struct('print_level', 1);
+solver_opts = struct('print_time', false);
+solver_opts.ipopt = struct('print_level', 0);
 %opts.ipopt = struct('linear_solver','ma27','acceptable_tol', 1e-12, 'tol', 1e-12);
 solver = nlpsol('solver','ipopt',nlp, solver_opts);
 

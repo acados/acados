@@ -24,11 +24,11 @@
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct ocp_nlp_function_ {
+typedef struct {
     //    const int_t *sparsity;
     //    const int_t *idx_in;
-    const int_t dim_in;
-    const int_t dim_out;
+    int_t dim_in;
+    int_t dim_out;
     void (*fun)(const real_t*, real_t*);
     void (*jac_fun)(const real_t*, real_t*);
     // TODO(rien): other directional and second order derivatives
@@ -36,7 +36,7 @@ typedef struct ocp_nlp_function_ {
 } ocp_nlp_function;
 
 
-typedef struct ocp_nlp_ls_cost_ {
+typedef struct {
     // TODO(rien): only for least squares cost with state and control reference atm
 //    void *fun;
 //    const int_t *ny;
@@ -45,12 +45,12 @@ typedef struct ocp_nlp_ls_cost_ {
 } ocp_nlp_ls_cost;
 
 
-typedef struct ocp_nlp_stage_cost_ {
+typedef struct {
     ocp_nlp_function *fun;
 } ocp_nlp_stage_cost;
 
 
-typedef struct ocp_nlp_in_ {
+typedef struct {
     int_t N;
     const int_t *nx;
     const int_t *nu;
@@ -72,47 +72,46 @@ typedef struct ocp_nlp_in_ {
     ocp_nlp_function *g;  // nonlinear constraints
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
-    int_t maxIter;
+    bool freezeSens;
 } ocp_nlp_in;
 
+typedef struct {
+    int_t dummy;
+    int_t maxIter;
+} ocp_nlp_args;
 
-typedef struct ocp_nlp_mem_ {
+typedef struct {
+    int_t num_vars;
     real_t **x;
     real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;
     real_t **lam;
-} ocp_nlp_mem;
+} ocp_nlp_memory;
 
-
-typedef struct ocp_nlp_work_ {
+typedef struct {
     real_t *w;
-
-    real_t **A;
-    real_t **B;
-    real_t **b;
-    real_t **Q;
-    real_t **S;
-    real_t **R;
-    real_t **q;
-    real_t **r;
-    real_t **lb;
-    real_t **ub;
-    real_t **lc;
-    real_t **uc;
-
-    ocp_qp_solver *solver;
 } ocp_nlp_work;
 
-
-typedef struct ocp_nlp_out_ {
+typedef struct {
     real_t **x;
     real_t **u;
-//    real_t **pi;  // TODO(rien): what is pi?
+    real_t **pi;
     real_t **lam;
 } ocp_nlp_out;
 
+typedef struct {
+    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
+    ocp_nlp_in *nlp_in;
+    ocp_nlp_out *nlp_out;
+    void *args;
+    void *mem;
+    void *work;
+} ocp_nlp_solver;
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, ocp_nlp_mem *mem);
+void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_);
+void ocp_nlp_free_memory(int_t N, void *mem_);
 
+int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
+void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

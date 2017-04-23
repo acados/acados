@@ -24,33 +24,35 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include "acados/utils/types.h"
 
-typedef struct simplified_form_ {
+enum Newton_type_collocation {
+          exact = 0,
+          simplified_in,
+          simplified_inis
+        };
+
+typedef struct {
+    enum Newton_type_collocation type;
     real_t *eig;
-
-    real_t *transf1;
-    real_t *transf2;
-
-    real_t *transf1_T;
-    real_t *transf2_T;
-} simplified_form;
-
-typedef struct single_form {
-    real_t eig;
     real_t *low_tria;
+    bool single;
+    bool freeze;
 
     real_t *transf1;
     real_t *transf2;
 
     real_t *transf1_T;
     real_t *transf2_T;
-} single_form;
+} Newton_scheme;
 
 real_t LU_system_solve(real_t* const A, real_t* const b, int* const perm,
         int dim, int dim2);
 
 void get_Gauss_nodes(const int_t num_stages, real_t *nodes);
+
+void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme);
 
 void create_Butcher_table(const int_t num_stages, const real_t *nodes,
         real_t *b, real_t *A);

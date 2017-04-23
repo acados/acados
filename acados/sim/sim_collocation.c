@@ -102,11 +102,101 @@ void get_Gauss_nodes(const int_t num_stages, real_t *nodes) {
     }
     for (uint i = 0; i < N1; i++) nodes[i] = (a*(1-y[i]) + b*(1+y[i]))/2;
 
-//    free(x_init);
-//    free(y);
-//    free(y_prev);
-//    free(lgvm);
-//    free(der_lgvm);
+    free(x_init);
+    free(y);
+    free(y_prev);
+    free(lgvm);
+    free(der_lgvm);
+}
+
+void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
+    real_t D[2*num_stages];
+    real_t T[num_stages*num_stages];
+    char simplified[80];
+    int_t *perm;
+    real_t *T_inv;
+
+    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2*num_stages, "D");
+    read_matrix(simplified, D, num_stages, 2);
+
+    snprintf(simplified, sizeof(simplified), "simplified/GL%d_simpl_%s.txt", 2*num_stages, "T");
+    read_matrix(simplified, T, num_stages, num_stages);
+
+//    print_matrix("stdout", D, num_stages, 2);
+//    print_matrix("stdout", T, num_stages, num_stages);
+
+    scheme->single = false;
+    scheme->low_tria = 0;
+    for (int_t i = 0; i < num_stages; i++) {
+        scheme->eig[i] = D[i];
+    }
+    for (int_t i = 0; i < num_stages*num_stages; i++) {
+        scheme->transf2[i] = T[i];
+    }
+    // transf1_T:
+    for (int_t i = 0; i < num_stages; i++) {
+        if ((i+1) < num_stages) {  // complex conjugate pair of eigenvalues
+            for (int_t i1 = i; i1 < i+2; i1++) {
+                for (int_t i2 = 0; i2 < num_stages; i2++) {
+                    scheme->transf1_T[i2*num_stages+i1] = 0.0;
+                    for (int_t i3 = 0; i3 < 2; i3++) {
+                        scheme->transf1_T[i2*num_stages+i1] +=
+                                D[(i1-i)*num_stages+(i+i3)]*T[(i+i3)*num_stages+i2];
+                    }
+                }
+            }
+            i++;
+        } else {  // real eigenvalue
+            for (int_t i2 = 0; i2 < num_stages; i2++) {
+                scheme->transf1_T[i2*num_stages+i] = D[i]*T[i*num_stages+i2];
+            }
+        }
+    }
+
+    int_zeros(&perm, num_stages, 1);
+    d_zeros(&T_inv, num_stages, num_stages);
+    for (int_t i = 0; i < num_stages; i++) {
+        T_inv[i*(num_stages+1)] = 1.0;
+    }
+    LU_system_solve(T, T_inv, perm, num_stages, num_stages);
+
+    // transf1:
+    for (int_t i = 0; i < num_stages; i++) {
+        if ((i+1) < num_stages) {  // complex conjugate pair of eigenvalues
+            for (int_t i1 = i; i1 < i+2; i1++) {
+                for (int_t i2 = 0; i2 < num_stages; i2++) {
+                    scheme->transf1[i2*num_stages+i1] = 0.0;
+                    for (int_t i3 = 0; i3 < 2; i3++) {
+                        scheme->transf1[i2*num_stages+i1] +=
+                                D[i3*num_stages+i1]*T_inv[i2*num_stages+i+i3];
+                    }
+                }
+            }
+            i++;
+        } else {  // real eigenvalue
+            for (int_t i2 = 0; i2 < num_stages; i2++) {
+                scheme->transf1[i2*num_stages+i] = D[i]*T_inv[i2*num_stages+i];
+            }
+        }
+    }
+    // transf2_T:
+    for (int_t i = 0; i < num_stages; i++) {
+        for (int_t i2 = 0; i2 < num_stages; i2++) {
+            scheme->transf2_T[i2*num_stages+i] = T_inv[i*num_stages+i2];
+        }
+    }
+
+//    print_matrix("stdout", scheme->transf1, num_stages, num_stages);
+//    print_matrix("stdout", T_inv, 1, 1);
+//    print_matrix("stdout", scheme->transf2, num_stages, num_stages);
+//    print_matrix("stdout", T_inv, 1, 1);
+//        print_matrix("stdout", scheme->transf1_T, num_stages, num_stages);
+//        print_matrix("stdout", T_inv, 1, 1);
+//        print_matrix("stdout", scheme->transf2_T, num_stages, num_stages);
+//        print_matrix("stdout", T_inv, 1, 1);
+
+    free(perm);
+    free(T_inv);
 }
 
 
@@ -148,6 +238,10 @@ void create_Butcher_table(const int_t num_stages, const real_t *nodes,
                 b[i] = b[i]+1.0/(j+1)*rhs[i*num_stages+j];
             }
         }
+
+        free(can_vm);
+        free(rhs);
+        free(perm);
 }
 
 
