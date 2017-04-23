@@ -27,9 +27,8 @@
 #include "acados/utils/print.h"
 
 
- static void sim_erk_cast_workspace(sim_erk_workspace *work,
+static void sim_erk_cast_workspace(sim_erk_workspace *work,
          const sim_in *in, void *args) {
-
      int_t nx = in->nx;
      int_t nu = in->nu;
      sim_RK_opts *opts = (sim_RK_opts*) args;
@@ -73,7 +72,7 @@
          work->adj_traj = (real_t*)ptr;
          ptr += (num_stages*(nx+nu))*sizeof(real_t);  // adj_traj
      }
- }
+}
 
 int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_) {
     int_t nx = in->nx;

@@ -33,7 +33,7 @@
 #include "acados/utils/print.h"
 
 
- static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
+static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
          const sim_in *in, void *args) {
     int_t nx = in->nx;
     int_t nu = in->nu;
@@ -643,7 +643,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 #if TRIPLE_LOOP
                     solve_system_trans_ACADO(sys_mat, sys_sol, ipiv, dim_sys, 1);
 #else  // TRIPLE_LOOP
-//#error: NOT YET IMPLEMENTED
+#error: NOT YET IMPLEMENTED
 #endif  // TRIPLE_LOOP
                 }
 #ifdef MEASURE_TIMINGS

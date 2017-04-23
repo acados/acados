@@ -769,8 +769,9 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 nlp_in->sim[i].in->step = 0.1;
                 nlp_in->sim[i].args = (void*) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(nlp_in->sim[i].args, 4);
-    			int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, nlp_in->sim[i].args);
-    			nlp_in->sim[i].work = (void *) malloc(erk_workspace_size);
+                int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, \
+                    nlp_in->sim[i].args);
+                nlp_in->sim[i].work = (void *) malloc(erk_workspace_size);
                 nlp_in->sim[i].fun = &sim_erk;
             }
         } else {
