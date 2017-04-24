@@ -292,6 +292,8 @@ int main() {
 
     R[0*(NU+1)] = 1e-4;
 
+    double sigma_mu = 0.01;
+
     // Integrator structs
     real_t T = 0.01;
     sim_in  sim_in;
@@ -727,7 +729,7 @@ int main() {
         for (int_t j = 0; j < NX; j++) {
             pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
         }
-        status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, MM, workspace);
+        status = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, MM, sigma_mu, workspace);
         // int status = 0;
         // printf("hpmpc_status=%i\n", status);
 

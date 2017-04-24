@@ -345,7 +345,8 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args 
 }
 
 int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-  ocp_qp_hpmpc_args *hpmpc_args, int M, void *workspace) {
+  ocp_qp_hpmpc_args *hpmpc_args, int M, double sigma_mu, void *workspace) {
+
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
 
@@ -373,9 +374,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hD = (double **) qp_in->Cu;
     double **hlg = (double **) qp_in->lc;
     double **hug = (double **) qp_in->uc;
-
-    // double **hlam_in = hpmpc_args->lam0; //TODO(Andrea): not using input multipliers
-    // double **ht_in = hpmpc_args->t0; //TODO(Andrea): not using input slacks
 
     struct d_strmat *hsmatdummy = NULL;
     struct d_strvec *hsvecdummy = NULL;
@@ -534,7 +532,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
     ptr_memory += (&hsux[ii])->memory_size;
 
-    d_create_strvec(nx[ii], &hspi[ii], ptr_memory);  // Andrea: bug?
+    d_create_strvec(nx[ii], &hspi[ii], ptr_memory); // Andrea: bug?
     ptr_memory += (&hspi[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
@@ -577,8 +575,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // ptr_memory += (&hsqx[ii])->memory_size;
     // d_create_strvec(2*nb[ii]+2*ng[ii], &hsdlam[ii], ptr_memory);
     // ptr_memory += (&hsdlam[ii])->memory_size;
-    // d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
-    // ptr_memory += (&hslamt[ii])->memory_size;
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
+    ptr_memory += (&hslamt[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
     ptr_memory += (&hstinv[ii])->memory_size;
@@ -603,7 +601,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hx = qp_out->x;
     double **hu = qp_out->u;
     // double **hpi = qp_out->pi;  // TODO(Andrea): not returning multiplers atm
-    // double **hlam = qp_out->lam;  // TODO(Andrea): not returning multiplers atm
+    double **hlam = qp_out->lam;  // TODO(Andrea): not returning multiplers atm
+    double **ht = qp_out->t;  // TODO(Andrea): not returning multiplers atm
 
     // extract args struct members
     double mu_tol = hpmpc_args->tol;
@@ -639,7 +638,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng));
 
     // update cost function matrices and vectors (box constraints)
-    double sigma_mu = 1.0;
+    // double sigma_mu = hpmpc_args->sigma_mu;
     d_update_hessian_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
       &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M],
       &hsQx[M], &hsqx[M]);
@@ -678,28 +677,27 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // IPM at the beginning
     hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
       warm_start, stat, M, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
-      hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);    // recover original stage M
+      hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory); // recover original stage M
 
     nu[M] = nuM;
     nb[M] = nbM;
     hsRSQrq[M] = hstmpmat0;
     hsux[M].pa -= nuM;
 
-    // forward riccati solution at the beginning
-      d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
-      0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], hsvecdummy, hsmatdummy,
-      hsvecdummy, hsvecdummy, &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
+    // forward riccati solution at the end
+    d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
+      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
+      &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
       &hsLxt[M], hsric_work_mat);
 
-    // // compute alpha, dlam and dt
-
+    // compute alpha, dlam and dt
     real_t alpha = 1.0;
     // compute primal step hsdux for stages M to N
     real_t *temp_p1, *temp_p2;
     for (int_t i = M; i <= N; i++) {
       // hsdux is initialized to be equal to hpmpc_args.ux0
       temp_p1 = hsdux[i].pa;
-      temp_p2 = hsux[i].pa;  // hsux[i].pa;
+      temp_p2 = hsux[i].pa; //hsux[i].pa;
       for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
     }
 
@@ -709,34 +707,61 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // overwrite alpha (taking full steps and performing line-search in out_iter
     // level)
+
     alpha = 1.0;
 
     // update stages M to N
-    double mu_scal = 0.0;
-    d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-      &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
-      &hsdlam[M], &hspi[M], &hspi[M]);
-    //
+    // double mu_scal = 0.0;
+    // d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+    //   &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+    //   &hsdlam[M], &hspi[M], &hspi[M]);
+
     // // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
     // // define and compute hsdpi (see function prototype).
 
     double **temp_u;
 
     // copy result to qp_out
-    for ( ii = 0; ii <= N; ii++ ) {
+    // for ( ii = 0; ii < M; ii++ ) {
+    //   hu[ii] = hsux[ii].pa;
+    //   // hlam[ii] = hslam[ii].pa;
+    //   // ht[ii] = hst[ii].pa;
+    //   temp_u = &hsux[ii].pa;
+    //   hx[ii] = &temp_u[0][nu[ii]];
+    // }
+
+    for ( ii = 0; ii < N; ii++ ) {
       hu[ii] = hsux[ii].pa;
+      hlam[ii] = hslam[ii].pa;
+      ht[ii] = hst[ii].pa;
       temp_u = &hsux[ii].pa;
       hx[ii] = &temp_u[0][nu[ii]];
     }
 
-    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
+    ii = N;
+    hlam[ii] = hslam[ii].pa;
+    ht[ii] = hst[ii].pa;
+    temp_u = &hsux[ii].pa;
+    hx[ii] = &temp_u[0][nu[ii]];
 
+    // ii = N;
+    // if (M < N){
+    //   hx[ii] = hsux[ii].pa;
+    //   hlam[ii] = hslam[ii].pa;
+    //   ht[ii] = hst[ii].pa;
+    // } else {
+    //   hx[ii] = hsux[ii].pa;
+    // }
+
+    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
 
     hpmpc_args->out_iter = kk;
+
     // return
     return acados_status;
 }
+
 
 // TODO(Andrea): need to merge hpmpc in order to use this...
 // int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args,
