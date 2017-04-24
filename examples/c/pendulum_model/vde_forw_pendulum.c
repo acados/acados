@@ -42,6 +42,7 @@ static const int CASADI_PREFIX(s2)[5] = {1, 1, 0, 1, 0};
 #define s2 CASADI_PREFIX(s2)
 /* vdeFun */
 int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+  mem = 0; mem += 0; w = 0; w += 0; iw = 0; iw += 0;
   real_t a0=arg[0] ? arg[0][2] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][3] : 0;
