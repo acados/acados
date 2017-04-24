@@ -25,14 +25,13 @@
 #include "test/test_utils/eigen.h"
 
 void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
-        sim_info* info, sim_RK_opts* rk_opts, sim_erk_workspace* erk_work,
+        sim_info* info, sim_RK_opts* rk_opts,
         int_t NX, int_t NU, real_t T, bool hessian) {
         sim_in->nSteps = 10;
         sim_in->step = T/sim_in->nSteps;
         sim_in->nx = NX;
         sim_in->nu = NU;
 
-        sim_in->opts = rk_opts;
         int_t nhess = (int_t)(NX+NU+1)*(real_t)(NX+NU)/2.0;
 
         sim_in->sens_forw = true;
@@ -64,6 +63,5 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         }
         sim_out->info = info;
 
-        sim_erk_create_opts(4, rk_opts);
-        sim_erk_create_workspace(sim_in, erk_work);
+        sim_erk_create_arguments(rk_opts, 4);
 }
