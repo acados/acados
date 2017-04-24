@@ -514,6 +514,11 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // d_cvt_tran_mat2strmat(nu[ii], 1, hr[ii], nu[ii], &hsRSQrq[ii], nu[ii]+nx[ii], 0);
     d_cvt_tran_mat2strmat(nx[ii], 1, hq[ii], nx[ii], &hsRSQrq[ii], nu[ii]+nx[ii], nu[ii]);
 
+    d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], ptr_memory);
+    ptr_memory += (&hsrq[ii])->memory_size;
+    // d_cvt_vec2strvec(nu[ii], hr[ii], &hsrq[ii], 0);
+    d_cvt_vec2strvec(nx[ii], hq[ii], &hsrq[ii], nu[ii]);
+
     d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], ptr_memory);
     ptr_memory += (&hsd[ii])->memory_size;
     d_cvt_vec2strvec(nb[ii], hlb[ii], &hsd[ii], 0);
@@ -641,8 +646,8 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // backward riccati factorization and solution at the end
     d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
-      0, &hsBAbt[M], hsvecdummy, 0, &hsRSQrq[M], hsvecdummy, hsmatdummy, hsvecdummy,
-      hsvecdummy, &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], &hsLxt[M], work_ric);
+      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy, &hsQx[M],
+      &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], &hsLxt[M], work_ric);
 
     // extract chol factor of [P p; p' *]
     // d_print_strmat(nu[M]+nx[M]+1, nu[M]+nx[M], &hsL[M], 0, 0);
