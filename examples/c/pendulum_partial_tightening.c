@@ -298,6 +298,7 @@ int main() {
     sim_out sim_out;
     sim_in.nSteps = 1;
     sim_in.step = T/sim_in.nSteps;
+    sim_in.vde = &vdeFun;
     sim_in.VDE_forw = &VDE_fun_pendulum;
     sim_in.nx = NX;
     sim_in.nu = NU;
