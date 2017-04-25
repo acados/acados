@@ -132,7 +132,7 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 //
 //     int hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0,
 //        mu_tol, N, nx, nu, nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS,
-//        hR, hq, hr, hlb, hub, hC, hD, hlg, 
+//        hR, hq, hr, hlb, hub, hC, hD, hlg,
 //         hug, hx, hu, hpi, hlam, inf_norm_res, workspace, stat);
 //
 //     hpmpc_args->out_iter = out_iter;  // number of performed iterations
@@ -346,8 +346,10 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 //     return acados_status;
 // }
 
-int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-  ocp_qp_hpmpc_args *hpmpc_args, int M, double sigma_mu, void *workspace) {
+int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+  ocp_qp_hpmpc_args *hpmpc_args, void *workspace) {
+    real_t sigma_mu = hpmpc_args->sigma_mu;
+    int_t M = hpmpc_args->M;
 
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
@@ -518,7 +520,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
     ptr_memory += (&hsux[ii])->memory_size;
 
-    d_create_strvec(nx[ii], &hspi[ii], ptr_memory); // Andrea: bug?
+    d_create_strvec(nx[ii], &hspi[ii], ptr_memory);  // Andrea: bug?
     ptr_memory += (&hspi[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslam[ii], ptr_memory);
@@ -620,7 +622,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // IPM at the beginning
     hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
       warm_start, stat, M, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
-      hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory); // recover original stage M
+      hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);  // recover original stage M
 
     nu[M] = nuM;
     nb[M] = nbM;
@@ -640,7 +642,7 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     for (int_t i = M; i <= N; i++) {
       // hsdux is initialized to be equal to hpmpc_args.ux0
       temp_p1 = hsdux[i].pa;
-      temp_p2 = hsux[i].pa; //hsux[i].pa;
+      temp_p2 = hsux[i].pa;  // hsux[i].pa;
       for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
     }
 
@@ -654,25 +656,17 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     alpha = 1.0;
 
     // update stages M to N
-    // double mu_scal = 0.0;
-    // d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-    //   &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
-    //   &hsdlam[M], &hspi[M], &hspi[M]);
+    double mu_scal = 0.0;
+    d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+      &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+      &hsdlam[M], &hspi[M], &hspi[M]);
 
-    // // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
-    // // define and compute hsdpi (see function prototype).
+    // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
+    // define and compute hsdpi (see function prototype).
 
     double **temp_u;
 
     // copy result to qp_out
-    // for ( ii = 0; ii < M; ii++ ) {
-    //   hu[ii] = hsux[ii].pa;
-    //   // hlam[ii] = hslam[ii].pa;
-    //   // ht[ii] = hst[ii].pa;
-    //   temp_u = &hsux[ii].pa;
-    //   hx[ii] = &temp_u[0][nu[ii]];
-    // }
-
     for ( ii = 0; ii < N; ii++ ) {
       hu[ii] = hsux[ii].pa;
       hlam[ii] = hslam[ii].pa;
@@ -686,15 +680,6 @@ int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ht[ii] = hst[ii].pa;
     temp_u = &hsux[ii].pa;
     hx[ii] = &temp_u[0][nu[ii]];
-
-    // ii = N;
-    // if (M < N){
-    //   hx[ii] = hsux[ii].pa;
-    //   hlam[ii] = hslam[ii].pa;
-    //   ht[ii] = hst[ii].pa;
-    // } else {
-    //   hx[ii] = hsux[ii].pa;
-    // }
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;

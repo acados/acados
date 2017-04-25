@@ -43,6 +43,10 @@ typedef struct ocp_qp_hpmpc_args_ {
     double **t0;
     int out_iter;  // number of performed iterations
     double *inf_norm_res;  // array of size 5, returning inf norm res
+
+    // partial tightening
+    double sigma_mu;
+    int M;
 } ocp_qp_hpmpc_args;
 
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
