@@ -20,14 +20,18 @@
 %module acados
 %{
 #ifdef SWIGMATLAB
-#define LangObject mxArray
-#define LANG_SEQUENCE_NAME "cell array"
-#define LANG_MAP_NAME "struct"
+
+    #define LangObject mxArray
+    #define LANG_SEQUENCE_NAME "cell array"
+    #define LANG_MAP_NAME "struct"
+
 #elif defined(SWIGPYTHON)
-#define SWIG_FILE_WITH_INIT
-#define LangObject PyObject
-#define LANG_SEQUENCE_NAME "list"
-#define LANG_MAP_NAME "dictionary"
+
+    #define SWIG_FILE_WITH_INIT
+    #define LangObject PyObject
+    #define LANG_SEQUENCE_NAME "list"
+    #define LANG_MAP_NAME "dictionary"
+
 #endif
 
 #include <dlfcn.h>
@@ -73,8 +77,8 @@ import_array();
 %include "acados/utils/types.h"
 
 %{
-static bool is_integer(PyObject *input) {
-    if (!PyInt_Check(input))
+static bool is_integer(const LangObject *input) {
+    if (!PyInt_Check((PyObject *) input))
         return false;
     return true;
 }
@@ -99,7 +103,7 @@ static bool is_sequence(const LangObject *object) {
 #ifdef SWIGMATLAB
     if (!mxIsCell(object))
 #elif defined(SWIGPYTHON)
-    if (!PySequence_Check((PyObject *) object))  // cast const away
+    if (!PyList_Check((PyObject *) object))  // cast const away
 #endif
         return false;
     return true;
@@ -115,18 +119,33 @@ static bool is_map(const LangObject *object) {
     return true;
 }
 
-static bool value_is_integer(const LangObject * const map, const char * const key) {
+static bool has(const LangObject *map, const char *key) {
 #ifdef SWIGMATLAB
-    mxArray *value = mxGetField(map, 0, key);
+    if (mxGetField(map, 0, key) == NULL)
 #elif defined(SWIGPYTHON)
-    PyObject *value = PyDict_GetItemString((PyObject *) map, key);
+    if (PyDict_GetItemString((PyObject *) map, key) == NULL)
 #endif
-    if (value == NULL) {
+        return false;
+    return true;
+}
+
+static LangObject *from(const LangObject *map, const char *key) {
+#ifdef SWIGMATLAB
+    return mxGetField(map, 0, key);
+#elif defined(SWIGPYTHON)
+    return PyDict_GetItemString((PyObject *) map, key);
+#endif
+}
+
+static bool value_is_integer(const LangObject * const map, const char * const key) {
+    if (!has(map, key)) {
         char err_msg[256];
         snprintf(err_msg, sizeof(err_msg), "Input %s must have an '%s' key "
             "with as value an integer number", LANG_MAP_NAME, key);
         SWIG_Error(SWIG_ValueError, err_msg);
-    } else if (!is_integer(value)) {
+    }
+    LangObject *value = from(map, key);
+    if (!is_integer(value)) {
         char err_msg[256];
         snprintf(err_msg, sizeof(err_msg), "'%s' must be an integer number", key);
         SWIG_Error(SWIG_ValueError, err_msg);
@@ -134,7 +153,7 @@ static bool value_is_integer(const LangObject * const map, const char * const ke
     return true;
 }
 
-static int_t from_map(const LangObject *map, const char *key) {
+static int_t int_from(const LangObject *map, const char *key) {
 #ifdef SWIGMATLAB
     mxArray *value_ptr = mxGetField(map, 0, key);
     return (int_t) mxGetScalar(value_ptr);
@@ -143,13 +162,21 @@ static int_t from_map(const LangObject *map, const char *key) {
 #endif
 }
 
-static bool is_sequence_with_length(LangObject *input, int_t expected_length) {
+static int_t int_from(const LangObject *object) {
+#ifdef SWIGMATLAB
+    return (int_t) mxGetScalar(object);
+#elif defined(SWIGPYTHON)
+    return (int_t) PyInt_AsLong((PyObject *) object);
+#endif
+}
+
+static bool is_sequence_with_length(const LangObject *input, int_t expected_length) {
     if (!is_sequence(input))
         return false;
 #ifdef SWIGMATLAB
     int_t length_of_sequence = mxGetNumberOfElements(input);
 #elif defined(SWIGPYTHON)
-    int_t length_of_sequence = PySequence_Length(input);
+    int_t length_of_sequence = PyList_Size((PyObject *) input);
 #endif
     if (length_of_sequence != expected_length) {
         char err_msg[256];
@@ -168,7 +195,7 @@ static bool value_is_sequence_with_length(const LangObject *map, const char *key
     return is_sequence_with_length(value, length);
 }
 
-static void integer_nor_sequence_error(const char *key) {
+static void error_is_integer_nor_sequence(const char *key) {
     char err_msg[256];
     snprintf(err_msg, sizeof(err_msg), "Input %s must have an '%s' key "
         "with as value an integer number or a list of integer numbers", LANG_MAP_NAME, key);
@@ -180,29 +207,43 @@ static bool is_valid_ocp_dimensions_map(const LangObject *input) {
         return false;
     if (!value_is_integer(input, "N"))
         return false;
-    int_t N = from_map(input, "N");
+    int_t N = int_from(input, "N");
     if (!value_is_integer(input, "nx") && !value_is_sequence_with_length(input, "nx", N+1)) {
-        integer_nor_sequence_error("nx");
+        error_is_integer_nor_sequence("nx");
         return false;
     }
     if (!value_is_integer(input, "nu") && !value_is_sequence_with_length(input, "nu", N)) {
-        integer_nor_sequence_error("nu");
+        error_is_integer_nor_sequence("nu");
         return false;
     }
     return true;
 }
 
-static void fill_array_from_sequence(int_t * const array, const int_t length_of_array,
-    PyObject * const sequence) {
+template<typename T>
+static void array_from(const LangObject *map, const char *key, T *array, int_t array_length) {
+    if (!has(map, key)) {
+        memset(array, 0, array_length*sizeof(*array));
+    } else {
+        LangObject *sequence = from(map, key);
+        convert_to_c_array(sequence, array, array_length);
+    }
+}
 
-    for (int_t i = 0; i < length_of_array; i++) {
-        PyObject *item = PySequence_GetItem(sequence, i);
+static LangObject *from(const LangObject *sequence, int_t index) {
+#ifdef SWIGMATLAB
+    return mxGetCell(sequence, index);
+#elif defined(SWIGPYTHON)
+    return PyList_GetItem((PyObject *) sequence, index);
+#endif
+}
+
+static void fill_array_from_sequence(const LangObject *sequence, int_t *array, const int_t length) {
+    for (int_t index = 0; index < length; index++) {
+        LangObject *item = from(sequence, index);
         if (!is_integer(item)) {
-            Py_XDECREF(item);
-            SWIG_Error(SWIG_ValueError, "Sequence elements must be integer numbers");
+            SWIG_Error(SWIG_ValueError, "Sequence elements must be scalars");
         }
-        array[i] = (int_t) PyInt_AsLong(item);
-        Py_DECREF(item);
+        array[index] = int_from(item);
     }
 }
 
@@ -222,17 +263,17 @@ static PyObject *convert_to_sequence(real_t *array, const int_t length) {
     return sequence;
 }
 
-static void convert_to_c_array(PyObject *input, int_t * const array, const int_t length_of_array) {
+static void convert_to_c_array(const LangObject *input, int_t *array, const int_t length) {
     if (is_integer(input)) {
-        int_t integer_number = (int_t) PyInt_AsLong(input);
-        for (int_t i = 0; i < length_of_array; i++)
-            array[i] = integer_number;
-    } else if (is_sequence_with_length(input, length_of_array)) {
-        fill_array_from_sequence(array, length_of_array, input);
+        int_t number = int_from(input);
+        for (int_t i = 0; i < length; i++)
+            array[i] = number;
+    } else if (is_sequence_with_length(input, length)) {
+        fill_array_from_sequence(input, array, length);
     } else {
         char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), "Expected integer number or sequence of "
-            "length %d", length_of_array);
+        snprintf(err_msg, sizeof(err_msg), \
+            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
         SWIG_Error(SWIG_ValueError, err_msg);
     }
 }
@@ -332,7 +373,7 @@ static void convert_to_2dim_c_array(PyObject * const input, T ** const array,
         }
     } else if (is_sequence_with_length(input, length_of_array)) {
         for (int_t i = 0; i < length_of_array; i++) {
-            PyObject *item = PySequence_GetItem(input, i);
+            PyObject *item = PyList_GetItem(input, i);
             if (is_valid_2dim_array(item)) {
                 int_t dim1 = dimensions1[i];
                 int_t dim2 = dimensions2[i];
@@ -361,7 +402,7 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
         }
     } else if (is_sequence_with_length(input, length_of_array)) {
         for (int_t i = 0; i < length_of_array; i++) {
-            PyObject *item = PySequence_GetItem(input, i);
+            PyObject *item = PyList_GetItem(input, i);
             if (is_valid_1dim_array(item)) {
                 PyArrayObject *input_array = object_to_1dim_array<T>(item, dimensions[i]);
                 memcpy((void *) array[i], (T *) array_data(input_array), dimensions[i]*sizeof(T));
@@ -369,18 +410,6 @@ static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
         }
     } else {
         SWIG_Error(SWIG_ValueError, "Expected a 1-dimensional array as input");
-    }
-}
-
-template<typename T>
-static void initialize_array_from(PyObject *dictionary, const char *key_name,
-    T *array, int_t array_length) {
-
-    if (PyDict_GetItemString(dictionary, key_name) == NULL) {
-        memset(array, 0, array_length*sizeof(*array));
-    } else {
-        PyObject *sequence = PyDict_GetItemString(dictionary, key_name);
-        convert_to_c_array(sequence, array, array_length);
     }
 }
 
@@ -586,24 +615,27 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
-    ocp_qp_in(PyObject *dictionary) {
+    ocp_qp_in(PyObject *input_map) {
         ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
-        if (!is_valid_ocp_dimensions_map(dictionary)) {
-            SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
+        if (!is_valid_ocp_dimensions_map(input_map)) {
+            char err_msg[256];
+            snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s", LANG_MAP_NAME);
+            SWIG_Error(SWIG_ValueError, err_msg);
         }
-        int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
+        int_t N = int_from(input_map, "N");
         int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1];
-        initialize_array_from(dictionary, "nx", nx, N+1);
-        initialize_array_from(dictionary, "nu", nu, N+1);
-        initialize_array_from(dictionary, "nb", nb, N+1);
-        initialize_array_from(dictionary, "nc", nc, N+1);
+        array_from(input_map, "nx", nx, N+1);
+        array_from(input_map, "nu", nu, N+1);
+        array_from(input_map, "nb", nb, N+1);
+        array_from(input_map, "nc", nc, N+1);
         nu[N] = 0;
         // Default behavior is that initial state is fixed
-        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+        if (!has(input_map, "nb")) {
             nb[0] = nx[0];
         }
         allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
-        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+        // Initial state is fixed
+        if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)
                 idxb[i] = i;
@@ -729,11 +761,11 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         }
         int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
         int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1], ng[N+1];
-        initialize_array_from(dictionary, "nx", nx, N+1);
-        initialize_array_from(dictionary, "nu", nu, N+1);
-        initialize_array_from(dictionary, "nb", nb, N+1);
-        initialize_array_from(dictionary, "nc", nc, N+1);
-        initialize_array_from(dictionary, "ng", ng, N+1);
+        array_from(dictionary, "nx", nx, N+1);
+        array_from(dictionary, "nu", nu, N+1);
+        array_from(dictionary, "nb", nb, N+1);
+        array_from(dictionary, "nc", nc, N+1);
+        array_from(dictionary, "ng", ng, N+1);
         nu[N] = 0;
         // Default behavior is that initial state is fixed
         if (PyDict_GetItemString(dictionary, "nb") == NULL) {
