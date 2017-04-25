@@ -62,7 +62,7 @@
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
 #define NSIM 1
 #define GAMMA 1e-2
-#define UMAX 10
+#define UMAX 1
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -732,7 +732,7 @@ int main() {
         for (int_t j = 0; j < NX; j++) {
             pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
         }
-        status = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
+        status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
         // int status = 0;
         // printf("hpmpc_status=%i\n", status);
 

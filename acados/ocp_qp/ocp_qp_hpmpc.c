@@ -346,7 +346,7 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 //     return acados_status;
 // }
 
-int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
   ocp_qp_hpmpc_args *hpmpc_args, void *workspace) {
     real_t sigma_mu = hpmpc_args->sigma_mu;
     int_t M = hpmpc_args->M;
@@ -400,7 +400,6 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strmat hsL[N+1];
     struct d_strmat hsLxt[N+1];
     struct d_strmat hsric_work_mat[2];
-    // struct d_strvec hsric_work_vec[1];
 
     struct d_strvec hsdlam[N+1];  // to be checked
     struct d_strvec hsdt[N+1];
@@ -408,9 +407,7 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     int nuM;
     int nbM;
-    // struct d_strmat sRSQrqM;
-    // struct d_strvec srqM;
-    // struct d_strvec srqM_tmp;
+
     struct d_strmat sLxM;
     struct d_strmat sPpM;
 
@@ -653,12 +650,12 @@ int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // overwrite alpha (taking full steps and performing line-search in out_iter
     // level)
 
-    alpha = 1.0;
+    // alpha = 1.0;
 
     // update stages M to N
     double mu_scal = 0.0;
     d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-      &mu0, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+      &sigma_mu, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
       &hsdlam[M], &hspi[M], &hspi[M]);
 
     // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
