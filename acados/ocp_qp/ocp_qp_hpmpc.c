@@ -48,7 +48,8 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 
     for (ii=0; ii <= N; ii++)
         workspace_size += nb[ii]*sizeof(int);
-        workspace_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, nu, nb, hidxb, ng, N2);
+        workspace_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx,
+          nu, nb, hidxb, ng, N2);
 
 
     return workspace_size;
@@ -737,7 +738,6 @@ int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
 
       ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
       ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-
     }
 
     ws_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
