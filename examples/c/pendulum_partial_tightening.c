@@ -540,79 +540,6 @@ int main() {
     hpmpc_args.M = MM;
     hpmpc_args.sigma_mu = sigma_mu;
 
-    /************************************************
-    * work space
-    ************************************************/
-
-    int work_space_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
-      nx, nu, nb, ngg);
-
-    // Adding memory for data
-    for ( int ii=0; ii <NN; ii++ ) {
-        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
-        work_space_size+= d_size_strvec(nx[ii+1]);
-        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-        work_space_size+= d_size_strvec(nu[ii]+nx[ii]);
-        work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, ngg[ii]);
-        work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(nu[ii]+nx[ii]);
-        work_space_size+= d_size_strvec(nx[ii+1]);
-        work_space_size+= d_size_strvec(nx[ii+1]);
-        work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    }
-
-    work_space_size+= d_size_strvec(nu[N]+nx[N]);
-    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    work_space_size+= d_size_strvec(nu[N]+nx[N]);
-    work_space_size+= d_size_strvec(nu[N]+nx[N]);
-    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-
-    // Adding memory for extra variables in the Riccati recursion
-    for ( int ii=0; ii < NN; ii++ ) {
-      work_space_size+=d_size_strvec(nx[ii+1]);
-      work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-      work_space_size+=d_size_strmat(nx[ii], nx[ii]);
-
-      work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-      work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-
-      work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    }
-
-    ii = NN;
-    work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    work_space_size+=d_size_strmat(nx[ii], nx[ii]);
-
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
-    work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
-
-    // add memory for riccati work space
-    work_space_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
-
-    // add memory for stats
-    work_space_size+=sizeof(double)*MAX_IP_ITER*5;
-    work_space_size+=sizeof(double)*1000;  // TODO(Andrea): fix this...
-
-    void *workspace;
-
-    v_zeros_align(&workspace, work_space_size);
-
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
     qp_in.N = N;
@@ -647,6 +574,83 @@ int main() {
     qp_out.pi = ppi;
     qp_out.lam = plam;
     qp_out.t = pt;
+
+    // /************************************************
+    // * work space
+    // ************************************************/
+    //
+    // int work_space_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
+    //   nx, nu, nb, ngg);
+    //
+    // // Adding memory for data
+    // for ( int ii=0; ii <NN; ii++ ) {
+    //     work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
+    //     work_space_size+= d_size_strvec(nx[ii+1]);
+    //     work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    //     work_space_size+= d_size_strvec(nu[ii]+nx[ii]);
+    //     work_space_size+= d_size_strmat(nu[ii]+nx[ii]+1, ngg[ii]);
+    //     work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //     work_space_size+= d_size_strvec(nu[ii]+nx[ii]);
+    //     work_space_size+= d_size_strvec(nx[ii+1]);
+    //     work_space_size+= d_size_strvec(nx[ii+1]);
+    //     work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //     work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //     work_space_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    // }
+    //
+    // work_space_size+= d_size_strvec(nu[N]+nx[N]);
+    // work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    // work_space_size+= d_size_strvec(nu[N]+nx[N]);
+    // work_space_size+= d_size_strvec(nu[N]+nx[N]);
+    // work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    // work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    // work_space_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    //
+    // // Adding memory for extra variables in the Riccati recursion
+    // for ( int ii=0; ii < NN; ii++ ) {
+    //   work_space_size+=d_size_strvec(nx[ii+1]);
+    //   work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    //   work_space_size+=d_size_strmat(nx[ii], nx[ii]);
+    //
+    //   work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //   work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    //   work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    //
+    //   work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //   work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    // }
+    //
+    // ii = NN;
+    // work_space_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    // work_space_size+=d_size_strmat(nx[ii], nx[ii]);
+    //
+    // work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    // work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    // work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    // work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    // work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //
+    // work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    // work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    // work_space_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    // work_space_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    //
+    // work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
+    // work_space_size+=d_size_strmat(nx[M]+1, nx[M]);
+    //
+    // // add memory for riccati work space
+    // work_space_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
+    //
+    // // add memory for stats
+    // work_space_size+=sizeof(double)*MAX_IP_ITER*5;
+
+    void *workspace;
+
+    const int_t work_space_size = ocp_qp_hpmpc_workspace_size(&qp_in, &hpmpc_args);
+
+    v_zeros_align(&workspace, work_space_size);
+
+
 
 
     acado_timer timer;
