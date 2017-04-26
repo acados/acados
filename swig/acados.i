@@ -46,9 +46,9 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "acados/ocp_nlp/allocate_ocp_nlp.h"
-#include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+// #include "acados/ocp_nlp/allocate_ocp_nlp.h"
+// #include "acados/ocp_nlp/ocp_nlp_common.h"
+// #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/model_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_rk_common.h"
@@ -78,25 +78,44 @@ import_array();
 
 %{
 static bool is_integer(const LangObject *input) {
-    if (!PyInt_Check((PyObject *) input))
-        return false;
-    return true;
+#ifdef SWIGMATLAB
+    return mxIsScalar(input);
+#elif defined(SWIGPYTHON)
+    return PyLong_Check((PyObject *) input);
+#endif
 }
 
-static bool is_valid_2dim_array(PyObject * const input) {
+static bool is_valid_2dim_array(const LangObject *input) {
+#ifdef SWIGMATLAB
+    mwSize nb_dims = mxGetNumberOfDimensions(input);
+    if (nb_dims != 2)
+        return false;
+    return true;
+#elif defined(SWIGPYTHON)
     if (!PyArray_Check(input))
         return false;
     if (array_numdims(input) != 2)
         return false;
     return true;
+#endif
 }
 
-static bool is_valid_1dim_array(PyObject * const input) {
+static bool is_valid_1dim_array(const LangObject *input) {
+#ifdef SWIGMATLAB
+    mwSize nb_dims = mxGetNumberOfDimensions(input);
+    if (nb_dims != 2)  // all Matlab arrays are 2-dimensional
+        return false;
+    const mwSize *dims = mxGetDimensions(input);
+    if (dims[0] != 1 && dims[1] != 1)
+        return false;
+    return true;
+#elif defined(SWIGPYTHON)
     if (!PyArray_Check(input))
         return false;
     if (array_numdims(input) != 1)
         return false;
     return true;
+#endif
 }
 
 static bool is_sequence(const LangObject *object) {
@@ -158,7 +177,7 @@ static int_t int_from(const LangObject *map, const char *key) {
     mxArray *value_ptr = mxGetField(map, 0, key);
     return (int_t) mxGetScalar(value_ptr);
 #elif defined(SWIGPYTHON)
-    return (int_t) PyInt_AsLong(PyDict_GetItemString((PyObject *) map, key));
+    return (int_t) PyLong_AsLong(PyDict_GetItemString((PyObject *) map, key));
 #endif
 }
 
@@ -166,7 +185,7 @@ static int_t int_from(const LangObject *object) {
 #ifdef SWIGMATLAB
     return (int_t) mxGetScalar(object);
 #elif defined(SWIGPYTHON)
-    return (int_t) PyInt_AsLong((PyObject *) object);
+    return (int_t) PyLong_AsLong((PyObject *) object);
 #endif
 }
 
@@ -247,18 +266,41 @@ static void fill_array_from_sequence(const LangObject *sequence, int_t *array, c
     }
 }
 
-static PyObject *convert_to_sequence(int_t *array, const int_t length) {
-    PyObject *sequence = PyList_New(length);
-    for (int_t i = 0; i < length; i++) {
-        PyList_SetItem(sequence, i, PyInt_FromLong((long) array[i]));
-    }
-    return sequence;
+static LangObject *new_sequence(const int_t length) {
+#ifdef SWIGMATLAB
+    const mwSize dims[1] = {length};
+    return mxCreateCellArray(1, dims);
+#elif defined(SWIGPYTHON)
+    return PyList_New(length);
+#endif
 }
 
-static PyObject *convert_to_sequence(real_t *array, const int_t length) {
-    PyObject *sequence = PyList_New(length);
-    for (int_t i = 0; i < length; i++) {
-        PyList_SetItem(sequence, i, PyFloat_FromDouble((double) array[i]));
+static void int_to(LangObject *sequence, const int_t index, const int_t number) {
+#ifdef SWIGMATLAB
+    mxArray *scalar = mxCreateNumericMatrix(1, 1, mxINT32_CLASS, mxREAL);
+    mxSetCell(sequence, index, scalar);
+#elif defined(SWIGPYTHON)
+    PyList_SetItem(sequence, index, PyLong_FromLong((long) number));
+#endif
+}
+
+static void real_to(LangObject *sequence, const int_t index, const real_t number) {
+#ifdef SWIGMATLAB
+    mxArray *scalar = mxCreateDoubleScalar(number);
+    mxSetCell(sequence, index, scalar);
+#elif defined(SWIGPYTHON)
+    PyList_SetItem(sequence, index, PyFloat_FromDouble((double) number));
+#endif
+}
+
+template <typename T>
+static LangObject *convert_to_sequence(const T *array, const int_t length) {
+    LangObject *sequence = new_sequence(length);
+    for (int_t index = 0; index < length; index++) {
+        if (std::is_same<T, int_t>::value)
+            int_to(sequence, index, array[index]);
+        else if (std::is_same<T, real_t>::value)
+            real_to(sequence, index, array[index]);
     }
     return sequence;
 }
@@ -711,177 +753,177 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     }
 }
 
-%typemap(in) real_t ** ls_cost_matrix {
-    $1 = ((ocp_nlp_ls_cost *) arg1->cost)->W;
-    int_t W_dimensions[arg1->N+1];
-    for (int_t i = 0; i < arg1->N+1; i++) {
-        W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
-    }
-    convert_to_2dim_c_array($input, $1, arg1->N+1, W_dimensions, W_dimensions);
-}
+// %typemap(in) real_t ** ls_cost_matrix {
+//     $1 = ((ocp_nlp_ls_cost *) arg1->cost)->W;
+//     int_t W_dimensions[arg1->N+1];
+//     for (int_t i = 0; i < arg1->N+1; i++) {
+//         W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
+//     }
+//     convert_to_2dim_c_array($input, $1, arg1->N+1, W_dimensions, W_dimensions);
+// }
 
-%typemap(out) real_t ** ls_cost_matrix {
-    int_t W_dimensions[arg1->N+1];
-    for (int_t i = 0; i < arg1->N+1; i++) {
-        W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
-    }
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N+1, W_dimensions, W_dimensions);
-}
+// %typemap(out) real_t ** ls_cost_matrix {
+//     int_t W_dimensions[arg1->N+1];
+//     for (int_t i = 0; i < arg1->N+1; i++) {
+//         W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
+//     }
+//     $result = convert_to_sequence_of_2dim_arrays($1, arg1->N+1, W_dimensions, W_dimensions);
+// }
 
-%ignore ocp_nlp_function;
-%ignore ocp_nlp_ls_cost;
-%ignore ocp_nlp_stage_cost;
-%ignore ocp_nlp_args;
-%ignore ocp_nlp_memory;
-%ignore ocp_nlp_work;
-%ignore ocp_nlp_out;
-%ignore ocp_nlp_calculate_workspace_size;
-%ignore ocp_nlp_cast_workspace;
-%ignore ocp_nlp_create_memory;
-%ignore ocp_nlp_free_memory;
-%rename(ocp_nlp) ocp_nlp_in;
-%include "acados/ocp_nlp/ocp_nlp_common.h"
+// %ignore ocp_nlp_function;
+// %ignore ocp_nlp_ls_cost;
+// %ignore ocp_nlp_stage_cost;
+// %ignore ocp_nlp_args;
+// %ignore ocp_nlp_memory;
+// %ignore ocp_nlp_work;
+// %ignore ocp_nlp_out;
+// %ignore ocp_nlp_calculate_workspace_size;
+// %ignore ocp_nlp_cast_workspace;
+// %ignore ocp_nlp_create_memory;
+// %ignore ocp_nlp_free_memory;
+// %rename(ocp_nlp) ocp_nlp_in;
+// %include "acados/ocp_nlp/ocp_nlp_common.h"
 
-%{
-void ocp_nlp_in_ls_cost_matrix_set(ocp_nlp_in *nlp, real_t **matrix) {
-    ((ocp_nlp_ls_cost *) nlp->cost)->W = matrix;
-}
+// %{
+// void ocp_nlp_in_ls_cost_matrix_set(ocp_nlp_in *nlp, real_t **matrix) {
+//     ((ocp_nlp_ls_cost *) nlp->cost)->W = matrix;
+// }
 
-real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
-    return ((ocp_nlp_ls_cost *) nlp->cost)->W;
-}
-%}
+// real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
+//     return ((ocp_nlp_ls_cost *) nlp->cost)->W;
+// }
+// %}
 
-%extend ocp_nlp_in {
-    real_t **ls_cost_matrix;
-    ocp_nlp_in(PyObject *dictionary) {
-        ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
-        if (!is_valid_ocp_dimensions_map(dictionary)) {
-            SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
-        }
-        int_t N = (int_t) PyInt_AsLong(PyDict_GetItemString(dictionary, "N"));
-        int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1], ng[N+1];
-        array_from(dictionary, "nx", nx, N+1);
-        array_from(dictionary, "nu", nu, N+1);
-        array_from(dictionary, "nb", nb, N+1);
-        array_from(dictionary, "nc", nc, N+1);
-        array_from(dictionary, "ng", ng, N+1);
-        nu[N] = 0;
-        // Default behavior is that initial state is fixed
-        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
-            nb[0] = nx[0];
-        }
-        allocate_ocp_nlp_in(N, nx, nu, nb, nc, ng, nlp_in);
-        if (PyDict_GetItemString(dictionary, "nb") == NULL) {
-            int idxb[nb[0]];
-            for (int_t i = 0; i < nb[0]; i++)
-                idxb[i] = i;
-            memcpy((void *) nlp_in->idxb[0], idxb, sizeof(idxb));
-        }
-        return nlp_in;
-    }
+// %extend ocp_nlp_in {
+//     real_t **ls_cost_matrix;
+//     ocp_nlp_in(PyObject *dictionary) {
+//         ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
+//         if (!is_valid_ocp_dimensions_map(dictionary)) {
+//             SWIG_Error(SWIG_ValueError, "Input must be a valid OCP dictionary");
+//         }
+//         int_t N = (int_t) PyLong_AsLong(PyDict_GetItemString(dictionary, "N"));
+//         int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1], ng[N+1];
+//         array_from(dictionary, "nx", nx, N+1);
+//         array_from(dictionary, "nu", nu, N+1);
+//         array_from(dictionary, "nb", nb, N+1);
+//         array_from(dictionary, "nc", nc, N+1);
+//         array_from(dictionary, "ng", ng, N+1);
+//         nu[N] = 0;
+//         // Default behavior is that initial state is fixed
+//         if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+//             nb[0] = nx[0];
+//         }
+//         allocate_ocp_nlp_in(N, nx, nu, nb, nc, ng, nlp_in);
+//         if (PyDict_GetItemString(dictionary, "nb") == NULL) {
+//             int idxb[nb[0]];
+//             for (int_t i = 0; i < nb[0]; i++)
+//                 idxb[i] = i;
+//             memcpy((void *) nlp_in->idxb[0], idxb, sizeof(idxb));
+//         }
+//         return nlp_in;
+//     }
 
-    void set_model(char *model_name) {
-        char library_name[256], path_to_library[256];
-        snprintf(library_name, sizeof(library_name), "%s.so", model_name);
-        snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
-        char command[256];
-        snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
-            model_name, library_name);
-        int compilation_failed = system(command);
-        if (compilation_failed)
-            SWIG_Error(SWIG_RuntimeError, "Something went wrong when compiling the model.");
-        void *handle;
-        handle = dlopen(path_to_library, RTLD_LAZY);
-        if (handle == 0) {
-            char err_msg[256];
-            snprintf(err_msg, sizeof(err_msg), \
-                "Something went wrong when loading the model. dlerror(): %s", dlerror());
-            SWIG_Error(SWIG_RuntimeError, err_msg);
-        }
-        typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
-        eval_t eval = (eval_t)dlsym(handle, model_name);
-        for (int_t i = 0; i < $self->N; i++) {
-            $self->sim[i].in->vde = eval;
-            $self->sim[i].in->VDE_forw = &vde_fun;
-        }
-        // dlclose(handle);
-    }
-}
+//     void set_model(char *model_name) {
+//         char library_name[256], path_to_library[256];
+//         snprintf(library_name, sizeof(library_name), "%s.so", model_name);
+//         snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
+//         char command[256];
+//         snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
+//             model_name, library_name);
+//         int compilation_failed = system(command);
+//         if (compilation_failed)
+//             SWIG_Error(SWIG_RuntimeError, "Something went wrong when compiling the model.");
+//         void *handle;
+//         handle = dlopen(path_to_library, RTLD_LAZY);
+//         if (handle == 0) {
+//             char err_msg[256];
+//             snprintf(err_msg, sizeof(err_msg), \
+//                 "Something went wrong when loading the model. dlerror(): %s", dlerror());
+//             SWIG_Error(SWIG_RuntimeError, err_msg);
+//         }
+//         typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
+//         eval_t eval = (eval_t)dlsym(handle, model_name);
+//         for (int_t i = 0; i < $self->N; i++) {
+//             $self->sim[i].in->vde = eval;
+//             $self->sim[i].in->VDE_forw = &vde_fun;
+//         }
+//         // dlclose(handle);
+//     }
+// }
 
-%extend ocp_nlp_solver {
-    ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in) {
-        ocp_nlp_solver *solver = (ocp_nlp_solver *) malloc(sizeof(ocp_nlp_solver));
-        void *args = NULL;
-        void *mem = NULL;
-        int_t workspace_size;
-        void *workspace = NULL;
-        if (!strcmp("gauss-newton-sqp", solver_name)) {
-            solver->fun = ocp_nlp_gn_sqp;
-            args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
-            ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
-            snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
-                sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "qpdunes");
-            mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
-            ((ocp_nlp_gn_sqp_memory *) mem)->common = \
-                (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
-            ocp_nlp_gn_sqp_create_memory(nlp_in, args, mem);
-            ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
-            workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
-            workspace = (void *) malloc(workspace_size);
-            int_t N = nlp_in->N;
-            ((ocp_nlp_gn_sqp_args *) args)->common->maxIter = 1;
-            nlp_in->freezeSens = false;
-            for (int_t i = 0; i < N; i++) {
-                nlp_in->sim[i].in->nx = nlp_in->nx[i];
-                nlp_in->sim[i].in->nu = nlp_in->nu[i];
-                nlp_in->sim[i].in->sens_forw = true;
-                nlp_in->sim[i].in->sens_adj = false;
-                nlp_in->sim[i].in->sens_hess = false;
-                nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
-                nlp_in->sim[i].in->nSteps = 2;
-                nlp_in->sim[i].in->step = 0.1;
-                nlp_in->sim[i].in->opts = (sim_RK_opts *) malloc(sizeof(sim_RK_opts));
-                sim_erk_create_opts(4, (sim_RK_opts *) nlp_in->sim[i].in->opts);
-                nlp_in->sim[i].work = (sim_erk_workspace *) malloc(sizeof(sim_erk_workspace));
-                sim_erk_create_workspace(nlp_in->sim[i].in, \
-                    (sim_erk_workspace *) nlp_in->sim[i].work);
-                nlp_in->sim[i].fun = &sim_erk;
-            }
-        } else {
-            SWIG_Error(SWIG_ValueError, "Solver name not known!");
-            return NULL;
-        }
-        solver->nlp_in = nlp_in;
-        ocp_nlp_out *nlp_out = (ocp_nlp_out *) malloc(sizeof(ocp_nlp_out));
-        allocate_ocp_nlp_out(nlp_in, nlp_out);
-        solver->nlp_out = nlp_out;
-        solver->args = args;
-        solver->mem = mem;
-        solver->work = workspace;
-        return solver;
-    }
+// %extend ocp_nlp_solver {
+//     ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in) {
+//         ocp_nlp_solver *solver = (ocp_nlp_solver *) malloc(sizeof(ocp_nlp_solver));
+//         void *args = NULL;
+//         void *mem = NULL;
+//         int_t workspace_size;
+//         void *workspace = NULL;
+//         if (!strcmp("gauss-newton-sqp", solver_name)) {
+//             solver->fun = ocp_nlp_gn_sqp;
+//             args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
+//             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+//             snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
+//                 sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "qpdunes");
+//             mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
+//             ((ocp_nlp_gn_sqp_memory *) mem)->common = \
+//                 (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
+//             ocp_nlp_gn_sqp_create_memory(nlp_in, args, mem);
+//             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+//             workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
+//             workspace = (void *) malloc(workspace_size);
+//             int_t N = nlp_in->N;
+//             ((ocp_nlp_gn_sqp_args *) args)->common->maxIter = 1;
+//             nlp_in->freezeSens = false;
+//             for (int_t i = 0; i < N; i++) {
+//                 nlp_in->sim[i].in->nx = nlp_in->nx[i];
+//                 nlp_in->sim[i].in->nu = nlp_in->nu[i];
+//                 nlp_in->sim[i].in->sens_forw = true;
+//                 nlp_in->sim[i].in->sens_adj = false;
+//                 nlp_in->sim[i].in->sens_hess = false;
+//                 nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
+//                 nlp_in->sim[i].in->nSteps = 2;
+//                 nlp_in->sim[i].in->step = 0.1;
+//                 nlp_in->sim[i].in->opts = (sim_RK_opts *) malloc(sizeof(sim_RK_opts));
+//                 sim_erk_create_opts(4, (sim_RK_opts *) nlp_in->sim[i].in->opts);
+//                 nlp_in->sim[i].work = (sim_erk_workspace *) malloc(sizeof(sim_erk_workspace));
+//                 sim_erk_create_workspace(nlp_in->sim[i].in, \
+//                     (sim_erk_workspace *) nlp_in->sim[i].work);
+//                 nlp_in->sim[i].fun = &sim_erk;
+//             }
+//         } else {
+//             SWIG_Error(SWIG_ValueError, "Solver name not known!");
+//             return NULL;
+//         }
+//         solver->nlp_in = nlp_in;
+//         ocp_nlp_out *nlp_out = (ocp_nlp_out *) malloc(sizeof(ocp_nlp_out));
+//         allocate_ocp_nlp_out(nlp_in, nlp_out);
+//         solver->nlp_out = nlp_out;
+//         solver->args = args;
+//         solver->mem = mem;
+//         solver->work = workspace;
+//         return solver;
+//     }
 
-    PyObject *solve() {
-        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
-        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
-            $self->mem, $self->work);
-        if (return_code != 0) {
-            SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
-        }
-        return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
-            $self->nlp_in->nx);
-    }
+//     PyObject *solve() {
+//         // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
+//         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
+//             $self->mem, $self->work);
+//         if (return_code != 0) {
+//             SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
+//         }
+//         return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
+//             $self->nlp_in->nx);
+//     }
 
-    PyObject *solve(PyObject *x0) {
-        convert_to_1dim_c_array(x0, $self->nlp_in->lb, 1, $self->nlp_in->nx);
-        convert_to_1dim_c_array(x0, $self->nlp_in->ub, 1, $self->nlp_in->nx);
-        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
-            $self->mem, $self->work);
-        if (return_code != 0) {
-            SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
-        }
-        return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
-            $self->nlp_in->nx);
-    }
-}
+//     PyObject *solve(PyObject *x0) {
+//         convert_to_1dim_c_array(x0, $self->nlp_in->lb, 1, $self->nlp_in->nx);
+//         convert_to_1dim_c_array(x0, $self->nlp_in->ub, 1, $self->nlp_in->nx);
+//         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
+//             $self->mem, $self->work);
+//         if (return_code != 0) {
+//             SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
+//         }
+//         return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
+//             $self->nlp_in->nx);
+//     }
+// }
