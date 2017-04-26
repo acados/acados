@@ -65,6 +65,12 @@ void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **w
     work++;
 }
 
+void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
+    // TODO(dimitris): replace dummy commands once interface completed
+    mem_++;
+    work++;
+}
+
 // int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 // ocp_qp_hpmpc_args *hpmpc_args,
 //     void *workspace) {

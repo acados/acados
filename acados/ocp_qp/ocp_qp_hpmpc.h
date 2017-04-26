@@ -74,6 +74,8 @@ int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in,
 
 void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
 
+void ocp_qp_hpmpc_destroy(void *mem_, void *work);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
