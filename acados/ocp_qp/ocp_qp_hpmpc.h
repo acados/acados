@@ -53,8 +53,11 @@ typedef struct ocp_qp_hpmpc_args_ {
 // int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
 //   void *workspace);
 
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
-        void *workspace);
+// int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
+        // void *workspace);
+
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+        void *args_, void *mem_, void *workspace_);
 
 // int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 //   ocp_qp_hpmpc_args *qp_args, int M, double sigma_mu, void *workspace);
@@ -68,6 +71,8 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 
 int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in,
     ocp_qp_hpmpc_args *args);
+
+void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
 
 #ifdef __cplusplus
 } /* extern "C" */

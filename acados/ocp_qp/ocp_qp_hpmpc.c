@@ -51,8 +51,18 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
         workspace_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx,
           nu, nb, hidxb, ng, N2);
 
-
     return workspace_size;
+}
+
+void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
+
+    // TODO(andrea): replace dummy commands once interface completed
+    args->max_iter = args->max_iter;
+    if (qp_in->nx[0] > 0)
+        mem_++;
+    work++;
 }
 
 // int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
@@ -347,8 +357,20 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 //     return acados_status;
 // }
 
+// int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+  // ocp_qp_hpmpc_args *hpmpc_args, void *workspace_) {
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-  ocp_qp_hpmpc_args *hpmpc_args, void *workspace) {
+        void *args_, void *mem_, void *workspace_) {
+
+    ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
+
+    // Process arguments TODO(Andrea): ask dimitris what this is for
+    // args_args->dummy = 1.0;
+    // workspace_++;
+    // workspace_ = 0;
+    mem_ = 0;
+    mem_++;
+
     real_t sigma_mu = hpmpc_args->sigma_mu;
     int_t M = hpmpc_args->M;
 
@@ -412,7 +434,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strmat sLxM;
     struct d_strmat sPpM;
 
-    char *ptr_memory = (char *) workspace;
+    char *ptr_memory = (char *) workspace_;
 
     for ( ii = 0; ii < N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
@@ -689,6 +711,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 }
 
 int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
+
     int_t N = (int_t)in->N;
     int_t *nx = (int_t*)in->nx;
     int_t *nu = (int_t*)in->nu;
@@ -786,7 +809,7 @@ int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
 
 // TODO(Andrea): need to merge hpmpc in order to use this...
 // int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args,
-//     void *workspace) {
+//     void *workspace_) {
 //
 //     // initialize return code
 //     int acados_status = ACADOS_SUCCESS;
