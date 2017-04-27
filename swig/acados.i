@@ -18,28 +18,22 @@
  */
 
 %module acados
+
+#if defined(SWIGPYTHON)
 %{
-#ifdef SWIGMATLAB
-
-    #define LangObject mxArray
-    #define LANG_SEQUENCE_NAME "cell array"
-    #define LANG_MAP_NAME "struct"
-
-#elif defined(SWIGPYTHON)
-
-    #define SWIG_FILE_WITH_INIT
-    #define LangObject PyObject
-    #define LANG_SEQUENCE_NAME "list"
-    #define LANG_MAP_NAME "dictionary"
-
+#define SWIG_FILE_WITH_INIT
+%}
 #endif
 
+%include "conversions.i"
+%include "ocp_typemaps.i"
+
+%{
 #include <dlfcn.h>
 // #include <xmmintrin.h>  // for floating point exceptions
 
 #include <cstdlib>
 #include <string>
-#include <typeinfo>
 
 #include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -56,403 +50,20 @@
 
 %}
 
-#ifdef SWIGPYTHON
 %{
-#define PyArray_SimpleNewFromDataF(nd, dims, typenum, data) \
-        PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
-                    data, 0, NPY_ARRAY_FARRAY, NULL)
-%}
-
-%include "numpy.i"
-%fragment("NumPy_Fragments");
-%init %{
-import_array();
-%}
-#endif
-
-%ignore ACADOS_SUCCESS;
-%ignore ACADOS_MAXITER;
-%ignore ACADOS_MINSTEP;
-
-%include "acados/utils/types.h"
-
-%{
-static bool is_integer(const LangObject *input) {
-#ifdef SWIGMATLAB
-    return mxIsScalar(input);
-#elif defined(SWIGPYTHON)
-    return PyLong_Check((PyObject *) input);
-#endif
-}
-
-static bool is_valid_2dim_array(const LangObject *input) {
-#ifdef SWIGMATLAB
-    mwSize nb_dims = mxGetNumberOfDimensions(input);
-    if (nb_dims != 2)
-        return false;
-    return true;
-#elif defined(SWIGPYTHON)
-    if (!PyArray_Check(input))
-        return false;
-    if (array_numdims(input) != 2)
-        return false;
-    return true;
-#endif
-}
-
-static bool is_valid_1dim_array(const LangObject *input) {
-#ifdef SWIGMATLAB
-    mwSize nb_dims = mxGetNumberOfDimensions(input);
-    if (nb_dims != 2)  // all Matlab arrays are 2-dimensional
-        return false;
-    const mwSize *dims = mxGetDimensions(input);
-    if (dims[0] != 1 && dims[1] != 1)
-        return false;
-    return true;
-#elif defined(SWIGPYTHON)
-    if (!PyArray_Check(input))
-        return false;
-    if (array_numdims(input) != 1)
-        return false;
-    return true;
-#endif
-}
-
-static bool is_sequence(const LangObject *object) {
-#ifdef SWIGMATLAB
-    if (!mxIsCell(object))
-#elif defined(SWIGPYTHON)
-    if (!PyList_Check((PyObject *) object))  // cast const away
-#endif
-        return false;
-    return true;
-}
-
-static bool is_map(const LangObject *object) {
-#ifdef SWIGMATLAB
-    if (!mxIsStruct(object))
-#elif defined(SWIGPYTHON)
-    if (!PyDict_Check(object))
-#endif
-        return false;
-    return true;
-}
-
-static bool has(const LangObject *map, const char *key) {
-#ifdef SWIGMATLAB
-    if (mxGetField(map, 0, key) == NULL)
-#elif defined(SWIGPYTHON)
-    if (PyDict_GetItemString((PyObject *) map, key) == NULL)
-#endif
-        return false;
-    return true;
-}
-
-static LangObject *from(const LangObject *map, const char *key) {
-#ifdef SWIGMATLAB
-    return mxGetField(map, 0, key);
-#elif defined(SWIGPYTHON)
-    return PyDict_GetItemString((PyObject *) map, key);
-#endif
-}
-
-static bool value_is_integer(const LangObject * const map, const char * const key) {
-    if (!has(map, key)) {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), "Input %s must have an '%s' key "
-            "with as value an integer number", LANG_MAP_NAME, key);
-        SWIG_Error(SWIG_ValueError, err_msg);
-    }
-    LangObject *value = from(map, key);
-    if (!is_integer(value)) {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), "'%s' must be an integer number", key);
-        SWIG_Error(SWIG_ValueError, err_msg);
-    }
-    return true;
-}
-
-static int_t int_from(const LangObject *map, const char *key) {
-#ifdef SWIGMATLAB
-    mxArray *value_ptr = mxGetField(map, 0, key);
-    return (int_t) mxGetScalar(value_ptr);
-#elif defined(SWIGPYTHON)
-    return (int_t) PyLong_AsLong(PyDict_GetItemString((PyObject *) map, key));
-#endif
-}
-
-static int_t int_from(const LangObject *object) {
-#ifdef SWIGMATLAB
-    return (int_t) mxGetScalar(object);
-#elif defined(SWIGPYTHON)
-    return (int_t) PyLong_AsLong((PyObject *) object);
-#endif
-}
-
-static bool is_sequence_with_length(const LangObject *input, int_t expected_length) {
-    if (!is_sequence(input))
-        return false;
-#ifdef SWIGMATLAB
-    int_t length_of_sequence = mxGetNumberOfElements(input);
-#elif defined(SWIGPYTHON)
-    int_t length_of_sequence = PyList_Size((PyObject *) input);
-#endif
-    if (length_of_sequence != expected_length) {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), "Length of sequence must be %d", expected_length);
-        SWIG_Error(SWIG_ValueError, err_msg);
-    }
-    return true;
-}
-
-static bool value_is_sequence_with_length(const LangObject *map, const char *key, int_t length) {
-#ifdef SWIGMATLAB
-    mxArray *value = mxGetField(map, 0, key);
-#elif defined(SWIGPYTHON)
-    PyObject *value = PyDict_GetItemString((PyObject *) map, key);
-#endif
-    return is_sequence_with_length(value, length);
-}
-
-static void error_is_integer_nor_sequence(const char *key) {
-    char err_msg[256];
-    snprintf(err_msg, sizeof(err_msg), "Input %s must have an '%s' key "
-        "with as value an integer number or a list of integer numbers", LANG_MAP_NAME, key);
-    SWIG_Error(SWIG_ValueError, err_msg);
-}
-
 static bool is_valid_ocp_dimensions_map(const LangObject *input) {
     if (!is_map(input))
         return false;
-    if (!value_is_integer(input, "N"))
-        return false;
     int_t N = int_from(input, "N");
-    if (!value_is_integer(input, "nx") && !value_is_sequence_with_length(input, "nx", N+1)) {
-        error_is_integer_nor_sequence("nx");
+    LangObject *nx = from(input, "nx");
+    if (!is_integer(nx) && !is_sequence(nx, N+1)) {
         return false;
     }
-    if (!value_is_integer(input, "nu") && !value_is_sequence_with_length(input, "nu", N)) {
-        error_is_integer_nor_sequence("nu");
+    LangObject *nu = from(input, "nu");
+    if (!is_integer(nu) && !is_sequence(nu, N)) {
         return false;
     }
     return true;
-}
-
-template<typename T>
-static void array_from(const LangObject *map, const char *key, T *array, int_t array_length) {
-    if (!has(map, key)) {
-        memset(array, 0, array_length*sizeof(*array));
-    } else {
-        LangObject *sequence = from(map, key);
-        convert_to_c_array(sequence, array, array_length);
-    }
-}
-
-static LangObject *from(const LangObject *sequence, int_t index) {
-#ifdef SWIGMATLAB
-    return mxGetCell(sequence, index);
-#elif defined(SWIGPYTHON)
-    return PyList_GetItem((PyObject *) sequence, index);
-#endif
-}
-
-static void fill_array_from_sequence(const LangObject *sequence, int_t *array, const int_t length) {
-    for (int_t index = 0; index < length; index++) {
-        LangObject *item = from(sequence, index);
-        if (!is_integer(item)) {
-            SWIG_Error(SWIG_ValueError, "Sequence elements must be scalars");
-        }
-        array[index] = int_from(item);
-    }
-}
-
-static LangObject *new_sequence(const int_t length) {
-#ifdef SWIGMATLAB
-    const mwSize dims[1] = {length};
-    return mxCreateCellArray(1, dims);
-#elif defined(SWIGPYTHON)
-    return PyList_New(length);
-#endif
-}
-
-static void int_to(LangObject *sequence, const int_t index, const int_t number) {
-#ifdef SWIGMATLAB
-    mxArray *scalar = mxCreateNumericMatrix(1, 1, mxINT32_CLASS, mxREAL);
-    mxSetCell(sequence, index, scalar);
-#elif defined(SWIGPYTHON)
-    PyList_SetItem(sequence, index, PyLong_FromLong((long) number));
-#endif
-}
-
-static void real_to(LangObject *sequence, const int_t index, const real_t number) {
-#ifdef SWIGMATLAB
-    mxArray *scalar = mxCreateDoubleScalar(number);
-    mxSetCell(sequence, index, scalar);
-#elif defined(SWIGPYTHON)
-    PyList_SetItem(sequence, index, PyFloat_FromDouble((double) number));
-#endif
-}
-
-template <typename T>
-static LangObject *convert_to_sequence(const T *array, const int_t length) {
-    LangObject *sequence = new_sequence(length);
-    for (int_t index = 0; index < length; index++) {
-        if (std::is_same<T, int_t>::value)
-            int_to(sequence, index, array[index]);
-        else if (std::is_same<T, real_t>::value)
-            real_to(sequence, index, array[index]);
-    }
-    return sequence;
-}
-
-static void convert_to_c_array(const LangObject *input, int_t *array, const int_t length) {
-    if (is_integer(input)) {
-        int_t number = int_from(input);
-        for (int_t i = 0; i < length; i++)
-            array[i] = number;
-    } else if (is_sequence_with_length(input, length)) {
-        fill_array_from_sequence(input, array, length);
-    } else {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), \
-            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
-        SWIG_Error(SWIG_ValueError, err_msg);
-    }
-}
-
-template<typename T>
-int_t get_numpy_type() {
-    if (typeid(T) == typeid(real_t))
-        return NPY_DOUBLE;
-    else if (typeid(T) == typeid(int_t))
-        return NPY_INT;
-    return NPY_NOTYPE;
-}
-
-template<typename T>
-static PyObject *convert_to_sequence_of_2dim_arrays(T **c_array,
-    const int_t length, const int_t *dimensions1, const int_t *dimensions2) {
-
-    PyObject *sequence = PyList_New(length);
-    for (int_t i = 0; i < length; i++) {
-        npy_intp dims[2] = {dimensions1[i], dimensions2[i]};
-        PyObject *py_array = PyArray_SimpleNewFromDataF(2, dims, get_numpy_type<T>(), \
-            (void*) c_array[i]);
-        PyObject *return_array = PyArray_NewCopy((PyArrayObject *) py_array, NPY_FORTRANORDER);
-        if (return_array != NULL)
-            PyList_SetItem(sequence, i, return_array);
-        else
-            SWIG_Error(SWIG_RuntimeError, "Something went wrong while copying array");
-    }
-    return sequence;
-}
-
-template<typename T>
-static PyObject *convert_to_sequence_of_1dim_arrays(T **c_array,
-    const int_t length, const int_t *dimensions) {
-
-    PyObject *sequence = PyList_New(length);
-    for (int_t i = 0; i < length; i++) {
-        npy_intp dims[1] = {dimensions[i]};
-        PyObject *py_array = PyArray_SimpleNewFromDataF(1, dims, get_numpy_type<T>(), \
-            (void*) c_array[i]);
-        PyObject *return_array = PyArray_NewCopy((PyArrayObject *) py_array, NPY_FORTRANORDER);
-        if (return_array != NULL)
-            PyList_SetItem(sequence, i, return_array);
-        else
-            SWIG_Error(SWIG_RuntimeError, "Something went wrong while copying array");
-    }
-    return sequence;
-}
-
-template<typename T>
-static PyArrayObject *array_with_type(PyObject *input) {
-    PyArrayObject *f_array = (PyArrayObject *) PyArray_FROM_OF(input, NPY_ARRAY_F_CONTIGUOUS);
-    PyObject *obj = PyArray_Cast(f_array, get_numpy_type<T>());
-    return reinterpret_cast<PyArrayObject *>(obj);
-}
-
-template<typename T>
-static PyArrayObject *object_to_2dim_array(PyObject *input, int_t dim1, int_t dim2) {
-    PyArrayObject *input_array = array_with_type<T>(input);
-    if (PyArray_NDIM(input_array) != 2) {
-        SWIG_Error(SWIG_ValueError, "Expected a 2D array as input");
-    }
-    npy_intp *dims = PyArray_DIMS(input_array);
-    if (dims[0] != dim1 || dims[1] != dim2) {
-        SWIG_Error(SWIG_ValueError, "Input array with wrong dimensions");
-    }
-    return input_array;
-}
-
-template<typename T>
-static PyArrayObject *object_to_1dim_array(PyObject *input, int_t dim) {
-    PyArrayObject *input_array = array_with_type<T>(input);
-    if (PyArray_NDIM(input_array) != 1) {
-        SWIG_Error(SWIG_ValueError, "Expected a 1D array as input");
-    }
-    npy_intp *dims = PyArray_DIMS(input_array);
-    if (dims[0] != dim) {
-        SWIG_Error(SWIG_ValueError, "Input array with wrong dimensions");
-    }
-    return input_array;
-}
-
-template<typename T>
-static void convert_to_2dim_c_array(PyObject * const input, T ** const array,
-    const int_t length_of_array, const int_t *dimensions1, const int_t *dimensions2) {
-
-    if (is_valid_2dim_array(input)) {
-        int_t dim1 = dimensions1[0];
-        int_t dim2 = dimensions2[0];
-        for (int_t i = 1; i < length_of_array; i++) {
-            if (dimensions1[i] != dim1 || dimensions2[i] != dim2)
-                SWIG_Error(SWIG_ValueError, "Not all dimensions are equal");
-        }
-        PyArrayObject *input_array = object_to_2dim_array<T>(input, dim1, dim2);
-        for (int_t i = 0; i < length_of_array; i++) {
-            memcpy((void *) array[i], (T *) array_data(input_array), dim1*dim2*sizeof(T));
-        }
-    } else if (is_sequence_with_length(input, length_of_array)) {
-        for (int_t i = 0; i < length_of_array; i++) {
-            PyObject *item = PyList_GetItem(input, i);
-            if (is_valid_2dim_array(item)) {
-                int_t dim1 = dimensions1[i];
-                int_t dim2 = dimensions2[i];
-                PyArrayObject *input_array = object_to_2dim_array<T>(item, dim1, dim2);
-                memcpy((void *) array[i], (T *) array_data(input_array), dim1*dim2*sizeof(T));
-            }
-        }
-    } else {
-        SWIG_Error(SWIG_ValueError, "Expected a 2-dimensional array as input");
-    }
-}
-
-template<typename T>
-static void convert_to_1dim_c_array(PyObject * const input, T ** const array,
-    const int_t length_of_array, const int_t *dimensions) {
-
-    if (is_valid_1dim_array(input)) {
-        int_t dim = dimensions[0];
-        for (int_t i = 1; i < length_of_array; i++) {
-            if (dimensions[i] != dim)
-                SWIG_Error(SWIG_ValueError, "Not all dimensions are equal");
-        }
-        PyArrayObject *input_array = object_to_1dim_array<T>(input, dimensions[0]);
-        for (int_t i = 0; i < length_of_array; i++) {
-            memcpy((void *) array[i], (T *) array_data(input_array), dimensions[0]*sizeof(T));
-        }
-    } else if (is_sequence_with_length(input, length_of_array)) {
-        for (int_t i = 0; i < length_of_array; i++) {
-            PyObject *item = PyList_GetItem(input, i);
-            if (is_valid_1dim_array(item)) {
-                PyArrayObject *input_array = object_to_1dim_array<T>(item, dimensions[i]);
-                memcpy((void *) array[i], (T *) array_data(input_array), dimensions[i]*sizeof(T));
-            }
-        }
-    } else {
-        SWIG_Error(SWIG_ValueError, "Expected a 1-dimensional array as input");
-    }
 }
 
 static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
@@ -477,180 +88,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         return false;
     return true;
 }
-
 %}
-
-%typemap(in) int_t N {
-    $1 = ($1_ltype) arg1->$1_name;
-    SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
-}
-
-%typemap(in) const int_t * nx {
-    SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of state vector");
-}
-
-%typemap(out) const int_t * nx {
-    return convert_to_sequence($1, arg1->N+1);
-}
-
-%typemap(in) const int_t * nu {
-    SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of vector of controls");
-}
-
-%typemap(out) const int_t * nu {
-    return convert_to_sequence($1, arg1->N);
-}
-
-%typemap(in) const int_t * nb {
-    SWIG_Error(SWIG_ValueError, "It's not allowed to change number of bounds");
-}
-
-%typemap(out) const int_t * nb {
-    return convert_to_sequence($1, arg1->N+1);
-}
-
-%typemap(in) const int_t * nc {
-    SWIG_Error(SWIG_ValueError, "It's not allowed to change number of polytopic constraints");
-}
-
-%typemap(out) const int_t * nc {
-    return convert_to_sequence($1, arg1->N+1);
-}
-
-%typemap(in) const real_t ** A {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N, &(arg1->nx[1]), &(arg1->nx[0]));
-}
-
-%typemap(out) const real_t ** A {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N, &arg1->nx[1], &arg1->nx[0]);
-}
-
-%typemap(in) const real_t ** B {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N, &(arg1->nx[1]), &(arg1->nu[0]));
-}
-
-%typemap(out) const real_t ** B {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N, &arg1->nx[1], &arg1->nu[0]);
-}
-
-%typemap(in) const real_t ** b {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N, &(arg1->nx[1]));
-}
-
-%typemap(out) const real_t ** b {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N, &(arg1->nx[1]));
-}
-
-%typemap(in) const real_t ** Q {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N+1, arg1->nx, arg1->nx);
-}
-
-%typemap(out) const real_t ** Q {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N+1, arg1->nx, arg1->nx);
-}
-
-%typemap(in) const real_t ** S {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N, arg1->nu, arg1->nx);
-}
-
-%typemap(out) const real_t ** S {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N, arg1->nu, arg1->nx);
-}
-
-%typemap(in) const real_t ** R {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N, arg1->nu, arg1->nu);
-}
-
-%typemap(out) const real_t ** R {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N, arg1->nu, arg1->nu);
-}
-
-%typemap(in) const real_t ** q {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nx);
-}
-
-%typemap(out) const real_t ** q {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nx);
-}
-
-%typemap(in) const real_t ** r {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N, arg1->nu);
-}
-
-%typemap(out) const real_t ** r {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N, arg1->nu);
-}
-
-%typemap(in) const int_t ** idxb {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nb);
-}
-
-%typemap(out) const int_t ** idxb {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nb);
-}
-
-%typemap(in) const real_t ** lb {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nb);
-}
-
-%typemap(out) const real_t ** lb {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nb);
-}
-
-%typemap(in) const real_t ** ub {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nb);
-}
-
-%typemap(out) const real_t ** ub {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nb);
-}
-
-%typemap(in) const real_t ** Cx {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N+1, arg1->nc, arg1->nx);
-}
-
-%typemap(out) const real_t ** Cx {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N+1, arg1->nc, arg1->nx);
-}
-
-%typemap(in) const real_t ** Cu {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_2dim_c_array($input, $1, arg1->N, arg1->nc, arg1->nu);
-}
-
-%typemap(out) const real_t ** Cu {
-    $result = convert_to_sequence_of_2dim_arrays($1, arg1->N, arg1->nc, arg1->nu);
-}
-
-%typemap(in) const real_t ** lc {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nc);
-}
-
-%typemap(out) const real_t ** lc {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nc);
-}
-
-%typemap(in) const real_t ** uc {
-    $1 = ($1_ltype) arg1->$1_name;
-    convert_to_1dim_c_array($input, $1, arg1->N+1, arg1->nc);
-}
-
-%typemap(out) const real_t ** uc {
-    $result = convert_to_sequence_of_1dim_arrays($1, arg1->N+1, arg1->nc);
-}
 
 %ignore ocp_qp_out;
 %rename(ocp_qp) ocp_qp_in;
@@ -661,15 +99,16 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
             char err_msg[256];
-            snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s", LANG_MAP_NAME);
+            snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s that specifies at "
+                "least N, nx, nu", LANG_MAP_NAME);
             SWIG_Error(SWIG_ValueError, err_msg);
         }
         int_t N = int_from(input_map, "N");
         int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1];
-        array_from(input_map, "nx", nx, N+1);
-        array_from(input_map, "nu", nu, N+1);
-        array_from(input_map, "nb", nb, N+1);
-        array_from(input_map, "nc", nc, N+1);
+        fill_array_from(input_map, "nx", nx, N+1);
+        fill_array_from(input_map, "nu", nu, N+1);
+        fill_array_from(input_map, "nb", nb, N+1);
+        fill_array_from(input_map, "nc", nc, N+1);
         nu[N] = 0;
         // Default behavior is that initial state is fixed
         if (!has(input_map, "nb")) {
@@ -698,7 +137,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
             solver->fun = ocp_qp_condensing_qpoases;
             args = (ocp_qp_condensing_qpoases_args *) \
                 malloc(sizeof(ocp_qp_condensing_qpoases_args));
-#ifdef OOQP
+#if defined(OOQP)
         } else if (!strcmp(solver_name, "ooqp")) {
             solver->fun = ocp_qp_ooqp;
             args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
@@ -735,7 +174,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
+        return new_sequence_from($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 
     PyObject *solve(ocp_qp_in *qp_in) {
@@ -749,7 +188,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             SWIG_Error(SWIG_RuntimeError, "qp solver failed!");
         }
-        return convert_to_sequence($self->qp_out->u[0], $self->qp_in->nu[0]);
+        return new_sequence_from($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 }
 
@@ -759,7 +198,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 //     for (int_t i = 0; i < arg1->N+1; i++) {
 //         W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
 //     }
-//     convert_to_2dim_c_array($input, $1, arg1->N+1, W_dimensions, W_dimensions);
+//     fill_array_from($input, $1, arg1->N+1, W_dimensions, W_dimensions);
 // }
 
 // %typemap(out) real_t ** ls_cost_matrix {
@@ -767,7 +206,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 //     for (int_t i = 0; i < arg1->N+1; i++) {
 //         W_dimensions[i] = arg1->nx[i] + arg1->nu[i];
 //     }
-//     $result = convert_to_sequence_of_2dim_arrays($1, arg1->N+1, W_dimensions, W_dimensions);
+//     $result = to_sequence_of_2dim_arrays($1, arg1->N+1, W_dimensions, W_dimensions);
 // }
 
 // %ignore ocp_nlp_function;
@@ -803,11 +242,11 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 //         }
 //         int_t N = (int_t) PyLong_AsLong(PyDict_GetItemString(dictionary, "N"));
 //         int_t nx[N+1], nu[N+1], nb[N+1], nc[N+1], ng[N+1];
-//         array_from(dictionary, "nx", nx, N+1);
-//         array_from(dictionary, "nu", nu, N+1);
-//         array_from(dictionary, "nb", nb, N+1);
-//         array_from(dictionary, "nc", nc, N+1);
-//         array_from(dictionary, "ng", ng, N+1);
+//         fill_array_from(dictionary, "nx", nx, N+1);
+//         fill_array_from(dictionary, "nu", nu, N+1);
+//         fill_array_from(dictionary, "nb", nb, N+1);
+//         fill_array_from(dictionary, "nc", nc, N+1);
+//         fill_array_from(dictionary, "ng", ng, N+1);
 //         nu[N] = 0;
 //         // Default behavior is that initial state is fixed
 //         if (PyDict_GetItemString(dictionary, "nb") == NULL) {
@@ -861,14 +300,14 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 //         if (!strcmp("gauss-newton-sqp", solver_name)) {
 //             solver->fun = ocp_nlp_gn_sqp;
 //             args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
-//             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+//           ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
 //             snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
 //                 sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "qpdunes");
 //             mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
 //             ((ocp_nlp_gn_sqp_memory *) mem)->common = \
 //                 (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
 //             ocp_nlp_gn_sqp_create_memory(nlp_in, args, mem);
-//             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+//           ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
 //             workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
 //             workspace = (void *) malloc(workspace_size);
 //             int_t N = nlp_in->N;
@@ -911,19 +350,19 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 //         if (return_code != 0) {
 //             SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
 //         }
-//         return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
+//         return to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
 //             $self->nlp_in->nx);
 //     }
 
 //     PyObject *solve(PyObject *x0) {
-//         convert_to_1dim_c_array(x0, $self->nlp_in->lb, 1, $self->nlp_in->nx);
-//         convert_to_1dim_c_array(x0, $self->nlp_in->ub, 1, $self->nlp_in->nx);
+//         fill_array_from(x0, $self->nlp_in->lb, 1, $self->nlp_in->nx);
+//         fill_array_from(x0, $self->nlp_in->ub, 1, $self->nlp_in->nx);
 //         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
 //             $self->mem, $self->work);
 //         if (return_code != 0) {
 //             SWIG_Error(SWIG_RuntimeError, "nlp solver failed!");
 //         }
-//         return convert_to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
+//         return to_sequence_of_1dim_arrays($self->nlp_out->x, $self->nlp_in->N, \
 //             $self->nlp_in->nx);
 //     }
 // }
