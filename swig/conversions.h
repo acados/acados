@@ -20,11 +20,9 @@
 #ifndef SWIG_CONVERSIONS_H_
 #define SWIG_CONVERSIONS_H_
 
-#include "acados/utils/types.h"
-
 #if defined(SWIGMATLAB)
 
-    #define LangObject mxArray
+    typedef mxArray LangObject;
     #define LANG_SEQUENCE_NAME "cell array"
     #define LANG_MAP_NAME "struct"
     #define LANG_MATRIX_NAME "matrix"
@@ -35,7 +33,7 @@
     #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
     #include "numpy/arrayobject.h"
 
-    #define LangObject PyObject
+    typedef PyObject LangObject;
     #define LANG_SEQUENCE_NAME "list"
     #define LANG_MAP_NAME "dictionary"
     #define LANG_MATRIX_NAME "ndarray"
@@ -44,5 +42,7 @@
             PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
                         data, 0, NPY_ARRAY_FARRAY, NULL)
 #endif
+
+#include "acados/utils/types.h"
 
 #endif  // SWIG_CONVERSIONS_H_

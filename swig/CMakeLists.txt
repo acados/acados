@@ -35,9 +35,9 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-set(SWIG_INTERFACE "Python")
-if(SWIG_INTERFACE MATCHES "Matlab")
-
+set(MATLAB_SWIG_INTERFACE ON)
+set(PYTHON_SWIG_INTERFACE ON)
+if(MATLAB_SWIG_INTERFACE)
     find_package(Matlab REQUIRED)
 
     swig_module_initialize(acadosMEX matlab)
@@ -56,10 +56,8 @@ if(SWIG_INTERFACE MATCHES "Matlab")
             PREFIX ""
             SUFFIX .${MATLAB_MEX_EXT}
     )
-
-else()
-    # Python
-
+endif()
+if(PYTHON_SWIG_INTERFACE) # Python
     find_package(PythonInterp 3 REQUIRED)
     find_package(PythonLibs 3 REQUIRED)
     find_package(NumPy REQUIRED)
@@ -74,5 +72,4 @@ else()
     install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${LIBRARY_OUTPUT_PATH})
     # add_test(NAME ocp_nlp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/examples ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_nlp.py)
     add_test(NAME ocp_qp_py COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/examples ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_qp.py)
-
 endif()

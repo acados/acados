@@ -19,7 +19,10 @@
 
 %module acados
 
-#if defined(SWIGPYTHON)
+#if defined(SWIGMATLAB)
+typedef mxArray LangObject;
+#elif defined(SWIGPYTHON)
+typedef PyObject LangObject;
 %{
 #define SWIG_FILE_WITH_INIT
 %}
@@ -95,7 +98,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
-    ocp_qp_in(PyObject *input_map) {
+    ocp_qp_in(LangObject *input_map) {
         ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
             char err_msg[256];
@@ -168,7 +171,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         return solver;
     }
 
-    PyObject *solve() {
+    LangObject *solve() {
         int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
             $self->mem, $self->work);
         if (return_code != 0) {
@@ -177,7 +180,7 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         return new_sequence_from($self->qp_out->u[0], $self->qp_in->nu[0]);
     }
 
-    PyObject *solve(ocp_qp_in *qp_in) {
+    LangObject *solve(ocp_qp_in *qp_in) {
         if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
             SWIG_Error(SWIG_ValueError, "Not allowed to change dimensions of variables "
                 "between calls to solver");

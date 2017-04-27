@@ -33,13 +33,14 @@ import_array();
 #include <typeinfo>
 
 #if defined(SWIGMATLAB)
+template<typename T>
 mxClassID get_numeric_type() {
     if (typeid(T) == typeid(real_t))
         return mxDOUBLE_CLASS;
     else if (typeid(T) == typeid(int_t))
         return mxDOUBLE_CLASS;
     throw std::invalid_argument("Matrix can only have integer or floating point entries");
-    return 0;
+    return mxUNKNOWN_CLASS;
 }
 #elif defined(SWIGPYTHON)
 template<typename T>
@@ -97,8 +98,9 @@ bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_colu
     if (!is_matrix(input))
         return false;
 #if defined(SWIGMATLAB)
-    mwSize *dims = mxGetDimensions(input);
-    if (dims[0] != nb_rows || dims[1] != nb_columns)
+    const mwSize *dims = mxGetDimensions(input);
+    int_t input_rows = dims[0], input_cols = dims[1];
+    if (input_rows != nb_rows || input_cols != nb_columns)
         return false;
     return true;
 #elif defined(SWIGPYTHON)
@@ -123,9 +125,9 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
     int_t nb_cols = dims[1];
 #if defined(SWIGMATLAB)
     mxArray *matrix = mxCreateNumericMatrix(nb_rows, nb_cols, get_numeric_type<T>(), mxREAL);
-    mxArray *new_array = mxCalloc(nb_rows*nb_cols, sizeof(T));
+    T *new_array = (T *) mxCalloc(nb_rows*nb_cols, sizeof(T));
     for (int_t i = 0; i < nb_rows*nb_cols; i++)
-        intermediate[i] = data[i];
+        new_array[i] = data[i];
     mxSetData(matrix, new_array);
     return matrix;
 #elif defined(SWIGPYTHON)
@@ -178,7 +180,7 @@ LangObject *from(const LangObject *sequence, int_t index) {
 
 LangObject *new_sequence(const int_t length) {
 #if defined(SWIGMATLAB)
-    const mwSize dims[1] = {length};
+    const mwSize dims[1] = {(const mwSize) length};
     return mxCreateCellArray(1, dims);
 #elif defined(SWIGPYTHON)
     return PyList_New(length);
@@ -288,7 +290,7 @@ void to(LangObject *sequence, const int_t index, LangObject *item) {
 
 void write_int_to(LangObject *sequence, const int_t index, const int_t number) {
 #if defined(SWIGMATLAB)
-    mxArray *scalar = mxCreateNumericMatrix(1, 1, mxINT32_CLASS, mxREAL);
+    mxArray *scalar = mxCreateDoubleScalar(number);
     to(sequence, index, scalar);
 #elif defined(SWIGPYTHON)
     to(sequence, index, PyLong_FromLong((long) number));
@@ -351,7 +353,7 @@ void copy_from(const LangObject *matrix, T *data, const int_t nb_elems) {
 #if defined(SWIGMATLAB)
     if (!mxIsDouble(matrix))
         SWIG_Error(SWIG_ValueError, "Only matrices with double precision numbers allowed");
-    double *matrix_data = mxGetData(matrix);
+    double *matrix_data = (double *) mxGetData(matrix);
     std::copy(matrix_data, matrix_data + nb_elems, data);
 #elif defined(SWIGPYTHON)
     if (PyArray_TYPE((PyArrayObject *) matrix) == get_numeric_type<int_t>()) {

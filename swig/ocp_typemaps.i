@@ -27,7 +27,7 @@
 }
 
 %typemap(out) const int_t * nx {
-    return new_sequence_from($1, arg1->N+1);
+    $result = new_sequence_from($1, arg1->N+1);
 }
 
 %typemap(in) const int_t * nu {
@@ -35,7 +35,7 @@
 }
 
 %typemap(out) const int_t * nu {
-    return new_sequence_from($1, arg1->N);
+    $result = new_sequence_from($1, arg1->N);
 }
 
 %typemap(in) const int_t * nb {
@@ -43,7 +43,7 @@
 }
 
 %typemap(out) const int_t * nb {
-    return new_sequence_from($1, arg1->N+1);
+    $result = new_sequence_from($1, arg1->N+1);
 }
 
 %typemap(in) const int_t * nc {
@@ -51,7 +51,7 @@
 }
 
 %typemap(out) const int_t * nc {
-    return new_sequence_from($1, arg1->N+1);
+    $result = new_sequence_from($1, arg1->N+1);
 }
 
 %typemap(in) const real_t ** A {
