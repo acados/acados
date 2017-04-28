@@ -27,7 +27,6 @@ import_array();
 
 #if defined(SWIGPYTHON)
 %pythoncode %{
-
 from numpy import copyto
 
 class sequence_of_arrays(list):

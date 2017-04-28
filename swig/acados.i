@@ -103,13 +103,13 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
     function self = subsasgn(self, s, v)
       if numel(s) == 1 && strcmp(s.type, '.')
         self.(s.subs)(v)
-      elseif numel(s) == 2 && strcmp(s(1,1).type, '.') && strcmp(s(1,2).type, '{}')
-        for cell_no = 1:numel(s(1,2).subs)
-          index_group = s(1,2).subs{cell_no};
+      elseif numel(s) == 2 && strcmp(s(1, 1).type, '.') && strcmp(s(1, 2).type, '{}')
+        for cell_no = 1:numel(s(1, 2).subs)
+          index_group = s(1, 2).subs{cell_no};
           for index = index_group
-            cell_array = self.(s(1,1).subs)();
+            cell_array = self.(s(1, 1).subs)();
             cell_array{index} = v;
-            self.(s(1,1).subs)(cell_array)
+            self.(s(1, 1).subs)(cell_array)
           end
         end
       else
