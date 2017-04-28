@@ -25,6 +25,32 @@ import_array();
 %}
 #endif
 
+#if defined(SWIGPYTHON)
+%pythoncode %{
+
+from numpy import copyto
+
+class sequence_of_arrays(list):
+    def __init__(self):
+        super().__init__()
+    def __init__(self, iterable):
+        super().__init__(iterable)
+    def __setitem__(self, k, v):
+        try:
+            indices_to_set = range(*k.indices(len(self)))
+        except AttributeError:
+            # k is probably an integer
+            try:
+                indices_to_set = [int(k)]
+            except TypeError:
+                # k is probably tuple
+                indices_to_set = k
+        for index in indices_to_set:
+            copyto(self.__getitem__(index), v)
+
+%}
+#endif
+
 %{
 #include "swig/conversions.h"
 
@@ -139,15 +165,15 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
     mxSetData(matrix, new_array);
     return matrix;
 #elif defined(SWIGPYTHON)
-    PyObject *array;
+    PyObject *matrix = NULL;
     if (nb_cols == 1) {
         npy_intp npy_dims[1] = {nb_rows};
-        array = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
     } else {
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
-        array = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
     }
-    PyObject *matrix = PyArray_NewCopy((PyArrayObject *) array, NPY_FORTRANORDER);
+    // PyObject *matrix = PyArray_NewCopy((PyArrayObject *) array, NPY_FORTRANORDER);
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
     return matrix;
@@ -314,11 +340,36 @@ void write_real_to(LangObject *sequence, const int_t index, const real_t number)
 #endif
 }
 
+LangObject *new_sequence_of_arrays(const int_t length) {
+#if defined(SWIGMATLAB)
+    mxArray *sequence = new_sequence(length);
+#elif defined(SWIGPYTHON)
+    PyObject *pModule = PyImport_Import(PyString_FromString("acados"));
+    PyObject *pDict = PyModule_GetDict(pModule);
+    PyObject *pClass = PyDict_GetItemString(pDict, "sequence_of_arrays");
+    PyObject *sequence = NULL;
+    if (PyCallable_Check(pClass)) {
+        PyObject *args = PyTuple_New(1);
+        PyObject *list = PyList_New(length);
+        for (int_t index = 0; index < length; index++)
+            PyList_SetItem(list, index, PyLong_FromLong((long) index));  // fill list with dummies
+        PyTuple_SetItem(args, 0, list);
+        sequence = PyObject_CallObject(pClass, args);
+    } else {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
+            "with length %d", LANG_SEQUENCE_NAME, length);
+        SWIG_Error(SWIG_RuntimeError, err_msg);
+    }
+#endif
+    return sequence;
+}
+
 template<typename T>
 LangObject *new_sequence_from(const T **data, const int_t length,
     const int_t *nb_rows, const int_t *nb_columns) {
 
-    LangObject *sequence = new_sequence(length);
+    LangObject *sequence = new_sequence_of_arrays(length);
     for (int_t index = 0; index < length; index++) {
         int_t dims[2] = {nb_rows[index], nb_columns[index]};
         LangObject *item = new_matrix<T>(dims, data[index]);
