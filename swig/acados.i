@@ -98,6 +98,17 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
 %include "acados/ocp_qp/ocp_qp_common.h"
 
 %extend ocp_qp_in {
+#if defined(SWIGMATLAB)
+    %matlabcode %{
+    function self = subsasgn(self, s, v)
+      if numel(s) == 1 && strcmp(s.type, '.')
+        self.(s.subs)(v)
+      else
+        self = builtin('subsasgn', self, s, v);
+      end
+    end
+    %}
+#endif
     ocp_qp_in(LangObject *input_map) {
         ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {

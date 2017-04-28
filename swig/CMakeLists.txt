@@ -35,7 +35,7 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-set(MATLAB_SWIG_INTERFACE ON)
+set(MATLAB_SWIG_INTERFACE OFF) # Until we have MATLAB on Travis
 set(PYTHON_SWIG_INTERFACE ON)
 if(MATLAB_SWIG_INTERFACE)
     find_package(Matlab REQUIRED)

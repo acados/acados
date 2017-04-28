@@ -76,6 +76,14 @@ int_t int_from(const LangObject *scalar) {
 #endif
 }
 
+LangObject *to_scalar(int_t scalar) {
+#if defined(SWIGMATLAB)
+    return mxCreateDoubleScalar((double) scalar);
+#elif defined(SWIGPYTHON)
+    return PyLong_FromLong((long) scalar);
+#endif
+}
+
 bool is_matrix(const LangObject *input) {
 #if defined(SWIGMATLAB)
     if (!mxIsNumeric(input))

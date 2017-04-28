@@ -20,10 +20,16 @@
 %typemap(in) int_t N {
     $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
+    SWIG_fail;
+}
+
+%typemap(out) int_t N {
+    $result = to_scalar($1);
 }
 
 %typemap(in) const int_t * nx {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of state vector");
+    SWIG_fail;
 }
 
 %typemap(out) const int_t * nx {
@@ -32,6 +38,7 @@
 
 %typemap(in) const int_t * nu {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of vector of controls");
+    SWIG_fail;
 }
 
 %typemap(out) const int_t * nu {
@@ -40,6 +47,7 @@
 
 %typemap(in) const int_t * nb {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of bounds");
+    SWIG_fail;
 }
 
 %typemap(out) const int_t * nb {
@@ -48,6 +56,7 @@
 
 %typemap(in) const int_t * nc {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of polytopic constraints");
+    SWIG_fail;
 }
 
 %typemap(out) const int_t * nc {
