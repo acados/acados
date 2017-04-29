@@ -39,6 +39,7 @@ set(MATLAB_SWIG_INTERFACE OFF) # Until we have MATLAB on Travis
 set(PYTHON_SWIG_INTERFACE ON)
 if(MATLAB_SWIG_INTERFACE)
     find_package(Matlab REQUIRED)
+    set(MATLAB_EXECUTABLE "${MATLAB_ROOT}/bin/matlab")
 
     swig_module_initialize(acadosMEX matlab)
     swig_add_source_to_module(acadosMEX FALSE MEX_FILE acados.i)
@@ -56,6 +57,9 @@ if(MATLAB_SWIG_INTERFACE)
             PREFIX ""
             SUFFIX .${MATLAB_MEX_EXT}
     )
+    install(DIRECTORY ${PROJECT_BINARY_DIR}/swig/+acados DESTINATION ${LIBRARY_OUTPUT_PATH})
+    install(FILES ${PROJECT_BINARY_DIR}/swig/SwigGet.m ${PROJECT_BINARY_DIR}/swig/SwigMem.m ${PROJECT_BINARY_DIR}/swig/SwigRef.m DESTINATION ${LIBRARY_OUTPUT_PATH})
+    add_test(NAME ocp_qp_matlab COMMAND "${CMAKE_COMMAND}" -E chdir "${PROJECT_BINARY_DIR}/examples" ${MATLAB_EXECUTABLE} -nojvm -nosplash -r "addpath('${EXAMPLES_SRC_DIR}/matlab');try, ocp_qp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 endif()
 if(PYTHON_SWIG_INTERFACE) # Python
     find_package(PythonInterp 3 REQUIRED)

@@ -108,7 +108,7 @@ if ("${MATLAB_ROOT}" STREQUAL "")
   message(STATUS "MATLAB not found. Set MATLAB_ROOT")
   # TODO should really skip rest of configuration as it will all fail anyway.
 else()
-  message(STATUS "MATLAB_ROOT set to ${MATLAB_ROOT}")
+  # message(STATUS "MATLAB_ROOT set to ${MATLAB_ROOT}")
 endif()
 
 # Find out where MATLAB libraries are
