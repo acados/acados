@@ -34,25 +34,24 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-// work space size
-int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
-    ocp_qp_hpmpc_args *hpmpc_args) {
-
-    int ii;
-
-    int N2 = hpmpc_args->N2;
-
-    int k_max = hpmpc_args->max_iter;
-
-    int workspace_size = 8 + 5*k_max*sizeof(double);  // alignment to single-word (4-byte)
-
-    for (ii=0; ii <= N; ii++)
-        workspace_size += nb[ii]*sizeof(int);
-        workspace_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx,
-          nu, nb, hidxb, ng, N2);
-
-    return workspace_size;
-}
+// // work space size
+// int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb,
+//     ocp_qp_hpmpc_args *hpmpc_args) {
+//
+//     int ii;
+//
+//     int N2 = hpmpc_args->N2;
+//
+//     int k_max = hpmpc_args->max_iter;
+//
+//     int workspace_size = 8 + 5*k_max*sizeof(double);  // alignment to single-word (4-byte)
+//
+//     for (ii=0; ii <= N; ii++) workspace_size += nb[ii]*sizeof(int);
+//         workspace_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx,
+//           nu, nb, hidxb, ng, N2);
+//
+//     return workspace_size;
+// }
 
 void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
 
@@ -716,7 +715,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     return acados_status;
 }
 
-int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
+int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
 
     int_t N = (int_t)in->N;
     int_t *nx = (int_t*)in->nx;
@@ -796,6 +795,24 @@ int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
 
     return ws_size;
 }
+
+int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_) {
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
+    hpmpc_options_t opts = (hpmpc_options_t) opts_;
+
+    if (opts == HPMPC_DEFAULT_ARGUMENTS) {
+    args->tol = 1e-8;
+    args->max_iter = 20;
+    args->mu0 = 0.1;
+    args->warm_start = 0;
+    args->M = args->N;
+    } else {
+      printf("Invalid hpmpc options.");
+      return -1;
+    }
+  return 0;
+  }
+
 //
 // void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
 //     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;

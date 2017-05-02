@@ -189,11 +189,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ", " << constraint << std::endl;
 
                             ocp_qp_hpmpc_args args;
-                            args.tol = 1e-12;
-                            args.max_iter = 20;
-                            args.mu0 = 0.0;
-                            args.warm_start = 0;
-                            args.N2 = N;
+
+                            args.N = N;
+
+                            ocp_qp_hpmc_create_arguments(&args, HPMPC_DEFAULT_ARGUMENTS);
+
                             double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
                             args.inf_norm_res = &inf_norm_res[0];
                             int work_space_size =

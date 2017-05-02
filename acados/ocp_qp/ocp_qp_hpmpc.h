@@ -27,6 +27,10 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
+typedef enum hpmpc_options_t_ {
+    HPMPC_DEFAULT_ARGUMENTS // TODO(Andrea): need to implement other options
+} hpmpc_options_t;
+
 // OCP QP interface
 // struct of arguments to the solver
 typedef struct ocp_qp_hpmpc_args_ {
@@ -46,6 +50,7 @@ typedef struct ocp_qp_hpmpc_args_ {
 
     // partial tightening
     double sigma_mu;
+    int N;
     int M;
 
 } ocp_qp_hpmpc_args;
@@ -69,12 +74,14 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
     ocp_qp_hpmpc_args *hpmpc_args);
 
-int_t ocp_qp_hpmpc_workspace_size(ocp_qp_in *in,
+int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in,
     ocp_qp_hpmpc_args *args);
 
 void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
 
 void ocp_qp_hpmpc_destroy(void *mem_, void *work);
+
+int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
 
 #ifdef __cplusplus
 } /* extern "C" */

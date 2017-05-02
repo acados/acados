@@ -578,7 +578,7 @@ int main() {
     void *workspace;
 
     int_t work_space_size = 0;
-    work_space_size = ocp_qp_hpmpc_workspace_size(&qp_in, &hpmpc_args);
+    work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     // printf("work_space_size = %i", work_space_size);
     v_zeros_align(&workspace, work_space_size);
 
