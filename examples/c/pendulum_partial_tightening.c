@@ -657,8 +657,8 @@ int main() {
         for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
         for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
 
-        for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
-        for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
+        // for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
+        // for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
 
         // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
 
