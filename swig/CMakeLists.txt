@@ -35,11 +35,11 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-set(MATLAB_SWIG_INTERFACE OFF) # Until we have MATLAB on Travis
-set(PYTHON_SWIG_INTERFACE ON)
-if(MATLAB_SWIG_INTERFACE)
+find_package(Matlab)
+if(MATLAB_FOUND)
     find_package(Matlab REQUIRED)
     set(MATLAB_EXECUTABLE "${MATLAB_ROOT}/bin/matlab")
+    find_package(Casadi)
 
     swig_module_initialize(acadosMEX matlab)
     swig_add_source_to_module(acadosMEX FALSE MEX_FILE acados.i)
@@ -62,7 +62,9 @@ if(MATLAB_SWIG_INTERFACE)
     add_test(NAME ocp_qp_matlab COMMAND "${CMAKE_COMMAND}" -E chdir "${PROJECT_BINARY_DIR}/examples" ${MATLAB_EXECUTABLE} -nojvm -nosplash -r "addpath('${EXAMPLES_SRC_DIR}/matlab');try, ocp_qp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
     add_test(NAME ocp_nlp_matlab COMMAND "${CMAKE_COMMAND}" -E chdir "${PROJECT_BINARY_DIR}/examples" ${MATLAB_EXECUTABLE} -nojvm -nosplash -r "addpath('${EXAMPLES_SRC_DIR}/matlab');try, ocp_nlp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 endif()
-if(PYTHON_SWIG_INTERFACE) # Python
+
+find_package(PythonInterp 3)
+if(PYTHON_FOUND)
     find_package(PythonInterp 3 REQUIRED)
     find_package(PythonLibs 3 REQUIRED)
     find_package(NumPy REQUIRED)

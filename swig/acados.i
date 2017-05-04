@@ -267,6 +267,26 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
 %}
 
 %extend ocp_nlp_in {
+#if defined(SWIGMATLAB)
+    %matlabcode %{
+    function self = subsasgn(self, s, v)
+      if numel(s) == 1 && strcmp(s.type, '.')
+        self.(s.subs)(v)
+      elseif numel(s) == 2 && strcmp(s(1, 1).type, '.') && strcmp(s(1, 2).type, '{}')
+        for cell_no = 1:numel(s(1, 2).subs)
+          index_group = s(1, 2).subs{cell_no};
+          for index = index_group
+            cell_array = self.(s(1, 1).subs)();
+            cell_array{index} = v;
+            self.(s(1, 1).subs)(cell_array)
+          end
+        end
+      else
+        self = builtin('subsasgn', self, s, v);
+      end
+    end
+    %}
+#endif
     real_t **ls_cost_matrix;
     ocp_nlp_in(LangObject *input_map) {
         ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));

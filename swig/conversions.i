@@ -172,13 +172,15 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
     PyObject *matrix = NULL;
     if (nb_cols == 1) {
         npy_intp npy_dims[1] = {nb_rows};
-        matrix = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_SimpleNew(1, npy_dims, get_numeric_type<T>());
     } else {
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
-        matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_SimpleNew(2, npy_dims, get_numeric_type<T>());
     }
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
+    T *matrix_data = (T *) PyArray_DATA((PyArrayObject *) matrix);
+    std::copy(data, data + nb_rows*nb_cols, matrix_data);
     return matrix;
 #endif
 }
@@ -441,7 +443,7 @@ void copy_from(const LangObject *matrix, T *data, const int_t nb_elems) {
         real_t *matrix_data = (real_t *) PyArray_DATA((PyArrayObject *) matrix);
         std::copy(matrix_data, matrix_data + nb_elems, data);
     } else {
-        throw std::invalid_argument("Only matrices with integer or double "
+        throw std::invalid_argument("Only matrices with integer numbers or double "
             "precision numbers allowed");
     }
 #endif
