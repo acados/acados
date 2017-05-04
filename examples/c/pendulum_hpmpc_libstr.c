@@ -216,11 +216,11 @@ int main() {
     sim_info erk_info;
     sim_out.info = &erk_info;
 
-    sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
-    sim_in.opts = &rk_opts;
-    sim_erk_create_workspace(&sim_in, &erk_work);
+    sim_erk_create_arguments(&rk_opts, 4);
+    void *erk_work;
+    int_t erk_workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
+    erk_work = (void *) malloc(erk_workspace_size);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN+1] = {0};
@@ -469,17 +469,17 @@ int main() {
     qp_out.lam = plam;
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
+    acado_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
-        acado_tic(&timer);
         for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
+                sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
                     pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -531,7 +531,6 @@ int main() {
         // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         // shift_states(w, x_end, N);
         // shift_controls(w, u_end, N);
-        timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
@@ -541,7 +540,8 @@ int main() {
     plot_states_controls(w, T);
     #endif  // PLOT_RESULTS
 
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    total_time += acado_toc(&timer);
+    printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
     free(workspace);
     return 0;
 }

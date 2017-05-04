@@ -39,11 +39,14 @@ typedef struct {
 } sim_erk_workspace;
 
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work);
+int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
 
-void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work);
+int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
 
-void sim_erk_create_opts(int_t num_stages, sim_RK_opts *opts);
+void sim_erk_create_arguments(void *args, int_t num_stages);
+
+void sim_erk_initialize(const sim_in *in, void *args_, void **work);
+void sim_erk_destroy(void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

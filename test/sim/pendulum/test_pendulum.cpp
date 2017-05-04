@@ -46,12 +46,15 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     sim_info info, info2;
 
     sim_RK_opts rk_opts, rk_opts2;
-    sim_erk_workspace erk_work, erk_work2;
+    void* erk_work = NULL;
+    void* erk_work2 = NULL;
 
     real_t adj[NX+NU];
     real_t seed[NX+NU];
 
-    create_ERK_integrator(&sim_in, &sim_out, &info, &rk_opts, &erk_work, NX, NU, T, false);
+    create_ERK_integrator(&sim_in, &sim_out, &info, &rk_opts, NX, NU, T, false);
+    int_t workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
+    erk_work = (void *) malloc(workspace_size);
 
     // adjoint seed:
     for (int_t i = 0; i < NX; i++) seed[i] = 1.0;
@@ -62,7 +65,7 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
         for (int_t i = 0; i < NX; i++) sim_in.x[i] = 0.0;
         sim_in.u[0] = 0.1;
 
-        sim_erk(&sim_in, &sim_out, 0, &erk_work);
+        sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
 
         for (int_t i = 0; i < NX+NU; i++) adj[i] = 0.0;
         for (int_t j = 0; j < NX+NU; j++) {
@@ -83,7 +86,9 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     real_t hess_test[(NX+NU)*(NX+NU)];
     real_t hess_err[(NX+NU)*(NX+NU)];
 
-    create_ERK_integrator(&sim_in2, &sim_out2, &info2, &rk_opts2, &erk_work2, NX, NU, T, true);
+    create_ERK_integrator(&sim_in2, &sim_out2, &info2, &rk_opts2, NX, NU, T, true);
+    workspace_size = sim_erk_calculate_workspace_size(&sim_in2, &rk_opts2);
+    erk_work2 = (void *) malloc(workspace_size);
 
     // adjoint seed:
     for (int_t i = 0; i < NX+NU; i++) sim_in2.S_adj[i] = seed[i];
@@ -92,7 +97,7 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
         for (int_t i = 0; i < NX; i++) sim_in2.x[i] = 0.0;
         sim_in2.u[0] = 0.1;
 
-        sim_erk(&sim_in2, &sim_out2, 0, &erk_work2);
+        sim_erk(&sim_in2, &sim_out2, &rk_opts, 0, erk_work2);
 
         // hessian test:
         int_t index = 0;
@@ -116,7 +121,7 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
                 sim_in.u[s-NX] = sim_in.u[s-NX]+FD_EPS;
             }
 
-            sim_erk(&sim_in, &sim_out, 0, &erk_work);
+            sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
 
             for (int_t i = 0; i < NX+NU; i++)
                 hess_FD[s*(NX+NU)+i] = (sim_out.S_adj[i] - adj[i])/FD_EPS;

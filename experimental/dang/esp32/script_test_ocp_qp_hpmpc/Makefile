@@ -9,6 +9,9 @@
 # Author: Dang Doan
 # Date: 2017.03.15
 
+# Project name
+PROJECT=ocp_qp_hpmpc
+
 # BLASFEO-specific options
 LA = REFERENCE
 TARGET = GENERIC
