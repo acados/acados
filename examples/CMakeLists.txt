@@ -35,6 +35,6 @@ add_executable(pendulum_hpmpc_libstr_example ${EXAMPLES_SRC_DIR}/c/pendulum_hpmp
 target_link_libraries(pendulum_hpmpc_libstr_example acados)
 add_test(NAME pendulum_hpmpc_libstr_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
 
-add_executable(pendulum_partial_tightening_example ${EXAMPLES_SRC_DIR}/c/pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
-target_link_libraries(pendulum_partial_tightening_example acados)
-add_test(NAME pendulum_partial_tightening_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_partial_tightening_example)
+# add_executable(pendulum_partial_tightening_example ${EXAMPLES_SRC_DIR}/c/pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
+# target_link_libraries(pendulum_partial_tightening_example acados)
+# add_test(NAME pendulum_partial_tightening_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_partial_tightening_example)

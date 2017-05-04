@@ -48,6 +48,11 @@ class sequence_of_arrays(list):
             copyto(self.__getitem__(index), v)
 
 %}
+
+%{
+// Global variable for Python module
+PyObject *pModule = NULL;
+%}
 #endif
 
 %{
@@ -172,7 +177,6 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
         matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
     }
-    // PyObject *matrix = PyArray_NewCopy((PyArrayObject *) array, NPY_FORTRANORDER);
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
     return matrix;
@@ -343,7 +347,12 @@ LangObject *new_sequence_of_arrays(const int_t length) {
 #if defined(SWIGMATLAB)
     mxArray *sequence = new_sequence(length);
 #elif defined(SWIGPYTHON)
-    PyObject *pModule = PyImport_Import(PyString_FromString("acados"));
+    // Try loading Python module into global variable
+    if (pModule == NULL)
+        pModule = PyImport_Import(PyString_FromString("acados"));
+    // Check if loading was succesful
+    if (pModule == NULL)
+        SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module");
     PyObject *pDict = PyModule_GetDict(pModule);
     PyObject *pClass = PyDict_GetItemString(pDict, "sequence_of_arrays");
     PyObject *sequence = NULL;
@@ -354,6 +363,8 @@ LangObject *new_sequence_of_arrays(const int_t length) {
             PyList_SetItem(list, index, PyLong_FromLong((long) index));  // fill list with dummies
         PyTuple_SetItem(args, 0, list);
         sequence = PyObject_CallObject(pClass, args);
+        if (sequence == NULL)
+            PyErr_Print();
     } else {
         char err_msg[256];
         snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
@@ -361,6 +372,12 @@ LangObject *new_sequence_of_arrays(const int_t length) {
         SWIG_Error(SWIG_RuntimeError, err_msg);
     }
 #endif
+    if (sequence == NULL) {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
+            "with length %d", LANG_SEQUENCE_NAME, length);
+        SWIG_Error(SWIG_RuntimeError, err_msg);
+    }
     return sequence;
 }
 
@@ -410,7 +427,7 @@ template<typename T>
 void copy_from(const LangObject *matrix, T *data, const int_t nb_elems) {
 #if defined(SWIGMATLAB)
     if (!mxIsDouble(matrix))
-        SWIG_Error(SWIG_ValueError, "Only matrices with double precision numbers allowed");
+        throw std::invalid_argument("Only matrices with double precision numbers allowed");
     double *matrix_data = (double *) mxGetData(matrix);
     std::copy(matrix_data, matrix_data + nb_elems, data);
 #elif defined(SWIGPYTHON)

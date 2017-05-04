@@ -34,12 +34,13 @@ vde = Function('vde', [x, Sx, Su, u], [rhs, vde_x, vde_u])
 vde.generate('vde.c')
 nlp.set_model('vde')
 
-solver = ocp_nlp_solver("gauss-newton-sqp", nlp)
+solver = ocp_nlp_solver('gauss-newton-sqp', nlp)
 
 STATES = [current_state]
 
 for i in range(10):
     current_state = solver.solve(current_state)[1]
+    print(current_state)
     STATES.append(current_state)
 
 plt.ion()
