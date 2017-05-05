@@ -54,7 +54,6 @@
 // }
 
 void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
-
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
     // TODO(andrea): replace dummy commands once interface completed
@@ -365,7 +364,6 @@ void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
   // ocp_qp_hpmpc_args *hpmpc_args, void *workspace_) {
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
         void *args_, void *mem_, void *workspace_) {
-
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
 
     // Process arguments TODO(Andrea): ask dimitris what this is for
@@ -716,12 +714,12 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args_) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
-    int_t ws_size = 0*in->N*args->N; // TODO(Andrea): dummy expression. Need to decide what hpmpc's workpsace is.
+    int_t ws_size = 0*in->N*args->N;  // TODO(Andrea): dummy expression. Need to
+    // decide what hpmpc's workpsace is.
     return ws_size;
 }
 
 int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
-
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
     // ocp_qp_hpmpc_memory mem = (ocp_qp_hpmpc_memory *) mem_;
 
