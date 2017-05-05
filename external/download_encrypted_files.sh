@@ -24,8 +24,6 @@ if [ "$INSTALL_MATLAB" = "1" ]; then
 
 	pushd matlab/bin
 	./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
-	popd
-	popd
 
 else
 	echo "Skipping MATLAB installation"
