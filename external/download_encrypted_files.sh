@@ -1,7 +1,7 @@
 #!/bin/sh
 
 INSTALL_ENCRYPTED_SOFTWARE=1
-INSTALL_MATLAB=0
+INSTALL_MATLAB=1
 
 if [ "$INSTALL_ENCRYPTED_SOFTWARE" = "1" ]; then
 	if [ ! -d "OOQP" ]; then
@@ -25,8 +25,7 @@ if [ "$INSTALL_MATLAB" = "1" ]; then
 	pushd matlab/bin
 	./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
 	popd
-	popd
-
+	
 else
 	echo "Skipping MATLAB installation"
 fi
