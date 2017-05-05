@@ -107,7 +107,7 @@ int main() {
 
     sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
+    sim_erk_create_arguments(4, &rk_opts);
     sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN+1] = {0};
@@ -191,7 +191,7 @@ int main() {
     initialise_qpoases(&qp_in);
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
 
     // Define residuals
     real_t *res_stat[N+1];
@@ -211,10 +211,10 @@ int main() {
     d_zeros(&res_ineq[ii], 2*nb[ii], 1);
     d_zeros(&res_compl[ii], 2*nb[ii], 1);
 
+    acado_tic(&timer);
     for ( int_t iter = 0; iter < timing_iters; iter++ ) {
-      for ( int_t i = 0; i < NX; i++ ) w[0][i] = x0[i];
+        for ( int_t i = 0; i < NX; i++ ) w[0][i] = x0[i];
 
-        acado_tic(&timer);
         for ( int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++ ) {
             printf("\n------ ITERATION %d ------\n", sqp_iter);
             for ( int_t i = 0; i < N; i++ ) {
@@ -295,12 +295,12 @@ int main() {
             for ( int_t j = 0; j < NX; j++ ) w[i][j] += qp_out.x[i][j];
             printf("x_step=%f\n", qp_out.x[i][0]);
         }
-        timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/timing_iters);
+    total_time = acado_toc(&timer);
+    printf("Average of %.3f ms per iteration.\n", 1e3*total_time/timing_iters);
 
     free(sim_in.x);
     free(sim_in.u);

@@ -715,7 +715,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     return acados_status;
 }
 
-int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *args) {
+int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args_) {
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
+    int_t ws_size = 0*in->N*args->N; // TODO(Andrea): dummy expression. Need to decide what hpmpc's workpsace is.
+    return ws_size;
+}
+
+int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void *mem_) {
+
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
+    ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory *) mem_;
 
     int_t N = (int_t)in->N;
     int_t *nx = (int_t*)in->nx;
@@ -725,76 +734,79 @@ int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, ocp_qp_hpmpc_args *ar
 
     int_t max_ip_iter = args->max_iter;
 
-    int_t ws_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
+    int_t mem_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
       nx, nu, nb, ngg);
 
     int_t ii;
     // Adding memory for data
     for (ii=0; ii < N; ii++) {
-      ws_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
-      ws_size+= d_size_strvec(nx[ii+1]);
-      ws_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-      ws_size+= d_size_strvec(nu[ii]+nx[ii]);
-      ws_size+= d_size_strmat(nu[ii]+nx[ii]+1, ngg[ii]);
-      ws_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      ws_size+= d_size_strvec(nu[ii]+nx[ii]);
-      ws_size+= d_size_strvec(nx[ii+1]);
-      ws_size+= d_size_strvec(nx[ii+1]);
-      ws_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      ws_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      ws_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
+      mem_size+= d_size_strvec(nx[ii+1]);
+      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+      mem_size+= d_size_strvec(nu[ii]+nx[ii]);
+      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ngg[ii]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+= d_size_strvec(nu[ii]+nx[ii]);
+      mem_size+= d_size_strvec(nx[ii+1]);
+      mem_size+= d_size_strvec(nx[ii+1]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
     }
 
-    ws_size+= d_size_strvec(nu[N]+nx[N]);
-    ws_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    ws_size+= d_size_strvec(nu[N]+nx[N]);
-    ws_size+= d_size_strvec(nu[N]+nx[N]);
-    ws_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    ws_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    ws_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    mem_size+= d_size_strvec(nu[N]+nx[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    mem_size+= d_size_strvec(nu[N]+nx[N]);
+    mem_size+= d_size_strvec(nu[N]+nx[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
 
 
     // Adding memory for extra variables in the Riccati recursion
-    ws_size+=d_size_strvec(nx[ii+1]);
-    ws_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    ws_size+=d_size_strmat(nx[ii], nx[ii]);
+    mem_size+=d_size_strvec(nx[ii+1]);
+    mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    mem_size+=d_size_strmat(nx[ii], nx[ii]);
 
     for ( int ii=0; ii < N; ii++ ) {
-      ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      ws_size+=d_size_strvec(nb[ii]+ngg[ii]);
-      ws_size+=d_size_strvec(nb[ii]+ngg[ii]);
+      mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
+      mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
 
-      ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
     }
 
-    ws_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    ws_size+=d_size_strmat(nx[ii], nx[ii]);
+    mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+    mem_size+=d_size_strmat(nx[ii], nx[ii]);
 
     ii = N;
-    ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    ws_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    ws_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
 
-    ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    ws_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    ws_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    ws_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
 
-    // ws_size+=d_size_strmat(nx[M]+1, nx[M]);
-    // ws_size+=d_size_strmat(nx[M]+1, nx[M]);
+    // mem_size+=d_size_strmat(nx[M]+1, nx[M]);
+    // mem_size+=d_size_strmat(nx[M]+1, nx[M]);
 
 
-    ws_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
+    mem_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
     // add memory for riccati work space
 
-    ws_size+=sizeof(double)*max_ip_iter*5;
+    mem_size+=sizeof(double)*max_ip_iter*5;
     // add memory for stats
 
-    return ws_size;
-}
+    mem = (ocp_qp_hpmpc_memory *)calloc(1, mem_size);
+    mem[0] = 0; //TODO(Andrea): dummy statement to make compiler happy
+
+    return 1;
+  }
 
 int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;

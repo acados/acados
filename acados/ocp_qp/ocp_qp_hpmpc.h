@@ -55,6 +55,9 @@ typedef struct ocp_qp_hpmpc_args_ {
 
 } ocp_qp_hpmpc_args;
 
+typedef void* ocp_qp_hpmpc_workspace;
+typedef void* ocp_qp_hpmpc_memory;
+
 // int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
 //   void *workspace);
 
@@ -71,17 +74,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 // int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
 //   void *workspace);
 
-int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
+int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb,
     ocp_qp_hpmpc_args *hpmpc_args);
 
-int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in,
-    ocp_qp_hpmpc_args *args);
+int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
+int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args);
+int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *input, void *args_, void *memory_);
+
 
 void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
-
 void ocp_qp_hpmpc_destroy(void *mem_, void *work);
-
-int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
 
 #ifdef __cplusplus
 } /* extern "C" */

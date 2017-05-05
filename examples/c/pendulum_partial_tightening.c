@@ -40,9 +40,9 @@
 #include "hpmpc/include/aux_d.h"
 #include "hpmpc/include/lqcp_solvers.h"
 
+#include "acados/sim/sim_erk_integrator.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
@@ -323,11 +323,12 @@ int main() {
     sim_info erk_info;
     sim_out.info = &erk_info;
 
-    sim_erk_workspace erk_work;
+    void *erk_work;
     sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
-    sim_in.opts = &rk_opts;
-    sim_erk_create_workspace(&sim_in, &erk_work);
+    sim_erk_create_arguments(&rk_opts, 4);
+    int_t sim_workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
+    erk_work = (void *) malloc(sim_workspace_size);
+    // sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN+1] = {0};
@@ -576,11 +577,13 @@ int main() {
     qp_out.t = pt;
 
     void *workspace;
+    void *mem = 0;
 
     int_t work_space_size = 0;
     work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     // printf("work_space_size = %i", work_space_size);
     v_zeros_align(&workspace, work_space_size);
+    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, mem);
 
     acado_timer timer;
     real_t timings = 0;
@@ -632,7 +635,7 @@ int main() {
             // Pass state and control to integrator
             for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
             for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-            sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
+            sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
             // Construct QP matrices
             for (int_t j = 0; j < nx[i]; j++) {
                 pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
