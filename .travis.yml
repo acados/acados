@@ -33,8 +33,8 @@ addons:
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      openssl aes-256-cbc -K $encrypted_953dc9b02fae_key -iv $encrypted_953dc9b02fae_iv
-      -in external/encrypted_script.enc -out external/encrypted_script -d;
+      openssl aes-256-cbc -K $encrypted_15c483c21b41_key -iv $encrypted_15c483c21b41_iv
+      -in external/download_software.enc -out external/download_software -d;
       openssl aes-256-cbc -K $encrypted_15c483c21b41_key -iv $encrypted_15c483c21b41_iv
       -in external/download_matlab.enc -out external/download_matlab -d;
     fi'

@@ -1,19 +1,32 @@
 #!/bin/sh
 
+INSTALL_ENCRYPTED_SOFTWARE=1
 INSTALL_MATLAB=0
-INSTALL_OOQP_AND_DEPS=1
 
-if [ "$INSTALL_MATLAB" = "1" ]; then
-	echo "Downloading MATLAB"
-	source download_matlab
+if [ "$INSTALL_ENCRYPTED_SOFTWARE" = "1" ]; then
+	if [ ! -d "OOQP" ]; then
+		echo "Downloading encrypted software"
+		source download_software
+	else
+		echo "Encrypted software already downloaded"
+	fi
 else
-	echo "Skipping MATLAB installation"
+	echo "Skipping installation of encrypted software"
 fi
 
+if [ "$INSTALL_MATLAB" = "1" ]; then
+	if [ ! -d "matlab" ]; then
+		echo "Downloading MATLAB"
+		source download_matlab
+	else
+		echo "MATLAB already downloaded"
+	fi
 
-if [ "$INSTALL_OOQP_AND_DEPS" = "1" ]; then
-	echo "Downloading OOQP and dependencies"
-	source encrypted_script
+	pushd matlab/bin
+	./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
+	popd
+	popd
+
 else
-	echo "Skipping OOQP installation"
+	echo "Skipping MATLAB installation"
 fi
