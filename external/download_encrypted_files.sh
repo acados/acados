@@ -1,7 +1,7 @@
 #!/bin/sh
 
 INSTALL_ENCRYPTED_SOFTWARE=1
-INSTALL_MATLAB=0
+INSTALL_MATLAB=1
 
 if [ "$INSTALL_ENCRYPTED_SOFTWARE" = "1" ]; then
 	if [ ! -d "OOQP" ]; then
