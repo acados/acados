@@ -1,5 +1,5 @@
 # This Makefile helps to compile the acados example
-# test_ocp_qp_hpmpc on microcontrollers
+# chen_nmpc_qpoases.c on microcontrollers
 
 # Makefile to help compiling acados code in a directory
 # It scans the SRCDIR to find all source files,
@@ -7,20 +7,15 @@
 # after that it links all the objects to compile the project
 # Note: PROJECT is the name of the main file to execute
 # Author: Dang Doan
-# Date: 2017.03.15
+# Date: 2017.03.08
 
 # Project name
-PROJECT=ocp_qp_hpmpc
-
-# BLASFEO-specific options
-LA = REFERENCE
-TARGET = GENERIC
+PROJECT=chen_nmpc_qpoases
 
 # Compiler
 CC = gcc
-CFLAGS = -std=c99 -Wextra -Wno-error -O2 -fPIC -march=native
-CFLAGS += -Wno-implicit-function-declaration -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-parentheses
-# -Wall
+CFLAGS = -std=c99 -Wall -Wextra -Wno-error -fPIC -D__SUPPRESSANYOUTPUT__
+CFLAGS += -Wno-unused-function -Wno-unused-parameter -Wno-implicit-function-declaration
 
 # Exclude particular source files
 IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)
