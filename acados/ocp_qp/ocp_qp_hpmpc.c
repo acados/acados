@@ -373,8 +373,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // args_args->dummy = 1.0;
     // workspace_++;
     // workspace_ = 0;
-    mem_ = 0;
-    mem_++;
+    workspace_ = 0;
+    workspace_++;
 
     real_t sigma_mu = hpmpc_args->sigma_mu;
     int_t M = hpmpc_args->M;
@@ -439,7 +439,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strmat sLxM;
     struct d_strmat sPpM;
 
-    char *ptr_memory = (char *) workspace_;
+    char *ptr_memory = (char *) mem_;
 
     for ( ii = 0; ii < N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
@@ -721,10 +721,10 @@ int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args_) {
     return ws_size;
 }
 
-int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void *mem_) {
+int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
 
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
-    ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory *) mem_;
+    // ocp_qp_hpmpc_memory mem = (ocp_qp_hpmpc_memory *) mem_;
 
     int_t N = (int_t)in->N;
     int_t *nx = (int_t*)in->nx;
@@ -800,10 +800,10 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void *mem_) {
     // add memory for riccati work space
 
     mem_size+=sizeof(double)*max_ip_iter*5;
+    mem_size+=sizeof(double)*1000000;
     // add memory for stats
 
-    mem = (ocp_qp_hpmpc_memory *)calloc(1, mem_size);
-    mem[0] = 0; //TODO(Andrea): dummy statement to make compiler happy
+    v_zeros_align(mem_, mem_size);
 
     return 1;
   }

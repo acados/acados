@@ -583,14 +583,14 @@ int main() {
     qp_out.lam = plam;
     qp_out.t = pt;
 
-    void *workspace;
+    void *workspace = 0;
     void *mem = 0;
 
     int_t work_space_size = 0;
     work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     // printf("work_space_size = %i", work_space_size);
     v_zeros_align(&workspace, work_space_size);
-    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, mem);
+    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
     acado_timer timer;
     real_t timings = 0;
@@ -676,7 +676,7 @@ int main() {
             pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
         }
 
-        void *mem = 0;
+        // void *mem = 0;
 
         status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
 
