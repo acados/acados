@@ -17,7 +17,7 @@
  *
  */
 
-#define PLOT_RESULTS
+// #define PLOT_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
