@@ -664,39 +664,8 @@ int main() {
             for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
         }
 
-<<<<<<< HEAD
         for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
         for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
-=======
-      acado_tic(&timer);
-      for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
-      for (int_t sqp_iter = 0; sqp_iter < SQP_ITER; sqp_iter++) {
-          for (int_t i = 0; i < N; i++) {
-              // Pass state and control to integrator
-              for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
-              for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-              sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
-              // Construct QP matrices
-              for (int_t j = 0; j < NX; j++) {
-                  pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
-              }
-              for (int_t j = 0; j < NU; j++) {
-                  pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
-              }
-              for (int_t j = 0; j < NX; j++) {
-                  pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                  for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
-              }
-              for (int_t j = 0; j < NU; j++)
-                  for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
-
-
-              for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
-              for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
-              for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
-              for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
-          }
->>>>>>> 33c021b0a2ec9d74225c1c5ea688af5541ca3319
 
         // for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
         // for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
