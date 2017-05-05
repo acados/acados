@@ -65,9 +65,8 @@ void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **w
 }
 
 void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
-    // TODO(dimitris): replace dummy commands once interface completed
-    mem_++;
-    work++;
+  free(work);
+  ocp_qp_hpmpc_free_memory(mem_);
 }
 
 // int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
@@ -808,6 +807,11 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
     return 1;
   }
 
+void ocp_qp_hpmpc_free_memory(void *mem_) {
+    ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory *) mem_;
+    free(mem);
+}
+
 int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
     hpmpc_options_t opts = (hpmpc_options_t) opts_;
@@ -825,22 +829,6 @@ int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_) {
   return 0;
   }
 
-//
-// void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
-//     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
-//
-//     // TODO(dimitris): replace dummy commands once interface completed
-//     args->dummy = 42.0;
-//     if (qp_in->nx[0] > 0)
-//         mem_++;
-//     work++;
-// }
-//
-// void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
-//     // TODO(dimitris): replace dummy commands once interface completed
-//     mem_++;
-//     work++;
-// }
 
 // TODO(Andrea): need to merge hpmpc in order to use this...
 // int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *hpmpc_args,

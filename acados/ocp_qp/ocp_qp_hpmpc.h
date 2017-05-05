@@ -28,7 +28,7 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef enum hpmpc_options_t_ {
-    HPMPC_DEFAULT_ARGUMENTS // TODO(Andrea): need to implement other options
+    HPMPC_DEFAULT_ARGUMENTS  // TODO(Andrea): need to implement other options
 } hpmpc_options_t;
 
 // OCP QP interface
@@ -52,7 +52,6 @@ typedef struct ocp_qp_hpmpc_args_ {
     double sigma_mu;
     int N;
     int M;
-
 } ocp_qp_hpmpc_args;
 
 typedef void* ocp_qp_hpmpc_workspace;
@@ -80,7 +79,7 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
 int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
 int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args);
 int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *input, void *args_, void **memory_);
-
+void ocp_qp_hpmpc_free_memory(void *mem_);
 
 void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
 void ocp_qp_hpmpc_destroy(void *mem_, void *work);

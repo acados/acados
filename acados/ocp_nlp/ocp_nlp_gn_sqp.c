@@ -340,9 +340,7 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
         mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         mem->qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
-    }
-
-    else if (!strcmp(args->qp_solver_name, "hpmpc")) {
+    } else if (!strcmp(args->qp_solver_name, "hpmpc")) {
         mem->qp_solver->fun = &ocp_qp_hpmpc;
         mem->qp_solver->initialize = &ocp_qp_hpmpc_initialize;
         mem->qp_solver->destroy = &ocp_qp_hpmpc_destroy;
