@@ -76,7 +76,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb,
     ocp_qp_hpmpc_args *hpmpc_args);
 
-int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
+int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_);
 int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args);
 int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *input, void *args_, void **memory_);
 void ocp_qp_hpmpc_free_memory(void *mem_);
