@@ -1,6 +1,6 @@
 #!/bin/sh
 
-INSTALL_MATLAB=0
+INSTALL_MATLAB=1
 INSTALL_OOQP_AND_DEPS=1
 
 if [ "$INSTALL_MATLAB" = "1" ]; then

@@ -306,6 +306,8 @@ set(MATLAB_FFLAGS "${mexDefines} ${mexFFlags}" CACHE STRING "Flags to compile Fo
 set(MATLAB_FLINKER_FLAGS "${mexLdFlags} ${mexLdFFlags} ${mexLdExport}" CACHE STRING "Flags to link MATLAB Fortran Mex files")
 set(MATLAB_FLIBS "${mexLdLibs} ${mexFLibs}" CACHE STRING "Flags with libraries to link MATLAB Fortran Mex files")
 
+set(MATLAB_EXECUTABLE "${MATLAB_ROOT}/bin/matlab")
+
 # handle the QUIETLY and REQUIRED arguments and set MATLAB_FOUND to TRUE if 
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
@@ -337,4 +339,5 @@ mark_as_advanced(
   MATLAB_CLIBS
   MATLAB_CXXLIBS
   MATLAB_FLIBS
+  MATLAB_EXECUTABLE
 )

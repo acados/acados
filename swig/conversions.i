@@ -27,13 +27,15 @@ import_array();
 
 #if defined(SWIGPYTHON)
 %pythoncode %{
-from numpy import copyto
+from numpy import copy, copyto
 
 class sequence_of_arrays(list):
     def __init__(self):
         super().__init__()
     def __init__(self, iterable):
         super().__init__(iterable)
+    def __getitem__(self, k):
+        return copy(super().__getitem__(k))
     def __setitem__(self, k, v):
         try:
             indices_to_set = range(*k.indices(len(self)))
@@ -45,7 +47,7 @@ class sequence_of_arrays(list):
                 # k is probably tuple
                 indices_to_set = k
         for index in indices_to_set:
-            copyto(self.__getitem__(index), v)
+            copyto(super().__getitem__(index), v)
 
 %}
 
@@ -172,15 +174,13 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
     PyObject *matrix = NULL;
     if (nb_cols == 1) {
         npy_intp npy_dims[1] = {nb_rows};
-        matrix = PyArray_SimpleNew(1, npy_dims, get_numeric_type<T>());
+        matrix = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
     } else {
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
-        matrix = PyArray_SimpleNew(2, npy_dims, get_numeric_type<T>());
+        matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
     }
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
-    T *matrix_data = (T *) PyArray_DATA((PyArrayObject *) matrix);
-    std::copy(data, data + nb_rows*nb_cols, matrix_data);
     return matrix;
 #endif
 }

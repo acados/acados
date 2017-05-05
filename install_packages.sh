@@ -21,4 +21,10 @@ wget http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
 mkdir -p casadi-py35-np1.9.1-v3.1.1
 tar -xvf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
 export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+
+wget https://files.casadi.org/3.1.1/linux/casadi-matlabR2015a-v3.1.1.tar.gz
+mkdir -p casadi-matlabR2015a-v3.1.1
+tar -xvf casadi-matlabR2015a-v3.1.1.tar.gz -C casadi-matlabR2015a-v3.1.1
+export MATLABPATH=$(pwd)/casadi-matlabR2015a-v3.1.1:$MATLABPATH
+
 popd

@@ -49,6 +49,9 @@ install:
   - export MPLBACKEND=Agg # For matplotlib
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH # For acados
 
+before_script:
+  - set -e
+
 script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Test ..
