@@ -58,5 +58,5 @@ script:
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
   - cmake --build build --clean-first
-  - pushd experimental/dang/esp32
-  - ./test_all_linux.sh
+  #- pushd experimental/dang/esp32
+  #- ./test_all_linux.sh
