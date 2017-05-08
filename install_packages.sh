@@ -32,7 +32,7 @@ export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 pushd swig
 
 ./autogen.sh
-./configure --prefix=$(pwd)/swig_install
+./configure --prefix=$(pwd)/swig_install CC="gcc-4.8" CXX="g++-4.8"
 make
 make install
 export PATH=$(pwd):$PATH
