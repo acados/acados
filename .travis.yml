@@ -28,7 +28,6 @@ addons:
       - g++-5
       - gcc-5
       - clang-3.7
-      - swig
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
@@ -51,6 +50,7 @@ install:
 
 before_script:
   - set -e
+  - env
 
 script:
   - cmake -E make_directory build
