@@ -1,6 +1,6 @@
 #!/usr/bin/env bash -xe
 
-sudo apt-get install swig libgsl0-dev liblapack-dev libopenblas-dev cppcheck
+sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev cppcheck
 
 sudo add-apt-repository -y ppa:octave/stable
 sudo apt-get update -yq
@@ -27,4 +27,10 @@ mkdir -p casadi-matlabR2014b-v3.1.1
 tar -xvf casadi-matlabR2014b-v3.1.1.tar.gz -C casadi-matlabR2014b-v3.1.1
 export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 
-popd
+pushd swig
+
+./configure --prefix=
+
+popd # swig
+
+popd # external
