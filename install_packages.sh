@@ -2,7 +2,7 @@
 
 sudo add-apt-repository -y ppa:octave/stable
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-if [$CC == 'clang-3.7'];
+if $CC == 'clang-3.7';
     then sudo deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.7 main;
 fi
 sudo apt-get update -yq
