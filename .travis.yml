@@ -10,25 +10,6 @@ env:
   - CXX="g++-4.9" CC="gcc-4.9"
   - CXX="clang++-3.7" CC="clang-3.7"
 
-addons:
-  apt:
-    sources:
-    - llvm-toolchain-precise-3.7
-    - ubuntu-toolchain-r-test
-    packages:
-      - libgsl0-dev
-      - liblapack-dev
-      - libopenblas-dev
-      - cppcheck
-      - g++-6
-      - gcc-6
-      - g++-4.9
-      - gcc-4.9
-      - gfortran-4.9
-      - g++-5
-      - gcc-5
-      - clang-3.7
-
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
