@@ -1,11 +1,12 @@
 #!/usr/bin/env bash -xe
 
-sudo add-apt-repository -y ppa:octave/stable ppa:ubuntu-toolchain-r/test
+sudo add-apt-repository -y ppa:octave/stable
+sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 if [$CC == 'clang-3.7'];
     then sudo deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.7 main;
 fi
 sudo apt-get update -yq
-sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev cppcheck octave liboctave-dev valgrind gfortran-4.9 $CXX $CC 
+sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev cppcheck octave liboctave-dev valgrind gfortran-4.9 $CXX $CC
 
 pip install numpy scipy matplotlib
 
