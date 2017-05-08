@@ -31,7 +31,7 @@ endif ()
 
 # Determine the version number
 execute_process(
-    COMMAND "${MATLAB_EXECUTABLE}" -nodesktop -nosplash -r "import casadi.*, disp(['casadi=',casadi.CasadiMeta.getVersion]), exit(0)"
+    COMMAND "${MATLAB_EXECUTABLE}" -nodesktop -nosplash -r "try, import casadi.*, disp(['casadi=',casadi.CasadiMeta.getVersion]), catch ME, disp(ME.getReport()), exit(1), end, exit(0)"
     OUTPUT_VARIABLE MATLAB_OUTPUT
 )
 string(FIND "${MATLAB_OUTPUT}" "casadi=" VERSION_POSITION)

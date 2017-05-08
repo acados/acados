@@ -14,3 +14,4 @@
 	path = external/swig
 	url = https://github.com/jaeandersson/swig
 	branch = matlab
+	ignore = dirty
