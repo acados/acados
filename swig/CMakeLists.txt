@@ -39,6 +39,7 @@ find_package(Matlab)
 if(MATLAB_FOUND)
     find_package(Matlab REQUIRED)
     find_package(CasadiMatlab)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ldl")
 
     swig_module_initialize(acadosMEX matlab)
     swig_add_source_to_module(acadosMEX FALSE MEX_FILE acados.i)
