@@ -48,7 +48,6 @@ install:
 
 before_script:
   - set -e
-  - env
 
 script:
   - cmake -E make_directory build
