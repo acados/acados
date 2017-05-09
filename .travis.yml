@@ -27,6 +27,7 @@ install:
   - export MPLBACKEND=Agg # For matplotlib
   - export MATLABPATH=$HOME/local/lib:$MATLABPATH
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
+  - ldd $HOME/local/lib/acadosMEX.mexa64
 
 before_script:
   - set -e
