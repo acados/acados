@@ -26,16 +26,65 @@
 
 #include "acados/utils/print.h"
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
+
+static void sim_erk_cast_workspace(sim_erk_workspace *work,
+         const sim_in *in, void *args) {
+     int_t nx = in->nx;
+     int_t nu = in->nu;
+     sim_RK_opts *opts = (sim_RK_opts*) args;
+     int_t num_stages = opts->num_stages;
+     int_t NF = in->nsens_forw;
+     int_t nSteps = in->nSteps;
+     if (!in->sens_forw) {
+         NF = 0;
+     }
+     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
+
+     char *ptr = (char *)work;
+     ptr += sizeof(sim_erk_workspace);
+     work->rhs_forw_in = (real_t*)ptr;
+     ptr += (nx*(1+NF)+nu)*sizeof(real_t);  // rhs_forw_in
+
+     if (!in->sens_adj) {
+         work->K_traj = (real_t*)ptr;
+         ptr += (num_stages*nx*(1+NF))*sizeof(real_t);  // K_traj
+         work->out_forw_traj = (real_t*)ptr;
+         ptr += (nx*(1+NF))*sizeof(real_t);  // out_forw_traj
+     } else {
+         work->K_traj = (real_t*)ptr;
+         ptr += (nSteps*num_stages*nx*(1+NF))*sizeof(real_t);  // K_traj
+         work->out_forw_traj = (real_t*)ptr;
+         ptr += ((nSteps+1)*nx*(1+NF))*sizeof(real_t);  // out_forw_traj
+     }
+
+     if (in->sens_hess && in->sens_adj) {
+         work->rhs_adj_in = (real_t*)ptr;
+         ptr += (nx*(2+NF)+nu)*sizeof(real_t);  // rhs_adj_in
+         work->out_adj_tmp = (real_t*)ptr;
+         ptr += (nx+nu+nhess)*sizeof(real_t);  // out_adj_tmp
+         work->adj_traj = (real_t*)ptr;
+         ptr += (num_stages*(nx+nu+nhess))*sizeof(real_t);  // adj_traj
+     } else if (in->sens_adj) {
+         work->rhs_adj_in = (real_t*)ptr;
+         ptr += (nx*2+nu)*sizeof(real_t);  // rhs_adj_in
+         work->out_adj_tmp = (real_t*)ptr;
+         ptr += (nx+nu)*sizeof(real_t);  // out_adj_tmp
+         work->adj_traj = (real_t*)ptr;
+         ptr += (num_stages*(nx+nu))*sizeof(real_t);  // adj_traj
+     }
+}
+
+int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t i, s, j, istep;
     real_t H_INT = in->step;
     int_t NSTEPS = in->nSteps;
     int_t NF = in->nsens_forw;
     sim_erk_workspace *work = (sim_erk_workspace*) work_;
+    sim_erk_cast_workspace(work, in, args);
     if (!in->sens_forw) {
         NF = 0;
     }
@@ -176,10 +225,10 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *mem, void *work_) {
     return 0;  // success
 }
 
-void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
+int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = in->opts;
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
     int_t nSteps = in->nSteps;
@@ -188,29 +237,32 @@ void sim_erk_create_workspace(const sim_in *in, sim_erk_workspace *work) {
     }
     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
 
+    int_t size = sizeof(sim_erk_workspace);
+    size += (nx*(1+NF)+nu)*sizeof(real_t);  // rhs_forw_in
 
-    work->rhs_forw_in = calloc(nx*(1+NF)+nu, sizeof(*work->rhs_forw_in));
     if (!in->sens_adj) {
-        work->K_traj = calloc(num_stages*nx*(1+NF), sizeof(*work->K_traj));
-        work->out_forw_traj = calloc(nx*(1+NF), sizeof(*work->out_forw_traj));
+        size += (num_stages*nx*(1+NF))*sizeof(real_t);  // K_traj
+        size += (nx*(1+NF))*sizeof(real_t);  // out_forw_traj
     } else {
-        work->K_traj = calloc(nSteps*num_stages*nx*(1+NF), sizeof(*work->K_traj));
-        work->out_forw_traj = calloc((nSteps+1)*nx*(1+NF), sizeof(*work->out_forw_traj));
+        size += (nSteps*num_stages*nx*(1+NF))*sizeof(real_t);  // K_traj
+        size += ((nSteps+1)*nx*(1+NF))*sizeof(real_t);  // out_forw_traj
     }
 
     if (in->sens_hess && in->sens_adj) {
-        work->rhs_adj_in = calloc((nx*(2+NF)+nu), sizeof(*work->rhs_adj_in));
-        work->out_adj_tmp = calloc((nx+nu+nhess), sizeof(*work->out_adj_tmp));
-        work->adj_traj = calloc(num_stages*(nx+nu+nhess), sizeof(*work->adj_traj));
+        size += (nx*(2+NF)+nu)*sizeof(real_t);  // rhs_adj_in
+        size += (nx+nu+nhess)*sizeof(real_t);  // out_adj_tmp
+        size += (num_stages*(nx+nu+nhess))*sizeof(real_t);  // adj_traj
     } else if (in->sens_adj) {
-        work->rhs_adj_in = calloc(nx*2+nu, sizeof(*work->rhs_adj_in));
-        work->out_adj_tmp = calloc(nx+nu, sizeof(*work->out_adj_tmp));
-        work->adj_traj = calloc(num_stages*(nx+nu), sizeof(*work->adj_traj));
+        size += (nx*2+nu)*sizeof(real_t);  // rhs_adj_in
+        size += (nx+nu)*sizeof(real_t);  // out_adj_tmp
+        size += (num_stages*(nx+nu))*sizeof(real_t);  // adj_traj
     }
+    return size;
 }
 
 
-void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
+void sim_erk_create_arguments(void *args, const int_t num_stages) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->scheme.type = exact;
     if ( num_stages == 1 ) {
         opts->num_stages = 1;       // explicit Euler
@@ -236,4 +288,23 @@ void sim_erk_create_opts(const int_t num_stages, sim_RK_opts *opts) {
     } else {
         // throw error somehow?
     }
+}
+
+
+void sim_erk_initialize(const sim_in *in, void *args, void **work) {
+    sim_RK_opts *opts = (sim_RK_opts*) args;
+
+    // TODO(dimitris): opts should be an input to initialize
+    if (opts->num_stages > 0) {
+        sim_erk_create_arguments(args, opts->num_stages);
+    } else {
+        sim_erk_create_arguments(args, 4);
+    }
+    int_t work_space_size = sim_erk_calculate_workspace_size(in, args);
+    *work = (void *) malloc(work_space_size);
+}
+
+
+void sim_erk_destroy(void *work) {
+    free(work);
 }
