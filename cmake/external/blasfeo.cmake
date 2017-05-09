@@ -17,7 +17,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND ""
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/blasfeo"
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make clean static_library -j 2 TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
+    BUILD_COMMAND make clean && make static_library -j 2 TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
     INSTALL_COMMAND cmake -E echo "Skipping install"
 )
 
