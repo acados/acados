@@ -35,7 +35,8 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-if(SWIG_MATLAB)
+find_package(Matlab)
+if(SWIG_MATLAB AND MATLAB_FOUND)
     find_package(Matlab REQUIRED)
     find_package(CasadiMatlab)
 
@@ -48,7 +49,7 @@ if(SWIG_MATLAB)
         add_library(acadosMATLAB MODULE ${MEX_FILE})
     endif()
     target_include_directories(acadosMATLAB PUBLIC ${MATLAB_INCLUDE_DIR})
-    target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados -ldl -lstdc++ -lc)
+    target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados)
     set_target_properties(acadosMATLAB
         PROPERTIES
             OUTPUT_NAME "acadosMEX"
@@ -61,7 +62,8 @@ if(SWIG_MATLAB)
     add_test(NAME ocp_nlp_matlab COMMAND "${CMAKE_COMMAND}" -E chdir "${PROJECT_BINARY_DIR}/examples" ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r "addpath('${EXAMPLES_SRC_DIR}/matlab');try, ocp_nlp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 endif()
 
-if(SWIG_PYTHON)
+find_package(PythonInterp 3)
+if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
     find_package(PythonInterp 3 REQUIRED)
     find_package(PythonLibs 3 REQUIRED)
     find_package(NumPy REQUIRED)
