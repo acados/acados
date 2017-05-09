@@ -1,15 +1,8 @@
 #!/usr/bin/env bash -xe
 
 sudo add-apt-repository -y ppa:octave/stable
-sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-if [[ "$CC" == "clang-3.7" ]];
-then
-    echo 'deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.7 main' > /tmp/myppa.list
-    sudo cp /tmp/myppa.list /etc/apt/sources.list.d/
-    rm /tmp/myppa.list
-fi
-sudo apt-get update --force-yes -yq
-sudo apt-get install $CXX $CC $GFORTRAN libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev
+sudo apt-get update -yq
+sudo apt-get install $CXX $CC libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev
 
 pip install numpy scipy matplotlib
 
