@@ -29,14 +29,17 @@ if (NOT CASADIMATLAB_ROOT_DIR)
     message(FATAL_ERROR "Casadi not found!")
 endif ()
 
-# Determine the version number
-execute_process(
-    COMMAND "${MATLAB_EXECUTABLE}" -nodesktop -nosplash -r "try, import casadi.*, disp(['casadi=',casadi.CasadiMeta.getVersion]), catch ME, disp(ME.getReport()), exit(1), end, exit(0)"
-    OUTPUT_VARIABLE MATLAB_OUTPUT
-)
-string(FIND "${MATLAB_OUTPUT}" "casadi=" VERSION_POSITION)
-string(SUBSTRING "${MATLAB_OUTPUT}" ${VERSION_POSITION} 8 CASADIMATLAB_RAW_VERSION)
-string(SUBSTRING "${CASADIMATLAB_RAW_VERSION}" 7 1 CASADIMATLAB_MAJOR_VERSION)
+# Determine the version number if not in cache
+if (NOT CASADIMATLAB_MAJOR_VERSION)
+    execute_process(
+        COMMAND "${MATLAB_EXECUTABLE}" -nodesktop -nosplash -r "try, import casadi.*, disp(['casadi=',casadi.CasadiMeta.getVersion]), catch ME, disp(ME.getReport()), exit(1), end, exit(0)"
+        OUTPUT_VARIABLE MATLAB_OUTPUT
+    )
+    string(FIND "${MATLAB_OUTPUT}" "casadi=" VERSION_POSITION)
+    string(SUBSTRING "${MATLAB_OUTPUT}" ${VERSION_POSITION} 8 CASADIMATLAB_RAW_VERSION)
+    string(SUBSTRING "${CASADIMATLAB_RAW_VERSION}" 7 1 CASADIMATLAB_MAJOR_VERSION)
+    set(CASADIMATLAB_MAJOR_VERSION "${CASADIMATLAB_MAJOR_VERSION}" CACHE STRING "")
+endif ()
 string(COMPARE EQUAL "${CASADIMATLAB_MAJOR_VERSION}" "3" FOUND_CASADIMATLAB_3)
 if (NOT FOUND_CASADIMATLAB_3)
     message(FATAL_ERROR "Casadi version 3 required. Found version: ${CASADIMATLAB_VERSION}")
