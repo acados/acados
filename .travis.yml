@@ -49,6 +49,7 @@ script:
   - echo $LD_LIBRARY_PATH
   - export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/libstdc++.so.6:$LD_LIBRARY_PATH
   - export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/libstdc++.so.6:$LIBRARY_PATH
+  - export LD_DEBUG=libs
   - find /usr | grep libstdc++
   - find /usr -type l -ls | grep libstdc++
   - cmake -E chdir build ctest --output-on-failure
