@@ -9,7 +9,7 @@ then
     rm /tmp/myppa.list
 fi
 sudo apt-get update -yq
-sudo apt-get install $CXX $CC libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev gfortran-4.9
+sudo apt-get install $CXX $CC $GFORTRAN libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev
 
 pip install numpy scipy matplotlib
 

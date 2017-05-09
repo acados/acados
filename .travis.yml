@@ -5,9 +5,9 @@ python:
   - 3.5
 
 env:
-  - CXX="g++-6" CC="gcc-6"
-  - CXX="g++-5" CC="gcc-5"
-  - CXX="g++-4.9" CC="gcc-4.9"
+  - CXX="g++-6" CC="gcc-6" GFORTRAN="gfortran-6"
+  - CXX="g++-5" CC="gcc-5" GFORTRAN="gfortran-5"
+  - CXX="g++-4.9" CC="gcc-4.9" GFORTRAN="gfortran-4.9"
   - CXX="clang++-3.7" CC="clang-3.7"
 
 before_install:

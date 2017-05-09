@@ -49,7 +49,7 @@ if(MATLAB_FOUND)
     add_library(acadosMATLAB MODULE ${MEX_FILE})
     # endif()
     target_include_directories(acadosMATLAB PUBLIC ${MATLAB_INCLUDE_DIR})
-    target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados)
+    target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados -ldl)
     set_target_properties(acadosMATLAB
         PROPERTIES
             OUTPUT_NAME "acadosMEX"
