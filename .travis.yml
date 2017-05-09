@@ -22,8 +22,6 @@ before_install:
       openssl aes-256-cbc -K $encrypted_15c483c21b41_key -iv $encrypted_15c483c21b41_iv -in external/encrypted_scripts.tar.enc -out external/encrypted_scripts.tar -d;
       tar -xvf external/encrypted_scripts.tar -C external;
     fi'
-  # get rid of old gcc installation
-  - echo 'Yes, do as I say!' | sudo apt-get remove --force-yes libstdc++-4.8-dev libgfortran-4.8-dev libgcc-4.8-dev gcc-4.8-base gcc-4.8 g++-4.8 cpp-4.8
   
 install:
   - pushd external
@@ -47,9 +45,10 @@ script:
   - cmake --build build --target lint
   - ldd $HOME/local/lib/acadosMEX.mexa64
   - nm -D $HOME/local/lib/acadosMEX.mexa64
-  - nm -D /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+  - nm -D /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep _ZNSt13runtime_errorC1EPKc
   - echo $LD_LIBRARY_PATH
-  - export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+  - export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/libstdc++.so.6:$LD_LIBRARY_PATH
+  - export LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu/libstdc++.so.6:$LIBRARY_PATH
   - find /usr | grep libstdc++
   - find /usr -type l -ls | grep libstdc++
   - cmake -E chdir build ctest --output-on-failure
