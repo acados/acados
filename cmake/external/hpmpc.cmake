@@ -16,7 +16,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND ""
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/hpmpc"
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make clean static_library -j 2 TARGET=${HPMPC_TARGET} BLASFEO_PATH=${HPMPC_BLASFEO_PATH}
+    BUILD_COMMAND make clean && make static_library -j 2 TARGET=${HPMPC_TARGET} BLASFEO_PATH=${HPMPC_BLASFEO_PATH}
     INSTALL_COMMAND ""
 )
 
