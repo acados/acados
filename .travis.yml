@@ -50,3 +50,6 @@ script:
   - cmake --build build --clean-first
   - pushd experimental/dang/esp32
   - ./test_all_linux.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
