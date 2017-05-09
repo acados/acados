@@ -1,10 +1,40 @@
-# Build list with all source files to go into the acados library
-file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/*.c)
-# Exclude helper files
-list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c)
+#
+#    This file is part of acados.
+#
+#    acados is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 3 of the License, or (at your option) any later version.
+#
+#    acados is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with acados; if not, write to the Free Software Foundation,
+#    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
 
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c)
+cmake_minimum_required(VERSION 3.2)
+project(acados_lib LANGUAGES C CXX)
+
+# Only test acados library for coverage
+if((CMAKE_BUILD_TYPE MATCHES Test) AND COVERAGE)
+    include(CodeCoverage)
+    setup_target_for_coverage(acados_coverage ${PROJECT_BINARY_DIR}/../ unit_tests ${PROJECT_BINARY_DIR}/../test/ coverage)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
+endif ()
+
+# Build list with all source files to go into the acados library
+file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/*.c)
+# Exclude helper files
+list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/ocp_qp/condensing_helper_functions.c)
+
+if(WITH_OOQP)
+    list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/ocp_qp/ocp_qp_ooqp.c)
 endif()
 
 # Define acados library
@@ -24,7 +54,8 @@ target_link_libraries(acados
         qpdunes
         m
 )
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+
+if(WITH_OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
         PUBLIC
@@ -37,6 +68,10 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
             ${FORTRAN_LIBRARY}
             m
     )
+endif()
+
+if(COVERAGE)
+    target_link_libraries(acados PRIVATE --coverage)
 endif()
 
 target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES
