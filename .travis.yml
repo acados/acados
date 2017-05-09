@@ -46,6 +46,7 @@ script:
   - ldd $HOME/local/lib/acadosMEX.mexa64
   - nm -D $HOME/local/lib/acadosMEX.mexa64
   - nm -D /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+  - find /usr | grep libstdc++
   - cmake -E chdir build ctest --output-on-failure
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
