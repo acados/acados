@@ -8,7 +8,7 @@ then
     sudo cp /tmp/myppa.list /etc/apt/sources.list.d/
     rm /tmp/myppa.list
 fi
-sudo apt-get update -yq
+sudo apt-get update --force-yes -yq
 sudo apt-get install $CXX $CC $GFORTRAN libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev
 
 pip install numpy scipy matplotlib
