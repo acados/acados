@@ -10,7 +10,6 @@ if [ "$INSTALL_ENCRYPTED_SOFTWARE" = "1" ]; then
 	else
 		echo "Encrypted software already downloaded"
 	fi
-	export WITH_OOQP=1
 else
 	echo "Skipping installation of encrypted software"
 fi

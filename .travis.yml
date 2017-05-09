@@ -39,7 +39,7 @@ before_script:
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Test -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DWITH_OOQP=$WITH_OOQP -DCOVERAGE=$COVERAGE ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Test -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - cmake --build build --clean-first
   - cmake --build build --target install
   - cmake --build build --target lint

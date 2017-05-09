@@ -17,24 +17,21 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.2)
-project(acados_lib LANGUAGES C CXX)
-
 # Only test acados library for coverage
-if((CMAKE_BUILD_TYPE MATCHES Test) AND COVERAGE)
+if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE EQUAL "lcov"))
     include(CodeCoverage)
-    setup_target_for_coverage(acados_coverage ${PROJECT_BINARY_DIR}/../ unit_tests ${PROJECT_BINARY_DIR}/../test/ coverage)
+    setup_target_for_coverage(acados_coverage ${PROJECT_BINARY_DIR} unit_tests ${PROJECT_BINARY_DIR}/test/ coverage)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
 endif ()
 
 # Build list with all source files to go into the acados library
-file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/*.c)
+file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/*.c)
 # Exclude helper files
-list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/ocp_qp/condensing_helper_functions.c)
+list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c)
 
-if(WITH_OOQP)
-    list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/ocp_qp/ocp_qp_ooqp.c)
+if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c)
 endif()
 
 # Define acados library
@@ -55,7 +52,7 @@ target_link_libraries(acados
         m
 )
 
-if(WITH_OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
         PUBLIC
@@ -70,7 +67,7 @@ if(WITH_OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     )
 endif()
 
-if(COVERAGE)
+if(COVERAGE EQUAL "lcov")
     target_link_libraries(acados PRIVATE --coverage)
 endif()
 
