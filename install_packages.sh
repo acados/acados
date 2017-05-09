@@ -2,11 +2,11 @@
 
 sudo add-apt-repository -y ppa:octave/stable
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-if '$CC' == 'clang-3.7';
+if [[ "$CC" == "clang-3.7" ]];
     then sudo deb http://apt.llvm.org/precise/ llvm-toolchain-precise-3.7 main;
 fi
 sudo apt-get update -yq
-sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev cppcheck octave liboctave-dev valgrind gfortran-4.9 $CXX $CC
+sudo apt-get install $CXX $CC libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev gfortran-4.9
 
 pip install numpy scipy matplotlib
 
@@ -32,7 +32,7 @@ export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 pushd swig
 
 ./autogen.sh
-./configure --prefix=$(pwd)/swig_install CC="gcc-4.8" CXX="g++-4.8"
+./configure --prefix=$(pwd)/swig_install --enable-silent-rules CC="gcc-4.8" CXX="g++-4.8"
 make
 make install
 export PATH=$(pwd):$PATH
