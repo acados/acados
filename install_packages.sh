@@ -1,6 +1,6 @@
 #!/usr/bin/env bash -xe
 
-sudo add-apt-repository ppa:octave/stable
+sudo add-apt-repository -y ppa:octave/stable
 sudo apt-get update -yqq
 sudo apt-get install -yqq $CXX $CC libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev
 
