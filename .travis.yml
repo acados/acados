@@ -23,7 +23,8 @@ before_install:
       tar -xvf external/encrypted_scripts.tar -C external;
     fi'
   # get rid of old gcc installation
-  - sudo apt-get remove libstdc++-4.8-dev libgfortran-4.8-dev libgcc-4.8-dev gcc-4.8 g++-4.8 cpp-4.8
+  - echo 'Yes, do as I say!' | sudo apt-get remove --force-yes libstdc++-4.8-dev libgfortran-4.8-dev libgcc-4.8-dev gcc-4.8-base gcc-4.8 g++-4.8 cpp-4.8
+  
 install:
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
