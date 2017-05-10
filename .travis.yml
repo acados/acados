@@ -6,8 +6,8 @@ python:
 
 env:
   - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=1 SWIG_MATLAB=0 # no MATLAB support for gcc>=5
-  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=1 SWIG_MATLAB=0 COVERAGE="lcov"
-  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=1 SWIG_MATLAB=1
+  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=1 SWIG_MATLAB=0
+  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=1 SWIG_MATLAB=1 COVERAGE="lcov"
   - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=1 SWIG_MATLAB=1
 
 addons:
