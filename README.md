@@ -11,7 +11,7 @@ From the `acados` root folder:
     git submodule update --recursive --init
     mkdir build
     cd build
-    cmake ..
+    cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 ..
     make install
     cd ..
     
