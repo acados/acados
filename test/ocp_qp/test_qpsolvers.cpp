@@ -189,23 +189,27 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ", " << constraint << std::endl;
 
                             ocp_qp_hpmpc_args args;
-                            args.tol = 1e-12;
-                            args.max_iter = 20;
-                            args.mu0 = 0.0;
-                            args.warm_start = 0;
-                            args.N2 = N;
+
+                            args.N = N;
+
+                            ocp_qp_hpmpc_create_arguments(&args, HPMPC_DEFAULT_ARGUMENTS);
+
                             double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
                             args.inf_norm_res = &inf_norm_res[0];
-                            int work_space_size =
-                            ocp_qp_hpmpc_workspace_size_bytes(N, (int_t *)qp_in.nx,
-                            (int_t *)qp_in.nu, (int_t *)qp_in.nb, (int_t *)qp_in.nc,
-                            (int_t **)qp_in.idxb, &args);
-                            // printf("\nwork space size: %d bytes\n", work_space_size);
-                            void *work = malloc(work_space_size);
 
-                            return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &args, work);
+                            void *workspace = 0;
+                            void *mem = 0;
+
+                            int_t work_space_size = 0;
+                            work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &args);
+                            // printf("work_space_size = %i", work_space_size);
+                            v_zeros_align(&workspace, work_space_size);
+                            ocp_qp_hpmpc_create_memory(&qp_in, &args, &mem);
+
+                            return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &args, mem, workspace);
+
                             acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            free(work);
+                            free(workspace);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_HPMPC));
                             std::cout <<"---> PASSED " << std::endl;

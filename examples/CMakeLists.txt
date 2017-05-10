@@ -10,12 +10,9 @@ file(GLOB PENDULUM_MODEL_SRC ${EXAMPLES_SRC_DIR}/c/pendulum_model/pendulum_model
 )
 
 # Define examples
-add_executable(mass_spring_hpmpc_example ${EXAMPLES_SRC_DIR}/c/mass_spring_hpmpc.c)
-target_link_libraries(mass_spring_hpmpc_example acados)
-add_test(
-    NAME mass_spring_hpmpc_example
-    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_hpmpc_example
-)
+# add_executable(mass_spring_hpmpc_example ${EXAMPLES_SRC_DIR}/c/mass_spring_hpmpc.c)
+# target_link_libraries(mass_spring_hpmpc_example acados)
+# add_test(NAME mass_spring_hpmpc_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_hpmpc_example)
 
 # add_executable(mass_spring_partial_tightening_example
 #    ${EXAMPLES_SRC_DIR}/c/mass_spring_partial_tightening.c
@@ -52,19 +49,14 @@ target_link_libraries(nonlinear_chain_sqp_example acados)
 #    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./nonlinear_chain_sqp_example
 # )
 
-add_executable(pendulum_hpmpc_libstr_example
-    ${EXAMPLES_SRC_DIR}/c/pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC}
-)
-target_link_libraries(pendulum_hpmpc_libstr_example acados)
-add_test(
-    NAME pendulum_hpmpc_libstr_example
-    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example
-)
+# add_executable(pendulum_hpmpc_libstr_example ${EXAMPLES_SRC_DIR}/c/pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
+# target_link_libraries(pendulum_hpmpc_libstr_example acados)
+# add_test(NAME pendulum_hpmpc_libstr_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
 
-# add_executable(pendulum_partial_tightening_example
-#     ${EXAMPLES_SRC_DIR}/c/pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
-# target_link_libraries(pendulum_partial_tightening_example acados)
-# add_test(
-#     NAME pendulum_partial_tightening_example
-#     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_partial_tightening_example
-# )
+add_executable(pendulum_partial_tightening_example
+    ${EXAMPLES_SRC_DIR}/c/pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
+target_link_libraries(pendulum_partial_tightening_example acados)
+add_test(
+    NAME pendulum_partial_tightening_example
+    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_partial_tightening_example
+)

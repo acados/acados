@@ -27,6 +27,10 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
+typedef enum hpmpc_options_t_ {
+    HPMPC_DEFAULT_ARGUMENTS  // TODO(Andrea): need to implement other options
+} hpmpc_options_t;
+
 // OCP QP interface
 // struct of arguments to the solver
 typedef struct ocp_qp_hpmpc_args_ {
@@ -43,23 +47,42 @@ typedef struct ocp_qp_hpmpc_args_ {
     double **t0;
     int out_iter;  // number of performed iterations
     double *inf_norm_res;  // array of size 5, returning inf norm res
+
+    // partial tightening
+    double sigma_mu;
+    int N;
+    int M;
 } ocp_qp_hpmpc_args;
 
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
-    void *workspace);
+typedef void* ocp_qp_hpmpc_workspace;
+typedef void* ocp_qp_hpmpc_memory;
 
-int ocp_qp_hpmpc_libstr(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args, \
-        void *workspace);
+// int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
+//   void *workspace);
 
-int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-  ocp_qp_hpmpc_args *qp_args, int M, void *workspace);
+// int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
+        // void *workspace);
+
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+        void *args_, void *mem_, void *workspace_);
+
+// int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+//   ocp_qp_hpmpc_args *qp_args, int M, double sigma_mu, void *workspace);
 
 // TODO(Andrea): need to merge hpmpc in order to use this... (Body is ready)
 // int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args *qp_args,
 //   void *workspace);
 
-int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb, \
+int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng, int **hidxb,
     ocp_qp_hpmpc_args *hpmpc_args);
+
+int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_);
+int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args);
+int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *input, void *args_, void **memory_);
+void ocp_qp_hpmpc_free_memory(void *mem_);
+
+void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
+void ocp_qp_hpmpc_destroy(void *mem_, void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */
