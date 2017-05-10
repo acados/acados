@@ -10,3 +10,8 @@
 [submodule "catch"]
 	path = external/catch
 	url = https://github.com/philsquared/Catch.git
+[submodule "swig"]
+	path = external/swig
+	url = https://github.com/jaeandersson/swig
+	branch = matlab
+	ignore = dirty

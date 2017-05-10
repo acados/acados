@@ -21,7 +21,7 @@ if [ "$INSTALL_MATLAB" = "1" ]; then
 	else
 		echo "MATLAB already downloaded"
 	fi
-
+	export MATLAB_ROOT=$(pwd)/matlab
 	pushd matlab/bin
 	./matlab -nodesktop -nojvm -nosplash < ../../hello_world.m
 	popd
