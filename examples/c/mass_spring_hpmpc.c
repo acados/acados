@@ -504,7 +504,7 @@ int main() {
 
     void *workspace = malloc(work_space_size);
 
-	void *mem;
+    void *mem;
     ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
     /************************************************

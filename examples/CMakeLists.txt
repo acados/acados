@@ -10,12 +10,12 @@ file(GLOB PENDULUM_MODEL_SRC ${EXAMPLES_SRC_DIR}/c/pendulum_model/pendulum_model
 )
 
 # Define examples
-add_executable(mass_spring_hpmpc_example ${EXAMPLES_SRC_DIR}/c/mass_spring_hpmpc.c)
-target_link_libraries(mass_spring_hpmpc_example acados)
-add_test(
-    NAME mass_spring_hpmpc_example 
-    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_hpmpc_example
-)
+#add_executable(mass_spring_hpmpc_example ${EXAMPLES_SRC_DIR}/c/mass_spring_hpmpc.c)
+#target_link_libraries(mass_spring_hpmpc_example acados)
+#add_test(
+#    NAME mass_spring_hpmpc_example 
+#    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_hpmpc_example
+#)
 
 # add_executable(mass_spring_partial_tightening_example
 #    ${EXAMPLES_SRC_DIR}/c/mass_spring_partial_tightening.c
