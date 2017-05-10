@@ -53,6 +53,6 @@ script:
   - ./test_all_linux.sh > /dev/null # quiet execution
 
 after_success:
-  - cd build/test
+  - pushd ${TRAVIS_BUILD_DIR}/acados/build/test
   # Uploading report to CodeCov
   - if [$COVERAGE]; then bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"; fi
