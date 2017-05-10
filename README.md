@@ -7,6 +7,7 @@ Fast optimal control problem solvers
 Make sure `cmake` is installed.
 From the `acados` root folder:
 
+    source install_packages.sh  # for Ubuntu
     git submodule update --recursive --init
     mkdir build
     cd build
