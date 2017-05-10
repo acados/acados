@@ -55,4 +55,4 @@ script:
 after_success:
   - pushd ${TRAVIS_BUILD_DIR}/build/test
   # Uploading report to CodeCov
-  - if [ -n $COVERAGE ]; then bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"; fi
+  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
