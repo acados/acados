@@ -18,7 +18,7 @@
 #
 
 # Only test acados library for coverage
-if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE EQUAL "lcov"))
+if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE MATCHES "lcov"))
     include(CodeCoverage)
     setup_target_for_coverage(acados_coverage ${PROJECT_BINARY_DIR} unit_tests ${PROJECT_BINARY_DIR}/test/ coverage)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
@@ -67,7 +67,7 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
     )
 endif()
 
-if(COVERAGE EQUAL "lcov")
+if(COVERAGE MATCHES "lcov")
     target_link_libraries(acados PRIVATE --coverage)
 endif()
 
