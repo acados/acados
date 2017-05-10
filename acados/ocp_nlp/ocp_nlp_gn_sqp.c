@@ -31,6 +31,7 @@
 #include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/print.h"
@@ -339,6 +340,11 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
         mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         mem->qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
+    } else if (!strcmp(args->qp_solver_name, "hpmpc")) {
+        mem->qp_solver->fun = &ocp_qp_hpmpc;
+        mem->qp_solver->initialize = &ocp_qp_hpmpc_initialize;
+        mem->qp_solver->destroy = &ocp_qp_hpmpc_destroy;
+        qp_args = (void *) malloc(sizeof(ocp_qp_hpmpc_args));
     } else {
         printf("CHOSEN QP SOLVER FOR SQP METHOD NOT AVAILABLE!\n");
         exit(1);

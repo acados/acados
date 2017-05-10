@@ -1,7 +1,7 @@
 /* The model comes from \cite{Wirsching2006} */
 #include "examples/c/pendulum_model/pendulum_model.h"
 
-extern int jacFun(const real_t** arg, real_t** res);
+// extern int jacFun(const real_t** arg, real_t** res);
 
 // The auto-generated VDE functions from CasADi:
 
@@ -39,23 +39,23 @@ void VDE_fun_pendulum(const real_t* in, real_t* out,
 
 // The auto-generated Jacobian functions from CasADi:
 
-void jac_fun_pendulum(const real_t* in, real_t* out) {
-    int_t NMF = 1;
-    int_t NX = NMF*6;
-    const real_t* x = in;
-    const real_t* u  = in + NX;
-
-    real_t* x_out = out;
-    real_t* jac_out = out + NX;
-
-    const real_t *casadi_arg[4];
-    real_t *casadi_res[3];
-
-    casadi_arg[0] = x;
-    casadi_arg[1] = u;
-
-    casadi_res[0] = x_out;
-    casadi_res[1] = jac_out;
-
-    jacFun(casadi_arg, casadi_res);
-}
+// void jac_fun_pendulum(const real_t* in, real_t* out) {
+//     int_t NMF = 1;
+//     int_t NX = NMF*6;
+//     const real_t* x = in;
+//     const real_t* u  = in + NX;
+//
+//     real_t* x_out = out;
+//     real_t* jac_out = out + NX;
+//
+//     const real_t *casadi_arg[4];
+//     real_t *casadi_res[3];
+//
+//     casadi_arg[0] = x;
+//     casadi_arg[1] = u;
+//
+//     casadi_res[0] = x_out;
+//     casadi_res[1] = jac_out;
+//
+//     jacFun(casadi_arg, casadi_res);
+// }

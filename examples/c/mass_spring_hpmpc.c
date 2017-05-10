@@ -169,7 +169,7 @@ int main() {
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
 
-    int N2 = 3;   // horizon length
+    int N2 = 3;   // horizon length of partially condensed problem
 
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -484,10 +484,11 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAXITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 0.0;
+    hpmpc_args.mu0 = 1.0;  // TODO make 0.0 work again by taking the max abs of cost function elements
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
+    hpmpc_args.M = N;
     double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
     hpmpc_args.inf_norm_res = &inf_norm_res[0];
 
@@ -495,11 +496,16 @@ int main() {
     * work space (fully sparse)
     ************************************************/
 
-    int work_space_size =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+//  int work_space_size =
+//      ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    int work_space_size = 0;
+    work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
 
     void *workspace = malloc(work_space_size);
+
+	void *mem;
+    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
     /************************************************
     * call the solver (fully sparse)
@@ -512,7 +518,8 @@ int main() {
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+//        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop
@@ -548,6 +555,7 @@ int main() {
 
     // solver arguments
     hpmpc_args.N2 = N2;
+#if 0
 
     /************************************************
     * work space (partial condensing)
@@ -597,6 +605,7 @@ int main() {
     printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, \
         time_part_cond);
     printf("\n\n");
+#endif
 
     /************************************************
     * free memory
@@ -641,7 +650,9 @@ int main() {
     d_free(hx[N]);
 
     free(workspace);
+#if 0
     free(workspace_part_cond);
+#endif
 
     return 0;
 }
