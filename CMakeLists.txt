@@ -29,7 +29,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
-    message("\n-- No build type chosen. Valid build types are:\n   Release (default), Debug, Test, NoExternalLibs")
+    message("\n-- No build type chosen. Valid build types are:"
+        "\n   Release (default), Debug, Test, NoExternalLibs")
     set(CMAKE_BUILD_TYPE Release)
 endif()
 

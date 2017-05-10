@@ -7,7 +7,7 @@ python:
 env:
   - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=1 SWIG_MATLAB=0 # no MATLAB support for gcc>=5
   - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=1 SWIG_MATLAB=0
-  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=1 SWIG_MATLAB=1
+  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=1 SWIG_MATLAB=1 COVERAGE="lcov"
   - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=1 SWIG_MATLAB=1
 
 addons:
@@ -39,14 +39,20 @@ before_script:
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Test -D SWIG_MATLAB=$SWIG_MATLAB -D SWIG_PYTHON=$SWIG_PYTHON ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Test -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - cmake --build build --clean-first
   - cmake --build build --target install
   - cmake --build build --target lint
+  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
   - cmake -E chdir build ctest --output-on-failure
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
   - cmake --build build --clean-first
   - pushd experimental/dang/esp32
-  - ./test_all_linux.sh
+  - ./test_all_linux.sh > /dev/null # quiet execution
+
+after_success:
+  - pushd ${TRAVIS_BUILD_DIR}/build/test
+  # Uploading report to CodeCov
+  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
