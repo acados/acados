@@ -43,7 +43,7 @@ script:
   - cmake --build build --clean-first
   - cmake --build build --target install
   - cmake --build build --target lint
-  - if [ -n $COVERAGE ]; then cmake --build build --target acados_coverage; fi
+  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
   - cmake -E chdir build ctest --output-on-failure
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
