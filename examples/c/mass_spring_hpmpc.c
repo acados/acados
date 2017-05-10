@@ -484,7 +484,7 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAXITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 1.0;  // TODO make 0.0 work again by taking the max abs of cost function elements
+    hpmpc_args.mu0 = 1.0;  // 0.0
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
@@ -504,7 +504,7 @@ int main() {
 
     void *workspace = malloc(work_space_size);
 
-	void *mem;
+    void *mem;
     ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
     /************************************************
