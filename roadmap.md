@@ -8,7 +8,8 @@
 - [ ] blockSQP
 
 #### `ocp_qp`
-- [x] qpOASES
+- [x] qpOASES v1.0
+- [ ] qpOASES v2.0 (no dynamic memory allocation, same structure as rest of QP solvers)
 - [ ] block condensing (should maybe get its own category)
 - [x] OOQP
 - [x] qpDUNES
