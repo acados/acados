@@ -364,23 +364,14 @@ void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
   // ocp_qp_hpmpc_args *hpmpc_args, void *workspace_) {
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
         void *args_, void *mem_, void *workspace_) {
+//
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
-
-    // Process arguments TODO(Andrea): ask dimitris what this is for
-    // args_args->dummy = 1.0;
-    // workspace_++;
-    // workspace_ = 0;
-    workspace_ = 0;
-    workspace_++;
-
-    real_t sigma_mu = hpmpc_args->sigma_mu;
-    int_t M = hpmpc_args->M;
 
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
 
     // loop index
-    int ii;
+    int ii, jj;
 
     // extract input struct members
     int N = qp_in->N;
@@ -403,6 +394,50 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hD = (double **) qp_in->Cu;
     double **hlg = (double **) qp_in->lc;
     double **hug = (double **) qp_in->uc;
+
+    // extract output struct members
+    double **hx = qp_out->x;
+    double **hu = qp_out->u;
+    double **hpi = qp_out->pi;  // TODO(Andrea): not returning multiplers atm
+    double **hlam = qp_out->lam;
+    double **ht = qp_out->t;
+
+    int hpmpc_status = -1;
+
+
+
+
+    int_t M = hpmpc_args->M;
+
+    if (M < N) {  // XXX andrea partial tightening stuff
+//
+    // Process arguments TODO(Andrea): ask dimitris what this is for
+    // args_args->dummy = 1.0;
+    // workspace_++;
+    // workspace_ = 0;
+    // workspace_ = 0;
+    // workspace_++;
+
+
+    char *ptr_memory = (char *) mem_;
+
+
+    // extract args struct members
+    double mu_tol = hpmpc_args->tol;
+    int k_max = hpmpc_args->max_iter;
+    double mu0 = hpmpc_args->mu0;
+    int warm_start = hpmpc_args->warm_start;
+
+    //  other solver arguments
+    int kk = -1;  // actual number of iterations
+
+    // IPM constants
+    // int kk_avg;
+    double alpha_min = 1e-8;
+    double *stat = (double*)ptr_memory;
+    ptr_memory+=sizeof(double)*k_max*6;
+    int compute_mult = 1;
+
 
     struct d_strmat *hsmatdummy = NULL;
     struct d_strvec *hsvecdummy = NULL;
@@ -429,14 +464,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strvec hsdlam[N+1];  // to be checked
     struct d_strvec hsdt[N+1];
     struct d_strvec hslamt[N+1];  // to be checked
-
-    int nuM;
-    int nbM;
-
-    struct d_strmat sLxM;
-    struct d_strmat sPpM;
-
-    char *ptr_memory = (char *) mem_;
 
     for ( ii = 0; ii < N; ii++ ) {
       d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], ptr_memory);
@@ -527,6 +554,11 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ptr_memory += (&hsrq[ii])->memory_size;
     d_cvt_vec2strvec(nx[ii], hq[ii], &hsrq[ii], nu[ii]);
 
+    d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], ptr_memory);
+    ptr_memory += (&hsDCt[ii])->memory_size;
+    d_cvt_tran_mat2strmat(ng[ii], nu[ii], hD[ii], ng[ii], &hsDCt[ii], 0, 0);
+    d_cvt_tran_mat2strmat(ng[ii], nx[ii], hC[ii], ng[ii], &hsDCt[ii], nu[ii], 0);
+
     d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], ptr_memory);
     ptr_memory += (&hsd[ii])->memory_size;
     d_cvt_vec2strvec(nb[ii], hlb[ii], &hsd[ii], 0);
@@ -571,37 +603,25 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ptr_memory += (&hsdlam[ii])->memory_size;
     d_create_strvec(2*nb[ii]+2*ng[ii], &hsdt[ii], ptr_memory);
     ptr_memory += (&hsdt[ii])->memory_size;
+
+
+
+
+
+    real_t sigma_mu = hpmpc_args->sigma_mu;
+
+    int nuM;
+    int nbM;
+
+    struct d_strmat sLxM;
+    struct d_strmat sPpM;
+
     d_create_strmat(nx[M]+1, nx[M], &sLxM, ptr_memory);
     ptr_memory += (&sLxM)->memory_size;
     d_create_strmat(nx[M]+1, nx[M], &sPpM, ptr_memory);
     ptr_memory += (&sPpM)->memory_size;
 
-
     struct d_strmat hstmpmat0;
-
-    // extract output struct members
-    double **hx = qp_out->x;
-    double **hu = qp_out->u;
-    // double **hpi = qp_out->pi;  // TODO(Andrea): not returning multiplers atm
-    double **hlam = qp_out->lam;
-    double **ht = qp_out->t;
-
-    // extract args struct members
-    double mu_tol = hpmpc_args->tol;
-    int k_max = hpmpc_args->max_iter;
-    double mu0 = hpmpc_args->mu0;
-    int warm_start = hpmpc_args->warm_start;
-
-    //  other solver arguments
-    int kk = -1;  // actual number of iterations
-
-    // IPM constants
-    int hpmpc_status;
-    // int kk_avg;
-    double alpha_min = 1e-8;
-    double *stat = (double*)ptr_memory;
-    ptr_memory+=sizeof(double)*k_max*6;
-    int compute_mult = 1;
 
     // riccati work space
     void *work_ric;
@@ -616,7 +636,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // backward riccati factorization and solution at the end
     d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
-      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy, &hsQx[M],
+      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], &hsDCt[M], &hsQx[M],
       &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], &hsLxt[M], work_ric);
 
     // extract chol factor of [P p; p' *]
@@ -686,38 +706,127 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
     // define and compute hsdpi (see function prototype).
 
-    double **temp_u;
-
+//    double **temp_u;
     // copy result to qp_out
     for ( ii = 0; ii < N; ii++ ) {
-      hu[ii] = hsux[ii].pa;
-      hlam[ii] = hslam[ii].pa;
-      ht[ii] = hst[ii].pa;
-      temp_u = &hsux[ii].pa;
-      hx[ii] = &temp_u[0][nu[ii]];
+        d_cvt_strvec2vec(nu[ii], &hsux[ii], 0, hu[ii]);
+        d_cvt_strvec2vec(nx[ii], &hsux[ii], nu[ii], hx[ii]);
+        d_cvt_strvec2vec(nx[ii], &hspi[ii], 0, hpi[ii]);
+        d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, hlam[ii]);
+        d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hst[ii], 0, ht[ii]);
+//      hu[ii] = hsux[ii].pa;
+//      hlam[ii] = hslam[ii].pa;
+//      ht[ii] = hst[ii].pa;
+//      temp_u = &hsux[ii].pa;
+//      hx[ii] = &temp_u[0][nu[ii]];
     }
 
     ii = N;
-    hlam[ii] = hslam[ii].pa;
-    ht[ii] = hst[ii].pa;
-    temp_u = &hsux[ii].pa;
-    hx[ii] = &temp_u[0][nu[ii]];
+    d_cvt_strvec2vec(nx[ii], &hsux[ii], nu[ii], hx[ii]);
+    d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, hlam[ii]);
+    d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hst[ii], 0, ht[ii]);
+//    hlam[ii] = hslam[ii].pa;
+//    ht[ii] = hst[ii].pa;
+//    temp_u = &hsux[ii].pa;
+//    hx[ii] = &temp_u[0][nu[ii]];
+
+    hpmpc_args->out_iter = kk;
+//
+    } else {  // XXX giaf fortran order interface with partial condensing
+//
+     // extract args struct members
+     double mu_tol = hpmpc_args->tol;
+     int k_max = hpmpc_args->max_iter;
+     double mu0 = hpmpc_args->mu0;
+     int warm_start = hpmpc_args->warm_start;
+     int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
+     int out_iter = -1;  // number of performed iterations
+     double *inf_norm_res = hpmpc_args->inf_norm_res;
+
+     // memory for stat
+     size_t addr = ( ( (size_t) workspace_) + 7) / 8 * 8;  // align to 8-byte boundaries
+     double *ptr_double = (double *) addr;
+     double *stat = ptr_double;
+     ptr_double += 5*k_max;
+     for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
+
+     // memory for idxb
+     int *hidxb[N+1];
+//   size_t addr = (( (size_t) workspace_ ) + 3 ) / 4 * 4;  // align to 4-byte boundaries
+     int *ptr_int = (int *) ptr_double;
+     for (ii = 0; ii <= N; ii++) {
+         hidxb[ii] = ptr_int;
+         ptr_int += nb[ii];
+     }
+     void *ipm_workspace = (void *) ptr_int;
+
+     //  swap x and u in bounds (by updating their indeces)
+     for (ii = 0; ii <= N; ii++) {
+         jj = 0;
+         for (; jj < nb[ii]; jj++) {
+             if (hsidxb[ii][jj] < nx[ii]) {  // state
+                 hidxb[ii][jj] = hsidxb[ii][jj]+nu[ii];
+             } else {  // input
+                 hidxb[ii][jj] = hsidxb[ii][jj]-nx[ii];
+             }
+         }
+     }
+
+     hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0,
+        mu_tol, N, nx, nu, nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS,
+        hR, hq, hr, hlb, hub, hC, hD, hlg,
+         hug, hx, hu, hpi, hlam, inf_norm_res, ipm_workspace, stat);
+
+     hpmpc_args->out_iter = out_iter;  // number of performed iterations
+//
+    }
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
-
-    hpmpc_args->out_iter = kk;
 
     // return
     return acados_status;
 }
 
-int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args_) {
+
+
+
+
+int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
+//
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
-    int_t ws_size = 0*in->N*args->N;  // TODO(Andrea): dummy expression. Need to
+
+    int N = qp_in->N;
+    int *nx = (int *) qp_in->nx;
+    int *nu = (int *) qp_in->nu;
+    int *nb = (int *) qp_in->nb;
+    int **hidxb = (int **) qp_in->idxb;
+    int *ng = (int *) qp_in->nc;
+    int_t N2 = args->N2;
+    int_t M = args->M;
+
+    int_t ws_size;  // TODO(Andrea): dummy expression. Need to
+    // ws_size = 0*in->N*args->N;  // TODO(Andrea): dummy expression. Need to
     // decide what hpmpc's workpsace is.
+
+    if (M < N) {  // XXX andrea partial tightening stuff
+        ws_size = 0;
+    } else {  // XXX giaf fortran interface
+        int ii;
+        int_t max_ip_iter = args->max_iter;
+        ws_size = 8 + 5*max_ip_iter*sizeof(double);
+        for (ii = 0; ii <= N; ii++) {
+            ws_size += nb[ii]*sizeof(int);
+        }
+        ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, \
+            nu, nb, hidxb, ng, N2);
+    }
     return ws_size;
 }
+
+
+
+
 
 int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
@@ -727,37 +836,46 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
     int_t *nx = (int_t*)in->nx;
     int_t *nu = (int_t*)in->nu;
     int_t *nb = (int_t*)in->nb;
-    int_t *ngg = (int_t*)in->nc;
+//    int **hidxb = (int **) in->idxb;
+    int_t *ng = (int_t*)in->nc;
 
     int_t max_ip_iter = args->max_iter;
 
-    int_t mem_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
-      nx, nu, nb, ngg);
+    int_t M = args->M;
+
+    int_t mem_size;
+
+    if (M < N) {  // XXX andrea partial tightened stuff
+//
+    mem_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
+      nx, nu, nb, ng);
 
     int_t ii;
     // Adding memory for data
     for (ii=0; ii < N; ii++) {
-      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);
-      mem_size+= d_size_strvec(nx[ii+1]);
-      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);  // BAbt
+      mem_size+= d_size_strvec(nx[ii+1]);  // b
+      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);  // RSQrq
+      mem_size+= d_size_strvec(nu[ii]+nx[ii]);  // rq
+      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ng[ii]);  // DCt
+      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);  // d
       mem_size+= d_size_strvec(nu[ii]+nx[ii]);
-      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ngg[ii]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      mem_size+= d_size_strvec(nu[ii]+nx[ii]);
       mem_size+= d_size_strvec(nx[ii+1]);
       mem_size+= d_size_strvec(nx[ii+1]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
     }
 
+    mem_size+= d_size_strmat(nu[N]+nx[N]+1, nu[N]+nx[N]);  // RSQrq
+    mem_size+= d_size_strvec(nu[N]+nx[N]);  // q
+    mem_size+= d_size_strmat(nu[N]+nx[N]+1, ng[N]);  // DCt
+    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);  // d
     mem_size+= d_size_strvec(nu[N]+nx[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
     mem_size+= d_size_strvec(nu[N]+nx[N]);
-    mem_size+= d_size_strvec(nu[N]+nx[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ngg[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
+    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
 
 
     // Adding memory for extra variables in the Riccati recursion
@@ -766,39 +884,43 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
     mem_size+=d_size_strmat(nx[ii], nx[ii]);
 
     for ( int ii=0; ii < N; ii++ ) {
-      mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
-      mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
+      mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+      mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+      mem_size+=d_size_strvec(nb[ii]+ng[ii]);
 
-      mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-      mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+      mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+      mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
     }
 
     mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
     mem_size+=d_size_strmat(nx[ii], nx[ii]);
 
     ii = N;
-    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
 
-    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ngg[ii]);
-    mem_size+=d_size_strvec(2*nb[ii]+2*ngg[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
 
     // mem_size+=d_size_strmat(nx[M]+1, nx[M]);
     // mem_size+=d_size_strmat(nx[M]+1, nx[M]);
 
 
-    mem_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ngg);
+    mem_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
     // add memory for riccati work space
 
     mem_size+=sizeof(double)*max_ip_iter*5;
     mem_size+=sizeof(double)*1000000;
     // add memory for stats
+
+    } else {  // XXX giaf fortran interface
+        mem_size = 0;
+    }
 
     v_zeros_align(mem_, mem_size);
 
