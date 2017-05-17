@@ -2,12 +2,6 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
-
-
 #include "acados/utils/types.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/allocate_ocp_qp.h"
