@@ -23,7 +23,6 @@
 
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-//#include "hpmpc/include/aux_d.h"
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
     #pragma clang diagnostic push
