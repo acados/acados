@@ -26,6 +26,7 @@
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "hpmpc/include/c_interface.h"
 #include "hpmpc/include/mpc_solvers.h"
 #include "hpmpc/include/lqcp_solvers.h"
@@ -458,7 +459,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     struct d_strvec hst[N+1];
     struct d_strvec hsPb[N+1];
     struct d_strmat hsL[N+1];
-    struct d_strmat hsLxt[N+1];
+//    struct d_strmat hsLxt[N+1];
     struct d_strmat hsric_work_mat[2];
 
     struct d_strvec hsdlam[N+1];  // to be checked
@@ -526,8 +527,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       ptr_memory += (&hsPb[ii+1])->memory_size;
       d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
       ptr_memory += (&hsL[ii])->memory_size;
-      d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
-      ptr_memory += (&hsLxt[ii])->memory_size;
+//      d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
+//      ptr_memory += (&hsLxt[ii])->memory_size;
 
       d_create_strvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
       ptr_memory += (&hstinv[ii])->memory_size;
@@ -587,8 +588,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
     ptr_memory += (&hsL[ii])->memory_size;
-    d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
-    ptr_memory += (&hsLxt[ii])->memory_size;
+//    d_create_strmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
+//    ptr_memory += (&hsLxt[ii])->memory_size;
 
     d_create_strvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
     ptr_memory += (&hslamt[ii])->memory_size;
@@ -630,14 +631,14 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ptr_memory+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
 
     // update cost function matrices and vectors (box constraints)
-    d_update_hessian_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-      &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M],
+    d_update_hessian_gradient_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M], \
+      &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M], \
       &hsQx[M], &hsqx[M]);
 
     // backward riccati factorization and solution at the end
-    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
-      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], &hsDCt[M], &hsQx[M],
-      &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], &hsLxt[M], work_ric);
+    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M], \
+      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], &hsDCt[M], &hsQx[M], \
+      &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], work_ric);
 
     // extract chol factor of [P p; p' *]
     // TODO(Andrea): have m and n !!!!!
@@ -647,7 +648,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // d_print_strmat(nx[M]+1, nx[M], &sLxM, 0, 0);
 
     // recover [P p; p' *]
-    dsyrk_ln_libstr(nx[M]+1, nx[M], nx[M], 1.0, &sLxM, 0, 0, &sLxM, 0, 0, 0.0,
+    dsyrk_ln_mn_libstr(nx[M]+1, nx[M], nx[M], 1.0, &sLxM, 0, 0, &sLxM, 0, 0, 0.0,
       &sPpM, 0, 0, &sPpM, 0, 0);
 
     // backup stage M
@@ -675,7 +676,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
       0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
       &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
-      &hsLxt[M], hsric_work_mat);
+      hsric_work_mat);
 
     // compute alpha, dlam and dt
     real_t alpha = 1.0;

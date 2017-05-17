@@ -23,10 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t *nu,
     ocp_qp_in *const qp) {
