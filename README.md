@@ -8,6 +8,7 @@ Fast optimal control problem solvers
 If you are on Ubuntu (tested with 16.04), you can use the `install.sh` script that does everything for you.
 
 Otherwise, follow the steps below:
+
 1. Install the dependencies:
     ```
     sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev libeigen3-dev python3-tk
@@ -15,7 +16,7 @@ Otherwise, follow the steps below:
     sudo apt-get install python3-scipy python3-numpy python3-matplotlib
     ```
 
-1. Download CasADi into the <acados_root_folder>/external folder:
+1. Download CasADi into the `<acados_root_folder>/external` folder:
     ```
     cd external
     wget -q -nc http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz
@@ -36,7 +37,7 @@ Otherwise, follow the steps below:
     git submodule update --recursive --init
     ```
 
-1. Build and install swig. Make sure you don't have an older version installed (e.g. via the package system):
+1. Build and install `swig`. Make sure you don't have an older version installed (e.g. via the package system):
     ```
     cd external/swig
     ./autogen.sh
@@ -47,7 +48,7 @@ Otherwise, follow the steps below:
     cd ../.. # back to acados root folder
     ```
 
-1. Build acados
+1. Build `acados`
     ```
     mkdir -p build
     cd build
@@ -57,7 +58,7 @@ Otherwise, follow the steps below:
 
 ### Getting started
 
-To use ACADOS, you have to add ACADOS and CasADi paths to the respective environment variables (add those lines to your .bashrc / .zshrc to set the paths permanently):
+To use acados, you have to add acados and Casadi paths to the respective environment variables (add those lines to your .bashrc / .zshrc to set the paths permanently):
 ```
 export MATLABPATH=<path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 export PYTHONPATH=<path_to_acados_root_folder>/external/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
