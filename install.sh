@@ -14,12 +14,12 @@ tar -xf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1
 wget -q -nc http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
 mkdir -p casadi-py35-np1.9.1-v3.1.1
 tar -xf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
-#export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
 
 wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.1.1/linux/casadi-matlabR2014b-v3.1.1.tar.gz
 mkdir -p casadi-matlabR2014b-v3.1.1
 tar -xf casadi-matlabR2014b-v3.1.1.tar.gz -C casadi-matlabR2014b-v3.1.1
-#export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
+export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 
 
 # Get all git submodules
