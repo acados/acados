@@ -32,6 +32,7 @@ Otherwise, follow the steps below:
     tar -xf casadi-matlabR2014b-v3.1.1.tar.gz -C casadi-matlabR2014b-v3.1.1
     cd ..
     ```
+
 1. Initialize all submodules
     ```
     git submodule update --recursive --init
@@ -43,29 +44,31 @@ Otherwise, follow the steps below:
     ./autogen.sh
     ./configure --prefix=$(pwd)/swig_install --enable-silent-rules
     make
-    make install > /dev/null # quiet installation
-    export PATH=$(pwd):$PATH # add to path environment variable to make it visible for the acados build process
+    make install > /dev/null    # quiet installation
+    export PATH=$(pwd):$PATH    # add swig to PATH
     cd ../.. # back to acados root folder
     ```
 
-1. Build `acados`
+1. Build and install `acados`. By default, `acados` is installed in `$HOME/local/lib`. If you want to install `acados` elsewhere, pass `-D ACADOS_INSTALL_DIR=<path_to_acados_installation_folder>` to `cmake` below.
     ```
     mkdir -p build
     cd build
-    cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 .. # set SWIG_MATLAB=0 if you don't have matlab installed
-    make install # installs into ~/local/lib
+    cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 ..   # set SWIG_MATLAB=0 if you don't have MATLAB installed
+    make install
     ```
+
 
 ### Getting started
 
-To use acados, you have to add acados and Casadi paths to the respective environment variables (add those lines to your .bashrc / .zshrc to set the paths permanently):
+To use acados, you have to add acados and CasADi paths to the respective environment variables (add those lines to your `.bashrc` or `.zshrc` to set the paths permanently):
+
 ```
 export MATLABPATH=<path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 export PYTHONPATH=<path_to_acados_root_folder>/external/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
-export PYTHONPATH=<path_to_acados_installation_folder>:$PYTHONPATH # usually ~/local/lib
+export PYTHONPATH=<path_to_acados_installation_folder>:$PYTHONPATH
 ```
 
-Now you can run the python example:
+Now you should be able to run the python example:
 ```
 python3 examples/python/ocp_nlp.py
 ```
