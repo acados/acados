@@ -2,10 +2,40 @@
 [![Build Status](https://secure.travis-ci.org/acados/acados.png?branch=master)](http://travis-ci.org/acados/acados)
 [![codecov](https://codecov.io/gh/acados/acados/branch/master/graph/badge.svg)](https://codecov.io/gh/acados/acados)
 
-Fast optimal control problem solvers
+Fast and embedded optimal control problem solvers.
 
 ### Installation
-If you are on Ubuntu (tested with 16.04), you can use the `install.sh` script that does everything for you.
+If you are on Ubuntu (tested with 16.04), you can run `./install.sh`. You can also
+follow the [manual installation instructions](#manual-installation) below.
+
+### Getting started
+
+#### MATLAB
+First, add CasADi and acados to your MATLAB path. From a MATLAB command window
+```
+addpath <path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.1.1
+addpath <path_to_acados_installation_folder>
+% To permanently add these paths:
+savepath
+```
+Run an acados example, from `<path_to_acados_root_folder>/examples/matlab/`:
+```
+ocp_nlp_example.m
+```
+
+#### Python
+
+acados only supports `Python3`. Add CasADi and acados to the `PYTHONPATH` environment variable (add those lines to your `.bashrc` or `.zshrc` to set the paths permanently):
+```
+export PYTHONPATH=<path_to_acados_root_folder>/external/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+export PYTHONPATH=<path_to_acados_installation_folder>:$PYTHONPATH
+```
+To run a Python example from the acados root folder:
+```
+python examples/python/ocp_nlp.py
+```
+
+### Manual Installation
 
 Otherwise, follow the steps below:
 
@@ -56,19 +86,3 @@ Otherwise, follow the steps below:
     cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 ..   # set SWIG_MATLAB=0 if you don't have MATLAB installed
     make install
     ```
-
-
-### Getting started
-
-To use acados, you have to add acados and CasADi paths to the respective environment variables (add those lines to your `.bashrc` or `.zshrc` to set the paths permanently):
-
-```
-export MATLABPATH=<path_to_acados_root_folder>/external/casadi-matlabR2014b-v3.1.1:$MATLABPATH
-export PYTHONPATH=<path_to_acados_root_folder>/external/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
-export PYTHONPATH=<path_to_acados_installation_folder>:$PYTHONPATH
-```
-
-Now you should be able to run the python example:
-```
-python3 examples/python/ocp_nlp.py
-```
