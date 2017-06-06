@@ -62,7 +62,7 @@ extern int vde_chain_nm9(const real_t** arg, real_t** res, int* iw, real_t* w, i
 // using Eigen::MatrixXd;
 // using Eigen::VectorXd;
 
-int main(){
+int main() {
     const int INEXACT = 0;
     const int d = 0;
     const int NMF = 1;
