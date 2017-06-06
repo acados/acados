@@ -26,22 +26,22 @@ add_test(
 #     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
 # )
 
-add_executable(nonlinear_chain_ocp_nlp
-  ${EXAMPLES_SRC_DIR}/c/nonlinear_chain_ocp_nlp.cpp
-  ${EXAMPLES_SRC_DIR}/c/chain_model/chain_model.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm2.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm3.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm4.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm5.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm6.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm7.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm8.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm9.c
+#add_executable(nonlinear_chain_ocp_nlp
+#  ${EXAMPLES_SRC_DIR}/c/nonlinear_chain_ocp_nlp.cpp
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/chain_model.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm2.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm3.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm4.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm5.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm6.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm7.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm8.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm9.c
 
-  ${EXAMPLES_SRC_DIR}/c/chain_model/vde_chain_nm2.c
-  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm2.c
-)
-target_link_libraries(nonlinear_chain_ocp_nlp acados)
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/vde_chain_nm2.c
+#  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm2.c
+#)
+#target_link_libraries(nonlinear_chain_ocp_nlp acados)
 
 add_executable(mass_spring_qpoases_example ${EXAMPLES_SRC_DIR}/c/mass_spring_qpoases.c)
 target_link_libraries(mass_spring_qpoases_example acados)
