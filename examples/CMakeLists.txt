@@ -26,7 +26,7 @@ add_test(
 #     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
 # )
 
-#add_executable(nonlinear_chain_ocp_nlp
+#add_executable(nonlinear_chain_ocp_nlp # for sumulink interface
 #  ${EXAMPLES_SRC_DIR}/c/nonlinear_chain_ocp_nlp.cpp
 #  ${EXAMPLES_SRC_DIR}/c/chain_model/chain_model.c
 #  ${EXAMPLES_SRC_DIR}/c/chain_model/jac_chain_nm2.c
