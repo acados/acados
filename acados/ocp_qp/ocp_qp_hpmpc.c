@@ -943,6 +943,7 @@ int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_) {
     args->mu0 = 0.1;
     args->warm_start = 0;
     args->M = args->N;
+    args->N2 = args->N;
     } else {
       printf("Invalid hpmpc options.");
       return -1;
