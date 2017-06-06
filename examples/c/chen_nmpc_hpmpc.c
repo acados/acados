@@ -38,7 +38,7 @@
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
-#include "examples/Chen/Chen_model.h"
+#include "examples/c/Chen_model/chen_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
@@ -86,7 +86,7 @@ int main() {
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10;
+    int_t   max_iters           = 10000;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
@@ -122,7 +122,7 @@ int main() {
 
     sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
-    sim_erk_create_opts(4, &rk_opts);
+    sim_erk_create_arguments(&rk_opts, 4);
     sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN+1] = {0};
@@ -155,7 +155,7 @@ int main() {
     /************************************************
     * box constraints
     ************************************************/
-    int ii, jj;
+    int ii;
 
     nb[0] = 0;
     for (ii = 1; ii < N; ii++) nb[ii] = 0;
@@ -320,16 +320,16 @@ int main() {
     qp_out.lam = plam;
 
     acado_timer timer;
-    real_t timings = 0;
+    real_t total_time = 0;
+    acado_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
-        acado_tic(&timer);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             for (int_t i = 0; i < N; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                sim_erk(&sim_in, &sim_out, &rk_opts, &erk_work);
+                sim_erk(&sim_in, &sim_out, &rk_opts, 0, &erk_work);
 
                 // Construct QP matrices
                 for (int_t j = 0; j < NX; j++) {
@@ -370,12 +370,12 @@ int main() {
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         shift_states(w, x_end, N);
         shift_controls(w, u_end, N);
-        timings += acado_toc(&timer);
     }
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
-    printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+    total_time = acado_toc(&timer);
+    printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
     // free(workspace);
     return 0;
 }

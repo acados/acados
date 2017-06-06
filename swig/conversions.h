@@ -17,39 +17,32 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
-#define ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#ifndef SWIG_CONVERSIONS_H_
+#define SWIG_CONVERSIONS_H_
 
-#ifdef __cplusplus
-extern "C" {
+#if defined(SWIGMATLAB)
+
+    typedef mxArray LangObject;
+    #define LANG_SEQUENCE_NAME "cell array"
+    #define LANG_MAP_NAME "struct"
+    #define LANG_MATRIX_NAME "matrix"
+
+#elif defined(SWIGPYTHON)
+
+    #define NO_IMPORT_ARRAY
+    #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+    #include "numpy/arrayobject.h"
+
+    typedef PyObject LangObject;
+    #define LANG_SEQUENCE_NAME "list"
+    #define LANG_MAP_NAME "dictionary"
+    #define LANG_MATRIX_NAME "ndarray"
+
+    #define PyArray_NewFromDataF(nd, dims, typenum, data) \
+            PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
+                        data, 0, NPY_ARRAY_FARRAY, NULL)
 #endif
 
-#include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    real_t *K_traj;
-
-    real_t *rhs_forw_in;
-    real_t *out_forw_traj;
-
-    real_t *adj_traj;
-    real_t *rhs_adj_in;
-    real_t *out_adj_tmp;
-} sim_erk_workspace;
-
-
-int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
-
-int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
-
-void sim_erk_create_arguments(void *args, int_t num_stages);
-
-void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-void sim_erk_destroy(void *work);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#endif  // ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#endif  // SWIG_CONVERSIONS_H_

@@ -44,8 +44,11 @@ add_executable(unit_tests
 target_include_directories(unit_tests PRIVATE "${EXTERNAL_SRC_DIR}/eigen")
 target_link_libraries(unit_tests acados)
 set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/test)
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    target_compile_definitions(unit_tests PRIVATE OOQP)
+endif()
 
 # Add as test in ctest
-add_test(NAME unit_tests COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_BINARY_DIR}/test ./unit_tests)
+add_test(NAME unit_tests COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_BINARY_DIR}/test ./unit_tests -a)
 
 file(COPY "${PROJECT_SOURCE_DIR}/acados/sim/simplified/" DESTINATION "${PROJECT_BINARY_DIR}/test/simplified/")

@@ -1,3 +1,30 @@
+#
+#    This file is part of acados.
+#
+#    acados is free software; you can redistribute it and/or
+#    modify it under the terms of the GNU Lesser General Public
+#    License as published by the Free Software Foundation; either
+#    version 3 of the License, or (at your option) any later version.
+#
+#    acados is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with acados; if not, write to the Free Software Foundation,
+#    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#
+#
+
+# Only test acados library for coverage
+if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE MATCHES "lcov"))
+    include(CodeCoverage)
+    setup_target_for_coverage(acados_coverage ctest coverage)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
+endif()
+
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/*.c)
 # Exclude helper files
@@ -24,6 +51,7 @@ target_link_libraries(acados
         qpdunes
         m
 )
+
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
@@ -37,6 +65,10 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
             ${FORTRAN_LIBRARY}
             m
     )
+endif()
+
+if(COVERAGE MATCHES "lcov")
+    target_link_libraries(acados PRIVATE --coverage)
 endif()
 
 target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES

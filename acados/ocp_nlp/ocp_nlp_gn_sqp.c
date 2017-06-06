@@ -31,6 +31,7 @@
 #include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/print.h"
@@ -143,6 +144,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     int_t status;
 
     acado_tic(&timer);
+
     for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
 #if PARALLEL
@@ -150,7 +152,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 #endif
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
-            sim_RK_opts *opts = sim[i].in->opts;
+            sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
             // Pass state and control to integrator
             for (int_t j = 0; j < nx[i]; j++) sim[i].in->x[j] = w[w_idx+j];
             for (int_t j = 0; j < nu[i]; j++) sim[i].in->u[j] = w[w_idx+nx[i]+j];
@@ -158,7 +160,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             if (nlp_in->freezeSens) {  // freeze inexact sensitivities after first SQP iteration !!
                 opts->scheme.freeze = sqp_iter > 0;
             }
-            sim[i].fun(sim[i].in, sim[i].out, sim[i].mem, sim[i].work);
+            sim[i].fun(sim[i].in, sim[i].out, sim[i].args, sim[i].mem, sim[i].work);
 
             // TODO(rien): transition functions for changing dimensions not yet implemented!
             for (int_t j = 0; j < nx[i]; j++) {
@@ -205,7 +207,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             // TODO(rien): only for diagonal Q, R matrices atm
             // TODO(rien): only for least squares cost with state and control reference atm
             if (i < N) {
-                sim_RK_opts *opts = sim[i].in->opts;
+                sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
                 for (int_t j = 0; j < nx[i]; j++) {
                     qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
                     // adjoint-based gradient correction:
@@ -275,17 +277,18 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
                         "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
     }
-    timings += acado_toc(&timer);
 
+    timings += acado_toc(&timer);
+#ifdef MEASURE_TIMINGS
     printf("\nAverage of %.3f ms in the integrator,\n",
             1e3*timings_sim/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in CasADi and\n",
             1e3*timings_ad/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in BLASFEO.\n",
             1e3*timings_la/(gn_sqp_args->common->maxIter));
+#endif
     printf("--Total of %.3f ms per SQP iteration.--\n",
             1e3*timings/(gn_sqp_args->common->maxIter));
-
     // Store trajectories:
     w_idx = 0;
     for (int_t i = 0; i < N; i++) {
@@ -337,6 +340,11 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
         mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         mem->qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
         qp_args = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
+    } else if (!strcmp(args->qp_solver_name, "hpmpc")) {
+        mem->qp_solver->fun = &ocp_qp_hpmpc;
+        mem->qp_solver->initialize = &ocp_qp_hpmpc_initialize;
+        mem->qp_solver->destroy = &ocp_qp_hpmpc_destroy;
+        qp_args = (void *) malloc(sizeof(ocp_qp_hpmpc_args));
     } else {
         printf("CHOSEN QP SOLVER FOR SQP METHOD NOT AVAILABLE!\n");
         exit(1);

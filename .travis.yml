@@ -5,58 +5,54 @@ python:
   - 3.5
 
 env:
-  - CXX="g++-6" CC="gcc-6"
-  - CXX="g++-5" CC="gcc-5"
-  - CXX="g++-4.9" CC="gcc-4.9"
-  - CXX="clang++-3.7" CC="clang-3.7"
+  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=1 SWIG_MATLAB=0 # no MATLAB support for gcc>=5
+  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=1 SWIG_MATLAB=0
+  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=1 SWIG_MATLAB=1 COVERAGE="lcov"
+  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=1 SWIG_MATLAB=1
 
 addons:
   apt:
     sources:
     - llvm-toolchain-precise-3.7
     - ubuntu-toolchain-r-test
-    packages:
-      - libgsl0-dev
-      - liblapack-dev
-      - libopenblas-dev
-      - cppcheck
-      - g++-6
-      - gcc-6
-      - g++-4.9
-      - gcc-4.9
-      - gfortran-4.9
-      - g++-5
-      - gcc-5
-      - clang-3.7
-      - swig
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      openssl aes-256-cbc -K $encrypted_953dc9b02fae_key -iv $encrypted_953dc9b02fae_iv
-      -in external/encrypted_script.enc -out external/encrypted_script -d;
+      openssl aes-256-cbc -K $encrypted_15c483c21b41_key -iv $encrypted_15c483c21b41_iv -in external/encrypted_scripts.tar.enc -out external/encrypted_scripts.tar -d;
+      tar -xvf external/encrypted_scripts.tar -C external;
     fi'
 
 install:
   - pushd external
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      source encrypted_script;
+      source download_encrypted_files.sh;
     fi'
   - popd
-  - travis_retry source install_packages.sh
+  - travis_retry source .travis_install.sh
   - export MPLBACKEND=Agg # For matplotlib
-  - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH # For acados
+  - export MATLABPATH=$HOME/local/lib:$MATLABPATH
+  - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
+
+before_script:
+  - set -e
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Test ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Test -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - cmake --build build --clean-first
   - cmake --build build --target install
   - cmake --build build --target lint
+  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
   - cmake -E chdir build ctest --output-on-failure
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
   - cmake --build build --clean-first
-  - pushd experimental/dang/esp32
-  - ./test_all_linux.sh
+  #- pushd experimental/dang/esp32
+  #- ./test_all_linux.sh
+
+after_success:
+  - pushd ${TRAVIS_BUILD_DIR}/build/test
+  # Uploading report to CodeCov
+  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"

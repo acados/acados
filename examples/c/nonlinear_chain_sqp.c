@@ -21,12 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_kernel.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -186,21 +182,14 @@ int main() {
     sim_info info[NN];
 
     sim_RK_opts rk_opts[NN];
-    sim_erk_workspace erk_work[NN];
-    sim_lifted_irk_workspace irk_work[NN];
+    void *sim_work = NULL;
     sim_lifted_irk_memory irk_mem[NN];
-
-    // TODO(rien): can I move this somewhere inside the integrator?
-    struct d_strmat str_mat[NN];
-    struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
         sim_in[jj].nSteps = 2;
         sim_in[jj].step = T/sim_in[jj].nSteps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
-
-        sim_in[jj].opts = &rk_opts[jj];
 
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;
@@ -260,17 +249,17 @@ int main() {
         sim_out[jj].S_forw = malloc(sizeof(*sim_out[jj].S_forw) * (NX*(NX+NU)));
         sim_out[jj].info = &info[jj];
 
-        irk_work[jj].str_mat = &str_mat[jj];
-        irk_work[jj].str_sol = &str_sol[jj];
+        int_t workspace_size;
         if (implicit > 0) {
-            sim_irk_create_opts(implicit, "Gauss", &rk_opts[jj]);
+            sim_irk_create_arguments(&rk_opts[jj], implicit, "Gauss");
 
-            sim_lifted_irk_create_workspace(&sim_in[jj], &irk_work[jj]);
-            sim_lifted_irk_create_memory(&sim_in[jj], &irk_mem[jj]);
+            workspace_size = sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
+            sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
         } else {
-            sim_erk_create_opts(4, &rk_opts[jj]);
-            sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
+            sim_erk_create_arguments(&rk_opts[jj], 4);
+            workspace_size = sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
+        if (jj == 0) sim_work = (void *) malloc(workspace_size);
     }
 
     int_t nx[NN+1] = {0};
@@ -401,112 +390,114 @@ int main() {
 //    for (int_t iter = 0; iter < max_iters; iter++) {
 //        printf("\n------ TIME STEP %d ------\n", iter);
 
-        acado_tic(&timer);
-        for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
-            feas = -1e10; stepX = -1e10; stepU = -1e10;
+    acado_tic(&timer);
+    for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
+        feas = -1e10; stepX = -1e10; stepU = -1e10;
 
 #if PARALLEL
-    #pragma omp parallel for
+#pragma omp parallel for
 #endif
-            for (int_t i = 0; i < N; i++) {
-                // Pass state and control to integrator
-                for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
-                for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
-                if (implicit > 0) {
-                    sim_lifted_irk(&sim_in[i], &sim_out[i], &irk_mem[i], &irk_work[i]);
-                } else {
-                    sim_erk(&sim_in[i], &sim_out[i], 0, &erk_work[i]);
-                }
-
-                for (int_t j = 0; j < NX; j++) {
-                    pb[i][j] = sim_out[i].xn[j] - w[(i+1)*(NX+NU)+j];
-                    if (fabs(pb[i][j]) > feas) feas = fabs(pb[i][j]);
-                    for (int_t k = 0; k < NX; k++)
-                        pA[i][j*NX+k] = sim_out[i].S_forw[j*NX+k];  // COLUMN MAJOR FROM CASADI
-                }
-                for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++)
-                        pB[i][j*NX+k] = sim_out[i].S_forw[(NX+j)*NX+k];  // COLUMN MAJOR FROM CASADI
-
-                timings_sim += sim_out[i].info->CPUtime;
-                timings_la += sim_out[i].info->LAtime;
-                timings_ad += sim_out[i].info->ADtime;
+        for (int_t i = 0; i < N; i++) {
+            // Pass state and control to integrator
+            for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
+            for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
+            if (implicit > 0) {
+                sim_lifted_irk(&sim_in[i], &sim_out[i], &rk_opts[i], &irk_mem[i], sim_work);
+            } else {
+                sim_erk(&sim_in[i], &sim_out[i], &rk_opts[i], 0, sim_work);
             }
-            for (int_t i = 0; i < N; i++) {
-                // Update bounds:
-                if ( i == 0 ) {
-                    for (int_t j = 0; j < NU; j++) {
-                        lb0[NX+j] = -UMAX - w[NX+j];
-                        ub0[NX+j] = UMAX - w[NX+j];
-                    }
-                } else {
-                    for (int_t j = 0; j < NU; j++) {
-                        lb1[i-1][j] = -UMAX - w[i*(NX+NU)+NX+j];
-                        ub1[i-1][j] = UMAX - w[i*(NX+NU)+NX+j];
-                    }
-                }
 
-                // Construct QP matrices
-                for (int_t j = 0; j < NX; j++) {
-                    pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
-                }
+            for (int_t j = 0; j < NX; j++) {
+                pb[i][j] = sim_out[i].xn[j] - w[(i+1)*(NX+NU)+j];
+                if (fabs(pb[i][j]) > feas) feas = fabs(pb[i][j]);
+                for (int_t k = 0; k < NX; k++)
+                    pA[i][j*NX+k] = sim_out[i].S_forw[j*NX+k];  // COLUMN MAJOR FROM CASADI
+            }
+            for (int_t j = 0; j < NU; j++)
+                for (int_t k = 0; k < NX; k++)
+                    pB[i][j*NX+k] = sim_out[i].S_forw[(NX+j)*NX+k];  // COLUMN MAJOR FROM CASADI
+
+            timings_sim += sim_out[i].info->CPUtime;
+            timings_la += sim_out[i].info->LAtime;
+            timings_ad += sim_out[i].info->ADtime;
+        }
+        for (int_t i = 0; i < N; i++) {
+            // Update bounds:
+            if ( i == 0 ) {
                 for (int_t j = 0; j < NU; j++) {
-                    pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
+                    lb0[NX+j] = -UMAX - w[NX+j];
+                    ub0[NX+j] = UMAX - w[NX+j];
                 }
-            }
-            for (int_t j = 0; j < NX; j++) {
-                lb0[j] = (x0[j]-w[j]);
-            }
-            for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
-            }
-
-            // Set updated bounds:
-            hlb[0] = lb0;
-            hub[0] = ub0;
-            for (int_t i = 1; i < N; i++) {
-                hlb[i] = lb1[i-1];
-                hub[i] = ub1[i-1];
-            }
-
-            int status = 0;
-            status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
-            if (status) {
-                printf("qpOASES returned error status %d\n", status);
-                return -1;
-            }
-            for (int_t i = 0; i < N; i++) {
-                for (int_t j = 0; j < NX; j++) {
-                    w[i*(NX+NU)+j] += qp_out.x[i][j];
-                    if (fabs(qp_out.x[i][j]) > stepX) stepX = fabs(qp_out.x[i][j]);
-                }
+            } else {
                 for (int_t j = 0; j < NU; j++) {
-                    w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
-                    if (fabs(qp_out.u[i][j]) > stepU) stepU = fabs(qp_out.u[i][j]);
+                    lb1[i-1][j] = -UMAX - w[i*(NX+NU)+NX+j];
+                    ub1[i-1][j] = UMAX - w[i*(NX+NU)+NX+j];
                 }
             }
-            for (int_t j = 0; j < NX; j++) {
-                w[N*(NX+NU)+j] += qp_out.x[N][j];
-                if (fabs(qp_out.x[N][j]) > stepX) stepX = fabs(qp_out.x[N][j]);
-            }
 
-            if (sqp_iter == max_sqp_iters-1) {
-                fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
-                        "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
+            // Construct QP matrices
+            for (int_t j = 0; j < NX; j++) {
+                pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
+            }
+            for (int_t j = 0; j < NU; j++) {
+                pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
             }
         }
+        for (int_t j = 0; j < NX; j++) {
+            lb0[j] = (x0[j]-w[j]);
+        }
+        for (int_t j = 0; j < NX; j++) {
+            pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
+        }
+
+        // Set updated bounds:
+        hlb[0] = lb0;
+        hub[0] = ub0;
+        for (int_t i = 1; i < N; i++) {
+            hlb[i] = lb1[i-1];
+            hub[i] = ub1[i-1];
+        }
+
+        int status = 0;
+        status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
+        if (status) {
+            printf("qpOASES returned error status %d\n", status);
+            return -1;
+        }
+        for (int_t i = 0; i < N; i++) {
+            for (int_t j = 0; j < NX; j++) {
+                w[i*(NX+NU)+j] += qp_out.x[i][j];
+                if (fabs(qp_out.x[i][j]) > stepX) stepX = fabs(qp_out.x[i][j]);
+            }
+            for (int_t j = 0; j < NU; j++) {
+                w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
+                if (fabs(qp_out.u[i][j]) > stepU) stepU = fabs(qp_out.u[i][j]);
+            }
+        }
+        for (int_t j = 0; j < NX; j++) {
+            w[N*(NX+NU)+j] += qp_out.x[N][j];
+            if (fabs(qp_out.x[N][j]) > stepX) stepX = fabs(qp_out.x[N][j]);
+        }
+
+        if (sqp_iter == max_sqp_iters-1) {
+            fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
+                    "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
+        }
+    }
 //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
 //        shift_states(w, x_end, N);
 //        shift_controls(w, u_end, N);
         timings += acado_toc(&timer);
 //    }
 
+#ifdef MEASURE_TIMINGS
         printf("\nAverage of %.3f ms in the integrator,\n",
                 1e3*timings_sim/(max_sqp_iters*max_iters));
         printf("  of which %.3f ms spent in CasADi and\n",
                 1e3*timings_ad/(max_sqp_iters*max_iters));
         printf("  of which %.3f ms spent in BLASFEO.\n",
                 1e3*timings_la/(max_sqp_iters*max_iters));
+#endif
         printf("--Total of %.3f ms per SQP iteration.--\n",
                 1e3*timings/(max_sqp_iters*max_iters));
 

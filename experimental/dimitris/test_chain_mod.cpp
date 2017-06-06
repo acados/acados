@@ -23,7 +23,8 @@
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_i_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
@@ -218,7 +219,7 @@ int main() {
                 sim_lifted_irk_create_workspace(&sim_in[jj], &irk_work[jj]);
                 sim_lifted_irk_create_memory(&sim_in[jj], &irk_mem[jj]);
             } else {
-                sim_erk_create_opts(4, &rk_opts[jj]);
+                sim_erk_create_arguments(4, &rk_opts[jj]);
                 sim_erk_create_workspace(&sim_in[jj], &erk_work[jj]);
             }
         }

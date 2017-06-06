@@ -28,7 +28,8 @@
 #include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
 #endif
 
-#include "hpmpc/include/aux_d.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
@@ -169,7 +170,7 @@ int main() {
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
 
-    int N2 = 3;   // horizon length
+    int N2 = 3;   // horizon length of partially condensed problem
 
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -271,6 +272,7 @@ int main() {
         idxb0[jj] = nxx[0]+jj;
     }
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
+    //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
 
     int *idxb1;
     int_zeros(&idxb1, nbb[1], 1);
@@ -289,6 +291,7 @@ int main() {
         idxb1[jj] = jj;
     }
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
+    //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
 
     int *idxbN;
     int_zeros(&idxbN, nbb[N], 1);
@@ -301,7 +304,8 @@ int main() {
         ubN[jj] = 4.0;   //   umax
         idxbN[jj] = jj;
     }
-    //    int_print_mat(nbb[N], 1, idxb1, nbb[N]);
+    //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
+    //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
 
     /************************************************
     * general constraints
@@ -433,15 +437,32 @@ int main() {
     double *hu[N];
     double *hpi[N];
     double *hlam[N+1];
+    double *ht[N+1];
 
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*nbb[ii], 1);  // Andrea: why do we have 4*nb here?
+        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
     }
     d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*nbb[N], 1);
+    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
+
+    /************************************************
+    * XXX initial guess
+    ************************************************/
+
+    double *hux_in[N+1];
+    double *hlam_in[N+1];
+    double *ht_in[N+1];
+
+    for (ii = 0; ii <= N; ii++) {
+        d_zeros(&hux_in[ii], nuu[ii]+nxx[ii], 1);
+        d_zeros(&hlam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&ht_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+    }
 
     /************************************************
     * create the in and out struct
@@ -474,6 +495,7 @@ int main() {
     qp_out.u = hu;
     qp_out.pi = hpi;
     qp_out.lam = hlam;
+    qp_out.t = ht;  // XXX why also the slack variables ???
 
     /************************************************
     * solver arguments (fully sparse)
@@ -484,22 +506,34 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAXITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 0.0;
+    hpmpc_args.mu0 = 1.0;  // 0.0
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
+    hpmpc_args.M = N;
     double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
     hpmpc_args.inf_norm_res = &inf_norm_res[0];
+
+// XXX
+    hpmpc_args.ux0 = hux_in;
+    hpmpc_args.lam0 = hlam_in;
+    hpmpc_args.t0 = ht_in;
 
     /************************************************
     * work space (fully sparse)
     ************************************************/
 
-    int work_space_size =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+//  int work_space_size =
+//      ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    int work_space_size = 0;
+//  for(int iii=0; iii<=N; iii++) printf("\n%d\n", qp_in.nb[iii]);
+    work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
 
     void *workspace = malloc(work_space_size);
+
+    void *mem;
+    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
     /************************************************
     * call the solver (fully sparse)
@@ -510,9 +544,11 @@ int main() {
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
+//  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+//        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop
@@ -553,8 +589,8 @@ int main() {
     * work space (partial condensing)
     ************************************************/
 
-    int work_space_size_part_cond =
-        ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+    int work_space_size_part_cond = 0;
+    work_space_size_part_cond = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size_part_cond);
 
     void *workspace_part_cond = malloc(work_space_size_part_cond);
@@ -567,7 +603,7 @@ int main() {
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace_part_cond);
+        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace_part_cond);
     }
 
     gettimeofday(&tv1, NULL);  // stop
@@ -637,11 +673,18 @@ int main() {
     for (ii = 0; ii < N; ii++) {
         d_free(hx[ii]);
         d_free(hu[ii]);
+        d_free(hpi[ii]);
+        d_free(hlam[ii]);
+        d_free(ht[ii]);
     }
     d_free(hx[N]);
+    d_free(hlam[N]);
+    d_free(ht[N]);
 
     free(workspace);
+#if 0
     free(workspace_part_cond);
+#endif
 
     return 0;
 }

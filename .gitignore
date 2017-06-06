@@ -54,8 +54,10 @@ Thumbs.db
 ############
 *external/OOQP
 *external/coinhsl
+*external/matlab
 *external/download
-*encrypted_script
+*download_software
+*download_matlab
 
 # Auto-generated files #
 ########################
