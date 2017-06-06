@@ -29,7 +29,7 @@ install:
       source download_encrypted_files.sh;
     fi'
   - popd
-  - travis_retry source install_packages.sh
+  - travis_retry source .travis_install.sh
   - export MPLBACKEND=Agg # For matplotlib
   - export MATLABPATH=$HOME/local/lib:$MATLABPATH
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH

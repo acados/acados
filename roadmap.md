@@ -29,3 +29,5 @@
 - [ ] allow for models with varying state and control dimensions
 - [ ] unit tests in Python (`unit_test` or `nosetests`) or MATLAB (built-in framework)
 - [ ] 'code generation' of driver files such that users don't have to code them manually
+- [ ] short Python doctests to exemplify usage of interface functions
+- [ ] installation via conda and/or pip
