@@ -16,7 +16,7 @@
 #include "sim_erk_integrator.h"
 #include "timing.h"
 #include "types.h"
-#include "Chen_model.h"
+#include "chen_model.h"
 
 #define NN 13
 #define NX 2
@@ -53,26 +53,31 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-void app_main(void)
-{
-    nvs_flash_init();
-    // tcpip_adapter_init();
-    // ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    // ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    // ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    // ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    // wifi_config_t sta_config = {
-    //     .sta = {
-    //         .ssid = "access_point_name",
-    //         .password = "password",
-    //         .bssid_set = false
-    //     }
-    // };
-    // ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
-    // ESP_ERROR_CHECK( esp_wifi_start() );
-    // ESP_ERROR_CHECK( esp_wifi_connect() );
+// void main_memory_task(void *pv)
+// {
+//   // function to test memory size
+//   // result on board Nano32 running ESP32:
+//   //  More stack size == less heap size for malloc(). Their sum is about 180 kB.
+//
+//   unsigned long occupy_heap_size=1024;
+//
+//   // void *dump_heap_size = malloc(occupy_heap_size); // for debug 115111: already big
+//   while(1) {
+//     int *dump_heap_size = malloc(occupy_heap_size);
+//     if(dump_heap_size == NULL) {
+//       printf("Pointer %p, failed to allocate %lu bytes.\n", dump_heap_size, occupy_heap_size);
+//       break;
+//     }
+//     else {
+//     printf("Pointer %p, Allocated %lu bytes.\n", dump_heap_size, occupy_heap_size);
+//     free(dump_heap_size);
+//     occupy_heap_size += 1024;
+//     }
+//   }
+// }
 
+void main_task(void *pv)
+{
     int loopnumber = 0; // for debug
 
     /* Begin acados code */
@@ -85,7 +90,7 @@ void app_main(void)
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10;
+    int_t   max_iters           = 10000;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
@@ -120,11 +125,11 @@ void app_main(void)
     sim_info erk_info;
     sim_out.info = &erk_info;
 
-    sim_erk_workspace erk_work;
     sim_RK_opts rk_opts;
-    sim_erk_create_arguments(4, &rk_opts);
-    sim_in.opts = &rk_opts;
-    sim_erk_create_workspace(&sim_in, &erk_work);
+    sim_erk_create_arguments(&rk_opts, 4);
+    void *erk_work;
+    int_t work_space_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
+    erk_work = (void *) malloc(work_space_size);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN] = {0};
@@ -146,6 +151,8 @@ void app_main(void)
     real_t *pr[N];
     real_t *px[N+1];
     real_t *pu[N];
+    real_t *ppi[N];
+    real_t *plam[N+1];
     real_t *px0[1];
     d_zeros(&px0[0], nx[0], 1);
     for (int_t i = 0; i < N; i++) {
@@ -157,13 +164,12 @@ void app_main(void)
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
+        d_zeros(&ppi[i], nx[i], 1);
+        d_zeros(&plam[i], nb[i]+nc[i], 1);
     }
     d_zeros(&pq[N], nx[N], 1);
     d_zeros(&px[N], nx[N], 1);
-
-    real_t *work = NULL;
-    real_t timings = 0;
-    int_t status = 0;
+    d_zeros(&plam[N], nb[N]+nc[N], 1);
 
     /* End acados code */
 
@@ -181,8 +187,7 @@ ocp_qp_in qp_in;
 qp_in.N = N;
 ocp_qp_out qp_out;
 ocp_qp_condensing_qpoases_args args;
-// real_t *work = NULL;  // move creator out of the loop
-// *work = NULL;
+real_t *work = NULL;
 qp_in.nx = nx;
 qp_in.nu = nu;
 qp_in.nb = nb;
@@ -203,21 +208,21 @@ qp_in.b = (const real_t **) pb;
 qp_in.lb = (const real_t **) px0;
 qp_out.x = px;
 qp_out.u = pu;
+qp_out.pi = ppi;
+qp_out.lam = plam;
 printf("Free heap size before initializing qpoases: %d\n",esp_get_free_heap_size()); // for debug
 
 acado_timer timer;
-// real_t timings = 0;  // move creator out of the loop
-timings = 0;
-
+real_t total_time = 0;
+acado_tic(&timer);
 for (int_t iter = 0; iter < max_iters; iter++) {
     // printf("\n------ ITERATION %d ------\n", iter);
-    acado_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
         for (int_t i = 0; i < N; i++) {
             // Pass state and control to integrator
             for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
             for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-            sim_erk(&sim_in, &sim_out, 0, &erk_work);
+            sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
             // Construct QP matrices
             for (int_t j = 0; j < NX; j++) {
                 pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -238,11 +243,9 @@ for (int_t iter = 0; iter < max_iters; iter++) {
         for (int_t j = 0; j < NX; j++) {
             pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
         }
-        // int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work); // move creator out of the loop
-        status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
+        int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
         if (status) {
             printf("qpOASES returned error status %d\n", status);
-            // return -1;
         }
         for (int_t i = 0; i < N; i++) {
             for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
@@ -253,16 +256,39 @@ for (int_t iter = 0; iter < max_iters; iter++) {
     for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
     shift_states(w, x_end, N);
     shift_controls(w, u_end, N);
-    timings += acado_toc(&timer);
 }
-printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
 
 #ifdef DEBUG
 print_states_controls(&w[0], N);
 #endif  // DEBUG
-printf("Average of %.3f ms per iteration.\n", 1e3*timings/max_iters);
+total_time = acado_toc(&timer);  // in seconds
+printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
+printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
 
 /* End acados code */
 
     }
+}
+
+void app_main(void)
+{
+    nvs_flash_init();
+    // tcpip_adapter_init();
+    // ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    // ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    // ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
+    // wifi_config_t sta_config = {
+    //     .sta = {
+    //         .ssid = "access_point_name",
+    //         .password = "password",
+    //         .bssid_set = false
+    //     }
+    // };
+    // ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
+    // ESP_ERROR_CHECK( esp_wifi_start() );
+    // ESP_ERROR_CHECK( esp_wifi_connect() );
+    xTaskCreate(main_task, "main", 10*1024, NULL, 5, NULL);
+    // xTaskCreate(main_memory_task, "main_memory", 10*1024, NULL, 5, NULL);
 }
