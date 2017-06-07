@@ -37,6 +37,8 @@ SRCEXT = c
 OBJEXT = o
 BINEXT = exe
 
+# Script below should NOT be touched
+
 # Scan for sources and objects to compile
 ALL_SRCS = $(wildcard $(SRCDIR)/*.$(SRCEXT))
 

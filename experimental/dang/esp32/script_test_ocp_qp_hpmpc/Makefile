@@ -26,6 +26,12 @@ CFLAGS += -Wno-implicit-function-declaration -Wno-unused-variable -Wno-unused-la
 IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)
 # main.c in the code of ESP32
 IGNORESRC += $(SRCDIR)/main.c
+# some BLASFEO files due to splitting code in the blas files
+IGNORESRC += $(SRCDIR)/x_blas1_lib.c
+IGNORESRC += $(SRCDIR)/x_blas2_lib.c
+IGNORESRC += $(SRCDIR)/x_blas3_diag_lib.c
+IGNORESRC += $(SRCDIR)/x_blas3_lib.c
+IGNORESRC += $(SRCDIR)/x_lapack_lib.c
 
 # Directories
 BUILDDIR = obj
@@ -41,6 +47,8 @@ LDFLAGS = -lm
 SRCEXT = c
 OBJEXT = o
 BINEXT = exe
+
+# Script below should NOT be touched
 
 # Scan for sources and objects to compile
 ALL_SRCS = $(wildcard $(SRCDIR)/*.$(SRCEXT))

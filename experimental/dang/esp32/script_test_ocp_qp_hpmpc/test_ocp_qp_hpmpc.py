@@ -26,14 +26,12 @@
 import sys
 import os
 import glob
-from subprocess import call
-from os.path import join
 
 print('Running python script to grab ocp_qp_hpmpc...')
 
-print(sys.version) # get python version, for debugging
+print(sys.version)  # get python version, for debugging
 
-if len(sys.argv)!= 3:
+if len(sys.argv) != 3:
     raise SyntaxError('This script needs exactly 2 arguments: \n \
     test_ocp_qp_hpmpc.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
@@ -41,61 +39,74 @@ if len(sys.argv)!= 3:
 
 # 1. Bring all necessary files to one directory.
 
-top_dir = str(sys.argv[1]).rstrip('/') # no trailing / in top_dir
-target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
+top_dir = str(sys.argv[1]).rstrip('/')  # no trailing / in top_dir
+target_dir = str(sys.argv[2]).rstrip('/')  # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
-workingcodefiles = \
-    ['examples/c/mass_spring_hpmpc.c', \
-    'acados/ocp_qp/ocp_qp_hpmpc.c', \
-    'acados/utils/print.c', \
-    'acados/utils/timing.c', \
-    'acados/utils/tools.c', \
-    'external/hpmpc/interfaces/c/fortran_order_interface_libstr.c', \
-    'external/hpmpc/mpc_solvers/d_ip2_res_hard_libstr.c', \
-    'external/hpmpc/mpc_solvers/c99/d_res_ip_res_hard_libstr.c', \
-    'external/hpmpc/mpc_solvers/c99/d_aux_ip_hard_libstr.c', \
-    'external/hpmpc/lqcp_solvers/d_back_ric_rec_libstr.c', \
-    'external/hpmpc/lqcp_solvers/d_part_cond_libstr.c', \
-    'external/hpmpc/auxiliary/d_aux_extern_depend_lib4.c', \
-    'external/hpmpc/auxiliary/i_aux.c', \
-    'external/blasfeo/kernel/c99/kernel_sgemm_4x4_lib4.c', \
-    'external/blasfeo/kernel/c99/kernel_sgemv_4_lib4.c', \
-    'external/blasfeo/blas/d_blas1_lib.c', \
-    'external/blasfeo/blas/d_blas2_lib.c', \
-    'external/blasfeo/blas/d_blas3_diag_lib.c', \
-    'external/blasfeo/blas/d_blas3_lib.c', \
-    'external/blasfeo/blas/d_lapack_lib.c', \
-    'external/blasfeo/auxiliary/d_aux_lib.c', \
-    'external/blasfeo/auxiliary/d_aux_extern_depend_lib.c']
-workingheaderfiles =\
-    ['acados/ocp_qp/ocp_qp_common.h', \
-    'acados/ocp_qp/ocp_qp_hpmpc.h', \
-    'acados/sim/sim_rk_common.h', \
-    'acados/utils/types.h', \
-    'acados/utils/print.h', \
-    'acados/utils/timing.h', \
-    'acados/utils/tools.h', \
-    'external/hpmpc/include/aux_s.h', \
-    'external/hpmpc/include/blas_d.h', \
-    'external/hpmpc/include/block_size.h', \
-    'external/hpmpc/include/target.h', \
-    'external/hpmpc/include/c_interface.h', \
-    'external/hpmpc/include/d_blas_aux.h', \
-    'external/hpmpc/include/tree.h', \
-    'external/hpmpc/include/kernel_d_lib4.h', \
-    'external/hpmpc/include/lqcp_aux.h', \
-    'external/hpmpc/include/lqcp_solvers.h', \
-    'external/hpmpc/include/mpc_aux.h', \
-    'external/hpmpc/include/mpc_solvers.h', \
-    'external/hpmpc/include/aux_d.h', \
-    'external/blasfeo/include/blasfeo_common.h', \
-    'external/blasfeo/include/blasfeo_target.h', \
-    'external/blasfeo/include/blasfeo_block_size.h', \
-    'external/blasfeo/include/blasfeo_d_kernel.h', \
-    'external/blasfeo/include/blasfeo_d_blas.h', \
-    'external/blasfeo/include/blasfeo_d_aux.h', \
-    'external/blasfeo/include/blasfeo_i_aux.h']
+workingcodefiles = [
+    'examples/c/mass_spring_hpmpc.c',
+
+    'acados/ocp_qp/ocp_qp_hpmpc.c',
+    'acados/utils/print.c',
+    'acados/utils/timing.c',
+    'acados/utils/tools.c',
+
+    'external/hpmpc/interfaces/c/fortran_order_interface_libstr.c',
+    'external/hpmpc/mpc_solvers/d_ip2_res_hard_libstr.c',
+    'external/hpmpc/mpc_solvers/d_res_ip_res_hard_libstr.c',
+    'external/hpmpc/mpc_solvers/c99/d_aux_ip_hard_libstr.c',
+    'external/hpmpc/lqcp_solvers/d_back_ric_rec_libstr.c',
+    'external/hpmpc/lqcp_solvers/d_part_cond_libstr.c',
+    'external/hpmpc/auxiliary/d_aux_extern_depend_lib4.c',
+    'external/hpmpc/auxiliary/i_aux.c',
+
+    'external/blasfeo/kernel/c99/kernel_sgemm_4x4_lib4.c',
+    'external/blasfeo/kernel/c99/kernel_sgemv_4_lib4.c',
+    'external/blasfeo/blas/d_blas1_lib.c',
+    'external/blasfeo/blas/d_blas2_lib.c',
+    'external/blasfeo/blas/d_blas3_diag_lib.c',
+    'external/blasfeo/blas/d_blas3_lib.c',
+    'external/blasfeo/blas/d_lapack_lib.c',
+    'external/blasfeo/blas/x_blas1_lib.c',
+    'external/blasfeo/blas/x_blas2_lib.c',
+    'external/blasfeo/blas/x_blas3_diag_lib.c',
+    'external/blasfeo/blas/x_blas3_lib.c',
+    'external/blasfeo/blas/x_lapack_lib.c',
+    'external/blasfeo/auxiliary/d_aux_lib.c',
+    'external/blasfeo/auxiliary/d_aux_ext_dep_lib.c',
+    'external/blasfeo/auxiliary/v_aux_ext_dep_lib.c']
+workingheaderfiles = [
+    'acados/ocp_qp/ocp_qp_common.h',
+    'acados/ocp_qp/ocp_qp_hpmpc.h',
+    'acados/sim/sim_rk_common.h',
+    'acados/utils/types.h',
+    'acados/utils/print.h',
+    'acados/utils/timing.h',
+    'acados/utils/tools.h',
+
+    'external/hpmpc/include/aux_s.h',
+    'external/hpmpc/include/blas_d.h',
+    'external/hpmpc/include/block_size.h',
+    'external/hpmpc/include/target.h',
+    'external/hpmpc/include/c_interface.h',
+    'external/hpmpc/include/d_blas_aux.h',
+    'external/hpmpc/include/tree.h',
+    'external/hpmpc/include/kernel_d_lib4.h',
+    'external/hpmpc/include/lqcp_aux.h',
+    'external/hpmpc/include/lqcp_solvers.h',
+    'external/hpmpc/include/mpc_aux.h',
+    'external/hpmpc/include/mpc_solvers.h',
+    'external/hpmpc/include/aux_d.h',
+
+    'external/blasfeo/include/blasfeo_common.h',
+    'external/blasfeo/include/blasfeo_target.h',
+    'external/blasfeo/include/blasfeo_block_size.h',
+    'external/blasfeo/include/blasfeo_d_kernel.h',
+    'external/blasfeo/include/blasfeo_d_blas.h',
+    'external/blasfeo/include/blasfeo_d_aux.h',
+    'external/blasfeo/include/blasfeo_d_aux_ext_dep.h',
+    'external/blasfeo/include/blasfeo_i_aux_ext_dep.h',
+    'external/blasfeo/include/blasfeo_v_aux_ext_dep.h']
 # Create directory structure and copy files
 if not os.path.exists(target_dir):
     os.system('mkdir '+target_dir)
@@ -110,87 +121,93 @@ print('Step 1: Necessary files copied.')
 
 # 2. Modify .h and .c files to adapt to the new code structure:
 # List of texts to be replaced:
-old_text =\
-    ['acados/ocp_qp/ocp_qp_common.h', \
-    'acados/ocp_qp/ocp_qp_hpmpc.h', \
-    'acados/utils/print.h', \
-    'acados/utils/timing.h', \
-    'acados/utils/tools.h', \
-    'acados/utils/types.h', \
-    'acados/sim/sim_common.h', \
+old_text = [
+    'acados/ocp_qp/ocp_qp_common.h',
+    'acados/ocp_qp/ocp_qp_hpmpc.h',
+    'acados/utils/print.h',
+    'acados/utils/timing.h',
+    'acados/utils/tools.h',
+    'acados/utils/types.h',
+    'acados/sim/sim_common.h',
 
-    'hpmpc/include/aux_d.h', \
-    'hpmpc/include/c_interface.h', \
-    'hpmpc/include/lqcp_solvers.h', \
-    'hpmpc/include/mpc_aux.h', \
-    'hpmpc/include/mpc_solvers.h', \
-    '../../include/aux_d.h', \
-    '../../include/aux_s.h', \
-    '../../include/blas_d.h', \
-    '../../include/block_size.h', \
-    '../../include/lqcp_solvers.h', \
-    '../../include/mpc_aux.h', \
-    '../../include/mpc_solvers.h', \
-    '../../include/target.h', \
-    '../include/aux_d.h', \
-    '../include/blas_d.h', \
-    '../include/block_size.h', \
-    '../include/d_blas_aux.h', \
-    '../include/kernel_d_lib4.h', \
-    '../include/lqcp_aux.h', \
-    '../include/lqcp_solvers.h', \
-    '../include/mpc_aux.h', \
+    'hpmpc/include/aux_d.h',
+    'hpmpc/include/c_interface.h',
+    'hpmpc/include/lqcp_solvers.h',
+    'hpmpc/include/mpc_aux.h',
+    'hpmpc/include/mpc_solvers.h',
+    '../../include/aux_d.h',
+    '../../include/aux_s.h',
+    '../../include/blas_d.h',
+    '../../include/block_size.h',
+    '../../include/lqcp_solvers.h',
+    '../../include/mpc_aux.h',
+    '../../include/mpc_solvers.h',
+    '../../include/target.h',
+    '../include/aux_d.h',
+    '../include/blas_d.h',
+    '../include/block_size.h',
+    '../include/d_blas_aux.h',
+    '../include/kernel_d_lib4.h',
+    '../include/lqcp_aux.h',
+    '../include/lqcp_solvers.h',
+    '../include/mpc_aux.h',
 
-    'blasfeo/include/blasfeo_common.h', \
-    'blasfeo/include/blasfeo_d_aux.h', \
-    'blasfeo/include/blasfeo_d_blas.h', \
-    'blasfeo/include/blasfeo_target.h', \
-    '../include/blasfeo_block_size.h', \
-    '../include/blasfeo_common.h', \
-    '../include/blasfeo_d_aux.h', \
-    '../include/blasfeo_d_kernel.h' \
+    'blasfeo/include/blasfeo_common.h',
+    'blasfeo/include/blasfeo_d_aux.h',
+    'blasfeo/include/blasfeo_d_aux_ext_dep.h',
+    'blasfeo/include/blasfeo_d_blas.h',
+    'blasfeo/include/blasfeo_i_aux_ext_dep.h',
+    'blasfeo/include/blasfeo_target.h',
+    'blasfeo/include/blasfeo_v_aux_ext_dep.h',
+    '../include/blasfeo_block_size.h',
+    '../include/blasfeo_common.h',
+    '../include/blasfeo_d_aux.h',
+    '../include/blasfeo_d_kernel.h'
     ]
 # List of new texts to replace old ones,
 #  in corresponding order to old_text:
-new_text =\
-    ['ocp_qp_common.h', \
-    'ocp_qp_hpmpc.h', \
-    'print.h', \
-    'timing.h', \
-    'tools.h', \
-    'types.h', \
-    'sim_common.h', \
+new_text = [
+    'ocp_qp_common.h',
+    'ocp_qp_hpmpc.h',
+    'print.h',
+    'timing.h',
+    'tools.h',
+    'types.h',
+    'sim_common.h',
 
-    'aux_d.h', \
-    'c_interface.h', \
-    'lqcp_solvers.h', \
-    'mpc_aux.h', \
-    'mpc_solvers.h', \
-    'aux_d.h', \
-    'aux_s.h', \
-    'blas_d.h', \
-    'block_size.h', \
-    'lqcp_solvers.h', \
-    'mpc_aux.h', \
-    'mpc_solvers.h', \
-    'target.h', \
-    'aux_d.h', \
-    'blas_d.h', \
-    'block_size.h', \
-    'd_blas_aux.h', \
-    'kernel_d_lib4.h', \
-    'lqcp_aux.h', \
-    'lqcp_solvers.h', \
-    'mpc_aux.h', \
+    'aux_d.h',
+    'c_interface.h',
+    'lqcp_solvers.h',
+    'mpc_aux.h',
+    'mpc_solvers.h',
+    'aux_d.h',
+    'aux_s.h',
+    'blas_d.h',
+    'block_size.h',
+    'lqcp_solvers.h',
+    'mpc_aux.h',
+    'mpc_solvers.h',
+    'target.h',
+    'aux_d.h',
+    'blas_d.h',
+    'block_size.h',
+    'd_blas_aux.h',
+    'kernel_d_lib4.h',
+    'lqcp_aux.h',
+    'lqcp_solvers.h',
+    'mpc_aux.h',
 
-    'blasfeo_common.h', \
-    'blasfeo_d_aux.h', \
-    'blasfeo_d_blas.h', \
-    'blasfeo_target.h', \
-    'blasfeo_block_size.h', \
-    'blasfeo_common.h', \
-    'blasfeo_d_aux.h', \
-    'blasfeo_d_kernel.h' \
+    'blasfeo_common.h',
+    'blasfeo_d_aux.h',
+    'blasfeo_d_aux_ext_dep.h',
+    'blasfeo_d_blas.h',
+    'blasfeo_i_aux_ext_dep.h',
+    'blasfeo_target.h',
+    'blasfeo_v_aux_ext_dep.h',
+    'blasfeo_block_size.h',
+    'blasfeo_common.h',
+    'blasfeo_d_aux.h',
+    'blasfeo_d_kernel.h'
     ]
 
 len_old_text = len(old_text)
@@ -205,7 +222,7 @@ for file in files:
     txtFile = objFile.read()
     objFile.close()
     for replacetext in range(len_old_text):
-        txtFile = txtFile.replace(old_text[replacetext],new_text[replacetext])
+        txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
     objFile = open(file, "w")
     objFile.write(txtFile)
     objFile.close()
@@ -216,7 +233,7 @@ for file in files:
     txtFile = objFile.read()
     objFile.close()
     for replacetext in range(len_old_text):
-        txtFile = txtFile.replace(old_text[replacetext],new_text[replacetext])
+        txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
     objFile = open(file, "w")
     objFile.write(txtFile)
     objFile.close()
@@ -225,28 +242,30 @@ print('Step 2: Path information in files modified to the new structure.')
 
 # 3. Add specific code to HPMPC and BLASFEO files:
 # List of files to be modified:
-files =\
-    ['include/blasfeo_common.h', \
-    'include/blas_d.h', \
-    'include/aux_d.h', \
-    'include/block_size.h', \
-    'fortran_order_interface_libstr.c', \
-    'd_ip2_res_hard_libstr.c', \
-    'd_res_ip_res_hard_libstr.c', \
-    'd_back_ric_rec_libstr.c', \
-    'd_aux_ip_hard_libstr.c']
+files = [
+    'include/blasfeo_common.h',
+    'include/blas_d.h',
+    'include/aux_d.h',
+    'include/block_size.h',
+    'fortran_order_interface_libstr.c',
+    'd_ip2_res_hard_libstr.c',
+    'd_res_ip_res_hard_libstr.c',
+    'd_back_ric_rec_libstr.c',
+    'd_aux_ip_hard_libstr.c'
+    ]
 # List of lines to be added in the beginning of files,
 #  in corresponding order with the list files:
-lines =\
-    ['#include "blasfeo_target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n', \
-    '#include "target.h"\n']
+lines = [
+    '#include "blasfeo_target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n',
+    '#include "target.h"\n'
+    ]
 
 if len(files) != len(lines):
     raise ValueError('Number of files and added lines not match')
@@ -256,7 +275,7 @@ for kk in range(len(files)):
     txtFile = objFile.read()
     objFile.close()
     objFile = open(target_dir+'/'+files[kk], "w")
-    objFile.write(lines[kk]) # write the line to the beginning
+    objFile.write(lines[kk])  # write the line to the beginning
     objFile.write(txtFile)
     objFile.close()
 

@@ -26,14 +26,12 @@
 import sys
 import os
 import glob
-from subprocess import call
-from os.path import join
 
 print('Running python script to grab chen_nmpc_qpoases...')
 
-print(sys.version) # get python version, for debugging
+print(sys.version)  # get python version, for debugging
 
-if len(sys.argv)!= 3:
+if len(sys.argv) != 3:
     raise SyntaxError('This script needs exactly 2 arguments: \n \
     test_nmpc_qpoases.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
@@ -41,67 +39,68 @@ if len(sys.argv)!= 3:
 
 # 1. Bring all necessary files to one directory.
 
-top_dir = str(sys.argv[1]).rstrip('/') # no trailing / in top_dir
-target_dir = str(sys.argv[2]).rstrip('/') # no trailing / in target_dir
+top_dir = str(sys.argv[1]).rstrip('/')  # no trailing / in top_dir
+target_dir = str(sys.argv[2]).rstrip('/')  # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
-workingcodefiles = [\
-    'examples/c/chen_nmpc_qpoases.c', \
-    'examples/c/Chen_model/chen_model.c', \
+workingcodefiles = [
+    'examples/c/chen_nmpc_qpoases.c',
+    'examples/c/Chen_model/chen_model.c',
 
-    'acados/utils/print.c', \
-    'acados/utils/timing.c', \
-    'acados/ocp_qp/condensing.c', \
-    'acados/ocp_qp/condensing_helper_functions.c', \
-    'acados/ocp_qp/ocp_qp_condensing_qpoases.c', \
-    'acados/sim/sim_erk_integrator.c', \
+    'acados/utils/print.c',
+    'acados/utils/timing.c',
+    'acados/ocp_qp/condensing.c',
+    'acados/ocp_qp/condensing_helper_functions.c',
+    'acados/ocp_qp/ocp_qp_condensing_qpoases.c',
+    'acados/sim/sim_erk_integrator.c',
 
-    'external/hpmpc/auxiliary/d_aux_extern_depend_lib4.c', \
+    'external/hpmpc/auxiliary/d_aux_extern_depend_lib4.c',
 
-    'external/blasfeo/auxiliary/i_aux_extern_depend_lib.c', \
+    'external/blasfeo/auxiliary/i_aux_ext_dep_lib.c',
 
-    'external/qpOASES/src/Constraints.c', \
-    'external/qpOASES/src/Bounds.c', \
-    'external/qpOASES/src/Flipper.c', \
-    'external/qpOASES/src/Indexlist.c', \
-    'external/qpOASES/src/Matrices.c', \
-    'external/qpOASES/src/MessageHandling.c', \
-    'external/qpOASES/src/Options.c', \
-    'external/qpOASES/src/QProblem.c', \
-    'external/qpOASES/src/QProblemB.c', \
-    'external/qpOASES/src/Utils.c' \
+    'external/qpOASES/src/Constraints.c',
+    'external/qpOASES/src/Bounds.c',
+    'external/qpOASES/src/Flipper.c',
+    'external/qpOASES/src/Indexlist.c',
+    'external/qpOASES/src/Matrices.c',
+    'external/qpOASES/src/MessageHandling.c',
+    'external/qpOASES/src/Options.c',
+    'external/qpOASES/src/QProblem.c',
+    'external/qpOASES/src/QProblemB.c',
+    'external/qpOASES/src/Utils.c'
     ]
-workingheaderfiles = [\
-    'examples/c/Chen_model/chen_model.h', \
-    'acados/ocp_qp/ocp_qp_common.h', \
-    'acados/ocp_qp/condensing.h', \
-    'acados/ocp_qp/ocp_qp_condensing_qpoases.h', \
-    'acados/sim/sim_common.h', \
-    'acados/sim/sim_erk_integrator.h', \
-    'acados/sim/sim_collocation.h', \
-    'acados/sim/sim_rk_common.h', \
-    'acados/utils/print.h', \
-    'acados/utils/types.h', \
-    'acados/utils/timing.h', \
+workingheaderfiles = [
+    'examples/c/Chen_model/chen_model.h',
+    'acados/ocp_qp/ocp_qp_common.h',
+    'acados/ocp_qp/condensing.h',
+    'acados/ocp_qp/ocp_qp_condensing_qpoases.h',
+    'acados/sim/sim_common.h',
+    'acados/sim/sim_erk_integrator.h',
+    'acados/sim/sim_collocation.h',
+    'acados/sim/sim_rk_common.h',
+    'acados/utils/print.h',
+    'acados/utils/types.h',
+    'acados/utils/timing.h',
 
-    'external/hpmpc/include/aux_d.h', \
-    'external/hpmpc/include/block_size.h', \
-    'external/hpmpc/include/kernel_d_lib4.h', \
+    'external/hpmpc/include/aux_d.h',
+    'external/hpmpc/include/block_size.h',
+    'external/hpmpc/include/kernel_d_lib4.h',
 
-    'external/blasfeo/include/blasfeo_i_aux.h', \
+    'external/blasfeo/include/blasfeo_d_aux_ext_dep.h',
+    'external/blasfeo/include/blasfeo_i_aux_ext_dep.h',
 
-    'external/qpOASES/include/qpOASES_e/Bounds.h', \
-    'external/qpOASES/include/qpOASES_e/Constants.h', \
-    'external/qpOASES/include/qpOASES_e/ConstraintProduct.h', \
-    'external/qpOASES/include/qpOASES_e/Constraints.h', \
-    'external/qpOASES/include/qpOASES_e/Flipper.h', \
-    'external/qpOASES/include/qpOASES_e/Indexlist.h', \
-    'external/qpOASES/include/qpOASES_e/Matrices.h', \
-    'external/qpOASES/include/qpOASES_e/MessageHandling.h', \
-    'external/qpOASES/include/qpOASES_e/Options.h', \
-    'external/qpOASES/include/qpOASES_e/QProblem.h', \
-    'external/qpOASES/include/qpOASES_e/QProblemB.h', \
-    'external/qpOASES/include/qpOASES_e/Utils.h' \
+    'external/qpOASES/include/qpOASES_e/Bounds.h',
+    'external/qpOASES/include/qpOASES_e/Constants.h',
+    'external/qpOASES/include/qpOASES_e/ConstraintProduct.h',
+    'external/qpOASES/include/qpOASES_e/Constraints.h',
+    'external/qpOASES/include/qpOASES_e/Flipper.h',
+    'external/qpOASES/include/qpOASES_e/Indexlist.h',
+    'external/qpOASES/include/qpOASES_e/Matrices.h',
+    'external/qpOASES/include/qpOASES_e/MessageHandling.h',
+    'external/qpOASES/include/qpOASES_e/Options.h',
+    'external/qpOASES/include/qpOASES_e/QProblem.h',
+    'external/qpOASES/include/qpOASES_e/QProblemB.h',
+    'external/qpOASES/include/qpOASES_e/Utils.h'
     ]
 # Files that should be renamed to avoid conflicts
 oldfiles = ['external/qpOASES/include/qpOASES_e/Types.h']
@@ -123,79 +122,82 @@ print('Step 1: Necessary files copied.')
 
 # 2. Modify .h and .c files to adapt to the new code structure:
 # List of texts to be replaced:
-old_text = [\
-    'examples/c/Chen_model/chen_model.h', \
-    'acados/ocp_qp/condensing.h', \
-    'acados/ocp_qp/condensing_helper_functions.c', \
-    'acados/ocp_qp/ocp_qp_common.h', \
-    'acados/ocp_qp/ocp_qp_condensing_qpoases.h', \
-    'acados/ocp_qp/ocp_qp_hpmpc.h', \
-    'acados/sim/sim_common.h', \
-    'acados/sim/sim_erk_integrator.h', \
-    'acados/sim/sim_collocation.h', \
-    'acados/sim/sim_rk_common.h', \
-    'acados/utils/print.h', \
-    'acados/utils/timing.h', \
-    'acados/utils/types.h', \
+old_text = [
+    'examples/c/Chen_model/chen_model.h',
+    'acados/ocp_qp/condensing.h',
+    'acados/ocp_qp/condensing_helper_functions.c',
+    'acados/ocp_qp/ocp_qp_common.h',
+    'acados/ocp_qp/ocp_qp_condensing_qpoases.h',
+    'acados/ocp_qp/ocp_qp_hpmpc.h',
+    'acados/sim/sim_common.h',
+    'acados/sim/sim_erk_integrator.h',
+    'acados/sim/sim_collocation.h',
+    'acados/sim/sim_rk_common.h',
+    'acados/utils/print.h',
+    'acados/utils/timing.h',
+    'acados/utils/types.h',
 
-    'hpmpc/include/aux_d.h', \
-    '../include/block_size.h', \
-    '../include/kernel_d_lib4.h', \
+    'hpmpc/include/aux_d.h',
+    '../include/block_size.h',
+    '../include/kernel_d_lib4.h',
 
-    'blasfeo/include/blasfeo_common.h', \
-    'blasfeo/include/blasfeo_i_aux.h', \
+    'blasfeo/include/blasfeo_common.h',
+    'blasfeo/include/blasfeo_d_aux_ext_dep.h',
+    'blasfeo/include/blasfeo_i_aux_ext_dep.h',
 
-    'qpOASES_e/Bounds.h', \
-    'qpOASES_e/Constants.h', \
-    'qpOASES_e/Constraints.h', \
-    'qpOASES_e/ConstraintProduct.h', \
-    'qpOASES_e/Flipper.h', \
-    'qpOASES_e/Indexlist.h', \
-    'qpOASES_e/Matrices.h', \
-    'qpOASES_e/MessageHandling.h', \
-    'qpOASES_e/Options.h', \
-    'qpOASES_e/QProblem.h', \
-    'qpOASES_e/QProblemB.h', \
-    'qpOASES_e/Types.h', \
-    'qpOASES_e/Utils.h' \
+
+    'qpOASES_e/Bounds.h',
+    'qpOASES_e/Constants.h',
+    'qpOASES_e/Constraints.h',
+    'qpOASES_e/ConstraintProduct.h',
+    'qpOASES_e/Flipper.h',
+    'qpOASES_e/Indexlist.h',
+    'qpOASES_e/Matrices.h',
+    'qpOASES_e/MessageHandling.h',
+    'qpOASES_e/Options.h',
+    'qpOASES_e/QProblem.h',
+    'qpOASES_e/QProblemB.h',
+    'qpOASES_e/Types.h',
+    'qpOASES_e/Utils.h'
     ]
 # List of new texts to replace old ones,
 #  in corresponding order to old_text:
-new_text = [\
-    'chen_model.h', \
-    'condensing.h', \
-    'condensing_helper_functions.c', \
-    'ocp_qp_common.h', \
-    'ocp_qp_condensing_qpoases.h', \
-    'ocp_qp_hpmpc.h', \
-    'sim_common.h', \
-    'sim_erk_integrator.h', \
-    'sim_collocation.h', \
-    'sim_rk_common.h', \
-    'print.h', \
-    'timing.h', \
-    'types.h', \
+new_text = [
+    'chen_model.h',
+    'condensing.h',
+    'condensing_helper_functions.c',
+    'ocp_qp_common.h',
+    'ocp_qp_condensing_qpoases.h',
+    'ocp_qp_hpmpc.h',
+    'sim_common.h',
+    'sim_erk_integrator.h',
+    'sim_collocation.h',
+    'sim_rk_common.h',
+    'print.h',
+    'timing.h',
+    'types.h',
 
-    'aux_d.h', \
-    'block_size.h', \
-    'kernel_d_lib4.h', \
+    'aux_d.h',
+    'block_size.h',
+    'kernel_d_lib4.h',
 
-    'blasfeo_common.h', \
-    'blasfeo_i_aux.h', \
+    'blasfeo_common.h',
+    'blasfeo_d_aux_ext_dep.h',
+    'blasfeo_i_aux_ext_dep.h',
 
-    'Bounds.h', \
-    'Constants.h', \
-    'Constraints.h', \
-    'ConstraintProduct.h', \
-    'Flipper.h', \
-    'Indexlist.h', \
-    'Matrices.h', \
-    'MessageHandling.h', \
-    'Options.h', \
-    'QProblem.h', \
-    'QProblemB.h', \
-    'qpOASES_e_Types.h', \
-    'Utils.h' \
+    'Bounds.h',
+    'Constants.h',
+    'Constraints.h',
+    'ConstraintProduct.h',
+    'Flipper.h',
+    'Indexlist.h',
+    'Matrices.h',
+    'MessageHandling.h',
+    'Options.h',
+    'QProblem.h',
+    'QProblemB.h',
+    'qpOASES_e_Types.h',
+    'Utils.h'
     ]
 
 len_old_text = len(old_text)
@@ -210,7 +212,7 @@ for file in files:
     txtFile = objFile.read()
     objFile.close()
     for replacetext in range(len_old_text):
-        txtFile = txtFile.replace(old_text[replacetext],new_text[replacetext])
+        txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
     objFile = open(file, "w")
     objFile.write(txtFile)
     objFile.close()
@@ -221,7 +223,7 @@ for file in files:
     txtFile = objFile.read()
     objFile.close()
     for replacetext in range(len_old_text):
-        txtFile = txtFile.replace(old_text[replacetext],new_text[replacetext])
+        txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
     objFile = open(file, "w")
     objFile.write(txtFile)
     objFile.close()
@@ -243,7 +245,7 @@ for kk in range(len(files)):
     txtFile = objFile.read()
     objFile.close()
     objFile = open(target_dir+'/'+files[kk], "w")
-    objFile.write(lines[kk]) # write the line to the beginning
+    objFile.write(lines[kk])  # write the line to the beginning
     objFile.write(txtFile)
     objFile.close()
 
