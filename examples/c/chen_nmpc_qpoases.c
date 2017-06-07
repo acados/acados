@@ -245,9 +245,12 @@ int main() {
         d_free(pr[i]);
         d_free(px[i]);
         d_free(pu[i]);
+        d_free(ppi[i]);
+        d_free(plam[i]);
     }
     d_free(pq[N]);
     d_free(px[N]);
+    d_free(plam[N]);
 
     free(rk_opts.A_mat);
     free(rk_opts.b_vec);
