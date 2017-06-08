@@ -18,8 +18,6 @@
 #define NX 2
 #define NU 1
 
-real_t aux[12];
-
 void VDE_fun(const real_t* in, real_t* out,
     int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     const real_t* x = in;
@@ -28,6 +26,7 @@ void VDE_fun(const real_t* in, real_t* out,
 #if LINEAR_MODEL == 0
     /* COMPUTE AUXILIARY VARIABLES: */
     /* ---------------------------- */
+    real_t aux[12];
     aux[0] = ((u[0]*(real_t)(0.5))*x[2]);
     aux[1] = (aux[0]+x[4]);
     aux[2] = ((u[0]*(real_t)(0.5))*x[3]);
