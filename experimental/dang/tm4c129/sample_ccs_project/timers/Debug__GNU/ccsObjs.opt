@@ -1,0 +1,1 @@
+"./linux_time.o" "./startup_ccs.o" "./timers.o" "./utils/uartstdio.o" "../timers_ccs.cmd" -Wl,--start-group -lc -lgcc -lnosys -ldriver -Wl,--end-group 

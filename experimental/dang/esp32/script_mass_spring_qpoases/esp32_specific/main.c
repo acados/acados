@@ -1,33 +1,26 @@
-/*
- *    This file is part of acados.
- *
- *    acados is free software; you can redistribute it and/or
- *    modify it under the terms of the GNU Lesser General Public
- *    License as published by the Free Software Foundation; either
- *    version 3 of the License, or (at your option) any later version.
- *
- *    acados is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *    Lesser General Public License for more details.
- *
- *    You should have received a copy of the GNU Lesser General Public
- *    License along with acados; if not, write to the Free Software Foundation,
- *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
- */
+#include "freertos/FreeRTOS.h"
+#include "esp_wifi.h"
+#include "esp_system.h"
+#include "esp_event.h"
+#include "esp_event_loop.h"
+#include "nvs_flash.h"
+#include "driver/gpio.h"
 
-// system headers
+/* Begin acados code */
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "aux_d.h"// system headers
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo_i_aux_ext_dep.h"
+#include "blasfeo_d_aux_ext_dep.h"
 
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/utils/tools.h"
+#include "ocp_qp_condensing_qpoases.h"
+#include "tools.h"
 
 // define number of repetitions
 #define NREP 10
@@ -117,18 +110,52 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     x0[1] = 2.5;
 }
 
-int main() {
+/* End acados code */
+
+esp_err_t event_handler(void *ctx, system_event_t *event)
+{
+    return ESP_OK;
+}
+
+void main_memory_task(void *pv)
+{
+  // function to test memory size
+  // result on board Nano32 running ESP32:
+  //  More stack size == less heap size for malloc(). Their sum is about 180 kB.
+
+  unsigned long occupy_heap_size=1024;
+
+  // void *dump_heap_size = malloc(occupy_heap_size); // for debug 115111: already big
+  while(1) {
+    int *dump_heap_size = malloc(occupy_heap_size);
+    if(dump_heap_size == NULL) {
+      printf("Pointer %p, failed to allocate %lu bytes.\n", dump_heap_size, occupy_heap_size);
+      break;
+    }
+    else {
+    printf("Pointer %p, Allocated %lu bytes.\n", dump_heap_size, occupy_heap_size);
+    free(dump_heap_size);
+    occupy_heap_size += 1024;
+    }
+  }
+}
+
+void main_task(void *pv)
+{
+    int loopnumber = 0; // for debug
+
+    /* Begin acados code */
     int ii, jj;
     int nrep = NREP;
 
     int nx = 8;  // number of states (it has to be even for the mass-spring
-                  // system test problem)
+                  // system test problem) 8
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 20;   // horizon length
-    int nb = 11;  // number of box constrained inputs and states
+    int N = 10;   // horizon length 20
+    int nb = 11;  // number of box constrained inputs and states 11
     int ng = 0;  // 4;  // number of general constraints
-    int ngN = 8;  // 4;  // number of general constraints at the last stage
+    int ngN = 8;  // 4;  // 8 number of general constraints at the last stage
 
     // int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -297,6 +324,18 @@ int main() {
     d_zeros(&r, nu, 1);
     for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
 
+    /* End acados code */
+
+    gpio_set_direction(GPIO_NUM_16, GPIO_MODE_OUTPUT);
+    int level = 0;
+    while (true) {
+        gpio_set_level(GPIO_NUM_16, level);
+        level = !level;
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        printf("\n\n New loop %d\n\n",++loopnumber);
+
+/* Begin acados code */
+
     /************************************************
     * problems data
     ************************************************/
@@ -416,12 +455,17 @@ int main() {
     // printf("\nwork space size: %d bytes\n", work_space_size);
 
     // double *work = (double *)malloc(work_space_size);
+/* End acados code */
+
+    printf("Free heap size before initializing qpoases: %d\n",esp_get_free_heap_size()); // for debug
+
+/* Begin acados code */
 
     /************************************************
     * call the solver
     ************************************************/
 
-    int return_value;
+    int return_value = 0;
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
@@ -453,43 +497,69 @@ int main() {
     * free memory
     ************************************************/
 
-    d_free(A);
-    d_free(B);
-    d_free(b);
-    d_free(x0);
-    d_free(A0);
-    d_free(b0);
-    d_free(C0);
-    d_free(D0);
-    d_free(lg0);
-    d_free(ug0);
-    d_free(Q);
-    d_free(S);
-    d_free(R);
-    d_free(q);
-    d_free(r);
-    int_free(idxb0);
-    d_free(lb0);
-    d_free(ub0);
-    int_free(idxb1);
-    d_free(lb1);
-    d_free(ub1);
-    int_free(idxbN);
-    d_free(lbN);
-    d_free(ubN);
-    d_free(C);
-    d_free(D);
-    d_free(lg);
-    d_free(ug);
-    d_free(CN);
-    d_free(lgN);
-    d_free(ugN);
+    // d_free(A);
+    // d_free(B);
+    // d_free(b);
+    // d_free(x0);
+    // d_free(A0);
+    // d_free(b0);
+    // d_free(C0);
+    // d_free(D0);
+    // d_free(lg0);
+    // d_free(ug0);
+    // d_free(Q);
+    // d_free(S);
+    // d_free(R);
+    // d_free(q);
+    // d_free(r);
+    // int_free(idxb0);
+    // d_free(lb0);
+    // d_free(ub0);
+    // int_free(idxb1);
+    // d_free(lb1);
+    // d_free(ub1);
+    // int_free(idxbN);
+    // d_free(lbN);
+    // d_free(ubN);
+    // d_free(C);
+    // d_free(D);
+    // d_free(lg);
+    // d_free(ug);
+    // d_free(CN);
+    // d_free(lgN);
+    // d_free(ugN);
+    //
+    // for (ii = 0; ii < N; ii++) {
+    //     d_free(hx[ii]);
+    //     d_free(hu[ii]);
+    // }
+    // d_free(hx[N]);
+/* End acados code */
 
-    for (ii = 0; ii < N; ii++) {
-        d_free(hx[ii]);
-        d_free(hu[ii]);
-    }
-    d_free(hx[N]);
+printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
 
-    return 0;
+    }  // while (true)
+}
+
+void app_main(void)
+{
+    nvs_flash_init();
+    // tcpip_adapter_init();
+    // ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    // ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    // ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
+    // wifi_config_t sta_config = {
+    //     .sta = {
+    //         .ssid = "access_point_name",
+    //         .password = "password",
+    //         .bssid_set = false
+    //     }
+    // };
+    // ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
+    // ESP_ERROR_CHECK( esp_wifi_start() );
+    // ESP_ERROR_CHECK( esp_wifi_connect() );
+    xTaskCreate(main_task, "main", 30*1024, NULL, 5, NULL);
+    // xTaskCreate(main_memory_task, "main_memory", 10*1024, NULL, 5, NULL);
 }
