@@ -127,29 +127,6 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-void app_main(void)
-{
-    nvs_flash_init();
-    // tcpip_adapter_init();
-    // ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    // ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    // ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    // ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    // wifi_config_t sta_config = {
-    //     .sta = {
-    //         .ssid = "access_point_name",
-    //         .password = "password",
-    //         .bssid_set = false
-    //     }
-    // };
-    // ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
-    // ESP_ERROR_CHECK( esp_wifi_start() );
-    // ESP_ERROR_CHECK( esp_wifi_connect() );
-    xTaskCreate(main_task, "main", 10*1024, NULL, 5, NULL);
-    // xTaskCreate(main_memory_task, "main_memory", 10*1024, NULL, 5, NULL);
-}
-
 
 void main_memory_task(void *pv)
 {
@@ -175,9 +152,12 @@ void main_memory_task(void *pv)
 
 void main_task(void *pv)
 {
-  int occupy_heap_size = 159000; // for this problem, HPMPC with partial condensing need about 158xxx bytes for work space
+  int occupy_heap_size = 120000; // for N=15, HPMPC with partial condensing need about 1722268 bytes for work space
   void *dump_heap_size = malloc(occupy_heap_size); // for debug 115111: already big
-  printf("\n Allocated %d bytes, at pointer %p",occupy_heap_size,dump_heap_size);
+  printf("\n Allocated %d bytes for dump heap, at pointer %p",occupy_heap_size,dump_heap_size);
+  // void *giveaway_heap = malloc(100); // to test if the next malloc gives address 0x00 (failed) or different
+  // void *workspace_part_cond = malloc(occupy_heap_size);
+  // printf("\n Allocated %d bytes, at pointer %p",occupy_heap_size,workspace_part_cond);
     int loopnumber = 0; // for debug
 
     /* Begin acados code */
@@ -215,7 +195,7 @@ void main_task(void *pv)
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 15;   // horizon length
+    int N = 10;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
@@ -580,11 +560,21 @@ void main_task(void *pv)
         hpmpc_args.ux0 = hux_in;
         hpmpc_args.lam0 = hlam_in;
         hpmpc_args.t0 = ht_in;
+            /* End acados code */
 
+            /* Begin acados code */
+	// Bring these variable definitions here, to use for either of the 2 cases
+            void *mem;
+            int return_value;
+            struct timeval tv0, tv1;
+            /* End acados code */
+
+            /* Begin acados code */
+
+// if (0) {
             /************************************************
             * work space (fully sparse)
             ************************************************/
-
         //  int work_space_size =
         //      ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
             int work_space_size = 0;
@@ -603,16 +593,15 @@ void main_task(void *pv)
             printf("Free heap size left: %d\n",esp_get_free_heap_size()); // for debug
 
             /* Begin acados code */
-            void *mem;
             ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
             /************************************************
             * call the solver (fully sparse)
             ************************************************/
+            /* End acados code */
 
-            int return_value;
+            /* Begin acados code */
 
-            struct timeval tv0, tv1;
             gettimeofday(&tv0, NULL);  // stop
 
         //  nrep = 1;
@@ -651,7 +640,8 @@ void main_task(void *pv)
             /* End acados code */
         // free allocated memory for work space
         free(workspace);
-//}
+        dump_heap_size = malloc(occupy_heap_size);
+// }
 if (0){
   /* Begin acados code */
   /************************************************
@@ -722,8 +712,8 @@ if (0){
   /* End acados code */
 
   // free allocated memory for work space
-  free(workspace);
-
+  free(workspace_part_cond);
+  dump_heap_size = malloc(occupy_heap_size);
         /************************************************
         * free memory
         ************************************************/
@@ -772,5 +762,29 @@ if (0){
         /* End acados code */
 
 } //if (0)
-    }
+    } //while
+}
+
+void app_main(void)
+{
+    nvs_flash_init();
+    // tcpip_adapter_init();
+    // ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
+    // wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    // ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+    // ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+    // ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
+    // wifi_config_t sta_config = {
+    //     .sta = {
+    //         .ssid = "access_point_name",
+    //         .password = "password",
+    //         .bssid_set = false
+    //     }
+    // };
+    // ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
+    // ESP_ERROR_CHECK( esp_wifi_start() );
+    // ESP_ERROR_CHECK( esp_wifi_connect() );
+    xTaskCreate(main_task, "main", 2*1024, NULL, 5, NULL);
+    //xTaskCreate(task_name, "function_name", stack_size, NULL, 5, NULL);
+    // xTaskCreate(main_memory_task, "main_memory", 10*1024, NULL, 5, NULL);
 }

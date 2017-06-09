@@ -18,10 +18,10 @@
 # Assume the source directory of acados is: ~/acados
 # The target folder to be created is: chen_nmpc_qpoases
 # This command should be used:
-# python test_nmpc_qpoases.py ~/acados chen_nmpc_qpoases
+# python test_chen_nmpc_qpoases.py ~/acados chen_nmpc_qpoases
 #
 # Author: Dang Doan
-# Date: 2017.04.03
+# Date: 2017.04.03-2017.06.09
 
 import sys
 import os
@@ -33,9 +33,9 @@ print(sys.version)  # get python version, for debugging
 
 if len(sys.argv) != 3:
     raise SyntaxError('This script needs exactly 2 arguments: \n \
-    test_nmpc_qpoases.py <acados_top_dir> <new_target_dir>\n \
+    test_chen_nmpc_qpoases.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
-    test_nmpc_qpoases.py ~/acados chen_nmpc_qpoases')
+    test_chen_nmpc_qpoases.py ~/acados chen_nmpc_qpoases')
 
 # 1. Bring all necessary files to one directory.
 
@@ -43,7 +43,7 @@ top_dir = str(sys.argv[1]).rstrip('/')  # no trailing / in top_dir
 target_dir = str(sys.argv[2]).rstrip('/')  # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
-workingcodefiles = [
+workingsourcefiles = [
     'examples/c/chen_nmpc_qpoases.c',
     'examples/c/Chen_model/chen_model.c',
 
@@ -69,7 +69,7 @@ workingcodefiles = [
     'external/qpOASES/src/QProblemB.c',
     'external/qpOASES/src/Utils.c'
     ]
-workingheaderfiles = [
+workingincludefiles = [
     'examples/c/Chen_model/chen_model.h',
     'acados/ocp_qp/ocp_qp_common.h',
     'acados/ocp_qp/condensing.h',
@@ -109,11 +109,11 @@ newfiles = ['include/qpOASES_e_Types.h']
 # Create directory structure and copy files
 if not os.path.exists(target_dir):
     os.system('mkdir '+target_dir)
-for filename in workingcodefiles:
+for filename in workingsourcefiles:
     os.system('cp '+top_dir+'/'+filename+' '+target_dir)
 if not os.path.exists(target_dir+'/include'):
     os.system('mkdir '+target_dir+'/include')
-for filename in workingheaderfiles:
+for filename in workingincludefiles:
     os.system('cp '+top_dir+'/'+filename+' '+target_dir+'/include/')
 for kk in range(len(oldfiles)):
     os.system('cp '+top_dir+'/'+oldfiles[kk]+' '+target_dir+'/'+newfiles[kk])
@@ -144,7 +144,6 @@ old_text = [
     'blasfeo/include/blasfeo_common.h',
     'blasfeo/include/blasfeo_d_aux_ext_dep.h',
     'blasfeo/include/blasfeo_i_aux_ext_dep.h',
-
 
     'qpOASES_e/Bounds.h',
     'qpOASES_e/Constants.h',
@@ -196,7 +195,7 @@ new_text = [
     'Options.h',
     'QProblem.h',
     'QProblemB.h',
-    'qpOASES_e_Types.h',
+    'qpOASES_e_Types.h',  # This filename is changed
     'Utils.h'
     ]
 
@@ -208,52 +207,54 @@ if len_old_text != len_new_text:
 
 files = glob.glob(target_dir+"/*.c")
 for file in files:
-    objFile = open(file, "r")
-    txtFile = objFile.read()
-    objFile.close()
+    with open(file) as objFile:
+        txtFile = objFile.read()
     for replacetext in range(len_old_text):
         txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
-    objFile = open(file, "w")
-    objFile.write(txtFile)
-    objFile.close()
+    with open(file, "w") as objFile:
+        objFile.write(txtFile)
 
 files = glob.glob(target_dir+"/include/*.h")
 for file in files:
-    objFile = open(file, "r")
-    txtFile = objFile.read()
-    objFile.close()
+    with open(file) as objFile:
+        txtFile = objFile.read()
     for replacetext in range(len_old_text):
         txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
-    objFile = open(file, "w")
-    objFile.write(txtFile)
-    objFile.close()
+    with open(file, "w") as objFile:
+        objFile.write(txtFile)
 
 print('Step 2: Path information in files modified to the new structure.')
 
 # 3. Add specific code to HPMPC and BLASFEO files:
 # List of files to be modified:
-files = ['include/block_size.h']
+files = [
+    'include/block_size.h',
+    'include/Constants.h',
+    'include/ocp_qp_condensing_qpoases.h'
+    ]
 # List of lines to be added in the beginning of files,
 #  in corresponding order with the list files:
-lines = ['#include "target.h"\n']
+lines = [
+    '#include "target.h"\n',
+    '#include "ocp_qp_condensing_qpoases.h"\n',
+    '#define QPOASES_NVMAX 13\n#define QPOASES_NCMAX 10\n'
+    ]
 
 if len(files) != len(lines):
     raise ValueError('Number of files and added lines not match')
 
 for kk in range(len(files)):
-    objFile = open(target_dir+'/'+files[kk], "r")
-    txtFile = objFile.read()
-    objFile.close()
-    objFile = open(target_dir+'/'+files[kk], "w")
-    objFile.write(lines[kk])  # write the line to the beginning
-    objFile.write(txtFile)
-    objFile.close()
+    with open(target_dir+'/'+files[kk]) as objFile:
+        txtFile = objFile.read()
+    with open(target_dir+'/'+files[kk], "w") as objFile:
+        objFile.write(lines[kk])  # write the line to the beginning
+        objFile.write(txtFile)
 
 print('Step 3: Common header file included in specific files.')
 
 # 4. Copy Makefile and specific setting files
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_nmpc_qpoases/Makefile '+target_dir)
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_nmpc_qpoases/target.h '+target_dir+'/include/')
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_chen_nmpc_qpoases/Makefile '+target_dir)
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_chen_nmpc_qpoases/target.h '+target_dir+'/include/')
 
 print('Step 4: Makefile, and HPMPC target.h replaced.')
 

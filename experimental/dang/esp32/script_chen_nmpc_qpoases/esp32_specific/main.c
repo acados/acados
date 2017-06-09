@@ -53,28 +53,28 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-// void main_memory_task(void *pv)
-// {
-//   // function to test memory size
-//   // result on board Nano32 running ESP32:
-//   //  More stack size == less heap size for malloc(). Their sum is about 180 kB.
-//
-//   unsigned long occupy_heap_size=1024;
-//
-//   // void *dump_heap_size = malloc(occupy_heap_size); // for debug 115111: already big
-//   while(1) {
-//     int *dump_heap_size = malloc(occupy_heap_size);
-//     if(dump_heap_size == NULL) {
-//       printf("Pointer %p, failed to allocate %lu bytes.\n", dump_heap_size, occupy_heap_size);
-//       break;
-//     }
-//     else {
-//     printf("Pointer %p, Allocated %lu bytes.\n", dump_heap_size, occupy_heap_size);
-//     free(dump_heap_size);
-//     occupy_heap_size += 1024;
-//     }
-//   }
-// }
+void main_memory_task(void *pv)
+{
+  // function to test memory size
+  // result on board Nano32 running ESP32:
+  //  More stack size == less heap size for malloc(). Their sum is about 180 kB.
+
+  unsigned long occupy_heap_size=1024;
+
+  // void *dump_heap_size = malloc(occupy_heap_size); // for debug 115111: already big
+  while(1) {
+    int *dump_heap_size = malloc(occupy_heap_size);
+    if(dump_heap_size == NULL) {
+      printf("Pointer %p, failed to allocate %lu bytes.\n", dump_heap_size, occupy_heap_size);
+      break;
+    }
+    else {
+    printf("Pointer %p, Allocated %lu bytes.\n", dump_heap_size, occupy_heap_size);
+    free(dump_heap_size);
+    occupy_heap_size += 1024;
+    }
+  }
+}
 
 void main_task(void *pv)
 {
@@ -90,7 +90,7 @@ void main_task(void *pv)
     real_t  xref[NX]            = {0};
     real_t  uref[NX]            = {0};
     int_t   max_sqp_iters       = 1;
-    int_t   max_iters           = 10000;
+    int_t   max_iters           = 10;
     real_t  x_end[NX]           = {0};
     real_t  u_end[NU]           = {0};
 
@@ -210,8 +210,11 @@ qp_out.x = px;
 qp_out.u = pu;
 qp_out.pi = ppi;
 qp_out.lam = plam;
+/* End acados code */
+
 printf("Free heap size before initializing qpoases: %d\n",esp_get_free_heap_size()); // for debug
 
+/* Begin acados code */
 acado_timer timer;
 real_t total_time = 0;
 acado_tic(&timer);
@@ -246,6 +249,7 @@ for (int_t iter = 0; iter < max_iters; iter++) {
         int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
         if (status) {
             printf("qpOASES returned error status %d\n", status);
+            return -1;
         }
         for (int_t i = 0; i < N; i++) {
             for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
@@ -257,15 +261,14 @@ for (int_t iter = 0; iter < max_iters; iter++) {
     shift_states(w, x_end, N);
     shift_controls(w, u_end, N);
 }
-
 #ifdef DEBUG
 print_states_controls(&w[0], N);
 #endif  // DEBUG
 total_time = acado_toc(&timer);  // in seconds
 printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
-printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
-
 /* End acados code */
+
+printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
 
     }
 }

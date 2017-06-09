@@ -16,12 +16,12 @@
 #
 # Example usage:
 # Assume the source directory of acados is: ~/acados
-# The target folder to be created is: ocp_qp_hpmpc
+# The target folder to be created is: mass_spring_hpmpc
 # This command should be used:
-# python test_ocp_qp_hpmpc.py ~/acados ocp_qp_hpmpc
+# python test_mass_spring_hpmpc.py ~/acados mass_spring_hpmpc
 #
 # Author: Dang Doan
-# Date: 2017.04.03
+# Date: 2017.04.03-2017.06.09
 
 import sys
 import os
@@ -33,9 +33,9 @@ print(sys.version)  # get python version, for debugging
 
 if len(sys.argv) != 3:
     raise SyntaxError('This script needs exactly 2 arguments: \n \
-    test_ocp_qp_hpmpc.py <acados_top_dir> <new_target_dir>\n \
+    test_mass_spring_hpmpc.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
-    test_ocp_qp_hpmpc.py ~/acados ocp_qp_hpmpc')
+    test_mass_spring_hpmpc.py ~/acados mass_spring_hpmpc')
 
 # 1. Bring all necessary files to one directory.
 
@@ -43,7 +43,7 @@ top_dir = str(sys.argv[1]).rstrip('/')  # no trailing / in top_dir
 target_dir = str(sys.argv[2]).rstrip('/')  # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
-workingcodefiles = [
+workingsourcefiles = [
     'examples/c/mass_spring_hpmpc.c',
 
     'acados/ocp_qp/ocp_qp_hpmpc.c',
@@ -67,15 +67,11 @@ workingcodefiles = [
     'external/blasfeo/blas/d_blas3_diag_lib.c',
     'external/blasfeo/blas/d_blas3_lib.c',
     'external/blasfeo/blas/d_lapack_lib.c',
-    'external/blasfeo/blas/x_blas1_lib.c',
-    'external/blasfeo/blas/x_blas2_lib.c',
-    'external/blasfeo/blas/x_blas3_diag_lib.c',
-    'external/blasfeo/blas/x_blas3_lib.c',
-    'external/blasfeo/blas/x_lapack_lib.c',
     'external/blasfeo/auxiliary/d_aux_lib.c',
     'external/blasfeo/auxiliary/d_aux_ext_dep_lib.c',
-    'external/blasfeo/auxiliary/v_aux_ext_dep_lib.c']
-workingheaderfiles = [
+    'external/blasfeo/auxiliary/v_aux_ext_dep_lib.c'
+    ]
+workingincludefiles = [
     'acados/ocp_qp/ocp_qp_common.h',
     'acados/ocp_qp/ocp_qp_hpmpc.h',
     'acados/sim/sim_rk_common.h',
@@ -106,15 +102,23 @@ workingheaderfiles = [
     'external/blasfeo/include/blasfeo_d_aux.h',
     'external/blasfeo/include/blasfeo_d_aux_ext_dep.h',
     'external/blasfeo/include/blasfeo_i_aux_ext_dep.h',
-    'external/blasfeo/include/blasfeo_v_aux_ext_dep.h']
+    'external/blasfeo/include/blasfeo_v_aux_ext_dep.h',
+
+    # These C code are included into the main source files
+    'external/blasfeo/blas/x_blas1_lib.c',
+    'external/blasfeo/blas/x_blas2_lib.c',
+    'external/blasfeo/blas/x_blas3_diag_lib.c',
+    'external/blasfeo/blas/x_blas3_lib.c',
+    'external/blasfeo/blas/x_lapack_lib.c'
+    ]
 # Create directory structure and copy files
 if not os.path.exists(target_dir):
     os.system('mkdir '+target_dir)
-for filename in workingcodefiles:
+for filename in workingsourcefiles:
     os.system('cp '+top_dir+'/'+filename+' '+target_dir)
 if not os.path.exists(target_dir+'/include'):
     os.system('mkdir '+target_dir+'/include')
-for filename in workingheaderfiles:
+for filename in workingincludefiles:
     os.system('cp '+top_dir+'/'+filename+' '+target_dir+'/include/')
 
 print('Step 1: Necessary files copied.')
@@ -218,25 +222,21 @@ if len_old_text != len_new_text:
 
 files = glob.glob(target_dir+"/*.c")
 for file in files:
-    objFile = open(file, "r")
-    txtFile = objFile.read()
-    objFile.close()
+    with open(file) as objFile:
+        txtFile = objFile.read()
     for replacetext in range(len_old_text):
         txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
-    objFile = open(file, "w")
-    objFile.write(txtFile)
-    objFile.close()
+    with open(file, "w") as objFile:
+        objFile.write(txtFile)
 
 files = glob.glob(target_dir+"/include/*.h")
 for file in files:
-    objFile = open(file, "r")
-    txtFile = objFile.read()
-    objFile.close()
+    with open(file) as objFile:
+        txtFile = objFile.read()
     for replacetext in range(len_old_text):
         txtFile = txtFile.replace(old_text[replacetext], new_text[replacetext])
-    objFile = open(file, "w")
-    objFile.write(txtFile)
-    objFile.close()
+    with open(file, "w") as objFile:
+        objFile.write(txtFile)
 
 print('Step 2: Path information in files modified to the new structure.')
 
@@ -271,24 +271,93 @@ if len(files) != len(lines):
     raise ValueError('Number of files and added lines not match')
 
 for kk in range(len(files)):
-    objFile = open(target_dir+'/'+files[kk], "r")
-    txtFile = objFile.read()
-    objFile.close()
-    objFile = open(target_dir+'/'+files[kk], "w")
-    objFile.write(lines[kk])  # write the line to the beginning
-    objFile.write(txtFile)
-    objFile.close()
+    with open(target_dir+'/'+files[kk]) as objFile:
+        txtFile = objFile.read()
+    with open(target_dir+'/'+files[kk], "w") as objFile:
+        objFile.write(lines[kk])  # write the line to the beginning
+        objFile.write(txtFile)
 
 print('Step 3: Common header file included in specific files.')
 
-# 4. Copy Makefile and specific setting files
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_ocp_qp_hpmpc/Makefile '+target_dir)
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_ocp_qp_hpmpc/target.h '+target_dir+'/include/')
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_test_ocp_qp_hpmpc/blasfeo_target.h '+target_dir+'/include/')
+# 4. Change some specific functions
+# List of files to be modified:
+files = [
+    # Move x_blas1_lib.c out of the source folder, to not compile it alone
+    'd_blas1_lib.c',
+    'd_blas2_lib.c',
+    'd_blas3_diag_lib.c',
+    'd_blas3_lib.c',
+    'd_lapack_lib.c',
 
-print('Step 4: Makefile, blasfeo_target.h and HPMPC target.h replaced.')
+    # Avoid using posix_memalign in v_zeros_align, for embedded platforms
+    'v_aux_ext_dep_lib.c'
+    ]
+# List of texts to be replaced:
+old_text = [
+    '#include "x_blas1_lib.c"',
+    '#include "x_blas2_lib.c"',
+    '#include "x_blas3_diag_lib.c"',
+    '#include "x_blas3_lib.c"',
+    '#include "x_lapack_lib.c"',
 
-# 5. Display further instruction
+    'void v_zeros_align(void **ptrA, int size)\n\
+    \t{\n\
+    #if defined(OS_WINDOWS)\n\
+    \t*ptrA = _aligned_malloc( size, 64 );\n\
+    #else\n\
+    \tint err = posix_memalign(ptrA, 64, size);\n\
+    \tif(err!=0)\n\
+    \t\t{\n\
+    \t\tprintf("Memory allocation error");\n\
+    \t\texit(1);\n\
+    \t\t}\n#endif\n\
+    \tchar *A = *ptrA;\n\
+    \tint i;\n\
+    \tfor(i=0; i<size; i++) A[i] = 0;\n\
+    \t}\n'
+    ]
+# List of new texts to replace old ones,
+#  in corresponding order to old_text:
+new_text = [
+    '#include "include/x_blas1_lib.c"',
+    '#include "include/x_blas2_lib.c"',
+    '#include "include/x_blas3_diag_lib.c"',
+    '#include "include/x_blas3_lib.c"',
+    '#include "include/x_lapack_lib.c"',
+
+    'void v_zeros_align(void **ptrA, int size)\n\
+    \t{\n\
+    \t/* Changed by Python script of Dang */\n\
+    \t/* Avoid posix_memalign in v_zeros_align, for embedded platforms */\n\
+    \tv_zeros(ptrA, size);\n\
+    \t}\n'
+    ]
+
+len_old_text = len(old_text)
+len_new_text = len(new_text)
+
+if len_old_text != len_new_text:
+    raise ValueError('Number of old and new texts not match')
+if len(files) != len_new_text:
+    raise ValueError('Number of files and texts not match')
+
+for kk in range(len_old_text):
+    with open(target_dir+'/'+files[kk]) as objFile:
+        txtFile = objFile.read()
+    txtFile = txtFile.replace(old_text[kk], new_text[kk])
+    with open(target_dir+'/'+files[kk], "w") as objFile:
+        objFile.write(txtFile)
+
+print('Step 4: Some specific functions replaced.')
+
+# 5. Copy Makefile and specific setting files
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_mass_spring_hpmpc/Makefile '+target_dir)
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_mass_spring_hpmpc/target.h '+target_dir+'/include/')
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_mass_spring_hpmpc/blasfeo_target.h '+target_dir+'/include/')
+
+print('Step 5: Makefile, blasfeo_target.h and HPMPC target.h replaced.')
+
+# 6. Display further instruction
 print('Please do next steps in terminal:')
 print(' cd '+target_dir)
 print(' make')

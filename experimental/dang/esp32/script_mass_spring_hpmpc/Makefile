@@ -10,7 +10,7 @@
 # Date: 2017.03.15
 
 # Project name
-PROJECT=ocp_qp_hpmpc
+PROJECT=mass_spring_hpmpc
 
 # BLASFEO-specific options
 LA = REFERENCE
@@ -18,7 +18,7 @@ TARGET = GENERIC
 
 # Compiler
 CC = gcc
-CFLAGS = -std=c99 -Wextra -Wno-error -O2 -fPIC -march=native
+CFLAGS = -std=c99 -Wextra -Wno-error -fPIC -march=native
 CFLAGS += -Wno-implicit-function-declaration -Wno-unused-variable -Wno-unused-label -Wno-unused-parameter -Wno-parentheses
 # -Wall
 
@@ -27,11 +27,11 @@ IGNORESRC = $(SRCDIR)/$(PROJECT).$(SRCEXT)
 # main.c in the code of ESP32
 IGNORESRC += $(SRCDIR)/main.c
 # some BLASFEO files due to splitting code in the blas files
-IGNORESRC += $(SRCDIR)/x_blas1_lib.c
-IGNORESRC += $(SRCDIR)/x_blas2_lib.c
-IGNORESRC += $(SRCDIR)/x_blas3_diag_lib.c
-IGNORESRC += $(SRCDIR)/x_blas3_lib.c
-IGNORESRC += $(SRCDIR)/x_lapack_lib.c
+# IGNORESRC += $(SRCDIR)/x_blas1_lib.c
+# IGNORESRC += $(SRCDIR)/x_blas2_lib.c
+# IGNORESRC += $(SRCDIR)/x_blas3_diag_lib.c
+# IGNORESRC += $(SRCDIR)/x_blas3_lib.c
+# IGNORESRC += $(SRCDIR)/x_lapack_lib.c
 
 # Directories
 BUILDDIR = obj

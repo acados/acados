@@ -11,5 +11,5 @@ CFLAGS += -DLA_REFERENCE
 CFLAGS += -DTARGET_GENERIC
 CFLAGS += -DTARGET_C99_4X4
 CFLAGS += -DBLASFEO
-CFLAGS += -O2 -fPIC
+CFLAGS += -fPIC
 CFLAGS += -Wno-error=parentheses -Wno-error=maybe-uninitialized -Wno-error=unused-label -Wno-error=implicit-function-declaration
