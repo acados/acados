@@ -16,3 +16,12 @@ cd $PROJECT
 make "PROJECT=$PROJECT"
 bin/$PROJECT.exe
 make clean "PROJECT=$PROJECT"
+cd ..
+
+PROJECT=mass_spring_qpoases
+
+python3 script_mass_spring_qpoases/test_mass_spring_qpoases.py ../../.. $PROJECT
+cd $PROJECT
+make "PROJECT=$PROJECT"
+bin/$PROJECT.exe
+make clean "PROJECT=$PROJECT"
