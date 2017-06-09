@@ -18,7 +18,7 @@
 # Assume the source directory of acados is: ~/acados
 # The target folder to be created is: mass_spring_hpmpc
 # This command should be used:
-# python test_mass_spring_hpmpc.py ~/acados mass_spring_hpmpc
+# python test_pendulum_partial_tightening.py ~/acados pendulum_partial_tightening
 #
 # Author: Dang Doan
 # Date: 2017.04.03-2017.06.09
@@ -27,15 +27,15 @@ import sys
 import os
 import glob
 
-print('Running python script to grab mass_spring_hpmpc...')
+print('Running python script to grab pendulum_partial_tightening...')
 
 print(sys.version)  # get python version, for debugging
 
 if len(sys.argv) != 3:
     raise SyntaxError('This script needs exactly 2 arguments: \n \
-    test_mass_spring_hpmpc.py <acados_top_dir> <new_target_dir>\n \
+    test_pendulum_partial_tightening.py <acados_top_dir> <new_target_dir>\n \
     Example:\n \
-    test_mass_spring_hpmpc.py ~/acados mass_spring_hpmpc')
+    test_pendulum_partial_tightening.py ~/acados pendulum_partial_tightening')
 
 # 1. Bring all necessary files to one directory.
 
@@ -44,12 +44,15 @@ target_dir = str(sys.argv[2]).rstrip('/')  # no trailing / in target_dir
 # List of file to collect
 #  Note: this hard-coded path doesnot work with Windows
 workingsourcefiles = [
-    'examples/c/mass_spring_hpmpc.c',
+    'examples/c/pendulum_partial_tightening.c',
+    'examples/c/pendulum_model/pendulum_model.c',
+    'examples/c/pendulum_model/vde_forw_pendulum.c',
 
     'acados/ocp_qp/ocp_qp_hpmpc.c',
     'acados/utils/print.c',
     'acados/utils/timing.c',
     'acados/utils/tools.c',
+    'acados/sim/sim_erk_integrator.c',
 
     'external/hpmpc/interfaces/c/fortran_order_interface_libstr.c',
     'external/hpmpc/mpc_solvers/d_ip2_res_hard_libstr.c',
@@ -72,8 +75,13 @@ workingsourcefiles = [
     'external/blasfeo/auxiliary/v_aux_ext_dep_lib.c'
     ]
 workingincludefiles = [
+    'examples/c/pendulum_model/pendulum_model.h',
+
     'acados/ocp_qp/ocp_qp_common.h',
     'acados/ocp_qp/ocp_qp_hpmpc.h',
+    'acados/sim/sim_common.h',
+    'acados/sim/sim_collocation.h',
+    'acados/sim/sim_erk_integrator.h',
     'acados/sim/sim_rk_common.h',
     'acados/utils/print.h',
     'acados/utils/timing.h',
@@ -126,6 +134,8 @@ print('Step 1: Necessary files copied.')
 # 2. Modify .h and .c files to adapt to the new code structure:
 # List of texts to be replaced:
 old_text = [
+    'examples/c/pendulum_model/pendulum_model.h',
+
     'acados/ocp_qp/ocp_qp_common.h',
     'acados/ocp_qp/ocp_qp_hpmpc.h',
     'acados/utils/print.h',
@@ -133,6 +143,9 @@ old_text = [
     'acados/utils/tools.h',
     'acados/utils/types.h',
     'acados/sim/sim_common.h',
+    'acados/sim/sim_collocation.h',
+    'acados/sim/sim_erk_integrator.h',
+    'acados/sim/sim_rk_common.h',
 
     'hpmpc/include/aux_d.h',
     'hpmpc/include/c_interface.h',
@@ -171,6 +184,8 @@ old_text = [
 # List of new texts to replace old ones,
 #  in corresponding order to old_text:
 new_text = [
+    'pendulum_model.h',
+
     'ocp_qp_common.h',
     'ocp_qp_hpmpc.h',
     'print.h',
@@ -178,6 +193,9 @@ new_text = [
     'tools.h',
     'types.h',
     'sim_common.h',
+    'sim_collocation.h',
+    'sim_erk_integrator.h',
+    'sim_rk_common.h',
 
     'aux_d.h',
     'c_interface.h',
@@ -351,9 +369,9 @@ for kk in range(len_old_text):
 print('Step 4: Some specific functions replaced.')
 
 # 5. Copy Makefile and specific setting files
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_mass_spring_hpmpc/Makefile '+target_dir)
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_mass_spring_hpmpc/target.h '+target_dir+'/include/')
-os.system('cp '+top_dir+'/experimental/dang/esp32/script_mass_spring_hpmpc/blasfeo_target.h '+target_dir+'/include/')
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_pendulum_partial_tightening/Makefile '+target_dir)
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_pendulum_partial_tightening/target.h '+target_dir+'/include/')
+os.system('cp '+top_dir+'/experimental/dang/esp32/script_pendulum_partial_tightening/blasfeo_target.h '+target_dir+'/include/')
 
 print('Step 5: Makefile, blasfeo_target.h and HPMPC target.h replaced.')
 

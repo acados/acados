@@ -25,3 +25,12 @@ cd $PROJECT
 make "PROJECT=$PROJECT"
 bin/$PROJECT.exe
 make clean "PROJECT=$PROJECT"
+cd ..
+
+PROJECT=pendulum_partial_tightening
+
+python3 script_pendulum_partial_tightening/test_pendulum_partial_tightening.py ../../.. $PROJECT
+cd $PROJECT
+make "PROJECT=$PROJECT"
+bin/$PROJECT.exe
+make clean "PROJECT=$PROJECT"
