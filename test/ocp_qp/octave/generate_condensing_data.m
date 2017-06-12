@@ -3,11 +3,11 @@ clear
 
 % Check if package 'optim' is installed, used for quadprog
 list = pkg('list', 'optim');
-disp('Packages installed:')
-disp(list)
 if(isempty(list))
-    pkg install -forge struct
-    pkg install -forge optim
+    try
+        pkg install -forge struct
+        pkg install -forge optim        
+    end
 end
 pkg load optim
 

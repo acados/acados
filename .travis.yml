@@ -40,7 +40,7 @@ install:
 
 before_script:
   - set -e
-  - ls /home/travis/octave
+  - ls /home/travis/octave/optim-1.5.2/
 
 script:
   - cmake -E make_directory build
