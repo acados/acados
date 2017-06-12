@@ -44,7 +44,6 @@ before_script:
   - pushd /home/travis/octave_download/
   - wget http://packages.octave.org/download/optim-1.5.2.tar.gz
   - wget http://packages.octave.org/download/struct-1.0.14.tar.gz
-  - ls /home/travis/octave/optim-1.5.2/
   - popd
 
 script:
