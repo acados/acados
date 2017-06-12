@@ -6,7 +6,11 @@ list = pkg('list', 'optim');
 if(isempty(list))
     try
         pkg install -forge struct
-        pkg install -forge optim        
+        pkg install -forge optim      
+    catch
+        % Try install without downloading
+        pkg install /home/travis/octave_download/struct-1.0.14.tar.gz
+        pkg install /home/travis/octave_download/optim-1.5.2.tar.gz
     end
 end
 pkg load optim
