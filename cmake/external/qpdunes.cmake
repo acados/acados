@@ -6,7 +6,7 @@ ExternalProject_Add(
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/qpDUNES-dev"
     BINARY_DIR "${PROJECT_SOURCE_DIR}/external/qpDUNES-dev/build"
     CONFIGURE_COMMAND cmake ..
-    BUILD_COMMAND make
+    BUILD_COMMAND cmake --build .
     INSTALL_COMMAND ""
 )
 
