@@ -24,36 +24,20 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 set(CMAKE_SKIP_RPATH TRUE) # Seems necessary for Mac OSX
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-# Set default compile flags for GCC
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fPIC")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -fPIC")
-endif(CMAKE_COMPILER_IS_GNUCXX)
-
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
-    message("\n-- No build type chosen. Valid build types are:"
-        "\n   Release (default), Debug, Test, NoExternalLibs")
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "No build type chosen. Valid build types are: \
+        Release (default), None, Debug, Test, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
+message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
-message("\n\n --- Configuring acados with build type: ${CMAKE_BUILD_TYPE} ---\n\n")
-
-if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    add_definitions(-DDEBUG)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
-endif()
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-unused-function -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-function -Wno-unused-parameter")
 
 if(CMAKE_BUILD_TYPE MATCHES Test)
     enable_testing(true)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+    set(CMAKE_C_FLAGS_TEST "${CMAKE_C_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS_TEST "${CMAKE_CXX_FLAGS} -g")
 endif()
 
 # Set install and executable output directories
@@ -61,9 +45,8 @@ if(NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
 endif()
 set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
-set(LIBRARY_OUTPUT_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
+set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/share")
+message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 
 # Configure external libraries
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)

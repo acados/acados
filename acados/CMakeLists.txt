@@ -17,6 +17,13 @@
 #
 #
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -fdiagnostics-show-option")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
+endif()
+
 # Only test acados library for coverage
 if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE MATCHES "lcov"))
     include(CodeCoverage)
@@ -34,23 +41,22 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c)
 endif()
 
+find_package(qpOASES_e)
+
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
+target_compile_features(acados PRIVATE c_std_99)
 target_include_directories(acados
     PUBLIC
         "${ACADOS_SRC_DIR}/.."
         "${EXTERNAL_SRC_DIR}"
-        "${EXTERNAL_SRC_DIR}/qpDUNES-dev/include/"
-        "${EXTERNAL_SRC_DIR}/qpOASES/include/"
-)
-target_link_libraries(acados
-    PRIVATE
-        qpoases
-        hpmpc
-        blasfeo
-        qpdunes
-        m
-)
+        "${EXTERNAL_SRC_DIR}/qpDUNES-dev/include/")
+
+target_link_libraries(acados PRIVATE qpOASES_e hpmpc blasfeo qpdunes)
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    target_compile_definitions(acados PRIVATE DEBUG)
+endif()
 
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
@@ -63,8 +69,7 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
             ma27
             blas
             ${FORTRAN_LIBRARY}
-            m
-    )
+            m)
 endif()
 
 if(COVERAGE MATCHES "lcov")

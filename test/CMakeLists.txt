@@ -47,6 +47,7 @@ set_target_properties(unit_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_B
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     target_compile_definitions(unit_tests PRIVATE OOQP)
 endif()
+target_compile_features(unit_tests PRIVATE cxx_std_11)
 
 # Add as test in ctest
 add_test(NAME unit_tests COMMAND "${CMAKE_COMMAND}" -E chdir ${CMAKE_BINARY_DIR}/test ./unit_tests -a)
