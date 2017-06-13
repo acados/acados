@@ -40,11 +40,6 @@ install:
 
 before_script:
   - set -e
-  - mkdir -p /home/travis/octave_download/
-  - pushd /home/travis/octave_download/
-  - wget http://packages.octave.org/download/optim-1.5.2.tar.gz
-  - wget http://packages.octave.org/download/struct-1.0.14.tar.gz
-  - popd
 
 script:
   - cmake -E make_directory build

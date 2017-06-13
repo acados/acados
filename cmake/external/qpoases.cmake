@@ -5,12 +5,13 @@ ExternalProject_Add(
 
     CONFIGURE_COMMAND ""
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/qpOASES"
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND make
+    BINARY_DIR "${PROJECT_SOURCE_DIR}/external/qpOASES/build"
+    CONFIGURE_COMMAND cmake ..
+    BUILD_COMMAND cmake --build .
     INSTALL_COMMAND ""
 )
 
 ExternalProject_Get_Property(qpoases_project source_dir)
 add_library(qpoases STATIC IMPORTED GLOBAL)
 add_dependencies(qpoases qpoases_project)
-set_property(TARGET qpoases PROPERTY IMPORTED_LOCATION "${source_dir}/bin/libqpOASES_e.a")
+set_property(TARGET qpoases PROPERTY IMPORTED_LOCATION "${source_dir}/build/lib/libqpOASES_e.a")
