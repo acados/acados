@@ -62,15 +62,15 @@ option(QPOASES_BUILD_EXAMPLES "Build examples." ON)
 #################### compiler flags ########################
 ############################################################
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__NO_COPYRIGHT__")
-IF ( UNIX )
+# IF ( UNIX )
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -O3 -finline-functions -fPIC")
     # SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_DEBUG} -O3 -finline-functions")
     ADD_DEFINITIONS(-DLINUX)
     ADD_DEFINITIONS(-D__SUPPRESSANYOUTPUT__)
     ADD_DEFINITIONS(-D__NO_STATIC__)
-ELSEIF( WINDOWS )
-    SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc -DWIN32")
-ENDIF()
+# ELSEIF( WINDOWS )
+    # SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc -DWIN32")
+# ENDIF()
 
 # SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D__DEBUG__")
 
