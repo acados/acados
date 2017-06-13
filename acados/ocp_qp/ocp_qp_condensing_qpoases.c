@@ -172,7 +172,7 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
 }
 
 static int_t solve_condensed_QPB(const int_t ncv, QProblemB *QP,
-    real_t* primal_solution, real_t* dual_solution) {
+    real_t* primal_solution_, real_t* dual_solution_) {
 
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
@@ -183,14 +183,14 @@ static int_t solve_condensed_QPB(const int_t ncv, QProblemB *QP,
 
     int_t return_flag = QProblemB_initW(QP, out.H, out.h, out.lb,
             out.ub, &nwsr, &cpu_time, NULL,
-            dual_solution, NULL, NULL);
-    QProblemB_getPrimalSolution(QP, primal_solution);
-    QProblemB_getDualSolution(QP, dual_solution);
+            dual_solution_, NULL, NULL);
+    QProblemB_getPrimalSolution(QP, primal_solution_);
+    QProblemB_getDualSolution(QP, dual_solution_);
     return return_flag;
 }
 
 static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
-    real_t* primal_solution, real_t* dual_solution) {
+    real_t* primal_solution_, real_t* dual_solution_) {
 
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
@@ -201,9 +201,9 @@ static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
 
     int_t return_flag = QProblem_initW(QP, out.H, out.h, A_row_major, out.lb,
             out.ub, out.lbA, out.ubA, &nwsr, &cpu_time, NULL,
-            dual_solution, NULL, NULL, NULL);
-    QProblem_getPrimalSolution(QP, primal_solution);
-    QProblem_getDualSolution(QP, dual_solution);
+            dual_solution_, NULL, NULL, NULL);
+    QProblem_getPrimalSolution(QP, primal_solution_);
+    QProblem_getDualSolution(QP, dual_solution_);
     return return_flag;
 }
 
