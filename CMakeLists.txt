@@ -24,8 +24,12 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 set(CMAKE_SKIP_RPATH TRUE) # Seems necessary for Mac OSX
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+message(STATUS "MAIN BEFORE EVERYTHING: ${CMAKE_CXX_FLAGS}")
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
+
+message(STATUS "MAIN AFTER CXX_FLAGS ASSIGNMENT: ${CMAKE_CXX_FLAGS}")
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -41,17 +45,23 @@ if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
 endif()
 
+message(STATUS "MAIN AFTER RELEASE: ${CMAKE_CXX_FLAGS}")
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
 endif()
 
+message(STATUS "MAIN AFTER DEBUG: ${CMAKE_CXX_FLAGS}")
+
 if(CMAKE_BUILD_TYPE MATCHES Test)
     enable_testing(true)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
+
+message(STATUS "MAIN AFTER TEST: ${CMAKE_CXX_FLAGS}")
 
 # Set install and executable output directories
 if(NOT ACADOS_INSTALL_DIR)
