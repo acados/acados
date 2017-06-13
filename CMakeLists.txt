@@ -26,8 +26,11 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 message(STATUS "MAIN BEFORE EVERYTHING: ${CMAKE_CXX_FLAGS}")
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
+# Set default compile flags for GCC
+if(CMAKE_COMPILER_IS_GNUCXX)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fPIC")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -fPIC")
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
 message(STATUS "MAIN AFTER CXX_FLAGS ASSIGNMENT: ${CMAKE_CXX_FLAGS}")
 
