@@ -40,6 +40,7 @@ install:
 
 before_script:
   - set -e
+  - ls -la /home/travis/octave_download
 
 script:
   - cmake -E make_directory build
