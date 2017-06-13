@@ -24,10 +24,8 @@ include(UseSWIGMOD)
 
 # SWIG wrapper file introduces some warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    message(STATUS "SWIG: ${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-register")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    message(STATUS "SWIG: ${CMAKE_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation -Wno-missing-field-initializers")
 endif()
 
