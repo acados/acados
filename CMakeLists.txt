@@ -62,17 +62,25 @@ set(LIBRARY_OUTPUT_PATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
 
+message(STATUS "MAIN BEFORE SUBS: ${CMAKE_CXX_FLAGS}")
+
 # Configure external libraries
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 add_subdirectory(${EXTERNAL_SRC_DIR})
+
+message(STATUS "MAIN AFTER EXTERNAL: ${CMAKE_CXX_FLAGS}")
 
 # Configure acados
 set(ACADOS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/acados)
 add_subdirectory(acados)
 
+message(STATUS "MAIN AFTER ACADOS: ${CMAKE_CXX_FLAGS}")
+
 # Add examples
 set(EXAMPLES_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
 add_subdirectory(${EXAMPLES_SRC_DIR})
+
+message(STATUS "MAIN AFTER EXAMPLES: ${CMAKE_CXX_FLAGS}")
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
