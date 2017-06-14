@@ -19,7 +19,7 @@
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror -fdiagnostics-show-option")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
 endif()
@@ -45,7 +45,6 @@ find_package(qpOASES_e)
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
-target_compile_features(acados PRIVATE c_std_99)
 target_include_directories(acados
     PUBLIC
         "${ACADOS_SRC_DIR}/.."

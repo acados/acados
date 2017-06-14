@@ -21,12 +21,12 @@ cmake_minimum_required(VERSION 3.2)
 project(acados LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
-set(CMAKE_SKIP_RPATH TRUE) # Seems necessary for Mac OSX
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "No build type chosen. Valid build types are: \
+    set(CMAKE_BUILD_TYPE Release
+        CACHE STRING "No build type chosen. Valid build types are: \
         Release (default), None, Debug, Test, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
@@ -40,11 +40,12 @@ if(CMAKE_BUILD_TYPE MATCHES Test)
     set(CMAKE_CXX_FLAGS_TEST "${CMAKE_CXX_FLAGS} -g")
 endif()
 
-# Set install and executable output directories
+# Set install directories
 if(NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
 endif()
-set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
+set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR}
+    CACHE STRING "Install path prefix, prepended onto install directories." FORCE)
 set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/share")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 

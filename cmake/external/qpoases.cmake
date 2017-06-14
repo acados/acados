@@ -9,4 +9,6 @@ ExternalProject_Add(
     CONFIGURE_COMMAND cmake -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} ..
     BUILD_COMMAND cmake --build .
     INSTALL_COMMAND cmake --build . --target install
+    LOG_CONFIGURE 1  # suppress output
+    LOG_BUILD 1
 )

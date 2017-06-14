@@ -8,6 +8,8 @@ ExternalProject_Add(
     CONFIGURE_COMMAND cmake ..
     BUILD_COMMAND make
     INSTALL_COMMAND ""
+    LOG_CONFIGURE 1  # suppress output
+    LOG_BUILD 1
 )
 
 ExternalProject_Get_Property(qpdunes_project source_dir)
