@@ -17,8 +17,11 @@
 #
 #
 
-add_test(NAME ocp_nlp_py
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp.py)
+find_package(PythonInterp 3)
+if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
+    add_test(NAME ocp_nlp_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp.py)
 
-add_test(NAME ocp_qp_py
-    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.py)
+    add_test(NAME ocp_qp_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.py)
+endif()
