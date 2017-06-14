@@ -46,8 +46,14 @@ script:
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
   - cmake --build build --target install
   - cmake --build build --target lint
+<<<<<<< HEAD
   - cmake -E chdir build ctest --output-on-failure 
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release -DUNIT_TESTS=OFF ..
+=======
+  - cmake -E chdir build ctest --output-on-failure
+  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
+>>>>>>> 1e26bd1fe592f0a810017d175895d71f20d59ed7
   - cmake --build build --clean-first
 
 after_success:
