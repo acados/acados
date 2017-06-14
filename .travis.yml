@@ -43,15 +43,18 @@ before_script:
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
   - cmake --build build --target install
   - cmake --build build --target lint
   - cmake -E chdir build ctest --output-on-failure 
-  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
-  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
+  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release -DUNIT_TESTS=OFF ..
   - cmake --build build --clean-first
 
 after_success:
+  # Generate coverage reports
+  - pwd
+  - cmake -E chdir ${TRAVIS_BUILD_DIR}/build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
+  - cmake --build ${TRAVIS_BUILD_DIR}/build --target acados_coverage || echo "Coverage report not generated"
   - pushd ${TRAVIS_BUILD_DIR}/build
-  # Uploading report to CodeCov
+  # Upload report to CodeCov
   - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi 
