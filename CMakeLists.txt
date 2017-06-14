@@ -54,12 +54,10 @@ set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 add_subdirectory(${EXTERNAL_SRC_DIR})
 
 # Configure acados
-set(ACADOS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/acados)
 add_subdirectory(acados)
 
 # Add examples
-set(EXAMPLES_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-add_subdirectory(${EXAMPLES_SRC_DIR})
+add_subdirectory(examples)
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)

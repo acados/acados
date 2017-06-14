@@ -24,35 +24,34 @@
 
 ##
 ##     Filename:  CMakeLists.txt
-##     Author:    Hans Joachim Ferreau (thanks to Milan Vukov)
-##     Version:   3.2
+##     Author:    Hans Joachim Ferreau (thanks to Milan Vukov), Robin Verschueren
+##     Version:   3.1embedded
 ##     Date:      2007-2017
 ##
 
 cmake_minimum_required(VERSION 2.6)
 
-PROJECT(qpOASES C)
-SET(PACKAGE_NAME "qpOASES")
-SET(PACKAGE_VERSION "3.1embeded")
-SET(PACKAGE_SO_VERSION "3.1")
-SET(PACKAGE_DESCRIPTION "An implementation of the online active set strategy")
-SET(PACKAGE_AUTHOR "Hans Joachim Ferreau, Andreas Potschka, Christian Kirches et al.")
-SET(PACKAGE_MAINTAINER "Hans Joachim Ferreau, Andreas Potschka, Christian Kirches et al.")
-SET(PACKAGE_URL "https://projects.coin-or.org/qpOASES")
+project(qpOASES C)
+set(PACKAGE_NAME "qpOASES")
+set(PACKAGE_VERSION "3.1embeded")
+set(PACKAGE_SO_VERSION "3.1")
+set(PACKAGE_DESCRIPTION "An implementation of the online active set strategy")
+set(PACKAGE_AUTHOR "Hans Joachim Ferreau, Andreas Potschka, Christian Kirches et al.")
+set(PACKAGE_MAINTAINER "Hans Joachim Ferreau, Andreas Potschka, Christian Kirches et al.")
+set(PACKAGE_URL "https://projects.coin-or.org/qpOASES")
 
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 
-IF( NOT CMAKE_VERBOSE_MAKEFILE )
-    SET( CMAKE_VERBOSE_MAKEFILE ON )
-ENDIF( NOT CMAKE_VERBOSE_MAKEFILE )
+if(NOT CMAKE_VERBOSE_MAKEFILE)
+    set(CMAKE_VERBOSE_MAKEFILE ON)
+endif(NOT CMAKE_VERBOSE_MAKEFILE)
 
-IF( NOT CMAKE_BUILD_TYPE )
-    SET(CMAKE_BUILD_TYPE Release CACHE STRING
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING
         "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
-        FORCE
-        )
-ENDIF( NOT CMAKE_BUILD_TYPE )
+        FORCE)
+endif(NOT CMAKE_BUILD_TYPE)
 
 
 option(QPOASES_BUILD_EXAMPLES "Build examples." ON)
@@ -61,73 +60,46 @@ option(QPOASES_BUILD_EXAMPLES "Build examples." ON)
 ############################################################
 #################### compiler flags ########################
 ############################################################
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__NO_COPYRIGHT__")
-# IF ( UNIX )
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -O3 -finline-functions -fPIC")
-    # SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_DEBUG} -O3 -finline-functions")
-    ADD_DEFINITIONS(-DLINUX)
-    ADD_DEFINITIONS(-D__SUPPRESSANYOUTPUT__)
-    ADD_DEFINITIONS(-D__NO_STATIC__)
-# ELSEIF( WINDOWS )
-    # SET(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc -DWIN32")
-# ENDIF()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__NO_COPYRIGHT__")
+if(UNIX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -fPIC")
+    add_definitions(-DLINUX)
+    add_definitions(-D__SUPPRESSANYOUTPUT__)
+    add_definitions(-D__NO_STATIC__)
+elseif(WINDOWS)
+    set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc -DWIN32")
+endif()
 
-# SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D__DEBUG__")
-
-############################################################
-######################## rpath #############################
-############################################################
-# use, i.e. don't skip the full RPATH for the build tree
-# set(CMAKE_SKIP_BUILD_RPATH  FALSE)
-
-# # when building, don't use the install RPATH already
-# # (but later on when installing)
-# set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-
-# set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-# # add the automatically determined parts of the RPATH
-# # which point to directories outside the build tree to the install RPATH
-# set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-# # the RPATH to be used when installing, but only if it's not a system directory
-# list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-# if("${isSystemDir}" STREQUAL "-1")
-#    set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-# endif("${isSystemDir}" STREQUAL "-1")
-
-
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D__DEBUG__")
 
 ############################################################
 #################### build and install #####################
 ############################################################
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include)
 
 # compile qpOASES libraries
-FILE(GLOB SRC src/*.c)
+file(GLOB SRC src/*.c)
 
 # library
-ADD_LIBRARY(qpOASES_e STATIC ${SRC})
-TARGET_INCLUDE_DIRECTORIES(qpOASES_e PUBLIC
+add_library(qpOASES_e STATIC ${SRC})
+target_include_directories(qpOASES_e PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-TARGET_LINK_LIBRARIES(qpOASES_e m)
-INSTALL(TARGETS qpOASES_e EXPORT qpOASES_eConfig
+target_link_libraries(qpOASES_e m)
+install(TARGETS qpOASES_e EXPORT qpOASES_eConfig
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
-  RUNTIME DESTINATION lib
-)
-INSTALL(EXPORT qpOASES_eConfig DESTINATION share)
-SET_TARGET_PROPERTIES(
+  RUNTIME DESTINATION lib)
+install(EXPORT qpOASES_eConfig DESTINATION share)
+set_target_properties(
     qpOASES_e
     PROPERTIES
-    SOVERSION ${PACKAGE_SO_VERSION}
-    )
+    SOVERSION ${PACKAGE_SO_VERSION})
+export(EXPORT qpOASES_eConfig FILE ${PROJECT_BINARY_DIR}/qpOASES_eConfig.cmake)
 
 # headers
-INSTALL(FILES include/qpOASES_e.h
+install(FILES include/qpOASES_e.h
   DESTINATION include)
-INSTALL(DIRECTORY include/qpOASES_e
+install(DIRECTORY include/qpOASES_e
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE)
@@ -136,21 +108,15 @@ INSTALL(DIRECTORY include/qpOASES_e
 ######################### examples #########################
 ############################################################
 
-if (QPOASES_BUILD_EXAMPLES)
+if(QPOASES_BUILD_EXAMPLES)
     # compile qpOASES examples
-    SET(EXAMPLE_NAMES
+    set(EXAMPLE_NAMES
         example1
         example1b
         example3
-        exampleLP
-    )
-
-    FOREACH(ELEMENT ${EXAMPLE_NAMES})
-        ADD_EXECUTABLE(${ELEMENT} examples/${ELEMENT}.c)
-        TARGET_LINK_LIBRARIES(${ELEMENT} qpOASES_e)
-    ENDFOREACH(ELEMENT ${EXAMPLE_NAMES})
-endif(QPOASES_BUILD_EXAMPLES)
-
-##
-##   end of file
-##
+        exampleLP)
+    foreach(ELEMENT ${EXAMPLE_NAMES})
+        add_executable(${ELEMENT} examples/${ELEMENT}.c)
+        target_link_libraries(${ELEMENT} qpOASES_e)
+    endforeach()
+endif()

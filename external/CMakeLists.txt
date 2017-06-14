@@ -1,7 +1,7 @@
 include(external/blasfeo)
 include(external/hpmpc)
 include(external/qpdunes)
-include(external/qpoases)
+add_subdirectory(qpOASES)
 if (NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/OOQP)
         include(external/ooqp)
