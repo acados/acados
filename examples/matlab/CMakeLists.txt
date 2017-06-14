@@ -17,19 +17,13 @@
 #
 #
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
-endif()
+find_package(Matlab)
+if(SWIG_MATLAB AND MATLAB_FOUND)
+add_test(NAME ocp_qp_matlab
+    COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r
+        "try, run('${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp_example'), catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 
-add_subdirectory(c)
-
-if(SWIG_PYTHON)
-    add_subdirectory(python)
-endif()
-
-if(SWIG_MATLAB)
-    add_subdirectory(matlab)
+add_test(NAME ocp_nlp_matlab
+    COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r
+        "try, run('${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp_example'), catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 endif()

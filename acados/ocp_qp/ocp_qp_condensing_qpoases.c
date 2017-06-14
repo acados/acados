@@ -61,29 +61,29 @@ condensing_in in;
 condensing_out out;
 condensing_workspace work;
 
-#ifdef DEBUG
-static void print_ocp_qp(ocp_qp_in *in) {
-    int_t N = in->N;
-    for (int_t i = 0; i < N; i++) {
-        print_int_array("nx.txt", in->nx, N+1);
-        print_int_array("nu.txt", in->nu, N);
-        print_int_array("nb.txt", in->nb, N+1);
-        print_int_array("nc.txt", in->nc, N+1);
-    }
-}
+// #ifdef DEBUG
+// static void print_ocp_qp(ocp_qp_in *in) {
+//     int_t N = in->N;
+//     for (int_t i = 0; i < N; i++) {
+//         print_int_array("nx.txt", in->nx, N+1);
+//         print_int_array("nu.txt", in->nu, N);
+//         print_int_array("nb.txt", in->nb, N+1);
+//         print_int_array("nc.txt", in->nc, N+1);
+//     }
+// }
 
-static void print_condensed_QP(const int_t ncv, const int_t nc,
-    condensing_out *out) {
+// static void print_condensed_QP(const int_t ncv, const int_t nc,
+//     condensing_out *out) {
 
-    print_matrix("hessian.txt", out->H, ncv, ncv);
-    print_array("gradient.txt", out->h, ncv);
-    print_matrix("A.txt", out->A, nc, ncv);
-    print_array("lbA.txt", out->lbA, nc);
-    print_array("ubA.txt", out->ubA, nc);
-    print_array("lb.txt", out->lb, ncv);
-    print_array("ub.txt", out->ub, ncv);
-}
-#endif
+//     print_matrix("hessian.txt", out->H, ncv, ncv);
+//     print_array("gradient.txt", out->h, ncv);
+//     print_matrix("A.txt", out->A, nc, ncv);
+//     print_array("lbA.txt", out->lbA, nc);
+//     print_array("ubA.txt", out->ubA, nc);
+//     print_array("lb.txt", out->lb, ncv);
+//     print_array("ub.txt", out->ub, ncv);
+// }
+// #endif
 
 static int_t get_num_condensed_vars(ocp_qp_in *in) {
     int_t num_condensed_vars = 0;
@@ -301,9 +301,9 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
     double *workspace = (double*) workspace_;
     fill_in_condensing_structs(qp_in);
-    #ifdef DEBUG
-    print_ocp_qp(qp_in);
-    #endif
+    // #ifdef DEBUG
+    // print_ocp_qp(qp_in);
+    // #endif
     condensing_N2_fixed_initial_state(&in, &out, &work);
 
     // Process arguments
@@ -316,9 +316,9 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
     convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);
 
-    #ifdef DEBUG
-    print_condensed_QP(work.nconvars, work.nconstraints, &out);
-    #endif
+    // #ifdef DEBUG
+    // print_condensed_QP(work.nconvars, work.nconstraints, &out);
+    // #endif
 
     int_t return_flag;
     if (work.nconstraints) {

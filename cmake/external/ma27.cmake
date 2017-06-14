@@ -8,6 +8,8 @@ ExternalProject_Add(
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make
     INSTALL_COMMAND ""
+    LOG_CONFIGURE 1  # suppress output
+    LOG_BUILD 1
 )
 
 ExternalProject_Add_Step(ma27_project cp_lib
