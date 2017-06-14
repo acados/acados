@@ -46,10 +46,9 @@ add_library(acados STATIC ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/.." # for include "acados/..."
-        "${EXTERNAL_SRC_DIR}"
-        "${EXTERNAL_SRC_DIR}/qpDUNES-dev/include/")
+        "${EXTERNAL_SRC_DIR}")
 
-target_link_libraries(acados PRIVATE qpOASES_e hpmpc blasfeo qpdunes)
+target_link_libraries(acados PUBLIC qpOASES_e hpmpc blasfeo qpdunes)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
