@@ -34,12 +34,6 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
 enable_testing(true)
 
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-unused-function -Wno-unused-parameter")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-function -Wno-unused-parameter")
-
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
-
 # Set install directories
 if(NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
