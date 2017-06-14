@@ -40,20 +40,14 @@ install:
 
 before_script:
   - set -e
-  - mkdir -p /home/travis/octave_download
-  - pushd /home/travis/octave_download
-  - wget http://packages.octave.org/download/optim-1.5.2.tar.gz
-  - wget http://packages.octave.org/download/struct-1.0.14.tar.gz
-  - popd
-  - ls -la /home/travis/octave_download
 
 script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - cmake --build build --target install
   - cmake --build build --target lint
+  - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
-  - cmake --build build --target test
   - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
   - cmake --build build --clean-first
 
