@@ -35,7 +35,8 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-if(SWIG_MATLAB)
+find_package(Matlab)
+if(SWIG_MATLAB AND MATLAB_FOUND)
     find_package(Matlab REQUIRED)
     find_package(CasadiMatlab)
 
@@ -66,7 +67,8 @@ if(SWIG_MATLAB)
     )
 endif()
 
-if(SWIG_PYTHON)
+find_package(PythonInterp 3)
+if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
     find_package(PythonInterp 3 REQUIRED)
     find_package(PythonLibs 3 REQUIRED)
     find_package(NumPy REQUIRED)
