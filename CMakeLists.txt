@@ -28,18 +28,17 @@ set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release
         CACHE STRING "No build type chosen. Valid build types are: \
-        Release (default), None, Debug, Test, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
+        Release (default), None, Debug, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
+
+enable_testing(true)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wno-unused-function -Wno-unused-parameter")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wno-unused-function -Wno-unused-parameter")
 
-if(CMAKE_BUILD_TYPE MATCHES Test)
-    enable_testing(true)
-    set(CMAKE_C_FLAGS_TEST "${CMAKE_C_FLAGS} -g")
-    set(CMAKE_CXX_FLAGS_TEST "${CMAKE_CXX_FLAGS} -g")
-endif()
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
 
 # Set install directories
 if(NOT ACADOS_INSTALL_DIR)
@@ -66,7 +65,7 @@ if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
 endif()
 
 # Generate test data and configure unit tests
-if(CMAKE_BUILD_TYPE MATCHES Test)
+if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 

@@ -25,7 +25,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 # Only test acados library for coverage
-if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE MATCHES "lcov"))
+if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)
     setup_target_for_coverage(acados_coverage ctest coverage)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
