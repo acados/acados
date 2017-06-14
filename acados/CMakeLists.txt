@@ -17,8 +17,15 @@
 #
 #
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
+elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
+endif()
+
 # Only test acados library for coverage
-if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE MATCHES "lcov"))
+if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)
     setup_target_for_coverage(acados_coverage ctest coverage)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
@@ -26,31 +33,26 @@ if((CMAKE_BUILD_TYPE MATCHES Test) AND (COVERAGE MATCHES "lcov"))
 endif()
 
 # Build list with all source files to go into the acados library
-file(GLOB_RECURSE ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/*.c)
+file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 # Exclude helper files
-list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c)
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c")
 
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
-    list(REMOVE_ITEM ACADOS_SRC ${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
 endif()
 
 # Define acados library
 add_library(acados STATIC ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
-        "${ACADOS_SRC_DIR}/.."
-        "${EXTERNAL_SRC_DIR}"
-        "${EXTERNAL_SRC_DIR}/qpDUNES-dev/include/"
-        "${EXTERNAL_SRC_DIR}/qpOASES/include/"
-)
-target_link_libraries(acados
-    PRIVATE
-        qpoases
-        hpmpc
-        blasfeo
-        qpdunes
-        m
-)
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." # for include "acados/..."
+        "${EXTERNAL_SRC_DIR}")
+
+target_link_libraries(acados PUBLIC qpOASES_e hpmpc blasfeo qpdunes)
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    target_compile_definitions(acados PRIVATE DEBUG)
+endif()
 
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
@@ -63,8 +65,7 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
             ma27
             blas
             ${FORTRAN_LIBRARY}
-            m
-    )
+            m)
 endif()
 
 if(COVERAGE MATCHES "lcov")

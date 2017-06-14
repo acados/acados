@@ -17,19 +17,11 @@
 #
 #
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
-endif()
+find_package(PythonInterp 3)
+if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
+    add_test(NAME ocp_nlp_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp.py)
 
-add_subdirectory(c)
-
-if(SWIG_PYTHON)
-    add_subdirectory(python)
-endif()
-
-if(SWIG_MATLAB)
-    add_subdirectory(matlab)
+    add_test(NAME ocp_qp_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.py)
 endif()
