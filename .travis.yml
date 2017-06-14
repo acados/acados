@@ -40,12 +40,6 @@ install:
 
 before_script:
   - set -e
-  - mkdir -p /home/travis/octave_download
-  - pushd /home/travis/octave_download
-  - wget http://packages.octave.org/download/optim-1.5.2.tar.gz
-  - wget http://packages.octave.org/download/struct-1.0.14.tar.gz
-  - popd
-  - ls -la /home/travis/octave_download
 
 script:
   - cmake -E make_directory build
@@ -58,6 +52,6 @@ script:
   - cmake --build build --clean-first
 
 after_success:
-  - pushd ${TRAVIS_BUILD_DIR}/build/test
+  - pushd ${TRAVIS_BUILD_DIR}/build
   # Uploading report to CodeCov
-  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi 
