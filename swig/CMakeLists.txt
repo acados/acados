@@ -36,16 +36,16 @@ set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-if(SWIG_MATLAB OR SWIG_PYTHON)
-    add_library(casadi SHARED IMPORTED)
-    set_property(TARGET casadi PROPERTY IMPORTED_LOCATION "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1/libcasadi.dylib")
-    install(FILES "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1/libcasadi.dylib" DESTINATION lib)
-endif()
-
 find_package(Matlab)
 if(SWIG_MATLAB AND MATLAB_FOUND)
     find_package(Matlab REQUIRED)
     find_package(CasadiMatlab)
+
+    if(CASADIMATLAB_FOUND)
+        add_library(casadi SHARED IMPORTED)
+        set_property(TARGET casadi PROPERTY IMPORTED_LOCATION "${CASADIMATLAB_LIBRARY}/libcasadi.dylib")
+        install(FILES "${CASADIMATLAB_LIBRARY}/libcasadi.dylib" DESTINATION lib) 
+    endif()
 
     swig_module_initialize(acadosMEX matlab)
     swig_add_source_to_module(acadosMEX FALSE MEX_FILE acados.i)
@@ -80,6 +80,13 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
     find_package(PythonLibs 3 REQUIRED)
     find_package(NumPy REQUIRED)
     find_package(CasadiPython)
+
+    # do not install casadi twice
+    if(NOT (SWIG_MATLAB AND CASADIMATLAB_FOUND) AND CASADIPYTHON_FOUND)
+        add_library(casadi SHARED IMPORTED)
+        set_property(TARGET casadi PROPERTY IMPORTED_LOCATION "${CASADIPYTHON_LIBRARY}/libcasadi.dylib")
+        install(FILES "${CASADIPYTHON_LIBRARY}/libcasadi.dylib" DESTINATION lib) 
+    endif()
 
     include_directories(${PYTHON_INCLUDE_DIRS})
     include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
