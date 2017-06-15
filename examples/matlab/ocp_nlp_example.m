@@ -23,18 +23,10 @@ nlp.ls_cost_matrix = cost_matrices;
 % The following ODE model comes from Chen1998
 x = SX.sym('x', nx);
 u = SX.sym('u', nu);
-
 mu = 0.5;
 rhs = vertcat(x(2) + u*(mu + (1.-mu)*x(1)), x(1) + u*(mu - 4.*(1.-mu)*x(2)));
-
-Sx = SX.sym('Sx', nx, nx);
-Su = SX.sym('Su', nx, nu);
-
-vde_x = jtimes(rhs, x, Sx);
-vde_u = jacobian(rhs, u) + jtimes(rhs, x, Su);
-vde = Function('vde', {x, Sx, Su, u}, {rhs, vde_x, vde_u});
-vde.generate('vde.c');
-nlp.set_model('vde');
+ode_fun = Function('ode_fun', {x, u}, {rhs});
+nlp.set_model(ode_fun);
 
 solver = ocp_nlp_solver('gauss-newton-sqp', nlp);
 

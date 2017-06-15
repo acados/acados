@@ -60,9 +60,7 @@ add_executable(unit_tests
     $<TARGET_OBJECTS:sim_gen>
     ${TEST_UTILS_SRC}
 )
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
+
 target_include_directories(unit_tests PRIVATE "${EXTERNAL_SRC_DIR}/eigen")
 target_link_libraries(unit_tests acados)
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)

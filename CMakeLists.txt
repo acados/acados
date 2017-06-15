@@ -34,6 +34,15 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
 enable_testing(true)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Werror -fdiagnostics-show-option")
+elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
+endif()
+
 # Set install directories
 if(NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
