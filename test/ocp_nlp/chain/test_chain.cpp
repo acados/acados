@@ -121,7 +121,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         sim_solver integrators[NN];
 
         sim_RK_opts rk_opts[NN];
-        void *sim_work;
+        void *sim_work = NULL;
         sim_lifted_irk_memory irk_mem[NN];
 
         // TODO(rien): can I move this somewhere inside the integrator?
@@ -205,7 +205,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 sim_erk_create_arguments(&rk_opts[jj], 4);
                 workspace_size = sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
             }
-            sim_work = (void *) malloc(workspace_size);
+            if (jj == 0)
+                sim_work = (void *) malloc(workspace_size);
             integrators[jj].work = sim_work;
         }
 
