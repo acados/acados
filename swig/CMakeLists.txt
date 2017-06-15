@@ -31,7 +31,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 # SWIG does not support target_include_directories()
-include_directories("${PROJECT_SOURCE_DIR}" "/Users/robin/casadi-py35-np1.9.1-v3.1.1/include")
+include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1/include")
 set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
