@@ -31,7 +31,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 # SWIG does not support target_include_directories()
-include_directories("${PROJECT_SOURCE_DIR}" "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1/include")
+include_directories("${PROJECT_SOURCE_DIR}")
 set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
@@ -42,8 +42,10 @@ if(SWIG_MATLAB AND MATLAB_FOUND)
     find_package(CasadiMatlab)
 
     if(CASADIMATLAB_FOUND)
-        add_library(casadi SHARED IMPORTED)
+        message(STATUS "Adding casadi libs...")
+        add_library(casadi SHARED IMPORTED GLOBAL)
         set_property(TARGET casadi PROPERTY IMPORTED_LOCATION "${CASADIMATLAB_LIBRARY}/libcasadi.dylib")
+        include_directories("${CASADIMATLAB_INCLUDE_DIR}")
         install(FILES "${CASADIMATLAB_LIBRARY}/libcasadi.dylib" DESTINATION lib) 
     endif()
 
@@ -83,8 +85,10 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
 
     # do not install casadi twice
     if(NOT (SWIG_MATLAB AND CASADIMATLAB_FOUND) AND CASADIPYTHON_FOUND)
-        add_library(casadi SHARED IMPORTED)
+        message(STATUS "Adding casadi libs...")
+        add_library(casadi SHARED IMPORTED GLOBAL)
         set_property(TARGET casadi PROPERTY IMPORTED_LOCATION "${CASADIPYTHON_LIBRARY}/libcasadi.dylib")
+        include_directories("${CASADIPYTHON_INCLUDE_DIR}")
         install(FILES "${CASADIPYTHON_LIBRARY}/libcasadi.dylib" DESTINATION lib) 
     endif()
 
