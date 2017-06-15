@@ -341,7 +341,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         const std::vector<casadi::SX> output_vector = {rhs, vde_x, vde_u};
         char generated_file_name[256], model_name[256];
         snprintf(model_name, sizeof(model_name), "vde");
-        snprintf(generated_file_name, sizeof(generated_file_name), "%s.c", model_name);        
+        snprintf(generated_file_name, sizeof(generated_file_name), "%s.c", model_name);
         casadi::Function vde = casadi::Function(model_name, input_vector, output_vector);
         vde.generate(generated_file_name);
         char library_name[256], path_to_library[256];

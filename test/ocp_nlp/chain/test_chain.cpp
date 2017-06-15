@@ -205,7 +205,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 sim_erk_create_arguments(&rk_opts[jj], 4);
                 workspace_size = sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
             }
-            if (jj == 0) sim_work = (void *) malloc(workspace_size);
+            sim_work = (void *) malloc(workspace_size);
             integrators[jj].work = sim_work;
         }
 
