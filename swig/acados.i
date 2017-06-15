@@ -61,6 +61,8 @@ typedef PyObject LangObject;
 #include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
 
+#include "casadi/casadi.hpp"
+
 %}
 
 %{
@@ -318,7 +320,30 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         return nlp_in;
     }
 
-    void set_model(char *model_name) {
+    void set_model(casadi::Function& f) {
+        if (f.n_in() != 2)
+            throw std::runtime_error("An ODE model should have 2 inputs: state and controls");
+        if (f.n_out() != 1)
+            throw std::runtime_error("An ODE model should have 1 output: the right hand side");
+        casadi::SX x = f.sx_in(0);
+        casadi::SX u = f.sx_in(1);
+        int_t nx = x.size1();
+        int_t nu = u.size1();
+        const std::vector<casadi::SX> input = {x, u};
+        casadi::SX rhs = casadi::SX::vertcat(f(input));
+        if (rhs.size1() != nx)
+            throw std::runtime_error("Length of right hand size should equal number of states");
+        casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
+        casadi::SX Su = casadi::SX::sym("Su", nx, nu);
+        casadi::SX vde_x = casadi::SX::jtimes(rhs, x, Sx);
+        casadi::SX vde_u = casadi::SX::jacobian(rhs, u) + casadi::SX::jtimes(rhs, x, Su);
+        const std::vector<casadi::SX> input_vector = {x, Sx, Su, u};
+        const std::vector<casadi::SX> output_vector = {rhs, vde_x, vde_u};
+        char generated_file_name[256], model_name[256];
+        snprintf(model_name, sizeof(model_name), "vde");
+        snprintf(generated_file_name, sizeof(generated_file_name), "%s.c", model_name);
+        casadi::Function vde = casadi::Function(model_name, input_vector, output_vector);
+        vde.generate(generated_file_name);
         char library_name[256], path_to_library[256];
         snprintf(library_name, sizeof(library_name), "%s.so", model_name);
         snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
