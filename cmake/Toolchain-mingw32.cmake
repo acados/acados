@@ -19,7 +19,7 @@ find_program(CMAKE_RANLIB NAMES ${COMILER-PREFIX}-ranlib)
 if(APPLE)
     SET(MACOS_PREFIX "local/Cellar/mingw-w64/5.0.2_1/toolchain-${BITNESS}/")
 endif()
-SET(CMAKE_FIND_ROOT_PATH "/usr/${MACOS_PREFIX}${COMPILER_PREFIX}" "${HOME}/WindowsLibs")
+SET(CMAKE_FIND_ROOT_PATH "/usr/${MACOS_PREFIX}${COMPILER_PREFIX}" "$ENV{HOME}/WindowsLibs")
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 
