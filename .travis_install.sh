@@ -6,6 +6,13 @@ sudo apt-get install -yqq $CXX $CC $COVERAGE libgsl0-dev liblapack-dev libopenbl
 
 pip install numpy scipy matplotlib
 
+# Windows libs for openblas
+pushd $HOME
+wget -q https://sourceforge.net/projects/openblas/files/v0.2.19/OpenBLAS-v0.2.19-Win64-int32.zip/download
+mkdir -p WindowsLibs
+tar xvf OpenBLAS-v0.2.19-Win64-int32.zip --strip-components=1 -C WindowsLibs
+popd
+
 pushd external
 wget -q http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
 mkdir -p eigen

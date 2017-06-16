@@ -61,12 +61,12 @@ option(QPOASES_BUILD_EXAMPLES "Build examples." ON)
 #################### compiler flags ########################
 ############################################################
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__NO_COPYRIGHT__")
-if(UNIX)
+if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w -fPIC")
     add_definitions(-DLINUX)
     add_definitions(-D__SUPPRESSANYOUTPUT__)
     add_definitions(-D__NO_STATIC__)
-elseif(WINDOWS)
+elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc -DWIN32")
 endif()
 
