@@ -17,4 +17,4 @@
 	ignore = dirty
 [submodule "hpipm"]
 	path = external/hpipm
-	url = https://github.com:giaf/hpipm.git
+	url = https://github.com/giaf/hpipm.git
