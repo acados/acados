@@ -54,7 +54,6 @@ SET(Open_BLAS_INCLUDE_SEARCH_PATHS
   /opt/openblas/include
   $ENV{OpenBLAS_HOME}
   $ENV{OpenBLAS_HOME}/include
-  ${CMAKE_FIND_ROOT_PATH}/include
 )
 
 SET(Open_BLAS_LIB_SEARCH_PATHS
@@ -72,8 +71,7 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
         $ENV{OpenBLAS}/lib
         $ENV{OpenBLAS_HOME}
         $ENV{OpenBLAS_HOME}/lib
-        ${CMAKE_FIND_ROOT_PATH}/lib
- )
+)
 
 FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS})
 FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS})

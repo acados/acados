@@ -21,7 +21,7 @@ if(APPLE)
 endif()
 SET(CMAKE_FIND_ROOT_PATH
     "/usr/${MACOS_PREFIX}${COMPILER_PREFIX}"
-    "/usr/lib/gcc/${COMPILER_PREFIX}/4.8"
+    "/usr/lib/gcc/${COMPILER_PREFIX}/*"
     "$ENV{HOME}/WindowsLibs")
 
 # adjust the default behaviour of the FIND_XXX() commands:

@@ -17,7 +17,12 @@
 #
 #
 
-find_library(FORTRAN_LIBRARY gfortran HINTS /usr/lib/gcc/x86_64-linux-gnu/* /usr/local/lib/gcc/*)
+find_library(FORTRAN_LIBRARY gfortran
+    HINTS
+        /usr/lib/gcc/x86_64-linux-gnu/*
+        /usr/local/lib/gcc/*
+        ${CMAKE_FIND_ROOT_PATH}
+    CMAKE_FIND_ROOT_PATH_BOTH)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FortranLibs FOUND_VAR FORTRANLIBS_FOUND
