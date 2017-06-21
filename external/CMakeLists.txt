@@ -19,7 +19,7 @@
 
 include(external/blasfeo)
 include(external/hpmpc)
-# add_subdirectory(hpipm)
+add_subdirectory(hpipm)
 add_subdirectory(qpDUNES-dev)
 add_subdirectory(qpOASES)
 if (NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
