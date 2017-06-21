@@ -1,9 +1,14 @@
 include(ExternalProject)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    # Needed for cross-compiling
+    set(HOST_FLAG "--host=${COMPILER_PREFIX}")
+endif()
+
 ExternalProject_Add(
     ma27_project
 
-    CONFIGURE_COMMAND ./configure "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FCFLAGS=-O2 -fPIC"
+    CONFIGURE_COMMAND ./configure "${HOST_FLAG}" "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FCFLAGS=-O2 -fPIC"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/coinhsl"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make

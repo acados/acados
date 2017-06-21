@@ -43,6 +43,9 @@ target_include_directories(acados
 
 target_link_libraries(acados PUBLIC qpOASES_e hpmpc blasfeo qpdunes)
 
+# TODO: The following definition should go ASAP!
+target_compile_definitions(acados PRIVATE EXT_DEP)
+
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()
