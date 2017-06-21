@@ -2,13 +2,24 @@ include(ExternalProject)
 
 if(NOT DEFINED BLASFEO_TARGET)
 #   set(BLASFEO_TARGET X64_INTEL_HASWELL)
-    set(BLASFEO_TARGET X64_INTEL_SANDY_BRIDGE)
-#   set(BLASFEO_TARGET GENERIC)
+    # set(BLASFEO_TARGET X64_INTEL_SANDY_BRIDGE)
+  set(BLASFEO_TARGET GENERIC)
 endif()
 if(NOT DEFINED BLASFEO_LA)
     set(BLASFEO_LA HIGH_PERFORMANCE)
 #   set(BLASFEO_LA REFERENCE)
 #   set(BLASFEO_LA BLAS)
+endif()
+
+set(OS "")
+set(RANLIB_COMMAND "")
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set(OS "LINUX")
+elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    set(OS "MAC")
+elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(OS "WINDOWS")
+    set(RANLIB_COMMAND ${CMAKE_RANLIB} libblasfeo.a)
 endif()
 
 ExternalProject_Add(
@@ -17,10 +28,10 @@ ExternalProject_Add(
     CONFIGURE_COMMAND make clean
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/blasfeo"
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make static_library -j 2 TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
-    INSTALL_COMMAND ""
-    LOG_CONFIGURE 1  # suppress output
-    LOG_BUILD 1
+    BUILD_COMMAND make static_library -j 2 OS=${OS} CC=${CMAKE_C_COMPILER} TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
+    INSTALL_COMMAND "${RANLIB_COMMAND}"
+    # LOG_CONFIGURE 1  # suppress output
+    # LOG_BUILD 1
 )
 
 ExternalProject_Get_Property(blasfeo_project source_dir)

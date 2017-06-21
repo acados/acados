@@ -47,6 +47,14 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()
 
+find_package(OpenBLAS REQUIRED)
+add_library(openblas UNKNOWN IMPORTED)
+set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
+
+find_package(FortranLibs REQUIRED)
+add_library(gfortran UNKNOWN IMPORTED)
+set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
@@ -56,8 +64,8 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES N
             ooqpgondzio
             ooqpbase
             ma27
-            blas
-            ${FORTRAN_LIBRARY}
+            openblas
+            gfortran
             m)
 endif()
 

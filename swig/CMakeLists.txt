@@ -19,6 +19,10 @@
 
 cmake_minimum_required(VERSION 3.2)
 
+if(NOT (SWIG_MATLAB OR SWIG_PYTHON))
+    return()
+endif()
+
 find_package(SWIG REQUIRED)
 include(UseSWIGMOD)
 

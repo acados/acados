@@ -4,17 +4,20 @@ find_package(OpenBLAS REQUIRED)
 find_package(FortranLibs REQUIRED)
 include(external/ma27)
 
+set(OOQP_LDFLAGS "")
+set(HOST_FLAG "")
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(OOQP_LDFLAGS "-lc++")
-else()
-    set(OOQP_LDFLAGS "")
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    # Needed for cross-compiling
+    set(HOST_FLAG "--host")
 endif()
 
 ExternalProject_Add(
     ooqp_project
 
     DEPENDS ma27
-    CONFIGURE_COMMAND ./configure "CXXFLAGS=-O2 -fPIC" "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
+    CONFIGURE_COMMAND ./configure "${HOST_FLAG}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-O2 -fPIC" "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make

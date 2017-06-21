@@ -50,6 +50,10 @@ script:
   - rm -r build
   - rm -r $HOME/local/lib
   - cmake -E make_directory build
+  - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
+  - cmake --build build --clean-first
+  - rm -r build
+  - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - cmake --build build --target install --clean-first
   - cmake --build build --target lint
