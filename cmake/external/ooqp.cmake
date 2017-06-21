@@ -10,7 +10,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(OOQP_LDFLAGS "-lc++")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # Needed for cross-compiling
-    set(HOST_FLAG "--host")
+    set(HOST_FLAG "--host=${COMPILER_PREFIX}")
 endif()
 
 ExternalProject_Add(
