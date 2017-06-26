@@ -81,28 +81,45 @@ static bool is_valid_ocp_dimensions_map(const LangObject *input) {
     return true;
 }
 
-static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
-    if (qp1->N != qp2->N)
-        return false;
-    int_t N = qp1->N;
-    for (int_t i = 0; i < N; i++) {
-        if (qp1->nx[i] != qp2->nx[i])
-            return false;
-        else if (qp1->nu[i] != qp2->nu[i])
-            return false;
-        else if (qp1->nb[i] != qp2->nb[i])
-            return false;
-        else if (qp1->nc[i] != qp2->nc[i])
-            return false;
-    }
-    if (qp1->nx[N] != qp2->nx[N])
-        return false;
-    else if (qp1->nb[N] != qp2->nb[N])
-        return false;
-    else if (qp1->nc[N] != qp2->nc[N])
-        return false;
-    return true;
+// static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
+//     if (qp1->N != qp2->N)
+//         return false;
+//     int_t N = qp1->N;
+//     for (int_t i = 0; i < N; i++) {
+//         if (qp1->nx[i] != qp2->nx[i])
+//             return false;
+//         else if (qp1->nu[i] != qp2->nu[i])
+//             return false;
+//         else if (qp1->nb[i] != qp2->nb[i])
+//             return false;
+//         else if (qp1->nc[i] != qp2->nc[i])
+//             return false;
+//     }
+//     if (qp1->nx[N] != qp2->nx[N])
+//         return false;
+//     else if (qp1->nb[N] != qp2->nb[N])
+//         return false;
+//     else if (qp1->nc[N] != qp2->nc[N])
+//         return false;
+//     return true;
+// }
+
+LangObject *output_list_with_states_and_controls(const ocp_qp_in *in, const ocp_qp_out *out) {
+    LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
+    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N, in->nu);
+    const LangObject *output_list[2]
+        = {(const LangObject *) x_star, (const LangObject *) u_star};
+    return new_output_list_from(output_list, 2);
 }
+
+LangObject *output_list_with_states_and_controls(const ocp_nlp_in *in, const ocp_nlp_out *out) {
+    LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
+    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N, in->nu);
+    const LangObject *output_list[2]
+        = {(const LangObject *) x_star, (const LangObject *) u_star};
+    return new_output_list_from(output_list, 2);
+}
+
 %}
 
 %ignore ocp_qp_out;
@@ -209,21 +226,17 @@ static bool qp_dimensions_equal(const ocp_qp_in *qp1, const ocp_qp_in *qp2) {
         if (return_code != 0) {
             throw std::runtime_error("qp solver failed!");
         }
-        return new_sequence_from($self->qp_out->u[0], $self->qp_in->nu[0]);
+        return output_list_with_states_and_controls($self->qp_in, $self->qp_out);
     }
 
-    LangObject *solve(ocp_qp_in *qp_in) {
-        if (!qp_dimensions_equal(qp_in, $self->qp_in)) {
-            throw std::invalid_argument("Not allowed to change dimensions of variables "
-                "between calls to solver");
-        }
-        $self->qp_in = qp_in;
+    LangObject *solve(LangObject *x0) {
+        fill_array_from(x0, (real_t **) $self->qp_in->lb, 1, $self->qp_in->nx);
+        fill_array_from(x0, (real_t **) $self->qp_in->ub, 1, $self->qp_in->nx);
         int_t return_code = $self->fun($self->qp_in, $self->qp_out, $self->args, \
             $self->mem, $self->work);
-        if (return_code != 0) {
+        if (return_code != 0)
             throw std::runtime_error("qp solver failed!");
-        }
-        return new_sequence_from($self->qp_out->u[0], $self->qp_in->nu[0]);
+        return output_list_with_states_and_controls($self->qp_in, $self->qp_out);
     }
 }
 
@@ -431,8 +444,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         if (return_code != 0) {
             throw std::runtime_error("nlp solver failed!");
         }
-        return new_sequence_from((const real_t **) $self->nlp_out->x, $self->nlp_in->N+1,
-            $self->nlp_in->nx);
+        return output_list_with_states_and_controls($self->nlp_in, $self->nlp_out);
     }
 
     LangObject *solve(LangObject *x0) {
@@ -443,7 +455,6 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         if (return_code != 0) {
             throw std::runtime_error("nlp solver failed!");
         }
-        return new_sequence_from((const real_t **) $self->nlp_out->x, $self->nlp_in->N+1,
-            $self->nlp_in->nx);
+        return output_list_with_states_and_controls($self->nlp_in, $self->nlp_out);
     }
 }

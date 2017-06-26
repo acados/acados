@@ -31,7 +31,8 @@ solver = ocp_nlp_solver('gauss-newton-sqp', nlp)
 
 STATES = [current_state]
 for i in range(10):
-    current_state = solver.solve(current_state)[1]
+    state_traj, control_traj = solver.solve(current_state)
+    current_state = state_traj[1]
     STATES += [current_state]
     print(STATES)
 

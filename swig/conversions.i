@@ -482,4 +482,13 @@ void fill_array_from(const LangObject *input, T **array, const int_t length,
     fill_array_from(input, array, length, nb_elems, nb_columns);
 }
 
+// TODO(roversch): This can probably be merged with the new_sequence_from functions.
+LangObject *new_output_list_from(const LangObject **input, const int_t length) {
+    LangObject *output_list = new_sequence(length);
+    for (int_t index = 0; index < length; index++) {
+        to(output_list, index, (LangObject *) input[index]);
+    }
+    return output_list;
+}
+
 %}
