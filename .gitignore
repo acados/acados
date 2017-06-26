@@ -78,3 +78,6 @@ octave-workspace
 notes.txt
 *.dSYM/
 cmakelint
+*.srctrlbm
+*.srctrldb
+*.srctrlprj

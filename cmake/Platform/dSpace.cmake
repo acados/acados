@@ -1,0 +1,4 @@
+message(STATUS "DSPACE")
+
+set(CMAKE_INCLUDE_FLAG_C "-J")
+set(CMAKE_INCLUDE_FLAG_CXX "-J")
