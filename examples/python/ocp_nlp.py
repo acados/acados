@@ -25,12 +25,13 @@ u = SX.sym('u', nu)
 mu = 0.5
 rhs = vertcat(x[1] + u*(mu + (1.-mu)*x[0]), x[0] + u*(mu - 4.*(1.-mu)*x[1]))
 ode_fun = Function('ode_fun', [x, u], [rhs])
-nlp.set_model(ode_fun)
+step = 0.1
+nlp.set_model(ode_fun, step)
 
 solver = ocp_nlp_solver('gauss-newton-sqp', nlp)
 
 STATES = [current_state]
-for i in range(10):
+for i in range(50):
     state_traj, control_traj = solver.solve(current_state)
     current_state = state_traj[1]
     STATES += [current_state]

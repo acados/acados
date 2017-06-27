@@ -26,13 +26,14 @@ u = SX.sym('u', nu);
 mu = 0.5;
 rhs = vertcat(x(2) + u*(mu + (1.-mu)*x(1)), x(1) + u*(mu - 4.*(1.-mu)*x(2)));
 ode_fun = Function('ode_fun', {x, u}, {rhs});
-nlp.set_model(ode_fun);
+step = 0.1;
+nlp.set_model(ode_fun, step);
 
 solver = ocp_nlp_solver('gauss-newton-sqp', nlp);
 
 STATES = current_state.';
 
-for i=1:11
+for i=1:51
     output = solver.solve(current_state);
     current_state = output.states{2};
     STATES = [STATES; current_state.'];

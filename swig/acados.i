@@ -329,7 +329,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         return nlp_in;
     }
 
-    void set_model(casadi::Function& f) {
+    void set_model(casadi::Function& f, double step) {
         if (f.n_in() != 2)
             throw std::runtime_error("An ODE model should have 2 inputs: state and controls");
         if (f.n_out() != 1)
@@ -375,6 +375,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         for (int_t i = 0; i < $self->N; i++) {
             $self->sim[i].in->vde = eval;
             $self->sim[i].in->VDE_forw = &vde_fun;
+            $self->sim[i].in->step = step;
         }
         // dlclose(handle);
     }
@@ -411,7 +412,6 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 nlp_in->sim[i].in->sens_hess = false;
                 nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
                 nlp_in->sim[i].in->nSteps = 2;
-                nlp_in->sim[i].in->step = 0.1;
                 nlp_in->sim[i].args = (void*) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(nlp_in->sim[i].args, 4);
                 int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, \
