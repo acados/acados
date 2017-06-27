@@ -542,7 +542,7 @@ LangObject *new_states_controls_output_tuple(LangObject *states, LangObject *con
     tuple_descriptor.fields = fields;
     tuple_descriptor.n_in_sequence = 2;
     PyTypeObject *tuple_type = PyStructSequence_NewType(&tuple_descriptor);
-    tuple_type->tp_flags = Py_TPFLAGS_HEAPTYPE;
+    tuple_type->tp_flags = tuple_type->tp_flags | Py_TPFLAGS_HEAPTYPE;
     PyObject *named_tuple = PyStructSequence_New(tuple_type);
     PyStructSequence_SetItem(named_tuple, 0, (PyObject *) states);
     PyStructSequence_SetItem(named_tuple, 1, (PyObject *) controls);
