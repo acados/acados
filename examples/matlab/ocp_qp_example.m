@@ -15,6 +15,6 @@ qp.ub{1} = x0;
 
 % solve QP
 solver = ocp_qp_solver('qpdunes', qp);
-result = solver.solve();
-assert(abs(-0.5 - result{1}) < 1e-8)
-disp(result)
+output = solver.solve();
+assert(abs(-0.5 - output.controls{1}) < 1e-8)
+disp(output.states)

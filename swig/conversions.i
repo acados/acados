@@ -491,4 +491,63 @@ LangObject *new_output_list_from(const LangObject **input, const int_t length) {
     return output_list;
 }
 
+LangObject *sequence_concatenate(const LangObject *seq1, const LangObject *seq2) {
+#if defined(SWIGMATLAB)
+    if (mxGetNumberOfDimensions(seq1) != 1 || mxGetNumberOfDimensions(seq2) != 1)
+        throw std::invalid_argument("Can only concatenate 1-D cell arrays");
+    int_t length_seq1 = mxGetNumberOfElements(seq1);
+    int_t length_seq2 = mxGetNumberOfElements(seq2);
+    int_t total_length = length_seq1 + length_seq2;
+    const mwSize dims[1] = {(const mwSize) total_length};
+    mxArray *output_array = mxCreateCellArray(1, dims);
+    for (int_t index = 0; index < length_seq1; index++)
+        mxSetCell(output_array, index, mxGetCell(seq1, index));
+    for (int_t index = 0; index < length_seq2; index++)
+        mxSetCell(output_array, length_seq1 + index, mxGetCell(seq2, index));
+    return output_array;
+#elif defined(SWIGPYTHON)
+    return PySequence_Concat((PyObject *) seq1, (PyObject *) seq2);
+#endif
+}
+
+bool is_named_tuple(const LangObject *object) {
+#if defined(SWIGMATLAB)
+    return mxIsStruct(object);
+#elif defined(SWIGPYTHON)
+    return PyTuple_Check((PyObject *) object);
+#endif
+}
+
+LangObject *new_states_controls_output_tuple(LangObject *states, LangObject *controls) {
+    const char *fieldnames[2] = {"states", "controls"};
+#if defined(SWIGMATLAB)
+    const mwSize dims[1] = {(const mwSize) 1};
+    mxArray *named_tuple = mxCreateStructArray(1, dims, 2, fieldnames);
+    mxSetField(named_tuple, 0, fieldnames[0], states);
+    mxSetField(named_tuple, 0, fieldnames[1], controls);
+    return named_tuple;
+#elif defined(SWIGPYTHON)
+    // The list of field names in named tuples must be NULL-terminated in Python
+    PyStructSequence_Field fields[3];
+    fields[0].name = (char *) fieldnames[0];
+    fields[0].doc = NULL;
+    fields[1].name = (char *) fieldnames[1];
+    fields[1].doc = NULL;
+    fields[2].name = NULL;
+    fields[2].doc = NULL;
+
+    PyStructSequence_Desc tuple_descriptor;
+    tuple_descriptor.name = (char *) "output";
+    tuple_descriptor.doc = NULL;
+    tuple_descriptor.fields = fields;
+    tuple_descriptor.n_in_sequence = 2;
+    PyTypeObject *tuple_type = PyStructSequence_NewType(&tuple_descriptor);
+    tuple_type->tp_flags = Py_TPFLAGS_HEAPTYPE;
+    PyObject *named_tuple = PyStructSequence_New(tuple_type);
+    PyStructSequence_SetItem(named_tuple, 0, (PyObject *) states);
+    PyStructSequence_SetItem(named_tuple, 1, (PyObject *) controls);
+    return named_tuple;
+#endif
+}
+
 %}

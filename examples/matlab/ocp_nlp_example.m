@@ -33,8 +33,8 @@ solver = ocp_nlp_solver('gauss-newton-sqp', nlp);
 STATES = current_state.';
 
 for i=1:11
-    optimal_states = solver.solve(current_state);
-    current_state = optimal_states{2};
+    output = solver.solve(current_state);
+    current_state = output.states{2};
     STATES = [STATES; current_state.'];
 end
 
