@@ -13,7 +13,7 @@ nlp.ub{1} = current_state;
 % Weighting matrix
 Q = diag([1.0, 1.0]);
 R = 1e-2;
-cost_matrices = {};
+cost_matrices = cell(N);
 for i=1:N
     cost_matrices{i} = blkdiag(Q, R);
 end
@@ -31,12 +31,13 @@ nlp.set_model(ode_fun, step);
 
 solver = ocp_nlp_solver('gauss-newton-sqp', nlp);
 
-STATES = current_state.';
-
-for i=1:51
+num_iters = 50;
+STATES = zeros(num_iters+1, nx);
+STATES(1, :) = current_state.';
+for i=1:num_iters
     output = solver.solve(current_state);
     current_state = output.states{2};
-    STATES = [STATES; current_state.'];
+    STATES(i+1) = current_state.';
 end
 
 plot(STATES(:,1), STATES(:,2));
