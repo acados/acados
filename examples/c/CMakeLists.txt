@@ -32,6 +32,10 @@ add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
 target_link_libraries(mass_spring_hpmpc_example acados)
 add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
 
+add_executable(mass_spring_hpipm_example mass_spring_hpipm.c)
+target_link_libraries(mass_spring_hpipm_example acados hpipm)
+add_test(mass_spring_hpipm_example mass_spring_hpipm_example)
+
 # add_executable(mass_spring_partial_tightening_example
 #    mass_spring_partial_tightening.c
 # )

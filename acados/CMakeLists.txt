@@ -39,6 +39,7 @@ add_library(acados STATIC ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/.." # for include "acados/..."
+        "${EXTERNAL_SRC_DIR}/blasfeo/include"
         "${EXTERNAL_SRC_DIR}")
 
 target_link_libraries(acados PUBLIC qpOASES_e hpmpc blasfeo qpdunes)
