@@ -49,8 +49,6 @@ int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *a
 
 int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
 //
-	int ii;
-
 	int N = qp_in->N;
 	int *nx = (int *) qp_in->nx;
 	int *nu = (int *) qp_in->nu;
@@ -85,10 +83,6 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
 
 void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, ocp_qp_hpipm_memory *hpipm_memory, void *memory) {
 //
-
-	// loop indexed
-	int ii;
-
 
     // extract problem size
     int N = qp_in->N;
