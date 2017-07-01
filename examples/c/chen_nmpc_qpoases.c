@@ -109,18 +109,14 @@ int main() {
     erk_work = (void *) malloc(work_space_size);
 
     int_t nx[NN+1] = {0};
-    int_t nu[NN+1] = {0};
+    int_t nu[NN] = {0};
     int_t nb[NN+1] = {0};
     int_t nc[NN+1] = {0};
-    nb[0] = NX; // XXX !!!
     for (int_t i = 0; i < N; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
     nx[N] = NX;
-    nu[N] = 0;
-
-	int_t idxb0[NX] = {0, 1};
 
     real_t *pA[N];
     real_t *pB[N];
@@ -152,16 +148,12 @@ int main() {
     d_zeros(&px[N], nx[N], 1);
     d_zeros(&plam[N], nb[N]+nc[N], 1);
 
-    int_t *idxb[N + 1];
-	idxb[0] = idxb0;
-    real_t *C[N + 1];
-    real_t *D[N];
-    real_t *lg[N + 1];
-    real_t *ug[N + 1];
-
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
     qp_in.N = N;
+    ocp_qp_out qp_out;
+    ocp_qp_condensing_qpoases_args args;
+    real_t *work = NULL;
     qp_in.nx = nx;
     qp_in.nu = nu;
     qp_in.nb = nb;
@@ -180,33 +172,10 @@ int main() {
     qp_in.B = (const real_t **) pB;
     qp_in.b = (const real_t **) pb;
     qp_in.lb = (const real_t **) px0;
-    qp_in.ub = (const real_t **) px0;
-    qp_in.lc = (const real_t **) lg;
-    qp_in.uc = (const real_t **) ug;
-    qp_in.Cx = (const real_t **) C;
-    qp_in.Cu = (const real_t **) D;
-    qp_in.idxb = (const int_t **) idxb;
-
-    ocp_qp_out qp_out;
     qp_out.x = px;
     qp_out.u = pu;
     qp_out.pi = ppi;
     qp_out.lam = plam;
-
-    ocp_qp_condensing_qpoases_args qpoases_args;
-
-#if defined(HPIPM_COND)
-    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
-    void *workspace = malloc(workspace_size);
-
-    int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
-    void *memory = malloc(memory_size);
-
-	ocp_qp_condensing_qpoases_memory qpoases_memory;
-	ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, memory);
-#else
-    real_t *work = NULL;
-#endif
 
     acado_timer timer;
     real_t total_time = 0;
@@ -239,11 +208,7 @@ int main() {
             for (int_t j = 0; j < NX; j++) {
                 pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-#if defined(HPIPM_COND)
-            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
-#else
-            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, NULL, work);
-#endif
+            int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;
@@ -292,11 +257,6 @@ int main() {
     free(rk_opts.c_vec);
 
     free(erk_work);
-
-#if defined(HPIPM_COND)
-    free(workspace);
-    free(memory);
-#endif
 
     return 0;
 }
