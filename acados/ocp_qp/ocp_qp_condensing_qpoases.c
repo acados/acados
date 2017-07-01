@@ -17,21 +17,23 @@
  *
  */
 
+
+
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 
 #include <stdlib.h>
 
 #include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
     #pragma clang diagnostic push
     #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
     #pragma clang diagnostic ignored "-Wunused-parameter"
     #pragma clang diagnostic ignored "-Wunused-function"
-    #include "qpOASES_e/QProblemB.h"
-    #include "qpOASES_e/QProblem.h"
     #pragma clang diagnostic pop
 #elif defined(__GNUC__)
     #if __GNUC__ >= 6
@@ -39,16 +41,582 @@
         #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
         #pragma GCC diagnostic ignored "-Wunused-parameter"
         #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/QProblemB.h"
-        #include "qpOASES_e/QProblem.h"
         #pragma GCC diagnostic pop
     #else
         #pragma GCC diagnostic ignored "-Wunused-parameter"
         #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/QProblemB.h"
-        #include "qpOASES_e/QProblem.h"
     #endif
 #endif
+
+#include "qpOASES_e/QProblemB.h"
+#include "qpOASES_e/QProblem.h"
+
+
+
+// giaf condensing
+#if defined(HPIPM_COND)
+
+
+
+#include "hpipm/include/hpipm_d_ocp_qp.h"
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_cond.h"
+
+
+
+int ocp_qp_condensing_qpoases_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args) {
+//
+	return 0;
+}
+
+
+
+int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args) {
+//
+	int ii, jj;
+
+	// extract ocp qp in size
+	int N = qp_in->N;
+	int *nx = (int *) qp_in->nx;
+	int *nu = (int *) qp_in->nu;
+	int *nb = (int *) qp_in->nb;
+	int *ng = (int *) qp_in->nc;
+	int **hidxb = (int **) qp_in->idxb;
+
+	//  swap x and u in bounds (by updating their indeces)
+	int itmp;
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] < nx[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]+nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]-nx[ii];
+				}
+			}
+		}
+	}
+
+	// dummy ocp qp
+	struct d_ocp_qp qp;
+	qp.N = N;
+	qp.nx = nx;
+	qp.nu = nu;
+	qp.nb = nb;
+	qp.ng = ng;
+	qp.idxb = hidxb;
+
+	// compute dense qp size
+	int nvd = 0;
+	int ned = 0;
+	int nbd = 0;
+	int ngd = 0;
+	d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+
+	// dummy dense qp
+	struct d_dense_qp qpd;
+	qpd.nv = nvd;
+	qpd.ne = ned;
+	qpd.nb = nbd;
+	qpd.ng = ngd;
+
+	// size in bytes
+	int size = 0;
+
+	size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
+	size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
+	size += d_memsize_dense_qp(nvd, ned, nbd, ngd);
+	size += d_memsize_dense_qp_sol(nvd, ned, nbd, ngd);
+	size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
+	size += 4*(N+1)*sizeof(double *); // lam_lb lam_ub lam_lg lam_ug
+
+	size += nvd*nvd*sizeof(double); // H
+	size += nvd*ned*sizeof(double); // A
+	size += nvd*ngd*sizeof(double); // C
+	size += 3*nvd*sizeof(double); // g d_lb d_ub
+	size += ned*sizeof(double); // b
+	size += 2*nbd*sizeof(double); // d_lb0 d_ub0
+	size += 2*ngd*sizeof(double); // d_lg d_ug
+	size += nbd*sizeof(int); // idxb
+	size += nvd*sizeof(double); // prim_sol
+	size += (2*nbd+2*ngd)*sizeof(double); // dual_sol
+
+	size += sizeof(QProblemB);
+	size += sizeof(QProblem);
+
+	size = (size+63)/64*64; // make multipl of typical cache line size
+	size += 1*64; // align once to typical cache line size
+
+	//  swap (back) x and u in bounds (by updating their indeces)
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] >= nu[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]-nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]+nx[ii];
+				}
+			}
+		}
+	}
+
+
+	return size;
+
+}
+
+
+
+void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args, ocp_qp_condensing_qpoases_memory *qpoases_memory, void *memory) {
+//
+
+	// loop indexed
+	int ii, jj;
+
+
+    // extract problem size
+    int N = qp_in->N;
+    int *nx = (int *) qp_in->nx;
+    int *nu = (int *) qp_in->nu;
+    int *nb = (int *) qp_in->nb;
+    int *ng = (int *) qp_in->nc;
+	int **hidxb = (int **) qp_in->idxb;
+
+	//  swap x and u in bounds (by updating their indeces)
+	int itmp;
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] < nx[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]+nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]-nx[ii];
+				}
+			}
+		}
+	}
+
+
+	// compute dense qp size
+	int nvd = 0;
+	int ned = 0;
+	int nbd = 0;
+	int ngd = 0;
+	d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+
+
+	// char pointer
+	char *c_ptr = (char *) memory;
+
+
+	//
+	qpoases_memory->qp = (struct d_ocp_qp *) c_ptr;
+	c_ptr += 1*sizeof(struct d_ocp_qp);
+	//
+	qpoases_memory->qp_sol = (struct d_ocp_qp_sol *) c_ptr;
+	c_ptr += 1*sizeof(struct d_ocp_qp_sol);
+	//
+	qpoases_memory->qpd = (struct d_dense_qp *) c_ptr;
+	c_ptr += 1*sizeof(struct d_dense_qp);
+	//
+	qpoases_memory->qpd_sol = (struct d_dense_qp_sol *) c_ptr;
+	c_ptr += 1*sizeof(struct d_dense_qp_sol);
+	//
+	qpoases_memory->cond_workspace = (struct d_cond_qp_ocp2dense_workspace *) c_ptr;
+	c_ptr += 1*sizeof(struct d_cond_qp_ocp2dense_workspace);
+	//
+	qpoases_memory->hlam_lb = (double **) c_ptr;
+	c_ptr += (N+1)*sizeof(double *);
+	//
+	qpoases_memory->hlam_ub = (double **) c_ptr;
+	c_ptr += (N+1)*sizeof(double *);
+	//
+	qpoases_memory->hlam_lg = (double **) c_ptr;
+	c_ptr += (N+1)*sizeof(double *);
+	//
+	qpoases_memory->hlam_ug = (double **) c_ptr;
+	c_ptr += (N+1)*sizeof(double *);
+
+
+	//
+	struct d_ocp_qp *qp = qpoases_memory->qp;
+	//
+	struct d_ocp_qp_sol *qp_sol = qpoases_memory->qp_sol;
+	//
+	struct d_dense_qp *qpd = qpoases_memory->qpd;
+	//
+	struct d_dense_qp_sol *qpd_sol = qpoases_memory->qpd_sol;
+	//
+	struct d_cond_qp_ocp2dense_workspace *cond_workspace = qpoases_memory->cond_workspace;
+
+
+	//
+	qpoases_memory->H = (double *) c_ptr;
+	c_ptr += nvd*nvd*sizeof(double);
+	//
+	qpoases_memory->A = (double *) c_ptr;
+	c_ptr += nvd*ned*sizeof(double);
+	//
+	qpoases_memory->C = (double *) c_ptr;
+	c_ptr += nvd*ngd*sizeof(double);
+	//
+	qpoases_memory->g = (double *) c_ptr;
+	c_ptr += nvd*sizeof(double);
+	//
+	qpoases_memory->b = (double *) c_ptr;
+	c_ptr += ned*sizeof(double);
+	//
+	qpoases_memory->d_lb0 = (double *) c_ptr;
+	c_ptr += nbd*sizeof(double);
+	//
+	qpoases_memory->d_ub0 = (double *) c_ptr;
+	c_ptr += nbd*sizeof(double);
+	//
+	qpoases_memory->d_lb = (double *) c_ptr;
+	c_ptr += nvd*sizeof(double);
+	//
+	qpoases_memory->d_ub = (double *) c_ptr;
+	c_ptr += nvd*sizeof(double);
+	//
+	qpoases_memory->d_lg = (double *) c_ptr;
+	c_ptr += ngd*sizeof(double);
+	//
+	qpoases_memory->d_ug = (double *) c_ptr;
+	c_ptr += ngd*sizeof(double);
+	//
+	qpoases_memory->idxb = (int *) c_ptr;
+	c_ptr += nbd*sizeof(int);
+	//
+	qpoases_memory->prim_sol = (double *) c_ptr;
+	c_ptr += nvd*sizeof(double);
+	//
+	qpoases_memory->dual_sol = (double *) c_ptr;
+	c_ptr += (2*nbd+2*ngd)*sizeof(double);
+
+
+	// align memory to typical cache line size
+	size_t s_ptr = (size_t) c_ptr;
+	s_ptr = (s_ptr+63)/64*64;
+	c_ptr = (char *) s_ptr;
+
+
+	// ocp qp structure
+	d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
+	c_ptr += qp->memsize;
+	// ocp qp sol structure
+	d_create_ocp_qp_sol(N, nx, nu, nb, ng, qp_sol, c_ptr);
+	c_ptr += qp_sol->memsize;
+	// dense qp structure
+	d_create_dense_qp(nvd, ned, nbd, ngd, qpd, c_ptr);
+	c_ptr += qpd->memsize;
+	// dense qp sol structure
+	d_create_dense_qp_sol(nvd, ned, nbd, ngd, qpd_sol, c_ptr);
+	c_ptr += qpd_sol->memsize;
+	// cond workspace structure
+	d_create_cond_qp_ocp2dense(qp, qpd, cond_workspace, c_ptr);
+	c_ptr += cond_workspace->memsize;
+
+
+	// qpOASES (HUGE!!!) workspace at the end !!!
+	//
+	qpoases_memory->QPB = (void *) c_ptr;
+	c_ptr += sizeof(QProblemB);
+	//
+	qpoases_memory->QP = (void *) c_ptr;
+	c_ptr += sizeof(QProblem);
+
+
+	//  swap (back) x and u in bounds (by updating their indeces)
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] >= nu[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]-nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]+nx[ii];
+				}
+			}
+		}
+	}
+
+
+	return;
+
+}
+
+
+
+int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+    void *args_, void *memory_, void *workspace_) {
+//
+
+	// cast structures
+	ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
+	ocp_qp_condensing_qpoases_memory *memory = (ocp_qp_condensing_qpoases_memory *) memory_;
+
+	// XXX touch args
+	args += 0;
+
+    // initialize return code
+    int acados_status = ACADOS_SUCCESS;
+
+    // loop index
+    int ii, jj;
+
+	// extract memory
+	double **hlam_lb = memory->hlam_lb;
+	double **hlam_ub = memory->hlam_ub;
+	double **hlam_lg = memory->hlam_lg;
+	double **hlam_ug = memory->hlam_ug;
+	struct d_ocp_qp *qp = memory->qp;
+	struct d_ocp_qp_sol *qp_sol = memory->qp_sol;
+	struct d_dense_qp *qpd = memory->qpd;
+	struct d_dense_qp_sol *qpd_sol = memory->qpd_sol;
+	struct d_cond_qp_ocp2dense_workspace *cond_workspace = memory->cond_workspace;
+	double *H = memory->H;
+	double *A = memory->A;
+	double *C = memory->C;
+	double *g = memory->g;
+	double *b = memory->b;
+	double *d_lb0 = memory->d_lb0;
+	double *d_ub0 = memory->d_ub0;
+	double *d_lb = memory->d_lb;
+	double *d_ub = memory->d_ub;
+	double *d_lg = memory->d_lg;
+	double *d_ug = memory->d_ug;
+	int *idxb = memory->idxb;
+	double *prim_sol = memory->prim_sol;
+	double *dual_sol = memory->dual_sol;
+	QProblemB *QPB = memory->QPB;
+	QProblem *QP = memory->QP;
+
+    // extract ocp problem size
+    int N = qp_in->N;
+    int *nx = (int *) qp_in->nx;
+    int *nu = (int *) qp_in->nu;
+    int *nb = (int *) qp_in->nb;
+    int *ng = (int *) qp_in->nc;
+
+	// extract input data
+    double **hA = (double **) qp_in->A;
+    double **hB = (double **) qp_in->B;
+    double **hb = (double **) qp_in->b;
+    double **hQ = (double **) qp_in->Q;
+    double **hS = (double **) qp_in->S;
+    double **hR = (double **) qp_in->R;
+    double **hq = (double **) qp_in->q;
+    double **hr = (double **) qp_in->r;
+    double **hd_lb = (double **) qp_in->lb;
+    double **hd_ub = (double **) qp_in->ub;
+    double **hC = (double **) qp_in->Cx;
+    double **hD = (double **) qp_in->Cu;
+    double **hd_lg = (double **) qp_in->lc;
+    double **hd_ug = (double **) qp_in->uc;
+    int **hidxb = (int **) qp_in->idxb;
+
+	//  swap x and u in bounds (by updating their indeces)
+	int itmp;
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] < nx[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]+nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]-nx[ii];
+				}
+			}
+		}
+	}
+
+    // extract output struct members
+    double **hx = qp_out->x;
+    double **hu = qp_out->u;
+    double **hpi = qp_out->pi;
+    double **hlam = qp_out->lam;
+
+	//
+	for(ii=0; ii<=N; ii++)
+		{
+		hlam_lb[ii] = hlam[ii];
+		hlam_ub[ii] = hlam[ii]+nb[ii];
+		hlam_lg[ii] = hlam[ii]+2*nb[ii];
+		hlam_ug[ii] = hlam[ii]+2*nb[ii]+ng[ii];
+		}
+
+	// extract dense qp size
+	int nvd = qpd->nv;
+//	int ned = qpd->ne;
+	int nbd = qpd->nb;
+	int ngd = qpd->ng;
+
+	// ocp qp structure
+	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub, hC, hD, hd_lg, hd_ug, qp);
+
+	// dense qp structure
+	d_cond_qp_ocp2dense(qp, qpd, cond_workspace);
+
+#if 0
+	d_print_strmat(nvd, nvd, qpd->Hg, 0, 0);
+	exit(1);
+#endif
+
+	// dense qp row-major
+	d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug);
+
+	// fill in lower triangular of H
+	for(jj=0; jj<nvd; jj++)
+		for(ii=jj+1; ii<nvd; ii++)
+			H[ii+nvd*jj] = H[jj+nvd*ii];
+	
+	// reorder bounds
+	for(ii=0; ii<nvd; ii++)
+		{
+		d_lb[ii] = - QPOASES_INFTY;
+		d_ub[ii] = + QPOASES_INFTY;
+		}
+	for(ii=0; ii<nbd; ii++)
+		{
+		d_lb[idxb[ii]] = d_lb0[ii];
+		d_ub[idxb[ii]] = d_ub0[ii];
+		}
+
+#if 0
+	d_print_mat(nvd, nvd, H, nvd);
+	exit(1);
+#endif
+
+
+	// solve dense qp
+	int nwsr = 1000;
+	double cpu_time = 100.0;
+	int return_flag;
+	if(ngd>0) // QProblemB
+		{
+		QProblemCON(QP, nvd, ngd, HST_POSDEF);
+		QProblem_setPrintLevel(QP, PL_MEDIUM);
+		QProblem_printProperties(QP);
+		return_flag = QProblem_initW(QP, H, g, C, d_lb,
+            d_ub, d_lg, d_ug, &nwsr, &cpu_time, NULL,
+            dual_sol, NULL, NULL, NULL);
+		QProblem_getPrimalSolution(QP, prim_sol);
+		QProblem_getDualSolution(QP, dual_sol);
+		}
+	else // QProblem
+		{
+		QProblemBCON(QPB, nvd, HST_POSDEF);
+		QProblemB_setPrintLevel(QPB, PL_MEDIUM);
+		QProblemB_printProperties(QPB);
+		return_flag = QProblemB_initW(QPB, H, g, d_lb,
+            d_ub, &nwsr, &cpu_time, NULL,
+            dual_sol, NULL, NULL);
+		QProblemB_getPrimalSolution(QPB, prim_sol);
+		QProblemB_getDualSolution(QPB, dual_sol);
+		}
+	
+
+#if 0
+	d_print_mat(1, nvd, prim_sol, 1);
+	exit(1);
+#endif
+
+	
+	// copy prim_sol and dual_sol to qpd_sol
+	double *v = qpd_sol->v->pa;
+	for(ii=0; ii<nvd; ii++)
+		v[ii] = prim_sol[ii];
+
+
+	// expand solution
+	d_expand_sol_dense2ocp(qp, qpd_sol, qp_sol, cond_workspace);
+
+
+	// extract solution
+	d_cvt_ocp_qp_sol_to_colmaj(qp, qp_sol, hu, hx, hpi, hlam_lb, hlam_ub, hlam_lg, hlam_ug);
+
+
+
+	//  swap (back) x and u in bounds (by updating their indeces)
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] >= nu[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]-nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]+nx[ii];
+				}
+			}
+		}
+	}
+
+
+    // return
+	acados_status = return_flag;
+    return acados_status;
+//
+}
+
+
+
+// XXX remove !!!!!
+void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
+
+    // TODO(dimitris): replace dummy commands once interface completed
+    args->dummy = 42.0;
+    if (qp_in->nx[0] > 0)
+        mem_++;
+    work++;
+}
+void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
+    // TODO(dimitris): replace dummy commands once interface completed
+    mem_++;
+    work++;
+}
+
+
+
+// robin condensing
+#else
+
+
 
 #include "acados/ocp_qp/condensing.h"
 #include "acados/utils/print.h"
@@ -321,6 +889,11 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // print_condensed_QP(work.nconvars, work.nconstraints, &out);
     // #endif
 
+#if 0
+	d_print_mat(ncv, ncv, out.H, ncv);
+	exit(1);
+#endif
+
     int_t return_flag;
     if (work.nconstraints) {
         return_flag = solve_condensed_QP(work.nconvars, work.nconstraints, &QP,
@@ -402,3 +975,8 @@ void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
     mem_++;
     work++;
 }
+
+
+
+// giaf vs robin condensing
+#endif

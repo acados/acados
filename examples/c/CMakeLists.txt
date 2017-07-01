@@ -67,17 +67,17 @@ add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_examp
 #target_link_libraries(nonlinear_chain_ocp_nlp acados)
 
 add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-target_link_libraries(mass_spring_qpoases_example acados)
+target_link_libraries(mass_spring_qpoases_example acados hpipm)
 add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
 
 add_executable(chen_nmpc_qpoases_example
     chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-target_link_libraries(chen_nmpc_qpoases_example acados)
+target_link_libraries(chen_nmpc_qpoases_example acados hpipm)
 add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
 
 add_executable(nonlinear_chain_sqp_example
     nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-target_link_libraries(nonlinear_chain_sqp_example acados)
+target_link_libraries(nonlinear_chain_sqp_example acados hpipm)
 # Following test takes too long!
 # add_test(
 #    NAME nonlinear_chain_sqp_example
