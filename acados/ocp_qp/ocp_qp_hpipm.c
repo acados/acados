@@ -73,10 +73,6 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
 	size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
 	size += d_memsize_ipm_hard_ocp_qp(&qp, &ipm_arg);
 	size += 4*(N+1)*sizeof(double *); // lam_lb lam_ub lam_lg lam_ug
-	size += 1*(N+1)*sizeof(int *); // hidxb
-
-	for(ii=0; ii<=N; ii++)
-		size += nb[ii]*sizeof(int); // hidxb
 
 	size = (size+63)/64*64; // make multipl of typical cache line size
 	size += 1*64; // align once to typical cache line size
@@ -130,13 +126,8 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, ocp_q
 	//
 	hpipm_memory->hlam_ug = (double **) c_ptr;
 	c_ptr += (N+1)*sizeof(double *);
-	//
-	hpipm_memory->hidxb = (int **) c_ptr;
-	c_ptr += (N+1)*sizeof(int *);
 
 
-	//
-	int **hidxb = hpipm_memory->hidxb;
 	//
 	struct d_ocp_qp *qp = hpipm_memory->qp;
 	//
@@ -145,14 +136,6 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, ocp_q
 	struct d_ipm_hard_ocp_qp_arg *ipm_arg = hpipm_memory->ipm_arg;
 	//
 	struct d_ipm_hard_ocp_qp_workspace *ipm_workspace = hpipm_memory->ipm_workspace;
-
-
-	//
-	for(ii=0; ii<=N; ii++)
-		{
-		hidxb[ii] = (int *) c_ptr;
-		c_ptr += nb[ii]*sizeof(int);
-		}
 
 
 	// align memory to typical cache line size
@@ -193,7 +176,6 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     int ii, jj;
 
 	// extract memory
-	int **hidxb = memory->hidxb;
 	double **hlam_lb = memory->hlam_lb;
 	double **hlam_ub = memory->hlam_ub;
 	double **hlam_lg = memory->hlam_lg;
@@ -225,19 +207,27 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hD = (double **) qp_in->Cu;
     double **hd_lg = (double **) qp_in->lc;
     double **hd_ug = (double **) qp_in->uc;
-    int **hsidxb = (int **) qp_in->idxb;
+    int **hidxb = (int **) qp_in->idxb;
 
-    //  swap x and u in bounds (by updating their indeces)
-     for (ii = 0; ii <= N; ii++) {
-         jj = 0;
-         for (; jj < nb[ii]; jj++) {
-             if (hsidxb[ii][jj] < nx[ii]) {  // state
-                 hidxb[ii][jj] = hsidxb[ii][jj]+nu[ii];
-             } else {  // input
-                 hidxb[ii][jj] = hsidxb[ii][jj]-nx[ii];
-             }
-         }
-     }
+	//  swap x and u in bounds (by updating their indeces)
+	int itmp;
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] < nx[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]+nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]-nx[ii];
+				}
+			}
+		}
+	}
 
     // extract output struct members
     double **hx = qp_out->x;
@@ -396,17 +386,34 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		}
 	inf_norm_res[4] = ipm_workspace->res_mu;
 
-#if 0
-	for(ii=0; ii<=N; ii++)
-		{
-		res_g = (ipm_workspace->res_g+ii)->pa;
-		d_print_e_mat(1, nu[ii]+nx[ii], res_g, 1);
-		}
-	exit(1);
-#endif
 
-//    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
-//    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
+	// max number of iterations
+    if (ipm_workspace->iter==args->iter_max)
+		acados_status = ACADOS_MAXITER;
+	// minimum step length
+    if (ipm_workspace->stat[3+(ipm_workspace->iter-1)*5]<args->alpha_min)
+		acados_status = ACADOS_MINSTEP;
+	
+
+	//  swap (back) x and u in bounds (by updating their indeces)
+	for (ii = 0; ii <= N; ii++) {
+		itmp = 0;
+		for(jj=0; jj<ii; jj++)
+			if(hidxb[ii]==hidxb[jj])
+				itmp = 1;
+		if(itmp==0) // new physical array
+			{
+			jj = 0;
+			for (; jj < nb[ii]; jj++) {
+				if (hidxb[ii][jj] >= nu[ii]) {  // state
+					hidxb[ii][jj] = hidxb[ii][jj]-nu[ii];
+				} else {  // input
+					hidxb[ii][jj] = hidxb[ii][jj]+nx[ii];
+				}
+			}
+		}
+	}
+
 
     // return
     return acados_status;

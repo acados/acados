@@ -49,7 +49,6 @@ typedef struct ocp_qp_hpipm_memory_ {
 	double **hlam_ub;
 	double **hlam_lg;
 	double **hlam_ug;
-	int **hidxb;
 	double inf_norm_res[5];
 	int iter;
 } ocp_qp_hpipm_memory;
