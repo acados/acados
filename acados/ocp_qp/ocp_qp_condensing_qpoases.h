@@ -17,17 +17,19 @@
  *
  */
 
-// comment this in for HPIPM condensing, out for ACADOS condensing
-#define HPIPM_COND
-
-
-
 #ifndef ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
 #define ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+
+// XXX comment this in for HPIPM condensing, out for ACADOS condensing
+#define HPIPM_COND
+
+
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
@@ -111,13 +113,15 @@ int_t ocp_qp_condensing_qpoases_workspace_size(ocp_qp_in *input,
 void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
 void ocp_qp_condensing_qpoases_destroy(void *mem, void *work);
 
-#ifdef __cplusplus
-} /* extern "C" */
+
+
+// giaf vs robin condensing
 #endif
 
 
 
-// giaf vs robin condensing
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 
