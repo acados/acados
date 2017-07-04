@@ -751,6 +751,10 @@ int main() {
     d_free(R);
     d_free(q);
     d_free(r);
+    d_free(Q0);
+    d_free(q0);
+    d_free(r0);
+    d_free(S0);
     int_free(idxb0);
     d_free(lb0);
     d_free(ub0);

@@ -577,14 +577,13 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
 		QProblem_printProperties(QP);
-		QP->haveCholesky = BT_TRUE;
 		return_flag = QProblem_initW(QP, H, g, C, d_lb,
             d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
             dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
-//		QProblem_getPrimalSolution(QP, prim_sol);
-//		QProblem_getDualSolution(QP, dual_sol);
+		QProblem_getPrimalSolution(QP, prim_sol);
+		QProblem_getDualSolution(QP, dual_sol);
 		}
 	else // QProblem
 		{
@@ -594,8 +593,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		return_flag = QProblemB_initW(QPB, H, g, d_lb,
             d_ub, &nwsr, &cputime, NULL,
             dual_sol, NULL, NULL);
-//		QProblemB_getPrimalSolution(QPB, prim_sol);
-//		QProblemB_getDualSolution(QPB, dual_sol);
+		QProblemB_getPrimalSolution(QPB, prim_sol);
+		QProblemB_getDualSolution(QPB, dual_sol);
 		}
 	
 
@@ -611,10 +610,9 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 	
 	// copy prim_sol and dual_sol to qpd_sol
-//	double *v = qpd_sol->v->pa;
-//	for(ii=0; ii<nvd; ii++)
-//		v[ii] = prim_sol[ii];
-prim_sol++;
+	double *v = qpd_sol->v->pa;
+	for(ii=0; ii<nvd; ii++)
+		v[ii] = prim_sol[ii];
 
 
 	// expand solution
