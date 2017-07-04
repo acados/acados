@@ -583,8 +583,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
             dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
-		QProblem_getPrimalSolution(QP, prim_sol);
-		QProblem_getDualSolution(QP, dual_sol);
+//		QProblem_getPrimalSolution(QP, prim_sol);
+//		QProblem_getDualSolution(QP, dual_sol);
 		}
 	else // QProblem
 		{
@@ -594,8 +594,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		return_flag = QProblemB_initW(QPB, H, g, d_lb,
             d_ub, &nwsr, &cputime, NULL,
             dual_sol, NULL, NULL);
-		QProblemB_getPrimalSolution(QPB, prim_sol);
-		QProblemB_getDualSolution(QPB, dual_sol);
+//		QProblemB_getPrimalSolution(QPB, prim_sol);
+//		QProblemB_getDualSolution(QPB, dual_sol);
 		}
 	
 
