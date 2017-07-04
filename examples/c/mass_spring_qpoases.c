@@ -705,8 +705,7 @@ int main() {
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
 #if defined(HPIPM_COND)
-qp_out.x[0] += 0;
-//        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
+        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
 #else
         return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, memory, workspace);
 #endif

@@ -143,7 +143,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += 1*sizeof(struct d_dense_qp); // qpd
 	size += 1*sizeof(struct d_dense_qp_sol); // qpd_sol
 	size += 1*sizeof(struct d_cond_qp_ocp2dense_workspace); // cond_workspace
-	size += 1*sizeof(struct d_strmat); // sR
+//	size += 1*sizeof(struct d_strmat); // sR
 
 	size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
 	size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
@@ -152,17 +152,18 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
 	size += 4*(N+1)*sizeof(double *); // lam_lb lam_ub lam_lg lam_ug
 
-	size += 1*d_size_strmat(nvd, nvd); // sR
+//	size += 1*d_size_strmat(nvd, nvd); // sR
 
-	size += 2*nvd*nvd*sizeof(double); // H R
-	size += nvd*ned*sizeof(double); // A
-	size += nvd*ngd*sizeof(double); // C
+	size += 1*nvd*nvd*sizeof(double); // H
+//	size += 1*nvd*nvd*sizeof(double); // R
+	size += 1*nvd*ned*sizeof(double); // A
+	size += 1*nvd*ngd*sizeof(double); // C
 	size += 3*nvd*sizeof(double); // g d_lb d_ub
-	size += ned*sizeof(double); // b
+	size += 1*ned*sizeof(double); // b
 	size += 2*nbd*sizeof(double); // d_lb0 d_ub0
 	size += 2*ngd*sizeof(double); // d_lg d_ug
-	size += nbd*sizeof(int); // idxb
-	size += nvd*sizeof(double); // prim_sol
+	size += 1*nbd*sizeof(int); // idxb
+	size += 1*nvd*sizeof(double); // prim_sol
 	size += (2*nbd+2*ngd)*sizeof(double); // dual_sol
 
 //	size += sizeof(QProblemB);
@@ -246,8 +247,8 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 
 	//
-	qpoases_memory->sR = (struct d_strmat *) c_ptr;
-	c_ptr += 1*sizeof(struct d_strmat);
+//	qpoases_memory->sR = (struct d_strmat *) c_ptr;
+//	c_ptr += 1*sizeof(struct d_strmat);
 
 	//
 	qpoases_memory->qp = (struct d_ocp_qp *) c_ptr;
@@ -279,7 +280,7 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 
 	//
-	struct d_strmat *sR = qpoases_memory->sR;
+//	struct d_strmat *sR = qpoases_memory->sR;
 
 	//
 	struct d_ocp_qp *qp = qpoases_memory->qp;
@@ -296,10 +297,9 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 	//
 	qpoases_memory->H = (double *) c_ptr;
 	c_ptr += nvd*nvd*sizeof(double);
-
 	//
-	qpoases_memory->R = (double *) c_ptr;
-	c_ptr += nvd*nvd*sizeof(double);
+//	qpoases_memory->R = (double *) c_ptr;
+//	c_ptr += nvd*nvd*sizeof(double);
 	//
 	qpoases_memory->A = (double *) c_ptr;
 	c_ptr += nvd*ned*sizeof(double);
@@ -348,8 +348,8 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 
 	//
-	d_create_strmat(nvd, nvd, sR, c_ptr);
-	c_ptr += sR->memory_size;
+//	d_create_strmat(nvd, nvd, sR, c_ptr);
+//	c_ptr += sR->memory_size;
 
 	// ocp qp structure
 	d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
@@ -423,14 +423,14 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	double **hlam_ub = memory->hlam_ub;
 	double **hlam_lg = memory->hlam_lg;
 	double **hlam_ug = memory->hlam_ug;
-	struct d_strmat *sR = memory->sR;
+//	struct d_strmat *sR = memory->sR;
 	struct d_ocp_qp *qp = memory->qp;
 	struct d_ocp_qp_sol *qp_sol = memory->qp_sol;
 	struct d_dense_qp *qpd = memory->qpd;
 	struct d_dense_qp_sol *qpd_sol = memory->qpd_sol;
 	struct d_cond_qp_ocp2dense_workspace *cond_workspace = memory->cond_workspace;
 	double *H = memory->H;
-	double *R = memory->R;
+//	double *R = memory->R;
 	double *A = memory->A;
 	double *C = memory->C;
 	double *g = memory->g;
@@ -535,25 +535,28 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 //			H[ii+nvd*jj] = H[jj+nvd*ii];
 	
 	// reorder bounds
-	for(ii=0; ii<nvd; ii++)
-		{
-		d_lb[ii] = - QPOASES_INFTY;
-		d_ub[ii] = + QPOASES_INFTY;
-		}
-	for(ii=0; ii<nbd; ii++)
-		{
-		d_lb[idxb[ii]] = d_lb0[ii];
-		d_ub[idxb[ii]] = d_ub0[ii];
-		}
+//	for(ii=0; ii<nvd; ii++)
+//		{
+//		d_lb[ii] = - QPOASES_INFTY;
+//		d_ub[ii] = + QPOASES_INFTY;
+//		}
+//	for(ii=0; ii<nbd; ii++)
+//		{
+//		d_lb[idxb[ii]] = d_lb0[ii];
+//		d_ub[idxb[ii]] = d_ub0[ii];
+//		}
+d_lb++;
+d_ub++;
+prim_sol++;
 	
 	// cholesky factorization of H
-	dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
+//	dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
 
 	// fill in upper triangular of R
-	dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
+//	dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
 
 	// extract R
-	d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
+//	d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
 
 #if 0
 	d_print_mat(nvd, nvd, H, nvd);
@@ -613,9 +616,9 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 	
 	// copy prim_sol and dual_sol to qpd_sol
-	double *v = qpd_sol->v->pa;
-	for(ii=0; ii<nvd; ii++)
-		v[ii] = prim_sol[ii];
+//	double *v = qpd_sol->v->pa;
+//	for(ii=0; ii<nvd; ii++)
+//		v[ii] = prim_sol[ii];
 
 
 	// expand solution
