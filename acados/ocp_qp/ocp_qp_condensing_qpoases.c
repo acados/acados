@@ -610,9 +610,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 	
 	// copy prim_sol and dual_sol to qpd_sol
-	double *v = qpd_sol->v->pa;
-	for(ii=0; ii<nvd; ii++)
-		v[ii] = prim_sol[ii];
+	d_cvt_vec2strvec(nvd, prim_sol, qpd_sol->v, 0);
 
 
 	// expand solution
