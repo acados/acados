@@ -39,9 +39,22 @@ extern "C" {
 
 
 
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+
+
+
+// define maximum number of variables and constraints in qpoases XXX does not work !
+//#define QPOASES_NVMAX 200
+//#define QPOASES_NCMAX 600
+//#define __EXTERNAL_DIMENSIONS__
+
+
+
 // struct of arguments to the solver
 typedef struct ocp_qp_condensing_qpoases_args_ {
-	double dummy;
+	double cputime; // maximum cpu time in seconds
+	int nwsr; // maximum number of working set recalculations
 } ocp_qp_condensing_qpoases_args;
 
 
@@ -53,11 +66,13 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
 	struct d_dense_qp *qpd;
 	struct d_dense_qp_sol *qpd_sol;
 	struct d_cond_qp_ocp2dense_workspace *cond_workspace;
+	struct d_strmat *sR;
 	double **hlam_lb;
 	double **hlam_ub;
 	double **hlam_lg;
 	double **hlam_ug;
 	double *H;
+	double *R;
 	double *g;
 	double *A;
 	double *b;
@@ -74,6 +89,8 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
 	void *QPB; // XXX cast to QProblemB to use !!!
 	void *QP; // XXX cast to QProblem to use !!!
 	double inf_norm_res[5];
+	double cputime; // requried cpu time
+	int nwsr; // performed number of working set recalculations
 } ocp_qp_condensing_qpoases_memory;
 
 

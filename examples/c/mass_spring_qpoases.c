@@ -665,7 +665,8 @@ int main() {
 
     // solver arguments
     ocp_qp_condensing_qpoases_args qpoases_args;
-    qpoases_args.dummy = 42.0;
+    qpoases_args.cputime = 100.0; // maximum cpu time in seconds
+	qpoases_args.nwsr = 1000; // maximum number of working set recalculations
 
     /************************************************
     * work space
@@ -721,7 +722,7 @@ int main() {
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     printf("\n");
-    printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
+    printf(" Solution time for %d working set recalculations, averaged over %d runs: %5.2e seconds\n", qpoases_memory.nwsr, nrep, time);
     printf("\n\n");
 
     if (return_value != 0) {

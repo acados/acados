@@ -62,6 +62,9 @@
 
 
 
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 #include "hpipm/include/hpipm_d_dense_qp.h"
@@ -135,6 +138,13 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	// size in bytes
 	int size = 0;
 
+	size += 1*sizeof(struct d_ocp_qp); // qp
+	size += 1*sizeof(struct d_ocp_qp_sol); // qp_sol
+	size += 1*sizeof(struct d_dense_qp); // qpd
+	size += 1*sizeof(struct d_dense_qp_sol); // qpd_sol
+	size += 1*sizeof(struct d_cond_qp_ocp2dense_workspace); // cond_workspace
+	size += 1*sizeof(struct d_strmat); // sR
+
 	size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
 	size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
 	size += d_memsize_dense_qp(nvd, ned, nbd, ngd);
@@ -142,7 +152,9 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
 	size += 4*(N+1)*sizeof(double *); // lam_lb lam_ub lam_lg lam_ug
 
-	size += nvd*nvd*sizeof(double); // H
+	size += 1*d_size_strmat(nvd, nvd); // sR
+
+	size += 2*nvd*nvd*sizeof(double); // H R
 	size += nvd*ned*sizeof(double); // A
 	size += nvd*ngd*sizeof(double); // C
 	size += 3*nvd*sizeof(double); // g d_lb d_ub
@@ -234,6 +246,10 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 
 	//
+	qpoases_memory->sR = (struct d_strmat *) c_ptr;
+	c_ptr += 1*sizeof(struct d_strmat);
+
+	//
 	qpoases_memory->qp = (struct d_ocp_qp *) c_ptr;
 	c_ptr += 1*sizeof(struct d_ocp_qp);
 	//
@@ -263,6 +279,9 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 
 	//
+	struct d_strmat *sR = qpoases_memory->sR;
+
+	//
 	struct d_ocp_qp *qp = qpoases_memory->qp;
 	//
 	struct d_ocp_qp_sol *qp_sol = qpoases_memory->qp_sol;
@@ -276,6 +295,10 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 	//
 	qpoases_memory->H = (double *) c_ptr;
+	c_ptr += nvd*nvd*sizeof(double);
+
+	//
+	qpoases_memory->R = (double *) c_ptr;
 	c_ptr += nvd*nvd*sizeof(double);
 	//
 	qpoases_memory->A = (double *) c_ptr;
@@ -323,6 +346,10 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 	s_ptr = (s_ptr+63)/64*64;
 	c_ptr = (char *) s_ptr;
 
+
+	//
+	d_create_strmat(nvd, nvd, sR, c_ptr);
+	c_ptr += sR->memory_size;
 
 	// ocp qp structure
 	d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
@@ -384,8 +411,6 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
 	ocp_qp_condensing_qpoases_memory *memory = (ocp_qp_condensing_qpoases_memory *) memory_;
 
-	// XXX touch args
-	args += 0;
 
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
@@ -398,12 +423,14 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	double **hlam_ub = memory->hlam_ub;
 	double **hlam_lg = memory->hlam_lg;
 	double **hlam_ug = memory->hlam_ug;
+	struct d_strmat *sR = memory->sR;
 	struct d_ocp_qp *qp = memory->qp;
 	struct d_ocp_qp_sol *qp_sol = memory->qp_sol;
 	struct d_dense_qp *qpd = memory->qpd;
 	struct d_dense_qp_sol *qpd_sol = memory->qpd_sol;
 	struct d_cond_qp_ocp2dense_workspace *cond_workspace = memory->cond_workspace;
 	double *H = memory->H;
+	double *R = memory->R;
 	double *A = memory->A;
 	double *C = memory->C;
 	double *g = memory->g;
@@ -496,13 +523,16 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	exit(1);
 #endif
 
+	// fill in the upper triangular of H in dense_qp
+	dtrtr_l_libstr(nvd, qpd->Hg, 0, 0, qpd->Hg, 0, 0);
+	
 	// dense qp row-major
 	d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug);
 
 	// fill in lower triangular of H
-	for(jj=0; jj<nvd; jj++)
-		for(ii=jj+1; ii<nvd; ii++)
-			H[ii+nvd*jj] = H[jj+nvd*ii];
+//	for(jj=0; jj<nvd; jj++)
+//		for(ii=jj+1; ii<nvd; ii++)
+//			H[ii+nvd*jj] = H[jj+nvd*ii];
 	
 	// reorder bounds
 	for(ii=0; ii<nvd; ii++)
@@ -515,25 +545,42 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		d_lb[idxb[ii]] = d_lb0[ii];
 		d_ub[idxb[ii]] = d_ub0[ii];
 		}
+	
+	// cholesky factorization of H
+	dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
+
+	// fill in upper triangular of R
+	dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
+
+	// extract R
+	d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
 
 #if 0
 	d_print_mat(nvd, nvd, H, nvd);
+	d_print_mat(nvd, nvd, R, nvd);
 	exit(1);
 #endif
 
 
+	// cold start the dual solution with no active constraints
+	for(ii=0; ii<2*nbd+2*ngd; ii++)
+		dual_sol[ii] = 0;
+
 	// solve dense qp
-	int nwsr = 1000;
-	double cpu_time = 100.0;
+	int nwsr = args->nwsr; // max number of working set recalculations
+	double cputime = args->cputime;
 	int return_flag;
 	if(ngd>0) // QProblemB
 		{
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
 		QProblem_printProperties(QP);
+		QP->haveCholesky = BT_TRUE;
 		return_flag = QProblem_initW(QP, H, g, C, d_lb,
-            d_ub, d_lg, d_ug, &nwsr, &cpu_time, NULL,
+            d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
             dual_sol, NULL, NULL, NULL);
+//            NULL, NULL, NULL, NULL);
+//            NULL, NULL, NULL, R);
 		QProblem_getPrimalSolution(QP, prim_sol);
 		QProblem_getDualSolution(QP, dual_sol);
 		}
@@ -543,11 +590,16 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblemB_setPrintLevel(QPB, PL_MEDIUM);
 		QProblemB_printProperties(QPB);
 		return_flag = QProblemB_initW(QPB, H, g, d_lb,
-            d_ub, &nwsr, &cpu_time, NULL,
+            d_ub, &nwsr, &cputime, NULL,
             dual_sol, NULL, NULL);
 		QProblemB_getPrimalSolution(QPB, prim_sol);
 		QProblemB_getDualSolution(QPB, dual_sol);
 		}
+	
+
+	// save solution statistics to memory
+	memory->cputime = cputime;
+	memory->nwsr = nwsr;
 	
 
 #if 0
@@ -604,7 +656,7 @@ void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *m
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
 
     // TODO(dimitris): replace dummy commands once interface completed
-    args->dummy = 42.0;
+    args++;
     if (qp_in->nx[0] > 0)
         mem_++;
     work++;

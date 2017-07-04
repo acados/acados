@@ -551,7 +551,7 @@ int main() {
     printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0], hpipm_memory.inf_norm_res[1],
         hpipm_memory.inf_norm_res[2], hpipm_memory.inf_norm_res[3], hpipm_memory.inf_norm_res[4]);
     printf("\n");
-    printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
+    printf(" Solution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n", hpipm_memory.iter, nrep, time);
     printf("\n\n");
 
     /************************************************
