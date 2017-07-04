@@ -165,8 +165,8 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += nvd*sizeof(double); // prim_sol
 	size += (2*nbd+2*ngd)*sizeof(double); // dual_sol
 
-	size += sizeof(QProblemB);
-	size += sizeof(QProblem);
+//	size += sizeof(QProblemB);
+//	size += sizeof(QProblem);
 
 	size = (size+63)/64*64; // make multipl of typical cache line size
 	size += 1*64; // align once to typical cache line size
