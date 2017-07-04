@@ -535,19 +535,16 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 //			H[ii+nvd*jj] = H[jj+nvd*ii];
 	
 	// reorder bounds
-//	for(ii=0; ii<nvd; ii++)
-//		{
-//		d_lb[ii] = - QPOASES_INFTY;
-//		d_ub[ii] = + QPOASES_INFTY;
-//		}
+	for(ii=0; ii<nvd; ii++)
+		{
+		d_lb[ii] = - QPOASES_INFTY;
+		d_ub[ii] = + QPOASES_INFTY;
+		}
 //	for(ii=0; ii<nbd; ii++)
 //		{
 //		d_lb[idxb[ii]] = d_lb0[ii];
 //		d_ub[idxb[ii]] = d_ub0[ii];
 //		}
-d_lb++;
-d_ub++;
-prim_sol++;
 	
 	// cholesky factorization of H
 //	dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
@@ -616,9 +613,9 @@ prim_sol++;
 
 	
 	// copy prim_sol and dual_sol to qpd_sol
-//	double *v = qpd_sol->v->pa;
-//	for(ii=0; ii<nvd; ii++)
-//		v[ii] = prim_sol[ii];
+	double *v = qpd_sol->v->pa;
+	for(ii=0; ii<nvd; ii++)
+		v[ii] = prim_sol[ii];
 
 
 	// expand solution
