@@ -576,9 +576,9 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
 		QProblem_printProperties(QP);
 		QP->haveCholesky = BT_TRUE;
-		return_flag = QProblem_initW(QP, H, g, C, d_lb,
-            d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
-            dual_sol, NULL, NULL, NULL);
+//		return_flag = QProblem_initW(QP, H, g, C, d_lb,
+ //           d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
+  //          dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
 		QProblem_getPrimalSolution(QP, prim_sol);
