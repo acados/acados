@@ -166,8 +166,8 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += 1*nvd*sizeof(double); // prim_sol
 	size += (2*nbd+2*ngd)*sizeof(double); // dual_sol
 
-//	size += sizeof(QProblemB);
-//	size += sizeof(QProblem);
+	size += sizeof(QProblemB);
+	size += sizeof(QProblem);
 
 	size = (size+63)/64*64; // make multipl of typical cache line size
 	size += 1*64; // align once to typical cache line size
@@ -370,11 +370,11 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 	// qpOASES (HUGE!!!) workspace at the end !!!
 	//
-//	qpoases_memory->QPB = (void *) c_ptr;
-//	c_ptr += sizeof(QProblemB);
+	qpoases_memory->QPB = (void *) c_ptr;
+	c_ptr += sizeof(QProblemB);
 	//
-//	qpoases_memory->QP = (void *) c_ptr;
-//	c_ptr += sizeof(QProblem);
+	qpoases_memory->QP = (void *) c_ptr;
+	c_ptr += sizeof(QProblem);
 
 
 	//  swap (back) x and u in bounds (by updating their indeces)
@@ -444,8 +444,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	int *idxb = memory->idxb;
 	double *prim_sol = memory->prim_sol;
 	double *dual_sol = memory->dual_sol;
-//	QProblemB *QPB = memory->QPB;
-//	QProblem *QP = memory->QP;
+	QProblemB *QPB = memory->QPB;
+	QProblem *QP = memory->QP;
 
     // extract ocp problem size
     int N = qp_in->N;
@@ -540,11 +540,11 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		d_lb[ii] = - QPOASES_INFTY;
 		d_ub[ii] = + QPOASES_INFTY;
 		}
-//	for(ii=0; ii<nbd; ii++)
-//		{
-//		d_lb[idxb[ii]] = d_lb0[ii];
-//		d_ub[idxb[ii]] = d_ub0[ii];
-//		}
+	for(ii=0; ii<nbd; ii++)
+		{
+		d_lb[idxb[ii]] = d_lb0[ii];
+		d_ub[idxb[ii]] = d_ub0[ii];
+		}
 	
 	// cholesky factorization of H
 //	dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
@@ -572,7 +572,6 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	int nwsr = args->nwsr; // max number of working set recalculations
 	double cputime = args->cputime;
 	int return_flag = 0;
-#if 0
 	if(ngd>0) // QProblemB
 		{
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);
@@ -598,7 +597,6 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblemB_getPrimalSolution(QPB, prim_sol);
 		QProblemB_getDualSolution(QPB, dual_sol);
 		}
-#endif
 	
 
 	// save solution statistics to memory
