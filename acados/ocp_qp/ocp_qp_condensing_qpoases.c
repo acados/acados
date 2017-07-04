@@ -563,13 +563,15 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
 
 	// cold start the dual solution with no active constraints
-	for(ii=0; ii<2*nbd+2*ngd; ii++)
-		dual_sol[ii] = 0;
+	int warm_start = args->warm_start;
+	if(!warm_start)
+		for(ii=0; ii<2*nbd+2*ngd; ii++)
+			dual_sol[ii] = 0;
 
 	// solve dense qp
 	int nwsr = args->nwsr; // max number of working set recalculations
 	double cputime = args->cputime;
-	int return_flag;
+	int return_flag = 0;
 	if(ngd>0) // QProblemB
 		{
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);

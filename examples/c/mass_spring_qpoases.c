@@ -667,6 +667,7 @@ int main() {
     ocp_qp_condensing_qpoases_args qpoases_args;
     qpoases_args.cputime = 100.0; // maximum cpu time in seconds
 	qpoases_args.nwsr = 1000; // maximum number of working set recalculations
+	qpoases_args.warm_start = 0; // wam start with dual_sol in memory
 
     /************************************************
     * work space

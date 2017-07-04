@@ -55,6 +55,7 @@ extern "C" {
 typedef struct ocp_qp_condensing_qpoases_args_ {
 	double cputime; // maximum cpu time in seconds
 	int nwsr; // maximum number of working set recalculations
+	int warm_start; // warm start with dual_sol in memory
 } ocp_qp_condensing_qpoases_args;
 
 
