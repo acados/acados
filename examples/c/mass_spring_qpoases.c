@@ -698,14 +698,15 @@ int main() {
     * call the solver
     ************************************************/
 
-    int return_value;
+    int return_value = 0;
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
 #if defined(HPIPM_COND)
-        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
+qp_out.x[0] += 0;
+//        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
 #else
         return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, memory, workspace);
 #endif

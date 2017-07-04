@@ -67,6 +67,11 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
 
 	int size = 0;
 
+	size += 1*sizeof(struct d_ocp_qp); // qp
+	size += 1*sizeof(struct d_ocp_qp_sol); // qp_sol
+	size += 1*sizeof(struct d_ipm_hard_ocp_qp_arg); // ipm_arg
+	size += 1*sizeof(struct d_ipm_hard_ocp_qp_workspace); // ipm_workspace
+
 	size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
 	size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
 	size += d_memsize_ipm_hard_ocp_qp(&qp, &ipm_arg);

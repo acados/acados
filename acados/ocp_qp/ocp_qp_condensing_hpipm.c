@@ -112,6 +112,14 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_conde
 	// size in bytes
 	int size = 0;
 
+	size += 1*sizeof(struct d_ocp_qp); // qp
+	size += 1*sizeof(struct d_ocp_qp_sol); // qp_sol
+	size += 1*sizeof(struct d_dense_qp); // qpd
+	size += 1*sizeof(struct d_dense_qp_sol); // qpd_sol
+	size += 1*sizeof(struct d_cond_qp_ocp2dense_workspace); // cond_workspace
+	size += 1*sizeof(struct d_ipm_hard_dense_qp_arg); // ipm_arg
+	size += 1*sizeof(struct d_ipm_hard_dense_qp_workspace); // ipm_workspace
+
 	size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
 	size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
 	size += d_memsize_dense_qp(nvd, ned, nbd, ngd);
