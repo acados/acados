@@ -370,11 +370,11 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 	// qpOASES (HUGE!!!) workspace at the end !!!
 	//
-	qpoases_memory->QPB = (void *) c_ptr;
-	c_ptr += sizeof(QProblemB);
+//	qpoases_memory->QPB = (void *) c_ptr;
+//	c_ptr += sizeof(QProblemB);
 	//
-	qpoases_memory->QP = (void *) c_ptr;
-	c_ptr += sizeof(QProblem);
+//	qpoases_memory->QP = (void *) c_ptr;
+//	c_ptr += sizeof(QProblem);
 
 
 	//  swap (back) x and u in bounds (by updating their indeces)
@@ -444,8 +444,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	int *idxb = memory->idxb;
 	double *prim_sol = memory->prim_sol;
 	double *dual_sol = memory->dual_sol;
-	QProblemB *QPB = memory->QPB;
-	QProblem *QP = memory->QP;
+//	QProblemB *QPB = memory->QPB;
+//	QProblem *QP = memory->QP;
 
     // extract ocp problem size
     int N = qp_in->N;
@@ -572,15 +572,16 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	int nwsr = args->nwsr; // max number of working set recalculations
 	double cputime = args->cputime;
 	int return_flag = 0;
+#if 0
 	if(ngd>0) // QProblemB
 		{
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
 		QProblem_printProperties(QP);
 		QP->haveCholesky = BT_TRUE;
-//		return_flag = QProblem_initW(QP, H, g, C, d_lb,
- //           d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
-  //          dual_sol, NULL, NULL, NULL);
+		return_flag = QProblem_initW(QP, H, g, C, d_lb,
+            d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
+            dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
 		QProblem_getPrimalSolution(QP, prim_sol);
@@ -597,6 +598,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblemB_getPrimalSolution(QPB, prim_sol);
 		QProblemB_getDualSolution(QPB, dual_sol);
 		}
+#endif
 	
 
 	// save solution statistics to memory
