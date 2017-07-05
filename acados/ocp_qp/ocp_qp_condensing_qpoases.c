@@ -166,8 +166,10 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += 1*nvd*sizeof(double); // prim_sol
 	size += (2*nbd+2*ngd)*sizeof(double); // dual_sol
 
-	size += sizeof(QProblemB);
-	size += sizeof(QProblem);
+	if(ngd>0) // QProblem
+		size += sizeof(QProblem);
+	else // QProblemB
+		size += sizeof(QProblemB);
 
 	size = (size+63)/64*64; // make multipl of typical cache line size
 	size += 1*64; // align once to typical cache line size
@@ -370,11 +372,16 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 
 	// qpOASES (HUGE!!!) workspace at the end !!!
 	//
-	qpoases_memory->QPB = (void *) c_ptr;
-	c_ptr += sizeof(QProblemB);
-	//
-	qpoases_memory->QP = (void *) c_ptr;
-	c_ptr += sizeof(QProblem);
+	if(ngd>0) // QProblem
+		{
+		qpoases_memory->QP = (void *) c_ptr;
+		c_ptr += sizeof(QProblem);
+		}
+	else // QProblemB
+		{
+		qpoases_memory->QPB = (void *) c_ptr;
+		c_ptr += sizeof(QProblemB);
+		}
 
 
 	//  swap (back) x and u in bounds (by updating their indeces)
@@ -572,7 +579,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	int nwsr = args->nwsr; // max number of working set recalculations
 	double cputime = args->cputime;
 	int return_flag = 0;
-	if(ngd>0) // QProblemB
+	if(ngd>0) // QProblem
 		{
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
@@ -585,7 +592,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblem_getPrimalSolution(QP, prim_sol);
 		QProblem_getDualSolution(QP, dual_sol);
 		}
-	else // QProblem
+	else // QProblemB
 		{
 		QProblemBCON(QPB, nvd, HST_POSDEF);
 		QProblemB_setPrintLevel(QPB, PL_MEDIUM);

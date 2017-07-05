@@ -781,8 +781,8 @@ int main() {
     d_free(hx[N]);
     d_free(hlam[N]);
 
-//    free(workspace);
-//    free(memory);
+    free(workspace);
+    free(memory);
 
     return 0;
 }
