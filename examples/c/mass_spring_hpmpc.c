@@ -43,6 +43,8 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
+//#define ELIMINATE_X0
+
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
 and the first and the last one to walls. nu (<=nx) controls act on the first nu
@@ -177,7 +179,11 @@ int main() {
 
     // stage-wise variant size
     int nxx[N + 1];
+#if defined(ELIMINATE_X0)
     nxx[0] = 0;
+#else
+    nxx[0] = nx;
+#endif
     for (ii = 1; ii <= N; ii++) nxx[ii] = nx;
 
     int nuu[N + 1];
@@ -185,7 +191,11 @@ int main() {
     nuu[N] = 0;
 
     int nbb[N + 1];
+#if defined(ELIMINATE_X0)
     nbb[0] = nbu;
+#else
+    nbb[0] = nb;
+#endif
     for (ii = 1; ii < N; ii++) nbb[ii] = nb;
     nbb[N] = nbx;
 
@@ -244,6 +254,7 @@ int main() {
     //    d_print_mat(nx, 1, b, nx);
     //    d_print_mat(nx, 1, x0, nx);
 
+#if defined(ELIMINATE_X0)
     // compute b0 = b + A*x0
     double *b0;
     d_zeros(&b0, nx, 1);
@@ -255,10 +266,13 @@ int main() {
     // then A0 is a matrix of size 0x0
     double *A0;
     d_zeros(&A0, 0, 0);
+#endif
 
     /************************************************
     * box constraints
     ************************************************/
+
+	int jj_end;
 
     int *idxb0;
     int_zeros(&idxb0, nbb[0], 1);
@@ -266,11 +280,28 @@ int main() {
     d_zeros(&lb0, nbb[0], 1);
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
-    for (jj = 0; jj < nbu; jj++) {
-        lb0[jj] = -0.5;  //   umin
-        ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = nxx[0]+jj;
-    }
+#if defined(ELIMINATE_X0)
+	for(jj=0; jj<nbb[0]; jj++)
+		{
+		lb0[jj] = - 0.5; // umin
+		ub0[jj] = + 0.5; // umin
+		idxb0[jj] = jj;
+		}
+#else
+	jj_end = nbu<nbb[0] ? nbu : nbb[0];
+	for(jj=0; jj<jj_end; jj++)
+		{
+		lb0[jj] = - 0.5; // umin
+		ub0[jj] = + 0.5; // umax
+		idxb0[jj] = jj;
+		}
+	for( ; jj<nbb[0]; jj++)
+		{
+		lb0[jj] = x0[jj-nbu]; // initial state
+		ub0[jj] = x0[jj-nbu]; // initial state
+		idxb0[jj] = jj;
+		}
+#endif
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
     //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
 
@@ -280,16 +311,19 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = 4.0;   //   xmax
-        idxb1[jj] = jj;
-    }
-    for (; jj < nb; jj++) {
-        lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
-        idxb1[jj] = jj;
-    }
+	jj_end = nbu<nbb[1] ? nbu : nbb[1];
+	for(jj=0; jj<jj_end; jj++)
+		{
+		lb1[jj] = - 0.5; // umin
+		ub1[jj] = + 0.5; // umax
+		idxb1[jj] = jj;
+		}
+	for( ; jj<nbb[1]; jj++)
+		{
+		lb1[jj] = - 4.0; // xmin
+		ub1[jj] = + 4.0; // xmax
+		idxb1[jj] = jj;
+		}
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
     //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
 
@@ -299,11 +333,19 @@ int main() {
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0;  //   umin
-        ubN[jj] = 4.0;   //   umax
-        idxbN[jj] = jj;
-    }
+	jj_end = nbu<nbb[N] ? nbu : nbb[N];
+	for(jj=0; jj<jj_end; jj++)
+		{
+		lbN[jj] = - 0.5; // umin
+		ubN[jj] = + 0.5; // umax
+		idxbN[jj] = jj;
+		}
+	for( ; jj<nbb[N]; jj++)
+		{
+		lbN[jj] = - 4.0; // xmin
+		ubN[jj] = + 4.0; // xmax
+		idxbN[jj] = jj;
+		}
     //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
     //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
 
@@ -352,6 +394,7 @@ int main() {
     d_zeros(&r, nu, 1);
     for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
 
+#if defined(ELIMINATE_X0)
     // Q0 and q0 are matrices of size 0
     double *Q0;
     d_zeros(&Q0, 0, 0);
@@ -367,6 +410,7 @@ int main() {
     // then S0 is a matrix of size nux0
     double *S0;
     d_zeros(&S0, nu, 0);
+#endif
 
     /************************************************
     * problems data
@@ -388,14 +432,23 @@ int main() {
     double *hlg[N + 1];
     double *hug[N + 1];
 
+#if defined(ELIMINATE_X0)
     hA[0] = A0;
-    hB[0] = B;
     hb[0] = b0;
     hQ[0] = Q0;
     hS[0] = S0;
-    hR[0] = R;
     hq[0] = q0;
     hr[0] = r0;
+#else
+    hA[0] = A;
+    hb[0] = b;
+    hQ[0] = Q;
+    hS[0] = S;
+    hq[0] = q;
+    hr[0] = r;
+#endif
+    hB[0] = B;
+    hR[0] = R;
     hlb[0] = lb0;
     hub[0] = ub0;
     hidxb[0] = idxb0;
@@ -642,17 +695,19 @@ int main() {
     d_free(B);
     d_free(b);
     d_free(x0);
-    d_free(A0);
-    d_free(b0);
     d_free(Q);
     d_free(S);
     d_free(R);
     d_free(q);
     d_free(r);
+#if defined(ELIMINATE_X0)
+    d_free(A0);
+    d_free(b0);
     d_free(Q0);
     d_free(S0);
     d_free(q0);
     d_free(r0);
+#endif
     int_free(idxb0);
     d_free(lb0);
     d_free(ub0);
