@@ -208,26 +208,6 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hd_ug = (double **) qp_in->uc;
     int **hidxb = (int **) qp_in->idxb;
 
-	//  swap x and u in bounds (by updating their indeces)
-	int itmp;
-	for (ii = 0; ii <= N; ii++) {
-		itmp = 0;
-		for(jj=0; jj<ii; jj++)
-			if(hidxb[ii]==hidxb[jj])
-				itmp = 1;
-		if(itmp==0) // new physical array
-			{
-			jj = 0;
-			for (; jj < nb[ii]; jj++) {
-				if (hidxb[ii][jj] < nx[ii]) {  // state
-					hidxb[ii][jj] = hidxb[ii][jj]+nu[ii];
-				} else {  // input
-					hidxb[ii][jj] = hidxb[ii][jj]-nx[ii];
-				}
-			}
-		}
-	}
-
     // extract output struct members
     double **hx = qp_out->x;
     double **hu = qp_out->u;
@@ -393,26 +373,6 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     if (ipm_workspace->stat[3+(ipm_workspace->iter-1)*5]<args->alpha_min)
 		acados_status = ACADOS_MINSTEP;
 	
-
-	//  swap (back) x and u in bounds (by updating their indeces)
-	for (ii = 0; ii <= N; ii++) {
-		itmp = 0;
-		for(jj=0; jj<ii; jj++)
-			if(hidxb[ii]==hidxb[jj])
-				itmp = 1;
-		if(itmp==0) // new physical array
-			{
-			jj = 0;
-			for (; jj < nb[ii]; jj++) {
-				if (hidxb[ii][jj] >= nu[ii]) {  // state
-					hidxb[ii][jj] = hidxb[ii][jj]-nu[ii];
-				} else {  // input
-					hidxb[ii][jj] = hidxb[ii][jj]+nx[ii];
-				}
-			}
-		}
-	}
-
 
     // return
     return acados_status;
