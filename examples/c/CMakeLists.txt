@@ -46,6 +46,7 @@ add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
 
 add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
 target_link_libraries(mass_spring_qpdunes_example acados)
+target_compile_definitions(mass_spring_qpdunes_example PRIVATE USE_ACADOS_TYPES)
 add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
 
 # add_executable(mass_spring_partial_tightening_example

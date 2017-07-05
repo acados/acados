@@ -125,8 +125,8 @@ static void form_ABt(real_t *ABkt, int_t nx, const real_t *Ak, int_t nu, const r
 }
 
 
-static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nxk, int_t nuk, int_t nbk, const int_t *idxbk,
-    const real_t *lbk, const real_t *ubk, real_t infty) {
+static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nxk, int_t nuk, int_t nbk,
+    const int_t *idxbk, const real_t *lbk, const real_t *ubk, real_t infty) {
 
     int_t ii;
 
@@ -135,16 +135,13 @@ static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nxk, int_t
         zUppk[ii] = infty;
     }
     for (ii = 0; ii < nbk; ii++) {
-		if(idxbk[ii]<nuk) // input
-		{
-			zLowk[idxbk[ii]+nxk] = lbk[ii];
-			zUppk[idxbk[ii]+nxk] = ubk[ii];
-		}
-		else // state
-		{
-			zLowk[idxbk[ii]-nuk] = lbk[ii];
-			zUppk[idxbk[ii]-nuk] = ubk[ii];
-		}
+        if (idxbk[ii] < nuk) {  // input
+            zLowk[idxbk[ii]+nxk] = lbk[ii];
+            zUppk[idxbk[ii]+nxk] = ubk[ii];
+        } else {  // state
+            zLowk[idxbk[ii]-nuk] = lbk[ii];
+            zUppk[idxbk[ii]-nuk] = ubk[ii];
+        }
     }
 }
 
@@ -174,8 +171,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
         /* setup of intervals */
         for (kk = 0; kk < N; ++kk) {
             form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
-            form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[kk], in->nu[kk], in->nb[kk], in->idxb[kk], in->lb[kk],
-                in->ub[kk], args->options.QPDUNES_INFTY);
+            form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[kk], in->nu[kk], in->nb[kk],
+                in->idxb[kk], in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
             form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
 
             if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
@@ -201,8 +198,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 return (int_t)value;
             }
         }
-        form_bounds(work->zLow, work->zUpp, nx, in->nx[N], in->nu[N], in->nb[N], in->idxb[N], in->lb[N],
-            in->ub[N], args->options.QPDUNES_INFTY);
+        form_bounds(work->zLow, work->zUpp, nx, in->nx[N], in->nu[N], in->nb[N], in->idxb[N],
+            in->lb[N], in->ub[N], args->options.QPDUNES_INFTY);
         if (in->nc[N] == 0) {
             value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N],
             in->Q[N], in->q[N], work->zLow, work->zUpp, 0, 0, 0);
@@ -228,8 +225,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 form_H(work->H, nx, in->Q[kk], nu, in->R[kk], in->S[kk]);
                 form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
                 form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
-                form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[kk], in->nu[kk], in->nb[kk], in->idxb[kk],
-                    in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
+                form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[kk], in->nu[kk], in->nb[kk],
+                    in->idxb[kk], in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
 
                 nc = in->nc[kk];
                 if (nc == 0) {
