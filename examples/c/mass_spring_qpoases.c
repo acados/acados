@@ -770,10 +770,10 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+    // for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    // for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     printf("\n");
     printf(" Solution time for %d working set recalculations, averaged over %d runs: %5.2e seconds\n", qpoases_memory.nwsr, nrep, time);
