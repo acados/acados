@@ -40,6 +40,14 @@ add_executable(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm
 target_link_libraries(mass_spring_condensing_hpipm_example acados hpipm)
 add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_example)
 
+add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
+target_link_libraries(mass_spring_qpoases_example acados hpipm)
+add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
+
+add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
+target_link_libraries(mass_spring_qpdunes_example acados)
+add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
+
 # add_executable(mass_spring_partial_tightening_example
 #    mass_spring_partial_tightening.c
 # )
@@ -65,10 +73,6 @@ add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_examp
 #  chain_model/jac_chain_nm2.c
 #)
 #target_link_libraries(nonlinear_chain_ocp_nlp acados)
-
-add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-target_link_libraries(mass_spring_qpoases_example acados hpipm)
-add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
 
 add_executable(chen_nmpc_qpoases_example
     chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
