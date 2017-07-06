@@ -99,7 +99,7 @@ int main() {
     for (int_t i = 0; i < NX; i++) w[i] = x0[i];
     for (int_t i = 0; i < NX; i++) Q[i*(NX+1)] = 1.0;
     for (int_t i = 0; i < NU; i++) R[i*(NU+1)] = 0.05;
-	for(int i=0; i<NX; i++) idxb0[i] = nu[0]+i;
+	for (int_t i = 0; i < NX; i++) idxb0[i] = nu[0]+i;
 
 
     // Integrator structs
@@ -139,6 +139,8 @@ int main() {
 
     real_t *pA[N];
     real_t *pB[N];
+    real_t *pCx[N+1];
+    real_t *pCu[N];
     real_t *pb[N];
     real_t *pQ[N+1];
     real_t *pS[N];
@@ -155,7 +157,7 @@ int main() {
     real_t *pug[N+1];
 	int_t *pidxb[N+1];
 
-	d_zeros(&pA[0], nx[1], nx[0]);
+	d_zeros(&pA[0], nx[1], nx[0]);  // TODO(dimitris): do we need this? It's the same in the loop
 	d_zeros(&pB[0], nx[1], nu[0]);
 	d_zeros(&pb[0], nx[1], 1);
 	pQ[0] = Q;
@@ -173,6 +175,8 @@ int main() {
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
+        d_zeros(&pCx[i], nc[i], nx[i]);
+        d_zeros(&pCu[i], nc[i], nu[i]);
         d_zeros(&pb[i], nx[i+1], 1);
         pQ[i] = Q;
         pR[i] = R;
@@ -189,7 +193,7 @@ int main() {
     d_zeros(&px[N], nx[N], 1);
 	d_zeros(&pu[N], nu[N], 1);
     d_zeros(&plam[N], 2*nb[N]+2*nc[N], 1);
-
+    d_zeros(&pCx[N], nc[N], nx[N]);
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
@@ -206,6 +210,8 @@ int main() {
     qp_in.r = (const real_t **) pr;
     qp_in.A = (const real_t **) pA;
     qp_in.B = (const real_t **) pB;
+    qp_in.Cx = (const real_t **) pCx;
+    qp_in.Cu = (const real_t **) pCu;
     qp_in.b = (const real_t **) pb;
     qp_in.lb = (const real_t **) plb;
     qp_in.ub = (const real_t **) pub;
