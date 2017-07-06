@@ -33,7 +33,7 @@
 // define number of repetitions
 #define NREP 100
 
-//#define ELIMINATE_X0
+#define ELIMINATE_X0
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -126,14 +126,14 @@ int main() {
     int ii, jj;
     int nrep = NREP;
 
-    int nx = 8;  // number of states (it has to be even for the mass-spring
+    int nx = 4;  // number of states (it has to be even for the mass-spring
                   // system test problem)
-    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
+    int nu = 1;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 15;   // horizon length
+    int N = 10;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
-    int ngN = 4;  // 4;  // number of general constraints at the last stage
+    int ngN = 2;  // 4;  // number of general constraints at the last stage
 
 #if 1
 
