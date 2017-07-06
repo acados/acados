@@ -73,6 +73,10 @@
 
 
 
+QProblem QP2;
+
+
+
 int ocp_qp_condensing_qpoases_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args) {
 //
 	return 0;
@@ -483,19 +487,19 @@ printf("\nqpoases 10\n");
 	int return_flag = 0;
 	if(ngd>0) // QProblem
 		{
-		QProblemCON(QP, nvd, ngd, HST_POSDEF);
-		QProblem_setPrintLevel(QP, PL_MEDIUM);
-		QProblem_printProperties(QP);
+		QProblemCON(&QP2, nvd, ngd, HST_POSDEF);
+		QProblem_setPrintLevel(&QP2, PL_MEDIUM);
+		QProblem_printProperties(&QP2);
 printf("\nqpoases 11\n");
-		return_flag = QProblem_initW(QP, H, g, C, d_lb,
+		return_flag = QProblem_initW(&QP2, H, g, C, d_lb,
             d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
             dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
 printf("\nqpoases 12\n");
-		QProblem_getPrimalSolution(QP, prim_sol);
+		QProblem_getPrimalSolution(&QP2, prim_sol);
 printf("\nqpoases 13\n");
-		QProblem_getDualSolution(QP, dual_sol);
+		QProblem_getDualSolution(&QP2, dual_sol);
 		}
 	else // QProblemB
 		{
@@ -508,6 +512,8 @@ printf("\nqpoases 13\n");
 		QProblemB_getPrimalSolution(QPB, prim_sol);
 		QProblemB_getDualSolution(QPB, dual_sol);
 		}
+	
+	QP++;
 	
 printf("\nqpoases 14\n");
 
