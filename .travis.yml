@@ -58,9 +58,11 @@ script:
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - cmake --build build --target install --clean-first
   - cmake --build build --target lint
-  - ./examples/c/mass_spring_qpoases_example
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+
+after_failure:
+  - ./examples/c/mass_spring_qpoases_example
 
 after_success:
   - pushd build
