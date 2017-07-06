@@ -47,6 +47,8 @@ script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
   - cmake --build build --target install --clean-first
+  - ls
+  - ./build/examples/c/mass_spring_qpoases_example
   - cmake -E chdir build ctest --output-on-failure
   - rm -r build
   - rm -r $HOME/local/lib
@@ -64,4 +66,4 @@ script:
 after_success:
   - pushd build
   # Upload report to CodeCov
-  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi 
+  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi
