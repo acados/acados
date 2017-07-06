@@ -31,7 +31,7 @@
 #include "acados/utils/tools.h"
 
 // define number of repetitions
-#define NREP 100
+#define NREP 10
 
 #define ELIMINATE_X0
 

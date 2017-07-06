@@ -477,6 +477,15 @@ printf("\nqpoases 9\n");
 			dual_sol[ii] = 0;
 printf("\nqpoases 10\n");
 
+d_print_mat(nvd, nvd, H, nvd);
+d_print_mat(1, nvd, g, 1);
+d_print_mat(nvd, ngd, C, nvd);
+d_print_mat(1, nvd, d_lb, 1);
+d_print_mat(1, nvd, d_ub, 1);
+d_print_mat(1, ngd, d_lg, 1);
+d_print_mat(1, ngd, d_ug, 1);
+
+printf("\nqpoases 10a\n");
 	// solve dense qp
 	int nwsr = args->nwsr; // max number of working set recalculations
 	double cputime = args->cputime;
