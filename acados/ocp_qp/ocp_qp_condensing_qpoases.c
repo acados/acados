@@ -496,9 +496,9 @@ printf("\nqpoases 10a\n");
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
 		QProblem_printProperties(QP);
 printf("\nqpoases 11\n");
-		return_flag = QProblem_initW(QP, H, g, C, d_lb,
-            d_ub, d_lg, d_ug, &nwsr, &cputime, NULL,
-            dual_sol, NULL, NULL, NULL);
+		return_flag = QProblem_init(QP, H, g, C, d_lb, // initW
+            d_ub, d_lg, d_ug, &nwsr, &cputime); //, NULL,
+//            dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
 printf("\nqpoases 12\n");
