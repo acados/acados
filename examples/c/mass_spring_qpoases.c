@@ -122,7 +122,7 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
 
 int main() {
 //
-    printf("Running the mass-spring example with qpOASES\n");
+    printf("Checkpoint 1\n");
     int ii, jj;
     int nrep = NREP;
 
@@ -684,6 +684,8 @@ int main() {
     * create the in and out struct
     ************************************************/
 
+    printf("Checkpoint 2\n");
+
     ocp_qp_in qp_in;
     ocp_qp_out qp_out;
 
@@ -727,17 +729,25 @@ int main() {
     * work space
     ************************************************/
 
+    printf("Checkpoint 3\n");
+
 #if defined(HPIPM_COND)
     int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
     printf("\nwork space size: %d bytes\n", workspace_size);
     void *workspace = malloc(workspace_size);
 
+    printf("Checkpoint 4\n");
+
     int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
+    printf("Checkpoint 5\n");
+
 	ocp_qp_condensing_qpoases_memory qpoases_memory;
 	ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, memory);
+
+    printf("Checkpoint 6\n");
 #else
     int workspace_size = 0;
     printf("\nwork space size: %d bytes\n", workspace_size);
@@ -758,6 +768,7 @@ int main() {
 
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
+        printf("Checkpoint 7, rep=%d\n", rep);
 #if defined(HPIPM_COND)
         return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
 #else
@@ -770,6 +781,8 @@ int main() {
     double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
+    printf("Checkpoint 8\n");
+
     printf("\nu = \n");
     for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
@@ -779,6 +792,8 @@ int main() {
     printf("\n");
     printf(" Solution time for %d working set recalculations, averaged over %d runs: %5.2e seconds\n", qpoases_memory.nwsr, nrep, time);
     printf("\n\n");
+
+    printf("Checkpoint 9\n");
 
     if (return_value != 0) {
         printf("\n qpOASES error ! No. %d\n", return_value);
@@ -839,6 +854,8 @@ int main() {
 
     free(workspace);
     free(memory);
+
+    printf("Checkpoint 10\n");
 
     return 0;
 }
