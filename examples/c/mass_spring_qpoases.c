@@ -122,6 +122,7 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
 
 int main() {
 //
+    printf("Running the mass-spring example with qpOASES\n");
     int ii, jj;
     int nrep = NREP;
 
