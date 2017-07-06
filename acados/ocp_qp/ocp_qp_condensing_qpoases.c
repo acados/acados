@@ -143,7 +143,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_con
 	size += 2*ngd*sizeof(double); // d_lg d_ug
 	size += 1*nbd*sizeof(int); // idxb
 	size += 1*nvd*sizeof(double); // prim_sol
-	size += (2*nbd+2*ngd)*sizeof(double); // dual_sol
+	size += (2*nvd+2*ngd)*sizeof(double); // dual_sol
 
 	if(ngd>0) // QProblem
 		size += sizeof(QProblem);
@@ -275,7 +275,7 @@ void ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing
 	c_ptr += nvd*sizeof(double);
 	//
 	qpoases_memory->dual_sol = (double *) c_ptr;
-	c_ptr += (2*nbd+2*ngd)*sizeof(double);
+	c_ptr += (2*nvd+2*ngd)*sizeof(double);
 
 
 	// align memory to typical cache line size
