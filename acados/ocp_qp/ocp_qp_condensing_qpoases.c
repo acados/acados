@@ -333,8 +333,6 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 	ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
 	ocp_qp_condensing_qpoases_memory *memory = (ocp_qp_condensing_qpoases_memory *) memory_;
 
-printf("\nqpoases 0\n");
-
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
 
@@ -367,10 +365,8 @@ printf("\nqpoases 0\n");
 	int *idxb = memory->idxb;
 	double *prim_sol = memory->prim_sol;
 	double *dual_sol = memory->dual_sol;
-printf("\nqpoases 1\n");
 	QProblemB *QPB = memory->QPB;
 	QProblem *QP = memory->QP;
-printf("\nqpoases 2\n");
 
     // extract ocp problem size
     int N = qp_in->N;
@@ -417,14 +413,11 @@ printf("\nqpoases 2\n");
 	int nbd = qpd->nb;
 	int ngd = qpd->ng;
 
-printf("\nqpoases 3\n");
 	// ocp qp structure
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub, hC, hD, hd_lg, hd_ug, qp);
-printf("\nqpoases 4\n");
 
 	// dense qp structure
 	d_cond_qp_ocp2dense(qp, qpd, cond_workspace);
-printf("\nqpoases 5\n");
 
 #if 0
 	d_print_strmat(nvd, nvd, qpd->Hg, 0, 0);
@@ -434,10 +427,8 @@ printf("\nqpoases 5\n");
 	// fill in the upper triangular of H in dense_qp
 	dtrtr_l_libstr(nvd, qpd->Hg, 0, 0, qpd->Hg, 0, 0);
 	
-printf("\nqpoases 6\n");
 	// dense qp row-major
 	d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug);
-printf("\nqpoases 7\n");
 
 	
 	// reorder bounds
@@ -451,7 +442,6 @@ printf("\nqpoases 7\n");
 		d_lb[idxb[ii]] = d_lb0[ii];
 		d_ub[idxb[ii]] = d_ub0[ii];
 		}
-printf("\nqpoases 8\n");
 	
 	// cholesky factorization of H
 //	dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
@@ -469,23 +459,13 @@ printf("\nqpoases 8\n");
 #endif
 
 
-printf("\nqpoases 9\n");
 	// cold start the dual solution with no active constraints
 	int warm_start = args->warm_start;
 	if(!warm_start)
 		for(ii=0; ii<2*nvd+2*ngd; ii++)
 			dual_sol[ii] = 0;
-printf("\nqpoases 10\n");
 
-d_print_mat(nvd, nvd, H, nvd);
-d_print_mat(1, nvd, g, 1);
-d_print_mat(nvd, ngd, C, nvd);
-d_print_mat(1, nvd, d_lb, 1);
-d_print_mat(1, nvd, d_ub, 1);
-d_print_mat(1, ngd, d_lg, 1);
-d_print_mat(1, ngd, d_ug, 1);
 
-printf("\nqpoases 10a\n");
 	// solve dense qp
 	int nwsr = args->nwsr; // max number of working set recalculations
 	double cputime = args->cputime;
@@ -495,15 +475,12 @@ printf("\nqpoases 10a\n");
 		QProblemCON(QP, nvd, ngd, HST_POSDEF);
 		QProblem_setPrintLevel(QP, PL_MEDIUM);
 		QProblem_printProperties(QP);
-printf("\nqpoases 11\n");
 		return_flag = QProblem_init(QP, H, g, C, d_lb, // initW
             d_ub, d_lg, d_ug, &nwsr, &cputime); //, NULL,
 //            dual_sol, NULL, NULL, NULL);
 //            NULL, NULL, NULL, NULL);
 //            NULL, NULL, NULL, R);
-printf("\nqpoases 12\n");
 		QProblem_getPrimalSolution(QP, prim_sol);
-printf("\nqpoases 13\n");
 		QProblem_getDualSolution(QP, dual_sol);
 		}
 	else // QProblemB
@@ -518,7 +495,6 @@ printf("\nqpoases 13\n");
 		QProblemB_getDualSolution(QPB, dual_sol);
 		}
 	
-printf("\nqpoases 14\n");
 
 	// save solution statistics to memory
 	memory->cputime = cputime;
@@ -530,26 +506,21 @@ printf("\nqpoases 14\n");
 	exit(1);
 #endif
 
-printf("\nqpoases 15\n");
 	
 	// copy prim_sol and dual_sol to qpd_sol
 	d_cvt_vec2strvec(nvd, prim_sol, qpd_sol->v, 0);
 
 
-printf("\nqpoases 16\n");
 	// expand solution
 	d_expand_sol_dense2ocp(qp, qpd_sol, qp_sol, cond_workspace);
 
 
-printf("\nqpoases 17\n");
 	// extract solution
 	d_cvt_ocp_qp_sol_to_colmaj(qp, qp_sol, hu, hx, hpi, hlam_lb, hlam_ub, hlam_lg, hlam_ug);
 
-printf("\nqpoases 18\n");
 
     // return
 	acados_status = return_flag;
-printf("\nqpoases 19\n");
     return acados_status;
 //
 }
