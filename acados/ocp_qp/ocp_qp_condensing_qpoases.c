@@ -488,9 +488,9 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 		QProblemBCON(QPB, nvd, HST_POSDEF);
 		QProblemB_setPrintLevel(QPB, PL_MEDIUM);
 		QProblemB_printProperties(QPB);
-		return_flag = QProblemB_initW(QPB, H, g, d_lb,
-            d_ub, &nwsr, &cputime, NULL,
-            dual_sol, NULL, NULL);
+		return_flag = QProblemB_init(QPB, H, g, d_lb, // initW
+            d_ub, &nwsr, &cputime); //, NULL,
+//            dual_sol, NULL, NULL);
 		QProblemB_getPrimalSolution(QPB, prim_sol);
 		QProblemB_getDualSolution(QPB, dual_sol);
 		}
