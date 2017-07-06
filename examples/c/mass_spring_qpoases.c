@@ -33,7 +33,7 @@
 // define number of repetitions
 #define NREP 100
 
-//#define ELIMINATE_X0
+#define ELIMINATE_X0
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
