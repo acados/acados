@@ -77,5 +77,8 @@ if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
+add_custom_target(uninstall
+    COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt | xargs rm -v)
+
 # Cpplint
 include(lint)
