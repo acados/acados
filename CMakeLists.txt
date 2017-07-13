@@ -69,7 +69,9 @@ add_subdirectory(examples)
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    add_subdirectory(swig)
+    if(SWIG_MATLAB OR SWIG_PYTHON)
+        add_subdirectory(swig)
+    endif()
 endif()
 
 # Generate test data and configure unit tests
