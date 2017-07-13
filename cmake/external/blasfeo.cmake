@@ -25,10 +25,10 @@ endif()
 ExternalProject_Add(
     blasfeo_project
 
-    CONFIGURE_COMMAND make clean
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/blasfeo"
-    BUILD_IN_SOURCE 1
-    BUILD_COMMAND make static_library -j 2 OS=${OS} CC=${CMAKE_C_COMPILER} TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
+    BINARY_DIR "${PROJECT_SOURCE_DIR}/external/blasfeo/build"
+    CONFIGURE_COMMAND cmake -DOS=${OS} -DCC=${CMAKE_C_COMPILER} -DTARGET=${BLASFEO_TARGET} -DLA=${BLASFEO_LA} -DCMAKE_VERBOSE_MAKEFILE=ON ..
+    BUILD_COMMAND cmake --build . --target blasfeo -- OS=${OS} CC=${CMAKE_C_COMPILER} TARGET=${BLASFEO_TARGET} LA=${BLASFEO_LA}
     INSTALL_COMMAND "${RANLIB_COMMAND}"
     # LOG_CONFIGURE 1  # suppress output
     # LOG_BUILD 1
