@@ -17,7 +17,9 @@
 #
 #
 
-include(external/blasfeo)
+set(TARGET "GENERIC" CACHE STRING "Target architecture")
+set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+add_subdirectory(blasfeo)
 include(external/hpmpc)
 add_subdirectory(hpipm)
 add_subdirectory(qpDUNES-dev)
