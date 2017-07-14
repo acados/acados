@@ -13,7 +13,7 @@ nlp.ub{1} = current_state;
 % Weighting matrix
 Q = diag([1.0, 1.0]);
 R = 1e-2;
-cost_matrices = cell(N);
+cost_matrices = cell(N+1, 1);
 for i=1:N
     cost_matrices{i} = blkdiag(Q, R);
 end
@@ -37,7 +37,7 @@ STATES(1, :) = current_state.';
 for i=1:num_iters
     output = solver.solve(current_state);
     current_state = output.states{2};
-    STATES(i+1) = current_state.';
+    STATES(i+1, :) = current_state.';
 end
 
 plot(STATES(:,1), STATES(:,2));
