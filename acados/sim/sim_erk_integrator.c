@@ -90,7 +90,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
     }
     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
 
-    mem = 0; mem += 0;
+    mem = 0; mem = mem;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;

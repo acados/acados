@@ -17,10 +17,16 @@
 #
 #
 
+set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+
 find_library(FORTRAN_LIBRARY gfortran
+	PATHS
+	    $ENV{GFORTRAN_HOME}/lib/gcc/mingw32/6.3.0
     HINTS
         /usr/lib/gcc/x86_64-linux-gnu/*
         /usr/local/lib/gcc/*
+	    $ENV{GFORTRAN_HOME}/*
         ${CMAKE_FIND_ROOT_PATH}
     CMAKE_FIND_ROOT_PATH_BOTH)
 

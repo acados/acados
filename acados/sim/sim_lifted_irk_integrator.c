@@ -1053,7 +1053,7 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
     sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
-    int_t num_sys = ceil(num_stages/2.0);
+    int_t num_sys = (int_t) ceil(num_stages/2.0);
 //    printf("num_stages: %d \n", num_stages);
 //    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
 //    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
@@ -1196,8 +1196,8 @@ void sim_irk_create_arguments(void *args, const int_t num_stages, const char* na
 }
 
 
-void sim_irk_create_Newton_scheme(void *args, const int_t num_stages, const char* name,
-        enum Newton_type_collocation type) {
+void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
+	enum Newton_type_collocation type) {
     sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->scheme.type = type;
     opts->scheme.freeze = false;
