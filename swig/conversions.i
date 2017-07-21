@@ -53,6 +53,7 @@ class sequence_of_arrays(list):
 
 %{
 // Global variable for Python module
+PyTypeObject tuple_type;
 PyObject *pModule = NULL;
 %}
 #endif
@@ -535,15 +536,14 @@ LangObject *new_states_controls_output_tuple(LangObject *states, LangObject *con
     fields[1].doc = NULL;
     fields[2].name = NULL;
     fields[2].doc = NULL;
-
     PyStructSequence_Desc tuple_descriptor;
     tuple_descriptor.name = (char *) "output";
     tuple_descriptor.doc = NULL;
     tuple_descriptor.fields = fields;
     tuple_descriptor.n_in_sequence = 2;
-    PyTypeObject *tuple_type = PyStructSequence_NewType(&tuple_descriptor);
-    tuple_type->tp_flags = tuple_type->tp_flags | Py_TPFLAGS_HEAPTYPE;
-    PyObject *named_tuple = PyStructSequence_New(tuple_type);
+    PyStructSequence_InitType2(&tuple_type, &tuple_descriptor);
+    tuple_type.tp_flags = tuple_type.tp_flags | Py_TPFLAGS_HEAPTYPE;
+    PyObject *named_tuple = PyStructSequence_New(&tuple_type);
     PyStructSequence_SetItem(named_tuple, 0, (PyObject *) states);
     PyStructSequence_SetItem(named_tuple, 1, (PyObject *) controls);
     return named_tuple;
