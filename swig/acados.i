@@ -391,14 +391,14 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         if (!strcmp("gauss-newton-sqp", solver_name)) {
             solver->fun = ocp_nlp_gn_sqp;
             args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
-          ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+            ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
             snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
                 sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "qpdunes");
             mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
             ((ocp_nlp_gn_sqp_memory *) mem)->common = \
                 (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
             ocp_nlp_gn_sqp_create_memory(nlp_in, args, mem);
-          ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
+            ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
             workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
             workspace = (void *) malloc(workspace_size);
             int_t N = nlp_in->N;
@@ -411,7 +411,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 nlp_in->sim[i].in->sens_adj = false;
                 nlp_in->sim[i].in->sens_hess = false;
                 nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
-                nlp_in->sim[i].in->nSteps = 2;
+                nlp_in->sim[i].in->nSteps = 1;
                 nlp_in->sim[i].args = (void*) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(nlp_in->sim[i].args, 4);
                 int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, \
