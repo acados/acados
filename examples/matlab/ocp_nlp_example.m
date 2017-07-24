@@ -29,7 +29,7 @@ ode_fun = Function('ode_fun', {x, u}, {rhs});
 step = 0.1;
 nlp.set_model(ode_fun, step);
 
-solver = ocp_nlp_solver('gauss-newton-sqp', nlp);
+solver = ocp_nlp_solver('gauss-newton-sqp', nlp, struct());
 
 num_iters = 50;
 STATES = zeros(num_iters+1, nx);
