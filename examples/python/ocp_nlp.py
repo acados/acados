@@ -28,7 +28,7 @@ ode_fun = Function('ode_fun', [x, u], [rhs])
 step = 0.1
 nlp.set_model(ode_fun, step)
 
-solver = ocp_nlp_solver('gauss-newton-sqp', nlp, dict())
+solver = ocp_nlp_solver('gauss-newton-sqp', nlp, {'integrator_steps': 2})
 
 STATES = [current_state]
 for i in range(50):

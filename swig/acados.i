@@ -21,8 +21,10 @@
 
 #if defined(SWIGMATLAB)
 typedef mxArray LangObject;
+#define NONE NULL
 #elif defined(SWIGPYTHON)
 typedef PyObject LangObject;
+#define NONE Py_None
 %{
 #define SWIG_FILE_WITH_INIT
 %}
@@ -382,15 +384,15 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
 }
 
 %extend ocp_nlp_solver {
-    ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in, LangObject *options) {
+    ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in, LangObject *options = NONE) {
         const char *fieldnames[3] = {"qp_solver", "integrator_steps", "SQP_steps"};
         const char *qp_solver = "qpdunes";
         int_t integrator_steps = 1;
         int_t sqp_steps = 1;
-        if (options == NULL) {
+        if (options == NONE) {
 #if defined(SWIGMATLAB)
             const mwSize dims[1] = {(const mwSize) 1};
-            options = mxCreateStructArray(1, dims, 0, fieldnames);
+            options = mxCreateStructArray(1, dims, 3, fieldnames);
             mxArray *qp_solver_string = mxCreateString(qp_solver);
             mxArray *integrator_steps_array = mxCreateDoubleScalar(integrator_steps);
             mxArray *sqp_steps_array = mxCreateDoubleScalar(sqp_steps);

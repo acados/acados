@@ -292,7 +292,7 @@ const char *char_from(const LangObject *map, const char *key) {
 #if defined(SWIGMATLAB)
     return (const char *) mxArrayToString(value);
 #elif defined(SWIGPYTHON)
-    return (const char *) PyByteArray_AsString(value);
+    return (const char *) PyUnicode_AsUTF8AndSize(value, NULL);
 #endif
 }
 
