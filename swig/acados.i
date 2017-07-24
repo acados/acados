@@ -382,7 +382,49 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
 }
 
 %extend ocp_nlp_solver {
-    ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in) {
+    ocp_nlp_solver(char *solver_name, ocp_nlp_in *nlp_in, LangObject *options) {
+        const char *fieldnames[3] = {"qp_solver", "integrator_steps", "SQP_steps"};
+        const char *qp_solver = "qpdunes";
+        int_t integrator_steps = 1;
+        int_t sqp_steps = 1;
+        if (options == NULL) {
+#if defined(SWIGMATLAB)
+            const mwSize dims[1] = {(const mwSize) 1};
+            options = mxCreateStructArray(1, dims, 0, fieldnames);
+            mxArray *qp_solver_string = mxCreateString(qp_solver);
+            mxArray *integrator_steps_array = mxCreateDoubleScalar(integrator_steps);
+            mxArray *sqp_steps_array = mxCreateDoubleScalar(sqp_steps);
+            mxSetField(options, 0, fieldnames[0], qp_solver_string);
+            mxSetField(options, 0, fieldnames[1], integrator_steps_array);
+            mxSetField(options, 0, fieldnames[2], sqp_steps_array);
+#elif defined(SWIGPYTHON)
+            options = PyDict_New();
+            PyDict_SetItem(options,
+                           PyString_FromString(fieldnames[0]),
+                           PyString_FromString(qp_solver));
+            PyDict_SetItem(options,
+                           PyString_FromString(fieldnames[1]),
+                           PyLong_FromLong((long) integrator_steps));
+            PyDict_SetItem(options,
+                           PyString_FromString(fieldnames[2]),
+                           PyLong_FromLong((long) sqp_steps));
+#endif
+        }
+        if (!is_map(options)) {
+            char err_msg[256];
+#if defined(SWIGMATLAB)
+            snprintf(err_msg, sizeof(err_msg), "Please pass options as a struct");
+#elif defined(SWIGPYTHON)
+            snprintf(err_msg, sizeof(err_msg), "Please pass options as a dictionary");
+#endif
+            throw std::runtime_error(err_msg);
+        }
+        if (has(options, fieldnames[0]))
+            qp_solver = char_from(options, fieldnames[0]);
+        if (has(options, fieldnames[1]))
+            integrator_steps = int_from(options, fieldnames[1]);
+        if (has(options, fieldnames[2]))
+            sqp_steps = int_from(options, fieldnames[2]);
         ocp_nlp_solver *solver = (ocp_nlp_solver *) malloc(sizeof(ocp_nlp_solver));
         void *args = NULL;
         void *mem = NULL;
@@ -393,7 +435,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
             args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
             snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
-                sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "qpdunes");
+                sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "%s", qp_solver);
             mem = (ocp_nlp_gn_sqp_memory *) malloc(sizeof(ocp_nlp_gn_sqp_memory));
             ((ocp_nlp_gn_sqp_memory *) mem)->common = \
                 (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
@@ -402,7 +444,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
             workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
             workspace = (void *) malloc(workspace_size);
             int_t N = nlp_in->N;
-            ((ocp_nlp_gn_sqp_args *) args)->common->maxIter = 1;
+            ((ocp_nlp_gn_sqp_args *) args)->common->maxIter = sqp_steps;
             nlp_in->freezeSens = false;
             for (int_t i = 0; i < N; i++) {
                 nlp_in->sim[i].in->nx = nlp_in->nx[i];
@@ -411,7 +453,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 nlp_in->sim[i].in->sens_adj = false;
                 nlp_in->sim[i].in->sens_hess = false;
                 nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
-                nlp_in->sim[i].in->nSteps = 1;
+                nlp_in->sim[i].in->nSteps = integrator_steps;
                 nlp_in->sim[i].args = (void*) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(nlp_in->sim[i].args, 4);
                 int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, \
@@ -434,7 +476,6 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     }
 
     LangObject *solve() {
-        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & (~_MM_MASK_INVALID));
         int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
             $self->mem, $self->work);
         if (return_code != 0) {

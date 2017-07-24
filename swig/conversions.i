@@ -287,12 +287,21 @@ LangObject *from(const LangObject *map, const char *key) {
 #endif
 }
 
-int_t int_from(const LangObject *map, const char *key) {
+const char *char_from(const LangObject *map, const char *key) {
+    LangObject *value = from(map, key);
 #if defined(SWIGMATLAB)
-    mxArray *value_ptr = mxGetField(map, 0, key);
-    return (int_t) mxGetScalar(value_ptr);
+    return (const char *) mxArrayToString(value);
 #elif defined(SWIGPYTHON)
-    return (int_t) PyLong_AsLong(PyDict_GetItemString((PyObject *) map, key));
+    return (const char *) PyByteArray_AsString(value);
+#endif
+}
+
+int_t int_from(const LangObject *map, const char *key) {
+    LangObject *value = from(map, key);
+#if defined(SWIGMATLAB)
+    return (int_t) mxGetScalar(value);
+#elif defined(SWIGPYTHON)
+    return (int_t) PyLong_AsLong(value);
 #endif
 }
 
