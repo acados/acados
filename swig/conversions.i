@@ -590,7 +590,7 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
     const mwSize dims[1] = {(const mwSize) 1};
     mxArray *named_tuple = mxCreateStructArray(1, dims, num_fields, field_names);
     for (int_t index = 0; index < num_fields; index++)
-        mxSetField(named_tuple, 0, fieldnames[index], content[index]);
+        mxSetField(named_tuple, 0, field_names[index], content[index]);
     return named_tuple;
 #elif defined(SWIGPYTHON)
     // The list of field names in named tuples must be NULL-terminated in Python
