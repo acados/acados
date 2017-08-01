@@ -35,7 +35,7 @@ num_iters = 50;
 STATES = zeros(num_iters+1, nx);
 STATES(1, :) = current_state.';
 for i=1:num_iters
-    output = solver.solve(current_state);
+    output = solver.evaluate(current_state);
     current_state = output.states{2};
     STATES(i+1, :) = current_state.';
 end

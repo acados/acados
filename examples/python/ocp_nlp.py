@@ -32,7 +32,7 @@ solver = ocp_nlp_solver('gauss-newton-sqp', nlp, {'integrator_steps': 2})
 
 STATES = [current_state]
 for i in range(50):
-    state_traj, control_traj = solver.solve(current_state)
+    state_traj, control_traj = solver.evaluate(current_state)
     current_state = state_traj[1]
     STATES += [current_state]
     print(STATES)
