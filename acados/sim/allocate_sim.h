@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_ALLOCATE_SIM_H_
-#define ACADOS_ALLOCATE_SIM_H_
+#ifndef ACADOS_SIM_ALLOCATE_SIM_H_
+#define ACADOS_SIM_ALLOCATE_SIM_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,4 +34,4 @@ void allocate_sim_out(sim_in *sim_in, sim_out *sim_out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_ALLOCATE_SIM_H_
+#endif  // ACADOS_SIM_ALLOCATE_SIM_H_
