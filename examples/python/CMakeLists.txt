@@ -24,4 +24,8 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
 
     add_test(NAME ocp_qp_py
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.py)
+
+    add_test(NAME sim_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/sim.py)
+
 endif()

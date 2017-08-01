@@ -347,45 +347,6 @@ real_t real_from(const LangObject *map, const char *key) {
 #endif
 }
 
-void fill_array_from(const LangObject *input, int_t *array, const int_t length) {
-    if (is_integer(input)) {
-        int_t number = int_from(input);
-        for (int_t i = 0; i < length; i++)
-            array[i] = number;
-    } else if (is_sequence(input, length)) {
-        fill_int_array_from(input, array, length);
-    } else {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), \
-            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
-        throw std::invalid_argument(err_msg);
-    }
-}
-
-void fill_array_from(const LangObject *input, real_t *array, const int_t length) {
-    if (is_real(input)) {
-        real_t number = real_from(input);
-        for (int_t i = 0; i < length; i++)
-            array[i] = number;
-    } else if (is_sequence(input, length)) {
-        fill_real_array_from(input, array, length);
-    } else {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), \
-            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
-        throw std::invalid_argument(err_msg);
-    }
-}
-
-void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t array_length) {
-    if (!has(map, key)) {
-        memset(array, 0, array_length*sizeof(*array));
-    } else {
-        LangObject *item = from(map, key);
-        fill_array_from(item, array, array_length);
-    }
-}
-
 void to(LangObject *sequence, const int_t index, LangObject *item) {
 #if defined(SWIGMATLAB)
     mxSetCell(sequence, index, item);
@@ -625,6 +586,47 @@ LangObject *new_sim_output_tuple(LangObject *final_state, LangObject *forward_se
     const char *field_names[2] = {"final_state", "forward_sensitivities"};
     LangObject *fields[2] = {final_state, forward_sensitivities};
     return new_output_tuple(2, field_names, fields);
+}
+
+void fill_array_from(const LangObject *input, int_t *array, const int_t length) {
+    if (is_integer(input)) {
+        int_t number = int_from(input);
+        for (int_t i = 0; i < length; i++)
+            array[i] = number;
+    } else if (is_sequence(input, length)) {
+        fill_int_array_from(input, array, length);
+    } else {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), \
+            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
+        throw std::invalid_argument(err_msg);
+    }
+}
+
+void fill_array_from(const LangObject *input, real_t *array, const int_t length) {
+    if (is_real(input)) {
+        real_t number = real_from(input);
+        for (int_t i = 0; i < length; i++)
+            array[i] = number;
+    } else if (is_sequence(input, length)) {
+        fill_real_array_from(input, array, length);
+    } else if (is_matrix(input, length, 1)) {
+        copy_from(input, array, length);
+    } else {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), \
+            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
+        throw std::invalid_argument(err_msg);
+    }
+}
+
+void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t array_length) {
+    if (!has(map, key)) {
+        memset(array, 0, array_length*sizeof(*array));
+    } else {
+        LangObject *item = from(map, key);
+        fill_array_from(item, array, array_length);
+    }
 }
 
 %}
