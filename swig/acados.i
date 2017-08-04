@@ -70,6 +70,8 @@ typedef PyObject LangObject;
 
 %{
 
+void *handle = NULL;
+
 // static bool is_valid_sim_dimensions_map(const LangObject *input) {
 //     if (!is_map(input))
 //         return false;
@@ -118,6 +120,7 @@ static void generate_model(casadi::Function& model, char *model_name, int_t str_
 void set_model(sim_in *sim, casadi::Function& f, double step) {
     char model_name[256], library_name[256], path_to_library[256];
     generate_model(f, model_name, sizeof(model_name));
+    // snprintf(library_name, sizeof(library_name), "%s_sim.so", model_name);
     snprintf(library_name, sizeof(library_name), "%s.so", model_name);
     snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
     char command[256];
@@ -126,9 +129,10 @@ void set_model(sim_in *sim, casadi::Function& f, double step) {
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
-    void *handle;
+    if (handle)
+        dlclose(handle);
     handle = dlopen(path_to_library, RTLD_LAZY);
-    if (handle == 0) {
+    if (handle == NULL) {
         char err_msg[256];
         snprintf(err_msg, sizeof(err_msg), \
             "Something went wrong when loading the model. dlerror(): %s", dlerror());
@@ -139,7 +143,6 @@ void set_model(sim_in *sim, casadi::Function& f, double step) {
     sim->vde = eval;
     sim->VDE_forw = &vde_fun;
     sim->step = step;
-    // dlclose(handle);  //TODO(roversch): necessary or not?
 }
 
 LangObject *sim_output(const sim_in *in, const sim_out *out) {
@@ -212,10 +215,13 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
     LangObject *evaluate(LangObject *initial_state, LangObject *control) {
         fill_array_from(initial_state, $self->in->x, $self->in->nx);
         fill_array_from(control, $self->in->u, $self->in->nu);
+        printf("x0=%f, x1=%f, u0=%f\n", $self->in->x[0], $self->in->x[1], $self->in->u[0]);
+        printf("nx=%d, nu=%d\n", $self->in->nx, $self->in->nu);
         int_t return_code = $self->fun($self->in, $self->out, $self->args, $self->mem, $self->work);
         if (return_code != 0) {
             throw std::runtime_error("integrator failed!");
         }
+        printf("final_state = [%f, %f]\n", $self->out->xn[0], $self->out->xn[1]);
         return sim_output($self->in, $self->out);
     }
 }
@@ -496,7 +502,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         int compilation_failed = system(command);
         if (compilation_failed)
             throw std::runtime_error("Something went wrong when compiling the model.");
-        void *handle;
+        if (handle)
+            dlclose(handle);
         handle = dlopen(path_to_library, RTLD_LAZY);
         if (handle == 0) {
             char err_msg[256];
@@ -511,7 +518,6 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
             $self->sim[i].in->VDE_forw = &vde_fun;
             $self->sim[i].in->step = step;
         }
-        // dlclose(handle);  //TODO(roversch): necessary or not?
     }
 }
 
