@@ -2,7 +2,7 @@ clc;
 %clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.1.1')
+addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
 
 % Get collocation points

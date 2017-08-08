@@ -18,9 +18,9 @@ wget -q http://bitbucket.org/eigen/eigen/get/3.2.10.tar.gz
 mkdir -p eigen
 tar -xf 3.2.10.tar.gz --strip-components=1 -C eigen
 
-wget -q http://files.casadi.org/3.1.1/linux/casadi-octave-v3.1.1.tar.gz
-mkdir -p casadi-octave-v3.1.1
-tar -xf casadi-octave-v3.1.1.tar.gz -C casadi-octave-v3.1.1
+wget -q http://files.casadi.org/3.2.2/linux/casadi-octave-v3.2.2.tar.gz
+mkdir -p casadi-octave-v3.2.2
+tar -xf casadi-octave-v3.2.2.tar.gz -C casadi-octave-v3.2.2
 
 wget -q http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
 mkdir -p casadi-py35-np1.9.1-v3.1.1
