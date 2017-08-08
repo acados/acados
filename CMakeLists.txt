@@ -77,6 +77,11 @@ if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
+install(DIRECTORY acados
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN "simplified" EXCLUDE)
+
 add_custom_target(uninstall
     COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt | xargs rm -v)
 

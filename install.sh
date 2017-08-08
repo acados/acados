@@ -1,7 +1,7 @@
 #!/bin/bash -xe
 
 # Install dependencies
-sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev libeigen3-dev python3-tk
+sudo apt-get install libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev libeigen3-dev python3-tk automake
 sudo apt-get install byacc # swig
 sudo apt-get install python3-scipy python3-numpy python3-matplotlib
 

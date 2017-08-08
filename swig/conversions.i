@@ -53,6 +53,7 @@ class sequence_of_arrays(list):
 
 %{
 // Global variable for Python module
+PyTypeObject tuple_type;
 PyObject *pModule = NULL;
 %}
 #endif
@@ -100,11 +101,31 @@ bool is_integer(const LangObject *input) {
 #endif
 }
 
+bool is_real(const LangObject *input) {
+#if defined(SWIGMATLAB)
+    if (!mxIsScalar(input) || !mxIsNumeric(input))
+        return false;
+    return true;
+#elif defined(SWIGPYTHON)
+    if (!PyFloat_Check((PyObject *) input))
+        return false;
+    return true;
+#endif
+}
+
 int_t int_from(const LangObject *scalar) {
 #if defined(SWIGMATLAB)
     return (int_t) mxGetScalar(scalar);
 #elif defined(SWIGPYTHON)
     return (int_t) PyLong_AsLong((PyObject *) scalar);
+#endif
+}
+
+real_t real_from(const LangObject *scalar) {
+#if defined(SWIGMATLAB)
+    return (real_t) mxGetScalar(scalar);
+#elif defined(SWIGPYTHON)
+    return (real_t) PyFloat_AsDouble((PyObject *) scalar);
 #endif
 }
 
@@ -251,6 +272,19 @@ void fill_int_array_from(const LangObject *sequence, int_t *array, const int_t l
     }
 }
 
+void fill_real_array_from(const LangObject *sequence, real_t *array, const int_t length) {
+    for (int_t index = 0; index < length; index++) {
+        LangObject *item = from(sequence, index);
+        if (!is_real(item)) {
+            char err_msg[256];
+            snprintf(err_msg, sizeof(err_msg), "Input %s elements must be scalars",
+                LANG_SEQUENCE_NAME);
+            throw std::invalid_argument(err_msg);
+        }
+        array[index] = real_from(item);
+    }
+}
+
 bool is_map(const LangObject *object) {
 #if defined(SWIGMATLAB)
     if (!mxIsStruct(object))
@@ -286,37 +320,31 @@ LangObject *from(const LangObject *map, const char *key) {
 #endif
 }
 
-int_t int_from(const LangObject *map, const char *key) {
+const char *char_from(const LangObject *map, const char *key) {
+    LangObject *value = from(map, key);
 #if defined(SWIGMATLAB)
-    mxArray *value_ptr = mxGetField(map, 0, key);
-    return (int_t) mxGetScalar(value_ptr);
+    return (const char *) mxArrayToString(value);
 #elif defined(SWIGPYTHON)
-    return (int_t) PyLong_AsLong(PyDict_GetItemString((PyObject *) map, key));
+    return (const char *) PyUnicode_AsUTF8AndSize(value, NULL);
 #endif
 }
 
-void fill_array_from(const LangObject *input, int_t *array, const int_t length) {
-    if (is_integer(input)) {
-        int_t number = int_from(input);
-        for (int_t i = 0; i < length; i++)
-            array[i] = number;
-    } else if (is_sequence(input, length)) {
-        fill_int_array_from(input, array, length);
-    } else {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), \
-            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
-        throw std::invalid_argument(err_msg);
-    }
+int_t int_from(const LangObject *map, const char *key) {
+    LangObject *value = from(map, key);
+#if defined(SWIGMATLAB)
+    return (int_t) mxGetScalar(value);
+#elif defined(SWIGPYTHON)
+    return (int_t) PyLong_AsLong(value);
+#endif
 }
 
-void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t array_length) {
-    if (!has(map, key)) {
-        memset(array, 0, array_length*sizeof(*array));
-    } else {
-        LangObject *item = from(map, key);
-        fill_array_from(item, array, array_length);
-    }
+real_t real_from(const LangObject *map, const char *key) {
+    LangObject *value = from(map, key);
+#if defined(SWIGMATLAB)
+    return (real_t) mxGetScalar(value);
+#elif defined(SWIGPYTHON)
+    return (real_t) PyFloat_AsDouble(value);
+#endif
 }
 
 void to(LangObject *sequence, const int_t index, LangObject *item) {
@@ -518,36 +546,87 @@ bool is_named_tuple(const LangObject *object) {
 #endif
 }
 
-LangObject *new_states_controls_output_tuple(LangObject *states, LangObject *controls) {
-    const char *fieldnames[2] = {"states", "controls"};
+LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObject **content) {
 #if defined(SWIGMATLAB)
     const mwSize dims[1] = {(const mwSize) 1};
-    mxArray *named_tuple = mxCreateStructArray(1, dims, 2, fieldnames);
-    mxSetField(named_tuple, 0, fieldnames[0], states);
-    mxSetField(named_tuple, 0, fieldnames[1], controls);
+    mxArray *named_tuple = mxCreateStructArray(1, dims, num_fields, field_names);
+    for (int_t index = 0; index < num_fields; index++)
+        mxSetField(named_tuple, 0, field_names[index], content[index]);
     return named_tuple;
 #elif defined(SWIGPYTHON)
     // The list of field names in named tuples must be NULL-terminated in Python
-    PyStructSequence_Field fields[3];
-    fields[0].name = (char *) fieldnames[0];
-    fields[0].doc = NULL;
-    fields[1].name = (char *) fieldnames[1];
-    fields[1].doc = NULL;
-    fields[2].name = NULL;
-    fields[2].doc = NULL;
-
+    PyStructSequence_Field fields[num_fields+1];
+    for (int_t index = 0; index < num_fields; index++) {
+        fields[index].name = (char *) field_names[index];
+        fields[index].doc = NULL;
+    }
+    fields[num_fields].name = NULL;
+    fields[num_fields].doc = NULL;
     PyStructSequence_Desc tuple_descriptor;
     tuple_descriptor.name = (char *) "output";
     tuple_descriptor.doc = NULL;
     tuple_descriptor.fields = fields;
-    tuple_descriptor.n_in_sequence = 2;
-    PyTypeObject *tuple_type = PyStructSequence_NewType(&tuple_descriptor);
-    tuple_type->tp_flags = tuple_type->tp_flags | Py_TPFLAGS_HEAPTYPE;
-    PyObject *named_tuple = PyStructSequence_New(tuple_type);
-    PyStructSequence_SetItem(named_tuple, 0, (PyObject *) states);
-    PyStructSequence_SetItem(named_tuple, 1, (PyObject *) controls);
+    tuple_descriptor.n_in_sequence = num_fields;
+    PyStructSequence_InitType2(&tuple_type, &tuple_descriptor);
+    tuple_type.tp_flags = tuple_type.tp_flags | Py_TPFLAGS_HEAPTYPE;
+    PyObject *named_tuple = PyStructSequence_New(&tuple_type);
+    for (int_t index = 0; index < num_fields; index++)
+        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content[index]);
     return named_tuple;
 #endif
+}
+
+LangObject *new_ocp_output_tuple(LangObject *states, LangObject *controls) {
+    const char *field_names[2] = {"states", "controls"};
+    LangObject *fields[2] = {states, controls};
+    return new_output_tuple(2, field_names, fields);
+}
+
+LangObject *new_sim_output_tuple(LangObject *final_state, LangObject *forward_sensitivities) {
+    const char *field_names[2] = {"final_state", "forward_sensitivities"};
+    LangObject *fields[2] = {final_state, forward_sensitivities};
+    return new_output_tuple(2, field_names, fields);
+}
+
+void fill_array_from(const LangObject *input, int_t *array, const int_t length) {
+    if (is_integer(input)) {
+        int_t number = int_from(input);
+        for (int_t i = 0; i < length; i++)
+            array[i] = number;
+    } else if (is_sequence(input, length)) {
+        fill_int_array_from(input, array, length);
+    } else {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), \
+            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
+        throw std::invalid_argument(err_msg);
+    }
+}
+
+void fill_array_from(const LangObject *input, real_t *array, const int_t length) {
+    if (is_real(input)) {
+        real_t number = real_from(input);
+        for (int_t i = 0; i < length; i++)
+            array[i] = number;
+    } else if (is_sequence(input, length)) {
+        fill_real_array_from(input, array, length);
+    } else if (is_matrix(input, length, 1)) {
+        copy_from(input, array, length);
+    } else {
+        char err_msg[256];
+        snprintf(err_msg, sizeof(err_msg), \
+            "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
+        throw std::invalid_argument(err_msg);
+    }
+}
+
+void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t array_length) {
+    if (!has(map, key)) {
+        memset(array, 0, array_length*sizeof(*array));
+    } else {
+        LangObject *item = from(map, key);
+        fill_array_from(item, array, array_length);
+    }
 }
 
 %}
