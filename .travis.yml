@@ -1,14 +1,15 @@
 dist: trusty
 sudo: required
+group: edge
 language: python
 python:
   - 3.5
 
 env:
-  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=1 SWIG_MATLAB=0 # no MATLAB support for gcc>=5
-  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=1 SWIG_MATLAB=0
-  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=1 SWIG_MATLAB=1 COVERAGE="lcov"
-  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=1 SWIG_MATLAB=1
+  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
+  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
+  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
+  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=ON
 
 addons:
   apt:
@@ -18,7 +19,7 @@ addons:
 
 cache:
   directories:
-    - /home/travis/octave
+    - /home/travis/octave_download/
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
@@ -37,26 +38,42 @@ install:
   - export MPLBACKEND=Agg # For matplotlib
   - export MATLABPATH=$HOME/local/lib:$MATLABPATH
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
+  - export LD_LIBRARY_PATH=$HOME/local/lib:$LD_LIBRARY_PATH
 
 before_script:
   - set -e
+  - mkdir -p /home/travis/octave_download
+  - |
+    if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
+      # directory empty
+      pushd /home/travis/octave_download
+      wget http://packages.octave.org/download/optim-1.5.2.tar.gz
+      wget http://packages.octave.org/download/struct-1.0.14.tar.gz
+      popd
+    fi
 
 script:
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Test -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
-  - cmake --build build --clean-first
-  - cmake --build build --target install
-  - cmake --build build --target lint
-  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
+  - cmake --build build --target install --clean-first
   - cmake -E chdir build ctest --output-on-failure
-  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Release ..
+  - rm -r build
+  - rm -r $HOME/local/lib
+  - cmake -E make_directory build
+  - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
   - cmake --build build --clean-first
-  - cmake -E chdir build cmake -D CMAKE_BUILD_TYPE=Debug ..
-  - cmake --build build --clean-first
+  - rm -r build
+  - cmake -E make_directory build
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
+  - export CXX="$CXX -std=c++11" # needed for octave
+  - cmake --build build --target install --clean-first
+  - cmake --build build --target lint
+  - cmake -E chdir build ctest --output-on-failure
+  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
   - pushd experimental/dang/esp32
   - ./test_all_linux.sh
 
 after_success:
-  - pushd ${TRAVIS_BUILD_DIR}/build/test
-  # Uploading report to CodeCov
-  - bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+  - pushd build
+  # Upload report to CodeCov
+  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi 

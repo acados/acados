@@ -19,12 +19,17 @@
 
 cmake_minimum_required(VERSION 3.2)
 
+if(NOT (SWIG_MATLAB OR SWIG_PYTHON))
+    return()
+endif()
+
 find_package(SWIG REQUIRED)
 include(UseSWIGMOD)
 
-# SWIG wrapper file introduces some warnings
+# Dependencies introduce some warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-register")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-register") # for SWIG
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags") # for CasADi
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation -Wno-missing-field-initializers")
 endif()
@@ -40,6 +45,15 @@ if(SWIG_MATLAB AND MATLAB_FOUND)
     find_package(Matlab REQUIRED)
     find_package(CasadiMatlab)
 
+    if(CASADIMATLAB_FOUND)
+        add_library(casadi_matlab SHARED IMPORTED)
+        set(CASADI_LIBRARY_NAME "${CMAKE_SHARED_LIBRARY_PREFIX}casadi${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(CASADI_LIBRARY_FILE "${CASADIMATLAB_LIBRARY}/${CASADI_LIBRARY_NAME}")
+        set_property(TARGET casadi_matlab PROPERTY IMPORTED_LOCATION "${CASADI_LIBRARY_FILE}")
+        include_directories("${CASADIMATLAB_INCLUDE_DIR}")
+        list(APPEND CMAKE_INSTALL_RPATH "${CASADIMATLAB_LIBRARY}")
+    endif()
+
     swig_module_initialize(acadosMEX matlab)
     swig_add_source_to_module(acadosMEX FALSE MEX_FILE acados.i)
 
@@ -49,35 +63,22 @@ if(SWIG_MATLAB AND MATLAB_FOUND)
         add_library(acadosMATLAB MODULE ${MEX_FILE})
     endif()
     target_include_directories(acadosMATLAB PUBLIC ${MATLAB_INCLUDE_DIR})
-    target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados)
+    target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados casadi_matlab)
     set_target_properties(acadosMATLAB
         PROPERTIES
             OUTPUT_NAME "acadosMEX"
             PREFIX ""
             SUFFIX .${MATLAB_MEX_EXT}
     )
-    install(DIRECTORY ${PROJECT_BINARY_DIR}/swig/+acados DESTINATION ${LIBRARY_OUTPUT_PATH})
+    install(TARGETS acadosMATLAB DESTINATION lib)
+    install(DIRECTORY ${PROJECT_BINARY_DIR}/swig/+acados DESTINATION lib)
     install(
         FILES
             ${PROJECT_BINARY_DIR}/swig/SwigGet.m
             ${PROJECT_BINARY_DIR}/swig/SwigMem.m
             ${PROJECT_BINARY_DIR}/swig/SwigRef.m
-        DESTINATION ${LIBRARY_OUTPUT_PATH}
+        DESTINATION lib
     )
-    add_test(
-        NAME ocp_qp_matlab
-        COMMAND "${CMAKE_COMMAND}" -E chdir "${PROJECT_BINARY_DIR}/examples"
-            ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r
-            "addpath('${EXAMPLES_SRC_DIR}/matlab');try, ocp_qp_example, \
-            catch ME, disp(ME.getReport()), exit(1), end, exit(0)"
-        )
-    add_test(
-        NAME ocp_nlp_matlab
-        COMMAND "${CMAKE_COMMAND}" -E chdir "${PROJECT_BINARY_DIR}/examples"
-            ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r
-            "addpath('${EXAMPLES_SRC_DIR}/matlab');try, ocp_nlp_example, \
-            catch ME, disp(ME.getReport()), exit(1), end, exit(0)"
-        )
 endif()
 
 find_package(PythonInterp 3)
@@ -87,21 +88,21 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
     find_package(NumPy REQUIRED)
     find_package(CasadiPython)
 
+    # do not install casadi twice
+    if(CASADIPYTHON_FOUND)
+        add_library(casadi_python SHARED IMPORTED)
+        set(CASADI_LIBRARY_NAME "${CMAKE_SHARED_LIBRARY_PREFIX}casadi${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(CASADI_LIBRARY_FILE "${CASADIPYTHON_LIBRARY}/${CASADI_LIBRARY_NAME}")
+        set_property(TARGET casadi_python PROPERTY IMPORTED_LOCATION "${CASADI_LIBRARY_FILE}")
+        include_directories("${CASADIPYTHON_INCLUDE_DIR}")
+        list(APPEND CMAKE_INSTALL_RPATH "${CASADIPYTHON_LIBRARY}")
+    endif()
+
     include_directories(${PYTHON_INCLUDE_DIRS})
     include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
     swig_add_module(acados python acados.i)
-    swig_link_libraries(acados ${PYTHON_LIBRARIES} acados)
+    swig_link_libraries(acados ${PYTHON_LIBRARIES} acados casadi_python)
 
-    install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION ${LIBRARY_OUTPUT_PATH})
-    install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION ${LIBRARY_OUTPUT_PATH})
-    add_test(
-        NAME ocp_nlp_py
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/examples
-            ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_nlp.py
-    )
-    add_test(
-        NAME ocp_qp_py
-        COMMAND "${CMAKE_COMMAND}" -E chdir ${PROJECT_BINARY_DIR}/examples
-        ${PYTHON_EXECUTABLE} ${EXAMPLES_SRC_DIR}/python/ocp_qp.py
-    )
+    install(TARGETS ${SWIG_MODULE_acados_REAL_NAME} DESTINATION lib)
+    install(FILES ${PROJECT_BINARY_DIR}/swig/acados.py DESTINATION lib)
 endif()

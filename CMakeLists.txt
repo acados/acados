@@ -20,69 +20,72 @@
 cmake_minimum_required(VERSION 3.2)
 project(acados LANGUAGES C CXX)
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
-set(CMAKE_SKIP_RPATH TRUE) # Seems necessary for Mac OSX
-set(CMAKE_VERBOSE_MAKEFILE OFF)
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
-    message("\n-- No build type chosen. Valid build types are:"
-        "\n   Release (default), Debug, Test, NoExternalLibs")
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Release
+        CACHE STRING "No build type chosen. Valid build types are: \
+        Release (default), None, Debug, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
+endif()
+message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
+
+enable_testing(true)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Werror -fdiagnostics-show-option")
+elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
 endif()
 
-message("\n\n --- Configuring acados with build type: ${CMAKE_BUILD_TYPE} ---\n\n")
-
-if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    add_definitions(-DDEBUG)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Test)
-    enable_testing(true)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-endif()
-
-# Set install and executable output directories
+# Set install directories
 if(NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
 endif()
-set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
-set(LIBRARY_OUTPUT_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
+set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR}
+    CACHE STRING "Install path prefix, prepended onto install directories." FORCE)
+set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/share")
+message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
+
+# Rpath handling, see https://cmake.org/Wiki/CMake_RPATH_handling#What_is_RPATH_.3F
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 # Configure external libraries
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 add_subdirectory(${EXTERNAL_SRC_DIR})
 
 # Configure acados
-set(ACADOS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/acados)
 add_subdirectory(acados)
 
 # Add examples
-set(EXAMPLES_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-add_subdirectory(${EXAMPLES_SRC_DIR})
+add_subdirectory(examples)
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    add_subdirectory(swig)
+    if(SWIG_MATLAB OR SWIG_PYTHON)
+        add_subdirectory(swig)
+    endif()
 endif()
 
 # Generate test data and configure unit tests
-if(CMAKE_BUILD_TYPE MATCHES Test)
+if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
+
+install(DIRECTORY acados
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN "simplified" EXCLUDE)
+
+add_custom_target(uninstall
+    COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt | xargs rm -v)
 
 # Cpplint
 include(lint)

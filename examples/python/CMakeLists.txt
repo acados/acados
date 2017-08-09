@@ -17,15 +17,15 @@
 #
 #
 
-set(TARGET "GENERIC" CACHE STRING "Target architecture")
-set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
-add_subdirectory(blasfeo)
-include(external/hpmpc)
-add_subdirectory(hpipm)
-add_subdirectory(qpDUNES-dev)
-add_subdirectory(qpOASES)
-if (NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/OOQP)
-        include(external/ooqp)
-    endif()
+find_package(PythonInterp 3)
+if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
+    add_test(NAME ocp_nlp_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp.py)
+
+    add_test(NAME ocp_qp_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp.py)
+
+    add_test(NAME sim_py
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/sim.py)
+
 endif()

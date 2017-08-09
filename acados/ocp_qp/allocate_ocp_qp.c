@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
@@ -36,29 +37,28 @@ static void allocate_ocp_qp_in_basic(const int_t N, const int_t *nx, const int_t
 
     qp->N = N;
     memcpy((void *) qp->nx, (void *) nx, sizeof(*nx)*(N+1));
-    // TODO(dkouzoup): the next line is wrong if you want u[N] != 0
-    memcpy((void *) qp->nu, (void *) nu, sizeof(*nu)*(N));
+    memcpy((void *) qp->nu, (void *) nu, sizeof(*nu)*(N+1));
 
     qp->A = (const real_t **) calloc(N, sizeof(*qp->A));
     qp->B = (const real_t **) calloc(N, sizeof(*qp->B));
     qp->b = (const real_t **) calloc(N, sizeof(*qp->b));
     qp->Q = (const real_t **) calloc(N+1, sizeof(*qp->Q));
-    qp->S = (const real_t **) calloc(N, sizeof(*qp->S));
-    qp->R = (const real_t **) calloc(N, sizeof(*qp->R));
+    qp->S = (const real_t **) calloc(N+1, sizeof(*qp->S));
+    qp->R = (const real_t **) calloc(N+1, sizeof(*qp->R));
     qp->q = (const real_t **) calloc(N+1, sizeof(*qp->q));
-    qp->r = (const real_t **) calloc(N, sizeof(*qp->r));
-    for (int_t i = 0; i < N; i++) {
-        d_zeros((real_t **) &qp->A[i], nx[i], nx[i]);
-        d_zeros((real_t **) &qp->B[i], nx[i], nu[i]);
-        d_zeros((real_t **) &qp->b[i], nx[i], 1);
+    qp->r = (const real_t **) calloc(N+1, sizeof(*qp->r));
+    for (int_t i = 0; i <= N; i++) {
+        if (i < N) {
+            d_zeros((real_t **) &qp->A[i], nx[i], nx[i]);
+            d_zeros((real_t **) &qp->B[i], nx[i], nu[i]);
+            d_zeros((real_t **) &qp->b[i], nx[i], 1);
+        }
         d_zeros((real_t **) &qp->Q[i], nx[i], nx[i]);
         d_zeros((real_t **) &qp->S[i], nu[i], nx[i]);
         d_zeros((real_t **) &qp->R[i], nu[i], nu[i]);
         d_zeros((real_t **) &qp->q[i], nx[i], 1);
         d_zeros((real_t **) &qp->r[i], nu[i], 1);
     }
-    d_zeros((real_t **) &qp->Q[N], nx[N], nx[N]);
-    d_zeros((real_t **) &qp->q[N], nx[N], 1);
 }
 
 static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
@@ -120,7 +120,7 @@ static void allocate_ocp_qp_in_polyhedral(const int_t N, const int_t *nc, ocp_qp
     qp->lc = (const real_t **) calloc(N+1, sizeof(*qp->lc));
     qp->uc = (const real_t **) calloc(N+1, sizeof(*qp->uc));
     qp->Cx = (const real_t **) calloc(N+1, sizeof(*qp->Cx));
-    qp->Cu = (const real_t **) calloc(N, sizeof(*qp->Cu));
+    qp->Cu = (const real_t **) calloc(N+1, sizeof(*qp->Cu));
 
     qp-> N = N;
     memcpy((void *) qp->nc, (void *) nc, sizeof(*nc)*(N+1));
@@ -129,20 +129,17 @@ static void allocate_ocp_qp_in_polyhedral(const int_t N, const int_t *nc, ocp_qp
         d_zeros((real_t **) &qp->lc[i], nc[i], 1);
         d_zeros((real_t **) &qp->uc[i], nc[i], 1);
         d_zeros((real_t **) &qp->Cx[i], nc[i], qp->nx[i]);
-        if (i < N) d_zeros((real_t **) &qp->Cu[i], nc[i], qp->nu[i]);
+        d_zeros((real_t **) &qp->Cu[i], nc[i], qp->nu[i]);
     }
 }
 
 static void free_ocp_qp_in_polyhedral(ocp_qp_in *const qp) {
-    for (int_t i = 0; i < qp->N; i++) {
+    for (int_t i = 0; i <= qp->N; i++) {
         d_free((real_t*)qp->lc[i]);
         d_free((real_t*)qp->uc[i]);
         d_free((real_t*)qp->Cx[i]);
         d_free((real_t*)qp->Cu[i]);
     }
-    d_free((real_t*)qp->lc[qp->N]);
-    d_free((real_t*)qp->uc[qp->N]);
-    d_free((real_t*)qp->Cx[qp->N]);
 
     free((real_t**)qp->lc);
     free((real_t**)qp->uc);
@@ -181,7 +178,7 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
         nLambdas += 2*(in->nb[kk] + in->nc[kk]);
     }
     nLambdas += 2*(in->nb[N] + in->nc[N]);
-    nPrimalVars += in->nx[N];
+    nPrimalVars += in->nx[N] + in->nu[N];
     // printf("\nProblem with:\n");
     // printf("- %d\tprimal variables.\n", nPrimalVars);
     // printf("- %d\tmultipliers of eq. constraints \n", nPis);
@@ -191,9 +188,8 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
     d_zeros(&pis, nPis, 1);
     d_zeros(&lambdas, nLambdas, 1);
 
-    // TODO(dimitris): Reference writes N+1 pointers for u, is it already updated?
     out->x = (real_t **) calloc(N+1, sizeof(*out->x));
-    out->u = (real_t **) calloc(N, sizeof(*out->u));
+    out->u = (real_t **) calloc(N+1, sizeof(*out->u));
     out->pi = (real_t **) calloc(N, sizeof(*out->pi));
     out->lam = (real_t **) calloc(N+1, sizeof(*out->lam));
 
@@ -207,6 +203,7 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
         accLamdas += 2*(in->nb[kk] + in->nc[kk]);
     }
     out->x[N] = &primalVars[accPrimal];
+    out->u[N] = &primalVars[accPrimal+in->nx[N]];
     out->lam[N] = &lambdas[accLamdas];
 }
 
