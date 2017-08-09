@@ -17,9 +17,6 @@
 #
 #
 
-set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-
 find_library(FORTRAN_LIBRARY gfortran
 	PATHS
 	    $ENV{GFORTRAN_HOME}/lib/gcc/mingw32/6.3.0

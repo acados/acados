@@ -38,7 +38,7 @@ static void sim_erk_cast_workspace(sim_erk_workspace *work,
      if (!in->sens_forw) {
          NF = 0;
      }
-     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
+     int_t nhess = (int_t) (NF+1)*(real_t)NF/2.0;
 
      char *ptr = (char *)work;
      ptr += sizeof(sim_erk_workspace);
@@ -90,7 +90,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
     }
     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
 
-    mem = 0; mem = mem;
+    mem = 0; (void) mem;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;

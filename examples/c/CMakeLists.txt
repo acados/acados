@@ -17,6 +17,8 @@
 #
 #
 
+add_definitions(-DEXT_DEP)
+
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC chain_model/chain_model.c
     chain_model/vde*.c

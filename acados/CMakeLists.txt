@@ -47,6 +47,9 @@ target_include_directories(acados
         $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
+if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    target_link_libraries(acados PUBLIC hpmpc)
+endif()
 
 # TODO: The following definition should go ASAP!
 target_compile_definitions(acados PRIVATE EXT_DEP)

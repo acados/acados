@@ -24,6 +24,11 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
+if(CMAKE_SYSTEM MATCHES "WINDOWS")
+	set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+endif()
+
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release
@@ -38,7 +43,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fdiagnostics-show-option")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
 elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX -Wall")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -showIncludes")
 endif()
 
 # Set install directories
@@ -86,4 +91,7 @@ add_custom_target(uninstall
     COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt | xargs rm -v)
 
 # Cpplint
-# include(lint)
+find_package(PythonInterp 3)
+if(PYTHONINTERP_FOUND)
+	include(lint)
+endif()
