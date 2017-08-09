@@ -46,18 +46,18 @@ extern int vde_chain_nm7(const real_t** arg, real_t** res, int* iw, real_t* w, i
 extern int vde_chain_nm8(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 extern int vde_chain_nm9(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
-// static void shift_states(real_t *w, real_t *x_end, int_t N) {
-//    for (int_t i = 0; i < N; i++) {
+// static void shift_states(real_t *w, real_t *x_end, int_t NN) {
+//    for (int_t i = 0; i < NN; i++) {
 //        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
 //    }
-//    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
+//    for (int_t j = 0; j < NX; j++) w[NN*(NX+NU)+j] = x_end[j];
 // }
 //
-// static void shift_controls(real_t *w, real_t *u_end, int_t N) {
-//    for (int_t i = 0; i < N-1; i++) {
+// static void shift_controls(real_t *w, real_t *u_end, int_t NN) {
+//    for (int_t i = 0; i < NN-1; i++) {
 //        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
 //    }
-//    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
+//    for (int_t j = 0; j < NU; j++) w[(NN-1)*(NX+NU)+NX+j] = u_end[j];
 // }
 
 // Simple SQP example for acados
@@ -83,7 +83,6 @@ int main() {
     int_t jj;
 
     // Problem data
-    int_t   N                   = NN;
     real_t  *x0;
     real_t  *w;  // States and controls stacked
     real_t  *Q;
@@ -108,28 +107,28 @@ int main() {
 
     switch (NMF) {
     case 1:
-        initStates = fopen("../../examples/c/chain_model/x0_nm2.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm2.txt", "r");
         break;
     case 2:
-        initStates = fopen("../../examples/c/chain_model/x0_nm3.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm3.txt", "r");
         break;
     case 3:
-        initStates = fopen("../../examples/c/chain_model/x0_nm4.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm4.txt", "r");
         break;
     case 4:
-        initStates = fopen("../../examples/c/chain_model/x0_nm5.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm5.txt", "r");
         break;
     case 5:
-        initStates = fopen("../../examples/c/chain_model/x0_nm6.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm6.txt", "r");
         break;
     case 6:
-        initStates = fopen("../../examples/c/chain_model/x0_nm7.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm7.txt", "r");
         break;
     case 7:
-        initStates = fopen("../../examples/c/chain_model/x0_nm8.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm8.txt", "r");
         break;
     default:
-        initStates = fopen("../../examples/c/chain_model/x0_nm9.txt", "r");
+        initStates = fopen("../../../../examples/c/chain_model/x0_nm9.txt", "r");
         break;
     }
     for (int_t i = 0; i < NX; i++) {
@@ -139,28 +138,28 @@ int main() {
 
     switch (NMF) {
     case 1:
-        refStates = fopen("../../examples/c/chain_model/xN_nm2.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm2.txt", "r");
         break;
     case 2:
-        refStates = fopen("../../examples/c/chain_model/xN_nm3.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm3.txt", "r");
         break;
     case 3:
-        refStates = fopen("../../examples/c/chain_model/xN_nm4.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm4.txt", "r");
         break;
     case 4:
-        refStates = fopen("../../examples/c/chain_model/xN_nm5.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm5.txt", "r");
         break;
     case 5:
-        refStates = fopen("../../examples/c/chain_model/xN_nm6.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm6.txt", "r");
         break;
     case 6:
-        refStates = fopen("../../examples/c/chain_model/xN_nm7.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm7.txt", "r");
         break;
     case 7:
-        refStates = fopen("../../examples/c/chain_model/xN_nm8.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm8.txt", "r");
         break;
     default:
-        refStates = fopen("../../examples/c/chain_model/xN_nm9.txt", "r");
+        refStates = fopen("../../../../examples/c/chain_model/xN_nm9.txt", "r");
         break;
     }
     for (int_t i = 0; i < NX; i++) {
@@ -267,11 +266,11 @@ int main() {
     int_t nu[NN] = {0};
     int_t nb[NN+1] = {0};
     int_t nc[NN+1] = {0};
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[N] = NX;
+    nx[NN] = NX;
 
     /************************************************
     * box constraints
@@ -297,9 +296,9 @@ int main() {
 
     int *idxb1;
     int_zeros(&idxb1, NU, 1);
-    double *lb1[N-1];
-    double *ub1[N-1];
-    for (int_t i = 0; i < N-1; i++) {
+    double *lb1[NN-1];
+    double *ub1[NN-1];
+    for (int_t i = 0; i < NN-1; i++) {
     d_zeros(&lb1[i], NU, 1);
     d_zeros(&ub1[i], NU, 1);
 //    for (jj = 0; jj < nbx; jj++) {
@@ -314,18 +313,18 @@ int main() {
     }
     }
 
-    real_t *pA[N];
-    real_t *pB[N];
-    real_t *pb[N];
-    real_t *pQ[N+1];
-    real_t *pS[N];
-    real_t *pR[N];
-    real_t *pq[N+1];
-    real_t *pr[N];
-    real_t *px[N+1];
-    real_t *pu[N];
-    real_t *ppi[N];
-    for (int_t i = 0; i < N; i++) {
+    real_t *pA[NN];
+    real_t *pB[NN];
+    real_t *pb[NN];
+    real_t *pQ[NN+1];
+    real_t *pS[NN];
+    real_t *pR[NN];
+    real_t *pq[NN+1];
+    real_t *pr[NN];
+    real_t *px[NN+1];
+    real_t *pu[NN];
+    real_t *ppi[NN];
+    for (int_t i = 0; i < NN; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
         d_zeros(&pb[i], nx[i+1], 1);
@@ -336,17 +335,17 @@ int main() {
         d_zeros(&pu[i], nu[i], 1);
         d_zeros(&ppi[i], nx[i+1], 1);
     }
-    d_zeros(&pq[N], nx[N], 1);
-    d_zeros(&px[N], nx[N], 1);
+    d_zeros(&pq[NN], nx[NN], 1);
+    d_zeros(&px[NN], nx[NN], 1);
 
-    real_t *hlb[N+1];
-    real_t *hub[N+1];
-    int *hidxb[N+1];
+    real_t *hlb[NN+1];
+    real_t *hub[NN+1];
+    int *hidxb[NN+1];
 
     hlb[0] = lb0;
     hub[0] = ub0;
     hidxb[0] = idxb0;
-    for (int_t i = 1; i < N; i++) {
+    for (int_t i = 1; i < NN; i++) {
         hlb[i] = lb1[i-1];
         hub[i] = ub1[i-1];
         hidxb[i] = idxb1;
@@ -355,7 +354,7 @@ int main() {
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
-    qp_in.N = N;
+    qp_in.N = NN;
     ocp_qp_out qp_out;
     ocp_qp_condensing_qpoases_args args;
     real_t *work = NULL;
@@ -363,11 +362,11 @@ int main() {
     qp_in.nu = nu;
     qp_in.nb = nb;
     qp_in.nc = nc;
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         pQ[i] = Q;
         pR[i] = R;
     }
-    pQ[N] = Q;
+    pQ[NN] = Q;
     qp_in.Q = (const real_t **) pQ;
     qp_in.S = (const real_t **) pS;
     qp_in.R = (const real_t **) pR;
@@ -398,7 +397,7 @@ int main() {
 #if PARALLEL
 #pragma omp parallel for
 #endif
-        for (int_t i = 0; i < N; i++) {
+        for (int_t i = 0; i < NN; i++) {
             // Pass state and control to integrator
             for (int_t j = 0; j < NX; j++) sim_in[i].x[j] = w[i*(NX+NU)+j];
             for (int_t j = 0; j < NU; j++) sim_in[i].u[j] = w[i*(NX+NU)+NX+j];
@@ -422,7 +421,7 @@ int main() {
             timings_la += sim_out[i].info->LAtime;
             timings_ad += sim_out[i].info->ADtime;
         }
-        for (int_t i = 0; i < N; i++) {
+        for (int_t i = 0; i < NN; i++) {
             // Update bounds:
             if ( i == 0 ) {
                 for (int_t j = 0; j < NU; j++) {
@@ -448,13 +447,13 @@ int main() {
             lb0[j] = (x0[j]-w[j]);
         }
         for (int_t j = 0; j < NX; j++) {
-            pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
+            pq[NN][j] = Q[j*(NX+1)]*(w[NN*(NX+NU)+j]-xref[j]);
         }
 
         // Set updated bounds:
         hlb[0] = lb0;
         hub[0] = ub0;
-        for (int_t i = 1; i < N; i++) {
+        for (int_t i = 1; i < NN; i++) {
             hlb[i] = lb1[i-1];
             hub[i] = ub1[i-1];
         }
@@ -465,7 +464,7 @@ int main() {
             printf("qpOASES returned error status %d\n", status);
             return -1;
         }
-        for (int_t i = 0; i < N; i++) {
+        for (int_t i = 0; i < NN; i++) {
             for (int_t j = 0; j < NX; j++) {
                 w[i*(NX+NU)+j] += qp_out.x[i][j];
                 if (fabs(qp_out.x[i][j]) > stepX) stepX = fabs(qp_out.x[i][j]);
@@ -476,8 +475,8 @@ int main() {
             }
         }
         for (int_t j = 0; j < NX; j++) {
-            w[N*(NX+NU)+j] += qp_out.x[N][j];
-            if (fabs(qp_out.x[N][j]) > stepX) stepX = fabs(qp_out.x[N][j]);
+            w[NN*(NX+NU)+j] += qp_out.x[NN][j];
+            if (fabs(qp_out.x[NN][j]) > stepX) stepX = fabs(qp_out.x[NN][j]);
         }
 
         if (sqp_iter == max_sqp_iters-1) {
@@ -486,8 +485,8 @@ int main() {
         }
     }
 //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-//        shift_states(w, x_end, N);
-//        shift_controls(w, u_end, N);
+//        shift_states(w, x_end, NN);
+//        shift_controls(w, u_end, NN);
         timings += acado_toc(&timer);
 //    }
 
@@ -503,7 +502,7 @@ int main() {
                 1e3*timings/(max_sqp_iters*max_iters));
 
 //    #ifdef DEBUG
-//    print_matrix_name("stdout", "sol", w, NX+NU, N);
+//    print_matrix_name("stdout", "sol", w, NX+NU, NN);
 //    #endif  // DEBUG
     }
     }

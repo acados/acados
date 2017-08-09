@@ -190,7 +190,8 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
     dim += 0;
     dim2 += 0;
 #endif
-    real_t bPerm[DIM*DIM_RHS];
+	real_t *bPerm;
+	bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
     for (i = 0; i < DIM; ++i) {
@@ -238,7 +239,8 @@ real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
     dim += 0;
     dim2 += 0;
 #endif
-    real_t bPerm[DIM*DIM_RHS];
+	real_t *bPerm;
+	bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
 
