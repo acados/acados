@@ -373,7 +373,6 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     if (ipm_workspace->stat[3+(ipm_workspace->iter-1)*5]<args->alpha_min)
 		acados_status = ACADOS_MINSTEP;
 
-
     // return
     return acados_status;
 //
