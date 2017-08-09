@@ -24,13 +24,6 @@
 extern "C" {
 #endif
 
-
-
-// XXX comment this in for HPIPM condensing, out for ACADOS condensing
-#define HPIPM_COND
-
-
-
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 #include "blasfeo/include/blasfeo_target.h"
@@ -96,17 +89,8 @@ void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *m
 
 void ocp_qp_condensing_qpoases_destroy(void *mem, void *work);
 
-
-
-// giaf vs robin condensing
-#endif
-
-
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
-
 
 #endif  // ACADOS_OCP_QP_OCP_QP_CONDENSING_QPOASES_H_

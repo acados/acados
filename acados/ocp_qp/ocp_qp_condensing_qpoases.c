@@ -522,8 +522,3 @@ void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
     mem_++;
     work++;
 }
-
-
-
-// giaf vs robin condensing
-#endif
