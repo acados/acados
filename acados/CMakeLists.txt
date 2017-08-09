@@ -27,8 +27,6 @@ endif()
 
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
-# Exclude helper files
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c")
 
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
@@ -40,9 +38,10 @@ target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..> # for include "acados/..."
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/blasfeo/include>
         $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(acados PUBLIC qpOASES_e hpmpc blasfeo qpdunes)
+target_link_libraries(acados PUBLIC qpOASES_e hpmpc hpipm blasfeo qpdunes)
 
 # TODO: The following definition should go ASAP!
 target_compile_definitions(acados PRIVATE EXT_DEP)

@@ -33,7 +33,7 @@
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
 
@@ -43,7 +43,7 @@
 #define TOL 1e-8
 #define MINSTEP 1e-8
 
-//#define ELIMINATE_X0
+#define ELIMINATE_X0
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -172,7 +172,7 @@ int main() {
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
 
-    int N2 = 3;   // horizon length of partially condensed problem
+//    int N2 = 3;   // horizon length of partially condensed problem
 
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -216,13 +216,6 @@ int main() {
         " IP method parameters: predictor-corrector IP, double precision, %d "
         "maximum iterations, %5.1e exit tolerance in duality measure.\n",
         MAXITER, TOL);
-    printf("\n");
-#if defined(TARGET_X64_AVX2)
-    printf(" HPMPC built for the AVX2 architecture\n");
-#endif
-#if defined(TARGET_X64_AVX)
-    printf(" HPMPC built for the AVX architecture\n");
-#endif
     printf("\n");
 
     /************************************************
@@ -490,32 +483,18 @@ int main() {
     double *hu[N];
     double *hpi[N];
     double *hlam[N+1];
-    double *ht[N+1];
+//    double *ht[N+1];
 
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
         d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
+//        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
     }
     d_zeros(&hx[N], nxx[N], 1);
     d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
-    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
-
-    /************************************************
-    * XXX initial guess
-    ************************************************/
-
-    double *hux_in[N+1];
-    double *hlam_in[N+1];
-    double *ht_in[N+1];
-
-    for (ii = 0; ii <= N; ii++) {
-        d_zeros(&hux_in[ii], nuu[ii]+nxx[ii], 1);
-        d_zeros(&hlam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&ht_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
-    }
+//    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
 
     /************************************************
     * create the in and out struct
@@ -548,45 +527,33 @@ int main() {
     qp_out.u = hu;
     qp_out.pi = hpi;
     qp_out.lam = hlam;
-    qp_out.t = ht;  // XXX why also the slack variables ???
+//    qp_out.t = ht;  // XXX why also the slack variables ???
 
     /************************************************
     * solver arguments (fully sparse)
     ************************************************/
 
     // solver arguments
-    ocp_qp_hpmpc_args hpmpc_args;
-    hpmpc_args.tol = TOL;
-    hpmpc_args.max_iter = MAXITER;
-//  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 1.0;  // 0.0
-//  hpmpc_args.sigma_min = 1e-3;
-    hpmpc_args.warm_start = 0;
-    hpmpc_args.N2 = N;
-    hpmpc_args.M = N;
-    double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-    hpmpc_args.inf_norm_res = &inf_norm_res[0];
-
-// XXX
-    hpmpc_args.ux0 = hux_in;
-    hpmpc_args.lam0 = hlam_in;
-    hpmpc_args.t0 = ht_in;
+    ocp_qp_hpipm_args hpipm_args;
+    hpipm_args.mu_max = TOL;
+    hpipm_args.iter_max = MAXITER;
+    hpipm_args.alpha_min = MINSTEP;
+    hpipm_args.mu0 = 1.0;  // 0.0
 
     /************************************************
     * work space (fully sparse)
     ************************************************/
 
-//  int work_space_size =
-//      ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
-    int work_space_size = 0;
-//  for(int iii=0; iii<=N; iii++) printf("\n%d\n", qp_in.nb[iii]);
-    work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
+    int work_space_size = ocp_qp_hpipm_calculate_workspace_size(&qp_in, &hpipm_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
-
     void *workspace = malloc(work_space_size);
 
-    void *mem;
-    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
+    int memory_size = ocp_qp_hpipm_calculate_memory_size(&qp_in, &hpipm_args);
+    printf("\nmemory: %d bytes\n", memory_size);
+    void *memory = malloc(memory_size);
+
+	ocp_qp_hpipm_memory hpipm_memory;
+	ocp_qp_hpipm_create_memory(&qp_in, &hpipm_args, &hpipm_memory, memory);
 
     /************************************************
     * call the solver (fully sparse)
@@ -600,14 +567,14 @@ int main() {
 //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-//        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
+//        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args, workspace);
+        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args, &hpipm_memory, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
+        printf("\nACADOS status: solution found in %d iterations\n", hpipm_memory.iter);
 
     if (return_value == ACADOS_MAXITER)
         printf("\nACADOS status: maximum number of iterations reached\n");
@@ -625,66 +592,10 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
-        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0], hpipm_memory.inf_norm_res[1],
+        hpipm_memory.inf_norm_res[2], hpipm_memory.inf_norm_res[3], hpipm_memory.inf_norm_res[4]);
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
-    printf("\n\n");
-
-    /************************************************
-    * solver arguments (partial condensing)
-    ************************************************/
-
-    // solver arguments
-    hpmpc_args.N2 = N2;
-
-    /************************************************
-    * work space (partial condensing)
-    ************************************************/
-
-    int work_space_size_part_cond = 0;
-    work_space_size_part_cond = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size_part_cond);
-
-    void *workspace_part_cond = malloc(work_space_size_part_cond);
-
-    /************************************************
-    * call the solver (partial condensing)
-    ************************************************/
-
-    gettimeofday(&tv0, NULL);  // stop
-
-    for (rep = 0; rep < nrep; rep++) {
-        // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace_part_cond);
-    }
-
-    gettimeofday(&tv1, NULL);  // stop
-
-    if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
-
-    if (return_value == ACADOS_MAXITER)
-        printf("\nACADOS status: maximum number of iterations reached\n");
-
-    if (return_value == ACADOS_MINSTEP)
-        printf("\nACADOS status: below minimum step size length\n");
-
-    printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
-
-    printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
-
-    printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
-        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
-    printf("\n");
-    printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, \
-        time_part_cond);
     printf("\n\n");
 
     /************************************************
@@ -730,16 +641,14 @@ int main() {
         d_free(hu[ii]);
         d_free(hpi[ii]);
         d_free(hlam[ii]);
-        d_free(ht[ii]);
+//        d_free(ht[ii]);
     }
     d_free(hx[N]);
     d_free(hlam[N]);
-    d_free(ht[N]);
+//    d_free(ht[N]);
 
     free(workspace);
-#if 0
-    free(workspace_part_cond);
-#endif
+    free(memory);
 
     return 0;
 }

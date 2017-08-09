@@ -26,6 +26,7 @@
 // #include "blasfeo/include/blasfeo_common.h"
 // #include "blasfeo/include/blasfeo_d_aux.h"
 
+#include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 
 // TODO(dimitris): detect cases where both qpOASES and clipping are detected (qpDUNES crashes)
@@ -125,8 +126,8 @@ static void form_ABt(real_t *ABkt, int_t nx, const real_t *Ak, int_t nu, const r
 }
 
 
-static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nbk, const int_t *idxbk,
-    const real_t *lbk, const real_t *ubk, real_t infty) {
+static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nxk, int_t nuk, int_t nbk,
+    const int_t *idxbk, const real_t *lbk, const real_t *ubk, real_t infty) {
 
     int_t ii;
 
@@ -135,8 +136,13 @@ static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nz, int_t nbk, const
         zUppk[ii] = infty;
     }
     for (ii = 0; ii < nbk; ii++) {
-        zLowk[idxbk[ii]] = lbk[ii];
-        zUppk[idxbk[ii]] = ubk[ii];
+        if (idxbk[ii] < nuk) {  // input
+            zLowk[idxbk[ii]+nxk] = lbk[ii];
+            zUppk[idxbk[ii]+nxk] = ubk[ii];
+        } else {  // state
+            zLowk[idxbk[ii]-nuk] = lbk[ii];
+            zUppk[idxbk[ii]-nuk] = ubk[ii];
+        }
     }
 }
 
@@ -166,8 +172,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
         /* setup of intervals */
         for (kk = 0; kk < N; ++kk) {
             form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
-            form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[kk], in->idxb[kk], in->lb[kk],
-                in->ub[kk], args->options.QPDUNES_INFTY);
+            form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[kk], in->nu[kk], in->nb[kk],
+                in->idxb[kk], in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
             form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
 
             if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
@@ -193,8 +199,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 return (int_t)value;
             }
         }
-        form_bounds(work->zLow, work->zUpp, nx, in->nb[N], in->idxb[N], in->lb[N],
-            in->ub[N], args->options.QPDUNES_INFTY);
+        form_bounds(work->zLow, work->zUpp, nx, in->nx[N], in->nu[N], in->nb[N], in->idxb[N],
+            in->lb[N], in->ub[N], args->options.QPDUNES_INFTY);
         if (in->nc[N] == 0) {
             value = qpDUNES_setupFinalInterval(&(mem->qpData), mem->qpData.intervals[N],
             in->Q[N], in->q[N], work->zLow, work->zUpp, 0, 0, 0);
@@ -220,8 +226,8 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 form_H(work->H, nx, in->Q[kk], nu, in->R[kk], in->S[kk]);
                 form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
                 form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
-                form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[kk], in->idxb[kk],
-                    in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
+                form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[kk], in->nu[kk], in->nb[kk],
+                    in->idxb[kk], in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
 
                 nc = in->nc[kk];
                 if (nc == 0) {
@@ -239,7 +245,7 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 }
                 // qpDUNES_printMatrixData( work->ABt, nx, nx+nu, "AB[%d]", kk );
             }
-            form_bounds(work->zLow, work->zUpp, nx, in->nb[N], in->idxb[N],
+            form_bounds(work->zLow, work->zUpp, nx, in->nx[N], in->nu[N], in->nb[N], in->idxb[N],
                 in->lb[N], in->ub[N], args->options.QPDUNES_INFTY);
             if (in->nc[N] == 0) {
                 value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[N],
@@ -255,7 +261,7 @@ static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,  const ocp_qp_qpd
                 return (int_t)value;
             }
         } else {  // linear MPC
-            form_bounds(work->zLow, work->zUpp, nx+nu, in->nb[0], in->idxb[0],
+            form_bounds(work->zLow, work->zUpp, nx+nu, in->nx[0], in->nu[0], in->nb[0], in->idxb[0],
                     in->lb[0], in->ub[0], args->options.QPDUNES_INFTY);
             value = qpDUNES_updateIntervalData(&(mem->qpData), mem->qpData.intervals[0],
                 0, 0, 0, 0, work->zLow, work->zUpp, 0, 0, 0, 0);
@@ -476,7 +482,6 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, vo
         return (int_t)return_value;
     }
     fill_in_qp_out(in, out, mem);
-
     return 0;
 }
 

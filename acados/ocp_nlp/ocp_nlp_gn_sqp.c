@@ -190,8 +190,13 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         for (int_t i = 0; i < N+1; i++) {
             // Update bounds:
             for (int_t j = 0; j < nlp_in->nb[i]; j++) {
-                qp_lb[i][j] = nlp_in->lb[i][j] - w[w_idx+nlp_in->idxb[i][j]];
-                qp_ub[i][j] = nlp_in->ub[i][j] - w[w_idx+nlp_in->idxb[i][j]];
+                if (nlp_in->idxb[i][j] < nu[i]) {
+                    qp_lb[i][j] = nlp_in->lb[i][j] - w[w_idx+nx[i]+nlp_in->idxb[i][j]];
+                    qp_ub[i][j] = nlp_in->ub[i][j] - w[w_idx+nx[i]+nlp_in->idxb[i][j]];
+                } else {
+                    qp_lb[i][j] = nlp_in->lb[i][j] - w[w_idx-nu[i]+nlp_in->idxb[i][j]];
+                    qp_ub[i][j] = nlp_in->ub[i][j] - w[w_idx-nu[i]+nlp_in->idxb[i][j]];
+                }
             }
         //    print_matrix_name((char*)"stdout", (char*)"qp_lb: ",
         //    gn_sqp_mem->qp_solver->qp_in->lb[i], 1, gn_sqp_mem->qp_solver->qp_in->nb[i]);
@@ -259,18 +264,18 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                     stepU = fabs(gn_sqp_mem->qp_solver->qp_out->u[i][j]);
             }
             w_idx += nx[i]+nu[i];
-           print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[i]: ",
-             gn_sqp_mem->qp_solver->qp_out->x[i], 1, nx[i]);
-           print_matrix_name((char*)"stdout", (char*)"solver->qp_out->u[i]: ",
-             gn_sqp_mem->qp_solver->qp_out->u[i], 1, nu[i]);
+        //    print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[i]: ",
+        //  gn_sqp_mem->qp_solver->qp_out->x[i], 1, nx[i]);
+        //   print_matrix_name((char*)"stdout", (char*)"solver->qp_out->u[i]: ",
+        //     gn_sqp_mem->qp_solver->qp_out->u[i], 1, nu[i]);
         }
         for (int_t j = 0; j < nx[N]; j++) {
             w[w_idx+j] += gn_sqp_mem->qp_solver->qp_out->x[N][j];
             if (fabs(gn_sqp_mem->qp_solver->qp_out->x[N][j]) > stepX)
                 stepX = fabs(gn_sqp_mem->qp_solver->qp_out->x[N][j]);
         }
-       print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[N]: ",
-           gn_sqp_mem->qp_solver->qp_out->x[N], 1, nx[N]);
+       //print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[N]: ",
+       //    gn_sqp_mem->qp_solver->qp_out->x[N], 1, nx[N]);
 
         fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
                         "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);

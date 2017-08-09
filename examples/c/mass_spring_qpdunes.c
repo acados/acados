@@ -33,15 +33,11 @@
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
 
-// define IP solver arguments && number of repetitions
-#define NREP 1000
-#define MAXITER 20
-#define TOL 1e-8
-#define MINSTEP 1e-8
+#define NREP 100
 
 //#define ELIMINATE_X0
 
@@ -172,8 +168,6 @@ int main() {
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
 
-    int N2 = 3;   // horizon length of partially condensed problem
-
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
 
@@ -212,17 +206,7 @@ int main() {
         "two-sided box constraints, %d two-sided general constraints.\n",
         nx, nu, N, nb, ng);
     printf("\n");
-    printf(
-        " IP method parameters: predictor-corrector IP, double precision, %d "
-        "maximum iterations, %5.1e exit tolerance in duality measure.\n",
-        MAXITER, TOL);
-    printf("\n");
-#if defined(TARGET_X64_AVX2)
-    printf(" HPMPC built for the AVX2 architecture\n");
-#endif
-#if defined(TARGET_X64_AVX)
-    printf(" HPMPC built for the AVX architecture\n");
-#endif
+    printf("qpDUNES\n");
     printf("\n");
 
     /************************************************
@@ -551,48 +535,27 @@ int main() {
     qp_out.t = ht;  // XXX why also the slack variables ???
 
     /************************************************
-    * solver arguments (fully sparse)
+    * solver arguments
     ************************************************/
 
-    // solver arguments
-    ocp_qp_hpmpc_args hpmpc_args;
-    hpmpc_args.tol = TOL;
-    hpmpc_args.max_iter = MAXITER;
-//  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 1.0;  // 0.0
-//  hpmpc_args.sigma_min = 1e-3;
-    hpmpc_args.warm_start = 0;
-    hpmpc_args.N2 = N;
-    hpmpc_args.M = N;
-    double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-    hpmpc_args.inf_norm_res = &inf_norm_res[0];
-
-// XXX
-    hpmpc_args.ux0 = hux_in;
-    hpmpc_args.lam0 = hlam_in;
-    hpmpc_args.t0 = ht_in;
+    ocp_qp_qpdunes_args args;
+    ocp_qp_qpdunes_create_arguments(&args, QPDUNES_LINEAR_MPC);
 
     /************************************************
-    * work space (fully sparse)
+    * work space
     ************************************************/
 
-//  int work_space_size =
-//      ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
-    int work_space_size = 0;
-//  for(int iii=0; iii<=N; iii++) printf("\n%d\n", qp_in.nb[iii]);
-    work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size);
+    ocp_qp_qpdunes_memory mem;
+    ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
 
-    void *workspace = malloc(work_space_size);
-
-    void *mem;
-    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
+    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
+    void *work = (void*)malloc(work_space_size);
 
     /************************************************
-    * call the solver (fully sparse)
+    * call the solver
     ************************************************/
 
-    int return_value;
+    int return_value = 0;
 
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
@@ -600,14 +563,13 @@ int main() {
 //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-//        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
+        ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
     }
 
     gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
+        printf("\nACADOS status: solution found\n");
 
     if (return_value == ACADOS_MAXITER)
         printf("\nACADOS status: maximum number of iterations reached\n");
@@ -625,66 +587,7 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
-        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
-    printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
-    printf("\n\n");
-
-    /************************************************
-    * solver arguments (partial condensing)
-    ************************************************/
-
-    // solver arguments
-    hpmpc_args.N2 = N2;
-
-    /************************************************
-    * work space (partial condensing)
-    ************************************************/
-
-    int work_space_size_part_cond = 0;
-    work_space_size_part_cond = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
-    printf("\nwork space size: %d bytes\n", work_space_size_part_cond);
-
-    void *workspace_part_cond = malloc(work_space_size_part_cond);
-
-    /************************************************
-    * call the solver (partial condensing)
-    ************************************************/
-
-    gettimeofday(&tv0, NULL);  // stop
-
-    for (rep = 0; rep < nrep; rep++) {
-        // call the QP OCP solver
-        return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace_part_cond);
-    }
-
-    gettimeofday(&tv1, NULL);  // stop
-
-    if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
-
-    if (return_value == ACADOS_MAXITER)
-        printf("\nACADOS status: maximum number of iterations reached\n");
-
-    if (return_value == ACADOS_MINSTEP)
-        printf("\nACADOS status: below minimum step size length\n");
-
-    printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
-
-    printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
-
-    printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
-        inf_norm_res[2], inf_norm_res[3], inf_norm_res[4]);
-    printf("\n");
-    printf(" Average solution time over %d runs (part cond): %5.2e seconds\n", nrep, \
-        time_part_cond);
     printf("\n\n");
 
     /************************************************
@@ -736,10 +639,8 @@ int main() {
     d_free(hlam[N]);
     d_free(ht[N]);
 
-    free(workspace);
-#if 0
-    free(workspace_part_cond);
-#endif
+    ocp_qp_qpdunes_free_memory(&mem);
+    free(work);
 
     return 0;
 }

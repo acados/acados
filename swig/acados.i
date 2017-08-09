@@ -323,7 +323,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)
-                idxb[i] = i;
+                idxb[i] = nu[0] + i;
             memcpy((void *) qp_in->idxb[0], idxb, sizeof(idxb));
         }
         return qp_in;
@@ -335,12 +335,26 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
         void *args = NULL;
         void *mem = NULL;
-        int_t workspace_size;
+        int_t workspace_size, memory_size;
         void *workspace = NULL;
         if (!strcmp(solver_name, "condensing_qpoases")) {
             solver->fun = ocp_qp_condensing_qpoases;
             args = (ocp_qp_condensing_qpoases_args *) \
                 malloc(sizeof(ocp_qp_condensing_qpoases_args));
+            workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(qp_in,
+                (ocp_qp_condensing_qpoases_args *) args);
+            workspace = (void *) malloc(workspace_size);
+            memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(qp_in,
+                (ocp_qp_condensing_qpoases_args *) args);
+            void *memory = (void *) malloc(memory_size);
+            ocp_qp_condensing_qpoases_memory *mem = (ocp_qp_condensing_qpoases_memory *)
+                malloc(sizeof(ocp_qp_condensing_qpoases_memory));
+            ocp_qp_condensing_qpoases_create_memory(qp_in,
+                (ocp_qp_condensing_qpoases_args *) args,
+                mem,
+                memory);
+            ((ocp_qp_condensing_qpoases_args *)args)->cputime = 1000.0;
+            ((ocp_qp_condensing_qpoases_args *)args)->nwsr = 1000;
 #if defined(OOQP)
         } else if (!strcmp(solver_name, "ooqp")) {
             solver->fun = ocp_qp_ooqp;
@@ -485,7 +499,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)
-                idxb[i] = i;
+                idxb[i] = nu[0] + i;
             memcpy((void *) nlp_in->idxb[0], idxb, sizeof(idxb));
         }
         return nlp_in;

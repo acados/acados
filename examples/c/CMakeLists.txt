@@ -34,6 +34,23 @@ add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
 target_link_libraries(mass_spring_hpmpc_example acados)
 add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
 
+add_executable(mass_spring_hpipm_example mass_spring_hpipm.c)
+target_link_libraries(mass_spring_hpipm_example acados hpipm)
+add_test(mass_spring_hpipm_example mass_spring_hpipm_example)
+
+add_executable(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm.c)
+target_link_libraries(mass_spring_condensing_hpipm_example acados hpipm)
+add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_example)
+
+add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
+target_link_libraries(mass_spring_qpoases_example acados hpipm)
+add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
+
+add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
+target_link_libraries(mass_spring_qpdunes_example acados)
+target_compile_definitions(mass_spring_qpdunes_example PRIVATE USE_ACADOS_TYPES)
+add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
+
 # add_executable(mass_spring_partial_tightening_example
 #    mass_spring_partial_tightening.c
 # )
@@ -60,19 +77,15 @@ add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
 #)
 #target_link_libraries(nonlinear_chain_ocp_nlp acados)
 
-add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-target_link_libraries(mass_spring_qpoases_example acados)
-add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
-
 add_executable(chen_nmpc_qpoases_example
     chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-target_link_libraries(chen_nmpc_qpoases_example acados)
+target_link_libraries(chen_nmpc_qpoases_example acados hpipm)
 add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
 
 add_executable(nonlinear_chain_sqp_example
     nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
 target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
-target_link_libraries(nonlinear_chain_sqp_example acados)
+target_link_libraries(nonlinear_chain_sqp_example acados hpipm)
 # Following test takes too long!
 # add_test(
 #    NAME nonlinear_chain_sqp_example
