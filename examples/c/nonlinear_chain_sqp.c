@@ -108,28 +108,28 @@ int main() {
 
     switch (NMF) {
     case 1:
-        initStates = fopen("../../examples/c/chain_model/x0_nm2.txt", "r");
+        initStates = fopen(X0_NM2_FILE, "r");
         break;
     case 2:
-        initStates = fopen("../../examples/c/chain_model/x0_nm3.txt", "r");
+        initStates = fopen(X0_NM3_FILE, "r");
         break;
     case 3:
-        initStates = fopen("../../examples/c/chain_model/x0_nm4.txt", "r");
+        initStates = fopen(X0_NM4_FILE, "r");
         break;
     case 4:
-        initStates = fopen("../../examples/c/chain_model/x0_nm5.txt", "r");
+        initStates = fopen(X0_NM5_FILE, "r");
         break;
     case 5:
-        initStates = fopen("../../examples/c/chain_model/x0_nm6.txt", "r");
+        initStates = fopen(X0_NM6_FILE, "r");
         break;
     case 6:
-        initStates = fopen("../../examples/c/chain_model/x0_nm7.txt", "r");
+        initStates = fopen(X0_NM7_FILE, "r");
         break;
     case 7:
-        initStates = fopen("../../examples/c/chain_model/x0_nm8.txt", "r");
+        initStates = fopen(X0_NM8_FILE, "r");
         break;
     default:
-        initStates = fopen("../../examples/c/chain_model/x0_nm9.txt", "r");
+        initStates = fopen(X0_NM9_FILE, "r");
         break;
     }
     for (int_t i = 0; i < NX; i++) {
@@ -139,28 +139,28 @@ int main() {
 
     switch (NMF) {
     case 1:
-        refStates = fopen("../../examples/c/chain_model/xN_nm2.txt", "r");
+        refStates = fopen(XN_NM2_FILE, "r");
         break;
     case 2:
-        refStates = fopen("../../examples/c/chain_model/xN_nm3.txt", "r");
+        refStates = fopen(XN_NM3_FILE, "r");
         break;
     case 3:
-        refStates = fopen("../../examples/c/chain_model/xN_nm4.txt", "r");
+        refStates = fopen(XN_NM4_FILE, "r");
         break;
     case 4:
-        refStates = fopen("../../examples/c/chain_model/xN_nm5.txt", "r");
+        refStates = fopen(XN_NM5_FILE, "r");
         break;
     case 5:
-        refStates = fopen("../../examples/c/chain_model/xN_nm6.txt", "r");
+        refStates = fopen(XN_NM6_FILE, "r");
         break;
     case 6:
-        refStates = fopen("../../examples/c/chain_model/xN_nm7.txt", "r");
+        refStates = fopen(XN_NM7_FILE, "r");
         break;
     case 7:
-        refStates = fopen("../../examples/c/chain_model/xN_nm8.txt", "r");
+        refStates = fopen(XN_NM8_FILE, "r");
         break;
     default:
-        refStates = fopen("../../examples/c/chain_model/xN_nm9.txt", "r");
+        refStates = fopen(XN_NM9_FILE, "r");
         break;
     }
     for (int_t i = 0; i < NX; i++) {
