@@ -38,7 +38,6 @@ target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..> # for include "acados/..."
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/blasfeo/include>
         $<INSTALL_INTERFACE:include>)
 
 target_link_libraries(acados PUBLIC qpOASES_e hpmpc hpipm blasfeo qpdunes)
