@@ -46,10 +46,11 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
+# HPMPC must come before BLASFEO!
 if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
     target_link_libraries(acados PUBLIC hpmpc)
 endif()
+target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
 
 # TODO: The following definition should go ASAP!
 target_compile_definitions(acados PRIVATE EXT_DEP)
