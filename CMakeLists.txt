@@ -79,13 +79,19 @@ if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
+# Installation
 install(DIRECTORY acados
   DESTINATION include
   FILES_MATCHING PATTERN "*.h"
   PATTERN "simplified" EXCLUDE)
 
+# Uninstallation
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
 add_custom_target(uninstall
-    COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt | xargs rm -v)
+    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint
 include(lint)
