@@ -71,12 +71,22 @@ SET(Open_BLAS_LIB_SEARCH_PATHS
         $ENV{OpenBLAS}/lib
         $ENV{OpenBLAS_HOME}
         $ENV{OpenBLAS_HOME}/lib
+		$ENV{PATH}
 )
 
 FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${Open_BLAS_INCLUDE_SEARCH_PATHS})
 FIND_LIBRARY(OpenBLAS_LIB NAMES openblas PATHS ${Open_BLAS_LIB_SEARCH_PATHS})
 
 SET(OpenBLAS_FOUND ON)
+
+IF(OpenBLAS_LIB)
+	get_filename_component(OpenBLAS_HOME ${OpenBLAS_LIB} DIRECTORY)
+	get_filename_component(OpenBLAS_HOME ${OpenBLAS_HOME} DIRECTORY)
+	FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h
+		PATHS
+			${OpenBLAS_HOME}/include/OpenBLAS
+			${OpenBLAS_HOME}/include/)
+ENDIF()
 
 #    Check include files
 IF(NOT OpenBLAS_INCLUDE_DIR)

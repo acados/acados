@@ -27,7 +27,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
     defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
@@ -468,9 +467,9 @@ int main() {
     qp_out.pi = ppi;
     qp_out.lam = plam;
 
-    acado_timer timer;
+    acados_timer timer;
     real_t total_time = 0;
-    acado_tic(&timer);
+    acados_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
         for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
@@ -540,7 +539,7 @@ int main() {
     plot_states_controls(w, T);
     #endif  // PLOT_RESULTS
 
-    total_time += acado_toc(&timer);
+    total_time += acados_toc(&timer);
     printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
     free(workspace);
     return 0;

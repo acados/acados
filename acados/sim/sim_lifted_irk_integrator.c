@@ -190,7 +190,8 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
     dim += 0;
     dim2 += 0;
 #endif
-    real_t bPerm[DIM*DIM_RHS];
+    real_t *bPerm;
+    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
     for (i = 0; i < DIM; ++i) {
@@ -238,7 +239,8 @@ real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
     dim += 0;
     dim2 += 0;
 #endif
-    real_t bPerm[DIM*DIM_RHS];
+    real_t *bPerm;
+    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
 
@@ -375,7 +377,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
 
     real_t tmp_eig, tmp_eig2;
 #ifdef MEASURE_TIMINGS
-    acado_timer timer_ad;
+    acados_timer timer_ad;
 #else
     timing_ad += 0;
 #endif
@@ -430,11 +432,11 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
             }
         }
 #ifdef MEASURE_TIMINGS
-        acado_tic(&timer_ad);
+        acados_tic(&timer_ad);
 #endif
         in->jac_fun(rhs_in, jac_tmp);  // k evaluation
 #ifdef MEASURE_TIMINGS
-        timing_ad += acado_toc(&timer_ad);
+        timing_ad += acados_toc(&timer_ad);
 #endif
         //                }
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
@@ -531,7 +533,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 #endif  // !TRIPLE_LOOP
 
 #ifdef MEASURE_TIMINGS
-    acado_timer timer, timer_la, timer_ad;
+    acados_timer timer, timer_la, timer_ad;
     real_t timing_la = 0.0;
     real_t timing_ad = 0.0;
 #endif
@@ -540,7 +542,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 //    printf("NU = %d, NF = %d \n", nu, NF);
 
 #ifdef MEASURE_TIMINGS
-    acado_tic(&timer);
+    acados_tic(&timer);
 #endif
 
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
@@ -615,7 +617,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
                     construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
                 }
 #ifdef MEASURE_TIMINGS
-                acado_tic(&timer_la);
+                acados_tic(&timer_la);
 #endif
                 int_t idx = 0;
                 for (s1 = 0; s1 < num_stages; s1++) {
@@ -647,7 +649,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 #endif  // TRIPLE_LOOP
                 }
 #ifdef MEASURE_TIMINGS
-                timing_la += acado_toc(&timer_la);
+                timing_la += acados_toc(&timer_la);
 #endif
                 // TRANSFORM using transf2_T:
                 if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
@@ -696,7 +698,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
         int_t idx;
         if (opts->scheme.type == exact || (istep == 0 && !opts->scheme.freeze)) {
 #ifdef MEASURE_TIMINGS
-            acado_tic(&timer_la);
+            acados_tic(&timer_la);
 #endif
             idx = 0;
             for (s1 = 0; s1 < num_stages; s1++) {
@@ -732,7 +734,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 #endif   // TRIPLE_LOOP
             }
 #ifdef MEASURE_TIMINGS
-            timing_la += acado_toc(&timer_la);
+            timing_la += acados_toc(&timer_la);
 #endif
         }
 
@@ -759,13 +761,13 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
             }
             rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
 #ifdef MEASURE_TIMINGS
-            acado_tic(&timer_ad);
+            acados_tic(&timer_ad);
 #endif
 
             in->VDE_forw(rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
 
 #ifdef MEASURE_TIMINGS
-            timing_ad += acado_toc(&timer_ad);
+            timing_ad += acados_toc(&timer_ad);
 #endif
             // put VDE_tmp in sys_sol:
             for (j = 0; j < 1+NF; j++) {
@@ -818,7 +820,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
         }
 
 #ifdef MEASURE_TIMINGS
-        acado_tic(&timer_la);
+        acados_tic(&timer_la);
 #endif
         idx = 0;
         for (s1 = 0; s1 < num_stages; s1++) {
@@ -873,7 +875,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
 #endif  // TRIPLE_LOOP
         }
 #ifdef MEASURE_TIMINGS
-        timing_la += acado_toc(&timer_la);
+        timing_la += acados_toc(&timer_la);
 #endif
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
             // construct sys_sol_trans from sys_sol2:
@@ -978,7 +980,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
     for (i = 0; i < nx*NF; i++) out->S_forw[i] = out_tmp[nx+i];
 
 #ifdef MEASURE_TIMINGS
-    out->info->CPUtime = acado_toc(&timer);
+    out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = timing_la;
     out->info->ADtime = timing_ad;
 #endif
@@ -1053,7 +1055,7 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
     sim_RK_opts *opts = (sim_RK_opts*) args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
-    int_t num_sys = ceil(num_stages/2.0);
+    int_t num_sys = (int_t) ceil(num_stages/2.0);
 //    printf("num_stages: %d \n", num_stages);
 //    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
 //    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
@@ -1196,8 +1198,8 @@ void sim_irk_create_arguments(void *args, const int_t num_stages, const char* na
 }
 
 
-void sim_irk_create_Newton_scheme(void *args, const int_t num_stages, const char* name,
-        enum Newton_type_collocation type) {
+void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
+    enum Newton_type_collocation type) {
     sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->scheme.type = type;
     opts->scheme.freeze = false;
@@ -1244,4 +1246,3 @@ void sim_lifted_irk_destroy(void *mem, void *work) {
     free(work);
     sim_lifted_irk_free_memory(mem);
 }
-

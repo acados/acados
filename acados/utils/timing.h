@@ -29,11 +29,11 @@
 #include <Windows.h>
 
 /** A structure for keeping internal timer data. */
-typedef struct acado_timer_ {
+typedef struct acados_timer_ {
     LARGE_INTEGER tic;
     LARGE_INTEGER toc;
     LARGE_INTEGER freq;
-} acado_timer;
+} acados_timer;
 
 
 #elif(defined __APPLE__)
@@ -41,11 +41,11 @@ typedef struct acado_timer_ {
 #include <mach/mach_time.h>
 
 /** A structure for keeping internal timer data. */
-typedef struct acado_timer_ {
+typedef struct acados_timer_ {
     uint64_t tic;
     uint64_t toc;
     mach_timebase_info_data_t tinfo;
-} acado_timer;
+} acados_timer;
 
 #else
 
@@ -58,29 +58,29 @@ typedef struct acado_timer_ {
 #include <sys/stat.h>
 #include <sys/time.h>
 
-typedef struct acado_timer_ {
+typedef struct acados_timer_ {
     struct timeval tic;
     struct timeval toc;
-} acado_timer;
+} acados_timer;
 
 #else
 /* ANSI C */
 
 /** A structure for keeping internal timer data. */
-typedef struct acado_timer_ {
+typedef struct acados_timer_ {
     struct timespec tic;
     struct timespec toc;
-} acado_timer;
+} acados_timer;
 
 #endif /* __STDC_VERSION__ >= 199901L */
 
 #endif /* (defined _WIN32 || defined _WIN64) */
 
 /** A function for measurement of the current time. */
-void acado_tic(acado_timer* t);
+void acados_tic(acados_timer* t);
 
 /** A function which returns the elapsed time. */
-real_t acado_toc(acado_timer* t);
+real_t acados_toc(acados_timer* t);
 
 #endif
 
