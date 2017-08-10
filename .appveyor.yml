@@ -5,8 +5,7 @@ branches:
 
 install:
   - call C:\Miniconda36-x64\Scripts\activate.bat
-  - conda install -c conda-forge openblas
-  - conda install -c msys2 m2w64-gcc-libgfortran
+  - conda install -c msys2 m2w64-gcc-libgfortran m2w64-openblas
 
 build_script:
   - git submodule update --init --recursive
