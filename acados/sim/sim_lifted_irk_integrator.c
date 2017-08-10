@@ -190,8 +190,8 @@ real_t solve_system_ACADO(real_t* const A, real_t* const b, int* const perm, int
     dim += 0;
     dim2 += 0;
 #endif
-	real_t *bPerm;
-	bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
+    real_t *bPerm;
+    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
     for (i = 0; i < DIM; ++i) {
@@ -239,8 +239,8 @@ real_t solve_system_trans_ACADO(real_t* const A, real_t* const b,
     dim += 0;
     dim2 += 0;
 #endif
-	real_t *bPerm;
-	bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
+    real_t *bPerm;
+    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
 
@@ -1199,7 +1199,7 @@ void sim_irk_create_arguments(void *args, const int_t num_stages, const char* na
 
 
 void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
-	enum Newton_type_collocation type) {
+    enum Newton_type_collocation type) {
     sim_RK_opts *opts = (sim_RK_opts*) args;
     opts->scheme.type = type;
     opts->scheme.freeze = false;
@@ -1246,4 +1246,3 @@ void sim_lifted_irk_destroy(void *mem, void *work) {
     free(work);
     sim_lifted_irk_free_memory(mem);
 }
-

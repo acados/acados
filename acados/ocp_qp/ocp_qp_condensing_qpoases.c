@@ -49,8 +49,8 @@
         #include "qpOASES_e/QProblem.h"
     #endif
 #else
-	#include "qpOASES_e/QProblemB.h"
-	#include "qpOASES_e/QProblem.h"
+    #include "qpOASES_e/QProblemB.h"
+    #include "qpOASES_e/QProblem.h"
 #endif
 
 #include "acados/ocp_qp/condensing.h"

@@ -111,9 +111,9 @@ void get_Gauss_nodes(const int_t num_stages, real_t *nodes) {
 
 void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
     real_t *D;
-	D = (real_t *) calloc(2 * num_stages, sizeof(real_t));
+    D = (real_t *) calloc(2 * num_stages, sizeof(real_t));
     real_t *T;
-	T = (real_t *) calloc(num_stages*num_stages, sizeof(real_t));
+    T = (real_t *) calloc(num_stages*num_stages, sizeof(real_t));
     char simplified[80];
     int_t *perm;
     real_t *T_inv;
@@ -260,8 +260,8 @@ real_t LU_system_solve(real_t* const A, real_t* const b, int* const perm,
     int intSwap;
     int DIM = dim;
     int DIM_RHS = dim2;
-	real_t *bPerm;
-	bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
+    real_t *bPerm;
+    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
 
     for (i = 0; i < DIM; ++i) {
