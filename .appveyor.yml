@@ -3,8 +3,15 @@ branches:
   only:
     - msvc
 
-build_script:
+init:
   - git submodule update --init --recursive
+
+install:
+  - call C:\Miniconda36-x64\Scripts\activate.bat
+  - conda install -c conda-forge openblas
+  - conda install -c msys2 m2w64-gcc-libgfortran
+
+build_script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake ..
   - cmake --build build --config Debug
