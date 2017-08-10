@@ -4,6 +4,7 @@ branches:
     - msvc
 
 build_script:
+  - git submodule update --init --recursive
   - cmake -E make_directory build
   - cmake -E chdir build cmake ..
   - cmake --build build --config Debug
