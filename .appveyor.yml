@@ -12,6 +12,6 @@ build_script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake ..
   - cmake --build build --config Debug
-  - cmake --build build --target test
+  - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --config Release
-  - cmake --build build --target test
+  - cmake -E chdir build ctest --output-on-failure
