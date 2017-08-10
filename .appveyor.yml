@@ -1,0 +1,9 @@
+branches:
+  - msvc
+
+build_script:
+  - cmake -E make_directory build
+  - cmake --build build --config Debug
+  - cmake --build build --target test
+  - cmake --build build --config Release
+  - cmake --build build --target test
