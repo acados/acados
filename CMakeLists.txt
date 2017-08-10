@@ -24,9 +24,9 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-if(CMAKE_SYSTEM MATCHES "WINDOWS")
-	set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+if(CMAKE_SYSTEM MATCHES "Windows")
+	set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
 endif()
 
 # Set up build type
@@ -89,7 +89,6 @@ add_custom_target(uninstall
     COMMAND cat ${CMAKE_CURRENT_BINARY_DIR}/install_manifest.txt | xargs rm -v)
 
 # Cpplint
-find_package(PythonInterp 3)
-if(PYTHONINTERP_FOUND)
+if(NOT ${CMAKE_SYSTEM} MATCHES "Windows")
 	include(lint)
 endif()

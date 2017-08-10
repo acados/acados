@@ -18,14 +18,22 @@
 #
 
 find_library(FORTRAN_LIBRARY gfortran
-	PATHS
-	    $ENV{GFORTRAN_HOME}/lib/gcc/mingw32/6.3.0
     HINTS
         /usr/lib/gcc/x86_64-linux-gnu/*
         /usr/local/lib/gcc/*
-	    $ENV{GFORTRAN_HOME}/*
         ${CMAKE_FIND_ROOT_PATH}
+		$ENV{PATH}
     CMAKE_FIND_ROOT_PATH_BOTH)
+
+if (NOT FORTRAN_LIBRARY)
+	find_library(FORTRAN_LIBRARY gfortran-3
+		HINTS
+			/usr/lib/gcc/x86_64-linux-gnu/*
+			/usr/local/lib/gcc/*
+			${CMAKE_FIND_ROOT_PATH}
+			$ENV{PATH}
+		CMAKE_FIND_ROOT_PATH_BOTH)
+endif ()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FortranLibs FOUND_VAR FORTRANLIBS_FOUND
