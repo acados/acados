@@ -26,8 +26,8 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
-#include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
 
 // define maximum number of variables and constraints in qpoases XXX does not
 // work !

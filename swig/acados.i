@@ -347,11 +347,10 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
             memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(qp_in,
                 (ocp_qp_condensing_qpoases_args *) args);
             void *memory = (void *) malloc(memory_size);
-            ocp_qp_condensing_qpoases_memory *mem = (ocp_qp_condensing_qpoases_memory *)
-                malloc(sizeof(ocp_qp_condensing_qpoases_memory));
+            mem = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_memory));
             ocp_qp_condensing_qpoases_create_memory(qp_in,
                 (ocp_qp_condensing_qpoases_args *) args,
-                mem,
+                (ocp_qp_condensing_qpoases_memory *) mem,
                 memory);
             ((ocp_qp_condensing_qpoases_args *)args)->cputime = 1000.0;
             ((ocp_qp_condensing_qpoases_args *)args)->nwsr = 1000;

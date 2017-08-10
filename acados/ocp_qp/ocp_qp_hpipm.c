@@ -23,10 +23,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 
 #include "hpipm/include/hpipm_d_ocp_qp.h"

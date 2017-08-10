@@ -23,9 +23,9 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_target.h"
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/utils/tools.h"
