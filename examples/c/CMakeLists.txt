@@ -18,6 +18,7 @@
 #
 
 add_definitions(-DEXT_DEP)
+configure_file(chain_model/chain_model.h.in chain_model/chain_model.h @ONLY)
 
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC chain_model/chain_model.c
@@ -75,6 +76,7 @@ add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
 
 add_executable(nonlinear_chain_sqp_example
     nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
+target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
 target_link_libraries(nonlinear_chain_sqp_example acados)
 # add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 

@@ -32,4 +32,8 @@ if(SWIG_MATLAB AND MATLAB_FOUND)
         COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -nosoftwareopengl -r
             "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, sim_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 
+    set_tests_properties(ocp_qp_matlab ocp_nlp_matlab sim_matlab
+        PROPERTIES
+            ENVIRONMENT "MATLABPATH=${CMAKE_BINARY_DIR}/swig:$ENV{MATLABPATH}")
+
 endif()

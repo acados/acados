@@ -19,8 +19,8 @@
 
 # Check if external libraries are present; these are needed for the unit tests
 find_package(Eigen3)
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.1.1")
-    message(FATAL_ERROR "You chose to run unit tests but casadi-octave-v3.1.1 can not be found")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
+    message(FATAL_ERROR "You chose to run unit tests but casadi-octave-v3.2.2 can not be found")
 endif()
 
 add_subdirectory(ocp_nlp)
