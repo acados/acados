@@ -21,28 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#if !(defined _DSPACE)
-#if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
-
- /* Use Windows QueryPerformanceCounter for timing. */
-#include <Windows.h>
-
-#elif(defined __APPLE__)
-
-#include <mach/mach_time.h>
-
-#else
-
- /* Use POSIX clock_gettime() for timing on non-Windows machines. */
-#include <time.h>
-
-#include <sys/stat.h>
-#include <sys/time.h>
-
-#endif /* (defined _WIN32 || defined _WIN64) */
-
-#endif
-
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
     defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
@@ -56,6 +34,7 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
 
@@ -565,8 +544,8 @@ int main() {
 
     int return_value;
 
-    struct timeval tv0, tv1;
-    gettimeofday(&tv0, NULL);  // stop
+    acados_timer tv0;
+    acados_tic(&tv0);  // start
 
 //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
@@ -575,7 +554,7 @@ int main() {
         return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
     }
 
-    gettimeofday(&tv1, NULL);  // stop
+    double time = acados_toc(&tv0);  // stop
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
@@ -591,9 +570,6 @@ int main() {
 
     printf("\nx = \n");
     for (ii = 0; ii <= NN; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
@@ -623,14 +599,14 @@ int main() {
     * call the solver (partial condensing)
     ************************************************/
 
-    gettimeofday(&tv0, NULL);  // stop
+    acados_tic(&tv0);  // start
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
         return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace_part_cond);
     }
 
-    gettimeofday(&tv1, NULL);  // stop
+    double time_part_cond = acados_toc(&tv0);  // stop
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
@@ -646,9 +622,6 @@ int main() {
 
     printf("\nx = \n");
     for (ii = 0; ii <= NN; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \

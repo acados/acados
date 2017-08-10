@@ -382,7 +382,7 @@ int main() {
     qp_out.u = pu;
     qp_out.pi = ppi;
 
-    acado_timer timer;
+    acados_timer timer;
     real_t timings = 0;
     real_t timings_sim = 0;
     real_t timings_la = 0;
@@ -390,7 +390,7 @@ int main() {
 //    for (int_t iter = 0; iter < max_iters; iter++) {
 //        printf("\n------ TIME STEP %d ------\n", iter);
 
-    acado_tic(&timer);
+    acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
         feas = -1e10; stepX = -1e10; stepU = -1e10;
 
@@ -487,7 +487,7 @@ int main() {
 //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
 //        shift_states(w, x_end, NN);
 //        shift_controls(w, u_end, NN);
-        timings += acado_toc(&timer);
+        timings += acados_toc(&timer);
 //    }
 
 #ifdef MEASURE_TIMINGS

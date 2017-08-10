@@ -134,7 +134,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         w[w_idx+j] = gn_sqp_mem->common->x[N][j];
     }
 
-    acado_timer timer;
+    acados_timer timer;
     real_t timings = 0;
     real_t timings_sim = 0;
     real_t timings_la = 0;
@@ -143,7 +143,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     real_t feas, stepX, stepU;
     int_t status;
 
-    acado_tic(&timer);
+    acados_tic(&timer);
 
     for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
@@ -276,7 +276,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                         "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
     }
 
-    timings += acado_toc(&timer);
+    timings += acados_toc(&timer);
 #ifdef MEASURE_TIMINGS
     printf("\nAverage of %.3f ms in the integrator,\n",
             1e3*timings_sim/(gn_sqp_args->common->maxIter));

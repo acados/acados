@@ -20,7 +20,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
     defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
@@ -558,15 +557,15 @@ int main() {
 
     int return_value;
 
-    struct timeval tv0, tv1;
-    gettimeofday(&tv0, NULL);  // stop
+    acados_timer tv0;
+    acados_tic(&tv0);  // start
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
         return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
     }
 
-    gettimeofday(&tv1, NULL);  // stop
+    double time = acados_toc(&tv0);  // stop
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found\n");
@@ -582,9 +581,6 @@ int main() {
 
     printf("\nx = \n");
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);

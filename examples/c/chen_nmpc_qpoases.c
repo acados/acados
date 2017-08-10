@@ -176,9 +176,9 @@ int main() {
     qp_out.pi = ppi;
     qp_out.lam = plam;
 
-    acado_timer timer;
+    acados_timer timer;
     real_t total_time = 0;
-    acado_tic(&timer);
+    acados_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
@@ -225,7 +225,7 @@ int main() {
     #ifdef DEBUG
     print_states_controls(&w[0], NN);
     #endif  // DEBUG
-    total_time = acado_toc(&timer);  // in seconds
+    total_time = acados_toc(&timer);  // in seconds
     printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
 
     free(sim_in.x);

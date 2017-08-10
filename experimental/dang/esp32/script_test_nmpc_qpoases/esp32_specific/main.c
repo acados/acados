@@ -205,13 +205,13 @@ qp_out.x = px;
 qp_out.u = pu;
 printf("Free heap size before initializing qpoases: %d\n",esp_get_free_heap_size()); // for debug
 
-acado_timer timer;
+acados_timer timer;
 // real_t timings = 0;  // move creator out of the loop
 timings = 0;
 
 for (int_t iter = 0; iter < max_iters; iter++) {
     // printf("\n------ ITERATION %d ------\n", iter);
-    acado_tic(&timer);
+    acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
         for (int_t i = 0; i < N; i++) {
             // Pass state and control to integrator
@@ -253,7 +253,7 @@ for (int_t iter = 0; iter < max_iters; iter++) {
     for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
     shift_states(w, x_end, N);
     shift_controls(w, u_end, N);
-    timings += acado_toc(&timer);
+    timings += acados_toc(&timer);
 }
 printf("Free heap size: %d\n",esp_get_free_heap_size()); // for debug
 
