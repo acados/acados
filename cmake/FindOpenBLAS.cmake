@@ -82,7 +82,6 @@ SET(OpenBLAS_FOUND ON)
 IF(OpenBLAS_LIB)
 	get_filename_component(OpenBLAS_HOME ${OpenBLAS_LIB} DIRECTORY)
 	get_filename_component(OpenBLAS_HOME ${OpenBLAS_HOME} DIRECTORY)
-	message(STATUS ${OpenBLAS_HOME})
 	FIND_PATH(OpenBLAS_INCLUDE_DIR NAMES cblas.h
 		PATHS
 			${OpenBLAS_HOME}/include/OpenBLAS

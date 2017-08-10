@@ -17,7 +17,7 @@
 #
 #
 
-find_library(FORTRAN_LIBRARY gfortran
+find_library(FORTRAN_LIBRARY NAMES libgfortran.so libgfortran.dylib gfortran
     HINTS
         /usr/lib/gcc/x86_64-linux-gnu/*
         /usr/local/lib/gcc/*

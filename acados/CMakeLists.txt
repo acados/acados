@@ -39,7 +39,7 @@ if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
 endif()
 
 # Define acados library
-add_library(acados STATIC ${ACADOS_SRC})
+add_library(acados ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..> # for include "acados/..."

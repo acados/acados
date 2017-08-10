@@ -83,7 +83,7 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D__DEBUG__")
 file(GLOB SRC src/*.c)
 
 # library
-add_library(qpOASES_e STATIC ${SRC})
+add_library(qpOASES_e ${SRC})
 target_include_directories(qpOASES_e PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
