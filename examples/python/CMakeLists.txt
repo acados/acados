@@ -28,4 +28,8 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
     add_test(NAME sim_py
         COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/sim.py)
 
+    set_tests_properties(ocp_nlp_py ocp_qp_py sim_py
+        PROPERTIES
+            ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/swig:$ENV{PYTHONPATH}")
+
 endif()
