@@ -22,12 +22,13 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_target.h"
 
 // flush denormals to zero
-#if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
+#if defined(TARGET_X64_INTEL_HASWELL) ||      \
+    defined(TARGET_X64_INTEL_SABDY_BRIDGE) || \
     defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
 #include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
 #endif
@@ -59,8 +60,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     int pp = nx / 2;  // number of masses
 
     /************************************************
-    * build the continuous time system
-    ************************************************/
+     * build the continuous time system
+     ************************************************/
 
     double *T;
     d_zeros(&T, pp, pp);
@@ -92,8 +93,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     free(I);
 
     /************************************************
-    * compute the discrete time system
-    ************************************************/
+     * compute the discrete time system
+     ************************************************/
 
     double *bb;
     d_zeros(&bb, nx, 1);
@@ -119,8 +120,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     free(bb);
 
     /************************************************
-    * initial state
-    ************************************************/
+     * initial state
+     ************************************************/
 
     if (nx == 4) {
         x0[0] = 5;
@@ -152,7 +153,8 @@ int main() {
     printf("\n");
     printf("\n");
 
-#if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
+#if defined(TARGET_X64_INTEL_HASWELL) ||      \
+    defined(TARGET_X64_INTEL_SABDY_BRIDGE) || \
     defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);  // flush to zero subnormals !!!
                                                  // works only with one thread
@@ -163,16 +165,16 @@ int main() {
 
     int rep, nrep = NREP;
 
-    int nx = 8;  // number of states (it has to be even for the mass-spring
+    int nx = 8;   // number of states (it has to be even for the mass-spring
                   // system test problem)
-    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
+    int nu = 3;   // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
     int N = 15;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
-    int ng = 0;  // 4;  // number of general constraints
+    int ng = 0;   // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
 
-//    int N2 = 3;   // horizon length of partially condensed problem
+    //    int N2 = 3;   // horizon length of partially condensed problem
 
     int nbu = nu < nb ? nu : nb;
     int nbx = nb - nu > 0 ? nb - nu : 0;
@@ -226,8 +228,8 @@ int main() {
     printf("\n");
 
     /************************************************
-    * dynamical system
-    ************************************************/
+     * dynamical system
+     ************************************************/
 
     // state space matrices & initial state
     double *A;
@@ -249,10 +251,10 @@ int main() {
     x0[0] = 2.5;
     x0[1] = 2.5;
 
-    //    d_print_mat(nx, nx, A, nx);
-    //    d_print_mat(nx, nu, B, nx);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, x0, nx);
+//    d_print_mat(nx, nx, A, nx);
+//    d_print_mat(nx, nu, B, nx);
+//    d_print_mat(nx, 1, b, nx);
+//    d_print_mat(nx, 1, x0, nx);
 
 #if defined(ELIMINATE_X0)
     // compute b0 = b + A*x0
@@ -269,10 +271,10 @@ int main() {
 #endif
 
     /************************************************
-    * box constraints
-    ************************************************/
+     * box constraints
+     ************************************************/
 
-	int jj_end;
+    int jj_end;
 
     int *idxb0;
     int_zeros(&idxb0, nbb[0], 1);
@@ -281,26 +283,23 @@ int main() {
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
 #if defined(ELIMINATE_X0)
-	for(jj=0; jj<nbb[0]; jj++)
-		{
-		lb0[jj] = - 0.5; // umin
-		ub0[jj] = + 0.5; // umin
-		idxb0[jj] = jj;
-		}
+    for (jj = 0; jj < nbb[0]; jj++) {
+        lb0[jj] = -0.5;  // umin
+        ub0[jj] = +0.5;  // umin
+        idxb0[jj] = jj;
+    }
 #else
-	jj_end = nbu<nbb[0] ? nbu : nbb[0];
-	for(jj=0; jj<jj_end; jj++)
-		{
-		lb0[jj] = - 0.5; // umin
-		ub0[jj] = + 0.5; // umax
-		idxb0[jj] = jj;
-		}
-	for( ; jj<nbb[0]; jj++)
-		{
-		lb0[jj] = x0[jj-nbu]; // initial state
-		ub0[jj] = x0[jj-nbu]; // initial state
-		idxb0[jj] = jj;
-		}
+    jj_end = nbu < nbb[0] ? nbu : nbb[0];
+    for (jj = 0; jj < jj_end; jj++) {
+        lb0[jj] = -0.5;  // umin
+        ub0[jj] = +0.5;  // umax
+        idxb0[jj] = jj;
+    }
+    for (; jj < nbb[0]; jj++) {
+        lb0[jj] = x0[jj - nbu];  // initial state
+        ub0[jj] = x0[jj - nbu];  // initial state
+        idxb0[jj] = jj;
+    }
 #endif
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
     //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
@@ -311,19 +310,17 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-	jj_end = nbu<nbb[1] ? nbu : nbb[1];
-	for(jj=0; jj<jj_end; jj++)
-		{
-		lb1[jj] = - 0.5; // umin
-		ub1[jj] = + 0.5; // umax
-		idxb1[jj] = jj;
-		}
-	for( ; jj<nbb[1]; jj++)
-		{
-		lb1[jj] = - 4.0; // xmin
-		ub1[jj] = + 4.0; // xmax
-		idxb1[jj] = jj;
-		}
+    jj_end = nbu < nbb[1] ? nbu : nbb[1];
+    for (jj = 0; jj < jj_end; jj++) {
+        lb1[jj] = -0.5;  // umin
+        ub1[jj] = +0.5;  // umax
+        idxb1[jj] = jj;
+    }
+    for (; jj < nbb[1]; jj++) {
+        lb1[jj] = -4.0;  // xmin
+        ub1[jj] = +4.0;  // xmax
+        idxb1[jj] = jj;
+    }
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
     //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
 
@@ -333,25 +330,23 @@ int main() {
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
-	jj_end = nbu<nbb[N] ? nbu : nbb[N];
-	for(jj=0; jj<jj_end; jj++)
-		{
-		lbN[jj] = - 0.5; // umin
-		ubN[jj] = + 0.5; // umax
-		idxbN[jj] = jj;
-		}
-	for( ; jj<nbb[N]; jj++)
-		{
-		lbN[jj] = - 4.0; // xmin
-		ubN[jj] = + 4.0; // xmax
-		idxbN[jj] = jj;
-		}
+    jj_end = nbu < nbb[N] ? nbu : nbb[N];
+    for (jj = 0; jj < jj_end; jj++) {
+        lbN[jj] = -0.5;  // umin
+        ubN[jj] = +0.5;  // umax
+        idxbN[jj] = jj;
+    }
+    for (; jj < nbb[N]; jj++) {
+        lbN[jj] = -4.0;  // xmin
+        ubN[jj] = +4.0;  // xmax
+        idxbN[jj] = jj;
+    }
     //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
     //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
 
     /************************************************
-    * general constraints
-    ************************************************/
+     * general constraints
+     ************************************************/
 
     double *C;
     d_zeros(&C, ng, nx);
@@ -372,8 +367,8 @@ int main() {
     d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
 
     /************************************************
-    * cost function
-    ************************************************/
+     * cost function
+     ************************************************/
 
     double *Q;
     d_zeros(&Q, nx, nx);
@@ -413,8 +408,8 @@ int main() {
 #endif
 
     /************************************************
-    * problems data
-    ************************************************/
+     * problems data
+     ************************************************/
 
     double *hA[N];
     double *hB[N];
@@ -483,51 +478,51 @@ int main() {
     hug[N] = ugN;
 
     /************************************************
-    * solution
-    ************************************************/
+     * solution
+     ************************************************/
 
     double *hx[N + 1];
     double *hu[N];
     double *hpi[N];
-    double *hlam[N+1];
-    double *ht[N+1];
+    double *hlam[N + 1];
+    double *ht[N + 1];
 
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
-        d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&hpi[ii], nxx[ii + 1], 1);
+        d_zeros(&hlam[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
+        d_zeros(&ht[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
     }
     d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
-    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&hlam[N], 2 * nbb[N] + 2 * ngg[N], 1);
+    d_zeros(&ht[N], 2 * nbb[N] + 2 * ngg[N], 1);
 
     /************************************************
-    * create the in and out struct
-    ************************************************/
+     * create the in and out struct
+     ************************************************/
 
     ocp_qp_in qp_in;
     qp_in.N = N;
-    qp_in.nx = (const int *) nxx;
-    qp_in.nu = (const int *) nuu;
-    qp_in.nb = (const int *) nbb;
-    qp_in.nc = (const int *) ngg;
-    qp_in.A = (const double **) hA;
-    qp_in.B = (const double **) hB;
-    qp_in.b = (const double **) hb;
-    qp_in.Q = (const double **) hQ;
-    qp_in.S = (const double **) hS;
-    qp_in.R = (const double **) hR;
-    qp_in.q = (const double **) hq;
-    qp_in.r = (const double **) hr;
-    qp_in.idxb = (const int **) hidxb;
-    qp_in.lb = (const double **) hlb;
-    qp_in.ub = (const double **) hub;
-    qp_in.Cx = (const double **) hC;
-    qp_in.Cu = (const double **) hD;
-    qp_in.lc = (const double **) hlg;
-    qp_in.uc = (const double **) hug;
+    qp_in.nx = (const int *)nxx;
+    qp_in.nu = (const int *)nuu;
+    qp_in.nb = (const int *)nbb;
+    qp_in.nc = (const int *)ngg;
+    qp_in.A = (const double **)hA;
+    qp_in.B = (const double **)hB;
+    qp_in.b = (const double **)hb;
+    qp_in.Q = (const double **)hQ;
+    qp_in.S = (const double **)hS;
+    qp_in.R = (const double **)hR;
+    qp_in.q = (const double **)hq;
+    qp_in.r = (const double **)hr;
+    qp_in.idxb = (const int **)hidxb;
+    qp_in.lb = (const double **)hlb;
+    qp_in.ub = (const double **)hub;
+    qp_in.Cx = (const double **)hC;
+    qp_in.Cu = (const double **)hD;
+    qp_in.lc = (const double **)hlg;
+    qp_in.uc = (const double **)hug;
 
     ocp_qp_out qp_out;
     qp_out.x = hx;
@@ -537,8 +532,8 @@ int main() {
     qp_out.t = ht;  // XXX why also the slack variables ???
 
     /************************************************
-    * solver arguments (fully sparse)
-    ************************************************/
+     * solver arguments (fully sparse)
+     ************************************************/
 
     // solver arguments
     ocp_qp_condensing_hpipm_args hpipm_args;
@@ -548,42 +543,48 @@ int main() {
     hpipm_args.mu0 = 1.0;  // 0.0
 
     /************************************************
-    * work space (fully sparse)
-    ************************************************/
+     * work space (fully sparse)
+     ************************************************/
 
-    int work_space_size = ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &hpipm_args);
+    int work_space_size =
+        ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &hpipm_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
     void *workspace = malloc(work_space_size);
 
-//    void *mem;
-//    ocp_qp_hpipm_create_memory(&qp_in, &hpipm_args, &mem);
-    int memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &hpipm_args);
+    //    void *mem;
+    //    ocp_qp_hpipm_create_memory(&qp_in, &hpipm_args, &mem);
+    int memory_size =
+        ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &hpipm_args);
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
-	ocp_qp_condensing_hpipm_memory hpipm_memory;
-	ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args, &hpipm_memory, memory);
+    ocp_qp_condensing_hpipm_memory hpipm_memory;
+    ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args, &hpipm_memory,
+                                          memory);
 
     /************************************************
-    * call the solver (fully sparse)
-    ************************************************/
+     * call the solver (fully sparse)
+     ************************************************/
 
     int return_value;
 
     struct timeval tv0, tv1;
     gettimeofday(&tv0, NULL);  // stop
 
-//  nrep = 1;
+    //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-//        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args, workspace);
-        return_value = ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args, &hpipm_memory, workspace);
+        //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args,
+        //        workspace);
+        return_value = ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args,
+                                               &hpipm_memory, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found in %d iterations\n", hpipm_memory.iter);
+        printf("\nACADOS status: solution found in %d iterations\n",
+               hpipm_memory.iter);
 
     if (return_value == ACADOS_MAXITER)
         printf("\nACADOS status: maximum number of iterations reached\n");
@@ -601,15 +602,19 @@ int main() {
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0], hpipm_memory.inf_norm_res[1],
-        hpipm_memory.inf_norm_res[2], hpipm_memory.inf_norm_res[3], hpipm_memory.inf_norm_res[4]);
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0],
+           hpipm_memory.inf_norm_res[1], hpipm_memory.inf_norm_res[2],
+           hpipm_memory.inf_norm_res[3], hpipm_memory.inf_norm_res[4]);
     printf("\n");
-    printf(" Solution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n", hpipm_memory.iter, nrep, time);
+    printf(
+        " Solution time for %d IPM iterations, averaged over %d runs: %5.2e "
+        "seconds\n",
+        hpipm_memory.iter, nrep, time);
     printf("\n\n");
 
     /************************************************
-    * free memory
-    ************************************************/
+     * free memory
+     ************************************************/
 
     d_free(A);
     d_free(B);

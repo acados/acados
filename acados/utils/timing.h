@@ -23,7 +23,8 @@
 #include "acados/utils/types.h"
 
 #if !(defined _DSPACE)
-#if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
+#if (defined _WIN32 || defined _WIN64) && \
+    !(defined __MINGW32__ || defined __MINGW64__)
 
 /* Use Windows QueryPerformanceCounter for timing. */
 #include <Windows.h>
@@ -35,8 +36,7 @@ typedef struct acado_timer_ {
     LARGE_INTEGER freq;
 } acado_timer;
 
-
-#elif(defined __APPLE__)
+#elif defined(__APPLE__)
 
 #include <mach/mach_time.h>
 

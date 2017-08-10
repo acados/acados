@@ -29,26 +29,23 @@ typedef struct {
     //    const int_t *idx_in;
     int_t dim_in;
     int_t dim_out;
-    void (*fun)(const real_t*, real_t*);
-    void (*jac_fun)(const real_t*, real_t*);
+    void (*fun)(const real_t *, real_t *);
+    void (*jac_fun)(const real_t *, real_t *);
     // TODO(rien): other directional and second order derivatives
-    // TODO(rien): define the overlapping 'sets' of functions, jacobians, hessians etc..
+    // TODO(rien): define the overlapping 'sets' of functions, jacobians,
+    // hessians etc..
 } ocp_nlp_function;
 
-
 typedef struct {
-    // TODO(rien): only for least squares cost with state and control reference atm
-//    void *fun;
-//    const int_t *ny;
+    // TODO(rien): only for least squares cost with state and control reference
+    // atm
+    //    void *fun;
+    //    const int_t *ny;
     real_t **W;
     real_t **y_ref;
 } ocp_nlp_ls_cost;
 
-
-typedef struct {
-    ocp_nlp_function *fun;
-} ocp_nlp_stage_cost;
-
+typedef struct { ocp_nlp_function *fun; } ocp_nlp_stage_cost;
 
 typedef struct {
     int_t N;
@@ -88,9 +85,7 @@ typedef struct {
     real_t **lam;
 } ocp_nlp_memory;
 
-typedef struct {
-    real_t *w;
-} ocp_nlp_work;
+typedef struct { real_t *w; } ocp_nlp_work;
 
 typedef struct {
     real_t **x;
@@ -100,7 +95,8 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
-    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
+    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem,
+                 void *work);
     ocp_nlp_in *nlp_in;
     ocp_nlp_out *nlp_out;
     void *args;

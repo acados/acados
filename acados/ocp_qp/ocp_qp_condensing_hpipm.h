@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_HPMPC_H_
-#define ACADOS_OCP_QP_OCP_QP_HPMPC_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_CONDENSING_HPIPM_H_
+#define ACADOS_OCP_QP_OCP_QP_CONDENSING_HPIPM_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,8 +26,6 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
-
-
 
 // struct of arguments to the solver
 typedef struct ocp_qp_condensing_hpipm_args_ {
@@ -37,40 +35,41 @@ typedef struct ocp_qp_condensing_hpipm_args_ {
     int iter_max;
 } ocp_qp_condensing_hpipm_args;
 
-
-
 // struct of the solver memory
 typedef struct ocp_qp_condensing_hpipm_memory_ {
-	struct d_ocp_qp *qp;
-	struct d_ocp_qp_sol *qp_sol;
-	struct d_dense_qp *qpd;
-	struct d_dense_qp_sol *qpd_sol;
-	struct d_cond_qp_ocp2dense_workspace *cond_workspace;
-	struct d_ipm_hard_dense_qp_arg *ipm_arg;
-	struct d_ipm_hard_dense_qp_workspace *ipm_workspace;
-	double **hlam_lb;
-	double **hlam_ub;
-	double **hlam_lg;
-	double **hlam_ug;
-	double inf_norm_res[5];
-	int iter;
+    struct d_ocp_qp *qp;
+    struct d_ocp_qp_sol *qp_sol;
+    struct d_dense_qp *qpd;
+    struct d_dense_qp_sol *qpd_sol;
+    struct d_cond_qp_ocp2dense_workspace *cond_workspace;
+    struct d_ipm_hard_dense_qp_arg *ipm_arg;
+    struct d_ipm_hard_dense_qp_workspace *ipm_workspace;
+    double **hlam_lb;
+    double **hlam_ub;
+    double **hlam_lg;
+    double **hlam_ug;
+    double inf_norm_res[5];
+    int iter;
 } ocp_qp_condensing_hpipm_memory;
 
-
-
 //
-int ocp_qp_condensing_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args);
+int ocp_qp_condensing_hpipm_calculate_workspace_size(
+    ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args);
 //
-int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args);
+int ocp_qp_condensing_hpipm_calculate_memory_size(
+    ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args);
 //
-void ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args, ocp_qp_condensing_hpipm_memory *hpipm_memory, void *memory);
+void ocp_qp_condensing_hpipm_create_memory(
+    ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
+    ocp_qp_condensing_hpipm_memory *hpipm_memory, void *memory);
 //
-int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_condensing_hpipm_args *args, ocp_qp_condensing_hpipm_memory *memory, void *workspace_);
-
-
+int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+                            ocp_qp_condensing_hpipm_args *args,
+                            ocp_qp_condensing_hpipm_memory *memory,
+                            void *workspace_);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_CONDENSING_HPIPM_H_

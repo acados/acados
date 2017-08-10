@@ -6,20 +6,21 @@
 // The auto-generated VDE functions from CasADi:
 
 void VDE_fun_pendulum(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+                      int (*vde)(const real_t**, real_t**, int*, real_t*,
+                                 int)) {
     int_t NX = 4;
     int_t NU = 1;
     const real_t* x = in;
     const real_t* Sx = in + NX;
-    const real_t* Su = in + NX + NX*NX;
-    const real_t* u  = in + NX + NX*(NX+NU);
+    const real_t* Su = in + NX + NX * NX;
+    const real_t* u = in + NX + NX * (NX + NU);
 
     real_t* x_out = out;
     real_t* Sx_out = out + NX;
-    real_t* Su_out = out + NX + NX*NX;
+    real_t* Su_out = out + NX + NX * NX;
 
-    const real_t *casadi_arg[4];
-    real_t *casadi_res[3];
+    const real_t* casadi_arg[4];
+    real_t* casadi_res[3];
 
     casadi_arg[0] = x;
     casadi_arg[1] = Sx;
@@ -30,8 +31,8 @@ void VDE_fun_pendulum(const real_t* in, real_t* out,
     casadi_res[1] = Sx_out;
     casadi_res[2] = Su_out;
 
-    int_t *iw = 0;
-    real_t *w = 0;
+    int_t* iw = 0;
+    real_t* w = 0;
     int_t mem = 0;
 
     vde(casadi_arg, casadi_res, iw, w, mem);

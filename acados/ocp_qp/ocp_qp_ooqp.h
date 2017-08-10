@@ -29,7 +29,7 @@ extern "C" {
 
 typedef struct ocp_qp_ooqp_args_ {
     int_t printLevel;
-    int_t useDiagonalWeights;   // TODO(dimitris): implement option
+    int_t useDiagonalWeights;  // TODO(dimitris): implement option
     int_t fixHessian;
     int_t fixHessianSparsity;
     int_t fixDynamics;
@@ -47,7 +47,7 @@ typedef struct ocp_qp_ooqp_workspace_ {
     real_t *lambda;
     real_t *pi;
     real_t objectiveValue;
-    int_t *tmpInt;  // temporary vector to sort indicies sparse matrices
+    int_t *tmpInt;    // temporary vector to sort indicies sparse matrices
     real_t *tmpReal;  // temporary vector to sort data of sparse matrices
     // int_t ierr;
 } ocp_qp_ooqp_workspace;
@@ -85,15 +85,17 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t nnz;  // max(nnzQ, nnzA, nnzC)
 } ocp_qp_ooqp_memory;
 
-int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_, void *memory_);
+int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_,
+                                void *memory_);
 void ocp_qp_ooqp_free_memory(void *mem_);
 
 int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_);
 
-int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output,
-    void *args_, void *memory_, void *work_);
+int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output, void *args_,
+                  void *memory_, void *work_);
 
-void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work);
+void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
+                            void **work);
 void ocp_qp_ooqp_destroy(void *mem_, void *work);
 
 #ifdef __cplusplus

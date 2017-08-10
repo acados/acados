@@ -24,8 +24,7 @@
 #include <string.h>
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
-    const int_t ncols) {
-
+                  const int_t ncols) {
     FILE *output;
     if (strcmp(file_name, "stdout") == 0) {
         output = stdout;
@@ -38,7 +37,7 @@ void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
     // Assumes column major ordering
     for (int_t i = 0; i < nrows; i++) {
         for (int_t j = 0; j < ncols; j++) {
-            fprintf(output, "%+.3e ", matrix[j*nrows+i]);
+            fprintf(output, "%+.3e ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
     }
@@ -46,7 +45,7 @@ void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
 }
 
 void print_matrix_name(char *file_name, char *name, const real_t *matrix,
-        const int_t nrows, const int_t ncols) {
+                       const int_t nrows, const int_t ncols) {
     FILE *output;
     if (strcmp(file_name, "stdout") == 0) {
         output = stdout;
@@ -60,7 +59,7 @@ void print_matrix_name(char *file_name, char *name, const real_t *matrix,
     // Assumes column major ordering
     for (int_t i = 0; i < nrows; i++) {
         for (int_t j = 0; j < ncols; j++) {
-            fprintf(output, "%+.3e ", matrix[j*nrows+i]);
+            fprintf(output, "%+.3e ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
     }
@@ -68,8 +67,7 @@ void print_matrix_name(char *file_name, char *name, const real_t *matrix,
 }
 
 void print_int_matrix(char *file_name, const int_t *matrix, const int_t nrows,
-    const int_t ncols) {
-
+                      const int_t ncols) {
     FILE *output;
     if (strcmp(file_name, "stdout") == 0) {
         output = stdout;
@@ -82,7 +80,7 @@ void print_int_matrix(char *file_name, const int_t *matrix, const int_t nrows,
     // Assumes column major ordering
     for (int_t i = 0; i < nrows; i++) {
         for (int_t j = 0; j < ncols; j++) {
-            fprintf(output, "%d ", matrix[j*nrows+i]);
+            fprintf(output, "%d ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
     }
@@ -98,8 +96,8 @@ void print_int_array(char *file_name, const int_t *array, int_t size) {
 }
 
 // Read space delimited file into column-major matrix
-void read_matrix(const char *file_name, real_t* array, const int_t nrows,
-        const int_t ncols) {
+void read_matrix(const char *file_name, real_t *array, const int_t nrows,
+                 const int_t ncols) {
     FILE *file;
     file = fopen(file_name, "r");
 
@@ -111,7 +109,7 @@ void read_matrix(const char *file_name, real_t* array, const int_t nrows,
     // Read numbers from file into buffer.
     for (int i = 0; i < nrows; i++) {
         for (int j = 0; j < ncols; j++) {
-            if (!fscanf(file, "%lf", &array[nrows*j+i])) {
+            if (!fscanf(file, "%lf", &array[nrows * j + i])) {
                 break;
             }
         }
@@ -124,10 +122,14 @@ void print_ocp_qp(ocp_qp_in *qp) {
     int_t N = qp->N;
     printf("ocp_qp structure with contents:\n");
     printf("N: %d\n", qp->N);
-    printf("nx:\n"); print_int_matrix("stdout", qp->nx, 1, N+1);
-    printf("nu:\n"); print_int_matrix("stdout", qp->nu, 1, N);
-    printf("nb:\n"); print_int_matrix("stdout", qp->nb, 1, N+1);
-    printf("nc:\n"); print_int_matrix("stdout", qp->nc, 1, N+1);
+    printf("nx:\n");
+    print_int_matrix("stdout", qp->nx, 1, N + 1);
+    printf("nu:\n");
+    print_int_matrix("stdout", qp->nu, 1, N);
+    printf("nb:\n");
+    print_int_matrix("stdout", qp->nb, 1, N + 1);
+    printf("nc:\n");
+    print_int_matrix("stdout", qp->nc, 1, N + 1);
     for (int_t stage = 0; stage < N; stage++) {
         printf("Q%d:\n", stage);
         print_matrix("stdout", qp->Q[stage], qp->nx[stage], qp->nx[stage]);
@@ -146,7 +148,8 @@ void print_ocp_qp(ocp_qp_in *qp) {
         printf("lb%d:\n", stage);
         print_matrix("stdout", qp->lb[stage], qp->nb[stage], 1);
         printf("ub%d:\n", stage);
-        print_matrix("stdout", qp->ub[stage], qp->nb[stage], 1);    }
+        print_matrix("stdout", qp->ub[stage], qp->nb[stage], 1);
+    }
     printf("QN:\n");
     print_matrix("stdout", qp->Q[N], qp->nx[N], qp->nx[N]);
     printf("qN:\n");

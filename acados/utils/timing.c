@@ -20,7 +20,8 @@
 #include "acados/utils/timing.h"
 
 #if !(defined _DSPACE)
-#if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
+#if (defined _WIN32 || defined _WIN64) && \
+    !(defined __MINGW32__ || defined __MINGW64__)
 
 void acado_tic(acado_timer* t) {
     QueryPerformanceFrequency(&t->freq);
@@ -32,7 +33,7 @@ real_t acado_toc(acado_timer* t) {
     return ((t->toc.QuadPart - t->tic.QuadPart) / (real_t)t->freq.QuadPart);
 }
 
-#elif(defined __APPLE__)
+#elif defined(__APPLE__)
 void acado_tic(acado_timer* t) {
     /* read current clock cycles */
     t->tic = mach_absolute_time();
@@ -58,9 +59,7 @@ real_t acado_toc(acado_timer* t) {
 /* C99 mode */
 
 /* read current time */
-void acado_tic(acado_timer* t) {
-    gettimeofday(&t->tic, 0);
-}
+void acado_tic(acado_timer* t) { gettimeofday(&t->tic, 0); }
 
 /* return time passed since last call to tic on this timer */
 real_t acado_toc(acado_timer* t) {
@@ -83,10 +82,7 @@ real_t acado_toc(acado_timer* t) {
 /* ANSI */
 
 /* read current time */
-void acado_tic(acado_timer* t) {
-    clock_gettime(CLOCK_MONOTONIC, &t->tic);
-}
-
+void acado_tic(acado_timer* t) { clock_gettime(CLOCK_MONOTONIC, &t->tic); }
 
 /* return time passed since last call to tic on this timer */
 real_t acado_toc(acado_timer* t) {
@@ -96,7 +92,7 @@ real_t acado_toc(acado_timer* t) {
 
     if ((t->toc.tv_nsec - t->tic.tv_nsec) < 0) {
         temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec - 1;
-        temp.tv_nsec = 1000000000+t->toc.tv_nsec - t->tic.tv_nsec;
+        temp.tv_nsec = 1000000000 + t->toc.tv_nsec - t->tic.tv_nsec;
     } else {
         temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec;
         temp.tv_nsec = t->toc.tv_nsec - t->tic.tv_nsec;

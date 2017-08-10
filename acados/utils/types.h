@@ -25,10 +25,6 @@ typedef unsigned int uint;
 typedef int int_t;
 
 // enum of return values
-enum return_values{
-    ACADOS_SUCCESS,
-    ACADOS_MAXITER,
-    ACADOS_MINSTEP
-};
+enum return_values { ACADOS_SUCCESS, ACADOS_MAXITER, ACADOS_MINSTEP };
 
 #endif  // ACADOS_UTILS_TYPES_H_

@@ -25,9 +25,10 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include "acados/utils/types.h"
-#include "acados/sim/sim_rk_common.h"
+
 #include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
@@ -69,25 +70,27 @@ typedef struct {
     real_t *u;
 } sim_lifted_irk_memory;
 
-
-int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args,
-        void *mem, void *work);
+int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem,
+                     void *work);
 
 int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args);
 
 void sim_lifted_irk_create_memory(const sim_in *in, void *args,
-        sim_lifted_irk_memory *mem);
+                                  sim_lifted_irk_memory *mem);
 void sim_lifted_irk_free_memory(void *mem_);
 
-void sim_irk_create_arguments(void *args, int_t num_stages, const char* name);
+void sim_irk_create_arguments(void *args, int_t num_stages, const char *name);
 
-void sim_lifted_irk_initialize(const sim_in *in, void *args_, void *mem_, void **work);
+void sim_lifted_irk_initialize(const sim_in *in, void *args_, void *mem_,
+                               void **work);
 void sim_lifted_irk_destroy(void *mem, void *work);
 
-void sim_irk_control_collocation(void *args, int_t num_stages, const char* name);
+void sim_irk_control_collocation(void *args, int_t num_stages,
+                                 const char *name);
 
-void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
-        enum Newton_type_collocation type);
+void sim_irk_create_Newton_scheme(void *args, int_t num_stages,
+                                  const char *name,
+                                  enum Newton_type_collocation type);
 
 #ifdef __cplusplus
 } /* extern "C" */
