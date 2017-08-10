@@ -30,7 +30,7 @@ file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/jac_pendulum.c)
 
 # Define examples
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
 	target_link_libraries(mass_spring_hpmpc_example acados)
 	add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
@@ -62,7 +62,7 @@ endif()
 #)
 #target_link_libraries(nonlinear_chain_ocp_nlp acados)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
 	target_link_libraries(mass_spring_qpoases_example acados)
 	add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
@@ -76,17 +76,13 @@ add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
 add_executable(nonlinear_chain_sqp_example
     nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
 target_link_libraries(nonlinear_chain_sqp_example acados)
-# Following test takes too long!
-# add_test(
-#    NAME nonlinear_chain_sqp_example
-#    COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./nonlinear_chain_sqp_example
-# )
+# add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 
 # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
 # target_link_libraries(pendulum_hpmpc_libstr_example acados)
 # add_test(NAME pendulum_hpmpc_libstr_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	add_executable(pendulum_partial_tightening_example
 		pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
 	target_link_libraries(pendulum_partial_tightening_example acados)

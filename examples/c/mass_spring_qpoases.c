@@ -32,6 +32,7 @@
 
 // define number of repetitions
 #define NREP 10
+#define NN 20   // horizon length
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -126,7 +127,6 @@ int main() {
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
-    int N = 20;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 8;  // 4;  // number of general constraints at the last stage
@@ -135,21 +135,21 @@ int main() {
     int nbx = nb - nu > 0 ? nb - nu : 0;
 
     // stage-wise variant size
-    int nxx[N + 1];
-    for (ii = 0; ii <= N; ii++) nxx[ii] = nx;
+    int nxx[NN + 1];
+    for (ii = 0; ii <= NN; ii++) nxx[ii] = nx;
 
-    int nuu[N + 1];
-    for (ii = 0; ii < N; ii++) nuu[ii] = nu;
-    nuu[N] = 0;
+    int nuu[NN + 1];
+    for (ii = 0; ii < NN; ii++) nuu[ii] = nu;
+    nuu[NN] = 0;
 
-    int nbb[N + 1];
-    for (ii = 0; ii < N; ii++) nbb[ii] = nb;
-    nbb[N] = nbx;
+    int nbb[NN + 1];
+    for (ii = 0; ii < NN; ii++) nbb[ii] = nb;
+    nbb[NN] = nbx;
 
-    int ngg[N + 1];
-    for (ii = 0; ii < N; ii++) ngg[ii] = ng;
+    int ngg[NN + 1];
+    for (ii = 0; ii < NN; ii++) ngg[ii] = ng;
     ngg[0] = 1;
-    ngg[N] = ngN;
+    ngg[NN] = ngN;
 
     printf(
         " Test problem: mass-spring system with %d masses and %d controls.\n",
@@ -158,7 +158,7 @@ int main() {
     printf(
         " MPC problem size: %d states, %d inputs, %d horizon length, %d "
         "two-sided box constraints, %d two-sided general constraints.\n",
-        nx, nu, N, nb, ng);
+        nx, nu, NN, nb, ng);
     printf("\n");
 
     /************************************************
@@ -229,11 +229,11 @@ int main() {
     }
 
     int *idxbN;
-    int_zeros(&idxbN, nbb[N], 1);
+    int_zeros(&idxbN, nbb[NN], 1);
     double *lbN;
-    d_zeros(&lbN, nbb[N], 1);
+    d_zeros(&lbN, nbb[NN], 1);
     double *ubN;
-    d_zeros(&ubN, nbb[N], 1);
+    d_zeros(&ubN, nbb[NN], 1);
     for (jj = 0; jj < nbx; jj++) {
         lbN[jj] = -4.0;  //   umin
         ubN[jj] = +4.0;   //   umax
@@ -304,21 +304,21 @@ int main() {
     ocp_qp_in qp_in;
     ocp_qp_out qp_out;
 
-    double *hA[N];
-    double *hB[N];
-    double *hb[N];
-    double *hQ[N + 1];
-    double *hS[N];
-    double *hR[N];
-    double *hq[N + 1];
-    double *hr[N];
-    double *hlb[N + 1];
-    double *hub[N + 1];
-    int *hidxb[N + 1];
-    double *hC[N + 1];
-    double *hD[N];
-    double *hlg[N + 1];
-    double *hug[N + 1];
+    double *hA[NN];
+    double *hB[NN];
+    double *hb[NN];
+    double *hQ[NN + 1];
+    double *hS[NN];
+    double *hR[NN];
+    double *hq[NN + 1];
+    double *hr[NN];
+    double *hlb[NN + 1];
+    double *hub[NN + 1];
+    int *hidxb[NN + 1];
+    double *hC[NN + 1];
+    double *hD[NN];
+    double *hlg[NN + 1];
+    double *hug[NN + 1];
 
     hA[0] = A;
     hB[0] = B;
@@ -335,7 +335,7 @@ int main() {
     hD[0] = D0;
     hlg[0] = lg0;
     hug[0] = ug0;
-    for (ii = 1; ii < N; ii++) {
+    for (ii = 1; ii < NN; ii++) {
         hA[ii] = A;
         hB[ii] = B;
         hb[ii] = b;
@@ -352,30 +352,30 @@ int main() {
         hlg[ii] = lg;
         hug[ii] = ug;
     }
-    hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
-    hq[N] = q;  // or maybe initialize to the solution of the DARE???
-    hlb[N] = lbN;
-    hub[N] = ubN;
-    hidxb[N] = idxbN;
-    hC[N] = CN;
-    hlg[N] = lgN;
-    hug[N] = ugN;
+    hQ[NN] = Q;  // or maybe initialize to the solution of the DARE???
+    hq[NN] = q;  // or maybe initialize to the solution of the DARE???
+    hlb[NN] = lbN;
+    hub[NN] = ubN;
+    hidxb[NN] = idxbN;
+    hC[NN] = CN;
+    hlg[NN] = lgN;
+    hug[NN] = ugN;
 
     /************************************************
     * solution
     ************************************************/
 
-    double *hx[N + 1];
-    double *hu[N + 1];
-    double *hpi[N + 1];
-    for (ii = 0; ii < N; ii++) {
+    double *hx[NN + 1];
+    double *hu[NN + 1];
+    double *hpi[NN + 1];
+    for (ii = 0; ii < NN; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
     }
-    d_zeros(&hx[N], nxx[N], 1);
+    d_zeros(&hx[NN], nxx[NN], 1);
 
-    qp_in.N = N;
+    qp_in.N = NN;
     qp_in.nx = nxx;
     qp_in.nu = nuu;
     qp_in.nb = nbb;
@@ -434,10 +434,10 @@ int main() {
     double time = acados_toc(&tv0);  // stop
 
     printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+    for (ii = 0; ii < NN; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (ii = 0; ii <= NN; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
@@ -483,11 +483,11 @@ int main() {
     d_free(lgN);
     d_free(ugN);
 
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < NN; ii++) {
         d_free(hx[ii]);
         d_free(hu[ii]);
     }
-    d_free(hx[N]);
+    d_free(hx[NN]);
 
     return 0;
 }
