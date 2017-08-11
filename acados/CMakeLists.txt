@@ -53,7 +53,9 @@ endif()
 target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
 
 # TODO: The following definition should go ASAP!
-target_compile_definitions(acados PRIVATE EXT_DEP)
+if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
+	set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
+endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)

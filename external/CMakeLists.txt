@@ -20,7 +20,7 @@
 set(TARGET "GENERIC" CACHE STRING "Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
 add_subdirectory(blasfeo)
-if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
+if((NOT CMAKE_C_COMPILER_ID MATCHES "MSVC") AND (NOT CMAKE_SYSTEM_NAME MATCHES "dSpace"))
 	include(external/hpmpc)
 	add_subdirectory(hpipm)
 endif()

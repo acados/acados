@@ -64,15 +64,17 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
+# Configure acados
+add_subdirectory(acados)
+
 # Configure external libraries
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 add_subdirectory(${EXTERNAL_SRC_DIR})
 
-# Configure acados
-add_subdirectory(acados)
-
 # Add examples
-add_subdirectory(examples)
+if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+	add_subdirectory(examples)
+endif()
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
