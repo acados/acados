@@ -19,12 +19,21 @@
 
 find_package(Matlab)
 if(SWIG_MATLAB AND MATLAB_FOUND)
-add_test(NAME ocp_qp_matlab
-    # run() is not useful here as it changes cwd, so we have to use addpath()
-    COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r
-        "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_qp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
+    add_test(NAME ocp_qp_matlab
+        # run() is not useful here as it changes cwd, so we have to use addpath()
+        COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -nosoftwareopengl -r
+            "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_qp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
 
-add_test(NAME ocp_nlp_matlab
-    COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -r
-        "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_nlp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
+    add_test(NAME ocp_nlp_matlab
+        COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -nosoftwareopengl -r
+            "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, ocp_nlp_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
+
+    add_test(NAME sim_matlab
+        COMMAND ${MATLAB_EXECUTABLE} -noFigureWindows -nodesktop -nosplash -nosoftwareopengl -r
+            "addpath('${CMAKE_CURRENT_SOURCE_DIR}'); try, sim_example, catch ME, disp(ME.getReport()), exit(1), end, exit(0)")
+
+    set_tests_properties(ocp_qp_matlab ocp_nlp_matlab sim_matlab
+        PROPERTIES
+            ENVIRONMENT "MATLABPATH=${CMAKE_BINARY_DIR}/swig:$ENV{MATLABPATH}")
+
 endif()

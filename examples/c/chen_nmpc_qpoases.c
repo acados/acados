@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "hpmpc/include/aux_d.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -59,7 +59,6 @@ static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 // Simple SQP example for acados
 int main() {
     // Problem data
-    int_t   N                   = NN;
     real_t  x0[NX]              = {0.5, 0};
     real_t  w[NN*(NX+NU)+NX]    = {0};  // States and controls stacked
     real_t  Q[NX*NX]            = {0};
@@ -112,27 +111,27 @@ int main() {
     int_t nu[NN] = {0};
     int_t nb[NN+1] = {0};
     int_t nc[NN+1] = {0};
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[N] = NX;
+    nx[NN] = NX;
 
-    real_t *pA[N];
-    real_t *pB[N];
-    real_t *pb[N];
-    real_t *pQ[N+1];
-    real_t *pS[N];
-    real_t *pR[N];
-    real_t *pq[N+1];
-    real_t *pr[N];
-    real_t *px[N+1];
-    real_t *pu[N];
-    real_t *ppi[N];
-    real_t *plam[N+1];
+    real_t *pA[NN];
+    real_t *pB[NN];
+    real_t *pb[NN];
+    real_t *pQ[NN+1];
+    real_t *pS[NN];
+    real_t *pR[NN];
+    real_t *pq[NN+1];
+    real_t *pr[NN];
+    real_t *px[NN+1];
+    real_t *pu[NN];
+    real_t *ppi[NN];
+    real_t *plam[NN+1];
     real_t *px0[1];
     d_zeros(&px0[0], nx[0], 1);
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
         d_zeros(&pb[i], nx[i+1], 1);
@@ -144,13 +143,13 @@ int main() {
         d_zeros(&ppi[i], nx[i], 1);
         d_zeros(&plam[i], nb[i]+nc[i], 1);
     }
-    d_zeros(&pq[N], nx[N], 1);
-    d_zeros(&px[N], nx[N], 1);
-    d_zeros(&plam[N], nb[N]+nc[N], 1);
+    d_zeros(&pq[NN], nx[NN], 1);
+    d_zeros(&px[NN], nx[NN], 1);
+    d_zeros(&plam[NN], nb[NN]+nc[NN], 1);
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
-    qp_in.N = N;
+    qp_in.N = NN;
     ocp_qp_out qp_out;
     ocp_qp_condensing_qpoases_args args;
     real_t *work = NULL;
@@ -158,11 +157,11 @@ int main() {
     qp_in.nu = nu;
     qp_in.nb = nb;
     qp_in.nc = nc;
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         pQ[i] = Q;
         pR[i] = R;
     }
-    pQ[N] = Q;
+    pQ[NN] = Q;
     qp_in.Q = (const real_t **) pQ;
     qp_in.S = (const real_t **) pS;
     qp_in.R = (const real_t **) pR;
@@ -177,13 +176,13 @@ int main() {
     qp_out.pi = ppi;
     qp_out.lam = plam;
 
-    acado_timer timer;
+    acados_timer timer;
     real_t total_time = 0;
-    acado_tic(&timer);
+    acados_tic(&timer);
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
-            for (int_t i = 0; i < N; i++) {
+            for (int_t i = 0; i < NN; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
@@ -206,27 +205,27 @@ int main() {
                 px0[0][j] = (x0[j]-w[j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
+                pq[NN][j] = Q[j*(NX+1)]*(w[NN*(NX+NU)+j]-xref[j]);
             }
             int status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, work);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;
             }
-            for (int_t i = 0; i < N; i++) {
+            for (int_t i = 0; i < NN; i++) {
                 for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
             }
-            for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
+            for (int_t j = 0; j < NX; j++) w[NN*(NX+NU)+j] += qp_out.x[NN][j];
         }
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-        shift_states(w, x_end, N);
-        shift_controls(w, u_end, N);
+        shift_states(w, x_end, NN);
+        shift_controls(w, u_end, NN);
     }
     #ifdef DEBUG
-    print_states_controls(&w[0], N);
+    print_states_controls(&w[0], NN);
     #endif  // DEBUG
-    total_time = acado_toc(&timer);  // in seconds
+    total_time = acados_toc(&timer);  // in seconds
     printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
 
     free(sim_in.x);
@@ -236,7 +235,7 @@ int main() {
     free(sim_out.S_forw);
 
     d_free(px0[0]);
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         d_free(pA[i]);
         d_free(pB[i]);
         d_free(pb[i]);
@@ -248,9 +247,9 @@ int main() {
         d_free(ppi[i]);
         d_free(plam[i]);
     }
-    d_free(pq[N]);
-    d_free(px[N]);
-    d_free(plam[N]);
+    d_free(pq[NN]);
+    d_free(px[NN]);
+    d_free(plam[NN]);
 
     free(rk_opts.A_mat);
     free(rk_opts.b_vec);

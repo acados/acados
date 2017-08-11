@@ -17,39 +17,21 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
-#define ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#ifndef ACADOS_SIM_ALLOCATE_SIM_H_
+#define ACADOS_SIM_ALLOCATE_SIM_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "acados/sim/sim_rk_common.h"
-#include "acados/utils/types.h"
+#include "acados/sim/sim_common.h"
 
-typedef struct {
-    real_t *K_traj;
+void allocate_sim_in(sim_in *sim_in);
 
-    real_t *rhs_forw_in;
-    real_t *out_forw_traj;
-
-    real_t *adj_traj;
-    real_t *rhs_adj_in;
-    real_t *out_adj_tmp;
-} sim_erk_workspace;
-
-
-int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
-
-int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
-
-void sim_erk_create_arguments(void *args, const int_t num_stages);
-
-void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-void sim_erk_destroy(void *work);
+void allocate_sim_out(sim_in *sim_in, sim_out *sim_out);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#endif  // ACADOS_SIM_ALLOCATE_SIM_H_

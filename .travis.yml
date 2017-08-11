@@ -42,23 +42,34 @@ install:
 
 before_script:
   - set -e
+  - mkdir -p /home/travis/octave_download
+  - |
+    if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
+      # directory empty
+      pushd /home/travis/octave_download
+      wget http://packages.octave.org/download/optim-1.5.2.tar.gz
+      wget http://packages.octave.org/download/struct-1.0.14.tar.gz
+      popd
+    fi
 
 script:
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
-  - cmake --build build --target install --clean-first
+  - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
   - rm -r build
-  - rm -r $HOME/local/lib
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
   - cmake --build build --clean-first
   - rm -r build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
-  - cmake --build build --target install --clean-first
-  - cmake --build build --target lint
+  - export CXX="$CXX -std=c++11" # needed for octave
+  - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
+  - cmake --build build --target install
+  - python -c "import acados" # check installation
+  - cmake --build build --target lint
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
 
 after_success:

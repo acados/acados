@@ -653,32 +653,32 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
     // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
 
 #ifdef MEASURE_TIMINGS
-    acado_timer timer;
+    acados_timer timer;
     real_t cputime;
-    acado_tic(&timer);
+    acados_tic(&timer);
 #endif
 
     // NOTE: has to be called after setting up the memory which contains the problem dimensions
     ocp_qp_ooqp_cast_workspace(work, mem);
 
 #ifdef MEASURE_TIMINGS
-    cputime = acado_toc(&timer);
+    cputime = acados_toc(&timer);
     printf(">>> OOQP workspace casted in %.3f ms.\n", 1e3*cputime);
 #endif
 
 #ifdef MEASURE_TIMINGS
-    acado_tic(&timer);
+    acados_tic(&timer);
 #endif
     ocp_qp_ooqp_update_memory(in, args, mem, work);
 #ifdef MEASURE_TIMINGS
-    cputime = acado_toc(&timer);
+    cputime = acados_toc(&timer);
     printf(">>> OOQP memory initialized in %.3f ms.\n", 1e3*cputime);
 #endif
 
     if (0) print_inputs(mem);
 
 #ifdef MEASURE_TIMINGS
-    acado_tic(&timer);
+    acados_tic(&timer);
 #endif
     // TODO(dimitris): implement dense OOQP
     // call sparse OOQP
@@ -692,7 +692,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_, vo
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
         &work->objectiveValue, args->printLevel, &return_value);
 #ifdef MEASURE_TIMINGS
-    cputime = acado_toc(&timer);
+    cputime = acados_toc(&timer);
     printf(">>> OOQP problem solved in %.3f ms.\n\n", 1e3*cputime);
 #endif
 

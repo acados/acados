@@ -3,7 +3,6 @@ include(ExternalProject)
 ExternalProject_Add(
     qpoases_project
 
-    CONFIGURE_COMMAND ""
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/qpOASES"
     BINARY_DIR "${PROJECT_SOURCE_DIR}/external/qpOASES/build"
     CONFIGURE_COMMAND cmake -D CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} ..

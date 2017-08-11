@@ -18,11 +18,22 @@
 #
 
 cmake_minimum_required(VERSION 3.2)
+
+#file(TO_CMAKE_PATH "C:\\Program Files\\dSPACE RCPHIL 2016-B" DSPACE_TOOLS)
+file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
+find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
+#set(CMAKE_MAKE_PROGRAM "${DSPACE_TOOLS}/Exe/DSMAKE.EXE" CACHE INTERNAL "Make utility")
+
 project(acados LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+
+if(CMAKE_SYSTEM MATCHES "Windows")
+	set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
+endif()
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -34,13 +45,9 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 
 enable_testing(true)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Werror -fdiagnostics-show-option")
-elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -WX")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
 endif()
 
 # Set install directories
@@ -51,6 +58,11 @@ set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR}
     CACHE STRING "Install path prefix, prepended onto install directories." FORCE)
 set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/share")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
+
+# Rpath handling, see https://cmake.org/Wiki/CMake_RPATH_handling#What_is_RPATH_.3F
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 # Configure external libraries
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
@@ -64,7 +76,9 @@ add_subdirectory(examples)
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    add_subdirectory(swig)
+    if(SWIG_MATLAB OR SWIG_PYTHON)
+        add_subdirectory(swig)
+    endif()
 endif()
 
 # Generate test data and configure unit tests
@@ -72,5 +86,21 @@ if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
+# Installation
+install(DIRECTORY acados
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN "simplified" EXCLUDE)
+
+# Uninstallation
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+add_custom_target(uninstall
+    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
+
 # Cpplint
-include(lint)
+if(LINT)
+	include(lint)
+endif()

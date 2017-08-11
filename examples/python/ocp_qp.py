@@ -17,6 +17,9 @@ qp.ub[0] = x0
 
 # solve QP
 solver = ocp_qp_solver("condensing_qpoases", qp)
-result = solver.solve()
-assert(abs(-0.5 - result[0]) < 1e-8)
-print(result)
+# Unpack the solution
+x_trajectory, u_trajectory = solver.evaluate(x0)
+assert(abs(-0.5 - u_trajectory[0]) < 1e-8)
+# Or use the output struct
+output = solver.evaluate(x0)
+print(output.states)

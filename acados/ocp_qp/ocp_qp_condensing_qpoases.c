@@ -48,6 +48,9 @@
         #include "qpOASES_e/QProblemB.h"
         #include "qpOASES_e/QProblem.h"
     #endif
+#else
+    #include "qpOASES_e/QProblemB.h"
+    #include "qpOASES_e/QProblem.h"
 #endif
 
 #include "acados/ocp_qp/condensing.h"
@@ -312,7 +315,7 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     workspace++;
     workspace = 0;
     mem_ = 0;
-    mem_++;
+    (void) mem_;
 
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
     convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);
@@ -393,12 +396,12 @@ void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *m
     // TODO(dimitris): replace dummy commands once interface completed
     args->dummy = 42.0;
     if (qp_in->nx[0] > 0)
-        mem_++;
-    work++;
+        (void) mem_;
+    (void) work;
 }
 
 void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
     // TODO(dimitris): replace dummy commands once interface completed
-    mem_++;
-    work++;
+    (void) mem_;
+    (void) work;
 }

@@ -17,9 +17,13 @@
 #
 #
 
-include(external/blasfeo)
-include(external/hpmpc)
-add_subdirectory(hpipm)
+set(TARGET "GENERIC" CACHE STRING "Target architecture")
+set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+add_subdirectory(blasfeo)
+if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
+	include(external/hpmpc)
+	add_subdirectory(hpipm)
+endif()
 add_subdirectory(qpDUNES-dev)
 add_subdirectory(qpOASES)
 if (NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)

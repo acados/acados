@@ -1,42 +1,33 @@
 import acados.*
-import casadi.*
 
 N = 10;
-nx = 2;
-nu = 1;
-
+[nx, nu, ode_fun] = example_model();
 nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu));
-% Specify initial condition
-current_state = [0.1; 0.1];
-nlp.lb{1} = current_state;
-nlp.ub{1} = current_state;
-% Weighting matrix
+
+% ODE Model
+step = 0.1;
+nlp.set_model(ode_fun, step);
+
+% Cost function
 Q = diag([1.0, 1.0]);
 R = 1e-2;
-cost_matrices = {};
+cost_matrices = cell(N+1, 1);
 for i=1:N
     cost_matrices{i} = blkdiag(Q, R);
 end
 cost_matrices{N+1} = Q;
 nlp.ls_cost_matrix = cost_matrices;
 
-% The following ODE model comes from Chen1998
-x = SX.sym('x', nx);
-u = SX.sym('u', nu);
-mu = 0.5;
-rhs = vertcat(x(2) + u*(mu + (1.-mu)*x(1)), x(1) + u*(mu - 4.*(1.-mu)*x(2)));
-ode_fun = Function('ode_fun', {x, u}, {rhs});
-nlp.set_model(ode_fun);
+solver = ocp_nlp_solver('gauss-newton-sqp', nlp, struct('integrator_steps', 2));
 
-solver = ocp_nlp_solver('gauss-newton-sqp', nlp);
-
-STATES = current_state.';
-
-for i=1:11
-    optimal_states = solver.solve(current_state);
-    current_state = optimal_states{2};
-    STATES = [STATES; current_state.'];
+% Simulation
+num_iters = 50;
+STATES = zeros(nx, num_iters+1);
+STATES(:, 1) = [0.1; 0.1];
+for i=1:num_iters
+    output = solver.evaluate(STATES(:, i));
+    STATES(:, i+1) = output.states{2};
 end
 
-plot(STATES(:,1), STATES(:,2));
-
+plot(STATES(1, :), STATES(2, :));
+axis equal

@@ -60,7 +60,7 @@ void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **w
     // TODO(andrea): replace dummy commands once interface completed
     args->max_iter = args->max_iter;
     if (qp_in->nx[0] > 0)
-        mem_++;
+        (void) mem_;
     work++;
 }
 

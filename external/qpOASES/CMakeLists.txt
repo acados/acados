@@ -67,7 +67,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
     add_definitions(-D__SUPPRESSANYOUTPUT__)
     add_definitions(-D__NO_STATIC__)
 elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc -DWIN32")
+    set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -nologo -EHsc")
+    add_definitions(-DWIN32)
+    add_definitions(-D__SUPPRESSANYOUTPUT__)
+    add_definitions(-D__NO_STATIC__)
 endif()
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D__DEBUG__")
@@ -80,11 +83,15 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D__DEBUG__")
 file(GLOB SRC src/*.c)
 
 # library
-add_library(qpOASES_e STATIC ${SRC})
+add_library(qpOASES_e ${SRC})
 target_include_directories(qpOASES_e PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-target_link_libraries(qpOASES_e m)
+
+if(CMAKE_C_COMPILER_ID MATCHES "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    target_link_libraries(qpOASES_e m)
+endif()
+
 install(TARGETS qpOASES_e EXPORT qpOASES_eConfig
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
