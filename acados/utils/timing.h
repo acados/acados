@@ -22,7 +22,7 @@
 
 #include "acados/utils/types.h"
 
-#if !(defined _DSPACE)
+#if !(defined __DSPACE__)
 #if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
 
 /* Use Windows QueryPerformanceCounter for timing. */

@@ -19,7 +19,7 @@
 
 #include "acados/utils/timing.h"
 
-#if !(defined _DSPACE)
+#if !(defined __DSPACE__)
 #if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
 
 void acados_tic(acados_timer* t) {

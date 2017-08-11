@@ -53,21 +53,23 @@ endif()
 target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
 
 # TODO: The following definition should go ASAP!
-target_compile_definitions(acados PRIVATE EXT_DEP)
+if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
+	set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
+endif()
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()
 
-find_package(OpenBLAS REQUIRED)
-add_library(openblas UNKNOWN IMPORTED)
-set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
-
-find_package(FortranLibs REQUIRED)
-add_library(gfortran UNKNOWN IMPORTED)
-set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
-
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+	find_package(OpenBLAS REQUIRED)
+	add_library(openblas UNKNOWN IMPORTED)
+	set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
+
+	find_package(FortranLibs REQUIRED)
+	add_library(gfortran UNKNOWN IMPORTED)
+	set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados
         PUBLIC

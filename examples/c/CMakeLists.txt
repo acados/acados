@@ -17,7 +17,6 @@
 #
 #
 
-add_definitions(-DEXT_DEP)
 configure_file(chain_model/chain_model.h.in chain_model/chain_model.h @ONLY)
 
 # Define sources for models used in the examples

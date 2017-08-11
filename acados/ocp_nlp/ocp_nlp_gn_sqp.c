@@ -134,16 +134,20 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         w[w_idx+j] = gn_sqp_mem->common->x[N][j];
     }
 
+#ifdef MEASURE_TIMINGS
     acados_timer timer;
     real_t timings = 0;
     real_t timings_sim = 0;
     real_t timings_la = 0;
     real_t timings_ad = 0;
+#endif
 
     real_t feas, stepX, stepU;
     int_t status;
 
+#ifdef MEASURE_TIMINGS
     acados_tic(&timer);
+#endif
 
     for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
@@ -181,9 +185,12 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             // printf("B[%d]\n",i);
             // d_print_mat(nx[i], nu[i], qp_B[i], nx[i]);
 
+#ifdef MEASURE_TIMINGS
             timings_sim += sim[i].out->info->CPUtime;
             timings_la += sim[i].out->info->LAtime;
             timings_ad += sim[i].out->info->ADtime;
+#endif
+
             w_idx += nx[i]+nu[i];
         }
         w_idx = 0;
@@ -276,17 +283,18 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                         "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
     }
 
-    timings += acados_toc(&timer);
 #ifdef MEASURE_TIMINGS
+    timings += acados_toc(&timer);
     printf("\nAverage of %.3f ms in the integrator,\n",
             1e3*timings_sim/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in CasADi and\n",
             1e3*timings_ad/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in BLASFEO.\n",
             1e3*timings_la/(gn_sqp_args->common->maxIter));
-#endif
     printf("--Total of %.3f ms per SQP iteration.--\n",
             1e3*timings/(gn_sqp_args->common->maxIter));
+#endif
+
     // Store trajectories:
     w_idx = 0;
     for (int_t i = 0; i < N; i++) {

@@ -18,6 +18,12 @@
 #
 
 cmake_minimum_required(VERSION 3.2)
+
+if(CMAKE_MAKE_PROGRAM)
+	file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
+	find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
+endif()
+
 project(acados LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -58,15 +64,17 @@ set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
-# Configure external libraries
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
-add_subdirectory(${EXTERNAL_SRC_DIR})
-
 # Configure acados
 add_subdirectory(acados)
 
+# Configure external libraries
+add_subdirectory(${EXTERNAL_SRC_DIR})
+
 # Add examples
-add_subdirectory(examples)
+if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+	add_subdirectory(examples)
+endif()
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
@@ -95,6 +103,6 @@ add_custom_target(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint
-if(NOT ${CMAKE_SYSTEM} MATCHES "Windows")
+if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
 	include(lint)
 endif()
