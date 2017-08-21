@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 /* Ignore compiler warnings from qpOASES */
@@ -47,6 +48,9 @@
         #include "qpOASES_e/QProblemB.h"
         #include "qpOASES_e/QProblem.h"
     #endif
+#else
+    #include "qpOASES_e/QProblemB.h"
+    #include "qpOASES_e/QProblem.h"
 #endif
 
 #include "acados/ocp_qp/condensing.h"
@@ -61,29 +65,29 @@ condensing_in in;
 condensing_out out;
 condensing_workspace work;
 
-#ifdef DEBUG
-static void print_ocp_qp(ocp_qp_in *in) {
-    int_t N = in->N;
-    for (int_t i = 0; i < N; i++) {
-        print_int_array("nx.txt", in->nx, N+1);
-        print_int_array("nu.txt", in->nu, N);
-        print_int_array("nb.txt", in->nb, N+1);
-        print_int_array("nc.txt", in->nc, N+1);
-    }
-}
+// #ifdef DEBUG
+// static void print_ocp_qp(ocp_qp_in *in) {
+//     int_t N = in->N;
+//     for (int_t i = 0; i < N; i++) {
+//         print_int_array("nx.txt", in->nx, N+1);
+//         print_int_array("nu.txt", in->nu, N);
+//         print_int_array("nb.txt", in->nb, N+1);
+//         print_int_array("nc.txt", in->nc, N+1);
+//     }
+// }
 
-static void print_condensed_QP(const int_t ncv, const int_t nc,
-    condensing_out *out) {
+// static void print_condensed_QP(const int_t ncv, const int_t nc,
+//     condensing_out *out) {
 
-    print_matrix("hessian.txt", out->H, ncv, ncv);
-    print_array("gradient.txt", out->h, ncv);
-    print_matrix("A.txt", out->A, nc, ncv);
-    print_array("lbA.txt", out->lbA, nc);
-    print_array("ubA.txt", out->ubA, nc);
-    print_array("lb.txt", out->lb, ncv);
-    print_array("ub.txt", out->ub, ncv);
-}
-#endif
+//     print_matrix("hessian.txt", out->H, ncv, ncv);
+//     print_array("gradient.txt", out->h, ncv);
+//     print_matrix("A.txt", out->A, nc, ncv);
+//     print_array("lbA.txt", out->lbA, nc);
+//     print_array("ubA.txt", out->ubA, nc);
+//     print_array("lb.txt", out->lb, ncv);
+//     print_array("ub.txt", out->ub, ncv);
+// }
+// #endif
 
 static int_t get_num_condensed_vars(ocp_qp_in *in) {
     int_t num_condensed_vars = 0;
@@ -172,7 +176,7 @@ static void fill_in_condensing_structs(ocp_qp_in *qp_in) {
 }
 
 static int_t solve_condensed_QPB(const int_t ncv, QProblemB *QP,
-    real_t* primal_solution, real_t* dual_solution) {
+    real_t* primal_solution_, real_t* dual_solution_) {
 
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
@@ -183,14 +187,14 @@ static int_t solve_condensed_QPB(const int_t ncv, QProblemB *QP,
 
     int_t return_flag = QProblemB_initW(QP, out.H, out.h, out.lb,
             out.ub, &nwsr, &cpu_time, NULL,
-            dual_solution, NULL, NULL);
-    QProblemB_getPrimalSolution(QP, primal_solution);
-    QProblemB_getDualSolution(QP, dual_solution);
+            dual_solution_, NULL, NULL);
+    QProblemB_getPrimalSolution(QP, primal_solution_);
+    QProblemB_getDualSolution(QP, dual_solution_);
     return return_flag;
 }
 
 static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
-    real_t* primal_solution, real_t* dual_solution) {
+    real_t* primal_solution_, real_t* dual_solution_) {
 
     int_t nwsr = 1000;
     real_t cpu_time = 100.0;
@@ -201,9 +205,9 @@ static int_t solve_condensed_QP(const int_t ncv, const int_t ncon, QProblem *QP,
 
     int_t return_flag = QProblem_initW(QP, out.H, out.h, A_row_major, out.lb,
             out.ub, out.lbA, out.ubA, &nwsr, &cpu_time, NULL,
-            dual_solution, NULL, NULL, NULL);
-    QProblem_getPrimalSolution(QP, primal_solution);
-    QProblem_getDualSolution(QP, dual_solution);
+            dual_solution_, NULL, NULL, NULL);
+    QProblem_getPrimalSolution(QP, primal_solution_);
+    QProblem_getDualSolution(QP, dual_solution_);
     return return_flag;
 }
 
@@ -301,9 +305,9 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args*) args_;
     double *workspace = (double*) workspace_;
     fill_in_condensing_structs(qp_in);
-    #ifdef DEBUG
-    print_ocp_qp(qp_in);
-    #endif
+    // #ifdef DEBUG
+    // print_ocp_qp(qp_in);
+    // #endif
     condensing_N2_fixed_initial_state(&in, &out, &work);
 
     // Process arguments
@@ -311,14 +315,14 @@ int_t ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     workspace++;
     workspace = 0;
     mem_ = 0;
-    mem_++;
+    (void) mem_;
 
     d_zeros(&A_row_major, work.nconstraints, work.nconvars);
     convert_to_row_major(out.A, A_row_major, work.nconstraints, work.nconvars);
 
-    #ifdef DEBUG
-    print_condensed_QP(work.nconvars, work.nconstraints, &out);
-    #endif
+    // #ifdef DEBUG
+    // print_condensed_QP(work.nconvars, work.nconstraints, &out);
+    // #endif
 
     int_t return_flag;
     if (work.nconstraints) {
@@ -392,12 +396,12 @@ void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void *m
     // TODO(dimitris): replace dummy commands once interface completed
     args->dummy = 42.0;
     if (qp_in->nx[0] > 0)
-        mem_++;
-    work++;
+        (void) mem_;
+    (void) work;
 }
 
 void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
     // TODO(dimitris): replace dummy commands once interface completed
-    mem_++;
-    work++;
+    (void) mem_;
+    (void) work;
 }

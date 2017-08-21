@@ -331,7 +331,7 @@ int main() {
     qp_out.lam = plam;
     qp_out.t = pt;
 
-    acado_timer timer;
+    acados_timer timer;
     real_t total_time = 0;
 
     // Define residuals
@@ -388,7 +388,7 @@ int main() {
     double mu_tol = 1e-6;
 
     for ( int_t i = 0; i < NX; i++ ) w[0][i] = x0[i];
-    acado_tic(&timer);
+    acados_tic(&timer);
     while ( ip_iter < max_ip_iters &&  (!sol_found) ) {
         // Pass state and control to integrator
         for ( int_t j = 0; j < NX; j++ ) sim_in.x[j] = w[0][j];
@@ -753,7 +753,7 @@ int main() {
     }
 
     #endif  // DEBUG
-    total_time = acado_toc(&timer);
+    total_time = acados_toc(&timer);
     printf("\n\nAverage of %.3f ms per iteration.\n", 1e3*total_time/timing_iters);
     // free(workspace);
     return 0;

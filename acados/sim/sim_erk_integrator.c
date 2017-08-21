@@ -38,7 +38,7 @@ static void sim_erk_cast_workspace(sim_erk_workspace *work,
      if (!in->sens_forw) {
          NF = 0;
      }
-     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
+     int_t nhess = (int_t) (NF+1)*(real_t)NF/2.0;
 
      char *ptr = (char *)work;
      ptr += sizeof(sim_erk_workspace);
@@ -90,7 +90,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
     }
     int_t nhess = (int_t)(NF+1)*(real_t)NF/2.0;
 
-    mem = 0; mem += 0;
+    mem = 0; (void) mem;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
@@ -107,9 +107,9 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
     real_t *rhs_adj_in = work->rhs_adj_in;
 
 #ifdef MEASURE_TIMINGS
-    acado_timer timer, timer_ad;
+    acados_timer timer, timer_ad;
     real_t timing_ad = 0.0;
-    acado_tic(&timer);
+    acados_tic(&timer);
 #endif
     for (i = 0; i < nx; i++) forw_traj[i] = in->x[i];
     if (in->sens_forw) {
@@ -140,11 +140,11 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
                 }
             }
 #ifdef MEASURE_TIMINGS
-            acado_tic(&timer_ad);
+            acados_tic(&timer_ad);
 #endif
             in->VDE_forw(rhs_forw_in, &(K_traj[s*nx*(1+NF)]), in->vde);  // k evaluation
 #ifdef MEASURE_TIMINGS
-            timing_ad += acado_toc(&timer_ad);
+            timing_ad += acados_toc(&timer_ad);
 #endif
         }
         for (s = 0; s < num_stages; s++) {
@@ -199,11 +199,11 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
                     }
                 }
 #ifdef MEASURE_TIMINGS
-                acado_tic(&timer_ad);
+                acados_tic(&timer_ad);
 #endif
                 in->VDE_adj(rhs_adj_in, &(adj_traj[s*nAdj]));  // adjoint VDE evaluation
 #ifdef MEASURE_TIMINGS
-                timing_ad += acado_toc(&timer_ad);
+                timing_ad += acados_toc(&timer_ad);
 #endif
             }
             for (s = 0; s < num_stages; s++) {
@@ -218,7 +218,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
         }
     }
 #ifdef MEASURE_TIMINGS
-    out->info->CPUtime = acado_toc(&timer);
+    out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
 #endif

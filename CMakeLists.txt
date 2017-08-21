@@ -18,71 +18,91 @@
 #
 
 cmake_minimum_required(VERSION 3.2)
+
+if(CMAKE_MAKE_PROGRAM)
+	file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
+	find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
+endif()
+
 project(acados LANGUAGES C CXX)
 
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
-set(CMAKE_SKIP_RPATH TRUE) # Seems necessary for Mac OSX
-set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra -Werror -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -fPIC")
+if(CMAKE_SYSTEM MATCHES "Windows")
+	set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
+	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
+endif()
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
-    message("\n-- No build type chosen. Valid build types are:"
-        "\n   Release (default), Debug, Test, NoExternalLibs")
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Release
+        CACHE STRING "No build type chosen. Valid build types are: \
+        Release (default), None, Debug, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
+endif()
+message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
+
+enable_testing(true)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
 endif()
 
-message("\n\n --- Configuring acados with build type: ${CMAKE_BUILD_TYPE} ---\n\n")
-
-if(CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -funroll-loops -fdiagnostics-show-option")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-    add_definitions(-DDEBUG)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wno-unused-function -Wno-unused-parameter")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Test)
-    enable_testing(true)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-endif()
-
-# Set install and executable output directories
+# Set install directories
 if(NOT ACADOS_INSTALL_DIR)
     set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
 endif()
-set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR})
-set(LIBRARY_OUTPUT_PATH "${CMAKE_INSTALL_PREFIX}/lib")
-set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
-message(STATUS "acados will be installed in ${CMAKE_INSTALL_PREFIX}")
+set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR}
+    CACHE STRING "Install path prefix, prepended onto install directories." FORCE)
+set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/share")
+message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 
-# Configure external libraries
+# Rpath handling, see https://cmake.org/Wiki/CMake_RPATH_handling#What_is_RPATH_.3F
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
-add_subdirectory(${EXTERNAL_SRC_DIR})
-
 # Configure acados
-set(ACADOS_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/acados)
 add_subdirectory(acados)
 
+# Configure external libraries
+add_subdirectory(${EXTERNAL_SRC_DIR})
+
 # Add examples
-set(EXAMPLES_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/examples)
-add_subdirectory(${EXAMPLES_SRC_DIR})
+if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+	add_subdirectory(examples)
+endif()
 
 # Configure SWIG interface
 if(NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    add_subdirectory(swig)
+    if(SWIG_MATLAB OR SWIG_PYTHON)
+        add_subdirectory(swig)
+    endif()
 endif()
 
 # Generate test data and configure unit tests
-if(CMAKE_BUILD_TYPE MATCHES Test)
+if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
+# Installation
+install(DIRECTORY acados
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN "simplified" EXCLUDE)
+
+# Uninstallation
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
+    IMMEDIATE @ONLY)
+add_custom_target(uninstall
+    "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
+
 # Cpplint
-include(lint)
+if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
+	include(lint)
+endif()

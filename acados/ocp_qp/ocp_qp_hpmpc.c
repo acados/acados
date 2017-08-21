@@ -60,7 +60,7 @@ void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **w
     // TODO(andrea): replace dummy commands once interface completed
     args->max_iter = args->max_iter;
     if (qp_in->nx[0] > 0)
-        mem_++;
+        (void) mem_;
     work++;
 }
 
@@ -642,8 +642,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // extract chol factor of [P p; p' *]
     // TODO(Andrea): have m and n !!!!!
-    dtrcp_l_libstr(nx[M], 1.0, &hsL[M], nu[M], nu[M], &sLxM, 0, 0);
-    dgecp_libstr(1, nx[M], 1.0, &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
+    dtrcp_l_libstr(nx[M], &hsL[M], nu[M], nu[M], &sLxM, 0, 0);
+    dgecp_libstr(1, nx[M], &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
 
     // d_print_strmat(nx[M]+1, nx[M], &sLxM, 0, 0);
 

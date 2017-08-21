@@ -15,3 +15,6 @@
 	url = https://github.com/jaeandersson/swig
 	branch = matlab
 	ignore = dirty
+[submodule "hpipm"]
+	path = external/hpipm
+	url = https://github.com/giaf/hpipm.git

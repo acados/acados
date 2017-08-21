@@ -42,7 +42,7 @@ static const int CASADI_PREFIX(s2)[] = {54, 54, 0, 54, 108, 162, 216, 270, 324, 
 #define s2 CASADI_PREFIX(s2)
 /* jacFun */
 int jac_chain_nm10(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w) {
-    mem = 0; mem += 0; w = 0; w += 0; iw = 0; iw += 0;
+    mem = 0; (void) mem; w = 0; w += 0; iw = 0; iw += 0;
   real_t a0=arg[0] ? arg[0][3] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][4] : 0;

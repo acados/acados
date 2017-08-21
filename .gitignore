@@ -8,6 +8,7 @@
 *.so
 *.out
 *.a
+*.mex*
 
 # Packages #
 ############
@@ -20,6 +21,7 @@
 *.jar
 *.rar
 *.tar
+*.tar.gz*
 *.zip
 
 # Logs and databases #
@@ -76,3 +78,7 @@ octave-workspace
 notes.txt
 *.dSYM/
 cmakelint
+*.srctrlbm
+*.srctrldb
+*.srctrlprj
+.vs

@@ -27,8 +27,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-// #include <fenv.h>
 
 // flush denormals to zero
 #if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
@@ -592,7 +590,7 @@ int main() {
     v_zeros_align(&workspace, work_space_size);
     ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
 
-    acado_timer timer;
+    acados_timer timer;
     real_t timings = 0;
     real_t sum_timings = 0;
     real_t min_timings = 1000000;
@@ -624,7 +622,7 @@ int main() {
 
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
       for (int_t iter = 0; iter < NREP; iter++) {
-        acado_tic(&timer);
+        acados_tic(&timer);
         // initialize nlp dual variables
         for (int_t i = M; i < N; i++) {
           for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
@@ -687,7 +685,7 @@ int main() {
         // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
         // shift_states(w, x_end, N);
         // shift_controls(w, u_end, N);
-        timings = acado_toc(&timer);
+        timings = acados_toc(&timer);
         sum_timings+=timings;
         if (timings < min_timings) min_timings = timings;
       }

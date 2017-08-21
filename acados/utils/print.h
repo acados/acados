@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 
+#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
@@ -38,6 +39,8 @@ void print_int_array(char *file_name, const int_t *array, int_t size);
 
 void read_matrix(const char *file_name, real_t* array, const int_t nrows,
         const int_t ncols);
+
+void print_ocp_qp(ocp_qp_in *qp);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -214,12 +214,13 @@ qp_out.lam = plam;
 
 printf("Free heap size before initializing qpoases: %d\n",esp_get_free_heap_size()); // for debug
 
-/* Begin acados code */
-acado_timer timer;
-real_t total_time = 0;
-acado_tic(&timer);
+acados_timer timer;
+// real_t timings = 0;  // move creator out of the loop
+timings = 0;
+
 for (int_t iter = 0; iter < max_iters; iter++) {
     // printf("\n------ ITERATION %d ------\n", iter);
+    acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
         for (int_t i = 0; i < N; i++) {
             // Pass state and control to integrator
@@ -260,6 +261,7 @@ for (int_t iter = 0; iter < max_iters; iter++) {
     for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
     shift_states(w, x_end, N);
     shift_controls(w, u_end, N);
+    timings += acados_toc(&timer);
 }
 #ifdef DEBUG
 print_states_controls(&w[0], N);

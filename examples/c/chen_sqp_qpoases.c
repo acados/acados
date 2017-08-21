@@ -190,7 +190,7 @@ int main() {
 
     initialise_qpoases(&qp_in);
 
-    acado_timer timer;
+    acados_timer timer;
     real_t total_time = 0;
 
     // Define residuals
@@ -211,7 +211,7 @@ int main() {
     d_zeros(&res_ineq[ii], 2*nb[ii], 1);
     d_zeros(&res_compl[ii], 2*nb[ii], 1);
 
-    acado_tic(&timer);
+    acados_tic(&timer);
     for ( int_t iter = 0; iter < timing_iters; iter++ ) {
         for ( int_t i = 0; i < NX; i++ ) w[0][i] = x0[i];
 
@@ -299,7 +299,7 @@ int main() {
     #ifdef DEBUG
     print_states_controls(&w[0], N);
     #endif  // DEBUG
-    total_time = acado_toc(&timer);
+    total_time = acados_toc(&timer);
     printf("Average of %.3f ms per iteration.\n", 1e3*total_time/timing_iters);
 
     free(sim_in.x);

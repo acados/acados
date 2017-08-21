@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "catch/include/catch.hpp"
 

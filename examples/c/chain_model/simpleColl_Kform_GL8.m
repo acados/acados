@@ -1,5 +1,5 @@
 function [G] = simpleColl_Kform_GL8(dae,tau_root,h)
-  addpath('../../external/casadi-octave-v3.1.1')
+  addpath('../../external/casadi-octave-v3.2.2')
   import casadi.*
   daefun = Function('fun',dae,char('x','p'),char('ode','quad'));
   % Degree of interpolating polynomial

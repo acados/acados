@@ -134,16 +134,20 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         w[w_idx+j] = gn_sqp_mem->common->x[N][j];
     }
 
-    acado_timer timer;
+#ifdef MEASURE_TIMINGS
+    acados_timer timer;
     real_t timings = 0;
     real_t timings_sim = 0;
     real_t timings_la = 0;
     real_t timings_ad = 0;
+#endif
 
     real_t feas, stepX, stepU;
     int_t status;
 
-    acado_tic(&timer);
+#ifdef MEASURE_TIMINGS
+    acados_tic(&timer);
+#endif
 
     for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
@@ -175,15 +179,18 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                     qp_B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];  // COLUMN MAJOR
 
             // printf("w\n");
-            // d_print_mat(1, nx[i], &w[w_idx], 1);
+            // print_matrix("stdout", &w[w_idx], nx[i]+nu[i], 1);
             // printf("A[%d]\n",i);
             // d_print_mat(nx[i], nx[i], qp_A[i], nx[i]);
             // printf("B[%d]\n",i);
             // d_print_mat(nx[i], nu[i], qp_B[i], nx[i]);
 
+#ifdef MEASURE_TIMINGS
             timings_sim += sim[i].out->info->CPUtime;
             timings_la += sim[i].out->info->LAtime;
             timings_ad += sim[i].out->info->ADtime;
+#endif
+
             w_idx += nx[i]+nu[i];
         }
         w_idx = 0;
@@ -233,15 +240,15 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 
     //    gn_sqp_mem->qp_solver->initialize(gn_sqp_mem->qp_solver->qp_in,
     //     gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem, gn_sqp_mem->qp_solver->work);
+#ifdef DEBUG
+        print_ocp_qp(gn_sqp_mem->qp_solver->qp_in);
+#endif
         status = gn_sqp_mem->qp_solver->fun(gn_sqp_mem->qp_solver->qp_in,
             gn_sqp_mem->qp_solver->qp_out, gn_sqp_mem->qp_solver->args, gn_sqp_mem->qp_solver->mem,
             gn_sqp_mem->qp_solver->work);
         if (status) {
             printf("QP solver returned error status %d\n", status);
             return -1;
-        }
-        for (int_t i = 0; i < nu[0]; i++) {
-            printf("u[i]: %f\n", gn_sqp_mem->qp_solver->qp_out->u[0][i]);
         }
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
@@ -259,36 +266,35 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                     stepU = fabs(gn_sqp_mem->qp_solver->qp_out->u[i][j]);
             }
             w_idx += nx[i]+nu[i];
-//            print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[i]: ",
-//              gn_sqp_mem->qp_solver->qp_out->x[i], 1, nx[i]);
-//            print_matrix_name((char*)"stdout", (char*)"solver->qp_out->u[i]: ",
-//              gn_sqp_mem->qp_solver->qp_out->u[i], 1, nu[i]);
+           print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[i]: ",
+             gn_sqp_mem->qp_solver->qp_out->x[i], 1, nx[i]);
+           print_matrix_name((char*)"stdout", (char*)"solver->qp_out->u[i]: ",
+             gn_sqp_mem->qp_solver->qp_out->u[i], 1, nu[i]);
         }
         for (int_t j = 0; j < nx[N]; j++) {
             w[w_idx+j] += gn_sqp_mem->qp_solver->qp_out->x[N][j];
             if (fabs(gn_sqp_mem->qp_solver->qp_out->x[N][j]) > stepX)
                 stepX = fabs(gn_sqp_mem->qp_solver->qp_out->x[N][j]);
         }
-//        print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[N]: ",
-    //        gn_sqp_mem->qp_solver->qp_out->x[N], 1, nx[N]);
-//        w_idx += nx[N];
-//        print_matrix_name((char*)"stdout", (char*)"w_cur: ", w, 1, w_idx);
+       print_matrix_name((char*)"stdout", (char*)"solver->qp_out->x[N]: ",
+           gn_sqp_mem->qp_solver->qp_out->x[N], 1, nx[N]);
 
         fprintf(stdout, "--- ITERATION %d, Infeasibility: %+.3e , step X: %+.3e, "
                         "step U: %+.3e \n", sqp_iter, feas, stepX, stepU);
     }
 
-    timings += acado_toc(&timer);
 #ifdef MEASURE_TIMINGS
+    timings += acados_toc(&timer);
     printf("\nAverage of %.3f ms in the integrator,\n",
             1e3*timings_sim/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in CasADi and\n",
             1e3*timings_ad/(gn_sqp_args->common->maxIter));
     printf("  of which %.3f ms spent in BLASFEO.\n",
             1e3*timings_la/(gn_sqp_args->common->maxIter));
-#endif
     printf("--Total of %.3f ms per SQP iteration.--\n",
             1e3*timings/(gn_sqp_args->common->maxIter));
+#endif
+
     // Store trajectories:
     w_idx = 0;
     for (int_t i = 0; i < N; i++) {

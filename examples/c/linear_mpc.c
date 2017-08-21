@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
@@ -40,7 +41,7 @@
 int main() {
     int_t nMPC = 10;
 
-    acado_timer timer;
+    acados_timer timer;
     real_t *cputimes;
     d_zeros(&cputimes, 1, nMPC);
 
@@ -201,9 +202,9 @@ int main() {
         }
 
         // solve QP
-        acado_tic(&timer);
+        acados_tic(&timer);
         ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
-        cputimes[kk] = 1000*acado_toc(&timer);
+        cputimes[kk] = 1000*acados_toc(&timer);
 
         // simulate system
         for (int ii = 0; ii < NX; ii++) {

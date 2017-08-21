@@ -4,8 +4,14 @@ clear
 % Check if package 'optim' is installed, used for quadprog
 list = pkg('list', 'optim');
 if(isempty(list))
-    pkg install -forge struct
-    pkg install -forge optim
+    try
+        pkg install -forge struct -verbose
+        pkg install -forge optim  -verbose
+    catch
+        % Try install without downloading
+        pkg install /home/travis/octave_download/struct-1.0.14.tar.gz
+        pkg install /home/travis/octave_download/optim-1.5.2.tar.gz
+    end
 end
 pkg load optim
 
