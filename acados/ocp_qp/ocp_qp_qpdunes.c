@@ -28,7 +28,7 @@
 
 #include "acados/utils/timing.h"
 
-// TODO(dimitris): detect cases where both qpOASES and clipping are detected (qpDUNES crashes)
+// TODO(dimitris): error on cases where both qpOASES and clipping are detected (qpDUNES crashes)
 
 static int_t max_of_two(int_t a, int_t b) {
      int_t ans = a;
@@ -49,6 +49,7 @@ static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
 }
 
 
+// TODO(dimitris): update code and remove this routine
 static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
     ocp_qp_qpdunes_memory *mem) {
 

@@ -26,17 +26,13 @@
 
 #include "acados/utils/types.h"
 #include "acados/utils/timing.h"
-#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-
-// #include "test/test_utils/read_ocp_qp_in.h"
 
 #define NN 10
 #define NX 2
 #define NU 1
-
-// TODO(dimitris): add exec. in cmake
 
 int main() {
     int_t nMPC = 10;
@@ -52,7 +48,7 @@ int main() {
     d_zeros(&xMPC, NX, nMPC+1);
 
     // LTI dynamics
-    real_t A[NX*NX] = {0.66, -1.2, 0.6, 0.6};  // NOTE: column major format
+    real_t A[NX*NX] = {0.66, -1.2, 0.6, 0.6};  // NOTE(dimitris): column major format
     real_t B[NX*NU] = {1, 0.5};
     real_t b[NX] = {0, 0};
 
@@ -72,7 +68,7 @@ int main() {
     for (int ii = 0; ii < NX; ii++) Q[ii*NX+ii] = 1.0;
     for (int ii = 0; ii < NU; ii++) R[ii*NU+ii] = 1.0;
 
-    // NOTE: trick qpDUNES to use qpOASES for subproblems
+    // NOTE(dimitris): uncomment to use qpOASES for stage QPs instead of clipping
     // Q[1] = 0.0000001;
     // Q[NX] = 0.000001;
     // S[0] = 0.0000001;
@@ -103,7 +99,7 @@ int main() {
     for (int ii = 0; ii < NU; ii++) {
         zmin[NX+ii] = umin[ii];
         zmax[NX+ii] = umax[ii];
-        z0min[NX+ii] = umin[ii];  // NOTE: First NX elements are updated in MPC loop
+        z0min[NX+ii] = umin[ii];  // NOTE(dimitris): First NX elements are updated in MPC loop
         z0max[NX+ii] = umax[ii];
         idxb[NX+ii] = NX+ii;
     }
@@ -155,7 +151,7 @@ int main() {
     hq[NN] = q;
     hlb[NN] = xmin;
     hub[NN] = xmax;
-    hidxb[NN] = idxb;  // NOTE: the first nb[N]=NX will be read anyway
+    hidxb[NN] = idxb;  // NOTE(dimitris): the first nb[N]=NX will be read anyway
 
     ocp_qp_in qp_in;
     qp_in.N  = NN;
@@ -188,8 +184,6 @@ int main() {
     void *work = (void*)malloc(work_space_size);
 
     ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
-
-    // print_ocp_qp_in(qp_in);
 
     // store initial condition
     for (int ii = 0; ii < NX; ii++) xMPC[ii] = x0[ii];
