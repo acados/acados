@@ -39,7 +39,7 @@
 
 #define NREP 100
 
-//#define ELIMINATE_X0
+// #define ELIMINATE_X0  // NOTE(dimitris): option NOT supported in qpDUNES
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -130,23 +130,6 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
 }
 
 int main() {
-    printf("\n");
-    printf("\n");
-    printf("\n");
-    printf(
-        " HPMPC -- Library for High-Performance implementation of solvers for "
-        "MPC.\n");
-    printf(
-        " Copyright (C) 2014-2015 by Technical University of Denmark. All "
-        "rights reserved.\n");
-    printf("\n");
-    printf(" HPMPC is distributed in the hope that it will be useful,\n");
-    printf(" but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
-    printf(" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
-    printf(" See the GNU Lesser General Public License for more details.\n");
-    printf("\n");
-    printf("\n");
-    printf("\n");
 
 #if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
     defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
@@ -542,7 +525,7 @@ int main() {
     ocp_qp_qpdunes_create_arguments(&args, QPDUNES_LINEAR_MPC);
 
     /************************************************
-    * work space
+    * workspace
     ************************************************/
 
     ocp_qp_qpdunes_memory mem;
@@ -562,6 +545,9 @@ int main() {
 
 //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
+        // NOTE(dimitris): creating memory again to avoid warm start
+        ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
+
         // call the QP OCP solver
         ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
     }
@@ -644,4 +630,3 @@ int main() {
 
     return 0;
 }
-
