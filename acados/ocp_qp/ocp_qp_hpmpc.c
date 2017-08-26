@@ -372,14 +372,14 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     int acados_status = ACADOS_SUCCESS;
 
     // loop index
-    int ii, jj;
+    int ii;
 
     // extract input struct members
     int N = qp_in->N;
     int *nx = (int *) qp_in->nx;
     int *nu = (int *) qp_in->nu;
     int *nb = (int *) qp_in->nb;
-    int **hsidxb = (int **) qp_in->idxb;
+    int **hidxb = (int **) qp_in->idxb;
     int *ng = (int *) qp_in->nc;
     double **hA = (double **) qp_in->A;
     double **hB = (double **) qp_in->B;
@@ -636,7 +636,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       &hsQx[M], &hsqx[M]);
 
     // backward riccati factorization and solution at the end
-    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M], \
+    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hidxb[M], &ng[M], \
       0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], &hsDCt[M], &hsQx[M], \
       &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], work_ric);
 
@@ -664,7 +664,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
     // IPM at the beginning
     hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
-      warm_start, stat, M, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
+      warm_start, stat, M, nx, nu, nb, hidxb, ng, hsBAbt, hsRSQrq, hsDCt,
       hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);  // recover original stage M
 
     nu[M] = nuM;
@@ -673,7 +673,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     hsux[M].pa -= nuM;
 
     // forward riccati solution at the end
-    d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
+    d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hidxb[M], &ng[M],
       0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
       &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
       hsric_work_mat);
@@ -689,7 +689,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
       for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
     }
 
-    d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
+    d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hidxb[M],
       &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
       &hsdux[M], &hsDCt[M], &hsd[M]);
 
@@ -751,27 +751,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
      ptr_double += 5*k_max;
      for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
 
-     // memory for idxb
-     int *hidxb[N+1];
-//   size_t addr = (( (size_t) workspace_ ) + 3 ) / 4 * 4;  // align to 4-byte boundaries
-     int *ptr_int = (int *) ptr_double;
-     for (ii = 0; ii <= N; ii++) {
-         hidxb[ii] = ptr_int;
-         ptr_int += nb[ii];
-     }
-     void *ipm_workspace = (void *) ptr_int;
-
-     //  swap x and u in bounds (by updating their indeces)
-     for (ii = 0; ii <= N; ii++) {
-         jj = 0;
-         for (; jj < nb[ii]; jj++) {
-             if (hsidxb[ii][jj] < nx[ii]) {  // state
-                 hidxb[ii][jj] = hsidxb[ii][jj]+nu[ii];
-             } else {  // input
-                 hidxb[ii][jj] = hsidxb[ii][jj]-nx[ii];
-             }
-         }
-     }
+     void *ipm_workspace = (void *) ptr_double;
 
      hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0,
         mu_tol, N, nx, nu, nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS,
@@ -813,12 +793,8 @@ int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
     if (M < N) {  // XXX andrea partial tightening stuff
         ws_size = 0;
     } else {  // XXX giaf fortran interface
-        int ii;
         int_t max_ip_iter = args->max_iter;
         ws_size = 8 + 5*max_ip_iter*sizeof(double);
-        for (ii = 0; ii <= N; ii++) {
-            ws_size += nb[ii]*sizeof(int);
-        }
         ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, \
             nu, nb, hidxb, ng, N2);
     }

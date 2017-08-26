@@ -20,31 +20,30 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-// flush denormals to zero
-#if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
-    defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
-    defined(TARGET_AMD_SSE3)
-#include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
-#endif
+#include <sys/time.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
+// flush denormals to zero
+#if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
+    defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
+#include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
+#endif
+
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/utils/timing.h"
 #include "acados/utils/tools.h"
 #include "acados/utils/types.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
-#define MAXITER 10
+#define MAXITER 20
 #define TOL 1e-8
 #define MINSTEP 1e-8
-#define NN 15
 
+//#define ELIMINATE_X0
 
 /************************************************
 Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -153,9 +152,8 @@ int main() {
     printf("\n");
     printf("\n");
 
-#if defined(TARGET_X64_AVX2) || defined(TARGET_X64_AVX) ||  \
-    defined(TARGET_X64_SSE3) || defined(TARGET_X86_ATOM) || \
-    defined(TARGET_AMD_SSE3)
+#if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
+    defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
     _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);  // flush to zero subnormals !!!
                                                  // works only with one thread
                                                  // !!!
@@ -169,6 +167,7 @@ int main() {
                   // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
+    int N = 15;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
     int ng = 0;  // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
@@ -179,22 +178,30 @@ int main() {
     int nbx = nb - nu > 0 ? nb - nu : 0;
 
     // stage-wise variant size
-    int nxx[NN + 1];
+    int nxx[N + 1];
+#if defined(ELIMINATE_X0)
     nxx[0] = 0;
-    for (ii = 1; ii <= NN; ii++) nxx[ii] = nx;
+#else
+    nxx[0] = nx;
+#endif
+    for (ii = 1; ii <= N; ii++) nxx[ii] = nx;
 
-    int nuu[NN + 1];
-    for (ii = 0; ii < NN; ii++) nuu[ii] = nu;
-    nuu[NN] = 0;
+    int nuu[N + 1];
+    for (ii = 0; ii < N; ii++) nuu[ii] = nu;
+    nuu[N] = 0;
 
-    int nbb[NN + 1];
+    int nbb[N + 1];
+#if defined(ELIMINATE_X0)
     nbb[0] = nbu;
-    for (ii = 1; ii < NN; ii++) nbb[ii] = nb;
-    nbb[NN] = nbx;
+#else
+    nbb[0] = nb;
+#endif
+    for (ii = 1; ii < N; ii++) nbb[ii] = nb;
+    nbb[N] = nbx;
 
-    int ngg[NN + 1];
-    for (ii = 0; ii < NN; ii++) ngg[ii] = ng;
-    ngg[NN] = ngN;
+    int ngg[N + 1];
+    for (ii = 0; ii < N; ii++) ngg[ii] = ng;
+    ngg[N] = ngN;
 
     printf(
         " Test problem: mass-spring system with %d masses and %d controls.\n",
@@ -203,7 +210,7 @@ int main() {
     printf(
         " MPC problem size: %d states, %d inputs, %d horizon length, %d "
         "two-sided box constraints, %d two-sided general constraints.\n",
-        nx, nu, NN, nb, ng);
+        nx, nu, N, nb, ng);
     printf("\n");
     printf(
         " IP method parameters: predictor-corrector IP, double precision, %d "
@@ -247,6 +254,7 @@ int main() {
     //    d_print_mat(nx, 1, b, nx);
     //    d_print_mat(nx, 1, x0, nx);
 
+#if defined(ELIMINATE_X0)
     // compute b0 = b + A*x0
     double *b0;
     d_zeros(&b0, nx, 1);
@@ -258,10 +266,13 @@ int main() {
     // then A0 is a matrix of size 0x0
     double *A0;
     d_zeros(&A0, 0, 0);
+#endif
 
     /************************************************
     * box constraints
     ************************************************/
+
+	int jj_end;
 
     int *idxb0;
     int_zeros(&idxb0, nbb[0], 1);
@@ -269,11 +280,28 @@ int main() {
     d_zeros(&lb0, nbb[0], 1);
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
-    for (jj = 0; jj < nbu; jj++) {
-        lb0[jj] = -0.5;  //   umin
-        ub0[jj] = 0.5;   //   umax
-        idxb0[jj] = nxx[0]+jj;
-    }
+#if defined(ELIMINATE_X0)
+	for(jj=0; jj<nbb[0]; jj++)
+		{
+		lb0[jj] = - 0.5; // umin
+		ub0[jj] = + 0.5; // umin
+		idxb0[jj] = jj;
+		}
+#else
+	jj_end = nbu<nbb[0] ? nbu : nbb[0];
+	for(jj=0; jj<jj_end; jj++)
+		{
+		lb0[jj] = - 0.5; // umin
+		ub0[jj] = + 0.5; // umax
+		idxb0[jj] = jj;
+		}
+	for( ; jj<nbb[0]; jj++)
+		{
+		lb0[jj] = x0[jj-nbu]; // initial state
+		ub0[jj] = x0[jj-nbu]; // initial state
+		idxb0[jj] = jj;
+		}
+#endif
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
     //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
 
@@ -283,32 +311,43 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = 4.0;   //   xmax
-        idxb1[jj] = jj;
-    }
-    for (; jj < nb; jj++) {
-        lb1[jj] = -0.5;  //   umin
-        ub1[jj] = 0.5;   //   umax
-        idxb1[jj] = jj;
-    }
+	jj_end = nbu<nbb[1] ? nbu : nbb[1];
+	for(jj=0; jj<jj_end; jj++)
+		{
+		lb1[jj] = - 0.5; // umin
+		ub1[jj] = + 0.5; // umax
+		idxb1[jj] = jj;
+		}
+	for( ; jj<nbb[1]; jj++)
+		{
+		lb1[jj] = - 4.0; // xmin
+		ub1[jj] = + 4.0; // xmax
+		idxb1[jj] = jj;
+		}
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
     //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
 
     int *idxbN;
-    int_zeros(&idxbN, nbb[NN], 1);
+    int_zeros(&idxbN, nbb[N], 1);
     double *lbN;
-    d_zeros(&lbN, nbb[NN], 1);
+    d_zeros(&lbN, nbb[N], 1);
     double *ubN;
-    d_zeros(&ubN, nbb[NN], 1);
-    for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0;  //   umin
-        ubN[jj] = 4.0;   //   umax
-        idxbN[jj] = jj;
-    }
-    //    int_print_mat(nbb[NN], 1, idxbN, nbb[NN]);
-    //    d_print_mat(nbb[NN], 1, lbN, nbb[NN]);
+    d_zeros(&ubN, nbb[N], 1);
+	jj_end = nbu<nbb[N] ? nbu : nbb[N];
+	for(jj=0; jj<jj_end; jj++)
+		{
+		lbN[jj] = - 0.5; // umin
+		ubN[jj] = + 0.5; // umax
+		idxbN[jj] = jj;
+		}
+	for( ; jj<nbb[N]; jj++)
+		{
+		lbN[jj] = - 4.0; // xmin
+		ubN[jj] = + 4.0; // xmax
+		idxbN[jj] = jj;
+		}
+    //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
+    //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
 
     /************************************************
     * general constraints
@@ -355,6 +394,7 @@ int main() {
     d_zeros(&r, nu, 1);
     for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
 
+#if defined(ELIMINATE_X0)
     // Q0 and q0 are matrices of size 0
     double *Q0;
     d_zeros(&Q0, 0, 0);
@@ -370,35 +410,45 @@ int main() {
     // then S0 is a matrix of size nux0
     double *S0;
     d_zeros(&S0, nu, 0);
+#endif
 
     /************************************************
     * problems data
     ************************************************/
 
-    double *hA[NN];
-    double *hB[NN];
-    double *hb[NN];
-    double *hQ[NN + 1];
-    double *hS[NN];
-    double *hR[NN];
-    double *hq[NN + 1];
-    double *hr[NN];
-    double *hlb[NN + 1];
-    double *hub[NN + 1];
-    int *hidxb[NN + 1];
-    double *hC[NN + 1];
-    double *hD[NN];
-    double *hlg[NN + 1];
-    double *hug[NN + 1];
+    double *hA[N];
+    double *hB[N];
+    double *hb[N];
+    double *hQ[N + 1];
+    double *hS[N];
+    double *hR[N];
+    double *hq[N + 1];
+    double *hr[N];
+    double *hlb[N + 1];
+    double *hub[N + 1];
+    int *hidxb[N + 1];
+    double *hC[N + 1];
+    double *hD[N];
+    double *hlg[N + 1];
+    double *hug[N + 1];
 
+#if defined(ELIMINATE_X0)
     hA[0] = A0;
-    hB[0] = B;
     hb[0] = b0;
     hQ[0] = Q0;
     hS[0] = S0;
-    hR[0] = R;
     hq[0] = q0;
     hr[0] = r0;
+#else
+    hA[0] = A;
+    hb[0] = b;
+    hQ[0] = Q;
+    hS[0] = S;
+    hq[0] = q;
+    hr[0] = r;
+#endif
+    hB[0] = B;
+    hR[0] = R;
     hlb[0] = lb0;
     hub[0] = ub0;
     hidxb[0] = idxb0;
@@ -406,7 +456,7 @@ int main() {
     hD[0] = D;
     hlg[0] = lg;
     hug[0] = ug;
-    for (ii = 1; ii < NN; ii++) {
+    for (ii = 1; ii < N; ii++) {
         hA[ii] = A;
         hB[ii] = B;
         hb[ii] = b;
@@ -423,45 +473,45 @@ int main() {
         hlg[ii] = lg;
         hug[ii] = ug;
     }
-    hQ[NN] = Q;  // or maybe initialize to the solution of the DARE???
-    hq[NN] = q;  // or maybe initialize to the solution of the DARE???
-    hlb[NN] = lbN;
-    hub[NN] = ubN;
-    hidxb[NN] = idxbN;
-    hC[NN] = CN;
-    hlg[NN] = lgN;
-    hug[NN] = ugN;
+    hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
+    hq[N] = q;  // or maybe initialize to the solution of the DARE???
+    hlb[N] = lbN;
+    hub[N] = ubN;
+    hidxb[N] = idxbN;
+    hC[N] = CN;
+    hlg[N] = lgN;
+    hug[N] = ugN;
 
     /************************************************
     * solution
     ************************************************/
 
-    double *hx[NN + 1];
-    double *hu[NN];
-    double *hpi[NN];
-    double *hlam[NN+1];
-    double *ht[NN+1];
+    double *hx[N + 1];
+    double *hu[N];
+    double *hpi[N];
+    double *hlam[N+1];
+    double *ht[N+1];
 
-    for (ii = 0; ii < NN; ii++) {
+    for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
         d_zeros(&hpi[ii], nxx[ii+1], 1);
         d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
         d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
     }
-    d_zeros(&hx[NN], nxx[NN], 1);
-    d_zeros(&hlam[NN], 2*nbb[NN]+2*ngg[NN], 1);
-    d_zeros(&ht[NN], 2*nbb[NN]+2*ngg[NN], 1);
+    d_zeros(&hx[N], nxx[N], 1);
+    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
 
     /************************************************
     * XXX initial guess
     ************************************************/
 
-    double *hux_in[NN+1];
-    double *hlam_in[NN+1];
-    double *ht_in[NN+1];
+    double *hux_in[N+1];
+    double *hlam_in[N+1];
+    double *ht_in[N+1];
 
-    for (ii = 0; ii <= NN; ii++) {
+    for (ii = 0; ii <= N; ii++) {
         d_zeros(&hux_in[ii], nuu[ii]+nxx[ii], 1);
         d_zeros(&hlam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
         d_zeros(&ht_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
@@ -472,7 +522,7 @@ int main() {
     ************************************************/
 
     ocp_qp_in qp_in;
-    qp_in.N = NN;
+    qp_in.N = N;
     qp_in.nx = (const int *) nxx;
     qp_in.nu = (const int *) nuu;
     qp_in.nb = (const int *) nbb;
@@ -512,8 +562,8 @@ int main() {
     hpmpc_args.mu0 = 1.0;  // 0.0
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
-    hpmpc_args.N2 = NN;
-    hpmpc_args.M = NN;
+    hpmpc_args.N2 = N;
+    hpmpc_args.M = N;
     double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
     hpmpc_args.inf_norm_res = &inf_norm_res[0];
 
@@ -527,9 +577,9 @@ int main() {
     ************************************************/
 
 //  int work_space_size =
-//      ocp_qp_hpmpc_workspace_size_bytes(NN, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
+//      ocp_qp_hpmpc_workspace_size_bytes(N, nxx, nuu, nbb, ngg, hidxb, &hpmpc_args);
     int work_space_size = 0;
-//  for(int iii=0; iii<=NN; iii++) printf("\n%d\n", qp_in.nb[iii]);
+//  for(int iii=0; iii<=N; iii++) printf("\n%d\n", qp_in.nb[iii]);
     work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
 
@@ -544,8 +594,8 @@ int main() {
 
     int return_value;
 
-    acados_timer tv0;
-    acados_tic(&tv0);  // start
+    struct timeval tv0, tv1;
+    gettimeofday(&tv0, NULL);  // stop
 
 //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
@@ -554,7 +604,7 @@ int main() {
         return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
     }
 
-    double time = acados_toc(&tv0);  // stop
+    gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
@@ -566,10 +616,13 @@ int main() {
         printf("\nACADOS status: below minimum step size length\n");
 
     printf("\nu = \n");
-    for (ii = 0; ii < NN; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= NN; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+
+    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
+                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
@@ -599,14 +652,14 @@ int main() {
     * call the solver (partial condensing)
     ************************************************/
 
-    acados_tic(&tv0);  // start
+    gettimeofday(&tv0, NULL);  // stop
 
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
         return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace_part_cond);
     }
 
-    double time_part_cond = acados_toc(&tv0);  // stop
+    gettimeofday(&tv1, NULL);  // stop
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n", hpmpc_args.out_iter);
@@ -618,10 +671,13 @@ int main() {
         printf("\nACADOS status: below minimum step size length\n");
 
     printf("\nu = \n");
-    for (ii = 0; ii < NN; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= NN; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+
+    double time_part_cond = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
+                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", inf_norm_res[0], inf_norm_res[1], \
@@ -639,17 +695,19 @@ int main() {
     d_free(B);
     d_free(b);
     d_free(x0);
-    d_free(A0);
-    d_free(b0);
     d_free(Q);
     d_free(S);
     d_free(R);
     d_free(q);
     d_free(r);
+#if defined(ELIMINATE_X0)
+    d_free(A0);
+    d_free(b0);
     d_free(Q0);
     d_free(S0);
     d_free(q0);
     d_free(r0);
+#endif
     int_free(idxb0);
     d_free(lb0);
     d_free(ub0);
@@ -667,16 +725,16 @@ int main() {
     d_free(lgN);
     d_free(ugN);
 
-    for (ii = 0; ii < NN; ii++) {
+    for (ii = 0; ii < N; ii++) {
         d_free(hx[ii]);
         d_free(hu[ii]);
         d_free(hpi[ii]);
         d_free(hlam[ii]);
         d_free(ht[ii]);
     }
-    d_free(hx[NN]);
-    d_free(hlam[NN]);
-    d_free(ht[NN]);
+    d_free(hx[N]);
+    d_free(hlam[N]);
+    d_free(ht[N]);
 
     free(workspace);
 #if 0

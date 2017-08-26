@@ -34,6 +34,24 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
 	target_link_libraries(mass_spring_hpmpc_example acados)
 	add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
+
+    add_executable(mass_spring_hpipm_example mass_spring_hpipm.c)
+    target_link_libraries(mass_spring_hpipm_example acados hpipm)
+    add_test(mass_spring_hpipm_example mass_spring_hpipm_example)
+
+    add_executable(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm.c)
+    target_link_libraries(mass_spring_condensing_hpipm_example acados hpipm)
+    add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_example)
+
+    add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
+    target_link_libraries(mass_spring_qpoases_example acados hpipm)
+    add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
+
+    add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
+    target_link_libraries(mass_spring_qpdunes_example acados)
+    target_compile_definitions(mass_spring_qpdunes_example PRIVATE USE_ACADOS_TYPES)
+    add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
+
 endif()
 
 # add_executable(mass_spring_partial_tightening_example
@@ -63,21 +81,17 @@ endif()
 #target_link_libraries(nonlinear_chain_ocp_nlp acados)
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-	target_link_libraries(mass_spring_qpoases_example acados)
-	add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
+    add_executable(chen_nmpc_qpoases_example
+        chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
+    target_link_libraries(chen_nmpc_qpoases_example acados hpipm)
+    add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
+
+    add_executable(nonlinear_chain_sqp_example
+        nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
+    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
+    target_link_libraries(nonlinear_chain_sqp_example acados hpipm)
+    # add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 endif()
-
-add_executable(chen_nmpc_qpoases_example
-    chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-target_link_libraries(chen_nmpc_qpoases_example acados)
-add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
-
-add_executable(nonlinear_chain_sqp_example
-    nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
-target_link_libraries(nonlinear_chain_sqp_example acados)
-# add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 
 # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
 # target_link_libraries(pendulum_hpmpc_libstr_example acados)
