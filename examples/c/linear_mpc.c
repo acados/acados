@@ -91,17 +91,17 @@ int main() {
     real_t z0max[NX+NU];
     int_t idxb[NX+NU];
 
-    for (int ii = 0; ii < NX; ii++) {
-        zmin[ii] = xmin[ii];
-        zmax[ii] = xmax[ii];
+    for (int ii = 0; ii < NU; ii++) {
+        zmin[ii] = umin[ii];
+        zmax[ii] = umax[ii];
+        z0min[ii] = umin[ii];
+        z0max[ii] = umax[ii];
         idxb[ii] = ii;
     }
-    for (int ii = 0; ii < NU; ii++) {
-        zmin[NX+ii] = umin[ii];
-        zmax[NX+ii] = umax[ii];
-        z0min[NX+ii] = umin[ii];  // NOTE(dimitris): First NX elements are updated in MPC loop
-        z0max[NX+ii] = umax[ii];
-        idxb[NX+ii] = NX+ii;
+    for (int ii = 0; ii < NX; ii++) {
+        zmin[NU + ii] = xmin[ii];
+        zmax[NU + ii] = xmax[ii];
+        idxb[NU + ii] = NU + ii;
     }
 
     // Setup ocp_qp_in
@@ -191,8 +191,8 @@ int main() {
     for (int kk = 0; kk < nMPC; kk++) {
         // update constraint on x0
         for (int ii = 0; ii < NX; ii++) {
-            z0min[ii] = x0[ii];
-            z0max[ii] = x0[ii];
+            z0min[NU + ii] = x0[ii];
+            z0max[NU + ii] = x0[ii];
         }
 
         // solve QP
