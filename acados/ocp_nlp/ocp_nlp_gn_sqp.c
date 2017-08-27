@@ -38,8 +38,6 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#define PARALLEL 0
-
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
@@ -62,34 +60,16 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
 }
 
 
-// Simple fixed-step Gauss-Newton based SQP routine
-int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args_,
-    void *nlp_mem_, void *nlp_work_) {
+static void initialize_objective(
+    const ocp_nlp_in *nlp_in,
+    ocp_nlp_gn_sqp_memory *gn_sqp_mem,
+    ocp_nlp_gn_sqp_work *work) {
 
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
-    sim_solver *sim = nlp_in->sim;
-    ocp_nlp_gn_sqp_args *gn_sqp_args = (ocp_nlp_gn_sqp_args *) nlp_args_;
-    ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
-    ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
-
-    ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
-
-    int_t N = nlp_in->N;
+    const int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
     const int_t *nu = nlp_in->nu;
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
 
-    real_t *w = work->common->w;
-    real_t **y_ref = cost->y_ref;
-
-    int_t **qp_idxb = (int_t **) gn_sqp_mem->qp_solver->qp_in->idxb;
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nlp_in->nb[i]; j++) {
-            qp_idxb[i][j] = nlp_in->idxb[i][j];
-        }
-    }
-    real_t **qp_A = (real_t **) gn_sqp_mem->qp_solver->qp_in->A;
-    real_t **qp_B = (real_t **) gn_sqp_mem->qp_solver->qp_in->B;
-    real_t **qp_b = (real_t **) gn_sqp_mem->qp_solver->qp_in->b;
     real_t **qp_Q = (real_t **) gn_sqp_mem->qp_solver->qp_in->Q;
     real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
@@ -114,12 +94,19 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             qp_Q[N][j*nx[N]+k] = cost->W[N][j*nx[N]+k];
         }
     }
-    real_t **qp_q = (real_t **) gn_sqp_mem->qp_solver->qp_in->q;
-    real_t **qp_r = (real_t **) gn_sqp_mem->qp_solver->qp_in->r;
-    real_t **qp_lb = (real_t **) gn_sqp_mem->qp_solver->qp_in->lb;
-    real_t **qp_ub = (real_t **) gn_sqp_mem->qp_solver->qp_in->ub;
+}
 
-    // Initialization of trajectories:
+
+static void initialize_trajectories(
+    const ocp_nlp_in *nlp_in,
+    ocp_nlp_gn_sqp_memory *gn_sqp_mem,
+    ocp_nlp_gn_sqp_work *work) {
+
+    const int_t N = nlp_in->N;
+    const int_t *nx = nlp_in->nx;
+    const int_t *nu = nlp_in->nu;
+    real_t *w = work->common->w;
+
     int_t w_idx = 0;
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
@@ -133,6 +120,27 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     for (int_t j = 0; j < nx[N]; j++) {
         w[w_idx+j] = gn_sqp_mem->common->x[N][j];
     }
+}
+
+
+// Simple fixed-step Gauss-Newton based SQP routine
+int_t ocp_nlp_gn_sqp(
+    const ocp_nlp_in *nlp_in,
+    ocp_nlp_out *nlp_out,
+    void *nlp_args_,
+    void *nlp_mem_,
+    void *nlp_work_) {
+
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
+    sim_solver *sim = nlp_in->sim;
+    ocp_nlp_gn_sqp_args *gn_sqp_args = (ocp_nlp_gn_sqp_args *) nlp_args_;
+    ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
+    ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
+
+    ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
+
+    initialize_objective(nlp_in, gn_sqp_mem, work);
+    initialize_trajectories(nlp_in, gn_sqp_mem, work);
 
 #ifdef MEASURE_TIMINGS
     acados_timer timer;
@@ -140,20 +148,35 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     real_t timings_sim = 0;
     real_t timings_la = 0;
     real_t timings_ad = 0;
-#endif
-
-    real_t feas, stepX, stepU;
-    int_t status;
-
-#ifdef MEASURE_TIMINGS
     acados_tic(&timer);
 #endif
 
+    const int_t N = nlp_in->N;
+    const int_t *nx = nlp_in->nx;
+    const int_t *nu = nlp_in->nu;
+    real_t feas, stepX, stepU;
+    int_t status;
+    int_t w_idx;
+
+    real_t **qp_A = (real_t **) gn_sqp_mem->qp_solver->qp_in->A;
+    real_t **qp_B = (real_t **) gn_sqp_mem->qp_solver->qp_in->B;
+    real_t **qp_b = (real_t **) gn_sqp_mem->qp_solver->qp_in->b;
+    real_t **qp_q = (real_t **) gn_sqp_mem->qp_solver->qp_in->q;
+    real_t **qp_r = (real_t **) gn_sqp_mem->qp_solver->qp_in->r;
+    real_t **qp_lb = (real_t **) gn_sqp_mem->qp_solver->qp_in->lb;
+    real_t **qp_ub = (real_t **) gn_sqp_mem->qp_solver->qp_in->ub;
+    int_t **qp_idxb = (int_t **) gn_sqp_mem->qp_solver->qp_in->idxb;
+    for (int_t i = 0; i <= N; i++) {
+        for (int_t j = 0; j < nlp_in->nb[i]; j++) {
+            qp_idxb[i][j] = nlp_in->idxb[i][j];
+        }
+    }
+
+    real_t *w = work->common->w;
+    real_t **y_ref = cost->y_ref;
+
     for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
         feas = stepX = stepU = -1e10;
-#if PARALLEL
-#pragma omp parallel for
-#endif
         w_idx = 0;
         for (int_t i = 0; i < N; i++) {
             sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
@@ -190,7 +213,6 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             timings_la += sim[i].out->info->LAtime;
             timings_ad += sim[i].out->info->ADtime;
 #endif
-
             w_idx += nx[i]+nu[i];
         }
         w_idx = 0;

@@ -23,7 +23,7 @@
 *                                                                                                 *
 **************************************************************************************************/
 
-#include "acados/utils/tools.h"
+#include "acados/utils/math.h"
 
 #include <math.h>
 #include <stdio.h>

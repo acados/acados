@@ -28,7 +28,7 @@
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/utils/timing.h"
-#include "acados/utils/tools.h"
+#include "acados/utils/math.h"
 
 // define number of repetitions
 #define NREP 10

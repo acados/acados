@@ -25,7 +25,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
-#include "acados/utils/tools.h"
+#include "acados/utils/math.h"
 #include "acados/utils/types.h"
 #include "examples/Chen/Chen_model.h"
 

@@ -22,8 +22,8 @@
 * Author: Gianluca Frison, giaf (at) dtu.dk                                                       *
 *                                                                                                 *
 **************************************************************************************************/
-#ifndef ACADOS_UTILS_TOOLS_H_
-#define ACADOS_UTILS_TOOLS_H_
+#ifndef ACADOS_UTILS_MATH_H_
+#define ACADOS_UTILS_MATH_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -77,4 +77,4 @@ void expm(int row, double *A);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_UTILS_TOOLS_H_
+#endif  // ACADOS_UTILS_MATH_H_
