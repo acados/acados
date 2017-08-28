@@ -318,6 +318,7 @@ static void update_dynamics_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
 static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     int_t ii, kk;
     int_t offset = 0;
+    int_t fixOrder;
 
     for (kk = 0; kk < in->N + 1; kk++) {
         for (ii = 0; ii < in->nx[kk] + in->nu[kk]; ii++) {
@@ -327,15 +328,21 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
             mem->xupp[offset + ii] = 0.0;
         }
         for (ii = 0; ii < in->nb[kk]; ii++) {
+            // NOTE(dimitris): order of bounds ...
+            if (in->idxb[kk][ii] < in->nu[kk]) {
+                fixOrder = in->idxb[kk][ii] + in->nx[kk];
+            } else {
+                fixOrder = in->idxb[kk][ii] - in->nu[kk];
+            }
             // TODO(dimitris): check if cast is redundant
-            // NOTE: OOQP can give wrong results if there are 1e12 bounds
+            // NOTE(dimitris): OOQP can give wrong results if there are 1e12 bounds
             if (in->lb[kk][ii] > -1e10) {  // TODO(dimitris): use acados inf
-                mem->ixlow[offset + in->idxb[kk][ii]] = (char)1;
-                mem->xlow[offset + in->idxb[kk][ii]] = in->lb[kk][ii];
+                mem->ixlow[offset + fixOrder] = (char)1;
+                mem->xlow[offset + fixOrder] = in->lb[kk][ii];
             }
             if (in->ub[kk][ii] < 1e10) {  // TODO(dimitris): same here
-                mem->ixupp[offset + in->idxb[kk][ii]] = (char)1;
-                mem->xupp[offset + in->idxb[kk][ii]] = in->ub[kk][ii];
+                mem->ixupp[offset + fixOrder] = (char)1;
+                mem->xupp[offset + fixOrder] = in->ub[kk][ii];
             }
         }
         offset += in->nx[kk] + in->nu[kk];
