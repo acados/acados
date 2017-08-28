@@ -17,7 +17,7 @@
  *
  */
 
- #ifndef ACADOS_UTILS_MATH_H_
+ #ifndef ACADOS_UTILS_COPY_H_
  #define ACADOS_UTILS_COPY_H_
 
  #include "acados/utils/types.h"
