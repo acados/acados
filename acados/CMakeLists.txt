@@ -50,7 +50,7 @@ target_include_directories(acados
 
 # HPMPC must come before BLASFEO!
 if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    target_link_libraries(acados PUBLIC hpmpc)
+    target_link_libraries(acados PUBLIC hpmpc hpipm)
 endif()
 target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
 
