@@ -1,25 +1,25 @@
 #include "acados/sim/model_wrapper.h"
 
-void vde_fun(const real_t *in, real_t *out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
+void vde_fun(const real_t* in, real_t* out,
+             int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     int_t nx = 2;
     int_t nu = 1;
 
     const real_t* x = in;
     const real_t* Sx = in + nx;
-    const real_t* Su = in + nx + nx*nx;
-    const real_t* u  = in + nx + nx*(nx+nu);
+    const real_t* Su = in + nx + nx * nx;
+    const real_t* u = in + nx + nx * (nx + nu);
 
     real_t* x_out = out;
     real_t* Sx_out = out + nx;
-    real_t* Su_out = out + nx + nx*nx;
+    real_t* Su_out = out + nx + nx * nx;
 
     int_t casadi_mem = 0;
-    int_t *casadi_iw = 0;
-    real_t *casadi_w = 0;
+    int_t* casadi_iw = 0;
+    real_t* casadi_w = 0;
 
-    const real_t *casadi_arg[4];
-    real_t *casadi_res[3];
+    const real_t* casadi_arg[4];
+    real_t* casadi_res[3];
 
     casadi_arg[0] = x;
     casadi_arg[1] = Sx;

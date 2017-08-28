@@ -35,8 +35,7 @@ typedef struct acados_timer_ {
     LARGE_INTEGER freq;
 } acados_timer;
 
-
-#elif(defined __APPLE__)
+#elif defined(__APPLE__)
 
 #include <mach/mach_time.h>
 

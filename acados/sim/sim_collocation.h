@@ -25,13 +25,10 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+
 #include "acados/utils/types.h"
 
-enum Newton_type_collocation {
-          exact = 0,
-          simplified_in,
-          simplified_inis
-        };
+enum Newton_type_collocation { exact = 0, simplified_in, simplified_inis };
 
 typedef struct {
     enum Newton_type_collocation type;
@@ -47,15 +44,15 @@ typedef struct {
     real_t *transf2_T;
 } Newton_scheme;
 
-real_t LU_system_solve(real_t* const A, real_t* const b, int* const perm,
-        int dim, int dim2);
+real_t LU_system_solve(real_t *const A, real_t *const b, int *const perm,
+                       int dim, int dim2);
 
 void get_Gauss_nodes(const int_t num_stages, real_t *nodes);
 
 void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme);
 
 void create_Butcher_table(const int_t num_stages, const real_t *nodes,
-        real_t *b, real_t *A);
+                          real_t *b, real_t *A);
 
 #ifdef __cplusplus
 } /* extern "C" */

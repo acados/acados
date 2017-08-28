@@ -96,7 +96,7 @@ real_t acados_toc(acados_timer* t) {
 
     if ((t->toc.tv_nsec - t->tic.tv_nsec) < 0) {
         temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec - 1;
-        temp.tv_nsec = 1000000000+t->toc.tv_nsec - t->tic.tv_nsec;
+        temp.tv_nsec = 1000000000 + t->toc.tv_nsec - t->tic.tv_nsec;
     } else {
         temp.tv_sec = t->toc.tv_sec - t->tic.tv_sec;
         temp.tv_nsec = t->toc.tv_nsec - t->tic.tv_nsec;

@@ -24,8 +24,8 @@
 #include <sys/time.h>
 
 #include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/utils/tools.h"
@@ -49,8 +49,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     int pp = nx / 2;  // number of masses
 
     /************************************************
-    * build the continuous time system
-    ************************************************/
+     * build the continuous time system
+     ************************************************/
 
     double *T;
     d_zeros(&T, pp, pp);
@@ -82,8 +82,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     d_free(I);
 
     /************************************************
-    * compute the discrete time system
-    ************************************************/
+     * compute the discrete time system
+     ************************************************/
 
     double *bb;
     d_zeros(&bb, nx, 1);
@@ -112,8 +112,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     d_free(J);
 
     /************************************************
-    * initial state
-    ************************************************/
+     * initial state
+     ************************************************/
 
     for (ii = 0; ii < nx; ii++) x0[ii] = 0;
     x0[0] = 2.5;
@@ -121,17 +121,17 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
 }
 
 int main() {
-//
+    //
     int ii, jj;
     int nrep = NREP;
 
-    int nx = 8;  // number of states (it has to be even for the mass-spring
+    int nx = 8;   // number of states (it has to be even for the mass-spring
                   // system test problem)
-    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
+    int nu = 3;   // number of inputs (controllers) (it has to be at least 1 and
                   // at most nx/2 for the mass-spring system test problem)
     int N = 15;   // horizon length
     int nb = 11;  // number of box constrained inputs and states
-    int ng = 0;  // 4;  // number of general constraints
+    int ng = 0;   // 4;  // number of general constraints
     int ngN = 4;  // 4;  // number of general constraints at the last stage
 
 #if 1
@@ -176,8 +176,8 @@ int main() {
     printf("\n");
 
     /************************************************
-    * dynamical system
-    ************************************************/
+     * dynamical system
+     ************************************************/
 
     // state space matrices & initial state
     double *A;
@@ -199,10 +199,10 @@ int main() {
     x0[0] = 2.5;
     x0[1] = 2.5;
 
-    //    d_print_mat(nx, nx, A, nx);
-    //    d_print_mat(nx, nu, B, nx);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, x0, nx);
+//    d_print_mat(nx, nx, A, nx);
+//    d_print_mat(nx, nu, B, nx);
+//    d_print_mat(nx, 1, b, nx);
+//    d_print_mat(nx, 1, x0, nx);
 
 #if defined(ELIMINATE_X0)
     // compute b0 = b + A*x0
@@ -219,10 +219,10 @@ int main() {
 #endif
 
     /************************************************
-    * box constraints
-    ************************************************/
+     * box constraints
+     ************************************************/
 
-	int jj_end;
+    int jj_end;
 
     int *idxb0;
     int_zeros(&idxb0, nbb[0], 1);
@@ -231,26 +231,23 @@ int main() {
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
 #if defined(ELIMINATE_X0)
-	for(jj=0; jj<nbb[0]; jj++)
-		{
-		lb0[jj] = - 0.5; // umin
-		ub0[jj] = + 0.5; // umin
-		idxb0[jj] = jj;
-		}
+    for (jj = 0; jj < nbb[0]; jj++) {
+        lb0[jj] = -0.5;  // umin
+        ub0[jj] = +0.5;  // umin
+        idxb0[jj] = jj;
+    }
 #else
-	jj_end = nbu<nbb[0] ? nbu : nbb[0];
-	for(jj=0; jj<jj_end; jj++)
-		{
-		lb0[jj] = - 0.5; // umin
-		ub0[jj] = + 0.5; // umax
-		idxb0[jj] = jj;
-		}
-	for( ; jj<nbb[0]; jj++)
-		{
-		lb0[jj] = x0[jj-nbu]; // initial state
-		ub0[jj] = x0[jj-nbu]; // initial state
-		idxb0[jj] = jj;
-		}
+    jj_end = nbu < nbb[0] ? nbu : nbb[0];
+    for (jj = 0; jj < jj_end; jj++) {
+        lb0[jj] = -0.5;  // umin
+        ub0[jj] = +0.5;  // umax
+        idxb0[jj] = jj;
+    }
+    for (; jj < nbb[0]; jj++) {
+        lb0[jj] = x0[jj - nbu];  // initial state
+        ub0[jj] = x0[jj - nbu];  // initial state
+        idxb0[jj] = jj;
+    }
 #endif
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
     //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
@@ -261,19 +258,17 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-	jj_end = nbu<nbb[1] ? nbu : nbb[1];
-	for(jj=0; jj<jj_end; jj++)
-		{
-		lb1[jj] = - 0.5; // umin
-		ub1[jj] = + 0.5; // umax
-		idxb1[jj] = jj;
-		}
-	for( ; jj<nbb[1]; jj++)
-		{
-		lb1[jj] = - 4.0; // xmin
-		ub1[jj] = + 4.0; // xmax
-		idxb1[jj] = jj;
-		}
+    jj_end = nbu < nbb[1] ? nbu : nbb[1];
+    for (jj = 0; jj < jj_end; jj++) {
+        lb1[jj] = -0.5;  // umin
+        ub1[jj] = +0.5;  // umax
+        idxb1[jj] = jj;
+    }
+    for (; jj < nbb[1]; jj++) {
+        lb1[jj] = -4.0;  // xmin
+        ub1[jj] = +4.0;  // xmax
+        idxb1[jj] = jj;
+    }
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
     //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
 
@@ -283,25 +278,23 @@ int main() {
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
-	jj_end = nbu<nbb[N] ? nbu : nbb[N];
-	for(jj=0; jj<jj_end; jj++)
-		{
-		lbN[jj] = - 0.5; // umin
-		ubN[jj] = + 0.5; // umax
-		idxbN[jj] = jj;
-		}
-	for( ; jj<nbb[N]; jj++)
-		{
-		lbN[jj] = - 4.0; // xmin
-		ubN[jj] = + 4.0; // xmax
-		idxbN[jj] = jj;
-		}
+    jj_end = nbu < nbb[N] ? nbu : nbb[N];
+    for (jj = 0; jj < jj_end; jj++) {
+        lbN[jj] = -0.5;  // umin
+        ubN[jj] = +0.5;  // umax
+        idxbN[jj] = jj;
+    }
+    for (; jj < nbb[N]; jj++) {
+        lbN[jj] = -4.0;  // xmin
+        ubN[jj] = +4.0;  // xmax
+        idxbN[jj] = jj;
+    }
     //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
     //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
 
     /************************************************
-    * general constraints
-    ************************************************/
+     * general constraints
+     ************************************************/
 
     double *C;
     d_zeros(&C, ng, nx);
@@ -322,8 +315,8 @@ int main() {
     d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
 
     /************************************************
-    * cost function
-    ************************************************/
+     * cost function
+     ************************************************/
 
     double *Q;
     d_zeros(&Q, nx, nx);
@@ -363,8 +356,8 @@ int main() {
 #endif
 
     /************************************************
-    * problems data
-    ************************************************/
+     * problems data
+     ************************************************/
 
     double *hA[N];
     double *hB[N];
@@ -464,8 +457,8 @@ int main() {
     printf("\n");
 
     /************************************************
-    * dynamical system
-    ************************************************/
+     * dynamical system
+     ************************************************/
 
     // state space matrices & initial state
     double *A;
@@ -493,8 +486,8 @@ int main() {
     d_zeros(&A0, 0, 0);
 
     /************************************************
-    * box constraints
-    ************************************************/
+     * box constraints
+     ************************************************/
 
     int *idxb0;
     int_zeros(&idxb0, nbb[0], 1);
@@ -503,13 +496,13 @@ int main() {
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
     for (jj = 0; jj < nx; jj++) {
-        lb0[jj] = x0[jj];   //   xmin
-        ub0[jj] = x0[jj];   //   xmax
+        lb0[jj] = x0[jj];  //   xmin
+        ub0[jj] = x0[jj];  //   xmax
         idxb0[jj] = jj;
     }
     for (; jj < nb; jj++) {
         lb0[jj] = -0.5;  //   umin
-        ub0[jj] = +0.5;   //   umax
+        ub0[jj] = +0.5;  //   umax
         idxb0[jj] = jj;
     }
 
@@ -521,12 +514,12 @@ int main() {
     d_zeros(&ub1, nbb[1], 1);
     for (jj = 0; jj < nbx; jj++) {
         lb1[jj] = -4.0;  //   xmin
-        ub1[jj] = +4.0;   //   xmax
+        ub1[jj] = +4.0;  //   xmax
         idxb1[jj] = jj;
     }
     for (; jj < nb; jj++) {
         lb1[jj] = -0.5;  //   umin
-        ub1[jj] = +0.5;   //   umax
+        ub1[jj] = +0.5;  //   umax
         idxb1[jj] = jj;
     }
 
@@ -538,13 +531,13 @@ int main() {
     d_zeros(&ubN, nbb[N], 1);
     for (jj = 0; jj < nbx; jj++) {
         lbN[jj] = -4.0;  //   umin
-        ubN[jj] = +4.0;   //   umax
+        ubN[jj] = +4.0;  //   umax
         idxbN[jj] = jj;
     }
 
     /************************************************
-    * general constraints
-    ************************************************/
+     * general constraints
+     ************************************************/
 
     double *C0;
     d_zeros(&C0, 1, nx);
@@ -577,8 +570,8 @@ int main() {
     d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
 
     /************************************************
-    * cost function
-    ************************************************/
+     * cost function
+     ************************************************/
 
     double *Q;
     d_zeros(&Q, nx, nx);
@@ -600,8 +593,8 @@ int main() {
     for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
 
     /************************************************
-    * problems data
-    ************************************************/
+     * problems data
+     ************************************************/
 
     double *hA[N];
     double *hB[N];
@@ -663,26 +656,25 @@ int main() {
 #endif
 
     /************************************************
-    * solution
-    ************************************************/
+     * solution
+     ************************************************/
 
-    double *hx[N+1];
-    double *hu[N+1];
-    double *hpi[N+1];
-    double *hlam[N+1];
+    double *hx[N + 1];
+    double *hu[N + 1];
+    double *hpi[N + 1];
+    double *hlam[N + 1];
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
-        d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&hpi[ii], nxx[ii + 1], 1);
+        d_zeros(&hlam[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
     }
     d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&hlam[N], 2 * nbb[N] + 2 * ngg[N], 1);
 
     /************************************************
-    * create the in and out struct
-    ************************************************/
-
+     * create the in and out struct
+     ************************************************/
 
     ocp_qp_in qp_in;
     ocp_qp_out qp_out;
@@ -692,21 +684,21 @@ int main() {
     qp_in.nu = nuu;
     qp_in.nb = nbb;
     qp_in.nc = ngg;
-    qp_in.A = (const real_t **) hA;
-    qp_in.B = (const real_t **) hB;
-    qp_in.b = (const real_t **) hb;
-    qp_in.Q = (const real_t **) hQ;
-    qp_in.S = (const real_t **) hS;
-    qp_in.R = (const real_t **) hR;
-    qp_in.q = (const real_t **) hq;
-    qp_in.r = (const real_t **) hr;
-    qp_in.idxb = (const int_t **) hidxb;
-    qp_in.lb = (const real_t **) hlb;
-    qp_in.ub = (const real_t **) hub;
-    qp_in.Cx = (const real_t **) hC;
-    qp_in.Cu = (const real_t **) hD;
-    qp_in.lc = (const real_t **) hlg;
-    qp_in.uc = (const real_t **) hug;
+    qp_in.A = (const real_t **)hA;
+    qp_in.B = (const real_t **)hB;
+    qp_in.b = (const real_t **)hb;
+    qp_in.Q = (const real_t **)hQ;
+    qp_in.S = (const real_t **)hS;
+    qp_in.R = (const real_t **)hR;
+    qp_in.q = (const real_t **)hq;
+    qp_in.r = (const real_t **)hr;
+    qp_in.idxb = (const int_t **)hidxb;
+    qp_in.lb = (const real_t **)hlb;
+    qp_in.ub = (const real_t **)hub;
+    qp_in.Cx = (const real_t **)hC;
+    qp_in.Cu = (const real_t **)hD;
+    qp_in.lc = (const real_t **)hlg;
+    qp_in.uc = (const real_t **)hug;
 
     qp_out.x = hx;
     qp_out.u = hu;
@@ -714,47 +706,36 @@ int main() {
     qp_out.lam = hlam;
 
     /************************************************
-    * solver arguments
-    ************************************************/
+     * solver arguments
+     ************************************************/
 
     // solver arguments
     ocp_qp_condensing_qpoases_args qpoases_args;
-    qpoases_args.cputime = 100.0; // maximum cpu time in seconds
-	qpoases_args.nwsr = 1000; // maximum number of working set recalculations
-	qpoases_args.warm_start = 0; // wam start with dual_sol in memory
+    qpoases_args.cputime = 100.0;  // maximum cpu time in seconds
+    qpoases_args.nwsr = 1000;  // maximum number of working set recalculations
+    qpoases_args.warm_start = 0;  // wam start with dual_sol in memory
 
     /************************************************
-    * work space
-    ************************************************/
+     * work space
+     ************************************************/
 
-
-#if defined(HPIPM_COND)
-    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
+    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(
+        &qp_in, &qpoases_args);
     printf("\nwork space size: %d bytes\n", workspace_size);
     void *workspace = malloc(workspace_size);
 
-
-    int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
+    int memory_size =
+        ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
-
-	ocp_qp_condensing_qpoases_memory qpoases_memory;
-	ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, memory);
-
-#else
-    int workspace_size = 0;
-    printf("\nwork space size: %d bytes\n", workspace_size);
-    void *workspace = malloc(workspace_size);
-
-    int memory_size = 0;
-    printf("\nmemory: %d bytes\n", memory_size);
-    void *memory = malloc(memory_size);
-#endif
+    ocp_qp_condensing_qpoases_memory qpoases_memory;
+    ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args,
+                                            &qpoases_memory, memory);
 
     /************************************************
-    * call the solver
-    ************************************************/
+     * call the solver
+     ************************************************/
 
     int return_value = 0;
     struct timeval tv0, tv1;
@@ -762,18 +743,14 @@ int main() {
 
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-#if defined(HPIPM_COND)
-        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
-#else
-        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, memory, workspace);
-#endif
+        return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args,
+                                                 &qpoases_memory, workspace);
     }
 
     gettimeofday(&tv1, NULL);  // stop
 
     double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
                   (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
-
 
     printf("\nu = \n");
     for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
@@ -782,17 +759,19 @@ int main() {
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
     printf("\n");
-    printf(" Solution time for %d working set recalculations, averaged over %d runs: %5.2e seconds\n", qpoases_memory.nwsr, nrep, time);
+    printf(
+        " Solution time for %d working set recalculations, averaged over %d "
+        "runs: %5.2e seconds\n",
+        qpoases_memory.nwsr, nrep, time);
     printf("\n\n");
-
 
     if (return_value != 0) {
         printf("\n qpOASES error ! No. %d\n", return_value);
     }
 
     /************************************************
-    * free memory
-    ************************************************/
+     * free memory
+     ************************************************/
 
     d_free(A);
     d_free(B);
@@ -845,7 +824,6 @@ int main() {
 
     free(workspace);
     free(memory);
-
 
     return 0;
 }

@@ -57,8 +57,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     int pp = nx / 2;  // number of masses
 
     /************************************************
-    * build the continuous time system
-    ************************************************/
+     * build the continuous time system
+     ************************************************/
 
     double *T;
     d_zeros(&T, pp, pp);
@@ -90,8 +90,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     free(I);
 
     /************************************************
-    * compute the discrete time system
-    ************************************************/
+     * compute the discrete time system
+     ************************************************/
 
     double *bb;
     d_zeros(&bb, nx, 1);
@@ -117,8 +117,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
     free(bb);
 
     /************************************************
-    * initial state
-    ************************************************/
+     * initial state
+     ************************************************/
 
     if (nx == 4) {
         x0[0] = 5;
@@ -163,13 +163,13 @@ int main() {
     int rep, nrep = NREP;
 
     int nx = 8;  // number of states (it has to be even for the mass-spring
-                  // system test problem)
+                 // system test problem)
     int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
-                  // at most nx/2 for the mass-spring system test problem)
-    int N = 20;   // horizon length
+                 // at most nx/2 for the mass-spring system test problem)
+    int N = 20;  // horizon length
     int M = 2;
     // int nb = 11;  // number of box constrained inputs and states
-    int ng = 0;  // 4;  // number of general constraints
+    int ng = 0;   // 4;  // number of general constraints
     int ngN = 0;  // 4;  // number of general constraints at the last stage
 
     // int nbu = nu < nb ? nu : nb;
@@ -190,12 +190,12 @@ int main() {
     // for (ii = 1; ii < N; ii++) nbb[ii] = nb;
     // nbb[N] = nbx;
 
-    // Andrea XXX change this back to 11 bounds, changed to debug the strmat interface
-    for ( ii = 0; ii < M; ii++ )  // XXX not M !!!
-      nbb[ii] = nuu[ii] + nxx[ii]/2;
+    // Andrea XXX change this back to 11 bounds, changed to debug the strmat
+    // interface
+    for (ii = 0; ii < M; ii++)  // XXX not M !!!
+        nbb[ii] = nuu[ii] + nxx[ii] / 2;
 
-    for ( ; ii <= N; ii++ )
-      nbb[ii] = 0;
+    for (; ii <= N; ii++) nbb[ii] = 0;
 
     int ngg[N + 1];
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
@@ -224,8 +224,8 @@ int main() {
     printf("\n");
 
     /************************************************
-    * dynamical system
-    ************************************************/
+     * dynamical system
+     ************************************************/
 
     // state space matrices & initial state
     double *A;
@@ -264,10 +264,9 @@ int main() {
     double *A0;
     d_zeros(&A0, 0, 0);
 
-
     /************************************************
-    * general constraints
-    ************************************************/
+     * general constraints
+     ************************************************/
 
     double *C;
     d_zeros(&C, ng, nx);
@@ -288,24 +287,25 @@ int main() {
     d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
 
     /************************************************
-    * box & general constraints
-    ************************************************/
+     * box & general constraints
+     ************************************************/
 
-    int *idxb0; int_zeros(&idxb0, nbb[0], 1);
+    int *idxb0;
+    int_zeros(&idxb0, nbb[0], 1);
     // double *d0; d_zeros(&d0, 2*nb[0]+2*ng[0], 1);
     double *lb0;
     d_zeros(&lb0, nbb[1], 1);
     double *ub0;
     d_zeros(&ub0, nbb[1], 1);
-    for ( ii = 0; ii < nbb[0]; ii++ ) {
-      if ( ii < nuu[0] ) {
-        lb0[ii] = - 0.5;  // umin
-        ub0[ii] =   0.5;  // umax
-      } else {
-        lb0[ii] = - 4.0;  // xmin
-        ub0[ii] =   4.0;  // xmax
-      }
-      idxb0[ii] = ii;
+    for (ii = 0; ii < nbb[0]; ii++) {
+        if (ii < nuu[0]) {
+            lb0[ii] = -0.5;  // umin
+            ub0[ii] = 0.5;   // umax
+        } else {
+            lb0[ii] = -4.0;  // xmin
+            ub0[ii] = 4.0;   // xmax
+        }
+        idxb0[ii] = ii;
     }
 
     // for(ii=0; ii<ng; ii++)  //Andrea: no general constraints atm
@@ -316,48 +316,50 @@ int main() {
     // i_print_mat(1, nb[0], idxb0, 1);
     // d_print_mat(1, 2*nb[0]+2*ng[0], d0, 1);
 
-    int *idxb1; int_zeros(&idxb1, nbb[1], 1);
+    int *idxb1;
+    int_zeros(&idxb1, nbb[1], 1);
     // double *d1; d_zeros(&d1, 2*nb[1]+2*ng[1], 1);
     int_zeros(&idxb1, nbb[1], 1);
     double *lb1;
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-    for ( ii = 0; ii < nbb[1]; ii++ ) {
-      if ( ii < nuu[1] ) {  // input
-        lb1[ii] = - 0.5;  // umin
-        ub1[ii] =   0.5;  // umax
-      } else {  // state
-        lb1[ii] = - 4.0;  // xmin
-        ub1[ii] =   4.0;  // xmax
-      }
-      idxb1[ii] = ii;
-     }
+    for (ii = 0; ii < nbb[1]; ii++) {
+        if (ii < nuu[1]) {   // input
+            lb1[ii] = -0.5;  // umin
+            ub1[ii] = 0.5;   // umax
+        } else {             // state
+            lb1[ii] = -4.0;  // xmin
+            ub1[ii] = 4.0;   // xmax
+        }
+        idxb1[ii] = ii;
+    }
 
-     // for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
-     // {
-     // // d1[2*nb[1]+ii]       = - 100.0; // dmin
-     // // d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
-     // }
-     // i_print_mat(1, nb[1], idxb1, 1);
-     // d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
+    // for(ii=0; ii<ng[1]; ii++)  //Andrea: no general constraints atm
+    // {
+    // // d1[2*nb[1]+ii]       = - 100.0; // dmin
+    // // d1[2*nb[1]+ng[1]+ii] =   100.0; // dmax
+    // }
+    // i_print_mat(1, nb[1], idxb1, 1);
+    // d_print_mat(1, 2*nb[1]+2*ng[1], d1, 1);
 
-    int *idxbN; int_zeros(&idxbN, nbb[N], 1);
+    int *idxbN;
+    int_zeros(&idxbN, nbb[N], 1);
     // double *dN; d_zeros(&dN, 2*nb[N]+2*ng[N], 1);
     int_zeros(&idxbN, nbb[N], 1);
     double *lbN;
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
-    for ( ii = 0; ii < nbb[N]; ii++ ) {
-      if ( ii < nuu[N] ) {
-        lbN[ii] = - 0.5;  // umin
-        ubN[ii] =   0.5;  // umax
-      } else {
-        lbN[ii] = - 4.0;  // xmin
-        ubN[ii] =   4.0;  // xmax
+    for (ii = 0; ii < nbb[N]; ii++) {
+        if (ii < nuu[N]) {
+            lbN[ii] = -0.5;  // umin
+            ubN[ii] = 0.5;   // umax
+        } else {
+            lbN[ii] = -4.0;  // xmin
+            ubN[ii] = 4.0;   // xmax
         }
-      idxbN[ii] = ii;
+        idxbN[ii] = ii;
     }
     // for(ii=0; ii<ng[N]; ii++)//Andrea: no general constraints atm
     // {
@@ -367,9 +369,9 @@ int main() {
     // i_print_mat(1, nb[N], idxbN, 1);
     // d_print_mat(1, 2*nb[N]+2*ng[N], dN, 1);
 
-  /************************************************
-  * cost function
-  ************************************************/
+    /************************************************
+     * cost function
+     ************************************************/
 
     double *Q;
     d_zeros(&Q, nx, nx);
@@ -407,8 +409,8 @@ int main() {
     d_zeros(&S0, nu, 0);
 
     /************************************************
-    * problems data
-    ************************************************/
+     * problems data
+     ************************************************/
 
     double *hA[N];
     double *hB[N];
@@ -468,114 +470,115 @@ int main() {
     hug[N] = ugN;
 
     /************************************************
-    * solution
-    ************************************************/
+     * solution
+     ************************************************/
 
     double *hx[N + 1];
     double *hu[N];
     double *hpi[N];
-    double *hlam[N+1];
-    double *ht[N+1];
+    double *hlam[N + 1];
+    double *ht[N + 1];
 
-    double *lam_in[N+1];
-    double *t_in[N+1];
+    double *lam_in[N + 1];
+    double *t_in[N + 1];
 
     for (ii = 0; ii < N; ii++) {
         d_zeros(&hx[ii], nxx[ii], 1);
         d_zeros(&hu[ii], nuu[ii], 1);
-        d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&lam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&t_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
+        d_zeros(&hpi[ii], nxx[ii + 1], 1);
+        d_zeros(&hlam[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
+        d_zeros(&ht[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
+        d_zeros(&lam_in[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
+        d_zeros(&t_in[ii], 2 * nbb[ii] + 2 * ngg[ii], 1);
 
         // Init multipliers and slacks
-        for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
-          lam_in[ii][jj] = 1.0;
-          t_in[ii][jj] = 1.0;
+        for (jj = 0; jj < 2 * nbb[ii] + 2 * ngg[ii]; jj++) {
+            lam_in[ii][jj] = 1.0;
+            t_in[ii][jj] = 1.0;
         }
     }
     d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
-    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
-    d_zeros(&lam_in[N], 2*nbb[N]+2*ngg[N], 1);
-    d_zeros(&t_in[N], 2*nbb[N]+2*ngg[N], 1);
+    d_zeros(&hlam[N], 2 * nbb[N] + 2 * ngg[N], 1);
+    d_zeros(&ht[N], 2 * nbb[N] + 2 * ngg[N], 1);
+    d_zeros(&lam_in[N], 2 * nbb[N] + 2 * ngg[N], 1);
+    d_zeros(&t_in[N], 2 * nbb[N] + 2 * ngg[N], 1);
 
     // Init multipliers and slacks
-    for (jj = 0; jj < 2*nbb[ii]+2*ngg[ii]; jj++) {
-      lam_in[N][jj] = 1.0;
-      t_in[N][jj] = 1.0;
+    for (jj = 0; jj < 2 * nbb[ii] + 2 * ngg[ii]; jj++) {
+        lam_in[N][jj] = 1.0;
+        t_in[N][jj] = 1.0;
     }
 
     /************************************************
-    * Solver arguments
-    ************************************************/
+     * Solver arguments
+     ************************************************/
 
     // solver arguments
     ocp_qp_hpmpc_args hpmpc_args;
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAXITER;
-//  hpmpc_args.min_step = MINSTEP;
+    //  hpmpc_args.min_step = MINSTEP;
     hpmpc_args.mu0 = 0.1;
-//  hpmpc_args.sigma_min = 1e-3;
+    //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
     hpmpc_args.lam0 = lam_in;
     hpmpc_args.t0 = t_in;
 
     /************************************************
-    * work space
-    ************************************************/
+     * work space
+     ************************************************/
 
-    int work_space_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
-      nxx, nuu, nbb, ngg);
+    int work_space_size =
+        d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nxx, nuu, nbb, ngg);
 
     // Adding memory for data
-    for ( int ii=0; ii <=N; ii++ ) {
-        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nxx[ii+1]);
-        work_space_size+= d_size_strvec(nxx[ii+1]);
-        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, nuu[ii]+nxx[ii]);
-        work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
-        work_space_size+= d_size_strmat(nuu[ii]+nxx[ii]+1, ngg[ii]);
-        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(nuu[ii]+nxx[ii]);
-        work_space_size+= d_size_strvec(nxx[ii+1]);
-        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
-        work_space_size+= d_size_strvec(2*nbb[ii]+2*ngg[ii]);
+    for (int ii = 0; ii <= N; ii++) {
+        work_space_size += d_size_strmat(nuu[ii] + nxx[ii] + 1, nxx[ii + 1]);
+        work_space_size += d_size_strvec(nxx[ii + 1]);
+        work_space_size +=
+            d_size_strmat(nuu[ii] + nxx[ii] + 1, nuu[ii] + nxx[ii]);
+        work_space_size += d_size_strvec(nuu[ii] + nxx[ii]);
+        work_space_size += d_size_strmat(nuu[ii] + nxx[ii] + 1, ngg[ii]);
+        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += d_size_strvec(nuu[ii] + nxx[ii]);
+        work_space_size += d_size_strvec(nxx[ii + 1]);
+        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
     }
 
-    work_space_size += 10000*sizeof(double)*(N+1);
+    work_space_size += 10000 * sizeof(double) * (N + 1);
     void *workspace;
 
     v_zeros_align(&workspace, work_space_size);
 
     /************************************************
-    * create the in and out struct
-    ************************************************/
+     * create the in and out struct
+     ************************************************/
 
     ocp_qp_in qp_in;
     qp_in.N = N;
-    qp_in.nx = (const int *) nxx;
-    qp_in.nu = (const int *) nuu;
-    qp_in.nb = (const int *) nbb;
-    qp_in.nc = (const int *) ngg;
-    qp_in.A = (const double **) hA;
-    qp_in.B = (const double **) hB;
-    qp_in.b = (const double **) hb;
-    qp_in.Q = (const double **) hQ;
-    qp_in.S = (const double **) hS;
-    qp_in.R = (const double **) hR;
-    qp_in.q = (const double **) hq;
-    qp_in.r = (const double **) hr;
-    qp_in.idxb = (const int **) hidxb;
-    qp_in.lb = (const double **) hlb;
-    qp_in.ub = (const double **) hub;
-    qp_in.Cx = (const double **) hC;
-    qp_in.Cu = (const double **) hD;
-    qp_in.lc = (const double **) hlg;
-    qp_in.uc = (const double **) hug;
+    qp_in.nx = (const int *)nxx;
+    qp_in.nu = (const int *)nuu;
+    qp_in.nb = (const int *)nbb;
+    qp_in.nc = (const int *)ngg;
+    qp_in.A = (const double **)hA;
+    qp_in.B = (const double **)hB;
+    qp_in.b = (const double **)hb;
+    qp_in.Q = (const double **)hQ;
+    qp_in.S = (const double **)hS;
+    qp_in.R = (const double **)hR;
+    qp_in.q = (const double **)hq;
+    qp_in.r = (const double **)hr;
+    qp_in.idxb = (const int **)hidxb;
+    qp_in.lb = (const double **)hlb;
+    qp_in.ub = (const double **)hub;
+    qp_in.Cx = (const double **)hC;
+    qp_in.Cu = (const double **)hD;
+    qp_in.lc = (const double **)hlg;
+    qp_in.uc = (const double **)hug;
 
     ocp_qp_out qp_out;
     qp_out.x = hx;
@@ -584,8 +587,8 @@ int main() {
     qp_out.lam = hlam;
 
     /************************************************
-    * call the solver
-    ************************************************/
+     * call the solver
+     ************************************************/
 
     int return_value;
 
@@ -593,9 +596,10 @@ int main() {
     acados_tic(&tv0);  // start
 
     // call the QP OCP solver
-    // return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args, workspace);
-    return_value = ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args,
-       M, 0.1, workspace);
+    // return_value = ocp_qp_hpmpc_libstr(&qp_in, &qp_out, &hpmpc_args,
+    // workspace);
+    return_value =
+        ocp_qp_hpmpc_libstr_pt(&qp_in, &qp_out, &hpmpc_args, M, 0.1, workspace);
 
     double time = acados_toc(&tv0);  // stop
 
@@ -619,8 +623,8 @@ int main() {
     printf("\n\n");
 
     /************************************************
-    * free memory
-    ************************************************/
+     * free memory
+     ************************************************/
 
     // d_free(A);
     // d_free(B);

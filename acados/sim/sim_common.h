@@ -31,24 +31,25 @@ typedef struct {
     real_t *x;  // x[NX]
     real_t *u;  // u[NU]
 
-    real_t *S_forw;     // forward seed
-    real_t *S_adj;      // backward seed
+    real_t *S_forw;  // forward seed
+    real_t *S_adj;   // backward seed
 
     bool sens_forw;
     bool sens_adj;
     bool sens_hess;
     int_t nsens_forw;
 
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int);
-    void (*VDE_forw)(const real_t*, real_t*,
-        int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-    void (*VDE_adj)(const real_t*, real_t*);
-    void (*jac_fun)(const real_t*, real_t*);
+    int (*vde)(const real_t **, real_t **, int *, real_t *, int);
+    void (*VDE_forw)(const real_t *, real_t *,
+                     int (*vde)(const real_t **, real_t **, int *, real_t *,
+                                int));
+    void (*VDE_adj)(const real_t *, real_t *);
+    void (*jac_fun)(const real_t *, real_t *);
 
     real_t step;
     uint nSteps;
 
-    real_t *grad_K;       // gradient correction
+    real_t *grad_K;  // gradient correction
 } sim_in;
 
 typedef struct {
@@ -58,18 +59,18 @@ typedef struct {
 } sim_info;
 
 typedef struct {
-    real_t *xn;         // xn[NX]
-    real_t *S_forw;     // S_forw[NX*(NX+NU)]
-    real_t *S_adj;      //
-    real_t *S_hess;     //
+    real_t *xn;      // xn[NX]
+    real_t *S_forw;  // S_forw[NX*(NX+NU)]
+    real_t *S_adj;   //
+    real_t *S_hess;  //
 
-    real_t *grad;       // gradient correction
+    real_t *grad;  // gradient correction
 
     sim_info *info;
 } sim_out;
 
 typedef struct {
-    int_t (*fun)(const sim_in*, sim_out*, void*, void*, void*);
+    int_t (*fun)(const sim_in *, sim_out *, void *, void *, void *);
     sim_in *in;
     sim_out *out;
     void *args;
