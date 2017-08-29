@@ -63,7 +63,7 @@ extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, i
 // Simple SQP example for acados
 int main() {
     int_t nil;
-    int_t NMF_MAX = 4; // data exist up to 9 masses
+    int_t NMF_MAX = 4;  // data exist up to 9 masses
     int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
 
     for (int_t implicit = 0; implicit < IMPL_MAX; implicit++) {

@@ -36,16 +36,16 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
    add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
 
     add_executable(mass_spring_hpipm_example mass_spring_hpipm.c)
-    target_link_libraries(mass_spring_hpipm_example acados hpipm)
+    target_link_libraries(mass_spring_hpipm_example acados)
     add_test(mass_spring_hpipm_example mass_spring_hpipm_example)
 
     add_executable(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm.c)
-    target_link_libraries(mass_spring_condensing_hpipm_example acados hpipm)
+    target_link_libraries(mass_spring_condensing_hpipm_example acados)
     add_test(mass_spring_condensing_hpipm_example mass_spring_condensing_hpipm_example)
 
     # Remove from test because of weird GCC bug (Segfault)
     add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-    target_link_libraries(mass_spring_qpoases_example acados hpipm)
+    target_link_libraries(mass_spring_qpoases_example acados)
     # add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
 
     add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
