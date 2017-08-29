@@ -38,80 +38,6 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-// Simple fixed-step Gauss-Newton based SQP routine
-int_t ocp_nlp_gn_sqp(
-    const ocp_nlp_in *nlp_in,
-    ocp_nlp_out *nlp_out,
-    void *nlp_args_,
-    void *nlp_mem_,
-    void *nlp_work_) {
-
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
-    ocp_nlp_gn_sqp_args *gn_sqp_args = (ocp_nlp_gn_sqp_args *) nlp_args_;
-    ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
-    ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
-
-    ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
-
-    initialize_objective(nlp_in, gn_sqp_mem, work);
-    initialize_trajectories(nlp_in, gn_sqp_mem, work);
-
-#ifdef MEASURE_TIMINGS
-    acados_timer timer;
-    real_t timings, timings_sim, timings_la, timings_ad = 0;
-    acados_tic(&timer);
-#endif
-
-    const int_t N = nlp_in->N;
-    const int_t *nx = nlp_in->nx;
-    const int_t *nu = nlp_in->nu;
-    int_t qp_status;
-    int_t w_idx;
-    real_t *w = work->common->w;
-
-    int_t **qp_idxb = (int_t **) gn_sqp_mem->qp_solver->qp_in->idxb;
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nlp_in->nb[i]; j++) {
-            qp_idxb[i][j] = nlp_in->idxb[i][j];
-        }
-    }
-
-    for (int_t sqp_iter = 0; sqp_iter < gn_sqp_args->common->maxIter; sqp_iter++) {
-
-        multiple_shooting(w, nlp_in, qp_A[i], qp_B[i], qp_b[i], sqp_iter);
-
-        qp_status = gn_sqp_mem->qp_solver->fun(
-            gn_sqp_mem->qp_solver->qp_in,
-            gn_sqp_mem->qp_solver->qp_out,
-            gn_sqp_mem->qp_solver->args,
-            gn_sqp_mem->qp_solver->mem,
-            gn_sqp_mem->qp_solver->work);
-
-        if (qp_status != 0) {
-            printf("QP solver returned error status %d\n", qp_status);
-            return -1;
-        }
-
-        update_variables();
-
-        for (int_t i = 0; i < N; i++) {
-            sim_RK_opts *opts = (sim_RK_opts*) nlp_in->sim[i].args;
-            nlp_in->sim[i].in->sens_adj = (opts->scheme.type != exact);
-            if (nlp_in->freezeSens) {  // freeze inexact sensitivities after first SQP iteration !!
-                opts->scheme.freeze = true;
-            }
-        }
-    }
-
-#ifdef MEASURE_TIMINGS
-    timings += acados_toc(&timer);
-#endif
-
-    store_trajectories(w, gn_sqp_mem->common, nlp_out, N, nx, nu);
-
-    return 0;
-}
-
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
@@ -197,7 +123,7 @@ static void initialize_trajectories(
 }
 
 
-static void multiple_shooting(ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
 
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
@@ -237,10 +163,6 @@ static void multiple_shooting(ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_
         timings_la += sim[i].out->info->LAtime;
         timings_ad += sim[i].out->info->ADtime;
 #endif
-    }
-
-    for (int_t i = 0; i <= N; i++) {
-        sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
 
         // Update bounds:
         for (int_t j = 0; j < nlp->nb[i]; j++) {
@@ -251,6 +173,7 @@ static void multiple_shooting(ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_
         // Update gradients
         // TODO(rien): only for diagonal Q, R matrices atm
         // TODO(rien): only for least squares cost with state and control reference atm
+        sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
         for (int_t j = 0; j < nx[i]; j++) {
             qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
             // adjoint-based gradient correction:
@@ -264,17 +187,24 @@ static void multiple_shooting(ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_
         w_idx += nx[i]+nu[i];
     }
 
+    for (int_t j = 0; j < nlp->nb[N]; j++) {
+        qp_lb[N][j] = nlp->lb[N][j] - w[w_idx+nlp->idxb[N][j]];
+        qp_ub[N][j] = nlp->ub[N][j] - w[w_idx+nlp->idxb[N][j]];
+    }
+
+    for (int_t j = 0; j < nx[N]; j++)
+        qp_q[N][j] = cost->W[N][j*(nx[N]+nu[N]+1)]*(w[w_idx+j]-y_ref[N][j]);
 }
 
 
-static void update_variables(ocp_nlp_in *nlp, real_t *w, ocp_nlp_gn_sqp_memory *mem) {
-    int_t w_idx = 0;
+static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
 
-    for (int_t i = 0; i <= N; i++) {
+    int_t w_idx = 0;
+    for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
             w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
@@ -283,11 +213,17 @@ static void update_variables(ocp_nlp_in *nlp, real_t *w, ocp_nlp_gn_sqp_memory *
             w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
+    for (int_t j = 0; j < nx[N]; j++)
+        w[w_idx+j] += mem->qp_solver->qp_out->x[N][j];
 }
 
 
-static void store_trajectories(real_t *w, ocp_nlp_memory *memory, ocp_nlp_out *out, const int_t N,
-    const int_t *nx, const int_t *nu) {
+static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_memory *memory, ocp_nlp_out *out,
+    real_t *w) {
+
+    const int_t N = nlp->N;
+    const int_t *nx = nlp->nx;
+    const int_t *nu = nlp->nu;
 
     int_t w_idx = 0;
     for (int_t i = 0; i <= N; i++) {
@@ -301,6 +237,69 @@ static void store_trajectories(real_t *w, ocp_nlp_memory *memory, ocp_nlp_out *o
         }
         w_idx += nx[i]+nu[i];
     }
+}
+
+
+// Simple fixed-step Gauss-Newton based SQP routine
+int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args_,
+    void *nlp_mem_, void *nlp_work_) {
+
+    ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
+    ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
+    ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
+
+    initialize_objective(nlp_in, gn_sqp_mem, work);
+    initialize_trajectories(nlp_in, gn_sqp_mem, work);
+
+    int_t **qp_idxb = (int_t **) gn_sqp_mem->qp_solver->qp_in->idxb;
+    for (int_t i = 0; i <= nlp_in->N; i++) {
+        for (int_t j = 0; j < nlp_in->nb[i]; j++) {
+            qp_idxb[i][j] = nlp_in->idxb[i][j];
+        }
+    }
+
+#ifdef MEASURE_TIMINGS
+    acados_timer timer;
+    real_t timings, timings_sim, timings_la, timings_ad = 0;
+    acados_tic(&timer);
+#endif
+
+    int_t max_sqp_iterations = ((ocp_nlp_gn_sqp_args *) nlp_args_)->common->maxIter;
+    int_t qp_status;
+    for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++) {
+
+        multiple_shooting(nlp_in, gn_sqp_mem, work->common->w);
+
+        qp_status = gn_sqp_mem->qp_solver->fun(
+            gn_sqp_mem->qp_solver->qp_in,
+            gn_sqp_mem->qp_solver->qp_out,
+            gn_sqp_mem->qp_solver->args,
+            gn_sqp_mem->qp_solver->mem,
+            gn_sqp_mem->qp_solver->work);
+
+        if (qp_status != 0) {
+            printf("QP solver returned error status %d\n", qp_status);
+            return -1;
+        }
+
+        update_variables(nlp_in, gn_sqp_mem, work->common->w);
+
+        for (int_t i = 0; i < nlp_in->N; i++) {
+            sim_RK_opts *opts = (sim_RK_opts*) nlp_in->sim[i].args;
+            nlp_in->sim[i].in->sens_adj = (opts->scheme.type != exact);
+            if (nlp_in->freezeSens) {  // freeze inexact sensitivities after first SQP iteration !!
+                opts->scheme.freeze = true;
+            }
+        }
+    }
+
+#ifdef MEASURE_TIMINGS
+    timings += acados_toc(&timer);
+#endif
+
+    store_trajectories(nlp_in, gn_sqp_mem->common, nlp_out, work->common->w);
+
+    return 0;
 }
 
 

@@ -17,23 +17,23 @@
  *
  */
 
- #ifndef ACADOS_UTILS_COPY_H_
- #define ACADOS_UTILS_COPY_H_
+#ifndef ACADOS_UTILS_COPY_H_
+#define ACADOS_UTILS_COPY_H_
 
- #include "acados/utils/types.h"
+#include "acados/utils/types.h"
 
- void copy_real_matrix_sequence(
+void copy_real_matrix_sequence(
     const int_t int_num_matrices,
     const int_t *matrix_num_rows,
     const int_t *matrix_num_cols,
     const real_t **source,
     real_t **destination);
 
- void copy_int_matrix_sequence(
+void copy_int_matrix_sequence(
     const int_t int_num_matrices,
     const int_t *matrix_num_rows,
     const int_t *matrix_num_cols,
     const int_t **source,
     int_t **destination);
 
- #endif  // ACADOS_UTILS_COPY_H_
+#endif  // ACADOS_UTILS_COPY_H_

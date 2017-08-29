@@ -34,9 +34,9 @@ typedef struct {
     real_t *S_forw;     // forward seed
     real_t *S_adj;      // backward seed
 
-    bool sens_forw = true;
-    bool sens_adj = false;
-    bool sens_hess = false;
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
     int_t nsens_forw;
 
     int (*vde)(const real_t**, real_t**, int*, real_t*, int);

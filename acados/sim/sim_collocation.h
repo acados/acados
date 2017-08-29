@@ -38,7 +38,7 @@ typedef struct {
     real_t *eig;
     real_t *low_tria;
     bool single;
-    bool freeze = false;
+    bool freeze;
 
     real_t *transf1;
     real_t *transf2;
