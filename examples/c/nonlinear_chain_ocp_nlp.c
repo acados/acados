@@ -95,7 +95,6 @@ int main() {
     int_t UMAX = 10;
 
     // Problem data
-    int_t N = NN;
     ocp_nlp_ls_cost ls_cost;
     real_t *W, *WN;
     real_t *uref;
@@ -121,18 +120,18 @@ int main() {
     for (int_t i = 0; i < NU; i++) W[(NX + i) * (NX + NU + 1)] = 1.0;
     for (int_t i = 0; i < NX; i++) WN[i * (NX + 1)] = 1e-2;
 
-    ls_cost.W = (real_t **)malloc(sizeof(*ls_cost.W) * (N + 1));
+    ls_cost.W = (real_t **)malloc(sizeof(*ls_cost.W) * (NN + 1));
     for (int_t i = 0; i < NN; i++) ls_cost.W[i] = W;
     ls_cost.W[NN] = WN;
-    ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (N + 1));
+    ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
         ls_cost.y_ref[i] =
             (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
         for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
         for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
     }
-    ls_cost.y_ref[N] = (real_t *)malloc(sizeof(*ls_cost.y_ref[N]) * (NX));
-    for (int_t j = 0; j < NX; j++) ls_cost.y_ref[N][j] = xref[j];
+    ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
+    for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
 
     // Integrator structs
     real_t Ts = TT / NN;
@@ -246,11 +245,11 @@ int main() {
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
     int_t ng[NN + 1] = {0};
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[N] = NX;
+    nx[NN] = NX;
 
     /************************************************
      * box constraints
@@ -276,9 +275,9 @@ int main() {
 
     int *idxb1;
     int_zeros(&idxb1, NMF + NU, 1);
-    double *lb1[N - 1];
-    double *ub1[N - 1];
-    for (int_t i = 0; i < N - 1; i++) {
+    double *lb1[NN - 1];
+    double *ub1[NN - 1];
+    for (int_t i = 0; i < NN - 1; i++) {
         d_zeros(&lb1[i], NMF + NU, 1);
         d_zeros(&ub1[i], NMF + NU, 1);
         for (jj = 0; jj < NU; jj++) {
@@ -307,21 +306,21 @@ int main() {
     }
     nb[NN] = NX;
 
-    real_t *hlb[N + 1];
-    real_t *hub[N + 1];
-    int *hidxb[N + 1];
+    real_t *hlb[NN + 1];
+    real_t *hub[NN + 1];
+    int *hidxb[NN + 1];
 
     hlb[0] = lb0;
     hub[0] = ub0;
     hidxb[0] = idxb0;
-    for (int_t i = 1; i < N; i++) {
+    for (int_t i = 1; i < NN; i++) {
         hlb[i] = lb1[i - 1];
         hub[i] = ub1[i - 1];
         hidxb[i] = idxb1;
     }
-    hlb[N] = lbN;
-    hub[N] = ubN;
-    hidxb[N] = idxbN;
+    hlb[NN] = lbN;
+    hub[NN] = ubN;
+    hidxb[NN] = idxbN;
 
     ocp_nlp_in nlp_in;
     nlp_in.N = NN;
@@ -339,15 +338,15 @@ int main() {
     if (INEXACT > 2) nlp_in.freezeSens = true;
 
     ocp_nlp_out nlp_out;
-    nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (N + 1));
-    nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * N);
-    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * N);
+    nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (NN + 1));
+    nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * NN);
+    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * NN);
     for (int_t i = 0; i < NN; i++) {
         nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
         nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
         nlp_out.lam[i] = (real_t *)malloc(sizeof(*nlp_out.lam[i]) * (NX));
     }
-    nlp_out.x[N] = (real_t *)malloc(sizeof(*nlp_out.x[N]) * (NX));
+    nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
 
     ocp_nlp_gn_sqp_args nlp_args;
     ocp_nlp_args nlp_common_args;
@@ -373,7 +372,7 @@ int main() {
             nlp_mem.common->u[i][j] = 0.0;  // resU(j, i)
     }
     for (int_t j = 0; j < NX; j++)
-        nlp_mem.common->x[NN][j] = xref[j];  // resX(j, N)
+        nlp_mem.common->x[NN][j] = xref[j];  // resX(j, NN)
 
     int_t status;
 
@@ -383,13 +382,13 @@ int main() {
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
 #if 0
-    real_t out_x[NX*(N+1)];
-    real_t out_u[NU*N];
+    real_t out_x[NX*(NN+1)];
+    real_t out_u[NU*NN];
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++) out_x[i*NX+j] = nlp_out.x[i][j];
         for (int_t j = 0; j < NU; j++) out_u[i*NU+j] = nlp_out.u[i][j];
     }
-    for (int_t j = 0; j < NX; j++) out_x[N*NX+j] = nlp_out.x[N][j];
+    for (int_t j = 0; j < NX; j++) out_x[NN*NX+j] = nlp_out.x[NN][j];
 #endif
 
     d_free(W);
@@ -402,7 +401,7 @@ int main() {
     d_free(lb0);
     d_free(ub0);
     int_free(idxb1);
-    for (jj = 0; jj < N - 1; jj++) {
+    for (jj = 0; jj < NN - 1; jj++) {
         d_free(lb1[jj]);
         d_free(ub1[jj]);
     }
@@ -421,16 +420,16 @@ int main() {
         free(sim_out[jj].grad);
         free(ls_cost.y_ref[jj]);
     }
-    free(ls_cost.y_ref[N]);
+    free(ls_cost.y_ref[NN]);
     free(ls_cost.y_ref);
     free(ls_cost.W);
 
-    for (jj = 0; jj < N; jj++) {
+    for (jj = 0; jj < NN; jj++) {
         free(nlp_out.x[jj]);
         free(nlp_out.u[jj]);
         free(nlp_out.lam[jj]);
     }
-    free(nlp_out.x[N]);
+    free(nlp_out.x[NN]);
     free(nlp_out.x);
     free(nlp_out.u);
     free(nlp_out.lam);
