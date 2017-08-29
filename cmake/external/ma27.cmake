@@ -11,7 +11,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND ./configure "${HOST_FLAG}" "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FCFLAGS=-O2 -fPIC"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/coinhsl"
     BUILD_IN_SOURCE 1
-    BUILD_COMMAND make
+    BUILD_COMMAND make clean all
     INSTALL_COMMAND ""
     # LOG_CONFIGURE 1  # suppress output
     # LOG_BUILD 1
