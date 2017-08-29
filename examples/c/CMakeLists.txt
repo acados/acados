@@ -111,15 +111,15 @@ endif()
 # add_test(NAME pendulum_hpmpc_libstr_example COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-   add_executable(pendulum_partial_tightening_example
+    add_executable(pendulum_partial_tightening_example
       pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
-   target_link_libraries(pendulum_partial_tightening_example acados)
-   add_test(pendulum_partial_tightening_example pendulum_partial_tightening_example)
+    target_link_libraries(pendulum_partial_tightening_example acados)
+    add_test(pendulum_partial_tightening_example pendulum_partial_tightening_example)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-   add_executable(linear_mpc_example linear_mpc.c)
-   target_link_libraries(linear_mpc_example acados)
+    add_executable(linear_mpc_example linear_mpc.c)
+    target_link_libraries(linear_mpc_example acados)
     target_compile_definitions(linear_mpc_example PRIVATE USE_ACADOS_TYPES)
-   add_test(linear_mpc_example linear_mpc_example)
+    add_test(linear_mpc_example linear_mpc_example)
 endif()
