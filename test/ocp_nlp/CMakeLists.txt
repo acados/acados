@@ -30,7 +30,7 @@ set(GENERATION_DIR "${CMAKE_SOURCE_DIR}/test/ocp_nlp/chain/casadi")
 set(SED_COMMAND "'s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;  real_t\ a0/g'")
 
 add_custom_command(OUTPUT ${TEST_OCP_NLP_GENERATED_FILES}
-    COMMAND "octave-cli" "--no-gui" "--path" "${GENERATION_DIR}\:${EXTERNAL_SRC_DIR}/casadi-octave-v3.2.2"
+    COMMAND "octave-cli" "--no-gui" "--path" "${GENERATION_DIR}:${EXTERNAL_SRC_DIR}/casadi-octave-v3.2.2"
         "${GENERATION_DIR}/generate_chain_mass.m"
     COMMAND "sed" "-i.bak" "-e" "${SED_COMMAND}" ${TEST_OCP_NLP_GENERATED_FILES}
     COMMENT "Generating data for OCP NLP test"

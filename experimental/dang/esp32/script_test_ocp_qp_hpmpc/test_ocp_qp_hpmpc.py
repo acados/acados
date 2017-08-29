@@ -50,7 +50,7 @@ workingcodefiles = \
     'acados/ocp_qp/ocp_qp_hpmpc.c', \
     'acados/utils/print.c', \
     'acados/utils/timing.c', \
-    'acados/utils/tools.c', \
+    'acados/utils/math.c', \
     'external/hpmpc/interfaces/c/fortran_order_interface_libstr.c', \
     'external/hpmpc/mpc_solvers/d_ip2_res_hard_libstr.c', \
     'external/hpmpc/mpc_solvers/c99/d_res_ip_res_hard_libstr.c', \
@@ -75,7 +75,7 @@ workingheaderfiles =\
     'acados/utils/types.h', \
     'acados/utils/print.h', \
     'acados/utils/timing.h', \
-    'acados/utils/tools.h', \
+    'acados/utils/math.h', \
     'external/hpmpc/include/aux_s.h', \
     'external/hpmpc/include/blas_d.h', \
     'external/hpmpc/include/block_size.h', \
@@ -115,7 +115,7 @@ old_text =\
     'acados/ocp_qp/ocp_qp_hpmpc.h', \
     'acados/utils/print.h', \
     'acados/utils/timing.h', \
-    'acados/utils/tools.h', \
+    'acados/utils/math.h', \
     'acados/utils/types.h', \
     'acados/sim/sim_common.h', \
 

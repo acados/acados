@@ -17,7 +17,7 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.0)
 
 if(CMAKE_MAKE_PROGRAM)
 	file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
@@ -25,6 +25,10 @@ if(CMAKE_MAKE_PROGRAM)
 endif()
 
 project(acados LANGUAGES C CXX)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_VERBOSE_MAKEFILE ON)

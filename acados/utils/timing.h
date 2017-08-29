@@ -22,65 +22,69 @@
 
 #include "acados/utils/types.h"
 
-#if !(defined __DSPACE__)
-#if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
+#ifdef MEASURE_TIMINGS
+    #if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
 
-/* Use Windows QueryPerformanceCounter for timing. */
-#include <Windows.h>
+        /* Use Windows QueryPerformanceCounter for timing. */
+        #include <Windows.h>
 
-/** A structure for keeping internal timer data. */
-typedef struct acados_timer_ {
-    LARGE_INTEGER tic;
-    LARGE_INTEGER toc;
-    LARGE_INTEGER freq;
-} acados_timer;
+        /** A structure for keeping internal timer data. */
+        typedef struct acados_timer_ {
+            LARGE_INTEGER tic;
+            LARGE_INTEGER toc;
+            LARGE_INTEGER freq;
+        } acados_timer;
 
-#elif defined(__APPLE__)
 
-#include <mach/mach_time.h>
+    #elif(defined __APPLE__)
 
-/** A structure for keeping internal timer data. */
-typedef struct acados_timer_ {
-    uint64_t tic;
-    uint64_t toc;
-    mach_timebase_info_data_t tinfo;
-} acados_timer;
+        #include <mach/mach_time.h>
+
+        /** A structure for keeping internal timer data. */
+        typedef struct acados_timer_ {
+            uint64_t tic;
+            uint64_t toc;
+            mach_timebase_info_data_t tinfo;
+        } acados_timer;
+
+    #else
+
+        /* Use POSIX clock_gettime() for timing on non-Windows machines. */
+        #include <time.h>
+
+        #if __STDC_VERSION__ >= 199901L  // C99 Mode
+
+            #include <sys/stat.h>
+            #include <sys/time.h>
+
+            typedef struct acados_timer_ {
+                struct timeval tic;
+                struct timeval toc;
+            } acados_timer;
+
+        #else  // ANSI C Mode
+
+            /** A structure for keeping internal timer data. */
+            typedef struct acados_timer_ {
+                struct timespec tic;
+                struct timespec toc;
+            } acados_timer;
+
+        #endif  // __STDC_VERSION__ >= 199901L
+
+    #endif  // (defined _WIN32 || defined _WIN64)
 
 #else
 
-/* Use POSIX clock_gettime() for timing on non-Windows machines. */
-#include <time.h>
+    // Dummy type when timings are off
+    typedef real_t acados_timer;
 
-#if __STDC_VERSION__ >= 199901L
-/* C99 mode of operation. */
-
-#include <sys/stat.h>
-#include <sys/time.h>
-
-typedef struct acados_timer_ {
-    struct timeval tic;
-    struct timeval toc;
-} acados_timer;
-
-#else
-/* ANSI C */
-
-/** A structure for keeping internal timer data. */
-typedef struct acados_timer_ {
-    struct timespec tic;
-    struct timespec toc;
-} acados_timer;
-
-#endif /* __STDC_VERSION__ >= 199901L */
-
-#endif /* (defined _WIN32 || defined _WIN64) */
+#endif  // MEASURE_TIMINGS
 
 /** A function for measurement of the current time. */
 void acados_tic(acados_timer* t);
 
 /** A function which returns the elapsed time. */
 real_t acados_toc(acados_timer* t);
-
-#endif
 
 #endif  // ACADOS_UTILS_TIMING_H_

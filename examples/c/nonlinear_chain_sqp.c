@@ -562,16 +562,14 @@ int main() {
             timings += acados_toc(&timer);
 //    }
 
-#ifdef MEASURE_TIMINGS
-            printf("\nAverage of %.3f ms in the integrator,\n",
-                   1e3 * timings_sim / (max_sqp_iters * max_iters));
-            printf("  of which %.3f ms spent in CasADi and\n",
-                   1e3 * timings_ad / (max_sqp_iters * max_iters));
-            printf("  of which %.3f ms spent in BLASFEO.\n",
-                   1e3 * timings_la / (max_sqp_iters * max_iters));
-#endif
-            printf("--Total of %.3f ms per SQP iteration.--\n",
-                   1e3 * timings / (max_sqp_iters * max_iters));
+        printf("\nAverage of %.3f ms in the integrator,\n",
+                1e3*timings_sim/(max_sqp_iters*max_iters));
+        printf("  of which %.3f ms spent in CasADi and\n",
+                1e3*timings_ad/(max_sqp_iters*max_iters));
+        printf("  of which %.3f ms spent in BLASFEO.\n",
+                1e3*timings_la/(max_sqp_iters*max_iters));
+        printf("--Total of %.3f ms per SQP iteration.--\n",
+                1e3*timings/(max_sqp_iters*max_iters));
 
             //    #ifdef DEBUG
             //    print_matrix_name("stdout", "sol", w, NX+NU, N);

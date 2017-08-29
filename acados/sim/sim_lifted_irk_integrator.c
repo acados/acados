@@ -383,11 +383,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
     real_t *c_vec = opts->c_vec;
 
     real_t tmp_eig, tmp_eig2;
-#ifdef MEASURE_TIMINGS
     acados_timer timer_ad;
-#else
-    timing_ad += 0;
-#endif
     real_t *out_tmp = work->out_tmp;
     real_t *rhs_in = work->rhs_in;
     real_t *jac_tmp = work->jac_tmp;
@@ -443,13 +439,9 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
                              K_traj[istep * num_stages * nx + s2 * nx + i];
             }
         }
-#ifdef MEASURE_TIMINGS
         acados_tic(&timer_ad);
-#endif
         in->jac_fun(rhs_in, jac_tmp);  // k evaluation
-#ifdef MEASURE_TIMINGS
         timing_ad += acados_toc(&timer_ad);
-#endif
         //                }
         if (opts->scheme.type == simplified_in ||
             opts->scheme.type == simplified_inis) {
@@ -549,19 +541,14 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     struct d_strmat **str_sol2 = mem->str_sol2;
 #endif  // !TRIPLE_LOOP
 
-#ifdef MEASURE_TIMINGS
     acados_timer timer, timer_la, timer_ad;
     real_t timing_la = 0.0;
     real_t timing_ad = 0.0;
-#endif
 
     if (NF != nx + nu) return -1;  // NOT YET IMPLEMENTED
 //    printf("NU = %d, NF = %d \n", nu, NF);
 
-#ifdef MEASURE_TIMINGS
     acados_tic(&timer);
-#endif
-
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
     for (i = 0; i < nx * NF; i++)
         out_tmp[nx + i] = in->S_forw[i];  // sensitivities
@@ -648,9 +635,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                     construct_subsystems(sys_sol_trans, sys_sol2, num_stages,
                                          nx, 1);
                 }
-#ifdef MEASURE_TIMINGS
                 acados_tic(&timer_la);
-#endif
                 int_t idx = 0;
                 for (s1 = 0; s1 < num_stages; s1++) {
                     // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE
@@ -682,9 +667,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 #error : NOT YET IMPLEMENTED
 #endif  // TRIPLE_LOOP
                 }
-#ifdef MEASURE_TIMINGS
                 timing_la += acados_toc(&timer_la);
-#endif
                 // TRANSFORM using transf2_T:
                 if (opts->scheme.type == simplified_in ||
                     opts->scheme.type == simplified_inis) {
@@ -729,19 +712,11 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     for (istep = 0; istep < NSTEPS; istep++) {
 // form linear system matrix (explicit ODE case):
 
-#ifdef MEASURE_TIMINGS
-        form_linear_system_matrix(istep, in, args, mem, work, sys_mat, sys_mat2,
-                                  timing_ad);
-#else
-        form_linear_system_matrix(istep, in, args, mem, work, sys_mat, sys_mat2,
-                                  0);
-#endif
+        form_linear_system_matrix(istep, in, args, mem, work, sys_mat, sys_mat2, timing_ad);
+
         int_t idx;
-        if (opts->scheme.type == exact ||
-            (istep == 0 && !opts->scheme.freeze)) {
-#ifdef MEASURE_TIMINGS
+        if (opts->scheme.type == exact || (istep == 0 && !opts->scheme.freeze)) {
             acados_tic(&timer_la);
-#endif
             idx = 0;
             for (s1 = 0; s1 < num_stages; s1++) {
                 // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE LINEAR
@@ -777,9 +752,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 // ---- BLASFEO: LU factorization ----
 #endif  // TRIPLE_LOOP
             }
-#ifdef MEASURE_TIMINGS
             timing_la += acados_toc(&timer_la);
-#endif
         }
 
         if (opts->scheme.type == simplified_in ||
@@ -807,17 +780,12 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                     }
                 }
             }
-            rhs_in[nx * (1 + NF) + nu] =
-                ((real_t)istep + c_vec[s1]) / ((real_t)in->nSteps);  // time
-#ifdef MEASURE_TIMINGS
+            rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
+
             acados_tic(&timer_ad);
-#endif
-
             in->VDE_forw(rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
-
-#ifdef MEASURE_TIMINGS
             timing_ad += acados_toc(&timer_ad);
-#endif
+
             // put VDE_tmp in sys_sol:
             for (j = 0; j < 1 + NF; j++) {
                 for (i = 0; i < nx; i++) {
@@ -879,9 +847,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             }
         }
 
-#ifdef MEASURE_TIMINGS
         acados_tic(&timer_la);
-#endif
         idx = 0;
         for (s1 = 0; s1 < num_stages; s1++) {
             // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE LINEAR
@@ -936,11 +902,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 #endif  // LA_BLAFEO
 #endif  // TRIPLE_LOOP
         }
-#ifdef MEASURE_TIMINGS
         timing_la += acados_toc(&timer_la);
-#endif
-        if (opts->scheme.type == simplified_in ||
-            opts->scheme.type == simplified_inis) {
+        if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
             // construct sys_sol_trans from sys_sol2:
             if (!opts->scheme.freeze) {
                 destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx,
@@ -1061,11 +1024,9 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     for (i = 0; i < nx; i++) out->xn[i] = out_tmp[i];
     for (i = 0; i < nx * NF; i++) out->S_forw[i] = out_tmp[nx + i];
 
-#ifdef MEASURE_TIMINGS
     out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = timing_la;
     out->info->ADtime = timing_ad;
-#endif
 
     return 0;  // success
 }

@@ -108,11 +108,9 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem,
     real_t *adj_traj = work->adj_traj;
     real_t *rhs_adj_in = work->rhs_adj_in;
 
-#ifdef MEASURE_TIMINGS
     acados_timer timer, timer_ad;
     real_t timing_ad = 0.0;
     acados_tic(&timer);
-#endif
     for (i = 0; i < nx; i++) forw_traj[i] = in->x[i];
     if (in->sens_forw) {
         for (i = 0; i < nx * NF; i++)
@@ -143,14 +141,9 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem,
                     }
                 }
             }
-#ifdef MEASURE_TIMINGS
             acados_tic(&timer_ad);
-#endif
-            in->VDE_forw(rhs_forw_in, &(K_traj[s * nx * (1 + NF)]),
-                         in->vde);  // k evaluation
-#ifdef MEASURE_TIMINGS
+            in->VDE_forw(rhs_forw_in, &(K_traj[s*nx*(1+NF)]), in->vde);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
-#endif
         }
         for (s = 0; s < num_stages; s++) {
             for (i = 0; i < nx * (1 + NF); i++) {
@@ -207,14 +200,9 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem,
                         }
                     }
                 }
-#ifdef MEASURE_TIMINGS
                 acados_tic(&timer_ad);
-#endif
-                in->VDE_adj(rhs_adj_in,
-                            &(adj_traj[s * nAdj]));  // adjoint VDE evaluation
-#ifdef MEASURE_TIMINGS
+                in->VDE_adj(rhs_adj_in, &(adj_traj[s*nAdj]));  // adjoint VDE evaluation
                 timing_ad += acados_toc(&timer_ad);
-#endif
             }
             for (s = 0; s < num_stages; s++) {
                 for (i = 0; i < nAdj; i++) {
@@ -227,11 +215,9 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem,
             for (i = 0; i < nhess; i++) out->S_hess[i] = adj_tmp[nx + nu + i];
         }
     }
-#ifdef MEASURE_TIMINGS
     out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
-#endif
     return 0;  // success
 }
 

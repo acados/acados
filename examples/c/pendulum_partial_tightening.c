@@ -42,7 +42,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/timing.h"
-#include "acados/utils/tools.h"
+#include "acados/utils/math.h"
 #include "acados/utils/types.h"
 #include "examples/c/pendulum_model/pendulum_model.h"
 
