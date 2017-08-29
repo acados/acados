@@ -29,6 +29,11 @@ file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
 
+add_executable(chen_nmpc_qpoases_example
+    chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
+target_link_libraries(chen_nmpc_qpoases_example acados)
+add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
+
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
    add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
@@ -91,11 +96,6 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 #     NAME mass_spring_partial_tightening_example
 #     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
 # )
-
-    add_executable(chen_nmpc_qpoases_example
-        chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-    target_link_libraries(chen_nmpc_qpoases_example acados)
-    add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
 
     add_executable(nonlinear_chain_sqp_example
         nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
