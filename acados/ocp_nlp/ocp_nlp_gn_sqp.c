@@ -158,12 +158,6 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
             for (int_t k = 0; k < nx[i]; k++)
                 qp_B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];
 
-#ifdef MEASURE_TIMINGS
-        timings_sim += sim[i].out->info->CPUtime;
-        timings_la += sim[i].out->info->LAtime;
-        timings_ad += sim[i].out->info->ADtime;
-#endif
-
         // Update bounds:
         for (int_t j = 0; j < nlp->nb[i]; j++) {
             qp_lb[i][j] = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
@@ -258,19 +252,16 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         }
     }
 
-#ifdef MEASURE_TIMINGS
-    acados_timer timer;
-    real_t timings, timings_sim, timings_la, timings_ad = 0;
-    acados_tic(&timer);
-#endif
-
     int_t max_sqp_iterations = ((ocp_nlp_gn_sqp_args *) nlp_args_)->common->maxIter;
-    int_t qp_status;
+
+    acados_timer timer;
+    real_t total_time = 0;
+    acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++) {
 
         multiple_shooting(nlp_in, gn_sqp_mem, work->common->w);
 
-        qp_status = gn_sqp_mem->qp_solver->fun(
+        int_t qp_status = gn_sqp_mem->qp_solver->fun(
             gn_sqp_mem->qp_solver->qp_in,
             gn_sqp_mem->qp_solver->qp_out,
             gn_sqp_mem->qp_solver->args,
@@ -293,12 +284,8 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         }
     }
 
-#ifdef MEASURE_TIMINGS
-    timings += acados_toc(&timer);
-#endif
-
+    total_time += acados_toc(&timer);
     store_trajectories(nlp_in, gn_sqp_mem->common, nlp_out, work->common->w);
-
     return 0;
 }
 
