@@ -59,18 +59,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
     endif()
 
-endif()
-
-# add_executable(mass_spring_partial_tightening_example
-#    mass_spring_partial_tightening.c
-# )
-# target_link_libraries(mass_spring_partial_tightening_example acados)
-# add_test(
-#     NAME mass_spring_partial_tightening_example
-#     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
-# )
-
-add_executable(nonlinear_chain_ocp_nlp_example
+    add_executable(nonlinear_chain_ocp_nlp_example
     nonlinear_chain_ocp_nlp.c
     chain_model/chain_model.c
     chain_model/jac_chain_nm2.c
@@ -90,11 +79,19 @@ add_executable(nonlinear_chain_ocp_nlp_example
     chain_model/vde_chain_nm7.c
     chain_model/vde_chain_nm8.c
     chain_model/vde_chain_nm9.c
-)
-target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+    )
+    target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+    add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 
-if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+# add_executable(mass_spring_partial_tightening_example
+#    mass_spring_partial_tightening.c
+# )
+# target_link_libraries(mass_spring_partial_tightening_example acados)
+# add_test(
+#     NAME mass_spring_partial_tightening_example
+#     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
+# )
+
     add_executable(chen_nmpc_qpoases_example
         chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
     target_link_libraries(chen_nmpc_qpoases_example acados)
