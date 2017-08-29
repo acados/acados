@@ -23,10 +23,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_target.h"
 
 // #include "catch/include/catch.hpp"
 
@@ -49,22 +49,14 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define TT 3.0
 #define Ns 2
 
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
+extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
 // using Eigen::MatrixXd;
 // using Eigen::VectorXd;
@@ -244,12 +236,13 @@ int main() {
             workspace_size =
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
-        if (jj == 0) sim_work = (void *)malloc(workspace_size);
+        // TODO(roversch): Next line is leaking memory!
+        sim_work = (void *)malloc(workspace_size);
         integrators[jj].work = sim_work;
     }
 
     int_t nx[NN + 1] = {0};
-    int_t nu[NN] = {0};
+    int_t nu[NN + 1] = {0};
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
     int_t ng[NN + 1] = {0};
@@ -269,15 +262,15 @@ int main() {
     d_zeros(&lb0, NX + NU, 1);
     real_t *ub0;
     d_zeros(&ub0, NX + NU, 1);
-    for (jj = 0; jj < NX; jj++) {
-        lb0[jj] = x0[jj];  // xmin
-        ub0[jj] = x0[jj];  // xmax
-        idxb0[jj] = jj;
-    }
-    for (; jj < NX + NU; jj++) {
+    for (jj = 0; jj < NU; jj++) {
         lb0[jj] = -UMAX;  // umin
         ub0[jj] = UMAX;   // umax
         idxb0[jj] = jj;
+    }
+    for (jj = 0; jj < NX; jj++) {
+        lb0[NU+jj] = x0[jj];  // xmin
+        ub0[NU+jj] = x0[jj];  // xmax
+        idxb0[NU+jj] = NU+jj;
     }
     nb[0] = NX + NU;
 
@@ -288,15 +281,15 @@ int main() {
     for (int_t i = 0; i < N - 1; i++) {
         d_zeros(&lb1[i], NMF + NU, 1);
         d_zeros(&ub1[i], NMF + NU, 1);
-        for (jj = 0; jj < NMF; jj++) {
-            lb1[i][jj] = wall_pos;  // wall position
-            ub1[i][jj] = 1e12;
-            idxb1[jj] = 6 * jj + 1;
-        }
         for (jj = 0; jj < NU; jj++) {
-            lb1[i][NMF + jj] = -UMAX;  // umin
-            ub1[i][NMF + jj] = UMAX;   // umax
-            idxb1[NMF + jj] = NX + jj;
+            lb1[i][jj] = -UMAX;  // umin
+            ub1[i][jj] = UMAX;   // umax
+            idxb1[jj] = jj;
+        }
+        for (jj = 0; jj < NMF; jj++) {
+            lb1[i][NU+jj] = wall_pos;  // wall position
+            ub1[i][NU+jj] = 1e12;
+            idxb1[NU+jj] = NU + 6 * jj + 1;
         }
         nb[i + 1] = NMF + NU;
     }

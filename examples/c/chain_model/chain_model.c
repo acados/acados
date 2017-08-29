@@ -1,24 +1,14 @@
 /* The model comes from \cite{Wirsching2006} */
 #include "examples/c/chain_model/chain_model.h"
 
-extern int jac_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm3(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm4(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm5(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm6(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm7(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm8(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-extern int jac_chain_nm9(void* mem, const real_t** arg, real_t** res, int* iw,
-                         real_t* w);
-
-// The auto-generated VDE functions from CasADi:
+extern int jac_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm3(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm4(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm5(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm6(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm7(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm8(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
+extern int jac_chain_nm9(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w);
 
 void VDE_fun_nm2(const real_t* in, real_t* out,
                  int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {

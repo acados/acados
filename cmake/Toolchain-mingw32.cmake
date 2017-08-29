@@ -17,10 +17,10 @@ find_program(CMAKE_RANLIB NAMES ${COMILER-PREFIX}-ranlib)
 
 # here is the target environment located
 if(APPLE)
-    SET(MACOS_PREFIX "local/Cellar/mingw-w64/5.0.2_1/toolchain-${BITNESS}/")
+    SET(MACOS_PREFIX "local/Cellar/mingw-w64/5.0.2_3/toolchain-${BITNESS}/")
 endif()
 SET(CMAKE_FIND_ROOT_PATH
-    "/usr/${MACOS_PREFIX}${COMPILER_PREFIX}"
+    "/usr/${MACOS_PREFIX}${COMPILER_PREFIX}/"
     "/usr/lib/gcc/${COMPILER_PREFIX}/*"
     "$ENV{HOME}/WindowsLibs")
 
