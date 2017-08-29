@@ -236,7 +236,8 @@ int main() {
             workspace_size =
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
-        if (jj == 0) sim_work = (void *)malloc(workspace_size);
+        // TODO(roversch): Next line is leaking memory!
+        sim_work = (void *)malloc(workspace_size);
         integrators[jj].work = sim_work;
     }
 
