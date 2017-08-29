@@ -52,7 +52,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_definitions(mass_spring_qpdunes_example PRIVATE USE_ACADOS_TYPES)
     add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
 
-    if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+    if (EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
         add_executable(mass_spring_ooqp_example mass_spring_ooqp.c)
         target_link_libraries(mass_spring_ooqp_example acados)
         add_test(mass_spring_ooqp_example mass_spring_ooqp_example)

@@ -37,22 +37,14 @@
 #define UMAX 2
 #define PARALLEL 0
 
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w,
-                         int mem);
+extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
 // static void shift_states(real_t *w, real_t *x_end, int_t NN) {
 //    for (int_t i = 0; i < NN; i++) {
@@ -71,32 +63,28 @@ extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w,
 // Simple SQP example for acados
 int main() {
     int_t nil;
+    int_t NMF_MAX = 4; // data exist up to 9 masses
+    int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
 
-    for (int_t implicit = 0; implicit < 4; implicit++) {
+    for (int_t implicit = 0; implicit < IMPL_MAX; implicit++) {
         if (implicit == 0) {
             printf(
-                "\n\n----------------------------------------------------------"
-                "----------\n");
+                "\n\n--------------------------------------------------------------------\n");
             printf(
-                "------------------ Explicit Runge-Kutta of order 4 "
-                "-----------------\n");
+                "------------------ Explicit Runge-Kutta of order 4 -----------------\n");
             printf(
-                "--------------------------------------------------------------"
-                "------\n");
+                "--------------------------------------------------------------------\n");
         } else {
             printf(
-                "\n\n----------------------------------------------------------"
-                "----------\n");
+                "\n\n--------------------------------------------------------------------\n");
             printf(
-                "-------------- Lifted Implicit Runge-Kutta of order %d "
-                "--------------\n",
+                "-------------- Lifted Implicit Runge-Kutta of order %d --------------\n",
                 2 * implicit);
             printf(
-                "--------------------------------------------------------------"
-                "------\n");
+                "--------------------------------------------------------------------\n");
         }
 
-        for (int_t NMF = 1; NMF < 9; NMF++) {
+        for (int_t NMF = 1; NMF < NMF_MAX; NMF++) {
             printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n",
                    NMF);
             int_t NX = 6 * NMF;
@@ -106,7 +94,7 @@ int main() {
             // Problem data
             int_t N = NN;
             real_t *x0;
-            real_t *w;  // States and controls stacked
+            real_t *w;  // states and controls stacked
             real_t *Q;
             real_t *R;
             real_t *xref;
@@ -263,36 +251,33 @@ int main() {
 
                 sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));
                 sim_in[jj].u = malloc(sizeof(*sim_in[jj].u) * (NU));
-                sim_in[jj].S_forw =
-                    malloc(sizeof(*sim_in[jj].S_forw) * (NX * (NX + NU)));
+                sim_in[jj].S_forw = malloc(sizeof(*sim_in[jj].S_forw) * (NX * (NX + NU)));
+
                 for (int_t i = 0; i < NX * (NX + NU); i++)
                     sim_in[jj].S_forw[i] = 0.0;
                 for (int_t i = 0; i < NX; i++)
                     sim_in[jj].S_forw[i * (NX + 1)] = 1.0;
 
                 sim_out[jj].xn = malloc(sizeof(*sim_out[jj].xn) * (NX));
-                sim_out[jj].S_forw =
-                    malloc(sizeof(*sim_out[jj].S_forw) * (NX * (NX + NU)));
+                sim_out[jj].S_forw = malloc(sizeof(*sim_out[jj].S_forw) * (NX * (NX + NU)));
                 sim_out[jj].info = &info[jj];
 
                 int_t workspace_size;
                 if (implicit > 0) {
                     sim_irk_create_arguments(&rk_opts[jj], implicit, "Gauss");
-
-                    workspace_size = sim_lifted_irk_calculate_workspace_size(
-                        &sim_in[jj], &rk_opts[jj]);
-                    sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj],
-                                                 &irk_mem[jj]);
+                    workspace_size =
+                        sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
+                    sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
                 } else {
                     sim_erk_create_arguments(&rk_opts[jj], 4);
-                    workspace_size = sim_erk_calculate_workspace_size(
-                        &sim_in[jj], &rk_opts[jj]);
+                    workspace_size =
+                        sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
                 }
                 if (jj == 0) sim_work = (void *)malloc(workspace_size);
             }
 
             int_t nx[NN + 1] = {0};
-            int_t nu[NN] = {0};
+            int_t nu[NN + 1] = {0};
             int_t nb[NN + 1] = {0};
             int_t nc[NN + 1] = {0};
             for (int_t i = 0; i < N; i++) {
@@ -311,35 +296,36 @@ int main() {
             d_zeros(&lb0, NX + NU, 1);
             real_t *ub0;
             d_zeros(&ub0, NX + NU, 1);
-            for (jj = 0; jj < NX; jj++) {
-                lb0[jj] = x0[jj];  //   xmin
-                ub0[jj] = x0[jj];  //   xmax
-                idxb0[jj] = jj;
+            for (int_t j = 0; j < NU; j++) {
+                lb0[j] = -UMAX;  //   umin
+                ub0[j] = UMAX;   //   umax
+                idxb0[j] = j;
             }
-            for (; jj < NX + NU; jj++) {
-                lb0[jj] = -UMAX;  //   umin
-                ub0[jj] = UMAX;   //   umax
-                idxb0[jj] = jj;
+            for (int_t j = 0; j < NX; j++) {
+                lb0[j + NU] = x0[j];  //   xmin
+                ub0[j + NU] = x0[j];  //   xmax
+                idxb0[j + NU] = j + NU;
             }
             nb[0] = NX + NU;
 
-            int *idxb1;
+            int_t *idxb1;
             int_zeros(&idxb1, NU, 1);
-            double *lb1[N - 1];
-            double *ub1[N - 1];
+            real_t *lb1[N - 1];
+            real_t *ub1[N - 1];
             for (int_t i = 0; i < N - 1; i++) {
                 d_zeros(&lb1[i], NU, 1);
                 d_zeros(&ub1[i], NU, 1);
-                //    for (jj = 0; jj < nbx; jj++) {
-                //        lb1[jj] = -4.0;  //   xmin
-                //        ub1[jj] = +4.0;   //   xmax
-                //        idxb1[jj] = jj;
-                //    }
-                for (jj = 0; jj < NU; jj++) {
-                    lb1[i][jj] = -UMAX;  //   umin
-                    ub1[i][jj] = UMAX;   //   umax
-                    idxb1[jj] = NX + jj;
+                for (int_t j = 0; j < NU; j++) {
+                    lb1[i][j] = -UMAX;  //   umin
+                    ub1[i][j] = UMAX;   //   umax
+                    idxb1[j] = j;
                 }
+                // NOTE(dimitris): not tested (need also to update bounds in the loop)
+                // for (int j = 0; j < nbx; j++) {
+                //     lb1[j + NU] = -4.0;  //   xmin
+                //     ub1[j + NU] = +4.0;  //   xmax
+                //     idxb1[j + NU] = NU + j;
+                // }
             }
 
             real_t *pA[N];
@@ -353,6 +339,12 @@ int main() {
             real_t *px[N + 1];
             real_t *pu[N];
             real_t *ppi[N];
+            real_t *plam[N + 1];
+            real_t *pCx[N + 1];
+            real_t *pCu[N];
+            real_t *plc[N + 1];
+            real_t *puc[N + 1];
+
             for (int_t i = 0; i < N; i++) {
                 d_zeros(&pA[i], nx[i + 1], nx[i]);
                 d_zeros(&pB[i], nx[i + 1], nu[i]);
@@ -363,9 +355,19 @@ int main() {
                 d_zeros(&px[i], nx[i], 1);
                 d_zeros(&pu[i], nu[i], 1);
                 d_zeros(&ppi[i], nx[i + 1], 1);
+                d_zeros(&plam[i], 2*nb[i] + 2*nc[i], 1);
+                d_zeros(&pCx[i], nc[i], nx[i]);
+                d_zeros(&pCu[i], nc[i], nu[i]);
+                d_zeros(&plc[i], nc[i], 1);
+                d_zeros(&puc[i], nc[i], 1);
             }
             d_zeros(&pq[N], nx[N], 1);
             d_zeros(&px[N], nx[N], 1);
+            d_zeros(&pCx[N], nc[N], nx[N]);
+            d_zeros(&plc[N], nc[N], 1);
+            d_zeros(&puc[N], nc[N], 1);
+
+            d_zeros(&plam[N], 2*nb[N] + 2*nc[N], 1);
 
             real_t *hlb[N + 1];
             real_t *hub[N + 1];
@@ -385,8 +387,7 @@ int main() {
             ocp_qp_in qp_in;
             qp_in.N = N;
             ocp_qp_out qp_out;
-            ocp_qp_condensing_qpoases_args args;
-            real_t *work = NULL;
+
             qp_in.nx = nx;
             qp_in.nu = nu;
             qp_in.nb = nb;
@@ -404,12 +405,36 @@ int main() {
             qp_in.A = (const real_t **)pA;
             qp_in.B = (const real_t **)pB;
             qp_in.b = (const real_t **)pb;
+            // TODO(dimitris): rename all to p
             qp_in.lb = (const real_t **)hlb;
             qp_in.ub = (const real_t **)hub;
             qp_in.idxb = (const int **)hidxb;
+            qp_in.Cx = (const real_t **)pCx;
+            qp_in.Cu = (const real_t **)pCu;
+            qp_in.lc = (const real_t **)plc;
+            qp_in.uc = (const real_t **)puc;;
             qp_out.x = px;
             qp_out.u = pu;
             qp_out.pi = ppi;
+            qp_out.lam = plam;
+
+            // Initialize solver
+            ocp_qp_condensing_qpoases_args qpoases_args;
+            ocp_qp_condensing_qpoases_memory qpoases_memory;
+
+            qpoases_args.cputime = 100.0;  // maximum cpu time in seconds
+            qpoases_args.warm_start = 0;
+            qpoases_args.nwsr = 1000;
+
+            int_t qpoases_workspace_size =
+                ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
+            int_t qpoases_memory_size =
+                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
+
+            void *qpoases_work = calloc(qpoases_workspace_size, sizeof(char));
+            void *mem = calloc(qpoases_memory_size, sizeof(char));
+
+            ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, mem);
 
             acados_timer timer;
             real_t timings = 0;
@@ -444,21 +469,15 @@ int main() {
                     }
 
                     for (int_t j = 0; j < NX; j++) {
-                        pb[i][j] =
-                            sim_out[i].xn[j] - w[(i + 1) * (NX + NU) + j];
+                        pb[i][j] = sim_out[i].xn[j] - w[(i + 1) * (NX + NU) + j];
                         if (fabs(pb[i][j]) > feas) feas = fabs(pb[i][j]);
                         for (int_t k = 0; k < NX; k++)
-                            pA[i][j * NX + k] =
-                                sim_out[i].S_forw[j * NX + k];  // COLUMN MAJOR
-                                                                // FROM CASADI
+                            pA[i][j * NX + k] = sim_out[i].S_forw[j * NX + k];  // COLUMN MAJOR
+                                                                                // FROM CASADI
                     }
                     for (int_t j = 0; j < NU; j++)
                         for (int_t k = 0; k < NX; k++)
-                            pB[i][j * NX + k] =
-                                sim_out[i].S_forw[(NX + j) * NX + k];  // COLUMN
-                                                                       // MAJOR
-                                                                       // FROM
-                                                                       // CASADI
+                            pB[i][j * NX + k] = sim_out[i].S_forw[(NX + j) * NX + k];
 
                     timings_sim += sim_out[i].info->CPUtime;
                     timings_la += sim_out[i].info->LAtime;
@@ -468,8 +487,8 @@ int main() {
                     // Update bounds:
                     if (i == 0) {
                         for (int_t j = 0; j < NU; j++) {
-                            lb0[NX + j] = -UMAX - w[NX + j];
-                            ub0[NX + j] = UMAX - w[NX + j];
+                            lb0[j] = -UMAX - w[NX + j];
+                            ub0[j] = UMAX - w[NX + j];
                         }
                     } else {
                         for (int_t j = 0; j < NU; j++) {
@@ -478,23 +497,21 @@ int main() {
                         }
                     }
 
-                    // Construct QP matrices
-                    for (int_t j = 0; j < NX; j++) {
-                        pq[i][j] =
-                            Q[j * (NX + 1)] * (w[i * (NX + NU) + j] - xref[j]);
-                    }
-                    for (int_t j = 0; j < NU; j++) {
-                        pr[i][j] = R[j * (NU + 1)] *
-                                   (w[i * (NX + NU) + NX + j] - uref[j]);
-                    }
+                    // Construct QP matrices:
+                    for (int_t j = 0; j < NX; j++)
+                        pq[i][j] = Q[j * (NX + 1)] * (w[i * (NX + NU) + j] - xref[j]);
+
+                    for (int_t j = 0; j < NU; j++)
+                        pr[i][j] = R[j * (NU + 1)] * (w[i * (NX + NU) + NX + j] - uref[j]);
+
                 }
                 for (int_t j = 0; j < NX; j++) {
-                    lb0[j] = (x0[j] - w[j]);
+                    lb0[j + NU] = (x0[j] - w[j]);
+                    ub0[j + NU] = (x0[j] - w[j]);
                 }
-                for (int_t j = 0; j < NX; j++) {
-                    pq[N][j] =
-                        Q[j * (NX + 1)] * (w[N * (NX + NU) + j] - xref[j]);
-                }
+
+                for (int_t j = 0; j < NX; j++)
+                    pq[N][j] = Q[j * (NX + 1)] * (w[N * (NX + NU) + j] - xref[j]);
 
                 // Set updated bounds:
                 hlb[0] = lb0;
@@ -505,8 +522,10 @@ int main() {
                 }
 
                 int status = 0;
-                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL,
-                                                   work);
+
+                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args,
+                    &qpoases_memory, qpoases_work);
+
                 if (status) {
                     printf("qpOASES returned error status %d\n", status);
                     return -1;
@@ -557,6 +576,8 @@ int main() {
             //    #ifdef DEBUG
             //    print_matrix_name("stdout", "sol", w, NX+NU, N);
             //    #endif  // DEBUG
+
+            // TODO(dimitris): this program is leaking memory
         }
     }
     return 0 * nil;

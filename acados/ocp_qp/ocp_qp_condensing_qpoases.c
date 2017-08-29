@@ -387,8 +387,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     int ngd = qpd->ng;
 
     // ocp qp structure
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub,
-                           hC, hD, hd_lg, hd_ug, qp);
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub, hC, hD,
+        hd_lg, hd_ug, qp);
 
     // dense qp structure
     d_cond_qp_ocp2dense(qp, qpd, cond_workspace);
@@ -402,8 +402,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     dtrtr_l_libstr(nvd, qpd->Hg, 0, 0, qpd->Hg, 0, 0);
 
     // dense qp row-major
-    d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg,
-                             d_ug);
+    d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug);
 
     // reorder bounds
     for (ii = 0; ii < nvd; ii++) {
