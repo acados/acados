@@ -145,7 +145,7 @@ int main() {
     sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN + 1] = {0};
-    int_t nu[NN] = {0};
+    int_t nu[NN + 1] = {0};
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
     for (int_t i = 0; i < NN; i++) {
