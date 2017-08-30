@@ -37,6 +37,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
@@ -568,8 +569,8 @@ int main() {
 
     int return_value;
 
-    struct timeval tv0, tv1;
-    gettimeofday(&tv0, NULL);  // stop
+    acados_timer timer;
+    acados_tic(&timer);
 
     //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
@@ -580,7 +581,7 @@ int main() {
                                                &hpipm_memory, workspace);
     }
 
-    gettimeofday(&tv1, NULL);  // stop
+    real_t time = acados_toc(&timer)/nrep;
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n",
@@ -598,9 +599,6 @@ int main() {
     printf("\nx = \n");
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
-    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
-
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0],
            hpipm_memory.inf_norm_res[1], hpipm_memory.inf_norm_res[2],
@@ -608,8 +606,7 @@ int main() {
     printf("\n");
     printf(
         " Solution time for %d IPM iterations, averaged over %d runs: %5.2e "
-        "seconds\n",
-        hpipm_memory.iter, nrep, time);
+        "seconds\n", hpipm_memory.iter, nrep, time);
     printf("\n\n");
 
     /************************************************
