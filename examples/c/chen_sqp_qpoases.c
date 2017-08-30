@@ -48,7 +48,6 @@ static void print_states_controls(real_t **w, int_t N) {
 // Simple SQP example for acados
 int main() {
     // Problem data
-    int_t N = NN;
     real_t x0[NX] = {0.5, 0};
     real_t Q[NX * NX] = {0};
     real_t R[NU * NU] = {0};
@@ -113,25 +112,25 @@ int main() {
     int_t nu[NN] = {0};
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[N] = NX;
+    nx[NN] = NX;
 
-    real_t *pA[N];
-    real_t *pB[N];
-    real_t *pb[N];
-    real_t *pQ[N + 1];
-    real_t *pS[N];
-    real_t *pR[N];
-    real_t *pq[N + 1];
-    real_t *pr[N];
-    real_t *px[N + 1];
-    real_t *pu[N];
+    real_t *pA[NN];
+    real_t *pB[NN];
+    real_t *pb[NN];
+    real_t *pQ[NN + 1];
+    real_t *pS[NN];
+    real_t *pR[NN];
+    real_t *pq[NN + 1];
+    real_t *pr[NN];
+    real_t *px[NN + 1];
+    real_t *pu[NN];
     real_t *px0[1];
     d_zeros(&px0[0], nx[0], 1);
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         d_zeros(&pA[i], nx[i + 1], nx[i]);
         d_zeros(&pB[i], nx[i + 1], nu[i]);
         d_zeros(&pb[i], nx[i + 1], 1);
@@ -141,25 +140,25 @@ int main() {
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
     }
-    d_zeros(&pq[N], nx[N], 1);
-    d_zeros(&px[N], nx[N], 1);
+    d_zeros(&pq[NN], nx[NN], 1);
+    d_zeros(&px[NN], nx[NN], 1);
 
-    real_t *ppi[N];
-    real_t *plam[N + 1];
+    real_t *ppi[NN];
+    real_t *plam[NN + 1];
 
     int ii;
     ii = 0;
     d_zeros(&ppi[ii], nx[ii + 1], 1);
     d_zeros(&plam[ii], 2 * nb[ii], 1);
-    for (ii = 1; ii < N; ii++) {
+    for (ii = 1; ii < NN; ii++) {
         d_zeros(&ppi[ii], nx[ii + 1], 1);
         d_zeros(&plam[ii], 2 * nb[ii], 1);
     }
-    d_zeros(&plam[N], 2 * nb[N], 1);
+    d_zeros(&plam[NN], 2 * nb[NN], 1);
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
-    qp_in.N = N;
+    qp_in.N = NN;
     ocp_qp_out qp_out;
     ocp_qp_condensing_qpoases_args args;
     real_t *work = NULL;
@@ -167,11 +166,11 @@ int main() {
     qp_in.nu = nu;
     qp_in.nb = nb;
     qp_in.nc = nc;
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         pQ[i] = Q;
         pR[i] = R;
     }
-    pQ[N] = Q;
+    pQ[NN] = Q;
     qp_in.Q = (const real_t **)pQ;
     qp_in.S = (const real_t **)pS;
     qp_in.R = (const real_t **)pR;
@@ -194,19 +193,19 @@ int main() {
     real_t total_time = 0;
 
     // Define residuals
-    real_t *res_stat[N + 1];
-    real_t *res_eq[N];
-    real_t *res_ineq[N + 1];
-    real_t *res_compl[N + 1];
+    real_t *res_stat[NN + 1];
+    real_t *res_eq[NN];
+    real_t *res_ineq[NN + 1];
+    real_t *res_compl[NN + 1];
 
     // Allocate memory for the residuals
-    for (ii = 0; ii < N; ii++) {
+    for (ii = 0; ii < NN; ii++) {
         d_zeros(&res_stat[ii], nx[ii] + nu[ii], 1);
         d_zeros(&res_eq[ii], nx[ii + 1], 1);
         d_zeros(&res_ineq[ii], 2 * nb[ii], 1);
         d_zeros(&res_compl[ii], 2 * nb[ii], 1);
     }
-    ii = N;
+    ii = NN;
     d_zeros(&res_stat[ii], nx[ii] + nu[ii], 1);
     d_zeros(&res_ineq[ii], 2 * nb[ii], 1);
     d_zeros(&res_compl[ii], 2 * nb[ii], 1);
@@ -217,7 +216,7 @@ int main() {
 
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
             printf("\n------ ITERATION %d ------\n", sqp_iter);
-            for (int_t i = 0; i < N; i++) {
+            for (int_t i = 0; i < NN; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i][j];
                 for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i][j + NX];
@@ -245,12 +244,12 @@ int main() {
                 px0[0][j] = (x0[j] - w[0][j]);
             }
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j * (NX + 1)] * (w[N][j] - xref[j]);
+                pq[NN][j] = Q[j * (NX + 1)] * (w[NN][j] - xref[j]);
             }
 
             // Compute residuals
             int_t i;
-            for (i = 0; i < N - 1; i++) {
+            for (i = 0; i < NN - 1; i++) {
                 for (int_t j = 0; j < nx[i] + nu[i]; j++)
                     res_stat[i][j] = -pi_n[i][j];
                 dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
@@ -264,7 +263,7 @@ int main() {
                 printf("Stationarity residuals = %f\n",
                        twonormv(NX, res_stat[i]));
             }
-            i = N;
+            i = NN;
             for (int_t j = 0; j < nx[i] + nu[i]; j++)
                 res_stat[i][j] = -pi_n[i][j];
             dgemv_n_3l(NX, NX, pQ[i], NX, w[i], res_stat[i]);
@@ -290,7 +289,7 @@ int main() {
                 lam_n[i][j] += qp_out.lam[i][j];
             // printf("checkpoint=%i\n",status);
 
-            for (i = 1; i < N; i++) {
+            for (i = 1; i < NN; i++) {
                 for (int_t j = 0; j < NX; j++) w[i][j] += qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++) w[i][j + NX] += qp_out.u[i][j];
                 printf("x_step=%f\n", qp_out.x[i][0]);
@@ -299,7 +298,7 @@ int main() {
                 for (int_t j = 0; j < 2 * (NBX + NBU); j++)
                     lam_n[i][j] += qp_out.lam[i][j];
             }
-            i = N;
+            i = NN;
             for (int_t j = 0; j < 2 * (NBU); j++)
                 lam_n[i][j] += qp_out.lam[i][j];
             for (int_t j = 0; j < NX; j++) w[i][j] += qp_out.x[i][j];
@@ -307,7 +306,7 @@ int main() {
         }
     }
 #ifdef DEBUG
-    print_states_controls(&w[0], N);
+    print_states_controls(&w[0], NN);
 #endif  // DEBUG
     total_time = acados_toc(&timer);
     printf("Average of %.3f ms per iteration.\n", 1e3*total_time/timing_iters);

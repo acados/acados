@@ -79,7 +79,6 @@ static void shift_controls(real_t *w, real_t *u_end, int_t N) {
 // Simple SQP example for acados
 int main() {
     // Problem data
-    int_t N = NN;
     real_t x0[NX] = {0.05, 0};
     real_t w[NN * (NX + NU) + NX] = {0};  // States and controls stacked
     real_t Q[NX * NX] = {0};
@@ -127,31 +126,31 @@ int main() {
     sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
 
     int_t nx[NN + 1] = {0};
-    int_t nu[NN] = {0};
+    int_t nu[NN + 1] = {0};
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
         nu[i] = NU;
     }
-    nx[N] = NX;
+    nx[NN] = NX;
 
-    real_t *pA[N];
-    real_t *pB[N];
-    real_t *pb[N];
-    real_t *pQ[N + 1];
-    real_t *pS[N];
-    real_t *pR[N];
-    real_t *pq[N + 1];
-    real_t *pr[N];
-    real_t *px[N + 1];
-    real_t *pu[N];
+    real_t *pA[NN];
+    real_t *pB[NN];
+    real_t *pb[NN];
+    real_t *pQ[NN + 1];
+    real_t *pS[NN];
+    real_t *pR[NN];
+    real_t *pq[NN + 1];
+    real_t *pr[NN];
+    real_t *px[NN + 1];
+    real_t *pu[NN];
     real_t *px0[1];
-    int *hidxb[N + 1];
-    real_t *pC[N + 1];
-    real_t *pD[N];
-    real_t *plg[N + 1];
-    real_t *pug[N + 1];
+    int *hidxb[NN + 1];
+    real_t *pC[NN + 1];
+    real_t *pD[NN];
+    real_t *plg[NN + 1];
+    real_t *pug[NN + 1];
 
     /************************************************
      * box constraints
@@ -159,8 +158,8 @@ int main() {
     int ii;
 
     nb[0] = 0;
-    for (ii = 1; ii < N; ii++) nb[ii] = 0;
-    nb[N] = 0;
+    for (ii = 1; ii < NN; ii++) nb[ii] = 0;
+    nb[NN] = 0;
 
     int *idxb0;
     int_zeros(&idxb0, nb[0], 1);
@@ -171,16 +170,16 @@ int main() {
     int_zeros(&idxb1, nb[1], 1);
 
     int *idxbN;
-    int_zeros(&idxbN, nb[N], 1);
+    int_zeros(&idxbN, nb[NN], 1);
 
-    for (ii = 1; ii < N; ii++) {
+    for (ii = 1; ii < NN; ii++) {
         hidxb[ii] = idxb1;
     }
 
-    hidxb[N] = idxbN;
+    hidxb[NN] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         d_zeros(&pA[i], nx[i + 1], nx[i]);
         d_zeros(&pB[i], nx[i + 1], nu[i]);
         d_zeros(&pb[i], nx[i + 1], 1);
@@ -190,9 +189,9 @@ int main() {
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
     }
-    d_zeros(&pq[N], nx[N], 1);
-    d_zeros(&px[N], nx[N], 1);
-    // hidxb[N] = idxbN;
+    d_zeros(&pq[NN], nx[NN], 1);
+    d_zeros(&px[NN], nx[NN], 1);
+    // hidxb[NN] = idxbN;
 
     nx[0] = 0;
     //    d_print_mat(nx, 1, b, nx);
@@ -205,9 +204,9 @@ int main() {
     int ng = 0;   // 4;  // number of general constraints
     int ngN = 0;  // 4;  // number of general constraints at the last stage
 
-    int ngg[N + 1];
-    for (ii = 0; ii < N; ii++) ngg[ii] = ng;
-    ngg[N] = ngN;
+    int ngg[NN + 1];
+    for (ii = 0; ii < NN; ii++) ngg[ii] = ng;
+    ngg[NN] = ngN;
 
     /************************************************
      * general constraints
@@ -242,13 +241,13 @@ int main() {
     pD[0] = D0;
     plg[0] = lg0;
     pug[0] = ug0;
-    real_t *ppi[N];
-    real_t *plam[N + 1];
+    real_t *ppi[NN];
+    real_t *plam[NN + 1];
 
     ii = 0;
     d_zeros(&ppi[ii], nx[ii + 1], 1);
     d_zeros(&plam[ii], 2 * nb[ii] + 2 * nb[ii], 1);
-    for (ii = 1; ii < N; ii++) {
+    for (ii = 1; ii < NN; ii++) {
         pC[ii] = C;
         pD[ii] = D;
         plg[ii] = lg;
@@ -256,9 +255,9 @@ int main() {
         d_zeros(&ppi[ii], nx[ii + 1], 1);
         d_zeros(&plam[ii], 2 * nb[ii] + 2 * nb[ii], 1);
     }
-    pC[N] = CN;
-    plg[N] = lgN;
-    pug[N] = ugN;
+    pC[NN] = CN;
+    plg[NN] = lgN;
+    pug[NN] = ugN;
 
     /************************************************
      * solver arguments
@@ -272,13 +271,13 @@ int main() {
     hpmpc_args.mu0 = 0.0;
     //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
-    hpmpc_args.N2 = N;
+    hpmpc_args.N2 = NN;
 
     /************************************************
      * work space
      ************************************************/
 
-    int work_space_size = ocp_qp_hpmpc_workspace_size_bytes(N, nx, nu, nb, ngg,
+    int work_space_size = ocp_qp_hpmpc_workspace_size_bytes(NN, nx, nu, nb, ngg,
                                                             hidxb, &hpmpc_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
 
@@ -288,17 +287,17 @@ int main() {
     // double workspace[500000];
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
-    qp_in.N = N;
+    qp_in.N = NN;
     ocp_qp_out qp_out;
     qp_in.nx = nx;
     qp_in.nu = nu;
     qp_in.nb = nb;
     qp_in.nc = nc;
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i < NN; i++) {
         pQ[i] = Q;
         pR[i] = R;
     }
-    pQ[N] = Q;
+    pQ[NN] = Q;
     qp_in.Q = (const real_t **)pQ;
     qp_in.S = (const real_t **)pS;
     qp_in.R = (const real_t **)pR;
@@ -326,7 +325,7 @@ int main() {
     for (int_t iter = 0; iter < max_iters; iter++) {
         // printf("\n------ ITERATION %d ------\n", iter);
         for (int_t sqp_iter = 0; sqp_iter < max_sqp_iters; sqp_iter++) {
-            for (int_t i = 0; i < N; i++) {
+            for (int_t i = 0; i < NN; i++) {
                 // Pass state and control to integrator
                 for (int_t j = 0; j < NX; j++)
                     sim_in.x[j] = w[i * (NX + NU) + j];
@@ -360,7 +359,7 @@ int main() {
             dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
 
             for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j] * (w[N * (NX + NU) + j] - xref[j]);
+                pq[NN][j] = Q[j] * (w[NN * (NX + NU) + j] - xref[j]);
             }
             int status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, workspace);
             // int status = 0;
@@ -369,21 +368,21 @@ int main() {
 
             if (status == 2) printf("status = ACADOS_MINSTEP\n");
 
-            for (int_t i = 0; i < N; i++) {
+            for (int_t i = 0; i < NN; i++) {
                 for (int_t j = 0; j < NX; j++)
                     w[i * (NX + NU) + j] += qp_out.x[i][j];
                 for (int_t j = 0; j < NU; j++)
                     w[i * (NX + NU) + NX + j] += qp_out.u[i][j];
             }
             for (int_t j = 0; j < NX; j++)
-                w[N * (NX + NU) + j] += qp_out.x[N][j];
+                w[NN * (NX + NU) + j] += qp_out.x[NN][j];
         }
         for (int_t i = 0; i < NX; i++) x0[i] = w[NX + NU + i];
-        shift_states(w, x_end, N);
-        shift_controls(w, u_end, N);
+        shift_states(w, x_end, NN);
+        shift_controls(w, u_end, NN);
     }
 #ifdef DEBUG
-    print_states_controls(&w[0], N);
+    print_states_controls(&w[0], NN);
     #endif  // DEBUG
     total_time = acados_toc(&timer);
     printf("Average of %.3f ms per iteration.\n", 1e3*total_time/max_iters);
