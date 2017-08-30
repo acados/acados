@@ -445,9 +445,9 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
         QProblem_setPrintLevel(QP, PL_MEDIUM);
         QProblem_printProperties(QP);
         return_flag =
-            QProblem_init(QP, H, g, C, d_lb,                   // initW
-                          d_ub, d_lg, d_ug, &nwsr, &cputime);  //, NULL,
-        //            dual_sol, NULL, NULL, NULL);
+            QProblem_initW(QP, H, g, C, d_lb,                   // initW
+                d_ub, d_lg, d_ug, &nwsr, &cputime,
+                0, dual_sol, 0, 0, NULL);
         //            NULL, NULL, NULL, NULL);
         //            NULL, NULL, NULL, R);
         QProblem_getPrimalSolution(QP, prim_sol);
@@ -456,9 +456,9 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
         QProblemBCON(QPB, nvd, HST_POSDEF);
         QProblemB_setPrintLevel(QPB, PL_MEDIUM);
         QProblemB_printProperties(QPB);
-        return_flag = QProblemB_init(QPB, H, g, d_lb,         // initW
-                                     d_ub, &nwsr, &cputime);  //, NULL,
-        //            dual_sol, NULL, NULL);
+        return_flag = QProblemB_initW(QPB, H, g, d_lb,         // initW
+            d_ub, &nwsr, &cputime,
+            0, dual_sol, 0, NULL);
         QProblemB_getPrimalSolution(QPB, prim_sol);
         QProblemB_getDualSolution(QPB, dual_sol);
     }
