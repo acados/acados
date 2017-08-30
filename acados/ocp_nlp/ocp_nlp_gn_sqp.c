@@ -72,7 +72,7 @@ static void initialize_objective(
     real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
     // TODO(rien): only for least squares cost with state and control reference atm
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) {
                 qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
@@ -87,11 +87,6 @@ static void initialize_objective(
                 qp_R[i][j * nu[i] + k] =
                     cost->W[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
             }
-        }
-    }
-    for (int_t j = 0; j < nx[N]; j++) {
-        for (int_t k = 0; k < nx[N]; k++) {
-            qp_Q[N][j * nx[N] + k] = cost->W[N][j * nx[N] + k];
         }
     }
 }
