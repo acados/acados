@@ -32,6 +32,11 @@ mkdir -p casadi-matlabR2014b-v3.1.1
 tar -xf casadi-matlabR2014b-v3.1.1.tar.gz -C casadi-matlabR2014b-v3.1.1
 export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
 
+wget -q http://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64/libblas.lib
+sudo mv libblas.lib /usr/x86_64-w64-mingw32/lib/libblas.a
+wget -q http://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64/liblapack.lib
+sudo mv liblapack.lib /usr/x86_64-w64-mingw32/lib/liblapack.a
+
 pushd swig
 
 ./autogen.sh
