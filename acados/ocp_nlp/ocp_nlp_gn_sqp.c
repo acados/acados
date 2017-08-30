@@ -165,7 +165,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
                 qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
             } else {
                 qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-                qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];      
+                qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
             }
         }
 
@@ -192,7 +192,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
             qp_ub[N][j] = nlp->ub[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
         } else {
             qp_lb[N][j] = nlp->lb[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
-            qp_ub[N][j] = nlp->ub[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];      
+            qp_ub[N][j] = nlp->ub[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
         }
     }
 
