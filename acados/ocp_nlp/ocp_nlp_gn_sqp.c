@@ -103,7 +103,7 @@ static void initialize_trajectories(
     real_t *w = work->common->w;
 
     int_t w_idx = 0;
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             w[w_idx + j] = gn_sqp_mem->common->x[i][j];
         }
@@ -111,9 +111,6 @@ static void initialize_trajectories(
             w[w_idx + nx[i] + j] = gn_sqp_mem->common->u[i][j];
         }
         w_idx += nx[i] + nu[i];
-    }
-    for (int_t j = 0; j < nx[N]; j++) {
-        w[w_idx + j] = gn_sqp_mem->common->x[N][j];
     }
 }
 
@@ -202,18 +199,19 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, 
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
 
-    int_t w_idx = 0;
-    for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
+    for (int_t i = 0; i < N; i++)
+        for (int_t j = 0; j < nx[i+1]; j++)
             sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
+
+    int_t w_idx = 0;
+    for (int_t i = 0; i <= N; i++) {
+        for (int_t j = 0; j < nx[i]; j++) {
             w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++)
             w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
-    for (int_t j = 0; j < nx[N]; j++)
-        w[w_idx+j] += mem->qp_solver->qp_out->x[N][j];
 }
 
 
@@ -294,8 +292,8 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     return 0;
 }
 
-void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_,
-                                  void *memory_) {
+void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
+
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
 

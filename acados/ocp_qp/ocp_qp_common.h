@@ -54,7 +54,7 @@ typedef struct {
     real_t **u;
     real_t **pi;
     real_t **lam;
-    real_t **t;  // TODO(roversch): remove
+    real_t **t;  // TODO(roversch): remove!
 } ocp_qp_out;
 
 typedef struct {
