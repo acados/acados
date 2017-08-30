@@ -147,6 +147,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(
 void ocp_qp_condensing_qpoases_create_memory(
     ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args,
     ocp_qp_condensing_qpoases_memory *qpoases_memory, void *memory) {
+
     // extract problem size
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -160,8 +161,7 @@ void ocp_qp_condensing_qpoases_create_memory(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
-    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd,
-                                &ngd);
+    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 
     // char pointer
     char *c_ptr = (char *)memory;
@@ -446,8 +446,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
         QProblem_printProperties(QP);
         return_flag =
             QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-                NULL, dual_sol, NULL, NULL, NULL);
-                // 0, dual_sol, 0, 0, NULL);
+                NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
         //            NULL, NULL, NULL, NULL);
         //            NULL, NULL, NULL, R);  // to provide Cholesky factor
         QProblem_getPrimalSolution(QP, prim_sol);
@@ -457,8 +456,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
         QProblemB_setPrintLevel(QPB, PL_MEDIUM);
         QProblemB_printProperties(QPB);
         return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
-            NULL, dual_sol, NULL, NULL);
-            // 0, dual_sol, 0, NULL);
+            NULL, dual_sol, NULL, NULL);  // NULL or 0
         QProblemB_getPrimalSolution(QPB, prim_sol);
         QProblemB_getDualSolution(QPB, dual_sol);
     }
