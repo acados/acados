@@ -22,6 +22,9 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
@@ -557,8 +560,8 @@ int main() {
 
     int return_value;
 
-    struct timeval tv0, tv1;
-    gettimeofday(&tv0, NULL);  // stop
+    acados_timer timer;
+    acados_tic(&timer);
 
     //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
@@ -569,7 +572,7 @@ int main() {
                                     workspace);
     }
 
-    gettimeofday(&tv1, NULL);  // stop
+    real_t time = acados_toc(&timer)/nrep;
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n",
@@ -586,9 +589,6 @@ int main() {
 
     printf("\nx = \n");
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
-
-    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
 
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0],

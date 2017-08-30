@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
@@ -736,8 +739,8 @@ int main() {
      ************************************************/
 
     int return_value = 0;
-    struct timeval tv0, tv1;
-    gettimeofday(&tv0, NULL);  // stop
+    acados_timer timer;
+    acados_tic(&timer);
 
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
@@ -745,10 +748,7 @@ int main() {
             ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
     }
 
-    gettimeofday(&tv1, NULL);  // stop
-
-    double time = (tv1.tv_sec - tv0.tv_sec) / (nrep + 0.0) +
-                  (tv1.tv_usec - tv0.tv_usec) / (nrep * 1e6);
+    real_t time = acados_toc(&timer)/nrep;
 
     printf("\nu = \n");
     for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
