@@ -31,3 +31,9 @@
 - [ ] 'code generation' of driver files such that users don't have to code them manually
 - [ ] short Python doctests to exemplify usage of interface functions
 - [ ] installation via conda and/or pip
+- [ ] RTI implementation similar to ACADO
+- [ ] Provide Simulink blocks as an interface (self-written or Legacy Code Tool)
+- [ ] HPMPC and HPIPM for MSVC / dSpace
+- [ ] Proper installation instructions/Troubleshooting on the Wiki/Readme
+- [ ] Installation instructions for MacOS
+- [ ] Provide separate documentation page
