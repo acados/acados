@@ -22,9 +22,6 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "acados/utils/timing.h"
-#include "acados/utils/types.h"
-
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
@@ -40,6 +37,7 @@
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
+#include "acados/utils/timing.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
