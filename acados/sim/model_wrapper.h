@@ -28,7 +28,7 @@ extern "C" {
 
 void jac_fun(const real_t* in, real_t* out);
 void vde_fun(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+             int (*vde)(const real_t**, real_t**, int*, real_t*, int));
 
 #ifdef __cplusplus
 } /* extern "C" */

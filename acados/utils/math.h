@@ -29,7 +29,8 @@
 extern "C" {
 #endif
 
-void dgemm_nn_3l(int m, int n, int k, double *A, int lda , double *B, int ldb, double *C, int ldc);
+void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
+                 double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
 void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y);
 void dcopy_3l(int n, double *x, int incx, double *y, int incy);
@@ -41,7 +42,8 @@ double twonormv(int n, double *ptrv);
 void dmcopy(int row, int col, double *ptrA, int lda, double *ptrB, int ldb);
 
 /* solution of a system of linear equations */
-void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B, int ldb, int *info);
+void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
+              int ldb, int *info);
 
 /* matrix exponential */
 void expm(int row, double *A);
@@ -63,7 +65,7 @@ void dgetrs_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
                int ldb);
 
 void dgesv_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
-                             int ldb, int *info);
+              int ldb, int *info);
 
 double onenorm(int row, int col, double *ptrA);
 

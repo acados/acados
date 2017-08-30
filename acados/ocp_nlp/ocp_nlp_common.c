@@ -33,23 +33,22 @@ static int_t number_of_primal_vars(const ocp_nlp_in *in) {
     return num_vars;
 }
 
-
 void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_) {
-    ocp_nlp_memory *mem = (ocp_nlp_memory *) mem_;
+    ocp_nlp_memory *mem = (ocp_nlp_memory *)mem_;
     mem->num_vars = number_of_primal_vars(in);
-    mem->x = (real_t **) calloc(in->N+1, sizeof(*mem->x));
-    mem->u = (real_t **) calloc(in->N, sizeof(*mem->u));
-    mem->lam = (real_t **) calloc(in->N, sizeof(*mem->lam));
+    mem->x = (real_t **)calloc(in->N + 1, sizeof(*mem->x));
+    mem->u = (real_t **)calloc(in->N, sizeof(*mem->u));
+    mem->lam = (real_t **)calloc(in->N, sizeof(*mem->lam));
     for (int_t i = 0; i < in->N; i++) {
-        mem->x[i] = (real_t *) calloc(in->nx[i], sizeof(*mem->x[i]));
-        mem->u[i] = (real_t *) calloc(in->nu[i], sizeof(*mem->u[i]));
-        mem->lam[i] = (real_t *) calloc(in->nx[i], sizeof(*mem->lam[i]));
+        mem->x[i] = (real_t *)calloc(in->nx[i], sizeof(*mem->x[i]));
+        mem->u[i] = (real_t *)calloc(in->nu[i], sizeof(*mem->u[i]));
+        mem->lam[i] = (real_t *)calloc(in->nx[i], sizeof(*mem->lam[i]));
     }
-    mem->x[in->N] = (real_t *) calloc(in->nx[in->N], sizeof(*mem->x[in->N]));
+    mem->x[in->N] = (real_t *)calloc(in->nx[in->N], sizeof(*mem->x[in->N]));
 }
 
 void ocp_nlp_free_memory(int_t N, void *mem_) {
-    ocp_nlp_memory *mem = (ocp_nlp_memory *) mem_;
+    ocp_nlp_memory *mem = (ocp_nlp_memory *)mem_;
 
     for (int_t i = 0; i < N; i++) {
         free(mem->x[i]);
@@ -62,9 +61,8 @@ void ocp_nlp_free_memory(int_t N, void *mem_) {
     free(mem->lam);
 }
 
-
 int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
-    ocp_nlp_args *args = (ocp_nlp_args*) args_;
+    ocp_nlp_args *args = (ocp_nlp_args *)args_;
 
     int_t size;
     int_t num_vars = number_of_primal_vars(in);
@@ -72,16 +70,16 @@ int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     args->dummy = 1;
 
     size = sizeof(ocp_nlp_work);
-    size += num_vars*sizeof(real_t);
+    size += num_vars * sizeof(real_t);
 
     return size;
 }
 
-
 void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem) {
-    char *ptr = (char *) work;
+    char *ptr = (char *)work;
 
     ptr += sizeof(ocp_nlp_work);
-    work->w = (real_t*) ptr;
-    ptr += mem->num_vars*sizeof(real_t);  // TODO(robin): ptr never used again?
+    work->w = (real_t *)ptr;
+    ptr +=
+        mem->num_vars * sizeof(real_t);  // TODO(robin): ptr never used again?
 }

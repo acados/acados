@@ -27,6 +27,7 @@ endif()
 
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
+
 # Exclude helper files
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c")
 # Exclude files not compatible with MSVC
@@ -43,12 +44,13 @@ add_library(acados ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..> # for include "acados/..."
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/blasfeo/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<INSTALL_INTERFACE:include>)
 
 # HPMPC must come before BLASFEO!
 if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    target_link_libraries(acados PUBLIC hpmpc)
+    target_link_libraries(acados PUBLIC hpmpc hpipm)
 endif()
 target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
 

@@ -17,7 +17,7 @@
 #
 #
 
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.0)
 
 if(NOT (SWIG_MATLAB OR SWIG_PYTHON))
     return()

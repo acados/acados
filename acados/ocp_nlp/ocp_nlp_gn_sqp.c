@@ -28,11 +28,11 @@
 #ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_qp/allocate_ocp_qp.h"
-#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -48,14 +48,12 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
     return size;
 }
 
-
 static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
-    ocp_nlp_gn_sqp_memory *mem) {
-
+                                          ocp_nlp_gn_sqp_memory *mem) {
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_nlp_gn_sqp_work);
-    work->common = (ocp_nlp_work*) ptr;
+    work->common = (ocp_nlp_work *)ptr;
     ocp_nlp_cast_workspace(work->common, mem->common);
 }
 
@@ -77,21 +75,23 @@ static void initialize_objective(
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) {
-                qp_Q[i][j*nx[i]+k] = cost->W[i][j*(nx[i]+nu[i])+k];
+                qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
             }
             for (int_t k = 0; k < nu[i]; k++) {
-                qp_S[i][j*nu[i]+k] = cost->W[i][j*(nx[i]+nu[i])+nx[i]+k];
+                qp_S[i][j * nu[i] + k] =
+                    cost->W[i][j * (nx[i] + nu[i]) + nx[i] + k];
             }
         }
         for (int_t j = 0; j < nu[i]; j++) {
             for (int_t k = 0; k < nu[i]; k++) {
-                qp_R[i][j*nu[i]+k] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i])+nx[i]+k];
+                qp_R[i][j * nu[i] + k] =
+                    cost->W[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
             }
         }
     }
     for (int_t j = 0; j < nx[N]; j++) {
         for (int_t k = 0; k < nx[N]; k++) {
-            qp_Q[N][j*nx[N]+k] = cost->W[N][j*nx[N]+k];
+            qp_Q[N][j * nx[N] + k] = cost->W[N][j * nx[N] + k];
         }
     }
 }
@@ -110,15 +110,15 @@ static void initialize_trajectories(
     int_t w_idx = 0;
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
-            w[w_idx+j] = gn_sqp_mem->common->x[i][j];
+            w[w_idx + j] = gn_sqp_mem->common->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++) {
-            w[w_idx+nx[i]+j] = gn_sqp_mem->common->u[i][j];
+            w[w_idx + nx[i] + j] = gn_sqp_mem->common->u[i][j];
         }
-        w_idx += nx[i]+nu[i];
+        w_idx += nx[i] + nu[i];
     }
     for (int_t j = 0; j < nx[N]; j++) {
-        w[w_idx+j] = gn_sqp_mem->common->x[N][j];
+        w[w_idx + j] = gn_sqp_mem->common->x[N][j];
     }
 }
 
@@ -160,8 +160,13 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
 
         // Update bounds:
         for (int_t j = 0; j < nlp->nb[i]; j++) {
-            qp_lb[i][j] = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
-            qp_ub[i][j] = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
+            if (nlp->idxb[i][j] < nu[i]) {
+                qp_lb[i][j] = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+                qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+            } else {
+                qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+                qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+            }
         }
 
         // Update gradients
@@ -182,8 +187,13 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
     }
 
     for (int_t j = 0; j < nlp->nb[N]; j++) {
-        qp_lb[N][j] = nlp->lb[N][j] - w[w_idx+nlp->idxb[N][j]];
-        qp_ub[N][j] = nlp->ub[N][j] - w[w_idx+nlp->idxb[N][j]];
+        if (nlp->idxb[N][j] < nu[N]) {
+            qp_lb[N][j] = nlp->lb[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
+            qp_ub[N][j] = nlp->ub[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
+        } else {
+            qp_lb[N][j] = nlp->lb[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
+            qp_ub[N][j] = nlp->ub[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
+        }
     }
 
     for (int_t j = 0; j < nx[N]; j++)
@@ -229,7 +239,7 @@ static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_memory *memory, oc
             memory->u[i][j] = w[w_idx+nx[i]+j];
             out->u[i][j] = w[w_idx+nx[i]+j];
         }
-        w_idx += nx[i]+nu[i];
+        w_idx += nx[i] + nu[i];
     }
 }
 
@@ -289,41 +299,41 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     return 0;
 }
 
+void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_,
+                                  void *memory_) {
+    ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
+    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
 
-void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
-    ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *) args_;
-    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *) memory_;
-
-    mem->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
-    ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
+    mem->qp_solver = (ocp_qp_solver *)malloc(sizeof(ocp_qp_solver));
+    ocp_qp_in *qp_in = (ocp_qp_in *)malloc(sizeof(ocp_qp_in));
     allocate_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc, qp_in);
-    ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
+    ocp_qp_out *qp_out = (ocp_qp_out *)malloc(sizeof(ocp_qp_out));
     allocate_ocp_qp_out(qp_in, qp_out);
     void *qp_args = NULL, *qp_mem = NULL, *qp_work = NULL;
     if (!strcmp(args->qp_solver_name, "qpdunes")) {
         mem->qp_solver->fun = &ocp_qp_qpdunes;
         mem->qp_solver->initialize = &ocp_qp_qpdunes_initialize;
         mem->qp_solver->destroy = &ocp_qp_qpdunes_destroy;
-        qp_args = (void *) malloc(sizeof(ocp_qp_qpdunes_args));
-        qp_mem = (void *) malloc(sizeof(ocp_qp_qpdunes_memory));
-    #ifdef OOQP
+        qp_args = (void *)malloc(sizeof(ocp_qp_qpdunes_args));
+        qp_mem = (void *)malloc(sizeof(ocp_qp_qpdunes_memory));
+#ifdef OOQP
     } else if (!strcmp(args->qp_solver_name, "ooqp")) {
         mem->qp_solver->fun = &ocp_qp_ooqp;
         mem->qp_solver->initialize = &ocp_qp_ooqp_initialize;
         mem->qp_solver->destroy = &ocp_qp_ooqp_destroy;
-        qp_args = (void *) malloc(sizeof(ocp_qp_ooqp_args));
-        qp_mem = (void *) malloc(sizeof(ocp_qp_ooqp_memory));
-    #endif
+        qp_args = (void *)malloc(sizeof(ocp_qp_ooqp_args));
+        qp_mem = (void *)malloc(sizeof(ocp_qp_ooqp_memory));
+#endif
     } else if (!strcmp(args->qp_solver_name, "condensing_qpoases")) {
         mem->qp_solver->fun = &ocp_qp_condensing_qpoases;
         mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         mem->qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
-        qp_args = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
+        qp_args = (void *)malloc(sizeof(ocp_qp_condensing_qpoases_args));
     } else if (!strcmp(args->qp_solver_name, "hpmpc")) {
         mem->qp_solver->fun = &ocp_qp_hpmpc;
         mem->qp_solver->initialize = &ocp_qp_hpmpc_initialize;
         mem->qp_solver->destroy = &ocp_qp_hpmpc_destroy;
-        qp_args = (void *) malloc(sizeof(ocp_qp_hpmpc_args));
+        qp_args = (void *)malloc(sizeof(ocp_qp_hpmpc_args));
     } else {
         printf("CHOSEN QP SOLVER FOR SQP METHOD NOT AVAILABLE!\n");
         exit(1);
@@ -338,9 +348,8 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     ocp_nlp_create_memory(in, mem->common);
 }
 
-
 void ocp_nlp_gn_sqp_free_memory(void *mem_) {
-    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *) mem_;
+    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)mem_;
 
     int_t N = mem->qp_solver->qp_in->N;
     ocp_nlp_free_memory(N, mem->common);

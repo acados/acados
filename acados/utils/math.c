@@ -1,27 +1,28 @@
 /**************************************************************************************************
-*                                                                                                 *
-* This file is part of HPMPC.                                                                     *
-*                                                                                                 *
-* HPMPC -- Library for High-Performance implementation of solvers for MPC.                        *
-* Copyright (C) 2014-2015 by Technical University of Denmark. All rights reserved.                *
-*                                                                                                 *
-* HPMPC is free software; you can redistribute it and/or                                          *
-* modify it under the terms of the GNU Lesser General Public                                      *
-* License as published by the Free Software Foundation; either                                    *
-* version 2.1 of the License, or (at your option) any later version.                              *
-*                                                                                                 *
-* HPMPC is distributed in the hope that it will be useful,                                        *
-* but WITHOUT ANY WARRANTY; without even the implied warranty of                                  *
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.                                            *
-* See the GNU Lesser General Public License for more details.                                     *
-*                                                                                                 *
-* You should have received a copy of the GNU Lesser General Public                                *
-* License along with HPMPC; if not, write to the Free Software                                    *
-* Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA                  *
-*                                                                                                 *
-* Author: Gianluca Frison, giaf (at) dtu.dk                                                       *
-*                                                                                                 *
-**************************************************************************************************/
+ *                                                                                                 *
+ * This file is part of HPMPC. *
+ *                                                                                                 *
+ * HPMPC -- Library for High-Performance implementation of solvers for MPC. *
+ * Copyright (C) 2014-2015 by Technical University of Denmark. All rights
+ *reserved.                *
+ *                                                                                                 *
+ * HPMPC is free software; you can redistribute it and/or * modify it under the
+ *terms of the GNU Lesser General Public                                      *
+ * License as published by the Free Software Foundation; either * version 2.1 of
+ *the License, or (at your option) any later version. *
+ *                                                                                                 *
+ * HPMPC is distributed in the hope that it will be useful, * but WITHOUT ANY
+ *WARRANTY; without even the implied warranty of * MERCHANTABILITY or FITNESS
+ *FOR A PARTICULAR PURPOSE.                                            * See
+ *the GNU Lesser General Public License for more details. *
+ *                                                                                                 *
+ * You should have received a copy of the GNU Lesser General Public * License
+ *along with HPMPC; if not, write to the Free Software * Foundation, Inc., 51
+ *Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA                  *
+ *                                                                                                 *
+ * Author: Gianluca Frison, giaf (at) dtu.dk *
+ *                                                                                                 *
+ **************************************************************************************************/
 
 #include "acados/utils/math.h"
 
@@ -344,7 +345,7 @@ double onenorm(int row, int col, double *ptrA) {
 double twonormv(int n, double *ptrv) {
     double temp;
     temp = 0;
-    for (int i = 0; i < n; i++) temp += ptrv[i]*ptrv[i];
+    for (int i = 0; i < n; i++) temp += ptrv[i] * ptrv[i];
     return (double)sqrt(temp);
 }
 
@@ -535,10 +536,20 @@ void padeapprox(int m, int row, double *A) {
         free(A8);
         free(temp);
     } else if (m == 13) {  // tested
-        double c[] = {64764752532480000, 32382376266240000, 7771770303897600,
-                      1187353796428800, 129060195264000, 10559470521600,
-                      670442572800, 33522128640, 1323241920, 40840800, 960960,
-                      16380, 182, 1};
+        double c[] = {64764752532480000,
+                      32382376266240000,
+                      7771770303897600,
+                      1187353796428800,
+                      129060195264000,
+                      10559470521600,
+                      670442572800,
+                      33522128640,
+                      1323241920,
+                      40840800,
+                      960960,
+                      16380,
+                      182,
+                      1};
         double *A0;
         d_eye(&A0, row);
         double *A2;
@@ -617,7 +628,7 @@ void padeapprox(int m, int row, double *A) {
     dmcopy(row, row, V, row, D, row);
     //    daxpy_(&row2, &dm1, U, &i1, D, &i1);
     daxpy_3l(row2, -1.0, U, D);
-    int *ipiv = (int *) calloc(row, sizeof(int));
+    int *ipiv = (int *)calloc(row, sizeof(int));
     int info = 0;
     //    dgesv_(&row, &row, D, &row, ipiv, A, &row, &info);
     dgesv_3l(row, row, D, row, ipiv, A, row, &info);

@@ -24,25 +24,27 @@
 void allocate_sim_in(sim_in *sim_in) {
     int_t nx = sim_in->nx;
     int_t nu = sim_in->nu;
-    sim_in->x = (real_t *) calloc(nx, sizeof(*sim_in->x));
-    sim_in->u = (real_t *) calloc(nu, sizeof(*sim_in->u));
+    sim_in->x = (real_t *)calloc(nx, sizeof(*sim_in->x));
+    sim_in->u = (real_t *)calloc(nu, sizeof(*sim_in->u));
     if (sim_in->sens_forw)
-        sim_in->S_forw = (real_t *) calloc(nx*(nx+nu), sizeof(*sim_in->S_forw));
+        sim_in->S_forw =
+            (real_t *)calloc(nx * (nx + nu), sizeof(*sim_in->S_forw));
     if (sim_in->sens_adj)
-        sim_in->S_adj = (real_t *) calloc(nx+nu, sizeof(*sim_in->S_adj));
+        sim_in->S_adj = (real_t *)calloc(nx + nu, sizeof(*sim_in->S_adj));
 }
 
 void allocate_sim_out(sim_in *sim_in, sim_out *sim_out) {
     int_t nx = sim_in->nx;
     int_t nu = sim_in->nu;
-    sim_out->xn = (real_t *) calloc(nx, sizeof(*sim_out->xn));
+    sim_out->xn = (real_t *)calloc(nx, sizeof(*sim_out->xn));
     if (sim_in->sens_forw)
-        sim_out->S_forw = (real_t *) calloc(nx*(nx+nu), sizeof(*sim_out->S_forw));
+        sim_out->S_forw =
+            (real_t *)calloc(nx * (nx + nu), sizeof(*sim_out->S_forw));
     if (sim_in->sens_adj)
-        sim_out->S_adj = (real_t *) calloc(nx+nu, sizeof(*sim_out->S_adj));
+        sim_out->S_adj = (real_t *)calloc(nx + nu, sizeof(*sim_out->S_adj));
     if (sim_in->sens_hess) {
-        int_t nhess = (nx+nu+1)*(nx+nu)/2;
-        sim_out->S_hess = (real_t *) calloc(nhess, sizeof(*sim_out->S_hess));
+        int_t nhess = (nx + nu + 1) * (nx + nu) / 2;
+        sim_out->S_hess = (real_t *)calloc(nhess, sizeof(*sim_out->S_hess));
     }
-    sim_out->info = (sim_info *) malloc(sizeof(sim_info));
+    sim_out->info = (sim_info *)malloc(sizeof(sim_info));
 }

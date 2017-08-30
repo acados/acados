@@ -24,19 +24,16 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
-#include "acados/utils/types.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 
-// #include "test/test_utils/read_ocp_qp_in.h"
 
 #define NN 10
 #define NX 2
 #define NU 1
-
-// TODO(dimitris): add exec. in cmake
 
 int main() {
     int_t nMPC = 10;
@@ -49,10 +46,10 @@ int main() {
     real_t *uMPC;
     real_t *xMPC;
     d_zeros(&uMPC, NU, nMPC);
-    d_zeros(&xMPC, NX, nMPC+1);
+    d_zeros(&xMPC, NX, nMPC + 1);
 
     // LTI dynamics
-    real_t A[NX*NX] = {0.66, -1.2, 0.6, 0.6};  // NOTE: column major format
+    real_t A[NX*NX] = {0.66, -1.2, 0.6, 0.6};  // NOTE(dimitris): column major format
     real_t B[NX*NU] = {1, 0.5};
     real_t b[NX] = {0, 0};
 
@@ -69,10 +66,10 @@ int main() {
     d_zeros(&q, NX, 1);
     d_zeros(&r, NU, 1);
 
-    for (int ii = 0; ii < NX; ii++) Q[ii*NX+ii] = 1.0;
-    for (int ii = 0; ii < NU; ii++) R[ii*NU+ii] = 1.0;
+    for (int ii = 0; ii < NX; ii++) Q[ii * NX + ii] = 1.0;
+    for (int ii = 0; ii < NU; ii++) R[ii * NU + ii] = 1.0;
 
-    // NOTE: trick qpDUNES to use qpOASES for subproblems
+    // NOTE(dimitris): uncomment to use qpOASES for stage QPs instead of clipping
     // Q[1] = 0.0000001;
     // Q[NX] = 0.000001;
     // S[0] = 0.0000001;
@@ -89,48 +86,48 @@ int main() {
     real_t x0[NX] = {-2, 5};
 
     // Concatenate bounds
-    real_t zmin[NX+NU];
-    real_t zmax[NX+NU];
-    real_t z0min[NX+NU];
-    real_t z0max[NX+NU];
-    int_t idxb[NX+NU];
+    real_t zmin[NX + NU];
+    real_t zmax[NX + NU];
+    real_t z0min[NX + NU];
+    real_t z0max[NX + NU];
+    int_t idxb[NX + NU];
 
-    for (int ii = 0; ii < NX; ii++) {
-        zmin[ii] = xmin[ii];
-        zmax[ii] = xmax[ii];
+    for (int ii = 0; ii < NU; ii++) {
+        zmin[ii] = umin[ii];
+        zmax[ii] = umax[ii];
+        z0min[ii] = umin[ii];
+        z0max[ii] = umax[ii];
         idxb[ii] = ii;
     }
-    for (int ii = 0; ii < NU; ii++) {
-        zmin[NX+ii] = umin[ii];
-        zmax[NX+ii] = umax[ii];
-        z0min[NX+ii] = umin[ii];  // NOTE: First NX elements are updated in MPC loop
-        z0max[NX+ii] = umax[ii];
-        idxb[NX+ii] = NX+ii;
+    for (int ii = 0; ii < NX; ii++) {
+        zmin[NU + ii] = xmin[ii];
+        zmax[NU + ii] = xmax[ii];
+        idxb[NU + ii] = NU + ii;
     }
 
     // Setup ocp_qp_in
     // TODO(dimitris): maybe function in utils for LTI systems?
-    real_t *hQ[NN+1];
+    real_t *hQ[NN + 1];
     real_t *hR[NN];
     real_t *hS[NN];
-    real_t *hq[NN+1];
+    real_t *hq[NN + 1];
     real_t *hr[NN];
     real_t *hA[NN];
     real_t *hB[NN];
     real_t *hb[NN];
-    real_t *hlb[NN+1];
-    real_t *hub[NN+1];
-    int_t *hidxb[NN+1];
-    int_t nx[NN+1];
-    int_t nu[NN+1];
-    int_t nb[NN+1];
+    real_t *hlb[NN + 1];
+    real_t *hub[NN + 1];
+    int_t *hidxb[NN + 1];
+    int_t nx[NN + 1];
+    int_t nu[NN + 1];
+    int_t nb[NN + 1];
     int_t *nc;
-    int_zeros(&nc, NN+1, 1);
+    int_zeros(&nc, NN + 1, 1);
 
     for (int kk = 0; kk < NN; kk++) {
         nx[kk] = NX;
         nu[kk] = NU;
-        nb[kk] = NX+NU;
+        nb[kk] = NX + NU;
         hQ[kk] = Q;
         hR[kk] = R;
         hS[kk] = S;
@@ -155,10 +152,10 @@ int main() {
     hq[NN] = q;
     hlb[NN] = xmin;
     hub[NN] = xmax;
-    hidxb[NN] = idxb;  // NOTE: the first nb[N]=NX will be read anyway
+    hidxb[NN] = idxb;  // NOTE(dimitris): the first nb[N]=NX will be read anyway
 
     ocp_qp_in qp_in;
-    qp_in.N  = NN;
+    qp_in.N = NN;
     qp_in.nx = nx;
     qp_in.nu = nu;
     qp_in.nb = nb;
@@ -184,12 +181,11 @@ int main() {
 
     ocp_qp_qpdunes_create_arguments(&args, QPDUNES_LINEAR_MPC);
 
-    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
-    void *work = (void*)malloc(work_space_size);
+    int_t work_space_size =
+        ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
+    void *work = (void *)malloc(work_space_size);
 
     ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
-
-    // print_ocp_qp_in(qp_in);
 
     // store initial condition
     for (int ii = 0; ii < NX; ii++) xMPC[ii] = x0[ii];
@@ -197,8 +193,8 @@ int main() {
     for (int kk = 0; kk < nMPC; kk++) {
         // update constraint on x0
         for (int ii = 0; ii < NX; ii++) {
-            z0min[ii] = x0[ii];
-            z0max[ii] = x0[ii];
+            z0min[NU + ii] = x0[ii];
+            z0max[NU + ii] = x0[ii];
         }
 
         // solve QP
@@ -209,13 +205,15 @@ int main() {
         // simulate system
         for (int ii = 0; ii < NX; ii++) {
             x0[ii] = b[ii];
-            for (int jj = 0; jj < NX; jj++) x0[ii]+= A[ii+jj*NX]*qp_out.x[0][jj];
-            for (int jj = 0; jj < NU; jj++) x0[ii]+= B[ii+jj*NX]*qp_out.u[0][jj];
+            for (int jj = 0; jj < NX; jj++)
+                x0[ii] += A[ii + jj * NX] * qp_out.x[0][jj];
+            for (int jj = 0; jj < NU; jj++)
+                x0[ii] += B[ii + jj * NX] * qp_out.u[0][jj];
         }
 
         // store MPC trajectories
-        for (int ii = 0; ii < NX; ii++) xMPC[ii+(kk+1)*NX] = x0[ii];
-        for (int ii = 0; ii < NU; ii++) uMPC[ii+kk*NU] = qp_out.u[0][ii];
+        for (int ii = 0; ii < NX; ii++) xMPC[ii + (kk + 1) * NX] = x0[ii];
+        for (int ii = 0; ii < NU; ii++) uMPC[ii + kk * NU] = qp_out.u[0][ii];
     }
 
     // print trajectories

@@ -33,8 +33,6 @@ set(TEST_OCP_NLP_SRC
 )
 
 set(TEST_OCP_QP_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/test_condensing.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/condensing_test_helper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/test_qpsolvers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/../test_utils/read_ocp_qp_in.c
 )
