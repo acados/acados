@@ -125,33 +125,31 @@ void print_ocp_qp(ocp_qp_in *qp) {
     printf("nx:\n");
     print_int_matrix("stdout", qp->nx, 1, N + 1);
     printf("nu:\n");
-    print_int_matrix("stdout", qp->nu, 1, N);
+    print_int_matrix("stdout", qp->nu, 1, N + 1);
     printf("nb:\n");
     print_int_matrix("stdout", qp->nb, 1, N + 1);
     printf("nc:\n");
     print_int_matrix("stdout", qp->nc, 1, N + 1);
-    for (int_t stage = 0; stage < N; stage++) {
-        printf("Q%d:\n", stage);
+    for (int_t stage = 0; stage < N+1; stage++) {
+        if (stage < N) {
+            printf("A[%d]:\n", stage);
+            print_matrix("stdout", qp->A[stage], qp->nx[stage], qp->nx[stage]);
+            printf("B[%d]:\n", stage);
+            print_matrix("stdout", qp->B[stage], qp->nx[stage], qp->nu[stage]);
+            printf("b[%d]:\n", stage);
+            print_matrix("stdout", qp->b[stage], qp->nx[stage], 1);
+        }
+        printf("Q[%d]:\n", stage);
         print_matrix("stdout", qp->Q[stage], qp->nx[stage], qp->nx[stage]);
-        printf("R%d:\n", stage);
+        printf("R[%d]:\n", stage);
         print_matrix("stdout", qp->R[stage], qp->nu[stage], qp->nu[stage]);
-        printf("q%d:\n", stage);
+        printf("q[%d]:\n", stage);
         print_matrix("stdout", qp->q[stage], qp->nx[stage], 1);
-        printf("r%d:\n", stage);
+        printf("r[%d]:\n", stage);
         print_matrix("stdout", qp->r[stage], qp->nu[stage], 1);
-        printf("A%d:\n", stage);
-        print_matrix("stdout", qp->A[stage], qp->nx[stage], qp->nx[stage]);
-        printf("B%d:\n", stage);
-        print_matrix("stdout", qp->B[stage], qp->nx[stage], qp->nu[stage]);
-        printf("b%d:\n", stage);
-        print_matrix("stdout", qp->b[stage], qp->nx[stage], 1);
-        printf("lb%d:\n", stage);
+        printf("lb[%d]:\n", stage);
         print_matrix("stdout", qp->lb[stage], qp->nb[stage], 1);
-        printf("ub%d:\n", stage);
+        printf("ub[%d]:\n", stage);
         print_matrix("stdout", qp->ub[stage], qp->nb[stage], 1);
     }
-    printf("QN:\n");
-    print_matrix("stdout", qp->Q[N], qp->nx[N], qp->nx[N]);
-    printf("qN:\n");
-    print_matrix("stdout", qp->q[N], qp->nx[N], 1);
 }
