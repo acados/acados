@@ -126,10 +126,6 @@ int main() {
         }
     }
 
-    for (int_t k = 0; k < NN+1; k++) {
-        d_print_mat(1, nb[k], (real_t *)qp_in->ub[k], 1);
-    }
-
     // Setup ocp_qp_out, ocp_qp_args and ocp_qp_mem
     ocp_qp_out qp_out;
     allocate_ocp_qp_out(qp_in, &qp_out);
@@ -188,7 +184,7 @@ int main() {
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
     free(work);
-
+    free(qp_in);
     #else  // OLD_VERSION
 
     // Concatenate bounds
@@ -335,15 +331,9 @@ int main() {
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
     free(work);
-
-    int_free(nc);
-    d_free(r);
-    d_free(q);
-    d_free(S);
-    d_free(R);
-    d_free(Q);
     #endif
 
+    free_ocp_qp_out(&qp_out);
     d_free(xMPC);
     d_free(uMPC);
     d_free(cputimes);

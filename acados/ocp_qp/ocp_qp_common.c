@@ -29,32 +29,31 @@ static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, 
 
     int_t bytes = 0;
 
-    // NOTE: not used yet
     bytes += sizeof(ocp_qp_in);
 
     bytes += 4*(N+1)*sizeof(int_t);  // nx, nu, nb, nc
-
-    bytes += 14*N*sizeof(real_t *); // A, B, b, ... , uc
-    bytes += 1*N*sizeof(int_t *); // idxb
+    bytes += 3*N*sizeof(real_t *);  // A, B, b
+    bytes += 11*(N+1)*sizeof(real_t *);  // ...
+    bytes += 1*(N+1)*sizeof(int_t *);  // idxb
 
     for (int_t k = 0; k < N+1; k++) {
 
         if (k < N) {
-            bytes += nx[k+1]*nx[k]*sizeof(real_t); // A
-            bytes += nx[k+1]*nu[k]*sizeof(real_t); // B
-            bytes += nx[k+1]*sizeof(real_t); // b
+            bytes += nx[k+1]*nx[k]*sizeof(real_t);  // A
+            bytes += nx[k+1]*nu[k]*sizeof(real_t);  // B
+            bytes += nx[k+1]*sizeof(real_t);  // b
         }
 
-        bytes += nx[k]*nx[k]*sizeof(real_t); // Q
-        bytes += nu[k]*nx[k]*sizeof(real_t); // S
-        bytes += nu[k]*nu[k]*sizeof(real_t); // R
-        bytes += nx[k]*sizeof(real_t); // q
-        bytes += nu[k]*sizeof(real_t); // r
-        bytes += nb[k]*sizeof(int_t); // idxb
-        bytes += 2*nb[k]*sizeof(real_t); // lb, ub
-        bytes += nc[k]*nx[k]*sizeof(real_t); // Cx
-        bytes += nc[k]*nu[k]*sizeof(real_t); // Cu
-        bytes += 2*nc[k]*sizeof(real_t); // lc, uc
+        bytes += nx[k]*nx[k]*sizeof(real_t);  // Q
+        bytes += nu[k]*nx[k]*sizeof(real_t);  // S
+        bytes += nu[k]*nu[k]*sizeof(real_t);  // R
+        bytes += nx[k]*sizeof(real_t);  // q
+        bytes += nu[k]*sizeof(real_t);  // r
+        bytes += nb[k]*sizeof(int_t);  // idxb
+        bytes += 2*nb[k]*sizeof(real_t);  // lb, ub
+        bytes += nc[k]*nx[k]*sizeof(real_t);  // Cx
+        bytes += nc[k]*nu[k]*sizeof(real_t);  // Cu
+        bytes += 2*nc[k]*sizeof(real_t);  // lc, uc
     }
 
     return bytes;
