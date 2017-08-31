@@ -28,8 +28,6 @@ endif()
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 
-# Exclude helper files
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/condensing_helper_functions.c")
 # Exclude files not compatible with MSVC
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c")
