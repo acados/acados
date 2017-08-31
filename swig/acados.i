@@ -274,7 +274,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
-%ignore create_ocp_qp;
+%ignore create_ocp_qp_in;
 %ignore ocp_qp_out;
 %rename(ocp_qp) ocp_qp_in;
 %include "acados/ocp_qp/ocp_qp_common.h"
