@@ -83,7 +83,7 @@ int main() {
     // Initial condition
     real_t x0[NX] = {-2, 5};
 
-    #ifdef NEW_VERSION
+#ifdef NEW_VERSION
 
     int_t nx[NN + 1];
     int_t nu[NN + 1];
@@ -103,6 +103,7 @@ int main() {
 
     ocp_qp_in *qp_in = create_ocp_qp_in(NN, nx, nu, nb, nc);
 
+    // Copy LTI dynamics and constraints to QP memory
     for (int_t k = 0; k < NN+1; k++) {
         ocp_qp_in_copy_objective(Q, S, R, q, r, qp_in, k);
         if (k < NN)
@@ -113,6 +114,7 @@ int main() {
     real_t **hlb = (real_t **) qp_in->lb;
     real_t **hub = (real_t **) qp_in->ub;
 
+    // Set up bounds
     for (int_t k = 0; k < NN+1; k++) {
         for (int_t i = 0; i < nb[k]; i++) {
             hidxb[k][i] = i;
@@ -126,9 +128,9 @@ int main() {
         }
     }
 
-    // Setup ocp_qp_out, ocp_qp_args and ocp_qp_mem
-    ocp_qp_out qp_out;
-    allocate_ocp_qp_out(qp_in, &qp_out);
+    ocp_qp_out *qp_out = create_ocp_qp_out(NN, nx, nu, nb, nc);
+
+    // Setup ocp_qp_args and ocp_qp_mem
 
     ocp_qp_qpdunes_args args;
     ocp_qp_qpdunes_memory mem;
@@ -153,7 +155,7 @@ int main() {
 
         // solve QP
         acados_tic(&timer);
-        ocp_qp_qpdunes(qp_in, &qp_out, &args, &mem, work);
+        ocp_qp_qpdunes(qp_in, qp_out, &args, &mem, work);
         cputimes[kk] = 1000*acados_toc(&timer);
         // print_ocp_qp_in(qp_in);
         // exit(1);
@@ -161,14 +163,14 @@ int main() {
         for (int ii = 0; ii < NX; ii++) {
             x0[ii] = b[ii];
             for (int jj = 0; jj < NX; jj++)
-                x0[ii] += A[ii + jj * NX] * qp_out.x[0][jj];
+                x0[ii] += A[ii + jj * NX] * qp_out->x[0][jj];
             for (int jj = 0; jj < NU; jj++)
-                x0[ii] += B[ii + jj * NX] * qp_out.u[0][jj];
+                x0[ii] += B[ii + jj * NX] * qp_out->u[0][jj];
         }
 
         // store MPC trajectories
         for (int ii = 0; ii < NX; ii++) xMPC[ii + (kk + 1) * NX] = x0[ii];
-        for (int ii = 0; ii < NU; ii++) uMPC[ii + kk * NU] = qp_out.u[0][ii];
+        for (int ii = 0; ii < NU; ii++) uMPC[ii + kk * NU] = qp_out->u[0][ii];
     }
 
     // print trajectories
@@ -179,13 +181,15 @@ int main() {
     printf("cpu times [ms]:\n");
     d_print_mat(1, nMPC, cputimes, 1);
 
-    // d_print_mat(NX+NU, NN, &qp_out.x[0][0], NX+NU);
+    // d_print_mat(NX+NU, NN, qp_out.x[0][0], NX+NU);
 
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
     free(work);
     free(qp_in);
-    #else  // OLD_VERSION
+    free(qp_out);
+
+#else  // OLD_VERSION
 
     // Concatenate bounds
     real_t zmin[NX + NU];
@@ -331,11 +335,10 @@ int main() {
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
     free(work);
-    #endif
-
     free_ocp_qp_out(&qp_out);
+#endif
+
     d_free(xMPC);
     d_free(uMPC);
     d_free(cputimes);
-
 }

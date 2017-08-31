@@ -59,8 +59,9 @@ static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, 
     return bytes;
 }
 
-static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in,
-    void *ptr) {
+
+static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
+    ocp_qp_in **qp_in, void *ptr) {
 
     // char pointer
     char *c_ptr = (char *) ptr;
@@ -185,11 +186,14 @@ static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc
 
 }
 
+
 ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
 
     ocp_qp_in *qp_in;
 
     int_t bytes = ocp_qp_in_calculate_size(N, nx, nu, nb, nc);
+    // TODO(dimitris): replace with acados_malloc that may include any malloc-type function
+    // supported by the embedded system
     void *ptr = malloc(bytes);
 
     // // set a value for debugging
@@ -202,6 +206,78 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
     return qp_in;
 }
+
+
+static int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+
+    int_t bytes = 0;
+
+    for (int_t k = 0; k < N+1; k++) {
+        bytes += (nx[k] + nu[k])*sizeof(real_t);  // u, x
+        if (k < N)
+            bytes += (nx[k+1])*sizeof(real_t);  // pi
+        bytes += 2*(nb[k] + nc[k])*sizeof(real_t);  // lam
+        }
+
+    return bytes;
+}
+
+
+static void assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
+    ocp_qp_out **qp_out, void *ptr) {
+
+    // char pointer
+    char *c_ptr = (char *) ptr;
+
+    *qp_out = (ocp_qp_out *) c_ptr;
+    c_ptr += sizeof(ocp_qp_out);
+
+    // assign double pointers
+    (*qp_out)->x = (real_t **) c_ptr;
+    c_ptr += (N+1)*sizeof(real_t *);
+
+    (*qp_out)->u = (real_t **) c_ptr;
+    c_ptr += (N+1)*sizeof(real_t *);
+
+    (*qp_out)->pi = (real_t **) c_ptr;
+    c_ptr += N*sizeof(real_t *);
+
+    (*qp_out)->lam = (real_t **) c_ptr;
+    c_ptr += (N+1)*sizeof(real_t *);
+
+    // assign pointers to QP solution
+    for (int_t k = 0; k < N+1; k++) {
+
+        (*qp_out)->x[k] = (real_t *) c_ptr;
+        c_ptr += nx[k]*sizeof(real_t);
+
+        (*qp_out)->u[k] = (real_t *) c_ptr;
+        c_ptr += nu[k]*sizeof(real_t);
+    }
+
+    // NOTE(dimitris): splitted the loops to be able to print primal/dual solution at once
+    for (int_t k = 0; k < N+1; k++) {
+        if (k < N) {
+            (*qp_out)->pi[k] = (real_t *) c_ptr;
+            c_ptr += nx[k+1]*sizeof(real_t);
+        }
+        (*qp_out)->lam[k] = (real_t *) c_ptr;
+        c_ptr += 2*(nb[k] + nc[k])*sizeof(real_t);
+    }
+}
+
+
+ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+
+    ocp_qp_out *qp_out;
+
+    int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
+    void *ptr = malloc(bytes);
+    assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
+
+    return qp_out;
+}
+
 
 void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, int_t stage) {
 
@@ -228,4 +304,4 @@ void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t
         memcpy(hR[stage], R, qp_in->nu[stage]*qp_in->nu[stage]*sizeof(real_t));
         memcpy(hq[stage], q, qp_in->nx[stage]*sizeof(real_t));
         memcpy(hr[stage], r, qp_in->nu[stage]*sizeof(real_t));
-    }
+}
