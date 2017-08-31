@@ -29,13 +29,12 @@ static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, 
 
     int_t bytes = 0;
 
-    // NOTE: not used yet
     bytes += sizeof(ocp_qp_in);
 
     bytes += 4*(N+1)*sizeof(int_t);  // nx, nu, nb, nc
-
-    bytes += 14*N*sizeof(real_t *); // A, B, b, ... , uc
-    bytes += 1*N*sizeof(int_t *); // idxb
+    bytes += 3*N*sizeof(real_t *);  // A, B, b
+    bytes += 11*(N+1)*sizeof(real_t *);  // ...
+    bytes += 1*(N+1)*sizeof(int_t *); // idxb
 
     for (int_t k = 0; k < N+1; k++) {
 

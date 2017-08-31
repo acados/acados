@@ -122,11 +122,11 @@ int main() {
     }
 
     for (int_t k = 0; k < NN+1; k++) {
-        memcpy(hQ[k], Q, NX*NX*sizeof(real_t));
-        memcpy(hS[k], S, NU*NX*sizeof(real_t));
-        memcpy(hR[k], R, NU*NU*sizeof(real_t));
-        memcpy(hq[k], q, NX*sizeof(real_t));
-        memcpy(hr[k], r, NU*sizeof(real_t));
+        memcpy(hQ[k], Q, nx[k]*nx[k]*sizeof(real_t));
+        memcpy(hS[k], S, nu[k]*nx[k]*sizeof(real_t));
+        memcpy(hR[k], R, nu[k]*nu[k]*sizeof(real_t));
+        memcpy(hq[k], q, nx[k]*sizeof(real_t));
+        memcpy(hr[k], r, nu[k]*sizeof(real_t));
 
         for (int_t i = 0; i < nb[k]; i++) {
             hidxb[k][i] = i;
@@ -139,10 +139,6 @@ int main() {
             }
         }
 
-    }
-
-    for (int_t k = 0; k < NN+1; k++) {
-        d_print_mat(1, nb[k], (real_t *)qp_in->ub[k], 1);
     }
 
     // Setup ocp_qp_out, ocp_qp_args and ocp_qp_mem
@@ -202,7 +198,7 @@ int main() {
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
     free(work);
-
+    free(qp_in);
     #else  // OLD_VERSION
 
     // Concatenate bounds
@@ -349,15 +345,9 @@ int main() {
     // free dynamically allocated memory
     ocp_qp_qpdunes_free_memory(&mem);
     free(work);
-
-    int_free(nc);
-    d_free(r);
-    d_free(q);
-    d_free(S);
-    d_free(R);
-    d_free(Q);
     #endif
 
+    free_ocp_qp_out(&qp_out);
     d_free(xMPC);
     d_free(uMPC);
     d_free(cputimes);
