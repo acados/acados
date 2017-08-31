@@ -25,8 +25,8 @@ ExternalProject_Add(
 
     DEPENDS blasfeo
     PREFIX "${PROJECT_BINARY_DIR}/external/hpmpc"
-    CONFIGURE_COMMAND make clean
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/hpmpc"
+    CONFIGURE_COMMAND ls && make clean
     BUILD_COMMAND make static_library -j 2 OS=${OS} CC=${CMAKE_C_COMPILER} TARGET=${HPMPC_TARGET} BLASFEO_PATH=${HPMPC_BLASFEO_PATH}
     INSTALL_COMMAND make install_static PREFIX=${PROJECT_BINARY_DIR}/external
     # LOG_CONFIGURE 1  # suppress output
@@ -43,6 +43,11 @@ ExternalProject_Add_Step(hpmpc_project copy_hpmpc
 ExternalProject_Add_Step(hpmpc_project ranlib_step
     COMMAND "${RANLIB_COMMAND}"
     DEPENDERS install
+)
+
+ExternalProject_Add_Step(hpmpc_project copy_target_h
+    COMMAND cp ${BINARY_DIR}/include/target.h ${EXTERNAL_SRC_DIR}/hpmpc/include/target.h
+    DEPENDEES install
 )
 
 add_library(hpmpc STATIC IMPORTED GLOBAL)
