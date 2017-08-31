@@ -59,23 +59,32 @@ target_link_libraries(ooqp INTERFACE
     openblas
     gfortran
     m)
+
 set_property(TARGET ooqp
     PROPERTY INTERFACE_INCLUDE_DIRECTORIES
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/external/ooqp/include>
         $<INSTALL_INTERFACE:include>)
 
+install(DIRECTORY ${BINARY_DIR}/include/
+    DESTINATION include/ooqp
+    FILES_MATCHING PATTERN "*.h")
+
 add_library(ooqpgensparse STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgensparse ooqp_project)
 set_property(TARGET ooqpgensparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpgensparse.a")
+install(FILES "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpgensparse.a" DESTINATION lib)
 
 add_library(ooqpsparse STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpsparse ooqp_project)
 set_property(TARGET ooqpsparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpsparse.a")
+install(FILES "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpsparse.a" DESTINATION lib)
 
 add_library(ooqpgondzio STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgondzio ooqp_project)
 set_property(TARGET ooqpgondzio PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpgondzio.a")
+install(FILES "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpgondzio.a" DESTINATION lib)
 
 add_library(ooqpbase STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpbase ma27 ooqp_project)
 set_property(TARGET ooqpbase PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpbase.a")
+install(FILES "${PROJECT_BINARY_DIR}/external/ooqp/lib/libooqpbase.a" DESTINATION lib)
