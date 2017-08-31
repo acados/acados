@@ -27,7 +27,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c")
 endif()
 
-if(NOT EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+if(NOT OOQP)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
 endif()
 
@@ -67,7 +67,7 @@ endif()
 
 target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES
 
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+if(OOQP)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()

@@ -61,7 +61,7 @@ add_executable(unit_tests
 
 target_include_directories(unit_tests PRIVATE "${EXTERNAL_SRC_DIR}/eigen")
 target_link_libraries(unit_tests acados)
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+if(OOQP)
     target_compile_definitions(unit_tests PRIVATE OOQP)
 endif()
 

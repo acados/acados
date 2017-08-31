@@ -26,6 +26,8 @@ endif()
 
 project(acados LANGUAGES C CXX)
 
+set(BUILD_SHARED_LIBS ON CACHE INTERNAL "Build shared libraries")
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 endif()
@@ -72,6 +74,12 @@ message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+    option(OOQP ON)
+else()
+    option(OOQP OFF)
+endif()
 
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 # Configure acados

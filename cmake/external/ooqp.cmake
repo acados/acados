@@ -58,6 +58,7 @@ target_link_libraries(ooqp INTERFACE
     ma27
     openblas
     gfortran
+    c++
     m)
 
 set_property(TARGET ooqp
