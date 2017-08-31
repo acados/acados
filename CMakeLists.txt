@@ -97,12 +97,6 @@ if(UNIT_TESTS)
     # add_subdirectory(test)
 endif()
 
-# Installation
-install(DIRECTORY acados
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN "simplified" EXCLUDE)
-
 # Uninstallation
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"

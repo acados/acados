@@ -42,6 +42,12 @@ install(TARGETS acados EXPORT acadosConfig
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../acados
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "simplified" EXCLUDE)
+
 # install(EXPORT acadosConfig DESTINATION share)
 
 # set_target_properties(acados

@@ -17,7 +17,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     set(OS "MAC")
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(OS "WINDOWS")
-    set(RANLIB_COMMAND ${CMAKE_RANLIB} libhpmpc.a)  # for mingw-w64
+    set(RANLIB_COMMAND ${CMAKE_RANLIB})  # for mingw-w64
 endif()
 
 ExternalProject_Add(
@@ -41,8 +41,8 @@ ExternalProject_Add_Step(hpmpc_project copy_hpmpc
 )
 
 ExternalProject_Add_Step(hpmpc_project ranlib_step
-    COMMAND "${RANLIB_COMMAND}"
-    DEPENDERS install
+    COMMAND ${RANLIB_COMMAND} ${BINARY_DIR}/lib/libhpmpc.a
+    DEPENDEES install
 )
 
 ExternalProject_Add_Step(hpmpc_project copy_target_h
@@ -53,7 +53,8 @@ ExternalProject_Add_Step(hpmpc_project copy_target_h
 add_library(hpmpc STATIC IMPORTED GLOBAL)
 add_dependencies(hpmpc hpmpc_project blasfeo_project)
 set_property(TARGET hpmpc PROPERTY IMPORTED_LOCATION "${BINARY_DIR}/libhpmpc.a")
+install(FILES "${BINARY_DIR}/libhpmpc.a" DESTINATION lib)
 set_property(TARGET hpmpc
     PROPERTY INTERFACE_INCLUDE_DIRECTORIES
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/external/>
-        $<INSTALL_INTERFACE:include>)
+        $<INSTALL_INTERFACE:include/hpmpc>)
