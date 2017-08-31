@@ -131,7 +131,6 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(NN, nx, nu, nb, nc);
 
     // Setup ocp_qp_args and ocp_qp_mem
-
     ocp_qp_qpdunes_args args;
     ocp_qp_qpdunes_memory mem;
 
