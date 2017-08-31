@@ -36,7 +36,7 @@ ExternalProject_Add(
 ExternalProject_Get_Property(hpmpc_project BINARY_DIR)
 
 ExternalProject_Add_Step(hpmpc_project copy_hpmpc
-    COMMAND cp -vr "${EXTERNAL_SRC_DIR}/hpmpc/" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${EXTERNAL_SRC_DIR}/hpmpc/" "${BINARY_DIR}"
     DEPENDERS configure
 )
 

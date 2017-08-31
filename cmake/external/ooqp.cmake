@@ -35,7 +35,7 @@ ExternalProject_Add(
 ExternalProject_Get_Property(ooqp_project BINARY_DIR)
 
 ExternalProject_Add_Step(ooqp_project copy_ooqp
-    COMMAND cp -r "${EXTERNAL_SRC_DIR}/ooqp/" "${BINARY_DIR}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${EXTERNAL_SRC_DIR}/ooqp/" "${BINARY_DIR}"
     DEPENDERS configure
 )
 
