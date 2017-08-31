@@ -70,6 +70,10 @@ typedef struct {
 
 ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
 
+void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, int_t stage);
+void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t *r,
+    ocp_qp_in *qp_in, int_t stage);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

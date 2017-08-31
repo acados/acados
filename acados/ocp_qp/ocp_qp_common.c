@@ -203,3 +203,30 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
     return qp_in;
 }
+
+void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, int_t stage) {
+
+    real_t **hA = (real_t **) qp_in->A;
+    real_t **hB = (real_t **) qp_in->B;
+    real_t **hb = (real_t **) qp_in->b;
+
+    memcpy(hA[stage], A, qp_in->nx[stage+1]*qp_in->nx[stage]*sizeof(real_t));
+    memcpy(hB[stage], B, qp_in->nx[stage+1]*qp_in->nu[stage]*sizeof(real_t));
+    memcpy(hb[stage], b, qp_in->nx[stage+1]*sizeof(real_t));
+}
+
+void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t *r,
+    ocp_qp_in *qp_in, int_t stage) {
+
+        real_t **hQ = (real_t **) qp_in->Q;
+        real_t **hS = (real_t **) qp_in->S;
+        real_t **hR = (real_t **) qp_in->R;
+        real_t **hq = (real_t **) qp_in->q;
+        real_t **hr = (real_t **) qp_in->r;
+
+        memcpy(hQ[stage], Q, qp_in->nx[stage]*qp_in->nx[stage]*sizeof(real_t));
+        memcpy(hS[stage], S, qp_in->nu[stage]*qp_in->nx[stage]*sizeof(real_t));
+        memcpy(hR[stage], R, qp_in->nu[stage]*qp_in->nu[stage]*sizeof(real_t));
+        memcpy(hq[stage], q, qp_in->nx[stage]*sizeof(real_t));
+        memcpy(hr[stage], r, qp_in->nu[stage]*sizeof(real_t));
+    }

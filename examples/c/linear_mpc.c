@@ -103,31 +103,17 @@ int main() {
 
     ocp_qp_in *qp_in = create_ocp_qp_in(NN, nx, nu, nb, nc);
 
-    real_t **hA = (real_t **) qp_in->A;
-    real_t **hB = (real_t **) qp_in->B;
-    real_t **hb = (real_t **) qp_in->b;
-    real_t **hQ = (real_t **) qp_in->Q;
-    real_t **hS = (real_t **) qp_in->S;
-    real_t **hR = (real_t **) qp_in->R;
-    real_t **hq = (real_t **) qp_in->q;
-    real_t **hr = (real_t **) qp_in->r;
+    for (int_t k = 0; k < NN+1; k++) {
+        ocp_qp_in_copy_objective(Q, S, R, q, r, qp_in, k);
+        if (k < NN)
+            ocp_qp_in_copy_dynamics(A, B, b, qp_in, k);
+    }
+
     int_t **hidxb = (int_t **) qp_in->idxb;
     real_t **hlb = (real_t **) qp_in->lb;
     real_t **hub = (real_t **) qp_in->ub;
 
-    for (int_t k = 0; k < NN; k++) {
-        memcpy(hA[k], A, NX*NX*sizeof(real_t));
-        memcpy(hB[k], B, NX*NU*sizeof(real_t));
-        memcpy(hb[k], b, NX*sizeof(real_t));
-    }
-
     for (int_t k = 0; k < NN+1; k++) {
-        memcpy(hQ[k], Q, NX*NX*sizeof(real_t));
-        memcpy(hS[k], S, NU*NX*sizeof(real_t));
-        memcpy(hR[k], R, NU*NU*sizeof(real_t));
-        memcpy(hq[k], q, NX*sizeof(real_t));
-        memcpy(hr[k], r, NU*sizeof(real_t));
-
         for (int_t i = 0; i < nb[k]; i++) {
             hidxb[k][i] = i;
             if (i < nu[k]) {
@@ -138,7 +124,6 @@ int main() {
                 hub[k][i] = xmax[i - nu[k]];
             }
         }
-
     }
 
     for (int_t k = 0; k < NN+1; k++) {
@@ -174,7 +159,8 @@ int main() {
         acados_tic(&timer);
         ocp_qp_qpdunes(qp_in, &qp_out, &args, &mem, work);
         cputimes[kk] = 1000*acados_toc(&timer);
-
+        // print_ocp_qp_in(qp_in);
+        // exit(1);
         // simulate system
         for (int ii = 0; ii < NX; ii++) {
             x0[ii] = b[ii];
