@@ -17,6 +17,8 @@
 #
 #
 
+set(PACKAGE_SO_VERSION "0.1")
+
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 
@@ -36,6 +38,16 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # for include "acados/..."
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<INSTALL_INTERFACE:include>)
+install(TARGETS acados EXPORT acadosConfig
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin)
+# install(EXPORT acadosConfig DESTINATION share)
+
+# set_target_properties(acados
+#     PROPERTIES
+#         SOVERSION ${PACKAGE_SO_VERSION})
+# export(TARGETS acados FILE ${PROJECT_BINARY_DIR}/acadosConfig.cmake)
 
 # HPMPC must come before BLASFEO!
 if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
