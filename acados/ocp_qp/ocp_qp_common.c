@@ -21,6 +21,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+// #include <stdio.h>
 
 #include "acados/utils/types.h"
 
@@ -135,7 +136,52 @@ static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc
 
     // assign pointers to QP data
     for (int_t k = 0; k < N+1; k++) {
+        if (k < N) {
+            (*qp_in)->A[k] = (real_t *) c_ptr;
+            c_ptr += nx[k+1]*nx[k]*sizeof(real_t);
 
+            (*qp_in)->B[k] = (real_t *) c_ptr;
+            c_ptr += nx[k+1]*nu[k]*sizeof(real_t);
+
+            (*qp_in)->b[k] = (real_t *) c_ptr;
+            c_ptr += nx[k+1]*sizeof(real_t);
+        }
+
+        (*qp_in)->Q[k] = (real_t *) c_ptr;
+        c_ptr += nx[k]*nx[k]*sizeof(real_t);
+
+        (*qp_in)->S[k] = (real_t *) c_ptr;
+        c_ptr += nu[k]*nx[k]*sizeof(real_t);
+
+        (*qp_in)->R[k] = (real_t *) c_ptr;
+        c_ptr += nu[k]*nu[k]*sizeof(real_t);
+
+        (*qp_in)->q[k] = (real_t *) c_ptr;
+        c_ptr += nx[k]*sizeof(real_t);
+
+        (*qp_in)->r[k] = (real_t *) c_ptr;
+        c_ptr += nu[k]*sizeof(real_t);
+
+        (*qp_in)->idxb[k] = (int_t *) c_ptr;
+        c_ptr += nb[k]*sizeof(int_t);
+
+        (*qp_in)->lb[k] = (real_t *) c_ptr;
+        c_ptr += nb[k]*sizeof(real_t);
+
+        (*qp_in)->ub[k] = (real_t *) c_ptr;
+        c_ptr += nb[k]*sizeof(real_t);
+
+        (*qp_in)->Cx[k] = (real_t *) c_ptr;
+        c_ptr += nc[k]*nx[k]*sizeof(real_t);
+
+        (*qp_in)->Cu[k] = (real_t *) c_ptr;
+        c_ptr += nc[k]*nu[k]*sizeof(real_t);
+
+        (*qp_in)->lc[k] = (real_t *) c_ptr;
+        c_ptr += nc[k]*sizeof(real_t);
+
+        (*qp_in)->uc[k] = (real_t *) c_ptr;
+        c_ptr += nc[k]*sizeof(real_t);
     }
 
 }
@@ -146,7 +192,14 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
     int_t bytes = ocp_qp_in_calculate_size(N, nx, nu, nb, nc);
     void *ptr = malloc(bytes);
+
+    // // set a value for debugging
+    // char *c_ptr = (char *) ptr;
+    // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
+
     assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
+
+    // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
 
     return qp_in;
 }
