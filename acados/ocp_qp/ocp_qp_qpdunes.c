@@ -50,7 +50,8 @@ static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
 
 // TODO(dimitris): update code and remove this routine
 static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
-                                          ocp_qp_qpdunes_memory *mem) {
+    ocp_qp_qpdunes_memory *mem) {
+
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_qp_qpdunes_workspace);
@@ -407,8 +408,7 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in,
     return size;
 }
 
-int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_,
-                                   void *mem_) {
+int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
 
