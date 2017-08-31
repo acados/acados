@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "OOQP/include/cQpGenSparse.h"
+#include "ooqp/cQpGenSparse.h"
 
 #include "acados/utils/timing.h"
 
