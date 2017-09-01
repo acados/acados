@@ -62,6 +62,7 @@ extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, i
 // using Eigen::VectorXd;
 
 int main() {
+    // TODO(dimitris): fix for NMF > 1
     const int INEXACT = 0;
     const int d = 0;
     const int NMF = 1;
@@ -354,7 +355,7 @@ int main() {
     nlp_args.common->maxIter = max_sqp_iters;
 
     snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-             "qpdunes");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
+             "qpdunes");  // NOTE(dimitris): currently supports "ooqp", "qpdunes" ("qpoases" broken)
 
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
@@ -379,6 +380,7 @@ int main() {
     status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
     printf("\n\nstatus = %i\n\n", status);
 
+    // d_print_mat(1, 20, nlp_out.x[0], 1);
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
 #if 0

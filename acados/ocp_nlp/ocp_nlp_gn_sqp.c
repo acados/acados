@@ -299,16 +299,17 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     return 0;
 }
 
-void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_,
-                                  void *memory_) {
+void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
 
     mem->qp_solver = (ocp_qp_solver *)malloc(sizeof(ocp_qp_solver));
-    ocp_qp_in *qp_in = (ocp_qp_in *)malloc(sizeof(ocp_qp_in));
-    allocate_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc, qp_in);
-    ocp_qp_out *qp_out = (ocp_qp_out *)malloc(sizeof(ocp_qp_out));
-    allocate_ocp_qp_out(qp_in, qp_out);
+
+    ocp_qp_in *qp_in =
+        create_ocp_qp_in(in->N, (int_t*)in->nx, (int_t*)in->nu, (int_t*)in->nb, (int_t*)in->nc);
+    ocp_qp_out *qp_out =
+        create_ocp_qp_out(in->N, (int_t*)in->nx, (int_t*)in->nu, (int_t*)in->nb, (int_t*)in->nc);
+
     void *qp_args = NULL, *qp_mem = NULL, *qp_work = NULL;
     if (!strcmp(args->qp_solver_name, "qpdunes")) {
         mem->qp_solver->fun = &ocp_qp_qpdunes;
@@ -355,8 +356,6 @@ void ocp_nlp_gn_sqp_free_memory(void *mem_) {
     ocp_nlp_free_memory(N, mem->common);
 
     mem->qp_solver->destroy(mem->qp_solver->mem, mem->qp_solver->work);
-    free_ocp_qp_in(mem->qp_solver->qp_in);
-    free_ocp_qp_out(mem->qp_solver->qp_out);
     free(mem->qp_solver->qp_in);
     free(mem->qp_solver->qp_out);
     free(mem->qp_solver->args);
