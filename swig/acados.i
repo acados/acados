@@ -50,7 +50,6 @@ typedef PyObject LangObject;
 #include <cstdlib>
 #include <string>
 
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
@@ -302,7 +301,6 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     %}
 #endif
     ocp_qp_in(LangObject *input_map) {
-        ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
             char err_msg[256];
             snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s that specifies at "
@@ -320,7 +318,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         if (!has(input_map, "nb")) {
             nb[0] = nx[0];
         }
-        allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        ocp_qp_in *qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
         // Initial state is fixed
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
@@ -378,8 +376,8 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
             return NULL;
         }
         solver->qp_in = qp_in;
-        ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
-        allocate_ocp_qp_out(qp_in, qp_out);
+        ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->N, (int*) qp_in->nx, (int*) qp_in->nu,
+            (int*) qp_in->nb, (int*) qp_in->nc);
         solver->qp_out = qp_out;
         solver->args = args;
         solver->mem = mem;
