@@ -86,7 +86,7 @@ static void sort_matrix_data_row_major(int_t *order, int_t nnz, real_t *d, real_
 static int_t get_number_of_primal_vars(const ocp_qp_in *in) {
     int_t nx = 0;
     int_t kk;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         nx += in->nx[kk] + in->nu[kk];
     }
     return nx;
@@ -117,7 +117,7 @@ static int_t get_nnzQ(const ocp_qp_in *in, const ocp_qp_ooqp_args *args) {
     // dummy command
     if (args->printLevel) kk = 0;
 
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         nnzQ += (in->nx[kk] * in->nx[kk] - in->nx[kk]) / 2 + in->nx[kk];
         nnzQ += (in->nu[kk] * in->nu[kk] - in->nu[kk]) / 2 + in->nu[kk];
         nnzQ += in->nx[kk] * in->nu[kk];
@@ -145,7 +145,7 @@ static int_t get_nnzC(const ocp_qp_in *in, const ocp_qp_ooqp_args *args) {
     // dummy command
     if (args->printLevel) kk = 0;
 
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         nnzC += in->nc[kk] * (in->nx[kk] + in->nu[kk]);
     }
     return nnzC;
@@ -155,7 +155,7 @@ static void update_gradient(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     int_t ii, kk, nn;
 
     nn = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         for (ii = 0; ii < in->nx[kk]; ii++) mem->c[nn++] = in->q[kk][ii];
         for (ii = 0; ii < in->nu[kk]; ii++) mem->c[nn++] = in->r[kk][ii];
     }
@@ -170,7 +170,7 @@ static void update_hessian_structure(const ocp_qp_in *in,
     // to def. sparsities) printf("------------> updating Hessian sparsity\n");
     nn = 0;
     offset = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         // writing Q[kk]
         for (jj = 0; jj < in->nx[kk]; jj++) {
             for (ii = jj; ii < in->nx[kk];
@@ -213,7 +213,7 @@ static void update_hessian_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
     // printf("------------> updating Hessian data\n");
     nn = 0;
     offset = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         for (jj = 0; jj < in->nx[kk]; jj++) {
             for (ii = jj; ii < in->nx[kk];
                  ii++) {  // we write only the lower triangular part
@@ -318,7 +318,7 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     int_t offset = 0;
     int_t fixOrder;
 
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         for (ii = 0; ii < in->nx[kk] + in->nu[kk]; ii++) {
             mem->ixlow[offset + ii] = (char)0;
             mem->ixupp[offset + ii] = (char)0;
@@ -370,7 +370,7 @@ static void update_inequalities_structure(const ocp_qp_in *in,
     nn = 0;
     offsetRows = 0;
     offsetCols = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         // writing Cx[k] (nc[k] x nx[k])
         for (jj = 0; jj < in->nx[kk]; jj++) {
             for (ii = 0; ii < in->nc[kk]; ii++) {
@@ -407,7 +407,7 @@ static void update_inequalities_data(const ocp_qp_in *in,
     nn = 0;
     offsetRows = 0;
     offsetCols = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         for (jj = 0; jj < in->nx[kk]; jj++) {
             for (ii = 0; ii < in->nc[kk]; ii++) {
                 mem->dC[nn++] = in->Cx[kk][jj * in->nc[kk] + ii];
@@ -545,7 +545,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out,
     int_t kk, ii, nn;
 
     nn = 0;
-    for (kk = 0; kk < in->N + 1; kk++) {
+    for (kk = 0; kk <= in->N; kk++) {
         for (ii = 0; ii < in->nx[kk]; ii++) out->x[kk][ii] = work->x[nn++];
         for (ii = 0; ii < in->nu[kk]; ii++) out->u[kk][ii] = work->x[nn++];
     }

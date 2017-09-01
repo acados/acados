@@ -89,8 +89,8 @@ static void free_ocp_qp_in_basic(ocp_qp_in *const qp) {
     free((real_t **)qp->r);
 }
 
-static void allocate_ocp_qp_in_bounds(const int_t N, const int_t *nb,
-                                      ocp_qp_in *const qp) {
+static void allocate_ocp_qp_in_bounds(const int_t N, const int_t *nb, ocp_qp_in *const qp) {
+
     qp->lb = (const real_t **)calloc(N + 1, sizeof(*qp->lb));
     qp->ub = (const real_t **)calloc(N + 1, sizeof(*qp->ub));
     qp->idxb = (const int_t **)calloc(N + 1, sizeof(*qp->idxb));
@@ -177,8 +177,8 @@ void allocate_ocp_qp_out(ocp_qp_in *const in, ocp_qp_out *out) {
         nPis += in->nx[kk + 1];
         nLambdas += 2 * (in->nb[kk] + in->nc[kk]);
     }
-    nLambdas += 2 * (in->nb[N] + in->nc[N]);
     nPrimalVars += in->nx[N] + in->nu[N];
+    nLambdas += 2 * (in->nb[N] + in->nc[N]);
     // printf("\nProblem with:\n");
     // printf("- %d\tprimal variables.\n", nPrimalVars);
     // printf("- %d\tmultipliers of eq. constraints \n", nPis);

@@ -38,15 +38,12 @@
 
 // void d_print_e_mat(int m, int n, double *a, int lda);
 
-int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in,
-                                          ocp_qp_hpipm_args *args) {
-    //
+int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     return 0;
 }
 
-int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in,
-                                       ocp_qp_hpipm_args *args) {
-    //
+int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
+
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
     int *nu = (int *)qp_in->nu;
