@@ -200,7 +200,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
 
     void *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
-    assert(ptr + bytes == ptr_end);
+    (void) ptr_end; assert(ptr + bytes == ptr_end);
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
 
@@ -278,7 +278,7 @@ ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
     int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
     void *ptr = malloc(bytes);
     void *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
-    assert(ptr + bytes == ptr_end);
+    (void) ptr_end; assert(ptr + bytes == ptr_end);
 
     return qp_out;
 }
