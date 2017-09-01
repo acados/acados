@@ -24,11 +24,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "acados/ocp_qp/ocp_qp_common.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 
 static void transpose_matrix(real_t *mat, int m, int n) {
     int_t ii, jj;
@@ -402,8 +402,9 @@ void print_ocp_qp_in(ocp_qp_in const in) {
 }
 
 
-void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
-    int_t BOUNDS, int_t INEQUALITIES, int_t MPC, int_t QUIET) {
+ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, int_t MPC,
+    int_t QUIET) {
+
     char fpath[256];
     int_t ii, kk, N, pathLength;
     int_t *nx, *nu, *nb, *nc;
@@ -435,7 +436,8 @@ void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
     if (INEQUALITIES) read_ocp_qp_in_nc(&nc, N, fpath);
     if (MPC && !BOUNDS) nb[0] = nx[0];
 
-    allocate_ocp_qp_in(N, nx, nu, nb, nc, in);
+    ocp_qp_in *in = create_ocp_qp_in(N, nx, nu, nb, nc);
+
     read_ocp_qp_in_basic(in, fpath);
     if (BOUNDS) read_ocp_qp_in_bounds(in, fpath);
     if (INEQUALITIES) read_ocp_qp_in_polyhedral(in, fpath);
@@ -456,6 +458,8 @@ void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
     int_free(nu);
     int_free(nb);
     int_free(nc);
+
+    return in;
 }
 
 

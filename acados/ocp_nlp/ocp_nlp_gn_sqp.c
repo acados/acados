@@ -29,7 +29,6 @@
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"

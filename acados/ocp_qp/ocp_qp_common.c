@@ -57,7 +57,7 @@ static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, 
     return bytes;
 }
 
-
+// TODO(dimitris): write an assert to ensure that ptr does not exceed the allocated memory
 static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
     ocp_qp_in **qp_in, void *ptr) {
 
