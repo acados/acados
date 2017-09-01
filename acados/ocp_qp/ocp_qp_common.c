@@ -27,9 +27,7 @@
 
 static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
 
-    int_t bytes = 0;
-
-    bytes += sizeof(ocp_qp_in);
+    int_t bytes = sizeof(ocp_qp_in);
 
     bytes += 4*(N+1)*sizeof(int_t);  // nx, nu, nb, nc
     bytes += 3*N*sizeof(real_t *);  // A, B, b
@@ -192,8 +190,8 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     ocp_qp_in *qp_in;
 
     int_t bytes = ocp_qp_in_calculate_size(N, nx, nu, nb, nc);
-    // TODO(dimitris): replace with acados_malloc that may include any malloc-type function
-    // supported by the embedded system
+
+    // TODO(dimitris): replace with acados_malloc to replace malloc at one place if not supported
     void *ptr = malloc(bytes);
 
     // // set a value for debugging
@@ -210,7 +208,10 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
 static int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
 
-    int_t bytes = 0;
+    int_t bytes = sizeof(ocp_qp_out);
+
+    bytes += 3*(N+1)*sizeof(real_t *);  // u, x, lam
+    bytes += N*sizeof(real_t *);  // pi
 
     for (int_t k = 0; k < N+1; k++) {
         bytes += (nx[k] + nu[k])*sizeof(real_t);  // u, x

@@ -384,8 +384,7 @@ int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_) {
     return 0;
 }
 
-int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in,
-                                              void *args_) {
+int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
     int_t size, dimA, dimB, dimC, nDmax, dimz, maxDim;
@@ -511,6 +510,7 @@ void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
 
     // TODO(dimitris): opts should be an input to initialize
     ocp_qp_qpdunes_create_arguments(args, QPDUNES_NONLINEAR_MPC);
+    // args->options.printLevel = 10;
     ocp_qp_qpdunes_create_memory(qp_in, args, mem);
     int_t work_space_size =
         ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
