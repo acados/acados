@@ -427,7 +427,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
          hug, hx, hu, hpi, hlam, inf_norm_res, ipm_workspace, stat);
 
      hpmpc_args->out_iter = out_iter;  // number of performed iterations
-//
     }
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
