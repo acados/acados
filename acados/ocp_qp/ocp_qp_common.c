@@ -19,6 +19,7 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 // #include <stdio.h>
@@ -57,8 +58,8 @@ static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, 
     return bytes;
 }
 
-// TODO(dimitris): write an assert to ensure that ptr does not exceed the allocated memory
-static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
+
+static void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
     ocp_qp_in **qp_in, void *ptr) {
 
     // char pointer
@@ -181,7 +182,7 @@ static void assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc
         (*qp_in)->uc[k] = (real_t *) c_ptr;
         c_ptr += nc[k]*sizeof(real_t);
     }
-
+    return (void *)c_ptr;
 }
 
 
@@ -198,7 +199,8 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     // char *c_ptr = (char *) ptr;
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
 
-    assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
+    void *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
+    assert(ptr + bytes == ptr_end);
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
 
@@ -224,7 +226,7 @@ static int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb,
 }
 
 
-static void assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
+static void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
     ocp_qp_out **qp_out, void *ptr) {
 
     // char pointer
@@ -265,6 +267,7 @@ static void assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
         (*qp_out)->lam[k] = (real_t *) c_ptr;
         c_ptr += 2*(nb[k] + nc[k])*sizeof(real_t);
     }
+    return c_ptr;
 }
 
 
@@ -274,7 +277,8 @@ ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
 
     int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
     void *ptr = malloc(bytes);
-    assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
+    void *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
+    assert(ptr + bytes == ptr_end);
 
     return qp_out;
 }
