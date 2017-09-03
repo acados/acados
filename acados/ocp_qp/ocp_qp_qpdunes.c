@@ -24,7 +24,7 @@
 
 // #include "blasfeo/include/blasfeo_target.h"
 // #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux.h"
+// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -68,7 +68,7 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
     work->H = (real_t *)ptr;
     ptr += (mem->dimz * mem->dimz) * sizeof(real_t);
     work->g = (real_t *)ptr;
-    // ptr += (mem->dimz)*sizeof(real_t);
+    ptr += (mem->dimz)*sizeof(real_t);
 }
 
 static void form_H(real_t *Hk, int_t nx, const real_t *Qk, int_t nu,

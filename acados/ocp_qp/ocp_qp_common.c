@@ -22,11 +22,11 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <stdio.h>
+#include <stdio.h>
 
 #include "acados/utils/types.h"
 
-static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
 
     int_t bytes = sizeof(ocp_qp_in);
 
@@ -59,8 +59,11 @@ static int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, 
 }
 
 
-static void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
+void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
     ocp_qp_in **qp_in, void *ptr) {
+
+    // pointer to initialize QP data to zero
+    char *c_ptr_QPdata;
 
     // char pointer
     char *c_ptr = (char *) ptr;
@@ -134,6 +137,8 @@ static void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
     c_ptr += (N+1)*sizeof(real_t *);
 
     // assign pointers to QP data
+    c_ptr_QPdata = c_ptr;
+
     for (int_t k = 0; k < N+1; k++) {
         if (k < N) {
             (*qp_in)->A[k] = (real_t *) c_ptr;
@@ -182,6 +187,11 @@ static void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
         (*qp_in)->uc[k] = (real_t *) c_ptr;
         c_ptr += nc[k]*sizeof(real_t);
     }
+    
+    // set QP data to zero (mainly for valgrind)
+    for (char *idx = c_ptr_QPdata; idx < c_ptr; idx++) 
+        *idx = 0;
+            
     return (void *)c_ptr;
 }
 
@@ -194,7 +204,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
     // TODO(dimitris): replace with acados_malloc to replace malloc at one place if not supported
     void *ptr = malloc(bytes);
-
+    
     // // set a value for debugging
     // char *c_ptr = (char *) ptr;
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
@@ -203,7 +213,8 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     (void) ptr_end; assert(ptr + bytes == ptr_end);
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
-
+    // exit(1);
+    
     return qp_in;
 }
 

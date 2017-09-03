@@ -68,6 +68,10 @@ typedef struct {
     void *work;
 } ocp_qp_solver;
 
+int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
+void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
+    ocp_qp_in **qp_in, void *ptr);
+
 ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
 ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
 
