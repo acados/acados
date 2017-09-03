@@ -63,7 +63,7 @@ extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, i
 // Simple SQP example for acados
 int main() {
     int_t nil;
-    int_t NMF_MAX = 4;  // data exist up to 9 masses
+    int_t NMF_MAX = 5;  // data exist up to 9 masses
     int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
 
     for (int_t implicit = 1; implicit < IMPL_MAX; implicit++) {
@@ -84,7 +84,7 @@ int main() {
                 "--------------------------------------------------------------------\n");
         }
 
-        for (int_t NMF = 1; NMF < NMF_MAX; NMF++) {
+        for (int_t NMF = 2; NMF < NMF_MAX; NMF++) {
             printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n",
                    NMF);
             int_t NX = 6 * NMF;
@@ -549,13 +549,13 @@ int main() {
                         stepX = fabs(qp_out.x[N][j]);
                 }
 
-                if (sqp_iter == max_sqp_iters - 1) {
+//                if (sqp_iter == max_sqp_iters - 1) {
                     fprintf(stdout,
                             "--- ITERATION %d, Infeasibility: %+.3e , step X: "
                             "%+.3e, "
                             "step U: %+.3e \n",
                             sqp_iter, feas, stepX, stepU);
-                }
+//                }
             }
             //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
             //        shift_states(w, x_end, N);

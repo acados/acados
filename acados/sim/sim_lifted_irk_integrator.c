@@ -32,6 +32,7 @@
 
 #include "acados/utils/print.h"
 
+
 static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
                                           const sim_in *in, void *args) {
     int_t nx = in->nx;
@@ -413,13 +414,13 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
         acados_tic(&timer_ad);
         in->jac_fun(rhs_in, jac_tmp);  // k evaluation
         timing_ad += acados_toc(&timer_ad);
+//        printMatrix("jac_tmp",&jac_tmp[nx+nz],(nx+nz),(2*nx+nz));
         //                }
         if (opts->scheme.type == simplified_in ||
             opts->scheme.type == simplified_inis) {
             for (i = 0; i < (nx+nz) * (2*nx+nz); i++)
                 jac_traj[istep * num_stages + s1][i] = jac_tmp[(nx+nz) + i];
         }
-
         // put jac_tmp in sys_mat:
         if (opts->scheme.type == exact) {
             for (j = 0; j < (nx+nz); j++) {
@@ -475,29 +476,33 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
             if ((s1 + 1) == num_stages) {  // real eigenvalue
                     tmp_eig = 1.0 / H_INT * opts->scheme.eig[s1];
                     for (i = 0; i < (nx+nz)*(nx+nz); i++) {
-                        sys_mat2[idx][i] = tmp_eig*jac_traj[0][nx * (nx+nz) + i];
+                        sys_mat2[idx][i] += tmp_eig*jac_traj[0][nx * (nx+nz) + i];
                     }
             } else {  // complex conjugate pair
                     tmp_eig = 1.0 / H_INT * opts->scheme.eig[s1];
                     tmp_eig2 = 1.0 / H_INT * opts->scheme.eig[s1 + 1];
                     for (j = 0; j < (nx+nz); j++) {
                         for (i = 0; i < (nx+nz); i++) {
-                            sys_mat2[idx][j * 2 * (nx+nz) + i] = tmp_eig*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                            sys_mat2[idx][j * 2 * (nx+nz) + i] +=
+                                    tmp_eig*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
                         }
                     }
                     for (j = 0; j < (nx+nz); j++) {
                         for (i = 0; i < (nx+nz); i++) {
-                            sys_mat2[idx][j * 2 * (nx+nz) + ((nx+nz) + i)] = tmp_eig2*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                            sys_mat2[idx][j * 2 * (nx+nz) + ((nx+nz) + i)] +=
+                                    tmp_eig2*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
                         }
                     }
                     for (j = 0; j < (nx+nz); j++) {
                         for (i = 0; i < (nx+nz); i++) {
-                            sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + i] = -tmp_eig2*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                            sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + i] -=
+                                    tmp_eig2*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
                         }
                     }
                     for (j = 0; j < (nx+nz); j++) {
                         for (i = 0; i < (nx+nz); i++) {
-                            sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + ((nx+nz) + i)] = tmp_eig*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                            sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + ((nx+nz) + i)] +=
+                                    tmp_eig*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
                         }
                     }
                 s1++;  // skip the complex conjugate eigenvalue
