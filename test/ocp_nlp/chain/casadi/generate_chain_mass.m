@@ -87,16 +87,28 @@ odeFun = Function(['ode_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacobian(d
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 
-vdeX = SX.zeros(nx,nx);
-vdeX = vdeX + jtimes(dae.ode,dae.x,Sx);
+Sx_dot = SX.sym('Sx_dot',nx,nx);
+Sp_dot = SX.sym('Sp_dot',nx,nu);
 
-vdeP = SX.zeros(nx,nu) + jacobian(dae.ode,dae.p);
-vdeP = vdeP + jtimes(dae.ode,dae.x,Sp);
+Sx_full = [Sx;Sx_dot];
+Sp_full = [Sp;Sp_dot];
 
-vdeFun = Function(['vde_chain_nm' num2str(Nm)],{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX,vdeP});
+x_dot = SX.sym('x_dot',nx,1);
 
-jacX = SX.zeros(nx,nx) + jacobian(dae.ode,dae.x);
-jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
+x_impl = [dae.x;x_dot];
+
+ode_impl = x_dot - dae.ode;
+
+vdeX = Sx_dot;
+vdeX = vdeX - jtimes(dae.ode,dae.x,Sx);
+
+vdeP = Sp_dot - jacobian(dae.ode,dae.p);
+vdeP = vdeP - jtimes(dae.ode,dae.x,Sp);
+
+vdeFun = Function(['vde_chain_nm' num2str(Nm)],{x_impl,Sx_full,Sp_full,dae.p},{ode_impl,vdeX,vdeP});
+
+jacX = SX.zeros(nx,2*nx) + jacobian(ode_impl,x_impl);
+jacFun = Function(['jac_chain_nm' num2str(Nm)],{x_impl,dae.p},{ode_impl,jacX});
 
 opts = struct('mex', false);
 vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);

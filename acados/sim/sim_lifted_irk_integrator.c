@@ -36,23 +36,24 @@ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
                                           const sim_in *in, void *args) {
     int_t nx = in->nx;
     int_t nu = in->nu;
+    int_t nz = in->nz;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
     //    int_t num_sys = ceil(num_stages/2.0);
-    int_t dim_sys = num_stages * nx;
+    int_t dim_sys = num_stages * (nx+nz);
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
-        dim_sys = nx;
-        if (num_stages > 1) dim_sys = 2 * nx;
+        dim_sys = (nx+nz);
+        if (num_stages > 1) dim_sys = 2 * (nx+nz);
     }
 
     char *ptr = (char *)work;
     ptr += sizeof(sim_lifted_irk_workspace);
     work->rhs_in = (real_t *)ptr;
-    ptr += (nx * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
+    ptr += ((2*nx+nz) * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
     work->out_tmp = (real_t *)ptr;
-    ptr += (nx * (1 + NF)) * sizeof(real_t);  // out_tmp
+    ptr += ((nx+nz) * (1 + NF)) * sizeof(real_t);  // out_tmp
     if (opts->scheme.type == exact) {
         work->ipiv = (int_t *)ptr;
         ptr += (dim_sys) * sizeof(int_t);  // ipiv
@@ -60,21 +61,21 @@ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
         ptr += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
     }
     work->sys_sol = (real_t *)ptr;
-    ptr += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
+    ptr += ((num_stages * (nx+nz)) * (1 + NF)) * sizeof(real_t);  // sys_sol
     work->VDE_tmp = (real_t **)ptr;
     ptr += (num_stages) * sizeof(real_t *);  // VDE_tmp
     for (int_t i = 0; i < num_stages; i++) {
         work->VDE_tmp[i] = (real_t *)ptr;
-        ptr += (nx * (1 + NF)) * sizeof(real_t);  // VDE_tmp[i]
+        ptr += ((nx+nz) * (1 + NF)) * sizeof(real_t);  // VDE_tmp[i]
     }
     work->jac_tmp = (real_t *)ptr;
-    ptr += (nx * (nx + 1)) * sizeof(real_t);  // jac_tmp
+    ptr += ((nx+nz) * (2*nx + nz + 1)) * sizeof(real_t);  // jac_tmp
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
         work->sys_sol_trans = (real_t *)ptr;
         ptr +=
-            ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
+            ((num_stages * (nx+nz)) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
         work->trans = (real_t *)ptr;
         ptr += (num_stages * num_stages) * sizeof(real_t);  // trans
     }
@@ -122,22 +123,13 @@ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
 
 #if TRIPLE_LOOP
 
-#if CODE_GENERATION
-#define DIM 6      // num_stages*NX
-#define DIM_RHS 9  // NX+NU
-#endif
-
 real_t LU_system_ACADO(real_t *const A, int *const perm, int dim) {
     real_t det;
     real_t swap;
     real_t valueMax;
 //    printf("LU_system_ACADO, dim: %d \n", dim);
 
-#if !CODE_GENERATION
     int DIM = dim;
-#else
-    dim += 0;
-#endif
 
     int i, j, k;
     int indexMax;
@@ -186,13 +178,8 @@ real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
     int index1;
 //    printf("solve_system_ACADO, dim: %d, dim2: %d \n", dim, dim2);
 
-#if !CODE_GENERATION
     int DIM = dim;
     int DIM_RHS = dim2;
-#else
-    dim += 0;
-    dim2 += 0;
-#endif
     real_t *bPerm;
     bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
@@ -235,13 +222,8 @@ real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
     int index1;
 //    printf("solve_system_trans_ACADO, dim: %d, dim2: %d \n", dim, dim2);
 
-#if !CODE_GENERATION
     int DIM = dim;
     int DIM_RHS = dim2;
-#else
-    dim += 0;
-    dim2 += 0;
-#endif
     real_t *bPerm;
     bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
     real_t tmp_var;
@@ -375,6 +357,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
                                sim_lifted_irk_workspace *work, real_t *sys_mat,
                                real_t **sys_mat2, real_t timing_ad) {
     int_t nx = in->nx;
+    int_t nz = in->nz;
     int_t nu = in->nu;
     real_t H_INT = in->step;
     sim_RK_opts *opts = (sim_RK_opts *)args;
@@ -398,31 +381,16 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
         int idx = 0;
         for (s1 = 0; s1 < num_stages; s1++) {
             if ((s1 + 1) == num_stages) {  // real eigenvalue
-                for (i = 0; i < nx * nx; i++) sys_mat2[idx][i] = 0.0;
-                tmp_eig = 1.0 / H_INT * opts->scheme.eig[s1];
-                for (i = 0; i < nx; i++) {
-                    sys_mat2[idx][i * (nx + 1)] = tmp_eig;
-                }
+                for (i = 0; i < (nx+nz) * (nx+nz); i++) sys_mat2[idx][i] = 0.0;
             } else {  // complex conjugate pair
-                for (i = 0; i < 4 * nx * nx; i++) sys_mat2[idx][i] = 0.0;
-                tmp_eig = 1.0 / H_INT * opts->scheme.eig[s1];
-                tmp_eig2 = 1.0 / H_INT * opts->scheme.eig[s1 + 1];
-                for (i = 0; i < nx; i++) {
-                    sys_mat2[idx][i * (2 * nx + 1)] = tmp_eig;
-                    sys_mat2[idx][(nx + i) * (2 * nx + 1)] = tmp_eig;
-
-                    sys_mat2[idx][i * 2 * nx + (nx + i)] = tmp_eig2;
-                    sys_mat2[idx][(nx + i) * 2 * nx + i] = -tmp_eig2;
-                }
+                for (i = 0; i < 4 * (nx+nz) * (nx+nz); i++) sys_mat2[idx][i] = 0.0;
                 s1++;  // skip the complex conjugate eigenvalue
             }
             idx++;
         }
     } else if (opts->scheme.type == exact) {
-        for (i = 0; i < num_stages * nx * num_stages * nx; i++)
+        for (i = 0; i < num_stages * (nx+nz) * num_stages * (nx+nz); i++)
             sys_mat[i] = 0.0;
-        for (i = 0; i < num_stages * nx; i++)
-            sys_mat[i * (num_stages * nx + 1)] = 1.0;  // identity
     }
 
     for (s1 = 0; s1 < num_stages; s1++) {
@@ -430,13 +398,16 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
         for (i = 0; i < nx; i++) {
             rhs_in[i] = out_tmp[i];
         }
-        for (i = 0; i < nu; i++) rhs_in[nx + i] = in->u[i];
-        rhs_in[nx + nu] =
+        for (i = 0; i < (nx+nz); i++) {
+            rhs_in[nx+i] = K_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i];
+        }
+        for (i = 0; i < nu; i++) rhs_in[nx + (nx+nz) + i] = in->u[i];
+        rhs_in[nx + (nx+nz) + nu] =
             ((real_t)istep + c_vec[s1]) / ((real_t)in->nSteps);  // time
         for (s2 = 0; s2 < num_stages; s2++) {
             for (i = 0; i < nx; i++) {
                 rhs_in[i] += H_INT * A_mat[s2 * num_stages + s1] *
-                             K_traj[istep * num_stages * nx + s2 * nx + i];
+                             K_traj[istep * num_stages * (nx+nz) + s2 * (nx+nz) + i];
             }
         }
         acados_tic(&timer_ad);
@@ -445,18 +416,24 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
         //                }
         if (opts->scheme.type == simplified_in ||
             opts->scheme.type == simplified_inis) {
-            for (i = 0; i < nx * nx; i++)
-                jac_traj[istep * num_stages + s1][i] = jac_tmp[nx + i];
+            for (i = 0; i < (nx+nz) * (2*nx+nz); i++)
+                jac_traj[istep * num_stages + s1][i] = jac_tmp[(nx+nz) + i];
         }
 
         // put jac_tmp in sys_mat:
         if (opts->scheme.type == exact) {
+            for (j = 0; j < (nx+nz); j++) {
+                for (i = 0; i < (nx+nz); i++) {
+                    sys_mat[(s1 * (nx+nz) + j) * num_stages * (nx+nz) + s1 * (nx+nz) + i]
+                            += jac_tmp[(nx+nz)*(1+nx) + j * (nx+nz) + i];
+                }
+            }
             for (s2 = 0; s2 < num_stages; s2++) {
                 for (j = 0; j < nx; j++) {
-                    for (i = 0; i < nx; i++) {
-                        sys_mat[(s2 * nx + j) * num_stages * nx + s1 * nx +
-                                i] -= H_INT * A_mat[s2 * num_stages + s1] *
-                                      jac_tmp[nx + j * nx + i];
+                    for (i = 0; i < (nx+nz); i++) {
+                        sys_mat[(s2 * (nx+nz) + j) * num_stages * (nx+nz) + s1 * (nx+nz) +
+                                i] += H_INT * A_mat[s2 * num_stages + s1] *
+                                        jac_tmp[(nx+nz) + j * (nx+nz) + i];
                     }
                 }
             }
@@ -471,19 +448,58 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
             istep == 0 && !opts->scheme.freeze) {
             if ((s1 + 1) == num_stages) {  // real eigenvalue
                 for (j = 0; j < nx; j++) {
-                    for (i = 0; i < nx; i++) {
-                        sys_mat2[idx][j * nx + i] -= jac_traj[0][j * nx + i];
+                    for (i = 0; i < (nx+nz); i++) {
+                        sys_mat2[idx][j * (nx+nz) + i] += jac_traj[0][j * (nx+nz) + i];
                     }
                 }
             } else {  // complex conjugate pair
                 for (j = 0; j < nx; j++) {
-                    for (i = 0; i < nx; i++) {
-                        sys_mat2[idx][j * 2 * nx + i] -=
-                            jac_traj[0][j * nx + i];
-                        sys_mat2[idx][(nx + j) * 2 * nx + nx + i] -=
-                            jac_traj[0][j * nx + i];
+                    for (i = 0; i < (nx+nz); i++) {
+                        sys_mat2[idx][j * 2 * (nx+nz) + i] +=
+                            jac_traj[0][j * (nx+nz) + i];
+                        sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + (nx+nz) + i] +=
+                            jac_traj[0][j * (nx+nz) + i];
                     }
                 }
+                s1++;  // skip the complex conjugate eigenvalue
+            }
+            idx++;
+        }
+    }
+
+    if ((opts->scheme.type == simplified_in ||
+         opts->scheme.type == simplified_inis) &&
+        istep == 0 && !opts->scheme.freeze) {
+        int idx = 0;
+        for (s1 = 0; s1 < num_stages; s1++) {
+            if ((s1 + 1) == num_stages) {  // real eigenvalue
+                    tmp_eig = 1.0 / H_INT * opts->scheme.eig[s1];
+                    for (i = 0; i < (nx+nz)*(nx+nz); i++) {
+                        sys_mat2[idx][i] = tmp_eig*jac_traj[0][nx * (nx+nz) + i];
+                    }
+            } else {  // complex conjugate pair
+                    tmp_eig = 1.0 / H_INT * opts->scheme.eig[s1];
+                    tmp_eig2 = 1.0 / H_INT * opts->scheme.eig[s1 + 1];
+                    for (j = 0; j < (nx+nz); j++) {
+                        for (i = 0; i < (nx+nz); i++) {
+                            sys_mat2[idx][j * 2 * (nx+nz) + i] = tmp_eig*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                        }
+                    }
+                    for (j = 0; j < (nx+nz); j++) {
+                        for (i = 0; i < (nx+nz); i++) {
+                            sys_mat2[idx][j * 2 * (nx+nz) + ((nx+nz) + i)] = tmp_eig2*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                        }
+                    }
+                    for (j = 0; j < (nx+nz); j++) {
+                        for (i = 0; i < (nx+nz); i++) {
+                            sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + i] = -tmp_eig2*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                        }
+                    }
+                    for (j = 0; j < (nx+nz); j++) {
+                        for (i = 0; i < (nx+nz); i++) {
+                            sys_mat2[idx][((nx+nz) + j) * 2 * (nx+nz) + ((nx+nz) + i)] = tmp_eig*jac_traj[0][nx * (nx+nz) + j*(nx+nz) + i];
+                        }
+                    }
                 s1++;  // skip the complex conjugate eigenvalue
             }
             idx++;
@@ -494,10 +510,11 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
 int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                      void *work_) {
     int_t nx = in->nx;
+    int_t nz = in->nz;
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    int_t dim_sys = num_stages * nx;
+    int_t dim_sys = num_stages * (nx+nz);
     int_t i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
@@ -553,7 +570,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     for (i = 0; i < nx * NF; i++)
         out_tmp[nx + i] = in->S_forw[i];  // sensitivities
 
-    for (i = 0; i < nu; i++) rhs_in[nx * (1 + NF) + i] = in->u[i];
+    for (i = 0; i < nu; i++) rhs_in[(2*nx+nz) * (1 + NF) + i] = in->u[i];
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
@@ -565,19 +582,19 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
         for (istep = NSTEPS - 1; istep > -1; istep--) {  // ADJOINT update
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (j = 0; j < nx; j++) {  // step in X
-                    for (i = 0; i < nx; i++) {
-                        K_traj[(istep * num_stages + s1) * nx + i] +=
-                            DK_traj[(istep * num_stages + s1) * nx * (nx + nu) +
-                                    j * nx + i] *
+                    for (i = 0; i < (nx+nz); i++) {
+                        K_traj[(istep * num_stages + s1) * (nx+nz) + i] +=
+                            DK_traj[(istep * num_stages + s1) * (nx+nz) * (nx + nu) +
+                                    j * (nx+nz) + i] *
                             (in->x[j] - mem->x[j]);  // RK step
                     }
                     mem->x[j] = in->x[j];
                 }
                 for (j = 0; j < nu; j++) {  // step in U
-                    for (i = 0; i < nx; i++) {
-                        K_traj[(istep * num_stages + s1) * nx + i] +=
-                            DK_traj[(istep * num_stages + s1) * nx * (nx + nu) +
-                                    (nx + j) * nx + i] *
+                    for (i = 0; i < (nx+nz); i++) {
+                        K_traj[(istep * num_stages + s1) * (nx+nz) + i] +=
+                            DK_traj[(istep * num_stages + s1) * (nx+nz) * (nx + nu) +
+                                    (nx + j) * (nx+nz) + i] *
                             (in->u[j] - mem->u[j]);  // RK step
                     }
                     mem->u[j] = in->u[j];
@@ -586,12 +603,12 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             if (opts->scheme.type == simplified_inis && !opts->scheme.freeze) {
                 for (s1 = 0; s1 < num_stages; s1++) {
                     for (j = 0; j < NF; j++) {
-                        for (i = 0; i < nx; i++) {
-                            DK_traj[(istep * num_stages + s1) * nx * NF +
-                                    j * nx + i] +=
-                                delta_DK_traj[(istep * num_stages + s1) * nx *
+                        for (i = 0; i < (nx+nz); i++) {
+                            DK_traj[(istep * num_stages + s1) * (nx+nz) * NF +
+                                    j * (nx+nz) + i] +=
+                                delta_DK_traj[(istep * num_stages + s1) * (nx+nz) *
                                                   NF +
-                                              j * nx + i];
+                                              j * (nx+nz) + i];
                         }
                     }
                 }
@@ -601,16 +618,18 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             if (opts->scheme.type == simplified_in ||
                 opts->scheme.type == simplified_inis) {
                 for (s1 = 0; s1 < num_stages; s1++) {
-                    for (i = 0; i < nx; i++) {
-                        sys_sol[s1 * nx + i] =
-                            -mu_traj[istep * num_stages * nx + s1 * nx + i];
+                    for (i = 0; i < (nx+nz); i++) {
+                        sys_sol[s1 * (nx+nz) + i] =
+                                -adj_traj[istep * num_stages * (2*nx+nz) + s1 * (2*nx+nz) + nx + i];
                         for (s2 = 0; s2 < num_stages; s2++) {
-                            sys_sol[s1 * nx + i] +=
+                            sys_sol[s1 * (nx+nz) + i] -=
                                 H_INT * A_mat[s1 * num_stages + s2] *
-                                adj_traj[istep * num_stages * nx + s2 * nx + i];
+                                adj_traj[istep * num_stages * (2*nx+nz) + s2 * (2*nx+nz) + i];
                         }
-                        sys_sol[s1 * nx + i] -= H_INT * b_vec[s1] * adj_tmp[i];
-                        sys_sol[s1 * nx + i] += in->grad_K[s1 * nx + i];
+                        sys_sol[s1 * (nx+nz) + i] += in->grad_K[s1 * (nx+nz) + i];
+                    }
+                    for (i = 0; i < nx; i++) {
+                        sys_sol[s1 * (nx+nz) + i] -= H_INT * b_vec[s1] * adj_tmp[i];
                     }
                 }
                 //                print_matrix("stdout", sys_sol, 1,
@@ -629,11 +648,11 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                         }
                     }
                     transform_vec(sys_sol, work->trans, sys_sol_trans,
-                                  num_stages, nx);
+                                  num_stages, (nx+nz));
 
                     // construct sys_sol2 from sys_sol_trans:
                     construct_subsystems(sys_sol_trans, sys_sol2, num_stages,
-                                         nx, 1);
+                                         (nx+nz), 1);
                 }
                 acados_tic(&timer_la);
                 int_t idx = 0;
@@ -651,13 +670,13 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 #endif
                         idx++;
                         if ((s1 + 1) < num_stages) {
-                            dim_sys = 2 * nx;
+                            dim_sys = 2 * (nx+nz);
                             s1++;  // complex conjugate pair of eigenvalues
                         } else {
-                            dim_sys = nx;
+                            dim_sys = (nx+nz);
                         }
                     } else {
-                        dim_sys = num_stages * nx;
+                        dim_sys = num_stages * (nx+nz);
                         s1 = num_stages;  // break out of for-loop
                     }
 #if TRIPLE_LOOP
@@ -672,20 +691,20 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                 if (opts->scheme.type == simplified_in ||
                     opts->scheme.type == simplified_inis) {
                     // construct sys_sol_trans from sys_sol2:
-                    destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx,
+                    destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, (nx+nz),
                                         1);
 
                     // apply the transf2 operation:
                     sys_sol = work->sys_sol;
                     transform_vec(sys_sol_trans, opts->scheme.transf2_T,
-                                  sys_sol, num_stages, nx);
+                                  sys_sol, num_stages, (nx+nz));
                 }
 
                 // update mu_traj
                 for (s1 = 0; s1 < num_stages; s1++) {
-                    for (i = 0; i < nx; i++) {
-                        mu_traj[istep * num_stages * nx + s1 * nx + i] +=
-                            sys_sol[s1 * nx + i];
+                    for (i = 0; i < (nx+nz); i++) {
+                        mu_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i] +=
+                            sys_sol[s1 * (nx+nz) + i];
                     }
                 }
 
@@ -693,10 +712,10 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                 // TODO(rien): USE ADJOINT DIFFERENTIATION HERE INSTEAD !!:
                 for (j = 0; j < nx; j++) {
                     for (s1 = 0; s1 < num_stages; s1++) {
-                        for (i = 0; i < nx; i++) {
+                        for (i = 0; i < (nx+nz); i++) {
                             adj_tmp[j] -=
-                                mu_traj[istep * num_stages * nx + s1 * nx + i] *
-                                jac_traj[istep * num_stages + s1][j * nx + i];
+                                mu_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i] *
+                                jac_traj[istep * num_stages + s1][j * (nx+nz) + i];
                         }
                     }
                 }
@@ -730,13 +749,13 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 #endif
                     idx++;
                     if ((s1 + 1) < num_stages) {
-                        dim_sys = 2 * nx;
+                        dim_sys = 2 * (nx+nz);
                         s1++;  // complex conjugate pair of eigenvalues
                     } else {
-                        dim_sys = nx;
+                        dim_sys = (nx+nz);
                     }
                 } else {
-                    dim_sys = num_stages * nx;
+                    dim_sys = num_stages * (nx+nz);
                     s1 = num_stages;  // break out of for-loop
                 }
 #if TRIPLE_LOOP
@@ -761,26 +780,43 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             sys_sol_trans = work->sys_sol_trans;
         }
         for (s1 = 0; s1 < num_stages; s1++) {
-            for (i = 0; i < nx * (1 + NF); i++) {
-                rhs_in[i] = out_tmp[i];
+            for (j = 0; j < (1 + NF); j++) {
+                for (i = 0; i < nx; i++) {
+                    rhs_in[j*(2*nx+nz)+i] = out_tmp[j*nx+i];
+                }
+                for (i = nx; i < (2*nx+nz); i++) {
+                    rhs_in[j*(2*nx+nz)+i] = 0.0;
+                }
+            }
+            for (i = 0; i < nx+nz; i++) {
+                rhs_in[nx+i] = K_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i];
             }
             for (s2 = 0; s2 < num_stages; s2++) {
                 for (i = 0; i < nx; i++) {
                     rhs_in[i] += H_INT * A_mat[s2 * num_stages + s1] *
-                                 K_traj[istep * num_stages * nx + s2 * nx + i];
+                                 K_traj[istep * num_stages * (nx+nz) + s2 * (nx+nz) + i];
                 }
                 if (opts->scheme.type == simplified_inis) {
                     for (j = 0; j < NF; j++) {
                         for (i = 0; i < nx; i++) {
-                            rhs_in[(j + 1) * nx + i] +=
+                            rhs_in[(j + 1) * (2*nx+nz) + i] +=
                                 H_INT * A_mat[s2 * num_stages + s1] *
-                                DK_traj[(istep * num_stages + s2) * nx * NF +
-                                        j * nx + i];
+                                DK_traj[(istep * num_stages + s2) * (nx+nz) * NF +
+                                        j * (nx+nz) + i];
                         }
                     }
                 }
             }
-            rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
+            if (opts->scheme.type == simplified_inis) {
+                for (j = 0; j < NF; j++) {
+                    for (i = 0; i < (nx+nz); i++) {
+                        rhs_in[(j + 1) * (2*nx+nz) + nx + i] +=
+                            DK_traj[(istep * num_stages + s1) * (nx+nz) * NF +
+                                    j * (nx+nz) + i];
+                    }
+                }
+            }
+            rhs_in[(2*nx+nz)*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
 
             acados_tic(&timer_ad);
             in->VDE_forw(rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
@@ -788,22 +824,9 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 
             // put VDE_tmp in sys_sol:
             for (j = 0; j < 1 + NF; j++) {
-                for (i = 0; i < nx; i++) {
-                    sys_sol[j * num_stages * nx + s1 * nx + i] =
-                        VDE_tmp[s1][j * nx + i];
-                }
-            }
-            for (i = 0; i < nx; i++) {
-                sys_sol[s1 * nx + i] -=
-                    K_traj[istep * num_stages * nx + s1 * nx + i];
-            }
-            if (opts->scheme.type == simplified_inis) {
-                for (j = 0; j < NF; j++) {
-                    for (i = 0; i < nx; i++) {
-                        sys_sol[(j + 1) * num_stages * nx + s1 * nx + i] -=
-                            DK_traj[(istep * num_stages + s1) * nx * NF +
-                                    j * nx + i];
-                    }
+                for (i = 0; i < (nx+nz); i++) {
+                    sys_sol[j * num_stages * (nx+nz) + s1 * (nx+nz) + i] =
+                        -VDE_tmp[s1][j * (nx+nz) + i];
                 }
             }
         }
@@ -812,9 +835,9 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
         // correction:
         if (opts->scheme.type == simplified_inis) {
             for (j = 0; j < NF; j++) {
-                for (i = 0; i < num_stages * nx; i++) {
-                    out->grad[j] += mu_traj[istep * num_stages * nx + i] *
-                                    sys_sol[(j + 1) * num_stages * nx + i];
+                for (i = 0; i < num_stages * (nx+nz); i++) {
+                    out->grad[j] += mu_traj[istep * num_stages * (nx+nz) + i] *
+                                    sys_sol[(j + 1) * num_stages * (nx+nz) + i];
                 }
             }
         }
@@ -831,18 +854,18 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             }
             if (!opts->scheme.freeze) {
                 transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages,
-                              nx, 1 + NF);
+                              (nx+nz), 1 + NF);
             } else {
                 transform_mat(sys_sol, work->trans, sys_sol_trans, num_stages,
-                              nx, 1);
+                              (nx+nz), 1);
             }
 
             // construct sys_sol2 from sys_sol_trans:
             if (!opts->scheme.freeze) {
-                construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx,
+                construct_subsystems(sys_sol_trans, sys_sol2, num_stages, (nx+nz),
                                      1 + NF);
             } else {
-                construct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx,
+                construct_subsystems(sys_sol_trans, sys_sol2, num_stages, (nx+nz),
                                      1);
             }
         }
@@ -863,13 +886,13 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 #endif
                 idx++;
                 if ((s1 + 1) < num_stages) {
-                    dim_sys = 2 * nx;
+                    dim_sys = 2 * (nx+nz);
                     s1++;  // complex conjugate pair of eigenvalues
                 } else {
-                    dim_sys = nx;
+                    dim_sys = (nx+nz);
                 }
             } else {
-                dim_sys = num_stages * nx;
+                dim_sys = num_stages * (nx+nz);
                 s1 = num_stages;  // break out of for-loop
             }
 #if TRIPLE_LOOP
@@ -906,74 +929,77 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
         if (opts->scheme.type == simplified_in || opts->scheme.type == simplified_inis) {
             // construct sys_sol_trans from sys_sol2:
             if (!opts->scheme.freeze) {
-                destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx,
+                destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, (nx+nz),
                                     1 + NF);
             } else {
-                destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, nx, 1);
+                destruct_subsystems(sys_sol_trans, sys_sol2, num_stages, (nx+nz), 1);
             }
 
             // apply the transf2 operation:
             sys_sol = work->sys_sol;
             if (!opts->scheme.freeze) {
                 transform_mat(sys_sol_trans, opts->scheme.transf2, sys_sol,
-                              num_stages, nx, 1 + NF);
+                              num_stages, (nx+nz), 1 + NF);
             } else {
                 transform_mat(sys_sol_trans, opts->scheme.transf2, sys_sol,
-                              num_stages, nx, 1);
+                              num_stages, (nx+nz), 1);
             }
         }
 
         // Newton step of the collocation variables
-        for (i = 0; i < num_stages * nx; i++) {
-            K_traj[istep * num_stages * nx + i] += sys_sol[i];
+        for (i = 0; i < num_stages * (nx+nz); i++) {
+            K_traj[istep * num_stages * (nx+nz) + i] += sys_sol[i];
         }
         for (s1 = 0; s1 < num_stages; s1++) {
             for (i = 0; i < nx; i++) {
                 out_tmp[i] +=
                     H_INT * b_vec[s1] *
-                    K_traj[istep * num_stages * nx + s1 * nx + i];  // RK step
+                    K_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i];  // RK step
             }
         }
 
         // Sensitivities collocation variables
         for (s1 = 0; s1 < num_stages; s1++) {
             for (j = 0; j < NF; j++) {
-                for (i = 0; i < nx; i++) {
+                for (i = 0; i < (nx+nz); i++) {
                     if (opts->scheme.type == simplified_inis && in->sens_adj &&
                         !opts->scheme.freeze) {
-                        delta_DK_traj[(istep * num_stages + s1) * nx * NF +
-                                      j * nx + i] =
-                            sys_sol[(j + 1) * num_stages * nx + s1 * nx + i];
+                        delta_DK_traj[(istep * num_stages + s1) * (nx+nz) * NF +
+                                      j * (nx+nz) + i] =
+                            sys_sol[(j + 1) * num_stages * (nx+nz) + s1 * (nx+nz) + i];
                     } else if (opts->scheme.type == simplified_inis &&
                                !opts->scheme.freeze) {
-                        DK_traj[(istep * num_stages + s1) * nx * NF + j * nx +
+                        DK_traj[(istep * num_stages + s1) * (nx+nz) * NF + j * (nx+nz) +
                                 i] +=
-                            sys_sol[(j + 1) * num_stages * nx + s1 * nx + i];
+                            sys_sol[(j + 1) * num_stages * (nx+nz) + s1 * (nx+nz) + i];
                     } else if (!opts->scheme.freeze) {
-                        DK_traj[(istep * num_stages + s1) * nx * NF + j * nx +
+                        DK_traj[(istep * num_stages + s1) * (nx+nz) * NF + j * (nx+nz) +
                                 i] =
-                            sys_sol[(j + 1) * num_stages * nx + s1 * nx + i];
+                            sys_sol[(j + 1) * num_stages * (nx+nz) + s1 * (nx+nz) + i];
                     }
                 }
             }
         }
         for (s1 = 0; s1 < num_stages; s1++) {
-            for (i = 0; i < nx * NF; i++) {
-                out_tmp[nx + i] += H_INT * b_vec[s1] *
-                                   DK_traj[(istep * num_stages + s1) * nx * NF +
-                                           i];  // RK step
+            for (j = 0; j < NF; j++) {
+                for (i = 0; i < nx; i++) {
+                    out_tmp[nx + j*nx + i] += H_INT * b_vec[s1] *
+                            DK_traj[(istep * num_stages + s1) * (nx+nz) * NF +
+                                    j * (nx+nz) + i];  // RK step
+                }
             }
         }
+
         if (opts->scheme.type == simplified_inis ||
             opts->scheme.type == simplified_in) {
             // Adjoint derivatives:
             for (s1 = 0; s1 < num_stages; s1++) {
-                for (j = 0; j < nx; j++) {
-                    adj_traj[istep * num_stages * nx + s1 * nx + j] = 0.0;
-                    for (i = 0; i < nx; i++) {
-                        adj_traj[istep * num_stages * nx + s1 * nx + j] +=
-                            mu_traj[istep * num_stages * nx + s1 * nx + i] *
-                            jac_traj[istep * num_stages + s1][j * nx + i];
+                for (j = 0; j < (2*nx+nz); j++) {
+                    adj_traj[istep * num_stages * (2*nx+nz) + s1 * (2*nx+nz) + j] = 0.0;
+                    for (i = 0; i < (nx+nz); i++) {
+                        adj_traj[istep * num_stages * (2*nx+nz) + s1 * (2*nx+nz) + j] +=
+                            mu_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i] *
+                            jac_traj[istep * num_stages + s1][j * (nx+nz) + i];
                     }
                 }
             }
@@ -989,31 +1015,31 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             // Standard Inexact Newton based gradient correction:
             for (j = 0; j < NF; j++) {
                 for (s1 = 0; s1 < num_stages; s1++) {
-                    for (i = 0; i < nx; i++) {
-                        out->grad[j] +=
-                            mu_traj[istep * num_stages * nx + s1 * nx + i] *
-                            VDE_tmp[s1][(j + 1) * nx + i];
+                    for (i = 0; i < (nx+nz); i++) {
+                        out->grad[j] -=
+                            mu_traj[istep * num_stages * (nx+nz) + s1 * (nx+nz) + i] *
+                            VDE_tmp[s1][(j + 1) * (nx+nz) + i];
                     }
                 }
             }
             for (j = 0; j < NF; j++) {
                 for (s1 = 0; s1 < num_stages; s1++) {
-                    for (i = 0; i < nx; i++) {
+                    for (i = 0; i < (nx+nz); i++) {
                         out->grad[j] -=
-                            mu_traj[istep * num_stages * nx + s1 * nx + i] *
-                            DK_traj[(istep * num_stages + s1) * nx * NF +
-                                    j * nx + i];
+                            adj_traj[istep * num_stages * (2*nx+nz) + s1 * (2*nx+nz) + nx + i] *
+                            DK_traj[(istep * num_stages + s1) * (nx+nz) * NF +
+                                    j * (nx+nz) + i];
                     }
                 }
                 for (s2 = 0; s2 < num_stages; s2++) {
                     for (s1 = 0; s1 < num_stages; s1++) {
                         for (i = 0; i < nx; i++) {
-                            out->grad[j] +=
+                            out->grad[j] -=
                                 H_INT * A_mat[s2 * num_stages + s1] *
-                                adj_traj[istep * num_stages * nx + s1 * nx +
+                                adj_traj[istep * num_stages * (2*nx+nz) + s1 * (2*nx+nz) +
                                          i] *
-                                DK_traj[(istep * num_stages + s2) * nx * NF +
-                                        j * nx + i];
+                                DK_traj[(istep * num_stages + s2) * (nx+nz) * NF +
+                                        j * (nx+nz) + i];
                         }
                     }
                 }
@@ -1033,34 +1059,35 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 
 int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
     int_t nx = in->nx;
+    int_t nz = in->nz;
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->nsens_forw;
     //    int_t num_sys = ceil(num_stages/2.0);
-    int_t dim_sys = num_stages * nx;
+    int_t dim_sys = num_stages * (nx+nz);
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
-        dim_sys = nx;
-        if (num_stages > 1) dim_sys = 2 * nx;
+        dim_sys = (nx+nz);
+        if (num_stages > 1) dim_sys = 2 * (nx+nz);
     }
 
     int_t size = sizeof(sim_lifted_irk_workspace);
-    size += (nx * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
+    size += ((2*nx+nz) * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
     size += (nx * (1 + NF)) * sizeof(real_t);           // out_tmp
     if (opts->scheme.type == exact) {
         size += (dim_sys) * sizeof(int_t);             // ipiv
         size += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
     }
-    size += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
+    size += ((num_stages * (nx+nz)) * (1 + NF)) * sizeof(real_t);  // sys_sol
     size += (num_stages) * sizeof(real_t *);                  // VDE_tmp
-    size += (num_stages * nx * (1 + NF)) * sizeof(real_t);    // VDE_tmp[...]
-    size += (nx * (nx + 1)) * sizeof(real_t);                 // jac_tmp
+    size += (num_stages * (nx+nz) * (1 + NF)) * sizeof(real_t);    // VDE_tmp[...]
+    size += ((nx+nz) * (2*nx + nz + 1)) * sizeof(real_t);                 // jac_tmp
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
         size +=
-            ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
+            ((num_stages * (nx+nz)) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
         size += (num_stages * num_stages) * sizeof(real_t);   // trans
     }
 
@@ -1095,6 +1122,7 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
                                   sim_lifted_irk_memory *mem) {
     int_t i;
     int_t nx = in->nx;
+    int_t nz = in->nz;
     int_t nu = in->nu;
     int_t nSteps = in->nSteps;
     sim_RK_opts *opts = (sim_RK_opts *)args;
@@ -1105,33 +1133,33 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
 //    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
 //    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
 
-    mem->K_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->K_traj));
-    mem->DK_traj = calloc(nSteps*num_stages*nx*NF, sizeof(*mem->DK_traj));
-    mem->mu_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->mu_traj));
+    mem->K_traj = calloc(nSteps*num_stages*(nx+nz), sizeof(*mem->K_traj));
+    mem->DK_traj = calloc(nSteps*num_stages*(nx+nz)*NF, sizeof(*mem->DK_traj));
+    mem->mu_traj = calloc(nSteps*num_stages*(nx+nz), sizeof(*mem->mu_traj));
     mem->x = calloc(nx, sizeof(*mem->x));
     mem->u = calloc(nu, sizeof(*mem->u));
     if (opts->scheme.type == simplified_inis) {
         mem->delta_DK_traj =
-            calloc(nSteps * num_stages * nx * NF, sizeof(*mem->delta_DK_traj));
-        for (i = 0; i < nSteps * num_stages * nx * NF; i++)
+            calloc(nSteps * num_stages * (nx+nz) * NF, sizeof(*mem->delta_DK_traj));
+        for (i = 0; i < nSteps * num_stages * (nx+nz) * NF; i++)
             mem->delta_DK_traj[i] = 0.0;
     }
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
         mem->adj_traj =
-            calloc(nSteps * num_stages * nx, sizeof(*mem->adj_traj));
-        for (i = 0; i < nSteps * num_stages * nx; i++) mem->adj_traj[i] = 0.0;
+            calloc(nSteps * num_stages * (2*nx+nz), sizeof(*mem->adj_traj));
+        for (i = 0; i < nSteps * num_stages * (2*nx+nz); i++) mem->adj_traj[i] = 0.0;
 
         mem->jac_traj = calloc(nSteps * num_stages, sizeof(*mem->jac_traj));
         for (int_t i = 0; i < nSteps * num_stages; i++) {
-            mem->jac_traj[i] = calloc(nx * nx, sizeof(*mem->jac_traj[i]));
+            mem->jac_traj[i] = calloc((nx+nz) * (2*nx+nz), sizeof(*mem->jac_traj[i]));
         }
     }
 
-    for (i = 0; i < nSteps * num_stages * nx; i++) mem->K_traj[i] = 0.0;
-    for (i = 0; i < nSteps * num_stages * nx * NF; i++) mem->DK_traj[i] = 0.0;
-    for (i = 0; i < nSteps * num_stages * nx; i++) mem->mu_traj[i] = 0.0;
+    for (i = 0; i < nSteps * num_stages * (nx+nz); i++) mem->K_traj[i] = 0.0;
+    for (i = 0; i < nSteps * num_stages * (nx+nz) * NF; i++) mem->DK_traj[i] = 0.0;
+    for (i = 0; i < nSteps * num_stages * (nx+nz); i++) mem->mu_traj[i] = 0.0;
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
@@ -1141,25 +1169,25 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
         for (int_t i = 0; i < num_sys; i++) {
             if ((i + 1) == num_sys &&
                 num_sys != floor(num_stages / 2.0)) {  // odd number of stages
-                mem->sys_mat2[i] = calloc(nx * nx, sizeof(*(mem->sys_mat2[i])));
-                mem->ipiv2[i] = calloc(nx, sizeof(*(mem->ipiv2[i])));
+                mem->sys_mat2[i] = calloc((nx+nz) * (nx+nz), sizeof(*(mem->sys_mat2[i])));
+                mem->ipiv2[i] = calloc((nx+nz), sizeof(*(mem->ipiv2[i])));
                 mem->sys_sol2[i] =
-                    calloc(nx * (1 + NF), sizeof(*(mem->sys_sol2[i])));
+                    calloc((nx+nz) * (1 + NF), sizeof(*(mem->sys_sol2[i])));
 
-                for (int_t j = 0; j < nx * nx; j++) mem->sys_mat2[i][j] = 0.0;
-                for (int_t j = 0; j < nx; j++)
-                    mem->sys_mat2[i][j * (nx + 1)] = 1.0;
+                for (int_t j = 0; j < (nx+nz) * (nx+nz); j++) mem->sys_mat2[i][j] = 0.0;
+                for (int_t j = 0; j < (nx+nz); j++)
+                    mem->sys_mat2[i][j * ((nx+nz) + 1)] = 1.0;
             } else {
                 mem->sys_mat2[i] =
-                    calloc(4 * nx * nx, sizeof(*(mem->sys_mat2[i])));
-                mem->ipiv2[i] = calloc(2 * nx, sizeof(*(mem->ipiv2[i])));
+                    calloc(4 * (nx+nz) * (nx+nz), sizeof(*(mem->sys_mat2[i])));
+                mem->ipiv2[i] = calloc(2 * (nx+nz), sizeof(*(mem->ipiv2[i])));
                 mem->sys_sol2[i] =
-                    calloc(2 * nx * (1 + NF), sizeof(*(mem->sys_sol2[i])));
+                    calloc(2 * (nx+nz) * (1 + NF), sizeof(*(mem->sys_sol2[i])));
 
-                for (int_t j = 0; j < 4 * nx * nx; j++)
+                for (int_t j = 0; j < 4 * (nx+nz) * (nx+nz); j++)
                     mem->sys_mat2[i][j] = 0.0;
-                for (int_t j = 0; j < 2 * nx; j++)
-                    mem->sys_mat2[i][j * (2 * nx + 1)] = 1.0;
+                for (int_t j = 0; j < 2 * (nx+nz); j++)
+                    mem->sys_mat2[i][j * (2 * (nx+nz) + 1)] = 1.0;
             }
         }
     } else {
@@ -1176,9 +1204,9 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
         for (int_t i = 0; i < num_sys; i++) {
             if ((i + 1) == num_sys &&
                 num_sys != floor(num_stages / 2.0)) {  // odd number of stages
-                dim_sys = nx;
+                dim_sys = (nx+nz);
             } else {
-                dim_sys = 2 * nx;
+                dim_sys = 2 * (nx+nz);
             }
 
 #if defined(LA_HIGH_PERFORMANCE)

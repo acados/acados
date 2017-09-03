@@ -63,7 +63,7 @@ extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, i
 
 int main() {
     const int INEXACT = 0;
-    const int d = 0;
+    const int d = 2;
     const int NMF = 1;
     if (INEXACT == 0) {
         printf(
@@ -164,6 +164,7 @@ int main() {
         sim_in[jj].step = Ts / sim_in[jj].nSteps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
+        sim_in[jj].nz = 0;
 
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;

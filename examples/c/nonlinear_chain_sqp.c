@@ -66,7 +66,7 @@ int main() {
     int_t NMF_MAX = 4;  // data exist up to 9 masses
     int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
 
-    for (int_t implicit = 0; implicit < IMPL_MAX; implicit++) {
+    for (int_t implicit = 1; implicit < IMPL_MAX; implicit++) {
         if (implicit == 0) {
             printf(
                 "\n\n--------------------------------------------------------------------\n");
@@ -200,6 +200,7 @@ int main() {
                 sim_in[jj].step = T / sim_in[jj].nSteps;
                 sim_in[jj].nx = NX;
                 sim_in[jj].nu = NU;
+                sim_in[jj].nz = 0;
 
                 sim_in[jj].sens_forw = true;
                 sim_in[jj].sens_adj = false;

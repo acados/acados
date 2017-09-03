@@ -15,10 +15,10 @@ extern "C" {
 
 #ifndef real_t
 #define real_t double
-#define to_double(x) (double) x
-#define to_int(x) (int) x
 #endif /* real_t */
 
+#define to_double(x) (double) x
+#define to_int(x) (int) x
 /* Pre-c99 compatibility */
 #if __STDC_VERSION__ < 199901L
 real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
@@ -34,26 +34,39 @@ real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
 real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
 #define sign(x) CASADI_PREFIX(sign)(x)
 
-static const int CASADI_PREFIX(s0)[] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s0)[16] = {12, 1, 0, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 #define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[] = {3, 1, 0, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s1)[7] = {3, 1, 0, 3, 0, 1, 2};
 #define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[] = {6, 6, 0, 6, 12, 18, 24, 30, 36, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s2)[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
 #define s2 CASADI_PREFIX(s2)
-/* jacFun */
-int jac_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* w) {
-    mem = 0; (void ) mem; w = 0; w += 0; iw = 0; iw += 0;
-  real_t a0=arg[0] ? arg[0][3] : 0;
+static const int CASADI_PREFIX(s3)[87] = {6, 12, 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+#define s3 CASADI_PREFIX(s3)
+/* jac_chain_nm2 */
+int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+  real_t a0=arg[0] ? arg[0][6] : 0;
+  real_t a1=arg[0] ? arg[0][3] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][0]=a0;
-  a0=arg[0] ? arg[0][4] : 0;
+  a0=arg[0] ? arg[0][7] : 0;
+  a1=arg[0] ? arg[0][4] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][1]=a0;
-  a0=arg[0] ? arg[0][5] : 0;
+  a0=arg[0] ? arg[0][8] : 0;
+  a1=arg[0] ? arg[0][5] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][2]=a0;
-  a0=arg[1] ? arg[1][0] : 0;
+  a0=arg[0] ? arg[0][9] : 0;
+  a1=arg[1] ? arg[1][0] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][3]=a0;
-  a0=arg[1] ? arg[1][1] : 0;
+  a0=arg[0] ? arg[0][10] : 0;
+  a1=arg[1] ? arg[1][1] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][4]=a0;
-  a0=arg[1] ? arg[1][2] : 0;
+  a0=arg[0] ? arg[0][11] : 0;
+  a1=arg[1] ? arg[1][2] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][5]=a0;
   a0=0.;
   if (res[1]!=0) res[1][0]=a0;
@@ -74,7 +87,7 @@ int jac_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* 
   if (res[1]!=0) res[1][15]=a0;
   if (res[1]!=0) res[1][16]=a0;
   if (res[1]!=0) res[1][17]=a0;
-  real_t a1=1.;
+  a1=-1.;
   if (res[1]!=0) res[1][18]=a1;
   if (res[1]!=0) res[1][19]=a0;
   if (res[1]!=0) res[1][20]=a0;
@@ -93,48 +106,86 @@ int jac_chain_nm2(void* mem, const real_t** arg, real_t** res, int* iw, real_t* 
   if (res[1]!=0) res[1][33]=a0;
   if (res[1]!=0) res[1][34]=a0;
   if (res[1]!=0) res[1][35]=a0;
+  a1=1.;
+  if (res[1]!=0) res[1][36]=a1;
+  if (res[1]!=0) res[1][37]=a0;
+  if (res[1]!=0) res[1][38]=a0;
+  if (res[1]!=0) res[1][39]=a0;
+  if (res[1]!=0) res[1][40]=a0;
+  if (res[1]!=0) res[1][41]=a0;
+  if (res[1]!=0) res[1][42]=a0;
+  if (res[1]!=0) res[1][43]=a1;
+  if (res[1]!=0) res[1][44]=a0;
+  if (res[1]!=0) res[1][45]=a0;
+  if (res[1]!=0) res[1][46]=a0;
+  if (res[1]!=0) res[1][47]=a0;
+  if (res[1]!=0) res[1][48]=a0;
+  if (res[1]!=0) res[1][49]=a0;
+  if (res[1]!=0) res[1][50]=a1;
+  if (res[1]!=0) res[1][51]=a0;
+  if (res[1]!=0) res[1][52]=a0;
+  if (res[1]!=0) res[1][53]=a0;
+  if (res[1]!=0) res[1][54]=a0;
+  if (res[1]!=0) res[1][55]=a0;
+  if (res[1]!=0) res[1][56]=a0;
+  if (res[1]!=0) res[1][57]=a1;
+  if (res[1]!=0) res[1][58]=a0;
+  if (res[1]!=0) res[1][59]=a0;
+  if (res[1]!=0) res[1][60]=a0;
+  if (res[1]!=0) res[1][61]=a0;
+  if (res[1]!=0) res[1][62]=a0;
+  if (res[1]!=0) res[1][63]=a0;
+  if (res[1]!=0) res[1][64]=a1;
+  if (res[1]!=0) res[1][65]=a0;
+  if (res[1]!=0) res[1][66]=a0;
+  if (res[1]!=0) res[1][67]=a0;
+  if (res[1]!=0) res[1][68]=a0;
+  if (res[1]!=0) res[1][69]=a0;
+  if (res[1]!=0) res[1][70]=a0;
+  if (res[1]!=0) res[1][71]=a1;
   return 0;
 }
 
-int jac_chain_nm2_init(int* n_in, int* n_out, int* n_int, int* n_real) {
-  if (n_in) *n_in = 2;
-  if (n_out) *n_out = 2;
-  if (n_int) *n_int = 0;
-  if (n_real) *n_real = 0;
-  return 0;
+void jac_chain_nm2_incref(void) {
 }
 
-int jac_chain_nm2_alloc(void** mem, const int* idata, const double* rdata) {
-  if (mem) *mem = 0;
-  (void)idata;
-  (void)rdata;
-  return 0;
+void jac_chain_nm2_decref(void) {
 }
 
-int jac_chain_nm2_free(void* mem) {
-  (void)mem;
-  return 0;
-}
+int jac_chain_nm2_n_in(void) { return 2;}
 
-int jac_chain_nm2_sparsity(int i, int *nrow, int *ncol, const int **colind, const int **row) {
-  const int* s;
+int jac_chain_nm2_n_out(void) { return 2;}
+
+const char* jac_chain_nm2_name_in(int i){
   switch (i) {
-    case 0:
-    case 2:
-      s = s0; break;
-    case 1:
-      s = s1; break;
-    case 3:
-      s = s2; break;
-    default:
-      return 1;
+  case 0: return "i0";
+  case 1: return "i1";
+  default: return 0;
   }
+}
 
-  if (nrow) *nrow = s[0];
-  if (ncol) *ncol = s[1];
-  if (colind) *colind = s + 2;
-  if (row) *row = s + 3 + s[1];
-  return 0;
+const char* jac_chain_nm2_name_out(int i){
+  switch (i) {
+  case 0: return "o0";
+  case 1: return "o1";
+  default: return 0;
+  }
+}
+
+const int* jac_chain_nm2_sparsity_in(int i) {
+  switch (i) {
+  case 0: return s0;
+  case 1: return s1;
+  default: return 0;
+  }
+}
+
+const int* jac_chain_nm2_sparsity_out(int i) {
+  switch (i) {
+  case 0: return s2;
+  case 1: return s3;
+  default: return 0;
+  }
 }
 
 int jac_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {

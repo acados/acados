@@ -13,9 +13,9 @@ void VDE_fun_nm2(const real_t* in, real_t* out,
     int_t NX = NMF*6;
     int_t NU = 3;
     const real_t* x = in;
-    const real_t* Sx = in + NX;
-    const real_t* Su = in + NX + NX*NX;
-    const real_t* u  = in + NX + NX*(NX+NU);
+    const real_t* Sx = in + 2*NX;
+    const real_t* Su = in + 2*NX + 2*NX*NX;
+    const real_t* u  = in + 2*NX + 2*NX*(NX+NU);
 
     real_t* x_out = out;
     real_t* Sx_out = out + NX;
@@ -46,9 +46,9 @@ void VDE_fun_nm3(const real_t* in, real_t* out,
     int_t NX = NMF*6;
     int_t NU = 3;
     const real_t* x = in;
-    const real_t* Sx = in + NX;
-    const real_t* Su = in + NX + NX*NX;
-    const real_t* u  = in + NX + NX*(NX+NU);
+    const real_t* Sx = in + 2*NX;
+    const real_t* Su = in + 2*NX + 2*NX*NX;
+    const real_t* u  = in + 2*NX + 2*NX*(NX+NU);
 
     real_t* x_out = out;
     real_t* Sx_out = out + NX;
@@ -79,9 +79,9 @@ void VDE_fun_nm4(const real_t* in, real_t* out,
     int_t NX = NMF*6;
     int_t NU = 3;
     const real_t* x = in;
-    const real_t* Sx = in + NX;
-    const real_t* Su = in + NX + NX*NX;
-    const real_t* u  = in + NX + NX*(NX+NU);
+    const real_t* Sx = in + 2*NX;
+    const real_t* Su = in + 2*NX + 2*NX*NX;
+    const real_t* u  = in + 2*NX + 2*NX*(NX+NU);
 
     real_t* x_out = out;
     real_t* Sx_out = out + NX;
@@ -114,7 +114,7 @@ void jac_fun_nm2(const real_t* in, real_t* out) {
     int_t NMF = 1;
     int_t NX = NMF*6;
     const real_t* x = in;
-    const real_t* u  = in + NX;
+    const real_t* u  = in + 2*NX;
 
     real_t* x_out = out;
     real_t* jac_out = out + NX;
@@ -139,7 +139,7 @@ void jac_fun_nm3(const real_t* in, real_t* out) {
     int_t NMF = 2;
     int_t NX = NMF*6;
     const real_t* x = in;
-    const real_t* u  = in + NX;
+    const real_t* u  = in + 2*NX;
 
     real_t* x_out = out;
     real_t* jac_out = out + NX;
@@ -164,7 +164,7 @@ void jac_fun_nm4(const real_t* in, real_t* out) {
     int_t NMF = 3;
     int_t NX = NMF*6;
     const real_t* x = in;
-    const real_t* u  = in + NX;
+    const real_t* u  = in + 2*NX;
 
     real_t* x_out = out;
     real_t* jac_out = out + NX;
