@@ -332,10 +332,10 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
             } else {
                 idx = in->idxb[kk][ii] - in->nu[kk];
             }
-            // printf("OOQP with flipped bounds\n"); exit(1);             
+            // printf("OOQP with flipped bounds\n"); exit(1);
 #else
             idx = in->idxb[kk][ii];
-            // printf("OOQP with normal bounds\n"); exit(1); 
+            // printf("OOQP with normal bounds\n"); exit(1);
 #endif
             // TODO(dimitris): check if cast is redundant
             // NOTE(dimitris): OOQP can give wrong results if there are 1e12 bounds

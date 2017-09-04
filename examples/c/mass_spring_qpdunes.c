@@ -303,7 +303,7 @@ for (jj = 0; jj < nbu; jj++) {
         ub1[jj] = + 4.0;  // xmax
         idxb1[jj] = jj;
     }
-#else   
+#else
     for (jj = 0; jj < nbx; jj++) {
         lb1[jj] = -4.0;  // xmin
         ub1[jj] = 4.0;   // xmax

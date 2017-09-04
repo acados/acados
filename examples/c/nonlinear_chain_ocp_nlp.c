@@ -294,7 +294,7 @@ int main() {
     for (int_t i = 0; i < NN - 1; i++) {
         d_zeros(&lb1[i], NMF + NU, 1);
         d_zeros(&ub1[i], NMF + NU, 1);
-#ifdef FLIP_BOUNDS        
+#ifdef FLIP_BOUNDS
         for (jj = 0; jj < NU; jj++) {
             lb1[i][jj] = -UMAX;  // umin
             ub1[i][jj] = UMAX;   // umax

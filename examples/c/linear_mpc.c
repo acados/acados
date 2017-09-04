@@ -208,7 +208,7 @@ for (int ii = 0; ii < NU; ii++) {
     for (int kk = 0; kk < nMPC; kk++) {
         // update constraint on x0
         for (int ii = 0; ii < NX; ii++) {
-#ifdef FLIP_BOUNDS            
+#ifdef FLIP_BOUNDS
             z0min[NU + ii] = x0[ii];
             z0max[NU + ii] = x0[ii];
 #else
