@@ -261,6 +261,7 @@ int main() {
     d_zeros(&lb0, NX + NU, 1);
     real_t *ub0;
     d_zeros(&ub0, NX + NU, 1);
+#ifdef FLIP_BOUNDS
     for (jj = 0; jj < NU; jj++) {
         lb0[jj] = -UMAX;  // umin
         ub0[jj] = UMAX;   // umax
@@ -271,6 +272,19 @@ int main() {
         ub0[NU+jj] = x0[jj];  // xmax
         idxb0[NU+jj] = NU+jj;
     }
+#else
+    for (jj = 0; jj < NX; jj++) {
+        lb0[jj] = x0[jj];  // xmin
+        ub0[jj] = x0[jj];  // xmax
+        idxb0[jj] = jj;
+    }
+    for (jj = 0; jj < NU; jj++) {
+        lb0[NX+jj] = -UMAX;  // umin
+        ub0[NX+jj] = UMAX;   // umax
+        idxb0[NX+jj] = NX+jj;
+    }
+#endif
+
     nb[0] = NX + NU;
 
     int *idxb1;
@@ -280,6 +294,7 @@ int main() {
     for (int_t i = 0; i < NN - 1; i++) {
         d_zeros(&lb1[i], NMF + NU, 1);
         d_zeros(&ub1[i], NMF + NU, 1);
+#ifdef FLIP_BOUNDS        
         for (jj = 0; jj < NU; jj++) {
             lb1[i][jj] = -UMAX;  // umin
             ub1[i][jj] = UMAX;   // umax
@@ -290,6 +305,18 @@ int main() {
             ub1[i][NU+jj] = 1e12;
             idxb1[NU+jj] = NU + 6 * jj + 1;
         }
+#else
+        for (jj = 0; jj < NMF; jj++) {
+            lb1[i][jj] = wall_pos;  // wall position
+            ub1[i][jj] = 1e12;
+            idxb1[jj] = 6 * jj + 1;
+        }
+        for (jj = 0; jj < NU; jj++) {
+            lb1[i][NMF+jj] = -UMAX;  // umin
+            ub1[i][NMF+jj] = UMAX;   // umax
+            idxb1[NMF+jj] = NX+jj;
+        }
+#endif
         nb[i + 1] = NMF + NU;
     }
 
@@ -378,6 +405,13 @@ int main() {
 
     status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
     printf("\n\nstatus = %i\n\n", status);
+
+    // for (int_t k =0; k < 3; k++) {
+    //     printf("x[%d] = \n", k);
+    //     d_print_mat(1, nx[k], nlp_out.x[k], 1);
+    //     printf("u[%d] = \n", k);
+    //     d_print_mat(1, nu[k], nlp_out.u[k], 1);
+    // }
 
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
