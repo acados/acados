@@ -59,7 +59,7 @@ int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *
 }
 
 
-void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in, 
+void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in,
     void *ptr) {
 
     // pointer to initialize QP data to zero
@@ -187,11 +187,11 @@ void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
         (*qp_in)->uc[k] = (real_t *) c_ptr;
         c_ptr += nc[k]*sizeof(real_t);
     }
-    
+
     // set QP data to zero (mainly for valgrind)
-    for (char *idx = c_ptr_QPdata; idx < c_ptr; idx++) 
+    for (char *idx = c_ptr_QPdata; idx < c_ptr; idx++)
         *idx = 0;
-            
+
     return (void *)c_ptr;
 }
 
@@ -204,7 +204,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
     // TODO(dimitris): replace with acados_malloc to replace malloc at one place if not supported
     void *ptr = malloc(bytes);
-    
+
     // // set a value for debugging
     // char *c_ptr = (char *) ptr;
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
@@ -214,7 +214,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
     // exit(1);
-    
+
     return qp_in;
 }
 
@@ -237,7 +237,7 @@ int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
 }
 
 
-void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out, 
+void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out,
     void *ptr) {
 
     // char pointer
