@@ -316,7 +316,7 @@ static void update_dynamics_data(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem,
 static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
     int_t ii, kk;
     int_t offset = 0;
-    int_t fixOrder;
+    int_t idx;
 
     for (kk = 0; kk < in->N + 1; kk++) {
         for (ii = 0; ii < in->nx[kk] + in->nu[kk]; ii++) {
@@ -326,21 +326,26 @@ static void update_bounds(const ocp_qp_in *in, ocp_qp_ooqp_memory *mem) {
             mem->xupp[offset + ii] = 0.0;
         }
         for (ii = 0; ii < in->nb[kk]; ii++) {
-            // NOTE(dimitris): order of bounds ...
+#ifdef FLIP_BOUNDS
             if (in->idxb[kk][ii] < in->nu[kk]) {
-                fixOrder = in->idxb[kk][ii] + in->nx[kk];
+                idx = in->idxb[kk][ii] + in->nx[kk];
             } else {
-                fixOrder = in->idxb[kk][ii] - in->nu[kk];
+                idx = in->idxb[kk][ii] - in->nu[kk];
             }
+            // printf("OOQP with flipped bounds\n"); exit(1);             
+#else
+            idx = in->idxb[kk][ii];
+            // printf("OOQP with normal bounds\n"); exit(1); 
+#endif
             // TODO(dimitris): check if cast is redundant
             // NOTE(dimitris): OOQP can give wrong results if there are 1e12 bounds
             if (in->lb[kk][ii] > -1e10) {  // TODO(dimitris): use acados inf
-                mem->ixlow[offset + fixOrder] = (char)1;
-                mem->xlow[offset + fixOrder] = in->lb[kk][ii];
+                mem->ixlow[offset + idx] = (char)1;
+                mem->xlow[offset + idx] = in->lb[kk][ii];
             }
             if (in->ub[kk][ii] < 1e10) {  // TODO(dimitris): same here
-                mem->ixupp[offset + fixOrder] = (char)1;
-                mem->xupp[offset + fixOrder] = in->ub[kk][ii];
+                mem->ixupp[offset + idx] = (char)1;
+                mem->xupp[offset + idx] = in->ub[kk][ii];
             }
         }
         offset += in->nx[kk] + in->nu[kk];
