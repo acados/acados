@@ -59,8 +59,8 @@ int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *
 }
 
 
-void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-    ocp_qp_in **qp_in, void *ptr) {
+void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in, 
+    void *ptr) {
 
     // pointer to initialize QP data to zero
     char *c_ptr_QPdata;
@@ -219,7 +219,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 }
 
 
-static int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
 
     int_t bytes = sizeof(ocp_qp_out);
 
@@ -237,8 +237,8 @@ static int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb,
 }
 
 
-static void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-    ocp_qp_out **qp_out, void *ptr) {
+void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out, 
+    void *ptr) {
 
     // char pointer
     char *c_ptr = (char *) ptr;
