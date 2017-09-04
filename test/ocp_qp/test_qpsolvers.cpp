@@ -33,7 +33,6 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "test/ocp_qp/condensing_test_helper.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/read_ocp_qp_in.h"
 
@@ -114,7 +113,9 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ", " << constraint << std::endl;
 
                             ocp_qp_condensing_qpoases_args args;
-                            args.dummy = 42.0;
+                            args.cputime = 100.0;  // maximum cpu time in seconds
+                            args.nwsr = 1000;  // maximum number of working set recalculations
+                            args.warm_start = 0;  // wam start with dual_sol in memory
 
                             // TODO(dimitris): also test that qp_in has not changed
                             return_value = \
