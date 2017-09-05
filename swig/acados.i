@@ -268,7 +268,7 @@ static bool is_valid_ocp_dimensions_map(const LangObject *input) {
 
 LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
-    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N, in->nu);
+    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N+1, in->nu);
     return new_ocp_output_tuple(x_star, u_star);
 }
 
@@ -425,7 +425,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %{
 LangObject *ocp_nlp_output(const ocp_nlp_in *in, const ocp_nlp_out *out) {
     LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
-    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N, in->nu);
+    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N+1, in->nu);
     return new_ocp_output_tuple(x_star, u_star);
 }
 

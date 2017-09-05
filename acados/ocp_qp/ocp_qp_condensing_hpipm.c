@@ -70,8 +70,7 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
-    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd,
-                                &ngd);
+    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 
     // dummy dense qp
     struct d_dense_qp qpd;
@@ -125,8 +124,7 @@ void ocp_qp_condensing_hpipm_create_memory(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
-    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd,
-                                &ngd);
+    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 
     // char pointer
     char *c_ptr = (char *)memory;
