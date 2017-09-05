@@ -182,11 +182,11 @@ int main() {
 
     // stage-wise variant size
     int nxx[N + 1];
-#if defined(ELIMINATE_X0)
-    nxx[0] = 0;
-#else
-    nxx[0] = nx;
-#endif
+    #if defined(ELIMINATE_X0)
+        nxx[0] = 0;
+    #else
+        nxx[0] = nx;
+    #endif
     for (ii = 1; ii <= N; ii++) nxx[ii] = nx;
 
     int nuu[N + 1];
@@ -194,11 +194,11 @@ int main() {
     nuu[N] = 0;
 
     int nbb[N + 1];
-#if defined(ELIMINATE_X0)
-    nbb[0] = nbu;
-#else
-    nbb[0] = nb;
-#endif
+    #if defined(ELIMINATE_X0)
+        nbb[0] = nbu;
+    #else
+        nbb[0] = nb;
+    #endif
     for (ii = 1; ii < N; ii++) nbb[ii] = nb;
     nbb[N] = nbx;
 
@@ -206,12 +206,10 @@ int main() {
     for (ii = 0; ii < N; ii++) ngg[ii] = ng;
     ngg[N] = ngN;
 
-    printf(
-        " Test problem: mass-spring system with %d masses and %d controls.\n",
-        nx / 2, nu);
+    printf(" Test problem: mass-spring system with %d masses and %d
+        controls.\n", nx / 2, nu);
     printf("\n");
-    printf(
-        " MPC problem size: %d states, %d inputs, %d horizon length, %d "
+    printf(" MPC problem size: %d states, %d inputs, %d horizon length, %d "
         "two-sided box constraints, %d two-sided general constraints.\n",
         nx, nu, N, nb, ng);
     printf("\n");
@@ -220,12 +218,12 @@ int main() {
         "maximum iterations, %5.1e exit tolerance in duality measure.\n",
         MAXITER, TOL);
     printf("\n");
-#if defined(TARGET_X64_AVX2)
-    printf(" HPMPC built for the AVX2 architecture\n");
-#endif
-#if defined(TARGET_X64_AVX)
-    printf(" HPMPC built for the AVX architecture\n");
-#endif
+    #if defined(TARGET_X64_AVX2)
+        printf(" HPMPC built for the AVX2 architecture\n");
+    #endif
+    #if defined(TARGET_X64_AVX)
+        printf(" HPMPC built for the AVX architecture\n");
+    #endif
     printf("\n");
 
     /************************************************
@@ -252,24 +250,24 @@ int main() {
     x0[0] = 2.5;
     x0[1] = 2.5;
 
-//    d_print_mat(nx, nx, A, nx);
-//    d_print_mat(nx, nu, B, nx);
-//    d_print_mat(nx, 1, b, nx);
-//    d_print_mat(nx, 1, x0, nx);
-
-#if defined(ELIMINATE_X0)
-    // compute b0 = b + A*x0
-    double *b0;
-    d_zeros(&b0, nx, 1);
-    dcopy_3l(nx, b, 1, b0, 1);
-    dgemv_n_3l(nx, nx, A, nx, x0, b0);
+    //    d_print_mat(nx, nx, A, nx);
+    //    d_print_mat(nx, nu, B, nx);
     //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, b0, nx);
+    //    d_print_mat(nx, 1, x0, nx);
 
-    // then A0 is a matrix of size 0x0
-    double *A0;
-    d_zeros(&A0, 0, 0);
-#endif
+    #if defined(ELIMINATE_X0)
+        // compute b0 = b + A*x0
+        double *b0;
+        d_zeros(&b0, nx, 1);
+        dcopy_3l(nx, b, 1, b0, 1);
+        dgemv_n_3l(nx, nx, A, nx, x0, b0);
+        //    d_print_mat(nx, 1, b, nx);
+        //    d_print_mat(nx, 1, b0, nx);
+
+        // then A0 is a matrix of size 0x0
+        double *A0;
+        d_zeros(&A0, 0, 0);
+    #endif
 
     /************************************************
      * box constraints
@@ -283,25 +281,25 @@ int main() {
     d_zeros(&lb0, nbb[0], 1);
     double *ub0;
     d_zeros(&ub0, nbb[0], 1);
-#if defined(ELIMINATE_X0)
-    for (jj = 0; jj < nbb[0]; jj++) {
-        lb0[jj] = -0.5;  // umin
-        ub0[jj] = +0.5;  // umin
-        idxb0[jj] = jj;
-    }
-#else
-    jj_end = nbu < nbb[0] ? nbu : nbb[0];
-    for (jj = 0; jj < jj_end; jj++) {
-        lb0[jj] = -0.5;  // umin
-        ub0[jj] = +0.5;  // umax
-        idxb0[jj] = jj;
-    }
-    for (; jj < nbb[0]; jj++) {
-        lb0[jj] = x0[jj - nbu];  // initial state
-        ub0[jj] = x0[jj - nbu];  // initial state
-        idxb0[jj] = jj;
-    }
-#endif
+    #if defined(ELIMINATE_X0)
+        for (jj = 0; jj < nbb[0]; jj++) {
+            lb0[jj] = -0.5;  // umin
+            ub0[jj] = +0.5;  // umin
+            idxb0[jj] = jj;
+        }
+    #else
+        jj_end = nbu < nbb[0] ? nbu : nbb[0];
+        for (jj = 0; jj < jj_end; jj++) {
+            lb0[jj] = -0.5;  // umin
+            ub0[jj] = +0.5;  // umax
+            idxb0[jj] = jj;
+        }
+        for (; jj < nbb[0]; jj++) {
+            lb0[jj] = x0[jj - nbu];  // initial state
+            ub0[jj] = x0[jj - nbu];  // initial state
+            idxb0[jj] = jj;
+        }
+    #endif
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
     //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
 
@@ -390,23 +388,23 @@ int main() {
     d_zeros(&r, nu, 1);
     for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
 
-#if defined(ELIMINATE_X0)
-    // Q0 and q0 are matrices of size 0
-    double *Q0;
-    d_zeros(&Q0, 0, 0);
-    double *q0;
-    d_zeros(&q0, 0, 1);
+    #if defined(ELIMINATE_X0)
+        // Q0 and q0 are matrices of size 0
+        double *Q0;
+        d_zeros(&Q0, 0, 0);
+        double *q0;
+        d_zeros(&q0, 0, 1);
 
-    // compute r0 = r + S*x0
-    double *r0;
-    d_zeros(&r0, nu, 1);
-    dcopy_3l(nu, r, 1, r0, 1);
-    dgemv_n_3l(nu, nx, S, nu, x0, r0);
+        // compute r0 = r + S*x0
+        double *r0;
+        d_zeros(&r0, nu, 1);
+        dcopy_3l(nu, r, 1, r0, 1);
+        dgemv_n_3l(nu, nx, S, nu, x0, r0);
 
-    // then S0 is a matrix of size nux0
-    double *S0;
-    d_zeros(&S0, nu, 0);
-#endif
+        // then S0 is a matrix of size nux0
+        double *S0;
+        d_zeros(&S0, nu, 0);
+    #endif
 
     /************************************************
      * problems data
@@ -428,21 +426,21 @@ int main() {
     double *hlg[N + 1];
     double *hug[N + 1];
 
-#if defined(ELIMINATE_X0)
-    hA[0] = A0;
-    hb[0] = b0;
-    hQ[0] = Q0;
-    hS[0] = S0;
-    hq[0] = q0;
-    hr[0] = r0;
-#else
-    hA[0] = A;
-    hb[0] = b;
-    hQ[0] = Q;
-    hS[0] = S;
-    hq[0] = q;
-    hr[0] = r;
-#endif
+    #if defined(ELIMINATE_X0)
+        hA[0] = A0;
+        hb[0] = b0;
+        hQ[0] = Q0;
+        hS[0] = S0;
+        hq[0] = q0;
+        hr[0] = r0;
+    #else
+        hA[0] = A;
+        hb[0] = b;
+        hQ[0] = Q;
+        hS[0] = S;
+        hq[0] = q;
+        hr[0] = r;
+    #endif
     hB[0] = B;
     hR[0] = R;
     hlb[0] = lb0;
@@ -698,14 +696,14 @@ int main() {
     d_free(R);
     d_free(q);
     d_free(r);
-#if defined(ELIMINATE_X0)
-    d_free(A0);
-    d_free(b0);
-    d_free(Q0);
-    d_free(S0);
-    d_free(q0);
-    d_free(r0);
-#endif
+    #if defined(ELIMINATE_X0)
+        d_free(A0);
+        d_free(b0);
+        d_free(Q0);
+        d_free(S0);
+        d_free(q0);
+        d_free(r0);
+    #endif
     int_free(idxb0);
     d_free(lb0);
     d_free(ub0);
