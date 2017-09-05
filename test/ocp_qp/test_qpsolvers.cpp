@@ -49,7 +49,7 @@ int_t TEST_QPOASES = 0;
 real_t TOL_QPOASES = 1e-10;
 int_t TEST_QPDUNES = 1;
 real_t TOL_QPDUNES = 1e-10;
-int_t TEST_HPMPC = 0;
+int_t TEST_HPMPC = 1;
 real_t TOL_HPMPC = 1e-5;
 
 static vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
