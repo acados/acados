@@ -92,7 +92,40 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
+#if 0
+    // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+#else
+    // [x; u] order
+    int ii, jj;
+
+    nvd = 0;
+    ned = 0;
+    nbd = 0;
+    ngd = 0;
+
+    // first stage
+    nvd += nx[0]+nu[0];
+    nbd += nb[0];
+    ngd += ng[0];
+    // remaining stages
+    for(ii=1; ii<=N; ii++)
+    {
+        nvd += nu[ii];
+        for(jj=0; jj<nb[ii]; jj++)
+        {
+            if(hidxb[ii][jj]<nx[ii]) // state constraint
+            {
+                ngd++;
+            }
+            else // input constraint
+            {
+                nbd++;
+            }
+        }
+    ngd += ng[ii];
+    }
+#endif
 
     // dummy dense qp
     struct d_dense_qp qpd;
@@ -117,7 +150,9 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(
     size += d_memsize_dense_qp_sol(nvd, ned, nbd, ngd);
     size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
-
+    for (ii = 0; ii <= N; ii++) {
+        size += nb[ii]*sizeof(int); // hidxb_rev
+    }
     //  size += 1*d_size_strmat(nvd, nvd); // sR
 
     size += 1 * nvd * nvd * sizeof(double);  // H
@@ -160,7 +195,41 @@ void ocp_qp_condensing_qpoases_create_memory(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
+#if 0
+    // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+#else
+    // [x; u] order
+    int ii, jj;
+
+    nvd = 0;
+    ned = 0;
+    nbd = 0;
+    ngd = 0;
+
+    // first stage
+    nvd += nx[0]+nu[0];
+    nbd += nb[0];
+    ngd += ng[0];
+    // remaining stages
+    for(ii=1; ii<=N; ii++)
+    {
+        nvd += nu[ii];
+        for(jj=0; jj<nb[ii]; jj++)
+        {
+            if(hidxb[ii][jj]<nx[ii]) // state constraint
+            {
+                ngd++;
+            }
+            else // input constraint
+            {
+                nbd++;
+            }
+        }
+    ngd += ng[ii];
+    }
+#endif
+
 
     // char pointer
     char *c_ptr = (char *)memory;
@@ -197,6 +266,9 @@ void ocp_qp_condensing_qpoases_create_memory(
     //
     qpoases_memory->hlam_ug = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
+    //
+    qpoases_memory->hidxb_rev = (int **)c_ptr;
+    c_ptr += (N + 1) * sizeof(int *);
 
     //
     //  struct d_strmat *sR = qpoases_memory->sR;
@@ -258,6 +330,14 @@ void ocp_qp_condensing_qpoases_create_memory(
     //
     qpoases_memory->dual_sol = (double *)c_ptr;
     c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
+    //
+    qpoases_memory->dual_sol = (double *)c_ptr;
+    c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
+    //
+    for (ii = 0; ii <= N; ii++) {
+        qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
+        c_ptr += nb[ii]*sizeof(int);
+    }
 
     // align memory to typical cache line size
     size_t s_ptr = (size_t)c_ptr;
@@ -309,7 +389,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     int acados_status = ACADOS_SUCCESS;
 
     // loop index
-    int ii;
+    int ii, jj;
 
     // extract memory
     double **hlam_lb = memory->hlam_lb;
@@ -336,6 +416,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     double *d_lg = memory->d_lg;
     double *d_ug = memory->d_ug;
     int *idxb = memory->idxb;
+    int **hidxb_rev = (int **) memory->hidxb_rev;
     double *prim_sol = memory->prim_sol;
     double *dual_sol = memory->dual_sol;
     QProblemB *QPB = memory->QPB;
@@ -343,8 +424,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
 
     // extract ocp problem size
     int N = qp_in->N;
-    //    int *nx = (int *) qp_in->nx;
-    //    int *nu = (int *) qp_in->nu;
+    int *nx = (int *) qp_in->nx;
+    int *nu = (int *) qp_in->nu;
     int *nb = (int *)qp_in->nb;
     int *ng = (int *)qp_in->nc;
 
@@ -371,6 +452,22 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     double **hpi = qp_out->pi;
     double **hlam = qp_out->lam;
 
+    // compute bounds indeces in order [u; x]
+    for (ii=0; ii <= N; ii++)
+    {
+        for(jj=0; jj<nb[ii]; jj++)
+        {
+            if(hidxb[ii][jj]<nx[ii]) // state constraint
+            {
+                hidxb_rev[ii][jj] = hidxb[ii][jj]+nu[ii];
+            }
+            else // input constraint
+            {
+                hidxb_rev[ii][jj] = hidxb[ii][jj]-nx[ii];
+            }
+        }
+    }
+
     //
     for (ii = 0; ii <= N; ii++) {
         hlam_lb[ii] = hlam[ii];
@@ -386,7 +483,7 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     int ngd = qpd->ng;
 
     // ocp qp structure
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub, hC, hD,
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb_rev, hd_lb, hd_ub, hC, hD,
         hd_lg, hd_ug, qp);
 
     // dense qp structure

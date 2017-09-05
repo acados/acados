@@ -66,6 +66,7 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
     double *d_lg;
     double *d_ug;
     int *idxb;
+    int **hidxb_rev;
     double *prim_sol;
     double *dual_sol;
     void *QPB;  // XXX cast to QProblemB to use !!!
