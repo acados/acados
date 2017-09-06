@@ -19,10 +19,12 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#include <assert.h>
+#include <stdint.h>
 
 #include "acados/utils/types.h"
 
