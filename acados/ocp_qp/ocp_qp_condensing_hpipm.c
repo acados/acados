@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "acados/utils/math.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
@@ -45,6 +47,35 @@ int ocp_qp_condensing_hpipm_calculate_workspace_size(
     ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
     return 0;
 }
+
+// // compute the memory size of condensing for [x u] order of bounds (instead of [u x] in hpipm)
+// void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
+//     int *nvd, int *ned, int *nbd, int *ngd) {
+
+//     int ii, jj;
+
+//     *nvd = 0;
+//     *ned = 0;
+//     *nbd = 0;
+//     *ngd = 0;
+
+//     // first stage
+//     *nvd += nx[0]+nu[0];
+//     *nbd += nb[0];
+//     *ngd += ng[0];
+//     // remaining stages
+//     for (ii = 1; ii <= N; ii++) {
+//         *nvd += nu[ii];
+//         for (jj = 0; jj < nb[ii]; jj++) {
+//             if (hidxb[ii][jj] < nx[ii]) {  // state constraint
+//                 (*ngd)++;
+//             } else {  // input constraint
+//                 (*nbd)++;
+//             }
+//         }
+//     *ngd += ng[ii];
+//     }
+// }
 
 int ocp_qp_condensing_hpipm_calculate_memory_size(
     ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
@@ -70,8 +101,14 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
-    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd,
-                                &ngd);
+#if 0
+    // [u; x] order
+    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+#else
+    // [x; u] order
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+#endif
+
 
     // dummy dense qp
     struct d_dense_qp qpd;
@@ -102,6 +139,10 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
     size += d_memsize_ipm_hard_dense_qp(&qpd, &ipm_arg);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
+    size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
+    for (int ii = 0; ii <= N; ii++) {
+        size += nb[ii]*sizeof(int);  // hidxb_rev
+    }
 
     size = (size + 63) / 64 * 64;  // make multipl of typical cache line size
     size += 1 * 64;                // align once to typical cache line size
@@ -125,8 +166,14 @@ void ocp_qp_condensing_hpipm_create_memory(
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
-    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd,
-                                &ngd);
+#if 0
+    // [u; x] order
+    d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+#else
+    // [x; u] order
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
+#endif
+
 
     // char pointer
     char *c_ptr = (char *)memory;
@@ -165,6 +212,9 @@ void ocp_qp_condensing_hpipm_create_memory(
     //
     hpipm_memory->hlam_ug = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
+    //
+    hpipm_memory->hidxb_rev = (int **)c_ptr;
+    c_ptr += (N + 1) * sizeof(int *);
 
     //
     struct d_ocp_qp *qp = hpipm_memory->qp;
@@ -212,6 +262,12 @@ void ocp_qp_condensing_hpipm_create_memory(
     d_create_ipm_hard_dense_qp(qpd, ipm_arg, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
+    //
+    for (int ii = 0; ii <= N; ii++) {
+        hpipm_memory->hidxb_rev[ii] = (int *) c_ptr;
+        c_ptr += nb[ii]*sizeof(int);
+    }
+
     return;
 }
 
@@ -238,11 +294,12 @@ int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
         memory->cond_workspace;
     //  struct d_ipm_hard_dense_qp_arg *ipm_arg = memory->ipm_arg;
     struct d_ipm_hard_dense_qp_workspace *ipm_workspace = memory->ipm_workspace;
+    int **hidxb_rev = (int **) memory->hidxb_rev;
 
     // extract problem size
     int N = qp_in->N;
-    //    int *nx = (int *) qp_in->nx;
-    //    int *nu = (int *) qp_in->nu;
+    int *nx = (int *) qp_in->nx;
+    int *nu = (int *) qp_in->nu;
     int *nb = (int *)qp_in->nb;
     int *ng = (int *)qp_in->nc;
 
@@ -269,6 +326,17 @@ int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hpi = qp_out->pi;
     double **hlam = qp_out->lam;
 
+    // compute bounds indeces in order [u; x]
+    for (ii = 0; ii <= N; ii++) {
+        for (jj = 0; jj < nb[ii]; jj++) {
+            if (hidxb[ii][jj] < nx[ii])  {  // state constraint
+                hidxb_rev[ii][jj] = hidxb[ii][jj]+nu[ii];
+            } else  {  // input constraint
+                hidxb_rev[ii][jj] = hidxb[ii][jj]-nx[ii];
+            }
+        }
+    }
+
     //
     for (ii = 0; ii <= N; ii++) {
         hlam_lb[ii] = hlam[ii];
@@ -278,7 +346,7 @@ int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     }
 
     // ocp qp structure
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub,
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb_rev, hd_lb, hd_ub,
                            hC, hD, hd_lg, hd_ug, qp);
 
     // ocp qp sol structure

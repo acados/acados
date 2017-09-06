@@ -71,7 +71,7 @@ static void initialize_objective(
     real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
     // TODO(rien): only for least squares cost with state and control reference atm
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) {
                 qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
@@ -88,11 +88,6 @@ static void initialize_objective(
             }
         }
     }
-    for (int_t j = 0; j < nx[N]; j++) {
-        for (int_t k = 0; k < nx[N]; k++) {
-            qp_Q[N][j * nx[N] + k] = cost->W[N][j * nx[N] + k];
-        }
-    }
 }
 
 
@@ -107,7 +102,7 @@ static void initialize_trajectories(
     real_t *w = work->common->w;
 
     int_t w_idx = 0;
-    for (int_t i = 0; i < N; i++) {
+    for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             w[w_idx + j] = gn_sqp_mem->common->x[i][j];
         }
@@ -115,9 +110,6 @@ static void initialize_trajectories(
             w[w_idx + nx[i] + j] = gn_sqp_mem->common->u[i][j];
         }
         w_idx += nx[i] + nu[i];
-    }
-    for (int_t j = 0; j < nx[N]; j++) {
-        w[w_idx + j] = gn_sqp_mem->common->x[N][j];
     }
 }
 
@@ -159,6 +151,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
 
         // Update bounds:
         for (int_t j = 0; j < nlp->nb[i]; j++) {
+#ifdef FLIP_BOUNDS
             if (nlp->idxb[i][j] < nu[i]) {
                 qp_lb[i][j] = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
                 qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
@@ -166,6 +159,10 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
                 qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
                 qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
             }
+#else
+            qp_lb[i][j] = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
+            qp_ub[i][j] = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
+#endif
         }
 
         // Update gradients
@@ -186,6 +183,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
     }
 
     for (int_t j = 0; j < nlp->nb[N]; j++) {
+#ifdef FLIP_BOUNDS
         if (nlp->idxb[N][j] < nu[N]) {
             qp_lb[N][j] = nlp->lb[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
             qp_ub[N][j] = nlp->ub[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
@@ -193,6 +191,10 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
             qp_lb[N][j] = nlp->lb[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
             qp_ub[N][j] = nlp->ub[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
         }
+#else
+        qp_lb[N][j] = nlp->lb[N][j] - w[w_idx+nlp->idxb[N][j]];
+        qp_ub[N][j] = nlp->ub[N][j] - w[w_idx+nlp->idxb[N][j]];
+#endif
     }
 
     for (int_t j = 0; j < nx[N]; j++)
@@ -206,18 +208,19 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, 
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
 
-    int_t w_idx = 0;
-    for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
+    for (int_t i = 0; i < N; i++)
+        for (int_t j = 0; j < nx[i+1]; j++)
             sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
+
+    int_t w_idx = 0;
+    for (int_t i = 0; i <= N; i++) {
+        for (int_t j = 0; j < nx[i]; j++) {
             w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++)
             w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
-    for (int_t j = 0; j < nx[N]; j++)
-        w[w_idx+j] += mem->qp_solver->qp_out->x[N][j];
 }
 
 
@@ -299,6 +302,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 }
 
 void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
+
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
 

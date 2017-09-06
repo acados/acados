@@ -38,15 +38,14 @@
 
 // void d_print_e_mat(int m, int n, double *a, int lda);
 
-int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in,
-                                          ocp_qp_hpipm_args *args) {
-    //
+int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     return 0;
 }
 
-int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in,
-                                       ocp_qp_hpipm_args *args) {
-    //
+int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
+
+    int ii;
+
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
     int *nu = (int *)qp_in->nu;
@@ -74,6 +73,10 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in,
     size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
     size += d_memsize_ipm_hard_ocp_qp(&qp, &ipm_arg);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
+    size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
+    for (ii = 0; ii <= N; ii++) {
+        size += nb[ii]*sizeof(int);  // hidxb_rev
+    }
 
     size = (size + 63) / 64 * 64;  // make multipl of typical cache line size
     size += 1 * 64;                // align once to typical cache line size
@@ -85,6 +88,7 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
                                 ocp_qp_hpipm_memory *hpipm_memory,
                                 void *memory) {
     //
+    int ii;
 
     // extract problem size
     int N = qp_in->N;
@@ -120,6 +124,9 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
     //
     hpipm_memory->hlam_ug = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
+    //
+    hpipm_memory->hidxb_rev = (int **)c_ptr;
+    c_ptr += (N + 1) * sizeof(int *);
 
     //
     struct d_ocp_qp *qp = hpipm_memory->qp;
@@ -151,6 +158,12 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
     d_create_ipm_hard_ocp_qp(qp, ipm_arg, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
+    //
+    for (ii = 0; ii <= N; ii++) {
+        hpipm_memory->hidxb_rev[ii] = (int *) c_ptr;
+        c_ptr += nb[ii]*sizeof(int);
+    }
+
     return;
 }
 
@@ -172,6 +185,7 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     struct d_ocp_qp_sol *qp_sol = memory->qp_sol;
     //  struct d_ipm_hard_ocp_qp_arg *ipm_arg = memory->ipm_arg;
     struct d_ipm_hard_ocp_qp_workspace *ipm_workspace = memory->ipm_workspace;
+    int **hidxb_rev = (int **) memory->hidxb_rev;
 
     // extract problem size
     int N = qp_in->N;
@@ -203,6 +217,17 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     double **hpi = qp_out->pi;
     double **hlam = qp_out->lam;
 
+    // compute bounds indeces in order [u; x]
+    for (ii = 0; ii <= N; ii++) {
+        for (jj = 0; jj < nb[ii]; jj++) {
+            if (hidxb[ii][jj] < nx[ii]) {  // state constraint
+                hidxb_rev[ii][jj] = hidxb[ii][jj]+nu[ii];
+            } else {  // input constraint
+                hidxb_rev[ii][jj] = hidxb[ii][jj]-nx[ii];
+            }
+        }
+    }
+
     //
     for (ii = 0; ii <= N; ii++) {
         hlam_lb[ii] = hlam[ii];
@@ -212,16 +237,16 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     }
 
     // ocp qp structure
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hd_lb, hd_ub,
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb_rev, hd_lb, hd_ub,
                            hC, hD, hd_lg, hd_ug, qp);
 
     // ocp qp sol structure
 
     // arg structure // XXX fixed in memory !!!
-    //  ipm_arg->alpha_min = args->alpha_min;
-    //  ipm_arg->mu_max = args->mu_max;
-    //  ipm_arg->iter_max = args->iter_max;
-    //  ipm_arg->mu0 = args->mu0;
+    // ipm_arg->alpha_min = args->alpha_min;
+    // ipm_arg->mu_max = args->mu_max;
+    // ipm_arg->iter_max = args->iter_max;
+    // ipm_arg->mu0 = args->mu0;
 
     // ipm structure
 

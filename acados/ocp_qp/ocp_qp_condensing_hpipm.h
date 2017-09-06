@@ -48,6 +48,7 @@ typedef struct ocp_qp_condensing_hpipm_memory_ {
     double **hlam_ub;
     double **hlam_lg;
     double **hlam_ug;
+    int **hidxb_rev;
     double inf_norm_res[5];
     int iter;
 } ocp_qp_condensing_hpipm_memory;

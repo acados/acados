@@ -114,6 +114,7 @@ int main() {
     for (int_t k = 0; k < NN+1; k++) {
         for (int_t i = 0; i < nb[k]; i++) {
             hidxb[k][i] = i;
+#ifdef FLIP_BOUNDS
             if (i < nu[k]) {
                 hlb[k][i] = umin[i];
                 hub[k][i] = umax[i];
@@ -121,6 +122,15 @@ int main() {
                 hlb[k][i] = xmin[i - nu[k]];
                 hub[k][i] = xmax[i - nu[k]];
             }
+#else
+            if (i < nx[k]) {
+                hlb[k][i] = xmin[i];
+                hub[k][i] = xmax[i];
+            } else {
+                hlb[k][i] = umin[i - nx[k]];
+                hub[k][i] = umax[i - nx[k]];
+            }
+#endif
         }
     }
 
@@ -144,8 +154,13 @@ int main() {
     for (int_t kk = 0; kk < nMPC; kk++) {
         // update constraint on x0
         for (int_t i = 0; i < NX; i++) {
+#ifdef FLIP_BOUNDS
             hlb[0][NU + i] = x0[i];
             hub[0][NU + i] = x0[i];
+#else
+            hlb[0][i] = x0[i];
+            hub[0][i] = x0[i];
+#endif
         }
 
         // solve QP
