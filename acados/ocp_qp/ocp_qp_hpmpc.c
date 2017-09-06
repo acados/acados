@@ -545,7 +545,6 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
 
     // add memory for riccati work space
     mem_size+=sizeof(double)*max_ip_iter*5;
-    mem_size+=sizeof(double)*1000000;
 
     // add memory for stats
     } else {  // XXX giaf fortran interface

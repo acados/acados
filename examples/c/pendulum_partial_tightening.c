@@ -733,5 +733,68 @@ int main() {
     printf("Average of %.3f ms per RTI.\n", 1e3*sum_timings/NREP);
     printf("Minimum of %.3f ms per RTI.\n", 1e3*min_timings);
     free(workspace);
+    ocp_qp_hpmpc_free_memory(mem);
+    sim_erk_destroy(erk_work);
+    free(sim_in.x);
+    free(sim_in.u);
+    free(sim_in.S_forw);
+    free(sim_out.xn);
+    free(sim_out.S_forw);
+
+    // UGLY
+    free(px0[0]);
+    free(plb[0]);
+    free(pub[0]);
+    for (int_t i = 0; i < N; i++) {
+        free(pA[i]);
+        free(pB[i]);
+        free(pb[i]);
+        free(pS[i]);
+        free(pq[i]);
+        free(pr[i]);
+        free(px[i]);
+        free(pu[i]);
+        free(plb[i+1]);
+        free(pub[i+1]);
+    }
+    free(pq[N]);
+    free(px[N]);
+
+    free(A0);
+
+    free(C0);
+    free(D0);
+    free(lg0);
+    free(ug0);
+
+    free(C);
+    free(D);
+    free(lg);
+    free(ug);
+
+    free(CN);
+    free(lgN);  // force all states to 0 at the last stage
+    free(ugN);  // force all states to 0 at the last stage
+
+    ii = 0;
+    for (ii = 0; ii < N; ii++) {
+        free(ppi[ii]);
+        free(plam[ii]);
+        free(pt[ii]);
+
+        free(lam_in[ii]);
+        free(t_in[ii]);
+        free(ux_in[ii]);
+    }
+
+    free(ppi[N]);
+    free(plam[N]);
+    free(pt[N]);
+
+    free(lam_in[N]);
+    free(t_in[N]);
+    free(ux_in[N]);
+
+    free(plam[N]);
     return 0;
 }
