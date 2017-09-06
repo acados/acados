@@ -280,11 +280,21 @@ int main() {
             int_t nu[NN + 1] = {0};
             int_t nb[NN + 1] = {0};
             int_t nc[NN + 1] = {0};
-            for (int_t i = 0; i < N; i++) {
+
+			nx[0] = NX;
+			nu[0] = NU;
+            nb[0] = NX + NU;
+            nc[0] = 0;
+            for (int_t i = 1; i < N; i++) {
                 nx[i] = NX;
                 nu[i] = NU;
+                nb[i] = NU;
+                nc[i] = 0;
             }
             nx[N] = NX;
+            nu[N] = 0;
+            nb[N] = 0;
+            nc[N] = 0;
 
             /************************************************
              * box constraints
@@ -296,17 +306,16 @@ int main() {
             d_zeros(&lb0, NX + NU, 1);
             real_t *ub0;
             d_zeros(&ub0, NX + NU, 1);
-            for (int_t j = 0; j < NU; j++) {
-                lb0[j] = -UMAX;  //   umin
-                ub0[j] = UMAX;   //   umax
+            for (int_t j = 0; j < NX; j++) {
+                lb0[j] = x0[j];  //   xmin
+                ub0[j] = x0[j];  //   xmax
                 idxb0[j] = j;
             }
-            for (int_t j = 0; j < NX; j++) {
-                lb0[j + NU] = x0[j];  //   xmin
-                ub0[j + NU] = x0[j];  //   xmax
-                idxb0[j + NU] = j + NU;
+            for (int_t j = 0; j < NU; j++) {
+                lb0[j + NX] = -UMAX;  //   umin
+                ub0[j + NX] = UMAX;   //   umax
+                idxb0[j + NX] = j + NX;
             }
-            nb[0] = NX + NU;
 
             int_t *idxb1;
             int_zeros(&idxb1, NU, 1);
@@ -318,7 +327,7 @@ int main() {
                 for (int_t j = 0; j < NU; j++) {
                     lb1[i][j] = -UMAX;  //   umin
                     ub1[i][j] = UMAX;   //   umax
-                    idxb1[j] = j;
+                    idxb1[j] = j + NX;
                 }
                 // NOTE(dimitris): not tested (need also to update bounds in the loop)
                 // for (int j = 0; j < nbx; j++) {
@@ -380,7 +389,6 @@ int main() {
                 hlb[i] = lb1[i - 1];
                 hub[i] = ub1[i - 1];
                 hidxb[i] = idxb1;
-                nb[i] = NU;
             }
 
             // Allocate OCP QP variables

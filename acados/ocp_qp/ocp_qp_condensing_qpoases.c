@@ -150,6 +150,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(
     size += d_memsize_dense_qp_sol(nvd, ned, nbd, ngd);
     size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
+    size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
     for (ii = 0; ii <= N; ii++) {
         size += nb[ii]*sizeof(int); // hidxb_rev
     }
@@ -285,6 +286,31 @@ void ocp_qp_condensing_qpoases_create_memory(
     struct d_cond_qp_ocp2dense_workspace *cond_workspace =
         qpoases_memory->cond_workspace;
 
+    // align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+    c_ptr = (char *)s_ptr;
+
+    //
+    //  d_create_strmat(nvd, nvd, sR, c_ptr);
+    //  c_ptr += sR->memory_size;
+
+    // ocp qp structure
+    d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
+    c_ptr += qp->memsize;
+    // ocp qp sol structure
+    d_create_ocp_qp_sol(N, nx, nu, nb, ng, qp_sol, c_ptr);
+    c_ptr += qp_sol->memsize;
+    // dense qp structure
+    d_create_dense_qp(nvd, ned, nbd, ngd, qpd, c_ptr);
+    c_ptr += qpd->memsize;
+    // dense qp sol structure
+    d_create_dense_qp_sol(nvd, ned, nbd, ngd, qpd_sol, c_ptr);
+    c_ptr += qpd_sol->memsize;
+    // cond workspace structure
+    d_create_cond_qp_ocp2dense(qp, qpd, cond_workspace, c_ptr);
+    c_ptr += cond_workspace->memsize;
+
     //
     qpoases_memory->H = (double *)c_ptr;
     c_ptr += nvd * nvd * sizeof(double);
@@ -322,9 +348,6 @@ void ocp_qp_condensing_qpoases_create_memory(
     qpoases_memory->d_ug = (double *)c_ptr;
     c_ptr += ngd * sizeof(double);
     //
-    qpoases_memory->idxb = (int *)c_ptr;
-    c_ptr += nbd * sizeof(int);
-    //
     qpoases_memory->prim_sol = (double *)c_ptr;
     c_ptr += nvd * sizeof(double);
     //
@@ -334,35 +357,13 @@ void ocp_qp_condensing_qpoases_create_memory(
     qpoases_memory->dual_sol = (double *)c_ptr;
     c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
     //
+    qpoases_memory->idxb = (int *)c_ptr;
+    c_ptr += nbd * sizeof(int);
+    //
     for (ii = 0; ii <= N; ii++) {
         qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
         c_ptr += nb[ii]*sizeof(int);
     }
-
-    // align memory to typical cache line size
-    size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *)s_ptr;
-
-    //
-    //  d_create_strmat(nvd, nvd, sR, c_ptr);
-    //  c_ptr += sR->memory_size;
-
-    // ocp qp structure
-    d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
-    c_ptr += qp->memsize;
-    // ocp qp sol structure
-    d_create_ocp_qp_sol(N, nx, nu, nb, ng, qp_sol, c_ptr);
-    c_ptr += qp_sol->memsize;
-    // dense qp structure
-    d_create_dense_qp(nvd, ned, nbd, ngd, qpd, c_ptr);
-    c_ptr += qpd->memsize;
-    // dense qp sol structure
-    d_create_dense_qp_sol(nvd, ned, nbd, ngd, qpd_sol, c_ptr);
-    c_ptr += qpd_sol->memsize;
-    // cond workspace structure
-    d_create_cond_qp_ocp2dense(qp, qpd, cond_workspace, c_ptr);
-    c_ptr += cond_workspace->memsize;
 
     // qpOASES (HUGE!!!) workspace at the end !!!
     //
