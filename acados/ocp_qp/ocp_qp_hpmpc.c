@@ -457,8 +457,9 @@ int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
         int ii;
         int_t max_ip_iter = args->max_iter;
         ws_size = 8 + 5*max_ip_iter*sizeof(double);
+//        ws_size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
         for (ii = 0; ii <= N; ii++) {
-            ws_size += nb[ii]*sizeof(int);
+            ws_size += nb[ii]*sizeof(int);  // hidxb_rev
         }
         ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, \
             nu, nb, hidxb, ng, N2);

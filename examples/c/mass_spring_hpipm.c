@@ -283,15 +283,17 @@ int main() {
         idxb0[jj] = jj;
     }
 #else
-    jj_end = nbu < nbb[0] ? nbu : nbb[0];
+    jj_end = nbx < nbb[0] ? nbx : nbb[0];
     for (jj = 0; jj < jj_end; jj++) {
-        lb0[jj] = -0.5;  // umin
-        ub0[jj] = +0.5;  // umax
+//        lb0[jj] = x0[jj - nbu];  // initial state
+//        ub0[jj] = x0[jj - nbu];  // initial state
+        lb0[jj] = x0[jj];  // initial state
+        ub0[jj] = x0[jj];  // initial state
         idxb0[jj] = jj;
     }
     for (; jj < nbb[0]; jj++) {
-        lb0[jj] = x0[jj - nbu];  // initial state
-        ub0[jj] = x0[jj - nbu];  // initial state
+        lb0[jj] = -0.5;  // umin
+        ub0[jj] = +0.5;  // umax
         idxb0[jj] = jj;
     }
 #endif
@@ -304,15 +306,15 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
-    jj_end = nbu < nbb[1] ? nbu : nbb[1];
+    jj_end = nbx < nbb[1] ? nbx : nbb[1];
     for (jj = 0; jj < jj_end; jj++) {
-        lb1[jj] = -0.5;  // umin
-        ub1[jj] = +0.5;  // umax
+        lb1[jj] = -4.0;  // xmin
+        ub1[jj] = +4.0;  // xmax
         idxb1[jj] = jj;
     }
     for (; jj < nbb[1]; jj++) {
-        lb1[jj] = -4.0;  // xmin
-        ub1[jj] = +4.0;  // xmax
+        lb1[jj] = -0.5;  // umin
+        ub1[jj] = +0.5;  // umax
         idxb1[jj] = jj;
     }
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
@@ -324,15 +326,15 @@ int main() {
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
-    jj_end = nbu < nbb[N] ? nbu : nbb[N];
+    jj_end = nbx < nbb[N] ? nbx : nbb[N];
     for (jj = 0; jj < jj_end; jj++) {
-        lbN[jj] = -0.5;  // umin
-        ubN[jj] = +0.5;  // umax
+        lbN[jj] = -4.0;  // xmin
+        ubN[jj] = +4.0;  // xmax
         idxbN[jj] = jj;
     }
     for (; jj < nbb[N]; jj++) {
-        lbN[jj] = -4.0;  // xmin
-        ubN[jj] = +4.0;  // xmax
+        lbN[jj] = -0.5;  // umin
+        ubN[jj] = +0.5;  // umax
         idxbN[jj] = jj;
     }
     //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);

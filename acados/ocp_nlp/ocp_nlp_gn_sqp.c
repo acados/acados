@@ -163,8 +163,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
 #else
             qp_lb[i][j] = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
             qp_ub[i][j] = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
-#endif
-        }
+#endif        }
 
         // Update gradients
         // TODO(rien): only for diagonal Q, R matrices atm
