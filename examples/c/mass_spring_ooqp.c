@@ -240,8 +240,9 @@ int main() {
     /************************************************
     * box constraints
     ************************************************/
-
+#if defined (FLIP_BOUNDS)
     int jj_end;
+#endif
 
     int *idxb0;
     int_zeros(&idxb0, nbb[0], 1);
@@ -256,6 +257,7 @@ int main() {
         idxb0[jj] = jj;
         }
 #else
+#if defined (FLIP_BOUNDS)
     jj_end = nbu < nbb[0] ? nbu : nbb[0];
     for (jj = 0; jj < jj_end; jj++) {
         lb0[jj] = - 0.5;  // umin
@@ -267,6 +269,18 @@ int main() {
         ub0[jj] = x0[jj-nbu];  // initial state
         idxb0[jj] = jj;
     }
+#else
+    for (jj = 0; jj < nxx[0]; jj++) {
+        lb0[jj] = x0[jj];  // initial state
+        ub0[jj] = x0[jj];  // initial state
+        idxb0[jj] = jj;
+    }
+    for (jj = 0; jj < nbu; jj++) {
+        lb0[jj+nxx[0]] = -0.5;  // umin
+        ub0[jj+nxx[0]] = 0.5;   // umax
+        idxb0[jj+nxx[0]] = nxx[0]+jj;
+    }
+#endif
 #endif
     //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
     //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
@@ -277,6 +291,7 @@ int main() {
     d_zeros(&lb1, nbb[1], 1);
     double *ub1;
     d_zeros(&ub1, nbb[1], 1);
+#if defined (FLIP_BOUNDS)
     jj_end = nbu < nbb[1] ? nbu : nbb[1];
     for (jj = 0; jj < jj_end; jj++) {
         lb1[jj] = - 0.5;  // umin
@@ -288,6 +303,18 @@ int main() {
         ub1[jj] = + 4.0;  // xmax
         idxb1[jj] = jj;
     }
+#else
+    for (jj = 0; jj < nbx; jj++) {
+        lb1[jj] = -4.0;  // xmin
+        ub1[jj] = 4.0;   // xmax
+        idxb1[jj] = jj;
+    }
+    for (; jj < nb; jj++) {
+        lb1[jj] = -0.5;  // umin
+        ub1[jj] = 0.5;   // umax
+        idxb1[jj] = jj;
+    }
+#endif
     //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
     //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
 
@@ -297,6 +324,7 @@ int main() {
     d_zeros(&lbN, nbb[N], 1);
     double *ubN;
     d_zeros(&ubN, nbb[N], 1);
+#if defined (FLIP_BOUNDS)
     jj_end = nbu < nbb[N] ? nbu : nbb[N];
     for (jj = 0; jj < jj_end; jj++) {
         lbN[jj] = - 0.5;  // umin
@@ -308,6 +336,13 @@ int main() {
         ubN[jj] = + 4.0;  // xmax
         idxbN[jj] = jj;
     }
+#else
+    for (jj = 0; jj < nbx; jj++) {
+        lbN[jj] = -4.0;  // xmin
+        ubN[jj] = 4.0;   // xmax
+        idxbN[jj] = jj;
+    }
+#endif
     //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
     //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
 

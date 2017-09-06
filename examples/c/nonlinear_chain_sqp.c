@@ -26,6 +26,8 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
@@ -36,6 +38,9 @@
 #define NN 10
 #define UMAX 2
 #define PARALLEL 0
+
+// TODO(dimitris): fix this
+// #define USE_QPOASES
 
 extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -280,11 +285,21 @@ int main() {
             int_t nu[NN + 1] = {0};
             int_t nb[NN + 1] = {0};
             int_t nc[NN + 1] = {0};
-            for (int_t i = 0; i < N; i++) {
+
+            nx[0] = NX;
+            nu[0] = NU;
+            nb[0] = NX + NU;
+            nc[0] = 0;
+            for (int_t i = 1; i < N; i++) {
                 nx[i] = NX;
                 nu[i] = NU;
+                nb[i] = NU;
+                nc[i] = 0;
             }
             nx[N] = NX;
+            nu[N] = 0;
+            nb[N] = 0;
+            nc[N] = 0;
 
             /************************************************
              * box constraints
@@ -296,17 +311,16 @@ int main() {
             d_zeros(&lb0, NX + NU, 1);
             real_t *ub0;
             d_zeros(&ub0, NX + NU, 1);
-            for (int_t j = 0; j < NU; j++) {
-                lb0[j] = -UMAX;  //   umin
-                ub0[j] = UMAX;   //   umax
+            for (int_t j = 0; j < NX; j++) {
+                lb0[j] = x0[j];  //   xmin
+                ub0[j] = x0[j];  //   xmax
                 idxb0[j] = j;
             }
-            for (int_t j = 0; j < NX; j++) {
-                lb0[j + NU] = x0[j];  //   xmin
-                ub0[j + NU] = x0[j];  //   xmax
-                idxb0[j + NU] = j + NU;
+            for (int_t j = 0; j < NU; j++) {
+                lb0[j + NX] = -UMAX;  //   umin
+                ub0[j + NX] = UMAX;   //   umax
+                idxb0[j + NX] = j + NX;
             }
-            nb[0] = NX + NU;
 
             int_t *idxb1;
             int_zeros(&idxb1, NU, 1);
@@ -318,14 +332,8 @@ int main() {
                 for (int_t j = 0; j < NU; j++) {
                     lb1[i][j] = -UMAX;  //   umin
                     ub1[i][j] = UMAX;   //   umax
-                    idxb1[j] = j;
+                    idxb1[j] = j + NX;
                 }
-                // NOTE(dimitris): not tested (need also to update bounds in the loop)
-                // for (int j = 0; j < nbx; j++) {
-                //     lb1[j + NU] = -4.0;  //   xmin
-                //     ub1[j + NU] = +4.0;  //   xmax
-                //     idxb1[j + NU] = NU + j;
-                // }
             }
 
             real_t *pA[N];
@@ -380,7 +388,6 @@ int main() {
                 hlb[i] = lb1[i - 1];
                 hub[i] = ub1[i - 1];
                 hidxb[i] = idxb1;
-                nb[i] = NU;
             }
 
             // Allocate OCP QP variables
@@ -419,22 +426,43 @@ int main() {
             qp_out.lam = plam;
 
             // Initialize solver
-            ocp_qp_condensing_qpoases_args qpoases_args;
-            ocp_qp_condensing_qpoases_memory qpoases_memory;
+            #ifdef USE_QPOASES
+            ocp_qp_condensing_qpoases_args qpsolver_args;
+            ocp_qp_condensing_qpoases_memory qpsolver_memory;
 
-            qpoases_args.cputime = 100.0;  // maximum cpu time in seconds
-            qpoases_args.warm_start = 0;
-            qpoases_args.nwsr = 1000;
+            qpsolver_args.cputime = 100.0;  // maximum cpu time in seconds
+            qpsolver_args.warm_start = 0;
+            qpsolver_args.nwsr = 1000;
 
-            int_t qpoases_workspace_size =
-                ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
-            int_t qpoases_memory_size =
-                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
+            int_t qpsolver_workspace_size =
+                ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpsolver_args);
+            int_t qpsolver_memory_size =
+                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpsolver_args);
+            #else
+            ocp_qp_condensing_hpipm_args qpsolver_args;
+            ocp_qp_condensing_hpipm_memory qpsolver_memory;
 
-            void *qpoases_work = calloc(qpoases_workspace_size, sizeof(char));
-            void *mem = calloc(qpoases_memory_size, sizeof(char));
+            qpsolver_args.mu_max = 1e-8;
+            qpsolver_args.iter_max = 20;
+            qpsolver_args.alpha_min = 1e-8;
+            qpsolver_args.mu0 = 1.0;
 
-            ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, mem);
+            int_t qpsolver_workspace_size =
+                ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &qpsolver_args);
+            int_t qpsolver_memory_size =
+                ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &qpsolver_args);
+            #endif
+
+            void *qpsolver_work = calloc(qpsolver_workspace_size, sizeof(char));
+            void *qpsolver_mem = calloc(qpsolver_memory_size, sizeof(char));
+
+            #ifdef USE_QPOASES
+            ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpsolver_args, &qpsolver_memory,
+                qpsolver_mem);
+            #else
+            ocp_qp_condensing_hpipm_create_memory(&qp_in, &qpsolver_args, &qpsolver_memory,
+                qpsolver_mem);
+            #endif
 
             acados_timer timer;
             real_t timings = 0;
@@ -487,8 +515,8 @@ int main() {
                     // Update bounds:
                     if (i == 0) {
                         for (int_t j = 0; j < NU; j++) {
-                            lb0[j] = -UMAX - w[NX + j];
-                            ub0[j] = UMAX - w[NX + j];
+                            lb0[NX + j] = -UMAX - w[NX + j];
+                            ub0[NX + j] = UMAX - w[NX + j];
                         }
                     } else {
                         for (int_t j = 0; j < NU; j++) {
@@ -506,8 +534,8 @@ int main() {
 
                 }
                 for (int_t j = 0; j < NX; j++) {
-                    lb0[j + NU] = (x0[j] - w[j]);
-                    ub0[j + NU] = (x0[j] - w[j]);
+                    lb0[j] = (x0[j] - w[j]);
+                    ub0[j] = (x0[j] - w[j]);
                 }
 
                 for (int_t j = 0; j < NX; j++)
@@ -523,8 +551,13 @@ int main() {
 
                 int status = 0;
 
-                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args,
-                    &qpoases_memory, qpoases_work);
+                #ifdef USE_QPOASES
+                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpsolver_args,
+                    &qpsolver_memory, qpsolver_work);
+                #else
+                status = ocp_qp_condensing_hpipm(&qp_in, &qp_out, &qpsolver_args,
+                    &qpsolver_memory, qpsolver_work);
+                #endif
 
                 if (status) {
                     printf("qpOASES returned error status %d\n", status);
