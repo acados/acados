@@ -323,7 +323,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)
-                idxb[i] = nu[0] + i;
+                idxb[i] = i;
             memcpy((void *) qp_in->idxb[0], idxb, sizeof(idxb));
         }
         return qp_in;
@@ -498,7 +498,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)
-                idxb[i] = nu[0] + i;
+                idxb[i] = i;
             memcpy((void *) nlp_in->idxb[0], idxb, sizeof(idxb));
         }
         return nlp_in;
