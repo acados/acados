@@ -677,3 +677,33 @@ void expm(int row, double *A) {
         free(temp);
     }
 }
+
+// TODO(dimitris): move this to condensing module once implemented
+// compute the memory size of condensing for [x u] order of bounds (instead of [u x] in hpipm)
+void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
+    int *nvd, int *ned, int *nbd, int *ngd) {
+
+    int ii, jj;
+
+    *nvd = 0;
+    *ned = 0;
+    *nbd = 0;
+    *ngd = 0;
+
+    // first stage
+    *nvd += nx[0]+nu[0];
+    *nbd += nb[0];
+    *ngd += ng[0];
+    // remaining stages
+    for (ii = 1; ii <= N; ii++) {
+        *nvd += nu[ii];
+        for (jj = 0; jj < nb[ii]; jj++) {
+            if (hidxb[ii][jj] < nx[ii]) {  // state constraint
+                (*ngd)++;
+            } else {  // input constraint
+                (*nbd)++;
+            }
+        }
+    *ngd += ng[ii];
+    }
+}

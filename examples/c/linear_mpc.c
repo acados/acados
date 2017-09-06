@@ -92,6 +92,7 @@ int main() {
     real_t z0max[NX + NU];
     int_t idxb[NX + NU];
 
+#ifdef FLIP_BOUNDS
     for (int ii = 0; ii < NU; ii++) {
         zmin[ii] = umin[ii];
         zmax[ii] = umax[ii];
@@ -104,6 +105,20 @@ int main() {
         zmax[NU + ii] = xmax[ii];
         idxb[NU + ii] = NU + ii;
     }
+#else
+for (int ii = 0; ii < NX; ii++) {
+    zmin[ii] = xmin[ii];
+    zmax[ii] = xmax[ii];
+    idxb[ii] = ii;
+}
+for (int ii = 0; ii < NU; ii++) {
+    zmin[NX+ii] = umin[ii];
+    zmax[NX+ii] = umax[ii];
+    z0min[NX+ii] = umin[ii];
+    z0max[NX+ii] = umax[ii];
+    idxb[NX+ii] = NX+ii;
+}
+#endif
 
     // Setup ocp_qp_in
     // TODO(dimitris): maybe function in utils for LTI systems?
@@ -193,8 +208,13 @@ int main() {
     for (int kk = 0; kk < nMPC; kk++) {
         // update constraint on x0
         for (int ii = 0; ii < NX; ii++) {
+#ifdef FLIP_BOUNDS
             z0min[NU + ii] = x0[ii];
             z0max[NU + ii] = x0[ii];
+#else
+            z0min[ii] = x0[ii];
+            z0max[ii] = x0[ii];
+#endif
         }
 
         // solve QP

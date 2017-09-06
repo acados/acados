@@ -61,11 +61,6 @@ Thumbs.db
 *download_software
 *download_matlab
 
-# Auto-generated files #
-########################
-*experimental/dimitris/*/*.txt
-*experimental/dimitris/*/*.mat
-
 # Misc #
 ########
 *.doc
