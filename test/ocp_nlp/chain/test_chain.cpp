@@ -51,7 +51,7 @@ using Eigen::VectorXd;
 
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
     for (int INEXACT = 0; INEXACT < 5; INEXACT++) {
-    int d_start = 0;
+    int d_start = 1;
     if (INEXACT > 0) d_start = 2;
 
     for (int d = d_start; d < 4; d++) {  // RK4 in case d == 0
@@ -144,6 +144,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             sim_in[jj].step = Ts/sim_in[jj].nSteps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
+            sim_in[jj].nz = 0;
 
             sim_in[jj].sens_forw = true;
             sim_in[jj].sens_adj = false;
