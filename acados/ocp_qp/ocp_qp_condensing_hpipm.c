@@ -23,6 +23,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "acados/utils/math.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
@@ -45,6 +47,35 @@ int ocp_qp_condensing_hpipm_calculate_workspace_size(
     ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
     return 0;
 }
+
+// // compute the memory size of condensing for [x u] order of bounds (instead of [u x] in hpipm)
+// void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
+//     int *nvd, int *ned, int *nbd, int *ngd) {
+
+//     int ii, jj;
+
+//     *nvd = 0;
+//     *ned = 0;
+//     *nbd = 0;
+//     *ngd = 0;
+
+//     // first stage
+//     *nvd += nx[0]+nu[0];
+//     *nbd += nb[0];
+//     *ngd += ng[0];
+//     // remaining stages
+//     for (ii = 1; ii <= N; ii++) {
+//         *nvd += nu[ii];
+//         for (jj = 0; jj < nb[ii]; jj++) {
+//             if (hidxb[ii][jj] < nx[ii]) {  // state constraint
+//                 (*ngd)++;
+//             } else {  // input constraint
+//                 (*nbd)++;
+//             }
+//         }
+//     *ngd += ng[ii];
+//     }
+// }
 
 int ocp_qp_condensing_hpipm_calculate_memory_size(
     ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
@@ -75,34 +106,7 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
     // [x; u] order
-    int ii, jj;
-
-    nvd = 0;
-    ned = 0;
-    nbd = 0;
-    ngd = 0;
-
-    // first stage
-    nvd += nx[0]+nu[0];
-    nbd += nb[0];
-    ngd += ng[0];
-    // remaining stages
-    for(ii=1; ii<=N; ii++)
-    {
-        nvd += nu[ii];
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
-                ngd++;
-            }
-            else // input constraint
-            {
-                nbd++;
-            }
-        }
-    ngd += ng[ii];
-    }
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
 
@@ -136,8 +140,8 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     size += d_memsize_ipm_hard_dense_qp(&qpd, &ipm_arg);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
     size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
-    for (ii = 0; ii <= N; ii++) {
-        size += nb[ii]*sizeof(int); // hidxb_rev
+    for (int ii = 0; ii <= N; ii++) {
+        size += nb[ii]*sizeof(int);  // hidxb_rev
     }
 
     size = (size + 63) / 64 * 64;  // make multipl of typical cache line size
@@ -167,34 +171,7 @@ void ocp_qp_condensing_hpipm_create_memory(
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
     // [x; u] order
-    int ii, jj;
-
-    nvd = 0;
-    ned = 0;
-    nbd = 0;
-    ngd = 0;
-
-    // first stage
-    nvd += nx[0]+nu[0];
-    nbd += nb[0];
-    ngd += ng[0];
-    // remaining stages
-    for(ii=1; ii<=N; ii++)
-    {
-        nvd += nu[ii];
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
-                ngd++;
-            }
-            else // input constraint
-            {
-                nbd++;
-            }
-        }
-    ngd += ng[ii];
-    }
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
 
@@ -286,7 +263,7 @@ void ocp_qp_condensing_hpipm_create_memory(
     c_ptr += ipm_workspace->memsize;
 
     //
-    for (ii = 0; ii <= N; ii++) {
+    for (int ii = 0; ii <= N; ii++) {
         hpipm_memory->hidxb_rev[ii] = (int *) c_ptr;
         c_ptr += nb[ii]*sizeof(int);
     }
@@ -350,16 +327,11 @@ int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     double **hlam = qp_out->lam;
 
     // compute bounds indeces in order [u; x]
-    for (ii=0; ii <= N; ii++)
-    {
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
+    for (ii = 0; ii <= N; ii++) {
+        for (jj = 0; jj < nb[ii]; jj++) {
+            if (hidxb[ii][jj] < nx[ii])  {  // state constraint
                 hidxb_rev[ii][jj] = hidxb[ii][jj]+nu[ii];
-            }
-            else // input constraint
-            {
+            } else  {  // input constraint
                 hidxb_rev[ii][jj] = hidxb[ii][jj]-nx[ii];
             }
         }

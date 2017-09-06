@@ -44,7 +44,7 @@ int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *a
 
 int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
 
-	int ii;
+    int ii;
 
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -75,7 +75,7 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
     size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
     for (ii = 0; ii <= N; ii++) {
-        size += nb[ii]*sizeof(int); // hidxb_rev
+        size += nb[ii]*sizeof(int);  // hidxb_rev
     }
 
     size = (size + 63) / 64 * 64;  // make multipl of typical cache line size
@@ -88,7 +88,7 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
                                 ocp_qp_hpipm_memory *hpipm_memory,
                                 void *memory) {
     //
-	int ii;
+    int ii;
 
     // extract problem size
     int N = qp_in->N;
@@ -218,16 +218,11 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     double **hlam = qp_out->lam;
 
     // compute bounds indeces in order [u; x]
-    for (ii=0; ii <= N; ii++)
-    {
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
+    for (ii = 0; ii <= N; ii++) {
+        for (jj = 0; jj < nb[ii]; jj++) {
+            if (hidxb[ii][jj] < nx[ii]) {  // state constraint
                 hidxb_rev[ii][jj] = hidxb[ii][jj]+nu[ii];
-            }
-            else // input constraint
-            {
+            } else {  // input constraint
                 hidxb_rev[ii][jj] = hidxb[ii][jj]-nx[ii];
             }
         }
@@ -248,10 +243,10 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     // ocp qp sol structure
 
     // arg structure // XXX fixed in memory !!!
-    //  ipm_arg->alpha_min = args->alpha_min;
-    //  ipm_arg->mu_max = args->mu_max;
-    //  ipm_arg->iter_max = args->iter_max;
-    //  ipm_arg->mu0 = args->mu0;
+    // ipm_arg->alpha_min = args->alpha_min;
+    // ipm_arg->mu_max = args->mu_max;
+    // ipm_arg->iter_max = args->iter_max;
+    // ipm_arg->mu0 = args->mu0;
 
     // ipm structure
 

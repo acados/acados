@@ -281,8 +281,8 @@ int main() {
             int_t nb[NN + 1] = {0};
             int_t nc[NN + 1] = {0};
 
-			nx[0] = NX;
-			nu[0] = NU;
+            nx[0] = NX;
+            nu[0] = NU;
             nb[0] = NX + NU;
             nc[0] = 0;
             for (int_t i = 1; i < N; i++) {

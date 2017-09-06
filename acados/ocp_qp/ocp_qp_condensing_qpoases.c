@@ -21,6 +21,8 @@
 
 #include <stdlib.h>
 
+#include "acados/utils/math.h"
+
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
@@ -97,34 +99,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
     // [x; u] order
-    int ii, jj;
-
-    nvd = 0;
-    ned = 0;
-    nbd = 0;
-    ngd = 0;
-
-    // first stage
-    nvd += nx[0]+nu[0];
-    nbd += nb[0];
-    ngd += ng[0];
-    // remaining stages
-    for(ii=1; ii<=N; ii++)
-    {
-        nvd += nu[ii];
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
-                ngd++;
-            }
-            else // input constraint
-            {
-                nbd++;
-            }
-        }
-    ngd += ng[ii];
-    }
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
     // dummy dense qp
@@ -151,8 +126,8 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(
     size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
     size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
-    for (ii = 0; ii <= N; ii++) {
-        size += nb[ii]*sizeof(int); // hidxb_rev
+    for (int ii = 0; ii <= N; ii++) {
+        size += nb[ii]*sizeof(int);  // hidxb_rev
     }
     //  size += 1*d_size_strmat(nvd, nvd); // sR
 
@@ -201,34 +176,7 @@ void ocp_qp_condensing_qpoases_create_memory(
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
     // [x; u] order
-    int ii, jj;
-
-    nvd = 0;
-    ned = 0;
-    nbd = 0;
-    ngd = 0;
-
-    // first stage
-    nvd += nx[0]+nu[0];
-    nbd += nb[0];
-    ngd += ng[0];
-    // remaining stages
-    for(ii=1; ii<=N; ii++)
-    {
-        nvd += nu[ii];
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
-                ngd++;
-            }
-            else // input constraint
-            {
-                nbd++;
-            }
-        }
-    ngd += ng[ii];
-    }
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
 
@@ -360,7 +308,7 @@ void ocp_qp_condensing_qpoases_create_memory(
     qpoases_memory->idxb = (int *)c_ptr;
     c_ptr += nbd * sizeof(int);
     //
-    for (ii = 0; ii <= N; ii++) {
+    for (int ii = 0; ii <= N; ii++) {
         qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
         c_ptr += nb[ii]*sizeof(int);
     }
@@ -454,16 +402,11 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     double **hlam = qp_out->lam;
 
     // compute bounds indeces in order [u; x]
-    for (ii=0; ii <= N; ii++)
-    {
-        for(jj=0; jj<nb[ii]; jj++)
-        {
-            if(hidxb[ii][jj]<nx[ii]) // state constraint
-            {
+    for (ii = 0; ii <= N; ii++) {
+        for (jj = 0; jj < nb[ii]; jj++) {
+            if (hidxb[ii][jj] < nx[ii]) {  // state constraint
                 hidxb_rev[ii][jj] = hidxb[ii][jj]+nu[ii];
-            }
-            else // input constraint
-            {
+            } else  {  // input constraint
                 hidxb_rev[ii][jj] = hidxb[ii][jj]-nx[ii];
             }
         }
