@@ -44,7 +44,7 @@ using Eigen::Map;
 
 int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
-int_t TEST_QPOASES = 0;
+int_t TEST_QPOASES = 1;
 real_t TOL_QPOASES = 1e-10;
 int_t TEST_QPDUNES = 1;
 real_t TOL_QPDUNES = 1e-10;
