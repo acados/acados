@@ -148,7 +148,7 @@ void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
     }
 
     // align data
-	long long l_ptr = (long long) c_ptr;
+    long long l_ptr = (long long) c_ptr;
     l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
     c_ptr = (char *) l_ptr;
 
@@ -157,7 +157,7 @@ void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
 
     for (int_t k = 0; k < N+1; k++) {
         // printf("%ld MODULO %d = %ld\n", (uintptr_t)c_ptr, ALIGNMENT, (uintptr_t)c_ptr % 8);
-        assert( (uintptr_t)c_ptr % 8 == 0);
+        assert((uintptr_t)c_ptr % 8 == 0);
 
         if (k < N) {
             (*qp_in)->A[k] = (real_t *) c_ptr;
@@ -279,13 +279,13 @@ void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
     c_ptr += (N+1)*sizeof(real_t *);
 
     // align data
-	long long l_ptr = (long long) c_ptr;
+    long long l_ptr = (long long) c_ptr;
     l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
     c_ptr = (char *) l_ptr;
 
     // assign pointers to QP solution
     for (int_t k = 0; k < N+1; k++) {
-        assert( (uintptr_t)c_ptr % 8 == 0);
+        assert((uintptr_t)c_ptr % 8 == 0);
 
         (*qp_out)->x[k] = (real_t *) c_ptr;
         c_ptr += nx[k]*sizeof(real_t);
@@ -296,7 +296,7 @@ void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
 
     // NOTE(dimitris): splitted the loops to be able to print primal/dual solution at once
     for (int_t k = 0; k < N+1; k++) {
-        assert( (uintptr_t)c_ptr % 8 == 0);
+        assert((uintptr_t)c_ptr % 8 == 0);
 
         if (k < N) {
             (*qp_out)->pi[k] = (real_t *) c_ptr;
