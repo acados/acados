@@ -55,6 +55,9 @@ int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *
         bytes += 2*nc[k]*sizeof(real_t);  // lc, uc
     }
 
+    bytes = (bytes+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
+    bytes += ALIGNMENT;
+
     return bytes;
 }
 
@@ -136,10 +139,24 @@ void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
     (*qp_in)->uc = (const real_t **) c_ptr;
     c_ptr += (N+1)*sizeof(real_t *);
 
-    // assign pointers to QP data
+    // assign pointers to ints
+    for (int_t k = 0; k < N+1; k++) {
+        (*qp_in)->idxb[k] = (int_t *) c_ptr;
+        c_ptr += nb[k]*sizeof(int_t);
+    }
+
+    // align data
+	long long l_ptr = (long long) c_ptr;
+    l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
+    c_ptr = (char *) l_ptr;
+
+    // assign pointers to doubles
     c_ptr_QPdata = c_ptr;
 
     for (int_t k = 0; k < N+1; k++) {
+        // printf("%ld MODULO %d = %ld\n", (uintptr_t)c_ptr, ALIGNMENT, (uintptr_t)c_ptr % 8);
+        assert( (uintptr_t)c_ptr % 8 == 0);
+
         if (k < N) {
             (*qp_in)->A[k] = (real_t *) c_ptr;
             c_ptr += nx[k+1]*nx[k]*sizeof(real_t);
@@ -165,9 +182,6 @@ void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
 
         (*qp_in)->r[k] = (real_t *) c_ptr;
         c_ptr += nu[k]*sizeof(real_t);
-
-        (*qp_in)->idxb[k] = (int_t *) c_ptr;
-        c_ptr += nb[k]*sizeof(int_t);
 
         (*qp_in)->lb[k] = (real_t *) c_ptr;
         c_ptr += nb[k]*sizeof(real_t);
@@ -210,7 +224,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
 
     void *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
-    (void) ptr_end; assert(ptr + bytes == ptr_end);
+    (void) ptr_end; assert(ptr + bytes >= ptr_end);
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
     // exit(1);
@@ -232,6 +246,9 @@ int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
             bytes += (nx[k+1])*sizeof(real_t);  // pi
         bytes += 2*(nb[k] + nc[k])*sizeof(real_t);  // lam
         }
+
+    bytes = (bytes+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
+    bytes += ALIGNMENT;
 
     return bytes;
 }
@@ -259,8 +276,14 @@ void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
     (*qp_out)->lam = (real_t **) c_ptr;
     c_ptr += (N+1)*sizeof(real_t *);
 
+    // align data
+	long long l_ptr = (long long) c_ptr;
+    l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
+    c_ptr = (char *) l_ptr;
+
     // assign pointers to QP solution
     for (int_t k = 0; k < N+1; k++) {
+        assert( (uintptr_t)c_ptr % 8 == 0);
 
         (*qp_out)->x[k] = (real_t *) c_ptr;
         c_ptr += nx[k]*sizeof(real_t);
@@ -271,6 +294,8 @@ void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
 
     // NOTE(dimitris): splitted the loops to be able to print primal/dual solution at once
     for (int_t k = 0; k < N+1; k++) {
+        assert( (uintptr_t)c_ptr % 8 == 0);
+
         if (k < N) {
             (*qp_out)->pi[k] = (real_t *) c_ptr;
             c_ptr += nx[k+1]*sizeof(real_t);
@@ -289,7 +314,7 @@ ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
     int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
     void *ptr = malloc(bytes);
     void *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
-    (void) ptr_end; assert(ptr + bytes == ptr_end);
+    (void) ptr_end; assert(ptr + bytes >= ptr_end);
 
     return qp_out;
 }

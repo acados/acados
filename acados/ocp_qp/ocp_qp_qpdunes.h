@@ -55,7 +55,7 @@ typedef struct ocp_qp_qpdunes_workspace_ {
     real_t *scrap;
     real_t *zLow;
     real_t *zUpp;
-    int tmp;
+    int tmp;  // TODO(dimitris): is this to make sizeof(struct) == 64??
 } ocp_qp_qpdunes_workspace;
 
 typedef struct ocp_qp_qpdunes_memory_ {

@@ -55,6 +55,8 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_qp_qpdunes_workspace);
+    assert( (uintptr_t)ptr % 8 == 0);
+
     work->ABt = (real_t *)ptr;
     ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
     work->Ct = (real_t *)ptr;
