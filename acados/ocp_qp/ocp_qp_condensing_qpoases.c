@@ -259,6 +259,7 @@ void ocp_qp_condensing_qpoases_create_memory(
     d_create_cond_qp_ocp2dense(qp, qpd, cond_workspace, c_ptr);
     c_ptr += cond_workspace->memsize;
 
+    // double stuff
     //
     qpoases_memory->H = (double *)c_ptr;
     c_ptr += nvd * nvd * sizeof(double);
@@ -304,16 +305,8 @@ void ocp_qp_condensing_qpoases_create_memory(
     //
     qpoases_memory->dual_sol = (double *)c_ptr;
     c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
-    //
-    qpoases_memory->idxb = (int *)c_ptr;
-    c_ptr += nbd * sizeof(int);
-    //
-    for (int ii = 0; ii <= N; ii++) {
-        qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
-        c_ptr += nb[ii]*sizeof(int);
-    }
 
-    // qpOASES (HUGE!!!) workspace at the end !!!
+    // qpOASES (HUGE!!!)
     //
     if (ngd > 0) {  // QProblem
         qpoases_memory->QP = (void *)c_ptr;
@@ -321,6 +314,16 @@ void ocp_qp_condensing_qpoases_create_memory(
     } else {  // QProblemB
         qpoases_memory->QPB = (void *)c_ptr;
         c_ptr += sizeof(QProblemB);
+    }
+
+    // int stuff
+    //
+    qpoases_memory->idxb = (int *)c_ptr;
+    c_ptr += nbd * sizeof(int);
+    //
+    for (int ii = 0; ii <= N; ii++) {
+        qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
+        c_ptr += nb[ii]*sizeof(int);
     }
 
     return;
