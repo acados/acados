@@ -757,10 +757,16 @@ int main() {
     printf("\nx = \n");
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
+    printf("\npi = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nxx[ii+1], hpi[ii], 1);
+
+    printf("\nlam = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, 2*nbb[ii]+2*ngg[ii], hlam[ii], 1);
+
     printf("\n");
     printf(
         " Solution time for %d working set recalculations, averaged over %d "
-        "runs: %5.2e seconds\n",
+        "runs: %5.2e seconds\n\n\n",
         qpoases_memory.nwsr, nrep, time);
     printf("\n\n");
 

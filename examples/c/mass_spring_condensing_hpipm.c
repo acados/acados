@@ -601,6 +601,12 @@ int main() {
     printf("\nx = \n");
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
+    printf("\npi = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nxx[ii+1], hpi[ii], 1);
+
+    printf("\nlam = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, 2*nbb[ii]+2*ngg[ii], hlam[ii], 1);
+
     printf("\n");
     printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0],
            hpipm_memory.inf_norm_res[1], hpipm_memory.inf_norm_res[2],
