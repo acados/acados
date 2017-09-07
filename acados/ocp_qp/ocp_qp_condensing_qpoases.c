@@ -513,17 +513,17 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
 
     // copy prim_sol and dual_sol to qpd_sol
     d_cvt_vec2strvec(nvd, prim_sol, qpd_sol->v, 0);
-    for(ii=0; ii<nbd; ii++) qpd_sol->lam_lb->pa[ii] = 0.0;
-    for(ii=0; ii<nbd; ii++) qpd_sol->lam_ub->pa[ii] = 0.0;
-    for(ii=0; ii<ngd; ii++) qpd_sol->lam_lg->pa[ii] = 0.0;
-    for(ii=0; ii<ngd; ii++) qpd_sol->lam_ug->pa[ii] = 0.0;
-    for(ii=0; ii<nbd; ii++)
-        if(dual_sol[ii]>=0.0)
+    for (ii=0; ii < nbd; ii++) qpd_sol->lam_lb->pa[ii] = 0.0;
+    for (ii=0; ii < nbd; ii++) qpd_sol->lam_ub->pa[ii] = 0.0;
+    for (ii=0; ii < ngd; ii++) qpd_sol->lam_lg->pa[ii] = 0.0;
+    for (ii=0; ii < ngd; ii++) qpd_sol->lam_ug->pa[ii] = 0.0;
+    for (ii=0; ii < nbd; ii++)
+        if (dual_sol[ii] >= 0.0)
             qpd_sol->lam_lb->pa[ii] =   dual_sol[ii];
         else
             qpd_sol->lam_ub->pa[ii] = - dual_sol[ii];
-    for(ii=0; ii<ngd; ii++)
-        if(dual_sol[nbd+ii]>=0.0)
+    for (ii=0; ii < ngd; ii++)
+        if (dual_sol[nbd+ii] >= 0.0)
             qpd_sol->lam_lg->pa[ii] =   dual_sol[nbd+ii];
         else
             qpd_sol->lam_ug->pa[ii] = - dual_sol[nbd+ii];
