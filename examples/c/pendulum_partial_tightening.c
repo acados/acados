@@ -795,6 +795,5 @@ int main() {
     free(t_in[N]);
     free(ux_in[N]);
 
-    free(plam[N]);
     return 0;
 }
