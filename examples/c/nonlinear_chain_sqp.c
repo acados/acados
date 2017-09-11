@@ -40,7 +40,7 @@
 #define PARALLEL 0
 
 // TODO(dimitris): fix this
-// #define USE_QPOASES
+#define USE_QPOASES
 
 extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);

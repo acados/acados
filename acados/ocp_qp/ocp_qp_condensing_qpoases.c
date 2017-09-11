@@ -259,6 +259,7 @@ void ocp_qp_condensing_qpoases_create_memory(
     d_create_cond_qp_ocp2dense(qp, qpd, cond_workspace, c_ptr);
     c_ptr += cond_workspace->memsize;
 
+    // double stuff
     //
     qpoases_memory->H = (double *)c_ptr;
     c_ptr += nvd * nvd * sizeof(double);
@@ -302,18 +303,8 @@ void ocp_qp_condensing_qpoases_create_memory(
     qpoases_memory->dual_sol = (double *)c_ptr;
     c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
     //
-    qpoases_memory->dual_sol = (double *)c_ptr;
-    c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
-    //
-    qpoases_memory->idxb = (int *)c_ptr;
-    c_ptr += nbd * sizeof(int);
-    //
-    for (int ii = 0; ii <= N; ii++) {
-        qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
-        c_ptr += nb[ii]*sizeof(int);
-    }
 
-    // qpOASES (HUGE!!!) workspace at the end !!!
+    // qpOASES (HUGE!!!)
     //
     if (ngd > 0) {  // QProblem
         qpoases_memory->QP = (void *)c_ptr;
@@ -321,6 +312,16 @@ void ocp_qp_condensing_qpoases_create_memory(
     } else {  // QProblemB
         qpoases_memory->QPB = (void *)c_ptr;
         c_ptr += sizeof(QProblemB);
+    }
+
+    // int stuff
+    //
+    qpoases_memory->idxb = (int *)c_ptr;
+    c_ptr += nbd * sizeof(int);
+    //
+    for (int ii = 0; ii <= N; ii++) {
+        qpoases_memory->hidxb_rev[ii] = (int *) c_ptr;
+        c_ptr += nb[ii]*sizeof(int);
     }
 
     return;
@@ -512,6 +513,20 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
 
     // copy prim_sol and dual_sol to qpd_sol
     d_cvt_vec2strvec(nvd, prim_sol, qpd_sol->v, 0);
+    for (ii=0; ii < nbd; ii++) qpd_sol->lam_lb->pa[ii] = 0.0;
+    for (ii=0; ii < nbd; ii++) qpd_sol->lam_ub->pa[ii] = 0.0;
+    for (ii=0; ii < ngd; ii++) qpd_sol->lam_lg->pa[ii] = 0.0;
+    for (ii=0; ii < ngd; ii++) qpd_sol->lam_ug->pa[ii] = 0.0;
+    for (ii=0; ii < nbd; ii++)
+        if (dual_sol[ii] >= 0.0)
+            qpd_sol->lam_lb->pa[ii] =   dual_sol[ii];
+        else
+            qpd_sol->lam_ub->pa[ii] = - dual_sol[ii];
+    for (ii=0; ii < ngd; ii++)
+        if (dual_sol[nbd+ii] >= 0.0)
+            qpd_sol->lam_lg->pa[ii] =   dual_sol[nbd+ii];
+        else
+            qpd_sol->lam_ug->pa[ii] = - dual_sol[nbd+ii];
 
     // expand solution
     d_expand_sol_dense2ocp(qp, qpd_sol, qp_sol, cond_workspace);
