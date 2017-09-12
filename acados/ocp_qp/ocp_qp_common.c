@@ -155,7 +155,7 @@ char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
     c_ptr_QPdata = c_ptr;
 
     for (int_t k = 0; k < N+1; k++) {
-        printf("%ld MODULO %d = %ld\n", (size_t)c_ptr, ALIGNMENT, (size_t)c_ptr % 8);
+        // printf("%zu MODULO %d = %zu\n", (size_t)c_ptr, 8, (size_t)c_ptr % 8);
         assert((size_t)c_ptr % 8 == 0);
 
         if (k < N) {
