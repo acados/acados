@@ -147,7 +147,7 @@ char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
     }
 
     // align data
-    long long l_ptr = (long long) c_ptr;
+    size_t l_ptr = (size_t) c_ptr;
     l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
     c_ptr = (char *) l_ptr;
 
@@ -225,7 +225,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
 
     char *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
-    assert(ptr + bytes >= ptr_end); (void) ptr_end;
+    assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
     // exit(1);
@@ -278,7 +278,7 @@ char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
     c_ptr += (N+1)*sizeof(real_t *);
 
     // align data
-    long long l_ptr = (long long) c_ptr;
+    size_t l_ptr = (size_t) c_ptr;
     l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
     c_ptr = (char *) l_ptr;
 
@@ -317,7 +317,7 @@ ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
     int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
     void *ptr = malloc(bytes);
     char *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
-    assert(ptr + bytes >= ptr_end); (void) ptr_end;
+    assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
 
     return qp_out;
 }
