@@ -29,7 +29,7 @@ project(acados LANGUAGES C CXX)
 set(BUILD_SHARED_LIBS ON CACHE INTERNAL "Build shared libraries")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
-    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 endif()
 
 # Enable or disable timings

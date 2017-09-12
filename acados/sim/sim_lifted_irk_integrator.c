@@ -783,7 +783,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
 
             acados_tic(&timer_ad);
-            in->VDE_forw(rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
+            in->VDE_forw(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:

@@ -59,7 +59,7 @@ typedef PyObject LangObject;
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/allocate_sim.h"
-#include "acados/sim/model_wrapper.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
@@ -120,12 +120,10 @@ static void generate_model(casadi::Function& model, char *model_name, int_t str_
 void set_model(sim_in *sim, casadi::Function& f, double step) {
     char model_name[256], library_name[256], path_to_library[256];
     generate_model(f, model_name, sizeof(model_name));
-    // snprintf(library_name, sizeof(library_name), "%s_sim.so", model_name);
     snprintf(library_name, sizeof(library_name), "%s.so", model_name);
     snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
     char command[256];
-    snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
-        model_name, library_name);
+    snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", model_name, library_name);
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
@@ -139,7 +137,7 @@ void set_model(sim_in *sim, casadi::Function& f, double step) {
         throw std::runtime_error(err_msg);
     }
     typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
-    eval_t eval = (eval_t)dlsym(handle, model_name);
+    eval_t eval = (eval_t) dlsym(handle, model_name);
     sim->vde = eval;
     sim->VDE_forw = &vde_fun;
     sim->step = step;

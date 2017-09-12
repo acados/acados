@@ -28,6 +28,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
@@ -214,42 +215,42 @@ int main() {
                 switch (NMF) {
                     case 1:
                         sim_in[jj].vde = &vde_chain_nm2;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm2;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm2;
                         break;
                     case 2:
                         sim_in[jj].vde = &vde_chain_nm3;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm3;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm3;
                         break;
                     case 3:
                         sim_in[jj].vde = &vde_chain_nm4;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm4;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm4;
                         break;
                     case 4:
                         sim_in[jj].vde = &vde_chain_nm5;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm5;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm5;
                         break;
                     case 5:
                         sim_in[jj].vde = &vde_chain_nm6;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm6;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm6;
                         break;
                     case 6:
                         sim_in[jj].vde = &vde_chain_nm7;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm7;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm7;
                         break;
                     case 7:
                         sim_in[jj].vde = &vde_chain_nm8;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm8;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm8;
                         break;
                     default:
                         sim_in[jj].vde = &vde_chain_nm9;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm9;
+                        sim_in[jj].VDE_forw = &vde_fun;
                         sim_in[jj].jac_fun = &jac_fun_nm9;
                         break;
                 }

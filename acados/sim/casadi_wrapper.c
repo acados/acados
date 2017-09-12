@@ -1,9 +1,7 @@
-#include "acados/sim/model_wrapper.h"
+#include "acados/sim/casadi_wrapper.h"
 
-void vde_fun(const real_t* in, real_t* out,
+void vde_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
              int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
-    int_t nx = 2;
-    int_t nu = 1;
 
     const real_t* x = in;
     const real_t* Sx = in + nx;

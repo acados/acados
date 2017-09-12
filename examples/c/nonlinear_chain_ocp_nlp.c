@@ -32,6 +32,7 @@
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
@@ -173,17 +174,17 @@ int main() {
         switch (NMF) {
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].VDE_forw = &VDE_fun_nm2;
+                sim_in[jj].VDE_forw = &vde_fun;
                 sim_in[jj].jac_fun = &jac_fun_nm2;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
-                sim_in[jj].VDE_forw = &VDE_fun_nm3;
+                sim_in[jj].VDE_forw = &vde_fun;
                 sim_in[jj].jac_fun = &jac_fun_nm3;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
-                sim_in[jj].VDE_forw = &VDE_fun_nm4;
+                sim_in[jj].VDE_forw = &vde_fun;
                 sim_in[jj].jac_fun = &jac_fun_nm4;
                 break;
             default:
@@ -236,7 +237,7 @@ int main() {
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
         // TODO(roversch): Next line is leaking memory!
-        sim_work = (void *)malloc(workspace_size);
+        sim_work = (void *) malloc(workspace_size);
         integrators[jj].work = sim_work;
     }
 

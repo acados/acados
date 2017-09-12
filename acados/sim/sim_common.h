@@ -40,9 +40,8 @@ typedef struct {
     int_t nsens_forw;
 
     int (*vde)(const real_t **, real_t **, int *, real_t *, int);
-    void (*VDE_forw)(const real_t *, real_t *,
-                     int (*vde)(const real_t **, real_t **, int *, real_t *,
-                                int));
+    void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *,
+                     int (*vde)(const real_t **, real_t **, int *, real_t *, int));
     void (*VDE_adj)(const real_t *, real_t *);
     void (*jac_fun)(const real_t *, real_t *);
 
