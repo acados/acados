@@ -24,7 +24,6 @@
 #include <stdio.h>
 
 #include <assert.h>
-#include <stdint.h>
 
 #include "acados/utils/types.h"
 
@@ -156,8 +155,8 @@ char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
     c_ptr_QPdata = c_ptr;
 
     for (int_t k = 0; k < N+1; k++) {
-        // printf("%ld MODULO %d = %ld\n", (uintptr_t)c_ptr, ALIGNMENT, (uintptr_t)c_ptr % 8);
-        assert((uintptr_t)c_ptr % 8 == 0);
+        printf("%ld MODULO %d = %ld\n", (size_t)c_ptr, ALIGNMENT, (size_t)c_ptr % 8);
+        assert((size_t)c_ptr % 8 == 0);
 
         if (k < N) {
             (*qp_in)->A[k] = (real_t *) c_ptr;
@@ -287,7 +286,7 @@ char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
 
     // assign pointers to QP solution
     for (int_t k = 0; k < N+1; k++) {
-        assert((uintptr_t)c_ptr % 8 == 0);
+        assert((size_t)c_ptr % 8 == 0);
 
         (*qp_out)->x[k] = (real_t *) c_ptr;
         c_ptr += nx[k]*sizeof(real_t);
@@ -297,13 +296,13 @@ char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
     }
 
     for (int_t k = 0; k < N; k++) {
-        assert((uintptr_t)c_ptr % 8 == 0);
+        assert((size_t)c_ptr % 8 == 0);
         (*qp_out)->pi[k] = (real_t *) c_ptr;
         c_ptr += nx[k+1]*sizeof(real_t);
     }
 
     for (int_t k = 0; k < N+1; k++) {
-        assert((uintptr_t)c_ptr % 8 == 0);
+        assert((size_t)c_ptr % 8 == 0);
         (*qp_out)->lam[k] = (real_t *) c_ptr;
         c_ptr += 2*(nb[k] + nc[k])*sizeof(real_t);
     }

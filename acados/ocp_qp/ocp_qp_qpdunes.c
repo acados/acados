@@ -23,7 +23,6 @@
 #include <stdlib.h>
 
 #include <assert.h>
-#include <stdint.h>
 
 // #include "blasfeo/include/blasfeo_target.h"
 // #include "blasfeo/include/blasfeo_common.h"
@@ -58,7 +57,7 @@ static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_qp_qpdunes_workspace);
-    assert((uintptr_t)ptr % 8 == 0);
+    assert((size_t)ptr % 8 == 0);
 
     work->ABt = (real_t *)ptr;
     ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
