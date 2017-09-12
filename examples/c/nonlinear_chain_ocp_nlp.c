@@ -50,15 +50,6 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define TT 3.0
 #define Ns 2
 
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-
 // using Eigen::MatrixXd;
 // using Eigen::VectorXd;
 

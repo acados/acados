@@ -21,22 +21,14 @@
 #define XN_NM8_FILE "@CMAKE_CURRENT_SOURCE_DIR@/chain_model/xN_nm8.txt"
 #define XN_NM9_FILE "@CMAKE_CURRENT_SOURCE_DIR@/chain_model/xN_nm9.txt"
 
-void VDE_fun_nm2(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm3(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm4(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm5(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm6(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm7(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm8(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-void VDE_fun_nm9(const real_t* in, real_t* out,
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
 void jac_fun_nm2(const real_t* in, real_t* out);
 void jac_fun_nm3(const real_t* in, real_t* out);

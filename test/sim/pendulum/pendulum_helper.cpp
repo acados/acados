@@ -17,6 +17,7 @@
  *
  */
 
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -40,7 +41,7 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         sim_in->num_forw_sens = NX+NU;
 
         sim_in->vde = &vde_forw_pendulum;
-        sim_in->VDE_forw = &VDE_forw_pendulum;
+        sim_in->VDE_forw = &vde_fun;
         if ( hessian ) {
             sim_in->VDE_adj = &VDE_hess_pendulum;
         } else {
