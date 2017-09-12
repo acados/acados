@@ -27,8 +27,8 @@
 void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         sim_info* info, sim_RK_opts* rk_opts,
         int_t NX, int_t NU, real_t T, bool hessian) {
-        sim_in->nSteps = 10;
-        sim_in->step = T/sim_in->nSteps;
+        sim_in->num_steps = 10;
+        sim_in->step = T/sim_in->num_steps;
         sim_in->nx = NX;
         sim_in->nu = NU;
 
@@ -37,7 +37,7 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         sim_in->sens_forw = true;
         sim_in->sens_adj = true;
         sim_in->sens_hess = hessian;
-        sim_in->nsens_forw = NX+NU;
+        sim_in->num_forw_sens = NX+NU;
 
         sim_in->vde = &vde_forw_pendulum;
         sim_in->VDE_forw = &VDE_forw_pendulum;

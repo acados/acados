@@ -33,8 +33,7 @@ static void sim_erk_cast_workspace(sim_erk_workspace *work, const sim_in *in,
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    int_t NF = in->nsens_forw;
-    int_t nSteps = in->nSteps;
+    int_t NF = in->num_forw_sens;
     if (!in->sens_forw) {
         NF = 0;
     }
@@ -53,10 +52,10 @@ static void sim_erk_cast_workspace(sim_erk_workspace *work, const sim_in *in,
     } else {
         work->K_traj = (real_t *)ptr;
         ptr +=
-            (nSteps * num_stages * nx * (1 + NF)) * sizeof(real_t);  // K_traj
+            (in->num_steps * num_stages * nx * (1 + NF)) * sizeof(real_t);  // K_traj
         work->out_forw_traj = (real_t *)ptr;
         ptr +=
-            ((nSteps + 1) * nx * (1 + NF)) * sizeof(real_t);  // out_forw_traj
+            ((in->num_steps + 1) * nx * (1 + NF)) * sizeof(real_t);  // out_forw_traj
     }
 
     if (in->sens_hess && in->sens_adj) {
@@ -81,11 +80,11 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    real_t H_INT = in->step;
-    int_t NSTEPS = in->nSteps;
-    int_t NF = in->nsens_forw;
+    int_t NF = in->num_forw_sens;
+
     sim_erk_workspace *work = (sim_erk_workspace *)work_;
     sim_erk_cast_workspace(work, in, args);
+
     if (!in->sens_forw)
         NF = 0;
     int_t nhess = (NF + 1) * NF / 2;
@@ -118,7 +117,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
         rhs_forw_in[nx * (1 + NF) + i] = in->u[i];
 
     // FORWARD SWEEP:
-    for (int_t istep = 0; istep < NSTEPS; istep++) {
+    for (int_t istep = 0; istep < in->num_steps; istep++) {
         if (in->sens_adj) {
             K_traj = &work->K_traj[istep * num_stages * nx * (1 + NF)];
             forw_traj = &work->out_forw_traj[(istep + 1) * nx * (1 + NF)];
@@ -134,7 +133,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
             for (int_t j = 0; j < s; j++) {
                 if (A_mat[j * num_stages + s] != 0) {
                     for (int_t i = 0; i < nx * (1 + NF); i++) {
-                        rhs_forw_in[i] += H_INT * A_mat[j * num_stages + s] *
+                        rhs_forw_in[i] += in->step * A_mat[j * num_stages + s] *
                                           K_traj[j * nx * (1 + NF) + i];
                     }
                 }
@@ -145,7 +144,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
         }
         for (int_t s = 0; s < num_stages; s++) {
             for (int_t i = 0; i < nx * (1 + NF); i++) {
-                forw_traj[i] += H_INT * b_vec[s] *
+                forw_traj[i] += in->step * b_vec[s] *
                                 K_traj[s * nx * (1 + NF) + i];  // ERK step
             }
         }
@@ -171,7 +170,7 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
         for (int_t i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = in->u[i];
 
-        for (int_t istep = NSTEPS - 1; istep > -1; istep--) {
+        for (int_t istep = in->num_steps - 1; istep > -1; istep--) {
             K_traj = &work->K_traj[istep * num_stages * nx * (1 + NF)];
             forw_traj = &work->out_forw_traj[istep * nx * (1 + NF)];
 
@@ -183,19 +182,19 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
                 for (int_t j = 0; j < s; j++) {
                     if (A_mat[j * num_stages + s] != 0) {
                         for (int_t i = 0; i < nForw; i++) {
-                            rhs_adj_in[i] += H_INT * A_mat[j * num_stages + s] *
+                            rhs_adj_in[i] += in->step * A_mat[j * num_stages + s] *
                                              K_traj[j * nx * (1 + NF) + i];
                         }
                     }
                 }
                 // adjoint variables:
                 for (int_t i = 0; i < nx; i++) {
-                    rhs_adj_in[nForw + i] = H_INT * b_vec[s] * adj_tmp[i];
+                    rhs_adj_in[nForw + i] = in->step * b_vec[s] * adj_tmp[i];
                 }
                 for (int_t j = s + 1; j < num_stages; j++) {
                     if (A_mat[s * num_stages + j] != 0) {
                         for (int_t i = 0; i < nx; i++) {
-                            rhs_adj_in[nForw + i] += H_INT * A_mat[s * num_stages + j] *
+                            rhs_adj_in[nForw + i] += in->step * A_mat[s * num_stages + j] *
                                                      adj_traj[j * nAdj + i];
                         }
                     }
@@ -228,8 +227,7 @@ int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args) {
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    int_t NF = in->nsens_forw;
-    int_t nSteps = in->nSteps;
+    int_t NF = in->num_forw_sens;
     if (!in->sens_forw) {
         NF = 0;
     }
@@ -243,9 +241,9 @@ int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args) {
         size += (nx * (1 + NF)) * sizeof(real_t);               // out_forw_traj
     } else {
         size +=
-            (nSteps * num_stages * nx * (1 + NF)) * sizeof(real_t);  // K_traj
+            (in->num_steps * num_stages * nx * (1 + NF)) * sizeof(real_t);  // K_traj
         size +=
-            ((nSteps + 1) * nx * (1 + NF)) * sizeof(real_t);  // out_forw_traj
+            ((in->num_steps + 1) * nx * (1 + NF)) * sizeof(real_t);  // out_forw_traj
     }
 
     if (in->sens_hess && in->sens_adj) {

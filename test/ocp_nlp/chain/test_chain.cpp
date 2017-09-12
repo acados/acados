@@ -140,15 +140,15 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 integrators[jj].mem = 0;
             }
 
-            sim_in[jj].nSteps = Ns;
-            sim_in[jj].step = Ts/sim_in[jj].nSteps;
+            sim_in[jj].num_steps = Ns;
+            sim_in[jj].step = Ts/sim_in[jj].num_steps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
 
             sim_in[jj].sens_forw = true;
             sim_in[jj].sens_adj = false;
             sim_in[jj].sens_hess = false;
-            sim_in[jj].nsens_forw = NX+NU;
+            sim_in[jj].num_forw_sens = NX+NU;
 
             switch (NMF) {
             case 1:

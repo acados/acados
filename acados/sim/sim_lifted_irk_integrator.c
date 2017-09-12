@@ -38,7 +38,7 @@ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    int_t NF = in->nsens_forw;
+    int_t NF = in->num_forw_sens;
     //    int_t num_sys = ceil(num_stages/2.0);
     int_t dim_sys = num_stages * nx;
     if (opts->scheme.type == simplified_in ||
@@ -432,7 +432,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
         }
         for (i = 0; i < nu; i++) rhs_in[nx + i] = in->u[i];
         rhs_in[nx + nu] =
-            ((real_t)istep + c_vec[s1]) / ((real_t)in->nSteps);  // time
+            ((real_t)istep + c_vec[s1]) / ((real_t)in->num_steps);  // time
         for (s2 = 0; s2 < num_stages; s2++) {
             for (i = 0; i < nx; i++) {
                 rhs_in[i] += H_INT * A_mat[s2 * num_stages + s1] *
@@ -503,8 +503,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
     sim_lifted_irk_cast_workspace(work, in, args);
     real_t H_INT = in->step;
-    int_t NSTEPS = in->nSteps;
-    int_t NF = in->nsens_forw;
+    int_t NF = in->num_forw_sens;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
@@ -562,7 +561,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 
     // Newton step of the collocation variables with respect to the inputs:
     if (NF == (nx + nu) && in->sens_adj) {
-        for (istep = NSTEPS - 1; istep > -1; istep--) {  // ADJOINT update
+        for (istep = in->num_steps - 1; istep > -1; istep--) {  // ADJOINT update
             for (s1 = 0; s1 < num_stages; s1++) {
                 for (j = 0; j < nx; j++) {  // step in X
                     for (i = 0; i < nx; i++) {
@@ -709,7 +708,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
         for (i = 0; i < NF; i++) out->grad[i] = 0.0;
     }
 
-    for (istep = 0; istep < NSTEPS; istep++) {
+    for (istep = 0; istep < in->num_steps; istep++) {
 // form linear system matrix (explicit ODE case):
 
         form_linear_system_matrix(istep, in, args, mem, work, sys_mat, sys_mat2, timing_ad);
@@ -780,7 +779,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                     }
                 }
             }
-            rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->nSteps);  // time
+            rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->num_steps);  // time
 
             acados_tic(&timer_ad);
             in->VDE_forw(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
@@ -1036,7 +1035,7 @@ int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
     int_t nu = in->nu;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    int_t NF = in->nsens_forw;
+    int_t NF = in->num_forw_sens;
     //    int_t num_sys = ceil(num_stages/2.0);
     int_t dim_sys = num_stages * nx;
     if (opts->scheme.type == simplified_in ||
@@ -1096,42 +1095,42 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
     int_t i;
     int_t nx = in->nx;
     int_t nu = in->nu;
-    int_t nSteps = in->nSteps;
+    int_t num_steps = in->num_steps;
     sim_RK_opts *opts = (sim_RK_opts *)args;
     int_t num_stages = opts->num_stages;
-    int_t NF = in->nsens_forw;
+    int_t NF = in->num_forw_sens;
     int_t num_sys = (int_t) ceil(num_stages/2.0);
 //    printf("num_stages: %d \n", num_stages);
 //    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
 //    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
 
-    mem->K_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->K_traj));
-    mem->DK_traj = calloc(nSteps*num_stages*nx*NF, sizeof(*mem->DK_traj));
-    mem->mu_traj = calloc(nSteps*num_stages*nx, sizeof(*mem->mu_traj));
+    mem->K_traj = calloc(num_steps*num_stages*nx, sizeof(*mem->K_traj));
+    mem->DK_traj = calloc(num_steps*num_stages*nx*NF, sizeof(*mem->DK_traj));
+    mem->mu_traj = calloc(num_steps*num_stages*nx, sizeof(*mem->mu_traj));
     mem->x = calloc(nx, sizeof(*mem->x));
     mem->u = calloc(nu, sizeof(*mem->u));
     if (opts->scheme.type == simplified_inis) {
         mem->delta_DK_traj =
-            calloc(nSteps * num_stages * nx * NF, sizeof(*mem->delta_DK_traj));
-        for (i = 0; i < nSteps * num_stages * nx * NF; i++)
+            calloc(num_steps * num_stages * nx * NF, sizeof(*mem->delta_DK_traj));
+        for (i = 0; i < num_steps * num_stages * nx * NF; i++)
             mem->delta_DK_traj[i] = 0.0;
     }
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {
         mem->adj_traj =
-            calloc(nSteps * num_stages * nx, sizeof(*mem->adj_traj));
-        for (i = 0; i < nSteps * num_stages * nx; i++) mem->adj_traj[i] = 0.0;
+            calloc(num_steps * num_stages * nx, sizeof(*mem->adj_traj));
+        for (i = 0; i < num_steps * num_stages * nx; i++) mem->adj_traj[i] = 0.0;
 
-        mem->jac_traj = calloc(nSteps * num_stages, sizeof(*mem->jac_traj));
-        for (int_t i = 0; i < nSteps * num_stages; i++) {
+        mem->jac_traj = calloc(num_steps * num_stages, sizeof(*mem->jac_traj));
+        for (int_t i = 0; i < num_steps * num_stages; i++) {
             mem->jac_traj[i] = calloc(nx * nx, sizeof(*mem->jac_traj[i]));
         }
     }
 
-    for (i = 0; i < nSteps * num_stages * nx; i++) mem->K_traj[i] = 0.0;
-    for (i = 0; i < nSteps * num_stages * nx * NF; i++) mem->DK_traj[i] = 0.0;
-    for (i = 0; i < nSteps * num_stages * nx; i++) mem->mu_traj[i] = 0.0;
+    for (i = 0; i < num_steps * num_stages * nx; i++) mem->K_traj[i] = 0.0;
+    for (i = 0; i < num_steps * num_stages * nx * NF; i++) mem->DK_traj[i] = 0.0;
+    for (i = 0; i < num_steps * num_stages * nx; i++) mem->mu_traj[i] = 0.0;
 
     if (opts->scheme.type == simplified_in ||
         opts->scheme.type == simplified_inis) {

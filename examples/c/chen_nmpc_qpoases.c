@@ -104,8 +104,8 @@ int main() {
     real_t T = 0.1;
     sim_in sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 10;
-    sim_in.step = T / sim_in.nSteps;
+    sim_in.num_steps = 10;
+    sim_in.step = T / sim_in.num_steps;
     sim_in.VDE_forw = &VDE_fun;
     sim_in.nx = NX;
     sim_in.nu = NU;
@@ -113,7 +113,7 @@ int main() {
     sim_in.sens_forw = true;
     sim_in.sens_adj = false;
     sim_in.sens_hess = false;
-    sim_in.nsens_forw = NX + NU;
+    sim_in.num_forw_sens = NX + NU;
 
     sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
     sim_in.u = malloc(sizeof(*sim_in.u) * (NU));

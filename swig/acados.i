@@ -180,8 +180,8 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         input->sens_forw = true;
         input->sens_adj = false;
         input->sens_hess = false;
-        input->nsens_forw = nx + nu;
-        input->nSteps = 1;
+        input->num_forw_sens = nx + nu;
+        input->num_steps = 1;
         allocate_sim_in(input);
         set_model(input, model, time_step);
 
@@ -602,8 +602,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 nlp_in->sim[i].in->sens_forw = true;
                 nlp_in->sim[i].in->sens_adj = false;
                 nlp_in->sim[i].in->sens_hess = false;
-                nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
-                nlp_in->sim[i].in->nSteps = integrator_steps;
+                nlp_in->sim[i].in->num_forw_sens = nlp_in->nx[i] + nlp_in->nu[i];
+                nlp_in->sim[i].in->num_steps = integrator_steps;
                 nlp_in->sim[i].args = (void *) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(nlp_in->sim[i].args, 4);
                 int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, \

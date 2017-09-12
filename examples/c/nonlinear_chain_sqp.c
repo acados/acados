@@ -202,15 +202,15 @@ int main() {
             sim_lifted_irk_memory irk_mem[NN];
 
             for (jj = 0; jj < NN; jj++) {
-                sim_in[jj].nSteps = 2;
-                sim_in[jj].step = T / sim_in[jj].nSteps;
+                sim_in[jj].num_steps = 2;
+                sim_in[jj].step = T / sim_in[jj].num_steps;
                 sim_in[jj].nx = NX;
                 sim_in[jj].nu = NU;
 
                 sim_in[jj].sens_forw = true;
                 sim_in[jj].sens_adj = false;
                 sim_in[jj].sens_hess = false;
-                sim_in[jj].nsens_forw = NX + NU;
+                sim_in[jj].num_forw_sens = NX + NU;
 
                 switch (NMF) {
                     case 1:

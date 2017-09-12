@@ -37,7 +37,7 @@ typedef struct {
     bool sens_forw;
     bool sens_adj;
     bool sens_hess;
-    int_t nsens_forw;
+    int_t num_forw_sens;
 
     int (*vde)(const real_t **, real_t **, int *, real_t *, int);
     void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *,
@@ -46,7 +46,7 @@ typedef struct {
     void (*jac_fun)(const real_t *, real_t *);
 
     real_t step;
-    uint nSteps;
+    uint num_steps;
 
     real_t *grad_K;  // gradient correction
 } sim_in;

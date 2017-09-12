@@ -243,7 +243,7 @@ The integrator function \texttt{integrator\_NAME} returns an integer number, tha
 The input struct is defined as:
 \begin{verbatim}
 typedef struct integrator_in_{
-    int nSteps, int nSystems, int nX, int nXA, int nP, int nOD, 
+    int num_steps, int nSystems, int nX, int nXA, int nP, int nOD,
     double *steps, int *nx, int *nxa, double **S0, double *mu,
     double **x, double **xa, double *p, double *od, double **xOut, 
     double **sensOut, double *muOut, double *hessOut, int nOutputs,
@@ -254,8 +254,8 @@ typedef struct integrator_in_{
 
 \begin{description}
 \item[] \textcolor{red}{For fixed step integrators:}
-\item[nSteps] [input] is the number of integration steps (in case of no step size control).
-\item[steps] [input] is the vector of size $nSteps$, containing the step size for each integration step.
+\item[num_steps] [input] is the number of integration steps (in case of no step size control).
+\item[steps] [input] is the vector of size $num_steps$, containing the step size for each integration step.
 \item[] \textcolor{red}{Dimensions of the dynamic system(s):}
 \item[nSystems] [input] is the number of dynamic subsystems in order of dependency (states of subsystem $k$ only depend on subsystems $1,2,\ldots, k-1$ etc).
 \item[flag\_linear] [input] is the vector of size $nSystems$, containing the flag whether the subsystem is linear or not ($0$ or $1$, should be part of options OR see the function\_call struct).
