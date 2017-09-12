@@ -213,13 +213,10 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
     LangObject *evaluate(LangObject *initial_state, LangObject *control) {
         fill_array_from(initial_state, $self->in->x, $self->in->nx);
         fill_array_from(control, $self->in->u, $self->in->nu);
-        printf("x0=%f, x1=%f, u0=%f\n", $self->in->x[0], $self->in->x[1], $self->in->u[0]);
-        printf("nx=%d, nu=%d\n", $self->in->nx, $self->in->nu);
         int_t return_code = $self->fun($self->in, $self->out, $self->args, $self->mem, $self->work);
         if (return_code != 0) {
-            throw std::runtime_error("integrator failed!");
+            throw std::runtime_error("Integrator failed!");
         }
-        printf("final_state = [%f, %f]\n", $self->out->xn[0], $self->out->xn[1]);
         return sim_output($self->in, $self->out);
     }
 }

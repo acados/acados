@@ -54,7 +54,8 @@ class sequence_of_arrays(list):
 %{
 // Global variable for Python module
 PyTypeObject tuple_type;
-PyObject *pModule = NULL;
+PyObject *sequence_of_arrays_module = NULL;
+PyObject *copy_module = NULL;
 %}
 #endif
 
@@ -378,12 +379,12 @@ LangObject *new_sequence_of_arrays(const int_t length) {
     mxArray *sequence = new_sequence(length);
 #elif defined(SWIGPYTHON)
     // Try loading Python module into global variable
-    if (pModule == NULL)
-        pModule = PyImport_Import(PyString_FromString("acados"));
+    if (sequence_of_arrays_module == NULL)
+        sequence_of_arrays_module = PyImport_Import(PyString_FromString("acados"));
     // Check if loading was succesful
-    if (pModule == NULL)
+    if (sequence_of_arrays_module == NULL)
         SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module");
-    PyObject *pDict = PyModule_GetDict(pModule);
+    PyObject *pDict = PyModule_GetDict(sequence_of_arrays_module);
     PyObject *pClass = PyDict_GetItemString(pDict, "sequence_of_arrays");
     PyObject *sequence = NULL;
     if (PyCallable_Check(pClass)) {
@@ -554,6 +555,24 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
         mxSetField(named_tuple, 0, field_names[index], content[index]);
     return named_tuple;
 #elif defined(SWIGPYTHON)
+    PyObject *content_copy[num_fields];
+    // Try loading Python module into global variable
+    if (copy_module == NULL)
+        copy_module = PyImport_Import(PyString_FromString("copy"));
+    // Check if loading was succesful
+    if (copy_module == NULL)
+        SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module 'copy'");
+    PyObject *pDict = PyModule_GetDict(copy_module);
+    PyObject *pFunction = PyDict_GetItemString(pDict, "deepcopy");
+    if (!PyCallable_Check(pFunction)) {
+        SWIG_Error(SWIG_RuntimeError, "Function is not callable");
+    }
+    for (int_t index = 0; index < num_fields; index++) {
+        PyObject *args = PyTuple_New(1);
+        PyTuple_SetItem(args, 0, content[index]);
+        content_copy[index] = PyObject_CallObject(pFunction, args);
+    }
+
     // The list of field names in named tuples must be NULL-terminated in Python
     PyStructSequence_Field fields[num_fields+1];
     for (int_t index = 0; index < num_fields; index++) {
@@ -568,10 +587,11 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
     tuple_descriptor.fields = fields;
     tuple_descriptor.n_in_sequence = num_fields;
     PyStructSequence_InitType2(&tuple_type, &tuple_descriptor);
-    tuple_type.tp_flags = tuple_type.tp_flags | Py_TPFLAGS_HEAPTYPE;
+    // DANGER: Following line creates segfault (but apparently needed per https://bugs.python.org/issue20066)
+    // tuple_type.tp_flags = tuple_type.tp_flags | Py_TPFLAGS_HEAPTYPE;
     PyObject *named_tuple = PyStructSequence_New(&tuple_type);
     for (int_t index = 0; index < num_fields; index++)
-        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content[index]);
+        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content_copy[index]);
     return named_tuple;
 #endif
 }
