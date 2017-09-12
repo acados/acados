@@ -75,6 +75,9 @@ void padeapprox(int m, int row, double *A);
 
 void expm(int row, double *A);
 
+void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
+    int *nvd, int *ned, int *nbd, int *ngd);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
