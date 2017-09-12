@@ -30,6 +30,8 @@
 #endif
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "test/test_utils/read_matrix.h"
@@ -44,12 +46,16 @@ using Eigen::Map;
 
 int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
-int_t TEST_QPOASES = 1;
+int_t TEST_QPOASES = 0;
 real_t TOL_QPOASES = 1e-10;
 int_t TEST_QPDUNES = 1;
 real_t TOL_QPDUNES = 1e-10;
 int_t TEST_HPMPC = 1;
 real_t TOL_HPMPC = 1e-5;
+int_t TEST_CON_HPIPM = 0;
+real_t TOL_CON_HPIPM = 1e-5;
+int_t TEST_HPIPM = 1;
+real_t TOL_HPIPM = 1e-5;
 
 static vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
 // TODO(dimitris): add back "ONLY_AFFINE" after fixing problem
@@ -138,11 +144,12 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_QPOASES));
                             // TODO(dimitris): check multipliers in other solvers too
-                            if (constraint == "CONSTRAINED")
-                                // for (int j = 0; j < N*nx; j++) {
-                                //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
-                                // }
-                                // REQUIRE(acados_PI.isApprox(true_PI, TOL_QPOASES));
+                            if (constraint == "CONSTRAINED") {
+                                for (int j = 0; j < N*nx; j++) {
+                                    printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
+                                }
+                                REQUIRE(acados_PI.isApprox(true_PI, TOL_QPOASES));
+                            }
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
@@ -231,6 +238,84 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             free(workspace);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_HPMPC));
+                            std::cout <<"---> PASSED " << std::endl;
+                        }
+                    }
+                    if (TEST_CON_HPIPM) {
+                        SECTION("CONDENSING_HPIPM") {
+                            std::cout <<"---> TESTING condensing + HPIPM with QP: "<< scenario <<
+                            ", " << constraint << std::endl;
+
+                            ocp_qp_condensing_hpipm_args args;
+                            args.mu_max = 1e-8;
+                            args.iter_max = 20;
+                            args.alpha_min = 1e-8;
+                            args.mu0 = 1.0;
+
+                            int workspace_size =
+                                ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &args);
+                            void *work = malloc(workspace_size);
+
+                            int memory_size =
+                                ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &args);
+                            void *mem = malloc(memory_size);
+
+                            ocp_qp_condensing_hpipm_memory memory;
+                            ocp_qp_condensing_hpipm_create_memory(&qp_in, &args, &memory, mem);
+
+                            return_value = \
+                                ocp_qp_condensing_hpipm(&qp_in, &qp_out, &args, &memory, work);
+                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
+                            free(work);
+                            free(mem);
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, TOL_CON_HPIPM));
+                            if (constraint == "CONSTRAINED") {
+                                // for (int j = 0; j < N*nx; j++) {
+                                //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
+                                // }
+                                REQUIRE(acados_PI.isApprox(true_PI, TOL_CON_HPIPM));
+                            }
+                            std::cout <<"---> PASSED " << std::endl;
+                        }
+                    }
+                    if (TEST_HPIPM) {
+                        SECTION("HPIPM") {
+                            std::cout <<"---> TESTING HPIPM with QP: "<< scenario <<
+                            ", " << constraint << std::endl;
+
+                            ocp_qp_hpipm_args args;
+                            args.mu_max = 1e-8;
+                            args.iter_max = 20;
+                            args.alpha_min = 1e-8;
+                            args.mu0 = 1.0;
+
+                            int workspace_size =
+                                ocp_qp_hpipm_calculate_workspace_size(&qp_in, &args);
+                            void *work = malloc(workspace_size);
+
+                            int memory_size =
+                                ocp_qp_hpipm_calculate_memory_size(&qp_in, &args);
+                            void *mem = malloc(memory_size);
+
+                            ocp_qp_hpipm_memory memory;
+                            ocp_qp_hpipm_create_memory(&qp_in, &args, &memory, mem);
+
+                            return_value = \
+                                ocp_qp_hpipm(&qp_in, &qp_out, &args, &memory, work);
+                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
+                            free(work);
+                            free(mem);
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, TOL_HPIPM));
+                            if (constraint == "CONSTRAINED") {
+                                // for (int j = 0; j < N*nx; j++) {
+                                //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
+                                // }
+                                REQUIRE(acados_PI.isApprox(true_PI, TOL_HPIPM));
+                            }
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
