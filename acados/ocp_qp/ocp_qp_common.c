@@ -64,7 +64,7 @@ int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *
 }
 
 
-void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in,
+char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in,
     void *ptr) {
 
     // pointer to initialize QP data to zero
@@ -208,7 +208,7 @@ void *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
     for (char *idx = c_ptr_QPdata; idx < c_ptr; idx++)
         *idx = 0;
 
-    return (void *)c_ptr;
+    return c_ptr;
 }
 
 
@@ -225,8 +225,8 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
     // char *c_ptr = (char *) ptr;
     // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
 
-    void *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
-    (void) ptr_end; assert(ptr + bytes >= ptr_end);
+    char *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
+    assert(ptr + bytes >= ptr_end); (void) ptr_end;
 
     // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
     // exit(1);
@@ -256,7 +256,7 @@ int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
 }
 
 
-void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out,
+char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out,
     void *ptr) {
 
     // char pointer
@@ -283,6 +283,8 @@ void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
     l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
     c_ptr = (char *) l_ptr;
 
+    // NOTE(dimitris): splitted the loops below to be able to print primal/dual solution at once
+
     // assign pointers to QP solution
     for (int_t k = 0; k < N+1; k++) {
         assert((uintptr_t)c_ptr % 8 == 0);
@@ -294,14 +296,14 @@ void *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
         c_ptr += nu[k]*sizeof(real_t);
     }
 
-    // NOTE(dimitris): splitted the loops to be able to print primal/dual solution at once
+    for (int_t k = 0; k < N; k++) {
+        assert((uintptr_t)c_ptr % 8 == 0);
+        (*qp_out)->pi[k] = (real_t *) c_ptr;
+        c_ptr += nx[k+1]*sizeof(real_t);
+    }
+
     for (int_t k = 0; k < N+1; k++) {
         assert((uintptr_t)c_ptr % 8 == 0);
-
-        if (k < N) {
-            (*qp_out)->pi[k] = (real_t *) c_ptr;
-            c_ptr += nx[k+1]*sizeof(real_t);
-        }
         (*qp_out)->lam[k] = (real_t *) c_ptr;
         c_ptr += 2*(nb[k] + nc[k])*sizeof(real_t);
     }
@@ -315,8 +317,8 @@ ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *n
 
     int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
     void *ptr = malloc(bytes);
-    void *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
-    (void) ptr_end; assert(ptr + bytes >= ptr_end);
+    char *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
+    assert(ptr + bytes >= ptr_end); (void) ptr_end;
 
     return qp_out;
 }

@@ -44,6 +44,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
+// TODO(dimitris): enable tests of condensing solvers after updating hpipm submodule
+
 int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
 int_t TEST_QPOASES = 0;
@@ -253,20 +255,20 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             args.mu0 = 1.0;
 
                             int workspace_size =
-                                ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &args);
+                                ocp_qp_condensing_hpipm_calculate_workspace_size(qp_in, &args);
                             void *work = malloc(workspace_size);
 
                             int memory_size =
-                                ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &args);
+                                ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, &args);
                             void *mem = malloc(memory_size);
 
                             ocp_qp_condensing_hpipm_memory memory;
-                            ocp_qp_condensing_hpipm_create_memory(&qp_in, &args, &memory, mem);
+                            ocp_qp_condensing_hpipm_create_memory(qp_in, &args, &memory, mem);
 
                             return_value = \
-                                ocp_qp_condensing_hpipm(&qp_in, &qp_out, &args, &memory, work);
-                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
+                                ocp_qp_condensing_hpipm(qp_in, qp_out, &args, &memory, work);
+                            acados_W = Eigen::Map<VectorXd>(qp_out->x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(qp_out->pi[0], N*nx);
                             free(work);
                             free(mem);
                             REQUIRE(return_value == 0);
@@ -292,20 +294,20 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             args.mu0 = 1.0;
 
                             int workspace_size =
-                                ocp_qp_hpipm_calculate_workspace_size(&qp_in, &args);
+                                ocp_qp_hpipm_calculate_workspace_size(qp_in, &args);
                             void *work = malloc(workspace_size);
 
                             int memory_size =
-                                ocp_qp_hpipm_calculate_memory_size(&qp_in, &args);
+                                ocp_qp_hpipm_calculate_memory_size(qp_in, &args);
                             void *mem = malloc(memory_size);
 
                             ocp_qp_hpipm_memory memory;
-                            ocp_qp_hpipm_create_memory(&qp_in, &args, &memory, mem);
+                            ocp_qp_hpipm_create_memory(qp_in, &args, &memory, mem);
 
                             return_value = \
-                                ocp_qp_hpipm(&qp_in, &qp_out, &args, &memory, work);
-                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
+                                ocp_qp_hpipm(qp_in, qp_out, &args, &memory, work);
+                            acados_W = Eigen::Map<VectorXd>(qp_out->x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(qp_out->pi[0], N*nx);
                             free(work);
                             free(mem);
                             REQUIRE(return_value == 0);
