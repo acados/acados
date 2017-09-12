@@ -30,6 +30,6 @@ if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
 
     set_tests_properties(ocp_nlp_py ocp_qp_py sim_py
         PROPERTIES
-            ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/swig:$ENV{PYTHONPATH}")
+            ENVIRONMENT "PYTHONPATH=${CMAKE_BINARY_DIR}/swig/python/:$ENV{PYTHONPATH}")
 
 endif()
