@@ -1,5 +1,5 @@
 find_package(Matlab REQUIRED)
-find_package(CasadiMatlab)
+find_package(CasadiMatlab REQUIRED)
 
 if(CASADIMATLAB_FOUND)
     add_library(casadi_matlab SHARED IMPORTED)

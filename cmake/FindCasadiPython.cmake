@@ -23,8 +23,8 @@ find_package(PythonInterp 3 REQUIRED)
 find_path(
     CASADI_PYTHON_ROOT
     NAMES "casadi/casadi.py"
-    PATHS ENV PYTHONPATH
-)
+    PATHS ENV PYTHONPATH)
+
 if(NOT CASADI_PYTHON_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
@@ -42,11 +42,18 @@ if(NOT FOUND_CASADI_PYTHON_3)
 endif()
 
 # Find Casadi libraries
-set(CASADI_PYTHON_LIBRARY "${CASADI_PYTHON_ROOT}/casadi")
-find_path(
-    CASADI_PYTHON_INCLUDE_DIR
+find_library(CASADI_PYTHON_LIBRARY
+    NAMES casadi
+    PATHS
+        "${CASADI_PYTHON_ROOT}/casadi/"
+        "${CASADI_PYTHON_ROOT}/lib/"
+        "${CASADI_PYTHON_ROOT}/../*")
+
+find_path(CASADI_PYTHON_INCLUDE_DIR
     NAMES casadi/casadi.hpp
-    PATHS ${CASADI_PYTHON_ROOT}/include)
+    PATHS
+        "${CASADI_PYTHON_ROOT}/include"
+        "${CASADI_PYTHON_ROOT}/../include")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CASADIPYTHON DEFAULT_MSG CASADI_PYTHON_LIBRARY CASADI_PYTHON_INCLUDE_DIR)

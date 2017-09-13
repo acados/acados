@@ -23,8 +23,8 @@ find_package(Matlab REQUIRED)
 find_path(
     CASADI_MATLAB_ROOT
     NAMES "+casadi"
-    PATHS ENV MATLABPATH
-)
+    PATHS ENV MATLABPATH)
+
 if(NOT CASADI_MATLAB_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
@@ -46,12 +46,18 @@ if(NOT FOUND_CASADI_MATLAB_3)
 endif()
 
 # Find Casadi libraries
-set(CASADI_MATLAB_LIBRARY "${CASADI_MATLAB_ROOT}")
-find_path(
-    CASADI_MATLAB_INCLUDE_DIR
+find_library(CASADI_MATLAB_LIBRARY
+    NAMES casadi
+    PATHS
+        "${CASADI_MATLAB_ROOT}"
+        "${CASADI_MATLAB_ROOT}/lib/"
+        "${CASADI_MATLAB_ROOT}/../*")
+
+find_path(CASADI_MATLAB_INCLUDE_DIR
     NAMES casadi/casadi.hpp
-    PATHS ${CASADI_MATLAB_ROOT}/include
-)
+    PATHS
+        "${CASADI_MATLAB_ROOT}/include"
+        "${CASADI_MATLAB_ROOT}/../include")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CASADIMATLAB DEFAULT_MSG CASADI_MATLAB_LIBRARY CASADI_MATLAB_INCLUDE_DIR)

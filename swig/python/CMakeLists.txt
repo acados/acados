@@ -1,7 +1,7 @@
 find_package(PythonInterp 3 REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 find_package(NumPy REQUIRED)
-find_package(CasadiPython)
+find_package(CasadiPython REQUIRED)
 
 # do not install casadi twice
 if(CASADIPYTHON_FOUND)
