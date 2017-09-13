@@ -9,11 +9,11 @@ sudo apt-get install python3-scipy python3-numpy python3-matplotlib
 
 # Get CasADi for octave, python and matlab
 pushd external
-wget -q -nc http://files.casadi.org/3.2.2/linux/casadi-octave-v3.2.2.tar.gz
+wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.2.2/linux/casadi-octave-v3.2.2.tar.gz
 mkdir -p casadi-octave-v3.2.2
 tar -xf casadi-octave-v3.2.2.tar.gz -C casadi-octave-v3.2.2
 
-wget -q -nc http://files.casadi.org/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
+wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.1.1/linux/casadi-py35-np1.9.1-v3.1.1.tar.gz
 mkdir -p casadi-py35-np1.9.1-v3.1.1
 tar -xf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
 export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
