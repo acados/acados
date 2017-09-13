@@ -364,8 +364,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         // print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX, N+1);
         // print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU, N);
 
-        // print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
-        // print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
+        print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
+        print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
         std::cout << resX << std::endl;
         std::cout << resU << std::endl;
