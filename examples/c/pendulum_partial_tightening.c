@@ -17,12 +17,17 @@
  *
  */
 
-#define PLOT_RESULTS
+#define PLOT_CL_RESULTS
+// #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
 
-#ifdef PLOT_RESULTS
+#ifdef PLOT_OL_RESULTS
 #define _GNU_SOURCE
-#endif  // PLOT_RESULTS
+#endif  // PLOT_OL_RESULTS
+
+#ifdef PLOT_CL_RESULTS
+#define _GNU_SOURCE
+#endif  // PLOT_CL_RESULTS
 
 #include <math.h>
 #include <stdio.h>
@@ -47,19 +52,19 @@
 #include "examples/c/pendulum_model/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
-#define NREP 10
+#define NREP 1
 #define MAX_IP_ITER 30
 #define TOL 1e-6
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 1
+#define MM 100
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define NSIM 1
-#define UMAX 10
+#define NSIM 200
+#define UMAX 60
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -73,11 +78,84 @@ static void print_states_controls(real_t *w, int_t N) {
 }
 #endif  // DEBUG
 
-#ifdef PLOT_RESULTS
+#ifdef PLOT_OL_RESULTS
 // static void plot_states_controls(real_t *w, int_t nx, int_t nu, int_t N, real_t T ) {
 static void plot_states_controls(real_t *w, real_t T) {
+    double t_grid[NN];
+    for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
+
+    FILE *gnuplotPipe, *tempDataFile;
+    char *x1_temp_file;
+    char *x2_temp_file;
+    char *u1_temp_file;
+    double x, y;
+    int i;
+    x1_temp_file = "x1";
+    gnuplotPipe = popen("gnuplot -persist", "w");
+    if (gnuplotPipe) {
+        fprintf(gnuplotPipe, "set multiplot layout 3,1\n");
+
+        // Plot x1
+        tempDataFile = fopen(x1_temp_file, "w");
+        fprintf(gnuplotPipe, "set grid ytics\n");
+        fprintf(gnuplotPipe, "set grid xtics\n");
+        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
+        fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
+        fflush(gnuplotPipe);
+        for (i=0; i < NN; i++) {
+            x = t_grid[i];
+            y = w[i*(NX+NU)];
+            fprintf(tempDataFile, "%lf %lf\n", x, y);
+        }
+        fclose(tempDataFile);
+
+        // Plot x2
+        x2_temp_file = "x2";
+        tempDataFile = fopen(x2_temp_file, "w");
+        fprintf(gnuplotPipe, "set grid ytics\n");
+        fprintf(gnuplotPipe, "set grid xtics\n");
+        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
+        fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
+        fflush(gnuplotPipe);
+        for (i=0; i < NN; i++) {
+            x = t_grid[i];
+            y = w[i*(NX+NU)+1];
+            fprintf(tempDataFile, "%lf %lf\n", x, y);
+        }
+        fclose(tempDataFile);
+
+        // Plot u1
+        u1_temp_file = "u1";
+        tempDataFile = fopen(u1_temp_file, "w");
+        fprintf(gnuplotPipe, "set grid ytics\n");
+        fprintf(gnuplotPipe, "set grid xtics\n");
+        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
+        fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
+        fflush(gnuplotPipe);
+        for (i=0; i < NN; i++) {
+            x = t_grid[i];
+            y = w[i*(NX+NU)+4];
+            fprintf(tempDataFile, "%lf %lf\n", x, y);
+        }
+        fclose(tempDataFile);
+
+        printf("Press enter to continue...");
+        getchar();
+        remove(x1_temp_file);
+        remove(x2_temp_file);
+        remove(u1_temp_file);
+
+        fprintf(gnuplotPipe, "exit gnuplot\n");
+        } else {
+            printf("gnuplot not found...");
+    }
+}
+#endif  // PLOT_OL_RESULTS
+
+#ifdef PLOT_CL_RESULTS
+static void plot_states_controls_cl(real_t *w, real_t T) {
       double t_grid[NN];
-      for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
+      for (int_t i = 0; i < NSIM; i++) t_grid[i] = i*T;
 
       FILE *gnuplotPipe, *tempDataFile;
       char *x1_temp_file;
@@ -97,7 +175,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
           fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
           fflush(gnuplotPipe);
-          for (i=0; i < NN; i++) {
+          for (i=0; i < NSIM; i++) {
               x = t_grid[i];
               y = w[i*(NX+NU)];
               fprintf(tempDataFile, "%lf %lf\n", x, y);
@@ -112,7 +190,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
           fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
           fflush(gnuplotPipe);
-          for (i=0; i < NN; i++) {
+          for (i=0; i < NSIM; i++) {
               x = t_grid[i];
               y = w[i*(NX+NU)+1];
               fprintf(tempDataFile, "%lf %lf\n", x, y);
@@ -127,7 +205,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
           fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
           fflush(gnuplotPipe);
-          for (i=0; i < NN; i++) {
+          for (i=0; i < NSIM; i++) {
               x = t_grid[i];
               y = w[i*(NX+NU)+4];
               fprintf(tempDataFile, "%lf %lf\n", x, y);
@@ -145,78 +223,7 @@ static void plot_states_controls(real_t *w, real_t T) {
           printf("gnuplot not found...");
       }
 }
-
-// static void plot_states_controls_cl(real_t *w, real_t T) {
-//       double t_grid[NN];
-//       for (int_t i = 0; i < NSIM; i++) t_grid[i] = i*T;
-//
-//       FILE *gnuplotPipe, *tempDataFile;
-//       char *x1_temp_file;
-//       char *x2_temp_file;
-//       char *u1_temp_file;
-//       double x, y;
-//       int i;
-//       x1_temp_file = "x1";
-//       gnuplotPipe = popen("gnuplot -persist", "w");
-//       if (gnuplotPipe) {
-//           fprintf(gnuplotPipe, "set multiplot layout 3,1\n");
-//
-//           // Plot x1
-//           tempDataFile = fopen(x1_temp_file, "w");
-//           fprintf(gnuplotPipe, "set grid ytics\n");
-//           fprintf(gnuplotPipe, "set grid xtics\n");
-//           fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-//           fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
-//           fflush(gnuplotPipe);
-//           for (i=0; i < NSIM; i++) {
-//               x = t_grid[i];
-//               y = w[i*(NX+NU)];
-//               fprintf(tempDataFile, "%lf %lf\n", x, y);
-//           }
-//           fclose(tempDataFile);
-//
-//           // Plot x2
-//           x2_temp_file = "x2";
-//           tempDataFile = fopen(x2_temp_file, "w");
-//           fprintf(gnuplotPipe, "set grid ytics\n");
-//           fprintf(gnuplotPipe, "set grid xtics\n");
-//           fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-//           fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
-//           fflush(gnuplotPipe);
-//           for (i=0; i < NSIM; i++) {
-//               x = t_grid[i];
-//               y = w[i*(NX+NU)+1];
-//               fprintf(tempDataFile, "%lf %lf\n", x, y);
-//           }
-//           fclose(tempDataFile);
-//
-//           // Plot u1
-//           u1_temp_file = "u1";
-//           tempDataFile = fopen(u1_temp_file, "w");
-//           fprintf(gnuplotPipe, "set grid ytics\n");
-//           fprintf(gnuplotPipe, "set grid xtics\n");
-//           fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-//           fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
-//           fflush(gnuplotPipe);
-//           for (i=0; i < NSIM; i++) {
-//               x = t_grid[i];
-//               y = w[i*(NX+NU)+4];
-//               fprintf(tempDataFile, "%lf %lf\n", x, y);
-//           }
-//           fclose(tempDataFile);
-//
-//           printf("Press enter to continue...");
-//           getchar();
-//           remove(x1_temp_file);
-//           remove(x2_temp_file);
-//           remove(u1_temp_file);
-//
-//           fprintf(gnuplotPipe, "exit gnuplot\n");
-//       } else {
-//           printf("gnuplot not found...");
-//       }
-// }
-#endif  // PLOT_RESULTS
+#endif  // PLOT_CL_RESULTS
 
 
 // static void shift_states(real_t *w, real_t *x_end, int_t N) {
@@ -236,7 +243,7 @@ static void plot_states_controls(real_t *w, real_t T) {
 // TODO(Andrea): need to fix this stuff below...
 
 extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
-  int *nu, int *nb, int *ng);
+    int *nu, int *nb, int *ng);
 
 extern int d_back_ric_rec_work_space_size_bytes_libstr(int N, int *nx, int *nu,
     int *nb, int *ng);  // TODO(Andrea): ask Gian how to fix this
@@ -255,9 +262,9 @@ int main() {
     // Problem data
     int_t   N                         = NN;
     int_t   M                         = MM;
-    real_t  x0[NX]                    = {0.0, 3.14, 0.0, 0.0};
+    real_t  x0[NX]                    = {0.0, 3, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
-    // real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
+    real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
     // real_t  pi_n[NN*(NX)]             = {0};
     real_t  t_n[2*((NBX+NBU)*NN + NBX)]   = {0};
     real_t  lam_n[2*((NBX+NBU)*NN + NBX)] = {0};
@@ -265,9 +272,9 @@ int main() {
     real_t  R[NU*NU]                  = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
-    real_t  lam_init                  = {0.0001};
-    real_t  t_init                    = {0.001};
-    real_t sigma_mu                   = {0.001};
+    real_t  lam_init                  = {0.1};
+    real_t  t_init                    = {0.1};
+    real_t sigma_mu                   = {0.000001};
     // real_t  pi_init                   = {0.1};
     // int_t   qp_iters               = 1;
     // int_t   max_iters               = 100;
@@ -288,7 +295,7 @@ int main() {
     Q[2*(NX+1)] = 0.01;
     Q[3*(NX+1)] = 2e-3;
 
-    R[0*(NU+1)] = 1e-4;
+    R[0*(NU+1)] = 1e-3;
 
     // double sigma_mu = 0.01;
 
@@ -599,11 +606,11 @@ int main() {
 
     // initialize nlp primal variables
     for (int_t i = 0; i < N; i++) {
-      for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = 0.0;
-      for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j]  = lam_init;
-      for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX + NBU)+j]  = t_init;
-      // for (int_t j = 0; j < NX; j++) pi_n[i*NX +j]  = pi_init;
-      for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
+        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = 0.0;
+        for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j]  = lam_init;
+        for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX + NBU)+j]  = t_init;
+        // for (int_t j = 0; j < NX; j++) pi_n[i*NX +j]  = pi_init;
+        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
     }
 
     for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = 0.0;
@@ -613,8 +620,8 @@ int main() {
     // initialize qp primal variables
     for (int_t j = 0; j < NU; j++) ux_in[0][j] = w[NX+j];
     for (int_t i = 1; i < N; i++) {
-      for (int_t j = 0; j < NX; j++)  ux_in[i][j] = w[i*(NX+NU)+j];
-      for (int_t j = 0; j < NU; j++)  ux_in[i][j] = w[i*(NX+NU)+NX+j];
+        for (int_t j = 0; j < NX; j++)  ux_in[i][j] = w[i*(NX+NU)+j];
+        for (int_t j = 0; j < NU; j++)  ux_in[i][j] = w[i*(NX+NU)+NX+j];
     }
 
     for (int_t j = 0; j < NX; j++) ux_in[N][j] = w[N*(NX+NU)+j];
@@ -622,128 +629,119 @@ int main() {
     for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
 
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
-      for (int_t iter = 0; iter < NREP; iter++) {
-        acados_tic(&timer);
-        // initialize nlp dual variables
-        for (int_t i = M; i < N; i++) {
-          for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
-            lam_in[i][j] = lam_n[2*(NBX + NBU)*i + j];
-            t_in[i][j] = t_n[2*(NBX + NBU)*i + j];
-          }
-        }
-
-        for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
-          lam_in[N][j] = lam_n[2*NBX*N + j];
-          t_in[N][j] = t_n[2*NBX*N + j];
-        }
-
-        for (int_t i = 0; i < N; i++) {
-            // Pass state and control to integrator
-            for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
-            for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-            sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
-            // Construct QP matrices
-            for (int_t j = 0; j < nx[i]; j++) {
-                pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
+        for (int_t iter = 0; iter < NREP; iter++) {
+            acados_tic(&timer);
+            // initialize nlp dual variables
+            for (int_t i = M; i < N; i++) {
+                for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
+                    lam_in[i][j] = lam_n[2*(NBX + NBU)*i + j];
+                    t_in[i][j] = t_n[2*(NBX + NBU)*i + j];
+                }
             }
-            for (int_t j = 0; j < NU; j++) {
-                pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
+
+            for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
+                lam_in[N][j] = lam_n[2*NBX*N + j];
+                t_in[N][j] = t_n[2*NBX*N + j];
             }
+
+            for (int_t i = 0; i < N; i++) {
+                // Pass state and control to integrator
+                for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
+                for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
+                sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
+                // Construct QP matrices
+                for (int_t j = 0; j < nx[i]; j++) {
+                    pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
+                }
+                for (int_t j = 0; j < NU; j++) {
+                    pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
+                }
+                for (int_t j = 0; j < NX; j++) {
+                    pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
+                    for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+                }
+                for (int_t j = 0; j < NU; j++)
+                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
+
+
+                for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
+                for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
+                for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
+                for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
+            }
+
+            for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
+            for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
+
+            // for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
+            // for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
+
+            // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
+
             for (int_t j = 0; j < NX; j++) {
-                pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
             }
-            for (int_t j = 0; j < NU; j++)
-                for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
 
+            // void *mem = 0;
 
-            for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
-            for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
-            for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
-            for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
+            status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
+
+            // int status = 0;
+            // printf("hpmpc_status=%i\n", status);
+
+            // }
+            // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
+            // shift_states(w, x_end, N);
+            // shift_controls(w, u_end, N);
+            timings = acados_toc(&timer);
+            sum_timings+=timings;
+            if (timings < min_timings) min_timings = timings;
         }
 
-        for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
-        for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
+        // done with timings, store closed loop solution and
+        // update primal and dual variables
+        if (status == 1) printf("status = ACADOS_MAXITER\n");
 
-        // for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
-        // for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
+        if (status == 2) printf("status = ACADOS_MINSTEP\n");
 
-        // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
+        // there is no x0 in the first stage
+        for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += qp_out.u[0][j];
+        // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+        for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[0*2*(NBX+NBU)+j] = qp_out.lam[0][j];
+        for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[0*2*(NBX+NBU)+j] = qp_out.t[0][j];
 
-        for (int_t j = 0; j < NX; j++) {
-            pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
+        for (int_t i = 1; i < N; i++) {
+            for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
+            for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
+            // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+            for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j];
+            for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
         }
 
-        // void *mem = 0;
+        for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
+        // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+        for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
+        for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
 
-        status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
 
-        // int status = 0;
-        // printf("hpmpc_status=%i\n", status);
+        for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
+        for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
 
-        // }
-        // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-        // shift_states(w, x_end, N);
-        // shift_controls(w, u_end, N);
-        timings = acados_toc(&timer);
-        sum_timings+=timings;
-        if (timings < min_timings) min_timings = timings;
-      }
-      // done with timings, store closed loop solution and
-      // update primal and dual variables
-
-      if (status == 1) printf("status = ACADOS_MAXITER\n");
-
-      if (status == 2) printf("status = ACADOS_MINSTEP\n");
-
-      // there is no x0 in the first stage
-      for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += qp_out.u[0][j];
-      // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-      for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[0*2*(NBX+NBU)+j] = qp_out.lam[0][j];
-      for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[0*2*(NBX+NBU)+j] = qp_out.t[0][j];
-
-      for (int_t i = 1; i < M; i++) {
-          for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
-          for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
-          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-          for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j];
-          for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
-      }
-
-      // line-search
-      for (int_t i = M; i < N; i++) {
-          for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
-          for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
-          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-          for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j];
-          for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
-      }
-
-      if (M < N){
-          for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
-          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-          for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
-          for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
-      } else{
-          for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
-          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-          for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
-          for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
-      }
-      // for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
-      // for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
-
-      // update initial condition
-      for (int_t j = 0; j < NX; j++) w[j] = w[(NX+NU) + j];
+        // update initial condition
+        for (int_t j = 0; j < NX; j++) w[j] = w[(NX+NU) + j];
     }
+
     #ifdef DEBUG
-     print_states_controls(&w[0], N);
+        print_states_controls(&w[0], N);
     #endif  // DEBUG
 
-    #ifdef PLOT_RESULTS
-    plot_states_controls(w, T);
-    #endif  // PLOT_RESULTS
+    #ifdef PLOT_OL_RESULTS
+        plot_states_controls(w, T);
+    #endif  // PLOT_OL_RESULTS
+
+    #ifdef PLOT_CL_RESULTS
+        plot_states_controls_cl(w_cl, T);
+    #endif  // PLOT_CL_RESULTS
 
     int ip_iter = hpmpc_args.out_iter;
     printf("Solved in %d iterations.\n", ip_iter);

@@ -539,7 +539,7 @@ int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
 
         // add memory for riccati work space
         ws_size+=sizeof(double)*max_ip_iter*5;
-        ws_size*=1.5; //  TODO(Andrea): ask giaf
+        ws_size*=1.5;  // TODO(Andrea): ask giaf
 
     } else {  // XXX giaf fortran interface
         int ii;
