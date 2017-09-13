@@ -21,6 +21,7 @@ find_library(FORTRAN_LIBRARY NAMES libgfortran.so libgfortran.dylib gfortran
     HINTS
         /usr/lib/gcc/x86_64-linux-gnu/*
         /usr/local/lib/gcc/*
+        /usr/lib/gcc/arm-linux-gnueabihf/* # for Raspbian
         ${CMAKE_FIND_ROOT_PATH}
         $ENV{PATH}
     CMAKE_FIND_ROOT_PATH_BOTH)
