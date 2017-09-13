@@ -24,7 +24,7 @@ file(GLOB CHAIN_MODEL_SRC chain_model/chain_model.c
     chain_model/vde*.c
     chain_model/jac*.c)
 
-set(CHEN_MODEL_SRC Chen_model/chen_model.c)
+set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)

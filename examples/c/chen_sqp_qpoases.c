@@ -27,7 +27,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
-#include "examples/Chen/Chen_model.h"
+#include "examples/chen/chen_model.h"
 
 #define NN 13
 #define NX 2

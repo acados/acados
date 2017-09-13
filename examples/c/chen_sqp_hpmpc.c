@@ -32,7 +32,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
-#include "examples/Chen/Chen_model.h"
+#include "examples/chen/chen_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000

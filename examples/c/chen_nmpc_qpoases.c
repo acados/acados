@@ -26,7 +26,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "examples/c/Chen_model/chen_model.h"
+#include "examples/c/chen_model/chen_model.h"
 
 #define NN 13
 #define NX 2

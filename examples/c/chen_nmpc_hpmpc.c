@@ -37,7 +37,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/math.h"
-#include "examples/c/Chen_model/chen_model.h"
+#include "examples/c/chen_model/chen_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 1000
