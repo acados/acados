@@ -53,6 +53,8 @@ before_script:
     fi
 
 script:
+  # travis-wait seems to stop at 20 mins, regardless if output is being generated
+  - (while true ; do sleep 60 ; echo "ping" ; done ) &
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
   - cmake --build build

@@ -23,14 +23,14 @@ if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
     message(FATAL_ERROR "You chose to run unit tests but casadi-octave-v3.2.2 can not be found")
 endif()
 
-# add_subdirectory(ocp_nlp)
+add_subdirectory(ocp_nlp)
 add_subdirectory(ocp_qp)
 add_subdirectory(sim)
 
-# set(TEST_OCP_NLP_SRC
-#     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/test_chain.cpp
-#     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/chain_model.c
-# )
+set(TEST_OCP_NLP_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/test_chain.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/chain_model.c
+)
 
 set(TEST_OCP_QP_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp/test_qpsolvers.cpp
@@ -50,8 +50,8 @@ set(TEST_UTILS_SRC
 # Unit test executable
 add_executable(unit_tests
     ${PROJECT_SOURCE_DIR}/test/all_tests.cpp
-    # ${TEST_OCP_NLP_SRC}
-    # $<TARGET_OBJECTS:ocp_nlp_gen>
+    ${TEST_OCP_NLP_SRC}
+    $<TARGET_OBJECTS:ocp_nlp_gen>
     ${TEST_OCP_QP_SRC}
     $<TARGET_OBJECTS:ocp_qp_gen>
     ${TEST_SIM_SRC}
