@@ -20,8 +20,8 @@
 cmake_minimum_required(VERSION 3.0)
 
 if(CMAKE_MAKE_PROGRAM)
-	file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
-	find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
+    file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
+    find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
 endif()
 
 project(acados LANGUAGES C CXX)
@@ -33,7 +33,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
 endif()
 
 # Enable or disable timings
-if(MEASURE_TIMINGS)
+if(ACADOS_MEASURE_TIMINGS)
     add_definitions(-DMEASURE_TIMINGS)
 endif()
 
@@ -42,14 +42,14 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 if(CMAKE_SYSTEM MATCHES "Windows")
-	set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
+    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
 endif()
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release
-        CACHE STRING "No build type chosen. Valid build types are: \
+        CACHE STRING "Valid build types are: \
         Release (default), None, Debug, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
@@ -76,9 +76,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    option(OOQP ON)
-else()
-    option(OOQP OFF)
+    set(ACADOS_WITH_OOQP ON CACHE BOOL "Add OOQP solver")
 endif()
 
 set(CMAKE_MACOSX_RPATH TRUE)
@@ -91,7 +89,7 @@ add_subdirectory(${EXTERNAL_SRC_DIR})
 
 # Add examples
 if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
-	add_subdirectory(examples)
+    add_subdirectory(examples)
 endif()
 
 # Configure SWIG interface
@@ -116,5 +114,5 @@ add_custom_target(uninstall
 
 # Cpplint
 if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
-	include(lint)
+    include(lint)
 endif()

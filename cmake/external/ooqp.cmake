@@ -24,7 +24,9 @@ ExternalProject_Add(
 
     DEPENDS ma27
     PREFIX "${PROJECT_BINARY_DIR}/external/ooqp"
-    CONFIGURE_COMMAND ./configure "--prefix=${PROJECT_BINARY_DIR}/external/ooqp/" "${HOST_FLAG}" "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-O2 -fPIC" "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
+    CONFIGURE_COMMAND ./configure "--prefix=${PROJECT_BINARY_DIR}/external/ooqp/" "${HOST_FLAG}"
+                                  "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-O2 -fPIC" "CC=${CMAKE_C_COMPILER}"
+                                  "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"
     BUILD_COMMAND make clean all
     INSTALL_COMMAND make install

@@ -31,6 +31,6 @@ if((NOT CMAKE_C_COMPILER_ID MATCHES "MSVC") AND (NOT CMAKE_SYSTEM_NAME MATCHES "
 endif()
 add_subdirectory(qpDUNES-dev)
 add_subdirectory(qpOASES)
-if (OOQP)
+if (ACADOS_WITH_OOQP)
     include(external/ooqp)
 endif()

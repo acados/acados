@@ -17,8 +17,8 @@ ExternalProject_Add(
 )
 
 ExternalProject_Add_Step(ma27_project rename_library
-   COMMAND mv ${PROJECT_BINARY_DIR}/external/ma27/lib/libcoinhsl.a ${PROJECT_BINARY_DIR}/external/ma27/lib/libma27.a
-   DEPENDEES install
+    COMMAND mv ${PROJECT_BINARY_DIR}/external/ma27/lib/libcoinhsl.a ${PROJECT_BINARY_DIR}/external/ma27/lib/libma27.a
+    DEPENDEES install
 )
 
 add_library(ma27 STATIC IMPORTED GLOBAL)
