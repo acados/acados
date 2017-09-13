@@ -17,7 +17,7 @@
  *
  */
 
-// #define PLOT_RESULTS
+#define PLOT_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
@@ -53,14 +53,13 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 10
+#define MM 99
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
 #define NSIM 1
-#define GAMMA 1e-2
-#define UMAX 1
+#define UMAX 10
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -267,7 +266,7 @@ int main() {
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
     real_t  lam_init                  = {0.0001};
-    real_t  t_init                    = {1};
+    real_t  t_init                    = {0.001};
     real_t sigma_mu                   = {0.001};
     // real_t  pi_init                   = {0.1};
     // int_t   qp_iters               = 1;
@@ -398,8 +397,8 @@ int main() {
 
     int *idxb1;
     int_zeros(&idxb1, nb[1], 1);
-    for (jj = 0; jj < NBU; jj++ ) idxb1[jj] = jj;
-    for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NU+jj;
+    for (jj = 0; jj < NBX; jj++ ) idxb1[jj] = jj;
+    for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NX+jj;
 
     int *idxbN;
     int_zeros(&idxbN, nb[N], 1);
@@ -514,11 +513,11 @@ int main() {
     d_zeros(&t_in[N], 2*nb[N]+2*ngg[N], 1);
     d_zeros(&ux_in[N], nx[N]+nu[N], 1);
 
-    // // Init multipliers and slacks
-    // for (jj = 0; jj < 2*nb[ii]+2*ngg[ii]; jj++) {
-    //   lam_in[N][jj] = 1.0;
-    //   t_in[N][jj] = 1.0;
-    // }
+    // Init multipliers and slacks
+    for (jj = 0; jj < 2*nb[ii]+2*ngg[ii]; jj++) {
+      lam_in[N][jj] = 1.0;
+      t_in[N][jj] = 1.0;
+    }
 
 
     d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
@@ -545,6 +544,8 @@ int main() {
     hpmpc_args.ux0 = ux_in;
     hpmpc_args.M = MM;
     hpmpc_args.sigma_mu = sigma_mu;
+    double res[5];
+    hpmpc_args.inf_norm_res = res;
 
     // Allocate OCP QP variables
     ocp_qp_in qp_in;
@@ -699,20 +700,29 @@ int main() {
       // there is no x0 in the first stage
       for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += qp_out.u[0][j];
       // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-      for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[0*2*(NBX+NBU)+j] = qp_out.lam[0][j] + GAMMA;
-      for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[0*2*(NBX+NBU)+j] = qp_out.t[0][j] + GAMMA;
+      for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[0*2*(NBX+NBU)+j] = qp_out.lam[0][j];
+      for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[0*2*(NBX+NBU)+j] = qp_out.t[0][j];
 
-      for (int_t i = 1; i < N; i++) {
+      for (int_t i = 1; i < M; i++) {
           for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
           for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
           // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-          for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j]+ GAMMA;
-          for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j]+ GAMMA;
+          for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j];
+          for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
       }
+
+      for (int_t i = M; i < N; i++) {
+          for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
+          for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
+          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+          for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j];
+          for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
+      }
+
       for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
       // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-      for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j]+ GAMMA;
-      for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j]+ GAMMA;
+      for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
+      for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
 
       // for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
       // for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
