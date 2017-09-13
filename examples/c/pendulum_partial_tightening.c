@@ -17,7 +17,7 @@
  *
  */
 
-#define PLOT_RESULTS
+// #define PLOT_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
@@ -53,7 +53,7 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 99
+#define MM 10
 #define NX 4
 #define NU 1
 #define NBU 1
