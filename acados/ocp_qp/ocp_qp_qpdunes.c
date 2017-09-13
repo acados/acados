@@ -512,7 +512,7 @@ void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
 
     // TODO(dimitris): opts should be an input to initialize
     ocp_qp_qpdunes_create_arguments(args, QPDUNES_NONLINEAR_MPC);
-    // args->options.printLevel = 0;
+    args->options.printLevel = 0;
 
     ocp_qp_qpdunes_create_memory(qp_in, args, mem);
     int_t work_space_size =
