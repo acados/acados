@@ -17,7 +17,7 @@
  *
  */
 
-// #define PLOT_RESULTS
+#define PLOT_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_RESULTS
@@ -53,7 +53,7 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 10
+#define MM 1
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -255,7 +255,7 @@ int main() {
     // Problem data
     int_t   N                         = NN;
     int_t   M                         = MM;
-    real_t  x0[NX]                    = {0.0, 0.1, 0.0, 0.0};
+    real_t  x0[NX]                    = {0.0, 3.14, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
     // real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
     // real_t  pi_n[NN*(NX)]             = {0};
@@ -711,6 +711,7 @@ int main() {
           for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
       }
 
+      // line-search
       for (int_t i = M; i < N; i++) {
           for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
           for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
@@ -719,11 +720,17 @@ int main() {
           for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
       }
 
-      for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
-      // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-      for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
-      for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
-
+      if (M < N){
+          for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
+          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+          for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
+          for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
+      } else{
+          for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
+          // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+          for (int_t j = 0; j < 2*NBX; j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
+          for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
+      }
       // for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
       // for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
 
