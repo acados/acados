@@ -17,8 +17,8 @@
  *
  */
 
-// #define PLOT_CL_RESULTS
-// #define PLOT_OL_RESULTS
+#define PLOT_CL_RESULTS
+#define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_OL_RESULTS
@@ -53,22 +53,32 @@
 
 // define IP solver arguments && number of repetitions
 #define NREP 1
-#define MAX_IP_ITER 25
+#define NSIM 5000
+#define MAX_IP_ITER 50
 #define TOL 1e-6
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 10
+#define MM 5  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define NSIM 1000
 #define UMAX 20
+#define N_INT_STEPS 1
+#define N_SQP_ITER 1
+
 #define L_INIT 1
 #define T_INIT 0.01
 #define MU_TIGHT 1
-#define MU0 1000
+#define MU0 1000000
+
+#define INIT_STRATEGY 0
+
+#define SHIFT_STATES 0
+#define SHIFT_CONTROLS 0
+
+#define GAMMA 0.6
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -230,22 +240,19 @@ static void plot_states_controls_cl(real_t *w, real_t T) {
 }
 #endif  // PLOT_CL_RESULTS
 
+static void shift_states(real_t *w, real_t *x_end, int_t N) {
+    for (int_t i = 0; i < N; i++) {
+        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
+    }
+    for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
+}
 
-// static void shift_states(real_t *w, real_t *x_end, int_t N) {
-//     for (int_t i = 0; i < N; i++) {
-//         for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
-//     }
-//     for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] = x_end[j];
-// }
-
-// static void shift_controls(real_t *w, real_t *u_end, int_t N) {
-//     for (int_t i = 0; i < N-1; i++) {
-//         for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
-//     }
-//     for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
-// }
-
-// TODO(Andrea): need to fix this stuff below...
+static void shift_controls(real_t *w, real_t *u_end, int_t N) {
+    for (int_t i = 0; i < N-1; i++) {
+        for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = w[(i+1)*(NX+NU)+NX+j];
+    }
+    for (int_t j = 0; j < NU; j++) w[(N-1)*(NX+NU)+NX+j] = u_end[j];
+}
 
 extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
     int *nu, int *nb, int *ng);
@@ -288,15 +295,14 @@ int main() {
     // int_t   max_iters               = 100;
     // real_t  x_min[NBX]              = {-10, -10, -10, -10};
     real_t  x_min[NBX]                = {};
-    // real_t  x_max[NBX]             = {10, 10, 10, 10};
     real_t  x_max[NBX]                = {};
     real_t  u_min[NBU]                = {-UMAX};
     real_t  u_max[NBU]                = {UMAX};
-
-    // Q[0*(NX+1)] = 1e-3;
-    // Q[1*(NX+1)] = 5e-1;
-    // Q[2*(NX+1)] = 1.0;
-    // Q[3*(NX+1)] = 2e-3;
+    real_t  sim_qp_timings[NSIM]      = {0.0};
+    real_t  sim_lin_timings[NSIM]     = {0.0};
+    int_t   sim_ip_iters[NSIM]        = {0};
+    real_t x_end[NX]                  = {0.0};
+    real_t u_end[NU]                  = {0.0};
 
     Q[0*(NX+1)] = 1e-1;
     Q[1*(NX+1)] = 1.0;
@@ -305,6 +311,7 @@ int main() {
 
     R[0*(NU+1)] = 5e-4;
 
+    // LQR gain
     real_t  QN[NX*NX] = {16.9480, -26.5174,  9.2770, -7.9895,
                         -26.5174, 130.5894, -36.8187, 35.0536,
                         9.2770,  -36.8187,   13.0231, -11.3380,
@@ -314,7 +321,7 @@ int main() {
     real_t T = 0.01;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 1;
+    sim_in.nSteps = N_INT_STEPS;
     sim_in.step = T/sim_in.nSteps;
     sim_in.vde = &vdeFun;
     sim_in.VDE_forw = &VDE_fun_pendulum;
@@ -343,14 +350,6 @@ int main() {
     sim_erk_create_arguments(&rk_opts, 4);
     int_t sim_workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
     erk_work = (void *) malloc(sim_workspace_size);
-    // sim_erk_create_workspace(&sim_in, &rk_opts, &erk_work);
-// =======
-//     sim_RK_opts rk_opts;
-//     sim_erk_create_arguments(&rk_opts, 4);
-//     void *erk_work;
-//     int_t erk_workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
-//     erk_work = (void *) malloc(erk_workspace_size);
-// >>>>>>> 33c021b0a2ec9d74225c1c5ea688af5541ca3319
 
     int_t nx[NN+1] = {0};
     int_t nu[NN+1] = {0};
@@ -390,24 +389,6 @@ int main() {
     nb[0] = NBU;
     for (ii = 1; ii < N; ii++ ) nb[ii] = NBU + NBX;
     nb[N] = NBX;
-
-    // int *idxb0;
-    // int_zeros(&idxb0, nb[0], 1);
-    // for (jj = 0; jj < NBX+NBU; jj++ ) idxb0[jj] = jj;
-    //
-    // int *idxb1;
-    // int_zeros(&idxb1, nb[1], 1);
-    // for (jj = 0; jj < NBX; jj++ ) idxb1[jj] = jj;
-    // for (; jj < NBX+NBU; jj++ ) idxb1[jj] = NX+jj;
-    //
-    // int *idxbN;
-    // int_zeros(&idxbN, nb[N], 1);
-    // for (jj = 0; jj < NBX; jj++ ) idxbN[jj] = jj;
-    // for (; jj < NBX+NBU; jj++ ) idxbN[jj] = NX+jj;
-    //
-    // hidxb[0] = idxb0;
-    // for (ii = 1; ii < N; ii++ ) hidxb[ii] = idxb1;
-    // hidxb[N] = idxbN;
 
     int *idxb0;  // TODO(Andrea): need to swap these guys in the interface...
     int_zeros(&idxb0, nb[0], 1);
@@ -611,16 +592,23 @@ int main() {
 
     acados_timer timer;
     real_t timings = 0;
-    real_t sum_timings = 0;
-    real_t min_timings = 1000000;
+    real_t qp_sum_timings = 0;
+    real_t lin_sum_timings = 0;
+    real_t qp_min_timings;
+    real_t lin_min_timings;
     int_t status;
 
     // initialize nlp primal variables
     for (int_t i = 0; i < N; i++) {
-        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = 0.0;
+        if (INIT_STRATEGY == 1) {
+            for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = x0[j]*(N-i)/N;
+        } else {
+            for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = 0.0;
+        }
+
         for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j]  = lam_init;
         for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX + NBU)+j]  = t_init;
-        // for (int_t j = 0; j < NX; j++) pi_n[i*NX +j]  = pi_init;
+
         for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] = 0.0;
     }
 
@@ -639,108 +627,147 @@ int main() {
 
     for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
 
+    real_t closed_loop_cost = 0.0;
+
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
-        for (int_t iter = 0; iter < NREP; iter++) {
-            acados_tic(&timer);
-            // initialize nlp dual variables
-            for (int_t i = M; i < N; i++) {
-                for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
-                    lam_in[i][j] = lam_n[2*(NBX + NBU)*i + j];
-                    t_in[i][j] = t_n[2*(NBX + NBU)*i + j];
+        for (int_t j = 0; j < NX; j++) w[j] = x0[j];
+        qp_min_timings = 1000000;
+        lin_min_timings = 1000000;
+        for (int_t sqp_iter = 0; sqp_iter < N_SQP_ITER; sqp_iter++) {
+            for (int_t iter = 0; iter < NREP; iter++) {
+                acados_tic(&timer);
+                // initialize nlp dual variables
+                for (int_t i = M; i < N; i++) {
+                    for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
+                        lam_in[i][j] = lam_n[2*(NBX + NBU)*i + j];
+                        t_in[i][j] = t_n[2*(NBX + NBU)*i + j];
+                    }
                 }
-            }
 
-            for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
-                lam_in[N][j] = lam_n[2*(NBX + NBU)*(N-1) + j];
-                t_in[N][j] = t_n[2*(NBX + NBU)*(N-1) + j];
-            }
+                for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
+                    lam_in[N][j] = lam_n[2*(NBX + NBU)*(N-1) + j];
+                    t_in[N][j] = t_n[2*(NBX + NBU)*(N-1) + j];
+                }
 
-            for (int_t i = 0; i < N; i++) {
-                // Pass state and control to integrator
-                for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
-                for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
-                // Construct QP matrices
-                for (int_t j = 0; j < nx[i]; j++) {
-                    pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
+                for (int_t i = 0; i < N; i++) {
+                    // Pass state and control to integrator
+                    for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
+                    for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
+                    sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
+                    // Construct QP matrices
+                    for (int_t j = 0; j < nx[i]; j++) {
+                        pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
+                    }
+                    for (int_t j = 0; j < NU; j++) {
+                        pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
+                    }
+                    for (int_t j = 0; j < NX; j++) {
+                        pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
+                        for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+                    }
+                    for (int_t j = 0; j < NU; j++)
+                        for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
+
+
+                    for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
+                    for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
+                    for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
+                    for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
                 }
-                for (int_t j = 0; j < NU; j++) {
-                    pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
-                }
+
+                for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
+                for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
+
                 for (int_t j = 0; j < NX; j++) {
-                    pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                    for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+                    pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
                 }
-                for (int_t j = 0; j < NU; j++)
-                    for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
 
+                timings = acados_toc(&timer);
+                lin_sum_timings+=timings;
+                if (timings < lin_min_timings) lin_min_timings = timings;
 
-                for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
-                for ( int_t j = 0; j < NBX; j++ ) pub[i][j+NBU] = x_max[j] - w[i*(NX+NU)+j];
-                for ( int_t j = 0; j < NBU; j++ ) plb[i][j] = u_min[j] - w[i*(NX+NU)+NX+j];
-                for ( int_t j = 0; j < NBU; j++ ) pub[i][j] = u_max[j] - w[i*(NX+NU)+NX+j];
+                acados_tic(&timer);
+
+                status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
+
+                timings = acados_toc(&timer);
+
+                qp_sum_timings+=timings;
+                if (timings < qp_min_timings) qp_min_timings = timings;
             }
 
-            for ( int_t j = 0; j < NBX; j++ ) plb[N][j+NBU] = x_min[j] - w[N*(NX+NU)+j];
-            for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
+            if (status == 1) printf("status = ACADOS_MAXITER\n");
 
-            // for ( int_t j = 0; j < NBU; j++ ) plb[0][j] = u_min[j] - w[0*(NX+NU)+NX+j];
-            // for ( int_t j = 0; j < NBU; j++ ) pub[0][j] = u_max[j] - w[0*(NX+NU)+NX+j];
+            if (status == 2) printf("status = ACADOS_MINSTEP\n");
 
-            // dgemv_n_3l(NX, NX, pA[0], NX, x0, pb[0]);
+            // there is no x0 in the first stage
+            for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += GAMMA*qp_out.u[0][j];
+            // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+            for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                lam_n[0*2*(NBX+NBU)+j] =
+                    lam_n[0*2*(NBX+NBU)+j] +
+                    GAMMA*(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
+            for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                t_n[0*2*(NBX+NBU)+j] =
+                    t_n[0*2*(NBX+NBU)+j]+
+                    GAMMA*(qp_out.t[0][j]-t_n[0*2*(NBX+NBU)+j]);
 
-            for (int_t j = 0; j < NX; j++) {
-                pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
+            for (int_t i = 1; i < N; i++) {
+                for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += GAMMA*qp_out.x[i][j];
+                for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += GAMMA*qp_out.u[i][j];
+                // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+                for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                    lam_n[i*2*(NBX+NBU)+j] =
+                        lam_n[i*2*(NBX+NBU)+j] +
+                        GAMMA*(qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
+                for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                    t_n[i*2*(NBX+NBU)+j] =
+                        t_n[i*2*(NBX+NBU)+j] +
+                        GAMMA*(qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]);
             }
 
-            // void *mem = 0;
-
-            status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
-
-            // int status = 0;
-            // printf("hpmpc_status=%i\n", status);
-
-            // }
-            // for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
-            // shift_states(w, x_end, N);
-            // shift_controls(w, u_end, N);
-            timings = acados_toc(&timer);
-            sum_timings+=timings;
-            if (timings < min_timings) min_timings = timings;
+            for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += GAMMA*qp_out.x[N][j];
+            // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+            for (int_t j = 0; j < 2*NBX; j++)
+                lam_n[(N-1)*2*(NBX+NBU)+j] =
+                lam_n[(N-1)*2*(NBX+NBU)+j] +
+                GAMMA*(qp_out.lam[N][j] - lam_n[(N-1)*2*(NBX+NBU)+j]);
+            for (int_t j = 0; j < 2*NBX; j++)
+                t_n[(N-1)*2*(NBX+NBU)+j] =
+                t_n[(N-1)*2*(NBX+NBU)+j] +
+                GAMMA*(qp_out.t[N][j] - t_n[(N-1)*2*(NBX+NBU)+j]);
         }
+
+        // store stats
+        int ip_iter = hpmpc_args.out_iter;
+        sim_qp_timings[sim_iter] = 1e3*qp_min_timings;
+        sim_lin_timings[sim_iter] = 1e3*lin_min_timings;
+        sim_ip_iters[sim_iter] =  ip_iter;
 
         // done with timings, store closed loop solution and
-        // update primal and dual variables
-        if (status == 1) printf("status = ACADOS_MAXITER\n");
-
-        if (status == 2) printf("status = ACADOS_MINSTEP\n");
-
-        // there is no x0 in the first stage
-        for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += qp_out.u[0][j];
-        // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-        for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[0*2*(NBX+NBU)+j] = qp_out.lam[0][j];
-        for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[0*2*(NBX+NBU)+j] = qp_out.t[0][j];
-
-        for (int_t i = 1; i < N; i++) {
-            for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += qp_out.x[i][j];
-            for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += qp_out.u[i][j];
-            // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-            for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[i*2*(NBX+NBU)+j] = qp_out.lam[i][j];
-            for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[i*2*(NBX+NBU)+j] = qp_out.t[i][j];
-        }
-
-        for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
-        // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-        for (int_t j = 0; j < 2*NBX; j++) lam_n[(N-1)*2*(NBX+NBU)+j] = qp_out.lam[N][j];
-        for (int_t j = 0; j < 2*NBX; j++) t_n[(N-1)*2*(NBX+NBU)+j] = qp_out.t[N][j];
 
 #ifdef PLOT_CL_RESULTS
         for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
         for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
 #endif  // PLOT_CL_RESULTS
 
+        if (SHIFT_STATES) shift_states(w, x_end, N);
+        if (SHIFT_CONTROLS) shift_controls(w, u_end, N);
+
+        // Pass state and control to integrator
+        for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[j];
+        for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[NX+j];
+        sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
+
+        // update closed-loop cost
+        for (int_t i = 0; i < NX; i++)
+            closed_loop_cost+=x0[i]*Q[i*(NX+1)]*x0[i];
+
+        for (int_t i = 0; i < NU; i++)
+            closed_loop_cost+=w[NX+i]*R[i*(NU+1)]*w[NX+i];
+
         // update initial condition
-        for (int_t j = 0; j < NX; j++) w[j] = w[(NX+NU) + j];
+        for (int_t j = 0; j < NX; j++) x0[j] = sim_out.xn[j];
     }
 
     #ifdef DEBUG
@@ -755,10 +782,30 @@ int main() {
         plot_states_controls_cl(w_cl, T);
     #endif  // PLOT_CL_RESULTS
 
-    int ip_iter = hpmpc_args.out_iter;
-    printf("Solved in %d iterations.\n", ip_iter);
-    printf("Average of %.3f ms per RTI.\n", 1e3*sum_timings/NREP);
-    printf("Minimum of %.3f ms per RTI.\n", 1e3*min_timings);
+    // compute worst-case CPU time
+    real_t max_qp_time = 0;
+    real_t min_lin_time = 0;
+    int_t max_ip_iters = 0;
+    for (int_t i = 0; i < NSIM; i++) {
+        printf("it: %d, min qp CPU time: %.3f, min linearization CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_lin_timings[i], sim_ip_iters[i]);
+        if (sim_qp_timings[i] > max_qp_time) {
+            max_qp_time = sim_qp_timings[i];
+        }
+
+        if (sim_lin_timings[i] > min_lin_time) {
+            min_lin_time = sim_lin_timings[i];
+        }
+
+        if (sim_ip_iters[i] > max_ip_iters) {
+            max_ip_iters = sim_ip_iters[i];
+        }
+    }
+
+    printf("-> worst-case qp CPU time: %.3f ms per RTI.\n", max_qp_time);
+    printf("-> lin CPU time: %.3f ms per RTI.\n", min_lin_time);
+    printf("-> worst-case ip iterations: %d.\n", max_ip_iters);
+    printf("-> closed-loop cost: %.3f\n", closed_loop_cost);
+
     free(workspace);
     ocp_qp_hpmpc_free_memory(mem);
     sim_erk_destroy(erk_work);

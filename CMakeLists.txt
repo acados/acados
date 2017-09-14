@@ -55,8 +55,14 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 enable_testing(true)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOFLIP_BOUNDS -std=c99 -Wall -Werror -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -DNOFLIP_BOUNDS -std=c++11 -Wall -Werror -fdiagnostics-show-option")
+	if(WERROR MATCHES OFF)
+		message("-> switching off warning-errors. make sure you everything if fine with -DWERROR=ON once you are done hacking around. ")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOFLIP_BOUNDS -std=c99 -Wall -fdiagnostics-show-option")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -DNOFLIP_BOUNDS -std=c++11 -Wall -fdiagnostics-show-option")
+	else()
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOFLIP_BOUNDS -std=c99 -Wall -Werror -fdiagnostics-show-option")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -DNOFLIP_BOUNDS -std=c++11 -Wall -Werror -fdiagnostics-show-option")
+	endif()
 endif()
 
 # Set install directories

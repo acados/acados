@@ -19,7 +19,11 @@
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
+    if(WERROR MATCHES OFF)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -fdiagnostics-show-option")
+    else()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -fdiagnostics-show-option")
+    endif()
 endif()
 
 add_subdirectory(c)
