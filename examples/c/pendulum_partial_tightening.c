@@ -53,18 +53,22 @@
 
 // define IP solver arguments && number of repetitions
 #define NREP 1
-#define MAX_IP_ITER 30
+#define MAX_IP_ITER 25
 #define TOL 1e-6
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 100
+#define MM 10
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define NSIM 200
-#define UMAX 60
+#define NSIM 1000
+#define UMAX 20
+#define L_INIT 1
+#define T_INIT 0.01
+#define MU_TIGHT 1
+#define MU0 1000
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -145,6 +149,7 @@ static void plot_states_controls(real_t *w, real_t T) {
         remove(x2_temp_file);
         remove(u1_temp_file);
 
+
         fprintf(gnuplotPipe, "exit gnuplot\n");
         } else {
             printf("gnuplot not found...");
@@ -154,7 +159,7 @@ static void plot_states_controls(real_t *w, real_t T) {
 
 #ifdef PLOT_CL_RESULTS
 static void plot_states_controls_cl(real_t *w, real_t T) {
-      double t_grid[NN];
+      double t_grid[NSIM];
       for (int_t i = 0; i < NSIM; i++) t_grid[i] = i*T;
 
       FILE *gnuplotPipe, *tempDataFile;
@@ -262,9 +267,12 @@ int main() {
     // Problem data
     int_t   N                         = NN;
     int_t   M                         = MM;
-    real_t  x0[NX]                    = {0.0, 3, 0.0, 0.0};
+    real_t  x0[NX]                    = {0.0, 3.14, 0.0, 0.0};
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
+#ifdef PLOT_CL_RESULTS
     real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
+#endif // PLOT_CL_RESULTS
+
     // real_t  pi_n[NN*(NX)]             = {0};
     real_t  t_n[2*((NBX+NBU)*NN + NBX)]   = {0};
     real_t  lam_n[2*((NBX+NBU)*NN + NBX)] = {0};
@@ -272,9 +280,9 @@ int main() {
     real_t  R[NU*NU]                  = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
-    real_t  lam_init                  = {0.1};
-    real_t  t_init                    = {0.1};
-    real_t sigma_mu                   = {0.000001};
+    real_t  lam_init                  = {L_INIT};
+    real_t  t_init                    = {T_INIT};
+    real_t sigma_mu                   = {MU_TIGHT};
     // real_t  pi_init                   = {0.1};
     // int_t   qp_iters               = 1;
     // int_t   max_iters               = 100;
@@ -290,14 +298,17 @@ int main() {
     // Q[2*(NX+1)] = 1.0;
     // Q[3*(NX+1)] = 2e-3;
 
-    Q[0*(NX+1)] = 1e-3;
-    Q[1*(NX+1)] = 5e1;
-    Q[2*(NX+1)] = 0.01;
+    Q[0*(NX+1)] = 1e-1;
+    Q[1*(NX+1)] = 1.0;
+    Q[2*(NX+1)] = 0.1;
     Q[3*(NX+1)] = 2e-3;
 
-    R[0*(NU+1)] = 1e-3;
+    R[0*(NU+1)] = 5e-4;
 
-    // double sigma_mu = 0.01;
+    real_t  QN[NX*NX] = {16.9480, -26.5174,  9.2770, -7.9895,
+                        -26.5174, 130.5894, -36.8187, 35.0536,
+                        9.2770,  -36.8187,   13.0231, -11.3380,
+                        -7.9895,   35.0536,  -11.338,   10.5763};
 
     // Integrator structs
     real_t T = 0.01;
@@ -542,7 +553,7 @@ int main() {
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAX_IP_ITER;
 //  hpmpc_args.min_step = MINSTEP;
-    hpmpc_args.mu0 = 1;
+    hpmpc_args.mu0 = MU0;
 //  hpmpc_args.sigma_min = 1e-3;
     hpmpc_args.warm_start = 0;
     hpmpc_args.N2 = N;
@@ -566,7 +577,7 @@ int main() {
         pQ[i] = Q;
         pR[i] = R;
     }
-    pQ[N] = Q;
+    pQ[N] = QN;
     qp_in.Q = (const real_t **) pQ;
     qp_in.S = (const real_t **) pS;
     qp_in.R = (const real_t **) pR;
@@ -640,8 +651,8 @@ int main() {
             }
 
             for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
-                lam_in[N][j] = lam_n[2*NBX*N + j];
-                t_in[N][j] = t_n[2*NBX*N + j];
+                lam_in[N][j] = lam_n[2*(NBX + NBU)*(N-1) + j];
+                t_in[N][j] = t_n[2*(NBX + NBU)*(N-1) + j];
             }
 
             for (int_t i = 0; i < N; i++) {
@@ -720,12 +731,13 @@ int main() {
 
         for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += qp_out.x[N][j];
         // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
-        for (int_t j = 0; j < 2*(NBX+NBU); j++) lam_n[N*2*(NBX+NBU)+j] = qp_out.lam[N][j];
-        for (int_t j = 0; j < 2*(NBX+NBU); j++) t_n[N*2*(NBX+NBU)+j] = qp_out.t[N][j];
+        for (int_t j = 0; j < 2*NBX; j++) lam_n[(N-1)*2*(NBX+NBU)+j] = qp_out.lam[N][j];
+        for (int_t j = 0; j < 2*NBX; j++) t_n[(N-1)*2*(NBX+NBU)+j] = qp_out.t[N][j];
 
-
+#ifdef PLOT_CL_RESULTS
         for (int_t j = 0; j < NX; j++) w_cl[sim_iter*(NX+NU) + j] = w[j];
         for (int_t j = 0; j < NU; j++) w_cl[sim_iter*(NX+NU) + NX + j] = w[j+NX];
+#endif  // PLOT_CL_RESULTS
 
         // update initial condition
         for (int_t j = 0; j < NX; j++) w[j] = w[(NX+NU) + j];

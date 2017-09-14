@@ -2,14 +2,10 @@ clc;
 clear all;
 close all;
 
+GENERATE_LQR_GAIN = 1;
+
 addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
-
-% constants
-M = 1;
-m = 0.1;
-g = 9.81;
-l = 0.8;
 
 % variables
 x1 = SX.sym('x1');
@@ -26,15 +22,8 @@ nx = length(x);
 nu = length(u);
 
 % ODE system
-% f_expl = [   dot(x1) == v1; ...
-%              dot(theta) == dtheta; ...
-%              dot(v1) == (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
-%              dot(dtheta) == (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
+f_expl = dyn(x, u);
 
-f_expl = [   v1; ...
-             dtheta; ...
-             (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
-             (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
 
          
 Sx = SX.sym('Sx',nx,nx);
@@ -73,3 +62,42 @@ jacFun.generate(['jac_pendulum'], opts);
 adjFun.generate(['vde_adj_pendulum'], opts);
 hessFun.generate(['vde_hess_pendulum'], opts);
 
+if GENERATE_LQR_GAIN % generate LQR gain
+   
+    Ts = 0.01;
+    
+    % fixed step Runge-Kutta 4 integrator
+    M = 1; % RK4 steps per interval
+    DT = Ts;
+    X0 = SX.sym('X0', 4,1);
+    U = SX.sym('U',1,1);
+    X = X0;
+    for j=1:M
+        [k1] = dyn(X, U);
+        [k2] = dyn(X + DT/2 * k1, U);
+        [k3] = dyn(X + DT/2 * k2, U);
+        [k4] = dyn(X + DT * k3, U);
+        X=X+DT/6*(k1 +2*k2 +2*k3 +k4);
+    end
+    
+    F = Function('F', {X0, U}, {X});
+        
+    J_x = Function('J_x', {X0, U}, {jacobian(X, X0)});
+    J_u = Function('J_u', {X0, U}, {jacobian(X, U)});
+    
+    A = full(J_x(zeros(4,1), zeros(1,1)));
+    B = full(J_u(zeros(4,1), zeros(1,1)));
+    
+    Q = zeros(4,4);
+    R = zeros(1,1);
+    
+    Q(1,1) = 1e-1;
+    Q(2,2) = 1.0;
+    Q(3,3) = 0.1;
+    Q(4,4) = 2e-3;
+
+    R(1,1) = 5e-4;
+    
+    [K, P] = dlqr(A, B, Q, R)
+    
+end
