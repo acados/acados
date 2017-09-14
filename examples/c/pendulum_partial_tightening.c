@@ -271,7 +271,7 @@ int main() {
     real_t  w[NN*(NX+NU)+NX]          = {0};  // States and controls stacked
 #ifdef PLOT_CL_RESULTS
     real_t  w_cl[NSIM*(NX+NU)]        = {0};  // States and controls stacked closed loop
-#endif // PLOT_CL_RESULTS
+#endif  // PLOT_CL_RESULTS
 
     // real_t  pi_n[NN*(NX)]             = {0};
     real_t  t_n[2*((NBX+NBU)*NN + NBX)]   = {0};
