@@ -95,6 +95,8 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
     target_link_libraries(chen_nmpc_qpoases_example acados)
     add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
+#     install(TARGETS chen_nmpc_qpoases_example RUNTIME DESTINATION bin)
+#     set_target_properties(chen_nmpc_qpoases_example PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/")
 
     add_executable(nonlinear_chain_sqp_example
         nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})

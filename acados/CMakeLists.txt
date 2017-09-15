@@ -36,6 +36,7 @@ add_library(acados ${ACADOS_SRC})
 target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # for include "acados/..."
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/blasfeo/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<INSTALL_INTERFACE:include>)
 install(TARGETS acados EXPORT acadosConfig

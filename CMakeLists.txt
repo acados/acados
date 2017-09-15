@@ -67,6 +67,8 @@ message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+# set(CMAKE_INSTALL_RPATH "\$ORIGIN")
+# SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
     set(ACADOS_WITH_OOQP ON CACHE BOOL "Add OOQP solver")
@@ -109,3 +111,5 @@ add_custom_target(uninstall
 if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
     include(lint)
 endif()
+
+add_subdirectory(experimental/robin/test_blasfeo)
