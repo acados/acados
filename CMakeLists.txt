@@ -111,5 +111,3 @@ add_custom_target(uninstall
 if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
     include(lint)
 endif()
-
-add_subdirectory(experimental/robin/test_blasfeo)
