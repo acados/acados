@@ -120,7 +120,7 @@ void read_Gauss_simplified(const int_t num_stages, Newton_scheme *scheme) {
     D = (real_t *) calloc(2 * num_stages, sizeof(real_t));
     real_t *T;
     T = (real_t *) calloc(num_stages*num_stages, sizeof(real_t));
-    char simplified[80];
+    char simplified[MAX_STR_LEN];
     int_t *perm;
     real_t *T_inv;
 

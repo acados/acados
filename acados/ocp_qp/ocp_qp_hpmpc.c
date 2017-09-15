@@ -514,9 +514,9 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
 
 
     // Adding memory for extra variables in the Riccati recursion
-    mem_size+=d_size_strvec(nx[ii+1]);
-    mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    mem_size+=d_size_strmat(nx[ii], nx[ii]);
+    mem_size+=d_size_strvec(nx[N]);
+    mem_size+=d_size_strmat(nu[N]+nx[N]+1, nu[N]+nx[N]);
+    mem_size+=d_size_strmat(nx[N], nx[N]);
 
     for ( int ii=0; ii < N; ii++ ) {
         mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);

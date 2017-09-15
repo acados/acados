@@ -29,7 +29,6 @@ add_subdirectory(sim)
 
 set(TEST_OCP_NLP_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/test_chain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/chain_model.c
 )
 
 set(TEST_OCP_QP_SRC
@@ -61,7 +60,7 @@ add_executable(unit_tests
 
 target_include_directories(unit_tests PRIVATE "${EXTERNAL_SRC_DIR}/eigen")
 target_link_libraries(unit_tests acados)
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+if(ACADOS_WITH_OOQP)
     target_compile_definitions(unit_tests PRIVATE OOQP)
 endif()
 

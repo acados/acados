@@ -64,3 +64,5 @@ endif(PYTHON_NUMPY_INCLUDE_DIR)
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(NumPy REQUIRED_VARS PYTHON_NUMPY_INCLUDE_DIR
                                         VERSION_VAR __numpy_version)
+
+mark_as_advanced(PYTHON_NUMPY_INCLUDE_DIR)

@@ -31,7 +31,7 @@ extern "C" {
 
 typedef struct {
     ocp_nlp_args *common;
-    char qp_solver_name[256];
+    char qp_solver_name[MAX_STR_LEN];
 } ocp_nlp_gn_sqp_args;
 
 typedef struct {

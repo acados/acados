@@ -26,7 +26,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "examples/c/Chen_model/chen_model.h"
+#include "examples/c/chen_model/chen_model.h"
 
 #define NN 13
 #define NX 2
@@ -104,8 +104,8 @@ int main() {
     real_t T = 0.1;
     sim_in sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 10;
-    sim_in.step = T / sim_in.nSteps;
+    sim_in.num_steps = 10;
+    sim_in.step = T / sim_in.num_steps;
     sim_in.VDE_forw = &VDE_fun;
     sim_in.nx = NX;
     sim_in.nu = NU;
@@ -113,7 +113,7 @@ int main() {
     sim_in.sens_forw = true;
     sim_in.sens_adj = false;
     sim_in.sens_hess = false;
-    sim_in.nsens_forw = NX + NU;
+    sim_in.num_forw_sens = NX + NU;
 
     sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
     sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
@@ -131,7 +131,7 @@ int main() {
     sim_erk_create_arguments(&rk_opts, 4);
     void *erk_work;
     int_t work_space_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
-    erk_work = (void *)malloc(work_space_size);
+    erk_work = (void *) malloc(work_space_size);
 
     real_t *pA[NN];
     real_t *pB[NN];
@@ -153,9 +153,7 @@ int main() {
     real_t *pug[NN + 1];
     int_t *pidxb[NN + 1];
 
-    d_zeros(
-        &pA[0], nx[1],
-        nx[0]);  // TODO(dimitris): do we need this? It's the same in the loop
+    d_zeros(&pA[0], nx[1], nx[0]);  // TODO(dimitris): do we need this? It's the same in the loop
     d_zeros(&pB[0], nx[1], nu[0]);
     d_zeros(&pb[0], nx[1], 1);
     pQ[0] = Q;
@@ -184,13 +182,13 @@ int main() {
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
         d_zeros(&ppi[i], nx[i + 1], 1);
-        d_zeros(&plam[i], 2 * nb[i] + 2 * nc[i], 1);
+        d_zeros(&plam[i], 2*nb[i] + 2*nc[i], 1);
     }
     pQ[NN] = Q;
     d_zeros(&pq[NN], nx[NN], 1);
     d_zeros(&px[NN], nx[NN], 1);
     d_zeros(&pu[NN], nu[NN], 1);
-    d_zeros(&plam[NN], 2 * nb[NN] + 2 * nc[NN], 1);
+    d_zeros(&plam[NN], 2*nb[NN] + 2*nc[NN], 1);
     d_zeros(&pCx[NN], nc[NN], nx[NN]);
 
     // Allocate OCP QP variables
@@ -227,16 +225,13 @@ int main() {
     qpoases_args.nwsr = 1000;  // maximum number of working set recalculations
     qpoases_args.warm_start = 0;  // wam start with dual_sol in memory
 
-    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(
-        &qp_in, &qpoases_args);
+    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
     void *workspace = malloc(workspace_size);
 
-    int memory_size =
-        ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
+    int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
     void *memory = malloc(memory_size);
     ocp_qp_condensing_qpoases_memory qpoases_memory;
-    ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args,
-                                            &qpoases_memory, memory);
+    ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, memory);
 
     acados_timer timer;
     real_t total_time = 0;
