@@ -6,17 +6,17 @@ from models import pendulum_model
 
 ode_fun, nx, _ = pendulum_model()
 
-time_grid, dt = linspace(start=0, stop=10, retstep=True)
+time_grid, dt = linspace(start=0, stop=10, num=51, retstep=True)
 sim_options = {'time_step': dt, 'order': 4}
 
-sim = sim_solver('erk', ode_fun, sim_options)
+integrator = sim_solver('erk', ode_fun, sim_options)
 
 current_state = array([0.0, pi, 0.0, 0.0]) # pendulum hangs down
 simulation = [current_state]
 
 for t in time_grid[:-1]:
     # apply periodic force to pendulum with period 5s.
-    output = sim.evaluate(current_state, cos(2*pi*t/5))
+    output = integrator.evaluate(current_state, cos(2*pi*t/5))
     current_state = output.final_state
     simulation.append(current_state)
 
