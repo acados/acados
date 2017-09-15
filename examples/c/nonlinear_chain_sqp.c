@@ -43,15 +43,6 @@
 // TODO(dimitris): fix this
 #define USE_QPOASES
 
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-
 // static void shift_states(real_t *w, real_t *x_end, int_t NN) {
 //    for (int_t i = 0; i < NN; i++) {
 //        for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] = w[(i+1)*(NX+NU)+j];
@@ -216,42 +207,50 @@ int main() {
                     case 1:
                         sim_in[jj].vde = &vde_chain_nm2;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm2;
+                        sim_in[jj].jac = &jac_chain_nm2;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 2:
                         sim_in[jj].vde = &vde_chain_nm3;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm3;
+                        sim_in[jj].jac = &jac_chain_nm2;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 3:
                         sim_in[jj].vde = &vde_chain_nm4;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm4;
+                        sim_in[jj].jac = &jac_chain_nm4;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 4:
                         sim_in[jj].vde = &vde_chain_nm5;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm5;
+                        sim_in[jj].jac = &jac_chain_nm5;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 5:
                         sim_in[jj].vde = &vde_chain_nm6;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm6;
+                        sim_in[jj].jac = &jac_chain_nm6;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 6:
                         sim_in[jj].vde = &vde_chain_nm7;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm7;
+                        sim_in[jj].jac = &jac_chain_nm7;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 7:
                         sim_in[jj].vde = &vde_chain_nm8;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm8;
+                        sim_in[jj].jac = &jac_chain_nm8;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     default:
                         sim_in[jj].vde = &vde_chain_nm9;
                         sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac_fun = &jac_fun_nm9;
+                        sim_in[jj].jac = &jac_chain_nm9;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                 }
 

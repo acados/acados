@@ -26,9 +26,9 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-void jac_fun(const real_t* in, real_t* out);
-void vde_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
-             int (*vde)(const real_t**, real_t**, int*, real_t*, int));
+void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde);
+
+void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t jac);
 
 #ifdef __cplusplus
 } /* extern "C" */

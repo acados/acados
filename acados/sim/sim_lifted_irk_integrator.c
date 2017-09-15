@@ -440,7 +440,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
             }
         }
         acados_tic(&timer_ad);
-        in->jac_fun(rhs_in, jac_tmp);  // k evaluation
+        in->jac_fun(nx, rhs_in, jac_tmp, in->jac);  // k evaluation
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme.type == simplified_in ||

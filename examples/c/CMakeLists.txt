@@ -20,7 +20,7 @@
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
 
 # Define sources for models used in the examples
-file(GLOB CHAIN_MODEL_SRC chain_model/chain_model.c
+file(GLOB CHAIN_MODEL_SRC
     chain_model/vde*.c
     chain_model/jac*.c)
 
@@ -61,7 +61,6 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     add_executable(nonlinear_chain_ocp_nlp_example
     nonlinear_chain_ocp_nlp.c
-    chain_model/chain_model.c
     chain_model/jac_chain_nm2.c
     chain_model/jac_chain_nm3.c
     chain_model/jac_chain_nm4.c

@@ -1,16 +1,27 @@
-from numpy import array
+import matplotlib.pyplot as plt
+from numpy import array, concatenate, cos, linspace, pi, reshape
 
 from acados import sim_solver
-from example_model import example_model
+from models import pendulum_model
 
-_, _, ode_fun = example_model()
+ode_fun, nx, _ = pendulum_model()
 
-sim_options = {'time_step': 0.2, 'order': 4}
+time_grid, dt = linspace(start=0, stop=10, retstep=True)
+sim_options = {'time_step': dt, 'order': 4}
 
-sim = sim_solver('rk', ode_fun, sim_options)
+sim = sim_solver('erk', ode_fun, sim_options)
 
-current_state = [1.0, 1.0]
-control = 0.25
-output = sim.evaluate(current_state, control)
+current_state = array([0.0, pi, 0.0, 0.0]) # pendulum hangs down
+simulation = [current_state]
 
-assert(all(abs(output.final_state - array([1.2670, 1.1442])) < 1e-3))
+for t in time_grid[:-1]:
+    # apply periodic force to pendulum with period 5s.
+    output = sim.evaluate(current_state, cos(2*pi*t/5))
+    current_state = output.final_state
+    simulation.append(current_state)
+
+simulation = reshape(concatenate(simulation), (-1, nx))
+
+plt.ion()
+plt.plot(time_grid, simulation)
+plt.legend(['p', 'theta', 'v', 'omega'])

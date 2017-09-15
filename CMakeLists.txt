@@ -26,15 +26,8 @@ endif()
 
 project(acados LANGUAGES C CXX)
 
-set(BUILD_SHARED_LIBS ON CACHE INTERNAL "Build shared libraries")
-
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-endif()
-
-# Enable or disable timings
-if(ACADOS_MEASURE_TIMINGS)
-    add_definitions(-DMEASURE_TIMINGS)
 endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")

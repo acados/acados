@@ -264,7 +264,7 @@ void fill_int_array_from(const LangObject *sequence, int_t *array, const int_t l
     for (int_t index = 0; index < length; index++) {
         LangObject *item = from(sequence, index);
         if (!is_integer(item)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input %s elements must be scalars",
                 LANG_SEQUENCE_NAME);
             throw std::invalid_argument(err_msg);
@@ -277,7 +277,7 @@ void fill_real_array_from(const LangObject *sequence, real_t *array, const int_t
     for (int_t index = 0; index < length; index++) {
         LangObject *item = from(sequence, index);
         if (!is_real(item)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input %s elements must be scalars",
                 LANG_SEQUENCE_NAME);
             throw std::invalid_argument(err_msg);
@@ -310,7 +310,7 @@ bool has(const LangObject *map, const char *key) {
 
 LangObject *from(const LangObject *map, const char *key) {
     if (!has(map, key)) {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), "Input %s has no key %s", LANG_MAP_NAME, key);
         throw std::invalid_argument(err_msg);
     }
@@ -397,14 +397,14 @@ LangObject *new_sequence_of_arrays(const int_t length) {
         if (sequence == NULL)
             PyErr_Print();
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
             "with length %d", LANG_SEQUENCE_NAME, length);
         SWIG_Error(SWIG_RuntimeError, err_msg);
     }
 #endif
     if (sequence == NULL) {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
             "with length %d", LANG_SEQUENCE_NAME, length);
         SWIG_Error(SWIG_RuntimeError, err_msg);
@@ -494,7 +494,7 @@ void fill_array_from(const LangObject *input, T **array,
                 copy_from(item, array[index], nb_rows[index]*nb_columns[index]);
         }
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg),
             "Expected %s or %s as input", LANG_SEQUENCE_NAME, LANG_MATRIX_NAME);
         throw std::invalid_argument(err_msg);
@@ -616,7 +616,7 @@ void fill_array_from(const LangObject *input, int_t *array, const int_t length) 
     } else if (is_sequence(input, length)) {
         fill_int_array_from(input, array, length);
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), \
             "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
         throw std::invalid_argument(err_msg);
@@ -633,7 +633,7 @@ void fill_array_from(const LangObject *input, real_t *array, const int_t length)
     } else if (is_matrix(input, length, 1)) {
         copy_from(input, array, length);
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), \
             "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
         throw std::invalid_argument(err_msg);

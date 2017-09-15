@@ -11,9 +11,9 @@ int vde_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem)
 int vde_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int vde_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
-void jac_fun_nm2(const real_t* in, real_t* out);
-void jac_fun_nm3(const real_t* in, real_t* out);
-void jac_fun_nm4(const real_t* in, real_t* out);
+int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int jac_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int jac_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

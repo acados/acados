@@ -42,7 +42,7 @@ ExternalProject_Add_Step(ooqp_project copy_ooqp
 )
 
 ExternalProject_Add_Step(ooqp_project create_lib_folder
-    COMMAND ${CMAKE_COMMAND} -E chdir ${BINARY_DIR} mkdir lib
+    COMMAND ${CMAKE_COMMAND} -E chdir ${BINARY_DIR} mkdir -p lib
     DEPENDERS configure
 )
 

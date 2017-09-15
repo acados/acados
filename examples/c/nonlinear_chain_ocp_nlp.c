@@ -55,7 +55,7 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
 int main() {
     const int INEXACT = 0;
-    const int d = 0;
+    const int d = 2;
     const int NMF = 1;
     if (INEXACT == 0) {
         printf(
@@ -133,7 +133,6 @@ int main() {
     sim_solver integrators[NN];
 
     sim_RK_opts rk_opts[NN];
-    void *sim_work;
     sim_lifted_irk_memory irk_mem[NN];
 
     // TODO(rien): can I move this somewhere inside the integrator?
@@ -166,20 +165,22 @@ int main() {
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
                 sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac_fun = &jac_fun_nm2;
+                sim_in[jj].jac = &jac_chain_nm2;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
                 sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac_fun = &jac_fun_nm3;
+                sim_in[jj].jac = &jac_chain_nm3;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
                 sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac_fun = &jac_fun_nm4;
+                sim_in[jj].jac = &jac_chain_nm4;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             default:
-                // REQUIRE(1 == 0);
                 break;
         }
 
@@ -227,9 +228,7 @@ int main() {
             workspace_size =
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
-        // TODO(roversch): Next line is leaking memory!
-        sim_work = (void *) malloc(workspace_size);
-        integrators[jj].work = sim_work;
+        integrators[jj].work = (void *) malloc(workspace_size);
     }
 
     int_t nx[NN + 1] = {0};
@@ -451,6 +450,7 @@ int main() {
     free(ls_cost.W);
 
     for (jj = 0; jj < NN; jj++) {
+        free(nlp_in.sim[jj].work);
         free(nlp_out.x[jj]);
         free(nlp_out.u[jj]);
         free(nlp_out.lam[jj]);

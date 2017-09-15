@@ -1,7 +1,7 @@
 import acados.*
 
 N = 10;
-[nx, nu, ode_fun] = example_model();
+[ode_fun, nx, nu] = chen_model();
 nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu));
 
 % ODE Model

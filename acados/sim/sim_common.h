@@ -39,11 +39,11 @@ typedef struct {
     bool sens_hess;
     int_t num_forw_sens;
 
-    int (*vde)(const real_t **, real_t **, int *, real_t *, int);
-    void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *,
-                     int (*vde)(const real_t **, real_t **, int *, real_t *, int));
+    casadi_function_t vde;
+    void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
     void (*VDE_adj)(const real_t *, real_t *);
-    void (*jac_fun)(const real_t *, real_t *);
+    casadi_function_t jac;
+    void (*jac_fun)(const int_t, const real_t *, real_t *, casadi_function_t);
 
     real_t step;
     uint num_steps;

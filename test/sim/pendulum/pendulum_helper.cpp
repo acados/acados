@@ -47,7 +47,8 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out,
         } else {
             sim_in->VDE_adj = &VDE_adj_pendulum;
         }
-        sim_in->jac_fun = &jac_fun_pendulum;
+        sim_in->jac = &jac_pendulum;
+        sim_in->jac_fun = &jac_fun;
 
         sim_in->x = (real_t*) malloc(sizeof(*sim_in->x) * (NX));
         sim_in->u = (real_t*) malloc(sizeof(*sim_in->u) * (NU));

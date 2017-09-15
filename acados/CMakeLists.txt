@@ -72,6 +72,11 @@ if(ACADOS_WITH_OOQP)
     target_link_libraries(acados PUBLIC ooqp)
 endif()
 
+# Enable or disable timings
+if(ACADOS_MEASURE_TIMINGS)
+    target_compile_definitions(acados PRIVATE MEASURE_TIMINGS)
+endif()
+
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)

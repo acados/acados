@@ -1,6 +1,6 @@
 import acados.*
 
-[~, ~, ode_fun] = example_model();
+ode_fun = chen_model();
 
 sim_options = struct('time_step', 0.2, 'order', 4);
 

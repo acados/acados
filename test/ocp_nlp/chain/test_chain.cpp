@@ -155,17 +155,20 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
                 sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac_fun = &jac_fun_nm2;
+                sim_in[jj].jac = &jac_chain_nm2;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
                 sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac_fun = &jac_fun_nm3;
+                sim_in[jj].jac = &jac_chain_nm3;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
                 sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac_fun = &jac_fun_nm4;
+                sim_in[jj].jac = &jac_chain_nm4;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             default:
                 REQUIRE(1 == 0);
@@ -212,7 +215,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         }
 
         int_t nx[NN+1] = {0};
-        int_t nu[NN] = {0};
+        int_t nu[NN+1] = {0};
         int_t nb[NN+1] = {0};
         int_t nc[NN+1] = {0};
         int_t ng[NN+1] = {0};
