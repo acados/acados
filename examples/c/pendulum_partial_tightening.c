@@ -18,13 +18,13 @@
  */
 
 #define NREP 1
-#define NSIM 1
+#define NSIM 500
 #define MAX_IP_ITER 50
 #define TOL 1e-6
 #define MINSTEP 1e-8
 
-#define NN 10
-#define MM 10  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
+#define NN 100
+#define MM 5  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
 #define NX 4
 #define NU 1
 #define NBU 1
@@ -32,11 +32,16 @@
 #define UMAX 20
 #define NMPC_INT_STEPS 1
 #define SIM_INT_STEPS 10
-#define N_SQP_ITER 100
+#define N_SQP_ITER 1
 
-#define L_INIT 1
-#define T_INIT 0.01
-#define MU_TIGHT 1
+// #define L_INIT 1
+// #define T_INIT 0.01
+// #define MU_TIGHT 1
+// #define MU0 1000000
+
+#define L_INIT 0.1
+#define T_INIT 0.1
+#define MU_TIGHT 0.1
 #define MU0 1000000
 
 #define INIT_STRATEGY 0
@@ -44,12 +49,13 @@
 #define SHIFT_STATES 0
 #define SHIFT_CONTROLS 0
 
-#define GAMMA 1.0
+#define GAMMA 0.7
 
 #define LVM 0.0 // Levenberg-Marquardt regularization
 
 #define PRINT_STATS 1
 #define PRINT_INT_STEPS 1
+#define PRINT_INT_SOL 1
 
 #define PLOT_CL_RESULTS
 #define PLOT_OL_RESULTS
@@ -891,6 +897,19 @@ int main() {
                 t_n[(N)*2*(NBX+NBU)+j] =
                 t_n[(N)*2*(NBX+NBU)+j] +
                 GAMMA*(qp_out.t[N][j] - t_n[(N)*2*(NBX+NBU)+j]);
+            }
+
+            if (PRINT_INT_SOL){
+                for (int_t j = 0; j < 2*(NBX+NBU); j++) {
+                    printf("lam_n[0][%i] = %.3f\n", j, lam_n[0*2*(NBX+NBU)+j]);
+                    printf("t_n[0][%i] = %.3f\n", j, t_n[0*2*(NBX+NBU)+j]);
+                }
+                for (int_t i = 1; i < N; i++) {
+                    for (int_t j = 0; j < 2*(NBX+NBU); j++) {
+                        printf("lam_n[%i][%i] = %.3f\n", i, j, lam_n[i*2*(NBX+NBU)+j]);
+                        printf("t_n[%i][%i] = %.3f\n", i, j, t_n[i*2*(NBX+NBU)+j]);
+                    }
+                }
             }
         }
 

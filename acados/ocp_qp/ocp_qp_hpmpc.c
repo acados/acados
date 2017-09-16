@@ -383,9 +383,14 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 
         // update stages M to N
         double mu_scal = 0.0;
+        // d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+        //   &sigma_mu, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+        //   &hsdlam[M], &hspi[M], &hspi[M]);
+        // TODO(Andrea): double check with gian that there are no other bugs like this (hspi->hslam)
+
         d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-          &sigma_mu, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
-          &hsdlam[M], &hspi[M], &hspi[M]);
+          &sigma_mu, mu_scal, alpha, &hsux[M], &hsdux[M], &hspi[M], &hspi[M], &hst[M],
+          &hsdt[M], &hslam[M], &hsdlam[M]);
 
         // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
         // define and compute hsdpi (see function prototype).
@@ -395,7 +400,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
             d_cvt_strvec2vec(nu[ii], &hsux[ii], 0, hu[ii]);
             d_cvt_strvec2vec(nx[ii], &hsux[ii], nu[ii], hx[ii]);
             d_cvt_strvec2vec(nx[ii], &hspi[ii], 0, hpi[ii]);
-                d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, hlam[ii]);
+            d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, hlam[ii]);
             d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hst[ii], 0, ht[ii]);
         }
 
