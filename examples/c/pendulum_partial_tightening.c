@@ -24,12 +24,12 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 5  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
+#define MM 2  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define UMAX 20
+#define UMAX 15
 #define NMPC_INT_STEPS 1
 #define SIM_INT_STEPS 10
 #define N_SQP_ITER 1
@@ -39,9 +39,9 @@
 // #define MU_TIGHT 1
 // #define MU0 1000000
 
-#define L_INIT 0.1
-#define T_INIT 0.1
-#define MU_TIGHT 0.1
+#define L_INIT 1
+#define T_INIT 1
+#define MU_TIGHT 1
 #define MU0 1000000
 
 #define INIT_STRATEGY 0
@@ -49,9 +49,9 @@
 #define SHIFT_STATES 0
 #define SHIFT_CONTROLS 0
 
-#define GAMMA 0.7
+#define GAMMA 0.99
 
-#define LVM 0.0 // Levenberg-Marquardt regularization
+#define LVM 1e-4 // Levenberg-Marquardt regularization
 
 #define PRINT_STATS 1
 #define PRINT_INT_STEPS 1
