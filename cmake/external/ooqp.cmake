@@ -24,6 +24,7 @@ ExternalProject_Add(
 
     DEPENDS ma27
     PREFIX "${PROJECT_BINARY_DIR}/external/OOQP"
+    DOWNLOAD_COMMAND ""
     CONFIGURE_COMMAND ./configure "--prefix=${PROJECT_BINARY_DIR}/external/OOQP/" "${HOST_FLAG}"
                                   "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-O2 -fPIC" "CC=${CMAKE_C_COMPILER}"
                                   "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
@@ -60,7 +61,6 @@ target_link_libraries(ooqp INTERFACE
     ma27
     openblas
     gfortran
-    c++
     m)
 
 set_property(TARGET ooqp
