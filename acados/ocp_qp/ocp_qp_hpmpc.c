@@ -395,7 +395,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
             d_cvt_strvec2vec(nu[ii], &hsux[ii], 0, hu[ii]);
             d_cvt_strvec2vec(nx[ii], &hsux[ii], nu[ii], hx[ii]);
             d_cvt_strvec2vec(nx[ii], &hspi[ii], 0, hpi[ii]);
-            d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, hlam[ii]);
+                d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hslam[ii], 0, hlam[ii]);
             d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &hst[ii], 0, ht[ii]);
         }
 

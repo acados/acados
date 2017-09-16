@@ -17,6 +17,40 @@
  *
  */
 
+#define NREP 1
+#define NSIM 1
+#define MAX_IP_ITER 50
+#define TOL 1e-6
+#define MINSTEP 1e-8
+
+#define NN 10
+#define MM 10  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
+#define NX 4
+#define NU 1
+#define NBU 1
+#define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
+#define UMAX 20
+#define NMPC_INT_STEPS 1
+#define SIM_INT_STEPS 10
+#define N_SQP_ITER 100
+
+#define L_INIT 1
+#define T_INIT 0.01
+#define MU_TIGHT 1
+#define MU0 1000000
+
+#define INIT_STRATEGY 0
+
+#define SHIFT_STATES 0
+#define SHIFT_CONTROLS 0
+
+#define GAMMA 1.0
+
+#define LVM 0.0 // Levenberg-Marquardt regularization
+
+#define PRINT_STATS 1
+#define PRINT_INT_STEPS 1
+
 #define PLOT_CL_RESULTS
 #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
@@ -51,34 +85,6 @@
 #include "acados/utils/types.h"
 #include "examples/c/pendulum_model/pendulum_model.h"
 
-// define IP solver arguments && number of repetitions
-#define NREP 1
-#define NSIM 5000
-#define MAX_IP_ITER 50
-#define TOL 1e-6
-#define MINSTEP 1e-8
-
-#define NN 100
-#define MM 5  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
-#define NX 4
-#define NU 1
-#define NBU 1
-#define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define UMAX 20
-#define N_INT_STEPS 1
-#define N_SQP_ITER 1
-
-#define L_INIT 1
-#define T_INIT 0.01
-#define MU_TIGHT 1
-#define MU0 1000000
-
-#define INIT_STRATEGY 0
-
-#define SHIFT_STATES 0
-#define SHIFT_CONTROLS 0
-
-#define GAMMA 0.6
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -285,6 +291,8 @@ int main() {
     real_t  lam_n[2*((NBX+NBU)*NN + NBX)] = {0};
     real_t  Q[NX*NX]                  = {0};
     real_t  R[NU*NU]                  = {0};
+    real_t  Q_lvm[NX*NX]              = {0};
+    real_t  R_lvm[NU*NU]              = {0};
     real_t  xref[NX]                  = {0};
     real_t  uref[NX]                  = {0};
     real_t  lam_init                  = {L_INIT};
@@ -311,45 +319,101 @@ int main() {
 
     R[0*(NU+1)] = 5e-4;
 
+    for (int_t i = 0; i < NX; i++)
+        for (int_t j = 0; j < NX; j++)
+            Q_lvm[i*NX+j] = Q[i*NX+j];
+
+    for (int_t i = 0; i < NX; i++)
+        Q_lvm[i*(NX+1)]+=LVM;
+
+    for (int_t i = 0; i < NU; i++)
+        for (int_t j = 0; j < NU; j++)
+            R_lvm[i*NU+j] = R[i*NU+j];
+
+    for (int_t i = 0; i < NU; i++)
+        R_lvm[i*(NU+1)]+=LVM;
+
     // LQR gain
     real_t  QN[NX*NX] = {16.9480, -26.5174,  9.2770, -7.9895,
                         -26.5174, 130.5894, -36.8187, 35.0536,
                         9.2770,  -36.8187,   13.0231, -11.3380,
                         -7.9895,   35.0536,  -11.338,   10.5763};
 
-    // Integrator structs
+    real_t  QN_lvm[NX*NX] = {0.0};
+
+    for (int_t i = 0; i < NX; i++)
+        for (int_t j = 0; j < NX; j++)
+            QN_lvm[i*NX+j] = QN[i*NX+j];
+
+    for (int_t i = 0; i < NX; i++)
+        QN_lvm[i*(NX+1)] += LVM;
+
+    // NMPC integrator structs
     real_t T = 0.01;
-    sim_in  sim_in;
-    sim_out sim_out;
-    sim_in.nSteps = N_INT_STEPS;
-    sim_in.step = T/sim_in.nSteps;
-    sim_in.vde = &vdeFun;
-    sim_in.VDE_forw = &VDE_fun_pendulum;
-    sim_in.nx = NX;
-    sim_in.nu = NU;
+    sim_in  nmpc_sim_in;
+    sim_out nmpc_sim_out;
+    nmpc_sim_in.nSteps = NMPC_INT_STEPS;
+    nmpc_sim_in.step = T/nmpc_sim_in.nSteps;
+    nmpc_sim_in.vde = &vdeFun;
+    nmpc_sim_in.VDE_forw = &VDE_fun_pendulum;
+    nmpc_sim_in.nx = NX;
+    nmpc_sim_in.nu = NU;
 
-    sim_in.sens_forw = true;
-    sim_in.sens_adj = false;
-    sim_in.sens_hess = false;
-    sim_in.nsens_forw = NX+NU;
+    nmpc_sim_in.sens_forw = true;
+    nmpc_sim_in.sens_adj = false;
+    nmpc_sim_in.sens_hess = false;
+    nmpc_sim_in.nsens_forw = NX+NU;
 
-    sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
-    sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
-    sim_in.S_forw = malloc(sizeof(*sim_in.S_forw) * (NX*(NX+NU)));
-    for (int_t i = 0; i < NX*(NX+NU); i++) sim_in.S_forw[i] = 0.0;
-    for (int_t i = 0; i < NX; i++) sim_in.S_forw[i*(NX+1)] = 1.0;
+    nmpc_sim_in.x = malloc(sizeof(*nmpc_sim_in.x) * (NX));
+    nmpc_sim_in.u = malloc(sizeof(*nmpc_sim_in.u) * (NU));
+    nmpc_sim_in.S_forw = malloc(sizeof(*nmpc_sim_in.S_forw) * (NX*(NX+NU)));
+    for (int_t i = 0; i < NX*(NX+NU); i++) nmpc_sim_in.S_forw[i] = 0.0;
+    for (int_t i = 0; i < NX; i++) nmpc_sim_in.S_forw[i*(NX+1)] = 1.0;
 
-    sim_out.xn = malloc(sizeof(*sim_out.xn) * (NX));
-    sim_out.S_forw = malloc(sizeof(*sim_out.S_forw) * (NX*(NX+NU)));
+    nmpc_sim_out.xn = malloc(sizeof(*nmpc_sim_out.xn) * (NX));
+    nmpc_sim_out.S_forw = malloc(sizeof(*nmpc_sim_out.S_forw) * (NX*(NX+NU)));
 
-    sim_info erk_info;
-    sim_out.info = &erk_info;
+    sim_info nmpc_erk_info;
+    nmpc_sim_out.info = &nmpc_erk_info;
 
-    void *erk_work;
-    sim_RK_opts rk_opts;
-    sim_erk_create_arguments(&rk_opts, 4);
-    int_t sim_workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
-    erk_work = (void *) malloc(sim_workspace_size);
+    void *nmpc_erk_work;
+    sim_RK_opts nmpc_rk_opts;
+    sim_erk_create_arguments(&nmpc_rk_opts, 4);
+    int_t nmpc_sim_workspace_size = sim_erk_calculate_workspace_size(&nmpc_sim_in, &nmpc_rk_opts);
+    nmpc_erk_work = (void *) malloc(nmpc_sim_workspace_size);
+
+    // simulation integrator structs
+    sim_in  plant_sim_in;
+    sim_out plant_sim_out;
+    plant_sim_in.nSteps = SIM_INT_STEPS;
+    plant_sim_in.step = T/plant_sim_in.nSteps;
+    plant_sim_in.vde = &vdeFun;
+    plant_sim_in.VDE_forw = &VDE_fun_pendulum;
+    plant_sim_in.nx = NX;
+    plant_sim_in.nu = NU;
+
+    plant_sim_in.sens_forw = true;
+    plant_sim_in.sens_adj = false;
+    plant_sim_in.sens_hess = false;
+    plant_sim_in.nsens_forw = NX+NU;
+
+    plant_sim_in.x = malloc(sizeof(*plant_sim_in.x) * (NX));
+    plant_sim_in.u = malloc(sizeof(*plant_sim_in.u) * (NU));
+    plant_sim_in.S_forw = malloc(sizeof(*plant_sim_in.S_forw) * (NX*(NX+NU)));
+    for (int_t i = 0; i < NX*(NX+NU); i++) plant_sim_in.S_forw[i] = 0.0;
+    for (int_t i = 0; i < NX; i++) plant_sim_in.S_forw[i*(NX+1)] = 1.0;
+
+    plant_sim_out.xn = malloc(sizeof(*plant_sim_out.xn) * (NX));
+    plant_sim_out.S_forw = malloc(sizeof(*plant_sim_out.S_forw) * (NX*(NX+NU)));
+
+    sim_info plant_erk_info;
+    plant_sim_out.info = &plant_erk_info;
+
+    void *plant_erk_work;
+    sim_RK_opts plant_rk_opts;
+    sim_erk_create_arguments(&plant_rk_opts, 4);
+    int_t plant_sim_workspace_size = sim_erk_calculate_workspace_size(&plant_sim_in, &plant_rk_opts);
+    plant_erk_work = (void *) malloc(plant_sim_workspace_size);
 
     int_t nx[NN+1] = {0};
     int_t nu[NN+1] = {0};
@@ -555,10 +619,10 @@ int main() {
     qp_in.nb = nb;
     qp_in.nc = nc;
     for (int_t i = 0; i < N; i++) {
-        pQ[i] = Q;
-        pR[i] = R;
+        pQ[i] = Q_lvm;
+        pR[i] = R_lvm;
     }
-    pQ[N] = QN;
+    pQ[N] = QN_lvm;
     qp_in.Q = (const real_t **) pQ;
     qp_in.S = (const real_t **) pS;
     qp_in.R = (const real_t **) pR;
@@ -629,11 +693,28 @@ int main() {
 
     real_t closed_loop_cost = 0.0;
 
+    real_t max_max_ss_u;
+    real_t max_max_ss_x;
+    real_t max_max_ss_l;
+    real_t max_max_ss_s;
+
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
         for (int_t j = 0; j < NX; j++) w[j] = x0[j];
         qp_min_timings = 1000000;
         lin_min_timings = 1000000;
+
+        real_t max_ss_u;
+        real_t max_ss_x;
+        real_t max_ss_l;
+        real_t max_ss_s;
+
         for (int_t sqp_iter = 0; sqp_iter < N_SQP_ITER; sqp_iter++) {
+
+            max_ss_u = 0;
+            max_ss_x = 0;
+            max_ss_l = 0;
+            max_ss_s = 0;
+
             for (int_t iter = 0; iter < NREP; iter++) {
                 acados_tic(&timer);
                 // initialize nlp dual variables
@@ -645,15 +726,16 @@ int main() {
                 }
 
                 for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
-                    lam_in[N][j] = lam_n[2*(NBX + NBU)*(N-1) + j];
-                    t_in[N][j] = t_n[2*(NBX + NBU)*(N-1) + j];
+                    lam_in[N][j] = lam_n[2*(NBX + NBU)*(N) + j];
+                    t_in[N][j] = t_n[2*(NBX + NBU)*(N) + j];
                 }
 
                 for (int_t i = 0; i < N; i++) {
                     // Pass state and control to integrator
-                    for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[i*(NX+NU)+j];
-                    for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[i*(NX+NU)+NX+j];
-                    sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
+                    for (int_t j = 0; j < NX; j++) nmpc_sim_in.x[j] = w[i*(NX+NU)+j];
+                    for (int_t j = 0; j < NU; j++) nmpc_sim_in.u[j] = w[i*(NX+NU)+NX+j];
+                    sim_erk(&nmpc_sim_in, &nmpc_sim_out, &nmpc_rk_opts, 0, nmpc_erk_work);
+
                     // Construct QP matrices
                     for (int_t j = 0; j < nx[i]; j++) {
                         pq[i][j] = Q[j*(NX+1)]*(w[i*(NX+NU)+j]-xref[j]);
@@ -662,11 +744,11 @@ int main() {
                         pr[i][j] = R[j*(NU+1)]*(w[i*(NX+NU)+NX+j]-uref[j]);
                     }
                     for (int_t j = 0; j < NX; j++) {
-                        pb[i][j] = sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                        for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = sim_out.S_forw[j*(NX)+k];
+                        pb[i][j] = nmpc_sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
+                        for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = nmpc_sim_out.S_forw[j*(NX)+k];
                     }
                     for (int_t j = 0; j < NU; j++)
-                        for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = sim_out.S_forw[NX*NX + NX*j+k];
+                        for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = nmpc_sim_out.S_forw[NX*NX + NX*j+k];
 
 
                     for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
@@ -679,7 +761,10 @@ int main() {
                 for ( int_t j = 0; j < NBX; j++ ) pub[N][j+NBU] = x_max[j] - w[N*(NX+NU)+j];
 
                 for (int_t j = 0; j < NX; j++) {
-                    pq[N][j] = Q[j*(NX+1)]*(w[N*(NX+NU)+j]-xref[j]);
+                    pq[N][j] = 0;
+                    for (int_t l = 0; l < NX; l++) {
+                        pq[N][j] += QN[j*NX+l]*(w[N*(NX+NU)+l]-xref[l]);
+                    }
                 }
 
                 timings = acados_toc(&timer);
@@ -701,42 +786,121 @@ int main() {
             if (status == 2) printf("status = ACADOS_MINSTEP\n");
 
             // there is no x0 in the first stage
+            // update max step size
+            for (int_t j = 0; j < NU; j++)
+                if (fabs(qp_out.u[0][j]) > max_ss_u)
+                    max_ss_u = fabs(qp_out.u[0][j]);
+
             for (int_t j = 0; j < NU; j++) w[0*(NX+NU)+NX+j] += GAMMA*qp_out.u[0][j];
+
             // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+
+            // update max step size
             for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                if (fabs(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]) > max_ss_l)
+                    max_ss_l = fabs(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
+
+            for (int_t j = 0; j < 2*(NBX+NBU); j++){
+                if (PRINT_INT_STEPS) printf("d_lam[0][%i] = %.3f\n", j, qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
                 lam_n[0*2*(NBX+NBU)+j] =
                     lam_n[0*2*(NBX+NBU)+j] +
                     GAMMA*(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
+            }
+
+            // update max step size
             for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                if (fabs(qp_out.t[0][j] - t_n[0*2*(NBX+NBU)+j]) > max_ss_s)
+                    max_ss_s = fabs(qp_out.t[0][j] - t_n[0*2*(NBX+NBU)+j]);
+
+            for (int_t j = 0; j < 2*(NBX+NBU); j++) {
+                if (PRINT_INT_STEPS) printf("d_t[%i] = %.3f\n", j, qp_out.t[0][j] - t_n[0*2*(NBX+NBU)+j]);
                 t_n[0*2*(NBX+NBU)+j] =
                     t_n[0*2*(NBX+NBU)+j]+
                     GAMMA*(qp_out.t[0][j]-t_n[0*2*(NBX+NBU)+j]);
+            }
 
             for (int_t i = 1; i < N; i++) {
+                // update max step size
+                for (int_t j = 0; j < NX; j++)
+                    if (fabs(qp_out.x[i][j]) > max_ss_x)
+                        max_ss_x = fabs(qp_out.x[i][j]);
+
                 for (int_t j = 0; j < NX; j++) w[i*(NX+NU)+j] += GAMMA*qp_out.x[i][j];
+
+                // update max step size
+                for (int_t j = 0; j < NU; j++)
+                    if (fabs(qp_out.u[i][j]) > max_ss_u)
+                        max_ss_u = fabs(qp_out.u[i][j]);
+
                 for (int_t j = 0; j < NU; j++) w[i*(NX+NU)+NX+j] += GAMMA*qp_out.u[i][j];
                 // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+
+                // update max step size
                 for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                    if (fabs(qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]) > max_ss_l)
+                        max_ss_l = fabs(qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
+
+                for (int_t j = 0; j < 2*(NBX+NBU); j++) {
+                    if (PRINT_INT_STEPS) printf("d_lam[%i][%i] = %.3f\n", i, j, qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
                     lam_n[i*2*(NBX+NBU)+j] =
                         lam_n[i*2*(NBX+NBU)+j] +
                         GAMMA*(qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
+                }
+
+                // update max step size
                 for (int_t j = 0; j < 2*(NBX+NBU); j++)
+                    if (fabs(qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]) > max_ss_s)
+                        max_ss_s = fabs(qp_out.t[i][j] -t_n[i*2*(NBX+NBU)+j]);
+
+
+                for (int_t j = 0; j < 2*(NBX+NBU); j++){
+                    if (PRINT_INT_STEPS) printf("d_t[%i][%i] = %.3f\n", i, j, qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]);
                     t_n[i*2*(NBX+NBU)+j] =
                         t_n[i*2*(NBX+NBU)+j] +
                         GAMMA*(qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]);
+                }
             }
+
+            // update max step size
+            for (int_t j = 0; j < NX; j++)
+                if (fabs(qp_out.x[N][j]) > max_ss_x)
+                    max_ss_x = fabs(qp_out.x[N][j]);
 
             for (int_t j = 0; j < NX; j++) w[N*(NX+NU)+j] += GAMMA*qp_out.x[N][j];
             // for (int_t j = 0; j < NX; j++) pi_n[0*NX+j] = qp_out.pi[0][j];
+
+            // update max step size
             for (int_t j = 0; j < 2*NBX; j++)
-                lam_n[(N-1)*2*(NBX+NBU)+j] =
-                lam_n[(N-1)*2*(NBX+NBU)+j] +
-                GAMMA*(qp_out.lam[N][j] - lam_n[(N-1)*2*(NBX+NBU)+j]);
+                if (fabs(qp_out.lam[N][j] - lam_n[(N)*2*(NBX+NBU)+j]) > max_ss_l)
+                    max_ss_l = fabs(qp_out.lam[N][j] - lam_n[N*2*(NBX+NBU)+j]);
+
+            for (int_t j = 0; j < 2*NBX; j++) {
+                if (PRINT_INT_STEPS) printf("d_lam[N][%i] = %.3f\n", j, qp_out.lam[N][j] - lam_n[N*2*(NBX+NBU)+j]);
+                lam_n[(N)*2*(NBX+NBU)+j] =
+                lam_n[(N)*2*(NBX+NBU)+j] +
+                GAMMA*(qp_out.lam[N][j] - lam_n[(N)*2*(NBX+NBU)+j]);
+            }
+
+            // update max step size
             for (int_t j = 0; j < 2*NBX; j++)
-                t_n[(N-1)*2*(NBX+NBU)+j] =
-                t_n[(N-1)*2*(NBX+NBU)+j] +
-                GAMMA*(qp_out.t[N][j] - t_n[(N-1)*2*(NBX+NBU)+j]);
+                if (fabs(qp_out.t[N][j] - t_n[(N)*2*(NBX+NBU)+j]) > max_ss_s)
+                    max_ss_s = fabs(qp_out.t[N][j] - t_n[(N)*2*(NBX+NBU)+j]);
+
+            for (int_t j = 0; j < 2*NBX; j++) {
+                if (PRINT_INT_STEPS) printf("d_t[N][%i] = %.3f\n", j, qp_out.t[N][j] - t_n[N*2*(NBX+NBU)+j]);
+                t_n[(N)*2*(NBX+NBU)+j] =
+                t_n[(N)*2*(NBX+NBU)+j] +
+                GAMMA*(qp_out.t[N][j] - t_n[(N)*2*(NBX+NBU)+j]);
+            }
         }
+
+        if (max_ss_u > max_max_ss_u) max_max_ss_u = max_ss_u;
+        if (max_ss_x > max_max_ss_x) max_max_ss_x = max_ss_x;
+        if (max_ss_l > max_max_ss_l) max_max_ss_l = max_ss_l;
+        if (max_ss_s > max_max_ss_s) max_max_ss_s = max_ss_s;
+
+        if(PRINT_STATS)
+            printf("max_ss_x = %.3f, max_ss_u = %.3f, max_ss_l = %.3f, max_ss_s = %.3f,\n", max_ss_x, max_ss_u, max_ss_l, max_ss_s);
 
         // store stats
         int ip_iter = hpmpc_args.out_iter;
@@ -755,9 +919,9 @@ int main() {
         if (SHIFT_CONTROLS) shift_controls(w, u_end, N);
 
         // Pass state and control to integrator
-        for (int_t j = 0; j < NX; j++) sim_in.x[j] = w[j];
-        for (int_t j = 0; j < NU; j++) sim_in.u[j] = w[NX+j];
-        sim_erk(&sim_in, &sim_out, &rk_opts, 0, erk_work);
+        for (int_t j = 0; j < NX; j++) plant_sim_in.x[j] = w[j];
+        for (int_t j = 0; j < NU; j++) plant_sim_in.u[j] = w[NX+j];
+        sim_erk(&plant_sim_in, &plant_sim_out, &plant_rk_opts, 0, plant_erk_work);
 
         // update closed-loop cost
         for (int_t i = 0; i < NX; i++)
@@ -767,7 +931,7 @@ int main() {
             closed_loop_cost+=w[NX+i]*R[i*(NU+1)]*w[NX+i];
 
         // update initial condition
-        for (int_t j = 0; j < NX; j++) x0[j] = sim_out.xn[j];
+        for (int_t j = 0; j < NX; j++) x0[j] = plant_sim_out.xn[j];
     }
 
     #ifdef DEBUG
@@ -785,7 +949,7 @@ int main() {
     // compute worst-case CPU time
     real_t max_qp_time = 0;
     real_t min_lin_time = 0;
-    int_t max_ip_iters = 0;
+    int_t  max_ip_iters = 0;
     for (int_t i = 0; i < NSIM; i++) {
         printf("it: %d, min qp CPU time: %.3f, min linearization CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_lin_timings[i], sim_ip_iters[i]);
         if (sim_qp_timings[i] > max_qp_time) {
@@ -805,15 +969,25 @@ int main() {
     printf("-> lin CPU time: %.3f ms per RTI.\n", min_lin_time);
     printf("-> worst-case ip iterations: %d.\n", max_ip_iters);
     printf("-> closed-loop cost: %.3f\n", closed_loop_cost);
+    printf("max_max_ss_x = %.3f, max_max_ss_u = %.3f, max_max_ss_l = %.3f, max_max_ss_s = %.3f,\n", max_max_ss_x, max_max_ss_u, max_max_ss_l, max_max_ss_s);
+
 
     free(workspace);
     ocp_qp_hpmpc_free_memory(mem);
-    sim_erk_destroy(erk_work);
-    free(sim_in.x);
-    free(sim_in.u);
-    free(sim_in.S_forw);
-    free(sim_out.xn);
-    free(sim_out.S_forw);
+
+    sim_erk_destroy(nmpc_erk_work);
+    free(nmpc_sim_in.x);
+    free(nmpc_sim_in.u);
+    free(nmpc_sim_in.S_forw);
+    free(nmpc_sim_out.xn);
+    free(nmpc_sim_out.S_forw);
+
+    sim_erk_destroy(plant_erk_work);
+    free(plant_sim_in.x);
+    free(plant_sim_in.u);
+    free(plant_sim_in.S_forw);
+    free(plant_sim_out.xn);
+    free(plant_sim_out.S_forw);
 
     // UGLY
     free(px0[0]);
