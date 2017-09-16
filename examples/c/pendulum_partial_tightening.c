@@ -24,12 +24,12 @@
 #define MINSTEP 1e-8
 
 #define NN 100
-#define MM 2  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
+#define MM 100  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
-#define UMAX 15
+#define UMAX 12
 #define NMPC_INT_STEPS 1
 #define SIM_INT_STEPS 10
 #define N_SQP_ITER 1
