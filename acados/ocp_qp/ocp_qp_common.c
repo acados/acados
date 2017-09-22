@@ -243,7 +243,8 @@ ocp_qp_in *create_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, con
 }
 
 
-int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc) {
+int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+                                const int_t *nc) {
 
     int_t bytes = sizeof(ocp_qp_out);
 
@@ -264,7 +265,8 @@ int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu,
 }
 
 
-char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc, ocp_qp_out **qp_out,
+char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+                        const int_t *nc, ocp_qp_out **qp_out,
     void *ptr) {
 
     // char pointer
@@ -318,8 +320,8 @@ char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const i
     return c_ptr;
 }
 
-
-ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc) {
+ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+                              const int_t *nc) {
 
     ocp_qp_out *qp_out;
 

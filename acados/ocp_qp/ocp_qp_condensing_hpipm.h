@@ -57,13 +57,16 @@ ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments();
 
 int_t ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, void *args_);
 
-char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void **hpipm_memory, void *raw_memory);
+char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void **hpipm_memory,
+                                            void *raw_memory);
 //
-ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, void *args_);
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in,
+                                                                      void *args_);
 
 int_t ocp_qp_condensing_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, void *args_);
 
-int_t ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *memory, void *workspace_);
+int_t ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *memory,
+                              void *workspace_);
 
 void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args, void **mem, void **work);
 

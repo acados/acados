@@ -162,7 +162,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
                             void *work;
 
-                            ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_create_arguments(QPDUNES_DEFAULT_ARGUMENTS);
+                            ocp_qp_qpdunes_args *args =
+                                ocp_qp_qpdunes_create_arguments(QPDUNES_DEFAULT_ARGUMENTS);
 
                             int_t workspace_size =
                                 ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
@@ -260,7 +261,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, &args);
                             void *mem = malloc(memory_size);
 
-                            ocp_qp_condensing_hpipm_memory *memory = ocp_qp_condensing_hpipm_create_memory(qp_in, &args);
+                            ocp_qp_condensing_hpipm_memory *memory =
+                                ocp_qp_condensing_hpipm_create_memory(qp_in, &args);
 
                             return_value = \
                                 ocp_qp_condensing_hpipm(qp_in, qp_out, &args, memory, work);

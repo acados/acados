@@ -561,7 +561,8 @@ int main() {
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
-    ocp_qp_condensing_hpipm_memory *hpipm_memory = ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args);
+    ocp_qp_condensing_hpipm_memory *hpipm_memory =
+        ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args);
 
     /************************************************
      * call the solver (fully sparse)
@@ -577,7 +578,8 @@ int main() {
         // call the QP OCP solver
         //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args,
         //        workspace);
-        return_value = ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args, hpipm_memory, workspace);
+        return_value =
+            ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args, hpipm_memory, workspace);
     }
 
     real_t time = acados_toc(&timer)/nrep;

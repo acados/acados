@@ -131,7 +131,8 @@ int_t ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, void *args
     return size;
 }
 
-char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void **mem_, void *raw_memory) {
+char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void **mem_,
+                                            void *raw_memory) {
 
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
     ocp_qp_condensing_hpipm_memory **hpipm_memory = (ocp_qp_condensing_hpipm_memory **) mem_;
@@ -256,12 +257,15 @@ char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void 
     return c_ptr;
 }
 
-ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, void *args_) {
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in,
+                                                                      void *args_) {
+
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
     ocp_qp_condensing_hpipm_memory *mem;
     int_t memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, args);
     void *raw_memory_ptr = malloc(memory_size);
-    char *ptr_end = ocp_qp_condensing_hpipm_assign_memory(qp_in, args, (void **) &mem, raw_memory_ptr);
+    char *ptr_end =
+        ocp_qp_condensing_hpipm_assign_memory(qp_in, args, (void **) &mem, raw_memory_ptr);
     assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
     return mem;
 }
