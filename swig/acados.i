@@ -280,6 +280,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %ignore assign_ocp_qp_out;
 %ignore create_ocp_qp_out;
 %ignore ocp_qp_out;
+%ignore create_ocp_qp_solver;
 %rename(ocp_qp) ocp_qp_in;
 %include "acados/ocp_qp/ocp_qp_common.h"
 
@@ -369,10 +370,8 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 #endif
         } else if (!strcmp(solver_name, "qpdunes")) {
             solver->fun = ocp_qp_qpdunes;
-            args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
-            ocp_qp_qpdunes_create_arguments(args, QPDUNES_DEFAULT_ARGUMENTS);
-            mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
-            ocp_qp_qpdunes_create_memory(qp_in, args, mem);
+            args = ocp_qp_qpdunes_create_arguments(QPDUNES_DEFAULT_ARGUMENTS);
+            mem = ocp_qp_qpdunes_create_memory(qp_in, (ocp_qp_qpdunes_args *) args);
             workspace_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
             workspace = (void *) malloc(workspace_size);
         }  else {

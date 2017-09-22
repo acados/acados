@@ -71,10 +71,9 @@ typedef struct ocp_qp_qpdunes_memory_ {
     qpdunes_stage_qp_solver_t stageQpSolver;
 } ocp_qp_qpdunes_memory;
 
-int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
+ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts);
 int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_);
-int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *input, void *args_,
-                                   void *memory_);
+ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, ocp_qp_qpdunes_args *args);
 
 void ocp_qp_qpdunes_free_memory(void *mem_);
 // void ocp_qp_qpdunes_free_workspace(void *work_);
@@ -82,8 +81,7 @@ void ocp_qp_qpdunes_free_memory(void *mem_);
 int_t ocp_qp_qpdunes(ocp_qp_in *input, ocp_qp_out *output, void *args_,
                      void *memory_, void *work_);
 
-void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
-                               void **work);
+void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
 void ocp_qp_qpdunes_destroy(void *mem, void *work);
 
 #ifdef __cplusplus

@@ -44,42 +44,23 @@
 
 // void d_print_e_mat(int m, int n, double *a, int lda);
 
-int ocp_qp_condensing_hpipm_calculate_workspace_size(
-    ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
+ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments() {
+    ocp_qp_condensing_hpipm_args *args =
+        (ocp_qp_condensing_hpipm_args *) malloc(sizeof(ocp_qp_condensing_hpipm_args));
+    args->mu_max = 1e-8;
+    args->iter_max = 20;
+    args->alpha_min = 1e-8;
+    args->mu0 = 1;
+
+    return args;
+}
+
+int ocp_qp_condensing_hpipm_calculate_workspace_size(ocp_qp_in *qp_in,
+                                                     ocp_qp_condensing_hpipm_args *args) {
     return 0;
 }
 
-// // compute the memory size of condensing for [x u] order of bounds (instead of [u x] in hpipm)
-// void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
-//     int *nvd, int *ned, int *nbd, int *ngd) {
-
-//     int ii, jj;
-
-//     *nvd = 0;
-//     *ned = 0;
-//     *nbd = 0;
-//     *ngd = 0;
-
-//     // first stage
-//     *nvd += nx[0]+nu[0];
-//     *nbd += nb[0];
-//     *ngd += ng[0];
-//     // remaining stages
-//     for (ii = 1; ii <= N; ii++) {
-//         *nvd += nu[ii];
-//         for (jj = 0; jj < nb[ii]; jj++) {
-//             if (hidxb[ii][jj] < nx[ii]) {  // state constraint
-//                 (*ngd)++;
-//             } else {  // input constraint
-//                 (*nbd)++;
-//             }
-//         }
-//     *ngd += ng[ii];
-//     }
-// }
-
-int ocp_qp_condensing_hpipm_calculate_memory_size(
-    ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
+int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
     // extract ocp qp in size
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -123,7 +104,7 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     ipm_arg.iter_max = args->iter_max;
 
     // size in bytes
-    int size = 0;
+    int size = sizeof(ocp_qp_condensing_hpipm_memory);
 
     size += 1 * sizeof(struct d_ocp_qp);                       // qp
     size += 1 * sizeof(struct d_ocp_qp_sol);                   // qp_sol
@@ -151,9 +132,8 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(
     return size;
 }
 
-void ocp_qp_condensing_hpipm_create_memory(
-    ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
-    ocp_qp_condensing_hpipm_memory *hpipm_memory, void *memory) {
+void ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
+    ocp_qp_condensing_hpipm_memory **hpipm_memory, void *memory) {
     // extract problem size
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -179,60 +159,63 @@ void ocp_qp_condensing_hpipm_create_memory(
     // char pointer
     char *c_ptr = (char *)memory;
 
+    *hpipm_memory = (ocp_qp_condensing_hpipm_memory *) c_ptr;
+    c_ptr += sizeof(ocp_qp_condensing_hpipm_memory);
+
     //
-    hpipm_memory->qp = (struct d_ocp_qp *)c_ptr;
+    (*hpipm_memory)->qp = (struct d_ocp_qp *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ocp_qp);
     //
-    hpipm_memory->qp_sol = (struct d_ocp_qp_sol *)c_ptr;
+    (*hpipm_memory)->qp_sol = (struct d_ocp_qp_sol *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ocp_qp_sol);
     //
-    hpipm_memory->qpd = (struct d_dense_qp *)c_ptr;
+    (*hpipm_memory)->qpd = (struct d_dense_qp *)c_ptr;
     c_ptr += 1 * sizeof(struct d_dense_qp);
     //
-    hpipm_memory->qpd_sol = (struct d_dense_qp_sol *)c_ptr;
+    (*hpipm_memory)->qpd_sol = (struct d_dense_qp_sol *)c_ptr;
     c_ptr += 1 * sizeof(struct d_dense_qp_sol);
     //
-    hpipm_memory->cond_workspace =
+    (*hpipm_memory)->cond_workspace =
         (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
     c_ptr += 1 * sizeof(struct d_cond_qp_ocp2dense_workspace);
     //
-    hpipm_memory->ipm_arg = (struct d_ipm_hard_dense_qp_arg *)c_ptr;
+    (*hpipm_memory)->ipm_arg = (struct d_ipm_hard_dense_qp_arg *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ipm_hard_dense_qp_arg);
     //
-    hpipm_memory->ipm_workspace = (struct d_ipm_hard_dense_qp_workspace *)c_ptr;
+    (*hpipm_memory)->ipm_workspace = (struct d_ipm_hard_dense_qp_workspace *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ipm_hard_dense_qp_workspace);
     //
-    hpipm_memory->hlam_lb = (double **)c_ptr;
+    (*hpipm_memory)->hlam_lb = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hlam_ub = (double **)c_ptr;
+    (*hpipm_memory)->hlam_ub = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hlam_lg = (double **)c_ptr;
+    (*hpipm_memory)->hlam_lg = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hlam_ug = (double **)c_ptr;
+    (*hpipm_memory)->hlam_ug = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hidxb_rev = (int **)c_ptr;
+    (*hpipm_memory)->hidxb_rev = (int **)c_ptr;
     c_ptr += (N + 1) * sizeof(int *);
 
     //
-    struct d_ocp_qp *qp = hpipm_memory->qp;
+    struct d_ocp_qp *qp = (*hpipm_memory)->qp;
     //
-    struct d_ocp_qp_sol *qp_sol = hpipm_memory->qp_sol;
+    struct d_ocp_qp_sol *qp_sol = (*hpipm_memory)->qp_sol;
     //
-    struct d_dense_qp *qpd = hpipm_memory->qpd;
+    struct d_dense_qp *qpd = (*hpipm_memory)->qpd;
     //
-    struct d_dense_qp_sol *qpd_sol = hpipm_memory->qpd_sol;
+    struct d_dense_qp_sol *qpd_sol = (*hpipm_memory)->qpd_sol;
     //
     struct d_cond_qp_ocp2dense_workspace *cond_workspace =
-        hpipm_memory->cond_workspace;
+        (*hpipm_memory)->cond_workspace;
     //
-    struct d_ipm_hard_dense_qp_arg *ipm_arg = hpipm_memory->ipm_arg;
+    struct d_ipm_hard_dense_qp_arg *ipm_arg = (*hpipm_memory)->ipm_arg;
     //
     struct d_ipm_hard_dense_qp_workspace *ipm_workspace =
-        hpipm_memory->ipm_workspace;
+        (*hpipm_memory)->ipm_workspace;
 
     // align memory to typical cache line size
     size_t s_ptr = (size_t)c_ptr;
@@ -265,7 +248,7 @@ void ocp_qp_condensing_hpipm_create_memory(
 
     //
     for (int ii = 0; ii <= N; ii++) {
-        hpipm_memory->hidxb_rev[ii] = (int *) c_ptr;
+        (*hpipm_memory)->hidxb_rev[ii] = (int *) c_ptr;
         c_ptr += nb[ii]*sizeof(int);
     }
 
@@ -273,9 +256,13 @@ void ocp_qp_condensing_hpipm_create_memory(
 }
 
 int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-                            ocp_qp_condensing_hpipm_args *args,
-                            ocp_qp_condensing_hpipm_memory *memory,
+                            void *args_,
+                            void *memory_,
                             void *workspace_) {
+
+    ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
+    ocp_qp_condensing_hpipm_memory *memory = (ocp_qp_condensing_hpipm_memory *) memory_;
+
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
 
@@ -428,4 +415,20 @@ int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     // return
     return acados_status;
     //
+}
+
+void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+    ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
+
+    int work_space_size = ocp_qp_condensing_hpipm_calculate_workspace_size(qp_in, args);
+    *work = malloc(work_space_size);
+
+    int memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, args);
+    void *memory = malloc(memory_size);
+    ocp_qp_condensing_hpipm_create_memory(qp_in, args, (ocp_qp_condensing_hpipm_memory **) mem, memory);
+}
+
+void ocp_qp_condensing_hpipm_destroy(void *mem, void *work) {
+    free(mem);
+    free(work);
 }

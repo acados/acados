@@ -136,16 +136,12 @@ int main() {
 
     ocp_qp_out *qp_out = create_ocp_qp_out(NN, nx, nu, nb, nc);
 
-    // Setup ocp_qp_args and ocp_qp_mem
-    ocp_qp_qpdunes_args args;
-    ocp_qp_qpdunes_memory mem;
+    ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_create_arguments(QPDUNES_LINEAR_MPC);
 
-    ocp_qp_qpdunes_create_arguments(&args, QPDUNES_LINEAR_MPC);
-
-    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, &args);
+    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
     void *work = (void *)malloc(work_space_size);
 
-    ocp_qp_qpdunes_create_memory(qp_in, &args, &mem);
+    ocp_qp_qpdunes_memory *mem = ocp_qp_qpdunes_create_memory(qp_in, args);
 
     // store initial condition
     for (int_t i = 0; i < NX; i++) xMPC[i] = x0[i];
@@ -165,7 +161,7 @@ int main() {
 
         // solve QP
         acados_tic(&timer);
-        ocp_qp_qpdunes(qp_in, qp_out, &args, &mem, work);
+        ocp_qp_qpdunes(qp_in, qp_out, args, mem, work);
         cputimes[kk] = 1000*acados_toc(&timer);
         // print_ocp_qp_in(qp_in);
         // exit(1);
@@ -194,7 +190,7 @@ int main() {
     // d_print_mat(NX+NU, NN, qp_out.x[0][0], NX+NU);
 
     // free dynamically allocated memory
-    ocp_qp_qpdunes_free_memory(&mem);
+    ocp_qp_qpdunes_free_memory(mem);
     free(work);
     free(qp_in);
     free(qp_out);

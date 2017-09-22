@@ -59,7 +59,7 @@ typedef struct {
 
 typedef struct {
     int_t (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
-    void (*initialize)(ocp_qp_in *qp_in, void *args, void *mem, void **work);
+    void (*initialize)(ocp_qp_in *qp_in, void *args, void **mem, void **work);
     void (*destroy)(void *mem, void *work);
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
@@ -68,19 +68,23 @@ typedef struct {
     void *work;
 } ocp_qp_solver;
 
-int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
-char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in,
+int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc);
+char *assign_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc, ocp_qp_in **qp_in,
     void *ptr);
-ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
+ocp_qp_in *create_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc);
 
-int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
-char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out,
+int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc);
+char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc, ocp_qp_out **qp_out,
     void *ptr);
-ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc);
+ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc);
 
 void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, int_t stage);
 void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t *r,
     ocp_qp_in *qp_in, int_t stage);
+
+ocp_qp_solver *create_ocp_qp_solver(const int_t N, const int_t *nx, const int_t *nu,
+        const int_t *nb, const int_t *nc, const int_t **idxb,
+        const char *solver_name, void *solver_options);
 
 #ifdef __cplusplus
 } /* extern "C" */

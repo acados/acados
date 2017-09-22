@@ -25,9 +25,17 @@
 
 #include <assert.h>
 
+#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#ifdef OOQP
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#endif
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/types.h"
 
-int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+                               const int_t *nc) {
 
     int_t bytes = sizeof(ocp_qp_in);
 
@@ -63,8 +71,8 @@ int_t ocp_qp_in_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *
 }
 
 
-char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_in **qp_in,
-    void *ptr) {
+char *assign_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+                       const int_t *nc, ocp_qp_in **qp_in, void *ptr) {
 
     // pointer to initialize QP data to zero
     char *c_ptr_QPdata;
@@ -211,7 +219,8 @@ char *assign_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_
 }
 
 
-ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+ocp_qp_in *create_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
+                            const int_t *nc) {
 
     ocp_qp_in *qp_in;
 
@@ -234,7 +243,7 @@ ocp_qp_in *create_ocp_qp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc)
 }
 
 
-int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc) {
 
     int_t bytes = sizeof(ocp_qp_out);
 
@@ -255,7 +264,7 @@ int_t ocp_qp_out_calculate_size(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t 
 }
 
 
-char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp_qp_out **qp_out,
+char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc, ocp_qp_out **qp_out,
     void *ptr) {
 
     // char pointer
@@ -310,7 +319,7 @@ char *assign_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, ocp
 }
 
 
-ocp_qp_out *create_ocp_qp_out(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc) {
+ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb, const int_t *nc) {
 
     ocp_qp_out *qp_out;
 
@@ -348,4 +357,62 @@ void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t
         memcpy(hR[stage], R, qp_in->nu[stage]*qp_in->nu[stage]*sizeof(real_t));
         memcpy(hq[stage], q, qp_in->nx[stage]*sizeof(real_t));
         memcpy(hr[stage], r, qp_in->nu[stage]*sizeof(real_t));
+}
+
+ocp_qp_solver *create_ocp_qp_solver(const int_t N, const int_t *nx, const int_t *nu,
+                                    const int_t *nb, const int_t *nc, const int **idxb,
+                                    const char *solver_name, void *solver_options) {
+    ocp_qp_solver *qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
+
+    qp_solver->qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
+    qp_solver->qp_out = create_ocp_qp_out(N, nx, nu, nb, nc);
+
+    int_t **qp_idxb = (int_t **) qp_solver->qp_in->idxb;
+    for (int_t i = 0; i <= N; i++) {
+        for (int_t j = 0; j < nb[i]; j++) {
+            qp_idxb[i][j] = idxb[i][j];
+        }
+    }
+
+    if (!strcmp(solver_name, "qpdunes")) {
+        if (solver_options == NULL)
+            qp_solver->args = (void *) ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
+        else
+            qp_solver->args = solver_options;
+        qp_solver->fun = &ocp_qp_qpdunes;
+        qp_solver->initialize = &ocp_qp_qpdunes_initialize;
+        qp_solver->destroy = &ocp_qp_qpdunes_destroy;
+// #ifdef OOQP
+//     } else if (!strcmp(solver_name, "ooqp")) {
+//         qp_solver->fun = &ocp_qp_ooqp;
+//         qp_solver->initialize = &ocp_qp_ooqp_initialize;
+//         qp_solver->destroy = &ocp_qp_ooqp_destroy;
+//         qp_args = (void *)malloc(sizeof(ocp_qp_ooqp_args));
+//         qp_mem = (void *)malloc(sizeof(ocp_qp_ooqp_memory));
+// #endif
+//     } else if (!strcmp(solver_name, "condensing_qpoases")) {
+//         qp_solver->fun = &ocp_qp_condensing_qpoases;
+//         qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
+//         qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
+//         qp_args = (void *)malloc(sizeof(ocp_qp_condensing_qpoases_args));
+//     } else if (!strcmp(solver_name, "hpmpc")) {
+//         qp_solver->fun = &ocp_qp_hpmpc;
+//         qp_solver->initialize = &ocp_qp_hpmpc_initialize;
+//         qp_solver->destroy = &ocp_qp_hpmpc_destroy;
+//         qp_args = (void *)malloc(sizeof(ocp_qp_hpmpc_args));
+    } else if (!strcmp(solver_name, "condensing_hpipm")) {
+        if (solver_options == NULL)
+            qp_solver->args = ocp_qp_condensing_hpipm_create_arguments();
+        else
+            qp_solver->args = solver_options;
+        qp_solver->fun = &ocp_qp_condensing_hpipm;
+        qp_solver->initialize = &ocp_qp_condensing_hpipm_initialize;
+        qp_solver->destroy = &ocp_qp_condensing_hpipm_destroy;
+    } else {
+        printf("Chosen QP solver not available\n");
+        exit(1);
+    }
+    qp_solver->initialize(qp_solver->qp_in, qp_solver->args, &qp_solver->mem, &qp_solver->work);
+
+    return qp_solver;
 }

@@ -160,23 +160,21 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> TESTING qpDUNES with QP: "<< scenario <<
                                 ", " << constraint << std::endl;
 
-                            ocp_qp_qpdunes_args args;
-                            ocp_qp_qpdunes_memory mem;
                             void *work;
 
-                            ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
+                            ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_create_arguments(QPDUNES_DEFAULT_ARGUMENTS);
 
                             int_t workspace_size =
-                                ocp_qp_qpdunes_calculate_workspace_size(qp_in, &args);
+                                ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
                             work = (void*)malloc(workspace_size);
 
-                            int_t mem_return = ocp_qp_qpdunes_create_memory(qp_in, &args, &mem);
-                            REQUIRE(mem_return == 0);
+                            ocp_qp_qpdunes_memory *mem = ocp_qp_qpdunes_create_memory(qp_in, args);
+                            REQUIRE(mem != NULL);
 
-                            return_value = ocp_qp_qpdunes(qp_in, qp_out, &args, &mem, work);
+                            return_value = ocp_qp_qpdunes(qp_in, qp_out, args, mem, work);
                             acados_W = Eigen::Map<VectorXd>(qp_out->x[0], (N+1)*nx + N*nu);
                             free(work);
-                            ocp_qp_qpdunes_free_memory(&mem);
+                            ocp_qp_qpdunes_free_memory(mem);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
                             std::cout <<"---> PASSED " << std::endl;
@@ -262,11 +260,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, &args);
                             void *mem = malloc(memory_size);
 
-                            ocp_qp_condensing_hpipm_memory memory;
+                            ocp_qp_condensing_hpipm_memory *memory;
                             ocp_qp_condensing_hpipm_create_memory(qp_in, &args, &memory, mem);
 
                             return_value = \
-                                ocp_qp_condensing_hpipm(qp_in, qp_out, &args, &memory, work);
+                                ocp_qp_condensing_hpipm(qp_in, qp_out, &args, memory, work);
                             acados_W = Eigen::Map<VectorXd>(qp_out->x[0], (N+1)*nx + N*nu);
                             acados_PI = Eigen::Map<VectorXd>(qp_out->pi[0], N*nx);
                             free(work);

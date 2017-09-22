@@ -551,17 +551,15 @@ for (jj = 0; jj < nbu; jj++) {
     * solver arguments
     ************************************************/
 
-    ocp_qp_qpdunes_args args;
-    ocp_qp_qpdunes_create_arguments(&args, QPDUNES_LINEAR_MPC);
+    ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_create_arguments(QPDUNES_LINEAR_MPC);
 
     /************************************************
     * workspace
     ************************************************/
 
-    ocp_qp_qpdunes_memory mem;
-    ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
+    ocp_qp_qpdunes_memory *mem = NULL;
 
-    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
+    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, args);
     void *work = (void*)malloc(work_space_size);
 
     /************************************************
@@ -576,10 +574,10 @@ for (jj = 0; jj < nbu; jj++) {
 //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // NOTE(dimitris): creating memory again to avoid warm start
-        ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
+        mem = ocp_qp_qpdunes_create_memory(&qp_in, args);
 
         // call the QP OCP solver
-        ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
+        ocp_qp_qpdunes(&qp_in, &qp_out, args, mem, work);
     }
 
     real_t time = acados_toc(&timer)/nrep;
@@ -652,7 +650,7 @@ for (jj = 0; jj < nbu; jj++) {
     d_free(hlam[N]);
     d_free(ht[N]);
 
-    ocp_qp_qpdunes_free_memory(&mem);
+    ocp_qp_qpdunes_free_memory(mem);
     free(work);
 
     return 0;
