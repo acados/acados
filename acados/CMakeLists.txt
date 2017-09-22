@@ -75,7 +75,7 @@ endif()
 
 # Enable or disable timings
 if(ACADOS_MEASURE_TIMINGS)
-    target_compile_definitions(acados PRIVATE MEASURE_TIMINGS)
+    target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
 # Only test acados library for coverage
