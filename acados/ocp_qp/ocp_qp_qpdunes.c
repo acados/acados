@@ -403,9 +403,9 @@ static void assign_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memo
     ptr += (mem->dimz)*sizeof(real_t);
 }
 
-ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in,
-                                                    ocp_qp_qpdunes_args *args) {
+ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_) {
 
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
     int_t N, nx, nu, kk;
     uint_t *nD_ptr = 0;
