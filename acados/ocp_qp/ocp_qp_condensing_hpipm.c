@@ -19,6 +19,7 @@
 
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -132,7 +133,7 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_conde
     return size;
 }
 
-void ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
+char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
     ocp_qp_condensing_hpipm_memory **hpipm_memory, void *memory) {
     // extract problem size
     int N = qp_in->N;
@@ -252,7 +253,16 @@ void ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_h
         c_ptr += nb[ii]*sizeof(int);
     }
 
-    return;
+    return c_ptr;
+}
+
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
+    ocp_qp_condensing_hpipm_memory *mem;
+    int_t memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, args);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end = ocp_qp_condensing_hpipm_assign_memory(qp_in, args, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
 }
 
 int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
@@ -423,9 +433,10 @@ void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **me
     int work_space_size = ocp_qp_condensing_hpipm_calculate_workspace_size(qp_in, args);
     *work = malloc(work_space_size);
 
-    int memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, args);
-    void *memory = malloc(memory_size);
-    ocp_qp_condensing_hpipm_create_memory(qp_in, args, (ocp_qp_condensing_hpipm_memory **) mem, memory);
+    *mem = ocp_qp_condensing_hpipm_create_memory(qp_in, args);
+    // int memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, args);
+    // void *memory = malloc(memory_size);
+    // ocp_qp_condensing_hpipm_assign_memory(qp_in, args, (ocp_qp_condensing_hpipm_memory **) mem, memory);
 }
 
 void ocp_qp_condensing_hpipm_destroy(void *mem, void *work) {

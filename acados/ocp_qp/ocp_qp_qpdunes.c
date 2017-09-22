@@ -50,29 +50,6 @@ static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
     for (ii = 0; ii < m * n; ii++) mat[ii] = tmp[ii];
 }
 
-static void assign_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem) {
-
-    char *ptr = (char *)work;
-
-    ptr += sizeof(ocp_qp_qpdunes_workspace);
-    assert((size_t)ptr % 8 == 0);
-
-    work->ABt = (real_t *)ptr;
-    ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
-    work->Ct = (real_t *)ptr;
-    ptr += (mem->dimC) * sizeof(real_t);
-    work->scrap = (real_t *)ptr;
-    ptr += (mem->maxDim) * sizeof(real_t);
-    work->zLow = (real_t *)ptr;
-    ptr += (mem->dimz) * sizeof(real_t);
-    work->zUpp = (real_t *)ptr;
-    ptr += (mem->dimz) * sizeof(real_t);
-    work->H = (real_t *)ptr;
-    ptr += (mem->dimz * mem->dimz) * sizeof(real_t);
-    work->g = (real_t *)ptr;
-    ptr += (mem->dimz)*sizeof(real_t);
-}
-
 static void form_H(real_t *Hk, int_t nx, const real_t *Qk, int_t nu,
                    const real_t *Rk, const real_t *Sk) {
     int_t ii, jj, offset;
@@ -401,6 +378,29 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
     size += (dimA + dimB + dimC + maxDim) * sizeof(real_t);  // ABt, Ct, scrap,
     size += (dimz * dimz + 3 * dimz) * sizeof(real_t);       // H, g, zLow, zUpp
     return size;
+}
+
+static void assign_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem) {
+
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_qp_qpdunes_workspace);
+    assert((size_t)ptr % 8 == 0);
+
+    work->ABt = (real_t *)ptr;
+    ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
+    work->Ct = (real_t *)ptr;
+    ptr += (mem->dimC) * sizeof(real_t);
+    work->scrap = (real_t *)ptr;
+    ptr += (mem->maxDim) * sizeof(real_t);
+    work->zLow = (real_t *)ptr;
+    ptr += (mem->dimz) * sizeof(real_t);
+    work->zUpp = (real_t *)ptr;
+    ptr += (mem->dimz) * sizeof(real_t);
+    work->H = (real_t *)ptr;
+    ptr += (mem->dimz * mem->dimz) * sizeof(real_t);
+    work->g = (real_t *)ptr;
+    ptr += (mem->dimz)*sizeof(real_t);
 }
 
 ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in,

@@ -460,7 +460,7 @@ int main() {
             ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpsolver_args, &qpsolver_memory,
                 qpsolver_mem);
             #else
-            ocp_qp_condensing_hpipm_create_memory(&qp_in, &qpsolver_args, &qpsolver_memory,
+            ocp_qp_condensing_hpipm_assign_memory(&qp_in, &qpsolver_args, &qpsolver_memory,
                 qpsolver_mem);
             #endif
 

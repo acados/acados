@@ -561,8 +561,7 @@ int main() {
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
-    ocp_qp_condensing_hpipm_memory *hpipm_memory;
-    ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args, &hpipm_memory, memory);
+    ocp_qp_condensing_hpipm_memory *hpipm_memory = ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args);
 
     /************************************************
      * call the solver (fully sparse)

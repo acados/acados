@@ -62,10 +62,12 @@ int ocp_qp_condensing_hpipm_calculate_workspace_size(
 int ocp_qp_condensing_hpipm_calculate_memory_size(
     ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args);
 //
-void ocp_qp_condensing_hpipm_create_memory(
+char *ocp_qp_condensing_hpipm_assign_memory(
     ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
     ocp_qp_condensing_hpipm_memory **hpipm_memory, void *memory);
 //
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args);
+
 int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                             void *args, void *memory, void *workspace_);
 

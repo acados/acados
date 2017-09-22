@@ -260,8 +260,7 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, &args);
                             void *mem = malloc(memory_size);
 
-                            ocp_qp_condensing_hpipm_memory *memory;
-                            ocp_qp_condensing_hpipm_create_memory(qp_in, &args, &memory, mem);
+                            ocp_qp_condensing_hpipm_memory *memory = ocp_qp_condensing_hpipm_create_memory(qp_in, &args);
 
                             return_value = \
                                 ocp_qp_condensing_hpipm(qp_in, qp_out, &args, memory, work);
