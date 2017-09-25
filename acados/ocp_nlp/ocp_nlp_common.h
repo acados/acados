@@ -40,15 +40,15 @@ typedef struct {
     // TODO(rien): only for least squares cost with state and control reference
     // atm
 
-    void (*res)(const real_t *, real_t *);
-    void (*jac_res)(const real_t *, real_t *);
+    // void (*res)(const real_t *, real_t *);
+    // void (*jac_res)(const real_t *, real_t *);
 
-    const int_t *ny;
+    // const int_t *ny;
 
     real_t **W;
     real_t **y_ref;
 
-    const int_t lin_res;  // special treatment of linear residuals
+    // const int_t lin_res;  // special treatment of linear residuals
 
 } ocp_nlp_ls_cost;
 
