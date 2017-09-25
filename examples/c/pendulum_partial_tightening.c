@@ -49,7 +49,7 @@
 #define SHIFT_STATES 0
 #define SHIFT_CONTROLS 0
 
-#define LOG_CL_SOL 0
+// #define LOG_CL_SOL
 #define LOG_NAME "cl_log_M_50_N_50.txt"
 
 #define GAMMA 0.5
@@ -668,7 +668,6 @@ int main() {
     acados_timer timer;
     real_t timings = 0;
     real_t qp_sum_timings = 0;
-    real_t lin_sum_timings = 0;
     real_t qp_min_timings;
     real_t lin_min_timings;
     int_t status;
@@ -704,10 +703,10 @@ int main() {
 
     real_t closed_loop_cost = 0.0;
 
-    real_t max_max_ss_u;
-    real_t max_max_ss_x;
-    real_t max_max_ss_l;
-    real_t max_max_ss_s;
+    real_t max_max_ss_u = 0.0;
+    real_t max_max_ss_x = 0.0;
+    real_t max_max_ss_l = 0.0;
+    real_t max_max_ss_s = 0.0;
 
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
         for (int_t j = 0; j < NX; j++) w[j] = x0[j];
@@ -730,13 +729,13 @@ int main() {
                 acados_tic(&timer);
                 // initialize nlp dual variables
                 for (int_t i = M; i < N; i++) {
-                    for (int_t j  = 0; j < 2*nb[i]+2*ngg[i]; j++) {
+                    for (int_t j  = 0; j < 2*nb[i]; j++) {
                         lam_in[i][j] = lam_n[2*(NBX + NBU)*i + j];
                         t_in[i][j] = t_n[2*(NBX + NBU)*i + j];
                     }
                 }
 
-                for (int_t j  = 0; j < 2*nb[N]+2*ngg[N]; j++) {
+                for (int_t j  = 0; j < 2*nb[N]; j++) {
                     lam_in[N][j] = lam_n[2*(NBX + NBU)*(N) + j];
                     t_in[N][j] = t_n[2*(NBX + NBU)*(N) + j];
                 }
@@ -1021,7 +1020,7 @@ int main() {
     printf("max_max_ss_x = %.3f, max_max_ss_u = %.3f, max_max_ss_l = %.3f, max_max_ss_s = %.3f,\n",
         max_max_ss_x, max_max_ss_u, max_max_ss_l, max_max_ss_s);
 
-    if (LOG_CL_SOL) {
+#ifdef LOG_CL_SOL
         FILE *fp;
 
         fp = fopen(LOG_NAME, "w+");
@@ -1031,7 +1030,7 @@ int main() {
             w_cl[i*(NX+NU) + 2], w_cl[i*(NX+NU) + 3], w_cl[i*(NX+NU) + 4]);
         }
         fclose(fp);
-    }
+#endif
 
     free(workspace);
     ocp_qp_hpmpc_free_memory(mem);
