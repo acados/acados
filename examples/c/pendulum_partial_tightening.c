@@ -735,7 +735,7 @@ int main() {
                     }
                 }
 
-                for (int_t j  = 0; j < 2*nb[N]; j++) {
+                for (int_t j  = 0; j < 2*NBX; j++) {
                     lam_in[N][j] = lam_n[2*(NBX + NBU)*(N) + j];
                     t_in[N][j] = t_n[2*(NBX + NBU)*(N) + j];
                 }
