@@ -49,7 +49,7 @@
 #define SHIFT_STATES 0
 #define SHIFT_CONTROLS 0
 
-#define LOG_CL_SOL 1
+#define LOG_CL_SOL 0
 #define LOG_NAME "cl_log_M_50_N_50.txt"
 
 #define GAMMA 0.5
@@ -60,8 +60,8 @@
 #define PRINT_INT_STEPS 0
 #define PRINT_INT_SOL 0
 
-#define PLOT_CL_RESULTS
-#define PLOT_OL_RESULTS
+// #define PLOT_CL_RESULTS
+// #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
 
 #ifdef PLOT_OL_RESULTS
