@@ -54,7 +54,7 @@
 
 #define GAMMA 0.5
 
-#define LVM 1e-4 // Levenberg-Marquardt regularization
+#define LVM 1e-4  // Levenberg-Marquardt regularization
 
 #define PRINT_STATS 0
 #define PRINT_INT_STEPS 0
@@ -421,7 +421,9 @@ int main() {
     void *plant_erk_work;
     sim_RK_opts plant_rk_opts;
     sim_erk_create_arguments(&plant_rk_opts, 4);
-    int_t plant_sim_workspace_size = sim_erk_calculate_workspace_size(&plant_sim_in, &plant_rk_opts);
+    int_t plant_sim_workspace_size =
+        sim_erk_calculate_workspace_size(&plant_sim_in, &plant_rk_opts);
+
     plant_erk_work = (void *) malloc(plant_sim_workspace_size);
 
     int_t nx[NN+1] = {0};
@@ -754,10 +756,12 @@ int main() {
                     }
                     for (int_t j = 0; j < NX; j++) {
                         pb[i][j] = nmpc_sim_out.xn[j] - w[(i+1)*(NX+NU)+j];
-                        for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] = nmpc_sim_out.S_forw[j*(NX)+k];
+                        for (int_t k = 0; k < nx[i]; k++) pA[i][j*NX+k] =
+                            nmpc_sim_out.S_forw[j*(NX)+k];
                     }
                     for (int_t j = 0; j < NU; j++)
-                        for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] = nmpc_sim_out.S_forw[NX*NX + NX*j+k];
+                        for (int_t k = 0; k < NX; k++) pB[i][j*NX+k] =
+                            nmpc_sim_out.S_forw[NX*NX + NX*j+k];
 
 
                     for ( int_t j = 0; j < NBX; j++ ) plb[i][j+NBU] = x_min[j] - w[i*(NX+NU)+j];
@@ -809,8 +813,11 @@ int main() {
                 if (fabs(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]) > max_ss_l)
                     max_ss_l = fabs(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
 
-            for (int_t j = 0; j < 2*(NBX+NBU); j++){
-                if (PRINT_INT_STEPS) printf("d_lam[0][%i] = %.3f\n", j, qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
+            for (int_t j = 0; j < 2*(NBX+NBU); j++) {
+                if (PRINT_INT_STEPS)
+                    printf("d_lam[0][%i] = %.3f\n", j,
+                    qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
+
                 lam_n[0*2*(NBX+NBU)+j] =
                     lam_n[0*2*(NBX+NBU)+j] +
                     GAMMA*(qp_out.lam[0][j] - lam_n[0*2*(NBX+NBU)+j]);
@@ -822,7 +829,10 @@ int main() {
                     max_ss_s = fabs(qp_out.t[0][j] - t_n[0*2*(NBX+NBU)+j]);
 
             for (int_t j = 0; j < 2*(NBX+NBU); j++) {
-                if (PRINT_INT_STEPS) printf("d_t[%i] = %.3f\n", j, qp_out.t[0][j] - t_n[0*2*(NBX+NBU)+j]);
+                if (PRINT_INT_STEPS)
+                    printf("d_t[%i] = %.3f\n", j,
+                    qp_out.t[0][j] - t_n[0*2*(NBX+NBU)+j]);
+
                 t_n[0*2*(NBX+NBU)+j] =
                     t_n[0*2*(NBX+NBU)+j]+
                     GAMMA*(qp_out.t[0][j]-t_n[0*2*(NBX+NBU)+j]);
@@ -850,7 +860,10 @@ int main() {
                         max_ss_l = fabs(qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
 
                 for (int_t j = 0; j < 2*(NBX+NBU); j++) {
-                    if (PRINT_INT_STEPS) printf("d_lam[%i][%i] = %.3f\n", i, j, qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
+                    if (PRINT_INT_STEPS)
+                        printf("d_lam[%i][%i] = %.3f\n", i, j,
+                        qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
+
                     lam_n[i*2*(NBX+NBU)+j] =
                         lam_n[i*2*(NBX+NBU)+j] +
                         GAMMA*(qp_out.lam[i][j] - lam_n[i*2*(NBX+NBU)+j]);
@@ -862,8 +875,11 @@ int main() {
                         max_ss_s = fabs(qp_out.t[i][j] -t_n[i*2*(NBX+NBU)+j]);
 
 
-                for (int_t j = 0; j < 2*(NBX+NBU); j++){
-                    if (PRINT_INT_STEPS) printf("d_t[%i][%i] = %.3f\n", i, j, qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]);
+                for (int_t j = 0; j < 2*(NBX+NBU); j++) {
+                    if (PRINT_INT_STEPS)
+                        printf("d_t[%i][%i] = %.3f\n", i, j,
+                        qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]);
+
                     t_n[i*2*(NBX+NBU)+j] =
                         t_n[i*2*(NBX+NBU)+j] +
                         GAMMA*(qp_out.t[i][j] - t_n[i*2*(NBX+NBU)+j]);
@@ -884,7 +900,10 @@ int main() {
                     max_ss_l = fabs(qp_out.lam[N][j] - lam_n[N*2*(NBX+NBU)+j]);
 
             for (int_t j = 0; j < 2*NBX; j++) {
-                if (PRINT_INT_STEPS) printf("d_lam[N][%i] = %.3f\n", j, qp_out.lam[N][j] - lam_n[N*2*(NBX+NBU)+j]);
+                if (PRINT_INT_STEPS)
+                    printf("d_lam[N][%i] = %.3f\n", j,
+                    qp_out.lam[N][j] - lam_n[N*2*(NBX+NBU)+j]);
+
                 lam_n[(N)*2*(NBX+NBU)+j] =
                 lam_n[(N)*2*(NBX+NBU)+j] +
                 GAMMA*(qp_out.lam[N][j] - lam_n[(N)*2*(NBX+NBU)+j]);
@@ -896,13 +915,16 @@ int main() {
                     max_ss_s = fabs(qp_out.t[N][j] - t_n[(N)*2*(NBX+NBU)+j]);
 
             for (int_t j = 0; j < 2*NBX; j++) {
-                if (PRINT_INT_STEPS) printf("d_t[N][%i] = %.3f\n", j, qp_out.t[N][j] - t_n[N*2*(NBX+NBU)+j]);
+                if (PRINT_INT_STEPS)
+                printf("d_t[N][%i] = %.3f\n", j,
+                qp_out.t[N][j] - t_n[N*2*(NBX+NBU)+j]);
+
                 t_n[(N)*2*(NBX+NBU)+j] =
                 t_n[(N)*2*(NBX+NBU)+j] +
                 GAMMA*(qp_out.t[N][j] - t_n[(N)*2*(NBX+NBU)+j]);
             }
 
-            if (PRINT_INT_SOL){
+            if (PRINT_INT_SOL) {
                 for (int_t j = 0; j < 2*(NBX+NBU); j++) {
                     printf("lam_n[0][%i] = %.3f\n", j, lam_n[0*2*(NBX+NBU)+j]);
                     printf("t_n[0][%i] = %.3f\n", j, t_n[0*2*(NBX+NBU)+j]);
@@ -921,8 +943,9 @@ int main() {
         if (max_ss_l > max_max_ss_l) max_max_ss_l = max_ss_l;
         if (max_ss_s > max_max_ss_s) max_max_ss_s = max_ss_s;
 
-        if(PRINT_STATS)
-            printf("max_ss_x = %.3f, max_ss_u = %.3f, max_ss_l = %.3f, max_ss_s = %.3f,\n", max_ss_x, max_ss_u, max_ss_l, max_ss_s);
+        if (PRINT_STATS)
+            printf("max_ss_x = %.3f, max_ss_u = %.3f, max_ss_l = %.3f, max_ss_s = %.3f,\n",
+            max_ss_x, max_ss_u, max_ss_l, max_ss_s);
 
         // store stats
         int ip_iter = hpmpc_args.out_iter;
@@ -973,7 +996,10 @@ int main() {
     real_t min_lin_time = 0;
     int_t  max_ip_iters = 0;
     for (int_t i = 0; i < NSIM; i++) {
-        // printf("it: %d, min qp CPU time: %.3f, min linearization CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_lin_timings[i], sim_ip_iters[i]);
+        // printf("it: %d, min qp CPU time: %.3f, min linearization CPU time:
+        // %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_lin_timings[i],
+        // sim_ip_iters[i]);
+
         printf("it: %d, min CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_ip_iters[i]);
         if (sim_qp_timings[i] > max_qp_time) {
             max_qp_time = sim_qp_timings[i];
@@ -992,13 +1018,14 @@ int main() {
     printf("-> lin CPU time: %.3f ms per RTI.\n", min_lin_time);
     printf("-> worst-case ip iterations: %d.\n", max_ip_iters);
     printf("-> closed-loop cost: %.3f\n", closed_loop_cost);
-    printf("max_max_ss_x = %.3f, max_max_ss_u = %.3f, max_max_ss_l = %.3f, max_max_ss_s = %.3f,\n", max_max_ss_x, max_max_ss_u, max_max_ss_l, max_max_ss_s);
+    printf("max_max_ss_x = %.3f, max_max_ss_u = %.3f, max_max_ss_l = %.3f, max_max_ss_s = %.3f,\n",
+        max_max_ss_x, max_max_ss_u, max_max_ss_l, max_max_ss_s);
 
-    if (LOG_CL_SOL){
+    if (LOG_CL_SOL) {
         FILE *fp;
 
         fp = fopen(LOG_NAME, "w+");
-        for (int_t i = 0; i < NSIM; i++){
+        for (int_t i = 0; i < NSIM; i++) {
             fprintf(fp, "%.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
             i*T, w_cl[i*(NX+NU) + 0], w_cl[i*(NX+NU) + 1],
             w_cl[i*(NX+NU) + 2], w_cl[i*(NX+NU) + 3], w_cl[i*(NX+NU) + 4]);
