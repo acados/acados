@@ -18,20 +18,20 @@
  */
 
 #define NREP 1
-#define NSIM 500
+#define NSIM 1000
 #define MAX_IP_ITER 50
 #define TOL 1e-6
 #define MINSTEP 1e-8
 
-#define NN 100
-#define MM 100  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
+#define NN 50
+#define MM 50  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
 #define NX 4
 #define NU 1
 #define NBU 1
 #define NBX 0  // TODO(Andrea): adding bounds gives MIN_STEP
 #define UMAX 12
 #define NMPC_INT_STEPS 1
-#define SIM_INT_STEPS 10
+#define SIM_INT_STEPS 50
 #define N_SQP_ITER 1
 
 // #define L_INIT 1
@@ -39,8 +39,8 @@
 // #define MU_TIGHT 1
 // #define MU0 1000000
 
-#define L_INIT 1
-#define T_INIT 1
+#define L_INIT 10
+#define T_INIT 0.1
 #define MU_TIGHT 1
 #define MU0 1000000
 
@@ -49,13 +49,16 @@
 #define SHIFT_STATES 0
 #define SHIFT_CONTROLS 0
 
-#define GAMMA 0.99
+#define LOG_CL_SOL 1
+#define LOG_NAME "cl_log_M_50_N_50.txt"
+
+#define GAMMA 0.5
 
 #define LVM 1e-4 // Levenberg-Marquardt regularization
 
-#define PRINT_STATS 1
-#define PRINT_INT_STEPS 1
-#define PRINT_INT_SOL 1
+#define PRINT_STATS 0
+#define PRINT_INT_STEPS 0
+#define PRINT_INT_SOL 0
 
 #define PLOT_CL_RESULTS
 #define PLOT_OL_RESULTS
@@ -773,11 +776,11 @@ int main() {
                     }
                 }
 
-                timings = acados_toc(&timer);
-                lin_sum_timings+=timings;
-                if (timings < lin_min_timings) lin_min_timings = timings;
-
-                acados_tic(&timer);
+                // timings = acados_toc(&timer);
+                // lin_sum_timings+=timings;
+                // if (timings < lin_min_timings) lin_min_timings = timings;
+                //
+                // acados_tic(&timer);
 
                 status = ocp_qp_hpmpc(&qp_in, &qp_out, &hpmpc_args, mem, workspace);
 
@@ -970,7 +973,8 @@ int main() {
     real_t min_lin_time = 0;
     int_t  max_ip_iters = 0;
     for (int_t i = 0; i < NSIM; i++) {
-        printf("it: %d, min qp CPU time: %.3f, min linearization CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_lin_timings[i], sim_ip_iters[i]);
+        // printf("it: %d, min qp CPU time: %.3f, min linearization CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_lin_timings[i], sim_ip_iters[i]);
+        printf("it: %d, min CPU time: %.3f, ip iters: %d\n", i, sim_qp_timings[i], sim_ip_iters[i]);
         if (sim_qp_timings[i] > max_qp_time) {
             max_qp_time = sim_qp_timings[i];
         }
@@ -990,6 +994,17 @@ int main() {
     printf("-> closed-loop cost: %.3f\n", closed_loop_cost);
     printf("max_max_ss_x = %.3f, max_max_ss_u = %.3f, max_max_ss_l = %.3f, max_max_ss_s = %.3f,\n", max_max_ss_x, max_max_ss_u, max_max_ss_l, max_max_ss_s);
 
+    if (LOG_CL_SOL){
+        FILE *fp;
+
+        fp = fopen(LOG_NAME, "w+");
+        for (int_t i = 0; i < NSIM; i++){
+            fprintf(fp, "%.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n",
+            i*T, w_cl[i*(NX+NU) + 0], w_cl[i*(NX+NU) + 1],
+            w_cl[i*(NX+NU) + 2], w_cl[i*(NX+NU) + 3], w_cl[i*(NX+NU) + 4]);
+        }
+        fclose(fp);
+    }
 
     free(workspace);
     ocp_qp_hpmpc_free_memory(mem);
