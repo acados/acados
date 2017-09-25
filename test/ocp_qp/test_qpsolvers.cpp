@@ -133,12 +133,12 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ocp_qp_condensing_qpoases_calculate_memory_size(qp_in, &args);
                             void *mem = malloc(memory_size);
 
-                            ocp_qp_condensing_qpoases_memory memory;
-                            ocp_qp_condensing_qpoases_create_memory(qp_in, &args, &memory, mem);
+                            ocp_qp_condensing_qpoases_memory *memory;
+                            ocp_qp_condensing_qpoases_assign_memory(qp_in, &args, (void **) &memory, mem);
 
                             // TODO(dimitris): also test that qp_in has not changed
                             return_value = \
-                                ocp_qp_condensing_qpoases(qp_in, qp_out, &args, &memory, work);
+                                ocp_qp_condensing_qpoases(qp_in, qp_out, &args, memory, work);
                             acados_W = Eigen::Map<VectorXd>(qp_out->x[0], (N+1)*nx + N*nu);
                             acados_PI = Eigen::Map<VectorXd>(qp_out->pi[0], N*nx);
                             free(work);
@@ -188,7 +188,6 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ", " << constraint << std::endl;
 
                             ocp_qp_ooqp_args args;
-                            ocp_qp_ooqp_memory mem;
                             void *work;
 
                             args.printLevel = 0;
@@ -197,13 +196,13 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                                 ocp_qp_ooqp_calculate_workspace_size(qp_in, &args);
                             work = (void*)malloc(workspace_size);
 
-                            int_t mem_return = ocp_qp_ooqp_create_memory(qp_in, &args, &mem);
-                            REQUIRE(mem_return == 0);
+                            ocp_qp_ooqp_memory *mem = ocp_qp_ooqp_create_memory(qp_in, &args);
+                            REQUIRE(mem != NULL);
 
-                            return_value = ocp_qp_ooqp(qp_in, qp_out, &args, &mem, work);
+                            return_value = ocp_qp_ooqp(qp_in, qp_out, &args, mem, work);
                             acados_W = Eigen::Map<VectorXd>(qp_out->x[0], (N+1)*nx + N*nu);
                             free(work);
-                            ocp_qp_ooqp_free_memory(&mem);
+                            ocp_qp_ooqp_free_memory(mem);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
                             std::cout <<"---> PASSED " << std::endl;

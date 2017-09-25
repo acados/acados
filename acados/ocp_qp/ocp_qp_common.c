@@ -334,7 +334,8 @@ ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, c
 }
 
 
-void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, int_t stage) {
+void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b,
+                             ocp_qp_in *qp_in, int_t stage) {
 
     real_t **hA = (real_t **) qp_in->A;
     real_t **hB = (real_t **) qp_in->B;
@@ -345,8 +346,8 @@ void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, 
     memcpy(hb[stage], b, qp_in->nx[stage+1]*sizeof(real_t));
 }
 
-void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t *r,
-    ocp_qp_in *qp_in, int_t stage) {
+void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
+                              const real_t *r, ocp_qp_in *qp_in, int_t stage) {
 
         real_t **hQ = (real_t **) qp_in->Q;
         real_t **hS = (real_t **) qp_in->S;
@@ -368,6 +369,7 @@ ocp_qp_solver *create_ocp_qp_solver(const int_t N, const int_t *nx, const int_t 
 
     qp_solver->qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
     qp_solver->qp_out = create_ocp_qp_out(N, nx, nu, nb, nc);
+    qp_solver->args = solver_options;
 
     int_t **qp_idxb = (int_t **) qp_solver->qp_in->idxb;
     for (int_t i = 0; i <= N; i++) {
@@ -377,36 +379,33 @@ ocp_qp_solver *create_ocp_qp_solver(const int_t N, const int_t *nx, const int_t 
     }
 
     if (!strcmp(solver_name, "qpdunes")) {
-        if (solver_options == NULL)
+        if (qp_solver->args == NULL)
             qp_solver->args = (void *) ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
-        else
-            qp_solver->args = solver_options;
         qp_solver->fun = &ocp_qp_qpdunes;
         qp_solver->initialize = &ocp_qp_qpdunes_initialize;
         qp_solver->destroy = &ocp_qp_qpdunes_destroy;
-// #ifdef OOQP
-//     } else if (!strcmp(solver_name, "ooqp")) {
-//         qp_solver->fun = &ocp_qp_ooqp;
-//         qp_solver->initialize = &ocp_qp_ooqp_initialize;
-//         qp_solver->destroy = &ocp_qp_ooqp_destroy;
-//         qp_args = (void *)malloc(sizeof(ocp_qp_ooqp_args));
-//         qp_mem = (void *)malloc(sizeof(ocp_qp_ooqp_memory));
-// #endif
-//     } else if (!strcmp(solver_name, "condensing_qpoases")) {
-//         qp_solver->fun = &ocp_qp_condensing_qpoases;
-//         qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
-//         qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
-//         qp_args = (void *)malloc(sizeof(ocp_qp_condensing_qpoases_args));
+#ifdef OOQP
+    } else if (!strcmp(solver_name, "ooqp")) {
+        if (qp_solver->args == NULL)
+            qp_solver->args = (void *) ocp_qp_ooqp_create_arguments();
+        qp_solver->fun = &ocp_qp_ooqp;
+        qp_solver->initialize = &ocp_qp_ooqp_initialize;
+        qp_solver->destroy = &ocp_qp_ooqp_destroy;
+#endif
+    } else if (!strcmp(solver_name, "condensing_qpoases")) {
+        if (qp_solver->args == NULL)
+            qp_solver->args = (void *) ocp_qp_condensing_qpoases_create_arguments();
+        qp_solver->fun = &ocp_qp_condensing_qpoases;
+        qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
+        qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
 //     } else if (!strcmp(solver_name, "hpmpc")) {
 //         qp_solver->fun = &ocp_qp_hpmpc;
 //         qp_solver->initialize = &ocp_qp_hpmpc_initialize;
 //         qp_solver->destroy = &ocp_qp_hpmpc_destroy;
 //         qp_args = (void *)malloc(sizeof(ocp_qp_hpmpc_args));
     } else if (!strcmp(solver_name, "condensing_hpipm")) {
-        if (solver_options == NULL)
+        if (qp_solver->args == NULL)
             qp_solver->args = ocp_qp_condensing_hpipm_create_arguments();
-        else
-            qp_solver->args = solver_options;
         qp_solver->fun = &ocp_qp_condensing_hpipm;
         qp_solver->initialize = &ocp_qp_condensing_hpipm_initialize;
         qp_solver->destroy = &ocp_qp_condensing_hpipm_destroy;

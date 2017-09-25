@@ -86,9 +86,11 @@ char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const i
 ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
                               const int_t *nc);
 
-void ocp_qp_in_copy_dynamics(real_t *A, real_t *B, real_t *b, ocp_qp_in *qp_in, int_t stage);
-void ocp_qp_in_copy_objective(real_t *Q, real_t *S, real_t *R, real_t *q, real_t *r,
-    ocp_qp_in *qp_in, int_t stage);
+void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, ocp_qp_in *qp_in,
+                             int_t stage);
+
+void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
+                              const real_t *r, ocp_qp_in *qp_in, int_t stage);
 
 ocp_qp_solver *create_ocp_qp_solver(const int_t N, const int_t *nx, const int_t *nu,
         const int_t *nb, const int_t *nc, const int_t **idxb,

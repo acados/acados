@@ -558,8 +558,7 @@ int main() {
     * workspace
     ************************************************/
 
-    ocp_qp_ooqp_memory mem;
-    ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
+    ocp_qp_ooqp_memory *mem = ocp_qp_ooqp_create_memory(&qp_in, &args);
 
     int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
     void *work = (void*)malloc(work_space_size);
@@ -577,7 +576,7 @@ int main() {
     for (rep = 0; rep < nrep; rep++) {
 
         // call the QP OCP solver
-        ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
+        ocp_qp_ooqp(&qp_in, &qp_out, &args, mem, work);
     }
 
     real_t time = acados_toc(&timer)/nrep;
@@ -650,7 +649,7 @@ int main() {
     d_free(hlam[N]);
     d_free(ht[N]);
 
-    ocp_qp_ooqp_free_memory(&mem);
+    ocp_qp_ooqp_free_memory(mem);
     free(work);
 
     return 0;

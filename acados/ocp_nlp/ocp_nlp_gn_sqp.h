@@ -46,6 +46,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 
 void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_,
                                   void *memory_);
+
 void ocp_nlp_gn_sqp_free_memory(void *memory_);
 
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in,
