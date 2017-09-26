@@ -66,27 +66,77 @@ static void initialize_objective(
     const int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
     const int_t *nu = nlp_in->nu;
+
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
+
+    const int_t *nr = cost->nr;
 
     real_t **qp_Q = (real_t **) gn_sqp_mem->qp_solver->qp_in->Q;
     real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
-    // TODO(rien): only for least squares cost with state and control reference atm
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
-            for (int_t k = 0; k < nx[i]; k++) {
-                qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
+
+    if (lin_res) {
+        // TODO(rien): only for least squares cost with state and control reference atm
+        for (int_t i = 0; i <= N; i++) {
+            for (int_t j = 0; j < nx[i]; j++) {
+                for (int_t k = 0; k < nx[i]; k++) {
+                    qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
+                }
+                for (int_t k = 0; k < nu[i]; k++) {
+                    qp_S[i][j * nu[i] + k] =
+                        cost->W[i][j * (nx[i] + nu[i]) + nx[i] + k];
+                }
             }
-            for (int_t k = 0; k < nu[i]; k++) {
-                qp_S[i][j * nu[i] + k] =
-                    cost->W[i][j * (nx[i] + nu[i]) + nx[i] + k];
+            for (int_t j = 0; j < nu[i]; j++) {
+                for (int_t k = 0; k < nu[i]; k++) {
+                    qp_R[i][j * nu[i] + k] =
+                        cost->W[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
+                }
             }
         }
-        for (int_t j = 0; j < nu[i]; j++) {
-            for (int_t k = 0; k < nu[i]; k++) {
-                qp_R[i][j * nu[i] + k] =
-                    cost->W[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
+    } else {
+        for (int_t i = 0; i < N; i++) {
+
+            real_t *r = ls_res_out;  // TODO(Andrea): allocate this
+            real_t *drdw = &ls_res_out[nr[i]];
+
+            // (dense) Gauss-Newton Hessian
+            for (int_t j = 0; j < nx[i]; j++)
+                res_in[j] = gn_sqp_mem->common->x[i][j];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                res_in[NX+j] = gn_sqp_mem->common->u[i][j];
+
+            cost->ls_res_eval(ls_res_in, ls_res_out, cost->ls_res);
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++)
+              for (int_t k = 0; k < nr[i]; k++) {
+                drdw_tran[k*(nx[i] + nu[i]) + j] = drdw[j*nr[i] + k];
+              }
+
+            // init Hgn to zeros
+            for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hgn[0][j] = 0.0;
+            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i], drdw, nr[i], Hgn[0], nx[i]);
+
+            // check symmetry
+            for (int_t j = 0; j < nx[i] + nu [i]; j++) {
+              for (int_t k = 0; k < nx[i] + nu [i]; k++) {
+                if (fabs(pQ[0][j*(nx[i] + nu [i]) + k] - Hgn[0][k*(nx[i] + nu [i]) + j])
+                    > 0.01) {
+                  printf("nonsymmetric Hessian!");
+                }
+              }
             }
+
+            // compute eta_tilde
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -rref[j] + r[j];
+            for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
+            printf("\n\n");
+            for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++) pq[0][j] = 0.0;
+
+            dgemv_n_3l(NX, NR, drdx_tran, NX, rref, pq[0]);
         }
     }
 }

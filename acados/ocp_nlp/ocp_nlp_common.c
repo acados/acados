@@ -79,6 +79,11 @@ int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     size = sizeof(ocp_nlp_work);
     size += num_vars * sizeof(real_t);
 
+    // allocate mem for least-squares cost
+    int_t *nr = ocp_nlp_in->ls_cost->nr;
+    int_t nr_ = 0;
+    for (i = 0; i < ocp_nlp_in->N; i++ ) nr_+=nr[i];
+
     return size;
 }
 
