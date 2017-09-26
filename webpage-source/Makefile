@@ -1,7 +1,8 @@
-# Minimal makefile for Sphinx documentation
-#
+# Acados Sphinx Makefile
+# --
+# Based on the sphinx-quickstart Makefile template.
+# Author: Rezart Qelibari <qelibarr@informatik.uni-freiburg.de>
 
-# You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
 SPHINXPROJ    = acados
