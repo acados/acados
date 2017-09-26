@@ -10,7 +10,7 @@ extensions = ['sphinx.ext.todo',
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages']
 templates_path = ['webpage-templates']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 # General information about the project.
