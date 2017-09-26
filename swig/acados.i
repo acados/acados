@@ -268,8 +268,18 @@ static bool is_valid_ocp_dimensions_map(const LangObject *input) {
 // }
 
 LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
-    LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
-    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N+1, in->nu);
+    const real_t **states_copy, **controls_copy;
+    states_copy = (const real_t **) malloc((in->N+1) * sizeof(real_t *));
+    controls_copy = (const real_t **) malloc((in->N+1) * sizeof(real_t *));
+    for (int_t i = 0; i <= in->N; i++) {
+        states_copy[i] = (const real_t *) calloc(in->nx[i], sizeof(real_t));
+        memcpy((void *)states_copy[i], (void *)out->x[i], in->nx[i] * sizeof(real_t));
+        controls_copy[i] = (const real_t *) calloc(in->nu[i], sizeof(real_t));
+        memcpy((void *)controls_copy[i], (void *)out->u[i], in->nu[i] * sizeof(real_t));
+    }
+
+    LangObject *x_star = new_sequence_from(states_copy, in->N+1, in->nx);
+    LangObject *u_star = new_sequence_from(controls_copy, in->N+1, in->nu);
     return new_ocp_output_tuple(x_star, u_star);
 }
 

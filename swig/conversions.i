@@ -53,7 +53,9 @@ class sequence_of_arrays(list):
 
 %{
 // Global variable for Python module
-PyTypeObject tuple_type;
+PyTypeObject *tuple_type = NULL;
+PyStructSequence_Desc *tuple_descriptor = NULL;
+
 PyObject *pModule = NULL;
 %}
 #endif
@@ -234,7 +236,9 @@ LangObject *from(const LangObject *sequence, int_t index) {
 #if defined(SWIGMATLAB)
     return mxGetCell(sequence, index);
 #elif defined(SWIGPYTHON)
-    return PyList_GetItem((PyObject *) sequence, index);
+    PyObject *item = PyList_GetItem((PyObject *) sequence, index);
+    Py_INCREF(item);
+    return item;
 #endif
 }
 
@@ -316,7 +320,10 @@ LangObject *from(const LangObject *map, const char *key) {
 #if defined(SWIGMATLAB)
     return mxGetField(map, 0, key);
 #elif defined(SWIGPYTHON)
-    return PyDict_GetItemString((PyObject *) map, key);
+    PyObject *item = PyDict_GetItemString((PyObject *) map, key);
+    if (item)
+        Py_INCREF(item);
+    return item;
 #endif
 }
 
@@ -385,6 +392,8 @@ LangObject *new_sequence_of_arrays(const int_t length) {
         SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module");
     PyObject *pDict = PyModule_GetDict(pModule);
     PyObject *pClass = PyDict_GetItemString(pDict, "sequence_of_arrays");
+    if (pClass)
+        Py_INCREF(pClass);
     PyObject *sequence = NULL;
     if (PyCallable_Check(pClass)) {
         PyObject *args = PyTuple_New(1);
@@ -393,13 +402,7 @@ LangObject *new_sequence_of_arrays(const int_t length) {
             PyList_SetItem(list, index, PyLong_FromLong((long) index));  // fill list with dummies
         PyTuple_SetItem(args, 0, list);
         sequence = PyObject_CallObject(pClass, args);
-        if (sequence == NULL)
-            PyErr_Print();
-    } else {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
-            "with length %d", LANG_SEQUENCE_NAME, length);
-        SWIG_Error(SWIG_RuntimeError, err_msg);
+        Py_DECREF(pClass);
     }
 #endif
     if (sequence == NULL) {
@@ -554,24 +557,32 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
         mxSetField(named_tuple, 0, field_names[index], content[index]);
     return named_tuple;
 #elif defined(SWIGPYTHON)
-    // The list of field names in named tuples must be NULL-terminated in Python
-    PyStructSequence_Field fields[num_fields+1];
+    PyStructSequence_Field *fields;
+    fields = (PyStructSequence_Field *) calloc(num_fields+1, sizeof(PyStructSequence_Field));
     for (int_t index = 0; index < num_fields; index++) {
         fields[index].name = (char *) field_names[index];
         fields[index].doc = NULL;
     }
+    // The list of field names in named tuples must be NULL-terminated in Python
     fields[num_fields].name = NULL;
     fields[num_fields].doc = NULL;
-    PyStructSequence_Desc tuple_descriptor;
-    tuple_descriptor.name = (char *) "output";
-    tuple_descriptor.doc = NULL;
-    tuple_descriptor.fields = fields;
-    tuple_descriptor.n_in_sequence = num_fields;
-    PyStructSequence_InitType2(&tuple_type, &tuple_descriptor);
-    tuple_type.tp_flags = tuple_type.tp_flags | Py_TPFLAGS_HEAPTYPE;
-    PyObject *named_tuple = PyStructSequence_New(&tuple_type);
+
+    if (tuple_descriptor)
+        free(tuple_descriptor);
+    tuple_descriptor = (PyStructSequence_Desc *) malloc(sizeof(PyStructSequence_Desc));
+    tuple_descriptor->name = (char *) "output";
+    tuple_descriptor->doc = NULL;
+    tuple_descriptor->fields = fields;
+    tuple_descriptor->n_in_sequence = num_fields;
+
+    if (tuple_type)
+        free(tuple_type);
+    tuple_type = (PyTypeObject *) malloc(sizeof(PyTypeObject));
+    PyStructSequence_InitType(tuple_type, tuple_descriptor);
+
+    PyObject *named_tuple = PyStructSequence_New(tuple_type);
     for (int_t index = 0; index < num_fields; index++)
-        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content[index]);
+        PyStructSequence_SetItem(named_tuple, index, content[index]);
     return named_tuple;
 #endif
 }
