@@ -301,8 +301,12 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
 
-    mem->qp_solver = create_ocp_qp_solver(in->N, in->nx, in->nu, in->nb, in->nc, in->idxb,
-        args->qp_solver_name, NULL);
+    ocp_qp_in *dummy_qp = create_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc);
+    int_t **idxb = (int_t **) dummy_qp->idxb;
+    for (int_t i = 0; i < in->N; i++)
+        for (int_t j = 0; j < in->nb[i]; j++)
+            idxb[i][j] = in->idxb[i][j];
+    mem->qp_solver = create_ocp_qp_solver(dummy_qp, args->qp_solver_name, NULL);
 
     ocp_nlp_create_memory(in, mem->common);
 }

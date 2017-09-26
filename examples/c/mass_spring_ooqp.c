@@ -39,7 +39,7 @@
 
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 
-#define NREP 100
+#define NREP 2
 
 // #define ELIMINATE_X0
 
@@ -540,28 +540,7 @@ int main() {
     qp_in.lc = (const double **) hlg;
     qp_in.uc = (const double **) hug;
 
-    ocp_qp_out qp_out;
-    qp_out.x = hx;
-    qp_out.u = hu;
-    qp_out.pi = hpi;
-    qp_out.lam = hlam;
-    qp_out.t = ht;  // XXX why also the slack variables ???
-
-    /************************************************
-    * solver arguments
-    ************************************************/
-
-    ocp_qp_ooqp_args args;
-    args.printLevel = 0;
-
-    /************************************************
-    * workspace
-    ************************************************/
-
-    ocp_qp_ooqp_memory *mem = ocp_qp_ooqp_create_memory(&qp_in, &args);
-
-    int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
-    void *work = (void*)malloc(work_space_size);
+    ocp_qp_solver *solver = create_ocp_qp_solver(&qp_in, "ooqp", NULL);
 
     /************************************************
     * call the solver
@@ -572,11 +551,9 @@ int main() {
     acados_timer timer;
     acados_tic(&timer);
 
-//  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
-
         // call the QP OCP solver
-        ocp_qp_ooqp(&qp_in, &qp_out, &args, mem, work);
+        solver->fun(solver->qp_in, solver->qp_out, solver->args, solver->mem, solver->work);
     }
 
     real_t time = acados_toc(&timer)/nrep;
@@ -591,10 +568,10 @@ int main() {
         printf("\nACADOS status: below minimum step size length\n");
 
     printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], solver->qp_out->u[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], solver->qp_out->x[ii], 1);
 
     printf("\n");
     printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
@@ -648,9 +625,7 @@ int main() {
     d_free(hx[N]);
     d_free(hlam[N]);
     d_free(ht[N]);
-
-    ocp_qp_ooqp_free_memory(mem);
-    free(work);
+    solver->destroy(solver->mem, solver->work);
 
     return 0;
 }

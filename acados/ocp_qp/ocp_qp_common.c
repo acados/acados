@@ -362,21 +362,13 @@ void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R,
         memcpy(hr[stage], r, qp_in->nu[stage]*sizeof(real_t));
 }
 
-ocp_qp_solver *create_ocp_qp_solver(const int_t N, const int_t *nx, const int_t *nu,
-                                    const int_t *nb, const int_t *nc, const int **idxb,
-                                    const char *solver_name, void *solver_options) {
+ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_name,
+                                    void *solver_options) {
     ocp_qp_solver *qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
 
-    qp_solver->qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
-    qp_solver->qp_out = create_ocp_qp_out(N, nx, nu, nb, nc);
+    qp_solver->qp_in = (ocp_qp_in *) qp_in;
+    qp_solver->qp_out = create_ocp_qp_out(qp_in->N, qp_in->nx, qp_in->nu, qp_in->nb, qp_in->nc);
     qp_solver->args = solver_options;
-
-    int_t **qp_idxb = (int_t **) qp_solver->qp_in->idxb;
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nb[i]; j++) {
-            qp_idxb[i][j] = idxb[i][j];
-        }
-    }
 
     if (!strcmp(solver_name, "qpdunes")) {
         if (qp_solver->args == NULL)

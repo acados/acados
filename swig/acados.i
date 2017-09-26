@@ -339,17 +339,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %extend ocp_qp_solver {
     ocp_qp_solver(const char *solver_name, ocp_qp_in *qp_in, LangObject *options = NONE) {
-        ocp_qp_solver *solver = create_ocp_qp_solver(qp_in->N, qp_in->nx, qp_in->nu, qp_in->nb,
-                                                     qp_in->nc, qp_in->idxb, solver_name, NULL);
-        int_t N = qp_in->N;
-        for (int_t k = 0; k < N; k++) {
-            ocp_qp_in_copy_objective(qp_in->Q[k], qp_in->S[k], qp_in->R[k], qp_in->q[k],
-                                     qp_in->r[k], solver->qp_in, k);
-            ocp_qp_in_copy_dynamics(qp_in->A[k], qp_in->B[k], qp_in->b[k], solver->qp_in, k);
-
-        }
-        ocp_qp_in_copy_objective(qp_in->Q[N], qp_in->S[N], qp_in->R[N], qp_in->q[N], qp_in->r[N],
-                                 solver->qp_in, N);
+        ocp_qp_solver *solver = create_ocp_qp_solver(qp_in, solver_name, NULL);
         return solver;
     }
 

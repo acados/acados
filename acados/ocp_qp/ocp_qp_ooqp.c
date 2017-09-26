@@ -675,6 +675,8 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
     int return_value;
     // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
 
+    if (0) print_inputs(mem);
+
     // NOTE: has to be called after setting up the memory which contains the problem dimensions
     ocp_qp_ooqp_cast_workspace(work, mem);
     ocp_qp_ooqp_update_memory(in, args, mem, work);
