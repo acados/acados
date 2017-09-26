@@ -12,6 +12,7 @@ set BUILDDIR=../doc
 set SPHINXPROJ=acados
 
 if "%1" == "" goto help
+if "%1" == "clean" goto clean
 
 %SPHINXBUILD% >NUL 2>NUL
 if errorlevel 9009 (
@@ -30,6 +31,12 @@ if "%1" == "html" goto html
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
 :html
 %SPHINXBUILD% -b %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS%
+goto end
+
+:clean
+echo.
+echo.Not Implemented yet.
+echo.
 goto end
 
 :help
