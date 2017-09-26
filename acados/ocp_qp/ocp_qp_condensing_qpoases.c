@@ -569,6 +569,7 @@ void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void **
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *)args_;
 
     *mem = ocp_qp_condensing_qpoases_create_memory(qp_in, args);
+    *work = NULL;
 }
 
 void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {

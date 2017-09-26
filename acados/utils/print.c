@@ -143,6 +143,8 @@ void print_ocp_qp(ocp_qp_in *qp) {
         print_matrix("stdout", qp->Q[stage], qp->nx[stage], qp->nx[stage]);
         printf("R[%d]:\n", stage);
         print_matrix("stdout", qp->R[stage], qp->nu[stage], qp->nu[stage]);
+        printf("S[%d]:\n", stage);
+        print_matrix("stdout", qp->S[stage], qp->nu[stage], qp->nx[stage]);
         printf("q[%d]:\n", stage);
         print_matrix("stdout", qp->q[stage], qp->nx[stage], 1);
         printf("r[%d]:\n", stage);
@@ -152,4 +154,5 @@ void print_ocp_qp(ocp_qp_in *qp) {
         printf("ub[%d]:\n", stage);
         print_matrix("stdout", qp->ub[stage], qp->nb[stage], 1);
     }
+    printf("\n");
 }
