@@ -733,7 +733,8 @@ int main() {
     void *memory = malloc(memory_size);
 
     ocp_qp_condensing_qpoases_memory *qpoases_memory;
-    ocp_qp_condensing_qpoases_assign_memory(&qp_in, &qpoases_args, (void **) &qpoases_memory, memory);
+    ocp_qp_condensing_qpoases_assign_memory(&qp_in, &qpoases_args, (void **) &qpoases_memory,
+                                            memory);
 
     /************************************************
      * call the solver

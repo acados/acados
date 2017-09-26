@@ -134,7 +134,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             void *mem = malloc(memory_size);
 
                             ocp_qp_condensing_qpoases_memory *memory;
-                            ocp_qp_condensing_qpoases_assign_memory(qp_in, &args, (void **) &memory, mem);
+                            ocp_qp_condensing_qpoases_assign_memory(qp_in, &args,
+                                                                    (void **) &memory, mem);
 
                             // TODO(dimitris): also test that qp_in has not changed
                             return_value = \

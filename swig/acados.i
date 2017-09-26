@@ -596,7 +596,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     }
 
     LangObject *evaluate() {
-        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem, $self->work);
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
+                                $self->work);
         if (fail)
             throw std::runtime_error("nlp solver failed!");
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
@@ -605,7 +606,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     LangObject *evaluate(LangObject *x0) {
         fill_array_from(x0, (real_t **) $self->nlp_in->lb, 1, $self->nlp_in->nx);
         fill_array_from(x0, (real_t **) $self->nlp_in->ub, 1, $self->nlp_in->nx);
-        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem, $self->work);
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
+                                $self->work);
         if (fail)
             throw std::runtime_error("nlp solver failed!");
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
