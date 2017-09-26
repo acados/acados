@@ -18,7 +18,7 @@ Q = diag([1.0, 1.0])
 R = 1e-2
 nlp.ls_cost_matrix = N*[block_diag(Q, R)] + [Q]
 
-solver = ocp_nlp_solver('gauss-newton-sqp', nlp, {'integrator_steps': 2, 'qp_solver': 'condensing_hpipm'})
+solver = ocp_nlp_solver('gauss-newton-sqp', nlp, {'integrator_steps': 2, 'qp_solver': 'condensing_qpoases'})
 
 # Simulation
 STATES = [array([0.1, 0.1])]

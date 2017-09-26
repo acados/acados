@@ -390,17 +390,23 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
         qp_solver->fun = &ocp_qp_condensing_qpoases;
         qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
-//     } else if (!strcmp(solver_name, "hpmpc")) {
-//         qp_solver->fun = &ocp_qp_hpmpc;
-//         qp_solver->initialize = &ocp_qp_hpmpc_initialize;
-//         qp_solver->destroy = &ocp_qp_hpmpc_destroy;
-//         qp_args = (void *)malloc(sizeof(ocp_qp_hpmpc_args));
+    // } else if (!strcmp(solver_name, "hpmpc")) {
+    //     qp_solver->fun = &ocp_qp_hpmpc;
+    //     qp_solver->initialize = &ocp_qp_hpmpc_initialize;
+    //     qp_solver->destroy = &ocp_qp_hpmpc_destroy;
+    //     qp_args = (void *)malloc(sizeof(ocp_qp_hpmpc_args));
     } else if (!strcmp(solver_name, "condensing_hpipm")) {
         if (qp_solver->args == NULL)
             qp_solver->args = ocp_qp_condensing_hpipm_create_arguments();
         qp_solver->fun = &ocp_qp_condensing_hpipm;
         qp_solver->initialize = &ocp_qp_condensing_hpipm_initialize;
         qp_solver->destroy = &ocp_qp_condensing_hpipm_destroy;
+    // } else if (!strcmp(solver_name, "hpipm")) {
+    //     if (qp_solver->args == NULL)
+    //         qp_solver->args = ocp_qp_hpipm_create_arguments();
+    //     qp_solver->fun = &ocp_qp_hpipm;
+    //     qp_solver->initialize = &ocp_qp_hpipm_initialize;
+    //     qp_solver->destroy = &ocp_qp_hpipm_destroy;
     } else {
         printf("Chosen QP solver not available\n");
         exit(1);

@@ -358,6 +358,7 @@ void to(LangObject *sequence, const int_t index, LangObject *item) {
 #if defined(SWIGMATLAB)
     mxSetCell(sequence, index, item);
 #elif defined(SWIGPYTHON)
+    Py_INCREF(item);
     PyList_SetItem(sequence, index, item);
 #endif
 }
@@ -400,6 +401,7 @@ LangObject *new_sequence_of_arrays(const int_t length) {
         PyObject *list = PyList_New(length);
         for (int_t index = 0; index < length; index++)
             PyList_SetItem(list, index, PyLong_FromLong((long) index));  // fill list with dummies
+        Py_INCREF(list);
         PyTuple_SetItem(args, 0, list);
         sequence = PyObject_CallObject(pClass, args);
         Py_DECREF(pClass);
@@ -567,16 +569,12 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
     fields[num_fields].name = NULL;
     fields[num_fields].doc = NULL;
 
-    if (tuple_descriptor)
-        free(tuple_descriptor);
     tuple_descriptor = (PyStructSequence_Desc *) malloc(sizeof(PyStructSequence_Desc));
     tuple_descriptor->name = (char *) "output";
     tuple_descriptor->doc = NULL;
     tuple_descriptor->fields = fields;
     tuple_descriptor->n_in_sequence = num_fields;
 
-    if (tuple_type)
-        free(tuple_type);
     tuple_type = (PyTypeObject *) malloc(sizeof(PyTypeObject));
     PyStructSequence_InitType(tuple_type, tuple_descriptor);
 
