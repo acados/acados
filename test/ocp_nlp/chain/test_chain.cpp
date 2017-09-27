@@ -211,7 +211,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         }
 
         int_t nx[NN+1] = {0};
-        int_t nu[NN] = {0};
+        int_t nu[NN+1] = {0};
         int_t nb[NN+1] = {0};
         int_t nc[NN+1] = {0};
         int_t ng[NN+1] = {0};
@@ -220,6 +220,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             nu[i] = NU;
         }
         nx[N] = NX;
+        nu[N] = 0;
 
         /************************************************
          * box constraints
