@@ -69,6 +69,7 @@ script:
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
+  - sleep 10
   - cmake --build build --target install
   - python -c "import acados" # check installation
   - cmake --build build --target lint
