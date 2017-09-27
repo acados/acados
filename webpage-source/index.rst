@@ -10,5 +10,6 @@ Navigation
 
    installation
    examples
+   troubleshooting
 
 * :ref:`search`
