@@ -52,12 +52,14 @@ typedef struct ocp_qp_hpipm_memory_ {
 
 ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments();
 
-int_t ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
+int_t ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
 
-int_t ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
+char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, void **mem_,
+                                 void *raw_memory);
 
-void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
-                                ocp_qp_hpipm_memory *hpipm_memory, void *memory);
+ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *args_);
+
+int_t ocp_qp_hpipm_calculate_workspace_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
 
 int_t ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *workspace_);
 

@@ -92,8 +92,7 @@ void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, 
 void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
                               const real_t *r, ocp_qp_in *qp_in, int_t stage);
 
-ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_name,
-                                    void *solver_options);
+ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *name, void *options);
 
 #ifdef __cplusplus
 } /* extern "C" */

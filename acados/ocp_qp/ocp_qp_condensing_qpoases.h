@@ -78,18 +78,18 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
 
 ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments();
 
-int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, void *args_);
+int_t ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, void *args_);
 
 char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_in *qp_in, void *args_,
-                                             void **qpoases_memory, void *raw_memory);
+                                              void **qpoases_memory, void *raw_memory);
 
 ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in,
                                                                           void *args_);
 
 int ocp_qp_condensing_qpoases_calculate_workspace_size(ocp_qp_in *qp_in, void *args_);
 
-int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output, void *args, void *mem,
-                                void *work);
+int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_,
+                                void *work_);
 
 void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
 
