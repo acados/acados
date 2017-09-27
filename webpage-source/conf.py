@@ -22,7 +22,7 @@ version = '0.5'
 release = '0.5a1'
 language = None
 
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'README.md', 'Thumbs.db', '.DS_Store']
 pygments_style = 'sphinx'
 todo_include_todos = True
 
