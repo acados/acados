@@ -37,6 +37,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/math.h"
 
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
@@ -57,6 +58,7 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
         int_t max_ls_drdw_tran_size = 0;    // drdw_tran
         int_t max_Hess_gn_size = 0;         // Hess_gn
         int_t max_grad_gn_size = 0;         // grad_gn
+        int_t max_rref_size = 0;         // grad_gn
 
         for (int_t i = 0; i <= N; i++) {
             if (max_ls_res_in_size < nx[i] + nu[i])
@@ -74,6 +76,9 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
             if (max_grad_gn_size < (nx[i] + nu[i]))
                 max_grad_gn_size = (nx[i] + nu[i]);
 
+            if (max_rref_size < nr[i])
+                max_rref_size = nr[i];
+
         }
 
         size +=sizeof(real_t)*max_ls_res_out_size;
@@ -81,6 +86,8 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
         size +=sizeof(real_t)*max_ls_drdw_tran_size;
         size +=sizeof(real_t)*max_Hess_gn_size;
         size +=sizeof(real_t)*max_grad_gn_size;
+        size +=sizeof(real_t)*max_rref_size;
+
     }
 
     return size;
@@ -91,6 +98,8 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_nlp_gn_sqp_work);
+    work->raw = (real_t *)ptr;
+    ptr += sizeof(real_t)*mem->raw_workspace_size;
     work->common = (ocp_nlp_work *)ptr;
     ocp_nlp_cast_workspace(work->common, mem->common);
 }
@@ -153,17 +162,21 @@ static void initialize_objective(
 
             real_t *Hess_gn = (real_t *)ptr;
             ptr+=sizeof(real_t)*(nx[i]+nu[i])*(nx[i]+nu[i]);
+
             real_t *grad_gn = (real_t *)ptr;
             ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *rref = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i]);
 
             // (dense) Gauss-Newton Hessian
             for (int_t j = 0; j < nx[i]; j++)
                 ls_res_in[j] = gn_sqp_mem->common->x[i][j];
 
             for (int_t j = 0; j < nu[i]; j++)
-                ls_res_in[NX+j] = gn_sqp_mem->common->u[i][j];
+                ls_res_in[nx[i]+j] = gn_sqp_mem->common->u[i][j];
 
-            cost[i]->ls_res_eval(ls_res_in, ls_res_out, cost[i]->ls_res);
+            cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
 
             for (int_t j = 0; j < nx[i] + nu[i]; j++)
               for (int_t k = 0; k < nr[i]; k++) {
@@ -175,7 +188,7 @@ static void initialize_objective(
             dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i], drdw, nr[i], Hess_gn, nx[i]);
 
             // compute gradient
-            for (int_t j = 0; j < nr[i]; j++) rref[j] = -rref[j] + r[j];
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -cost->y_ref[i][j] + r[j];
             for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
             printf("\n\n");
             for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
@@ -185,12 +198,12 @@ static void initialize_objective(
             dgemv_n_3l(nx[i] + nu[i], nr[i], drdw_tran, nx[i] + nu[i], rref, grad_gn);
 
             // copy dense Hessian and gradient into qp struct
-            for (int_t j = 0; j < nx[i]*nx[i]; j++) pQ[i][j] = Hess_gn[j];
-            for (int_t j = 0; j < nu[i]*nu[i]; j++) pR[i][j] = Hess_gn[j + nx[i]*nx[i] + nx[i]*nu[i]];
-            for (int_t j = 0; j < nx[i]*nu[i]; j++) pS[i][j] = Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
+            for (int_t j = 0; j < nx[i]*nx[i]; j++) qp_Q[i][j] = Hess_gn[j];
+            for (int_t j = 0; j < nu[i]*nu[i]; j++) qp_R[i][j] = Hess_gn[j + nx[i]*nx[i] + nx[i]*nu[i]];
+            for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] = Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
 
-            for (int_t j = 0; j < nx[i]; j++) pq[i][j] = grad_gn[j];
-            for (int_t j = 0; j < nu[i]; j++) pr[i][j] = grad_gn[nx[i] + j];
+            for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_gn[j];
+            for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_gn[nx[i] + j];
 
         }
     }

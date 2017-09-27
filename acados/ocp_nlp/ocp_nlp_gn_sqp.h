@@ -37,6 +37,7 @@ typedef struct {
 typedef struct {
     ocp_nlp_memory *common;
     ocp_qp_solver *qp_solver;
+    int_t raw_workspace_size;
 } ocp_nlp_gn_sqp_memory;
 
 typedef struct {

@@ -40,8 +40,8 @@ typedef struct {
     // TODO(rien): only for least squares cost with state and control reference
     // atm
 
-    void *(*ls_res)(const real_t**, real_t**, int*, real_t*, int);
-    void *(*ls_res_eval)(const real_t* in, real_t* out,
+    int (**ls_res)(const real_t**, real_t**, int*, real_t*, int);
+    void (**ls_res_eval)(const real_t* in, real_t* out,
         int (*ls_res)(const real_t**, real_t**, int*, real_t*, int));
 
     const int_t *nr;
