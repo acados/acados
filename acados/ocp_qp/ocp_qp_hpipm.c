@@ -36,7 +36,15 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-// void d_print_e_mat(int m, int n, double *a, int lda);
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments() {
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) malloc(sizeof(ocp_qp_hpipm_args));
+    args->mu_max = 1e-8;
+    args->iter_max = 20;
+    args->alpha_min = 1e-8;
+    args->mu0 = 1;
+
+    return args;
+}
 
 int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     return 0;
@@ -167,8 +175,10 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
     return;
 }
 
-int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
-                 ocp_qp_hpipm_memory *memory, void *workspace_) {
+int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_) {
+
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
+    ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
     //
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
@@ -362,4 +372,22 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     // return
     return acados_status;
     //
+}
+
+void ocp_qp_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
+
+    ocp_qp_hpipm_memory *hpipm_memory = (ocp_qp_hpipm_memory *) malloc(sizeof(ocp_qp_hpipm_memory));
+    int_t memory_size = ocp_qp_hpipm_calculate_memory_size(qp_in, args);
+    void *raw_memory = calloc(1, memory_size);
+    ocp_qp_hpipm_create_memory(qp_in, args, hpipm_memory, raw_memory);
+    *mem = (ocp_qp_hpipm_memory *) hpipm_memory;
+
+    int_t work_space_size = ocp_qp_hpipm_calculate_workspace_size(qp_in, args);
+    *work = malloc(work_space_size);
+}
+
+void ocp_qp_hpipm_destroy(void *mem, void *work) {
+    free(mem);
+    free(work);
 }

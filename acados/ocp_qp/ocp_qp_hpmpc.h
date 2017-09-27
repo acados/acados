@@ -54,6 +54,10 @@ typedef struct ocp_qp_hpmpc_args_ {
     int M;
 } ocp_qp_hpmpc_args;
 
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts);
+
+
+
 typedef void *ocp_qp_hpmpc_workspace;
 typedef void *ocp_qp_hpmpc_memory;
 
@@ -64,8 +68,7 @@ typedef void *ocp_qp_hpmpc_memory;
 // int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args
 // *qp_args, void *workspace);
 
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_,
-                 void *workspace_);
+int_t ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *workspace_);
 
 // int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
 //   ocp_qp_hpmpc_args *qp_args, int M, double sigma_mu, void *workspace);
@@ -79,13 +82,12 @@ int ocp_qp_hpmpc_workspace_size_bytes(int N, int *nx, int *nu, int *nb, int *ng,
                                       int **hidxb,
                                       ocp_qp_hpmpc_args *hpmpc_args);
 
-int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_);
 int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *in, void *args);
 int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *input, void *args_, void **memory_);
 void ocp_qp_hpmpc_free_memory(void *mem_);
 
-void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
-                             void **work);
+void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
+
 void ocp_qp_hpmpc_destroy(void *mem_, void *work);
 
 #ifdef __cplusplus

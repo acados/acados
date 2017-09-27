@@ -19,6 +19,7 @@
 
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -34,16 +35,6 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
-
-void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void *mem_, void **work) {
-    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
-
-    // TODO(andrea): replace dummy commands once interface completed
-    args->max_iter = args->max_iter;
-    if (qp_in->nx[0] > 0)
-        (void) mem_;
-    work++;
-}
 
 void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
   free(work);
@@ -562,20 +553,99 @@ void ocp_qp_hpmpc_free_memory(void *mem_) {
     free(mem);
 }
 
-int_t ocp_qp_hpmpc_create_arguments(void *args_, int_t opts_) {
-    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
-    hpmpc_options_t opts = (hpmpc_options_t) opts_;
+int_t ocp_qp_hpmpc_calculate_arguments_size(const ocp_qp_in *in) {
+    int_t N = in->N;
+    int_t size = sizeof(ocp_qp_hpmpc_args);
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
+    for (int_t i = 0; i <= N; i++) {
+        size += (in->nu[i] + in->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+        if (i > 0) size += (in->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+        size += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+        size += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+    }
+    size += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+    size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+    size += 1 * 64;  // align once to typical cache line size
+    return size;
+}
+
+char *ocp_qp_hpmpc_assign_arguments(const ocp_qp_in *in, void **args_, void *raw_memory) {
+    ocp_qp_hpmpc_args **args = (ocp_qp_hpmpc_args **) args_;
+    int_t N = in->N;
+    char *c_ptr = (char *) raw_memory;
+
+    *args = (ocp_qp_hpmpc_args *) c_ptr;
+    c_ptr += sizeof(ocp_qp_hpmpc_args);
+
+    (*args)->ux0 = (real_t **) c_ptr;
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
+
+    (*args)->pi0 = (real_t **) c_ptr;
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
+
+    (*args)->lam0 = (real_t **) c_ptr;
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
+
+    (*args)->t0 = (real_t **) c_ptr;
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
+
+    // align memory to typical cache line size
+    size_t s_ptr = (size_t) c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+    c_ptr = (char *) s_ptr;
+
+    for (int_t i = 0; i <= N; i++) {
+        (*args)->ux0[i] = (real_t *) c_ptr;
+        c_ptr += (in->nu[i] + in->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+    }
+    for (int_t i = 1; i <= N; i++) {
+        (*args)->pi0[i] = (real_t *) c_ptr;
+        c_ptr += in->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+    }
+    for (int_t i = 0; i <= N; i++) {
+        (*args)->lam0[i] = (real_t *) c_ptr;
+        c_ptr += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+    }
+    for (int_t i = 0; i <= N; i++) {
+        (*args)->t0[i] = (real_t *) c_ptr;
+        c_ptr += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+    }
+    (*args)->inf_norm_res = (real_t *) c_ptr;
+    c_ptr += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+    return c_ptr;
+}
+
+
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts) {
+    ocp_qp_hpmpc_args *args;
+    int_t arguments_size = ocp_qp_hpmpc_calculate_arguments_size(qp_in);
+    void *raw_memory = malloc(arguments_size);
+    char *ptr_end = ocp_qp_hpmpc_assign_arguments(qp_in, (void **) &args, raw_memory);
+    assert((char *) raw_memory + arguments_size >= ptr_end); (void) ptr_end;
 
     if (opts == HPMPC_DEFAULT_ARGUMENTS) {
-    args->tol = 1e-8;
-    args->max_iter = 20;
-    args->mu0 = 0.1;
-    args->warm_start = 0;
-    args->M = args->N;
-    args->N2 = args->N;
+        args->tol = 1e-8;
+        args->max_iter = 20;
+        args->mu0 = 0.1;
+        args->warm_start = 0;
+        args->N2 = qp_in->N;
+        args->M = qp_in->N;
+        args->N = qp_in->N;
     } else {
-      printf("Invalid hpmpc options.");
-      return -1;
+        printf("Invalid hpmpc options.");
+        return NULL;
     }
-  return 0;
-  }
+    return args;
+}
+
+void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
+
+    ocp_qp_hpmpc_create_memory(qp_in, args, mem);
+
+    int_t workspace_size = ocp_qp_hpmpc_calculate_workspace_size(qp_in, args);
+    *work = malloc(workspace_size);
+}
