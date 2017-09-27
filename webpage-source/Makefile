@@ -14,7 +14,7 @@ GENERATED     = .doctrees _static _sources .buildinfo .nojekyll genindex.html ob
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile html
+.PHONY: help Makefile clean html
 
 clean:
 	@for file in *.rst; do rm "$(BUILDDIR)/$${file%.*}.html" 2> /dev/null || true; done
