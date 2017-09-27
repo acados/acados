@@ -9,5 +9,6 @@ Navigation
    :maxdepth: 2
 
    installation
+   examples
 
 * :ref:`search`
