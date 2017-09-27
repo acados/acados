@@ -20,14 +20,23 @@
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
 
 # Define sources for models used in the examples
-file(GLOB CHAIN_MODEL_SRC chain_model/chain_model.c
+file(GLOB CHAIN_MODEL_SRC
+    chain_model/chain_model.c
     chain_model/vde*.c
     chain_model/jac*.c)
 
 set(CHEN_MODEL_SRC Chen_model/chen_model.c)
-file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
+
+file(GLOB PENDULUM_MODEL_SRC
+    pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
+
+file(GLOB QUADCOPTER_MODEL_SRC
+    quadcopter_model/quadcopter_model.c
+    quadcopter_model/vde_forw_quadcotper.c
+    quadcopter_model/ls_res_quadcopter.c
+    quadcopter_model/ls_res_end_quadcopter.c)
 
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -113,6 +122,13 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
       pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
     target_link_libraries(pendulum_partial_tightening_example acados)
     add_test(pendulum_partial_tightening_example pendulum_partial_tightening_example)
+endif()
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_executable(quadcopter_ocp_nlp
+      quadcopter_ocp_nlp.c ${QUADCOPTER_MODEL_SRC})
+    target_link_libraries(quadcopter_ocp_nlp acados)
+    add_test(quadcopter_ocp_nlp quadcopter_ocp_nlp)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

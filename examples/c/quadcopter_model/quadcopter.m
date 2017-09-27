@@ -99,9 +99,9 @@ res_exp = [x;u];
 res_end_exp = [x];
 
 jac_res_exp = SX.zeros(nr,nx+nu) + jacobian(res_exp,[x;u]);
-ls_res_Fun = Function('jac_res', {x,u}, {res_exp,jac_res_exp});
+ls_res_Fun = Function('ls_res_Fun', {x,u}, {res_exp,jac_res_exp});
 jac_res_end_exp = SX.zeros(nr_end,nx) + jacobian(res_end_exp,[x]);
-ls_res_end_Fun = Function('jac_res_end', {x,u}, {res_end_exp,jac_res_end_exp});
+ls_res_end_Fun = Function('ls_res_end_Fun', {x,u}, {res_end_exp,jac_res_end_exp});
 
 ls_res_Fun.generate(['ls_res_quadcopter'], opts);
 ls_res_end_Fun.generate(['ls_res_end_quadcopter'], opts);

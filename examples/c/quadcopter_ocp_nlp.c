@@ -39,8 +39,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "examples/c/quadcotper_model/quadcopter_model.h"
-#include "examples/c/quadcotper_model/residual_x_eval_wrapper.h"
+#include "examples/c/quadcopter_model/quadcopter_model.h"
+#include "examples/c/quadcopter_model/ls_res_eval.h"
 
 // #include "test/test_utils/eigen.h"
 // #include "test/test_utils/read_matrix  .h"
@@ -51,46 +51,19 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define TT 3.0
 #define Ns 2
 
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+extern int ls_res_end_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+//
+extern int vdeFun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
 // using Eigen::MatrixXd;
 // using Eigen::VectorXd;
 
 int main() {
     const int INEXACT = 0;
-    const int d = 0;
-    const int NMF = 1;
-    if (INEXACT == 0) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact Newton) -----\n",
-            NMF, d);
-    } else if (INEXACT == 1) {
-        printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (IN Scheme) -----\n",
-               NMF, d);
-    } else if (INEXACT == 2) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (INIS Scheme) -----\n",
-            NMF, d);
-    } else if (INEXACT == 3) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN IN Scheme) "
-            "-----\n",
-            NMF, d);
-    } else if (INEXACT == 4) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN INIS Scheme) "
-            "-----\n",
-            NMF, d);
-    }
-    int_t NX = 6 * NMF;
-    int_t NU = 3;
+
+    int_t NX = 11;
+    int_t NU = 4;
     int_t jj;
 
     real_t wall_pos = -0.01;
@@ -99,8 +72,18 @@ int main() {
     // Problem data
     ocp_nlp_ls_cost ls_cost;
 
-    ls_cost->res_x = &res_x;
-    ls_cost->residual_x_eval_wrapper = &residual_x_eval_wrapper;
+    // allocate memory for ls_cost
+    ls_cost.ls_res = malloc(sizeof(char *)*NN);
+    ls_cost.ls_res_eval = malloc(sizeof(char *)*NN);
+
+    // assign residual function pointers
+    for (int_t i = 0; i < NN; i++) {
+        ls_cost.ls_res[i] = &ls_res_Fun;
+        ls_cost.ls_res_eval[i] = &ls_res_eval_quadcopter;
+    }
+
+    ls_cost.ls_res[NN] = &ls_res_end_Fun;
+    ls_cost.ls_res_eval[NN] = &ls_res_eval_end_quadcopter;
 
     real_t *W, *WN;
     real_t *uref;
@@ -114,13 +97,21 @@ int main() {
     d_zeros(&x_end, NX, 1);
     d_zeros(&u_end, NU, 1);
 
-    real_t x0[6] = {0.0000000000000000e+00, 1.5000000000000000e+00,
-                    5.0000000000000000e-01, 0.0000000000000000e+00,
-                    0.0000000000000000e+00, 0.0000000000000000e+00};
+    real_t x0[11] = {
+        1.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+    };
 
-    real_t xref[6] = {1.0000000000000000e+00, 0.0000000000000000e+00,
-                      0.0000000000000000e+00, 0.0000000000000000e+00,
-                      0.0000000000000000e+00, 0.0000000000000000e+00};
+    real_t xref[11] = {0.0};
 
     for (int_t i = 0; i < NX; i++) W[i * (NX + NU + 1)] = 1e-2;
     for (int_t i = 0; i < NU; i++) W[(NX + i) * (NX + NU + 1)] = 1.0;

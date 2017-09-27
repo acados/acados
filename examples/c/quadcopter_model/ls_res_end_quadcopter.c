@@ -42,8 +42,8 @@ static const int CASADI_PREFIX(s1)[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 #define s1 CASADI_PREFIX(s1)
 static const int CASADI_PREFIX(s2)[135] = {11, 11, 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, 110, 121, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 #define s2 CASADI_PREFIX(s2)
-/* jac_res_end */
-int jac_res_end(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+/* ls_res_end_Fun */
+int ls_res_end_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   real_t a0=arg[0] ? arg[0][0] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][1] : 0;
@@ -192,17 +192,17 @@ int jac_res_end(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   return 0;
 }
 
-void jac_res_end_incref(void) {
+void ls_res_end_Fun_incref(void) {
 }
 
-void jac_res_end_decref(void) {
+void ls_res_end_Fun_decref(void) {
 }
 
-int jac_res_end_n_in(void) { return 2;}
+int ls_res_end_Fun_n_in(void) { return 2;}
 
-int jac_res_end_n_out(void) { return 2;}
+int ls_res_end_Fun_n_out(void) { return 2;}
 
-const char* jac_res_end_name_in(int i){
+const char* ls_res_end_Fun_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -210,7 +210,7 @@ const char* jac_res_end_name_in(int i){
   }
 }
 
-const char* jac_res_end_name_out(int i){
+const char* ls_res_end_Fun_name_out(int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -218,7 +218,7 @@ const char* jac_res_end_name_out(int i){
   }
 }
 
-const int* jac_res_end_sparsity_in(int i) {
+const int* ls_res_end_Fun_sparsity_in(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s1;
@@ -226,7 +226,7 @@ const int* jac_res_end_sparsity_in(int i) {
   }
 }
 
-const int* jac_res_end_sparsity_out(int i) {
+const int* ls_res_end_Fun_sparsity_out(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s2;
@@ -234,7 +234,7 @@ const int* jac_res_end_sparsity_out(int i) {
   }
 }
 
-int jac_res_end_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+int ls_res_end_Fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;

@@ -41,7 +41,7 @@ void ls_res_eval_quadcopter(const real_t* in, real_t* out,
 
 }
 
-void ls_res_eval_quadcopter_end(const real_t* in, real_t* out,
+void ls_res_eval_end_quadcopter(const real_t* in, real_t* out,
                       int (*ls_res)(const real_t**, real_t**, int*, real_t*,
                                  int)) {
 
