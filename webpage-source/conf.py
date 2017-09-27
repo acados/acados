@@ -28,6 +28,11 @@ todo_include_todos = True
 
 # -- Options for HTML output ----------------------------------------------
 html_theme = 'alabaster'
+html_theme_options = {
+    'github_user': 'acados',
+    'github_repo': 'acados',
+    'github_banner': True
+}
 html_sidebars = {
     '**': [
         'about.html',
