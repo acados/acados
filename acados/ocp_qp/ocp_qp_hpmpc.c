@@ -36,13 +36,8 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-void ocp_qp_hpmpc_destroy(void *mem_, void *work) {
-  free(work);
-  ocp_qp_hpmpc_free_memory(mem_);
-}
-
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-        void *args_, void *mem_, void *workspace_) {
+int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_,
+                 void *workspace_) {
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
 
     // initialize return code
@@ -427,7 +422,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     return acados_status;
 }
 
-int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
+int_t ocp_qp_hpmpc_calculate_workspace_size(const ocp_qp_in *qp_in, void *args_) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
     int N = qp_in->N;
@@ -457,7 +452,7 @@ int_t ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
     return ws_size;
 }
 
-int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
+int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
     int_t N = (int_t)in->N;
@@ -470,83 +465,85 @@ int_t ocp_qp_hpmpc_create_memory(ocp_qp_in *in, void *args_, void **mem_) {
 
     int_t M = args->M;
 
-    int_t mem_size;
+    int_t mem_size = 0;
 
     if (M < N) {  // XXX andrea partial tightened stuff
-    mem_size = d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N,
-      nx, nu, nb, ng);
+        mem_size += d_ip2_res_mpc_hard_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
 
-    int_t ii;
-    // Adding memory for data
-    for (ii=0; ii < N; ii++) {
-      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);  // BAbt
-      mem_size+= d_size_strvec(nx[ii+1]);  // b
-      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);  // RSQrq
-      mem_size+= d_size_strvec(nu[ii]+nx[ii]);  // rq
-      mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ng[ii]);  // DCt
-      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);  // d
-      mem_size+= d_size_strvec(nu[ii]+nx[ii]);
-      mem_size+= d_size_strvec(nx[ii+1]);
-      mem_size+= d_size_strvec(nx[ii+1]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
-      mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
-    }
+        int_t ii;
+        // Adding memory for data
+        for (ii=0; ii < N; ii++) {
+        mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);  // BAbt
+        mem_size+= d_size_strvec(nx[ii+1]);  // b
+        mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);  // RSQrq
+        mem_size+= d_size_strvec(nu[ii]+nx[ii]);  // rq
+        mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ng[ii]);  // DCt
+        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);  // d
+        mem_size+= d_size_strvec(nu[ii]+nx[ii]);
+        mem_size+= d_size_strvec(nx[ii+1]);
+        mem_size+= d_size_strvec(nx[ii+1]);
+        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+        }
 
-    mem_size+= d_size_strmat(nu[N]+nx[N]+1, nu[N]+nx[N]);  // RSQrq
-    mem_size+= d_size_strvec(nu[N]+nx[N]);  // q
-    mem_size+= d_size_strmat(nu[N]+nx[N]+1, ng[N]);  // DCt
-    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);  // d
-    mem_size+= d_size_strvec(nu[N]+nx[N]);
-    mem_size+= d_size_strvec(nu[N]+nx[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
-    mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
+        mem_size+= d_size_strmat(nu[N]+nx[N]+1, nu[N]+nx[N]);  // RSQrq
+        mem_size+= d_size_strvec(nu[N]+nx[N]);  // q
+        mem_size+= d_size_strmat(nu[N]+nx[N]+1, ng[N]);  // DCt
+        mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);  // d
+        mem_size+= d_size_strvec(nu[N]+nx[N]);
+        mem_size+= d_size_strvec(nu[N]+nx[N]);
+        mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
+        mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
+        mem_size+= d_size_strvec(2*nb[N]+2*ng[N]);
 
 
-    // Adding memory for extra variables in the Riccati recursion
-    mem_size+=d_size_strvec(nx[ii+1]);
-    mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    mem_size+=d_size_strmat(nx[ii], nx[ii]);
+        // Adding memory for extra variables in the Riccati recursion
+        mem_size+=d_size_strvec(nx[ii+1]);
+        mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+        mem_size+=d_size_strmat(nx[ii], nx[ii]);
 
-    for ( int ii=0; ii < N; ii++ ) {
+        for ( int ii=0; ii < N; ii++ ) {
+            mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+            mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+            mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+
+            mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+            mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+        }
+
+        mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
+        mem_size+=d_size_strmat(nx[ii], nx[ii]);
+
+        ii = N;
         mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
         mem_size+=d_size_strvec(nb[ii]+ng[ii]);
         mem_size+=d_size_strvec(nb[ii]+ng[ii]);
-
         mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
         mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
-    }
 
-    mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-    mem_size+=d_size_strmat(nx[ii], nx[ii]);
+        mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+        mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+        mem_size+=d_size_strvec(nb[ii]+ng[ii]);
+        mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
 
-    ii = N;
-    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
-    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
-    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+        mem_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
 
-    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
-    mem_size+=d_size_strvec(nb[ii]+ng[ii]);
-    mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);
+        // add memory for riccati work space
+        mem_size+=sizeof(double)*max_ip_iter*5;
 
-    mem_size+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
-
-    // add memory for riccati work space
-    mem_size+=sizeof(double)*max_ip_iter*5;
-
-    // add memory for stats
+        // add memory for stats
     } else {  // XXX giaf fortran interface
         mem_size = 0;
     }
 
-    v_zeros_align(mem_, mem_size);
+    return mem_size;
+}
 
-    return 1;
-  }
+ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(const ocp_qp_in *qp_in, void *args_) {
+    int_t memory_size = ocp_qp_hpmpc_calculate_memory_size(qp_in, args_);
+    return (ocp_qp_hpmpc_memory *) malloc(memory_size);
+}
 
 void ocp_qp_hpmpc_free_memory(void *mem_) {
     ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory *) mem_;
@@ -641,11 +638,16 @@ ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_o
     return args;
 }
 
-void ocp_qp_hpmpc_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+void ocp_qp_hpmpc_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
-    ocp_qp_hpmpc_create_memory(qp_in, args, mem);
+    *mem = ocp_qp_hpmpc_create_memory(qp_in, args);
 
     int_t workspace_size = ocp_qp_hpmpc_calculate_workspace_size(qp_in, args);
     *work = malloc(workspace_size);
+}
+
+void ocp_qp_hpmpc_destroy(void *mem, void *work) {
+    ocp_qp_hpmpc_free_memory(mem);
+    free(work);
 }

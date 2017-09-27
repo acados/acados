@@ -187,7 +187,7 @@ ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *ar
     return mem;
 }
 
-int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_) {
+int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_) {
 
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
     ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
@@ -386,7 +386,7 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     //
 }
 
-void ocp_qp_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+void ocp_qp_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
 
     *mem = ocp_qp_hpipm_create_memory(qp_in, args);

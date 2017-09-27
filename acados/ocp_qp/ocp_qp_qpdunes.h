@@ -79,9 +79,10 @@ void ocp_qp_qpdunes_free_memory(void *mem_);
 
 int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_);
 
-int_t ocp_qp_qpdunes(ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_, void *work_);
+int_t ocp_qp_qpdunes(const ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_,
+                     void *work_);
 
-void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
+void ocp_qp_qpdunes_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
 
 void ocp_qp_qpdunes_destroy(void *mem, void *work);
 

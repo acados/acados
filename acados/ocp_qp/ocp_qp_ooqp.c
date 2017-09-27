@@ -545,7 +545,7 @@ static void print_outputs(ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work,
     }
 }
 
-static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out,
+static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out,
                            ocp_qp_ooqp_workspace *work) {
     int_t kk, ii, nn;
 
@@ -666,7 +666,7 @@ void ocp_qp_ooqp_free_memory(void *mem_) {
     free(mem->orderC);
 }
 
-int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
+int_t ocp_qp_ooqp(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
                   void *work_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *)args_;
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *)memory_;
@@ -699,7 +699,7 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
     return return_value;
 }
 
-void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+void ocp_qp_ooqp_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *)args_;
 
     *mem = ocp_qp_ooqp_create_memory(qp_in, args);

@@ -480,7 +480,7 @@ void ocp_qp_qpdunes_free_memory(void *mem_) {
     qpDUNES_cleanup(&(mem->qpData));
 }
 
-int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
+int_t ocp_qp_qpdunes(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
@@ -501,7 +501,7 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, vo
     return 0;
 }
 
-void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+void ocp_qp_qpdunes_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
 
     *mem = ocp_qp_qpdunes_create_memory(qp_in, args);

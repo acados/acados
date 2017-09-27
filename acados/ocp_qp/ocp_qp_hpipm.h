@@ -61,9 +61,10 @@ ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *ar
 
 int_t ocp_qp_hpipm_calculate_workspace_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
 
-int_t ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *workspace_);
+int_t ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_,
+                   void *workspace_);
 
-void ocp_qp_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
+void ocp_qp_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
 
 void ocp_qp_hpipm_destroy(void *mem, void *work);
 

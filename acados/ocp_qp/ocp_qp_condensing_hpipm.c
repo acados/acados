@@ -54,11 +54,11 @@ ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments() {
     return args;
 }
 
-int_t ocp_qp_condensing_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
+int_t ocp_qp_condensing_hpipm_calculate_workspace_size(const ocp_qp_in *qp_in, void *args_) {
     return 0;
 }
 
-int_t ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, void *args_) {
+int_t ocp_qp_condensing_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, void *args_) {
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
     // extract ocp qp in size
     int_t N = qp_in->N;
@@ -131,7 +131,7 @@ int_t ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_in *qp_in, void *args
     return size;
 }
 
-char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void **mem_,
+char *ocp_qp_condensing_hpipm_assign_memory(const ocp_qp_in *qp_in, void *args_, void **mem_,
                                             void *raw_memory) {
 
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
@@ -257,7 +257,7 @@ char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, void *args_, void 
     return c_ptr;
 }
 
-ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in,
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(const ocp_qp_in *qp_in,
                                                                       void *args_) {
 
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
@@ -272,7 +272,7 @@ ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in 
     return mem;
 }
 
-int_t ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
+int_t ocp_qp_condensing_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out,
                             void *args_,
                             void *memory_,
                             void *workspace_) {
@@ -434,7 +434,8 @@ int_t ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
     //
 }
 
-void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+void ocp_qp_condensing_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem,
+                                        void **work) {
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
 
     *mem = ocp_qp_condensing_hpipm_create_memory(qp_in, args);

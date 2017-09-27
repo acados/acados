@@ -75,11 +75,11 @@ ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments() {
     return args;
 }
 
-int ocp_qp_condensing_qpoases_calculate_workspace_size(ocp_qp_in *qp_in, void *args_) {
+int ocp_qp_condensing_qpoases_calculate_workspace_size(const ocp_qp_in *qp_in, void *args_) {
     return 0;
 }
 
-int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, void *args_) {
+int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void *args_) {
     // extract ocp qp in size
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -162,7 +162,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_in *qp_in, void *args
     return size;
 }
 
-char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_in *qp_in, void *args_,
+char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args_,
                                              void **mem, void *raw_memory) {
 
     ocp_qp_condensing_qpoases_memory **qpoases_memory = (ocp_qp_condensing_qpoases_memory **) mem;
@@ -338,7 +338,7 @@ char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_in *qp_in, void *args_,
     return c_ptr;
 }
 
-ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp_in *qp_in,
+ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(const ocp_qp_in *qp_in,
                                                                           void *args_) {
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
     ocp_qp_condensing_qpoases_memory *mem;
@@ -350,7 +350,7 @@ ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp
     return mem;
 }
 
-int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
+int ocp_qp_condensing_qpoases(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
                               void *memory_, void *workspace_) {
     // cast structures
     ocp_qp_condensing_qpoases_args *args =
@@ -564,8 +564,8 @@ int ocp_qp_condensing_qpoases(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
     //
 }
 
-// XXX remove !!!!!
-void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+void ocp_qp_condensing_qpoases_initialize(const ocp_qp_in *qp_in, void *args_, void **mem,
+                                          void **work) {
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *)args_;
 
     *mem = ocp_qp_condensing_qpoases_create_memory(qp_in, args);
