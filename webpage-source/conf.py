@@ -44,3 +44,5 @@ html_sidebars = {
     ]
 }
 html_static_path = ['webpage-static']
+html_copy_source = False
+html_sourcelink_suffix = ''
