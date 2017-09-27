@@ -46,11 +46,11 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
     size = sizeof(ocp_nlp_gn_sqp_work);
     size += ocp_nlp_calculate_workspace_size(in, args->common);
 
-    if (!in->lin_res) {
+    if (!in->ls_cost->lin_res) {
         int_t N = in->N;
-        int_t *nr = in->nr;
-        int_t *nx = in->nx;
-        int_t *nu = in->nu;
+        const int_t *nr = in->ls_cost->nr;
+        const int_t *nx = in->nx;
+        const int_t *nu = in->nu;
 
         int_t max_ls_res_in_size = 0;       // ls_res_in
         int_t max_ls_res_out_size = 0;      // ls_res_out
@@ -60,10 +60,10 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
 
         for (int_t i = 0; i <= N; i++) {
             if (max_ls_res_in_size < nx[i] + nu[i])
-            max_ls_res_in_size = nx[i] + nu[i]);
+                max_ls_res_in_size = nx[i] + nu[i];
 
             if (max_ls_res_out_size < nr[i] + nr[i]*(nx[i] + nu[i]))
-            max_ls_res_out_size = nr[i] + nr[i]*(nx[i] + nu[i]);
+                max_ls_res_out_size = nr[i] + nr[i]*(nx[i] + nu[i]);
 
             if (max_ls_drdw_tran_size < nr[i]*(nx[i] + nu[i]))
                 max_ls_drdw_tran_size = nr[i]*(nx[i] + nu[i]);
@@ -82,6 +82,7 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
         size +=sizeof(real_t)*max_Hess_gn_size;
         size +=sizeof(real_t)*max_grad_gn_size;
     }
+
     return size;
 }
 
@@ -114,7 +115,7 @@ static void initialize_objective(
     real_t **qp_q = (real_t **) gn_sqp_mem->qp_solver->qp_in->q;
     real_t **qp_r = (real_t **) gn_sqp_mem->qp_solver->qp_in->r;
 
-    if (lin_res) {
+    if (nlp_in->ls_cost->lin_res) {
         // TODO(rien): only for least squares cost with state and control reference atm
         for (int_t i = 0; i <= N; i++) {
             for (int_t j = 0; j < nx[i]; j++) {
@@ -137,16 +138,30 @@ static void initialize_objective(
 
         for (int_t i = 0; i <= N; i++) {
 
-            real_t *ls_res_out =
+            char *ptr = (char *)work->raw;
+            real_t *ls_res_out = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]);
+
             real_t *r = ls_res_out;  // TODO(Andrea): allocate this
             real_t *drdw = &ls_res_out[nr[i]];
 
+            real_t *ls_res_in = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *drdw_tran = (real_t *)ptr;
+            ptr+=sizeof(real_t)*nr[i]*(nx[i]+nu[i]);
+
+            real_t *Hess_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i])*(nx[i]+nu[i]);
+            real_t *grad_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
             // (dense) Gauss-Newton Hessian
             for (int_t j = 0; j < nx[i]; j++)
-                res_in[j] = gn_sqp_mem->common->x[i][j];
+                ls_res_in[j] = gn_sqp_mem->common->x[i][j];
 
             for (int_t j = 0; j < nu[i]; j++)
-                res_in[NX+j] = gn_sqp_mem->common->u[i][j];
+                ls_res_in[NX+j] = gn_sqp_mem->common->u[i][j];
 
             cost[i]->ls_res_eval(ls_res_in, ls_res_out, cost[i]->ls_res);
 

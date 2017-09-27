@@ -40,14 +40,14 @@ typedef struct {
     // TODO(rien): only for least squares cost with state and control reference
     // atm
 
-    void (*ls_res)(const real_t**, real_t**, int*, real_t*, int);
-    void (*ls_res_eval)(const real_t* in, real_t* out,
+    void *(*ls_res)(const real_t**, real_t**, int*, real_t*, int);
+    void *(*ls_res_eval)(const real_t* in, real_t* out,
         int (*ls_res)(const real_t**, real_t**, int*, real_t*, int));
 
     const int_t *nr;
 
     real_t **W;
-    real_t **r_ref;
+    real_t **y_ref;
 
     const int_t lin_res;  // special treatment of linear residuals
 
@@ -77,7 +77,7 @@ typedef struct {
     void *cost;
     sim_solver *sim;
     ocp_nlp_function *g;  // nonlinear constraints
-    ocp_nlp_ls_cost **ls_cost;  // time-varying stage ls cost
+    ocp_nlp_ls_cost *ls_cost;  // time-varying stage ls cost
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 

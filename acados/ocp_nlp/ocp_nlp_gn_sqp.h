@@ -41,6 +41,7 @@ typedef struct {
 
 typedef struct {
     ocp_nlp_work *common;
+    real_t *raw;
 } ocp_nlp_gn_sqp_work;
 
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
