@@ -338,7 +338,6 @@ static int_t get_maximum_number_of_inequality_constraints(const ocp_qp_in *in) {
 
 ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
-    args->options.printLevel = 0;
 
     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
         args->options = qpDUNES_setupDefaultOptions();
@@ -346,9 +345,11 @@ ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
     } else if (opts == QPDUNES_NONLINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 0;
+        args->options.printLevel = 0;
     } else if (opts == QPDUNES_LINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 1;
+        args->options.printLevel = 0;
     } else {
         printf("\nUnknown option (%d) for qpDUNES!\n", opts);
         args->options = qpDUNES_setupDefaultOptions();
@@ -505,7 +506,7 @@ void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void *
 
     *mem = ocp_qp_qpdunes_create_memory(qp_in, args);
     int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
-    *work = (void *)malloc(work_space_size);
+    *work = malloc(work_space_size);
 }
 
 void ocp_qp_qpdunes_destroy(void *mem, void *work) {
