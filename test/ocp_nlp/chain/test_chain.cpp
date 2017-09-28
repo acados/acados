@@ -347,7 +347,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_mem.common = &nlp_mem_common;
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
 
-        int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, &nlp_args, &nlp_mem);
+        int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in,
+            &nlp_args, &nlp_mem);
         void *nlp_work = (void*)malloc(work_space_size);
 
         for (int_t i = 0; i < NN; i++) {
