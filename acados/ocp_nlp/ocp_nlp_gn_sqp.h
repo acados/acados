@@ -32,11 +32,13 @@ extern "C" {
 typedef struct {
     ocp_nlp_args *common;
     char qp_solver_name[256];
+    int_t lin_res;
 } ocp_nlp_gn_sqp_args;
 
 typedef struct {
     ocp_nlp_memory *common;
     ocp_qp_solver *qp_solver;
+    int_t lin_res;
     int_t raw_workspace_size;
 } ocp_nlp_gn_sqp_memory;
 

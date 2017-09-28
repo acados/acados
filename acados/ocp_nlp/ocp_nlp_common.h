@@ -77,7 +77,7 @@ typedef struct {
     void *cost;
     sim_solver *sim;
     ocp_nlp_function *g;  // nonlinear constraints
-    ocp_nlp_ls_cost *ls_cost;  // time-varying stage ls cost
+    // ocp_nlp_ls_cost *ls_cost;  // time-varying stage ls cost
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 

@@ -96,6 +96,16 @@ int main() {
 
     // Problem data
     ocp_nlp_ls_cost ls_cost;
+    ls_cost.lin_res = 1;
+    ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
+
+    // number of residual
+    for (int_t i = 0; i < NN; i++) {
+        ls_cost.nr[i] = NX + NU;
+    }
+
+    ls_cost.nr[NN] = NX;
+
     real_t *W, *WN;
     real_t *uref;
     int_t max_sqp_iters = 20;
@@ -377,6 +387,8 @@ int main() {
 
     ocp_nlp_gn_sqp_args nlp_args;
     ocp_nlp_args nlp_common_args;
+
+    nlp_args.lin_res = 1;
     nlp_args.common = &nlp_common_args;
     nlp_args.common->maxIter = max_sqp_iters;
 

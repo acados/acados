@@ -77,7 +77,7 @@ int main() {
     ls_cost.ls_res_eval = malloc(sizeof(char *)*(NN+1));
     ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
     ls_cost.lin_res = 0;
-    
+
     // assign residual function pointers
     for (int_t i = 0; i < NN; i++) {
         ls_cost.ls_res[i] = &ls_res_Fun;
@@ -344,7 +344,7 @@ int main() {
     nlp_in.ub = (const real_t **)hub;
     nlp_in.sim = integrators;
     // nlp_in.cost = &ls_cost;
-    nlp_in.ls_cost = &ls_cost;
+    nlp_in.cost = &ls_cost;
     nlp_in.freezeSens = false;
     if (INEXACT > 2) nlp_in.freezeSens = true;
 
