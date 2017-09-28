@@ -35,11 +35,12 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "examples/c/quadcopter_model/quadcopter_model.h"
+// #include "examples/c/quadcopter_model/quadcopter_model.h"
 #include "examples/c/quadcopter_model/ls_res_eval.h"
 
 // #include "test/test_utils/eigen.h"
@@ -161,18 +162,18 @@ int main() {
             integrators[jj].mem = 0;
         }
 
-        sim_in[jj].nSteps = Ns;
-        sim_in[jj].step = Ts / sim_in[jj].nSteps;
+        sim_in[jj].num_steps = Ns;
+        sim_in[jj].step = Ts / sim_in[jj].num_steps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
 
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;
         sim_in[jj].sens_hess = false;
-        sim_in[jj].nsens_forw = NX + NU;
+        sim_in[jj].num_forw_sens = NX + NU;
 
         sim_in[jj].vde = &vdeFun;
-        sim_in[jj].VDE_forw = &VDE_fun_quadcopter;
+        sim_in[jj].VDE_forw = &vde_fun;
 
         sim_in[jj].x = (real_t *)malloc(sizeof(*sim_in[jj].x) * (NX));
         sim_in[jj].u = (real_t *)malloc(sizeof(*sim_in[jj].u) * (NU));

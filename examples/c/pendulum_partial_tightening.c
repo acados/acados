@@ -363,17 +363,17 @@ int main() {
     real_t T = 0.01;
     sim_in  nmpc_sim_in;
     sim_out nmpc_sim_out;
-    nmpc_sim_in.nSteps = NMPC_INT_STEPS;
-    nmpc_sim_in.step = T/nmpc_sim_in.nSteps;
+    nmpc_sim_in.num_steps = NMPC_INT_STEPS;
+    nmpc_sim_in.step = T/nmpc_sim_in.num_steps;
     nmpc_sim_in.vde = &vdeFun;
-    nmpc_sim_in.VDE_forw = &VDE_fun_pendulum;
+    nmpc_sim_in.VDE_forw = &vde_fun;
     nmpc_sim_in.nx = NX;
     nmpc_sim_in.nu = NU;
 
     nmpc_sim_in.sens_forw = true;
     nmpc_sim_in.sens_adj = false;
     nmpc_sim_in.sens_hess = false;
-    nmpc_sim_in.nsens_forw = NX+NU;
+    nmpc_sim_in.num_forw_sens = NX+NU;
 
     nmpc_sim_in.x = malloc(sizeof(*nmpc_sim_in.x) * (NX));
     nmpc_sim_in.u = malloc(sizeof(*nmpc_sim_in.u) * (NU));
@@ -396,17 +396,17 @@ int main() {
     // simulation integrator structs
     sim_in  plant_sim_in;
     sim_out plant_sim_out;
-    plant_sim_in.nSteps = SIM_INT_STEPS;
-    plant_sim_in.step = T/plant_sim_in.nSteps;
+    plant_sim_in.num_steps = SIM_INT_STEPS;
+    plant_sim_in.step = T/plant_sim_in.num_steps;
     plant_sim_in.vde = &vdeFun;
-    plant_sim_in.VDE_forw = &VDE_fun_pendulum;
+    plant_sim_in.VDE_forw = &vde_fun;
     plant_sim_in.nx = NX;
     plant_sim_in.nu = NU;
 
     plant_sim_in.sens_forw = true;
     plant_sim_in.sens_adj = false;
     plant_sim_in.sens_hess = false;
-    plant_sim_in.nsens_forw = NX+NU;
+    plant_sim_in.num_forw_sens = NX+NU;
 
     plant_sim_in.x = malloc(sizeof(*plant_sim_in.x) * (NX));
     plant_sim_in.u = malloc(sizeof(*plant_sim_in.u) * (NU));

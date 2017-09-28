@@ -25,20 +25,12 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_*)
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
-file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
-    chain_model/chain_model.c
-    chain_model/vde*.c
-    chain_model/jac*.c)
-
-set(CHEN_MODEL_SRC chen_model/chen_model.c)
 
 file(GLOB PENDULUM_MODEL_SRC
-    pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
 
 file(GLOB QUADCOPTER_MODEL_SRC
-    quadcopter_model/quadcopter_model.c
     quadcopter_model/vde_forw_quadcopter.c
     quadcopter_model/ls_res_eval.c
     quadcopter_model/ls_res_quadcopter.c
