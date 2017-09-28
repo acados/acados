@@ -46,11 +46,11 @@ typedef PyObject LangObject;
 %{
 #include <dlfcn.h>
 // #include <xmmintrin.h>  // for floating point exceptions
+// _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
 #include <cstdlib>
 #include <string>
 
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
@@ -63,6 +63,7 @@ typedef PyObject LangObject;
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_rk_common.h"
+#include "acados/utils/print.h"
 #include "acados/utils/types.h"
 
 #include "casadi/casadi.hpp"
@@ -306,14 +307,31 @@ static bool is_valid_ocp_dimensions_map(const LangObject *input) {
 // }
 
 LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
-    LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
-    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N+1, in->nu);
+    const real_t **states_copy, **controls_copy;
+    states_copy = (const real_t **) malloc((in->N+1) * sizeof(real_t *));
+    controls_copy = (const real_t **) malloc((in->N+1) * sizeof(real_t *));
+    for (int_t i = 0; i <= in->N; i++) {
+        states_copy[i] = (const real_t *) calloc(in->nx[i], sizeof(real_t));
+        memcpy((void *)states_copy[i], (void *)out->x[i], in->nx[i] * sizeof(real_t));
+        controls_copy[i] = (const real_t *) calloc(in->nu[i], sizeof(real_t));
+        memcpy((void *)controls_copy[i], (void *)out->u[i], in->nu[i] * sizeof(real_t));
+    }
+
+    LangObject *x_star = new_sequence_from(states_copy, in->N+1, in->nx);
+    LangObject *u_star = new_sequence_from(controls_copy, in->N+1, in->nu);
     return new_ocp_output_tuple(x_star, u_star);
 }
 
 %}
 
+%ignore ocp_qp_in_calculate_size;
+%ignore assign_ocp_qp_in;
+%ignore create_ocp_qp_in;
+%ignore ocp_qp_out_calculate_size;
+%ignore assign_ocp_qp_out;
+%ignore create_ocp_qp_out;
 %ignore ocp_qp_out;
+%ignore create_ocp_qp_solver;
 %rename(ocp_qp) ocp_qp_in;
 %include "acados/ocp_qp/ocp_qp_common.h"
 
@@ -339,7 +357,6 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     %}
 #endif
     ocp_qp_in(LangObject *input_map) {
-        ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
             char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s that specifies at "
@@ -357,7 +374,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         if (!has(input_map, "nb")) {
             nb[0] = nx[0];
         }
-        allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        ocp_qp_in *qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
         // Initial state is fixed
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
@@ -371,55 +388,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %extend ocp_qp_solver {
     ocp_qp_solver(const char *solver_name, ocp_qp_in *qp_in, LangObject *options = NONE) {
-        ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
-        void *args = NULL;
-        void *mem = NULL;
-        int_t workspace_size, memory_size;
-        void *workspace = NULL;
-        if (!strcmp(solver_name, "condensing_qpoases")) {
-            solver->fun = ocp_qp_condensing_qpoases;
-            args = (ocp_qp_condensing_qpoases_args *) \
-                malloc(sizeof(ocp_qp_condensing_qpoases_args));
-            workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(qp_in,
-                (ocp_qp_condensing_qpoases_args *) args);
-            workspace = (void *) malloc(workspace_size);
-            memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(qp_in,
-                (ocp_qp_condensing_qpoases_args *) args);
-            void *memory = (void *) malloc(memory_size);
-            mem = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_memory));
-            ocp_qp_condensing_qpoases_create_memory(qp_in,
-                (ocp_qp_condensing_qpoases_args *) args,
-                (ocp_qp_condensing_qpoases_memory *) mem,
-                memory);
-            ((ocp_qp_condensing_qpoases_args *)args)->cputime = 1000.0;
-            ((ocp_qp_condensing_qpoases_args *)args)->nwsr = 1000;
-#if defined(OOQP)
-        } else if (!strcmp(solver_name, "ooqp")) {
-            solver->fun = ocp_qp_ooqp;
-            args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
-            mem = (ocp_qp_ooqp_memory *) malloc(sizeof(ocp_qp_ooqp_memory));
-            ocp_qp_ooqp_create_memory(qp_in, args, mem);
-            workspace_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
-            workspace = (void *) malloc(workspace_size);
-#endif
-        } else if (!strcmp(solver_name, "qpdunes")) {
-            solver->fun = ocp_qp_qpdunes;
-            args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
-            ocp_qp_qpdunes_create_arguments(args, QPDUNES_DEFAULT_ARGUMENTS);
-            mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
-            ocp_qp_qpdunes_create_memory(qp_in, args, mem);
-            workspace_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
-            workspace = (void *) malloc(workspace_size);
-        }  else {
-            throw std::invalid_argument("Solver name not known!");
-        }
-        solver->qp_in = qp_in;
-        ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
-        allocate_ocp_qp_out(qp_in, qp_out);
-        solver->qp_out = qp_out;
-        solver->args = args;
-        solver->mem = mem;
-        solver->work = workspace;
+        ocp_qp_solver *solver = create_ocp_qp_solver(qp_in, solver_name, NULL);
         return solver;
     }
 
@@ -665,22 +634,20 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     }
 
     LangObject *evaluate() {
-        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
-            $self->mem, $self->work);
-        if (return_code != 0) {
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
+                                $self->work);
+        if (fail)
             throw std::runtime_error("nlp solver failed!");
-        }
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 
     LangObject *evaluate(LangObject *x0) {
         fill_array_from(x0, (real_t **) $self->nlp_in->lb, 1, $self->nlp_in->nx);
         fill_array_from(x0, (real_t **) $self->nlp_in->ub, 1, $self->nlp_in->nx);
-        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
-            $self->mem, $self->work);
-        if (return_code != 0) {
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
+                                $self->work);
+        if (fail)
             throw std::runtime_error("nlp solver failed!");
-        }
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 }

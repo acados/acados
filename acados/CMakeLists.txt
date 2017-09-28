@@ -66,8 +66,6 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()
 
-target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES
-
 if(ACADOS_WITH_OOQP)
     target_compile_definitions(acados PRIVATE OOQP)
     target_link_libraries(acados PUBLIC ooqp)
@@ -86,3 +84,6 @@ if(COVERAGE MATCHES "lcov")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -fprofile-arcs -ftest-coverage")
     target_link_libraries(acados PRIVATE --coverage)
 endif()
+
+target_compile_definitions(acados PRIVATE ALIGNMENT=64)
+target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES

@@ -221,7 +221,7 @@ int main() {
     qp_out.lam = plam;
 
     ocp_qp_condensing_qpoases_args qpoases_args;
-    qpoases_args.cputime = 100.0;  // maximum cpu time in seconds
+    qpoases_args.cputime = 1000.0;  // maximum cpu time in seconds
     qpoases_args.nwsr = 1000;  // maximum number of working set recalculations
     qpoases_args.warm_start = 0;  // wam start with dual_sol in memory
 
@@ -230,8 +230,9 @@ int main() {
 
     int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
     void *memory = malloc(memory_size);
-    ocp_qp_condensing_qpoases_memory qpoases_memory;
-    ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, memory);
+    ocp_qp_condensing_qpoases_memory *qpoases_memory;
+    ocp_qp_condensing_qpoases_assign_memory(&qp_in, &qpoases_args,
+                                            (void **) &qpoases_memory, memory);
 
     acados_timer timer;
     real_t total_time = 0;
@@ -272,7 +273,7 @@ int main() {
                 pq[NN][j] = Q[j * (NX + 1)] * (w[NN * (NX + NU) + j] - xref[j]);
             }
             int status = ocp_qp_condensing_qpoases(
-                &qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
+                &qp_in, &qp_out, &qpoases_args, qpoases_memory, workspace);
             if (status) {
                 printf("qpOASES returned error status %d\n", status);
                 return -1;

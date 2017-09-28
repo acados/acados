@@ -561,9 +561,8 @@ int main() {
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
-    ocp_qp_condensing_hpipm_memory hpipm_memory;
-    ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args, &hpipm_memory,
-                                          memory);
+    ocp_qp_condensing_hpipm_memory *hpipm_memory =
+        ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args);
 
     /************************************************
      * call the solver (fully sparse)
@@ -579,15 +578,15 @@ int main() {
         // call the QP OCP solver
         //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args,
         //        workspace);
-        return_value = ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args,
-                                               &hpipm_memory, workspace);
+        return_value =
+            ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args, hpipm_memory, workspace);
     }
 
     real_t time = acados_toc(&timer)/nrep;
 
     if (return_value == ACADOS_SUCCESS)
         printf("\nACADOS status: solution found in %d iterations\n",
-               hpipm_memory.iter);
+               hpipm_memory->iter);
 
     if (return_value == ACADOS_MAXITER)
         printf("\nACADOS status: maximum number of iterations reached\n");
@@ -608,13 +607,13 @@ int main() {
     for (ii = 0; ii <= N; ii++) d_print_mat(1, 2*nbb[ii]+2*ngg[ii], hlam[ii], 1);
 
     printf("\n");
-    printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory.inf_norm_res[0],
-           hpipm_memory.inf_norm_res[1], hpipm_memory.inf_norm_res[2],
-           hpipm_memory.inf_norm_res[3], hpipm_memory.inf_norm_res[4]);
+    printf(" inf norm res: %e, %e, %e, %e, %e\n", hpipm_memory->inf_norm_res[0],
+           hpipm_memory->inf_norm_res[1], hpipm_memory->inf_norm_res[2],
+           hpipm_memory->inf_norm_res[3], hpipm_memory->inf_norm_res[4]);
     printf("\n");
     printf(
         " Solution time for %d IPM iterations, averaged over %d runs: %5.2e "
-        "seconds\n", hpipm_memory.iter, nrep, time);
+        "seconds\n", hpipm_memory->iter, nrep, time);
     printf("\n\n");
 
     /************************************************
