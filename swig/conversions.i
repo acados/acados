@@ -56,6 +56,8 @@ class sequence_of_arrays(list):
 PyTypeObject *tuple_type = NULL;
 PyStructSequence_Desc *tuple_descriptor = NULL;
 PyObject *sequence_of_arrays_module = NULL;
+PyObject *copy_module = NULL;
+
 %}
 #endif
 
@@ -558,6 +560,24 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
         mxSetField(named_tuple, 0, field_names[index], content[index]);
     return named_tuple;
 #elif defined(SWIGPYTHON)
+    PyObject *content_copy[num_fields];
+    // Try loading Python module into global variable
+    if (copy_module == NULL)
+        copy_module = PyImport_Import(PyString_FromString("copy"));
+    // Check if loading was succesful
+    if (copy_module == NULL)
+        SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module 'copy'");
+    PyObject *pDict = PyModule_GetDict(copy_module);
+    PyObject *pFunction = PyDict_GetItemString(pDict, "deepcopy");
+    if (!PyCallable_Check(pFunction)) {
+        SWIG_Error(SWIG_RuntimeError, "Function is not callable");
+    }
+    for (int_t index = 0; index < num_fields; index++) {
+        PyObject *args = PyTuple_New(1);
+        PyTuple_SetItem(args, 0, content[index]);
+        content_copy[index] = PyObject_CallObject(pFunction, args);
+    }
+
     PyStructSequence_Field *fields;
     fields = (PyStructSequence_Field *) calloc(num_fields+1, sizeof(PyStructSequence_Field));
     for (int_t index = 0; index < num_fields; index++) {
@@ -579,7 +599,7 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
 
     PyObject *named_tuple = PyStructSequence_New(tuple_type);
     for (int_t index = 0; index < num_fields; index++)
-        PyStructSequence_SetItem(named_tuple, index, content[index]);
+        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content_copy[index]);
     return named_tuple;
 #endif
 }
