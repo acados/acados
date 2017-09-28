@@ -20,9 +20,13 @@
 #ifndef ACADOS_UTILS_TYPES_H_
 #define ACADOS_UTILS_TYPES_H_
 
+#define MAX_STR_LEN 256
+
 typedef double real_t;
 typedef unsigned int uint;
 typedef int int_t;
+
+typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
 
 // enum of return values
 enum return_values { ACADOS_SUCCESS, ACADOS_MAXITER, ACADOS_MINSTEP };

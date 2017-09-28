@@ -92,10 +92,10 @@ vdeX = vdeX + jtimes(dae.ode,dae.x,Sx);
 vdeP = SX.zeros(nx,nu) + jacobian(dae.ode,dae.p);
 vdeP = vdeP + jtimes(dae.ode,dae.x,Sp);
 
-vdeFun = Function('vdeFun',{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX,vdeP});
+vdeFun = Function(['vde_chain_nm' num2str(Nm)],{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX,vdeP});
 
 jacX = SX.zeros(nx,nx) + jacobian(dae.ode,dae.x);
-jacFun = Function('jacFun',{dae.x,dae.p},{dae.ode,jacX});
+jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
 
 opts = struct('mex', false);
 vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);

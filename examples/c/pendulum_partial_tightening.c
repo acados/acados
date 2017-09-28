@@ -39,12 +39,12 @@
 #include "hpmpc/include/lqcp_solvers.h"
 
 #include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
-#include "examples/c/pendulum_model/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 10
@@ -61,6 +61,8 @@
 #define NSIM 1
 #define GAMMA 1e-2
 #define UMAX 1
+
+int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -297,17 +299,17 @@ int main() {
     real_t T = 0.01;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 1;
-    sim_in.step = T/sim_in.nSteps;
+    sim_in.num_steps = 1;
+    sim_in.step = T/sim_in.num_steps;
     sim_in.vde = &vdeFun;
-    sim_in.VDE_forw = &VDE_fun_pendulum;
+    sim_in.VDE_forw = &vde_fun;
     sim_in.nx = NX;
     sim_in.nu = NU;
 
     sim_in.sens_forw = true;
     sim_in.sens_adj = false;
     sim_in.sens_hess = false;
-    sim_in.nsens_forw = NX+NU;
+    sim_in.num_forw_sens = NX+NU;
 
     sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
     sim_in.u = malloc(sizeof(*sim_in.u) * (NU));

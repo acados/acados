@@ -28,6 +28,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
@@ -41,15 +42,6 @@
 
 // TODO(dimitris): fix this
 #define USE_QPOASES
-
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
 // static void shift_states(real_t *w, real_t *x_end, int_t NN) {
 //    for (int_t i = 0; i < NN; i++) {
@@ -201,56 +193,64 @@ int main() {
             sim_lifted_irk_memory irk_mem[NN];
 
             for (jj = 0; jj < NN; jj++) {
-                sim_in[jj].nSteps = 2;
-                sim_in[jj].step = T / sim_in[jj].nSteps;
+                sim_in[jj].num_steps = 2;
+                sim_in[jj].step = T / sim_in[jj].num_steps;
                 sim_in[jj].nx = NX;
                 sim_in[jj].nu = NU;
 
                 sim_in[jj].sens_forw = true;
                 sim_in[jj].sens_adj = false;
                 sim_in[jj].sens_hess = false;
-                sim_in[jj].nsens_forw = NX + NU;
+                sim_in[jj].num_forw_sens = NX + NU;
 
                 switch (NMF) {
                     case 1:
                         sim_in[jj].vde = &vde_chain_nm2;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm2;
-                        sim_in[jj].jac_fun = &jac_fun_nm2;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm2;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 2:
                         sim_in[jj].vde = &vde_chain_nm3;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm3;
-                        sim_in[jj].jac_fun = &jac_fun_nm3;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm2;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 3:
                         sim_in[jj].vde = &vde_chain_nm4;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm4;
-                        sim_in[jj].jac_fun = &jac_fun_nm4;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm4;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 4:
                         sim_in[jj].vde = &vde_chain_nm5;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm5;
-                        sim_in[jj].jac_fun = &jac_fun_nm5;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm5;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 5:
                         sim_in[jj].vde = &vde_chain_nm6;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm6;
-                        sim_in[jj].jac_fun = &jac_fun_nm6;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm6;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 6:
                         sim_in[jj].vde = &vde_chain_nm7;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm7;
-                        sim_in[jj].jac_fun = &jac_fun_nm7;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm7;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     case 7:
                         sim_in[jj].vde = &vde_chain_nm8;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm8;
-                        sim_in[jj].jac_fun = &jac_fun_nm8;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm8;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                     default:
                         sim_in[jj].vde = &vde_chain_nm9;
-                        sim_in[jj].VDE_forw = &VDE_fun_nm9;
-                        sim_in[jj].jac_fun = &jac_fun_nm9;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm9;
+                        sim_in[jj].jac_fun = &jac_fun;
                         break;
                 }
 
@@ -591,14 +591,14 @@ int main() {
             timings += acados_toc(&timer);
 //    }
 
-        printf("\nAverage of %.3f ms in the integrator,\n",
-                1e3*timings_sim/(max_sqp_iters*max_iters));
-        printf("  of which %.3f ms spent in CasADi and\n",
-                1e3*timings_ad/(max_sqp_iters*max_iters));
-        printf("  of which %.3f ms spent in BLASFEO.\n",
-                1e3*timings_la/(max_sqp_iters*max_iters));
-        printf("--Total of %.3f ms per SQP iteration.--\n",
-                1e3*timings/(max_sqp_iters*max_iters));
+            printf("\nAverage of %.3f ms in the integrator,\n",
+                   1e3 * timings_sim / (max_sqp_iters * max_iters));
+            printf("  of which %.3f ms spent in CasADi and\n",
+                   1e3 * timings_ad / (max_sqp_iters * max_iters));
+            printf("  of which %.3f ms spent in BLASFEO.\n",
+                   1e3 * timings_la / (max_sqp_iters * max_iters));
+            printf("--Total of %.3f ms per SQP iteration.--\n",
+                   1e3 * timings / (max_sqp_iters * max_iters));
 
             //    #ifdef DEBUG
             //    print_matrix_name("stdout", "sol", w, NX+NU, N);

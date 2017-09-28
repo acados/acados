@@ -29,6 +29,7 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
@@ -140,31 +141,34 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 integrators[jj].mem = 0;
             }
 
-            sim_in[jj].nSteps = Ns;
-            sim_in[jj].step = Ts/sim_in[jj].nSteps;
+            sim_in[jj].num_steps = Ns;
+            sim_in[jj].step = Ts/sim_in[jj].num_steps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
 
             sim_in[jj].sens_forw = true;
             sim_in[jj].sens_adj = false;
             sim_in[jj].sens_hess = false;
-            sim_in[jj].nsens_forw = NX+NU;
+            sim_in[jj].num_forw_sens = NX+NU;
 
             switch (NMF) {
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].VDE_forw = &VDE_fun_nm2;
-                sim_in[jj].jac_fun = &jac_fun_nm2;
+                sim_in[jj].VDE_forw = &vde_fun;
+                sim_in[jj].jac = &jac_chain_nm2;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
-                sim_in[jj].VDE_forw = &VDE_fun_nm3;
-                sim_in[jj].jac_fun = &jac_fun_nm3;
+                sim_in[jj].VDE_forw = &vde_fun;
+                sim_in[jj].jac = &jac_chain_nm3;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
-                sim_in[jj].VDE_forw = &VDE_fun_nm4;
-                sim_in[jj].jac_fun = &jac_fun_nm4;
+                sim_in[jj].VDE_forw = &vde_fun;
+                sim_in[jj].jac = &jac_chain_nm4;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             default:
                 REQUIRE(1 == 0);

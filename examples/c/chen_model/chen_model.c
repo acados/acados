@@ -1,5 +1,5 @@
 /* The model comes from \cite{Chen1998} */
-#include "examples/c/Chen_model/chen_model.h"
+#include "examples/c/chen_model/chen_model.h"
 
 /* Ignore vde */
 #if defined(__clang__)
@@ -18,7 +18,7 @@
 #define NX 2
 #define NU 1
 
-void VDE_fun(const real_t* in, real_t* out,
+void VDE_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
              int (*vde)(const real_t**, real_t**, int*, real_t*, int)) {
     const real_t* x = in;
     const real_t* u = in + NX + NX * (NX + NU);

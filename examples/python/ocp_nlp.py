@@ -3,10 +3,10 @@ from numpy import array, diag
 from scipy.linalg import block_diag
 
 from acados import ocp_nlp, ocp_nlp_solver
-from example_model import example_model
+from models import chen_model
 
 N = 10
-nx, nu, ode_fun = example_model()
+ode_fun, nx, nu = chen_model()
 nlp = ocp_nlp({'N': N, 'nx': nx, 'nu': nu})
 
 # ODE Model
