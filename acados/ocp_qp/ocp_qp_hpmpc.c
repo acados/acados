@@ -369,50 +369,50 @@ int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
 
         hpmpc_args->out_iter = kk;
 
-        } else {  // XXX giaf fortran order interface with partial condensing
-         // extract args struct members
-         double mu_tol = hpmpc_args->tol;
-         int k_max = hpmpc_args->max_iter;
-         double mu0 = hpmpc_args->mu0;
-         int warm_start = hpmpc_args->warm_start;
-         int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
-         int out_iter = -1;  // number of performed iterations
-         double *inf_norm_res = hpmpc_args->inf_norm_res;
+    } else {  // XXX giaf fortran order interface with partial condensing
+        // extract args struct members
+        double mu_tol = hpmpc_args->tol;
+        int k_max = hpmpc_args->max_iter;
+        double mu0 = hpmpc_args->mu0;
+        int warm_start = hpmpc_args->warm_start;
+        int N2 = hpmpc_args->N2;  // horizon length of the partially condensed problem
+        int out_iter = -1;  // number of performed iterations
+        double *inf_norm_res = hpmpc_args->inf_norm_res;
 
-         // memory for stat
-         size_t addr = ( ( (size_t) workspace_) + 7) / 8 * 8;  // align to 8-byte boundaries
-         double *ptr_double = (double *) addr;
-         double *stat = ptr_double;
-         ptr_double += 5*k_max;
-         for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
+        // memory for stat
+        size_t addr = ( ( (size_t) workspace_) + 7) / 8 * 8;  // align to 8-byte boundaries
+        double *ptr_double = (double *) addr;
+        double *stat = ptr_double;
+        ptr_double += 5*k_max;
+        for (ii = 0; ii < 5*k_max; ii++) stat[ii] = 0.0;  // zero
 
-         // memory for idxb
-         int *hidxb[N+1];
-         int *ptr_int = (int *) ptr_double;
-         for (ii = 0; ii <= N; ii++) {
-             hidxb[ii] = ptr_int;
-             ptr_int += nb[ii];
-         }
-         void *ipm_workspace = (void *) ptr_int;
+        // memory for idxb
+        int *hidxb[N+1];
+        int *ptr_int = (int *) ptr_double;
+        for (ii = 0; ii <= N; ii++) {
+            hidxb[ii] = ptr_int;
+            ptr_int += nb[ii];
+        }
+        void *ipm_workspace = (void *) ptr_int;
 
-         //  swap x and u in bounds (by updating their indeces)
-         for (ii = 0; ii <= N; ii++) {
-             jj = 0;
-             for (; jj < nb[ii]; jj++) {
-                 if (hsidxb[ii][jj] < nx[ii]) {  // state
-                     hidxb[ii][jj] = hsidxb[ii][jj]+nu[ii];
-                 } else {  // input
-                     hidxb[ii][jj] = hsidxb[ii][jj]-nx[ii];
-                 }
-             }
-         }
+        //  swap x and u in bounds (by updating their indeces)
+        for (ii = 0; ii <= N; ii++) {
+            jj = 0;
+            for (; jj < nb[ii]; jj++) {
+                if (hsidxb[ii][jj] < nx[ii]) {  // state
+                    hidxb[ii][jj] = hsidxb[ii][jj]+nu[ii];
+                } else {  // input
+                    hidxb[ii][jj] = hsidxb[ii][jj]-nx[ii];
+                }
+            }
+        }
 
-         hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0,
+        hpmpc_status = fortran_order_d_ip_ocp_hard_tv(&out_iter, k_max, mu0,
             mu_tol, N, nx, nu, nb, hidxb, ng, N2, warm_start, hA, hB, hb, hQ, hS,
             hR, hq, hr, hlb, hub, hC, hD, hlg,
-             hug, hx, hu, hpi, hlam, inf_norm_res, ipm_workspace, stat);
+            hug, hx, hu, hpi, hlam, inf_norm_res, ipm_workspace, stat);
 
-         hpmpc_args->out_iter = out_iter;  // number of performed iterations
+        hpmpc_args->out_iter = out_iter;  // number of performed iterations
     }
 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
@@ -473,18 +473,18 @@ int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_) {
         int_t ii;
         // Adding memory for data
         for (ii=0; ii < N; ii++) {
-        mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);  // BAbt
-        mem_size+= d_size_strvec(nx[ii+1]);  // b
-        mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);  // RSQrq
-        mem_size+= d_size_strvec(nu[ii]+nx[ii]);  // rq
-        mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ng[ii]);  // DCt
-        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);  // d
-        mem_size+= d_size_strvec(nu[ii]+nx[ii]);
-        mem_size+= d_size_strvec(nx[ii+1]);
-        mem_size+= d_size_strvec(nx[ii+1]);
-        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
-        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
-        mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+            mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nx[ii+1]);  // BAbt
+            mem_size+= d_size_strvec(nx[ii+1]);  // b
+            mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);  // RSQrq
+            mem_size+= d_size_strvec(nu[ii]+nx[ii]);  // rq
+            mem_size+= d_size_strmat(nu[ii]+nx[ii]+1, ng[ii]);  // DCt
+            mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);  // d
+            mem_size+= d_size_strvec(nu[ii]+nx[ii]);
+            mem_size+= d_size_strvec(nx[ii+1]);
+            mem_size+= d_size_strvec(nx[ii+1]);
+            mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+            mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
+            mem_size+= d_size_strvec(2*nb[ii]+2*ng[ii]);
         }
 
         mem_size+= d_size_strmat(nu[N]+nx[N]+1, nu[N]+nx[N]);  // RSQrq
@@ -499,9 +499,9 @@ int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_) {
 
 
         // Adding memory for extra variables in the Riccati recursion
-        mem_size+=d_size_strvec(nx[ii+1]);
-        mem_size+=d_size_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii]);
-        mem_size+=d_size_strmat(nx[ii], nx[ii]);
+        mem_size+=d_size_strvec(nx[N]);
+        mem_size+=d_size_strmat(nu[N]+nx[N]+1, nu[N]+nx[N]);
+        mem_size+=d_size_strmat(nx[N], nx[N]);
 
         for ( int ii=0; ii < N; ii++ ) {
             mem_size+=d_size_strvec(2*nb[ii]+2*ng[ii]);

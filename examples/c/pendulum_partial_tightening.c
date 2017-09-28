@@ -351,20 +351,20 @@ int main() {
     real_t *pB[N];
     real_t *pb[N];
     real_t *pQ[N+1];
-    real_t *pS[N];
-    real_t *pR[N];
+    real_t *pS[N+1];
+    real_t *pR[N+1];
     real_t *pq[N+1];
-    real_t *pr[N];
+    real_t *pr[N+1];
     real_t *px[N+1];
-    real_t *pu[N];
+    real_t *pu[N+1];
     real_t *px0[1];
     int    *hidxb[N+1];
     real_t *pub[N+1];
     real_t *plb[N+1];
-    real_t *pC[N + 1];
-    real_t *pD[N];
-    real_t *plg[N + 1];
-    real_t *pug[N + 1];
+    real_t *pC[N+1];
+    real_t *pD[N+1];
+    real_t *plg[N+1];
+    real_t *pug[N+1];
 
     /************************************************
     * box constraints
@@ -412,8 +412,8 @@ int main() {
     hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
-    d_zeros(&plb[0], (NBU), 1);
-    d_zeros(&pub[0], (NBU), 1);
+    d_zeros(&plb[0], NBU, 1);
+    d_zeros(&pub[0], NBU, 1);
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
@@ -423,8 +423,8 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
-        d_zeros(&plb[i+1], (NBU+NBX), 1);
-        d_zeros(&pub[i+1], (NBU+NBX), 1);
+        if (i >= 1) d_zeros(&plb[i], NBU+NBX, 1);
+        if (i >= 1) d_zeros(&pub[i], NBU+NBX, 1);
     }
     d_zeros(&plb[N], NBX, 1);
     d_zeros(&pub[N], NBX, 1);
@@ -470,6 +470,8 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, NX);
+    double *DN;
+    d_zeros(&DN, ngN, nu[N]);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
     double *ugN;
@@ -524,6 +526,7 @@ int main() {
     d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
 
     pC[N] = CN;
+    pD[N] = DN;
     plg[N] = lgN;
     pug[N] = ugN;
 
@@ -773,6 +776,7 @@ int main() {
     free(ug);
 
     free(CN);
+    free(DN);
     free(lgN);  // force all states to 0 at the last stage
     free(ugN);  // force all states to 0 at the last stage
 
@@ -787,7 +791,6 @@ int main() {
         free(ux_in[ii]);
     }
 
-    free(ppi[N]);
     free(plam[N]);
     free(pt[N]);
 
