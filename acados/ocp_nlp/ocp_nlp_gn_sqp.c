@@ -39,7 +39,8 @@
 #include "acados/utils/types.h"
 #include "acados/utils/math.h"
 
-int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_, ocp_nlp_gn_sqp_memory* mem) {
+int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_,
+    ocp_nlp_gn_sqp_memory* mem) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
     int_t size;
@@ -201,7 +202,8 @@ static void initialize_objective(
 
             // init Hess_gn to zeros
             for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hess_gn[j] = 0.0;
-            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i], drdw, nr[i], Hess_gn, nx[i]+nu[i]);
+            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i],
+                drdw, nr[i], Hess_gn, nx[i]+nu[i]);
 
             // compute gradient
             for (int_t j = 0; j < nr[i]; j++) rref[j] = -cost->y_ref[i][j] + r[j];
@@ -220,8 +222,10 @@ static void initialize_objective(
 
             for (int_t j = 0; j < nu[i]; j++)
                 for (int_t k = 0; k < nu[i]; k++)
-                    qp_R[i][k + j*nu[i]] = Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
-            // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] = Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
+                    qp_R[i][k + j*nu[i]] =
+                        Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
+            // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] =
+            // Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
 
             for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_gn[j];
             for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_gn[nx[i] + j];
@@ -253,7 +257,8 @@ static void initialize_trajectories(
 }
 
 
-static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
+    ocp_nlp_gn_sqp_memory *mem, real_t *w) {
 
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
