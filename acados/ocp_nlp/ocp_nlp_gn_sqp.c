@@ -39,7 +39,7 @@
 #include "acados/utils/types.h"
 #include "acados/utils/math.h"
 
-int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
+int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_, ocp_nlp_gn_sqp_memory* mem) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
     int_t size;
@@ -56,6 +56,7 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
 
     size += ocp_nlp_calculate_workspace_size(in, args->common);
 
+    int_t raw_workspace_size = 0;
     if (!cost->lin_res) {
         int_t N = in->N;
         const int_t *nr = cost->nr;
@@ -90,12 +91,16 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
 
         }
 
-        size +=sizeof(real_t)*max_ls_res_out_size;
-        size +=sizeof(real_t)*max_ls_res_in_size;
-        size +=sizeof(real_t)*max_ls_drdw_tran_size;
-        size +=sizeof(real_t)*max_Hess_gn_size;
-        size +=sizeof(real_t)*max_grad_gn_size;
-        size +=sizeof(real_t)*max_rref_size;
+        raw_workspace_size +=sizeof(real_t)*max_ls_res_out_size;
+        raw_workspace_size +=sizeof(real_t)*max_ls_res_in_size;
+        raw_workspace_size +=sizeof(real_t)*max_ls_drdw_tran_size;
+        raw_workspace_size +=sizeof(real_t)*max_Hess_gn_size;
+        raw_workspace_size +=sizeof(real_t)*max_grad_gn_size;
+        raw_workspace_size +=sizeof(real_t)*max_rref_size;
+
+        mem->raw_workspace_size = raw_workspace_size;
+
+        size+=raw_workspace_size;
 
     }
 
@@ -108,7 +113,7 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
 
     ptr += sizeof(ocp_nlp_gn_sqp_work);
     work->raw = (real_t *)ptr;
-    ptr += sizeof(real_t)*mem->raw_workspace_size;
+    ptr += mem->raw_workspace_size;
     work->common = (ocp_nlp_work *)ptr;
     ocp_nlp_cast_workspace(work->common, mem->common);
 }
@@ -196,22 +201,27 @@ static void initialize_objective(
 
             // init Hess_gn to zeros
             for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hess_gn[j] = 0.0;
-            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i], drdw, nr[i], Hess_gn, nx[i]);
+            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i], drdw, nr[i], Hess_gn, nx[i]+nu[i]);
 
             // compute gradient
             for (int_t j = 0; j < nr[i]; j++) rref[j] = -cost->y_ref[i][j] + r[j];
-            for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
-            printf("\n\n");
-            for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
+            // for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
+            // printf("\n\n");
+            // for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
 
             for (int_t j = 0; j < nx[i] + nu[i]; j++) grad_gn[j] = 0.0;
 
             dgemv_n_3l(nx[i] + nu[i], nr[i], drdw_tran, nx[i] + nu[i], rref, grad_gn);
 
             // copy dense Hessian and gradient into qp struct
-            for (int_t j = 0; j < nx[i]*nx[i]; j++) qp_Q[i][j] = Hess_gn[j];
-            for (int_t j = 0; j < nu[i]*nu[i]; j++) qp_R[i][j] = Hess_gn[j + nx[i]*nx[i] + nx[i]*nu[i]];
-            for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] = Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
+            for (int_t j = 0; j < nx[i]; j++)
+                for (int_t k = 0; k < nx[i]; k++)
+                    qp_Q[i][k + j*nx[i]] = Hess_gn[k + j*(nx[i] + nu[i])];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                for (int_t k = 0; k < nu[i]; k++)
+                    qp_R[i][k + j*nu[i]] = Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
+            // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] = Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
 
             for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_gn[j];
             for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_gn[nx[i] + j];
@@ -219,7 +229,6 @@ static void initialize_objective(
         }
     }
 }
-
 
 static void initialize_trajectories(
     const ocp_nlp_in *nlp_in,

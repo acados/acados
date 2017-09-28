@@ -43,8 +43,8 @@ typedef struct {
 } ocp_nlp_gn_sqp_memory;
 
 typedef struct {
-    ocp_nlp_work *common;
     real_t *raw;
+    ocp_nlp_work *common;
 } ocp_nlp_gn_sqp_work;
 
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
@@ -55,7 +55,7 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_,
 void ocp_nlp_gn_sqp_free_memory(void *memory_);
 
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in,
-                                              void *args_);
+                                              void *args_, ocp_nlp_gn_sqp_memory *mem);
 
 #ifdef __cplusplus
 } /* extern "C" */
