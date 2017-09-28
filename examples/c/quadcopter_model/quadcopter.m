@@ -4,8 +4,6 @@ close all;
 
 GENERATE_LQR_GAIN = 0;
 
-addpath /home/andrea/acados/external/casadi-matlabR2014b-v3.1.1
-
 addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
 
@@ -23,7 +21,7 @@ nu = length(u);
 
 % ODE system
 f_expl = dyn(x, u);
-         
+
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
@@ -61,9 +59,9 @@ adjFun.generate(['vde_adj_quadcopter'], opts);
 hessFun.generate(['vde_hess_quadcopter'], opts);
 
 if GENERATE_LQR_GAIN % generate LQR gain
-   
+
     Ts = 0.01;
-    
+
     % fixed step Runge-Kutta 4 integrator
     M = 1; % RK4 steps per interval
     DT = Ts;
@@ -77,21 +75,21 @@ if GENERATE_LQR_GAIN % generate LQR gain
         [k4] = dyn(X + DT * k3, U);
         X=X+DT/6*(k1 +2*k2 +2*k3 +k4);
     end
-    
+
     F = Function('F', {X0, U}, {X});
-        
+
     J_x = Function('J_x', {X0, U}, {jacobian(X, X0)});
     J_u = Function('J_u', {X0, U}, {jacobian(X, U)});
-    
+
     A = full(J_x(zeros(11,1), zeros(4,1)));
     B = full(J_u(zeros(11,1), zeros(4,1)));
-    
+
     Q = eye(11);
 
     R = eye(4);
-    
+
     [K, P] = dlqr(A, B, Q, R)
-    
+
 end
 
 % generate code for residuals
