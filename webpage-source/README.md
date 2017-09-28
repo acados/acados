@@ -7,7 +7,7 @@ Install `sphinx` and `recommonmark` for [Markdown][1] support. Feel free to acti
 
 ### Building the webpage
 After doing your modification to the webpage, you can build the webpage
-in the `acados/doc` folder with the following command:
+in the `acados/docs` folder with the following command:
 
     # For Linux, MacOS
     make html

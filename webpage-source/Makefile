@@ -7,7 +7,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
 SPHINXPROJ    = acados
 SOURCEDIR     = .
-BUILDDIR      = ../doc
+BUILDDIR      = ../docs
 GENERATED     = .doctrees _static _sources .buildinfo .nojekyll genindex.html objects.inv search.html searchindex.js
 
 # Put it first so that "make" without argument is like "make help".
