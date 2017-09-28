@@ -46,11 +46,11 @@ typedef PyObject LangObject;
 %{
 #include <dlfcn.h>
 // #include <xmmintrin.h>  // for floating point exceptions
+// _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
 #include <cstdlib>
 #include <string>
 
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
@@ -59,9 +59,11 @@ typedef PyObject LangObject;
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/sim/allocate_sim.h"
-#include "acados/sim/model_wrapper.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_rk_common.h"
+#include "acados/utils/print.h"
 #include "acados/utils/types.h"
 
 #include "casadi/casadi.hpp"
@@ -70,7 +72,7 @@ typedef PyObject LangObject;
 
 %{
 
-void *handle = NULL;
+void *global_handle;
 
 // static bool is_valid_sim_dimensions_map(const LangObject *input) {
 //     if (!is_map(input))
@@ -96,7 +98,7 @@ static void validate_model(casadi::Function& model) {
         throw std::runtime_error("Length of right hand size should equal number of states");
 }
 
-static void generate_model(casadi::Function& model, char *model_name, int_t str_len) {
+static std::string generate_vde_function(casadi::Function& model) {
     validate_model(model);
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
@@ -110,38 +112,67 @@ static void generate_model(casadi::Function& model, char *model_name, int_t str_
     casadi::SX vde_u = casadi::SX::jacobian(rhs, u) + casadi::SX::jtimes(rhs, x, Su);
     const std::vector<casadi::SX> input_vector = {x, Sx, Su, u};
     const std::vector<casadi::SX> output_vector = {rhs, vde_x, vde_u};
-    char generated_file_name[256];
-    snprintf(model_name, str_len, "vde");
-    snprintf(generated_file_name, sizeof(generated_file_name), "%s.c", model_name);
-    casadi::Function vde = casadi::Function(model_name, input_vector, output_vector);
-    vde.generate(generated_file_name);
+    std::string full_name = std::string("vde_") + model.name();
+    std::string generated_file = full_name + std::string(".c");
+    casadi::Function vde = casadi::Function(full_name, input_vector, output_vector);
+    vde.generate(generated_file);
+    return full_name;
 }
 
-void set_model(sim_in *sim, casadi::Function& f, double step) {
-    char model_name[256], library_name[256], path_to_library[256];
-    generate_model(f, model_name, sizeof(model_name));
-    // snprintf(library_name, sizeof(library_name), "%s_sim.so", model_name);
-    snprintf(library_name, sizeof(library_name), "%s.so", model_name);
-    snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
-    char command[256];
-    snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
-        model_name, library_name);
+static std::string generate_jac_function(casadi::Function& model) {
+    validate_model(model);
+    casadi::SX x = model.sx_in(0);
+    casadi::SX u = model.sx_in(1);
+    const std::vector<casadi::SX> input = {x, u};
+    casadi::SX rhs = casadi::SX::vertcat(model(input));
+    int_t nx = x.size1();
+    casadi::SX jac_x = casadi::SX::zeros(nx, nx) + casadi::SX::jacobian(rhs, x);
+    const std::vector<casadi::SX> input_vector = {x, u};
+    const std::vector<casadi::SX> output_vector = {rhs, jac_x};
+    std::string full_name = std::string("jac_") + model.name();
+    std::string generated_file = full_name + std::string(".c");
+    casadi::Function jac = casadi::Function(full_name, input_vector, output_vector);
+    jac.generate(generated_file);
+    return full_name;
+}
+
+enum generation_mode {
+    GENERATE_VDE,
+    GENERATE_JAC
+};
+
+static casadi_function_t compile_and_load(std::string name, void **handle) {
+    std::string library_name = name + std::string(".so");
+    std::string path_to_library = std::string("./") + library_name;
+    char command[MAX_STR_LEN];
+    snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", name.c_str(),
+                                                                         library_name.c_str());
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
-    if (handle)
-        dlclose(handle);
-    handle = dlopen(path_to_library, RTLD_LAZY);
-    if (handle == NULL) {
-        char err_msg[256];
+    *handle = dlopen(path_to_library.c_str(), RTLD_LAZY);
+    if (*handle == NULL) {
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), \
             "Something went wrong when loading the model. dlerror(): %s", dlerror());
         throw std::runtime_error(err_msg);
     }
-    typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
-    eval_t eval = (eval_t)dlsym(handle, model_name);
-    sim->vde = eval;
+    typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
+    return (casadi_function_t) dlsym(*handle, name.c_str());
+}
+
+void set_model(sim_in *sim, casadi::Function& f, double step, enum generation_mode mode) {
+    std::string vde_name = generate_vde_function(f);
+    void *vde_handle = malloc(sizeof(void *));
+    sim->vde = compile_and_load(vde_name, &vde_handle);
+    sim->jac = NULL;
+    if (mode == GENERATE_JAC) {
+        std::string jac_name = generate_jac_function(f);
+        void *jac_handle = malloc(sizeof(void *));
+        sim->jac = compile_and_load(jac_name, &jac_handle);
+    }
     sim->VDE_forw = &vde_fun;
+    sim->jac_fun = &jac_fun;
     sim->step = step;
 }
 
@@ -161,6 +192,7 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
 
 %extend sim_solver {
     sim_solver(const char *solver_name, casadi::Function& model, LangObject *options = NONE) {
+
         const char *fieldnames[2] = {"time_step", "order"};
         real_t time_step = 0.1;
         int_t order = 4;
@@ -182,32 +214,43 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         input->sens_forw = true;
         input->sens_adj = false;
         input->sens_hess = false;
-        input->nsens_forw = nx + nu;
-        input->nSteps = 1;
+        input->num_forw_sens = nx + nu;
+        input->num_steps = 10;
         allocate_sim_in(input);
-        set_model(input, model, time_step);
 
         sim_out *output = (sim_out *) malloc(sizeof(sim_out));
         allocate_sim_out(input, output);
 
         void *args = NULL;
+        void *memory = NULL;
         int_t workspace_size;
         void *workspace = NULL;
-        if (!strcmp("runge-kutta", solver_name) || !(strcmp("rk", solver_name))) {
+        if (!strcmp("explicit runge-kutta", solver_name) || !strcmp("erk", solver_name) ||
+                                                            !strcmp("rk", solver_name)) {
             solver->fun = sim_erk;
             args = (void *) malloc(sizeof(sim_RK_opts));
             sim_erk_create_arguments(args, order);
             workspace_size = sim_erk_calculate_workspace_size(input, args);
             workspace = malloc(workspace_size);
+            set_model(input, model, time_step / input->num_steps, GENERATE_VDE);
+        } else if (!strcmp("implicit runge-kutta", solver_name) || !strcmp("irk", solver_name)) {
+            solver->fun = sim_lifted_irk;
+            args = (void *) malloc(sizeof(sim_RK_opts));
+            sim_irk_create_arguments(args, 1, "Gauss");
+            sim_irk_create_Newton_scheme(args, 1, "Gauss", exact);
+            memory = (sim_lifted_irk_memory *) malloc(sizeof(sim_lifted_irk_memory));
+            sim_lifted_irk_create_memory(input, args, (sim_lifted_irk_memory *) memory);
+            workspace_size = sim_lifted_irk_calculate_workspace_size(input, args);
+            workspace = (void *) malloc(workspace_size);
+            set_model(input, model, time_step / input->num_steps, GENERATE_JAC);
         } else {
             throw std::invalid_argument("Integrator name not known!");
-            return NULL;
         }
 
         solver->in = input;
         solver->out = output;
         solver->args = args;
-        solver->mem = NULL;
+        solver->mem = memory;
         solver->work = workspace;
         return solver;
     }
@@ -215,13 +258,10 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
     LangObject *evaluate(LangObject *initial_state, LangObject *control) {
         fill_array_from(initial_state, $self->in->x, $self->in->nx);
         fill_array_from(control, $self->in->u, $self->in->nu);
-        printf("x0=%f, x1=%f, u0=%f\n", $self->in->x[0], $self->in->x[1], $self->in->u[0]);
-        printf("nx=%d, nu=%d\n", $self->in->nx, $self->in->nu);
         int_t return_code = $self->fun($self->in, $self->out, $self->args, $self->mem, $self->work);
         if (return_code != 0) {
-            throw std::runtime_error("integrator failed!");
+            throw std::runtime_error("Integrator failed!");
         }
-        printf("final_state = [%f, %f]\n", $self->out->xn[0], $self->out->xn[1]);
         return sim_output($self->in, $self->out);
     }
 }
@@ -267,14 +307,31 @@ static bool is_valid_ocp_dimensions_map(const LangObject *input) {
 // }
 
 LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
-    LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
-    LangObject *u_star = new_sequence_from((const real_t **) out->u, in->N+1, in->nu);
+    const real_t **states_copy, **controls_copy;
+    states_copy = (const real_t **) malloc((in->N+1) * sizeof(real_t *));
+    controls_copy = (const real_t **) malloc((in->N+1) * sizeof(real_t *));
+    for (int_t i = 0; i <= in->N; i++) {
+        states_copy[i] = (const real_t *) calloc(in->nx[i], sizeof(real_t));
+        memcpy((void *)states_copy[i], (void *)out->x[i], in->nx[i] * sizeof(real_t));
+        controls_copy[i] = (const real_t *) calloc(in->nu[i], sizeof(real_t));
+        memcpy((void *)controls_copy[i], (void *)out->u[i], in->nu[i] * sizeof(real_t));
+    }
+
+    LangObject *x_star = new_sequence_from(states_copy, in->N+1, in->nx);
+    LangObject *u_star = new_sequence_from(controls_copy, in->N+1, in->nu);
     return new_ocp_output_tuple(x_star, u_star);
 }
 
 %}
 
+%ignore ocp_qp_in_calculate_size;
+%ignore assign_ocp_qp_in;
+%ignore create_ocp_qp_in;
+%ignore ocp_qp_out_calculate_size;
+%ignore assign_ocp_qp_out;
+%ignore create_ocp_qp_out;
 %ignore ocp_qp_out;
+%ignore create_ocp_qp_solver;
 %rename(ocp_qp) ocp_qp_in;
 %include "acados/ocp_qp/ocp_qp_common.h"
 
@@ -300,9 +357,8 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     %}
 #endif
     ocp_qp_in(LangObject *input_map) {
-        ocp_qp_in *qp_in = (ocp_qp_in *) malloc(sizeof(ocp_qp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s that specifies at "
                 "least N, nx, nu", LANG_MAP_NAME);
             throw std::invalid_argument(err_msg);
@@ -318,7 +374,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         if (!has(input_map, "nb")) {
             nb[0] = nx[0];
         }
-        allocate_ocp_qp_in(N, nx, nu, nb, nc, qp_in);
+        ocp_qp_in *qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
         // Initial state is fixed
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
@@ -332,56 +388,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %extend ocp_qp_solver {
     ocp_qp_solver(const char *solver_name, ocp_qp_in *qp_in, LangObject *options = NONE) {
-        ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
-        void *args = NULL;
-        void *mem = NULL;
-        int_t workspace_size, memory_size;
-        void *workspace = NULL;
-        if (!strcmp(solver_name, "condensing_qpoases")) {
-            solver->fun = ocp_qp_condensing_qpoases;
-            args = (ocp_qp_condensing_qpoases_args *) \
-                malloc(sizeof(ocp_qp_condensing_qpoases_args));
-            workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(qp_in,
-                (ocp_qp_condensing_qpoases_args *) args);
-            workspace = (void *) malloc(workspace_size);
-            memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(qp_in,
-                (ocp_qp_condensing_qpoases_args *) args);
-            void *memory = (void *) malloc(memory_size);
-            mem = (void *) malloc(sizeof(ocp_qp_condensing_qpoases_memory));
-            ocp_qp_condensing_qpoases_create_memory(qp_in,
-                (ocp_qp_condensing_qpoases_args *) args,
-                (ocp_qp_condensing_qpoases_memory *) mem,
-                memory);
-            ((ocp_qp_condensing_qpoases_args *)args)->cputime = 1000.0;
-            ((ocp_qp_condensing_qpoases_args *)args)->nwsr = 1000;
-#if defined(OOQP)
-        } else if (!strcmp(solver_name, "ooqp")) {
-            solver->fun = ocp_qp_ooqp;
-            args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
-            mem = (ocp_qp_ooqp_memory *) malloc(sizeof(ocp_qp_ooqp_memory));
-            ocp_qp_ooqp_create_memory(qp_in, args, mem);
-            workspace_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
-            workspace = (void *) malloc(workspace_size);
-#endif
-        } else if (!strcmp(solver_name, "qpdunes")) {
-            solver->fun = ocp_qp_qpdunes;
-            args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
-            ocp_qp_qpdunes_create_arguments(args, QPDUNES_DEFAULT_ARGUMENTS);
-            mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
-            ocp_qp_qpdunes_create_memory(qp_in, args, mem);
-            workspace_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
-            workspace = (void *) malloc(workspace_size);
-        }  else {
-            throw std::invalid_argument("Solver name not known!");
-            return NULL;
-        }
-        solver->qp_in = qp_in;
-        ocp_qp_out *qp_out = (ocp_qp_out *) malloc(sizeof(ocp_qp_out));
-        allocate_ocp_qp_out(qp_in, qp_out);
-        solver->qp_out = qp_out;
-        solver->args = args;
-        solver->mem = mem;
-        solver->work = workspace;
+        ocp_qp_solver *solver = create_ocp_qp_solver(qp_in, solver_name, NULL);
         return solver;
     }
 
@@ -477,7 +484,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     ocp_nlp_in(LangObject *input_map) {
         ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input must be a valid OCP %s that specifies at "
                 "least N, nx, nu", LANG_MAP_NAME);
             throw std::invalid_argument(err_msg);
@@ -505,27 +512,27 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     }
 
     void set_model(casadi::Function& f, double step) {
-        char model_name[256], library_name[256], path_to_library[256];
-        generate_model(f, model_name, sizeof(model_name));
-        snprintf(library_name, sizeof(library_name), "%s.so", model_name);
+        char library_name[MAX_STR_LEN], path_to_library[MAX_STR_LEN];
+        std::string model_name = generate_vde_function(f);
+        snprintf(library_name, sizeof(library_name), "%s.so", model_name.c_str());
         snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
-        char command[256];
+        char command[MAX_STR_LEN];
         snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
-            model_name, library_name);
+            model_name.c_str(), library_name);
         int compilation_failed = system(command);
         if (compilation_failed)
             throw std::runtime_error("Something went wrong when compiling the model.");
-        if (handle)
-            dlclose(handle);
-        handle = dlopen(path_to_library, RTLD_LAZY);
-        if (handle == 0) {
-            char err_msg[256];
+        if (global_handle)
+            dlclose(global_handle);
+        global_handle = dlopen(path_to_library, RTLD_LAZY);
+        if (global_handle == 0) {
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), \
                 "Something went wrong when loading the model. dlerror(): %s", dlerror());
             throw std::runtime_error(err_msg);
         }
         typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
-        eval_t eval = (eval_t)dlsym(handle, model_name);
+        eval_t eval = (eval_t)dlsym(global_handle, model_name.c_str());
         for (int_t i = 0; i < $self->N; i++) {
             $self->sim[i].in->vde = eval;
             $self->sim[i].in->VDE_forw = &vde_fun;
@@ -564,7 +571,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
 #endif
         }
         if (!is_map(options)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Please pass options as a %s", LANG_MAP_NAME);
             throw std::runtime_error(err_msg);
         }
@@ -604,8 +611,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 nlp_in->sim[i].in->sens_forw = true;
                 nlp_in->sim[i].in->sens_adj = false;
                 nlp_in->sim[i].in->sens_hess = false;
-                nlp_in->sim[i].in->nsens_forw = nlp_in->nx[i] + nlp_in->nu[i];
-                nlp_in->sim[i].in->nSteps = integrator_steps;
+                nlp_in->sim[i].in->num_forw_sens = nlp_in->nx[i] + nlp_in->nu[i];
+                nlp_in->sim[i].in->num_steps = integrator_steps;
                 nlp_in->sim[i].args = (void *) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(nlp_in->sim[i].args, 4);
                 int_t erk_workspace_size = sim_erk_calculate_workspace_size(nlp_in->sim[i].in, \
@@ -615,7 +622,6 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
             }
         } else {
             throw std::invalid_argument("Solver name not known!");
-            return NULL;
         }
         solver->nlp_in = nlp_in;
         ocp_nlp_out *nlp_out = (ocp_nlp_out *) malloc(sizeof(ocp_nlp_out));
@@ -628,22 +634,20 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     }
 
     LangObject *evaluate() {
-        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
-            $self->mem, $self->work);
-        if (return_code != 0) {
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
+                                $self->work);
+        if (fail)
             throw std::runtime_error("nlp solver failed!");
-        }
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 
     LangObject *evaluate(LangObject *x0) {
         fill_array_from(x0, (real_t **) $self->nlp_in->lb, 1, $self->nlp_in->nx);
         fill_array_from(x0, (real_t **) $self->nlp_in->ub, 1, $self->nlp_in->nx);
-        int_t return_code = $self->fun($self->nlp_in, $self->nlp_out, $self->args, \
-            $self->mem, $self->work);
-        if (return_code != 0) {
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
+                                $self->work);
+        if (fail)
             throw std::runtime_error("nlp solver failed!");
-        }
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 }

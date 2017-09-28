@@ -34,6 +34,6 @@ if(SWIG_MATLAB AND MATLAB_FOUND)
 
     set_tests_properties(ocp_qp_matlab ocp_nlp_matlab sim_matlab
         PROPERTIES
-            ENVIRONMENT "MATLABPATH=${CMAKE_BINARY_DIR}/swig:$ENV{MATLABPATH}")
+            ENVIRONMENT "MATLABPATH=${CMAKE_BINARY_DIR}/swig/matlab/:$ENV{MATLABPATH}")
 
 endif()

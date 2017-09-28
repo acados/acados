@@ -3,10 +3,10 @@ from numpy import array, diag
 from scipy.linalg import block_diag
 
 from acados import ocp_nlp, ocp_nlp_solver
-from example_model import example_model
+from models import chen_model
 
 N = 10
-nx, nu, ode_fun = example_model()
+ode_fun, nx, nu = chen_model()
 nlp = ocp_nlp({'N': N, 'nx': nx, 'nu': nu})
 
 # ODE Model
@@ -18,7 +18,7 @@ Q = diag([1.0, 1.0])
 R = 1e-2
 nlp.ls_cost_matrix = N*[block_diag(Q, R)] + [Q]
 
-solver = ocp_nlp_solver('gauss-newton-sqp', nlp, {'integrator_steps': 2})
+solver = ocp_nlp_solver('gauss-newton-sqp', nlp, {'integrator_steps': 2, 'qp_solver': 'condensing_qpoases'})
 
 # Simulation
 STATES = [array([0.1, 0.1])]

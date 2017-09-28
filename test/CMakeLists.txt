@@ -20,8 +20,9 @@
 # Check if external libraries are present; these are needed for the unit tests
 find_package(Eigen3)
 if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
-    message(FATAL_ERROR "You chose to run unit tests but casadi-octave-v3.2.2 can not be found")
+    message(WARNING "You chose to run unit tests but casadi-octave-v3.2.2 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
 endif()
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory(ocp_nlp)
 add_subdirectory(ocp_qp)
@@ -29,7 +30,6 @@ add_subdirectory(sim)
 
 set(TEST_OCP_NLP_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/test_chain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp/chain/chain_model.c
 )
 
 set(TEST_OCP_QP_SRC
@@ -61,7 +61,7 @@ add_executable(unit_tests
 
 target_include_directories(unit_tests PRIVATE "${EXTERNAL_SRC_DIR}/eigen")
 target_link_libraries(unit_tests acados)
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP)
+if(ACADOS_WITH_OOQP)
     target_compile_definitions(unit_tests PRIVATE OOQP)
 endif()
 

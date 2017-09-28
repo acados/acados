@@ -1,13 +1,22 @@
 import acados.*
 
-[~, ~, ode_fun] = example_model();
+[ode_fun, nx, ~] = pendulum_model();
 
-sim_options = struct('time_step', 0.2, 'order', 4);
+dt = 0.2;
+sim_options = struct('time_step', dt, 'order', 4);
 
-sim = sim_solver('rk', ode_fun, sim_options);
+integrator = sim_solver('erk', ode_fun, sim_options);
 
-current_state = [1.0; 1.0];
-control = 0.25;
-output = sim.evaluate(current_state, control);
+current_state = [0.0; pi; 0.0; 0.0]; % pendulum hangs down
+simulation = current_state;
 
-assert(all(abs(output.final_state - [1.2670; 1.1442]) < 1e-3));
+time_grid = 0:dt:10;
+for t=time_grid(1:end-1)
+    % apply periodic force to pendulum with period 5s.
+    output = integrator.evaluate(current_state, cos(2*pi*t/5));
+    current_state = output.final_state;
+    simulation = [simulation, current_state];
+end
+
+plot(time_grid, simulation.');
+legend('p', 'theta', 'v', 'omega');

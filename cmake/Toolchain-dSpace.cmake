@@ -16,7 +16,7 @@ find_program(CMAKE_MAKE_PROGRAM NAMES ${DSPACE_TOOLS}/Exe/DSMAKE.EXE)
 set(CMAKE_FIND_ROOT_PATH ${DSPACE_PPCTOOLS})
 
 # adjust the default behaviour of the FIND_XXX() commands:
-# search headers and libraries in the target environment, search 
+# search headers and libraries in the target environment, search
 # programs in the host environment
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

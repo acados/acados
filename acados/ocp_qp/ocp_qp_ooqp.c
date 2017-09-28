@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "OOQP/include/cQpGenSparse.h"
+#include "ooqp/cQpGenSparse.h"
 
 #include "acados/utils/timing.h"
 
@@ -545,7 +545,7 @@ static void print_outputs(ocp_qp_ooqp_memory *mem, ocp_qp_ooqp_workspace *work,
     }
 }
 
-static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out,
+static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out,
                            ocp_qp_ooqp_workspace *work) {
     int_t kk, ii, nn;
 
@@ -560,6 +560,20 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out,
             out->pi[kk][ii] = -work->y[nn++];
     }
     // TODO(dimitris): fill-in multipliers of inequalities
+}
+
+ocp_qp_ooqp_args *ocp_qp_ooqp_create_arguments() {
+    ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *) malloc(sizeof(ocp_qp_ooqp_args));
+
+    args->printLevel = 0;
+    args->fixHessianSparsity = 1;
+    args->fixDynamicsSparsity = 1;
+    args->fixInequalitiesSparsity = 1;
+    args->fixHessian = 0;
+    args->fixDynamics = 0;
+    args->fixInequalities = 0;
+
+    return args;
 }
 
 static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work,
@@ -587,14 +601,11 @@ static void ocp_qp_ooqp_cast_workspace(ocp_qp_ooqp_workspace *work,
     // ptr += (mem->nnz)*sizeof(real_t);
 }
 
-int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
+ocp_qp_ooqp_memory *ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *)args_;
-    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *)mem_;
-
-    int_t return_value;
+    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *) malloc(sizeof(ocp_qp_ooqp_memory));
 
     mem->firstRun = 1;
-
     mem->nx = get_number_of_primal_vars(in);
     mem->my = get_number_of_equalities(in);
     mem->mz = get_number_of_inequalities(in);
@@ -603,18 +614,21 @@ int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *in, void *args_, void *mem_) {
     mem->nnzC = get_nnzC(in, args);
     mem->nnz = max_of_three(mem->nnzQ, mem->nnzA, mem->nnzC);
 
+    int ooqp_failed;
     newQpGenSparse(&mem->c, mem->nx, &mem->irowQ, mem->nnzQ, &mem->jcolQ,
                    &mem->dQ, &mem->xlow, &mem->ixlow, &mem->xupp, &mem->ixupp,
                    &mem->irowA, mem->nnzA, &mem->jcolA, &mem->dA, &mem->bA,
                    mem->my, &mem->irowC, mem->nnzC, &mem->jcolC, &mem->dC,
                    &mem->clow, mem->mz, &mem->iclow, &mem->cupp, &mem->icupp,
-                   &return_value);
+                   &ooqp_failed);
 
     mem->orderQ = (int_t *)calloc(mem->nnzQ, sizeof(*mem->orderQ));
     mem->orderA = (int_t *)calloc(mem->nnzA, sizeof(*mem->orderA));
     mem->orderC = (int_t *)calloc(mem->nnzC, sizeof(*mem->orderC));
 
-    return return_value;
+    if (ooqp_failed)
+        return NULL;
+    return mem;
 }
 
 int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
@@ -652,20 +666,20 @@ void ocp_qp_ooqp_free_memory(void *mem_) {
     free(mem->orderC);
 }
 
-int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
+int_t ocp_qp_ooqp(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
                   void *work_) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *)args_;
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *)memory_;
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *)work_;
 
     int return_value;
-// printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
+    // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
+
+    if (0) print_inputs(mem);
 
     // NOTE: has to be called after setting up the memory which contains the problem dimensions
     ocp_qp_ooqp_cast_workspace(work, mem);
     ocp_qp_ooqp_update_memory(in, args, mem, work);
-
-    if (0) print_inputs(mem);
 
     // TODO(dimitris): implement dense OOQP
     // call sparse OOQP
@@ -685,20 +699,10 @@ int_t ocp_qp_ooqp(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memory_,
     return return_value;
 }
 
-void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
-                            void **work) {
+void ocp_qp_ooqp_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
     ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *)args_;
-    ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *)mem_;
 
-    args->printLevel = 0;
-    args->fixHessianSparsity = 1;
-    args->fixDynamicsSparsity = 1;
-    args->fixInequalitiesSparsity = 1;
-    args->fixHessian = 0;
-    args->fixDynamics = 0;
-    args->fixInequalities = 0;
-
-    ocp_qp_ooqp_create_memory(qp_in, args, mem);
+    *mem = ocp_qp_ooqp_create_memory(qp_in, args);
     int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, args);
     *work = (void *)malloc(work_space_size);
 }

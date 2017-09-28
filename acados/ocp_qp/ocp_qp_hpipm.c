@@ -19,6 +19,7 @@
 
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,16 +37,21 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-// void d_print_e_mat(int m, int n, double *a, int lda);
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments() {
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) malloc(sizeof(ocp_qp_hpipm_args));
+    args->mu_max = 1e-8;
+    args->iter_max = 20;
+    args->alpha_min = 1e-8;
+    args->mu0 = 1;
 
-int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
+    return args;
+}
+
+int ocp_qp_hpipm_calculate_workspace_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     return 0;
 }
 
-int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
-
-    int ii;
-
+int ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
     int *nu = (int *)qp_in->nu;
@@ -62,7 +68,7 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     struct d_ipm_hard_ocp_qp_arg ipm_arg;
     ipm_arg.iter_max = args->iter_max;
 
-    int size = 0;
+    int size = sizeof(ocp_qp_hpipm_memory);
 
     size += 1 * sizeof(struct d_ocp_qp);                     // qp
     size += 1 * sizeof(struct d_ocp_qp_sol);                 // qp_sol
@@ -74,7 +80,7 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     size += d_memsize_ipm_hard_ocp_qp(&qp, &ipm_arg);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
     size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
-    for (ii = 0; ii <= N; ii++) {
+    for (int_t ii = 0; ii <= N; ii++) {
         size += nb[ii]*sizeof(int);  // hidxb_rev
     }
 
@@ -84,11 +90,10 @@ int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     return size;
 }
 
-void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
-                                ocp_qp_hpipm_memory *hpipm_memory,
-                                void *memory) {
-    //
-    int ii;
+char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, void **mem_,
+                                void *raw_memory) {
+
+    ocp_qp_hpipm_memory **hpipm_memory = (ocp_qp_hpipm_memory **) mem_;
 
     // extract problem size
     int N = qp_in->N;
@@ -98,45 +103,48 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
     int *ng = (int *)qp_in->nc;
 
     // char pointer
-    char *c_ptr = (char *)memory;
+    char *c_ptr = (char *)raw_memory;
+
+    *hpipm_memory = (ocp_qp_hpipm_memory *) c_ptr;
+    c_ptr += sizeof(ocp_qp_hpipm_memory);
 
     //
-    hpipm_memory->qp = (struct d_ocp_qp *)c_ptr;
+    (*hpipm_memory)->qp = (struct d_ocp_qp *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ocp_qp);
     //
-    hpipm_memory->qp_sol = (struct d_ocp_qp_sol *)c_ptr;
+    (*hpipm_memory)->qp_sol = (struct d_ocp_qp_sol *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ocp_qp_sol);
     //
-    hpipm_memory->ipm_arg = (struct d_ipm_hard_ocp_qp_arg *)c_ptr;
+    (*hpipm_memory)->ipm_arg = (struct d_ipm_hard_ocp_qp_arg *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ipm_hard_ocp_qp_arg);
     //
-    hpipm_memory->ipm_workspace = (struct d_ipm_hard_ocp_qp_workspace *)c_ptr;
+    (*hpipm_memory)->ipm_workspace = (struct d_ipm_hard_ocp_qp_workspace *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ipm_hard_ocp_qp_workspace);
     //
-    hpipm_memory->hlam_lb = (double **)c_ptr;
+    (*hpipm_memory)->hlam_lb = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hlam_ub = (double **)c_ptr;
+    (*hpipm_memory)->hlam_ub = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hlam_lg = (double **)c_ptr;
+    (*hpipm_memory)->hlam_lg = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hlam_ug = (double **)c_ptr;
+    (*hpipm_memory)->hlam_ug = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
     //
-    hpipm_memory->hidxb_rev = (int **)c_ptr;
+    (*hpipm_memory)->hidxb_rev = (int **)c_ptr;
     c_ptr += (N + 1) * sizeof(int *);
 
     //
-    struct d_ocp_qp *qp = hpipm_memory->qp;
+    struct d_ocp_qp *qp = (*hpipm_memory)->qp;
     //
-    struct d_ocp_qp_sol *qp_sol = hpipm_memory->qp_sol;
+    struct d_ocp_qp_sol *qp_sol = (*hpipm_memory)->qp_sol;
     //
-    struct d_ipm_hard_ocp_qp_arg *ipm_arg = hpipm_memory->ipm_arg;
+    struct d_ipm_hard_ocp_qp_arg *ipm_arg = (*hpipm_memory)->ipm_arg;
     //
     struct d_ipm_hard_ocp_qp_workspace *ipm_workspace =
-        hpipm_memory->ipm_workspace;
+        (*hpipm_memory)->ipm_workspace;
 
     // align memory to typical cache line size
     size_t s_ptr = (size_t)c_ptr;
@@ -159,16 +167,30 @@ void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
     c_ptr += ipm_workspace->memsize;
 
     //
-    for (ii = 0; ii <= N; ii++) {
-        hpipm_memory->hidxb_rev[ii] = (int *) c_ptr;
+    for (int_t ii = 0; ii <= N; ii++) {
+        (*hpipm_memory)->hidxb_rev[ii] = (int *) c_ptr;
         c_ptr += nb[ii]*sizeof(int);
     }
 
-    return;
+    return c_ptr;
 }
 
-int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
-                 ocp_qp_hpipm_memory *memory, void *workspace_) {
+ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *args_) {
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
+
+    ocp_qp_hpipm_memory *mem;
+    int_t memory_size = ocp_qp_hpipm_calculate_memory_size(qp_in, args);
+    void *raw_memory = malloc(memory_size);
+    char *ptr_end = ocp_qp_hpipm_assign_memory(qp_in, args, (void **) &mem, raw_memory);
+    assert((char *) raw_memory + memory_size >= ptr_end); (void) ptr_end;
+
+    return mem;
+}
+
+int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_) {
+
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
+    ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
     //
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
@@ -362,4 +384,18 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
     // return
     return acados_status;
     //
+}
+
+void ocp_qp_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
+
+    *mem = ocp_qp_hpipm_create_memory(qp_in, args);
+
+    int_t work_space_size = ocp_qp_hpipm_calculate_workspace_size(qp_in, args);
+    *work = malloc(work_space_size);
+}
+
+void ocp_qp_hpipm_destroy(void *mem, void *work) {
+    free(mem);
+    free(work);
 }
