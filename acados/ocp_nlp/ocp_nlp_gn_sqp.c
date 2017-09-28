@@ -51,7 +51,7 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_,
     size += ocp_nlp_calculate_workspace_size(in, args->common);
 
     int_t raw_workspace_size = 0;
-    if (!cost->lin_res) {
+    if (!args->lin_res) {
         int_t N = in->N;
         const int_t *nr = cost->nr;
         const int_t *nx = in->nx;

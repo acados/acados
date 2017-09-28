@@ -77,7 +77,7 @@ int main() {
     ls_cost.ls_res = malloc(sizeof(char *)*(NN+1));
     ls_cost.ls_res_eval = malloc(sizeof(char *)*(NN+1));
     ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
-    ls_cost.lin_res = 0;
+    // ls_cost.lin_res = 0;
 
     // assign residual function pointers
     for (int_t i = 0; i < NN; i++) {
@@ -362,6 +362,7 @@ int main() {
 
     ocp_nlp_gn_sqp_args nlp_args;
     ocp_nlp_args nlp_common_args;
+    nlp_args.lin_res = 0;
     nlp_args.common = &nlp_common_args;
     nlp_args.common->maxIter = max_sqp_iters;
 

@@ -4,6 +4,8 @@ close all;
 
 GENERATE_LQR_GAIN = 0;
 
+addpath /home/andrea/acados/external/casadi-matlabR2014b-v3.1.1
+
 addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
 

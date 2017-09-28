@@ -89,7 +89,6 @@ int main() {
 
     // Problem data
     ocp_nlp_ls_cost ls_cost;
-    ls_cost.lin_res = 1;
     ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
 
     // number of residual

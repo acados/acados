@@ -49,7 +49,7 @@ typedef struct {
     real_t **W;
     real_t **y_ref;
 
-    int_t lin_res;  // special treatment of linear residuals
+    // int_t lin_res;  // special treatment of linear residuals
 
 } ocp_nlp_ls_cost;
 

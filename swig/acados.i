@@ -599,7 +599,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
                 (ocp_nlp_memory *) malloc(sizeof(ocp_nlp_memory));
             ocp_nlp_gn_sqp_create_memory(nlp_in, args, mem);
 
-            workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args);
+
+            workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in, args, (ocp_nlp_gn_sqp_memory *)mem);
             workspace = (void *) malloc(workspace_size);
 
             int_t N = nlp_in->N;
