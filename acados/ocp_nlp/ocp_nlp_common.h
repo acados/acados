@@ -44,12 +44,12 @@ typedef struct {
     void (**ls_res_eval)(const real_t* in, real_t* out,
         int (*ls_res)(const real_t**, real_t**, int*, real_t*, int));
 
-    const int_t *nr;
+    int_t *nr;
 
     real_t **W;
     real_t **y_ref;
 
-    const int_t lin_res;  // special treatment of linear residuals
+    int_t lin_res;  // special treatment of linear residuals
 
 } ocp_nlp_ls_cost;
 

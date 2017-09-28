@@ -60,30 +60,34 @@ extern int vdeFun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem)
 // using Eigen::VectorXd;
 
 int main() {
+    const int d = 0;
     const int INEXACT = 0;
 
     int_t NX = 11;
     int_t NU = 4;
     int_t jj;
 
-    real_t wall_pos = -0.01;
     int_t UMAX = 10;
 
     // Problem data
     ocp_nlp_ls_cost ls_cost;
 
     // allocate memory for ls_cost
-    ls_cost.ls_res = malloc(sizeof(char *)*NN);
-    ls_cost.ls_res_eval = malloc(sizeof(char *)*NN);
-
+    ls_cost.ls_res = malloc(sizeof(char *)*(NN+1));
+    ls_cost.ls_res_eval = malloc(sizeof(char *)*(NN+1));
+    ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
+    ls_cost.lin_res = 0;
+    
     // assign residual function pointers
     for (int_t i = 0; i < NN; i++) {
         ls_cost.ls_res[i] = &ls_res_Fun;
         ls_cost.ls_res_eval[i] = &ls_res_eval_quadcopter;
+        ls_cost.nr[i] = NX + NU;
     }
 
     ls_cost.ls_res[NN] = &ls_res_end_Fun;
     ls_cost.ls_res_eval[NN] = &ls_res_eval_end_quadcopter;
+    ls_cost.nr[NN] = NX;
 
     real_t *W, *WN;
     real_t *uref;
@@ -167,26 +171,8 @@ int main() {
         sim_in[jj].sens_hess = false;
         sim_in[jj].nsens_forw = NX + NU;
 
-        switch (NMF) {
-            case 1:
-                sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].VDE_forw = &VDE_fun_nm2;
-                sim_in[jj].jac_fun = &jac_fun_nm2;
-                break;
-            case 2:
-                sim_in[jj].vde = &vde_chain_nm3;
-                sim_in[jj].VDE_forw = &VDE_fun_nm3;
-                sim_in[jj].jac_fun = &jac_fun_nm3;
-                break;
-            case 3:
-                sim_in[jj].vde = &vde_chain_nm4;
-                sim_in[jj].VDE_forw = &VDE_fun_nm4;
-                sim_in[jj].jac_fun = &jac_fun_nm4;
-                break;
-            default:
-                // REQUIRE(1 == 0);
-                break;
-        }
+        sim_in[jj].vde = &vdeFun;
+        sim_in[jj].VDE_forw = &VDE_fun_quadcopter;
 
         sim_in[jj].x = (real_t *)malloc(sizeof(*sim_in[jj].x) * (NX));
         sim_in[jj].u = (real_t *)malloc(sizeof(*sim_in[jj].u) * (NU));
@@ -285,36 +271,36 @@ int main() {
     nb[0] = NX + NU;
 
     int *idxb1;
-    int_zeros(&idxb1, NMF + NU, 1);
+    int_zeros(&idxb1, NX + NU, 1);
     double *lb1[NN - 1];
     double *ub1[NN - 1];
     for (int_t i = 0; i < NN - 1; i++) {
-        d_zeros(&lb1[i], NMF + NU, 1);
-        d_zeros(&ub1[i], NMF + NU, 1);
+        d_zeros(&lb1[i], NX + NU, 1);
+        d_zeros(&ub1[i], NX + NU, 1);
 #ifdef FLIP_BOUNDS
         for (jj = 0; jj < NU; jj++) {
             lb1[i][jj] = -UMAX;  // umin
             ub1[i][jj] = UMAX;   // umax
             idxb1[jj] = jj;
         }
-        for (jj = 0; jj < NMF; jj++) {
-            lb1[i][NU+jj] = wall_pos;  // wall position
+        for (jj = 0; jj < NX; jj++) {
+            lb1[i][NU+jj] = -1e12;
             ub1[i][NU+jj] = 1e12;
-            idxb1[NU+jj] = NU + 6 * jj + 1;
+            idxb1[NU+jj] = NU + jj;
         }
 #else
-        for (jj = 0; jj < NMF; jj++) {
-            lb1[i][jj] = wall_pos;  // wall position
+        for (jj = 0; jj < NX; jj++) {
+            lb1[i][jj] = -1e12;
             ub1[i][jj] = 1e12;
-            idxb1[jj] = 6 * jj + 1;
+            idxb1[jj] = jj;
         }
         for (jj = 0; jj < NU; jj++) {
-            lb1[i][NMF+jj] = -UMAX;  // umin
-            ub1[i][NMF+jj] = UMAX;   // umax
-            idxb1[NMF+jj] = NX+jj;
+            lb1[i][NX+jj] = -UMAX;  // umin
+            ub1[i][NX+jj] = UMAX;   // umax
+            idxb1[NX+jj] = NX+jj;
         }
 #endif
-        nb[i + 1] = NMF + NU;
+        nb[i + 1] = NX + NU;
     }
 
     int *idxbN;
@@ -324,8 +310,8 @@ int main() {
     real_t *ubN;
     d_zeros(&ubN, NX, 1);
     for (jj = 0; jj < NX; jj++) {
-        lbN[jj] = xref[jj];  // xmin
-        ubN[jj] = xref[jj];  // xmax
+        lbN[jj] = -1e12;  // xmin
+        ubN[jj] = 1e12;  // xmax
         idxbN[jj] = jj;
     }
     nb[NN] = NX;
@@ -357,7 +343,8 @@ int main() {
     nlp_in.lb = (const real_t **)hlb;
     nlp_in.ub = (const real_t **)hub;
     nlp_in.sim = integrators;
-    nlp_in.cost = &ls_cost;
+    // nlp_in.cost = &ls_cost;
+    nlp_in.ls_cost = &ls_cost;
     nlp_in.freezeSens = false;
     if (INEXACT > 2) nlp_in.freezeSens = true;
 

@@ -11,7 +11,7 @@ void ls_res_eval_quadcopter(const real_t* in, real_t* out,
     const int nx = 11;
     const int nu = 4;
     const int nr = 15;
-    const int np = 0;
+    // const int np = 0;
 
     const real_t* x = in;
     const real_t* u = in + nx;
@@ -19,7 +19,6 @@ void ls_res_eval_quadcopter(const real_t* in, real_t* out,
 
     real_t* r  = out;
     real_t* drdw = out + nr;
-    real_t* rref = out + nr + nr*(nx+nu);
 
     // TODO(Andrea): need to remove this and allocate memory somewhere else
     int casadi_mem = 0;
@@ -42,13 +41,13 @@ void ls_res_eval_quadcopter(const real_t* in, real_t* out,
 }
 
 void ls_res_eval_end_quadcopter(const real_t* in, real_t* out,
-                      int (*ls_res)(const real_t**, real_t**, int*, real_t*,
+                      int (*ls_res_end)(const real_t**, real_t**, int*, real_t*,
                                  int)) {
 
     const int nx = 11;
     const int nu = 0;
     const int nr = 11;
-    const int np = 0;
+    // const int np = 0;
 
     const real_t* x = in;
     const real_t* u = in + nx;
@@ -56,7 +55,7 @@ void ls_res_eval_end_quadcopter(const real_t* in, real_t* out,
 
     real_t* r  = out;
     real_t* drdw = out + nr;
-    real_t* rref = out + nr + nr*(nx+nu);
+    // real_t* rref = out + nr + nr*(nx+nu);
 
     // TODO(Andrea): need to remove this and allocate memory somewhere else
     int casadi_mem = 0;

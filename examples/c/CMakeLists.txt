@@ -34,7 +34,8 @@ file(GLOB PENDULUM_MODEL_SRC
 
 file(GLOB QUADCOPTER_MODEL_SRC
     quadcopter_model/quadcopter_model.c
-    quadcopter_model/vde_forw_quadcotper.c
+    quadcopter_model/vde_forw_quadcopter.c
+    quadcopter_model/ls_res_eval.c
     quadcopter_model/ls_res_quadcopter.c
     quadcopter_model/ls_res_end_quadcopter.c)
 
@@ -68,7 +69,8 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
     endif()
 
-    add_executable(nonlinear_chain_ocp_nlp_example
+    add_executable(
+    nonlinear_chain_ocp_nlp_example
     nonlinear_chain_ocp_nlp.c
     chain_model/chain_model.c
     chain_model/jac_chain_nm2.c
