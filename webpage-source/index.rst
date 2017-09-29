@@ -1,6 +1,6 @@
 Welcome to acados!
 ==================
-Welcome to the arcados webpage. This site is hosted on github.
+Welcome to the acados webpage. This site is hosted on github.
 
 Navigation
 ~~~~~~~~~~
