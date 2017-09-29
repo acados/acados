@@ -317,7 +317,8 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
                 if (opts->scheme.type != exact) qp_q[i][j] += sim[i].out->grad[j];
             }
             for (int_t j = 0; j < nu[i]; j++) {
-                qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]*(w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
+                qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]*
+                    (w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
                 // adjoint-based gradient correction:
                 if (opts->scheme.type != exact) qp_r[i][j] += sim[i].out->grad[nx[i]+j];
             }
