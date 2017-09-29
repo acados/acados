@@ -251,13 +251,15 @@ static void initialize_trajectories(
 
 
 static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
+    ocp_nlp_gn_sqp_work *work,
     ocp_nlp_gn_sqp_memory *mem, real_t *w) {
 
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)nlp->cost;
+    const int_t *nr = cost->nr;
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
     real_t **y_ref = cost->y_ref;
 
     real_t **qp_A = (real_t **) mem->qp_solver->qp_in->A;
@@ -265,6 +267,8 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
     real_t **qp_b = (real_t **) mem->qp_solver->qp_in->b;
     real_t **qp_q = (real_t **) mem->qp_solver->qp_in->q;
     real_t **qp_r = (real_t **) mem->qp_solver->qp_in->r;
+    real_t **qp_R = (real_t **) mem->qp_solver->qp_in->R;
+    real_t **qp_Q = (real_t **) mem->qp_solver->qp_in->Q;
     real_t **qp_lb = (real_t **) mem->qp_solver->qp_in->lb;
     real_t **qp_ub = (real_t **) mem->qp_solver->qp_in->ub;
 
@@ -302,20 +306,92 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
 #endif
         }
 
-        // Update gradients
-        // TODO(rien): only for diagonal Q, R matrices atm
-        // TODO(rien): only for least squares cost with state and control reference atm
-        sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
-        for (int_t j = 0; j < nx[i]; j++) {
-            qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
-            // adjoint-based gradient correction:
-            if (opts->scheme.type != exact) qp_q[i][j] += sim[i].out->grad[j];
+        if (args->lin_res) {
+            // Update gradients
+            // TODO(rien): only for diagonal Q, R matrices atm
+            // TODO(rien): only for least squares cost with state and control reference atm
+            sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
+            for (int_t j = 0; j < nx[i]; j++) {
+                qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
+                // adjoint-based gradient correction:
+                if (opts->scheme.type != exact) qp_q[i][j] += sim[i].out->grad[j];
+            }
+            for (int_t j = 0; j < nu[i]; j++) {
+                qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]*(w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
+                // adjoint-based gradient correction:
+                if (opts->scheme.type != exact) qp_r[i][j] += sim[i].out->grad[nx[i]+j];
+            }
+        } else {
+            char *ptr = (char *)work->raw;
+            real_t *ls_res_out = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]);
+
+            real_t *r = ls_res_out;  // TODO(Andrea): allocate this
+            real_t *drdw = &ls_res_out[nr[i]];
+
+            real_t *ls_res_in = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *drdw_tran = (real_t *)ptr;
+            ptr+=sizeof(real_t)*nr[i]*(nx[i]+nu[i]);
+
+            real_t *Hess_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i])*(nx[i]+nu[i]);
+
+            real_t *grad_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *rref = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i]);
+
+            // (dense) Gauss-Newton Hessian
+            for (int_t j = 0; j < nx[i]; j++)
+                ls_res_in[j] = mem->common->x[i][j];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                ls_res_in[nx[i]+j] = mem->common->u[i][j];
+
+            cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++)
+              for (int_t k = 0; k < nr[i]; k++) {
+                drdw_tran[k*(nx[i] + nu[i]) + j] = drdw[j*nr[i] + k];
+              }
+
+            // init Hess_gn to zeros
+            for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hess_gn[j] = 0.0;
+            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i],
+                drdw, nr[i], Hess_gn, nx[i]+nu[i]);
+
+            // compute gradient
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -cost->y_ref[i][j] + r[j];
+            // for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
+            // printf("\n\n");
+            // for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++) grad_gn[j] = 0.0;
+
+            dgemv_n_3l(nx[i] + nu[i], nr[i], drdw_tran, nx[i] + nu[i], rref, grad_gn);
+
+            // copy dense Hessian and gradient into qp struct
+
+            for (int_t j = 0; j < nx[i]; j++)
+                for (int_t k = 0; k < nx[i]; k++)
+                    qp_Q[i][k + j*nx[i]] = Hess_gn[k + j*(nx[i] + nu[i])];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                for (int_t k = 0; k < nu[i]; k++)
+                    qp_R[i][k + j*nu[i]] =
+                        Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
+
+            // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] =
+            // Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
+
+            for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_gn[j];
+            for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_gn[nx[i] + j];
+
         }
-        for (int_t j = 0; j < nu[i]; j++) {
-            qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]*(w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
-            // adjoint-based gradient correction:
-            if (opts->scheme.type != exact) qp_r[i][j] += sim[i].out->grad[nx[i]+j];
-        }
+
         w_idx += nx[i]+nu[i];
     }
 
@@ -411,7 +487,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++) {
 
-        multiple_shooting(nlp_in, nlp_args, gn_sqp_mem, work->common->w);
+        multiple_shooting(nlp_in, nlp_args, work, gn_sqp_mem, work->common->w);
 
         int_t qp_status = gn_sqp_mem->qp_solver->fun(
             gn_sqp_mem->qp_solver->qp_in,

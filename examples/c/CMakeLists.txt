@@ -89,7 +89,7 @@ add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN
 
     add_executable(nonlinear_chain_sqp_example
         nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
+#    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
     target_link_libraries(nonlinear_chain_sqp_example acados)
     add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 endif()
