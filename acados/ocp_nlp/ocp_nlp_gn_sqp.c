@@ -42,18 +42,18 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_,
 
     // allocate mem for least-squares cost
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)in->cost;
-    int_t *nr =  cost->nr;
-    int_t nr_ = 0;
-    for (int_t i = 0; i < in->N; i++ ) nr_+=nr[i];
-
-    size += sizeof(int_t)*nr_;
 
     size += ocp_nlp_calculate_workspace_size(in, args->common);
 
     int_t raw_workspace_size = 0;
     if (!args->lin_res) {
+
+        int_t *nr =  cost->nr;
+        int_t nr_ = 0;
+        for (int_t i = 0; i < in->N; i++ ) nr_+=nr[i];
+
+        size += sizeof(int_t)*nr_;
         int_t N = in->N;
-        const int_t *nr = cost->nr;
         const int_t *nx = in->nx;
         const int_t *nu = in->nu;
 
