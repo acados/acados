@@ -590,6 +590,7 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
             solver->fun = ocp_nlp_gn_sqp;
 
             args = (ocp_nlp_gn_sqp_args *) malloc(sizeof(ocp_nlp_gn_sqp_args));
+            ((ocp_nlp_gn_sqp_args *) args)->lin_res = 1;
             ((ocp_nlp_gn_sqp_args *) args)->common = (ocp_nlp_args *) malloc(sizeof(ocp_nlp_args));
             snprintf(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name, \
                 sizeof(((ocp_nlp_gn_sqp_args *) args)->qp_solver_name), "%s", qp_solver);
