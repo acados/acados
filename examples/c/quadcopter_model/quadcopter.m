@@ -13,6 +13,9 @@ omega = SX.sym('omega', 3, 1);
 W = SX.sym('W', 4, 1);
 rW = SX.sym('rW', 4, 1);
 
+Q = diag([1e1*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
+R = 1.0e-2*eye(4);
+    
 x = [q; omega; W];
 u = rW;
 
@@ -84,10 +87,6 @@ if GENERATE_LQR_GAIN % generate LQR gain
     A = full(J_x(zeros(11,1), zeros(4,1)));
     B = full(J_u(zeros(11,1), zeros(4,1)));
 
-    Q = eye(11);
-
-    R = eye(4);
-
     [K, P] = dlqr(A, B, Q, R)
 
 end
@@ -95,8 +94,8 @@ end
 % generate code for residuals
 nr = 15;
 nr_end = 11;
-res_exp = [x;u];
-res_end_exp = [x];
+res_exp = [sqrt(Q)*x;sqrt(R)*u];
+res_end_exp = [sqrt(Q)*x];
 
 jac_res_exp = SX.zeros(nr,nx+nu) + jacobian(res_exp,[x;u]);
 ls_res_Fun = Function('ls_res_Fun', {x,u}, {res_exp,jac_res_exp});

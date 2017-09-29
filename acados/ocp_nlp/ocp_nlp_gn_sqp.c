@@ -346,10 +346,10 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
 
             // (dense) Gauss-Newton Hessian
             for (int_t j = 0; j < nx[i]; j++)
-                ls_res_in[j] = mem->common->x[i][j];
+                ls_res_in[j] = w[w_idx+j];
 
             for (int_t j = 0; j < nu[i]; j++)
-                ls_res_in[nx[i]+j] = mem->common->u[i][j];
+                ls_res_in[nx[i]+j] = w[w_idx+nx[i]+j];
 
             cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
 

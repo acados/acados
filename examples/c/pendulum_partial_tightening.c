@@ -23,7 +23,7 @@
 #define TOL 1e-6
 #define MINSTEP 1e-8
 
-#define NN 50
+#define NN 100
 #define MM 50  // works with (MM, GAMMA) = (2, 0.5), (5, 0.6), (10, 0.7), (100, 1)
 #define NX 4
 #define NU 1
@@ -33,11 +33,6 @@
 #define NMPC_INT_STEPS 1
 #define SIM_INT_STEPS 50
 #define N_SQP_ITER 1
-
-// #define L_INIT 1
-// #define T_INIT 0.01
-// #define MU_TIGHT 1
-// #define MU0 1000000
 
 #define L_INIT 10
 #define T_INIT 0.1
@@ -52,7 +47,7 @@
 // #define LOG_CL_SOL
 #define LOG_NAME "cl_log_M_50_N_50.txt"
 
-#define GAMMA 0.5
+#define GAMMA 0.99
 
 #define LVM 1e-4  // Levenberg-Marquardt regularization
 
@@ -110,7 +105,6 @@ static void print_states_controls(real_t *w, int_t N) {
 #endif  // DEBUG
 
 #ifdef PLOT_OL_RESULTS
-// static void plot_states_controls(real_t *w, int_t nx, int_t nu, int_t N, real_t T ) {
 static void plot_states_controls(real_t *w, real_t T) {
     double t_grid[NN];
     for (int_t i = 0; i < NN; i++) t_grid[i] = i*T;
@@ -182,6 +176,7 @@ static void plot_states_controls(real_t *w, real_t T) {
             printf("gnuplot not found...");
     }
 }
+
 #endif  // PLOT_OL_RESULTS
 
 #ifdef PLOT_CL_RESULTS
