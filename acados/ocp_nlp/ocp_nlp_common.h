@@ -25,67 +25,44 @@
 #include "acados/utils/types.h"
 
 typedef struct {
-    //    const int_t *sparsity;
-    //    const int_t *idx_in;
-    int_t dim_in;
-    int_t dim_out;
-    void (*fun)(const real_t *, real_t *);
-    void (*jac_fun)(const real_t *, real_t *);
-    // TODO(rien): other directional and second order derivatives
-    // TODO(rien): define the overlapping 'sets' of functions, jacobians,
-    // hessians etc..
-} ocp_nlp_function;
+    real_t f;
+    real_t *grad_f;
+    real_t *hess_lag;
+    real_t *g;
+    real_t *jac_g;
+} ocp_nlp_stage_sensitivities;
 
 typedef struct {
-    // TODO(rien): only for least squares cost with state and control reference
-    // atm
-    //    void *fun;
-    //    const int_t *ny;
-    real_t **W;
-    real_t **y_ref;
-} ocp_nlp_ls_cost;
-
-typedef struct { ocp_nlp_function *fun; } ocp_nlp_stage_cost;
+    real_t **x;
+    real_t **u;
+    real_t **pi;
+    real_t **lam;
+    ocp_nlp_stage_sensitivities *sens;
+} ocp_nlp_memory;
 
 typedef struct {
     int_t N;
     const int_t *nx;
     const int_t *nu;
     const int_t *nb;
-    const int_t *nc;
     const int_t *ng;
     const int_t **idxb;
     const real_t **lb;
     const real_t **ub;
-    const real_t **Cx;
-    const real_t **Cu;
-    const real_t **lc;
-    const real_t **uc;
     const real_t **lg;
     const real_t **ug;
 
-    void *cost;
-    sim_solver *sim;
-    ocp_nlp_function *g;  // nonlinear constraints
-    // TODO(rien): what about invariants, e.g., algebraic constraints?
-
-    bool freezeSens;
+    ocp_nlp_sensitivities_provider *sensitivities_provider;
+    ocp_qp_solver *qp_solver; // TODO(nielsvd): rename to something more general
 } ocp_nlp_in;
 
 typedef struct {
-    int_t dummy;
     int_t maxIter;
 } ocp_nlp_args;
 
 typedef struct {
-    int_t num_vars;
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-} ocp_nlp_memory;
-
-typedef struct { real_t *w; } ocp_nlp_work;
+    real_t *w;
+} ocp_nlp_work;
 
 typedef struct {
     real_t **x;

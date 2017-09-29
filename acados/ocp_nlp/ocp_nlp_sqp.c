@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -31,21 +31,21 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
-    ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
+int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
+    ocp_nlp_sqp_args *args = (ocp_nlp_sqp_args*) args_;
 
     int_t size;
 
-    size = sizeof(ocp_nlp_gn_sqp_work);
+    size = sizeof(ocp_nlp_sqp_work);
     size += ocp_nlp_calculate_workspace_size(in, args->common);
     return size;
 }
 
-static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
-                                          ocp_nlp_gn_sqp_memory *mem) {
+static void ocp_nlp_sqp_cast_workspace(ocp_nlp_sqp_work *work,
+                                          ocp_nlp_sqp_memory *mem) {
     char *ptr = (char *)work;
 
-    ptr += sizeof(ocp_nlp_gn_sqp_work);
+    ptr += sizeof(ocp_nlp_sqp_work);
     work->common = (ocp_nlp_work *)ptr;
     ocp_nlp_cast_workspace(work->common, mem->common);
 }
@@ -53,8 +53,8 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
 
 static void initialize_objective(
     const ocp_nlp_in *nlp_in,
-    ocp_nlp_gn_sqp_memory *gn_sqp_mem,
-    ocp_nlp_gn_sqp_work *work) {
+    ocp_nlp_sqp_memory *gn_sqp_mem,
+    ocp_nlp_sqp_work *work) {
 
     const int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
@@ -87,8 +87,8 @@ static void initialize_objective(
 
 static void initialize_trajectories(
     const ocp_nlp_in *nlp_in,
-    ocp_nlp_gn_sqp_memory *gn_sqp_mem,
-    ocp_nlp_gn_sqp_work *work) {
+    ocp_nlp_sqp_memory *gn_sqp_mem,
+    ocp_nlp_sqp_work *work) {
 
     const int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
@@ -108,7 +108,7 @@ static void initialize_trajectories(
 }
 
 
-static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_sqp_memory *mem, real_t *w) {
 
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
@@ -196,7 +196,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
 }
 
 
-static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_sqp_memory *mem, real_t *w) {
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
@@ -241,12 +241,12 @@ static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_memory *memory, oc
 
 
 // Simple fixed-step Gauss-Newton based SQP routine
-int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args_,
+int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_args_,
     void *nlp_mem_, void *nlp_work_) {
 
-    ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
-    ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
-    ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
+    ocp_nlp_sqp_memory *gn_sqp_mem = (ocp_nlp_sqp_memory *) nlp_mem_;
+    ocp_nlp_sqp_work *work = (ocp_nlp_sqp_work*) nlp_work_;
+    ocp_nlp_sqp_cast_workspace(work, gn_sqp_mem);
 
     initialize_objective(nlp_in, gn_sqp_mem, work);
     initialize_trajectories(nlp_in, gn_sqp_mem, work);
@@ -259,7 +259,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         }
     }
 
-    int_t max_sqp_iterations = ((ocp_nlp_gn_sqp_args *) nlp_args_)->common->maxIter;
+    int_t max_sqp_iterations = ((ocp_nlp_sqp_args *) nlp_args_)->common->maxIter;
 
     acados_timer timer;
     real_t total_time = 0;
@@ -296,10 +296,10 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     return 0;
 }
 
-void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
+void ocp_nlp_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_) {
 
-    ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
-    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
+    ocp_nlp_sqp_args *args = (ocp_nlp_sqp_args *)args_;
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *)memory_;
 
     ocp_qp_in *dummy_qp = create_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc);
     int_t **idxb = (int_t **) dummy_qp->idxb;
@@ -311,8 +311,8 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     ocp_nlp_create_memory(in, mem->common);
 }
 
-void ocp_nlp_gn_sqp_free_memory(void *mem_) {
-    ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)mem_;
+void ocp_nlp_sqp_free_memory(void *mem_) {
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *)mem_;
 
     int_t N = mem->qp_solver->qp_in->N;
     ocp_nlp_free_memory(N, mem->common);
