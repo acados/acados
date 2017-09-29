@@ -18,7 +18,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'acados'
-copyright = '2017, D. Kouzoupis et al'
+copyright = '2017, Syscop'
 author = 'Dimitris Kouzoupis, Robin Verschueren, Gianluca Frison'
 
 version = '0.5'

@@ -3,8 +3,10 @@
 {%- block footer %}
     <div class="footer">
       {% if show_copyright %}&copy;{{ copyright }}.{% endif %}
-      {% if theme_show_powered_by|lower == 'true' %}
       {% if show_copyright %}|{% endif %}
+      <a href="https://www.syscop.de">Syscop Website</a>
+      {% if theme_show_powered_by|lower == 'true' %}
+      |
       Powered by <a href="http://sphinx-doc.org/">Sphinx {{ sphinx_version }}</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster {{ alabaster_version }}</a>
       {% endif %}
