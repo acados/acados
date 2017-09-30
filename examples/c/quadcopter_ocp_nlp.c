@@ -41,7 +41,7 @@
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
-#define NN 100
+#define NN 10
 #define TT 5.0
 #define T_SIM 3.0
 #define Ns 2
@@ -49,8 +49,10 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define NU 4
 #define NSIM 1
 #define UMAX 10.0
+#define NR 18
+#define NR_END 14
 
-// #define PLOT_OL_RESULTS
+#define PLOT_OL_RESULTS
 // #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
 
@@ -86,7 +88,7 @@ int main() {
 
     real_t *W, *WN;
     real_t *uref;
-    int_t max_sqp_iters = 20;
+    int_t max_sqp_iters = 1;
     real_t *x_end;
     real_t *u_end;
 
@@ -96,7 +98,7 @@ int main() {
     d_zeros(&x_end, NX, 1);
     d_zeros(&u_end, NU, 1);
 
-    real_t initial_angle_rad = 3.0;
+    real_t initial_angle_rad = 0.0;
 
     real_t x0[11] = {
         cos(initial_angle_rad/2),
@@ -112,7 +114,31 @@ int main() {
         0.0000000000000000e+00,
     };
 
-    real_t xref[11] =  {
+    real_t y_ref[18] =  {
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        1.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+    };
+
+    real_t y_ref_end[14] =  {
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
+        0.0000000000000000e+00,
         1.0000000000000000e+00,
         0.0000000000000000e+00,
         0.0000000000000000e+00,
@@ -154,12 +180,11 @@ int main() {
     ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
         ls_cost.y_ref[i] =
-            (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
-        for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
-        for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
+            (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * NR);
+        for (int_t j = 0; j < NR; j++) ls_cost.y_ref[i][j] = y_ref[j];
     }
-    ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
-    for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
+    ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NR_END));
+    for (int_t j = 0; j < NR_END; j++) ls_cost.y_ref[NN][j] = y_ref_end[j];
 
     // Integrator structs
     real_t Ts = TT / NN;
@@ -445,7 +470,7 @@ int main() {
         gnuplot_data[3] = q_4;
 
         gnuplot_data[4] = w_1;
-        gnuplot_data[5] = w_1;
+        gnuplot_data[5] = w_2;
         gnuplot_data[6] = w_3;
         gnuplot_data[7] = w_4;
 

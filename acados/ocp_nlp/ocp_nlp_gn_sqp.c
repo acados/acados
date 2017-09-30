@@ -380,11 +380,24 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
                 for (int_t k = 0; k < nx[i]; k++)
                     qp_Q[i][k + j*nx[i]] = Hess_gn[k + j*(nx[i] + nu[i])];
 
+            // print Q
+            for (int_t j = 0; j < nx[i]; j++) {
+                for (int_t k = 0; k < nx[i]; k++)
+                    printf("%.3e  ", qp_Q[i][j + k*nx[i]]);
+                printf("\n");
+            }
+
             for (int_t j = 0; j < nu[i]; j++)
                 for (int_t k = 0; k < nu[i]; k++)
                     qp_R[i][k + j*nu[i]] =
                         Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
 
+            // print R
+            for (int_t j = 0; j < nu[i]; j++) {
+                for (int_t k = 0; k < nu[i]; k++)
+                    printf("%.3e  ", qp_R[i][j + k*nu[i]]);
+                printf("\n");
+            }
             // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] =
             // Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
 

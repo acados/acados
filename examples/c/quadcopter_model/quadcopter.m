@@ -3,6 +3,7 @@ clear all;
 close all;
 
 GENERATE_LQR_GAIN = 0;
+LIN_RES = 0
 
 addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
@@ -13,9 +14,15 @@ omega = SX.sym('omega', 3, 1);
 W = SX.sym('W', 4, 1);
 rW = SX.sym('rW', 4, 1);
 
-Q = diag([1e1*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
-R = 1.0e-2*eye(4);
-    
+if LIN_RES
+    Q = diag([1e1*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
+    R = 1.0e-2*eye(4);
+else
+    Q_eul = 1e1*eye(3);
+    Q = diag([1e-2*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
+    R = 1.0e-2*eye(4);
+end
+
 x = [q; omega; W];
 u = rW;
 
@@ -91,11 +98,19 @@ if GENERATE_LQR_GAIN % generate LQR gain
 
 end
 
-% generate code for residuals
-nr = 15;
-nr_end = 11;
-res_exp = [sqrt(Q)*x;sqrt(R)*u];
-res_end_exp = [sqrt(Q)*x];
+% Generate code for residuals
+if(LIN_RES)
+    nr = 15;
+    nr_end = 11;
+    res_exp = [sqrt(Q)*x;sqrt(R)*u];
+    res_end_exp = [sqrt(Q)*x];
+else
+    nr = 18;
+    nr_end = 14;
+    eul_expr = myquat2eul(q);
+    res_exp = [Q_eul*eul_expr.';sqrt(Q)*x;sqrt(R)*u];
+    res_end_exp = [Q_eul*eul_expr.';sqrt(Q)*x];
+end
 
 jac_res_exp = SX.zeros(nr,nx+nu) + jacobian(res_exp,[x;u]);
 ls_res_Fun = Function('ls_res_Fun', {x,u}, {res_exp,jac_res_exp});

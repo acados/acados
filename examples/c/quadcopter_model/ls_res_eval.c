@@ -10,7 +10,7 @@ void ls_res_eval_quadcopter(const real_t* in, real_t* out,
 
     const int nx = 11;
     const int nu = 4;
-    const int nr = 15;
+    const int nr = 18;
     // const int np = 0;
 
     const real_t* x = in;
@@ -46,7 +46,7 @@ void ls_res_eval_end_quadcopter(const real_t* in, real_t* out,
 
     const int nx = 11;
     const int nu = 0;
-    const int nr = 11;
+    const int nr = 14;
     // const int np = 0;
 
     const real_t* x = in;
