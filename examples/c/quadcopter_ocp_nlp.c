@@ -41,21 +41,21 @@
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
-#define NN 20
+#define NN 50
 #define TT 2.0
-#define T_SIM 3.0
-#define Ns 2
+#define Ns 10
 #define NX 11
 #define NU 4
-#define NSIM 10
-#define UMAX 10.0
+#define NSIM 500
+#define UMAX 10000.0
 #define NR 18
 #define NR_END 14
-#define MAX_SQP_ITERS 10
+#define MAX_SQP_ITERS 1
+#define INITIAL_ANGLE_RAD 3.0
 // #define LAMBDA 1.0
 
 // #define PLOT_OL_RESULTS
-// #define PLOT_OL_RESULTS
+// #define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
 
 extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -100,7 +100,7 @@ int main() {
     d_zeros(&x_end, NX, 1);
     d_zeros(&u_end, NU, 1);
 
-    real_t initial_angle_rad = 1.0;
+    real_t initial_angle_rad = INITIAL_ANGLE_RAD;
 
     real_t x0[11] = {
         cos(initial_angle_rad/2),
@@ -428,7 +428,7 @@ int main() {
 
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++)
-            nlp_mem.common->x[i][j] = 0.1;  // resX(j,i)
+            nlp_mem.common->x[i][j] = x0[j];  // resX(j,i)
         for (int_t j = 0; j < NU; j++)
             nlp_mem.common->u[i][j] = 0.1;  // resU(j, i)
     }
@@ -437,24 +437,69 @@ int main() {
 
     int_t status;
 
-    status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
-    printf("\n\nstatus = %i\n\n", status);
+#ifdef PLOT_CL_RESULTS
+    real_t w_cl[(NX+NU)*NSIM] = {0.0};
+    for (int_t i = 0; i < NX; i++) w_cl[i] = x0[i];
+    real_t T_SIM = TT/NN*NSIM;
+#endif
+    for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
+        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
+        // forward simulation
+        for (int_t j = 0; j < nx[0]; j++) integrators[0].in->x[j] = x0[j];
+        for (int_t j = 0; j < nu[0]; j++) integrators[0].in->u[j] = nlp_out.u[0][j];
+        integrators[0].fun(integrators[0].in, integrators[0].out,
+            integrators[0].args, integrators[0].mem, integrators[0].work);
 
-    #ifdef PLOT_OL_RESULTS
+        // TODO(rien): transition functions for changing dimensions not yet implemented!
+#ifdef PLOT_CL_RESULTS
+        for (int_t j = 0; j < nx[0]; j++)
+            w_cl[sim_iter*(nx[0]+nu[0]) + j] = x0[j];
+        for (int_t j = 0; j < nu[0]; j++)
+            w_cl[sim_iter*(nx[0]+nu[0]) + nx[0] + j] = nlp_out.u[0][j];
+
+        for (int_t j = 0; j < nx[0]; j++)
+            x0[j] = integrators[0].out->xn[j];
+#endif
+
+#ifdef FLIP_BOUNDS
+        for (jj = 0; jj < nx[0]; jj++) {
+            lb0[NU+jj] = integrators[0].out->xn[jj];  // xmin
+            ub0[NU+jj] = integrators[0].out->xn[jj];  // xmax
+        }
+#else
+        for (jj = 0; jj < nx[0]; jj++) {
+            lb0[jj] = integrators[0].out->xn[jj];  // xmin
+            ub0[jj] = integrators[0].out->xn[jj];  // xmax
+        }
+#endif
+
+        printf("\n\nstatus = %i\n\n", status);
+    }
+
+#if defined(PLOT_OL_RESULTS) || defined(PLOT_CL_RESULTS)
+#if defined (PLOT_OL_RESULTS)
         real_t *gnu_plot_w = ((ocp_nlp_gn_sqp_work *)nlp_work)->common->w;
+        int_t N_plt = NN;
+        real_t T_plt = TT;
+#elif defined(PLOT_CL_RESULTS)
+        real_t *gnu_plot_w = w_cl;
+        int_t N_plt = NSIM;
+        real_t T_plt = T_SIM;
+#endif
+
         real_t *gnuplot_data[8];
 
-        real_t q_1[NN];
-        real_t q_2[NN];
-        real_t q_3[NN];
-        real_t q_4[NN];
+        real_t q_1[NSIM];
+        real_t q_2[NSIM];
+        real_t q_3[NSIM];
+        real_t q_4[NSIM];
 
-        real_t w_1[NN];
-        real_t w_2[NN];
-        real_t w_3[NN];
-        real_t w_4[NN];
+        real_t w_1[NSIM];
+        real_t w_2[NSIM];
+        real_t w_3[NSIM];
+        real_t w_4[NSIM];
 
-        for (int_t i = 0; i < NN; i++) {
+        for (int_t i = 0; i < NSIM; i++) {
             q_1[i] = gnu_plot_w[i*(NX+NU) + 0];
             q_2[i] = gnu_plot_w[i*(NX+NU) + 1];
             q_3[i] = gnu_plot_w[i*(NX+NU) + 2];
@@ -497,8 +542,8 @@ int main() {
         labels[6] = plot_7;
         labels[7] = plot_8;
 
-        acados_gnuplot(gnuplot_data, 8, TT, NN, labels, 4, 2);
-    #endif  // PLOT_OL_RESULTS
+        acados_gnuplot(gnuplot_data, 8, T_plt, N_plt, labels, 4, 2);
+#endif  // PLOT_OL_RESULTS
 
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 

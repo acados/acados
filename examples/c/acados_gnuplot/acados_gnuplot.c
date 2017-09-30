@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wattributes"
+
 #include <stdio.h>
 #include "acados/utils/types.h"
 #include "examples/c/acados_gnuplot/acados_gnuplot.h"
