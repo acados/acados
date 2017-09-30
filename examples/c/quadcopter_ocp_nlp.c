@@ -50,7 +50,7 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define NSIM 1
 #define UMAX 10.0
 
-#define PLOT_OL_RESULTS
+// #define PLOT_OL_RESULTS
 // #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
 

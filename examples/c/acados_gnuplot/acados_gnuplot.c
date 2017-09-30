@@ -3,6 +3,8 @@
 
 #define _GNU_SOURCE
 
+extern FILE *popen(char *command, const char *type);
+
 void acados_gnuplot(real_t **data, int_t n_data, real_t T,
     int_t N, char **labels, int_t layout_x, int_t layout_y) {
 
@@ -10,7 +12,7 @@ void acados_gnuplot(real_t **data, int_t n_data, real_t T,
     for (int_t i = 0; i < N; i++) t_grid[i] = i*T/N;
 
     FILE *gnuplotPipe, *tempDataFile;
-    char *temp_file;
+    char *temp_file = NULL;
 
     double x, y;
     int i;
