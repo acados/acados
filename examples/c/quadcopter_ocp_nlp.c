@@ -41,18 +41,20 @@
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
-#define NN 10
-#define TT 5.0
+#define NN 20
+#define TT 2.0
 #define T_SIM 3.0
 #define Ns 2
 #define NX 11
 #define NU 4
-#define NSIM 1
+#define NSIM 10
 #define UMAX 10.0
 #define NR 18
 #define NR_END 14
+#define MAX_SQP_ITERS 10
+// #define LAMBDA 1.0
 
-#define PLOT_OL_RESULTS
+// #define PLOT_OL_RESULTS
 // #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
 
@@ -79,16 +81,16 @@ int main() {
     for (int_t i = 0; i < NN; i++) {
         ls_cost.ls_res[i] = &ls_res_Fun;
         ls_cost.ls_res_eval[i] = &ls_res_eval_quadcopter;
-        ls_cost.nr[i] = NX + NU;
+        ls_cost.nr[i] = NR;
     }
 
     ls_cost.ls_res[NN] = &ls_res_end_Fun;
     ls_cost.ls_res_eval[NN] = &ls_res_eval_end_quadcopter;
-    ls_cost.nr[NN] = NX;
+    ls_cost.nr[NN] = NR_END;
 
     real_t *W, *WN;
     real_t *uref;
-    int_t max_sqp_iters = 1;
+    int_t max_sqp_iters = MAX_SQP_ITERS;
     real_t *x_end;
     real_t *u_end;
 
@@ -98,7 +100,7 @@ int main() {
     d_zeros(&x_end, NX, 1);
     d_zeros(&u_end, NU, 1);
 
-    real_t initial_angle_rad = 0.0;
+    real_t initial_angle_rad = 1.0;
 
     real_t x0[11] = {
         cos(initial_angle_rad/2),
@@ -413,7 +415,7 @@ int main() {
     nlp_args.common->maxIter = max_sqp_iters;
 
     snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-             "qpdunes");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
+             "condensing_qpoases");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
 
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;

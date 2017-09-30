@@ -359,6 +359,13 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
                 drdw_tran[k*(nx[i] + nu[i]) + j] = drdw[j*nr[i] + k];
               }
 
+            // // print J
+            // for (int_t j = 0; j < nr[i]; j++) {
+            //   for (int_t k = 0; k < nx[i] + nu[i]; k++)
+            //       printf("%.2f  ", drdw[k*nr[i] + j]);
+            //   printf("\n");
+            // }
+
             // init Hess_gn to zeros
             for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hess_gn[j] = 0.0;
             dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i],
@@ -380,24 +387,38 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
                 for (int_t k = 0; k < nx[i]; k++)
                     qp_Q[i][k + j*nx[i]] = Hess_gn[k + j*(nx[i] + nu[i])];
 
-            // print Q
-            for (int_t j = 0; j < nx[i]; j++) {
-                for (int_t k = 0; k < nx[i]; k++)
-                    printf("%.3e  ", qp_Q[i][j + k*nx[i]]);
-                printf("\n");
-            }
+            // printf("\n");
+            // printf("\n");
+            // // print Q
+            // for (int_t j = 0; j < nx[i]; j++) {
+            //     for (int_t k = 0; k < nx[i]; k++)
+            //     printf("%.2f  ", qp_Q[i][j + k*nx[i]]);
+            //     printf("\n");
+            // }
 
             for (int_t j = 0; j < nu[i]; j++)
                 for (int_t k = 0; k < nu[i]; k++)
                     qp_R[i][k + j*nu[i]] =
                         Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
 
-            // print R
-            for (int_t j = 0; j < nu[i]; j++) {
-                for (int_t k = 0; k < nu[i]; k++)
-                    printf("%.3e  ", qp_R[i][j + k*nu[i]]);
-                printf("\n");
-            }
+            // printf("\n");
+            // printf("\n");
+            // // print R
+            // for (int_t j = 0; j < nu[i]; j++) {
+            //     for (int_t k = 0; k < nu[i]; k++)
+            //         printf("%.2f  ", qp_R[i][j + k*nu[i]]);
+            //     printf("\n");
+            // }
+
+            // printf("\n");
+            // printf("\n");
+            //
+            // // print Hess_gn
+            // for (int_t j = 0; j < nu[i] + nx[i]; j++) {
+            //     for (int_t k = 0; k < nu[i] + nx[i]; k++)
+            //         printf("%.2f  ", Hess_gn[j + k*(nu[i]+nx[i])]);
+            //     printf("\n");
+            // }
             // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] =
             // Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
 
@@ -434,6 +455,7 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, 
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
+    // const real_t lambda = mem->lambda;  // step-size
 
     for (int_t i = 0; i < N; i++)
         for (int_t j = 0; j < nx[i+1]; j++)
