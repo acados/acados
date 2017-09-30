@@ -28,8 +28,6 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
-// #include "catch/include/catch.hpp"
-
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
@@ -39,13 +37,9 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+
 #include "examples/c/acados_gnuplot/acados_gnuplot.h"
-
-// #include "examples/c/quadcopter_model/quadcopter_model.h"
 #include "examples/c/quadcopter_model/ls_res_eval.h"
-
-// #include "test/test_utils/eigen.h"
-// #include "test/test_utils/read_matrix  .h"
 
 real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
@@ -80,7 +74,6 @@ int main() {
     ls_cost.ls_res = malloc(sizeof(char *)*(NN+1));
     ls_cost.ls_res_eval = malloc(sizeof(char *)*(NN+1));
     ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
-    // ls_cost.lin_res = 0;
 
     // assign residual function pointers
     for (int_t i = 0; i < NN; i++) {
@@ -180,10 +173,6 @@ int main() {
     sim_RK_opts rk_opts[NN];
     void *sim_work;
     sim_lifted_irk_memory irk_mem[NN];
-
-    // TODO(rien): can I move this somewhere inside the integrator?
-    // struct d_strmat str_mat[NN];
-    // struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
         integrators[jj].in = &sim_in[jj];
@@ -379,7 +368,6 @@ int main() {
     nlp_in.lb = (const real_t **)hlb;
     nlp_in.ub = (const real_t **)hub;
     nlp_in.sim = integrators;
-    // nlp_in.cost = &ls_cost;
     nlp_in.cost = &ls_cost;
     nlp_in.freezeSens = false;
     if (INEXACT > 2) nlp_in.freezeSens = true;
