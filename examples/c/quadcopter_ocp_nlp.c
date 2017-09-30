@@ -58,13 +58,9 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define NSIM 1
 #define UMAX 10.0
 
-#define PLOT_OL_RESULTS
+// #define PLOT_OL_RESULTS
 // #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
-
-#ifdef PLOT_CL_RESULTS
-#define _GNU_SOURCE
-#endif  // PLOT_CL_RESULTS
 
 extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 extern int ls_res_end_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);

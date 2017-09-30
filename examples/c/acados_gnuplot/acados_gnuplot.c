@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "acados/utils/types.h"
 
 #define _GNU_SOURCE
