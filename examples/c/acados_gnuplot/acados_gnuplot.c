@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "acados/utils/types.h"
+#include "examples/c/acados_gnuplot/acados_gnuplot.h"
 
 #define _GNU_SOURCE
 
@@ -19,7 +20,7 @@ void acados_gnuplot(real_t **data, int_t n_data, real_t T,
     gnuplotPipe = popen("gnuplot -persist", "w");
     if (gnuplotPipe) {
         fprintf(gnuplotPipe, "set multiplot layout %i,%i\n", layout_x, layout_y);
-        for (int_t k = 0; k < n_data; k++){
+        for (int_t k = 0; k < n_data; k++) {
             temp_file = labels[k];
             // Plot x1
             tempDataFile = fopen(temp_file, "w");

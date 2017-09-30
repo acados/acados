@@ -427,7 +427,7 @@ int main() {
         real_t w_3[NN];
         real_t w_4[NN];
 
-        for (int_t i = 0; i < NN; i++){
+        for (int_t i = 0; i < NN; i++) {
             q_1[i] = gnu_plot_w[i*(NX+NU) + 0];
             q_2[i] = gnu_plot_w[i*(NX+NU) + 1];
             q_3[i] = gnu_plot_w[i*(NX+NU) + 2];
