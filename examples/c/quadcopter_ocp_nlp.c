@@ -39,6 +39,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "examples/c/acados_gnuplot/acados_gnuplot.h"
 
 // #include "examples/c/quadcopter_model/quadcopter_model.h"
 #include "examples/c/quadcopter_model/ls_res_eval.h"
@@ -57,13 +58,9 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define NSIM 1
 #define UMAX 10.0
 
-// #define PLOT_OL_RESULTS
+#define PLOT_OL_RESULTS
 // #define PLOT_OL_RESULTS
 // #define FP_EXCEPTIONS
-
-#ifdef PLOT_OL_RESULTS
-#define _GNU_SOURCE
-#endif  // PLOT_OL_RESULTS
 
 #ifdef PLOT_CL_RESULTS
 #define _GNU_SOURCE
@@ -73,236 +70,6 @@ extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int 
 extern int ls_res_end_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 //
 extern int vdeFun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-
-#ifdef PLOT_OL_RESULTS
-static void plot_states_controls(real_t *w) {
-    double t_grid[NN];
-    for (int_t i = 0; i < NN; i++) t_grid[i] = i*TT/NN;
-
-    FILE *gnuplotPipe, *tempDataFile;
-    char *x1_temp_file;
-    char *x2_temp_file;
-    char *x3_temp_file;
-    char *x4_temp_file;
-
-    char *u1_temp_file;
-    char *u2_temp_file;
-    char *u3_temp_file;
-    char *u4_temp_file;
-
-    double x, y;
-    int i;
-    x1_temp_file = "x1";
-    gnuplotPipe = popen("gnuplot -persist", "w");
-    if (gnuplotPipe) {
-        fprintf(gnuplotPipe, "set multiplot layout 4,2\n");
-
-        // Plot x1
-        tempDataFile = fopen(x1_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot x2
-        x2_temp_file = "x2";
-        tempDataFile = fopen(x2_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+1];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot x3
-        x3_temp_file = "x3";
-        tempDataFile = fopen(x3_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x3_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+2];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot x4
-        x4_temp_file = "x4";
-        tempDataFile = fopen(x4_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x4_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+3];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot u1
-        u1_temp_file = "u1";
-        tempDataFile = fopen(u1_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+7];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot u2
-        u2_temp_file = "u2";
-        tempDataFile = fopen(u2_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u2_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+8];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot u3
-        u3_temp_file = "u3";
-        tempDataFile = fopen(u2_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u3_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+9];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        // Plot u4
-        u4_temp_file = "u4";
-        tempDataFile = fopen(u4_temp_file, "w");
-        fprintf(gnuplotPipe, "set grid ytics\n");
-        fprintf(gnuplotPipe, "set grid xtics\n");
-        fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-        fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u4_temp_file);
-        fflush(gnuplotPipe);
-        for (i=0; i < NN; i++) {
-            x = t_grid[i];
-            y = w[i*(NX+NU)+10];
-            fprintf(tempDataFile, "%lf %lf\n", x, y);
-        }
-        fclose(tempDataFile);
-
-        printf("Press enter to continue...");
-        getchar();
-        remove(x1_temp_file);
-        remove(x2_temp_file);
-        remove(u1_temp_file);
-
-
-        fprintf(gnuplotPipe, "exit gnuplot\n");
-        } else {
-            printf("gnuplot not found...");
-    }
-}
-
-#endif  // PLOT_OL_RESULTS
-
-#ifdef PLOT_CL_RESULTS
-static void plot_states_controls_cl(real_t *w) {
-      double t_grid[NSIM];
-      for (int_t i = 0; i < NSIM; i++) t_grid[i] = i*T_SIM/NN;
-
-      FILE *gnuplotPipe, *tempDataFile;
-      char *x1_temp_file;
-      char *x2_temp_file;
-      char *u1_temp_file;
-      double x, y;
-      int i;
-      x1_temp_file = "x1";
-      gnuplotPipe = popen("gnuplot -persist", "w");
-      if (gnuplotPipe) {
-          fprintf(gnuplotPipe, "set multiplot layout 3,1\n");
-
-          // Plot x1
-          tempDataFile = fopen(x1_temp_file, "w");
-          fprintf(gnuplotPipe, "set grid ytics\n");
-          fprintf(gnuplotPipe, "set grid xtics\n");
-          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-          fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x1_temp_file);
-          fflush(gnuplotPipe);
-          for (i=0; i < NSIM; i++) {
-              x = t_grid[i];
-              y = w[i*(NX+NU)];
-              fprintf(tempDataFile, "%lf %lf\n", x, y);
-          }
-          fclose(tempDataFile);
-
-          // Plot x2
-          x2_temp_file = "x2";
-          tempDataFile = fopen(x2_temp_file, "w");
-          fprintf(gnuplotPipe, "set grid ytics\n");
-          fprintf(gnuplotPipe, "set grid xtics\n");
-          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-          fprintf(gnuplotPipe, "plot \"%s\" with lines lt rgb \"blue\"\n", x2_temp_file);
-          fflush(gnuplotPipe);
-          for (i=0; i < NSIM; i++) {
-              x = t_grid[i];
-              y = w[i*(NX+NU)+1];
-              fprintf(tempDataFile, "%lf %lf\n", x, y);
-          }
-          fclose(tempDataFile);
-
-          // Plot u1
-          u1_temp_file = "u1";
-          tempDataFile = fopen(u1_temp_file, "w");
-          fprintf(gnuplotPipe, "set grid ytics\n");
-          fprintf(gnuplotPipe, "set grid xtics\n");
-          fprintf(gnuplotPipe, "set xlabel \"%s\"\n", "time [s]");
-          fprintf(gnuplotPipe, "plot \"%s\" with steps lt rgb \"red\" \n", u1_temp_file);
-          fflush(gnuplotPipe);
-          for (i=0; i < NSIM; i++) {
-              x = t_grid[i];
-              y = w[i*(NX+NU)+4];
-              fprintf(tempDataFile, "%lf %lf\n", x, y);
-          }
-          fclose(tempDataFile);
-
-          printf("Press enter to continue...");
-          getchar();
-          remove(x1_temp_file);
-          remove(x2_temp_file);
-          remove(u1_temp_file);
-
-          fprintf(gnuplotPipe, "exit gnuplot\n");
-      } else {
-          printf("gnuplot not found...");
-      }
-}
-#endif  // PLOT_CL_RESULTS
 
 int main() {
     const int d = 0;
@@ -665,7 +432,63 @@ int main() {
     printf("\n\nstatus = %i\n\n", status);
 
     #ifdef PLOT_OL_RESULTS
-        plot_states_controls(((ocp_nlp_gn_sqp_work *)nlp_work)->common->w);
+        real_t *gnu_plot_w = ((ocp_nlp_gn_sqp_work *)nlp_work)->common->w;
+        real_t *gnuplot_data[8];
+
+        real_t q_1[NN];
+        real_t q_2[NN];
+        real_t q_3[NN];
+        real_t q_4[NN];
+
+        real_t w_1[NN];
+        real_t w_2[NN];
+        real_t w_3[NN];
+        real_t w_4[NN];
+
+        for (int_t i = 0; i < NN; i++){
+            q_1[i] = gnu_plot_w[i*(NX+NU) + 0];
+            q_2[i] = gnu_plot_w[i*(NX+NU) + 1];
+            q_3[i] = gnu_plot_w[i*(NX+NU) + 2];
+            q_4[i] = gnu_plot_w[i*(NX+NU) + 3];
+
+            w_1[i] = gnu_plot_w[i*(NX+NU) + 7];
+            w_2[i] = gnu_plot_w[i*(NX+NU) + 8];
+            w_3[i] = gnu_plot_w[i*(NX+NU) + 9];
+            w_4[i] = gnu_plot_w[i*(NX+NU) + 10];
+        }
+
+        gnuplot_data[0] = q_1;
+        gnuplot_data[1] = q_2;
+        gnuplot_data[2] = q_3;
+        gnuplot_data[3] = q_4;
+
+        gnuplot_data[4] = w_1;
+        gnuplot_data[5] = w_1;
+        gnuplot_data[6] = w_3;
+        gnuplot_data[7] = w_4;
+
+        char plot_1[10] = "x_1";
+        char plot_2[10] = "x_2";
+        char plot_3[10] = "x_3";
+        char plot_4[10] = "x_4";
+
+        char plot_5[10] = "x_5";
+        char plot_6[10] = "x_6";
+        char plot_7[10] = "x_7";
+        char plot_8[10] = "x_8";
+
+        char *labels[8];
+        labels[0] = plot_1;
+        labels[1] = plot_2;
+        labels[2] = plot_3;
+        labels[3] = plot_4;
+
+        labels[4] = plot_5;
+        labels[5] = plot_6;
+        labels[6] = plot_7;
+        labels[7] = plot_8;
+
+        acados_gnuplot(gnuplot_data, 8, TT, NN, labels, 4, 2);
     #endif  // PLOT_OL_RESULTS
 
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);

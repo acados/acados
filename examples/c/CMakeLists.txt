@@ -107,7 +107,9 @@ endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_executable(quadcopter_ocp_nlp
-      quadcopter_ocp_nlp.c ${QUADCOPTER_MODEL_SRC})
+      quadcopter_ocp_nlp.c
+      ${QUADCOPTER_MODEL_SRC}
+      acados_gnuplot/acados_gnuplot.c)
     target_link_libraries(quadcopter_ocp_nlp acados)
     add_test(quadcopter_ocp_nlp quadcopter_ocp_nlp)
 endif()
