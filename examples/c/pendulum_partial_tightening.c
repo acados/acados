@@ -710,7 +710,7 @@ int main() {
 
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
         for (int_t j = 0; j < NX; j++) w[j] = x0[j];
-        qp_min_timings = 1000000;
+        qp_min_timings =  1000000;
         lin_min_timings = 1000000;
 
         real_t max_ss_u;

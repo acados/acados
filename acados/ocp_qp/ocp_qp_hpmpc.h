@@ -28,7 +28,8 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef enum hpmpc_options_t_ {
-    HPMPC_DEFAULT_ARGUMENTS  // TODO(Andrea): need to implement other options
+    HPMPC_DEFAULT_ARGUMENTS,
+    HPMPC_PARTIAL_TIGHTENING  
 } hpmpc_options_t;
 
 typedef struct ocp_qp_hpmpc_args_ {

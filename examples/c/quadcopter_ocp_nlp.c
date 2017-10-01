@@ -28,6 +28,7 @@
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
@@ -43,19 +44,23 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
 #define NN 50
 #define TT 2.0
-#define Ns 10
+#define Ns 1
 #define NX 11
 #define NU 4
-#define NSIM 500
+#define NSIM 1000
 #define UMAX 10000.0
 #define NR 18
 #define NR_END 14
 #define MAX_SQP_ITERS 1
 #define INITIAL_ANGLE_RAD 3.0
 // #define LAMBDA 1.0
+#define MU_TIGHT 1.0
+#define MM 50
+#define LAM_INIT 1.0
+#define T_INIT 1.0
 
 // #define PLOT_OL_RESULTS
-// #define PLOT_CL_RESULTS
+#define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
 
 extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -415,12 +420,49 @@ int main() {
     nlp_args.common->maxIter = max_sqp_iters;
 
     snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-             "condensing_qpoases");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
+             "hpmpc");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
 
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
     nlp_mem.common = &nlp_mem_common;
     ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
+    ocp_qp_hpmpc_args *qp_args = (ocp_qp_hpmpc_args *)nlp_mem.qp_solver->args;
+
+    // TODO(ANDREA) UGLY: how to move this into ocp_nlp_gn_sqp_create_memory?
+    double *lam_in[NN+1];
+    double *t_in[NN+1];
+    double *pt[NN+1];
+
+    for (int_t ii = 0; ii < NN; ii++) {
+        d_zeros(&lam_in[ii], 2*nb[ii]+2*ng[ii], 1);
+        d_zeros(&t_in[ii], 2*nb[ii]+2*ng[ii], 1);
+        d_zeros(&pt[ii], 2*nb[ii]+2*ng[ii], 1);
+    }
+
+    d_zeros(&pt[NN], 2*nb[NN]+2*ng[NN], 1);
+    d_zeros(&lam_in[NN], 2*nb[NN]+2*ng[NN], 1);
+    d_zeros(&t_in[NN], 2*nb[NN]+2*ng[NN], 1);
+
+    qp_args->lam0 = lam_in;
+    qp_args->t0 = t_in;
+    qp_args->sigma_mu = MU_TIGHT;
+    qp_args->M = MM;
+
+    ocp_qp_solver *qp_solver = (ocp_qp_solver *)nlp_mem.qp_solver;
+    qp_solver->qp_out->t = pt;
+
+    // initialize nlp dual variables
+    for (int_t i = MM; i < NN; i++) {
+        for (int_t j  = 0; j < 2*nb[i]; j++) {
+            lam_in[i][j] = LAM_INIT;
+            t_in[i][j] = T_INIT;
+        }
+    }
+
+    for (int_t j  = 0; j < 2*NX; j++) {
+        lam_in[NN][j] = LAM_INIT;
+        t_in[NN][j] = T_INIT;
+    }
 
     int_t work_space_size =
         ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, &nlp_args, &nlp_mem);

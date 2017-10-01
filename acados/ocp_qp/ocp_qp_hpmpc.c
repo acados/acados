@@ -652,11 +652,19 @@ ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_o
     if (opts == HPMPC_DEFAULT_ARGUMENTS) {
         args->tol = 1e-8;
         args->max_iter = 20;
-        args->mu0 = 0.1;
+        args->mu0 = 1e3;
         args->warm_start = 0;
         args->N2 = qp_in->N;
         args->M = qp_in->N;
         args->N = qp_in->N;
+    } else if (opts == HPMPC_PARTIAL_TIGHTENING) {
+        args->tol = 1e-8;
+        args->max_iter = 20;
+        args->mu0 = 1e3;
+        args->warm_start = 0;
+        args->N2 = qp_in->N;
+        args->N = qp_in->N;
+        args->M = 2;
     } else {
         printf("Invalid hpmpc options.");
         return NULL;
