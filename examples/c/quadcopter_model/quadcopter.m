@@ -18,8 +18,8 @@ if LIN_RES
     Q = diag([1e1*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
     R = 1.0e-2*eye(4);
 else
-    Q_eul = diag([1e1;1e1;1e1]);
-    Q = diag([1e-4*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
+    Q_eul = 1e1*eye(3);
+    Q = diag([1e-2*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
     R = 1.0e-2*eye(4);
 end
 
