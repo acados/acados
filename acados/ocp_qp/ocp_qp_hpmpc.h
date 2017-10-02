@@ -29,7 +29,7 @@ extern "C" {
 
 typedef enum hpmpc_options_t_ {
     HPMPC_DEFAULT_ARGUMENTS,
-    HPMPC_PARTIAL_TIGHTENING  
+    HPMPC_PARTIAL_TIGHTENING
 } hpmpc_options_t;
 
 typedef struct ocp_qp_hpmpc_args_ {
