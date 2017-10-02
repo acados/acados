@@ -47,15 +47,15 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define Ns 1
 #define NX 11
 #define NU 4
-#define NSIM 1000
+#define NSIM 500
 #define UMAX 10000.0
 #define NR 18
 #define NR_END 14
 #define MAX_SQP_ITERS 1
 #define INITIAL_ANGLE_RAD 3.0
 // #define LAMBDA 1.0
-#define MU_TIGHT 1.0
-#define MM 50
+#define MU_TIGHT 10
+#define MM 2
 #define LAM_INIT 1.0
 #define T_INIT 1.0
 
@@ -428,7 +428,7 @@ int main() {
     ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
     ocp_qp_hpmpc_args *qp_args = (ocp_qp_hpmpc_args *)nlp_mem.qp_solver->args;
 
-    // TODO(ANDREA) UGLY: how to move this into ocp_nlp_gn_sqp_create_memory?
+    // TODO(ANDREA) UGLY HACK: how to move this into ocp_nlp_gn_sqp_create_memory?
     double *lam_in[NN+1];
     double *t_in[NN+1];
     double *pt[NN+1];
@@ -486,6 +486,21 @@ int main() {
 #endif
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
         status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
+
+        // TODO(Andrea): UGLY HACK udpate of t and lam should take place inside
+        // ocp_nlp_gn_sqp
+        for (int_t i = MM; i < NN; i++) {
+            for (int_t j  = 0; j < 2*nb[i]; j++) {
+                lam_in[i][j] = qp_solver->qp_out->lam[i][j];
+                t_in[i][j] = qp_solver->qp_out->t[i][j];
+            }
+        }
+
+        for (int_t j  = 0; j < 2*NX; j++) {
+            lam_in[NN][j] = qp_solver->qp_out->lam[NN][j];
+            t_in[NN][j] = qp_solver->qp_out->t[NN][j];
+        }
+
         // forward simulation
         for (int_t j = 0; j < nx[0]; j++) integrators[0].in->x[j] = x0[j];
         for (int_t j = 0; j < nu[0]; j++) integrators[0].in->u[j] = nlp_out.u[0][j];

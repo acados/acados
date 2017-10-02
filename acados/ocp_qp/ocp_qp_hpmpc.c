@@ -642,33 +642,21 @@ char *ocp_qp_hpmpc_assign_arguments(const ocp_qp_in *in, void **args_, void *raw
 }
 
 
-ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts) {
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in) {
     ocp_qp_hpmpc_args *args;
     int_t arguments_size = ocp_qp_hpmpc_calculate_arguments_size(qp_in);
     void *raw_memory = malloc(arguments_size);
     char *ptr_end = ocp_qp_hpmpc_assign_arguments(qp_in, (void **) &args, raw_memory);
     assert((char *) raw_memory + arguments_size >= ptr_end); (void) ptr_end;
 
-    if (opts == HPMPC_DEFAULT_ARGUMENTS) {
-        args->tol = 1e-8;
-        args->max_iter = 20;
-        args->mu0 = 1e3;
-        args->warm_start = 0;
-        args->N2 = qp_in->N;
-        args->M = qp_in->N;
-        args->N = qp_in->N;
-    } else if (opts == HPMPC_PARTIAL_TIGHTENING) {
-        args->tol = 1e-8;
-        args->max_iter = 20;
-        args->mu0 = 1e3;
-        args->warm_start = 0;
-        args->N2 = qp_in->N;
-        args->N = qp_in->N;
-        args->M = 2;
-    } else {
-        printf("Invalid hpmpc options.");
-        return NULL;
-    }
+    args->tol = 1e-8;
+    args->max_iter = 20;
+    args->mu0 = 1e3;
+    args->warm_start = 0;
+    args->N2 = qp_in->N;
+    args->M = qp_in->N;
+    args->N = qp_in->N;
+
     return args;
 }
 

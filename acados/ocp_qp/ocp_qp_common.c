@@ -393,7 +393,7 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
         qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
     } else if (!strcmp(solver_name, "hpmpc")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = (void *)ocp_qp_hpmpc_create_arguments(qp_in, HPMPC_DEFAULT_ARGUMENTS);
+            qp_solver->args = (void *)ocp_qp_hpmpc_create_arguments(qp_in);
         qp_solver->fun = &ocp_qp_hpmpc;
         qp_solver->initialize = &ocp_qp_hpmpc_initialize;
         qp_solver->destroy = &ocp_qp_hpmpc_destroy;

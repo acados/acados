@@ -29,7 +29,6 @@ extern "C" {
 
 typedef enum hpmpc_options_t_ {
     HPMPC_DEFAULT_ARGUMENTS,
-    HPMPC_PARTIAL_TIGHTENING
 } hpmpc_options_t;
 
 typedef struct ocp_qp_hpmpc_args_ {
@@ -57,7 +56,7 @@ typedef void ocp_qp_hpmpc_memory;  // HPMPC does not have a memory struct
 
 typedef void ocp_qp_hpmpc_workspace;  // // HPMPC does not have a workspace struct
 
-ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts);
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in);
 
 int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_);
 
