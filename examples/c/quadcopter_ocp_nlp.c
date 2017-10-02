@@ -60,7 +60,7 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define T_INIT 1.0
 
 // #define PLOT_OL_RESULTS
-#define PLOT_CL_RESULTS
+// #define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
 
 extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
