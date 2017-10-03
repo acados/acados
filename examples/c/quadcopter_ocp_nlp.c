@@ -45,19 +45,23 @@
 #define Ns 1
 #define NX 11
 #define NU 4
-#define NSIM 1
-#define UMAX 10.0
+#define NSIM 2000
+#define UMAX 3.0
 #define NR 18
 #define NR_END 14
 
 #define MAX_SQP_ITERS 1
-#define N_SQP_HACK 100
-#define ALPHA 0.1
+// #define N_SQP_HACK 100
+#define N_SQP_HACK 1
 
-#define INITIAL_ANGLE_RAD 3.14
+// #define ALPHA 0.1
+#define ALPHA 0.9
+
+
+#define INITIAL_ANGLE_RAD 0.0
 #define ANGLE_STEP 3.14/4.0
-#define STEP_PERIOD 3.0
-#define SIM_SCENARIO 0  // 0: stabilization, 1: tracking
+#define STEP_PERIOD 10.0
+#define SIM_SCENARIO 1  // 0: stabilization, 1: tracking
 
 #define MU_TIGHT 10
 #define MM 2
@@ -67,7 +71,7 @@
 #define OMEGA_REF 40.0
 
 // #define PLOT_OL_RESULTS
-// #define PLOT_CL_RESULTS
+#define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
 #define PLOT_CONTROLS 0  // plot rates:0 plot controls:1
 
@@ -495,34 +499,25 @@ int main() {
 #endif
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
         if (SIM_SCENARIO == 1) {
-            int_t step_samples = (int_t)(TT/STEP_PERIOD)*NN;
-            int_t ref_phase = (int_t)(sim_iter/step_samples)%3;
-            printf("ref_phase = %i\n", ref_phase);
+            int_t step_samples = (int_t)(STEP_PERIOD*NN/TT);
+            int_t ref_phase = (int_t)((sim_iter/step_samples)%2);
             switch (ref_phase) {
                 case 0:
-                    printf("phase I\n");
                     y_ref[0] = -ANGLE_STEP;
                     y_ref_end[0] = -ANGLE_STEP;
                     for (int_t i = 0; i < NN; i++) {
                         for (int_t j = 0; j < NR; j++) ls_cost.y_ref[i][j] = y_ref[j];
                     }
                     for (int_t j = 0; j < NR_END; j++) ls_cost.y_ref[NN][j] = y_ref_end[j];
+                    break;
                 case 1:
-                    printf("phase II\n");
-                    y_ref[0] = 0.0;
-                    y_ref_end[0] = 0.0;
-                    for (int_t i = 0; i < NN; i++) {
-                        for (int_t j = 0; j < NR; j++) ls_cost.y_ref[i][j] = y_ref[j];
-                    }
-                    for (int_t j = 0; j < NR_END; j++) ls_cost.y_ref[NN][j] = y_ref_end[j];
-                case 2:
-                    printf("phase III\n");
                     y_ref[0] = ANGLE_STEP;
                     y_ref_end[0] = ANGLE_STEP;
                     for (int_t i = 0; i < NN; i++) {
                         for (int_t j = 0; j < NR; j++) ls_cost.y_ref[i][j] = y_ref[j];
                     }
                     for (int_t j = 0; j < NR_END; j++) ls_cost.y_ref[NN][j] = y_ref_end[j];
+                    break;
             }
         }
         for (int_t sqp_iter_hack = 0; sqp_iter_hack < N_SQP_HACK; sqp_iter_hack++) {
@@ -575,7 +570,7 @@ int main() {
         }
 #endif
 
-        printf("\n\nstatus = %i\n\n", status);
+        printf("status = %i\n", status);
     }
 
 #if defined(PLOT_OL_RESULTS) || defined(PLOT_CL_RESULTS)
