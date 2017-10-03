@@ -66,7 +66,7 @@
 
 #define OMEGA_REF 40.0
 
-#define PLOT_OL_RESULTS
+// #define PLOT_OL_RESULTS
 // #define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
 #define PLOT_CONTROLS 0  // plot rates:0 plot controls:1
@@ -494,10 +494,10 @@ int main() {
     real_t T_SIM = TT/NN*NSIM;
 #endif
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
-        if (SIM_SCENARIO == 1){
+        if (SIM_SCENARIO == 1) {
             int_t step_samples = (int_t)(TT/STEP_PERIOD)*NN;
             int_t ref_phase = (int_t)(sim_iter/step_samples)%3;
-            printf("ref_phase = %i\n",ref_phase);
+            printf("ref_phase = %i\n", ref_phase);
             switch (ref_phase) {
                 case 0:
                     printf("phase I\n");
@@ -684,14 +684,14 @@ int main() {
 #if 0
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++)
-            printf("%.3f  ",nlp_out.x[i][j]);
+            printf("%.3f  ", nlp_out.x[i][j]);
         for (int_t j = 0; j < NU; j++)
-            printf("%.3f  ",nlp_out.u[i][j]);
+            printf("%.3f  ", nlp_out.u[i][j]);
         printf("\n");
 
     }
     for (int_t j = 0; j < NX; j++)
-        printf("%.3f  ",nlp_out.x[NN][j]);
+        printf("%.3f  ", nlp_out.x[NN][j]);
     printf("\n");
 #endif
 
