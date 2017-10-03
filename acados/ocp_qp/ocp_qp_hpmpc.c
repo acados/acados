@@ -568,7 +568,7 @@ int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_) {
 
 ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(const ocp_qp_in *qp_in, void *args_) {
     int_t memory_size = ocp_qp_hpmpc_calculate_memory_size(qp_in, args_);
-    return (ocp_qp_hpmpc_memory *) malloc(memory_size);
+    return (ocp_qp_hpmpc_memory *) calloc(1, memory_size);
 }
 
 void ocp_qp_hpmpc_free_memory(void *mem_) {
@@ -666,7 +666,7 @@ void ocp_qp_hpmpc_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, vo
     *mem = ocp_qp_hpmpc_create_memory(qp_in, args);
 
     int_t workspace_size = ocp_qp_hpmpc_calculate_workspace_size(qp_in, args);
-    *work = malloc(workspace_size);
+    *work = calloc(1, workspace_size);
 }
 
 void ocp_qp_hpmpc_destroy(void *mem, void *work) {

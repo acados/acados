@@ -95,6 +95,7 @@ typedef struct {
     real_t **u;
     real_t **pi;
     real_t **lam;
+    real_t step_size;  // primal step-size
 } ocp_nlp_memory;
 
 typedef struct {
