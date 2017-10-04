@@ -41,12 +41,12 @@
 #include "examples/c/quadcopter_model/ls_res_eval.h"
 
 #define NN 50
-#define TT 2.0
-#define Ns 1
+#define TT 1.0
+#define Ns 100
 #define NX 11
 #define NU 4
 #define NSIM 2000
-#define UMAX 3.0
+#define UMAX 5.0
 #define NR 18
 #define NR_END 14
 
@@ -55,17 +55,17 @@
 #define N_SQP_HACK 1
 
 // #define ALPHA 0.1
-#define ALPHA 0.9
+#define ALPHA 0.7
 
 
 #define INITIAL_ANGLE_RAD 0.0
-#define ANGLE_STEP 3.14/4.0
-#define STEP_PERIOD 10.0
+#define ANGLE_STEP 45.0/180*3.14
+#define STEP_PERIOD 5.0
 #define SIM_SCENARIO 1  // 0: stabilization, 1: tracking
 
 #define MU_TIGHT 10
-#define MM 2
-#define LAM_INIT 1.0
+#define MM 5
+#define LAM_INIT 10.0
 #define T_INIT 0.1
 
 #define OMEGA_REF 40.0
@@ -79,6 +79,17 @@ extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int 
 extern int ls_res_end_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 //
 extern int vdeFun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+
+// static void quat2eul(real_t *quat_in, real_t *eul_out){
+//     real_t q0 = quat_in[0];
+//     real_t q1 = quat_in[0];
+//     real_t q2 = quat_in[0];
+//     real_t q3 = quat_in[0];
+//
+//     eul_out[0] = atan2(2*(q0*q1 + q2*q3),(1 - 2*(q1*q1 + q2*q2)));
+//     eul_out[1] = asin(2*(q0*q2 - q3*q1));
+//     eul_out[2] = atan2(2*(q0*q3 + q1*q2),(1 - 2*(q2*q2 + q3*q3)));
+// }
 
 int main() {
     const int d = 0;
@@ -445,21 +456,25 @@ int main() {
     double *lam_in[NN+1];
     double *t_in[NN+1];
     double *pt[NN+1];
+    double *ux_in[NN+1];
 
     for (int_t ii = 0; ii < NN; ii++) {
         d_zeros(&lam_in[ii], 2*nb[ii]+2*ng[ii], 1);
         d_zeros(&t_in[ii], 2*nb[ii]+2*ng[ii], 1);
         d_zeros(&pt[ii], 2*nb[ii]+2*ng[ii], 1);
+        d_zeros(&ux_in[ii], nx[ii]+nu[ii], 1);
     }
 
     d_zeros(&pt[NN], 2*nb[NN]+2*ng[NN], 1);
     d_zeros(&lam_in[NN], 2*nb[NN]+2*ng[NN], 1);
     d_zeros(&t_in[NN], 2*nb[NN]+2*ng[NN], 1);
+    d_zeros(&ux_in[NN], nx[NN]+nu[NN], 1);
 
     qp_args->lam0 = lam_in;
     qp_args->t0 = t_in;
     qp_args->sigma_mu = MU_TIGHT;
     qp_args->M = MM;
+    qp_args->ux0 = ux_in;
 
     ocp_qp_solver *qp_solver = (ocp_qp_solver *)nlp_mem.qp_solver;
     qp_solver->qp_out->t = pt;
