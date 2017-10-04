@@ -405,7 +405,7 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
         qp_solver->destroy = &ocp_qp_condensing_hpipm_destroy;
     } else if (!strcmp(solver_name, "hpipm")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_hpipm_create_arguments();
+            qp_solver->args = ocp_qp_hpipm_create_arguments(qp_in);
         qp_solver->fun = &ocp_qp_hpipm;
         qp_solver->initialize = &ocp_qp_hpipm_initialize;
         qp_solver->destroy = &ocp_qp_hpipm_destroy;

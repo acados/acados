@@ -37,12 +37,40 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments() {
-    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) malloc(sizeof(ocp_qp_hpipm_args));
+int ocp_qp_hpipm_calculate_args_size(const ocp_qp_in *qp_in) {
+    int N = qp_in->N;
+    int size = 0;
+    size += sizeof(ocp_qp_hpipm_args);
+    size += (N+1)*sizeof(int);
+    return size;
+}
+
+char *ocp_qp_hpipm_assign_args(const ocp_qp_in *qp_in, ocp_qp_hpipm_args **args, void *mem) {
+    int N = qp_in->N;
+
+    char *c_ptr = (char *) mem;
+
+    *args = (ocp_qp_hpipm_args *) c_ptr;
+    c_ptr += sizeof(ocp_qp_hpipm_args);
+
+    (*args)->scrapspace = c_ptr;
+    c_ptr += (N+1)*sizeof(int);
+
+    return c_ptr;
+    }
+
+static void ocp_qp_hpipm_initialize_default_args(ocp_qp_hpipm_args *args) {
     args->mu_max = 1e-8;
     args->iter_max = 20;
     args->alpha_min = 1e-8;
     args->mu0 = 1;
+    }
+
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(const ocp_qp_in *qp_in) {
+    void *mem = malloc(ocp_qp_hpipm_calculate_args_size(qp_in));
+    ocp_qp_hpipm_args *args;
+    ocp_qp_hpipm_assign_args(qp_in, &args, mem);
+    ocp_qp_hpipm_initialize_default_args(args);
 
     return args;
 }

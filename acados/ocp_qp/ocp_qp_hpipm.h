@@ -32,6 +32,7 @@ typedef struct ocp_qp_hpipm_args_ {
     double alpha_min;
     double mu_max;
     double mu0;
+    void *scrapspace;
     int iter_max;
 } ocp_qp_hpipm_args;
 
@@ -50,7 +51,7 @@ typedef struct ocp_qp_hpipm_memory_ {
     int iter;
 } ocp_qp_hpipm_memory;
 
-ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments();
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(const ocp_qp_in *qp_in);
 
 int_t ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
 
