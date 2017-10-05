@@ -55,7 +55,9 @@ int ocp_qp_condensing_hpipm_calculate_args_size(const ocp_qp_in *qp_in) {
 
 
 
-char *ocp_qp_condensing_hpipm_assign_args(const ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args **args, void *mem) {
+char *ocp_qp_condensing_hpipm_assign_args(const ocp_qp_in *qp_in,
+    ocp_qp_condensing_hpipm_args **args, void *mem) {
+
     int N = qp_in->N;
 
     char *c_ptr = (char *) mem;
@@ -71,7 +73,9 @@ char *ocp_qp_condensing_hpipm_assign_args(const ocp_qp_in *qp_in, ocp_qp_condens
 
 
 
-static void ocp_qp_condensing_hpipm_initialize_default_args(const ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args) {
+static void ocp_qp_condensing_hpipm_initialize_default_args(const ocp_qp_in *qp_in,
+    ocp_qp_condensing_hpipm_args *args) {
+
     args->res_g_max = 1e-6;
     args->res_b_max = 1e-8;
     args->res_d_max = 1e-8;
@@ -139,8 +143,8 @@ int_t ocp_qp_condensing_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, void
     // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
-    // [x; u] order
-    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);  // XXX update with ns !!!!!
+    // [x; u] order  // XXX update with ns !!!!!
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
 
@@ -214,8 +218,8 @@ char *ocp_qp_condensing_hpipm_assign_memory(const ocp_qp_in *qp_in, void *args_,
     // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
-    // [x; u] order
-    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);  // XXX update with ns !!!!!
+    // [x; u] order  // XXX update with ns !!!!!
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
 

@@ -77,7 +77,9 @@ int ocp_qp_condensing_qpoases_calculate_args_size(const ocp_qp_in *qp_in) {
 
 
 
-char *ocp_qp_condensing_qpoases_assign_args(const ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args **args, void *mem) {
+char *ocp_qp_condensing_qpoases_assign_args(const ocp_qp_in *qp_in,
+    ocp_qp_condensing_qpoases_args **args, void *mem) {
+
     int N = qp_in->N;
 
     char *c_ptr = (char *) mem;
@@ -93,7 +95,9 @@ char *ocp_qp_condensing_qpoases_assign_args(const ocp_qp_in *qp_in, ocp_qp_conde
 
 
 
-static void ocp_qp_condensing_qpoases_initialize_default_args(const ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args) {
+static void ocp_qp_condensing_qpoases_initialize_default_args(const ocp_qp_in *qp_in,
+    ocp_qp_condensing_qpoases_args *args) {
+
     args->cputime = 1000.0;  // maximum cpu time in seconds
     args->warm_start = 0;
     args->nwsr = 1000;
@@ -157,8 +161,8 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
-    // [x; u] order
-    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);  // XXX update with ns !!!!!
+    // [x; u] order  // XXX update with ns !!!!!
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
     // dummy dense qp
@@ -243,8 +247,8 @@ char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args
     // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
-    // [x; u] order
-    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);  // XXX update with ns !!!!!
+    // [x; u] order  // XXX update with ns !!!!!
+    d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
 

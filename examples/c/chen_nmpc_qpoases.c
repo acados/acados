@@ -220,7 +220,8 @@ int main() {
     qp_out.pi = ppi;
     qp_out.lam = plam;
 
-    ocp_qp_condensing_qpoases_args *qpoases_args = ocp_qp_condensing_qpoases_create_arguments(&qp_in);
+    ocp_qp_condensing_qpoases_args *qpoases_args =
+        ocp_qp_condensing_qpoases_create_arguments(&qp_in);
     qpoases_args->cputime = 1000.0;  // maximum cpu time in seconds
     qpoases_args->nwsr = 1000;  // maximum number of working set recalculations
     qpoases_args->warm_start = 0;  // wam start with dual_sol in memory

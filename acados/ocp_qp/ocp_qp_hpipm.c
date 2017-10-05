@@ -123,7 +123,7 @@ int ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args
     ipm_arg.stat_max = args->iter_max;
 
     int size = 0;
-	
+
     size += sizeof(ocp_qp_hpipm_memory);
 
     size += 1 * sizeof(struct d_ocp_qp);                     // qp

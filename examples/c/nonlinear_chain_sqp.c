@@ -437,7 +437,8 @@ int main() {
             int_t qpsolver_memory_size =
                 ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpsolver_args);
             #else
-            ocp_qp_condensing_hpipm_args *qpsolver_args = ocp_qp_condensing_hpipm_create_arguments(qp_in);
+            ocp_qp_condensing_hpipm_args *qpsolver_args =
+                ocp_qp_condensing_hpipm_create_arguments(qp_in);
             ocp_qp_condensing_hpipm_memory qpsolver_memory;
 
             qpsolver_args->mu_max = 1e-8;
@@ -548,7 +549,7 @@ int main() {
                 int status = 0;
 
                 #ifdef USE_QPOASES
-                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out,qpsolver_args,
+                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, qpsolver_args,
                     qpsolver_memory, qpsolver_work);
                 #else
                 status = ocp_qp_condensing_hpipm(&qp_in, &qp_out, qpsolver_args,
