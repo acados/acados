@@ -539,30 +539,30 @@ int main() {
      ************************************************/
 
     // solver arguments
-    ocp_qp_condensing_hpipm_args hpipm_args;
-    hpipm_args.mu_max = TOL;
-    hpipm_args.iter_max = MAXITER;
-    hpipm_args.alpha_min = MINSTEP;
-    hpipm_args.mu0 = 1.0;  // 0.0
+    ocp_qp_condensing_hpipm_args *hpipm_args = ocp_qp_condensing_hpipm_create_arguments(&qp_in);
+//    hpipm_args->mu_max = TOL;
+//    hpipm_args->iter_max = MAXITER;
+//    hpipm_args->alpha_min = MINSTEP;
+    hpipm_args->mu0 = 1.0;  // 0.0
 
     /************************************************
      * work space (fully sparse)
      ************************************************/
 
     int work_space_size =
-        ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &hpipm_args);
+        ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, hpipm_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
     void *workspace = malloc(work_space_size);
 
     //    void *mem;
-    //    ocp_qp_hpipm_create_memory(&qp_in, &hpipm_args, &mem);
+    //    ocp_qp_hpipm_create_memory(&qp_in, hpipm_args, &mem);
     int memory_size =
-        ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &hpipm_args);
+        ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, hpipm_args);
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
     ocp_qp_condensing_hpipm_memory *hpipm_memory =
-        ocp_qp_condensing_hpipm_create_memory(&qp_in, &hpipm_args);
+        ocp_qp_condensing_hpipm_create_memory(&qp_in, hpipm_args);
 
     /************************************************
      * call the solver (fully sparse)
@@ -576,10 +576,10 @@ int main() {
     //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args,
+        //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, hpipm_args,
         //        workspace);
         return_value =
-            ocp_qp_condensing_hpipm(&qp_in, &qp_out, &hpipm_args, hpipm_memory, workspace);
+            ocp_qp_condensing_hpipm(&qp_in, &qp_out, hpipm_args, hpipm_memory, workspace);
     }
 
     real_t time = acados_toc(&timer)/nrep;

@@ -533,9 +533,9 @@ int main() {
 
     // solver arguments
     ocp_qp_hpipm_args *hpipm_args = ocp_qp_hpipm_create_arguments(&qp_in);
-    hpipm_args->mu_max = TOL;
-    hpipm_args->iter_max = MAXITER;
-    hpipm_args->alpha_min = MINSTEP;
+//    hpipm_args->mu_max = TOL;
+//    hpipm_args->iter_max = MAXITER;
+//    hpipm_args->alpha_min = MINSTEP;
     hpipm_args->mu0 = 1.0;  // 0.0
 
     /************************************************
@@ -601,7 +601,9 @@ int main() {
            hpipm_memory->inf_norm_res[1], hpipm_memory->inf_norm_res[2],
            hpipm_memory->inf_norm_res[3], hpipm_memory->inf_norm_res[4]);
     printf("\n");
-    printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
+    printf(
+        " Solution time for %d IPM iterations, averaged over %d runs: %5.2e "
+        "seconds\n", hpipm_memory->iter, nrep, time);
     printf("\n\n");
 
     /************************************************
