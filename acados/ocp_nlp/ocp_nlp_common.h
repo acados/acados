@@ -20,24 +20,20 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 typedef struct {
-    real_t f;
-    real_t *grad_f;
-    real_t *hess_lag;
-    real_t *g;
-    real_t *jac_g;
-} ocp_nlp_stage_sensitivities;
-
-typedef struct {
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-    ocp_nlp_stage_sensitivities *sens;
+    const real_t **hess_l; // TODO(nielsvd): Hessians of stage-wise Lagrangians, document precise definition.
+    const real_t **grad_f; // Gradients of stage-wise cost terms.
+    const real_t **jac_h;  // TODO(niels): rename. Jacobians of stage-wise integration operator.
+    const real_t **jac_g; // Jacobians of stage-wise path constraints.
+    const real_t **h;     // TODO(nielsvd): rename. Evaluation of stage-wise integration operator.
+    const real_t **g; // Evaluation of stage-wise path constraints.
+    const real_t **x;
+    const real_t **u;
+    const real_t **pi;
+    const real_t **lam;
+    // TODO(nielsvd): what about lifted variables?
 } ocp_nlp_memory;
 
 typedef struct {
@@ -51,18 +47,7 @@ typedef struct {
     const real_t **ub;
     const real_t **lg;
     const real_t **ug;
-
-    ocp_nlp_sensitivities_provider *sensitivities_provider;
-    ocp_qp_solver *qp_solver; // TODO(nielsvd): rename to something more general
 } ocp_nlp_in;
-
-typedef struct {
-    int_t maxIter;
-} ocp_nlp_args;
-
-typedef struct {
-    real_t *w;
-} ocp_nlp_work;
 
 typedef struct {
     real_t **x;
@@ -72,8 +57,9 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
-    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem,
-                 void *work);
+    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
+    void (*initialize)(const ocp_nlp_in *nlp_in, void *args, void **mem, void **work);
+    void (*destroy)(void *mem, void *work);
     ocp_nlp_in *nlp_in;
     ocp_nlp_out *nlp_out;
     void *args;
@@ -83,8 +69,5 @@ typedef struct {
 
 void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_);
 void ocp_nlp_free_memory(int_t N, void *mem_);
-
-int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
-void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

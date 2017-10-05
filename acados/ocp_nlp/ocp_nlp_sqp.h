@@ -24,8 +24,25 @@
 extern "C" {
 #endif
 
+#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
+
+typedef struct {
+    // ocp_nlp_args *common;
+    int_t maxIter;
+    char qp_solver_name[MAX_STR_LEN];
+} ocp_nlp_sqp_args;
+
+typedef struct {
+    ocp_nlp_memory *common;
+    ocp_qp_solver *qp_solver;
+    void *sensitivity_method; // TODO(nielsvd): formalize/generalize by introducing ocp_nlp_sm-struct
+} ocp_nlp_sqp_memory;
+
+typedef struct {
+    int_t dummy;
+} ocp_nlp_sqp_work;
 
 int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                      void *nlp_args, void *nlp_mem, void *work);
@@ -34,9 +51,6 @@ void ocp_nlp_sqp_create_memory(const ocp_nlp_in *in, void *args_,
                                   void *memory_);
 
 void ocp_nlp_sqp_free_memory(void *memory_);
-
-int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *in,
-                                              void *args_);
 
 #ifdef __cplusplus
 } /* extern "C" */

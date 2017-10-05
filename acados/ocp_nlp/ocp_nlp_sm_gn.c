@@ -17,28 +17,12 @@
  *
  */
 
-#include "acados/ocp_nlp/allocate_ocp_nlp.h"
+#include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/utils/types.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+int_t ocp_nlp_sm_gn(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_, void *memory_, void *workspace_) {
+    // Write sensitivities to nlp-memory
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-
-void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, int_t *ng, ocp_nlp_in *const nlp) {
-
-}
-
-void free_ocp_nlp_in(ocp_nlp_in *const nlp) {
-
-}
-
-void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {
-
-}
-
-void free_ocp_nlp_out(int_t N, ocp_nlp_out *out) {
-    
+    return 0;
 }

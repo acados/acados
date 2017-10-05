@@ -59,9 +59,9 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
     endif()
 
-    add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-    target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-    add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+    # add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+    # target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+    # add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 
 # add_executable(mass_spring_partial_tightening_example
 #    mass_spring_partial_tightening.c
@@ -72,18 +72,18 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 #     COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./mass_spring_partial_tightening_example
 # )
 
-    add_executable(chen_nmpc_qpoases_example
-        chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
-    target_link_libraries(chen_nmpc_qpoases_example acados)
-    add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
+    # add_executable(chen_nmpc_qpoases_example
+    #     chen_nmpc_qpoases.c ${CHEN_MODEL_SRC})
+    # target_link_libraries(chen_nmpc_qpoases_example acados)
+    # add_test(chen_nmpc_qpoases_example chen_nmpc_qpoases_example)
 #     install(TARGETS chen_nmpc_qpoases_example RUNTIME DESTINATION bin)
 #     set_target_properties(chen_nmpc_qpoases_example PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/")
 
-    add_executable(nonlinear_chain_sqp_example
-        nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
-    target_link_libraries(nonlinear_chain_sqp_example acados)
-    add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
+    # add_executable(nonlinear_chain_sqp_example
+    #     nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
+    # target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
+    # target_link_libraries(nonlinear_chain_sqp_example acados)
+    # add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 endif()
 
 # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
