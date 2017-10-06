@@ -3,7 +3,6 @@
 sudo add-apt-repository -y ppa:octave/stable
 sudo apt-get update -yqq
 sudo apt-get install -yqq $CXX $CC $COVERAGE libgsl0-dev liblapack-dev libopenblas-dev liboctave-dev mingw-w64 bsdtar
-sudo apt-get install qemu-user-static
 
 pip install numpy scipy matplotlib
 
