@@ -1,5 +1,5 @@
 # Pull base image
-FROM doanminhdang/rpi-raspbian-casadi:jessie
+FROM doanminhdang/rpi-debian-casadi:latest
 
 # Set PATH environment to let casadi and acados find swig
 ENV PATH="/home/pi/acados/external/swig:${PATH}"

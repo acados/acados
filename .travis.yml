@@ -82,7 +82,7 @@ script:
 # prepare qemu
 - docker run --rm --privileged multiarch/qemu-user-static:register --reset
 # build image
-- docker build -t rpi-raspbian .
+- docker build -t rpi-debian .
 # test image
 #- docker run rpi-raspbian
 
