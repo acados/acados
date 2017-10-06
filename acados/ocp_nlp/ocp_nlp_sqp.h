@@ -37,7 +37,7 @@ typedef struct {
 typedef struct {
     ocp_nlp_memory *common;
     ocp_qp_solver *qp_solver;
-    void *sensitivity_method; // TODO(nielsvd): formalize/generalize by introducing ocp_nlp_sm-struct
+    ocp_nlp_sm *sensitivity_method;
 } ocp_nlp_sqp_memory;
 
 typedef struct {

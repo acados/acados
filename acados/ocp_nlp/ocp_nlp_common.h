@@ -57,6 +57,13 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
+    void (*fun)(const ocp_nlp_in *nlp_in, ocp_nlp_memory *nlp_mem, void *args, void *mem, void *work);
+    void *args;
+    void *mem;
+    void *work;
+} ocp_nlp_sm;
+
+typedef struct {
     int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
     void (*initialize)(const ocp_nlp_in *nlp_in, void *args, void **mem, void **work);
     void (*destroy)(void *mem, void *work);
