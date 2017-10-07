@@ -205,11 +205,11 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> TESTING condensing + HPIPM with QP: "<< scenario <<
                             ", " << constraint << std::endl;
 
-                            //ocp_qp_condensing_hpipm_args args;
-                            //args.mu_max = 1e-8;
-                            //args.iter_max = 30;
-                            //args.alpha_min = 1e-8;
-                            //args.mu0 = 1;
+                            // ocp_qp_condensing_hpipm_args args;
+                            // args.mu_max = 1e-8;
+                            // args.iter_max = 30;
+                            // args.alpha_min = 1e-8;
+                            // args.mu0 = 1;
 
                             ocp_qp_solver *solver =
                                 create_ocp_qp_solver(qp_in, "condensing_hpipm", NULL);
