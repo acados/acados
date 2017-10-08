@@ -1,20 +1,24 @@
 # Pull base image
 FROM doanminhdang/rpi-debian-casadi:latest
 
-# Set PATH environment to let casadi and acados find swig
+# Set PATH environment to let casadi and acados find precompiled swig (duplicate)
 ENV PATH="/home/pi/acados/external/swig:${PATH}"
 
-ENV PYTHONPATH="${PYTHONPATH}:/usr/local/lib:/usr/local/python:~/local/lib"
+# Set PYTHONPATH environment for casadi and acados lib, note that user is root
+ENV PYTHONPATH="${PYTHONPATH}:/usr/local/lib:/usr/local/python:${HOME}/local/lib"
 
-# Compile acados
-RUN cd /home/pi/acados && \
-    mkdir build && \
+# Add current source to docker
+ADD . /app/acados/
+
+# Compile acados with Python interface
+RUN cd /app/acados && \
+    rm -rf build && mkdir build && \
     cd build && \
     cmake -D SWIG_MATLAB=0 -D SWIG_PYTHON=1 .. && \
     make install
 
-# Make port 22 available to the world outside this container
-EXPOSE 22
+# Test
+RUN python3 -c "import acados"
 
 # Define default command
 CMD ["bash"]
