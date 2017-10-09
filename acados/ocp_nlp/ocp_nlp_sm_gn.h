@@ -39,6 +39,7 @@ typedef struct {
 typedef struct {
     sim_solver *sim;
     ocp_nlp_ls_cost *ls_cost;
+    ocp_nlp_function *path_constraints;
 } ocp_nlp_sm_gn_memory;
 
 typedef struct {
@@ -47,6 +48,8 @@ typedef struct {
     real_t *DF; // should be max_i ny[i]*(nx[i]+nu[i])
     real_t *DFT;  // should be max_i (nx[i]*nu[i])*ny[i]
     real_t *DFTW; // should be max_i (nx[i]+nu[i])*ny[i]
+    real_t *G; // should be max_i ng[i]
+    real_t *DG; // should be max_i ng[i]*(nx[i]+nu[i])
 } ocp_nlp_sm_gn_workspace;
 
 // ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments();

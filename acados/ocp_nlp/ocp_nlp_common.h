@@ -57,6 +57,18 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
+    //    const int_t *sparsity;
+    //    const int_t *idx_in;
+    int_t dim_in;
+    int_t dim_out;
+    void (*fun)(const real_t *, real_t *);
+    void (*jac_fun)(const real_t *, real_t *);
+    // TODO(rien): other directional and second order derivatives
+    // TODO(rien): define the overlapping 'sets' of functions, jacobians,
+    // hessians etc..
+} ocp_nlp_function;
+
+typedef struct {
     void (*fun)(const ocp_nlp_in *nlp_in, ocp_nlp_memory *nlp_mem, void *args, void *mem, void *work);
     void *args;
     void *mem;
