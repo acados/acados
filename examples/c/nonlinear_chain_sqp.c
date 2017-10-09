@@ -222,36 +222,36 @@ int main() {
                         sim_in[jj].jac = &jac_chain_nm4;
                         sim_in[jj].jac_fun = &jac_fun;
                         break;
-                    case 4:
-                        sim_in[jj].vde = &vde_chain_nm5;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm5;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    case 5:
-                        sim_in[jj].vde = &vde_chain_nm6;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm6;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    case 6:
-                        sim_in[jj].vde = &vde_chain_nm7;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm7;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    case 7:
-                        sim_in[jj].vde = &vde_chain_nm8;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm8;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    default:
-                        sim_in[jj].vde = &vde_chain_nm9;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm9;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
+                    // case 4:
+                    //     sim_in[jj].vde = &vde_chain_nm5;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm5;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // case 5:
+                    //     sim_in[jj].vde = &vde_chain_nm6;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm6;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // case 6:
+                    //     sim_in[jj].vde = &vde_chain_nm7;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm7;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // case 7:
+                    //     sim_in[jj].vde = &vde_chain_nm8;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm8;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // default:
+                    //     sim_in[jj].vde = &vde_chain_nm9;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm9;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
                 }
 
                 sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));

@@ -21,8 +21,12 @@ configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_mo
 
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC
-    chain_model/jac_*
-    chain_model/vde_*)
+    chain_model/jac_chain_nm2.c
+    chain_model/jac_chain_nm3.c
+    chain_model/jac_chain_nm4.c
+    chain_model/vde_chain_nm2.c
+    chain_model/vde_chain_nm3.c
+    chain_model/vde_chain_nm4.c)
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
