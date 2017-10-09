@@ -25,11 +25,11 @@
 #include "acados/utils/types.h"
 
 typedef struct {
-    void (*fun)(real_t *w, real_t *f);
-    void (*jac_fun)(real_t *w, real_t *jac_f);
+    void (*fun)(const real_t **, real_t **, int *, real_t *, int);
+    void (*jac_fun)(const real_t **, real_t **, int *, real_t *, int);
     const int_t *ny;
-    real_t **W;
-    real_t **y_ref;
+    real_t *W;
+    real_t *y_ref;
 } ocp_nlp_ls_cost;
 
 typedef struct {
@@ -38,12 +38,16 @@ typedef struct {
 
 typedef struct {
     sim_solver *sim;
-    ocp_nlp_ls_cost *cost;
+    ocp_nlp_ls_cost *ls_cost;
 } ocp_nlp_sm_gn_memory;
 
 typedef struct {
-    int_t dummy;
-} ocp_nlp_sm_gn_work;
+    real_t *w; // should be max_i (nx[i]+nu[i])
+    real_t *F; // should be max_i ny[i]
+    real_t *DF; // should be max_i ny[i]*(nx[i]+nu[i])
+    real_t *DFT;  // should be max_i (nx[i]*nu[i])*ny[i]
+    real_t *DFTW; // should be max_i (nx[i]+nu[i])*ny[i]
+} ocp_nlp_sm_gn_workspace;
 
 // ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments();
 
@@ -59,7 +63,7 @@ typedef struct {
 // int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_in *nlp_in,
 //                                                        void *args_);
 
-int_t ocp_nlp_sm_gn(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
+int_t ocp_nlp_sm_gn(const ocp_nlp_in *nlp_in, ocp_nlp_memory *nlp_mem,
                               void *args_, void *memory_, void *workspace_);
 
 // void ocp_nlp_sm_gn_initialize(const ocp_nlp_in *nlp_in, void *args_,
