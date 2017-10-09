@@ -2,7 +2,7 @@ OS := $(shell uname)
 
 ACADOS=$(abspath ../../)
 ACADOS_EXT=$(ACADOS)/external
-ACADOSLIBDIR=$(ACADOS)/build
+ACADOSLIBDIR=$(ACADOS)/build/acados
 
 OOQP=$(ACADOS_EXT)/OOQP
 OOQPINCLUDEDIR=$(OOQP)/include
@@ -35,7 +35,7 @@ LDFLAGS+=-L$(ACADOSLIBDIR)
 BLAS     = -lblas
 MA27LIB  = $(OOQP)/libma27.a
 ifeq ($(OS), Darwin)
-	FLIBS = /usr/local/lib/gcc/6/libgfortran.dylib
+	FLIBS = /usr/local/lib/gcc/7/libgfortran.dylib
 else
 	FLIBS = -lgfortran
 endif
@@ -43,7 +43,7 @@ endif
 OOQP_SPARSE_LIBS = -looqpgensparse -looqpsparse  -looqpgondzio -looqpbase \
                  $(BLAS) $(MA27LIB) $(FLIBS)
 
-LIBS= -lqpOASES_e -lhpmpc -lblasfeo -lqpdunes
+LIBS= -lqpOASES_e -lhpmpc -lblasfeo -lqpdunes -lacados
 LIBS+=$(OOQP_SPARSE_LIBS)
 LIBS+=-lm
 
@@ -65,12 +65,12 @@ qpdunes: test_qpdunes.c
 ooqp: test_qp.c
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_ooqp.c -o ocp_qp_ooqp.o -I$(OOQPINCLUDEDIR) -I$(ACADOS)  -I$(ACADOS_EXT)
 	gcc -c -g -O0 ../../acados/utils/timing.c -o timing.o -I$(ACADOS)
-	gcc -c -g -O0 ../../acados/utils/allocate_ocp_qp.c -o allocate_ocp_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
+	gcc -c -g -O0 ../../acados/ocp_qp/allocate_ocp_qp.c -o allocate_ocp_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 ../../test/test_utils/read_ocp_qp_in.c -o read_ocp_qp_in.o -I$(ACADOS) -I$(ACADOS_EXT)
 	gcc -c -g -O0 -DSOLVER=1 test_qp.c -o test_qp.o -I$(ACADOS) -I$(ACADOS_EXT)
 	g++ -g -O0 ocp_qp_ooqp.o timing.o allocate_ocp_qp.o read_ocp_qp_in.o test_qp.o $(SORTOBJ) -o test_qp.exe $(LDFLAGS) $(LIBS)
-	valgrind --leak-check=full ./test_qp.exe
-	# ./test_qp.exe
+	# valgrind --leak-check=full ./test_qp.exe
+	./test_qp.exe
 
 qpoases: test_qp.c
 	gcc -c -g -O0 ../../acados/ocp_qp/ocp_qp_condensing_qpoases.c -o ocp_qp_condensing_qpoases.o -I$(ACADOS_EXT) -I$(ACADOS) -I$(QPOASESINCLUDEDIR)

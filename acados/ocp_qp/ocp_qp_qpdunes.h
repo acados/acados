@@ -47,17 +47,6 @@ typedef struct ocp_qp_qpdunes_args_ {
     bool isLinearMPC;
 } ocp_qp_qpdunes_args;
 
-typedef struct ocp_qp_qpdunes_workspace_ {
-    real_t *H;
-    real_t *g;
-    real_t *ABt;
-    real_t *Ct;
-    real_t *scrap;
-    real_t *zLow;
-    real_t *zUpp;
-    int tmp;
-} ocp_qp_qpdunes_workspace;
-
 typedef struct ocp_qp_qpdunes_memory_ {
     int_t firstRun;
     int_t dimA;
@@ -71,19 +60,30 @@ typedef struct ocp_qp_qpdunes_memory_ {
     qpdunes_stage_qp_solver_t stageQpSolver;
 } ocp_qp_qpdunes_memory;
 
-int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_);
-int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_);
-int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *input, void *args_,
-                                   void *memory_);
+typedef struct ocp_qp_qpdunes_workspace_ {
+    real_t *H;
+    real_t *g;
+    real_t *ABt;
+    real_t *Ct;
+    real_t *scrap;
+    real_t *zLow;
+    real_t *zUpp;
+    int tmp;  // TODO(dimitris): is this to make sizeof(struct) == 64??
+} ocp_qp_qpdunes_workspace;
+
+ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts);
+
+ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_);
 
 void ocp_qp_qpdunes_free_memory(void *mem_);
-// void ocp_qp_qpdunes_free_workspace(void *work_);
 
-int_t ocp_qp_qpdunes(ocp_qp_in *input, ocp_qp_out *output, void *args_,
-                     void *memory_, void *work_);
+int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_);
 
-void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
-                               void **work);
+int_t ocp_qp_qpdunes(const ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_,
+                     void *work_);
+
+void ocp_qp_qpdunes_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
+
 void ocp_qp_qpdunes_destroy(void *mem, void *work);
 
 #ifdef __cplusplus

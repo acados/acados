@@ -37,6 +37,7 @@ extern "C" {
 // struct of arguments to the solver
 typedef struct ocp_qp_condensing_qpoases_args_ {
     double cputime;  // maximum cpu time in seconds
+    void *scrapspace;
     int nwsr;        // maximum number of working set recalculations
     int warm_start;  // warm start with dual_sol in memory
 } ocp_qp_condensing_qpoases_args;
@@ -76,21 +77,23 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
     int nwsr;        // performed number of working set recalculations
 } ocp_qp_condensing_qpoases_memory;
 
-int ocp_qp_condensing_qpoases_calculate_workspace_size(
-    ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args);
+ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(const ocp_qp_in *qp_in);
 
-int ocp_qp_condensing_qpoases_calculate_memory_size(
-    ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args);
+int_t ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void *args_);
 
-void ocp_qp_condensing_qpoases_create_memory(
-    ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args,
-    ocp_qp_condensing_qpoases_memory *qpoases_memory, void *memory);
+char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args_,
+                                              void **qpoases_memory, void *raw_memory);
 
-int_t ocp_qp_condensing_qpoases(ocp_qp_in *input, ocp_qp_out *output,
-                                void *args, void *mem, void *work);
+ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(const ocp_qp_in *qp_in,
+                                                                          void *args_);
 
-void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_,
-                                          void *mem_, void **work);
+int_t ocp_qp_condensing_qpoases_calculate_workspace_size(const ocp_qp_in *qp_in, void *args_);
+
+int_t ocp_qp_condensing_qpoases(const ocp_qp_in *input, ocp_qp_out *output, void *args_,
+                                void *memory_, void *work_);
+
+void ocp_qp_condensing_qpoases_initialize(const ocp_qp_in *qp_in, void *args_, void **mem,
+                                          void **work);
 
 void ocp_qp_condensing_qpoases_destroy(void *mem, void *work);
 

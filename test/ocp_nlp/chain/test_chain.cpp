@@ -224,6 +224,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             nu[i] = NU;
         }
         nx[N] = NX;
+        nu[N] = 0;
 
         /************************************************
          * box constraints
@@ -371,12 +372,11 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
         print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
-        // std::cout << resX << std::endl;
+        std::cout << resX << std::endl;
         std::cout << resU << std::endl;
 
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
-        std::cout << SQP_u << std::endl;
 
         REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));

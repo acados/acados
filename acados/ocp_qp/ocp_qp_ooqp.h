@@ -85,17 +85,19 @@ typedef struct ocp_qp_ooqp_memory_ {
     int_t nnz;  // max(nnzQ, nnzA, nnzC)
 } ocp_qp_ooqp_memory;
 
-int_t ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_,
-                                void *memory_);
+ocp_qp_ooqp_args *ocp_qp_ooqp_create_arguments();
+
+ocp_qp_ooqp_memory *ocp_qp_ooqp_create_memory(const ocp_qp_in *input, void *args_);
+
 void ocp_qp_ooqp_free_memory(void *mem_);
 
 int_t ocp_qp_ooqp_calculate_workspace_size(const ocp_qp_in *in, void *args_);
 
-int_t ocp_qp_ooqp(ocp_qp_in *input, ocp_qp_out *output, void *args_,
-                  void *memory_, void *work_);
+int_t ocp_qp_ooqp(const ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_,
+                  void *work_);
 
-void ocp_qp_ooqp_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
-                            void **work);
+void ocp_qp_ooqp_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
+
 void ocp_qp_ooqp_destroy(void *mem_, void *work);
 
 #ifdef __cplusplus

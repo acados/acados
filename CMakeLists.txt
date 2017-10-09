@@ -50,8 +50,8 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 enable_testing(true)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOFLIP_BOUNDS -std=c99 -Wall -Werror -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOFLIP_BOUNDS -std=c++11 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
 endif()
 
 # Set install directories
