@@ -26,12 +26,14 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_sm_common.h"
 #include "acados/utils/types.h"
 
 typedef struct {
     // ocp_nlp_args *common;
     int_t maxIter;
     char qp_solver_name[MAX_STR_LEN];
+    char sm_method_name[MAX_STR_LEN];
 } ocp_nlp_sqp_args;
 
 typedef struct {

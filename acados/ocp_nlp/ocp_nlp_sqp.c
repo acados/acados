@@ -182,19 +182,45 @@ void store_variables(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp
 
 // Simple fixed-step Gauss-Newton based SQP routine
 int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                  void *nlp_args_, void *nlp_mem_, void *nlp_work_) {
+                  void *args_, void *mem_, void *work_) {
     int_t return_status = 0;
 
     // Initialize
-    ocp_nlp_sqp_memory *sqp_mem = (ocp_nlp_sqp_memory *)nlp_mem_;
+    ocp_nlp_sqp_memory *sqp_mem = (ocp_nlp_sqp_memory *) mem_;
 
     // SQP iterations
-    ocp_nlp_sqp_args * nlp_args = (ocp_nlp_sqp_args *) nlp_args_;
+    ocp_nlp_sqp_args * nlp_args = (ocp_nlp_sqp_args *) args_;
     int_t max_sqp_iterations = nlp_args->maxIter;
+
+    // TODO(nielsvd): evaluate whether this is the best location for STATIC 
+    // sensitivity input/output definition.
+    // Sensitivity method input
+    ocp_nlp_sm_in sm_in;
+    sm_in.N = nlp_in->N;
+    sm_in.nx = nlp_in->nx;
+    sm_in.nu = nlp_in->nu;
+    sm_in.nb = nlp_in->nb;
+    sm_in.ng = nlp_in->ng;
+    sm_in.cost = nlp_in->cost;
+    sm_in.sim = (sim_solver *) nlp_in->sim;
+    sm_in.path_constraints = (ocp_nlp_function *) nlp_in->path_constraints;
+    sm_in.x = sqp_mem->common->x;
+    sm_in.u = sqp_mem->common->u;
+    sm_in.pi = sqp_mem->common->pi;
+    sm_in.lam = sqp_mem->common->lam;
+
+    // Sensitivity method output
+    ocp_nlp_sm_out sm_out;
+    sm_out.hess_l = sqp_mem->common->hess_l;
+    sm_out.grad_f = sqp_mem->common->grad_f;
+    sm_out.jac_h = sqp_mem->common->jac_h;
+    sm_out.jac_g = sqp_mem->common->jac_g;
+    sm_out.h = sqp_mem->common->h;
+    sm_out.g = sqp_mem->common->g;
     
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++) {
         // Compute/update quadratic approximation
-        sqp_mem->sensitivity_method->fun(nlp_in, sqp_mem->common,
+        sqp_mem->sensitivity_method->fun(&sm_in, &sm_out,
             sqp_mem->sensitivity_method->args,
             sqp_mem->sensitivity_method->mem,
             sqp_mem->sensitivity_method->work);

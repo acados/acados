@@ -25,15 +25,15 @@
 typedef struct {
     const real_t **hess_l; // TODO(nielsvd): Hessians of stage-wise Lagrangians, document precise definition.
     const real_t **grad_f; // Gradients of stage-wise cost terms.
-    const real_t **jac_h;  // TODO(niels): rename. Jacobians of stage-wise integration operator.
+    const real_t **jac_h;  // TODO(niels): rename (maybe phi?). Jacobians of stage-wise integration operator.
     const real_t **jac_g; // Jacobians of stage-wise path constraints.
-    const real_t **h;     // TODO(nielsvd): rename. Evaluation of stage-wise integration operator.
+    const real_t **h;     // TODO(nielsvd): rename (maybe phi?). Evaluation of stage-wise integration operator.
     const real_t **g; // Evaluation of stage-wise path constraints.
     const real_t **x;
     const real_t **u;
     const real_t **pi;
     const real_t **lam;
-    // TODO(nielsvd): what about lifted variables?
+    // TODO(nielsvd): what about parameters and addtionaly variables such as lifted variables?
 } ocp_nlp_memory;
 
 typedef struct {
@@ -47,6 +47,10 @@ typedef struct {
     const real_t **ub;
     const real_t **lg;
     const real_t **ug;
+
+    void *cost;
+    void *sim;
+    void *path_constraints;
 } ocp_nlp_in;
 
 typedef struct {
@@ -55,25 +59,6 @@ typedef struct {
     real_t **pi;
     real_t **lam;
 } ocp_nlp_out;
-
-typedef struct {
-    //    const int_t *sparsity;
-    //    const int_t *idx_in;
-    int_t dim_in;
-    int_t dim_out;
-    void (*fun)(const real_t *, real_t *);
-    void (*jac_fun)(const real_t *, real_t *);
-    // TODO(rien): other directional and second order derivatives
-    // TODO(rien): define the overlapping 'sets' of functions, jacobians,
-    // hessians etc..
-} ocp_nlp_function;
-
-typedef struct {
-    void (*fun)(const ocp_nlp_in *nlp_in, ocp_nlp_memory *nlp_mem, void *args, void *mem, void *work);
-    void *args;
-    void *mem;
-    void *work;
-} ocp_nlp_sm;
 
 typedef struct {
     int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
