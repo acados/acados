@@ -19,11 +19,17 @@
 
 set(PACKAGE_SO_VERSION "0.1")
 
+if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    set(ACADOS_WITH_HPMPC OFF)
+else()
+    set(ACADOS_WITH_HPMPC ON)
+endif()
+
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 
 # Exclude files not compatible with MSVC
-if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+if(NOT ACADOS_WITH_HPMPC)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c")
 endif()
 
@@ -57,13 +63,17 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../acados
 # export(TARGETS acados FILE ${PROJECT_BINARY_DIR}/acadosConfig.cmake)
 
 # HPMPC must come before BLASFEO!
-if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    target_link_libraries(acados PUBLIC hpmpc hpipm)
+if(ACADOS_WITH_HPMPC)
+    target_link_libraries(acados PUBLIC hpmpc)
 endif()
-target_link_libraries(acados PUBLIC qpOASES_e blasfeo qpdunes)
+target_link_libraries(acados PUBLIC hpipm qpOASES_e blasfeo qpdunes)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
+endif()
+
+if(ACADOS_WITH_HPMPC)
+    target_compile_definitions(acados PRIVATE ACADOS_WITH_HPMPC)
 endif()
 
 if(ACADOS_WITH_OOQP)
