@@ -108,4 +108,8 @@ add_custom_target(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint
+if (NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
 include(lint)
+else()
+message(STATUS "Skipping lint (python not found).")
+endif()
