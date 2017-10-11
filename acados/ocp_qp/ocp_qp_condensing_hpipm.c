@@ -80,7 +80,7 @@ static void ocp_qp_condensing_hpipm_initialize_default_args(const ocp_qp_in *qp_
     args->res_b_max = 1e-8;
     args->res_d_max = 1e-8;
     args->res_m_max = 1e-8;
-    args->iter_max = 20;
+    args->iter_max = 50;
     args->alpha_min = 1e-8;
     args->mu0 = 1;
 
