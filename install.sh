@@ -19,6 +19,8 @@ wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.1.1/linux/cas
 mkdir -p casadi-py35-np1.9.1-v3.1.1
 tar -xf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
 export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
+# will not work with custom install dir
+export PYTHONPATH=~/local/lib:$PYTHONPATH
 
 wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.1.1/linux/casadi-matlabR2014b-v3.1.1.tar.gz
 mkdir -p casadi-matlabR2014b-v3.1.1
