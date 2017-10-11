@@ -180,13 +180,45 @@ void store_variables(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp
     }
 }
 
-// Simple fixed-step Gauss-Newton based SQP routine
+ocp_nlp_sqp_args *ocp_nlp_sqp_create_arguments() {
+    ocp_nlp_sqp_args *args = (ocp_nlp_sqp_args *) malloc(sizeof(ocp_nlp_sqp_args));
+    args->maxIter = 10;
+
+    return args;
+}
+
+// int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in, void *args_) {
+//     ocp_nlp_memory *common;
+//     ocp_qp_solver *qp_solver;
+//     ocp_nlp_sm *sensitivity_method;
+// }
+
+// char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_, void **mem_, void *raw_memory) {
+
+// }
+
+// ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(const ocp_nlp_in *nlp_in, void *args_) {
+
+// }
+
+// int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *nlp_in, void *args_) {
+
+// }
+
+// char *ocp_nlp_sqp_assign_workspace(const ocp_nlp_in *nlp_in, void *args_, void **work_, void *raw_memory) {
+
+// }
+
+// ocp_nlp_sqp_workspace *ocp_nlp_sqp_create_workspace(const ocp_nlp_in *nlp_in, void *args_) {
+
+// }
+
 int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                  void *args_, void *mem_, void *work_) {
+                  void *args_, void *memory_, void *workspace_) {
     int_t return_status = 0;
 
     // Initialize
-    ocp_nlp_sqp_memory *sqp_mem = (ocp_nlp_sqp_memory *) mem_;
+    ocp_nlp_sqp_memory *sqp_mem = (ocp_nlp_sqp_memory *) memory_;
 
     // SQP iterations
     ocp_nlp_sqp_args * nlp_args = (ocp_nlp_sqp_args *) args_;
@@ -245,11 +277,10 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     return return_status;
 }
 
-void ocp_nlp_sqp_create_memory(const ocp_nlp_in *in, void *args_,
-                               void *memory_) {
+// void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem, void **work) {
 
-}
+// }
 
-void ocp_nlp_sqp_free_memory(void *mem_) {
+// void ocp_nlp_sqp_destroy(void *mem, void *work) {
 
-}
+// }
