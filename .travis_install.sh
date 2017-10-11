@@ -27,10 +27,10 @@ mkdir -p casadi-py35-np1.9.1-v3.1.1
 tar -xf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
 export PYTHONPATH=$(pwd)/casadi-py35-np1.9.1-v3.1.1:$PYTHONPATH
 
-wget -q https://sourceforge.net/projects/casadi/files/CasADi/3.1.1/linux/casadi-matlabR2014b-v3.1.1.tar.gz
-mkdir -p casadi-matlabR2014b-v3.1.1
-tar -xf casadi-matlabR2014b-v3.1.1.tar.gz -C casadi-matlabR2014b-v3.1.1
-export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.1.1:$MATLABPATH
+wget -q https://sourceforge.net/projects/casadi/files/CasADi/3.2.3/linux/casadi-matlabR2014b-v3.2.3.tar.gz
+mkdir -p casadi-matlabR2014b-v3.2.3
+tar -xf casadi-matlabR2014b-v3.2.3.tar.gz -C casadi-matlabR2014b-v3.2.3
+export MATLABPATH=$(pwd)/casadi-matlabR2014b-v3.2.3:$MATLABPATH
 
 wget -q http://icl.cs.utk.edu/lapack-for-windows/libraries/VisualStudio/3.7.0/Dynamic-MINGW/Win64/libblas.lib
 sudo mv libblas.lib /usr/x86_64-w64-mingw32/lib/libblas.a
