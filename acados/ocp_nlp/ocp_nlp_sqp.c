@@ -271,7 +271,6 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                   void *args_, void *memory_, void *workspace_) {
     int_t return_status = 0;
 
-    // Initialize
     ocp_nlp_sqp_args *sqp_args = (ocp_nlp_sqp_args *) args_;
     ocp_nlp_sqp_memory *sqp_mem = (ocp_nlp_sqp_memory *) memory_;
 
@@ -305,32 +304,36 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     return return_status;
 }
 
-// void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem, void **work) {
-// Sensitivity method input
-// ocp_nlp_sm_in sm_in;
-// sm_in.N = nlp_in->N;
-// sm_in.nx = nlp_in->nx;
-// sm_in.nu = nlp_in->nu;
-// sm_in.nb = nlp_in->nb;
-// sm_in.ng = nlp_in->ng;
-// sm_in.cost = nlp_in->cost;
-// sm_in.sim = (sim_solver *)nlp_in->sim;
-// sm_in.path_constraints = (ocp_nlp_function *)nlp_in->path_constraints;
-// sm_in.x = sqp_mem->common->x;
-// sm_in.u = sqp_mem->common->u;
-// sm_in.pi = sqp_mem->common->pi;
-// sm_in.lam = sqp_mem->common->lam;
+void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void *mem_, void *work_) {
+    
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) mem_;
+    
+    ocp_nlp_sm_in *sm_in = mem->sm_in;
+    ocp_nlp_sm_out *sm_out = mem->sm_out;
 
-// // Sensitivity method output
-// ocp_nlp_sm_out sm_out;
-// sm_out.hess_l = sqp_mem->common->hess_l;
-// sm_out.grad_f = sqp_mem->common->grad_f;
-// sm_out.jac_h = sqp_mem->common->jac_h;
-// sm_out.jac_g = sqp_mem->common->jac_g;
-// sm_out.h = sqp_mem->common->h;
-// sm_out.g = sqp_mem->common->g;
-// }
+    // Sensitivity method input
+    sm_in->N = nlp_in->N;
+    sm_in->nx = nlp_in->nx;
+    sm_in->nu = nlp_in->nu;
+    sm_in->nb = nlp_in->nb;
+    sm_in->ng = nlp_in->ng;
+    sm_in->cost = nlp_in->cost;
+    sm_in->sim = (sim_solver *)nlp_in->sim;
+    sm_in->path_constraints = (ocp_nlp_function *)nlp_in->path_constraints;
+    sm_in->x = mem->common->x;
+    sm_in->u = mem->common->u;
+    sm_in->pi = mem->common->pi;
+    sm_in->lam = mem->common->lam;
 
-// void ocp_nlp_sqp_destroy(void *mem, void *work) {
+    // Sensitivity method output
+    sm_out->hess_l = mem->common->hess_l;
+    sm_out->grad_f = mem->common->grad_f;
+    sm_out->jac_h = mem->common->jac_h;
+    sm_out->jac_g = mem->common->jac_g;
+    sm_out->h = mem->common->h;
+    sm_out->g = mem->common->g;
+}
 
-// }
+void ocp_nlp_sqp_destroy(void *mem, void *work) {
+    // TODO(nielsvd): implement memory cleanup.
+}

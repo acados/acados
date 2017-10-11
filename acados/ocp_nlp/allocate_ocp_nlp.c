@@ -27,18 +27,18 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
-void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc, int_t *ng, ocp_nlp_in *const nlp) {
-
+void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *ng, ocp_nlp_in *const nlp_in) {
+    // TODO(nielsvd): implement.
 }
 
 void free_ocp_nlp_in(ocp_nlp_in *const nlp) {
-
+    // TODO(nielsvd): implement.
 }
 
 void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {
-
+    // TODO(nielsvd): implement.
 }
 
 void free_ocp_nlp_out(int_t N, ocp_nlp_out *out) {
-    
+    // TODO(nielsvd): implement.
 }
