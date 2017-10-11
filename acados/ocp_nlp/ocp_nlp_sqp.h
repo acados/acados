@@ -30,32 +30,39 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef struct {
-    // ocp_nlp_args *common;
     int_t maxIter;
-    char qp_solver_name[MAX_STR_LEN];
-    char sm_method_name[MAX_STR_LEN];
+    ocp_qp_solver *qp_solver;
+    ocp_nlp_sm *sensitivity_method;
+    // char qp_solver_name[MAX_STR_LEN];
+    // char sm_method_name[MAX_STR_LEN];
 } ocp_nlp_sqp_args;
 
 typedef struct {
     ocp_nlp_memory *common;
-    ocp_qp_solver *qp_solver;
-    ocp_nlp_sm *sensitivity_method;
+
+    // TODO(nielsvd): qp solver and sensitivity method 
+    //       could be automatically initialized for user
+    //       convenience, look into this!
+    ocp_nlp_sm_in *sm_in;
+    ocp_nlp_sm_out *sm_out;
+    // ocp_qp_solver *qp_solver;
+    // ocp_nlp_sm *sensitivity_method;
 } ocp_nlp_sqp_memory;
 
 typedef struct {
     int_t dummy;
-} ocp_nlp_sqp_work;
+} ocp_nlp_sqp_workspace;
 
 ocp_nlp_sqp_args *ocp_nlp_sqp_create_arguments();
 
-// int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in,
-//                                           void *args_);
+int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in,
+                                          void *args_);
 
-// char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_,
-//                                   void **mem_, void *raw_memory);
+char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_,
+                                  void **mem_, void *raw_memory);
 
-// ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(const ocp_nlp_in *nlp_in,
-//                                                   void *args_);
+ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(const ocp_nlp_in *nlp_in,
+                                                  void *args_);
 
 // int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *nlp_in,
 //                                              void *args_);

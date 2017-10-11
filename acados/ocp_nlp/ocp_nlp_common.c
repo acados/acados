@@ -105,6 +105,7 @@ int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in) {
 }
 
 char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_, void *raw_memory) {
+
     ocp_nlp_memory **nlp_memory = (ocp_nlp_memory **)mem_;
     char *c_ptr = (char *)raw_memory;
 
