@@ -157,8 +157,8 @@ static casadi_function_t compile_and_load(std::string name, void **handle) {
     std::string library_name = name + std::string(".so");
     std::string path_to_library = std::string("./") + library_name;
     char command[MAX_STR_LEN];
-    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s%d.c -o %s", compiler, name.c_str(), global_library_counter++,
-                                                                         library_name.c_str());
+    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s%d.c -o %s", compiler, name.c_str(),
+    global_library_counter++, library_name.c_str());
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
@@ -182,7 +182,7 @@ static casadi_function_t compile_and_load(std::string name, void **handle) {
     #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
     return (casadi_function_t) GetProcAddress((HMODULE)*handle, name.c_str());
     #else
-    return (casadi_function_t) dlsym(*handle, name.c_str());    
+    return (casadi_function_t) dlsym(*handle, name.c_str());
     #endif
 }
 
@@ -539,7 +539,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     void set_model(casadi::Function& f, double step) {
         char library_name[MAX_STR_LEN], path_to_library[MAX_STR_LEN];
         std::string model_name = generate_vde_function(f);
-        snprintf(library_name, sizeof(library_name), "%s%d.so", model_name.c_str(), global_library_counter++);
+        snprintf(library_name, sizeof(library_name), "%s%d.so", model_name.c_str(),
+            global_library_counter++);
         snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
         char command[MAX_STR_LEN];
         snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, \
@@ -568,7 +569,8 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
             throw std::runtime_error(err_msg);
         }
         #ifdef SWIG_WIN_MINGW
-        casadi_function_t eval = (casadi_function_t)GetProcAddress(global_handle, model_name.c_str());        
+        casadi_function_t eval =
+            (casadi_function_t)GetProcAddress(global_handle, model_name.c_str());
         #else
         casadi_function_t eval = (casadi_function_t)dlsym(global_handle, model_name.c_str());
         #endif
