@@ -23,6 +23,7 @@ find_package(Matlab REQUIRED)
 find_path(
     CASADI_MATLAB_ROOT
     NAMES "+casadi"
+    HINTS ${CMAKE_SOURCE_DIR}/external/*
     PATHS ENV MATLABPATH)
 
 if(NOT CASADI_MATLAB_ROOT)
