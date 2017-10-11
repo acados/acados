@@ -54,6 +54,9 @@
 // #define N_SQP_HACK 100
 #define N_SQP_HACK 1
 
+// #define LOG_CL_SOL
+#define LOG_NAME "cl_log_quadcopter.txt"
+
 // #define ALPHA 0.1
 #define ALPHA 0.7
 
@@ -71,9 +74,9 @@
 #define OMEGA_REF 40.0
 
 // #define PLOT_OL_RESULTS
-#define PLOT_CL_RESULTS
+// #define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
-#define PLOT_CONTROLS 0  // plot rates:0 plot controls:1
+// #define PLOT_CONTROLS 0  // plot rates:0 plot controls:1
 
 extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 extern int ls_res_end_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -689,6 +692,20 @@ int main() {
         acados_gnuplot(gnuplot_data, 8, T_plt, N_plt, labels, 4, 2);
 #endif  // PLOT_OL_RESULTS
 
+#ifdef LOG_CL_SOL
+        FILE *fp;
+
+        fp = fopen(LOG_NAME, "w+");
+        for (int_t i = 0; i < NSIM; i++) {
+            fprintf(fp, "%.3f, ", i*TT/NN);
+            for (int_t j = 0; j < NX; j++)
+                fprintf(fp, "%.3f,", w_cl[i*(NX+NU) + j]);
+            for (int_t j = 0; j < NU; j++)
+                fprintf(fp, "%.3f, ", w_cl[i*(NX+NU) + NX + j]);
+            fprintf(fp, "\n");
+        }
+        fclose(fp);
+#endif
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
 #if 0
