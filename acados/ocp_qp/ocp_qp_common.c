@@ -28,7 +28,9 @@
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#endif
 #ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
@@ -391,12 +393,14 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
         qp_solver->fun = &ocp_qp_condensing_qpoases;
         qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
+#ifdef ACADOS_WITH_HPMPC
     } else if (!strcmp(solver_name, "hpmpc")) {
         if (qp_solver->args == NULL)
             qp_solver->args = ocp_qp_hpmpc_create_arguments(qp_in, HPMPC_DEFAULT_ARGUMENTS);
         qp_solver->fun = &ocp_qp_hpmpc;
         qp_solver->initialize = &ocp_qp_hpmpc_initialize;
         qp_solver->destroy = &ocp_qp_hpmpc_destroy;
+#endif
     } else if (!strcmp(solver_name, "condensing_hpipm")) {
         if (qp_solver->args == NULL)
             qp_solver->args = ocp_qp_condensing_hpipm_create_arguments(qp_in);

@@ -1,5 +1,9 @@
 # Linter
-find_package(PythonInterp 3 REQUIRED)
+find_package(PythonInterp 3)
+if(NOT PythonInterp_FOUND)
+    message(STATUS "Skipping lint (python not found).")
+    return()
+endif()
 set(FIND_FILES_TO_LINT find acados test examples swig -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.i")
 set(FIND_FILES_TO_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_FILES_TO_LINT})
 execute_process(COMMAND ${FIND_FILES_TO_LINT} OUTPUT_VARIABLE FILES_TO_LINT)

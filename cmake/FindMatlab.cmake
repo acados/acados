@@ -11,16 +11,16 @@
 #  MATLAB_MEX_EXT: mex extension
 #  MATLAB_CFLAGS, MATLAB_CLINKER_FLAGS, MATLAB_CLIBS (and same for CXX and Fortran)
 #
-# Note: You cannot use MATLAB_CLIBS etc to "target_link_libraries" as that gets confused 
+# Note: You cannot use MATLAB_CLIBS etc to "target_link_libraries" as that gets confused
 # by the flag that specifies where the matlab libraries are (at least on Windows for Visual Studio).
-# This variable also contains system libraries etc so it's probably not a good idea to use it in 
+# This variable also contains system libraries etc so it's probably not a good idea to use it in
 # your CMake file. You should probably use
 #
 #  include_directories(${MATLAB_INCLUDE_DIR})
 #  add_definitions(${MATLAB_CXXFLAGS})
 #  target_link_libraries(yourmexfile ${MATLAB_LIBRARIES} )
 #
-# Reason for MATLAB_CXXFLAGS: on linux, mex files need to be compiled with -fPIC, but that means all 
+# Reason for MATLAB_CXXFLAGS: on linux, mex files need to be compiled with -fPIC, but that means all
 # linked libraries need to be compiled with -fPIC as well.
 
 # This is a derivative work of file FindMatlab.cmake released with
@@ -91,7 +91,7 @@ if (NOT MATLAB_ROOT)
     elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")   # Check if this is a Mac
       # we look in the applications folder
       # Search for a version of Matlab available, starting from the most modern one to older versions
-      foreach(MATVER "R2015b" "R2015a" "R2014b" "R2014a" "R2013b" "R2013a" "R2012b" "R2012a" "R2011b" "R2011a" "R2010b" "R2010a" "R2009b" "R2009a" "R2008b")
+      foreach(MATVER "R2017b" "R2017a" "R2016b" "R2016a" "R2015b" "R2015a" "R2014b" "R2014a" "R2013b" "R2013a" "R2012b" "R2012a" "R2011b" "R2011a" "R2010b" "R2010a" "R2009b" "R2009a" "R2008b")
         if((NOT DEFINED MATLAB_ROOT) OR ("${MATLAB_ROOT}" STREQUAL ""))
           if(EXISTS /Applications/MATLAB_${MATVER}.app)
             set(MATLAB_ROOT /Applications/MATLAB_${MATVER}.app)
@@ -116,15 +116,16 @@ IF (NOT MATLAB_LIBRARIES)
   if (WIN32)
     # Directory name depending on whether the Windows architecture is 32
     # bit or 64 bit
-    if(CMAKE_SIZEOF_VOID_P MATCHES "4")
-      set(WINDIR "win32")
-    elseif(CMAKE_SIZEOF_VOID_P MATCHES "8")
-      set(WINDIR "win64")
-    else()
-      message(FATAL_ERROR
-        "CMAKE_SIZEOF_VOID_P (${CMAKE_SIZEOF_VOID_P}) doesn't indicate a valid platform")
-    endif()
-
+  if(CMAKE_SIZEOF_VOID_P MATCHES "4")
+    set(WINDIR "win32")
+  elseif(CMAKE_SIZEOF_VOID_P MATCHES "8")
+    set(WINDIR "win64")
+  else()
+    message(FATAL_ERROR
+      "CMAKE_SIZEOF_VOID_P (${CMAKE_SIZEOF_VOID_P}) doesn't indicate a valid platform")
+  endif()
+  # message(STATUS "Detected Windows architecture: ${WINDIR}")
+  
     # Folder where the MEX libraries are, depending on the Windows compiler
     if(${CMAKE_GENERATOR} MATCHES "Visual Studio 6")
       set(MATLAB_LIBRARIES_DIR "${MATLAB_ROOT}/extern/lib/${WINDIR}/microsoft/msvc60")
@@ -143,8 +144,12 @@ IF (NOT MATLAB_LIBRARIES)
       # If the compiler is Visual Studio, but not any of the specific
       # versions above, we try our luck with the microsoft directory
       set(MATLAB_LIBRARIES_DIR "${MATLAB_ROOT}/extern/lib/${WINDIR}/microsoft/")
+    elseif(${CMAKE_GENERATOR} MATCHES "MinGW Makefiles")
+      set(MATLAB_LIBRARIES_DIR "${MATLAB_ROOT}/bin/${WINDIR}/")
+      # TODO(dimitris): dir below does not work. Perhaps dir above works for any compiler anyway?
+      # set(MATLAB_LIBRARIES_DIR "${MATLAB_ROOT}/extern/lib/${WINDIR}/mingw64/")
     endif()
-
+    
   else(WIN32)
 
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -152,7 +157,7 @@ IF (NOT MATLAB_LIBRARIES)
     else()
       set(LIBRARY_EXTENSION .so)
     endif()
-    
+
     # There seems to be no way to let cmake do a search in subdirectories, so use "find"
     execute_process(
       COMMAND find "${MATLAB_ROOT}/bin" -name libmex${LIBRARY_EXTENSION}
@@ -175,7 +180,9 @@ endif() # MATLAB_LIBRARIES
 
 if (WIN32)
   set(BATEXT .bat)
-  set(LIBPREFIX lib)
+  if(NOT ${CMAKE_SHARED_LIBRARY_PREFIX} MATCHES "lib")  
+    set(LIBPREFIX lib)
+  endif()
 endif()
 
 
@@ -202,7 +209,7 @@ find_library(MATLAB_UT_LIBRARY
     ${LIBPREFIX}ut
     HINTS ${MATLAB_LIBRARIES_DIR}
     )
-
+    
 # Get path to the include directory
 find_path(MATLAB_INCLUDE_DIR
     "mex.h"
@@ -227,7 +234,7 @@ execute_process(
     )
 
 set(MATLAB_LIBRARIES
-  ${MATLAB_MEX_LIBRARY} ${MATLAB_MX_LIBRARY} ${MATLAB_ENG_LIBRARY} ${MATLAB_UT_LIBRARY}
+  "${MATLAB_MEX_LIBRARY}" "${MATLAB_MX_LIBRARY}" "${MATLAB_ENG_LIBRARY}" "${MATLAB_UT_LIBRARY}"
   CACHE PATH "Libraries to link mex files"
 )
 
@@ -235,7 +242,7 @@ set(MATLAB_LIBRARIES
 # This is based on Kent Williams's post at
 # http://www.cmake.org/pipermail/cmake/2013-December/056593.html
 
-# mex -v outputs all the settings used for building MEX files, so 
+# mex -v outputs all the settings used for building MEX files, so
 # we can use it to grab the important variables needed
 
 # This sets MATLAB_CFLAGS, MATLAB_CLINKER_FLAGS, MATLAB_CLIBS (and same for CXX and Fortran)
@@ -247,7 +254,7 @@ macro(MATLAB_GETFLAGS FILENAME)
 
 # parse mex output line by line by turning file into CMake list of lines
 string(REGEX REPLACE "\r?\n" ";" _mexOut "${mexOut}")
-foreach(line ${_mexOut})  
+foreach(line ${_mexOut})
   if("${line}" MATCHES "[\t ]+DEFINES *:") # on Linux
     string(REGEX REPLACE "[\t ]+DEFINES *: *" "" mexDefines "${line}")
   elseif("${line}" MATCHES "[\t ]+COMPDEFINES *:") # on Windows
@@ -308,10 +315,10 @@ set(MATLAB_FLIBS "${mexLdLibs} ${mexFLibs}" CACHE STRING "Flags with libraries t
 
 set(MATLAB_EXECUTABLE "${MATLAB_ROOT}/bin/matlab")
 
-# handle the QUIETLY and REQUIRED arguments and set MATLAB_FOUND to TRUE if 
+# handle the QUIETLY and REQUIRED arguments and set MATLAB_FOUND to TRUE if
 # all listed variables are TRUE
 INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(MATLAB "MATLAB not found. If you do have it, set MATLAB_ROOT and reconfigure" 
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(MATLAB "MATLAB not found. If you do have it, set MATLAB_ROOT and reconfigure"
   MATLAB_ROOT MATLAB_INCLUDE_DIR  MATLAB_LIBRARIES
   MATLAB_MEX_PATH
   MATLAB_MEXEXT_PATH
