@@ -195,7 +195,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
 
     sim_solver *sim = sm_in->sim;
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) sm_in->cost;
-    ocp_nlp_function *path_constraints = sm_in->path_constraints;
+    // ocp_nlp_function *path_constraints = sm_in->path_constraints;
 
     for (int_t i = 0; i < N; i++) {
         // Pass state and control to integrator
@@ -239,8 +239,8 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
         dgemv_n_3l(nx[i]+nu[i], ny, work->DFTW, nx[i]+nu[i], work->F, grad_f[i]);
 
         // Sensitivities for the linearization of the path constraints
-        path_constraints[i].fun(work->w, work->G);
-        path_constraints[i].fun(work->w, work->DG);
+        // path_constraints[i].fun(work->w, work->G);
+        // path_constraints[i].fun(work->w, work->DG);
         for (int_t j = 0; j < ng[i]; j++) {
             g[i][j] = work->G[j];
             for (int_t k = 0; k < nx[i] + nu[i]; k++) {

@@ -28,8 +28,8 @@ typedef struct {
     //    const int_t *idx_in;
     int_t dim_in;
     int_t dim_out;
-    void (*fun)(const real_t *, real_t *);
-    void (*jac_fun)(const real_t *, real_t *);
+    casadi_function_t fun;
+    casadi_function_t jac_fun;
     // TODO(rien): other directional and second order derivatives
     // TODO(rien): define the overlapping 'sets' of functions, jacobians,
     // hessians etc..

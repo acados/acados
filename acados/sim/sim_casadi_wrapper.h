@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_SIM_CASADI_WRAPPER_H_
-#define ACADOS_SIM_CASADI_WRAPPER_H_
+#ifndef ACADOS_SIM_SIM_CASADI_WRAPPER_H_
+#define ACADOS_SIM_SIM_CASADI_WRAPPER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,4 +34,4 @@ void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t ja
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_CASADI_WRAPPER_H_
+#endif  // ACADOS_SIM_SIM_CASADI_WRAPPER_H_
