@@ -1,5 +1,5 @@
 # Pull base image
-FROM doanminhdang/rpi-debian-casadi:latest
+FROM acados/rpi-debian-casadi:latest
 
 # Set PATH environment to let casadi and acados find precompiled swig (duplicate)
 ENV PATH="/home/pi/acados/external/swig:${PATH}"
@@ -8,10 +8,10 @@ ENV PATH="/home/pi/acados/external/swig:${PATH}"
 ENV PYTHONPATH="${PYTHONPATH}:/usr/local/lib:/usr/local/python:${HOME}/local/lib"
 
 # Add current source to docker
-ADD . /app/acados/
+ADD . /home/pi/acados/
 
 # Compile acados with Python interface
-RUN cd /app/acados && \
+RUN cd /home/pi/acados && \
     rm -rf build && mkdir build && \
     cd build && \
     cmake -D SWIG_MATLAB=0 -D SWIG_PYTHON=1 .. && \
