@@ -154,11 +154,11 @@ enum generation_mode {
 };
 
 static casadi_function_t compile_and_load(std::string name, void **handle) {
-    std::string library_name = name + std::string(".so");
+    std::string library_name = name + std::to_string(global_library_counter++) + std::string(".so");
     std::string path_to_library = std::string("./") + library_name;
     char command[MAX_STR_LEN];
-    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s%d.c -o %s", compiler, name.c_str(),
-    global_library_counter++, library_name.c_str());
+    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, name.c_str(),
+        library_name.c_str());
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
