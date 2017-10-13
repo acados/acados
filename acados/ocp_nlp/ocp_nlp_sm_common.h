@@ -22,17 +22,19 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
+#include "acados/utils/casadi_wrapper.h"
 
 typedef struct {
-    //    const int_t *sparsity;
-    //    const int_t *idx_in;
-    int_t dim_in;
-    int_t dim_out;
-    casadi_function_t fun;
-    casadi_function_t jac_fun;
-    // TODO(rien): other directional and second order derivatives
-    // TODO(rien): define the overlapping 'sets' of functions, jacobians,
-    // hessians etc..
+    int_t nx;
+    int_t nu;
+    int_t np;
+
+    int_t ny;
+
+    casadi_wrapper_in *in;
+    casadi_wrapper_out *out;
+    casadi_wrapper_args *args;
+    casadi_wrapper_workspace *work;
 } ocp_nlp_function;
 
 typedef struct {

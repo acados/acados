@@ -24,9 +24,7 @@
 #include "acados/utils/types.h"
 
 typedef struct {
-    void (*fun)(const real_t **, real_t **, int *, real_t *, int);
-    void (*jac_fun)(const real_t **, real_t **, int *, real_t *, int);
-    const int_t ny;
+    ocp_nlp_function fun;
     real_t *W;
     real_t *y_ref;
 } ocp_nlp_ls_cost;
@@ -39,6 +37,9 @@ typedef struct {
     int_t dummy;
 } ocp_nlp_sm_gn_memory;
 
+// TODO(nielsvd): definition below (using less memory) is not
+//   suitable for parallel computation of sensitivities. Change
+//   to (real_t **)-types with memory allocated for all stages.
 typedef struct {
     real_t *w; // should be max_i (nx[i]+nu[i])
     real_t *F; // should be max_i ny[i]

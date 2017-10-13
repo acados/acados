@@ -23,9 +23,9 @@
 #include "acados/utils/types.h"
 
 typedef struct {
-    real_t *x;
-    real_t *u;
-    real_t *p;
+    const real_t *x;
+    const real_t *u;
+    const real_t *p;
 
     int_t compute_jac;
     int_t compute_hess;
@@ -38,10 +38,6 @@ typedef struct {
 } casadi_wrapper_out;
 
 typedef struct {
-    int_t nx;
-    int_t nu;
-    int_t np;
-
     int_t (*fun)(const real_t **, real_t **, int *, real_t *, int);
     int_t (*dims)(int *, int *, int *, int *);
 } casadi_wrapper_args;
@@ -56,21 +52,22 @@ typedef struct {
 casadi_wrapper_args *casadi_wrapper_create_arguments();
 
 int_t casadi_wrapper_calculate_workspace_size(const casadi_wrapper_in *cw_in,
-                                              void *args_);
+                                              casadi_wrapper_args *args);
 
 char *casadi_wrapper_assign_workspace(const casadi_wrapper_in *cw_in,
-                                      void *args_, void **work_,
+                                      casadi_wrapper_args *args, 
+                                      casadi_wrapper_workspace **work,
                                       void *raw_memory);
 
 casadi_wrapper_workspace *casadi_wrapper_create_workspace(
-    const casadi_wrapper_in *cw_in, void *args_);
+    const casadi_wrapper_in *cw_in, casadi_wrapper_args *args);
 
 int_t casadi_wrapper(const casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out,
-                     void *args_, void *workspace_);
+                     casadi_wrapper_args *args, casadi_wrapper_workspace *work);
 
-void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in, void *args_,
-                              void **work);
+void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in, casadi_wrapper_args *args,
+                              casadi_wrapper_workspace **work);
 
-void casadi_wrapper_destroy(void *work);
+void casadi_wrapper_destroy(casadi_wrapper_workspace *work);
 
 #endif  // ACADOS_UTILS_CASADI_WRAPPER_H_
