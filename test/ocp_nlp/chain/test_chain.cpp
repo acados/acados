@@ -51,7 +51,7 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear optimization]") {
-    for (int INEXACT = 0; INEXACT < 5; INEXACT++) {
+    for (int INEXACT = 0; INEXACT < 1; INEXACT++) {
     int d_start = 1;
     if (INEXACT > 0) d_start = 2;
 
@@ -370,11 +370,13 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         // print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX, N+1);
         // print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU, N);
 
-        print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
-        print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
-
-        std::cout << resX << std::endl;
-        std::cout << resU << std::endl;
+//        print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
+//        print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
+//
+//        std::cout << "\nresX:" << std::endl;
+//        std::cout << resX << std::endl;
+//        std::cout << "\nresU:" << std::endl;
+//        std::cout << resU << std::endl;
 
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
