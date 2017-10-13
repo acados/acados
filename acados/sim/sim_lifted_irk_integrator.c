@@ -1278,6 +1278,7 @@ void sim_irk_create_arguments(void *args, const int_t num_stages,
     opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
     opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
     opts->scheme.type = exact;
+    opts->scheme.freeze = false;
 
     if (strcmp(name, "Gauss") == 0) {  // GAUSS METHODS
         get_Gauss_nodes(opts->num_stages, opts->c_vec);

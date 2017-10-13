@@ -60,8 +60,8 @@
 // Simple SQP example for acados
 int main() {
     int_t nil;
-    int_t NMF_MAX = 5;  // data exist up to 9 masses
-    int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
+    int_t NMF_MAX = 2;  // data exist up to 9 masses
+    int_t IMPL_MAX = 3;  // was originally 4, reduced to run the ctest faster
 
     for (int_t implicit = 1; implicit < IMPL_MAX; implicit++) {
         if (implicit == 0) {
@@ -81,7 +81,7 @@ int main() {
                 "--------------------------------------------------------------------\n");
         }
 
-        for (int_t NMF = 2; NMF < NMF_MAX; NMF++) {
+        for (int_t NMF = 1; NMF < NMF_MAX; NMF++) {
             printf("\n------------ NUMBER OF FREE MASSES =  %d ------------\n",
                    NMF);
             int_t NX = 6 * NMF;
@@ -271,6 +271,7 @@ int main() {
                 int_t workspace_size;
                 if (implicit > 0) {
                     sim_irk_create_arguments(&rk_opts[jj], implicit, "Gauss");
+                    sim_irk_create_Newton_scheme(&rk_opts[jj], implicit, "Gauss", exact);
                     workspace_size =
                         sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
                     sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
@@ -435,31 +436,23 @@ int main() {
 
             int_t qpsolver_workspace_size =
                 ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, qpsolver_args);
-            int_t qpsolver_memory_size =
-                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpsolver_args);
             #else
             ocp_qp_condensing_hpipm_args *qpsolver_args =
-                ocp_qp_condensing_hpipm_create_arguments(qp_in);
-            ocp_qp_condensing_hpipm_memory qpsolver_memory;
-
-            qpsolver_args->mu_max = 1e-8;
-            qpsolver_args->iter_max = 20;
-            qpsolver_args->alpha_min = 1e-8;
-            qpsolver_args->mu0 = 1.0;
+                ocp_qp_condensing_hpipm_create_arguments(&qp_in);
+            ocp_qp_condensing_hpipm_memory *qpsolver_memory;
 
             int_t qpsolver_workspace_size =
                 ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, qpsolver_args);
             int_t qpsolver_memory_size =
                 ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, qpsolver_args);
+            void *qpsolver_mem = calloc(qpsolver_memory_size, sizeof(char));
             #endif
 
             void *qpsolver_work = calloc(qpsolver_workspace_size, sizeof(char));
 
-            #ifdef USE_QPOASES
-            (void) qpsolver_memory_size;
-            #else
-            ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, &qpsolver_memory,
-                qpsolver_mem);
+            #ifndef USE_QPOASES
+            ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, (void **) &qpsolver_memory,
+                    qpsolver_mem);
             #endif
 
             acados_timer timer;
