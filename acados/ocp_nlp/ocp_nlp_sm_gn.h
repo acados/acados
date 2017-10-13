@@ -25,8 +25,8 @@
 
 typedef struct {
     ocp_nlp_function fun;
-    real_t *W;
-    real_t *y_ref;
+    const real_t *W;
+    const real_t *y_ref;
 } ocp_nlp_ls_cost;
 
 typedef struct {
@@ -37,17 +37,14 @@ typedef struct {
     int_t dummy;
 } ocp_nlp_sm_gn_memory;
 
-// TODO(nielsvd): definition below (using less memory) is not
-//   suitable for parallel computation of sensitivities. Change
-//   to (real_t **)-types with memory allocated for all stages.
 typedef struct {
-    real_t *w; // should be max_i (nx[i]+nu[i])
-    real_t *F; // should be max_i ny[i]
-    real_t *DF; // should be max_i ny[i]*(nx[i]+nu[i])
-    real_t *DFT;  // should be max_i (nx[i]*nu[i])*ny[i]
-    real_t *DFTW; // should be max_i (nx[i]+nu[i])*ny[i]
-    real_t *G; // should be max_i ng[i]
-    real_t *DG; // should be max_i ng[i]*(nx[i]+nu[i])
+    real_t **w;
+    real_t **F;
+    real_t **DF;
+    real_t **DFT;
+    real_t **DFTW;
+    real_t **G;
+    real_t **DG;
 } ocp_nlp_sm_gn_workspace;
 
 ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments();
