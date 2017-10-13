@@ -353,19 +353,21 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
         ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
-        real_t out_x[NX*(N+1)], err_x[NX*(N+1)];
-        real_t out_u[NU*N], err_u[NU*N];
+//        real_t err_x[NX*(N+1)];
+//        real_t err_u[NU*N];
+        real_t out_x[NX*(N+1)];
+        real_t out_u[NU*N];
         for (int_t i = 0; i < NN; i++) {
             for (int_t j = 0; j < NX; j++) out_x[i*NX+j] = nlp_out.x[i][j];
             for (int_t j = 0; j < NU; j++) out_u[i*NU+j] = nlp_out.u[i][j];
         }
         for (int_t j = 0; j < NX; j++) out_x[N*NX+j] = nlp_out.x[N][j];
 
-        for (int_t i = 0; i < NN; i++) {
-            for (int_t j = 0; j < NX; j++) err_x[i*NX+j] = fabs(out_x[i*NX+j] - resX(j, i));
-            for (int_t j = 0; j < NU; j++) err_u[i*NU+j] = fabs(out_u[i*NU+j] - resU(j, i));
-        }
-        for (int_t j = 0; j < NX; j++) err_x[N*NX+j] = fabs(out_x[N*NX+j] - resX(j, N));
+//        for (int_t i = 0; i < NN; i++) {
+//            for (int_t j = 0; j < NX; j++) err_x[i*NX+j] = fabs(out_x[i*NX+j] - resX(j, i));
+//            for (int_t j = 0; j < NU; j++) err_u[i*NU+j] = fabs(out_u[i*NU+j] - resU(j, i));
+//        }
+//        for (int_t j = 0; j < NX; j++) err_x[N*NX+j] = fabs(out_x[N*NX+j] - resX(j, N));
 
         // print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX, N+1);
         // print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU, N);
