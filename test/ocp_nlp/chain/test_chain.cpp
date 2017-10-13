@@ -29,6 +29,7 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
@@ -140,8 +141,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
                 integrators[jj].mem = 0;
             }
 
-            sim_in[jj].nSteps = Ns;
-            sim_in[jj].step = Ts/sim_in[jj].nSteps;
+            sim_in[jj].num_steps = Ns;
+            sim_in[jj].step = Ts/sim_in[jj].num_steps;
             sim_in[jj].nx = NX;
             sim_in[jj].nu = NU;
             sim_in[jj].nz = 0;
@@ -149,23 +150,26 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             sim_in[jj].sens_forw = true;
             sim_in[jj].sens_adj = false;
             sim_in[jj].sens_hess = false;
-            sim_in[jj].nsens_forw = NX+NU;
+            sim_in[jj].num_forw_sens = NX+NU;
 
             switch (NMF) {
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].VDE_forw = &VDE_fun_nm2;
-                sim_in[jj].jac_fun = &jac_fun_nm2;
+                sim_in[jj].VDE_forw = &vde_impl_fun;
+                sim_in[jj].jac = &jac_chain_nm2;
+                sim_in[jj].jac_fun = &jac_impl_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
-                sim_in[jj].VDE_forw = &VDE_fun_nm3;
-                sim_in[jj].jac_fun = &jac_fun_nm3;
+                sim_in[jj].VDE_forw = &vde_impl_fun;
+                sim_in[jj].jac = &jac_chain_nm3;
+                sim_in[jj].jac_fun = &jac_impl_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
-                sim_in[jj].VDE_forw = &VDE_fun_nm4;
-                sim_in[jj].jac_fun = &jac_fun_nm4;
+                sim_in[jj].VDE_forw = &vde_impl_fun;
+                sim_in[jj].jac = &jac_chain_nm4;
+                sim_in[jj].jac_fun = &jac_impl_fun;
                 break;
             default:
                 REQUIRE(1 == 0);
@@ -212,7 +216,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         }
 
         int_t nx[NN+1] = {0};
-        int_t nu[NN] = {0};
+        int_t nu[NN+1] = {0};
         int_t nb[NN+1] = {0};
         int_t nc[NN+1] = {0};
         int_t ng[NN+1] = {0};
@@ -221,6 +225,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
             nu[i] = NU;
         }
         nx[N] = NX;
+        nu[N] = 0;
 
         /************************************************
          * box constraints
@@ -368,12 +373,11 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         print_matrix_name((char*)"stdout", (char*)"err_x", err_x, NX, N+1);
         print_matrix_name((char*)"stdout", (char*)"err_u", err_u, NU, N);
 
-        // std::cout << resX << std::endl;
+        std::cout << resX << std::endl;
         std::cout << resU << std::endl;
 
         MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N+1);
         MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
-        std::cout << SQP_u << std::endl;
 
         REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
         REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));

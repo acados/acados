@@ -30,8 +30,12 @@ extern "C" {
 // struct of arguments to the solver
 typedef struct ocp_qp_hpipm_args_ {
     double alpha_min;
-    double mu_max;
+    double res_g_max;
+    double res_b_max;
+    double res_d_max;
+    double res_m_max;
     double mu0;
+    void *scrapspace;
     int iter_max;
 } ocp_qp_hpipm_args;
 
@@ -39,8 +43,8 @@ typedef struct ocp_qp_hpipm_args_ {
 typedef struct ocp_qp_hpipm_memory_ {
     struct d_ocp_qp *qp;
     struct d_ocp_qp_sol *qp_sol;
-    struct d_ipm_hard_ocp_qp_arg *ipm_arg;
-    struct d_ipm_hard_ocp_qp_workspace *ipm_workspace;
+    struct d_ocp_qp_ipm_arg *ipm_arg;
+    struct d_ocp_qp_ipm_workspace *ipm_workspace;
     double **hlam_lb;
     double **hlam_ub;
     double **hlam_lg;
@@ -50,19 +54,23 @@ typedef struct ocp_qp_hpipm_memory_ {
     int iter;
 } ocp_qp_hpipm_memory;
 
-//
-int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_in *qp_in,
-                                          ocp_qp_hpipm_args *args);
-//
-int ocp_qp_hpipm_calculate_memory_size(ocp_qp_in *qp_in,
-                                       ocp_qp_hpipm_args *args);
-//
-void ocp_qp_hpipm_create_memory(ocp_qp_in *qp_in, ocp_qp_hpipm_args *args,
-                                ocp_qp_hpipm_memory *hpipm_memory,
-                                void *memory);
-//
-int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpipm_args *args,
-                 ocp_qp_hpipm_memory *memory, void *workspace_);
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(const ocp_qp_in *qp_in);
+
+int_t ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
+
+char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, void **mem_,
+                                 void *raw_memory);
+
+ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *args_);
+
+int_t ocp_qp_hpipm_calculate_workspace_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
+
+int_t ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_,
+                   void *workspace_);
+
+void ocp_qp_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
+
+void ocp_qp_hpipm_destroy(void *mem, void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

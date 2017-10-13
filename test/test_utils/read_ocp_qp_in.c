@@ -24,11 +24,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "acados/ocp_qp/ocp_qp_common.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 
 static void transpose_matrix(real_t *mat, int m, int n) {
     int_t ii, jj;
@@ -140,7 +140,7 @@ int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname) {
 
 
 static void read_ocp_qp_in_N(int_t *N, const char *fpath) {
-    char fname[256];
+    char fname[MAX_STR_LEN];
     int status;
     snprintf(fname, sizeof(fname), "%s%s", fpath, "N.txt");
     status = read_int_vector_from_txt(N, 1, fname);
@@ -151,7 +151,7 @@ static void read_ocp_qp_in_N(int_t *N, const char *fpath) {
 
 static void read_ocp_qp_in_nx(int_t **nx, int_t N, const char *fpath) {
     int_t kk, status;
-    char fname[256];
+    char fname[MAX_STR_LEN];
 
     snprintf(fname, sizeof(fname), "%s%s", fpath, "nx.txt");
     status = read_int_vector_from_txt(*nx, N+1, fname);
@@ -162,7 +162,7 @@ static void read_ocp_qp_in_nx(int_t **nx, int_t N, const char *fpath) {
 
 static void read_ocp_qp_in_nu(int_t **nu, int_t N, const char *fpath) {
     int_t kk, status;
-    char fname[256];
+    char fname[MAX_STR_LEN];
 
     snprintf(fname, sizeof(fname), "%s%s", fpath, "nu.txt");
     status = read_int_vector_from_txt(*nu, N, fname);
@@ -173,7 +173,7 @@ static void read_ocp_qp_in_nu(int_t **nu, int_t N, const char *fpath) {
 
 static void read_ocp_qp_in_nb(int_t **nb, int_t N, const char *fpath) {
     int_t kk, status;
-    char fname[256];
+    char fname[MAX_STR_LEN];
 
     snprintf(fname, sizeof(fname), "%s%s", fpath, "nb.txt");
     status = read_int_vector_from_txt(*nb, N+1, fname);
@@ -184,7 +184,7 @@ static void read_ocp_qp_in_nb(int_t **nb, int_t N, const char *fpath) {
 
 static void read_ocp_qp_in_nc(int_t **nc, int_t N, const char *fpath) {
     int_t kk, status;
-    char fname[256];
+    char fname[MAX_STR_LEN];
 
     snprintf(fname, sizeof(fname), "%s%s", fpath, "nc.txt");
     status = read_int_vector_from_txt(*nc, N+1, fname);
@@ -195,7 +195,7 @@ static void read_ocp_qp_in_nc(int_t **nc, int_t N, const char *fpath) {
 
 static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
     int_t kk, N, status;
-    char fname[256];
+    char fname[MAX_STR_LEN];
     char stage[16];
     N = in->N;
 
@@ -246,7 +246,7 @@ static void read_ocp_qp_in_basic(ocp_qp_in *const in, const char *fpath) {
 
 
 static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath) {
-    char fname[256];
+    char fname[MAX_STR_LEN];
     char stage[16];
     int_t ii, kk, status;
 
@@ -275,7 +275,7 @@ static void read_ocp_qp_in_bounds(ocp_qp_in *const in, const char *fpath) {
 
 
 static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath) {
-    char fname[256];
+    char fname[MAX_STR_LEN];
     char stage[16];
     int_t ii, kk, status;
 
@@ -306,7 +306,7 @@ static void read_ocp_qp_in_polyhedral(ocp_qp_in *const in, const char *fpath) {
 
 
 static void read_ocp_qp_in_x0(ocp_qp_in *const in, const char *fpath) {
-    char fname[256];
+    char fname[MAX_STR_LEN];
     int ii, status, *ptr;
 
     snprintf(fname, sizeof(fname), "%s%s", fpath, "x0.txt");
@@ -402,9 +402,10 @@ void print_ocp_qp_in(ocp_qp_in const in) {
 }
 
 
-void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
-    int_t BOUNDS, int_t INEQUALITIES, int_t MPC, int_t QUIET) {
-    char fpath[256];
+ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, int_t MPC,
+    int_t QUIET) {
+
+    char fpath[MAX_STR_LEN];
     int_t ii, kk, N, pathLength;
     int_t *nx, *nu, *nb, *nc;
 
@@ -435,7 +436,8 @@ void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
     if (INEQUALITIES) read_ocp_qp_in_nc(&nc, N, fpath);
     if (MPC && !BOUNDS) nb[0] = nx[0];
 
-    allocate_ocp_qp_in(N, nx, nu, nb, nc, in);
+    ocp_qp_in *in = create_ocp_qp_in(N, nx, nu, nb, nc);
+
     read_ocp_qp_in_basic(in, fpath);
     if (BOUNDS) read_ocp_qp_in_bounds(in, fpath);
     if (INEQUALITIES) read_ocp_qp_in_polyhedral(in, fpath);
@@ -456,6 +458,8 @@ void read_ocp_qp_in(ocp_qp_in *const in, const char *fpath_,
     int_free(nu);
     int_free(nb);
     int_free(nc);
+
+    return in;
 }
 
 
@@ -473,7 +477,7 @@ void write_ocp_qp_in_to_txt(ocp_qp_in *const in, const char *dir) {
     real_t infty = 1e12;
 
     char sep[1];
-    char fpath[256];
+    char fpath[MAX_STR_LEN];
 
     // TODO(dimitris): S terms in objective and inequality constraints missing
     int_t *nx, *nu;

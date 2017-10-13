@@ -4,7 +4,7 @@
 
 #include "acados/utils/types.h"
 #include "acados/utils/timing.h"
-#include "acados/utils/allocate_ocp_qp.h"
+#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "test/test_utils/read_ocp_qp_in.h"
 
@@ -17,8 +17,6 @@
 int_t main( ) {
     /* code */
     int N, return_value;
-    ocp_qp_in qp_in;
-    ocp_qp_out qp_out;
 
     #if SOLVER == 1
     ocp_qp_ooqp_args args;
@@ -54,51 +52,51 @@ int_t main( ) {
     int_t MPC = 1;
     int_t QUIET = 1;
 
-    read_ocp_qp_in(&qp_in, "LTV/", BOUNDS, CONSTRAINTS, MPC, QUIET);
-    allocate_ocp_qp_out(&qp_in, &qp_out);
+    ocp_qp_in *qp_in = read_ocp_qp_in("LTV/", BOUNDS, CONSTRAINTS, MPC, QUIET);
+    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->N, (int*)qp_in->nx, (int*)qp_in->nu, (int*)qp_in->nb, (int*)qp_in->nc);
 
-    N = qp_in.N;
+    N = qp_in->N;
     int nPrimalVars = 0;
     for (int kk = 0; kk < N; kk++) {
-        nPrimalVars += qp_in.nx[kk] + qp_in.nu[kk];
+        nPrimalVars += qp_in->nx[kk] + qp_in->nu[kk];
     }
-    nPrimalVars += qp_in.nx[N];
+    nPrimalVars += qp_in->nx[N];
 
     #if SOLVER == 1
-    ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
+    ocp_qp_ooqp_create_memory(qp_in, &args, &mem);
     #if OOQP_WORK == 1
-    ocp_qp_ooqp_create_workspace(&qp_in, &args, &work);
+    ocp_qp_ooqp_create_workspace(qp_in, &args, &work);
     #elif OOQP_WORK == 2
-    int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
+    int_t work_space_size = ocp_qp_ooqp_calculate_workspace_size(qp_in, &args);
     printf("\nwork space size: %d bytes\n", work_space_size);
     work = (void*)malloc(work_space_size);
     #endif
     #elif SOLVER == 2
-    initialise_qpoases(&qp_in);
+    initialise_qpoases(qp_in);
     #elif SOLVER == 3
     int work_space_size =
-        ocp_qp_hpmpc_workspace_size_bytes(N, (int_t *)qp_in.nx, (int_t *)qp_in.nu, (int_t *)qp_in.nb, (int_t *)qp_in.nc, (int_t **)qp_in.idxb, &args);
+        ocp_qp_hpmpc_workspace_size_bytes(N, (int_t *)qp_in->nx, (int_t *)qp_in->nu, (int_t *)qp_in->nb, (int_t *)qp_in->nc, (int_t **)qp_in->idxb, &args);
     printf("\nwork space size: %d bytes\n", work_space_size);
     void *work = (void*)malloc(work_space_size);
     #endif
 
     #if SOLVER == 1
     #if OOQP_WORK == 1
-    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, &work);
+    return_value = ocp_qp_ooqp(qp_in, qp_out, &args, &mem, &work);
     #elif OOQP_WORK == 2
-    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
-    return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
+    return_value = ocp_qp_ooqp(qp_in, qp_out, &args, &mem, work);
+    return_value = ocp_qp_ooqp(qp_in, qp_out, &args, &mem, work);
     #endif
     #elif SOLVER == 2
-    return_value = ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL);
+    return_value = ocp_qp_condensing_qpoases(qp_in, qp_out, &args, NULL);
     #elif SOLVER ==3
-    return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &args, work);
+    return_value = ocp_qp_hpmpc(qp_in, qp_out, &args, work);
     #endif
 
-    printf("\nRETURN VALUE = %d LAST ELEMENT OF SOLUTION = %f\n\n", return_value,qp_out.x[0][nPrimalVars-1]);
+    printf("\nRETURN VALUE = %d LAST ELEMENT OF SOLUTION = %f\n\n", return_value,qp_out->x[0][nPrimalVars-1]);
     if (!QUIET) {
         printf("\nSOLUTION= \n");
-        for (int ii=0; ii <nPrimalVars; ii++) printf("%10.8f\n",qp_out.x[0][ii]);
+        for (int ii=0; ii <nPrimalVars; ii++) printf("%10.8f\n",qp_out->x[0][ii]);
     }
 
     #if SOLVER == 1
@@ -112,8 +110,8 @@ int_t main( ) {
     free(work);
     #endif
 
-    free_ocp_qp_in(&qp_in);
-    free_ocp_qp_out(&qp_out);
+    free(qp_in);
+    free(qp_out);
 
     return 0;
 }

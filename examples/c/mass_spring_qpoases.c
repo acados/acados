@@ -715,25 +715,27 @@ int main() {
      ************************************************/
 
     // solver arguments
-    ocp_qp_condensing_qpoases_args qpoases_args;
-    qpoases_args.cputime = 100.0;  // maximum cpu time in seconds
-    qpoases_args.nwsr = 1000;  // maximum number of working set recalculations
-    qpoases_args.warm_start = 0;  // wam start with dual_sol in memory
+    ocp_qp_condensing_qpoases_args *qpoases_args =
+        ocp_qp_condensing_qpoases_create_arguments(&qp_in);
+    qpoases_args->cputime = 100.0;  // maximum cpu time in seconds
+    qpoases_args->nwsr = 1000;  // maximum number of working set recalculations
+    qpoases_args->warm_start = 0;  // wam start with dual_sol in memory
 
     /************************************************
      * work space
      ************************************************/
 
-    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpoases_args);
+    int workspace_size = ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, qpoases_args);
     printf("\nwork space size: %d bytes\n", workspace_size);
     void *workspace = malloc(workspace_size);
 
-    int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpoases_args);
+    int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpoases_args);
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
-    ocp_qp_condensing_qpoases_memory qpoases_memory;
-    ocp_qp_condensing_qpoases_create_memory(&qp_in, &qpoases_args, &qpoases_memory, memory);
+    ocp_qp_condensing_qpoases_memory *qpoases_memory;
+    ocp_qp_condensing_qpoases_assign_memory(&qp_in, qpoases_args, (void **) &qpoases_memory,
+                                            memory);
 
     /************************************************
      * call the solver
@@ -746,7 +748,7 @@ int main() {
     for (int rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
         return_value =
-            ocp_qp_condensing_qpoases(&qp_in, &qp_out, &qpoases_args, &qpoases_memory, workspace);
+            ocp_qp_condensing_qpoases(&qp_in, &qp_out, qpoases_args, qpoases_memory, workspace);
     }
 
     real_t time = acados_toc(&timer)/nrep;
@@ -757,11 +759,17 @@ int main() {
     printf("\nx = \n");
     for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
 
+    printf("\npi = \n");
+    for (ii = 0; ii < N; ii++) d_print_mat(1, nxx[ii+1], hpi[ii], 1);
+
+    printf("\nlam = \n");
+    for (ii = 0; ii <= N; ii++) d_print_mat(1, 2*nbb[ii]+2*ngg[ii], hlam[ii], 1);
+
     printf("\n");
     printf(
         " Solution time for %d working set recalculations, averaged over %d "
-        "runs: %5.2e seconds\n",
-        qpoases_memory.nwsr, nrep, time);
+        "runs: %5.2e seconds\n\n\n",
+        qpoases_memory->nwsr, nrep, time);
     printf("\n\n");
 
     if (return_value != 0) {

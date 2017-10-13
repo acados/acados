@@ -20,19 +20,14 @@
 cmake_minimum_required(VERSION 3.0)
 
 if(CMAKE_MAKE_PROGRAM)
-	file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
-	find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
+    file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
+    find_program(CMAKE_MAKE_PROGRAM ${CMAKE_MAKE_PROGRAM})
 endif()
 
 project(acados LANGUAGES C CXX)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
-    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-endif()
-
-# Enable or disable timings
-if(MEASURE_TIMINGS)
-    add_definitions(-DMEASURE_TIMINGS)
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -40,14 +35,14 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 if(CMAKE_SYSTEM MATCHES "Windows")
-	set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
-	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
+    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
 endif()
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release
-        CACHE STRING "No build type chosen. Valid build types are: \
+        CACHE STRING "Valid build types are: \
         Release (default), None, Debug, NoExternalLibs, RelWithDebInfo, MinSizeRel." FORCE)
 endif()
 message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
@@ -55,8 +50,8 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 enable_testing(true)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNOFLIP_BOUNDS -std=c99 -Wall -Werror -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -DNOFLIP_BOUNDS -std=c++11 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
 endif()
 
 # Set install directories
@@ -72,7 +67,14 @@ message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+# set(CMAKE_INSTALL_RPATH "\$ORIGIN")
+# SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+    set(ACADOS_WITH_OOQP ON CACHE BOOL "Add OOQP solver")
+endif()
+
+set(CMAKE_MACOSX_RPATH TRUE)
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 # Configure acados
 add_subdirectory(acados)
@@ -82,7 +84,7 @@ add_subdirectory(${EXTERNAL_SRC_DIR})
 
 # Add examples
 if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
-	add_subdirectory(examples)
+    add_subdirectory(examples)
 endif()
 
 # Configure SWIG interface
@@ -97,12 +99,6 @@ if(UNIT_TESTS)
     add_subdirectory(test)
 endif()
 
-# Installation
-install(DIRECTORY acados
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN "simplified" EXCLUDE)
-
 # Uninstallation
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
@@ -113,5 +109,5 @@ add_custom_target(uninstall
 
 # Cpplint
 if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
-	include(lint)
+    include(lint)
 endif()

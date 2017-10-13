@@ -32,6 +32,7 @@
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
@@ -49,19 +50,11 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 #define TT 3.0
 #define Ns 2
 
-extern int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-extern int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-
 // using Eigen::MatrixXd;
 // using Eigen::VectorXd;
 
 int main() {
+    // TODO(dimitris): fix for NMF > 1
     const int INEXACT = 0;
     const int d = 2;
     const int NMF = 1;
@@ -141,7 +134,6 @@ int main() {
     sim_solver integrators[NN];
 
     sim_RK_opts rk_opts[NN];
-    void *sim_work;
     sim_lifted_irk_memory irk_mem[NN];
 
     // TODO(rien): can I move this somewhere inside the integrator?
@@ -160,8 +152,8 @@ int main() {
             integrators[jj].mem = 0;
         }
 
-        sim_in[jj].nSteps = Ns;
-        sim_in[jj].step = Ts / sim_in[jj].nSteps;
+        sim_in[jj].num_steps = Ns;
+        sim_in[jj].step = Ts / sim_in[jj].num_steps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
         sim_in[jj].nz = 0;
@@ -169,26 +161,28 @@ int main() {
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;
         sim_in[jj].sens_hess = false;
-        sim_in[jj].nsens_forw = NX + NU;
+        sim_in[jj].num_forw_sens = NX + NU;
 
         switch (NMF) {
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].VDE_forw = &VDE_fun_nm2;
-                sim_in[jj].jac_fun = &jac_fun_nm2;
+                sim_in[jj].VDE_forw = &vde_impl_fun;
+                sim_in[jj].jac = &jac_chain_nm2;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
-                sim_in[jj].VDE_forw = &VDE_fun_nm3;
-                sim_in[jj].jac_fun = &jac_fun_nm3;
+                sim_in[jj].VDE_forw = &vde_impl_fun;
+                sim_in[jj].jac = &jac_chain_nm3;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
-                sim_in[jj].VDE_forw = &VDE_fun_nm4;
-                sim_in[jj].jac_fun = &jac_fun_nm4;
+                sim_in[jj].VDE_forw = &vde_impl_fun;
+                sim_in[jj].jac = &jac_chain_nm4;
+                sim_in[jj].jac_fun = &jac_fun;
                 break;
             default:
-                // REQUIRE(1 == 0);
                 break;
         }
 
@@ -236,9 +230,7 @@ int main() {
             workspace_size =
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
-        // TODO(roversch): Next line is leaking memory!
-        sim_work = (void *)malloc(workspace_size);
-        integrators[jj].work = sim_work;
+        integrators[jj].work = (void *) malloc(workspace_size);
     }
 
     int_t nx[NN + 1] = {0};
@@ -381,8 +373,7 @@ int main() {
     nlp_args.common = &nlp_common_args;
     nlp_args.common->maxIter = max_sqp_iters;
 
-    snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-             "qpdunes");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
+    snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "condensing_qpoases");
 
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
@@ -460,6 +451,7 @@ int main() {
     free(ls_cost.W);
 
     for (jj = 0; jj < NN; jj++) {
+        free(nlp_in.sim[jj].work);
         free(nlp_out.x[jj]);
         free(nlp_out.u[jj]);
         free(nlp_out.lam[jj]);

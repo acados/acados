@@ -22,9 +22,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <assert.h>
+
 // #include "blasfeo/include/blasfeo_target.h"
 // #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux.h"
+// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -46,28 +48,6 @@ static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
         }
     }
     for (ii = 0; ii < m * n; ii++) mat[ii] = tmp[ii];
-}
-
-// TODO(dimitris): update code and remove this routine
-static void ocp_qp_qpdunes_cast_workspace(ocp_qp_qpdunes_workspace *work,
-                                          ocp_qp_qpdunes_memory *mem) {
-    char *ptr = (char *)work;
-
-    ptr += sizeof(ocp_qp_qpdunes_workspace);
-    work->ABt = (real_t *)ptr;
-    ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
-    work->Ct = (real_t *)ptr;
-    ptr += (mem->dimC) * sizeof(real_t);
-    work->scrap = (real_t *)ptr;
-    ptr += (mem->maxDim) * sizeof(real_t);
-    work->zLow = (real_t *)ptr;
-    ptr += (mem->dimz) * sizeof(real_t);
-    work->zUpp = (real_t *)ptr;
-    ptr += (mem->dimz) * sizeof(real_t);
-    work->H = (real_t *)ptr;
-    ptr += (mem->dimz * mem->dimz) * sizeof(real_t);
-    work->g = (real_t *)ptr;
-    // ptr += (mem->dimz)*sizeof(real_t);
 }
 
 static void form_H(real_t *Hk, int_t nx, const real_t *Qk, int_t nu,
@@ -150,10 +130,9 @@ static void form_Ct(real_t *Ckt, int_t nc, int_t nx, const real_t *Cxk,
     transpose_matrix(Ckt, nc, nx + nu, scrap);
 }
 
-static int_t ocp_qp_qpdunes_update_memory(const ocp_qp_in *in,
-                                          const ocp_qp_qpdunes_args *args,
-                                          ocp_qp_qpdunes_memory *mem,
-                                          ocp_qp_qpdunes_workspace *work) {
+static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
+                           ocp_qp_qpdunes_memory *mem, ocp_qp_qpdunes_workspace *work) {
+
     int_t kk, N, nx, nu, nc;
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
     return_t value = 0;
@@ -357,32 +336,29 @@ static int_t get_maximum_number_of_inequality_constraints(const ocp_qp_in *in) {
     return nDmax;
 }
 
-int_t ocp_qp_qpdunes_create_arguments(void *args_, int_t opts_) {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
-    qpdunes_options_t opts = (qpdunes_options_t)opts_;
-
-    args->options.printLevel = 0;
+ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
 
     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 0;
     } else if (opts == QPDUNES_NONLINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
-        // TODO(dimitris): maybe less accurate solution for MPC
         args->isLinearMPC = 0;
+        args->options.printLevel = 0;
     } else if (opts == QPDUNES_LINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
-        // TODO(dimitris): maybe less accurate solution for MPC
         args->isLinearMPC = 1;
+        args->options.printLevel = 0;
     } else {
-        printf("\nUnknown option (%d) for qpDUNES!\n", opts_);
-        return -1;
+        printf("\nUnknown option (%d) for qpDUNES!\n", opts);
+        args->options = qpDUNES_setupDefaultOptions();
+        args->isLinearMPC = 0;
     }
-    return 0;
+    return args;
 }
 
-int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in,
-                                              void *args_) {
+int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
     int_t size, dimA, dimB, dimC, nDmax, dimz, maxDim;
@@ -405,11 +381,33 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in,
     return size;
 }
 
-int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_,
-                                   void *mem_) {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
-    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
+static void assign_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory *mem) {
 
+    char *ptr = (char *)work;
+
+    ptr += sizeof(ocp_qp_qpdunes_workspace);
+    assert((size_t)ptr % 8 == 0);
+
+    work->ABt = (real_t *)ptr;
+    ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
+    work->Ct = (real_t *)ptr;
+    ptr += (mem->dimC) * sizeof(real_t);
+    work->scrap = (real_t *)ptr;
+    ptr += (mem->maxDim) * sizeof(real_t);
+    work->zLow = (real_t *)ptr;
+    ptr += (mem->dimz) * sizeof(real_t);
+    work->zUpp = (real_t *)ptr;
+    ptr += (mem->dimz) * sizeof(real_t);
+    work->H = (real_t *)ptr;
+    ptr += (mem->dimz * mem->dimz) * sizeof(real_t);
+    work->g = (real_t *)ptr;
+    ptr += (mem->dimz)*sizeof(real_t);
+}
+
+ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_) {
+
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
+    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
     int_t N, nx, nu, kk;
     uint_t *nD_ptr = 0;
     return_t return_value;
@@ -430,12 +428,14 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_,
     for (kk = 1; kk < N; kk++) {
         if ((nx != in->nx[kk]) || (nu != in->nu[kk])) {
             printf("\nqpDUNES does not support varying dimensions!\n");
-            return -1;
+            free(mem);
+            return NULL;
         }
     }
     if ((nx != in->nx[N]) || (in->nu[N] != 0)) {
         printf("\nqpDUNES does not support varying dimensions!\n");
-        return -1;
+        free(mem);
+        return NULL;
     }
 
     mem->stageQpSolver = define_stage_qp_solver(in);
@@ -466,13 +466,13 @@ int_t ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_,
     }
 
     /* memory allocation */
-    return_value =
-        qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
+    return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
     if (return_value != QPDUNES_OK) {
         printf("Setup of the QP solver failed\n");
-        return (int_t)return_value;
+        free(mem);
+        return NULL;
     }
-    return 0;
+    return mem;
 }
 
 void ocp_qp_qpdunes_free_memory(void *mem_) {
@@ -480,8 +480,7 @@ void ocp_qp_qpdunes_free_memory(void *mem_) {
     qpDUNES_cleanup(&(mem->qpData));
 }
 
-int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_,
-                     void *work_) {
+int_t ocp_qp_qpdunes(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
@@ -489,8 +488,8 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_,
     return_t return_value;
     // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
 
-    ocp_qp_qpdunes_cast_workspace(work, mem);
-    ocp_qp_qpdunes_update_memory(in, args, mem, work);
+    assign_workspace(work, mem);
+    update_memory(in, args, mem, work);
 
     return_value = qpDUNES_solve(&(mem->qpData));
     if (return_value != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) {
@@ -502,19 +501,12 @@ int_t ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_,
     return 0;
 }
 
-void ocp_qp_qpdunes_initialize(ocp_qp_in *qp_in, void *args_, void *mem_,
-                               void **work) {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
-    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
+void ocp_qp_qpdunes_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
 
-    // TODO(dimitris): opts should be an input to initialize
-    ocp_qp_qpdunes_create_arguments(args, QPDUNES_NONLINEAR_MPC);
-    // args->options.printLevel = 0;
-
-    ocp_qp_qpdunes_create_memory(qp_in, args, mem);
-    int_t work_space_size =
-        ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
-    *work = (void *)malloc(work_space_size);
+    *mem = ocp_qp_qpdunes_create_memory(qp_in, args);
+    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
+    *work = malloc(work_space_size);
 }
 
 void ocp_qp_qpdunes_destroy(void *mem, void *work) {

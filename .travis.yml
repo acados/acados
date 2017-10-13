@@ -53,15 +53,18 @@ before_script:
     fi
 
 script:
+  # travis-wait seems to stop at 20 mins, regardless if output is being generated
+  - (while true ; do sleep 60 ; echo "ping" ; done ) &
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
+  - cmake --build build --target lint
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
-  - rm -r build
+  - rm -r -f build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
   - cmake --build build --clean-first
-  - rm -r build
+  - rm -r -f build
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
   - export CXX="$CXX -std=c++11" # needed for octave
@@ -69,7 +72,6 @@ script:
   - cmake -E chdir build ctest --output-on-failure
   - cmake --build build --target install
   - python -c "import acados" # check installation
-  - cmake --build build --target lint
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
 
 after_success:

@@ -25,14 +25,7 @@
 #include <string.h>
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#ifdef OOQP
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
-#endif
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_qp/allocate_ocp_qp.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -258,6 +251,7 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
     initialize_objective(nlp_in, gn_sqp_mem, work);
     initialize_trajectories(nlp_in, gn_sqp_mem, work);
 
+    // TODO(roversch): Do we need this here?
     int_t **qp_idxb = (int_t **) gn_sqp_mem->qp_solver->qp_in->idxb;
     for (int_t i = 0; i <= nlp_in->N; i++) {
         for (int_t j = 0; j < nlp_in->nb[i]; j++) {
@@ -307,46 +301,12 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args *)args_;
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)memory_;
 
-    mem->qp_solver = (ocp_qp_solver *)malloc(sizeof(ocp_qp_solver));
-    ocp_qp_in *qp_in = (ocp_qp_in *)malloc(sizeof(ocp_qp_in));
-    allocate_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc, qp_in);
-    ocp_qp_out *qp_out = (ocp_qp_out *)malloc(sizeof(ocp_qp_out));
-    allocate_ocp_qp_out(qp_in, qp_out);
-    void *qp_args = NULL, *qp_mem = NULL, *qp_work = NULL;
-    if (!strcmp(args->qp_solver_name, "qpdunes")) {
-        mem->qp_solver->fun = &ocp_qp_qpdunes;
-        mem->qp_solver->initialize = &ocp_qp_qpdunes_initialize;
-        mem->qp_solver->destroy = &ocp_qp_qpdunes_destroy;
-        qp_args = (void *)malloc(sizeof(ocp_qp_qpdunes_args));
-        qp_mem = (void *)malloc(sizeof(ocp_qp_qpdunes_memory));
-#ifdef OOQP
-    } else if (!strcmp(args->qp_solver_name, "ooqp")) {
-        mem->qp_solver->fun = &ocp_qp_ooqp;
-        mem->qp_solver->initialize = &ocp_qp_ooqp_initialize;
-        mem->qp_solver->destroy = &ocp_qp_ooqp_destroy;
-        qp_args = (void *)malloc(sizeof(ocp_qp_ooqp_args));
-        qp_mem = (void *)malloc(sizeof(ocp_qp_ooqp_memory));
-#endif
-    } else if (!strcmp(args->qp_solver_name, "condensing_qpoases")) {
-        mem->qp_solver->fun = &ocp_qp_condensing_qpoases;
-        mem->qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
-        mem->qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
-        qp_args = (void *)malloc(sizeof(ocp_qp_condensing_qpoases_args));
-    } else if (!strcmp(args->qp_solver_name, "hpmpc")) {
-        mem->qp_solver->fun = &ocp_qp_hpmpc;
-        mem->qp_solver->initialize = &ocp_qp_hpmpc_initialize;
-        mem->qp_solver->destroy = &ocp_qp_hpmpc_destroy;
-        qp_args = (void *)malloc(sizeof(ocp_qp_hpmpc_args));
-    } else {
-        printf("CHOSEN QP SOLVER FOR SQP METHOD NOT AVAILABLE!\n");
-        exit(1);
-    }
-    mem->qp_solver->initialize(qp_in, qp_args, qp_mem, &qp_work);
-    mem->qp_solver->qp_in = qp_in;
-    mem->qp_solver->qp_out = qp_out;
-    mem->qp_solver->args = qp_args;
-    mem->qp_solver->mem = qp_mem;
-    mem->qp_solver->work = qp_work;
+    ocp_qp_in *dummy_qp = create_ocp_qp_in(in->N, in->nx, in->nu, in->nb, in->nc);
+    int_t **idxb = (int_t **) dummy_qp->idxb;
+    for (int_t i = 0; i < in->N; i++)
+        for (int_t j = 0; j < in->nb[i]; j++)
+            idxb[i][j] = in->idxb[i][j];
+    mem->qp_solver = create_ocp_qp_solver(dummy_qp, args->qp_solver_name, NULL);
 
     ocp_nlp_create_memory(in, mem->common);
 }
@@ -358,12 +318,10 @@ void ocp_nlp_gn_sqp_free_memory(void *mem_) {
     ocp_nlp_free_memory(N, mem->common);
 
     mem->qp_solver->destroy(mem->qp_solver->mem, mem->qp_solver->work);
-    free_ocp_qp_in(mem->qp_solver->qp_in);
-    free_ocp_qp_out(mem->qp_solver->qp_out);
+
     free(mem->qp_solver->qp_in);
     free(mem->qp_solver->qp_out);
     free(mem->qp_solver->args);
-    free(mem->qp_solver->mem);
     free(mem->qp_solver);
     // TODO(dimitris): where do we free the integrators?
 }

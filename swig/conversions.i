@@ -53,8 +53,11 @@ class sequence_of_arrays(list):
 
 %{
 // Global variable for Python module
-PyTypeObject tuple_type;
-PyObject *pModule = NULL;
+PyTypeObject *tuple_type = NULL;
+PyStructSequence_Desc *tuple_descriptor = NULL;
+PyObject *sequence_of_arrays_module = NULL;
+PyObject *copy_module = NULL;
+
 %}
 #endif
 
@@ -234,7 +237,9 @@ LangObject *from(const LangObject *sequence, int_t index) {
 #if defined(SWIGMATLAB)
     return mxGetCell(sequence, index);
 #elif defined(SWIGPYTHON)
-    return PyList_GetItem((PyObject *) sequence, index);
+    PyObject *item = PyList_GetItem((PyObject *) sequence, index);
+    Py_INCREF(item);
+    return item;
 #endif
 }
 
@@ -263,7 +268,7 @@ void fill_int_array_from(const LangObject *sequence, int_t *array, const int_t l
     for (int_t index = 0; index < length; index++) {
         LangObject *item = from(sequence, index);
         if (!is_integer(item)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input %s elements must be scalars",
                 LANG_SEQUENCE_NAME);
             throw std::invalid_argument(err_msg);
@@ -276,7 +281,7 @@ void fill_real_array_from(const LangObject *sequence, real_t *array, const int_t
     for (int_t index = 0; index < length; index++) {
         LangObject *item = from(sequence, index);
         if (!is_real(item)) {
-            char err_msg[256];
+            char err_msg[MAX_STR_LEN];
             snprintf(err_msg, sizeof(err_msg), "Input %s elements must be scalars",
                 LANG_SEQUENCE_NAME);
             throw std::invalid_argument(err_msg);
@@ -309,14 +314,17 @@ bool has(const LangObject *map, const char *key) {
 
 LangObject *from(const LangObject *map, const char *key) {
     if (!has(map, key)) {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), "Input %s has no key %s", LANG_MAP_NAME, key);
         throw std::invalid_argument(err_msg);
     }
 #if defined(SWIGMATLAB)
     return mxGetField(map, 0, key);
 #elif defined(SWIGPYTHON)
-    return PyDict_GetItemString((PyObject *) map, key);
+    PyObject *item = PyDict_GetItemString((PyObject *) map, key);
+    if (item)
+        Py_INCREF(item);
+    return item;
 #endif
 }
 
@@ -351,6 +359,7 @@ void to(LangObject *sequence, const int_t index, LangObject *item) {
 #if defined(SWIGMATLAB)
     mxSetCell(sequence, index, item);
 #elif defined(SWIGPYTHON)
+    Py_INCREF(item);
     PyList_SetItem(sequence, index, item);
 #endif
 }
@@ -378,32 +387,29 @@ LangObject *new_sequence_of_arrays(const int_t length) {
     mxArray *sequence = new_sequence(length);
 #elif defined(SWIGPYTHON)
     // Try loading Python module into global variable
-    if (pModule == NULL)
-        pModule = PyImport_Import(PyString_FromString("acados"));
+    if (sequence_of_arrays_module == NULL)
+        sequence_of_arrays_module = PyImport_Import(PyString_FromString("acados"));
     // Check if loading was succesful
-    if (pModule == NULL)
+    if (sequence_of_arrays_module == NULL)
         SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module");
-    PyObject *pDict = PyModule_GetDict(pModule);
+    PyObject *pDict = PyModule_GetDict(sequence_of_arrays_module);
     PyObject *pClass = PyDict_GetItemString(pDict, "sequence_of_arrays");
+    if (pClass)
+        Py_INCREF(pClass);
     PyObject *sequence = NULL;
     if (PyCallable_Check(pClass)) {
         PyObject *args = PyTuple_New(1);
         PyObject *list = PyList_New(length);
         for (int_t index = 0; index < length; index++)
             PyList_SetItem(list, index, PyLong_FromLong((long) index));  // fill list with dummies
+        Py_INCREF(list);
         PyTuple_SetItem(args, 0, list);
         sequence = PyObject_CallObject(pClass, args);
-        if (sequence == NULL)
-            PyErr_Print();
-    } else {
-        char err_msg[256];
-        snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
-            "with length %d", LANG_SEQUENCE_NAME, length);
-        SWIG_Error(SWIG_RuntimeError, err_msg);
+        Py_DECREF(pClass);
     }
 #endif
     if (sequence == NULL) {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), "Something went wrong during construction of %s "
             "with length %d", LANG_SEQUENCE_NAME, length);
         SWIG_Error(SWIG_RuntimeError, err_msg);
@@ -493,7 +499,7 @@ void fill_array_from(const LangObject *input, T **array,
                 copy_from(item, array[index], nb_rows[index]*nb_columns[index]);
         }
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg),
             "Expected %s or %s as input", LANG_SEQUENCE_NAME, LANG_MATRIX_NAME);
         throw std::invalid_argument(err_msg);
@@ -554,24 +560,46 @@ LangObject *new_output_tuple(int_t num_fields, const char **field_names, LangObj
         mxSetField(named_tuple, 0, field_names[index], content[index]);
     return named_tuple;
 #elif defined(SWIGPYTHON)
-    // The list of field names in named tuples must be NULL-terminated in Python
-    PyStructSequence_Field fields[num_fields+1];
+    PyObject *content_copy[num_fields];
+    // Try loading Python module into global variable
+    if (copy_module == NULL)
+        copy_module = PyImport_Import(PyString_FromString("copy"));
+    // Check if loading was succesful
+    if (copy_module == NULL)
+        SWIG_Error(SWIG_RuntimeError, "Something went wrong when importing Python module 'copy'");
+    PyObject *pDict = PyModule_GetDict(copy_module);
+    PyObject *pFunction = PyDict_GetItemString(pDict, "deepcopy");
+    if (!PyCallable_Check(pFunction)) {
+        SWIG_Error(SWIG_RuntimeError, "Function is not callable");
+    }
+    for (int_t index = 0; index < num_fields; index++) {
+        PyObject *args = PyTuple_New(1);
+        PyTuple_SetItem(args, 0, content[index]);
+        content_copy[index] = PyObject_CallObject(pFunction, args);
+    }
+
+    PyStructSequence_Field *fields;
+    fields = (PyStructSequence_Field *) calloc(num_fields+1, sizeof(PyStructSequence_Field));
     for (int_t index = 0; index < num_fields; index++) {
         fields[index].name = (char *) field_names[index];
         fields[index].doc = NULL;
     }
+    // The list of field names in named tuples must be NULL-terminated in Python
     fields[num_fields].name = NULL;
     fields[num_fields].doc = NULL;
-    PyStructSequence_Desc tuple_descriptor;
-    tuple_descriptor.name = (char *) "output";
-    tuple_descriptor.doc = NULL;
-    tuple_descriptor.fields = fields;
-    tuple_descriptor.n_in_sequence = num_fields;
-    PyStructSequence_InitType2(&tuple_type, &tuple_descriptor);
-    tuple_type.tp_flags = tuple_type.tp_flags | Py_TPFLAGS_HEAPTYPE;
-    PyObject *named_tuple = PyStructSequence_New(&tuple_type);
+
+    tuple_descriptor = (PyStructSequence_Desc *) malloc(sizeof(PyStructSequence_Desc));
+    tuple_descriptor->name = (char *) "output";
+    tuple_descriptor->doc = NULL;
+    tuple_descriptor->fields = fields;
+    tuple_descriptor->n_in_sequence = num_fields;
+
+    tuple_type = (PyTypeObject *) malloc(sizeof(PyTypeObject));
+    PyStructSequence_InitType(tuple_type, tuple_descriptor);
+
+    PyObject *named_tuple = PyStructSequence_New(tuple_type);
     for (int_t index = 0; index < num_fields; index++)
-        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content[index]);
+        PyStructSequence_SetItem(named_tuple, index, (PyObject *) content_copy[index]);
     return named_tuple;
 #endif
 }
@@ -596,7 +624,7 @@ void fill_array_from(const LangObject *input, int_t *array, const int_t length) 
     } else if (is_sequence(input, length)) {
         fill_int_array_from(input, array, length);
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), \
             "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
         throw std::invalid_argument(err_msg);
@@ -613,7 +641,7 @@ void fill_array_from(const LangObject *input, real_t *array, const int_t length)
     } else if (is_matrix(input, length, 1)) {
         copy_from(input, array, length);
     } else {
-        char err_msg[256];
+        char err_msg[MAX_STR_LEN];
         snprintf(err_msg, sizeof(err_msg), \
             "Expected scalar or %s of length %d", LANG_SEQUENCE_NAME, length);
         throw std::invalid_argument(err_msg);

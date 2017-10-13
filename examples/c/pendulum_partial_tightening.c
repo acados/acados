@@ -39,12 +39,12 @@
 #include "hpmpc/include/lqcp_solvers.h"
 
 #include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/casadi_wrapper.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
-#include "examples/c/pendulum_model/pendulum_model.h"
 
 // define IP solver arguments && number of repetitions
 #define NREP 10
@@ -61,6 +61,8 @@
 #define NSIM 1
 #define GAMMA 1e-2
 #define UMAX 1
+
+int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef DEBUG
 static void print_states_controls(real_t *w, int_t N) {
@@ -297,17 +299,17 @@ int main() {
     real_t T = 0.01;
     sim_in  sim_in;
     sim_out sim_out;
-    sim_in.nSteps = 1;
-    sim_in.step = T/sim_in.nSteps;
+    sim_in.num_steps = 1;
+    sim_in.step = T/sim_in.num_steps;
     sim_in.vde = &vdeFun;
-    sim_in.VDE_forw = &VDE_fun_pendulum;
+    sim_in.VDE_forw = &vde_fun;
     sim_in.nx = NX;
     sim_in.nu = NU;
 
     sim_in.sens_forw = true;
     sim_in.sens_adj = false;
     sim_in.sens_hess = false;
-    sim_in.nsens_forw = NX+NU;
+    sim_in.num_forw_sens = NX+NU;
 
     sim_in.x = malloc(sizeof(*sim_in.x) * (NX));
     sim_in.u = malloc(sizeof(*sim_in.u) * (NU));
@@ -351,20 +353,20 @@ int main() {
     real_t *pB[N];
     real_t *pb[N];
     real_t *pQ[N+1];
-    real_t *pS[N];
-    real_t *pR[N];
+    real_t *pS[N+1];
+    real_t *pR[N+1];
     real_t *pq[N+1];
-    real_t *pr[N];
+    real_t *pr[N+1];
     real_t *px[N+1];
-    real_t *pu[N];
+    real_t *pu[N+1];
     real_t *px0[1];
     int    *hidxb[N+1];
     real_t *pub[N+1];
     real_t *plb[N+1];
-    real_t *pC[N + 1];
-    real_t *pD[N];
-    real_t *plg[N + 1];
-    real_t *pug[N + 1];
+    real_t *pC[N+1];
+    real_t *pD[N+1];
+    real_t *plg[N+1];
+    real_t *pug[N+1];
 
     /************************************************
     * box constraints
@@ -412,8 +414,8 @@ int main() {
     hidxb[N] = idxbN;
 
     d_zeros(&px0[0], nx[0], 1);
-    d_zeros(&plb[0], (NBU), 1);
-    d_zeros(&pub[0], (NBU), 1);
+    d_zeros(&plb[0], NBU, 1);
+    d_zeros(&pub[0], NBU, 1);
     for (int_t i = 0; i < N; i++) {
         d_zeros(&pA[i], nx[i+1], nx[i]);
         d_zeros(&pB[i], nx[i+1], nu[i]);
@@ -423,8 +425,8 @@ int main() {
         d_zeros(&pr[i], nu[i], 1);
         d_zeros(&px[i], nx[i], 1);
         d_zeros(&pu[i], nu[i], 1);
-        d_zeros(&plb[i+1], (NBU+NBX), 1);
-        d_zeros(&pub[i+1], (NBU+NBX), 1);
+        if (i >= 1) d_zeros(&plb[i], NBU+NBX, 1);
+        if (i >= 1) d_zeros(&pub[i], NBU+NBX, 1);
     }
     d_zeros(&plb[N], NBX, 1);
     d_zeros(&pub[N], NBX, 1);
@@ -470,6 +472,8 @@ int main() {
 
     double *CN;
     d_zeros(&CN, ngN, NX);
+    double *DN;
+    d_zeros(&DN, ngN, nu[N]);
     double *lgN;
     d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
     double *ugN;
@@ -524,6 +528,7 @@ int main() {
     d_zeros(&plam[N], 2*nb[N]+2*nb[N], 1);
 
     pC[N] = CN;
+    pD[N] = DN;
     plg[N] = lgN;
     pug[N] = ugN;
 
@@ -588,7 +593,7 @@ int main() {
     work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &hpmpc_args);
     // printf("work_space_size = %i", work_space_size);
     v_zeros_align(&workspace, work_space_size);
-    ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args, &mem);
+    mem = ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args);
 
     acados_timer timer;
     real_t timings = 0;
@@ -733,5 +738,67 @@ int main() {
     printf("Average of %.3f ms per RTI.\n", 1e3*sum_timings/NREP);
     printf("Minimum of %.3f ms per RTI.\n", 1e3*min_timings);
     free(workspace);
+    ocp_qp_hpmpc_free_memory(mem);
+    sim_erk_destroy(erk_work);
+    free(sim_in.x);
+    free(sim_in.u);
+    free(sim_in.S_forw);
+    free(sim_out.xn);
+    free(sim_out.S_forw);
+
+    // UGLY
+    free(px0[0]);
+    free(plb[0]);
+    free(pub[0]);
+    for (int_t i = 0; i < N; i++) {
+        free(pA[i]);
+        free(pB[i]);
+        free(pb[i]);
+        free(pS[i]);
+        free(pq[i]);
+        free(pr[i]);
+        free(px[i]);
+        free(pu[i]);
+        free(plb[i+1]);
+        free(pub[i+1]);
+    }
+    free(pq[N]);
+    free(px[N]);
+
+    free(A0);
+
+    free(C0);
+    free(D0);
+    free(lg0);
+    free(ug0);
+
+    free(C);
+    free(D);
+    free(lg);
+    free(ug);
+
+    free(CN);
+    free(DN);
+    free(lgN);  // force all states to 0 at the last stage
+    free(ugN);  // force all states to 0 at the last stage
+
+    ii = 0;
+    for (ii = 0; ii < N; ii++) {
+        free(ppi[ii]);
+        free(plam[ii]);
+        free(pt[ii]);
+
+        free(lam_in[ii]);
+        free(t_in[ii]);
+        free(ux_in[ii]);
+    }
+
+    free(plam[N]);
+    free(pt[N]);
+
+    free(lam_in[N]);
+    free(t_in[N]);
+    free(ux_in[N]);
+
     return 0;
 }
