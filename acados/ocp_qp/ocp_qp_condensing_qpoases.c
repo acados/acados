@@ -65,21 +65,71 @@
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 
-ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments() {
-    ocp_qp_condensing_qpoases_args *args =
-        (ocp_qp_condensing_qpoases_args *) malloc(sizeof(ocp_qp_condensing_qpoases_args));
+
+
+int ocp_qp_condensing_qpoases_calculate_args_size(const ocp_qp_in *qp_in) {
+    int N = qp_in->N;
+    int size = 0;
+    size += sizeof(ocp_qp_condensing_qpoases_args);
+    size += (N+1)*sizeof(int);
+    return size;
+}
+
+
+
+char *ocp_qp_condensing_qpoases_assign_args(const ocp_qp_in *qp_in,
+    ocp_qp_condensing_qpoases_args **args, void *mem) {
+
+    int N = qp_in->N;
+
+    char *c_ptr = (char *) mem;
+
+    *args = (ocp_qp_condensing_qpoases_args *) c_ptr;
+    c_ptr += sizeof(ocp_qp_condensing_qpoases_args);
+
+    (*args)->scrapspace = c_ptr;
+    c_ptr += (N+1)*sizeof(int);
+
+    return c_ptr;
+    }
+
+
+
+static void ocp_qp_condensing_qpoases_initialize_default_args(const ocp_qp_in *qp_in,
+    ocp_qp_condensing_qpoases_args *args) {
+
     args->cputime = 1000.0;  // maximum cpu time in seconds
     args->warm_start = 0;
     args->nwsr = 1000;
 
+    int N = qp_in->N;
+
+    int *ns = (int *) args->scrapspace;
+    int ii;
+    for (ii=0; ii < N+1; ii++) ns[ii] = 0;
+    }
+
+
+
+ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(const ocp_qp_in *qp_in) {
+    void *mem = malloc(ocp_qp_condensing_qpoases_calculate_args_size(qp_in));
+    ocp_qp_condensing_qpoases_args *args;
+    ocp_qp_condensing_qpoases_assign_args(qp_in, &args, mem);
+    ocp_qp_condensing_qpoases_initialize_default_args(qp_in, args);
+
     return args;
 }
+
+
 
 int ocp_qp_condensing_qpoases_calculate_workspace_size(const ocp_qp_in *qp_in, void *args_) {
     return 0;
 }
 
+
+
 int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void *args_) {
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
     // extract ocp qp in size
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -87,6 +137,9 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     int *nb = (int *)qp_in->nb;
     int *ng = (int *)qp_in->nc;
     int **hidxb = (int **)qp_in->idxb;
+
+    // extract ns from args
+    int_t *ns = (int_t *) args->scrapspace;
 
     // dummy ocp qp
     struct d_ocp_qp qp;
@@ -96,17 +149,19 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     qp.nb = nb;
     qp.ng = ng;
     qp.idxb = hidxb;
+    qp.ns = ns;
 
     // compute dense qp size
     int nvd = 0;
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
+    int_t nsd = 0;
 #if 0
     // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
-    // [x; u] order
+    // [x; u] order  // XXX update with ns !!!!!
     d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
@@ -116,6 +171,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     qpd.ne = ned;
     qpd.nb = nbd;
     qpd.ng = ngd;
+    qpd.ns = nsd;
 
     // size in bytes
     int size = sizeof(ocp_qp_condensing_qpoases_memory);
@@ -127,10 +183,10 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     size += 1 * sizeof(struct d_cond_qp_ocp2dense_workspace);  // cond_workspace
     //  size += 1*sizeof(struct d_strmat); // sR
 
-    size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
-    size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
-    size += d_memsize_dense_qp(nvd, ned, nbd, ngd);
-    size += d_memsize_dense_qp_sol(nvd, ned, nbd, ngd);
+    size += d_memsize_ocp_qp(N, nx, nu, nb, ng, ns);
+    size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng, ns);
+    size += d_memsize_dense_qp(nvd, ned, nbd, ngd, nsd);
+    size += d_memsize_dense_qp_sol(nvd, ned, nbd, ngd, nsd);
     size += d_memsize_cond_qp_ocp2dense(&qp, &qpd);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
     size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
@@ -162,10 +218,14 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     return size;
 }
 
+
+
 char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args_,
                                              void **mem, void *raw_memory) {
 
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
     ocp_qp_condensing_qpoases_memory **qpoases_memory = (ocp_qp_condensing_qpoases_memory **) mem;
+
     // extract problem size
     int N = qp_in->N;
     int *nx = (int *)qp_in->nx;
@@ -174,16 +234,20 @@ char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args
     int *ng = (int *)qp_in->nc;
     int **hidxb = (int **)qp_in->idxb;
 
+    // extract ns from args
+    int_t *ns = (int_t *) args->scrapspace;
+
     // compute dense qp size
     int nvd = 0;
     int ned = 0;
     int nbd = 0;
     int ngd = 0;
+    int_t nsd = 0;
 #if 0
     // [u; x] order
     d_compute_qp_size_ocp2dense(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #else
-    // [x; u] order
+    // [x; u] order  // XXX update with ns !!!!!
     d_compute_qp_size_ocp2dense_rev(N, nx, nu, nb, hidxb, ng, &nvd, &ned, &nbd, &ngd);
 #endif
 
@@ -255,16 +319,16 @@ char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args
     //  c_ptr += sR->memory_size;
 
     // ocp qp structure
-    d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
+    d_create_ocp_qp(N, nx, nu, nb, ng, ns, qp, c_ptr);
     c_ptr += qp->memsize;
     // ocp qp sol structure
-    d_create_ocp_qp_sol(N, nx, nu, nb, ng, qp_sol, c_ptr);
+    d_create_ocp_qp_sol(N, nx, nu, nb, ng, ns, qp_sol, c_ptr);
     c_ptr += qp_sol->memsize;
     // dense qp structure
-    d_create_dense_qp(nvd, ned, nbd, ngd, qpd, c_ptr);
+    d_create_dense_qp(nvd, ned, nbd, ngd, nsd, qpd, c_ptr);
     c_ptr += qpd->memsize;
     // dense qp sol structure
-    d_create_dense_qp_sol(nvd, ned, nbd, ngd, qpd_sol, c_ptr);
+    d_create_dense_qp_sol(nvd, ned, nbd, ngd, nsd, qpd_sol, c_ptr);
     c_ptr += qpd_sol->memsize;
     // cond workspace structure
     d_create_cond_qp_ocp2dense(qp, qpd, cond_workspace, c_ptr);
@@ -338,6 +402,8 @@ char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args
     return c_ptr;
 }
 
+
+
 ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(const ocp_qp_in *qp_in,
                                                                           void *args_) {
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
@@ -349,6 +415,8 @@ ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(const 
     assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
     return mem;
 }
+
+
 
 int ocp_qp_condensing_qpoases(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_,
                               void *memory_, void *workspace_) {
@@ -452,7 +520,7 @@ int ocp_qp_condensing_qpoases(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *
 
     // ocp qp structure
     d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb_rev, hd_lb, hd_ub, hC, hD,
-        hd_lg, hd_ug, qp);
+        hd_lg, hd_ug, NULL, NULL, NULL, NULL, NULL, qp);
 
     // dense qp structure
     d_cond_qp_ocp2dense(qp, qpd, cond_workspace);
@@ -466,7 +534,8 @@ int ocp_qp_condensing_qpoases(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *
     dtrtr_l_libstr(nvd, qpd->Hg, 0, 0, qpd->Hg, 0, 0);
 
     // dense qp row-major
-    d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug);
+    d_cvt_dense_qp_to_rowmaj(qpd, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
+        NULL, NULL, NULL, NULL, NULL);
 
     // reorder bounds
     for (ii = 0; ii < nvd; ii++) {
@@ -536,33 +605,32 @@ int ocp_qp_condensing_qpoases(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *
 
     // copy prim_sol and dual_sol to qpd_sol
     d_cvt_vec2strvec(nvd, prim_sol, qpd_sol->v, 0);
-    for (ii=0; ii < nbd; ii++) qpd_sol->lam_lb->pa[ii] = 0.0;
-    for (ii=0; ii < nbd; ii++) qpd_sol->lam_ub->pa[ii] = 0.0;
-    for (ii=0; ii < ngd; ii++) qpd_sol->lam_lg->pa[ii] = 0.0;
-    for (ii=0; ii < ngd; ii++) qpd_sol->lam_ug->pa[ii] = 0.0;
+    for (ii=0; ii < 2*nbd+2*ngd; ii++) qpd_sol->lam->pa[ii] = 0.0;
     for (ii=0; ii < nbd; ii++)
         if (dual_sol[ii] >= 0.0)
-            qpd_sol->lam_lb->pa[ii] =   dual_sol[ii];
+            qpd_sol->lam->pa[ii] =   dual_sol[ii];
         else
-            qpd_sol->lam_ub->pa[ii] = - dual_sol[ii];
+            qpd_sol->lam->pa[nbd+ngd+ii] = - dual_sol[ii];
     for (ii=0; ii < ngd; ii++)
         if (dual_sol[nbd+ii] >= 0.0)
-            qpd_sol->lam_lg->pa[ii] =   dual_sol[nbd+ii];
+            qpd_sol->lam->pa[nbd+ii] =   dual_sol[nbd+ii];
         else
-            qpd_sol->lam_ug->pa[ii] = - dual_sol[nbd+ii];
+            qpd_sol->lam->pa[2*nbd+ngd+ii] = - dual_sol[nbd+ii];
 
     // expand solution
     d_expand_sol_dense2ocp(qp, qpd_sol, qp_sol, cond_workspace);
 
     // extract solution
-    d_cvt_ocp_qp_sol_to_colmaj(qp, qp_sol, hu, hx, hpi, hlam_lb, hlam_ub,
-                               hlam_lg, hlam_ug);
+    d_cvt_ocp_qp_sol_to_colmaj(qp, qp_sol, hu, hx, NULL, NULL, hpi,
+                               hlam_lb, hlam_ub, hlam_lg, hlam_ug, NULL, NULL);
 
     // return
     acados_status = return_flag;
     return acados_status;
     //
 }
+
+
 
 void ocp_qp_condensing_qpoases_initialize(const ocp_qp_in *qp_in, void *args_, void **mem,
                                           void **work) {
@@ -571,6 +639,8 @@ void ocp_qp_condensing_qpoases_initialize(const ocp_qp_in *qp_in, void *args_, v
     *mem = ocp_qp_condensing_qpoases_create_memory(qp_in, args);
     *work = NULL;
 }
+
+
 
 void ocp_qp_condensing_qpoases_destroy(void *mem_, void *work) {
     // TODO(dimitris): replace dummy commands once interface completed

@@ -30,8 +30,12 @@ extern "C" {
 // struct of arguments to the solver
 typedef struct ocp_qp_hpipm_args_ {
     double alpha_min;
-    double mu_max;
+    double res_g_max;
+    double res_b_max;
+    double res_d_max;
+    double res_m_max;
     double mu0;
+    void *scrapspace;
     int iter_max;
 } ocp_qp_hpipm_args;
 
@@ -39,8 +43,8 @@ typedef struct ocp_qp_hpipm_args_ {
 typedef struct ocp_qp_hpipm_memory_ {
     struct d_ocp_qp *qp;
     struct d_ocp_qp_sol *qp_sol;
-    struct d_ipm_hard_ocp_qp_arg *ipm_arg;
-    struct d_ipm_hard_ocp_qp_workspace *ipm_workspace;
+    struct d_ocp_qp_ipm_arg *ipm_arg;
+    struct d_ocp_qp_ipm_workspace *ipm_workspace;
     double **hlam_lb;
     double **hlam_ub;
     double **hlam_lg;
@@ -50,7 +54,7 @@ typedef struct ocp_qp_hpipm_memory_ {
     int iter;
 } ocp_qp_hpipm_memory;
 
-ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments();
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(const ocp_qp_in *qp_in);
 
 int_t ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args);
 

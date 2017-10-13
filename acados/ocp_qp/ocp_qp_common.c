@@ -373,39 +373,39 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
 
     if (!strcmp(solver_name, "qpdunes")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = (void *) ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
+            qp_solver->args = ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
         qp_solver->fun = &ocp_qp_qpdunes;
         qp_solver->initialize = &ocp_qp_qpdunes_initialize;
         qp_solver->destroy = &ocp_qp_qpdunes_destroy;
 #ifdef OOQP
     } else if (!strcmp(solver_name, "ooqp")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = (void *) ocp_qp_ooqp_create_arguments();
+            qp_solver->args = ocp_qp_ooqp_create_arguments();
         qp_solver->fun = &ocp_qp_ooqp;
         qp_solver->initialize = &ocp_qp_ooqp_initialize;
         qp_solver->destroy = &ocp_qp_ooqp_destroy;
 #endif
     } else if (!strcmp(solver_name, "condensing_qpoases")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = (void *) ocp_qp_condensing_qpoases_create_arguments();
+            qp_solver->args = ocp_qp_condensing_qpoases_create_arguments(qp_in);
         qp_solver->fun = &ocp_qp_condensing_qpoases;
         qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
         qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
     } else if (!strcmp(solver_name, "hpmpc")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = (void *)ocp_qp_hpmpc_create_arguments(qp_in, HPMPC_DEFAULT_ARGUMENTS);
+            qp_solver->args = ocp_qp_hpmpc_create_arguments(qp_in, HPMPC_DEFAULT_ARGUMENTS);
         qp_solver->fun = &ocp_qp_hpmpc;
         qp_solver->initialize = &ocp_qp_hpmpc_initialize;
         qp_solver->destroy = &ocp_qp_hpmpc_destroy;
     } else if (!strcmp(solver_name, "condensing_hpipm")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_condensing_hpipm_create_arguments();
+            qp_solver->args = ocp_qp_condensing_hpipm_create_arguments(qp_in);
         qp_solver->fun = &ocp_qp_condensing_hpipm;
         qp_solver->initialize = &ocp_qp_condensing_hpipm_initialize;
         qp_solver->destroy = &ocp_qp_condensing_hpipm_destroy;
     } else if (!strcmp(solver_name, "hpipm")) {
         if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_hpipm_create_arguments();
+            qp_solver->args = ocp_qp_hpipm_create_arguments(qp_in);
         qp_solver->fun = &ocp_qp_hpipm;
         qp_solver->initialize = &ocp_qp_hpipm_initialize;
         qp_solver->destroy = &ocp_qp_hpipm_destroy;
