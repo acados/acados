@@ -114,37 +114,38 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a13=arg[0] ? arg[0][10] : 0;
   a13=(a12*a13);
   if (res[0]!=0) res[0][13]=a13;
-  a13=arg[1] ? arg[1][0] : 0;
-  a13=(a12*a13);
-  if (res[0]!=0) res[0][14]=a13;
-  a13=arg[1] ? arg[1][1] : 0;
-  a13=(a12*a13);
-  if (res[0]!=0) res[0][15]=a13;
-  a13=arg[1] ? arg[1][2] : 0;
-  a13=(a12*a13);
-  if (res[0]!=0) res[0][16]=a13;
-  a13=arg[1] ? arg[1][3] : 0;
-  a13=(a12*a13);
-  if (res[0]!=0) res[0][17]=a13;
-  a13=sq(a2);
-  real_t a14=sq(a6);
-  a13=(a13+a14);
-  a6=(a6/a13);
-  a14=(a5*a1);
-  a14=(a6*a14);
-  a14=(a9*a14);
-  if (res[1]!=0) res[1][0]=a14;
-  a14=(a5*a3);
+  a13=3.1622776601683794e-01;
+  real_t a14=arg[1] ? arg[1][0] : 0;
+  a14=(a13*a14);
+  if (res[0]!=0) res[0][14]=a14;
+  a14=arg[1] ? arg[1][1] : 0;
+  a14=(a13*a14);
+  if (res[0]!=0) res[0][15]=a14;
+  a14=arg[1] ? arg[1][2] : 0;
+  a14=(a13*a14);
+  if (res[0]!=0) res[0][16]=a14;
+  a14=arg[1] ? arg[1][3] : 0;
+  a14=(a13*a14);
+  if (res[0]!=0) res[0][17]=a14;
+  a14=sq(a2);
+  real_t a15=sq(a6);
+  a14=(a14+a15);
+  a6=(a6/a14);
+  a15=(a5*a1);
+  a15=(a6*a15);
+  a15=(a9*a15);
+  if (res[1]!=0) res[1][0]=a15;
+  a15=(a5*a3);
   a8=sq(a8);
   a7=(a7-a8);
   a7=sqrt(a7);
-  a14=(a14/a7);
-  a14=(a9*a14);
-  if (res[1]!=0) res[1][1]=a14;
-  a14=sq(a10);
+  a15=(a15/a7);
+  a15=(a9*a15);
+  if (res[1]!=0) res[1][1]=a15;
+  a15=sq(a10);
   a8=sq(a11);
-  a14=(a14+a8);
-  a11=(a11/a14);
+  a15=(a15+a8);
+  a11=(a11/a15);
   a8=(a5*a4);
   a8=(a11*a8);
   a8=(a9*a8);
@@ -165,24 +166,24 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][15]=a8;
   if (res[1]!=0) res[1][16]=a8;
   if (res[1]!=0) res[1][17]=a8;
-  real_t a15=(a5*a0);
-  a15=(a6*a15);
-  a2=(a2/a13);
-  a13=(a1+a1);
-  a13=(a5*a13);
-  a13=(a2*a13);
-  a15=(a15+a13);
-  a15=(a9*a15);
-  if (res[1]!=0) res[1][18]=a15;
-  a15=(a5*a4);
-  a15=(a15/a7);
-  a15=(a9*a15);
-  a15=(-a15);
-  if (res[1]!=0) res[1][19]=a15;
-  a15=(a5*a3);
-  a15=(a11*a15);
-  a15=(a9*a15);
-  if (res[1]!=0) res[1][20]=a15;
+  real_t a16=(a5*a0);
+  a16=(a6*a16);
+  a2=(a2/a14);
+  a14=(a1+a1);
+  a14=(a5*a14);
+  a14=(a2*a14);
+  a16=(a16+a14);
+  a16=(a9*a16);
+  if (res[1]!=0) res[1][18]=a16;
+  a16=(a5*a4);
+  a16=(a16/a7);
+  a16=(a9*a16);
+  a16=(-a16);
+  if (res[1]!=0) res[1][19]=a16;
+  a16=(a5*a3);
+  a16=(a11*a16);
+  a16=(a9*a16);
+  if (res[1]!=0) res[1][20]=a16;
   if (res[1]!=0) res[1][21]=a8;
   if (res[1]!=0) res[1][22]=a12;
   if (res[1]!=0) res[1][23]=a8;
@@ -198,27 +199,27 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][33]=a8;
   if (res[1]!=0) res[1][34]=a8;
   if (res[1]!=0) res[1][35]=a8;
-  a15=(a5*a4);
-  a15=(a6*a15);
-  a13=(a3+a3);
-  a13=(a5*a13);
-  a2=(a2*a13);
-  a15=(a15+a2);
-  a15=(a9*a15);
-  if (res[1]!=0) res[1][36]=a15;
-  a15=(a5*a0);
-  a15=(a15/a7);
-  a15=(a9*a15);
-  if (res[1]!=0) res[1][37]=a15;
-  a15=(a5*a1);
-  a15=(a11*a15);
-  a10=(a10/a14);
+  a16=(a5*a4);
+  a16=(a6*a16);
   a14=(a3+a3);
   a14=(a5*a14);
-  a14=(a10*a14);
-  a15=(a15+a14);
-  a15=(a9*a15);
-  if (res[1]!=0) res[1][38]=a15;
+  a2=(a2*a14);
+  a16=(a16+a2);
+  a16=(a9*a16);
+  if (res[1]!=0) res[1][36]=a16;
+  a16=(a5*a0);
+  a16=(a16/a7);
+  a16=(a9*a16);
+  if (res[1]!=0) res[1][37]=a16;
+  a16=(a5*a1);
+  a16=(a11*a16);
+  a10=(a10/a15);
+  a15=(a3+a3);
+  a15=(a5*a15);
+  a15=(a10*a15);
+  a16=(a16+a15);
+  a16=(a9*a16);
+  if (res[1]!=0) res[1][38]=a16;
   if (res[1]!=0) res[1][39]=a8;
   if (res[1]!=0) res[1][40]=a8;
   if (res[1]!=0) res[1][41]=a12;
@@ -249,8 +250,8 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a5=(a5*a4);
   a10=(a10*a5);
   a11=(a11+a10);
-  a9=(a9*a11);
-  if (res[1]!=0) res[1][56]=a9;
+  a11=(a9*a11);
+  if (res[1]!=0) res[1][56]=a11;
   if (res[1]!=0) res[1][57]=a8;
   if (res[1]!=0) res[1][58]=a8;
   if (res[1]!=0) res[1][59]=a8;
@@ -406,7 +407,7 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][209]=a8;
   if (res[1]!=0) res[1][210]=a8;
   if (res[1]!=0) res[1][211]=a8;
-  if (res[1]!=0) res[1][212]=a12;
+  if (res[1]!=0) res[1][212]=a13;
   if (res[1]!=0) res[1][213]=a8;
   if (res[1]!=0) res[1][214]=a8;
   if (res[1]!=0) res[1][215]=a8;
@@ -425,7 +426,7 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][228]=a8;
   if (res[1]!=0) res[1][229]=a8;
   if (res[1]!=0) res[1][230]=a8;
-  if (res[1]!=0) res[1][231]=a12;
+  if (res[1]!=0) res[1][231]=a13;
   if (res[1]!=0) res[1][232]=a8;
   if (res[1]!=0) res[1][233]=a8;
   if (res[1]!=0) res[1][234]=a8;
@@ -444,7 +445,7 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][247]=a8;
   if (res[1]!=0) res[1][248]=a8;
   if (res[1]!=0) res[1][249]=a8;
-  if (res[1]!=0) res[1][250]=a12;
+  if (res[1]!=0) res[1][250]=a13;
   if (res[1]!=0) res[1][251]=a8;
   if (res[1]!=0) res[1][252]=a8;
   if (res[1]!=0) res[1][253]=a8;
@@ -463,7 +464,61 @@ int ls_res_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[1]!=0) res[1][266]=a8;
   if (res[1]!=0) res[1][267]=a8;
   if (res[1]!=0) res[1][268]=a8;
-  if (res[1]!=0) res[1][269]=a12;
+  if (res[1]!=0) res[1][269]=a13;
+  a8=arg[2] ? arg[2][0] : 0;
+  a8=(a9*a8);
+  if (res[2]!=0) res[2][0]=a8;
+  a8=arg[2] ? arg[2][1] : 0;
+  a8=(a9*a8);
+  if (res[2]!=0) res[2][1]=a8;
+  a8=arg[2] ? arg[2][2] : 0;
+  a9=(a9*a8);
+  if (res[2]!=0) res[2][2]=a9;
+  a9=arg[2] ? arg[2][3] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][3]=a9;
+  a9=arg[2] ? arg[2][4] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][4]=a9;
+  a9=arg[2] ? arg[2][5] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][5]=a9;
+  a9=arg[2] ? arg[2][6] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][6]=a9;
+  a9=arg[2] ? arg[2][7] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][7]=a9;
+  a9=arg[2] ? arg[2][8] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][8]=a9;
+  a9=arg[2] ? arg[2][9] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][9]=a9;
+  a9=arg[2] ? arg[2][10] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][10]=a9;
+  a9=arg[2] ? arg[2][11] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][11]=a9;
+  a9=arg[2] ? arg[2][12] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][12]=a9;
+  a9=arg[2] ? arg[2][13] : 0;
+  a12=(a12*a9);
+  if (res[2]!=0) res[2][13]=a12;
+  a12=arg[2] ? arg[2][14] : 0;
+  a12=(a13*a12);
+  if (res[2]!=0) res[2][14]=a12;
+  a12=arg[2] ? arg[2][15] : 0;
+  a12=(a13*a12);
+  if (res[2]!=0) res[2][15]=a12;
+  a12=arg[2] ? arg[2][16] : 0;
+  a12=(a13*a12);
+  if (res[2]!=0) res[2][16]=a12;
+  a12=arg[2] ? arg[2][17] : 0;
+  a13=(a13*a12);
+  if (res[2]!=0) res[2][17]=a13;
   return 0;
 }
 
@@ -473,14 +528,15 @@ void ls_res_Fun_incref(void) {
 void ls_res_Fun_decref(void) {
 }
 
-int ls_res_Fun_n_in(void) { return 2;}
+int ls_res_Fun_n_in(void) { return 3;}
 
-int ls_res_Fun_n_out(void) { return 2;}
+int ls_res_Fun_n_out(void) { return 3;}
 
 const char* ls_res_Fun_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
+    case 2: return "i2";
     default: return 0;
   }
 }
@@ -489,6 +545,7 @@ const char* ls_res_Fun_name_out(int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
+    case 2: return "o2";
     default: return 0;
   }
 }
@@ -497,6 +554,7 @@ const int* ls_res_Fun_sparsity_in(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s1;
+    case 2: return s2;
     default: return 0;
   }
 }
@@ -505,15 +563,16 @@ const int* ls_res_Fun_sparsity_out(int i) {
   switch (i) {
     case 0: return s2;
     case 1: return s3;
+    case 2: return s2;
     default: return 0;
   }
 }
 
 int ls_res_Fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 2;
-  if (sz_res) *sz_res = 2;
+  if (sz_arg) *sz_arg = 3;
+  if (sz_res) *sz_res = 3;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 16;
+  if (sz_w) *sz_w = 17;
   return 0;
 }
 

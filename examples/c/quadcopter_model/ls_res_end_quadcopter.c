@@ -225,8 +225,8 @@ int ls_res_end_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   a5=(a5*a4);
   a10=(a10*a5);
   a11=(a11+a10);
-  a9=(a9*a11);
-  if (res[1]!=0) res[1][44]=a9;
+  a11=(a9*a11);
+  if (res[1]!=0) res[1][44]=a11;
   if (res[1]!=0) res[1][45]=a8;
   if (res[1]!=0) res[1][46]=a8;
   if (res[1]!=0) res[1][47]=a8;
@@ -336,6 +336,48 @@ int ls_res_end_Fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   if (res[1]!=0) res[1][151]=a8;
   if (res[1]!=0) res[1][152]=a8;
   if (res[1]!=0) res[1][153]=a12;
+  a8=arg[2] ? arg[2][0] : 0;
+  a8=(a9*a8);
+  if (res[2]!=0) res[2][0]=a8;
+  a8=arg[2] ? arg[2][1] : 0;
+  a8=(a9*a8);
+  if (res[2]!=0) res[2][1]=a8;
+  a8=arg[2] ? arg[2][2] : 0;
+  a9=(a9*a8);
+  if (res[2]!=0) res[2][2]=a9;
+  a9=arg[2] ? arg[2][3] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][3]=a9;
+  a9=arg[2] ? arg[2][4] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][4]=a9;
+  a9=arg[2] ? arg[2][5] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][5]=a9;
+  a9=arg[2] ? arg[2][6] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][6]=a9;
+  a9=arg[2] ? arg[2][7] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][7]=a9;
+  a9=arg[2] ? arg[2][8] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][8]=a9;
+  a9=arg[2] ? arg[2][9] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][9]=a9;
+  a9=arg[2] ? arg[2][10] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][10]=a9;
+  a9=arg[2] ? arg[2][11] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][11]=a9;
+  a9=arg[2] ? arg[2][12] : 0;
+  a9=(a12*a9);
+  if (res[2]!=0) res[2][12]=a9;
+  a9=arg[2] ? arg[2][13] : 0;
+  a12=(a12*a9);
+  if (res[2]!=0) res[2][13]=a12;
   return 0;
 }
 
@@ -345,14 +387,15 @@ void ls_res_end_Fun_incref(void) {
 void ls_res_end_Fun_decref(void) {
 }
 
-int ls_res_end_Fun_n_in(void) { return 2;}
+int ls_res_end_Fun_n_in(void) { return 3;}
 
-int ls_res_end_Fun_n_out(void) { return 2;}
+int ls_res_end_Fun_n_out(void) { return 3;}
 
 const char* ls_res_end_Fun_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
+    case 2: return "i2";
     default: return 0;
   }
 }
@@ -361,6 +404,7 @@ const char* ls_res_end_Fun_name_out(int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
+    case 2: return "o2";
     default: return 0;
   }
 }
@@ -369,6 +413,7 @@ const int* ls_res_end_Fun_sparsity_in(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s1;
+    case 2: return s2;
     default: return 0;
   }
 }
@@ -377,13 +422,14 @@ const int* ls_res_end_Fun_sparsity_out(int i) {
   switch (i) {
     case 0: return s2;
     case 1: return s3;
+    case 2: return s2;
     default: return 0;
   }
 }
 
 int ls_res_end_Fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 2;
-  if (sz_res) *sz_res = 2;
+  if (sz_arg) *sz_arg = 3;
+  if (sz_res) *sz_res = 3;
   if (sz_iw) *sz_iw = 0;
   if (sz_w) *sz_w = 16;
   return 0;

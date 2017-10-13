@@ -16,12 +16,14 @@
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
+#define _POSIX_C_SOURCE 200809L
 
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -306,6 +308,7 @@ int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
         work_ric = ptr_memory;
         ptr_memory+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
 
+
         // update cost function matrices and vectors (box constraints)
         d_update_hessian_gradient_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M], \
           &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M], \
@@ -336,6 +339,7 @@ int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
         hsRSQrq[M] = sPpM;
         hsux[M].pa += nuM;
 
+
         // IPM at the beginning
         hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
           warm_start, stat, M, nx, nu, nb, hidxb, ng, hsBAbt, hsRSQrq, hsDCt,
@@ -355,17 +359,25 @@ int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
         // compute alpha, dlam and dt
         real_t alpha = 1.0;
         // compute primal step hsdux for stages M to N
+
+        // TODO(Andrea): ask gian what is happening here!
         real_t *temp_p1, *temp_p2;
         for (int_t i = M; i <= N; i++) {
           // hsdux is initialized to be equal to hpmpc_args.ux0
           temp_p1 = hsdux[i].pa;
           temp_p2 = hsux[i].pa;  // hsux[i].pa;
-          for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
+          for (int_t j = 0; j < nx[i]+nu[i]; j++) {
+              temp_p1[j]= temp_p2[j];
+            //   printf("%f\n", temp_p2[j]);
+            //   temp_p2[j] = 0.0;
+          }
         }
 
         d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hidxb[M],
           &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
           &hsdux[M], &hsDCt[M], &hsd[M]);
+
+        printf("alpha = %f\n", alpha);
 
         // update stages M to N
         double mu_scal = 0.0;
@@ -568,7 +580,16 @@ int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_) {
 
 ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(const ocp_qp_in *qp_in, void *args_) {
     int_t memory_size = ocp_qp_hpmpc_calculate_memory_size(qp_in, args_);
-    return (ocp_qp_hpmpc_memory *) malloc(memory_size);
+    ocp_qp_hpmpc_memory * memory = 0;
+    int_t err = posix_memalign(&memory, 64, memory_size);
+    if (err != 0) {
+        printf("Memory allocation error");
+        exit(1);
+    }
+    memset(memory, 0 , memory_size);
+    return memory;
+    // return (ocp_qp_hpmpc_memory *) calloc(1, memory_size);
+
 }
 
 void ocp_qp_hpmpc_free_memory(void *mem_) {
@@ -642,25 +663,28 @@ char *ocp_qp_hpmpc_assign_arguments(const ocp_qp_in *in, void **args_, void *raw
 }
 
 
-ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts) {
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in) {
     ocp_qp_hpmpc_args *args;
     int_t arguments_size = ocp_qp_hpmpc_calculate_arguments_size(qp_in);
-    void *raw_memory = malloc(arguments_size);
+    void *raw_memory = 0;
+    int err = posix_memalign(&raw_memory, 64, arguments_size);
+    if (err != 0) {
+        printf("Memory allocation error");
+        exit(1);
+    }
+    memset(raw_memory, 0 , arguments_size);
+    // void *raw_memory = calloc(1, arguments_size);
     char *ptr_end = ocp_qp_hpmpc_assign_arguments(qp_in, (void **) &args, raw_memory);
     assert((char *) raw_memory + arguments_size >= ptr_end); (void) ptr_end;
 
-    if (opts == HPMPC_DEFAULT_ARGUMENTS) {
-        args->tol = 1e-8;
-        args->max_iter = 20;
-        args->mu0 = 0.1;
-        args->warm_start = 0;
-        args->N2 = qp_in->N;
-        args->M = qp_in->N;
-        args->N = qp_in->N;
-    } else {
-        printf("Invalid hpmpc options.");
-        return NULL;
-    }
+    args->tol = 1e-8;
+    args->max_iter = 20;
+    args->mu0 = 1e3;
+    args->warm_start = 0;
+    args->N2 = qp_in->N;
+    args->M = qp_in->N;
+    args->N = qp_in->N;
+
     return args;
 }
 
@@ -670,7 +694,13 @@ void ocp_qp_hpmpc_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, vo
     *mem = ocp_qp_hpmpc_create_memory(qp_in, args);
 
     int_t workspace_size = ocp_qp_hpmpc_calculate_workspace_size(qp_in, args);
-    *work = malloc(workspace_size);
+    int_t err = posix_memalign( work , 64, workspace_size*sizeof(double));
+    if (err != 0) {
+        printf("Memory allocation error");
+        exit(1);
+    }
+    memset(*work, 0 , workspace_size);
+    // *work = calloc(1, workspace_size);
 }
 
 void ocp_qp_hpmpc_destroy(void *mem, void *work) {

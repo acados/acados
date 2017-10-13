@@ -3,7 +3,6 @@ clear all;
 close all;
 
 GENERATE_LQR_GAIN = 0;
-LIN_RES = 0
 
 addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
@@ -14,14 +13,9 @@ omega = SX.sym('omega', 3, 1);
 W = SX.sym('W', 4, 1);
 rW = SX.sym('rW', 4, 1);
 
-if LIN_RES
-    Q = diag([1e1*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
-    R = 1.0e-2*eye(4);
-else
-    Q_eul = 1e1*eye(3);
-    Q = diag([1e-2*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
-    R = 1.0e-2*eye(4);
-end
+Q_eul = diag([1e2;1e2;1e2]);
+Q = diag([1e-2*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
+R = 1.0e-1*eye(4);
 
 x = [q; omega; W];
 u = rW;
@@ -99,23 +93,22 @@ if GENERATE_LQR_GAIN % generate LQR gain
 end
 
 % Generate code for residuals
-if(LIN_RES)
-    nr = 15;
-    nr_end = 11;
-    res_exp = [sqrt(Q)*x;sqrt(R)*u];
-    res_end_exp = [sqrt(Q)*x];
-else
-    nr = 18;
-    nr_end = 14;
-    eul_expr = myquat2eul(q);
-    res_exp = [Q_eul*eul_expr.';sqrt(Q)*x;sqrt(R)*u];
-    res_end_exp = [Q_eul*eul_expr.';sqrt(Q)*x];
-end
+nr = 18;
+nr_end = 14;
 
-jac_res_exp = SX.zeros(nr,nx+nu) + jacobian(res_exp,[x;u]);
-ls_res_Fun = Function('ls_res_Fun', {x,u}, {res_exp,jac_res_exp});
+rref = SX.sym('rref', nr, 1);
+rref_end = SX.sym('rref_end', nr_end, 1);
+
+eul_expr = myquat2eul(q);
+res_exp = [sqrt(Q_eul)*eul_expr.';sqrt(Q)*x;sqrt(R)*u];
+res_end_exp = [sqrt(Q_eul)*eul_expr.';sqrt(Q)*x];
+scaled_rref_exp = diag([diag(sqrt(Q_eul));diag(sqrt(Q));diag(sqrt(R))])*rref;
+scaled_rref_end_exp = diag([diag(sqrt(Q_eul));diag(sqrt(Q))])*rref_end;
+
+jac_res_exp = SX.zeros(nr,nx+nu) + jacobian(res_exp,[x;u;]);
+ls_res_Fun = Function('ls_res_Fun', {x, u, rref}, {res_exp,jac_res_exp, scaled_rref_exp});
 jac_res_end_exp = SX.zeros(nr_end,nx) + jacobian(res_end_exp,[x]);
-ls_res_end_Fun = Function('ls_res_end_Fun', {x,u}, {res_end_exp,jac_res_end_exp});
+ls_res_end_Fun = Function('ls_res_end_Fun', {x,u, rref_end}, {res_end_exp,jac_res_end_exp, scaled_rref_end_exp});
 
 ls_res_Fun.generate(['ls_res_quadcopter'], opts);
 ls_res_end_Fun.generate(['ls_res_end_quadcopter'], opts);

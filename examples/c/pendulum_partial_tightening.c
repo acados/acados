@@ -691,13 +691,13 @@ int main() {
     for (int_t j = 0; j < 2*NBX; j++) t_n[N*2*(NBX + NBU)+j]  = t_init;
 
     // initialize qp primal variables
-    for (int_t j = 0; j < NU; j++) ux_in[0][j] = w[NX+j];
+    for (int_t j = 0; j < NU; j++) ux_in[0][j] = 0.0;
     for (int_t i = 1; i < N; i++) {
-        for (int_t j = 0; j < NX; j++)  ux_in[i][j] = w[i*(NX+NU)+j];
-        for (int_t j = 0; j < NU; j++)  ux_in[i][j] = w[i*(NX+NU)+NX+j];
+        for (int_t j = 0; j < NX; j++)  ux_in[i][j+NU] = 0.0;
+        for (int_t j = 0; j < NU; j++)  ux_in[i][j] = 0.0;
     }
 
-    for (int_t j = 0; j < NX; j++) ux_in[N][j] = w[N*(NX+NU)+j];
+    for (int_t j = 0; j < NX; j++) ux_in[N][j] = 0.0;
 
     for ( int_t ii = 0; ii < NX; ii++ ) w[ii] = x0[ii];
 

@@ -27,6 +27,7 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -39,29 +40,59 @@
 #include "examples/c/acados_gnuplot/acados_gnuplot.h"
 #include "examples/c/quadcopter_model/ls_res_eval.h"
 
-real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
-
 #define NN 50
-#define TT 2.0
-#define Ns 10
+#define TT 1.0
+#define Ns 100
 #define NX 11
 #define NU 4
-#define NSIM 500
-#define UMAX 10000.0
+#define NSIM 2000
+#define UMAX 5.0
 #define NR 18
 #define NR_END 14
+
 #define MAX_SQP_ITERS 1
-#define INITIAL_ANGLE_RAD 3.0
-// #define LAMBDA 1.0
+// #define N_SQP_HACK 100
+#define N_SQP_HACK 1
+
+// #define LOG_CL_SOL
+#define LOG_NAME "cl_log_quadcopter.txt"
+
+// #define ALPHA 0.1
+#define ALPHA 0.7
+
+
+#define INITIAL_ANGLE_RAD 0.0
+#define ANGLE_STEP 45.0/180*3.14
+#define STEP_PERIOD 5.0
+#define SIM_SCENARIO 1  // 0: stabilization, 1: tracking
+
+#define MU_TIGHT 10
+#define MM 5
+#define LAM_INIT 10.0
+#define T_INIT 0.1
+
+#define OMEGA_REF 40.0
 
 // #define PLOT_OL_RESULTS
 // #define PLOT_CL_RESULTS
 // #define FP_EXCEPTIONS
+// #define PLOT_CONTROLS 0  // plot rates:0 plot controls:1
 
 extern int ls_res_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 extern int ls_res_end_Fun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 //
 extern int vdeFun(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+
+// static void quat2eul(real_t *quat_in, real_t *eul_out){
+//     real_t q0 = quat_in[0];
+//     real_t q1 = quat_in[0];
+//     real_t q2 = quat_in[0];
+//     real_t q3 = quat_in[0];
+//
+//     eul_out[0] = atan2(2*(q0*q1 + q2*q3),(1 - 2*(q1*q1 + q2*q2)));
+//     eul_out[1] = asin(2*(q0*q2 - q3*q1));
+//     eul_out[2] = atan2(2*(q0*q3 + q1*q2),(1 - 2*(q2*q2 + q3*q3)));
+// }
 
 int main() {
     const int d = 0;
@@ -110,10 +141,10 @@ int main() {
         0.0000000000000000e+00,
         0.0000000000000000e+00,
         0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
+        OMEGA_REF,
+        OMEGA_REF,
+        OMEGA_REF,
+        OMEGA_REF,
     };
 
     real_t y_ref[18] =  {
@@ -127,10 +158,10 @@ int main() {
         0.0000000000000000e+00,
         0.0000000000000000e+00,
         0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
+        OMEGA_REF,
+        OMEGA_REF,
+        OMEGA_REF,
+        OMEGA_REF,
         0.0000000000000000e+00,
         0.0000000000000000e+00,
         0.0000000000000000e+00,
@@ -148,10 +179,10 @@ int main() {
         0.0000000000000000e+00,
         0.0000000000000000e+00,
         0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
-        0.0000000000000000e+00,
+        OMEGA_REF,
+        OMEGA_REF,
+        OMEGA_REF,
+        OMEGA_REF,
     };
 
     real_t W_diag[15] = {
@@ -420,7 +451,49 @@ int main() {
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
     nlp_mem.common = &nlp_mem_common;
+    nlp_mem.common->step_size = ALPHA;
     ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
+    ocp_qp_hpmpc_args *qp_args = (ocp_qp_hpmpc_args *)nlp_mem.qp_solver->args;
+
+    // TODO(ANDREA) UGLY HACK: how to move this into ocp_nlp_gn_sqp_create_memory?
+    double *lam_in[NN+1];
+    double *t_in[NN+1];
+    double *pt[NN+1];
+    double *ux_in[NN+1];
+
+    for (int_t ii = 0; ii < NN; ii++) {
+        d_zeros(&lam_in[ii], 2*nb[ii]+2*ng[ii], 1);
+        d_zeros(&t_in[ii], 2*nb[ii]+2*ng[ii], 1);
+        d_zeros(&pt[ii], 2*nb[ii]+2*ng[ii], 1);
+        d_zeros(&ux_in[ii], nx[ii]+nu[ii], 1);
+    }
+
+    d_zeros(&pt[NN], 2*nb[NN]+2*ng[NN], 1);
+    d_zeros(&lam_in[NN], 2*nb[NN]+2*ng[NN], 1);
+    d_zeros(&t_in[NN], 2*nb[NN]+2*ng[NN], 1);
+    d_zeros(&ux_in[NN], nx[NN]+nu[NN], 1);
+
+    qp_args->lam0 = lam_in;
+    qp_args->t0 = t_in;
+    qp_args->sigma_mu = MU_TIGHT;
+    qp_args->M = MM;
+    qp_args->ux0 = ux_in;
+
+    ocp_qp_solver *qp_solver = (ocp_qp_solver *)nlp_mem.qp_solver;
+    qp_solver->qp_out->t = pt;
+
+    // initialize nlp dual variables
+    for (int_t i = MM; i < NN; i++) {
+        for (int_t j  = 0; j < 2*nb[i]; j++) {
+            lam_in[i][j] = LAM_INIT;
+            t_in[i][j] = T_INIT;
+        }
+    }
+
+    for (int_t j  = 0; j < 2*NX; j++) {
+        lam_in[NN][j] = LAM_INIT;
+        t_in[NN][j] = T_INIT;
+    }
 
     int_t work_space_size =
         ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, &nlp_args, &nlp_mem);
@@ -433,7 +506,7 @@ int main() {
             nlp_mem.common->u[i][j] = 0.1;  // resU(j, i)
     }
     for (int_t j = 0; j < NX; j++)
-        nlp_mem.common->x[NN][j] = 0.1;  // resX(j, NN)
+        nlp_mem.common->x[NN][j] = x0[j];  // resX(j, NN)
 
     int_t status;
 
@@ -443,7 +516,49 @@ int main() {
     real_t T_SIM = TT/NN*NSIM;
 #endif
     for (int_t sim_iter = 0; sim_iter < NSIM; sim_iter++) {
-        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
+        if (SIM_SCENARIO == 1) {
+            int_t step_samples = (int_t)(STEP_PERIOD*NN/TT);
+            int_t ref_phase = (int_t)((sim_iter/step_samples)%2);
+            switch (ref_phase) {
+                case 0:
+                    y_ref[0] = -ANGLE_STEP;
+                    y_ref_end[0] = -ANGLE_STEP;
+                    for (int_t i = 0; i < NN; i++) {
+                        for (int_t j = 0; j < NR; j++) ls_cost.y_ref[i][j] = y_ref[j];
+                    }
+                    for (int_t j = 0; j < NR_END; j++) ls_cost.y_ref[NN][j] = y_ref_end[j];
+                    break;
+                case 1:
+                    y_ref[0] = ANGLE_STEP;
+                    y_ref_end[0] = ANGLE_STEP;
+                    for (int_t i = 0; i < NN; i++) {
+                        for (int_t j = 0; j < NR; j++) ls_cost.y_ref[i][j] = y_ref[j];
+                    }
+                    for (int_t j = 0; j < NR_END; j++) ls_cost.y_ref[NN][j] = y_ref_end[j];
+                    break;
+            }
+        }
+        for (int_t sqp_iter_hack = 0; sqp_iter_hack < N_SQP_HACK; sqp_iter_hack++) {
+            status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
+
+            // TODO(Andrea): UGLY HACK udpate of t and lam should take place inside
+            // ocp_nlp_gn_sqp
+            for (int_t i = MM; i < NN; i++) {
+                for (int_t j  = 0; j < 2*nb[i]; j++) {
+                    lam_in[i][j] = lam_in[i][j] +
+                    ALPHA*(qp_solver->qp_out->lam[i][j] - lam_in[i][j]);
+                    t_in[i][j] = qp_solver->qp_out->t[i][j] +
+                    ALPHA*(qp_solver->qp_out->t[i][j] - t_in[i][j]);
+                }
+            }
+
+            for (int_t j  = 0; j < 2*NX; j++) {
+                lam_in[NN][j] = lam_in[NN][j] +
+                ALPHA*(qp_solver->qp_out->lam[NN][j] - lam_in[NN][j]);
+                t_in[NN][j] = qp_solver->qp_out->t[NN][j] +
+                ALPHA*(qp_solver->qp_out->t[NN][j] - t_in[NN][j]);
+            }
+        }
         // forward simulation
         for (int_t j = 0; j < nx[0]; j++) integrators[0].in->x[j] = x0[j];
         for (int_t j = 0; j < nu[0]; j++) integrators[0].in->u[j] = nlp_out.u[0][j];
@@ -473,12 +588,18 @@ int main() {
         }
 #endif
 
-        printf("\n\nstatus = %i\n\n", status);
+        printf("status = %i\n", status);
     }
 
 #if defined(PLOT_OL_RESULTS) || defined(PLOT_CL_RESULTS)
 #if defined (PLOT_OL_RESULTS)
-        real_t *gnu_plot_w = ((ocp_nlp_gn_sqp_work *)nlp_work)->common->w;
+        real_t gnu_plot_w[(NX+NU)*(NN+1)];
+        for (int_t i = 0; i < NN; i++) {
+            for (int_t j = 0; j < NX; j++)
+                gnu_plot_w[i*(NX+NU)+j] = nlp_out.x[i][j];
+            for (int_t j = 0; j < NU; j++)
+                gnu_plot_w[i*(NX+NU)+NX+j] = nlp_out.u[i][j];
+        }
         int_t N_plt = NN;
         real_t T_plt = TT;
 #elif defined(PLOT_CL_RESULTS)
@@ -489,26 +610,40 @@ int main() {
 
         real_t *gnuplot_data[8];
 
-        real_t q_1[NSIM];
-        real_t q_2[NSIM];
-        real_t q_3[NSIM];
-        real_t q_4[NSIM];
+        real_t q_1[N_plt];
+        real_t q_2[N_plt];
+        real_t q_3[N_plt];
+        real_t q_4[N_plt];
 
-        real_t w_1[NSIM];
-        real_t w_2[NSIM];
-        real_t w_3[NSIM];
-        real_t w_4[NSIM];
+#if PLOT_CONTROLS
+        real_t w_1[N_plt];
+        real_t w_2[N_plt];
+        real_t w_3[N_plt];
+        real_t w_4[N_plt];
+#else
+        real_t rw_1[N_plt];
+        real_t rw_2[N_plt];
+        real_t rw_3[N_plt];
+        real_t rw_4[N_plt];
+#endif
 
-        for (int_t i = 0; i < NSIM; i++) {
+        for (int_t i = 0; i < N_plt; i++) {
             q_1[i] = gnu_plot_w[i*(NX+NU) + 0];
             q_2[i] = gnu_plot_w[i*(NX+NU) + 1];
             q_3[i] = gnu_plot_w[i*(NX+NU) + 2];
             q_4[i] = gnu_plot_w[i*(NX+NU) + 3];
 
+#if PLOT_CONTROLS
             w_1[i] = gnu_plot_w[i*(NX+NU) + 7];
             w_2[i] = gnu_plot_w[i*(NX+NU) + 8];
             w_3[i] = gnu_plot_w[i*(NX+NU) + 9];
             w_4[i] = gnu_plot_w[i*(NX+NU) + 10];
+#else
+            rw_1[i] = gnu_plot_w[i*(NX+NU) + 11];
+            rw_2[i] = gnu_plot_w[i*(NX+NU) + 12];
+            rw_3[i] = gnu_plot_w[i*(NX+NU) + 13];
+            rw_4[i] = gnu_plot_w[i*(NX+NU) + 14];
+#endif
         }
 
         gnuplot_data[0] = q_1;
@@ -516,21 +651,33 @@ int main() {
         gnuplot_data[2] = q_3;
         gnuplot_data[3] = q_4;
 
+#if PLOT_CONTROLS
         gnuplot_data[4] = w_1;
         gnuplot_data[5] = w_2;
         gnuplot_data[6] = w_3;
         gnuplot_data[7] = w_4;
+#else
+        gnuplot_data[4] = rw_1;
+        gnuplot_data[5] = rw_2;
+        gnuplot_data[6] = rw_3;
+        gnuplot_data[7] = rw_4;
+#endif
 
-        char plot_1[10] = "x_1";
-        char plot_2[10] = "x_2";
-        char plot_3[10] = "x_3";
-        char plot_4[10] = "x_4";
-
-        char plot_5[10] = "x_5";
-        char plot_6[10] = "x_6";
-        char plot_7[10] = "x_7";
-        char plot_8[10] = "x_8";
-
+        char plot_1[10] = "q_1";
+        char plot_2[10] = "q_2";
+        char plot_3[10] = "q_3";
+        char plot_4[10] = "q_4";
+#if PLOT_CONTROLS
+        char plot_5[10] = "w_1";
+        char plot_6[10] = "w_2";
+        char plot_7[10] = "w_3";
+        char plot_8[10] = "w_4";
+#else
+        char plot_5[10]  = "rw_1";
+        char plot_6[10] = "rw_2";
+        char plot_7[10] = "rw_3";
+        char plot_8[10] = "rw_4";
+#endif
         char *labels[8];
         labels[0] = plot_1;
         labels[1] = plot_2;
@@ -545,16 +692,34 @@ int main() {
         acados_gnuplot(gnuplot_data, 8, T_plt, N_plt, labels, 4, 2);
 #endif  // PLOT_OL_RESULTS
 
+#ifdef LOG_CL_SOL
+        FILE *fp;
+
+        fp = fopen(LOG_NAME, "w+");
+        for (int_t i = 0; i < NSIM; i++) {
+            fprintf(fp, "%.3f, ", i*TT/NN);
+            for (int_t j = 0; j < NX; j++)
+                fprintf(fp, "%.3f,", w_cl[i*(NX+NU) + j]);
+            for (int_t j = 0; j < NU; j++)
+                fprintf(fp, "%.3f, ", w_cl[i*(NX+NU) + NX + j]);
+            fprintf(fp, "\n");
+        }
+        fclose(fp);
+#endif
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
 #if 0
-    real_t out_x[NX*(NN+1)];
-    real_t out_u[NU*NN];
     for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < NX; j++) out_x[i*NX+j] = nlp_out.x[i][j];
-        for (int_t j = 0; j < NU; j++) out_u[i*NU+j] = nlp_out.u[i][j];
+        for (int_t j = 0; j < NX; j++)
+            printf("%.3f  ", nlp_out.x[i][j]);
+        for (int_t j = 0; j < NU; j++)
+            printf("%.3f  ", nlp_out.u[i][j]);
+        printf("\n");
+
     }
-    for (int_t j = 0; j < NX; j++) out_x[NN*NX+j] = nlp_out.x[NN][j];
+    for (int_t j = 0; j < NX; j++)
+        printf("%.3f  ", nlp_out.x[NN][j]);
+    printf("\n");
 #endif
 
     d_free(W);

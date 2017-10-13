@@ -90,7 +90,7 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_,
         raw_workspace_size +=sizeof(real_t)*max_ls_drdw_tran_size;
         raw_workspace_size +=sizeof(real_t)*max_Hess_gn_size;
         raw_workspace_size +=sizeof(real_t)*max_grad_gn_size;
-        raw_workspace_size +=sizeof(real_t)*max_rref_size;
+        raw_workspace_size +=3*sizeof(real_t)*max_rref_size;
 
         mem->raw_workspace_size = raw_workspace_size;
 
@@ -159,10 +159,11 @@ static void initialize_objective(
 
             char *ptr = (char *)work->raw;
             real_t *ls_res_out = (real_t *)ptr;
-            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]);
+            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]+nr[i]+nr[i]);
 
             real_t *r = ls_res_out;  // TODO(Andrea): allocate this
             real_t *drdw = &ls_res_out[nr[i]];
+            real_t *scaled_rref = &ls_res_out[nr[i]+(nx[i]+nu[i])*nr[i]];
 
             real_t *ls_res_in = (real_t *)ptr;
             ptr+=sizeof(real_t)*(nx[i]+nu[i]);
@@ -186,6 +187,10 @@ static void initialize_objective(
             for (int_t j = 0; j < nu[i]; j++)
                 ls_res_in[nx[i]+j] = gn_sqp_mem->common->u[i][j];
 
+            for (int_t j = 0; j < nr[i]; j++)
+                ls_res_in[nx[i]+nu[i]+j] = cost->y_ref[i][j];
+
+
             cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
 
             for (int_t j = 0; j < nx[i] + nu[i]; j++)
@@ -199,7 +204,7 @@ static void initialize_objective(
                 drdw, nr[i], Hess_gn, nx[i]+nu[i]);
 
             // compute gradient
-            for (int_t j = 0; j < nr[i]; j++) rref[j] = -cost->y_ref[i][j] + r[j];
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -scaled_rref[j] + r[j];
             // for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
             // printf("\n\n");
             // for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
@@ -325,10 +330,11 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
         } else {
             char *ptr = (char *)work->raw;
             real_t *ls_res_out = (real_t *)ptr;
-            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]);
+            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]+nr[i]);
 
-            real_t *r = ls_res_out;  // TODO(Andrea): allocate this
+            real_t *r = ls_res_out;
             real_t *drdw = &ls_res_out[nr[i]];
+            real_t *scaled_rref = &ls_res_out[nr[i]+(nx[i]+nu[i])*nr[i]];
 
             real_t *ls_res_in = (real_t *)ptr;
             ptr+=sizeof(real_t)*(nx[i]+nu[i]);
@@ -352,6 +358,9 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
             for (int_t j = 0; j < nu[i]; j++)
                 ls_res_in[nx[i]+j] = w[w_idx+nx[i]+j];
 
+            for (int_t j = 0; j < nr[i]; j++)
+                ls_res_in[nx[i]+nu[i]+j] = cost->y_ref[i][j];
+
             cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
 
             for (int_t j = 0; j < nx[i] + nu[i]; j++)
@@ -372,7 +381,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
                 drdw, nr[i], Hess_gn, nx[i]+nu[i]);
 
             // compute gradient
-            for (int_t j = 0; j < nr[i]; j++) rref[j] = -cost->y_ref[i][j] + r[j];
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -scaled_rref[j] + r[j];
             // for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
             // printf("\n\n");
             // for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
@@ -450,7 +459,12 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
 }
 
 
-static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
+    real_t *w, real_t alpha) {
+
+    // TODO(Andrea): alpha is the primal step-size, something else for
+    // dual variables should be implemented (full steps atm).
+
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
@@ -464,10 +478,10 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, 
     int_t w_idx = 0;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
-            w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
+            w[w_idx+j] += alpha*mem->qp_solver->qp_out->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++)
-            w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
+            w[w_idx+nx[i]+j] += alpha*mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
 }
@@ -537,7 +551,9 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             return -1;
         }
 
-        update_variables(nlp_in, gn_sqp_mem, work->common->w);
+        real_t alpha = gn_sqp_mem->common->step_size;
+
+        update_variables(nlp_in, gn_sqp_mem, work->common->w, alpha);
 
         for (int_t i = 0; i < nlp_in->N; i++) {
             sim_RK_opts *opts = (sim_RK_opts*) nlp_in->sim[i].args;
