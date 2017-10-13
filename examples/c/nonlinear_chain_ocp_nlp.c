@@ -168,19 +168,19 @@ int main() {
                 sim_in[jj].vde = &vde_chain_nm2;
                 sim_in[jj].VDE_forw = &vde_impl_fun;
                 sim_in[jj].jac = &jac_chain_nm2;
-                sim_in[jj].jac_fun = &jac_fun;
+                sim_in[jj].jac_fun = &jac_impl_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
                 sim_in[jj].VDE_forw = &vde_impl_fun;
                 sim_in[jj].jac = &jac_chain_nm3;
-                sim_in[jj].jac_fun = &jac_fun;
+                sim_in[jj].jac_fun = &jac_impl_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
                 sim_in[jj].VDE_forw = &vde_impl_fun;
                 sim_in[jj].jac = &jac_chain_nm4;
-                sim_in[jj].jac_fun = &jac_fun;
+                sim_in[jj].jac_fun = &jac_impl_fun;
                 break;
             default:
                 break;

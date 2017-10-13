@@ -56,7 +56,8 @@ void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t ja
     jac(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
-void vde_impl_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde) {
+void vde_impl_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
+        casadi_function_t vde) {
 
     const double *x = in;
     const double *Sx = in + 2*nx;

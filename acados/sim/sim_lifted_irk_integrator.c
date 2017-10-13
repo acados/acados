@@ -821,7 +821,8 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                     }
                 }
             }
-            rhs_in[(2*nx+nz)*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->num_steps);  // time
+            rhs_in[(2*nx+nz)*(1+NF)+nu] =
+                    ((real_t) istep+c_vec[s1])/((real_t) in->num_steps);  // time
 
             acados_tic(&timer_ad);
             in->VDE_forw(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
