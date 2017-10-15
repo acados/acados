@@ -76,7 +76,7 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args, ocp_nlp_sq
                 qp_Q[i][j * nx[i] + k] = hess_l[i][j * (nx[i] + nu[i]) + k];
             }
             for (int_t k = 0; k < nu[i]; k++) {
-                qp_S[i][j * nx[i] + k] = hess_l[i][j * (nx[i] + nu[i]) + nx[i] + k];
+                qp_S[i][j * nu[i] + k] = hess_l[i][j * (nx[i] + nu[i]) + nx[i] + k];
             }
         }
         for (int_t j = 0; j < nu[i]; j++) {
@@ -95,7 +95,7 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args, ocp_nlp_sq
     // State-continuity constraints, and state/control bounds
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
-            qp_b[i][j] = h[i][j] -  nlp_x[i][j];
+            qp_b[i][j] = h[i][j] -  nlp_x[i+1][j];
             for (int_t k = 0; k < nx[i]; k++) {
                 qp_A[i][k * nx[i] + j] = jac_h[i][k * nx[i] + j];
             }
@@ -303,21 +303,6 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             sqp_args->qp_solver->args, sqp_args->qp_solver->mem,
             sqp_args->qp_solver->work);
         if (qp_status) return_status = qp_status;
-
-        real_t norm_step = 0;
-        // (nielsvd): DEBUG!
-        for (int_t i = 0; i <= nlp_in->N; i++) {
-            for (int_t j = 0; j < nlp_in->nx[i]; j++){
-                norm_step += sqp_args->qp_solver->qp_out->x[i][j]*sqp_args->qp_solver->qp_out->x[i][j];
-                printf("x_%d_%d = %.5f\n",i,j,sqp_args->qp_solver->qp_out->x[i][j]);
-            }
-            for (int_t j = 0; j < nlp_in->nu[i]; j++) {
-                norm_step += sqp_args->qp_solver->qp_out->u[i][j]*sqp_args->qp_solver->qp_out->u[i][j];
-                printf("u_%d_%d = %.5f\n",i,j,sqp_args->qp_solver->qp_out->u[i][j]);
-            }
-        }
-        norm_step = sqrt(norm_step);
-        printf("Norm of step: %.8f\n", norm_step);
 
         // Update optimization variables (globalization)
         update_variables(nlp_in, sqp_args, sqp_mem);

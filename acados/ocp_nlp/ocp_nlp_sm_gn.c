@@ -258,8 +258,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
         for (int_t j = 0; j < ng[i]; j++) {
             g[i][j] = work->G[i][j];
             for (int_t k = 0; k < nx[i] + nu[i]; k++) {
-                jac_g[i][k * (nx[i] + nu[i]) + j] =
-                    work->DG[i][k * (nx[i] + nu[i]) + j];
+                jac_g[i][k * ng[i] + j] = work->DG[i][k * ng[i] + j];
             }
         }
     }
