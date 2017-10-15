@@ -63,9 +63,10 @@ typedef struct {
     const real_t **g;       // Evaluation of stage-wise path constraints.
 } ocp_nlp_sm_out;
 
+// TODO(nielsvd): add sm_in and sm_out to struct
 typedef struct {
-    void (*fun)(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
-                void *args, void *mem, void *work);
+    int_t (*fun)(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
+                void *args_, void *mem_, void *work_);
     void (*initialize)(const ocp_nlp_sm_in *sm_in, void *args, void **mem,
                        void **work);
     void (*destroy)(void *mem, void *work);

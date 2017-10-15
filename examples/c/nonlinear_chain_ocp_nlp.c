@@ -29,13 +29,15 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 // #include "catch/include/catch.hpp"
-
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/utils/casadi_wrapper.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -62,7 +64,7 @@ int main() {
         printf(
             "\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact Newton) -----\n",
             NMF, d);
-    } else if (INEXACT == 1) {
+    } /* else if (INEXACT == 1) {
         printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (IN Scheme) -----\n",
                NMF, d);
     } else if (INEXACT == 2) {
@@ -79,7 +81,7 @@ int main() {
             "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN INIS Scheme) "
             "-----\n",
             NMF, d);
-    }
+    } */
     int_t NX = 6 * NMF;
     int_t NU = 3;
     int_t jj;
@@ -94,6 +96,10 @@ int main() {
     int_t max_sqp_iters = 20;
     real_t *x_end;
     real_t *u_end;
+
+    /************************************************
+     * cost
+     ************************************************/
 
     d_zeros(&W, NX + NU, NX + NU);
     d_zeros(&WN, NX, NX);
@@ -117,16 +123,46 @@ int main() {
     for (int_t i = 0; i < NN; i++) ls_cost.W[i] = W;
     ls_cost.W[NN] = WN;
     ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
+    ls_cost.fun = (ocp_nlp_function *)malloc(sizeof(*ls_cost.fun) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
+        // Initialize LS cost
+        ls_cost.fun[i].nx = NX;
+        ls_cost.fun[i].nu = NU;
+        ls_cost.fun[i].np = 0;
+        ls_cost.fun[i].ny = (NX+NU);
+        ls_cost.fun[i].in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+        ls_cost.fun[i].in->compute_jac = 1;
+        ls_cost.fun[i].in->compute_hess = 0;
+        ls_cost.fun[i].out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+        ls_cost.fun[i].args = casadi_wrapper_create_arguments();
+        ls_cost.fun[i].args->fun = &ls_cost_nm2;
+        ls_cost.fun[i].args->dims = &ls_cost_nm2_work;
+        casadi_wrapper_initialize(ls_cost.fun[i].in, ls_cost.fun[i].args, &ls_cost.fun[i].work);
+
         ls_cost.y_ref[i] =
             (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
         for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
         for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
     }
+    ls_cost.fun[NN].nx = NX;
+    ls_cost.fun[NN].nu = 0;
+    ls_cost.fun[NN].np = 0;
+    ls_cost.fun[NN].ny = NX;
+    ls_cost.fun[NN].in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+    ls_cost.fun[NN].in->compute_jac = 1;
+    ls_cost.fun[NN].in->compute_hess = 0;
+    ls_cost.fun[NN].out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+    ls_cost.fun[NN].args = casadi_wrapper_create_arguments();
+    ls_cost.fun[NN].args->fun = &ls_costN_nm2;
+    ls_cost.fun[NN].args->dims = &ls_costN_nm2_work;
+    casadi_wrapper_initialize(ls_cost.fun[NN].in, ls_cost.fun[NN].args, &ls_cost.fun[NN].work);
+
     ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
 
-    // Integrator structs
+    /************************************************
+     * simulator
+     ************************************************/
     real_t Ts = TT / NN;
     sim_in sim_in[NN];
     sim_out sim_out[NN];
@@ -235,7 +271,6 @@ int main() {
     int_t nx[NN + 1] = {0};
     int_t nu[NN + 1] = {0};
     int_t nb[NN + 1] = {0};
-    int_t nc[NN + 1] = {0};
     int_t ng[NN + 1] = {0};
     for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
@@ -341,60 +376,118 @@ int main() {
     hub[NN] = ubN;
     hidxb[NN] = idxbN;
 
+    /************************************************
+     * nonlinear path constraints
+     ************************************************/
+    ocp_nlp_function *path_constraints = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function) * (NN +1));
+    for (int_t i = 0; i < NN; i++) {
+        // Initialize LS cost
+        path_constraints[i].nx = NX;
+        path_constraints[i].nu = NU;
+        path_constraints[i].np = 0;
+        path_constraints[i].ny = (NX + NU);
+        path_constraints[i].in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+        path_constraints[i].in->compute_jac = 1;
+        path_constraints[i].in->compute_hess = 0;
+        path_constraints[i].out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+        path_constraints[i].args = casadi_wrapper_create_arguments();
+        path_constraints[i].args->fun = &pathcon_nm2;
+        path_constraints[i].args->dims = &pathcon_nm2_work;
+        casadi_wrapper_initialize(path_constraints[i].in,
+                                  path_constraints[i].args,
+                                  &path_constraints[i].work);
+    }
+    path_constraints[NN].nx = NX;
+    path_constraints[NN].nu = 0;
+    path_constraints[NN].np = 0;
+    path_constraints[NN].ny = NX;
+    path_constraints[NN].in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+    path_constraints[NN].in->compute_jac = 1;
+    path_constraints[NN].in->compute_hess = 0;
+    path_constraints[NN].out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+    path_constraints[NN].args = casadi_wrapper_create_arguments();
+    path_constraints[NN].args->fun = &pathconN_nm2;
+    path_constraints[NN].args->dims = &pathconN_nm2_work;
+    casadi_wrapper_initialize(path_constraints[NN].in,
+                              path_constraints[NN].args,
+                              &path_constraints[NN].work);
+
+    /************************************************
+     * sensitivity method
+     ************************************************/
+    ocp_nlp_sm sensitivity_method;
+    sensitivity_method.fun = &ocp_nlp_sm_gn;
+    sensitivity_method.initialize = &ocp_nlp_sm_gn_initialize;
+    sensitivity_method.destroy = &ocp_nlp_sm_gn_destroy;
+
+    /************************************************
+     * QP solver
+     ************************************************/
+    ocp_qp_solver qp_solver;
+    qp_solver.fun = &ocp_qp_condensing_qpoases;
+    qp_solver.initialize = &ocp_qp_condensing_qpoases_initialize;
+    qp_solver.destroy = &ocp_qp_condensing_qpoases_destroy;
+
+    /************************************************
+     * SQP method
+     ************************************************/
     ocp_nlp_in nlp_in;
     nlp_in.N = NN;
     nlp_in.nx = nx;
     nlp_in.nu = nu;
     nlp_in.nb = nb;
-    nlp_in.nc = nc;
     nlp_in.ng = ng;
     nlp_in.idxb = (const int_t **)hidxb;
     nlp_in.lb = (const real_t **)hlb;
     nlp_in.ub = (const real_t **)hub;
-    nlp_in.sim = integrators;
-    nlp_in.cost = &ls_cost;
-    nlp_in.freezeSens = false;
-    if (INEXACT > 2) nlp_in.freezeSens = true;
+    nlp_in.lg = NULL;
+    nlp_in.ug = NULL;
+    nlp_in.sim = (void *) integrators;
+    nlp_in.cost = (void *) &ls_cost;
+    nlp_in.path_constraints = (void *) path_constraints;
 
     ocp_nlp_out nlp_out;
     nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (NN + 1));
-    nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * NN);
-    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * NN);
+    nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * (NN + 1));
+    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (NN + 1));
+    nlp_out.pi = (real_t **)malloc(sizeof(*nlp_out.pi) * (NN + 1));
+    // Allocate output variables
+    nlp_out.pi[0] = NULL;
     for (int_t i = 0; i < NN; i++) {
         nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
         nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
-        nlp_out.lam[i] = (real_t *)malloc(sizeof(*nlp_out.lam[i]) * (NX));
+        nlp_out.pi[i+1] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
+        nlp_out.lam[i] = (real_t *) malloc(sizeof(*nlp_out.lam[i]) * 2*nb[i] + 2*ng[i]);
     }
     nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
+    nlp_out.u[NN] = NULL;
+    nlp_out.lam[NN] = (real_t *) malloc(sizeof(*nlp_out.lam[NN]) * 2*nb[NN] + 2*ng[NN]);
 
-    ocp_nlp_gn_sqp_args nlp_args;
-    ocp_nlp_args nlp_common_args;
-    nlp_args.common = &nlp_common_args;
-    nlp_args.common->maxIter = max_sqp_iters;
+    ocp_nlp_sqp_args *nlp_args = ocp_nlp_sqp_create_arguments();
+    nlp_args->maxIter = max_sqp_iters;
+    nlp_args->sensitivity_method = &sensitivity_method;
+    nlp_args->qp_solver = &qp_solver;
 
-    snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "condensing_qpoases");
+    // snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "condensing_qpoases");
 
-    ocp_nlp_gn_sqp_memory nlp_mem;
-    ocp_nlp_memory nlp_mem_common;
-    nlp_mem.common = &nlp_mem_common;
-    ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
+    ocp_nlp_sqp_memory *nlp_mem;
+    ocp_nlp_sqp_workspace *nlp_work;
+    ocp_nlp_sqp_initialize(&nlp_in, nlp_args, (void **)&nlp_mem, (void **)&nlp_work);
 
-    int_t work_space_size =
-        ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, &nlp_args);
-    void *nlp_work = (void *)malloc(work_space_size);
-
+    real_t **nlp_x_mem = (real_t **)nlp_mem->common->x;
+    real_t **nlp_u_mem = (real_t **)nlp_mem->common->u;
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++)
-            nlp_mem.common->x[i][j] = xref[j];  // resX(j,i)
+            nlp_x_mem[i][j] = xref[j];  // resX(j,i)
         for (int_t j = 0; j < NU; j++)
-            nlp_mem.common->u[i][j] = 0.0;  // resU(j, i)
+            nlp_u_mem[i][j] = 0.0;  // resU(j, i)
     }
     for (int_t j = 0; j < NX; j++)
-        nlp_mem.common->x[NN][j] = xref[j];  // resX(j, NN)
+        nlp_x_mem[NN][j] = xref[j];  // resX(j, NN)
 
     int_t status;
 
-    status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
+    status = ocp_nlp_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
     printf("\n\nstatus = %i\n\n", status);
 
     // for (int_t k =0; k < 3; k++) {
@@ -404,7 +497,7 @@ int main() {
     //     d_print_mat(1, nu[k], nlp_out.u[k], 1);
     // }
 
-    ocp_nlp_gn_sqp_free_memory(&nlp_mem);
+    ocp_nlp_sqp_destroy(nlp_mem, nlp_work);
 
 #if 0
     real_t out_x[NX*(NN+1)];
@@ -434,31 +527,31 @@ int main() {
     d_free(lbN);
     d_free(ubN);
 
-    for (jj = 0; jj < NN; jj++) {
-        free(sim_in[jj].x);
-        free(sim_in[jj].u);
-        free(sim_in[jj].S_forw);
-        free(sim_in[jj].S_adj);
-        free(sim_in[jj].grad_K);
-        free(sim_out[jj].xn);
-        free(sim_out[jj].S_forw);
-        free(sim_out[jj].grad);
-        free(ls_cost.y_ref[jj]);
-    }
-    free(ls_cost.y_ref[NN]);
-    free(ls_cost.y_ref);
-    free(ls_cost.W);
+    // for (jj = 0; jj < NN; jj++) {
+    //     free(sim_in[jj].x);
+    //     free(sim_in[jj].u);
+    //     free(sim_in[jj].S_forw);
+    //     free(sim_in[jj].S_adj);
+    //     free(sim_in[jj].grad_K);
+    //     free(sim_out[jj].xn);
+    //     free(sim_out[jj].S_forw);
+    //     free(sim_out[jj].grad);
+    //     free(ls_cost.y_ref[jj]);
+    // }
+    // free(ls_cost.y_ref[NN]);
+    // free(ls_cost.y_ref);
+    // free(ls_cost.W);
 
-    for (jj = 0; jj < NN; jj++) {
-        free(nlp_in.sim[jj].work);
-        free(nlp_out.x[jj]);
-        free(nlp_out.u[jj]);
-        free(nlp_out.lam[jj]);
-    }
-    free(nlp_out.x[NN]);
-    free(nlp_out.x);
-    free(nlp_out.u);
-    free(nlp_out.lam);
+    // for (jj = 0; jj < NN; jj++) {
+    //     free(nlp_in.sim[jj].work);
+    //     free(nlp_out.x[jj]);
+    //     free(nlp_out.u[jj]);
+    //     free(nlp_out.lam[jj]);
+    // }
+    // free(nlp_out.x[NN]);
+    // free(nlp_out.x);
+    // free(nlp_out.u);
+    // free(nlp_out.lam);
 
-    free(nlp_work);
+    // free(nlp_work);
 }

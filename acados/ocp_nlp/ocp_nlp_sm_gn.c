@@ -23,6 +23,7 @@
 
 // TODO(nielsvd): only perform assert in debug mode?
 #include <assert.h>
+#include <stdio.h>
 
 #include <stdlib.h>
 
@@ -73,13 +74,13 @@ void size_of_workspace_elements(const ocp_nlp_sm_in *sm_in, const int_t stage,
     const int_t *nu = sm_in->nu;
     const int_t *ng = sm_in->ng;
 
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)sm_in->cost;
+    ocp_nlp_function *cost_fun = ((ocp_nlp_ls_cost *)sm_in->cost)->fun;
 
     *size_w = (nx[stage] + nu[stage]) * sizeof(real_t);
-    *size_F = (cost[stage].fun.ny) * sizeof(real_t);
-    *size_DF = (cost[stage].fun.ny * (nx[stage] + nu[stage])) * sizeof(real_t);
-    *size_DFT = ((nx[stage] * nu[stage]) * cost[stage].fun.ny) * sizeof(real_t);
-    *size_DFTW =((nx[stage] + nu[stage]) * cost[stage].fun.ny) * sizeof(real_t);
+    *size_F = (cost_fun[stage].ny) * sizeof(real_t);
+    *size_DF = (cost_fun[stage].ny * (nx[stage] + nu[stage])) * sizeof(real_t);
+    *size_DFT = ((nx[stage] + nu[stage]) * cost_fun[stage].ny) * sizeof(real_t);
+    *size_DFTW =((nx[stage] + nu[stage]) * cost_fun[stage].ny) * sizeof(real_t);
     *size_G = (ng[stage]) * sizeof(real_t);
     *size_DG = (ng[stage] * (nx[stage] + nu[stage])) * sizeof(real_t);
 }
@@ -220,11 +221,11 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
 
     for (int_t i = 0; i <= N; i++) {
         // Least squares cost for shooting node i
-        const int_t ny = ls_cost[i].fun.ny;
-        casadi_wrapper_in *ls_in = ls_cost[i].fun.in;
-        casadi_wrapper_out *ls_out = ls_cost[i].fun.out;
-        casadi_wrapper_args *ls_args = ls_cost[i].fun.args;
-        casadi_wrapper_workspace *ls_work = ls_cost[i].fun.work;
+        const int_t ny = ls_cost->fun[i].ny;
+        casadi_wrapper_in *ls_in = ls_cost->fun[i].in;
+        casadi_wrapper_out *ls_out = ls_cost->fun[i].out;
+        casadi_wrapper_args *ls_args = ls_cost->fun[i].args;
+        casadi_wrapper_workspace *ls_work = ls_cost->fun[i].work;
 
         // Path constraints for shooting node i
         casadi_wrapper_in *pc_in = path_constraints[i].in;
@@ -237,19 +238,20 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
         for (int_t j = 0; j < nu[i]; j++) work->w[i][nx[i] + j] = sm_in->u[i][j];
         // Compute residual vector F and its Jacobian
         casadi_wrapper(ls_in, ls_out, ls_args, ls_work);
-        for (int_t j = 0; j < ny; j++) work->F[i][j] -= ls_cost[i].y_ref[j];
+        for (int_t j = 0; j < ny; j++) work->F[i][j] -= ls_cost->y_ref[i][j];
         // Take transpose of DF
         for (int_t j = 0; j < nx[i] + nu[i]; j++) {
             for (int_t k = 0; k < ny; k++) {
                 work->DFT[i][k * (nx[i] + nu[i]) + j] = work->DF[i][j * ny + k];
             }
         }
-        // Compute Gauss-Newon Hessian
+
+        // Compute Gauss-Newton Hessian
         for (int_t j = 0; j < (nx[i] + nu[i]) * ny; j++) work->DFTW[i][j] = 0;
-        dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i], (real_t *) ls_cost[i].W, ny, work->DFTW[i], nx[i] + nu[i]);
+        dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i], (real_t *)ls_cost->W[i], ny, work->DFTW[i], nx[i] + nu[i]);
         dgemm_nn_3l(nx[i] + nu[i], nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->DF[i], ny, hess_l[i], nx[i] + nu[i]);
         // Compute gradient of cost
-        dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i],grad_f[i]);
+        dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i], grad_f[i]);
 
         // Sensitivities for the linearization of the path constraints
         casadi_wrapper(pc_in, pc_out, pc_args, pc_work);
@@ -278,13 +280,13 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_, void **me
 
     for (int_t i = 0; i <= N; i++) {
         // assign correct pointers to ls_cost-array
-        ls_cost[i].fun.in->x = sm_in->x[i];
-        ls_cost[i].fun.in->u = sm_in->u[i];
-        ls_cost[i].fun.in->p = NULL; // TODO(nielsvd): support for parameters
-        ls_cost[i].fun.out->y = (*work)->F[i];
-        ls_cost[i].fun.out->jac_y = (*work)->DF[i];
-        ls_cost[i].fun.in->compute_jac = 1;
-        ls_cost[i].fun.in->compute_hess = 0;
+        ls_cost->fun[i].in->x = sm_in->x[i];
+        ls_cost->fun[i].in->u = sm_in->u[i];
+        ls_cost->fun[i].in->p = NULL; // TODO(nielsvd): support for parameters
+        ls_cost->fun[i].out->y = (*work)->F[i];
+        ls_cost->fun[i].out->jac_y = (*work)->DF[i];
+        ls_cost->fun[i].in->compute_jac = 1;
+        ls_cost->fun[i].in->compute_hess = 0;
         
         // assign correct pointers to path_constraints-array
         path_constraints[i].in->x = sm_in->x[i];

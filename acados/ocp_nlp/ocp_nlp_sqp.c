@@ -84,8 +84,12 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args, ocp_nlp_sq
                 qp_R[i][j * nu[i] + k] = hess_l[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
             }
         }
-        for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_f[i][j];
-        for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_f[i][nx[i] + j];
+        for (int_t j = 0; j < nx[i]; j++){
+            qp_q[i][j] = grad_f[i][j];
+        }
+        for (int_t j = 0; j < nu[i]; j++){
+            qp_r[i][j] = grad_f[i][nx[i] + j];
+        }
     }
 
     // State-continuity constraints, and state/control bounds
@@ -100,18 +104,23 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args, ocp_nlp_sq
             }
         }
         for (int_t j = 0; j < nb[i]; j++) {
-// #ifdef FLIP_BOUNDS
-            // TODO(nielsvd): I believe #ifdef-section is unnecessary when 
-            //                avoiding use of w-vector. VERIFY!
-// #else
+#ifdef FLIP_BOUNDS
             if (idxb[i][j] < nu[i]) {
                 qp_lb[i][j] = nlp_in->lb[i][j] - nlp_u[i][idxb[i][j]];
                 qp_ub[i][j] = nlp_in->ub[i][j] - nlp_u[i][idxb[i][j]];
             } else {
-                qp_lb[i][j] = nlp_in->lb[i][j] - nlp_u[i][idxb[i][j]-nu[i]];
-                qp_ub[i][j] = nlp_in->ub[i][j] - nlp_u[i][idxb[i][j]-nu[i]];
+                qp_lb[i][j] = nlp_in->lb[i][j] - nlp_x[i][idxb[i][j]-nu[i]];
+                qp_ub[i][j] = nlp_in->ub[i][j] - nlp_x[i][idxb[i][j]-nu[i]];
             }
-// #endif
+#else
+            if (idxb[i][j] < nx[i]) {
+                qp_lb[i][j] = nlp_in->lb[i][j] - nlp_x[i][idxb[i][j]];
+                qp_ub[i][j] = nlp_in->ub[i][j] - nlp_x[i][idxb[i][j]];
+            } else {
+                qp_lb[i][j] = nlp_in->lb[i][j] - nlp_u[i][idxb[i][j]-nx[i]];
+                qp_ub[i][j] = nlp_in->ub[i][j] - nlp_u[i][idxb[i][j]-nx[i]];
+            }
+#endif
         }
     }
 
@@ -136,7 +145,6 @@ void update_variables(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args, ocp_
     const int_t *nu = nlp_in->nu;
     const int_t *nb = nlp_in->nb;
     const int_t *ng = nlp_in->ng;
-    const int_t **idxb = nlp_in->idxb;
 
     real_t **nlp_x = (real_t **) sqp_mem->common->x;
     real_t **nlp_u = (real_t **) sqp_mem->common->u;
@@ -150,10 +158,12 @@ void update_variables(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args, ocp_
         for (int_t j = 0; j < nu[i]; j++) {
             nlp_u[i][j] += sqp_args->qp_solver->qp_out->u[i][j];
         }
-        for (int_t j = 0; j < nb[i]; j++) {
-            nlp_pi[i][idxb[i][j]] = sqp_args->qp_solver->qp_out->pi[i][idxb[i][j]];
+        if (i > 0) {
+            for (int_t j = 0; j < nx[i]; j++) {
+                nlp_pi[i][j] = sqp_args->qp_solver->qp_out->pi[i][j];
+            }
         }
-        for (int_t j = 0; j < ng[i]; j++) {
+        for (int_t j = 0; j < 2 * nb[i] + 2 * ng[i]; j++) {
             nlp_lam[i][j] = sqp_args->qp_solver->qp_out->lam[i][j];
         }
     }
@@ -165,7 +175,6 @@ void store_variables(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp
     const int_t *nu = nlp_in->nu;
     const int_t *nb = nlp_in->nb;
     const int_t *ng = nlp_in->ng;
-    const int_t **idxb = nlp_in->idxb;
 
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
@@ -174,10 +183,12 @@ void store_variables(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp
         for (int_t j = 0; j < nu[i]; j++) {
             nlp_out->u[i][j] = sqp_mem->common->u[i][j];
         }
-        for (int_t j = 0; j < nb[i]; j++) {
-            nlp_out->pi[i][idxb[i][j]] = sqp_mem->common->pi[i][idxb[i][j]];
+        if (i > 0) {
+            for (int_t j = 0; j < nx[i]; j++) {
+                nlp_out->pi[i][j] = sqp_mem->common->pi[i][j];
+            }
         }
-        for (int_t j = 0; j < ng[i]; j++) {
+        for (int_t j = 0; j < 2 * nb[i] + 2 * ng[i]; j++) {
             nlp_out->lam[i][j] = sqp_mem->common->lam[i][j];
         }
     }
@@ -209,8 +220,7 @@ char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_, void **me
     *sqp_memory = (ocp_nlp_sqp_memory *)c_ptr;
     c_ptr += sizeof(ocp_nlp_sqp_memory);
 
-    (*sqp_memory)->common = (ocp_nlp_memory *)c_ptr;
-    c_ptr += ocp_nlp_calculate_memory_size(nlp_in);
+    c_ptr = ocp_nlp_assign_memory(nlp_in, (void **)(&(*sqp_memory)->common), (void *)c_ptr);
 
     (*sqp_memory)->sm_in = (ocp_nlp_sm_in *)c_ptr;
     c_ptr += sizeof(ocp_nlp_sm_in);
@@ -294,6 +304,21 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             sqp_args->qp_solver->work);
         if (qp_status) return_status = qp_status;
 
+        real_t norm_step = 0;
+        // (nielsvd): DEBUG!
+        for (int_t i = 0; i <= nlp_in->N; i++) {
+            for (int_t j = 0; j < nlp_in->nx[i]; j++){
+                norm_step += sqp_args->qp_solver->qp_out->x[i][j]*sqp_args->qp_solver->qp_out->x[i][j];
+                printf("x_%d_%d = %.5f\n",i,j,sqp_args->qp_solver->qp_out->x[i][j]);
+            }
+            for (int_t j = 0; j < nlp_in->nu[i]; j++) {
+                norm_step += sqp_args->qp_solver->qp_out->u[i][j]*sqp_args->qp_solver->qp_out->u[i][j];
+                printf("u_%d_%d = %.5f\n",i,j,sqp_args->qp_solver->qp_out->u[i][j]);
+            }
+        }
+        norm_step = sqrt(norm_step);
+        printf("Norm of step: %.8f\n", norm_step);
+
         // Update optimization variables (globalization)
         update_variables(nlp_in, sqp_args, sqp_mem);
     }
@@ -304,12 +329,19 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
     return return_status;
 }
 
-void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void *mem_, void *work_) {
-    
-    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) mem_;
-    
-    ocp_nlp_sm_in *sm_in = mem->sm_in;
-    ocp_nlp_sm_out *sm_out = mem->sm_out;
+void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_, void **work_) {
+    ocp_nlp_sqp_args *args = (ocp_nlp_sqp_args *) args_;
+    ocp_nlp_sqp_memory **mem = (ocp_nlp_sqp_memory **) mem_;
+    ocp_nlp_sqp_workspace **work = (ocp_nlp_sqp_workspace **) work_;
+
+    *mem = ocp_nlp_sqp_create_memory(nlp_in, args);
+    *work = ocp_nlp_sqp_create_workspace(nlp_in, args);
+
+    ocp_nlp_sm_in *sm_in = (*mem)->sm_in;
+    ocp_nlp_sm_out *sm_out = (*mem)->sm_out;
+
+    ocp_nlp_sm *nlp_sm = args->sensitivity_method;
+    ocp_qp_solver *qp_solver = args->qp_solver;
 
     // Sensitivity method input
     sm_in->N = nlp_in->N;
@@ -320,18 +352,37 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void *mem_, v
     sm_in->cost = nlp_in->cost;
     sm_in->sim = (sim_solver *)nlp_in->sim;
     sm_in->path_constraints = (ocp_nlp_function *)nlp_in->path_constraints;
-    sm_in->x = mem->common->x;
-    sm_in->u = mem->common->u;
-    sm_in->pi = mem->common->pi;
-    sm_in->lam = mem->common->lam;
+    sm_in->x = (*mem)->common->x;
+    sm_in->u = (*mem)->common->u;
+    sm_in->pi = (*mem)->common->pi;
+    sm_in->lam = (*mem)->common->lam;
 
     // Sensitivity method output
-    sm_out->hess_l = mem->common->hess_l;
-    sm_out->grad_f = mem->common->grad_f;
-    sm_out->jac_h = mem->common->jac_h;
-    sm_out->jac_g = mem->common->jac_g;
-    sm_out->h = mem->common->h;
-    sm_out->g = mem->common->g;
+    sm_out->hess_l = (*mem)->common->hess_l;
+    sm_out->grad_f = (*mem)->common->grad_f;
+    sm_out->jac_h = (*mem)->common->jac_h;
+    sm_out->jac_g = (*mem)->common->jac_g;
+    sm_out->h = (*mem)->common->h;
+    sm_out->g = (*mem)->common->g;
+
+    // QP solver input
+    qp_solver->qp_in = create_ocp_qp_in(nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
+    int_t **idxb = (int_t **) qp_solver->qp_in->idxb;
+    for (int_t i = 0; i < nlp_in->N; i++)
+        for (int_t j = 0; j < qp_solver->qp_in->nb[i]; j++) idxb[i][j] = nlp_in->idxb[i][j];
+
+    // QP solver args
+    // TODO(nielsvd): Args dependent on the input? resolve hack below!
+    // HACK!!!
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+    qp_solver->args = (void *) ocp_qp_condensing_qpoases_create_arguments(qp_solver->qp_in);
+
+    // QP solver output
+    qp_solver->qp_out = create_ocp_qp_out(nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
+
+    // Initialize sensitivity method and QP solver
+    nlp_sm->initialize(sm_in, nlp_sm->args, &nlp_sm->mem, &nlp_sm->work);
+    qp_solver->initialize(qp_solver->qp_in, qp_solver->args, &qp_solver->mem, &qp_solver->work);
 }
 
 void ocp_nlp_sqp_destroy(void *mem, void *work) {

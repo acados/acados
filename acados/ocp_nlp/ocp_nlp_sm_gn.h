@@ -24,9 +24,9 @@
 #include "acados/utils/types.h"
 
 typedef struct {
-    ocp_nlp_function fun;
-    const real_t *W;
-    const real_t *y_ref;
+    ocp_nlp_function *fun;
+    real_t **W;
+    real_t **y_ref;
 } ocp_nlp_ls_cost;
 
 typedef struct {

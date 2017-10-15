@@ -77,7 +77,7 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                     void *args_, void *memory_, void *workspace_);
 
 void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_,
-                              void *mem_, void *work_);
+                              void **mem_, void **work_);
 
 void ocp_nlp_sqp_destroy(void *mem, void *work);
 
