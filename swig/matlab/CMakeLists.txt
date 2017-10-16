@@ -2,7 +2,7 @@ find_package(Matlab REQUIRED)
 find_package(CasadiMatlab REQUIRED)
 
 if(CASADIMATLAB_FOUND)
-    add_library(casadi_matlab SHARED IMPORTED)
+    add_library(casadi_matlab UNKNOWN IMPORTED)
     set_property(TARGET casadi_matlab PROPERTY IMPORTED_LOCATION "${CASADI_MATLAB_LIBRARY}")
     include_directories("${CASADI_MATLAB_INCLUDE_DIR}")
     get_filename_component(CASADI_MATLAB_LIBRARY_DIR "${CASADI_MATLAB_LIBRARY}" DIRECTORY)
@@ -10,6 +10,12 @@ if(CASADIMATLAB_FOUND)
 endif()
 
 set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
+
+if(CMAKE_SYSTEM MATCHES "Windows")
+    if(${CMAKE_GENERATOR} MATCHES "MinGW Makefiles")
+        set_source_files_properties(../acados.i PROPERTIES SWIG_FLAGS "-DSWIG_WIN_MINGW")
+    endif()
+endif()
 
 swig_module_initialize(acadosMEX matlab)
 swig_add_source_to_module(acadosMEX FALSE MEX_FILE ../acados.i)
