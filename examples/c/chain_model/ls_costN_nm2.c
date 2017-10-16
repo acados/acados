@@ -63,9 +63,9 @@ casadi_real twice(casadi_real x) { return x+x;}
 #endif
 
 static const int casadi_s0[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
-static const int casadi_s1[45] = {6, 6, 0, 6, 12, 18, 24, 30, 36, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+static const int casadi_s1[15] = {6, 6, 0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3, 4, 5};
 
-/* ls_costN_nm2:(i0[6])->(o0[6],o1[6x6]) */
+/* ls_costN_nm2:(i0[6])->(o0[6],o1[6x6,6nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, int mem) {
   casadi_real a0=arg[0] ? arg[0][0] : 0;
   if (res[0]!=0) res[0][0]=a0;
@@ -81,42 +81,11 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   if (res[0]!=0) res[0][5]=a0;
   a0=1.;
   if (res[1]!=0) res[1][0]=a0;
-  casadi_real a1=0.;
-  if (res[1]!=0) res[1][1]=a1;
-  if (res[1]!=0) res[1][2]=a1;
-  if (res[1]!=0) res[1][3]=a1;
-  if (res[1]!=0) res[1][4]=a1;
-  if (res[1]!=0) res[1][5]=a1;
-  if (res[1]!=0) res[1][6]=a1;
-  if (res[1]!=0) res[1][7]=a0;
-  if (res[1]!=0) res[1][8]=a1;
-  if (res[1]!=0) res[1][9]=a1;
-  if (res[1]!=0) res[1][10]=a1;
-  if (res[1]!=0) res[1][11]=a1;
-  if (res[1]!=0) res[1][12]=a1;
-  if (res[1]!=0) res[1][13]=a1;
-  if (res[1]!=0) res[1][14]=a0;
-  if (res[1]!=0) res[1][15]=a1;
-  if (res[1]!=0) res[1][16]=a1;
-  if (res[1]!=0) res[1][17]=a1;
-  if (res[1]!=0) res[1][18]=a1;
-  if (res[1]!=0) res[1][19]=a1;
-  if (res[1]!=0) res[1][20]=a1;
-  if (res[1]!=0) res[1][21]=a0;
-  if (res[1]!=0) res[1][22]=a1;
-  if (res[1]!=0) res[1][23]=a1;
-  if (res[1]!=0) res[1][24]=a1;
-  if (res[1]!=0) res[1][25]=a1;
-  if (res[1]!=0) res[1][26]=a1;
-  if (res[1]!=0) res[1][27]=a1;
-  if (res[1]!=0) res[1][28]=a0;
-  if (res[1]!=0) res[1][29]=a1;
-  if (res[1]!=0) res[1][30]=a1;
-  if (res[1]!=0) res[1][31]=a1;
-  if (res[1]!=0) res[1][32]=a1;
-  if (res[1]!=0) res[1][33]=a1;
-  if (res[1]!=0) res[1][34]=a1;
-  if (res[1]!=0) res[1][35]=a0;
+  if (res[1]!=0) res[1][1]=a0;
+  if (res[1]!=0) res[1][2]=a0;
+  if (res[1]!=0) res[1][3]=a0;
+  if (res[1]!=0) res[1][4]=a0;
+  if (res[1]!=0) res[1][5]=a0;
   return 0;
 }
 
@@ -168,7 +137,7 @@ CASADI_SYMBOL_EXPORT int ls_costN_nm2_work(int *sz_arg, int* sz_res, int *sz_iw,
   if (sz_arg) *sz_arg = 1;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 2;
+  if (sz_w) *sz_w = 1;
   return 0;
 }
 

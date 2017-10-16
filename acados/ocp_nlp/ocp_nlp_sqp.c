@@ -306,6 +306,15 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 
         // Update optimization variables (globalization)
         update_variables(nlp_in, sqp_args, sqp_mem);
+
+        // TODO(nielsvd): debug, remove... Norm of step-size
+        real_t norm_step = 0;
+        for (int_t i = 0; i <= nlp_in->N; i++){
+            for (int_t j = 0; j < nlp_in->nx[i]; j++) norm_step = (sqp_args->qp_solver->qp_out->x[i][j])*(sqp_args->qp_solver->qp_out->x[i][j]);
+            for (int_t j = 0; j < nlp_in->nu[i]; j++) norm_step = (sqp_args->qp_solver->qp_out->u[i][j])*(sqp_args->qp_solver->qp_out->u[i][j]);
+        }
+        norm_step = sqrt(norm_step);
+        printf("Norm_step = %.10f\n", norm_step);
     }
 
     // Post-process solution

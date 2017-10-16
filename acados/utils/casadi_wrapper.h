@@ -40,6 +40,7 @@ typedef struct {
 typedef struct {
     int_t (*fun)(const real_t **, real_t **, int *, real_t *, int);
     int_t (*dims)(int *, int *, int *, int *);
+    const int_t *(*sparsity)(int_t);
 } casadi_wrapper_args;
 
 typedef struct {
@@ -47,6 +48,7 @@ typedef struct {
     real_t **res;
     int_t *iw;
     real_t *w;
+    real_t **sparse_res;
 } casadi_wrapper_workspace;
 
 casadi_wrapper_args *casadi_wrapper_create_arguments();

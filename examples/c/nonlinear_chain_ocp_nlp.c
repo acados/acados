@@ -137,6 +137,7 @@ int main() {
         ls_cost.fun[i].args = casadi_wrapper_create_arguments();
         ls_cost.fun[i].args->fun = &ls_cost_nm2;
         ls_cost.fun[i].args->dims = &ls_cost_nm2_work;
+        ls_cost.fun[i].args->sparsity = &ls_cost_nm2_sparsity_out;
         casadi_wrapper_initialize(ls_cost.fun[i].in, ls_cost.fun[i].args, &ls_cost.fun[i].work);
 
         ls_cost.y_ref[i] =
@@ -155,6 +156,7 @@ int main() {
     ls_cost.fun[NN].args = casadi_wrapper_create_arguments();
     ls_cost.fun[NN].args->fun = &ls_costN_nm2;
     ls_cost.fun[NN].args->dims = &ls_costN_nm2_work;
+    ls_cost.fun[NN].args->sparsity = &ls_costN_nm2_sparsity_out;
     casadi_wrapper_initialize(ls_cost.fun[NN].in, ls_cost.fun[NN].args, &ls_cost.fun[NN].work);
 
     ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
@@ -393,6 +395,7 @@ int main() {
         path_constraints[i].args = casadi_wrapper_create_arguments();
         path_constraints[i].args->fun = &pathcon_nm2;
         path_constraints[i].args->dims = &pathcon_nm2_work;
+        path_constraints[i].args->sparsity = &pathcon_nm2_sparsity_out;
         casadi_wrapper_initialize(path_constraints[i].in,
                                   path_constraints[i].args,
                                   &path_constraints[i].work);
@@ -408,6 +411,7 @@ int main() {
     path_constraints[NN].args = casadi_wrapper_create_arguments();
     path_constraints[NN].args->fun = &pathconN_nm2;
     path_constraints[NN].args->dims = &pathconN_nm2_work;
+    path_constraints[NN].args->sparsity = &pathconN_nm2_sparsity_out;
     casadi_wrapper_initialize(path_constraints[NN].in,
                               path_constraints[NN].args,
                               &path_constraints[NN].work);

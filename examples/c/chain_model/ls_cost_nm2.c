@@ -67,9 +67,9 @@ casadi_real twice(casadi_real x) { return x+x;}
 static const int casadi_s0[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
 static const int casadi_s1[7] = {3, 1, 0, 3, 0, 1, 2};
 static const int casadi_s2[13] = {9, 1, 0, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
-static const int casadi_s3[93] = {9, 9, 0, 9, 18, 27, 36, 45, 54, 63, 72, 81, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+static const int casadi_s3[21] = {9, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
 
-/* ls_cost_nm2:(i0[6],i1[3])->(o0[9],o1[9x9]) */
+/* ls_cost_nm2:(i0[6],i1[3])->(o0[9],o1[9x9,9nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, int mem) {
   casadi_real a0=arg[0] ? arg[0][0] : 0;
   if (res[0]!=0) res[0][0]=a0;
@@ -91,87 +91,14 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   if (res[0]!=0) res[0][8]=a0;
   a0=1.;
   if (res[1]!=0) res[1][0]=a0;
-  casadi_real a1=0.;
-  if (res[1]!=0) res[1][1]=a1;
-  if (res[1]!=0) res[1][2]=a1;
-  if (res[1]!=0) res[1][3]=a1;
-  if (res[1]!=0) res[1][4]=a1;
-  if (res[1]!=0) res[1][5]=a1;
-  if (res[1]!=0) res[1][6]=a1;
-  if (res[1]!=0) res[1][7]=a1;
-  if (res[1]!=0) res[1][8]=a1;
-  if (res[1]!=0) res[1][9]=a1;
-  if (res[1]!=0) res[1][10]=a0;
-  if (res[1]!=0) res[1][11]=a1;
-  if (res[1]!=0) res[1][12]=a1;
-  if (res[1]!=0) res[1][13]=a1;
-  if (res[1]!=0) res[1][14]=a1;
-  if (res[1]!=0) res[1][15]=a1;
-  if (res[1]!=0) res[1][16]=a1;
-  if (res[1]!=0) res[1][17]=a1;
-  if (res[1]!=0) res[1][18]=a1;
-  if (res[1]!=0) res[1][19]=a1;
-  if (res[1]!=0) res[1][20]=a0;
-  if (res[1]!=0) res[1][21]=a1;
-  if (res[1]!=0) res[1][22]=a1;
-  if (res[1]!=0) res[1][23]=a1;
-  if (res[1]!=0) res[1][24]=a1;
-  if (res[1]!=0) res[1][25]=a1;
-  if (res[1]!=0) res[1][26]=a1;
-  if (res[1]!=0) res[1][27]=a1;
-  if (res[1]!=0) res[1][28]=a1;
-  if (res[1]!=0) res[1][29]=a1;
-  if (res[1]!=0) res[1][30]=a0;
-  if (res[1]!=0) res[1][31]=a1;
-  if (res[1]!=0) res[1][32]=a1;
-  if (res[1]!=0) res[1][33]=a1;
-  if (res[1]!=0) res[1][34]=a1;
-  if (res[1]!=0) res[1][35]=a1;
-  if (res[1]!=0) res[1][36]=a1;
-  if (res[1]!=0) res[1][37]=a1;
-  if (res[1]!=0) res[1][38]=a1;
-  if (res[1]!=0) res[1][39]=a1;
-  if (res[1]!=0) res[1][40]=a0;
-  if (res[1]!=0) res[1][41]=a1;
-  if (res[1]!=0) res[1][42]=a1;
-  if (res[1]!=0) res[1][43]=a1;
-  if (res[1]!=0) res[1][44]=a1;
-  if (res[1]!=0) res[1][45]=a1;
-  if (res[1]!=0) res[1][46]=a1;
-  if (res[1]!=0) res[1][47]=a1;
-  if (res[1]!=0) res[1][48]=a1;
-  if (res[1]!=0) res[1][49]=a1;
-  if (res[1]!=0) res[1][50]=a0;
-  if (res[1]!=0) res[1][51]=a1;
-  if (res[1]!=0) res[1][52]=a1;
-  if (res[1]!=0) res[1][53]=a1;
-  if (res[1]!=0) res[1][54]=a1;
-  if (res[1]!=0) res[1][55]=a1;
-  if (res[1]!=0) res[1][56]=a1;
-  if (res[1]!=0) res[1][57]=a1;
-  if (res[1]!=0) res[1][58]=a1;
-  if (res[1]!=0) res[1][59]=a1;
-  if (res[1]!=0) res[1][60]=a0;
-  if (res[1]!=0) res[1][61]=a1;
-  if (res[1]!=0) res[1][62]=a1;
-  if (res[1]!=0) res[1][63]=a1;
-  if (res[1]!=0) res[1][64]=a1;
-  if (res[1]!=0) res[1][65]=a1;
-  if (res[1]!=0) res[1][66]=a1;
-  if (res[1]!=0) res[1][67]=a1;
-  if (res[1]!=0) res[1][68]=a1;
-  if (res[1]!=0) res[1][69]=a1;
-  if (res[1]!=0) res[1][70]=a0;
-  if (res[1]!=0) res[1][71]=a1;
-  if (res[1]!=0) res[1][72]=a1;
-  if (res[1]!=0) res[1][73]=a1;
-  if (res[1]!=0) res[1][74]=a1;
-  if (res[1]!=0) res[1][75]=a1;
-  if (res[1]!=0) res[1][76]=a1;
-  if (res[1]!=0) res[1][77]=a1;
-  if (res[1]!=0) res[1][78]=a1;
-  if (res[1]!=0) res[1][79]=a1;
-  if (res[1]!=0) res[1][80]=a0;
+  if (res[1]!=0) res[1][1]=a0;
+  if (res[1]!=0) res[1][2]=a0;
+  if (res[1]!=0) res[1][3]=a0;
+  if (res[1]!=0) res[1][4]=a0;
+  if (res[1]!=0) res[1][5]=a0;
+  if (res[1]!=0) res[1][6]=a0;
+  if (res[1]!=0) res[1][7]=a0;
+  if (res[1]!=0) res[1][8]=a0;
   return 0;
 }
 
@@ -225,7 +152,7 @@ CASADI_SYMBOL_EXPORT int ls_cost_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, 
   if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 2;
+  if (sz_w) *sz_w = 1;
   return 0;
 }
 
