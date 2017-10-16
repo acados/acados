@@ -128,14 +128,8 @@ int main() {
                 case 5:
                     initStates = fopen(X0_NM6_FILE, "r");
                     break;
-                case 6:
-                    initStates = fopen(X0_NM7_FILE, "r");
-                    break;
-                case 7:
-                    initStates = fopen(X0_NM8_FILE, "r");
-                    break;
                 default:
-                    initStates = fopen(X0_NM9_FILE, "r");
+                    initStates = fopen(X0_NM7_FILE, "r");
                     break;
             }
             for (int_t i = 0; i < NX; i++) {
@@ -159,14 +153,8 @@ int main() {
                 case 5:
                     refStates = fopen(XN_NM6_FILE, "r");
                     break;
-                case 6:
-                    refStates = fopen(XN_NM7_FILE, "r");
-                    break;
-                case 7:
-                    refStates = fopen(XN_NM8_FILE, "r");
-                    break;
                 default:
-                    refStates = fopen(XN_NM9_FILE, "r");
+                    refStates = fopen(XN_NM7_FILE, "r");
                     break;
             }
             for (int_t i = 0; i < NX; i++) {
@@ -235,22 +223,10 @@ int main() {
                         sim_in[jj].jac = &jac_chain_nm6;
                         sim_in[jj].jac_fun = &jac_impl_fun;
                         break;
-                    case 6:
+                    default:
                         sim_in[jj].vde = &vde_chain_nm7;
                         sim_in[jj].VDE_forw = &vde_impl_fun;
                         sim_in[jj].jac = &jac_chain_nm7;
-                        sim_in[jj].jac_fun = &jac_impl_fun;
-                        break;
-                    case 7:
-                        sim_in[jj].vde = &vde_chain_nm8;
-                        sim_in[jj].VDE_forw = &vde_impl_fun;
-                        sim_in[jj].jac = &jac_chain_nm8;
-                        sim_in[jj].jac_fun = &jac_impl_fun;
-                        break;
-                    default:
-                        sim_in[jj].vde = &vde_chain_nm9;
-                        sim_in[jj].VDE_forw = &vde_impl_fun;
-                        sim_in[jj].jac = &jac_chain_nm9;
                         sim_in[jj].jac_fun = &jac_impl_fun;
                         break;
                 }
