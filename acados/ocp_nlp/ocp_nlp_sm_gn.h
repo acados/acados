@@ -73,6 +73,6 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
 void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
                                         void **mem, void **work);
 
-void ocp_nlp_sm_gn_destroy(void *mem, void *work);
+void ocp_nlp_sm_gn_destroy(void *mem_, void *work_);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_SM_GN_H_

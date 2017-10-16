@@ -79,7 +79,7 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_,
                               void **mem_, void **work_);
 
-void ocp_nlp_sqp_destroy(void *mem, void *work);
+void ocp_nlp_sqp_destroy(void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

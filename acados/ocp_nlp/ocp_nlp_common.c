@@ -175,8 +175,8 @@ ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in) {
     return mem;
 }
 
-void ocp_nlp_free_memory(int_t N, void *mem_) {
+void ocp_nlp_destroy(void *mem_) {
+    ocp_nlp_memory *mem = (ocp_nlp_memory *) mem_;
 
-    // TODO(nielsvd): implement memory clean-up
-
+    free(mem);
 }

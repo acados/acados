@@ -379,6 +379,10 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_, 
     qp_solver->initialize(qp_solver->qp_in, qp_solver->args, &qp_solver->mem, &qp_solver->work);
 }
 
-void ocp_nlp_sqp_destroy(void *mem, void *work) {
-    // TODO(nielsvd): implement memory cleanup.
+void ocp_nlp_sqp_destroy(void *mem_, void *work_) {
+    ocp_nlp_sqp_memory *mem = (ocp_nlp_sqp_memory *) mem_;
+    ocp_nlp_sqp_workspace *work = (ocp_nlp_sqp_workspace *) work_;
+
+    free(work);
+    free(mem);
 }

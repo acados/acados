@@ -67,9 +67,9 @@ typedef struct {
 typedef struct {
     int_t (*fun)(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
                 void *args_, void *mem_, void *work_);
-    void (*initialize)(const ocp_nlp_sm_in *sm_in, void *args, void **mem,
-                       void **work);
-    void (*destroy)(void *mem, void *work);
+    void (*initialize)(const ocp_nlp_sm_in *sm_in, void *args_, void **mem_,
+                       void **work_);
+    void (*destroy)(void *mem_, void *work_);
     void *args;
     void *mem;
     void *work;

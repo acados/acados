@@ -501,8 +501,6 @@ int main() {
     //     d_print_mat(1, nu[k], nlp_out.u[k], 1);
     // }
 
-    ocp_nlp_sqp_destroy(nlp_mem, nlp_work);
-
 #if 0
     real_t out_x[NX*(NN+1)];
     real_t out_u[NU*NN];
@@ -531,31 +529,51 @@ int main() {
     d_free(lbN);
     d_free(ubN);
 
-    // for (jj = 0; jj < NN; jj++) {
-    //     free(sim_in[jj].x);
-    //     free(sim_in[jj].u);
-    //     free(sim_in[jj].S_forw);
-    //     free(sim_in[jj].S_adj);
-    //     free(sim_in[jj].grad_K);
-    //     free(sim_out[jj].xn);
-    //     free(sim_out[jj].S_forw);
-    //     free(sim_out[jj].grad);
-    //     free(ls_cost.y_ref[jj]);
-    // }
-    // free(ls_cost.y_ref[NN]);
-    // free(ls_cost.y_ref);
-    // free(ls_cost.W);
+    // LS cost and path constraints
+    for (int_t i = 0; i <= NN; i++) {
+        // Least-squares cost
+        free(ls_cost.fun[i].in);
+        free(ls_cost.fun[i].out);
+        free(ls_cost.fun[i].args);
+        casadi_wrapper_destroy(ls_cost.fun[i].work);
+        free(ls_cost.y_ref[i]);
+        // Path constraints
+        free(path_constraints[i].in);
+        free(path_constraints[i].out);
+        free(path_constraints[i].args);
+        casadi_wrapper_destroy(path_constraints[i].work);
+    }
+    free(ls_cost.W);
+    free(ls_cost.y_ref);
 
-    // for (jj = 0; jj < NN; jj++) {
-    //     free(nlp_in.sim[jj].work);
-    //     free(nlp_out.x[jj]);
-    //     free(nlp_out.u[jj]);
-    //     free(nlp_out.lam[jj]);
-    // }
-    // free(nlp_out.x[NN]);
-    // free(nlp_out.x);
-    // free(nlp_out.u);
-    // free(nlp_out.lam);
+    // Integrators
+    for (jj = 0; jj < NN; jj++) {
+        free(sim_in[jj].x);
+        free(sim_in[jj].u);
+        free(sim_in[jj].S_forw);
+        free(sim_in[jj].S_adj);
+        free(sim_in[jj].grad_K);
+        free(sim_out[jj].xn);
+        free(sim_out[jj].S_forw);
+        free(sim_out[jj].grad);
+    }
 
-    // free(nlp_work);
+    // NLP memory and workspace
+    ocp_nlp_sqp_destroy(nlp_mem, nlp_work);
+    // NLP arguments
+    free(nlp_args);
+    // NLP output
+    for (int_t i = 0; i < NN; i++) {
+        free(nlp_out.x[i]);
+        free(nlp_out.u[i]);
+        free(nlp_out.pi[i+1]);
+        free(nlp_out.lam[i]);
+    }
+    free(nlp_out.x[NN]);
+    free(nlp_out.u[NN]);
+    free(nlp_out.lam[NN]);
+    free(nlp_out.x);
+    free(nlp_out.u);
+    free(nlp_out.lam);
+    free(nlp_out.pi);
 }

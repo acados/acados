@@ -181,6 +181,5 @@ void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in, casadi_wrapper_ar
 }
 
 void casadi_wrapper_destroy(casadi_wrapper_workspace *work) {
-    // TODO(nielsvd): replace dummy commands once interface completed
-    (void)work;
+    free(work);
 }

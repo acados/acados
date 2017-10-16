@@ -75,6 +75,7 @@ int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in);
 char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
                             void *raw_memory);
 ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in);
-void ocp_nlp_free_memory(int_t N, void *mem_);
+
+void ocp_nlp_destroy(void *mem_);
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

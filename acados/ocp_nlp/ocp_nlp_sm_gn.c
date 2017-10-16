@@ -298,8 +298,10 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_, void **me
     }
 }
 
-void ocp_nlp_sm_gn_destroy(void *mem, void *work) {
-    // TODO(nielsvd): replace dummy commands once interface completed
-    (void)mem;
-    (void)work;
+void ocp_nlp_sm_gn_destroy(void *mem_, void *work_) {
+    ocp_nlp_sm_gn_memory *mem = (ocp_nlp_sm_gn_memory *) mem_;
+    ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *) work_;
+    
+    free(mem);
+    free(work);
 }
