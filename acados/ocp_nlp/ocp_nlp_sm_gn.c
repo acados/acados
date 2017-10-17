@@ -67,16 +67,14 @@ ocp_nlp_sm_gn_memory *ocp_nlp_sm_gn_create_memory(const ocp_nlp_sm_in *sm_in, vo
 }
 
 void size_of_workspace_elements(const ocp_nlp_sm_in *sm_in, const int_t stage, 
-                                int_t *size_w, int_t *size_F, int_t *size_DF, 
-                                int_t *size_DFT, int_t *size_DFTW, int_t *size_G,
-                                int_t *size_DG) {
+                                int_t *size_F, int_t *size_DF, int_t *size_DFT, 
+                                int_t *size_DFTW, int_t *size_G, int_t *size_DG) {
     const int_t *nx = sm_in->nx;
     const int_t *nu = sm_in->nu;
     const int_t *ng = sm_in->ng;
 
     ocp_nlp_function *cost_fun = ((ocp_nlp_ls_cost *)sm_in->cost)->fun;
 
-    *size_w = (nx[stage] + nu[stage]) * sizeof(real_t);
     *size_F = (cost_fun[stage].ny) * sizeof(real_t);
     *size_DF = (cost_fun[stage].ny * (nx[stage] + nu[stage])) * sizeof(real_t);
     *size_DFT = ((nx[stage] + nu[stage]) * cost_fun[stage].ny) * sizeof(real_t);
@@ -91,7 +89,6 @@ int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in, void *a
 
     int_t size = sizeof(ocp_nlp_sm_gn_workspace);
 
-    size += (N + 1) * sizeof(real_t *); // w
     size += (N + 1) * sizeof(real_t *); // F
     size += (N + 1) * sizeof(real_t *); // DF
     size += (N + 1) * sizeof(real_t *); // DFT
@@ -100,11 +97,11 @@ int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in, void *a
     size += (N + 1) * sizeof(real_t *); // DG
 
     for (int_t i = 0; i <= N; i++) {
-        int_t size_w, size_F, size_DF, size_DFT, size_DFTW, size_G, size_DG;
-        size_of_workspace_elements(sm_in, i, &size_w, &size_F, &size_DF, &size_DFT,
+        int_t size_F, size_DF, size_DFT, size_DFTW, size_G, size_DG;
+        size_of_workspace_elements(sm_in, i, &size_F, &size_DF, &size_DFT,
                                    &size_DFTW, &size_G, &size_DG);
 
-        size += size_w + size_F + size_DF + size_DFT + size_DFTW + size_G + size_DG;
+        size += size_F + size_DF + size_DFT + size_DFTW + size_G + size_DG;
     }
 
     return size;
@@ -119,9 +116,6 @@ char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_, vo
 
     *sm_workspace = (ocp_nlp_sm_gn_workspace *)c_ptr;
     c_ptr += sizeof(ocp_nlp_sm_gn_workspace);
-
-    (*sm_workspace)->w = (real_t **)c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
 
     (*sm_workspace)->F = (real_t **)c_ptr;
     c_ptr += (N + 1) * sizeof(real_t *);
@@ -142,12 +136,9 @@ char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_, vo
     c_ptr += (N + 1) * sizeof(real_t *);
 
     for (int_t i = 0; i <= N; i++) {
-        int_t size_w, size_F, size_DF, size_DFT, size_DFTW, size_G, size_DG;
-        size_of_workspace_elements(sm_in, i, &size_w, &size_F, &size_DF, &size_DFT,
+        int_t size_F, size_DF, size_DFT, size_DFTW, size_G, size_DG;
+        size_of_workspace_elements(sm_in, i, &size_F, &size_DF, &size_DFT,
                                    &size_DFTW, &size_G, &size_DG);
-
-        (*sm_workspace)->w[i] = (real_t *)c_ptr;
-        c_ptr += size_w;
 
         (*sm_workspace)->F[i] = (real_t *)c_ptr;
         c_ptr += size_F;
@@ -234,8 +225,6 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
         casadi_wrapper_workspace *pc_work = path_constraints[i].work;
 
         // Sensitivities for the quadratic approximation of the objective
-        for (int_t j = 0; j < nx[i]; j++) work->w[i][j] = sm_in->x[i][j];
-        for (int_t j = 0; j < nu[i]; j++) work->w[i][nx[i] + j] = sm_in->u[i][j];
         // Compute residual vector F and its Jacobian
         casadi_wrapper(ls_in, ls_out, ls_args, ls_work);
         for (int_t j = 0; j < ny; j++) work->F[i][j] -= ls_cost->y_ref[i][j];

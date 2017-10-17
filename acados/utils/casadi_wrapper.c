@@ -48,8 +48,8 @@ void densify(const real_t *sparse_in, real_t *dense_out, const int_t *sparsity) 
     const int_t ncol = sparsity[1];
     const int_t dense = sparsity[2];
 
-    for (int_t i = 0; i < ncol*nrow; i++) dense_out[i] = sparse_in[i];
-        if (dense) {
+    if (dense) {
+        for (int_t i = 0; i < ncol * nrow; i++) dense_out[i] = sparse_in[i];
     } else {
         // Fill with zeros
         for (int_t i = 0; i < ncol; i++) {

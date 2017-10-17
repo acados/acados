@@ -38,7 +38,6 @@ typedef struct {
 } ocp_nlp_sm_gn_memory;
 
 typedef struct {
-    real_t **w;
     real_t **F;
     real_t **DF;
     real_t **DFT;
