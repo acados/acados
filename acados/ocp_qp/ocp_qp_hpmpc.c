@@ -16,7 +16,6 @@
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-#define _POSIX_C_SOURCE 200112L
 
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 
@@ -37,8 +36,6 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
-
-extern int posix_memalign(void **memptr, size_t alignment, size_t size);
 
 int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_,
                  void *workspace_) {
