@@ -672,14 +672,8 @@ char *ocp_qp_hpmpc_assign_arguments(const ocp_qp_in *in, void **args_, void *raw
 ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in) {
     ocp_qp_hpmpc_args *args;
     int_t arguments_size = ocp_qp_hpmpc_calculate_arguments_size(qp_in);
-    void *raw_memory = 0;
-    int err = posix_memalign(&raw_memory, 64, arguments_size);
-    if (err != 0) {
-        printf("Memory allocation error");
-        exit(1);
-    }
-    memset(raw_memory, 0 , arguments_size);
-    // void *raw_memory = calloc(1, arguments_size);
+    void *raw_memory = calloc(1, arguments_size);
+
     char *ptr_end = ocp_qp_hpmpc_assign_arguments(qp_in, (void **) &args, raw_memory);
     assert((char *) raw_memory + arguments_size >= ptr_end); (void) ptr_end;
 
@@ -700,13 +694,12 @@ void ocp_qp_hpmpc_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, vo
     *mem = ocp_qp_hpmpc_create_memory(qp_in, args);
 
     int_t workspace_size = ocp_qp_hpmpc_calculate_workspace_size(qp_in, args);
-    int_t err = posix_memalign( work , 64, workspace_size*sizeof(double));
-    if (err != 0) {
-        printf("Memory allocation error");
-        exit(1);
-    }
-    memset(*work, 0 , workspace_size);
-    // *work = calloc(1, workspace_size);
+    *work = calloc(1, workspace_size);
+
+    size_t s_ptr = (size_t)*work;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+    *work = (void *)s_ptr;
+
 }
 
 void ocp_qp_hpmpc_destroy(void *mem, void *work) {
