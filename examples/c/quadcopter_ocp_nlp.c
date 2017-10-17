@@ -446,7 +446,7 @@ int main() {
     nlp_args.common->maxIter = max_sqp_iters;
 
     snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
-             "condensing_qpoases");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
+             "hpmpc");  // supported: "condensing_qpoases", "ooqp", "qpdunes"
 
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
