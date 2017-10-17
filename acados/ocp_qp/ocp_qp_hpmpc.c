@@ -580,18 +580,25 @@ int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_) {
     return mem_size;
 }
 
+void ocp_qp_hpmpc_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpmpc_args *args, void **mem_,
+                                void *raw_memory) {
+    char *c_ptr = (char *)raw_memory;
+    ocp_qp_hpmpc_memory **hpmpc_memory = (ocp_qp_hpmpc_memory **) mem_;
+
+    // align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+    c_ptr = (char *)s_ptr;
+    *hpmpc_memory = c_ptr;
+    return;
+};
+
 ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(const ocp_qp_in *qp_in, void *args_) {
     int_t memory_size = ocp_qp_hpmpc_calculate_memory_size(qp_in, args_);
-    ocp_qp_hpmpc_memory * memory = 0;
-    int_t err = posix_memalign(&memory, 64, memory_size);
-    if (err != 0) {
-        printf("Memory allocation error");
-        exit(1);
-    }
-    memset(memory, 0 , memory_size);
+    ocp_qp_hpmpc_memory *memory;
+    void *raw_mem = calloc(1, memory_size);
+    ocp_qp_hpmpc_assign_memory(qp_in, args_, &memory, raw_mem);
     return memory;
-    // return (ocp_qp_hpmpc_memory *) calloc(1, memory_size);
-
 }
 
 void ocp_qp_hpmpc_free_memory(void *mem_) {

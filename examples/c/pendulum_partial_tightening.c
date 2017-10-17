@@ -664,6 +664,7 @@ int main() {
     // printf("work_space_size = %i", work_space_size);
     v_zeros_align(&workspace, work_space_size);
     mem = ocp_qp_hpmpc_create_memory(&qp_in, &hpmpc_args);
+    
 
     acados_timer timer;
     real_t timings = 0;

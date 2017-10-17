@@ -60,6 +60,9 @@ ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in);
 
 int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_);
 
+void ocp_qp_hpmpc_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpmpc_args *args,
+    void **mem_, void *raw_memory);
+
 void *ocp_qp_hpmpc_create_memory(const ocp_qp_in *input, void *args_);
 
 void ocp_qp_hpmpc_free_memory(void *mem);
