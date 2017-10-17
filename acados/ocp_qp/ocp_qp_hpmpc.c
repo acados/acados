@@ -591,7 +591,7 @@ void ocp_qp_hpmpc_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpmpc_args *args,
     c_ptr = (char *)s_ptr;
     *hpmpc_memory = c_ptr;
     return;
-};
+}
 
 ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(const ocp_qp_in *qp_in, void *args_) {
     int_t memory_size = ocp_qp_hpmpc_calculate_memory_size(qp_in, args_);
