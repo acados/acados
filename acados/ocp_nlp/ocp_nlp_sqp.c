@@ -365,12 +365,6 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_, 
     for (int_t i = 0; i < nlp_in->N; i++)
         for (int_t j = 0; j < qp_solver->qp_in->nb[i]; j++) idxb[i][j] = nlp_in->idxb[i][j];
 
-    // QP solver args
-    // TODO(nielsvd): Args dependent on the input? resolve hack below!
-    // HACK!!!
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-    qp_solver->args = (void *) ocp_qp_condensing_qpoases_create_arguments(qp_solver->qp_in);
-
     // QP solver output
     qp_solver->qp_out = create_ocp_qp_out(nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
 

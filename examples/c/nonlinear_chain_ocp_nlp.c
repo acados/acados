@@ -431,6 +431,7 @@ int main() {
     qp_solver.fun = &ocp_qp_condensing_qpoases;
     qp_solver.initialize = &ocp_qp_condensing_qpoases_initialize;
     qp_solver.destroy = &ocp_qp_condensing_qpoases_destroy;
+    qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments();
 
     /************************************************
      * SQP method
