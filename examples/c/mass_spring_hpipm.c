@@ -532,27 +532,27 @@ int main() {
      ************************************************/
 
     // solver arguments
-    ocp_qp_hpipm_args hpipm_args;
-    hpipm_args.mu_max = TOL;
-    hpipm_args.iter_max = MAXITER;
-    hpipm_args.alpha_min = MINSTEP;
-    hpipm_args.mu0 = 1.0;  // 0.0
+    ocp_qp_hpipm_args *hpipm_args = ocp_qp_hpipm_create_arguments(&qp_in);
+//    hpipm_args->mu_max = TOL;
+//    hpipm_args->iter_max = MAXITER;
+//    hpipm_args->alpha_min = MINSTEP;
+    hpipm_args->mu0 = 1.0;  // 0.0
 
     /************************************************
      * work space (fully sparse)
      ************************************************/
 
     int work_space_size =
-        ocp_qp_hpipm_calculate_workspace_size(&qp_in, &hpipm_args);
+        ocp_qp_hpipm_calculate_workspace_size(&qp_in, hpipm_args);
     printf("\nwork space size: %d bytes\n", work_space_size);
     void *workspace = malloc(work_space_size);
 
-    int memory_size = ocp_qp_hpipm_calculate_memory_size(&qp_in, &hpipm_args);
+    int memory_size = ocp_qp_hpipm_calculate_memory_size(&qp_in, hpipm_args);
     printf("\nmemory: %d bytes\n", memory_size);
     void *memory = malloc(memory_size);
 
     ocp_qp_hpipm_memory *hpipm_memory;
-    ocp_qp_hpipm_assign_memory(&qp_in, &hpipm_args, (void **) &hpipm_memory, memory);
+    ocp_qp_hpipm_assign_memory(&qp_in, hpipm_args, (void **) &hpipm_memory, memory);
 
     /************************************************
      * call the solver (fully sparse)
@@ -566,9 +566,9 @@ int main() {
     //  nrep = 1;
     for (rep = 0; rep < nrep; rep++) {
         // call the QP OCP solver
-        //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args,
+        //        return_value = ocp_qp_hpipm(&qp_in, &qp_out, hpipm_args,
         //        workspace);
-        return_value = ocp_qp_hpipm(&qp_in, &qp_out, &hpipm_args, hpipm_memory,
+        return_value = ocp_qp_hpipm(&qp_in, &qp_out, hpipm_args, hpipm_memory,
                                     workspace);
     }
 
@@ -601,7 +601,9 @@ int main() {
            hpipm_memory->inf_norm_res[1], hpipm_memory->inf_norm_res[2],
            hpipm_memory->inf_norm_res[3], hpipm_memory->inf_norm_res[4]);
     printf("\n");
-    printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
+    printf(
+        " Solution time for %d IPM iterations, averaged over %d runs: %5.2e "
+        "seconds\n", hpipm_memory->iter, nrep, time);
     printf("\n\n");
 
     /************************************************

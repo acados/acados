@@ -30,8 +30,12 @@ extern "C" {
 // struct of arguments to the solver
 typedef struct ocp_qp_condensing_hpipm_args_ {
     real_t alpha_min;
-    real_t mu_max;
+    real_t res_g_max;
+    real_t res_b_max;
+    real_t res_d_max;
+    real_t res_m_max;
     real_t mu0;
+    void *scrapspace;
     int_t iter_max;
 } ocp_qp_condensing_hpipm_args;
 
@@ -42,8 +46,8 @@ typedef struct ocp_qp_condensing_hpipm_memory_ {
     struct d_dense_qp *qpd;
     struct d_dense_qp_sol *qpd_sol;
     struct d_cond_qp_ocp2dense_workspace *cond_workspace;
-    struct d_ipm_hard_dense_qp_arg *ipm_arg;
-    struct d_ipm_hard_dense_qp_workspace *ipm_workspace;
+    struct d_dense_qp_ipm_arg *ipm_arg;
+    struct d_dense_qp_ipm_workspace *ipm_workspace;
     real_t **hlam_lb;
     real_t **hlam_ub;
     real_t **hlam_lg;
@@ -53,7 +57,7 @@ typedef struct ocp_qp_condensing_hpipm_memory_ {
     int_t iter;
 } ocp_qp_condensing_hpipm_memory;
 
-ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments();
+ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(const ocp_qp_in *qp_in);
 
 int_t ocp_qp_condensing_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, void *args_);
 
