@@ -17,10 +17,7 @@ u_in = [2.0,3.0];
 
 res = nlp_function.evaluate(x_in, u_in);
 
-#print(res)
+print(res)
 
-NN = 1;
-ls_cost = ocp_nlp_ls_cost(NN,[nlp_function, nlp_function]);
-
-#print(ls_cost.ls_cost_matrix)
-#print(ls_cost.ls_cost_ref)
+print(ls_cost.ls_cost_matrix)
+print(ls_cost.ls_cost_ref)

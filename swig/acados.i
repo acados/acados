@@ -647,9 +647,9 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 #endif
     real_t **ls_cost_matrix;
     real_t **ls_cost_ref;
-    ocp_nlp_ls_cost(LangObject *N, LangObject* nlp_functions, LangObject *options = NONE){
+    ocp_nlp_ls_cost(LangObject *N, LangObject* stage_costs, LangObject *options = NONE){
         int_t NN = int_from(N);
-        if(!is_sequence(nlp_functions, NN+1))
+        if(!is_sequence(stage_costs, NN+1))
             throw std::runtime_error("The array of stage cost functions must be of length N+1!");
         
         ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) malloc(sizeof(ocp_nlp_ls_cost));
@@ -658,25 +658,23 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         // Read NLS cost output functions
         ls_cost->fun = (ocp_nlp_function **) malloc((NN+1)*sizeof(ocp_nlp_function *));
         for (int_t i = 0; i <= NN; i++) {
-            LangObject* nlp_function = from(nlp_functions, i);
-            ls_cost->fun[i] = from<ocp_nlp_function *>(nlp_function);
-            std::cout << ls_cost->fun[i]->ny << std::endl << std::endl;
+            LangObject* stage_cost = from(stage_costs, i);
+            SWIG_ConvertPtr(stage_cost, (void **) &ls_cost->fun[i], SWIGTYPE_p_ocp_nlp_function, 0);
         }
 
         // Prepare memory for cost and reference
         ls_cost->W = (real_t **) malloc((NN+1)*sizeof(real_t *));
         ls_cost->y_ref = (real_t **) malloc((NN+1)*sizeof(real_t *));
 
-        // for(int_t i = 0; i <= NN; i++) {
-        //     int_t ny = ls_cost->fun[i]->ny;
-        //     ls_cost->W[i] = (real_t *) malloc(ny*ny*sizeof(real_t));
-        //     ls_cost->y_ref[i] = (real_t *) malloc(ny*sizeof(real_t));
-        //     for (int_t j = 0; j < ny; j++) {
-        //         ls_cost->y_ref[i][j] = 0;
-        //         std::cout << ny << std::endl << std::endl;
-        //         //    for (int_t k = 0; k < ny; k++) ls_cost->W[i][j*ny+k] = 0;
-        //     }
-        // }
+        for(int_t i = 0; i <= NN; i++) {
+            int_t ny = ls_cost->fun[i]->ny;
+            ls_cost->W[i] = (real_t *) malloc(ny*ny*sizeof(real_t));
+            ls_cost->y_ref[i] = (real_t *) malloc(ny*sizeof(real_t));
+            for (int_t j = 0; j < ny; j++) {
+                ls_cost->y_ref[i][j] = 0;
+                for (int_t k = 0; k < ny; k++) ls_cost->W[i][j*ny+k] = 0;
+            }
+        }
 
         return ls_cost;
     }
@@ -757,11 +755,25 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         }
         typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
         eval_t eval = (eval_t)dlsym(global_handle, model_name.c_str());
-        sim_solver* simulators = (sim_solver*) $self->sim;
+        sim_solver **simulators = (sim_solver **) $self->sim;
         for (int_t i = 0; i < $self->N; i++) {
-            simulators[i].in->vde = eval;
-            simulators[i].in->VDE_forw = &vde_fun;
-            simulators[i].in->step = step;
+            simulators[i]->in->vde = eval;
+            simulators[i]->in->VDE_forw = &vde_fun;
+            simulators[i]->in->step = step;
+        }
+    }
+
+    void set_cost(ocp_nlp_ls_cost *ls_cost) {
+        // Make compatible with general cost
+        $self->cost = (void *) ls_cost;
+    }
+
+    void set_path_constraints(LangObject *path_constraints) {
+        ocp_nlp_function **pathcons = (ocp_nlp_function **) $self->path_constraints;
+        for (int_t i = 0; i <= $self->N; i++) {
+            // TODO(nielsvd): write dimensions
+            LangObject* path_constraint = from(path_constraints, i);
+            SWIG_ConvertPtr(path_constraint, (void **) &pathcons[i], SWIGTYPE_p_ocp_nlp_function, 0);
         }
     }
 }
@@ -893,21 +905,21 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             ocp_nlp_sqp_initialize(nlp_in, args, (void **)&mem, (void **)&workspace);
 
             ((ocp_nlp_sqp_args *) args)->maxIter = sqp_steps;
-            sim_solver* simulators = (sim_solver*) nlp_in->sim;
+            sim_solver** simulators = (sim_solver**) nlp_in->sim;
             for (int_t i = 0; i < N; i++) {
-                simulators[i].in->nx = nlp_in->nx[i];
-                simulators[i].in->nu = nlp_in->nu[i];
-                simulators[i].in->sens_forw = true;
-                simulators[i].in->sens_adj = false;
-                simulators[i].in->sens_hess = false;
-                simulators[i].in->num_forw_sens = nlp_in->nx[i] + nlp_in->nu[i];
-                simulators[i].in->num_steps = integrator_steps;
-                simulators[i].args = (void *) malloc(sizeof(sim_RK_opts));
-                sim_erk_create_arguments(simulators[i].args, 4);
-                int_t erk_workspace_size = sim_erk_calculate_workspace_size(simulators[i].in, \
-                    simulators[i].args);
-                simulators[i].work = (void *) malloc(erk_workspace_size);
-                simulators[i].fun = &sim_erk;
+                simulators[i]->in->nx = nlp_in->nx[i];
+                simulators[i]->in->nu = nlp_in->nu[i];
+                simulators[i]->in->sens_forw = true;
+                simulators[i]->in->sens_adj = false;
+                simulators[i]->in->sens_hess = false;
+                simulators[i]->in->num_forw_sens = nlp_in->nx[i] + nlp_in->nu[i];
+                simulators[i]->in->num_steps = integrator_steps;
+                simulators[i]->args = (void *) malloc(sizeof(sim_RK_opts));
+                sim_erk_create_arguments(simulators[i]->args, 4);
+                int_t erk_workspace_size = sim_erk_calculate_workspace_size(simulators[i]->in, \
+                    simulators[i]->args);
+                simulators[i]->work = (void *) malloc(erk_workspace_size);
+                simulators[i]->fun = &sim_erk;
             }
         } else {
             throw std::invalid_argument("Solver name not known!");

@@ -460,17 +460,6 @@ bool dimensions_match(const LangObject *matrix, const int_t *nb_rows, const int_
 }
 
 template<typename T>
-T from(const LangObject *data) {
-    T return_value;
-#if defined(SWIGMATLAB)
-    return_value = (T) mxGetData(data);
-#elif defined(SWIGPYTHON)
-    return_value = (T) PyArray_DATA((PyArrayObject *) data);
-#endif
-    return return_value;
-}
-
-template<typename T>
 void copy_from(const LangObject *matrix, T *data, const int_t nb_elems) {
 #if defined(SWIGMATLAB)
     if (!mxIsDouble(matrix))

@@ -126,6 +126,7 @@ int main() {
     ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
     ls_cost.fun = (ocp_nlp_function **)malloc(sizeof(*ls_cost.fun) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
+        ls_cost.fun[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
         // Initialize LS cost
         ls_cost.fun[i]->nx = NX;
         ls_cost.fun[i]->nu = NU;
@@ -146,6 +147,7 @@ int main() {
         for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
         for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
     }
+    ls_cost.fun[NN] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
     ls_cost.fun[NN]->nx = NX;
     ls_cost.fun[NN]->nu = 0;
     ls_cost.fun[NN]->np = 0;
@@ -170,7 +172,7 @@ int main() {
     sim_in sim_in[NN];
     sim_out sim_out[NN];
     sim_info info[NN];
-    sim_solver integrators[NN];
+    sim_solver* integrators[NN];
 
     sim_RK_opts rk_opts[NN];
     sim_lifted_irk_memory irk_mem[NN];
@@ -180,15 +182,16 @@ int main() {
     // struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
-        integrators[jj].in = &sim_in[jj];
-        integrators[jj].out = &sim_out[jj];
-        integrators[jj].args = &rk_opts[jj];
+        integrators[jj] = malloc(sizeof(sim_solver));
+        integrators[jj]->in = &sim_in[jj];
+        integrators[jj]->out = &sim_out[jj];
+        integrators[jj]->args = &rk_opts[jj];
         if (d > 0) {
-            integrators[jj].fun = &sim_lifted_irk;
-            integrators[jj].mem = &irk_mem[jj];
+            integrators[jj]->fun = &sim_lifted_irk;
+            integrators[jj]->mem = &irk_mem[jj];
         } else {
-            integrators[jj].fun = &sim_erk;
-            integrators[jj].mem = 0;
+            integrators[jj]->fun = &sim_erk;
+            integrators[jj]->mem = 0;
         }
 
         sim_in[jj].num_steps = Ns;
@@ -268,7 +271,7 @@ int main() {
             workspace_size =
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
-        integrators[jj].work = (void *) malloc(workspace_size);
+        integrators[jj]->work = (void *) malloc(workspace_size);
     }
 
     int_t nx[NN + 1] = {0};
@@ -382,40 +385,42 @@ int main() {
     /************************************************
      * nonlinear path constraints
      ************************************************/
-    ocp_nlp_function *path_constraints = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function) * (NN +1));
+    ocp_nlp_function **path_constraints = (ocp_nlp_function **)malloc(sizeof(ocp_nlp_function *) * (NN +1));
     for (int_t i = 0; i < NN; i++) {
         // Initialize path constraints
-        path_constraints[i].nx = NX;
-        path_constraints[i].nu = NU;
-        path_constraints[i].np = 0;
-        path_constraints[i].ny = (NX + NU);
-        path_constraints[i].in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-        path_constraints[i].in->compute_jac = 1;
-        path_constraints[i].in->compute_hess = 0;
-        path_constraints[i].out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
-        path_constraints[i].args = casadi_wrapper_create_arguments();
-        path_constraints[i].args->fun = &pathcon_nm2;
-        path_constraints[i].args->dims = &pathcon_nm2_work;
-        path_constraints[i].args->sparsity = &pathcon_nm2_sparsity_out;
-        casadi_wrapper_initialize(path_constraints[i].in,
-                                  path_constraints[i].args,
-                                  &path_constraints[i].work);
+        path_constraints[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+        path_constraints[i]->nx = NX;
+        path_constraints[i]->nu = NU;
+        path_constraints[i]->np = 0;
+        path_constraints[i]->ny = (NX + NU);
+        path_constraints[i]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+        path_constraints[i]->in->compute_jac = 1;
+        path_constraints[i]->in->compute_hess = 0;
+        path_constraints[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+        path_constraints[i]->args = casadi_wrapper_create_arguments();
+        path_constraints[i]->args->fun = &pathcon_nm2;
+        path_constraints[i]->args->dims = &pathcon_nm2_work;
+        path_constraints[i]->args->sparsity = &pathcon_nm2_sparsity_out;
+        casadi_wrapper_initialize(path_constraints[i]->in,
+                                  path_constraints[i]->args,
+                                  &path_constraints[i]->work);
     }
-    path_constraints[NN].nx = NX;
-    path_constraints[NN].nu = 0;
-    path_constraints[NN].np = 0;
-    path_constraints[NN].ny = NX;
-    path_constraints[NN].in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-    path_constraints[NN].in->compute_jac = 1;
-    path_constraints[NN].in->compute_hess = 0;
-    path_constraints[NN].out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
-    path_constraints[NN].args = casadi_wrapper_create_arguments();
-    path_constraints[NN].args->fun = &pathconN_nm2;
-    path_constraints[NN].args->dims = &pathconN_nm2_work;
-    path_constraints[NN].args->sparsity = &pathconN_nm2_sparsity_out;
-    casadi_wrapper_initialize(path_constraints[NN].in,
-                              path_constraints[NN].args,
-                              &path_constraints[NN].work);
+    path_constraints[NN] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+    path_constraints[NN]->nx = NX;
+    path_constraints[NN]->nu = 0;
+    path_constraints[NN]->np = 0;
+    path_constraints[NN]->ny = NX;
+    path_constraints[NN]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+    path_constraints[NN]->in->compute_jac = 1;
+    path_constraints[NN]->in->compute_hess = 0;
+    path_constraints[NN]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+    path_constraints[NN]->args = casadi_wrapper_create_arguments();
+    path_constraints[NN]->args->fun = &pathconN_nm2;
+    path_constraints[NN]->args->dims = &pathconN_nm2_work;
+    path_constraints[NN]->args->sparsity = &pathconN_nm2_sparsity_out;
+    casadi_wrapper_initialize(path_constraints[NN]->in,
+                              path_constraints[NN]->args,
+                              &path_constraints[NN]->work);
 
     /************************************************
      * sensitivity method
@@ -450,7 +455,7 @@ int main() {
     nlp_in.ug = NULL;
     nlp_in.sim = (void **) &integrators;
     nlp_in.cost = (void *) &ls_cost;
-    nlp_in.path_constraints = (void **) &path_constraints;
+    nlp_in.path_constraints = (void **) path_constraints;
 
     ocp_nlp_out nlp_out;
     nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (NN + 1));
@@ -539,12 +544,15 @@ int main() {
         free(ls_cost.fun[i]->args);
         casadi_wrapper_destroy(ls_cost.fun[i]->work);
         free(ls_cost.y_ref[i]);
+        free(ls_cost.fun[i]);
         // Path constraints
-        free(path_constraints[i].in);
-        free(path_constraints[i].out);
-        free(path_constraints[i].args);
-        casadi_wrapper_destroy(path_constraints[i].work);
+        free(path_constraints[i]->in);
+        free(path_constraints[i]->out);
+        free(path_constraints[i]->args);
+        casadi_wrapper_destroy(path_constraints[i]->work);
+        free(path_constraints[i]);
     }
+    free(path_constraints);
     free(ls_cost.W);
     free(ls_cost.y_ref);
 
