@@ -344,8 +344,8 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_, 
     sm_in->nb = nlp_in->nb;
     sm_in->ng = nlp_in->ng;
     sm_in->cost = nlp_in->cost;
-    sm_in->sim = (sim_solver *)nlp_in->sim;
-    sm_in->path_constraints = (ocp_nlp_function *)nlp_in->path_constraints;
+    sm_in->sim = (sim_solver **)nlp_in->sim;
+    sm_in->path_constraints = (ocp_nlp_function **)nlp_in->path_constraints;
     sm_in->x = (*mem)->common->x;
     sm_in->u = (*mem)->common->u;
     sm_in->pi = (*mem)->common->pi;

@@ -20,6 +20,10 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_SM_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_SM_COMMON_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 #include "acados/utils/casadi_wrapper.h"
@@ -45,8 +49,8 @@ typedef struct {
     const int_t *ng;
     
     void *cost;
-    sim_solver *sim;
-    ocp_nlp_function *path_constraints;
+    sim_solver **sim;
+    ocp_nlp_function **path_constraints;
     
     const real_t **x;
     const real_t **u;
@@ -74,5 +78,9 @@ typedef struct {
     void *mem;
     void *work;
 } ocp_nlp_sm;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_SM_COMMON_H_

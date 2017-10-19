@@ -460,6 +460,17 @@ bool dimensions_match(const LangObject *matrix, const int_t *nb_rows, const int_
 }
 
 template<typename T>
+T from(const LangObject *data) {
+    T return_value;
+#if defined(SWIGMATLAB)
+    return_value = (T) mxGetData(data);
+#elif defined(SWIGPYTHON)
+    return_value = (T) PyArray_DATA((PyArrayObject *) data);
+#endif
+    return return_value;
+}
+
+template<typename T>
 void copy_from(const LangObject *matrix, T *data, const int_t nb_elems) {
 #if defined(SWIGMATLAB)
     if (!mxIsDouble(matrix))
@@ -514,6 +525,15 @@ void fill_array_from(const LangObject *input, T **array, const int_t length,
     for (int_t i = 0; i < length; i++)
         nb_columns[i] = 1;
     fill_array_from(input, array, length, nb_elems, nb_columns);
+}
+
+template<typename T>
+void fill_array_from(const LangObject *input, T **array, const int_t length) {
+
+    int_t nb[length];
+    for (int_t i = 0; i < length; i++)
+        nb[i] = 1;
+    fill_array_from(input, array, length, nb, nb);
 }
 
 // TODO(roversch): This can probably be merged with the new_sequence_from functions.
@@ -614,6 +634,12 @@ LangObject *new_sim_output_tuple(LangObject *final_state, LangObject *forward_se
     const char *field_names[2] = {"final_state", "forward_sensitivities"};
     LangObject *fields[2] = {final_state, forward_sensitivities};
     return new_output_tuple(2, field_names, fields);
+}
+
+LangObject *new_ocp_nlp_function_output_tuple(LangObject *y, LangObject *jac_y, LangObject *hess_y) {
+    const char *field_names[3] = {"y", "jac_y", "hess_y"};
+    LangObject *fields[3] = {y, jac_y, hess_y};
+    return new_output_tuple(3, field_names, fields);
 }
 
 void fill_array_from(const LangObject *input, int_t *array, const int_t length) {

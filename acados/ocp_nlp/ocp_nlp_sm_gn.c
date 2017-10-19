@@ -73,12 +73,12 @@ void size_of_workspace_elements(const ocp_nlp_sm_in *sm_in, const int_t stage,
     const int_t *nu = sm_in->nu;
     const int_t *ng = sm_in->ng;
 
-    ocp_nlp_function *cost_fun = ((ocp_nlp_ls_cost *)sm_in->cost)->fun;
+    ocp_nlp_function **cost_fun = ((ocp_nlp_ls_cost *)sm_in->cost)->fun;
 
-    *size_F = (cost_fun[stage].ny) * sizeof(real_t);
-    *size_DF = (cost_fun[stage].ny * (nx[stage] + nu[stage])) * sizeof(real_t);
-    *size_DFT = ((nx[stage] + nu[stage]) * cost_fun[stage].ny) * sizeof(real_t);
-    *size_DFTW =((nx[stage] + nu[stage]) * cost_fun[stage].ny) * sizeof(real_t);
+    *size_F = (cost_fun[stage]->ny) * sizeof(real_t);
+    *size_DF = (cost_fun[stage]->ny * (nx[stage] + nu[stage])) * sizeof(real_t);
+    *size_DFT = ((nx[stage] + nu[stage]) * cost_fun[stage]->ny) * sizeof(real_t);
+    *size_DFTW =((nx[stage] + nu[stage]) * cost_fun[stage]->ny) * sizeof(real_t);
     *size_G = (ng[stage]) * sizeof(real_t);
     *size_DG = (ng[stage] * (nx[stage] + nu[stage])) * sizeof(real_t);
 }
@@ -191,38 +191,38 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
     real_t **h = (real_t **)sm_out->h;
     real_t **g = (real_t **)sm_out->g;
 
-    sim_solver *sim = sm_in->sim;
+    sim_solver **sim = sm_in->sim;
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) sm_in->cost;
-    ocp_nlp_function *path_constraints = sm_in->path_constraints;
+    ocp_nlp_function **path_constraints = sm_in->path_constraints;
 
     for (int_t i = 0; i < N; i++) {
         // Pass state and control to integrator
-        for (int_t j = 0; j < nx[i]; j++) sim[i].in->x[j] = sm_in->x[i][j];
-        for (int_t j = 0; j < nu[i]; j++) sim[i].in->u[j] = sm_in->u[i][j];
-        sim[i].fun(sim[i].in, sim[i].out, sim[i].args, sim[i].mem, sim[i].work);
+        for (int_t j = 0; j < nx[i]; j++) sim[i]->in->x[j] = sm_in->x[i][j];
+        for (int_t j = 0; j < nu[i]; j++) sim[i]->in->u[j] = sm_in->u[i][j];
+        sim[i]->fun(sim[i]->in, sim[i]->out, sim[i]->args, sim[i]->mem, sim[i]->work);
 
         // Sensitivities for the linearization of the system dynamics
         // TODO(rien): transition functions for changing dimensions not yet implemented!
         for (int_t j = 0; j < nx[i]; j++) {
-            h[i][j] = sim[i].out->xn[j];
+            h[i][j] = sim[i]->out->xn[j];
             for (int_t k = 0; k < nx[i] + nu[i]; k++)
-                jac_h[i][k * nx[i] + j] = sim[i].out->S_forw[k * nx[i] + j];
+                jac_h[i][k * nx[i] + j] = sim[i]->out->S_forw[k * nx[i] + j];
         }
     }
 
     for (int_t i = 0; i <= N; i++) {
         // Least squares cost for shooting node i
-        const int_t ny = ls_cost->fun[i].ny;
-        casadi_wrapper_in *ls_in = ls_cost->fun[i].in;
-        casadi_wrapper_out *ls_out = ls_cost->fun[i].out;
-        casadi_wrapper_args *ls_args = ls_cost->fun[i].args;
-        casadi_wrapper_workspace *ls_work = ls_cost->fun[i].work;
+        const int_t ny = ls_cost->fun[i]->ny;
+        casadi_wrapper_in *ls_in = ls_cost->fun[i]->in;
+        casadi_wrapper_out *ls_out = ls_cost->fun[i]->out;
+        casadi_wrapper_args *ls_args = ls_cost->fun[i]->args;
+        casadi_wrapper_workspace *ls_work = ls_cost->fun[i]->work;
 
         // Path constraints for shooting node i
-        casadi_wrapper_in *pc_in = path_constraints[i].in;
-        casadi_wrapper_out *pc_out = path_constraints[i].out;
-        casadi_wrapper_args *pc_args = path_constraints[i].args;
-        casadi_wrapper_workspace *pc_work = path_constraints[i].work;
+        casadi_wrapper_in *pc_in = path_constraints[i]->in;
+        casadi_wrapper_out *pc_out = path_constraints[i]->out;
+        casadi_wrapper_args *pc_args = path_constraints[i]->args;
+        casadi_wrapper_workspace *pc_work = path_constraints[i]->work;
 
         // Sensitivities for the quadratic approximation of the objective
         // Compute residual vector F and its Jacobian
@@ -264,26 +264,26 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_, void **me
 
     int_t N = sm_in->N;
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) sm_in->cost;
-    ocp_nlp_function *path_constraints = sm_in->path_constraints;
+    ocp_nlp_function **path_constraints = sm_in->path_constraints;
 
     for (int_t i = 0; i <= N; i++) {
         // assign correct pointers to ls_cost-array
-        ls_cost->fun[i].in->x = sm_in->x[i];
-        ls_cost->fun[i].in->u = sm_in->u[i];
-        ls_cost->fun[i].in->p = NULL; // TODO(nielsvd): support for parameters
-        ls_cost->fun[i].out->y = (*work)->F[i];
-        ls_cost->fun[i].out->jac_y = (*work)->DF[i];
-        ls_cost->fun[i].in->compute_jac = 1;
-        ls_cost->fun[i].in->compute_hess = 0;
+        ls_cost->fun[i]->in->x = sm_in->x[i];
+        ls_cost->fun[i]->in->u = sm_in->u[i];
+        ls_cost->fun[i]->in->p = NULL; // TODO(nielsvd): support for parameters
+        ls_cost->fun[i]->out->y = (*work)->F[i];
+        ls_cost->fun[i]->out->jac_y = (*work)->DF[i];
+        ls_cost->fun[i]->in->compute_jac = 1;
+        ls_cost->fun[i]->in->compute_hess = 0;
         
         // assign correct pointers to path_constraints-array
-        path_constraints[i].in->x = sm_in->x[i];
-        path_constraints[i].in->u = sm_in->u[i];
-        path_constraints[i].in->p = NULL;  // TODO(nielsvd): support for parameters
-        path_constraints[i].out->y = (*work)->G[i];
-        path_constraints[i].out->jac_y = (*work)->DG[i];
-        path_constraints[i].in->compute_jac = 1;
-        path_constraints[i].in->compute_hess = 0;
+        path_constraints[i]->in->x = sm_in->x[i];
+        path_constraints[i]->in->u = sm_in->u[i];
+        path_constraints[i]->in->p = NULL;  // TODO(nielsvd): support for parameters
+        path_constraints[i]->out->y = (*work)->G[i];
+        path_constraints[i]->out->jac_y = (*work)->DG[i];
+        path_constraints[i]->in->compute_jac = 1;
+        path_constraints[i]->in->compute_hess = 0;
     }
 }
 

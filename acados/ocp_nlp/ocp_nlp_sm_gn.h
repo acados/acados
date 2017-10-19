@@ -20,13 +20,18 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_SM_GN_H_
 #define ACADOS_OCP_NLP_OCP_NLP_SM_GN_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/ocp_nlp/ocp_nlp_sm_common.h"
 #include "acados/utils/types.h"
 
 typedef struct {
-    ocp_nlp_function *fun;
+    ocp_nlp_function **fun;
     real_t **W;
     real_t **y_ref;
+    int_t N;
 } ocp_nlp_ls_cost;
 
 typedef struct {
@@ -73,5 +78,9 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
                                         void **mem, void **work);
 
 void ocp_nlp_sm_gn_destroy(void *mem_, void *work_);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_SM_GN_H_

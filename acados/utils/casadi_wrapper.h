@@ -20,6 +20,10 @@
 #ifndef ACADOS_UTILS_CASADI_WRAPPER_H_
 #define ACADOS_UTILS_CASADI_WRAPPER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -38,8 +42,8 @@ typedef struct {
 } casadi_wrapper_out;
 
 typedef struct {
-    int_t (*fun)(const real_t **, real_t **, int *, real_t *, int);
-    int_t (*dims)(int *, int *, int *, int *);
+    int_t (*fun)(const real_t **, real_t **, int_t *, real_t *, int_t);
+    int_t (*dims)(int_t *, int_t *, int_t *, int_t *);
     const int_t *(*sparsity)(int_t);
 } casadi_wrapper_args;
 
@@ -71,5 +75,9 @@ void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in, casadi_wrapper_ar
                               casadi_wrapper_workspace **work);
 
 void casadi_wrapper_destroy(casadi_wrapper_workspace *work);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_UTILS_CASADI_WRAPPER_H_

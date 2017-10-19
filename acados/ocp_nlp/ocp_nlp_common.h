@@ -20,6 +20,10 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -49,8 +53,8 @@ typedef struct {
     const real_t **ug;
 
     void *cost;
-    void *sim;
-    void *path_constraints;
+    void **sim;
+    void **path_constraints;
 } ocp_nlp_in;
 
 typedef struct {
@@ -77,5 +81,9 @@ char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
 ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in);
 
 void ocp_nlp_destroy(void *mem_);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
