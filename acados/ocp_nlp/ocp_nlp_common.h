@@ -24,6 +24,10 @@
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     //    const int_t *sparsity;
     //    const int_t *idx_in;
@@ -109,5 +113,9 @@ void ocp_nlp_free_memory(int_t N, void *mem_);
 
 int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
 void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_OCP_NLP_OCP_NLP_COMMON_H_

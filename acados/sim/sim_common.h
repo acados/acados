@@ -25,6 +25,10 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     int_t nx;   // NX
     int_t nu;   // NU
@@ -76,5 +80,9 @@ typedef struct {
     void *mem;
     void *work;
 } sim_solver;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

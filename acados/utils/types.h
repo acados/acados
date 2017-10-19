@@ -20,6 +20,10 @@
 #ifndef ACADOS_UTILS_TYPES_H_
 #define ACADOS_UTILS_TYPES_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_STR_LEN 256
 
 typedef double real_t;
@@ -30,5 +34,9 @@ typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, doub
 
 // enum of return values
 enum return_values { ACADOS_SUCCESS, ACADOS_MAXITER, ACADOS_MINSTEP };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_UTILS_TYPES_H_
