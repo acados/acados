@@ -345,7 +345,7 @@ ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
     } else if (opts == QPDUNES_NONLINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 0;
-        args->options.printLevel = 0;
+        args->options.printLevel = 10;
     } else if (opts == QPDUNES_LINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 1;

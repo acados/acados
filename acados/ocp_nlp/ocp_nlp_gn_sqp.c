@@ -30,14 +30,74 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/math.h"
 
-int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
+int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_,
+    ocp_nlp_gn_sqp_memory* mem) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
     int_t size;
 
     size = sizeof(ocp_nlp_gn_sqp_work);
+
+    // allocate mem for least-squares cost
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)in->cost;
+
     size += ocp_nlp_calculate_workspace_size(in, args->common);
+
+    int_t raw_workspace_size = 0;
+    if (!args->lin_res) {
+
+        int_t *nr =  cost->nr;
+        int_t nr_ = 0;
+        for (int_t i = 0; i < in->N; i++ ) nr_+=nr[i];
+
+        size += sizeof(int_t)*nr_;
+        int_t N = in->N;
+        const int_t *nx = in->nx;
+        const int_t *nu = in->nu;
+
+        int_t max_ls_res_in_size = 0;       // ls_res_in
+        int_t max_ls_res_out_size = 0;      // ls_res_out
+        int_t max_ls_drdw_tran_size = 0;    // drdw_tran
+        int_t max_Hess_gn_size = 0;         // Hess_gn
+        int_t max_grad_gn_size = 0;         // grad_gn
+        int_t max_rref_size = 0;         // grad_gn
+
+        for (int_t i = 0; i <= N; i++) {
+            if (max_ls_res_in_size < nx[i] + nu[i])
+                max_ls_res_in_size = nx[i] + nu[i];
+
+            if (max_ls_res_out_size < nr[i] + nr[i]*(nx[i] + nu[i]))
+                max_ls_res_out_size = nr[i] + nr[i]*(nx[i] + nu[i]);
+
+            if (max_ls_drdw_tran_size < nr[i]*(nx[i] + nu[i]))
+                max_ls_drdw_tran_size = nr[i]*(nx[i] + nu[i]);
+
+            if (max_Hess_gn_size < (nx[i] + nu[i])*(nx[i] + nu[i]))
+                max_Hess_gn_size = (nx[i] + nu[i])*(nx[i] + nu[i]);
+
+            if (max_grad_gn_size < (nx[i] + nu[i]))
+                max_grad_gn_size = (nx[i] + nu[i]);
+
+            if (max_rref_size < nr[i])
+                max_rref_size = nr[i];
+
+        }
+
+        raw_workspace_size +=sizeof(real_t)*max_ls_res_out_size;
+        raw_workspace_size +=sizeof(real_t)*max_ls_res_in_size;
+        raw_workspace_size +=sizeof(real_t)*max_ls_drdw_tran_size;
+        raw_workspace_size +=sizeof(real_t)*max_Hess_gn_size;
+        raw_workspace_size +=sizeof(real_t)*max_grad_gn_size;
+        raw_workspace_size +=3*sizeof(real_t)*max_rref_size;
+
+        mem->raw_workspace_size = raw_workspace_size;
+
+        size+=raw_workspace_size;
+
+    }
+
     return size;
 }
 
@@ -46,6 +106,8 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
     char *ptr = (char *)work;
 
     ptr += sizeof(ocp_nlp_gn_sqp_work);
+    work->raw = (real_t *)ptr;
+    ptr += mem->raw_workspace_size;
     work->common = (ocp_nlp_work *)ptr;
     ocp_nlp_cast_workspace(work->common, mem->common);
 }
@@ -53,37 +115,122 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
 
 static void initialize_objective(
     const ocp_nlp_in *nlp_in,
+    ocp_nlp_gn_sqp_args *args,
     ocp_nlp_gn_sqp_memory *gn_sqp_mem,
     ocp_nlp_gn_sqp_work *work) {
 
     const int_t N = nlp_in->N;
     const int_t *nx = nlp_in->nx;
     const int_t *nu = nlp_in->nu;
+
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
+
+    const int_t *nr = cost->nr;
 
     real_t **qp_Q = (real_t **) gn_sqp_mem->qp_solver->qp_in->Q;
     real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
-    // TODO(rien): only for least squares cost with state and control reference atm
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
-            for (int_t k = 0; k < nx[i]; k++) {
-                qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
+
+    real_t **qp_q = (real_t **) gn_sqp_mem->qp_solver->qp_in->q;
+    real_t **qp_r = (real_t **) gn_sqp_mem->qp_solver->qp_in->r;
+
+    if (args->lin_res) {
+        // TODO(rien): only for least squares cost with state and control reference atm
+        for (int_t i = 0; i <= N; i++) {
+            for (int_t j = 0; j < nx[i]; j++) {
+                for (int_t k = 0; k < nx[i]; k++) {
+                    qp_Q[i][j * nx[i] + k] = cost->W[i][j * (nx[i] + nu[i]) + k];
+                }
+                for (int_t k = 0; k < nu[i]; k++) {
+                    qp_S[i][j * nu[i] + k] =
+                        cost->W[i][j * (nx[i] + nu[i]) + nx[i] + k];
+                }
             }
-            for (int_t k = 0; k < nu[i]; k++) {
-                qp_S[i][j * nu[i] + k] =
-                    cost->W[i][j * (nx[i] + nu[i]) + nx[i] + k];
+            for (int_t j = 0; j < nu[i]; j++) {
+                for (int_t k = 0; k < nu[i]; k++) {
+                    qp_R[i][j * nu[i] + k] =
+                        cost->W[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
+                }
             }
         }
-        for (int_t j = 0; j < nu[i]; j++) {
-            for (int_t k = 0; k < nu[i]; k++) {
-                qp_R[i][j * nu[i] + k] =
-                    cost->W[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
-            }
+    } else {
+
+        for (int_t i = 0; i <= N; i++) {
+
+            char *ptr = (char *)work->raw;
+            real_t *ls_res_out = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]+nr[i]+nr[i]);
+
+            real_t *r = ls_res_out;  // TODO(Andrea): allocate this
+            real_t *drdw = &ls_res_out[nr[i]];
+            real_t *scaled_rref = &ls_res_out[nr[i]+(nx[i]+nu[i])*nr[i]];
+
+            real_t *ls_res_in = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *drdw_tran = (real_t *)ptr;
+            ptr+=sizeof(real_t)*nr[i]*(nx[i]+nu[i]);
+
+            real_t *Hess_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i])*(nx[i]+nu[i]);
+
+            real_t *grad_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *rref = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i]);
+
+            // (dense) Gauss-Newton Hessian
+            for (int_t j = 0; j < nx[i]; j++)
+                ls_res_in[j] = gn_sqp_mem->common->x[i][j];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                ls_res_in[nx[i]+j] = gn_sqp_mem->common->u[i][j];
+
+            for (int_t j = 0; j < nr[i]; j++)
+                ls_res_in[nx[i]+nu[i]+j] = cost->y_ref[i][j];
+
+
+            cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++)
+              for (int_t k = 0; k < nr[i]; k++) {
+                drdw_tran[k*(nx[i] + nu[i]) + j] = drdw[j*nr[i] + k];
+              }
+
+            // init Hess_gn to zeros
+            for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hess_gn[j] = 0.0;
+            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i],
+                drdw, nr[i], Hess_gn, nx[i]+nu[i]);
+
+            // compute gradient
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -scaled_rref[j] + r[j];
+            // for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
+            // printf("\n\n");
+            // for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++) grad_gn[j] = 0.0;
+
+            dgemv_n_3l(nx[i] + nu[i], nr[i], drdw_tran, nx[i] + nu[i], rref, grad_gn);
+
+            // copy dense Hessian and gradient into qp struct
+            for (int_t j = 0; j < nx[i]; j++)
+                for (int_t k = 0; k < nx[i]; k++)
+                    qp_Q[i][k + j*nx[i]] = Hess_gn[k + j*(nx[i] + nu[i])];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                for (int_t k = 0; k < nu[i]; k++)
+                    qp_R[i][k + j*nu[i]] =
+                        Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
+            // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] =
+            // Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
+
+            for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_gn[j];
+            for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_gn[nx[i] + j];
+
         }
     }
 }
-
 
 static void initialize_trajectories(
     const ocp_nlp_in *nlp_in,
@@ -108,13 +255,16 @@ static void initialize_trajectories(
 }
 
 
-static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args,
+    ocp_nlp_gn_sqp_work *work,
+    ocp_nlp_gn_sqp_memory *mem, real_t *w) {
 
+    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)nlp->cost;
+    const int_t *nr = cost->nr;
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
     real_t **y_ref = cost->y_ref;
 
     real_t **qp_A = (real_t **) mem->qp_solver->qp_in->A;
@@ -122,6 +272,8 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
     real_t **qp_b = (real_t **) mem->qp_solver->qp_in->b;
     real_t **qp_q = (real_t **) mem->qp_solver->qp_in->q;
     real_t **qp_r = (real_t **) mem->qp_solver->qp_in->r;
+    real_t **qp_R = (real_t **) mem->qp_solver->qp_in->R;
+    real_t **qp_Q = (real_t **) mem->qp_solver->qp_in->Q;
     real_t **qp_lb = (real_t **) mem->qp_solver->qp_in->lb;
     real_t **qp_ub = (real_t **) mem->qp_solver->qp_in->ub;
 
@@ -159,20 +311,131 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
 #endif
         }
 
-        // Update gradients
-        // TODO(rien): only for diagonal Q, R matrices atm
-        // TODO(rien): only for least squares cost with state and control reference atm
-        sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
-        for (int_t j = 0; j < nx[i]; j++) {
-            qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
-            // adjoint-based gradient correction:
-            if (opts->scheme.type != exact) qp_q[i][j] += sim[i].out->grad[j];
+        if (args->lin_res) {
+            // Update gradients
+            // TODO(rien): only for diagonal Q, R matrices atm
+            // TODO(rien): only for least squares cost with state and control reference atm
+            sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
+            for (int_t j = 0; j < nx[i]; j++) {
+                qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
+                // adjoint-based gradient correction:
+                if (opts->scheme.type != exact) qp_q[i][j] += sim[i].out->grad[j];
+            }
+            for (int_t j = 0; j < nu[i]; j++) {
+                qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]*
+                    (w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
+                // adjoint-based gradient correction:
+                if (opts->scheme.type != exact) qp_r[i][j] += sim[i].out->grad[nx[i]+j];
+            }
+        } else {
+            char *ptr = (char *)work->raw;
+            real_t *ls_res_out = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i] + (nx[i]+nu[i])*nr[i]+nr[i]);
+
+            real_t *r = ls_res_out;
+            real_t *drdw = &ls_res_out[nr[i]];
+            real_t *scaled_rref = &ls_res_out[nr[i]+(nx[i]+nu[i])*nr[i]];
+
+            real_t *ls_res_in = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *drdw_tran = (real_t *)ptr;
+            ptr+=sizeof(real_t)*nr[i]*(nx[i]+nu[i]);
+
+            real_t *Hess_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i])*(nx[i]+nu[i]);
+
+            real_t *grad_gn = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nx[i]+nu[i]);
+
+            real_t *rref = (real_t *)ptr;
+            ptr+=sizeof(real_t)*(nr[i]);
+
+            // (dense) Gauss-Newton Hessian
+            for (int_t j = 0; j < nx[i]; j++)
+                ls_res_in[j] = w[w_idx+j];
+
+            for (int_t j = 0; j < nu[i]; j++)
+                ls_res_in[nx[i]+j] = w[w_idx+nx[i]+j];
+
+            for (int_t j = 0; j < nr[i]; j++)
+                ls_res_in[nx[i]+nu[i]+j] = cost->y_ref[i][j];
+
+            cost->ls_res_eval[i](ls_res_in, ls_res_out, cost->ls_res[i]);
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++)
+              for (int_t k = 0; k < nr[i]; k++) {
+                drdw_tran[k*(nx[i] + nu[i]) + j] = drdw[j*nr[i] + k];
+              }
+
+            // // print J
+            // for (int_t j = 0; j < nr[i]; j++) {
+            //   for (int_t k = 0; k < nx[i] + nu[i]; k++)
+            //       printf("%.2f  ", drdw[k*nr[i] + j]);
+            //   printf("\n");
+            // }
+
+            // init Hess_gn to zeros
+            for (int_t j = 0; j < (nx[i]+nu[i])*(nx[i]+nu[i]); j++) Hess_gn[j] = 0.0;
+            dgemm_nn_3l(nx[i]+nu[i], nx[i]+nu[i], nr[i], drdw_tran, nx[i]+nu[i],
+                drdw, nr[i], Hess_gn, nx[i]+nu[i]);
+
+            // compute gradient
+            for (int_t j = 0; j < nr[i]; j++) rref[j] = -scaled_rref[j] + r[j];
+            // for (int_t j = 0; j < nr[i]; j++) printf("rref[%i]=%f\n", j, rref[j] );
+            // printf("\n\n");
+            // for (int_t j = 0; j < nr[i]; j++) printf("r[%i]=%f\n", j, r[j] );
+
+            for (int_t j = 0; j < nx[i] + nu[i]; j++) grad_gn[j] = 0.0;
+
+            dgemv_n_3l(nx[i] + nu[i], nr[i], drdw_tran, nx[i] + nu[i], rref, grad_gn);
+
+            // copy dense Hessian and gradient into qp struct
+
+            for (int_t j = 0; j < nx[i]; j++)
+                for (int_t k = 0; k < nx[i]; k++)
+                    qp_Q[i][k + j*nx[i]] = Hess_gn[k + j*(nx[i] + nu[i])];
+
+            // printf("\n");
+            // printf("\n");
+            // // print Q
+            // for (int_t j = 0; j < nx[i]; j++) {
+            //     for (int_t k = 0; k < nx[i]; k++)
+            //     printf("%.2f  ", qp_Q[i][j + k*nx[i]]);
+            //     printf("\n");
+            // }
+
+            for (int_t j = 0; j < nu[i]; j++)
+                for (int_t k = 0; k < nu[i]; k++)
+                    qp_R[i][k + j*nu[i]] =
+                        Hess_gn[nx[i]*(nx[i]+nu[i]) + k + nx[i] + j*(nx[i] + nu[i])];
+
+            // printf("\n");
+            // printf("\n");
+            // // print R
+            // for (int_t j = 0; j < nu[i]; j++) {
+            //     for (int_t k = 0; k < nu[i]; k++)
+            //         printf("%.2f  ", qp_R[i][j + k*nu[i]]);
+            //     printf("\n");
+            // }
+
+            // printf("\n");
+            // printf("\n");
+            //
+            // // print Hess_gn
+            // for (int_t j = 0; j < nu[i] + nx[i]; j++) {
+            //     for (int_t k = 0; k < nu[i] + nx[i]; k++)
+            //         printf("%.2f  ", Hess_gn[j + k*(nu[i]+nx[i])]);
+            //     printf("\n");
+            // }
+            // for (int_t j = 0; j < nx[i]*nu[i]; j++) qp_S[i][j] =
+            // Hess_gn[j + nx[i]*nx[i]];  // TODO(Andrea: untested)
+
+            for (int_t j = 0; j < nx[i]; j++) qp_q[i][j] = grad_gn[j];
+            for (int_t j = 0; j < nu[i]; j++) qp_r[i][j] = grad_gn[nx[i] + j];
+
         }
-        for (int_t j = 0; j < nu[i]; j++) {
-            qp_r[i][j] = cost->W[i][(nx[i]+j)*(nx[i]+nu[i]+1)]*(w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j]);
-            // adjoint-based gradient correction:
-            if (opts->scheme.type != exact) qp_r[i][j] += sim[i].out->grad[nx[i]+j];
-        }
+
         w_idx += nx[i]+nu[i];
     }
 
@@ -196,11 +459,17 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
 }
 
 
-static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
+    real_t *w, real_t alpha) {
+
+    // TODO(Andrea): alpha is the primal step-size, something else for
+    // dual variables should be implemented (full steps atm).
+
     const int_t N = nlp->N;
     const int_t *nx = nlp->nx;
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
+    // const real_t lambda = mem->lambda;  // step-size
 
     for (int_t i = 0; i < N; i++)
         for (int_t j = 0; j < nx[i+1]; j++)
@@ -209,10 +478,10 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, 
     int_t w_idx = 0;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
-            w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
+            w[w_idx+j] += alpha*mem->qp_solver->qp_out->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++)
-            w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
+            w[w_idx+nx[i]+j] += alpha*mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
 }
@@ -246,9 +515,10 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 
     ocp_nlp_gn_sqp_memory *gn_sqp_mem = (ocp_nlp_gn_sqp_memory *) nlp_mem_;
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) nlp_work_;
+    ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) nlp_args_;
     ocp_nlp_gn_sqp_cast_workspace(work, gn_sqp_mem);
 
-    initialize_objective(nlp_in, gn_sqp_mem, work);
+    initialize_objective(nlp_in, args, gn_sqp_mem, work);
     initialize_trajectories(nlp_in, gn_sqp_mem, work);
 
     // TODO(roversch): Do we need this here?
@@ -259,14 +529,15 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
         }
     }
 
-    int_t max_sqp_iterations = ((ocp_nlp_gn_sqp_args *) nlp_args_)->common->maxIter;
+    ocp_nlp_gn_sqp_args * nlp_args = (ocp_nlp_gn_sqp_args *) nlp_args_;
+    int_t max_sqp_iterations = nlp_args->common->maxIter;
 
     acados_timer timer;
     real_t total_time = 0;
     acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++) {
 
-        multiple_shooting(nlp_in, gn_sqp_mem, work->common->w);
+        multiple_shooting(nlp_in, nlp_args, work, gn_sqp_mem, work->common->w);
 
         int_t qp_status = gn_sqp_mem->qp_solver->fun(
             gn_sqp_mem->qp_solver->qp_in,
@@ -280,7 +551,9 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             return -1;
         }
 
-        update_variables(nlp_in, gn_sqp_mem, work->common->w);
+        real_t alpha = gn_sqp_mem->common->step_size;
+
+        update_variables(nlp_in, gn_sqp_mem, work->common->w, alpha);
 
         for (int_t i = 0; i < nlp_in->N; i++) {
             sim_RK_opts *opts = (sim_RK_opts*) nlp_in->sim[i].args;

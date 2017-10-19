@@ -32,14 +32,20 @@ extern "C" {
 typedef struct {
     ocp_nlp_args *common;
     char qp_solver_name[MAX_STR_LEN];
+    int_t lin_res;
 } ocp_nlp_gn_sqp_args;
 
 typedef struct {
     ocp_nlp_memory *common;
     ocp_qp_solver *qp_solver;
+    int_t lin_res;
+    int_t raw_workspace_size;
 } ocp_nlp_gn_sqp_memory;
 
-typedef struct { ocp_nlp_work *common; } ocp_nlp_gn_sqp_work;
+typedef struct {
+    real_t *raw;
+    ocp_nlp_work *common;
+} ocp_nlp_gn_sqp_work;
 
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                      void *nlp_args, void *nlp_mem, void *work);
@@ -50,7 +56,7 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_,
 void ocp_nlp_gn_sqp_free_memory(void *memory_);
 
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in,
-                                              void *args_);
+                                              void *args_, ocp_nlp_gn_sqp_memory *mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

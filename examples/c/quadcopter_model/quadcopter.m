@@ -2,21 +2,23 @@ clc;
 clear all;
 close all;
 
-GENERATE_LQR_GAIN = 1;
+GENERATE_LQR_GAIN = 0;
 
 addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
 
 % variables
-x1 = SX.sym('x1');
-theta = SX.sym('theta');
-v1 = SX.sym('v1');
-dtheta = SX.sym('dtheta');
+q = SX.sym('q', 4, 1);
+omega = SX.sym('omega', 3, 1);
+W = SX.sym('W', 4, 1);
+rW = SX.sym('rW', 4, 1);
 
-F = SX.sym('F');
+Q_eul = diag([1e2;1e2;1e2]);
+Q = diag([1e-2*ones(4,1);1e-2*ones(3,1);1e-2*ones(4,1)]);
+R = 1.0e-1*eye(4);
 
-x = [x1; theta; v1; dtheta];
-u = F;
+x = [q; omega; W];
+u = rW;
 
 nx = length(x);
 nu = length(u);
@@ -24,8 +26,6 @@ nu = length(u);
 % ODE system
 f_expl = dyn(x, u);
 
-
-         
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
@@ -57,20 +57,20 @@ end
 hessFun = Function('adjFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
 
 opts = struct('mex', false);
-vdeFun.generate(['vde_forw_pendulum'], opts);
-jacFun.generate(['jac_pendulum'], opts);
-adjFun.generate(['vde_adj_pendulum'], opts);
-hessFun.generate(['vde_hess_pendulum'], opts);
+vdeFun.generate(['vde_forw_quadcopter'], opts);
+jacFun.generate(['jac_quadcopter'], opts);
+adjFun.generate(['vde_adj_quadcopter'], opts);
+hessFun.generate(['vde_hess_quadcopter'], opts);
 
 if GENERATE_LQR_GAIN % generate LQR gain
-   
+
     Ts = 0.01;
-    
+
     % fixed step Runge-Kutta 4 integrator
     M = 1; % RK4 steps per interval
     DT = Ts;
-    X0 = SX.sym('X0', 4,1);
-    U = SX.sym('U',1,1);
+    X0 = SX.sym('X0', 11,1);
+    U = SX.sym('U',4,1);
     X = X0;
     for j=1:M
         [k1] = dyn(X, U);
@@ -79,25 +79,36 @@ if GENERATE_LQR_GAIN % generate LQR gain
         [k4] = dyn(X + DT * k3, U);
         X=X+DT/6*(k1 +2*k2 +2*k3 +k4);
     end
-    
+
     F = Function('F', {X0, U}, {X});
-        
+
     J_x = Function('J_x', {X0, U}, {jacobian(X, X0)});
     J_u = Function('J_u', {X0, U}, {jacobian(X, U)});
-    
-    A = full(J_x(zeros(4,1), zeros(1,1)));
-    B = full(J_u(zeros(4,1), zeros(1,1)));
-    
-    Q = zeros(4,4);
-    R = zeros(1,1);
-    
-    Q(1,1) = 1e-1;
-    Q(2,2) = 1.0;
-    Q(3,3) = 0.1;
-    Q(4,4) = 2e-3;
 
-    R(1,1) = 5e-4;
-    
+    A = full(J_x(zeros(11,1), zeros(4,1)));
+    B = full(J_u(zeros(11,1), zeros(4,1)));
+
     [K, P] = dlqr(A, B, Q, R)
-    
+
 end
+
+% Generate code for residuals
+nr = 18;
+nr_end = 14;
+
+rref = SX.sym('rref', nr, 1);
+rref_end = SX.sym('rref_end', nr_end, 1);
+
+eul_expr = myquat2eul(q);
+res_exp = [sqrt(Q_eul)*eul_expr.';sqrt(Q)*x;sqrt(R)*u];
+res_end_exp = [sqrt(Q_eul)*eul_expr.';sqrt(Q)*x];
+scaled_rref_exp = diag([diag(sqrt(Q_eul));diag(sqrt(Q));diag(sqrt(R))])*rref;
+scaled_rref_end_exp = diag([diag(sqrt(Q_eul));diag(sqrt(Q))])*rref_end;
+
+jac_res_exp = SX.zeros(nr,nx+nu) + jacobian(res_exp,[x;u;]);
+ls_res_Fun = Function('ls_res_Fun', {x, u, rref}, {res_exp,jac_res_exp, scaled_rref_exp});
+jac_res_end_exp = SX.zeros(nr_end,nx) + jacobian(res_end_exp,[x]);
+ls_res_end_Fun = Function('ls_res_end_Fun', {x,u, rref_end}, {res_end_exp,jac_res_end_exp, scaled_rref_end_exp});
+
+ls_res_Fun.generate(['ls_res_quadcopter'], opts);
+ls_res_end_Fun.generate(['ls_res_end_quadcopter'], opts);

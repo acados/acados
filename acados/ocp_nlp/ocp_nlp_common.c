@@ -87,5 +87,5 @@ void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem) {
 
     ptr += sizeof(ocp_nlp_work);
     work->w = (real_t *)ptr;
-    ptr += mem->num_vars * sizeof(real_t);  // TODO(robin): ptr never used again?
+    // ptr += mem->num_vars * sizeof(real_t);  // TODO(robin): ptr never used again?
 }

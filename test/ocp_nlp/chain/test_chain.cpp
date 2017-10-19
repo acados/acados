@@ -79,6 +79,16 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         // Problem data
         int_t N = NN;
         ocp_nlp_ls_cost ls_cost;
+
+        ls_cost.nr = (int_t *)malloc(sizeof(int_t)*(NN+1));
+
+        // number of residual
+        for (int_t i = 0; i < NN; i++) {
+            ls_cost.nr[i] = NX + NU;
+        }
+
+        ls_cost.nr[NN] = NX;
+
         real_t *W, *WN;
         real_t *uref;
         int_t max_sqp_iters = 20;
@@ -325,6 +335,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
 
         ocp_nlp_gn_sqp_args nlp_args;
         ocp_nlp_args nlp_common_args;
+        nlp_args.lin_res = 1;
         nlp_args.common = &nlp_common_args;
         nlp_args.common->maxIter = max_sqp_iters;
 
@@ -336,7 +347,9 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses", "[nonlinear
         nlp_mem.common = &nlp_mem_common;
         ocp_nlp_gn_sqp_create_memory(&nlp_in, &nlp_args, &nlp_mem);
 
-        int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, &nlp_args);
+        int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in,
+            &nlp_args, &nlp_mem);
+
         void *nlp_work = (void*)malloc(work_space_size);
 
         for (int_t i = 0; i < NN; i++) {

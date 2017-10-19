@@ -39,13 +39,23 @@ typedef struct {
 typedef struct {
     // TODO(rien): only for least squares cost with state and control reference
     // atm
-    //    void *fun;
-    //    const int_t *ny;
+
+    int (**ls_res)(const real_t**, real_t**, int*, real_t*, int);
+    void (**ls_res_eval)(const real_t* in, real_t* out,
+        int (*ls_res)(const real_t**, real_t**, int*, real_t*, int));
+
+    int_t *nr;
+
     real_t **W;
     real_t **y_ref;
+
+    // int_t lin_res;  // special treatment of linear residuals
+
 } ocp_nlp_ls_cost;
 
-typedef struct { ocp_nlp_function *fun; } ocp_nlp_stage_cost;
+typedef struct {
+    ocp_nlp_function *fun;
+} ocp_nlp_stage_cost;
 
 typedef struct {
     int_t N;
@@ -67,6 +77,8 @@ typedef struct {
     void *cost;
     sim_solver *sim;
     ocp_nlp_function *g;  // nonlinear constraints
+    // ocp_nlp_ls_cost *ls_cost;  // time-varying stage ls cost
+
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
     bool freezeSens;
@@ -83,9 +95,12 @@ typedef struct {
     real_t **u;
     real_t **pi;
     real_t **lam;
+    real_t step_size;  // primal step-size
 } ocp_nlp_memory;
 
-typedef struct { real_t *w; } ocp_nlp_work;
+typedef struct {
+    real_t *w;
+} ocp_nlp_work;
 
 typedef struct {
     real_t **x;

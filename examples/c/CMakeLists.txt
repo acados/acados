@@ -25,9 +25,16 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_*)
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
-file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
+
+file(GLOB PENDULUM_MODEL_SRC
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
+
+file(GLOB QUADCOPTER_MODEL_SRC
+    quadcopter_model/vde_forw_quadcopter.c
+    quadcopter_model/ls_res_eval.c
+    quadcopter_model/ls_res_quadcopter.c
+    quadcopter_model/ls_res_end_quadcopter.c)
 
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -59,7 +66,8 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
     endif()
 
-    add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+
+add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
     target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
     add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
 
@@ -81,7 +89,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     add_executable(nonlinear_chain_sqp_example
         nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
+#    target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
     target_link_libraries(nonlinear_chain_sqp_example acados)
     add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 endif()
@@ -95,6 +103,15 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
       pendulum_partial_tightening.c ${PENDULUM_MODEL_SRC})
     target_link_libraries(pendulum_partial_tightening_example acados)
     add_test(pendulum_partial_tightening_example pendulum_partial_tightening_example)
+endif()
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_executable(quadcopter_ocp_nlp
+      quadcopter_ocp_nlp.c
+      ${QUADCOPTER_MODEL_SRC}
+      acados_gnuplot/acados_gnuplot.c)
+    target_link_libraries(quadcopter_ocp_nlp acados)
+    add_test(quadcopter_ocp_nlp quadcopter_ocp_nlp)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
