@@ -45,7 +45,7 @@
 #define Ns 100
 #define NX 11
 #define NU 4
-#define NSIM 200
+#define NSIM 2
 #define UMAX 5.0
 #define NR 18
 #define NR_END 14

@@ -584,7 +584,7 @@ void ocp_qp_hpmpc_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpmpc_args *args,
 
     // align memory to typical cache line size
     size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
+    // s_ptr = (s_ptr + 63) / 64 * 64;
     c_ptr = (char *)s_ptr;
     *hpmpc_memory = c_ptr;
     return;
@@ -642,10 +642,10 @@ char *ocp_qp_hpmpc_assign_arguments(const ocp_qp_in *in, void **args_, void *raw
     (*args)->t0 = (real_t **) c_ptr;
     c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
 
-    // align memory to typical cache line size
-    size_t s_ptr = (size_t) c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *) s_ptr;
+    // // align memory to typical cache line size
+    // size_t s_ptr = (size_t) c_ptr;
+    // s_ptr = (s_ptr + 63) / 64 * 64;
+    // c_ptr = (char *) s_ptr;
 
     for (int_t i = 0; i <= N; i++) {
         (*args)->ux0[i] = (real_t *) c_ptr;
@@ -696,9 +696,9 @@ void ocp_qp_hpmpc_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, vo
     int_t workspace_size = ocp_qp_hpmpc_calculate_workspace_size(qp_in, args);
     *work = calloc(1, workspace_size);
 
-    size_t s_ptr = (size_t)*work;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    *work = (void *)s_ptr;
+    // size_t s_ptr = (size_t)*work;
+    // s_ptr = (s_ptr + 63) / 64 * 64;
+    // *work = (void *)s_ptr;
 
 }
 
