@@ -19,6 +19,8 @@
 
 set(PACKAGE_SO_VERSION "0.1")
 
+include(CMakePackageConfigHelpers)
+
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
     set(ACADOS_WITH_HPMPC OFF)
 else()
@@ -39,28 +41,12 @@ endif()
 
 # Define acados library
 add_library(acados ${ACADOS_SRC})
+
 target_include_directories(acados
     PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # for include "acados/..."
-        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/blasfeo/include>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # to be able to include "acados/header.h"
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<INSTALL_INTERFACE:include>)
-install(TARGETS acados EXPORT acadosConfig
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin)
-
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../acados
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "simplified" EXCLUDE)
-
-# install(EXPORT acadosConfig DESTINATION share)
-
-# set_target_properties(acados
-#     PROPERTIES
-#         SOVERSION ${PACKAGE_SO_VERSION})
-# export(TARGETS acados FILE ${PROJECT_BINARY_DIR}/acadosConfig.cmake)
 
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
@@ -82,7 +68,7 @@ if(ACADOS_WITH_OOQP)
 endif()
 
 # Enable or disable timings
-if(ACADOS_MEASURE_TIMINGS)
+if(NOT ACADOS_NO_TIMINGS)
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
@@ -97,3 +83,26 @@ endif()
 
 target_compile_definitions(acados PRIVATE ALIGNMENT=64)
 target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES
+
+install(TARGETS acados EXPORT acadosTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../acados
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+    PATTERN "simplified" EXCLUDE)
+
+install(EXPORT acadosTargets DESTINATION cmake)
+
+configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/acadosConfig.cmake.in
+                              ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
+                              INSTALL_DESTINATION cmake)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/acadosConfig.cmake
+        DESTINATION cmake)
+
+# set_target_properties(acados
+#     PROPERTIES SOVERSION ${PACKAGE_SO_VERSION})
+# export(TARGETS acados FILE ${PROJECT_BINARY_DIR}/acadosConfig.cmake)

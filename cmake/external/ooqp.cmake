@@ -68,6 +68,18 @@ set_property(TARGET ooqp
         $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/external/OOQP/include>
         $<INSTALL_INTERFACE:include>)
 
+install(TARGETS ooqp EXPORT ooqpConfig
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin)
+
+install(EXPORT ooqpConfig DESTINATION cmake)
+
+install(FILES
+        ${CMAKE_CURRENT_LIST_DIR}/../FindFortranLibs.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/../FindOpenBLAS.cmake
+    DESTINATION cmake)
+
 install(DIRECTORY ${BINARY_DIR}/include/
     DESTINATION include/ooqp
     FILES_MATCHING PATTERN "*.h")
