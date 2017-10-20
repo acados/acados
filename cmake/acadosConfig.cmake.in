@@ -1,0 +1,19 @@
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/../") # for *Config.cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")     # for FindOpenBLAS, FindFortranLibs
+
+find_package(blasfeo)
+find_package(hpipm)
+find_package(hpmpc)
+find_package(qpdunes)
+find_package(qpOASES_e)
+
+find_package(ooqp)
+find_package(OpenBLAS)
+add_library(openblas UNKNOWN IMPORTED)
+set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
+
+find_package(FortranLibs)
+add_library(gfortran UNKNOWN IMPORTED)
+set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+
+include("${CMAKE_CURRENT_LIST_DIR}/acadosTargets.cmake")

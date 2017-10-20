@@ -437,7 +437,12 @@ int main() {
     qp_solver.fun = &ocp_qp_condensing_qpoases;
     qp_solver.initialize = &ocp_qp_condensing_qpoases_initialize;
     qp_solver.destroy = &ocp_qp_condensing_qpoases_destroy;
-    qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments();
+    // TODO(nielsvd): lines below should go
+    ocp_qp_in *dummy_qp = create_ocp_qp_in(NN, nx, nu, nb, ng);
+    int_t **idxb = (int_t **)dummy_qp->idxb;
+    for (int_t i = 0; i < NN; i++)
+        for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
+    qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments(dummy_qp);
 
     /************************************************
      * SQP method

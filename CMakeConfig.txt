@@ -12,8 +12,6 @@ set(BUILD_SHARED_LIBS ON CACHE INTERNAL "Build shared libraries")
 # acados specific options
 set(ACADOS_INSTALL_DIR "$ENV{HOME}/local" CACHE PATH "acados installation folder")
 
-set(ACADOS_MEASURE_TIMINGS ON CACHE BOOL "Measure the solution time of various algorithms")
-
 set(SWIG_PYTHON ON CACHE BOOL "Build the Python interface")
 
 set(SWIG_MATLAB OFF CACHE BOOL "Build the MATLAB interface")

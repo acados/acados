@@ -31,25 +31,74 @@
 #include "blasfeo/include/blasfeo_v_aux_ext_dep.h"
 
 #include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_ipm_hard.h"
+#include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments() {
-    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) malloc(sizeof(ocp_qp_hpipm_args));
-    args->mu_max = 1e-8;
-    args->iter_max = 20;
+
+
+int ocp_qp_hpipm_calculate_args_size(const ocp_qp_in *qp_in) {
+    int N = qp_in->N;
+    int size = 0;
+    size += sizeof(ocp_qp_hpipm_args);
+    size += (N+1)*sizeof(int);
+    return size;
+}
+
+
+
+char *ocp_qp_hpipm_assign_args(const ocp_qp_in *qp_in, ocp_qp_hpipm_args **args, void *mem) {
+    int N = qp_in->N;
+
+    char *c_ptr = (char *) mem;
+
+    *args = (ocp_qp_hpipm_args *) c_ptr;
+    c_ptr += sizeof(ocp_qp_hpipm_args);
+
+    (*args)->scrapspace = c_ptr;
+    c_ptr += (N+1)*sizeof(int);
+
+    return c_ptr;
+}
+
+
+
+static void ocp_qp_hpipm_initialize_default_args(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
+    args->res_g_max = 1e-6;
+    args->res_b_max = 1e-8;
+    args->res_d_max = 1e-8;
+    args->res_m_max = 1e-8;
+    args->iter_max = 50;
     args->alpha_min = 1e-8;
     args->mu0 = 1;
+
+    int N = qp_in->N;
+
+    int *ns = (int *) args->scrapspace;
+    int ii;
+    for (ii=0; ii < N+1; ii++) ns[ii] = 0;
+}
+
+
+
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(const ocp_qp_in *qp_in) {
+    void *mem = malloc(ocp_qp_hpipm_calculate_args_size(qp_in));
+    ocp_qp_hpipm_args *args;
+    ocp_qp_hpipm_assign_args(qp_in, &args, mem);
+    ocp_qp_hpipm_initialize_default_args(qp_in, args);
 
     return args;
 }
 
+
+
 int ocp_qp_hpipm_calculate_workspace_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     return 0;
 }
+
+
 
 int ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args) {
     int N = qp_in->N;
@@ -58,26 +107,34 @@ int ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args
     int *nb = (int *)qp_in->nb;
     int *ng = (int *)qp_in->nc;
 
+    // extract ns from args
+    int_t *ns = (int_t *) args->scrapspace;
+
     struct d_ocp_qp qp;
     qp.N = N;
     qp.nx = nx;
     qp.nu = nu;
     qp.nb = nb;
     qp.ng = ng;
+    qp.ns = ns;
 
-    struct d_ipm_hard_ocp_qp_arg ipm_arg;
-    ipm_arg.iter_max = args->iter_max;
+    // dummy ipm arg
+    struct d_ocp_qp_ipm_arg ipm_arg;
+    ipm_arg.stat_max = args->iter_max;
 
-    int size = sizeof(ocp_qp_hpipm_memory);
+    int size = 0;
+
+    size += sizeof(ocp_qp_hpipm_memory);
 
     size += 1 * sizeof(struct d_ocp_qp);                     // qp
     size += 1 * sizeof(struct d_ocp_qp_sol);                 // qp_sol
-    size += 1 * sizeof(struct d_ipm_hard_ocp_qp_arg);        // ipm_arg
-    size += 1 * sizeof(struct d_ipm_hard_ocp_qp_workspace);  // ipm_workspace
+    size += 1 * sizeof(struct d_ocp_qp_ipm_arg);        // ipm_arg
+    size += 1 * sizeof(struct d_ocp_qp_ipm_workspace);  // ipm_workspace
 
-    size += d_memsize_ocp_qp(N, nx, nu, nb, ng);
-    size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng);
-    size += d_memsize_ipm_hard_ocp_qp(&qp, &ipm_arg);
+    size += d_memsize_ocp_qp(N, nx, nu, nb, ng, ns);
+    size += d_memsize_ocp_qp_sol(N, nx, nu, nb, ng, ns);
+    size += d_memsize_ocp_qp_ipm_arg(&qp);
+    size += d_memsize_ocp_qp_ipm(&qp, &ipm_arg);
     size += 4 * (N + 1) * sizeof(double *);  // lam_lb lam_ub lam_lg lam_ug
     size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
     for (int_t ii = 0; ii <= N; ii++) {
@@ -90,6 +147,8 @@ int ocp_qp_hpipm_calculate_memory_size(const ocp_qp_in *qp_in, ocp_qp_hpipm_args
     return size;
 }
 
+
+
 char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args, void **mem_,
                                 void *raw_memory) {
 
@@ -101,6 +160,9 @@ char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     int *nu = (int *)qp_in->nu;
     int *nb = (int *)qp_in->nb;
     int *ng = (int *)qp_in->nc;
+
+    // extract ns from args
+    int_t *ns = (int_t *) args->scrapspace;
 
     // char pointer
     char *c_ptr = (char *)raw_memory;
@@ -115,11 +177,11 @@ char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     (*hpipm_memory)->qp_sol = (struct d_ocp_qp_sol *)c_ptr;
     c_ptr += 1 * sizeof(struct d_ocp_qp_sol);
     //
-    (*hpipm_memory)->ipm_arg = (struct d_ipm_hard_ocp_qp_arg *)c_ptr;
-    c_ptr += 1 * sizeof(struct d_ipm_hard_ocp_qp_arg);
+    (*hpipm_memory)->ipm_arg = (struct d_ocp_qp_ipm_arg *)c_ptr;
+    c_ptr += 1 * sizeof(struct d_ocp_qp_ipm_arg);
     //
-    (*hpipm_memory)->ipm_workspace = (struct d_ipm_hard_ocp_qp_workspace *)c_ptr;
-    c_ptr += 1 * sizeof(struct d_ipm_hard_ocp_qp_workspace);
+    (*hpipm_memory)->ipm_workspace = (struct d_ocp_qp_ipm_workspace *)c_ptr;
+    c_ptr += 1 * sizeof(struct d_ocp_qp_ipm_workspace);
     //
     (*hpipm_memory)->hlam_lb = (double **)c_ptr;
     c_ptr += (N + 1) * sizeof(double *);
@@ -141,9 +203,9 @@ char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     //
     struct d_ocp_qp_sol *qp_sol = (*hpipm_memory)->qp_sol;
     //
-    struct d_ipm_hard_ocp_qp_arg *ipm_arg = (*hpipm_memory)->ipm_arg;
+    struct d_ocp_qp_ipm_arg *ipm_arg = (*hpipm_memory)->ipm_arg;
     //
-    struct d_ipm_hard_ocp_qp_workspace *ipm_workspace =
+    struct d_ocp_qp_ipm_workspace *ipm_workspace =
         (*hpipm_memory)->ipm_workspace;
 
     // align memory to typical cache line size
@@ -152,18 +214,25 @@ char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
     c_ptr = (char *)s_ptr;
 
     // ocp qp structure
-    d_create_ocp_qp(N, nx, nu, nb, ng, qp, c_ptr);
+    d_create_ocp_qp(N, nx, nu, nb, ng, ns, qp, c_ptr);
     c_ptr += qp->memsize;
     // ocp qp sol structure
-    d_create_ocp_qp_sol(N, nx, nu, nb, ng, qp_sol, c_ptr);
+    d_create_ocp_qp_sol(N, nx, nu, nb, ng, ns, qp_sol, c_ptr);
     c_ptr += qp_sol->memsize;
     // ipm arg structure
+    d_create_ocp_qp_ipm_arg(qp, ipm_arg, c_ptr);
+    c_ptr += ipm_arg->memsize;
+    d_set_default_ocp_qp_ipm_arg(ipm_arg);
     ipm_arg->iter_max = args->iter_max;
+    ipm_arg->stat_max = args->iter_max;
     ipm_arg->alpha_min = args->alpha_min;
-    ipm_arg->mu_max = args->mu_max;
+    ipm_arg->res_g_max = args->res_g_max;
+    ipm_arg->res_b_max = args->res_b_max;
+    ipm_arg->res_d_max = args->res_d_max;
+    ipm_arg->res_m_max = args->res_m_max;
     ipm_arg->mu0 = args->mu0;
     // ipm workspace structure
-    d_create_ipm_hard_ocp_qp(qp, ipm_arg, ipm_workspace, c_ptr);
+    d_create_ocp_qp_ipm(qp, ipm_arg, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
     //
@@ -174,6 +243,8 @@ char *ocp_qp_hpipm_assign_memory(const ocp_qp_in *qp_in, ocp_qp_hpipm_args *args
 
     return c_ptr;
 }
+
+
 
 ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *args_) {
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
@@ -186,6 +257,8 @@ ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *ar
 
     return mem;
 }
+
+
 
 int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_) {
 
@@ -205,8 +278,8 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double **hlam_ug = memory->hlam_ug;
     struct d_ocp_qp *qp = memory->qp;
     struct d_ocp_qp_sol *qp_sol = memory->qp_sol;
-    //  struct d_ipm_hard_ocp_qp_arg *ipm_arg = memory->ipm_arg;
-    struct d_ipm_hard_ocp_qp_workspace *ipm_workspace = memory->ipm_workspace;
+    struct d_ocp_qp_ipm_arg *ipm_arg = memory->ipm_arg;
+    struct d_ocp_qp_ipm_workspace *ipm_workspace = memory->ipm_workspace;
     int **hidxb_rev = (int **) memory->hidxb_rev;
 
     // extract problem size
@@ -260,24 +333,19 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
 
     // ocp qp structure
     d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb_rev, hd_lb, hd_ub,
-                           hC, hD, hd_lg, hd_ug, qp);
+                           hC, hD, hd_lg, hd_ug, NULL, NULL, NULL, NULL, NULL, qp);
 
     // ocp qp sol structure
 
-    // arg structure // XXX fixed in memory !!!
-    // ipm_arg->alpha_min = args->alpha_min;
-    // ipm_arg->mu_max = args->mu_max;
-    // ipm_arg->iter_max = args->iter_max;
-    // ipm_arg->mu0 = args->mu0;
 
     // ipm structure
 
     // solve ipm
-    d_solve_ipm2_hard_ocp_qp(qp, qp_sol, ipm_workspace);
+    d_solve_ocp_qp_ipm(qp, qp_sol, ipm_arg, ipm_workspace);
 
     // extract solution
-    d_cvt_ocp_qp_sol_to_colmaj(qp, qp_sol, hu, hx, hpi, hlam_lb, hlam_ub,
-                               hlam_lg, hlam_ug);
+    d_cvt_ocp_qp_sol_to_colmaj(qp, qp_sol, hu, hx, NULL, NULL, hpi,
+                               hlam_lb, hlam_ub, hlam_lg, hlam_ug, NULL, NULL);
 
     // extract iteration number
     memory->iter = ipm_workspace->iter;
@@ -289,7 +357,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_g;
     inf_norm_res[0] = 0;
     for (ii = 0; ii <= N; ii++) {
-        res_g = (ipm_workspace->res_g + ii)->pa;
+        res_g = (ipm_workspace->res_workspace->res_g + ii)->pa;
         for (jj = 0; jj < nu[ii] + nx[ii]; jj++) {
             res_tmp = fabs(res_g[jj]);
             if (res_tmp > inf_norm_res[0]) {
@@ -300,7 +368,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_b;
     inf_norm_res[1] = 0;
     for (ii = 0; ii < N; ii++) {
-        res_b = (ipm_workspace->res_b + ii)->pa;
+        res_b = (ipm_workspace->res_workspace->res_b + ii)->pa;
         for (jj = 0; jj < nx[ii + 1]; jj++) {
             res_tmp = fabs(res_b[jj]);
             if (res_tmp > inf_norm_res[1]) {
@@ -311,28 +379,28 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_d;
     inf_norm_res[2] = 0;
     for (ii = 0; ii <= N; ii++) {
-        res_d = (ipm_workspace->res_d_lb + ii)->pa;
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+0;
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
                 inf_norm_res[2] = res_tmp;
             }
         }
-        res_d = (ipm_workspace->res_d_ub + ii)->pa;
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+nb[ii]+ng[ii];
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
                 inf_norm_res[2] = res_tmp;
             }
         }
-        res_d = (ipm_workspace->res_d_lg + ii)->pa;
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+nb[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
                 inf_norm_res[2] = res_tmp;
             }
         }
-        res_d = (ipm_workspace->res_d_ug + ii)->pa;
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+2*nb[ii]+ng[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
@@ -343,28 +411,28 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_m;
     inf_norm_res[3] = 0;
     for (ii = 0; ii <= N; ii++) {
-        res_m = (ipm_workspace->res_m_lb + ii)->pa;
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+0;
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
                 inf_norm_res[3] = res_tmp;
             }
         }
-        res_m = (ipm_workspace->res_m_ub + ii)->pa;
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+nb[ii]+ng[ii];
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
                 inf_norm_res[3] = res_tmp;
             }
         }
-        res_m = (ipm_workspace->res_m_lg + ii)->pa;
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+nb[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
                 inf_norm_res[3] = res_tmp;
             }
         }
-        res_m = (ipm_workspace->res_m_ug + ii)->pa;
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+2*nb[ii]+ng[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
@@ -372,7 +440,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
             }
         }
     }
-    inf_norm_res[4] = ipm_workspace->res_mu;
+    inf_norm_res[4] = ipm_workspace->res_workspace->res_mu;
 
     // max number of iterations
     if (ipm_workspace->iter == args->iter_max) acados_status = ACADOS_MAXITER;
@@ -385,6 +453,8 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     return acados_status;
     //
 }
+
+
 
 void ocp_qp_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;

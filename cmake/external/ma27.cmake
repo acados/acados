@@ -25,3 +25,4 @@ ExternalProject_Add_Step(ma27_project rename_library
 add_library(ma27 STATIC IMPORTED GLOBAL)
 add_dependencies(ma27 ma27_project)
 set_property(TARGET ma27 PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/ma27/lib/libma27.a")
+install(FILES "${PROJECT_BINARY_DIR}/external/ma27/lib/libma27.a" DESTINATION lib)

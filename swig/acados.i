@@ -44,7 +44,14 @@ typedef PyObject LangObject;
 %include "ocp_typemaps.i"
 
 %{
+// TODO(dimitris): support compilation with visual studio
+#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+#include <windows.h>
+char compiler[16] = "gcc";
+#else
 #include <dlfcn.h>
+char compiler[16] = "cc";
+#endif
 // #include <xmmintrin.h>  // for floating point exceptions
 // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
@@ -80,7 +87,12 @@ typedef PyObject LangObject;
 
 %{
 
+#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+HINSTANCE global_handle;
+#else
 void *global_handle;
+#endif
+int global_library_counter = 1;
 
 // static bool is_valid_sim_dimensions_map(const LangObject *input) {
 //     if (!is_map(input))
@@ -150,23 +162,36 @@ enum generation_mode {
 };
 
 static casadi_function_t compile_and_load(std::string name, void **handle) {
-    std::string library_name = name + std::string(".so");
+    std::string library_name = name + std::to_string(global_library_counter++) + std::string(".so");
     std::string path_to_library = std::string("./") + library_name;
     char command[MAX_STR_LEN];
-    snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", name.c_str(),
-                                                                         library_name.c_str());
+    snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, name.c_str(),
+        library_name.c_str());
     int compilation_failed = system(command);
     if (compilation_failed)
         throw std::runtime_error("Something went wrong when compiling the model.");
+    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+    *handle = LoadLibrary(path_to_library.c_str());
+    #else
     *handle = dlopen(path_to_library.c_str(), RTLD_LAZY);
+    #endif
     if (*handle == NULL) {
         char err_msg[MAX_STR_LEN];
+        #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+        snprintf(err_msg, sizeof(err_msg), \
+            "Something went wrong when loading the model.");
+        #else
         snprintf(err_msg, sizeof(err_msg), \
             "Something went wrong when loading the model. dlerror(): %s", dlerror());
+        #endif
         throw std::runtime_error(err_msg);
     }
     typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
+    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+    return (casadi_function_t) GetProcAddress((HMODULE)*handle, name.c_str());
+    #else
     return (casadi_function_t) dlsym(*handle, name.c_str());
+    #endif
 }
 
 void set_model(sim_in *sim, casadi::Function& f, double step, enum generation_mode mode) {
@@ -760,26 +785,42 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     void set_model(casadi::Function& f, double step) {
         char library_name[MAX_STR_LEN], path_to_library[MAX_STR_LEN];
         std::string model_name = generate_vde_function(f);
-        snprintf(library_name, sizeof(library_name), "%s.so", model_name.c_str());
+        snprintf(library_name, sizeof(library_name), "%s%d.so", model_name.c_str(),
+            global_library_counter++);
         snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
         char command[MAX_STR_LEN];
-        snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s", \
+        snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, \
             model_name.c_str(), library_name);
         int compilation_failed = system(command);
         if (compilation_failed)
             throw std::runtime_error("Something went wrong when compiling the model.");
+        #ifdef SWIG_WIN_MINGW
+        if (global_handle)
+            FreeLibrary(global_handle);
+        global_handle = LoadLibrary(path_to_library);
+        #else
         if (global_handle)
             dlclose(global_handle);
         global_handle = dlopen(path_to_library, RTLD_LAZY);
+        #endif
         if (global_handle == 0) {
             char err_msg[MAX_STR_LEN];
+            #ifdef SWIG_WIN_MINGW
+            snprintf(err_msg, sizeof(err_msg), \
+                "Something went wrong when loading the model.");
+            #else
             snprintf(err_msg, sizeof(err_msg), \
                 "Something went wrong when loading the model. dlerror(): %s", dlerror());
+            #endif
             throw std::runtime_error(err_msg);
         }
-        typedef int (*eval_t)(const double** arg, double** res, int* iw, double* w, int mem);
-        eval_t eval = (eval_t)dlsym(global_handle, model_name.c_str());
-        sim_solver **simulators = (sim_solver **) $self->sim;
+        #ifdef SWIG_WIN_MINGW
+        casadi_function_t eval =
+            (casadi_function_t)GetProcAddress(global_handle, model_name.c_str());
+        #else
+        casadi_function_t eval = (casadi_function_t)dlsym(global_handle, model_name.c_str());
+        #endif
+        sim_solver **simulators = (sim_solver **)$self->sim;
         for (int_t i = 0; i < $self->N; i++) {
             simulators[i]->in->vde = eval;
             simulators[i]->in->VDE_forw = &vde_fun;
@@ -905,7 +946,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 qpsol->destroy = &ocp_qp_ooqp_destroy;
 #endif
             } else if (!strcmp(qp_solver, "condensing_qpoases")) {
-                qpsol->args = (void *)ocp_qp_condensing_qpoases_create_arguments();
+                qpsol->args = (void *)ocp_qp_condensing_qpoases_create_arguments(dummy_qp);
                 qpsol->fun = &ocp_qp_condensing_qpoases;
                 qpsol->initialize = &ocp_qp_condensing_qpoases_initialize;
                 qpsol->destroy = &ocp_qp_condensing_qpoases_destroy;
@@ -915,12 +956,12 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 qpsol->initialize = &ocp_qp_hpmpc_initialize;
                 qpsol->destroy = &ocp_qp_hpmpc_destroy;
             } else if (!strcmp(qp_solver, "condensing_hpipm")) {
-                qpsol->args = ocp_qp_condensing_hpipm_create_arguments();
+                qpsol->args = ocp_qp_condensing_hpipm_create_arguments(dummy_qp);
                 qpsol->fun = &ocp_qp_condensing_hpipm;
                 qpsol->initialize = &ocp_qp_condensing_hpipm_initialize;
                 qpsol->destroy = &ocp_qp_condensing_hpipm_destroy;
             } else if (!strcmp(qp_solver, "hpipm")) {
-                qpsol->args = ocp_qp_hpipm_create_arguments();
+                qpsol->args = ocp_qp_hpipm_create_arguments(dummy_qp);
                 qpsol->fun = &ocp_qp_hpipm;
                 qpsol->initialize = &ocp_qp_hpipm_initialize;
                 qpsol->destroy = &ocp_qp_hpipm_destroy;

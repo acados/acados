@@ -1,11 +1,13 @@
 [submodule "hpmpc"]
 	path = external/hpmpc
 	url = https://github.com/giaf/hpmpc.git
+	branch = stable
 [submodule "blasfeo"]
 	path = external/blasfeo
 	url = https://github.com/giaf/blasfeo.git
+	branch = stable
 [submodule "qpdunes"]
-	path = external/qpDUNES-dev
+	path = external/qpdunes
 	url = https://github.com/acados/qpDUNES-dev.git
 [submodule "catch"]
 	path = external/catch
@@ -18,3 +20,4 @@
 [submodule "hpipm"]
 	path = external/hpipm
 	url = https://github.com/giaf/hpipm.git
+	branch = stable

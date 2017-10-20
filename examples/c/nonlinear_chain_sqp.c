@@ -222,36 +222,36 @@ int main() {
                         sim_in[jj].jac = &jac_chain_nm4;
                         sim_in[jj].jac_fun = &jac_fun;
                         break;
-                    case 4:
-                        sim_in[jj].vde = &vde_chain_nm5;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm5;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    case 5:
-                        sim_in[jj].vde = &vde_chain_nm6;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm6;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    case 6:
-                        sim_in[jj].vde = &vde_chain_nm7;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm7;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    case 7:
-                        sim_in[jj].vde = &vde_chain_nm8;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm8;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
-                    default:
-                        sim_in[jj].vde = &vde_chain_nm9;
-                        sim_in[jj].VDE_forw = &vde_fun;
-                        sim_in[jj].jac = &jac_chain_nm9;
-                        sim_in[jj].jac_fun = &jac_fun;
-                        break;
+                    // case 4:
+                    //     sim_in[jj].vde = &vde_chain_nm5;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm5;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // case 5:
+                    //     sim_in[jj].vde = &vde_chain_nm6;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm6;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // case 6:
+                    //     sim_in[jj].vde = &vde_chain_nm7;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm7;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // case 7:
+                    //     sim_in[jj].vde = &vde_chain_nm8;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm8;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
+                    // default:
+                    //     sim_in[jj].vde = &vde_chain_nm9;
+                    //     sim_in[jj].VDE_forw = &vde_fun;
+                    //     sim_in[jj].jac = &jac_chain_nm9;
+                    //     sim_in[jj].jac_fun = &jac_fun;
+                    //     break;
                 }
 
                 sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));
@@ -428,27 +428,28 @@ int main() {
             // Initialize solver
             #ifdef USE_QPOASES
             ocp_qp_condensing_qpoases_args *qpsolver_args =
-                ocp_qp_condensing_qpoases_create_arguments();
+                ocp_qp_condensing_qpoases_create_arguments(&qp_in);
             ocp_qp_condensing_qpoases_memory *qpsolver_memory =
                 ocp_qp_condensing_qpoases_create_memory(&qp_in, qpsolver_args);
 
             int_t qpsolver_workspace_size =
-                ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, &qpsolver_args);
+                ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, qpsolver_args);
             int_t qpsolver_memory_size =
-                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, &qpsolver_args);
+                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpsolver_args);
             #else
-            ocp_qp_condensing_hpipm_args qpsolver_args;
+            ocp_qp_condensing_hpipm_args *qpsolver_args =
+                ocp_qp_condensing_hpipm_create_arguments(qp_in);
             ocp_qp_condensing_hpipm_memory qpsolver_memory;
 
-            qpsolver_args.mu_max = 1e-8;
-            qpsolver_args.iter_max = 20;
-            qpsolver_args.alpha_min = 1e-8;
-            qpsolver_args.mu0 = 1.0;
+            qpsolver_args->mu_max = 1e-8;
+            qpsolver_args->iter_max = 20;
+            qpsolver_args->alpha_min = 1e-8;
+            qpsolver_args->mu0 = 1.0;
 
             int_t qpsolver_workspace_size =
-                ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, &qpsolver_args);
+                ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, qpsolver_args);
             int_t qpsolver_memory_size =
-                ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, &qpsolver_args);
+                ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, qpsolver_args);
             #endif
 
             void *qpsolver_work = calloc(qpsolver_workspace_size, sizeof(char));
@@ -456,7 +457,7 @@ int main() {
             #ifdef USE_QPOASES
             (void) qpsolver_memory_size;
             #else
-            ocp_qp_condensing_hpipm_assign_memory(&qp_in, &qpsolver_args, &qpsolver_memory,
+            ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, &qpsolver_memory,
                 qpsolver_mem);
             #endif
 
@@ -551,7 +552,7 @@ int main() {
                 status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, qpsolver_args,
                     qpsolver_memory, qpsolver_work);
                 #else
-                status = ocp_qp_condensing_hpipm(&qp_in, &qp_out, &qpsolver_args,
+                status = ocp_qp_condensing_hpipm(&qp_in, &qp_out, qpsolver_args,
                     &qpsolver_memory, qpsolver_work);
                 #endif
 

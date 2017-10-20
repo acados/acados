@@ -22,6 +22,10 @@
 
 #include "acados/utils/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifdef MEASURE_TIMINGS
     #if (defined _WIN32 || defined _WIN64) && !(defined __MINGW32__ || defined __MINGW64__)
 
@@ -86,5 +90,9 @@ void acados_tic(acados_timer* t);
 
 /** A function which returns the elapsed time. */
 real_t acados_toc(acados_timer* t);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_UTILS_TIMING_H_

@@ -3,6 +3,10 @@
 
 #include "acados/utils/types.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define X0_NM2_FILE "@CMAKE_CURRENT_SOURCE_DIR@/chain_model/x0_nm2.txt"
 #define X0_NM3_FILE "@CMAKE_CURRENT_SOURCE_DIR@/chain_model/x0_nm3.txt"
 #define X0_NM4_FILE "@CMAKE_CURRENT_SOURCE_DIR@/chain_model/x0_nm4.txt"
@@ -146,5 +150,9 @@ const int* pathconN_nm6_sparsity_out(int i);
 const int* pathconN_nm7_sparsity_out(int i);
 const int* pathconN_nm8_sparsity_out(int i);
 const int* pathconN_nm9_sparsity_out(int i);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // EXAMPLES_CASADI_CHAIN_CHAIN_MODEL_H_

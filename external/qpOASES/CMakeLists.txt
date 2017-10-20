@@ -96,7 +96,7 @@ install(TARGETS qpOASES_e EXPORT qpOASES_eConfig
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION lib)
-install(EXPORT qpOASES_eConfig DESTINATION share)
+install(EXPORT qpOASES_eConfig DESTINATION cmake)
 set_target_properties(
     qpOASES_e
     PROPERTIES

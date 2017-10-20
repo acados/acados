@@ -37,6 +37,7 @@ extern "C" {
 // struct of arguments to the solver
 typedef struct ocp_qp_condensing_qpoases_args_ {
     double cputime;  // maximum cpu time in seconds
+    void *scrapspace;
     int nwsr;        // maximum number of working set recalculations
     int warm_start;  // warm start with dual_sol in memory
 } ocp_qp_condensing_qpoases_args;
@@ -76,7 +77,7 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
     int nwsr;        // performed number of working set recalculations
 } ocp_qp_condensing_qpoases_memory;
 
-ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments();
+ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(const ocp_qp_in *qp_in);
 
 int_t ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void *args_);
 
