@@ -20,4 +20,4 @@
 [submodule "hpipm"]
 	path = external/hpipm
 	url = https://github.com/giaf/hpipm.git
-	branch = acados_stable
+	branch = stable
