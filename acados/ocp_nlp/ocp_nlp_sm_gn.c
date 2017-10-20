@@ -240,6 +240,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
         dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i], (real_t *)ls_cost->W[i], ny, work->DFTW[i], nx[i] + nu[i]);
         dgemm_nn_3l(nx[i] + nu[i], nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->DF[i], ny, hess_l[i], nx[i] + nu[i]);
         // Compute gradient of cost
+        for (int_t j = 0; j < (nx[i] + nu[i]); j++) grad_f[i][j] = 0;
         dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i], grad_f[i]);
 
         // Sensitivities for the linearization of the path constraints

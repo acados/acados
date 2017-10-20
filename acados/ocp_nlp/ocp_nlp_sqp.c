@@ -314,7 +314,7 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
             for (int_t j = 0; j < nlp_in->nu[i]; j++) norm_step = (sqp_args->qp_solver->qp_out->u[i][j])*(sqp_args->qp_solver->qp_out->u[i][j]);
         }
         norm_step = sqrt(norm_step);
-        printf("Norm_step = %.10f\n", norm_step);
+        printf("Norm_step = %.10e\n", norm_step);
     }
 
     // Post-process solution

@@ -40,7 +40,7 @@ STATES = [array([0.1, 0.1])]
 for i in range(50):
     state_traj, control_traj = solver.evaluate(STATES[-1])
     STATES += [state_traj[1]]
-#
-#plt.ion()
-#plt.plot([x[0] for x in STATES], [x[1] for x in STATES])
-#plt.axis('equal')
+
+plt.ion()
+plt.plot([x[0] for x in STATES], [x[1] for x in STATES])
+plt.axis('equal')

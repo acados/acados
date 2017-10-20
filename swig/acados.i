@@ -584,7 +584,9 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 
         return nlp_function;
     }
-    
+
+    // TODO(nielsvd): write destructor
+
     LangObject *evaluate(LangObject *x, LangObject *u) {
         int_t nx = $self->nx;
         int_t nu = $self->nu;
@@ -637,12 +639,16 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
       elseif numel(s) == 2 && strcmp(s(1, 1).type, '.') && strcmp(s(1, 2).type, '{}')
         for cell_no = 1:numel(s(1, 2).subs)
           index_group = s(1, 2).subs{cell_no};
-          for
-              index = index_group cell_array = self.(s(1, 1).subs)();
-          cell_array{index} = v;
-          self.(s(1, 1).subs)(cell_array)end end else self =
-              builtin('subsasgn', self, s, v);
-          end end 
+          for index = index_group
+            cell_array = self.(s(1, 1).subs)();
+            cell_array{index} = v;
+            self.(s(1, 1).subs)(cell_array)
+          end
+        end
+      else
+        self = builtin('subsasgn', self, s, v);
+      end
+    end
     %}
 #endif
     real_t **ls_cost_matrix;
@@ -748,6 +754,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         // TODO(nielsvd): cost, path_constraints
         return nlp_in;
     }
+
+    // TODO(nielsvd): write destructor
 
     void set_model(casadi::Function& f, double step) {
         char library_name[MAX_STR_LEN], path_to_library[MAX_STR_LEN];
@@ -979,6 +987,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         return solver;
     }
 
+    // TODO(nielsvd): write destructor
+
     LangObject *evaluate() {
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
                                 $self->work);
@@ -992,8 +1002,6 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         fill_array_from(x0, (real_t **) $self->nlp_in->ub, 1, $self->nlp_in->nx);
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
                                 $self->work);
-
-        std::cout << fail << std::endl << std::endl;
         
         if (fail)
             throw std::runtime_error("nlp solver failed!");
