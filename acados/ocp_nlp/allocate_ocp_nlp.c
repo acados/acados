@@ -148,12 +148,12 @@ void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {
     int_t N = in->N;
     out->x = (real_t **)calloc(N + 1, sizeof(*out->x));
     out->u = (real_t **)calloc(N + 1, sizeof(*out->u));
-    out->pi = (real_t **)calloc(N, sizeof(*out->pi));
+    out->pi = (real_t **)calloc(N + 1, sizeof(*out->pi));
     out->lam = (real_t **)calloc(N + 1, sizeof(*out->lam));
     for (int_t k = 0; k < N; k++) {
         d_zeros(&out->x[k], in->nx[k], 1);
         d_zeros(&out->u[k], in->nu[k], 1);
-        d_zeros(&out->pi[k], in->nx[k+1], 1);
+        d_zeros(&out->pi[k + 1], in->nx[k+1], 1);
         d_zeros(&out->lam[k], 2 * (in->nb[k] + in->ng[k]), 1);
     }
     d_zeros(&out->x[N], in->nx[N], 1);
@@ -165,7 +165,7 @@ void free_ocp_nlp_out(int_t N, ocp_nlp_out *out) {
     for (int_t k = 0; k < N; k++) {
         d_free(out->x[k]);
         d_free(out->u[k]);
-        d_free(out->pi[k]);
+        d_free(out->pi[k + 1]);
         d_free(out->lam[k]);
     }
     d_free(out->x[N]);

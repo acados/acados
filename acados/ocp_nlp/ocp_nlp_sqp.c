@@ -368,7 +368,7 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_, 
     // QP solver output
     qp_solver->qp_out = create_ocp_qp_out(nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
 
-    // Initialize sensitivity method and QP solver
+    // // Initialize sensitivity method and QP solver
     nlp_sm->initialize(sm_in, nlp_sm->args, &nlp_sm->mem, &nlp_sm->work);
     qp_solver->initialize(qp_solver->qp_in, qp_solver->args, &qp_solver->mem, &qp_solver->work);
 }

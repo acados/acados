@@ -658,8 +658,25 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         // Read NLS cost output functions
         ls_cost->fun = (ocp_nlp_function **) malloc((NN+1)*sizeof(ocp_nlp_function *));
         for (int_t i = 0; i <= NN; i++) {
-            LangObject* stage_cost = from(stage_costs, i);
-            SWIG_ConvertPtr(stage_cost, (void **) &ls_cost->fun[i], SWIGTYPE_p_ocp_nlp_function, 0);
+            LangObject* stage_cost_lo = from(stage_costs, i);
+            ocp_nlp_function *stage_cost;
+            SWIG_ConvertPtr(stage_cost_lo, (void **)&stage_cost, SWIGTYPE_p_ocp_nlp_function, 0);
+            // Initialize LS cost
+            ls_cost->fun[i] = (ocp_nlp_function *) malloc(sizeof(ocp_nlp_function));
+            ls_cost->fun[i]->nx = stage_cost->nx;
+            ls_cost->fun[i]->nu = stage_cost->nu;
+            ls_cost->fun[i]->np = stage_cost->np;
+            ls_cost->fun[i]->ny = stage_cost->ny;
+            ls_cost->fun[i]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+            ls_cost->fun[i]->in->compute_jac = 1;
+            ls_cost->fun[i]->in->compute_hess = 0;
+            ls_cost->fun[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+            ls_cost->fun[i]->args = casadi_wrapper_create_arguments();
+            ls_cost->fun[i]->args->fun = stage_cost->args->fun;
+            ls_cost->fun[i]->args->dims = stage_cost->args->dims;
+            ls_cost->fun[i]->args->sparsity = stage_cost->args->sparsity;
+            casadi_wrapper_initialize(ls_cost->fun[i]->in, ls_cost->fun[i]->args,
+                                      &ls_cost->fun[i]->work);
         }
 
         // Prepare memory for cost and reference
@@ -701,7 +718,6 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     end
     %}
 #endif
-    // real_t **ls_cost_matrix;
     ocp_nlp_in(LangObject *input_map) {
         ocp_nlp_in *nlp_in = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
         if (!is_valid_ocp_dimensions_map(input_map)) {
@@ -769,11 +785,32 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     }
 
     void set_path_constraints(LangObject *path_constraints) {
-        ocp_nlp_function **pathcons = (ocp_nlp_function **) $self->path_constraints;
-        for (int_t i = 0; i <= $self->N; i++) {
-            // TODO(nielsvd): write dimensions
-            LangObject* path_constraint = from(path_constraints, i);
-            SWIG_ConvertPtr(path_constraint, (void **) &pathcons[i], SWIGTYPE_p_ocp_nlp_function, 0);
+        int_t NN = $self->N;
+        $self->path_constraints = (void **) malloc((NN + 1) * sizeof(ocp_nlp_function *));
+        ocp_nlp_function **pathcons =(ocp_nlp_function **)$self->path_constraints;
+        for (int_t i = 0; i <= NN; i++) {
+            LangObject *path_constraint_lo = from(path_constraints, i);
+            ocp_nlp_function *path_constraint;
+            SWIG_ConvertPtr(path_constraint_lo, (void **)&path_constraint,
+                            SWIGTYPE_p_ocp_nlp_function, 0);
+            // Initialize path constraint
+            pathcons[i] = (ocp_nlp_function *) malloc(sizeof(ocp_nlp_function));
+            pathcons[i]->nx = path_constraint->nx;
+            pathcons[i]->nu = path_constraint->nu;
+            pathcons[i]->np = path_constraint->np;
+            pathcons[i]->ny = path_constraint->ny;
+            pathcons[i]->in =
+                (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+            pathcons[i]->in->compute_jac = 1;
+            pathcons[i]->in->compute_hess = 0;
+            pathcons[i]->out =
+                (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+            pathcons[i]->args = casadi_wrapper_create_arguments();
+            pathcons[i]->args->fun = path_constraint->args->fun;
+            pathcons[i]->args->dims = path_constraint->args->dims;
+            pathcons[i]->args->sparsity = path_constraint->args->sparsity;
+            casadi_wrapper_initialize(pathcons[i]->in, pathcons[i]->args,
+                                      &pathcons[i]->work);
         }
     }
 }
@@ -830,59 +867,52 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         void *args = NULL;
         void *mem = NULL;
         void *workspace = NULL;
+        int_t N = nlp_in->N;
 
         if (!strcmp("sqp", solver_name)) {
-            int_t N = nlp_in->N;
             
-            solver->fun = ocp_nlp_sqp;
+            solver->fun = &ocp_nlp_sqp;
 
             args = (ocp_nlp_sqp_args *) malloc(sizeof(ocp_nlp_sqp_args));
 
             // Select QP solver based on user input
-            ocp_qp_in *dummy_qp = create_ocp_qp_in(nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
+            ocp_qp_in *dummy_qp = create_ocp_qp_in(
+            nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
             int_t **idxb = (int_t **)dummy_qp->idxb;
             for (int_t i = 0; i < N; i++)
                 for (int_t j = 0; j < nlp_in->nb[i]; j++)
                     idxb[i][j] = nlp_in->idxb[i][j];
-
+            ((ocp_nlp_sqp_args *)args)->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
             ocp_qp_solver *qpsol = ((ocp_nlp_sqp_args *)args)->qp_solver;
             if (!strcmp(qp_solver, "qpdunes")) {
-                if (qpsol->args == NULL)
-                    qpsol->args = (void *)ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
+                qpsol->args = (void *)ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
                 qpsol->fun = &ocp_qp_qpdunes;
                 qpsol->initialize = &ocp_qp_qpdunes_initialize;
                 qpsol->destroy = &ocp_qp_qpdunes_destroy;
 #ifdef OOQP
             } else if (!strcmp(qp_solver, "ooqp")) {
-                if (qpsol->args == NULL)
-                    qpsol->args = (void *)ocp_qp_ooqp_create_arguments();
+                qpsol->args = (void *)ocp_qp_ooqp_create_arguments();
                 qpsol->fun = &ocp_qp_ooqp;
                 qpsol->initialize = &ocp_qp_ooqp_initialize;
                 qpsol->destroy = &ocp_qp_ooqp_destroy;
 #endif
             } else if (!strcmp(qp_solver, "condensing_qpoases")) {
-                if (qpsol->args == NULL)
-                    qpsol->args =
-                        (void *)ocp_qp_condensing_qpoases_create_arguments();
+                qpsol->args = (void *)ocp_qp_condensing_qpoases_create_arguments();
                 qpsol->fun = &ocp_qp_condensing_qpoases;
                 qpsol->initialize = &ocp_qp_condensing_qpoases_initialize;
                 qpsol->destroy = &ocp_qp_condensing_qpoases_destroy;
             } else if (!strcmp(qp_solver, "hpmpc")) {
-                if (qpsol->args == NULL)
-                    qpsol->args = (void *)ocp_qp_hpmpc_create_arguments(dummy_qp, HPMPC_DEFAULT_ARGUMENTS);
+                qpsol->args = (void *)ocp_qp_hpmpc_create_arguments(dummy_qp, HPMPC_DEFAULT_ARGUMENTS);
                 qpsol->fun = &ocp_qp_hpmpc;
                 qpsol->initialize = &ocp_qp_hpmpc_initialize;
                 qpsol->destroy = &ocp_qp_hpmpc_destroy;
             } else if (!strcmp(qp_solver, "condensing_hpipm")) {
-                if (qpsol->args == NULL)
-                    qpsol->args =
-                        ocp_qp_condensing_hpipm_create_arguments();
+                qpsol->args = ocp_qp_condensing_hpipm_create_arguments();
                 qpsol->fun = &ocp_qp_condensing_hpipm;
                 qpsol->initialize = &ocp_qp_condensing_hpipm_initialize;
                 qpsol->destroy = &ocp_qp_condensing_hpipm_destroy;
             } else if (!strcmp(qp_solver, "hpipm")) {
-                if (qpsol->args == NULL)
-                    qpsol->args = ocp_qp_hpipm_create_arguments();
+                qpsol->args = ocp_qp_hpipm_create_arguments();
                 qpsol->fun = &ocp_qp_hpipm;
                 qpsol->initialize = &ocp_qp_hpipm_initialize;
                 qpsol->destroy = &ocp_qp_hpipm_destroy;
@@ -891,18 +921,15 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             }
 
             // Select sensitivity method based on user input
+            ((ocp_nlp_sqp_args *)args)->sensitivity_method = (ocp_nlp_sm *) malloc(sizeof(ocp_nlp_sm));
+            ocp_nlp_sm *sm = ((ocp_nlp_sqp_args *)args)->sensitivity_method;
             if (!strcmp(sensitivity_method, "gauss-newton")) {
-                ocp_nlp_sm *sm = ((ocp_nlp_sqp_args *)args)->sensitivity_method;
                 sm->fun = &ocp_nlp_sm_gn;
                 sm->initialize = &ocp_nlp_sm_gn_initialize;
                 sm->destroy = &ocp_nlp_sm_gn_destroy;
             } else {
                 throw std::invalid_argument("Chosen sensitivity method not available!");
             }
-
-            ocp_nlp_sqp_memory *mem;
-            ocp_nlp_sqp_workspace *workspace;
-            ocp_nlp_sqp_initialize(nlp_in, args, (void **)&mem, (void **)&workspace);
 
             ((ocp_nlp_sqp_args *) args)->maxIter = sqp_steps;
             sim_solver** simulators = (sim_solver**) nlp_in->sim;
@@ -916,14 +943,32 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 simulators[i]->in->num_steps = integrator_steps;
                 simulators[i]->args = (void *) malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(simulators[i]->args, 4);
-                int_t erk_workspace_size = sim_erk_calculate_workspace_size(simulators[i]->in, \
+                int_t erk_workspace_size = sim_erk_calculate_workspace_size(simulators[i]->in, 
                     simulators[i]->args);
                 simulators[i]->work = (void *) malloc(erk_workspace_size);
                 simulators[i]->fun = &sim_erk;
             }
+
+            ocp_nlp_sqp_initialize(nlp_in, args, &mem, &workspace);
+
+            // Set initial guess to zero
+            ocp_nlp_sqp_memory *sqp_mem = (ocp_nlp_sqp_memory *) mem;
+            real_t **x = (real_t **) sqp_mem->common->x;
+            real_t **u = (real_t **) sqp_mem->common->u;
+            real_t **pi = (real_t **) sqp_mem->common->pi;
+            real_t **lam = (real_t **) sqp_mem->common->lam;
+            for (int_t i = 0; i <= N; i++) {
+                for (int_t j = 0; j < nlp_in->nx[i]; j++) x[i][j] = 0.0;
+                for (int_t j = 0; j < nlp_in->nu[i]; j++) u[i][j] = 0.0;
+                if (i > 0)
+                    for (int_t j = 0; j < nlp_in->nx[i]; j++) pi[i][j] = 0.0;
+                for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i];
+                     j++) lam[i][j] = 0.0;
+            }
         } else {
             throw std::invalid_argument("Solver name not known!");
         }
+
         solver->nlp_in = nlp_in;
         ocp_nlp_out *nlp_out = (ocp_nlp_out *) malloc(sizeof(ocp_nlp_out));
         allocate_ocp_nlp_out(nlp_in, nlp_out);
@@ -947,6 +992,9 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         fill_array_from(x0, (real_t **) $self->nlp_in->ub, 1, $self->nlp_in->nx);
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
                                 $self->work);
+
+        std::cout << fail << std::endl << std::endl;
+        
         if (fail)
             throw std::runtime_error("nlp solver failed!");
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
