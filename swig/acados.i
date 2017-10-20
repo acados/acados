@@ -127,7 +127,9 @@ static std::string generate_vde_function(casadi::Function& model) {
     std::string full_name = std::string("vde_") + model.name();
     std::string generated_file = full_name + std::string(".c");
     casadi::Function vde = casadi::Function(full_name, input_vector, output_vector);
-    vde.generate(generated_file);
+    casadi::Dict opts;
+    opts["with_header"] = casadi::GenericType(true);
+    vde.generate(generated_file, opts);
     return full_name;
 }
 
@@ -144,7 +146,9 @@ static std::string generate_jac_function(casadi::Function& model) {
     std::string full_name = std::string("jac_") + model.name();
     std::string generated_file = full_name + std::string(".c");
     casadi::Function jac = casadi::Function(full_name, input_vector, output_vector);
-    jac.generate(generated_file);
+    casadi::Dict opts;
+    opts["with_header"] = casadi::GenericType(true);
+    jac.generate(generated_file, opts);
     return full_name;
 }
 
