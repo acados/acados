@@ -26,7 +26,7 @@ extern "C" {
 
 #include "acados/sim/sim_common.h"
 
-void allocate_sim_in(sim_in *sim_in);
+void allocate_sim_in(sim_in *sim_in, int_t num_stages);
 
 void allocate_sim_out(sim_in *sim_in, sim_out *sim_out);
 

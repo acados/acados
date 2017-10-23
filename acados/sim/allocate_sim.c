@@ -21,30 +21,25 @@
 
 #include <stdlib.h>
 
-void allocate_sim_in(sim_in *sim_in) {
+void allocate_sim_in(sim_in *sim_in, int_t num_stages) {
     int_t nx = sim_in->nx;
     int_t nu = sim_in->nu;
-    sim_in->x = (real_t *)calloc(nx, sizeof(*sim_in->x));
-    sim_in->u = (real_t *)calloc(nu, sizeof(*sim_in->u));
-    if (sim_in->sens_forw)
-        sim_in->S_forw =
-            (real_t *)calloc(nx * (nx + nu), sizeof(*sim_in->S_forw));
-    if (sim_in->sens_adj)
-        sim_in->S_adj = (real_t *)calloc(nx + nu, sizeof(*sim_in->S_adj));
+    sim_in->x = calloc(nx, sizeof(*sim_in->x));
+    sim_in->u = calloc(nu, sizeof(*sim_in->u));
+    sim_in->S_forw = calloc(nx * (nx + nu), sizeof(*sim_in->S_forw));
+    sim_in->S_adj = calloc(nx + nu, sizeof(*sim_in->S_adj));
+    sim_in->grad_K = calloc(nx * num_stages, sizeof(*sim_in->grad_K));
+
 }
 
 void allocate_sim_out(sim_in *sim_in, sim_out *sim_out) {
     int_t nx = sim_in->nx;
     int_t nu = sim_in->nu;
-    sim_out->xn = (real_t *)calloc(nx, sizeof(*sim_out->xn));
-    if (sim_in->sens_forw)
-        sim_out->S_forw =
-            (real_t *)calloc(nx * (nx + nu), sizeof(*sim_out->S_forw));
-    if (sim_in->sens_adj)
-        sim_out->S_adj = (real_t *)calloc(nx + nu, sizeof(*sim_out->S_adj));
-    if (sim_in->sens_hess) {
-        int_t nhess = (nx + nu + 1) * (nx + nu) / 2;
-        sim_out->S_hess = (real_t *)calloc(nhess, sizeof(*sim_out->S_hess));
-    }
-    sim_out->info = (sim_info *)malloc(sizeof(sim_info));
+    sim_out->xn = calloc(nx, sizeof(*sim_out->xn));
+    sim_out->S_forw = calloc(nx * (nx + nu), sizeof(*sim_out->S_forw));
+    sim_out->S_adj = calloc(nx + nu, sizeof(*sim_out->S_adj));
+    int_t nhess = (nx + nu + 1) * (nx + nu) / 2;
+    sim_out->S_hess = calloc(nhess, sizeof(*sim_out->S_hess));
+    sim_out->grad = calloc(sim_in->num_forw_sens, sizeof(*sim_out->grad));
+    sim_out->info = malloc(sizeof(sim_info));
 }

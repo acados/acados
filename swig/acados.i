@@ -238,7 +238,7 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         input->sens_hess = false;
         input->num_forw_sens = nx + nu;
         input->num_steps = 10;
-        allocate_sim_in(input);
+        allocate_sim_in(input, order);
 
         sim_out *output = (sim_out *) malloc(sizeof(sim_out));
         allocate_sim_out(input, output);
@@ -255,11 +255,18 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
             workspace_size = sim_erk_calculate_workspace_size(input, args);
             workspace = malloc(workspace_size);
             set_model(input, model, time_step / input->num_steps, GENERATE_VDE);
-        } else if (!strcmp("implicit runge-kutta", solver_name) || !strcmp("irk", solver_name)) {
+        } else if (!strcmp("implicit runge-kutta", solver_name) || !strcmp("irk", solver_name)
+                   || !strcmp("in", solver_name) || !strcmp("inis", solver_name)) {
             solver->fun = sim_lifted_irk;
             args = (void *) malloc(sizeof(sim_RK_opts));
-            sim_irk_create_arguments(args, 1, "Gauss");
-            sim_irk_create_Newton_scheme(args, 1, "Gauss", exact);
+            sim_irk_create_arguments(args, 2, "Gauss");
+            if (!strcmp("implicit runge-kutta", solver_name)
+                || !strcmp("irk", solver_name))
+                sim_irk_create_Newton_scheme(args, 2, "Gauss", exact);
+            if (!strcmp("in", solver_name))
+                sim_irk_create_Newton_scheme(args, 2, "Gauss", simplified_in);
+            if (!strcmp("inis", solver_name))
+                sim_irk_create_Newton_scheme(args, 2, "Gauss", simplified_inis);
             memory = (sim_lifted_irk_memory *) malloc(sizeof(sim_lifted_irk_memory));
             sim_lifted_irk_create_memory(input, args, (sim_lifted_irk_memory *) memory);
             workspace_size = sim_lifted_irk_calculate_workspace_size(input, args);
