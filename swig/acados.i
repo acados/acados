@@ -111,17 +111,17 @@ static std::string generate_vde_function(casadi::Function& model) {
     casadi::SX u = model.sx_in(1);
     int_t nx = x.size1();
     int_t nu = u.size1();
-    const std::vector<casadi::SX> input = {x, u};
-    casadi::SX rhs = casadi::SX::vertcat(model(input));
+    const std::vector<casadi::SX> states_controls = {x, u};
+    casadi::SX rhs = casadi::SX::vertcat(model(states_controls));
     casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
     casadi::SX Su = casadi::SX::sym("Su", nx, nu);
     casadi::SX vde_x = casadi::SX::jtimes(rhs, x, Sx);
     casadi::SX vde_u = casadi::SX::jacobian(rhs, u) + casadi::SX::jtimes(rhs, x, Su);
-    const std::vector<casadi::SX> input_vector = {x, Sx, Su, u};
-    const std::vector<casadi::SX> output_vector = {rhs, vde_x, vde_u};
+    const std::vector<casadi::SX> input = {x, Sx, Su, u};
+    const std::vector<casadi::SX> output = {rhs, vde_x, vde_u};
     std::string full_name = std::string("vde_") + model.name();
     std::string generated_file = full_name + std::string(".c");
-    casadi::Function vde = casadi::Function(full_name, input_vector, output_vector);
+    casadi::Function vde = casadi::Function(full_name, input, output);
     casadi::Dict opts;
     opts["with_header"] = casadi::GenericType(true);
     vde.generate(generated_file, opts);
@@ -132,15 +132,15 @@ static std::string generate_jac_function(casadi::Function& model) {
     validate_model(model);
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
-    const std::vector<casadi::SX> input = {x, u};
-    casadi::SX rhs = casadi::SX::vertcat(model(input));
+    const std::vector<casadi::SX> states_controls = {x, u};
+    casadi::SX rhs = casadi::SX::vertcat(model(states_controls));
     int_t nx = x.size1();
     casadi::SX jac_x = casadi::SX::zeros(nx, nx) + casadi::SX::jacobian(rhs, x);
-    const std::vector<casadi::SX> input_vector = {x, u};
-    const std::vector<casadi::SX> output_vector = {rhs, jac_x};
+    const std::vector<casadi::SX> input = {x, u};
+    const std::vector<casadi::SX> output = {rhs, jac_x};
     std::string full_name = std::string("jac_") + model.name();
     std::string generated_file = full_name + std::string(".c");
-    casadi::Function jac = casadi::Function(full_name, input_vector, output_vector);
+    casadi::Function jac = casadi::Function(full_name, input, output);
     casadi::Dict opts;
     opts["with_header"] = casadi::GenericType(true);
     jac.generate(generated_file, opts);
@@ -203,7 +203,7 @@ void set_model(sim_in *sim, casadi::Function& f, double step, enum generation_mo
 LangObject *sim_output(const sim_in *in, const sim_out *out) {
     int_t x_dims[2] = {in->nx, 1};
     LangObject *x_final = new_matrix(x_dims, out->xn);
-    int_t S_dims[2] = {in->nx, in->nx+in->nu};
+    int_t S_dims[2] = {in->num_forw_sens, in->nx+in->nu};
     LangObject *S_forward = new_matrix(S_dims, out->S_forw);
     return new_sim_output_tuple(x_final, S_forward);
 }
@@ -228,10 +228,8 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         }
         sim_solver *solver = (sim_solver *) malloc(sizeof(sim_solver));
         validate_model(model);
-        casadi::SX x = model.sx_in(0);
-        casadi::SX u = model.sx_in(1);
-        int_t nx = x.size1();
-        int_t nu = u.size1();
+        int_t nx = model.sx_in(0).size1();
+        int_t nu = model.sx_in(1).size1();
         sim_in *input = (sim_in *) malloc(sizeof(sim_in));
         input->nx = nx;
         input->nu = nu;
@@ -270,7 +268,6 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         } else {
             throw std::invalid_argument("Integrator name not known!");
         }
-
         solver->in = input;
         solver->out = output;
         solver->args = args;
