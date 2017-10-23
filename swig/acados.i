@@ -79,11 +79,6 @@ char compiler[16] = "cc";
 
 %{
 
-#if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-HINSTANCE global_handle;
-#else
-void *global_handle;
-#endif
 int global_library_counter = 1;
 
 // static bool is_valid_sim_dimensions_map(const LangObject *input) {
@@ -541,43 +536,9 @@ real_t **ocp_nlp_in_ls_cost_matrix_get(ocp_nlp_in *nlp) {
     }
 
     void set_model(casadi::Function& f, double step) {
-        char library_name[MAX_STR_LEN], path_to_library[MAX_STR_LEN];
         std::string model_name = generate_vde_function(f);
-        snprintf(library_name, sizeof(library_name), "%s%d.so", model_name.c_str(),
-            global_library_counter++);
-        snprintf(path_to_library, sizeof(path_to_library), "./%s", library_name);
-        char command[MAX_STR_LEN];
-        snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, \
-            model_name.c_str(), library_name);
-        int compilation_failed = system(command);
-        if (compilation_failed)
-            throw std::runtime_error("Something went wrong when compiling the model.");
-        #ifdef SWIG_WIN_MINGW
-        if (global_handle)
-            FreeLibrary(global_handle);
-        global_handle = LoadLibrary(path_to_library);
-        #else
-        if (global_handle)
-            dlclose(global_handle);
-        global_handle = dlopen(path_to_library, RTLD_LAZY);
-        #endif
-        if (global_handle == 0) {
-            char err_msg[MAX_STR_LEN];
-            #ifdef SWIG_WIN_MINGW
-            snprintf(err_msg, sizeof(err_msg), \
-                "Something went wrong when loading the model.");
-            #else
-            snprintf(err_msg, sizeof(err_msg), \
-                "Something went wrong when loading the model. dlerror(): %s", dlerror());
-            #endif
-            throw std::runtime_error(err_msg);
-        }
-        #ifdef SWIG_WIN_MINGW
-        casadi_function_t eval =
-            (casadi_function_t)GetProcAddress(global_handle, model_name.c_str());
-        #else
-        casadi_function_t eval = (casadi_function_t)dlsym(global_handle, model_name.c_str());
-        #endif
+        void *handle = malloc(sizeof(void *));
+        casadi_function_t eval = compile_and_load(model_name, &handle);
         for (int_t i = 0; i < $self->N; i++) {
             $self->sim[i].in->vde = eval;
             $self->sim[i].in->VDE_forw = &vde_fun;
