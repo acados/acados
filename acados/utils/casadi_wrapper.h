@@ -61,7 +61,7 @@ int_t casadi_wrapper_calculate_workspace_size(const casadi_wrapper_in *cw_in,
                                               casadi_wrapper_args *args);
 
 char *casadi_wrapper_assign_workspace(const casadi_wrapper_in *cw_in,
-                                      casadi_wrapper_args *args, 
+                                      casadi_wrapper_args *args,
                                       casadi_wrapper_workspace **work,
                                       void *raw_memory);
 
@@ -71,8 +71,9 @@ casadi_wrapper_workspace *casadi_wrapper_create_workspace(
 int_t casadi_wrapper(const casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out,
                      casadi_wrapper_args *args, casadi_wrapper_workspace *work);
 
-void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in, casadi_wrapper_args *args,
-                              casadi_wrapper_workspace **work);
+void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in,
+                               casadi_wrapper_args *args,
+                               casadi_wrapper_workspace **work);
 
 void casadi_wrapper_destroy(casadi_wrapper_workspace *work);
 

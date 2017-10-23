@@ -625,7 +625,8 @@ LangObject *new_sim_output_tuple(LangObject *final_state, LangObject *forward_se
     return new_output_tuple(2, field_names, fields);
 }
 
-LangObject *new_ocp_nlp_function_output_tuple(LangObject *y, LangObject *jac_y, LangObject *hess_y) {
+LangObject *new_ocp_nlp_function_output_tuple(
+    LangObject * y, LangObject * jac_y, LangObject * hess_y) {
     const char *field_names[3] = {"y", "jac_y", "hess_y"};
     LangObject *fields[3] = {y, jac_y, hess_y};
     return new_output_tuple(3, field_names, fields);

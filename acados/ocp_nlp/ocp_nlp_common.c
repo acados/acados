@@ -25,9 +25,9 @@
 #include <stdlib.h>
 
 void size_of_memory_elements(const ocp_nlp_in *nlp_in, const int_t stage,
-                             int_t *size_hess_l, int_t *size_grad_f, 
-                             int_t *size_jac_h, int_t *size_jac_g, 
-                             int_t *size_h, int_t *size_g,int_t *size_x, 
+                             int_t *size_hess_l, int_t *size_grad_f,
+                             int_t *size_jac_h, int_t *size_jac_g,
+                             int_t *size_h, int_t *size_g, int_t *size_x,
                              int_t *size_u, int_t *size_pi, int_t *size_lam) {
     int_t N = nlp_in->N;
     int_t *nx = (int_t *)nlp_in->nx;
@@ -35,23 +35,22 @@ void size_of_memory_elements(const ocp_nlp_in *nlp_in, const int_t stage,
     int_t *ng = (int_t *)nlp_in->ng;
     int_t *nb = (int_t *)nlp_in->nb;
 
-    *size_hess_l = ((nx[stage] + nu[stage]) * (nx[stage] + nu[stage])) * sizeof(real_t);
+    *size_hess_l =
+        ((nx[stage] + nu[stage]) * (nx[stage] + nu[stage])) * sizeof(real_t);
     *size_grad_f = (nx[stage] + nu[stage]) * sizeof(real_t);
-    *size_jac_h = (stage < N)
-                      ? (nx[stage + 1] * (nx[stage] + nu[stage])) * sizeof(real_t)
-                      : 0;
+    *size_jac_h =
+        (stage < N) ? (nx[stage + 1] * (nx[stage] + nu[stage])) * sizeof(real_t)
+                    : 0;
     *size_jac_g = (ng[stage] * (nx[stage] + nu[stage])) * sizeof(real_t);
     *size_h = (stage < N) ? nx[stage + 1] * sizeof(real_t) : 0;
     *size_g = ng[stage] * sizeof(real_t);
     *size_x = nx[stage] * sizeof(real_t);
     *size_u = nu[stage] * sizeof(real_t);
     *size_pi = (stage > 0) ? nx[stage] * sizeof(real_t) : 0;
-    *size_lam = (2*nb[stage] + 2*ng[stage]) * sizeof(real_t);
+    *size_lam = (2 * nb[stage] + 2 * ng[stage]) * sizeof(real_t);
 }
-                            
 
 int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in) {
-
     int_t N = nlp_in->N;
 
     int_t size = sizeof(ocp_nlp_memory);
@@ -70,9 +69,9 @@ int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in) {
     for (int_t i = 0; i <= nlp_in->N; i++) {
         int_t size_hess_l, size_grad_f, size_jac_h, size_jac_g, size_h, size_g;
         int_t size_x, size_u, size_pi, size_lam;
-        size_of_memory_elements(nlp_in, i, &size_hess_l, &size_grad_f, &size_jac_h,
-                                &size_jac_g, &size_h, &size_g, &size_x, &size_u,
-                                &size_pi, &size_lam);
+        size_of_memory_elements(nlp_in, i, &size_hess_l, &size_grad_f,
+                                &size_jac_h, &size_jac_g, &size_h, &size_g,
+                                &size_x, &size_u, &size_pi, &size_lam);
         size += size_hess_l + size_grad_f + size_jac_h + size_jac_g + size_h +
                 size_g;
         size += size_x + size_u + size_pi + size_lam;
@@ -81,8 +80,8 @@ int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in) {
     return size;
 }
 
-char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_, void *raw_memory) {
-    
+char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
+                            void *raw_memory) {
     int_t N = nlp_in->N;
 
     ocp_nlp_memory **nlp_memory = (ocp_nlp_memory **)mem_;
@@ -163,20 +162,21 @@ char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_, void *raw_mem
 }
 
 ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in) {
-    
     ocp_nlp_memory *mem;
 
     int_t memory_size = ocp_nlp_calculate_memory_size(nlp_in);
     void *raw_memory_ptr = malloc(memory_size);
 
-    char *ptr_end = ocp_nlp_assign_memory(nlp_in, (void **)&mem, raw_memory_ptr);
-    assert((char *)raw_memory_ptr + memory_size >= ptr_end); (void)ptr_end;
+    char *ptr_end =
+        ocp_nlp_assign_memory(nlp_in, (void **)&mem, raw_memory_ptr);
+    assert((char *)raw_memory_ptr + memory_size >= ptr_end);
+    (void)ptr_end;
 
     return mem;
 }
 
 void ocp_nlp_destroy(void *mem_) {
-    ocp_nlp_memory *mem = (ocp_nlp_memory *) mem_;
+    ocp_nlp_memory *mem = (ocp_nlp_memory *)mem_;
 
     free(mem);
 }

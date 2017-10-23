@@ -550,7 +550,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         casadi::SX rhs = casadi::SX::vertcat(cas_fun(input));
         casadi::SX jac = casadi::SX::jacobian(rhs, xu);
         casadi::SX hess = casadi::SX::jacobian(jac, xu);
-        
+
         // Generate code
         const std::vector<casadi::SX> input_vector = {x, u};
         const std::vector<casadi::SX> output_vector = {rhs, jac, hess};
@@ -601,9 +601,14 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 
         // Write casadi wrapper arguments
         nlp_function->args = casadi_wrapper_create_arguments();
-        nlp_function->args->fun = (int_t(*)(const real_t **, real_t **, int_t *, real_t *, int_t))dlsym(fun_handle, full_name.c_str());
-        nlp_function->args->dims = (int_t(*)(int_t *, int_t *, int_t *, int_t *))dlsym(fun_handle, (full_name + "_work").c_str());
-        nlp_function->args->sparsity = (const int *(*)(int_t))dlsym(fun_handle, (full_name + "_sparsity_out").c_str());
+        nlp_function->args->fun =
+            (int_t(*)(const real_t **, real_t **, int_t *, real_t *,
+                      int_t))dlsym(fun_handle, full_name.c_str());
+        nlp_function->args->dims =
+            (int_t(*)(int_t *, int_t *, int_t *, int_t *))dlsym(
+                fun_handle, (full_name + "_work").c_str());
+        nlp_function->args->sparsity = (const int *(*)(int_t))dlsym(
+            fun_handle, (full_name + "_sparsity_out").c_str());
         casadi_wrapper_initialize(nlp_function->in, nlp_function->args,
                                   &nlp_function->work);
 
@@ -680,9 +685,11 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     real_t **ls_cost_ref;
     ocp_nlp_ls_cost(LangObject *N, LangObject* stage_costs, LangObject *options = NONE){
         int_t NN = int_from(N);
-        if(!is_sequence(stage_costs, NN+1))
-            throw std::runtime_error("The array of stage cost functions must be of length N+1!");
-        
+        if (!is_sequence(stage_costs, NN + 1)) {
+            throw std::runtime_error(
+                "The array of stage cost functions must be of length N+1!");
+        }
+
         ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) malloc(sizeof(ocp_nlp_ls_cost));
         ls_cost->N = NN;
 
@@ -714,7 +721,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         ls_cost->W = (real_t **) malloc((NN+1)*sizeof(real_t *));
         ls_cost->y_ref = (real_t **) malloc((NN+1)*sizeof(real_t *));
 
-        for(int_t i = 0; i <= NN; i++) {
+        for (int_t i = 0; i <= NN; i++) {
             int_t ny = ls_cost->fun[i]->ny;
             ls_cost->W[i] = (real_t *) malloc(ny*ny*sizeof(real_t));
             ls_cost->y_ref[i] = (real_t *) malloc(ny*sizeof(real_t));
@@ -866,7 +873,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 
 %extend ocp_nlp_solver {
     ocp_nlp_solver(const char *solver_name, ocp_nlp_in *nlp_in, LangObject *options = NONE) {
-        const char *fieldnames[4] = {"qp_solver", "sensitivity_method", "integrator_steps", "SQP_steps"};
+        const char *fieldnames[4] = {"qp_solver", "sensitivity_method",
+                                     "integrator_steps", "SQP_steps"};
         const char *qp_solver = "qpdunes";
         const char *sensitivity_method = "gauss-newton";
         int_t integrator_steps = 1;
@@ -919,7 +927,6 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         int_t N = nlp_in->N;
 
         if (!strcmp("sqp", solver_name)) {
-            
             solver->fun = &ocp_nlp_sqp;
 
             args = (ocp_nlp_sqp_args *) malloc(sizeof(ocp_nlp_sqp_args));
@@ -951,7 +958,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 qpsol->initialize = &ocp_qp_condensing_qpoases_initialize;
                 qpsol->destroy = &ocp_qp_condensing_qpoases_destroy;
             } else if (!strcmp(qp_solver, "hpmpc")) {
-                qpsol->args = (void *)ocp_qp_hpmpc_create_arguments(dummy_qp, HPMPC_DEFAULT_ARGUMENTS);
+                qpsol->args = (void *)ocp_qp_hpmpc_create_arguments(
+                    dummy_qp, HPMPC_DEFAULT_ARGUMENTS);
                 qpsol->fun = &ocp_qp_hpmpc;
                 qpsol->initialize = &ocp_qp_hpmpc_initialize;
                 qpsol->destroy = &ocp_qp_hpmpc_destroy;
@@ -970,14 +978,16 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             }
 
             // Select sensitivity method based on user input
-            ((ocp_nlp_sqp_args *)args)->sensitivity_method = (ocp_nlp_sm *) malloc(sizeof(ocp_nlp_sm));
+            ((ocp_nlp_sqp_args *)args)->sensitivity_method =
+                (ocp_nlp_sm *)malloc(sizeof(ocp_nlp_sm));
             ocp_nlp_sm *sm = ((ocp_nlp_sqp_args *)args)->sensitivity_method;
             if (!strcmp(sensitivity_method, "gauss-newton")) {
                 sm->fun = &ocp_nlp_sm_gn;
                 sm->initialize = &ocp_nlp_sm_gn_initialize;
                 sm->destroy = &ocp_nlp_sm_gn_destroy;
             } else {
-                throw std::invalid_argument("Chosen sensitivity method not available!");
+                throw std::invalid_argument(
+                    "Chosen sensitivity method not available!");
             }
 
             ((ocp_nlp_sqp_args *) args)->maxIter = sqp_steps;
@@ -988,13 +998,14 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 simulators[i]->in->sens_forw = true;
                 simulators[i]->in->sens_adj = false;
                 simulators[i]->in->sens_hess = false;
-                simulators[i]->in->num_forw_sens = nlp_in->nx[i] + nlp_in->nu[i];
+                simulators[i]->in->num_forw_sens =
+                    nlp_in->nx[i] + nlp_in->nu[i];
                 simulators[i]->in->num_steps = integrator_steps;
-                simulators[i]->args = (void *) malloc(sizeof(sim_RK_opts));
+                simulators[i]->args = (void *)malloc(sizeof(sim_RK_opts));
                 sim_erk_create_arguments(simulators[i]->args, 4);
-                int_t erk_workspace_size = sim_erk_calculate_workspace_size(simulators[i]->in, 
-                    simulators[i]->args);
-                simulators[i]->work = (void *) malloc(erk_workspace_size);
+                int_t erk_workspace_size = sim_erk_calculate_workspace_size(
+                    simulators[i]->in, simulators[i]->args);
+                simulators[i]->work = (void *)malloc(erk_workspace_size);
                 simulators[i]->fun = &sim_erk;
             }
 
@@ -1009,10 +1020,13 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             for (int_t i = 0; i <= N; i++) {
                 for (int_t j = 0; j < nlp_in->nx[i]; j++) x[i][j] = 0.0;
                 for (int_t j = 0; j < nlp_in->nu[i]; j++) u[i][j] = 0.0;
-                if (i > 0)
+                if (i > 0) {
                     for (int_t j = 0; j < nlp_in->nx[i]; j++) pi[i][j] = 0.0;
+                }
                 for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i];
-                     j++) lam[i][j] = 0.0;
+                     j++) {
+                    lam[i][j] = 0.0;
+                }
             }
         } else {
             throw std::invalid_argument("Solver name not known!");
@@ -1039,13 +1053,12 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     }
 
     LangObject *evaluate(LangObject *x0) {
-        fill_array_from(x0, (real_t **) $self->nlp_in->lb, 1, $self->nlp_in->nx);
-        fill_array_from(x0, (real_t **) $self->nlp_in->ub, 1, $self->nlp_in->nx);
-        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
-                                $self->work);
-        
-        if (fail)
-            throw std::runtime_error("nlp solver failed!");
+        fill_array_from(x0, (real_t **)$self->nlp_in->lb, 1, $self->nlp_in->nx);
+        fill_array_from(x0, (real_t **)$self->nlp_in->ub, 1, $self->nlp_in->nx);
+        int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args,
+                                $self->mem, $self->work);
+
+        if (fail) throw std::runtime_error("nlp solver failed!");
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 }

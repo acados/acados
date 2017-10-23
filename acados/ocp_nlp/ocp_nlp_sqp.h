@@ -24,9 +24,9 @@
 extern "C" {
 #endif
 
-#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_sm_common.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -40,7 +40,7 @@ typedef struct {
 typedef struct {
     ocp_nlp_memory *common;
 
-    // TODO(nielsvd): qp solver and sensitivity method 
+    // TODO(nielsvd): qp solver and sensitivity method
     //       could be automatically initialized for user
     //       convenience, look into this!
     ocp_nlp_sm_in *sm_in;
@@ -49,35 +49,32 @@ typedef struct {
     // ocp_nlp_sm *sensitivity_method;
 } ocp_nlp_sqp_memory;
 
-typedef struct {
-    int_t dummy;
-} ocp_nlp_sqp_workspace;
+typedef struct { int_t dummy; } ocp_nlp_sqp_workspace;
 
 ocp_nlp_sqp_args *ocp_nlp_sqp_create_arguments();
 
-int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in,
-                                          void *args_);
+int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in, void *args_);
 
 char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_,
-                                  void **mem_, void *raw_memory);
+                                void **mem_, void *raw_memory);
 
 ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(const ocp_nlp_in *nlp_in,
-                                                  void *args_);
+                                              void *args_);
 
 int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *nlp_in,
-                                             void *args_);
+                                           void *args_);
 
 char *ocp_nlp_sqp_assign_workspace(const ocp_nlp_in *nlp_in, void *args_,
-                                     void **work_, void *raw_memory);
+                                   void **work_, void *raw_memory);
 
-ocp_nlp_sqp_workspace *ocp_nlp_sqp_create_workspace(
-    const ocp_nlp_in *nlp_in, void *args_);
+ocp_nlp_sqp_workspace *ocp_nlp_sqp_create_workspace(const ocp_nlp_in *nlp_in,
+                                                    void *args_);
 
-int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                    void *args_, void *memory_, void *workspace_);
+int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
+                  void *memory_, void *workspace_);
 
-void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_,
-                              void **mem_, void **work_);
+void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_,
+                            void **work_);
 
 void ocp_nlp_sqp_destroy(void *mem_, void *work_);
 

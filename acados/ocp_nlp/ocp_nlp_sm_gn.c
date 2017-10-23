@@ -18,57 +18,58 @@
  */
 
 #include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
+
+#include <assert.h>
+#include <stdlib.h>
+
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
 
-// TODO(nielsvd): only perform assert in debug mode?
-#include <assert.h>
-#include <stdio.h>
-
-#include <stdlib.h>
-
 ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments() {
-    
-    ocp_nlp_sm_gn_args *args = (ocp_nlp_sm_gn_args *) malloc(sizeof(ocp_nlp_sm_gn_args));
+    ocp_nlp_sm_gn_args *args =
+        (ocp_nlp_sm_gn_args *)malloc(sizeof(ocp_nlp_sm_gn_args));
     args->dummy = 0;
     return args;
 }
 
-int_t ocp_nlp_sm_gn_calculate_memory_size(const ocp_nlp_sm_in *sm_in, void *args_) {
-    
+int_t ocp_nlp_sm_gn_calculate_memory_size(const ocp_nlp_sm_in *sm_in,
+                                          void *args_) {
     int_t size = sizeof(ocp_nlp_sm_gn_memory);
     return size;
 }
 
-char *ocp_nlp_sm_gn_assign_memory(const ocp_nlp_sm_in *sm_in, void *args_, void **mem_, void *raw_memory) {
-    
-    ocp_nlp_sm_gn_memory **sm_memory = (ocp_nlp_sm_gn_memory **) mem_;
+char *ocp_nlp_sm_gn_assign_memory(const ocp_nlp_sm_in *sm_in, void *args_,
+                                  void **mem_, void *raw_memory) {
+    ocp_nlp_sm_gn_memory **sm_memory = (ocp_nlp_sm_gn_memory **)mem_;
 
     // char pointer
     char *c_ptr = (char *)raw_memory;
 
-    *sm_memory = (ocp_nlp_sm_gn_memory *) c_ptr;
+    *sm_memory = (ocp_nlp_sm_gn_memory *)c_ptr;
     c_ptr += sizeof(ocp_nlp_sm_gn_memory);
 
     return c_ptr;
 }
 
-ocp_nlp_sm_gn_memory *ocp_nlp_sm_gn_create_memory(const ocp_nlp_sm_in *sm_in, void *args_) {
-
+ocp_nlp_sm_gn_memory *ocp_nlp_sm_gn_create_memory(const ocp_nlp_sm_in *sm_in,
+                                                  void *args_) {
     ocp_nlp_sm_gn_memory *mem;
 
     int_t memory_size = ocp_nlp_sm_gn_calculate_memory_size(sm_in, args_);
     void *raw_memory_ptr = malloc(memory_size);
 
-    char *ptr_end = ocp_nlp_sm_gn_assign_memory(sm_in, args_, (void **) &mem, raw_memory_ptr);
-    assert((char *)raw_memory_ptr + memory_size >= ptr_end); (void)ptr_end;
+    char *ptr_end = ocp_nlp_sm_gn_assign_memory(sm_in, args_, (void **)&mem,
+                                                raw_memory_ptr);
+    assert((char *)raw_memory_ptr + memory_size >= ptr_end);
+    (void)ptr_end;
 
     return mem;
 }
 
-void size_of_workspace_elements(const ocp_nlp_sm_in *sm_in, const int_t stage, 
-                                int_t *size_F, int_t *size_DF, int_t *size_DFT, 
-                                int_t *size_DFTW, int_t *size_G, int_t *size_DG) {
+void size_of_workspace_elements(const ocp_nlp_sm_in *sm_in, const int_t stage,
+                                int_t *size_F, int_t *size_DF, int_t *size_DFT,
+                                int_t *size_DFTW, int_t *size_G,
+                                int_t *size_DG) {
     const int_t *nx = sm_in->nx;
     const int_t *nu = sm_in->nu;
     const int_t *ng = sm_in->ng;
@@ -77,24 +78,26 @@ void size_of_workspace_elements(const ocp_nlp_sm_in *sm_in, const int_t stage,
 
     *size_F = (cost_fun[stage]->ny) * sizeof(real_t);
     *size_DF = (cost_fun[stage]->ny * (nx[stage] + nu[stage])) * sizeof(real_t);
-    *size_DFT = ((nx[stage] + nu[stage]) * cost_fun[stage]->ny) * sizeof(real_t);
-    *size_DFTW =((nx[stage] + nu[stage]) * cost_fun[stage]->ny) * sizeof(real_t);
+    *size_DFT =
+        ((nx[stage] + nu[stage]) * cost_fun[stage]->ny) * sizeof(real_t);
+    *size_DFTW =
+        ((nx[stage] + nu[stage]) * cost_fun[stage]->ny) * sizeof(real_t);
     *size_G = (ng[stage]) * sizeof(real_t);
     *size_DG = (ng[stage] * (nx[stage] + nu[stage])) * sizeof(real_t);
 }
 
-int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in, void *args_) {
-
+int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in,
+                                             void *args_) {
     int_t N = sm_in->N;
 
     int_t size = sizeof(ocp_nlp_sm_gn_workspace);
 
-    size += (N + 1) * sizeof(real_t *); // F
-    size += (N + 1) * sizeof(real_t *); // DF
-    size += (N + 1) * sizeof(real_t *); // DFT
-    size += (N + 1) * sizeof(real_t *); // DFTW
-    size += (N + 1) * sizeof(real_t *); // G
-    size += (N + 1) * sizeof(real_t *); // DG
+    size += (N + 1) * sizeof(real_t *);  // F
+    size += (N + 1) * sizeof(real_t *);  // DF
+    size += (N + 1) * sizeof(real_t *);  // DFT
+    size += (N + 1) * sizeof(real_t *);  // DFTW
+    size += (N + 1) * sizeof(real_t *);  // G
+    size += (N + 1) * sizeof(real_t *);  // DG
 
     for (int_t i = 0; i <= N; i++) {
         int_t size_F, size_DF, size_DFT, size_DFTW, size_G, size_DG;
@@ -107,8 +110,8 @@ int_t ocp_nlp_sm_gn_calculate_workspace_size(const ocp_nlp_sm_in *sm_in, void *a
     return size;
 }
 
-char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_, void **work_, void *raw_memory) {
-    
+char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_,
+                                     void **work_, void *raw_memory) {
     int_t N = sm_in->N;
 
     ocp_nlp_sm_gn_workspace **sm_workspace = (ocp_nlp_sm_gn_workspace **)work_;
@@ -162,22 +165,24 @@ char *ocp_nlp_sm_gn_assign_workspace(const ocp_nlp_sm_in *sm_in, void *args_, vo
     return c_ptr;
 }
 
-ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(const ocp_nlp_sm_in *sm_in, void *args_) {
-    
+ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(
+    const ocp_nlp_sm_in *sm_in, void *args_) {
     ocp_nlp_sm_gn_workspace *work;
 
     int_t workspace_size = ocp_nlp_sm_gn_calculate_workspace_size(sm_in, args_);
     void *raw_memory_ptr = malloc(workspace_size);
-    
-    char *ptr_end = ocp_nlp_sm_gn_assign_workspace(sm_in, args_, (void **)&work, raw_memory_ptr);
-    assert((char *)raw_memory_ptr + workspace_size >= ptr_end); (void)ptr_end;
-    
+
+    char *ptr_end = ocp_nlp_sm_gn_assign_workspace(sm_in, args_, (void **)&work,
+                                                   raw_memory_ptr);
+    assert((char *)raw_memory_ptr + workspace_size >= ptr_end);
+    (void)ptr_end;
+
     return work;
 }
 
-int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *args_, void *memory_, void *workspace_) {
-    
-    ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *) workspace_;
+int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
+                    void *args_, void *memory_, void *workspace_) {
+    ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *)workspace_;
 
     const int_t N = sm_in->N;
     const int_t *nx = sm_in->nx;
@@ -192,17 +197,19 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
     real_t **g = (real_t **)sm_out->g;
 
     sim_solver **sim = sm_in->sim;
-    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) sm_in->cost;
+    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *)sm_in->cost;
     ocp_nlp_function **path_constraints = sm_in->path_constraints;
 
     for (int_t i = 0; i < N; i++) {
         // Pass state and control to integrator
         for (int_t j = 0; j < nx[i]; j++) sim[i]->in->x[j] = sm_in->x[i][j];
         for (int_t j = 0; j < nu[i]; j++) sim[i]->in->u[j] = sm_in->u[i][j];
-        sim[i]->fun(sim[i]->in, sim[i]->out, sim[i]->args, sim[i]->mem, sim[i]->work);
+        sim[i]->fun(sim[i]->in, sim[i]->out, sim[i]->args, sim[i]->mem,
+                    sim[i]->work);
 
         // Sensitivities for the linearization of the system dynamics
-        // TODO(rien): transition functions for changing dimensions not yet implemented!
+        // TODO(rien): transition functions for changing dimensions not yet
+        // implemented!
         for (int_t j = 0; j < nx[i]; j++) {
             h[i][j] = sim[i]->out->xn[j];
             for (int_t k = 0; k < nx[i] + nu[i]; k++)
@@ -237,11 +244,14 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
 
         // Compute Gauss-Newton Hessian
         for (int_t j = 0; j < (nx[i] + nu[i]) * ny; j++) work->DFTW[i][j] = 0;
-        dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i], (real_t *)ls_cost->W[i], ny, work->DFTW[i], nx[i] + nu[i]);
-        dgemm_nn_3l(nx[i] + nu[i], nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->DF[i], ny, hess_l[i], nx[i] + nu[i]);
+        dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i],
+                    (real_t *)ls_cost->W[i], ny, work->DFTW[i], nx[i] + nu[i]);
+        dgemm_nn_3l(nx[i] + nu[i], nx[i] + nu[i], ny, work->DFTW[i],
+                    nx[i] + nu[i], work->DF[i], ny, hess_l[i], nx[i] + nu[i]);
         // Compute gradient of cost
         for (int_t j = 0; j < (nx[i] + nu[i]); j++) grad_f[i][j] = 0;
-        dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i], grad_f[i]);
+        dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i],
+                   grad_f[i]);
 
         // Sensitivities for the linearization of the path constraints
         casadi_wrapper(pc_in, pc_out, pc_args, pc_work);
@@ -256,31 +266,33 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out, void *ar
     return 0;
 }
 
-void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_, void **mem_, void **work_) {
-    ocp_nlp_sm_gn_memory **mem = (ocp_nlp_sm_gn_memory **) mem_;
-    ocp_nlp_sm_gn_workspace **work = (ocp_nlp_sm_gn_workspace **) work_;
+void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
+                              void **mem_, void **work_) {
+    ocp_nlp_sm_gn_memory **mem = (ocp_nlp_sm_gn_memory **)mem_;
+    ocp_nlp_sm_gn_workspace **work = (ocp_nlp_sm_gn_workspace **)work_;
 
     *mem = ocp_nlp_sm_gn_create_memory(sm_in, args_);
     *work = ocp_nlp_sm_gn_create_workspace(sm_in, args_);
 
     int_t N = sm_in->N;
-    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) sm_in->cost;
+    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *)sm_in->cost;
     ocp_nlp_function **path_constraints = sm_in->path_constraints;
 
     for (int_t i = 0; i <= N; i++) {
         // assign correct pointers to ls_cost-array
         ls_cost->fun[i]->in->x = sm_in->x[i];
         ls_cost->fun[i]->in->u = sm_in->u[i];
-        ls_cost->fun[i]->in->p = NULL; // TODO(nielsvd): support for parameters
+        ls_cost->fun[i]->in->p = NULL;  // TODO(nielsvd): support for parameters
         ls_cost->fun[i]->out->y = (*work)->F[i];
         ls_cost->fun[i]->out->jac_y = (*work)->DF[i];
         ls_cost->fun[i]->in->compute_jac = 1;
         ls_cost->fun[i]->in->compute_hess = 0;
-        
+
         // assign correct pointers to path_constraints-array
         path_constraints[i]->in->x = sm_in->x[i];
         path_constraints[i]->in->u = sm_in->u[i];
-        path_constraints[i]->in->p = NULL;  // TODO(nielsvd): support for parameters
+        path_constraints[i]->in->p =
+            NULL;  // TODO(nielsvd): support for parameters
         path_constraints[i]->out->y = (*work)->G[i];
         path_constraints[i]->out->jac_y = (*work)->DG[i];
         path_constraints[i]->in->compute_jac = 1;
@@ -289,9 +301,9 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_, void **me
 }
 
 void ocp_nlp_sm_gn_destroy(void *mem_, void *work_) {
-    ocp_nlp_sm_gn_memory *mem = (ocp_nlp_sm_gn_memory *) mem_;
-    ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *) work_;
-    
+    ocp_nlp_sm_gn_memory *mem = (ocp_nlp_sm_gn_memory *)mem_;
+    ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *)work_;
+
     free(mem);
     free(work);
 }

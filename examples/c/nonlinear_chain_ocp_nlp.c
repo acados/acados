@@ -23,14 +23,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_target.h"
 
 // #include "catch/include/catch.hpp"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_casadi_wrapper.h"
@@ -64,7 +64,7 @@ int main() {
         printf(
             "\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact Newton) -----\n",
             NMF, d);
-    } /* else if (INEXACT == 1) {
+    } else if (INEXACT == 1) {
         printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (IN Scheme) -----\n",
                NMF, d);
     } else if (INEXACT == 2) {
@@ -81,7 +81,7 @@ int main() {
             "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN INIS Scheme) "
             "-----\n",
             NMF, d);
-    } */
+    }
     int_t NX = 6 * NMF;
     int_t NU = 3;
     int_t jj;
@@ -131,16 +131,19 @@ int main() {
         ls_cost.fun[i]->nx = NX;
         ls_cost.fun[i]->nu = NU;
         ls_cost.fun[i]->np = 0;
-        ls_cost.fun[i]->ny = (NX+NU);
-        ls_cost.fun[i]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+        ls_cost.fun[i]->ny = (NX + NU);
+        ls_cost.fun[i]->in =
+            (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
         ls_cost.fun[i]->in->compute_jac = 1;
         ls_cost.fun[i]->in->compute_hess = 0;
-        ls_cost.fun[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+        ls_cost.fun[i]->out =
+            (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
         ls_cost.fun[i]->args = casadi_wrapper_create_arguments();
         ls_cost.fun[i]->args->fun = &ls_cost_nm2;
         ls_cost.fun[i]->args->dims = &ls_cost_nm2_work;
         ls_cost.fun[i]->args->sparsity = &ls_cost_nm2_sparsity_out;
-        casadi_wrapper_initialize(ls_cost.fun[i]->in, ls_cost.fun[i]->args, &ls_cost.fun[i]->work);
+        casadi_wrapper_initialize(ls_cost.fun[i]->in, ls_cost.fun[i]->args,
+                                  &ls_cost.fun[i]->work);
 
         ls_cost.y_ref[i] =
             (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
@@ -152,15 +155,18 @@ int main() {
     ls_cost.fun[NN]->nu = 0;
     ls_cost.fun[NN]->np = 0;
     ls_cost.fun[NN]->ny = NX;
-    ls_cost.fun[NN]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+    ls_cost.fun[NN]->in =
+        (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
     ls_cost.fun[NN]->in->compute_jac = 1;
     ls_cost.fun[NN]->in->compute_hess = 0;
-    ls_cost.fun[NN]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+    ls_cost.fun[NN]->out =
+        (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
     ls_cost.fun[NN]->args = casadi_wrapper_create_arguments();
     ls_cost.fun[NN]->args->fun = &ls_costN_nm2;
     ls_cost.fun[NN]->args->dims = &ls_costN_nm2_work;
     ls_cost.fun[NN]->args->sparsity = &ls_costN_nm2_sparsity_out;
-    casadi_wrapper_initialize(ls_cost.fun[NN]->in, ls_cost.fun[NN]->args, &ls_cost.fun[NN]->work);
+    casadi_wrapper_initialize(ls_cost.fun[NN]->in, ls_cost.fun[NN]->args,
+                              &ls_cost.fun[NN]->work);
 
     ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
@@ -182,7 +188,7 @@ int main() {
     // struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
-        integrators[jj] = (sim_solver *) malloc(sizeof(sim_solver));
+        integrators[jj] = (sim_solver *)malloc(sizeof(sim_solver));
         integrators[jj]->in = &sim_in[jj];
         integrators[jj]->out = &sim_out[jj];
         integrators[jj]->args = &rk_opts[jj];
@@ -271,7 +277,7 @@ int main() {
             workspace_size =
                 sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
         }
-        integrators[jj]->work = (void *) malloc(workspace_size);
+        integrators[jj]->work = (void *)malloc(workspace_size);
     }
 
     int_t nx[NN + 1] = {0};
@@ -301,9 +307,9 @@ int main() {
         idxb0[jj] = jj;
     }
     for (jj = 0; jj < NX; jj++) {
-        lb0[NU+jj] = x0[jj];  // xmin
-        ub0[NU+jj] = x0[jj];  // xmax
-        idxb0[NU+jj] = NU+jj;
+        lb0[NU + jj] = x0[jj];  // xmin
+        ub0[NU + jj] = x0[jj];  // xmax
+        idxb0[NU + jj] = NU + jj;
     }
 #else
     for (jj = 0; jj < NX; jj++) {
@@ -312,9 +318,9 @@ int main() {
         idxb0[jj] = jj;
     }
     for (jj = 0; jj < NU; jj++) {
-        lb0[NX+jj] = -UMAX;  // umin
-        ub0[NX+jj] = UMAX;   // umax
-        idxb0[NX+jj] = NX+jj;
+        lb0[NX + jj] = -UMAX;  // umin
+        ub0[NX + jj] = UMAX;   // umax
+        idxb0[NX + jj] = NX + jj;
     }
 #endif
 
@@ -334,9 +340,9 @@ int main() {
             idxb1[jj] = jj;
         }
         for (jj = 0; jj < NMF; jj++) {
-            lb1[i][NU+jj] = wall_pos;  // wall position
-            ub1[i][NU+jj] = 1e12;
-            idxb1[NU+jj] = NU + 6 * jj + 1;
+            lb1[i][NU + jj] = wall_pos;  // wall position
+            ub1[i][NU + jj] = 1e12;
+            idxb1[NU + jj] = NU + 6 * jj + 1;
         }
 #else
         for (jj = 0; jj < NMF; jj++) {
@@ -345,9 +351,9 @@ int main() {
             idxb1[jj] = 6 * jj + 1;
         }
         for (jj = 0; jj < NU; jj++) {
-            lb1[i][NMF+jj] = -UMAX;  // umin
-            ub1[i][NMF+jj] = UMAX;   // umax
-            idxb1[NMF+jj] = NX+jj;
+            lb1[i][NMF + jj] = -UMAX;  // umin
+            ub1[i][NMF + jj] = UMAX;   // umax
+            idxb1[NMF + jj] = NX + jj;
         }
 #endif
         nb[i + 1] = NMF + NU;
@@ -385,18 +391,22 @@ int main() {
     /************************************************
      * nonlinear path constraints
      ************************************************/
-    ocp_nlp_function **path_constraints = (ocp_nlp_function **)malloc(sizeof(ocp_nlp_function *) * (NN +1));
+    ocp_nlp_function **path_constraints =
+        (ocp_nlp_function **)malloc(sizeof(ocp_nlp_function *) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
         // Initialize path constraints
-        path_constraints[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
+        path_constraints[i] =
+            (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
         path_constraints[i]->nx = NX;
         path_constraints[i]->nu = NU;
         path_constraints[i]->np = 0;
         path_constraints[i]->ny = (NX + NU);
-        path_constraints[i]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+        path_constraints[i]->in =
+            (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
         path_constraints[i]->in->compute_jac = 1;
         path_constraints[i]->in->compute_hess = 0;
-        path_constraints[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+        path_constraints[i]->out =
+            (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
         path_constraints[i]->args = casadi_wrapper_create_arguments();
         path_constraints[i]->args->fun = &pathcon_nm2;
         path_constraints[i]->args->dims = &pathcon_nm2_work;
@@ -410,10 +420,12 @@ int main() {
     path_constraints[NN]->nu = 0;
     path_constraints[NN]->np = 0;
     path_constraints[NN]->ny = NX;
-    path_constraints[NN]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
+    path_constraints[NN]->in =
+        (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
     path_constraints[NN]->in->compute_jac = 1;
     path_constraints[NN]->in->compute_hess = 0;
-    path_constraints[NN]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
+    path_constraints[NN]->out =
+        (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
     path_constraints[NN]->args = casadi_wrapper_create_arguments();
     path_constraints[NN]->args->fun = &pathconN_nm2;
     path_constraints[NN]->args->dims = &pathconN_nm2_work;
@@ -442,7 +454,8 @@ int main() {
     int_t **idxb = (int_t **)dummy_qp->idxb;
     for (int_t i = 0; i <= NN; i++)
         for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-    qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments(dummy_qp);
+    qp_solver.args =
+        (void *)ocp_qp_condensing_qpoases_create_arguments(dummy_qp);
 
     /************************************************
      * SQP method
@@ -458,9 +471,9 @@ int main() {
     nlp_in.ub = (const real_t **)hub;
     nlp_in.lg = NULL;
     nlp_in.ug = NULL;
-    nlp_in.sim = (void **) &integrators;
-    nlp_in.cost = (void *) &ls_cost;
-    nlp_in.path_constraints = (void **) path_constraints;
+    nlp_in.sim = (void **)&integrators;
+    nlp_in.cost = (void *)&ls_cost;
+    nlp_in.path_constraints = (void **)path_constraints;
 
     ocp_nlp_out nlp_out;
     nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (NN + 1));
@@ -472,46 +485,47 @@ int main() {
     for (int_t i = 0; i < NN; i++) {
         nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
         nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
-        nlp_out.pi[i+1] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
-        nlp_out.lam[i] = (real_t *) malloc(sizeof(*nlp_out.lam[i]) * 2*nb[i] + 2*ng[i]);
+        nlp_out.pi[i + 1] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
+        nlp_out.lam[i] =
+            (real_t *)malloc(sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
     }
     nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
     nlp_out.u[NN] = NULL;
-    nlp_out.lam[NN] = (real_t *) malloc(sizeof(*nlp_out.lam[NN]) * 2*nb[NN] + 2*ng[NN]);
+    nlp_out.lam[NN] =
+        (real_t *)malloc(sizeof(*nlp_out.lam[NN]) * 2 * nb[NN] + 2 * ng[NN]);
 
     ocp_nlp_sqp_args *nlp_args = ocp_nlp_sqp_create_arguments();
     nlp_args->maxIter = max_sqp_iters;
     nlp_args->sensitivity_method = &sensitivity_method;
     nlp_args->qp_solver = &qp_solver;
 
-    // snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "condensing_qpoases");
+    // snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s",
+    // "condensing_qpoases");
 
     ocp_nlp_sqp_memory *nlp_mem;
     ocp_nlp_sqp_workspace *nlp_work;
-    ocp_nlp_sqp_initialize(&nlp_in, nlp_args, (void **)&nlp_mem, (void **)&nlp_work);
+    ocp_nlp_sqp_initialize(&nlp_in, nlp_args, (void **)&nlp_mem,
+                           (void **)&nlp_work);
 
     real_t **nlp_x_mem = (real_t **)nlp_mem->common->x;
     real_t **nlp_u_mem = (real_t **)nlp_mem->common->u;
     for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < NX; j++)
-            nlp_x_mem[i][j] = xref[j];  // resX(j,i)
-        for (int_t j = 0; j < NU; j++)
-            nlp_u_mem[i][j] = 0.0;  // resU(j, i)
+        for (int_t j = 0; j < NX; j++) nlp_x_mem[i][j] = xref[j];  // resX(j,i)
+        for (int_t j = 0; j < NU; j++) nlp_u_mem[i][j] = 0.0;      // resU(j, i)
     }
-    for (int_t j = 0; j < NX; j++)
-        nlp_x_mem[NN][j] = xref[j];  // resX(j, NN)
+    for (int_t j = 0; j < NX; j++) nlp_x_mem[NN][j] = xref[j];  // resX(j, NN)
 
     int_t status;
 
     status = ocp_nlp_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
     printf("\n\nstatus = %i\n\n", status);
 
-    // for (int_t k =0; k < 3; k++) {
-    //     printf("x[%d] = \n", k);
-    //     d_print_mat(1, nx[k], nlp_out.x[k], 1);
-    //     printf("u[%d] = \n", k);
-    //     d_print_mat(1, nu[k], nlp_out.u[k], 1);
-    // }
+// for (int_t k =0; k < 3; k++) {
+//     printf("x[%d] = \n", k);
+//     d_print_mat(1, nx[k], nlp_out.x[k], 1);
+//     printf("u[%d] = \n", k);
+//     d_print_mat(1, nu[k], nlp_out.u[k], 1);
+// }
 
 #if 0
     real_t out_x[NX*(NN+1)];
@@ -581,7 +595,7 @@ int main() {
     for (int_t i = 0; i < NN; i++) {
         free(nlp_out.x[i]);
         free(nlp_out.u[i]);
-        free(nlp_out.pi[i+1]);
+        free(nlp_out.pi[i + 1]);
         free(nlp_out.lam[i]);
     }
     free(nlp_out.x[NN]);
