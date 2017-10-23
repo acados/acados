@@ -166,13 +166,13 @@ int main() {
     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
 
     /************************************************
-     * simulator
+     * simulators
      ************************************************/
     real_t Ts = TT / NN;
     sim_in sim_in[NN];
     sim_out sim_out[NN];
     sim_info info[NN];
-    sim_solver* integrators[NN];
+    sim_solver *integrators[NN];
 
     sim_RK_opts rk_opts[NN];
     sim_lifted_irk_memory irk_mem[NN];
@@ -182,7 +182,7 @@ int main() {
     // struct d_strmat str_sol[NN];
 
     for (jj = 0; jj < NN; jj++) {
-        integrators[jj] = malloc(sizeof(sim_solver));
+        integrators[jj] = (sim_solver *) malloc(sizeof(sim_solver));
         integrators[jj]->in = &sim_in[jj];
         integrators[jj]->out = &sim_out[jj];
         integrators[jj]->args = &rk_opts[jj];
@@ -440,7 +440,7 @@ int main() {
     // TODO(nielsvd): lines below should go
     ocp_qp_in *dummy_qp = create_ocp_qp_in(NN, nx, nu, nb, ng);
     int_t **idxb = (int_t **)dummy_qp->idxb;
-    for (int_t i = 0; i < NN; i++)
+    for (int_t i = 0; i <= NN; i++)
         for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
     qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments(dummy_qp);
 

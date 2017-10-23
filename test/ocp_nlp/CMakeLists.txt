@@ -36,4 +36,20 @@ add_custom_command(OUTPUT ${TEST_OCP_NLP_GENERATED_FILES}
     COMMENT "Generating data for OCP NLP test"
 )
 
+set(TEST_OCP_NLP_GENERATED_FILES
+    "${TEST_OCP_NLP_GENERATED_FILES}"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_cost_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_cost_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_cost_nm4.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_costN_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_costN_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_costN_nm4.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathcon_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathcon_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathcon_nm4.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathconN_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathconN_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathconN_nm4.c"
+)
+
 add_library(ocp_nlp_gen OBJECT ${TEST_OCP_NLP_GENERATED_FILES})

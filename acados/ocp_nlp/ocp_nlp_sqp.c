@@ -296,7 +296,7 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
 
         // Prepare QP
         prepare_qp(nlp_in, sqp_args, sqp_mem);
-
+        
         // Solve QP
         int_t qp_status = sqp_args->qp_solver->fun(
             sqp_args->qp_solver->qp_in, sqp_args->qp_solver->qp_out,
@@ -310,8 +310,12 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
         // TODO(nielsvd): debug, remove... Norm of step-size
         real_t norm_step = 0;
         for (int_t i = 0; i <= nlp_in->N; i++){
-            for (int_t j = 0; j < nlp_in->nx[i]; j++) norm_step = (sqp_args->qp_solver->qp_out->x[i][j])*(sqp_args->qp_solver->qp_out->x[i][j]);
-            for (int_t j = 0; j < nlp_in->nu[i]; j++) norm_step = (sqp_args->qp_solver->qp_out->u[i][j])*(sqp_args->qp_solver->qp_out->u[i][j]);
+            for (int_t j = 0; j < nlp_in->nx[i]; j++){
+                norm_step += (sqp_args->qp_solver->qp_out->x[i][j])*(sqp_args->qp_solver->qp_out->x[i][j]);
+            }
+            for (int_t j = 0; j < nlp_in->nu[i]; j++) {
+                norm_step += (sqp_args->qp_solver->qp_out->u[i][j])*(sqp_args->qp_solver->qp_out->u[i][j]);
+            }
         }
         norm_step = sqrt(norm_step);
         printf("Norm_step = %.10e\n", norm_step);
@@ -362,7 +366,7 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_, 
     // QP solver input
     qp_solver->qp_in = create_ocp_qp_in(nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
     int_t **idxb = (int_t **) qp_solver->qp_in->idxb;
-    for (int_t i = 0; i < nlp_in->N; i++)
+    for (int_t i = 0; i <= nlp_in->N; i++)
         for (int_t j = 0; j < qp_solver->qp_in->nb[i]; j++) idxb[i][j] = nlp_in->idxb[i][j];
 
     // QP solver output

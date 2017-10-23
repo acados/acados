@@ -928,7 +928,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             ocp_qp_in *dummy_qp = create_ocp_qp_in(
             nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
             int_t **idxb = (int_t **)dummy_qp->idxb;
-            for (int_t i = 0; i < N; i++)
+            for (int_t i = 0; i <= N; i++)
                 for (int_t j = 0; j < nlp_in->nb[i]; j++)
                     idxb[i][j] = nlp_in->idxb[i][j];
             ((ocp_nlp_sqp_args *)args)->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
