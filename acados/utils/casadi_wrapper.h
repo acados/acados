@@ -24,8 +24,6 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
 #include "acados/utils/types.h"
 
 typedef struct {
