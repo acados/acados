@@ -158,6 +158,7 @@ void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {
     }
     d_zeros(&out->x[N], in->nx[N], 1);
     d_zeros(&out->u[N], in->nu[N], 1);
+    d_zeros(&out->pi[N], 0, 1);
     d_zeros(&out->lam[N], 2 * (in->nb[N] + in->ng[N]), 1);
 }
 
@@ -165,11 +166,12 @@ void free_ocp_nlp_out(int_t N, ocp_nlp_out *out) {
     for (int_t k = 0; k < N; k++) {
         d_free(out->x[k]);
         d_free(out->u[k]);
-        d_free(out->pi[k + 1]);
+        d_free(out->pi[k]);
         d_free(out->lam[k]);
     }
     d_free(out->x[N]);
     d_free(out->u[N]);
+    d_free(out->pi[N]);
     d_free(out->lam[N]);
     free(out->x);
     free(out->u);

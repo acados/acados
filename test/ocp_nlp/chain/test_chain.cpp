@@ -588,8 +588,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                         sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
                 }
                 nlp_out.x[N] = (real_t *)malloc(sizeof(*nlp_out.x[N]) * (NX));
-                nlp_out.u[N] = NULL;
-                nlp_out.pi[N] = NULL;
+                nlp_out.u[N] = (real_t *)malloc(sizeof(*nlp_out.u[N]) * 0);
+                nlp_out.pi[N] = (real_t *)malloc(sizeof(*nlp_out.pi[N]) * 0);
                 nlp_out.lam[N] = (real_t *)malloc(
                     sizeof(*nlp_out.lam[N]) * 2 * nb[N] + 2 * ng[N]);
 
@@ -723,15 +723,12 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 // NLP arguments
                 free(nlp_args);
                 // NLP output
-                for (int_t i = 0; i < N; i++) {
+                for (int_t i = 0; i <= N; i++) {
                     free(nlp_out.x[i]);
                     free(nlp_out.u[i]);
-                    free(nlp_out.pi[i + 1]);
+                    free(nlp_out.pi[i]);
                     free(nlp_out.lam[i]);
                 }
-                free(nlp_out.x[N]);
-                free(nlp_out.u[N]);
-                free(nlp_out.lam[N]);
                 free(nlp_out.x);
                 free(nlp_out.u);
                 free(nlp_out.lam);

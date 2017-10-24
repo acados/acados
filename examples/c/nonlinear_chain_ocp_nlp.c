@@ -490,8 +490,8 @@ int main() {
             (real_t *)malloc(sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
     }
     nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
-    nlp_out.u[NN] = NULL;
-    nlp_out.pi[NN] = NULL;
+    nlp_out.u[NN] = (real_t *)malloc(sizeof(*nlp_out.u[NN]) * 0);
+    nlp_out.pi[NN] = (real_t *)malloc(sizeof(*nlp_out.pi[NN]) * (0));
     nlp_out.lam[NN] =
         (real_t *)malloc(sizeof(*nlp_out.lam[NN]) * 2 * nb[NN] + 2 * ng[NN]);
 
@@ -593,15 +593,12 @@ int main() {
     // NLP arguments
     free(nlp_args);
     // NLP output
-    for (int_t i = 0; i < NN; i++) {
+    for (int_t i = 0; i <= NN; i++) {
         free(nlp_out.x[i]);
         free(nlp_out.u[i]);
-        free(nlp_out.pi[i + 1]);
+        free(nlp_out.pi[i]);
         free(nlp_out.lam[i]);
     }
-    free(nlp_out.x[NN]);
-    free(nlp_out.u[NN]);
-    free(nlp_out.lam[NN]);
     free(nlp_out.x);
     free(nlp_out.u);
     free(nlp_out.lam);
