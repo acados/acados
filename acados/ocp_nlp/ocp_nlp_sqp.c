@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO(nielsvd): only perform assert in debug mode?
 #include <assert.h>
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"

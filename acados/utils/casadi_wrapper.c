@@ -19,7 +19,6 @@
 
 #include "acados/utils/casadi_wrapper.h"
 
-// TODO(nielsvd): only perform assert in debug mode?
 #include <assert.h>
 
 #include <stdlib.h>
