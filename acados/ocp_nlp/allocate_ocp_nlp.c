@@ -153,7 +153,7 @@ void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out) {
     for (int_t k = 0; k < N; k++) {
         d_zeros(&out->x[k], in->nx[k], 1);
         d_zeros(&out->u[k], in->nu[k], 1);
-        d_zeros(&out->pi[k + 1], in->nx[k+1], 1);
+        d_zeros(&out->pi[k], in->nx[k+1], 1);
         d_zeros(&out->lam[k], 2 * (in->nb[k] + in->ng[k]), 1);
     }
     d_zeros(&out->x[N], in->nx[N], 1);

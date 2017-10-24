@@ -1020,13 +1020,13 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             for (int_t i = 0; i <= N; i++) {
                 for (int_t j = 0; j < nlp_in->nx[i]; j++) x[i][j] = 0.0;
                 for (int_t j = 0; j < nlp_in->nu[i]; j++) u[i][j] = 0.0;
-                if (i > 0) {
-                    for (int_t j = 0; j < nlp_in->nx[i]; j++) pi[i][j] = 0.0;
-                }
                 for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i];
                      j++) {
                     lam[i][j] = 0.0;
                 }
+            }
+            for (int_t i = 0; i < N; i++) {
+                for (int_t j = 0; j < nlp_in->nx[i+1]; j++) pi[i][j] = 0.0;
             }
         } else {
             throw std::invalid_argument("Solver name not known!");
