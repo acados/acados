@@ -161,13 +161,14 @@ void update_variables(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
         for (int_t j = 0; j < nu[i]; j++) {
             nlp_u[i][j] += sqp_args->qp_solver->qp_out->u[i][j];
         }
-        if (i > 0) {
-            for (int_t j = 0; j < nx[i]; j++) {
-                nlp_pi[i][j] = sqp_args->qp_solver->qp_out->pi[i][j];
-            }
-        }
         for (int_t j = 0; j < 2 * nb[i] + 2 * ng[i]; j++) {
             nlp_lam[i][j] = sqp_args->qp_solver->qp_out->lam[i][j];
+        }
+    }
+
+    for (int_t i = 0; i < N; i++) {
+        for (int_t j = 0; j < nx[i+1]; j++) {
+            nlp_pi[i][j] = sqp_args->qp_solver->qp_out->pi[i][j];
         }
     }
 }
@@ -187,13 +188,14 @@ void store_variables(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
         for (int_t j = 0; j < nu[i]; j++) {
             nlp_out->u[i][j] = sqp_mem->common->u[i][j];
         }
-        if (i > 0) {
-            for (int_t j = 0; j < nx[i]; j++) {
-                nlp_out->pi[i][j] = sqp_mem->common->pi[i][j];
-            }
-        }
         for (int_t j = 0; j < 2 * nb[i] + 2 * ng[i]; j++) {
             nlp_out->lam[i][j] = sqp_mem->common->lam[i][j];
+        }
+    }
+
+    for (int_t i = 0; i < N; i++) {
+        for (int_t j = 0; j < nx[i+1]; j++) {
+            nlp_out->pi[i][j] = sqp_mem->common->pi[i][j];
         }
     }
 }

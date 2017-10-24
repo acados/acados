@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "acados/sim/sim_common.h"
+#include "acados/sim/sim_rk_common.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
 
@@ -183,6 +185,7 @@ ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(
 int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
                     void *args_, void *memory_, void *workspace_) {
     ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *)workspace_;
+    ocp_nlp_sm_gn_memory *mem = (ocp_nlp_sm_gn_memory *)memory_;
 
     const int_t N = sm_in->N;
     const int_t *nx = sm_in->nx;
@@ -201,6 +204,17 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     ocp_nlp_function **path_constraints = sm_in->path_constraints;
 
     for (int_t i = 0; i < N; i++) {
+        // Adjoint-based gradient correction (used for)
+        // TODO(nielsvd): create new sensitivity methods for inexact newton methods
+        sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
+        if (mem->inexact_init) {
+            sim[i]->in->sens_adj = (sim_opts->scheme.type != exact);
+            for (int_t j = 0; j < nx[i + 1]; j++)
+                sim[i]->in->S_adj[j] = -sm_in->pi[i][j];
+        } else {
+            sim[i]->in->sens_adj = 0;
+        }
+
         // Pass state and control to integrator
         for (int_t j = 0; j < nx[i]; j++) sim[i]->in->x[j] = sm_in->x[i][j];
         for (int_t j = 0; j < nu[i]; j++) sim[i]->in->u[j] = sm_in->u[i][j];
@@ -263,6 +277,21 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         }
     }
 
+    // Adjoint-based gradient correction
+    // TODO(nielsvd): create new sensitivity methods for inexact newton methods
+    if (mem->inexact_init) {
+        for (int_t i = 0; i < N; i++) {
+            sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
+            if (sim_opts->scheme.type != exact) {
+                for (int_t j = 0; j < nx[i] + nu[i]; j++) {
+                    grad_f[i][j] += sim[i]->out->grad[j];
+                }
+            }
+        }
+    } else {
+        mem->inexact_init = 1;
+    }
+
     return 0;
 }
 
@@ -273,6 +302,8 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
 
     *mem = ocp_nlp_sm_gn_create_memory(sm_in, args_);
     *work = ocp_nlp_sm_gn_create_workspace(sm_in, args_);
+
+    (*mem)->inexact_init = 0;
 
     int_t N = sm_in->N;
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *)sm_in->cost;

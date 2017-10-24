@@ -478,19 +478,19 @@ int main() {
     ocp_nlp_out nlp_out;
     nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (NN + 1));
     nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * (NN + 1));
-    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (NN + 1));
     nlp_out.pi = (real_t **)malloc(sizeof(*nlp_out.pi) * (NN + 1));
+    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (NN + 1));
     // Allocate output variables
-    nlp_out.pi[0] = NULL;
     for (int_t i = 0; i < NN; i++) {
         nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
         nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
-        nlp_out.pi[i + 1] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
+        nlp_out.pi[i] = (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
         nlp_out.lam[i] =
             (real_t *)malloc(sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
     }
     nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
     nlp_out.u[NN] = NULL;
+    nlp_out.pi[NN] = NULL;
     nlp_out.lam[NN] =
         (real_t *)malloc(sizeof(*nlp_out.lam[NN]) * 2 * nb[NN] + 2 * ng[NN]);
 

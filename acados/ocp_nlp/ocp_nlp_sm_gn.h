@@ -36,7 +36,7 @@ typedef struct {
 
 typedef struct { int_t dummy; } ocp_nlp_sm_gn_args;
 
-typedef struct { int_t dummy; } ocp_nlp_sm_gn_memory;
+typedef struct { int_t inexact_init; } ocp_nlp_sm_gn_memory;
 
 typedef struct {
     real_t **F;

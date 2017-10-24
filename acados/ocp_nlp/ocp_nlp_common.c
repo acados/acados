@@ -46,7 +46,7 @@ void size_of_memory_elements(const ocp_nlp_in *nlp_in, const int_t stage,
     *size_g = ng[stage] * sizeof(real_t);
     *size_x = nx[stage] * sizeof(real_t);
     *size_u = nu[stage] * sizeof(real_t);
-    *size_pi = (stage > 0) ? nx[stage] * sizeof(real_t) : 0;
+    *size_pi = (stage < N) ? nx[stage+1] * sizeof(real_t) : 0;
     *size_lam = (2 * nb[stage] + 2 * ng[stage]) * sizeof(real_t);
 }
 

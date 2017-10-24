@@ -30,6 +30,7 @@
 #include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
@@ -57,7 +58,7 @@ using Eigen::VectorXd;
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
           "[nonlinear optimization]") {
     // TODO(nielsvd): re-implement (Frozen) IN/INIS
-    for (int INEXACT = 0; INEXACT < 1; INEXACT++) {
+    for (int INEXACT = 0; INEXACT < 3; INEXACT++) {
         int d_start = 0;
         if (INEXACT > 0) d_start = 2;
 
@@ -534,17 +535,16 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                  * QP solver
                  ************************************************/
                 ocp_qp_solver qp_solver;
-                qp_solver.fun = &ocp_qp_condensing_qpoases;
-                qp_solver.initialize = &ocp_qp_condensing_qpoases_initialize;
-                qp_solver.destroy = &ocp_qp_condensing_qpoases_destroy;
+                qp_solver.fun = &ocp_qp_qpdunes;
+                qp_solver.initialize = &ocp_qp_qpdunes_initialize;
+                qp_solver.destroy = &ocp_qp_qpdunes_destroy;
                 // TODO(nielsvd): lines below should go
                 ocp_qp_in *dummy_qp = create_ocp_qp_in(N, nx, nu, nb, ng);
                 int_t **idxb = (int_t **)dummy_qp->idxb;
                 for (int_t i = 0; i <= N; i++)
                     for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-                qp_solver.args =
-                    (void *)ocp_qp_condensing_qpoases_create_arguments(
-                        dummy_qp);
+                qp_solver.args = (void *)ocp_qp_qpdunes_create_arguments(
+                    QPDUNES_NONLINEAR_MPC);  // dummy_qp); //
 
                 /************************************************
                  * SQP method
@@ -568,22 +568,22 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 ocp_nlp_out nlp_out;
                 nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (N + 1));
                 nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * (N + 1));
-                nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (N + 1));
                 nlp_out.pi = (real_t **)malloc(sizeof(*nlp_out.pi) * (N + 1));
+                nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * (N + 1));
                 // Allocate output variables
-                nlp_out.pi[0] = NULL;
                 for (int_t i = 0; i < N; i++) {
                     nlp_out.x[i] =
                         (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
                     nlp_out.u[i] =
                         (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
-                    nlp_out.pi[i + 1] =
+                    nlp_out.pi[i] =
                         (real_t *)malloc(sizeof(*nlp_out.pi[i]) * (NX));
                     nlp_out.lam[i] = (real_t *)malloc(
                         sizeof(*nlp_out.lam[i]) * 2 * nb[i] + 2 * ng[i]);
                 }
                 nlp_out.x[N] = (real_t *)malloc(sizeof(*nlp_out.x[N]) * (NX));
                 nlp_out.u[N] = NULL;
+                nlp_out.pi[N] = NULL;
                 nlp_out.lam[N] = (real_t *)malloc(
                     sizeof(*nlp_out.lam[N]) * 2 * nb[N] + 2 * ng[N]);
 
