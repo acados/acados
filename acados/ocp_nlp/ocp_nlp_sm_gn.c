@@ -30,7 +30,7 @@
 ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments() {
     ocp_nlp_sm_gn_args *args =
         (ocp_nlp_sm_gn_args *)malloc(sizeof(ocp_nlp_sm_gn_args));
-    args->dummy = 0;
+    args->freezeSens = 0;
     return args;
 }
 
@@ -208,9 +208,12 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         // TODO(nielsvd): create new sensitivity methods for inexact newton methods
         sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
         if (mem->inexact_init) {
-            sim[i]->in->sens_adj = (sim_opts->scheme.type != exact);
-            for (int_t j = 0; j < nx[i + 1]; j++)
-                sim[i]->in->S_adj[j] = -sm_in->pi[i][j];
+            if (sim_opts->scheme.type != exact) {
+                sim[i]->in->sens_adj = 1;
+                sim_opts->scheme.freeze = sm_in->freezeSens;
+                for (int_t j = 0; j < nx[i + 1]; j++)
+                    sim[i]->in->S_adj[j] = -sm_in->pi[i][j];
+            }
         } else {
             sim[i]->in->sens_adj = 0;
         }

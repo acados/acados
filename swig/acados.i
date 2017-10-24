@@ -932,14 +932,17 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             args = (ocp_nlp_sqp_args *) malloc(sizeof(ocp_nlp_sqp_args));
 
             // Select QP solver based on user input
-            ocp_qp_in *dummy_qp = create_ocp_qp_in(
-            nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
-            int_t **idxb = (int_t **)dummy_qp->idxb;
+            ((ocp_nlp_sqp_args *)args)->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
+            ocp_qp_solver *qpsol = ((ocp_nlp_sqp_args *)args)->qp_solver;
+            qpsol->qp_in = create_ocp_qp_in(
+                nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
+            qpsol->qp_out = create_ocp_qp_out(
+                nlp_in->N, nlp_in->nx, nlp_in->nu, nlp_in->nb, nlp_in->ng);
+            // TODO(nielsvd): lines below should go
+            int_t **idxb = (int_t **)qpsol->qp_in->idxb;
             for (int_t i = 0; i <= N; i++)
                 for (int_t j = 0; j < nlp_in->nb[i]; j++)
                     idxb[i][j] = nlp_in->idxb[i][j];
-            ((ocp_nlp_sqp_args *)args)->qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
-            ocp_qp_solver *qpsol = ((ocp_nlp_sqp_args *)args)->qp_solver;
             if (!strcmp(qp_solver, "qpdunes")) {
                 qpsol->args = (void *)ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
                 qpsol->fun = &ocp_qp_qpdunes;
@@ -953,23 +956,26 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 qpsol->destroy = &ocp_qp_ooqp_destroy;
 #endif
             } else if (!strcmp(qp_solver, "condensing_qpoases")) {
-                qpsol->args = (void *)ocp_qp_condensing_qpoases_create_arguments(dummy_qp);
+                qpsol->args =
+                    (void *)ocp_qp_condensing_qpoases_create_arguments(
+                        qpsol->qp_in);
                 qpsol->fun = &ocp_qp_condensing_qpoases;
                 qpsol->initialize = &ocp_qp_condensing_qpoases_initialize;
                 qpsol->destroy = &ocp_qp_condensing_qpoases_destroy;
             } else if (!strcmp(qp_solver, "hpmpc")) {
                 qpsol->args = (void *)ocp_qp_hpmpc_create_arguments(
-                    dummy_qp, HPMPC_DEFAULT_ARGUMENTS);
+                    qpsol->qp_in, HPMPC_DEFAULT_ARGUMENTS);
                 qpsol->fun = &ocp_qp_hpmpc;
                 qpsol->initialize = &ocp_qp_hpmpc_initialize;
                 qpsol->destroy = &ocp_qp_hpmpc_destroy;
             } else if (!strcmp(qp_solver, "condensing_hpipm")) {
-                qpsol->args = ocp_qp_condensing_hpipm_create_arguments(dummy_qp);
+                qpsol->args =
+                    ocp_qp_condensing_hpipm_create_arguments(qpsol->qp_in);
                 qpsol->fun = &ocp_qp_condensing_hpipm;
                 qpsol->initialize = &ocp_qp_condensing_hpipm_initialize;
                 qpsol->destroy = &ocp_qp_condensing_hpipm_destroy;
             } else if (!strcmp(qp_solver, "hpipm")) {
-                qpsol->args = ocp_qp_hpipm_create_arguments(dummy_qp);
+                qpsol->args = ocp_qp_hpipm_create_arguments(qpsol->qp_in);
                 qpsol->fun = &ocp_qp_hpipm;
                 qpsol->initialize = &ocp_qp_hpipm_initialize;
                 qpsol->destroy = &ocp_qp_hpipm_destroy;

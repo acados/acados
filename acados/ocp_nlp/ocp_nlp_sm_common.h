@@ -56,6 +56,9 @@ typedef struct {
     const real_t **u;
     const real_t **pi;
     const real_t **lam;
+
+    // TODO(nielsvd): should go, old interface
+    int_t freezeSens;
 } ocp_nlp_sm_in;
 
 typedef struct {

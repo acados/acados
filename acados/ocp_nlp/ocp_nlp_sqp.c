@@ -375,18 +375,6 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_,
     sm_out->h = (*mem)->common->h;
     sm_out->g = (*mem)->common->g;
 
-    // QP solver input
-    qp_solver->qp_in = create_ocp_qp_in(nlp_in->N, nlp_in->nx, nlp_in->nu,
-                                        nlp_in->nb, nlp_in->ng);
-    int_t **idxb = (int_t **)qp_solver->qp_in->idxb;
-    for (int_t i = 0; i <= nlp_in->N; i++)
-        for (int_t j = 0; j < qp_solver->qp_in->nb[i]; j++)
-            idxb[i][j] = nlp_in->idxb[i][j];
-
-    // QP solver output
-    qp_solver->qp_out = create_ocp_qp_out(nlp_in->N, nlp_in->nx, nlp_in->nu,
-                                          nlp_in->nb, nlp_in->ng);
-
     // // Initialize sensitivity method and QP solver
     nlp_sm->initialize(sm_in, nlp_sm->args, &nlp_sm->mem, &nlp_sm->work);
     qp_solver->initialize(qp_solver->qp_in, qp_solver->args, &qp_solver->mem,

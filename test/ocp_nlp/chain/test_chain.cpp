@@ -58,7 +58,7 @@ using Eigen::VectorXd;
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
           "[nonlinear optimization]") {
     // TODO(nielsvd): re-implement (Frozen) IN/INIS
-    for (int INEXACT = 0; INEXACT < 3; INEXACT++) {
+    for (int INEXACT = 0; INEXACT < 5; INEXACT++) {
         int d_start = 0;
         if (INEXACT > 0) d_start = 2;
 
@@ -530,6 +530,11 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 sensitivity_method.fun = &ocp_nlp_sm_gn;
                 sensitivity_method.initialize = &ocp_nlp_sm_gn_initialize;
                 sensitivity_method.destroy = &ocp_nlp_sm_gn_destroy;
+                sensitivity_method.args = ocp_nlp_sm_gn_create_arguments();
+                if (INEXACT > 2) {
+                    ((ocp_nlp_sm_gn_args *)sensitivity_method.args)
+                        ->freezeSens = 1;
+                }
 
                 /************************************************
                  * QP solver
@@ -538,13 +543,14 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 qp_solver.fun = &ocp_qp_qpdunes;
                 qp_solver.initialize = &ocp_qp_qpdunes_initialize;
                 qp_solver.destroy = &ocp_qp_qpdunes_destroy;
+                qp_solver.qp_in = create_ocp_qp_in(N, nx, nu, nb, ng);
+                qp_solver.qp_out = create_ocp_qp_out(N, nx, nu, nb, ng);
                 // TODO(nielsvd): lines below should go
-                ocp_qp_in *dummy_qp = create_ocp_qp_in(N, nx, nu, nb, ng);
-                int_t **idxb = (int_t **)dummy_qp->idxb;
+                int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
                 for (int_t i = 0; i <= N; i++)
                     for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
                 qp_solver.args = (void *)ocp_qp_qpdunes_create_arguments(
-                    QPDUNES_NONLINEAR_MPC);  // dummy_qp); //
+                    QPDUNES_NONLINEAR_MPC);  // qp_solver.qp_in); //
 
                 /************************************************
                  * SQP method
@@ -596,6 +602,9 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 ocp_nlp_sqp_workspace *nlp_work;
                 ocp_nlp_sqp_initialize(&nlp_in, nlp_args, (void **)&nlp_mem,
                                        (void **)&nlp_work);
+
+                // TOOD(nielsvd): should go, old interface
+
 
                 // TODO(nielsvd): set memory to zero during allocation
                 real_t **nlp_x_mem = (real_t **)nlp_mem->common->x;

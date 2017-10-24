@@ -34,7 +34,7 @@ typedef struct {
     int_t N;
 } ocp_nlp_ls_cost;
 
-typedef struct { int_t dummy; } ocp_nlp_sm_gn_args;
+typedef struct { int_t freezeSens; } ocp_nlp_sm_gn_args;
 
 typedef struct { int_t inexact_init; } ocp_nlp_sm_gn_memory;
 
