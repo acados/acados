@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include "acados/sim/sim_common.h"
 #include "acados/utils/casadi_wrapper.h"
 #include "acados/utils/types.h"
@@ -58,7 +60,7 @@ typedef struct {
     const real_t **lam;
 
     // TODO(nielsvd): should go, old interface
-    int_t freezeSens;
+    bool freezeSens;
 } ocp_nlp_sm_in;
 
 typedef struct {

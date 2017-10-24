@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -31,8 +33,8 @@ typedef struct {
     const real_t *u;
     const real_t *p;
 
-    int_t compute_jac;
-    int_t compute_hess;
+    bool compute_jac;
+    bool compute_hess;
 } casadi_wrapper_in;
 
 typedef struct {

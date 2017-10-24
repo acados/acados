@@ -147,8 +147,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     ls_cost.fun[i]->ny = (NX + NU);
                     ls_cost.fun[i]->in =
                         (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-                    ls_cost.fun[i]->in->compute_jac = 1;
-                    ls_cost.fun[i]->in->compute_hess = 0;
+                    ls_cost.fun[i]->in->compute_jac = true;
+                    ls_cost.fun[i]->in->compute_hess = false;
                     ls_cost.fun[i]->out = (casadi_wrapper_out *)malloc(
                         sizeof(casadi_wrapper_out));
                     ls_cost.fun[i]->args = casadi_wrapper_create_arguments();
@@ -194,8 +194,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 ls_cost.fun[N]->ny = NX;
                 ls_cost.fun[N]->in =
                     (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-                ls_cost.fun[N]->in->compute_jac = 1;
-                ls_cost.fun[N]->in->compute_hess = 0;
+                ls_cost.fun[N]->in->compute_jac = true;
+                ls_cost.fun[N]->in->compute_hess = false;
                 ls_cost.fun[N]->out =
                     (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
                 ls_cost.fun[N]->args = casadi_wrapper_create_arguments();
@@ -450,8 +450,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     path_constraints[i]->ny = (NX + NU);
                     path_constraints[i]->in =
                         (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-                    path_constraints[i]->in->compute_jac = 1;
-                    path_constraints[i]->in->compute_hess = 0;
+                    path_constraints[i]->in->compute_jac = true;
+                    path_constraints[i]->in->compute_hess = false;
                     path_constraints[i]->out = (casadi_wrapper_out *)malloc(
                         sizeof(casadi_wrapper_out));
                     path_constraints[i]->args =
@@ -491,8 +491,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 path_constraints[N]->ny = NX;
                 path_constraints[N]->in =
                     (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-                path_constraints[N]->in->compute_jac = 1;
-                path_constraints[N]->in->compute_hess = 0;
+                path_constraints[N]->in->compute_jac = true;
+                path_constraints[N]->in->compute_hess = false;
                 path_constraints[N]->out =
                     (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
                 path_constraints[N]->args = casadi_wrapper_create_arguments();
@@ -533,7 +533,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 sensitivity_method.args = ocp_nlp_sm_gn_create_arguments();
                 if (INEXACT > 2) {
                     ((ocp_nlp_sm_gn_args *)sensitivity_method.args)
-                        ->freezeSens = 1;
+                        ->freezeSens = true;
                 }
 
                 /************************************************

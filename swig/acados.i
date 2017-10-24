@@ -593,8 +593,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 
         // Initialize casadi wrapper input
         nlp_function->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-        nlp_function->in->compute_jac = 1;
-        nlp_function->in->compute_hess = 1;
+        nlp_function->in->compute_jac = true;
+        nlp_function->in->compute_hess = true;
 
         // Initialize casadi wrapper output
         nlp_function->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
@@ -706,8 +706,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             ls_cost->fun[i]->np = stage_cost->np;
             ls_cost->fun[i]->ny = stage_cost->ny;
             ls_cost->fun[i]->in = (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-            ls_cost->fun[i]->in->compute_jac = 1;
-            ls_cost->fun[i]->in->compute_hess = 0;
+            ls_cost->fun[i]->in->compute_jac = true;
+            ls_cost->fun[i]->in->compute_hess = false;
             ls_cost->fun[i]->out = (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
             ls_cost->fun[i]->args = casadi_wrapper_create_arguments();
             ls_cost->fun[i]->args->fun = stage_cost->args->fun;
@@ -857,8 +857,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             pathcons[i]->ny = path_constraint->ny;
             pathcons[i]->in =
                 (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-            pathcons[i]->in->compute_jac = 1;
-            pathcons[i]->in->compute_hess = 0;
+            pathcons[i]->in->compute_jac = true;
+            pathcons[i]->in->compute_hess = false;
             pathcons[i]->out =
                 (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
             pathcons[i]->args = casadi_wrapper_create_arguments();

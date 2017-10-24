@@ -134,8 +134,8 @@ int main() {
         ls_cost.fun[i]->ny = (NX + NU);
         ls_cost.fun[i]->in =
             (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-        ls_cost.fun[i]->in->compute_jac = 1;
-        ls_cost.fun[i]->in->compute_hess = 0;
+        ls_cost.fun[i]->in->compute_jac = true;
+        ls_cost.fun[i]->in->compute_hess = false;
         ls_cost.fun[i]->out =
             (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
         ls_cost.fun[i]->args = casadi_wrapper_create_arguments();
@@ -157,8 +157,8 @@ int main() {
     ls_cost.fun[NN]->ny = NX;
     ls_cost.fun[NN]->in =
         (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-    ls_cost.fun[NN]->in->compute_jac = 1;
-    ls_cost.fun[NN]->in->compute_hess = 0;
+    ls_cost.fun[NN]->in->compute_jac = true;
+    ls_cost.fun[NN]->in->compute_hess = false;
     ls_cost.fun[NN]->out =
         (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
     ls_cost.fun[NN]->args = casadi_wrapper_create_arguments();
@@ -403,8 +403,8 @@ int main() {
         path_constraints[i]->ny = (NX + NU);
         path_constraints[i]->in =
             (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-        path_constraints[i]->in->compute_jac = 1;
-        path_constraints[i]->in->compute_hess = 0;
+        path_constraints[i]->in->compute_jac = true;
+        path_constraints[i]->in->compute_hess = false;
         path_constraints[i]->out =
             (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
         path_constraints[i]->args = casadi_wrapper_create_arguments();
@@ -422,8 +422,8 @@ int main() {
     path_constraints[NN]->ny = NX;
     path_constraints[NN]->in =
         (casadi_wrapper_in *)malloc(sizeof(casadi_wrapper_in));
-    path_constraints[NN]->in->compute_jac = 1;
-    path_constraints[NN]->in->compute_hess = 0;
+    path_constraints[NN]->in->compute_jac = true;
+    path_constraints[NN]->in->compute_hess = false;
     path_constraints[NN]->out =
         (casadi_wrapper_out *)malloc(sizeof(casadi_wrapper_out));
     path_constraints[NN]->args = casadi_wrapper_create_arguments();

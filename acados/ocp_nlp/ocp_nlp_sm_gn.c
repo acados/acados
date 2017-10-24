@@ -30,7 +30,7 @@
 ocp_nlp_sm_gn_args *ocp_nlp_sm_gn_create_arguments() {
     ocp_nlp_sm_gn_args *args =
         (ocp_nlp_sm_gn_args *)malloc(sizeof(ocp_nlp_sm_gn_args));
-    args->freezeSens = 0;
+    args->freezeSens = false;
     return args;
 }
 
@@ -209,13 +209,13 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
         if (mem->inexact_init) {
             if (sim_opts->scheme.type != exact) {
-                sim[i]->in->sens_adj = 1;
+                sim[i]->in->sens_adj = true;
                 sim_opts->scheme.freeze = sm_in->freezeSens;
                 for (int_t j = 0; j < nx[i + 1]; j++)
                     sim[i]->in->S_adj[j] = -sm_in->pi[i][j];
             }
         } else {
-            sim[i]->in->sens_adj = 0;
+            sim[i]->in->sens_adj = false;
         }
 
         // Pass state and control to integrator
@@ -292,7 +292,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
             }
         }
     } else {
-        mem->inexact_init = 1;
+        mem->inexact_init = true;
     }
 
     return 0;
@@ -306,7 +306,7 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
     *mem = ocp_nlp_sm_gn_create_memory(sm_in, args_);
     *work = ocp_nlp_sm_gn_create_workspace(sm_in, args_);
 
-    (*mem)->inexact_init = 0;
+    (*mem)->inexact_init = false;
 
     int_t N = sm_in->N;
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *)sm_in->cost;
@@ -319,8 +319,8 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
         ls_cost->fun[i]->in->p = NULL;  // TODO(nielsvd): support for parameters
         ls_cost->fun[i]->out->y = (*work)->F[i];
         ls_cost->fun[i]->out->jac_y = (*work)->DF[i];
-        ls_cost->fun[i]->in->compute_jac = 1;
-        ls_cost->fun[i]->in->compute_hess = 0;
+        ls_cost->fun[i]->in->compute_jac = true;
+        ls_cost->fun[i]->in->compute_hess = false;
 
         // assign correct pointers to path_constraints-array
         path_constraints[i]->in->x = sm_in->x[i];
@@ -329,8 +329,8 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
             NULL;  // TODO(nielsvd): support for parameters
         path_constraints[i]->out->y = (*work)->G[i];
         path_constraints[i]->out->jac_y = (*work)->DG[i];
-        path_constraints[i]->in->compute_jac = 1;
-        path_constraints[i]->in->compute_hess = 0;
+        path_constraints[i]->in->compute_jac = true;
+        path_constraints[i]->in->compute_hess = false;
     }
 }
 
