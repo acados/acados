@@ -33,7 +33,7 @@ if((NOT CMAKE_C_COMPILER_ID MATCHES "MSVC") AND (NOT CMAKE_SYSTEM_NAME MATCHES "
 	add_subdirectory(hpmpc)
 endif()
 add_subdirectory(qpdunes)
-add_subdirectory(qpOASES)
+add_subdirectory(qpoases)
 if (ACADOS_WITH_OOQP)
     include(external/ooqp)
 endif()
