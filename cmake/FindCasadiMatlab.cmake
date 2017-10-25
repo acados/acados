@@ -30,19 +30,6 @@ if(NOT CASADI_MATLAB_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
 
-# Determine the version number if not in cache
-if(NOT CASADI_MATLAB_MAJOR_VERSION)
-    file(READ ${CASADI_MATLAB_ROOT}/include/casadi/config.h CONFIG_RAW_FILE)
-    string(FIND "${CONFIG_RAW_FILE}" "#define CASADI_MAJOR_VERSION " VERSION_START_POSITION)
-    string(LENGTH "#define CASADI_MAJOR_VERSION " VERSION_OFFSET)
-    math(EXPR VERSION_START_POSITION "${VERSION_START_POSITION} + ${VERSION_OFFSET}")
-    string(SUBSTRING "${CONFIG_RAW_FILE}" "${VERSION_START_POSITION}" 1 CASADI_MATLAB_MAJOR_VERSION)
-endif()
-string(COMPARE EQUAL "${CASADI_MATLAB_MAJOR_VERSION}" "3" FOUND_CASADI_MATLAB_3)
-if(NOT FOUND_CASADI_MATLAB_3)
-    message(FATAL_ERROR "Casadi version 3 required. Found version: ${CASADI_MATLAB_MAJOR_VERSION}")
-endif()
-
 # Find Casadi libraries
 find_library(CASADI_MATLAB_LIBRARY
     NAMES casadi
@@ -56,6 +43,19 @@ find_path(CASADI_MATLAB_INCLUDE_DIR
     PATHS
         "${CASADI_MATLAB_ROOT}/include"
         "${CASADI_MATLAB_ROOT}/../include")
+
+# Determine the version number if not in cache
+if(NOT CASADI_MATLAB_MAJOR_VERSION)
+    file(READ ${CASADI_MATLAB_INCLUDE_DIR}/casadi/config.h CONFIG_RAW_FILE)
+    string(FIND "${CONFIG_RAW_FILE}" "#define CASADI_MAJOR_VERSION " VERSION_START_POSITION)
+    string(LENGTH "#define CASADI_MAJOR_VERSION " VERSION_OFFSET)
+    math(EXPR VERSION_START_POSITION "${VERSION_START_POSITION} + ${VERSION_OFFSET}")
+    string(SUBSTRING "${CONFIG_RAW_FILE}" "${VERSION_START_POSITION}" 1 CASADI_MATLAB_MAJOR_VERSION)
+endif()
+string(COMPARE EQUAL "${CASADI_MATLAB_MAJOR_VERSION}" "3" FOUND_CASADI_MATLAB_3)
+if(NOT FOUND_CASADI_MATLAB_3)
+    message(FATAL_ERROR "Casadi version 3 required. Found version: ${CASADI_MATLAB_MAJOR_VERSION}")
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CASADIMATLAB DEFAULT_MSG CASADI_MATLAB_LIBRARY CASADI_MATLAB_INCLUDE_DIR)

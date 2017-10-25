@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #define MAX_STR_LEN 256
 
 typedef double real_t;
