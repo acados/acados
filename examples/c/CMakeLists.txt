@@ -21,12 +21,8 @@ configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_mo
 
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC
-    chain_model/jac_chain_nm2.c
-    chain_model/jac_chain_nm3.c
-    chain_model/jac_chain_nm4.c
-    chain_model/vde_chain_nm2.c
-    chain_model/vde_chain_nm3.c
-    chain_model/vde_chain_nm4.c
+    chain_model/jac_chain_*.c
+    chain_model/vde_chain_*.c
     chain_model/ls_cost_*
     chain_model/ls_costN_*
     chain_model/pathcon_*
