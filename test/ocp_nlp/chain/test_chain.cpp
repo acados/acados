@@ -58,8 +58,8 @@ using Eigen::VectorXd;
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
           "[nonlinear optimization]") {
     // TODO(nielsvd): re-implement (Frozen) IN/INIS
-    for (int INEXACT = 0; INEXACT < 5; INEXACT++) {
-        int d_start = 0;
+    for (int INEXACT = 0; INEXACT < 1; INEXACT++) {
+        int d_start = 1;
         if (INEXACT > 0) d_start = 2;
 
         for (int d = d_start; d < 4; d++) {  // RK4 in case d == 0
@@ -264,6 +264,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     sim_in[jj].step = Ts / sim_in[jj].num_steps;
                     sim_in[jj].nx = NX;
                     sim_in[jj].nu = NU;
+                    sim_in[jj].nz = 0;
 
                     sim_in[jj].sens_forw = true;
                     sim_in[jj].sens_adj = false;
@@ -273,21 +274,21 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     switch (NMF) {
                         case 1:
                             sim_in[jj].vde = &vde_chain_nm2;
-                            sim_in[jj].VDE_forw = &vde_fun;
+                            sim_in[jj].VDE_forw = &vde_impl_fun;
                             sim_in[jj].jac = &jac_chain_nm2;
-                            sim_in[jj].jac_fun = &jac_fun;
+                            sim_in[jj].jac_fun = &jac_impl_fun;
                             break;
                         case 2:
                             sim_in[jj].vde = &vde_chain_nm3;
-                            sim_in[jj].VDE_forw = &vde_fun;
+                            sim_in[jj].VDE_forw = &vde_impl_fun;
                             sim_in[jj].jac = &jac_chain_nm3;
-                            sim_in[jj].jac_fun = &jac_fun;
+                            sim_in[jj].jac_fun = &jac_impl_fun;
                             break;
                         case 3:
                             sim_in[jj].vde = &vde_chain_nm4;
-                            sim_in[jj].VDE_forw = &vde_fun;
+                            sim_in[jj].VDE_forw = &vde_impl_fun;
                             sim_in[jj].jac = &jac_chain_nm4;
-                            sim_in[jj].jac_fun = &jac_fun;
+                            sim_in[jj].jac_fun = &jac_impl_fun;
                             break;
                         default:
                             REQUIRE(1 == 0);
@@ -624,8 +625,10 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     ocp_nlp_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
                 REQUIRE(status == 0);
 
-                real_t out_x[NX * (N + 1)], err_x[NX * (N + 1)];
-                real_t out_u[NU * N], err_u[NU * N];
+                // real_t err_x[NX * (N + 1)];
+                // real_t err_u[NU * N];
+                real_t out_x[NX * (N + 1)];
+                real_t out_u[NU * N];
                 for (int_t i = 0; i < N; i++) {
                     for (int_t j = 0; j < NX; j++)
                         out_x[i * NX + j] = nlp_out.x[i][j];
@@ -635,35 +638,34 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 for (int_t j = 0; j < NX; j++)
                     out_x[N * NX + j] = nlp_out.x[N][j];
 
-                for (int_t i = 0; i < N; i++) {
-                    for (int_t j = 0; j < NX; j++)
-                        err_x[i * NX + j] =
-                            fabs(out_x[i * NX + j] - resX(j, i));
-                    for (int_t j = 0; j < NU; j++)
-                        err_u[i * NU + j] =
-                            fabs(out_u[i * NU + j] - resU(j, i));
-                }
-                for (int_t j = 0; j < NX; j++)
-                    err_x[N * NX + j] = fabs(out_x[N * NX + j] - resX(j, N));
+                // for (int_t i = 0; i < N; i++) {
+                //     for (int_t j = 0; j < NX; j++)
+                //         err_x[i * NX + j] =
+                //             fabs(out_x[i * NX + j] - resX(j, i));
+                //     for (int_t j = 0; j < NU; j++)
+                //         err_u[i * NU + j] =
+                //             fabs(out_u[i * NU + j] - resU(j, i));
+                // }
+                // for (int_t j = 0; j < NX; j++)
+                //     err_x[N * NX + j] = fabs(out_x[N * NX + j] - resX(j, N));
 
                 // print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX,
                 // N+1);
                 // print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU,
                 // N);
 
-                print_matrix_name((char *)"stdout", (char *)"err_x", err_x, NX,
-                                  N + 1);
-                print_matrix_name((char *)"stdout", (char *)"err_u", err_u, NU,
-                                  N);
+                // print_matrix_name((char *)"stdout", (char *)"err_x", err_x, NX,
+                //                   N + 1);
+                // print_matrix_name((char *)"stdout", (char *)"err_u", err_u, NU,
+                //                   N);
 
-                std::cout << resX << std::endl;
-                std::cout << resU << std::endl;
+                // std::cout << "\nresX:" << std::endl;
+                // std::cout << resX << std::endl;
+                // std::cout << "\nresU:" << std::endl;
+                // std::cout << resU << std::endl;
 
                 MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N + 1);
                 MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
-
-                std::cout << "SQP_x:" << std::endl;
-                std::cout << SQP_x << std::endl;
 
                 REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
                 REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));

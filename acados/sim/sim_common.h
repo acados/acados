@@ -30,6 +30,7 @@ extern "C" {
 typedef struct {
     int_t nx;   // NX
     int_t nu;   // NU
+    int_t nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     real_t *x;  // x[NX]
     real_t *u;  // u[NU]
 
@@ -43,6 +44,7 @@ typedef struct {
 
     casadi_function_t vde;
     void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
+
     void (*VDE_adj)(const real_t *, real_t *);
     casadi_function_t jac;
     void (*jac_fun)(const int_t, const real_t *, real_t *, casadi_function_t);
