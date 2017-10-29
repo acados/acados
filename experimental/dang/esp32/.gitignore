@@ -1,2 +1,6 @@
+example_projects
 chen_nmpc_qpoases
 ocp_qp_hpmpc
+mass_spring_hpmpc
+mass_spring_qpoases
+pendulum_partial_tightening

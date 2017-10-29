@@ -6,10 +6,11 @@ python:
   - 3.5
 
 env:
-  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
-  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
-  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
-  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=ON
+  - PLATFORM="x86_64" CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
+  - PLATFORM="x86_64" CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
+  - PLATFORM="x86_64" CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
+  - PLATFORM="x86_64" CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=ON
+  - PLATFORM="arm_rpi"
 
 addons:
   apt:
@@ -20,6 +21,9 @@ addons:
 cache:
   directories:
     - /home/travis/octave_download/
+
+services:
+  - docker
 
 before_install:
   - echo "TRAVIS_REPO_SLUG=$TRAVIS_REPO_SLUG TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST TRAVIS_BRANCH=$TRAVIS_BRANCH"
@@ -34,7 +38,7 @@ install:
       source download_encrypted_files.sh;
     fi'
   - popd
-  - travis_retry source .travis_install.sh
+  - if [ "$PLATFORM" == "x86_64" ]; then travis_retry source .travis_install.sh; fi
   - export MPLBACKEND=Agg # For matplotlib
   - export MATLABPATH=$HOME/local/lib:$MATLABPATH
   - export PYTHONPATH=$HOME/local/lib:$PYTHONPATH
@@ -44,37 +48,53 @@ before_script:
   - set -e
   - mkdir -p /home/travis/octave_download
   - |
-    if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
-      # directory empty
-      pushd /home/travis/octave_download
-      wget http://packages.octave.org/download/optim-1.5.2.tar.gz
-      wget http://packages.octave.org/download/struct-1.0.14.tar.gz
-      popd
+    if [ "$PLATFORM" == "x86_64" ]; then
+      if [ -z "$(ls -1qA /home/travis/octave_download)" ]; then
+        # directory empty
+        pushd /home/travis/octave_download
+        wget http://packages.octave.org/download/optim-1.5.2.tar.gz
+        wget http://packages.octave.org/download/struct-1.0.14.tar.gz
+        popd
+      fi
     fi
 
 script:
-  # travis-wait seems to stop at 20 mins, regardless if output is being generated
-  - (while true ; do sleep 60 ; echo "ping" ; done ) &
-  - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
-  - cmake --build build --target lint
-  - cmake --build build
-  - cmake -E chdir build ctest --output-on-failure
-  - rm -r -f build
-  - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
-  - cmake --build build --clean-first
-  - rm -r -f build
-  - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
-  - export CXX="$CXX -std=c++11" # needed for octave
-  - cmake --build build
-  - cmake -E chdir build ctest --output-on-failure
-  - cmake --build build --target install
-  - python -c "import acados" # check installation
-  - cmake --build build --target acados_coverage || echo "Coverage report not generated"
+  - |
+    if [ "$PLATFORM" == "x86_64" ]; then
+    # travis-wait seems to stop at 20 mins, regardless if output is being generated
+      (while true ; do sleep 60 ; echo "ping" ; done ) &
+      cmake -E make_directory build
+      cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
+      cmake --build build --target lint
+      cmake --build build
+      cmake -E chdir build ctest --output-on-failure
+      rm -r -f build
+      cmake -E make_directory build
+      cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
+      cmake --build build --clean-first
+      rm -r -f build
+      cmake -E make_directory build
+      cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
+      export CXX="$CXX -std=c++11" # needed for octave
+      cmake --build build
+      cmake -E chdir build ctest --output-on-failure
+      cmake --build build --target install
+      python -c "import acados" # check installation
+      cmake --build build --target acados_coverage || echo "Coverage report not generated"
+    fi
+  # build for ARM on Raspberry Pi with QEMU
+  - |
+    if [ "$PLATFORM" == "arm_rpi" ]; then
+      # prepare qemu
+      docker run --rm --privileged multiarch/qemu-user-static:register --reset
+      # build image
+      docker build -t rpi-debian .
+    fi
 
 after_success:
-  - pushd build
-  # Upload report to CodeCov
-  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi
+  - |
+    if [ "$PLATFORM" == "x86_64" ]; then
+      pushd build
+      # Upload report to CodeCov
+      if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi
+    fi
