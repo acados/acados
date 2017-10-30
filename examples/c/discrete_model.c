@@ -62,7 +62,7 @@ int main() {
     allocate_ocp_nlp_in(N, nx, nu, nb, ng, &nlp);
     int_t idxb0[] = {0};
     nlp.idxb[0] = idxb0;
-    
+
     ocp_nlp_ls_cost ls_cost;
     allocate_ls_cost(N, nx, nu, ny, &ls_cost);
     nlp.cost = &ls_cost;
@@ -79,7 +79,7 @@ int main() {
     ls_cost.fun[N]->args->dims = &discrete_model_costN_work;
     ls_cost.fun[N]->args->sparsity = &discrete_model_costN_sparsity_out;
     casadi_wrapper_initialize(ls_cost.fun[N]->in, ls_cost.fun[N]->args, &ls_cost.fun[N]->work);
-    
+
     // Dynamics
     sim_solver **simulators = (sim_solver **) nlp.sim;
     for (int_t k = 0; k < N; k++) {
@@ -100,7 +100,7 @@ int main() {
     sensitivity_method.fun = &ocp_nlp_sm_gn;
     sensitivity_method.initialize = &ocp_nlp_sm_gn_initialize;
     sensitivity_method.destroy = &ocp_nlp_sm_gn_destroy;
-    
+
     ocp_nlp_sqp_args *nlp_args = ocp_nlp_sqp_create_arguments();
     nlp_args->maxIter = num_sqp_iterations;
     nlp_args->sensitivity_method = &sensitivity_method;

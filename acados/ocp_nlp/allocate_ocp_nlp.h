@@ -36,7 +36,7 @@ void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out);
 
 void free_ocp_nlp_out(int_t N, ocp_nlp_out *out);
 
-void allocate_ls_cost(int_t N, int_t *nx, int_t *nu, int_t *ny, ocp_nlp_ls_cost *ls_cost);    
+void allocate_ls_cost(int_t N, int_t *nx, int_t *nu, int_t *ny, ocp_nlp_ls_cost *ls_cost);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -47,7 +47,7 @@ typedef struct {
     casadi_function_t jac;
     void (*jac_fun)(const int_t, const real_t *, real_t *, casadi_function_t);
     casadi_function_t discrete_model;
-    
+
     real_t step;
     uint num_steps;
 

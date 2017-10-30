@@ -58,7 +58,7 @@ void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t ja
 
 void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
                         casadi_function_t discrete_model) {
-    
+
     const double *x = in;
     const double *u = in + nx;
 
