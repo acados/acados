@@ -796,6 +796,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         std::string model_name = generate_vde_function(f);
         void *handle = malloc(sizeof(void *));
         casadi_function_t eval = compile_and_load(model_name, &handle);
+        sim_solver **simulators = (sim_solver **)$self->sim;
         for (int_t i = 0; i < $self->N; i++) {
             simulators[i]->in->vde = eval;
             simulators[i]->in->VDE_forw = &vde_fun;
