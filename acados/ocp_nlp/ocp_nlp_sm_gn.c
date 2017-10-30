@@ -185,7 +185,7 @@ ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(
 int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
                     void *args_, void *memory_, void *workspace_) {
     ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *)workspace_;
-    (void) memory_;
+    ocp_nlp_sm_gn_memory *mem = memory_;
 
     const int_t N = sm_in->N;
     const int_t *nx = sm_in->nx;
@@ -206,17 +206,17 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     for (int_t i = 0; i < N; i++) {
         // Adjoint-based gradient correction (used for)
         // TODO(nielsvd): create new sensitivity methods for inexact newton methods
-        // sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
-        // if (mem->inexact_init) {
-        //     if (sim_opts->scheme.type != exact) {
-        //         sim[i]->in->sens_adj = true;
-        //         sim_opts->scheme.freeze = sm_in->freezeSens;
-        //         for (int_t j = 0; j < nx[i + 1]; j++)
-        //             sim[i]->in->S_adj[j] = -sm_in->pi[i][j];
-        //     }
-        // } else {
-        //     sim[i]->in->sens_adj = false;
-        // }
+        sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
+        if (mem->inexact_init) {
+            if (sim_opts->scheme.type != exact) {
+                sim[i]->in->sens_adj = true;
+                sim_opts->scheme.freeze = sm_in->freezeSens;
+                for (int_t j = 0; j < nx[i + 1]; j++)
+                    sim[i]->in->S_adj[j] = -sm_in->pi[i][j];
+            }
+        } else {
+            sim[i]->in->sens_adj = false;
+        }
 
         // Pass state and control to integrator
         for (int_t j = 0; j < nx[i]; j++) sim[i]->in->x[j] = sm_in->x[i][j];
@@ -282,18 +282,18 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
 
     // Adjoint-based gradient correction
     // TODO(nielsvd): create new sensitivity methods for inexact newton methods
-    // if (mem->inexact_init) {
-    //     for (int_t i = 0; i < N; i++) {
-    //         sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
-    //         if (sim_opts->scheme.type != exact) {
-    //             for (int_t j = 0; j < nx[i] + nu[i]; j++) {
-    //                 grad_f[i][j] += sim[i]->out->grad[j];
-    //             }
-    //         }
-    //     }
-    // } else {
-    //     mem->inexact_init = true;
-    // }
+    if (mem->inexact_init) {
+        for (int_t i = 0; i < N; i++) {
+            sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
+            if (sim_opts->scheme.type != exact) {
+                for (int_t j = 0; j < nx[i] + nu[i]; j++) {
+                    grad_f[i][j] += sim[i]->out->grad[j];
+                }
+            }
+        }
+    } else {
+        mem->inexact_init = true;
+    }
 
     return 0;
 }
