@@ -26,7 +26,11 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/jac_chain_nm4.c
     chain_model/vde_chain_nm2.c
     chain_model/vde_chain_nm3.c
-    chain_model/vde_chain_nm4.c)
+    chain_model/vde_chain_nm4.c
+    chain_model/ls_cost_*
+    chain_model/ls_costN_*
+    chain_model/pathcon_*
+    chain_model/pathconN_*)
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c

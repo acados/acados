@@ -17,7 +17,7 @@
 #
 #
 
-set(TEST_OCP_NLP_GENERATED_FILES
+set(TEST_OCP_NLP_GENERATED_FILES_TO_SED
     "${PROJECT_BINARY_DIR}/test/ocp_nlp/jac_chain_nm2.c"
     "${PROJECT_BINARY_DIR}/test/ocp_nlp/jac_chain_nm3.c"
     "${PROJECT_BINARY_DIR}/test/ocp_nlp/jac_chain_nm4.c"
@@ -26,13 +26,29 @@ set(TEST_OCP_NLP_GENERATED_FILES
     "${PROJECT_BINARY_DIR}/test/ocp_nlp/vde_chain_nm4.c"
 )
 
+set(TEST_OCP_NLP_GENERATED_FILES
+    "${TEST_OCP_NLP_GENERATED_FILES_TO_SED}"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_cost_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_cost_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_cost_nm4.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_costN_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_costN_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/ls_costN_nm4.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathcon_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathcon_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathcon_nm4.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathconN_nm2.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathconN_nm3.c"
+    "${PROJECT_BINARY_DIR}/test/ocp_nlp/pathconN_nm4.c"
+)
+
 set(GENERATION_DIR "${CMAKE_SOURCE_DIR}/test/ocp_nlp/chain/casadi")
 set(SED_COMMAND "'s/real_t\ a0/mem\ =\ 0;\ mem\ +=\ 0;\ w\ =\ 0;\ w\ +=\ 0;\ iw\ =\ 0;\ iw\ +=\ 0;  real_t\ a0/g'")
 
 add_custom_command(OUTPUT ${TEST_OCP_NLP_GENERATED_FILES}
     COMMAND "octave-cli" "--no-gui" "--path" "${GENERATION_DIR}:${EXTERNAL_SRC_DIR}/casadi-octave-v3.2.2"
         "${GENERATION_DIR}/generate_chain_mass.m"
-    COMMAND "sed" "-i.bak" "-e" "${SED_COMMAND}" ${TEST_OCP_NLP_GENERATED_FILES}
+    COMMAND "sed" "-i.bak" "-e" "${SED_COMMAND}" ${TEST_OCP_NLP_GENERATED_FILES_TO_SED}
     COMMENT "Generating data for OCP NLP test"
 )
 

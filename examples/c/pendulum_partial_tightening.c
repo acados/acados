@@ -39,7 +39,7 @@
 #include "hpmpc/include/lqcp_solvers.h"
 
 #include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/casadi_wrapper.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/timing.h"

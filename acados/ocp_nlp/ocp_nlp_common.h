@@ -20,76 +20,46 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/sim/sim_common.h"
-#include "acados/utils/types.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct {
-    //    const int_t *sparsity;
-    //    const int_t *idx_in;
-    int_t dim_in;
-    int_t dim_out;
-    void (*fun)(const real_t *, real_t *);
-    void (*jac_fun)(const real_t *, real_t *);
-    // TODO(rien): other directional and second order derivatives
-    // TODO(rien): define the overlapping 'sets' of functions, jacobians,
-    // hessians etc..
-} ocp_nlp_function;
+#include "acados/utils/types.h"
 
 typedef struct {
-    // TODO(rien): only for least squares cost with state and control reference
-    // atm
-    //    void *fun;
-    //    const int_t *ny;
-    real_t **W;
-    real_t **y_ref;
-} ocp_nlp_ls_cost;
-
-typedef struct { ocp_nlp_function *fun; } ocp_nlp_stage_cost;
+    const real_t **hess_l;  // TODO(nielsvd): Hessians of stage-wise
+                            // Lagrangians, document precise definition.
+    const real_t **grad_f;  // Gradients of stage-wise cost terms.
+    const real_t **jac_h;   // TODO(niels): rename (maybe phi?). Jacobians of
+                            // stage-wise integration operator.
+    const real_t **jac_g;   // Jacobians of stage-wise path constraints.
+    const real_t **h;       // TODO(nielsvd): rename (maybe phi?). Evaluation of
+                            // stage-wise integration operator.
+    const real_t **g;       // Evaluation of stage-wise path constraints.
+    const real_t **x;
+    const real_t **u;
+    const real_t **pi;
+    const real_t **lam;
+    // TODO(nielsvd): what about parameters and addtionaly variables such as
+    // lifted variables?
+} ocp_nlp_memory;
 
 typedef struct {
     int_t N;
     const int_t *nx;
     const int_t *nu;
     const int_t *nb;
-    const int_t *nc;
     const int_t *ng;
     const int_t **idxb;
     const real_t **lb;
     const real_t **ub;
-    const real_t **Cx;
-    const real_t **Cu;
-    const real_t **lc;
-    const real_t **uc;
     const real_t **lg;
     const real_t **ug;
 
     void *cost;
-    sim_solver *sim;
-    ocp_nlp_function *g;  // nonlinear constraints
-    // TODO(rien): what about invariants, e.g., algebraic constraints?
-
-    bool freezeSens;
+    void **sim;
+    void **path_constraints;
 } ocp_nlp_in;
-
-typedef struct {
-    int_t dummy;
-    int_t maxIter;
-} ocp_nlp_args;
-
-typedef struct {
-    int_t num_vars;
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-} ocp_nlp_memory;
-
-typedef struct { real_t *w; } ocp_nlp_work;
 
 typedef struct {
     real_t **x;
@@ -99,8 +69,9 @@ typedef struct {
 } ocp_nlp_out;
 
 typedef struct {
-    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem,
-                 void *work);
+    int_t (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
+    void (*initialize)(const ocp_nlp_in *nlp_in, void *args, void **mem, void **work);
+    void (*destroy)(void *mem, void *work);
     ocp_nlp_in *nlp_in;
     ocp_nlp_out *nlp_out;
     void *args;
@@ -108,11 +79,12 @@ typedef struct {
     void *work;
 } ocp_nlp_solver;
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_);
-void ocp_nlp_free_memory(int_t N, void *mem_);
+int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in);
+char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
+                            void *raw_memory);
+ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in);
 
-int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
-void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
+void ocp_nlp_destroy(void *mem_);
 
 #ifdef __cplusplus
 } /* extern "C" */

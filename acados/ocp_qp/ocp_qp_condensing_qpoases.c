@@ -208,9 +208,9 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(const ocp_qp_in *qp_in, void
     size += (2 * nvd + 2 * ngd) * sizeof(double);  // dual_sol
 
     if (ngd > 0)  // QProblem
-        size += sizeof(QProblem);
+        size += QProblem_calculateMemorySize(nvd, ngd);
     else  // QProblemB
-        size += sizeof(QProblemB);
+        size += QProblemB_calculateMemorySize(nvd);
 
     size = (size + 63) / 64 * 64;  // make multipl of typical cache line size
     size += 1 * 64;                // align once to typical cache line size
@@ -382,11 +382,9 @@ char *ocp_qp_condensing_qpoases_assign_memory(const ocp_qp_in *qp_in, void *args
     // qpOASES (HUGE!!!)
     //
     if (ngd > 0) {  // QProblem
-        (*qpoases_memory)->QP = (void *)c_ptr;
-        c_ptr += sizeof(QProblem);
+        c_ptr = QProblem_assignMemory(nvd, ngd, (QProblem **) &((*qpoases_memory)->QP), c_ptr);
     } else {  // QProblemB
-        (*qpoases_memory)->QPB = (void *)c_ptr;
-        c_ptr += sizeof(QProblemB);
+        c_ptr = QProblemB_assignMemory(nvd, (QProblemB **) &((*qpoases_memory)->QPB), c_ptr);
     }
 
     // int stuff

@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/sim/casadi_wrapper.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
