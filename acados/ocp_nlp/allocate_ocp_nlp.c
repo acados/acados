@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "acados/ocp_nlp/ocp_nlp_sm_common.h"
+#include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -177,4 +178,40 @@ void free_ocp_nlp_out(int_t N, ocp_nlp_out *out) {
     free(out->u);
     free(out->pi);
     free(out->lam);
+}
+
+void allocate_ls_cost(int_t N, int_t *nx, int_t *nu, int_t *ny, ocp_nlp_ls_cost *ls_cost) {
+    ls_cost->N = N;
+    ls_cost->W = calloc(N + 1, sizeof(*ls_cost->W));
+    ls_cost->y_ref = calloc(N + 1, sizeof(*ls_cost->y_ref));
+    ls_cost->fun = calloc(N + 1, sizeof(*ls_cost->fun));
+    for (int_t i = 0; i <= N; i++) {
+        ls_cost->W[i] = calloc(ny[i]*ny[i], sizeof(*ls_cost->W[i]));
+        ls_cost->y_ref[i] = calloc(ny[i], sizeof(*ls_cost->y_ref[i]));
+        ls_cost->fun[i] = malloc(sizeof(ocp_nlp_function));
+        // Initialize LS cost
+        ls_cost->fun[i]->nx = nx[i];
+        ls_cost->fun[i]->nu = nu[i];
+        ls_cost->fun[i]->np = 0;
+        ls_cost->fun[i]->ny = ny[i];
+        ls_cost->fun[i]->in = malloc(sizeof(casadi_wrapper_in));
+        ls_cost->fun[i]->in->compute_jac = true;
+        ls_cost->fun[i]->in->compute_hess = false;
+        ls_cost->fun[i]->out = malloc(sizeof(casadi_wrapper_out));
+        ls_cost->fun[i]->args = casadi_wrapper_create_arguments();
+    }
+}
+
+void free_ls_cost(int_t N, ocp_nlp_ls_cost *ls_cost) {
+    for (int_t i = 0; i <= N; i++) {
+        free(ls_cost->fun[i]);
+        free(ls_cost->fun[i]->in);
+        free(ls_cost->fun[i]->out);
+        free(ls_cost->fun[i]->args);
+        casadi_wrapper_destroy(ls_cost->fun[i]->work);
+        free(ls_cost->y_ref[i]);
+    }
+    free(ls_cost->W);
+    free(ls_cost->y_ref);
+    free(ls_cost->fun);
 }

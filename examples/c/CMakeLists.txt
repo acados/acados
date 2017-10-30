@@ -111,3 +111,12 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_compile_definitions(linear_mpc_example PRIVATE USE_ACADOS_TYPES)
     add_test(linear_mpc_example linear_mpc_example)
 endif()
+
+add_executable(discrete_model
+    discrete_model.c
+    discrete_model/discrete_model.c
+    discrete_model/discrete_model_cost.c
+    discrete_model/discrete_model_costN.c
+    )
+target_link_libraries(discrete_model acados)
+add_test(discrete_model discrete_model)

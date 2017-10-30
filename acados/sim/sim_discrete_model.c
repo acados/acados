@@ -17,24 +17,24 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_CASADI_WRAPPER_H_
-#define ACADOS_SIM_SIM_CASADI_WRAPPER_H_
+#include "acados/sim/sim_discrete_model.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "acados/sim/sim_casadi_wrapper.h"
+#include "acados/sim/sim_common.h"
 
-#include "acados/utils/types.h"
+int_t sim_discrete_model(const sim_in *in, sim_out *out, void *args, void *mem, void *work) {
 
-void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde);
-
-void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t jac);
-
-void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
-    casadi_function_t discrete_model);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#endif  // ACADOS_SIM_SIM_CASADI_WRAPPER_H_
+    int_t nx = in->nx;
+    int_t nu = in->nu;
+    real_t in_array[nx+nu], out_array[nx+nx*nu];
+    for (int_t i = 0; i < nx; i++)
+        in_array[i] = in->x[i];
+    for (int_t i = 0; i < nu; i++)
+        in_array[nx+i] = in->u[i];
+    discrete_model_fun(in->nx, in->nu, in_array, out_array, in->discrete_model);
+    for (int_t i = 0; i < nx; i++)
+        out->xn[i] = out_array[i];
+    for (int_t i = 0; i < nx * (nx+nu); i++)
+        out->S_forw[i] = out_array[nx+i];
+    return 0;
+}
