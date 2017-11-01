@@ -28,7 +28,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 
-#include "acados/sim/casadi_wrapper.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"

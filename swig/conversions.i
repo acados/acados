@@ -516,6 +516,15 @@ void fill_array_from(const LangObject *input, T **array, const int_t length,
     fill_array_from(input, array, length, nb_elems, nb_columns);
 }
 
+template<typename T>
+void fill_array_from(const LangObject *input, T **array, const int_t length) {
+
+    int_t nb[length];
+    for (int_t i = 0; i < length; i++)
+        nb[i] = 1;
+    fill_array_from(input, array, length, nb, nb);
+}
+
 // TODO(roversch): This can probably be merged with the new_sequence_from functions.
 LangObject *new_output_list_from(const LangObject **input, const int_t length) {
     LangObject *output_list = new_sequence(length);
@@ -614,6 +623,13 @@ LangObject *new_sim_output_tuple(LangObject *final_state, LangObject *forward_se
     const char *field_names[2] = {"final_state", "forward_sensitivities"};
     LangObject *fields[2] = {final_state, forward_sensitivities};
     return new_output_tuple(2, field_names, fields);
+}
+
+LangObject *new_ocp_nlp_function_output_tuple(
+    LangObject * y, LangObject * jac_y, LangObject * hess_y) {
+    const char *field_names[3] = {"y", "jac_y", "hess_y"};
+    LangObject *fields[3] = {y, jac_y, hess_y};
+    return new_output_tuple(3, field_names, fields);
 }
 
 void fill_array_from(const LangObject *input, int_t *array, const int_t length) {

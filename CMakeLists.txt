@@ -26,9 +26,9 @@ endif()
 
 project(acados LANGUAGES C CXX)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
-    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-endif()
+# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
+#     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+# endif()
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -108,6 +108,8 @@ add_custom_target(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint
-if(NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
-    include(lint)
+if (NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
+include(lint)
+else()
+message(STATUS "Skipping lint (python not found).")
 endif()

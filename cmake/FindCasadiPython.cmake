@@ -23,15 +23,17 @@ find_package(PythonInterp 3 REQUIRED)
 find_path(
     CASADI_PYTHON_ROOT
     NAMES "casadi/casadi.py"
+    HINTS ${CMAKE_SOURCE_DIR}/external/*
     PATHS ENV PYTHONPATH)
 
 if(NOT CASADI_PYTHON_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
+message(STATUS "Found Casadi-python: ${CASADI_PYTHON_ROOT}")
 
 # Determine the version number
 execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" -c "from sys import path; path.append(r'${CASADI_PYTHON_ROOT}');import casadi; print(casadi.CasadiMeta_getVersion())"
+    COMMAND "${PYTHON_EXECUTABLE}" -c "from sys import path; path.insert(0, r'${CASADI_PYTHON_ROOT}');import casadi; print(casadi.CasadiMeta_getVersion())"
     OUTPUT_VARIABLE CASADI_PYTHON_VERSION)
 
 string(STRIP "${CASADI_PYTHON_VERSION}" CASADI_PYTHON_VERSION)

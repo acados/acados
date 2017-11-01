@@ -357,7 +357,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_g;
     inf_norm_res[0] = 0;
     for (ii = 0; ii <= N; ii++) {
-        res_g = (ipm_workspace->res_g + ii)->pa;
+        res_g = (ipm_workspace->res_workspace->res_g + ii)->pa;
         for (jj = 0; jj < nu[ii] + nx[ii]; jj++) {
             res_tmp = fabs(res_g[jj]);
             if (res_tmp > inf_norm_res[0]) {
@@ -368,7 +368,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_b;
     inf_norm_res[1] = 0;
     for (ii = 0; ii < N; ii++) {
-        res_b = (ipm_workspace->res_b + ii)->pa;
+        res_b = (ipm_workspace->res_workspace->res_b + ii)->pa;
         for (jj = 0; jj < nx[ii + 1]; jj++) {
             res_tmp = fabs(res_b[jj]);
             if (res_tmp > inf_norm_res[1]) {
@@ -379,28 +379,28 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_d;
     inf_norm_res[2] = 0;
     for (ii = 0; ii <= N; ii++) {
-        res_d = (ipm_workspace->res_d + ii)->pa+0;
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+0;
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
                 inf_norm_res[2] = res_tmp;
             }
         }
-        res_d = (ipm_workspace->res_d + ii)->pa+nb[ii]+ng[ii];
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+nb[ii]+ng[ii];
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
                 inf_norm_res[2] = res_tmp;
             }
         }
-        res_d = (ipm_workspace->res_d + ii)->pa+nb[ii];
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+nb[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
                 inf_norm_res[2] = res_tmp;
             }
         }
-        res_d = (ipm_workspace->res_d + ii)->pa+2*nb[ii]+ng[ii];
+        res_d = (ipm_workspace->res_workspace->res_d + ii)->pa+2*nb[ii]+ng[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_d[jj]);
             if (res_tmp > inf_norm_res[2]) {
@@ -411,28 +411,28 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     double *res_m;
     inf_norm_res[3] = 0;
     for (ii = 0; ii <= N; ii++) {
-        res_m = (ipm_workspace->res_m + ii)->pa+0;
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+0;
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
                 inf_norm_res[3] = res_tmp;
             }
         }
-        res_m = (ipm_workspace->res_m + ii)->pa+nb[ii]+ng[ii];
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+nb[ii]+ng[ii];
         for (jj = 0; jj < nb[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
                 inf_norm_res[3] = res_tmp;
             }
         }
-        res_m = (ipm_workspace->res_m + ii)->pa+nb[ii];
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+nb[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
                 inf_norm_res[3] = res_tmp;
             }
         }
-        res_m = (ipm_workspace->res_m + ii)->pa+2*nb[ii]+ng[ii];
+        res_m = (ipm_workspace->res_workspace->res_m + ii)->pa+2*nb[ii]+ng[ii];
         for (jj = 0; jj < ng[ii]; jj++) {
             res_tmp = fabs(res_m[jj]);
             if (res_tmp > inf_norm_res[3]) {
@@ -440,7 +440,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
             }
         }
     }
-    inf_norm_res[4] = ipm_workspace->res_mu;
+    inf_norm_res[4] = ipm_workspace->res_workspace->res_mu;
 
     // max number of iterations
     if (ipm_workspace->iter == args->iter_max) acados_status = ACADOS_MAXITER;

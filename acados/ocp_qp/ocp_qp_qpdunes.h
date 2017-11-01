@@ -24,9 +24,7 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
-#include "qpDUNES-dev/include/qpDUNES.h"
+#include "qpDUNES.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"

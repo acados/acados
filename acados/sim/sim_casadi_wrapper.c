@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "acados/sim/casadi_wrapper.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 
 void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde) {
 

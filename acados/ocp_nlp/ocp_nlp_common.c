@@ -19,73 +19,163 @@
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
+#include <assert.h>
+
 #include <stdlib.h>
-#include <string.h>
 
-static int_t number_of_primal_vars(const ocp_nlp_in *in) {
-    int_t num_vars = 0;
-    for (int_t i = 0; i <= in->N; i++) {
-        num_vars += in->nx[i] + in->nu[i];
-    }
-    return num_vars;
+void size_of_memory_elements(const ocp_nlp_in *nlp_in, const int_t stage,
+                             int_t *size_hess_l, int_t *size_grad_f,
+                             int_t *size_jac_h, int_t *size_jac_g,
+                             int_t *size_h, int_t *size_g, int_t *size_x,
+                             int_t *size_u, int_t *size_pi, int_t *size_lam) {
+    int_t N = nlp_in->N;
+    int_t *nx = (int_t *)nlp_in->nx;
+    int_t *nu = (int_t *)nlp_in->nu;
+    int_t *ng = (int_t *)nlp_in->ng;
+    int_t *nb = (int_t *)nlp_in->nb;
+
+    *size_hess_l =
+        ((nx[stage] + nu[stage]) * (nx[stage] + nu[stage])) * sizeof(real_t);
+    *size_grad_f = (nx[stage] + nu[stage]) * sizeof(real_t);
+    *size_jac_h =
+        (stage < N) ? (nx[stage + 1] * (nx[stage] + nu[stage])) * sizeof(real_t)
+                    : 0;
+    *size_jac_g = (ng[stage] * (nx[stage] + nu[stage])) * sizeof(real_t);
+    *size_h = (stage < N) ? nx[stage + 1] * sizeof(real_t) : 0;
+    *size_g = ng[stage] * sizeof(real_t);
+    *size_x = nx[stage] * sizeof(real_t);
+    *size_u = nu[stage] * sizeof(real_t);
+    *size_pi = (stage < N) ? nx[stage+1] * sizeof(real_t) : 0;
+    *size_lam = (2 * nb[stage] + 2 * ng[stage]) * sizeof(real_t);
 }
 
-void ocp_nlp_create_memory(const ocp_nlp_in *in, void *mem_) {
-    ocp_nlp_memory *mem = (ocp_nlp_memory *)mem_;
-    mem->num_vars = number_of_primal_vars(in);
-    mem->x = (real_t **)calloc(in->N + 1, sizeof(*mem->x));
-    mem->u = (real_t **)calloc(in->N + 1, sizeof(*mem->u));
-    mem->pi = (real_t **)calloc(in->N, sizeof(*mem->pi));
-    mem->lam = (real_t **)calloc(in->N + 1, sizeof(*mem->lam));
-    for (int_t i = 0; i < in->N; i++) {
-        mem->x[i] = (real_t *)calloc(in->nx[i], sizeof(*mem->x[i]));
-        mem->u[i] = (real_t *)calloc(in->nu[i], sizeof(*mem->u[i]));
-        mem->pi[i] = (real_t *)calloc(in->nx[i+1], sizeof(*mem->pi[i]));
-        mem->lam[i] = (real_t *)calloc(2 * (in->nb[i] + in->nc[i] + in->ng[i]),
-            sizeof(*mem->lam[i]));
+int_t ocp_nlp_calculate_memory_size(const ocp_nlp_in *nlp_in) {
+    int_t N = nlp_in->N;
+
+    int_t size = sizeof(ocp_nlp_memory);
+
+    size += sizeof(real_t *) * (N + 1);  // hess_l
+    size += sizeof(real_t *) * (N + 1);  // grad_f
+    size += sizeof(real_t *) * (N + 1);  // jac_h
+    size += sizeof(real_t *) * (N + 1);  // jac_g
+    size += sizeof(real_t *) * (N + 1);  // h
+    size += sizeof(real_t *) * (N + 1);  // g
+    size += sizeof(real_t *) * (N + 1);  // x
+    size += sizeof(real_t *) * (N + 1);  // u
+    size += sizeof(real_t *) * (N + 1);  // pi
+    size += sizeof(real_t *) * (N + 1);  // lam
+
+    for (int_t i = 0; i <= nlp_in->N; i++) {
+        int_t size_hess_l, size_grad_f, size_jac_h, size_jac_g, size_h, size_g;
+        int_t size_x, size_u, size_pi, size_lam;
+        size_of_memory_elements(nlp_in, i, &size_hess_l, &size_grad_f,
+                                &size_jac_h, &size_jac_g, &size_h, &size_g,
+                                &size_x, &size_u, &size_pi, &size_lam);
+        size += size_hess_l + size_grad_f + size_jac_h + size_jac_g + size_h +
+                size_g;
+        size += size_x + size_u + size_pi + size_lam;
     }
-    mem->x[in->N] = (real_t *)calloc(in->nx[in->N], sizeof(*mem->x[in->N]));
-    mem->u[in->N] = (real_t *)calloc(in->nu[in->N], sizeof(*mem->u[in->N]));
-    mem->lam[in->N] = (real_t *)calloc(2 * (in->nb[in->N] + in->nc[in->N] + in->ng[in->N]),
-        sizeof(*mem->lam[in->N]));
-}
-
-void ocp_nlp_free_memory(int_t N, void *mem_) {
-    ocp_nlp_memory *mem = (ocp_nlp_memory *)mem_;
-
-    for (int_t i = 0; i < N; i++) {
-        free(mem->x[i]);
-        free(mem->u[i]);
-        free(mem->pi[i]);
-        free(mem->lam[i]);
-    }
-    free(mem->x[N]);
-    free(mem->u[N]);
-    free(mem->lam[N]);
-    free(mem->x);
-    free(mem->u);
-    free(mem->pi);
-    free(mem->lam);
-}
-
-int_t ocp_nlp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
-    ocp_nlp_args *args = (ocp_nlp_args *)args_;
-
-    int_t size;
-    int_t num_vars = number_of_primal_vars(in);
-
-    args->dummy = 1;
-
-    size = sizeof(ocp_nlp_work);
-    size += num_vars * sizeof(real_t);
 
     return size;
 }
 
-void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem) {
-    char *ptr = (char *)work;
+char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
+                            void *raw_memory) {
+    int_t N = nlp_in->N;
 
-    ptr += sizeof(ocp_nlp_work);
-    work->w = (real_t *)ptr;
-    ptr += mem->num_vars * sizeof(real_t);  // TODO(robin): ptr never used again?
+    ocp_nlp_memory **nlp_memory = (ocp_nlp_memory **)mem_;
+    char *c_ptr = (char *)raw_memory;
+
+    *nlp_memory = (ocp_nlp_memory *)c_ptr;
+    c_ptr += sizeof(ocp_nlp_memory);
+
+    (*nlp_memory)->hess_l = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->grad_f = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->jac_h = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->jac_g = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->h = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->g = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->x = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->u = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->pi = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    (*nlp_memory)->lam = (const real_t **)c_ptr;
+    c_ptr += sizeof(const real_t *) * (N + 1);
+
+    for (int_t i = 0; i <= nlp_in->N; i++) {
+        int_t size_hess_l, size_grad_f, size_jac_h, size_jac_g, size_h, size_g;
+        int_t size_x, size_u, size_pi, size_lam;
+        size_of_memory_elements(nlp_in, i, &size_hess_l, &size_grad_f,
+                                &size_jac_h, &size_jac_g, &size_h, &size_g,
+                                &size_x, &size_u, &size_pi, &size_lam);
+
+        (*nlp_memory)->hess_l[i] = (const real_t *)c_ptr;
+        c_ptr += size_hess_l;
+
+        (*nlp_memory)->grad_f[i] = (const real_t *)c_ptr;
+        c_ptr += size_grad_f;
+
+        (*nlp_memory)->jac_h[i] = (const real_t *)c_ptr;
+        c_ptr += size_jac_h;
+
+        (*nlp_memory)->jac_g[i] = (const real_t *)c_ptr;
+        c_ptr += size_jac_g;
+
+        (*nlp_memory)->h[i] = (const real_t *)c_ptr;
+        c_ptr += size_h;
+
+        (*nlp_memory)->g[i] = (const real_t *)c_ptr;
+        c_ptr += size_g;
+
+        (*nlp_memory)->x[i] = (const real_t *)c_ptr;
+        c_ptr += size_x;
+
+        (*nlp_memory)->u[i] = (const real_t *)c_ptr;
+        c_ptr += size_u;
+
+        (*nlp_memory)->pi[i] = (const real_t *)c_ptr;
+        c_ptr += size_pi;
+
+        (*nlp_memory)->lam[i] = (const real_t *)c_ptr;
+        c_ptr += size_lam;
+    }
+
+    return c_ptr;
+}
+
+ocp_nlp_memory *ocp_nlp_create_memory(const ocp_nlp_in *nlp_in) {
+    ocp_nlp_memory *mem;
+
+    int_t memory_size = ocp_nlp_calculate_memory_size(nlp_in);
+    void *raw_memory_ptr = malloc(memory_size);
+
+    char *ptr_end =
+        ocp_nlp_assign_memory(nlp_in, (void **)&mem, raw_memory_ptr);
+    assert((char *)raw_memory_ptr + memory_size >= ptr_end);
+    (void)ptr_end;
+
+    return mem;
+}
+
+void ocp_nlp_destroy(void *mem_) {
+    ocp_nlp_memory *mem = (ocp_nlp_memory *)mem_;
+
+    free(mem);
 }
