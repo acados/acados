@@ -19,6 +19,8 @@
 
 #include "acados/sim/sim_discrete_model.h"
 
+#include <stdlib.h>
+
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 
