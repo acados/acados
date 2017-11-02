@@ -26,7 +26,9 @@ int_t sim_discrete_model(const sim_in *in, sim_out *out, void *args, void *mem, 
 
     int_t nx = in->nx;
     int_t nu = in->nu;
-    real_t in_array[nx+nu], out_array[nx+nx*nu];
+    real_t *in_array, *out_array;
+    in_array = calloc(nx+nu, sizeof(real_t));
+    out_array = calloc(nx+nx*nu, sizeof(real_t));
     for (int_t i = 0; i < nx; i++)
         in_array[i] = in->x[i];
     for (int_t i = 0; i < nu; i++)
