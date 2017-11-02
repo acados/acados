@@ -45,8 +45,13 @@ int main() {
     int_t num_sqp_iterations = 1;
 
     // Problem dimensions
-    int_t nx[N+1], nu[N+1], nb[N+1], ng[N+1], ny[N+1];
-
+    int_t *nx, *nu, *nb, *ng, *ny;
+    nx = calloc(N+1, sizeof(int_t));
+    nu = calloc(N+1, sizeof(int_t));
+    nb = calloc(N+1, sizeof(int_t));
+    ng = calloc(N+1, sizeof(int_t));
+    ny = calloc(N+1, sizeof(int_t));
+    
     for (int_t k = 0; k <= N; k++) {
         nx[k] = NX;
         nu[k] = NU;
