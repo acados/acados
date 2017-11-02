@@ -30,9 +30,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef ACADOS_WITH_HPMPC
-#include "hpmpc/include/aux_d.h"
-
 /************************************************
  matrix-matrix multiplication
 ************************************************/
@@ -171,6 +168,9 @@ void dger_3l(int m, int n, double alpha, double *x, int incx, double *y,
 
     return;
 }
+
+#ifdef ACADOS_WITH_HPMPC
+#include "hpmpc/include/aux_d.h"
 
 void dgetf2_3l(int m, int n, double *A, int lda, int *ipiv, int *info) {
     if (m <= 0 || n <= 0) return;

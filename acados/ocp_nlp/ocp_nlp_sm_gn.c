@@ -185,7 +185,7 @@ ocp_nlp_sm_gn_workspace *ocp_nlp_sm_gn_create_workspace(
 int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
                     void *args_, void *memory_, void *workspace_) {
     ocp_nlp_sm_gn_workspace *work = (ocp_nlp_sm_gn_workspace *)workspace_;
-    ocp_nlp_sm_gn_memory *mem = (ocp_nlp_sm_gn_memory *)memory_;
+    ocp_nlp_sm_gn_memory *mem = memory_;
 
     const int_t N = sm_in->N;
     const int_t *nx = sm_in->nx;
@@ -221,8 +221,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         // Pass state and control to integrator
         for (int_t j = 0; j < nx[i]; j++) sim[i]->in->x[j] = sm_in->x[i][j];
         for (int_t j = 0; j < nu[i]; j++) sim[i]->in->u[j] = sm_in->u[i][j];
-        sim[i]->fun(sim[i]->in, sim[i]->out, sim[i]->args, sim[i]->mem,
-                    sim[i]->work);
+        sim[i]->fun(sim[i]->in, sim[i]->out, sim[i]->args, sim[i]->mem, sim[i]->work);
 
         // Sensitivities for the linearization of the system dynamics
         // TODO(rien): transition functions for changing dimensions not yet
@@ -241,12 +240,6 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         casadi_wrapper_out *ls_out = ls_cost->fun[i]->out;
         casadi_wrapper_args *ls_args = ls_cost->fun[i]->args;
         casadi_wrapper_workspace *ls_work = ls_cost->fun[i]->work;
-
-        // Path constraints for shooting node i
-        casadi_wrapper_in *pc_in = path_constraints[i]->in;
-        casadi_wrapper_out *pc_out = path_constraints[i]->out;
-        casadi_wrapper_args *pc_args = path_constraints[i]->args;
-        casadi_wrapper_workspace *pc_work = path_constraints[i]->work;
 
         // Sensitivities for the quadratic approximation of the objective
         // Compute residual vector F and its Jacobian
@@ -270,12 +263,19 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i],
                    grad_f[i]);
 
-        // Sensitivities for the linearization of the path constraints
-        casadi_wrapper(pc_in, pc_out, pc_args, pc_work);
-        for (int_t j = 0; j < ng[i]; j++) {
-            g[i][j] = work->G[i][j];
-            for (int_t k = 0; k < nx[i] + nu[i]; k++) {
-                jac_g[i][k * ng[i] + j] = work->DG[i][k * ng[i] + j];
+        if (sm_in->ng[i] > 0) {
+            // Path constraints for shooting node i
+            casadi_wrapper_in *pc_in = path_constraints[i]->in;
+            casadi_wrapper_out *pc_out = path_constraints[i]->out;
+            casadi_wrapper_args *pc_args = path_constraints[i]->args;
+            casadi_wrapper_workspace *pc_work = path_constraints[i]->work;
+            // Sensitivities for the linearization of the path constraints
+            casadi_wrapper(pc_in, pc_out, pc_args, pc_work);
+            for (int_t j = 0; j < ng[i]; j++) {
+                g[i][j] = work->G[i][j];
+                for (int_t k = 0; k < nx[i] + nu[i]; k++) {
+                    jac_g[i][k * ng[i] + j] = work->DG[i][k * ng[i] + j];
+                }
             }
         }
     }
@@ -322,15 +322,16 @@ void ocp_nlp_sm_gn_initialize(const ocp_nlp_sm_in *sm_in, void *args_,
         ls_cost->fun[i]->in->compute_jac = true;
         ls_cost->fun[i]->in->compute_hess = false;
 
-        // assign correct pointers to path_constraints-array
-        path_constraints[i]->in->x = sm_in->x[i];
-        path_constraints[i]->in->u = sm_in->u[i];
-        path_constraints[i]->in->p =
-            NULL;  // TODO(nielsvd): support for parameters
-        path_constraints[i]->out->y = (*work)->G[i];
-        path_constraints[i]->out->jac_y = (*work)->DG[i];
-        path_constraints[i]->in->compute_jac = true;
-        path_constraints[i]->in->compute_hess = false;
+        if (sm_in->ng[i] > 0) {
+            // assign correct pointers to path_constraints-array
+            path_constraints[i]->in->x = sm_in->x[i];
+            path_constraints[i]->in->u = sm_in->u[i];
+            path_constraints[i]->in->p = NULL;  // TODO(nielsvd): support for parameters
+            path_constraints[i]->out->y = (*work)->G[i];
+            path_constraints[i]->out->jac_y = (*work)->DG[i];
+            path_constraints[i]->in->compute_jac = true;
+            path_constraints[i]->in->compute_hess = false;
+        }
     }
 }
 

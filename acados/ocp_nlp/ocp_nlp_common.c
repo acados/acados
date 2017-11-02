@@ -89,34 +89,34 @@ char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
     *nlp_memory = (ocp_nlp_memory *)c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
 
-    (*nlp_memory)->hess_l = (const real_t **)c_ptr;
+    (*nlp_memory)->hess_l = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->grad_f = (const real_t **)c_ptr;
+    (*nlp_memory)->grad_f = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->jac_h = (const real_t **)c_ptr;
+    (*nlp_memory)->jac_h = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->jac_g = (const real_t **)c_ptr;
+    (*nlp_memory)->jac_g = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->h = (const real_t **)c_ptr;
+    (*nlp_memory)->h = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->g = (const real_t **)c_ptr;
+    (*nlp_memory)->g = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->x = (const real_t **)c_ptr;
+    (*nlp_memory)->x = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->u = (const real_t **)c_ptr;
+    (*nlp_memory)->u = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->pi = (const real_t **)c_ptr;
+    (*nlp_memory)->pi = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
-    (*nlp_memory)->lam = (const real_t **)c_ptr;
+    (*nlp_memory)->lam = (real_t **)c_ptr;
     c_ptr += sizeof(const real_t *) * (N + 1);
 
     for (int_t i = 0; i <= nlp_in->N; i++) {
@@ -126,34 +126,34 @@ char *ocp_nlp_assign_memory(const ocp_nlp_in *nlp_in, void **mem_,
                                 &size_jac_h, &size_jac_g, &size_h, &size_g,
                                 &size_x, &size_u, &size_pi, &size_lam);
 
-        (*nlp_memory)->hess_l[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->hess_l[i] = (real_t *)c_ptr;
         c_ptr += size_hess_l;
 
-        (*nlp_memory)->grad_f[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->grad_f[i] = (real_t *)c_ptr;
         c_ptr += size_grad_f;
 
-        (*nlp_memory)->jac_h[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->jac_h[i] = (real_t *)c_ptr;
         c_ptr += size_jac_h;
 
-        (*nlp_memory)->jac_g[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->jac_g[i] = (real_t *)c_ptr;
         c_ptr += size_jac_g;
 
-        (*nlp_memory)->h[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->h[i] = (real_t *)c_ptr;
         c_ptr += size_h;
 
-        (*nlp_memory)->g[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->g[i] = (real_t *)c_ptr;
         c_ptr += size_g;
 
-        (*nlp_memory)->x[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->x[i] = (real_t *)c_ptr;
         c_ptr += size_x;
 
-        (*nlp_memory)->u[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->u[i] = (real_t *)c_ptr;
         c_ptr += size_u;
 
-        (*nlp_memory)->pi[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->pi[i] = (real_t *)c_ptr;
         c_ptr += size_pi;
 
-        (*nlp_memory)->lam[i] = (const real_t *)c_ptr;
+        (*nlp_memory)->lam[i] = (real_t *)c_ptr;
         c_ptr += size_lam;
     }
 
