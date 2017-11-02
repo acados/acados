@@ -51,7 +51,7 @@ int main() {
     nb = calloc(N+1, sizeof(int_t));
     ng = calloc(N+1, sizeof(int_t));
     ny = calloc(N+1, sizeof(int_t));
-    
+
     for (int_t k = 0; k <= N; k++) {
         nx[k] = NX;
         nu[k] = NU;
