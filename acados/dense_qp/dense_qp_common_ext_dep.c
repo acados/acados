@@ -52,3 +52,14 @@ dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns) {
 
     return qp_out;
 }
+
+
+
+void print_dense_qp_in(dense_qp_in *qp_in)
+{
+    int nv = qp_in->nv;
+
+    printf("H =\n");
+    d_print_strmat(nv, nv, qp_in->Hg);
+    // TODO(dimitris): print all data
+}

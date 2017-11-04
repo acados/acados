@@ -37,8 +37,10 @@ ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
 //
 void print_ocp_qp_dims(ocp_qp_dims *dims);
-
+//
 void print_ocp_qp_in(ocp_qp_in *qp_in);
+//
+void print_ocp_qp_out(ocp_qp_out *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

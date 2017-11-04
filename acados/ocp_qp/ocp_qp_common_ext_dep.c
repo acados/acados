@@ -113,7 +113,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
             d_print_tran_strvec(nx[ii+1], &qp_in->b[ii], 0);
         }
 
-        printf("idxb = %d\n", qp_in->idxb[ii][0]);
+        printf("idxb = (nb = %d = %d + %d)\n", qp_in->size->nb[ii], qp_in->size->nbu[ii], qp_in->size->nbx[ii]);
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
 
         printf("d =\n");
@@ -121,6 +121,38 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     }
 
 }
+
+
+
+void print_ocp_qp_out(ocp_qp_out *qp_out)
+{
+    int N = qp_out->size->N;
+    int *nx = qp_out->size->nx;
+    int *nu = qp_out->size->nu;
+    int *nb = qp_out->size->nb;
+    int *ng = qp_out->size->ng;
+
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        printf("k = %d\n\n", ii);
+
+        printf("ux =\n");
+        d_print_tran_strvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+
+        if (ii < N)
+        {
+            printf("pi =\n");
+            d_print_tran_strvec(nx[ii], &qp_out->pi[ii], 0);
+        }
+
+        printf("lam =\n");
+        d_print_tran_strvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+    }
+
+}
+
+
+
 // TEMP TO FIX GN_SQP
 
 // void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b,

@@ -31,6 +31,8 @@ extern "C" {
 dense_qp_in *create_dense_qp_in(int nv, int ne, int nb, int ng, int ns);
 //
 dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns);
+//
+void print_dense_qp_in(dense_qp_in *qp_in);
 
 #ifdef __cplusplus
 } /* extern "C" */
