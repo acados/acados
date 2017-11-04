@@ -24,8 +24,8 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm_ext_dep.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -38,7 +38,7 @@ int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" acados + condensing_hpipm\n");
+    printf(" acados + condensing_qpoases\n");
     printf("\n");
     printf("\n");
     printf("\n");
@@ -48,6 +48,9 @@ int main() {
     ************************************************/
 
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
+
+    // print_ocp_qp_dims(qp_in->size);
+    // exit(1);
 
     int N = qp_in->size->N;
     int *nx = qp_in->size->nx;
@@ -65,9 +68,9 @@ int main() {
     * ipm
     ************************************************/
 
-    ocp_qp_condensing_hpipm_args *arg = ocp_qp_condensing_hpipm_create_arguments(qp_in->size);
+    ocp_qp_condensing_qpoases_args *arg = ocp_qp_condensing_qpoases_create_arguments(qp_in->size);
 
-    ocp_qp_condensing_hpipm_memory *mem = ocp_qp_condensing_hpipm_create_memory(qp_in, arg);
+    ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_create_memory(qp_in, arg);
 
 	int acados_return; // 0 normal; 1 max iter
 
@@ -75,7 +78,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_condensing_hpipm(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_condensing_qpoases(qp_in, qp_out, arg, mem);
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -107,8 +110,8 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        mem->solver_memory->hpipm_workspace->iter, NREP, time);
+    printf("\nSolution time for %d NWSR, averaged over %d runs: %5.2e seconds\n\n\n",
+        mem->solver_memory->nwsr, NREP, time);
 
     /************************************************
     * free memory

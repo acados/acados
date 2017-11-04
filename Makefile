@@ -8,13 +8,6 @@ include ./Makefile.rule
 
 OBJS =
 
-# # dense qp
-# OBJS += acados/dense_qp/dense_qp_common.o
-# OBJS += acados/dense_qp/dense_qp_common_ext_dep.o
-# OBJS += acados/dense_qp/dense_qp_hpipm.o
-# OBJS += acados/dense_qp/dense_qp_hpipm_ext_dep.o
-# OBJS += acados/dense_qp/dense_qp_qpoases.o
-# OBJS += acados/dense_qp/dense_qp_qpoases_ext_dep.o
 # # ocp nlp
 # OBJS += acados/ocp_nlp/allocate_ocp_nlp.o
 # OBJS += acados/ocp_nlp/ocp_nlp_common.o
@@ -22,18 +15,25 @@ OBJS =
 # # OBJS += acados/ocp_nlp/ocp_nlp_sm_gn.o
 # OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
 # # OBJS += acados/ocp_nlp/ocp_nlp_sqp_ext_dep.o
+# dense qp
+OBJS += acados/dense_qp/dense_qp_common.o
+OBJS += acados/dense_qp/dense_qp_common_ext_dep.o
+OBJS += acados/dense_qp/dense_qp_hpipm.o
+OBJS += acados/dense_qp/dense_qp_hpipm_ext_dep.o
+OBJS += acados/dense_qp/dense_qp_qpoases.o
+OBJS += acados/dense_qp/dense_qp_qpoases_ext_dep.o
 # ocp qp
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_ext_dep.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm_ext_dep.o
-# OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm.o
-# OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm_ext_dep.o
-# OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases.o
-# OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.o
-# OBJS += acados/ocp_qp/ocp_qp_condensing.o
-# OBJS += acados/ocp_qp/ocp_qp_condensing_ext_dep.o
+OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm.o
+OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm_ext_dep.o
+OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases.o
+OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.o
+OBJS += acados/ocp_qp/ocp_qp_condensing.o
+OBJS += acados/ocp_qp/ocp_qp_condensing_ext_dep.o
 #sim
 OBJS += acados/sim/allocate_sim.o
 OBJS += acados/sim/casadi_wrapper.o

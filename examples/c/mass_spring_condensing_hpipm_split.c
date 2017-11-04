@@ -21,16 +21,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 // acados
+#include "acados/dense_qp/dense_qp_common.h"
+#include "acados/dense_qp/dense_qp_common_ext_dep.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_hpipm_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_ext_dep.h"
+#include "acados/ocp_qp/ocp_qp_condensing.h"
+#include "acados/ocp_qp/ocp_qp_condensing_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm_ext_dep.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#define ELIMINATE_X0
 #define NREP 1000
+#define ELIMINATE_X0
 
 #include "./mass_spring.c"
 
@@ -38,7 +42,7 @@ int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" acados + condensing_hpipm\n");
+    printf(" acados + condensing + hpipm + expansion\n");
     printf("\n");
     printf("\n");
     printf("\n");
@@ -56,29 +60,60 @@ int main() {
     int *ng = qp_in->size->ng;
 
     /************************************************
+    * dense qp
+    ************************************************/
+
+    // dummy dense qp to calculate dimensions
+    dense_qp_in qpd_dummy;
+    dummy_dense_qp_in(&qpd_dummy, qp_in->size);
+
+    int nvd = qpd_dummy.nv;
+    int ned = qpd_dummy.ne;
+    int ngd = qpd_dummy.ng;
+    int nbd = qpd_dummy.nb;
+    int nsd = qpd_dummy.ns;
+
+    dense_qp_in *qpd_in = create_dense_qp_in(nvd, ned, nbd, ngd, nsd);
+
+    ocp_qp_condensing_args *cond_args = ocp_qp_condensing_create_arguments(qp_in->size);
+    ocp_qp_condensing_memory *cond_memory = ocp_qp_condensing_create_memory(qp_in, qpd_in);
+
+    /************************************************
     * ocp qp solution
     ************************************************/
 
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->size);
 
     /************************************************
-    * ipm
+    * dense sol
     ************************************************/
 
-    ocp_qp_condensing_hpipm_args *arg = ocp_qp_condensing_hpipm_create_arguments(qp_in->size);
+    dense_qp_out *qpd_out = create_dense_qp_out(nvd, ned, nbd, ngd, nsd);
 
-    ocp_qp_condensing_hpipm_memory *mem = ocp_qp_condensing_hpipm_create_memory(qp_in, arg);
+    /************************************************
+    * dense ipm
+    ************************************************/
 
-	int acados_return; // 0 normal; 1 max iter
+    dense_qp_hpipm_args *argd = dense_qp_hpipm_create_arguments(qpd_in);
+
+    // argd->hpipm_args->iter_max = 10;
+
+    dense_qp_hpipm_memory *mem = dense_qp_hpipm_create_memory(qpd_in, argd);
+	int acados_return;  // 0 normal; 1 max iter
 
     acados_timer timer;
     acados_tic(&timer);
 
-	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_condensing_hpipm(qp_in, qp_out, arg, mem);
+	for(int rep = 0; rep < NREP; rep++) {
+
+        ocp_qp_condensing(qp_in, qpd_in, cond_args, cond_memory);
+
+        acados_return = dense_qp_hpipm(qpd_in, qpd_out, argd, mem);
+
+        ocp_qp_expansion(qpd_out, qp_out, cond_args, cond_memory);
     }
 
-    double time = acados_toc(&timer)/NREP;
+    real_t time = acados_toc(&timer)/NREP;
 
     /************************************************
     * extract solution
@@ -108,17 +143,22 @@ int main() {
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        mem->solver_memory->hpipm_workspace->iter, NREP, time);
+        mem->hpipm_workspace->iter, NREP, time);
 
     /************************************************
     * free memory
     ************************************************/
 
     free(qp_in);
+    free(qpd_in);
     free(qp_out);
+    free(qpd_out);
     free(sol);
-    free(arg);
+    free(argd);
     free(mem);
+    free(cond_memory);
 
 	return 0;
 }
+
+
