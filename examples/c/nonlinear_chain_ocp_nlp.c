@@ -397,12 +397,12 @@ int main() {
     status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
     printf("\n\nstatus = %i\n\n", status);
 
-    // for (int_t k =0; k < 3; k++) {
-    //     printf("x[%d] = \n", k);
-    //     d_print_mat(1, nx[k], nlp_out.x[k], 1);
-    //     printf("u[%d] = \n", k);
-    //     d_print_mat(1, nu[k], nlp_out.u[k], 1);
-    // }
+    for (int_t k =0; k < 3; k++) {
+        printf("x[%d] = \n", k);
+        d_print_mat(1, nx[k], nlp_out.x[k], 1);
+        printf("u[%d] = \n", k);
+        d_print_mat(1, nu[k], nlp_out.u[k], 1);
+    }
 
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 

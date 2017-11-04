@@ -297,21 +297,22 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, 
     const int_t *nu = nlp->nu;
     sim_solver *sim = nlp->sim;
 
-    #if 0
     for (int_t i = 0; i < N; i++)
         for (int_t j = 0; j < nx[i+1]; j++)
-            sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
+            sim[i].in->S_adj[j] = -DVECEL_LIBSTR(&mem->qp_solver->qp_out->pi[i], j);
+            // sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
 
     int_t w_idx = 0;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
-            w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
+            w[w_idx+j] += DVECEL_LIBSTR(&mem->qp_solver->qp_out->ux[i], j + nu[i]);
+            // w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++)
-            w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
+            w[w_idx+nx[i]+j] += DVECEL_LIBSTR(&mem->qp_solver->qp_out->ux[i], j);
+            // w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
-    #endif
 }
 
 
@@ -373,8 +374,9 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
 
         multiple_shooting(nlp_in, gn_sqp_mem, work->common->w);
 
-        print_ocp_qp_dims(gn_sqp_mem->qp_solver->qp_in->size);
-        print_ocp_qp_in(gn_sqp_mem->qp_solver->qp_in);
+        // print_ocp_qp_dims(gn_sqp_mem->qp_solver->qp_in->size);
+        // print_ocp_qp_in(gn_sqp_mem->qp_solver->qp_in);
+        printf("SQP iter #%d\n", sqp_iter);
 
         int_t qp_status = gn_sqp_mem->qp_solver->fun(
             gn_sqp_mem->qp_solver->qp_in,
@@ -382,10 +384,8 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
             gn_sqp_mem->qp_solver->args,
             gn_sqp_mem->qp_solver->mem);
 
-        printf("qp_status = %d\n", qp_status);
-        exit(1);
+        // printf("qp_status = %d\n", qp_status);
 
-        #if 0
         if (qp_status != 0) {
             printf("QP solver returned error status %d\n", qp_status);
             return -1;
@@ -400,7 +400,6 @@ int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *nlp_a
                 opts->scheme.freeze = true;
             }
         }
-        #endif
     }
 
     total_time += acados_toc(&timer);
