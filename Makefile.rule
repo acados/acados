@@ -1,0 +1,59 @@
+# Author: Gianluca Frison
+
+CC = gcc
+#CC = clang
+#CC = x86_64-w64-mingw32-gcc
+
+# Operating system
+UNAME_S = $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    OS = LINUX
+endif
+ifeq ($(UNAME_S),Darwin)
+    OS = MAC
+endif
+#OS = LINUX
+#OS = MAC
+#OS = WINDOWS
+
+# Installation directory
+TOP = $(shell pwd)
+#PREFIX = /opt
+
+# BLASFEO path
+BLASFEO_PATH = /opt/blasfeo
+
+# HPIPM path
+HPIPM_PATH = /opt/hpipm
+
+# qpOASES path
+QPOASES_PATH = /opt/qpoases
+
+# EXTERNAL PATH
+EXT_PATH = $(TOP)/external
+
+# measure timings
+MEASURE_TIMINGS = 1
+
+
+# compiler flags
+CFLAGS  =
+
+# optimization flags
+CFLAGS += -O2 -fPIC
+
+# debugging flags
+CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
+
+# TEMP
+CFLAGS += -DALIGNMENT=64
+
+# timing
+ifeq ($(MEASURE_TIMINGS), 1)
+CFLAGS += -DMEASURE_TIMINGS
+endif
+
+# search directories
+# TODO(dimitris): SET BLASFEO/HPIPM/QPOASES PATHS TO EXTERNAL!
+CFLAGS += -g -O0 -I$(TOP) -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include
+LDFLAGS += -L$(TOP)/lib -L$(BLASFEO_PATH)/lib -L$(HPIPM_PATH)/lib -L$(QPOASES_PATH)/bin

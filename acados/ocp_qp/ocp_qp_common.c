@@ -34,7 +34,7 @@
 #ifdef OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
-#include "acados/ocp_qp/ocp_qp_qpdunes.h"
+// #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/utils/types.h"
 
 int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
@@ -374,11 +374,11 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
     qp_solver->args = solver_options;
 
     if (!strcmp(solver_name, "qpdunes")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
-        qp_solver->fun = &ocp_qp_qpdunes;
-        qp_solver->initialize = &ocp_qp_qpdunes_initialize;
-        qp_solver->destroy = &ocp_qp_qpdunes_destroy;
+        // if (qp_solver->args == NULL)
+        //     qp_solver->args = ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
+        // qp_solver->fun = &ocp_qp_qpdunes;
+        // qp_solver->initialize = &ocp_qp_qpdunes_initialize;
+        // qp_solver->destroy = &ocp_qp_qpdunes_destroy;
 #ifdef OOQP
     } else if (!strcmp(solver_name, "ooqp")) {
         if (qp_solver->args == NULL)
