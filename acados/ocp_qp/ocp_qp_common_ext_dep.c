@@ -37,6 +37,8 @@
 
 // TODO TEMP
 #include "acados/ocp_qp/ocp_qp_hpipm_ext_dep.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.h"
 
 
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims) {
@@ -172,11 +174,11 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_n
     // qp_solver->destroy = &ocp_qp_ooqp_destroy;
     #endif
     } else if (!strcmp(solver_name, "condensing_qpoases")) {
-    // if (qp_solver->args == NULL)
-    //     qp_solver->args = ocp_qp_condensing_qpoases_create_arguments(qp_in);
-    // qp_solver->fun = &ocp_qp_condensing_qpoases;
-    // qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
-    // qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
+    if (qp_solver->args == NULL)
+        qp_solver->args = ocp_qp_condensing_qpoases_create_arguments(qp_in->size);
+    qp_solver->fun = &ocp_qp_condensing_qpoases;
+    qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
+    qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
     } else if (!strcmp(solver_name, "condensing_hpipm")) {
     // if (qp_solver->args == NULL)
     //     qp_solver->args = ocp_qp_condensing_hpipm_create_arguments(qp_in);

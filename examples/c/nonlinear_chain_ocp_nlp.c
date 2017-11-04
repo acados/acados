@@ -372,7 +372,7 @@ int main() {
     nlp_args.common = &nlp_common_args;
     nlp_args.common->maxIter = max_sqp_iters;
 
-    snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "hpipm");
+    snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "condensing_qpoases");
 
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
