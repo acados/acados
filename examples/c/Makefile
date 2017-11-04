@@ -6,11 +6,9 @@ include ../../Makefile.rule
 
 
 
-examples: mass_spring_hpipm mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases #nonlinear_chain_ocp_nlp
-#examples: nonlinear_chain_ocp_nlp
+examples: mass_spring_hpipm mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases nonlinear_chain_ocp_nlp
 
-run_examples: run_mass_spring_hpipm run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases #run_nonlinear_chain_ocp_nlp
-#run_examples: run_nonlinear_chain_ocp_nlp
+run_examples: run_mass_spring_hpipm run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_nonlinear_chain_ocp_nlp
 
 mass_spring_hpipm: mass_spring_hpipm.o
 	$(CC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) -lacore -lhpipm -lblasfeo -lm
@@ -37,12 +35,12 @@ mass_spring_condensing_qpoases: mass_spring_condensing_qpoases.o
 	@echo
 
 OBJS =
-OBJS += chain_model/ls_cost_nm2.o
-OBJS += chain_model/ls_costN_nm2.o
+# OBJS += chain_model/ls_cost_nm2.o
+# OBJS += chain_model/ls_costN_nm2.o
 OBJS += chain_model/vde_chain_nm2.o
 OBJS += chain_model/jac_chain_nm2.o
-OBJS += chain_model/pathcon_nm2.o
-OBJS += chain_model/pathconN_nm2.o
+# OBJS += chain_model/pathcon_nm2.o
+# OBJS += chain_model/pathconN_nm2.o
 OBJS += nonlinear_chain_ocp_nlp.o
 
 nonlinear_chain_ocp_nlp: $(OBJS)

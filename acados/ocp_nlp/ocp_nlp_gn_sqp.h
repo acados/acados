@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 
+// acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_rk_common.h"
