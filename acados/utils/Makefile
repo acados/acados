@@ -6,9 +6,9 @@ OBJS =
 
 OBJS += math.o
 OBJS += copy.o
-OBJS += print.o
+# OBJS += print.o
 OBJS += timing.o
-# OBJS += mem.o
+OBJS += mem.o
 
 obj: $(OBJS)
 

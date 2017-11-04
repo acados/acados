@@ -24,43 +24,32 @@
 extern "C" {
 #endif
 
+// hpipm
+#include "hpipm/include/hpipm_d_ocp_qp.h"
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_d_ocp_qp_size.h"
+// acados
 #include "acados/utils/types.h"
 
-typedef struct {
-    int_t N;
-    const int_t *nx;
-    const int_t *nu;
-    const int_t *nb;
-    const int_t *nc;
-    const real_t **A;
-    const real_t **B;
-    const real_t **b;
-    const real_t **Q;
-    const real_t **S;
-    const real_t **R;
-    const real_t **q;
-    const real_t **r;
-    const int_t **idxb;
-    const real_t **lb;
-    const real_t **ub;
-    const real_t **Cx;
-    const real_t **Cu;
-    const real_t **lc;
-    const real_t **uc;
-} ocp_qp_in;
+
+typedef struct d_ocp_qp_size ocp_qp_dims;
+
+
+typedef struct d_ocp_qp ocp_qp_in;
+
+
+typedef struct d_ocp_qp_sol ocp_qp_out;
+
 
 typedef struct {
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-    real_t **t;  // TODO(roversch): remove!
-} ocp_qp_out;
-
-typedef struct {
-    int_t (*fun)(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
-    void (*initialize)(const ocp_qp_in *qp_in, void *args, void **mem, void **work);
+    int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
+	// TODO remove ???
+    void (*initialize)(ocp_qp_in *qp_in, void *args, void **mem, void **work);
+	// TODO remove ???
     void (*destroy)(void *mem, void *work);
+	// TODO add calculate_size and assign instead ???
+	int (*calculate_memory)(ocp_qp_in *qp_in, void *args);
+	char* (*assign_memory)(ocp_qp_in *qp_in, void *args, void **mem, void *raw_mem);
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
     void *args;
@@ -68,29 +57,27 @@ typedef struct {
     void *work;
 } ocp_qp_solver;
 
-int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                               const int_t *nc);
 
-char *assign_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                       const int_t *nc, ocp_qp_in **qp_in, void *ptr);
 
-ocp_qp_in *create_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                            const int_t *nc);
+//
+int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
+// TODO make name consistent !!! (ocp_qp_out_assign)
+char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem);
+//
+int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
+// TODO make name consistent !!! (ocp_qp_out_assign)
+char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem);
 
-int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                                const int_t *nc);
 
-char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                        const int_t *nc, ocp_qp_out **qp_out, void *ptr);
+// TODO TEMP
 
-ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                              const int_t *nc);
+void form_nbx_nbu(int N, int *nbx, int *nbu, int *nb, int* nx, int *nu, int **idxb);
 
 void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, ocp_qp_in *qp_in,
-                             int_t stage);
+    int_t stage);
 
 void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
-                              const real_t *r, ocp_qp_in *qp_in, int_t stage);
+     const real_t *r, ocp_qp_in *qp_in, int_t stage);
 
 ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *name, void *options);
 
@@ -98,4 +85,4 @@ ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *name, vo
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_
+#endif // ACADOS_OCP_QP_OCP_QP_COMMON_H_

@@ -24,13 +24,13 @@ OBJS =
 # # OBJS += acados/ocp_nlp/ocp_nlp_sqp_ext_dep.o
 # ocp qp
 OBJS += acados/ocp_qp/ocp_qp_common.o
-# OBJS += acados/ocp_qp/ocp_qp_common_ext_dep.o
-# OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
+OBJS += acados/ocp_qp/ocp_qp_common_ext_dep.o
+OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
-# OBJS += acados/ocp_qp/ocp_qp_hpipm_ext_dep.o
-OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm.o
+OBJS += acados/ocp_qp/ocp_qp_hpipm_ext_dep.o
+# OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm.o
 # OBJS += acados/ocp_qp/ocp_qp_condensing_hpipm_ext_dep.o
-OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases.o
+# OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases.o
 # OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.o
 # OBJS += acados/ocp_qp/ocp_qp_condensing.o
 # OBJS += acados/ocp_qp/ocp_qp_condensing_ext_dep.o
@@ -43,9 +43,9 @@ OBJS += acados/sim/sim_lifted_irk_integrator.o
 # utils
 OBJS += acados/utils/math.o
 OBJS += acados/utils/copy.o
-OBJS += acados/utils/print.o
+# OBJS += acados/utils/print.o
 OBJS += acados/utils/timing.o
-# OBJS += acados/utils/mem.o
+OBJS += acados/utils/mem.o
 
 
 static_library:
