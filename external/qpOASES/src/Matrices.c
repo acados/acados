@@ -43,6 +43,48 @@ BEGIN_NAMESPACE_QPOASES
  *  P U B L I C                                                              *
  *****************************************************************************/
 
+int DenseMatrix_calculateMemorySize( int m, int n )
+{
+	int size = 0;
+	size += sizeof(DenseMatrix); 	   // size of structure itself
+	size += (m * n) * sizeof(real_t);  // matrix data
+
+	size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+	size += 1 * 64;                // align once to typical cache line size
+
+	return size;
+}
+
+char *DenseMatrix_assignMemory( int m, int n, DenseMatrix **mem, void *raw_memory )
+{
+	// char pointer
+	char *c_ptr = (char *)raw_memory;
+
+	// assign structures
+	*mem = (DenseMatrix *) c_ptr;
+	c_ptr += sizeof(DenseMatrix);
+
+	// align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+	c_ptr = (char *)s_ptr;
+
+	// assign data
+	(*mem)->val = (real_t *) c_ptr;
+	c_ptr += (m * n) * sizeof(real_t);
+
+	return c_ptr;
+}
+
+DenseMatrix *DenseMatrix_createMemory( int m, int n )
+{
+	DenseMatrix *mem;
+    int memory_size = DenseMatrix_calculateMemorySize(m, n);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end =  DenseMatrix_assignMemory(m, n, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
+}
 
 void DenseMatrixCON(	DenseMatrix* _THIS,
 						int m,
@@ -67,7 +109,7 @@ void DenseMatrixCPY(	DenseMatrix* FROM,
 
 	for( i=0; i<FROM->nRows; ++i )
 		for( j=0; j<FROM->nCols; ++j )
-			TO->val[i*FROM->leaDim+j] = FROM->val[i*FROM->leaDim+j]; 
+			TO->val[i*FROM->leaDim+j] = FROM->val[i*FROM->leaDim+j];
 }
 
 
@@ -86,10 +128,10 @@ returnValue DenseMatrix_init(	DenseMatrix* _THIS,
 {
 	int i,j;
 
-	if ( n*m > NVCMAX*NVMAX )
-		return RET_INVALID_ARGUMENTS;
+	// if ( n*m > NVCMAX*NVMAX )
+	// 	return RET_INVALID_ARGUMENTS;
 
-	_THIS->nRows  = m; 
+	_THIS->nRows  = m;
 	_THIS->nCols  = n;
 	_THIS->leaDim = lD;
 
@@ -134,13 +176,13 @@ BooleanType DenseMatrix_isDiag( DenseMatrix* _THIS )
 
 real_t DenseMatrix_getNorm( DenseMatrix* _THIS, int type )
 {
-    return REFER_NAMESPACE_QPOASES qpOASES_getNorm( _THIS->val,(_THIS->nCols)*(_THIS->nRows),type ); 
+    return REFER_NAMESPACE_QPOASES qpOASES_getNorm( _THIS->val,(_THIS->nCols)*(_THIS->nRows),type );
 }
 
 
 real_t DenseMatrix_getRowNorm( DenseMatrix* _THIS, int rNum, int type )
 {
-    return REFER_NAMESPACE_QPOASES qpOASES_getNorm( &(_THIS->val[rNum*(_THIS->leaDim)]),_THIS->nCols,type ); 
+    return REFER_NAMESPACE_QPOASES qpOASES_getNorm( &(_THIS->val[rNum*(_THIS->leaDim)]),_THIS->nCols,type );
 }
 
 
@@ -496,7 +538,7 @@ returnValue DenseMatrix_bilinear(	DenseMatrix* _THIS,
 
 	myStatic real_t Ax[NVCMAX*NVMAX];
 	real_t h;
-	
+
 	for (ii = 0; ii < xN; ii++)
 		for (jj = 0; jj < xN; jj++)
 			y[ii*yLD+jj] = 0.0;

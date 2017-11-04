@@ -43,7 +43,7 @@
 BEGIN_NAMESPACE_QPOASES
 
 
-/** 
+/**
  *	\brief Stores and manages index lists.
  *
  *	This class manages index lists of active/inactive bounds/constraints.
@@ -54,8 +54,8 @@ BEGIN_NAMESPACE_QPOASES
  */
 typedef struct
 {
-	int number[NVCMAX];	/**< Array to store numbers of constraints or bounds. */
-	int iSort[NVCMAX];	/**< Index list to sort vector \a number */
+	int *number;		/**< Array to store numbers of constraints or bounds. */
+	int *iSort;			/**< Index list to sort vector \a number */
 
 	int	length;			/**< Length of index list. */
 	int	first;			/**< Physical index of first element. */
@@ -64,7 +64,11 @@ typedef struct
 	int	physicallength;	/**< Physical length of index list. */
 } Indexlist;
 
+int Indexlist_calculateMemorySize( int n);
 
+char *Indexlist_assignMemory(int n, Indexlist **mem, void *raw_memory);
+
+Indexlist *Indexlist_createMemory( int n );
 
 /** Constructor which takes the desired physical length of the index list. */
 void IndexlistCON(	Indexlist* _THIS,
@@ -83,7 +87,6 @@ void IndexlistCPY(	Indexlist* FROM,
 returnValue Indexlist_init(	Indexlist* _THIS,
 							int n		/**< Physical length of index list. */
 							);
-
 
 /** Creates an array of all numbers within the index set in correct order.
  *	\return SUCCESSFUL_RETURN \n

@@ -108,13 +108,17 @@ BEGIN_NAMESPACE_QPOASES
  */
 typedef struct
 {
+	real_t *val;				/**< Vector of entries. */
 	int nRows;					/**< Number of rows. */
 	int nCols;					/**< Number of columns. */
 	int leaDim;					/**< Leading dimension. */
-	real_t val[NVCMAX*NVMAX];	/**< Vector of entries. */
 } DenseMatrix;
 
+int DenseMatrix_calculateMemorySize( int m, int n );
 
+char *DenseMatrix_assignMemory( int m, int n, DenseMatrix **mem, void *raw_memory );
+
+DenseMatrix *DenseMatrix_createMemory( int m, int n );
 
 /** Constructor from vector of values.
  *  Caution: Data pointer must be valid throughout lifetime

@@ -48,6 +48,125 @@
 
 BEGIN_NAMESPACE_QPOASES
 
+typedef struct {
+	Bounds *auxiliaryBounds;
+	Constraints *auxiliaryConstraints;
+
+	real_t *ub_new_far;
+	real_t *lb_new_far;
+	real_t *ubA_new_far;
+	real_t *lbA_new_far;
+
+	real_t *g_new;
+	real_t *lb_new;
+	real_t *ub_new;
+	real_t *lbA_new;
+	real_t *ubA_new;
+
+	real_t *g_new2;
+	real_t *lb_new2;
+	real_t *ub_new2;
+	real_t *lbA_new2;
+	real_t *ubA_new2;
+
+	real_t *delta_xFX5;
+	real_t *delta_xFR5;
+	real_t *delta_yAC5;
+	real_t *delta_yFX5;
+
+	real_t *Hx;
+
+	real_t *_H;
+
+	real_t *g_original;
+	real_t *lb_original;
+	real_t *ub_original;
+	real_t *lbA_original;
+	real_t *ubA_original;
+
+	real_t *delta_xFR;
+	real_t *delta_xFX;
+	real_t *delta_yAC;
+	real_t *delta_yFX;
+	real_t *delta_g;
+	real_t *delta_lb;
+	real_t *delta_ub;
+	real_t *delta_lbA;
+	real_t *delta_ubA;
+
+	real_t *gMod;
+
+	real_t *aFR;
+	real_t *wZ;
+
+	real_t *delta_g2;
+	real_t *delta_xFX2;
+	real_t *delta_xFR2;
+	real_t *delta_yAC2;
+	real_t *delta_yFX2;
+	real_t *nul;
+	real_t *Arow;
+
+	real_t *xiC;
+	real_t *xiC_TMP;
+	real_t *xiB;
+	real_t *Arow2;
+	real_t *num;
+
+	real_t *w;
+	real_t *tmp;
+
+	real_t *delta_g3;
+	real_t *delta_xFX3;
+	real_t *delta_xFR3;
+	real_t *delta_yAC3;
+	real_t *delta_yFX3;
+	real_t *nul2;
+
+	real_t *xiC2;
+	real_t *xiC_TMP2;
+	real_t *xiB2;
+	real_t *num2;
+
+	real_t *Hz;
+	real_t *z;
+	real_t *ZHz;
+	real_t *r;
+
+	real_t *tmp2;
+	real_t *Hz2;
+	real_t *z2;
+	real_t *r2;
+	real_t *rhs;
+
+	real_t *delta_xFX4;
+	real_t *delta_xFR4;
+	real_t *delta_yAC4;
+	real_t *delta_yFX4;
+	real_t *nul3;
+	real_t *ek;
+	real_t *x_W;
+	real_t *As;
+	real_t *Ax_W;
+
+	real_t *num3;
+	real_t *den;
+	real_t *delta_Ax_l;
+	real_t *delta_Ax_u;
+	real_t *delta_Ax;
+	real_t *delta_x;
+
+	real_t *_A;
+
+	real_t *grad;
+	real_t *AX;
+} QProblem_ws;
+
+int QProblem_ws_calculateMemorySize( unsigned int nV, unsigned int nC );
+
+char *QProblem_ws_assignMemory( unsigned int nV, unsigned int nC, QProblem_ws **mem, void *raw_memory );
+
+QProblem_ws *QProblem_ws_createMemory( unsigned int nV, unsigned int nC );
 
 /**
  *	\brief Implements the online active set strategy for QPs with general constraints.
@@ -62,72 +181,73 @@ BEGIN_NAMESPACE_QPOASES
  */
 typedef struct
 {
+	QProblem_ws *ws;				/**< Workspace */
+	Bounds *bounds;					/**< Data structure for problem's bounds. */
+	Constraints *constraints;		/**< Data structure for problem's constraints. */
+	Flipper *flipper;				/**< Struct for making a temporary copy of the matrix factorisations. */
+
 	DenseMatrix* H;					/**< Hessian matrix pointer. */
-	DenseMatrix HH;					/**< Hessian matrix. */
-
-	real_t g[NVMAX];				/**< Gradient. */
-	real_t lb[NVMAX];				/**< Lower bound vector (on variables). */
-	real_t ub[NVMAX];				/**< Upper bound vector (on variables). */
-
-	Bounds bounds;					/**< Data structure for problem's bounds. */
-
-	real_t R[NVMAX*NVMAX];			/**< Cholesky factor of H (i.e. H = R^T*R). */
-	BooleanType haveCholesky;		/**< Flag indicating whether Cholesky decomposition has already been setup. */
-
-	real_t x[NVMAX];				/**< Primal solution vector. */
-	real_t y[NVMAX+NCMAX];			/**< Dual solution vector. */
-
-	real_t tau;						/**< Last homotopy step length. */
-
-	QProblemStatus status;			/**< Current status of the solution process. */
-
-	BooleanType infeasible;			/**< QP infeasible? */
-	BooleanType unbounded;			/**< QP unbounded? */
-
-	HessianType hessianType;		/**< Type of Hessian matrix. */
-	real_t regVal;					/**< Holds the offset used to regularise Hessian matrix (zero by default). */
-
-	unsigned int count;				/**< Counts the number of hotstart function calls (internal usage only!). */
-
-	real_t delta_xFR_TMP[NVMAX];	/**< Temporary for determineStepDirection */
-
-	real_t ramp0;					/**< Start value for Ramping Strategy. */
-	real_t ramp1;					/**< Final value for Ramping Strategy. */
-	int rampOffset;					/**< Offset index for Ramping. */
+	DenseMatrix* A;					/**< Constraint matrix pointer. */
 
 	Options options;				/**< Struct containing all user-defined options for solving QPs. */
 	TabularOutput tabularOutput;	/**< Struct storing information for tabular output (printLevel == PL_TABULAR). */
 
-	Flipper flipper;				/**< Struct for making a temporary copy of the matrix factorisations. */
+	real_t *g;						/**< Gradient. */
 
-	DenseMatrix* A;					/**< Constraint matrix pointer. */
-	DenseMatrix AA;					/**< Constraint matrix. */
+	real_t *lb;						/**< Lower bound vector (on variables). */
+	real_t *ub;						/**< Upper bound vector (on variables). */
+	real_t *lbA;					/**< Lower constraints' bound vector. */
+	real_t *ubA;					/**< Upper constraints' bound vector. */
 
-	real_t lbA[NCMAX];				/**< Lower constraints' bound vector. */
-	real_t ubA[NCMAX];				/**< Upper constraints' bound vector. */
+	real_t *R;						/**< Cholesky factor of H (i.e. H = R^T*R). */
 
-	Constraints constraints;		/**< Data structure for problem's constraints. */
+	real_t *T;						/**< Reverse triangular matrix, A = [0 T]*Q'. */
+	real_t *Q;						/**< Orthonormal quadratic matrix, A = [0 T]*Q'. */
 
-	real_t T[NVCMIN*NVCMIN];		/**< Reverse triangular matrix, A = [0 T]*Q'. */
-	real_t Q[NVMAX*NVMAX];			/**< Orthonormal quadratic matrix, A = [0 T]*Q'. */
-	int sizeT;						/**< Matrix T is stored in a (sizeT x sizeT) array. */
-
-	real_t Ax[NCMAX];				/**< Stores the current A*x \n
+	real_t *Ax;						/**< Stores the current A*x \n
 									 *	 (for increased efficiency only). */
-	real_t Ax_l[NCMAX];				/**< Stores the current distance to lower constraints' bounds A*x-lbA \n
+	real_t *Ax_l;					/**< Stores the current distance to lower constraints' bounds A*x-lbA \n
 									 *	 (for increased efficiency only). */
-	real_t Ax_u[NCMAX];				/**< Stores the current distance to lower constraints' bounds ubA-A*x \n
+	real_t *Ax_u;					/**< Stores the current distance to lower constraints' bounds ubA-A*x \n
 									 *	 (for increased efficiency only). */
+
+	real_t *x;						/**< Primal solution vector. */
+	real_t *y;						/**< Dual solution vector. */
+
+	real_t *delta_xFR_TMP;			/**< Temporary for determineStepDirection */
+	real_t *tempA;					/**< Temporary for determineStepDirection. */
+	real_t *tempB;					/**< Temporary for determineStepDirection. */
+	real_t *ZFR_delta_xFRz;			/**< Temporary for determineStepDirection. */
+	real_t *delta_xFRy;				/**< Temporary for determineStepDirection. */
+	real_t *delta_xFRz;				/**< Temporary for determineStepDirection. */
+	real_t *delta_yAC_TMP;			/**< Temporary for determineStepDirection. */
 
 	ConstraintProduct constraintProduct;	/**< Pointer to user-defined constraint product function. */
 
-	real_t tempA[NVMAX];			/**< Temporary for determineStepDirection. */
-	real_t tempB[NCMAX];			/**< Temporary for determineStepDirection. */
-	real_t ZFR_delta_xFRz[NVMAX];	/**< Temporary for determineStepDirection. */
-	real_t delta_xFRy[NCMAX];		/**< Temporary for determineStepDirection. */
-	real_t delta_xFRz[NVMAX];		/**< Temporary for determineStepDirection. */
-	real_t delta_yAC_TMP[NCMAX];	/**< Temporary for determineStepDirection. */
+	real_t tau;						/**< Last homotopy step length. */
+	real_t regVal;					/**< Holds the offset used to regularise Hessian matrix (zero by default). */
+
+	real_t ramp0;					/**< Start value for Ramping Strategy. */
+	real_t ramp1;					/**< Final value for Ramping Strategy. */
+
+	QProblemStatus status;			/**< Current status of the solution process. */
+	HessianType hessianType;		/**< Type of Hessian matrix. */
+
+	BooleanType haveCholesky;		/**< Flag indicating whether Cholesky decomposition has already been setup. */
+	BooleanType infeasible;			/**< QP infeasible? */
+	BooleanType unbounded;			/**< QP unbounded? */
+
+	int rampOffset;					/**< Offset index for Ramping. */
+	unsigned int count;				/**< Counts the number of hotstart function calls (internal usage only!). */
+
+	int sizeT;						/**< Matrix T is stored in a (sizeT x sizeT) array. */
 } QProblem;
+
+int QProblem_calculateMemorySize( unsigned int nV, unsigned int nC );
+
+char *QProblem_assignMemory( unsigned int nV, unsigned int nC, QProblem **mem, void *raw_memory );
+
+QProblem *QProblem_createMemory( unsigned int nV, unsigned int nC );
 
 
 /** Constructor which takes the QP dimension and Hessian type
@@ -297,7 +417,7 @@ returnValue QProblem_initMW(	QProblem* _THIS,
 																			 (If a null pointer is passed, the old dual solution is kept!) */
 								Bounds* const guessedBounds,			/**< Optimal working set of bounds for solution (xOpt,yOpt). */
 								Constraints* const guessedConstraints,	/**< Optimal working set of constraints for solution (xOpt,yOpt). */
-								const real_t* const _R					/**< Pre-computed (upper triangular) Cholesky factor of Hessian matrix. 
+								const real_t* const _R					/**< Pre-computed (upper triangular) Cholesky factor of Hessian matrix.
 																	 		 The Cholesky factor must be stored in a real_t array of size nV*nV
 																			 in row-major format. Note: Only used if xOpt/yOpt and gB are NULL! \n
 																			 (If a null pointer is passed, Cholesky decomposition is computed internally!) */
@@ -347,7 +467,7 @@ returnValue QProblem_initW(	QProblem* _THIS,
 																		 (If a null pointer is passed, the old dual solution is kept!) */
 							Bounds* const guessedBounds,			/**< Optimal working set of bounds for solution (xOpt,yOpt). */
 							Constraints* const guessedConstraints,	/**< Optimal working set of constraints for solution (xOpt,yOpt). */
-							const real_t* const _R					/**< Pre-computed (upper triangular) Cholesky factor of Hessian matrix. 
+							const real_t* const _R					/**< Pre-computed (upper triangular) Cholesky factor of Hessian matrix.
 																	 	 The Cholesky factor must be stored in a real_t array of size nV*nV
 																		 in row-major format. Note: Only used if xOpt/yOpt and gB are NULL! \n
 																		 (If a null pointer is passed, Cholesky decomposition is computed internally!) */
@@ -397,14 +517,14 @@ returnValue QProblem_initFW(	QProblem* _THIS,
 																			 (If a null pointer is passed, the old dual solution is kept!) */
 								Bounds* const guessedBounds,			/**< Optimal working set of bounds for solution (xOpt,yOpt). */
 								Constraints* const guessedConstraints,	/**< Optimal working set of constraints for solution (xOpt,yOpt). */
-								const char* const R_file				/**< Pre-computed (upper triangular) Cholesky factor of Hessian matrix. 
+								const char* const R_file				/**< Pre-computed (upper triangular) Cholesky factor of Hessian matrix.
 																		 	 The Cholesky factor must be stored in a real_t array of size nV*nV
 																			 in row-major format. Note: Only used if xOpt/yOpt and gB are NULL! \n
 																			 (If a null pointer is passed, Cholesky decomposition is computed internally!) */
 								);
 
 /** Solves an initialised QP sequence using the online active set strategy.
- *	QP solution is started from previous solution. 
+ *	QP solution is started from previous solution.
  *
  *  Note: This function internally calls solveQP/solveRegularisedQP
  *        for solving an initialised QP!
@@ -436,7 +556,7 @@ returnValue QProblem_hotstart(	QProblem* _THIS,
 								);
 
 /** Solves an initialised QP sequence using the online active set strategy,
- *	where QP data is read from files. QP solution is started from previous solution. 
+ *	where QP data is read from files. QP solution is started from previous solution.
  *
  *  Note: This function internally calls solveQP/solveRegularisedQP
  *        for solving an initialised QP!
@@ -627,14 +747,14 @@ returnValue QProblem_getWorkingSet(	QProblem* _THIS,
 									);
 
 /** Writes a vector with the state of the working set of bounds
- *	\return SUCCESSFUL_RETURN \n 
+ *	\return SUCCESSFUL_RETURN \n
  *	        RET_INVALID_ARGUMENTS */
 returnValue QProblem_getWorkingSetBounds(	QProblem* _THIS,
 											real_t* workingSetB	/** Output: array containing state of the working set of bounds. */
 											);
 
 /** Writes a vector with the state of the working set of constraints
- *	\return SUCCESSFUL_RETURN \n 
+ *	\return SUCCESSFUL_RETURN \n
  *	        RET_INVALID_ARGUMENTS */
 returnValue QProblem_getWorkingSetConstraints(	QProblem* _THIS,
 												real_t* workingSetC	/** Output: array containing state of the working set of constraints. */
@@ -1230,7 +1350,7 @@ BooleanType QProblem_shallRefactorise(	QProblem* _THIS,
 										Constraints* const guessedConstraints	/**< Guessed new working set of constraints. */
 										);
 
-/** Setups internal QP data. 
+/** Setups internal QP data.
  *	\return SUCCESSFUL_RETURN \n
 			RET_INVALID_ARGUMENTS \n
 			RET_UNKNONW_BUG */
@@ -1402,8 +1522,8 @@ returnValue QProblem_dropInfeasibles ( 	QProblem* _THIS,
 										real_t *xiB,
 										real_t *xiC
 										);
-								
-								
+
+
 /** If Hessian type has been set by the user, nothing is done.
  *  Otherwise the Hessian type is set to HST_IDENTITY, HST_ZERO, or
  *  HST_POSDEF (default), respectively.
@@ -1471,7 +1591,7 @@ returnValue QProblemBCPY_determineDataShift(	QProblem* _THIS,
 												);
 
 
-/** Sets up internal QP data. 
+/** Sets up internal QP data.
  *	\return SUCCESSFUL_RETURN \n
 			RET_INVALID_ARGUMENTS */
 returnValue QProblemBCPY_setupQPdataM(	QProblem* _THIS,
@@ -1566,7 +1686,7 @@ returnValue QProblem_regulariseHessian( QProblem* _THIS );
 static inline returnValue QProblem_setHM(	QProblem* _THIS,
 											DenseMatrix* H_new	/**< New Hessian matrix. */
 											);
-							
+
 /** Sets dense Hessian matrix of the QP.
  *  If a null pointer is passed and
  *  a) hessianType is HST_IDENTITY, nothing is done,
@@ -1679,7 +1799,7 @@ static inline returnValue QProblem_getBounds( QProblem* _THIS, Bounds* _bounds )
 	if ( nV == 0 )
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
-	*_bounds = _THIS->bounds;
+	_bounds = _THIS->bounds;
 
 	return SUCCESSFUL_RETURN;
 }
@@ -1690,7 +1810,7 @@ static inline returnValue QProblem_getBounds( QProblem* _THIS, Bounds* _bounds )
  */
 static inline int QProblem_getNV( QProblem* _THIS )
 {
-	return Bounds_getNV( &(_THIS->bounds) );
+	return Bounds_getNV( _THIS->bounds );
 }
 
 
@@ -1699,7 +1819,7 @@ static inline int QProblem_getNV( QProblem* _THIS )
  */
 static inline int QProblem_getNFR( QProblem* _THIS )
 {
-	return Bounds_getNFR( &(_THIS->bounds) );
+	return Bounds_getNFR( _THIS->bounds );
 }
 
 
@@ -1708,7 +1828,7 @@ static inline int QProblem_getNFR( QProblem* _THIS )
  */
 static inline int QProblem_getNFX( QProblem* _THIS )
 {
-	return Bounds_getNFX( &(_THIS->bounds) );
+	return Bounds_getNFX( _THIS->bounds );
 }
 
 
@@ -1717,7 +1837,7 @@ static inline int QProblem_getNFX( QProblem* _THIS )
  */
 static inline int QProblem_getNFV( QProblem* _THIS )
 {
-	return Bounds_getNFV( &(_THIS->bounds) );
+	return Bounds_getNFV( _THIS->bounds );
 }
 
 
@@ -2019,7 +2139,7 @@ static inline returnValue QProblem_setUBn( QProblem* _THIS, int number, real_t v
 /*
  * i s B l o c k i n g
  */
-static inline BooleanType QProblem_isBlocking(	QProblem* _THIS, 
+static inline BooleanType QProblem_isBlocking(	QProblem* _THIS,
 												real_t num,
 												real_t den,
 												real_t epsNum,
@@ -2048,7 +2168,7 @@ static inline returnValue QProblem_getConstraints( QProblem* _THIS, Constraints*
 	if ( nV == 0 )
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
-	ConstraintsCPY( &(_THIS->constraints),_constraints );
+	ConstraintsCPY( _THIS->constraints,_constraints );
 
 	return SUCCESSFUL_RETURN;
 }
@@ -2060,7 +2180,7 @@ static inline returnValue QProblem_getConstraints( QProblem* _THIS, Constraints*
  */
 static inline int QProblem_getNC( QProblem* _THIS )
 {
-	return Constraints_getNC( &(_THIS->constraints) );
+	return Constraints_getNC( _THIS->constraints );
 }
 
 
@@ -2069,7 +2189,7 @@ static inline int QProblem_getNC( QProblem* _THIS )
  */
 static inline int QProblem_getNEC( QProblem* _THIS )
 {
-	return Constraints_getNEC( &(_THIS->constraints) );
+	return Constraints_getNEC( _THIS->constraints );
 }
 
 
@@ -2078,7 +2198,7 @@ static inline int QProblem_getNEC( QProblem* _THIS )
  */
 static inline int QProblem_getNAC( QProblem* _THIS )
 {
-	return Constraints_getNAC( &(_THIS->constraints) );
+	return Constraints_getNAC( _THIS->constraints );
 }
 
 
@@ -2087,7 +2207,7 @@ static inline int QProblem_getNAC( QProblem* _THIS )
  */
 static inline int QProblem_getNIAC( QProblem* _THIS )
 {
-	return Constraints_getNIAC( &(_THIS->constraints) );
+	return Constraints_getNIAC( _THIS->constraints );
 }
 
 
@@ -2132,10 +2252,10 @@ static inline returnValue QProblem_setA( QProblem* _THIS, real_t* const A_new )
 	{
 		_THIS->Ax_u[j] = _THIS->ubA[j] - _THIS->Ax[j];
 		_THIS->Ax_l[j] = _THIS->Ax[j] - _THIS->lbA[j];
-		
+
 		/* (ckirches) disable constraints with empty rows */
 		if ( qpOASES_isZero( DenseMatrix_getRowNorm( _THIS->A,j,2 ),QPOASES_ZERO ) == BT_TRUE )
-			Constraints_setType( &(_THIS->constraints),j,ST_DISABLED );
+			Constraints_setType( _THIS->constraints,j,ST_DISABLED );
 	}
 
 	return SUCCESSFUL_RETURN;
@@ -2155,7 +2275,7 @@ static inline returnValue QProblem_setLBA( QProblem* _THIS, const real_t* const 
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
 	if ( lbA_new != 0 )
-	{	
+	{
 		memcpy( _THIS->lbA,lbA_new,nC*sizeof(real_t) );
 	}
 	else
@@ -2203,7 +2323,7 @@ static inline returnValue QProblem_setUBA( QProblem* _THIS, const real_t* const 
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
 	if ( ubA_new != 0 )
-	{	
+	{
 		memcpy( _THIS->ubA,ubA_new,nC*sizeof(real_t) );
 	}
 	else

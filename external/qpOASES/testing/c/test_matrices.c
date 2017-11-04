@@ -33,7 +33,7 @@ int sumOfSquares()
 	/* sum of first n squares */
 	const int N = 100;
 	real_t av[N];
-	real_t aT[N];
+	real_t aTv[N];
 	real_t bv[N];
 	real_t c;
 
@@ -131,7 +131,7 @@ int submatrix()
 		}
 	}
 	fprintf(stdFile, "Submatrix transpose; Deviation from identity: %9.2e\n", err);
-	
+
 	Asub.free ();	// or delete[] Asubv;
 
 	return 0;
@@ -274,7 +274,7 @@ long spGetCol()
 		for (i = 0; i < 4; i++)
 			fprintf(stdFile, " %3.0f\n", col[i]);
 	}
-				
+
 	delete[] col;
 	A.free ();	// or delete[] val,jc,ir;
 
@@ -298,9 +298,9 @@ long spGetRow()
 
 	jc[0] = 0; jc[1] = 2; jc[2] = 3; jc[3] = 5; jc[4] = 8; jc[5] = 10;
 	ir[0] = 1; ir[1] = 2;
-	ir[2] = 0; 
+	ir[2] = 0;
 	ir[3] = 0; ir[4] = 2;
-	ir[5] = 0; ir[6] = 1; ir[7] = 2; 
+	ir[5] = 0; ir[6] = 1; ir[7] = 2;
 	ir[8] = 1; ir[9] = 2;
 	for (i = 0; i < 10; i++) val[i] = 1.0+i;
 
@@ -327,7 +327,7 @@ long spGetRow()
 			fprintf(stdFile, " %3.0f", row[i]);
 		fprintf(stdFile, "\n");
 	}
-				
+
 	delete[] row;
 	A.free ();
 
@@ -359,16 +359,16 @@ long spTimes()
 
 	jc[0] = 0; jc[1] = 2; jc[2] = 3; jc[3] = 5; jc[4] = 8; jc[5] = 10;
 	ir[0] = 1; ir[1] = 2;
-	ir[2] = 0; 
+	ir[2] = 0;
 	ir[3] = 0; ir[4] = 2;
-	ir[5] = 0; ir[6] = 1; ir[7] = 2; 
+	ir[5] = 0; ir[6] = 1; ir[7] = 2;
 	ir[8] = 1; ir[9] = 2;
 	for (i = 0; i < 10; i++) val[i] = 1.0+i;
 
 	SparseMatrix A(3, 5, ir, jc, val);	// reference to ir, jc, val
 
 	A.times(2, 1.0, x, 5, 0.0, y, 3);
-	
+
 	for (i = 0; i < 6; i++)
 		if (fabs(y[i] - Ax[i]) > err) err = fabs(y[i] - Ax[i]);
 	fprintf(stdFile, "Error in sparse A*x: %9.2e\n", err);
@@ -413,12 +413,12 @@ long spIndTimes()
 	cols.addNumber(3);
 	cols.addNumber(0);
 
-	for (i = 0; i < nCols; i++) 
+	for (i = 0; i < nCols; i++)
 		allcols.addNumber(i);
 
 	// build test matrix
 	for (i = 0; i <= N; i++) jc[i] = 3*i;
-	for (j = 0; j < N; j++) 
+	for (j = 0; j < N; j++)
 		for (i = 0; i < 3; i++)
 		{
 			ir[j*3+i] = 2*j + i;
@@ -511,7 +511,7 @@ long sprGetCol()
 		for (i = 0; i < 4; i++)
 			fprintf(stdFile, " %3.0f\n", col[i]);
 	}
-				
+
 	delete[] col;
 	A.free ();	// or delete[] val,jc,ir;
 
@@ -535,9 +535,9 @@ long sprGetRow()
 
 	jc[0] = 0; jc[1] = 2; jc[2] = 3; jc[3] = 5; jc[4] = 8; jc[5] = 10;
 	ir[0] = 1; ir[1] = 2;
-	ir[2] = 0; 
+	ir[2] = 0;
 	ir[3] = 0; ir[4] = 2;
-	ir[5] = 0; ir[6] = 1; ir[7] = 2; 
+	ir[5] = 0; ir[6] = 1; ir[7] = 2;
 	ir[8] = 1; ir[9] = 2;
 	for (i = 0; i < 10; i++) val[i] = 1.0+i;
 
@@ -568,7 +568,7 @@ long sprGetRow()
 			fprintf(stdFile, " %3.0f", row[i]);
 		fprintf(stdFile, "\n");
 	}
-				
+
 	delete[] row;
 	A.free ();
 
@@ -600,9 +600,9 @@ long sprTimes()
 
 	jc[0] = 0; jc[1] = 2; jc[2] = 3; jc[3] = 5; jc[4] = 8; jc[5] = 10;
 	ir[0] = 1; ir[1] = 2;
-	ir[2] = 0; 
+	ir[2] = 0;
 	ir[3] = 0; ir[4] = 2;
-	ir[5] = 0; ir[6] = 1; ir[7] = 2; 
+	ir[5] = 0; ir[6] = 1; ir[7] = 2;
 	ir[8] = 1; ir[9] = 2;
 	for (i = 0; i < 10; i++) val[i] = 1.0+i;
 
@@ -613,7 +613,7 @@ long sprTimes()
 	Ac.free ();	// or delete[] val,jc,ir;
 
 	A.times(2, 1.0, x, 5, 0.0, y, 3);
-	
+
 	for (i = 0; i < 6; i++)
 		if (fabs(y[i] - Ax[i]) > err) err = fabs(y[i] - Ax[i]);
 	fprintf(stdFile, "Error in sparse A*x: %9.2e\n", err);
@@ -658,12 +658,12 @@ long sprIndTimes()
 	cols.addNumber(3);
 	cols.addNumber(0);
 
-	for (i = 0; i < nCols; i++) 
+	for (i = 0; i < nCols; i++)
 		allcols.addNumber(i);
 
 	// build test matrix
 	for (i = 0; i <= N; i++) jc[i] = 3*i;
-	for (j = 0; j < N; j++) 
+	for (j = 0; j < N; j++)
 		for (i = 0; i < 3; i++)
 		{
 			ir[j*3+i] = 2*j + i;
@@ -749,7 +749,7 @@ int Symmetry()
 		fprintf (stderr, "\n");
 	}
 	fprintf (stderr, "\n");
-	
+
 	cols->addNumber(3);
 	cols->addNumber(0);
 	cols->addNumber(4);
@@ -764,7 +764,7 @@ int Symmetry()
 		fprintf (stderr, "\n");
 	}
 	fprintf (stderr, "\n");
-	
+
 	Hd->bilinear(cols, 3, Z, 6, ZHZd, 3);
 
 	err = 0.0;
@@ -774,7 +774,7 @@ int Symmetry()
 	fprintf(stdFile, "Error in indexed dense bilinear form: %9.2e\n", err);
 
 	Hs->bilinear(cols, 3, Z, 6, ZHZs, 3);
-	
+
 	for (i = 0; i < 3; ++i)
 	{
 		for (j = 0; j < 3; ++j)
@@ -797,7 +797,7 @@ int Symmetry()
 			err = fabs(ZHZs[i] - ZHZv[i]);
 	fprintf(stdFile, "Error in indexed sparse bilinear form: %9.2e\n", err);
 
-	delete cols;	
+	delete cols;
 	delete Hs;
 	delete Hd;
 	delete[] ZHZs;

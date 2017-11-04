@@ -43,6 +43,80 @@ BEGIN_NAMESPACE_QPOASES
  *  P U B L I C                                                              *
  *****************************************************************************/
 
+int Bounds_calculateMemorySize( int n)
+{
+	int size = 0;
+
+    size += sizeof(Bounds);  				// size of structure itself
+    size += 2 * n * sizeof(SubjectToType);    	// type, typeTmp
+	size += 2 * n * sizeof(SubjectToStatus);    // status, statusTmp
+	size += 2 * Indexlist_calculateMemorySize(n);  // freee, fixed
+	size += 2 * Indexlist_calculateMemorySize(n);  // shiftedFreee, shiftedFixed
+	size += 2 * Indexlist_calculateMemorySize(n);  // rotatedFreee, rotatedFixed
+
+	size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+    size += 1 * 64;                // align once to typical cache line size
+
+    return size;
+}
+
+char *Bounds_assignMemory(int n, Bounds **mem, void *raw_memory)
+{
+	// char pointer
+	char *c_ptr = (char *)raw_memory;
+
+	// assign structures
+	*mem = (Bounds *) c_ptr;
+	c_ptr += sizeof(Bounds);
+
+	(*mem)->freee = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->freee), c_ptr);
+
+	(*mem)->fixed = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->fixed), c_ptr);
+
+	(*mem)->shiftedFreee = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->shiftedFreee), c_ptr);
+
+	(*mem)->shiftedFixed = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->shiftedFixed), c_ptr);
+
+	(*mem)->rotatedFreee = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->rotatedFreee), c_ptr);
+
+	(*mem)->rotatedFixed = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->rotatedFixed), c_ptr);
+
+	// align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+	c_ptr = (char *)s_ptr;
+
+	// assign data
+	(*mem)->type = (SubjectToType *) c_ptr;
+	c_ptr += n * sizeof(SubjectToType);
+
+	(*mem)->status = (SubjectToStatus *) c_ptr;
+	c_ptr += n * sizeof(SubjectToStatus);
+
+	(*mem)->typeTmp = (SubjectToType *) c_ptr;
+	c_ptr += n * sizeof(SubjectToType);
+
+	(*mem)->statusTmp = (SubjectToStatus *) c_ptr;
+	c_ptr += n * sizeof(SubjectToStatus);
+
+	return c_ptr;
+}
+
+Bounds *Bounds_createMemory( int n )
+{
+	Bounds *mem;
+    int memory_size = Bounds_calculateMemorySize(n);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end =  Bounds_assignMemory(n, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
+}
 
 /*
  *	B o u n d s
@@ -75,8 +149,8 @@ void BoundsCPY(	Bounds* FROM,
 		}
 	}
 
-	IndexlistCPY( &(FROM->freee),&(TO->freee) );
-	IndexlistCPY( &(FROM->fixed),&(TO->fixed) );
+	IndexlistCPY( FROM->freee, TO->freee );
+	IndexlistCPY( FROM->fixed, TO->fixed );
 }
 
 
@@ -89,21 +163,21 @@ returnValue Bounds_init(	Bounds* _THIS,
 							)
 {
 	int i;
-	
+
 	if ( _n < 0 )
 		return THROWERROR( RET_INVALID_ARGUMENTS );
 
 	if ( _n >= 0 )
 	{
-		Indexlist_init( &(_THIS->freee),_n );
-		Indexlist_init( &(_THIS->fixed),_n );
+		Indexlist_init( _THIS->freee, _n );
+		Indexlist_init( _THIS->fixed, _n );
 	}
 
 	_THIS->n = _n;
 	_THIS->noLower = BT_TRUE;
 	_THIS->noUpper = BT_TRUE;
 
-	assert( _THIS->n <= NVMAX );
+	// assert( _THIS->n <= NVMAX );
 
 	if ( _THIS->n > 0 )
 	{
@@ -113,7 +187,7 @@ returnValue Bounds_init(	Bounds* _THIS,
 			_THIS->status[i] = ST_UNDEFINED;
 		}
 	}
-	
+
 	return SUCCESSFUL_RETURN;
 }
 
@@ -266,11 +340,11 @@ returnValue Bounds_shift(	Bounds* _THIS, int offset )
 {
 	int i;
 
-	myStatic Indexlist shiftedFreee;
-	myStatic Indexlist shiftedFixed;
+	Indexlist *shiftedFreee = _THIS->shiftedFreee;
+	Indexlist *shiftedFixed = _THIS->shiftedFixed;
 
-	Indexlist_init( &shiftedFreee,_THIS->n );
-	Indexlist_init( &shiftedFixed,_THIS->n );
+	Indexlist_init( shiftedFreee, _THIS->n );
+	Indexlist_init( shiftedFixed, _THIS->n );
 
 	/* consistency check */
 	if ( ( offset == 0 ) || ( _THIS->n <= 1 ) )
@@ -296,17 +370,17 @@ returnValue Bounds_shift(	Bounds* _THIS, int offset )
 		switch ( Bounds_getStatus( _THIS,i ) )
 		{
 			case ST_INACTIVE:
-				if ( Indexlist_addNumber( &shiftedFreee,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( shiftedFreee,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SHIFTING_FAILED );
 				break;
 
 			case ST_LOWER:
-				if ( Indexlist_addNumber( &shiftedFixed,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( shiftedFixed,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SHIFTING_FAILED );
 				break;
 
 			case ST_UPPER:
-				if ( Indexlist_addNumber( &shiftedFixed,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( shiftedFixed,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SHIFTING_FAILED );
 				break;
 
@@ -316,8 +390,8 @@ returnValue Bounds_shift(	Bounds* _THIS, int offset )
 	}
 
 	/* 3) Assign shifted index list. */
-	IndexlistCPY( &shiftedFreee,&(_THIS->freee) );
-	IndexlistCPY( &shiftedFixed,&(_THIS->fixed) );
+	IndexlistCPY( shiftedFreee,_THIS->freee );
+	IndexlistCPY( shiftedFixed,_THIS->fixed );
 
 	return SUCCESSFUL_RETURN;
 }
@@ -329,14 +403,14 @@ returnValue Bounds_shift(	Bounds* _THIS, int offset )
 returnValue Bounds_rotate( Bounds* _THIS, int offset )
 {
 	int i;
-	myStatic SubjectToType   typeTmp[NVMAX];
-	myStatic SubjectToStatus statusTmp[NVMAX];
-	
-	myStatic Indexlist rotatedFreee;
-	myStatic Indexlist rotatedFixed;
+	SubjectToType   *typeTmp = _THIS->typeTmp;
+	SubjectToStatus *statusTmp = _THIS->statusTmp;
 
-	Indexlist_init( &rotatedFreee,_THIS->n );
-	Indexlist_init( &rotatedFixed,_THIS->n );
+	Indexlist *rotatedFreee = _THIS->rotatedFreee;
+	Indexlist *rotatedFixed = _THIS->rotatedFixed;
+
+	Indexlist_init( rotatedFreee,_THIS->n );
+	Indexlist_init( rotatedFixed,_THIS->n );
 
 	/* consistency check */
 	if ( ( offset == 0 ) || ( offset == _THIS->n ) || ( _THIS->n <= 1 ) )
@@ -371,17 +445,17 @@ returnValue Bounds_rotate( Bounds* _THIS, int offset )
 		switch ( Bounds_getStatus( _THIS,i ) )
 		{
 			case ST_INACTIVE:
-				if ( Indexlist_addNumber( &rotatedFreee,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( rotatedFreee,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_ROTATING_FAILED );
 				break;
 
 			case ST_LOWER:
-				if ( Indexlist_addNumber( &rotatedFixed,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( rotatedFixed,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_ROTATING_FAILED );
 				break;
 
 			case ST_UPPER:
-				if ( Indexlist_addNumber( &rotatedFixed,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( rotatedFixed,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_ROTATING_FAILED );
 				break;
 
@@ -391,8 +465,8 @@ returnValue Bounds_rotate( Bounds* _THIS, int offset )
 	}
 
 	/* 3) Assign shifted index list. */
-	IndexlistCPY( &rotatedFreee,&(_THIS->freee) );
-	IndexlistCPY( &rotatedFixed,&(_THIS->fixed) );
+	IndexlistCPY( rotatedFreee, _THIS->freee );
+	IndexlistCPY( rotatedFixed, _THIS->fixed );
 
 	return SUCCESSFUL_RETURN;
 }

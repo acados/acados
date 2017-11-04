@@ -30,7 +30,7 @@ BLASFEO_PATH = $(EXT_PATH)/blasfeo
 HPIPM_PATH = $(EXT_PATH)/hpipm
 
 # qpOASES path
-QPOASES_PATH = /opt/qpoases
+QPOASES_PATH = $(EXT_PATH)/qpoases
 
 # measure timings
 MEASURE_TIMINGS = 1

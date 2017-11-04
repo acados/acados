@@ -43,7 +43,7 @@
 BEGIN_NAMESPACE_QPOASES
 
 
-/** 
+/**
  *	\brief Manages working sets of constraints.
  *
  *	This class manages working sets of constraints by storing
@@ -55,19 +55,32 @@ BEGIN_NAMESPACE_QPOASES
  */
 typedef struct
 {
-	int n;								/**< Total number of constraints. */
+	Indexlist *active;					/**< Index list of active constraints. */
+	Indexlist *inactive;				/**< Index list of inactive constraints. */
 
-	SubjectToType   type[NCMAX]; 		/**< Type of constraints. */
-	SubjectToStatus status[NCMAX];		/**< Status of constraints. */
+	Indexlist *shiftedActive;			/**< Memory for shifting active constraints. */
+	Indexlist *shiftedInactive;			/**< Memory for shifting inactive constraints. */
+
+	Indexlist *rotatedActive;			/**< Memory for rotating active constraints. */
+	Indexlist *rotatedInactive;			/**< Memory for rotating inactive constraints. */
+
+	SubjectToType   *type; 				/**< Type of constraints. */
+	SubjectToStatus *status;			/**< Status of constraints. */
+
+	SubjectToType   *typeTmp;			/**< Temp memory for type of constraints. */
+	SubjectToStatus *statusTmp;			/**< Temp memory for status of constraints. */
 
 	BooleanType noLower;			 	/**< This flag indicates if there is no lower bound on any variable. */
 	BooleanType noUpper;	 			/**< This flag indicates if there is no upper bound on any variable. */
 
-	Indexlist active;					/**< Index list of active constraints. */
-	Indexlist inactive;					/**< Index list of inactive constraints. */
+	int n;								/**< Total number of constraints. */
 } Constraints;
 
+int Constraints_calculateMemorySize( int n);
 
+char *Constraints_assignMemory(int n, Constraints **mem, void *raw_memory);
+
+Constraints *Constraints_createMemory( int n );
 
 /** Constructor which takes the number of constraints. */
 void ConstraintsCON(	Constraints* _THIS,
@@ -479,7 +492,7 @@ static inline int Constraints_getNUC( Constraints* _THIS )
  */
 static inline int Constraints_getNAC( Constraints* _THIS )
 {
- 	return Indexlist_getLength( &(_THIS->active) );
+ 	return Indexlist_getLength( _THIS->active );
 }
 
 
@@ -488,7 +501,7 @@ static inline int Constraints_getNAC( Constraints* _THIS )
  */
 static inline int Constraints_getNIAC( Constraints* _THIS )
 {
-	return Indexlist_getLength( &(_THIS->inactive) );
+	return Indexlist_getLength( _THIS->inactive );
 }
 
 
@@ -498,7 +511,7 @@ static inline int Constraints_getNIAC( Constraints* _THIS )
  */
 static inline Indexlist* Constraints_getActive( Constraints* _THIS )
 {
-	return &(_THIS->active);
+	return _THIS->active;
 }
 
 
@@ -507,7 +520,7 @@ static inline Indexlist* Constraints_getActive( Constraints* _THIS )
  */
 static inline Indexlist* Constraints_getInactive( Constraints* _THIS )
 {
-	return &(_THIS->inactive);
+	return _THIS->inactive;
 }
 
 

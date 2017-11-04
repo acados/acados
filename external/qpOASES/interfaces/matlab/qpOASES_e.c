@@ -63,7 +63,7 @@ int QProblem_qpOASES(	int nV, int nC, HessianType hessianType, int nP,
 	static char msg[QPOASES_MAX_STRING_LENGTH];
 
 	real_t *g_current, *lb_current, *ub_current, *lbA_current, *ubA_current;
-	
+
 	/* 1) Setup initial QP. */
 	static QProblem QP;
 	static Bounds bounds;
@@ -112,7 +112,7 @@ int QProblem_qpOASES(	int nV, int nC, HessianType hessianType, int nP,
 
 	nWSRout = nWSRin;
 	maxCpuTimeOut = (maxCpuTimeIn >= 0.0) ? maxCpuTimeIn : QPOASES_INFTY;
-	
+
 	returnvalue = QProblem_initMW(	&QP, H,g,A,lb,ub,lbA,ubA,
 									&nWSRout,&maxCpuTimeOut,
 									x0,0,
@@ -181,7 +181,7 @@ int QProblemB_qpOASES(	int nV, HessianType hessianType, int nP,
 	static char msg[QPOASES_MAX_STRING_LENGTH];
 
 	real_t *g_current, *lb_current, *ub_current;
-	
+
 	/* 1) Setup initial QP. */
 	static QProblemB QP;
 	static Bounds bounds;
@@ -210,7 +210,7 @@ int QProblemB_qpOASES(	int nV, HessianType hessianType, int nP,
 
 	nWSRout = nWSRin;
 	maxCpuTimeOut = (maxCpuTimeIn >= 0.0) ? maxCpuTimeIn : QPOASES_INFTY;
-	
+
 	returnvalue = QProblemB_initMW(	&QP, H,g,lb,ub,
 									&nWSRout,&maxCpuTimeOut,
 									x0,0,
@@ -259,7 +259,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 	/* inputs */
 	static DenseMatrix H;
 	static DenseMatrix A;
-	
+
 	real_t *g=0, *lb=0, *ub=0, *lbA=0, *ubA=0;
 	HessianType hessianType = HST_UNKNOWN;
 	double *x0=0, *R_for=0;
@@ -277,7 +277,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 	int nWSRin;
 	real_t maxCpuTimeIn;
 	static char msg[QPOASES_MAX_STRING_LENGTH];
-	
+
     /* Setup default options */
 	static Options options;
 	Options_setToDefault( &options );
@@ -297,7 +297,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 		myMexErrMsgTxt( "ERROR (qpOASES_e): Invalid number of input arguments!\nType 'help qpOASES' for further information." );
 		return;
 	}
-    
+
 	/* 2) Check for proper number of output arguments. */
 	if ( nlhs > 6 )
 	{
@@ -365,7 +365,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 		ub_idx   = 3;
 
 		if ( ( nrhs >= 6 ) && ( !mxIsEmpty(prhs[5]) ) )
-		{ 
+		{
 			/* auxInput specified */
 			if ( mxIsStruct(prhs[5]) )
 			{
@@ -407,7 +407,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 		}
 
 		if ( ( nrhs >= 9 ) && ( !mxIsEmpty(prhs[8]) ) )
-		{ 
+		{
 			/* auxInput specified */
 			if ( mxIsStruct(prhs[8]) )
 			{
@@ -452,7 +452,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 	/* Check inputs dimensions and assign pointers to inputs. */
 	if ( ( H_idx >= 0 ) && ( ( mxGetN( prhs[ H_idx ] ) != nV ) || ( mxGetM( prhs[ H_idx ] ) != nV ) ) )
 	{
-		snprintf(msg, QPOASES_MAX_STRING_LENGTH, "ERROR (qpOASES_e): Hessian matrix dimension mismatch (%ld != %d)!", 
+		snprintf(msg, QPOASES_MAX_STRING_LENGTH, "ERROR (qpOASES_e): Hessian matrix dimension mismatch (%ld != %d)!",
 				(long int)mxGetN(prhs[H_idx]), nV);
 		myMexErrMsgTxt(msg);
 		return;
@@ -470,7 +470,7 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 		/* Check inputs dimensions and assign pointers to inputs. */
 		if ( mxGetN( prhs[ A_idx ] ) != nV )
 		{
-			snprintf(msg, QPOASES_MAX_STRING_LENGTH, "ERROR (qpOASES_e): Constraint matrix input dimension mismatch (%ld != %d)!", 
+			snprintf(msg, QPOASES_MAX_STRING_LENGTH, "ERROR (qpOASES_e): Constraint matrix input dimension mismatch (%ld != %d)!",
 					(long int)mxGetN(prhs[A_idx]), nV);
 			myMexErrMsgTxt(msg);
 			return;
@@ -520,20 +520,20 @@ void mexFunction( int nlhs, mxArray* plhs[], int nrhs, const mxArray* prhs[] )
 	/* III) ACTUALLY PERFORM QPOASES FUNCTION CALL: */
 	nWSRin = 5*(nV+nC);
 	maxCpuTimeIn = -1.0;
-	
+
 	if ( options_idx > 0 )
 		setupOptions( &options,prhs[options_idx],&nWSRin,&maxCpuTimeIn );
-	
+
 	/* make a deep-copy of the user-specified Hessian matrix (possibly sparse) */
 	if ( H_idx >= 0 )
 		setupHessianMatrix(	prhs[H_idx],nV, &H );
-	
+
 	/* make a deep-copy of the user-specified constraint matrix (possibly sparse) */
 	if ( ( nC > 0 ) && ( A_idx >= 0 ) )
 		setupConstraintMatrix( prhs[A_idx],nV,nC, &A );
-	
+
 	allocateOutputs( nlhs,plhs,nV,nC,nP,-1 );
-	
+
 	if ( nC == 0 )
 	{
 		/* Call qpOASES (using QProblemB class). */

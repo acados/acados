@@ -43,6 +43,80 @@ BEGIN_NAMESPACE_QPOASES
  *  P U B L I C                                                              *
  *****************************************************************************/
 
+int Constraints_calculateMemorySize( int n)
+{
+	int size = 0;
+
+	size += sizeof(Constraints);  				// size of structure itself
+	size += 2 * n * sizeof(SubjectToType);    	// type, status
+	size += 2 * n * sizeof(SubjectToStatus);    // status, statusTmp
+	size += 2 * Indexlist_calculateMemorySize(n);  // active, inactive
+	size += 2 * Indexlist_calculateMemorySize(n);  // shiftedActive, shiftedInactive
+	size += 2 * Indexlist_calculateMemorySize(n);  // rotatedActive, rotatedInactive
+
+	size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+    size += 1 * 64;                // align once to typical cache line size
+
+	return size;
+}
+
+char *Constraints_assignMemory(int n, Constraints **mem, void *raw_memory)
+{
+	// char pointer
+	char *c_ptr = (char *)raw_memory;
+
+	// assign structures
+	*mem = (Constraints *) c_ptr;
+	c_ptr += sizeof(Constraints);
+
+	(*mem)->active = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->active), c_ptr);
+
+	(*mem)->inactive = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->inactive), c_ptr);
+
+	(*mem)->shiftedActive = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->shiftedActive), c_ptr);
+
+	(*mem)->shiftedInactive = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->shiftedInactive), c_ptr);
+
+	(*mem)->rotatedActive = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->rotatedActive), c_ptr);
+
+	(*mem)->rotatedInactive = (Indexlist *) c_ptr;
+	c_ptr = Indexlist_assignMemory(n, &((*mem)->rotatedInactive), c_ptr);
+
+	// align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+	c_ptr = (char *)s_ptr;
+
+	// assign data
+	(*mem)->type = (SubjectToType *) c_ptr;
+	c_ptr += n * sizeof(SubjectToType);
+
+	(*mem)->status = (SubjectToStatus *) c_ptr;
+	c_ptr += n * sizeof(SubjectToStatus);
+
+	(*mem)->typeTmp = (SubjectToType *) c_ptr;
+	c_ptr += n * sizeof(SubjectToType);
+
+	(*mem)->statusTmp = (SubjectToStatus *) c_ptr;
+	c_ptr += n * sizeof(SubjectToStatus);
+
+	return c_ptr;
+}
+
+Constraints *Constraints_createMemory( int n )
+{
+	Constraints *mem;
+    int memory_size = Constraints_calculateMemorySize(n);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end =  Constraints_assignMemory(n, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
+}
 
 /*
  *	C o n s t r a i n t s
@@ -77,8 +151,8 @@ void ConstraintsCPY(	Constraints* FROM,
 		}
 	}
 
-	IndexlistCPY( &(FROM->active),&(TO->active) );
-	IndexlistCPY( &(FROM->inactive),&(TO->inactive) );
+	IndexlistCPY( FROM->active,TO->active );
+	IndexlistCPY( FROM->inactive,TO->inactive );
 }
 
 
@@ -97,15 +171,15 @@ returnValue Constraints_init(	Constraints* _THIS,
 
 	if ( _n >= 0 )
 	{
-		Indexlist_init( &(_THIS->active),_n );
-		Indexlist_init( &(_THIS->inactive),_n );
+		Indexlist_init( _THIS->active,_n );
+		Indexlist_init( _THIS->inactive,_n );
 	}
 
 	_THIS->n = _n;
 	_THIS->noLower = BT_TRUE;
 	_THIS->noUpper = BT_TRUE;
 
-	assert( _THIS->n <= NCMAX );
+	// assert( _THIS->n <= NCMAX );
 
 	if ( _THIS->n > 0 )
 	{
@@ -259,11 +333,11 @@ returnValue Constraints_flipFixed( Constraints* _THIS, int number )
 returnValue Constraints_shift( Constraints* _THIS, int offset )
 {
 	int i;
-	myStatic Indexlist shiftedActive;
-	myStatic Indexlist shiftedInactive;
+	Indexlist *shiftedActive = _THIS->shiftedActive;
+	Indexlist *shiftedInactive = _THIS->shiftedInactive;
 
-	Indexlist_init( &shiftedActive,_THIS->n );
-	Indexlist_init( &shiftedInactive,_THIS->n );
+	Indexlist_init( shiftedActive,_THIS->n );
+	Indexlist_init( shiftedInactive,_THIS->n );
 
 	/* consistency check */
 	if ( ( offset == 0 ) || ( _THIS->n <= 1 ) )
@@ -289,17 +363,17 @@ returnValue Constraints_shift( Constraints* _THIS, int offset )
 		switch ( Constraints_getStatus( _THIS,i ) )
 		{
 			case ST_INACTIVE:
-				if ( Indexlist_addNumber( &shiftedInactive,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( shiftedInactive,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SHIFTING_FAILED );
 				break;
 
 			case ST_LOWER:
-				if ( Indexlist_addNumber( &shiftedActive,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( shiftedActive,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SHIFTING_FAILED );
 				break;
 
 			case ST_UPPER:
-				if ( Indexlist_addNumber( &shiftedActive,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( shiftedActive,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SHIFTING_FAILED );
 				break;
 
@@ -309,8 +383,8 @@ returnValue Constraints_shift( Constraints* _THIS, int offset )
 	}
 
 	/* 3) Assign shifted index list. */
-	IndexlistCPY( &shiftedActive,&(_THIS->active) );
-	IndexlistCPY( &shiftedInactive,&(_THIS->inactive) );
+	IndexlistCPY( shiftedActive,_THIS->active );
+	IndexlistCPY( shiftedInactive,_THIS->inactive );
 
 	return SUCCESSFUL_RETURN;
 }
@@ -322,15 +396,15 @@ returnValue Constraints_shift( Constraints* _THIS, int offset )
 returnValue Constraints_rotate( Constraints* _THIS, int offset )
 {
 	int i;
-	myStatic SubjectToType   typeTmp[NCMAX];
-	myStatic SubjectToStatus statusTmp[NCMAX];
-	
-	myStatic Indexlist rotatedActive;
-	myStatic Indexlist rotatedInactive;
+	SubjectToType   *typeTmp = _THIS->typeTmp;
+	SubjectToStatus *statusTmp = _THIS->statusTmp;
 
-	Indexlist_init( &rotatedActive,_THIS->n );
-	Indexlist_init( &rotatedInactive,_THIS->n );
-	
+	Indexlist *rotatedActive = _THIS->rotatedActive;
+	Indexlist *rotatedInactive = _THIS->rotatedInactive;
+
+	Indexlist_init( rotatedActive,_THIS->n );
+	Indexlist_init( rotatedInactive,_THIS->n );
+
 	/* consistency check */
 	if ( ( offset == 0 ) || ( offset == _THIS->n ) || ( _THIS->n <= 1 ) )
 		return SUCCESSFUL_RETURN;
@@ -364,17 +438,17 @@ returnValue Constraints_rotate( Constraints* _THIS, int offset )
 		switch ( Constraints_getStatus( _THIS,i ) )
 		{
 			case ST_INACTIVE:
-				if ( Indexlist_addNumber( &rotatedInactive,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( rotatedInactive,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_ROTATING_FAILED );
 				break;
 
 			case ST_LOWER:
-				if ( Indexlist_addNumber( &rotatedActive,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( rotatedActive,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_ROTATING_FAILED );
 				break;
 
 			case ST_UPPER:
-				if ( Indexlist_addNumber( &rotatedActive,i ) != SUCCESSFUL_RETURN )
+				if ( Indexlist_addNumber( rotatedActive,i ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_ROTATING_FAILED );
 				break;
 
@@ -384,8 +458,8 @@ returnValue Constraints_rotate( Constraints* _THIS, int offset )
 	}
 
 	/* 3) Assign shifted index list. */
-	IndexlistCPY( &rotatedActive,&(_THIS->active) );
-	IndexlistCPY( &rotatedInactive,&(_THIS->inactive) );
+	IndexlistCPY( rotatedActive,_THIS->active );
+	IndexlistCPY( rotatedInactive,_THIS->inactive );
 
 	return SUCCESSFUL_RETURN;
 }

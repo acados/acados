@@ -38,6 +38,170 @@
 
 BEGIN_NAMESPACE_QPOASES
 
+int QProblemB_ws_calculateMemorySize( unsigned int nV )
+{
+	int size = 0;
+	size += sizeof(QProblemB_ws);
+	size += Bounds_calculateMemorySize(nV);  // emptyBounds
+	size += Bounds_calculateMemorySize(nV);  // auxiliaryBounds
+	size += 22 * nV * sizeof(real_t);        // hope these numbers are correct :)
+	size += 1 * (nV * nV) * sizeof(real_t);
+	size += 1 * (nV + 1) * sizeof(real_t);
+
+	size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+	size += 1 * 64;                // align once to typical cache line size
+
+	return size;
+}
+
+char *QProblemB_ws_assignMemory( unsigned int nV, QProblemB_ws **mem, void *raw_memory )
+{
+	// char pointer
+	char *c_ptr = (char *)raw_memory;
+
+	// assign structures
+	*mem = (QProblemB_ws *) c_ptr;
+	c_ptr += sizeof(QProblemB_ws);
+
+	(*mem)->emptyBounds = (Bounds *) c_ptr;
+	c_ptr = Bounds_assignMemory(nV, &((*mem)->emptyBounds), c_ptr);
+
+	(*mem)->auxiliaryBounds = (Bounds *) c_ptr;
+	c_ptr = Bounds_assignMemory(nV, &((*mem)->auxiliaryBounds), c_ptr);
+
+	// align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+	c_ptr = (char *)s_ptr;
+
+	// assign data
+	(*mem)->ub_new_far = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->lb_new_far = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->g_new = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->lb_new = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->ub_new = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->g_new2 = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t); //
+	(*mem)->lb_new2 = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t); //
+	(*mem)->ub_new2 = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t); //
+
+	(*mem)->Hx = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->_H = (real_t *) c_ptr; c_ptr += (nV*nV)*sizeof(real_t);
+
+	(*mem)->g_original = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->lb_original = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->ub_original = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->delta_xFR = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->delta_xFX = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->delta_yFX = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->delta_g = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->delta_lb = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->delta_ub = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->gMod = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->num = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+	(*mem)->den = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	(*mem)->rhs = (real_t *) c_ptr; c_ptr += (nV+1)*sizeof(real_t);
+	(*mem)->r = (real_t *) c_ptr; c_ptr += (nV)*sizeof(real_t);
+
+	return c_ptr;
+}
+
+QProblemB_ws *QProblemB_ws_createMemory( unsigned int nV )
+{
+	QProblemB_ws *mem;
+    int memory_size = QProblemB_ws_calculateMemorySize(nV);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end =  QProblemB_ws_assignMemory(nV, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
+}
+
+int QProblemB_calculateMemorySize( unsigned int nV )
+{
+	int size = 0;
+	size += sizeof(QProblemB);  					   // size of structure itself
+	size += QProblemB_ws_calculateMemorySize(nV);  	   // size of the workspace
+	size += Bounds_calculateMemorySize(nV);		   	   // bounds
+	size += Flipper_calculateMemorySize(nV, 0);        // flipper
+	size += DenseMatrix_calculateMemorySize(nV, nV);   // H
+	size += 3 * nV * sizeof(real_t);				   // g, lb, ub
+	size += 1 * (nV * nV) * sizeof(real_t);			   // R
+	size += 1 * nV * sizeof(real_t);				   // x
+	size += 1 * nV * sizeof(real_t);			   	   // y
+	size += 1 * nV * sizeof(real_t);				   // delta_xFR_TMP
+
+	size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+	size += 1 * 64;                // align once to typical cache line size
+
+	return size;
+}
+
+char *QProblemB_assignMemory( unsigned int nV, QProblemB **mem, void *raw_memory )
+{
+	// char pointer
+	char *c_ptr = (char *)raw_memory;
+
+	// assign structures
+	*mem = (QProblemB *) c_ptr;
+	c_ptr += sizeof(QProblemB);
+
+	(*mem)->ws = (QProblemB_ws *) c_ptr;
+	c_ptr = QProblemB_ws_assignMemory(nV, &((*mem)->ws), c_ptr);
+
+	(*mem)->bounds = (Bounds *) c_ptr;
+	c_ptr = Bounds_assignMemory(nV, &((*mem)->bounds), c_ptr);
+
+	(*mem)->flipper = (Flipper *) c_ptr;
+	c_ptr = Flipper_assignMemory(nV, 0, &((*mem)->flipper), c_ptr);
+
+	(*mem)->H = (DenseMatrix *) c_ptr;
+	c_ptr = DenseMatrix_assignMemory(nV, nV, &((*mem)->H), c_ptr);
+
+	// align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+	c_ptr = (char *)s_ptr;
+
+	// assign data
+	(*mem)->g = (real_t *) c_ptr;
+	c_ptr += nV * sizeof(real_t);
+
+	(*mem)->lb = (real_t *) c_ptr;
+	c_ptr += nV * sizeof(real_t);
+
+	(*mem)->ub = (real_t *) c_ptr;
+	c_ptr += nV * sizeof(real_t);
+
+	(*mem)->R = (real_t *) c_ptr;
+	c_ptr += (nV * nV) * sizeof(real_t);
+
+	(*mem)->x = (real_t *) c_ptr;
+	c_ptr += nV * sizeof(real_t);
+
+	(*mem)->y = (real_t *) c_ptr;
+	c_ptr += nV * sizeof(real_t);
+
+	(*mem)->delta_xFR_TMP = (real_t *) c_ptr;
+	c_ptr += nV * sizeof(real_t);
+
+	return c_ptr;
+}
+
+QProblemB *QProblemB_createMemory( unsigned int nV )
+{
+	QProblemB *mem;
+    int memory_size = QProblemB_calculateMemorySize(nV);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end =  QProblemB_assignMemory(nV, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
+}
 
 /*
  *	Q P r o b l e m B
@@ -58,7 +222,7 @@ void QProblemBCON(	QProblemB* _THIS,
 		qpOASES_printCopyrightNotice( );
 
 	/* consistency check */
-	if ( ( _nV <= 0 ) || ( _nV > NVMAX ) )
+	if ( ( _nV <= 0 ) )
 	{
 		_nV = 1;
 		THROWERROR( RET_INVALID_ARGUMENTS );
@@ -68,8 +232,6 @@ void QProblemBCON(	QProblemB* _THIS,
 	/* reset global message handler */
 	MessageHandling_reset( qpOASES_getGlobalMessageHandler() );
 
-	_THIS->H = &(_THIS->HH);
-
 	for( i=0; i<_nV; ++i ) _THIS->g[i] = 0.0;
 	for( i=0; i<_nV; ++i ) _THIS->lb[i] = 0.0;
 	for( i=0; i<_nV; ++i ) _THIS->ub[i] = 0.0;
@@ -77,7 +239,7 @@ void QProblemBCON(	QProblemB* _THIS,
 	for( i=0; i<_nV; ++i ) _THIS->x[i] = 0.0;
 	for( i=0; i<_nV; ++i ) _THIS->y[i] = 0.0;
 
-	Bounds_init( &(_THIS->bounds),_nV );
+	Bounds_init( _THIS->bounds,_nV );
 
 	_THIS->haveCholesky = BT_FALSE;
 
@@ -110,17 +272,15 @@ void QProblemBCPY(	QProblemB* FROM,
 {
 	unsigned int _nV = (unsigned int)QProblemB_getNV( FROM );
 
-	TO->bounds = FROM->bounds;
-
-	TO->HH = FROM->HH;
-	TO->H = &(TO->HH);
+	BoundsCPY(FROM->bounds, TO->bounds);
+	DenseMatrixCPY(FROM->H, TO->H);
 
 	QProblemB_setG( TO,FROM->g );
 	QProblemB_setLB( TO,FROM->lb );
 	QProblemB_setUB( TO,FROM->ub );
 
-	memcpy( TO->R,FROM->R,NVMAX*NVMAX*sizeof(real_t) );
-	
+	memcpy( TO->R,FROM->R,_nV*_nV*sizeof(real_t) );
+
 	TO->haveCholesky = FROM->haveCholesky;
 
 	memcpy( TO->x,FROM->x,_nV*sizeof(real_t) );
@@ -159,12 +319,12 @@ returnValue QProblemB_reset( QProblemB* _THIS )
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
 	/* 1) Reset bounds. */
-	Bounds_init( &(_THIS->bounds),nV );
+	Bounds_init( _THIS->bounds,nV );
 
 	/* 2) Reset Cholesky decomposition. */
-	for( i=0; i<NVMAX*NVMAX; ++i )
+	for( i=0; i<nV*nV; ++i )
 		_THIS->R[i] = 0.0;
-	
+
 	_THIS->haveCholesky = BT_FALSE;
 
 	/* 3) Reset steplength and status flags. */
@@ -436,7 +596,7 @@ returnValue QProblemB_setupInitialCholesky( QProblemB* _THIS )
 {
 	returnValue returnvalueCholesky;
 
-	/* If regularisation shall be used, always regularise at beginning 
+	/* If regularisation shall be used, always regularise at beginning
 	 * if initial working set is not empty. */
 	if ( ( QProblemB_getNV( _THIS ) != QProblemB_getNFR( _THIS ) - QProblemB_getNFV( _THIS ) ) && ( _THIS->options.enableRegularisation == BT_TRUE ) )
 	{
@@ -444,7 +604,7 @@ returnValue QProblemB_setupInitialCholesky( QProblemB* _THIS )
 			return RET_INIT_FAILED_REGULARISATION;
 	}
 
-	/* Factorise projected Hessian 
+	/* Factorise projected Hessian
 	 * now handles all special cases (no active bounds/constraints, no nullspace) */
 	returnvalueCholesky = QProblemB_computeCholesky( _THIS );
 
@@ -487,9 +647,9 @@ returnValue QProblemB_hotstart(	QProblemB* _THIS, const real_t* const g_new,
 
 	BooleanType isFirstCall = BT_TRUE;
 
-	myStatic real_t ub_new_far[NVMAX];
-	myStatic real_t lb_new_far[NVMAX];
-	
+	real_t *ub_new_far = _THIS->ws->ub_new_far;
+	real_t *lb_new_far = _THIS->ws->lb_new_far;
+
 	real_t tol;
 
 	if ( QProblemB_getNV( _THIS ) == 0 )
@@ -542,7 +702,7 @@ returnValue QProblemB_hotstart(	QProblemB* _THIS, const real_t* const g_new,
 														nWSR,&cputime_remaining,nWSR_performed,
 														isFirstCall
 														);
-			
+
 			nWSR_performed  = *nWSR;
 			cputime_needed += cputime_remaining;
 			isFirstCall     = BT_FALSE;
@@ -621,9 +781,9 @@ returnValue QProblemB_hotstartF(	QProblemB* _THIS, const char* const g_file,
 	returnValue returnvalue;
 
 	/* 1) Allocate memory (if bounds exist). */
-	myStatic real_t g_new[NVMAX];
-	myStatic real_t lb_new[NVMAX];
-	myStatic real_t ub_new[NVMAX];
+	real_t *g_new = _THIS->ws->g_new;
+	real_t *lb_new = _THIS->ws->lb_new;
+	real_t *ub_new = _THIS->ws->ub_new;
 
 
 	if ( nV == 0 )
@@ -660,19 +820,19 @@ returnValue QProblemB_hotstartW(	QProblemB* _THIS, const real_t* const g_new,
 									)
 {
 	int nV = QProblemB_getNV( _THIS );
-	
+
 	returnValue returnvalue;
 	real_t starttime = 0.0;
 	real_t auxTime = 0.0;
-	
-	myStatic Bounds emptyBounds;
-	BoundsCON( &emptyBounds,nV );
+
+	Bounds *emptyBounds = _THIS->ws->emptyBounds;
+	BoundsCON( emptyBounds,nV );
 
 
 	if ( nV == 0 )
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
-	
+
 	/* 1) Update working set according to guess for working set of bounds. */
 	if ( guessedBounds != 0 )
 	{
@@ -681,7 +841,7 @@ returnValue QProblemB_hotstartW(	QProblemB* _THIS, const real_t* const g_new,
 
 		if ( QProblemB_setupAuxiliaryQP( _THIS,guessedBounds ) != SUCCESSFUL_RETURN )
 			return THROWERROR( RET_SETUP_AUXILIARYQP_FAILED );
-		
+
 		/* Allow only remaining CPU time for usual hotstart. */
 		if ( cputime != 0 )
 		{
@@ -690,7 +850,7 @@ returnValue QProblemB_hotstartW(	QProblemB* _THIS, const real_t* const g_new,
 		}
 	}
 
-	_THIS->status = QPS_AUXILIARYQPSOLVED;	
+	_THIS->status = QPS_AUXILIARYQPSOLVED;
 
 	/* 2) Perform usual homotopy. */
 	returnvalue = QProblemB_hotstart( _THIS,g_new,lb_new,ub_new, nWSR,cputime );
@@ -716,11 +876,11 @@ returnValue QProblemB_hotstartFW(	QProblemB* _THIS, const char* const g_file,
 	returnValue returnvalue;
 
 	/* 1) Allocate memory (if bounds exist). */
-	myStatic real_t g_new[NVMAX];
-	myStatic real_t lb_new[NVMAX];
-	myStatic real_t ub_new[NVMAX];
+	real_t *g_new = _THIS->ws->g_new2;
+	real_t *lb_new = _THIS->ws->lb_new2;
+	real_t *ub_new = _THIS->ws->ub_new2;
 
-	
+
 	if ( nV == 0 )
 		return THROWERROR( RET_QPOBJECT_NOT_SETUP );
 
@@ -767,7 +927,7 @@ returnValue QProblemB_getWorkingSetBounds( QProblemB* _THIS, real_t* workingSetB
 
 	/* At which limit is the bound active? */
 	for (i = 0; i < nV; i++) {
-		switch ( Bounds_getStatus( &(_THIS->bounds),i ) ) {
+		switch ( Bounds_getStatus( _THIS->bounds,i ) ) {
 			case ST_LOWER: workingSetB[i] = -1.0; break;
 			case ST_UPPER: workingSetB[i] = +1.0; break;
 			default:       workingSetB[i] =  0.0; break;
@@ -834,7 +994,7 @@ real_t QProblemB_getObjValX( QProblemB* _THIS, const real_t* const _x )
 	int nV = QProblemB_getNV( _THIS );
 
 	real_t objVal = 0.0;
-	myStatic real_t Hx[NVMAX];
+	real_t *Hx = _THIS->ws->Hx;
 
 	if ( nV == 0 )
 		return 0.0;
@@ -995,12 +1155,12 @@ returnValue QProblemB_printProperties( QProblemB* _THIS )
 	snprintf( myPrintfString,QPOASES_MAX_STRING_LENGTH,  "Number of Variables: %4.1d\n",QProblemB_getNV( _THIS ) );
 	qpOASES_myPrintf( myPrintfString );
 
-	if ( Bounds_hasNoLower( &(_THIS->bounds) ) == BT_TRUE )
+	if ( Bounds_hasNoLower( _THIS->bounds ) == BT_TRUE )
 			qpOASES_myPrintf( "Variables are not bounded from below.\n" );
 		else
 			qpOASES_myPrintf( "Variables are bounded from below.\n" );
 
-	if ( Bounds_hasNoUpper( &(_THIS->bounds) ) == BT_TRUE )
+	if ( Bounds_hasNoUpper( _THIS->bounds ) == BT_TRUE )
 			qpOASES_myPrintf( "Variables are not bounded from above.\n" );
 		else
 			qpOASES_myPrintf( "Variables are bounded from above.\n" );
@@ -1139,7 +1299,7 @@ returnValue QProblemB_determineHessianType( QProblemB* _THIS )
 	BooleanType isIdentity, isZero;
 
 	int nV = QProblemB_getNV( _THIS );
-	
+
 	/* if Hessian type has been set by user, do NOT change it! */
 	switch ( _THIS->hessianType )
 	{
@@ -1151,7 +1311,7 @@ returnValue QProblemB_determineHessianType( QProblemB* _THIS )
 				_THIS->options.numRegularisationSteps = 1;
 			}
 			return SUCCESSFUL_RETURN;
-		
+
 		case HST_IDENTITY:
 			return SUCCESSFUL_RETURN;
 
@@ -1252,28 +1412,28 @@ returnValue QProblemB_setupSubjectToTypeNew( QProblemB* _THIS, const real_t* con
 
 
 	/* 1) Check if lower bounds are present. */
-	Bounds_setNoLower( &(_THIS->bounds),BT_TRUE );
+	Bounds_setNoLower( _THIS->bounds,BT_TRUE );
 	if ( lb_new != 0 )
 	{
 		for( i=0; i<nV; ++i )
 		{
 			if ( lb_new[i] > -QPOASES_INFTY )
 			{
-				Bounds_setNoLower( &(_THIS->bounds),BT_FALSE );
+				Bounds_setNoLower( _THIS->bounds,BT_FALSE );
 				break;
 			}
 		}
 	}
 
 	/* 2) Check if upper bounds are present. */
-	Bounds_setNoUpper( &(_THIS->bounds),BT_TRUE );
+	Bounds_setNoUpper( _THIS->bounds,BT_TRUE );
 	if ( ub_new != 0 )
 	{
 		for( i=0; i<nV; ++i )
 		{
 			if ( ub_new[i] < QPOASES_INFTY )
 			{
-				Bounds_setNoUpper( &(_THIS->bounds),BT_FALSE );
+				Bounds_setNoUpper( _THIS->bounds,BT_FALSE );
 				break;
 			}
 		}
@@ -1287,16 +1447,16 @@ returnValue QProblemB_setupSubjectToTypeNew( QProblemB* _THIS, const real_t* con
 			if ( ( lb_new[i] <= -QPOASES_INFTY ) && ( ub_new[i] >= QPOASES_INFTY )
 					&& (_THIS->options.enableFarBounds == BT_FALSE))
 			{
-				Bounds_setType( &(_THIS->bounds),i,ST_UNBOUNDED );
+				Bounds_setType( _THIS->bounds,i,ST_UNBOUNDED );
 			}
 			else
 			{
 				if ( _THIS->options.enableEqualities
 						&& _THIS->lb[i] > _THIS->ub[i] - _THIS->options.boundTolerance
 						&& lb_new[i] > ub_new[i] - _THIS->options.boundTolerance)
-					Bounds_setType( &(_THIS->bounds),i,ST_EQUALITY );
+					Bounds_setType( _THIS->bounds,i,ST_EQUALITY );
 				else
-					Bounds_setType( &(_THIS->bounds),i,ST_BOUNDED );
+					Bounds_setType( _THIS->bounds,i,ST_BOUNDED );
 			}
 		}
 	}
@@ -1305,12 +1465,12 @@ returnValue QProblemB_setupSubjectToTypeNew( QProblemB* _THIS, const real_t* con
 		if ( ( lb_new == 0 ) && ( ub_new == 0 ) )
 		{
 			for( i=0; i<nV; ++i )
-				Bounds_setType( &(_THIS->bounds),i,ST_UNBOUNDED );
+				Bounds_setType( _THIS->bounds,i,ST_UNBOUNDED );
 		}
 		else
 		{
 			for( i=0; i<nV; ++i )
-				Bounds_setType( &(_THIS->bounds),i,ST_BOUNDED );
+				Bounds_setType( _THIS->bounds,i,ST_BOUNDED );
 		}
 	}
 
@@ -1326,14 +1486,14 @@ returnValue QProblemB_computeCholesky( QProblemB* _THIS )
 	int i, j;
 	int nV  = QProblemB_getNV( _THIS );
 	int nFR = QProblemB_getNFR( _THIS );
-	
+
 	int* FR_idx;
 
 	long info = 0;
-	unsigned long _nFR = (unsigned long)nFR, _nV = NVMAX;
-	
+	unsigned long _nFR = (unsigned long)nFR, _nV = nV;
+
 	/* 1) Initialises R with all zeros. */
-	for( i=0; i<NVMAX*NVMAX; ++i )
+	for( i=0; i<nV*nV; ++i )
 		_THIS->R[i] = 0.0;
 
 	/* 2) Calculate Cholesky decomposition of H (projected to free variables). */
@@ -1358,15 +1518,15 @@ returnValue QProblemB_computeCholesky( QProblemB* _THIS )
 			for( i=0; i<nV; ++i )
 				RR(i,i) = 1.0;
 			break;
-	
+
 		default:
 			if ( nFR > 0 )
 			{
-				Indexlist_getNumberArray( Bounds_getFree( &(_THIS->bounds) ),&FR_idx );
+				Indexlist_getNumberArray( Bounds_getFree( _THIS->bounds ),&FR_idx );
 
 				/* get H */
 				for ( j=0; j < nFR; ++j )
-					DenseMatrix_getCol(_THIS->H,FR_idx[j], Bounds_getFree( &(_THIS->bounds) ), 1.0, &(_THIS->R[j*NVMAX]));
+					DenseMatrix_getCol(_THIS->H,FR_idx[j], Bounds_getFree( _THIS->bounds ), 1.0, &(_THIS->R[j*nV]));
 
 				/* R'*R = H */
 				POTRF( "U", &_nFR, _THIS->R, &_nV, &info );
@@ -1376,7 +1536,7 @@ returnValue QProblemB_computeCholesky( QProblemB* _THIS )
 					if ( _THIS->R[0] < 0.0 )
 					{
 						/* Cholesky decomposition has tunneled a negative
-						 * diagonal element. */ 
+						 * diagonal element. */
 						_THIS->options.epsRegularisation = qpOASES_getMin( -_THIS->R[0]+_THIS->options.epsRegularisation,qpOASES_getSqrt(qpOASES_getAbs(_THIS->options.epsRegularisation)) );
 					}
 
@@ -1421,7 +1581,7 @@ returnValue QProblemB_obtainAuxiliaryWorkingSet(	QProblemB* _THIS, const real_t*
 		for( i=0; i<nV; ++i )
 		{
 			#ifdef __ALWAYS_INITIALISE_WITH_ALL_EQUALITIES__
-			if ( Bounds_getType( &(_THIS->bounds),i ) == ST_EQUALITY )
+			if ( Bounds_getType( _THIS->bounds,i ) == ST_EQUALITY )
 			{
 				if ( Bounds_setupBound( auxiliaryBounds,i,ST_LOWER ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_OBTAINING_WORKINGSET_FAILED );
@@ -1457,7 +1617,7 @@ returnValue QProblemB_obtainAuxiliaryWorkingSet(	QProblemB* _THIS, const real_t*
 
 				/* Moreover, add all implictly fixed variables if specified. */
 				#ifdef __ALWAYS_INITIALISE_WITH_ALL_EQUALITIES__
-				if ( Bounds_getType( &(_THIS->bounds),i ) == ST_EQUALITY )
+				if ( Bounds_getType( _THIS->bounds,i ) == ST_EQUALITY )
 				{
 					if ( Bounds_setupBound( auxiliaryBounds,i,ST_LOWER ) != SUCCESSFUL_RETURN )
 						return THROWERROR( RET_OBTAINING_WORKINGSET_FAILED );
@@ -1492,7 +1652,7 @@ returnValue QProblemB_obtainAuxiliaryWorkingSet(	QProblemB* _THIS, const real_t*
 
 				/* Moreover, add all implictly fixed variables if specified. */
 				#ifdef __ALWAYS_INITIALISE_WITH_ALL_EQUALITIES__
-				if ( Bounds_getType( &(_THIS->bounds),i ) == ST_EQUALITY )
+				if ( Bounds_getType( _THIS->bounds,i ) == ST_EQUALITY )
 				{
 					if ( Bounds_setupBound( auxiliaryBounds,i,ST_LOWER ) != SUCCESSFUL_RETURN )
 						return THROWERROR( RET_OBTAINING_WORKINGSET_FAILED );
@@ -1513,7 +1673,7 @@ returnValue QProblemB_obtainAuxiliaryWorkingSet(	QProblemB* _THIS, const real_t*
 		{
 			for( i=0; i<nV; ++i )
 			{
-				switch( Bounds_getType( &(_THIS->bounds),i ) )
+				switch( Bounds_getType( _THIS->bounds,i ) )
 				{
 					case ST_UNBOUNDED:
 						if ( Bounds_setupBound( auxiliaryBounds,i,ST_INACTIVE ) != SUCCESSFUL_RETURN )
@@ -1563,6 +1723,7 @@ returnValue QProblemB_backsolveRrem(	QProblemB* _THIS, const real_t* const b, Bo
 {
 	int i, j;
 	int nR = QProblemB_getNZ( _THIS );
+	int nV = QProblemB_getNV( _THIS );
 
 	real_t sum;
 
@@ -1624,7 +1785,7 @@ returnValue QProblemB_determineDataShift(	QProblemB* _THIS, const real_t* const 
 	int nFX = QProblemB_getNFX( _THIS );
 
 	int* FX_idx;
-	Indexlist_getNumberArray( Bounds_getFixed( &(_THIS->bounds) ),&FX_idx );
+	Indexlist_getNumberArray( Bounds_getFixed( _THIS->bounds ),&FX_idx );
 
 
 	/* 1) Calculate shift directions. */
@@ -1707,7 +1868,7 @@ returnValue QProblemB_setupQPdata(	QProblemB* _THIS, real_t* const _H, const rea
 	/* 3) Setup lower/upper bounds vector. */
 	QProblemB_setLB( _THIS,_lb );
 	QProblemB_setUB( _THIS,_ub );
-	
+
 	return SUCCESSFUL_RETURN;
 }
 
@@ -1726,7 +1887,7 @@ returnValue QProblemB_setupQPdataFromFile(	QProblemB* _THIS, const char* const H
 
 
 	/* 1) Load Hessian matrix from file. */
-	myStatic real_t _H[NVMAX*NVMAX];
+	real_t *_H = _THIS->ws->_H;
 
 	if ( H_file != 0 )
 	{
@@ -1948,7 +2109,7 @@ returnValue QProblemB_regulariseHessian( QProblemB* _THIS )
 /*
  *	p e r f o r m R a t i o T e s t
  */
-returnValue QProblemB_performRatioTestB(	QProblemB* _THIS, 
+returnValue QProblemB_performRatioTestB(	QProblemB* _THIS,
 											int nIdx,
 											const int* const idxList,
 											Bounds* const subjectTo,
@@ -2106,7 +2267,7 @@ returnValue QProblemB_performRamping( QProblemB* _THIS )
 	/* ramp inactive bounds and active dual variables */
 	for (i = 0; i < nV; i++)
 	{
-		switch (Bounds_getType( &(_THIS->bounds),i))
+		switch (Bounds_getType( _THIS->bounds,i))
 		{
 			case ST_EQUALITY: _THIS->lb[i] = _THIS->x[i]; _THIS->ub[i] = _THIS->x[i]; continue; /* reestablish exact feasibility */
 			case ST_UNBOUNDED: continue;
@@ -2116,7 +2277,7 @@ returnValue QProblemB_performRamping( QProblemB* _THIS )
 
 		t = (real_t)((i + _THIS->rampOffset) % nV) / (real_t)(nV-1);
 		rampVal = (1.0-t) * _THIS->ramp0 + t * _THIS->ramp1;
-		bstat = Bounds_getStatus(&(_THIS->bounds),i);
+		bstat = Bounds_getStatus(_THIS->bounds,i);
 		if (bstat != ST_LOWER) { _THIS->lb[i] = _THIS->x[i] - rampVal; }
 		if (bstat != ST_UPPER) { _THIS->ub[i] = _THIS->x[i] + rampVal; }
 		if (bstat == ST_LOWER) { _THIS->lb[i] = _THIS->x[i]; _THIS->y[i] = +rampVal; }
@@ -2150,21 +2311,21 @@ returnValue QProblemB_solveInitialQP(	QProblemB* _THIS, const real_t* const xOpt
 {
 	int i,j;
 	int nV = QProblemB_getNV( _THIS );
-	
-	myStatic Bounds auxiliaryBounds;
-	
+
+	Bounds *auxiliaryBounds = _THIS->ws->auxiliaryBounds;
+
 	returnValue returnvalue;
-	
-	myStatic real_t g_original[NVMAX];
-	myStatic real_t lb_original[NVMAX];
-	myStatic real_t ub_original[NVMAX];
+
+	real_t *g_original = _THIS->ws->g_original;
+	real_t *lb_original = _THIS->ws->lb_original;
+	real_t *ub_original = _THIS->ws->ub_original;
 
 	/* start runtime measurement */
 	real_t starttime = 0.0;
 	if ( cputime != 0 )
 		starttime = qpOASES_getCPUtime( );
 
-	BoundsCON( &auxiliaryBounds,nV );
+	BoundsCON( auxiliaryBounds,nV );
 
 
 	_THIS->status = QPS_NOTINITIALISED;
@@ -2173,7 +2334,7 @@ returnValue QProblemB_solveInitialQP(	QProblemB* _THIS, const real_t* const xOpt
 	/* 1) Check if Hessian happens to be the identity matrix. */
 	if ( QProblemB_determineHessianType( _THIS ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_INIT_FAILED );
-	
+
 	/* 2) Setup type of bounds (i.e. unbounded, implicitly fixed etc.). */
 	if ( QProblemB_setupSubjectToType( _THIS ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_INIT_FAILED );
@@ -2183,7 +2344,7 @@ returnValue QProblemB_solveInitialQP(	QProblemB* _THIS, const real_t* const xOpt
 
 	/* II) SETUP AUXILIARY QP WITH GIVEN OPTIMAL SOLUTION: */
 	/* 1) Setup bounds data structure. */
-	if ( Bounds_setupAllFree( &(_THIS->bounds) ) != SUCCESSFUL_RETURN )
+	if ( Bounds_setupAllFree( _THIS->bounds ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_INIT_FAILED );
 
 	/* 2) Setup optimal primal/dual solution for auxiliary QP. */
@@ -2191,12 +2352,12 @@ returnValue QProblemB_solveInitialQP(	QProblemB* _THIS, const real_t* const xOpt
 		return THROWERROR( RET_INIT_FAILED );
 
 	/* 3) Obtain linear independent working set for auxiliary QP. */
-	if ( QProblemB_obtainAuxiliaryWorkingSet( _THIS,xOpt,yOpt,guessedBounds, &auxiliaryBounds ) != SUCCESSFUL_RETURN )
+	if ( QProblemB_obtainAuxiliaryWorkingSet( _THIS,xOpt,yOpt,guessedBounds, auxiliaryBounds ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_INIT_FAILED );
 
 	/* 4) Setup working set of auxiliary QP and possibly cholesky decomposition. */
 	/* a) Working set of auxiliary QP. */
-	if ( QProblemB_setupAuxiliaryWorkingSet( _THIS,&auxiliaryBounds,BT_TRUE ) != SUCCESSFUL_RETURN )
+	if ( QProblemB_setupAuxiliaryWorkingSet( _THIS,auxiliaryBounds,BT_TRUE ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_INIT_FAILED );
 
 	/* b) Regularise Hessian if necessary. */
@@ -2231,7 +2392,7 @@ returnValue QProblemB_solveInitialQP(	QProblemB* _THIS, const real_t* const xOpt
 			}
 		}
 	}
-	
+
 	/* 5) Store original QP formulation... */
 	for( i=0; i<nV; ++i )
 		g_original[i]  = _THIS->g[i];
@@ -2293,17 +2454,17 @@ returnValue QProblemB_solveQP(	QProblemB* _THIS, const real_t* const g_new,
 								)
 {
 	int iter;
-	
+
 	/* I) PREPARATIONS */
 	/* 1) Allocate delta vectors of gradient and bounds,
 	 *    index arrays and step direction arrays. */
-	myStatic real_t delta_xFR[NVMAX];
-	myStatic real_t delta_xFX[NVMAX];
-	myStatic real_t delta_yFX[NVMAX];
+	real_t *delta_xFR = _THIS->ws->delta_xFR;
+	real_t *delta_xFX = _THIS->ws->delta_xFX;
+	real_t *delta_yFX = _THIS->ws->delta_yFX;
 
-	myStatic real_t delta_g[NVMAX];
-	myStatic real_t delta_lb[NVMAX];
-	myStatic real_t delta_ub[NVMAX];
+	real_t *delta_g = _THIS->ws->delta_g;
+	real_t *delta_lb = _THIS->ws->delta_lb;
+	real_t *delta_ub = _THIS->ws->delta_ub;
 
 	returnValue returnvalue;
 	BooleanType Delta_bB_isZero;
@@ -2529,7 +2690,7 @@ returnValue QProblemB_solveRegularisedQP(	QProblemB* _THIS, const real_t* const 
 	real_t cputime_total = 0.0;
 	real_t cputime_cur   = 0.0;
 
-	myStatic real_t gMod[NVMAX];
+	real_t *gMod = _THIS->ws->gMod;
 
 
 	/* Perform normal QP solution if QP has not been regularised. */
@@ -2617,21 +2778,21 @@ returnValue QProblemB_solveRegularisedQP(	QProblemB* _THIS, const real_t* const 
 /*
  *	s e t u p A u x i l i a r y W o r k i n g S e t
  */
-returnValue QProblemB_setupAuxiliaryWorkingSet( 	QProblemB* _THIS, 
+returnValue QProblemB_setupAuxiliaryWorkingSet( 	QProblemB* _THIS,
 													Bounds* const auxiliaryBounds,
 													BooleanType setupAfresh
 													)
 {
 	int i;
 	int nV = QProblemB_getNV( _THIS );
-	
+
 	BooleanType updateCholesky;
 
 	/* consistency checks */
 	if ( auxiliaryBounds != 0 )
 	{
 		for( i=0; i<nV; ++i )
-			if ( ( Bounds_getStatus(&(_THIS->bounds),i ) == ST_UNDEFINED ) || ( Bounds_getStatus( auxiliaryBounds,i ) == ST_UNDEFINED ) )
+			if ( ( Bounds_getStatus(_THIS->bounds,i ) == ST_UNDEFINED ) || ( Bounds_getStatus( auxiliaryBounds,i ) == ST_UNDEFINED ) )
 				return THROWERROR( RET_UNKNOWN_BUG );
 	}
 	else
@@ -2656,11 +2817,11 @@ returnValue QProblemB_setupAuxiliaryWorkingSet( 	QProblemB* _THIS,
 		*  all active bounds that are active at the wrong bound. */
 		for( i=0; i<nV; ++i )
 		{
-			if ( ( Bounds_getStatus(&(_THIS->bounds),i ) == ST_LOWER ) && ( Bounds_getStatus( auxiliaryBounds,i ) != ST_LOWER ) )
+			if ( ( Bounds_getStatus(_THIS->bounds,i ) == ST_LOWER ) && ( Bounds_getStatus( auxiliaryBounds,i ) != ST_LOWER ) )
 				if ( QProblemB_removeBound( _THIS,i,updateCholesky ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SETUP_WORKINGSET_FAILED );
 
-			if ( ( Bounds_getStatus(&(_THIS->bounds),i ) == ST_UPPER ) && ( Bounds_getStatus( auxiliaryBounds,i ) != ST_UPPER ) )
+			if ( ( Bounds_getStatus(_THIS->bounds,i ) == ST_UPPER ) && ( Bounds_getStatus( auxiliaryBounds,i ) != ST_UPPER ) )
 				if ( QProblemB_removeBound( _THIS,i,updateCholesky ) != SUCCESSFUL_RETURN )
 					return THROWERROR( RET_SETUP_WORKINGSET_FAILED );
 		}
@@ -2672,7 +2833,7 @@ returnValue QProblemB_setupAuxiliaryWorkingSet( 	QProblemB* _THIS,
 	 *      all formerly active bounds that have been active at the wrong bound. */
 	for( i=0; i<nV; ++i )
 	{
-		if ( ( Bounds_getStatus(&(_THIS->bounds),i ) == ST_INACTIVE ) && ( Bounds_getStatus( auxiliaryBounds,i ) != ST_INACTIVE ) )
+		if ( ( Bounds_getStatus(_THIS->bounds,i ) == ST_INACTIVE ) && ( Bounds_getStatus( auxiliaryBounds,i ) != ST_INACTIVE ) )
 		{
 			if ( QProblemB_addBound( _THIS,i,Bounds_getStatus( auxiliaryBounds,i ),updateCholesky ) != SUCCESSFUL_RETURN )
 				return THROWERROR( RET_SETUP_WORKINGSET_FAILED );
@@ -2776,12 +2937,12 @@ returnValue QProblemB_setupAuxiliaryQPbounds( QProblemB* _THIS, BooleanType useR
 	/* Setup bound vectors. */
 	for ( i=0; i<nV; ++i )
 	{
-		switch ( Bounds_getStatus(&(_THIS->bounds),i ) )
+		switch ( Bounds_getStatus(_THIS->bounds,i ) )
 		{
 			case ST_INACTIVE:
 				if ( useRelaxation == BT_TRUE )
 				{
-					if ( Bounds_getType( &(_THIS->bounds),i ) == ST_EQUALITY )
+					if ( Bounds_getType( _THIS->bounds,i ) == ST_EQUALITY )
 					{
 						_THIS->lb[i] = _THIS->x[i];
 						_THIS->ub[i] = _THIS->x[i];
@@ -2796,7 +2957,7 @@ returnValue QProblemB_setupAuxiliaryQPbounds( QProblemB* _THIS, BooleanType useR
 
 			case ST_LOWER:
 				_THIS->lb[i] = _THIS->x[i];
-				if ( Bounds_getType( &(_THIS->bounds),i ) == ST_EQUALITY )
+				if ( Bounds_getType( _THIS->bounds,i ) == ST_EQUALITY )
 				{
 					_THIS->ub[i] = _THIS->x[i];
 				}
@@ -2809,7 +2970,7 @@ returnValue QProblemB_setupAuxiliaryQPbounds( QProblemB* _THIS, BooleanType useR
 
 			case ST_UPPER:
 				_THIS->ub[i] = _THIS->x[i];
-				if ( Bounds_getType( &(_THIS->bounds),i ) == ST_EQUALITY )
+				if ( Bounds_getType( _THIS->bounds,i ) == ST_EQUALITY )
 				{
 					_THIS->lb[i] = _THIS->x[i];
 				}
@@ -2822,7 +2983,7 @@ returnValue QProblemB_setupAuxiliaryQPbounds( QProblemB* _THIS, BooleanType useR
 
             case ST_DISABLED:
                 break;
-                
+
 			default:
 				return THROWERROR( RET_UNKNOWN_BUG );
 		}
@@ -2841,7 +3002,7 @@ returnValue QProblemB_setupAuxiliaryQP( QProblemB* _THIS, Bounds* const guessedB
 	int nV = QProblemB_getNV( _THIS );
 
 	/* nothing to do */
-	if ( guessedBounds == &(_THIS->bounds) )
+	if ( guessedBounds == _THIS->bounds )
 		return SUCCESSFUL_RETURN;
 
 	_THIS->status = QPS_PREPARINGAUXILIARYQP;
@@ -2852,13 +3013,13 @@ returnValue QProblemB_setupAuxiliaryQP( QProblemB* _THIS, Bounds* const guessedB
 	{
 		/* ... WITH REFACTORISATION: */
 		/* 1) Reset bounds ... */
-		Bounds_init( &(_THIS->bounds),nV );
+		Bounds_init( _THIS->bounds,nV );
 
 		/*    ... and set them up afresh. */
 		if ( QProblemB_setupSubjectToType( _THIS ) != SUCCESSFUL_RETURN )
 			return THROWERROR( RET_SETUP_AUXILIARYQP_FAILED );
 
-		if ( Bounds_setupAllFree( &(_THIS->bounds) ) != SUCCESSFUL_RETURN )
+		if ( Bounds_setupAllFree( _THIS->bounds ) != SUCCESSFUL_RETURN )
 			return THROWERROR( RET_SETUP_AUXILIARYQP_FAILED );
 
 		/* 2) Setup guessed working set afresh. */
@@ -2880,7 +3041,7 @@ returnValue QProblemB_setupAuxiliaryQP( QProblemB* _THIS, Bounds* const guessedB
 	/* II) SETUP AUXILIARY QP DATA: */
 	/* 1) Ensure that dual variable is zero for free bounds. */
 	for ( i=0; i<nV; ++i )
-		if ( Bounds_getStatus(&(_THIS->bounds),i ) == ST_INACTIVE )
+		if ( Bounds_getStatus(_THIS->bounds,i ) == ST_INACTIVE )
 			_THIS->y[i] = 0.0;
 
 	/* 2) Setup gradient and bound vectors. */
@@ -2897,7 +3058,7 @@ returnValue QProblemB_setupAuxiliaryQP( QProblemB* _THIS, Bounds* const guessedB
 /*
  *	d e t e r m i n e S t e p D i r e c t i o n
  */
-returnValue QProblemB_determineStepDirection(	QProblemB* _THIS, 
+returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 												const real_t* const delta_g, const real_t* const delta_lb, const real_t* const delta_ub,
 												BooleanType Delta_bB_isZero,
 												real_t* const delta_xFX, real_t* const delta_xFR,
@@ -2908,15 +3069,15 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 	int r;
 	int nFR = QProblemB_getNFR( _THIS );
 	int nFX = QProblemB_getNFX( _THIS );
-	
+
 	int* FR_idx;
 	int* FX_idx;
 
 	real_t rnrm;
 
-	Indexlist_getNumberArray( Bounds_getFree( &(_THIS->bounds) ),&FR_idx );
-	Indexlist_getNumberArray( Bounds_getFixed( &(_THIS->bounds) ),&FX_idx );
-	
+	Indexlist_getNumberArray( Bounds_getFree( _THIS->bounds ),&FR_idx );
+	Indexlist_getNumberArray( Bounds_getFixed( _THIS->bounds ),&FX_idx );
+
 	/* This routine computes
 	 * delta_xFX := delta_b
 	 * delta_xFR := R \ R' \ -( delta_g + HMX*delta_xFX )
@@ -2930,7 +3091,7 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 		{
 			ii = FX_idx[i];
 
-			if ( Bounds_getStatus(&(_THIS->bounds),ii ) == ST_LOWER )
+			if ( Bounds_getStatus(_THIS->bounds,ii ) == ST_LOWER )
 				delta_xFX[i] = delta_lb[ii];
 			else
 				delta_xFX[i] = delta_ub[ii];
@@ -2962,7 +3123,7 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 			/* Add - HMX*delta_xFX
 			 * This is skipped if delta_b=0 or mixed part HM=0 (H=0 or H=Id) */
 			if ( ( _THIS->hessianType != HST_ZERO ) && ( _THIS->hessianType != HST_IDENTITY ) && ( Delta_bB_isZero == BT_FALSE ) && ( r == 0 ) )
-				DenseMatrix_subTimes(_THIS->H,Bounds_getFree( &(_THIS->bounds) ), Bounds_getFixed( &(_THIS->bounds) ), 1, -1.0, delta_xFX, nFX, 1.0, _THIS->delta_xFR_TMP, nFR, BT_TRUE);
+				DenseMatrix_subTimes(_THIS->H,Bounds_getFree( _THIS->bounds ), Bounds_getFixed( _THIS->bounds ), 1, -1.0, delta_xFX, nFX, 1.0, _THIS->delta_xFR_TMP, nFR, BT_TRUE);
 
 			/* Determine R' \ ( - HMX*delta_xFX - delta_gFR ) where R'R = HFR */
 			if ( QProblemB_backsolveR( _THIS,_THIS->delta_xFR_TMP,BT_TRUE,_THIS->delta_xFR_TMP ) != SUCCESSFUL_RETURN )
@@ -3006,8 +3167,8 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 					break;
 
 				default:
-					DenseMatrix_subTimes(_THIS->H,Bounds_getFree( &(_THIS->bounds) ), Bounds_getFree( &(_THIS->bounds) ),  1, -1.0, delta_xFR, nFR, 1.0, _THIS->delta_xFR_TMP, nFR, BT_TRUE);
-					DenseMatrix_subTimes(_THIS->H,Bounds_getFree( &(_THIS->bounds) ), Bounds_getFixed( &(_THIS->bounds) ), 1, -1.0, delta_xFX, nFX, 1.0, _THIS->delta_xFR_TMP, nFR, BT_TRUE);
+					DenseMatrix_subTimes(_THIS->H,Bounds_getFree( _THIS->bounds ), Bounds_getFree( _THIS->bounds ),  1, -1.0, delta_xFR, nFR, 1.0, _THIS->delta_xFR_TMP, nFR, BT_TRUE);
+					DenseMatrix_subTimes(_THIS->H,Bounds_getFree( _THIS->bounds ), Bounds_getFixed( _THIS->bounds ), 1, -1.0, delta_xFX, nFX, 1.0, _THIS->delta_xFR_TMP, nFR, BT_TRUE);
 
 					/* compute max norm */
 					for ( i=0; i<nFR; ++i )
@@ -3016,7 +3177,7 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 
 					break;
 			}
-			
+
 			/* early termination of residual norm small enough */
 			if ( rnrm < _THIS->options.epsIterRef )
 				break;
@@ -3053,9 +3214,9 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 				ii = FX_idx[i];
 				delta_yFX[i] = delta_g[ii];
 			}
-			DenseMatrix_subTimes(_THIS->H,Bounds_getFixed( &(_THIS->bounds) ), Bounds_getFree( &(_THIS->bounds) ), 1, 1.0, delta_xFR, nFR, 1.0, delta_yFX, nFX, BT_TRUE);
+			DenseMatrix_subTimes(_THIS->H,Bounds_getFixed( _THIS->bounds ), Bounds_getFree( _THIS->bounds ), 1, 1.0, delta_xFR, nFR, 1.0, delta_yFX, nFX, BT_TRUE);
 			if (Delta_bB_isZero == BT_FALSE)
-				DenseMatrix_subTimes(_THIS->H,Bounds_getFixed( &(_THIS->bounds) ), Bounds_getFixed( &(_THIS->bounds) ), 1, 1.0, delta_xFX, nFX, 1.0, delta_yFX, nFX, BT_TRUE);
+				DenseMatrix_subTimes(_THIS->H,Bounds_getFixed( _THIS->bounds ), Bounds_getFixed( _THIS->bounds ), 1, 1.0, delta_xFX, nFX, 1.0, delta_yFX, nFX, BT_TRUE);
 		}
 	}
 
@@ -3066,7 +3227,7 @@ returnValue QProblemB_determineStepDirection(	QProblemB* _THIS,
 /*
  *	p e r f o r m S t e p
  */
-returnValue QProblemB_performStep(	QProblemB* _THIS, 
+returnValue QProblemB_performStep(	QProblemB* _THIS,
 									const real_t* const delta_g,
 									const real_t* const delta_lb, const real_t* const delta_ub,
 									const real_t* const delta_xFX,
@@ -3079,14 +3240,14 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 	int nV = QProblemB_getNV( _THIS );
 	int nFR = QProblemB_getNFR( _THIS );
 	int nFX = QProblemB_getNFX( _THIS );
-	
+
 	myStatic char messageString[QPOASES_MAX_STRING_LENGTH];
 
 	int BC_idx_tmp = -1;
 
-	myStatic real_t num[NVMAX];
-	myStatic real_t den[NVMAX];
-	
+	real_t *num = _THIS->ws->num;
+	real_t *den = _THIS->ws->den;
+
 	int* FR_idx;
 	int* FX_idx;
 
@@ -3094,8 +3255,8 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 	*BC_idx = -1;
 	*BC_status = ST_UNDEFINED;
 
-	Indexlist_getNumberArray( Bounds_getFree( &(_THIS->bounds) ),&FR_idx );
-	Indexlist_getNumberArray( Bounds_getFixed( &(_THIS->bounds) ),&FX_idx );
+	Indexlist_getNumberArray( Bounds_getFree( _THIS->bounds ),&FR_idx );
+	Indexlist_getNumberArray( Bounds_getFixed( _THIS->bounds ),&FX_idx );
 
 
 	/* I) DETERMINE MAXIMUM DUAL STEPLENGTH, i.e. ensure that
@@ -3107,7 +3268,7 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 		den[i] = -delta_yFX[i];
 	}
 
-	QProblemB_performRatioTestB( _THIS,nFX,FX_idx,&(_THIS->bounds),num,den, _THIS->options.epsNum,_THIS->options.epsDen, &(_THIS->tau),&BC_idx_tmp );
+	QProblemB_performRatioTestB( _THIS,nFX,FX_idx,_THIS->bounds,num,den, _THIS->options.epsNum,_THIS->options.epsDen, &(_THIS->tau),&BC_idx_tmp );
 
 	if ( BC_idx_tmp >= 0 )
 	{
@@ -3119,7 +3280,7 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 	/* II) DETERMINE MAXIMUM PRIMAL STEPLENGTH, i.e. ensure that
 	 *     inactive bounds remain valid (ignoring unbounded variables). */
 	/* 1) Inactive lower bounds. */
-	if ( Bounds_hasNoLower( &(_THIS->bounds) ) == BT_FALSE )
+	if ( Bounds_hasNoLower( _THIS->bounds ) == BT_FALSE )
 	{
 		for( i=0; i<nFR; ++i )
 		{
@@ -3128,7 +3289,7 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 			den[i] = delta_lb[ii] - delta_xFR[i];
 		}
 
-		QProblemB_performRatioTestB( _THIS,nFR,FR_idx,&(_THIS->bounds),num,den, _THIS->options.epsNum,_THIS->options.epsDen, &(_THIS->tau),&BC_idx_tmp );
+		QProblemB_performRatioTestB( _THIS,nFR,FR_idx,_THIS->bounds,num,den, _THIS->options.epsNum,_THIS->options.epsDen, &(_THIS->tau),&BC_idx_tmp );
 
 		if ( BC_idx_tmp >= 0 )
 		{
@@ -3138,7 +3299,7 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 	}
 
 	/* 2) Inactive upper bounds. */
-	if ( Bounds_hasNoUpper( &(_THIS->bounds) ) == BT_FALSE )
+	if ( Bounds_hasNoUpper( _THIS->bounds ) == BT_FALSE )
 	{
 		for( i=0; i<nFR; ++i )
 		{
@@ -3147,7 +3308,7 @@ returnValue QProblemB_performStep(	QProblemB* _THIS,
 			den[i] = delta_xFR[i] - delta_ub[ii];
 		}
 
-		QProblemB_performRatioTestB( _THIS,nFR,FR_idx,&(_THIS->bounds),num,den, _THIS->options.epsNum,_THIS->options.epsDen, &(_THIS->tau),&BC_idx_tmp );
+		QProblemB_performRatioTestB( _THIS,nFR,FR_idx,_THIS->bounds,num,den, _THIS->options.epsNum,_THIS->options.epsDen, &(_THIS->tau),&BC_idx_tmp );
 
 		if ( BC_idx_tmp >= 0 )
 		{
@@ -3267,10 +3428,10 @@ returnValue QProblemB_performDriftCorrection( QProblemB* _THIS )
 
 	for ( i=0; i<nV; ++i )
 	{
-		switch ( Bounds_getType ( &(_THIS->bounds),i ) )
+		switch ( Bounds_getType ( _THIS->bounds,i ) )
 		{
 			case ST_BOUNDED:
-				switch ( Bounds_getStatus( &(_THIS->bounds),i ) )
+				switch ( Bounds_getStatus( _THIS->bounds,i ) )
 				{
 					case ST_LOWER:
 						_THIS->lb[i] = _THIS->x[i];
@@ -3315,7 +3476,7 @@ BooleanType QProblemB_shallRefactorise( QProblemB* _THIS, Bounds* const guessedB
 {
 	int i;
 	int nV = QProblemB_getNV( _THIS );
-	
+
 	int differenceNumber = 0;
 
 	/* always refactorise if Hessian is not known to be positive definite */
@@ -3325,7 +3486,7 @@ BooleanType QProblemB_shallRefactorise( QProblemB* _THIS, Bounds* const guessedB
 	/* 1) Determine number of bounds that have same status
 	 *    in guessed AND current bounds.*/
 	for( i=0; i<nV; ++i )
-		if ( Bounds_getStatus( guessedBounds,i ) != Bounds_getStatus(&(_THIS->bounds),i ) )
+		if ( Bounds_getStatus( guessedBounds,i ) != Bounds_getStatus(_THIS->bounds,i ) )
 			++differenceNumber;
 
 	/* 2) Decide wheter to refactorise or not. */
@@ -3339,13 +3500,14 @@ BooleanType QProblemB_shallRefactorise( QProblemB* _THIS, Bounds* const guessedB
 /*
  *	a d d B o u n d
  */
-returnValue QProblemB_addBound(	QProblemB* _THIS, 
+returnValue QProblemB_addBound(	QProblemB* _THIS,
 								int number, SubjectToStatus B_status,
 								BooleanType updateCholesky
 								)
 {
 	int i, j;
 	int nFR = QProblemB_getNFR( _THIS );
+	int nV = QProblemB_getNV( _THIS );
 
 	int number_idx;
 	real_t c, s, nu;
@@ -3363,7 +3525,7 @@ returnValue QProblemB_addBound(	QProblemB* _THIS,
 	if ( QProblemB_getStatus( _THIS ) == QPS_PREPARINGAUXILIARYQP )
 	{
 		/* UPDATE INDICES */
-		if ( Bounds_moveFreeToFixed( &(_THIS->bounds),number,B_status ) != SUCCESSFUL_RETURN )
+		if ( Bounds_moveFreeToFixed( _THIS->bounds,number,B_status ) != SUCCESSFUL_RETURN )
 			return THROWERROR( RET_ADDBOUND_FAILED );
 
 		return SUCCESSFUL_RETURN;
@@ -3375,7 +3537,7 @@ returnValue QProblemB_addBound(	QProblemB* _THIS,
 		 ( _THIS->hessianType != HST_ZERO )   && ( _THIS->hessianType != HST_IDENTITY ) )
 	{
 		/* 1) Index of variable to be added within the list of free variables. */
-		number_idx = Indexlist_getIndex( Bounds_getFree( &(_THIS->bounds) ),number );
+		number_idx = Indexlist_getIndex( Bounds_getFree( _THIS->bounds ),number );
 
 		/* 2) Use row-wise Givens rotations to restore upper triangular form of R. */
 		for( i=number_idx+1; i<nFR; ++i )
@@ -3398,7 +3560,7 @@ returnValue QProblemB_addBound(	QProblemB* _THIS,
 
 	/* II) UPDATE INDICES */
 	_THIS->tabularOutput.idxAddB = number;
-	if ( Bounds_moveFreeToFixed( &(_THIS->bounds),number,B_status ) != SUCCESSFUL_RETURN )
+	if ( Bounds_moveFreeToFixed( _THIS->bounds,number,B_status ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_ADDBOUND_FAILED );
 
 
@@ -3409,18 +3571,19 @@ returnValue QProblemB_addBound(	QProblemB* _THIS,
 /*
  *	r e m o v e B o u n d
  */
-returnValue QProblemB_removeBound(	QProblemB* _THIS, 
+returnValue QProblemB_removeBound(	QProblemB* _THIS,
 									int number,
 									BooleanType updateCholesky
 									)
 {
 	int i;
 	int nFR = QProblemB_getNFR( _THIS );
-	
+	int nV = QProblemB_getNV( _THIS );
+
 	int* FR_idx;
 
-	myStatic real_t rhs[NVMAX+1];
-	myStatic real_t r[NVMAX];
+	real_t *rhs = _THIS->ws->rhs;
+	real_t *r = _THIS->ws->r;
 
 	real_t r0;
 
@@ -3436,11 +3599,11 @@ returnValue QProblemB_removeBound(	QProblemB* _THIS,
 
 	/* save index sets and decompositions for flipping bounds strategy */
 	if ( _THIS->options.enableFlippingBounds == BT_TRUE )
-		Flipper_set( &(_THIS->flipper), &(_THIS->bounds),_THIS->R, 0,0,0 );
+		Flipper_set( _THIS->flipper, _THIS->bounds,_THIS->R, 0,0,0 );
 
 	/* I) UPDATE INDICES */
 	_THIS->tabularOutput.idxRemB = number;
-	if ( Bounds_moveFixedToFree( &(_THIS->bounds),number ) != SUCCESSFUL_RETURN )
+	if ( Bounds_moveFixedToFree( _THIS->bounds,number ) != SUCCESSFUL_RETURN )
 		return THROWERROR( RET_REMOVEBOUND_FAILED );
 
 	/* Perform cholesky updates only if QProblemB has been initialised! */
@@ -3452,7 +3615,7 @@ returnValue QProblemB_removeBound(	QProblemB* _THIS,
 	if ( ( updateCholesky == BT_TRUE ) &&
 		 ( _THIS->hessianType != HST_ZERO )   && ( _THIS->hessianType != HST_IDENTITY ) )
 	{
-		Indexlist_getNumberArray( Bounds_getFree( &(_THIS->bounds) ),&FR_idx );
+		Indexlist_getNumberArray( Bounds_getFree( _THIS->bounds ),&FR_idx );
 
 		/* 1) Calculate new column of cholesky decomposition. */
 		switch ( _THIS->hessianType )
@@ -3473,7 +3636,7 @@ returnValue QProblemB_removeBound(	QProblemB* _THIS,
 				break;
 
 			default:
-				DenseMatrix_getRow(_THIS->H,number, Bounds_getFree( &(_THIS->bounds) ), 1.0, rhs);
+				DenseMatrix_getRow(_THIS->H,number, Bounds_getFree( _THIS->bounds ), 1.0, rhs);
 				r0 = DenseMatrix_diag(_THIS->H,number);
 				break;
 		}
@@ -3496,10 +3659,10 @@ returnValue QProblemB_removeBound(	QProblemB* _THIS,
 			{
 				_THIS->hessianType = HST_SEMIDEF;
 
-				Flipper_get( &(_THIS->flipper), &(_THIS->bounds),_THIS->R, 0,0,0 );
-				Bounds_flipFixed( &(_THIS->bounds),number );
+				Flipper_get( _THIS->flipper, _THIS->bounds,_THIS->R, 0,0,0 );
+				Bounds_flipFixed( _THIS->bounds,number );
 
-				switch ( Bounds_getStatus( &(_THIS->bounds),number) )
+				switch ( Bounds_getStatus( _THIS->bounds,number) )
 				{
 					case ST_LOWER: _THIS->lb[number] = _THIS->ub[number]; break;
 					case ST_UPPER: _THIS->ub[number] = _THIS->lb[number]; break;
@@ -3522,10 +3685,10 @@ returnValue QProblemB_removeBound(	QProblemB* _THIS,
 
 	if ( ( _THIS->hessianType == HST_ZERO ) && ( _THIS->options.enableFlippingBounds == BT_TRUE ) )
 	{
-		Flipper_get( &(_THIS->flipper), &(_THIS->bounds),_THIS->R, 0,0,0 );
-		Bounds_flipFixed( &(_THIS->bounds),number );
+		Flipper_get( _THIS->flipper, _THIS->bounds,_THIS->R, 0,0,0 );
+		Bounds_flipFixed( _THIS->bounds,number );
 
-		switch ( Bounds_getStatus( &(_THIS->bounds),number) )
+		switch ( Bounds_getStatus( _THIS->bounds,number) )
 		{
 			case ST_LOWER: _THIS->lb[number] = _THIS->ub[number]; break;
 			case ST_UPPER: _THIS->ub[number] = _THIS->lb[number]; break;
@@ -3541,7 +3704,7 @@ returnValue QProblemB_removeBound(	QProblemB* _THIS,
 /*
  *	p r i n t I t e r a t i o n
  */
-returnValue QProblemB_printIteration( 	QProblemB* _THIS, 
+returnValue QProblemB_printIteration( 	QProblemB* _THIS,
 										int iter,
 										int BC_idx,	SubjectToStatus BC_status,
 										real_t homotopyLength,
@@ -3597,7 +3760,7 @@ returnValue QProblemB_printIteration( 	QProblemB* _THIS,
 		snprintf( myPrintfString,QPOASES_MAX_STRING_LENGTH,"   %5.1d   |   %1.6e   |   %s %4.1d   |  %4.1d   \n", iter,_THIS->tau,info,BC_idx,QProblemB_getNFX( _THIS ) );
 		qpOASES_myPrintf( myPrintfString );
 	}
-    
+
     #endif /* __SUPPRESSANYOUTPUT__ */
 
 	return SUCCESSFUL_RETURN;

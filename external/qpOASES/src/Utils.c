@@ -48,7 +48,7 @@
 
 
 #ifdef __NO_SNPRINTF__
-#if (!defined(_MSC_VER)) || defined(__DSPACE__) || defined(__XPCTARGET__) 
+#if (!defined(_MSC_VER)) || defined(__DSPACE__) || defined(__XPCTARGET__)
 /* If snprintf is not available, provide an empty implementation. */
 int snprintf( char* s, size_t n, const char* format, ... )
 {
@@ -315,7 +315,7 @@ returnValue qpOASES_readFromFileM(	real_t* data, int nrow, int ncol,
 									const char* datafilename
 									)
 {
-	#ifndef __SUPPRESSANYOUTPUT__
+	// #ifndef __SUPPRESSANYOUTPUT__
 
 	int i, j;
 	real_t float_data;
@@ -352,12 +352,12 @@ returnValue qpOASES_readFromFileM(	real_t* data, int nrow, int ncol,
 	fclose( datafile );
 
 	return SUCCESSFUL_RETURN;
-    
-	#else
 
-	return RET_NOT_YET_IMPLEMENTED;
+	// #else
 
-	#endif /* __SUPPRESSANYOUTPUT__ */
+	// return RET_NOT_YET_IMPLEMENTED;
+
+	// #endif /* __SUPPRESSANYOUTPUT__ */
 }
 
 
@@ -380,7 +380,7 @@ returnValue qpOASES_readFromFileI(	int* data, int n,
 									const char* datafilename
 									)
 {
-	#ifndef __SUPPRESSANYOUTPUT__
+	// #ifndef __SUPPRESSANYOUTPUT__
 
 	int i;
 	FILE* datafile;
@@ -408,12 +408,12 @@ returnValue qpOASES_readFromFileI(	int* data, int n,
 	fclose( datafile );
 
 	return SUCCESSFUL_RETURN;
-	
-    #else
 
-	return RET_NOT_YET_IMPLEMENTED;
+    // #else
 
-	#endif /* __SUPPRESSANYOUTPUT__ */
+	// return RET_NOT_YET_IMPLEMENTED;
+
+	// #endif /* __SUPPRESSANYOUTPUT__ */
 }
 
 
@@ -463,7 +463,7 @@ returnValue qpOASES_writeIntoFileM(	const real_t* const data, int nrow, int ncol
 	fclose( datafile );
 
 	return SUCCESSFUL_RETURN;
-    
+
 	#else /* __SUPPRESSANYOUTPUT__ */
 
 	return RET_NOT_YET_IMPLEMENTED;
@@ -525,7 +525,7 @@ returnValue qpOASES_writeIntoFileI(	const int* const integer, int n,
 	fclose( datafile );
 
 	return SUCCESSFUL_RETURN;
-	
+
     #else /* __SUPPRESSANYOUTPUT__ */
 
 	return RET_NOT_YET_IMPLEMENTED;
@@ -548,7 +548,7 @@ returnValue qpOASES_writeIntoMatFile(	FILE* const matFile,
 
 	int ii, jj;
 	MatMatrixHeader var;
-	
+
 	if ( ( matFile == 0 ) || ( data == 0 ) || ( nRows < 0 ) || ( nCols < 0 ) || ( name == 0 ) )
 		return RET_INVALID_ARGUMENTS;
 
@@ -558,7 +558,7 @@ returnValue qpOASES_writeIntoMatFile(	FILE* const matFile,
 	var.nCols         = nCols; /* number of columns */
 	var.imaginaryPart = 0;     /* no imaginary part */
 	var.nCharName     = (long)(strlen(name))+1; /* matrix name length  */
-	
+
 	/* write variable header to mat file */
 	if ( fwrite( &var, sizeof(MatMatrixHeader),1,  matFile ) < 1 )
 		return RET_UNABLE_TO_WRITE_FILE;
@@ -588,15 +588,46 @@ returnValue qpOASES_writeIntoMatFileI(	FILE* const matFile,
 										const int* const data, int nRows, int nCols, const char* name
 										)
 {
+	/*  Note, this code snippet has been inspired from the document
+	 *  "Matlab(R) MAT-file Format, R2013b" by MathWorks */
+
+	#ifndef __SUPPRESSANYOUTPUT__
+
 	int ii, jj;
+	MatMatrixHeader var;
 
-	myStatic real_t realData[NVMAX*NCMAX]; /* TODO: fix this!! */
-	
-	for ( ii=0; ii<nRows; ++ii )
-		for ( jj=0; jj<nCols; ++jj )
-			realData[ ii*nCols+jj ] = (real_t) data[ ii*nCols+jj ];
+	if ( ( matFile == 0 ) || ( data == 0 ) || ( nRows < 0 ) || ( nCols < 0 ) || ( name == 0 ) )
+		return RET_INVALID_ARGUMENTS;
 
-	return qpOASES_writeIntoMatFile( matFile,realData,nRows,nCols,name );
+	/* setup variable header */
+	var.numericFormat = 0000;  /* IEEE Little Endian - reserved - double precision (64 bits) - numeric full matrix */
+	var.nRows         = nRows; /* number of rows */
+	var.nCols         = nCols; /* number of columns */
+	var.imaginaryPart = 0;     /* no imaginary part */
+	var.nCharName     = (long)(strlen(name))+1; /* matrix name length  */
+
+	/* write variable header to mat file */
+	if ( fwrite( &var, sizeof(MatMatrixHeader),1,  matFile ) < 1 )
+		return RET_UNABLE_TO_WRITE_FILE;
+
+	if ( fwrite( name, sizeof(char),(unsigned long)(var.nCharName), matFile ) < 1 )
+		return RET_UNABLE_TO_WRITE_FILE;
+
+	for ( ii=0; ii<nCols; ++ii ) {
+		for ( jj=0; jj<nRows; ++jj ) {
+			double real_data = (double) data[jj*nCols+ii];
+			if ( fwrite( &real_data, sizeof(double),1, matFile ) < 1 )
+							return RET_UNABLE_TO_WRITE_FILE;
+		}
+	}
+
+	return SUCCESSFUL_RETURN;
+
+    #else /* __SUPPRESSANYOUTPUT__ */
+
+	return RET_NOT_YET_IMPLEMENTED;
+
+	#endif
 }
 
 
@@ -638,7 +669,7 @@ real_t qpOASES_getNorm( const real_t* const v, int n, int type )
 			for( i=0; i<n; ++i )
 				norm += v[i]*v[i];
 			return qpOASES_getSqrt( norm );
- 
+
 		case 1:
 			for( i=0; i<n; ++i )
 				norm += qpOASES_getAbs( v[i] );
@@ -700,11 +731,11 @@ returnValue qpOASES_getKktViolation(	int nV, int nC,
 	{
 		/* feasibility */
 		if ( lb != 0 )
-			if (lb[i] - x[i] > *feas) 
+			if (lb[i] - x[i] > *feas)
 				*feas = lb[i] - x[i];
 
 		if ( ub != 0 )
-			if (x[i] - ub[i] > *feas) 
+			if (x[i] - ub[i] > *feas)
 				*feas = x[i] - ub[i];
 
 		/* complementarity */
@@ -728,15 +759,15 @@ returnValue qpOASES_getKktViolation(	int nV, int nC,
 		sum = 0.0;
 
 		if ( A != 0 )
-			for (j = 0; j < nV; j++) 
+			for (j = 0; j < nV; j++)
 				sum += A[i*nV+j] * x[j];
 
 		/* feasibility */
 		if ( lbA != 0 )
-			if (lbA[i] - sum > *feas) 
+			if (lbA[i] - sum > *feas)
 				*feas = lbA[i] - sum;
 		if ( ubA != 0 )
-			if (sum - ubA[i] > *feas) 
+			if (sum - ubA[i] > *feas)
 				*feas = sum - ubA[i];
 
 		/* complementarity */
@@ -745,7 +776,7 @@ returnValue qpOASES_getKktViolation(	int nV, int nC,
 		if ( lbA != 0 )
 			if (y[nV+i] > dualActiveTolerance) /* lower bound */
 				prod = (sum - lbA[i]) * y[nV+i];
-		
+
 		if ( ubA != 0 )
 			if (y[nV+i] < -dualActiveTolerance) /* upper bound */
 				prod = (sum - ubA[i]) * y[nV+i];
@@ -815,7 +846,7 @@ returnValue qpOASES_convertSubjectToStatusToString( SubjectToStatus value, char*
 		case ST_UNDEFINED:
 			snprintf( string,20,"ST_UNDEFINED" );
 			break;
-			
+
 		case ST_INFEASIBLE_LOWER:
 			snprintf( string,20,"ST_INFEASIBLE_LOWER" );
 			break;
@@ -857,7 +888,7 @@ returnValue qpOASES_convertPrintLevelToString( PrintLevel value, char* const str
 		case PL_HIGH:
 			snprintf( string,20,"PL_HIGH" );
 			break;
-			
+
 		case PL_TABULAR:
 			snprintf( string,20,"PL_TABULAR" );
 			break;
@@ -917,7 +948,7 @@ int qpOASES_getSimpleStatus(	returnValue returnvalue,
 		VisibilityStatus vsInfo = MessageHandling_getInfoVisibilityStatus( qpOASES_getGlobalMessageHandler() );
 		MessageHandling_setInfoVisibilityStatus( qpOASES_getGlobalMessageHandler(),VS_VISIBLE );
 		MessageHandling_setErrorCount( qpOASES_getGlobalMessageHandler(),-1 );
-		
+
 		retValNumber = (int)RET_SIMPLE_STATUS_P0 - simpleStatus;
 		THROWINFO( (returnValue)retValNumber );
 
@@ -992,7 +1023,7 @@ void gdb_printmat( const char *fname, real_t *M, int n, int m, int ldim )
 	FILE *fid;
 
 	fid = fopen(fname, "wt");
-	if (!fid) 
+	if (!fid)
 	{
 		perror("Error opening file: ");
 		return;
@@ -1011,7 +1042,7 @@ void gdb_printmat( const char *fname, real_t *M, int n, int m, int ldim )
 #endif /* __DEBUG__ */
 
 
-#if defined(__DSPACE__) || defined(__XPCTARGET__) 
+#if defined(__DSPACE__) || defined(__XPCTARGET__)
 /*
  *	_ _ c x a _ p u r e _ v i r t u a l
  */
@@ -1019,7 +1050,7 @@ void __cxa_pure_virtual( void )
 {
 	/* put your customized implementation here! */
 }
-#endif /* __DSPACE__ || __XPCTARGET__*/ 
+#endif /* __DSPACE__ || __XPCTARGET__*/
 
 
 END_NAMESPACE_QPOASES

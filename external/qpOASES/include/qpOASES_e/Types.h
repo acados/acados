@@ -145,13 +145,13 @@
 
 
 /** Macro for accessing the Cholesky factor R. */
-#define RR( I,J )  _THIS->R[(I)+NVMAX*(J)]
+#define RR( I,J )  _THIS->R[(I)+nV*(J)]
 
 /** Macro for accessing the orthonormal matrix Q of the QT factorisation. */
-#define QQ( I,J )  _THIS->Q[(I)+NVMAX*(J)]
+#define QQ( I,J )  _THIS->Q[(I)+nV*(J)]
 
 /** Macro for accessing the triangular matrix T of the QT factorisation. */
-#define TT( I,J )  _THIS->T[(I)*NVCMIN+(J)]
+#define TT( I,J )  _THIS->T[(I)*nVC_min+(J)]
 
 
 

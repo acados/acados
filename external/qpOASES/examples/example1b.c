@@ -40,6 +40,8 @@ int main( )
 {
 	USING_NAMESPACE_QPOASES
 
+	real_t stat, feas, cmpl;
+
 	/* Setup data of first QP. */
 	real_t H[2*2] = { 1.0, 0.0, 0.0, 0.5 };
 	real_t g[2] = { 1.5, 1.0 };
@@ -53,36 +55,50 @@ int main( )
 
 
 	/* Setting up QProblemB object. */
-	static QProblemB example;
+	QProblemB *example = QProblemB_createMemory(2);
 	static Options options;
 
 	int nWSR = 10;
 	real_t xOpt[2];
+	real_t yOpt[2];
 
-	QProblemBCON( &example,2,HST_UNKNOWN );
+	QProblemBCON( example,2,HST_UNKNOWN );
 	Options_setToDefault( &options );
 	/* options.enableFlippingBounds = BT_FALSE; */
 	options.initialStatusBounds = ST_INACTIVE;
 	options.numRefinementSteps = 1;
 	/* options.enableCholeskyRefactorisation = 1; */
-	QProblemB_setOptions( &example,options );
+	QProblemB_setOptions( example,options );
 
 
 	/* Solve first QP. */
 	nWSR = 10;
-	QProblemB_init( &example,H,g,lb,ub, &nWSR,0 );
+	QProblemB_init( example,H,g,lb,ub, &nWSR,0 );
 
 	/* Get and print solution of second QP. */
-	QProblemB_getPrimalSolution( &example,xOpt );
-	printf( "\nxOpt = [ %e, %e ];  objVal = %e\n\n", xOpt[0],xOpt[1],QProblemB_getObjVal(&example) );
-	
+	QProblemB_getPrimalSolution( example,xOpt );
+	QProblemB_getDualSolution( example,yOpt );
+	printf( "\nxOpt = [ %e, %e ];  objVal = %e\n\n", xOpt[0],xOpt[1],QProblemB_getObjVal(example) );
+
+	qpOASES_getKktViolation( 2,1, H,g,NULL,lb,ub,NULL,NULL, xOpt,yOpt, &stat,&feas,&cmpl );
+	printf("KKT violations:\n\n");
+	printf("stat = %e, feas = %e, cmpl = %e\n\n", stat, feas, cmpl);
+
+
 	/* Solve second QP. */
 	nWSR = 10;
-	QProblemB_hotstart( &example,g_new,lb_new,ub_new, &nWSR,0 );
+	QProblemB_hotstart( example,g_new,lb_new,ub_new, &nWSR,0 );
 
 	/* Get and print solution of second QP. */
-	QProblemB_getPrimalSolution( &example,xOpt );
-	printf( "\nxOpt = [ %e, %e ];  objVal = %e\n\n", xOpt[0],xOpt[1],QProblemB_getObjVal(&example) );
+	QProblemB_getPrimalSolution( example,xOpt );
+	QProblemB_getDualSolution( example,yOpt );
+	printf( "\nxOpt = [ %e, %e ];  objVal = %e\n\n", xOpt[0],xOpt[1],QProblemB_getObjVal(example) );
+
+	qpOASES_getKktViolation( 2,1, H,g_new,NULL,lb_new,ub_new,NULL,NULL, xOpt,yOpt, &stat,&feas,&cmpl );
+	printf("KKT violations:\n\n");
+	printf("stat = %e, feas = %e, cmpl = %e\n\n", stat, feas, cmpl);
+
+	free(example);
 
 	return 0;
 }

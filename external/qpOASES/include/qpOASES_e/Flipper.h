@@ -44,7 +44,7 @@
 BEGIN_NAMESPACE_QPOASES
 
 
-/** 
+/**
  *	\brief Auxiliary class for storing a copy of the current matrix factorisations.
  *
  *	This auxiliary class stores a copy of the current matrix factorisations. It
@@ -56,17 +56,22 @@ BEGIN_NAMESPACE_QPOASES
  */
 typedef struct
 {
+	Bounds      *bounds;			/**< Data structure for problem's bounds. */
+	Constraints *constraints;		/**< Data structure for problem's constraints. */
+
+	real_t *R;						/**< Cholesky factor of H (i.e. H = R^T*R). */
+	real_t *Q;						/**< Orthonormal quadratic matrix, A = [0 T]*Q'. */
+	real_t *T;						/**< Reverse triangular matrix, A = [0 T]*Q'. */
+
 	unsigned int nV;				/**< Number of variables. */
 	unsigned int nC;				/**< Number of constraints. */
-
-	Bounds      bounds;				/**< Data structure for problem's bounds. */
-	Constraints constraints;		/**< Data structure for problem's constraints. */
-
-	real_t R[NVMAX*NVMAX];			/**< Cholesky factor of H (i.e. H = R^T*R). */
-	real_t Q[NVMAX*NVMAX];			/**< Orthonormal quadratic matrix, A = [0 T]*Q'. */
-	real_t T[NVCMIN*NVCMIN];		/**< Reverse triangular matrix, A = [0 T]*Q'. */
 } Flipper;
 
+int Flipper_calculateMemorySize( unsigned int nV, unsigned int nC );
+
+char *Flipper_assignMemory( unsigned int nV, unsigned int nC, Flipper **mem, void *raw_memory );
+
+Flipper *Flipper_createMemory( unsigned int nV, unsigned int nC );
 
 /** Constructor which takes the number of bounds and constraints. */
 void FlipperCON(	Flipper* _THIS,
@@ -107,7 +112,7 @@ returnValue Flipper_set(	Flipper* _THIS,
 							const real_t* const _Q,					/**< New matrix Q. */
 							const real_t* const _T					/**< New matrix T. */
 							);
-		
+
 /** Returns dimension of matrix T.
  *  \return Dimension of matrix T. */
 unsigned int Flipper_getDimT( Flipper* _THIS );

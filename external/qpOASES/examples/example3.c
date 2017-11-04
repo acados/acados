@@ -30,7 +30,7 @@
  *
  *	Example demonstrating usage of qpOASES for solving a QP sequence of the
  *	Online QP Benchmark Collection. In order to run it, you have to download
- *	"Example 02" from from http://www.qpOASES.org/onlineQP/ and store it into 
+ *	"Example 02" from from http://www.qpOASES.org/onlineQP/ and store it into
  *	the directory bin/chain80w/.
  */
 
@@ -47,21 +47,32 @@ int main( )
 	/* 1) Define benchmark arguments. */
 	BooleanType isSparse = BT_FALSE;
 	BooleanType useHotstarts = BT_TRUE;
-	
+
 	int maxAllowedNWSR = 600;
 	real_t maxNWSR, avgNWSR, maxCPUtime, avgCPUtime;
 	real_t maxStationarity, maxFeasibility, maxComplementarity;
 
+	int nQP=0, nV=0, nC=0, nEC=0;
+
 	static Options options;
+	Options_setToDefault( &options );
 	Options_setToMPC( &options );
 	options.printLevel = PL_LOW;
+	maxCPUtime = 300.0;
+	maxAllowedNWSR = 3500;
+
+	if ( readOQPdimensions( "./chain80w/", &nQP,&nV,&nC,&nEC ) != SUCCESSFUL_RETURN )
+		return THROWERROR( RET_UNABLE_TO_READ_FILE );
+
+	OQPinterface_ws *benchmark_ws = OQPinterface_ws_createMemory(nV, nC, nQP);
 
 	/* 2) Run benchmark. */
 	if ( runOQPbenchmark(	"./chain80w/",
 							isSparse,useHotstarts,
 							&options,maxAllowedNWSR,
 							&maxNWSR,&avgNWSR,&maxCPUtime,&avgCPUtime,
-							&maxStationarity,&maxFeasibility,&maxComplementarity
+							&maxStationarity,&maxFeasibility,&maxComplementarity,
+							benchmark_ws
 							) != SUCCESSFUL_RETURN )
 	{
 		qpOASES_myPrintf( "In order to run this example, you need to download example no. 02\nfrom the Online QP Benchmark Collection website first!\n" );
@@ -78,6 +89,8 @@ int main( )
 	fprintf( stderr,"maximum complementary error:  %.3e\n",maxComplementarity );
 	fprintf( stderr,"\n" );
 	fprintf( stderr,"maximum CPU time:             %.3f milliseconds\n\n",1000.0*maxCPUtime );
+
+	free(benchmark_ws);
 
 	return 0;
 }

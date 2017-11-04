@@ -43,10 +43,10 @@
 BEGIN_NAMESPACE_QPOASES
 
 
-/** 
+/**
  *	\brief Manages working sets of bounds (= box constraints).
  *
- *	This class manages working sets of bounds (= box constraints) 
+ *	This class manages working sets of bounds (= box constraints)
  *	by storing index sets and other status information.
  *
  *	\author Hans Joachim Ferreau
@@ -55,19 +55,32 @@ BEGIN_NAMESPACE_QPOASES
  */
 typedef struct
 {
-	int n;								/**< Total number of bounds. */
+	Indexlist *freee;					/**< Index list of free variables. */
+	Indexlist *fixed;					/**< Index list of fixed variables. */
 
-	SubjectToType   type[NVMAX]; 		/**< Type of bounds. */
-	SubjectToStatus status[NVMAX];		/**< Status of bounds. */
+	Indexlist *shiftedFreee;			/**< Memory for shifting free variables. */
+	Indexlist *shiftedFixed;			/**< Memory for shifting fixed variables. */
+
+	Indexlist *rotatedFreee;			/**< Memory for rotating free variables. */
+	Indexlist *rotatedFixed;			/**< Memory for rotating fixed variables. */
+
+	SubjectToType   *type; 				/**< Type of bounds. */
+	SubjectToStatus *status;			/**< Status of bounds. */
+
+	SubjectToType   *typeTmp;			/**< Temp memory for type of bounds. */
+	SubjectToStatus *statusTmp;			/**< Temp memory for status of bounds. */
 
 	BooleanType noLower;	 			/**< This flag indicates if there is no lower bound on any variable. */
 	BooleanType noUpper;	 			/**< This flag indicates if there is no upper bound on any variable. */
 
-	Indexlist freee;					/**< Index list of free variables. */
-	Indexlist fixed;					/**< Index list of fixed variables. */
+	int n;								/**< Total number of bounds. */
 } Bounds;
 
+int Bounds_calculateMemorySize( int n);
 
+char *Bounds_assignMemory(int n, Bounds **mem, void *raw_memory);
+
+Bounds *Bounds_createMemory( int n );
 
 /** Constructor which takes the number of bounds. */
 void BoundsCON(	Bounds* _THIS,
@@ -489,7 +502,7 @@ static inline int Bounds_getNUV( Bounds* _THIS )
  */
 static inline int Bounds_getNFR( Bounds* _THIS )
 {
- 	return Indexlist_getLength( &(_THIS->freee) );
+ 	return Indexlist_getLength( _THIS->freee );
 }
 
 
@@ -498,7 +511,7 @@ static inline int Bounds_getNFR( Bounds* _THIS )
  */
 static inline int Bounds_getNFX( Bounds* _THIS )
 {
-	return Indexlist_getLength( &(_THIS->fixed) );
+	return Indexlist_getLength( _THIS->fixed );
 }
 
 
@@ -507,7 +520,7 @@ static inline int Bounds_getNFX( Bounds* _THIS )
  */
 static inline Indexlist* Bounds_getFree( Bounds* _THIS )
 {
-	return &(_THIS->freee);
+	return _THIS->freee;
 }
 
 
@@ -516,7 +529,7 @@ static inline Indexlist* Bounds_getFree( Bounds* _THIS )
  */
 static inline Indexlist* Bounds_getFixed( Bounds* _THIS )
 {
-	return &(_THIS->fixed);
+	return _THIS->fixed;
 }
 
 

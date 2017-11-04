@@ -27,7 +27,7 @@
  *	\author Hans Joachim Ferreau, Andreas Potschka, Christian Kirches
  *	\version 3.1embedded
  *	\date 2007-2015
- *
+ * Indexlist
  *	Implementation of the Indexlist class designed to manage index lists of
  *	constraints and bounds within a QProblem_SubjectTo.
  */
@@ -42,6 +42,55 @@ BEGIN_NAMESPACE_QPOASES
 /*****************************************************************************
  *  P U B L I C                                                              *
  *****************************************************************************/
+
+int Indexlist_calculateMemorySize( int n)
+{
+	int size = 0;
+
+	size += sizeof(Indexlist);	// size of structure itself
+	size += n * sizeof(int);	// elements of number
+	size += n * sizeof(int);	// elements of isort
+
+	size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
+    size += 1 * 64;                // align once to typical cache line size
+
+	return size;
+}
+
+char *Indexlist_assignMemory(int n, Indexlist **mem, void *raw_memory)
+{
+	// char pointer
+	char *c_ptr = (char *)raw_memory;
+
+	// assign structure
+	*mem = (Indexlist *) c_ptr;
+	c_ptr += sizeof(Indexlist);
+
+	// align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+	c_ptr = (char *)s_ptr;
+
+	// assign data
+
+	(*mem)->number = (int *) c_ptr;
+	c_ptr += n * sizeof(int);
+
+	(*mem)->iSort = (int *) c_ptr;
+	c_ptr += n * sizeof(int);
+
+	return c_ptr;
+}
+
+Indexlist *Indexlist_createMemory( int n )
+{
+	Indexlist *mem;
+    int memory_size = Indexlist_calculateMemorySize(n);
+    void *raw_memory_ptr = malloc(memory_size);
+    char *ptr_end =  Indexlist_assignMemory(n, &mem, raw_memory_ptr);
+    assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
+    return mem;
+}
 
 /*
  *	I n d e x l i s t
@@ -62,7 +111,7 @@ void IndexlistCPY(	Indexlist* FROM,
 					)
 {
 	int i;
-	
+
 	if ( FROM != TO )
 	{
 		TO->length = FROM->length;
@@ -78,8 +127,6 @@ void IndexlistCPY(	Indexlist* FROM,
 	}
 }
 
-
-
 /*
  *	i n i t
  */
@@ -93,11 +140,10 @@ returnValue Indexlist_init(	Indexlist* _THIS,
 	_THIS->length = 0;
 	_THIS->physicallength = n;
 
-	assert( n <= NVCMAX );
+	// assert( n <= NVCMAX );
 
 	return SUCCESSFUL_RETURN;
 }
-
 
 /*
  *	g e t N u m b e r A r r a y

@@ -35,6 +35,7 @@
 int main(int argc, char *argv[])
 {
 	const real_t TOL = 1e-5;
+	int nQP=0, nV=0, nC=0, nEC=0;
 
 	/* 1) Define benchmark arguments. */
 	BooleanType isSparse = BT_FALSE;
@@ -61,7 +62,7 @@ int main(int argc, char *argv[])
 	options.printLevel = PL_LOW;
 	/*options.enableRamping = BT_FALSE;*/
 	/*options.enableFarBounds = BT_FALSE;*/
-	
+
 	if (argc == 1)
 	{
 		/* 2a) Scan problem directory */
@@ -106,11 +107,18 @@ int main(int argc, char *argv[])
 		snprintf(OQPproblem, 199, "../testing/c/data/problems/%s/", problem);
 		maxCPUtime = 300.0;
 		maxAllowedNWSR = 3500;
+
+		if ( readOQPdimensions( OQPproblem, &nQP,&nV,&nC,&nEC ) != SUCCESSFUL_RETURN )
+			return THROWERROR( RET_UNABLE_TO_READ_FILE );
+
+		OQPinterface_ws *benchmark_ws = OQPinterface_ws_createMemory(nV, nC, nQP);
+
 		returnvalue = runOQPbenchmark(	OQPproblem,
 										isSparse,useHotstarts,
 										&options,maxAllowedNWSR,
 										&maxNWSR,&avgNWSR,&maxCPUtime,&avgCPUtime,
-										&maxStationarity,&maxFeasibility,&maxComplementarity
+										&maxStationarity,&maxFeasibility,&maxComplementarity,
+										benchmark_ws
 										);
 		if (returnvalue	== SUCCESSFUL_RETURN
 				&& maxStationarity < TOL
@@ -129,6 +137,9 @@ int main(int argc, char *argv[])
 				maxFeasibility, maxComplementarity, (int)maxNWSR, resstr);
 
 		if (scannedDir) free(namelist[i]);
+
+		// free benchmark workspace
+		free(benchmark_ws);
 	}
 	if (scannedDir) free(namelist);
 
