@@ -20,17 +20,17 @@ endif
 TOP = $(shell pwd)
 #PREFIX = /opt
 
+# External projects directory
+EXT_PATH = $(TOP)/external
+
 # BLASFEO path
-BLASFEO_PATH = /opt/blasfeo
+BLASFEO_PATH = $(EXT_PATH)/blasfeo
 
 # HPIPM path
-HPIPM_PATH = /opt/hpipm
+HPIPM_PATH = $(EXT_PATH)/hpipm
 
 # qpOASES path
 QPOASES_PATH = /opt/qpoases
-
-# EXTERNAL PATH
-EXT_PATH = $(TOP)/external
 
 # measure timings
 MEASURE_TIMINGS = 1
@@ -54,6 +54,5 @@ CFLAGS += -DMEASURE_TIMINGS
 endif
 
 # search directories
-# TODO(dimitris): SET BLASFEO/HPIPM/QPOASES PATHS TO EXTERNAL!
 CFLAGS += -g -O0 -I$(TOP) -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include
 LDFLAGS += -L$(TOP)/lib -L$(BLASFEO_PATH)/lib -L$(HPIPM_PATH)/lib -L$(QPOASES_PATH)/bin
