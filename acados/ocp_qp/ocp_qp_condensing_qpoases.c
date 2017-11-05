@@ -146,6 +146,7 @@ char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_in *qp_in, ocp_qp_condensin
     assign_ocp_qp_condensing_memory(qp_in, &(*qpoases_memory)->condensing_memory, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_memory_size(qp_in->size, args->cond_args);
 
+    // TODO(dimitris): TRANSFER ASSERT INSIDE ASSIGN RATHER THAN CREATE! ASSERTS OF DENSE QP NOT CHECKED
     align_char_to(8, &c_ptr);
     dense_qp_qpoases_assign_memory(&qpd_in, args->solver_args, (void**)&(*qpoases_memory)->solver_memory, c_ptr);
     c_ptr += dense_qp_qpoases_calculate_memory_size(&qpd_in, args->solver_args);

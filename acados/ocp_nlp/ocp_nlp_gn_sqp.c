@@ -39,6 +39,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
@@ -163,6 +164,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
     // real_t **qp_ub = (real_t **) mem->qp_solver->qp_in->ub;
 
     // TODO(dimitris): TEMPORARY HACK TO STORE INTERM. RESULT
+    // TODO(dimitris): REPLACE WITH MACROS ASAP
     int nvmax = 0;
     for (int i = 0; i < N+1; i++) {
         if (nx[i]+nu[i] > nvmax) {
@@ -213,17 +215,23 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
         // Update bounds:
         for (int_t j = 0; j < nlp->nb[i]; j++) {
 // #ifdef FLIP_BOUNDS
-            if (nlp->idxb[i][j] < nu[i]) {
-                DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-                DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-                // qp_lb[i][j] = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-                // qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-            } else {
-                DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-                DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-                // qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-                // qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-            }
+
+            // NOTE!!!! ATM IDXB OF NLP IS FLIPPED WRT QP
+            DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
+            DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
+
+            // if (nlp->idxb[i][j] < nu[i]) {
+            //     DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+            //     DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+            //     // qp_lb[i][j] = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+            //     // qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+            // } else {
+            //     DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+            //     DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+            //     // qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+            //     // qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+            // }
+
 // #else
 //             qp_lb[i][j] = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
 //             qp_ub[i][j] = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
@@ -420,7 +428,8 @@ void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memor
     for (int ii = 0; ii < in->N+1; ii++)
         ns[ii] = 0;
 
-    form_nbx_nbu((int) in->N, nbx, nbu, (int*)in->nb, (int*)in->nx, (int*)in->nu, (int**)in->idxb);
+    // NOTE!!!! ATM IDXB OF NLP IS FLIPPED WRT QP
+    form_nbu_nbx_rev((int) in->N, nbu, nbx, (int*)in->nb, (int*)in->nx, (int*)in->nu, (int**)in->idxb);
 
     ocp_qp_dims dims;
     dims.N = (int) in->N;
