@@ -71,7 +71,7 @@ char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem);
 
 // TODO TEMP
 
-void form_nbx_nbu(int N, int *nbx, int *nbu, int *nb, int* nx, int *nu, int **idxb);
+void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev);
 
 void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, ocp_qp_in *qp_in,
     int_t stage);

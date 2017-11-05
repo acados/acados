@@ -20,6 +20,13 @@
 // external
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 // acados
 #include "acados/dense_qp/dense_qp_common_ext_dep.h"
 #include "acados/dense_qp/dense_qp_common.h"
@@ -60,6 +67,6 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     int nv = qp_in->nv;
 
     printf("H =\n");
-    d_print_strmat(nv, nv, qp_in->Hg);
+    d_print_strmat(nv, nv, qp_in->Hg, 0, 0);
     // TODO(dimitris): print all data
 }

@@ -115,21 +115,21 @@ char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem)
 
 
 
-void form_nbx_nbu(int N, int *nbx, int *nbu, int *nb, int* nx, int *nu, int **idxb)
+void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
 {
     for (int ii = 0; ii < N+1; ii++)
     {
-        nbx[ii] = 0;
         nbu[ii] = 0;
+        nbx[ii] = 0;
         for (int jj = 0; jj < nb[ii]; jj++)
         {
-            if (idxb[ii][jj] < nu[ii])
+            if (idxb_rev[ii][jj] < nx[ii])
             {
-                nbu[ii]++;
+                nbx[ii]++;
             }
             else
             {
-                nbx[ii]++;
+                nbu[ii]++;
             }
         }
     }

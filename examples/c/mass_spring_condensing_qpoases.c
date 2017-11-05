@@ -65,7 +65,7 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->size);
 
     /************************************************
-    * ipm
+    * qpoases
     ************************************************/
 
     ocp_qp_condensing_qpoases_args *arg = ocp_qp_condensing_qpoases_create_arguments(qp_in->size);

@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
                   const int_t ncols) {
@@ -117,4 +118,46 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows,
 
     fclose(file);
 }
+
+
+void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname) {
+    int_t i, status;
+    FILE *myFile;
+
+    myFile = fopen(fname, "wr");
+
+    if (myFile == NULL) {
+        printf("Error opening file %s !\n", fname);
+        assert (1 == 0);
+    }
+
+    for (i = 0; i < n; i++) {
+        status = fprintf(myFile, "%.16e\n", vec[i]);
+        assert(status >= 0);
+    }
+
+    fclose(myFile);
+}
+
+
+// int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname) {
+//     int_t i, status;
+//     FILE *myFile;
+
+//     myFile = fopen(fname, "wr");
+
+//     if (myFile == NULL) {
+//         printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", fname);
+//         return -1;
+//     }
+
+//     for (i = 0; i < n; i++) {
+//         status = fprintf(myFile, "%d\n", vec[i]);
+//         assert(status >= 0);
+//     }
+
+//     fclose(myFile);
+
+//     return 0;
+// }
 
