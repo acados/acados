@@ -2,7 +2,7 @@ clc;
 %clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.2.2')
+addpath('../../../external/casadi-octave-v3.2.3')
 import casadi.*
 
 % Get collocation points
@@ -129,6 +129,24 @@ jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
 opts = struct('mex', false);
 vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);
 jacFun.generate(['jac_chain_nm' num2str(Nm)], opts);
+
+lambdaX = SX.sym('lambdaX', nx, 1);
+adj = jtimes(dae.ode, [dae.x; u], lambdaX, true);
+
+adjFun = Function(['vde_adj_chain_nm' num2str(Nm)], {dae.x, lambdaX, u}, {adj});
+adjFun.generate(['vde_adj_chain_nm' num2str(Nm)]);
+
+S_forw = [Sx Sp; DM([zeros(nu,nx) eye(nu)])];
+hess = S_forw.' * jtimes(adj, [dae.x; u], S_forw);
+hess2 = [];
+for j = 1:nx+nu
+    for i = j:nx+nu
+        hess2 = [hess2; hess(i,j)];
+    end
+end
+
+hessFun = Function(['vde_hess_chain_nm' num2str(Nm)], {dae.x, Sx, Sp, lambdaX, u}, {adj, hess2});
+hessFun.generate(['vde_hess_chain_nm' num2str(Nm)]);
 
 out = odeFun(x0_guess,u_guess);
 while norm(full(out)) > 1e-10

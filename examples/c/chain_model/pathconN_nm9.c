@@ -4,76 +4,60 @@
 extern "C" {
 #endif
 
-/* How to prefix internal symbols */
 #ifdef CODEGEN_PREFIX
   #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
-#else
+#else /* CODEGEN_PREFIX */
   #define CASADI_PREFIX(ID) pathconN_nm9_ ## ID
-#endif
+#endif /* CODEGEN_PREFIX */
 
 #include <math.h>
 
-#ifndef casadi_real
-#define casadi_real double
-#endif
+#ifndef real_t
+#define real_t double
+#endif /* real_t */
 
 #define to_double(x) (double) x
 #define to_int(x) (int) x
 #define CASADI_CAST(x,y) (x) y
-
 /* Pre-c99 compatibility */
 #if __STDC_VERSION__ < 199901L
-  #define fmin CASADI_PREFIX(fmin)
-  casadi_real fmin(casadi_real x, casadi_real y) { return x<y ? x : y;}
-  #define fmax CASADI_PREFIX(fmax)
-  casadi_real fmax(casadi_real x, casadi_real y) { return x>y ? x : y;}
+real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
+#define fmin(x,y) CASADI_PREFIX(fmin)(x,y)
+real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
+#define fmax(x,y) CASADI_PREFIX(fmax)(x,y)
 #endif
 
-/* CasADi extensions */
-#define sq CASADI_PREFIX(sq)
-casadi_real sq(casadi_real x) { return x*x;}
-#define sign CASADI_PREFIX(sign)
-casadi_real CASADI_PREFIX(sign)(casadi_real x) { return x<0 ? -1 : x>0 ? 1 : x;}
-#define twice CASADI_PREFIX(twice)
-casadi_real twice(casadi_real x) { return x+x;}
-
-/* Add prefix to internal symbols */
-#define casadi_f0 CASADI_PREFIX(f0)
-#define casadi_s0 CASADI_PREFIX(s0)
-#define casadi_s1 CASADI_PREFIX(s1)
-#define casadi_s2 CASADI_PREFIX(s2)
-
-/* Printing routine */
 #define PRINTF printf
-
-/* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
-  #if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
-    #if defined(STATIC_LINKED)
-      #define CASADI_SYMBOL_EXPORT
-    #else
-      #define CASADI_SYMBOL_EXPORT __declspec(dllexport)
-    #endif
-  #elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
-    #define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
-  #else
-    #define CASADI_SYMBOL_EXPORT
-  #endif
-#endif
+#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(STATIC_LINKED)
+#define CASADI_SYMBOL_EXPORT
+#else /* defined(STATIC_LINKED) */
+#define CASADI_SYMBOL_EXPORT __declspec(dllexport)
+#endif /* defined(STATIC_LINKED) */
+#elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+#define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
+#else /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
+#define CASADI_SYMBOL_EXPORT
+#endif /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
+#endif /* CASADI_SYMBOL_EXPORT */
+real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
+#define sq(x) CASADI_PREFIX(sq)(x)
 
-static const int casadi_s0[52] = {48, 1, 0, 48, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
-static const int casadi_s1[4] = {0, 1, 0, 0};
-static const int casadi_s2[51] = {0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
+#define sign(x) CASADI_PREFIX(sign)(x)
 
-/* pathconN_nm9:(i0[48])->(o0[0],o1[0x48]) */
-static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, int mem) {
+static const int CASADI_PREFIX(s0)[52] = {48, 1, 0, 48, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47};
+#define s0 CASADI_PREFIX(s0)
+static const int CASADI_PREFIX(s1)[4] = {0, 1, 0, 0};
+#define s1 CASADI_PREFIX(s1)
+static const int CASADI_PREFIX(s2)[51] = {0, 48, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#define s2 CASADI_PREFIX(s2)
+/* pathconN_nm9 */
+CASADI_SYMBOL_EXPORT int pathconN_nm9(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   return 0;
-}
-
-CASADI_SYMBOL_EXPORT int pathconN_nm9(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, int mem){
-  return casadi_f0(arg, res, iw, w, mem);
 }
 
 CASADI_SYMBOL_EXPORT void pathconN_nm9_incref(void) {
@@ -103,15 +87,15 @@ CASADI_SYMBOL_EXPORT const char* pathconN_nm9_name_out(int i){
 
 CASADI_SYMBOL_EXPORT const int* pathconN_nm9_sparsity_in(int i) {
   switch (i) {
-    case 0: return casadi_s0;
+    case 0: return s0;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const int* pathconN_nm9_sparsity_out(int i) {
   switch (i) {
-    case 0: return casadi_s1;
-    case 1: return casadi_s2;
+    case 0: return s1;
+    case 1: return s2;
     default: return 0;
   }
 }

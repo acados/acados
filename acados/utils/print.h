@@ -45,6 +45,8 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows,
 
 void print_ocp_qp(ocp_qp_in *qp);
 
+void print_ocp_qp_to_file(ocp_qp_in *qp);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

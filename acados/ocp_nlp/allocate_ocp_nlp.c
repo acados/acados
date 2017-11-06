@@ -104,6 +104,7 @@ static void allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, int_t 
         simulators[i]->out = (sim_out *)malloc(sizeof(sim_out));
         d_zeros(&simulators[i]->out->xn, nx_i1, 1);
         d_zeros(&simulators[i]->out->S_forw, nx_i1, nx_i + nu_i);
+        d_zeros(&simulators[i]->out->S_adj, nx_i + nu_i, 1);
         d_zeros(&simulators[i]->out->grad, nx_i + nu_i, 1);
         simulators[i]->out->info = (sim_info *)malloc(sizeof(sim_info));
 
