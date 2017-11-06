@@ -33,7 +33,8 @@ void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t ja
 void vde_hess_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
                   casadi_function_t vde_hess);
 
-void vde_adj_fun(const int_t nx, const real_t* in, real_t* out, casadi_function_t vde_adj);
+void vde_adj_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
+                 casadi_function_t vde_adj);
 
 void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
     casadi_function_t discrete_model);

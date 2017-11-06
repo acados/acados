@@ -87,7 +87,8 @@ void vde_hess_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
     vde_hess(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
-void vde_adj_fun(const int_t nx, const real_t* in, real_t* out, casadi_function_t vde_adj) {
+void vde_adj_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
+                 casadi_function_t vde_adj) {
 
     const real_t* x = in;
     const real_t* lambdaX = in + nx;

@@ -727,8 +727,8 @@ static void tred2(int_t dim, real_t *V, real_t *d, real_t *e) {
     Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
     Fortran subroutine in EISPACK. */
 
-    int i,j,k;
-    real_t f,g,h,hh;
+    int i, j, k;
+    real_t f, g, h, hh;
     for (j = 0; j < dim; j++) {
         d[j] = V[(dim-1)*dim+j];
     }
@@ -857,7 +857,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
 
     f = 0.0;
     tst1 = 0.0;
-    eps = pow(2.0,-52.0);
+    eps = pow(2.0, -52.0);
     for (l = 0; l < dim; l++) {
 
         /* Find small subdiagonal element */
@@ -882,7 +882,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
 
                 g = d[l];
                 p = (d[l+1] - g) / (2.0 * e[l]);
-                r = hypot2(p,1.0);
+                r = hypot2(p, 1.0);
                 if (p < 0) {
                 r = -r;
                 }
@@ -910,7 +910,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
                     s2 = s;
                     g = c * e[i];
                     h = c * p;
-                    r = hypot2(p,e[i]);
+                    r = hypot2(p, e[i]);
                     e[i+1] = s * r;
                     s = e[i] / r;
                     c = p / r;
@@ -939,7 +939,7 @@ static void tql2(int_t dim, real_t *V, real_t *d, real_t *e) {
 }
 
 static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d) {
-    real_t e[dim];
+    real_t *e = (real_t *) calloc(dim, sizeof(real_t));
     for (int_t i = 0; i < dim; i++)
         for (int_t j = 0; j < dim; j++)
             V[i*dim+j] = A[i*dim+j];
@@ -948,10 +948,10 @@ static void eigen_decomposition(int_t dim, real_t *A, real_t *V, real_t *d) {
 }
 
 static void reconstruct_A(int_t dim, real_t *A, real_t *V, real_t *d) {
-    for(int_t i = 0; i < dim; i++) {
-        for(int_t j = 0; j <= i; j++) {
+    for (int_t i = 0; i < dim; i++) {
+        for (int_t j = 0; j <= i; j++) {
             A[i*dim+j] = 0.0;
-            for(int_t k = 0; k < dim; k++)
+            for (int_t k = 0; k < dim; k++)
                 A[i*dim+j] += V[i*dim+k]*d[k]*V[j*dim+k];
             A[j*dim+i] = A[i*dim+j];
         }
@@ -972,15 +972,15 @@ reconstruct_A(A, V, d);
 
 /* mirroring regularization */
 void regularize(int_t dim, real_t *A) {
-    real_t V[dim*dim];
-    real_t d[dim];
+    real_t *V = (real_t *) calloc(dim*dim, sizeof(real_t));
+    real_t *d = (real_t *) calloc(dim, sizeof(real_t));
 
     eigen_decomposition(dim, A, V, d);
 
     for (int_t i = 0; i < dim; i++) {
-        if(d[i] >= -ACADOS_EPS && d[i] <= ACADOS_EPS)
+        if (d[i] >= -ACADOS_EPS && d[i] <= ACADOS_EPS)
             d[i] = ACADOS_EPS;
-        else if( d[i] < 0 )
+        else if (d[i] < 0)
             d[i] = -d[i];
     }
 
