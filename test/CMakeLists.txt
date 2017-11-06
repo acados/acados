@@ -19,8 +19,8 @@
 
 # Check if external libraries are present; these are needed for the unit tests
 find_package(Eigen3)
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
-    message(WARNING "You chose to run unit tests but casadi-octave-v3.2.2 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.3")
+    message(WARNING "You chose to run unit tests but casadi-octave-v3.2.3 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.3")
 endif()
 include_directories(${EIGEN3_INCLUDE_DIR})
 

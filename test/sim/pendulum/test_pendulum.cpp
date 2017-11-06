@@ -23,7 +23,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "test/sim/pendulum/casadi/casadi_pendulum.h"
 #include "test/sim/pendulum/pendulum_helper.cpp"
 #include "test/test_utils/eigen.h"
 
