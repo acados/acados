@@ -39,8 +39,6 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     int_t NU = 1;
     real_t T = 0.5;
 
-    int_t nhess = (int_t)(NX+NU+1)*(real_t)(NX+NU)/2.0;
-
     sim_in  sim_in, sim_in2;
     sim_out sim_out, sim_out2;
     sim_info info, info2;

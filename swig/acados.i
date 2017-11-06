@@ -778,7 +778,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         if (!has(input_map, "nb")) {
             nb[0] = nx[0];
         }
-        allocate_ocp_nlp_in(N, nx, nu, nb, ng, nlp_in);
+        allocate_ocp_nlp_in(N, nx, nu, nb, ng, 0, nlp_in);
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)

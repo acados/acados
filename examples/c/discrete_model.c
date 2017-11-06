@@ -64,7 +64,7 @@ int main() {
     ny[N] = NX;
 
     ocp_nlp_in nlp;
-    allocate_ocp_nlp_in(N, nx, nu, nb, ng, &nlp);
+    allocate_ocp_nlp_in(N, nx, nu, nb, ng, 0, &nlp);
     int_t idxb0[] = {0};
     nlp.idxb[0] = idxb0;
 
