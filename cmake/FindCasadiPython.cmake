@@ -29,7 +29,6 @@ find_path(
 if(NOT CASADI_PYTHON_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
-message(STATUS "Found Casadi-python: ${CASADI_PYTHON_ROOT}")
 
 # Determine the version number
 execute_process(
@@ -55,7 +54,8 @@ find_path(CASADI_PYTHON_INCLUDE_DIR
     NAMES casadi/casadi.hpp
     PATHS
         "${CASADI_PYTHON_ROOT}/include"
-        "${CASADI_PYTHON_ROOT}/../include")
+        "${CASADI_PYTHON_ROOT}/../include"
+        "${CASADI_PYTHON_ROOT}/casadi/include")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CASADIPYTHON DEFAULT_MSG CASADI_PYTHON_LIBRARY CASADI_PYTHON_INCLUDE_DIR)

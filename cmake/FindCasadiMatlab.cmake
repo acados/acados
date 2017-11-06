@@ -42,7 +42,8 @@ find_path(CASADI_MATLAB_INCLUDE_DIR
     NAMES casadi/casadi.hpp
     PATHS
         "${CASADI_MATLAB_ROOT}/include"
-        "${CASADI_MATLAB_ROOT}/../include")
+        "${CASADI_MATLAB_ROOT}/../include"
+        "${CASADI_PYTHON_ROOT}/casadi/include")
 
 # Determine the version number if not in cache
 if(NOT CASADI_MATLAB_MAJOR_VERSION)
