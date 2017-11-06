@@ -21,6 +21,6 @@
 	path = external/hpipm
 	url = https://github.com/giaf/hpipm.git
 	branch = stable
-[submodule "external/qpoases"]
+[submodule "qpoases"]
 	path = external/qpoases
-	url = git@github.com:acados/qpOASES.git
+	url = https://github.com:acados/qpOASES.git
