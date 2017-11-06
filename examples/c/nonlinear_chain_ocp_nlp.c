@@ -90,14 +90,12 @@ int main() {
     // Problem data
     ocp_nlp_ls_cost ls_cost;
     real_t *W, *WN;
-    real_t *uref;
     int_t max_sqp_iters = 20;
     real_t *x_end;
     real_t *u_end;
 
     d_zeros(&W, NX + NU, NX + NU);
     d_zeros(&WN, NX, NX);
-    d_zeros(&uref, NU, 1);
     d_zeros(&x_end, NX, 1);
     d_zeros(&u_end, NU, 1);
 
@@ -105,9 +103,19 @@ int main() {
                     5.0000000000000000e-01, 0.0000000000000000e+00,
                     0.0000000000000000e+00, 0.0000000000000000e+00};
 
-    real_t xref[6] = {1.0000000000000000e+00, 0.0000000000000000e+00,
-                      0.0000000000000000e+00, 0.0000000000000000e+00,
-                      0.0000000000000000e+00, 0.0000000000000000e+00};
+    // real_t xref[6] = {1.0000000000000000e+00, 0.0000000000000000e+00,
+    //                   0.0000000000000000e+00, 0.0000000000000000e+00,
+    //                   0.0000000000000000e+00, 0.0000000000000000e+00};
+
+    // real_t uref[3] = {0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00};
+
+    // TODO(dimitris): REMOVE THOSE TEMP REF VALUES FOR DEBUGGING
+    real_t xref[6] = {1.0000000000000000e+00, 2.0000000000000000e+00,
+                      3.0000000000000000e+00, 4.0000000000000000e+00,
+                      5.0000000000000000e+00, 6.0000000000000000e+00};
+
+    // TODO(dimitris): why changing this has no effect on solution??
+    real_t uref[3] = {1.1000000000000000e+00, 2.2000000000000000e+00, 3.3000000000000000e+00};
 
     for (int_t i = 0; i < NX; i++) W[i * (NX + NU + 1)] = 1e-2;
     for (int_t i = 0; i < NU; i++) W[(NX + i) * (NX + NU + 1)] = 1.0;
@@ -118,10 +126,9 @@ int main() {
     ls_cost.W[NN] = WN;
     ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
-        ls_cost.y_ref[i] =
-            (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
+        ls_cost.y_ref[i] = (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
         for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
-        for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
+        for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = uref[j];
     }
     ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
@@ -237,11 +244,13 @@ int main() {
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
     int_t ng[NN + 1] = {0};
-    for (int_t i = 0; i < NN; i++) {
+    for (int_t i = 0; i < NN; i++)
+    {
         nx[i] = NX;
         nu[i] = NU;
     }
     nx[NN] = NX;
+    nu[NN] = 0;
 
     /************************************************
      * box constraints
@@ -387,7 +396,7 @@ int main() {
         for (int_t j = 0; j < NX; j++)
             nlp_mem.common->x[i][j] = xref[j];  // resX(j,i)
         for (int_t j = 0; j < NU; j++)
-            nlp_mem.common->u[i][j] = 0.0;  // resU(j, i)
+            nlp_mem.common->u[i][j] = uref[j];  // resU(j, i)
     }
     for (int_t j = 0; j < NX; j++)
         nlp_mem.common->x[NN][j] = xref[j];  // resX(j, NN)
@@ -398,11 +407,15 @@ int main() {
     printf("\n\nstatus = %i\n\n", status);
 
     for (int_t k =0; k < 3; k++) {
-        printf("x[%d] = \n", k);
-        d_print_mat(1, nx[k], nlp_out.x[k], 1);
         printf("u[%d] = \n", k);
         d_print_mat(1, nu[k], nlp_out.u[k], 1);
+        printf("x[%d] = \n", k);
+        d_print_mat(1, nx[k], nlp_out.x[k], 1);
     }
+    printf("u[N-1] = \n");
+    d_print_mat(1, nu[NN-1], nlp_out.u[NN-1], 1);
+    printf("x[N] = \n");
+    d_print_mat(1, nx[NN], nlp_out.x[NN], 1);
 
     ocp_nlp_gn_sqp_free_memory(&nlp_mem);
 
@@ -418,7 +431,6 @@ int main() {
 
     d_free(W);
     d_free(WN);
-    d_free(uref);
     d_free(x_end);
     d_free(u_end);
 
