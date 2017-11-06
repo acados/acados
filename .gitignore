@@ -71,6 +71,8 @@ Thumbs.db
 *.doc
 *.swp
 build/
+include/
+lib/
 local/
 *.dat
 octave-workspace
