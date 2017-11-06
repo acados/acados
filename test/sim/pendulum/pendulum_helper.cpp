@@ -52,7 +52,7 @@ void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim
     }
     sim_in->jacobian_wrapper = &jac_fun;
     sim_in->jac = &jac_pendulum;
-    
+
     sim_in->x = (real_t*) malloc(sizeof(*sim_in->x) * (NX));
     sim_in->u = (real_t*) malloc(sizeof(*sim_in->u) * (NU));
     sim_in->S_forw = (real_t*) malloc(sizeof(*sim_in->S_forw) * (NX*(NX+NU)));
