@@ -48,7 +48,7 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 
 
-static_library:
+static_library: blasfeo_static hpipm_static qpoases_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -56,6 +56,27 @@ static_library:
 	@echo
 	@echo " libacore.a static library build complete."
 	@echo
+
+blasfeo_static:
+	( cd external/blasfeo; $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	mkdir -p include/blasfeo
+	mkdir -p lib
+	cp external/blasfeo/include/*.h include/blasfeo
+	cp external/blasfeo/lib/libblasfeo.a lib
+
+hpipm_static: blasfeo_static
+	( cd external/hpipm; $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo )
+	mkdir -p include/hpipm
+	mkdir -p lib
+	cp external/hpipm/include/*.h include/hpipm
+	cp external/hpipm/lib/libhpipm.a lib
+
+qpoases_static:
+	( cd external/qpoases; $(MAKE) CC=$(CC) )
+	mkdir -p include/qpoases
+	mkdir -p lib
+	cp -r external/qpoases/include/* include/qpoases
+	cp external/qpoases/bin/libqpOASES_e.a lib
 
 examples_c:
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
@@ -66,5 +87,10 @@ run_examples_c:
 clean:
 	( cd acados; $(MAKE) clean )
 	( cd examples/c; $(MAKE) clean )
-	rm -f libacore.a
+
+deep_clean: clean
+	( cd external/blasfeo; $(MAKE) clean )
+	( cd external/hpipm; $(MAKE) clean )
+	( cd external/qpoases; $(MAKE) clean )
+	rm -rf include
 	rm -rf lib
