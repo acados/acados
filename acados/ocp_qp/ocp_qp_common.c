@@ -25,9 +25,9 @@
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 
-//#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-//#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 //#include "acados/ocp_qp/ocp_qp_hpipm.h"
 //#ifdef ACADOS_WITH_HPMPC
 //#include "acados/ocp_qp/ocp_qp_hpmpc.h"
@@ -41,18 +41,18 @@
 
 
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
-	{
+{
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
     size += sizeof(ocp_qp_dims);
     size += d_memsize_ocp_qp_size(dims->N);
     return size;
-	}
+}
 
 
 
 char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem)
-	{
+{
     // char pointer
     char *c_ptr = (char *) mem;
 
@@ -84,22 +84,22 @@ char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem)
     (*qp_in)->size = dims_copy;
 
     return c_ptr;
-	}
+}
 
 
 
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
-    {
+{
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
 
     return size;
-    }
+}
 
 
 
 char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem)
-	{
+{
     // char pointer
     char *c_ptr = (char *) mem;
 
@@ -110,7 +110,7 @@ char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem)
     c_ptr += d_memsize_ocp_qp_sol(dims);
 
     return c_ptr;
-	}
+}
 
 
 
@@ -134,3 +134,43 @@ void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int 
         }
     }
 }
+
+
+ocp_qp_solver_funs ocp_qp_solver_set_function_pointers(qp_solver_t qp_solver)
+{
+    ocp_qp_solver_funs funs;
+
+    switch (qp_solver)
+    {
+        case HPIPM:
+            funs.calculate_args_size = ocp_qp_hpipm_calculate_args_size;
+            funs.assign_args = ocp_qp_hpipm_assign_args;
+            // ...
+        case CONDENSING_HPIPM:
+            funs.calculate_args_size = ocp_qp_condensing_hpipm_calculate_args_size;
+        case CONDENSING_QPOASES:
+            funs.calculate_args_size = ocp_qp_condensing_qpoases_calculate_args_size;
+        default:
+            funs.calculate_args_size = NULL;
+    }
+    return funs;
+}
+
+// NOTE(dimitris): maybe better do switch only in one function, as above
+// int ocp_qp_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t qp_solver)
+// {
+//     int size = 0;
+
+//     switch (qp_solver)
+//     {
+//         case HPIPM:
+//             size = ocp_qp_hpipm_calculate_args_size(dims);
+//         case CONDENSING_HPIPM:
+//             size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
+//         case CONDENSING_QPOASES:
+//             size = ocp_qp_condensing_qpoases_calculate_args_size(dims);
+//         default:
+//             size = -1;
+//     }
+//     return size;
+// }

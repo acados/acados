@@ -40,6 +40,35 @@
 #include "acados/utils/types.h"
 
 
+// TODO(dimitris): WIP not used yet
+int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_in *in, qp_solver_t qp_solver)
+{
+    int_t size = 0;
+
+    ocp_qp_solver_funs qp_funs = ocp_qp_solver_set_function_pointers(qp_solver);
+
+    // TODO(dimitris): implement ocp_nlp_dims and remove this code
+    ocp_qp_dims dims;
+    dims.N = in->N;
+    dims.nx = (int *)in->nx;
+    dims.nu = (int *)in->nu;
+    dims.ng = (int *)in->nc;
+    dims.nb = (int *)in->nb;
+    int NS[in->N+1];
+    int NBX[in->N+1];
+    int NBU[in->N+1];
+    for (int ii = 0; ii < in->N+1; ii++) NS[ii] = 0;
+    dims.ns = NS;
+    form_nbu_nbx_rev(in->N, NBU, NBX, dims.nb, dims.nx, dims.nu, (int **)in->idxb);
+
+    size += sizeof(ocp_nlp_args);
+    size += qp_funs.calculate_args_size(&dims);
+    size += sizeof(char)*MAX_STR_LEN;  // TEMP for qp_solver name
+    return size;
+}
+
+
+
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 

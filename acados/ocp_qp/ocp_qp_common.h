@@ -41,6 +41,20 @@ typedef struct d_ocp_qp ocp_qp_in;
 typedef struct d_ocp_qp_sol ocp_qp_out;
 
 
+typedef enum {
+    HPIPM,
+    CONDENSING_HPIPM,
+    CONDENSING_QPOASES
+} qp_solver_t;
+
+
+typedef struct {
+    int (*calculate_args_size)(ocp_qp_dims *dims);
+    char (*assign_args)(ocp_qp_dims *dims, void *mem);  // TODO(dimitris): return pointer to struct instead? (void here)
+    // + default args, calculate memory size, assign memory, solve
+} ocp_qp_solver_funs;
+
+
 typedef struct {
     int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
 	// TODO remove ???
@@ -67,7 +81,8 @@ char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem);
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 // TODO make name consistent !!! (ocp_qp_out_assign)
 char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem);
-
+//
+ocp_qp_solver_funs ocp_qp_solver_set_function_pointers(qp_solver_t qp_solver);
 
 // TODO TEMP
 

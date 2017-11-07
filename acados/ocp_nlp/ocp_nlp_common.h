@@ -28,6 +28,9 @@
 extern "C" {
 #endif
 
+// TODO(dimitris): implement this
+typedef struct d_ocp_qp_size ocp_nlp_dims;
+
 typedef struct {
     //    const int_t *sparsity;
     //    const int_t *idx_in;

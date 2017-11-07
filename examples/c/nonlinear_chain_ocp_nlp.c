@@ -17,19 +17,16 @@
  *
  */
 
-// #include <iostream>
 // #include <string>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+// blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-
-// #include "catch/include/catch.hpp"
-
+// acados
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/casadi_wrapper.h"
@@ -41,8 +38,7 @@
 #include "acados/utils/types.h"
 
 #include "examples/c/chain_model/chain_model.h"
-// #include "test/test_utils/eigen.h"
-// #include "test/test_utils/read_matrix.h"
+
 
 
 #define NN 15
