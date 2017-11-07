@@ -42,9 +42,8 @@
 
 #include "examples/c/chain_model/chain_model.h"
 // #include "test/test_utils/eigen.h"
-// #include "test/test_utils/read_matrix  .h"
+// #include "test/test_utils/read_matrix.h"
 
-real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 
 #define NN 15
 #define TT 3.0
