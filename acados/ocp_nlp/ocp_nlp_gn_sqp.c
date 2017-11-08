@@ -19,11 +19,15 @@
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 
+// external
+#if defined(RUNTIME_CHECKS)
+#include <assert.h>
+#endif
+// TODO(dimitris): remove includes
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -44,13 +48,53 @@ int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, new_ocp_qp_solver *
 {
     int_t size = 0;
 
-    size += sizeof(ocp_nlp_args);
+    size += sizeof(ocp_nlp_gn_sqp_args);
+    size += sizeof(ocp_nlp_args);  // TODO(dimitris): REPLACE WITH CALCULATE SIZE?
     size += qp_solver->calculate_args_size((ocp_qp_dims *)dims);
-    size += sizeof(char)*MAX_STR_LEN;  // TODO(dimitris): remove this (used for qp_solver name)
+
     return size;
 }
 
 
+
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver, void *mem)
+{
+    ocp_nlp_gn_sqp_args *args;
+
+    char *c_ptr = (char *) mem;
+
+    args = (ocp_nlp_gn_sqp_args *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_gn_sqp_args);
+
+    args->common = (ocp_nlp_args *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_args);  // TODO(dimitris): REPLACE WITH ASSIGN?
+
+    args->qp_solver_args = qp_solver->assign_args(dims, c_ptr);
+    c_ptr += qp_solver->calculate_args_size((ocp_qp_dims *)dims);  // TODO(dimitris): replace with memsize?
+
+#if defined(RUNTIME_CHECKS)
+    assert((char*)mem + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver) >= c_ptr);
+#endif
+    return args;
+}
+
+
+#if defined(EXT_DEPS)
+
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver)
+{
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver);
+    void *ptr = malloc(size);
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver, ptr);
+    // TODO(dimitris): same for other submodules
+    qp_solver->initialize_default_args(args->qp_solver_args);
+
+    return args;
+}
+
+
+
+#endif
 
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;

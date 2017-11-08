@@ -150,16 +150,17 @@ new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
     {
         case HPIPM:
             qp_solver.calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
-            // qp_solver.assign_args = ocp_qp_hpipm_assign_args;
+            qp_solver.assign_args = &ocp_qp_hpipm_assign_args;
             // ...
             break;
         case CONDENSING_HPIPM:
             qp_solver.calculate_args_size = &ocp_qp_condensing_hpipm_calculate_args_size;
-            // qp_solver.assign_args = ocp_qp_condensing_hpipm_assign_args;
+            qp_solver.assign_args = &ocp_qp_condensing_hpipm_assign_args;
             break;
         case CONDENSING_QPOASES:
             qp_solver.calculate_args_size = &ocp_qp_condensing_qpoases_calculate_args_size;
-            // qp_solver.assign_args = ocp_qp_condensing_qpoases_assign_args;
+            qp_solver.assign_args = &ocp_qp_condensing_qpoases_assign_args;
+            qp_solver.initialize_default_args = &ocp_qp_condensing_qpoases_initialize_default_args;
             break;
         default:
             qp_solver.calculate_args_size = NULL;

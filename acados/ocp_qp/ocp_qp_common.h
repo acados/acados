@@ -50,7 +50,8 @@ typedef enum {
 
 typedef struct {
     int (*calculate_args_size)(ocp_qp_dims *dims);
-    char (*assign_args)(ocp_qp_dims *dims, void **ptrm, void *mem);  // TODO(dimitris): return pointer to struct instead? (void here)
+    void *(*assign_args)(ocp_qp_dims *dims, void *mem);
+    void (*initialize_default_args)(void *args);
     //...
     int (*solve)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
     ocp_qp_in *qp_in;
@@ -59,6 +60,8 @@ typedef struct {
     void *mem;
     void *work;
 } new_ocp_qp_solver;
+
+
 
 typedef struct {
     int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);

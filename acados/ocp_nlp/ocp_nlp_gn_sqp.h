@@ -47,6 +47,13 @@ typedef struct {
 
 
 int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver);
+//
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver, void *mem);
+//
+
+#if defined(EXT_DEPS)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver);
+#endif
 
 int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
                      void *nlp_args, void *nlp_mem, void *work);
