@@ -79,6 +79,7 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, new_ocp_qp_s
 }
 
 
+
 #if defined(EXT_DEPS)
 
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver)
@@ -95,6 +96,8 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_s
 
 #endif
 
+
+
 int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_) {
     ocp_nlp_gn_sqp_args *args = (ocp_nlp_gn_sqp_args*) args_;
 
@@ -104,6 +107,8 @@ int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_)
     size += ocp_nlp_calculate_workspace_size(in, args->common);
     return size;
 }
+
+
 
 static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work,
                                           ocp_nlp_gn_sqp_memory *mem) {

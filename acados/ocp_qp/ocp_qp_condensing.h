@@ -55,14 +55,11 @@ ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *m
 //
 int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args);
 //
-char *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_memory **memory,
-    void *raw_memory);
+void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args, void *raw_memory);
 //
-void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args,
-    ocp_qp_condensing_memory *mem);
+void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem);
 //
-void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args,
-    ocp_qp_condensing_memory *mem);
+void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem);
 
 
 #ifdef __cplusplus

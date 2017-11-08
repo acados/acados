@@ -76,7 +76,7 @@ int main() {
     dense_qp_in *qpd_in = create_dense_qp_in(nvd, ned, nbd, ngd, nsd);
 
     ocp_qp_condensing_args *cond_args = ocp_qp_condensing_create_arguments(qp_in->size);
-    ocp_qp_condensing_memory *cond_memory = ocp_qp_condensing_create_memory(qp_in->size, qpd_in);
+    ocp_qp_condensing_memory *cond_memory = ocp_qp_condensing_create_memory(qp_in->size, cond_args);
 
     /************************************************
     * ocp qp solution

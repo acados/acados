@@ -167,7 +167,7 @@ char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing
     dummy_dense_qp_in(&qpd_in, dims);
 
     align_char_to(8, &c_ptr);
-    assign_ocp_qp_condensing_memory(dims, &(*hpipm_memory)->condensing_memory, c_ptr);
+    (*hpipm_memory)->condensing_memory = assign_ocp_qp_condensing_memory(dims, args->cond_args, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_memory_size(dims, args->cond_args);
 
     align_char_to(8, &c_ptr);

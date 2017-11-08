@@ -35,24 +35,20 @@
 #include "acados/utils/types.h"
 
 
-ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims) {
-
-    int memory_size = ocp_qp_condensing_calculate_args_size(dims);
-    void *ptr = malloc(memory_size);
+ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims)
+{
+    int size = ocp_qp_condensing_calculate_args_size(dims);
+    void *ptr = malloc(size);
     ocp_qp_condensing_args *args = ocp_qp_condensing_assign_args(dims, ptr);
     return args;
 }
 
 
 
-ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_dims *dims, dense_qp_in *out) {
-
-    ocp_qp_condensing_memory *memory;
-
-    int size = ocp_qp_condensing_calculate_memory_size(dims, NULL);
+ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args)
+{
+    int size = ocp_qp_condensing_calculate_memory_size(dims, args);
     void *ptr = malloc(size);
-    char *ptr_end = assign_ocp_qp_condensing_memory(dims, &memory, ptr);
-    assert((char*)ptr + size >= ptr_end); (void) ptr_end;
-
+    ocp_qp_condensing_memory *memory = assign_ocp_qp_condensing_memory(dims, args, ptr);
     return memory;
 }

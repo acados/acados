@@ -36,9 +36,9 @@
 #include "acados/utils/mem.h"
 
 
-
-void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims) {
-
+// TODO(dimitris): implement dense_dims in hpipm and get rid of this file
+void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims)
+{
     // compute dense qp size
     int nvd = 0;
     int ned = 0;
@@ -58,8 +58,8 @@ void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims) {
 
 
 
-int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims) {
-
+int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims)
+{
     int size = 0;
     size += sizeof(ocp_qp_condensing_args);
     return size;
@@ -67,8 +67,8 @@ int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims) {
 
 
 
-ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem) {
-
+ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem)
+{
     ocp_qp_condensing_args *args;
 
     char *c_ptr = (char *) mem;
@@ -84,15 +84,11 @@ ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *m
 
 
 
-int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args) {
-
+int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args)
+{
     int size = sizeof(ocp_qp_condensing_memory);
 
     size += sizeof(struct d_cond_qp_ocp2dense_workspace);
-
-    // // dummy dense qp
-    // dense_qp_in qpd_in;
-    // dummy_dense_qp_in(&qpd_in, qp_in);
 
     size += d_memsize_cond_qp_ocp2dense(dims);
 
@@ -103,32 +99,36 @@ int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing
 }
 
 
-char *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_memory **memory,
-    void *raw_memory) {
+
+void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args, void *raw_memory)
+{
+    ocp_qp_condensing_memory *mem;
 
     // char pointer
     char *c_ptr = (char *)raw_memory;
 
-    *memory = (ocp_qp_condensing_memory *) c_ptr;
+    mem = (ocp_qp_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_memory);
     //
-    (*memory)->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
+    mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
 
     // hpipm workspace structure
     align_char_to(8, &c_ptr);
-    struct d_cond_qp_ocp2dense_workspace *hpipm_workspace = (*memory)->hpipm_workspace;
+    struct d_cond_qp_ocp2dense_workspace *hpipm_workspace = mem->hpipm_workspace;
     d_create_cond_qp_ocp2dense(dims, hpipm_workspace, c_ptr);
     c_ptr += hpipm_workspace->memsize;
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)raw_memory + ocp_qp_condensing_calculate_memory_size(dims, args) >= c_ptr);
+#endif
+    return mem;
 }
 
 
 
-void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args,
-    ocp_qp_condensing_memory *mem) {
-
+void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem)
+{
     // save pointer to ocp_qp_in to memory (needed for expansion)
     mem->qp_in = in;
 
@@ -138,9 +138,7 @@ void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *
 
 
 
-// TODO(dimitris): Remove qp from inputs
-void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args,
-    ocp_qp_condensing_memory *mem) {
-
+void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem)
+{
     d_expand_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);
 }
