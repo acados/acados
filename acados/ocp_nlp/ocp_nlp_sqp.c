@@ -127,15 +127,13 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
 
     // Path constraints
     for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; i < ng[i]; j++) {
+        for (int_t j = 0; j < ng[i]; j++) {
             qp_lc[i][j] = nlp_lg[i][j] - g[i][j];
             qp_uc[i][j] = nlp_ug[i][j] - g[i][j];
-            for (int_t k = 0; i < nx[i]; k++) {
-                qp_Cx[i][k * nx[i] + j] = jac_g[i][k * nx[i] + j];
-            }
-            for (int_t k = 0; i < nu[i]; k++) {
-                qp_Cu[i][k * nx[i] + j] = jac_g[i][(nx[i] + k) * nx[i] + j];
-            }
+            for (int_t k = 0; k < nx[i]; k++)
+                qp_Cx[i][k * ng[i] + j] = jac_g[i][k * ng[i] + j];
+            for (int_t k = 0; k < nu[i]; k++)
+                qp_Cu[i][k * ng[i] + j] = jac_g[i][(nx[i] + k) * ng[i] + j];
         }
     }
 }

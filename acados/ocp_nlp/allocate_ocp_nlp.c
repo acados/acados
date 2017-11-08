@@ -75,10 +75,23 @@ static void free_ocp_nlp_in_bounds(ocp_nlp_in *const nlp) {
 }
 
 static void allocate_ocp_nlp_in_nonlinear_constraints(int_t N, int_t *ng, ocp_nlp_in *const nlp) {
+    memcpy((void *)nlp->ng, (void *)ng, sizeof(*ng) * (N + 1));
+    nlp->lg = (const real_t **) calloc(N + 1, sizeof(*nlp->lg));
+    nlp->ug = (const real_t **) calloc(N + 1, sizeof(*nlp->ug));
+    for (int_t i = 0; i <= N; i++) {
+        nlp->lg[i] = calloc(ng[i], sizeof(*nlp->lg[i]));
+        nlp->ug[i] = calloc(ng[i], sizeof(*nlp->ug[i]));
+    }
     nlp->path_constraints = (void **) malloc((N+1)*sizeof(ocp_nlp_function *));
 }
 
 static void free_ocp_nlp_in_nonlinear_constraints(ocp_nlp_in *const nlp) {
+    for (int_t i = 0; i <= nlp->N; i++) {
+        free((void *)nlp->lg[i]);
+        free((void *)nlp->ug[i]);
+    }
+    free(nlp->lg);
+    free(nlp->ug);
     free(nlp->path_constraints);
 }
 

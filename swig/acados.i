@@ -995,8 +995,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             for (int_t i = 0; i <= N; i++) {
                 for (int_t j = 0; j < nlp_in->nx[i]; j++) x[i][j] = 0.0;
                 for (int_t j = 0; j < nlp_in->nu[i]; j++) u[i][j] = 0.0;
-                for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i];
-                     j++) {
+                for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i]; j++) {
                     lam[i][j] = 0.0;
                 }
             }
@@ -1023,7 +1022,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
                                 $self->work);
         if (fail)
-            throw std::runtime_error("nlp solver failed!");
+            throw std::runtime_error("nlp solver failed with error code " + std::to_string(fail));
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 
@@ -1033,7 +1032,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args,
                                 $self->mem, $self->work);
 
-        if (fail) throw std::runtime_error("nlp solver failed!");
+        if (fail)
+            throw std::runtime_error("nlp solver failed with error code " + std::to_string(fail));
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 }

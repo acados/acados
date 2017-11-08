@@ -247,9 +247,8 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
         for (int_t j = 0; j < ny; j++) work->F[i][j] -= ls_cost->y_ref[i][j];
         // Take transpose of DF
         for (int_t j = 0; j < nx[i] + nu[i]; j++) {
-            for (int_t k = 0; k < ny; k++) {
+            for (int_t k = 0; k < ny; k++)
                 work->DFT[i][k * (nx[i] + nu[i]) + j] = work->DF[i][j * ny + k];
-            }
         }
 
         // Compute Gauss-Newton Hessian
@@ -273,9 +272,8 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
             casadi_wrapper(pc_in, pc_out, pc_args, pc_work);
             for (int_t j = 0; j < ng[i]; j++) {
                 g[i][j] = work->G[i][j];
-                for (int_t k = 0; k < nx[i] + nu[i]; k++) {
+                for (int_t k = 0; k < nx[i] + nu[i]; k++)
                     jac_g[i][k * ng[i] + j] = work->DG[i][k * ng[i] + j];
-                }
             }
         }
     }
