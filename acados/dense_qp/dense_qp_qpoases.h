@@ -65,13 +65,13 @@ typedef struct dense_qp_qpoases_memory_ {
 
 int dense_qp_qpoases_calculate_args_size(dense_qp_in *qp_in);
 //
-dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_in *qp_in, void *mem);
+dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_in *qp_in, void *raw_memory);
 //
 void dense_qp_qpoases_initialize_default_args(dense_qp_qpoases_args *args);
 //
 int dense_qp_qpoases_calculate_memory_size(dense_qp_in *qp_in, void *args_);
 //
-char *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void **mem, void *raw_memory);
+void *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void *raw_memory);
 //
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_);
 

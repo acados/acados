@@ -33,8 +33,8 @@
 #include "acados/utils/mem.h"
 
 
-int dense_qp_qpoases_calculate_args_size(dense_qp_in *qp_in) {
-
+int dense_qp_qpoases_calculate_args_size(dense_qp_in *qp_in)
+{
     int size = 0;
     size += sizeof(dense_qp_qpoases_args);
 
@@ -46,25 +46,25 @@ int dense_qp_qpoases_calculate_args_size(dense_qp_in *qp_in) {
 
 
 
-dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_in *qp_in, void *mem) {
-
+dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_in *qp_in, void *raw_memory)
+{
     dense_qp_qpoases_args *args;
 
-    char *c_ptr = (char *) mem;
+    char *c_ptr = (char *) raw_memory;
 
     args = (dense_qp_qpoases_args *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_args);
 
 #if defined(RUNTIME_CHECKS)
-    assert((char*)mem + dense_qp_qpoases_calculate_args_size(qp_in) >= c_ptr);
+    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(qp_in) >= c_ptr);
 #endif
     return args;
 }
 
 
 
-void dense_qp_qpoases_initialize_default_args(dense_qp_qpoases_args *args) {
-
+void dense_qp_qpoases_initialize_default_args(dense_qp_qpoases_args *args)
+{
     args->max_cputime = 1000.0;
     args->warm_start = 0;
     args->max_nwsr = 1000;
@@ -72,8 +72,8 @@ void dense_qp_qpoases_initialize_default_args(dense_qp_qpoases_args *args) {
 
 
 
-int dense_qp_qpoases_calculate_memory_size(dense_qp_in *qp_in, void *args_) {
-
+int dense_qp_qpoases_calculate_memory_size(dense_qp_in *qp_in, void *args_)
+{
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) args_;
 
     int nvd = qp_in->nv;
@@ -108,10 +108,10 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_in *qp_in, void *args_) {
 
 
 
-char *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void **mem, void *raw_memory) {
-
+void *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void *raw_memory)
+{
+    dense_qp_qpoases_memory *mem;
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) args_;
-    dense_qp_qpoases_memory **qpoases_memory = (dense_qp_qpoases_memory **) mem;
 
     int nvd = qp_in->nv;
     int ned = qp_in->ne;
@@ -121,63 +121,68 @@ char *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void **mem
     // char pointer
     char *c_ptr = (char *)raw_memory;
 
-    *qpoases_memory = (dense_qp_qpoases_memory *) c_ptr;
+    mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
     align_char_to(8, &c_ptr);
 
     //
-    (*qpoases_memory)->H = (double *)c_ptr;
+    mem->H = (double *)c_ptr;
     c_ptr += nvd * nvd * sizeof(double);
     //
-    (*qpoases_memory)->A = (double *)c_ptr;
+    mem->A = (double *)c_ptr;
     c_ptr += nvd * ned * sizeof(double);
     //
-    (*qpoases_memory)->C = (double *)c_ptr;
+    mem->C = (double *)c_ptr;
     c_ptr += nvd * ngd * sizeof(double);
     //
-    (*qpoases_memory)->g = (double *)c_ptr;
+    mem->g = (double *)c_ptr;
     c_ptr += nvd * sizeof(double);
     //
-    (*qpoases_memory)->b = (double *)c_ptr;
+    mem->b = (double *)c_ptr;
     c_ptr += ned * sizeof(double);
     //
-    (*qpoases_memory)->d_lb0 = (double *)c_ptr;
+    mem->d_lb0 = (double *)c_ptr;
     c_ptr += nbd * sizeof(double);
     //
-    (*qpoases_memory)->d_ub0 = (double *)c_ptr;
+    mem->d_ub0 = (double *)c_ptr;
     c_ptr += nbd * sizeof(double);
     //
-    (*qpoases_memory)->d_lb = (double *)c_ptr;
+    mem->d_lb = (double *)c_ptr;
     c_ptr += nvd * sizeof(double);
     //
-    (*qpoases_memory)->d_ub = (double *)c_ptr;
+    mem->d_ub = (double *)c_ptr;
     c_ptr += nvd * sizeof(double);
     //
-    (*qpoases_memory)->d_lg = (double *)c_ptr;
+    mem->d_lg = (double *)c_ptr;
     c_ptr += ngd * sizeof(double);
     //
-    (*qpoases_memory)->d_ug = (double *)c_ptr;
+    mem->d_ug = (double *)c_ptr;
     c_ptr += ngd * sizeof(double);
     //
-    (*qpoases_memory)->prim_sol = (double *)c_ptr;
+    mem->prim_sol = (double *)c_ptr;
     c_ptr += nvd * sizeof(double);
     //
-    (*qpoases_memory)->dual_sol = (double *)c_ptr;
+    mem->dual_sol = (double *)c_ptr;
     c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
 
 
+    // TODO(dimitris): update syntax in qpOASES
+
     if (ngd > 0) {  // QProblem
-        c_ptr = QProblem_assignMemory(nvd, ngd, (QProblem **) &((*qpoases_memory)->QP), c_ptr);
+        c_ptr = QProblem_assignMemory(nvd, ngd, (QProblem **) &(mem->QP), c_ptr);
     } else {  // QProblemB
-        c_ptr = QProblemB_assignMemory(nvd, (QProblemB **) &((*qpoases_memory)->QPB), c_ptr);
+        c_ptr = QProblemB_assignMemory(nvd, (QProblemB **) &(mem->QPB), c_ptr);
     }
 
     // int stuff
-    (*qpoases_memory)->idxb = (int *)c_ptr;
+    mem->idxb = (int *)c_ptr;
     c_ptr += nbd * sizeof(int);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(qp_in, args_) >= c_ptr);
+#endif
+    return mem;
 }
 
 

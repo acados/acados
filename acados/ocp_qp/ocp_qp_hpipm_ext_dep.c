@@ -52,15 +52,9 @@ ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims) {
 ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_) {
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
 
-    ocp_qp_hpipm_memory *mem;
-
     int size = ocp_qp_hpipm_calculate_memory_size(dims, args);
     void *ptr = malloc(size);
-    // char *c_ptr = (char*)ptr;
-    // for (int ii = 0; ii < size; ii++)
-    //     c_ptr[ii] = 0;
-    char *ptr_end = ocp_qp_hpipm_assign_memory(dims, args, (void **) &mem, ptr);
-    assert((char *) ptr + size >= ptr_end); (void) ptr_end;
+    void *mem = ocp_qp_hpipm_assign_memory(dims, args, ptr);
 
     return mem;
 }

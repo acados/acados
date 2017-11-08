@@ -171,7 +171,7 @@ char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing
     c_ptr += ocp_qp_condensing_calculate_memory_size(dims, args->cond_args);
 
     align_char_to(8, &c_ptr);
-    dense_qp_hpipm_assign_memory(&qpd_in, args->solver_args, (void**)&(*hpipm_memory)->solver_memory, c_ptr);
+    (*hpipm_memory)->solver_memory = dense_qp_hpipm_assign_memory(&qpd_in, args->solver_args, c_ptr);
     c_ptr += dense_qp_hpipm_calculate_memory_size(&qpd_in, args->solver_args);
 
     align_char_to(8, &c_ptr);

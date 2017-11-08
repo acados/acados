@@ -50,7 +50,7 @@ dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_in *qp_in, void *mem);
 //
 int dense_qp_hpipm_calculate_memory_size(dense_qp_in *qp_in, dense_qp_hpipm_args *args);
 //
-char *dense_qp_hpipm_assign_memory(dense_qp_in *qp_in, dense_qp_hpipm_args *args, void **mem_, void *raw_memory);
+void *dense_qp_hpipm_assign_memory(dense_qp_in *qp_in, dense_qp_hpipm_args *args, void *raw_memory);
 //
 int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *mem_);
 
