@@ -18,6 +18,9 @@
  */
 
 // external
+#if defined(RUNTIME_CHECKS)
+#include <assert.h>
+#endif
 #include <stdio.h>
 // hpipm
 // #include "hpipm_d_ocp_qp.h"
@@ -56,30 +59,35 @@ int ocp_qp_condensing_hpipm_calculate_args_size(ocp_qp_dims *dims) {
 
 
 
-char *ocp_qp_condensing_hpipm_assign_args(ocp_qp_dims *dims, ocp_qp_condensing_hpipm_args **args, void *mem) {
+ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_assign_args(ocp_qp_dims *dims, void *mem)
+{
+    ocp_qp_condensing_hpipm_args *args;
 
     char *c_ptr = (char *) mem;
 
-    *args = (ocp_qp_condensing_hpipm_args *) c_ptr;
+    args = (ocp_qp_condensing_hpipm_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_hpipm_args);
 
-    (*args)->cond_args = (ocp_qp_condensing_args *) c_ptr;
+    args->cond_args = (ocp_qp_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_args);
 
-    (*args)->solver_args = (dense_qp_hpipm_args *) c_ptr;
+    args->solver_args = (dense_qp_hpipm_args *) c_ptr;
     c_ptr += sizeof(dense_qp_hpipm_args);
 
     // dummy dense qp
     dense_qp_in qpd_in;
     dummy_dense_qp_in(&qpd_in, dims);
 
-    (*args)->solver_args = dense_qp_hpipm_assign_args(&qpd_in, c_ptr);
+    args->solver_args = dense_qp_hpipm_assign_args(&qpd_in, c_ptr);
     c_ptr += dense_qp_hpipm_calculate_args_size(&qpd_in);
 
-    (*args)->cond_args = ocp_qp_condensing_assign_args(dims, c_ptr);
+    args->cond_args = ocp_qp_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_args_size(dims);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)mem + ocp_qp_condensing_hpipm_calculate_args_size(dims) >= c_ptr);
+#endif
+    return args;
 }
 
 

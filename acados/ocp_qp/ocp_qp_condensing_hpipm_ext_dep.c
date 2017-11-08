@@ -41,10 +41,8 @@ ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_di
 
     int memory_size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
     void *ptr = malloc(memory_size);
-    ocp_qp_condensing_hpipm_args *args;
-    char *ptr_end = ocp_qp_condensing_hpipm_assign_args(dims, &args, ptr);
+    ocp_qp_condensing_hpipm_args *args = ocp_qp_condensing_hpipm_assign_args(dims, ptr);
     ocp_qp_condensing_hpipm_initialize_default_args(args);
-    assert((char*)ptr + memory_size >= ptr_end); (void) ptr_end;
     return args;
 }
 

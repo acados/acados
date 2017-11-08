@@ -31,10 +31,8 @@ ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(ocp_q
 
     int memory_size = ocp_qp_condensing_qpoases_calculate_args_size(dims);
     void *ptr = malloc(memory_size);
-    ocp_qp_condensing_qpoases_args *args;
-    char *ptr_end = ocp_qp_condensing_qpoases_assign_args(dims, &args, ptr);
+    ocp_qp_condensing_qpoases_args *args = ocp_qp_condensing_qpoases_assign_args(dims, ptr);
     ocp_qp_condensing_qpoases_initialize_default_args(args);
-    assert((char*)ptr + memory_size >= ptr_end); (void) ptr_end;
     return args;
 }
 
