@@ -138,7 +138,7 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_dims *dims,
 
 
 
-char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, ocp_qp_condensing_hpipm_args *args,
+char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing_hpipm_args *args,
         void **mem_, void *raw_memory) {
 
     ocp_qp_condensing_hpipm_memory **hpipm_memory = (ocp_qp_condensing_hpipm_memory **) mem_;
@@ -164,11 +164,11 @@ char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_in *qp_in, ocp_qp_condensing_
 
     // dummy dense qp
     dense_qp_in qpd_in;
-    dummy_dense_qp_in(&qpd_in, qp_in->size);
+    dummy_dense_qp_in(&qpd_in, dims);
 
     align_char_to(8, &c_ptr);
-    assign_ocp_qp_condensing_memory(qp_in, &(*hpipm_memory)->condensing_memory, c_ptr);
-    c_ptr += ocp_qp_condensing_calculate_memory_size(qp_in->size, args->cond_args);
+    assign_ocp_qp_condensing_memory(dims, &(*hpipm_memory)->condensing_memory, c_ptr);
+    c_ptr += ocp_qp_condensing_calculate_memory_size(dims, args->cond_args);
 
     align_char_to(8, &c_ptr);
     dense_qp_hpipm_assign_memory(&qpd_in, args->solver_args, (void**)&(*hpipm_memory)->solver_memory, c_ptr);

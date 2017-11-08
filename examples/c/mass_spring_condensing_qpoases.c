@@ -70,7 +70,7 @@ int main() {
 
     ocp_qp_condensing_qpoases_args *arg = ocp_qp_condensing_qpoases_create_arguments(qp_in->size);
 
-    ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_create_memory(qp_in, arg);
+    ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_create_memory(qp_in->size, arg);
 
 	int acados_return; // 0 normal; 1 max iter
 

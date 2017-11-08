@@ -34,7 +34,7 @@ extern "C" {
 //
 ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims);
 //
-ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_in *in, dense_qp_in *out);
+ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_dims *dims, dense_qp_in *out);
 
 
 #ifdef __cplusplus

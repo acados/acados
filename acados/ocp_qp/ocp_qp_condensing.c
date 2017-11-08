@@ -103,7 +103,7 @@ int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing
 }
 
 
-char *assign_ocp_qp_condensing_memory(ocp_qp_in *in, ocp_qp_condensing_memory **memory,
+char *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_memory **memory,
     void *raw_memory) {
 
     // char pointer
@@ -111,8 +111,6 @@ char *assign_ocp_qp_condensing_memory(ocp_qp_in *in, ocp_qp_condensing_memory **
 
     *memory = (ocp_qp_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_memory);
-    // pointer to ocp_qp, needed for the expansion (not copied to memory)
-    (*memory)->qp_in = in;
     //
     (*memory)->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
@@ -120,7 +118,7 @@ char *assign_ocp_qp_condensing_memory(ocp_qp_in *in, ocp_qp_condensing_memory **
     // hpipm workspace structure
     align_char_to(8, &c_ptr);
     struct d_cond_qp_ocp2dense_workspace *hpipm_workspace = (*memory)->hpipm_workspace;
-    d_create_cond_qp_ocp2dense(in->size, hpipm_workspace, c_ptr);
+    d_create_cond_qp_ocp2dense(dims, hpipm_workspace, c_ptr);
     c_ptr += hpipm_workspace->memsize;
 
     return c_ptr;
@@ -130,6 +128,9 @@ char *assign_ocp_qp_condensing_memory(ocp_qp_in *in, ocp_qp_condensing_memory **
 
 void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args,
     ocp_qp_condensing_memory *mem) {
+
+    // save pointer to ocp_qp_in to memory (needed for expansion)
+    mem->qp_in = in;
 
     // convert to dense qp structure
     d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);

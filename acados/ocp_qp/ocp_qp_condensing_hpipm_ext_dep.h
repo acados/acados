@@ -31,7 +31,7 @@ extern "C" {
 //
 ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims);
 //
-ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_in *qp_in, void *args_);
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_dims *dims, void *args_);
 //
 void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
 //

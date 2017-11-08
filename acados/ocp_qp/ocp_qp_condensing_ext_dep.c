@@ -45,13 +45,13 @@ ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims) {
 
 
 
-ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_in *in, dense_qp_in *out) {
+ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_dims *dims, dense_qp_in *out) {
 
     ocp_qp_condensing_memory *memory;
 
-    int size = ocp_qp_condensing_calculate_memory_size(in->size, NULL);
+    int size = ocp_qp_condensing_calculate_memory_size(dims, NULL);
     void *ptr = malloc(size);
-    char *ptr_end = assign_ocp_qp_condensing_memory(in, &memory, ptr);
+    char *ptr_end = assign_ocp_qp_condensing_memory(dims, &memory, ptr);
     assert((char*)ptr + size >= ptr_end); (void) ptr_end;
 
     return memory;

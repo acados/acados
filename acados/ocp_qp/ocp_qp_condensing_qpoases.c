@@ -122,7 +122,7 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_dims *dims,
 
 
 
-char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_in *qp_in, ocp_qp_condensing_qpoases_args *args,
+char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing_qpoases_args *args,
         void **mem_, void *raw_memory) {
 
     ocp_qp_condensing_qpoases_memory **qpoases_memory = (ocp_qp_condensing_qpoases_memory **) mem_;
@@ -148,11 +148,11 @@ char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_in *qp_in, ocp_qp_condensin
 
     // dummy dense qp
     dense_qp_in qpd_in;
-    dummy_dense_qp_in(&qpd_in, qp_in->size);
+    dummy_dense_qp_in(&qpd_in, dims);
 
     align_char_to(8, &c_ptr);
-    assign_ocp_qp_condensing_memory(qp_in, &(*qpoases_memory)->condensing_memory, c_ptr);
-    c_ptr += ocp_qp_condensing_calculate_memory_size(qp_in->size, args->cond_args);
+    assign_ocp_qp_condensing_memory(dims, &(*qpoases_memory)->condensing_memory, c_ptr);
+    c_ptr += ocp_qp_condensing_calculate_memory_size(dims, args->cond_args);
 
     // TODO(dimitris): TRANSFER ASSERT INSIDE ASSIGN RATHER THAN CREATE! ASSERTS OF DENSE QP NOT CHECKED
     align_char_to(8, &c_ptr);
