@@ -130,11 +130,11 @@ void *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_dims *dims, void *args_, vo
     c_ptr += dense_qp_qpoases_calculate_memory_size(&qpd_in, args->solver_args);
 
     align_char_to(8, &c_ptr);
-    assign_dense_qp_in(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, &mem->qpd_in, c_ptr);
+    mem->qpd_in = assign_dense_qp_in(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, c_ptr);
     c_ptr += dense_qp_in_calculate_size(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns);
 
     align_char_to(8, &c_ptr);
-    assign_dense_qp_out(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, &mem->qpd_out, c_ptr);
+    mem->qpd_out = assign_dense_qp_out(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, c_ptr);
     c_ptr += dense_qp_out_calculate_size(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns);
 
 #if defined(RUNTIME_CHECKS)

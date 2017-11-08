@@ -39,11 +39,11 @@ typedef struct d_dense_qp_sol dense_qp_out;
 //
 int dense_qp_in_calculate_size(int nv, int ne, int nb, int ng, int ns);
 //
-char *assign_dense_qp_in(int nv, int ne, int nb, int ng, int ns, dense_qp_in **qp_in, void *ptr);
+dense_qp_in *assign_dense_qp_in(int nv, int ne, int nb, int ng, int ns, void *raw_memory);
 //
 int dense_qp_out_calculate_size(int nv, int ne, int nb, int ng, int ns);
 //
-char *assign_dense_qp_out(int nv, int ne, int nb, int ng, int ns, dense_qp_out **qp_out, void *ptr);
+dense_qp_out *assign_dense_qp_out(int nv, int ne, int nb, int ng, int ns, void *raw_memory);
 
 
 #ifdef __cplusplus

@@ -187,7 +187,8 @@ void *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void *raw_
 
 
 
-int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_) {
+int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_)
+{
     // cast structures
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)args_;
     dense_qp_qpoases_memory *memory = (dense_qp_qpoases_memory *)memory_;

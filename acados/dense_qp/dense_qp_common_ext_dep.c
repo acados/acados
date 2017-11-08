@@ -34,29 +34,21 @@
 
 
 
-dense_qp_in *create_dense_qp_in(int nv, int ne, int nb, int ng, int ns) {
-
-    dense_qp_in *qp_in;
-
+dense_qp_in *create_dense_qp_in(int nv, int ne, int nb, int ng, int ns)
+{
     int size = dense_qp_in_calculate_size(nv, ne, nb, ng, ns);
     void *ptr = malloc(size);
-    char *ptr_end = assign_dense_qp_in(nv, ne, nb, ng, ns, &qp_in, ptr);
-    assert((char*)ptr + size >= ptr_end); (void) ptr_end;
-
+    dense_qp_in *qp_in = assign_dense_qp_in(nv, ne, nb, ng, ns, ptr);
     return qp_in;
 }
 
 
 
-dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns) {
-
-    dense_qp_out *qp_out;
-
+dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns)
+{
     int size = dense_qp_out_calculate_size(nv, ne, nb, ng, ns);
     void *ptr = malloc(size);
-    char *ptr_end = assign_dense_qp_out(nv, ne, nb, ng, ns, &qp_out, ptr);
-    assert((char*)ptr + size >= ptr_end); (void) ptr_end;
-
+    dense_qp_out *qp_out = assign_dense_qp_out(nv, ne, nb, ng, ns, ptr);
     return qp_out;
 }
 

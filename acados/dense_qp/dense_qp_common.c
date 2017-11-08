@@ -17,6 +17,10 @@
  *
  */
 
+// external
+#if defined(RUNTIME_CHECKS)
+#include <assert.h>
+#endif
 // hpipm
 #include "hpipm_d_dense_qp.h"
 #include "hpipm_d_dense_qp_sol.h"
@@ -26,8 +30,8 @@
 
 
 
-int dense_qp_in_calculate_size(int nv, int ne, int nb, int ng, int ns) {
-
+int dense_qp_in_calculate_size(int nv, int ne, int nb, int ng, int ns)
+{
     int size = sizeof(dense_qp_in);
     size += d_memsize_dense_qp(nv, ne, nb, ng, ns);
     return size;
@@ -35,26 +39,27 @@ int dense_qp_in_calculate_size(int nv, int ne, int nb, int ng, int ns) {
 
 
 
-char *assign_dense_qp_in(int nv, int ne, int nb, int ng, int ns, dense_qp_in **qp_in, void *ptr) {
+dense_qp_in *assign_dense_qp_in(int nv, int ne, int nb, int ng, int ns, void *raw_memory)
+{
+    char *c_ptr = (char *)raw_memory;
 
-    // char pointer
-    char *c_ptr = (char *) ptr;
-
-    *qp_in = (dense_qp_in *) c_ptr;
+    dense_qp_in *qp_in = (dense_qp_in *) c_ptr;
     c_ptr += sizeof(dense_qp_in);
 
-    d_create_dense_qp(nv, ne, nb, ng, ns, *qp_in, c_ptr);
+    d_create_dense_qp(nv, ne, nb, ng, ns, qp_in, c_ptr);
     c_ptr += d_memsize_dense_qp(nv, ne, nb, ng, ns);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)raw_memory + dense_qp_in_calculate_size(nv, ne, nb, ng, ns) >= c_ptr);
+#endif
+    return qp_in;
 }
 
 
 
-int dense_qp_out_calculate_size(int nv, int ne, int nb, int ng, int ns) {
-
+int dense_qp_out_calculate_size(int nv, int ne, int nb, int ng, int ns)
+{
     int size = sizeof(dense_qp_out);
-    // TODO(dimitris): update HPIPM to get rid of those casts
     size += d_memsize_dense_qp_sol(nv, ne, nb, ng, ns);
 
     return size;
@@ -62,17 +67,18 @@ int dense_qp_out_calculate_size(int nv, int ne, int nb, int ng, int ns) {
 
 
 
-char *assign_dense_qp_out(int nv, int ne, int nb, int ng, int ns,
-    dense_qp_out **qp_out, void *ptr) {
+dense_qp_out *assign_dense_qp_out(int nv, int ne, int nb, int ng, int ns, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
 
-    // char pointer
-    char *c_ptr = (char *) ptr;
-
-    *qp_out = (dense_qp_out *) c_ptr;
+    dense_qp_out *qp_out = (dense_qp_out *) c_ptr;
     c_ptr += sizeof(dense_qp_out);
 
-    d_create_dense_qp_sol(nv, ne, nb, ng, ns, *qp_out, c_ptr);
+    d_create_dense_qp_sol(nv, ne, nb, ng, ns, qp_out, c_ptr);
     c_ptr += d_memsize_dense_qp_sol(nv, ne, nb, ng, ns);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)raw_memory + dense_qp_out_calculate_size(nv, ne, nb, ng, ns) >= c_ptr);
+#endif
+    return qp_out;
 }
