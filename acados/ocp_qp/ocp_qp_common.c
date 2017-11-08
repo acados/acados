@@ -136,24 +136,35 @@ void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int 
 }
 
 
-ocp_qp_solver_funs ocp_qp_solver_set_function_pointers(qp_solver_t qp_solver)
+new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
 {
-    ocp_qp_solver_funs funs;
+    new_ocp_qp_solver qp_solver;
 
-    switch (qp_solver)
+    qp_solver.qp_in = NULL;
+    qp_solver.qp_out = NULL;
+    qp_solver.args = NULL;
+    qp_solver.mem = NULL;
+    qp_solver.work = NULL;
+
+    switch (qp_solver_name)
     {
         case HPIPM:
-            funs.calculate_args_size = ocp_qp_hpipm_calculate_args_size;
-            funs.assign_args = ocp_qp_hpipm_assign_args;
+            qp_solver.calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
+            // qp_solver.assign_args = ocp_qp_hpipm_assign_args;
             // ...
+            break;
         case CONDENSING_HPIPM:
-            funs.calculate_args_size = ocp_qp_condensing_hpipm_calculate_args_size;
+            qp_solver.calculate_args_size = &ocp_qp_condensing_hpipm_calculate_args_size;
+            // qp_solver.assign_args = ocp_qp_condensing_hpipm_assign_args;
+            break;
         case CONDENSING_QPOASES:
-            funs.calculate_args_size = ocp_qp_condensing_qpoases_calculate_args_size;
+            qp_solver.calculate_args_size = &ocp_qp_condensing_qpoases_calculate_args_size;
+            // qp_solver.assign_args = ocp_qp_condensing_qpoases_assign_args;
+            break;
         default:
-            funs.calculate_args_size = NULL;
+            qp_solver.calculate_args_size = NULL;
     }
-    return funs;
+    return qp_solver;
 }
 
 // NOTE(dimitris): maybe better do switch only in one function, as above

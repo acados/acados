@@ -398,6 +398,30 @@ int main() {
 
     int_t status;
 
+
+    ocp_nlp_dims dims;
+    dims.N = nlp_in.N;
+    dims.nx = (int *)nlp_in.nx;
+    dims.nu = (int *)nlp_in.nu;
+    dims.ng = (int *)nlp_in.nc;
+    dims.nb = (int *)nlp_in.nb;
+    int NS[NN+1];
+    int NBX[NN+1];
+    int NBU[NN+1];
+    for (int ii = 0; ii < NN+1; ii++) NS[ii] = 0;
+    dims.ns = NS;
+    form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, (int **)nlp_in.idxb);
+    dims.nbx = NBX;
+    dims.nbu = NBU;
+
+    // set all function pointers
+    new_ocp_qp_solver qp_solver = initialize_ocp_qp_solver(CONDENSING_QPOASES);
+
+    // calculated size of args with nested structs
+    int args_size = ocp_nlp_gn_sqp_calculate_args_size(&dims, &qp_solver);
+
+    // exit(1);
+
     status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, &nlp_args, &nlp_mem, nlp_work);
     printf("\n\nstatus = %i\n\n", status);
 

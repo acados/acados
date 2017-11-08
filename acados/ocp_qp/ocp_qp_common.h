@@ -50,10 +50,15 @@ typedef enum {
 
 typedef struct {
     int (*calculate_args_size)(ocp_qp_dims *dims);
-    char (*assign_args)(ocp_qp_dims *dims, void *mem);  // TODO(dimitris): return pointer to struct instead? (void here)
-    // + default args, calculate memory size, assign memory, solve
-} ocp_qp_solver_funs;
-
+    char (*assign_args)(ocp_qp_dims *dims, void **ptrm, void *mem);  // TODO(dimitris): return pointer to struct instead? (void here)
+    //...
+    int (*solve)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
+    void *args;
+    void *mem;
+    void *work;
+} new_ocp_qp_solver;
 
 typedef struct {
     int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
@@ -82,7 +87,7 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 // TODO make name consistent !!! (ocp_qp_out_assign)
 char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem);
 //
-ocp_qp_solver_funs ocp_qp_solver_set_function_pointers(qp_solver_t qp_solver);
+new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 
 // TODO TEMP
 
