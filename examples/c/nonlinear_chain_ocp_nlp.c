@@ -399,9 +399,6 @@ int main() {
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(&dims, &qp_solver);
     nlp_args->common->maxIter = max_sqp_iters;
 
-    // TEMP
-    snprintf(nlp_args->qp_solver_name, sizeof(char)*MAX_STR_LEN, "%s", "condensing_qpoases");
-
     // OLD WAY
     // ocp_nlp_gn_sqp_args nlp_args;
     // ocp_nlp_args nlp_common_args;
@@ -416,7 +413,8 @@ int main() {
     ocp_nlp_gn_sqp_memory nlp_mem;
     ocp_nlp_memory nlp_mem_common;
     nlp_mem.common = &nlp_mem_common;
-    ocp_nlp_gn_sqp_create_memory(&nlp_in, nlp_args, &nlp_mem);
+
+    ocp_nlp_gn_sqp_create_memory(&dims, &qp_solver, &nlp_in, nlp_args, &nlp_mem);
 
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++)
@@ -431,8 +429,8 @@ int main() {
     * gn_sqp workspace --- OLD
     ************************************************/
 
-    int_t work_space_size =
-        ocp_nlp_gn_sqp_calculate_workspace_size(&nlp_in, nlp_args);
+    int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&dims, &qp_solver, nlp_args);
+
     void *nlp_work = (void *)malloc(work_space_size);
 
     int_t status;

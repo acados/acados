@@ -47,19 +47,3 @@ ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp
     ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_assign_memory(dims, args, ptr);
     return mem;
 }
-
-
-
-void ocp_qp_condensing_qpoases_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
-    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
-
-    *mem = ocp_qp_condensing_qpoases_create_memory(qp_in->size, args);
-
-}
-
-
-
-void ocp_qp_condensing_qpoases_destroy(void *mem, void *work) {
-    free(mem);
-    free(work);
-}

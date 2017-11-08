@@ -32,11 +32,6 @@ extern "C" {
 ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims);
 //
 ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_);
-//
-void ocp_qp_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work);
-//
-void ocp_qp_hpipm_destroy(void *mem, void *work);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

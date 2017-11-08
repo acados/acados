@@ -33,16 +33,22 @@ extern "C" {
 typedef struct {
     ocp_nlp_args *common;
     void *qp_solver_args;
-    char qp_solver_name[MAX_STR_LEN];  // TODO(dimitris): replace with qpsolver_t
 } ocp_nlp_gn_sqp_args;
 
 typedef struct {
     ocp_nlp_memory *common;
-    ocp_qp_solver *qp_solver;
+    new_ocp_qp_solver *new_qp_solver;
+    ocp_nlp_dims *dims;
 } ocp_nlp_gn_sqp_memory;
 
 typedef struct {
+    // nlp workspace
     ocp_nlp_work *common;
+    // sqp workspace
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
+    void *qp_mem;
+    void *qp_work;
 } ocp_nlp_gn_sqp_work;
 
 
@@ -50,19 +56,18 @@ int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, new_ocp_qp_solver *
 //
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver, void *mem);
 //
-
 #if defined(EXT_DEPS)
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver);
 #endif
 
-int_t ocp_nlp_gn_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out,
-                     void *nlp_args, void *nlp_mem, void *work);
+int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
 
-void ocp_nlp_gn_sqp_create_memory(const ocp_nlp_in *in, void *args_, void *memory_);
+void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, new_ocp_qp_solver *new_qp_solver, const ocp_nlp_in *in, void *args_, void *memory_);
 
 void ocp_nlp_gn_sqp_free_memory(void *memory_);
 
-int_t ocp_nlp_gn_sqp_calculate_workspace_size(const ocp_nlp_in *in, void *args_);
+//
+int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
 
 #ifdef __cplusplus
 } /* extern "C" */

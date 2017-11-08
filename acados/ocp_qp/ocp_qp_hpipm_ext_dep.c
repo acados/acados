@@ -58,19 +58,3 @@ ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_) 
 
     return mem;
 }
-
-
-
-void ocp_qp_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
-    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
-
-    *mem = ocp_qp_hpipm_create_memory(qp_in->size, args);
-
-}
-
-
-
-void ocp_qp_hpipm_destroy(void *mem, void *work) {
-    free(mem);
-    free(work);
-}

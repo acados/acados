@@ -50,34 +50,17 @@ typedef enum {
 
 typedef struct {
     int (*calculate_args_size)(ocp_qp_dims *dims);
-    void *(*assign_args)(ocp_qp_dims *dims, void *mem);
+    void *(*assign_args)(ocp_qp_dims *dims, void *raw_memory);
     void (*initialize_default_args)(void *args);
-    //...
-    int (*solve)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
+    int (*calculate_memory_size)(ocp_qp_dims *dims, void *args);
+    void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
+    int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
     void *args;
     void *mem;
     void *work;
 } new_ocp_qp_solver;
-
-
-
-typedef struct {
-    int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
-	// TODO remove ???
-    void (*initialize)(ocp_qp_in *qp_in, void *args, void **mem, void **work);
-	// TODO remove ???
-    void (*destroy)(void *mem, void *work);
-	// TODO add calculate_size and assign instead ???
-	int (*calculate_memory)(ocp_qp_in *qp_in, void *args);
-	char* (*assign_memory)(ocp_qp_in *qp_in, void *args, void **mem, void *raw_mem);
-    ocp_qp_in *qp_in;
-    ocp_qp_out *qp_out;
-    void *args;
-    void *mem;
-    void *work;
-} ocp_qp_solver;
 
 
 
@@ -101,8 +84,6 @@ void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, 
 
 void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
      const real_t *r, ocp_qp_in *qp_in, int_t stage);
-
-ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *name, void *options);
 
 #ifdef __cplusplus
 } /* extern "C" */
