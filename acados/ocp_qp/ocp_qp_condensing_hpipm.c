@@ -106,11 +106,6 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_dims *dims, void *args_
     int size = 0;
     size += sizeof(ocp_qp_condensing_hpipm_memory);
 
-    size += sizeof(ocp_qp_condensing_memory);
-    size += sizeof(dense_qp_hpipm_memory);
-    size += sizeof(dense_qp_in);
-    size += sizeof(dense_qp_out);
-
     // dummy dense qp
     dense_qp_in qpd_in;
     dummy_dense_qp_in(&qpd_in, dims);
@@ -136,19 +131,6 @@ void *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, void *args_, void
 
     ocp_qp_condensing_hpipm_memory *mem = (ocp_qp_condensing_hpipm_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_hpipm_memory);
-
-    //
-    mem->condensing_memory = (ocp_qp_condensing_memory *)c_ptr;
-    c_ptr += sizeof(ocp_qp_condensing_memory);
-    //
-    mem->solver_memory = (dense_qp_hpipm_memory *)c_ptr;
-    c_ptr += sizeof(dense_qp_hpipm_memory);
-    //
-    mem->qpd_in = (dense_qp_in *)c_ptr;
-    c_ptr += sizeof(dense_qp_in);
-    //
-    mem->qpd_out = (dense_qp_out *)c_ptr;
-    c_ptr += sizeof(dense_qp_out);
 
     // dummy dense qp
     dense_qp_in qpd_in;
