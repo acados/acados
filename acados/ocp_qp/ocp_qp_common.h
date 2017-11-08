@@ -83,12 +83,12 @@ typedef struct {
 
 //
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
-// TODO make name consistent !!! (ocp_qp_out_assign)
-char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem);
+//
+ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
 //
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
-// TODO make name consistent !!! (ocp_qp_out_assign)
-char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem);
+//
+ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 //
 new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 

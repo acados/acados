@@ -41,48 +41,41 @@
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.h"
 
 
-ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims) {
-
-    ocp_qp_in *qp_in;
-
+ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
+{
     int size = ocp_qp_in_calculate_size(dims);
     void *ptr = malloc(size);
-    char *ptr_end = assign_ocp_qp_in(dims, &qp_in, ptr);
-    assert((char*)ptr + size >= ptr_end); (void) ptr_end;
-
+    ocp_qp_in *qp_in = ocp_qp_in_assign(dims, ptr);
     return qp_in;
 }
 
 
 
-ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims) {
-
-    ocp_qp_out *qp_out;
-
+ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
+{
     int size = ocp_qp_out_calculate_size(dims);
     void *ptr = malloc(size);
-    char *ptr_end = assign_ocp_qp_out(dims, &qp_out, ptr);
-    assert((char*)ptr + size >= ptr_end); (void) ptr_end;
-
+    ocp_qp_out *qp_out = ocp_qp_out_assign(dims, ptr);
     return qp_out;
 }
 
 
 
-void print_ocp_qp_dims(ocp_qp_dims *dims) {
-
+void print_ocp_qp_dims(ocp_qp_dims *dims)
+{
     int N = dims->N;
 
     printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
 
-    for (int kk = 0; kk < N+1; kk++) {
+    for (int kk = 0; kk < N+1; kk++)
+    {
         printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
             dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
     }
 
     printf("\nmemsize = %d\n", dims->memsize);
-
 }
+
 
 
 void print_ocp_qp_in(ocp_qp_in *qp_in)
@@ -119,7 +112,6 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         printf("d =\n");
         d_print_tran_strvec(2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
     }
-
 }
 
 
@@ -152,36 +144,8 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
 }
 
 
+// **************** TEMP TO FIX GN_SQP
 
-// TEMP TO FIX GN_SQP
-
-// void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b,
-//     ocp_qp_in *qp_in, int_t stage) {
-
-//     real_t **hA = (real_t **) qp_in->A;
-//     real_t **hB = (real_t **) qp_in->B;
-//     real_t **hb = (real_t **) qp_in->b;
-
-//     memcpy(hA[stage], A, qp_in->nx[stage+1]*qp_in->nx[stage]*sizeof(real_t));
-//     memcpy(hB[stage], B, qp_in->nx[stage+1]*qp_in->nu[stage]*sizeof(real_t));
-//     memcpy(hb[stage], b, qp_in->nx[stage+1]*sizeof(real_t));
-// }
-
-// void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
-//      const real_t *r, ocp_qp_in *qp_in, int_t stage) {
-
-//     real_t **hQ = (real_t **) qp_in->Q;
-//     real_t **hS = (real_t **) qp_in->S;
-//     real_t **hR = (real_t **) qp_in->R;
-//     real_t **hq = (real_t **) qp_in->q;
-//     real_t **hr = (real_t **) qp_in->r;
-
-//     memcpy(hQ[stage], Q, qp_in->nx[stage]*qp_in->nx[stage]*sizeof(real_t));
-//     memcpy(hS[stage], S, qp_in->nu[stage]*qp_in->nx[stage]*sizeof(real_t));
-//     memcpy(hR[stage], R, qp_in->nu[stage]*qp_in->nu[stage]*sizeof(real_t));
-//     memcpy(hq[stage], q, qp_in->nx[stage]*sizeof(real_t));
-//     memcpy(hr[stage], r, qp_in->nu[stage]*sizeof(real_t));
-// }
 
 ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_name,
     void *solver_options) {

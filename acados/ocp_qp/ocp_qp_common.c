@@ -51,18 +51,17 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 
 
 
-char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem)
+ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory)
 {
-    // char pointer
-    char *c_ptr = (char *) mem;
+    char *c_ptr = (char *) raw_memory;
 
-    *qp_in = (ocp_qp_in *) c_ptr;
+    ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
 
     ocp_qp_dims *dims_copy = (ocp_qp_dims *) c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
 
-    d_create_ocp_qp(dims, *qp_in, c_ptr);
+    d_create_ocp_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_ocp_qp(dims);
 
     d_create_ocp_qp_size(dims->N, dims_copy, c_ptr);
@@ -71,7 +70,7 @@ char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem)
     dims_copy->N = dims->N;
 
     for (int ii = 0; ii < dims->N+1; ii++)
-        {
+    {
         dims_copy->nx[ii] = dims->nx[ii];
         dims_copy->nu[ii] = dims->nu[ii];
         dims_copy->nb[ii] = dims->nb[ii];
@@ -79,11 +78,14 @@ char *assign_ocp_qp_in(ocp_qp_dims *dims, ocp_qp_in **qp_in, void *mem)
         dims_copy->ns[ii] = dims->ns[ii];
         dims_copy->nbu[ii] = dims->nbu[ii];
         dims_copy->nbx[ii] = dims->nbx[ii];
-        }
+    }
 
-    (*qp_in)->size = dims_copy;
+    qp_in->size = dims_copy;
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+#endif
+    return qp_in;
 }
 
 
@@ -92,24 +94,25 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
-
     return size;
 }
 
 
 
-char *assign_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out **qp_out, void *mem)
+ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 {
-    // char pointer
-    char *c_ptr = (char *) mem;
+    char *c_ptr = (char *) raw_memory;
 
-    *qp_out = (ocp_qp_out *) c_ptr;
+    ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
 
-    d_create_ocp_qp_sol(dims, *qp_out, c_ptr);
+    d_create_ocp_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_ocp_qp_sol(dims);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+#endif
+    return qp_out;
 }
 
 
@@ -134,6 +137,7 @@ void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int 
         }
     }
 }
+
 
 
 new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
@@ -167,22 +171,3 @@ new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
     }
     return qp_solver;
 }
-
-// NOTE(dimitris): maybe better do switch only in one function, as above
-// int ocp_qp_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t qp_solver)
-// {
-//     int size = 0;
-
-//     switch (qp_solver)
-//     {
-//         case HPIPM:
-//             size = ocp_qp_hpipm_calculate_args_size(dims);
-//         case CONDENSING_HPIPM:
-//             size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
-//         case CONDENSING_QPOASES:
-//             size = ocp_qp_condensing_qpoases_calculate_args_size(dims);
-//         default:
-//             size = -1;
-//     }
-//     return size;
-// }
