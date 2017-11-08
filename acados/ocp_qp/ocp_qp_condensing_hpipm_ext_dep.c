@@ -37,8 +37,8 @@
 // #include "utils/types.h"
 
 
-ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims) {
-
+ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims)
+{
     int memory_size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
     void *ptr = malloc(memory_size);
     ocp_qp_condensing_hpipm_args *args = ocp_qp_condensing_hpipm_assign_args(dims, ptr);
@@ -48,16 +48,13 @@ ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_di
 
 
 
-ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_dims *dims, void *args_) {
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_dims *dims, void *args_)
+{
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
-
-    ocp_qp_condensing_hpipm_memory *mem;
 
     int memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(dims, args);
     void *ptr = malloc(memory_size);
-    char *ptr_end = ocp_qp_condensing_hpipm_assign_memory(dims, args, (void **) &mem, ptr);
-    assert((char *) ptr + memory_size >= ptr_end); (void) ptr_end;
-
+    ocp_qp_condensing_hpipm_memory *mem = ocp_qp_condensing_hpipm_assign_memory(dims, args, ptr);
     return mem;
 }
 

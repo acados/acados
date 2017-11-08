@@ -54,9 +54,9 @@ void *ocp_qp_condensing_hpipm_assign_args(ocp_qp_dims *dims, void *mem);
 //
 void ocp_qp_condensing_hpipm_initialize_default_args(void *args_);
 //
-int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_hpipm_args *args);
+int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_dims *dims, void *args_);
 //
-char *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing_hpipm_args *args, void **mem_, void *raw_memory);
+void *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
 int ocp_qp_condensing_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_);
 

@@ -69,11 +69,9 @@ int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims)
 
 ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem)
 {
-    ocp_qp_condensing_args *args;
-
     char *c_ptr = (char *) mem;
 
-    args = (ocp_qp_condensing_args *) c_ptr;
+    ocp_qp_condensing_args *args = (ocp_qp_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_args);
 
 #if defined(RUNTIME_CHECKS)
@@ -86,10 +84,10 @@ ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *m
 
 int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args)
 {
-    int size = sizeof(ocp_qp_condensing_memory);
+    int size = 0;
 
+    size += sizeof(ocp_qp_condensing_memory);
     size += sizeof(struct d_cond_qp_ocp2dense_workspace);
-
     size += d_memsize_cond_qp_ocp2dense(dims);
 
     make_int_multiple_of(8, &size);
@@ -102,12 +100,9 @@ int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing
 
 void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args, void *raw_memory)
 {
-    ocp_qp_condensing_memory *mem;
-
-    // char pointer
     char *c_ptr = (char *)raw_memory;
 
-    mem = (ocp_qp_condensing_memory *) c_ptr;
+    ocp_qp_condensing_memory *mem = (ocp_qp_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_memory);
     //
     mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
@@ -115,9 +110,8 @@ void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args 
 
     // hpipm workspace structure
     align_char_to(8, &c_ptr);
-    struct d_cond_qp_ocp2dense_workspace *hpipm_workspace = mem->hpipm_workspace;
-    d_create_cond_qp_ocp2dense(dims, hpipm_workspace, c_ptr);
-    c_ptr += hpipm_workspace->memsize;
+    d_create_cond_qp_ocp2dense(dims, mem->hpipm_workspace, c_ptr);
+    c_ptr += mem->hpipm_workspace->memsize;
 
 #if defined(RUNTIME_CHECKS)
     assert((char*)raw_memory + ocp_qp_condensing_calculate_memory_size(dims, args) >= c_ptr);

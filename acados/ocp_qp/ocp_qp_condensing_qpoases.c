@@ -41,9 +41,6 @@ int ocp_qp_condensing_qpoases_calculate_args_size(ocp_qp_dims *dims) {
     dense_qp_in qpd_in;
     dummy_dense_qp_in(&qpd_in, dims);
 
-    size += sizeof(ocp_qp_condensing_args);
-    size += sizeof(dense_qp_qpoases_args);
-
     size += dense_qp_qpoases_calculate_args_size(&qpd_in);
     size += ocp_qp_condensing_calculate_args_size(dims);
 
@@ -52,19 +49,12 @@ int ocp_qp_condensing_qpoases_calculate_args_size(ocp_qp_dims *dims) {
 
 
 
-void *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *mem)
+void *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *raw_memory)
 {
-    ocp_qp_condensing_qpoases_args *args;
-    char *c_ptr = (char *) mem;
+    char *c_ptr = (char *) raw_memory;
 
-    args = (ocp_qp_condensing_qpoases_args *) c_ptr;
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_qpoases_args);
-
-    args->cond_args = (ocp_qp_condensing_args *) c_ptr;
-    c_ptr += sizeof(ocp_qp_condensing_args);
-
-    args->solver_args = (dense_qp_qpoases_args *) c_ptr;
-    c_ptr += sizeof(dense_qp_qpoases_args);
 
     // dummy dense qp
     dense_qp_in qpd_in;
@@ -77,7 +67,7 @@ void *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *mem)
     c_ptr += ocp_qp_condensing_calculate_args_size(dims);
 
 #if defined(RUNTIME_CHECKS)
-    assert((char*)mem + ocp_qp_condensing_qpoases_calculate_args_size(dims) >= c_ptr);
+    assert((char*)raw_memory + ocp_qp_condensing_qpoases_calculate_args_size(dims) >= c_ptr);
 #endif
     return (void*)args;
 }
@@ -94,8 +84,9 @@ void ocp_qp_condensing_qpoases_initialize_default_args(void *args_)
 
 
 
-int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_dims *dims,
-    ocp_qp_condensing_qpoases_args *args) {
+int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_dims *dims, void *args_)
+{
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *)args_;
 
     int size = 0;
     size += sizeof(ocp_qp_condensing_qpoases_memory);
@@ -122,28 +113,25 @@ int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_dims *dims,
 
 
 
-char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing_qpoases_args *args,
-        void **mem_, void *raw_memory) {
+void *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
+{
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *)args_;
 
-    ocp_qp_condensing_qpoases_memory **qpoases_memory = (ocp_qp_condensing_qpoases_memory **) mem_;
-
-    // char pointer
     char *c_ptr = (char *)raw_memory;
 
-    *qpoases_memory = (ocp_qp_condensing_qpoases_memory *) c_ptr;
+    ocp_qp_condensing_qpoases_memory *mem = (ocp_qp_condensing_qpoases_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_qpoases_memory);
-
     //
-    (*qpoases_memory)->condensing_memory = (ocp_qp_condensing_memory *)c_ptr;
+    mem->condensing_memory = (ocp_qp_condensing_memory *)c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_memory);
     //
-    (*qpoases_memory)->solver_memory = (dense_qp_qpoases_memory *)c_ptr;
+    mem->solver_memory = (dense_qp_qpoases_memory *)c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
     //
-    (*qpoases_memory)->qpd_in = (dense_qp_in *)c_ptr;
+    mem->qpd_in = (dense_qp_in *)c_ptr;
     c_ptr += sizeof(dense_qp_in);
     //
-    (*qpoases_memory)->qpd_out = (dense_qp_out *)c_ptr;
+    mem->qpd_out = (dense_qp_out *)c_ptr;
     c_ptr += sizeof(dense_qp_out);
 
     // dummy dense qp
@@ -151,22 +139,25 @@ char *ocp_qp_condensing_qpoases_assign_memory(ocp_qp_dims *dims, ocp_qp_condensi
     dummy_dense_qp_in(&qpd_in, dims);
 
     align_char_to(8, &c_ptr);
-    (*qpoases_memory)->condensing_memory = assign_ocp_qp_condensing_memory(dims, args->cond_args, c_ptr);
+    mem->condensing_memory = assign_ocp_qp_condensing_memory(dims, args->cond_args, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_memory_size(dims, args->cond_args);
 
     align_char_to(8, &c_ptr);
-    (*qpoases_memory)->solver_memory = dense_qp_qpoases_assign_memory(&qpd_in, args->solver_args, c_ptr);
+    mem->solver_memory = dense_qp_qpoases_assign_memory(&qpd_in, args->solver_args, c_ptr);
     c_ptr += dense_qp_qpoases_calculate_memory_size(&qpd_in, args->solver_args);
 
     align_char_to(8, &c_ptr);
-    assign_dense_qp_in(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, &(*qpoases_memory)->qpd_in, c_ptr);
+    assign_dense_qp_in(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, &mem->qpd_in, c_ptr);
     c_ptr += dense_qp_in_calculate_size(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns);
 
     align_char_to(8, &c_ptr);
-    assign_dense_qp_out(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, &(*qpoases_memory)->qpd_out, c_ptr);
+    assign_dense_qp_out(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns, &mem->qpd_out, c_ptr);
     c_ptr += dense_qp_out_calculate_size(qpd_in.nv, qpd_in.ne, qpd_in.nb, qpd_in.ng, qpd_in.ns);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char *) raw_memory + ocp_qp_condensing_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
+#endif
+    return mem;
 }
 
 
