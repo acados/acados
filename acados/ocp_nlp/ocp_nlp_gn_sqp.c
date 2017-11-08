@@ -86,13 +86,12 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_s
     int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver);
     void *ptr = malloc(size);
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver, ptr);
-    // TODO(dimitris): same for other submodules
+
+    // TODO(dimitris): nest in initialize default args of gn_sqp solver
     qp_solver->initialize_default_args(args->qp_solver_args);
 
     return args;
 }
-
-
 
 #endif
 

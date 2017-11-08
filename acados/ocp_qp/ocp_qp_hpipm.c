@@ -45,7 +45,7 @@ int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims) {
 
 
 
-ocp_qp_hpipm_args *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *mem) {
+void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *mem) {
 
     ocp_qp_hpipm_args *args;
 
@@ -65,12 +65,14 @@ ocp_qp_hpipm_args *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *mem) {
     assert((char*)mem + ocp_qp_hpipm_calculate_args_size(dims) >= c_ptr);
 #endif
 
-    return args;
+    return (void *)args;
 }
 
 
 
-void ocp_qp_hpipm_initialize_default_args(ocp_qp_hpipm_args *args) {
+void ocp_qp_hpipm_initialize_default_args(void *args_) {
+
+    ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *)args_;
 
     d_set_default_ocp_qp_ipm_arg(args->hpipm_args);
 	// overwrite some default options

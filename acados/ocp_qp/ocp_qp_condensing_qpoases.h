@@ -50,9 +50,9 @@ typedef struct ocp_qp_condensing_qpoases_memory_ {
 //
 int ocp_qp_condensing_qpoases_calculate_args_size(ocp_qp_dims *dims);
 //
-ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *mem);
+void *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *mem);
 //
-void ocp_qp_condensing_qpoases_initialize_default_args(ocp_qp_condensing_qpoases_args *args);
+void ocp_qp_condensing_qpoases_initialize_default_args(void *args_);
 //
 int ocp_qp_condensing_qpoases_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_qpoases_args *args);
 //

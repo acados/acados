@@ -52,7 +52,7 @@ int ocp_qp_condensing_qpoases_calculate_args_size(ocp_qp_dims *dims) {
 
 
 
-ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *mem)
+void *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dims *dims, void *mem)
 {
     ocp_qp_condensing_qpoases_args *args;
     char *c_ptr = (char *) mem;
@@ -79,13 +79,14 @@ ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_assign_args(ocp_qp_dim
 #if defined(RUNTIME_CHECKS)
     assert((char*)mem + ocp_qp_condensing_qpoases_calculate_args_size(dims) >= c_ptr);
 #endif
-    return args;
+    return (void*)args;
 }
 
 
 
-void ocp_qp_condensing_qpoases_initialize_default_args(ocp_qp_condensing_qpoases_args *args) {
-
+void ocp_qp_condensing_qpoases_initialize_default_args(void *args_)
+{
+    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *)args_;
     args->solver_args->max_cputime = 1000.0;
     args->solver_args->warm_start = 0;
     args->solver_args->max_nwsr = 1000;
