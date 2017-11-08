@@ -17,6 +17,10 @@
  *
  */
 
+// external
+#if defined(RUNTIME_CHECKS)
+#include <assert.h>
+#endif
 // hpipm
 #include "hpipm/include/hpipm_d_dense_qp.h"
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
@@ -63,14 +67,19 @@ int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims) {
 
 
 
-char *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, ocp_qp_condensing_args **args, void *mem) {
+ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem) {
+
+    ocp_qp_condensing_args *args;
 
     char *c_ptr = (char *) mem;
 
-    *args = (ocp_qp_condensing_args *) c_ptr;
+    args = (ocp_qp_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_args);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)mem + ocp_qp_condensing_calculate_args_size(dims) >= c_ptr);
+#endif
+    return args;
 }
 
 

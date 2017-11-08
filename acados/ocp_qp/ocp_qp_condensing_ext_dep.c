@@ -39,9 +39,7 @@ ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims) {
 
     int memory_size = ocp_qp_condensing_calculate_args_size(dims);
     void *ptr = malloc(memory_size);
-    ocp_qp_condensing_args *args;
-    char *ptr_end = ocp_qp_condensing_assign_args(dims, &args, ptr);
-    assert((char*)ptr + memory_size >= ptr_end); (void) ptr_end;
+    ocp_qp_condensing_args *args = ocp_qp_condensing_assign_args(dims, ptr);
     return args;
 }
 

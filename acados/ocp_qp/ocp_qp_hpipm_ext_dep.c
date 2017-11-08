@@ -41,10 +41,8 @@ ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims) {
 
     int size = ocp_qp_hpipm_calculate_args_size(dims);
     void *ptr = malloc(size);
-    ocp_qp_hpipm_args *args;
-    char *ptr_end = ocp_qp_hpipm_assign_args(dims, &args, ptr);
+    ocp_qp_hpipm_args *args = ocp_qp_hpipm_assign_args(dims, ptr);
     ocp_qp_hpipm_initialize_default_args(args);
-    assert((char*)ptr + size >= ptr_end); (void) ptr_end;
 
     return args;
 }

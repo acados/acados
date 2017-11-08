@@ -51,7 +51,7 @@ void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims);
 //
 int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims);
 //
-char *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, ocp_qp_condensing_args **args, void *mem);
+ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem);
 //
 int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args);
 //

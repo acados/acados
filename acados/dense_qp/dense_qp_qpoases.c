@@ -17,6 +17,10 @@
  *
  */
 
+// external
+#if defined(RUNTIME_CHECKS)
+#include <assert.h>
+#endif
 // blasfeo
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
@@ -42,14 +46,19 @@ int dense_qp_qpoases_calculate_args_size(dense_qp_in *qp_in) {
 
 
 
-char *dense_qp_qpoases_assign_args(dense_qp_in *qp_in, dense_qp_qpoases_args **args, void *mem) {
+dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_in *qp_in, void *mem) {
+
+    dense_qp_qpoases_args *args;
 
     char *c_ptr = (char *) mem;
 
-    *args = (dense_qp_qpoases_args *) c_ptr;
+    args = (dense_qp_qpoases_args *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_args);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)mem + dense_qp_qpoases_calculate_args_size(qp_in) >= c_ptr);
+#endif
+    return args;
 }
 
 

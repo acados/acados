@@ -17,6 +17,10 @@
  *
  */
 
+// external
+#if defined(RUNTIME_CHECKS)
+#include <assert.h>
+#endif
 // hpipm
 #include "hpipm_d_dense_qp.h"
 #include "hpipm_d_dense_qp_sol.h"
@@ -42,21 +46,26 @@ int dense_qp_hpipm_calculate_args_size(dense_qp_in *qp_in) {
 
 
 
-char *dense_qp_hpipm_assign_args(dense_qp_in *qp_in, dense_qp_hpipm_args **args, void *mem) {
+dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_in *qp_in, void *mem) {
+
+    dense_qp_hpipm_args *args;
 
     char *c_ptr = (char *) mem;
 
-    *args = (dense_qp_hpipm_args *) c_ptr;
+    args = (dense_qp_hpipm_args *) c_ptr;
     c_ptr += sizeof(dense_qp_hpipm_args);
 
-    (*args)->hpipm_args = (struct d_dense_qp_ipm_arg *) c_ptr;
+    args->hpipm_args = (struct d_dense_qp_ipm_arg *) c_ptr;
     c_ptr += sizeof(struct d_dense_qp_ipm_arg);
 
     align_char_to(8, &c_ptr);
-    d_create_dense_qp_ipm_arg(qp_in, (*args)->hpipm_args, c_ptr);
+    d_create_dense_qp_ipm_arg(qp_in, args->hpipm_args, c_ptr);
     c_ptr += d_memsize_dense_qp_ipm_arg(qp_in);
 
-    return c_ptr;
+#if defined(RUNTIME_CHECKS)
+    assert((char*)mem + dense_qp_hpipm_calculate_args_size(qp_in) >= c_ptr);
+#endif
+    return args;
 }
 
 

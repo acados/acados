@@ -36,10 +36,8 @@ dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_in *qp_in) {
 
     int memory_size = dense_qp_hpipm_calculate_args_size(qp_in);
     void *ptr = malloc(memory_size);
-    dense_qp_hpipm_args *args;
-    char *ptr_end = dense_qp_hpipm_assign_args(qp_in, &args, ptr);
+    dense_qp_hpipm_args *args = dense_qp_hpipm_assign_args(qp_in, ptr);
     dense_qp_hpipm_initialize_default_args(args);
-    assert((char*)ptr + memory_size >= ptr_end); (void) ptr_end;
 
     return args;
 }

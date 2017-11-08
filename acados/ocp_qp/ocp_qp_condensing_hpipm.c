@@ -73,10 +73,10 @@ char *ocp_qp_condensing_hpipm_assign_args(ocp_qp_dims *dims, ocp_qp_condensing_h
     dense_qp_in qpd_in;
     dummy_dense_qp_in(&qpd_in, dims);
 
-    dense_qp_hpipm_assign_args(&qpd_in, &(*args)->solver_args, c_ptr);
+    (*args)->solver_args = dense_qp_hpipm_assign_args(&qpd_in, c_ptr);
     c_ptr += dense_qp_hpipm_calculate_args_size(&qpd_in);
 
-    ocp_qp_condensing_assign_args(dims, &(*args)->cond_args, c_ptr);
+    (*args)->cond_args = ocp_qp_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_args_size(dims);
 
     return c_ptr;
