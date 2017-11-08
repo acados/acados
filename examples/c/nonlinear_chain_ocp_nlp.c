@@ -393,7 +393,7 @@ int main() {
     ************************************************/
 
     // choose QP solver and set its function pointers
-    new_ocp_qp_solver qp_solver = initialize_ocp_qp_solver(CONDENSING_QPOASES);
+    ocp_qp_solver qp_solver = initialize_ocp_qp_solver(CONDENSING_QPOASES);
 
     // set up args with nested structs
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(&dims, &qp_solver);

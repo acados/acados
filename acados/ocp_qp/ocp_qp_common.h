@@ -60,7 +60,7 @@ typedef struct {
     void *args;
     void *mem;
     void *work;
-} new_ocp_qp_solver;
+} ocp_qp_solver;
 
 
 
@@ -73,7 +73,7 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
+ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 
 // TODO TEMP
 

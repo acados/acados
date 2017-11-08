@@ -37,7 +37,7 @@ typedef struct {
 
 typedef struct {
     ocp_nlp_memory *common;
-    new_ocp_qp_solver *new_qp_solver;
+    ocp_qp_solver *qp_solver;
     ocp_nlp_dims *dims;
 } ocp_nlp_gn_sqp_memory;
 
@@ -52,22 +52,22 @@ typedef struct {
 } ocp_nlp_gn_sqp_work;
 
 
-int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver);
+int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
 //
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver, void *mem);
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, void *mem);
 //
 #if defined(EXT_DEPS)
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver);
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
 #endif
 
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
 
-void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, new_ocp_qp_solver *new_qp_solver, const ocp_nlp_in *in, void *args_, void *memory_);
+void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, const ocp_nlp_in *in, void *args_, void *memory_);
 
 void ocp_nlp_gn_sqp_free_memory(void *memory_);
 
 //
-int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, new_ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
 
 #ifdef __cplusplus
 } /* extern "C" */

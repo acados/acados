@@ -140,9 +140,9 @@ void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int 
 
 
 
-new_ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
+ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
 {
-    new_ocp_qp_solver qp_solver;
+    ocp_qp_solver qp_solver;
 
     qp_solver.qp_in = NULL;
     qp_solver.qp_out = NULL;
