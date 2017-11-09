@@ -29,7 +29,9 @@ extern "C" {
 #include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
-
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
 
 typedef struct {
     // general nlp options
@@ -54,13 +56,15 @@ typedef struct {
 
 
 typedef struct {
-    // nlp workspace
     ocp_nlp_work *common;
-    // sqp workspace
+
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
-    // void *qp_mem;
     void *qp_work;
+
+    struct d_strvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+                                // not using max(nx+nu) for parallelization in the future
+
 } ocp_nlp_gn_sqp_work;
 
 

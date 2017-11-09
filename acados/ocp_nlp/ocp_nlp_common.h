@@ -29,9 +29,17 @@ extern "C" {
 #endif
 
 
-// TODO(dimitris): introduce struct here and add path constraints dimension
-// TODO(dimitris): take care when passing nlp dims to qp dims with/without cast!
-typedef struct d_ocp_qp_size ocp_nlp_dims;
+typedef struct {
+    int *nx;
+    int *nu;
+    int *nb;  // nbx + nbu
+    int *nbx;
+    int *nbu;
+    int *ng;  // number of general linear constraints
+    int *ns;  // number of soft constraints
+    int *nh;  // number of path constraints - ONLY difference with ocp_qp_dims atm
+    int N;
+} ocp_nlp_dims;
 
 
 
@@ -65,14 +73,8 @@ typedef struct {
 
 
 typedef struct {
-    // TODO(dimitris): replace with ocp_nlp_dims
-    int_t N;
-    const int_t *nx;
-    const int_t *nu;
-    const int_t *nb;
-    const int_t *nc;
-    const int_t *ng;
-    // TODO(dimitris): decide on the blasfeo format for those
+    ocp_nlp_dims *dims;
+    // TODO(dimitris): decide on the blasfeo format for those fields
     const int_t **idxb;
     const real_t **lb;
     const real_t **ub;
@@ -122,7 +124,7 @@ typedef struct {
     real_t **lam;
 } ocp_nlp_out;
 
-
+void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
 //
 int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
 //

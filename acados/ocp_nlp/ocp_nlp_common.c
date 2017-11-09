@@ -18,11 +18,13 @@
  */
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/utils/mem.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+
+#include "acados/utils/mem.h"
+#include "hpipm/include/hpipm_d_ocp_qp_size.h"
 
 
 static int number_of_primal_vars(ocp_nlp_dims *dims)
@@ -34,6 +36,21 @@ static int number_of_primal_vars(ocp_nlp_dims *dims)
     return num_vars;
 }
 
+
+void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
+{
+    qp_dims->N = nlp_dims->N;
+    qp_dims->nx = nlp_dims->nx;
+    qp_dims->nu = nlp_dims->nu;
+    qp_dims->nb = nlp_dims->nb;
+    qp_dims->nbx = nlp_dims->nbx;
+    qp_dims->nbu = nlp_dims->nbu;
+    qp_dims->ng = nlp_dims->ng;
+    qp_dims->ns = nlp_dims->ns;
+
+    // TODO(dimitris): probably redundant (can also remove hpipm header)
+    qp_dims->memsize = d_memsize_ocp_qp_size(qp_dims->N);
+}
 
 
 // TODO(dimitris): THAT'S NOT REALLY MEMORY, THAT'S OUTPUT

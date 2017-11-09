@@ -345,13 +345,32 @@ int main() {
     hub[NN] = ubN;
     hidxb[NN] = idxbN;
 
+
+    // TODO(dimitris): clean this up ! ******************************
+
+    ocp_nlp_dims dims;
+    dims.N  = NN;
+    dims.nx = nx;
+    dims.nu = nu;
+    dims.ng = nc;
+    dims.nb = nb;
+
+    int NS[NN+1];
+    int NBX[NN+1];
+    int NBU[NN+1];
+
+    for (int ii = 0; ii < NN+1; ii++) NS[ii] = 0;
+    dims.ns = NS;
+
+    form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, hidxb);
+    dims.nbx = NBX;
+    dims.nbu = NBU;
+
+    // **************************************************************
+
     ocp_nlp_in nlp_in;
-    nlp_in.N = NN;
-    nlp_in.nx = nx;
-    nlp_in.nu = nu;
-    nlp_in.nb = nb;
-    nlp_in.nc = nc;
-    nlp_in.ng = ng;
+
+    nlp_in.dims = &dims;
     nlp_in.idxb = (const int_t **)hidxb;
     nlp_in.lb = (const real_t **)hlb;
     nlp_in.ub = (const real_t **)hub;
@@ -371,23 +390,6 @@ int main() {
     }
     nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
 
-
-    // TODO(dimitris): clean this up !
-
-    ocp_nlp_dims dims;
-    dims.N = nlp_in.N;
-    dims.nx = (int *)nlp_in.nx;
-    dims.nu = (int *)nlp_in.nu;
-    dims.ng = (int *)nlp_in.nc;
-    dims.nb = (int *)nlp_in.nb;
-    int NS[NN+1];
-    int NBX[NN+1];
-    int NBU[NN+1];
-    for (int ii = 0; ii < NN+1; ii++) NS[ii] = 0;
-    dims.ns = NS;
-    form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, (int **)nlp_in.idxb);
-    dims.nbx = NBX;
-    dims.nbu = NBU;
 
     /************************************************
     * gn_sqp args
