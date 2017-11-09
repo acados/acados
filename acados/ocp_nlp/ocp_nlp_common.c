@@ -53,7 +53,8 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
 }
 
 
-// TODO(dimitris): THAT'S NOT REALLY MEMORY, THAT'S OUTPUT
+
+// TODO(dimitris): use the same functions to calculate  and assign nlp_out
 int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
 {
     int N = dims->N;

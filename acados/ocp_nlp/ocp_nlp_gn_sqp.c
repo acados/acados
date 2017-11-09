@@ -178,6 +178,9 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_qp_solver *q
         size += d_size_strvec(qp_dims.nx[ii] + qp_dims.nu[ii]);
     }
 
+    make_int_multiple_of(64, &size);
+    size += 1 * 64;
+
     return size;
 }
 
@@ -185,26 +188,42 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_qp_solver *q
 
 static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_args *args)
 {
-    char *ptr = (char *)work;
-    ptr += sizeof(ocp_nlp_gn_sqp_work);
+    char *c_ptr = (char *)work;
+    c_ptr += sizeof(ocp_nlp_gn_sqp_work);
+
+    int N = mem->dims->N;
+    int *nx = mem->dims->nx;
+    int *nu = mem->dims->nu;
 
     ocp_qp_dims qp_dims;
     cast_nlp_dims_to_qp_dims(&qp_dims, mem->dims);
 
     // set up common nlp workspace
-    work->common = (ocp_nlp_work *)ptr;
+    work->common = (ocp_nlp_work *)c_ptr;
     ocp_nlp_cast_workspace(work->common, mem->common);
-    ptr += ocp_nlp_calculate_workspace_size(mem->dims, args->common);
+    c_ptr += ocp_nlp_calculate_workspace_size(mem->dims, args->common);
+
+    // set up local SQP data
+    work->tmp_vecs = (struct d_strvec *)c_ptr;
+    c_ptr += (N+1)*sizeof(struct d_strvec);
+
+    align_char_to(64, &c_ptr);
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        d_create_strvec(nx[ii]+nu[ii], &work->tmp_vecs[ii], c_ptr);
+        c_ptr += work->tmp_vecs[ii].memory_size;
+    }
+
     // set up QP solver
-    work->qp_in = ocp_qp_in_assign(&qp_dims, ptr);
-    ptr += ocp_qp_in_calculate_size(&qp_dims);
-    work->qp_out = ocp_qp_out_assign(&qp_dims, ptr);
-    ptr += ocp_qp_out_calculate_size(&qp_dims);
+    work->qp_in = ocp_qp_in_assign(&qp_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(&qp_dims);
+    work->qp_out = ocp_qp_out_assign(&qp_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(&qp_dims);
     mem->qp_solver->qp_in = work->qp_in;
     mem->qp_solver->qp_out = work->qp_out;
     mem->qp_solver->args = args->qp_solver_args;
 
-    assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, mem->qp_solver, args) >= ptr);
+    assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, mem->qp_solver, args) >= c_ptr);
 }
 
 
@@ -285,13 +304,16 @@ static void initialize_trajectories(
 
 
 
-static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work) {
 
     int N = nlp->dims->N;
     int *nx = nlp->dims->nx;
     int *nu = nlp->dims->nu;
     int *nb = nlp->dims->nb;
     int *ng = nlp->dims->ng;
+
+    real_t *w = work->common->w;
+    struct d_strvec *stmp = work->tmp_vecs;
 
     sim_solver *sim = nlp->sim;
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
@@ -310,17 +332,6 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
     // real_t **qp_r = (real_t **) mem->qp_solver->qp_in->r;
     // real_t **qp_lb = (real_t **) mem->qp_solver->qp_in->lb;
     // real_t **qp_ub = (real_t **) mem->qp_solver->qp_in->ub;
-
-    // TODO(dimitris): TEMPORARY HACK TO STORE INTERM. RESULT
-    // TODO(dimitris): REPLACE WITH A FIELD IN WORKSPACE ASAP
-    int nvmax = 0;
-    for (int i = 0; i < N+1; i++) {
-        if (nx[i]+nu[i] > nvmax) {
-            nvmax = nx[i]+nu[i];
-        }
-    }
-    struct d_strvec stmp;
-    d_allocate_strvec(nvmax, &stmp);
 
     int_t w_idx = 0;
 
@@ -391,11 +402,11 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
         sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
 
         for (int j = 0; j < nx[i]; j++)
-            DVECEL_LIBSTR(&stmp, nu[i]+j) = w[w_idx+j]-y_ref[i][j];
+            DVECEL_LIBSTR(&stmp[i], nu[i]+j) = w[w_idx+j]-y_ref[i][j];
         for (int j = 0; j < nu[i]; j++)
-            DVECEL_LIBSTR(&stmp, j) = w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j];
+            DVECEL_LIBSTR(&stmp[i], j) = w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j];
 
-        dsymv_l_libstr(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp, 0, 0.0, &srq[i], 0, &srq[i], 0);
+        dsymv_l_libstr(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp[i], 0, 0.0, &srq[i], 0, &srq[i], 0);
 
         if (opts->scheme.type != exact)
         {
@@ -436,8 +447,8 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem,
     }
 
     for (int j=0; j<nx[N]; j++)
-        DVECEL_LIBSTR(&stmp, j) = w[w_idx+j]-y_ref[N][j];
-    dsymv_l_libstr(nx[N], nx[N], 1.0, &sRSQrq[N], 0, 0, &stmp, 0, 0.0, &srq[N], 0, &srq[N], 0);
+        DVECEL_LIBSTR(&stmp[N], j) = w[w_idx+j]-y_ref[N][j];
+    dsymv_l_libstr(nx[N], nx[N], 1.0, &sRSQrq[N], 0, 0, &stmp[N], 0, 0.0, &srq[N], 0, &srq[N], 0);
 
     drowin_libstr(nx[N], 1.0, &srq[N], 0, &sRSQrq[N], nx[N], 0);
 
@@ -532,7 +543,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     acados_tic(&timer);
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
-        multiple_shooting(nlp_in, mem, work->common->w);
+        multiple_shooting(nlp_in, mem, work);
 
         int_t qp_status = mem->qp_solver->fun(mem->qp_solver->qp_in, mem->qp_solver->qp_out,
             mem->qp_solver->args, mem->qp_solver->mem);
