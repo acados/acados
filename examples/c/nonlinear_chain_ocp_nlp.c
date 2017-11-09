@@ -41,8 +41,9 @@
 
 
 
+#define NREP 10
 #define NN 15
-#define TT 3.0
+#define T 3.0
 #define Ns 2
 
 // using Eigen::MatrixXd;
@@ -129,7 +130,7 @@ int main() {
     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
 
     // Integrator structs
-    real_t Ts = TT / NN;
+    real_t Ts = T / NN;
     sim_in sim_in[NN];
     sim_out sim_out[NN];
     sim_info info[NN];
@@ -409,6 +410,7 @@ int main() {
 
     ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(&dims, &qp_solver, nlp_args);
 
+    // TODO(dimitris): users shouldn't write directly on memory..
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++)
             nlp_mem->common->x[i][j] = xref[j];  // resX(j,i)
@@ -430,9 +432,19 @@ int main() {
     * gn_sqp solve
     ************************************************/
 
-    int status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
+    int status;
 
-    printf("\n\nstatus = %i\n\n", status);
+    acados_timer timer;
+    acados_tic(&timer);
+
+    for (int rep = 0; rep < NREP; rep++)
+    {
+        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
+    }
+
+    double time = acados_toc(&timer)/NREP;
+
+    printf("\n\nstatus = %i, total time = %f ms\n\n", status, time*1e3);
 
     for (int_t k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
