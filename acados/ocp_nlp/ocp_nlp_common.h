@@ -29,6 +29,8 @@ extern "C" {
 #endif
 
 
+// TODO(dimitris): introduce struct here and add path constraints dimension
+// TODO(dimitris): take care when passing nlp dims to qp dims with/without cast!
 typedef struct d_ocp_qp_size ocp_nlp_dims;
 
 
@@ -56,7 +58,9 @@ typedef struct {
 
 
 
-typedef struct { ocp_nlp_function *fun; } ocp_nlp_stage_cost;
+typedef struct {
+    ocp_nlp_function *fun;
+} ocp_nlp_stage_cost;
 
 
 
@@ -68,7 +72,7 @@ typedef struct {
     const int_t *nb;
     const int_t *nc;
     const int_t *ng;
-    // TODO(dimitris): decide on the blasfeo format of those
+    // TODO(dimitris): decide on the blasfeo format for those
     const int_t **idxb;
     const real_t **lb;
     const real_t **ub;
@@ -119,23 +123,15 @@ typedef struct {
 } ocp_nlp_out;
 
 
-
-// typedef struct {
-//     int (*fun)(const ocp_nlp_in *, ocp_nlp_out *, void *args, void *mem, void *work);
-//     ocp_nlp_in *nlp_in;
-//     ocp_nlp_out *nlp_out;
-//     void *args;
-//     void *mem;
-//     void *work;
-// } ocp_nlp_solver;
-
-void ocp_nlp_create_memory(ocp_nlp_dims *dims, void *mem_);
-void ocp_nlp_free_memory(int_t N, void *mem_);
-
+//
+int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
+//
+ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory);
 //
 int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
 //
 void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

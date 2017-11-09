@@ -372,7 +372,8 @@ int main() {
     nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
 
 
-    // TODO(dimitris): clean this up
+    // TODO(dimitris): clean this up !
+
     ocp_nlp_dims dims;
     dims.N = nlp_in.N;
     dims.nx = (int *)nlp_in.nx;
@@ -389,7 +390,7 @@ int main() {
     dims.nbu = NBU;
 
     /************************************************
-    * gn_sqp args --- NEW
+    * gn_sqp args
     ************************************************/
 
     // choose QP solver and set its function pointers
@@ -399,47 +400,35 @@ int main() {
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(&dims, &qp_solver);
     nlp_args->common->maxIter = max_sqp_iters;
 
-    // OLD WAY
-    // ocp_nlp_gn_sqp_args nlp_args;
-    // ocp_nlp_args nlp_common_args;
-    // nlp_args.common = &nlp_common_args;
-    // nlp_args.common->maxIter = max_sqp_iters;
-    // snprintf(nlp_args.qp_solver_name, sizeof(nlp_args.qp_solver_name), "%s", "condensing_qpoases");
-
     /************************************************
-    * gn_sqp memory --- OLD
+    * gn_sqp memory
     ************************************************/
 
-    ocp_nlp_gn_sqp_memory nlp_mem;
-    ocp_nlp_memory nlp_mem_common;
-    nlp_mem.common = &nlp_mem_common;
-
-    ocp_nlp_gn_sqp_create_memory(&dims, &qp_solver, &nlp_in, nlp_args, &nlp_mem);
+    ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(&dims, &qp_solver, nlp_args);
 
     for (int_t i = 0; i < NN; i++) {
         for (int_t j = 0; j < NX; j++)
-            nlp_mem.common->x[i][j] = xref[j];  // resX(j,i)
+            nlp_mem->common->x[i][j] = xref[j];  // resX(j,i)
         for (int_t j = 0; j < NU; j++)
-            nlp_mem.common->u[i][j] = uref[j];  // resU(j, i)
+            nlp_mem->common->u[i][j] = uref[j];  // resU(j, i)
     }
     for (int_t j = 0; j < NX; j++)
-        nlp_mem.common->x[NN][j] = xref[j];  // resX(j, NN)
+        nlp_mem->common->x[NN][j] = xref[j];  // resX(j, NN)
 
     /************************************************
-    * gn_sqp workspace --- OLD
+    * gn_sqp workspace
     ************************************************/
 
-    int_t work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&dims, &qp_solver, nlp_args);
+    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&dims, &qp_solver, nlp_args);
 
     void *nlp_work = (void *)malloc(work_space_size);
-
-    int_t status;
 
     /************************************************
     * gn_sqp solve
     ************************************************/
 
-    status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, nlp_args, &nlp_mem, nlp_work);
+    int status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
+
     printf("\n\nstatus = %i\n\n", status);
 
     for (int_t k =0; k < 3; k++) {
@@ -452,18 +441,6 @@ int main() {
     d_print_mat(1, nu[NN-1], nlp_out.u[NN-1], 1);
     printf("x[N] = \n");
     d_print_mat(1, nx[NN], nlp_out.x[NN], 1);
-
-    ocp_nlp_gn_sqp_free_memory(&nlp_mem);
-
-#if 0
-    real_t out_x[NX*(NN+1)];
-    real_t out_u[NU*NN];
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < NX; j++) out_x[i*NX+j] = nlp_out.x[i][j];
-        for (int_t j = 0; j < NU; j++) out_u[i*NU+j] = nlp_out.u[i][j];
-    }
-    for (int_t j = 0; j < NX; j++) out_x[NN*NX+j] = nlp_out.x[NN][j];
-#endif
 
     /************************************************
     * free memory
@@ -513,4 +490,6 @@ int main() {
     free(nlp_out.lam);
 
     free(nlp_work);
+    free(nlp_mem);
+    free(nlp_args);
 }

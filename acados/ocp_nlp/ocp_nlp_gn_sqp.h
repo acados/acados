@@ -30,16 +30,28 @@ extern "C" {
 #include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
 
+
 typedef struct {
+    // general nlp options
     ocp_nlp_args *common;
+    // specific SQP options
+    // ...
+    // QP solver options
     void *qp_solver_args;
+    // integrator options
+    // void **sim_solver_args;
 } ocp_nlp_gn_sqp_args;
+
+
 
 typedef struct {
     ocp_nlp_memory *common;
+    ocp_nlp_dims *dims;  // TODO(dimitris): move inside common!
     ocp_qp_solver *qp_solver;
-    ocp_nlp_dims *dims;
+    void *qp_mem;
 } ocp_nlp_gn_sqp_memory;
+
+
 
 typedef struct {
     // nlp workspace
@@ -47,27 +59,30 @@ typedef struct {
     // sqp workspace
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
-    void *qp_mem;
+    // void *qp_mem;
     void *qp_work;
 } ocp_nlp_gn_sqp_work;
 
 
-int_t ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
 //
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, void *mem);
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
 //
-#if defined(EXT_DEPS)
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
-#endif
-
-int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
-
-void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, const ocp_nlp_in *in, void *args_, void *memory_);
-
-void ocp_nlp_gn_sqp_free_memory(void *memory_);
-
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, void *raw_memory);
+//
+int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+//
+void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem);
 //
 int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+//
+int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
+//
+#if defined(EXT_DEPS)
+//
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
+//
+ocp_nlp_gn_sqp_memory *new_ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
