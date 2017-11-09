@@ -58,10 +58,6 @@ int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
 {
     int N = dims->N;
 
-    // TODO(dimitris): ADD DIMENSION OF PATH CONSTRAINTS TO nlp dims !!!
-    int ng_old[dims->N+1];
-    for (int i = 0; i < dims->N+1; i++) ng_old[i] = 0;
-
     int size = sizeof(ocp_nlp_memory);
 
     size += sizeof(double *) * (N + 1);  // x
@@ -73,7 +69,7 @@ int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
     {
         size += sizeof(double)*dims->nx[ii];  // x
         size += sizeof(double)*dims->nu[ii];  // u
-        size += sizeof(double)*(2*dims->nb[ii] + 2*dims->ng[ii] + 2*ng_old[ii]);  // lam
+        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
         if (ii < N)
         {
             size += sizeof(double)*dims->nx[ii+1];  // pi
@@ -83,7 +79,7 @@ int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
-    return size + 100*(N+1);  // TODO(dimitris): FIND BUG IN CODE WHERE WE WRITE OUTSIDE MEMORY!
+    return size;
 }
 
 
@@ -93,10 +89,6 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
     char *c_ptr = (char *) raw_memory;
 
     int N = dims->N;
-
-    // TODO(dimitris): ADD DIMENSION OF PATH CONSTRAINTS TO nlp dims !!!
-    int ng_old[N+1];
-    for (int i = 0; i < N+1; i++) ng_old[i] = 0;
 
     ocp_nlp_memory *mem = (ocp_nlp_memory *)c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
@@ -122,16 +114,16 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
     for (int ii = 0; ii <= N; ii++)
     {
         mem->x[ii] = (double *)c_ptr;
-        c_ptr += dims->nx[ii]+100;  // TODO(dimitris): FIND BUG IN CODE WHERE WE WRITE OUTSIDE MEMORY!
+        c_ptr += dims->nx[ii]*sizeof(double);
         mem->u[ii] = (double *)c_ptr;
-        c_ptr += dims->nu[ii];
+        c_ptr += dims->nu[ii]*sizeof(double);
         if (ii < N)
         {
             mem->pi[ii] = (double *)c_ptr;
-            c_ptr += dims->nx[ii+1];
+            c_ptr += dims->nx[ii+1]*sizeof(double);
         }
         mem->lam[ii] = (double *)c_ptr;
-        c_ptr += 2*(dims->nb[ii] + dims->ng[ii] + ng_old[ii])+100;  // TODO(dimitris): FIND BUG IN CODE WHERE WE WRITE OUTSIDE MEMORY!
+        c_ptr += 2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii])*sizeof(double);
     }
 
     assert((char *)raw_memory + ocp_nlp_calculate_memory_size(dims, args) >= c_ptr);

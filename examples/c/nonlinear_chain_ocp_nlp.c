@@ -355,12 +355,13 @@ int main() {
     dims.ng = nc;
     dims.nb = nb;
 
-    int NS[NN+1];
+    int NS_NH[NN+1];
     int NBX[NN+1];
     int NBU[NN+1];
 
-    for (int ii = 0; ii < NN+1; ii++) NS[ii] = 0;
-    dims.ns = NS;
+    for (int ii = 0; ii < NN+1; ii++) NS_NH[ii] = 0;
+    dims.ns = NS_NH;
+    dims.nh = NS_NH;
 
     form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, hidxb);
     dims.nbx = NBX;

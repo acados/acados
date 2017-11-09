@@ -47,9 +47,12 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_sol
 {
     int size = 0;
 
+    ocp_qp_dims qp_dims;
+    cast_nlp_dims_to_qp_dims(&qp_dims, dims);
+
     size += sizeof(ocp_nlp_gn_sqp_args);
     size += sizeof(ocp_nlp_args);  // TODO(dimitris): REPLACE WITH CALCULATE SIZE?
-    size += qp_solver->calculate_args_size((ocp_qp_dims *)dims);
+    size += qp_solver->calculate_args_size(&qp_dims);
 
     return size;
 }
