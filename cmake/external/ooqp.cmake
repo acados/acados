@@ -87,19 +87,23 @@ install(DIRECTORY ${BINARY_DIR}/include/
 add_library(ooqpgensparse STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgensparse ooqp_project)
 set_property(TARGET ooqpgensparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgensparse.a")
+set_property(TARGET ooqpgensparse PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgensparse.a" DESTINATION lib)
 
 add_library(ooqpsparse STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpsparse ooqp_project)
 set_property(TARGET ooqpsparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpsparse.a")
+set_property(TARGET ooqpsparse PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpsparse.a" DESTINATION lib)
 
 add_library(ooqpgondzio STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgondzio ooqp_project)
 set_property(TARGET ooqpgondzio PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgondzio.a")
+set_property(TARGET ooqpgondzio PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgondzio.a" DESTINATION lib)
 
 add_library(ooqpbase STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpbase ma27 ooqp_project)
 set_property(TARGET ooqpbase PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpbase.a")
+set_property(TARGET ooqpbase PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpbase.a" DESTINATION lib)

@@ -30,6 +30,19 @@ real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
 #endif
 
 #define PRINTF printf
+#ifndef CASADI_SYMBOL_EXPORT
+#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+#if defined(STATIC_LINKED)
+#define CASADI_SYMBOL_EXPORT
+#else /* defined(STATIC_LINKED) */
+#define CASADI_SYMBOL_EXPORT __declspec(dllexport)
+#endif /* defined(STATIC_LINKED) */
+#elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+#define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
+#else /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
+#define CASADI_SYMBOL_EXPORT
+#endif /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
+#endif /* CASADI_SYMBOL_EXPORT */
 real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
 #define sq(x) CASADI_PREFIX(sq)(x)
 
@@ -43,7 +56,7 @@ static const int CASADI_PREFIX(s1)[7] = {3, 1, 0, 3, 0, 1, 2};
 static const int CASADI_PREFIX(s2)[45] = {6, 6, 0, 6, 12, 18, 24, 30, 36, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
 #define s2 CASADI_PREFIX(s2)
 /* jac_chain_nm2 */
-int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+CASADI_SYMBOL_EXPORT int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   real_t a0=arg[0] ? arg[0][3] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][4] : 0;
@@ -97,17 +110,17 @@ int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem)
   return 0;
 }
 
-void jac_chain_nm2_incref(void) {
+CASADI_SYMBOL_EXPORT void jac_chain_nm2_incref(void) {
 }
 
-void jac_chain_nm2_decref(void) {
+CASADI_SYMBOL_EXPORT void jac_chain_nm2_decref(void) {
 }
 
-int jac_chain_nm2_n_in(void) { return 2;}
+CASADI_SYMBOL_EXPORT int jac_chain_nm2_n_in(void) { return 2;}
 
-int jac_chain_nm2_n_out(void) { return 2;}
+CASADI_SYMBOL_EXPORT int jac_chain_nm2_n_out(void) { return 2;}
 
-const char* jac_chain_nm2_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* jac_chain_nm2_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -115,7 +128,7 @@ const char* jac_chain_nm2_name_in(int i){
   }
 }
 
-const char* jac_chain_nm2_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* jac_chain_nm2_name_out(int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -123,7 +136,7 @@ const char* jac_chain_nm2_name_out(int i){
   }
 }
 
-const int* jac_chain_nm2_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* jac_chain_nm2_sparsity_in(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s1;
@@ -131,7 +144,7 @@ const int* jac_chain_nm2_sparsity_in(int i) {
   }
 }
 
-const int* jac_chain_nm2_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* jac_chain_nm2_sparsity_out(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s2;
@@ -139,7 +152,7 @@ const int* jac_chain_nm2_sparsity_out(int i) {
   }
 }
 
-int jac_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int jac_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;

@@ -153,6 +153,63 @@ void print_ocp_qp(ocp_qp_in *qp) {
         print_matrix("stdout", qp->lb[stage], qp->nb[stage], 1);
         printf("ub[%d]:\n", stage);
         print_matrix("stdout", qp->ub[stage], qp->nb[stage], 1);
+        printf("Cx[%d]:\n", stage);
+        print_matrix("stdout", qp->Cx[stage], qp->nc[stage], qp->nx[stage]);
+        printf("Cu[%d]:\n", stage);
+        print_matrix("stdout", qp->Cu[stage], qp->nc[stage], qp->nu[stage]);
+        printf("lc[%d]:\n", stage);
+        print_matrix("stdout", qp->lc[stage], qp->nc[stage], 1);
+        printf("uc[%d]:\n", stage);
+        print_matrix("stdout", qp->uc[stage], qp->nc[stage], 1);
     }
     printf("\n");
+}
+
+void print_ocp_qp_to_file(ocp_qp_in *qp) {
+    char filename[MAX_STR_LEN];
+    for (int_t i = 0; i <= qp->N; i++) {
+        snprintf(filename, sizeof(filename), "Qm%d.txt", i);
+        print_matrix(filename, qp->Q[i], qp->nx[i], qp->nx[i]);
+        snprintf(filename, sizeof(filename), "Sm%d.txt", i);
+        print_matrix(filename, qp->S[i], qp->nu[i], qp->nx[i]);
+        snprintf(filename, sizeof(filename), "Rm%d.txt", i);
+        print_matrix(filename, qp->R[i], qp->nu[i], qp->nu[i]);
+        snprintf(filename, sizeof(filename), "qv%d.txt", i);
+        print_matrix(filename, qp->q[i], qp->nx[i], 1);
+        snprintf(filename, sizeof(filename), "rv%d.txt", i);
+        print_matrix(filename, qp->r[i], qp->nu[i], 1);
+        if (i < qp->N) {
+            snprintf(filename, sizeof(filename), "Am%d.txt", i);
+            print_matrix(filename, qp->A[i], qp->nx[i+1], qp->nx[i+1]);
+            snprintf(filename, sizeof(filename), "Bm%d.txt", i);
+            print_matrix(filename, qp->B[i], qp->nx[i+1], qp->nu[i]);
+            snprintf(filename, sizeof(filename), "bv%d.txt", i);
+            print_matrix(filename, qp->b[i], qp->nx[i+1], 1);
+        }
+        snprintf(filename, sizeof(filename), "idxb%d.txt", i);
+        print_int_matrix(filename, qp->idxb[i], qp->nb[i], 1);
+        snprintf(filename, sizeof(filename), "lb%d.txt", i);
+        print_matrix(filename, qp->lb[i], qp->nb[i], 1);
+        snprintf(filename, sizeof(filename), "ub%d.txt", i);
+        print_matrix(filename, qp->ub[i], qp->nb[i], 1);
+        snprintf(filename, sizeof(filename), "Cx%d.txt", i);
+        print_matrix(filename, qp->Cx[i], qp->nc[i], qp->nx[i]);
+        snprintf(filename, sizeof(filename), "Cu%d.txt", i);
+        print_matrix(filename, qp->Cu[i], qp->nc[i], qp->nu[i]);
+    }
+}
+
+void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out) {
+    for (int_t i = 0; i <= qp->N; i++) {
+        printf("x[%d]:\n", i);
+        print_matrix(filename, out->x[i], qp->nx[i], 1);
+        printf("u[%d]:\n", i);
+        print_matrix(filename, out->u[i], qp->nu[i], 1);
+        if (i < qp->N) {
+            printf("pi[%d]:\n", i);
+            print_matrix(filename, out->pi[i], qp->nx[i], 1);
+        }
+        printf("lam[%d]:\n", i);
+        print_matrix(filename, out->x[i], 2*qp->nb[i] + 2*qp->nc[i], 1);
+    }
 }

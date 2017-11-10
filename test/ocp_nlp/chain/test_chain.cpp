@@ -273,21 +273,21 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     switch (NMF) {
                         case 1:
                             sim_in[jj].vde = &vde_chain_nm2;
-                            sim_in[jj].VDE_forw = &vde_fun;
+                            sim_in[jj].forward_vde_wrapper = &vde_fun;
                             sim_in[jj].jac = &jac_chain_nm2;
-                            sim_in[jj].jac_fun = &jac_fun;
+                            sim_in[jj].jacobian_wrapper = &jac_fun;
                             break;
                         case 2:
                             sim_in[jj].vde = &vde_chain_nm3;
-                            sim_in[jj].VDE_forw = &vde_fun;
+                            sim_in[jj].forward_vde_wrapper = &vde_fun;
                             sim_in[jj].jac = &jac_chain_nm3;
-                            sim_in[jj].jac_fun = &jac_fun;
+                            sim_in[jj].jacobian_wrapper = &jac_fun;
                             break;
                         case 3:
                             sim_in[jj].vde = &vde_chain_nm4;
-                            sim_in[jj].VDE_forw = &vde_fun;
+                            sim_in[jj].forward_vde_wrapper = &vde_fun;
                             sim_in[jj].jac = &jac_chain_nm4;
-                            sim_in[jj].jac_fun = &jac_fun;
+                            sim_in[jj].jacobian_wrapper = &jac_fun;
                             break;
                         default:
                             REQUIRE(1 == 0);

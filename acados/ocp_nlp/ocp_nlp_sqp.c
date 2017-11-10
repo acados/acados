@@ -127,15 +127,13 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
 
     // Path constraints
     for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; i < ng[i]; j++) {
+        for (int_t j = 0; j < ng[i]; j++) {
             qp_lc[i][j] = nlp_lg[i][j] - g[i][j];
             qp_uc[i][j] = nlp_ug[i][j] - g[i][j];
-            for (int_t k = 0; i < nx[i]; k++) {
-                qp_Cx[i][k * nx[i] + j] = jac_g[i][k * nx[i] + j];
-            }
-            for (int_t k = 0; i < nu[i]; k++) {
-                qp_Cu[i][k * nx[i] + j] = jac_g[i][(nx[i] + k) * nx[i] + j];
-            }
+            for (int_t k = 0; k < nx[i]; k++)
+                qp_Cx[i][k * ng[i] + j] = jac_g[i][k * ng[i] + j];
+            for (int_t k = 0; k < nu[i]; k++)
+                qp_Cu[i][k * ng[i] + j] = jac_g[i][(nx[i] + k) * ng[i] + j];
         }
     }
 }
@@ -361,18 +359,18 @@ void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_,
     sm_in->cost = nlp_in->cost;
     sm_in->sim = (sim_solver **)nlp_in->sim;
     sm_in->path_constraints = (ocp_nlp_function **)nlp_in->path_constraints;
-    sm_in->x = (*mem)->common->x;
-    sm_in->u = (*mem)->common->u;
-    sm_in->pi = (*mem)->common->pi;
-    sm_in->lam = (*mem)->common->lam;
+    sm_in->x = (const real_t **)(*mem)->common->x;
+    sm_in->u = (const real_t **)(*mem)->common->u;
+    sm_in->pi = (const real_t **)(*mem)->common->pi;
+    sm_in->lam = (const real_t **)(*mem)->common->lam;
 
     // Sensitivity method output
-    sm_out->hess_l = (*mem)->common->hess_l;
-    sm_out->grad_f = (*mem)->common->grad_f;
-    sm_out->jac_h = (*mem)->common->jac_h;
-    sm_out->jac_g = (*mem)->common->jac_g;
-    sm_out->h = (*mem)->common->h;
-    sm_out->g = (*mem)->common->g;
+    sm_out->hess_l = (const real_t **)(*mem)->common->hess_l;
+    sm_out->grad_f = (const real_t **)(*mem)->common->grad_f;
+    sm_out->jac_h = (const real_t **)(*mem)->common->jac_h;
+    sm_out->jac_g = (const real_t **)(*mem)->common->jac_g;
+    sm_out->h = (const real_t **)(*mem)->common->h;
+    sm_out->g = (const real_t **)(*mem)->common->g;
 
     // // Initialize sensitivity method and QP solver
     nlp_sm->initialize(sm_in, nlp_sm->args, &nlp_sm->mem, &nlp_sm->work);

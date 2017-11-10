@@ -237,8 +237,8 @@ void set_model(sim_in *sim, casadi::Function& f, double step, enum generation_mo
         void *jac_handle = malloc(sizeof(void *));
         sim->jac = compile_and_load(jac_name, &jac_handle);
     }
-    sim->VDE_forw = &vde_fun;
-    sim->jac_fun = &jac_fun;
+    sim->forward_vde_wrapper = &vde_fun;
+    sim->jacobian_wrapper = &jac_fun;
     sim->step = step;
 }
 
@@ -788,7 +788,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         if (!has(input_map, "nb")) {
             nb[0] = nx[0];
         }
-        allocate_ocp_nlp_in(N, nx, nu, nb, ng, nlp_in);
+        allocate_ocp_nlp_in(N, nx, nu, nb, ng, 0, nlp_in);
         if (!has(input_map, "nb")) {
             int idxb[nb[0]];
             for (int_t i = 0; i < nb[0]; i++)
@@ -809,7 +809,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         sim_solver **simulators = (sim_solver **)$self->sim;
         for (int_t i = 0; i < $self->N; i++) {
             simulators[i]->in->vde = eval;
-            simulators[i]->in->VDE_forw = &vde_fun;
+            simulators[i]->in->forward_vde_wrapper = &vde_fun;
             simulators[i]->in->step = step;
         }
     }
@@ -1005,8 +1005,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             for (int_t i = 0; i <= N; i++) {
                 for (int_t j = 0; j < nlp_in->nx[i]; j++) x[i][j] = 0.0;
                 for (int_t j = 0; j < nlp_in->nu[i]; j++) u[i][j] = 0.0;
-                for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i];
-                     j++) {
+                for (int_t j = 0; j < 2 * nlp_in->nb[i] + 2 * nlp_in->ng[i]; j++) {
                     lam[i][j] = 0.0;
                 }
             }
@@ -1033,7 +1032,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args, $self->mem,
                                 $self->work);
         if (fail)
-            throw std::runtime_error("nlp solver failed!");
+            throw std::runtime_error("nlp solver failed with error code " + std::to_string(fail));
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 
@@ -1043,7 +1042,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         int_t fail = $self->fun($self->nlp_in, $self->nlp_out, $self->args,
                                 $self->mem, $self->work);
 
-        if (fail) throw std::runtime_error("nlp solver failed!");
+        if (fail)
+            throw std::runtime_error("nlp solver failed with error code " + std::to_string(fail));
         return ocp_nlp_output($self->nlp_in, $self->nlp_out);
     }
 }

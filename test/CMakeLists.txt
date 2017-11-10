@@ -19,8 +19,8 @@
 
 # Check if external libraries are present; these are needed for the unit tests
 find_package(Eigen3)
-if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
-    message(WARNING "You chose to run unit tests but casadi-octave-v3.2.2 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.2")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.3")
+    message(WARNING "You chose to run unit tests but casadi-octave-v3.2.3 was not found in: ${PROJECT_SOURCE_DIR}/external/casadi-octave-v3.2.3")
 endif()
 include_directories(${EIGEN3_INCLUDE_DIR})
 
@@ -39,7 +39,6 @@ set(TEST_OCP_QP_SRC
 
 set(TEST_SIM_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/sim/pendulum/test_pendulum.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/sim/pendulum/casadi/casadi_pendulum.c
 )
 
 set(TEST_UTILS_SRC
@@ -50,12 +49,12 @@ set(TEST_UTILS_SRC
 # Unit test executable
 add_executable(unit_tests
     ${PROJECT_SOURCE_DIR}/test/all_tests.cpp
-    ${TEST_OCP_NLP_SRC}
     $<TARGET_OBJECTS:ocp_nlp_gen>
-    ${TEST_OCP_QP_SRC}
+    ${TEST_OCP_NLP_SRC}
     $<TARGET_OBJECTS:ocp_qp_gen>
-    ${TEST_SIM_SRC}
+    ${TEST_OCP_QP_SRC}
     $<TARGET_OBJECTS:sim_gen>
+    ${TEST_SIM_SRC}
     ${TEST_UTILS_SRC}
 )
 

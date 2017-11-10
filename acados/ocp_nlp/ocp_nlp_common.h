@@ -27,19 +27,19 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef struct {
-    const real_t **hess_l;  // TODO(nielsvd): Hessians of stage-wise
+    real_t **hess_l;  // TODO(nielsvd): Hessians of stage-wise
                             // Lagrangians, document precise definition.
-    const real_t **grad_f;  // Gradients of stage-wise cost terms.
-    const real_t **jac_h;   // TODO(niels): rename (maybe phi?). Jacobians of
+    real_t **grad_f;  // Gradients of stage-wise cost terms.
+    real_t **jac_h;   // TODO(niels): rename (maybe phi?). Jacobians of
                             // stage-wise integration operator.
-    const real_t **jac_g;   // Jacobians of stage-wise path constraints.
-    const real_t **h;       // TODO(nielsvd): rename (maybe phi?). Evaluation of
+    real_t **jac_g;   // Jacobians of stage-wise path constraints.
+    real_t **h;       // TODO(nielsvd): rename (maybe phi?). Evaluation of
                             // stage-wise integration operator.
-    const real_t **g;       // Evaluation of stage-wise path constraints.
-    const real_t **x;
-    const real_t **u;
-    const real_t **pi;
-    const real_t **lam;
+    real_t **g;       // Evaluation of stage-wise path constraints.
+    real_t **x;
+    real_t **u;
+    real_t **pi;
+    real_t **lam;
     // TODO(nielsvd): what about parameters and addtionaly variables such as
     // lifted variables?
 } ocp_nlp_memory;
