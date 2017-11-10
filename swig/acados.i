@@ -114,7 +114,7 @@ std::string load_error_message() {
         dw,
         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
         (LPTSTR) &lpMsgBuf,
-        0, NULL );
+        0, NULL);
 
     return std::string((LPTSTR) lpMsgBuf);
 
@@ -126,9 +126,11 @@ std::string load_error_message() {
 
 }
 
-static int (*load_dims_function(void *handle, std::string name))(int_t *, int_t *, int_t *, int_t *) {
+static int(*load_dims_function(void *handle, std::string name))(int_t *, int_t *,
+                                                                 int_t *, int_t *) {
     #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-        return (int_t (*)(int_t*, int_t*, int_t*, int_t*)) GetProcAddress((HMODULE)handle, name.c_str());
+        return (int_t(*)(int_t*, int_t*, int_t*, int_t*))
+                   GetProcAddress((HMODULE)handle, name.c_str());
     #else
         return (casadi_function_t) dlsym(handle, name.c_str());
     #endif
@@ -218,7 +220,8 @@ static casadi_function_t compile_and_load(std::string name, void **handle) {
     *handle = dlopen(path_to_library.c_str(), RTLD_LAZY);
     #endif
     if (*handle == NULL)
-        throw std::runtime_error("Loading of " + path_to_library + " failed. Error message: " + load_error_message());
+        throw std::runtime_error("Loading of " + path_to_library + " failed. Error message: "
+                                 + load_error_message());
     typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
     #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
     return (casadi_function_t) GetProcAddress((HMODULE)*handle, name.c_str());
