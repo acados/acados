@@ -181,7 +181,7 @@ int main() {
 
     // TODO(dimitris): fix for NMF > 1
     enum sensitivities_scheme scheme = EXACT_NEWTON;
-    const int NMF = 3;
+    const int NMF = 2;
     const int d = 2;
     print_problem_info(scheme, NMF, d);
 
