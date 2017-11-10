@@ -138,6 +138,8 @@ void *dense_qp_qpoases_assign_memory(dense_qp_in *qp_in, void *args_, void *raw_
     //
     mem->g = (double *)c_ptr;
     c_ptr += nvd * sizeof(double);
+    // TODO(dimitris): use this instead
+    // assign_double(nvd, &mem->g, &c_ptr);
     //
     mem->b = (double *)c_ptr;
     c_ptr += ned * sizeof(double);

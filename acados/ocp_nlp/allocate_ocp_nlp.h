@@ -28,7 +28,7 @@ extern "C" {
 #include "acados/utils/types.h"
 
 void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *nc,
-                         int_t *ng, ocp_nlp_in *const nlp);
+                         int_t *ng, int_t num_integrator_stages, ocp_nlp_in *const nlp);
 void free_ocp_nlp_in(ocp_nlp_in *const nlp);
 
 void allocate_ocp_nlp_out(ocp_nlp_in *const in, ocp_nlp_out *out);

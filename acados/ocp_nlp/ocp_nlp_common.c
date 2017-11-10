@@ -141,7 +141,7 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
     for (int ii = 0; ii <= N; ii++)
     {
         // mem->x[ii] = (double *)c_ptr;
-        // c_ptr += dims->nx[ii]*sizeof(double)+100;
+        // c_ptr += dims->nx[ii]*sizeof(double);
         // mem->u[ii] = (double *)c_ptr;
         // c_ptr += dims->nu[ii]*sizeof(double);
         assign_double(dims->nx[ii], &mem->x[ii], &c_ptr);
@@ -149,7 +149,7 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
         if (ii < N)
         {
             // mem->pi[ii] = (double *)c_ptr;
-            // c_ptr += dims->nx[ii+1]*sizeof(double)+100;
+            // c_ptr += dims->nx[ii+1]*sizeof(double);
             assign_double(dims->nx[ii+1], &mem->pi[ii], &c_ptr);
         }
         // mem->lam[ii] = (double *)c_ptr;
