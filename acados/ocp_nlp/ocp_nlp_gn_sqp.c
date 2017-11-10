@@ -36,6 +36,7 @@
 #include "acados/ocp_qp/ocp_qp_common_ext_dep.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_common.h"
+#include "acados/sim/sim_collocation.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -53,7 +54,7 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_sol
     cast_nlp_dims_to_qp_dims(&qp_dims, dims);
 
     size += sizeof(ocp_nlp_gn_sqp_args);
-    size += sizeof(ocp_nlp_args);  // TODO(dimitris): REPLACE WITH CALCULATE SIZE?
+    size += ocp_nlp_calculate_args_size(dims);
     size += qp_solver->calculate_args_size(&qp_dims);
 
     return size;
@@ -73,8 +74,8 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solve
     args = (ocp_nlp_gn_sqp_args *) c_ptr;
     c_ptr += sizeof(ocp_nlp_gn_sqp_args);
 
-    args->common = (ocp_nlp_args *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_args);  // TODO(dimitris): REPLACE WITH ASSIGN?
+    args->common = ocp_nlp_assign_args(dims, c_ptr);
+    c_ptr += ocp_nlp_calculate_args_size(dims);
 
     args->qp_solver_args = qp_solver->assign_args(&qp_dims, c_ptr);
     c_ptr += qp_solver->calculate_args_size(&qp_dims);  // TODO(dimitris): replace with memsize?

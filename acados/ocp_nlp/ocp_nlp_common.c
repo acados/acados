@@ -55,6 +55,29 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
 
 
 
+int ocp_nlp_calculate_args_size(ocp_nlp_dims *dims)
+{
+    int size = 0;
+
+    size += sizeof(ocp_nlp_args);
+
+    return size;
+}
+
+
+
+ocp_nlp_args *ocp_nlp_assign_args(ocp_nlp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_args *args = (ocp_nlp_args *)c_ptr;
+    c_ptr += sizeof(ocp_nlp_args);
+
+    return args;
+}
+
+
+
 int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
 {
     int N = dims->N;

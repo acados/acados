@@ -85,7 +85,7 @@ int main() {
     // Problem data
     ocp_nlp_ls_cost ls_cost;
     real_t *W, *WN;
-    int_t max_sqp_iters = 10;
+    int_t max_sqp_iters = 20;
     real_t *x_end;
     real_t *u_end;
 
@@ -441,7 +441,7 @@ int main() {
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\nstatus = %i, total time = %f ms\n\n", status, time*1e3);
+    printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, max_sqp_iters, time*1e3);
 
     for (int_t k =0; k < 3; k++) {
         printf("u[%d] = \n", k);

@@ -126,6 +126,10 @@ typedef struct {
 
 void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
 //
+int ocp_nlp_calculate_args_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_args *ocp_nlp_assign_args(ocp_nlp_dims *dims, void *raw_memory);
+//
 // TODO(dimitris): write those after deciding on nlp_in format
 // int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
 //
