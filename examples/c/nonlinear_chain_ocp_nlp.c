@@ -40,8 +40,7 @@
 #include "examples/c/chain_model/chain_model.h"
 
 
-
-#define NREP 10
+#define NREP 2
 #define NN 15
 #define T 3.0
 #define Ns 2
@@ -53,7 +52,7 @@ int main() {
     // TODO(dimitris): fix for NMF > 1
     const int INEXACT = 0;
     const int d = 2;
-    const int NMF = 1;
+    const int NMF = 2;
     if (INEXACT == 0) {
         printf(
             "\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact Newton) -----\n",
@@ -86,7 +85,7 @@ int main() {
     // Problem data
     ocp_nlp_ls_cost ls_cost;
     real_t *W, *WN;
-    int_t max_sqp_iters = 20;
+    int_t max_sqp_iters = 10;
     real_t *x_end;
     real_t *u_end;
 
@@ -381,17 +380,6 @@ int main() {
     nlp_in.freezeSens = false;
     if (INEXACT > 2) nlp_in.freezeSens = true;
 
-    ocp_nlp_out nlp_out;
-    nlp_out.x = (real_t **)malloc(sizeof(*nlp_out.x) * (NN + 1));
-    nlp_out.u = (real_t **)malloc(sizeof(*nlp_out.u) * NN);
-    nlp_out.lam = (real_t **)malloc(sizeof(*nlp_out.lam) * NN);
-    for (int_t i = 0; i < NN; i++) {
-        nlp_out.x[i] = (real_t *)malloc(sizeof(*nlp_out.x[i]) * (NX));
-        nlp_out.u[i] = (real_t *)malloc(sizeof(*nlp_out.u[i]) * (NU));
-        nlp_out.lam[i] = (real_t *)malloc(sizeof(*nlp_out.lam[i]) * (NX));
-    }
-    nlp_out.x[NN] = (real_t *)malloc(sizeof(*nlp_out.x[NN]) * (NX));
-
 
     /************************************************
     * gn_sqp args
@@ -403,6 +391,15 @@ int main() {
     // set up args with nested structs
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(&dims, &qp_solver);
     nlp_args->common->maxIter = max_sqp_iters;
+
+
+    /************************************************
+    * ocp_nlp out
+    ************************************************/
+
+    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(&dims, nlp_args->common), 1);
+    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(&dims, nlp_args->common, nlp_out_mem);
+
 
     /************************************************
     * gn_sqp memory
@@ -439,7 +436,7 @@ int main() {
 
     for (int rep = 0; rep < NREP; rep++)
     {
-        status = ocp_nlp_gn_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
+        status = ocp_nlp_gn_sqp(&nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work);
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -448,14 +445,14 @@ int main() {
 
     for (int_t k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
-        d_print_mat(1, nu[k], nlp_out.u[k], 1);
+        d_print_mat(1, nu[k], nlp_out->u[k], 1);
         printf("x[%d] = \n", k);
-        d_print_mat(1, nx[k], nlp_out.x[k], 1);
+        d_print_mat(1, nx[k], nlp_out->x[k], 1);
     }
     printf("u[N-1] = \n");
-    d_print_mat(1, nu[NN-1], nlp_out.u[NN-1], 1);
+    d_print_mat(1, nu[NN-1], nlp_out->u[NN-1], 1);
     printf("x[N] = \n");
-    d_print_mat(1, nx[NN], nlp_out.x[NN], 1);
+    d_print_mat(1, nx[NN], nlp_out->x[NN], 1);
 
     /************************************************
     * free memory
@@ -495,15 +492,9 @@ int main() {
 
     for (jj = 0; jj < NN; jj++) {
         free(nlp_in.sim[jj].work);
-        free(nlp_out.x[jj]);
-        free(nlp_out.u[jj]);
-        free(nlp_out.lam[jj]);
     }
-    free(nlp_out.x[NN]);
-    free(nlp_out.x);
-    free(nlp_out.u);
-    free(nlp_out.lam);
 
+    free(nlp_out);
     free(nlp_work);
     free(nlp_mem);
     free(nlp_args);

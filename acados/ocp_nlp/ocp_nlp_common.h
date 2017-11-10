@@ -126,6 +126,11 @@ typedef struct {
 
 void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
 //
+// TODO(dimitris): write those after deciding on nlp_in format
+// int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
+//
+// ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory);
+//
 int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
 //
 ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory);
@@ -133,6 +138,10 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
 int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
 //
 void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem);
+//
+int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
+//
+ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory);
 
 
 #ifdef __cplusplus
