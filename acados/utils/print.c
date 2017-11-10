@@ -198,3 +198,18 @@ void print_ocp_qp_to_file(ocp_qp_in *qp) {
         print_matrix(filename, qp->Cu[i], qp->nc[i], qp->nu[i]);
     }
 }
+
+void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out) {
+    for (int_t i = 0; i <= qp->N; i++) {
+        printf("x[%d]:\n", i);
+        print_matrix(filename, out->x[i], qp->nx[i], 1);
+        printf("u[%d]:\n", i);
+        print_matrix(filename, out->u[i], qp->nu[i], 1);
+        if (i < qp->N) {
+            printf("pi[%d]:\n", i);
+            print_matrix(filename, out->pi[i], qp->nx[i], 1);
+        }
+        printf("lam[%d]:\n", i);
+        print_matrix(filename, out->x[i], 2*qp->nb[i] + 2*qp->nc[i], 1);
+    }
+}
