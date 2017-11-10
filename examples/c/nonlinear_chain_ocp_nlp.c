@@ -17,16 +17,16 @@
  *
  */
 
-// #include <string>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-// blasfeo
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-// acados
+
+#include "acados/ocp_nlp/allocate_ocp_nlp.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/casadi_wrapper.h"
@@ -36,315 +36,296 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-
 #include "examples/c/chain_model/chain_model.h"
 
-
-#define NREP 2
 #define NN 15
-#define T 3.0
+#define TT 3.0
 #define Ns 2
+#define MAX_SQP_ITERS 20
+#define NREP 2
 
-// using Eigen::MatrixXd;
-// using Eigen::VectorXd;
+enum sensitivities_scheme {
+    EXACT_NEWTON,
+    INEXACT_NEWTON,
+    INIS,
+    FROZEN_INEXACT_NEWTON,
+    FROZEN_INIS
+};
+
+static void print_problem_info(enum sensitivities_scheme sensitivities_type,
+                               const int_t num_free_masses, const int_t num_stages) {
+    char scheme_name[MAX_STR_LEN];
+    switch (sensitivities_type) {
+        case EXACT_NEWTON:
+            snprintf(scheme_name, sizeof(scheme_name), "EXACT_NEWTON");
+            break;
+        case INEXACT_NEWTON:
+            snprintf(scheme_name, sizeof(scheme_name), "INEXACT_NEWTON");
+            break;
+        case INIS:
+            snprintf(scheme_name, sizeof(scheme_name), "INIS");
+            break;
+        case FROZEN_INEXACT_NEWTON:
+            snprintf(scheme_name, sizeof(scheme_name), "FROZEN_INEXACT_NEWTON");
+            break;
+        case FROZEN_INIS:
+            snprintf(scheme_name, sizeof(scheme_name), "FROZEN_INIS");
+            break;
+        default:
+            printf("Chose sensitivities type not available");
+            exit(1);
+    }
+    printf("\n----- NUMBER OF FREE MASSES = %d, stages = %d (%s) -----\n",
+           num_free_masses, num_stages, scheme_name);
+}
+
+static void select_model(const int_t num_free_masses, sim_in *sim) {
+    switch (num_free_masses) {
+        case 1:
+            sim->vde = &vde_chain_nm2;
+            sim->VDE_forw = &vde_fun;
+            sim->jac = &jac_chain_nm2;
+            sim->jac_fun = &jac_fun;
+            break;
+        case 2:
+            sim->vde = &vde_chain_nm3;
+            sim->VDE_forw = &vde_fun;
+            sim->jac = &jac_chain_nm3;
+            sim->jac_fun = &jac_fun;
+            break;
+        case 3:
+            sim->vde = &vde_chain_nm4;
+            sim->VDE_forw = &vde_fun;
+            sim->jac = &jac_chain_nm4;
+            sim->jac_fun = &jac_fun;
+            break;
+        default:
+            printf("Problem size not available");
+            exit(1);
+            break;
+    }
+}
+
+void read_initial_state(const int_t nx, const int_t num_free_masses, real_t *x0) {
+    FILE *initial_states_file;
+    switch (num_free_masses) {
+        case 1:
+            initial_states_file = fopen(X0_NM2_FILE, "r");
+            break;
+        case 2:
+            initial_states_file = fopen(X0_NM3_FILE, "r");
+            break;
+        case 3:
+            initial_states_file = fopen(X0_NM4_FILE, "r");
+            break;
+        // case 4:
+        //     initial_states_file = fopen(X0_NM5_FILE, "r");
+        //     break;
+        // case 5:
+        //     initial_states_file = fopen(X0_NM6_FILE, "r");
+        //     break;
+        // case 6:
+        //     initial_states_file = fopen(X0_NM7_FILE, "r");
+        //     break;
+        // case 7:
+        //     initial_states_file = fopen(X0_NM8_FILE, "r");
+        //     break;
+        default:
+            initial_states_file = fopen(X0_NM2_FILE, "r");
+            break;
+    }
+    for (int_t i = 0; i < nx; i++)
+        if (!fscanf(initial_states_file, "%lf", &x0[i]))
+            break;
+    fclose(initial_states_file);
+}
+
+void read_final_state(const int_t nx, const int_t num_free_masses, real_t *xN) {
+    FILE *final_state_file;
+    switch (num_free_masses) {
+        case 1:
+            final_state_file = fopen(XN_NM2_FILE, "r");
+            break;
+        case 2:
+            final_state_file = fopen(XN_NM3_FILE, "r");
+            break;
+        // case 3:
+        //     final_state_file = fopen(XN_NM4_FILE, "r");
+        //     break;
+        // case 4:
+        //     final_state_file = fopen(XN_NM5_FILE, "r");
+        //     break;
+        // case 5:
+        //     final_state_file = fopen(XN_NM6_FILE, "r");
+        //     break;
+        // case 6:
+        //     final_state_file = fopen(XN_NM7_FILE, "r");
+        //     break;
+        // case 7:
+        //     final_state_file = fopen(XN_NM8_FILE, "r");
+        //     break;
+        default:
+            final_state_file = fopen(XN_NM2_FILE, "r");
+            break;
+    }
+    for (int_t i = 0; i < nx; i++)
+        if (!fscanf(final_state_file, "%lf", &xN[i]))
+            break;
+    fclose(final_state_file);
+}
 
 int main() {
     // TODO(dimitris): fix for NMF > 1
-    const int INEXACT = 0;
+    enum sensitivities_scheme scheme = EXACT_NEWTON;
+    const int NMF = 3;
     const int d = 2;
-    const int NMF = 2;
-    if (INEXACT == 0) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (Exact Newton) -----\n",
-            NMF, d);
-    } else if (INEXACT == 1) {
-        printf("\n----- NUMBER OF FREE MASSES = %d, d = %d (IN Scheme) -----\n",
-               NMF, d);
-    } else if (INEXACT == 2) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (INIS Scheme) -----\n",
-            NMF, d);
-    } else if (INEXACT == 3) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN IN Scheme) "
-            "-----\n",
-            NMF, d);
-    } else if (INEXACT == 4) {
-        printf(
-            "\n----- NUMBER OF FREE MASSES = %d, d = %d (FROZEN INIS Scheme) "
-            "-----\n",
-            NMF, d);
-    }
+    print_problem_info(scheme, NMF, d);
+
+    // Dimensions
     int_t NX = 6 * NMF;
     int_t NU = 3;
-    int_t jj;
-
-    real_t wall_pos = -0.01;
-    int_t UMAX = 10;
-
-    // Problem data
-    ocp_nlp_ls_cost ls_cost;
-    real_t *W, *WN;
-    int_t max_sqp_iters = 20;
-    real_t *x_end;
-    real_t *u_end;
-
-    d_zeros(&W, NX + NU, NX + NU);
-    d_zeros(&WN, NX, NX);
-    d_zeros(&x_end, NX, 1);
-    d_zeros(&u_end, NU, 1);
-
-    real_t x0[6] = {0.0000000000000000e+00, 1.5000000000000000e+00,
-                    5.0000000000000000e-01, 0.0000000000000000e+00,
-                    0.0000000000000000e+00, 0.0000000000000000e+00};
-
-    // real_t xref[6] = {1.0000000000000000e+00, 0.0000000000000000e+00,
-    //                   0.0000000000000000e+00, 0.0000000000000000e+00,
-    //                   0.0000000000000000e+00, 0.0000000000000000e+00};
-
-    // real_t uref[3] = {0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00};
-
-    // TODO(dimitris): REMOVE THOSE TEMP REF VALUES FOR DEBUGGING
-    real_t xref[6] = {1.0000000000000000e+00, 2.0000000000000000e+00,
-                      3.0000000000000000e+00, 4.0000000000000000e+00,
-                      5.0000000000000000e+00, 6.0000000000000000e+00};
-
-    // TODO(dimitris): why changing this has no effect on solution??
-    real_t uref[3] = {1.1000000000000000e+00, 2.2000000000000000e+00, 3.3000000000000000e+00};
-
-    for (int_t i = 0; i < NX; i++) W[i * (NX + NU + 1)] = 1e-2;
-    for (int_t i = 0; i < NU; i++) W[(NX + i) * (NX + NU + 1)] = 1.0;
-    for (int_t i = 0; i < NX; i++) WN[i * (NX + 1)] = 1e-2;
-
-    ls_cost.W = (real_t **)malloc(sizeof(*ls_cost.W) * (NN + 1));
-    for (int_t i = 0; i < NN; i++) ls_cost.W[i] = W;
-    ls_cost.W[NN] = WN;
-    ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
-    for (int_t i = 0; i < NN; i++) {
-        ls_cost.y_ref[i] = (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
-        for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
-        for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = uref[j];
-    }
-    ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
-    for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
-
-    // Integrator structs
-    real_t Ts = T / NN;
-    sim_in sim_in[NN];
-    sim_out sim_out[NN];
-    sim_info info[NN];
-    sim_solver integrators[NN];
-
-    sim_RK_opts rk_opts[NN];
-    sim_lifted_irk_memory irk_mem[NN];
-
-    // TODO(rien): can I move this somewhere inside the integrator?
-    // struct d_strmat str_mat[NN];
-    // struct d_strmat str_sol[NN];
-
-    for (jj = 0; jj < NN; jj++) {
-        integrators[jj].in = &sim_in[jj];
-        integrators[jj].out = &sim_out[jj];
-        integrators[jj].args = &rk_opts[jj];
-        if (d > 0) {
-            integrators[jj].fun = &sim_lifted_irk;
-            integrators[jj].mem = &irk_mem[jj];
-        } else {
-            integrators[jj].fun = &sim_erk;
-            integrators[jj].mem = 0;
-        }
-
-        sim_in[jj].num_steps = Ns;
-        sim_in[jj].step = Ts / sim_in[jj].num_steps;
-        sim_in[jj].nx = NX;
-        sim_in[jj].nu = NU;
-
-        sim_in[jj].sens_forw = true;
-        sim_in[jj].sens_adj = false;
-        sim_in[jj].sens_hess = false;
-        sim_in[jj].num_forw_sens = NX + NU;
-
-        switch (NMF) {
-            case 1:
-                sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].VDE_forw = &vde_fun;
-                sim_in[jj].jac = &jac_chain_nm2;
-                sim_in[jj].jac_fun = &jac_fun;
-                break;
-           case 2:
-               sim_in[jj].vde = &vde_chain_nm3;
-               sim_in[jj].VDE_forw = &vde_fun;
-               sim_in[jj].jac = &jac_chain_nm3;
-               sim_in[jj].jac_fun = &jac_fun;
-               break;
-           case 3:
-               sim_in[jj].vde = &vde_chain_nm4;
-               sim_in[jj].VDE_forw = &vde_fun;
-               sim_in[jj].jac = &jac_chain_nm4;
-               sim_in[jj].jac_fun = &jac_fun;
-               break;
-            default:
-                break;
-        }
-
-        sim_in[jj].x = (real_t *)malloc(sizeof(*sim_in[jj].x) * (NX));
-        sim_in[jj].u = (real_t *)malloc(sizeof(*sim_in[jj].u) * (NU));
-        sim_in[jj].S_forw =
-            (real_t *)malloc(sizeof(*sim_in[jj].S_forw) * (NX * (NX + NU)));
-        for (int_t i = 0; i < NX * (NX + NU); i++) sim_in[jj].S_forw[i] = 0.0;
-        for (int_t i = 0; i < NX; i++) sim_in[jj].S_forw[i * (NX + 1)] = 1.0;
-
-        sim_in[jj].S_adj =
-            (real_t *)malloc(sizeof(*sim_in[jj].S_adj) * (NX + NU));
-        for (int_t i = 0; i < NX + NU; i++) sim_in[jj].S_adj[i] = 0.0;
-
-        sim_in[jj].grad_K =
-            (real_t *)malloc(sizeof(*sim_in[jj].grad_K) * (d * NX));
-        for (int_t i = 0; i < d * NX; i++) sim_in[jj].grad_K[i] = 0.0;
-
-        sim_out[jj].xn = (real_t *)malloc(sizeof(*sim_out[jj].xn) * (NX));
-        sim_out[jj].S_forw =
-            (real_t *)malloc(sizeof(*sim_out[jj].S_forw) * (NX * (NX + NU)));
-        sim_out[jj].info = &info[jj];
-        sim_out[jj].grad =
-            (real_t *)malloc(sizeof(*sim_out[jj].grad) * (NX + NU));
-
-        int_t workspace_size;
-        if (d > 0) {
-            sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
-            if (INEXACT == 0) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
-            } else if (INEXACT == 1 || INEXACT == 3) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss",
-                                             simplified_in);
-            } else if (INEXACT == 2 || INEXACT == 4) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss",
-                                             simplified_inis);
-            }
-
-            workspace_size = sim_lifted_irk_calculate_workspace_size(
-                &sim_in[jj], &rk_opts[jj]);
-            sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj],
-                                         &irk_mem[jj]);
-        } else {
-            sim_erk_create_arguments(&rk_opts[jj], 4);
-            workspace_size =
-                sim_erk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
-        }
-        integrators[jj].work = (void *) malloc(workspace_size);
-    }
 
     int_t nx[NN + 1] = {0};
     int_t nu[NN + 1] = {0};
     int_t nb[NN + 1] = {0};
     int_t nc[NN + 1] = {0};
     int_t ng[NN + 1] = {0};
-    for (int_t i = 0; i < NN; i++)
-    {
+    for (int_t i = 0; i < NN; i++) {
         nx[i] = NX;
         nu[i] = NU;
+        nb[i] = NMF + NU;
     }
     nx[NN] = NX;
-    nu[NN] = 0;
-
-    /************************************************
-     * box constraints
-     ************************************************/
-
-    int *idxb0;
-    int_zeros(&idxb0, NX + NU, 1);
-    real_t *lb0;
-    d_zeros(&lb0, NX + NU, 1);
-    real_t *ub0;
-    d_zeros(&ub0, NX + NU, 1);
-#ifdef FLIP_BOUNDS
-    for (jj = 0; jj < NU; jj++) {
-        lb0[jj] = -UMAX;  // umin
-        ub0[jj] = UMAX;   // umax
-        idxb0[jj] = jj;
-    }
-    for (jj = 0; jj < NX; jj++) {
-        lb0[NU+jj] = x0[jj];  // xmin
-        ub0[NU+jj] = x0[jj];  // xmax
-        idxb0[NU+jj] = NU+jj;
-    }
-#else
-    for (jj = 0; jj < NX; jj++) {
-        lb0[jj] = x0[jj];  // xmin
-        ub0[jj] = x0[jj];  // xmax
-        idxb0[jj] = jj;
-    }
-    for (jj = 0; jj < NU; jj++) {
-        lb0[NX+jj] = -UMAX;  // umin
-        ub0[NX+jj] = UMAX;   // umax
-        idxb0[NX+jj] = NX+jj;
-    }
-#endif
-
     nb[0] = NX + NU;
-
-    int *idxb1;
-    int_zeros(&idxb1, NMF + NU, 1);
-    double *lb1[NN - 1];
-    double *ub1[NN - 1];
-    for (int_t i = 0; i < NN - 1; i++) {
-        d_zeros(&lb1[i], NMF + NU, 1);
-        d_zeros(&ub1[i], NMF + NU, 1);
-#ifdef FLIP_BOUNDS
-        for (jj = 0; jj < NU; jj++) {
-            lb1[i][jj] = -UMAX;  // umin
-            ub1[i][jj] = UMAX;   // umax
-            idxb1[jj] = jj;
-        }
-        for (jj = 0; jj < NMF; jj++) {
-            lb1[i][NU+jj] = wall_pos;  // wall position
-            ub1[i][NU+jj] = 1e12;
-            idxb1[NU+jj] = NU + 6 * jj + 1;
-        }
-#else
-        for (jj = 0; jj < NMF; jj++) {
-            lb1[i][jj] = wall_pos;  // wall position
-            ub1[i][jj] = 1e12;
-            idxb1[jj] = 6 * jj + 1;
-        }
-        for (jj = 0; jj < NU; jj++) {
-            lb1[i][NMF+jj] = -UMAX;  // umin
-            ub1[i][NMF+jj] = UMAX;   // umax
-            idxb1[NMF+jj] = NX+jj;
-        }
-#endif
-        nb[i + 1] = NMF + NU;
-    }
-
-    int *idxbN;
-    int_zeros(&idxbN, NX, 1);
-    real_t *lbN;
-    d_zeros(&lbN, NX, 1);
-    real_t *ubN;
-    d_zeros(&ubN, NX, 1);
-    for (jj = 0; jj < NX; jj++) {
-        lbN[jj] = xref[jj];  // xmin
-        ubN[jj] = xref[jj];  // xmax
-        idxbN[jj] = jj;
-    }
     nb[NN] = NX;
 
-    real_t *hlb[NN + 1];
-    real_t *hub[NN + 1];
-    int *hidxb[NN + 1];
-
-    hlb[0] = lb0;
-    hub[0] = ub0;
-    hidxb[0] = idxb0;
-    for (int_t i = 1; i < NN; i++) {
-        hlb[i] = lb1[i - 1];
-        hub[i] = ub1[i - 1];
-        hidxb[i] = idxb1;
+    // Problem data
+    real_t wall_pos = -0.01;
+    real_t UMAX = 10;
+    real_t lb0[NX+NU], ub0[NX+NU];
+    read_initial_state(NX, NMF, lb0);
+    read_initial_state(NX, NMF, ub0);
+    for (int_t i = NX; i < NX+NU; i++) {
+        lb0[i] = -UMAX;
+        ub0[i] = +UMAX;
     }
-    hlb[NN] = lbN;
-    hub[NN] = ubN;
-    hidxb[NN] = idxbN;
+    real_t lb[NMF+NU], ub[NMF+NU];
+    real_t xref[NX];
+    read_final_state(NX, NMF, xref);
+    real_t uref[3] = {0.0, 0.0, 0.0};
+    real_t diag_cost_x[NX];
+    for (int_t i = 0; i < NX; i++)
+        diag_cost_x[i] = 1e-2;
+    real_t diag_cost_u[3] = {1.0, 1.0, 1.0};
+    real_t x_pos_inf[NX], x_neg_inf[NX];
+    for (int_t i = 0; i < NX; i++) {
+        x_pos_inf[i] = +1e4;
+        x_neg_inf[i] = -1e4;
+    }
 
+    ocp_nlp_in *nlp;
+    nlp = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
+    allocate_ocp_nlp_in(NN, nx, nu, nb, nc, ng, d, nlp);
+
+    // Least-squares cost
+    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp->cost;
+    for (int_t i = 0; i < NN; i++) {
+        for (int_t j = 0; j < NX; j++)
+            ls_cost->W[i][j * (NX + NU + 1)] = diag_cost_x[j];
+        for (int_t j = 0; j < NU; j++)
+            ls_cost->W[i][(NX + j) * (NX + NU + 1)] = diag_cost_u[j];
+        for (int_t j = 0; j < NX; j++)
+            ls_cost->y_ref[i][j] = xref[j];
+        for (int_t j = 0; j < NU; j++)
+            ls_cost->y_ref[i][NX+j] = uref[j];
+    }
+    for (int_t j = 0; j < NX; j++)
+        ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
+
+    // Simulation
+    real_t Ts = TT / NN;
+    sim_RK_opts rk_opts[NN];
+    sim_lifted_irk_memory irk_mem[NN];
+    nlp->freezeSens = false;
+    if (scheme > 2)
+        nlp->freezeSens = true;
+
+    for (int_t jj = 0; jj < NN; jj++) {
+        nlp->sim[jj].in->num_steps = Ns;
+        nlp->sim[jj].in->step = Ts / nlp->sim[jj].in->num_steps;
+        nlp->sim[jj].in->nx = NX;
+        nlp->sim[jj].in->nu = NU;
+
+        nlp->sim[jj].in->sens_forw = true;
+        nlp->sim[jj].in->sens_adj = true;
+        nlp->sim[jj].in->sens_hess = true;
+        nlp->sim[jj].in->num_forw_sens = NX + NU;
+
+        select_model(NMF, nlp->sim[jj].in);
+
+        for (int_t i = 0; i < NX * (NX + NU); i++)
+            nlp->sim[jj].in->S_forw[i] = 0.0;
+        for (int_t i = 0; i < NX; i++)
+            nlp->sim[jj].in->S_forw[i * (NX + 1)] = 1.0;
+        for (int_t i = 0; i < NX + NU; i++)
+            nlp->sim[jj].in->S_adj[i] = 0.0;
+        for (int_t i = 0; i < d * NX; i++)
+            nlp->sim[jj].in->grad_K[i] = 0.0;
+
+        nlp->sim[jj].args = &rk_opts[jj];
+
+        int_t workspace_size;
+        if (d > 0) {
+            nlp->sim[jj].fun = &sim_lifted_irk;
+            nlp->sim[jj].mem = &irk_mem[jj];
+            sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
+            if (scheme == EXACT_NEWTON) {
+                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
+            } else if (scheme == INEXACT_NEWTON || scheme == FROZEN_INEXACT_NEWTON) {
+                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
+            } else if (scheme == INIS || scheme == FROZEN_INIS) {
+                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
+            }
+            sim_lifted_irk_create_memory(nlp->sim[jj].in, &rk_opts[jj], &irk_mem[jj]);
+            workspace_size = sim_lifted_irk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
+        } else {
+            nlp->sim[jj].fun = &sim_erk;
+            nlp->sim[jj].mem = 0;
+            sim_erk_create_arguments(&rk_opts[jj], 4);
+            workspace_size = sim_erk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
+        }
+        nlp->sim[jj].work = (void *) malloc(workspace_size);
+    }
+
+    // Box constraints
+    int_t idxb_0[nb[0]], idxb_1[nb[1]], idxb_N[nb[NN]];
+    for (int_t i = 0; i < nb[0]; i++)
+        idxb_0[i] = i;
+    for (int_t i = 0; i < NMF; i++)
+        idxb_1[i] = 6*i + 1;
+    for (int_t i = 0; i < NU; i++)
+        idxb_1[NMF+i] = NX+i;
+    for (int_t i = 0; i < nb[NN]; i++)
+        idxb_N[i] = i;
+    nlp->lb[0] = lb0;
+    nlp->ub[0] = ub0;
+    nlp->idxb[0] = idxb_0;
+    for (int_t j = 0; j < NMF; j++) {
+        lb[j] = wall_pos;  // wall position
+        ub[j] = 1e4;
+    }
+    for (int_t j = 0; j < NU; j++) {
+        lb[NMF+j] = -UMAX;  // umin
+        ub[NMF+j] = +UMAX;  // umax
+    }
+    for (int_t i = 1; i < NN; i++) {
+        nlp->lb[i] = lb;
+        nlp->ub[i] = ub;
+        nlp->idxb[i] = idxb_1;
+    }
+    nlp->lb[NN] = x_neg_inf;
+    nlp->ub[NN] = x_pos_inf;
+    nlp->idxb[NN] = idxb_N;
 
     // TODO(dimitris): clean this up ! ******************************
 
@@ -363,22 +344,11 @@ int main() {
     dims.ns = NS_NH;
     dims.nh = NS_NH;
 
-    form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, hidxb);
+    form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, (int **)nlp->idxb);
     dims.nbx = NBX;
     dims.nbu = NBU;
 
-    // **************************************************************
-
-    ocp_nlp_in nlp_in;
-
-    nlp_in.dims = &dims;
-    nlp_in.idxb = (const int_t **)hidxb;
-    nlp_in.lb = (const real_t **)hlb;
-    nlp_in.ub = (const real_t **)hub;
-    nlp_in.sim = integrators;
-    nlp_in.cost = &ls_cost;
-    nlp_in.freezeSens = false;
-    if (INEXACT > 2) nlp_in.freezeSens = true;
+    // ***************************************************************
 
 
     /************************************************
@@ -386,11 +356,11 @@ int main() {
     ************************************************/
 
     // choose QP solver and set its function pointers
-    ocp_qp_solver qp_solver = initialize_ocp_qp_solver(CONDENSING_QPOASES);
+    ocp_qp_solver qp_solver = initialize_ocp_qp_solver(HPIPM);
 
     // set up args with nested structs
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(&dims, &qp_solver);
-    nlp_args->common->maxIter = max_sqp_iters;
+    nlp_args->common->maxIter = MAX_SQP_ITERS;
 
 
     /************************************************
@@ -408,13 +378,13 @@ int main() {
     ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(&dims, &qp_solver, nlp_args);
 
     // TODO(dimitris): users shouldn't write directly on memory..
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < NX; j++)
+    for (int i = 0; i < NN; i++) {
+        for (int j = 0; j < NX; j++)
             nlp_mem->common->x[i][j] = xref[j];  // resX(j,i)
-        for (int_t j = 0; j < NU; j++)
+        for (int j = 0; j < NU; j++)
             nlp_mem->common->u[i][j] = uref[j];  // resU(j, i)
     }
-    for (int_t j = 0; j < NX; j++)
+    for (int j = 0; j < NX; j++)
         nlp_mem->common->x[NN][j] = xref[j];  // resX(j, NN)
 
     /************************************************
@@ -436,14 +406,14 @@ int main() {
 
     for (int rep = 0; rep < NREP; rep++)
     {
-        status = ocp_nlp_gn_sqp(&nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work);
+        status = ocp_nlp_gn_sqp(nlp, nlp_out, nlp_args, nlp_mem, nlp_work);
     }
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, max_sqp_iters, time*1e3);
+    printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, MAX_SQP_ITERS, time*1e3);
 
-    for (int_t k =0; k < 3; k++) {
+    for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
         d_print_mat(1, nu[k], nlp_out->u[k], 1);
         printf("x[%d] = \n", k);
@@ -458,44 +428,12 @@ int main() {
     * free memory
     ************************************************/
 
-    d_free(W);
-    d_free(WN);
-    d_free(x_end);
-    d_free(u_end);
-
-    int_free(idxb0);
-    d_free(lb0);
-    d_free(ub0);
-    int_free(idxb1);
-    for (jj = 0; jj < NN - 1; jj++) {
-        d_free(lb1[jj]);
-        d_free(ub1[jj]);
-    }
-    int_free(idxbN);
-    d_free(lbN);
-    d_free(ubN);
-
-    for (jj = 0; jj < NN; jj++) {
-        free(sim_in[jj].x);
-        free(sim_in[jj].u);
-        free(sim_in[jj].S_forw);
-        free(sim_in[jj].S_adj);
-        free(sim_in[jj].grad_K);
-        free(sim_out[jj].xn);
-        free(sim_out[jj].S_forw);
-        free(sim_out[jj].grad);
-        free(ls_cost.y_ref[jj]);
-    }
-    free(ls_cost.y_ref[NN]);
-    free(ls_cost.y_ref);
-    free(ls_cost.W);
-
-    for (jj = 0; jj < NN; jj++) {
-        free(nlp_in.sim[jj].work);
-    }
+    // TODO(dimitris): replace with new ocp_nlp_in functionality
+    // free_ocp_nlp_in(nlp);
 
     free(nlp_out);
     free(nlp_work);
     free(nlp_mem);
     free(nlp_args);
+
 }
