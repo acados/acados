@@ -30,8 +30,10 @@ if(NOT CASADI_MATLAB_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
 
-list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "lib")
-list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "lib")
+    list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+endif()
 
 # Find Casadi libraries
 find_library(CASADI_MATLAB_LIBRARY

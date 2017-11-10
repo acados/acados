@@ -124,13 +124,13 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_test(linear_mpc_example linear_mpc_example)
 endif()
 
-# if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-#     add_executable(discrete_model
-#         discrete_model.c
-#         discrete_model/discrete_model.c
-#         discrete_model/discrete_model_cost.c
-#         discrete_model/discrete_model_costN.c
-#         )
-#     target_link_libraries(discrete_model acados)
-#     add_test(discrete_model discrete_model)
-# endif()
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_executable(discrete_model
+        discrete_model.c
+        discrete_model/discrete_model.c
+        discrete_model/discrete_model_cost.c
+        discrete_model/discrete_model_costN.c
+        )
+    target_link_libraries(discrete_model acados)
+    add_test(discrete_model discrete_model)
+endif()
