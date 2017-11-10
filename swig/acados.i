@@ -132,7 +132,7 @@ static int(*load_dims_function(void *handle, std::string name))(int_t *, int_t *
         return (int_t(*)(int_t*, int_t*, int_t*, int_t*))
                    GetProcAddress((HMODULE)handle, name.c_str());
     #else
-        return (casadi_function_t) dlsym(handle, name.c_str());
+        return (int_t(*)(int_t*, int_t*, int_t*, int_t*)) dlsym(handle, name.c_str());
     #endif
 }
 
@@ -140,7 +140,7 @@ static const int_t *(*load_sparsity_function(void *handle, std::string name))(in
     #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
         return (const int_t *(*)(int_t)) GetProcAddress((HMODULE)handle, name.c_str());
     #else
-        return (casadi_function_t) dlsym(handle, name.c_str());
+        return (const int_t *(*)(int_t)) dlsym(handle, name.c_str());
     #endif
 }
 
