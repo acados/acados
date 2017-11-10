@@ -47,7 +47,7 @@ void print_ocp_qp(ocp_qp_in *qp);
 
 void print_ocp_qp_to_file(ocp_qp_in *qp);
 
-void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out);    
+void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out);
 
 #ifdef __cplusplus
 } /* extern "C" */
