@@ -47,7 +47,6 @@ dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void
     int memory_size = dense_qp_qpoases_calculate_memory_size(qp_in, args);
     void *ptr = malloc(memory_size);
     dense_qp_qpoases_memory *mem = dense_qp_qpoases_assign_memory(qp_in, args, ptr);
-    // TODO(dimitris): ASSERT DOES NOT WORK (REDEFINED IN QPOASES)
-    assert(1==0);
+    // NOTE(dimitris): this function is NOT called by the ocp_qp_condensing_qpoases_create_memory..
     return mem;
 }

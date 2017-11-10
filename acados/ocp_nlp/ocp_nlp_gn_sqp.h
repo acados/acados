@@ -48,7 +48,7 @@ typedef struct {
 
 typedef struct {
     ocp_nlp_memory *common;
-    ocp_nlp_dims *dims;  // TODO(dimitris): move inside common!
+    ocp_nlp_dims *dims;
     ocp_qp_solver *qp_solver;
     void *qp_mem;
 } ocp_nlp_gn_sqp_memory;
