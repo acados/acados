@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #include <xmmintrin.h>
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -175,6 +177,8 @@ void read_final_state(const int_t nx, const int_t num_free_masses, real_t *xN) {
 }
 
 int main() {
+// _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+
     // TODO(dimitris): fix for NMF > 1
     enum sensitivities_scheme scheme = EXACT_NEWTON;
     const int NMF = 3;
