@@ -17,30 +17,20 @@
  *
  */
 
-// external
-#include <assert.h>
-#include <stdlib.h>
-// // blasfeo
-// #include "blasfeo_target.h"
-// #include "blasfeo_common.h"
-// #include "blasfeo_d_aux.h"
-// #include "blasfeo_d_blas.h"
-// #include "blasfeo_v_aux_ext_dep.h"
-// // hpipm
-// #include "hpipm_d_ocp_qp.h"
-// #include "hpipm_d_ocp_qp_sol.h"
-// #include "hpipm_d_ocp_qp_ipm.h"
+// // external
+// #include <assert.h>
+// #include <stdlib.h>
 // acados
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-// #include "utils/types.h"
+#include "acados/utils/mem.h"
 
 
 ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims)
 {
-    int memory_size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
-    void *ptr = malloc(memory_size);
+    int size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
+    void *ptr = acados_malloc(size, 1);
     ocp_qp_condensing_hpipm_args *args = ocp_qp_condensing_hpipm_assign_args(dims, ptr);
     ocp_qp_condensing_hpipm_initialize_default_args(args);
     return args;
@@ -52,24 +42,24 @@ ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_dim
 {
     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
 
-    int memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(dims, args);
-    void *ptr = malloc(memory_size);
+    int size = ocp_qp_condensing_hpipm_calculate_memory_size(dims, args);
+    void *ptr = acados_malloc(size, 1);
     ocp_qp_condensing_hpipm_memory *mem = ocp_qp_condensing_hpipm_assign_memory(dims, args, ptr);
     return mem;
 }
 
 
 
-void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
-    ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
+// void ocp_qp_condensing_hpipm_initialize(ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
+//     ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
 
-    *mem = ocp_qp_condensing_hpipm_create_memory(qp_in->size, args);
+//     *mem = ocp_qp_condensing_hpipm_create_memory(qp_in->size, args);
 
-}
+// }
 
 
 
-void ocp_qp_condensing_hpipm_destroy(void *mem, void *work) {
-    free(mem);
-    free(work);
-}
+// void ocp_qp_condensing_hpipm_destroy(void *mem, void *work) {
+//     free(mem);
+//     free(work);
+// }

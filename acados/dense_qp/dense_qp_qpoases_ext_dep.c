@@ -25,13 +25,14 @@
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_qpoases_ext_dep.h"
 #include "acados/dense_qp/dense_qp_common.h"
+#include "acados/utils/mem.h"
 
 
 
 dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_in *qp_in)
 {
-    int memory_size = dense_qp_qpoases_calculate_args_size(qp_in);
-    void *ptr = malloc(memory_size);
+    int size = dense_qp_qpoases_calculate_args_size(qp_in);
+    void *ptr = acados_malloc(size, 1);
     dense_qp_qpoases_args *args = dense_qp_qpoases_assign_args(qp_in, ptr);
     dense_qp_qpoases_initialize_default_args(args);
 
@@ -44,8 +45,8 @@ dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void
 {
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) args_;
 
-    int memory_size = dense_qp_qpoases_calculate_memory_size(qp_in, args);
-    void *ptr = malloc(memory_size);
+    int size = dense_qp_qpoases_calculate_memory_size(qp_in, args);
+    void *ptr = acados_malloc(size, 1);
     dense_qp_qpoases_memory *mem = dense_qp_qpoases_assign_memory(qp_in, args, ptr);
     // NOTE(dimitris): this function is NOT called by the ocp_qp_condensing_qpoases_create_memory..
     return mem;

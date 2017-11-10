@@ -34,6 +34,7 @@
 #include "acados/ocp_qp/ocp_qp_common_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
+#include "acados/utils/mem.h"
 
 // TODO TEMP
 #include "acados/ocp_qp/ocp_qp_hpipm_ext_dep.h"
@@ -44,7 +45,7 @@
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
 {
     int size = ocp_qp_in_calculate_size(dims);
-    void *ptr = malloc(size);
+    void *ptr = acados_malloc(size, 1);;
     ocp_qp_in *qp_in = ocp_qp_in_assign(dims, ptr);
     return qp_in;
 }
@@ -54,7 +55,7 @@ ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 {
     int size = ocp_qp_out_calculate_size(dims);
-    void *ptr = malloc(size);
+    void *ptr = acados_malloc(size, 1);
     ocp_qp_out *qp_out = ocp_qp_out_assign(dims, ptr);
     return qp_out;
 }

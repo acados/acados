@@ -89,6 +89,9 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
 {
     char *c_ptr = (char *) raw_memory;
 
+    // TODO(dimitris): check if aligning pointers is really necessary and use such asserts
+    // assert((size_t)c_ptr % 8 == 0);
+
     int N = dims->N;
 
     ocp_nlp_memory *mem = (ocp_nlp_memory *)c_ptr;
@@ -114,17 +117,21 @@ ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, vo
 
     for (int ii = 0; ii <= N; ii++)
     {
-        mem->x[ii] = (double *)c_ptr;
-        c_ptr += dims->nx[ii]*sizeof(double);
-        mem->u[ii] = (double *)c_ptr;
-        c_ptr += dims->nu[ii]*sizeof(double);
+        // mem->x[ii] = (double *)c_ptr;
+        // c_ptr += dims->nx[ii]*sizeof(double)+100;
+        // mem->u[ii] = (double *)c_ptr;
+        // c_ptr += dims->nu[ii]*sizeof(double);
+        assign_double(dims->nx[ii], &mem->x[ii], &c_ptr);
+        assign_double(dims->nu[ii], &mem->u[ii], &c_ptr);
         if (ii < N)
         {
-            mem->pi[ii] = (double *)c_ptr;
-            c_ptr += dims->nx[ii+1]*sizeof(double);
+            // mem->pi[ii] = (double *)c_ptr;
+            // c_ptr += dims->nx[ii+1]*sizeof(double)+100;
+            assign_double(dims->nx[ii+1], &mem->pi[ii], &c_ptr);
         }
-        mem->lam[ii] = (double *)c_ptr;
-        c_ptr += 2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii])*sizeof(double);
+        // mem->lam[ii] = (double *)c_ptr;
+        // c_ptr += 2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii])*sizeof(double);
+        assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &mem->lam[ii], &c_ptr);
     }
 
     assert((char *)raw_memory + ocp_nlp_calculate_memory_size(dims, args) >= c_ptr);

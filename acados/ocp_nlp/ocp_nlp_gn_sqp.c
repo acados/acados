@@ -138,7 +138,7 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_qp_s
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver)
 {
     int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver);
-    void *ptr = malloc(size);
+    void *ptr = acados_malloc(size, 1);
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver, ptr);
 
     // TODO(dimitris): nest in initialize default args of each module
@@ -153,7 +153,7 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solve
 ocp_nlp_gn_sqp_memory *new_ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args)
 {
     int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, qp_solver, args);
-    void *ptr = malloc(size);
+    void *ptr = acados_malloc(size, 1);
     ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, qp_solver, args, ptr);
     return mem;
 }

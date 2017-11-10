@@ -17,20 +17,20 @@
  *
  */
 
-// external
-#include <assert.h>
-#include <stdlib.h>
+// // external
+// #include <assert.h>
+// #include <stdlib.h>
 // acados
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-// #include "utils/types.h"
+#include "acados/utils/mem.h"
 
 
 ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(ocp_qp_dims *dims)
 {
-    int memory_size = ocp_qp_condensing_qpoases_calculate_args_size(dims);
-    void *ptr = malloc(memory_size);
+    int size = ocp_qp_condensing_qpoases_calculate_args_size(dims);
+    void *ptr = acados_malloc(size, 1);
     ocp_qp_condensing_qpoases_args *args = ocp_qp_condensing_qpoases_assign_args(dims, ptr);
     ocp_qp_condensing_qpoases_initialize_default_args(args);
     return args;
@@ -42,8 +42,8 @@ ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp
 {
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
 
-    int memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(dims, args);
-    void *ptr = malloc(memory_size);
+    int size = ocp_qp_condensing_qpoases_calculate_memory_size(dims, args);
+    void *ptr = acados_malloc(size, 1);
     ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_assign_memory(dims, args, ptr);
     return mem;
 }

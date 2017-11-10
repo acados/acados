@@ -17,9 +17,19 @@
  *
  */
 
+// external
 #include <stdio.h>
+#include <stdlib.h>
 
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+// acados
 #include "acados/utils/mem.h"
+
+// #define _USE_VALGRIND_
 
 
 void make_int_multiple_of(int num, int *size) {
@@ -32,4 +42,61 @@ void align_char_to(int num, char **c_ptr) {
     size_t s_ptr = (size_t)*c_ptr;
     s_ptr = (s_ptr + num - 1) / num * num;
     *c_ptr = (char *)s_ptr;
+}
+
+
+
+// print warning when by-passing pointer and allocating new memory (for debugging)
+static void print_warning ()
+{
+    printf(" -- using dynamically allocated memory for debugging --\n");
+}
+
+
+
+void *acados_malloc(size_t nitems, size_t size)
+{
+    void *ptr = malloc(nitems*size);
+    // void *ptr = calloc(nitems, size);
+
+    return ptr;
+}
+
+
+
+void assign_double(int n, double **v, char **ptr)
+{
+#ifdef _USE_VALGRIND_
+    *v = (double *)acados_malloc(n, sizeof(double));
+    print_warning();
+#else
+    *v = (double *)*ptr;
+    *ptr += n*sizeof(double);
+#endif
+}
+
+
+
+void assign_strvec(int n, struct d_strvec *sv, char **ptr)
+{
+#ifdef _USE_VALGRIND_
+    d_allocate_strvec(n, sv);
+    print_warning();
+#else
+    d_create_strvec(n, sv, *ptr);
+    *ptr += sv->memory_size;
+#endif
+}
+
+
+
+void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
+{
+#ifdef _USE_VALGRIND_
+    d_allocate_strmat(m, n, sA);
+    print_warning();
+#else
+    d_create_strmat(m, n, sA, *ptr);
+    *ptr += sA->memory_size;
+#endif
 }
