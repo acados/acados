@@ -99,6 +99,49 @@ int global_library_counter = 1;
 //     return true;
 // }
 
+std::string load_error_message() {
+    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+
+    // Retrieve the system error message for the last-error code
+    LPVOID lpMsgBuf;
+    DWORD dw = GetLastError();
+
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL );
+
+    return std::string((LPTSTR) lpMsgBuf);
+
+    #else
+
+    return std::string(dlerror());
+
+    #endif
+
+}
+
+static int (*load_dims_function(void *handle, std::string name))(int_t *, int_t *, int_t *, int_t *) {
+    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+        return (int_t (*)(int_t*, int_t*, int_t*, int_t*)) GetProcAddress((HMODULE)handle, name.c_str());
+    #else
+        return (casadi_function_t) dlsym(handle, name.c_str());
+    #endif
+}
+
+static const int_t *(*load_sparsity_function(void *handle, std::string name))(int_t) {
+    #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
+        return (const int_t *(*)(int_t)) GetProcAddress((HMODULE)handle, name.c_str());
+    #else
+        return (casadi_function_t) dlsym(handle, name.c_str());
+    #endif
+}
+
 static void validate_model(casadi::Function& model) {
     if (model.n_in() != 2)
         throw std::runtime_error("An ODE model should have 2 inputs: state and controls");
@@ -162,7 +205,7 @@ enum generation_mode {
 
 static casadi_function_t compile_and_load(std::string name, void **handle) {
     std::string library_name = name + std::to_string(global_library_counter++) + std::string(".so");
-    std::string path_to_library = std::string("./") + library_name;
+    std::string path_to_library = library_name;
     char command[MAX_STR_LEN];
     snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, name.c_str(),
         library_name.c_str());
@@ -174,17 +217,8 @@ static casadi_function_t compile_and_load(std::string name, void **handle) {
     #else
     *handle = dlopen(path_to_library.c_str(), RTLD_LAZY);
     #endif
-    if (*handle == NULL) {
-        char err_msg[MAX_STR_LEN];
-        #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
-        snprintf(err_msg, sizeof(err_msg), \
-            "Something went wrong when loading the model.");
-        #else
-        snprintf(err_msg, sizeof(err_msg), \
-            "Something went wrong when loading the model. dlerror(): %s", dlerror());
-        #endif
-        throw std::runtime_error(err_msg);
-    }
+    if (*handle == NULL)
+        throw std::runtime_error("Loading of " + path_to_library + " failed. Error message: " + load_error_message());
     typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
     #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
     return (casadi_function_t) GetProcAddress((HMODULE)*handle, name.c_str());
@@ -563,27 +597,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             casadi::Function(full_name, input_vector, output_vector);
         extended_function.generate(generated_file);
 
-        // Compile code
-        std::string library_name = full_name + std::string(".so");
-        std::string path_to_library = std::string("./") + library_name;
-        char command[MAX_STR_LEN];
-        snprintf(command, sizeof(command), "cc -fPIC -shared -g %s.c -o %s",
-                 full_name.c_str(), library_name.c_str());
-        int compilation_failed = system(command);
-        if (compilation_failed)
-            throw std::runtime_error("Something went wrong when compiling the model.");
-
-        // Load library
-        void *fun_handle = malloc(sizeof(void *));
-        fun_handle = dlopen(path_to_library.c_str(), RTLD_LAZY);
-        if (fun_handle == NULL) {
-            char err_msg[MAX_STR_LEN];
-            snprintf(
-                err_msg, sizeof(err_msg),
-                "Something went wrong when loading the model. dlerror(): %s",
-                dlerror());
-            throw std::runtime_error(err_msg);
-        }
+        void *handle = malloc(sizeof(void *));
+        casadi_function_t generated_function = compile_and_load(full_name, &handle);
 
         // Create nlp_function object
         ocp_nlp_function *nlp_function = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
@@ -604,14 +619,9 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 
         // Write casadi wrapper arguments
         nlp_function->args = casadi_wrapper_create_arguments();
-        nlp_function->args->fun =
-            (int_t(*)(const real_t **, real_t **, int_t *, real_t *,
-                      int_t))dlsym(fun_handle, full_name.c_str());
-        nlp_function->args->dims =
-            (int_t(*)(int_t *, int_t *, int_t *, int_t *))dlsym(
-                fun_handle, (full_name + "_work").c_str());
-        nlp_function->args->sparsity = (const int *(*)(int_t))dlsym(
-            fun_handle, (full_name + "_sparsity_out").c_str());
+        nlp_function->args->fun = generated_function;
+        nlp_function->args->dims = load_dims_function(handle, full_name + "_work");
+        nlp_function->args->sparsity = load_sparsity_function(handle, full_name + "_sparsity_out");
         casadi_wrapper_initialize(nlp_function->in, nlp_function->args,
                                   &nlp_function->work);
 
