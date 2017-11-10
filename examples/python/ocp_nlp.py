@@ -17,20 +17,19 @@ nlp.set_model(ode_fun, step)
 # Cost function
 Q = diag([1.0, 1.0])
 R = 1e-2
-x = SX.sym('x',nx)
-u = SX.sym('u',nu)
-uN = SX.sym('u',0)
-F = ocp_nlp_function(Function('ls_cost', [x,u], [vertcat(x,u)]))
-FN = ocp_nlp_function(Function('ls_costN', [x,uN], [x]))
-ls_cost = ocp_nlp_ls_cost(N, N*[F]+[FN])
+x = SX.sym('x', nx)
+u = SX.sym('u', nu)
+u_N = SX.sym('u', 0)
+f = ocp_nlp_function(Function('ls_cost', [x, u], [vertcat(x, u)]))
+f_N = ocp_nlp_function(Function('ls_cost_N', [x, u_N], [x]))
+ls_cost = ocp_nlp_ls_cost(N, N*[f]+[f_N])
 ls_cost.ls_cost_matrix = N*[block_diag(Q, R)] + [Q]
 nlp.set_cost(ls_cost)
 
 # Constraints
-g = u
-G = ocp_nlp_function(Function('path_constraint', [x,u], [g]))
-path_constraints = N*[G] + [SX([])]
-nlp.set_path_constraints(path_constraints)
+g = ocp_nlp_function(Function('path_constraint', [x, u], [u]))
+g_N = ocp_nlp_function(Function('path_constraintN', [x, u], [SX([])]))
+nlp.set_path_constraints(N*[g] + [g_N])
 for i in range(N):
     nlp.lg[i] = -0.5
     nlp.ug[i] = +0.5
@@ -42,8 +41,6 @@ STATES = [array([0.1, 0.1])]
 CONTROLS = []
 for i in range(20):
     state_traj, control_traj = solver.evaluate(STATES[-1])
-    print('state_traj:', state_traj)
-    print('control_traj:', control_traj)
     STATES += [state_traj[1]]
     CONTROLS += [control_traj[0]]
 
