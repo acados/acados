@@ -85,6 +85,9 @@ examples_c:
 run_examples_c:
 	( cd examples/c; $(MAKE) run_examples )
 
+run_example_chain:
+	( cd examples/c; $(MAKE) run_nonlinear_chain_ocp_nlp )
+
 clean:
 	( cd acados; $(MAKE) clean )
 	( cd examples/c; $(MAKE) clean )

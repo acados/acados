@@ -37,6 +37,7 @@ mass_spring_condensing_qpoases: mass_spring_condensing_qpoases.o
 OBJS =
 OBJS += chain_model/vde_chain_nm2.o
 OBJS += chain_model/jac_chain_nm2.o
+OBJS += chain_model/vde_adj_chain_nm2.o
 OBJS += chain_model/vde_chain_nm3.o
 OBJS += chain_model/jac_chain_nm3.o
 OBJS += chain_model/vde_chain_nm4.o
@@ -62,7 +63,7 @@ run_mass_spring_condensing_qpoases:
 	./mass_spring_condensing_qpoases.out
 
 run_nonlinear_chain_ocp_nlp:
-	( cd ../..; ./examples/c/nonlinear_chain_ocp_nlp.out )
+	./nonlinear_chain_ocp_nlp.out
 
 clean:
 	rm -f chain_model/*.o
