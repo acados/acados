@@ -76,14 +76,11 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
 ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 
 // TODO TEMP
-
-void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev);
-
-void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, ocp_qp_in *qp_in,
-    int_t stage);
-
-void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
-     const real_t *r, ocp_qp_in *qp_in, int_t stage);
+// void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev);
+// void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, ocp_qp_in *qp_in,
+//     int_t stage);
+// void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
+//      const real_t *r, ocp_qp_in *qp_in, int_t stage);
 
 #ifdef __cplusplus
 } /* extern "C" */

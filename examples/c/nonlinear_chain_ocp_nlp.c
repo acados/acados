@@ -456,12 +456,13 @@ int main() {
     * free memory
     ************************************************/
 
-    // TODO(dimitris): replace with new ocp_nlp_in functionality
-    // free_ocp_nlp_in(nlp);
+    // TODO(dimitris): still huge memory leaks from integrator args, mem, workspace...
+    tmp_free_ocp_nlp_in_sim_solver(nlp);
 
-    free(nlp_out);
     free(nlp_work);
     free(nlp_mem);
+    free(nlp_out);
+    free(nlp);
     free(nlp_args);
 
 }

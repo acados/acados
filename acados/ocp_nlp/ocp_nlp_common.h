@@ -150,6 +150,10 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args);
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory);
 
 
+// TODO(dimitris): TEMP!!
+void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp);
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

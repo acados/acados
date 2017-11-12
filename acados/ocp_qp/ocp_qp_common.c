@@ -118,25 +118,25 @@ ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
-{
-    for (int ii = 0; ii < N+1; ii++)
-    {
-        nbu[ii] = 0;
-        nbx[ii] = 0;
-        for (int jj = 0; jj < nb[ii]; jj++)
-        {
-            if (idxb_rev[ii][jj] < nx[ii])
-            {
-                nbx[ii]++;
-            }
-            else
-            {
-                nbu[ii]++;
-            }
-        }
-    }
-}
+// void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
+// {
+//     for (int ii = 0; ii < N+1; ii++)
+//     {
+//         nbu[ii] = 0;
+//         nbx[ii] = 0;
+//         for (int jj = 0; jj < nb[ii]; jj++)
+//         {
+//             if (idxb_rev[ii][jj] < nx[ii])
+//             {
+//                 nbx[ii]++;
+//             }
+//             else
+//             {
+//                 nbu[ii]++;
+//             }
+//         }
+//     }
+// }
 
 
 
