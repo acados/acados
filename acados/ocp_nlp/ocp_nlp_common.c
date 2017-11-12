@@ -270,7 +270,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
 {
     int N = dims->N;
 
-    int size = sizeof(ocp_nlp_out);
+    int size = sizeof(ocp_nlp_in);
 
     size += sizeof(ocp_nlp_dims);
     size += 8*sizeof(int)*(N+1);  // dims
@@ -301,6 +301,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
         size += sizeof(double)*(dims->nx[ii]+dims->nu[ii]);  // yref
     }
 
+    // TODO(dimitris): add alignment when strvecs/strmats are used
     return size;
 }
 
@@ -349,8 +350,10 @@ void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
 
         free(nlp->sim[i].out->xn);
         free(nlp->sim[i].out->S_forw);
+        free(nlp->sim[i].out->S_adj);
         free(nlp->sim[i].out->info);
         free(nlp->sim[i].out->grad);
+        free(nlp->sim[i].out->S_hess);
         free(nlp->sim[i].out);
     }
     free(nlp->sim);
@@ -442,6 +445,8 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, int num_st
 
     tmp_allocate_ocp_nlp_in_sim_solver(N, dims->nx, dims->nu, num_stages, in);
 
-    // TODO ASSERT!
+    // printf("diff = %lld\n", (long long int)(raw_memory + ocp_nlp_in_calculate_size(dims, args)) - (long long int)c_ptr);
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims, args) == c_ptr);
+
     return in;
 }
