@@ -45,7 +45,7 @@
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
 {
     int size = ocp_qp_in_calculate_size(dims);
-    void *ptr = acados_malloc(size, 1);;
+    void *ptr = acados_malloc(size, 1);
     ocp_qp_in *qp_in = ocp_qp_in_assign(dims, ptr);
     return qp_in;
 }

@@ -20,6 +20,7 @@
 // external
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
@@ -29,8 +30,9 @@
 // acados
 #include "acados/utils/mem.h"
 
-// #define _USE_VALGRIND_
+// #define _USE_VALGRIND_  // uncomment to bypass assignment and do new memory allocation instead
 
+#define _USE_MALLOC_  // acados_malloc = malloc / acados_malloc = calloc
 
 void make_int_multiple_of(int num, int *size) {
     *size = (*size + num - 1) / num * num;
@@ -56,22 +58,71 @@ static void print_warning ()
 
 void *acados_malloc(size_t nitems, size_t size)
 {
+#if defined(_USE_MALLOC_)
     void *ptr = malloc(nitems*size);
-    // void *ptr = calloc(nitems, size);
-
+#else
+    void *ptr = calloc(nitems, size);
+#endif
     return ptr;
+}
+
+
+
+void assign_double_ptrs(int n, double ***v, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *v = (double **)acados_malloc(n, sizeof(double *));
+#else
+    *v = (double **)*ptr;
+    *ptr += sizeof(double *) * n;
+#endif
+}
+
+
+
+void assign_int_ptrs(int n, int ***v, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *v = (int **)acados_malloc(n, sizeof(int *));
+#else
+    *v = (int **)*ptr;
+    *ptr += sizeof(int *) * n;
+#endif
+}
+
+
+// TODO(dimitris):
+// assign_strvec_ptrs
+// assign_strmat ptrs
+
+
+void assign_int(int n, int **v, char **ptr)
+{
+#ifdef _USE_VALGRIND_
+    *v = (int *)acados_malloc(n, sizeof(int));
+    print_warning();
+#else
+    *v = (int *)*ptr;
+    *ptr += sizeof(int) * n;
+#endif
 }
 
 
 
 void assign_double(int n, double **v, char **ptr)
 {
+    assert((size_t)*ptr % 8 == 0 && "double not 8-byte aligned!");
+
 #ifdef _USE_VALGRIND_
     *v = (double *)acados_malloc(n, sizeof(double));
     print_warning();
 #else
     *v = (double *)*ptr;
-    *ptr += n*sizeof(double);
+    *ptr += sizeof(double) * n;
 #endif
 }
 
@@ -79,6 +130,8 @@ void assign_double(int n, double **v, char **ptr)
 
 void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 {
+    assert((size_t)*ptr % 64 == 0 && "strvec not 64-byte aligned!");
+
 #ifdef _USE_VALGRIND_
     d_allocate_strvec(n, sv);
     print_warning();
@@ -92,6 +145,8 @@ void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 
 void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
 {
+    assert((size_t)*ptr % 64 == 0 && "strmat not 64-byte aligned!");
+
 #ifdef _USE_VALGRIND_
     d_allocate_strmat(m, n, sA);
     print_warning();

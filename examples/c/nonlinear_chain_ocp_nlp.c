@@ -35,6 +35,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -54,8 +55,11 @@ enum sensitivities_scheme {
     FROZEN_INIS
 };
 
+
+
 static void print_problem_info(enum sensitivities_scheme sensitivities_type,
-                               const int_t num_free_masses, const int_t num_stages) {
+                               const int num_free_masses, const int num_stages)
+{
     char scheme_name[MAX_STR_LEN];
     switch (sensitivities_type) {
         case EXACT_NEWTON:
@@ -81,8 +85,12 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
            num_free_masses, num_stages, scheme_name);
 }
 
-static void select_model(const int_t num_free_masses, sim_in *sim) {
-    switch (num_free_masses) {
+
+
+static void select_model(const int num_free_masses, sim_in *sim)
+{
+    switch (num_free_masses)
+    {
         case 1:
             sim->vde = &vde_chain_nm2;
             sim->VDE_forw = &vde_fun;
@@ -108,9 +116,13 @@ static void select_model(const int_t num_free_masses, sim_in *sim) {
     }
 }
 
-void read_initial_state(const int_t nx, const int_t num_free_masses, real_t *x0) {
+
+
+void read_initial_state(const int nx, const int num_free_masses, double *x0)
+{
     FILE *initial_states_file;
-    switch (num_free_masses) {
+    switch (num_free_masses)
+    {
         case 1:
             initial_states_file = fopen(X0_NM2_FILE, "r");
             break;
@@ -136,13 +148,16 @@ void read_initial_state(const int_t nx, const int_t num_free_masses, real_t *x0)
             initial_states_file = fopen(X0_NM2_FILE, "r");
             break;
     }
-    for (int_t i = 0; i < nx; i++)
+    for (int i = 0; i < nx; i++)
         if (!fscanf(initial_states_file, "%lf", &x0[i]))
             break;
     fclose(initial_states_file);
 }
 
-void read_final_state(const int_t nx, const int_t num_free_masses, real_t *xN) {
+
+
+void read_final_state(const int nx, const int num_free_masses, double *xN)
+{
     FILE *final_state_file;
     switch (num_free_masses) {
         case 1:
@@ -151,9 +166,9 @@ void read_final_state(const int_t nx, const int_t num_free_masses, real_t *xN) {
         case 2:
             final_state_file = fopen(XN_NM3_FILE, "r");
             break;
-        // case 3:
-        //     final_state_file = fopen(XN_NM4_FILE, "r");
-        //     break;
+        case 3:
+            final_state_file = fopen(XN_NM4_FILE, "r");
+            break;
         // case 4:
         //     final_state_file = fopen(XN_NM5_FILE, "r");
         //     break;
@@ -170,91 +185,122 @@ void read_final_state(const int_t nx, const int_t num_free_masses, real_t *xN) {
             final_state_file = fopen(XN_NM2_FILE, "r");
             break;
     }
-    for (int_t i = 0; i < nx; i++)
+    for (int i = 0; i < nx; i++)
         if (!fscanf(final_state_file, "%lf", &xN[i]))
             break;
     fclose(final_state_file);
 }
 
-int main() {
-// _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-    // TODO(dimitris): fix for NMF > 1
+
+int main() {
+    // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+
     enum sensitivities_scheme scheme = EXACT_NEWTON;
-    const int NMF = 2;
-    const int d = 2;
+    const int NMF = 2;  // number of free masses
+    const int d = 2;  // number of stages in integrator
+
     print_problem_info(scheme, NMF, d);
 
-    // Dimensions
-    int_t NX = 6 * NMF;
-    int_t NU = 3;
+    // dimensions
+    int NX = 6 * NMF;
+    int NU = 3;
 
-    int_t nx[NN + 1] = {0};
-    int_t nu[NN + 1] = {0};
-    int_t nb[NN + 1] = {0};
-    int_t nc[NN + 1] = {0};
-    int_t ng[NN + 1] = {0};
-    for (int_t i = 0; i < NN; i++) {
+    int nx[NN + 1] = {0};
+    int nu[NN + 1] = {0};
+    int nbx[NN + 1] = {0};
+    int nbu[NN + 1] = {0};
+    int nc[NN + 1] = {0};
+    int ng[NN + 1] = {0};
+    int ns[NN+1] = {0};
+    int nh[NN+1] = {0};
+
+    nx[0] = NX;
+    nu[0] = NU;
+    nbx[0] = nx[0];
+    nbu[0] = nu[0];
+
+    for (int i = 1; i < NN; i++)
+    {
         nx[i] = NX;
         nu[i] = NU;
-        nb[i] = NMF + NU;
+        nbx[i] = NMF;
+        nbu[i] = NU;
     }
+
     nx[NN] = NX;
-    nb[0] = NX + NU;
-    nb[NN] = NX;
+    nbx[NN] = NX;
+    nbu[NN] = 0;
+
+    // TODO(dimitris): if dims were defined stagewise, we could do directly ocp_nlp_dims dims[N]..
+    ocp_nlp_dims dims;
+    dims.N  = NN;
+    dims.nx = nx;
+    dims.nu = nu;
+    dims.ng = nc;
+    dims.nbx = nbx;
+    dims.nbu = nbu;
+    dims.nh = nh;
+    dims.ns = ns;
+
+    /************************************************
+    * nlp_in (wip)
+    ************************************************/
+
+    // TODO(dimitris): clean up integrators inside
+    // TODO(dimitris): call after args instead of passing NULL
+    ocp_nlp_in *nlp = create_ocp_nlp_in(&dims, NULL, d);
+
+    // NOTE(dimitris): use nlp->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
     // Problem data
-    real_t wall_pos = -0.01;
-    real_t UMAX = 10;
-    real_t lb0[NX+NU], ub0[NX+NU];
+    double wall_pos = -0.01;
+    double UMAX = 10;
+    double lb0[NX+NU], ub0[NX+NU];
     read_initial_state(NX, NMF, lb0);
     read_initial_state(NX, NMF, ub0);
-    for (int_t i = NX; i < NX+NU; i++) {
+    for (int i = NX; i < NX+NU; i++) {
         lb0[i] = -UMAX;
         ub0[i] = +UMAX;
     }
-    real_t lb[NMF+NU], ub[NMF+NU];
-    real_t xref[NX];
+    double lb[NMF+NU], ub[NMF+NU];
+    double xref[NX];
     read_final_state(NX, NMF, xref);
-    real_t uref[3] = {0.0, 0.0, 0.0};
-    real_t diag_cost_x[NX];
-    for (int_t i = 0; i < NX; i++)
+    double uref[3] = {0.0, 0.0, 0.0};
+    double diag_cost_x[NX];
+    for (int i = 0; i < NX; i++)
         diag_cost_x[i] = 1e-2;
-    real_t diag_cost_u[3] = {1.0, 1.0, 1.0};
-    real_t x_pos_inf[NX], x_neg_inf[NX];
-    for (int_t i = 0; i < NX; i++) {
+    double diag_cost_u[3] = {1.0, 1.0, 1.0};
+    double x_pos_inf[NX], x_neg_inf[NX];
+    for (int i = 0; i < NX; i++) {
         x_pos_inf[i] = +1e4;
         x_neg_inf[i] = -1e4;
     }
 
-    ocp_nlp_in *nlp;
-    nlp = (ocp_nlp_in *) malloc(sizeof(ocp_nlp_in));
-    allocate_ocp_nlp_in(NN, nx, nu, nb, nc, ng, d, nlp);
-
     // Least-squares cost
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp->cost;
-    for (int_t i = 0; i < NN; i++) {
-        for (int_t j = 0; j < NX; j++)
+    for (int i = 0; i < NN; i++) {
+        for (int j = 0; j < NX; j++)
             ls_cost->W[i][j * (NX + NU + 1)] = diag_cost_x[j];
-        for (int_t j = 0; j < NU; j++)
+        for (int j = 0; j < NU; j++)
             ls_cost->W[i][(NX + j) * (NX + NU + 1)] = diag_cost_u[j];
-        for (int_t j = 0; j < NX; j++)
+        for (int j = 0; j < NX; j++)
             ls_cost->y_ref[i][j] = xref[j];
-        for (int_t j = 0; j < NU; j++)
+        for (int j = 0; j < NU; j++)
             ls_cost->y_ref[i][NX+j] = uref[j];
     }
-    for (int_t j = 0; j < NX; j++)
+    for (int j = 0; j < NX; j++)
         ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
     // Simulation
-    real_t Ts = TT / NN;
+    double Ts = TT / NN;
     sim_RK_opts rk_opts[NN];
     sim_lifted_irk_memory irk_mem[NN];
     nlp->freezeSens = false;
     if (scheme > 2)
         nlp->freezeSens = true;
 
-    for (int_t jj = 0; jj < NN; jj++) {
+    for (int jj = 0; jj < NN; jj++) {
         nlp->sim[jj].in->num_steps = Ns;
         nlp->sim[jj].in->step = Ts / nlp->sim[jj].in->num_steps;
         nlp->sim[jj].in->nx = NX;
@@ -267,18 +313,18 @@ int main() {
 
         select_model(NMF, nlp->sim[jj].in);
 
-        for (int_t i = 0; i < NX * (NX + NU); i++)
+        for (int i = 0; i < NX * (NX + NU); i++)
             nlp->sim[jj].in->S_forw[i] = 0.0;
-        for (int_t i = 0; i < NX; i++)
+        for (int i = 0; i < NX; i++)
             nlp->sim[jj].in->S_forw[i * (NX + 1)] = 1.0;
-        for (int_t i = 0; i < NX + NU; i++)
+        for (int i = 0; i < NX + NU; i++)
             nlp->sim[jj].in->S_adj[i] = 0.0;
-        for (int_t i = 0; i < d * NX; i++)
+        for (int i = 0; i < d * NX; i++)
             nlp->sim[jj].in->grad_K[i] = 0.0;
 
         nlp->sim[jj].args = &rk_opts[jj];
 
-        int_t workspace_size;
+        int workspace_size;
         if (d > 0) {
             nlp->sim[jj].fun = &sim_lifted_irk;
             nlp->sim[jj].mem = &irk_mem[jj];
@@ -302,27 +348,29 @@ int main() {
     }
 
     // Box constraints
-    int_t idxb_0[nb[0]], idxb_1[nb[1]], idxb_N[nb[NN]];
-    for (int_t i = 0; i < nb[0]; i++)
+    int *nb = nlp->dims->nb;
+
+    int idxb_0[nb[0]], idxb_1[nb[1]], idxb_N[nb[NN]];
+    for (int i = 0; i < nb[0]; i++)
         idxb_0[i] = i;
-    for (int_t i = 0; i < NMF; i++)
+    for (int i = 0; i < NMF; i++)
         idxb_1[i] = 6*i + 1;
-    for (int_t i = 0; i < NU; i++)
+    for (int i = 0; i < NU; i++)
         idxb_1[NMF+i] = NX+i;
-    for (int_t i = 0; i < nb[NN]; i++)
+    for (int i = 0; i < nb[NN]; i++)
         idxb_N[i] = i;
     nlp->lb[0] = lb0;
     nlp->ub[0] = ub0;
     nlp->idxb[0] = idxb_0;
-    for (int_t j = 0; j < NMF; j++) {
+    for (int j = 0; j < NMF; j++) {
         lb[j] = wall_pos;  // wall position
         ub[j] = 1e4;
     }
-    for (int_t j = 0; j < NU; j++) {
+    for (int j = 0; j < NU; j++) {
         lb[NMF+j] = -UMAX;  // umin
         ub[NMF+j] = +UMAX;  // umax
     }
-    for (int_t i = 1; i < NN; i++) {
+    for (int i = 1; i < NN; i++) {
         nlp->lb[i] = lb;
         nlp->ub[i] = ub;
         nlp->idxb[i] = idxb_1;
@@ -330,30 +378,6 @@ int main() {
     nlp->lb[NN] = x_neg_inf;
     nlp->ub[NN] = x_pos_inf;
     nlp->idxb[NN] = idxb_N;
-
-    // TODO(dimitris): clean this up ! ******************************
-
-    ocp_nlp_dims dims;
-    dims.N  = NN;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.ng = nc;
-    dims.nb = nb;
-
-    int NS_NH[NN+1];
-    int NBX[NN+1];
-    int NBU[NN+1];
-
-    for (int ii = 0; ii < NN+1; ii++) NS_NH[ii] = 0;
-    dims.ns = NS_NH;
-    dims.nh = NS_NH;
-
-    form_nbu_nbx_rev(NN, NBU, NBX, dims.nb, dims.nx, dims.nu, (int **)nlp->idxb);
-    dims.nbx = NBX;
-    dims.nbu = NBU;
-
-    // ***************************************************************
-
 
     /************************************************
     * gn_sqp args
@@ -363,7 +387,7 @@ int main() {
     ocp_qp_solver qp_solver = initialize_ocp_qp_solver(HPIPM);
 
     // set up args with nested structs
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(&dims, &qp_solver);
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, &qp_solver);
     nlp_args->common->maxIter = MAX_SQP_ITERS;
 
 
@@ -371,15 +395,15 @@ int main() {
     * ocp_nlp out
     ************************************************/
 
-    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(&dims, nlp_args->common), 1);
-    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(&dims, nlp_args->common, nlp_out_mem);
+    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims, nlp_args->common), 1);
+    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(nlp->dims, nlp_args->common, nlp_out_mem);
 
 
     /************************************************
     * gn_sqp memory
     ************************************************/
 
-    ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(&dims, &qp_solver, nlp_args);
+    ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(nlp->dims, &qp_solver, nlp_args);
 
     // TODO(dimitris): users shouldn't write directly on memory..
     for (int i = 0; i < NN; i++) {
@@ -395,7 +419,7 @@ int main() {
     * gn_sqp workspace
     ************************************************/
 
-    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(&dims, &qp_solver, nlp_args);
+    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, &qp_solver, nlp_args);
 
     void *nlp_work = (void *)malloc(work_space_size);
 

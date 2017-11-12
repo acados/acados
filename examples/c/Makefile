@@ -62,7 +62,7 @@ run_mass_spring_condensing_qpoases:
 	./mass_spring_condensing_qpoases.out
 
 run_nonlinear_chain_ocp_nlp:
-	./nonlinear_chain_ocp_nlp.out
+	( cd ../..; ./examples/c/nonlinear_chain_ocp_nlp.out )
 
 clean:
 	rm -f chain_model/*.o
