@@ -38,10 +38,15 @@ OBJS =
 OBJS += chain_model/vde_chain_nm2.o
 OBJS += chain_model/jac_chain_nm2.o
 OBJS += chain_model/vde_adj_chain_nm2.o
+OBJS += chain_model/vde_hess_chain_nm2.o
 OBJS += chain_model/vde_chain_nm3.o
 OBJS += chain_model/jac_chain_nm3.o
+OBJS += chain_model/vde_adj_chain_nm3.o
+OBJS += chain_model/vde_hess_chain_nm3.o
 OBJS += chain_model/vde_chain_nm4.o
 OBJS += chain_model/jac_chain_nm4.o
+OBJS += chain_model/vde_adj_chain_nm4.o
+OBJS += chain_model/vde_hess_chain_nm4.o
 OBJS += nonlinear_chain_ocp_nlp.o
 
 nonlinear_chain_ocp_nlp: $(OBJS)

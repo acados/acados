@@ -30,6 +30,12 @@ void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casa
 
 void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t jac);
 
+void vde_adj_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
+                 casadi_function_t vde_hess);
+
+void vde_hess_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
+                  casadi_function_t vde_hess);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

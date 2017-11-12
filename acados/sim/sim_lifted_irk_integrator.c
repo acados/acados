@@ -440,7 +440,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
             }
         }
         acados_tic(&timer_ad);
-        in->jac_fun(nx, rhs_in, jac_tmp, in->jac);  // k evaluation
+        in->jacobian_wrapper(nx, rhs_in, jac_tmp, in->jac);  // k evaluation
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme.type == simplified_in ||
@@ -782,7 +782,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
             rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) in->num_steps);  // time
 
             acados_tic(&timer_ad);
-            in->VDE_forw(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
+            in->forward_vde_wrapper(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:

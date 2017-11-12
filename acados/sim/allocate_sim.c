@@ -26,7 +26,7 @@ void allocate_sim_in(sim_in *sim_in, int_t num_stages) {
     int_t nu = sim_in->nu;
     sim_in->x = calloc(nx, sizeof(*sim_in->x));
     sim_in->u = calloc(nu, sizeof(*sim_in->u));
-    sim_in->S_forw = calloc(nx * (nx + nu), sizeof(*sim_in->S_forw));
+    sim_in->S_forw = calloc(nx * sim_in->num_forw_sens, sizeof(*sim_in->S_forw));
     sim_in->S_adj = calloc(nx + nu, sizeof(*sim_in->S_adj));
     sim_in->grad_K = calloc(nx * num_stages, sizeof(*sim_in->grad_K));
 

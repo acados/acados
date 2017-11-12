@@ -93,24 +93,30 @@ static void select_model(const int num_free_masses, sim_in *sim)
     {
         case 1:
             sim->vde = &vde_chain_nm2;
-            sim->VDE_forw = &vde_fun;
+            sim->forward_vde_wrapper = &vde_fun;
             sim->jac = &jac_chain_nm2;
-            sim->jac_fun = &jac_fun;
+            sim->jacobian_wrapper = &jac_fun;
+            sim->vde_adj = &vde_hess_chain_nm2;
+            sim->adjoint_vde_wrapper = &vde_hess_fun;
             break;
         case 2:
             sim->vde = &vde_chain_nm3;
-            sim->VDE_forw = &vde_fun;
+            sim->forward_vde_wrapper = &vde_fun;
             sim->jac = &jac_chain_nm3;
-            sim->jac_fun = &jac_fun;
+            sim->jacobian_wrapper = &jac_fun;
+            sim->vde_adj = &vde_hess_chain_nm3;
+            sim->adjoint_vde_wrapper = &vde_hess_fun;
             break;
         case 3:
             sim->vde = &vde_chain_nm4;
-            sim->VDE_forw = &vde_fun;
+            sim->forward_vde_wrapper = &vde_fun;
             sim->jac = &jac_chain_nm4;
-            sim->jac_fun = &jac_fun;
+            sim->jacobian_wrapper = &jac_fun;
+            sim->vde_adj = &vde_hess_chain_nm4;
+            sim->adjoint_vde_wrapper = &vde_hess_fun;
             break;
         default:
-            printf("Problem size not available");
+            printf("Problem size not available\n");
             exit(1);
             break;
     }
@@ -197,8 +203,8 @@ int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
-    const int NMF = 2;  // number of free masses
-    const int d = 2;  // number of stages in integrator
+    const int NMF = 3;  // number of free masses
+    const int d = 4;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
 
