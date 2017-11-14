@@ -17,6 +17,11 @@
 #
 #
 
+if(CMAKE_SYSTEM MATCHES "Windows")		
+    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")		
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")		
+endif()
+
 message(STATUS "${CMAKE_FIND_LIBRARY_PREFIXES}")
 message(STATUS "${CMAKE_FIND_LIBRARY_SUFFIXES}")
 message(STATUS "${CMAKE_FIND_ROOT_PATH}")
