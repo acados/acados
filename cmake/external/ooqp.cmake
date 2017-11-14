@@ -1,12 +1,12 @@
 include(ExternalProject)
 
-find_package(OpenBLAS REQUIRED)
-add_library(openblas UNKNOWN IMPORTED)
-set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
-
 find_package(FortranLibs REQUIRED)
 add_library(gfortran UNKNOWN IMPORTED)
 set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+
+find_package(BLAS REQUIRED)
+add_library(blas UNKNOWN IMPORTED)
+set_property(TARGET blas PROPERTY IMPORTED_LOCATION ${BLAS_LIBRARIES})
 
 include(external/ma27)
 
@@ -59,7 +59,7 @@ target_link_libraries(ooqp INTERFACE
     ooqpgondzio
     ooqpbase
     ma27
-    openblas
+    blas
     gfortran
     m)
 
@@ -77,7 +77,6 @@ install(EXPORT ooqpConfig DESTINATION cmake)
 
 install(FILES
         ${CMAKE_CURRENT_LIST_DIR}/../FindFortranLibs.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/../FindOpenBLAS.cmake
     DESTINATION cmake)
 
 install(DIRECTORY ${BINARY_DIR}/include/
