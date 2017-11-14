@@ -17,6 +17,10 @@
 #
 #
 
+message(STATUS "${CMAKE_FIND_SHARED_LIBRARY_PREFIX}")
+message(STATUS "${CMAKE_FIND_SHARED_LIBRARY_SUFFIX}")
+message(STATUS "${CMAKE_FIND_ROOT_PATH}")
+
 find_library(FORTRAN_LIBRARY
     NAMES gfortran gfortran-3 gfortran-4
     PATHS

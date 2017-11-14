@@ -6,7 +6,7 @@ set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
 
 set(BLA_VENDOR OpenBLAS)
 # Kludge to make CMake find OpenBLAS:
-set(_libdir "/usr/lib;/usr/local/opt/openblas/lib" CACHE INTERNAL "Blas location")
+set(_libdir "/usr/local/opt/openblas/lib" CACHE INTERNAL "Blas location")
 find_package(BLAS REQUIRED)
 add_library(blas UNKNOWN IMPORTED)
 set_property(TARGET blas PROPERTY IMPORTED_LOCATION ${BLAS_LIBRARIES})
