@@ -39,7 +39,8 @@ find_library(FORTRAN_LIBRARY gfortran-4 gfortran-3
         # /usr/lib/gcc/x86_64-linux-gnu/*
         # /usr/local/lib/gcc/*
         ${CMAKE_FIND_ROOT_PATH}
-        # $ENV{PATH})
+        # $ENV{PATH}
+)
 endif()
 
 include(FindPackageHandleStandardArgs)
