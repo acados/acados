@@ -49,17 +49,12 @@ typedef enum {
 
 
 typedef struct {
+    int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
     int (*calculate_args_size)(ocp_qp_dims *dims);
     void *(*assign_args)(ocp_qp_dims *dims, void *raw_memory);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(ocp_qp_dims *dims, void *args);
     void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
-    int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
-    ocp_qp_in *qp_in;
-    ocp_qp_out *qp_out;
-    void *args;
-    void *mem;
-    void *work;
 } ocp_qp_solver;
 
 

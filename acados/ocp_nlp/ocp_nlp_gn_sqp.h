@@ -54,7 +54,7 @@ typedef struct {
     double **lam;
 
     ocp_nlp_dims *dims;
-    void *qp_mem;
+    void *qp_solver_mem;
 } ocp_nlp_gn_sqp_memory;
 
 

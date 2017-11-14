@@ -178,10 +178,9 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
     }
 
     align_char_to(8, &c_ptr);
-    mem->qp_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
+    mem->qp_solver_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
     c_ptr += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
 
-    args->qp_solver->mem = mem->qp_mem;
     mem->dims = dims;
 
     assert((char *)raw_memory + ocp_nlp_gn_sqp_calculate_memory_size(dims, args) >= c_ptr);
@@ -279,9 +278,6 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
     c_ptr += ocp_qp_in_calculate_size(&qp_dims);
     work->qp_out = ocp_qp_out_assign(&qp_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
-    args->qp_solver->qp_in = work->qp_in;
-    args->qp_solver->qp_out = work->qp_out;
-    args->qp_solver->args = args->qp_solver_args;
 
     assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, mem->qp_solver, args) >= c_ptr);
 }
@@ -298,7 +294,7 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
     // real_t **qp_Q = (real_t **) gn_sqp_mem->qp_solver->qp_in->Q;
     // real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     // real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
-	struct d_strmat *sRSQrq = args->qp_solver->qp_in->RSQrq;
+	struct d_strmat *sRSQrq = work->qp_in->RSQrq;
 
     // TODO(rien): only for least squares cost with state and control reference atm
     for (int_t i = 0; i <= N; i++) {
@@ -379,11 +375,11 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
     real_t **y_ref = cost->y_ref;
 
-    struct d_strmat *sBAbt = args->qp_solver->qp_in->BAbt;
-    struct d_strvec *sb = args->qp_solver->qp_in->b;
-    struct d_strmat *sRSQrq = args->qp_solver->qp_in->RSQrq;
-    struct d_strvec *srq = args->qp_solver->qp_in->rq;
-    struct d_strvec *sd = args->qp_solver->qp_in->d;
+    struct d_strmat *sBAbt = work->qp_in->BAbt;
+    struct d_strvec *sb = work->qp_in->b;
+    struct d_strmat *sRSQrq = work->qp_in->RSQrq;
+    struct d_strvec *srq = work->qp_in->rq;
+    struct d_strvec *sd = work->qp_in->d;
 
     // real_t **qp_A = (real_t **) mem->qp_solver->qp_in->A;
     // real_t **qp_B = (real_t **) mem->qp_solver->qp_in->B;
@@ -518,7 +514,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 
 
 
-static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, real_t *w) {
+static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work) {
     int N = nlp->dims->N;
     int *nx = nlp->dims->nx;
     int *nu = nlp->dims->nu;
@@ -526,17 +522,17 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, o
 
     for (int_t i = 0; i < N; i++)
         for (int_t j = 0; j < nx[i+1]; j++)
-            sim[i].in->S_adj[j] = -DVECEL_LIBSTR(&args->qp_solver->qp_out->pi[i], j);
+            sim[i].in->S_adj[j] = -DVECEL_LIBSTR(&work->qp_out->pi[i], j);
             // sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
 
     int_t w_idx = 0;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
-            w[w_idx+j] += DVECEL_LIBSTR(&args->qp_solver->qp_out->ux[i], j + nu[i]);
+            work->w[w_idx+j] += DVECEL_LIBSTR(&work->qp_out->ux[i], j + nu[i]);
             // w[w_idx+j] += mem->qp_solver->qp_out->x[i][j];
         }
         for (int_t j = 0; j < nu[i]; j++)
-            w[w_idx+nx[i]+j] += DVECEL_LIBSTR(&args->qp_solver->qp_out->ux[i], j);
+            work->w[w_idx+nx[i]+j] += DVECEL_LIBSTR(&work->qp_out->ux[i], j);
             // w[w_idx+nx[i]+j] += mem->qp_solver->qp_out->u[i][j];
         w_idx += nx[i]+nu[i];
     }
@@ -583,7 +579,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     initialize_trajectories(nlp_in, mem, work);
 
     // TODO(dimitris): move somewhere else
-    int_t **qp_idxb = (int_t **) args->qp_solver->qp_in->idxb;
+    int_t **qp_idxb = (int_t **) work->qp_in->idxb;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nb[i]; j++) {
             if (nlp_in->idxb[i][j] < nx[i]) {
@@ -605,8 +601,8 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     {
         multiple_shooting(nlp_in, args, mem, work);
 
-        int_t qp_status = args->qp_solver->fun(args->qp_solver->qp_in, args->qp_solver->qp_out,
-            args->qp_solver->args, args->qp_solver->mem);
+        int_t qp_status = args->qp_solver->fun(work->qp_in, work->qp_out,
+            args->qp_solver_args, mem->qp_solver_mem);
 
         // ocp_qp_condensing_qpoases_memory *tmp_mem = mem->qp_mem;
         // printf("SQP iter #%d - QP status %d - nwsr %d - cputime %f\n", sqp_iter, qp_status, tmp_mem->solver_memory->nwsr, tmp_mem->solver_memory->cputime*1e3);
@@ -617,7 +613,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
             return -1;
         }
 
-        update_variables(nlp_in, args, mem, work->w);
+        update_variables(nlp_in, args, mem, work);
 
         for (int_t i = 0; i < N; i++)
         {

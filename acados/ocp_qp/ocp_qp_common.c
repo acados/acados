@@ -144,12 +144,6 @@ ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
 {
     ocp_qp_solver qp_solver;
 
-    qp_solver.qp_in = NULL;
-    qp_solver.qp_out = NULL;
-    qp_solver.args = NULL;
-    qp_solver.mem = NULL;
-    qp_solver.work = NULL;
-
     switch (qp_solver_name)
     {
         case HPIPM:
