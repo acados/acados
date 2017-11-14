@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // hpipm
 #include "hpipm/include/hpipm_d_dense_qp.h"
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
@@ -67,16 +65,15 @@ int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem)
+ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *) mem;
+    char *c_ptr = (char *) raw_memory;
 
     ocp_qp_condensing_args *args = (ocp_qp_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_args);
 
-#if defined(RUNTIME_CHECKS)
-    assert((char*)mem + ocp_qp_condensing_calculate_args_size(dims) >= c_ptr);
-#endif
+    assert((char*)raw_memory + ocp_qp_condensing_calculate_args_size(dims) >= c_ptr);
+
     return args;
 }
 
@@ -113,9 +110,8 @@ void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args 
     d_create_cond_qp_ocp2dense(dims, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-#if defined(RUNTIME_CHECKS)
     assert((char*)raw_memory + ocp_qp_condensing_calculate_memory_size(dims, args) >= c_ptr);
-#endif
+
     return mem;
 }
 

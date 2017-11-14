@@ -15,6 +15,7 @@ OBJS += ocp_qp_condensing_qpoases.o
 OBJS += ocp_qp_condensing_qpoases_ext_dep.o
 OBJS += ocp_qp_condensing.o
 OBJS += ocp_qp_condensing_ext_dep.o
+OBJS += ocp_qp_partial_condensing.o
 
 obj: $(OBJS)
 
