@@ -254,7 +254,7 @@ int main() {
 
     // TODO(dimitris): clean up integrators inside
     // TODO(dimitris): call after args instead of passing NULL
-    ocp_nlp_in *nlp = create_ocp_nlp_in(&dims, NULL, d);
+    ocp_nlp_in *nlp = create_ocp_nlp_in(&dims, d);
 
     // NOTE(dimitris): use nlp->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
@@ -393,38 +393,38 @@ int main() {
 
     // set up args with nested structs
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, &qp_solver);
-    nlp_args->common->maxIter = MAX_SQP_ITERS;
+    nlp_args->maxIter = MAX_SQP_ITERS;
 
 
     /************************************************
     * ocp_nlp out
     ************************************************/
 
-    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims, nlp_args->common), 1);
-    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(nlp->dims, nlp_args->common, nlp_out_mem);
+    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
+    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(nlp->dims, nlp_out_mem);
 
 
     /************************************************
     * gn_sqp memory
     ************************************************/
 
-    ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(nlp->dims, &qp_solver, nlp_args);
+    ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(nlp->dims, nlp_args);
 
     // TODO(dimitris): users shouldn't write directly on memory..
     for (int i = 0; i < NN; i++) {
         for (int j = 0; j < NX; j++)
-            nlp_mem->common->x[i][j] = xref[j];  // resX(j,i)
+            nlp_mem->x[i][j] = xref[j];  // resX(j,i)
         for (int j = 0; j < NU; j++)
-            nlp_mem->common->u[i][j] = uref[j];  // resU(j, i)
+            nlp_mem->u[i][j] = uref[j];  // resU(j, i)
     }
     for (int j = 0; j < NX; j++)
-        nlp_mem->common->x[NN][j] = xref[j];  // resX(j, NN)
+        nlp_mem->x[NN][j] = xref[j];  // resX(j, NN)
 
     /************************************************
     * gn_sqp workspace
     ************************************************/
 
-    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, &qp_solver, nlp_args);
+    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
 
     void *nlp_work = (void *)malloc(work_space_size);
 

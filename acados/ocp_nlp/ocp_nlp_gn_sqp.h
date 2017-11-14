@@ -35,9 +35,9 @@ extern "C" {
 
 typedef struct {
     // general nlp options
-    ocp_nlp_args *common;
+    int maxIter;
     // specific SQP options
-    // ...
+    ocp_qp_solver *qp_solver;
     // QP solver options
     void *qp_solver_args;
     // integrator options
@@ -47,16 +47,20 @@ typedef struct {
 
 
 typedef struct {
-    ocp_nlp_memory *common;
+    int num_vars;
+    double **x;
+    double **u;
+    double **pi;
+    double **lam;
+
     ocp_nlp_dims *dims;
-    ocp_qp_solver *qp_solver;
     void *qp_mem;
 } ocp_nlp_gn_sqp_memory;
 
 
 
 typedef struct {
-    ocp_nlp_work *common;
+    double *w;
 
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
@@ -73,11 +77,11 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_sol
 //
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, void *raw_memory);
 //
-int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 //
-void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem);
+void ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem);
 //
-int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 //
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
 //
@@ -85,7 +89,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 //
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver);
 //
-ocp_nlp_gn_sqp_memory *new_ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, ocp_nlp_gn_sqp_args *args);
+ocp_nlp_gn_sqp_memory *new_ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 #endif
 
 #ifdef __cplusplus
