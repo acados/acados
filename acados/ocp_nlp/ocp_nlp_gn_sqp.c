@@ -110,7 +110,7 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
             size += sizeof(double)*dims->nx[ii+1];  // pi
         }
     }
-    
+
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
