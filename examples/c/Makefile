@@ -65,7 +65,7 @@ run_mass_spring_hpipm:
 	./mass_spring_hpipm.out
 
 run_mass_spring_pcond_hpipm_split:
-	./mass_spring_hpipm.out
+	./mass_spring_pcond_hpipm_split.out
 
 run_mass_spring_condensing_hpipm_split:
 	./mass_spring_condensing_hpipm_split.out
