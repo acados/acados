@@ -18,7 +18,7 @@
 #
 
 find_library(FORTRAN_LIBRARY
-    NAMES gfortran
+    NAMES gfortran gfortran-3 gfortran-4
     PATHS
         "/usr/local/lib/gcc/*"
         "/usr/lib/gcc/x86_64-linux-gnu/*"
