@@ -19,6 +19,8 @@
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 
+#include <assert.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>

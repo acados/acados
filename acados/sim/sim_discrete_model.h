@@ -17,18 +17,16 @@
  *
  */
 
-#ifndef ACADOS_SIM_CASADI_WRAPPER_H_
-#define ACADOS_SIM_CASADI_WRAPPER_H_
+#ifndef ACADOS_SIM_SIM_DISCRETE_MODEL_H_
+#define ACADOS_SIM_SIM_DISCRETE_MODEL_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "acados/utils/types.h"
+#include "acados/sim/sim_common.h"
 
-void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde);
-
-void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t jac);
+int_t sim_discrete_model(const sim_in *, sim_out *, void *, void *, void *);
 
 void vde_adj_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
                  casadi_function_t vde_hess);
@@ -40,4 +38,4 @@ void vde_hess_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_SIM_CASADI_WRAPPER_H_
+#endif  // ACADOS_SIM_SIM_DISCRETE_MODEL_H_

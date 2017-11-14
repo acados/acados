@@ -42,6 +42,10 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
 
 void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
+// void print_ocp_qp_to_file(ocp_qp_in *qp);
+
+// void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

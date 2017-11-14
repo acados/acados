@@ -29,6 +29,8 @@
 extern "C" {
 #endif
 
+#include "acados/utils/types.h"
+
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
                  double *C, int ldc);
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y);
@@ -77,6 +79,8 @@ void expm(int row, double *A);
 
 void d_compute_qp_size_ocp2dense_rev(int N, int *nx, int *nu, int *nb, int **hidxb, int *ng,
     int *nvd, int *ned, int *nbd, int *ngd);
+
+void regularize(int_t dim, real_t *A);
 
 #ifdef __cplusplus
 } /* extern "C" */

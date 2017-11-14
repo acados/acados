@@ -200,7 +200,7 @@ int main() {
     sim_in.num_steps = 10;
     sim_in.step = T / sim_in.num_steps;
     sim_in.vde = &vdeFun;
-    sim_in.VDE_forw = &VDE_fun_pendulum;
+    sim_in.forward_vde_wrapper = &VDE_fun_pendulum;
     sim_in.nx = NX;
     sim_in.nu = NU;
 

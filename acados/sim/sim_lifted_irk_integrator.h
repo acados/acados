@@ -24,8 +24,6 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
 #include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"

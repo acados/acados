@@ -17,6 +17,11 @@
 #
 #
 
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "lib")
+    list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+endif()
+
 find_library(FORTRAN_LIBRARY NAMES libgfortran.so libgfortran.dylib gfortran
     HINTS
         /usr/lib/gcc/x86_64-linux-gnu/*

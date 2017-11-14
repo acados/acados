@@ -132,7 +132,6 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
                     rhs_forw_in[i] += in->step * A_mat[j * opts->num_stages + s] *
                                         K_traj[j * nx * (1 + NF) + i];
             acados_tic(&timer_ad);
-            // k evaluation
             in->forward_vde_wrapper(nx, nu, rhs_forw_in, &(K_traj[s*nx*(1+NF)]), in->vde);
             timing_ad += acados_toc(&timer_ad);
         }
@@ -183,7 +182,6 @@ int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work_
                         rhs_adj_in[nForw + i] += in->step * A_mat[s * opts->num_stages + j] *
                                                  adj_traj[j * nAdj + i];
                 acados_tic(&timer_ad);
-                // adjoint VDE evaluation
                 in->adjoint_vde_wrapper(nx, nu, rhs_adj_in, &(adj_traj[s*nAdj]), in->vde_adj);
                 timing_ad += acados_toc(&timer_ad);
             }

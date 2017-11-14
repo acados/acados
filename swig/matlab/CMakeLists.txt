@@ -1,4 +1,4 @@
-find_package(Matlab REQUIRED)
+find_package(Matlab COMPONENTS MX_LIBRARY ENG_LIBRARY MAT_LIBRARY REQUIRED)
 find_package(CasadiMatlab REQUIRED)
 
 if(CASADIMATLAB_FOUND)
@@ -20,18 +20,18 @@ endif()
 swig_module_initialize(acadosMEX matlab)
 swig_add_source_to_module(acadosMEX FALSE MEX_FILE ../acados.i)
 
-if(EXISTS ${MATLAB_INCLUDE_DIR}/../version/cpp_mexapi_version.cpp)
-    add_library(acadosMATLAB MODULE ${MEX_FILE} ${MATLAB_INCLUDE_DIR}/../version/cpp_mexapi_version.cpp)
+if(EXISTS ${Matlab_INCLUDE_DIRS}/../version/cpp_mexapi_version.cpp)
+    add_library(acadosMATLAB MODULE ${MEX_FILE} ${Matlab_INCLUDE_DIRS}/../version/cpp_mexapi_version.cpp)
 else()
     add_library(acadosMATLAB MODULE ${MEX_FILE})
 endif()
-target_include_directories(acadosMATLAB PUBLIC ${MATLAB_INCLUDE_DIR})
-target_link_libraries(acadosMATLAB ${MATLAB_LIBRARIES} acados casadi_matlab)
+target_include_directories(acadosMATLAB PUBLIC ${Matlab_INCLUDE_DIRS})
+target_link_libraries(acadosMATLAB acados casadi_matlab ${Matlab_LIBRARIES})
 set_target_properties(acadosMATLAB
     PROPERTIES
         OUTPUT_NAME "acadosMEX"
         PREFIX ""
-        SUFFIX .${MATLAB_MEX_EXT}
+        SUFFIX .${Matlab_MEX_EXTENSION}
 )
 install(TARGETS acadosMATLAB DESTINATION lib)
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/+acados DESTINATION lib)

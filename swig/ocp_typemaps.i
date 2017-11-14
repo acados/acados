@@ -219,3 +219,23 @@
     const int_t *nb_elems = arg1->nc;
     $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
+
+%typemap(in) const real_t ** lg {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->ng);
+}
+
+%typemap(out) const real_t ** lg {
+    const int_t *nb_elems = arg1->ng;
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
+}
+
+%typemap(in) const real_t ** ug {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->ng);
+}
+
+%typemap(out) const real_t ** ug {
+    const int_t *nb_elems = arg1->ng;
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
+}

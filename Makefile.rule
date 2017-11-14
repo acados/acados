@@ -60,7 +60,7 @@ CFLAGS += -DALIGNMENT=64
 
 # timing
 ifeq ($(MEASURE_TIMINGS), 1)
-CFLAGS += -DMEASURE_TIMINGS
+CFLAGS += -DMEASURE_TIMINGS -DEXT_DEPS
 endif
 
 # search directories

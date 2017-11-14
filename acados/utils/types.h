@@ -24,7 +24,10 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 #define MAX_STR_LEN 256
+#define ACADOS_EPS 1e-12
 
 typedef double real_t;
 typedef unsigned int uint;

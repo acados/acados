@@ -5,7 +5,7 @@ include ../../Makefile.rule
 OBJS =
 
 OBJS += allocate_sim.o
-OBJS += casadi_wrapper.o
+OBJS += sim_casadi_wrapper.o
 OBJS += sim_collocation.o
 OBJS += sim_erk_integrator.o
 OBJS += sim_lifted_irk_integrator.o

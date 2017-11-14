@@ -39,7 +39,7 @@
 #include "hpmpc/include/lqcp_solvers.h"
 
 #include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/casadi_wrapper.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/utils/timing.h"
@@ -302,7 +302,7 @@ int main() {
     sim_in.num_steps = 1;
     sim_in.step = T/sim_in.num_steps;
     sim_in.vde = &vdeFun;
-    sim_in.VDE_forw = &vde_fun;
+    sim_in.forward_vde_wrapper = &vde_fun;
     sim_in.nx = NX;
     sim_in.nu = NU;
 

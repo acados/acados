@@ -20,14 +20,13 @@
 #ifndef ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 #define ACADOS_OCP_NLP_OCP_NLP_COMMON_H_
 
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/sim/sim_common.h"
-#include "acados/utils/types.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/sim_common.h"
+#include "acados/utils/types.h"
 
 typedef struct {
     int *nx;

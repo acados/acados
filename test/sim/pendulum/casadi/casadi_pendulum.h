@@ -11,9 +11,9 @@ int vde_forw_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int 
 
 int jac_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
-void VDE_adj_pendulum(const real_t* in, real_t* out);
+int vde_adj_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
-void VDE_hess_pendulum(const real_t* in, real_t* out);
+int vde_hess_pendulum(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

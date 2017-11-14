@@ -26,7 +26,23 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/jac_chain_nm4.c
     chain_model/vde_chain_nm2.c
     chain_model/vde_chain_nm3.c
-    chain_model/vde_chain_nm4.c)
+    chain_model/vde_chain_nm4.c
+    chain_model/ls_cost_nm2.c
+    chain_model/ls_cost_nm3.c
+    chain_model/ls_cost_nm4.c
+    chain_model/ls_costN_nm2.c
+    chain_model/ls_costN_nm3.c
+    chain_model/ls_costN_nm4.c
+    chain_model/pathcon_nm2.c
+    chain_model/pathcon_nm3.c
+    chain_model/pathcon_nm4.c
+    chain_model/pathconN_nm2.c
+    chain_model/pathconN_nm3.c
+    chain_model/pathconN_nm4.c
+    chain_model/vde_hess_chain_nm2.c
+    chain_model/vde_hess_chain_nm3.c
+    chain_model/vde_hess_chain_nm4.c
+)
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
@@ -106,4 +122,15 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_link_libraries(linear_mpc_example acados)
     target_compile_definitions(linear_mpc_example PRIVATE USE_ACADOS_TYPES)
     add_test(linear_mpc_example linear_mpc_example)
+endif()
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_executable(discrete_model
+        discrete_model.c
+        discrete_model/discrete_model.c
+        discrete_model/discrete_model_cost.c
+        discrete_model/discrete_model_costN.c
+        )
+    target_link_libraries(discrete_model acados)
+    add_test(discrete_model discrete_model)
 endif()

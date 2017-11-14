@@ -34,9 +34,9 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-if(CMAKE_SYSTEM MATCHES "Windows")
-    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")
+if(CMAKE_SYSTEM MATCHES "Windows")		
+    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")		
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")		
 endif()
 
 # Set up build type
@@ -51,16 +51,9 @@ enable_testing(true)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Werror -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror -fdiagnostics-show-option")
 endif()
 
-# Set install directories
-if(NOT ACADOS_INSTALL_DIR)
-    set(ACADOS_INSTALL_DIR "$ENV{HOME}/local")
-endif()
-set(CMAKE_INSTALL_PREFIX ${ACADOS_INSTALL_DIR}
-    CACHE STRING "Install path prefix, prepended onto install directories." FORCE)
-set(CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/share")
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 
 # Rpath handling, see https://cmake.org/Wiki/CMake_RPATH_handling#What_is_RPATH_.3F

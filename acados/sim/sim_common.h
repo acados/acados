@@ -20,8 +20,6 @@
 #ifndef ACADOS_SIM_SIM_COMMON_H_
 #define ACADOS_SIM_SIM_COMMON_H_
 
-#include <stdbool.h>
-
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -51,6 +49,7 @@ typedef struct {
     casadi_function_t vde_adj;
     void (*adjoint_vde_wrapper)(const int_t, const int_t, const real_t *, real_t *,
                                 casadi_function_t);
+    casadi_function_t discrete_model;
 
     real_t step;
     uint num_steps;

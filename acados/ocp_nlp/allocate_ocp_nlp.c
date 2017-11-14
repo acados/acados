@@ -17,15 +17,18 @@
  *
  */
 
-#include "acados/ocp_nlp/allocate_ocp_nlp.h"
+// #include "acados/ocp_nlp/allocate_ocp_nlp.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+// #include "acados/ocp_nlp/ocp_nlp_sm_common.h"
+// #include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
+
+// #include "blasfeo/include/blasfeo_target.h"
+// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+// #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 // static void allocate_ocp_nlp_in_basic(int_t N, int_t *nx, int_t *nu, ocp_nlp_in *const nlp) {
 
