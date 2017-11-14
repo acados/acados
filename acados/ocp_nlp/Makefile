@@ -4,7 +4,6 @@ include ../../Makefile.rule
 
 OBJS =
 
-OBJS += allocate_ocp_nlp.o
 OBJS += ocp_nlp_common.o
 # OBJS += ocp_nlp_common_ext_dep.o
 # OBJS += ocp_nlp_sm_gn.o

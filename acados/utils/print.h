@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include "acados/dense_qp/dense_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
@@ -42,9 +44,19 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
 
 void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
-// void print_ocp_qp_to_file(ocp_qp_in *qp);
+void print_ocp_qp_dims(ocp_qp_dims *dims);
 
-// void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out);
+void print_ocp_qp_in(ocp_qp_in *qp_in);
+
+void print_ocp_qp_out(ocp_qp_out *qp_out);
+
+void print_col_maj_ocp_qp_in(col_maj_ocp_qp_in *qp);
+
+void print_col_maj_ocp_qp_in_to_file(col_maj_ocp_qp_in *qp);
+
+void print_col_maj_ocp_qp_out(char *filename, col_maj_ocp_qp_in *qp, col_maj_ocp_qp_out *out);
+
+void print_dense_qp_in(dense_qp_in *qp_in);
 
 #ifdef __cplusplus
 } /* extern "C" */

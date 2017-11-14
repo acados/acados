@@ -62,13 +62,15 @@ typedef struct {
 //
 int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
-char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr);
+char *col_maj_ocp_qp_in_assign(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr);
 //
 int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
-char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr);
+char *col_maj_ocp_qp_out_assign(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr);
 //
-void convert_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_maj_ocp_qp_out *cm_qp_out);
+void convert_from_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in);
+//
+void convert_to_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_maj_ocp_qp_out *cm_qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

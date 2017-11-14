@@ -22,10 +22,9 @@
 #include <stdlib.h>
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_common_ext_dep.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases_ext_dep.h"
+#include "acados/utils/create.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -91,8 +90,8 @@ int main() {
 
     col_maj_ocp_qp_out *sol;
     void *memsol = malloc(col_maj_ocp_qp_out_calculate_size(dims));
-    assign_col_maj_ocp_qp_out(dims, &sol, memsol);
-    convert_col_maj_ocp_qp_out(dims, qp_out, sol);
+    col_maj_ocp_qp_out_assign(dims, &sol, memsol);
+    convert_to_col_maj_ocp_qp_out(dims, qp_out, sol);
 
     /************************************************
     * print solution and stats

@@ -33,10 +33,10 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_common_ext_dep.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_collocation.h"
+#include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"

@@ -25,9 +25,48 @@
 extern "C" {
 #endif
 
-#include "acados/ocp_nlp/ocp_nlp_common.h"
 
-//
+#include "acados/dense_qp/dense_qp_common.h"
+#include "acados/dense_qp/dense_qp_qpoases.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_qp/ocp_qp_condensing.h"
+#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
+
+ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
+
+ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
+
+ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims);
+
+ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_);
+
+ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims);
+
+ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args);
+
+ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims);
+
+ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_dims *dims, void *args_);
+
+ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(ocp_qp_dims *dims);
+
+ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp_dims *dims, void *args_);
+
+dense_qp_in *create_dense_qp_in(int nv, int ne, int nb, int ng, int ns);
+
+dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns);
+
+dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_in *qp_in);
+
+dense_qp_hpipm_memory *dense_qp_hpipm_create_memory(dense_qp_in *qp_in, void *args_);
+
+dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_in *qp_in);
+
+dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void *args_);
+
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, ocp_nlp_args *args, int num_stages);
 
 

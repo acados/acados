@@ -28,7 +28,6 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
-#include "acados/ocp_nlp/allocate_ocp_nlp.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_casadi_wrapper.h"
@@ -42,7 +41,7 @@
 #include "examples/c/chain_model/chain_model.h"
 
 #define NN 15
-#define TT 3.0
+#define TF 3.0
 #define Ns 2
 #define MAX_SQP_ITERS 20
 #define NREP 2
@@ -299,7 +298,7 @@ int main() {
         ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
     // Simulation
-    double Ts = TT / NN;
+    double Ts = TF / NN;
     sim_RK_opts rk_opts[NN];
     sim_lifted_irk_memory irk_mem[NN];
     nlp->freezeSens = false;

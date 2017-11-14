@@ -56,11 +56,11 @@ CFLAGS += -O2 -fPIC
 CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
 
 # TEMP
-CFLAGS += -DALIGNMENT=64
+CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64
 
 # timing
 ifeq ($(MEASURE_TIMINGS), 1)
-CFLAGS += -DMEASURE_TIMINGS -DEXT_DEPS
+CFLAGS += -DMEASURE_TIMINGS
 endif
 
 # search directories

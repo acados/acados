@@ -20,6 +20,7 @@
 // external
 // TODO(dimitris): remove memcpy to avoid this dependency?
 #include <string.h>
+#include <assert.h>
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -35,8 +36,8 @@
 // #include "ocp_qp/ocp_qp_hpipm.h"
 
 
-int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims) {
-
+int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
+{
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -78,8 +79,8 @@ int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims) {
 
 
 
-char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr) {
-
+char *col_maj_ocp_qp_in_assign(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr)
+{
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -229,8 +230,8 @@ char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, voi
 
 
 
-int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims) {
-
+int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
+{
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -257,8 +258,8 @@ int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims) {
 
 
 
-char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr) {
-
+char *col_maj_ocp_qp_out_assign(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr)
+{
     int N = dims->N;
     int *nx = dims->nx;
     int *nu = dims->nu;
@@ -313,27 +314,71 @@ char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, 
 
 
 
-void convert_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_maj_ocp_qp_out *cm_qp_out) {
+void convert_from_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
+{
+    qp_in->size->N = cm_qp_in->N;
 
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *nb = dims->nb;
-    int *ng = dims->ng;
+    // bounds and idxb
+    for (int ii = 0; ii <= dims->N; ii++)
+    {
+        qp_in->size->nbx[ii] = 0;
+        qp_in->size->nbu[ii] = 0;
+        for (int jj = 0; jj < cm_qp_in->nb[ii]; jj++)
+        {
 
-    col_maj_ocp_qp_out *sol = cm_qp_out;
+            if (cm_qp_in->idxb[ii][jj] < cm_qp_in->nx[ii])  // state bound
+            {
+                qp_in->size->nbx[ii]++;
+                qp_in->idxb[ii][jj] = cm_qp_in->idxb[ii][jj] + cm_qp_in->nu[ii];
+            } else
+            {
+                qp_in->size->nbu[ii]++;
+                qp_in->idxb[ii][jj] = cm_qp_in->idxb[ii][jj] - cm_qp_in->nx[ii];
+            }
+        }
+        qp_in->size->nb[ii] = qp_in->size->nbx[ii] + qp_in->size->nbu[ii];
+        assert(qp_in->size->nb[ii] == cm_qp_in->nb[ii]);
+    }
 
-    for (int ii = 0; ii <= dims->N; ii++) {
+
+    for (int ii = 0; ii <= dims->N; ii++)
+    {
+        // rest of dimensions
+        qp_in->size->nx[ii] = cm_qp_in->nx[ii];
+        qp_in->size->nu[ii] = cm_qp_in->nu[ii];
+        qp_in->size->ng[ii] = cm_qp_in->nc[ii];
+        qp_in->size->ns[ii] = 0;
+
+        // objective
+
+        // dynamics
+        if (ii < dims->N)
+        {
+
+        }
+    }
+
+}
+
+
+
+void convert_to_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_maj_ocp_qp_out *cm_qp_out)
+{
+    for (int ii = 0; ii <= dims->N; ii++)
+    {
 		d_cvt_strvec2vec(dims->nu[ii], &qp_out->ux[ii], 0, cm_qp_out->u[ii]);
         d_cvt_strvec2vec(dims->nx[ii], &qp_out->ux[ii], dims->nu[ii], cm_qp_out->x[ii]);
 
-        if (ii < dims->N) {
+        if (ii < dims->N)
+        {
             d_cvt_strvec2vec(dims->nx[ii+1], &qp_out->pi[ii], 0, cm_qp_out->pi[ii]);
         }
 
         // TODO(dimitris): change to new convention for the col_maj interface
-        d_cvt_strvec2vec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0, cm_qp_out->lam[ii]);
+        d_cvt_strvec2vec(2*dims->nb[ii]+2*dims->ng[ii], &qp_out->lam[ii], 0, cm_qp_out->lam[ii]);
     }
+
+    // col_maj_ocp_qp_out *sol = cm_qp_out;
 
     // // dummy qp_in
     // ocp_qp_in qp_in;
