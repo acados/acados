@@ -17,21 +17,13 @@
 #
 #
 
-if(CMAKE_SYSTEM MATCHES "Windows")		
-    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")		
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")		
-endif()
-
-message(STATUS "${CMAKE_FIND_LIBRARY_PREFIXES}")
-message(STATUS "${CMAKE_FIND_LIBRARY_SUFFIXES}")
-message(STATUS "${CMAKE_FIND_ROOT_PATH}")
-
 find_library(FORTRAN_LIBRARY
     NAMES gfortran gfortran-3 gfortran-4
     PATHS
         "/usr/local/lib/gcc/*"
         "/usr/lib/gcc/x86_64-linux-gnu/*"
         "/usr/lib/gcc/arm-linux-gnueabihf/*"
+        "/usr/lib/gcc/x86_64-w64-mingw32/*"
 )
 
 include(FindPackageHandleStandardArgs)
