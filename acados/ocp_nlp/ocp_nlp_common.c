@@ -33,7 +33,7 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
-static int number_of_primal_vars(ocp_nlp_dims *dims)
+int number_of_primal_vars(ocp_nlp_dims *dims)
 {
     int num_vars = 0;
     for (int ii = 0; ii <= dims->N; ii++) {
@@ -61,214 +61,8 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
 
 
 
-int ocp_nlp_calculate_args_size(ocp_nlp_dims *dims)
-{
-    int size = 0;
-
-    size += sizeof(ocp_nlp_args);
-
-    return size;
-}
-
-
-
-ocp_nlp_args *ocp_nlp_assign_args(ocp_nlp_dims *dims, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_args *args = (ocp_nlp_args *)c_ptr;
-    c_ptr += sizeof(ocp_nlp_args);
-
-    return args;
-}
-
-
-
-int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
-{
-    int N = dims->N;
-
-    int size = sizeof(ocp_nlp_memory);
-
-    size += sizeof(double *) * (N + 1);  // x
-    size += sizeof(double *) * (N + 1);  // u
-    size += sizeof(double *) * (N + 1);  // lam
-    size += sizeof(double *) * N;  // pi
-
-    for (int ii = 0; ii <= N; ii++)
-    {
-        size += sizeof(double)*dims->nx[ii];  // x
-        size += sizeof(double)*dims->nu[ii];  // u
-        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
-        if (ii < N)
-        {
-            size += sizeof(double)*dims->nx[ii+1];  // pi
-        }
-    }
-
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
-
-    return size;
-}
-
-
-
-ocp_nlp_memory *ocp_nlp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    // TODO(dimitris): check if aligning pointers is really necessary
-
-    int N = dims->N;
-
-    ocp_nlp_memory *mem = (ocp_nlp_memory *)c_ptr;
-    c_ptr += sizeof(ocp_nlp_memory);
-
-    mem->num_vars = number_of_primal_vars(dims);
-
-    // double pointers
-    mem->x = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    mem->u = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    mem->pi = (double **)c_ptr;
-    c_ptr += sizeof(double *) * N;
-
-    mem->lam = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    // doubles
-    align_char_to(64, &c_ptr);
-
-    for (int ii = 0; ii <= N; ii++)
-    {
-        // mem->x[ii] = (double *)c_ptr;
-        // c_ptr += dims->nx[ii]*sizeof(double);
-        // mem->u[ii] = (double *)c_ptr;
-        // c_ptr += dims->nu[ii]*sizeof(double);
-        assign_double(dims->nx[ii], &mem->x[ii], &c_ptr);
-        assign_double(dims->nu[ii], &mem->u[ii], &c_ptr);
-        if (ii < N)
-        {
-            // mem->pi[ii] = (double *)c_ptr;
-            // c_ptr += dims->nx[ii+1]*sizeof(double);
-            assign_double(dims->nx[ii+1], &mem->pi[ii], &c_ptr);
-        }
-        // mem->lam[ii] = (double *)c_ptr;
-        // c_ptr += 2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii])*sizeof(double);
-        assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &mem->lam[ii], &c_ptr);
-    }
-
-    assert((char *)raw_memory + ocp_nlp_calculate_memory_size(dims, args) >= c_ptr);
-
-    return mem;
-}
-
-
-
-int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
-{
-    int size = 0;
-    int num_vars = number_of_primal_vars(dims);
-
-    size += sizeof(ocp_nlp_work);
-    size += num_vars * sizeof(double);  // w
-
-    return size;
-}
-
-
-
-void ocp_nlp_cast_workspace(ocp_nlp_work *work, ocp_nlp_memory *mem)
-{
-    char *ptr = (char *)work;
-
-    ptr += sizeof(ocp_nlp_work);
-    work->w = (double *)ptr;
-    ptr += mem->num_vars * sizeof(double);
-    // TODO(dimitris): check that this pointer does not go outside allocated memory
-}
-
-
-
-int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
-{
-    int N = dims->N;
-
-    int size = sizeof(ocp_nlp_out);
-
-    size += sizeof(double *) * (N + 1);  // x
-    size += sizeof(double *) * (N + 1);  // u
-    size += sizeof(double *) * (N + 1);  // lam
-    size += sizeof(double *) * N;  // pi
-
-    for (int ii = 0; ii <= N; ii++)
-    {
-        size += sizeof(double)*dims->nx[ii];  // x
-        size += sizeof(double)*dims->nu[ii];  // u
-        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
-        if (ii < N)
-        {
-            size += sizeof(double)*dims->nx[ii+1];  // pi
-        }
-    }
-
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
-
-    return size;
-}
-
-
-
-ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    int N = dims->N;
-
-    ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
-    c_ptr += sizeof(ocp_nlp_out);
-
-    // double pointers
-    out->x = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    out->u = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    out->pi = (double **)c_ptr;
-    c_ptr += sizeof(double *) * N;
-
-    out->lam = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    // doubles
-    align_char_to(64, &c_ptr);
-
-    for (int ii = 0; ii <= N; ii++)
-    {
-        assign_double(dims->nx[ii], &out->x[ii], &c_ptr);
-        assign_double(dims->nu[ii], &out->u[ii], &c_ptr);
-        if (ii < N)
-        {
-            assign_double(dims->nx[ii+1], &out->pi[ii], &c_ptr);
-        }
-        assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &out->lam[ii], &c_ptr);
-    }
-
-    assert((char *)raw_memory + ocp_nlp_calculate_memory_size(dims, args) >= c_ptr);
-
-    return out;
-}
-
-
-
 // TODO(dimitris): fix order of funs
-int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
+int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 {
     int N = dims->N;
 
@@ -308,9 +102,11 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_args *args)
 }
 
 
+
 // TEMP!!!
 static void tmp_allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, int_t num_stages,
-                                           ocp_nlp_in *const nlp) {
+    ocp_nlp_in *const nlp)
+{
     nlp->sim = (sim_solver *)calloc(N, sizeof(sim_solver));
     for (int_t i = 0; i < N; i++) {
         int_t nx_i = nx[i];
@@ -320,7 +116,7 @@ static void tmp_allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, in
         d_zeros(&nlp->sim[i].in->u, nu_i, 1);
         d_zeros(&nlp->sim[i].in->S_forw, nx_i, nx_i + nu_i);
         for (int_t j = 0; j < nx_i; j++)
-            nlp->sim[i].in->S_forw[j * (nx_i + 1)] = 1.0;
+        nlp->sim[i].in->S_forw[j * (nx_i + 1)] = 1.0;
 
         d_zeros(&nlp->sim[i].in->S_adj, nx_i + nu_i, 1);
         d_zeros(&nlp->sim[i].in->grad_K, nx_i * num_stages, 1);
@@ -363,7 +159,7 @@ void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
 
 
 // TODO(dimitris): move num_stages inside args, as nested integrator args
-ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, int num_stages, void *raw_memory)
+ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_dims *dims, int num_stages, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -448,7 +244,80 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_dims *dims, ocp_nlp_args *args, int num_st
     tmp_allocate_ocp_nlp_in_sim_solver(N, dims->nx, dims->nu, num_stages, in);
 
     // printf("diff = %lld\n", (long long int)(raw_memory + ocp_nlp_in_calculate_size(dims, args)) - (long long int)c_ptr);
-    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims, args) == c_ptr);
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims) == c_ptr);
 
     return in;
+}
+
+
+
+int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
+{
+    int N = dims->N;
+
+    int size = sizeof(ocp_nlp_out);
+
+    size += sizeof(double *) * (N + 1);  // x
+    size += sizeof(double *) * (N + 1);  // u
+    size += sizeof(double *) * (N + 1);  // lam
+    size += sizeof(double *) * N;  // pi
+
+    for (int ii = 0; ii <= N; ii++)
+    {
+        size += sizeof(double)*dims->nx[ii];  // x
+        size += sizeof(double)*dims->nu[ii];  // u
+        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
+        if (ii < N)
+        {
+            size += sizeof(double)*dims->nx[ii+1];  // pi
+        }
+    }
+
+    make_int_multiple_of(64, &size);
+    size += 1 * 64;
+
+    return size;
+}
+
+
+
+ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    int N = dims->N;
+
+    ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
+    c_ptr += sizeof(ocp_nlp_out);
+
+    // double pointers
+    out->x = (double **)c_ptr;
+    c_ptr += sizeof(double *) * (N + 1);
+
+    out->u = (double **)c_ptr;
+    c_ptr += sizeof(double *) * (N + 1);
+
+    out->pi = (double **)c_ptr;
+    c_ptr += sizeof(double *) * N;
+
+    out->lam = (double **)c_ptr;
+    c_ptr += sizeof(double *) * (N + 1);
+
+    // doubles
+    align_char_to(64, &c_ptr);
+
+    for (int ii = 0; ii <= N; ii++)
+    {
+        assign_double(dims->nx[ii], &out->x[ii], &c_ptr);
+        assign_double(dims->nu[ii], &out->u[ii], &c_ptr);
+        if (ii < N)
+        {
+            assign_double(dims->nx[ii+1], &out->pi[ii], &c_ptr);
+        }
+        assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &out->lam[ii], &c_ptr);
+    }
+
+    assert((char *)raw_memory + ocp_nlp_out_calculate_size(dims) >= c_ptr);
+
+    return out;
 }

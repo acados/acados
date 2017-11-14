@@ -67,7 +67,7 @@ dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_in *qp_in);
 
 dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void *args_);
 
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, ocp_nlp_args *args, int num_stages);
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages);
 
 
 

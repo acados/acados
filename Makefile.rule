@@ -50,7 +50,7 @@ MEASURE_TIMINGS = 1
 CFLAGS  =
 
 # optimization flags
-CFLAGS += -O2 -fPIC
+CFLAGS += #-O2 -fPIC
 
 # debugging flags
 CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg

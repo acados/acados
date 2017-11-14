@@ -28,6 +28,14 @@ extern "C" {
 #endif
 
 typedef struct {
+    int nx;
+    int nu;
+    int num_forw_sens;
+    int num_steps;
+    int num_stages;
+} sim_dims;
+
+typedef struct {
     int_t nx;   // NX
     int_t nu;   // NU
     real_t *x;  // x[NX]
@@ -82,6 +90,10 @@ typedef struct {
     void *mem;
     void *work;
 } sim_solver;
+
+int sim_in_calculate_size(sim_dims *dims);
+
+sim_in *sim_in_assign(sim_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */

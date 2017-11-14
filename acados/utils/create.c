@@ -216,11 +216,11 @@ dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void
 
 
 
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, ocp_nlp_args *args, int num_stages)
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 {
-    int size = ocp_nlp_in_calculate_size(dims, args);
+    int size = ocp_nlp_in_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    ocp_nlp_in *nlp_in = ocp_nlp_in_assign(dims, args, num_stages, ptr);
+    ocp_nlp_in *nlp_in = ocp_nlp_in_assign(dims, num_stages, ptr);
     return nlp_in;
 }
 
