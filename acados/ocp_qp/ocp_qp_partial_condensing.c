@@ -36,6 +36,7 @@ int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims)
 {
     int size = 0;
     size += sizeof(ocp_qp_partial_condensing_args);
+    size += sizeof(ocp_qp_dims);
     size += d_memsize_ocp_qp_size(dims->N);  // worst-case size of new QP
     return size;
 }
@@ -49,7 +50,10 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
     ocp_qp_partial_condensing_args *args = (ocp_qp_partial_condensing_args *)c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_args);
 
-    args->new_dims = (ocp_qp_dims *)c_ptr;
+    args->pcond_dims = (ocp_qp_dims *)c_ptr;
+    c_ptr += sizeof(ocp_qp_dims);
+
+    d_create_ocp_qp_size(dims->N, args->pcond_dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_size(dims->N);
 
     assert((char*)mem + ocp_qp_partial_condensing_calculate_args_size(dims) == c_ptr);
@@ -57,22 +61,75 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
     return args;
 }
 
-// TODO(dimitris): DEFAULT ARGS!!!
+
+
+void ocp_qp_partial_condensing_initialize_default_args(ocp_qp_partial_condensing_args *args)
+{
+    args->N2 = 5;  // new horizon length
+    args->pcond_dims->N = args->N2;
+}
+
+
 
 int ocp_qp_partial_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args)
 {
     int size = 0;
 
     // populate dimensions of new ocp_qp based on N2
-    args->new_dims->N = args->N2;
-    d_compute_qp_size_ocp2ocp(dims, args->new_dims);
+    args->pcond_dims->N = args->N2;
+    d_compute_qp_size_ocp2ocp(dims, args->pcond_dims);
 
     size += sizeof(ocp_qp_partial_condensing_memory);
-    size += sizeof(struct d_cond_qp_ocp2dense_workspace);
-    size += d_memsize_cond_qp_ocp2ocp(dims, args->new_dims);
+    size += sizeof(struct d_cond_qp_ocp2ocp_workspace);
+    size += d_memsize_cond_qp_ocp2ocp(dims, args->pcond_dims);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
     return size;
+}
+
+
+
+ocp_qp_partial_condensing_memory *assign_ocp_qp_partial_condensing_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args, void *raw_memory)
+{
+    char *c_ptr = (char *)raw_memory;
+
+    ocp_qp_partial_condensing_memory *mem = (ocp_qp_partial_condensing_memory *) c_ptr;
+    c_ptr += sizeof(ocp_qp_partial_condensing_memory);
+    //
+    mem->hpipm_workspace = (struct d_cond_qp_ocp2ocp_workspace *)c_ptr;
+    c_ptr += sizeof(struct d_cond_qp_ocp2ocp_workspace);
+
+    // hpipm workspace structure
+    align_char_to(8, &c_ptr);
+    d_create_cond_qp_ocp2ocp(dims, args->pcond_dims, mem->hpipm_workspace, c_ptr);
+    c_ptr += mem->hpipm_workspace->memsize;
+
+    mem->qp_in = NULL;  // initialized when partial condensing routine is called
+
+    assert((char*)raw_memory + ocp_qp_partial_condensing_calculate_memory_size(dims, args) >= c_ptr);
+
+    return mem;
+}
+
+
+
+void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_args *args,
+    ocp_qp_partial_condensing_memory *mem)
+{
+    // save pointers to ocp_qp_in in memory (needed for expansion)
+    mem->qp_in = in;
+    mem->pcond_qp_in = out;
+
+    // convert to partially condensed qp structure
+    d_cond_qp_ocp2ocp(in, out, mem->hpipm_workspace);
+}
+
+
+
+void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_args *args,
+    ocp_qp_partial_condensing_memory *mem)
+{
+    d_expand_sol_ocp2ocp(mem->qp_in, mem->pcond_qp_in, in, out, mem->hpipm_workspace);
 }

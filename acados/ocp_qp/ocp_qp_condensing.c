@@ -119,7 +119,7 @@ void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args 
 
 void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem)
 {
-    // save pointer to ocp_qp_in to memory (needed for expansion)
+    // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->qp_in = in;
 
     // convert to dense qp structure
