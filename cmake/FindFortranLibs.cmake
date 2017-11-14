@@ -31,15 +31,16 @@ HINTS
     $ENV{PATH}
 CMAKE_FIND_ROOT_PATH_BOTH)
 
-# if(NOT FORTRAN_LIBRARY)
-# find_library(FORTRAN_LIBRARY gfortran-4 gfortran-3
-#     HINTS
-#         /usr/lib/gcc/x86_64-linux-gnu/*
-#         /usr/local/lib/gcc/*
-#         ${CMAKE_FIND_ROOT_PATH}
-#         $ENV{PATH}
-#     CMAKE_FIND_ROOT_PATH_BOTH)
-# endif()
+message(STATUS "${CMAKE_FIND_ROOT_PATH}")
+
+if(NOT FORTRAN_LIBRARY)
+find_library(FORTRAN_LIBRARY gfortran-4 gfortran-3
+    HINTS
+        # /usr/lib/gcc/x86_64-linux-gnu/*
+        # /usr/local/lib/gcc/*
+        ${CMAKE_FIND_ROOT_PATH}
+        # $ENV{PATH})
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FortranLibs DEFAULT_MSG FORTRAN_LIBRARY)
