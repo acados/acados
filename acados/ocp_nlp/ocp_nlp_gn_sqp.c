@@ -279,7 +279,7 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
     work->qp_out = ocp_qp_out_assign(&qp_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
 
-    assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, mem->qp_solver, args) >= c_ptr);
+    assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, args) >= c_ptr);
 }
 
 
