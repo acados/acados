@@ -21,7 +21,8 @@ find_library(FORTRAN_LIBRARY
     NAMES gfortran
     PATHS
         "/usr/local/lib/gcc/*"
-        "/usr/lib/gcc/*"
+        "/usr/lib/gcc/x86_64-linux-gnu/*"
+        "/usr/lib/gcc/arm-linux-gnueabihf/*"
 )
 
 include(FindPackageHandleStandardArgs)
