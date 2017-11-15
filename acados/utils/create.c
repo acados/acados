@@ -31,6 +31,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/mem.h"
 
@@ -118,6 +119,29 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
     int size = ocp_qp_partial_condensing_calculate_memory_size(dims, args);
     void *ptr = acados_malloc(size, 1);
     ocp_qp_partial_condensing_memory *mem = ocp_qp_partial_condensing_assign_memory(dims, args, ptr);
+    return mem;
+}
+
+
+
+ocp_qp_partial_condensing_solver_args *ocp_qp_partial_condensing_solver_create_arguments(ocp_qp_dims *dims, ocp_qp_solver *solver)
+{
+    int size = ocp_qp_partial_condensing_solver_calculate_args_size(dims, solver);
+    void *ptr = acados_malloc(size, 1);
+    ocp_qp_partial_condensing_solver_args *args = ocp_qp_partial_condensing_solver_assign_args(dims, solver, ptr);
+    ocp_qp_partial_condensing_solver_initialize_default_args(args);
+    return args;
+}
+
+
+
+ocp_qp_partial_condensing_solver_memory *ocp_qp_partial_condensing_solver_create_memory(ocp_qp_dims *dims, void *args_)
+{
+    ocp_qp_partial_condensing_solver_args *args = (ocp_qp_partial_condensing_solver_args *) args_;
+
+    int size = ocp_qp_partial_condensing_solver_calculate_memory_size(dims, args);
+    void *ptr = acados_malloc(size, 1);
+    ocp_qp_partial_condensing_solver_memory *mem = ocp_qp_partial_condensing_solver_assign_memory(dims, args, ptr);
     return mem;
 }
 

@@ -34,6 +34,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
@@ -51,6 +52,10 @@ ocp_qp_condensing_memory *ocp_qp_condensing_create_memory(ocp_qp_dims *dims, ocp
 ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_create_arguments(ocp_qp_dims *dims);
 
 ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
+
+ocp_qp_partial_condensing_solver_args *ocp_qp_partial_condensing_solver_create_arguments(ocp_qp_dims *dims, ocp_qp_solver *solver);
+
+ocp_qp_partial_condensing_solver_memory *ocp_qp_partial_condensing_solver_create_memory(ocp_qp_dims *dims, void *args_);
 
 ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims);
 
