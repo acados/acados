@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_QP_OCP_QP_PARTIAL_CONDENSING_SOLVER_H_
-#define ACADOS_OCP_QP_OCP_QP_PARTIAL_CONDENSING_SOLVER_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
+#define ACADOS_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,4 +64,4 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_PARTIAL_CONDENSING_SOLVER_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_SPARSE_SOLVER_H_

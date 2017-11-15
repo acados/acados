@@ -24,8 +24,6 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/dense_qp/dense_qp_qpoases.h"
-#include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
