@@ -95,7 +95,8 @@ int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing
 
 
 
-void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args, void *raw_memory)
+ocp_qp_condensing_memory *ocp_qp_condensing_assign_memory(ocp_qp_dims *dims,
+    ocp_qp_condensing_args *args, void *raw_memory)
 {
     char *c_ptr = (char *)raw_memory;
 
@@ -117,7 +118,8 @@ void *assign_ocp_qp_condensing_memory(ocp_qp_dims *dims, ocp_qp_condensing_args 
 
 
 
-void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem)
+void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args,
+    ocp_qp_condensing_memory *mem)
 {
     // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->qp_in = in;
@@ -128,7 +130,8 @@ void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *
 
 
 
-void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem)
+void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args,
+    ocp_qp_condensing_memory *mem)
 {
     d_expand_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);
 }

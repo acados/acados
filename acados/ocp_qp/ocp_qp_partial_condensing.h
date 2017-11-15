@@ -49,7 +49,7 @@ void ocp_qp_partial_condensing_initialize_default_args(ocp_qp_partial_condensing
 //
 int ocp_qp_partial_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
 //
-ocp_qp_partial_condensing_memory *assign_ocp_qp_partial_condensing_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args, void *raw_memory);
+ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_assign_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args, void *raw_memory);
 //
 void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_args *args, ocp_qp_partial_condensing_memory *mem);
 //

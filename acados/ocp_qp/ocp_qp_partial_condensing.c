@@ -91,7 +91,8 @@ int ocp_qp_partial_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_pa
 
 
 
-ocp_qp_partial_condensing_memory *assign_ocp_qp_partial_condensing_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args, void *raw_memory)
+ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_assign_memory(ocp_qp_dims *dims,
+    ocp_qp_partial_condensing_args *args, void *raw_memory)
 {
     char *c_ptr = (char *)raw_memory;
 

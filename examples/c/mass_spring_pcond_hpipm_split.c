@@ -62,14 +62,14 @@ int main() {
     * partial condensing arguments/memory
     ************************************************/
 
-    // TODO(dimitris): write creates
-    void *tmp_args  = malloc(ocp_qp_partial_condensing_calculate_args_size(qp_in->size));
-    ocp_qp_partial_condensing_args *pcond_args = ocp_qp_partial_condensing_assign_args(qp_in->size, tmp_args);
+
+    ocp_qp_partial_condensing_args *pcond_args =
+        ocp_qp_partial_condensing_create_arguments(qp_in->size);
 
     pcond_args->N2 = 4;
 
-    void *tmp_mem  = malloc(ocp_qp_partial_condensing_calculate_memory_size(qp_in->size, pcond_args));
-    ocp_qp_partial_condensing_memory * pcond_mem = assign_ocp_qp_partial_condensing_memory(qp_in->size, pcond_args, tmp_mem);
+    ocp_qp_partial_condensing_memory *pcond_mem =
+        ocp_qp_partial_condensing_create_memory(qp_in->size, pcond_args);
 
     /************************************************
     * partially condensed ocp qp
