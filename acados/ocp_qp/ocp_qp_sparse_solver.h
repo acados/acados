@@ -30,33 +30,33 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
-typedef struct ocp_qp_partial_condensing_solver_args_ {
+typedef struct ocp_qp_sparse_solver_args_ {
     ocp_qp_partial_condensing_args *pcond_args;
     ocp_qp_solver *solver;
     void *solver_args;
-} ocp_qp_partial_condensing_solver_args;
+} ocp_qp_sparse_solver_args;
 
 
 
-typedef struct ocp_qp_partial_condensing_solver_memory_ {
+typedef struct ocp_qp_sparse_solver_memory_ {
     ocp_qp_partial_condensing_memory *pcond_memory;
     void *solver_memory;
     ocp_qp_in *pcond_qp_in;
     ocp_qp_out *pcond_qp_out;
-} ocp_qp_partial_condensing_solver_memory;
+} ocp_qp_sparse_solver_memory;
 
 //
-int ocp_qp_partial_condensing_solver_calculate_args_size(ocp_qp_dims *dims, ocp_qp_solver *solver);
+int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, ocp_qp_solver *solver);
 //
-void *ocp_qp_partial_condensing_solver_assign_args(ocp_qp_dims *dims, ocp_qp_solver *solver, void *raw_memory);
+void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, ocp_qp_solver *solver, void *raw_memory);
 //
-void ocp_qp_partial_condensing_solver_initialize_default_args(void *args_);
+void ocp_qp_sparse_solver_initialize_default_args(void *args_);
 //
-int ocp_qp_partial_condensing_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_);
 //
-void *ocp_qp_partial_condensing_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-int ocp_qp_partial_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_);
+int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_);
 
 
 

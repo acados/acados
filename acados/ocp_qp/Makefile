@@ -11,7 +11,7 @@ OBJS += ocp_qp_condensing_hpipm.o
 OBJS += ocp_qp_condensing_qpoases.o
 OBJS += ocp_qp_condensing.o
 OBJS += ocp_qp_partial_condensing.o
-OBJS += ocp_qp_partial_condensing_solver.o
+OBJS += ocp_qp_sparse_solver.o
 
 obj: $(OBJS)
 

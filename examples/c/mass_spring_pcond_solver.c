@@ -23,7 +23,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/create.h"
 #include "acados/utils/timing.h"
@@ -71,8 +71,8 @@ int main() {
     ocp_qp_solver qp_solver = initialize_ocp_qp_solver(HPIPM);
 
     // create partial condensing solver args
-    ocp_qp_partial_condensing_solver_args *arg =
-        ocp_qp_partial_condensing_solver_create_arguments(qp_in->size, &qp_solver);
+    ocp_qp_sparse_solver_args *arg =
+        ocp_qp_sparse_solver_create_arguments(qp_in->size, &qp_solver);
 
     // change partial condensing arguments
     arg->pcond_args->N2 = 10;
@@ -83,8 +83,8 @@ int main() {
     // printf("maxIter = %d\n", qpsolver_args->hpipm_args->iter_max);
 
     // create partial condensing solver memory
-    ocp_qp_partial_condensing_solver_memory *mem =
-        ocp_qp_partial_condensing_solver_create_memory(qp_in->size, arg);
+    ocp_qp_sparse_solver_memory *mem =
+        ocp_qp_sparse_solver_create_memory(qp_in->size, arg);
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -92,7 +92,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_partial_condensing_solver(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem);
 	}
 
     double time = acados_toc(&timer)/NREP;
