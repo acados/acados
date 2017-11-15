@@ -398,7 +398,7 @@ int main() {
     ************************************************/
 
     void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(&dims, nlp_args->common), 1);
-    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(&dims, nlp_args->common, nlp_out_mem);
+    ocp_nlp_out *nlp_out = ocp_assign_nlp_out(&dims, nlp_args->common, nlp_out_mem);
 
 
     /************************************************

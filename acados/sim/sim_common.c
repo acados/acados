@@ -30,7 +30,7 @@ int sim_in_calculate_size(sim_dims *dims)
     return size;
 }
 
-sim_in *sim_in_assign(sim_dims *dims, void *raw_memory)
+sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 

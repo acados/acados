@@ -274,9 +274,9 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
     }
 
     // set up QP solver
-    work->qp_in = ocp_qp_in_assign(&qp_dims, c_ptr);
+    work->qp_in = assign_ocp_qp_in(&qp_dims, c_ptr);
     c_ptr += ocp_qp_in_calculate_size(&qp_dims);
-    work->qp_out = ocp_qp_out_assign(&qp_dims, c_ptr);
+    work->qp_out = assign_ocp_qp_out(&qp_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
 
     assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, args) >= c_ptr);

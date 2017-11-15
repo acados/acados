@@ -159,7 +159,7 @@ void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
 
 
 // TODO(dimitris): move num_stages inside args, as nested integrator args
-ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_dims *dims, int num_stages, void *raw_memory)
+ocp_nlp_in *ocp_assign_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -281,7 +281,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 
 
 
-ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_dims *dims, void *raw_memory)
+ocp_nlp_out *ocp_assign_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 

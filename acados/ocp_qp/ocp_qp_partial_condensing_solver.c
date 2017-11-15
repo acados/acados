@@ -113,11 +113,11 @@ void *ocp_qp_partial_condensing_solver_assign_memory(ocp_qp_dims *dims, void *ar
     c_ptr += args->solver->calculate_memory_size(args->pcond_args->pcond_dims, args->solver_args);
 
     align_char_to(8, &c_ptr);
-    mem->pcond_qp_in = ocp_qp_in_assign(args->pcond_args->pcond_dims, c_ptr);
+    mem->pcond_qp_in = assign_ocp_qp_in(args->pcond_args->pcond_dims, c_ptr);
     c_ptr += ocp_qp_in_calculate_size(args->pcond_args->pcond_dims);
 
     align_char_to(8, &c_ptr);
-    mem->pcond_qp_out = ocp_qp_out_assign(args->pcond_args->pcond_dims, c_ptr);
+    mem->pcond_qp_out = assign_ocp_qp_out(args->pcond_args->pcond_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(args->pcond_args->pcond_dims);
 
     assert((char *) raw_memory + ocp_qp_partial_condensing_solver_calculate_memory_size(dims, args_) >= c_ptr);

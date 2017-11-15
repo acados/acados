@@ -62,11 +62,11 @@ typedef struct {
 //
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_in *ocp_qp_in_assign(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory);
 //
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_out *ocp_qp_out_assign(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
 //
 ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 

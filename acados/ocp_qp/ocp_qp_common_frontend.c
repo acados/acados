@@ -79,7 +79,7 @@ int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 
 
 
-char *col_maj_ocp_qp_in_assign(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr)
+char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -258,7 +258,7 @@ int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 
 
 
-char *col_maj_ocp_qp_out_assign(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr)
+char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr)
 {
     int N = dims->N;
     int *nx = dims->nx;

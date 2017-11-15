@@ -90,7 +90,7 @@ int main() {
 
     col_maj_ocp_qp_out *sol;
     void *memsol = malloc(col_maj_ocp_qp_out_calculate_size(dims));
-    col_maj_ocp_qp_out_assign(dims, &sol, memsol);
+    assign_col_maj_ocp_qp_out(dims, &sol, memsol);
     convert_to_col_maj_ocp_qp_out(dims, qp_out, sol);
 
     /************************************************
