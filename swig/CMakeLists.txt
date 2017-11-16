@@ -39,6 +39,11 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
+set_source_files_properties(acados.i PROPERTIES CPLUSPLUS ON)
+if(ACADOS_WITH_OOQP)
+    set_source_files_properties(acados.i PROPERTIES SWIG_FLAGS -DOOQP)
+endif()
+
 find_package(Matlab)
 if(SWIG_MATLAB AND MATLAB_FOUND)
     add_subdirectory(matlab)
