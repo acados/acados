@@ -34,7 +34,7 @@ for i in range(N):
     nlp.lg[i] = -0.5
     nlp.ug[i] = +0.5
 
-solver = ocp_nlp_solver('sqp', nlp, {'integrator_steps': 2, 'qp_solver':'condensing_qpoases', 'sensitivity_method': 'gauss-newton'})
+solver = ocp_nlp_solver('sqp', nlp, {'integrator_steps': 2, 'qp_solver':'hpipm', 'sensitivity_method': 'gauss-newton'})
 
 # Simulation
 STATES = [array([0.1, 0.1])]

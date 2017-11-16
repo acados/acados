@@ -251,7 +251,7 @@ ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(const ocp_qp_in *qp_in, void *ar
 
     ocp_qp_hpipm_memory *mem;
     int_t memory_size = ocp_qp_hpipm_calculate_memory_size(qp_in, args);
-    void *raw_memory = malloc(memory_size);
+    void *raw_memory = calloc(1, memory_size);
     char *ptr_end = ocp_qp_hpipm_assign_memory(qp_in, args, (void **) &mem, raw_memory);
     assert((char *) raw_memory + memory_size >= ptr_end); (void) ptr_end;
 
@@ -462,7 +462,7 @@ void ocp_qp_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, vo
     *mem = ocp_qp_hpipm_create_memory(qp_in, args);
 
     int_t work_space_size = ocp_qp_hpipm_calculate_workspace_size(qp_in, args);
-    *work = malloc(work_space_size);
+    *work = calloc(1, work_space_size);
 }
 
 void ocp_qp_hpipm_destroy(void *mem, void *work) {
