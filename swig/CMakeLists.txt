@@ -39,12 +39,10 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-find_package(Matlab)
-if(SWIG_MATLAB AND MATLAB_FOUND)
+if(SWIG_MATLAB)
     add_subdirectory(matlab)
 endif()
 
-find_package(PythonInterp 3)
-if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
+if(SWIG_PYTHON)
     add_subdirectory(python)
 endif()
