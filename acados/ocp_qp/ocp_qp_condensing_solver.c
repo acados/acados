@@ -38,10 +38,10 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, dense_qp_solver_t solver_name)
+int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t solver_name)
 {
     dense_qp_solver solver;
-    set_dense_qp_solver_fun_ptrs(solver_name, &solver);
+    set_qp_solver_fun_ptrs(solver_name, &solver);
 
     int size = 0;
     size += sizeof(ocp_qp_condensing_solver_args);
@@ -58,7 +58,7 @@ int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, dense_qp_sol
 
 
 
-void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver_t solver_name, void *raw_memory)
+void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver_name, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -68,7 +68,7 @@ void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver_t 
     args->solver = (dense_qp_solver*) c_ptr;
     c_ptr += sizeof(dense_qp_solver);
 
-    set_dense_qp_solver_fun_ptrs(solver_name, args->solver);
+    set_qp_solver_fun_ptrs(solver_name, args->solver);
 
     dense_qp_dims ddims;
     d_compute_qp_dim_ocp2dense(dims, &ddims);

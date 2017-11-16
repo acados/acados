@@ -68,7 +68,7 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    dense_qp_solver_t qp_solver_name = DENSE_QP_QPOASES;
+    qp_solver_t qp_solver_name = CONDENSING_QPOASES;
 
     // create partial condensing solver args
     ocp_qp_condensing_solver_args *arg =

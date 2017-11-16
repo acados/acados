@@ -28,10 +28,10 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, ocp_qp_solver_t solver_name)
+int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t solver_name)
 {
     ocp_qp_solver solver;
-    set_ocp_qp_solver_fun_ptrs(solver_name, &solver);
+    set_qp_solver_fun_ptrs(solver_name, &solver);
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_args);
@@ -45,7 +45,7 @@ int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, ocp_qp_solver_t 
 
 
 
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, ocp_qp_solver_t solver_name, void *raw_memory)
+void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver_name, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -55,7 +55,7 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, ocp_qp_solver_t solver
     args->solver = (ocp_qp_solver*) c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
-    set_ocp_qp_solver_fun_ptrs(solver_name, args->solver);
+    set_qp_solver_fun_ptrs(solver_name, args->solver);
 
     args->pcond_args = ocp_qp_partial_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_partial_condensing_calculate_args_size(dims);
