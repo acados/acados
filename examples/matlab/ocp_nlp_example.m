@@ -8,7 +8,7 @@ for i=1:N
     ng{i} = 1;
 end
 ng{N+1} = 0;
-nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu, 'ng', ng));
+nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu, 'ng', {ng}));
 
 % ODE Model
 step = 0.1;
