@@ -79,7 +79,7 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
 // TODO(dimitris):remove
 ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 //
-void set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
+int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
 //
 void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
 

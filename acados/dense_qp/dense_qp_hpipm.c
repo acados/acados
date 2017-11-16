@@ -46,7 +46,7 @@ int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims)
 
 
 
-dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory)
 {
     dense_qp_hpipm_args *args;
 
@@ -64,13 +64,15 @@ dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_m
 
     assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims) >= c_ptr);
 
-    return args;
+    return (void *)args;
 }
 
 
 
-void dense_qp_hpipm_initialize_default_args(dense_qp_hpipm_args *args)
+void dense_qp_hpipm_initialize_default_args(void *args_)
 {
+    dense_qp_hpipm_args *args = (dense_qp_hpipm_args *)args_;
+
     d_set_default_dense_qp_ipm_arg(args->hpipm_args);
     // overwrite some default options
     args->hpipm_args->res_g_max = 1e-6;
@@ -85,8 +87,10 @@ void dense_qp_hpipm_initialize_default_args(dense_qp_hpipm_args *args)
 
 
 
-int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, dense_qp_hpipm_args *args)
+int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *args_)
 {
+    dense_qp_hpipm_args *args = (dense_qp_hpipm_args *)args_;
+
     int size = 0;
     size += sizeof(dense_qp_hpipm_memory);
     size += sizeof(struct d_dense_qp_ipm_workspace);
@@ -101,8 +105,9 @@ int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, dense_qp_hpipm_arg
 
 
 
-void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, dense_qp_hpipm_args *args, void *raw_memory)
+void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory)
 {
+    dense_qp_hpipm_args *args = (dense_qp_hpipm_args *)args_;
     dense_qp_hpipm_memory *mem;
 
     // char pointer

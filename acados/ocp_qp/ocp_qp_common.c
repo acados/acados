@@ -184,8 +184,9 @@ ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
 
 
 
-void set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
+int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
 {
+    int return_value = ACADOS_SUCCESS;
 
     switch (qp_solver_name)
     {
@@ -214,16 +215,15 @@ void set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((dense_qp_solver *)qp_solver)->fun = &dense_qp_qpoases;
             break;
         default:
-            printf("Unknown specified solver\n");
-            exit(1);
+            return_value = ACADOS_FAILURE;
     }
+    return return_value;
 }
 
 
 
 void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver)
 {
-
     if (qp_solver_name < CONDENSING_HPIPM)
     {
         qp_solver->calculate_args_size = &ocp_qp_sparse_solver_calculate_args_size;

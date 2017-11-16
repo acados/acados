@@ -46,7 +46,7 @@ int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
 
 
 
-dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory)
 {
     dense_qp_qpoases_args *args;
 
@@ -57,13 +57,15 @@ dense_qp_qpoases_args *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *r
 
     assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims) >= c_ptr);
 
-    return args;
+    return (void *)args;
 }
 
 
 
-void dense_qp_qpoases_initialize_default_args(dense_qp_qpoases_args *args)
+void dense_qp_qpoases_initialize_default_args(void *args_)
 {
+    dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)args_;
+
     args->max_cputime = 1000.0;
     args->warm_start = 0;
     args->max_nwsr = 1000;
