@@ -38,28 +38,37 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, dense_qp_solver *solver) {
+int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, dense_qp_solver_t solver_name)
+{
+    dense_qp_solver solver;
+    set_dense_qp_solver_fun_ptrs(solver_name, &solver);
 
     int size = 0;
     size += sizeof(ocp_qp_condensing_solver_args);
+    size += sizeof(dense_qp_solver);
 
     dense_qp_dims ddims;
     d_compute_qp_dim_ocp2dense(dims, &ddims);
 
     size += ocp_qp_condensing_calculate_args_size(dims);
-    size += solver->calculate_args_size(&ddims);
+    size += solver.calculate_args_size(&ddims);
 
     return size;
 }
 
 
 
-void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver *solver, void *raw_memory)
+void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver_t solver_name, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
     ocp_qp_condensing_solver_args *args = (ocp_qp_condensing_solver_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_solver_args);
+
+    args->solver = (dense_qp_solver*) c_ptr;
+    c_ptr += sizeof(dense_qp_solver);
+
+    set_dense_qp_solver_fun_ptrs(solver_name, args->solver);
 
     dense_qp_dims ddims;
     d_compute_qp_dim_ocp2dense(dims, &ddims);
@@ -67,12 +76,10 @@ void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver *s
     args->cond_args = ocp_qp_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_args_size(dims);
 
-    args->solver = solver;
+    args->solver_args = args->solver->assign_args(&ddims, c_ptr);
+    c_ptr += args->solver->calculate_args_size(&ddims);
 
-    args->solver_args = solver->assign_args(&ddims, c_ptr);
-    c_ptr += solver->calculate_args_size(&ddims);
-
-    assert((char*)raw_memory + ocp_qp_condensing_solver_calculate_args_size(dims, solver) >= c_ptr);
+    assert((char*)raw_memory + ocp_qp_condensing_solver_calculate_args_size(dims, solver_name) == c_ptr);
 
     return (void*)args;
 }

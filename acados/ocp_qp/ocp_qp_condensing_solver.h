@@ -47,9 +47,9 @@ typedef struct ocp_qp_condensing_solver_memory_ {
 } ocp_qp_condensing_solver_memory;
 
 //
-int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, dense_qp_solver *solver);
+int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, dense_qp_solver_t solver_name);
 //
-void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver *solver, void *raw_memory);
+void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, dense_qp_solver_t solver_name, void *raw_memory);
 //
 void ocp_qp_condensing_solver_initialize_default_args(void *args_);
 //

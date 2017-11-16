@@ -125,11 +125,11 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 
 
 
-ocp_qp_sparse_solver_args *ocp_qp_sparse_solver_create_arguments(ocp_qp_dims *dims, ocp_qp_solver *solver)
+ocp_qp_sparse_solver_args *ocp_qp_sparse_solver_create_arguments(ocp_qp_dims *dims, ocp_qp_solver_t solver_name)
 {
-    int size = ocp_qp_sparse_solver_calculate_args_size(dims, solver);
+    int size = ocp_qp_sparse_solver_calculate_args_size(dims, solver_name);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_sparse_solver_args *args = ocp_qp_sparse_solver_assign_args(dims, solver, ptr);
+    ocp_qp_sparse_solver_args *args = ocp_qp_sparse_solver_assign_args(dims, solver_name, ptr);
     ocp_qp_sparse_solver_initialize_default_args(args);
     return args;
 }
@@ -148,11 +148,11 @@ ocp_qp_sparse_solver_memory *ocp_qp_sparse_solver_create_memory(ocp_qp_dims *dim
 
 
 
-ocp_qp_condensing_solver_args *ocp_qp_condensing_solver_create_arguments(ocp_qp_dims *dims, dense_qp_solver *solver)
+ocp_qp_condensing_solver_args *ocp_qp_condensing_solver_create_arguments(ocp_qp_dims *dims, dense_qp_solver_t solver_name)
 {
-    int size = ocp_qp_condensing_solver_calculate_args_size(dims, solver);
+    int size = ocp_qp_condensing_solver_calculate_args_size(dims, solver_name);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_condensing_solver_args *args = ocp_qp_condensing_solver_assign_args(dims, solver, ptr);
+    ocp_qp_condensing_solver_args *args = ocp_qp_condensing_solver_assign_args(dims, solver_name, ptr);
     ocp_qp_condensing_solver_initialize_default_args(args);
     return args;
 }

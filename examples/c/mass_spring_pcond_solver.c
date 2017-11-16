@@ -67,12 +67,12 @@ int main() {
     * partial condensing solver
     ************************************************/
 
-    // choose QP solver and set its function pointers
-    ocp_qp_solver qp_solver = initialize_ocp_qp_solver(HPIPM);
+    // choose QP solver
+    ocp_qp_solver_t qp_solver_name = OCP_QP_HPIPM;
 
     // create partial condensing solver args
     ocp_qp_sparse_solver_args *arg =
-        ocp_qp_sparse_solver_create_arguments(qp_in->dim, &qp_solver);
+        ocp_qp_sparse_solver_create_arguments(qp_in->dim, OCP_QP_HPIPM);
 
     // change partial condensing arguments
     arg->pcond_args->N2 = 10;

@@ -140,39 +140,63 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
-{
-    ocp_qp_solver qp_solver;
+// ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
+// {
+//     ocp_qp_solver qp_solver;
 
+//     switch (qp_solver_name)
+//     {
+//         case HPIPM:
+//             qp_solver.calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
+//             qp_solver.assign_args = &ocp_qp_hpipm_assign_args;
+//             qp_solver.initialize_default_args = &ocp_qp_hpipm_initialize_default_args;
+//             qp_solver.calculate_memory_size = &ocp_qp_hpipm_calculate_memory_size;
+//             qp_solver.assign_memory = &ocp_qp_hpipm_assign_memory;
+//             qp_solver.fun = &ocp_qp_hpipm;
+//             break;
+//         case CONDENSING_HPIPM:
+//             qp_solver.calculate_args_size = &ocp_qp_condensing_hpipm_calculate_args_size;
+//             qp_solver.assign_args = &ocp_qp_condensing_hpipm_assign_args;
+//             qp_solver.initialize_default_args = &ocp_qp_condensing_hpipm_initialize_default_args;
+//             qp_solver.calculate_memory_size = &ocp_qp_condensing_hpipm_calculate_memory_size;
+//             qp_solver.assign_memory = &ocp_qp_condensing_hpipm_assign_memory;
+//             qp_solver.fun = &ocp_qp_condensing_hpipm;
+//             assert(1 == 0);  // NIY
+//             break;
+//         case CONDENSING_QPOASES:
+//             qp_solver.calculate_args_size = &ocp_qp_condensing_qpoases_calculate_args_size;
+//             qp_solver.assign_args = &ocp_qp_condensing_qpoases_assign_args;
+//             qp_solver.initialize_default_args = &ocp_qp_condensing_qpoases_initialize_default_args;
+//             qp_solver.calculate_memory_size = &ocp_qp_condensing_qpoases_calculate_memory_size;
+//             qp_solver.assign_memory = &ocp_qp_condensing_qpoases_assign_memory;
+//             qp_solver.fun = &ocp_qp_condensing_qpoases;
+//             break;
+//         default:
+//             qp_solver.calculate_args_size = NULL;
+//     }
+//     return qp_solver;
+// }
+
+
+
+void set_ocp_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, ocp_qp_solver *qp_solver)
+{
     switch (qp_solver_name)
     {
-        case HPIPM:
-            qp_solver.calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
-            qp_solver.assign_args = &ocp_qp_hpipm_assign_args;
-            qp_solver.initialize_default_args = &ocp_qp_hpipm_initialize_default_args;
-            qp_solver.calculate_memory_size = &ocp_qp_hpipm_calculate_memory_size;
-            qp_solver.assign_memory = &ocp_qp_hpipm_assign_memory;
-            qp_solver.fun = &ocp_qp_hpipm;
-            break;
-        case CONDENSING_HPIPM:
-            qp_solver.calculate_args_size = &ocp_qp_condensing_hpipm_calculate_args_size;
-            qp_solver.assign_args = &ocp_qp_condensing_hpipm_assign_args;
-            qp_solver.initialize_default_args = &ocp_qp_condensing_hpipm_initialize_default_args;
-            qp_solver.calculate_memory_size = &ocp_qp_condensing_hpipm_calculate_memory_size;
-            qp_solver.assign_memory = &ocp_qp_condensing_hpipm_assign_memory;
-            qp_solver.fun = &ocp_qp_condensing_hpipm;
-            assert(1 == 0);  // NIY
-            break;
-        case CONDENSING_QPOASES:
-            qp_solver.calculate_args_size = &ocp_qp_condensing_qpoases_calculate_args_size;
-            qp_solver.assign_args = &ocp_qp_condensing_qpoases_assign_args;
-            qp_solver.initialize_default_args = &ocp_qp_condensing_qpoases_initialize_default_args;
-            qp_solver.calculate_memory_size = &ocp_qp_condensing_qpoases_calculate_memory_size;
-            qp_solver.assign_memory = &ocp_qp_condensing_qpoases_assign_memory;
-            qp_solver.fun = &ocp_qp_condensing_qpoases;
+        case OCP_QP_HPIPM:
+            qp_solver->calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
+            qp_solver->assign_args = &ocp_qp_hpipm_assign_args;
+            qp_solver->initialize_default_args = &ocp_qp_hpipm_initialize_default_args;
+            qp_solver->calculate_memory_size = &ocp_qp_hpipm_calculate_memory_size;
+            qp_solver->assign_memory = &ocp_qp_hpipm_assign_memory;
+            qp_solver->fun = &ocp_qp_hpipm;
             break;
         default:
-            qp_solver.calculate_args_size = NULL;
+            qp_solver->calculate_args_size = NULL;
+            qp_solver->assign_args = NULL;
+            qp_solver->initialize_default_args = NULL;
+            qp_solver->calculate_memory_size = NULL;
+            qp_solver->assign_memory = NULL;
+            qp_solver->fun = NULL;
     }
-    return qp_solver;
 }

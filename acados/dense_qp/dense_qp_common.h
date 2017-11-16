@@ -61,7 +61,8 @@ int dense_qp_out_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory);
 //
-dense_qp_solver initialize_dense_qp_solver(dense_qp_solver_t qp_solver_name);
+void set_dense_qp_solver_fun_ptrs(dense_qp_solver_t qp_solver_name, dense_qp_solver *qp_solver);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

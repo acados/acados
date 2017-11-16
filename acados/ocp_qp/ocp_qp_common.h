@@ -38,6 +38,12 @@ typedef struct d_ocp_qp_sol ocp_qp_out;
 
 
 typedef enum {
+    OCP_QP_HPIPM,
+} ocp_qp_solver_t;
+
+
+// NOTE(dimitris): contains both ocp_qp solvers and condensing with dense solvers
+typedef enum {
     HPIPM,
     CONDENSING_HPIPM,
     CONDENSING_QPOASES
@@ -64,7 +70,9 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
 //
-ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
+// ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
+//
+void set_ocp_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, ocp_qp_solver *qp_solver);
 
 // TODO TEMP
 // void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev);

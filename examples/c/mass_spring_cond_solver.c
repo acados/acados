@@ -67,13 +67,12 @@ int main() {
     * condensing solver
     ************************************************/
 
-    // choose QP solver and set its function pointers
+    // choose QP solver
     dense_qp_solver_t qp_solver_name = DENSE_QP_QPOASES;
-    dense_qp_solver qp_solver = initialize_dense_qp_solver(qp_solver_name);
 
     // create partial condensing solver args
     ocp_qp_condensing_solver_args *arg =
-        ocp_qp_condensing_solver_create_arguments(qp_in->dim, &qp_solver);
+        ocp_qp_condensing_solver_create_arguments(qp_in->dim, qp_solver_name);
 
     // // change qp solver arguments (cast required)
     // dense_qp_hpipm_args *qpsolver_args = (dense_qp_hpipm_args *) arg->solver_args;
