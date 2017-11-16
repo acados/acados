@@ -46,6 +46,8 @@ void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
 void print_ocp_qp_dims(ocp_qp_dims *dims);
 
+void print_dense_qp_dims(dense_qp_dims *dims);
+
 void print_ocp_qp_in(ocp_qp_in *qp_in);
 
 void print_ocp_qp_out(ocp_qp_out *qp_out);

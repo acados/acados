@@ -42,15 +42,15 @@ typedef struct dense_qp_hpipm_memory_ {
 } dense_qp_hpipm_memory;
 
 //
-int dense_qp_hpipm_calculate_args_size(dense_qp_in *qp_in);
+int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims);
 //
 void dense_qp_hpipm_initialize_default_args(dense_qp_hpipm_args *args);
 //
-dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_in *qp_in, void *mem);
+dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory);
 //
-int dense_qp_hpipm_calculate_memory_size(dense_qp_in *qp_in, dense_qp_hpipm_args *args);
+int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, dense_qp_hpipm_args *args);
 //
-void *dense_qp_hpipm_assign_memory(dense_qp_in *qp_in, dense_qp_hpipm_args *args, void *raw_memory);
+void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, dense_qp_hpipm_args *args, void *raw_memory);
 //
 int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *mem_);
 

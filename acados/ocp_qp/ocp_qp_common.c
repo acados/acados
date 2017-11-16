@@ -20,7 +20,7 @@
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_ocp_qp_size.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -45,7 +45,7 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
     size += sizeof(ocp_qp_dims);
-    size += d_memsize_ocp_qp_size(dims->N);
+    size += d_memsize_ocp_qp_dim(dims->N);
     return size;
 }
 
@@ -64,8 +64,8 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_ocp_qp(dims);
 
-    d_create_ocp_qp_size(dims->N, dims_copy, c_ptr);
-    c_ptr += d_memsize_ocp_qp_size(dims->N);
+    d_create_ocp_qp_dim(dims->N, dims_copy, c_ptr);
+    c_ptr += d_memsize_ocp_qp_dim(dims->N);
 
     dims_copy->N = dims->N;
 
@@ -80,7 +80,7 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
         dims_copy->nbx[ii] = dims->nbx[ii];
     }
 
-    qp_in->size = dims_copy;
+    qp_in->dim = dims_copy;
 
 #if defined(RUNTIME_CHECKS)
     assert((char*)raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);

@@ -47,7 +47,7 @@ typedef struct ocp_qp_condensing_memory_ {
 
 
 //
-void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims);
+// void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims);
 //
 int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims);
 //

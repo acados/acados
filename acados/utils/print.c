@@ -161,13 +161,24 @@ void print_ocp_qp_dims(ocp_qp_dims *dims)
 
 
 
+void print_dense_qp_dims(dense_qp_dims *dims)
+{
+    printf("nv = %d\n", dims->nv);
+    printf("ne = %d\n", dims->ne);
+    printf("nb = %d\n", dims->nb);
+    printf("ng = %d\n", dims->ng);
+    printf("ns = %d\n", dims->ns);
+}
+
+
+
 void print_ocp_qp_in(ocp_qp_in *qp_in)
 {
-    int N = qp_in->size->N;
-    int *nx = qp_in->size->nx;
-    int *nu = qp_in->size->nu;
-    int *nb = qp_in->size->nb;
-    int *ng = qp_in->size->ng;
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
 
     for (int ii = 0; ii < N+1; ii++)
     {
@@ -189,7 +200,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
             d_print_tran_strvec(nx[ii+1], &qp_in->b[ii], 0);
         }
 
-        printf("idxb = (nb = %d = %d + %d)\n", qp_in->size->nb[ii], qp_in->size->nbu[ii], qp_in->size->nbx[ii]);
+        printf("idxb = (nb = %d = %d + %d)\n", qp_in->dim->nb[ii], qp_in->dim->nbu[ii], qp_in->dim->nbx[ii]);
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
 
         printf("d =\n");
@@ -201,11 +212,11 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 
 void print_ocp_qp_out(ocp_qp_out *qp_out)
 {
-    int N = qp_out->size->N;
-    int *nx = qp_out->size->nx;
-    int *nu = qp_out->size->nu;
-    int *nb = qp_out->size->nb;
-    int *ng = qp_out->size->ng;
+    int N = qp_out->dim->N;
+    int *nx = qp_out->dim->nx;
+    int *nu = qp_out->dim->nu;
+    int *nb = qp_out->dim->nb;
+    int *ng = qp_out->dim->ng;
 
     for (int ii = 0; ii < N+1; ii++)
     {
@@ -334,7 +345,7 @@ void print_col_maj_ocp_qp_out(char *filename, col_maj_ocp_qp_in *qp, col_maj_ocp
 
 void print_dense_qp_in(dense_qp_in *qp_in)
 {
-    int nv = qp_in->nv;
+    int nv = qp_in->dim->nv;
 
     printf("H =\n");
     d_print_strmat(nv, nv, qp_in->Hg, 0, 0);

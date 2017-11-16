@@ -48,28 +48,28 @@ int main() {
 
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    // print_ocp_qp_dims(qp_in->size);
+    // print_ocp_qp_dims(qp_in->dim);
     // exit(1);
 
-    int N = qp_in->size->N;
-    int *nx = qp_in->size->nx;
-    int *nu = qp_in->size->nu;
-    int *nb = qp_in->size->nb;
-    int *ng = qp_in->size->ng;
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
 
     /************************************************
     * ocp qp solution
     ************************************************/
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->size);
+    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
     * qpoases
     ************************************************/
 
-    ocp_qp_condensing_qpoases_args *arg = ocp_qp_condensing_qpoases_create_arguments(qp_in->size);
+    ocp_qp_condensing_qpoases_args *arg = ocp_qp_condensing_qpoases_create_arguments(qp_in->dim);
 
-    ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_create_memory(qp_in->size, arg);
+    ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_create_memory(qp_in->dim, arg);
 
 	int acados_return; // 0 normal; 1 max iter
 
@@ -86,7 +86,7 @@ int main() {
     * extract solution
     ************************************************/
 
-    ocp_qp_dims *dims = qp_in->size;
+    ocp_qp_dims *dims = qp_in->dim;
 
     col_maj_ocp_qp_out *sol;
     void *memsol = malloc(col_maj_ocp_qp_out_calculate_size(dims));

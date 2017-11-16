@@ -31,12 +31,12 @@
 #include "acados/utils/mem.h"
 
 
-int dense_qp_hpipm_calculate_args_size(dense_qp_in *qp_in)
+int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims)
 {
     int size = 0;
     size += sizeof(dense_qp_hpipm_args);
     size += sizeof(struct d_dense_qp_ipm_arg);
-    size += d_memsize_dense_qp_ipm_arg(qp_in);
+    size += d_memsize_dense_qp_ipm_arg(dims);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -46,7 +46,7 @@ int dense_qp_hpipm_calculate_args_size(dense_qp_in *qp_in)
 
 
 
-dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_in *qp_in, void *raw_memory)
+dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory)
 {
     dense_qp_hpipm_args *args;
 
@@ -59,12 +59,11 @@ dense_qp_hpipm_args *dense_qp_hpipm_assign_args(dense_qp_in *qp_in, void *raw_me
     c_ptr += sizeof(struct d_dense_qp_ipm_arg);
 
     align_char_to(8, &c_ptr);
-    d_create_dense_qp_ipm_arg(qp_in, args->hpipm_args, c_ptr);
-    c_ptr += d_memsize_dense_qp_ipm_arg(qp_in);
+    d_create_dense_qp_ipm_arg(dims, args->hpipm_args, c_ptr);
+    c_ptr += d_memsize_dense_qp_ipm_arg(dims);
 
-#if defined(RUNTIME_CHECKS)
-    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(qp_in) >= c_ptr);
-#endif
+    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims) >= c_ptr);
+
     return args;
 }
 
@@ -86,13 +85,13 @@ void dense_qp_hpipm_initialize_default_args(dense_qp_hpipm_args *args)
 
 
 
-int dense_qp_hpipm_calculate_memory_size(dense_qp_in *qp_in, dense_qp_hpipm_args *args)
+int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, dense_qp_hpipm_args *args)
 {
     int size = 0;
     size += sizeof(dense_qp_hpipm_memory);
     size += sizeof(struct d_dense_qp_ipm_workspace);
 
-    size += d_memsize_dense_qp_ipm(qp_in, args->hpipm_args);
+    size += d_memsize_dense_qp_ipm(dims, args->hpipm_args);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -102,7 +101,7 @@ int dense_qp_hpipm_calculate_memory_size(dense_qp_in *qp_in, dense_qp_hpipm_args
 
 
 
-void *dense_qp_hpipm_assign_memory(dense_qp_in *qp_in, dense_qp_hpipm_args *args, void *raw_memory)
+void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, dense_qp_hpipm_args *args, void *raw_memory)
 {
     dense_qp_hpipm_memory *mem;
 
@@ -119,12 +118,11 @@ void *dense_qp_hpipm_assign_memory(dense_qp_in *qp_in, dense_qp_hpipm_args *args
 
     // ipm workspace structure
     align_char_to(8, &c_ptr);
-    d_create_dense_qp_ipm(qp_in, args->hpipm_args, ipm_workspace, c_ptr);
+    d_create_dense_qp_ipm(dims, args->hpipm_args, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
-#if defined(RUNTIME_CHECKS)
-    assert((char *)raw_memory + dense_qp_hpipm_calculate_memory_size(qp_in, args) >= c_ptr);
-#endif
+    assert((char *)raw_memory + dense_qp_hpipm_calculate_memory_size(dims, args) >= c_ptr);
+
     return mem;
 }
 

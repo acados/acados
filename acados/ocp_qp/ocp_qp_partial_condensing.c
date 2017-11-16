@@ -28,7 +28,7 @@
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_ocp_qp_size.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 #include "hpipm/include/hpipm_d_cond.h"
 #include "hpipm/include/hpipm_d_part_cond.h"
 
@@ -37,7 +37,7 @@ int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims)
     int size = 0;
     size += sizeof(ocp_qp_partial_condensing_args);
     size += sizeof(ocp_qp_dims);
-    size += d_memsize_ocp_qp_size(dims->N);  // worst-case size of new QP
+    size += d_memsize_ocp_qp_dim(dims->N);  // worst-case size of new QP
     return size;
 }
 
@@ -53,8 +53,8 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
     args->pcond_dims = (ocp_qp_dims *)c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
 
-    d_create_ocp_qp_size(dims->N, args->pcond_dims, c_ptr);
-    c_ptr += d_memsize_ocp_qp_size(dims->N);
+    d_create_ocp_qp_dim(dims->N, args->pcond_dims, c_ptr);
+    c_ptr += d_memsize_ocp_qp_dim(dims->N);
 
     assert((char*)mem + ocp_qp_partial_condensing_calculate_args_size(dims) == c_ptr);
 
@@ -77,7 +77,7 @@ int ocp_qp_partial_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_pa
 
     // populate dimensions of new ocp_qp based on N2
     args->pcond_dims->N = args->N2;
-    d_compute_qp_size_ocp2ocp(dims, args->pcond_dims);
+    d_compute_qp_dim_ocp2ocp(dims, args->pcond_dims);
 
     size += sizeof(ocp_qp_partial_condensing_memory);
     size += sizeof(struct d_cond_qp_ocp2ocp_workspace);

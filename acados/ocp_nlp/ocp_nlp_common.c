@@ -26,7 +26,7 @@
 #include <assert.h>
 
 #include "acados/utils/mem.h"
-#include "hpipm/include/hpipm_d_ocp_qp_size.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 
 // TODO(dimitris): TEMP!!! REMOVE AFTER tmp_allocate_ocp_nlp_in_sim_solver IS GONE!
 #include "blasfeo/include/blasfeo_target.h"
@@ -56,7 +56,7 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
     qp_dims->ns = nlp_dims->ns;
 
     // TODO(dimitris): probably redundant (can also remove hpipm header)
-    qp_dims->memsize = d_memsize_ocp_qp_size(qp_dims->N);
+    qp_dims->memsize = d_memsize_ocp_qp_dim(qp_dims->N);
 }
 
 

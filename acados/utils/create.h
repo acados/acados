@@ -65,17 +65,17 @@ ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(ocp_q
 
 ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp_dims *dims, void *args_);
 
-dense_qp_in *create_dense_qp_in(int nv, int ne, int nb, int ng, int ns);
+dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
 
-dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns);
+dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);
 
-dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_in *qp_in);
+dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_dims *dims);
 
-dense_qp_hpipm_memory *dense_qp_hpipm_create_memory(dense_qp_in *qp_in, void *args_);
+dense_qp_hpipm_memory *dense_qp_hpipm_create_memory(dense_qp_dims *dims, void *args_);
 
-dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_in *qp_in);
+dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_dims *dims);
 
-dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void *args_);
+dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_dims *dims, void *args_);
 
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages);
 

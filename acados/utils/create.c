@@ -193,31 +193,31 @@ ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp
 
 
 
-dense_qp_in *create_dense_qp_in(int nv, int ne, int nb, int ng, int ns)
+dense_qp_in *create_dense_qp_in(dense_qp_dims *dims)
 {
-    int size = dense_qp_in_calculate_size(nv, ne, nb, ng, ns);
+    int size = dense_qp_in_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    dense_qp_in *qp_in = assign_dense_qp_in(nv, ne, nb, ng, ns, ptr);
+    dense_qp_in *qp_in = assign_dense_qp_in(dims, ptr);
     return qp_in;
 }
 
 
 
-dense_qp_out *create_dense_qp_out(int nv, int ne, int nb, int ng, int ns)
+dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
 {
-    int size = dense_qp_out_calculate_size(nv, ne, nb, ng, ns);
+    int size = dense_qp_out_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    dense_qp_out *qp_out = assign_dense_qp_out(nv, ne, nb, ng, ns, ptr);
+    dense_qp_out *qp_out = assign_dense_qp_out(dims, ptr);
     return qp_out;
 }
 
 
 
-dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_in *qp_in)
+dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_dims *dims)
 {
-    int size = dense_qp_hpipm_calculate_args_size(qp_in);
+    int size = dense_qp_hpipm_calculate_args_size(dims);
     void *ptr = acados_malloc(size, 1);
-    dense_qp_hpipm_args *args = dense_qp_hpipm_assign_args(qp_in, ptr);
+    dense_qp_hpipm_args *args = dense_qp_hpipm_assign_args(dims, ptr);
     dense_qp_hpipm_initialize_default_args(args);
 
     return args;
@@ -225,24 +225,24 @@ dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_in *qp_in)
 
 
 
-dense_qp_hpipm_memory *dense_qp_hpipm_create_memory(dense_qp_in *qp_in, void *args_)
+dense_qp_hpipm_memory *dense_qp_hpipm_create_memory(dense_qp_dims *dims, void *args_)
 {
     dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) args_;
 
-    int size = dense_qp_hpipm_calculate_memory_size(qp_in, args);
+    int size = dense_qp_hpipm_calculate_memory_size(dims, args);
     void *ptr = acados_malloc(size, 1);
-    dense_qp_hpipm_memory *mem = dense_qp_hpipm_assign_memory(qp_in, args, ptr);
+    dense_qp_hpipm_memory *mem = dense_qp_hpipm_assign_memory(dims, args, ptr);
 
     return mem;
 }
 
 
 
-dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_in *qp_in)
+dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_dims *dims)
 {
-    int size = dense_qp_qpoases_calculate_args_size(qp_in);
+    int size = dense_qp_qpoases_calculate_args_size(dims);
     void *ptr = acados_malloc(size, 1);
-    dense_qp_qpoases_args *args = dense_qp_qpoases_assign_args(qp_in, ptr);
+    dense_qp_qpoases_args *args = dense_qp_qpoases_assign_args(dims, ptr);
     dense_qp_qpoases_initialize_default_args(args);
 
     return args;
@@ -250,13 +250,13 @@ dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_in *qp_in)
 
 
 
-dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_in *qp_in, void *args_)
+dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_dims *dims, void *args_)
 {
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) args_;
 
-    int size = dense_qp_qpoases_calculate_memory_size(qp_in, args);
+    int size = dense_qp_qpoases_calculate_memory_size(dims, args);
     void *ptr = acados_malloc(size, 1);
-    dense_qp_qpoases_memory *mem = dense_qp_qpoases_assign_memory(qp_in, args, ptr);
+    dense_qp_qpoases_memory *mem = dense_qp_qpoases_assign_memory(dims, args, ptr);
     // NOTE(dimitris): this function is NOT called by the ocp_qp_condensing_qpoases_create_memory..
     return mem;
 }

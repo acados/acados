@@ -27,17 +27,13 @@ extern "C" {
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_ocp_qp_size.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 // acados
 #include "acados/utils/types.h"
 
 
-typedef struct d_ocp_qp_size ocp_qp_dims;
-
-
+typedef struct d_ocp_qp_dim ocp_qp_dims;
 typedef struct d_ocp_qp ocp_qp_in;
-
-
 typedef struct d_ocp_qp_sol ocp_qp_out;
 
 

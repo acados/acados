@@ -316,38 +316,38 @@ char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, 
 
 void convert_from_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
 {
-    qp_in->size->N = cm_qp_in->N;
+    qp_in->dim->N = cm_qp_in->N;
 
     // bounds and idxb
     for (int ii = 0; ii <= dims->N; ii++)
     {
-        qp_in->size->nbx[ii] = 0;
-        qp_in->size->nbu[ii] = 0;
+        qp_in->dim->nbx[ii] = 0;
+        qp_in->dim->nbu[ii] = 0;
         for (int jj = 0; jj < cm_qp_in->nb[ii]; jj++)
         {
 
             if (cm_qp_in->idxb[ii][jj] < cm_qp_in->nx[ii])  // state bound
             {
-                qp_in->size->nbx[ii]++;
+                qp_in->dim->nbx[ii]++;
                 qp_in->idxb[ii][jj] = cm_qp_in->idxb[ii][jj] + cm_qp_in->nu[ii];
             } else
             {
-                qp_in->size->nbu[ii]++;
+                qp_in->dim->nbu[ii]++;
                 qp_in->idxb[ii][jj] = cm_qp_in->idxb[ii][jj] - cm_qp_in->nx[ii];
             }
         }
-        qp_in->size->nb[ii] = qp_in->size->nbx[ii] + qp_in->size->nbu[ii];
-        assert(qp_in->size->nb[ii] == cm_qp_in->nb[ii]);
+        qp_in->dim->nb[ii] = qp_in->dim->nbx[ii] + qp_in->dim->nbu[ii];
+        assert(qp_in->dim->nb[ii] == cm_qp_in->nb[ii]);
     }
 
 
     for (int ii = 0; ii <= dims->N; ii++)
     {
         // rest of dimensions
-        qp_in->size->nx[ii] = cm_qp_in->nx[ii];
-        qp_in->size->nu[ii] = cm_qp_in->nu[ii];
-        qp_in->size->ng[ii] = cm_qp_in->nc[ii];
-        qp_in->size->ns[ii] = 0;
+        qp_in->dim->nx[ii] = cm_qp_in->nx[ii];
+        qp_in->dim->nu[ii] = cm_qp_in->nu[ii];
+        qp_in->dim->ng[ii] = cm_qp_in->nc[ii];
+        qp_in->dim->ns[ii] = 0;
 
         // objective
 

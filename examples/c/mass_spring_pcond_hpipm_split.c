@@ -52,11 +52,11 @@ int main() {
 
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    int N = qp_in->size->N;
-    int *nx = qp_in->size->nx;
-    int *nu = qp_in->size->nu;
-    int *nb = qp_in->size->nb;
-    int *ng = qp_in->size->ng;
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
 
     /************************************************
     * partial condensing arguments/memory
@@ -64,12 +64,12 @@ int main() {
 
 
     ocp_qp_partial_condensing_args *pcond_args =
-        ocp_qp_partial_condensing_create_arguments(qp_in->size);
+        ocp_qp_partial_condensing_create_arguments(qp_in->dim);
 
     pcond_args->N2 = 4;
 
     ocp_qp_partial_condensing_memory *pcond_mem =
-        ocp_qp_partial_condensing_create_memory(qp_in->size, pcond_args);
+        ocp_qp_partial_condensing_create_memory(qp_in->dim, pcond_args);
 
     /************************************************
     * partially condensed ocp qp
@@ -77,30 +77,30 @@ int main() {
 
     ocp_qp_in *pcond_qp_in = create_ocp_qp_in(pcond_args->pcond_dims);
 
-    // print_ocp_qp_dims(qp_in->size);
-    // print_ocp_qp_dims(pcond_qp_in->size);
+    // print_ocp_qp_dims(qp_in->dim);
+    // print_ocp_qp_dims(pcond_qp_in->dim);
 
     /************************************************
     * ocp qp solution
     ************************************************/
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->size);
+    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
     * partially condensed ocp qp solution
     ************************************************/
 
-    ocp_qp_out *pcond_qp_out = create_ocp_qp_out(pcond_qp_in->size);
+    ocp_qp_out *pcond_qp_out = create_ocp_qp_out(pcond_qp_in->dim);
 
     /************************************************
     * ipm
     ************************************************/
 
-    ocp_qp_hpipm_args *arg = ocp_qp_hpipm_create_arguments(pcond_qp_in->size);
+    ocp_qp_hpipm_args *arg = ocp_qp_hpipm_create_arguments(pcond_qp_in->dim);
 
     arg->hpipm_args->iter_max = 10;
 
-    ocp_qp_hpipm_memory *mem = ocp_qp_hpipm_create_memory(pcond_qp_in->size, arg);
+    ocp_qp_hpipm_memory *mem = ocp_qp_hpipm_create_memory(pcond_qp_in->dim, arg);
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -122,7 +122,7 @@ int main() {
     * extract solution
     ************************************************/
 
-    ocp_qp_dims *dims = qp_in->size;
+    ocp_qp_dims *dims = qp_in->dim;
 
     col_maj_ocp_qp_out *sol;
     void *memsol = malloc(col_maj_ocp_qp_out_calculate_size(dims));

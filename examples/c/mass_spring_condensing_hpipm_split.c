@@ -20,6 +20,14 @@
 // external
 #include <stdio.h>
 #include <stdlib.h>
+// hpipm
+#include "hpipm/include/hpipm_d_dense_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp.h"
+#include "hpipm/include/hpipm_d_dense_qp.h"
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_cond.h"  // needed for d_compute_qp_dim_ocp2dense
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
@@ -50,52 +58,47 @@ int main() {
 
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    int N = qp_in->size->N;
-    int *nx = qp_in->size->nx;
-    int *nu = qp_in->size->nu;
-    int *nb = qp_in->size->nb;
-    int *ng = qp_in->size->ng;
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
 
     /************************************************
     * dense qp
     ************************************************/
 
     // dummy dense qp to calculate dimensions
-    dense_qp_in qpd_dummy;
-    dummy_dense_qp_in(&qpd_dummy, qp_in->size);
+    dense_qp_dims ddims;
+    // TODO(dimitris): wrap in acados function and remove hpipm headers
+    d_compute_qp_dim_ocp2dense(qp_in->dim, &ddims);
 
-    int nvd = qpd_dummy.nv;
-    int ned = qpd_dummy.ne;
-    int ngd = qpd_dummy.ng;
-    int nbd = qpd_dummy.nb;
-    int nsd = qpd_dummy.ns;
+    dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
 
-    dense_qp_in *qpd_in = create_dense_qp_in(nvd, ned, nbd, ngd, nsd);
-
-    ocp_qp_condensing_args *cond_args = ocp_qp_condensing_create_arguments(qp_in->size);
-    ocp_qp_condensing_memory *cond_memory = ocp_qp_condensing_create_memory(qp_in->size, cond_args);
+    ocp_qp_condensing_args *cond_args = ocp_qp_condensing_create_arguments(qp_in->dim);
+    ocp_qp_condensing_memory *cond_memory = ocp_qp_condensing_create_memory(qp_in->dim, cond_args);
 
     /************************************************
     * ocp qp solution
     ************************************************/
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->size);
+    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
     * dense sol
     ************************************************/
 
-    dense_qp_out *qpd_out = create_dense_qp_out(nvd, ned, nbd, ngd, nsd);
+    dense_qp_out *qpd_out = create_dense_qp_out(&ddims);
 
     /************************************************
     * dense ipm
     ************************************************/
 
-    dense_qp_hpipm_args *argd = dense_qp_hpipm_create_arguments(qpd_in);
+    dense_qp_hpipm_args *argd = dense_qp_hpipm_create_arguments(&ddims);
 
     // argd->hpipm_args->iter_max = 10;
 
-    dense_qp_hpipm_memory *mem = dense_qp_hpipm_create_memory(qpd_in, argd);
+    dense_qp_hpipm_memory *mem = dense_qp_hpipm_create_memory(&ddims, argd);
 	int acados_return;  // 0 normal; 1 max iter
 
     acados_timer timer;
@@ -116,7 +119,7 @@ int main() {
     * extract solution
     ************************************************/
 
-    ocp_qp_dims *dims = qp_in->size;
+    ocp_qp_dims *dims = qp_in->dim;
 
     col_maj_ocp_qp_out *sol;
     void *memsol = malloc(col_maj_ocp_qp_out_calculate_size(dims));
@@ -157,5 +160,3 @@ int main() {
 
 	return 0;
 }
-
-
