@@ -20,14 +20,6 @@
 // external
 #include <assert.h>
 #include <stdio.h>
-// hpipm
-#include "hpipm/include/hpipm_d_dense_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
-#include "hpipm/include/hpipm_d_cond.h"  // needed for d_compute_qp_dim_ocp2dense
 // acados
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_condensing.h"
@@ -44,7 +36,7 @@ int ocp_qp_condensing_hpipm_calculate_args_size(ocp_qp_dims *dims) {
     size += sizeof(ocp_qp_condensing_hpipm_args);
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     size += dense_qp_hpipm_calculate_args_size(&ddims);
     size += ocp_qp_condensing_calculate_args_size(dims);
@@ -62,7 +54,7 @@ void *ocp_qp_condensing_hpipm_assign_args(ocp_qp_dims *dims, void *mem)
     c_ptr += sizeof(ocp_qp_condensing_hpipm_args);
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     args->solver_args = dense_qp_hpipm_assign_args(&ddims, c_ptr);
     c_ptr += dense_qp_hpipm_calculate_args_size(&ddims);
@@ -103,7 +95,7 @@ int ocp_qp_condensing_hpipm_calculate_memory_size(ocp_qp_dims *dims, void *args_
     size += sizeof(ocp_qp_condensing_hpipm_memory);
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     size += ocp_qp_condensing_calculate_memory_size(dims, args->cond_args);
     size += dense_qp_hpipm_calculate_memory_size(&ddims, args->solver_args);
@@ -128,7 +120,7 @@ void *ocp_qp_condensing_hpipm_assign_memory(ocp_qp_dims *dims, void *args_, void
     c_ptr += sizeof(ocp_qp_condensing_hpipm_memory);
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     align_char_to(8, &c_ptr);
     mem->condensing_memory = ocp_qp_condensing_assign_memory(dims, args->cond_args, c_ptr);

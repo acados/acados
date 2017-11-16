@@ -34,6 +34,12 @@
 #include "acados/utils/mem.h"
 
 
+void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
+{
+    d_compute_qp_dim_ocp2dense(dims, ddims);
+}
+
+
 
 int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims)
 {

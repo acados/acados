@@ -20,14 +20,6 @@
 // external
 #include <assert.h>
 #include <stdio.h>
-// hpipm
-#include "hpipm/include/hpipm_d_dense_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
-#include "hpipm/include/hpipm_d_cond.h"  // needed for d_compute_qp_dim_ocp2dense
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
@@ -48,7 +40,7 @@ int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t 
     size += sizeof(dense_qp_solver);
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     size += ocp_qp_condensing_calculate_args_size(dims);
     size += solver.calculate_args_size(&ddims);
@@ -71,7 +63,7 @@ void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver
     set_qp_solver_fun_ptrs(solver_name, args->solver);
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     args->cond_args = ocp_qp_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_condensing_calculate_args_size(dims);
@@ -100,7 +92,7 @@ int ocp_qp_condensing_solver_calculate_memory_size(ocp_qp_dims *dims, void *args
     ocp_qp_condensing_solver_args *args = (ocp_qp_condensing_solver_args *)args_;
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     int size = 0;
     size += sizeof(ocp_qp_condensing_memory);
@@ -124,7 +116,7 @@ void *ocp_qp_condensing_solver_assign_memory(ocp_qp_dims *dims, void *args_, voi
     ocp_qp_condensing_solver_args *args = (ocp_qp_condensing_solver_args *)args_;
 
     dense_qp_dims ddims;
-    d_compute_qp_dim_ocp2dense(dims, &ddims);
+    compute_dense_qp_dims(dims, &ddims);
 
     char *c_ptr = (char *)raw_memory;
 

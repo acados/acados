@@ -20,14 +20,6 @@
 // external
 #include <stdio.h>
 #include <stdlib.h>
-// hpipm
-#include "hpipm/include/hpipm_d_dense_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
-#include "hpipm/include/hpipm_d_ocp_qp.h"
-#include "hpipm/include/hpipm_d_dense_qp.h"
-#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-#include "hpipm/include/hpipm_d_dense_qp_sol.h"
-#include "hpipm/include/hpipm_d_cond.h"  // needed for d_compute_qp_dim_ocp2dense
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
@@ -68,10 +60,8 @@ int main() {
     * dense qp
     ************************************************/
 
-    // dummy dense qp to calculate dimensions
     dense_qp_dims ddims;
-    // TODO(dimitris): wrap in acados function and remove hpipm headers
-    d_compute_qp_dim_ocp2dense(qp_in->dim, &ddims);
+    compute_dense_qp_dims(qp_in->dim, &ddims);
 
     dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
 
