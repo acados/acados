@@ -6,9 +6,9 @@ include ../../Makefile.rule
 
 
 
-examples: mass_spring_hpipm mass_spring_pcond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases nonlinear_chain_ocp_nlp
+examples: mass_spring_hpipm mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases nonlinear_chain_ocp_nlp
 
-run_examples: run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_nonlinear_chain_ocp_nlp
+run_examples: run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_nonlinear_chain_ocp_nlp
 
 mass_spring_hpipm: mass_spring_hpipm.o
 	$(CC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
@@ -20,6 +20,12 @@ mass_spring_pcond_solver: mass_spring_pcond_solver.o
 	$(CC) -o mass_spring_pcond_solver.out mass_spring_pcond_solver.o $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
 	@echo
 	@echo " Example mass_spring_pcond_solver build complete."
+	@echo
+
+mass_spring_cond_solver: mass_spring_cond_solver.o
+	$(CC) -o mass_spring_cond_solver.out mass_spring_cond_solver.o $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
+	@echo
+	@echo " Example mass_spring_cond_solver build complete."
 	@echo
 
 mass_spring_pcond_hpipm_split: mass_spring_pcond_hpipm_split.o
@@ -75,6 +81,9 @@ run_mass_spring_pcond_hpipm_split:
 
 run_mass_spring_pcond_solver:
 	./mass_spring_pcond_solver.out
+
+run_mass_spring_cond_solver:
+	./mass_spring_cond_solver.out
 
 run_mass_spring_condensing_hpipm_split:
 	./mass_spring_condensing_hpipm_split.out

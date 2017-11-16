@@ -34,27 +34,6 @@
 #include "acados/utils/mem.h"
 
 
-// // TODO(dimitris): implement dense_dims in hpipm and get rid of this file
-// void dummy_dense_qp_in(dense_qp_in *qpd_in, ocp_qp_dims *dims)
-// {
-//     // compute dense qp size
-//     int nvd = 0;
-//     int ned = 0;
-//     int nbd = 0;
-//     int ngd = 0;
-//     int nsd = 0;
-
-//     d_compute_qp_size_ocp2dense(dims, &nvd, &ned, &nbd, &ngd, &nsd);
-
-//     // dummy dense qp
-//     qpd_in->nv = nvd;
-//     qpd_in->ne = ned;
-//     qpd_in->nb = nbd;
-//     qpd_in->ng = ngd;
-//     qpd_in->ns = nsd;
-// }
-
-
 
 int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims)
 {

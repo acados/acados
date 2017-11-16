@@ -27,6 +27,8 @@
 // acados
 #include "acados/utils/types.h"
 #include "acados/dense_qp/dense_qp_common.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_qpoases.h"
 
 
 
@@ -89,4 +91,34 @@ dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory)
     assert((char*)raw_memory + dense_qp_out_calculate_size(dims) >= c_ptr);
 
     return qp_out;
+}
+
+
+
+dense_qp_solver initialize_dense_qp_solver(dense_qp_solver_t qp_solver_name)
+{
+    dense_qp_solver qp_solver;
+
+    switch (qp_solver_name)
+    {
+        case DENSE_QP_HPIPM:
+            qp_solver.calculate_args_size = &dense_qp_hpipm_calculate_args_size;
+            qp_solver.assign_args = &dense_qp_hpipm_assign_args;
+            qp_solver.initialize_default_args = &dense_qp_hpipm_initialize_default_args;
+            qp_solver.calculate_memory_size = &dense_qp_hpipm_calculate_memory_size;
+            qp_solver.assign_memory = &dense_qp_hpipm_assign_memory;
+            qp_solver.fun = &dense_qp_hpipm;
+            break;
+        case DENSE_QP_QPOASES:
+            qp_solver.calculate_args_size = &dense_qp_qpoases_calculate_args_size;
+            qp_solver.assign_args = &dense_qp_qpoases_assign_args;
+            qp_solver.initialize_default_args = &dense_qp_qpoases_initialize_default_args;
+            qp_solver.calculate_memory_size = &dense_qp_qpoases_calculate_memory_size;
+            qp_solver.assign_memory = &dense_qp_qpoases_assign_memory;
+            qp_solver.fun = &dense_qp_qpoases;
+            break;
+        default:
+            qp_solver.calculate_args_size = NULL;
+    }
+    return qp_solver;
 }

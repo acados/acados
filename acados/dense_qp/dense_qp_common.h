@@ -36,20 +36,20 @@ typedef struct d_dense_qp dense_qp_in;
 typedef struct d_dense_qp_sol dense_qp_out;
 
 
-// typedef enum {
-//     DENSE_QP_HPIPM=20,  // NOTE(dimitris): not to overlap int values with ocp_qp_solver_t
-//     DENSE_QP_QPOASES
-// } dense_qp_solver_t;
+typedef enum {
+    DENSE_QP_HPIPM=20,  // NOTE(dimitris): not to overlap int values with ocp_qp_solver_t
+    DENSE_QP_QPOASES
+} dense_qp_solver_t;
 
 
-// typedef struct {
-//     int (*fun)(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args, void *mem);
-//     int (*calculate_args_size)(dense_qp_in *qpd_in);
-//     void *(*assign_args)(dense_qp_in *qpd_in, void *raw_memory);
-//     void (*initialize_default_args)(void *args);
-//     int (*calculate_memory_size)(dense_qp_in *qpd_in, void *args);
-//     void *(*assign_memory)(dense_qp_in *qpd_in, void *args, void *raw_memory);
-// } dense_qp_solver;
+typedef struct {
+    int (*fun)(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args, void *mem);
+    int (*calculate_args_size)(dense_qp_dims *dims);
+    void *(*assign_args)(dense_qp_dims *dims, void *raw_memory);
+    void (*initialize_default_args)(void *args);
+    int (*calculate_memory_size)(dense_qp_dims *dims, void *args);
+    void *(*assign_memory)(dense_qp_dims *dims, void *args, void *raw_memory);
+} dense_qp_solver;
 
 
 //
@@ -60,7 +60,8 @@ dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory);
 int dense_qp_out_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory);
-
+//
+dense_qp_solver initialize_dense_qp_solver(dense_qp_solver_t qp_solver_name);
 
 #ifdef __cplusplus
 } /* extern "C" */

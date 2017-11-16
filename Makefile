@@ -25,6 +25,7 @@ OBJS += acados/ocp_qp/ocp_qp_condensing_qpoases.o
 OBJS += acados/ocp_qp/ocp_qp_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
+OBJS += acados/ocp_qp/ocp_qp_condensing_solver.o
 #sim
 OBJS += acados/sim/allocate_sim.o
 OBJS += acados/sim/sim_casadi_wrapper.o
