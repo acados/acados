@@ -44,7 +44,7 @@
 #define TF 3.0
 #define Ns 2
 #define MAX_SQP_ITERS 20
-#define NREP 2
+#define NREP 5
 
 enum sensitivities_scheme {
     EXACT_NEWTON,
@@ -388,11 +388,11 @@ int main() {
     * gn_sqp args
     ************************************************/
 
-    // choose QP solver and set its function pointers
-    ocp_qp_solver qp_solver = initialize_ocp_qp_solver(HPIPM);
+    // choose QP solver
+    qp_solver_t qp_solver_name = HPIPM;
 
     // set up args with nested structs
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, &qp_solver);
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
     nlp_args->maxIter = MAX_SQP_ITERS;
 
 

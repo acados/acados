@@ -57,6 +57,15 @@ typedef struct {
 } ocp_qp_solver;
 
 
+typedef struct {
+    int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
+    int (*calculate_args_size)(ocp_qp_dims *dims, qp_solver_t solver_name);
+    void *(*assign_args)(ocp_qp_dims *dims, qp_solver_t solver_name, void *raw_memory);
+    void (*initialize_default_args)(void *args);
+    int (*calculate_memory_size)(ocp_qp_dims *dims, void *args);
+    void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
+} ocp_qp_xcond_solver;
+
 
 //
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
@@ -71,6 +80,8 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
 ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name);
 //
 void set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
+//
+void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
 
 // TODO TEMP
 // void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev);

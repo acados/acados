@@ -24,6 +24,8 @@
 // acados
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
@@ -214,5 +216,29 @@ void set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
         default:
             printf("Unknown specified solver\n");
             exit(1);
+    }
+}
+
+
+
+void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver)
+{
+
+    if (qp_solver_name < CONDENSING_HPIPM)
+    {
+        qp_solver->calculate_args_size = &ocp_qp_sparse_solver_calculate_args_size;
+        qp_solver->assign_args = &ocp_qp_sparse_solver_assign_args;
+        qp_solver->initialize_default_args = &ocp_qp_sparse_solver_initialize_default_args;
+        qp_solver->calculate_memory_size = &ocp_qp_sparse_solver_calculate_memory_size;
+        qp_solver->assign_memory = &ocp_qp_sparse_solver_assign_memory;
+        qp_solver->fun = &ocp_qp_sparse_solver;
+    } else
+    {
+        qp_solver->calculate_args_size = &ocp_qp_condensing_solver_calculate_args_size;
+        qp_solver->assign_args = &ocp_qp_condensing_solver_assign_args;
+        qp_solver->initialize_default_args = &ocp_qp_condensing_solver_initialize_default_args;
+        qp_solver->calculate_memory_size = &ocp_qp_condensing_solver_calculate_memory_size;
+        qp_solver->assign_memory = &ocp_qp_condensing_solver_assign_memory;
+        qp_solver->fun = &ocp_qp_condensing_solver;
     }
 }

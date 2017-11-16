@@ -46,22 +46,26 @@
 // #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 
 
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver)
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
 {
+    ocp_qp_xcond_solver qp_solver;
+    set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
+
     int size = 0;
 
     ocp_qp_dims qp_dims;
     cast_nlp_dims_to_qp_dims(&qp_dims, dims);
-
     size += sizeof(ocp_nlp_gn_sqp_args);
-    size += qp_solver->calculate_args_size(&qp_dims);
+    size += sizeof(ocp_qp_xcond_solver);
+
+    size += qp_solver.calculate_args_size(&qp_dims, qp_solver_name);
 
     return size;
 }
 
 
 
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver, void *raw_memory)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, void *raw_memory)
 {
     ocp_nlp_gn_sqp_args *args;
 
@@ -73,11 +77,15 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solve
     args = (ocp_nlp_gn_sqp_args *) c_ptr;
     c_ptr += sizeof(ocp_nlp_gn_sqp_args);
 
-    args->qp_solver = qp_solver;
-    args->qp_solver_args = qp_solver->assign_args(&qp_dims, c_ptr);
-    c_ptr += qp_solver->calculate_args_size(&qp_dims);  // TODO(dimitris): replace with memsize?
+    args->qp_solver = (ocp_qp_xcond_solver*) c_ptr;
+    c_ptr += sizeof(ocp_qp_xcond_solver);
 
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver) >= c_ptr);
+    set_xcond_qp_solver_fun_ptrs(qp_solver_name, args->qp_solver);
+
+    args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver_name, c_ptr);
+    c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver_name);
+
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name) >= c_ptr);
 
     return args;
 }
@@ -189,16 +197,17 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 }
 
 
+// TODO(dimitris): MOVE TO CREATE.C!
 #if defined(EXT_DEPS)
 
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver *qp_solver)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
 {
-    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver);
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
     void *ptr = acados_malloc(size, 1);
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver, ptr);
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
 
     // TODO(dimitris): nest in initialize default args of each module
-    qp_solver->initialize_default_args(args->qp_solver_args);
+    args->qp_solver->initialize_default_args(args->qp_solver_args);
     args->maxIter = 30;
 
     return args;
