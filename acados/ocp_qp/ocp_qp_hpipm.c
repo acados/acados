@@ -445,8 +445,7 @@ int ocp_qp_hpipm(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     // max number of iterations
     if (ipm_workspace->iter == args->iter_max) acados_status = ACADOS_MAXITER;
     // minimum step length
-    if (ipm_workspace->stat[3 + (ipm_workspace->iter - 1) * 5] <
-        args->alpha_min)
+    if (ipm_workspace->stat[3 + (ipm_workspace->iter - 1) * 5] < args->alpha_min)
         acados_status = ACADOS_MINSTEP;
 
     // return

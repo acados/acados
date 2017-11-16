@@ -94,7 +94,7 @@ static void ocp_qp_condensing_hpipm_initialize_default_args(const ocp_qp_in *qp_
 
 
 ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(const ocp_qp_in *qp_in) {
-    void *mem = malloc(ocp_qp_condensing_hpipm_calculate_args_size(qp_in));
+    void *mem = calloc(1, ocp_qp_condensing_hpipm_calculate_args_size(qp_in));
     ocp_qp_condensing_hpipm_args *args;
     ocp_qp_condensing_hpipm_assign_args(qp_in, &args, mem);
     ocp_qp_condensing_hpipm_initialize_default_args(qp_in, args);
@@ -338,7 +338,7 @@ ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(const ocp_
 
     ocp_qp_condensing_hpipm_memory *mem;
     int_t memory_size = ocp_qp_condensing_hpipm_calculate_memory_size(qp_in, args);
-    void *raw_memory = malloc(memory_size);
+    void *raw_memory = calloc(1, memory_size);
     char *ptr_end =
         ocp_qp_condensing_hpipm_assign_memory(qp_in, args, (void **) &mem, raw_memory);
     assert((char*) raw_memory + memory_size >= ptr_end); (void) ptr_end;
@@ -514,7 +514,7 @@ void ocp_qp_condensing_hpipm_initialize(const ocp_qp_in *qp_in, void *args_, voi
     *mem = ocp_qp_condensing_hpipm_create_memory(qp_in, args);
 
     int_t work_space_size = ocp_qp_condensing_hpipm_calculate_workspace_size(qp_in, args);
-    *work = malloc(work_space_size);
+    *work = calloc(1, work_space_size);
 }
 
 
