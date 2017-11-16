@@ -42,9 +42,6 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
-// TEMP
-// #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-
 
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
 {
@@ -584,9 +581,6 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
         int_t qp_status = args->qp_solver->fun(work->qp_in, work->qp_out,
             args->qp_solver_args, mem->qp_solver_mem);
-
-        // ocp_qp_condensing_qpoases_memory *tmp_mem = mem->qp_mem;
-        // printf("SQP iter #%d - QP status %d - nwsr %d - cputime %f\n", sqp_iter, qp_status, tmp_mem->solver_memory->nwsr, tmp_mem->solver_memory->cputime*1e3);
 
         if (qp_status != 0)
         {

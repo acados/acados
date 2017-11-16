@@ -21,9 +21,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 // acados
+#include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/utils/create.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -64,9 +65,9 @@ int main() {
     * ipm
     ************************************************/
 
-    ocp_qp_condensing_hpipm_args *arg = ocp_qp_condensing_hpipm_create_arguments(qp_in->dim);
+    ocp_qp_condensing_solver_args *arg = ocp_qp_condensing_solver_create_arguments(qp_in->dim, CONDENSING_HPIPM);
 
-    ocp_qp_condensing_hpipm_memory *mem = ocp_qp_condensing_hpipm_create_memory(qp_in->dim, arg);
+    ocp_qp_condensing_solver_memory *mem = ocp_qp_condensing_solver_create_memory(qp_in->dim, arg);
 
 	int acados_return; // 0 normal; 1 max iter
 
@@ -74,7 +75,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_condensing_hpipm(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_condensing_solver(qp_in, qp_out, arg, mem);
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -106,8 +107,10 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
+    dense_qp_hpipm_memory *tmp_mem = (dense_qp_hpipm_memory *) mem->solver_memory;
+
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        mem->solver_memory->hpipm_workspace->iter, NREP, time);
+        tmp_mem->hpipm_workspace->iter, NREP, time);
 
     /************************************************
     * free memory

@@ -30,19 +30,6 @@
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-
-//#include "acados/ocp_qp/ocp_qp_hpipm.h"
-//#ifdef ACADOS_WITH_HPMPC
-//#include "acados/ocp_qp/ocp_qp_hpmpc.h"
-//#endif
-//#ifdef OOQP
-//#include "acados/ocp_qp/ocp_qp_ooqp.h"
-//#endif
-//#include "acados/ocp_qp/ocp_qp_qpdunes.h"
-//#include "acados/utils/types.h"
-
 
 
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
@@ -122,7 +109,6 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-
 // void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
 // {
 //     for (int ii = 0; ii < N+1; ii++)
@@ -142,45 +128,6 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
 //         }
 //     }
 // }
-
-
-
-ocp_qp_solver initialize_ocp_qp_solver(qp_solver_t qp_solver_name)
-{
-    ocp_qp_solver qp_solver;
-
-    switch (qp_solver_name)
-    {
-        case HPIPM:
-            qp_solver.calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
-            qp_solver.assign_args = &ocp_qp_hpipm_assign_args;
-            qp_solver.initialize_default_args = &ocp_qp_hpipm_initialize_default_args;
-            qp_solver.calculate_memory_size = &ocp_qp_hpipm_calculate_memory_size;
-            qp_solver.assign_memory = &ocp_qp_hpipm_assign_memory;
-            qp_solver.fun = &ocp_qp_hpipm;
-            break;
-        case CONDENSING_HPIPM:
-            qp_solver.calculate_args_size = &ocp_qp_condensing_hpipm_calculate_args_size;
-            qp_solver.assign_args = &ocp_qp_condensing_hpipm_assign_args;
-            qp_solver.initialize_default_args = &ocp_qp_condensing_hpipm_initialize_default_args;
-            qp_solver.calculate_memory_size = &ocp_qp_condensing_hpipm_calculate_memory_size;
-            qp_solver.assign_memory = &ocp_qp_condensing_hpipm_assign_memory;
-            qp_solver.fun = &ocp_qp_condensing_hpipm;
-            assert(1 == 0);  // NIY
-            break;
-        case CONDENSING_QPOASES:
-            qp_solver.calculate_args_size = &ocp_qp_condensing_qpoases_calculate_args_size;
-            qp_solver.assign_args = &ocp_qp_condensing_qpoases_assign_args;
-            qp_solver.initialize_default_args = &ocp_qp_condensing_qpoases_initialize_default_args;
-            qp_solver.calculate_memory_size = &ocp_qp_condensing_qpoases_calculate_memory_size;
-            qp_solver.assign_memory = &ocp_qp_condensing_qpoases_assign_memory;
-            qp_solver.fun = &ocp_qp_condensing_qpoases;
-            break;
-        default:
-            qp_solver.calculate_args_size = NULL;
-    }
-    return qp_solver;
-}
 
 
 

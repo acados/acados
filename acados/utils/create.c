@@ -28,8 +28,6 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing.h"
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
@@ -172,52 +170,6 @@ ocp_qp_condensing_solver_memory *ocp_qp_condensing_solver_create_memory(ocp_qp_d
 
 
 
-ocp_qp_condensing_hpipm_args *ocp_qp_condensing_hpipm_create_arguments(ocp_qp_dims *dims)
-{
-    int size = ocp_qp_condensing_hpipm_calculate_args_size(dims);
-    void *ptr = acados_malloc(size, 1);
-    ocp_qp_condensing_hpipm_args *args = ocp_qp_condensing_hpipm_assign_args(dims, ptr);
-    ocp_qp_condensing_hpipm_initialize_default_args(args);
-    return args;
-}
-
-
-
-ocp_qp_condensing_hpipm_memory *ocp_qp_condensing_hpipm_create_memory(ocp_qp_dims *dims, void *args_)
-{
-    ocp_qp_condensing_hpipm_args *args = (ocp_qp_condensing_hpipm_args *) args_;
-
-    int size = ocp_qp_condensing_hpipm_calculate_memory_size(dims, args);
-    void *ptr = acados_malloc(size, 1);
-    ocp_qp_condensing_hpipm_memory *mem = ocp_qp_condensing_hpipm_assign_memory(dims, args, ptr);
-    return mem;
-}
-
-
-
-ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(ocp_qp_dims *dims)
-{
-    int size = ocp_qp_condensing_qpoases_calculate_args_size(dims);
-    void *ptr = acados_malloc(size, 1);
-    ocp_qp_condensing_qpoases_args *args = ocp_qp_condensing_qpoases_assign_args(dims, ptr);
-    ocp_qp_condensing_qpoases_initialize_default_args(args);
-    return args;
-}
-
-
-
-ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(ocp_qp_dims *dims, void *args_)
-{
-    ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
-
-    int size = ocp_qp_condensing_qpoases_calculate_memory_size(dims, args);
-    void *ptr = acados_malloc(size, 1);
-    ocp_qp_condensing_qpoases_memory *mem = ocp_qp_condensing_qpoases_assign_memory(dims, args, ptr);
-    return mem;
-}
-
-
-
 dense_qp_in *create_dense_qp_in(dense_qp_dims *dims)
 {
     int size = dense_qp_in_calculate_size(dims);
@@ -282,7 +234,6 @@ dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_dims *dims, voi
     int size = dense_qp_qpoases_calculate_memory_size(dims, args);
     void *ptr = acados_malloc(size, 1);
     dense_qp_qpoases_memory *mem = dense_qp_qpoases_assign_memory(dims, args, ptr);
-    // NOTE(dimitris): this function is NOT called by the ocp_qp_condensing_qpoases_create_memory..
     return mem;
 }
 
