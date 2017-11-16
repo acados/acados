@@ -10,6 +10,9 @@ if(CASADIMATLAB_FOUND)
 endif()
 
 set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
+if(ACADOS_WITH_OOQP)
+    set_source_files_properties(../acados.i PROPERTIES SWIG_FLAGS -DOOQP)
+endif()
 
 if(CMAKE_SYSTEM MATCHES "Windows")
     if(${CMAKE_GENERATOR} MATCHES "MinGW Makefiles")
@@ -33,7 +36,13 @@ set_target_properties(acadosMATLAB
         PREFIX ""
         SUFFIX .${Matlab_MEX_EXTENSION}
 )
+
+if(ACADOS_WITH_OOQP)
+    target_compile_definitions(acadosMATLAB PRIVATE OOQP)
+endif()
+
 install(TARGETS acadosMATLAB DESTINATION lib)
+
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/+acados DESTINATION lib)
 install(
     FILES

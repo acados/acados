@@ -17,31 +17,17 @@
 #
 #
 
-if(CMAKE_SYSTEM MATCHES "Windows")		
-    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")		
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")		
-endif()
+list(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-find_library(FORTRAN_LIBRARY NAMES libgfortran.so libgfortran.dylib gfortran
-HINTS
-    /usr/lib/gcc/x86_64-linux-gnu/*
-    /usr/local/lib/gcc/*
-    /usr/lib/gcc/arm-linux-gnueabihf/* # for Raspbian
-    ${CMAKE_FIND_ROOT_PATH}
-    $ENV{PATH}
-CMAKE_FIND_ROOT_PATH_BOTH)
-
-message(STATUS "${CMAKE_FIND_ROOT_PATH}")
-
-if(NOT FORTRAN_LIBRARY)
-find_library(FORTRAN_LIBRARY gfortran-4 gfortran-3
-    HINTS
-        # /usr/lib/gcc/x86_64-linux-gnu/*
-        # /usr/local/lib/gcc/*
-        ${CMAKE_FIND_ROOT_PATH}
-        # $ENV{PATH}
-    CMAKE_FIND_ROOT_PATH_BOTH)
-endif()
+find_library(FORTRAN_LIBRARY
+    NAMES gfortran gfortran-3 gfortran-4
+    PATHS
+        "/usr/local/lib/gcc/*"
+        "/usr/lib/gcc/x86_64-linux-gnu/*"
+        "/usr/lib/gcc/arm-linux-gnueabihf/*"
+        "/usr/lib/gcc/x86_64-w64-mingw32/*"
+    CMAKE_FIND_ROOT_PATH_BOTH
+)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FortranLibs DEFAULT_MSG FORTRAN_LIBRARY)

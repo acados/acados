@@ -112,7 +112,7 @@ static void ocp_qp_condensing_qpoases_initialize_default_args(const ocp_qp_in *q
 
 
 ocp_qp_condensing_qpoases_args *ocp_qp_condensing_qpoases_create_arguments(const ocp_qp_in *qp_in) {
-    void *mem = malloc(ocp_qp_condensing_qpoases_calculate_args_size(qp_in));
+    void *mem = calloc(1, ocp_qp_condensing_qpoases_calculate_args_size(qp_in));
     ocp_qp_condensing_qpoases_args *args;
     ocp_qp_condensing_qpoases_assign_args(qp_in, &args, mem);
     ocp_qp_condensing_qpoases_initialize_default_args(qp_in, args);
@@ -407,7 +407,7 @@ ocp_qp_condensing_qpoases_memory *ocp_qp_condensing_qpoases_create_memory(const 
     ocp_qp_condensing_qpoases_args *args = (ocp_qp_condensing_qpoases_args *) args_;
     ocp_qp_condensing_qpoases_memory *mem;
     int_t memory_size = ocp_qp_condensing_qpoases_calculate_memory_size(qp_in, args);
-    void *raw_memory_ptr = malloc(memory_size);
+    void *raw_memory_ptr = calloc(1, memory_size);
     char *ptr_end =
         ocp_qp_condensing_qpoases_assign_memory(qp_in, args, (void **) &mem, raw_memory_ptr);
     assert((char*)raw_memory_ptr + memory_size >= ptr_end); (void) ptr_end;
