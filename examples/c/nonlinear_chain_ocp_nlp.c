@@ -408,7 +408,7 @@ int main() {
     * gn_sqp memory
     ************************************************/
 
-    ocp_nlp_gn_sqp_memory *nlp_mem = new_ocp_nlp_gn_sqp_create_memory(nlp->dims, nlp_args);
+    ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp->dims, nlp_args);
 
     // TODO(dimitris): users shouldn't write directly on memory..
     for (int i = 0; i < NN; i++) {

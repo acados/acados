@@ -37,6 +37,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
 
@@ -84,7 +85,9 @@ dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_dims *dims, voi
 
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages);
 
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name);
 
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 
 #ifdef __cplusplus
 } /* extern "C" */

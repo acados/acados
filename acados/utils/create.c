@@ -34,6 +34,7 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/utils/mem.h"
 
 
@@ -294,5 +295,31 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
     ocp_nlp_in *nlp_in = ocp_assign_nlp_in(dims, num_stages, ptr);
     return nlp_in;
 }
+
+
+
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
+{
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
+    void *ptr = acados_malloc(size, 1);
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
+
+    // TODO(dimitris): nest in initialize default args of each module
+    args->qp_solver->initialize_default_args(args->qp_solver_args);
+    args->maxIter = 30;
+
+    return args;
+}
+
+
+
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
+{
+    int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, args);
+    void *ptr = acados_malloc(size, 1);
+    ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
+    return mem;
+}
+
 
 #endif  // EXT_DEPS

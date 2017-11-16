@@ -197,34 +197,6 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 }
 
 
-// TODO(dimitris): MOVE TO CREATE.C!
-#if defined(EXT_DEPS)
-
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
-{
-    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
-    void *ptr = acados_malloc(size, 1);
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
-
-    // TODO(dimitris): nest in initialize default args of each module
-    args->qp_solver->initialize_default_args(args->qp_solver_args);
-    args->maxIter = 30;
-
-    return args;
-}
-
-
-
-ocp_nlp_gn_sqp_memory *new_ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
-{
-    int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, args);
-    void *ptr = acados_malloc(size, 1);
-    ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
-    return mem;
-}
-
-#endif
-
 
 int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
 {
