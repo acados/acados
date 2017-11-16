@@ -15,6 +15,11 @@ endif()
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
 
+set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
+if(ACADOS_WITH_OOQP)
+    set_source_files_properties(../acados.i PROPERTIES SWIG_FLAGS -DOOQP)
+endif()
+
 swig_add_module(acados python ../acados.i)
 swig_link_libraries(acados ${PYTHON_LIBRARIES} acados casadi_python)
 

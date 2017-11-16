@@ -10,6 +10,9 @@ if(CASADIMATLAB_FOUND)
 endif()
 
 set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
+if(ACADOS_WITH_OOQP)
+    set_source_files_properties(../acados.i PROPERTIES SWIG_FLAGS -DOOQP)
+endif()
 
 if(CMAKE_SYSTEM MATCHES "Windows")
     if(${CMAKE_GENERATOR} MATCHES "MinGW Makefiles")
