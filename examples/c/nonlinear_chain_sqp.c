@@ -60,10 +60,10 @@
 // Simple SQP example for acados
 int main() {
     int_t nil;
-    int_t NMF_MAX = 4;  // data exist up to 9 masses
-    int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
+    int_t NMF_MAX = 2;  // data exist up to 9 masses
+    int_t IMPL_MAX = 3;  // was originally 4, reduced to run the ctest faster
 
-    for (int_t implicit = 0; implicit < IMPL_MAX; implicit++) {
+    for (int_t implicit = 1; implicit < IMPL_MAX; implicit++) {
         if (implicit == 0) {
             printf(
                 "\n\n--------------------------------------------------------------------\n");
@@ -128,14 +128,8 @@ int main() {
                 case 5:
                     initStates = fopen(X0_NM6_FILE, "r");
                     break;
-                case 6:
-                    initStates = fopen(X0_NM7_FILE, "r");
-                    break;
-                case 7:
-                    initStates = fopen(X0_NM8_FILE, "r");
-                    break;
                 default:
-                    initStates = fopen(X0_NM9_FILE, "r");
+                    initStates = fopen(X0_NM7_FILE, "r");
                     break;
             }
             for (int_t i = 0; i < NX; i++) {
@@ -159,14 +153,8 @@ int main() {
                 case 5:
                     refStates = fopen(XN_NM6_FILE, "r");
                     break;
-                case 6:
-                    refStates = fopen(XN_NM7_FILE, "r");
-                    break;
-                case 7:
-                    refStates = fopen(XN_NM8_FILE, "r");
-                    break;
                 default:
-                    refStates = fopen(XN_NM9_FILE, "r");
+                    refStates = fopen(XN_NM7_FILE, "r");
                     break;
             }
             for (int_t i = 0; i < NX; i++) {
@@ -197,6 +185,7 @@ int main() {
                 sim_in[jj].step = T / sim_in[jj].num_steps;
                 sim_in[jj].nx = NX;
                 sim_in[jj].nu = NU;
+                sim_in[jj].nz = 0;
 
                 sim_in[jj].sens_forw = true;
                 sim_in[jj].sens_adj = false;
@@ -222,36 +211,6 @@ int main() {
                         sim_in[jj].jac = &jac_chain_nm4;
                         sim_in[jj].jacobian_wrapper = &jac_fun;
                         break;
-                    // case 4:
-                    //     sim_in[jj].vde = &vde_chain_nm5;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm5;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // case 5:
-                    //     sim_in[jj].vde = &vde_chain_nm6;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm6;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // case 6:
-                    //     sim_in[jj].vde = &vde_chain_nm7;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm7;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // case 7:
-                    //     sim_in[jj].vde = &vde_chain_nm8;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm8;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // default:
-                    //     sim_in[jj].vde = &vde_chain_nm9;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm9;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
                 }
 
                 sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));
@@ -270,6 +229,7 @@ int main() {
                 int_t workspace_size;
                 if (implicit > 0) {
                     sim_irk_create_arguments(&rk_opts[jj], implicit, "Gauss");
+                    sim_irk_create_Newton_scheme(&rk_opts[jj], implicit, "Gauss", exact);
                     workspace_size =
                         sim_lifted_irk_calculate_workspace_size(&sim_in[jj], &rk_opts[jj]);
                     sim_lifted_irk_create_memory(&sim_in[jj], &rk_opts[jj], &irk_mem[jj]);
@@ -434,31 +394,23 @@ int main() {
 
             int_t qpsolver_workspace_size =
                 ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, qpsolver_args);
-            int_t qpsolver_memory_size =
-                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpsolver_args);
             #else
             ocp_qp_condensing_hpipm_args *qpsolver_args =
-                ocp_qp_condensing_hpipm_create_arguments(qp_in);
-            ocp_qp_condensing_hpipm_memory qpsolver_memory;
-
-            qpsolver_args->mu_max = 1e-8;
-            qpsolver_args->iter_max = 20;
-            qpsolver_args->alpha_min = 1e-8;
-            qpsolver_args->mu0 = 1.0;
+                ocp_qp_condensing_hpipm_create_arguments(&qp_in);
+            ocp_qp_condensing_hpipm_memory *qpsolver_memory;
 
             int_t qpsolver_workspace_size =
                 ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, qpsolver_args);
             int_t qpsolver_memory_size =
                 ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, qpsolver_args);
+            void *qpsolver_mem = calloc(qpsolver_memory_size, sizeof(char));
             #endif
 
             void *qpsolver_work = calloc(qpsolver_workspace_size, sizeof(char));
 
-            #ifdef USE_QPOASES
-            (void) qpsolver_memory_size;
-            #else
-            ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, &qpsolver_memory,
-                qpsolver_mem);
+            #ifndef USE_QPOASES
+            ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, (void **) &qpsolver_memory,
+                    qpsolver_mem);
             #endif
 
             acados_timer timer;
@@ -578,13 +530,13 @@ int main() {
                         stepX = fabs(qp_out.x[N][j]);
                 }
 
-                if (sqp_iter == max_sqp_iters - 1) {
+//                if (sqp_iter == max_sqp_iters - 1) {
                     fprintf(stdout,
                             "--- ITERATION %d, Infeasibility: %+.3e , step X: "
                             "%+.3e, "
                             "step U: %+.3e \n",
                             sqp_iter, feas, stepX, stepU);
-                }
+//                }
             }
             //        for (int_t i = 0; i < NX; i++) x0[i] = w[NX+NU+i];
             //        shift_states(w, x_end, N);

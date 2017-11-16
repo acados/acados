@@ -204,6 +204,7 @@ int main() {
         sim_in[jj].step = Ts / sim_in[jj].num_steps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
+        sim_in[jj].nz = 0;
 
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;

@@ -49,25 +49,39 @@ real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
 real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
 #define sign(x) CASADI_PREFIX(sign)(x)
 
-static const int CASADI_PREFIX(s0)[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s0)[16] = {12, 1, 0, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 #define s0 CASADI_PREFIX(s0)
 static const int CASADI_PREFIX(s1)[7] = {3, 1, 0, 3, 0, 1, 2};
 #define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[45] = {6, 6, 0, 6, 12, 18, 24, 30, 36, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+static const int CASADI_PREFIX(s2)[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
 #define s2 CASADI_PREFIX(s2)
+static const int CASADI_PREFIX(s3)[87] = {6, 12, 0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5};
+#define s3 CASADI_PREFIX(s3)
 /* jac_chain_nm2 */
 CASADI_SYMBOL_EXPORT int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t a0=arg[0] ? arg[0][3] : 0;
+  real_t a0=arg[0] ? arg[0][6] : 0;
+  real_t a1=arg[0] ? arg[0][3] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][0]=a0;
-  a0=arg[0] ? arg[0][4] : 0;
+  a0=arg[0] ? arg[0][7] : 0;
+  a1=arg[0] ? arg[0][4] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][1]=a0;
-  a0=arg[0] ? arg[0][5] : 0;
+  a0=arg[0] ? arg[0][8] : 0;
+  a1=arg[0] ? arg[0][5] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][2]=a0;
-  a0=arg[1] ? arg[1][0] : 0;
+  a0=arg[0] ? arg[0][9] : 0;
+  a1=arg[1] ? arg[1][0] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][3]=a0;
-  a0=arg[1] ? arg[1][1] : 0;
+  a0=arg[0] ? arg[0][10] : 0;
+  a1=arg[1] ? arg[1][1] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][4]=a0;
-  a0=arg[1] ? arg[1][2] : 0;
+  a0=arg[0] ? arg[0][11] : 0;
+  a1=arg[1] ? arg[1][2] : 0;
+  a0=(a0-a1);
   if (res[0]!=0) res[0][5]=a0;
   a0=0.;
   if (res[1]!=0) res[1][0]=a0;
@@ -88,7 +102,7 @@ CASADI_SYMBOL_EXPORT int jac_chain_nm2(const real_t** arg, real_t** res, int* iw
   if (res[1]!=0) res[1][15]=a0;
   if (res[1]!=0) res[1][16]=a0;
   if (res[1]!=0) res[1][17]=a0;
-  real_t a1=1.;
+  a1=-1.;
   if (res[1]!=0) res[1][18]=a1;
   if (res[1]!=0) res[1][19]=a0;
   if (res[1]!=0) res[1][20]=a0;
@@ -107,6 +121,43 @@ CASADI_SYMBOL_EXPORT int jac_chain_nm2(const real_t** arg, real_t** res, int* iw
   if (res[1]!=0) res[1][33]=a0;
   if (res[1]!=0) res[1][34]=a0;
   if (res[1]!=0) res[1][35]=a0;
+  a1=1.;
+  if (res[1]!=0) res[1][36]=a1;
+  if (res[1]!=0) res[1][37]=a0;
+  if (res[1]!=0) res[1][38]=a0;
+  if (res[1]!=0) res[1][39]=a0;
+  if (res[1]!=0) res[1][40]=a0;
+  if (res[1]!=0) res[1][41]=a0;
+  if (res[1]!=0) res[1][42]=a0;
+  if (res[1]!=0) res[1][43]=a1;
+  if (res[1]!=0) res[1][44]=a0;
+  if (res[1]!=0) res[1][45]=a0;
+  if (res[1]!=0) res[1][46]=a0;
+  if (res[1]!=0) res[1][47]=a0;
+  if (res[1]!=0) res[1][48]=a0;
+  if (res[1]!=0) res[1][49]=a0;
+  if (res[1]!=0) res[1][50]=a1;
+  if (res[1]!=0) res[1][51]=a0;
+  if (res[1]!=0) res[1][52]=a0;
+  if (res[1]!=0) res[1][53]=a0;
+  if (res[1]!=0) res[1][54]=a0;
+  if (res[1]!=0) res[1][55]=a0;
+  if (res[1]!=0) res[1][56]=a0;
+  if (res[1]!=0) res[1][57]=a1;
+  if (res[1]!=0) res[1][58]=a0;
+  if (res[1]!=0) res[1][59]=a0;
+  if (res[1]!=0) res[1][60]=a0;
+  if (res[1]!=0) res[1][61]=a0;
+  if (res[1]!=0) res[1][62]=a0;
+  if (res[1]!=0) res[1][63]=a0;
+  if (res[1]!=0) res[1][64]=a1;
+  if (res[1]!=0) res[1][65]=a0;
+  if (res[1]!=0) res[1][66]=a0;
+  if (res[1]!=0) res[1][67]=a0;
+  if (res[1]!=0) res[1][68]=a0;
+  if (res[1]!=0) res[1][69]=a0;
+  if (res[1]!=0) res[1][70]=a0;
+  if (res[1]!=0) res[1][71]=a1;
   return 0;
 }
 
@@ -146,8 +197,8 @@ CASADI_SYMBOL_EXPORT const int* jac_chain_nm2_sparsity_in(int i) {
 
 CASADI_SYMBOL_EXPORT const int* jac_chain_nm2_sparsity_out(int i) {
   switch (i) {
-    case 0: return s0;
-    case 1: return s2;
+    case 0: return s2;
+    case 1: return s3;
     default: return 0;
   }
 }

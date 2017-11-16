@@ -29,7 +29,6 @@ extern "C" {
 #include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
-#define CODE_GENERATION 0
 
 typedef struct {
     real_t *rhs_in;
