@@ -54,7 +54,7 @@ before_script:
 
 script:
   - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" -a "$USE_MATLAB" == "true" ]; then
-       SWIG_MATLAB=ON
+       SWIG_MATLAB=ON;
     fi'
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
