@@ -36,9 +36,6 @@ int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
     int size = 0;
     size += sizeof(dense_qp_qpoases_args);
 
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
     return size;
 }
 
@@ -53,7 +50,7 @@ void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory)
     args = (dense_qp_qpoases_args *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_args);
 
-    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims) >= c_ptr);
+    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims) == c_ptr);
 
     return (void *)args;
 }
@@ -100,7 +97,6 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
         size += QProblemB_calculateMemorySize(nvd);
 
     make_int_multiple_of(8, &size);
-    size += 1 * 8;
 
     return size;
 }
@@ -123,7 +119,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
-    align_char_to(8, &c_ptr);
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     //
     mem->H = (double *)c_ptr;
@@ -167,16 +163,18 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     mem->dual_sol = (double *)c_ptr;
     c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
 
-
-    // TODO(dimitris): update syntax in qpOASES
+    // TODO(dimitris): update assign syntax in qpOASES
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     if (ngd > 0) {  // QProblem
-        c_ptr = QProblem_assignMemory(nvd, ngd, (QProblem **) &(mem->QP), c_ptr);
+        QProblem_assignMemory(nvd, ngd, (QProblem **) &(mem->QP), c_ptr);
+        c_ptr += QProblem_calculateMemorySize(nvd, ngd);
     } else {  // QProblemB
-        c_ptr = QProblemB_assignMemory(nvd, (QProblemB **) &(mem->QPB), c_ptr);
+        QProblemB_assignMemory(nvd, (QProblemB **) &(mem->QPB), c_ptr);
+        c_ptr += QProblemB_calculateMemorySize(nvd);
     }
 
-    // int stuff
+    // int data
     mem->idxb = (int *)c_ptr;
     c_ptr += nbd * sizeof(int);
 
