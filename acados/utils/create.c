@@ -243,7 +243,7 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 {
     int size = ocp_nlp_in_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    ocp_nlp_in *nlp_in = ocp_assign_nlp_in(dims, num_stages, ptr);
+    ocp_nlp_in *nlp_in = assign_ocp_nlp_in(dims, num_stages, ptr);
     return nlp_in;
 }
 

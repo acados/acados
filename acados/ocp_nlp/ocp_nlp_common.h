@@ -88,11 +88,11 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
 //
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims);
 //
-ocp_nlp_in *ocp_assign_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
+ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
 //
 int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 //
-ocp_nlp_out *ocp_assign_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
+ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 
 // TODO(dimitris): TEMP!!

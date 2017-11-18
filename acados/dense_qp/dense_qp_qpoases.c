@@ -121,47 +121,19 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    //
-    mem->H = (double *)c_ptr;
-    c_ptr += nvd * nvd * sizeof(double);
-    //
-    mem->A = (double *)c_ptr;
-    c_ptr += nvd * ned * sizeof(double);
-    //
-    mem->C = (double *)c_ptr;
-    c_ptr += nvd * ngd * sizeof(double);
-    //
-    mem->g = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    // TODO(dimitris): use this instead
-    // assign_double(nvd, &mem->g, &c_ptr);
-    //
-    mem->b = (double *)c_ptr;
-    c_ptr += ned * sizeof(double);
-    //
-    mem->d_lb0 = (double *)c_ptr;
-    c_ptr += nbd * sizeof(double);
-    //
-    mem->d_ub0 = (double *)c_ptr;
-    c_ptr += nbd * sizeof(double);
-    //
-    mem->d_lb = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->d_ub = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->d_lg = (double *)c_ptr;
-    c_ptr += ngd * sizeof(double);
-    //
-    mem->d_ug = (double *)c_ptr;
-    c_ptr += ngd * sizeof(double);
-    //
-    mem->prim_sol = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->dual_sol = (double *)c_ptr;
-    c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
+    assign_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_double(nvd*ned, &mem->A, &c_ptr);
+    assign_double(nvd*ngd, &mem->C, &c_ptr);
+    assign_double(nvd, &mem->g, &c_ptr);
+    assign_double(ned, &mem->b, &c_ptr);
+    assign_double(nbd, &mem->d_lb0, &c_ptr);
+    assign_double(nbd, &mem->d_ub0, &c_ptr);
+    assign_double(nvd, &mem->d_lb, &c_ptr);
+    assign_double(nvd, &mem->d_ub, &c_ptr);
+    assign_double(ngd, &mem->d_lg, &c_ptr);
+    assign_double(ngd, &mem->d_ug, &c_ptr);
+    assign_double(nvd, &mem->prim_sol, &c_ptr);
+    assign_double(2*nvd + 2*ngd, &mem->dual_sol, &c_ptr);
 
     // TODO(dimitris): update assign syntax in qpOASES
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
@@ -175,8 +147,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     }
 
     // int data
-    mem->idxb = (int *)c_ptr;
-    c_ptr += nbd * sizeof(int);
+    assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
 

@@ -116,13 +116,7 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
         }
     }
 
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
-
     size += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
-
-    make_int_multiple_of(8, &size);
-    size += 2 * 8;
 
     return size;
 }
@@ -139,56 +133,40 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
     ocp_nlp_gn_sqp_memory *mem = (ocp_nlp_gn_sqp_memory *)c_ptr;
     c_ptr += sizeof(ocp_nlp_gn_sqp_memory);
 
-    align_char_to(8, &c_ptr);
-
-    // TODO(dimitris): check if aligning pointers is really necessary
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     int N = dims->N;
 
     mem->num_vars = number_of_primal_vars(dims);
 
     // double pointers
-    mem->x = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    mem->u = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
-
-    mem->pi = (double **)c_ptr;
-    c_ptr += sizeof(double *) * N;
-
-    mem->lam = (double **)c_ptr;
-    c_ptr += sizeof(double *) * (N + 1);
+    assign_double_ptrs(N+1, &mem->x, &c_ptr);
+    assign_double_ptrs(N+1, &mem->u, &c_ptr);
+    assign_double_ptrs(N, &mem->pi, &c_ptr);
+    assign_double_ptrs(N+1, &mem->lam, &c_ptr);
 
     // doubles
-    align_char_to(64, &c_ptr);
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     for (int ii = 0; ii <= N; ii++)
     {
-        // mem->x[ii] = (double *)c_ptr;
-        // c_ptr += dims->nx[ii]*sizeof(double);
-        // mem->u[ii] = (double *)c_ptr;
-        // c_ptr += dims->nu[ii]*sizeof(double);
         assign_double(dims->nx[ii], &mem->x[ii], &c_ptr);
         assign_double(dims->nu[ii], &mem->u[ii], &c_ptr);
         if (ii < N)
         {
-            // mem->pi[ii] = (double *)c_ptr;
-            // c_ptr += dims->nx[ii+1]*sizeof(double);
             assign_double(dims->nx[ii+1], &mem->pi[ii], &c_ptr);
         }
-        // mem->lam[ii] = (double *)c_ptr;
-        // c_ptr += 2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii])*sizeof(double);
         assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &mem->lam[ii], &c_ptr);
     }
 
-    align_char_to(8, &c_ptr);
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
     mem->qp_solver_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
     c_ptr += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
 
     mem->dims = dims;
 
-    assert((char *)raw_memory + ocp_nlp_gn_sqp_calculate_memory_size(dims, args) >= c_ptr);
+    assert((char *)raw_memory + ocp_nlp_gn_sqp_calculate_memory_size(dims, args) == c_ptr);
 
     return mem;
 }
@@ -237,8 +215,9 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
     cast_nlp_dims_to_qp_dims(&qp_dims, mem->dims);
 
     // set up common nlp workspace
-    work->w = (double *)c_ptr;
-    c_ptr += mem->num_vars * sizeof(double);
+    assign_double(mem->num_vars, &work->w, &c_ptr);
+
+    // TODO(dimitris): use mem helper functions below
 
     // set up local SQP data
     work->tmp_vecs = (struct d_strvec *)c_ptr;
