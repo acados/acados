@@ -100,7 +100,7 @@ int main() {
     colmaj_ocp_qp_out *sol;
     void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
     assign_colmaj_ocp_qp_out(dims, &sol, memsol);
-    convert_ocp_qp_out_to_colmaj(dims, qp_out, sol);
+    convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
     * print solution and stats

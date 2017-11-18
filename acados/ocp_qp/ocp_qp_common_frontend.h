@@ -68,9 +68,9 @@ int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, void *ptr);
 //
-void convert_colmaj_to_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in);
+void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in);
 //
-void convert_ocp_qp_out_to_colmaj(ocp_qp_dims *dims, ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out);
+void convert_ocp_qp_out_to_colmaj(ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -314,12 +314,12 @@ char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, vo
 
 
 
-void convert_colmaj_to_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
+void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
 {
-    qp_in->dim->N = cm_qp_in->N;
+    int N = cm_qp_in->N;
 
     // bounds and idxb
-    for (int ii = 0; ii <= dims->N; ii++)
+    for (int ii = 0; ii < N+1; ii++)
     {
         qp_in->dim->nbx[ii] = 0;
         qp_in->dim->nbu[ii] = 0;
@@ -340,49 +340,31 @@ void convert_colmaj_to_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in *cm_qp_in, 
         assert(qp_in->dim->nb[ii] == cm_qp_in->nb[ii]);
     }
 
+    // rest of dimensions
+    qp_in->dim->N = N;
 
-    for (int ii = 0; ii <= dims->N; ii++)
+    for (int ii = 0; ii < N+1; ii++)
     {
-        // rest of dimensions
         qp_in->dim->nx[ii] = cm_qp_in->nx[ii];
         qp_in->dim->nu[ii] = cm_qp_in->nu[ii];
         qp_in->dim->ng[ii] = cm_qp_in->nc[ii];
         qp_in->dim->ns[ii] = 0;
-
-        // objective
-
-        // dynamics
-        if (ii < dims->N)
-        {
-
-        }
     }
 
-    // extract input data
-    double **hA = (double **)cm_qp_in->A;
-    double **hB = (double **)cm_qp_in->B;
-    double **hb = (double **)cm_qp_in->b;
-    double **hQ = (double **)cm_qp_in->Q;
-    double **hS = (double **)cm_qp_in->S;
-    double **hR = (double **)cm_qp_in->R;
-    double **hq = (double **)cm_qp_in->q;
-    double **hr = (double **)cm_qp_in->r;
-    double **hd_lb = (double **)cm_qp_in->lb;
-    double **hd_ub = (double **)cm_qp_in->ub;
-    double **hC = (double **)cm_qp_in->Cx;
-    double **hD = (double **)cm_qp_in->Cu;
-    double **hd_lg = (double **)cm_qp_in->lc;
-    double **hd_ug = (double **)cm_qp_in->uc;
-
     // convert to backend qp
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, qp_in->idxb, hd_lb,
-        hd_ub, hC, hD, hd_lg, hd_ug, NULL, NULL, NULL, NULL, NULL, qp_in);
+    d_cvt_colmaj_to_ocp_qp(cm_qp_in->A, cm_qp_in->B, cm_qp_in->b,
+        cm_qp_in->Q, cm_qp_in->S, cm_qp_in->R, cm_qp_in->q, cm_qp_in->r,
+        qp_in->idxb, cm_qp_in->lb, cm_qp_in->ub,
+        cm_qp_in->Cx, cm_qp_in->Cu, cm_qp_in->lc, cm_qp_in->uc,
+        NULL, NULL, NULL, NULL, NULL, qp_in);
 }
 
 
 
-void convert_ocp_qp_out_to_colmaj(ocp_qp_dims *dims, ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out)
+void convert_ocp_qp_out_to_colmaj(ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out)
 {
+    ocp_qp_dims *dims = qp_out->dim;
+
     for (int ii = 0; ii <= dims->N; ii++)
     {
 		d_cvt_strvec2vec(dims->nu[ii], &qp_out->ux[ii], 0, cm_qp_out->u[ii]);
