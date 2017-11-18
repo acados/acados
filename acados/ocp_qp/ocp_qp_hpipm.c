@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
@@ -61,9 +59,7 @@ void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp_ipm_arg(dims, args->hpipm_args, c_ptr);
     c_ptr += d_memsize_ocp_qp_ipm_arg(dims);
 
-#if defined(RUNTIME_CHECKS)
     assert((char*)raw_memory + ocp_qp_hpipm_calculate_args_size(dims) >= c_ptr);
-#endif
 
     return (void *)args;
 }
@@ -129,9 +125,8 @@ void *ocp_qp_hpipm_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
     d_create_ocp_qp_ipm(dims, args->hpipm_args, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
-#if defined(RUNTIME_CHECKS)
     assert((char *)raw_memory + ocp_qp_hpipm_calculate_memory_size(dims, args_) >= c_ptr);
-#endif
+
     return mem;
 }
 

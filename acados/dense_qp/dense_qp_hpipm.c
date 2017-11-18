@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // hpipm
 #include "hpipm_d_dense_qp.h"
 #include "hpipm_d_dense_qp_sol.h"

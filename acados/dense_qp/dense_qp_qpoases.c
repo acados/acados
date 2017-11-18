@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // blasfeo
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
