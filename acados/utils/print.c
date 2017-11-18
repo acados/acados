@@ -238,7 +238,7 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
 
 
 
-void print_col_maj_ocp_qp_in(col_maj_ocp_qp_in *qp)
+void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp)
 {
     int_t N = qp->N;
     printf("ocp_qp structure with contents:\n");
@@ -288,7 +288,7 @@ void print_col_maj_ocp_qp_in(col_maj_ocp_qp_in *qp)
 
 
 
-void print_col_maj_ocp_qp_in_to_file(col_maj_ocp_qp_in *qp)
+void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp)
 {
     char filename[MAX_STR_LEN];
     for (int_t i = 0; i <= qp->N; i++) {
@@ -325,7 +325,7 @@ void print_col_maj_ocp_qp_in_to_file(col_maj_ocp_qp_in *qp)
 
 
 
-void print_col_maj_ocp_qp_out(char *filename, col_maj_ocp_qp_in *qp, col_maj_ocp_qp_out *out)
+void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp_out *out)
 {
     for (int_t i = 0; i <= qp->N; i++) {
         printf("x[%d]:\n", i);

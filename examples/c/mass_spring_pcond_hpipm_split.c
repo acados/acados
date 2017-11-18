@@ -124,10 +124,10 @@ int main() {
 
     ocp_qp_dims *dims = qp_in->dim;
 
-    col_maj_ocp_qp_out *sol;
-    void *memsol = malloc(col_maj_ocp_qp_out_calculate_size(dims));
-    assign_col_maj_ocp_qp_out(dims, &sol, memsol);
-    convert_to_col_maj_ocp_qp_out(dims, qp_out, sol);
+    colmaj_ocp_qp_out *sol;
+    void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
+    assign_colmaj_ocp_qp_out(dims, &sol, memsol);
+    convert_ocp_qp_out_to_colmaj(dims, qp_out, sol);
 
     /************************************************
     * print solution and stats

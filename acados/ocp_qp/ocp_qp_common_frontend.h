@@ -48,7 +48,7 @@ typedef struct {
     double **Cu;
     double **lc;
     double **uc;
-} col_maj_ocp_qp_in;
+} colmaj_ocp_qp_in;
 
 
 typedef struct {
@@ -56,21 +56,21 @@ typedef struct {
     double **u;
     double **pi;
     double **lam;
-} col_maj_ocp_qp_out;
+} colmaj_ocp_qp_out;
 
 
 //
-int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims);
+int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
-char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr);
+char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void *ptr);
 //
-int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims);
+int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
-char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr);
+char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, void *ptr);
 //
-void convert_from_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in);
+void convert_colmaj_to_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in);
 //
-void convert_to_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_maj_ocp_qp_out *cm_qp_out);
+void convert_ocp_qp_out_to_colmaj(ocp_qp_dims *dims, ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

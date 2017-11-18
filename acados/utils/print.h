@@ -52,11 +52,11 @@ void print_ocp_qp_in(ocp_qp_in *qp_in);
 
 void print_ocp_qp_out(ocp_qp_out *qp_out);
 
-void print_col_maj_ocp_qp_in(col_maj_ocp_qp_in *qp);
+void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp);
 
-void print_col_maj_ocp_qp_in_to_file(col_maj_ocp_qp_in *qp);
+void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp);
 
-void print_col_maj_ocp_qp_out(char *filename, col_maj_ocp_qp_in *qp, col_maj_ocp_qp_out *out);
+void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp_out *out);
 
 void print_dense_qp_in(dense_qp_in *qp_in);
 

@@ -36,7 +36,7 @@
 // #include "ocp_qp/ocp_qp_hpipm.h"
 
 
-int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
+int colmaj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -44,7 +44,7 @@ int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
     int *nb = dims->nb;
     int *nc = dims->ng;
 
-    int size = sizeof(col_maj_ocp_qp_in);
+    int size = sizeof(colmaj_ocp_qp_in);
 
     size += 4*(N+1)*sizeof(int);  // nx, nu, nb, nc
     size += 3*N*sizeof(double *);  // A, B, b
@@ -79,7 +79,7 @@ int col_maj_ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 
 
 
-char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, void *ptr)
+char *assign_colmaj_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in **qp_in, void *ptr)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -93,8 +93,8 @@ char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, voi
     // char pointer
     char *c_ptr = (char *) ptr;
 
-    *qp_in = (col_maj_ocp_qp_in *) c_ptr;
-    c_ptr += sizeof(col_maj_ocp_qp_in);
+    *qp_in = (colmaj_ocp_qp_in *) c_ptr;
+    c_ptr += sizeof(colmaj_ocp_qp_in);
 
     // copy dimensions to workspace
     (*qp_in)->N = N;
@@ -230,7 +230,7 @@ char *assign_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in **qp_in, voi
 
 
 
-int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
+int colmaj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -238,7 +238,7 @@ int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
     int *nb = dims->nb;
     int *nc = dims->ng;
 
-    int size = sizeof(col_maj_ocp_qp_out);
+    int size = sizeof(colmaj_ocp_qp_out);
 
     size += 3*(N+1)*sizeof(double *);  // u, x, lam
     size += N*sizeof(double *);  // pi
@@ -258,7 +258,7 @@ int col_maj_ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 
 
 
-char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, void *ptr)
+char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, void *ptr)
 {
     int N = dims->N;
     int *nx = dims->nx;
@@ -269,8 +269,8 @@ char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, 
     // char pointer
     char *c_ptr = (char *) ptr;
 
-    *qp_out = (col_maj_ocp_qp_out *) c_ptr;
-    c_ptr += sizeof(col_maj_ocp_qp_out);
+    *qp_out = (colmaj_ocp_qp_out *) c_ptr;
+    c_ptr += sizeof(colmaj_ocp_qp_out);
 
     // assign double pointers
     (*qp_out)->x = (double **) c_ptr;
@@ -314,7 +314,7 @@ char *assign_col_maj_ocp_qp_out(ocp_qp_dims *dims, col_maj_ocp_qp_out **qp_out, 
 
 
 
-void convert_from_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
+void convert_colmaj_to_ocp_qp_in(ocp_qp_dims *dims, colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
 {
     qp_in->dim->N = cm_qp_in->N;
 
@@ -358,11 +358,30 @@ void convert_from_col_maj_ocp_qp_in(ocp_qp_dims *dims, col_maj_ocp_qp_in *cm_qp_
         }
     }
 
+    // extract input data
+    double **hA = (double **)cm_qp_in->A;
+    double **hB = (double **)cm_qp_in->B;
+    double **hb = (double **)cm_qp_in->b;
+    double **hQ = (double **)cm_qp_in->Q;
+    double **hS = (double **)cm_qp_in->S;
+    double **hR = (double **)cm_qp_in->R;
+    double **hq = (double **)cm_qp_in->q;
+    double **hr = (double **)cm_qp_in->r;
+    double **hd_lb = (double **)cm_qp_in->lb;
+    double **hd_ub = (double **)cm_qp_in->ub;
+    double **hC = (double **)cm_qp_in->Cx;
+    double **hD = (double **)cm_qp_in->Cu;
+    double **hd_lg = (double **)cm_qp_in->lc;
+    double **hd_ug = (double **)cm_qp_in->uc;
+
+    // convert to backend qp
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, qp_in->idxb, hd_lb,
+        hd_ub, hC, hD, hd_lg, hd_ug, NULL, NULL, NULL, NULL, NULL, qp_in);
 }
 
 
 
-void convert_to_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_maj_ocp_qp_out *cm_qp_out)
+void convert_ocp_qp_out_to_colmaj(ocp_qp_dims *dims, ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_out)
 {
     for (int ii = 0; ii <= dims->N; ii++)
     {
@@ -374,11 +393,11 @@ void convert_to_col_maj_ocp_qp_out(ocp_qp_dims *dims, ocp_qp_out *qp_out, col_ma
             d_cvt_strvec2vec(dims->nx[ii+1], &qp_out->pi[ii], 0, cm_qp_out->pi[ii]);
         }
 
-        // TODO(dimitris): change to new convention for the col_maj interface
+        // TODO(dimitris): change to new convention for the colmaj interface
         d_cvt_strvec2vec(2*dims->nb[ii]+2*dims->ng[ii], &qp_out->lam[ii], 0, cm_qp_out->lam[ii]);
     }
 
-    // col_maj_ocp_qp_out *sol = cm_qp_out;
+    // colmaj_ocp_qp_out *sol = cm_qp_out;
 
     // // dummy qp_in
     // ocp_qp_in qp_in;
