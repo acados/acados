@@ -207,7 +207,7 @@ enum generation_mode {
 
 static casadi_function_t compile_and_load(std::string name, void **handle) {
     std::string library_name = name + std::to_string(global_library_counter++) + std::string(".so");
-    std::string path_to_library = library_name;
+    std::string path_to_library = std::string("./") + library_name;
     char command[MAX_STR_LEN];
     snprintf(command, sizeof(command), "%s -fPIC -shared -g %s.c -o %s", compiler, name.c_str(),
         library_name.c_str());
