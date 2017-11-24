@@ -27,12 +27,12 @@ typedef struct {
     int newton_iter;
     double *A_mat;
     double *c_vec;
-    double *b_vec;  
+    double *b_vec;
 } sim_RK_opts;
 
 int_t sim_RK_opts_calculate_size(int_t ns);
 
-char *assign_sim_RK_opts(int_t ns, sim_RK_opts **opts, void *ptr);
+sim_RK_opts *assign_sim_RK_opts(int ns, void *raw_memory);
 
 sim_RK_opts *create_sim_RK_opts(int_t ns);
 

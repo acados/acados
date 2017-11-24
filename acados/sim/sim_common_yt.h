@@ -26,13 +26,13 @@
 #include "acados/utils/types.h"
 
 typedef struct {
-    int_t nx;   // NX
-    int_t nu;   // NU
-    int_t NF;   // NO. of forward sens
+    int nx;   // NX
+    int nu;   // NU
+    int NF;   // NO. of forward sens
 
-    // int_t nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
-    real_t *x;  // x[NX]
-    real_t *u;  // u[NU]
+    // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
+    double *x;  // x[NX]
+    double *u;  // u[NU]
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
@@ -42,16 +42,16 @@ typedef struct {
     bool sens_hess;
 
     casadi_function_t vde;
-    void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
+    void (*VDE_forw)(const int, const int, const double *, double *, casadi_function_t);
 
     casadi_function_t adj;
-    void (*VDE_adj)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
-    
+    void (*VDE_adj)(const int, const int, const double *, double *, casadi_function_t);
+
     // casadi_function_t jac;
     // void (*jac_fun)(int, double *, double *, casadi_function_t);
 
     casadi_function_t hess;
-    void (*Hess_fun)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
+    void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);
 
     casadi_function_t impl_ode;
     void (*eval_impl_res)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
@@ -65,8 +65,8 @@ typedef struct {
     casadi_function_t impl_jac_u;
     void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
 
-    real_t step;
-    int_t num_steps;
+    double step;
+    int num_steps;
 
 } sim_in;
 
@@ -85,11 +85,27 @@ typedef struct {
     sim_info *info;
 } sim_out;
 
-int_t sim_in_calculate_size(int_t nx, int_t nu, int_t NF);
-char *assign_sim_in(int_t nx, int_t nu, int_t NF, sim_in **in, void *ptr);
-sim_in *create_sim_in(int_t nx, int_t nu, int_t NF);
 
-int_t sim_out_calculate_size(int_t nx, int_t nu, int_t NF);
-char *assign_sim_out(int_t nx, int_t nu, int_t NF, sim_out **out, void *ptr);
-sim_out *create_sim_out(int_t nx, int_t nu, int_t NF);
+typedef struct {
+    int (*fun)(sim_in *in, sim_out *out, void *args, void *mem);
+    int (*calculate_args_size)(int ns);
+    void *(*assign_args)(int ns, void *raw_memory);
+    // void (*initialize_default_args)(void *args);  // TODO(dimitris): IMPLEMENT!
+    int (*calculate_memory_size)(void *args, sim_in *in);  // TODO(dimitris): CHANGE ORDER!
+    void *(*assign_memory)(void *args, sim_in *in, void *raw_memory);  // TODO(dimitris): change this!
+} sim_solver_yt;
+
+
+int sim_in_calculate_size(int nx, int nu, int NF);
+
+sim_in *assign_sim_in(int nx, int nu, int NF, void *raw_memory);
+
+sim_in *create_sim_in(int nx, int nu, int NF);
+
+int sim_out_calculate_size(int nx, int nu, int NF);
+
+sim_out *assign_sim_out(int nx, int nu, int NF, void *raw_memory);
+
+sim_out *create_sim_out(int nx, int nu, int NF);
+
 #endif  // ACADOS_SIM_SIM_YT_COMMON_H_

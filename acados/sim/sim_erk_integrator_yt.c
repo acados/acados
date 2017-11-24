@@ -30,156 +30,165 @@
 
 #include "acados/sim/sim_casadi_wrapper.h"
 
-int_t erk_calculate_memory_size(sim_RK_opts *opts, sim_in *in)
+
+int erk_calculate_memory_size(sim_in *in, sim_RK_opts *opts)
 {
+    int nx = in->nx;
+    int nu = in->nu;
+    int NF = in->NF;
 
-int_t nx = in->nx;
-int_t nu = in->nu; 
-int_t NF = in->NF;
- 
-int_t num_stages = opts->num_stages; // number of stages
-int_t nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
-int_t nhess = (NF + 1) * NF / 2;
-uint num_steps = in->num_steps;  // number of steps
+    int num_stages = opts->num_stages; // number of stages
+    int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
+    int nhess = (NF + 1) * NF / 2;
+    uint num_steps = in->num_steps;  // number of steps
 
-int_t size = sizeof(sim_erk_memory);
+    int size = sizeof(sim_erk_memory);
 
-size += (nX + nu) * sizeof(real_t); // rhs_forw_in
+    size += (nX + nu) * sizeof(double); // rhs_forw_in
 
-if(in->sens_adj){
-    size += num_steps * num_stages * nX * sizeof(real_t); // K_traj
-    size += (num_steps + 1) * nX *sizeof(real_t); // out_forw_traj
-}else{
-    size += num_stages * nX * sizeof(real_t); // K_traj
-    size += nX *sizeof(real_t); // out_forw_traj
-}
-
-if (in->sens_hess && in->sens_adj){
-    size += (nx + nX + nu) * sizeof(real_t); //rhs_adj_in
-    size += (nx + nu + nhess) * sizeof(real_t); //out_adj_tmp
-    size += num_stages * (nx + nu + nhess) * sizeof(real_t); //adj_traj
-}else if (in->sens_adj){
-    size += (nx * 2 + nu) * sizeof(real_t); //rhs_adj_in
-    size += (nx + nu)* sizeof(real_t); //out_adj_tmp
-    size += num_stages * (nx + nu) * sizeof(real_t); //adj_traj
-}
-
-size = (size + 63) / 64 * 64;
-size += 1 * 64;
-
-return size;
-}
-
-char *assign_erk_memory(sim_RK_opts *opts, sim_in *in, sim_erk_memory **memory, void *raw_memory)
-{
-
-int_t nx = in->nx;
-int_t nu = in->nu; 
-int_t NF = in->NF;
-
-int_t num_stages = opts->num_stages; // number of stages
-int_t nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
-int_t nhess = (NF + 1) * NF / 2;
-int_t num_steps = in->num_steps;  // number of steps
-
-char *c_ptr = (char *)raw_memory;
-
-*memory = (sim_erk_memory *) c_ptr;
-c_ptr += sizeof(sim_erk_memory);
-
-// align memory to typical cache line size
-size_t s_ptr = (size_t)c_ptr;
-s_ptr = (s_ptr + 63) / 64 * 64;
-c_ptr = (char *)s_ptr;
-
-(*memory)->rhs_forw_in = (real_t *)c_ptr;
-c_ptr += (nX + nu) * sizeof(real_t);
-
-if(in->sens_adj){
-    (*memory)->K_traj = (real_t *)c_ptr;
-    c_ptr += num_steps * num_stages * nX * sizeof(real_t);
-    (*memory)->out_forw_traj = (real_t *)c_ptr;
-    c_ptr += (num_steps + 1) * nX * sizeof(real_t);
-}else{
-    (*memory)->K_traj = (real_t *)c_ptr;
-    c_ptr += num_stages * nX * sizeof(real_t);
-    (*memory)->out_forw_traj = (real_t *)c_ptr;
-    c_ptr += nX * sizeof(real_t);
-}
-
-if (in->sens_hess && in->sens_adj){
-    (*memory)->rhs_adj_in = (real_t *)c_ptr;
-    c_ptr += (nx + nX + nu) * sizeof(real_t);
-    (*memory)->out_adj_tmp = (real_t *)c_ptr;
-    c_ptr += (nx + nu + nhess) * sizeof(real_t); 
-    (*memory)->adj_traj = (real_t *)c_ptr;
-    c_ptr += num_stages * (nx + nu + nhess) * sizeof(real_t); 
-    }else if (in->sens_adj){
-        (*memory)->rhs_adj_in = (real_t *)c_ptr;
-        c_ptr += (nx * 2 + nu) * sizeof(real_t);
-        (*memory)->out_adj_tmp = (real_t *)c_ptr;
-        c_ptr += (nx + nu) * sizeof(real_t);
-        (*memory)->adj_traj = (real_t *)c_ptr;
-        c_ptr += num_stages * (nx + nu) * sizeof(real_t);
+    if(in->sens_adj){
+        size += num_steps * num_stages * nX * sizeof(double); // K_traj
+        size += (num_steps + 1) * nX *sizeof(double); // out_forw_traj
+    }else{
+        size += num_stages * nX * sizeof(double); // K_traj
+        size += nX *sizeof(double); // out_forw_traj
     }
 
-    return c_ptr;
+    if (in->sens_hess && in->sens_adj){
+        size += (nx + nX + nu) * sizeof(double); //rhs_adj_in
+        size += (nx + nu + nhess) * sizeof(double); //out_adj_tmp
+        size += num_stages * (nx + nu + nhess) * sizeof(double); //adj_traj
+    }else if (in->sens_adj){
+        size += (nx * 2 + nu) * sizeof(double); //rhs_adj_in
+        size += (nx + nu)* sizeof(double); //out_adj_tmp
+        size += num_stages * (nx + nu) * sizeof(double); //adj_traj
+    }
+
+    size = (size + 63) / 64 * 64;
+    size += 1 * 64;
+
+    return size;
 }
 
-sim_erk_memory *sim_erk_create_memory(sim_RK_opts *opts, sim_in *in)
-{
-    sim_erk_memory *memory;
 
-    int_t bytes = erk_calculate_memory_size(opts, in);
+
+sim_erk_memory *assign_erk_memory(sim_in *in, sim_RK_opts *opts, void *raw_memory)
+{
+
+    int nx = in->nx;
+    int nu = in->nu;
+    int NF = in->NF;
+
+    int num_stages = opts->num_stages; // number of stages
+    int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
+    int nhess = (NF + 1) * NF / 2;
+    int num_steps = in->num_steps;  // number of steps
+
+    char *c_ptr = (char *)raw_memory;
+
+    sim_erk_memory *mem = (sim_erk_memory *) c_ptr;
+    c_ptr += sizeof(sim_erk_memory);
+
+    // align memory to typical cache line size
+    size_t s_ptr = (size_t)c_ptr;
+    s_ptr = (s_ptr + 63) / 64 * 64;
+    c_ptr = (char *)s_ptr;
+
+    mem->rhs_forw_in = (double *)c_ptr;
+    c_ptr += (nX + nu) * sizeof(double);
+
+    if(in->sens_adj)
+    {
+        mem->K_traj = (double *)c_ptr;
+        c_ptr += num_steps * num_stages * nX * sizeof(double);
+        mem->out_forw_traj = (double *)c_ptr;
+        c_ptr += (num_steps + 1) * nX * sizeof(double);
+    } else
+    {
+        mem->K_traj = (double *)c_ptr;
+        c_ptr += num_stages * nX * sizeof(double);
+        mem->out_forw_traj = (double *)c_ptr;
+        c_ptr += nX * sizeof(double);
+    }
+
+    if (in->sens_hess && in->sens_adj)
+    {
+        mem->rhs_adj_in = (double *)c_ptr;
+        c_ptr += (nx + nX + nu) * sizeof(double);
+        mem->out_adj_tmp = (double *)c_ptr;
+        c_ptr += (nx + nu + nhess) * sizeof(double);
+        mem->adj_traj = (double *)c_ptr;
+        c_ptr += num_stages * (nx + nu + nhess) * sizeof(double);
+    } else if (in->sens_adj)
+    {
+        mem->rhs_adj_in = (double *)c_ptr;
+        c_ptr += (nx * 2 + nu) * sizeof(double);
+        mem->out_adj_tmp = (double *)c_ptr;
+        c_ptr += (nx + nu) * sizeof(double);
+        mem->adj_traj = (double *)c_ptr;
+        c_ptr += num_stages * (nx + nu) * sizeof(double);
+    }
+
+    assert((char*)raw_memory + erk_calculate_memory_size(opts, in) >= c_ptr);
+
+    return mem;
+}
+
+
+
+sim_erk_memory *sim_erk_create_memory(sim_in *in, sim_RK_opts *opts)
+{
+    int bytes = erk_calculate_memory_size( in, opts);
     void *ptr = malloc(bytes);
-    char *ptr_end = assign_erk_memory(opts, in, &memory, ptr);
-    assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
+    sim_erk_memory *memory = assign_erk_memory(in, opts, ptr);
 
     return memory;
 }
 
-int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
 
+
+int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_)
+{
     sim_RK_opts *opts = (sim_RK_opts *) opts_;
     sim_erk_memory *mem = (sim_erk_memory *) mem_;
 
-    int_t i, j, s, istep;
-    real_t a = 0, b =0; // temp values of A_mat and b_vec
-    int_t nx = in->nx;
-    int_t nu = in->nu;
+    int i, j, s, istep;
+    double a = 0, b =0; // temp values of A_mat and b_vec
+    int nx = in->nx;
+    int nu = in->nu;
 
-    int_t NF = in->NF;
+    int NF = in->NF;
     if (!in->sens_forw)
         NF = 0;
-    
-    int_t nhess = (NF + 1) * NF / 2;
-    int_t nX = nx * (1 + NF);
 
-    real_t *x = in->x;
-    real_t *u = in->u;
-    real_t *S_forw_in = in->S_forw; 
-    int_t num_steps = in->num_steps;
-    real_t step = in->step;
+    int nhess = (NF + 1) * NF / 2;
+    int nX = nx * (1 + NF);
 
-    real_t *S_adj_in = in->S_adj;
+    double *x = in->x;
+    double *u = in->u;
+    double *S_forw_in = in->S_forw;
+    int num_steps = in->num_steps;
+    double step = in->step;
 
-    real_t *A_mat = opts->A_mat;
-    real_t *b_vec = opts->b_vec;
-    //    real_t *c_vec = opts->c_vec;
-    int_t num_stages = opts->num_stages;
+    double *S_adj_in = in->S_adj;
 
-    real_t *K_traj = mem->K_traj;
-    real_t *forw_traj = mem->out_forw_traj;
-    real_t *rhs_forw_in = mem->rhs_forw_in;
+    double *A_mat = opts->A_mat;
+    double *b_vec = opts->b_vec;
+    //    double *c_vec = opts->c_vec;
+    int num_stages = opts->num_stages;
 
-    real_t *adj_tmp = mem->out_adj_tmp;
-    real_t *adj_traj = mem->adj_traj;
-    real_t *rhs_adj_in = mem->rhs_adj_in;
+    double *K_traj = mem->K_traj;
+    double *forw_traj = mem->out_forw_traj;
+    double *rhs_forw_in = mem->rhs_forw_in;
 
-    real_t *xn = out->xn;
-    real_t *S_forw_out = out->S_forw;
-    real_t *S_adj_out = out->S_adj;
-    real_t *S_hess_out = out->S_hess;
+    double *adj_tmp = mem->out_adj_tmp;
+    double *adj_traj = mem->adj_traj;
+    double *rhs_adj_in = mem->rhs_adj_in;
+
+    double *xn = out->xn;
+    double *S_forw_out = out->S_forw;
+    double *S_adj_out = out->S_adj;
+    double *S_hess_out = out->S_hess;
 
     acados_timer timer, timer_ad;
     double timing_ad = 0.0;
@@ -210,7 +219,7 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
             for (j = 0; j < s; j++){
                 a = A_mat[j * num_stages + s];
                 if (a!=0){
-                    a *= step;                   
+                    a *= step;
                     for (i = 0; i < nX; i++)
                         rhs_forw_in[i] += a * K_traj[j * nX + i];
                 }
@@ -226,7 +235,7 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
                 forw_traj[i] += b * K_traj[s * nX + i];  // ERK step
         }
     }
-    
+
     for (i = 0; i < nx; i++)
         xn[i] = forw_traj[i];
     if (in->sens_forw) {
@@ -245,7 +254,7 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
         int nAdj = nx + nu;
         if (in->sens_hess) {
             nForw = nX;
-            nAdj = nx + nu + nhess;         
+            nAdj = nx + nu + nhess;
             for (i = 0; i < nhess; i++)
                 adj_tmp[nx + nu + i] = 0.0;
         }
@@ -254,7 +263,7 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
 
         for (i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = u[i];
-       
+
         for (istep = num_steps - 1; istep > -1; istep--) {
             K_traj = mem->K_traj + istep * num_stages * nX;
             forw_traj = mem->out_forw_traj + istep * nX;
@@ -281,12 +290,12 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
                             rhs_adj_in[nForw + i] += a * adj_traj[j * nAdj + i];
                     }
                 }
-                acados_tic(&timer_ad);  
+                acados_tic(&timer_ad);
                 if (in->sens_hess){
-                    in->Hess_fun(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->hess);                   
+                    in->Hess_fun(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->hess);
                 }else{
                     in->VDE_adj(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->adj); // adjoint VDE evaluation
-                }              
+                }
                 timing_ad += acados_toc(&timer_ad);
 
                 // printf("\nadj_traj:\n");
