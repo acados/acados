@@ -237,7 +237,7 @@ int main() {
     nbx[NN] = NX;
     nbu[NN] = 0;
 
-    // TODO(dimitris): if dims were defined stagewise, we could do directly ocp_nlp_dims dims[N]..
+    // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
     ocp_nlp_dims dims;
     dims.N  = NN;
     dims.nx = nx;
@@ -253,7 +253,6 @@ int main() {
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-    // TODO(dimitris): call after args instead of passing NULL
     ocp_nlp_in *nlp = create_ocp_nlp_in(&dims, d);
 
     // NOTE(dimitris): use nlp->dims instead of &dims from now on since nb is filled with nbx+nbu!

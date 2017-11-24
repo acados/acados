@@ -217,17 +217,14 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
     // set up common nlp workspace
     assign_double(mem->num_vars, &work->w, &c_ptr);
 
-    // TODO(dimitris): use mem helper functions below
-
     // set up local SQP data
-    work->tmp_vecs = (struct d_strvec *)c_ptr;
-    c_ptr += (N+1)*sizeof(struct d_strvec);
+    assign_strvec_ptrs(N+1, &work->tmp_vecs, &c_ptr);
 
     align_char_to(64, &c_ptr);
+
     for (int ii = 0; ii < N+1; ii++)
     {
-        d_create_strvec(nx[ii]+nu[ii], &work->tmp_vecs[ii], c_ptr);
-        c_ptr += work->tmp_vecs[ii].memory_size;
+        assign_strvec(nx[ii]+nu[ii], &work->tmp_vecs[ii], &c_ptr);
     }
 
     // set up QP solver
@@ -535,7 +532,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
     initialize_trajectories(nlp_in, mem, work);
 
-    // TODO(dimitris): move somewhere else
+    // TODO(dimitris): move somewhere else (not needed after new nlp_in)
     int_t **qp_idxb = (int_t **) work->qp_in->idxb;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nb[i]; j++) {

@@ -70,7 +70,7 @@ typedef struct {
     sim_solver *sim;
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
-    bool freezeSens;
+    bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
 } ocp_nlp_in;
 
 
