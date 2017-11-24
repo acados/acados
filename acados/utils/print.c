@@ -80,7 +80,7 @@ void print_int_matrix(char *file_name, const int_t *matrix, const int_t nrows,
     // Assumes column major ordering
     for (int_t i = 0; i < nrows; i++) {
         for (int_t j = 0; j < ncols; j++) {
-            fprintf(output, "%d ", matrix[j * nrows + i]);
+            fprintf(output, "%2d ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
     }
