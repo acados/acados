@@ -7,6 +7,7 @@ OBJS =
 OBJS += dense_qp_common.o
 OBJS += dense_qp_hpipm.o
 OBJS += dense_qp_qpoases.o
+OBJS += dense_qp_qore.o
 
 obj: $(OBJS)
 

@@ -16,6 +16,7 @@ OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
 OBJS += acados/dense_qp/dense_qp_common.o
 OBJS += acados/dense_qp/dense_qp_hpipm.o
 OBJS += acados/dense_qp/dense_qp_qpoases.o
+OBJS += acados/dense_qp/dense_qp_qore.o
 # ocp qp
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
@@ -39,7 +40,7 @@ OBJS += acados/utils/mem.o
 OBJS += acados/utils/create.o
 
 
-static_library: blasfeo_static hpipm_static qpoases_static
+static_library: blasfeo_static hpipm_static qpoases_static qore_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -68,6 +69,21 @@ qpoases_static:
 	mkdir -p lib
 	cp -r external/qpoases/include/* include/qpoases
 	cp external/qpoases/bin/libqpOASES_e.a lib
+	
+qore_static: blasfeo_static
+	mkdir -p external/qore/external/blasfeo
+	cp external/blasfeo/include/*.h external/qore/external/blasfeo
+	cp external/blasfeo/lib/libblasfeo.a external/qore/external/blasfeo
+	( cd external/qore; $(MAKE) static_dense; )
+	mkdir -p include/qore
+	mkdir -p lib
+	cp external/qore/*.h include/qore
+	cp external/qore/KKTPACK_DENSE/include/*.h include/qore
+	cp external/qore/KKTPACK_DENSE/source/*.h include/qore
+	cp external/qore/QPCORE/include/*.h include/qore
+	cp external/qore/QPSOLVER_DENSE/include/*.h include/qore
+	cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
+	cp external/qore/bin/libqore_dense.a lib
 
 examples_c:
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
@@ -86,5 +102,6 @@ deep_clean: clean
 	( cd external/blasfeo; $(MAKE) clean )
 	( cd external/hpipm; $(MAKE) clean )
 	( cd external/qpoases; $(MAKE) clean )
+	( cd external/qore; $(MAKE) purge )
 	rm -rf include
 	rm -rf lib

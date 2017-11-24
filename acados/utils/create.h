@@ -28,6 +28,7 @@ extern "C" {
 
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
+#include "acados/dense_qp/dense_qp_qore.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing.h"

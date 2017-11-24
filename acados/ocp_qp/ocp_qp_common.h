@@ -43,7 +43,8 @@ typedef struct d_ocp_qp_sol ocp_qp_out;
 typedef enum {
     HPIPM,
     CONDENSING_HPIPM,
-    CONDENSING_QPOASES
+    CONDENSING_QPOASES,
+    CONDENSING_QORE
 } qp_solver_t;
 
 

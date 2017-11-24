@@ -24,3 +24,6 @@
 [submodule "external/qpoases"]
 	path = external/qpoases
 	url = https://github.com/acados/qpOASES.git
+[submodule "external/qore"]
+	path = external/qore
+	url = https://github.com/acados/QORE.git

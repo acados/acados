@@ -29,6 +29,7 @@
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
+#include "acados/dense_qp/dense_qp_qore.h"
 
 
 
@@ -161,6 +162,13 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((dense_qp_solver *)qp_solver)->assign_memory = &dense_qp_qpoases_assign_memory;
             ((dense_qp_solver *)qp_solver)->fun = &dense_qp_qpoases;
             break;
+        case CONDENSING_QORE:
+            ((dense_qp_solver *)qp_solver)->calculate_args_size = &dense_qp_qore_calculate_args_size;
+            ((dense_qp_solver *)qp_solver)->assign_args = &dense_qp_qore_assign_args;
+            ((dense_qp_solver *)qp_solver)->initialize_default_args = &dense_qp_qore_initialize_default_args;
+            ((dense_qp_solver *)qp_solver)->calculate_memory_size = &dense_qp_qore_calculate_memory_size;
+            ((dense_qp_solver *)qp_solver)->assign_memory = &dense_qp_qore_assign_memory;
+            ((dense_qp_solver *)qp_solver)->fun = &dense_qp_qore;
         default:
             return_value = ACADOS_FAILURE;
     }
