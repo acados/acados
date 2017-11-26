@@ -41,11 +41,11 @@ typedef struct{
 
 } sim_erk_memory;
 
-int erk_calculate_memory_size(sim_in *in, sim_RK_opts *opts);
+int erk_calculate_memory_size(sim_in *in, void *opts_);
 
-sim_erk_memory *assign_erk_memory(sim_in *in, sim_RK_opts *opts, void *raw_memory);
+void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory);
 
-sim_erk_memory *sim_erk_create_memory(sim_in *in, sim_RK_opts *opts);
+void *sim_erk_create_memory(sim_in *in, void *opts_);
 
 int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_);
 
@@ -54,7 +54,6 @@ int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_);
 // void sim_erk_create_arguments(void *args, const int num_stages);
 
 // void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-// void sim_erk_destroy(void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

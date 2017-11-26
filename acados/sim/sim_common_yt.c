@@ -26,6 +26,8 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/sim/sim_common_yt.h"
+#include "acados/sim/sim_rk_common_yt.h"
+#include "acados/sim/sim_erk_integrator_yt.h"
 
 
 // TODO(dimitris): write sim_dims
@@ -156,4 +158,25 @@ sim_out *create_sim_out(int nx, int nu, int NF)
     sim_out *out = assign_sim_out(nx, nu, NF, ptr);
 
     return out;
+}
+
+
+
+int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_yt *sim_solver)
+{
+    int return_value = ACADOS_SUCCESS;
+
+    switch (sim_solver_name)
+    {
+        case ERK:
+            sim_solver->calculate_args_size = &sim_RK_opts_calculate_size;
+            sim_solver->assign_args = &assign_sim_RK_opts;
+            sim_solver->initialize_default_args = &sim_rk_initialize_default_args;
+            sim_solver->calculate_memory_size = &erk_calculate_memory_size;
+            sim_solver->assign_memory = &assign_erk_memory;
+            break;
+        default:
+            return_value = ACADOS_FAILURE;
+    }
+    return return_value;
 }

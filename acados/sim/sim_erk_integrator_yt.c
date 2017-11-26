@@ -31,8 +31,10 @@
 #include "acados/sim/sim_casadi_wrapper.h"
 
 
-int erk_calculate_memory_size(sim_in *in, sim_RK_opts *opts)
+int erk_calculate_memory_size(sim_in *in, void *opts_)
 {
+    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+
     int nx = in->nx;
     int nu = in->nu;
     int NF = in->NF;
@@ -72,8 +74,9 @@ int erk_calculate_memory_size(sim_in *in, sim_RK_opts *opts)
 
 
 
-sim_erk_memory *assign_erk_memory(sim_in *in, sim_RK_opts *opts, void *raw_memory)
+void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory)
 {
+    sim_RK_opts *opts = (sim_RK_opts *) opts_;
 
     int nx = in->nx;
     int nu = in->nu;
@@ -131,18 +134,18 @@ sim_erk_memory *assign_erk_memory(sim_in *in, sim_RK_opts *opts, void *raw_memor
 
     assert((char*)raw_memory + erk_calculate_memory_size(in, opts) >= c_ptr);
 
-    return mem;
+    return (void *)mem;
 }
 
 
 
-sim_erk_memory *sim_erk_create_memory(sim_in *in, sim_RK_opts *opts)
+void *sim_erk_create_memory(sim_in *in, void *opts_)
 {
-    int bytes = erk_calculate_memory_size( in, opts);
+    int bytes = erk_calculate_memory_size( in, opts_);
     void *ptr = malloc(bytes);
-    sim_erk_memory *memory = assign_erk_memory(in, opts, ptr);
+    sim_erk_memory *memory = assign_erk_memory(in, opts_, ptr);
 
-    return memory;
+    return (void *)memory;
 }
 
 

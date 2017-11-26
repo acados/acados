@@ -25,6 +25,11 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+typedef enum {
+    ERK,
+} sim_solver_t;
+
+
 typedef struct {
     int nx;   // NX
     int nu;   // NU
@@ -93,7 +98,7 @@ typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem);
     int (*calculate_args_size)(int ns);
     void *(*assign_args)(int ns, void *raw_memory);
-    void (*initialize_default_args)(void *args);
+    void (*initialize_default_args)(void *args, int ns);
     int (*calculate_memory_size)(sim_in *in, void *args);  // TODO(dimitris): use sim_dims instead
     void *(*assign_memory)(sim_in *in, void *args, void *raw_memory);
 } sim_solver_yt;
@@ -110,5 +115,7 @@ int sim_out_calculate_size(int nx, int nu, int NF);
 sim_out *assign_sim_out(int nx, int nu, int NF, void *raw_memory);
 
 sim_out *create_sim_out(int nx, int nu, int NF);
+
+int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_yt *sim_solver);
 
 #endif  // ACADOS_SIM_SIM_YT_COMMON_H_
