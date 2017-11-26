@@ -129,7 +129,7 @@ sim_erk_memory *assign_erk_memory(sim_in *in, sim_RK_opts *opts, void *raw_memor
         c_ptr += num_stages * (nx + nu) * sizeof(double);
     }
 
-    assert((char*)raw_memory + erk_calculate_memory_size(opts, in) >= c_ptr);
+    assert((char*)raw_memory + erk_calculate_memory_size(in, opts) >= c_ptr);
 
     return mem;
 }
