@@ -140,7 +140,6 @@ sim_out *assign_sim_out(int nx, int nu, int NF, void *raw_memory)
     out->S_hess = (double *) c_ptr;
     c_ptr += ((NF + 1) * NF / 2) *sizeof(double);
 
-    // TODO(dimitris): check also with equality once
     assert((char*)raw_memory + sim_out_calculate_size(nx, nu, NF) >= c_ptr);
 
     return out;

@@ -76,6 +76,21 @@ sim_RK_opts *assign_sim_RK_opts(int ns, void *raw_memory)
 
 
 
+void sim_rk_initialize_default_args(sim_RK_opts *opts, int ns)
+{
+    assert(ns == 4 && "only number of stages = 4 implemented!");
+
+    memcpy(opts->A_mat,
+        ((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
+        sizeof(*opts->A_mat) * (ns * ns));
+    memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
+        sizeof(*opts->b_vec) * (ns));
+    memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
+        sizeof(*opts->c_vec) * (ns));
+}
+
+
+
 sim_RK_opts *create_sim_RK_opts(int ns)
 {
     int bytes = sim_RK_opts_calculate_size(ns);
@@ -83,6 +98,8 @@ sim_RK_opts *create_sim_RK_opts(int ns)
     void *ptr = malloc(bytes);
 
     sim_RK_opts *opts = assign_sim_RK_opts(ns, ptr);
+
+    sim_rk_initialize_default_args(opts, ns);
 
     return opts;
 }

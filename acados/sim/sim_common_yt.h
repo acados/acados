@@ -47,6 +47,7 @@ typedef struct {
     casadi_function_t adj;
     void (*VDE_adj)(const int, const int, const double *, double *, casadi_function_t);
 
+    // TODO(dimitris): why is this commented out?
     // casadi_function_t jac;
     // void (*jac_fun)(int, double *, double *, casadi_function_t);
 
@@ -70,11 +71,13 @@ typedef struct {
 
 } sim_in;
 
+
 typedef struct {
     double CPUtime;
     double LAtime;
     double ADtime;
 } sim_info;
+
 
 typedef struct {
     double *xn;      // xn[NX]
@@ -90,9 +93,9 @@ typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem);
     int (*calculate_args_size)(int ns);
     void *(*assign_args)(int ns, void *raw_memory);
-    // void (*initialize_default_args)(void *args);  // TODO(dimitris): IMPLEMENT!
-    int (*calculate_memory_size)(void *args, sim_in *in);  // TODO(dimitris): CHANGE ORDER!
-    void *(*assign_memory)(void *args, sim_in *in, void *raw_memory);  // TODO(dimitris): change this!
+    void (*initialize_default_args)(void *args);
+    int (*calculate_memory_size)(sim_in *in, void *args);  // TODO(dimitris): use sim_dims instead
+    void *(*assign_memory)(sim_in *in, void *args, void *raw_memory);
 } sim_solver_yt;
 
 

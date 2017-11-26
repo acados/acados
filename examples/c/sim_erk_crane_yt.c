@@ -38,24 +38,9 @@ int main() {
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
-    double A_rk[] = {0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 0.0};
-    double B_rk[] = {1.0/6.0, 1.0/3.0, 1.0/3.0, 1.0/6.0};
-    // double C_rk[] = {0.0, 0.5, 0.5, 0.0};
-
     sim_RK_opts *erk_opts = create_sim_RK_opts(num_stages);
 
-    for (ii=0;ii<num_stages*num_stages;ii++){
-        erk_opts->A_mat[ii] = A_rk[ii];
-    }
-    for (ii=0;ii<num_stages;ii++){
-        erk_opts->b_vec[ii] = B_rk[ii];
-        // rk_opts->c_vec[ii] = C_rk[ii];
-    }
-
-    sim_in *in = create_sim_in(nx, nu ,NF);
+    sim_in *in = create_sim_in(nx, nu, NF);
 
     in->num_steps = 4;
     in->step = T / in->num_steps;
