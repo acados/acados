@@ -248,12 +248,26 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 }
 
 
-
+#ifdef YT
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name,
+    sim_solver_t *sim_solver_names, int *num_stages)
+#else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
+#endif
 {
+    #ifdef YT
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names, num_stages);
+    #else
     int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
+    #endif
+
     void *ptr = acados_malloc(size, 1);
+
+    #ifdef YT
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, sim_solver_names, num_stages, ptr);
+    #else
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
+    #endif
 
     // TODO(dimitris): nest in initialize default args of each module
     args->qp_solver->initialize_default_args(args->qp_solver_args);
@@ -264,13 +278,13 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
 
 
 
-ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
-{
-    int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, args);
-    void *ptr = acados_malloc(size, 1);
-    ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
-    return mem;
-}
+// ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
+// {
+//     int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, args);
+//     void *ptr = acados_malloc(size, 1);
+//     ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
+//     return mem;
+// }
 
 
 #endif  // EXT_DEPS

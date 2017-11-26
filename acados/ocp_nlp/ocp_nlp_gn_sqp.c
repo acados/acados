@@ -34,8 +34,12 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#ifdef YT
+#include "acados/sim/sim_common_yt.h"
+#else
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_collocation.h"
+#endif
 #include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -43,7 +47,12 @@
 #include "acados/utils/mem.h"
 
 
+#ifdef YT
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name,
+    sim_solver_t *sim_solver_names, int *num_stages)  // TODO(dimitris): move num_stages in nlp_dims?
+#else
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
+#endif
 {
     ocp_qp_xcond_solver qp_solver;
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
@@ -57,12 +66,29 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
 
     size += qp_solver.calculate_args_size(&qp_dims, qp_solver_name);
 
+    #ifdef YT
+    size += dims->N*sizeof(sim_solver_yt *);
+    size += dims->N*sizeof(sim_solver_yt);
+
+    sim_solver_yt sim_solver;
+
+    for (int ii = 0; ii < dims->N; ii++)
+    {
+        set_sim_solver_fun_ptrs(sim_solver_names[ii], &sim_solver);
+        size += sim_solver.calculate_args_size(num_stages);
+    }
+    #endif
+
     return size;
 }
 
 
-
+#ifdef YT
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name,
+     sim_solver_t *sim_solver_names, int *num_stages, void *raw_memory)
+#else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, void *raw_memory)
+#endif
 {
     ocp_nlp_gn_sqp_args *args;
 
@@ -82,12 +108,16 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
     args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver_name, c_ptr);
     c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver_name);
 
+    #ifdef YT
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names, num_stages) >= c_ptr);
+    #else
     assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name) >= c_ptr);
+    #endif
 
     return args;
 }
 
-
+#if 0
 
 int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
 {
@@ -515,11 +545,12 @@ static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem
     }
 }
 
-
+#endif
 
 // Simple fixed-step Gauss-Newton based SQP routine
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_)
 {
+    #if 0
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) work_;
     ocp_nlp_gn_sqp_cast_workspace(work, mem, args);
 
@@ -579,6 +610,8 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
     total_time += acados_toc(&timer);
     store_trajectories(nlp_in, mem, nlp_out, work->w);
+
+    #endif
 
     return 0;
 }

@@ -31,9 +31,16 @@
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_casadi_wrapper.h"
+
+#ifdef YT
+#include "acados/sim/sim_common_yt.h"
+#include "acados/sim/sim_erk_integrator_yt.h"
+#else
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#endif
+
 #include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -296,6 +303,8 @@ int main() {
     for (int j = 0; j < NX; j++)
         ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
+    #if 0
+
     // Simulation
     double Ts = TF / NN;
     sim_RK_opts rk_opts[NN];
@@ -351,6 +360,8 @@ int main() {
         nlp->sim[jj].work = (void *) malloc(workspace_size);
     }
 
+    #endif
+
     // Box constraints
     int *nb = nlp->dims->nb;
 
@@ -391,7 +402,15 @@ int main() {
     qp_solver_t qp_solver_name = HPIPM;
 
     // set up args with nested structs
+    #ifdef YT
+
+    sim_solver_t sim_solver_names[NN] = {ERK};
+    int num_stages[NN] = {4};
+
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names, num_stages);
+    #else
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
+    #endif
     nlp_args->maxIter = MAX_SQP_ITERS;
 
 
@@ -402,6 +421,7 @@ int main() {
     void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
     ocp_nlp_out *nlp_out = assign_ocp_nlp_out(nlp->dims, nlp_out_mem);
 
+    #if 0
 
     /************************************************
     * gn_sqp memory
@@ -469,4 +489,5 @@ int main() {
     free(nlp);
     free(nlp_args);
 
+    #endif
 }

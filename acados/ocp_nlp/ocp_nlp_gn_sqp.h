@@ -26,8 +26,15 @@ extern "C" {
 
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+
+#ifdef YT
+#include "acados/sim/sim_common_yt.h"
+#include "acados/sim/sim_rk_common_yt.h"
+#else
 #include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_rk_common.h"
+#endif
+
 #include "acados/utils/types.h"
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
@@ -38,10 +45,17 @@ typedef struct {
     int maxIter;
     // specific SQP options
     ocp_qp_xcond_solver *qp_solver;
+    #ifdef YT
+    sim_solver_yt **sim_solvers;
+    #else
+    #endif
     // QP solver options
     void *qp_solver_args;
+    #ifdef YT
     // integrator options
-    // void **sim_solver_args;
+    void **sim_solvers_args;
+    #else
+    #endif
 } ocp_nlp_gn_sqp_args;
 
 
@@ -73,9 +87,18 @@ typedef struct {
 
 
 //
+#ifdef YT
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names, int *num_stages);
+#else
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name);
+#endif
 //
+#ifdef YT
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name,
+     sim_solver_t *sim_solver_names, int *num_stages, void *raw_memory);
+#else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, void *raw_memory);
+#endif
 //
 int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 //

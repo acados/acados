@@ -25,7 +25,11 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
+#ifdef YT
+#include "acados/sim/sim_common_yt.h"
+#else
 #include "acados/sim/sim_common.h"
+#endif
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -67,7 +71,11 @@ typedef struct {
     // ocp_nlp_function *h;  // nonlinear path constraints
 
     void *cost;
+    #ifdef YT
+    // TODO(dimitris): introduce "model"
+    #else
     sim_solver *sim;
+    #endif
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
     bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
@@ -94,10 +102,10 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
-
+#ifndef YT
 // TODO(dimitris): TEMP!!
 void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp);
-
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
