@@ -47,14 +47,14 @@ typedef struct {
     bool sens_hess;
 
     casadi_function_t vde;
-    void (*VDE_forw)(const int, const int, const double *, double *, casadi_function_t);
+    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
 
-    casadi_function_t adj;
-    void (*VDE_adj)(const int, const int, const double *, double *, casadi_function_t);
+    casadi_function_t vde_adj;
+    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
 
-    // TODO(dimitris): why is this commented out?
-    // casadi_function_t jac;
-    // void (*jac_fun)(int, double *, double *, casadi_function_t);
+    // TODO(dimitris): why was this commented out?
+    casadi_function_t jac;
+    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
 
     casadi_function_t hess;
     void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);

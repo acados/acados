@@ -229,7 +229,7 @@ int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_)
             }
 
             acados_tic(&timer_ad);
-            in->VDE_forw(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
+            in->forward_vde_wrapper(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
             timing_ad += acados_toc(&timer_ad)*1000;
         }
         for (s = 0; s < num_stages; s++){
@@ -297,7 +297,7 @@ int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_)
                 if (in->sens_hess){
                     in->Hess_fun(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->hess);
                 }else{
-                    in->VDE_adj(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->adj); // adjoint VDE evaluation
+                    in->adjoint_vde_wrapper(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->vde_adj); // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
 

@@ -49,10 +49,10 @@ int main() {
     in->sens_hess = false;
 
     in->vde = &vdeFun;
-    in->adj = &adjFun;
+    in->vde_adj = &adjFun;
     in->hess = &hessFun;
-    in->VDE_forw = &vde_fun;
-    in->VDE_adj = &vde_adj_fun;
+    in->forward_vde_wrapper = &vde_fun;
+    in->adjoint_vde_wrapper = &vde_adj_fun;
     in->Hess_fun = &vde_hess_fun;
 
     for (ii = 0; ii < nx; ii++) {
