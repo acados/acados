@@ -414,15 +414,14 @@ int main() {
 
     num_stages[0] = 4;
     num_stages[1] = 4;
+    for (int ii = 2; ii < NN; ii++) num_stages[ii] = -1;  // NOTE(dimitris): overwritten with correct values inside create_args below
+    nlp->dims->num_stages = num_stages;
 
-    for (int ii = 2; ii < NN; ii++) num_stages[ii] = -1;
-
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names, num_stages);
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
     #else
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
     #endif
     nlp_args->maxIter = MAX_SQP_ITERS;
-
 
     /************************************************
     * ocp_nlp out

@@ -41,6 +41,9 @@ typedef struct {
     int *ng;  // number of general linear constraints
     int *nh;  // number of path constraints - ONLY difference with ocp_qp_dims atm
     int *ns;  // number of soft constraints
+    #if YT
+    int *num_stages;
+    #endif
     int N;
 } ocp_nlp_dims;
 
@@ -103,7 +106,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 #ifdef YT
-void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int num_stages, int stage);
+void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
 #endif
 
 #ifndef YT

@@ -249,14 +249,13 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 
 
 #ifdef YT
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name,
-    sim_solver_t *sim_solver_names, int *num_stages)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
 #else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
 #endif
 {
     #ifdef YT
-    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names, num_stages);
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names);
     #else
     int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
     #endif
@@ -264,7 +263,7 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     void *ptr = acados_malloc(size, 1);
 
     #ifdef YT
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, sim_solver_names, num_stages, ptr);
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, sim_solver_names, ptr);
     #else
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
     #endif
@@ -280,7 +279,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
             args->sim_solvers[ii]->initialize_default_args(args->sim_solvers_args[ii]);
         }
         sim_RK_opts *tmp = (sim_RK_opts *)args->sim_solvers_args[ii];
-        // printf("ii = %d, num_stages = %d true num_stages = %d\n", ii, num_stages[ii], tmp->num_stages);
     }
 
     return args;

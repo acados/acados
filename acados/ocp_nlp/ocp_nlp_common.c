@@ -63,12 +63,11 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
 
 
 #ifdef YT
-// TODO(dimitris): num_stages inside nlp_dims?
-void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int num_stages, int stage)
+void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage)
 {
     sim_dims->nx = nlp_dims->nx[stage];
     sim_dims->nu = nlp_dims->nu[stage];
-    sim_dims->num_stages = num_stages;
+    sim_dims->num_stages = nlp_dims->num_stages[stage];
 }
 #endif
 

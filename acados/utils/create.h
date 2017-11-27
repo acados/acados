@@ -76,8 +76,7 @@ dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_dims *dims, voi
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages);
 
 #ifdef YT
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name,
-    sim_solver_t *sim_solver_names, int *num_stages);
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
 #else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name);
 #endif
