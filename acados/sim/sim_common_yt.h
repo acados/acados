@@ -112,17 +112,17 @@ typedef struct {
 } sim_solver_yt;
 
 
-int sim_in_calculate_size(int nx, int nu, int NF);
+int sim_in_calculate_size(sim_dims *dims);
 
-sim_in *assign_sim_in(int nx, int nu, int NF, void *raw_memory);
+sim_in *assign_sim_in(sim_dims *dims, void *raw_memory);
 
-sim_in *create_sim_in(int nx, int nu, int NF);
+sim_in *create_sim_in(sim_dims *dims);
 
-int sim_out_calculate_size(int nx, int nu, int NF);
+int sim_out_calculate_size(sim_dims *dims);
 
-sim_out *assign_sim_out(int nx, int nu, int NF, void *raw_memory);
+sim_out *assign_sim_out(sim_dims *dims, void *raw_memory);
 
-sim_out *create_sim_out(int nx, int nu, int NF);
+sim_out *create_sim_out(sim_dims *dims);
 
 int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_yt *sim_solver);
 

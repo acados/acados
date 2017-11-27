@@ -30,14 +30,16 @@
 #include "acados/sim/sim_erk_integrator_yt.h"
 
 
-// TODO(dimitris): write sim_dims
-int sim_in_calculate_size(int nx, int nu, int NF)
+int sim_in_calculate_size(sim_dims *dims)
 {
     int size = sizeof(sim_in);
 
+    int nx = dims->nx;
+    int nu = dims->nu;
+
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
-    size += nx * NF * sizeof(double);  // S_forw
+    size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += nx * sizeof(double);  // S_adj
 
     size = (size + 63) / 64 * 64;
@@ -48,16 +50,21 @@ int sim_in_calculate_size(int nx, int nu, int NF)
 
 
 
-sim_in *assign_sim_in(int nx, int nu, int NF, void *raw_memory)
+sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
     sim_in *in = (sim_in *) c_ptr;
     c_ptr += sizeof(sim_in);
 
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int NF = nx+nu;
+
+    // TODO(dimitris): USE DIMS INSIDE SIM_IN INSTEAD!
     in->nx = nx;
     in->nu = nu;
-    in->NF = NF;
+    in->NF = nx+nu;
 
     // replace with mem.c functions
     size_t s_ptr = (size_t)c_ptr;
@@ -76,7 +83,7 @@ sim_in *assign_sim_in(int nx, int nu, int NF, void *raw_memory)
     in->S_adj = (double *) c_ptr;
     c_ptr += nx *sizeof(double);
 
-    assert((char*)raw_memory + sim_in_calculate_size(nx, nu, NF) >= c_ptr);
+    assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
 
     return in;
 }
@@ -84,23 +91,26 @@ sim_in *assign_sim_in(int nx, int nu, int NF, void *raw_memory)
 
 
 // TODO(dimitris): move to create.c
-sim_in *create_sim_in(int nx, int nu, int NF)
+sim_in *create_sim_in(sim_dims *dims)
 {
-    int bytes = sim_in_calculate_size(nx, nu, NF);
+    int bytes = sim_in_calculate_size(dims);
 
     void *ptr = acados_malloc(bytes, 1);
 
-    sim_in *in = assign_sim_in(nx, nu, NF, ptr);
+    sim_in *in = assign_sim_in(dims, ptr);
 
     return in;
 }
 
 
 
-int sim_out_calculate_size(int nx, int nu, int NF)
+int sim_out_calculate_size(sim_dims *dims)
 {
     int size = sizeof(sim_out);
 
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int NF = nx + nu;
     size += sizeof(sim_info);
 
     size += nx * sizeof(double);  // xn
@@ -116,9 +126,13 @@ int sim_out_calculate_size(int nx, int nu, int NF)
 
 
 
-sim_out *assign_sim_out(int nx, int nu, int NF, void *raw_memory)
+sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int NF = nx + nu;
 
     sim_out *out = (sim_out *) c_ptr;
     c_ptr += sizeof(sim_out);
@@ -142,20 +156,20 @@ sim_out *assign_sim_out(int nx, int nu, int NF, void *raw_memory)
     out->S_hess = (double *) c_ptr;
     c_ptr += ((NF + 1) * NF / 2) *sizeof(double);
 
-    assert((char*)raw_memory + sim_out_calculate_size(nx, nu, NF) >= c_ptr);
+    assert((char*)raw_memory + sim_out_calculate_size(dims) >= c_ptr);
 
     return out;
 }
 
 
 
-sim_out *create_sim_out(int nx, int nu, int NF)
+sim_out *create_sim_out(sim_dims *dims)
 {
-    int bytes = sim_out_calculate_size(nx, nu, NF);
+    int bytes = sim_out_calculate_size(dims);
 
     void *ptr = malloc(bytes);
 
-    sim_out *out = assign_sim_out(nx, nu, NF, ptr);
+    sim_out *out = assign_sim_out(dims, ptr);
 
     return out;
 }

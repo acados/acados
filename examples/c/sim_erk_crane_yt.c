@@ -45,7 +45,7 @@ int main() {
 
     sim_RK_opts *erk_opts = create_sim_RK_opts(&dims);
 
-    sim_in *in = create_sim_in(nx, nu, NF);
+    sim_in *in = create_sim_in(&dims);
 
     in->num_steps = 4;
     in->step = T / in->num_steps;
@@ -84,7 +84,7 @@ int main() {
 
     sim_erk_memory *erk_mem = sim_erk_create_memory(&dims, erk_opts);
 
-    sim_out *out = create_sim_out(nx, nu, NF);
+    sim_out *out = create_sim_out(&dims);
 
     int flag = sim_erk_yt(in, out, erk_opts, erk_mem, NULL);
 
