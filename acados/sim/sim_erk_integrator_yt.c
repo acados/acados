@@ -150,7 +150,7 @@ void *sim_erk_create_memory(sim_in *in, void *opts_)
 
 
 
-int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_)
+int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_RK_opts *opts = (sim_RK_opts *) opts_;
     sim_erk_memory *mem = (sim_erk_memory *) mem_;

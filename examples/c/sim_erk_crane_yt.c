@@ -74,7 +74,7 @@ int main() {
 
     sim_out *out = create_sim_out(nx, nu, NF);
 
-    int flag = sim_erk_yt(in, out, erk_opts, erk_mem);
+    int flag = sim_erk_yt(in, out, erk_opts, erk_mem, NULL);
 
     double *xn = out->xn;
 

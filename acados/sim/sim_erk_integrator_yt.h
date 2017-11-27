@@ -28,6 +28,7 @@ extern "C" {
 #include "acados/sim/sim_common_yt.h"
 #include "acados/utils/types.h"
 
+// TODO(dimitris): this is workspace, not memory
 typedef struct{
 
     double *rhs_forw_in;  // x + S + p
@@ -47,7 +48,7 @@ void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory);
 
 void *sim_erk_create_memory(sim_in *in, void *opts_);
 
-int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_);
+int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
 // int sim_erk_calculate_workspace_size(const sim_in *in, void *args);
 
