@@ -177,6 +177,7 @@ static std::string generate_vde_function(casadi::Function& model) {
     casadi::Function vde = casadi::Function(full_name, input, output);
     casadi::Dict opts;
     opts["with_header"] = casadi::GenericType(true);
+    opts["with_export"] = casadi::GenericType(false);
     vde.generate(generated_file, opts);
     return full_name;
 }
@@ -196,6 +197,7 @@ static std::string generate_jac_function(casadi::Function& model) {
     casadi::Function jac = casadi::Function(full_name, input, output);
     casadi::Dict opts;
     opts["with_header"] = casadi::GenericType(true);
+    opts["with_export"] = casadi::GenericType(false);
     jac.generate(generated_file, opts);
     return full_name;
 }
@@ -598,7 +600,10 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         std::string generated_file = full_name + std::string(".c");
         casadi::Function extended_function =
             casadi::Function(full_name, input_vector, output_vector);
-        extended_function.generate(generated_file);
+        casadi::Dict opts;
+        opts["with_header"] = casadi::GenericType(true);
+        opts["with_export"] = casadi::GenericType(false);
+        extended_function.generate(generated_file, opts);
 
         void *handle = malloc(sizeof(void *));
         casadi_function_t generated_function = compile_and_load(full_name, &handle);
