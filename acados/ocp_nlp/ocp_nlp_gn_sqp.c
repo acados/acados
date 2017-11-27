@@ -68,19 +68,37 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
 
     #ifdef YT
     size += dims->N*sizeof(sim_solver_yt *);
-    size += dims->N*sizeof(sim_solver_yt);
+    size += dims->N*sizeof(void *);  //sim_solvers_args
 
     sim_solver_yt sim_solver;
+    int return_value, ns;
+    sim_solver_t sim_solver_name;
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        set_sim_solver_fun_ptrs(sim_solver_names[ii], &sim_solver);
-        size += sim_solver.calculate_args_size(num_stages);
+        if (sim_solver_names[ii] == PREVIOUS)
+        {
+            // keep previous sim solver
+            assert (ii != 0);
+        } else {
+            ns = num_stages[ii];
+            sim_solver_name = sim_solver_names[ii];
+        }
+
+        return_value = set_sim_solver_fun_ptrs(sim_solver_name, &sim_solver);
+        assert(return_value == ACADOS_SUCCESS);
+
+        if (sim_solver_names[ii] != PREVIOUS)
+        {  // only allocate for new sim_solvers
+            size += sizeof(sim_solver_yt);
+            size += sim_solver.calculate_args_size(ns);
+        }
     }
     #endif
 
     return size;
 }
+
 
 
 #ifdef YT
@@ -109,9 +127,41 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
     c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver_name);
 
     #ifdef YT
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names, num_stages) >= c_ptr);
+    args->sim_solvers = (sim_solver_yt **) c_ptr;
+    c_ptr += dims->N*sizeof(sim_solver_yt *);
+
+    args->sim_solvers_args = (void **) c_ptr;
+    c_ptr += dims->N*sizeof(void *);
+
+    sim_solver_yt sim_solver;
+    int return_value, ns;
+    sim_solver_t sim_solver_name;
+
+    for (int ii = 0; ii < dims->N; ii++)
+    {
+        if (sim_solver_names[ii] == PREVIOUS)
+        {
+            assert (ii != 0);
+            args->sim_solvers[ii] = args->sim_solvers[ii-1];
+            args->sim_solvers_args[ii] = args->sim_solvers_args[ii-1];
+        } else {
+            ns = num_stages[ii];
+            sim_solver_name = sim_solver_names[ii];
+
+            args->sim_solvers[ii] = (sim_solver_yt *) c_ptr;
+            c_ptr += sizeof(sim_solver_yt);
+
+            return_value = set_sim_solver_fun_ptrs(sim_solver_name, args->sim_solvers[ii]);
+            assert(return_value == ACADOS_SUCCESS);
+
+            args->sim_solvers_args[ii] = args->sim_solvers[ii]->assign_args(ns, c_ptr);
+            c_ptr += args->sim_solvers[ii]->calculate_args_size(ns);
+        }
+    }
+
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names, num_stages) == c_ptr);
     #else
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name) >= c_ptr);
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name) == c_ptr);
     #endif
 
     return args;

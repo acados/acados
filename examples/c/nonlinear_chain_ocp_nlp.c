@@ -404,8 +404,18 @@ int main() {
     // set up args with nested structs
     #ifdef YT
 
-    sim_solver_t sim_solver_names[NN] = {ERK};
-    int num_stages[NN] = {4};
+    sim_solver_t sim_solver_names[NN];
+    int num_stages[NN];
+
+    sim_solver_names[0] = ERK;
+    sim_solver_names[1] = ERK;
+
+    for (int ii = 2; ii < NN; ii++) sim_solver_names[ii] = PREVIOUS;
+
+    num_stages[0] = 4;
+    num_stages[1] = 4;
+
+    for (int ii = 2; ii < NN; ii++) num_stages[ii] = -1;
 
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names, num_stages);
     #else

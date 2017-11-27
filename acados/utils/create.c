@@ -269,9 +269,19 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
     #endif
 
-    // TODO(dimitris): nest in initialize default args of each module
+    // TODO(dimitris): nest in initialize default args of SQP solver!
     args->qp_solver->initialize_default_args(args->qp_solver_args);
     args->maxIter = 30;
+
+    for (int ii = 0; ii < dims->N; ii++)
+    {
+        if (sim_solver_names[ii] != PREVIOUS)
+        {
+            args->sim_solvers[ii]->initialize_default_args(args->sim_solvers_args[ii]);
+        }
+        sim_RK_opts *tmp = (sim_RK_opts *)args->sim_solvers_args[ii];
+        // printf("ii = %d, num_stages = %d true num_stages = %d\n", ii, num_stages[ii], tmp->num_stages);
+    }
 
     return args;
 }

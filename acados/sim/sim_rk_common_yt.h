@@ -36,6 +36,6 @@ void *assign_sim_RK_opts(int ns, void *raw_memory);
 
 void *create_sim_RK_opts(int_t ns);
 
-void sim_rk_initialize_default_args(void *opts_, int ns);
+void sim_rk_initialize_default_args(void *opts_);
 
 #endif  // ACADOS_SIM_SIM_RK_COMMON_YT_H_

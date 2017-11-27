@@ -76,11 +76,12 @@ void *assign_sim_RK_opts(int ns, void *raw_memory)
 
 
 
-void sim_rk_initialize_default_args(void *opts_, int ns)
+void sim_rk_initialize_default_args(void *opts_)
 {
-    assert(ns == 4 && "only number of stages = 4 implemented!");
-
     sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    int ns = opts->num_stages;
+
+    assert(opts->num_stages == 4 && "only number of stages = 4 implemented!");
 
     memcpy(opts->A_mat,
         ((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
@@ -101,7 +102,7 @@ void *create_sim_RK_opts(int ns)
 
     sim_RK_opts *opts = assign_sim_RK_opts(ns, ptr);
 
-    sim_rk_initialize_default_args(opts, ns);
+    sim_rk_initialize_default_args(opts);
 
     return (void *)opts;
 }

@@ -26,6 +26,7 @@
 #include "acados/utils/types.h"
 
 typedef enum {
+    PREVIOUS,
     ERK,
 } sim_solver_t;
 
@@ -98,7 +99,7 @@ typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem);
     int (*calculate_args_size)(int ns);
     void *(*assign_args)(int ns, void *raw_memory);
-    void (*initialize_default_args)(void *args, int ns);
+    void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(sim_in *in, void *args);  // TODO(dimitris): use sim_dims instead
     void *(*assign_memory)(sim_in *in, void *args, void *raw_memory);
 } sim_solver_yt;
