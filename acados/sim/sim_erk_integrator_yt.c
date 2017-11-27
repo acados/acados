@@ -157,10 +157,11 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
 
 
-int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
+int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_RK_opts *opts = (sim_RK_opts *) opts_;
     sim_erk_memory *mem = (sim_erk_memory *) mem_;
+    sim_erk_workspace *work = (sim_erk_workspace *) work_;
 
     int i, j, s, istep;
     double a = 0, b =0; // temp values of A_mat and b_vec

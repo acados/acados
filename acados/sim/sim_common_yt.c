@@ -183,6 +183,7 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_yt *sim_sol
     switch (sim_solver_name)
     {
         case ERK:
+            sim_solver->fun = &sim_erk_yt;
             sim_solver->calculate_args_size = &sim_RK_opts_calculate_size;
             sim_solver->assign_args = &assign_sim_RK_opts;
             sim_solver->initialize_default_args = &sim_rk_initialize_default_args;
