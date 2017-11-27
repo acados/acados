@@ -93,6 +93,8 @@ void sim_rk_initialize_default_args(void *opts_)
         sizeof(*opts->b_vec) * (ns));
     memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
         sizeof(*opts->c_vec) * (ns));
+
+    // TODO(dimitris): set default values to other options too! (should we pass dims to set NF=NX+NU?)
 }
 
 

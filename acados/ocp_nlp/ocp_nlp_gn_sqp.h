@@ -41,17 +41,13 @@ extern "C" {
 #include "blasfeo/include/blasfeo_common.h"
 
 typedef struct {
-    // general nlp options
     int maxIter;
-    // specific SQP options
+    // QP solver
     ocp_qp_xcond_solver *qp_solver;
+    void *qp_solver_args;
+    // integrators
     #ifdef YT
     sim_solver_yt **sim_solvers;
-    #endif
-    // QP solver options
-    void *qp_solver_args;
-    #ifdef YT
-    // integrator options
     void **sim_solvers_args;
     #endif
 } ocp_nlp_gn_sqp_args;
@@ -67,6 +63,7 @@ typedef struct {
 
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
+
     #if YT
     void **sim_solvers_mem;
     #endif
@@ -75,12 +72,20 @@ typedef struct {
 
 
 typedef struct {
+    // TODO(dimitris): move tmp_vecs up
     double *w;
 
+    // QP solver
     ocp_qp_in *qp_in;
     ocp_qp_out *qp_out;
     void *qp_work;
 
+    // integrators
+    sim_in *sim_in;
+    sim_out *sim_out;
+    void **sim_solvers_work;
+
+    // SQP solver
     struct d_strvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
                                 // not using max(nx+nu) for parallelization in the future
 

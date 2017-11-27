@@ -446,8 +446,6 @@ int main() {
     for (int j = 0; j < NX; j++)
         nlp_mem->x[NN][j] = xref[j];  // resX(j, NN)
 
-    #if 0
-
     /************************************************
     * gn_sqp workspace
     ************************************************/
@@ -455,6 +453,8 @@ int main() {
     int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
 
     void *nlp_work = (void *)malloc(work_space_size);
+
+    #if 0
 
     /************************************************
     * gn_sqp solve

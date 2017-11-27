@@ -207,7 +207,8 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     for (int ii = 0; ii < N; ii++)
     {
-        // TODO(dimitris): ONLY ADD MEMORY IF NOT PREVIOUS
+        // NOTE(dimitris): use if below for workspace, NOT memory since it can't be re-used
+        // if ((ii == 0) || (args->sim_solvers_args[ii] != args->sim_solvers_args[ii-1]))
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
         size += args->sim_solvers[ii]->calculate_memory_size(&sim_dims, args->sim_solvers_args[ii]);
     }
@@ -284,8 +285,6 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 
 
 
-#if 0
-
 int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
 {
     int size = 0;
@@ -350,6 +349,8 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
 }
 
 
+
+#if 0
 
 static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
 {
