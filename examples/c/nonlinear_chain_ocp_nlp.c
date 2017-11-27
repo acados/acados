@@ -450,9 +450,12 @@ int main() {
     * gn_sqp workspace
     ************************************************/
 
-    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
+    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
 
-    void *nlp_work = (void *)malloc(work_space_size);
+    // ocp_nlp_gn_sqp_work *tmp = malloc(workspace_size);
+    // ocp_nlp_gn_sqp_cast_workspace(tmp, nlp_mem, nlp_args);
+
+    void *nlp_work = (void *)malloc(workspace_size);
 
     #if 0
 

@@ -47,6 +47,28 @@
 #include "acados/utils/mem.h"
 
 
+void get_max_sim_struct_sizes(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, int *max_sim_in_size, int *max_sim_out_size, int *max_sim_work_size)
+{
+    sim_dims sim_dims;
+    int sim_in_size, sim_out_size, sim_work_size;
+
+    *max_sim_in_size = 0;
+    *max_sim_out_size = 0;
+    *max_sim_work_size = 0;
+
+    for (int ii = 0; ii < dims->N; ii++)
+    {
+        cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
+        sim_in_size = sim_in_calculate_size(&sim_dims);
+        if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
+        sim_out_size = sim_out_calculate_size(&sim_dims);
+        if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
+        sim_work_size = args->sim_solvers[ii]->calculate_workspace_size(&sim_dims, args->sim_solvers_args[ii]);
+        if (sim_work_size > *max_sim_work_size) *max_sim_work_size = sim_work_size;
+    }
+}
+
+
 #ifdef YT
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
 #else
@@ -207,8 +229,6 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     for (int ii = 0; ii < N; ii++)
     {
-        // NOTE(dimitris): use if below for workspace, NOT memory since it can't be re-used
-        // if ((ii == 0) || (args->sim_solvers_args[ii] != args->sim_solvers_args[ii-1]))
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
         size += args->sim_solvers[ii]->calculate_memory_size(&sim_dims, args->sim_solvers_args[ii]);
     }
@@ -299,6 +319,17 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     size += ocp_qp_in_calculate_size(&qp_dims);
     size += ocp_qp_out_calculate_size(&qp_dims);
 
+    #if YT
+    size += dims->N*sizeof(sim_in *);
+    size += dims->N*sizeof(sim_out *);
+    size += dims->N*sizeof(void *);  // sim_work
+
+    int max_sim_in_size, max_sim_out_size, max_sim_work_size;
+    // allocate maximum size for each of the structs sim_in, sim_out, sim_work
+    get_max_sim_struct_sizes(dims, args, &max_sim_in_size, &max_sim_out_size, &max_sim_work_size);
+    size += max_sim_in_size + max_sim_out_size + max_sim_work_size;
+    #endif
+
     size += (dims->N+1)*sizeof(struct d_strvec);  // tmp_vecs
 
     for (int ii = 0; ii < dims->N+1; ii++)
@@ -314,7 +345,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
 
 
-static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_args *args)
+void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_args *args)
 {
     char *c_ptr = (char *)work;
     c_ptr += sizeof(ocp_nlp_gn_sqp_work);
@@ -344,6 +375,33 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_
     c_ptr += ocp_qp_in_calculate_size(&qp_dims);
     work->qp_out = assign_ocp_qp_out(&qp_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
+
+    // set up integrators
+    #if YT
+    work->sim_in = (sim_in **) c_ptr;
+    c_ptr += mem->dims->N*sizeof(sim_in *);
+    work->sim_out = (sim_out **) c_ptr;
+    c_ptr += mem->dims->N*sizeof(sim_out *);
+    work->sim_solvers_work = (void **) c_ptr;
+    c_ptr += mem->dims->N*sizeof(void *);
+
+    int max_sim_in_size, max_sim_out_size, max_sim_work_size;
+    get_max_sim_struct_sizes(mem->dims, args, &max_sim_in_size, &max_sim_out_size, &max_sim_work_size);
+
+    work->sim_in[0] = (sim_in *)c_ptr;
+    c_ptr += max_sim_in_size;
+    work->sim_out[0] = (sim_out *)c_ptr;
+    c_ptr += max_sim_out_size;
+    work->sim_solvers_work[0] = (void *)c_ptr;
+    c_ptr += max_sim_work_size;
+
+    for (int ii = 1; ii < mem->dims->N; ii++)
+    {
+        work->sim_in[ii] = work->sim_in[0];
+        work->sim_out[ii] = work->sim_out[0];
+        work->sim_solvers_work[ii] = work->sim_solvers_work[0];
+    }
+    #endif
 
     assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, args) >= c_ptr);
 }

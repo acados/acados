@@ -81,8 +81,8 @@ typedef struct {
     void *qp_work;
 
     // integrators
-    sim_in *sim_in;
-    sim_out *sim_out;
+    sim_in **sim_in;
+    sim_out **sim_out;
     void **sim_solvers_work;
 
     // SQP solver
