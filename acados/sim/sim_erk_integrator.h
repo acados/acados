@@ -38,8 +38,7 @@ typedef struct {
     real_t *out_adj_tmp;
 } sim_erk_workspace;
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem,
-              void *work);
+int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
 
 int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
 

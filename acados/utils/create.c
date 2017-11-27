@@ -288,13 +288,13 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
 
 
 
-// ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
-// {
-//     int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, args);
-//     void *ptr = acados_malloc(size, 1);
-//     ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
-//     return mem;
-// }
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
+{
+    int size = ocp_nlp_gn_sqp_calculate_memory_size(dims, args);
+    void *ptr = acados_malloc(size, 1);
+    ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
+    return mem;
+}
 
 
 #endif  // EXT_DEPS

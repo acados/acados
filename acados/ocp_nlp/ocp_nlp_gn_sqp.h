@@ -47,14 +47,12 @@ typedef struct {
     ocp_qp_xcond_solver *qp_solver;
     #ifdef YT
     sim_solver_yt **sim_solvers;
-    #else
     #endif
     // QP solver options
     void *qp_solver_args;
     #ifdef YT
     // integrator options
     void **sim_solvers_args;
-    #else
     #endif
 } ocp_nlp_gn_sqp_args;
 
@@ -69,6 +67,9 @@ typedef struct {
 
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
+    #if YT
+    void **sim_solvers_mem;
+    #endif
 } ocp_nlp_gn_sqp_memory;
 
 

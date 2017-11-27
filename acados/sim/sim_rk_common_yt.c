@@ -25,14 +25,16 @@
 // acados
 #include "acados/utils/print.h"
 // #include "sim/sim_collocation.h"
+#include "acados/sim/sim_common_yt.h"
 #include "acados/sim/sim_rk_common_yt.h"
 
 
-int sim_RK_opts_calculate_size(int ns)
+int sim_RK_opts_calculate_size(sim_dims *dims)
 {
     // int size = sizeof(Newton_scheme);
     int size = sizeof(sim_RK_opts);
 
+    int ns = dims->num_stages;
     size += ns * ns * sizeof(double);  // A_mat
     size += ns * sizeof(double);  // b_vec
     size += ns * sizeof(double);  // c_vec
@@ -45,13 +47,14 @@ int sim_RK_opts_calculate_size(int ns)
 
 
 
-void *assign_sim_RK_opts(int ns, void *raw_memory)
+void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
     sim_RK_opts *opts = (sim_RK_opts *) c_ptr;
     c_ptr += sizeof(sim_RK_opts);
 
+    int ns = dims->num_stages;
     opts->num_stages = ns;
 
     // c_ptr += sizeof(Newton_scheme);
@@ -69,7 +72,7 @@ void *assign_sim_RK_opts(int ns, void *raw_memory)
     opts->c_vec = (double *) c_ptr;
     c_ptr += ns*sizeof(double);
 
-    assert((char*)raw_memory + sim_RK_opts_calculate_size(ns) >= c_ptr);
+    assert((char*)raw_memory + sim_RK_opts_calculate_size(dims) >= c_ptr);
 
     return (void *)opts;
 }
@@ -94,13 +97,13 @@ void sim_rk_initialize_default_args(void *opts_)
 
 
 
-void *create_sim_RK_opts(int ns)
+void *create_sim_RK_opts(sim_dims *dims)
 {
-    int bytes = sim_RK_opts_calculate_size(ns);
+    int bytes = sim_RK_opts_calculate_size(dims);
 
     void *ptr = malloc(bytes);
 
-    sim_RK_opts *opts = assign_sim_RK_opts(ns, ptr);
+    sim_RK_opts *opts = assign_sim_RK_opts(dims, ptr);
 
     sim_rk_initialize_default_args(opts);
 

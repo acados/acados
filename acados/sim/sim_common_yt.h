@@ -32,6 +32,13 @@ typedef enum {
 
 
 typedef struct {
+    int num_stages;
+    int nx;
+    int nu;
+} sim_dims;
+
+
+typedef struct {
     int nx;   // NX
     int nu;   // NU
     int NF;   // NO. of forward sens
@@ -97,12 +104,21 @@ typedef struct {
 
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem);
-    int (*calculate_args_size)(int ns);
-    void *(*assign_args)(int ns, void *raw_memory);
+    int (*calculate_args_size)(sim_dims *dims);
+    void *(*assign_args)(sim_dims *dims, void *raw_memory);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(sim_in *in, void *args);  // TODO(dimitris): use sim_dims instead
     void *(*assign_memory)(sim_in *in, void *args, void *raw_memory);
 } sim_solver_yt;
+
+// typedef struct {
+//     int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem);
+//     int (*calculate_args_size)(ocp_qp_dims *dims);
+//     void *(*assign_args)(ocp_qp_dims *dims, void *raw_memory);
+//     void (*initialize_default_args)(void *args);
+//     int (*calculate_memory_size)(ocp_qp_dims *dims, void *args);
+//     void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
+// } ocp_qp_solver;
 
 
 int sim_in_calculate_size(int nx, int nu, int NF);

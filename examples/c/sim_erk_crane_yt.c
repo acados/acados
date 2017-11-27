@@ -38,7 +38,10 @@ int main() {
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
-    sim_RK_opts *erk_opts = create_sim_RK_opts(num_stages);
+    sim_dims dims;
+    dims.num_stages = num_stages;
+
+    sim_RK_opts *erk_opts = create_sim_RK_opts(&dims);
 
     sim_in *in = create_sim_in(nx, nu, NF);
 

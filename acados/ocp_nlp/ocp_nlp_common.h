@@ -102,6 +102,10 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
+#ifdef YT
+void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int num_stages, int stage);
+#endif
+
 #ifndef YT
 // TODO(dimitris): TEMP!!
 void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp);

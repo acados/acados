@@ -431,8 +431,6 @@ int main() {
     void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
     ocp_nlp_out *nlp_out = assign_ocp_nlp_out(nlp->dims, nlp_out_mem);
 
-    #if 0
-
     /************************************************
     * gn_sqp memory
     ************************************************/
@@ -448,6 +446,8 @@ int main() {
     }
     for (int j = 0; j < NX; j++)
         nlp_mem->x[NN][j] = xref[j];  // resX(j, NN)
+
+    #if 0
 
     /************************************************
     * gn_sqp workspace

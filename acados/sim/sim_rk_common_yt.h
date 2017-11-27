@@ -20,6 +20,7 @@
 #ifndef ACADOS_SIM_SIM_RK_COMMON_YT_H_
 #define ACADOS_SIM_SIM_RK_COMMON_YT_H_
 
+#include "acados/sim/sim_common_yt.h"
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -30,11 +31,11 @@ typedef struct {
     double *b_vec;
 } sim_RK_opts;
 
-int_t sim_RK_opts_calculate_size(int_t ns);
+int_t sim_RK_opts_calculate_size(sim_dims *dims);
 
-void *assign_sim_RK_opts(int ns, void *raw_memory);
+void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory);
 
-void *create_sim_RK_opts(int_t ns);
+void *create_sim_RK_opts(sim_dims *dims);
 
 void sim_rk_initialize_default_args(void *opts_);
 
