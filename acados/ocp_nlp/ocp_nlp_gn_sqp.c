@@ -402,9 +402,9 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, mem->dims, ii);
 
-        work->sim_in[ii] = (sim_in *)c_ptr;
+        work->sim_in[ii] = assign_sim_in(&sim_dims, c_ptr);
         c_ptr += sim_in_calculate_size(&sim_dims);
-        work->sim_out[ii] = (sim_out *)c_ptr;
+        work->sim_out[ii] = assign_sim_out(&sim_dims, c_ptr);
         c_ptr += sim_out_calculate_size(&sim_dims);
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
