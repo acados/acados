@@ -408,8 +408,6 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
 
 
-#if 0
-
 static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
 {
     int N = nlp_in->dims->N;
@@ -497,7 +495,10 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
     real_t *w = work->w;
     struct d_strvec *stmp = work->tmp_vecs;
 
+    #ifndef YT
     sim_solver *sim = nlp->sim;
+    #endif
+
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
     real_t **y_ref = cost->y_ref;
 
@@ -520,13 +521,29 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
     for (int_t i = 0; i < N; i++)
     {
         // Pass state and control to integrator
+        #ifdef YT
+        for (int_t j = 0; j < nx[i]; j++) work->sim_in[i]->x[j] = w[w_idx+j];
+        for (int_t j = 0; j < nu[i]; j++) work->sim_in[i]->u[j] = w[w_idx+nx[i]+j];
+        args->sim_solvers[i]->fun(work->sim_in[i], work->sim_out[i], args->sim_solvers_args[i],
+            mem->sim_solvers_mem[i], work->sim_solvers_work[i]);
+        #else
         for (int_t j = 0; j < nx[i]; j++) sim[i].in->x[j] = w[w_idx+j];
         for (int_t j = 0; j < nu[i]; j++) sim[i].in->u[j] = w[w_idx+nx[i]+j];
         sim[i].fun(sim[i].in, sim[i].out, sim[i].args, sim[i].mem, sim[i].work);
+        #endif
 
         // TODO(rien): transition functions for changing dimensions not yet implemented!
 
         // convert b
+        #ifdef YT
+        d_cvt_vec2strvec(nx[i+1], work->sim_out[i]->xn, &sb[i], 0);
+        for (int j = 0; j < nx[i+1]; j++)
+            DVECEL_LIBSTR(&sb[i], j) -= w[w_idx+nx[i]+nu[i]+j];
+        // copy B
+        d_cvt_tran_mat2strmat(nx[i+1], nu[i], &work->sim_out[i]->S_forw[nx[i+1]*nx[i]], nx[i+1], &sBAbt[i], 0, 0);
+        // copy A
+        d_cvt_tran_mat2strmat(nx[i+1], nx[i], &work->sim_out[i]->S_forw[0], nx[i+1], &sBAbt[i], nu[i], 0);
+        #else
         d_cvt_vec2strvec(nx[i+1], sim[i].out->xn, &sb[i], 0);
         for (int j = 0; j < nx[i+1]; j++)
             DVECEL_LIBSTR(&sb[i], j) -= w[w_idx+nx[i]+nu[i]+j];
@@ -534,6 +551,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         d_cvt_tran_mat2strmat(nx[i+1], nu[i], &sim[i].out->S_forw[nx[i+1]*nx[i]], nx[i+1], &sBAbt[i], 0, 0);
         // copy A
         d_cvt_tran_mat2strmat(nx[i+1], nx[i], &sim[i].out->S_forw[0], nx[i+1], &sBAbt[i], nu[i], 0);
+        #endif
         // copy b
         drowin_libstr(nx[i+1], 1.0, &sb[i], 0, &sBAbt[i], nu[i]+nx[i], 0);
 
@@ -581,7 +599,11 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         // Update gradients
         // TODO(rien): only for diagonal Q, R matrices atm
         // TODO(rien): only for least squares cost with state and control reference atm
+        #ifdef YT
+        sim_RK_opts *opts = (sim_RK_opts*) args->sim_solvers_args[i];
+        #else
         sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
+        #endif
 
         for (int j = 0; j < nx[i]; j++)
             DVECEL_LIBSTR(&stmp[i], nu[i]+j) = w[w_idx+j]-y_ref[i][j];
@@ -590,6 +612,9 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 
         dsymv_l_libstr(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp[i], 0, 0.0, &srq[i], 0, &srq[i], 0);
 
+        #ifdef YT
+        // TODO(dimitris): inexact schemes not implemented yet
+        #else
         if (opts->scheme.type != exact)
         {
             for (int_t j = 0; j < nx[i]; j++)
@@ -597,6 +622,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
             for (int_t j = 0; j < nu[i]; j++)
                 DVECEL_LIBSTR(&srq[i], j) += sim[i].out->grad[nx[i]+j];
         }
+        #endif
         drowin_libstr(nu[i]+nx[i], 1.0, &srq[i], 0, &sRSQrq[i], nu[i]+nx[i], 0);
 
         // for (int_t j = 0; j < nx[i]; j++) {
@@ -644,13 +670,23 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, o
     int N = nlp->dims->N;
     int *nx = nlp->dims->nx;
     int *nu = nlp->dims->nu;
+
+    #ifndef YT
     sim_solver *sim = nlp->sim;
+    #endif
 
     for (int_t i = 0; i < N; i++)
+    {
         for (int_t j = 0; j < nx[i+1]; j++)
+        {
+            #ifdef YT
+            work->sim_in[i]->S_adj[j] = -DVECEL_LIBSTR(&work->qp_out->pi[i], j);
+            #else
             sim[i].in->S_adj[j] = -DVECEL_LIBSTR(&work->qp_out->pi[i], j);
+            #endif
             // sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
-
+        }
+    }
     int_t w_idx = 0;
     for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
@@ -687,7 +723,7 @@ static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem
     }
 }
 
-#endif
+
 
 // Simple fixed-step Gauss-Newton based SQP routine
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_)

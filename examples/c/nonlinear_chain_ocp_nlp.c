@@ -418,6 +418,7 @@ int main() {
     nlp->dims->num_stages = num_stages;
 
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
+
     #else
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
     #endif
@@ -457,8 +458,6 @@ int main() {
 
     void *nlp_work = (void *)malloc(workspace_size);
 
-    #if 0
-
     /************************************************
     * gn_sqp solve
     ************************************************/
@@ -492,8 +491,10 @@ int main() {
     * free memory
     ************************************************/
 
+    #ifndef YT
     // TODO(dimitris): still huge memory leaks from integrator args, mem, workspace...
     tmp_free_ocp_nlp_in_sim_solver(nlp);
+    #endif
 
     free(nlp_work);
     free(nlp_mem);
@@ -501,5 +502,4 @@ int main() {
     free(nlp);
     free(nlp_args);
 
-    #endif
 }
