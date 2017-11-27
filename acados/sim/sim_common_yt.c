@@ -188,6 +188,7 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_yt *sim_sol
             sim_solver->initialize_default_args = &sim_rk_initialize_default_args;
             sim_solver->calculate_memory_size = &erk_calculate_memory_size;
             sim_solver->assign_memory = &assign_erk_memory;
+            sim_solver->calculate_workspace_size = &sim_erk_calculate_workspace_size;
             break;
         default:
             return_value = ACADOS_FAILURE;

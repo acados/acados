@@ -50,7 +50,7 @@ void *sim_erk_create_memory(sim_dims *dims, void *opts_);
 
 int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
-// int sim_erk_calculate_workspace_size(const sim_in *in, void *args);
+int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_);
 
 // void sim_erk_create_arguments(void *args, const int num_stages);
 

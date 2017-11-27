@@ -109,8 +109,8 @@ typedef struct {
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(sim_dims *dims, void *args);
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
+    int (*calculate_workspace_size)(sim_dims *dims, void *args);
 } sim_solver_yt;
-
 
 int sim_in_calculate_size(sim_dims *dims);
 
