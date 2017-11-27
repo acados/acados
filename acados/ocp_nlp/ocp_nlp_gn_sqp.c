@@ -47,25 +47,24 @@
 #include "acados/utils/mem.h"
 
 
-void get_max_sim_struct_sizes(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, int *max_sim_in_size, int *max_sim_out_size, int *max_sim_work_size)
+static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
 {
     sim_dims sim_dims;
-    int sim_in_size, sim_out_size, sim_work_size;
+    int sim_work_size;
 
-    *max_sim_in_size = 0;
-    *max_sim_out_size = 0;
-    *max_sim_work_size = 0;
+    int max_sim_work_size = 0;
 
     for (int ii = 0; ii < dims->N; ii++)
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-        sim_in_size = sim_in_calculate_size(&sim_dims);
-        if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
-        sim_out_size = sim_out_calculate_size(&sim_dims);
-        if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
+        // sim_in_size = sim_in_calculate_size(&sim_dims);
+        // if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
+        // sim_out_size = sim_out_calculate_size(&sim_dims);
+        // if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
         sim_work_size = args->sim_solvers[ii]->calculate_workspace_size(&sim_dims, args->sim_solvers_args[ii]);
-        if (sim_work_size > *max_sim_work_size) *max_sim_work_size = sim_work_size;
+        if (sim_work_size > max_sim_work_size) max_sim_work_size = sim_work_size;
     }
+    return max_sim_work_size;
 }
 
 
@@ -320,14 +319,21 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     size += ocp_qp_out_calculate_size(&qp_dims);
 
     #if YT
+    sim_dims sim_dims;
+
     size += dims->N*sizeof(sim_in *);
     size += dims->N*sizeof(sim_out *);
     size += dims->N*sizeof(void *);  // sim_work
 
-    int max_sim_in_size, max_sim_out_size, max_sim_work_size;
-    // allocate maximum size for each of the structs sim_in, sim_out, sim_work
-    get_max_sim_struct_sizes(dims, args, &max_sim_in_size, &max_sim_out_size, &max_sim_work_size);
-    size += max_sim_in_size + max_sim_out_size + max_sim_work_size;
+    size += get_max_sim_workspace_size(dims, args);
+
+    for (int ii = 0; ii < dims->N; ii++)
+    {
+        cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
+        size += sim_in_calculate_size(&sim_dims);
+        size += sim_out_calculate_size(&sim_dims);
+    }
+
     #endif
 
     size += (dims->N+1)*sizeof(struct d_strvec);  // tmp_vecs
@@ -378,6 +384,8 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
     // set up integrators
     #if YT
+    sim_dims sim_dims;
+
     work->sim_in = (sim_in **) c_ptr;
     c_ptr += mem->dims->N*sizeof(sim_in *);
     work->sim_out = (sim_out **) c_ptr;
@@ -385,21 +393,21 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     work->sim_solvers_work = (void **) c_ptr;
     c_ptr += mem->dims->N*sizeof(void *);
 
-    int max_sim_in_size, max_sim_out_size, max_sim_work_size;
-    get_max_sim_struct_sizes(mem->dims, args, &max_sim_in_size, &max_sim_out_size, &max_sim_work_size);
+    int max_sim_work_size = get_max_sim_workspace_size(mem->dims, args);
 
-    work->sim_in[0] = (sim_in *)c_ptr;
-    c_ptr += max_sim_in_size;
-    work->sim_out[0] = (sim_out *)c_ptr;
-    c_ptr += max_sim_out_size;
     work->sim_solvers_work[0] = (void *)c_ptr;
     c_ptr += max_sim_work_size;
 
-    for (int ii = 1; ii < mem->dims->N; ii++)
+    for (int ii = 0; ii < mem->dims->N; ii++)
     {
-        work->sim_in[ii] = work->sim_in[0];
-        work->sim_out[ii] = work->sim_out[0];
-        work->sim_solvers_work[ii] = work->sim_solvers_work[0];
+        cast_nlp_dims_to_sim_dims(&sim_dims, mem->dims, ii);
+
+        work->sim_in[ii] = (sim_in *)c_ptr;
+        c_ptr += sim_in_calculate_size(&sim_dims);
+        work->sim_out[ii] = (sim_out *)c_ptr;
+        c_ptr += sim_out_calculate_size(&sim_dims);
+
+        if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }
     #endif
 
@@ -728,7 +736,6 @@ static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem
 // Simple fixed-step Gauss-Newton based SQP routine
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_)
 {
-    #if 0
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) work_;
     ocp_nlp_gn_sqp_cast_workspace(work, mem, args);
 
@@ -775,6 +782,8 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
         update_variables(nlp_in, args, mem, work);
 
+        // TODO(dimitris): how does this work?
+        #ifndef YT
         for (int_t i = 0; i < N; i++)
         {
             sim_RK_opts *opts = (sim_RK_opts*) nlp_in->sim[i].args;
@@ -784,12 +793,11 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
                 opts->scheme.freeze = true;
             }
         }
+        #endif
     }
 
     total_time += acados_toc(&timer);
     store_trajectories(nlp_in, mem, nlp_out, work->w);
-
-    #endif
 
     return 0;
 }
