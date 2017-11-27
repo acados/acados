@@ -31,24 +31,24 @@
 #include "acados/sim/sim_casadi_wrapper.h"
 
 
-int erk_calculate_memory_size(sim_in *in, void *opts_)
+int erk_calculate_memory_size(sim_dims *dims, void *opts_)
 {
     sim_RK_opts *opts = (sim_RK_opts *) opts_;
 
-    int nx = in->nx;
-    int nu = in->nu;
-    int NF = in->NF;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int NF = opts->num_forw_sens;
 
     int num_stages = opts->num_stages; // number of stages
     int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
     int nhess = (NF + 1) * NF / 2;
-    uint num_steps = in->num_steps;  // number of steps
+    uint num_steps = opts->num_steps;  // number of steps
 
     int size = sizeof(sim_erk_memory);
 
     size += (nX + nu) * sizeof(double); // rhs_forw_in
 
-    if(in->sens_adj){
+    if(opts->sens_adj){
         size += num_steps * num_stages * nX * sizeof(double); // K_traj
         size += (num_steps + 1) * nX *sizeof(double); // out_forw_traj
     }else{
@@ -56,11 +56,11 @@ int erk_calculate_memory_size(sim_in *in, void *opts_)
         size += nX *sizeof(double); // out_forw_traj
     }
 
-    if (in->sens_hess && in->sens_adj){
+    if (opts->sens_hess && opts->sens_adj){
         size += (nx + nX + nu) * sizeof(double); //rhs_adj_in
         size += (nx + nu + nhess) * sizeof(double); //out_adj_tmp
         size += num_stages * (nx + nu + nhess) * sizeof(double); //adj_traj
-    }else if (in->sens_adj){
+    }else if (opts->sens_adj){
         size += (nx * 2 + nu) * sizeof(double); //rhs_adj_in
         size += (nx + nu)* sizeof(double); //out_adj_tmp
         size += num_stages * (nx + nu) * sizeof(double); //adj_traj
@@ -74,18 +74,18 @@ int erk_calculate_memory_size(sim_in *in, void *opts_)
 
 
 
-void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory)
+void *assign_erk_memory(sim_dims *dims, void *opts_, void *raw_memory)
 {
     sim_RK_opts *opts = (sim_RK_opts *) opts_;
 
-    int nx = in->nx;
-    int nu = in->nu;
-    int NF = in->NF;
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int NF = opts->num_forw_sens;
 
     int num_stages = opts->num_stages; // number of stages
     int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
     int nhess = (NF + 1) * NF / 2;
-    int num_steps = in->num_steps;  // number of steps
+    int num_steps = opts->num_steps;  // number of steps
 
     char *c_ptr = (char *)raw_memory;
 
@@ -100,7 +100,7 @@ void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory)
     mem->rhs_forw_in = (double *)c_ptr;
     c_ptr += (nX + nu) * sizeof(double);
 
-    if(in->sens_adj)
+    if(opts->sens_adj)
     {
         mem->K_traj = (double *)c_ptr;
         c_ptr += num_steps * num_stages * nX * sizeof(double);
@@ -114,7 +114,7 @@ void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory)
         c_ptr += nX * sizeof(double);
     }
 
-    if (in->sens_hess && in->sens_adj)
+    if (opts->sens_hess && opts->sens_adj)
     {
         mem->rhs_adj_in = (double *)c_ptr;
         c_ptr += (nx + nX + nu) * sizeof(double);
@@ -122,7 +122,7 @@ void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory)
         c_ptr += (nx + nu + nhess) * sizeof(double);
         mem->adj_traj = (double *)c_ptr;
         c_ptr += num_stages * (nx + nu + nhess) * sizeof(double);
-    } else if (in->sens_adj)
+    } else if (opts->sens_adj)
     {
         mem->rhs_adj_in = (double *)c_ptr;
         c_ptr += (nx * 2 + nu) * sizeof(double);
@@ -132,18 +132,18 @@ void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory)
         c_ptr += num_stages * (nx + nu) * sizeof(double);
     }
 
-    assert((char*)raw_memory + erk_calculate_memory_size(in, opts) >= c_ptr);
+    assert((char*)raw_memory + erk_calculate_memory_size(dims, opts_) >= c_ptr);
 
     return (void *)mem;
 }
 
 
 
-void *sim_erk_create_memory(sim_in *in, void *opts_)
+void *sim_erk_create_memory(sim_dims *dims, void *opts_)
 {
-    int bytes = erk_calculate_memory_size( in, opts_);
+    int bytes = erk_calculate_memory_size(dims, opts_);
     void *ptr = malloc(bytes);
-    sim_erk_memory *memory = assign_erk_memory(in, opts_, ptr);
+    sim_erk_memory *memory = assign_erk_memory(dims, opts_, ptr);
 
     return (void *)memory;
 }

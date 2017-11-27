@@ -207,11 +207,10 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     for (int ii = 0; ii < N; ii++)
     {
+        // TODO(dimitris): ONLY ADD MEMORY IF NOT PREVIOUS
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-
-        // size += args->sim_solvers[ii]->calculate_memory_size();
+        size += args->sim_solvers[ii]->calculate_memory_size(&sim_dims, args->sim_solvers_args[ii]);
     }
-
     #endif
 
     return size;
@@ -257,8 +256,24 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
+    // QP solver
     mem->qp_solver_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
     c_ptr += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
+
+    #if YT
+    // integrators
+    sim_dims sim_dims;
+
+    mem->sim_solvers_mem = (void **) c_ptr;
+    c_ptr += N*sizeof(void *);
+
+    for (int ii = 0; ii < N; ii++)
+    {
+        cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
+        mem->sim_solvers_mem[ii] = args->sim_solvers[ii]->assign_memory(&sim_dims, args->sim_solvers_args[ii], c_ptr);
+        c_ptr += args->sim_solvers[ii]->calculate_memory_size(&sim_dims, args->sim_solvers_args[ii]);
+    }
+    #endif
 
     mem->dims = dims;
 

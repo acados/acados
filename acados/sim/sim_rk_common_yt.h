@@ -29,6 +29,14 @@ typedef struct {
     double *A_mat;
     double *c_vec;
     double *b_vec;
+
+    // TODO(dimitris): move those to common opts?!
+    int num_forw_sens;
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+    int num_steps;
+
 } sim_RK_opts;
 
 int_t sim_RK_opts_calculate_size(sim_dims *dims);

@@ -42,11 +42,11 @@ typedef struct{
 
 } sim_erk_memory;
 
-int erk_calculate_memory_size(sim_in *in, void *opts_);
+int erk_calculate_memory_size(sim_dims *dims, void *opts_);
 
-void *assign_erk_memory(sim_in *in, void *opts_, void *raw_memory);
+void *assign_erk_memory(sim_dims *dims, void *opts_, void *raw_memory);
 
-void *sim_erk_create_memory(sim_in *in, void *opts_);
+void *sim_erk_create_memory(sim_dims *dims, void *opts_);
 
 int sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 

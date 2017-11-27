@@ -40,6 +40,8 @@ int main() {
 
     sim_dims dims;
     dims.num_stages = num_stages;
+    dims.nx = nx;
+    dims.nu = nu;
 
     sim_RK_opts *erk_opts = create_sim_RK_opts(&dims);
 
@@ -73,7 +75,14 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
-    sim_erk_memory *erk_mem = sim_erk_create_memory(in, erk_opts);
+    // TODO(dimitris): SET IN DEFAULT ARGS
+    erk_opts->num_steps = in->num_steps;
+    erk_opts->sens_forw = in->sens_forw;
+    erk_opts->sens_adj = in->sens_adj;
+    erk_opts->sens_hess = in->sens_hess;
+    erk_opts->num_forw_sens = NF;
+
+    sim_erk_memory *erk_mem = sim_erk_create_memory(&dims, erk_opts);
 
     sim_out *out = create_sim_out(nx, nu, NF);
 
