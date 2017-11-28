@@ -285,17 +285,15 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     if (mem->inexact_init) {
         for (int_t i = 0; i < N; i++) {
             sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
-            if (sim_opts->scheme.type != exact) {
+            if (sim_opts != NULL && sim_opts->scheme.type != exact) {
                 for (int_t j = 0; j < nx[i] + nu[i]; j++) {
                     grad_f[i][j] += sim[i]->out->grad[j];
                 }
             }
         }
+    } else {
+        mem->inexact_init = true;
     }
-    // TODO(roversch): do the following lines make sense?
-    // else {
-        // mem->inexact_init = true;
-    // }
 
     return 0;
 }
