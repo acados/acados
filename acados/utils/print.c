@@ -196,6 +196,10 @@ void print_ocp_qp_to_file(ocp_qp_in *qp) {
         print_matrix(filename, qp->Cx[i], qp->nc[i], qp->nx[i]);
         snprintf(filename, sizeof(filename), "Cu%d.txt", i);
         print_matrix(filename, qp->Cu[i], qp->nc[i], qp->nu[i]);
+        snprintf(filename, sizeof(filename), "lc%d.txt", i);
+        print_matrix(filename, qp->lc[i], qp->nc[i], 1);
+        snprintf(filename, sizeof(filename), "uc%d.txt", i);
+        print_matrix(filename, qp->uc[i], qp->nc[i], 1);
     }
 }
 

@@ -76,7 +76,6 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
         for (int_t j = 0; j < nx[i]; j++) {
             for (int_t k = 0; k < nx[i]; k++) {
                 qp_Q[i][j * nx[i] + k] = hess_l[i][j * (nx[i] + nu[i]) + k];
-                if (j == k) qp_Q[i][j * nx[i] + k] += 1;
             }
             for (int_t k = 0; k < nu[i]; k++) {
                 qp_S[i][j * nu[i] + k] =
@@ -87,7 +86,6 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
             for (int_t k = 0; k < nu[i]; k++) {
                 qp_R[i][j * nu[i] + k] =
                     hess_l[i][(nx[i] + j) * (nx[i] + nu[i]) + nx[i] + k];
-                if (j == k) qp_R[i][j * nu[i] + k] += 1;                    
             }
         }
         for (int_t j = 0; j < nx[i]; j++) {
@@ -98,7 +96,7 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
         }
     }
 
-    // State-continuity constraints, and state/control bounds
+    // State-continuity constraints
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             qp_b[i][j] = h[i][j] - nlp_x[i + 1][j];
@@ -109,6 +107,10 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
                 qp_B[i][k * nx[i] + j] = jac_h[i][(nx[i] + k) * nx[i] + j];
             }
         }
+    }
+
+    // State and control bounds
+    for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nb[i]; j++) {
 #ifdef FLIP_BOUNDS
             if (idxb[i][j] < nu[i]) {
@@ -297,7 +299,7 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
 
     // SQP iterations
     int_t max_sqp_iterations = sqp_args->maxIter;
-    
+
     for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++) {
         // Compute/update quadratic approximation
         sqp_args->sensitivity_method->fun(sqp_mem->sm_in, sqp_mem->sm_out,
@@ -307,12 +309,7 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
 
         // Prepare QP
         prepare_qp(nlp_in, sqp_args, sqp_mem);
-        
-        print_ocp_qp_to_file(sqp_args->qp_solver->qp_in);
-        print_ocp_qp(sqp_args->qp_solver->qp_in);
-        for (int_t i = 0; i <= nlp_in->N; i++)
-            print_int_array("stdout", sqp_args->qp_solver->qp_in->idxb[i], sqp_args->qp_solver->qp_in->nb[i]);
-        
+
         // Solve QP
         int_t qp_status = sqp_args->qp_solver->fun(
             sqp_args->qp_solver->qp_in, sqp_args->qp_solver->qp_out,
