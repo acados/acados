@@ -168,8 +168,8 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     int nx = in->nx;
     int nu = in->nu;
 
-    int NF = in->NF;
-    if (!in->sens_forw)
+    int NF = opts->num_forw_sens;
+    if (!opts->sens_forw)
         NF = 0;
 
     int nhess = (NF + 1) * NF / 2;
@@ -178,7 +178,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     double *x = in->x;
     double *u = in->u;
     double *S_forw_in = in->S_forw;
-    int num_steps = in->num_steps;
+    int num_steps = opts->num_steps;
     double step = in->step;
 
     double *S_adj_in = in->S_adj;
@@ -207,7 +207,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     acados_tic(&timer);
     for (i = 0; i < nx; i++)
         forw_traj[i] = x[i];  // x0
-    if (in->sens_forw) {
+    if (opts->sens_forw) {
         for (i = 0; i < nx * NF; i++)
             forw_traj[nx + i] = S_forw_in[i];  // sensitivities
     }
@@ -217,7 +217,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
     // FORWARD SWEEP:
     for (istep = 0; istep < num_steps; istep++) {
-        if (in->sens_adj) {
+        if (opts->sens_adj) {
             K_traj = mem->K_traj + istep * num_stages * nX;
             forw_traj = mem->out_forw_traj + (istep + 1) * nX;
             for (i = 0; i < nX; i++)
@@ -249,13 +249,13 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
     for (i = 0; i < nx; i++)
         xn[i] = forw_traj[i];
-    if (in->sens_forw) {
+    if (opts->sens_forw) {
         for (i = 0; i < nx * NF; i++)
             S_forw_out[i] = forw_traj[nx + i];
     }
 
     // ADJOINT SWEEP:
-    if (in->sens_adj) {
+    if (opts->sens_adj) {
         for (i = 0; i < nx; i++)
             adj_tmp[i] = S_adj_in[i];
         for (i = 0; i < nu; i++)
@@ -263,7 +263,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
         int nForw = nx;
         int nAdj = nx + nu;
-        if (in->sens_hess) {
+        if (opts->sens_hess) {
             nForw = nX;
             nAdj = nx + nu + nhess;
             for (i = 0; i < nhess; i++)
@@ -302,7 +302,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                     }
                 }
                 acados_tic(&timer_ad);
-                if (in->sens_hess){
+                if (opts->sens_hess){
                     in->Hess_fun(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->hess);
                 }else{
                     in->adjoint_vde_wrapper(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->vde_adj); // adjoint VDE evaluation
@@ -319,7 +319,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
         }
         for (i = 0; i < nx + nu; i++)
             S_adj_out[i] = adj_tmp[i];
-        if (in->sens_hess) {
+        if (opts->sens_hess) {
             for (i = 0; i < nhess; i++)
                 S_hess_out[i] = adj_tmp[nx + nu + i];
         }

@@ -744,23 +744,32 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     int *nu = nlp_in->dims->nu;
     int *nb = nlp_in->dims->nb;
 
-    // TODO(dimitris): set up integrators properly. THIS VALUES ARE SET CORRECT HERE LOCALLY, TEMPORARY!!!
+    // set up integrators
     for (int ii = 0; ii < N; ii++)
     {
-        work->sim_in[ii]->num_steps = 2;  // TEMP!
         work->sim_in[ii]->step = (3.0/N)/2;  // TEMP!
-        work->sim_in[ii]->sens_forw = true;
-        work->sim_in[ii]->sens_adj = false;
-        work->sim_in[ii]->sens_hess = false;
-        work->sim_in[ii]->NF = work->sim_in[ii]->nx + work->sim_in[ii]->nu;  // rename to num_forw_sens
+
+        // TODO(dimitris): should be nlp_in->vde[ii] etc instead
         work->sim_in[ii]->vde = nlp_in->vde;
         work->sim_in[ii]->forward_vde_wrapper = nlp_in->forward_vde_wrapper;
-
         work->sim_in[ii]->jac = nlp_in->jac;
         work->sim_in[ii]->jacobian_wrapper = nlp_in->jacobian_wrapper;
         work->sim_in[ii]->vde_adj = nlp_in->vde_adj;
         work->sim_in[ii]->adjoint_vde_wrapper = nlp_in->adjoint_vde_wrapper;
+
+        // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!
+        for (int jj = 0; jj < nx[ii+1] * (nx[ii] + nu[ii]); jj++)
+            work->sim_in[ii]->S_forw[jj] = 0.0;
+        for (int jj = 0; jj < nx[ii+1]; jj++)
+            work->sim_in[ii]->S_forw[jj * (nx[ii] + 1)] = 1.0;
+        // for (int jj = 0; jj < nx[ii] + nu[ii]; jj++)
+        //     work->sim_in[ii]->S_adj[jj] = 0.0;
+        // for (int jj = 0; jj < d? * nx[ii+1]; jj++)
+        //     work->sim_in[ii]->grad_K[jj] = 0.0;
+
+
     }
+
 
     initialize_objective(nlp_in, args, mem, work);
 
