@@ -130,33 +130,24 @@ static void select_model(const int num_free_masses, sim_in *sim)
 
 
 // TODO(dimitris): TEMPORARY
-static void select_model_new(const int num_free_masses, ocp_nlp_in *sim)
+static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
 {
     switch (num_free_masses)
     {
         case 1:
-            sim->vde = &vde_chain_nm2;
-            sim->forward_vde_wrapper = &vde_fun;
-            sim->jac = &jac_chain_nm2;
-            sim->jacobian_wrapper = &jac_fun;
-            sim->vde_adj = &vde_hess_chain_nm2;
-            sim->adjoint_vde_wrapper = &vde_hess_fun;
+            nlp->vde = &vde_chain_nm2;
+            nlp->jac = &jac_chain_nm2;
+            nlp->vde_adj = &vde_hess_chain_nm2;
             break;
         case 2:
-            sim->vde = &vde_chain_nm3;
-            sim->forward_vde_wrapper = &vde_fun;
-            sim->jac = &jac_chain_nm3;
-            sim->jacobian_wrapper = &jac_fun;
-            sim->vde_adj = &vde_hess_chain_nm3;
-            sim->adjoint_vde_wrapper = &vde_hess_fun;
+            nlp->vde = &vde_chain_nm3;
+            nlp->jac = &jac_chain_nm3;
+            nlp->vde_adj = &vde_hess_chain_nm3;
             break;
         case 3:
-            sim->vde = &vde_chain_nm4;
-            sim->forward_vde_wrapper = &vde_fun;
-            sim->jac = &jac_chain_nm4;
-            sim->jacobian_wrapper = &jac_fun;
-            sim->vde_adj = &vde_hess_chain_nm4;
-            sim->adjoint_vde_wrapper = &vde_hess_fun;
+            nlp->vde = &vde_chain_nm4;
+            nlp->jac = &jac_chain_nm4;
+            nlp->vde_adj = &vde_hess_chain_nm4;
             break;
         default:
             printf("Problem size not available\n");

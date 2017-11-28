@@ -75,13 +75,9 @@ typedef struct {
 
     void *cost;
     #ifdef YT
-    // TODO(dimitris): introduce "model",  CURRENTLY ONLY ONE POINTER, SHOULD BE ARRAY OF POINTERS!!!
     casadi_function_t vde;
-    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
     casadi_function_t vde_adj;
-    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
     casadi_function_t jac;
-    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
     #else
     sim_solver *sim;
     #endif

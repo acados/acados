@@ -36,6 +36,7 @@
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #ifdef YT
 #include "acados/sim/sim_common_yt.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 #else
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_collocation.h"
@@ -751,11 +752,11 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
         // TODO(dimitris): should be nlp_in->vde[ii] etc instead
         work->sim_in[ii]->vde = nlp_in->vde;
-        work->sim_in[ii]->forward_vde_wrapper = nlp_in->forward_vde_wrapper;
         work->sim_in[ii]->jac = nlp_in->jac;
-        work->sim_in[ii]->jacobian_wrapper = nlp_in->jacobian_wrapper;
         work->sim_in[ii]->vde_adj = nlp_in->vde_adj;
-        work->sim_in[ii]->adjoint_vde_wrapper = nlp_in->adjoint_vde_wrapper;
+        work->sim_in[ii]->forward_vde_wrapper = &vde_fun;
+        work->sim_in[ii]->jacobian_wrapper = &jac_fun;
+        work->sim_in[ii]->adjoint_vde_wrapper = &vde_hess_fun;
 
         // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!
         for (int jj = 0; jj < nx[ii+1] * (nx[ii] + nu[ii]); jj++)
