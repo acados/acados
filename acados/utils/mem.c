@@ -95,9 +95,33 @@ void assign_int_ptrs(int n, int ***v, char **ptr)
 }
 
 
-// TODO(dimitris):
-// assign_strvec_ptrs
-// assign_strmat ptrs
+
+void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *sv = (struct d_strvec *)acados_malloc(n, sizeof(struct d_strvec));
+#else
+    *sv = (struct d_strvec *) *ptr;
+    *ptr += sizeof(struct d_strvec) * n;
+#endif
+}
+
+
+
+void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *sm = (struct d_strmat *)acados_malloc(n, sizeof(struct d_strmat));
+#else
+    *sm = (struct d_strmat *) *ptr;
+    *ptr += sizeof(struct d_strmat) * n;
+#endif
+}
+
 
 
 void assign_int(int n, int **v, char **ptr)
@@ -130,7 +154,8 @@ void assign_double(int n, double **v, char **ptr)
 
 void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 {
-    assert((size_t)*ptr % 64 == 0 && "strvec not 64-byte aligned!");
+    // TODO(dimitris): ask Gianluca why this is not 32/16-byte aligned
+    assert((size_t)*ptr % 8 == 0 && "strvec not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
     d_allocate_strvec(n, sv);

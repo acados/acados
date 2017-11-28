@@ -40,12 +40,20 @@ void align_char_to(int num, char **c_ptr);
 void *acados_malloc(size_t nitems, size_t size);
 
 
-// allocate vector of pointers to doubles and advance pointer
+// allocate vector of pointers to vectors of doubles and advance pointer
 void assign_double_ptrs(int n, double ***v, char **ptr);
 
 
-// allocate vector of pointers to ints and advance pointer
+// allocate vector of pointers to vectors of ints and advance pointer
 void assign_int_ptrs(int n, int ***v, char **ptr);
+
+
+// allocate vector of pointers to strvecs and advance pointer
+void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr);
+
+
+// allocate vector of pointers to strmats and advance pointer
+void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr);
 
 
 // allocate vector of ints and advance pointer

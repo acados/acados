@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // hpipm
 #include "hpipm_d_dense_qp.h"
 #include "hpipm_d_dense_qp_sol.h"
@@ -37,9 +35,6 @@ int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims)
     size += sizeof(dense_qp_hpipm_args);
     size += sizeof(struct d_dense_qp_ipm_arg);
     size += d_memsize_dense_qp_ipm_arg(dims);
-
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
 
     return size;
 }
@@ -58,11 +53,12 @@ void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory)
     args->hpipm_args = (struct d_dense_qp_ipm_arg *) c_ptr;
     c_ptr += sizeof(struct d_dense_qp_ipm_arg);
 
-    align_char_to(8, &c_ptr);
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
     d_create_dense_qp_ipm_arg(dims, args->hpipm_args, c_ptr);
     c_ptr += d_memsize_dense_qp_ipm_arg(dims);
 
-    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims) >= c_ptr);
+    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims) == c_ptr);
 
     return (void *)args;
 }
@@ -97,9 +93,6 @@ int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *args_)
 
     size += d_memsize_dense_qp_ipm(dims, args->hpipm_args);
 
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
     return size;
 }
 
@@ -110,7 +103,6 @@ void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *args_, void *raw_m
     dense_qp_hpipm_args *args = (dense_qp_hpipm_args *)args_;
     dense_qp_hpipm_memory *mem;
 
-    // char pointer
     char *c_ptr = (char *)raw_memory;
 
     mem = (dense_qp_hpipm_memory *) c_ptr;
@@ -121,12 +113,13 @@ void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *args_, void *raw_m
 
     struct d_dense_qp_ipm_workspace *ipm_workspace = mem->hpipm_workspace;
 
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
     // ipm workspace structure
-    align_char_to(8, &c_ptr);
     d_create_dense_qp_ipm(dims, args->hpipm_args, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
-    assert((char *)raw_memory + dense_qp_hpipm_calculate_memory_size(dims, args) >= c_ptr);
+    assert((char *)raw_memory + dense_qp_hpipm_calculate_memory_size(dims, args) == c_ptr);
 
     return mem;
 }

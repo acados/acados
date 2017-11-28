@@ -33,7 +33,7 @@ extern "C" {
 
 
 typedef struct ocp_qp_condensing_args_ {
-    int dummy;
+    double dummy;
 } ocp_qp_condensing_args;
 
 
