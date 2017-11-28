@@ -291,9 +291,11 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
                 }
             }
         }
-    } else {
-        mem->inexact_init = true;
     }
+    // TODO(roversch): do the following lines make sense?
+    // else {
+        // mem->inexact_init = true;
+    // }
 
     return 0;
 }
