@@ -129,6 +129,43 @@ static void select_model(const int num_free_masses, sim_in *sim)
 }
 
 
+// TODO(dimitris): TEMPORARY
+static void select_model_new(const int num_free_masses, ocp_nlp_in *sim)
+{
+    switch (num_free_masses)
+    {
+        case 1:
+            sim->vde = &vde_chain_nm2;
+            sim->forward_vde_wrapper = &vde_fun;
+            sim->jac = &jac_chain_nm2;
+            sim->jacobian_wrapper = &jac_fun;
+            sim->vde_adj = &vde_hess_chain_nm2;
+            sim->adjoint_vde_wrapper = &vde_hess_fun;
+            break;
+        case 2:
+            sim->vde = &vde_chain_nm3;
+            sim->forward_vde_wrapper = &vde_fun;
+            sim->jac = &jac_chain_nm3;
+            sim->jacobian_wrapper = &jac_fun;
+            sim->vde_adj = &vde_hess_chain_nm3;
+            sim->adjoint_vde_wrapper = &vde_hess_fun;
+            break;
+        case 3:
+            sim->vde = &vde_chain_nm4;
+            sim->forward_vde_wrapper = &vde_fun;
+            sim->jac = &jac_chain_nm4;
+            sim->jacobian_wrapper = &jac_fun;
+            sim->vde_adj = &vde_hess_chain_nm4;
+            sim->adjoint_vde_wrapper = &vde_hess_fun;
+            break;
+        default:
+            printf("Problem size not available\n");
+            exit(1);
+            break;
+    }
+}
+
+
 
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
 {
@@ -303,7 +340,14 @@ int main() {
     for (int j = 0; j < NX; j++)
         ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
-    #if 0
+    #ifdef YT
+
+    for (int jj = 0; jj < NN; jj++)
+    {
+        select_model_new(NMF, nlp);
+    }
+
+    # else
 
     // Simulation
     double Ts = TF / NN;
