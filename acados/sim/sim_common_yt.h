@@ -41,7 +41,6 @@ typedef struct {
 typedef struct {
     int nx;   // NX
     int nu;   // NU
-    int NF;   // NO. of forward sens
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
@@ -50,17 +49,13 @@ typedef struct {
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
-    bool sens_forw;
-    bool sens_adj;
-    bool sens_hess;
-
     casadi_function_t vde;
     void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
 
     casadi_function_t vde_adj;
     void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
 
-    // TODO(dimitris): why was this commented out?
+    // TODO(dimitris): @yutao why was this commented out?
     casadi_function_t jac;
     void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
 
@@ -80,7 +75,6 @@ typedef struct {
     void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
 
     double step;
-    int num_steps;
 
 } sim_in;
 

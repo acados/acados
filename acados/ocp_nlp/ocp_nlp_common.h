@@ -75,9 +75,9 @@ typedef struct {
 
     void *cost;
     #ifdef YT
-    casadi_function_t vde;
-    casadi_function_t vde_adj;
-    casadi_function_t jac;
+    casadi_function_t *vde;
+    casadi_function_t *vde_adj;
+    casadi_function_t *jac;
     #else
     sim_solver *sim;
     #endif

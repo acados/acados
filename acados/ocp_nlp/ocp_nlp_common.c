@@ -107,6 +107,10 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
         size += sizeof(double)*(dims->nx[ii]+dims->nu[ii]);  // yref
     }
 
+    #ifdef YT
+    size += 3*N*sizeof(casadi_function_t *);  // vde, vde_adj, jac
+    #endif
+
     // TODO(dimitris): add alignment when strvecs/strmats are used
     return size;
 }
@@ -186,6 +190,15 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)c_ptr;
     in->cost = (void *)cost;
     c_ptr += sizeof(ocp_nlp_ls_cost);
+
+    #ifdef YT
+    in->vde = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    in->vde_adj = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    in->jac = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    #endif
 
     // double pointers
     assign_int_ptrs(N+1, &in->idxb, &c_ptr);

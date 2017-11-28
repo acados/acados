@@ -64,7 +64,6 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     // TODO(dimitris): USE DIMS INSIDE SIM_IN INSTEAD!
     in->nx = nx;
     in->nu = nu;
-    in->NF = nx+nu;
 
     // replace with mem.c functions
     size_t s_ptr = (size_t)c_ptr;

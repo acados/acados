@@ -129,30 +129,33 @@ static void select_model(const int num_free_masses, sim_in *sim)
 }
 
 
-// TODO(dimitris): TEMPORARY
+
 static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
 {
-    switch (num_free_masses)
+    for (int ii = 0; ii < nlp->dims->N; ii++)
     {
-        case 1:
-            nlp->vde = &vde_chain_nm2;
-            nlp->jac = &jac_chain_nm2;
-            nlp->vde_adj = &vde_hess_chain_nm2;
-            break;
-        case 2:
-            nlp->vde = &vde_chain_nm3;
-            nlp->jac = &jac_chain_nm3;
-            nlp->vde_adj = &vde_hess_chain_nm3;
-            break;
-        case 3:
-            nlp->vde = &vde_chain_nm4;
-            nlp->jac = &jac_chain_nm4;
-            nlp->vde_adj = &vde_hess_chain_nm4;
-            break;
-        default:
-            printf("Problem size not available\n");
-            exit(1);
-            break;
+        switch (num_free_masses)
+        {
+            case 1:
+                nlp->vde[ii] = &vde_chain_nm2;
+                nlp->jac[ii] = &jac_chain_nm2;
+                nlp->vde_adj[ii] = &vde_hess_chain_nm2;
+                break;
+            case 2:
+                nlp->vde[ii] = &vde_chain_nm3;
+                nlp->jac[ii] = &jac_chain_nm3;
+                nlp->vde_adj[ii] = &vde_hess_chain_nm3;
+                break;
+            case 3:
+                nlp->vde[ii] = &vde_chain_nm4;
+                nlp->jac[ii] = &jac_chain_nm4;
+                nlp->vde_adj[ii] = &vde_hess_chain_nm4;
+                break;
+            default:
+                printf("Problem size not available\n");
+                exit(1);
+                break;
+        }
     }
 }
 

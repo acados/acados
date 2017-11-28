@@ -47,11 +47,11 @@ int main() {
 
     sim_in *in = create_sim_in(&dims);
 
-    in->num_steps = 4;
-    in->step = T / in->num_steps;
-    in->sens_forw = true;
-    in->sens_adj = true;
-    in->sens_hess = false;
+    erk_opts->num_steps = 4;
+    in->step = T / erk_opts->num_steps;
+    erk_opts->sens_forw = true;
+    erk_opts->sens_adj = true;
+    erk_opts->sens_hess = false;
 
     in->vde = &vdeFun;
     in->vde_adj = &adjFun;
@@ -76,10 +76,6 @@ int main() {
         in->S_adj[ii] = 1.0;
 
     // TODO(dimitris): SET IN DEFAULT ARGS
-    erk_opts->num_steps = in->num_steps;
-    erk_opts->sens_forw = in->sens_forw;
-    erk_opts->sens_adj = in->sens_adj;
-    erk_opts->sens_hess = in->sens_hess;
     erk_opts->num_forw_sens = NF;
 
     sim_erk_memory *erk_mem = sim_erk_create_memory(&dims, erk_opts);

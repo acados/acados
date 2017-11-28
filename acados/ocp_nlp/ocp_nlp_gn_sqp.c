@@ -47,7 +47,7 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
-
+#ifdef YT
 static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
 {
     sim_dims sim_dims;
@@ -67,6 +67,7 @@ static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *a
     }
     return max_sim_work_size;
 }
+#endif
 
 
 #ifdef YT
@@ -750,10 +751,9 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     {
         work->sim_in[ii]->step = (3.0/N)/2;  // TEMP!
 
-        // TODO(dimitris): should be nlp_in->vde[ii] etc instead
-        work->sim_in[ii]->vde = nlp_in->vde;
-        work->sim_in[ii]->jac = nlp_in->jac;
-        work->sim_in[ii]->vde_adj = nlp_in->vde_adj;
+        work->sim_in[ii]->vde = nlp_in->vde[ii];
+        work->sim_in[ii]->jac = nlp_in->jac[ii];
+        work->sim_in[ii]->vde_adj = nlp_in->vde_adj[ii];
         work->sim_in[ii]->forward_vde_wrapper = &vde_fun;
         work->sim_in[ii]->jacobian_wrapper = &jac_fun;
         work->sim_in[ii]->adjoint_vde_wrapper = &vde_hess_fun;
@@ -767,8 +767,6 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
         //     work->sim_in[ii]->S_adj[jj] = 0.0;
         // for (int jj = 0; jj < d? * nx[ii+1]; jj++)
         //     work->sim_in[ii]->grad_K[jj] = 0.0;
-
-
     }
 
 
