@@ -41,7 +41,7 @@ typedef struct {
     int *ng;  // number of general linear constraints
     int *nh;  // number of path constraints - ONLY difference with ocp_qp_dims atm
     int *ns;  // number of soft constraints
-    #if YT
+    #ifdef YT
     int *num_stages;
     #endif
     int N;

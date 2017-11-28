@@ -64,7 +64,7 @@ typedef struct {
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
-    #if YT
+    #ifdef YT
     void **sim_solvers_mem;
     #endif
 } ocp_nlp_gn_sqp_memory;

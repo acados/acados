@@ -221,7 +221,7 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     size += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
 
-    #if YT
+    #ifdef YT
     sim_dims sim_dims;
 
     size += N*sizeof(void *);  // sim_solvers_mem
@@ -280,7 +280,7 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
     mem->qp_solver_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
     c_ptr += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
 
-    #if YT
+    #ifdef YT
     // integrators
     sim_dims sim_dims;
 
@@ -318,7 +318,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     size += ocp_qp_in_calculate_size(&qp_dims);
     size += ocp_qp_out_calculate_size(&qp_dims);
 
-    #if YT
+    #ifdef YT
     sim_dims sim_dims;
 
     size += dims->N*sizeof(sim_in *);
@@ -383,7 +383,7 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
 
     // set up integrators
-    #if YT
+    #ifdef YT
     sim_dims sim_dims;
 
     work->sim_in = (sim_in **) c_ptr;
