@@ -92,7 +92,7 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
 }
 
 
-
+#ifndef YT
 static void select_model(const int num_free_masses, sim_in *sim)
 {
     switch (num_free_masses)
@@ -127,9 +127,9 @@ static void select_model(const int num_free_masses, sim_in *sim)
             break;
     }
 }
+#endif
 
-
-
+#ifdef YT
 static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
 {
     for (int ii = 0; ii < nlp->dims->N; ii++)
@@ -158,7 +158,7 @@ static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
         }
     }
 }
-
+#endif
 
 
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
@@ -241,7 +241,7 @@ int main() {
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
     const int NMF = 3;  // number of free masses
-    const int d = 4;  // number of stages in integrator
+    const int d = 0;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
 
