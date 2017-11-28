@@ -182,7 +182,8 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
     c_ptr += (nvd + ngd) * sizeof(double);
 
 
-    QPDenseCreate(mem->QP, nvd, ngd, 2*(nvd+ngd), c_ptr);
+    int nsmax = (2*nvd >= 400) ? 400 : 2*nvd;
+    QPDenseCreate(mem->QP, nvd, ngd, nsmax, c_ptr);
     c_ptr += mem->QP->memory_size;
 
     // int stuff
