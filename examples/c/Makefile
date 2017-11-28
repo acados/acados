@@ -51,7 +51,7 @@ mass_spring_condensing_qpoases: mass_spring_condensing_qpoases.o
 	@echo
 	@echo " Example mass_spring_condensing_qpoases build complete."
 	@echo
-	
+
 mass_spring_condensing_qore: mass_spring_condensing_qore.o
 	$(CC) -o mass_spring_condensing_qore.out mass_spring_condensing_qore.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo
@@ -99,9 +99,9 @@ run_mass_spring_condensing_hpipm:
 
 run_mass_spring_condensing_qpoases:
 	./mass_spring_condensing_qpoases.out
-	
+
 run_mass_spring_condensing_qore:
-	./run_mass_spring_condensing_qore.out
+	./mass_spring_condensing_qore.out
 
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
