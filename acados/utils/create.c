@@ -272,14 +272,18 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     args->qp_solver->initialize_default_args(args->qp_solver_args);
     args->maxIter = 30;
 
+    #ifdef YT
+    sim_dims sim_dims;
     for (int ii = 0; ii < dims->N; ii++)
     {
         if (sim_solver_names[ii] != PREVIOUS)
         {
-            args->sim_solvers[ii]->initialize_default_args(args->sim_solvers_args[ii]);
+            cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
+            args->sim_solvers[ii]->initialize_default_args(&sim_dims, args->sim_solvers_args[ii]);
         }
         sim_RK_opts *tmp = (sim_RK_opts *)args->sim_solvers_args[ii];
     }
+    #endif
 
     return args;
 }

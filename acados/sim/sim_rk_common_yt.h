@@ -45,6 +45,6 @@ void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory);
 
 void *create_sim_RK_opts(sim_dims *dims);
 
-void sim_rk_initialize_default_args(void *opts_);
+void sim_rk_initialize_default_args(sim_dims *dims, void *opts_);
 
 #endif  // ACADOS_SIM_SIM_RK_COMMON_YT_H_
