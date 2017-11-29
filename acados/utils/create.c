@@ -81,6 +81,32 @@ ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_)
 
 
 
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(ocp_qp_dims *dims)
+{
+    int size = ocp_qp_hpmpc_calculate_args_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    void *args = ocp_qp_hpmpc_assign_args(dims, ptr);
+    ocp_qp_hpmpc_initialize_default_args(args);
+
+    return args;
+}
+
+
+
+ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(ocp_qp_dims *dims, void *args_)
+{
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) args_;
+
+    int size = ocp_qp_hpmpc_calculate_memory_size(dims, args);
+    void *ptr = acados_malloc(size, 1);
+    void *mem = ocp_qp_hpmpc_assign_memory(dims, args, ptr);
+
+    return mem;
+}
+
+
+
+
 
 ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims)
 {
@@ -89,6 +115,7 @@ ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims)
     ocp_qp_condensing_args *args = ocp_qp_condensing_assign_args(dims, ptr);
     return args;
 }
+
 
 
 
