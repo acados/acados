@@ -59,7 +59,7 @@ CFLAGS += #-O2 -fPIC
 CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
 
 # TEMP
-CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__
+CFLAGS += -g -O0 -DYT -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__
 
 # timing
 ifeq ($(MEASURE_TIMINGS), 1)

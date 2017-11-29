@@ -31,9 +31,16 @@
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_casadi_wrapper.h"
+
+#ifdef YT
+#include "acados/sim/sim_common_yt.h"
+#include "acados/sim/sim_erk_integrator_yt.h"
+#else
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#endif
+
 #include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -85,7 +92,7 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
 }
 
 
-
+#ifndef YT
 static void select_model(const int num_free_masses, sim_in *sim)
 {
     switch (num_free_masses)
@@ -120,7 +127,38 @@ static void select_model(const int num_free_masses, sim_in *sim)
             break;
     }
 }
+#endif
 
+#ifdef YT
+static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
+{
+    for (int ii = 0; ii < nlp->dims->N; ii++)
+    {
+        switch (num_free_masses)
+        {
+            case 1:
+                nlp->vde[ii] = &vde_chain_nm2;
+                nlp->jac[ii] = &jac_chain_nm2;
+                nlp->vde_adj[ii] = &vde_hess_chain_nm2;
+                break;
+            case 2:
+                nlp->vde[ii] = &vde_chain_nm3;
+                nlp->jac[ii] = &jac_chain_nm3;
+                nlp->vde_adj[ii] = &vde_hess_chain_nm3;
+                break;
+            case 3:
+                nlp->vde[ii] = &vde_chain_nm4;
+                nlp->jac[ii] = &jac_chain_nm4;
+                nlp->vde_adj[ii] = &vde_hess_chain_nm4;
+                break;
+            default:
+                printf("Problem size not available\n");
+                exit(1);
+                break;
+        }
+    }
+}
+#endif
 
 
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
@@ -203,7 +241,7 @@ int main() {
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
     const int NMF = 3;  // number of free masses
-    const int d = 4;  // number of stages in integrator
+    const int d = 0;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
 
@@ -296,6 +334,15 @@ int main() {
     for (int j = 0; j < NX; j++)
         ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
+    #ifdef YT
+
+    for (int jj = 0; jj < NN; jj++)
+    {
+        select_model_new(NMF, nlp);
+    }
+
+    # else
+
     // Simulation
     double Ts = TF / NN;
     sim_RK_opts rk_opts[NN];
@@ -351,6 +398,8 @@ int main() {
         nlp->sim[jj].work = (void *) malloc(workspace_size);
     }
 
+    #endif
+
     // Box constraints
     int *nb = nlp->dims->nb;
 
@@ -391,9 +440,27 @@ int main() {
     qp_solver_t qp_solver_name = HPIPM;
 
     // set up args with nested structs
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
-    nlp_args->maxIter = MAX_SQP_ITERS;
+    #ifdef YT
 
+    sim_solver_t sim_solver_names[NN];
+    int num_stages[NN];
+
+    sim_solver_names[0] = ERK;
+    sim_solver_names[1] = ERK;
+
+    for (int ii = 2; ii < NN; ii++) sim_solver_names[ii] = PREVIOUS;
+
+    num_stages[0] = 4;
+    num_stages[1] = 4;
+    for (int ii = 2; ii < NN; ii++) num_stages[ii] = -1;  // NOTE(dimitris): overwritten with correct values inside create_args below
+    nlp->dims->num_stages = num_stages;
+
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
+
+    #else
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
+    #endif
+    nlp_args->maxIter = MAX_SQP_ITERS;
 
     /************************************************
     * ocp_nlp out
@@ -401,7 +468,6 @@ int main() {
 
     void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
     ocp_nlp_out *nlp_out = assign_ocp_nlp_out(nlp->dims, nlp_out_mem);
-
 
     /************************************************
     * gn_sqp memory
@@ -423,9 +489,12 @@ int main() {
     * gn_sqp workspace
     ************************************************/
 
-    int work_space_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
+    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
 
-    void *nlp_work = (void *)malloc(work_space_size);
+    // ocp_nlp_gn_sqp_work *tmp = malloc(workspace_size);
+    // ocp_nlp_gn_sqp_cast_workspace(tmp, nlp_mem, nlp_args);
+
+    void *nlp_work = (void *)malloc(workspace_size);
 
     /************************************************
     * gn_sqp solve
@@ -460,8 +529,10 @@ int main() {
     * free memory
     ************************************************/
 
+    #ifndef YT
     // TODO(dimitris): still huge memory leaks from integrator args, mem, workspace...
     tmp_free_ocp_nlp_in_sim_solver(nlp);
+    #endif
 
     free(nlp_work);
     free(nlp_mem);

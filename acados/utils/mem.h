@@ -26,7 +26,11 @@ extern "C" {
 
 // external
 #include <stdio.h>
-
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 // make int counter of memory multiple of a number (typically 8 or 64)
 void make_int_multiple_of(int num, int *size);

@@ -28,10 +28,12 @@
 #include "acados/utils/mem.h"
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 
+#ifndef YT
 // TODO(dimitris): TEMP!!! REMOVE AFTER tmp_allocate_ocp_nlp_in_sim_solver IS GONE!
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#endif
 
 int number_of_primal_vars(ocp_nlp_dims *dims)
 {
@@ -60,6 +62,14 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
 }
 
 
+#ifdef YT
+void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage)
+{
+    sim_dims->nx = nlp_dims->nx[stage];
+    sim_dims->nu = nlp_dims->nu[stage];
+    sim_dims->num_stages = nlp_dims->num_stages[stage];
+}
+#endif
 
 // TODO(dimitris): fix order of funs
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
@@ -97,12 +107,16 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
         size += sizeof(double)*(dims->nx[ii]+dims->nu[ii]);  // yref
     }
 
+    #ifdef YT
+    size += 3*N*sizeof(casadi_function_t *);  // vde, vde_adj, jac
+    #endif
+
     // TODO(dimitris): add alignment when strvecs/strmats are used
     return size;
 }
 
 
-
+#ifndef YT
 // TEMP!!!
 static void tmp_allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, int_t num_stages,
     ocp_nlp_in *const nlp)
@@ -156,6 +170,7 @@ void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
     }
     free(nlp->sim);
 }
+#endif // YT
 
 
 // TODO(dimitris): move num_stages inside args, as nested integrator args
@@ -175,6 +190,15 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *)c_ptr;
     in->cost = (void *)cost;
     c_ptr += sizeof(ocp_nlp_ls_cost);
+
+    #ifdef YT
+    in->vde = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    in->vde_adj = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    in->jac = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    #endif
 
     // double pointers
     assign_int_ptrs(N+1, &in->idxb, &c_ptr);
@@ -241,7 +265,9 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
         in->dims->ns[ii] = dims->ns[ii];
     }
 
+    #ifndef YT
     tmp_allocate_ocp_nlp_in_sim_solver(N, dims->nx, dims->nu, num_stages, in);
+    #endif
 
     // printf("diff = %lld\n", (long long int)(raw_memory + ocp_nlp_in_calculate_size(dims, args)) - (long long int)c_ptr);
     assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims) == c_ptr);
