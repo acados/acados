@@ -17,6 +17,8 @@
  *
  */
 
+#ifndef YT 
+
 #include "acados/sim/sim_erk_integrator.h"
 
 #include <stdlib.h>
@@ -281,3 +283,5 @@ void sim_erk_initialize(const sim_in *in, void *args, void **work) {
 }
 
 void sim_erk_destroy(void *work) { free(work); }
+
+#endif
