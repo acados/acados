@@ -30,7 +30,7 @@
 #include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
@@ -102,7 +102,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 ocp_nlp_ls_cost ls_cost;
                 real_t *W, *WN;
                 real_t *uref;
-                int_t max_sqp_iters = 1;
+                int_t max_sqp_iters = 20;
                 real_t *x_end;
                 real_t *u_end;
 
@@ -541,16 +541,16 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                  * QP solver
                  ************************************************/
                 ocp_qp_solver qp_solver;
-                qp_solver.fun = &ocp_qp_hpipm;
-                qp_solver.initialize = &ocp_qp_hpipm_initialize;
-                qp_solver.destroy = &ocp_qp_hpipm_destroy;
+                qp_solver.fun = &ocp_qp_condensing_qpoases;
+                qp_solver.initialize = &ocp_qp_condensing_qpoases_initialize;
+                qp_solver.destroy = &ocp_qp_condensing_qpoases_destroy;
                 qp_solver.qp_in = create_ocp_qp_in(N, nx, nu, nb, ng);
                 qp_solver.qp_out = create_ocp_qp_out(N, nx, nu, nb, ng);
                 // TODO(nielsvd): lines below should go
                 int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
                 for (int_t i = 0; i <= N; i++)
                     for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-                qp_solver.args = (void *)ocp_qp_hpipm_create_arguments(qp_solver.qp_in);
+                qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments(qp_solver.qp_in);
 
                 /************************************************
                  * SQP method

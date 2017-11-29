@@ -131,6 +131,8 @@ void print_ocp_qp(ocp_qp_in *qp) {
     printf("nc:\n");
     print_int_matrix("stdout", qp->nc, 1, N + 1);
     for (int_t stage = 0; stage < N+1; stage++) {
+        printf("idxb[%d]:\n", stage);
+        print_int_matrix("stdout", qp->idxb[stage], 1, qp->nb[stage]);
         if (stage < N) {
             printf("A[%d]:\n", stage);
             print_matrix("stdout", qp->A[stage], qp->nx[stage], qp->nx[stage]);
