@@ -550,7 +550,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
                 for (int_t i = 0; i <= N; i++)
                     for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-                qp_solver.args = (void *)ocp_qp_condensing_qpoases_create_arguments(qp_solver.qp_in);
+                qp_solver.args =
+                    (void *)ocp_qp_condensing_qpoases_create_arguments(qp_solver.qp_in);
 
                 /************************************************
                  * SQP method
