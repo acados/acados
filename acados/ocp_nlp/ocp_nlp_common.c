@@ -285,18 +285,18 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 
     size += sizeof(double *) * (N + 1);  // x
     size += sizeof(double *) * (N + 1);  // u
+    size += sizeof(double *) * N;        // pi
     size += sizeof(double *) * (N + 1);  // lam
-    size += sizeof(double *) * N;  // pi
 
     for (int ii = 0; ii <= N; ii++)
     {
         size += sizeof(double)*dims->nx[ii];  // x
         size += sizeof(double)*dims->nu[ii];  // u
-        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
         if (ii < N)
         {
             size += sizeof(double)*dims->nx[ii+1];  // pi
         }
+        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
     }
 
     make_int_multiple_of(64, &size);
@@ -323,7 +323,7 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
     assign_double_ptrs(N+1, &out->lam, &c_ptr);
 
     // doubles
-    align_char_to(64, &c_ptr);
+    int padding = align_char_to(64, &c_ptr);
 
     for (int ii = 0; ii <= N; ii++)
     {
@@ -336,7 +336,15 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
         assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &out->lam[ii], &c_ptr);
     }
 
-    assert((char *)raw_memory + ocp_nlp_out_calculate_size(dims) >= c_ptr);
+    // compute padded region size
+    char *region_init = (char *)raw_memory;
+    char *region_end  = c_ptr;
+    int   region_size = (int)(region_end - padding - region_init);
 
+    // additional processing
+    make_int_multiple_of(64, &region_size);
+    region_size+=64;
+
+    assert(ocp_nlp_out_calculate_size(dims) == region_size);
     return out;
 }
