@@ -40,10 +40,12 @@ void make_int_multiple_of(int num, int *size) {
 
 
 
-void align_char_to(int num, char **c_ptr) {
+int align_char_to(int num, char **c_ptr) {
     size_t s_ptr = (size_t)*c_ptr;
     s_ptr = (s_ptr + num - 1) / num * num;
+    int offset = (int)(s_ptr - (size_t)(*c_ptr));
     *c_ptr = (char *)s_ptr;
+    return offset;
 }
 
 
