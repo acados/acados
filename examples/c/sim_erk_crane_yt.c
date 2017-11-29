@@ -50,7 +50,7 @@ int main() {
     erk_opts->num_steps = 4;
     in->step = T / erk_opts->num_steps;
     erk_opts->sens_forw = true;
-    erk_opts->sens_adj = true;
+    erk_opts->sens_adj = false;
     erk_opts->sens_hess = false;
 
     in->vde = &vdeFun;
@@ -91,63 +91,73 @@ int main() {
         printf("%8.5f ",xn[ii]);
     printf("\n");
 
-    double *S_forw_out = out->S_forw;
-    printf("\nS_forw_out: \n");
-    for (ii=0;ii<nx;ii++){
-        for (jj=0;jj<NF;jj++)
-            printf("%8.5f ",S_forw_out[jj*nx+ii]);
+    double *S_forw_out;
+    if(erk_opts->sens_forw){
+        S_forw_out = out->S_forw;
+        printf("\nS_forw_out: \n");
+        for (ii=0;ii<nx;ii++){
+            for (jj=0;jj<NF;jj++)
+                printf("%8.5f ",S_forw_out[jj*nx+ii]);
+            printf("\n");
+        }
+    }
+
+    double *S_adj_out;
+    if(erk_opts->sens_adj){
+        S_adj_out = out->S_adj;
+        printf("\nS_adj_out: \n");
+        for (ii=0;ii<nx+nu;ii++){
+            printf("%8.5f ",S_adj_out[ii]);
+        }
         printf("\n");
     }
 
-    double *S_adj_out = out->S_adj;
-    printf("\nS_adj_out: \n");
-    for (ii=0;ii<nx+nu;ii++){
-        printf("%8.5f ",S_adj_out[ii]);
+    double *S_hess_out;
+    if(erk_opts->sens_hess){
+        double zero = 0.0;
+        S_hess_out = out->S_hess;
+        printf("\nS_hess_out: \n");
+        for (ii=0;ii<NF;ii++){
+            for (jj=0;jj<NF;jj++){
+                if (jj>ii){
+                    printf("%8.5f ",zero);
+                }else{
+                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
+                }
+            }
+            printf("\n");
+        }
     }
-    printf("\n");
-
-    // double zero = 0.0;
-    // if(in->sens_hess){
-    //     double *S_hess_out = out->S_hess;
-    //     printf("\nS_hess_out: \n");
-    //     for (ii=0;ii<NF;ii++){
-    //         for (jj=0;jj<NF;jj++){
-    //             if (jj>ii){
-    //                 printf("%8.5f ",zero);
-    //             }else{
-    //                 printf("%8.5f ",S_hess_out[jj*NF+ii]);
-    //             }
-    //         }
-    //         printf("\n");
-    //     }
-    // }
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
+    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
 
-    struct d_strmat sA;
-    d_create_strmat(nx, nx+nu, &sA, S_forw_out);
+    if(erk_opts->sens_adj){
+        struct d_strmat sA;
+        d_create_strmat(nx, nx+nu, &sA, S_forw_out);
 
-    struct d_strvec sx;
-    d_create_strvec(nx, &sx, in->S_adj);
+        struct d_strvec sx;
+        d_create_strvec(nx, &sx, in->S_adj);
 
-    struct d_strvec sz;
-    void *mz;
-    v_zeros_align(&mz, d_size_strvec(nx+nu));
-    d_create_strvec(nx+nu, &sz, mz);
-    dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+        struct d_strvec sz;
+        void *mz;
+        v_zeros_align(&mz, d_size_strvec(nx+nu));
+        d_create_strvec(nx+nu, &sz, mz);
+        dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
-    printf("\nJac times lambdaX:\n");
-    d_print_tran_strvec(nx+nu, &sz, 0);
+        printf("\nJac times lambdaX:\n");
+        d_print_tran_strvec(nx+nu, &sz, 0);
+
+        v_free_align(mz);
+    }
 
     free(xref);
     free(erk_opts);
     free(in);
     free(erk_mem);
     free(out);
-    v_free_align(mz);
-
+    
     return flag;
 }
