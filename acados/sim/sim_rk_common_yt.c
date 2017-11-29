@@ -39,8 +39,8 @@ int sim_RK_opts_calculate_size(sim_dims *dims)
     size += ns * sizeof(double);  // b_vec
     size += ns * sizeof(double);  // c_vec
 
-    size = (size + 63) / 64 * 64;
-    size += 1 * 64;
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
 
     return size;
 }
@@ -59,9 +59,7 @@ void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory)
 
     // c_ptr += sizeof(Newton_scheme);
 
-    size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *)s_ptr;
+    align_char_to(8, &c_ptr);
 
     opts->A_mat = (double *) c_ptr;
     c_ptr += ns*ns*sizeof(double);
