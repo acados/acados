@@ -42,8 +42,10 @@ int sim_in_calculate_size(sim_dims *dims)
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += nx * sizeof(double);  // S_adj
 
-    size = (size + 63) / 64 * 64;
-    size += 1 * 64;
+    // size = (size + 63) / 64 * 64;
+    // size += 1 * 64;
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
 
     return size;
 }
@@ -65,22 +67,12 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     in->nx = nx;
     in->nu = nu;
 
-    // replace with mem.c functions
-    size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *)s_ptr;
+    align_char_to(8, &c_ptr);
 
-    in->x = (double *) c_ptr;
-    c_ptr += nx*sizeof(double);
-
-    in->u = (double *) c_ptr;
-    c_ptr += nu*sizeof(double);
-
-    in->S_forw = (double *) c_ptr;
-    c_ptr += nx * NF *sizeof(double);
-
-    in->S_adj = (double *) c_ptr;
-    c_ptr += nx *sizeof(double);
+    assign_double(nx, &in->x, &c_ptr);
+    assign_double(nu, &in->u, &c_ptr);
+    assign_double(nx * NF, &in->S_forw, &c_ptr);
+    assign_double(nx, &in->S_adj, &c_ptr);
 
     assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
 
@@ -117,8 +109,8 @@ int sim_out_calculate_size(sim_dims *dims)
     size += (nx + nu) * sizeof(double);  // S_adj
     size += ((NF + 1) * NF / 2) * sizeof(double);  // S_hess
 
-    size = (size + 63) / 64 * 64;
-    size += 1 * 64;
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
 
     return size;
 }
@@ -139,21 +131,12 @@ sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
     out->info = (sim_info *)c_ptr;
     c_ptr += sizeof(sim_info);
 
-    size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *)s_ptr;
+    align_char_to(8, &c_ptr);
 
-    out->xn = (double *) c_ptr;
-    c_ptr += nx*sizeof(double);
-
-    out->S_forw = (double *) c_ptr;
-    c_ptr += nx * NF *sizeof(double);
-
-    out->S_adj = (double *) c_ptr;
-    c_ptr += (nx + nu) *sizeof(double);
-
-    out->S_hess = (double *) c_ptr;
-    c_ptr += ((NF + 1) * NF / 2) *sizeof(double);
+    assign_double(nx, &out->xn, &c_ptr);
+    assign_double(nx * NF, &out->S_forw, &c_ptr);
+    assign_double(nx + nu, &out->S_adj, &c_ptr);
+    assign_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
 
     assert((char*)raw_memory + sim_out_calculate_size(dims) >= c_ptr);
 
