@@ -25,8 +25,8 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados/utils/mem.h"
-#include "acados/sim/sim_common_yt.h"
-#include "acados/sim/sim_rk_common_yt.h"
+#include "acados/sim/sim_common.h"
+#include "acados/sim/sim_rk_common.h"
 
 
 int sim_RK_opts_calculate_size(sim_dims *dims)

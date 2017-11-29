@@ -34,13 +34,9 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#ifdef YT
-#include "acados/sim/sim_common_yt.h"
 #include "acados/sim/sim_casadi_wrapper.h"
-#else
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_collocation.h"
-#endif
 #include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -91,10 +87,10 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
     #ifdef YT
     sim_dims sim_dims;
 
-    size += dims->N*sizeof(sim_solver_yt *);
+    size += dims->N*sizeof(sim_solver *);
     size += dims->N*sizeof(void *);  //sim_solvers_args
 
-    sim_solver_yt sim_solver;
+    sim_solver sim_solver;
     int return_value;
     sim_solver_t sim_solver_name;
 
@@ -114,7 +110,7 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
 
         if (sim_solver_names[ii] != PREVIOUS)
         {  // only allocate for new sim_solvers
-            size += sizeof(sim_solver_yt);
+            size += sizeof(sim_solver);
             size += sim_solver.calculate_args_size(&sim_dims);
         }
     }
@@ -152,13 +148,12 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
     #ifdef YT
     sim_dims sim_dims;
 
-    args->sim_solvers = (sim_solver_yt **) c_ptr;
-    c_ptr += dims->N*sizeof(sim_solver_yt *);
+    args->sim_solvers = (sim_solver **) c_ptr;
+    c_ptr += dims->N*sizeof(sim_solver *);
 
     args->sim_solvers_args = (void **) c_ptr;
     c_ptr += dims->N*sizeof(void *);
 
-    sim_solver_yt sim_solver;
     int return_value, ns;
     sim_solver_t sim_solver_name;
 
@@ -173,8 +168,8 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
             cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
             sim_solver_name = sim_solver_names[ii];
 
-            args->sim_solvers[ii] = (sim_solver_yt *) c_ptr;
-            c_ptr += sizeof(sim_solver_yt);
+            args->sim_solvers[ii] = (sim_solver *) c_ptr;
+            c_ptr += sizeof(sim_solver);
 
             return_value = set_sim_solver_fun_ptrs(sim_solver_name, args->sim_solvers[ii]);
             assert(return_value == ACADOS_SUCCESS);

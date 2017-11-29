@@ -20,25 +20,31 @@
 #ifndef ACADOS_SIM_SIM_RK_COMMON_H_
 #define ACADOS_SIM_SIM_RK_COMMON_H_
 
-#include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct {
-    int_t num_stages;
-    real_t *A_mat;
-    real_t *c_vec;
-    real_t *b_vec;
+    int num_stages;
+    int newton_iter;
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
 
-    Newton_scheme scheme;
+    // TODO(dimitris): move those to common opts?!
+    int num_forw_sens;
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+    int num_steps;
+
 } sim_RK_opts;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+int_t sim_RK_opts_calculate_size(sim_dims *dims);
+
+void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory);
+
+void *create_sim_RK_opts(sim_dims *dims);
+
+void sim_rk_initialize_default_args(sim_dims *dims, void *opts_);
 
 #endif  // ACADOS_SIM_SIM_RK_COMMON_H_
