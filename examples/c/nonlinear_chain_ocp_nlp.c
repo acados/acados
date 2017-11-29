@@ -58,7 +58,7 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 int main() {
     // TODO(dimitris): fix for NMF > 1
     const int INEXACT = 0;
-    const int d = 2;
+    const int d = 1;
     const int NMF = 1;
     if (INEXACT == 0) {
         printf(
@@ -93,7 +93,7 @@ int main() {
     ocp_nlp_ls_cost ls_cost;
     real_t *W, *WN;
     real_t *uref;
-    int_t max_sqp_iters = 20;
+    int_t max_sqp_iters = 1;
     real_t *x_end;
     real_t *u_end;
 
