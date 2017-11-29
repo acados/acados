@@ -25,14 +25,13 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados/utils/mem.h"
-// #include "sim/sim_collocation.h"
 #include "acados/sim/sim_common_yt.h"
 #include "acados/sim/sim_rk_common_yt.h"
 
 
 int sim_RK_opts_calculate_size(sim_dims *dims)
 {
-    // int size = sizeof(Newton_scheme);
+    
     int size = sizeof(sim_RK_opts);
 
     int ns = dims->num_stages;
@@ -58,18 +57,11 @@ void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory)
     int ns = dims->num_stages;
     opts->num_stages = ns;
 
-    // c_ptr += sizeof(Newton_scheme);
-
     align_char_to(8, &c_ptr);
 
-    opts->A_mat = (double *) c_ptr;
-    c_ptr += ns*ns*sizeof(double);
-
-    opts->b_vec = (double *) c_ptr;
-    c_ptr += ns*sizeof(double);
-
-    opts->c_vec = (double *) c_ptr;
-    c_ptr += ns*sizeof(double);
+    assign_double(ns*ns, &opts->A_mat, &c_ptr);
+    assign_double(ns, &opts->b_vec, &c_ptr);
+    assign_double(ns, &opts->c_vec, &c_ptr);
 
     assert((char*)raw_memory + sim_RK_opts_calculate_size(dims) >= c_ptr);
 

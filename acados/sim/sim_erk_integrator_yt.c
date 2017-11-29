@@ -23,6 +23,7 @@
 #include <string.h>
 #include <assert.h>
 // acados
+#include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/sim/sim_rk_common_yt.h"
 #include "acados/sim/sim_common_yt.h"
@@ -66,8 +67,8 @@ int erk_calculate_memory_size(sim_dims *dims, void *opts_)
         size += num_stages * (nx + nu) * sizeof(double); //adj_traj
     }
 
-    size = (size + 63) / 64 * 64;
-    size += 1 * 64;
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
 
     return size;
 }
@@ -93,43 +94,30 @@ void *assign_erk_memory(sim_dims *dims, void *opts_, void *raw_memory)
     c_ptr += sizeof(sim_erk_memory);
 
     // align memory to typical cache line size
-    size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *)s_ptr;
+    align_char_to(8, &c_ptr);
 
-    mem->rhs_forw_in = (double *)c_ptr;
-    c_ptr += (nX + nu) * sizeof(double);
+    assign_double(nX + nu, &mem->rhs_forw_in, &c_ptr);
 
     if(opts->sens_adj)
     {
-        mem->K_traj = (double *)c_ptr;
-        c_ptr += num_steps * num_stages * nX * sizeof(double);
-        mem->out_forw_traj = (double *)c_ptr;
-        c_ptr += (num_steps + 1) * nX * sizeof(double);
+        assign_double(num_steps*num_stages*nX, &mem->K_traj, &c_ptr);
+        assign_double((num_steps + 1)*nX, &mem->out_forw_traj, &c_ptr);
     } else
     {
-        mem->K_traj = (double *)c_ptr;
-        c_ptr += num_stages * nX * sizeof(double);
-        mem->out_forw_traj = (double *)c_ptr;
-        c_ptr += nX * sizeof(double);
+        assign_double(num_stages*nX, &mem->K_traj, &c_ptr);
+        assign_double(nX, &mem->out_forw_traj, &c_ptr);
     }
 
     if (opts->sens_hess && opts->sens_adj)
     {
-        mem->rhs_adj_in = (double *)c_ptr;
-        c_ptr += (nx + nX + nu) * sizeof(double);
-        mem->out_adj_tmp = (double *)c_ptr;
-        c_ptr += (nx + nu + nhess) * sizeof(double);
-        mem->adj_traj = (double *)c_ptr;
-        c_ptr += num_stages * (nx + nu + nhess) * sizeof(double);
+        assign_double(nx+nX+nu, &mem->rhs_adj_in, &c_ptr);
+        assign_double(nx+nu+nhess, &mem->out_adj_tmp, &c_ptr);
+        assign_double(num_stages*(nx+nu+nhess), &mem->adj_traj, &c_ptr);
     } else if (opts->sens_adj)
     {
-        mem->rhs_adj_in = (double *)c_ptr;
-        c_ptr += (nx * 2 + nu) * sizeof(double);
-        mem->out_adj_tmp = (double *)c_ptr;
-        c_ptr += (nx + nu) * sizeof(double);
-        mem->adj_traj = (double *)c_ptr;
-        c_ptr += num_stages * (nx + nu) * sizeof(double);
+        assign_double((nx*2+nu), &mem->rhs_adj_in, &c_ptr);
+        assign_double(nx+nu, &mem->out_adj_tmp, &c_ptr);
+        assign_double(num_stages*(nx+nu), &mem->adj_traj, &c_ptr);
     }
 
     assert((char*)raw_memory + erk_calculate_memory_size(dims, opts_) >= c_ptr);
