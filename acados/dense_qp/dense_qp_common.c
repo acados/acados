@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // hpipm
 #include "hpipm_d_dense_qp.h"
 #include "hpipm_d_dense_qp_sol.h"
@@ -48,6 +46,8 @@ dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory)
 
     dense_qp_in *qp_in = (dense_qp_in *) c_ptr;
     c_ptr += sizeof(dense_qp_in);
+
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     d_create_dense_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_dense_qp(dims);
@@ -85,10 +85,12 @@ dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory)
     dense_qp_out *qp_out = (dense_qp_out *) c_ptr;
     c_ptr += sizeof(dense_qp_out);
 
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
     d_create_dense_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_dense_qp_sol(dims);
 
-    assert((char*)raw_memory + dense_qp_out_calculate_size(dims) >= c_ptr);
+    assert((char*)raw_memory + dense_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
 }

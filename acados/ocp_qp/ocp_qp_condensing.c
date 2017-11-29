@@ -57,7 +57,7 @@ ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *r
     ocp_qp_condensing_args *args = (ocp_qp_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_args);
 
-    assert((char*)raw_memory + ocp_qp_condensing_calculate_args_size(dims) >= c_ptr);
+    assert((char*)raw_memory + ocp_qp_condensing_calculate_args_size(dims) == c_ptr);
 
     return args;
 }
@@ -72,9 +72,6 @@ int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing
     size += sizeof(struct d_cond_qp_ocp2dense_workspace);
     size += d_memsize_cond_qp_ocp2dense(dims);
 
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
     return size;
 }
 
@@ -87,16 +84,17 @@ ocp_qp_condensing_memory *ocp_qp_condensing_assign_memory(ocp_qp_dims *dims,
 
     ocp_qp_condensing_memory *mem = (ocp_qp_condensing_memory *) c_ptr;
     c_ptr += sizeof(ocp_qp_condensing_memory);
-    //
+
     mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
 
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
     // hpipm workspace structure
-    align_char_to(8, &c_ptr);
     d_create_cond_qp_ocp2dense(dims, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-    assert((char*)raw_memory + ocp_qp_condensing_calculate_memory_size(dims, args) >= c_ptr);
+    assert((char*)raw_memory + ocp_qp_condensing_calculate_memory_size(dims, args) == c_ptr);
 
     return mem;
 }

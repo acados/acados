@@ -243,21 +243,47 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 {
     int size = ocp_nlp_in_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    ocp_nlp_in *nlp_in = ocp_assign_nlp_in(dims, num_stages, ptr);
+    ocp_nlp_in *nlp_in = assign_ocp_nlp_in(dims, num_stages, ptr);
     return nlp_in;
 }
 
 
-
+#ifdef YT
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
+#else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
+#endif
 {
+    #ifdef YT
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names);
+    #else
     int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
-    void *ptr = acados_malloc(size, 1);
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
+    #endif
 
-    // TODO(dimitris): nest in initialize default args of each module
+    void *ptr = acados_malloc(size, 1);
+
+    #ifdef YT
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, sim_solver_names, ptr);
+    #else
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
+    #endif
+
+    // TODO(dimitris): nest in initialize default args of SQP solver!
     args->qp_solver->initialize_default_args(args->qp_solver_args);
     args->maxIter = 30;
+
+    #ifdef YT
+    sim_dims sim_dims;
+    for (int ii = 0; ii < dims->N; ii++)
+    {
+        if (sim_solver_names[ii] != PREVIOUS)
+        {
+            cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
+            args->sim_solvers[ii]->initialize_default_args(&sim_dims, args->sim_solvers_args[ii]);
+        }
+        sim_RK_opts *tmp = (sim_RK_opts *)args->sim_solvers_args[ii];
+    }
+    #endif
 
     return args;
 }

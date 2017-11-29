@@ -17,38 +17,34 @@
  *
  */
 
-#ifndef ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
-#define ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#ifndef ACADOS_SIM_SIM_RK_COMMON_YT_H_
+#define ACADOS_SIM_SIM_RK_COMMON_YT_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common_yt.h"
 #include "acados/utils/types.h"
 
 typedef struct {
-    real_t *K_traj;
+    int num_stages;
+    int newton_iter;
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
 
-    real_t *rhs_forw_in;
-    real_t *out_forw_traj;
+    // TODO(dimitris): move those to common opts?!
+    int num_forw_sens;
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+    int num_steps;
 
-    real_t *adj_traj;
-    real_t *rhs_adj_in;
-    real_t *out_adj_tmp;
-} sim_erk_workspace;
+} sim_RK_opts;
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
+int_t sim_RK_opts_calculate_size(sim_dims *dims);
 
-int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
+void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory);
 
-void sim_erk_create_arguments(void *args, const int_t num_stages);
+void *create_sim_RK_opts(sim_dims *dims);
 
-void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-void sim_erk_destroy(void *work);
+void sim_rk_initialize_default_args(sim_dims *dims, void *opts_);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#endif  // ACADOS_SIM_SIM_ERK_INTEGRATOR_H_
+#endif  // ACADOS_SIM_SIM_RK_COMMON_YT_H_

@@ -18,9 +18,7 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 // blasfeo
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
@@ -38,9 +36,6 @@ int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
     int size = 0;
     size += sizeof(dense_qp_qpoases_args);
 
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
     return size;
 }
 
@@ -55,7 +50,7 @@ void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory)
     args = (dense_qp_qpoases_args *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_args);
 
-    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims) >= c_ptr);
+    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims) == c_ptr);
 
     return (void *)args;
 }
@@ -102,7 +97,6 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
         size += QProblemB_calculateMemorySize(nvd);
 
     make_int_multiple_of(8, &size);
-    size += 1 * 8;
 
     return size;
 }
@@ -125,62 +119,35 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
-    align_char_to(8, &c_ptr);
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    //
-    mem->H = (double *)c_ptr;
-    c_ptr += nvd * nvd * sizeof(double);
-    //
-    mem->A = (double *)c_ptr;
-    c_ptr += nvd * ned * sizeof(double);
-    //
-    mem->C = (double *)c_ptr;
-    c_ptr += nvd * ngd * sizeof(double);
-    //
-    mem->g = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    // TODO(dimitris): use this instead
-    // assign_double(nvd, &mem->g, &c_ptr);
-    //
-    mem->b = (double *)c_ptr;
-    c_ptr += ned * sizeof(double);
-    //
-    mem->d_lb0 = (double *)c_ptr;
-    c_ptr += nbd * sizeof(double);
-    //
-    mem->d_ub0 = (double *)c_ptr;
-    c_ptr += nbd * sizeof(double);
-    //
-    mem->d_lb = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->d_ub = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->d_lg = (double *)c_ptr;
-    c_ptr += ngd * sizeof(double);
-    //
-    mem->d_ug = (double *)c_ptr;
-    c_ptr += ngd * sizeof(double);
-    //
-    mem->prim_sol = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->dual_sol = (double *)c_ptr;
-    c_ptr += (2 * nvd + 2 * ngd) * sizeof(double);
+    assign_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_double(nvd*ned, &mem->A, &c_ptr);
+    assign_double(nvd*ngd, &mem->C, &c_ptr);
+    assign_double(nvd, &mem->g, &c_ptr);
+    assign_double(ned, &mem->b, &c_ptr);
+    assign_double(nbd, &mem->d_lb0, &c_ptr);
+    assign_double(nbd, &mem->d_ub0, &c_ptr);
+    assign_double(nvd, &mem->d_lb, &c_ptr);
+    assign_double(nvd, &mem->d_ub, &c_ptr);
+    assign_double(ngd, &mem->d_lg, &c_ptr);
+    assign_double(ngd, &mem->d_ug, &c_ptr);
+    assign_double(nvd, &mem->prim_sol, &c_ptr);
+    assign_double(2*nvd + 2*ngd, &mem->dual_sol, &c_ptr);
 
-
-    // TODO(dimitris): update syntax in qpOASES
+    // TODO(dimitris): update assign syntax in qpOASES
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     if (ngd > 0) {  // QProblem
-        c_ptr = QProblem_assignMemory(nvd, ngd, (QProblem **) &(mem->QP), c_ptr);
+        QProblem_assignMemory(nvd, ngd, (QProblem **) &(mem->QP), c_ptr);
+        c_ptr += QProblem_calculateMemorySize(nvd, ngd);
     } else {  // QProblemB
-        c_ptr = QProblemB_assignMemory(nvd, (QProblemB **) &(mem->QPB), c_ptr);
+        QProblemB_assignMemory(nvd, (QProblemB **) &(mem->QPB), c_ptr);
+        c_ptr += QProblemB_calculateMemorySize(nvd);
     }
 
-    // int stuff
-    mem->idxb = (int *)c_ptr;
-    c_ptr += nbd * sizeof(int);
+    // int data
+    assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
 

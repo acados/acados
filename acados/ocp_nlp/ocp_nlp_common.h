@@ -25,7 +25,11 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
+#ifdef YT
+#include "acados/sim/sim_common_yt.h"
+#else
 #include "acados/sim/sim_common.h"
+#endif
 #include "acados/utils/types.h"
 
 typedef struct {
@@ -37,6 +41,9 @@ typedef struct {
     int *ng;  // number of general linear constraints
     int *nh;  // number of path constraints - ONLY difference with ocp_qp_dims atm
     int *ns;  // number of soft constraints
+    #ifdef YT
+    int *num_stages;
+    #endif
     int N;
 } ocp_nlp_dims;
 
@@ -67,10 +74,16 @@ typedef struct {
     // ocp_nlp_function *h;  // nonlinear path constraints
 
     void *cost;
+    #ifdef YT
+    casadi_function_t *vde;
+    casadi_function_t *vde_adj;
+    casadi_function_t *jac;
+    #else
     sim_solver *sim;
+    #endif
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
-    bool freezeSens;
+    bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
 } ocp_nlp_in;
 
 
@@ -88,16 +101,20 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
 //
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims);
 //
-ocp_nlp_in *ocp_assign_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
+ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
 //
 int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 //
-ocp_nlp_out *ocp_assign_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
+ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
+#ifdef YT
+void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
+#endif
 
+#ifndef YT
 // TODO(dimitris): TEMP!!
 void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp);
-
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
