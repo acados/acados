@@ -28,6 +28,7 @@
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -40,6 +41,8 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
     const int_t *nb = nlp_in->nb;
     const int_t **idxb = nlp_in->idxb;
     const int_t *ng = nlp_in->ng;
+
+    sqp_args->qp_solver->qp_in->idxb = idxb;
 
     real_t **qp_A = (real_t **)sqp_args->qp_solver->qp_in->A;
     real_t **qp_B = (real_t **)sqp_args->qp_solver->qp_in->B;
@@ -93,7 +96,7 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
         }
     }
 
-    // State-continuity constraints, and state/control bounds
+    // State-continuity constraints
     for (int_t i = 0; i < N; i++) {
         for (int_t j = 0; j < nx[i]; j++) {
             qp_b[i][j] = h[i][j] - nlp_x[i + 1][j];
@@ -104,6 +107,10 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
                 qp_B[i][k * nx[i] + j] = jac_h[i][(nx[i] + k) * nx[i] + j];
             }
         }
+    }
+
+    // State and control bounds
+    for (int_t i = 0; i <= N; i++) {
         for (int_t j = 0; j < nb[i]; j++) {
 #ifdef FLIP_BOUNDS
             if (idxb[i][j] < nu[i]) {

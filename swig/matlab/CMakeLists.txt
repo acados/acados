@@ -1,3 +1,4 @@
+set(Matlab_ROOT_DIR "$ENV{MATLAB_ROOT}")
 find_package(Matlab COMPONENTS MX_LIBRARY ENG_LIBRARY MAT_LIBRARY REQUIRED)
 find_package(CasadiMatlab REQUIRED)
 

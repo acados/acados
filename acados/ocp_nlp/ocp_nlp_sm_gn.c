@@ -236,31 +236,33 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     for (int_t i = 0; i <= N; i++) {
         // Least squares cost for shooting node i
         const int_t ny = ls_cost->fun[i]->ny;
-        casadi_wrapper_in *ls_in = ls_cost->fun[i]->in;
-        casadi_wrapper_out *ls_out = ls_cost->fun[i]->out;
-        casadi_wrapper_args *ls_args = ls_cost->fun[i]->args;
-        casadi_wrapper_workspace *ls_work = ls_cost->fun[i]->work;
+        if (ny > 0) {
+            casadi_wrapper_in *ls_in = ls_cost->fun[i]->in;
+            casadi_wrapper_out *ls_out = ls_cost->fun[i]->out;
+            casadi_wrapper_args *ls_args = ls_cost->fun[i]->args;
+            casadi_wrapper_workspace *ls_work = ls_cost->fun[i]->work;
 
-        // Sensitivities for the quadratic approximation of the objective
-        // Compute residual vector F and its Jacobian
-        casadi_wrapper(ls_in, ls_out, ls_args, ls_work);
-        for (int_t j = 0; j < ny; j++) work->F[i][j] -= ls_cost->y_ref[i][j];
-        // Take transpose of DF
-        for (int_t j = 0; j < nx[i] + nu[i]; j++) {
-            for (int_t k = 0; k < ny; k++)
-                work->DFT[i][k * (nx[i] + nu[i]) + j] = work->DF[i][j * ny + k];
+            // Sensitivities for the quadratic approximation of the objective
+            // Compute residual vector F and its Jacobian
+            casadi_wrapper(ls_in, ls_out, ls_args, ls_work);
+            for (int_t j = 0; j < ny; j++) work->F[i][j] -= ls_cost->y_ref[i][j];
+            // Take transpose of DF
+            for (int_t j = 0; j < nx[i] + nu[i]; j++) {
+                for (int_t k = 0; k < ny; k++)
+                    work->DFT[i][k * (nx[i] + nu[i]) + j] = work->DF[i][j * ny + k];
+            }
+
+            // Compute Gauss-Newton Hessian
+            for (int_t j = 0; j < (nx[i] + nu[i]) * ny; j++) work->DFTW[i][j] = 0;
+            dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i],
+                        (real_t *)ls_cost->W[i], ny, work->DFTW[i], nx[i] + nu[i]);
+            dgemm_nn_3l(nx[i] + nu[i], nx[i] + nu[i], ny, work->DFTW[i],
+                        nx[i] + nu[i], work->DF[i], ny, hess_l[i], nx[i] + nu[i]);
+            // Compute gradient of cost
+            for (int_t j = 0; j < (nx[i] + nu[i]); j++) grad_f[i][j] = 0;
+            dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i],
+                        grad_f[i]);
         }
-
-        // Compute Gauss-Newton Hessian
-        for (int_t j = 0; j < (nx[i] + nu[i]) * ny; j++) work->DFTW[i][j] = 0;
-        dgemm_nn_3l(nx[i] + nu[i], ny, ny, work->DFT[i], nx[i] + nu[i],
-                    (real_t *)ls_cost->W[i], ny, work->DFTW[i], nx[i] + nu[i]);
-        dgemm_nn_3l(nx[i] + nu[i], nx[i] + nu[i], ny, work->DFTW[i],
-                    nx[i] + nu[i], work->DF[i], ny, hess_l[i], nx[i] + nu[i]);
-        // Compute gradient of cost
-        for (int_t j = 0; j < (nx[i] + nu[i]); j++) grad_f[i][j] = 0;
-        dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i],
-                   grad_f[i]);
 
         if (sm_in->ng[i] > 0) {
             // Path constraints for shooting node i
@@ -283,7 +285,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     if (mem->inexact_init) {
         for (int_t i = 0; i < N; i++) {
             sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
-            if (sim_opts->scheme.type != exact) {
+            if (sim_opts != NULL && sim_opts->scheme.type != exact) {
                 for (int_t j = 0; j < nx[i] + nu[i]; j++) {
                     grad_f[i][j] += sim[i]->out->grad[j];
                 }
