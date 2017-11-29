@@ -58,9 +58,9 @@ Otherwise, follow the steps below:
     mkdir -p casadi-py35-np1.9.1-v3.1.1
     tar -xf casadi-py35-np1.9.1-v3.1.1.tar.gz -C casadi-py35-np1.9.1-v3.1.1
 
-    wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.1.1/linux/casadi-matlabR2014b-v3.1.1.tar.gz
-    mkdir -p casadi-matlabR2014b-v3.1.1
-    tar -xf casadi-matlabR2014b-v3.1.1.tar.gz -C casadi-matlabR2014b-v3.1.1
+    wget -q -nc https://sourceforge.net/projects/casadi/files/CasADi/3.2.3/linux/casadi-matlabR2014b-v3.2.3.tar.gz
+    mkdir -p casadi-matlabR2014b-v3.2.3
+    tar -xf casadi-matlabR2014b-v3.2.3.tar.gz -C casadi-matlabR2014b-v3.2.3
     cd ..
     ```
 

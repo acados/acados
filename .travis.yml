@@ -6,10 +6,10 @@ python:
   - 3.5
 
 env:
-  - CXX="g++-6" CC="gcc-6" SWIG_PYTHON=ON SWIG_MATLAB=OFF # no MATLAB support for gcc>=5
-  - CXX="g++-5" CC="gcc-5" SWIG_PYTHON=ON SWIG_MATLAB=OFF
-  - CXX="g++-4.9" CC="gcc-4.9" SWIG_PYTHON=ON SWIG_MATLAB=ON COVERAGE="lcov"
-  - CXX="clang++-3.7" CC="clang-3.7" SWIG_PYTHON=ON SWIG_MATLAB=OFF
+  - CXX="g++-6" CC="gcc-6"
+  - CXX="g++-5" CC="gcc-5"
+  - CXX="g++-4.9" CC="gcc-4.9" USE_MATLAB=true COVERAGE="lcov"
+  - CXX="clang++-3.7" CC="clang-3.7"
 
 addons:
   apt:
@@ -53,10 +53,11 @@ before_script:
     fi
 
 script:
-  # travis-wait seems to stop at 20 mins, regardless if output is being generated
-  - (while true ; do sleep 60 ; echo "ping" ; done ) &
+  - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" -a "$USE_MATLAB" == "true" ]; then
+       SWIG_MATLAB=ON;
+    fi'
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
   - cmake --build build --target lint
   - cmake --build build
   - cmake -E chdir build ctest --verbose --output-on-failure
@@ -66,7 +67,7 @@ script:
   - cmake --build build --clean-first
   - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
   - cmake --build build
   - cmake -E chdir build ctest --output-on-failure
