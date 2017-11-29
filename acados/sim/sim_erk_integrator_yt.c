@@ -93,14 +93,13 @@ void *assign_erk_memory(sim_dims *dims, void *opts_, void *raw_memory)
     sim_erk_memory *mem = (sim_erk_memory *) c_ptr;
     c_ptr += sizeof(sim_erk_memory);
 
-    // align memory to typical cache line size
     align_char_to(8, &c_ptr);
 
     assign_double(nX + nu, &mem->rhs_forw_in, &c_ptr);
 
     if(opts->sens_adj)
     {
-        assign_double(num_steps*num_stages*nX, &mem->K_traj, &c_ptr);
+        assign_double(num_stages*num_steps*nX, &mem->K_traj, &c_ptr);
         assign_double((num_steps + 1)*nX, &mem->out_forw_traj, &c_ptr);
     } else
     {
@@ -226,7 +225,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
             acados_tic(&timer_ad);
             in->forward_vde_wrapper(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
-            timing_ad += acados_toc(&timer_ad)*1000;
+            timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++){
             b = step * b_vec[s];
@@ -258,15 +257,14 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 adj_tmp[nx + nu + i] = 0.0;
         }
 
-        printf("\nnFOrw=%d nAdj=%d\n", nForw, nAdj);
-
         for (i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = u[i];
 
         for (istep = num_steps - 1; istep > -1; istep--) {
             K_traj = mem->K_traj + istep * num_stages * nX;
-            forw_traj = mem->out_forw_traj + istep * nX;
+            forw_traj = mem->out_forw_traj + (istep+1) * nX;
             for (s = num_stages - 1; s > -1; s--) {
+
                 // forward variables:
                 for (i = 0; i < nForw; i++)
                     rhs_adj_in[i] = forw_traj[i]; // extract x trajectory
@@ -276,7 +274,8 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                         a*=step;
                         for (i = 0; i < nForw; i++)
                             rhs_adj_in[i] += a *K_traj[j * nX + i];
-                    } // plus k traj
+                        } // plus k traj
+                        
                 // adjoint variables:
                 b = step * b_vec[s];
                 for (i = 0; i < nx; i++)
@@ -297,9 +296,6 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 }
                 timing_ad += acados_toc(&timer_ad);
 
-                // printf("\nadj_traj:\n");
-                // for (int ii=0;ii<num_stages*nAdj;ii++)
-                //     printf("%3.1f ", adj_traj[ii]);
             }
             for (s = 0; s < num_stages; s++)
                 for (i = 0; i < nAdj; i++)
@@ -312,7 +308,7 @@ int sim_erk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 S_hess_out[i] = adj_tmp[nx + nu + i];
         }
     }
-    out->info->CPUtime = acados_toc(&timer)*1000;
+    out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
     return 0;  // success
