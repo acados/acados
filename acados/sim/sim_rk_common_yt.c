@@ -24,6 +24,7 @@
 #include <assert.h>
 // acados
 #include "acados/utils/print.h"
+#include "acados/utils/mem.h"
 // #include "sim/sim_collocation.h"
 #include "acados/sim/sim_common_yt.h"
 #include "acados/sim/sim_rk_common_yt.h"
