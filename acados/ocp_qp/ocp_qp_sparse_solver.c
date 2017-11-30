@@ -175,25 +175,34 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
 
 
 
-int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_) {
+int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+{
+    return sizeof(ocp_qp_sparse_solver_workspace);
+}
 
+
+
+int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
+{
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) args_;
     ocp_qp_sparse_solver_memory *memory = (ocp_qp_sparse_solver_memory *) mem_;
+    // TODO(dimitris): also assign workspace once it contains data that need to be casted..
+    ocp_qp_sparse_solver_workspace *work = (ocp_qp_sparse_solver_workspace *) work_;
 
     // condense
     if (args->pcond_args->N2 < qp_in->dim->N) {
-        ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory);
+        ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory, work->pcond_work);
     } else {
         memory->pcond_qp_in = qp_in;
         memory->pcond_qp_out = qp_out;
     }
 
     // solve qp
-    int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory);
+    int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_workspace);
 
     // expand
     if (args->pcond_args->N2 < qp_in->dim->N) {
-        ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory);
+        ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory, work->pcond_work);
     }
 
     // return
