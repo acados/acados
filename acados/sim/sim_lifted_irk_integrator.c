@@ -32,11 +32,75 @@
 
 #include "acados/utils/print.h"
 
+
+int sim_irk_opts_calculate_size(sim_dims *dims)
+{
+    
+    int size = sizeof(sim_rk_opts);
+
+    int ns = dims->num_stages;
+    size += ns * ns * sizeof(double);  // A_mat
+    size += ns * sizeof(double);  // b_vec
+    size += ns * sizeof(double);  // c_vec
+
+    size += sizeof(Newton_scheme);
+
+    make_int_multiple_of(8, &size);
+
+    size += ns * sizeof(double);  // eig
+
+    size += ns*ns * sizeof(double);  // transf1
+    size += ns*ns * sizeof(double);  // transf2
+    size += ns*ns * sizeof(double);  // transf1_T
+    size += ns*ns * sizeof(double);  // transf2_T
+    
+    make_int_multiple_of(8, &size);
+    size += 2 * 8;
+
+    return size;
+}
+
+
+
+sim_rk_opts *assign_sim_irk_opts(sim_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
+    c_ptr += sizeof(sim_rk_opts);
+
+    int ns = dims->num_stages;
+    opts->num_stages = ns;
+
+    align_char_to(8, &c_ptr);
+
+    assign_double(ns*ns, &opts->A_mat, &c_ptr);
+    assign_double(ns, &opts->b_vec, &c_ptr);
+    assign_double(ns, &opts->c_vec, &c_ptr);
+
+    opts->scheme = (Newton_scheme *) c_ptr;
+    c_ptr += sizeof(Newton_scheme);
+
+    align_char_to(8, &c_ptr);
+
+    assign_double(ns, &opts->scheme->eig, &c_ptr);    
+
+    assign_double(ns*ns, &opts->scheme->transf1, &c_ptr);
+    assign_double(ns*ns, &opts->scheme->transf2, &c_ptr);
+    assign_double(ns*ns, &opts->scheme->transf1_T, &c_ptr);
+    assign_double(ns*ns, &opts->scheme->transf2_T, &c_ptr);
+    
+    assert((char*)raw_memory + sim_rk_opts_calculate_size(dims) >= c_ptr);
+
+    return (void *)opts;
+}
+
+
 static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
                                           const sim_in *in, void *args) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->num_forw_sens;
     //    int_t num_sys = ceil(num_stages/2.0);
@@ -377,7 +441,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
     int_t nx = in->nx;
     int_t nu = in->nu;
     real_t H_INT = in->step;
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     int_t num_stages = opts->num_stages;
     real_t *A_mat = opts->A_mat;
     real_t *c_vec = opts->c_vec;
@@ -495,7 +559,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                      void *work_) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     int_t num_stages = opts->num_stages;
     int_t dim_sys = num_stages * nx;
     int_t i, s1, s2, j, istep;
@@ -1033,7 +1097,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
     int_t nx = in->nx;
     int_t nu = in->nu;
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->num_forw_sens;
     //    int_t num_sys = ceil(num_stages/2.0);
@@ -1096,7 +1160,7 @@ void sim_lifted_irk_create_memory(const sim_in *in, void *args,
     int_t nx = in->nx;
     int_t nu = in->nu;
     int_t num_steps = in->num_steps;
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     int_t num_stages = opts->num_stages;
     int_t NF = in->num_forw_sens;
     int_t num_sys = (int_t) ceil(num_stages/2.0);
@@ -1237,7 +1301,7 @@ void sim_lifted_irk_free_memory(void *mem_) { free(mem_); }
 
 void sim_irk_create_arguments(void *args, const int_t num_stages,
                               const char *name) {
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     opts->num_stages = num_stages;
     opts->A_mat = calloc(num_stages * num_stages, sizeof(*opts->A_mat));
     opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
@@ -1264,7 +1328,7 @@ void sim_irk_create_arguments(void *args, const int_t num_stages,
 
 void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
     enum Newton_type_collocation type) {
-    sim_RK_opts *opts = (sim_RK_opts*) args;
+    sim_rk_opts *opts = (sim_rk_opts*) args;
     opts->scheme.type = type;
     opts->scheme.freeze = false;
     if (strcmp(name, "Gauss") == 0) {  // GAUSS METHODS
@@ -1294,7 +1358,7 @@ void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name
 
 void sim_lifted_irk_initialize(const sim_in *in, void *args, void *mem_,
                                void **work) {
-    sim_RK_opts *opts = (sim_RK_opts *)args;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
 
     // TODO(dimitris): opts should be an input to initialize

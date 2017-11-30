@@ -563,7 +563,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         // Update gradients
         // TODO(rien): only for diagonal Q, R matrices atm
         // TODO(rien): only for least squares cost with state and control reference atm
-        sim_RK_opts *opts = (sim_RK_opts*) args->sim_solvers_args[i];
+        sim_rk_opts *opts = (sim_rk_opts*) args->sim_solvers_args[i];
 
         for (int j = 0; j < nx[i]; j++)
             DVECEL_LIBSTR(&stmp[i], nu[i]+j) = w[w_idx+j]-y_ref[i][j];
@@ -572,7 +572,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 
         dsymv_l_libstr(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp[i], 0, 0.0, &srq[i], 0, &srq[i], 0);
 
-        if (opts->scheme.type != exact)
+        if (opts->scheme != NULL && opts->scheme->type != exact)
         {
             for (int_t j = 0; j < nx[i]; j++)
                 DVECEL_LIBSTR(&srq[i], nu[i]+j) += work->sim_out[i]->grad[j];
@@ -685,7 +685,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     int *nu = nlp_in->dims->nu;
     int *nb = nlp_in->dims->nb;
 
-    sim_RK_opts *sim_opts;
+    sim_rk_opts *sim_opts;
 
     // set up integrators
     for (int ii = 0; ii < N; ii++)
@@ -751,11 +751,13 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
         for (int_t i = 0; i < N; i++)
         {
-            sim_RK_opts *opts = (sim_RK_opts*) args->sim_solvers_args[i];
-            opts->sens_adj = (opts->scheme.type != exact);
+            sim_rk_opts *opts = (sim_rk_opts*) args->sim_solvers_args[i];
+            if (opts->scheme == NULL)
+                continue;
+            opts->sens_adj = (opts->scheme->type != exact);
             if (nlp_in->freezeSens) {
                 // freeze inexact sensitivities after first SQP iteration !!
-                opts->scheme.freeze = true;
+                opts->scheme->freeze = true;
             }
         }
     }

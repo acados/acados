@@ -206,7 +206,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     for (int_t i = 0; i < N; i++) {
         // Adjoint-based gradient correction (used for)
         // TODO(nielsvd): create new sensitivity methods for inexact newton methods
-        sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
+        sim_rk_opts *sim_opts = (sim_rk_opts *)sim[i]->args;
         if (mem->inexact_init) {
             if (sim_opts->scheme.type != exact) {
                 sim[i]->in->sens_adj = true;
@@ -282,7 +282,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
     // TODO(nielsvd): create new sensitivity methods for inexact newton methods
     if (mem->inexact_init) {
         for (int_t i = 0; i < N; i++) {
-            sim_RK_opts *sim_opts = (sim_RK_opts *)sim[i]->args;
+            sim_rk_opts *sim_opts = (sim_rk_opts *)sim[i]->args;
             if (sim_opts->scheme.type != exact) {
                 for (int_t j = 0; j < nx[i] + nu[i]; j++) {
                     grad_f[i][j] += sim[i]->out->grad[j];

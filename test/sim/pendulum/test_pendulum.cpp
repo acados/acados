@@ -42,7 +42,7 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     sim_out sim_out, sim_out2;
     sim_info info, info2;
 
-    sim_RK_opts rk_opts, rk_opts2;
+    sim_rk_opts rk_opts, rk_opts2;
     void* erk_work = NULL;
     void* erk_work2 = NULL;
 
