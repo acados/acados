@@ -42,7 +42,7 @@ void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory)
 
 int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 {
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     
     int nx = dims->nx;
     int nu = dims->nu;
@@ -83,7 +83,7 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
 void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 {
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     
     int nx = dims->nx;
     int nu = dims->nu;
@@ -143,7 +143,7 @@ void *sim_erk_create_memory(sim_dims *dims, void *opts_)
 
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     sim_erk_memory *mem = (sim_erk_memory *) mem_;
     sim_dims dims = {
         opts->num_stages,

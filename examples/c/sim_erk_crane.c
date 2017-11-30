@@ -43,7 +43,7 @@ int main() {
     dims.nx = nx;
     dims.nu = nu;
 
-    sim_RK_opts *erk_opts = create_sim_RK_opts(&dims);
+    sim_rk_opts *erk_opts = create_sim_rk_opts(&dims);
 
     sim_in *in = create_sim_in(&dims);
 

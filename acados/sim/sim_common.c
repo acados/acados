@@ -170,8 +170,8 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver
     {
         case ERK:
             sim_solver->fun = &sim_erk;
-            sim_solver->calculate_args_size = &sim_RK_opts_calculate_size;
-            sim_solver->assign_args = &assign_sim_RK_opts;
+            sim_solver->calculate_args_size = &sim_rk_opts_calculate_size;
+            sim_solver->assign_args = &assign_sim_rk_opts;
             sim_solver->initialize_default_args = &sim_rk_initialize_default_args;
             sim_solver->calculate_memory_size = &sim_erk_calculate_memory_size;
             sim_solver->assign_memory = &sim_erk_assign_memory;

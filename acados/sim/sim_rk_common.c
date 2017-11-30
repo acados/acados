@@ -29,10 +29,10 @@
 #include "acados/sim/sim_rk_common.h"
 
 
-int sim_RK_opts_calculate_size(sim_dims *dims)
+int sim_rk_opts_calculate_size(sim_dims *dims)
 {
     
-    int size = sizeof(sim_RK_opts);
+    int size = sizeof(sim_rk_opts);
 
     int ns = dims->num_stages;
     size += ns * ns * sizeof(double);  // A_mat
@@ -47,12 +47,12 @@ int sim_RK_opts_calculate_size(sim_dims *dims)
 
 
 
-void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory)
+void *assign_sim_rk_opts(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    sim_RK_opts *opts = (sim_RK_opts *) c_ptr;
-    c_ptr += sizeof(sim_RK_opts);
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
+    c_ptr += sizeof(sim_rk_opts);
 
     int ns = dims->num_stages;
     opts->num_stages = ns;
@@ -63,7 +63,7 @@ void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory)
     assign_double(ns, &opts->b_vec, &c_ptr);
     assign_double(ns, &opts->c_vec, &c_ptr);
 
-    assert((char*)raw_memory + sim_RK_opts_calculate_size(dims) >= c_ptr);
+    assert((char*)raw_memory + sim_rk_opts_calculate_size(dims) >= c_ptr);
 
     return (void *)opts;
 }
@@ -72,7 +72,7 @@ void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory)
 
 void sim_rk_initialize_default_args(sim_dims *dims, void *opts_)
 {
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     int ns = opts->num_stages;
 
     assert(opts->num_stages == 4 && "only number of stages = 4 implemented!");
@@ -94,13 +94,13 @@ void sim_rk_initialize_default_args(sim_dims *dims, void *opts_)
 
 
 
-void *create_sim_RK_opts(sim_dims *dims)
+void *create_sim_rk_opts(sim_dims *dims)
 {
-    int bytes = sim_RK_opts_calculate_size(dims);
+    int bytes = sim_rk_opts_calculate_size(dims);
 
     void *ptr = malloc(bytes);
 
-    sim_RK_opts *opts = assign_sim_RK_opts(dims, ptr);
+    sim_rk_opts *opts = assign_sim_rk_opts(dims, ptr);
 
     sim_rk_initialize_default_args(dims, opts);
 

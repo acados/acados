@@ -41,13 +41,13 @@ typedef struct {
 
     Newton_scheme scheme;    
 
-} sim_RK_opts;
+} sim_rk_opts;
 
-int_t sim_RK_opts_calculate_size(sim_dims *dims);
+int_t sim_rk_opts_calculate_size(sim_dims *dims);
 
-void *assign_sim_RK_opts(sim_dims *dims, void *raw_memory);
+void *assign_sim_rk_opts(sim_dims *dims, void *raw_memory);
 
-void *create_sim_RK_opts(sim_dims *dims);
+void *create_sim_rk_opts(sim_dims *dims);
 
 void sim_rk_initialize_default_args(sim_dims *dims, void *opts_);
 

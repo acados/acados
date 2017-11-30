@@ -239,7 +239,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 sim_info info[N];
                 sim_solver *integrators[N];
 
-                sim_RK_opts rk_opts[N];
+                sim_rk_opts rk_opts[N];
                 void *sim_work = NULL;
                 sim_lifted_irk_memory irk_mem[N];
 
