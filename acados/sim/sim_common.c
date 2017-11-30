@@ -40,11 +40,8 @@ int sim_in_calculate_size(sim_dims *dims)
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
-    size += nx * sizeof(double);  // S_adj
-    size += (dims->num_stages * nx) * sizeof(double);
+    size += (nx + nu) * sizeof(double);  // S_adj
 
-    // size = (size + 63) / 64 * 64;
-    // size += 1 * 64;
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
@@ -73,8 +70,7 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     assign_double(nx, &in->x, &c_ptr);
     assign_double(nu, &in->u, &c_ptr);
     assign_double(nx * NF, &in->S_forw, &c_ptr);
-    assign_double(nx, &in->S_adj, &c_ptr);
-    assign_double(dims->num_stages * nx, &in->grad_K, &c_ptr);
+    assign_double(NF, &in->S_adj, &c_ptr);
 
     assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
 

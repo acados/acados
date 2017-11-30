@@ -98,15 +98,76 @@ void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
 }
 
 
+int sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
+    int nx = in->nx;
+    int nu = in->nu;
+    sim_rk_opts *opts = (sim_rk_opts *)args;
+    int num_stages = opts->num_stages;
+    int NF = opts->num_forw_sens;
+    //    int num_sys = ceil(num_stages/2.0);
+    int dim_sys = num_stages * nx;
+    if (opts->scheme->type == simplified_in ||
+        opts->scheme->type == simplified_inis) {
+        dim_sys = nx;
+        if (num_stages > 1) dim_sys = 2 * nx;
+    }
+
+    int size = sizeof(sim_lifted_irk_workspace);
+    size += (nx * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
+    size += (nx * (1 + NF)) * sizeof(real_t);           // out_tmp
+    if (opts->scheme->type == exact) {
+        size += (dim_sys) * sizeof(int);             // ipiv
+        size += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
+    }
+    size += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
+    size += (num_stages) * sizeof(real_t *);                  // VDE_tmp
+    size += (num_stages * nx * (1 + NF)) * sizeof(real_t);    // VDE_tmp[...]
+    size += (nx * (nx + 1)) * sizeof(real_t);                 // jac_tmp
+
+    if (opts->scheme->type == simplified_in ||
+        opts->scheme->type == simplified_inis) {
+        size +=
+            ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
+        size += (num_stages * num_stages) * sizeof(real_t);   // trans
+    }
+
+    if (opts->scheme->type == simplified_in ||
+        opts->scheme->type == simplified_inis) {
+        size += (nx) * sizeof(real_t);  // out_adj_tmp
+    }
+
+#if !TRIPLE_LOOP
+    size += sizeof(struct d_strmat);  // str_mat
+    size += sizeof(struct d_strmat);  // str_sol
+
+    int size_strmat = 0;
+#if defined(LA_HIGH_PERFORMANCE)
+    // matrices in matrix struct format:
+    size_strmat += d_size_strmat(dim_sys, dim_sys);
+    size_strmat += d_size_strmat(dim_sys, 1 + NF);
+
+#elif defined(LA_REFERENCE)
+    // allocate new memory only for the diagonal
+    int size_strmat = 0;
+    size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
+
+#endif  // LA_HIGH_PERFORMANCE
+    size += size_strmat;
+#endif  // !TRIPLE_LOOP
+
+    return size;
+}
+
+
 static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
                                           const sim_in *in, void *args) {
-    int_t nx = in->nx;
-    int_t nu = in->nu;
+    int nx = in->nx;
+    int nu = in->nu;
     sim_rk_opts *opts = (sim_rk_opts *)args;
-    int_t num_stages = opts->num_stages;
-    int_t NF = opts->num_forw_sens;
-    //    int_t num_sys = ceil(num_stages/2.0);
-    int_t dim_sys = num_stages * nx;
+    int num_stages = opts->num_stages;
+    int NF = opts->num_forw_sens;
+    //    int num_sys = ceil(num_stages/2.0);
+    int dim_sys = num_stages * nx;
     if (opts->scheme->type == simplified_in ||
         opts->scheme->type == simplified_inis) {
         dim_sys = nx;
@@ -120,8 +181,8 @@ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
     work->out_tmp = (real_t *)ptr;
     ptr += (nx * (1 + NF)) * sizeof(real_t);  // out_tmp
     if (opts->scheme->type == exact) {
-        work->ipiv = (int_t *)ptr;
-        ptr += (dim_sys) * sizeof(int_t);  // ipiv
+        work->ipiv = (int *)ptr;
+        ptr += (dim_sys) * sizeof(int);  // ipiv
         work->sys_mat = (real_t *)ptr;
         ptr += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
     }
@@ -129,7 +190,7 @@ static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
     ptr += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
     work->VDE_tmp = (real_t **)ptr;
     ptr += (num_stages) * sizeof(real_t *);  // VDE_tmp
-    for (int_t i = 0; i < num_stages; i++) {
+    for (int i = 0; i < num_stages; i++) {
         work->VDE_tmp[i] = (real_t *)ptr;
         ptr += (nx * (1 + NF)) * sizeof(real_t);  // VDE_tmp[i]
     }
@@ -250,7 +311,6 @@ real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
                           int dim, int dim2) {
     int i, j, k;
     int index1;
-//    printf("solve_system_ACADO, dim: %d, dim2: %d \n", dim, dim2);
 
 #if !CODE_GENERATION
     int DIM = dim;
@@ -347,14 +407,14 @@ real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
 #endif
 
 void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
-                   const int_t stages, const int_t n, const int_t m) {
+                   const int stages, const int n, const int m) {
     //    print_matrix_name("stdout", "trans", trans, stages, stages);
-    for (int_t i = 0; i < stages * n * m; i++) mat_trans[i] = 0.0;
-    for (int_t j = 0; j < m; j++) {
-        for (int_t s2 = 0; s2 < stages; s2++) {
-            for (int_t s1 = 0; s1 < stages; s1++) {
+    for (int i = 0; i < stages * n * m; i++) mat_trans[i] = 0.0;
+    for (int j = 0; j < m; j++) {
+        for (int s2 = 0; s2 < stages; s2++) {
+            for (int s1 = 0; s1 < stages; s1++) {
                 if (trans[s2 * stages + s1] != 0) {
-                    for (int_t i = 0; i < n; i++) {
+                    for (int i = 0; i < n; i++) {
                         mat_trans[j * (stages * n) + s1 * n + i] +=
                             trans[s2 * stages + s1] *
                             mat[j * (stages * n) + s2 * n + i];
@@ -366,11 +426,11 @@ void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
 }
 
 void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
-                   const int_t stages, const int_t n) {
-    for (int_t i = 0; i < stages * n; i++) mat_trans[i] = 0.0;
-    for (int_t s2 = 0; s2 < stages; s2++) {
-        for (int_t s1 = 0; s1 < stages; s1++) {
-            for (int_t i = 0; i < n; i++) {
+                   const int stages, const int n) {
+    for (int i = 0; i < stages * n; i++) mat_trans[i] = 0.0;
+    for (int s2 = 0; s2 < stages; s2++) {
+        for (int s1 = 0; s1 < stages; s1++) {
+            for (int i = 0; i < n; i++) {
                 mat_trans[s1 * n + i] +=
                     trans[s2 * stages + s1] * mat[s2 * n + i];
             }
@@ -378,27 +438,27 @@ void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
     }
 }
 
-void construct_subsystems(real_t *mat, real_t **mat2, const int_t stages,
-                          const int_t n, const int_t m) {
-    int_t idx = 0;
-    for (int_t s1 = 0; s1 < stages; s1++) {
+void construct_subsystems(real_t *mat, real_t **mat2, const int stages,
+                          const int n, const int m) {
+    int idx = 0;
+    for (int s1 = 0; s1 < stages; s1++) {
         if ((s1 + 1) < stages) {  // complex conjugate pair of eigenvalues
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
                     mat2[idx][j * 2 * n + i] =
                         mat[j * (stages * n) + s1 * n + i];
                 }
             }
             s1++;
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
                     mat2[idx][j * 2 * n + n + i] =
                         mat[j * (stages * n) + s1 * n + i];
                 }
             }
         } else {  // real eigenvalue
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
                     mat2[idx][j * n + i] = mat[j * (stages * n) + s1 * n + i];
                 }
             }
@@ -407,27 +467,27 @@ void construct_subsystems(real_t *mat, real_t **mat2, const int_t stages,
     }
 }
 
-void destruct_subsystems(real_t *mat, real_t **mat2, const int_t stages,
-                         const int_t n, const int_t m) {
-    int_t idx = 0;
-    for (int_t s1 = 0; s1 < stages; s1++) {
+void destruct_subsystems(real_t *mat, real_t **mat2, const int stages,
+                         const int n, const int m) {
+    int idx = 0;
+    for (int s1 = 0; s1 < stages; s1++) {
         if ((s1 + 1) < stages) {  // complex conjugate pair of eigenvalues
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
                     mat[j * (stages * n) + s1 * n + i] =
                         mat2[idx][j * 2 * n + i];
                 }
             }
             s1++;
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
                     mat[j * (stages * n) + s1 * n + i] =
                         mat2[idx][j * 2 * n + n + i];
                 }
             }
         } else {  // real eigenvalue
-            for (int_t j = 0; j < m; j++) {
-                for (int_t i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
                     mat[j * (stages * n) + s1 * n + i] = mat2[idx][j * n + i];
                 }
             }
@@ -436,15 +496,15 @@ void destruct_subsystems(real_t *mat, real_t **mat2, const int_t stages,
     }
 }
 
-void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
+void form_linear_system_matrix(int istep, const sim_in *in, void *args,
                                sim_lifted_irk_memory *mem,
                                sim_lifted_irk_workspace *work, real_t *sys_mat,
                                real_t **sys_mat2, real_t timing_ad) {
-    int_t nx = in->nx;
-    int_t nu = in->nu;
+    int nx = in->nx;
+    int nu = in->nu;
     real_t H_INT = in->step;
     sim_rk_opts *opts = (sim_rk_opts *)args;
-    int_t num_stages = opts->num_stages;
+    int num_stages = opts->num_stages;
     real_t *A_mat = opts->A_mat;
     real_t *c_vec = opts->c_vec;
 
@@ -457,7 +517,7 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
     real_t **jac_traj = mem->jac_traj;
     real_t *K_traj = mem->K_traj;
 
-    int_t i, j, s1, s2;
+    int i, j, s1, s2;
     if ((opts->scheme->type == simplified_in ||
          opts->scheme->type == simplified_inis) &&
         istep == 0 && !opts->scheme->freeze) {
@@ -556,19 +616,19 @@ void form_linear_system_matrix(int_t istep, const sim_in *in, void *args,
     }
 }
 
-int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
+int sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                      void *work_) {
-    int_t nx = in->nx;
-    int_t nu = in->nu;
+    int nx = in->nx;
+    int nu = in->nu;
     sim_rk_opts *opts = (sim_rk_opts *)args;
-    int_t num_stages = opts->num_stages;
-    int_t dim_sys = num_stages * nx;
-    int_t i, s1, s2, j, istep;
+    int num_stages = opts->num_stages;
+    int dim_sys = num_stages * nx;
+    int i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
     sim_lifted_irk_cast_workspace(work, in, args);
     real_t H_INT = in->step;
-    int_t NF = opts->num_forw_sens;
+    int NF = opts->num_forw_sens;
 
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
@@ -674,7 +734,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                                 adj_traj[istep * num_stages * nx + s2 * nx + i];
                         }
                         sys_sol[s1 * nx + i] -= H_INT * b_vec[s1] * adj_tmp[i];
-                        sys_sol[s1 * nx + i] += in->grad_K[s1 * nx + i];
+                        sys_sol[s1 * nx + i] += mem->grad_K[s1 * nx + i];
                     }
                 }
                 //                print_matrix("stdout", sys_sol, 1,
@@ -700,7 +760,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
                                          nx, 1);
                 }
                 acados_tic(&timer_la);
-                int_t idx = 0;
+                int idx = 0;
                 for (s1 = 0; s1 < num_stages; s1++) {
                     // THIS LOOP IS PARALLELIZABLE BECAUSE OF DECOMPOSABLE
                     // LINEAR SUBSYSTEMS
@@ -778,7 +838,7 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
 
         form_linear_system_matrix(istep, in, args, mem, work, sys_mat, sys_mat2, timing_ad);
 
-        int_t idx;
+        int idx;
         if (opts->scheme->type == exact || (istep == 0 && !opts->scheme->freeze)) {
             acados_tic(&timer_la);
             idx = 0;
@@ -1095,212 +1155,174 @@ int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     return 0;  // success
 }
 
-int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
-    int_t nx = in->nx;
-    int_t nu = in->nu;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
-    int_t num_stages = opts->num_stages;
-    int_t NF = opts->num_forw_sens;
-    //    int_t num_sys = ceil(num_stages/2.0);
-    int_t dim_sys = num_stages * nx;
-    if (opts->scheme->type == simplified_in ||
-        opts->scheme->type == simplified_inis) {
-        dim_sys = nx;
-        if (num_stages > 1) dim_sys = 2 * nx;
+
+// for (i = 0; i < num_steps * num_stages * nx; i++) mem->K_traj[i] = 0.0;
+// for (i = 0; i < num_steps * num_stages * nx * NF; i++) mem->DK_traj[i] = 0.0;
+// for (i = 0; i < num_steps * num_stages * nx; i++) mem->mu_traj[i] = 0.0;
+
+// for (i = 0; i < num_steps * num_stages * nx * NF; i++) mem->delta_DK_traj[i] = 0.0;
+
+// for (i = 0; i < num_steps * num_stages * nx; i++) mem->adj_traj[i] = 0.0;
+
+// for (int i = 0; i < num_steps * num_stages; i++) mem->jac_traj[i] = calloc(nx * nx, sizeof(*mem->jac_traj[i]));
+
+// for (int j = 0; j < 4 * nx * nx; j++) mem->sys_mat2[i][j] = 0.0;
+// for (int j = 0; j < 2 * nx; j++) mem->sys_mat2[i][j * (2 * nx + 1)] = 1.0;
+
+int sim_lifted_irk_calculate_memory_size(sim_dims *dims, sim_rk_opts *opts) {
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int num_steps = opts->num_steps;
+    int num_stages = opts->num_stages;
+    int nf = opts->num_forw_sens;
+    int num_sys = (int) ceil(num_stages/2.0);
+
+    int size = sizeof(sim_lifted_irk_memory);
+
+    size += num_steps * num_stages * sizeof(double *);
+    size += num_sys * sizeof(double *);
+    size += num_sys * sizeof(int *);
+    size += num_sys * sizeof(double *);
+    size += num_sys * sizeof(struct d_strmat *);
+    size += num_sys * sizeof(struct d_strmat *);
+
+    make_int_multiple_of(8, &size);
+
+    size += nf;  // grad_correction
+    size += nx * num_stages;  // grad_K
+
+    size += num_steps * num_stages * nx * sizeof(double);  // K_traj
+    size += num_steps * num_stages * nx * nf * sizeof(double);  // DK_traj
+    size += num_steps * num_stages * nx * sizeof(double);  // mu_traj
+    size += nx * sizeof(double);  // x
+    size += nu * sizeof(double);  // u
+    if (opts->scheme->type == simplified_inis)
+        size += num_steps * num_stages * nx * nf * sizeof(double);  // delta_DK_traj
+
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        size += num_steps * num_stages * nx * sizeof(double);  // adj_traj
+        size += num_steps * num_stages * nx * nx * sizeof(double);  // jac_traj
     }
 
-    int_t size = sizeof(sim_lifted_irk_workspace);
-    size += (nx * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
-    size += (nx * (1 + NF)) * sizeof(real_t);           // out_tmp
-    if (opts->scheme->type == exact) {
-        size += (dim_sys) * sizeof(int_t);             // ipiv
-        size += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
-    }
-    size += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
-    size += (num_stages) * sizeof(real_t *);                  // VDE_tmp
-    size += (num_stages * nx * (1 + NF)) * sizeof(real_t);    // VDE_tmp[...]
-    size += (nx * (nx + 1)) * sizeof(real_t);                 // jac_tmp
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        int dim_sys = 2 * nx;
+        size += (num_sys - 1) * dim_sys * dim_sys * sizeof(double);  // sys_mat2
+        size += (num_sys - 1) * dim_sys * sizeof(double);  // ipiv2
+        size += (num_sys - 1) * dim_sys * (1 + nf) * sizeof(double);  // sys_sol2
 
-    if (opts->scheme->type == simplified_in ||
-        opts->scheme->type == simplified_inis) {
-        size +=
-            ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
-        size += (num_stages * num_stages) * sizeof(real_t);   // trans
-    }
-
-    if (opts->scheme->type == simplified_in ||
-        opts->scheme->type == simplified_inis) {
-        size += (nx) * sizeof(real_t);  // out_adj_tmp
-    }
-
-#if !TRIPLE_LOOP
-    size += sizeof(struct d_strmat);  // str_mat
-    size += sizeof(struct d_strmat);  // str_sol
-
-    int size_strmat = 0;
-#if defined(LA_HIGH_PERFORMANCE)
-    // matrices in matrix struct format:
-    size_strmat += d_size_strmat(dim_sys, dim_sys);
-    size_strmat += d_size_strmat(dim_sys, 1 + NF);
-
-#elif defined(LA_REFERENCE)
-    // allocate new memory only for the diagonal
-    int size_strmat = 0;
-    size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
-
-#endif  // LA_HIGH_PERFORMANCE
-    size += size_strmat;
-#endif  // !TRIPLE_LOOP
-
-    return size;
-}
-
-void sim_lifted_irk_create_memory(const sim_in *in, void *args,
-                                  sim_lifted_irk_memory *mem) {
-    int_t i;
-    int_t nx = in->nx;
-    int_t nu = in->nu;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
-    int_t num_steps = opts->num_steps;
-    int_t num_stages = opts->num_stages;
-    int_t NF = opts->num_forw_sens;
-    int_t num_sys = (int_t) ceil(num_stages/2.0);
-//    printf("num_stages: %d \n", num_stages);
-//    printf("ceil(num_stages/2.0): %d \n", (int)ceil(num_stages/2.0));
-//    printf("floor(num_stages/2.0): %d \n", (int)floor(num_stages/2.0));
-
-    mem->K_traj = calloc(num_steps*num_stages*nx, sizeof(*mem->K_traj));
-    mem->DK_traj = calloc(num_steps*num_stages*nx*NF, sizeof(*mem->DK_traj));
-    mem->mu_traj = calloc(num_steps*num_stages*nx, sizeof(*mem->mu_traj));
-    mem->x = calloc(nx, sizeof(*mem->x));
-    mem->u = calloc(nu, sizeof(*mem->u));
-    if (opts->scheme->type == simplified_inis) {
-        mem->delta_DK_traj =
-            calloc(num_steps * num_stages * nx * NF, sizeof(*mem->delta_DK_traj));
-        for (i = 0; i < num_steps * num_stages * nx * NF; i++)
-            mem->delta_DK_traj[i] = 0.0;
-    }
-
-    if (opts->scheme->type == simplified_in ||
-        opts->scheme->type == simplified_inis) {
-        mem->adj_traj =
-            calloc(num_steps * num_stages * nx, sizeof(*mem->adj_traj));
-        for (i = 0; i < num_steps * num_stages * nx; i++) mem->adj_traj[i] = 0.0;
-
-        mem->jac_traj = calloc(num_steps * num_stages, sizeof(*mem->jac_traj));
-        for (int_t i = 0; i < num_steps * num_stages; i++) {
-            mem->jac_traj[i] = calloc(nx * nx, sizeof(*mem->jac_traj[i]));
-        }
-    }
-
-    for (i = 0; i < num_steps * num_stages * nx; i++) mem->K_traj[i] = 0.0;
-    for (i = 0; i < num_steps * num_stages * nx * NF; i++) mem->DK_traj[i] = 0.0;
-    for (i = 0; i < num_steps * num_stages * nx; i++) mem->mu_traj[i] = 0.0;
-
-    if (opts->scheme->type == simplified_in ||
-        opts->scheme->type == simplified_inis) {
-        mem->sys_mat2 = calloc(num_sys, sizeof(*mem->sys_mat2));
-        mem->ipiv2 = calloc(num_sys, sizeof(*mem->ipiv2));
-        mem->sys_sol2 = calloc(num_sys, sizeof(*mem->sys_sol2));
-        for (int_t i = 0; i < num_sys; i++) {
-            if ((i + 1) == num_sys &&
-                num_sys != floor(num_stages / 2.0)) {  // odd number of stages
-                mem->sys_mat2[i] = calloc(nx * nx, sizeof(*(mem->sys_mat2[i])));
-                mem->ipiv2[i] = calloc(nx, sizeof(*(mem->ipiv2[i])));
-                mem->sys_sol2[i] =
-                    calloc(nx * (1 + NF), sizeof(*(mem->sys_sol2[i])));
-
-                for (int_t j = 0; j < nx * nx; j++) mem->sys_mat2[i][j] = 0.0;
-                for (int_t j = 0; j < nx; j++)
-                    mem->sys_mat2[i][j * (nx + 1)] = 1.0;
-            } else {
-                mem->sys_mat2[i] =
-                    calloc(4 * nx * nx, sizeof(*(mem->sys_mat2[i])));
-                mem->ipiv2[i] = calloc(2 * nx, sizeof(*(mem->ipiv2[i])));
-                mem->sys_sol2[i] =
-                    calloc(2 * nx * (1 + NF), sizeof(*(mem->sys_sol2[i])));
-
-                for (int_t j = 0; j < 4 * nx * nx; j++)
-                    mem->sys_mat2[i][j] = 0.0;
-                for (int_t j = 0; j < 2 * nx; j++)
-                    mem->sys_mat2[i][j * (2 * nx + 1)] = 1.0;
-            }
-        }
+        if (num_sys != floor(num_stages / 2.0)) // odd number of stages
+            dim_sys = nx;
+        size += dim_sys * dim_sys * sizeof(double);  // sys_mat2
+        size += dim_sys * sizeof(int);  // ipiv2
+        size += dim_sys * (1 + nf) * sizeof(double);  // sys_sol2
     } else {
         num_sys = 1;
     }
 
 #if !TRIPLE_LOOP
-    if (opts->scheme->type == simplified_in ||
-        opts->scheme->type == simplified_inis) {
-        mem->str_mat2 = calloc(num_sys, sizeof(*mem->str_mat2));
-        mem->str_sol2 = calloc(num_sys, sizeof(*mem->str_sol2));
-        int_t dim_sys;
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
 
-        for (int_t i = 0; i < num_sys; i++) {
-            if ((i + 1) == num_sys &&
-                num_sys != floor(num_stages / 2.0)) {  // odd number of stages
+        int dim_sys = 2 * nx;
+        for (int i = 0; i < num_sys; i++) {
+            if ((i + 1) == num_sys && num_sys != floor(num_stages / 2.0))  // odd number of stages
                 dim_sys = nx;
-            } else {
-                dim_sys = 2 * nx;
-            }
 
 #if defined(LA_HIGH_PERFORMANCE)
-            // matrices in matrix struct format:
-            int size_strmat = 0;
-            size_strmat += d_size_strmat(dim_sys, dim_sys);
-            size_strmat += d_size_strmat(dim_sys, 1 + NF);
-
-            // accocate memory
-            void *memory_strmat;
-            v_zeros_align(&memory_strmat, size_strmat);
-            char *ptr_memory_strmat = (char *)memory_strmat;
-
-            d_create_strmat(dim_sys, dim_sys, mem->str_mat2[i],
-                            ptr_memory_strmat);
-            ptr_memory_strmat += mem->str_mat2[i]->memory_size;
-            d_create_strmat(dim_sys, 1 + NF, mem->str_sol2[i],
-                            ptr_memory_strmat);
-            ptr_memory_strmat += mem->str_sol2[i]->memory_size;
-
+            size += d_size_strmat(dim_sys, dim_sys);  // str_mat2
+            size += d_size_strmat(dim_sys, 1 + NF);  // str_sol2
 #elif defined(LA_REFERENCE)
-
-            //  pointer to column-major matrix
-            d_create_strmat(dim_sys, dim_sys, mem->str_mat2[i],
-                            mem->sys_mat2[i]);
-            d_create_strmat(dim_sys, 1 + NF, mem->str_sol2[i],
-                            mem->sys_sol2[i]);
-
-            // allocate new memory only for the diagonal
-            int size_strmat = 0;
-            size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
-
-            void *memory_strmat = malloc(size_strmat);
-            //    void *memory_strmat;
-            //    v_zeros_align(&memory_strmat, size_strmat);
-            char *ptr_memory_strmat = (char *)memory_strmat;
-
-            d_cast_diag_mat2strmat((double *)ptr_memory_strmat,
-                                   mem->str_mat2[i]);
-//    ptr_memory_strmat += d_size_diag_strmat(dim_sys, dim_sys);
-
+            size += d_size_diag_strmat(dim_sys, dim_sys);
 #else  // LA_BLAS
-
-            // not allocate new memory: point to column-major matrix
-            d_create_strmat(dim_sys, dim_sys, mem->str_mat2[i],
-                            mem->sys_mat2[i]);
-            d_create_strmat(dim_sys, 1 + NF, mem->str_sol2[i],
-                            mem->sys_sol2[i]);
-
+            size += 0;
 #endif  // LA_HIGH_PERFORMANCE
         }
     }
 #endif  // !TRIPLE_LOOP
+    size += 1 * 8;
+    return size;
 }
 
-void sim_lifted_irk_free_memory(void *mem_) { free(mem_); }
+sim_lifted_irk_memory *sim_lifted_irk_assign_memory(sim_dims *dims, sim_rk_opts *opts, void *raw_memory) {
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int num_steps = opts->num_steps;
+    int num_stages = opts->num_stages;
+    int nf = opts->num_forw_sens;
+    int num_sys = (int) ceil(num_stages/2.0);
 
-void sim_irk_create_arguments(void *args, const int_t num_stages,
+    char *c_ptr = raw_memory;
+    
+    sim_lifted_irk_memory *memory = raw_memory;
+    c_ptr += sizeof(sim_lifted_irk_memory);
+
+    assign_double_ptrs(num_steps * num_stages, &memory->jac_traj, &c_ptr);
+    assign_double_ptrs(num_sys, &memory->sys_mat2, &c_ptr);
+    assign_int_ptrs(num_sys, &memory->ipiv2, &c_ptr);
+    assign_double_ptrs(num_sys, &memory->sys_sol2, &c_ptr);
+    assign_strmat_ptrs(num_sys, &memory->str_mat2, &c_ptr);
+    assign_strmat_ptrs(num_sys, &memory->str_sol2, &c_ptr);
+
+    align_char_to(8, &c_ptr);
+
+    assign_double(nf, &memory->grad_correction, &c_ptr);
+    assign_double(nx * num_stages, &memory->grad_K, &c_ptr);
+    assign_double(num_steps * num_stages * nx, &memory->K_traj, &c_ptr);
+    assign_double(num_steps * num_stages * nx * nf, &memory->DK_traj, &c_ptr);
+    assign_double(num_steps * num_stages * nx, &memory->mu_traj, &c_ptr);
+    assign_double(nx, &memory->x, &c_ptr);
+    assign_double(nu, &memory->u, &c_ptr);
+
+    if (opts->scheme->type == simplified_inis)
+        assign_double(num_steps * num_stages * nx * nf, &memory->delta_DK_traj, &c_ptr);
+        
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        assign_double(num_steps * num_stages * nx, &memory->adj_traj, &c_ptr);
+        for (int i = 0; i < num_steps * num_stages; ++i)
+            assign_double(nx * nx, &memory->jac_traj[i], &c_ptr);
+    }
+
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        int dim_sys = 2 * nx;
+        for (int i = 0; i < num_sys; ++i) {
+            assign_double(dim_sys * dim_sys, &memory->sys_mat2[i], &c_ptr);
+            assign_double(dim_sys, &memory->sys_mat2[i], &c_ptr);
+            assign_double(dim_sys * (1 + nf), &memory->sys_mat2[i], &c_ptr);
+        }
+        if (num_sys != floor(num_stages / 2.0)) // odd number of stages
+            dim_sys = nx;
+        assign_double(dim_sys * dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
+        assign_double(dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
+        assign_double(dim_sys * (1 + nf), &memory->sys_mat2[num_sys], &c_ptr);
+    } else {
+        num_sys = 1;
+    }
+
+#if !TRIPLE_LOOP
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+
+    int dim_sys = 2 * nx;
+    for (int i = 0; i < num_sys; i++) {
+        if ((i + 1) == num_sys && num_sys != floor(num_stages / 2.0))  // odd number of stages
+            dim_sys = nx;
+
+#if defined(LA_HIGH_PERFORMANCE)
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
+#elif defined(LA_REFERENCE)
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+        d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
+#else  // LA_BLAS
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+#endif  // LA_HIGH_PERFORMANCE
+        }
+    }
+#endif  // !TRIPLE_LOOP
+    return memory;
+}
+
+void sim_irk_create_arguments(void *args, const int num_stages,
                               const char *name) {
     sim_rk_opts *opts = (sim_rk_opts *)args;
     opts->num_stages = num_stages;
@@ -1327,7 +1349,7 @@ void sim_irk_create_arguments(void *args, const int_t num_stages,
 }
 
 
-void sim_irk_create_Newton_scheme(void *args, int_t num_stages, const char* name,
+void sim_irk_create_Newton_scheme(void *args, int num_stages, const char* name,
     enum Newton_type_collocation type) {
     sim_rk_opts *opts = (sim_rk_opts*) args;
     opts->scheme->type = type;
@@ -1369,7 +1391,7 @@ void sim_lifted_irk_initialize(const sim_in *in, void *args, void *mem_,
         sim_irk_create_arguments(args, 2, "Gauss");
     }
     sim_lifted_irk_create_memory(in, args, mem);
-    int_t work_space_size = sim_lifted_irk_calculate_workspace_size(in, args);
+    int work_space_size = sim_lifted_irk_calculate_workspace_size(in, args);
     *work = (void *)malloc(work_space_size);
 }
 

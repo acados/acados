@@ -707,8 +707,8 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
             work->sim_in[ii]->S_forw[jj * (nx[ii] + 1)] = 1.0;
         for (int jj = 0; jj < nx[ii] + nu[ii]; jj++)
             work->sim_in[ii]->S_adj[jj] = 0.0;
-        for (int jj = 0; jj < nlp_in->dims->num_stages[ii] * nx[ii+1]; jj++)
-            work->sim_in[ii]->grad_K[jj] = 0.0;
+        // for (int jj = 0; jj < nlp_in->dims->num_stages[ii] * nx[ii+1]; jj++)
+            // work->sim_in[ii]->grad_K[jj] = 0.0;
     }
 
     initialize_objective(nlp_in, args, mem, work);

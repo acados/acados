@@ -50,24 +50,27 @@ typedef struct {
 } sim_lifted_irk_workspace;
 
 typedef struct {
+
+    double *grad_correction;
+    double *grad_K;  // gradient correction
+
     real_t *K_traj;
     real_t *DK_traj;
-    real_t *delta_DK_traj;
     real_t *mu_traj;
-
-    real_t **sys_mat2;
-    real_t **sys_sol2;
-    struct d_strmat **str_mat2;
-    struct d_strmat **str_sol2;
-    int_t **ipiv2;
-    real_t *adj_traj;
-
-    real_t **jac_traj;
 
     real_t *x;
     real_t *u;
 
-    double *grad;  // gradient correction
+    real_t *delta_DK_traj;    
+    real_t *adj_traj;
+    real_t **jac_traj;
+    
+    real_t **sys_mat2;
+    int_t **ipiv2;
+    real_t **sys_sol2;
+
+    struct d_strmat *str_mat2;
+    struct d_strmat *str_sol2;
 
 } sim_lifted_irk_memory;
 

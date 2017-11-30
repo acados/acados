@@ -297,40 +297,6 @@ int main() {
     if (scheme > 2)
         nlp->freezeSens = true;
 
-    #if 0
- 
-    // Simulation
-    sim_rk_opts rk_opts[NN];
-    sim_lifted_irk_memory irk_mem[NN];
-
-    for (int jj = 0; jj < NN; jj++) {
-        
-
-        int workspace_size;
-        if (d > 0) {
-            nlp->sim[jj].fun = &sim_lifted_irk;
-            nlp->sim[jj].mem = &irk_mem[jj];
-            sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
-            if (scheme == EXACT_NEWTON) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
-            } else if (scheme == INEXACT_NEWTON || scheme == FROZEN_INEXACT_NEWTON) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
-            } else if (scheme == INIS || scheme == FROZEN_INIS) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
-            }
-            sim_lifted_irk_create_memory(nlp->sim[jj].in, &rk_opts[jj], &irk_mem[jj]);
-            workspace_size = sim_lifted_irk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
-        } else {
-            nlp->sim[jj].fun = &sim_erk;
-            nlp->sim[jj].mem = 0;
-            sim_erk_create_arguments(&rk_opts[jj], 4);
-            workspace_size = sim_erk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
-        }
-        nlp->sim[jj].work = (void *) malloc(workspace_size);
-    }
-
-    #endif
-
     // Box constraints
     int *nb = nlp->dims->nb;
 
@@ -386,11 +352,12 @@ int main() {
 
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
     for (int i = 0; i < NN; ++i) {
-        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->interval = TF/NN;
-        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->num_steps = 2;
-        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->sens_forw = true;
-        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->sens_adj = false;
-        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->sens_hess = false;
+        sim_rk_opts *sim_opts = nlp_args->sim_solvers_args[i];
+        sim_opts->interval = TF/NN;
+        sim_opts->num_steps = 2;
+        sim_opts->sens_forw = true;
+        sim_opts->sens_adj = false;
+        sim_opts->sens_hess = false;
         if (d > 0) {
             assert(1 == 0 && "Implicit not implemented");
             // sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
