@@ -92,6 +92,8 @@ typedef struct {
     double *S_adj;   //
     double *S_hess;  //
 
+    double *grad;  // gradient correction    
+
     sim_info *info;
 } sim_out;
 

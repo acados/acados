@@ -43,7 +43,6 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
-#ifdef YT
 static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
 {
     sim_dims sim_dims;
@@ -63,14 +62,9 @@ static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *a
     }
     return max_sim_work_size;
 }
-#endif
 
 
-#ifdef YT
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
-#else
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
-#endif
 {
     ocp_qp_xcond_solver qp_solver;
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
@@ -84,7 +78,6 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
 
     size += qp_solver.calculate_args_size(&qp_dims, qp_solver_name);
 
-    #ifdef YT
     sim_dims sim_dims;
 
     size += dims->N*sizeof(sim_solver *);
@@ -114,18 +107,13 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
             size += sim_solver.calculate_args_size(&sim_dims);
         }
     }
-    #endif
 
     return size;
 }
 
 
 
-#ifdef YT
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names, void *raw_memory)
-#else
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, void *raw_memory)
-#endif
 {
     ocp_nlp_gn_sqp_args *args;
 
@@ -145,7 +133,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
     args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver_name, c_ptr);
     c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver_name);
 
-    #ifdef YT
     sim_dims sim_dims;
 
     args->sim_solvers = (sim_solver **) c_ptr;
@@ -180,9 +167,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
     }
 
     assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names) == c_ptr);
-    #else
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name) == c_ptr);
-    #endif
 
     return args;
 }
@@ -218,7 +202,6 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     size += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
 
-    #ifdef YT
     sim_dims sim_dims;
 
     size += N*sizeof(void *);  // sim_solvers_mem
@@ -228,7 +211,6 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
         size += args->sim_solvers[ii]->calculate_memory_size(&sim_dims, args->sim_solvers_args[ii]);
     }
-    #endif
 
     return size;
 }
@@ -277,7 +259,6 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
     mem->qp_solver_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
     c_ptr += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
 
-    #ifdef YT
     // integrators
     sim_dims sim_dims;
 
@@ -290,7 +271,6 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
         mem->sim_solvers_mem[ii] = args->sim_solvers[ii]->assign_memory(&sim_dims, args->sim_solvers_args[ii], c_ptr);
         c_ptr += args->sim_solvers[ii]->calculate_memory_size(&sim_dims, args->sim_solvers_args[ii]);
     }
-    #endif
 
     mem->dims = dims;
 
@@ -316,7 +296,6 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     size += ocp_qp_out_calculate_size(&qp_dims);
     size += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
 
-    #ifdef YT
     sim_dims sim_dims;
 
     size += dims->N*sizeof(sim_in *);
@@ -332,7 +311,6 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
         size += sim_out_calculate_size(&sim_dims);
     }
 
-    #endif
 
     size += (dims->N+1)*sizeof(struct d_strvec);  // tmp_vecs
 
@@ -383,7 +361,6 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     c_ptr += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
 
     // set up integrators
-    #ifdef YT
     sim_dims sim_dims;
 
     work->sim_in = (sim_in **) c_ptr;
@@ -409,7 +386,6 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }
-    #endif
 
     assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, args) >= c_ptr);
 }
@@ -503,10 +479,6 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
     real_t *w = work->w;
     struct d_strvec *stmp = work->tmp_vecs;
 
-    #ifndef YT
-    sim_solver *sim = nlp->sim;
-    #endif
-
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
     real_t **y_ref = cost->y_ref;
 
@@ -529,21 +501,14 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
     for (int_t i = 0; i < N; i++)
     {
         // Pass state and control to integrator
-        #ifdef YT
         for (int_t j = 0; j < nx[i]; j++) work->sim_in[i]->x[j] = w[w_idx+j];
         for (int_t j = 0; j < nu[i]; j++) work->sim_in[i]->u[j] = w[w_idx+nx[i]+j];
         args->sim_solvers[i]->fun(work->sim_in[i], work->sim_out[i], args->sim_solvers_args[i],
             mem->sim_solvers_mem[i], work->sim_solvers_work[i]);
-        #else
-        for (int_t j = 0; j < nx[i]; j++) sim[i].in->x[j] = w[w_idx+j];
-        for (int_t j = 0; j < nu[i]; j++) sim[i].in->u[j] = w[w_idx+nx[i]+j];
-        sim[i].fun(sim[i].in, sim[i].out, sim[i].args, sim[i].mem, sim[i].work);
-        #endif
 
         // TODO(rien): transition functions for changing dimensions not yet implemented!
 
         // convert b
-        #ifdef YT
         d_cvt_vec2strvec(nx[i+1], work->sim_out[i]->xn, &sb[i], 0);
         for (int j = 0; j < nx[i+1]; j++)
             DVECEL_LIBSTR(&sb[i], j) -= w[w_idx+nx[i]+nu[i]+j];
@@ -551,15 +516,6 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         d_cvt_tran_mat2strmat(nx[i+1], nu[i], &work->sim_out[i]->S_forw[nx[i+1]*nx[i]], nx[i+1], &sBAbt[i], 0, 0);
         // copy A
         d_cvt_tran_mat2strmat(nx[i+1], nx[i], &work->sim_out[i]->S_forw[0], nx[i+1], &sBAbt[i], nu[i], 0);
-        #else
-        d_cvt_vec2strvec(nx[i+1], sim[i].out->xn, &sb[i], 0);
-        for (int j = 0; j < nx[i+1]; j++)
-            DVECEL_LIBSTR(&sb[i], j) -= w[w_idx+nx[i]+nu[i]+j];
-        // copy B
-        d_cvt_tran_mat2strmat(nx[i+1], nu[i], &sim[i].out->S_forw[nx[i+1]*nx[i]], nx[i+1], &sBAbt[i], 0, 0);
-        // copy A
-        d_cvt_tran_mat2strmat(nx[i+1], nx[i], &sim[i].out->S_forw[0], nx[i+1], &sBAbt[i], nu[i], 0);
-        #endif
         // copy b
         drowin_libstr(nx[i+1], 1.0, &sb[i], 0, &sBAbt[i], nu[i]+nx[i], 0);
 
@@ -607,11 +563,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         // Update gradients
         // TODO(rien): only for diagonal Q, R matrices atm
         // TODO(rien): only for least squares cost with state and control reference atm
-        #ifdef YT
         sim_RK_opts *opts = (sim_RK_opts*) args->sim_solvers_args[i];
-        #else
-        sim_RK_opts *opts = (sim_RK_opts*) sim[i].args;
-        #endif
 
         for (int j = 0; j < nx[i]; j++)
             DVECEL_LIBSTR(&stmp[i], nu[i]+j) = w[w_idx+j]-y_ref[i][j];
@@ -620,17 +572,13 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 
         dsymv_l_libstr(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp[i], 0, 0.0, &srq[i], 0, &srq[i], 0);
 
-        #ifdef YT
-        // TODO(dimitris): inexact schemes not implemented yet
-        #else
         if (opts->scheme.type != exact)
         {
             for (int_t j = 0; j < nx[i]; j++)
-                DVECEL_LIBSTR(&srq[i], nu[i]+j) += sim[i].out->grad[j];
+                DVECEL_LIBSTR(&srq[i], nu[i]+j) += work->sim_out[i]->grad[j];
             for (int_t j = 0; j < nu[i]; j++)
-                DVECEL_LIBSTR(&srq[i], j) += sim[i].out->grad[nx[i]+j];
+                DVECEL_LIBSTR(&srq[i], j) += work->sim_out[i]->grad[nx[i]+j];
         }
-        #endif
         drowin_libstr(nu[i]+nx[i], 1.0, &srq[i], 0, &sRSQrq[i], nu[i]+nx[i], 0);
 
         // for (int_t j = 0; j < nx[i]; j++) {
@@ -679,19 +627,12 @@ static void update_variables(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, o
     int *nx = nlp->dims->nx;
     int *nu = nlp->dims->nu;
 
-    #ifndef YT
-    sim_solver *sim = nlp->sim;
-    #endif
 
     for (int_t i = 0; i < N; i++)
     {
         for (int_t j = 0; j < nx[i+1]; j++)
         {
-            #ifdef YT
             work->sim_in[i]->S_adj[j] = -DVECEL_LIBSTR(&work->qp_out->pi[i], j);
-            #else
-            sim[i].in->S_adj[j] = -DVECEL_LIBSTR(&work->qp_out->pi[i], j);
-            #endif
             // sim[i].in->S_adj[j] = -mem->qp_solver->qp_out->pi[i][j];
         }
     }
@@ -807,18 +748,15 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
         update_variables(nlp_in, args, mem, work);
 
-        // TODO(dimitris): how does this work?
-        #ifndef YT
         for (int_t i = 0; i < N; i++)
         {
-            sim_RK_opts *opts = (sim_RK_opts*) nlp_in->sim[i].args;
-            nlp_in->sim[i].in->sens_adj = (opts->scheme.type != exact);
-            if (nlp_in->freezeSens)
-            {  // freeze inexact sensitivities after first SQP iteration !!
+            sim_RK_opts *opts = (sim_RK_opts*) args->sim_solvers_args[i];
+            opts->sens_adj = (opts->scheme.type != exact);
+            if (nlp_in->freezeSens) {
+                // freeze inexact sensitivities after first SQP iteration !!
                 opts->scheme.freeze = true;
             }
         }
-        #endif
     }
 
     total_time += acados_toc(&timer);

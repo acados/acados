@@ -20,6 +20,7 @@
 #ifndef ACADOS_SIM_SIM_RK_COMMON_H_
 #define ACADOS_SIM_SIM_RK_COMMON_H_
 
+#include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
@@ -36,6 +37,8 @@ typedef struct {
     bool sens_adj;
     bool sens_hess;
     int num_steps;
+
+    Newton_scheme scheme;    
 
 } sim_RK_opts;
 
