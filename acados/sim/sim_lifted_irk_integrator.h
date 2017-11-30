@@ -66,6 +66,9 @@ typedef struct {
 
     real_t *x;
     real_t *u;
+
+    double *grad;  // gradient correction
+
 } sim_lifted_irk_memory;
 
 int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem,

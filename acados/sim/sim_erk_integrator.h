@@ -55,10 +55,6 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
 int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_);
 
-// void sim_erk_create_arguments(void *args, const int num_stages);
-
-// void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
