@@ -71,6 +71,10 @@ typedef struct {
 
 } sim_lifted_irk_memory;
 
+int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
+
+void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory);
+
 int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem,
                      void *work);
 

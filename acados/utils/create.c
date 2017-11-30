@@ -32,6 +32,7 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/sim/sim_erk_integrator.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/utils/mem.h"
 
@@ -250,11 +251,11 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 
 void *create_sim_erk_opts(sim_dims *dims)
 {
-    int bytes = sim_erk_opts_calculate_size(dims);
+    int size = sim_erk_opts_calculate_size(dims);
 
-    void *ptr = malloc(bytes);
+    void *ptr = acados_malloc(size, 1);
 
-    sim_rk_opts *opts = assign_sim_erk_opts(dims, ptr);
+    sim_rk_opts *opts = sim_erk_assign_opts(dims, ptr);
 
     sim_erk_initialize_default_args(dims, opts);
 

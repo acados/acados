@@ -17,7 +17,6 @@ CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
 CRANE_OBJS += sim_erk_crane.o
-CRANE_OBJS += sim_irk_crane_yt.o
 
 sim_erk_crane: $(CRANE_OBJS)
 	$(CC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas

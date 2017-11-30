@@ -49,7 +49,7 @@ int sim_erk_opts_calculate_size(sim_dims *dims)
 
 
 
-void *assign_sim_erk_opts(sim_dims *dims, void *raw_memory)
+void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
