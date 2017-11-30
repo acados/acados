@@ -200,4 +200,5 @@ void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solve
         qp_solver->calculate_workspace_size = &ocp_qp_condensing_solver_calculate_workspace_size;
         qp_solver->fun = &ocp_qp_condensing_solver;
     }
+    set_qp_solver_fun_ptrs(qp_solver_name, qp_solver->qp_solver_funs);
 }
