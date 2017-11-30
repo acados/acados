@@ -17,11 +17,18 @@ CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
 CRANE_OBJS += sim_erk_crane.o
+CRANE_OBJS += sim_irk_crane_yt.o
 
 sim_erk_crane: $(CRANE_OBJS)
 	$(CC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
 	@echo
 	@echo " Example sim_erk_crane build complete."
+	@echo
+
+sim_irk_crane_yt: $(CRANE_OBJS)
+	$(CC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
+	@echo
+	@echo " Example sim_irk_crane_yt build complete."
 	@echo
 
 mass_spring_hpipm: mass_spring_hpipm.o

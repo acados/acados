@@ -102,7 +102,7 @@ void *create_sim_RK_opts(sim_dims *dims)
 
     sim_RK_opts *opts = assign_sim_RK_opts(dims, ptr);
 
-    sim_rk_initialize_default_args(dims, opts);
+    // sim_rk_initialize_default_args(dims, opts);
 
     return (void *)opts;
 }
