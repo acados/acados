@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#ifndef YT
+
 #include "acados/sim/sim_rk_common.h"
 #include "acados/utils/types.h"
 
@@ -46,6 +48,8 @@ void sim_erk_create_arguments(void *args, const int_t num_stages);
 
 void sim_erk_initialize(const sim_in *in, void *args_, void **work);
 void sim_erk_destroy(void *work);
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
