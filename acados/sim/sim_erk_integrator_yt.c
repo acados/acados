@@ -43,7 +43,7 @@ int erk_calculate_memory_size(sim_dims *dims, void *opts_)
     int num_stages = opts->num_stages; // number of stages
     int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
     int nhess = (NF + 1) * NF / 2;
-    uint num_steps = opts->num_steps;  // number of steps
+    int num_steps = opts->num_steps;  // number of steps
 
     int size = sizeof(sim_erk_memory);
 

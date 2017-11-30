@@ -136,3 +136,96 @@ void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t
 
     discrete_model(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
+
+void impl_ode_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_ode){
+    const double *x = in;
+    const double *xdot = in + nx;
+    const double *u = in + 2 * nx;
+
+    double *res = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[3];
+    double *casadi_res[1];
+
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = xdot;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = res;  
+
+    impl_ode(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
+void impl_jac_x_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_jac_x){
+    const double *x = in;
+    const double *xdot = in + nx;
+    const double *u = in + 2 * nx;
+
+    double *jac_x = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[3];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = xdot;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = jac_x;
+
+    impl_jac_x(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
+void impl_jac_xdot_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_jac_xdot){
+    const double *x = in;
+    const double *xdot = in + nx;
+    const double *u = in + 2 * nx;
+
+    double *jac_xdot = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[3];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = xdot;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = jac_xdot;
+
+    impl_jac_xdot(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
+void impl_jac_u_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_jac_u){
+    const double *x = in;
+    const double *xdot = in + nx;
+    const double *u = in + 2 * nx;
+
+    double *jac_u = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[3];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = xdot;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = jac_u;
+
+    impl_jac_u(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}

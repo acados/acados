@@ -42,8 +42,6 @@ int sim_in_calculate_size(sim_dims *dims)
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += nx * sizeof(double);  // S_adj
 
-    // size = (size + 63) / 64 * 64;
-    // size += 1 * 64;
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
