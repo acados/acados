@@ -49,19 +49,6 @@ int ocp_qp_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *solver
 
 
 
-static void copy_module_pointers_to_args(dense_qp_solver *solver_in_args, dense_qp_solver *solver)
-{
-    solver_in_args->calculate_args_size = solver->calculate_args_size;
-    solver_in_args->assign_args = solver->assign_args;
-    solver_in_args->initialize_default_args = solver->initialize_default_args;
-    solver_in_args->calculate_memory_size = solver->calculate_memory_size;
-    solver_in_args->assign_memory = solver->assign_memory;
-    solver_in_args->calculate_workspace_size = solver->calculate_workspace_size;
-    solver_in_args->fun = solver->fun;
-}
-
-
-
 void *ocp_qp_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
 {
     dense_qp_solver *solver = (dense_qp_solver *)solver_;

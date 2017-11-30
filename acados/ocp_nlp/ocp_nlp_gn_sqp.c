@@ -117,19 +117,6 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *
 }
 
 
-// TODO(dimitris): doesn't matter whether it is dense or ocp_qp_solver, replace with general module struct
-static void copy_module_pointers_to_args(ocp_qp_solver *solver_in_args, ocp_qp_solver *solver)
-{
-    solver_in_args->calculate_args_size = solver->calculate_args_size;
-    solver_in_args->assign_args = solver->assign_args;
-    solver_in_args->initialize_default_args = solver->initialize_default_args;
-    solver_in_args->calculate_memory_size = solver->calculate_memory_size;
-    solver_in_args->assign_memory = solver->assign_memory;
-    solver_in_args->calculate_workspace_size = solver->calculate_workspace_size;
-    solver_in_args->fun = solver->fun;
-}
-
-
 
 #ifdef YT
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver_t *sim_solver_names, void *raw_memory)

@@ -261,7 +261,7 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
 #endif
 {
     ocp_qp_xcond_solver qp_solver;
-    dense_qp_solver solver_funs;  // TODO TEMP!
+    module_solver solver_funs;
     qp_solver.qp_solver_funs = &solver_funs;
 
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
