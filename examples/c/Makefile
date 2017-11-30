@@ -30,6 +30,12 @@ mass_spring_hpipm: mass_spring_hpipm.o
 	@echo " Example mass_spring_hpipm build complete."
 	@echo
 
+mass_spring_hpmpc: mass_spring_hpmpc_lazarus.o
+	$(CC) -o mass_spring_hpmpc_lazarus.out mass_spring_hpmpc_lazarus.o $(LDFLAGS) -lacore -lhpmpc -lblasfeo -lm -lblas
+	@echo
+	@echo " Example mass_spring_hpmpc build complete."
+	@echo
+
 mass_spring_pcond_solver: mass_spring_pcond_solver.o
 	$(CC) -o mass_spring_pcond_solver.out mass_spring_pcond_solver.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo

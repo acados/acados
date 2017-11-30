@@ -21,6 +21,7 @@ OBJS += acados/dense_qp/dense_qp_qore.o
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
+OBJS += acados/ocp_qp/ocp_qp_hpmpc.o
 OBJS += acados/ocp_qp/ocp_qp_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
@@ -72,7 +73,7 @@ qpoases_static:
 	mkdir -p lib
 	cp -r external/qpoases/include/* include/qpoases
 	cp external/qpoases/bin/libqpOASES_e.a lib
-	
+
 qore_static: blasfeo_static
 	mkdir -p external/qore/external/blasfeo
 	cp external/blasfeo/include/*.h external/qore/external/blasfeo

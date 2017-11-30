@@ -37,31 +37,32 @@
 #include "acados/utils/types.h"
 
 
-int_t ocp_qp_hpmpc_calculate_args_size(const ocp_qp_in *in) {
-    int_t N = in->N;
+int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims) {
+    int_t N = dims->N;
     int_t size = sizeof(ocp_qp_hpmpc_args);
     size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
     size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
     size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
     size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
     for (int_t i = 0; i <= N; i++) {
-        size += (in->nu[i] + in->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
-        if (i > 0) size += (in->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
-        size += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
-        size += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+        size += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+        if (i > 0) size += (dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
     }
     size += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
-    size = (size + 63) / 64 * 64;  // make multiple of typical cache line size
-    size += 1 * 64;  // align once to typical cache line size
+    size = (size + 63) / 64 * 64;   // make multiple of typical cache line size
+    size += 1 * 64;                 // align once to typical cache line size
     return size;
 }
 
-char *ocp_qp_hpmpc_assign_args(const ocp_qp_in *in, void **args_, void *raw_memory) {
-    ocp_qp_hpmpc_args **args = (ocp_qp_hpmpc_args **) args_;
-    int_t N = in->N;
+void *ocp_qp_hpmpc_assign_args(ocp_qp_in *in, void *raw_memory) {
+    ocp_qp_hpmpc_args *args;
+    // ocp_qp_hpmpc_args **args = (ocp_qp_hpmpc_args **) args_;
+    int_t N = in->dim->N;
     char *c_ptr = (char *) raw_memory;
 
-    *args = (ocp_qp_hpmpc_args *) c_ptr;
+    args = (ocp_qp_hpmpc_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_hpmpc_args);
 
     (*args)->ux0 = (real_t **) c_ptr;
@@ -83,23 +84,23 @@ char *ocp_qp_hpmpc_assign_args(const ocp_qp_in *in, void **args_, void *raw_memo
 
     for (int_t i = 0; i <= N; i++) {
         (*args)->ux0[i] = (real_t *) c_ptr;
-        c_ptr += (in->nu[i] + in->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+        c_ptr += (in->dim->nu[i] + in->dim->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
     }
     for (int_t i = 1; i <= N; i++) {
         (*args)->pi0[i] = (real_t *) c_ptr;
-        c_ptr += in->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+        c_ptr += in->dim->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
     }
     for (int_t i = 0; i <= N; i++) {
         (*args)->lam0[i] = (real_t *) c_ptr;
-        c_ptr += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+        c_ptr += (2 * in->dim->nb[i] + 2 * in->dim->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
     }
     for (int_t i = 0; i <= N; i++) {
         (*args)->t0[i] = (real_t *) c_ptr;
-        c_ptr += (2 * in->nb[i] + 2 * in->nc[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+        c_ptr += (2 * in->dim->nb[i] + 2 * in->dim->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
     }
     (*args)->inf_norm_res = (real_t *) c_ptr;
     c_ptr += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
-    return c_ptr;
+    return (void *)args;
 }
 
 
@@ -108,7 +109,7 @@ char *ocp_qp_hpmpc_assign_args(const ocp_qp_in *in, void **args_, void *raw_memo
 void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
 
-};
+}
 
 
 
@@ -117,12 +118,12 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
-    int N = qp_in->N;
-    int *nx = (int *) qp_in->nx;
-    int *nu = (int *) qp_in->nu;
-    int *nb = (int *) qp_in->nb;
-    int **hidxb = (int **) qp_in->idxb;
-    int *ng = (int *) qp_in->nc;
+    int N = dims->N;
+    int *nx = (int *) dims->nx;
+    int *nu = (int *) dims->nu;
+    int *nb = (int *) dims->nb;
+    int **hidxb = (int **) dims->idxb;
+    int *ng = (int *) dims->ng;
     int_t N2 = args->N2;
     int_t M = args->M;
 
@@ -142,7 +143,7 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
         int ii;
         int_t max_ip_iter = args->max_iter;
         ws_size = 8 + 5*max_ip_iter*sizeof(double);
-//        ws_size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
+//      ws_size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
         for (ii = 0; ii <= N; ii++) {
             ws_size += nb[ii]*sizeof(int);  // hidxb_rev
         }
@@ -151,7 +152,7 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
     }
     return ws_size;
 
-};
+}
 
 
 
@@ -159,11 +160,11 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
     return;
-};
+}
 
 
 
-int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
 {
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
 
@@ -174,12 +175,12 @@ int ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *
     int ii, jj;
 
     // extract input struct members
-    int N = qp_in->N;
-    int *nx = (int *) qp_in->nx;
-    int *nu = (int *) qp_in->nu;
-    int *nb = (int *) qp_in->nb;
-    int **hsidxb = (int **) qp_in->idxb;
-    int *ng = (int *) qp_in->nc;
+    int N = qp_in->dim->N;
+    int *nx = (int *) qp_in->dim->nx;
+    int *nu = (int *) qp_in->dim->nu;
+    int *nb = (int *) qp_in->dim->nb;
+    int **hsidxb = (int **) qp_in->dim->idxb;
+    int *ng = (int *) qp_in->dim->ng;
     double **hA = (double **) qp_in->A;
     double **hB = (double **) qp_in->B;
     double **hb = (double **) qp_in->b;
@@ -564,9 +565,9 @@ ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_o
         args->max_iter = 20;
         args->mu0 = 0.1;
         args->warm_start = 0;
-        args->N2 = qp_in->N;
-        args->M = qp_in->N;
-        args->N = qp_in->N;
+        args->N2 = qp_in->dim->N;
+        args->M = qp_in->dim->N;
+        args->N = qp_in->dim->N;
     } else {
         printf("Invalid hpmpc options.");
         return NULL;

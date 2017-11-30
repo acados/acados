@@ -56,7 +56,7 @@ CFLAGS  =
 CFLAGS += #-O2 -fPIC
 
 # debugging flags
-CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
+CFLAGS  += -g -Wall -pedantic -Wfloat-equal #-pg
 
 # TEMP
 CFLAGS += -g -O0 -DYT -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__

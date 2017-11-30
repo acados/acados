@@ -32,6 +32,7 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/utils/mem.h"
 
