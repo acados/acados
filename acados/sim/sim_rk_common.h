@@ -37,6 +37,7 @@ typedef struct {
     bool sens_adj;
     bool sens_hess;
     int num_steps;
+    double interval;
 
     Newton_scheme scheme;    
 
