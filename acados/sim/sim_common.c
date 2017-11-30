@@ -41,6 +41,7 @@ int sim_in_calculate_size(sim_dims *dims)
     size += nu * sizeof(double);  // u
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += nx * sizeof(double);  // S_adj
+    size += (dims->num_stages * nx) * sizeof(double);
 
     // size = (size + 63) / 64 * 64;
     // size += 1 * 64;
@@ -73,6 +74,7 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     assign_double(nu, &in->u, &c_ptr);
     assign_double(nx * NF, &in->S_forw, &c_ptr);
     assign_double(nx, &in->S_adj, &c_ptr);
+    assign_double(dims->num_stages * nx, &in->grad_K, &c_ptr);
 
     assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
 
@@ -108,6 +110,7 @@ int sim_out_calculate_size(sim_dims *dims)
     size += nx * NF * sizeof(double);  // S_forw
     size += (nx + nu) * sizeof(double);  // S_adj
     size += ((NF + 1) * NF / 2) * sizeof(double);  // S_hess
+    size += NF * sizeof(double);  // grad
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -137,6 +140,7 @@ sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
     assign_double(nx * NF, &out->S_forw, &c_ptr);
     assign_double(nx + nu, &out->S_adj, &c_ptr);
     assign_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
+    assign_double(NF, &out->grad, &c_ptr);
 
     assert((char*)raw_memory + sim_out_calculate_size(dims) >= c_ptr);
 
