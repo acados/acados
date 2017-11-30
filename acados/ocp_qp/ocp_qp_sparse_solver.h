@@ -45,6 +45,17 @@ typedef struct ocp_qp_sparse_solver_memory_ {
     ocp_qp_out *pcond_qp_out;
 } ocp_qp_sparse_solver_memory;
 
+
+
+typedef struct ocp_qp_sparse_solver_workspace_ {
+    void *pcond_work;
+    void *solver_workspace;
+    // TODO(dimitris): move from memory to workspace
+    // ocp_qp_in *pcond_qp_in;
+    // ocp_qp_out *pcond_qp_out;
+} ocp_qp_sparse_solver_workspace;
+
+
 //
 int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t solver_name);
 //
@@ -56,7 +67,9 @@ int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_);
 //
 void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_);
+int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+//
+int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
 
 
 

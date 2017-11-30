@@ -52,7 +52,9 @@ int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *args_);
 //
 void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *mem_);
+int dense_qp_hpipm_calculate_workspace_size(dense_qp_dims *dims, void *args_);
+//
+int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

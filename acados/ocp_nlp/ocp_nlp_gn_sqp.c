@@ -314,6 +314,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
     size += ocp_qp_in_calculate_size(&qp_dims);
     size += ocp_qp_out_calculate_size(&qp_dims);
+    size += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
 
     #ifdef YT
     sim_dims sim_dims;
@@ -378,6 +379,8 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     c_ptr += ocp_qp_in_calculate_size(&qp_dims);
     work->qp_out = assign_ocp_qp_out(&qp_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
+    work->qp_work = (void *)c_ptr;
+    c_ptr += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
 
     // set up integrators
     #ifdef YT
@@ -794,7 +797,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
         multiple_shooting(nlp_in, args, mem, work);
 
         int_t qp_status = args->qp_solver->fun(work->qp_in, work->qp_out,
-            args->qp_solver_args, mem->qp_solver_mem);
+            args->qp_solver_args, mem->qp_solver_mem, work->qp_work);
 
         if (qp_status != 0)
         {
