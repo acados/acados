@@ -151,19 +151,28 @@ void *ocp_qp_condensing_solver_assign_memory(ocp_qp_dims *dims, void *args_, voi
 
 
 
-int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_) {
+int ocp_qp_condensing_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+{
+    return sizeof(ocp_qp_condensing_solver_workspace);
+}
 
+
+
+int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
+{
     ocp_qp_condensing_solver_args *args = (ocp_qp_condensing_solver_args *) args_;
     ocp_qp_condensing_solver_memory *memory = (ocp_qp_condensing_solver_memory *) mem_;
+    // TODO(dimitris): also assign workspace once it contains data that need to be casted..
+    ocp_qp_condensing_solver_workspace *work = (ocp_qp_condensing_solver_workspace *) work_;
 
     // condense
-    ocp_qp_condensing(qp_in, memory->qpd_in, args->cond_args, memory->cond_memory);
+    ocp_qp_condensing(qp_in, memory->qpd_in, args->cond_args, memory->cond_memory, work->cond_work);
 
     // solve qp
-    int solver_status = args->solver->fun(memory->qpd_in, memory->qpd_out, args->solver_args, memory->solver_memory);
+    int solver_status = args->solver->fun(memory->qpd_in, memory->qpd_out, args->solver_args, memory->solver_memory, work->solver_workspace);
 
     // expand
-    ocp_qp_expansion(memory->qpd_out, qp_out, args->cond_args, memory->cond_memory);
+    ocp_qp_expansion(memory->qpd_out, qp_out, args->cond_args, memory->cond_memory, work->cond_work);
 
     // return
     return solver_status;

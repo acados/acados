@@ -78,7 +78,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_hpipm(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_hpipm(qp_in, qp_out, arg, mem, NULL);
 	}
 
     double time = acados_toc(&timer)/NREP;
