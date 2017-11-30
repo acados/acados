@@ -94,11 +94,11 @@ ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(ocp_qp_dims *dims)
 
 
 
-ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(ocp_qp_dims *dims, void *args_)
+ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(ocp_qp_dims *dims, ocp_qp_in *qp_in, void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) args_;
 
-    int size = ocp_qp_hpmpc_calculate_memory_size(dims, args);
+    int size = ocp_qp_hpmpc_calculate_memory_size(dims, qp_in, args);
     void *ptr = acados_malloc(size, 1);
     void *mem = ocp_qp_hpmpc_assign_memory(dims, args, ptr);
 

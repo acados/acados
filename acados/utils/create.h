@@ -36,6 +36,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
@@ -45,6 +46,10 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
 ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims);
 
 ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_);
+
+ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(ocp_qp_dims *dims);
+
+ocp_qp_hpmpc_memory *ocp_qp_hpmpc_create_memory(ocp_qp_dims *dims, ocp_qp_in *qp_in, void *args_);
 
 ocp_qp_condensing_args *ocp_qp_condensing_create_arguments(ocp_qp_dims *dims);
 
