@@ -57,9 +57,9 @@ typedef struct ocp_qp_sparse_solver_workspace_ {
 
 
 //
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t solver_name);
+int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_);
 //
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver_name, void *raw_memory);
+void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory);
 //
 void ocp_qp_sparse_solver_initialize_default_args(void *args_);
 //

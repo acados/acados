@@ -61,12 +61,13 @@ typedef struct {
 
 typedef struct {
     int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(ocp_qp_dims *dims, qp_solver_t solver_name);
-    void *(*assign_args)(ocp_qp_dims *dims, qp_solver_t solver_name, void *raw_memory);
+    int (*calculate_args_size)(ocp_qp_dims *dims, void *solver_funs);
+    void *(*assign_args)(ocp_qp_dims *dims, void *solver_funs, void *raw_memory);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(ocp_qp_dims *dims, void *args);
     void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_qp_dims *dims, void *args);
+    void *solver_funs;
 } ocp_qp_xcond_solver;
 
 
