@@ -685,11 +685,13 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     int *nu = nlp_in->dims->nu;
     int *nb = nlp_in->dims->nb;
 
+    sim_RK_opts *sim_opts;
+
     // set up integrators
-    #ifdef YT
     for (int ii = 0; ii < N; ii++)
     {
-        work->sim_in[ii]->step = (3.0/N)/2;  // TEMP!
+        sim_opts = args->sim_solvers_args[ii];
+        work->sim_in[ii]->step = sim_opts->interval/sim_opts->num_steps;
 
         work->sim_in[ii]->vde = nlp_in->vde[ii];
         work->sim_in[ii]->jac = nlp_in->jac[ii];
@@ -703,12 +705,11 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
             work->sim_in[ii]->S_forw[jj] = 0.0;
         for (int jj = 0; jj < nx[ii+1]; jj++)
             work->sim_in[ii]->S_forw[jj * (nx[ii] + 1)] = 1.0;
-        // for (int jj = 0; jj < nx[ii] + nu[ii]; jj++)
-        //     work->sim_in[ii]->S_adj[jj] = 0.0;
-        // for (int jj = 0; jj < d? * nx[ii+1]; jj++)
-        //     work->sim_in[ii]->grad_K[jj] = 0.0;
+        for (int jj = 0; jj < nx[ii] + nu[ii]; jj++)
+            work->sim_in[ii]->S_adj[jj] = 0.0;
+        for (int jj = 0; jj < nlp_in->dims->num_stages[ii] * nx[ii+1]; jj++)
+            work->sim_in[ii]->grad_K[jj] = 0.0;
     }
-    #endif
 
     initialize_objective(nlp_in, args, mem, work);
 
