@@ -25,7 +25,7 @@ sim_erk_crane_yt: $(CRANE_OBJS)
 	@echo
 
 mass_spring_hpipm: mass_spring_hpipm.o
-	$(CC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+	$(CC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) -lacore -lhpipm -lhpmpc -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo
 	@echo " Example mass_spring_hpipm build complete."
 	@echo

@@ -44,7 +44,7 @@ OBJS += acados/utils/mem.o
 OBJS += acados/utils/create.o
 
 
-static_library: blasfeo_static hpipm_static qpoases_static qore_static
+static_library: blasfeo_static hpipm_static hpmpc_static qpoases_static qore_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -66,6 +66,13 @@ hpipm_static: blasfeo_static
 	mkdir -p lib
 	cp external/hpipm/include/*.h include/hpipm
 	cp external/hpipm/lib/libhpipm.a lib
+
+hpmpc_static: blasfeo_static
+	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo )
+	mkdir -p include/hpmpc
+	mkdir -p lib
+	cp external/hpmpc/include/*.h include/hpmpc
+	cp external/hpmpc/lib/libhmpc.a lib
 
 qpoases_static:
 	( cd external/qpoases; $(MAKE) CC=$(CC) )

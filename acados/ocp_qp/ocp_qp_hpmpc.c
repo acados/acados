@@ -108,6 +108,13 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory) {
 
 void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
+    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
+    args->tol = 1e-8;
+    args->max_iter = 20;
+    args->mu0 = 1e3;
+    args->warm_start = 0;
+
+    return;
 
 }
 
@@ -125,7 +132,6 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_in *qp_in, void
     int **hidxb = (int **) qp_in->idxb;
     int *ng = (int *) dims->ng;
     int_t N2 = args->N2;
-    int_t M = args->M;
 
     int_t ws_size;
 
@@ -170,27 +176,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
     int *nb = (int *) qp_in->dim->nb;
     int **hsidxb = (int **) qp_in->idxb;
     int *ng = (int *) qp_in->dim->ng;
-    // double **hA = (double **) qp_in->A;
-    // double **hB = (double **) qp_in->B;
-    // double **hb = (double **) qp_in->b;
-    // double **hQ = (double **) qp_in->Q;
-    // double **hS = (double **) qp_in->S;
-    // double **hR = (double **) qp_in->R;
-    // double **hq = (double **) qp_in->q;
-    // double **hr = (double **) qp_in->r;
-    // double **hlb = (double **) qp_in->lb;
-    // double **hub = (double **) qp_in->ub;
-    // double **hC = (double **) qp_in->Cx;
-    // double **hD = (double **) qp_in->Cu;
-    // double **hlg = (double **) qp_in->lc;
-    // double **hug = (double **) qp_in->uc;
-
-    // extract output struct members
-    // double **hux = qp_out->ux;
-    // double **hu = qp_out->u;
-    // double **hpi = qp_out->pi;  // TODO(Andrea): not returning multiplers atm
-    // double **hlam = qp_out->lam;
-    // double **ht = qp_out->t;
 
     int hpmpc_status = -1;
 
@@ -447,29 +432,4 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
 
     // return
     return acados_status;
-}
-
-
-
-
-ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts) {
-    ocp_qp_hpmpc_args *args;
-    int_t arguments_size = ocp_qp_hpmpc_calculate_arguments_size(qp_in);
-    void *raw_memory = malloc(arguments_size);
-    char *ptr_end = ocp_qp_hpmpc_assign_arguments(qp_in, (void **) &args, raw_memory);
-    assert((char *) raw_memory + arguments_size >= ptr_end); (void) ptr_end;
-
-    if (opts == HPMPC_DEFAULT_ARGUMENTS) {
-        args->tol = 1e-8;
-        args->max_iter = 20;
-        args->mu0 = 0.1;
-        args->warm_start = 0;
-        args->N2 = qp_in->dim->N;
-        args->M = qp_in->dim->N;
-        args->N = qp_in->dim->N;
-    } else {
-        printf("Invalid hpmpc options.");
-        return NULL;
-    }
-    return args;
 }
