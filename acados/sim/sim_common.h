@@ -76,8 +76,6 @@ typedef struct {
 
     double step;
 
-    double *grad_K;  // gradient correction    
-
 } sim_in;
 
 

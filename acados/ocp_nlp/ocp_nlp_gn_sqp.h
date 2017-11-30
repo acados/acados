@@ -39,8 +39,10 @@ typedef struct {
     ocp_qp_xcond_solver *qp_solver;
     void *qp_solver_args;
     // integrators
+    #ifdef YT
     sim_solver **sim_solvers;
     void **sim_solvers_args;
+    #endif
 } ocp_nlp_gn_sqp_args;
 
 
@@ -55,7 +57,9 @@ typedef struct {
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
+    #ifdef YT
     void **sim_solvers_mem;
+    #endif
 } ocp_nlp_gn_sqp_memory;
 
 
@@ -82,9 +86,17 @@ typedef struct {
 
 
 //
+#ifdef YT
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
+#else
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name);
+#endif
 //
+#ifdef YT
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names, void *raw_memory);
+#else
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, void *raw_memory);
+#endif
 //
 int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 //
