@@ -45,6 +45,12 @@ typedef struct {
 
 } sim_erk_workspace;
 
+int sim_erk_opts_calculate_size(sim_dims *dims);
+
+void *assign_sim_erk_opts(sim_dims *dims, void *raw_memory);
+
+void sim_erk_initialize_default_args(sim_dims *dims, void *opts_);
+
 int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_);
 
 void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);

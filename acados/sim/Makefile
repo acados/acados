@@ -6,7 +6,6 @@ OBJS =
 
 OBJS += sim_casadi_wrapper.o
 OBJS += sim_erk_integrator.o
-OBJS += sim_rk_common.o
 OBJS += sim_common.o
 
 obj: $(OBJS)

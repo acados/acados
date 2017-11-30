@@ -386,11 +386,11 @@ int main() {
 
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
     for (int i = 0; i < NN; ++i) {
-        ((sim_erk_opts *)nlp_args->sim_solvers_args[i])->interval = TF/NN;
-        ((sim_erk_opts *)nlp_args->sim_solvers_args[i])->num_steps = 2;
-        ((sim_erk_opts *)nlp_args->sim_solvers_args[i])->sens_forw = true;
-        ((sim_erk_opts *)nlp_args->sim_solvers_args[i])->sens_adj = false;
-        ((sim_erk_opts *)nlp_args->sim_solvers_args[i])->sens_hess = false;
+        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->interval = TF/NN;
+        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->num_steps = 2;
+        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->sens_forw = true;
+        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->sens_adj = false;
+        ((sim_rk_opts *)nlp_args->sim_solvers_args[i])->sens_hess = false;
         if (d > 0) {
             assert(1 == 0 && "Implicit not implemented");
             // sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");

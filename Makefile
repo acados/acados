@@ -29,7 +29,6 @@ OBJS += acados/ocp_qp/ocp_qp_condensing_solver.o
 OBJS += acados/sim/sim_casadi_wrapper.o
 OBJS += acados/sim/sim_erk_integrator.o
 OBJS += acados/sim/sim_erk_integrator.o
-OBJS += acados/sim/sim_rk_common.o
 OBJS += acados/sim/sim_common.o
 # utils
 OBJS += acados/utils/math.o
