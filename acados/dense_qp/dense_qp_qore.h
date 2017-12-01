@@ -33,8 +33,13 @@ extern "C" {
 
 typedef struct dense_qp_qore_args_ {
     int nsmax;          // maximum size of Schur complement
-    int prtfreq;        // print frequency
-    int warm_start;     // warm start with prim_sol and dual_sol in memory
+    int prtfreq;        // print frequency,
+                        // prtfreq  < 0: disable printing;
+                        // prtfreq == 0: print on each call and include working set changes;
+                        // prtfreq  > 0: print on every prtfreq seconds, but do not include working set changes;
+    int warm_start;     // warm start with updated matrices H and C
+    int warm_strategy;  // 0: ramp-up from zero homotopy; 1: setup homotopy from the previous solution
+    int hot_start;      // hot start with unchanged matrices H and C
 } dense_qp_qore_args;
 
 
