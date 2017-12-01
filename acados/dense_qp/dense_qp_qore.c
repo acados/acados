@@ -231,17 +231,22 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     // solve dense qp
     int prtfreq = args->prtfreq;
     int warm_start = args->warm_start;
+    int warm_strategy = args->warm_strategy;
+    int hot_start = args->hot_start;
     int return_flag = 0;
 
-    QPDenseSetData( QP, nvd, ngd, Ct, H );
-    QPDenseSetInt(QP, "prtfreq", prtfreq);
-    if (!warm_start) {
-        QPDenseSetInt(QP, "wsvalid", 0);
-        QPDenseSetInt(QP, "xyvalid", 0);
-        return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
-    } else {
-        return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
+    if (warm_start)
+    {
+        QPDenseSetInt(QP, "warmstrategy", warm_strategy);
+        QPDenseUpdateMatrices(QP, nvd, ngd, Ct, H);
     }
+    else if (!hot_start)
+    {
+        QPDenseSetData(QP, nvd, ngd, Ct, H);
+    }
+
+    QPDenseSetInt(QP, "prtfreq", prtfreq);
+    return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );
     QPDenseGetDblVector( QP, "dualsol", dual_sol );
