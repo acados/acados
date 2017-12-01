@@ -58,7 +58,7 @@ real_t COMPARISON_TOLERANCE_IPOPT = 1e-6;
 int main() {
     // TODO(dimitris): fix for NMF > 1
     const int INEXACT = 0;
-    const int d = 2;
+    const int d = 1;
     const int NMF = 1;
     if (INEXACT == 0) {
         printf(
@@ -93,7 +93,7 @@ int main() {
     ocp_nlp_ls_cost ls_cost;
     real_t *W, *WN;
     real_t *uref;
-    int_t max_sqp_iters = 20;
+    int_t max_sqp_iters = 1;
     real_t *x_end;
     real_t *u_end;
 
@@ -204,6 +204,7 @@ int main() {
         sim_in[jj].step = Ts / sim_in[jj].num_steps;
         sim_in[jj].nx = NX;
         sim_in[jj].nu = NU;
+        sim_in[jj].nz = 0;
 
         sim_in[jj].sens_forw = true;
         sim_in[jj].sens_adj = false;
@@ -213,21 +214,21 @@ int main() {
         switch (NMF) {
             case 1:
                 sim_in[jj].vde = &vde_chain_nm2;
-                sim_in[jj].forward_vde_wrapper = &vde_fun;
+                sim_in[jj].forward_vde_wrapper = &vde_impl_fun;
                 sim_in[jj].jac = &jac_chain_nm2;
-                sim_in[jj].jacobian_wrapper = &jac_fun;
+                sim_in[jj].jacobian_wrapper = &jac_impl_fun;
                 break;
             case 2:
                 sim_in[jj].vde = &vde_chain_nm3;
-                sim_in[jj].forward_vde_wrapper = &vde_fun;
+                sim_in[jj].forward_vde_wrapper = &vde_impl_fun;
                 sim_in[jj].jac = &jac_chain_nm3;
-                sim_in[jj].jacobian_wrapper = &jac_fun;
+                sim_in[jj].jacobian_wrapper = &jac_impl_fun;
                 break;
             case 3:
                 sim_in[jj].vde = &vde_chain_nm4;
-                sim_in[jj].forward_vde_wrapper = &vde_fun;
+                sim_in[jj].forward_vde_wrapper = &vde_impl_fun;
                 sim_in[jj].jac = &jac_chain_nm4;
-                sim_in[jj].jacobian_wrapper = &jac_fun;
+                sim_in[jj].jacobian_wrapper = &jac_impl_fun;
                 break;
             default:
                 break;
