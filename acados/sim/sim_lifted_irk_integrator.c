@@ -140,8 +140,8 @@ int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts_) {
 
     make_int_multiple_of(8, &size);
 
-    size += nf;  // grad_correction
-    size += nx * num_stages;  // grad_K
+    size += nf * sizeof(double);  // grad_correction
+    size += nx * num_stages * sizeof(double);  // grad_K
 
     size += num_steps * num_stages * nx * sizeof(double);  // K_traj
     size += num_steps * num_stages * nx * nf * sizeof(double);  // DK_traj
@@ -277,13 +277,13 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
         assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
         assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
 #elif defined(LA_REFERENCE)
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
         d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
         c_ptr += dim_sys * sizeof(double);
 #else  // LA_BLAS
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
 #endif  // LA_HIGH_PERFORMANCE
         dgesc_libstr(dim_sys, dim_sys, 0.0 memory->str_mat2[i], 0, 0);
         dgesc_libstr(dim_sys, 1 + nf, 0.0, memory->str_sol2[i], 0, 0);

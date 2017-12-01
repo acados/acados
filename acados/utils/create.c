@@ -313,7 +313,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
         args->sim_solvers[ii]->initialize_default_args(&sim_dims, args->sim_solvers_args[ii]);
-        sim_rk_opts *tmp = (sim_rk_opts *)args->sim_solvers_args[ii];
     }
 
     return args;
