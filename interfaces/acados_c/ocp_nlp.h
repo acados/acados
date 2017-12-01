@@ -27,6 +27,38 @@ extern "C" {
 // acados
 #include <acados/ocp_nlp/ocp_nlp_common.h>
 #include <acados/utils/types.h>
+// acados_c
+#include <acados_c/sim.h>
+#include <acados_c/ocp_qp.h>
+
+
+typedef enum {
+    SQP_GN
+} ocp_nlp_solver_t;
+
+
+typedef struct {
+    ocp_qp_solver_t qp_solver;
+    sim_solver_t sim_solver;
+} ocp_nlp_config;
+
+
+//
+int ocp_nlp_calculate_args_size(ocp_nlp_solver_t solver, ocp_nlp_config *config, ocp_nlp_dims *dims);
+//
+void *ocp_nlp_assign_args(ocp_nlp_solver_t solver, ocp_nlp_config *config, ocp_qp_dims *dims, void *raw_memory);
+//
+void *ocp_nlp_create_args(ocp_nlp_solver_t solver, ocp_nlp_config *config, ocp_qp_dims *dims);
+//
+void ocp_nlp_assign_default_args(void * args_);
+//
+int ocp_nlp_calculate_memory_size();
+//
+void *ocp_nlp_assign_memory();
+//
+void *ocp_nlp_create_memory();
+//
+int ocp_nlp_calculate_workspace_size();
 
 
 #ifdef __cplusplus

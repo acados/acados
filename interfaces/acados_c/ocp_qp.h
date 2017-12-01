@@ -35,12 +35,12 @@ typedef enum {
     CONDENSING_HPIPM,
     CONDENSING_QPOASES,
     CONDENSING_QORE
-} qp_solver_t;
+} ocp_qp_solver_t;
 
 //
-int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
+int set_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, void *qp_solver);
 //
-void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
+void set_xcond_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
 
 #ifdef __cplusplus
 } /* extern "C" */
