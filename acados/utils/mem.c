@@ -169,7 +169,6 @@ void assign_double(int n, double **v, char **ptr)
 
 void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 {
-    // TODO(dimitris): ask Gianluca why this is not 32/16-byte aligned
     assert((size_t)*ptr % 8 == 0 && "strvec not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
@@ -185,7 +184,11 @@ void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 
 void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
 {
+#ifdef LA_HIGH_PERFORMANCE
     assert((size_t)*ptr % 64 == 0 && "strmat not 64-byte aligned!");
+#else
+    assert((size_t)*ptr % 8 == 0 && "strmat not 8-byte aligned!");
+#endif
 
 #ifdef _USE_VALGRIND_
     d_allocate_strmat(m, n, sA);
