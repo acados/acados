@@ -58,11 +58,16 @@ int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims) {
 
 void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory) {
     ocp_qp_hpmpc_args *args;
+    char *c_ptr = (char *) raw_memory;
+    args = (ocp_qp_hpmpc_args *) c_ptr;
     // ocp_qp_hpmpc_args **args = (ocp_qp_hpmpc_args **) args_;
     int_t N = dims->N;
-    char *c_ptr = (char *) raw_memory;
 
-    args = (ocp_qp_hpmpc_args *) c_ptr;
+    args->N = dims->N;
+    args->M = dims->N;
+    args->N2 = dims->N;
+
+
     c_ptr += sizeof(ocp_qp_hpmpc_args);
 
     args->ux0 = (real_t **) c_ptr;
@@ -154,7 +159,7 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_in *qp_in, void
 
 void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
-    return;
+    return raw_memory;
 }
 
 
@@ -286,10 +291,11 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
 
     // initialize hsdux to primal input later usx will be subtracted
     d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
+    printf("nu[N] = %i\n", nu[ii]);
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
     ptr_memory += (&hsdux[ii])->memory_size;
-    d_create_strvec(nu[ii]+nx[ii], &hsux[ii], ptr_memory);
-    d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
+    d_create_strvec(nx[ii], &hsux[ii], ptr_memory);
+    d_cvt_vec2strvec(nx[ii], hpmpc_args->ux0[ii], &hsux[ii], 0);
     ptr_memory += (&hsux[ii])->memory_size;
 
     d_create_strvec(nx[ii], &hspi[ii], ptr_memory);  // Andrea: bug?
