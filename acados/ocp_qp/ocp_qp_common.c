@@ -75,7 +75,7 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
-    assert((char*)raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
 
     return qp_in;
 }
@@ -101,7 +101,7 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_ocp_qp_sol(dims);
 
-    assert((char*)raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
 }

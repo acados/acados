@@ -439,14 +439,12 @@ int main() {
     sim_solver_t sim_solver_names[NN];
     int num_stages[NN];
 
-    sim_solver_names[0] = ERK;
-    sim_solver_names[1] = ERK;
+    for (int ii = 0; ii < NN; ii++)
+    {
+        sim_solver_names[ii] = ERK;
+        num_stages[ii] = 4;
+    }
 
-    for (int ii = 2; ii < NN; ii++) sim_solver_names[ii] = PREVIOUS;
-
-    num_stages[0] = 4;
-    num_stages[1] = 4;
-    for (int ii = 2; ii < NN; ii++) num_stages[ii] = -1;  // NOTE(dimitris): overwritten with correct values inside create_args below
     nlp->dims->num_stages = num_stages;
 
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
@@ -460,8 +458,7 @@ int main() {
     * ocp_nlp out
     ************************************************/
 
-    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
-    ocp_nlp_out *nlp_out = assign_ocp_nlp_out(nlp->dims, nlp_out_mem);
+    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp->dims);
 
     /************************************************
     * gn_sqp memory

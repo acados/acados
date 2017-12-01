@@ -67,7 +67,7 @@ static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *a
 
 
 #ifdef YT
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver_t *sim_solver_names)
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver *sim_solvers)
 #else
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver)
 #endif
@@ -87,29 +87,13 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *
     size += dims->N*sizeof(sim_solver *);
     size += dims->N*sizeof(void *);  //sim_solvers_args
 
-    sim_solver sim_solver;
     int return_value;
-    sim_solver_t sim_solver_name;
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        if (sim_solver_names[ii] == PREVIOUS)
-        {
-            dims->num_stages[ii] = sim_dims.num_stages;
-            assert (ii != 0);
-        } else {
-            cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-            sim_solver_name = sim_solver_names[ii];
-        }
-
-        return_value = set_sim_solver_fun_ptrs(sim_solver_name, &sim_solver);
-        assert(return_value == ACADOS_SUCCESS);
-
-        if (sim_solver_names[ii] != PREVIOUS)
-        {  // only allocate for new sim_solvers
-            size += sizeof(sim_solver);
-            size += sim_solver.calculate_args_size(&sim_dims);
-        }
+        cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
+        size += sizeof(sim_solver);
+        size += sim_solvers[ii].calculate_args_size(&sim_dims);
     }
     #endif
 
@@ -119,7 +103,7 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *
 
 
 #ifdef YT
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver_t *sim_solver_names, void *raw_memory)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver *sim_solvers, void *raw_memory)
 #else
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, void *raw_memory)
 #endif
@@ -154,31 +138,21 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond
     c_ptr += dims->N*sizeof(void *);
 
     int return_value, ns;
-    sim_solver_t sim_solver_name;
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        if (sim_solver_names[ii] == PREVIOUS)
-        {
-            assert (ii != 0);
-            args->sim_solvers[ii] = args->sim_solvers[ii-1];
-            args->sim_solvers_args[ii] = args->sim_solvers_args[ii-1];
-        } else {
-            cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-            sim_solver_name = sim_solver_names[ii];
+        cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
 
-            args->sim_solvers[ii] = (sim_solver *) c_ptr;
-            c_ptr += sizeof(sim_solver);
+        args->sim_solvers[ii] = (sim_solver *) c_ptr;
+        c_ptr += sizeof(sim_solver);
 
-            return_value = set_sim_solver_fun_ptrs(sim_solver_name, args->sim_solvers[ii]);
-            assert(return_value == ACADOS_SUCCESS);
+        copy_module_pointers_to_args(args->sim_solvers[ii], &sim_solvers[ii]);
 
-            args->sim_solvers_args[ii] = args->sim_solvers[ii]->assign_args(&sim_dims, c_ptr);
-            c_ptr += args->sim_solvers[ii]->calculate_args_size(&sim_dims);
-        }
+        args->sim_solvers_args[ii] = args->sim_solvers[ii]->assign_args(&sim_dims, c_ptr);
+        c_ptr += args->sim_solvers[ii]->calculate_args_size(&sim_dims);
     }
 
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver, sim_solver_names) == c_ptr);
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver, sim_solvers) == c_ptr);
     #else
     assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver) == c_ptr);
     #endif
@@ -378,6 +352,7 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     c_ptr += ocp_qp_in_calculate_size(&qp_dims);
     work->qp_out = assign_ocp_qp_out(&qp_dims, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
+
     work->qp_work = (void *)c_ptr;
     c_ptr += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
 
