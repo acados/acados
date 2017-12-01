@@ -24,7 +24,6 @@
 extern "C" {
 #endif
 
-#include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 

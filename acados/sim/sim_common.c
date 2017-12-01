@@ -26,7 +26,6 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 

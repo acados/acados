@@ -24,7 +24,6 @@
 #include <assert.h>
 // acados
 #include "acados/utils/mem.h"
-#include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 
@@ -33,7 +32,7 @@
 
 int sim_erk_opts_calculate_size(sim_dims *dims)
 {
-    
+
     int size = sizeof(sim_rk_opts);
 
     int ns = dims->num_stages;
@@ -110,7 +109,7 @@ void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory)
 int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    
+
     int nx = dims->nx;
     int nu = dims->nu;
     int NF = opts->num_forw_sens;
@@ -151,7 +150,7 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    
+
     int nx = dims->nx;
     int nu = dims->nu;
     int NF = opts->num_forw_sens;
@@ -218,7 +217,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
         in->nu
     };
     sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(&dims, opts, work_);
-    
+
     int i, j, s, istep;
     double a = 0, b =0; // temp values of A_mat and b_vec
     int nx = in->nx;
