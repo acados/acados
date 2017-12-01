@@ -343,7 +343,7 @@ int main() {
 
     for (int ii = 0; ii < NN; ii++)
     {
-        sim_solver_names[ii] = ERK;
+        sim_solver_names[ii] = LIFTED_IRK;
         num_stages[ii] = 4;
     }
 
