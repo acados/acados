@@ -28,25 +28,26 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, qp_solver_t solver_name)
+int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 {
-    ocp_qp_solver solver;
-    set_qp_solver_fun_ptrs(solver_name, &solver);
+    ocp_qp_solver *solver = (ocp_qp_solver *)solver_;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_args);
     size += sizeof(ocp_qp_solver);
 
     size += ocp_qp_partial_condensing_calculate_args_size(dims);
-    size += solver.calculate_args_size(dims);
+    size += solver->calculate_args_size(dims);
 
     return size;
 }
 
 
 
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver_name, void *raw_memory)
+void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
 {
+    ocp_qp_solver *solver = (ocp_qp_solver *)solver_;
+
     char *c_ptr = (char *) raw_memory;
 
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) c_ptr;
@@ -55,7 +56,7 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver_nam
     args->solver = (ocp_qp_solver*) c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
-    set_qp_solver_fun_ptrs(solver_name, args->solver);
+    copy_module_pointers_to_args(args->solver, solver);
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
@@ -67,7 +68,7 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, qp_solver_t solver_nam
     args->solver_args = args->solver->assign_args(dims, c_ptr);
     c_ptr += args->solver->calculate_args_size(dims);
 
-    assert((char*)raw_memory + ocp_qp_sparse_solver_calculate_args_size(dims, solver_name) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_sparse_solver_calculate_args_size(dims, solver) == c_ptr);
 
     return (void*)args;
 }
@@ -175,25 +176,34 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
 
 
 
-int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_) {
+int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+{
+    return sizeof(ocp_qp_sparse_solver_workspace);
+}
 
+
+
+int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
+{
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) args_;
     ocp_qp_sparse_solver_memory *memory = (ocp_qp_sparse_solver_memory *) mem_;
+    // TODO(dimitris): also assign workspace once it contains data that need to be casted..
+    ocp_qp_sparse_solver_workspace *work = (ocp_qp_sparse_solver_workspace *) work_;
 
     // condense
     if (args->pcond_args->N2 < qp_in->dim->N) {
-        ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory);
+        ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory, work->pcond_work);
     } else {
         memory->pcond_qp_in = qp_in;
         memory->pcond_qp_out = qp_out;
     }
 
     // solve qp
-    int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory);
+    int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_workspace);
 
     // expand
     if (args->pcond_args->N2 < qp_in->dim->N) {
-        ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory);
+        ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory, work->pcond_work);
     }
 
     // return

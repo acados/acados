@@ -32,15 +32,9 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 
-#ifdef YT
-#include "acados/sim/sim_common_yt.h"
-#include "acados/sim/sim_erk_integrator_yt.h"
-#else
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#endif
-
 #include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
