@@ -556,9 +556,6 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
 
             dvecpei_libstr(nx*num_stages, ipiv, lambdaK, 0);
 
-            // ???
-            // dgemv_t_libstr(nx*num_stages, nx, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
-            // dgemv_t_libstr(nx*num_stages, nu, 1.0, JGf, 0, nx, lambdaK, 0, 1.0, lambda, nx, lambda, nx);
             dgemv_t_libstr(nx*num_stages, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
         }
     }
