@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/sim/sim_collocation.h"
-#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
@@ -61,10 +61,10 @@ typedef struct {
     real_t *x;
     real_t *u;
 
-    real_t *delta_DK_traj;    
+    real_t *delta_DK_traj;
     real_t *adj_traj;
     real_t **jac_traj;
-    
+
     real_t **sys_mat2;
     int_t **ipiv2;
     real_t **sys_sol2;
@@ -83,7 +83,7 @@ void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_);
 int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts);
 
 void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
-    
+
 int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem, void *work);
 
 int sim_lifted_irk_calculate_workspace_size(sim_dims *in, void *args);

@@ -27,7 +27,7 @@ extern "C" {
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_collocation.h"
-#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"

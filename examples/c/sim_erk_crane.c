@@ -3,7 +3,6 @@
 #include <stdlib.h>
 
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 
@@ -80,7 +79,7 @@ int main() {
     erk_opts->num_forw_sens = NF;
 
     int workspace_size = sim_erk_calculate_workspace_size(&dims, erk_opts);
-    void *workspace = malloc(workspace_size);        
+    void *workspace = malloc(workspace_size);
 
     sim_out *out = create_sim_out(&dims);
 
@@ -160,6 +159,6 @@ int main() {
     free(in);
     free(workspace);
     free(out);
-    
+
     return flag;
 }
