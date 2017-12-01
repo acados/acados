@@ -2,7 +2,7 @@ import casadi.*
 import acados.*
 
 N = 10;
-[ode_fun, nx, nu] = chen_model();
+[ode_fun, nx, nu] = chen_model(true);
 ng = cell(N+1, 1);
 for i=1:N
     ng{i} = 1;
@@ -47,7 +47,7 @@ end
 path_constraints{N+1} = g_N;
 nlp.set_path_constraints(path_constraints);
  
-solver = ocp_nlp_solver('sqp', nlp, struct('integrator_steps', 2, 'qp_solver', 'condensing_qpoases', 'sensitivity_method', 'gauss-newton'));
+solver = ocp_nlp_solver('sqp', nlp, struct('sim_solver', 'lifted-irk', 'integrator_steps', 2, 'qp_solver', 'condensing_qpoases', 'sensitivity_method', 'gauss-newton'));
  
 % Simulation
 num_iters = 20;
