@@ -255,7 +255,7 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 }
 
 
-void *create_sim_erk_opts(sim_dims *dims)
+sim_rk_opts *create_sim_erk_opts(sim_dims *dims)
 {
     int size = sim_erk_opts_calculate_size(dims);
 
@@ -265,7 +265,7 @@ void *create_sim_erk_opts(sim_dims *dims)
 
     sim_erk_initialize_default_args(dims, opts);
 
-    return (void *)opts;
+    return opts;
 }
 
 

@@ -74,7 +74,7 @@ dense_qp_qpoases_args *dense_qp_qpoases_create_arguments(dense_qp_dims *dims);
 
 dense_qp_qpoases_memory *dense_qp_qpoases_create_memory(dense_qp_dims *dims, void *args_);
 
-void *create_sim_erk_opts(sim_dims *dims);
+sim_rk_opts *create_sim_erk_opts(sim_dims *dims);
 
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages);
 

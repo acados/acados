@@ -10,6 +10,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/create.h"
 
 #include "examples/c/crane_model/crane_model.h"
 
