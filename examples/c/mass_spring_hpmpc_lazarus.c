@@ -70,7 +70,7 @@ int main() {
 
     // arg->hpipm_args->iter_max = 10;
 
-    ocp_qp_hpipm_memory *mem = ocp_qp_hpmpc_create_memory(qp_in->dim, arg);
+    ocp_qp_hpipm_memory *mem = ocp_qp_hpmpc_create_memory(qp_in->dim, qp_in, arg);
 
 	int acados_return;  // 0 normal; 1 max iter
 
