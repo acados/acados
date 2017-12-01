@@ -45,7 +45,7 @@
 #define TF 3.0
 #define Ns 2
 #define MAX_SQP_ITERS 20
-#define NREP 5
+#define NREP 1
 
 enum sensitivities_scheme {
     EXACT_NEWTON,
@@ -342,7 +342,7 @@ int main() {
 
     for (int ii = 0; ii < NN; ii++)
     {
-        sim_solver_names[ii] = ERK;
+        sim_solver_names[ii] = LIFTED_IRK;
         num_stages[ii] = 4;
     }
 
@@ -352,23 +352,6 @@ int main() {
     for (int i = 0; i < NN; ++i) {
         sim_rk_opts *sim_opts = nlp_args->sim_solvers_args[i];
         sim_opts->interval = TF/NN;
-        sim_opts->num_steps = 2;
-        sim_opts->sens_forw = true;
-        sim_opts->sens_adj = false;
-        sim_opts->sens_hess = false;
-        if (d > 0) {
-            assert(1 == 0 && "Implicit not implemented");
-            // sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
-            // if (scheme == EXACT_NEWTON) {
-                // sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
-            // } else if (scheme == INEXACT_NEWTON || scheme == FROZEN_INEXACT_NEWTON) {
-                // sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
-            // } else if (scheme == INIS || scheme == FROZEN_INIS) {
-                // sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
-            // }
-            // sim_lifted_irk_create_memory(nlp->sim[jj].in, &rk_opts[jj], &irk_mem[jj]);
-            // workspace_size = sim_lifted_irk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
-        }
     }
 
     nlp_args->maxIter = MAX_SQP_ITERS;
