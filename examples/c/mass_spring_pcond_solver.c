@@ -139,6 +139,7 @@ int main() {
     free(sol);
     free(arg);
     free(mem);
+    free(work);
 
     return 0;
 }

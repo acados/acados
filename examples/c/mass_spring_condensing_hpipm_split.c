@@ -147,6 +147,7 @@ int main() {
     free(argd);
     free(mem);
     free(cond_memory);
+    free(cond_args);
 
 	return 0;
 }
