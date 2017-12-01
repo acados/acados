@@ -126,9 +126,12 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 
 ocp_qp_sparse_solver_args *ocp_qp_sparse_solver_create_arguments(ocp_qp_dims *dims, qp_solver_t solver_name)
 {
-    int size = ocp_qp_sparse_solver_calculate_args_size(dims, solver_name);
+    ocp_qp_solver solver;
+    set_qp_solver_fun_ptrs(solver_name, &solver);
+
+    int size = ocp_qp_sparse_solver_calculate_args_size(dims, &solver);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_sparse_solver_args *args = ocp_qp_sparse_solver_assign_args(dims, solver_name, ptr);
+    ocp_qp_sparse_solver_args *args = ocp_qp_sparse_solver_assign_args(dims, &solver, ptr);
     ocp_qp_sparse_solver_initialize_default_args(args);
     return args;
 }
@@ -149,9 +152,12 @@ ocp_qp_sparse_solver_memory *ocp_qp_sparse_solver_create_memory(ocp_qp_dims *dim
 
 ocp_qp_condensing_solver_args *ocp_qp_condensing_solver_create_arguments(ocp_qp_dims *dims, qp_solver_t solver_name)
 {
-    int size = ocp_qp_condensing_solver_calculate_args_size(dims, solver_name);
+    dense_qp_solver solver;
+    set_qp_solver_fun_ptrs(solver_name, &solver);
+
+    int size = ocp_qp_condensing_solver_calculate_args_size(dims, &solver);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_condensing_solver_args *args = ocp_qp_condensing_solver_assign_args(dims, solver_name, ptr);
+    ocp_qp_condensing_solver_args *args = ocp_qp_condensing_solver_assign_args(dims, &solver, ptr);
     ocp_qp_condensing_solver_initialize_default_args(args);
     return args;
 }
@@ -254,18 +260,24 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
 #endif
 {
+    ocp_qp_xcond_solver qp_solver;
+    module_solver solver_funs;
+    qp_solver.qp_solver_funs = &solver_funs;
+
+    set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
+
     #ifdef YT
-    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names);
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, &qp_solver, sim_solver_names);
     #else
-    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name);
+    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, &qp_solver);
     #endif
 
     void *ptr = acados_malloc(size, 1);
 
     #ifdef YT
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, sim_solver_names, ptr);
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, &qp_solver, sim_solver_names, ptr);
     #else
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, qp_solver_name, ptr);
+    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, &qp_solver, ptr);
     #endif
 
     // TODO(dimitris): nest in initialize default args of SQP solver!

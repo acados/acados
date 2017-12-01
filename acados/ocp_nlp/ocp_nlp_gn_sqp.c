@@ -67,14 +67,11 @@ static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *a
 
 
 #ifdef YT
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver_t *sim_solver_names)
 #else
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver)
 #endif
 {
-    ocp_qp_xcond_solver qp_solver;
-    set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
-
     int size = 0;
 
     ocp_qp_dims qp_dims;
@@ -82,7 +79,7 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
     size += sizeof(ocp_nlp_gn_sqp_args);
     size += sizeof(ocp_qp_xcond_solver);
 
-    size += qp_solver.calculate_args_size(&qp_dims, qp_solver_name);
+    size += qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver_funs);
 
     #ifdef YT
     sim_dims sim_dims;
@@ -122,9 +119,9 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, qp_solver_t qp_solver
 
 
 #ifdef YT
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names, void *raw_memory)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver_t *sim_solver_names, void *raw_memory)
 #else
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, void *raw_memory)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, void *raw_memory)
 #endif
 {
     ocp_nlp_gn_sqp_args *args;
@@ -140,10 +137,12 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
     args->qp_solver = (ocp_qp_xcond_solver*) c_ptr;
     c_ptr += sizeof(ocp_qp_xcond_solver);
 
-    set_xcond_qp_solver_fun_ptrs(qp_solver_name, args->qp_solver);
+    copy_module_pointers_to_args(args->qp_solver, qp_solver);
+    args->qp_solver->qp_solver_funs = qp_solver->qp_solver_funs;
+    copy_module_pointers_to_args(args->qp_solver->qp_solver_funs, qp_solver->qp_solver_funs);
 
-    args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver_name, c_ptr);
-    c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver_name);
+    args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver->qp_solver_funs, c_ptr);
+    c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver_funs);
 
     #ifdef YT
     sim_dims sim_dims;
@@ -179,9 +178,9 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, qp_solver_t 
         }
     }
 
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name, sim_solver_names) == c_ptr);
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver, sim_solver_names) == c_ptr);
     #else
-    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver_name) == c_ptr);
+    assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver) == c_ptr);
     #endif
 
     return args;
