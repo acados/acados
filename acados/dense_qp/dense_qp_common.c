@@ -72,7 +72,7 @@ int dense_qp_out_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_out);
     size += d_memsize_dense_qp_sol(dims);
-
+    size += sizeof(dense_qp_info);
     return size;
 }
 
@@ -89,6 +89,9 @@ dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory)
 
     d_create_dense_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_dense_qp_sol(dims);
+
+    qp_out->info = (void *) c_ptr;
+    c_ptr += sizeof(dense_qp_info);
 
     assert((char*)raw_memory + dense_qp_out_calculate_size(dims) == c_ptr);
 

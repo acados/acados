@@ -71,6 +71,15 @@ typedef struct {
 } ocp_qp_xcond_solver;
 
 
+
+typedef struct {
+    double solve_QP_time;
+    double condensing_time;
+    double interface_time;
+    double total_time;
+} ocp_qp_info;
+
+
 //
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //

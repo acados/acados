@@ -48,6 +48,13 @@ typedef struct {
 } dense_qp_solver;
 
 
+typedef struct {
+    double solve_QP_time;
+    double interface_time;
+    double total_time;
+} dense_qp_info;
+
+
 //
 int dense_qp_in_calculate_size(dense_qp_dims *dims);
 //
