@@ -78,6 +78,8 @@ void *create_sim_erk_opts(sim_dims *dims);
 
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages);
 
+ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
+
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
 
 ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);

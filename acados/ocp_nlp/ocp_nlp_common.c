@@ -103,7 +103,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 
     size += 3*N*sizeof(casadi_function_t *);  // vde, vde_adj, jac
 
-    // TODO(dimitris): add alignment when strvecs/strmats are used
     return size;
 }
 
@@ -114,6 +113,7 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 {
     char *c_ptr = (char *) raw_memory;
 
+    int padding = 0;
     int N = dims->N;
 
     ocp_nlp_in *in = (ocp_nlp_in *)c_ptr;
@@ -199,8 +199,7 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
         in->dims->ns[ii] = dims->ns[ii];
     }
 
-    // printf("diff = %lld\n", (long long int)(raw_memory + ocp_nlp_in_calculate_size(dims, args)) - (long long int)c_ptr);
-    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims) == c_ptr);
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims) == c_ptr + padding);
 
     return in;
 }
@@ -215,23 +214,19 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 
     size += sizeof(double *) * (N + 1);  // x
     size += sizeof(double *) * (N + 1);  // u
+    size += sizeof(double *) * N;        // pi
     size += sizeof(double *) * (N + 1);  // lam
-    size += sizeof(double *) * N;  // pi
 
     for (int ii = 0; ii <= N; ii++)
     {
         size += sizeof(double)*dims->nx[ii];  // x
         size += sizeof(double)*dims->nu[ii];  // u
-        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
         if (ii < N)
         {
             size += sizeof(double)*dims->nx[ii+1];  // pi
         }
+        size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
     }
-
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
-
     return size;
 }
 
@@ -241,6 +236,7 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
+    int padding = 0;
     int N = dims->N;
 
     ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
@@ -253,8 +249,6 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
     assign_double_ptrs(N+1, &out->lam, &c_ptr);
 
     // doubles
-    align_char_to(64, &c_ptr);
-
     for (int ii = 0; ii <= N; ii++)
     {
         assign_double(dims->nx[ii], &out->x[ii], &c_ptr);
@@ -266,7 +260,7 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
         assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &out->lam[ii], &c_ptr);
     }
 
-    assert((char *)raw_memory + ocp_nlp_out_calculate_size(dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_out_calculate_size(dims) == c_ptr + padding);
 
     return out;
 }

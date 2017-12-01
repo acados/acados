@@ -40,10 +40,12 @@ void make_int_multiple_of(int num, int *size) {
 
 
 
-void align_char_to(int num, char **c_ptr) {
+int align_char_to(int num, char **c_ptr) {
     size_t s_ptr = (size_t)*c_ptr;
     s_ptr = (s_ptr + num - 1) / num * num;
+    int offset = num - (int)(s_ptr - (size_t)(*c_ptr));
     *c_ptr = (char *)s_ptr;
+    return offset;
 }
 
 
@@ -192,4 +194,21 @@ void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
     d_create_strmat(m, n, sA, *ptr);
     *ptr += sA->memory_size;
 #endif
+}
+
+
+
+// TODO(dimitris): probably does not belong here
+void copy_module_pointers_to_args(void *solver_in_args_, void *solver_)
+{
+    module_solver *solver_in_args = solver_in_args_;
+    module_solver *solver = solver_;
+
+    solver_in_args->calculate_args_size = solver->calculate_args_size;
+    solver_in_args->assign_args = solver->assign_args;
+    solver_in_args->initialize_default_args = solver->initialize_default_args;
+    solver_in_args->calculate_memory_size = solver->calculate_memory_size;
+    solver_in_args->assign_memory = solver->assign_memory;
+    solver_in_args->calculate_workspace_size = solver->calculate_workspace_size;
+    solver_in_args->fun = solver->fun;
 }
