@@ -65,7 +65,7 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
-    * qpoases
+    * qore
     ************************************************/
 
     ocp_qp_condensing_solver_args *arg = ocp_qp_condensing_solver_create_arguments(qp_in->dim, CONDENSING_QORE);
