@@ -68,11 +68,11 @@ hpipm_static: blasfeo_static
 	cp external/hpipm/lib/libhpipm.a lib
 
 hpmpc_static: blasfeo_static
-	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo )
+	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo )
 	mkdir -p include/hpmpc
 	mkdir -p lib
 	cp external/hpmpc/include/*.h include/hpmpc
-	cp external/hpmpc/lib/libhmpc.a lib
+	cp external/hpmpc/libhpmpc.a lib
 
 qpoases_static:
 	( cd external/qpoases; $(MAKE) CC=$(CC) )

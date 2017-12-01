@@ -41,6 +41,8 @@ HPIPM_TARGET = GENERIC
 
 # HPMPC path
 HPMPC_PATH = $(EXT_PATH)/hpmpc
+# HPMPC target
+HPMPC_TARGET = X64_AVX2
 
 # qpOASES path
 QPOASES_PATH = $(EXT_PATH)/qpoases
