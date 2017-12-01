@@ -46,7 +46,8 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 
 ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *) raw_memory;
+    char **c_double_ptr = (char **) raw_memory;
+    char *c_ptr = *c_double_ptr;
 
     ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
@@ -75,7 +76,10 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
-    assert((char*)raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+    assert((char*) *c_double_ptr + ocp_qp_in_calculate_size(dims) == c_ptr);
+
+    // advance pointer
+    *c_double_ptr = c_ptr;
 
     return qp_in;
 }
@@ -93,7 +97,8 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 
 ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *) raw_memory;
+    char **c_double_ptr = (char **) raw_memory;
+    char *c_ptr = (char *) *c_double_ptr;
 
     ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
@@ -101,7 +106,10 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_ocp_qp_sol(dims);
 
-    assert((char*)raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+    assert((char*) *c_double_ptr + ocp_qp_out_calculate_size(dims) == c_ptr);
+
+    // advance pointer
+    *c_double_ptr = c_ptr;
 
     return qp_out;
 }
