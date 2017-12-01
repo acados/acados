@@ -6,9 +6,10 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados/utils/mem.h"
-#include "acados/sim/sim_rk_common.h"
+
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 
 #include "external/blasfeo/include/blasfeo_target.h"
 #include "external/blasfeo/include/blasfeo_common.h"
@@ -17,10 +18,87 @@
 #include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
-
-int irk_calculate_memory_size(sim_dims *dims, void *opts_)
+int sim_irk_opts_calculate_size(sim_dims *dims)
 {
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+
+    int size = sizeof(sim_rk_opts);
+
+    int ns = dims->num_stages;
+    size += ns * ns * sizeof(double);  // A_mat
+    size += ns * sizeof(double);  // b_vec
+    size += ns * sizeof(double);  // c_vec
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+
+    return size;
+}
+
+
+
+void *sim_irk_assign_opts(sim_dims *dims, void *raw_workspaceory)
+{
+    char *c_ptr = (char *) raw_workspaceory;
+
+    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
+    c_ptr += sizeof(sim_rk_opts);
+
+    int ns = dims->num_stages;
+    opts->num_stages = ns;
+
+    align_char_to(8, &c_ptr);
+
+    assign_double(ns*ns, &opts->A_mat, &c_ptr);
+    assign_double(ns, &opts->b_vec, &c_ptr);
+    assign_double(ns, &opts->c_vec, &c_ptr);
+
+    assert((char*)raw_workspaceory + sim_irk_opts_calculate_size(dims) >= c_ptr);
+
+    opts->newton_iter = 3;
+    opts->scheme = NULL;
+
+    return (void *)opts;
+}
+
+
+void sim_irk_initialize_default_args(sim_dims *dims, void *opts_)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->num_stages;
+
+    assert(opts->num_stages == 3 && "only number of stages = 3 implemented!");
+
+    memcpy(opts->A_mat,
+        ((real_t[]){0.1389, 0.3003, 0.2680 ,
+        -0.0360, 0.2222, 0.4804,
+        0.0098, -0.0225, 0.1389}),
+        sizeof(*opts->A_mat) * (ns * ns));
+    memcpy(opts->b_vec, ((real_t[]){0.2778, 0.4444, 0.2778}),
+        sizeof(*opts->b_vec) * (ns));
+    memcpy(opts->c_vec, ((real_t[]){0.1127, 0.5, 0.8873}),
+        sizeof(*opts->c_vec) * (ns));
+
+    opts->num_steps = 2;
+    opts->num_forw_sens = dims->nx + dims->nu;
+    opts->sens_forw = true;
+    opts->sens_adj = false;
+    opts->sens_hess = false;
+}
+
+
+int sim_irk_calculate_memory_size(sim_dims *dims, void *opts_)
+{
+    return 0;
+}
+
+void *sim_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_workspaceory)
+{
+    return NULL;
+}
+
+int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
+{
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -28,9 +106,9 @@ int irk_calculate_memory_size(sim_dims *dims, void *opts_)
     int ns = opts->num_stages; // number of stages
     int steps = opts->num_steps;
 
-    int size = sizeof(sim_irk_memory);
+    int size = sizeof(sim_irk_workspace);
 
-    size += 5*sizeof(struct d_strmat); // JG, JGf, JKf, JFK
+    size += 5*sizeof(struct d_strmat); // JG, JGf, JKf, JFK, S_forw
     size += 4*sizeof(struct d_strvec); // rG, K, xt, xn
     size += 2*sizeof(struct d_strvec); // lambda,lambdaK
 
@@ -42,7 +120,7 @@ int irk_calculate_memory_size(sim_dims *dims, void *opts_)
     size += d_size_strmat(nx, nx*ns); // JFK
     size += d_size_strmat(nx, nx+nu); // S_forw
 
-    size += 4*d_size_strvec(nx*ns); // rG, K
+    size += 2*d_size_strvec(nx*ns); // rG, K
     size += 2*d_size_strvec(nx); // xt, x
 
     size += d_size_strvec(nx+nu); // lambda
@@ -55,7 +133,7 @@ int irk_calculate_memory_size(sim_dims *dims, void *opts_)
     size += nx * (2*nx+nu) * sizeof(double); // jac_out
     size += nx * nx * sizeof(double); // Jt
     size += (2*nx + nu) * sizeof(double); // ode_args
-    size += (nx+nu) * sizeof(double);
+    size += (nx+nu) * sizeof(double); // S_adj_w
 
     size += nx *ns * sizeof(int); // ipiv
 
@@ -65,10 +143,10 @@ int irk_calculate_memory_size(sim_dims *dims, void *opts_)
     return size;
 }
 
-char *assign_irk_memory(sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 {
 
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -78,136 +156,139 @@ char *assign_irk_memory(sim_dims *dims, void *opts_, void *raw_memory)
 
     char *c_ptr = (char *)raw_memory;
 
-    sim_irk_memory *mem = (sim_irk_memory *) c_ptr;
-    c_ptr += sizeof(sim_irk_memory);
+    sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
+    c_ptr += sizeof(sim_irk_workspace);
 
-
-    (*memory)->xn_traj = (struct d_strvec **)c_ptr;
+    workspace->xn_traj = (struct d_strvec **)c_ptr;
     c_ptr += steps* sizeof(struct d_strvec *); 
     
-    (*memory)->K_traj = (struct d_strvec **)c_ptr;
+    workspace->K_traj = (struct d_strvec **)c_ptr;
     c_ptr += steps* sizeof(struct d_strvec *); 
 
-    (*memory)->JG = (struct d_strmat *)c_ptr;
+    workspace->JG = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat); 
 
-    (*memory)->JGf = (struct d_strmat *)c_ptr;
+    workspace->JGf = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat);
 
-    (*memory)->JKf = (struct d_strmat *)c_ptr;
+    workspace->JKf = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat);
 
-    (*memory)->JFK = (struct d_strmat *)c_ptr;
+    workspace->JFK = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat);
 
-    (*memory)->S_forw = (struct d_strmat *)c_ptr;
+    workspace->S_forw = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat);
 
-    (*memory)->rG = (struct d_strvec *)c_ptr;
+    workspace->rG = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
 
-    (*memory)->K = (struct d_strvec *)c_ptr;
+    workspace->K = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
 
-    (*memory)->xt = (struct d_strvec *)c_ptr;
+    workspace->xt = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
 
-     (*memory)->xn = (struct d_strvec *)c_ptr;
+    workspace->xn = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
 
-     (*memory)->lambda = (struct d_strvec *)c_ptr;
+    workspace->lambda = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
 
-    (*memory)->lambdaK = (struct d_strvec *)c_ptr;
+    workspace->lambdaK = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
 
-
-    //
     for (int i=0;i<steps;i++){
-        (*memory)->xn_traj[i] = (struct d_strvec *)c_ptr;
+        workspace->xn_traj[i] = (struct d_strvec *)c_ptr;
         c_ptr += sizeof(struct d_strvec);
 
-        (*memory)->K_traj[i] = (struct d_strvec *)c_ptr;
+        workspace->K_traj[i] = (struct d_strvec *)c_ptr;
         c_ptr += sizeof(struct d_strvec);
     }
     
-    // struct d_strmat *JG = (*memory)->JG; 
-    // struct d_strmat *JGf = (*memory)->JGf;
-    // struct d_strmat *JKf = (*memory)->JKf;
-    // struct d_strmat *JFK = (*memory)->JFK;
-    // struct d_strmat *S_forw = (*memory)->S_forw;
+    // struct d_strmat *JG = workspace->JG; 
+    // struct d_strmat *JGf = workspace->JGf;
+    // struct d_strmat *JKf = workspace->JKf;
+    // struct d_strmat *JFK = workspace->JFK;
+    // struct d_strmat *S_forw = workspace->S_forw;
 
-    // struct d_strvec *rG = (*memory)->rG;
-    // struct d_strvec *K = (*memory)->K;
-    // struct d_strvec *xt = (*memory)->xt;
-    // struct d_strvec *xn = (*memory)->xn;
+    // struct d_strvec *rG = workspace->rG;
+    // struct d_strvec *K = workspace->K;
+    // struct d_strvec *xt = workspace->xt;
+    // struct d_strvec *xn = workspace->xn;
 
-    // struct d_strvec *lambda = (*memory)->lambda;
-    // struct d_strvec *lambdaK = (*memory)->lambdaK;
+    // struct d_strvec *lambda = workspace->lambda;
+    // struct d_strvec *lambdaK = workspace->lambdaK;
 
-    // struct d_strvec **xn_traj = (*memory)->xn_traj;
-    // struct d_strvec **K_traj = (*memory)->K_traj;
+    // struct d_strvec **xn_traj = workspace->xn_traj;
+    // struct d_strvec **K_traj = workspace->K_traj;
 
-    // align memory to typical cache line size
-    // size_t s_ptr = (size_t)c_ptr;
-    // s_ptr = (s_ptr + 63) / 64 * 64;
-    // c_ptr = (char *)s_ptr;
     align_char_to(64, &c_ptr);
 
     // d_create_strmat(nx*ns, nx*ns, JG, c_ptr);
     // c_ptr += d_size_strmat(nx*ns, nx*ns);
 
-    assign_strmat(nx*ns, nx*ns, &mem->JG, &c_ptr);
+    printf("\nbefore first assign_strmat\n");
+
+    int i=0;
+
+    assign_strmat(nx*ns, nx*ns, workspace->JG, &c_ptr);
 
     // d_create_strmat(nx*ns, nx+nu, JGf, c_ptr);
     // c_ptr += d_size_strmat(nx*ns, nx+nu);
 
-    assign_strmat(nx*ns, nx+nu, &mem->JGf, &c_ptr);
+    printf("\nThe %d-th assign_strmat successful\n", ++i);
+
+    assign_strmat(nx*ns, nx+nu, workspace->JGf, &c_ptr);
+
+    printf("\nThe %d-th assign_strmat successful\n", ++i);
 
     // d_create_strmat(nx*ns, nx+nu, JKf, c_ptr);
     // c_ptr += d_size_strmat(nx*ns, nx+nu);
 
-    assign_strmat(nx*ns, nx+nu, &mem->JKf, &c_ptr);
+    assign_strmat(nx*ns, nx+nu, workspace->JKf, &c_ptr);
+
+    printf("\nThe %d-th assign_strmat successful\n", ++i);
 
     // d_create_strmat(nx, nx*ns, JFK, c_ptr);
     // c_ptr += d_size_strmat(nx, nx*ns);
 
-    assign_strmat(nx, nx*ns, &mem->JFK, &c_ptr);
+    assign_strmat(nx, nx*ns, workspace->JFK, &c_ptr);
 
     // d_create_strmat(nx, nx+nu, S_forw, c_ptr);
     // c_ptr += d_size_strmat(nx, nx+nu);
 
-    assign_strmat(nx, nx+nu, &mem->S_forw, &c_ptr);
+    assign_strmat(nx, nx+nu, workspace->S_forw, &c_ptr);
 
     // d_create_strvec(nx*ns, rG, c_ptr);
     // c_ptr += d_size_strvec(nx*ns);
 
-    assign_strvec(nx*ns, &mem->rG, &c_ptr);
+    assign_strvec(nx*ns, workspace->rG, &c_ptr);
 
     // d_create_strvec(nx*ns, K, c_ptr);
     // c_ptr += d_size_strvec(nx*ns);
 
-    assign_strvec(nx*ns, &mem->K, &c_ptr);
+    assign_strvec(nx*ns, workspace->K, &c_ptr);
 
     // d_create_strvec(nx, xt, c_ptr);
     // c_ptr += d_size_strvec(nx);
 
-    assign_strvec(nx, &mem->xt, &c_ptr);
+    assign_strvec(nx, workspace->xt, &c_ptr);
 
     // d_create_strvec(nx, xn, c_ptr);
     // c_ptr += d_size_strvec(nx);
 
-    assign_strvec(nx, &mem->xn, &c_ptr);
+    assign_strvec(nx, workspace->xn, &c_ptr);
 
     // d_create_strvec(nx+nu, lambda, c_ptr);
     // c_ptr += d_size_strvec(nx);
 
-    assign_strvec(nx+nu, &mem->lambda, &c_ptr);
+    assign_strvec(nx+nu, workspace->lambda, &c_ptr);
 
     // d_create_strvec(nx*ns, lambdaK, c_ptr);
     // c_ptr += d_size_strvec(nx*ns);
 
-    assign_strvec(nx*ns, &mem->lambdaK, &c_ptr);
+    assign_strvec(nx*ns, workspace->lambdaK, &c_ptr);
 
     //
     for (int i=0;i<steps;i++){
@@ -217,61 +298,67 @@ char *assign_irk_memory(sim_dims *dims, void *opts_, void *raw_memory)
         // d_create_strvec(nx*ns, K_traj[i], c_ptr);
         // c_ptr += d_size_strvec(nx*ns);
 
-        assign_strvec(nx, &mem->xn_traj[i], &c_ptr);
-        assign_strvec(nx*ns, &mem->K_traj[i], &c_ptr);
+        assign_strvec(nx, workspace->xn_traj[i], &c_ptr);
+        assign_strvec(nx*ns, workspace->K_traj[i], &c_ptr);
     }
 
     //
-    // (*memory)->rGt = (double *)c_ptr;
+    // workspace->rGt = (double *)c_ptr;
     // c_ptr += nx * sizeof(double);
-    assign_double(nx, &mem->rGt, &c_ptr);
+    assign_double(nx, &workspace->rGt, &c_ptr);
 
-    // (*memory)->jac_out = (double *)c_ptr;
+    // workspace->jac_out = (double *)c_ptr;
     // c_ptr += nx * (2*nx+nu) * sizeof(double);
 
-    assign_double(nx * (2*nx+nu), &mem->jac_out, &c_ptr);
+    assign_double(nx * (2*nx+nu), &workspace->jac_out, &c_ptr);
 
-    // (*memory)->Jt = (double *)c_ptr;
+    // workspace->Jt = (double *)c_ptr;
     // c_ptr += nx * nx * sizeof(double);
 
-    assign_double(nx * nx, &mem->Jt, &c_ptr);
+    assign_double(nx * nx, &workspace->Jt, &c_ptr);
 
-    // (*memory)->ode_args = (double *)c_ptr;
+    // workspace->ode_args = (double *)c_ptr;
     // c_ptr += (2*nx + nu) * sizeof(double);
 
-    assign_double(2*nx + nu, &mem->ode_args, &c_ptr);
+    assign_double(2*nx + nu, &workspace->ode_args, &c_ptr);
 
-    // (*memory)->S_adj_w = (double *)c_ptr;
+    // workspace->S_adj_w = (double *)c_ptr;
     // c_ptr += (nx + nu) * sizeof(double);
 
-    assign_double(nx + nu, &mem->S_adj_w, &c_ptr);
+    assign_double(nx + nu, &workspace->S_adj_w, &c_ptr);
 
-    // (*memory)->ipiv = (int *)c_ptr;
+    // workspace->ipiv = (int *)c_ptr;
     // c_ptr += nx * ns * sizeof(int);
 
-    assign_int(nx * ns , &mem->ipiv, &c_ptr);
+    assign_int(nx * ns , &workspace->ipiv, &c_ptr);
 
-    assert((char*)raw_memory + irk_calculate_memory_size(dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_calculate_workspace_size(dims, opts_) >= c_ptr);
 
-    return (void *)mem;
+    return (void *)workspace;
 }
 
 void *sim_irk_create_memory(sim_dims *dims, void *opts_)
 {
 
-    int bytes = irk_calculate_memory_size(dims, opts_);
+    int bytes = sim_irk_calculate_memory_size(dims, opts_);
     void *ptr = malloc(bytes);
-    sim_irk_memory *memory = assign_irk_memory(dims, opts_, ptr);
+    sim_irk_memory *memory = sim_irk_assign_memory(dims, opts_, ptr);
 
     return (void *)memory;
 }
 
 
-int sim_irk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
+int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     
-    sim_RK_opts *opts = (sim_RK_opts *) opts_;
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
-    sim_irk_workspace *work = (sim_irk_workspace *) work_;
+
+    sim_dims dims = {
+        opts->num_stages,
+        in->nx,
+        in->nu
+    };
+    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_cast_workspace(&dims, opts, work_);
 
     int ii, jj, iter, kk, ss;
     double a,b;
@@ -289,27 +376,27 @@ int sim_irk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
  
-	double *rGt = mem->rGt;  // residual of one stage of the impl. ODE
-	double *jac_out = mem->jac_out;
-    double *Jt = mem->Jt;
-    double *ode_args = mem->ode_args;
-    int *ipiv = mem->ipiv;
-	struct d_strmat *JG = mem->JG;
-	struct d_strvec *rG = mem->rG; // residual of the of the IRK equations G
-    struct d_strvec *K = mem->K;
-    struct d_strmat *JGf = mem->JGf;
-    struct d_strmat *JKf = mem->JKf;
-    struct d_strvec *xt = mem->xt;
-    struct d_strvec *xn = mem->xn;
-    struct d_strmat *JFK = mem->JFK;
-    struct d_strmat *S_forw = mem->S_forw;
+	double *rGt = workspace->rGt; 
+	double *jac_out = workspace->jac_out;
+    double *Jt = workspace->Jt;
+    double *ode_args = workspace->ode_args;
+    int *ipiv = workspace->ipiv;
+	struct d_strmat *JG = workspace->JG;
+	struct d_strvec *rG = workspace->rG;
+    struct d_strvec *K = workspace->K;
+    struct d_strmat *JGf = workspace->JGf;
+    struct d_strmat *JKf = workspace->JKf;
+    struct d_strvec *xt = workspace->xt;
+    struct d_strvec *xn = workspace->xn;
+    struct d_strmat *JFK = workspace->JFK;
+    struct d_strmat *S_forw = workspace->S_forw;
 
     // for adjoint
-    struct d_strvec *lambda = mem->lambda;
-    struct d_strvec *lambdaK = mem->lambdaK;
-    struct d_strvec **xn_traj = mem->xn_traj;
-    struct d_strvec **K_traj = mem->K_traj;
-    double *S_adj_in = mem->S_adj_w;
+    struct d_strvec *lambda = workspace->lambda;
+    struct d_strvec *lambdaK = workspace->lambdaK;
+    struct d_strvec **xn_traj = workspace->xn_traj;
+    struct d_strvec **K_traj = workspace->K_traj;
+    double *S_adj_in = workspace->S_adj_w;
 
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
@@ -361,7 +448,7 @@ int sim_irk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
         //  obtain Kn
         for(iter=0; iter<newton_iter; iter++){
 
-            if (in->sens_adj){
+            if (opts->sens_adj){
                 dveccp_libstr(nx, xn, 0, xn_traj[ss], 0);
             }
            
@@ -426,12 +513,12 @@ int sim_irk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
             daxpy_libstr(nx*num_stages, -1.0, rG, 0, K, 0, K, 0);
         }// end iter
 
-        if (in->sens_adj){
+        if (opts->sens_adj){
             dveccp_libstr(nx*num_stages, K, 0, K_traj[ss], 0);
         }
         
         // evaluate forward sensitivities
-        if (in->sens_forw){
+        if (opts->sens_forw){
 
             // evaluate JG(xn,Kn)         
             for(ii=0; ii<num_stages; ii++){  
@@ -495,7 +582,7 @@ int sim_irk_yt(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     }// end int step ss
 
     // evaluate backwards
-    if (in->sens_adj){ 
+    if (opts->sens_adj){ 
 
         for(ss=num_steps-1;ss>-1;ss--){
 

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 
 #include "acados/utils/print.h"
@@ -33,7 +33,7 @@ int main() {
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
-    int num_stages = 4;
+    int num_stages = 3;
     double *xref;
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
@@ -43,22 +43,26 @@ int main() {
     dims.nx = nx;
     dims.nu = nu;
 
-    sim_rk_opts *erk_opts = create_sim_erk_opts(&dims);
+    // the function to create opts should not be named by erk
+    sim_rk_opts *irk_opts = create_sim_irk_opts(&dims);
 
     sim_in *in = create_sim_in(&dims);
 
-    erk_opts->num_steps = 4;
-    in->step = T / erk_opts->num_steps;
-    erk_opts->sens_forw = true;
-    erk_opts->sens_adj = false;
-    erk_opts->sens_hess = false;
+    irk_opts->num_steps = 4;
+    in->step = T / irk_opts->num_steps;
+    irk_opts->sens_forw = true;
+    irk_opts->sens_adj = false;
+    irk_opts->sens_hess = false;
 
-    in->vde = &vdeFun;
-    in->vde_adj = &adjFun;
-    in->hess = &hessFun;
-    in->forward_vde_wrapper = &vde_fun;
-    in->adjoint_vde_wrapper = &vde_adj_fun;
-    in->Hess_fun = &vde_hess_fun;
+    in->impl_ode = &impl_odeFun;
+    in->eval_impl_res = &impl_ode_fun;
+    in->impl_jac_x = &impl_jacFun_x;
+    in->eval_impl_jac_x = &impl_jac_x_fun;
+    in->impl_jac_xdot = &impl_jacFun_xdot;
+    in->eval_impl_jac_xdot = &impl_jac_xdot_fun;
+    in->impl_jac_u = &impl_jacFun_u;
+    in->eval_impl_jac_u = &impl_jac_u_fun;
+
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
@@ -76,14 +80,14 @@ int main() {
         in->S_adj[ii] = 1.0;
 
     // TODO(dimitris): SET IN DEFAULT ARGS
-    erk_opts->num_forw_sens = NF;
+    irk_opts->num_forw_sens = NF;
 
-    int workspace_size = sim_erk_calculate_workspace_size(&dims, erk_opts);
+    int workspace_size = sim_irk_calculate_workspace_size(&dims, irk_opts);
     void *workspace = malloc(workspace_size);
 
     sim_out *out = create_sim_out(&dims);
 
-    int flag = sim_erk(in, out, erk_opts, NULL, workspace);
+    int flag = sim_irk(in, out, irk_opts, NULL, workspace);
 
     double *xn = out->xn;
 
@@ -93,7 +97,7 @@ int main() {
     printf("\n");
 
     double *S_forw_out;
-    if(erk_opts->sens_forw){
+    if(irk_opts->sens_forw){
         S_forw_out = out->S_forw;
         printf("\nS_forw_out: \n");
         for (ii=0;ii<nx;ii++){
@@ -104,7 +108,7 @@ int main() {
     }
 
     double *S_adj_out;
-    if(erk_opts->sens_adj){
+    if(irk_opts->sens_adj){
         S_adj_out = out->S_adj;
         printf("\nS_adj_out: \n");
         for (ii=0;ii<nx+nu;ii++){
@@ -114,7 +118,7 @@ int main() {
     }
 
     double *S_hess_out;
-    if(erk_opts->sens_hess){
+    if(irk_opts->sens_hess){
         double zero = 0.0;
         S_hess_out = out->S_hess;
         printf("\nS_hess_out: \n");
@@ -135,7 +139,7 @@ int main() {
     printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
     printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
 
-    if(erk_opts->sens_adj){
+    if(irk_opts->sens_adj){
         struct d_strmat sA;
         d_create_strmat(nx, nx+nu, &sA, S_forw_out);
 
@@ -155,7 +159,7 @@ int main() {
     }
 
     free(xref);
-    free(erk_opts);
+    free(irk_opts);
     free(in);
     free(workspace);
     free(out);

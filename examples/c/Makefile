@@ -6,9 +6,9 @@ include ../../Makefile.rule
 
 
 
-examples: sim_erk_crane mass_spring_hpipm mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
+examples: sim_erk_crane sim_irk_crane mass_spring_hpipm mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
 
-run_examples: run_sim_erk_crane run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
+run_examples: run_sim_erk_crane run_sim_irk_crane run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
 
 CRANE_OBJS =
 CRANE_OBJS += crane_model/jac_model.o
@@ -16,18 +16,21 @@ CRANE_OBJS += crane_model/ode_model.o
 CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
-CRANE_OBJS += sim_erk_crane.o
+CRANE_OBJS += crane_model/impl_ode.o
+CRANE_OBJS += crane_model/impl_jac_x.o
+CRANE_OBJS += crane_model/impl_jac_xdot.o
+CRANE_OBJS += crane_model/impl_jac_u.o
 
 sim_erk_crane: $(CRANE_OBJS)
-	$(CC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+	$(CC) -o sim_erk_crane.out  sim_erk_crane.o $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
 
-sim_irk_crane_yt: $(CRANE_OBJS)
-	$(CC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
+sim_irk_crane: $(CRANE_OBJS)
+	$(CC) -o sim_irk_crane.out sim_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo
-	@echo " Example sim_irk_crane_yt build complete."
+	@echo " Example sim_irk_crane build complete."
 	@echo
 
 mass_spring_hpipm: mass_spring_hpipm.o
@@ -101,6 +104,9 @@ nonlinear_chain_ocp_nlp: $(OBJS)
 
 run_sim_erk_crane:
 	./sim_erk_crane.out
+
+run_sim_irk_crane:
+	./sim_irk_crane.out
 
 run_mass_spring_hpipm:
 	./mass_spring_hpipm.out
