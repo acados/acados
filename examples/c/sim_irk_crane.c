@@ -51,8 +51,8 @@ int main() {
     irk_opts->num_steps = 4;
     in->step = T / irk_opts->num_steps;
     irk_opts->sens_forw = true;
-    irk_opts->sens_adj = false;
-    irk_opts->sens_hess = false;
+    irk_opts->sens_adj = true;
+    // irk_opts->sens_hess = false;
 
     in->impl_ode = &impl_odeFun;
     in->eval_impl_res = &impl_ode_fun;
@@ -136,8 +136,8 @@ int main() {
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
+    printf("cpt: %8.5f [ms]\n", out->info->CPUtime*1000);
+    printf("AD cpt: %8.5f [ms]\n", out->info->ADtime*1000);
 
     if(irk_opts->sens_adj){
         struct d_strmat sA;
