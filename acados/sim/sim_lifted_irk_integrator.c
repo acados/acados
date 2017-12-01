@@ -98,9 +98,228 @@ void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
 }
 
 
-int sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args) {
-    int nx = in->nx;
-    int nu = in->nu;
+void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_) {
+    sim_rk_opts *opts = (sim_rk_opts*) opts_;
+    enum Newton_type_collocation type = exact;
+    opts->scheme->type = type;
+    opts->scheme->freeze = false;
+    get_Gauss_nodes(opts->num_stages, opts->c_vec);
+    create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
+    if (dims->num_stages <= 15 && (type == simplified_in || type == simplified_inis)) {
+        read_Gauss_simplified(opts->num_stages, opts->scheme);
+    } else {
+        opts->scheme->type = exact;
+    }
+
+    opts->num_steps = 2;
+    opts->num_forw_sens = dims->nx + dims->nu;
+    opts->sens_forw = true;
+    opts->sens_adj = false;
+    opts->sens_hess = false;
+}
+
+
+int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts_) {
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int num_steps = opts->num_steps;
+    int num_stages = opts->num_stages;
+    int nf = opts->num_forw_sens;
+    int num_sys = (int) ceil(num_stages/2.0);
+
+    int size = sizeof(sim_lifted_irk_memory);
+
+    size += num_steps * num_stages * sizeof(double *);  // jac_traj
+    size += num_sys * sizeof(double *);  // sys_mat2
+    size += num_sys * sizeof(int *);  // ipiv2
+    size += num_sys * sizeof(double *);  // sys_sol2
+    size += num_sys * sizeof(struct d_strmat *);  // str_mat2
+    size += num_sys * sizeof(struct d_strmat *);  // str_sol2
+
+    make_int_multiple_of(8, &size);
+
+    size += nf;  // grad_correction
+    size += nx * num_stages;  // grad_K
+
+    size += num_steps * num_stages * nx * sizeof(double);  // K_traj
+    size += num_steps * num_stages * nx * nf * sizeof(double);  // DK_traj
+    size += num_steps * num_stages * nx * sizeof(double);  // mu_traj
+    size += nx * sizeof(double);  // x
+    size += nu * sizeof(double);  // u
+    if (opts->scheme->type == simplified_inis)
+        size += num_steps * num_stages * nx * nf * sizeof(double);  // delta_DK_traj
+
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        size += num_steps * num_stages * nx * sizeof(double);  // adj_traj
+        size += num_steps * num_stages * nx * nx * sizeof(double);  // jac_traj
+    }
+
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        int dim_sys = 2 * nx;
+        size += (num_sys - 1) * dim_sys * dim_sys * sizeof(double);  // sys_mat2
+        size += (num_sys - 1) * dim_sys * sizeof(double);  // ipiv2
+        size += (num_sys - 1) * dim_sys * (1 + nf) * sizeof(double);  // sys_sol2
+
+        if (num_sys != floor(num_stages / 2.0)) // odd number of stages
+            dim_sys = nx;
+        size += dim_sys * dim_sys * sizeof(double);  // sys_mat2
+        size += dim_sys * sizeof(int);  // ipiv2
+        size += dim_sys * (1 + nf) * sizeof(double);  // sys_sol2
+    } else {
+        num_sys = 1;
+    }
+
+#if !TRIPLE_LOOP
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+
+        int dim_sys = 2 * nx;
+        for (int i = 0; i < num_sys; i++) {
+            if ((i + 1) == num_sys && num_sys != floor(num_stages / 2.0))  // odd number of stages
+                dim_sys = nx;
+
+#if defined(LA_HIGH_PERFORMANCE)
+            size += d_size_strmat(dim_sys, dim_sys);  // str_mat2
+            size += d_size_strmat(dim_sys, 1 + NF);  // str_sol2
+#elif defined(LA_REFERENCE)
+            size += d_size_diag_strmat(dim_sys, dim_sys);
+#else  // LA_BLAS
+            size += 0;
+#endif  // LA_HIGH_PERFORMANCE
+        }
+    }
+#endif  // !TRIPLE_LOOP
+    size += 2 * 8;
+    return size;
+}
+
+void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory) {
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int num_steps = opts->num_steps;
+    int num_stages = opts->num_stages;
+    int nf = opts->num_forw_sens;
+    int num_sys = (int) ceil(num_stages/2.0);
+
+    char *c_ptr = raw_memory;
+    
+    sim_lifted_irk_memory *memory = raw_memory;
+    c_ptr += sizeof(sim_lifted_irk_memory);
+
+    align_char_to(8, &c_ptr);
+
+    assign_double_ptrs(num_steps * num_stages, &memory->jac_traj, &c_ptr);
+    assign_double_ptrs(num_sys, &memory->sys_mat2, &c_ptr);
+    assign_int_ptrs(num_sys, &memory->ipiv2, &c_ptr);
+    assign_double_ptrs(num_sys, &memory->sys_sol2, &c_ptr);
+    assign_strmat_ptrs_to_ptrs(num_sys, &memory->str_mat2, &c_ptr);
+    assign_strmat_ptrs_to_ptrs(num_sys, &memory->str_sol2, &c_ptr);
+
+    align_char_to(8, &c_ptr);
+
+    assign_double(nf, &memory->grad_correction, &c_ptr);
+    assign_double(nx * num_stages, &memory->grad_K, &c_ptr);
+
+    assign_double(num_steps * num_stages * nx, &memory->K_traj, &c_ptr);
+    assign_double(num_steps * num_stages * nx * nf, &memory->DK_traj, &c_ptr);
+    assign_double(num_steps * num_stages * nx, &memory->mu_traj, &c_ptr);
+    assign_double(nx, &memory->x, &c_ptr);
+    assign_double(nu, &memory->u, &c_ptr);
+
+    if (opts->scheme->type == simplified_inis)
+        assign_double(num_steps * num_stages * nx * nf, &memory->delta_DK_traj, &c_ptr);
+        
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        assign_double(num_steps * num_stages * nx, &memory->adj_traj, &c_ptr);
+        for (int i = 0; i < num_steps * num_stages; ++i)
+            assign_double(nx * nx, &memory->jac_traj[i], &c_ptr);
+    }
+
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+        int dim_sys = 2 * nx;
+        for (int i = 0; i < num_sys; ++i) {
+            assign_double(dim_sys * dim_sys, &memory->sys_mat2[i], &c_ptr);
+            assign_double(dim_sys, &memory->sys_mat2[i], &c_ptr);
+            assign_double(dim_sys * (1 + nf), &memory->sys_mat2[i], &c_ptr);
+
+            for (int j = 0; j < dim_sys * dim_sys; ++j)
+                memory->sys_mat2[i][j] = 0.0;
+            for (int j = 0; j < dim_sys; j++)
+                memory->sys_mat2[i][j * (dim_sys + 1)] = 1.0;
+            
+        }
+        if (num_sys != floor(num_stages / 2.0)) // odd number of stages
+            dim_sys = nx;
+        assign_double(dim_sys * dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
+        assign_double(dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
+        assign_double(dim_sys * (1 + nf), &memory->sys_mat2[num_sys], &c_ptr);
+
+        for (int j = 0; j < dim_sys * dim_sys; ++j)
+            memory->sys_mat2[num_sys][j] = 0.0;
+        for (int j = 0; j < dim_sys; j++)
+            memory->sys_mat2[num_sys][j * (dim_sys + 1)] = 1.0;
+    } else {
+        num_sys = 1;
+    }
+
+#if !TRIPLE_LOOP
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
+
+    int dim_sys = 2 * nx;
+    for (int i = 0; i < num_sys; i++) {
+        if ((i + 1) == num_sys && num_sys != floor(num_stages / 2.0))  // odd number of stages
+            dim_sys = nx;
+
+#if defined(LA_HIGH_PERFORMANCE)
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
+#elif defined(LA_REFERENCE)
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+        d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
+        c_ptr += dim_sys * sizeof(double);
+#else  // LA_BLAS
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+#endif  // LA_HIGH_PERFORMANCE
+        dgesc_libstr(dim_sys, dim_sys, 0.0 memory->str_mat2[i], 0, 0);
+        dgesc_libstr(dim_sys, 1 + nf, 0.0, memory->str_sol2[i], 0, 0);
+        }
+    }
+#endif  // !TRIPLE_LOOP
+
+    assert((char*)raw_memory + sim_lifted_irk_calculate_memory_size(dims, opts) >= c_ptr);
+
+    // initialize
+    for (int i = 0; i < num_steps * num_stages * nx; ++i)
+        memory->K_traj[i] = 0.0;
+    for (int i = 0; i < num_steps * num_stages * nx * nf; ++i)
+        memory->DK_traj[i] = 0.0;
+    for (int i = 0; i < num_steps * num_stages * nx; ++i)
+        memory->mu_traj[i] = 0.0;
+
+    if (opts->scheme->type == simplified_inis)    
+        for (int i = 0; i < num_steps * num_stages * nx * nf; ++i)
+            memory->delta_DK_traj[i] = 0.0;
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {                
+        for (int i = 0; i < num_steps * num_stages * nx; ++i)
+            memory->adj_traj[i] = 0.0;
+        for (int i = 0; i < num_steps * num_stages; ++i)
+            for (int j = 0; j < nx * nx; ++j)
+                memory->jac_traj[i][j] = 0.0;
+    }
+
+    return memory;
+}
+
+
+
+int sim_lifted_irk_calculate_workspace_size(sim_dims *dims, void *args) {
+    int nx = dims->nx;
+    int nu = dims->nu;
     sim_rk_opts *opts = (sim_rk_opts *)args;
     int num_stages = opts->num_stages;
     int NF = opts->num_forw_sens;
@@ -616,8 +835,8 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args,
     }
 }
 
-int sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
-                     void *work_) {
+int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_) {
+
     int nx = in->nx;
     int nu = in->nu;
     sim_rk_opts *opts = (sim_rk_opts *)args;
@@ -633,9 +852,7 @@ int sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
     real_t *c_vec = opts->c_vec;
-
-    //    print_matrix("stdout", A_mat, num_stages, num_stages);
-
+    
     real_t **VDE_tmp = work->VDE_tmp;
     real_t *out_tmp = work->out_tmp;
     real_t *rhs_in = work->rhs_in;
@@ -669,8 +886,7 @@ int sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     real_t timing_la = 0.0;
     real_t timing_ad = 0.0;
 
-    if (NF != nx + nu) return -1;  // NOT YET IMPLEMENTED
-//    printf("NU = %d, NF = %d \n", nu, NF);
+    assert(NF == nx + nu && "Not implemented yet for other num_forw_sens");
 
     acados_tic(&timer);
     for (i = 0; i < nx; i++) out_tmp[i] = in->x[i];
@@ -1153,249 +1369,4 @@ int sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem_,
     out->info->ADtime = timing_ad;
 
     return 0;  // success
-}
-
-
-// for (i = 0; i < num_steps * num_stages * nx; i++) mem->K_traj[i] = 0.0;
-// for (i = 0; i < num_steps * num_stages * nx * NF; i++) mem->DK_traj[i] = 0.0;
-// for (i = 0; i < num_steps * num_stages * nx; i++) mem->mu_traj[i] = 0.0;
-
-// for (i = 0; i < num_steps * num_stages * nx * NF; i++) mem->delta_DK_traj[i] = 0.0;
-
-// for (i = 0; i < num_steps * num_stages * nx; i++) mem->adj_traj[i] = 0.0;
-
-// for (int i = 0; i < num_steps * num_stages; i++) mem->jac_traj[i] = calloc(nx * nx, sizeof(*mem->jac_traj[i]));
-
-// for (int j = 0; j < 4 * nx * nx; j++) mem->sys_mat2[i][j] = 0.0;
-// for (int j = 0; j < 2 * nx; j++) mem->sys_mat2[i][j * (2 * nx + 1)] = 1.0;
-
-int sim_lifted_irk_calculate_memory_size(sim_dims *dims, sim_rk_opts *opts) {
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int num_steps = opts->num_steps;
-    int num_stages = opts->num_stages;
-    int nf = opts->num_forw_sens;
-    int num_sys = (int) ceil(num_stages/2.0);
-
-    int size = sizeof(sim_lifted_irk_memory);
-
-    size += num_steps * num_stages * sizeof(double *);
-    size += num_sys * sizeof(double *);
-    size += num_sys * sizeof(int *);
-    size += num_sys * sizeof(double *);
-    size += num_sys * sizeof(struct d_strmat *);
-    size += num_sys * sizeof(struct d_strmat *);
-
-    make_int_multiple_of(8, &size);
-
-    size += nf;  // grad_correction
-    size += nx * num_stages;  // grad_K
-
-    size += num_steps * num_stages * nx * sizeof(double);  // K_traj
-    size += num_steps * num_stages * nx * nf * sizeof(double);  // DK_traj
-    size += num_steps * num_stages * nx * sizeof(double);  // mu_traj
-    size += nx * sizeof(double);  // x
-    size += nu * sizeof(double);  // u
-    if (opts->scheme->type == simplified_inis)
-        size += num_steps * num_stages * nx * nf * sizeof(double);  // delta_DK_traj
-
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-        size += num_steps * num_stages * nx * sizeof(double);  // adj_traj
-        size += num_steps * num_stages * nx * nx * sizeof(double);  // jac_traj
-    }
-
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-        int dim_sys = 2 * nx;
-        size += (num_sys - 1) * dim_sys * dim_sys * sizeof(double);  // sys_mat2
-        size += (num_sys - 1) * dim_sys * sizeof(double);  // ipiv2
-        size += (num_sys - 1) * dim_sys * (1 + nf) * sizeof(double);  // sys_sol2
-
-        if (num_sys != floor(num_stages / 2.0)) // odd number of stages
-            dim_sys = nx;
-        size += dim_sys * dim_sys * sizeof(double);  // sys_mat2
-        size += dim_sys * sizeof(int);  // ipiv2
-        size += dim_sys * (1 + nf) * sizeof(double);  // sys_sol2
-    } else {
-        num_sys = 1;
-    }
-
-#if !TRIPLE_LOOP
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-
-        int dim_sys = 2 * nx;
-        for (int i = 0; i < num_sys; i++) {
-            if ((i + 1) == num_sys && num_sys != floor(num_stages / 2.0))  // odd number of stages
-                dim_sys = nx;
-
-#if defined(LA_HIGH_PERFORMANCE)
-            size += d_size_strmat(dim_sys, dim_sys);  // str_mat2
-            size += d_size_strmat(dim_sys, 1 + NF);  // str_sol2
-#elif defined(LA_REFERENCE)
-            size += d_size_diag_strmat(dim_sys, dim_sys);
-#else  // LA_BLAS
-            size += 0;
-#endif  // LA_HIGH_PERFORMANCE
-        }
-    }
-#endif  // !TRIPLE_LOOP
-    size += 1 * 8;
-    return size;
-}
-
-sim_lifted_irk_memory *sim_lifted_irk_assign_memory(sim_dims *dims, sim_rk_opts *opts, void *raw_memory) {
-    int nx = dims->nx;
-    int nu = dims->nu;
-    int num_steps = opts->num_steps;
-    int num_stages = opts->num_stages;
-    int nf = opts->num_forw_sens;
-    int num_sys = (int) ceil(num_stages/2.0);
-
-    char *c_ptr = raw_memory;
-    
-    sim_lifted_irk_memory *memory = raw_memory;
-    c_ptr += sizeof(sim_lifted_irk_memory);
-
-    assign_double_ptrs(num_steps * num_stages, &memory->jac_traj, &c_ptr);
-    assign_double_ptrs(num_sys, &memory->sys_mat2, &c_ptr);
-    assign_int_ptrs(num_sys, &memory->ipiv2, &c_ptr);
-    assign_double_ptrs(num_sys, &memory->sys_sol2, &c_ptr);
-    assign_strmat_ptrs(num_sys, &memory->str_mat2, &c_ptr);
-    assign_strmat_ptrs(num_sys, &memory->str_sol2, &c_ptr);
-
-    align_char_to(8, &c_ptr);
-
-    assign_double(nf, &memory->grad_correction, &c_ptr);
-    assign_double(nx * num_stages, &memory->grad_K, &c_ptr);
-    assign_double(num_steps * num_stages * nx, &memory->K_traj, &c_ptr);
-    assign_double(num_steps * num_stages * nx * nf, &memory->DK_traj, &c_ptr);
-    assign_double(num_steps * num_stages * nx, &memory->mu_traj, &c_ptr);
-    assign_double(nx, &memory->x, &c_ptr);
-    assign_double(nu, &memory->u, &c_ptr);
-
-    if (opts->scheme->type == simplified_inis)
-        assign_double(num_steps * num_stages * nx * nf, &memory->delta_DK_traj, &c_ptr);
-        
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-        assign_double(num_steps * num_stages * nx, &memory->adj_traj, &c_ptr);
-        for (int i = 0; i < num_steps * num_stages; ++i)
-            assign_double(nx * nx, &memory->jac_traj[i], &c_ptr);
-    }
-
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-        int dim_sys = 2 * nx;
-        for (int i = 0; i < num_sys; ++i) {
-            assign_double(dim_sys * dim_sys, &memory->sys_mat2[i], &c_ptr);
-            assign_double(dim_sys, &memory->sys_mat2[i], &c_ptr);
-            assign_double(dim_sys * (1 + nf), &memory->sys_mat2[i], &c_ptr);
-        }
-        if (num_sys != floor(num_stages / 2.0)) // odd number of stages
-            dim_sys = nx;
-        assign_double(dim_sys * dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
-        assign_double(dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
-        assign_double(dim_sys * (1 + nf), &memory->sys_mat2[num_sys], &c_ptr);
-    } else {
-        num_sys = 1;
-    }
-
-#if !TRIPLE_LOOP
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-
-    int dim_sys = 2 * nx;
-    for (int i = 0; i < num_sys; i++) {
-        if ((i + 1) == num_sys && num_sys != floor(num_stages / 2.0))  // odd number of stages
-            dim_sys = nx;
-
-#if defined(LA_HIGH_PERFORMANCE)
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
-#elif defined(LA_REFERENCE)
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
-        d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
-#else  // LA_BLAS
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
-#endif  // LA_HIGH_PERFORMANCE
-        }
-    }
-#endif  // !TRIPLE_LOOP
-    return memory;
-}
-
-void sim_irk_create_arguments(void *args, const int num_stages,
-                              const char *name) {
-    sim_rk_opts *opts = (sim_rk_opts *)args;
-    opts->num_stages = num_stages;
-    opts->A_mat = calloc(num_stages * num_stages, sizeof(*opts->A_mat));
-    opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
-    opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
-    opts->scheme->type = exact;
-
-    if (strcmp(name, "Gauss") == 0) {  // GAUSS METHODS
-        get_Gauss_nodes(opts->num_stages, opts->c_vec);
-        create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec,
-                             opts->A_mat);
-    } else if (strcmp(name, "Radau") == 0) {
-        // TODO(rien): add Radau IIA collocation schemes
-        //        get_Radau_nodes(opts->num_stages, opts->c_vec);
-        create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec,
-                             opts->A_mat);
-    } else {
-        // throw error somehow?
-    }
-    //    print_matrix("stdout", opts->c_vec, num_stages, 1);
-    //    print_matrix("stdout", opts->A_mat, num_stages, num_stages);
-    //    print_matrix("stdout", opts->b_vec, num_stages, 1);
-}
-
-
-void sim_irk_create_Newton_scheme(void *args, int num_stages, const char* name,
-    enum Newton_type_collocation type) {
-    sim_rk_opts *opts = (sim_rk_opts*) args;
-    opts->scheme->type = type;
-    opts->scheme->freeze = false;
-    if (strcmp(name, "Gauss") == 0) {  // GAUSS METHODS
-        if (num_stages <= 15 &&
-            (type == simplified_in || type == simplified_inis)) {
-            opts->scheme->eig = calloc(num_stages, sizeof(*opts->scheme->eig));
-            opts->scheme->transf1 =
-                calloc(num_stages * num_stages, sizeof(*opts->scheme->transf1));
-            opts->scheme->transf2 =
-                calloc(num_stages * num_stages, sizeof(*opts->scheme->transf2));
-            opts->scheme->transf1_T = calloc(num_stages * num_stages,
-                                            sizeof(*opts->scheme->transf1_T));
-            opts->scheme->transf2_T = calloc(num_stages * num_stages,
-                                            sizeof(*opts->scheme->transf2_T));
-            read_Gauss_simplified(opts->num_stages, opts->scheme);
-        } else if (num_stages == 1) {
-            opts->scheme->type = exact;
-        } else {
-            // throw error somehow?
-        }
-    } else if (strcmp(name, "Radau") == 0) {
-        // TODO(rien): add Radau IIA collocation schemes
-    } else {
-        // throw error somehow?
-    }
-}
-
-void sim_lifted_irk_initialize(const sim_in *in, void *args, void *mem_,
-                               void **work) {
-    sim_rk_opts *opts = (sim_rk_opts *)args;
-    sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
-
-    // TODO(dimitris): opts should be an input to initialize
-    if (opts->num_stages > 0) {
-        sim_irk_create_arguments(args, opts->num_stages, "Gauss");
-    } else {
-        sim_irk_create_arguments(args, 2, "Gauss");
-    }
-    sim_lifted_irk_create_memory(in, args, mem);
-    int work_space_size = sim_lifted_irk_calculate_workspace_size(in, args);
-    *work = (void *)malloc(work_space_size);
-}
-
-void sim_lifted_irk_destroy(void *mem, void *work) {
-    free(work);
-    sim_lifted_irk_free_memory(mem);
 }

@@ -29,6 +29,7 @@
 typedef enum {
     PREVIOUS,
     ERK,
+    LIFTED_IRK
 } sim_solver_t;
 
 

@@ -28,6 +28,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
 
 
 int sim_in_calculate_size(sim_dims *dims)
@@ -172,6 +173,15 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver
             sim_solver->calculate_memory_size = &sim_erk_calculate_memory_size;
             sim_solver->assign_memory = &sim_erk_assign_memory;
             sim_solver->calculate_workspace_size = &sim_erk_calculate_workspace_size;
+            break;
+        case LIFTED_IRK:
+            sim_solver->fun = &sim_lifted_irk;
+            sim_solver->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
+            sim_solver->assign_args = &sim_lifted_irk_assign_opts;
+            sim_solver->initialize_default_args = &sim_lifted_irk_initialize_default_args;
+            sim_solver->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
+            sim_solver->assign_memory = &sim_lifted_irk_assign_memory;
+            sim_solver->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
             break;
         default:
             return_value = ACADOS_FAILURE;

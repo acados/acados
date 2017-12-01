@@ -60,6 +60,10 @@ void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr);
 void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr);
 
 
+// allocate vector of pointers to vector of pointers to strmats and advance pointer
+void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr);
+
+
 // allocate vector of ints and advance pointer
 void assign_int(int n, int **v, char **ptr);
 

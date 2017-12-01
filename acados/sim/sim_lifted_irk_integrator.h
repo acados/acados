@@ -69,8 +69,8 @@ typedef struct {
     int_t **ipiv2;
     real_t **sys_sol2;
 
-    struct d_strmat *str_mat2;
-    struct d_strmat *str_sol2;
+    struct d_strmat **str_mat2;
+    struct d_strmat **str_sol2;
 
 } sim_lifted_irk_memory;
 
@@ -78,14 +78,15 @@ int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
 
 void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory);
 
-int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem,
-                     void *work);
+void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_);
 
-int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args);
+int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts);
 
-void sim_lifted_irk_create_memory(const sim_in *in, void *args,
-                                  sim_lifted_irk_memory *mem);
-void sim_lifted_irk_free_memory(void *mem_);
+void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
+    
+int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem, void *work);
+
+int sim_lifted_irk_calculate_workspace_size(sim_dims *in, void *args);
 
 void sim_irk_create_arguments(void *args, const int_t num_stages, const char* name);
 

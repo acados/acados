@@ -123,6 +123,19 @@ void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr)
 }
 
 
+void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *sm = (struct d_strmat **) acados_malloc(n, sizeof(struct d_strmat *));
+#else
+    *sm = (struct d_strmat **) *ptr;
+    *ptr += sizeof(struct d_strmat *) * n;
+#endif
+}
+
+
 
 void assign_int(int n, int **v, char **ptr)
 {
