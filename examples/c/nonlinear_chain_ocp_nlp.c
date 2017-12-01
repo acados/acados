@@ -85,46 +85,7 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
            num_free_masses, num_stages, scheme_name);
 }
 
-
-#ifndef YT
-static void select_model(const int num_free_masses, sim_in *sim)
-{
-    switch (num_free_masses)
-    {
-        case 1:
-            sim->vde = &vde_chain_nm2;
-            sim->forward_vde_wrapper = &vde_fun;
-            sim->jac = &jac_chain_nm2;
-            sim->jacobian_wrapper = &jac_fun;
-            sim->vde_adj = &vde_hess_chain_nm2;
-            sim->adjoint_vde_wrapper = &vde_hess_fun;
-            break;
-        case 2:
-            sim->vde = &vde_chain_nm3;
-            sim->forward_vde_wrapper = &vde_fun;
-            sim->jac = &jac_chain_nm3;
-            sim->jacobian_wrapper = &jac_fun;
-            sim->vde_adj = &vde_hess_chain_nm3;
-            sim->adjoint_vde_wrapper = &vde_hess_fun;
-            break;
-        case 3:
-            sim->vde = &vde_chain_nm4;
-            sim->forward_vde_wrapper = &vde_fun;
-            sim->jac = &jac_chain_nm4;
-            sim->jacobian_wrapper = &jac_fun;
-            sim->vde_adj = &vde_hess_chain_nm4;
-            sim->adjoint_vde_wrapper = &vde_hess_fun;
-            break;
-        default:
-            printf("Problem size not available\n");
-            exit(1);
-            break;
-    }
-}
-#endif
-
-#ifdef YT
-static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
+static void select_model(const int num_free_masses, ocp_nlp_in *nlp)
 {
     for (int ii = 0; ii < nlp->dims->N; ii++)
     {
@@ -152,7 +113,6 @@ static void select_model_new(const int num_free_masses, ocp_nlp_in *nlp)
         }
     }
 }
-#endif
 
 
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
@@ -328,71 +288,14 @@ int main() {
     for (int j = 0; j < NX; j++)
         ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
-    #ifdef YT
-
     for (int jj = 0; jj < NN; jj++)
     {
-        select_model_new(NMF, nlp);
+        select_model(NMF, nlp);
     }
 
-    # else
-
-    // Simulation
-    double Ts = TF / NN;
-    sim_RK_opts rk_opts[NN];
-    sim_lifted_irk_memory irk_mem[NN];
     nlp->freezeSens = false;
     if (scheme > 2)
         nlp->freezeSens = true;
-
-    for (int jj = 0; jj < NN; jj++) {
-        nlp->sim[jj].in->num_steps = Ns;
-        nlp->sim[jj].in->step = Ts / nlp->sim[jj].in->num_steps;
-        nlp->sim[jj].in->nx = NX;
-        nlp->sim[jj].in->nu = NU;
-
-        nlp->sim[jj].in->sens_forw = true;
-        nlp->sim[jj].in->sens_adj = true;
-        nlp->sim[jj].in->sens_hess = true;
-        nlp->sim[jj].in->num_forw_sens = NX + NU;
-
-        select_model(NMF, nlp->sim[jj].in);
-
-        for (int i = 0; i < NX * (NX + NU); i++)
-            nlp->sim[jj].in->S_forw[i] = 0.0;
-        for (int i = 0; i < NX; i++)
-            nlp->sim[jj].in->S_forw[i * (NX + 1)] = 1.0;
-        for (int i = 0; i < NX + NU; i++)
-            nlp->sim[jj].in->S_adj[i] = 0.0;
-        for (int i = 0; i < d * NX; i++)
-            nlp->sim[jj].in->grad_K[i] = 0.0;
-
-        nlp->sim[jj].args = &rk_opts[jj];
-
-        int workspace_size;
-        if (d > 0) {
-            nlp->sim[jj].fun = &sim_lifted_irk;
-            nlp->sim[jj].mem = &irk_mem[jj];
-            sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
-            if (scheme == EXACT_NEWTON) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
-            } else if (scheme == INEXACT_NEWTON || scheme == FROZEN_INEXACT_NEWTON) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
-            } else if (scheme == INIS || scheme == FROZEN_INIS) {
-                sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
-            }
-            sim_lifted_irk_create_memory(nlp->sim[jj].in, &rk_opts[jj], &irk_mem[jj]);
-            workspace_size = sim_lifted_irk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
-        } else {
-            nlp->sim[jj].fun = &sim_erk;
-            nlp->sim[jj].mem = 0;
-            sim_erk_create_arguments(&rk_opts[jj], 4);
-            workspace_size = sim_erk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
-        }
-        nlp->sim[jj].work = (void *) malloc(workspace_size);
-    }
-
-    #endif
 
     // Box constraints
     int *nb = nlp->dims->nb;
@@ -434,34 +337,47 @@ int main() {
     qp_solver_t qp_solver_name = HPIPM;
 
     // set up args with nested structs
-    #ifdef YT
-
     sim_solver_t sim_solver_names[NN];
     int num_stages[NN];
 
-    sim_solver_names[0] = ERK;
-    sim_solver_names[1] = ERK;
+    for (int ii = 0; ii < NN; ii++)
+    {
+        sim_solver_names[ii] = ERK;
+        num_stages[ii] = 4;
+    }
 
-    for (int ii = 2; ii < NN; ii++) sim_solver_names[ii] = PREVIOUS;
-
-    num_stages[0] = 4;
-    num_stages[1] = 4;
-    for (int ii = 2; ii < NN; ii++) num_stages[ii] = -1;  // NOTE(dimitris): overwritten with correct values inside create_args below
     nlp->dims->num_stages = num_stages;
 
     ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
+    for (int i = 0; i < NN; ++i) {
+        sim_rk_opts *sim_opts = nlp_args->sim_solvers_args[i];
+        sim_opts->interval = TF/NN;
+        sim_opts->num_steps = 2;
+        sim_opts->sens_forw = true;
+        sim_opts->sens_adj = false;
+        sim_opts->sens_hess = false;
+        if (d > 0) {
+            assert(1 == 0 && "Implicit not implemented");
+            // sim_irk_create_arguments(&rk_opts[jj], d, "Gauss");
+            // if (scheme == EXACT_NEWTON) {
+                // sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", exact);
+            // } else if (scheme == INEXACT_NEWTON || scheme == FROZEN_INEXACT_NEWTON) {
+                // sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_in);
+            // } else if (scheme == INIS || scheme == FROZEN_INIS) {
+                // sim_irk_create_Newton_scheme(&rk_opts[jj], d, "Gauss", simplified_inis);
+            // }
+            // sim_lifted_irk_create_memory(nlp->sim[jj].in, &rk_opts[jj], &irk_mem[jj]);
+            // workspace_size = sim_lifted_irk_calculate_workspace_size(nlp->sim[jj].in, &rk_opts[jj]);
+        }
+    }
 
-    #else
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name);
-    #endif
     nlp_args->maxIter = MAX_SQP_ITERS;
 
     /************************************************
     * ocp_nlp out
     ************************************************/
 
-    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
-    ocp_nlp_out *nlp_out = assign_ocp_nlp_out(nlp->dims, nlp_out_mem);
+    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp->dims);
 
     /************************************************
     * gn_sqp memory
@@ -522,11 +438,6 @@ int main() {
     /************************************************
     * free memory
     ************************************************/
-
-    #ifndef YT
-    // TODO(dimitris): still huge memory leaks from integrator args, mem, workspace...
-    tmp_free_ocp_nlp_in_sim_solver(nlp);
-    #endif
 
     free(nlp_work);
     free(nlp_mem);

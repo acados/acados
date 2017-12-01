@@ -39,6 +39,18 @@ void vde_adj_fun(const int_t nx, const int_t nu, const real_t* in, real_t* out,
 void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
     casadi_function_t discrete_model);
 
+void impl_ode_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
+    casadi_function_t impl_ode);
+
+void impl_jac_x_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, 
+    casadi_function_t impl_jac_x);
+
+void impl_jac_xdot_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, 
+    casadi_function_t impl_jac_xdot);
+
+void impl_jac_u_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, 
+    casadi_function_t impl_jac_u);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

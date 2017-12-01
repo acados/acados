@@ -127,7 +127,7 @@ int main() {
     sim_info erk_info;
     sim_out.info = &erk_info;
 
-    sim_RK_opts rk_opts;
+    sim_rk_opts rk_opts;
     sim_erk_create_arguments(&rk_opts, 4);
     void *erk_work;
     int_t work_space_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);

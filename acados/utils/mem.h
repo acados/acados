@@ -52,8 +52,9 @@ void copy_module_pointers_to_args(void *solver_in_args_, void *solver_);
 void make_int_multiple_of(int num, int *size);
 
 
-// align char pointer to number (typically 8 for pointers and doubles, 64 for blasfeo structs)
-void align_char_to(int num, char **c_ptr);
+// align char pointer to number (typically 8 for pointers and doubles,
+// 64 for blasfeo structs) and return offset
+int align_char_to(int num, char **c_ptr);
 
 
 // switch between malloc and calloc (for valgrinding)
@@ -74,6 +75,10 @@ void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr);
 
 // allocate vector of pointers to strmats and advance pointer
 void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr);
+
+
+// allocate vector of pointers to vector of pointers to strmats and advance pointer
+void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr);
 
 
 // allocate vector of ints and advance pointer

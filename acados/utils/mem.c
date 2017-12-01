@@ -40,10 +40,12 @@ void make_int_multiple_of(int num, int *size) {
 
 
 
-void align_char_to(int num, char **c_ptr) {
+int align_char_to(int num, char **c_ptr) {
     size_t s_ptr = (size_t)*c_ptr;
     s_ptr = (s_ptr + num - 1) / num * num;
+    int offset = num - (int)(s_ptr - (size_t)(*c_ptr));
     *c_ptr = (char *)s_ptr;
+    return offset;
 }
 
 
@@ -119,6 +121,19 @@ void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr)
 #else
     *sm = (struct d_strmat *) *ptr;
     *ptr += sizeof(struct d_strmat) * n;
+#endif
+}
+
+
+void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *sm = (struct d_strmat **) acados_malloc(n, sizeof(struct d_strmat *));
+#else
+    *sm = (struct d_strmat **) *ptr;
+    *ptr += sizeof(struct d_strmat *) * n;
 #endif
 }
 
