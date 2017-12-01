@@ -188,7 +188,7 @@ int main() {
             sim_out sim_out[NN];
             sim_info info[NN];
 
-            sim_RK_opts rk_opts[NN];
+            sim_rk_opts rk_opts[NN];
             void *sim_work = NULL;
             sim_lifted_irk_memory irk_mem[NN];
 

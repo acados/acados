@@ -6,9 +6,9 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados/utils/mem.h"
-#include "acados/sim/sim_rk_common_yt.h"
-#include "acados/sim/sim_common_yt.h"
-#include "acados/sim/sim_irk_integrator_yt.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common.h"
+#include "acados/sim/sim_irk_integrator.h"
 
 #include "external/blasfeo/include/blasfeo_target.h"
 #include "external/blasfeo/include/blasfeo_common.h"

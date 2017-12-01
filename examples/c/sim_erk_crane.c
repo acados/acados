@@ -2,16 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "acados/sim/sim_common_yt.h"
-#include "acados/sim/sim_rk_common_yt.h"
-#include "acados/sim/sim_erk_integrator_yt.h"
+#include "acados/sim/sim_common.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/create.h"
 
-#include "examples/c/yutao_model/yutao_model.h"
+#include "examples/c/crane_model/crane_model.h"
 
 // blasfeo
 #include "external/blasfeo/include/blasfeo_target.h"
@@ -43,7 +44,7 @@ int main() {
     dims.nx = nx;
     dims.nu = nu;
 
-    sim_RK_opts *erk_opts = create_sim_RK_opts(&dims);
+    sim_rk_opts *erk_opts = create_sim_erk_opts(&dims);
 
     sim_in *in = create_sim_in(&dims);
 
@@ -78,11 +79,12 @@ int main() {
     // TODO(dimitris): SET IN DEFAULT ARGS
     erk_opts->num_forw_sens = NF;
 
-    sim_erk_memory *erk_mem = sim_erk_create_memory(&dims, erk_opts);
+    int workspace_size = sim_erk_calculate_workspace_size(&dims, erk_opts);
+    void *workspace = malloc(workspace_size);        
 
     sim_out *out = create_sim_out(&dims);
 
-    int flag = sim_erk_yt(in, out, erk_opts, erk_mem, NULL);
+    int flag = sim_erk(in, out, erk_opts, NULL, workspace);
 
     double *xn = out->xn;
 
@@ -156,7 +158,7 @@ int main() {
     free(xref);
     free(erk_opts);
     free(in);
-    free(erk_mem);
+    free(workspace);
     free(out);
     
     return flag;

@@ -26,7 +26,7 @@
 #include "test/sim/pendulum/casadi/casadi_pendulum.h"
 #include "test/test_utils/eigen.h"
 
-void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim_RK_opts* rk_opts,
+void create_ERK_integrator(sim_in* sim_in, sim_out* sim_out, sim_info* info, sim_rk_opts* rk_opts,
                            int_t NX, int_t NU, real_t T, bool hessian) {
 
     sim_in->num_steps = 10;
