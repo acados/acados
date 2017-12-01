@@ -81,53 +81,45 @@ char *assign_irk_memory(sim_dims *dims, void *opts_, void *raw_memory)
     sim_irk_memory *mem = (sim_irk_memory *) c_ptr;
     c_ptr += sizeof(sim_irk_memory);
 
-    //
 
-    // (*memory)->xn_traj = (struct d_strvec **)c_ptr;
-    // c_ptr += steps* sizeof(struct d_strvec *); 
+    (*memory)->xn_traj = (struct d_strvec **)c_ptr;
+    c_ptr += steps* sizeof(struct d_strvec *); 
     
-    // (*memory)->K_traj = (struct d_strvec **)c_ptr;
-    // c_ptr += steps* sizeof(struct d_strvec *); 
+    (*memory)->K_traj = (struct d_strvec **)c_ptr;
+    c_ptr += steps* sizeof(struct d_strvec *); 
 
-    assign_strvec_ptrs(steps, &mem->xn_traj, &c_ptr);
-    assign_strvec_ptrs(steps, &mem->K_traj, &c_ptr);
+    (*memory)->JG = (struct d_strmat *)c_ptr;
+    c_ptr += sizeof(struct d_strmat); 
 
-    //
-    // (*memory)->JG = (struct d_strmat *)c_ptr;
-    // c_ptr += sizeof(struct d_strmat); 
-    
-    assign_strmat(int m, int n, struct d_strmat *sA, char **ptr);
+    (*memory)->JGf = (struct d_strmat *)c_ptr;
+    c_ptr += sizeof(struct d_strmat);
 
-    // (*memory)->JGf = (struct d_strmat *)c_ptr;
-    // c_ptr += sizeof(struct d_strmat);
+    (*memory)->JKf = (struct d_strmat *)c_ptr;
+    c_ptr += sizeof(struct d_strmat);
 
-    // (*memory)->JKf = (struct d_strmat *)c_ptr;
-    // c_ptr += sizeof(struct d_strmat);
+    (*memory)->JFK = (struct d_strmat *)c_ptr;
+    c_ptr += sizeof(struct d_strmat);
 
-    // (*memory)->JFK = (struct d_strmat *)c_ptr;
-    // c_ptr += sizeof(struct d_strmat);
+    (*memory)->S_forw = (struct d_strmat *)c_ptr;
+    c_ptr += sizeof(struct d_strmat);
 
-    // (*memory)->S_forw = (struct d_strmat *)c_ptr;
-    // c_ptr += sizeof(struct d_strmat);
+    (*memory)->rG = (struct d_strvec *)c_ptr;
+    c_ptr += sizeof(struct d_strvec);
 
-    // (*memory)->rG = (struct d_strvec *)c_ptr;
-    // c_ptr += sizeof(struct d_strvec);
+    (*memory)->K = (struct d_strvec *)c_ptr;
+    c_ptr += sizeof(struct d_strvec);
 
-    // (*memory)->K = (struct d_strvec *)c_ptr;
-    // c_ptr += sizeof(struct d_strvec);
+    (*memory)->xt = (struct d_strvec *)c_ptr;
+    c_ptr += sizeof(struct d_strvec);
 
-    // (*memory)->xt = (struct d_strvec *)c_ptr;
-    // c_ptr += sizeof(struct d_strvec);
+     (*memory)->xn = (struct d_strvec *)c_ptr;
+    c_ptr += sizeof(struct d_strvec);
 
-    //  (*memory)->xn = (struct d_strvec *)c_ptr;
-    // c_ptr += sizeof(struct d_strvec);
+     (*memory)->lambda = (struct d_strvec *)c_ptr;
+    c_ptr += sizeof(struct d_strvec);
 
-    //  (*memory)->lambda = (struct d_strvec *)c_ptr;
-    // c_ptr += sizeof(struct d_strvec);
-
-    // (*memory)->lambdaK = (struct d_strvec *)c_ptr;
-    // c_ptr += sizeof(struct d_strvec);
-
+    (*memory)->lambdaK = (struct d_strvec *)c_ptr;
+    c_ptr += sizeof(struct d_strvec);
 
 
     //
@@ -139,89 +131,125 @@ char *assign_irk_memory(sim_dims *dims, void *opts_, void *raw_memory)
         c_ptr += sizeof(struct d_strvec);
     }
     
-    struct d_strmat *JG = (*memory)->JG; 
-    struct d_strmat *JGf = (*memory)->JGf;
-    struct d_strmat *JKf = (*memory)->JKf;
-    struct d_strmat *JFK = (*memory)->JFK;
-    struct d_strmat *S_forw = (*memory)->S_forw;
+    // struct d_strmat *JG = (*memory)->JG; 
+    // struct d_strmat *JGf = (*memory)->JGf;
+    // struct d_strmat *JKf = (*memory)->JKf;
+    // struct d_strmat *JFK = (*memory)->JFK;
+    // struct d_strmat *S_forw = (*memory)->S_forw;
 
-    struct d_strvec *rG = (*memory)->rG;
-    struct d_strvec *K = (*memory)->K;
-    struct d_strvec *xt = (*memory)->xt;
-    struct d_strvec *xn = (*memory)->xn;
+    // struct d_strvec *rG = (*memory)->rG;
+    // struct d_strvec *K = (*memory)->K;
+    // struct d_strvec *xt = (*memory)->xt;
+    // struct d_strvec *xn = (*memory)->xn;
 
-    struct d_strvec *lambda = (*memory)->lambda;
-    struct d_strvec *lambdaK = (*memory)->lambdaK;
+    // struct d_strvec *lambda = (*memory)->lambda;
+    // struct d_strvec *lambdaK = (*memory)->lambdaK;
 
-    struct d_strvec **xn_traj = (*memory)->xn_traj;
-    struct d_strvec **K_traj = (*memory)->K_traj;
+    // struct d_strvec **xn_traj = (*memory)->xn_traj;
+    // struct d_strvec **K_traj = (*memory)->K_traj;
 
-    align memory to typical cache line size
-    size_t s_ptr = (size_t)c_ptr;
-    s_ptr = (s_ptr + 63) / 64 * 64;
-    c_ptr = (char *)s_ptr;
-    // align_char_to(64, &c_ptr);
+    // align memory to typical cache line size
+    // size_t s_ptr = (size_t)c_ptr;
+    // s_ptr = (s_ptr + 63) / 64 * 64;
+    // c_ptr = (char *)s_ptr;
+    align_char_to(64, &c_ptr);
 
-    d_create_strmat(nx*ns, nx*ns, JG, c_ptr);
-    c_ptr += d_size_strmat(nx*ns, nx*ns);
+    // d_create_strmat(nx*ns, nx*ns, JG, c_ptr);
+    // c_ptr += d_size_strmat(nx*ns, nx*ns);
 
-    d_create_strmat(nx*ns, nx+nu, JGf, c_ptr);
-    c_ptr += d_size_strmat(nx*ns, nx+nu);
+    assign_strmat(nx*ns, nx*ns, &mem->JG, &c_ptr);
 
-    d_create_strmat(nx*ns, nx+nu, JKf, c_ptr);
-    c_ptr += d_size_strmat(nx*ns, nx+nu);
+    // d_create_strmat(nx*ns, nx+nu, JGf, c_ptr);
+    // c_ptr += d_size_strmat(nx*ns, nx+nu);
 
-    d_create_strmat(nx, nx*ns, JFK, c_ptr);
-    c_ptr += d_size_strmat(nx, nx*ns);
+    assign_strmat(nx*ns, nx+nu, &mem->JGf, &c_ptr);
 
-    d_create_strmat(nx, nx+nu, S_forw, c_ptr);
-    c_ptr += d_size_strmat(nx, nx+nu);
+    // d_create_strmat(nx*ns, nx+nu, JKf, c_ptr);
+    // c_ptr += d_size_strmat(nx*ns, nx+nu);
 
-    d_create_strvec(nx*ns, rG, c_ptr);
-    c_ptr += d_size_strvec(nx*ns);
+    assign_strmat(nx*ns, nx+nu, &mem->JKf, &c_ptr);
 
-    d_create_strvec(nx*ns, K, c_ptr);
-    c_ptr += d_size_strvec(nx*ns);
+    // d_create_strmat(nx, nx*ns, JFK, c_ptr);
+    // c_ptr += d_size_strmat(nx, nx*ns);
 
-    d_create_strvec(nx, xt, c_ptr);
-    c_ptr += d_size_strvec(nx);
+    assign_strmat(nx, nx*ns, &mem->JFK, &c_ptr);
 
-    d_create_strvec(nx, xn, c_ptr);
-    c_ptr += d_size_strvec(nx);
+    // d_create_strmat(nx, nx+nu, S_forw, c_ptr);
+    // c_ptr += d_size_strmat(nx, nx+nu);
 
-    d_create_strvec(nx+nu, lambda, c_ptr);
-    c_ptr += d_size_strvec(nx);
+    assign_strmat(nx, nx+nu, &mem->S_forw, &c_ptr);
 
-    d_create_strvec(nx, lambdaK, c_ptr);
-    c_ptr += d_size_strvec(nx*ns);
+    // d_create_strvec(nx*ns, rG, c_ptr);
+    // c_ptr += d_size_strvec(nx*ns);
+
+    assign_strvec(nx*ns, &mem->rG, &c_ptr);
+
+    // d_create_strvec(nx*ns, K, c_ptr);
+    // c_ptr += d_size_strvec(nx*ns);
+
+    assign_strvec(nx*ns, &mem->K, &c_ptr);
+
+    // d_create_strvec(nx, xt, c_ptr);
+    // c_ptr += d_size_strvec(nx);
+
+    assign_strvec(nx, &mem->xt, &c_ptr);
+
+    // d_create_strvec(nx, xn, c_ptr);
+    // c_ptr += d_size_strvec(nx);
+
+    assign_strvec(nx, &mem->xn, &c_ptr);
+
+    // d_create_strvec(nx+nu, lambda, c_ptr);
+    // c_ptr += d_size_strvec(nx);
+
+    assign_strvec(nx+nu, &mem->lambda, &c_ptr);
+
+    // d_create_strvec(nx*ns, lambdaK, c_ptr);
+    // c_ptr += d_size_strvec(nx*ns);
+
+    assign_strvec(nx*ns, &mem->lambdaK, &c_ptr);
 
     //
     for (int i=0;i<steps;i++){
-        d_create_strvec(nx, xn_traj[i], c_ptr);
-        c_ptr += d_size_strvec(nx);
+        // d_create_strvec(nx, xn_traj[i], c_ptr);
+        // c_ptr += d_size_strvec(nx);
 
-        d_create_strvec(nx*ns, K_traj[i], c_ptr);
-        c_ptr += d_size_strvec(nx*ns);
+        // d_create_strvec(nx*ns, K_traj[i], c_ptr);
+        // c_ptr += d_size_strvec(nx*ns);
+
+        assign_strvec(nx, &mem->xn_traj[i], &c_ptr);
+        assign_strvec(nx*ns, &mem->K_traj[i], &c_ptr);
     }
 
     //
-    (*memory)->rGt = (double *)c_ptr;
-    c_ptr += nx * sizeof(double);
+    // (*memory)->rGt = (double *)c_ptr;
+    // c_ptr += nx * sizeof(double);
+    assign_double(nx, &mem->rGt, &c_ptr);
 
-    (*memory)->jac_out = (double *)c_ptr;
-    c_ptr += nx * (2*nx+nu) * sizeof(double);
+    // (*memory)->jac_out = (double *)c_ptr;
+    // c_ptr += nx * (2*nx+nu) * sizeof(double);
 
-    (*memory)->Jt = (double *)c_ptr;
-    c_ptr += nx * nx * sizeof(double);
+    assign_double(nx * (2*nx+nu), &mem->jac_out, &c_ptr);
 
-    (*memory)->ode_args = (double *)c_ptr;
-    c_ptr += (2*nx + nu) * sizeof(double);
+    // (*memory)->Jt = (double *)c_ptr;
+    // c_ptr += nx * nx * sizeof(double);
 
-    (*memory)->S_adj_w = (double *)c_ptr;
-    c_ptr += (nx + nu) * sizeof(double);
+    assign_double(nx * nx, &mem->Jt, &c_ptr);
 
-    (*memory)->ipiv = (int *)c_ptr;
-    c_ptr += nx * ns * sizeof(int);
+    // (*memory)->ode_args = (double *)c_ptr;
+    // c_ptr += (2*nx + nu) * sizeof(double);
+
+    assign_double(2*nx + nu, &mem->ode_args, &c_ptr);
+
+    // (*memory)->S_adj_w = (double *)c_ptr;
+    // c_ptr += (nx + nu) * sizeof(double);
+
+    assign_double(nx + nu, &mem->S_adj_w, &c_ptr);
+
+    // (*memory)->ipiv = (int *)c_ptr;
+    // c_ptr += nx * ns * sizeof(int);
+
+    assign_int(nx * ns , &mem->ipiv, &c_ptr);
 
     assert((char*)raw_memory + irk_calculate_memory_size(dims, opts_) >= c_ptr);
 
