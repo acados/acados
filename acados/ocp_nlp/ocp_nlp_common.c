@@ -111,8 +111,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
     size += 3*N*sizeof(casadi_function_t *);  // vde, vde_adj, jac
     #endif
 
-    size += 1 * 64;
-
     return size;
 }
 
@@ -177,8 +175,7 @@ void tmp_free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
 // TODO(dimitris): move num_stages inside args, as nested integrator args
 ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory)
 {
-    char **c_double_ptr = (char **) raw_memory;
-    char *c_ptr = (char *) *c_double_ptr;
+    char *c_ptr = (char *) raw_memory;
 
     int padding = 0;
     int N = dims->N;
@@ -272,12 +269,7 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     tmp_allocate_ocp_nlp_in_sim_solver(N, dims->nx, dims->nu, num_stages, in);
     #endif
 
-    padding += align_char_to(64, &c_ptr);
-
-    assert((char *) *c_double_ptr + ocp_nlp_in_calculate_size(dims) == c_ptr + padding);
-
-    // advance pointer
-    *c_double_ptr = c_ptr;
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims) == c_ptr + padding);
 
     return in;
 }
@@ -305,9 +297,6 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
         }
         size += sizeof(double)*2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]);  // lam
     }
-
-    size += 1 * 64;
-
     return size;
 }
 
@@ -315,8 +304,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 {
-    char **c_double_ptr = (char **) raw_memory;
-    char *c_ptr = (char *) *c_double_ptr;
+    char *c_ptr = (char *) raw_memory;
 
     int padding = 0;
     int N = dims->N;
@@ -342,12 +330,7 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
         assign_double(2*(dims->nb[ii] + dims->ng[ii] + dims->nh[ii]), &out->lam[ii], &c_ptr);
     }
 
-    padding += align_char_to(64, &c_ptr);
-
-    assert((char *) *c_double_ptr + ocp_nlp_out_calculate_size(dims) == c_ptr + padding);
-
-    // advance pointer
-    *c_double_ptr = c_ptr;
+    assert((char *) raw_memory + ocp_nlp_out_calculate_size(dims) == c_ptr + padding);
 
     return out;
 }

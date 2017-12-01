@@ -155,14 +155,16 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
     c_ptr += args->solver->calculate_memory_size(pcond_dims, args->solver_args);
 
     if (args->pcond_args->N2 < dims->N) {
-        mem->pcond_qp_in = assign_ocp_qp_in(pcond_dims, &c_ptr);
+        mem->pcond_qp_in = assign_ocp_qp_in(pcond_dims, c_ptr);
+        c_ptr += ocp_qp_in_calculate_size(pcond_dims);
     } else
     {
         mem->pcond_qp_in = NULL;
     }
 
     if (args->pcond_args->N2 < dims->N) {
-        mem->pcond_qp_out = assign_ocp_qp_out(pcond_dims, &c_ptr);
+        mem->pcond_qp_out = assign_ocp_qp_out(pcond_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(pcond_dims);
     } else {
         mem->pcond_qp_out = NULL;
     }
