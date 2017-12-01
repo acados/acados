@@ -80,12 +80,12 @@ qore_static: blasfeo_static
 	( cd external/qore; $(MAKE) static_dense; )
 	mkdir -p include/qore
 	mkdir -p lib
-	cp external/qore/*.h include/qore
-	cp external/qore/KKTPACK_DENSE/include/*.h include/qore
-	cp external/qore/KKTPACK_DENSE/source/*.h include/qore
-	cp external/qore/QPCORE/include/*.h include/qore
+	cp external/qore/qp_types.h include/qore
+	#cp external/qore/KKTPACK_DENSE/include/*.h include/qore
+	#cp external/qore/KKTPACK_DENSE/source/*.h include/qore
+	#cp external/qore/QPCORE/include/*.h include/qore
 	cp external/qore/QPSOLVER_DENSE/include/*.h include/qore
-	cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
+	#cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
 	cp external/qore/bin/libqore_dense.a lib
 
 examples_c:

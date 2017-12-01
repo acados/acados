@@ -25,13 +25,14 @@
 extern "C" {
 #endif
 
-// qpoases
-#include "qproblem_dense.h"
+// qore
+#include "qpsolver_dense.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 
 typedef struct dense_qp_qore_args_ {
+    int nsmax;          // maximum size of Schur complement
     int prtfreq;        // print frequency
     int warm_start;     // warm start with prim_sol and dual_sol in memory
 } dense_qp_qore_args;
@@ -56,7 +57,7 @@ typedef struct dense_qp_qore_memory_ {
     int *idxb;
     double *prim_sol;
     double *dual_sol;
-    struct QoreProblemDense *QP;
+    QoreProblemDense *QP;
 } dense_qp_qore_memory;
 
 

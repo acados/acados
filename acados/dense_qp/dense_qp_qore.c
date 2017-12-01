@@ -28,8 +28,6 @@
 #include "blasfeo_common.h"
 #include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
-// qpoases
-#include "qpsolver_dense.h"
 // acados
 #include "acados/dense_qp/dense_qp_qore.h"
 #include "acados/dense_qp/dense_qp_common.h"
@@ -68,6 +66,7 @@ void dense_qp_qore_initialize_default_args(void *args_)
 
     args->prtfreq = -1;
     args->warm_start = 0;
+    args->nsmax = 400;
 }
 
 
@@ -80,6 +79,7 @@ int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_)
     int ned = dims->ne;
     int ngd = dims->ng;
     int nbd = dims->nb;
+    int nsmax = (2*nvd >= args->nsmax) ? args->nsmax : 2*nvd;
 
     // size in bytes
     int size = sizeof(dense_qp_qore_memory);
@@ -95,8 +95,7 @@ int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 2 * (nvd + ngd) * sizeof(double);      // lb, ub
     size += (nvd + ngd) * sizeof(double);          // prim_sol
     size += (nvd + ngd) * sizeof(double);          // dual_sol
-    size += sizeof(QoreProblemDense);
-    size += QPDenseSize(nvd,ngd,2*(nvd+ngd));
+    size += QPDenseSize(nvd,ngd,nsmax);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -115,15 +114,13 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
     int ned = dims->ne;
     int ngd = dims->ng;
     int nbd = dims->nb;
+    int nsmax = (2*nvd >= args->nsmax) ? args->nsmax : 2*nvd;
 
     // char pointer
     char *c_ptr = (char *)raw_memory;
 
     mem = (dense_qp_qore_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_memory);
-
-    mem->QP = (QoreProblemDense *) c_ptr;
-    c_ptr += sizeof(QoreProblemDense);
 
     align_char_to(8, &c_ptr);
 
@@ -178,10 +175,9 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
     mem->dual_sol = (double *)c_ptr;
     c_ptr += (nvd + ngd) * sizeof(double);
 
-
-    int nsmax = (2*nvd >= 400) ? 400 : 2*nvd;
-    QPDenseCreate(mem->QP, nvd, ngd, nsmax, c_ptr);
-    c_ptr += mem->QP->memory_size;
+    mem->QP = (QoreProblemDense *) c_ptr;
+    QPDenseCreate(&mem->QP, nvd, ngd, nsmax, c_ptr);
+    c_ptr += QPDenseSize(nvd,ngd,nsmax);
 
     // int stuff
     mem->idxb = (int *)c_ptr;
