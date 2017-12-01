@@ -89,7 +89,7 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 2 * ngd * sizeof(double);              // d_lg d_ug
     size += 1 * nbd * sizeof(int);                 // idxb
     size += 1 * nvd * sizeof(double);              // prim_sol
-    size += (2 * nvd + 2 * ngd) * sizeof(double);  // dual_sol
+    size += (nvd+ngd) * sizeof(double);  // dual_sol
 
     if (ngd > 0)  // QProblem
         size += QProblem_calculateMemorySize(nvd, ngd);
@@ -133,7 +133,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     assign_double(ngd, &mem->d_lg, &c_ptr);
     assign_double(ngd, &mem->d_ug, &c_ptr);
     assign_double(nvd, &mem->prim_sol, &c_ptr);
-    assign_double(2*nvd + 2*ngd, &mem->dual_sol, &c_ptr);
+    assign_double(nvd+ngd, &mem->dual_sol, &c_ptr);
 
     // TODO(dimitris): update assign syntax in qpOASES
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
@@ -231,7 +231,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // cold start the dual solution with no active constraints
     int warm_start = args->warm_start;
     if (!warm_start) {
-        for (int ii = 0; ii < 2 * nvd + 2 * ngd; ii++)
+        for (int ii = 0; ii < nvd + ngd; ii++)
             dual_sol[ii] = 0;
     }
 
@@ -273,16 +273,16 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
         qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nbd; ii++) {
-        if (dual_sol[ii] >= 0.0)
-            qp_out->lam->pa[ii] = dual_sol[ii];
+        if (dual_sol[idxb[ii]] >= 0.0)
+            qp_out->lam->pa[ii] = dual_sol[idxb[ii]];
         else
-            qp_out->lam->pa[nbd+ngd+ii] = - dual_sol[ii];
+            qp_out->lam->pa[nbd+ngd+ii] = - dual_sol[idxb[ii]];
     }
     for (int ii = 0; ii < ngd; ii++) {
-        if (dual_sol[nbd+ii] >= 0.0)
-            qp_out->lam->pa[nbd+ii] =   dual_sol[nbd+ii];
+        if (dual_sol[nvd+ii] >= 0.0)
+            qp_out->lam->pa[nbd+ii] =   dual_sol[nvd+ii];
         else
-            qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nbd+ii];
+            qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
     }
 
     // return

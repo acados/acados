@@ -20,6 +20,7 @@
 // external
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 // blasfeo
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
@@ -261,16 +262,16 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
         qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nbd; ii++) {
-        if (dual_sol[ii] >= 0.0)
-            qp_out->lam->pa[ii] = dual_sol[ii];
+        if (dual_sol[idxb[ii]] >= 0.0)
+            qp_out->lam->pa[ii] = dual_sol[idxb[ii]];
         else
-            qp_out->lam->pa[nbd+ngd+ii] = - dual_sol[ii];
+            qp_out->lam->pa[nbd+ngd+ii] = - dual_sol[idxb[ii]];
     }
     for (int ii = 0; ii < ngd; ii++) {
-        if (dual_sol[nbd+ii] >= 0.0)
-            qp_out->lam->pa[nbd+ii] =   dual_sol[nbd+ii];
+        if (dual_sol[nvd+ii] >= 0.0)
+            qp_out->lam->pa[nbd+ii] =   dual_sol[nvd+ii];
         else
-            qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nbd+ii];
+            qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
     }
 
     // return
