@@ -57,6 +57,7 @@ char compiler[16] = "cc";
 
 #include <cstdlib>
 #include <string>
+#include <utility>
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
@@ -144,62 +145,107 @@ static const int_t *(*load_sparsity_function(void *handle, std::string name))(in
     #endif
 }
 
-static void validate_model(casadi::Function& model) {
-    if (model.n_in() != 2)
-        throw std::runtime_error("An ODE model should have 2 inputs: state and controls");
+static bool validate_model(casadi::Function& model) {
+    if (model.n_in() != 2 && model.n_in() != 3)
+        throw std::runtime_error("An ODE model should have 2 or 3 inputs: state and controls, "
+            "and optionally state derivatives");
     if (model.n_out() != 1)
         throw std::runtime_error("An ODE model should have 1 output: the right hand side");
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
     int_t nx = x.size1();
-    const std::vector<casadi::SX> input = {x, u};
+    std::vector<casadi::SX> input;
+    bool implicit_model = false;
+
+    if (model.n_in() == 3) {
+        implicit_model = true;
+        casadi::SX xdot = model.sx_in(2);
+        if (model.sx_in(2).size1() != nx)
+            throw std::runtime_error("State derivatives must have same dimension as the states");
+        input = {x, u, xdot};
+    } else {
+        input = {x, u};
+    }
     casadi::SX rhs = casadi::SX::vertcat(model(input));
     if (rhs.size1() != nx)
         throw std::runtime_error("Length of right hand size should equal number of states");
+    return implicit_model;
 }
 
-static std::string generate_vde_function(casadi::Function& model) {
-    validate_model(model);
+static std::vector< casadi::Function >
+explicit_functions(casadi::Function& model) {
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
     int_t nx = x.size1();
     int_t nu = u.size1();
-    const std::vector<casadi::SX> states_controls = {x, u};
-    casadi::SX rhs = casadi::SX::vertcat(model(states_controls));
+    casadi::SX rhs = casadi::SX::vertcat(model(std::vector<casadi::SX>({x, u})));
+
     casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
     casadi::SX Su = casadi::SX::sym("Su", nx, nu);
+
     casadi::SX vde_x = casadi::SX::jtimes(rhs, x, Sx);
     casadi::SX vde_u = casadi::SX::jacobian(rhs, u) + casadi::SX::jtimes(rhs, x, Su);
-    const std::vector<casadi::SX> input = {x, Sx, Su, u};
-    const std::vector<casadi::SX> output = {rhs, vde_x, vde_u};
-    std::string full_name = std::string("vde_") + model.name();
-    std::string generated_file = full_name + std::string(".c");
-    casadi::Function vde = casadi::Function(full_name, input, output);
-    casadi::Dict opts;
-    opts["with_header"] = casadi::GenericType(true);
-    opts["with_export"] = casadi::GenericType(false);
-    vde.generate(generated_file, opts);
-    return full_name;
+
+    casadi::Function vde_fun("vde_" + model.name(), {x, Sx, Su, u}, {rhs, vde_x, vde_u});
+
+    casadi::SX jac_x = casadi::SX::zeros(nx, nx) + casadi::SX::jacobian(rhs, x);
+    casadi::Function jac_fun("jac_" + model.name(), {x, Sx, Su, u}, {rhs, jac_x});
+
+    return {vde_fun, jac_fun};
 }
 
-static std::string generate_jac_function(casadi::Function& model) {
-    validate_model(model);
+static std::vector< casadi::Function >
+implicit_functions(casadi::Function& model) {
     casadi::SX x = model.sx_in(0);
     casadi::SX u = model.sx_in(1);
-    const std::vector<casadi::SX> states_controls = {x, u};
-    casadi::SX rhs = casadi::SX::vertcat(model(states_controls));
+    casadi::SX x_dot = model.sx_in(2);
     int_t nx = x.size1();
-    casadi::SX jac_x = casadi::SX::zeros(nx, nx) + casadi::SX::jacobian(rhs, x);
-    const std::vector<casadi::SX> input = {x, u};
-    const std::vector<casadi::SX> output = {rhs, jac_x};
-    std::string full_name = std::string("jac_") + model.name();
-    std::string generated_file = full_name + std::string(".c");
-    casadi::Function jac = casadi::Function(full_name, input, output);
+    int_t nu = u.size1();
+    casadi::SX res = casadi::SX::vertcat(model(std::vector<casadi::SX>({x, u, x_dot})));
+
+    casadi::SX x_stacked = casadi::SX::vertcat({x, x_dot});
+
+    casadi::SX Sx = casadi::SX::sym("Sx", nx, nx);
+    casadi::SX Su = casadi::SX::sym("Su", nx, nu);
+    casadi::SX Sx_dot = casadi::SX::sym("Sx_dot", nx, nx);
+    casadi::SX Su_dot = casadi::SX::sym("Su_dot", nx, nu);
+    casadi::SX Sx_stacked = casadi::SX::vertcat({Sx, Sx_dot});
+    casadi::SX Su_stacked = casadi::SX::vertcat({Su, Su_dot});
+
+    casadi::SX vde_x = Sx_dot + casadi::SX::jtimes(res, x, Sx);
+    casadi::SX vde_u = Su_dot + casadi::SX::jacobian(res, u) + casadi::SX::jtimes(res, x, Su);
+
+    casadi::Function vde_fun("vde_" + model.name(),
+                                {x_stacked, Sx_stacked, Su_stacked, u},
+                                {res, vde_x, vde_u});
+
+    casadi::SX jac_x_stacked = casadi::SX::zeros(nx, 2 * nx) + casadi::SX::jacobian(res, x_stacked);
+
+    casadi::Function jac_fun("jac_" + model.name(), {x_stacked, u}, {res, jac_x_stacked});
+
+    return {vde_fun, jac_fun};
+
+}
+
+
+static std::vector<casadi::Function>
+generate_functions(casadi::Function& model, bool& implicit_model) {
+    implicit_model = validate_model(model);
+    std::vector< casadi::Function > functions_to_generate;
+
+    if (implicit_model)
+        functions_to_generate = implicit_functions(model);
+    else
+        functions_to_generate = explicit_functions(model);
+
     casadi::Dict opts;
-    opts["with_header"] = casadi::GenericType(true);
-    opts["with_export"] = casadi::GenericType(false);
-    jac.generate(generated_file, opts);
-    return full_name;
+    opts["with_header"] = true;
+    opts["with_export"] = false;
+
+    for (auto& f : functions_to_generate)
+        f.generate(f.name() + ".c", opts);
+
+    return functions_to_generate;
 }
 
 enum generation_mode {
@@ -233,17 +279,18 @@ static casadi_function_t compile_and_load(std::string name, void **handle) {
 }
 
 void set_model(sim_in *sim, casadi::Function& f, double step, enum generation_mode mode) {
-    std::string vde_name = generate_vde_function(f);
+    bool implicit;
+    std::vector<casadi::Function> generated_functions = generate_functions(f, implicit);
+
     void *vde_handle = malloc(sizeof(void *));
-    sim->vde = compile_and_load(vde_name, &vde_handle);
-    sim->jac = NULL;
-    if (mode == GENERATE_JAC) {
-        std::string jac_name = generate_jac_function(f);
-        void *jac_handle = malloc(sizeof(void *));
-        sim->jac = compile_and_load(jac_name, &jac_handle);
-    }
-    sim->forward_vde_wrapper = &vde_fun;
-    sim->jacobian_wrapper = &jac_fun;
+    sim->vde = compile_and_load(generated_functions[0].name(), &vde_handle);
+
+    void *jac_handle = malloc(sizeof(void *));
+    sim->jac = compile_and_load(generated_functions[1].name(), &jac_handle);
+
+    sim->forward_vde_wrapper = implicit ? &vde_impl_fun : &vde_fun;
+    sim->jacobian_wrapper = implicit ? &jac_impl_fun : &jac_fun;
+
     sim->step = step;
 }
 
@@ -294,7 +341,7 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         void *memory = NULL;
         int_t workspace_size;
         void *workspace = NULL;
-        if (!strcmp("explicit runge-kutta", solver_name) || !strcmp("erk", solver_name) ||
+        if (!strcmp("explicit-runge-kutta", solver_name) || !strcmp("erk", solver_name) ||
                                                             !strcmp("rk", solver_name)) {
             solver->fun = sim_erk;
             args = (void *) malloc(sizeof(sim_RK_opts));
@@ -601,8 +648,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         casadi::Function extended_function =
             casadi::Function(full_name, input_vector, output_vector);
         casadi::Dict opts;
-        opts["with_header"] = casadi::GenericType(true);
-        opts["with_export"] = casadi::GenericType(false);
+        opts["with_header"] = true;
+        opts["with_export"] = false;
         extended_function.generate(generated_file, opts);
 
         void *handle = malloc(sizeof(void *));
@@ -811,13 +858,22 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     // TODO(nielsvd): write destructor
 
     void set_model(casadi::Function& f, double step) {
-        std::string model_name = generate_vde_function(f);
-        void *handle = malloc(sizeof(void *));
-        casadi_function_t eval = compile_and_load(model_name, &handle);
+        bool implicit;
+        std::vector<casadi::Function> generated_functions = generate_functions(f, implicit);
+        std::string vde_name = generated_functions[0].name();
+        void *handle_vde = malloc(sizeof(void *));
+        casadi_function_t eval_vde = compile_and_load(vde_name, &handle_vde);
+
+        std::string jac_name = generated_functions[1].name();
+        void *handle_jac = malloc(sizeof(void *));
+        casadi_function_t eval_jac = compile_and_load(jac_name, &handle_jac);
+
         sim_solver **simulators = (sim_solver **)$self->sim;
         for (int_t i = 0; i < $self->N; i++) {
-            simulators[i]->in->vde = eval;
-            simulators[i]->in->forward_vde_wrapper = &vde_fun;
+            simulators[i]->in->vde = eval_vde;
+            simulators[i]->in->forward_vde_wrapper = implicit ? &vde_impl_fun : &vde_fun;
+            simulators[i]->in->jac = eval_jac;
+            simulators[i]->in->jacobian_wrapper = implicit ? &jac_impl_fun : &jac_fun;
             simulators[i]->in->step = step;
         }
     }
@@ -860,10 +916,11 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 
 %extend ocp_nlp_solver {
     ocp_nlp_solver(const char *solver_name, ocp_nlp_in *nlp_in, LangObject *options = NONE) {
-        const char *fieldnames[4] = {"qp_solver", "sensitivity_method",
-                                     "integrator_steps", "SQP_steps"};
+        const char *fieldnames[5] = {"qp_solver", "sensitivity_method",
+                                     "integrator_steps", "SQP_steps", "sim_solver"};
         const char *qp_solver = "qpdunes";
         const char *sensitivity_method = "gauss-newton";
+        const char *integrator_name = "erk";
         int_t integrator_steps = 1;
         int_t sqp_steps = 1;
         if (options == NONE) {
@@ -874,10 +931,12 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             mxArray *sensitivity_method_string = mxCreateString(sensitivity_method);
             mxArray *integrator_steps_array = mxCreateDoubleScalar(integrator_steps);
             mxArray *sqp_steps_array = mxCreateDoubleScalar(sqp_steps);
+            mxArray *integrator_name_string = mxCreateString(integrator_name);
             mxSetField(options, 0, fieldnames[0], qp_solver_string);
             mxSetField(options, 0, fieldnames[1], sensitivity_method_string);
             mxSetField(options, 0, fieldnames[2], integrator_steps_array);
             mxSetField(options, 0, fieldnames[3], sqp_steps_array);
+            mxSetField(options, 0, fieldnames[4], integrator_name_string);
 #elif defined(SWIGPYTHON)
             options = PyDict_New();
             PyDict_SetItem(options,
@@ -892,6 +951,9 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             PyDict_SetItem(options,
                            PyString_FromString(fieldnames[3]),
                            PyLong_FromLong((long) sqp_steps));
+            PyDict_SetItem(options,
+                            PyString_FromString(fieldnames[4]),
+                            PyString_FromString(integrator_name));
 #endif
         }
         if (!is_map(options)) {
@@ -907,6 +969,8 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             integrator_steps = int_from(options, fieldnames[2]);
         if (has(options, fieldnames[3]))
             sqp_steps = int_from(options, fieldnames[3]);
+        if (has(options, fieldnames[4]))
+            integrator_name = char_from(options, fieldnames[4]);
         ocp_nlp_solver *solver = (ocp_nlp_solver *) malloc(sizeof(ocp_nlp_solver));
         void *args = NULL;
         void *mem = NULL;
@@ -984,22 +1048,51 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
             }
 
             ((ocp_nlp_sqp_args *) args)->maxIter = sqp_steps;
+
+
             sim_solver** simulators = (sim_solver**) nlp_in->sim;
+            sim_in *siminput;
+            void *simargs;
             for (int_t i = 0; i < N; i++) {
-                simulators[i]->in->nx = nlp_in->nx[i];
-                simulators[i]->in->nu = nlp_in->nu[i];
-                simulators[i]->in->sens_forw = true;
-                simulators[i]->in->sens_adj = false;
-                simulators[i]->in->sens_hess = false;
-                simulators[i]->in->num_forw_sens =
-                    nlp_in->nx[i] + nlp_in->nu[i];
-                simulators[i]->in->num_steps = integrator_steps;
+                siminput = simulators[i]->in;
+                siminput->nx = nlp_in->nx[i];
+                siminput->nu = nlp_in->nu[i];
+                siminput->sens_forw = true;
+                siminput->sens_adj = false;
+                siminput->sens_hess = false;
+                siminput->num_forw_sens = nlp_in->nx[i] + nlp_in->nu[i];
+                siminput->num_steps = integrator_steps;
                 simulators[i]->args = (void *)malloc(sizeof(sim_RK_opts));
-                sim_erk_create_arguments(simulators[i]->args, 4);
-                int_t erk_workspace_size = sim_erk_calculate_workspace_size(
-                    simulators[i]->in, simulators[i]->args);
-                simulators[i]->work = (void *)malloc(erk_workspace_size);
-                simulators[i]->fun = &sim_erk;
+                simargs = simulators[i]->args;
+
+                int workspace_size = 0;
+                if (!strcmp("explicit-runge-kutta", integrator_name)
+                                    || !strcmp("erk", integrator_name)
+                                    ||!strcmp("rk", integrator_name)) {
+                    simulators[i]->fun = sim_erk;
+                    sim_erk_create_arguments(simargs, 4);
+                    workspace_size = sim_erk_calculate_workspace_size(siminput, simargs);
+                    simulators[i]->work = malloc(workspace_size);
+                } else if (!strcmp("lifted-implicit-runge-kutta", integrator_name)
+                                    || !strcmp("lifted-irk", integrator_name)
+                                    || !strcmp("in", integrator_name)
+                                    || !strcmp("inis", integrator_name)) {
+                    simulators[i]->fun = sim_lifted_irk;
+                    sim_irk_create_arguments(simargs, 2, "Gauss");
+                    if (!strcmp("implicit runge-kutta", solver_name))
+                        sim_irk_create_Newton_scheme(simargs, 2, "Gauss", exact);
+                    if (!strcmp("in", solver_name))
+                        sim_irk_create_Newton_scheme(simargs, 2, "Gauss", simplified_in);
+                    if (!strcmp("inis", solver_name))
+                        sim_irk_create_Newton_scheme(simargs, 2, "Gauss", simplified_inis);
+                    simulators[i]->mem = malloc(sizeof(sim_lifted_irk_memory));
+                    sim_lifted_irk_create_memory(siminput, simargs,
+                            (sim_lifted_irk_memory *) simulators[i]->mem);
+                    workspace_size = sim_lifted_irk_calculate_workspace_size(siminput, simargs);
+                    simulators[i]->work = (void *) malloc(workspace_size);
+                } else {
+                    throw std::invalid_argument("Integrator name not known!");
+                }
             }
 
             ocp_nlp_sqp_initialize(nlp_in, args, &mem, &workspace);
