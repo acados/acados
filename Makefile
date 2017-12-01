@@ -68,7 +68,7 @@ hpipm_static: blasfeo_static
 	cp external/hpipm/lib/libhpipm.a lib
 
 hpmpc_static: blasfeo_static
-	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo )
+	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo  )
 	mkdir -p include/hpmpc
 	mkdir -p lib
 	cp external/hpmpc/include/*.h include/hpmpc
@@ -112,6 +112,7 @@ clean:
 deep_clean: clean
 	( cd external/blasfeo; $(MAKE) clean )
 	( cd external/hpipm; $(MAKE) clean )
+	( cd external/hpmpc; $(MAKE) clean )
 	( cd external/qpoases; $(MAKE) clean )
 	( cd external/qore; $(MAKE) purge )
 	rm -rf include
