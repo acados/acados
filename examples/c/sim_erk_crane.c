@@ -10,6 +10,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/create.h"
 
 #include "examples/c/crane_model/crane_model.h"
 
@@ -43,7 +44,7 @@ int main() {
     dims.nx = nx;
     dims.nu = nu;
 
-    sim_RK_opts *erk_opts = create_sim_RK_opts(&dims);
+    sim_rk_opts *erk_opts = create_sim_erk_opts(&dims);
 
     sim_in *in = create_sim_in(&dims);
 

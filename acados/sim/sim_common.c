@@ -28,6 +28,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_rk_common.h"
 #include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
 
 
 int sim_in_calculate_size(sim_dims *dims)
@@ -40,10 +41,8 @@ int sim_in_calculate_size(sim_dims *dims)
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
-    size += nx * sizeof(double);  // S_adj
+    size += (nx + nu) * sizeof(double);  // S_adj
 
-    // size = (size + 63) / 64 * 64;
-    // size += 1 * 64;
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
@@ -72,7 +71,7 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     assign_double(nx, &in->x, &c_ptr);
     assign_double(nu, &in->u, &c_ptr);
     assign_double(nx * NF, &in->S_forw, &c_ptr);
-    assign_double(nx, &in->S_adj, &c_ptr);
+    assign_double(NF, &in->S_adj, &c_ptr);
 
     assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
 
@@ -108,6 +107,7 @@ int sim_out_calculate_size(sim_dims *dims)
     size += nx * NF * sizeof(double);  // S_forw
     size += (nx + nu) * sizeof(double);  // S_adj
     size += ((NF + 1) * NF / 2) * sizeof(double);  // S_hess
+    size += NF * sizeof(double);  // grad
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -137,6 +137,7 @@ sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
     assign_double(nx * NF, &out->S_forw, &c_ptr);
     assign_double(nx + nu, &out->S_adj, &c_ptr);
     assign_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
+    assign_double(NF, &out->grad, &c_ptr);
 
     assert((char*)raw_memory + sim_out_calculate_size(dims) >= c_ptr);
 
@@ -166,12 +167,21 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver
     {
         case ERK:
             sim_solver->fun = &sim_erk;
-            sim_solver->calculate_args_size = &sim_RK_opts_calculate_size;
-            sim_solver->assign_args = &assign_sim_RK_opts;
-            sim_solver->initialize_default_args = &sim_rk_initialize_default_args;
+            sim_solver->calculate_args_size = &sim_erk_opts_calculate_size;
+            sim_solver->assign_args = &sim_erk_assign_opts;
+            sim_solver->initialize_default_args = &sim_erk_initialize_default_args;
             sim_solver->calculate_memory_size = &sim_erk_calculate_memory_size;
             sim_solver->assign_memory = &sim_erk_assign_memory;
             sim_solver->calculate_workspace_size = &sim_erk_calculate_workspace_size;
+            break;
+        case LIFTED_IRK:
+            sim_solver->fun = &sim_lifted_irk;
+            sim_solver->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
+            sim_solver->assign_args = &sim_lifted_irk_assign_opts;
+            sim_solver->initialize_default_args = &sim_lifted_irk_initialize_default_args;
+            sim_solver->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
+            sim_solver->assign_memory = &sim_lifted_irk_assign_memory;
+            sim_solver->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
             break;
         default:
             return_value = ACADOS_FAILURE;

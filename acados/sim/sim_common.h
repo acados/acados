@@ -22,12 +22,14 @@
 
 #include <stdbool.h>
 
+#include "acados/sim/sim_collocation.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
 typedef enum {
     PREVIOUS,
     ERK,
+    LIFTED_IRK
 } sim_solver_t;
 
 
@@ -92,8 +94,33 @@ typedef struct {
     double *S_adj;   //
     double *S_hess;  //
 
+    double *grad;  // gradient correction    
+
     sim_info *info;
 } sim_out;
+
+
+typedef struct {
+    
+    double interval;
+    int num_stages;
+    
+    int num_steps;
+    int num_forw_sens;
+
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
+
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+
+    // for explicit integrators: newton_iter == 0 && scheme == NULL
+    int newton_iter;
+    Newton_scheme *scheme;
+
+} sim_rk_opts;
 
 
 typedef struct {

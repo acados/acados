@@ -32,6 +32,7 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/sim/sim_erk_integrator.h"
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/utils/mem.h"
 
@@ -254,6 +255,20 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
 }
 
 
+sim_rk_opts *create_sim_erk_opts(sim_dims *dims)
+{
+    int size = sim_erk_opts_calculate_size(dims);
+
+    void *ptr = acados_malloc(size, 1);
+
+    sim_rk_opts *opts = sim_erk_assign_opts(dims, ptr);
+
+    sim_erk_initialize_default_args(dims, opts);
+
+    return opts;
+}
+
+
 
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
 {
@@ -265,11 +280,7 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
 
 
 
-#ifdef YT
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
-#else
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name)
-#endif
 {
     ocp_qp_xcond_solver qp_solver;
     module_solver solver_funs;
@@ -277,7 +288,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
 
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
 
-    #ifdef YT
     int return_value;
     // sim_solver **sim_solver_ptrs = acados_malloc(sizeof(sim_solver *), dims->N);
     sim_solver *sim_solvers = acados_malloc(sizeof(sim_solver), dims->N);
@@ -289,23 +299,15 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     }
 
     int size = ocp_nlp_gn_sqp_calculate_args_size(dims, &qp_solver, sim_solvers);
-    #else
-    int size = ocp_nlp_gn_sqp_calculate_args_size(dims, &qp_solver);
-    #endif
 
     void *ptr = acados_malloc(size, 1);
 
-    #ifdef YT
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, &qp_solver, sim_solvers, ptr);
-    #else
-    ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, &qp_solver, ptr);
-    #endif
 
     // TODO(dimitris): nest in initialize default args of SQP solver!
     args->qp_solver->initialize_default_args(args->qp_solver_args);
     args->maxIter = 30;
 
-    #ifdef YT
     sim_dims sim_dims;
     for (int ii = 0; ii < dims->N; ii++)
     {
@@ -313,7 +315,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
         args->sim_solvers[ii]->initialize_default_args(&sim_dims, args->sim_solvers_args[ii]);
         sim_RK_opts *tmp = (sim_RK_opts *)args->sim_solvers_args[ii];
     }
-    #endif
 
     return args;
 }

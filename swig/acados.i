@@ -295,7 +295,7 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         if (!strcmp("explicit runge-kutta", solver_name) || !strcmp("erk", solver_name) ||
                                                             !strcmp("rk", solver_name)) {
             solver->fun = sim_erk;
-            args = (void *) malloc(sizeof(sim_RK_opts));
+            args = (void *) malloc(sizeof(sim_rk_opts));
             sim_erk_create_arguments(args, order);
             workspace_size = sim_erk_calculate_workspace_size(input, args);
             workspace = malloc(workspace_size);
@@ -303,7 +303,7 @@ LangObject *sim_output(const sim_in *in, const sim_out *out) {
         } else if (!strcmp("implicit runge-kutta", solver_name) || !strcmp("irk", solver_name)
                    || !strcmp("in", solver_name) || !strcmp("inis", solver_name)) {
             solver->fun = sim_lifted_irk;
-            args = (void *) malloc(sizeof(sim_RK_opts));
+            args = (void *) malloc(sizeof(sim_rk_opts));
             sim_irk_create_arguments(args, 2, "Gauss");
             if (!strcmp("implicit runge-kutta", solver_name)
                 || !strcmp("irk", solver_name))
@@ -989,7 +989,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 simulators[i]->in->num_forw_sens =
                     nlp_in->nx[i] + nlp_in->nu[i];
                 simulators[i]->in->num_steps = integrator_steps;
-                simulators[i]->args = (void *)malloc(sizeof(sim_RK_opts));
+                simulators[i]->args = (void *)malloc(sizeof(sim_rk_opts));
                 sim_erk_create_arguments(simulators[i]->args, 4);
                 int_t erk_workspace_size = sim_erk_calculate_workspace_size(
                     simulators[i]->in, simulators[i]->args);
