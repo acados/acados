@@ -24,32 +24,40 @@
 extern "C" {
 #endif
 
-#ifndef YT
-
 #include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 typedef struct {
-    real_t *K_traj;
 
-    real_t *rhs_forw_in;
-    real_t *out_forw_traj;
+} sim_erk_memory;
 
-    real_t *adj_traj;
-    real_t *rhs_adj_in;
-    real_t *out_adj_tmp;
+typedef struct {
+
+    double *rhs_forw_in;  // x + S + p
+
+    double *K_traj; // (stages *nX) or (steps*stages*nX) for adj
+    double *out_forw_traj; // S or (steps+1)*nX for adj
+
+    double *rhs_adj_in;
+    double *out_adj_tmp;
+    double *adj_traj;
+
 } sim_erk_workspace;
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem, void *work);
+int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_);
 
-int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
+void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
 
-void sim_erk_create_arguments(void *args, const int_t num_stages);
+void *sim_erk_create_memory(sim_dims *dims, void *opts_);
 
-void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-void sim_erk_destroy(void *work);
+int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
-#endif
+int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_);
+
+// void sim_erk_create_arguments(void *args, const int num_stages);
+
+// void sim_erk_initialize(const sim_in *in, void *args_, void **work);
 
 #ifdef __cplusplus
 } /* extern "C" */

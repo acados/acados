@@ -190,7 +190,14 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
 
 
 
-int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_)
+int dense_qp_qore_calculate_workspace_size(dense_qp_dims *dims, void *args_)
+{
+    return 0;
+}
+
+
+
+int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
     // cast structures
     dense_qp_qore_args *args = (dense_qp_qore_args *)args_;

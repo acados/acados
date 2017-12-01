@@ -25,11 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#ifdef YT
-#include "acados/sim/sim_common_yt.h"
-#else
 #include "acados/sim/sim_common.h"
-#endif
 #include "acados/utils/types.h"
 
 typedef struct {

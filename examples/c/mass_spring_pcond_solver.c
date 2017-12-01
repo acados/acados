@@ -86,13 +86,16 @@ int main() {
     ocp_qp_sparse_solver_memory *mem =
         ocp_qp_sparse_solver_create_memory(qp_in->dim, arg);
 
+    // create partial condensing solver workspace
+    void *work = malloc(ocp_qp_sparse_solver_calculate_workspace_size(qp_in->dim, arg));
+
 	int acados_return;  // 0 normal; 1 max iter
 
     acados_timer timer;
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem, work);
 	}
 
     double time = acados_toc(&timer)/NREP;
