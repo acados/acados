@@ -37,17 +37,6 @@ typedef struct d_ocp_qp ocp_qp_in;
 typedef struct d_ocp_qp_sol ocp_qp_out;
 
 
-
-
-// NOTE(dimitris): contains both ocp_qp solvers and condensing with dense solvers
-typedef enum {
-    HPIPM,
-    CONDENSING_HPIPM,
-    CONDENSING_QPOASES,
-    CONDENSING_QORE
-} qp_solver_t;
-
-
 typedef struct {
     int (*fun)(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
     int (*calculate_args_size)(ocp_qp_dims *dims);
@@ -79,10 +68,6 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory);
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
-//
-int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
-//
-void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
 
 #ifdef __cplusplus
 } /* extern "C" */

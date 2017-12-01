@@ -67,5 +67,5 @@ CFLAGS += -DMEASURE_TIMINGS
 endif
 
 # search directories
-CFLAGS += -I$(TOP) -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore
+CFLAGS += -I$(TOP) -I$(TOP)/interfaces -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore
 LDFLAGS += -L$(TOP)/lib -L$(BLASFEO_PATH)/lib -L$(HPIPM_PATH)/lib -L$(QPOASES_PATH)/bin

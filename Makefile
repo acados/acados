@@ -25,7 +25,7 @@ OBJS += acados/ocp_qp/ocp_qp_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
 OBJS += acados/ocp_qp/ocp_qp_condensing_solver.o
-#sim
+# sim
 OBJS += acados/sim/sim_casadi_wrapper.o
 OBJS += acados/sim/sim_collocation.o
 OBJS += acados/sim/sim_erk_integrator.o
@@ -37,7 +37,6 @@ OBJS += acados/utils/copy.o
 OBJS += acados/utils/print.o
 OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
-OBJS += acados/utils/create.o
 
 
 static_library: blasfeo_static hpipm_static qpoases_static qore_static
@@ -85,6 +84,13 @@ qore_static: blasfeo_static
 	#cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
 	cp external/qore/bin/libqore_dense.a lib
 
+acados_c_static:
+	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
+	mkdir -p include/acados_c
+	mkdir -p lib
+	cp -r interfaces/acados_c/*.h include/acados_c
+	mv interfaces/acados_c/libacados_c.a lib
+
 examples_c:
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
 
@@ -99,6 +105,7 @@ clean:
 	( cd examples/c; $(MAKE) clean )
 
 deep_clean: clean
+	( cd interfaces/acados_c; $(MAKE) clean )
 	( cd external/blasfeo; $(MAKE) clean )
 	( cd external/hpipm; $(MAKE) clean )
 	( cd external/qpoases; $(MAKE) clean )

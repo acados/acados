@@ -19,6 +19,7 @@
 
 // external
 #include <assert.h>
+#include <string.h>
 #include <math.h>
 // blasfeo
 #include "blasfeo_target.h"
