@@ -30,7 +30,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#define NREP 1000
+#define NREP 100
 #define ELIMINATE_X0
 
 #include "./mass_spring.c"

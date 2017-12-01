@@ -32,7 +32,7 @@
 #include "acados/utils/print.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -157,10 +157,13 @@ int main() {
     ************************************************/
 
     free(qp_in);
+    free(pcond_qp_in);
     free(qp_out);
+    free(pcond_qp_out);
     free(sol);
     free(arg);
+    free(pcond_args);
     free(mem);
-
+    free(pcond_mem);
     return 0;
 }
