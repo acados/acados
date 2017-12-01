@@ -460,8 +460,7 @@ int main() {
     * ocp_nlp out
     ************************************************/
 
-    void *nlp_out_mem = calloc(ocp_nlp_out_calculate_size(nlp->dims), 1);
-    ocp_nlp_out *nlp_out = assign_ocp_nlp_out(nlp->dims, nlp_out_mem);
+    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp->dims);
 
     /************************************************
     * gn_sqp memory
