@@ -30,7 +30,7 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -70,7 +70,7 @@ int main() {
     // choose QP solver
     qp_solver_t qp_solver_name = CONDENSING_QPOASES;
 
-    // create partial condensing solver args
+    // create condensing solver args
     ocp_qp_condensing_solver_args *arg =
         ocp_qp_condensing_solver_create_arguments(qp_in->dim, qp_solver_name);
 
@@ -79,9 +79,12 @@ int main() {
     // qpsolver_args->hpipm_args->iter_max = 21;
     // printf("maxIter = %d\n", qpsolver_args->hpipm_args->iter_max);
 
-    // create partial condensing solver memory
+    // create condensing solver memory
     ocp_qp_condensing_solver_memory *mem =
         ocp_qp_condensing_solver_create_memory(qp_in->dim, arg);
+
+    // create condensing solver workspace
+    void *work = malloc(ocp_qp_condensing_solver_calculate_workspace_size(qp_in->dim, arg));
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -89,7 +92,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_condensing_solver(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_condensing_solver(qp_in, qp_out, arg, mem, work);
 	}
 
     double time = acados_toc(&timer)/NREP;
@@ -133,6 +136,7 @@ int main() {
     free(sol);
     free(arg);
     free(mem);
+    free(work);
 
     return 0;
 }

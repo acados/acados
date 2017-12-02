@@ -32,6 +32,22 @@ extern "C" {
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
+
+// TODO(dimitris): probably does not belong here
+typedef struct {
+    int (*fun)(void *);
+    int (*calculate_args_size)(void *);
+    void *(*assign_args)(void *);
+    void (*initialize_default_args)(void *);
+    int (*calculate_memory_size)(void *);
+    void *(*assign_memory)(void *);
+    int (*calculate_workspace_size)(void *);
+} module_solver;
+
+
+void copy_module_pointers_to_args(void *solver_in_args_, void *solver_);
+
+
 // make int counter of memory multiple of a number (typically 8 or 64)
 void make_int_multiple_of(int num, int *size);
 
@@ -59,6 +75,10 @@ void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr);
 
 // allocate vector of pointers to strmats and advance pointer
 void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr);
+
+
+// allocate vector of pointers to vector of pointers to strmats and advance pointer
+void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr);
 
 
 // allocate vector of ints and advance pointer

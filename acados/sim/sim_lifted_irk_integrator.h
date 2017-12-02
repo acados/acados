@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/sim/sim_collocation.h"
-#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
@@ -50,32 +50,43 @@ typedef struct {
 } sim_lifted_irk_workspace;
 
 typedef struct {
+
+    double *grad_correction;
+    double *grad_K;  // gradient correction
+
     real_t *K_traj;
     real_t *DK_traj;
-    real_t *delta_DK_traj;
     real_t *mu_traj;
-
-    real_t **sys_mat2;
-    real_t **sys_sol2;
-    struct d_strmat **str_mat2;
-    struct d_strmat **str_sol2;
-    int_t **ipiv2;
-    real_t *adj_traj;
-
-    real_t **jac_traj;
 
     real_t *x;
     real_t *u;
+
+    real_t *delta_DK_traj;
+    real_t *adj_traj;
+    real_t **jac_traj;
+
+    real_t **sys_mat2;
+    int_t **ipiv2;
+    real_t **sys_sol2;
+
+    struct d_strmat **str_mat2;
+    struct d_strmat **str_sol2;
+
 } sim_lifted_irk_memory;
 
-int_t sim_lifted_irk(const sim_in *in, sim_out *out, void *args, void *mem,
-                     void *work);
+int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
 
-int_t sim_lifted_irk_calculate_workspace_size(const sim_in *in, void *args);
+void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory);
 
-void sim_lifted_irk_create_memory(const sim_in *in, void *args,
-                                  sim_lifted_irk_memory *mem);
-void sim_lifted_irk_free_memory(void *mem_);
+void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_);
+
+int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts);
+
+void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
+
+int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem, void *work);
+
+int sim_lifted_irk_calculate_workspace_size(sim_dims *in, void *args);
 
 void sim_irk_create_arguments(void *args, const int_t num_stages, const char* name);
 

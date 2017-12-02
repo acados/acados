@@ -29,7 +29,7 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -78,7 +78,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_hpipm(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_hpipm(qp_in, qp_out, arg, mem, NULL);
 	}
 
     double time = acados_toc(&timer)/NREP;

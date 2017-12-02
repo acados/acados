@@ -18,18 +18,13 @@
  */
 
 // external
-#if defined(RUNTIME_CHECKS)
 #include <assert.h>
-#endif
 #include <math.h>
-#include <string.h>
 // blasfeo
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
 #include "blasfeo_d_aux.h"
 #include "blasfeo_d_aux_ext_dep.h"
-// qpoases
-#include "qpsolver_dense.h"
 // acados
 #include "acados/dense_qp/dense_qp_qore.h"
 #include "acados/dense_qp/dense_qp_common.h"
@@ -68,6 +63,9 @@ void dense_qp_qore_initialize_default_args(void *args_)
 
     args->prtfreq = -1;
     args->warm_start = 0;
+    args->warm_strategy = 0;
+    args->nsmax = 400;
+    args->hot_start = 0;
 }
 
 
@@ -80,6 +78,7 @@ int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_)
     int ned = dims->ne;
     int ngd = dims->ng;
     int nbd = dims->nb;
+    int nsmax = (2*nvd >= args->nsmax) ? args->nsmax : 2*nvd;
 
     // size in bytes
     int size = sizeof(dense_qp_qore_memory);
@@ -95,11 +94,9 @@ int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 2 * (nvd + ngd) * sizeof(double);      // lb, ub
     size += (nvd + ngd) * sizeof(double);          // prim_sol
     size += (nvd + ngd) * sizeof(double);          // dual_sol
-    size += sizeof(QoreProblemDense);
-    size += QPDenseSize(nvd,ngd,2*(nvd+ngd));
+    size += QPDenseSize(nvd,ngd,nsmax);
 
     make_int_multiple_of(8, &size);
-    size += 1 * 8;
 
     return size;
 }
@@ -115,6 +112,7 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
     int ned = dims->ne;
     int ngd = dims->ng;
     int nbd = dims->nb;
+    int nsmax = (2*nvd >= args->nsmax) ? args->nsmax : 2*nvd;
 
     // char pointer
     char *c_ptr = (char *)raw_memory;
@@ -122,70 +120,33 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
     mem = (dense_qp_qore_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_memory);
 
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
+
+    assign_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_double(nvd*ned, &mem->A, &c_ptr);
+    assign_double(nvd*ngd, &mem->C, &c_ptr);
+    assign_double(nvd*ngd, &mem->Ct, &c_ptr);
+    assign_double(nvd, &mem->g, &c_ptr);
+    assign_double(ned, &mem->b, &c_ptr);
+    assign_double(nbd, &mem->d_lb0, &c_ptr);
+    assign_double(nbd, &mem->d_ub0, &c_ptr);
+    assign_double(nvd, &mem->d_lb, &c_ptr);
+    assign_double(nvd, &mem->d_ub, &c_ptr);
+    assign_double(ngd, &mem->d_lg, &c_ptr);
+    assign_double(ngd, &mem->d_ug, &c_ptr);
+    assign_double(nvd+ngd, &mem->lb, &c_ptr);
+    assign_double(nvd+ngd, &mem->ub, &c_ptr);
+    assign_double(nvd+ngd, &mem->prim_sol, &c_ptr);
+    assign_double(nvd+ngd, &mem->dual_sol, &c_ptr);
+
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
+
     mem->QP = (QoreProblemDense *) c_ptr;
-    c_ptr += sizeof(QoreProblemDense);
-
-    align_char_to(8, &c_ptr);
-
-    //
-    mem->H = (double *)c_ptr;
-    c_ptr += nvd * nvd * sizeof(double);
-    //
-    mem->A = (double *)c_ptr;
-    c_ptr += nvd * ned * sizeof(double);
-    //
-    mem->C = (double *)c_ptr;
-    c_ptr += nvd * ngd * sizeof(double);
-    //
-    mem->Ct = (double *)c_ptr;
-    c_ptr += nvd * ngd * sizeof(double);
-    //
-    mem->g = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    // TODO(dimitris): use this instead
-    // assign_double(nvd, &mem->g, &c_ptr);
-    //
-    mem->b = (double *)c_ptr;
-    c_ptr += ned * sizeof(double);
-    //
-    mem->d_lb0 = (double *)c_ptr;
-    c_ptr += nbd * sizeof(double);
-    //
-    mem->d_ub0 = (double *)c_ptr;
-    c_ptr += nbd * sizeof(double);
-    //
-    mem->d_lb = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->d_ub = (double *)c_ptr;
-    c_ptr += nvd * sizeof(double);
-    //
-    mem->d_lg = (double *)c_ptr;
-    c_ptr += ngd * sizeof(double);
-    //
-    mem->d_ug = (double *)c_ptr;
-    c_ptr += ngd * sizeof(double);
-    //
-    mem->lb = (double *)c_ptr;
-    c_ptr += (nvd + ngd) * sizeof(double);
-    //
-    mem->ub = (double *)c_ptr;
-    c_ptr += (nvd + ngd) * sizeof(double);
-    //
-    mem->prim_sol = (double *)c_ptr;
-    c_ptr += (nvd + ngd) * sizeof(double);
-    //
-    mem->dual_sol = (double *)c_ptr;
-    c_ptr += (nvd + ngd) * sizeof(double);
-
-
-    int nsmax = (2*nvd >= 400) ? 400 : 2*nvd;
-    QPDenseCreate(mem->QP, nvd, ngd, nsmax, c_ptr);
-    c_ptr += mem->QP->memory_size;
+    QPDenseCreate(&mem->QP, nvd, ngd, nsmax, c_ptr);
+    c_ptr += QPDenseSize(nvd,ngd,nsmax);
 
     // int stuff
-    mem->idxb = (int *)c_ptr;
-    c_ptr += nbd * sizeof(int);
+    assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qore_calculate_memory_size(dims, args_) >= c_ptr);
 
@@ -194,7 +155,14 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
 
 
 
-int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_)
+int dense_qp_qore_calculate_workspace_size(dense_qp_dims *dims, void *args_)
+{
+    return 0;
+}
+
+
+
+int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
     // cast structures
     dense_qp_qore_args *args = (dense_qp_qore_args *)args_;
@@ -263,17 +231,22 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     // solve dense qp
     int prtfreq = args->prtfreq;
     int warm_start = args->warm_start;
+    int warm_strategy = args->warm_strategy;
+    int hot_start = args->hot_start;
     int return_flag = 0;
 
-    QPDenseSetData( QP, nvd, ngd, Ct, H );
-    QPDenseSetInt(QP, "prtfreq", prtfreq);
-    if (!warm_start) {
-        QPDenseSetInt(QP, "wsvalid", 0);
-        QPDenseSetInt(QP, "xyvalid", 0);
-        return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
-    } else {
-        return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
+    if (warm_start)
+    {
+        QPDenseSetInt(QP, "warmstrategy", warm_strategy);
+        QPDenseUpdateMatrices(QP, nvd, ngd, Ct, H);
     }
+    else if (!hot_start)
+    {
+        QPDenseSetData(QP, nvd, ngd, Ct, H);
+    }
+
+    QPDenseSetInt(QP, "prtfreq", prtfreq);
+    return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );
     QPDenseGetDblVector( QP, "dualsol", dual_sol );

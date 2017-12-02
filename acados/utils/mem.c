@@ -43,7 +43,7 @@ void make_int_multiple_of(int num, int *size) {
 int align_char_to(int num, char **c_ptr) {
     size_t s_ptr = (size_t)*c_ptr;
     s_ptr = (s_ptr + num - 1) / num * num;
-    int offset = (int)(s_ptr - (size_t)(*c_ptr));
+    int offset = num - (int)(s_ptr - (size_t)(*c_ptr));
     *c_ptr = (char *)s_ptr;
     return offset;
 }
@@ -125,6 +125,19 @@ void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr)
 }
 
 
+void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr)
+{
+    assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
+
+#ifdef _USE_VALGRIND_
+    *sm = (struct d_strmat **) acados_malloc(n, sizeof(struct d_strmat *));
+#else
+    *sm = (struct d_strmat **) *ptr;
+    *ptr += sizeof(struct d_strmat *) * n;
+#endif
+}
+
+
 
 void assign_int(int n, int **v, char **ptr)
 {
@@ -156,7 +169,6 @@ void assign_double(int n, double **v, char **ptr)
 
 void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 {
-    // TODO(dimitris): ask Gianluca why this is not 32/16-byte aligned
     assert((size_t)*ptr % 8 == 0 && "strvec not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
@@ -172,7 +184,11 @@ void assign_strvec(int n, struct d_strvec *sv, char **ptr)
 
 void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
 {
+#ifdef LA_HIGH_PERFORMANCE
     assert((size_t)*ptr % 64 == 0 && "strmat not 64-byte aligned!");
+#else
+    assert((size_t)*ptr % 8 == 0 && "strmat not 8-byte aligned!");
+#endif
 
 #ifdef _USE_VALGRIND_
     d_allocate_strmat(m, n, sA);
@@ -181,4 +197,21 @@ void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
     d_create_strmat(m, n, sA, *ptr);
     *ptr += sA->memory_size;
 #endif
+}
+
+
+
+// TODO(dimitris): probably does not belong here
+void copy_module_pointers_to_args(void *solver_in_args_, void *solver_)
+{
+    module_solver *solver_in_args = solver_in_args_;
+    module_solver *solver = solver_;
+
+    solver_in_args->calculate_args_size = solver->calculate_args_size;
+    solver_in_args->assign_args = solver->assign_args;
+    solver_in_args->initialize_default_args = solver->initialize_default_args;
+    solver_in_args->calculate_memory_size = solver->calculate_memory_size;
+    solver_in_args->assign_memory = solver->assign_memory;
+    solver_in_args->calculate_workspace_size = solver->calculate_workspace_size;
+    solver_in_args->fun = solver->fun;
 }

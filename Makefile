@@ -27,14 +27,11 @@ OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
 OBJS += acados/ocp_qp/ocp_qp_condensing_solver.o
 #sim
-OBJS += acados/sim/allocate_sim.o
 OBJS += acados/sim/sim_casadi_wrapper.o
 OBJS += acados/sim/sim_collocation.o
 OBJS += acados/sim/sim_erk_integrator.o
 OBJS += acados/sim/sim_lifted_irk_integrator.o
-OBJS += acados/sim/sim_erk_integrator_yt.o
-OBJS += acados/sim/sim_rk_common_yt.o
-OBJS += acados/sim/sim_common_yt.o
+OBJS += acados/sim/sim_common.o
 # utils
 OBJS += acados/utils/math.o
 OBJS += acados/utils/copy.o
@@ -88,12 +85,12 @@ qore_static: blasfeo_static
 	( cd external/qore; $(MAKE) static_dense; )
 	mkdir -p include/qore
 	mkdir -p lib
-	cp external/qore/*.h include/qore
-	cp external/qore/KKTPACK_DENSE/include/*.h include/qore
-	cp external/qore/KKTPACK_DENSE/source/*.h include/qore
-	cp external/qore/QPCORE/include/*.h include/qore
+	cp external/qore/qp_types.h include/qore
+	#cp external/qore/KKTPACK_DENSE/include/*.h include/qore
+	#cp external/qore/KKTPACK_DENSE/source/*.h include/qore
+	#cp external/qore/QPCORE/include/*.h include/qore
 	cp external/qore/QPSOLVER_DENSE/include/*.h include/qore
-	cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
+	#cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
 	cp external/qore/bin/libqore_dense.a lib
 
 examples_c:

@@ -75,7 +75,7 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
-    assert((char*)raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
 
     return qp_in;
 }
@@ -101,7 +101,7 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_ocp_qp_sol(dims);
 
-    assert((char*)raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
 }
@@ -142,6 +142,7 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((ocp_qp_solver *)qp_solver)->initialize_default_args = &ocp_qp_hpipm_initialize_default_args;
             ((ocp_qp_solver *)qp_solver)->calculate_memory_size = &ocp_qp_hpipm_calculate_memory_size;
             ((ocp_qp_solver *)qp_solver)->assign_memory = &ocp_qp_hpipm_assign_memory;
+            ((ocp_qp_solver *)qp_solver)->calculate_workspace_size = &ocp_qp_hpipm_calculate_workspace_size;
             ((ocp_qp_solver *)qp_solver)->fun = &ocp_qp_hpipm;
             break;
         case CONDENSING_HPIPM:
@@ -150,6 +151,7 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((dense_qp_solver *)qp_solver)->initialize_default_args = &dense_qp_hpipm_initialize_default_args;
             ((dense_qp_solver *)qp_solver)->calculate_memory_size = &dense_qp_hpipm_calculate_memory_size;
             ((dense_qp_solver *)qp_solver)->assign_memory = &dense_qp_hpipm_assign_memory;
+            ((dense_qp_solver *)qp_solver)->calculate_workspace_size = &dense_qp_hpipm_calculate_workspace_size;
             ((dense_qp_solver *)qp_solver)->fun = &dense_qp_hpipm;
             break;
         case CONDENSING_QPOASES:
@@ -158,6 +160,7 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((dense_qp_solver *)qp_solver)->initialize_default_args = &dense_qp_qpoases_initialize_default_args;
             ((dense_qp_solver *)qp_solver)->calculate_memory_size = &dense_qp_qpoases_calculate_memory_size;
             ((dense_qp_solver *)qp_solver)->assign_memory = &dense_qp_qpoases_assign_memory;
+            ((dense_qp_solver *)qp_solver)->calculate_workspace_size = &dense_qp_qpoases_calculate_workspace_size;
             ((dense_qp_solver *)qp_solver)->fun = &dense_qp_qpoases;
             break;
         case CONDENSING_QORE:
@@ -166,6 +169,7 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((dense_qp_solver *)qp_solver)->initialize_default_args = &dense_qp_qore_initialize_default_args;
             ((dense_qp_solver *)qp_solver)->calculate_memory_size = &dense_qp_qore_calculate_memory_size;
             ((dense_qp_solver *)qp_solver)->assign_memory = &dense_qp_qore_assign_memory;
+            ((dense_qp_solver *)qp_solver)->calculate_workspace_size = &dense_qp_qore_calculate_workspace_size;
             ((dense_qp_solver *)qp_solver)->fun = &dense_qp_qore;
         default:
             return_value = ACADOS_FAILURE;
@@ -184,6 +188,7 @@ void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solve
         qp_solver->initialize_default_args = &ocp_qp_sparse_solver_initialize_default_args;
         qp_solver->calculate_memory_size = &ocp_qp_sparse_solver_calculate_memory_size;
         qp_solver->assign_memory = &ocp_qp_sparse_solver_assign_memory;
+        qp_solver->calculate_workspace_size = &ocp_qp_sparse_solver_calculate_workspace_size;
         qp_solver->fun = &ocp_qp_sparse_solver;
     } else
     {
@@ -192,6 +197,8 @@ void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solve
         qp_solver->initialize_default_args = &ocp_qp_condensing_solver_initialize_default_args;
         qp_solver->calculate_memory_size = &ocp_qp_condensing_solver_calculate_memory_size;
         qp_solver->assign_memory = &ocp_qp_condensing_solver_assign_memory;
+        qp_solver->calculate_workspace_size = &ocp_qp_condensing_solver_calculate_workspace_size;
         qp_solver->fun = &ocp_qp_condensing_solver;
     }
+    set_qp_solver_fun_ptrs(qp_solver_name, qp_solver->qp_solver_funs);
 }

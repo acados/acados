@@ -30,7 +30,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#define NREP 1000
+#define NREP 100
 #define ELIMINATE_X0
 
 #include "./mass_spring.c"
@@ -96,11 +96,11 @@ int main() {
 
 	for(int rep = 0; rep < NREP; rep++) {
 
-        ocp_qp_condensing(qp_in, qpd_in, cond_args, cond_memory);
+        ocp_qp_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
 
-        acados_return = dense_qp_hpipm(qpd_in, qpd_out, argd, mem);
+        acados_return = dense_qp_hpipm(qpd_in, qpd_out, argd, mem, NULL);
 
-        ocp_qp_expansion(qpd_out, qp_out, cond_args, cond_memory);
+        ocp_qp_expansion(qpd_out, qp_out, cond_args, cond_memory, NULL);
     }
 
     real_t time = acados_toc(&timer)/NREP;
@@ -147,6 +147,7 @@ int main() {
     free(argd);
     free(mem);
     free(cond_memory);
+    free(cond_args);
 
 	return 0;
 }

@@ -32,7 +32,7 @@
 #include "acados/utils/print.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -109,11 +109,11 @@ int main() {
 
 	for (int rep = 0; rep < NREP; rep++) {
 
-        ocp_qp_partial_condensing(qp_in, pcond_qp_in, pcond_args, pcond_mem);
+        ocp_qp_partial_condensing(qp_in, pcond_qp_in, pcond_args, pcond_mem, NULL);
 
-        acados_return = ocp_qp_hpipm(pcond_qp_in, pcond_qp_out, arg, mem);
+        acados_return = ocp_qp_hpipm(pcond_qp_in, pcond_qp_out, arg, mem, NULL);
 
-        ocp_qp_partial_expansion(pcond_qp_out, qp_out, pcond_args, pcond_mem);
+        ocp_qp_partial_expansion(pcond_qp_out, qp_out, pcond_args, pcond_mem, NULL);
 	}
 
     double time = acados_toc(&timer)/NREP;
@@ -157,10 +157,13 @@ int main() {
     ************************************************/
 
     free(qp_in);
+    free(pcond_qp_in);
     free(qp_out);
+    free(pcond_qp_out);
     free(sol);
     free(arg);
+    free(pcond_args);
     free(mem);
-
+    free(pcond_mem);
     return 0;
 }
