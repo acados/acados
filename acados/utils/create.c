@@ -21,6 +21,8 @@
 
 #include "acados/utils/create.h"
 
+#include <stdlib.h>
+
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"

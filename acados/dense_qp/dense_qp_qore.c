@@ -19,6 +19,7 @@
 
 // external
 #include <assert.h>
+#include <string.h>
 #include <math.h>
 // blasfeo
 #include "blasfeo_target.h"
@@ -29,6 +30,7 @@
 #include "acados/dense_qp/dense_qp_qore.h"
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/timing.h"
 
 
 int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
@@ -164,6 +166,12 @@ int dense_qp_qore_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 
 int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
+    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+
+    acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
+
     // cast structures
     dense_qp_qore_args *args = (dense_qp_qore_args *)args_;
     dense_qp_qore_memory *memory = (dense_qp_qore_memory *)memory_;
@@ -235,6 +243,9 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     int hot_start = args->hot_start;
     int return_flag = 0;
 
+    info->interface_time = acados_toc(&interface_timer);
+    acados_tic(&qp_timer);
+
     if (warm_start)
     {
         QPDenseSetInt(QP, "warmstrategy", warm_strategy);
@@ -256,6 +267,9 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     exit(1);
 #endif
 
+    info->solve_QP_time = acados_toc(&qp_timer);
+    acados_tic(&interface_timer);
+
     // copy prim_sol and dual_sol to qpd_sol
     d_cvt_vec2strvec(nvd, prim_sol, qp_out->v, 0);
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
@@ -272,6 +286,9 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
         else
             qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nbd+ii];
     }
+
+    info->interface_time += acados_toc(&interface_timer);
+    info->total_time = acados_toc(&tot_timer);
 
     // return
     // TODO(bnovoselnik): cast qore return to acados return

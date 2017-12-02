@@ -79,8 +79,17 @@ int main() {
     acados_timer timer;
     acados_tic(&timer);
 
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    ocp_qp_info min_info;
+    min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
+
 	for (int rep = 0; rep < NREP; rep++) {
         acados_return = ocp_qp_condensing_solver(qp_in, qp_out, arg, mem, work);
+
+        if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
+        if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
+        if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
+        if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -113,6 +122,8 @@ int main() {
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
     printf("\nSolution time averaged over %d runs: %5.2e seconds\n\n\n", NREP, time);
+
+    print_ocp_qp_info(&min_info);
 
     /************************************************
     * free memory
