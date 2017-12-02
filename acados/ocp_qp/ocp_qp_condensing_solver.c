@@ -162,7 +162,7 @@ int ocp_qp_condensing_solver_calculate_workspace_size(ocp_qp_dims *dims, void *a
 
 int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
-    ocp_qp_info *info = (ocp_qp_info *)qp_out->info;
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer, cond_timer;
     acados_tic(&tot_timer);
 
@@ -184,8 +184,8 @@ int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, 
     info->condensing_time += acados_toc(&cond_timer);
 
     info->total_time = acados_toc(&tot_timer);
-    info->solve_QP_time = ((dense_qp_info *)(memory->qpd_out->info))->solve_QP_time;
-    info->interface_time = ((dense_qp_info *)(memory->qpd_out->info))->interface_time;
+    info->solve_QP_time = ((dense_qp_info *)(memory->qpd_out->misc))->solve_QP_time;
+    info->interface_time = ((dense_qp_info *)(memory->qpd_out->misc))->interface_time;
     // return
     return solver_status;
 }

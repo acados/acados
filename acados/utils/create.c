@@ -288,6 +288,10 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
 
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
 
+    // NOTE(dimitris): can also directly pass sparse solver
+    // ocp_qp_solver qp_solver;
+    // set_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
+
     int return_value;
     sim_solver *sim_solvers = acados_malloc(sizeof(sim_solver), dims->N);
 

@@ -80,7 +80,7 @@ int main() {
     acados_timer timer;
     acados_tic(&timer);
 
-    ocp_qp_info *info = (ocp_qp_info *)qp_out->info;
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     ocp_qp_info min_info;
     min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
 
