@@ -36,6 +36,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/create.h"
+#include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
@@ -383,11 +384,7 @@ int main() {
     ************************************************/
 
     int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
-
-    // ocp_nlp_gn_sqp_work *tmp = malloc(workspace_size);
-    // ocp_nlp_gn_sqp_cast_workspace(tmp, nlp_mem, nlp_args);
-
-    void *nlp_work = (void *)malloc(workspace_size);
+    void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
     * gn_sqp solve
@@ -422,10 +419,9 @@ int main() {
     * free memory
     ************************************************/
 
+    free(nlp);
+    free(nlp_out);
     free(nlp_work);
     free(nlp_mem);
-    free(nlp_out);
-    free(nlp);
     free(nlp_args);
-
 }
