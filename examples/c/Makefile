@@ -19,13 +19,13 @@ CRANE_OBJS += crane_model/vde_hess_model.o
 CRANE_OBJS += sim_erk_crane.o
 
 sim_erk_crane: $(CRANE_OBJS)
-	$(CC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+	$(CC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lhpmpc -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
 
 sim_irk_crane_yt: $(CRANE_OBJS)
-	$(CC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lblasfeo -lqpOASES_e -lm
+	$(CC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lhpmpc -lblasfeo -lqpOASES_e -lm
 	@echo
 	@echo " Example sim_irk_crane_yt build complete."
 	@echo

@@ -31,7 +31,7 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-    #define NREP 1000
+#define NREP 1000
 
 #include "./mass_spring.c"
 
