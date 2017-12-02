@@ -30,7 +30,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#define NREP 1000
+#define NREP 100
 #define ELIMINATE_X0
 
 #include "./mass_spring.c"
@@ -147,6 +147,7 @@ int main() {
     free(argd);
     free(mem);
     free(cond_memory);
+    free(cond_args);
 
 	return 0;
 }
