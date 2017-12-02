@@ -33,16 +33,14 @@ extern "C" {
 
 
 typedef enum {
-    SQP_GN,
-    RTI_GN
+    SQP_GN
 } ocp_nlp_solver_t;
 
 
 typedef struct {
     ocp_nlp_solver_t ocp_nlp_solver;
     ocp_qp_config *ocp_qp_config;
-    sim_config *sim_config;
-    globalization_config globalization_config;
+    sim_config **sim_config;
 } ocp_nlp_config;
 
 
