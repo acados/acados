@@ -234,10 +234,10 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
 
         d_create_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], qp_in->BAbt[ii].pA);
         d_create_strvec(nx[ii+1], &hsb[ii], qp_in->b[ii].pa);
-        d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq);
-        d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq);
-        d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], qp_in->DCt);
-        d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d);
+        d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
+        d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
+        d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
+        d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
 
         // initialize hsdux to primal input later usx will be subtracted
         d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
@@ -284,14 +284,13 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
 
     ii = N;
 
-    d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq);
-    d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq);
-    d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], qp_in->DCt);
-    d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d);
+    d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
+    d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
+    d_create_strmat(nu[ii]+nx[ii]+1, ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
+    d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
 
     // initialize hsdux to primal input later usx will be subtracted
     d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
-    printf("nu[N] = %i\n", nu[ii]);
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
     ptr_memory += (&hsdux[ii])->memory_size;
     d_create_strvec(nx[ii], &hsux[ii], ptr_memory);
@@ -347,79 +346,86 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
     work_ric = ptr_memory;
     ptr_memory+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
 
-    // update cost function matrices and vectors (box constraints)
-    d_update_hessian_gradient_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M], \
-      &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M], \
-      &hsQx[M], &hsqx[M]);
+    if (M < N){
+        // update cost function matrices and vectors (box constraints)
+        d_update_hessian_gradient_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M], \
+          &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M], \
+          &hsQx[M], &hsqx[M]);
 
-    // backward riccati factorization and solution at the end
-    d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M], \
-      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], &hsDCt[M], &hsQx[M], \
-      &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], work_ric);
+        // backward riccati factorization and solution at the end
+        d_back_ric_rec_sv_back_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M], \
+          0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], &hsDCt[M], &hsQx[M], \
+          &hsqx[M], &hsux[M], 1, &hspi[M],  1, &hsPb[M], &hsL[M], work_ric);
 
-    // extract chol factor of [P p; p' *]
-    // TODO(Andrea): have m and n !!!!!
-    dtrcp_l_libstr(nx[M], &hsL[M], nu[M], nu[M], &sLxM, 0, 0);
-    dgecp_libstr(1, nx[M], &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
+        // extract chol factor of [P p; p' *]
+        // TODO(Andrea): have m and n !!!!!
+        dtrcp_l_libstr(nx[M], &hsL[M], nu[M], nu[M], &sLxM, 0, 0);
+        dgecp_libstr(1, nx[M], &hsL[M], nu[M]+nx[M], nu[M], &sLxM, nx[M], 0);
 
-    // recover [P p; p' *]
-    dsyrk_ln_mn_libstr(nx[M]+1, nx[M], nx[M], 1.0, &sLxM, 0, 0, &sLxM, 0, 0, 0.0,
-      &sPpM, 0, 0, &sPpM, 0, 0);
+        // recover [P p; p' *]
+        dsyrk_ln_mn_libstr(nx[M]+1, nx[M], nx[M], 1.0, &sLxM, 0, 0, &sLxM, 0, 0, 0.0,
+          &sPpM, 0, 0, &sPpM, 0, 0);
 
-    // backup stage M
-    nuM = nu[M];
-    nbM = nb[M];
-    hstmpmat0 = hsRSQrq[M];
+        // backup stage M
+        nuM = nu[M];
+        nbM = nb[M];
+        hstmpmat0 = hsRSQrq[M];
 
-    // update new terminal cost
-    nu[M] = 0;
-    nb[M] = 0;
-    hsRSQrq[M] = sPpM;
-    hsux[M].pa += nuM;
+        // update new terminal cost
+        nu[M] = 0;
+        nb[M] = 0;
+        hsRSQrq[M] = sPpM;
+        hsux[M].pa += nuM;
 
-    // IPM at the beginning
-    hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
-      warm_start, stat, M, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
-      hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);  // recover original stage M
+        // IPM at the beginning
+        hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
+          warm_start, stat, M, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
+          hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);  // recover original stage M
 
-    nu[M] = nuM;
-    nb[M] = nbM;
-    hsRSQrq[M] = hstmpmat0;
-    hsux[M].pa -= nuM;
+        nu[M] = nuM;
+        nb[M] = nbM;
+        hsRSQrq[M] = hstmpmat0;
+        hsux[M].pa -= nuM;
 
-    // forward riccati solution at the end
-    d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
-      0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
-      &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
-      hsric_work_mat);
+        // forward riccati solution at the end
+        d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M], &ng[M],
+          0, &hsBAbt[M], hsvecdummy, 1, &hsRSQrq[M], &hsrq[M], hsmatdummy,
+          &hsQx[M], &hsqx[M], &hsux[M], 1, &hspi[M], 1, &hsPb[M], &hsL[M],
+          hsric_work_mat);
 
-    // compute alpha, dlam and dt
-    real_t alpha = 1.0;
-    // compute primal step hsdux for stages M to N
-    real_t *temp_p1, *temp_p2;
-    for (int_t i = M; i <= N; i++) {
-      // hsdux is initialized to be equal to hpmpc_args.ux0
-      temp_p1 = hsdux[i].pa;
-      temp_p2 = hsux[i].pa;  // hsux[i].pa;
-      for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
+        // compute alpha, dlam and dt
+        real_t alpha = 1.0;
+        // compute primal step hsdux for stages M to N
+        real_t *temp_p1, *temp_p2;
+        for (int_t i = M; i <= N; i++) {
+          // hsdux is initialized to be equal to hpmpc_args.ux0
+          temp_p1 = hsdux[i].pa;
+          temp_p2 = hsux[i].pa;  // hsux[i].pa;
+          for (int_t j = 0; j < nx[i]+nu[i]; j++) temp_p1[j]= - temp_p1[j] + temp_p2[j];
+        }
+
+        d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
+          &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
+          &hsdux[M], &hsDCt[M], &hsd[M]);
+
+        // update stages M to N
+        double mu_scal = 0.0;
+        d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
+          &sigma_mu, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
+          &hsdlam[M], &hspi[M], &hspi[M]);
+
+        // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
+        // define and compute hsdpi (see function prototype).
+    } else{
+        // IPM at the beginning
+        hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
+          warm_start, stat, N, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
+          hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);  // recover original stage M
     }
-
-    d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &hsidxb[M],
-      &ng[M], &alpha, &hst[M], &hsdt[M], &hslam[M], &hsdlam[M], &hslamt[M],
-      &hsdux[M], &hsDCt[M], &hsd[M]);
-
-    // update stages M to N
-    double mu_scal = 0.0;
-    d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
-      &sigma_mu, mu_scal, alpha, &hsux[M], &hsdux[M], &hst[M], &hsdt[M], &hslam[M],
-      &hsdlam[M], &hspi[M], &hspi[M]);
-
-    // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
-    // define and compute hsdpi (see function prototype).
 
     // copy result to qp_out
     for ( ii = 0; ii < N; ii++ ) {
-        dveccp_libstr(nu[ii] + nu[ii], &hsux[ii], 0, &qp_out->ux[ii], 0);
+        dveccp_libstr(nx[ii] + nu[ii], &hsux[ii], 0, &qp_out->ux[ii], 0);
         dveccp_libstr(nx[ii], &hspi[ii], 0, &qp_out->pi[ii], 0);
         dveccp_libstr(2*nb[ii]+2*ng[ii], &hslam[ii], 0, &qp_out->lam[ii], 0);
         dveccp_libstr(2*nb[ii]+2*ng[ii], &hst[ii], 0, &qp_out->t[ii], 0);
@@ -427,7 +433,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
     }
 
     ii = N;
-    dveccp_libstr(nu[ii] + nu[ii], &hsux[ii], 0, &qp_out->ux[ii], 0);
+    dveccp_libstr(nx[ii] + nu[ii], &hsux[ii], 0, &qp_out->ux[ii], 0);
     dveccp_libstr(2*nb[ii]+2*ng[ii], &hslam[ii], 0, &qp_out->lam[ii], 0);
     dveccp_libstr(2*nb[ii]+2*ng[ii], &hst[ii], 0, &qp_out->t[ii], 0);
 

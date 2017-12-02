@@ -17,6 +17,8 @@
  *
  */
 
+ #define _GNU_SOURCE
+ #include <fenv.h>
 // external
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,12 +31,13 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+    #define NREP 1000
 
 #include "./mass_spring.c"
 
 
 int main() {
+    // feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     printf("\n");
     printf("\n");
     printf("\n");
@@ -50,7 +53,7 @@ int main() {
     // TODO(dimitris): write a print_ocp_qp function
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    int N = qp_in->dim->N;
+    int N   = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
@@ -66,12 +69,20 @@ int main() {
     * ipm
     ************************************************/
 
-    ocp_qp_hpipm_args *arg = ocp_qp_hpmpc_create_arguments(qp_in->dim);
+    ocp_qp_hpmpc_args *arg = ocp_qp_hpmpc_create_arguments(qp_in->dim);
 
-    // arg->hpipm_args->iter_max = 10;
+    // arg->hpmpc_args->iter_max = 10;
 
-    ocp_qp_hpipm_memory *mem = ocp_qp_hpmpc_create_memory(qp_in->dim, qp_in, arg);
+    ocp_qp_hpmpc_memory *mem = ocp_qp_hpmpc_create_memory(qp_in->dim, qp_in, arg);
 
+    // intialize variables
+    for (int ii = 0; ii <= N;  ii++) {
+        for (int jj = 0; jj < 2*nb[ii] + 2*ng[ii]; jj++) {
+            arg->t0[ii][jj] = 10;
+            arg->lam0[ii][jj] = 10;
+        }
+
+    }
 	int acados_return;  // 0 normal; 1 max iter
 
     acados_timer timer;
@@ -82,6 +93,8 @@ int main() {
 	}
 
     double time = acados_toc(&timer)/NREP;
+
+    printf("acados_return = %i", acados_return);
 
     /************************************************
     * extract solution
@@ -112,18 +125,18 @@ int main() {
     printf("\nx = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
 
-    printf("\npi = \n");
-    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
+    // printf("\npi = \n");
+    // for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
 
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
-           mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
-           mem->hpipm_workspace->qp_res[3], mem->hpipm_workspace->res_workspace->res_mu);
+    // printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpmpc_workspace->qp_res[0],
+        //    mem->hpmpc_workspace->qp_res[1], mem->hpmpc_workspace->qp_res[2],
+        //    mem->hpmpc_workspace->qp_res[3], mem->hpmpc_workspace->res_workspace->res_mu);
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        mem->hpipm_workspace->iter, NREP, time);
+    printf("\nN ITER = %i\n\n\n",
+        arg->out_iter);
 
     /************************************************
     * free memory
