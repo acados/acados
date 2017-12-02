@@ -166,6 +166,7 @@ int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, 
     acados_timer tot_timer, qp_timer, interface_timer, cond_timer;
     acados_tic(&tot_timer);
 
+    // cast data structures
     ocp_qp_condensing_solver_args *args = (ocp_qp_condensing_solver_args *) args_;
     ocp_qp_condensing_solver_memory *memory = (ocp_qp_condensing_solver_memory *) mem_;
     ocp_qp_condensing_solver_workspace *work = (ocp_qp_condensing_solver_workspace *) work_;

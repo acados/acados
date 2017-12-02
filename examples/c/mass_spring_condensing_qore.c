@@ -26,6 +26,7 @@
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/utils/create.h"
+#include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
