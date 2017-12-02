@@ -289,7 +289,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
 
     int return_value;
-    // sim_solver **sim_solver_ptrs = acados_malloc(sizeof(sim_solver *), dims->N);
     sim_solver *sim_solvers = acados_malloc(sizeof(sim_solver), dims->N);
 
     for (int ii = 0; ii < dims->N; ii++)
@@ -314,6 +313,8 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
         args->sim_solvers[ii]->initialize_default_args(&sim_dims, args->sim_solvers_args[ii]);
     }
+
+    free(sim_solvers);
 
     return args;
 }
