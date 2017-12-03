@@ -68,7 +68,7 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    qp_solver_t qp_solver_name = CONDENSING_QPOASES;
+    ocp_qp_solver_t qp_solver_name = CONDENSING_QPOASES;
 
     // create condensing solver args
     ocp_qp_condensing_solver_args *arg =

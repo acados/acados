@@ -69,7 +69,7 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    qp_solver_t qp_solver_name = HPIPM;
+    ocp_qp_solver_t qp_solver_name = HPIPM;
 
     // create partial condensing solver args
     ocp_qp_sparse_solver_args *arg =

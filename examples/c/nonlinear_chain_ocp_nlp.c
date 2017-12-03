@@ -335,7 +335,7 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    qp_solver_t qp_solver_name = HPIPM;
+    ocp_qp_solver_t qp_solver_name = HPIPM;
 
     // set up args with nested structs
     sim_solver_t sim_solver_names[NN];

@@ -127,7 +127,7 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 
 
 
-ocp_qp_sparse_solver_args *ocp_qp_sparse_solver_create_arguments(ocp_qp_dims *dims, qp_solver_t solver_name)
+ocp_qp_sparse_solver_args *ocp_qp_sparse_solver_create_arguments(ocp_qp_dims *dims, ocp_qp_solver_t solver_name)
 {
     ocp_qp_solver solver;
     set_qp_solver_fun_ptrs(solver_name, &solver);
@@ -153,7 +153,7 @@ ocp_qp_sparse_solver_memory *ocp_qp_sparse_solver_create_memory(ocp_qp_dims *dim
 
 
 
-ocp_qp_condensing_solver_args *ocp_qp_condensing_solver_create_arguments(ocp_qp_dims *dims, qp_solver_t solver_name)
+ocp_qp_condensing_solver_args *ocp_qp_condensing_solver_create_arguments(ocp_qp_dims *dims, ocp_qp_solver_t solver_name)
 {
     dense_qp_solver solver;
     set_qp_solver_fun_ptrs(solver_name, &solver);
@@ -282,7 +282,7 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
 
 
 
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
 {
     ocp_qp_xcond_solver qp_solver;
     module_solver solver_funs;
