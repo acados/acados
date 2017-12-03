@@ -33,14 +33,14 @@
 
 // TODO(dimitris): error on cases where both qpOASES and clipping are detected (qpDUNES crashes)
 
-static int_t max_of_two(int_t a, int_t b) {
-    int_t ans = a;
+static int max_of_two(int a, int b) {
+    int ans = a;
     (void)((ans < b) && (ans = b));
     return ans;
 }
 
-static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
-    int_t ii, jj;
+static void transpose_matrix(double *mat, int m, int n, double *tmp) {
+    int ii, jj;
 
     for (jj = 0; jj < n; jj++) {
         for (ii = 0; ii < m; ii++) {
@@ -50,10 +50,10 @@ static void transpose_matrix(real_t *mat, int m, int n, real_t *tmp) {
     for (ii = 0; ii < m * n; ii++) mat[ii] = tmp[ii];
 }
 
-static void form_H(real_t *Hk, int_t nx, const real_t *Qk, int_t nu,
-                   const real_t *Rk, const real_t *Sk) {
-    int_t ii, jj, offset;
-    int_t lda = nx + nu;
+static void form_H(double *Hk, int nx, const double *Qk, int nu,
+                   const double *Rk, const double *Sk) {
+    int ii, jj, offset;
+    int lda = nx + nu;
 
     for (ii = 0; ii < nx; ii++) {
         for (jj = 0; jj < nx; jj++) {
@@ -82,16 +82,16 @@ static void form_H(real_t *Hk, int_t nx, const real_t *Qk, int_t nu,
     // d_print_mat(lda, lda, Hk, lda);
 }
 
-static void form_g(real_t *gk, int_t nx, const real_t *qk, int_t nu,
-                   const real_t *rk) {
-    int_t ii;
+static void form_g(double *gk, int nx, const double *qk, int nu,
+                   const double *rk) {
+    int ii;
     for (ii = 0; ii < nx; ii++) gk[ii] = qk[ii];
     for (ii = 0; ii < nu; ii++) gk[ii + nx] = rk[ii];
 }
 
-static void form_ABt(real_t *ABkt, int_t nx, const real_t *Ak, int_t nu,
-                     const real_t *Bk, real_t *scrap) {
-    int_t ii;
+static void form_ABt(double *ABkt, int nx, const double *Ak, int nu,
+                     const double *Bk, double *scrap) {
+    int ii;
 
     for (ii = 0; ii < nx * nx; ii++) ABkt[ii] = Ak[ii];
     for (ii = 0; ii < nx * nu; ii++) ABkt[ii + nx * nx] = Bk[ii];
@@ -99,14 +99,14 @@ static void form_ABt(real_t *ABkt, int_t nx, const real_t *Ak, int_t nu,
     transpose_matrix(ABkt, nx, nx + nu, scrap);
 }
 
-static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nxk, int_t nuk, int_t nbk,
-    const int_t *idxbk, const real_t *lbk, const real_t *ubk, real_t infty) {
+static void form_bounds(double *zLowk, double *zUppk, int nxk, int nuk, int nbk,
+    const int *idxbk, const double *lbk, const double *ubk, double infty) {
 
-    for (int_t ii = 0; ii < nxk+nuk; ii++) {
+    for (int ii = 0; ii < nxk+nuk; ii++) {
         zLowk[ii] = -infty;
         zUppk[ii] = infty;
     }
-    for (int_t ii = 0; ii < nbk; ii++) {
+    for (int ii = 0; ii < nbk; ii++) {
 #ifdef FLIP_BOUNDS
         if (idxbk[ii] < nuk) {  // input
             zLowk[idxbk[ii] + nxk] = lbk[ii];
@@ -122,24 +122,24 @@ static void form_bounds(real_t *zLowk, real_t *zUppk, int_t nxk, int_t nuk, int_
     }
 }
 
-static void form_Ct(real_t *Ckt, int_t nc, int_t nx, const real_t *Cxk,
-                    int_t nu, const real_t *Cuk, real_t *scrap) {
-    int_t ii;
+static void form_Ct(double *Ckt, int nc, int nx, const double *Cxk,
+                    int nu, const double *Cuk, double *scrap) {
+    int ii;
     for (ii = 0; ii < nc * nx; ii++) Ckt[ii] = Cxk[ii];
     for (ii = 0; ii < nc * nu; ii++) Ckt[ii + nc * nx] = Cuk[ii];
     transpose_matrix(Ckt, nc, nx + nu, scrap);
 }
 
-static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
-                           ocp_qp_qpdunes_memory *mem, ocp_qp_qpdunes_workspace *work) {
-
-    int_t kk, N, nx, nu, nc;
+static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdunes_memory *mem,
+ocp_qp_qpdunes_workspace *work)
+{
+    int kk, N, nx, nu, nc;
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
     return_t value = 0;
 
-    N = in->N;
-    nx = in->nx[0];
-    nu = in->nu[0];
+    N = in->dim->N;
+    nx = in->dim->nx[0];
+    nu = in->dim->nu[0];
 
     if (mem->firstRun == 1) {
         /* setup of intervals */
@@ -173,7 +173,7 @@ static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
             }
             if (value != QPDUNES_OK) {
                 printf("Setup of qpDUNES failed on interval %d\n", kk);
-                return (int_t)value;
+                return (int)value;
             }
         }
         form_bounds(work->zLow, work->zUpp, in->nx[N], in->nu[N], in->nb[N], in->idxb[N], in->lb[N],
@@ -190,14 +190,14 @@ static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
         }
         if (value != QPDUNES_OK) {
             printf("Setup of qpDUNES failed on last interval\n");
-            return (int_t)value;
+            return (int)value;
         }
 
         /* setup of stage QPs */
         value = qpDUNES_setupAllLocalQPs(&(mem->qpData), isLTI = QPDUNES_FALSE);
         if (value != QPDUNES_OK) {
             printf("Setup of qpDUNES failed on initialization of stage QPs\n");
-            return (int_t)value;
+            return (int)value;
         }
     } else {  // if mem->firstRun == 0
         if (args->isLinearMPC == 0) {
@@ -224,7 +224,7 @@ static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
                 }
                 if (value != QPDUNES_OK) {
                     printf("Update of qpDUNES failed on interval %d\n", kk);
-                    return (int_t)value;
+                    return (int)value;
                 }
                 // qpDUNES_printMatrixData( work->ABt, nx, nx+nu, "AB[%d]", kk
                 // );
@@ -245,7 +245,7 @@ static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
             }
             if (value != QPDUNES_OK) {
                 printf("Update of qpDUNES failed on last interval\n");
-                return (int_t)value;
+                return (int)value;
             }
         } else {  // linear MPC
             form_bounds(work->zLow, work->zUpp, in->nx[0], in->nu[0], in->nb[0], in->idxb[0],
@@ -255,12 +255,12 @@ static int_t update_memory(const ocp_qp_in *in, const ocp_qp_qpdunes_args *args,
                 work->zLow, work->zUpp, 0, 0, 0, 0);
             if (value != QPDUNES_OK) {
                 printf("Update of qpDUNES failed on first interval\n");
-                return (int_t)value;
+                return (int)value;
             }
         }
     }
     mem->firstRun = 0;
-    return (int_t)value;
+    return (int)value;
 }
 
 static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out,
@@ -285,8 +285,8 @@ static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out,
 }
 
 static qpdunes_stage_qp_solver_t define_stage_qp_solver(const ocp_qp_in *in) {
-    int_t ii, jj, kk;
-    int_t nD = 0;
+    int ii, jj, kk;
+    int nD = 0;
 
     // check for polyhedral constraints
     for (kk = 0; kk < in->N + 1; kk++) nD += in->nc[kk];
@@ -326,8 +326,8 @@ static qpdunes_stage_qp_solver_t define_stage_qp_solver(const ocp_qp_in *in) {
     return QPDUNES_WITH_CLIPPING;
 }
 
-static int_t get_maximum_number_of_inequality_constraints(const ocp_qp_in *in) {
-    int_t kk, nDmax;
+static int get_maximum_number_of_inequality_constraints(const ocp_qp_in *in) {
+    int kk, nDmax;
 
     nDmax = in->nc[0];
     for (kk = 1; kk < in->N + 1; kk++) {
@@ -358,10 +358,10 @@ ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
     return args;
 }
 
-int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
+int ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
-    int_t size, dimA, dimB, dimC, nDmax, dimz, maxDim;
+    int size, dimA, dimB, dimC, nDmax, dimz, maxDim;
 
     // dummy command
     if (args->options.logLevel == 0) dimA = 0;
@@ -376,8 +376,8 @@ int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_) 
     maxDim = max_of_two(dimA + dimB, dimC);
 
     size = sizeof(ocp_qp_qpdunes_workspace);
-    size += (dimA + dimB + dimC + maxDim) * sizeof(real_t);  // ABt, Ct, scrap,
-    size += (dimz * dimz + 3 * dimz) * sizeof(real_t);       // H, g, zLow, zUpp
+    size += (dimA + dimB + dimC + maxDim) * sizeof(double);  // ABt, Ct, scrap,
+    size += (dimz * dimz + 3 * dimz) * sizeof(double);       // H, g, zLow, zUpp
     return size;
 }
 
@@ -388,28 +388,28 @@ static void assign_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memo
     ptr += sizeof(ocp_qp_qpdunes_workspace);
     assert((size_t)ptr % 8 == 0);
 
-    work->ABt = (real_t *)ptr;
-    ptr += (mem->dimA + mem->dimB) * sizeof(real_t);
-    work->Ct = (real_t *)ptr;
-    ptr += (mem->dimC) * sizeof(real_t);
-    work->scrap = (real_t *)ptr;
-    ptr += (mem->maxDim) * sizeof(real_t);
-    work->zLow = (real_t *)ptr;
-    ptr += (mem->dimz) * sizeof(real_t);
-    work->zUpp = (real_t *)ptr;
-    ptr += (mem->dimz) * sizeof(real_t);
-    work->H = (real_t *)ptr;
-    ptr += (mem->dimz * mem->dimz) * sizeof(real_t);
-    work->g = (real_t *)ptr;
-    ptr += (mem->dimz)*sizeof(real_t);
+    work->ABt = (double *)ptr;
+    ptr += (mem->dimA + mem->dimB) * sizeof(double);
+    work->Ct = (double *)ptr;
+    ptr += (mem->dimC) * sizeof(double);
+    work->scrap = (double *)ptr;
+    ptr += (mem->maxDim) * sizeof(double);
+    work->zLow = (double *)ptr;
+    ptr += (mem->dimz) * sizeof(double);
+    work->zUpp = (double *)ptr;
+    ptr += (mem->dimz) * sizeof(double);
+    work->H = (double *)ptr;
+    ptr += (mem->dimz * mem->dimz) * sizeof(double);
+    work->g = (double *)ptr;
+    ptr += (mem->dimz)*sizeof(double);
 }
 
 ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_) {
 
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
-    int_t N, nx, nu, kk;
-    uint_t *nD_ptr = 0;
+    int N, nx, nu, kk;
+    uint *nD_ptr = 0;
     return_t return_value;
 
     N = in->N;
@@ -462,7 +462,7 @@ ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *a
             }
         }
         if (mem->nDmax > 0)
-            nD_ptr = (uint_t *)in->nc;  // otherwise leave pointer equal to zero
+            nD_ptr = (uint *)in->nc;  // otherwise leave pointer equal to zero
     }
 
     /* memory allocation */
@@ -480,7 +480,7 @@ void ocp_qp_qpdunes_free_memory(void *mem_) {
     qpDUNES_cleanup(&(mem->qpData));
 }
 
-int_t ocp_qp_qpdunes(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
+int ocp_qp_qpdunes(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_) {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
@@ -495,7 +495,7 @@ int_t ocp_qp_qpdunes(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *me
     if (return_value != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) {
         printf("qpDUNES failed to solve the QP. Error code: %d\n",
                return_value);
-        return (int_t)return_value;
+        return (int)return_value;
     }
     fill_in_qp_out(in, out, mem);
     return 0;
@@ -505,7 +505,7 @@ void ocp_qp_qpdunes_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, 
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
 
     *mem = ocp_qp_qpdunes_create_memory(qp_in, args);
-    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
+    int work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
     *work = malloc(work_space_size);
 }
 
