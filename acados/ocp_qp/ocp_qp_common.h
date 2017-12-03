@@ -42,6 +42,7 @@ typedef struct d_ocp_qp_sol ocp_qp_out;
 // NOTE(dimitris): contains both ocp_qp solvers and condensing with dense solvers
 typedef enum {
     HPIPM,
+    QPDUNES,
     CONDENSING_HPIPM,
     CONDENSING_QPOASES,
     CONDENSING_QORE

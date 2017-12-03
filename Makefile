@@ -21,6 +21,7 @@ OBJS += acados/dense_qp/dense_qp_qore.o
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
+OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 OBJS += acados/ocp_qp/ocp_qp_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
@@ -40,7 +41,7 @@ OBJS += acados/utils/mem.o
 OBJS += acados/utils/create.o
 
 
-static_library: blasfeo_static hpipm_static qpoases_static qore_static
+static_library: blasfeo_static hpipm_static qpoases_static qore_static qpdunes_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -69,7 +70,7 @@ qpoases_static:
 	mkdir -p lib
 	cp -r external/qpoases/include/* include/qpoases
 	cp external/qpoases/bin/libqpOASES_e.a lib
-	
+
 qore_static: blasfeo_static
 	mkdir -p external/qore/external/blasfeo
 	cp external/blasfeo/include/*.h external/qore/external/blasfeo
@@ -84,6 +85,13 @@ qore_static: blasfeo_static
 	cp external/qore/QPSOLVER_DENSE/include/*.h include/qore
 	#cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
 	cp external/qore/bin/libqore_dense.a lib
+
+qpdunes_static:
+	( cd external/qpdunes; $(MAKE) CC=$(CC) )
+	mkdir -p include/qpdunes
+	mkdir -p lib
+	cp -r external/qpdunes/include/* include/qpdunes
+	cp external/qpdunes/src/libqpdunes.a lib
 
 examples_c:
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )

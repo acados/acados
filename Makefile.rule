@@ -45,6 +45,9 @@ QPOASES_PATH = $(EXT_PATH)/qpoases
 # QORE path
 QORE_PATH = $(EXT_PATH)/qore
 
+# QQPDUNES path
+QPDUNES_PATH = $(EXT_PATH)/qpdunes
+
 # measure timings
 MEASURE_TIMINGS = 1
 
@@ -67,5 +70,5 @@ CFLAGS += -DMEASURE_TIMINGS
 endif
 
 # search directories
-CFLAGS += -I$(TOP) -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore
+CFLAGS += -I$(TOP) -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore -I$(QPDUNES_PATH)/include
 LDFLAGS += -L$(TOP)/lib -L$(BLASFEO_PATH)/lib -L$(HPIPM_PATH)/lib -L$(QPOASES_PATH)/bin
