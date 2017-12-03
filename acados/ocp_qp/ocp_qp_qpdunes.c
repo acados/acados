@@ -19,146 +19,135 @@
 
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 
+//external
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <assert.h>
-
-// #include "blasfeo/include/blasfeo_target.h"
-// #include "blasfeo/include/blasfeo_common.h"
-// #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+// acados
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 
 // TODO(dimitris): error on cases where both qpOASES and clipping are detected (qpDUNES crashes)
 
-static int max_of_two(int a, int b) {
+static int max_of_two(int a, int b)
+{
     int ans = a;
     (void)((ans < b) && (ans = b));
     return ans;
 }
 
-static void transpose_matrix(double *mat, int m, int n, double *tmp) {
-    int ii, jj;
+// static void transpose_matrix(double *mat, int m, int n, double *tmp)
+// {
+//     for (int jj = 0; jj < n; jj++) {
+//         for (int ii = 0; ii < m; ii++) {
+//             tmp[ii * n + jj] = mat[jj * m + ii];
+//         }
+//     }
+//     for (int ii = 0; ii < m * n; ii++) mat[ii] = tmp[ii];
+// }
 
-    for (jj = 0; jj < n; jj++) {
-        for (ii = 0; ii < m; ii++) {
-            tmp[ii * n + jj] = mat[jj * m + ii];
-        }
-    }
-    for (ii = 0; ii < m * n; ii++) mat[ii] = tmp[ii];
+
+static void form_H(double *H, int nx, int nu, struct d_strmat *sRSQrq)
+{
+    // copy Q
+    d_cvt_strmat2mat(nx, nx, sRSQrq, nu, nu, &H[0], nx+nu);
+    // copy R
+    d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, &H[nx*(nx+nu) + nx], nx+nu);
+    // copy S
+    // TODO(dimitris): NOT SURE ABOUT DIMENSIONS OF S AND WHERE TO TRANSPOSE!
+    d_cvt_strmat2mat(nu, nx, sRSQrq, nu, 0, &H[nx], nx+nu);
+    d_cvt_tran_strmat2mat(nu, nx, sRSQrq, nu, 0, &H[nx*nx + nx*nu], nx+nu);
+
+    printf("Hessian:\n");
+    d_print_mat(nx+nu, nx+nu, H, nx+nu);
+    exit(1);
 }
 
-static void form_H(double *Hk, int nx, const double *Qk, int nu,
-                   const double *Rk, const double *Sk) {
-    int ii, jj, offset;
-    int lda = nx + nu;
 
-    for (ii = 0; ii < nx; ii++) {
-        for (jj = 0; jj < nx; jj++) {
-            Hk[jj * lda + ii] = Qk[jj * nx + ii];
-        }
-    }
-    offset = nx * (nx + nu) + nx;
-    for (ii = 0; ii < nu; ii++) {
-        for (jj = 0; jj < nu; jj++) {
-            Hk[jj * lda + ii + offset] = Rk[jj * nu + ii];
-        }
-    }
-    offset = nx;
-    for (ii = 0; ii < nu; ii++) {
-        for (jj = 0; jj < nx; jj++) {
-            Hk[jj * lda + ii + offset] = Sk[jj * nu + ii];
-        }
-    }
-    offset = nx * nx + nx * nu;
-    for (ii = 0; ii < nu; ii++) {
-        for (jj = 0; jj < nx; jj++) {
-            Hk[ii * lda + jj + offset] = Sk[jj * nu + ii];
-        }
-    }
-    // printf("Hessian:\n");
-    // d_print_mat(lda, lda, Hk, lda);
+
+static void form_g(double *g, int nx, int nu, struct d_strvec *srq)
+{
+    d_cvt_strvec2vec(nx, srq, nu, &g[0]);
+    d_cvt_strvec2vec(nu, srq, 0, &g[nx]);
 }
 
-static void form_g(double *gk, int nx, const double *qk, int nu,
-                   const double *rk) {
-    int ii;
-    for (ii = 0; ii < nx; ii++) gk[ii] = qk[ii];
-    for (ii = 0; ii < nu; ii++) gk[ii + nx] = rk[ii];
+
+
+static void form_ABt(double *ABt, int nx, int nu, struct d_strmat *sBAbt)
+{
+    d_cvt_strmat2mat(nx, nx, sBAbt, 0, nu, &ABt[0], nx);
+    d_cvt_strmat2mat(nx, nu, sBAbt, 0, 0, &ABt[nx*nx], nx);
 }
 
-static void form_ABt(double *ABkt, int nx, const double *Ak, int nu,
-                     const double *Bk, double *scrap) {
-    int ii;
 
-    for (ii = 0; ii < nx * nx; ii++) ABkt[ii] = Ak[ii];
-    for (ii = 0; ii < nx * nu; ii++) ABkt[ii + nx * nx] = Bk[ii];
 
-    transpose_matrix(ABkt, nx, nx + nu, scrap);
-}
-
-static void form_bounds(double *zLowk, double *zUppk, int nxk, int nuk, int nbk,
-    const int *idxbk, const double *lbk, const double *ubk, double infty) {
-
-    for (int ii = 0; ii < nxk+nuk; ii++) {
-        zLowk[ii] = -infty;
-        zUppk[ii] = infty;
+static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int ng, int *idxb,
+    struct d_strvec *sd, double infty)
+{
+    for (int ii = 0; ii < nx+nu; ii++)
+    {
+        zLow[ii] = -infty;
+        zUpp[ii] = infty;
     }
-    for (int ii = 0; ii < nbk; ii++) {
-#ifdef FLIP_BOUNDS
-        if (idxbk[ii] < nuk) {  // input
-            zLowk[idxbk[ii] + nxk] = lbk[ii];
-            zUppk[idxbk[ii] + nxk] = ubk[ii];
-        } else {  // state
-            zLowk[idxbk[ii] - nuk] = lbk[ii];
-            zUppk[idxbk[ii] - nuk] = ubk[ii];
+    for (int ii = 0; ii < nb; ii++)
+    {
+        if (idxb[ii] < nu)
+        {  // input bound
+            zLow[idxb[ii] + nx] = DVECEL_LIBSTR(sd, ii);  // lb[ii]
+            zUpp[idxb[ii] + nx] = DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
+        } else
+        {  // state bounds
+            zLow[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii);  // lbk[ii]
+            zUpp[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
         }
-#else
-        zLowk[idxbk[ii]] = lbk[ii];
-        zUppk[idxbk[ii]] = ubk[ii];
-#endif
     }
 }
 
-static void form_Ct(double *Ckt, int nc, int nx, const double *Cxk,
-                    int nu, const double *Cuk, double *scrap) {
-    int ii;
-    for (ii = 0; ii < nc * nx; ii++) Ckt[ii] = Cxk[ii];
-    for (ii = 0; ii < nc * nu; ii++) Ckt[ii + nc * nx] = Cuk[ii];
-    transpose_matrix(Ckt, nc, nx + nu, scrap);
+
+
+static void form_Ct(double *Ct, int nx,  int nu, int ng, struct d_strmat *sDCt)
+{
+    // copy C
+    d_cvt_strmat2mat(nx, ng, sDCt, nu, 0, &Ct[0], nx+nu);
+    // copy D
+    d_cvt_strmat2mat(nu, ng, sDCt, 0, 0, &Ct[nx*ng], nx+nu);
 }
+
+
 
 static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdunes_memory *mem,
-ocp_qp_qpdunes_workspace *work)
+    ocp_qp_qpdunes_workspace *work)
 {
-    int kk, N, nx, nu, nc;
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
     return_t value = 0;
 
-    N = in->dim->N;
-    nx = in->dim->nx[0];
-    nu = in->dim->nu[0];
+    int N = in->dim->N;
+    int *nx = in->dim->nx;
+    int *nu = in->dim->nu;
+    int *nb = in->dim->nb;
+    int *ng = in->dim->ng;
 
     if (mem->firstRun == 1) {
         /* setup of intervals */
-        for (kk = 0; kk < N; ++kk) {
-            form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
-            form_bounds(work->zLow, work->zUpp, in->nx[kk], in->nu[kk], in->nb[kk], in->idxb[kk],
-                in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
-            form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
+        for (int kk = 0; kk < N; ++kk) {
+            form_g(work->g, nx[kk], nu[kk], &in->rq[kk]);
+            form_bounds(work->zLow, work->zUpp, nx[kk], nu[kk], nb[kk], ng[kk], in->idxb[kk],
+            &in->d[kk], args->options.QPDUNES_INFTY);
+            form_ABt(work->ABt, nx[kk], nu[kk], &in->BAbt[kk]);
 
             if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
-                nc = in->nc[kk];
-                if (nc == 0) {
+                if (ng[kk] == 0) {
                     value = qpDUNES_setupRegularInterval(
                         &(mem->qpData), mem->qpData.intervals[kk], 0, in->Q[kk],
                         in->R[kk], in->S[kk], work->g, work->ABt, 0, 0,
                         in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
                 } else {
-                    form_Ct(work->Ct, nc, nx, in->Cx[kk], nu, in->Cu[kk],
-                            work->scrap);
+                    form_Ct(work->Ct, nx[kk], nu[kk], ng[kk], &in->DCt[kk]);
                     value = qpDUNES_setupRegularInterval(
                         &(mem->qpData), mem->qpData.intervals[kk], 0, in->Q[kk],
                         in->R[kk], in->S[kk], work->g, work->ABt, 0, 0,
@@ -176,14 +165,14 @@ ocp_qp_qpdunes_workspace *work)
                 return (int)value;
             }
         }
-        form_bounds(work->zLow, work->zUpp, in->nx[N], in->nu[N], in->nb[N], in->idxb[N], in->lb[N],
-            in->ub[N], args->options.QPDUNES_INFTY);
-        if (in->nc[N] == 0) {
+        form_bounds(work->zLow, work->zUpp, nx[N], nu[N], nb[N], ng[N], in->idxb[N],
+            &in->d[N], args->options.QPDUNES_INFTY);
+        if (ng[N] == 0) {
             value = qpDUNES_setupFinalInterval(
                 &(mem->qpData), mem->qpData.intervals[N], in->Q[N], in->q[N],
                 work->zLow, work->zUpp, 0, 0, 0);
         } else {
-            form_Ct(work->Ct, in->nc[N], nx, in->Cx[N], 0, NULL, work->scrap);
+            form_Ct(work->Ct, nx[N], 0, ng[N], &in->DCt[N]);
             value = qpDUNES_setupFinalInterval(
                 &(mem->qpData), mem->qpData.intervals[N], in->Q[N], in->q[N],
                 work->zLow, work->zUpp, work->Ct, in->lc[N], in->uc[N]);
@@ -201,22 +190,20 @@ ocp_qp_qpdunes_workspace *work)
         }
     } else {  // if mem->firstRun == 0
         if (args->isLinearMPC == 0) {
-            for (kk = 0; kk < N; kk++) {
-                form_H(work->H, nx, in->Q[kk], nu, in->R[kk], in->S[kk]);
-                form_g(work->g, nx, in->q[kk], nu, in->r[kk]);
-                form_ABt(work->ABt, nx, in->A[kk], nu, in->B[kk], work->scrap);
-                form_bounds(work->zLow, work->zUpp, in->nx[kk], in->nu[kk], in->nb[kk],
-                    in->idxb[kk], in->lb[kk], in->ub[kk], args->options.QPDUNES_INFTY);
+            for (int kk = 0; kk < N; kk++) {
+                form_H(work->H, nx[kk], nu[kk], &in->RSQrq[kk]);
+                form_g(work->g, nx[kk], nu[kk], &in->rq[kk]);
+                form_ABt(work->ABt, nx[kk], nu[kk], &in->BAbt[kk]);
 
-                nc = in->nc[kk];
-                if (nc == 0) {
+                form_bounds(work->zLow, work->zUpp, nx[kk], nu[kk], nb[kk], ng[kk], in->idxb[kk],
+                    &in->d[kk], args->options.QPDUNES_INFTY);
+                if (ng[kk] == 0) {
                     value = qpDUNES_updateIntervalData(
                         &(mem->qpData), mem->qpData.intervals[kk], work->H,
                         work->g, work->ABt, in->b[kk], work->zLow, work->zUpp,
                         0, 0, 0, 0);
                 } else {
-                    form_Ct(work->Ct, nc, nx, in->Cx[kk], nu, in->Cu[kk],
-                            work->scrap);
+                    form_Ct(work->Ct, nx[kk], nu[kk], ng[kk], &in->DCt[kk]);
                     value = qpDUNES_updateIntervalData(
                         &(mem->qpData), mem->qpData.intervals[kk], work->H,
                         work->g, work->ABt, in->b[kk], work->zLow, work->zUpp,
@@ -236,8 +223,7 @@ ocp_qp_qpdunes_workspace *work)
                     &(mem->qpData), mem->qpData.intervals[N], in->Q[N],
                     in->q[N], 0, 0, work->zLow, work->zUpp, 0, 0, 0, 0);
             } else {
-                form_Ct(work->Ct, in->nc[N], nx, in->Cx[kk], 0, NULL,
-                        work->scrap);
+                form_Ct(work->Ct, nx[N], 0, ng[N], &in->DCt[N]);
                 value = qpDUNES_updateIntervalData(
                     &(mem->qpData), mem->qpData.intervals[N], in->Q[N],
                     in->q[N], 0, 0, work->zLow, work->zUpp, work->Ct, in->lc[N],
@@ -263,26 +249,33 @@ ocp_qp_qpdunes_workspace *work)
     return (int)value;
 }
 
-static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out,
-                           ocp_qp_qpdunes_memory *mem) {
-    int ii, kk, nn;
 
-    for (kk = 0; kk < in->N + 1; kk++) {
-        for (ii = 0; ii < in->nx[kk]; ii++) {
+
+static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
+{
+    int N = in->dim->N;
+    int nn;
+    int *nx = in->dim->nx;
+    int *nu = in->dim->nu;
+
+    for (int kk = 0; kk < N + 1; kk++) {
+        for (int ii = 0; ii < nx[kk]; ii++) {
             out->x[kk][ii] = mem->qpData.intervals[kk]->z.data[ii];
         }
-        for (ii = 0; ii < in->nu[kk]; ii++) {
-            out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[in->nx[kk] + ii];
+        for (int ii = 0; ii < nu[kk]; ii++) {
+            out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[nx[kk] + ii];
         }
     }
     nn = 0;
-    for (kk = 0; kk < in->N; kk++) {
-        for (ii = 0; ii < in->nx[kk + 1]; ii++) {
+    for (int kk = 0; kk < N; kk++) {
+        for (int ii = 0; ii < nx[kk + 1]; ii++) {
             out->pi[kk][ii] = mem->qpData.lambda.data[nn++];
         }
     }
     // TODO(dimitris): fill-in multipliers for inequalities
 }
+
+
 
 static qpdunes_stage_qp_solver_t define_stage_qp_solver(const ocp_qp_in *in) {
     int ii, jj, kk;
