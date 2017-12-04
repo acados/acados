@@ -21,6 +21,20 @@
 
 
 
+ocp_linearization_in *create_ocp_linearization_in(ocp_linearization_dims *dims)
+{
+    return NULL;
+}
+
+
+
+ocp_linearization_out *create_ocp_linearization_out(ocp_linearization_dims *dims)
+{
+    return NULL;
+}
+
+
+
 int ocp_linearization_calculate_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return 0;

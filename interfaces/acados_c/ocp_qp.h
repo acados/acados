@@ -54,6 +54,13 @@ typedef struct {
 } ocp_qp_solver;
 
 
+
+// INPUT AND OUTPUT
+//
+ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
+//
+ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
+
 // BASIC INTERFACE
 //
 int ocp_qp_calculate_size(ocp_qp_config *config, ocp_qp_dims *dims);

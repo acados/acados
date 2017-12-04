@@ -45,6 +45,12 @@ typedef struct {
     void *work;
 } dense_qp_solver;
 
+// INPUT AND OUTPUT
+//
+dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
+//
+dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);
+
 // BASIC INTERFACE
 //
 int dense_qp_calculate_size(dense_qp_config *config, dense_qp_dims *dims);

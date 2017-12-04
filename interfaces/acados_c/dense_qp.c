@@ -26,6 +26,20 @@
 
 
 
+dense_qp_in *create_dense_qp_in(dense_qp_dims *dims)
+{
+    return NULL;
+}
+
+
+
+dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
+{
+    return NULL;
+}
+
+
+
 int dense_qp_calculate_size(dense_qp_config *config, dense_qp_dims *dims)
 {
     return 0;

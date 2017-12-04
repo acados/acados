@@ -21,6 +21,20 @@
 
 
 
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims)
+{
+    return NULL;
+}
+
+
+
+ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
+{
+    return NULL;
+}
+
+
+
 int ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
 {
     return 0;

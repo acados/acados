@@ -47,6 +47,12 @@ typedef struct {
     void *work;
 } ocp_nlp_solver;
 
+// INPUT AND OUTPUT
+//
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims);
+//
+ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
+
 // BASIC INTERFACE
 //
 int ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);

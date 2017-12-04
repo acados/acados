@@ -27,28 +27,6 @@
 #include <acados/utils/mem.h>
 
 
-sim_in *create_sim_in(sim_dims *dims)
-{
-    int bytes = sim_in_calculate_size(dims);
-
-    void *ptr = acados_malloc(bytes, 1);
-
-    sim_in *in = assign_sim_in(dims, ptr);
-
-    return in;
-}
-
-sim_out *create_sim_out(sim_dims *dims)
-{
-    int bytes = sim_out_calculate_size(dims);
-
-    void *ptr = malloc(bytes);
-
-    sim_out *out = assign_sim_out(dims, ptr);
-
-    return out;
-}
-
 int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_fcn_ptrs *sim_solver)
 {
     int return_value = ACADOS_SUCCESS;
@@ -78,6 +56,34 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_fcn_ptrs *s
     }
     return return_value;
 }
+
+
+
+sim_in *create_sim_in(sim_dims *dims)
+{
+    int bytes = sim_in_calculate_size(dims);
+
+    void *ptr = acados_malloc(bytes, 1);
+
+    sim_in *in = assign_sim_in(dims, ptr);
+
+    return in;
+}
+
+
+
+sim_out *create_sim_out(sim_dims *dims)
+{
+    int bytes = sim_out_calculate_size(dims);
+
+    void *ptr = malloc(bytes);
+
+    sim_out *out = assign_sim_out(dims, ptr);
+
+    return out;
+}
+
+
 
 int sim_calculate_size(sim_config *config, sim_dims *dims)
 {

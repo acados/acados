@@ -45,6 +45,12 @@ typedef struct {
     void *work;
 } sim_solver;
 
+// INPUT AND OUTPUT
+//
+sim_in *create_sim_in(sim_dims *dims);
+//
+sim_out *create_sim_out(sim_dims *dims);
+
 // BASIC INTERFACE
 //
 int sim_calculate_size(sim_config *config, sim_dims *dims);

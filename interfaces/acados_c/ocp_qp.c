@@ -133,6 +133,20 @@
 
 
 
+ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
+{
+    return NULL;
+}
+
+
+
+ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
+{
+    return NULL;
+}
+
+
+
 int ocp_qp_calculate_size(ocp_qp_config *config, ocp_qp_dims *dims)
 {
     return 0;

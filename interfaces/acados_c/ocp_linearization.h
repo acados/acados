@@ -45,6 +45,12 @@ typedef struct {
     void *work;
 } ocp_linearization_method;
 
+// INPUT AND OUTPUT
+//
+ocp_linearization_in *create_ocp_linearization_in(ocp_linearization_dims *dims);
+//
+ocp_linearization_out *create_ocp_linearization_out(ocp_linearization_dims *dims);
+
 // BASIC INTERFACE
 //
 int ocp_linearization_calculate_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
