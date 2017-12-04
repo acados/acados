@@ -169,6 +169,24 @@ int ocp_qp_condensing_solver_calculate_workspace_size(ocp_qp_dims *dims, void *a
 
 
 
+static void cast_workspace(ocp_qp_dims *dims, ocp_qp_condensing_solver_args *args, ocp_qp_condensing_solver_memory *mem, ocp_qp_condensing_solver_workspace *work)
+{
+    dense_qp_dims *ddims = mem->qpd_in->dim;
+
+
+    char *c_ptr = (char *) work;
+
+    c_ptr += sizeof(ocp_qp_condensing_solver_workspace);
+
+    work->cond_work = c_ptr;
+    c_ptr += ocp_qp_condensing_calculate_workspace_size(dims, args->cond_args);
+
+    work->solver_workspace = c_ptr;
+    c_ptr += args->solver->calculate_workspace_size(ddims, args->solver_args);
+}
+
+
+
 int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
@@ -179,6 +197,9 @@ int ocp_qp_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, 
     ocp_qp_condensing_solver_args *args = (ocp_qp_condensing_solver_args *) args_;
     ocp_qp_condensing_solver_memory *memory = (ocp_qp_condensing_solver_memory *) mem_;
     ocp_qp_condensing_solver_workspace *work = (ocp_qp_condensing_solver_workspace *) work_;
+
+    // cast workspace
+    cast_workspace(qp_in->dim, args, memory, work);
 
     // condense
     acados_tic(&cond_timer);

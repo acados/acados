@@ -179,7 +179,32 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
 
 int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 {
-    return sizeof(ocp_qp_sparse_solver_workspace);
+    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;
+
+    int size = sizeof(ocp_qp_sparse_solver_workspace);
+    size += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
+
+    // @dimitris: dims here should be from the partialy condensed qp, or from the original one?
+    size += args->solver->calculate_workspace_size(dims, args->solver_args);
+
+    return size;
+}
+
+
+
+static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, ocp_qp_sparse_solver_memory *mem, ocp_qp_sparse_solver_workspace *work)
+{
+    ocp_qp_dims *pdims = mem->pcond_qp_in->dim;
+
+    char *c_ptr = (char *) work;
+
+    c_ptr += sizeof(ocp_qp_sparse_solver_workspace);
+
+    work->pcond_work = c_ptr;
+    c_ptr += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
+
+    work->solver_workspace = c_ptr;
+    c_ptr += args->solver->calculate_workspace_size(pdims, args->solver_args);
 }
 
 
