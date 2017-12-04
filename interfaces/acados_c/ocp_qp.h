@@ -46,6 +46,25 @@ typedef struct {
     ocp_qp_solver_t qp_solver;
 } ocp_qp_config;
 
+typedef struct {
+    ocp_qp_solver_fcn_ptrs *fcn_prts;
+    void *args;
+    void *mem;
+    void *work;
+} ocp_qp_solver;
+
+
+// BASIC INTERFACE
+//
+int ocp_qp_calculate_size(ocp_qp_config *config, ocp_qp_dims *dims);
+//
+ocp_qp_solver *ocp_qp_assign(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory);
+//
+ocp_qp_solver *ocp_qp_create(ocp_qp_config *config, ocp_qp_dims *dims);
+//
+int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+
+// EXPERT INTERFACE
 //
 int ocp_qp_calculate_args_size(ocp_qp_config *config, ocp_qp_dims *dims);
 //

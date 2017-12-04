@@ -20,6 +20,34 @@
 #include "acados_c/ocp_linearization.h"
 
 
+
+int ocp_linearization_calculate_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
+{
+    return 0;
+}
+
+
+
+ocp_linearization_method *ocp_linearization_assign(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+ocp_linearization_method *ocp_linearization_create(ocp_linearization_config *config, ocp_linearization_dims *dims)
+{
+    return NULL;
+}
+
+
+
+int ocp_linearization_solve(ocp_linearization_method *solver, ocp_linearization_in *qp_in, ocp_linearization_out *qp_out)
+{
+    return 0;
+}
+
+
 int ocp_linearization_calculate_args_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return 0;

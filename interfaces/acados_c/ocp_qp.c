@@ -131,40 +131,85 @@
 //     set_qp_solver_fun_ptrs(qp_solver_name, qp_solver->qp_solver_funs);
 // }
 
-int ocp_qp_calculate_args_size(ocp_qp_config *config, ocp_qp_dims *dims)
+
+
+int ocp_qp_calculate_size(ocp_qp_config *config, ocp_qp_dims *dims)
 {
     return 0;
 }
+
+
+
+ocp_qp_solver *ocp_qp_assign(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+ocp_qp_solver *ocp_qp_create(ocp_qp_config *config, ocp_qp_dims *dims)
+{
+    return NULL;
+}
+
+
+
+int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    return 0;
+}
+
+
+
+int ocp_qp_calculate_args_size(ocp_qp_config *config, ocp_qp_dims *dims)
+{
+
+    return 0;
+}
+
+
 
 void *ocp_qp_assign_args(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
+
+
 void *ocp_qp_create_args(ocp_qp_config *config, ocp_qp_dims *dims)
 {
     return NULL;
 }
+
+
 
 void ocp_qp_assign_default_args(ocp_qp_config *config, void *args_)
 {
 
 }
 
+
+
 int ocp_qp_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 {
     return 0;
 }
+
+
 
 void *ocp_qp_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
+
+
 void *ocp_qp_create_memory(ocp_qp_dims *dims, void *args_)
 {
     return NULL;
 }
+
+
 
 int ocp_qp_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 {

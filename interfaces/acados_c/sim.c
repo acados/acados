@@ -49,7 +49,7 @@ sim_out *create_sim_out(sim_dims *dims)
     return out;
 }
 
-int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver)
+int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_fcn_ptrs *sim_solver)
 {
     int return_value = ACADOS_SUCCESS;
 
@@ -79,40 +79,82 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver
     return return_value;
 }
 
+int sim_calculate_size(sim_config *config, sim_dims *dims)
+{
+    return 0;
+}
+
+
+
+sim_solver *sim_assign(sim_config *config, sim_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+sim_solver *sim_create(sim_config *config, sim_dims *dims)
+{
+    return NULL;
+}
+
+
+
+int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
+{
+    return 0;
+}
+
+
+
 int sim_calculate_args_size(sim_config *config, sim_dims *dims)
 {
     return 0;
 }
+
+
 
 void *sim_assign_args(sim_config *config, sim_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
+
+
 void *sim_create_args(sim_config *config, sim_dims *dims)
 {
     return NULL;
 }
+
+
 
 void sim_assign_default_args(sim_config *config, void *args_)
 {
 
 }
 
+
+
 int sim_calculate_memory_size(sim_dims *dims, void *args_)
 {
     return 0;
 }
+
+
 
 void *sim_assign_memory(sim_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
+
+
 void *sim_create_memory(sim_dims *dims, void *args_)
 {
     return NULL;
 }
+
+
 
 int sim_calculate_workspace_size(sim_dims *dims, void *args_)
 {

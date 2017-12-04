@@ -86,6 +86,21 @@ typedef struct {
     double **lam;
 } ocp_nlp_out;
 
+
+
+typedef struct {
+    int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
+    int (*calculate_args_size)(ocp_nlp_dims *dims, void *solver_);
+    void *(*assign_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory);
+    void (*initialize_default_args)(void *args);
+    int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
+    void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
+    int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
+    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
+    sim_solver_fcn_ptrs **sim_solvers;
+    // TODO(nielsvd): add cost and nonlinear constraints
+} ocp_nlp_solver_fcn_ptrs;
+
 int number_of_primal_vars(ocp_nlp_dims *dims);
 
 void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);

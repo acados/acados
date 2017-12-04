@@ -46,7 +46,7 @@ typedef struct {
     int (*calculate_memory_size)(ocp_qp_dims *dims, void *args);
     void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_qp_dims *dims, void *args);
-} ocp_qp_solver;
+} ocp_qp_solver_fcn_ptrs;
 
 
 
@@ -59,7 +59,7 @@ typedef struct {
     void *(*assign_memory)(ocp_qp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_qp_dims *dims, void *args);
     void *qp_solver;
-} ocp_qp_xcond_solver;
+} ocp_qp_xcond_solver_fcn_ptrs;
 
 
 

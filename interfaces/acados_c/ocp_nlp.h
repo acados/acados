@@ -40,6 +40,26 @@ typedef struct {
     sim_config **sim_config;
 } ocp_nlp_config;
 
+typedef struct {
+    ocp_nlp_solver_fcn_ptrs *fcn_prts;
+    void *args;
+    void *mem;
+    void *work;
+} ocp_nlp_solver;
+
+// BASIC INTERFACE
+//
+int ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_config *config, ocp_nlp_dims *dims,
+                             void *raw_memory);
+//
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
+//
+int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out);
+
+// EXPERT INTERFACE
+//
 //
 int ocp_nlp_calculate_args_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //

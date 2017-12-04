@@ -45,7 +45,7 @@ typedef struct {
     int (*calculate_memory_size)(dense_qp_dims *dims, void *args);
     void *(*assign_memory)(dense_qp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(dense_qp_dims *dims, void *args);
-} dense_qp_solver;
+} dense_qp_solver_fcn_ptrs;
 
 
 //

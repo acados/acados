@@ -32,11 +32,11 @@
 
 int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 {
-    dense_qp_solver *solver = (dense_qp_solver *)solver_;
+    dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
 
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_solver_args);
-    size += sizeof(dense_qp_solver);
+    size += sizeof(dense_qp_solver_fcn_ptrs);
 
     dense_qp_dims ddims;
     compute_dense_qp_dims(dims, &ddims);
@@ -51,15 +51,15 @@ int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *s
 
 void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
 {
-    dense_qp_solver *solver = (dense_qp_solver *)solver_;
+    dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
 
     char *c_ptr = (char *) raw_memory;
 
     ocp_qp_full_condensing_solver_args *args = (ocp_qp_full_condensing_solver_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_solver_args);
 
-    args->solver = (dense_qp_solver*) c_ptr;
-    c_ptr += sizeof(dense_qp_solver);
+    args->solver = (dense_qp_solver_fcn_ptrs*) c_ptr;
+    c_ptr += sizeof(dense_qp_solver_fcn_ptrs);
 
     copy_module_pointers_to_args(args->solver, solver);
 

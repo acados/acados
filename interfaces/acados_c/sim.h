@@ -38,13 +38,24 @@ typedef struct {
     sim_solver_t sim_solver;
 } sim_config;
 
-// //
-// sim_in *create_sim_in(sim_dims *dims);
-// //
-// sim_out *create_sim_out(sim_dims *dims);
-// //
-// int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver);
+typedef struct {
+    sim_solver_fcn_ptrs *fcn_prts;
+    void *args;
+    void *mem;
+    void *work;
+} sim_solver;
 
+// BASIC INTERFACE
+//
+int sim_calculate_size(sim_config *config, sim_dims *dims);
+//
+sim_solver *sim_assign(sim_config *config, sim_dims *dims, void *raw_memory);
+//
+sim_solver *sim_create(sim_config *config, sim_dims *dims);
+//
+int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
+
+// EXPERT INTERFACE
 //
 int sim_calculate_args_size(sim_config *config, sim_dims *dims);
 //

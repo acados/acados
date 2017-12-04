@@ -30,11 +30,11 @@
 
 int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 {
-    ocp_qp_solver *solver = (ocp_qp_solver *)solver_;
+    ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_args);
-    size += sizeof(ocp_qp_solver);
+    size += sizeof(ocp_qp_solver_fcn_ptrs);
 
     size += ocp_qp_partial_condensing_calculate_args_size(dims);
     size += solver->calculate_args_size(dims);
@@ -46,15 +46,15 @@ int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 
 void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
 {
-    ocp_qp_solver *solver = (ocp_qp_solver *)solver_;
+    ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
 
     char *c_ptr = (char *) raw_memory;
 
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_sparse_solver_args);
 
-    args->solver = (ocp_qp_solver*) c_ptr;
-    c_ptr += sizeof(ocp_qp_solver);
+    args->solver = (ocp_qp_solver_fcn_ptrs*) c_ptr;
+    c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
 
     copy_module_pointers_to_args(args->solver, solver);
 

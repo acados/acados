@@ -124,7 +124,7 @@ typedef struct {
     int (*calculate_memory_size)(sim_dims *dims, void *args);
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
-} sim_solver;
+} sim_solver_fcn_ptrs;
 
 int sim_in_calculate_size(sim_dims *dims);
 

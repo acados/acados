@@ -38,6 +38,26 @@ typedef struct {
     ocp_linearization_method_t linearization_method;
 } ocp_linearization_config;
 
+typedef struct {
+    ocp_linearization_method_fcn_ptrs *fcn_prts;
+    void *args;
+    void *mem;
+    void *work;
+} ocp_linearization_method;
+
+// BASIC INTERFACE
+//
+int ocp_linearization_calculate_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
+//
+ocp_linearization_method *ocp_linearization_assign(ocp_linearization_config *config, ocp_linearization_dims *dims,
+                             void *raw_memory);
+//
+ocp_linearization_method *ocp_linearization_create(ocp_linearization_config *config, ocp_linearization_dims *dims);
+//
+int ocp_linearization_solve(ocp_linearization_method *solver, ocp_linearization_in *qp_in, ocp_linearization_out *qp_out);
+
+// EXPERT INTERFACE
+//
 //
 int ocp_linearization_calculate_args_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
 //

@@ -57,7 +57,7 @@ typedef struct {
 
 typedef struct {
     void *cost;
-    sim_solver **sim;
+    sim_solver_fcn_ptrs **sim;
     ocp_nlp_function **path_constraints;
 
     const real_t **x;
@@ -89,7 +89,7 @@ typedef struct {
     int (*calculate_memory_size)(ocp_linearization_dims *dims, void *args);
     void *(*assign_memory)(ocp_linearization_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_linearization_dims *dims, void *args);
-} ocp_linearization_method;
+} ocp_linearization_method_fcn_ptrs;
 
 #ifdef __cplusplus
 } /* extern "C" */
