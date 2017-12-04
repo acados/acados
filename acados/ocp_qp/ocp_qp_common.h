@@ -28,6 +28,7 @@ extern "C" {
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp_res.h"
 // acados
 #include "acados/utils/types.h"
 
@@ -35,6 +36,8 @@ extern "C" {
 typedef struct d_ocp_qp_dim ocp_qp_dims;
 typedef struct d_ocp_qp ocp_qp_in;
 typedef struct d_ocp_qp_sol ocp_qp_out;
+typedef struct d_ocp_qp_res ocp_qp_res;
+typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 
 
 
@@ -79,6 +82,16 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory);
 int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_res_calculate_size(ocp_qp_dims *dims);
+//
+ocp_qp_res *assign_ocp_qp_res(ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_res_ws_calculate_size(ocp_qp_dims *dims);
+//
+ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory);
+//
+void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
 //
 int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
 //

@@ -21,6 +21,8 @@
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp_res.h"
+#include "hpipm/include/hpipm_d_ocp_qp_kkt.h"
 // acados
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -104,6 +106,65 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
     assert((char*) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
+}
+
+
+
+int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
+{
+    int size = sizeof(ocp_qp_res);
+    size += d_memsize_ocp_qp_res(dims);
+    return size;
+}
+
+
+
+ocp_qp_res *assign_ocp_qp_res(ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_res *qp_res = (ocp_qp_res *) c_ptr;
+    c_ptr += sizeof(ocp_qp_res);
+
+    d_create_ocp_qp_res(dims, qp_res, c_ptr);
+    c_ptr += d_memsize_ocp_qp_res(dims);
+
+    assert((char*) raw_memory + ocp_qp_res_calculate_size(dims) == c_ptr);
+
+    return qp_res;
+}
+
+
+
+int ocp_qp_res_ws_calculate_size(ocp_qp_dims *dims)
+{
+    int size = sizeof(ocp_qp_res_ws);
+    size += d_memsize_ocp_qp_res_workspace(dims);
+    return size;
+}
+
+
+
+void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws)
+{
+    d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
+}
+
+
+
+ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_res_ws *qp_res_ws = (ocp_qp_res_ws *) c_ptr;
+    c_ptr += sizeof(ocp_qp_res_ws);
+
+    d_create_ocp_qp_res_workspace(dims, qp_res_ws, c_ptr);
+    c_ptr += d_memsize_ocp_qp_res_workspace(dims);
+
+    assert((char*) raw_memory + ocp_qp_res_ws_calculate_size(dims) == c_ptr);
+
+    return qp_res_ws;
 }
 
 

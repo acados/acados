@@ -42,6 +42,10 @@ ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
 
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
 
+ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims);
+
+ocp_qp_res_ws *create_ocp_qp_res_ws(ocp_qp_dims *dims);
+
 ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims);
 
 ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_);

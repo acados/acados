@@ -348,6 +348,6 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     int nv = qp_in->dim->nv;
 
     printf("H =\n");
-    d_print_strmat(nv, nv, qp_in->Hg, 0, 0);
+    d_print_strmat(nv, nv, qp_in->Hv, 0, 0);
     // TODO(dimitris): print all data
 }
