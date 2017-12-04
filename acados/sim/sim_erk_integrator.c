@@ -68,6 +68,7 @@ void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 
     opts->newton_iter = 0;
     opts->scheme = NULL;
+    opts->jac_reuse = false;
 
     return (void *)opts;
 }
@@ -92,7 +93,7 @@ void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
-    opts->sens_hess = false;
+    opts->sens_hess = false;   
 }
 
 

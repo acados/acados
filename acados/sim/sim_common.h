@@ -116,8 +116,10 @@ typedef struct {
     bool sens_adj;
     bool sens_hess;
 
-    // for explicit integrators: newton_iter == 0 && scheme == NULL
+    // for explicit integrators: newton_iter == 0 && scheme == NULL 
+    // && jac_reuse=false
     int newton_iter;
+    bool jac_reuse;
     Newton_scheme *scheme;
 
 } sim_rk_opts;

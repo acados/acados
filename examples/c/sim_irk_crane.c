@@ -21,9 +21,15 @@
 #include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
+#include <malloc.h>
+
 // #define M_PI 3.14159265358979323846
 
 int main() {
+
+    int NREP = 500;
+    acados_timer timer;
+    double Time1, Time2;
 
     int ii;
     int jj;
@@ -48,11 +54,12 @@ int main() {
 
     sim_in *in = create_sim_in(&dims);
 
-    irk_opts->num_steps = 4;
+    irk_opts->num_steps = 2;
     in->step = T / irk_opts->num_steps;
     irk_opts->sens_forw = true;
-    irk_opts->sens_adj = true;
+    irk_opts->sens_adj = false;
     // irk_opts->sens_hess = false;
+    irk_opts->jac_reuse = false;
 
     in->impl_ode = &impl_odeFun;
     in->eval_impl_res = &impl_ode_fun;
@@ -83,80 +90,105 @@ int main() {
     irk_opts->num_forw_sens = NF;
 
     int workspace_size = sim_irk_calculate_workspace_size(&dims, irk_opts);
-    void *workspace = malloc(workspace_size);
+    // void *workspace = malloc(workspace_size);
+
+    void *workspace;
+    posix_memalign(&workspace, 64, workspace_size);
 
     sim_out *out = create_sim_out(&dims);
 
-    int flag = sim_irk(in, out, irk_opts, NULL, workspace);
+    acados_tic(&timer);
+    for (ii=0;ii<NREP;ii++)
+        sim_irk(in, out, irk_opts, NULL, workspace);
+    Time1 = acados_toc(&timer)/NREP;
 
-    double *xn = out->xn;
+    irk_opts->jac_reuse = true;
+    acados_tic(&timer);
+    for (ii=0;ii<NREP;ii++)
+        sim_irk(in, out, irk_opts, NULL, workspace);
+    Time2 = acados_toc(&timer)/NREP;
 
-    printf("\nxn: \n");
-    for (ii=0;ii<nx;ii++)
-        printf("%8.5f ",xn[ii]);
-    printf("\n");
-
-    double *S_forw_out;
-    if(irk_opts->sens_forw){
-        S_forw_out = out->S_forw;
-        printf("\nS_forw_out: \n");
-        for (ii=0;ii<nx;ii++){
-            for (jj=0;jj<NF;jj++)
-                printf("%8.5f ",S_forw_out[jj*nx+ii]);
-            printf("\n");
-        }
-    }
-
-    double *S_adj_out;
-    if(irk_opts->sens_adj){
-        S_adj_out = out->S_adj;
-        printf("\nS_adj_out: \n");
-        for (ii=0;ii<nx+nu;ii++){
-            printf("%8.5f ",S_adj_out[ii]);
-        }
-        printf("\n");
-    }
-
-    double *S_hess_out;
-    if(irk_opts->sens_hess){
-        double zero = 0.0;
-        S_hess_out = out->S_hess;
-        printf("\nS_hess_out: \n");
-        for (ii=0;ii<NF;ii++){
-            for (jj=0;jj<NF;jj++){
-                if (jj>ii){
-                    printf("%8.5f ",zero);
-                }else{
-                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
-                }
-            }
-            printf("\n");
-        }
-    }
-
+    printf("IRK Example for Inverted Pendulum:\n");
+    printf("No. of Integration Steps: %d", irk_opts->num_steps);
 
     printf("\n");
-    printf("cpt: %8.5f [ms]\n", out->info->CPUtime*1000);
-    printf("AD cpt: %8.5f [ms]\n", out->info->ADtime*1000);
 
-    if(irk_opts->sens_adj){
-        struct d_strmat sA;
-        d_create_strmat(nx, nx+nu, &sA, S_forw_out);
+    printf("IRK with exact Jacobian:\n");
+    printf("NO. of run: %d   Avg cpt: %8.5f[ms]\n", NREP, Time1*1000);
 
-        struct d_strvec sx;
-        d_create_strvec(nx, &sx, in->S_adj);
+    printf("IRK with Jacobian re-use:\n");
+    printf("NO. of run: %d   Avg cpt: %8.5f[ms]\n", NREP, Time2*1000);
 
-        struct d_strvec sz;
-        void *mz;
-        v_zeros_align(&mz, d_size_strvec(nx+nu));
-        d_create_strvec(nx+nu, &sz, mz);
-        dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+    printf("Speed Up Factor: %8.5f\n", Time1/Time2);
 
-        printf("\nJac times lambdaX:\n");
-        d_print_tran_strvec(nx+nu, &sz, 0);
+    // double *xn = out->xn;
 
-        v_free_align(mz);
-    }
+    // printf("\nxn: \n");
+    // for (ii=0;ii<nx;ii++)
+    //     printf("%8.5f ",xn[ii]);
+    // printf("\n");
+
+    // double *S_forw_out;
+    // if(irk_opts->sens_forw){
+    //     S_forw_out = out->S_forw;
+    //     printf("\nS_forw_out: \n");
+    //     for (ii=0;ii<nx;ii++){
+    //         for (jj=0;jj<NF;jj++)
+    //             printf("%8.5f ",S_forw_out[jj*nx+ii]);
+    //         printf("\n");
+    //     }
+    // }
+
+    // double *S_adj_out;
+    // if(irk_opts->sens_adj){
+    //     S_adj_out = out->S_adj;
+    //     printf("\nS_adj_out: \n");
+    //     for (ii=0;ii<nx+nu;ii++){
+    //         printf("%8.5f ",S_adj_out[ii]);
+    //     }
+    //     printf("\n");
+    // }
+
+    // double *S_hess_out;
+    // if(irk_opts->sens_hess){
+    //     double zero = 0.0;
+    //     S_hess_out = out->S_hess;
+    //     printf("\nS_hess_out: \n");
+    //     for (ii=0;ii<NF;ii++){
+    //         for (jj=0;jj<NF;jj++){
+    //             if (jj>ii){
+    //                 printf("%8.5f ",zero);
+    //             }else{
+    //                 printf("%8.5f ",S_hess_out[jj*NF+ii]);
+    //             }
+    //         }
+    //         printf("\n");
+    //     }
+    // }
+
+
+    // printf("\n");
+    // printf("cpt: %8.5f [ms]\n", out->info->CPUtime*1000);
+    // printf("AD cpt: %8.5f [ms]\n", out->info->ADtime*1000);
+
+    // if(irk_opts->sens_adj && irk_opts->sens_forw){
+    //     struct d_strmat sA;
+    //     d_create_strmat(nx, nx+nu, &sA, S_forw_out);
+
+    //     struct d_strvec sx;
+    //     d_create_strvec(nx, &sx, in->S_adj);
+
+    //     struct d_strvec sz;
+    //     void *mz;
+    //     v_zeros_align(&mz, d_size_strvec(nx+nu));
+    //     d_create_strvec(nx+nu, &sz, mz);
+    //     dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+
+    //     printf("\nJac times lambdaX:\n");
+    //     d_print_tran_strvec(nx+nu, &sz, 0);
+
+    //     v_free_align(mz);
+    // }
 
     free(xref);
     free(irk_opts);
@@ -164,5 +196,5 @@ int main() {
     free(workspace);
     free(out);
 
-    return flag;
+    return 0;
 }

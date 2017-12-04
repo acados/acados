@@ -83,6 +83,7 @@ void sim_irk_initialize_default_args(sim_dims *dims, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+    opts->jac_reuse = false;
 }
 
 
@@ -115,6 +116,12 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
     size += 2*sizeof(struct d_strvec *); // **xn_traj, **K_traj;
     size += 2*steps*sizeof(struct d_strvec);  // number of strvec pointers
 
+    size += sizeof(struct d_strmat *); // JG_traj
+    size += steps*sizeof(struct d_strmat);
+
+    make_int_multiple_of(64, &size);
+    size += 1 * 64; 
+
     size += d_size_strmat(nx*ns, nx*ns); // JG
     size += 2*d_size_strmat(nx*ns, nx+nu); // JGf, JKf
     size += d_size_strmat(nx, nx*ns); // JFK
@@ -128,6 +135,7 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
     size += steps * d_size_strvec(nx); // for xn_traj
     size += steps * d_size_strvec(nx*ns); // for K_traj
+    size += steps * d_size_strmat(nx*ns, nx*ns); // for JG_traj  
 
     size += nx * sizeof(double); //  rGt
     size += nx * (2*nx+nu) * sizeof(double); // jac_out
@@ -135,10 +143,12 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
     size += (2*nx + nu) * sizeof(double); // ode_args
     size += (nx+nu) * sizeof(double); // S_adj_w
 
-    size += nx *ns * sizeof(int); // ipiv
+    size += nx *ns * (steps+1) * sizeof(int); // ipiv
 
-    make_int_multiple_of(64, &size);
-    size += 1 * 64;
+    // make_int_multiple_of(64, &size);
+    // size += 1 * 64; 
+
+    // printf("size calculated %d", size);
 
     return size;
 }
@@ -151,7 +161,7 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
     int nx = dims->nx;
     int nu = dims->nu;
         
-    int ns = opts->num_stages; // number of stages
+    int ns = opts->num_stages;
     int steps = opts->num_steps;
 
     char *c_ptr = (char *)raw_memory;
@@ -163,7 +173,10 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
     c_ptr += steps* sizeof(struct d_strvec *); 
     
     workspace->K_traj = (struct d_strvec **)c_ptr;
-    c_ptr += steps* sizeof(struct d_strvec *); 
+    c_ptr += steps* sizeof(struct d_strvec *);
+
+    workspace->JG_traj = (struct d_strmat **)c_ptr;
+    c_ptr += steps* sizeof(struct d_strmat *);
 
     workspace->JG = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat); 
@@ -179,6 +192,11 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     workspace->S_forw = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat);
+
+    for (int i=0;i<steps;i++){
+        workspace->JG_traj[i] = (struct d_strmat *)c_ptr;
+        c_ptr += sizeof(struct d_strmat);
+    }
 
     workspace->rG = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
@@ -218,6 +236,10 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     assign_strmat(nx, nx+nu, workspace->S_forw, &c_ptr);
 
+    for (int i=0;i<steps;i++){
+        assign_strmat(nx*ns, nx*ns, workspace->JG_traj[i], &c_ptr);
+    }
+
     assign_strvec(nx*ns, workspace->rG, &c_ptr);
 
     assign_strvec(nx*ns, workspace->K, &c_ptr);
@@ -232,7 +254,7 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     for (int i=0;i<steps;i++){
         assign_strvec(nx, workspace->xn_traj[i], &c_ptr);
-        assign_strvec(nx*ns, workspace->K_traj[i], &c_ptr);
+        assign_strvec(nx*ns, workspace->K_traj[i], &c_ptr);    
     }
 
     assign_double(nx, &workspace->rGt, &c_ptr);
@@ -245,7 +267,10 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     assign_double(nx + nu, &workspace->S_adj_w, &c_ptr);
 
-    assign_int(nx * ns , &workspace->ipiv, &c_ptr);
+    assign_int(nx * ns* (steps+1) , &workspace->ipiv, &c_ptr);
+
+    // printf("\npointer moved: %d bytes\n", c_ptr - (char*)raw_memory);
+    // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
     assert((char*)raw_memory + sim_irk_calculate_workspace_size(dims, opts_) >= c_ptr);
 
@@ -311,6 +336,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     struct d_strvec *lambdaK = workspace->lambdaK;
     struct d_strvec **xn_traj = workspace->xn_traj;
     struct d_strvec **K_traj = workspace->K_traj;
+    struct d_strmat **JG_traj = workspace->JG_traj;
     double *S_adj_in = workspace->S_adj_w;
 
     double *x_out = out->xn;
@@ -354,8 +380,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
         jac_out[kk] = 0.0;
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
-    for (kk=0;kk<num_stages*nx;kk++)
-        ipiv[kk] = kk; //ipiv?
+    
         
     // start the loop
     acados_tic(&timer);
@@ -369,20 +394,20 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
             }
            
             for(ii=0; ii<num_stages; ii++){ // ii-th row of tableau   
-                
+                    
                 // take x(n); copy a strvec into a strvec
                 dveccp_libstr(nx, xn, 0, xt, 0);
 
                 for(jj=0; jj<num_stages; jj++){ // jj-th col of tableau
                     a = A_mat[ii+num_stages*jj];
-					if(a!=0){           // xt = xt + T_int * a[i,j]*K_j
+                    if(a!=0){           // xt = xt + T_int * a[i,j]*K_j
                         a *= step; 
                         daxpy_libstr(nx, a, K, jj*nx, xt, 0, xt, 0); 
-					}
+                    }
                 }
                 // put xn+sum kj into first nx elements of ode_arg               
                 d_cvt_strvec2vec(nx, xt, 0, ode_args);
-                
+                    
                 // put ki into the next nx elements of ode_args
                 d_cvt_strvec2vec(nx, K, ii*nx, ode_args+nx);      
 
@@ -390,33 +415,38 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                 in->eval_impl_res(nx, nu, ode_args, rGt, in->impl_ode);
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 d_cvt_vec2strvec(nx, rGt, rG, ii*nx);
-                
-                // compute the jacobian of implicit ode
-                acados_tic(&timer_ad);
-                in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
-                timing_ad += acados_toc(&timer_ad);
-                // compute the blocks of JG
-                for (jj=0; jj<num_stages; jj++){ //compute the block (ii,jj)th block = Jt
-                    a = A_mat[ii + num_stages*jj];
-                    if (a!=0){
-                        a *= step;
-                        for (kk=0; kk<nx*nx; kk++)
-                            Jt[kk] = a* jac_out[kk];                          
-                    }
-                    if(jj==ii){
-                        for (kk=0;kk<nx*nx;kk++)
-                            Jt[kk] += jac_out[nx*nx+kk];
-                    }
-                    // fill in the ii-th, jj-th block of JG
-                    d_cvt_mat2strmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);
-                } // end jj
+                    
+                if ( (ss==0 && iter==0 && opts->jac_reuse) || (!opts->jac_reuse) ){
+                    // compute the jacobian of implicit ode
+                    acados_tic(&timer_ad);
+                    in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
+                    in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
+                    timing_ad += acados_toc(&timer_ad);
 
+                    // compute the blocks of JG
+                    for (jj=0; jj<num_stages; jj++){ //compute the block (ii,jj)th block = Jt
+                        a = A_mat[ii + num_stages*jj];
+                        if (a!=0){
+                            a *= step;
+                            for (kk=0; kk<nx*nx; kk++)
+                                Jt[kk] = a* jac_out[kk];                          
+                        }
+                        if(jj==ii){
+                            for (kk=0;kk<nx*nx;kk++)
+                                Jt[kk] += jac_out[nx*nx+kk];
+                        }
+                        // fill in the ii-th, jj-th block of JG
+                        d_cvt_mat2strmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);
+                    } // end jj
+                }
             } // end ii
-            
+                
             //DGETRF computes an LU factorization of a general M-by-N matrix A
-            //using partial pivoting with row interchanges. // and store it in JG
-            dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
+            //using partial pivoting with row interchanges.
+            if ( (ss==0 && iter==0 && opts->jac_reuse) || (!opts->jac_reuse) ){
+                dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
+            }
+        
             // permute also the r.h.s
             dvecpe_libstr(nx*num_stages, ipiv, rG, 0);
 
@@ -479,7 +509,13 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
             } // end ii
 
             // factorize JG
-            dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
+            dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv+(ss+1)*num_stages*nx);
+            for (jj=0;jj<nx*num_stages;jj++)
+                ipiv[jj] = ipiv[(ss+1)*num_stages*nx + jj];
+
+            if (opts->sens_adj){ // store the factorization and permutation
+                dgecp_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG_traj[ss], 0, 0);
+            }
 
             // obtain JKf
             dgemm_nn_libstr(nx*num_stages, nx, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
@@ -502,59 +538,83 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
 
     // evaluate backwards
     if (opts->sens_adj){ 
-
+              
         for(ss=num_steps-1;ss>-1;ss--){
 
             dveccp_libstr(nx, xn_traj[ss], 0, xt, 0);
 
-            dveccp_libstr(num_stages*nx, K_traj[ss], 0, K, 0);
+            if (opts->sens_forw){ // evalute JGf and extract factorization
 
-            for(ii=0; ii<num_stages; ii++){  
+                for(ii=0; ii<num_stages; ii++){  
 
-                for(jj=0; jj<num_stages; jj++){ 
-                    a = A_mat[ii+num_stages*jj];
-                    if(a!=0){
-                        a *= step;
-                        daxpy_libstr(nx, a, K, jj*nx, xt, 0, xt, 0);
-                    }
-                }               
-                d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
-                d_cvt_strvec2vec(nx, K, ii*nx, ode_args+nx);  
+                    for(jj=0; jj<num_stages; jj++){ 
+                        a = A_mat[ii+num_stages*jj];
+                        if(a!=0){
+                            a *= step;
+                            daxpy_libstr(nx, a, K_traj[ss], jj*nx, xt, 0, xt, 0);
+                        }
+                    }               
+                    d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
+                    d_cvt_strvec2vec(nx, K_traj[ss], ii*nx, ode_args+nx);  
 
-                acados_tic(&timer_ad);
-                in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                d_cvt_mat2strmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+                    acados_tic(&timer_ad);
+                    in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
+                    d_cvt_mat2strmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-                in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-                d_cvt_mat2strmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
+                    d_cvt_mat2strmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    timing_ad += acados_toc(&timer_ad);
+                }
+            
+            }else{ // extract trajectory to evaluate JGf and JG
 
-                in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
-                timing_ad += acados_toc(&timer_ad);
-                for (jj=0;jj<num_stages;jj++){
-                    a = A_mat[ii+num_stages*jj];
-                    if (a!=0){
-                        a *= step;
-                        for (kk=0;kk<nx*nx;kk++)
-                            Jt[kk] = a* jac_out[kk];                          
-                    }
-                    if(jj==ii){
-                        for (kk=0;kk<nx*nx;kk++)
-                            Jt[kk] += jac_out[nx*nx+kk];
-                    }
-                    d_cvt_mat2strmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);            
-                } // end jj     
-            } // end ii
+                for(ii=0; ii<num_stages; ii++){  
 
-            // factorize JG
-            dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
+                    for(jj=0; jj<num_stages; jj++){ 
+                        a = A_mat[ii+num_stages*jj];
+                        if(a!=0){
+                            a *= step;
+                            daxpy_libstr(nx, a, K_traj[ss], jj*nx, xt, 0, xt, 0);
+                        }
+                    }               
+                    d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
+                    d_cvt_strvec2vec(nx, K_traj[ss], ii*nx, ode_args+nx);  
+
+                    acados_tic(&timer_ad);
+                    in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
+                    d_cvt_mat2strmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+
+                    in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
+                    d_cvt_mat2strmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
+                    in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
+                    timing_ad += acados_toc(&timer_ad);
+                    for (jj=0;jj<num_stages;jj++){
+                        a = A_mat[ii+num_stages*jj];
+                        if (a!=0){
+                            a *= step;
+                            for (kk=0;kk<nx*nx;kk++)
+                                Jt[kk] = a* jac_out[kk];                          
+                        }
+                        if(jj==ii){
+                            for (kk=0;kk<nx*nx;kk++)
+                                Jt[kk] += jac_out[nx*nx+kk];
+                        }
+                        d_cvt_mat2strmat(nx, nx, Jt, nx, JG_traj[ss], ii*nx, jj*nx);            
+                    } // end jj     
+                } // end ii
+
+                // factorize JG
+                dgetrf_libstr(nx*num_stages, nx*num_stages, JG_traj[ss], 0, 0, JG_traj[ss], 0, 0, ipiv+(ss+1)*num_stages*nx); //
+            }// else if/else
 
             dgemv_t_libstr(nx, nx*num_stages, -1.0, JFK, 0, 0, lambda, 0, 0.0, lambdaK, 0, lambdaK, 0);
 
-            dtrsv_utn_libstr(nx*num_stages, JG, 0, 0, lambdaK, 0, lambdaK, 0);
+            dtrsv_utn_libstr(nx*num_stages, JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
-            dtrsv_ltu_libstr(nx*num_stages, JG, 0, 0, lambdaK, 0, lambdaK, 0);
+            dtrsv_ltu_libstr(nx*num_stages, JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
-            dvecpei_libstr(nx*num_stages, ipiv, lambdaK, 0);
+            dvecpei_libstr(nx*num_stages, ipiv+(ss+1)*num_stages*nx, lambdaK, 0);
 
             dgemv_t_libstr(nx*num_stages, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
         }

@@ -52,10 +52,11 @@ typedef struct {
     double *Jt; // temporary Jacobian of ode (nx, nx)
     double *ode_args; // pointer to ode args
     double *S_adj_w;
-    int *ipiv; // index of pivot vector// jacobian of G over x and u (nx*ns, nx+nu);
+    int *ipiv; // index of pivot vector
 
     struct d_strvec **xn_traj; // xn trajectory
     struct d_strvec **K_traj;  // K trajectory
+    struct d_strmat **JG_traj; // JG trajectory
 
 } sim_irk_workspace;
 
