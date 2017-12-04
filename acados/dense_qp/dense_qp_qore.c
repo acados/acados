@@ -191,6 +191,7 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     double *prim_sol = memory->prim_sol;
     double *dual_sol = memory->dual_sol;
     QoreProblemDense *QP = memory->QP;
+    int num_iter;
 
     // extract dense qp size
     int nvd = qp_in->dim->nv;
@@ -198,8 +199,10 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
 
+    assert(ned == 0 && "ned != 0 not supported yet");
+
     // fill in the upper triangular of H in dense_qp
-    dtrtr_l_libstr(nvd, qp_in->Hg, 0, 0, qp_in->Hg, 0, 0);
+    dtrtr_l_libstr(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // dense qp row-major
     d_cvt_dense_qp_to_colmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
@@ -251,6 +254,8 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );
     QPDenseGetDblVector( QP, "dualsol", dual_sol );
+    QPDenseGetInt(QP, "itercount", &num_iter);
+    memory->num_iter = num_iter;
 
 #if 0
     d_print_mat(1, nvd, prim_sol, 1);

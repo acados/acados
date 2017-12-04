@@ -196,8 +196,10 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
 
+    assert(ned == 0 && "ned != 0 not supported yet");
+
     // fill in the upper triangular of H in dense_qp
-    dtrtr_l_libstr(nvd, qp_in->Hg, 0, 0, qp_in->Hg, 0, 0);
+    dtrtr_l_libstr(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // dense qp row-major
     d_cvt_dense_qp_to_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
@@ -214,17 +216,18 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     }
 
     // cholesky factorization of H
-    //  dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
+    // dpotrf_l_libstr(nvd, qpd->Hv, 0, 0, sR, 0, 0);
 
-    //  fill in upper triangular of R
-    //  dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
+    // fill in upper triangular of R
+    // dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
 
-    //  extract R
-    //  d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
+    // extract R
+    // d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
 
 #if 0
-    d_print_mat(nvd, nvd, H, nvd);
-    d_print_mat(nvd, nvd, R, nvd);
+    printf("ngd=%d nvd=%d\n", ngd, nvd);
+    d_print_mat(1,ngd,d_lg,1);
+    d_print_mat(1,ngd,d_ug,1);
     exit(1);
 #endif
 
@@ -258,13 +261,16 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
         QProblemB_getPrimalSolution(QPB, prim_sol);
         QProblemB_getDualSolution(QPB, dual_sol);
     }
+    double cmpl = 0.0, feas = 0.0, stat = 0.0;
+    // qpOASES_getKktViolation(nvd, ngd, H, g, C, d_lb, d_ub, d_lg, d_ug, prim_sol, dual_sol, &stat, &feas, &cmpl);
+    // printf("\nstat=%e, feas=%e, cmpl=%e\n", stat, feas, cmpl);
 
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;
 
 #if 0
-    d_print_mat(1, nvd, prim_sol, 1);
+    d_print_mat(1, nvd+ngd, dual_sol, 1);
     exit(1);
 #endif
 
