@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -358,7 +359,7 @@ void print_dense_qp_in(dense_qp_in *qp_in)
 void print_ocp_qp_info(ocp_qp_info *info)
 {
     double misc = info->total_time - info->condensing_time - info->solve_QP_time - info->interface_time;
-    assert(misc > 0 && "sum of timings larger than total time!");
+    assert((misc >= 0 || fabs(misc) <= ACADOS_EPS) && "sum of timings larger than total time!");
 
     printf("\n***************************************************************\n");
     printf("total time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->total_time, 100.0);
