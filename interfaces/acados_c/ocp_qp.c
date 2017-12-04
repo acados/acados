@@ -18,12 +18,14 @@
  */
 
 #include "acados_c/ocp_qp.h"
- 
-// X-Condensing QP solvers
+
+//external
+#include <stdlib.h>
+//acados
+//acados: X-Condensing QP solvers
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
-
-// Submodules
+//acados: Submodules
 #include <acados/dense_qp/dense_qp_hpipm.h>
 #include <acados/dense_qp/dense_qp_qore.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
@@ -135,14 +137,26 @@
 
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
 {
-    return NULL;
+    int bytes = ocp_qp_in_calculate_size(dims);
+
+    void *ptr = malloc(bytes);
+
+    ocp_qp_in *in = assign_ocp_qp_in(dims, ptr);
+
+    return in;
 }
 
 
 
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 {
-    return NULL;
+    int bytes = ocp_qp_out_calculate_size(dims);
+
+    void *ptr = malloc(bytes);
+
+    ocp_qp_out *out = assign_ocp_qp_out(dims, ptr);
+
+    return out;
 }
 
 

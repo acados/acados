@@ -54,8 +54,6 @@ typedef struct {
     void *work;
 } ocp_qp_solver;
 
-
-
 // INPUT AND OUTPUT
 //
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);

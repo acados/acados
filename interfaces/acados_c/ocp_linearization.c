@@ -19,6 +19,9 @@
 
 #include "acados_c/ocp_linearization.h"
 
+//external
+#include <stdlib.h>
+
 
 
 ocp_linearization_in *create_ocp_linearization_in(ocp_linearization_dims *dims)

@@ -19,6 +19,9 @@
 
 #include "acados_c/ocp_nlp.h"
 
+//external
+#include <stdlib.h>
+
 
 
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims)

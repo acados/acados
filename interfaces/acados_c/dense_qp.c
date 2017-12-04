@@ -19,6 +19,9 @@
 
 #include "acados_c/dense_qp.h"
 
+//external
+#include <stdlib.h>
+//acados
 #include <acados/dense_qp/dense_qp_common.h>
 #include <acados/dense_qp/dense_qp_hpipm.h>
 #include <acados/dense_qp/dense_qp_qore.h>
@@ -28,14 +31,26 @@
 
 dense_qp_in *create_dense_qp_in(dense_qp_dims *dims)
 {
-    return NULL;
+    int bytes = dense_qp_in_calculate_size(dims);
+
+    void *ptr = malloc(bytes);
+
+    dense_qp_in *in = assign_dense_qp_in(dims, ptr);
+
+    return in;
 }
 
 
 
 dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
 {
-    return NULL;
+    int bytes = dense_qp_out_calculate_size(dims);
+
+    void *ptr = malloc(bytes);
+
+    dense_qp_out *out = assign_dense_qp_out(dims, ptr);
+
+    return out;
 }
 
 
