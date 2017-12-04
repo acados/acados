@@ -124,6 +124,7 @@ int main() {
     for (int_t i = 0; i < NN; i++) ls_cost.W[i] = W;
     ls_cost.W[NN] = WN;
     ls_cost.y_ref = (real_t **)malloc(sizeof(*ls_cost.y_ref) * (NN + 1));
+    ls_cost.linear_cost = (real_t **)malloc(sizeof(*ls_cost.linear_cost) * (NN + 1));
     ls_cost.fun = (ocp_nlp_function **)malloc(sizeof(*ls_cost.fun) * (NN + 1));
     for (int_t i = 0; i < NN; i++) {
         ls_cost.fun[i] = (ocp_nlp_function *)malloc(sizeof(ocp_nlp_function));
@@ -147,6 +148,8 @@ int main() {
 
         ls_cost.y_ref[i] =
             (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
+        ls_cost.linear_cost[i] =
+            (real_t *)calloc((NX + NU), sizeof(*ls_cost.linear_cost[i]));
         for (int_t j = 0; j < NX; j++) ls_cost.y_ref[i][j] = xref[j];
         for (int_t j = 0; j < NU; j++) ls_cost.y_ref[i][NX + j] = 0.0;
     }
@@ -169,6 +172,7 @@ int main() {
                               &ls_cost.fun[NN]->work);
 
     ls_cost.y_ref[NN] = (real_t *)malloc(sizeof(*ls_cost.y_ref[NN]) * (NX));
+    ls_cost.linear_cost[NN] = (real_t *)calloc((NX + NU), sizeof(*ls_cost.linear_cost[NN]));
     for (int_t j = 0; j < NX; j++) ls_cost.y_ref[NN][j] = xref[j];
 
     /************************************************
