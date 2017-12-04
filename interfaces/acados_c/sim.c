@@ -27,7 +27,6 @@
 #include <acados/utils/mem.h>
 
 
-
 sim_in *create_sim_in(sim_dims *dims)
 {
     int bytes = sim_in_calculate_size(dims);
@@ -39,8 +38,6 @@ sim_in *create_sim_in(sim_dims *dims)
     return in;
 }
 
-
-
 sim_out *create_sim_out(sim_dims *dims)
 {
     int bytes = sim_out_calculate_size(dims);
@@ -51,8 +48,6 @@ sim_out *create_sim_out(sim_dims *dims)
 
     return out;
 }
-
-
 
 int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver)
 {
@@ -82,4 +77,44 @@ int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver
             return_value = ACADOS_FAILURE;
     }
     return return_value;
+}
+
+int sim_calculate_args_size(sim_config *config, sim_dims *dims)
+{
+    return 0;
+}
+
+void *sim_assign_args(sim_config *config, sim_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+void *sim_create_args(sim_config *config, sim_dims *dims)
+{
+    return NULL;
+}
+
+void sim_assign_default_args(sim_config *config, void *args_)
+{
+
+}
+
+int sim_calculate_memory_size(sim_dims *dims, void *args_)
+{
+    return 0;
+}
+
+void *sim_assign_memory(sim_dims *dims, void *args_, void *raw_memory)
+{
+    return NULL;
+}
+
+void *sim_create_memory(sim_dims *dims, void *args_)
+{
+    return NULL;
+}
+
+int sim_calculate_workspace_size(sim_dims *dims, void *args_)
+{
+    return 0;
 }

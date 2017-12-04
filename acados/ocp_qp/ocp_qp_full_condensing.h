@@ -18,8 +18,8 @@
  */
 
 
-#ifndef ACADOS_OCP_QP_OCP_QP_CONDENSING_H_
-#define ACADOS_OCP_QP_OCP_QP_CONDENSING_H_
+#ifndef ACADOS_OCP_QP_OCP_QP_FULL_CONDENSING_H_
+#define ACADOS_OCP_QP_OCP_QP_FULL_CONDENSING_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,37 +32,37 @@ extern "C" {
 
 
 
-typedef struct ocp_qp_condensing_args_ {
+typedef struct ocp_qp_full_condensing_args_ {
     double dummy;
-} ocp_qp_condensing_args;
+} ocp_qp_full_condensing_args;
 
 
 
-typedef struct ocp_qp_condensing_memory_ {
+typedef struct ocp_qp_full_condensing_memory_ {
     struct d_cond_qp_ocp2dense_workspace *hpipm_workspace;
     // NOTE(dimitris): points to qp_in, does NOT copy to memory (needed for expansion)
     ocp_qp_in *qp_in;
-} ocp_qp_condensing_memory;
+} ocp_qp_full_condensing_memory;
 
 void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims);
 //
-int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims);
 //
-ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *mem);
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dims, void *mem);
 //
-int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args);
+int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);
 //
-ocp_qp_condensing_memory *ocp_qp_condensing_assign_memory(ocp_qp_dims *dims, ocp_qp_condensing_args *args, void *raw_memory);
+ocp_qp_full_condensing_memory *ocp_qp_full_condensing_assign_memory(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args, void *raw_memory);
 //
-int ocp_qp_condensing_calculate_workspace_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args);
+int ocp_qp_full_condensing_calculate_workspace_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);
 //
-void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem, void *work);
+void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_args *args, ocp_qp_full_condensing_memory *mem, void *work);
 //
-void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args, ocp_qp_condensing_memory *mem, void *work);
+void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_args *args, ocp_qp_full_condensing_memory *mem, void *work);
 
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_CONDENSING_H_
+#endif  // ACADOS_OCP_QP_OCP_QP_FULL_CONDENSING_H_

@@ -2,6 +2,8 @@ include ../../Makefile.rule
 
 OBJS =
 
+OBJS += dense_qp.o
+OBJS += ocp_linearization.o
 OBJS += ocp_nlp.o
 OBJS += ocp_qp.o
 OBJS += sim.o

@@ -17,54 +17,47 @@
  *
  */
 
-#ifndef ACADOS_C_SIM_H_
-#define ACADOS_C_SIM_H_
+#ifndef ACADOS_C_DENSE_QP_H_
+#define ACADOS_C_DENSE_QP_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 // acados
-#include <acados/sim/sim_common.h>
+#include <acados/dense_qp/dense_qp_common.h>
 #include <acados/utils/types.h>
 
 typedef enum {
-    PREVIOUS,
-    ERK,
-    LIFTED_IRK
-} sim_solver_t;
+    DENSE_QP_HPIPM,
+    DENSE_QP_QORE,
+    DENSE_QP_QPOASES
+} dense_qp_solver_t;
 
 typedef struct {
-    sim_solver_t sim_solver;
-} sim_config;
-
-// //
-// sim_in *create_sim_in(sim_dims *dims);
-// //
-// sim_out *create_sim_out(sim_dims *dims);
-// //
-// int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver);
+    dense_qp_solver_t qp_solver;
+} dense_qp_config;
 
 //
-int sim_calculate_args_size(sim_config *config, sim_dims *dims);
+int dense_qp_calculate_args_size(dense_qp_config *config, dense_qp_dims *dims);
 //
-void *sim_assign_args(sim_config *config, sim_dims *dims, void *raw_memory);
+void *dense_qp_assign_args(dense_qp_config *config, dense_qp_dims *dims, void *raw_memory);
 //
-void *sim_create_args(sim_config *config, sim_dims *dims);
+void *dense_qp_create_args(dense_qp_config *config, dense_qp_dims *dims);
 //
-void sim_assign_default_args(sim_config *config, void *args_);
+void dense_qp_assign_default_args(dense_qp_config *config, void *args_);
 //
-int sim_calculate_memory_size(sim_dims *dims, void *args_);
+int dense_qp_calculate_memory_size(dense_qp_dims *dims, void *args_);
 //
-void *sim_assign_memory(sim_dims *dims, void *args_, void *raw_memory);
+void *dense_qp_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-void *sim_create_memory(sim_dims *dims, void *args_);
+void *dense_qp_create_memory(dense_qp_dims *dims, void *args_);
 //
-int sim_calculate_workspace_size(sim_dims *dims, void *args_);
+int dense_qp_calculate_workspace_size(dense_qp_dims *dims, void *args_);
 
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_SIM_H_
+#endif  // ACADOS_C_DENSE_QP_H_

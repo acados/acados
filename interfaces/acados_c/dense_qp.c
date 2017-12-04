@@ -17,45 +17,50 @@
  *
  */
 
-#include "acados_c/ocp_nlp.h"
+#include "acados_c/dense_qp.h"
+
+#include <acados/dense_qp/dense_qp_common.h>
+#include <acados/dense_qp/dense_qp_hpipm.h>
+#include <acados/dense_qp/dense_qp_qore.h>
+#include <acados/dense_qp/dense_qp_qpoases.h>
 
 
-int ocp_nlp_calculate_args_size(ocp_nlp_config *config, ocp_nlp_dims *dims)
+int dense_qp_calculate_args_size(dense_qp_config *config, dense_qp_dims *dims)
 {
     return 0;
 }
 
-void *ocp_nlp_assign_args(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory)
+void *dense_qp_assign_args(dense_qp_config *config, dense_qp_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
-void *ocp_nlp_create_args(ocp_nlp_config *config, ocp_nlp_dims *dims)
+void *dense_qp_create_args(dense_qp_config *config, dense_qp_dims *dims)
 {
     return NULL;
 }
 
-void ocp_nlp_assign_default_args(ocp_nlp_config *config, void *args_)
+void dense_qp_assign_default_args(dense_qp_config *config, void *args_)
 {
 
 }
 
-int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, void *args_)
+int dense_qp_calculate_memory_size(dense_qp_dims *dims, void *args_)
 {
     return 0;
 }
 
-void *ocp_nlp_assign_memory(ocp_nlp_dims *dims, void *args_, void *raw_memory)
+void *dense_qp_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
-void *ocp_nlp_create_memory(ocp_nlp_dims *dims, void *args_)
+void *dense_qp_create_memory(dense_qp_dims *dims, void *args_)
 {
     return NULL;
 }
 
-int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, void *args_)
+int dense_qp_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 {
     return 0;
 }

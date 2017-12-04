@@ -28,55 +28,40 @@ extern "C" {
 #include <acados/ocp_qp/ocp_qp_common.h>
 #include <acados/utils/types.h>
 
-
 typedef enum {
-    DENSE_HPIPM,
-    DENSE_QORE,
-    DENSE_QPOASES
-} dense_qp_solver_t;
-
-
-typedef enum {
-    SPARSE_HPIPM,
-    SPARSE_HPMPC,
-    SPARSE_OOQP,
-    SPARSE_QPDUNES
-} sparse_qp_solver_t;
-
-
-typedef enum {
-    PARTIAL_CONDENSING,
-    FULL_CONDENSING,
-    HPIPM,
-    HPMPC,
-    OOQP,
-    QPDUNES
+    OCP_QP_HPIPM,
+    OCP_QP_HPMPC,
+    OCP_QP_OOQP,
+    OCP_QP_QPDUNES,
+    PARTIAL_CONDENSING_HPIPM,
+    PARTIAL_CONDENSING_HPMPC,
+    PARTIAL_CONDENSING_OOQP,
+    PARTIAL_CONDENSING_QPDUNES,
+    CONDENSING_HPIPM,
+    CONDENSING_QPOASES,
+    CONDENSING_QORE
 } ocp_qp_solver_t;
-
 
 typedef struct {
     ocp_qp_solver_t qp_solver;
-    dense_qp_solver_t full_condensing_qp_solver;
-    sparse_qp_solver_t partial_condensing_qp_solver;    
 } ocp_qp_config;
 
-
 //
-int ocp_qp_calculate_args_size(ocp_qp_config * config, ocp_qp_dims * dims);
+int ocp_qp_calculate_args_size(ocp_qp_config *config, ocp_qp_dims *dims);
 //
-void *ocp_qp_assign_args(ocp_qp_config  *config, ocp_qp_dims * dims, void * raw_memory);
+void *ocp_qp_assign_args(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory);
 //
-void *ocp_qp_create_args(ocp_qp_config * config, ocp_qp_dims * dims);
+void *ocp_qp_create_args(ocp_qp_config *config, ocp_qp_dims *dims);
 //
-void ocp_qp_assign_default_args(ocp_qp_config * config, void * args_);
+void ocp_qp_assign_default_args(ocp_qp_config *config, void *args_);
 //
-int ocp_qp_calculate_memory_size(ocp_qp_dims * dims, void * args_);
+int ocp_qp_calculate_memory_size(ocp_qp_dims *dims, void *args_);
 //
-void *ocp_qp_assign_memory(ocp_qp_dims * dims, void * args_, void *raw_memory);
+void *ocp_qp_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-void *ocp_qp_create_memory(ocp_qp_dims * dims, void * args_);
+void *ocp_qp_create_memory(ocp_qp_dims *dims, void *args_);
 //
-int ocp_qp_calculate_workspace_size(ocp_qp_dims * dims, void * args_);
+int ocp_qp_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
 
 
 #ifdef __cplusplus

@@ -29,7 +29,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_condensing.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
@@ -41,34 +41,34 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
 
 
 
-int ocp_qp_condensing_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims)
 {
     int size = 0;
-    size += sizeof(ocp_qp_condensing_args);
+    size += sizeof(ocp_qp_full_condensing_args);
     return size;
 }
 
 
 
-ocp_qp_condensing_args *ocp_qp_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_condensing_args *args = (ocp_qp_condensing_args *) c_ptr;
-    c_ptr += sizeof(ocp_qp_condensing_args);
+    ocp_qp_full_condensing_args *args = (ocp_qp_full_condensing_args *) c_ptr;
+    c_ptr += sizeof(ocp_qp_full_condensing_args);
 
-    assert((char*)raw_memory + ocp_qp_condensing_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_calculate_args_size(dims) == c_ptr);
 
     return args;
 }
 
 
 
-int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args)
+int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args)
 {
     int size = 0;
 
-    size += sizeof(ocp_qp_condensing_memory);
+    size += sizeof(ocp_qp_full_condensing_memory);
     size += sizeof(struct d_cond_qp_ocp2dense_workspace);
     size += d_memsize_cond_qp_ocp2dense(dims);
 
@@ -77,13 +77,13 @@ int ocp_qp_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_condensing
 
 
 
-ocp_qp_condensing_memory *ocp_qp_condensing_assign_memory(ocp_qp_dims *dims,
-    ocp_qp_condensing_args *args, void *raw_memory)
+ocp_qp_full_condensing_memory *ocp_qp_full_condensing_assign_memory(ocp_qp_dims *dims,
+    ocp_qp_full_condensing_args *args, void *raw_memory)
 {
     char *c_ptr = (char *)raw_memory;
 
-    ocp_qp_condensing_memory *mem = (ocp_qp_condensing_memory *) c_ptr;
-    c_ptr += sizeof(ocp_qp_condensing_memory);
+    ocp_qp_full_condensing_memory *mem = (ocp_qp_full_condensing_memory *) c_ptr;
+    c_ptr += sizeof(ocp_qp_full_condensing_memory);
 
     mem->hpipm_workspace = (struct d_cond_qp_ocp2dense_workspace *)c_ptr;
     c_ptr += sizeof(struct d_cond_qp_ocp2dense_workspace);
@@ -94,22 +94,22 @@ ocp_qp_condensing_memory *ocp_qp_condensing_assign_memory(ocp_qp_dims *dims,
     d_create_cond_qp_ocp2dense(dims, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-    assert((char*)raw_memory + ocp_qp_condensing_calculate_memory_size(dims, args) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_calculate_memory_size(dims, args) == c_ptr);
 
     return mem;
 }
 
 
 
-int ocp_qp_condensing_calculate_workspace_size(ocp_qp_dims *dims, ocp_qp_condensing_args *args)
+int ocp_qp_full_condensing_calculate_workspace_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args)
 {
     return 0;
 }
 
 
 
-void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *args,
-    ocp_qp_condensing_memory *mem, void *work)
+void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_args *args,
+    ocp_qp_full_condensing_memory *mem, void *work)
 {
     // save pointer to ocp_qp_in in memory (needed for expansion)
     mem->qp_in = in;
@@ -120,8 +120,8 @@ void ocp_qp_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_condensing_args *
 
 
 
-void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_condensing_args *args,
-    ocp_qp_condensing_memory *mem, void *work)
+void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_args *args,
+    ocp_qp_full_condensing_memory *mem, void *work)
 {
     d_expand_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);
 }

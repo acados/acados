@@ -72,7 +72,7 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *
     size += sizeof(ocp_nlp_gn_sqp_args);
     size += sizeof(ocp_qp_xcond_solver);
 
-    size += qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver_funs);
+    size += qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver);
 
     sim_dims sim_dims;
 
@@ -109,11 +109,11 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond
     c_ptr += sizeof(ocp_qp_xcond_solver);
 
     copy_module_pointers_to_args(args->qp_solver, qp_solver);
-    args->qp_solver->qp_solver_funs = qp_solver->qp_solver_funs;
-    copy_module_pointers_to_args(args->qp_solver->qp_solver_funs, qp_solver->qp_solver_funs);
+    args->qp_solver->qp_solver = qp_solver->qp_solver;
+    copy_module_pointers_to_args(args->qp_solver->qp_solver, qp_solver->qp_solver);
 
-    args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver->qp_solver_funs, c_ptr);
-    c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver_funs);
+    args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver->qp_solver, c_ptr);
+    c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver);
 
     sim_dims sim_dims;
 

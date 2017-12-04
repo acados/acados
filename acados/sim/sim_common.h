@@ -116,7 +116,6 @@ typedef struct {
 
 } sim_rk_opts;
 
-
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
     int (*calculate_args_size)(sim_dims *dims);

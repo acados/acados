@@ -31,35 +31,31 @@ extern "C" {
 #include <acados_c/sim.h>
 #include <acados_c/ocp_qp.h>
 
-
 typedef enum {
     SQP_GN
 } ocp_nlp_solver_t;
 
-
 typedef struct {
-    ocp_nlp_solver_t ocp_nlp_solver;
     ocp_qp_config *ocp_qp_config;
     sim_config **sim_config;
 } ocp_nlp_config;
 
-
 //
-int ocp_nlp_calculate_args_size(ocp_nlp_config * config, ocp_nlp_dims * dims);
+int ocp_nlp_calculate_args_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
-void *ocp_nlp_assign_args(ocp_nlp_config  *config, ocp_nlp_dims * dims, void * raw_memory);
+void *ocp_nlp_assign_args(ocp_nlp_config  *config, ocp_nlp_dims *dims, void *raw_memory);
 //
-void *ocp_nlp_create_args(ocp_nlp_config * config, ocp_nlp_dims * dims);
+void *ocp_nlp_create_args(ocp_nlp_config *config, ocp_nlp_dims *dims);
 //
-void ocp_nlp_assign_default_args(ocp_nlp_config * config, void * args_);
+void ocp_nlp_assign_default_args(ocp_nlp_config *config, void *args_);
 //
-int ocp_nlp_calculate_memory_size(ocp_nlp_dims * dims, void * args_);
+int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, void *args_);
 //
-void *ocp_nlp_assign_memory(ocp_nlp_dims * dims, void * args_, void *raw_memory);
+void *ocp_nlp_assign_memory(ocp_nlp_dims *dims, void *args_, void *raw_memory);
 //
-void *ocp_nlp_create_memory(ocp_nlp_dims * dims, void * args_);
+void *ocp_nlp_create_memory(ocp_nlp_dims *dims, void *args_);
 //
-int ocp_nlp_calculate_workspace_size(ocp_nlp_dims * dims, void * args_);
+int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, void *args_);
 
 
 #ifdef __cplusplus
