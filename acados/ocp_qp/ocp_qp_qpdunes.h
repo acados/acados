@@ -95,10 +95,10 @@ int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_qpdunes(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *memory_, void *work_);
 
+void ocp_qp_qpdunes_free_memory(void *mem_);
 
 // ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts);
 // ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_);
-// void ocp_qp_qpdunes_free_memory(void *mem_);
 
 #ifdef __cplusplus
 } /* extern "C" */

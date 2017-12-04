@@ -68,77 +68,77 @@ int main() {
 
     int size_args = ocp_qp_qpdunes_calculate_args_size(qp_in->dim);
     void *ptr_args = acados_malloc(size_args, 1);
-    ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_assign_args(qp_in->dim, ptr_args);
-    ocp_qp_qpdunes_initialize_default_args(QPDUNES_DEFAULT_ARGUMENTS, args);
+    ocp_qp_qpdunes_args *arg = ocp_qp_qpdunes_assign_args(qp_in->dim, ptr_args);
+    ocp_qp_qpdunes_initialize_default_args(QPDUNES_DEFAULT_ARGUMENTS, arg);
 
-    // arg->stageQpSolver = QPDUNES_WITH_QPOASES;
+    arg->stageQpSolver = QPDUNES_WITH_QPOASES;
 
-    int size_mem = ocp_qp_qpdunes_calculate_memory_size(qp_in->dim, args);
+    int size_mem = ocp_qp_qpdunes_calculate_memory_size(qp_in->dim, arg);
     void *ptr_mem = acados_malloc(size_mem, 1);
-    ocp_qp_qpdunes_memory *memory = ocp_qp_qpdunes_assign_memory(qp_in->dim, args, ptr_mem);
+    ocp_qp_qpdunes_memory *mem = ocp_qp_qpdunes_assign_memory(qp_in->dim, arg, ptr_mem);
 
-	// int acados_return;  // 0 normal; 1 max iter
+    int size_work = ocp_qp_qpdunes_calculate_workspace_size(qp_in->dim, arg);
+    void *work = acados_malloc(size_work, 1);;
 
-    // acados_timer timer;
-    // acados_tic(&timer);
+	int acados_return;
 
-	// for (int rep = 0; rep < NREP; rep++) {
-    //     acados_return = ocp_qp_qpdunes(qp_in, qp_out, arg, mem, NULL);
-	// }
+    acados_timer timer;
+    acados_tic(&timer);
 
-    // double time = acados_toc(&timer)/NREP;
+	for (int rep = 0; rep < NREP; rep++) {
+        acados_return = ocp_qp_qpdunes(qp_in, qp_out, arg, mem, work);
+	}
 
-    // /************************************************
-    // * extract solution
-    // ************************************************/
+    double time = acados_toc(&timer)/NREP;
 
-    // // ocp_qp_dims dims;
-    // // dims.N = N;
-    // // dims.nx = nx;
-    // // dims.nu = nu;
-    // // dims.nb = nb;
-    // // dims.ns = ns;
-    // // dims.ng = ng;
+    /************************************************
+    * extract solution
+    ************************************************/
 
-    // ocp_qp_dims *dims = qp_in->dim;
+    // ocp_qp_dims dims;
+    // dims.N = N;
+    // dims.nx = nx;
+    // dims.nu = nu;
+    // dims.nb = nb;
+    // dims.ns = ns;
+    // dims.ng = ng;
 
-    // colmaj_ocp_qp_out *sol;
-    // void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
-    // assign_colmaj_ocp_qp_out(dims, &sol, memsol);
-    // convert_ocp_qp_out_to_colmaj(qp_out, sol);
+    ocp_qp_dims *dims = qp_in->dim;
 
-    // /************************************************
-    // * print solution and stats
-    // ************************************************/
+    colmaj_ocp_qp_out *sol;
+    void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
+    assign_colmaj_ocp_qp_out(dims, &sol, memsol);
+    convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
-    // printf("\nu = \n");
-    // for (int ii = 0; ii < N; ii++) d_print_mat(1, nu[ii], sol->u[ii], 1);
+    /************************************************
+    * print solution and stats
+    ************************************************/
 
-    // printf("\nx = \n");
-    // for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
+    printf("\nu = \n");
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nu[ii], sol->u[ii], 1);
 
-    // printf("\npi = \n");
-    // for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
+    printf("\nx = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
 
-    // printf("\nlam = \n");
-    // for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
+    printf("\npi = \n");
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
 
-    // printf("\ninf norm res: %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
-    //        mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
-    //        mem->hpipm_workspace->qp_res[3]);
+    printf("\nlam = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    // printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-    //     mem->hpipm_workspace->iter, NREP, time);
 
-    // /************************************************
-    // * free memory
-    // ************************************************/
+    printf("\nSolution time for %d dual Newton iterations, averaged over %d runs: %5.2e seconds\n\n\n",
+        -1, NREP, time);
 
-    // free(qp_in);
-    // free(qp_out);
-    // free(sol);
-    // free(arg);
-    // free(mem);
+    /************************************************
+    * free memory
+    ************************************************/
+
+    free(qp_in);
+    free(qp_out);
+    free(sol);
+    free(arg);
+    free(mem);
 
     return 0;
 }

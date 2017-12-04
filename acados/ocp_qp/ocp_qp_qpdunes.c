@@ -546,126 +546,128 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
     return (int)value;
 }
 
-#if 0
 
-static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
+
+static void fill_in_qp_out(ocp_qp_dims *dims, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
 {
-    int N = in->dim->N;
-    int nn;
-    int *nx = in->dim->nx;
-    int *nu = in->dim->nu;
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
 
     for (int kk = 0; kk < N + 1; kk++) {
-        for (int ii = 0; ii < nx[kk]; ii++) {
-            out->x[kk][ii] = mem->qpData.intervals[kk]->z.data[ii];
-        }
-        for (int ii = 0; ii < nu[kk]; ii++) {
-            out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[nx[kk] + ii];
-        }
+        d_cvt_vec2strvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
+        d_cvt_vec2strvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
+        // for (int ii = 0; ii < nx[kk]; ii++) {
+        //     out->x[kk][ii] = mem->qpData.intervals[kk]->z.data[ii];
+        // }
+        // for (int ii = 0; ii < nu[kk]; ii++) {
+        //     out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[nx[kk] + ii];
+        // }
     }
-    nn = 0;
+    // int nn = 0;
     for (int kk = 0; kk < N; kk++) {
-        for (int ii = 0; ii < nx[kk + 1]; ii++) {
-            out->pi[kk][ii] = mem->qpData.lambda.data[nn++];
-        }
+        d_cvt_vec2strvec(nx[kk+1], mem->qpData.lambda.data, &out->pi[kk], 0);
+        // for (int ii = 0; ii < nx[kk + 1]; ii++) {
+        //     out->pi[kk][ii] = mem->qpData.lambda.data[nn++];
+        // }
     }
     // TODO(dimitris): fill-in multipliers for inequalities
 }
 
 
-ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
+// ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts) {
+//     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) malloc(sizeof(ocp_qp_qpdunes_args));
 
-    if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 0;
-    } else if (opts == QPDUNES_NONLINEAR_MPC) {
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 0;
-        args->options.printLevel = 0;
-    } else if (opts == QPDUNES_LINEAR_MPC) {
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 1;
-        args->options.printLevel = 0;
-    } else {
-        printf("\nUnknown option (%d) for qpDUNES!\n", opts);
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 0;
-    }
-    return args;
-}
+//     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
+//         args->options = qpDUNES_setupDefaultOptions();
+//         args->isLinearMPC = 0;
+//     } else if (opts == QPDUNES_NONLINEAR_MPC) {
+//         args->options = qpDUNES_setupDefaultOptions();
+//         args->isLinearMPC = 0;
+//         args->options.printLevel = 0;
+//     } else if (opts == QPDUNES_LINEAR_MPC) {
+//         args->options = qpDUNES_setupDefaultOptions();
+//         args->isLinearMPC = 1;
+//         args->options.printLevel = 0;
+//     } else {
+//         printf("\nUnknown option (%d) for qpDUNES!\n", opts);
+//         args->options = qpDUNES_setupDefaultOptions();
+//         args->isLinearMPC = 0;
+//     }
+//     return args;
+// }
 
 
-ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_) {
+// ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_) {
 
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
-    ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
-    int N, nx, nu, kk;
-    uint *nD_ptr = 0;
-    return_t return_value;
+//     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
+//     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *) malloc(sizeof(ocp_qp_qpdunes_memory));
+//     int N, nx, nu, kk;
+//     uint *nD_ptr = 0;
+//     return_t return_value;
 
-    N = in->N;
-    nx = in->nx[0];
-    nu = in->nu[0];
+//     N = in->N;
+//     nx = in->nx[0];
+//     nu = in->nu[0];
 
-    mem->firstRun = 1;
-    mem->dimA = nx * nx;
-    mem->dimB = nx * nu;
-    mem->dimz = nx + nu;
-    mem->nDmax = get_maximum_number_of_inequality_constraints(in);
-    mem->dimC = mem->nDmax * mem->dimz;
-    mem->maxDim = max_of_two(mem->dimA + mem->dimB, mem->dimC);
+//     mem->firstRun = 1;
+//     mem->dimA = nx * nx;
+//     mem->dimB = nx * nu;
+//     mem->dimz = nx + nu;
+//     mem->nDmax = get_maximum_number_of_inequality_constraints(in);
+//     mem->dimC = mem->nDmax * mem->dimz;
+//     mem->maxDim = max_of_two(mem->dimA + mem->dimB, mem->dimC);
 
-    /* Check for constant dimensions */
-    for (kk = 1; kk < N; kk++) {
-        if ((nx != in->nx[kk]) || (nu != in->nu[kk])) {
-            printf("\nqpDUNES does not support varying dimensions!\n");
-            free(mem);
-            return NULL;
-        }
-    }
-    if ((nx != in->nx[N]) || (in->nu[N] != 0)) {
-        printf("\nqpDUNES does not support varying dimensions!\n");
-        free(mem);
-        return NULL;
-    }
+//     /* Check for constant dimensions */
+//     for (kk = 1; kk < N; kk++) {
+//         if ((nx != in->nx[kk]) || (nu != in->nu[kk])) {
+//             printf("\nqpDUNES does not support varying dimensions!\n");
+//             free(mem);
+//             return NULL;
+//         }
+//     }
+//     if ((nx != in->nx[N]) || (in->nu[N] != 0)) {
+//         printf("\nqpDUNES does not support varying dimensions!\n");
+//         free(mem);
+//         return NULL;
+//     }
 
-    mem->stageQpSolver = define_stage_qp_solver(in);
-    // if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) printf("\n\n >>>>>>
-    // QPDUNES + QPOASES!\n"); if (mem->stageQpSolver == QPDUNES_WITH_CLIPPING)
-    // printf("\n\n >>>>>> QPDUNES + CLIPPING!\n");
+//     mem->stageQpSolver = define_stage_qp_solver(in);
+//     // if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) printf("\n\n >>>>>>
+//     // QPDUNES + QPOASES!\n"); if (mem->stageQpSolver == QPDUNES_WITH_CLIPPING)
+//     // printf("\n\n >>>>>> QPDUNES + CLIPPING!\n");
 
-    if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
-        // NOTE: lsType 5 seems to work but yields wrong results with ineq.
-        // constraints
-        if (args->options.lsType != 7) {
-            args->options.lsType = 7;
-            // TODO(dimitris): write proper acados warnings and errors
-            if (args->options.printLevel > 0) {
-                printf(
-                    "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                    "!!!!!!!!!!!!!\n");
-                printf(
-                    "WARNING: Changed line-search algorithm for qpDUNES "
-                    "(incompatible with QP)");
-                printf(
-                    "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-                    "!!!!!!!!!!!!!\n");
-            }
-        }
-        if (mem->nDmax > 0)
-            nD_ptr = (uint *)in->nc;  // otherwise leave pointer equal to zero
-    }
+//     if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
+//         // NOTE: lsType 5 seems to work but yields wrong results with ineq.
+//         // constraints
+//         if (args->options.lsType != 7) {
+//             args->options.lsType = 7;
+//             // TODO(dimitris): write proper acados warnings and errors
+//             if (args->options.printLevel > 0) {
+//                 printf(
+//                     "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+//                     "!!!!!!!!!!!!!\n");
+//                 printf(
+//                     "WARNING: Changed line-search algorithm for qpDUNES "
+//                     "(incompatible with QP)");
+//                 printf(
+//                     "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+//                     "!!!!!!!!!!!!!\n");
+//             }
+//         }
+//         if (mem->nDmax > 0)
+//             nD_ptr = (uint *)in->nc;  // otherwise leave pointer equal to zero
+//     }
 
-    /* memory allocation */
-    return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
-    if (return_value != QPDUNES_OK) {
-        printf("Setup of the QP solver failed\n");
-        free(mem);
-        return NULL;
-    }
-    return mem;
-}
+//     /* memory allocation */
+//     return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
+//     if (return_value != QPDUNES_OK) {
+//         printf("Setup of the QP solver failed\n");
+//         free(mem);
+//         return NULL;
+//     }
+//     return mem;
+// }
 
 
 
@@ -675,8 +677,6 @@ void ocp_qp_qpdunes_free_memory(void *mem_)
     qpDUNES_cleanup(&(mem->qpData));
 }
 
-
-#endif
 
 
 int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_)
@@ -690,7 +690,6 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
 
     cast_workspace(work, mem);
 
-    #if 0
     update_memory(in, args, mem, work);
 
     return_value = qpDUNES_solve(&(mem->qpData));
@@ -700,9 +699,7 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
         return (int)return_value;
     }
 
-    fill_in_qp_out(in, out, mem);
-
-    #endif
+    fill_in_qp_out(in->dim, out, mem);
 
     // TODO(dimitris): use acados return value
     return 0;
