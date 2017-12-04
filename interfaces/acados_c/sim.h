@@ -39,7 +39,7 @@ typedef struct {
 } sim_config;
 
 typedef struct {
-    sim_solver_fcn_ptrs *fcn_prts;
+    sim_solver_fcn_ptrs *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
@@ -61,6 +61,8 @@ sim_solver *sim_assign(sim_config *config, sim_dims *dims, void *raw_memory);
 sim_solver *sim_create(sim_config *config, sim_dims *dims);
 //
 int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
+//
+void sim_initialize_default_args(sim_solver *solver);
 
 // EXPERT INTERFACE
 //
@@ -70,15 +72,13 @@ void *sim_assign_args(sim_config *config, sim_dims *dims, void *raw_memory);
 //
 void *sim_create_args(sim_config *config, sim_dims *dims);
 //
-void sim_assign_default_args(sim_config *config, void *args_);
+int sim_calculate_memory_size(sim_config *config, sim_dims *dims);
 //
-int sim_calculate_memory_size(sim_dims *dims, void *args_);
+void *sim_assign_memory(sim_config *config, sim_dims *dims, void *raw_memory);
 //
-void *sim_assign_memory(sim_dims *dims, void *args_, void *raw_memory);
+void *sim_create_memory(sim_config *config, sim_dims *dims);
 //
-void *sim_create_memory(sim_dims *dims, void *args_);
-//
-int sim_calculate_workspace_size(sim_dims *dims, void *args_);
+int sim_calculate_workspace_size(sim_config *config, sim_dims *dims);
 
 
 #ifdef __cplusplus

@@ -135,6 +135,20 @@
 
 
 
+int calculate_dims_size(ocp_qp_dims *dims)
+{
+
+}
+
+
+
+void copy_dims(ocp_qp_dims *target, ocp_qp_dims *src)
+{
+    
+}
+
+
+
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_in_calculate_size(dims);
@@ -163,21 +177,65 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 
 int ocp_qp_calculate_size(ocp_qp_config *config, ocp_qp_dims *dims)
 {
-    return 0;
+    int bytes;
+    
+    bytes = sizeof(ocp_qp_solver);
+    
+    bytes += sizeof(ocp_qp_solver_fcn_ptrs);
+    
+    bytes += calculate_dims_size(dims);
+
+    bytes += ocp_qp_calculate_args_size(config, dims);
+
+    bytes += ocp_qp_calculate_memory_size(config, dims);
+
+    bytes += ocp_qp_calculate_workspace_size(config, dims);
+
+    return bytes;
 }
 
 
 
 ocp_qp_solver *ocp_qp_assign(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory)
 {
-    return NULL;
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_solver *solver;
+    solver = (ocp_qp_solver *) c_ptr;
+    c_ptr += sizeof(ocp_qp_solver);
+
+    solver->fcn_ptrs = (ocp_qp_solver_fcn_ptrs *) c_ptr;
+    c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
+
+    solver->dims = (ocp_qp_dims *) c_ptr;
+    c_ptr += calculate_dims_size(dims);
+    copy_dims(solver->dims, dims);
+
+    solver->args = ocp_qp_assign_args(config, dims, c_ptr);
+    c_ptr += ocp_qp_calculate_args_size(config, dims);
+
+    solver->mem = ocp_qp_assign_memory(config, dims, c_ptr);
+    c_ptr += ocp_qp_calculate_memory_size(config, dims);
+
+    solver->mem = (void *) c_ptr;
+    c_ptr += ocp_qp_calculate_workspace_size(config, dims);
+
+    assert((char*)raw_memory + ocp_qp_calculate_size(config, dims) == c_ptr);
+
+    return solver;
 }
 
 
 
 ocp_qp_solver *ocp_qp_create(ocp_qp_config *config, ocp_qp_dims *dims)
 {
-    return NULL;
+    int bytes = ocp_qp_calculate_size(config, dims);
+
+    void *ptr = malloc(bytes);
+
+    ocp_qp_solver *solver = ocp_qp_assign(config, dims, ptr);
+
+    return solver;
 }
 
 
@@ -185,6 +243,13 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_config *config, ocp_qp_dims *dims)
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     return 0;
+}
+
+
+
+void ocp_qp_initialize_default_args(ocp_qp_solver *solver)
+{
+
 }
 
 
@@ -211,35 +276,28 @@ void *ocp_qp_create_args(ocp_qp_config *config, ocp_qp_dims *dims)
 
 
 
-void ocp_qp_assign_default_args(ocp_qp_config *config, void *args_)
-{
-
-}
-
-
-
-int ocp_qp_calculate_memory_size(ocp_qp_dims *dims, void *args_)
+int ocp_qp_calculate_memory_size(ocp_qp_config *config, ocp_qp_dims *dims)
 {
     return 0;
 }
 
 
 
-void *ocp_qp_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
+void *ocp_qp_assign_memory(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *ocp_qp_create_memory(ocp_qp_dims *dims, void *args_)
+void *ocp_qp_create_memory(ocp_qp_config *config, ocp_qp_dims *dims)
 {
     return NULL;
 }
 
 
 
-int ocp_qp_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+int ocp_qp_calculate_workspace_size(ocp_qp_config *config, ocp_qp_dims *dims)
 {
     return 0;
 }

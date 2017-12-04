@@ -47,7 +47,7 @@ typedef struct {
 } ocp_qp_config;
 
 typedef struct {
-    ocp_qp_solver_fcn_ptrs *fcn_prts;
+    ocp_qp_solver_fcn_ptrs *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
@@ -69,6 +69,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_config *config, ocp_qp_dims *dims, void *raw
 ocp_qp_solver *ocp_qp_create(ocp_qp_config *config, ocp_qp_dims *dims);
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+//
+void ocp_qp_initialize_default_args(ocp_qp_solver *solver);
 
 // EXPERT INTERFACE
 //
@@ -78,15 +80,13 @@ void *ocp_qp_assign_args(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_mem
 //
 void *ocp_qp_create_args(ocp_qp_config *config, ocp_qp_dims *dims);
 //
-void ocp_qp_assign_default_args(ocp_qp_config *config, void *args_);
+int ocp_qp_calculate_memory_size(ocp_qp_config *config, ocp_qp_dims *dims);
 //
-int ocp_qp_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+void *ocp_qp_assign_memory(ocp_qp_config *config, ocp_qp_dims *dims, void *raw_memory);
 //
-void *ocp_qp_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_create_memory(ocp_qp_config *config, ocp_qp_dims *dims);
 //
-void *ocp_qp_create_memory(ocp_qp_dims *dims, void *args_);
-//
-int ocp_qp_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_calculate_workspace_size(ocp_qp_config *config, ocp_qp_dims *dims);
 
 
 #ifdef __cplusplus

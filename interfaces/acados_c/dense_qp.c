@@ -83,6 +83,13 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 
 
 
+void dense_qp_initialize_default_args(dense_qp_solver *solver)
+{
+
+}
+
+
+
 int dense_qp_calculate_args_size(dense_qp_config *config, dense_qp_dims *dims)
 {
     return 0;
@@ -104,35 +111,28 @@ void *dense_qp_create_args(dense_qp_config *config, dense_qp_dims *dims)
 
 
 
-void dense_qp_assign_default_args(dense_qp_config *config, void *args_)
-{
-
-}
-
-
-
-int dense_qp_calculate_memory_size(dense_qp_dims *dims, void *args_)
+int dense_qp_calculate_memory_size(dense_qp_config *config, dense_qp_dims *dims)
 {
     return 0;
 }
 
 
 
-void *dense_qp_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory)
+void *dense_qp_assign_memory(dense_qp_config *config, dense_qp_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *dense_qp_create_memory(dense_qp_dims *dims, void *args_)
+void *dense_qp_create_memory(dense_qp_config *config, dense_qp_dims *dims)
 {
     return NULL;
 }
 
 
 
-int dense_qp_calculate_workspace_size(dense_qp_dims *dims, void *args_)
+int dense_qp_calculate_workspace_size(dense_qp_config *config, dense_qp_dims *dims)
 {
     return 0;
 }

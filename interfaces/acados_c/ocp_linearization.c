@@ -65,42 +65,57 @@ int ocp_linearization_solve(ocp_linearization_method *solver, ocp_linearization_
 }
 
 
+
+void ocp_linearization_initialize_default_args(ocp_linearization_method *method)
+{
+
+}
+
+
+
 int ocp_linearization_calculate_args_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return 0;
 }
+
+
 
 void *ocp_linearization_assign_args(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
+
+
 void *ocp_linearization_create_args(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return NULL;
 }
 
-void ocp_linearization_assign_default_args(ocp_linearization_config *config, void *args_)
-{
 
-}
 
-int ocp_linearization_calculate_memory_size(ocp_linearization_dims *dims, void *args_)
+int ocp_linearization_calculate_memory_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return 0;
 }
 
-void *ocp_linearization_assign_memory(ocp_linearization_dims *dims, void *args_, void *raw_memory)
+
+
+void *ocp_linearization_assign_memory(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
-void *ocp_linearization_create_memory(ocp_linearization_dims *dims, void *args_)
+
+
+void *ocp_linearization_create_memory(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return NULL;
 }
 
-int ocp_linearization_calculate_workspace_size(ocp_linearization_dims *dims, void *args_)
+
+
+int ocp_linearization_calculate_workspace_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
 {
     return 0;
 }
