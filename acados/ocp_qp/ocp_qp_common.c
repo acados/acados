@@ -32,6 +32,11 @@
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_qore.h"
+// blasfeo
+#include "blasfeo_target.h"
+#include "blasfeo_common.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 
@@ -149,13 +154,6 @@ int ocp_qp_res_ws_calculate_size(ocp_qp_dims *dims)
 
 
 
-void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws)
-{
-    d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
-}
-
-
-
 ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -169,6 +167,56 @@ ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory)
     assert((char*) raw_memory + ocp_qp_res_ws_calculate_size(dims) == c_ptr);
 
     return qp_res_ws;
+}
+
+
+
+void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws)
+{
+    // loop index
+	int ii;
+
+	//
+	int N = qp_in->dim->N;
+	int *nx = qp_in->dim->nx;
+	int *nu = qp_in->dim->nu;
+	int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+
+    struct d_strmat *DCt = qp_in->DCt;
+    struct d_strvec *d = qp_in->d;
+    int **idxb = qp_in->idxb;
+
+    struct d_strvec *ux = qp_out->ux;
+    struct d_strvec *t = qp_out->t;
+
+    struct d_strvec *tmp_nbgM = res_ws->tmp_nbgM;
+
+    int nx_i, nu_i, nb_i, ng_i;
+
+    for(ii=0; ii<=N; ii++)
+    {
+        nx_i = nx[ii];
+		nu_i = nu[ii];
+		nb_i = nb[ii];
+		ng_i = ng[ii];
+
+        // set t to zero
+        dvecse_libstr(2*nb_i+2*ng_i, 0.0, t+ii, 0);
+
+        // compute slacks for general constraints
+        dgemv_t_libstr(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
+        dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
+
+        // compute slacks for bounds
+        dvecex_sp_libstr(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
+        daxpy_libstr(nb_i, -1.0, d+ii, 0, t+ii, 0, t+ii, 0);
+        daxpy_libstr(nb_i,  1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+        daxpy_libstr(nb_i,  1.0, tmp_nbgM+0, 0, t+ii, 0, t+ii, 0);
+        daxpy_libstr(nb_i, -1.0, tmp_nbgM+0, 0, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+    }
+
+    d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
 }
 
 
