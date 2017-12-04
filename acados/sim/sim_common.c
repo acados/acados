@@ -149,7 +149,7 @@ sim_out *create_sim_out(sim_dims *dims)
 {
     int bytes = sim_out_calculate_size(dims);
 
-    void *ptr = malloc(bytes);
+    void *ptr = acados_malloc(bytes, 1);
 
     sim_out *out = assign_sim_out(dims, ptr);
 

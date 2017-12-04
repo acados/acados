@@ -23,12 +23,14 @@
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
 #include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 // qpoases
 #include "qpOASES_e.h"
 // acados
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/timing.h"
 
 
 int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
@@ -90,13 +92,16 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 1 * nbd * sizeof(int);                 // idxb
     size += 1 * nvd * sizeof(double);              // prim_sol
     size += (nvd+ngd) * sizeof(double);  // dual_sol
+    size += sizeof(struct d_strvec); // tmp_nb
+    size += d_size_strvec(nbd); // tmp_nb
 
     if (ngd > 0)  // QProblem
         size += QProblem_calculateMemorySize(nvd, ngd);
     else  // QProblemB
         size += QProblemB_calculateMemorySize(nvd);
 
-    make_int_multiple_of(8, &size);
+    make_int_multiple_of(64, &size);
+    size += 64;
 
     return size;
 }
@@ -119,7 +124,11 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
-    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
+    assign_strvec_ptrs(1, &mem->tmp_nb, &c_ptr);
+
+    align_char_to(64, &c_ptr);
+
+    assign_strvec(nbd, mem->tmp_nb, &c_ptr);
 
     assign_double(nvd*nvd, &mem->H, &c_ptr);
     assign_double(nvd*ned, &mem->A, &c_ptr);
@@ -165,6 +174,12 @@ int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
+    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+
+    acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
+
     // cast structures
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)args_;
     dense_qp_qpoases_memory *memory = (dense_qp_qpoases_memory *)memory_;
@@ -189,6 +204,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     double *dual_sol = memory->dual_sol;
     QProblemB *QPB = memory->QPB;
     QProblem *QP = memory->QP;
+    struct d_strvec *tmp_nb = memory->tmp_nb;
 
     // extract dense qp size
     int nvd = qp_in->dim->nv;
@@ -225,10 +241,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
 
 #if 0
-    printf("ngd=%d nvd=%d\n", ngd, nvd);
-    d_print_mat(1,ngd,d_lg,1);
-    d_print_mat(1,ngd,d_ug,1);
-    exit(1);
 #endif
 
     // cold start the dual solution with no active constraints
@@ -237,6 +249,9 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
         for (int ii = 0; ii < nvd + ngd; ii++)
             dual_sol[ii] = 0;
     }
+
+    info->interface_time = acados_toc(&interface_timer);
+    acados_tic(&qp_timer);
 
     // solve dense qp
     int nwsr = args->max_nwsr;
@@ -261,18 +276,19 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
         QProblemB_getPrimalSolution(QPB, prim_sol);
         QProblemB_getDualSolution(QPB, dual_sol);
     }
-    double cmpl = 0.0, feas = 0.0, stat = 0.0;
-    // qpOASES_getKktViolation(nvd, ngd, H, g, C, d_lb, d_ub, d_lg, d_ug, prim_sol, dual_sol, &stat, &feas, &cmpl);
-    // printf("\nstat=%e, feas=%e, cmpl=%e\n", stat, feas, cmpl);
 
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;
 
 #if 0
-    d_print_mat(1, nvd+ngd, dual_sol, 1);
-    exit(1);
+    double cmpl = 0.0, feas = 0.0, stat = 0.0;
+    qpOASES_getKktViolation(nvd, ngd, H, g, C, d_lb, d_ub, d_lg, d_ug, prim_sol, dual_sol, &stat, &feas, &cmpl);
+    printf("\nstat=%e, feas=%e, cmpl=%e\n", stat, feas, cmpl);
 #endif
+
+    info->solve_QP_time = acados_toc(&qp_timer);
+    acados_tic(&interface_timer);
 
     // copy prim_sol and dual_sol to qpd_sol
     d_cvt_vec2strvec(nvd, prim_sol, qp_out->v, 0);
@@ -289,10 +305,34 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
             qp_out->lam->pa[nbd+ii] =   dual_sol[nvd+ii];
         else
             qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
-    }
+        }
+
+    // set t to zero
+    dvecse_libstr(2*nbd+2*ngd, 0.0, qp_out->t, 0);
+
+    // compute slacks for general constraints
+    dgemv_t_libstr(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, nbd, qp_out->t, nbd);
+    dgemv_t_libstr(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
+
+    // compute slacks for bounds
+    dvecex_sp_libstr(nbd, 1.0, idxb, qp_out->v, 0, tmp_nb, 0);
+    daxpy_libstr(nbd, -1.0, qp_in->d, 0, qp_out->t, 0, qp_out->t, 0);
+    daxpy_libstr(nbd, 1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
+    daxpy_libstr(nbd, 1.0, tmp_nb, 0, qp_out->t, 0, qp_out->t, 0);
+    daxpy_libstr(nbd, -1.0, tmp_nb, 0, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
 
     // return
     // TODO(dimitris): cast qpoases return to acados return
     acados_status = return_flag;
+
+    info->interface_time += acados_toc(&interface_timer);
+    info->total_time = acados_toc(&tot_timer);
+
+    // printf("total time = \t\t\t%f\n", 1000*info->total_time);
+    // printf("interface time = \t\t%f\n", 1000*info->interface_time);
+    // printf("qp time = \t\t\t%f\n", 1000*info->solve_QP_time);
+    // printf("total time from qpOASES = \t%f\n", 1000*cputime);  // does not include getSolution
+    // printf("**************\n");
+
     return acados_status;
 }

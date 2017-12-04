@@ -29,7 +29,7 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -140,9 +140,9 @@ int main() {
     for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_m+ii, 0);
 
 
-    printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
+    printf("\ninf norm res: %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
            mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
-           mem->hpipm_workspace->qp_res[3], mem->hpipm_workspace->res->res_mu);
+           mem->hpipm_workspace->qp_res[3]);
 
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
         mem->hpipm_workspace->iter, NREP, time);

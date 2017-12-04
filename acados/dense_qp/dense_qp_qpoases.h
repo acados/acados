@@ -30,6 +30,9 @@ extern "C" {
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
+// blasfeo
+#include "blasfeo_target.h"
+#include "blasfeo_common.h"
 
 typedef struct dense_qp_qpoases_args_ {
     double max_cputime;  // maximum cpu time in seconds
@@ -59,6 +62,7 @@ typedef struct dense_qp_qpoases_memory_ {
     void *QP;                  // NOTE(giaf): cast to QProblem to use
     double cputime;            // cputime of qpoases
     int nwsr;                  // performed number of working set recalculations
+    struct d_strvec *tmp_nb;
 } dense_qp_qpoases_memory;
 
 

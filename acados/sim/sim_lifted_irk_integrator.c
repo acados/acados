@@ -37,7 +37,7 @@
 
 int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
 {
-    
+
     int size = sizeof(sim_rk_opts);
 
     int ns = dims->num_stages;
@@ -55,7 +55,7 @@ int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
     size += ns*ns * sizeof(double);  // transf2
     size += ns*ns * sizeof(double);  // transf1_T
     size += ns*ns * sizeof(double);  // transf2_T
-    
+
     make_int_multiple_of(8, &size);
     size += 2 * 8;
 
@@ -85,13 +85,13 @@ void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns, &opts->scheme->eig, &c_ptr);    
+    assign_double(ns, &opts->scheme->eig, &c_ptr);
 
     assign_double(ns*ns, &opts->scheme->transf1, &c_ptr);
     assign_double(ns*ns, &opts->scheme->transf2, &c_ptr);
     assign_double(ns*ns, &opts->scheme->transf1_T, &c_ptr);
     assign_double(ns*ns, &opts->scheme->transf2_T, &c_ptr);
-    
+
     assert((char*)raw_memory + sim_lifted_irk_opts_calculate_size(dims) >= c_ptr);
 
     return (void *)opts;
@@ -140,8 +140,8 @@ int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts_) {
 
     make_int_multiple_of(8, &size);
 
-    size += nf;  // grad_correction
-    size += nx * num_stages;  // grad_K
+    size += nf * sizeof(double);  // grad_correction
+    size += nx * num_stages * sizeof(double);  // grad_K
 
     size += num_steps * num_stages * nx * sizeof(double);  // K_traj
     size += num_steps * num_stages * nx * nf * sizeof(double);  // DK_traj
@@ -196,7 +196,7 @@ int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts_) {
 
 void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory) {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    
+
     int nx = dims->nx;
     int nu = dims->nu;
     int num_steps = opts->num_steps;
@@ -205,7 +205,7 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
     int num_sys = (int) ceil(num_stages/2.0);
 
     char *c_ptr = raw_memory;
-    
+
     sim_lifted_irk_memory *memory = raw_memory;
     c_ptr += sizeof(sim_lifted_irk_memory);
 
@@ -231,7 +231,7 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
 
     if (opts->scheme->type == simplified_inis)
         assign_double(num_steps * num_stages * nx * nf, &memory->delta_DK_traj, &c_ptr);
-        
+
     if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
         assign_double(num_steps * num_stages * nx, &memory->adj_traj, &c_ptr);
         for (int i = 0; i < num_steps * num_stages; ++i)
@@ -249,7 +249,7 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
                 memory->sys_mat2[i][j] = 0.0;
             for (int j = 0; j < dim_sys; j++)
                 memory->sys_mat2[i][j * (dim_sys + 1)] = 1.0;
-            
+
         }
         if (num_sys != floor(num_stages / 2.0)) // odd number of stages
             dim_sys = nx;
@@ -277,15 +277,15 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
         assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
         assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
 #elif defined(LA_REFERENCE)
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
         d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
         c_ptr += dim_sys * sizeof(double);
 #else  // LA_BLAS
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], mem->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], mem->sys_sol2[i]);
+        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
 #endif  // LA_HIGH_PERFORMANCE
-        dgesc_libstr(dim_sys, dim_sys, 0.0 memory->str_mat2[i], 0, 0);
+        dgesc_libstr(dim_sys, dim_sys, 0.0, memory->str_mat2[i], 0, 0);
         dgesc_libstr(dim_sys, 1 + nf, 0.0, memory->str_sol2[i], 0, 0);
         }
     }
@@ -301,10 +301,10 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
     for (int i = 0; i < num_steps * num_stages * nx; ++i)
         memory->mu_traj[i] = 0.0;
 
-    if (opts->scheme->type == simplified_inis)    
+    if (opts->scheme->type == simplified_inis)
         for (int i = 0; i < num_steps * num_stages * nx * nf; ++i)
             memory->delta_DK_traj[i] = 0.0;
-    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {                
+    if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
         for (int i = 0; i < num_steps * num_stages * nx; ++i)
             memory->adj_traj[i] = 0.0;
         for (int i = 0; i < num_steps * num_stages; ++i)
@@ -367,7 +367,6 @@ int sim_lifted_irk_calculate_workspace_size(sim_dims *dims, void *args) {
 
 #elif defined(LA_REFERENCE)
     // allocate new memory only for the diagonal
-    int size_strmat = 0;
     size_strmat += d_size_diag_strmat(dim_sys, dim_sys);
 
 #endif  // LA_HIGH_PERFORMANCE
@@ -852,7 +851,7 @@ int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_
     real_t *A_mat = opts->A_mat;
     real_t *b_vec = opts->b_vec;
     real_t *c_vec = opts->c_vec;
-    
+
     real_t **VDE_tmp = work->VDE_tmp;
     real_t *out_tmp = work->out_tmp;
     real_t *rhs_in = work->rhs_in;
