@@ -572,6 +572,27 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     $result = new_sequence_from((const real_t **)$1, arg1->N + 1, y_dimensions, ones);
 }
 
+%typemap(in) real_t **ls_linear_cost {
+    $1 = arg1->linear_cost;
+    int_t cost_dimensions[arg1->N + 1];
+    int_t ones[arg1->N + 1];
+    for (int_t i = 0; i < arg1->N + 1; i++) {
+        cost_dimensions[i] = arg1->fun[i]->ny;
+        ones[i] = 1;
+    }
+    fill_array_from($input, $1, arg1->N + 1, cost_dimensions, ones);
+}
+
+%typemap(out) real_t **ls_linear_cost {
+    int_t cost_dimensions[arg1->N + 1];
+    int_t ones[arg1->N + 1];
+    for (int_t i = 0; i < arg1->N + 1; i++) {
+        cost_dimensions[i] = arg1->fun[i]->ny;
+        ones[i] = 1;
+    }
+    $result = new_sequence_from((const real_t **)$1, arg1->N + 1, cost_dimensions, ones);
+}
+
 %{
 LangObject *ocp_nlp_output(const ocp_nlp_in *in, const ocp_nlp_out *out) {
     LangObject *x_star = new_sequence_from((const real_t **) out->x, in->N+1, in->nx);
@@ -593,6 +614,14 @@ void ocp_nlp_ls_cost_ls_cost_ref_set(ocp_nlp_ls_cost *ls_cost, real_t **y_ref) {
 
 real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
     return ls_cost->y_ref;
+}
+
+real_t **ocp_nlp_ls_cost_ls_linear_cost_get(ocp_nlp_ls_cost *ls_cost) {
+    return ls_cost->linear_cost;
+}
+
+void ocp_nlp_ls_cost_ls_linear_cost_set(ocp_nlp_ls_cost *ls_cost, real_t **cost) {
+    ls_cost->linear_cost = cost;
 }
 %}
 
@@ -698,9 +727,9 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         $self->in->u = u_in;
         $self->in->p = p_in;
 
-        real_t *y_out = (real_t *)malloc(ny * sizeof(real_t));
-        real_t *jac_y_out = (real_t *)malloc(ny * (nx + nu) * sizeof(real_t));
-        real_t *hess_y_out = (real_t *)malloc(ny * (nx + nu) * (nx + nu) * sizeof(real_t));
+        real_t *y_out = (real_t *)calloc(ny, sizeof(real_t));
+        real_t *jac_y_out = (real_t *)calloc(ny * (nx + nu), sizeof(real_t));
+        real_t *hess_y_out = (real_t *)calloc(ny * (nx + nu) * (nx + nu), sizeof(real_t));
 
         $self->out->y = y_out;
         $self->out->jac_y = jac_y_out;
@@ -751,6 +780,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
 #endif
     real_t **ls_cost_matrix;
     real_t **ls_cost_ref;
+    real_t **ls_linear_cost;
     ocp_nlp_ls_cost(LangObject *N, LangObject* stage_costs, LangObject *options = NONE){
         int_t NN = int_from(N);
         if (!is_sequence(stage_costs, NN + 1)) {
@@ -788,15 +818,13 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
         // Prepare memory for cost and reference
         ls_cost->W = (real_t **) malloc((NN+1)*sizeof(real_t *));
         ls_cost->y_ref = (real_t **) malloc((NN+1)*sizeof(real_t *));
+        ls_cost->linear_cost = (real_t **) malloc((NN+1)*sizeof(real_t *));
 
         for (int_t i = 0; i <= NN; i++) {
             int_t ny = ls_cost->fun[i]->ny;
-            ls_cost->W[i] = (real_t *) malloc(ny*ny*sizeof(real_t));
-            ls_cost->y_ref[i] = (real_t *) malloc(ny*sizeof(real_t));
-            for (int_t j = 0; j < ny; j++) {
-                ls_cost->y_ref[i][j] = 0;
-                for (int_t k = 0; k < ny; k++) ls_cost->W[i][j*ny+k] = 0;
-            }
+            ls_cost->W[i] = (real_t *) calloc(ny*ny, sizeof(real_t));
+            ls_cost->y_ref[i] = (real_t *) calloc(ny, sizeof(real_t));
+            ls_cost->linear_cost[i] = (real_t *) calloc(ny, sizeof(real_t));
         }
 
         return ls_cost;
@@ -1057,6 +1085,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 siminput = simulators[i]->in;
                 siminput->nx = nlp_in->nx[i];
                 siminput->nu = nlp_in->nu[i];
+                siminput->nz = 0;
                 siminput->sens_forw = true;
                 siminput->sens_adj = false;
                 siminput->sens_hess = false;
@@ -1068,11 +1097,11 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                 int workspace_size = 0;
                 if (!strcmp("explicit-runge-kutta", integrator_name)
                                     || !strcmp("erk", integrator_name)
-                                    ||!strcmp("rk", integrator_name)) {
+                                    || !strcmp("rk", integrator_name)) {
                     simulators[i]->fun = sim_erk;
                     sim_erk_create_arguments(simargs, 4);
                     workspace_size = sim_erk_calculate_workspace_size(siminput, simargs);
-                    simulators[i]->work = malloc(workspace_size);
+                    simulators[i]->work = calloc(1, workspace_size);
                 } else if (!strcmp("lifted-implicit-runge-kutta", integrator_name)
                                     || !strcmp("lifted-irk", integrator_name)
                                     || !strcmp("in", integrator_name)
@@ -1089,7 +1118,7 @@ real_t **ocp_nlp_ls_cost_ls_cost_ref_get(ocp_nlp_ls_cost *ls_cost) {
                     sim_lifted_irk_create_memory(siminput, simargs,
                             (sim_lifted_irk_memory *) simulators[i]->mem);
                     workspace_size = sim_lifted_irk_calculate_workspace_size(siminput, simargs);
-                    simulators[i]->work = (void *) malloc(workspace_size);
+                    simulators[i]->work = (void *) calloc(1, workspace_size);
                 } else {
                     throw std::invalid_argument("Integrator name not known!");
                 }

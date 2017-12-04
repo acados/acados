@@ -262,6 +262,7 @@ int_t ocp_nlp_sm_gn(const ocp_nlp_sm_in *sm_in, ocp_nlp_sm_out *sm_out,
             for (int_t j = 0; j < (nx[i] + nu[i]); j++) grad_f[i][j] = 0;
             dgemv_n_3l(nx[i] + nu[i], ny, work->DFTW[i], nx[i] + nu[i], work->F[i],
                         grad_f[i]);
+            daxpy_3l(ny, 1.0, ls_cost->linear_cost[i], grad_f[i]);
         }
 
         if (sm_in->ng[i] > 0) {

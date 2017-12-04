@@ -199,10 +199,12 @@ void allocate_ls_cost(int_t N, int_t *nx, int_t *nu, int_t *ny, ocp_nlp_ls_cost 
     ls_cost->N = N;
     ls_cost->W = calloc(N + 1, sizeof(*ls_cost->W));
     ls_cost->y_ref = calloc(N + 1, sizeof(*ls_cost->y_ref));
+    ls_cost->linear_cost = calloc(N + 1, sizeof(*ls_cost->linear_cost));
     ls_cost->fun = calloc(N + 1, sizeof(*ls_cost->fun));
     for (int_t i = 0; i <= N; i++) {
         ls_cost->W[i] = calloc(ny[i]*ny[i], sizeof(*ls_cost->W[i]));
         ls_cost->y_ref[i] = calloc(ny[i], sizeof(*ls_cost->y_ref[i]));
+        ls_cost->linear_cost[i] = calloc(ny[i], sizeof(*ls_cost->linear_cost[i]));
         ls_cost->fun[i] = malloc(sizeof(ocp_nlp_function));
         // Initialize LS cost
         ls_cost->fun[i]->nx = nx[i];

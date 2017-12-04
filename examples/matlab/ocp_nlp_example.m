@@ -2,7 +2,7 @@ import casadi.*
 import acados.*
 
 N = 10;
-[ode_fun, nx, nu] = chen_model(true);
+[ode_fun, nx, nu] = chen_model();
 ng = cell(N+1, 1);
 for i=1:N
     ng{i} = 1;
@@ -24,15 +24,19 @@ f = ocp_nlp_function(Function('ls_cost', {x, u}, {vertcat(x, u)}));
 f_N = ocp_nlp_function(Function('ls_cost_N', {x, u_N}, {x}));
 cost_functions = cell(N+1, 1);
 cost_matrices = cell(N+1, 1);
+linear_cost = cell(N+1, 1);
 for i=1:N
     cost_functions{i} = f;
     cost_matrices{i} = blkdiag(Q, R);
+    linear_cost{i} = [0; 0; 0];
 end
 cost_functions{N+1} = f_N;
 cost_matrices{N+1} = Q;
+linear_cost{N+1} = [0; 0];
 
 ls_cost = ocp_nlp_ls_cost(N, cost_functions);
 ls_cost.ls_cost_matrix = cost_matrices;
+ls_cost.ls_linear_cost = linear_cost;
 nlp.set_cost(ls_cost);
 
 % Constraints
@@ -47,7 +51,7 @@ end
 path_constraints{N+1} = g_N;
 nlp.set_path_constraints(path_constraints);
  
-solver = ocp_nlp_solver('sqp', nlp, struct('sim_solver', 'lifted-irk', 'integrator_steps', 2, 'qp_solver', 'condensing_qpoases', 'sensitivity_method', 'gauss-newton'));
+solver = ocp_nlp_solver('sqp', nlp, struct('integrator_steps', 2, 'qp_solver', 'condensing_qpoases', 'sensitivity_method', 'gauss-newton'));
  
 % Simulation
 num_iters = 20;

@@ -31,6 +31,7 @@ typedef struct {
     ocp_nlp_function **fun;
     real_t **W;
     real_t **y_ref;
+    real_t **linear_cost;
     int_t N;
 } ocp_nlp_ls_cost;
 
