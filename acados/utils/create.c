@@ -21,6 +21,8 @@
 
 #include "acados/utils/create.h"
 
+#include <stdlib.h>
+
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
@@ -287,6 +289,10 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     qp_solver.qp_solver_funs = &solver_funs;
 
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
+
+    // NOTE(dimitris): can also directly pass sparse solver
+    // ocp_qp_solver qp_solver;
+    // set_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
 
     int return_value;
     sim_solver *sim_solvers = acados_malloc(sizeof(sim_solver), dims->N);

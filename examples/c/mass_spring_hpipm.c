@@ -118,9 +118,9 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
+    printf("\ninf norm res: %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
            mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
-           mem->hpipm_workspace->qp_res[3], mem->hpipm_workspace->res_workspace->res_mu);
+           mem->hpipm_workspace->qp_res[3]);
 
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
         mem->hpipm_workspace->iter, NREP, time);

@@ -27,6 +27,7 @@
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/timing.h"
 
 
 int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims)
@@ -135,13 +136,25 @@ int dense_qp_hpipm_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 
 int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
+    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+
+    acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
+
+    // cast structures
     dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) args_;
     dense_qp_hpipm_memory *memory = (dense_qp_hpipm_memory *) mem_;
 
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
+    info->interface_time = acados_toc(&interface_timer);
+    acados_tic(&qp_timer);
+
     // solve ipm
+    int acados_status = ACADOS_SUCCESS;
     int hpipm_status = d_solve_dense_qp_ipm(qp_in, qp_out, args->hpipm_args, memory->hpipm_workspace);
+
+    info->solve_QP_time = acados_toc(&qp_timer);
+    info->total_time = acados_toc(&tot_timer);
 
     // check max number of iterations
     // TODO(dimitris): check ACADOS_MIN_STEP (not implemented in HPIPM yet)

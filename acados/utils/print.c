@@ -18,6 +18,7 @@
  */
 
 // external
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -350,4 +351,20 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     printf("H =\n");
     d_print_strmat(nv, nv, qp_in->Hg, 0, 0);
     // TODO(dimitris): print all data
+}
+
+
+
+void print_ocp_qp_info(ocp_qp_info *info)
+{
+    double misc = info->total_time - info->condensing_time - info->solve_QP_time - info->interface_time;
+    assert(misc > 0 && "sum of timings larger than total time!");
+
+    printf("\n***************************************************************\n");
+    printf("total time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->total_time, 100.0);
+    printf("condensing time =\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->condensing_time, 100*info->condensing_time/info->total_time);
+    printf("QP time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->solve_QP_time, 100*info->solve_QP_time/info->total_time);
+    printf("interface time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->interface_time, 100*info->interface_time/info->total_time);
+    printf("misc \t\t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*misc, 100*misc/info->total_time);
+    printf("***************************************************************\n\n");
 }

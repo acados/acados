@@ -29,6 +29,7 @@
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/timing.h"
 
 
 int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
@@ -165,6 +166,12 @@ int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
+    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+
+    acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
+
     // cast structures
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)args_;
     dense_qp_qpoases_memory *memory = (dense_qp_qpoases_memory *)memory_;
@@ -235,6 +242,9 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
             dual_sol[ii] = 0;
     }
 
+    info->interface_time = acados_toc(&interface_timer);
+    acados_tic(&qp_timer);
+
     // solve dense qp
     int nwsr = args->max_nwsr;
     double cputime = args->max_cputime;
@@ -268,6 +278,9 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     exit(1);
 #endif
 
+    info->solve_QP_time = acados_toc(&qp_timer);
+    acados_tic(&interface_timer);
+
     // copy prim_sol and dual_sol to qpd_sol
     d_cvt_vec2strvec(nvd, prim_sol, qp_out->v, 0);
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
@@ -288,5 +301,15 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // return
     // TODO(dimitris): cast qpoases return to acados return
     acados_status = return_flag;
+
+    info->interface_time += acados_toc(&interface_timer);
+    info->total_time = acados_toc(&tot_timer);
+
+    // printf("total time = \t\t\t%f\n", 1000*info->total_time);
+    // printf("interface time = \t\t%f\n", 1000*info->interface_time);
+    // printf("qp time = \t\t\t%f\n", 1000*info->solve_QP_time);
+    // printf("total time from qpOASES = \t%f\n", 1000*cputime);  // does not include getSolution
+    // printf("**************\n");
+
     return acados_status;
 }
