@@ -310,6 +310,8 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
         // Prepare QP
         prepare_qp(nlp_in, sqp_args, sqp_mem);
 
+        print_ocp_qp(sqp_args->qp_solver->qp_in);
+
         // Solve QP
         int_t qp_status = sqp_args->qp_solver->fun(
             sqp_args->qp_solver->qp_in, sqp_args->qp_solver->qp_out,
