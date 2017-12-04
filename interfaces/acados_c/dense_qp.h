@@ -40,6 +40,7 @@ typedef struct {
 
 typedef struct {
     dense_qp_solver_fcn_ptrs *fcn_prts;
+    void *dims;
     void *args;
     void *mem;
     void *work;
