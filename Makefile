@@ -92,6 +92,7 @@ qpdunes_static:
 	mkdir -p lib
 	cp -r external/qpdunes/include/* include/qpdunes
 	cp external/qpdunes/src/libqpdunes.a lib
+	cp external/qpdunes/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
 
 examples_c:
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )

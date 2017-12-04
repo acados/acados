@@ -6,9 +6,9 @@ include ../../Makefile.rule
 
 
 
-examples: sim_erk_crane mass_spring_hpipm mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
+examples: sim_erk_crane mass_spring_hpipm mass_spring_qpdunes mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
 
-run_examples: run_sim_erk_crane run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
+run_examples: run_sim_erk_crane run_mass_spring_hpipm run_mass_spring_qpdunes run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
 
 CRANE_OBJS =
 CRANE_OBJS += crane_model/jac_model.o
@@ -34,6 +34,12 @@ mass_spring_hpipm: mass_spring_hpipm.o
 	$(CC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 	@echo
 	@echo " Example mass_spring_hpipm build complete."
+	@echo
+
+mass_spring_qpdunes: mass_spring_qpdunes.o
+	g++ -o mass_spring_qpdunes.out mass_spring_qpdunes.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lqpdunes -lblasfeo -lqpOASES_e -lqpOASES -lm -lblas
+	@echo
+	@echo " Example mass_spring_qpdunes build complete."
 	@echo
 
 mass_spring_pcond_solver: mass_spring_pcond_solver.o
@@ -104,6 +110,9 @@ run_sim_erk_crane:
 
 run_mass_spring_hpipm:
 	./mass_spring_hpipm.out
+
+run_mass_spring_qpdunes:
+	./mass_spring_qpdunes.out
 
 run_mass_spring_pcond_hpipm_split:
 	./mass_spring_pcond_hpipm_split.out
