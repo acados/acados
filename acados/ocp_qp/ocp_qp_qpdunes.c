@@ -31,6 +31,7 @@
 // acados
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
+#include "acados/utils/mem.h"
 
 
 
@@ -56,7 +57,7 @@ static int get_maximum_number_of_inequality_constraints(ocp_qp_dims *dims)
 
 
 
-static void assert_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
+static bool check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
 {
     int N = qp_in->dim->N;
     int nx = qp_in->dim->nx[0];
@@ -113,7 +114,18 @@ static void assert_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
             }
         }
     }
-    assert(stageQpSolver ==  args->stageQpSolver);
+    if (stageQpSolver == QPDUNES_WITH_QPOASES)
+    {
+        // NOTE(dimitris): the opposite is possible (i.e., use qpOASES for a clipping formulation)
+        if (args->stageQpSolver == QPDUNES_WITH_QPOASES)
+        {
+            return true;
+        } else
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 
@@ -200,10 +212,13 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     nu = dims->nu[0];
 
     mem->firstRun = 1;
+    mem->nx = nx;
+    mem->nu = nu;
+    mem->nz = nx+nu;
+    mem->nDmax = get_maximum_number_of_inequality_constraints(dims);
     mem->dimA = nx * nx;
     mem->dimB = nx * nu;
     mem->dimz = nx + nu;
-    mem->nDmax = get_maximum_number_of_inequality_constraints(dims);
     mem->dimC = mem->nDmax * mem->dimz;
     // mem->maxDim = max_of_two(mem->dimA + mem->dimB, mem->dimC);
 
@@ -270,6 +285,20 @@ static void form_H(double *H, int nx, int nu, struct d_strmat *sRSQrq)
 
 
 
+static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct d_strmat *sRSQrq)
+{
+    // copy Q
+    d_cvt_strmat2mat(nx, nx, sRSQrq, nu, nu, Q, nx);
+    // copy R
+    d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, R, nu);
+    // copy S
+    // TODO(dimitris): NOT SURE ABOUT DIMENSIONS OF S AND WHERE TO TRANSPOSE!
+    d_cvt_strmat2mat(nu, nx, sRSQrq, nu, 0, S, nu);
+}
+
+
+
+
 static void form_g(double *g, int nx, int nu, struct d_strvec *srq)
 {
     d_cvt_strvec2vec(nx, srq, nu, &g[0]);
@@ -278,10 +307,11 @@ static void form_g(double *g, int nx, int nu, struct d_strvec *srq)
 
 
 
-static void form_ABt(double *ABt, int nx, int nu, struct d_strmat *sBAbt)
+static void form_dynamics(double *ABt, double *b, int nx, int nu, struct d_strmat *sBAbt, struct d_strvec *sb)
 {
     d_cvt_strmat2mat(nx, nx, sBAbt, 0, nu, &ABt[0], nx);
     d_cvt_strmat2mat(nx, nu, sBAbt, 0, 0, &ABt[nx*nx], nx);
+    d_cvt_strvec2vec(nx, sb, 0, b);
 }
 
 
@@ -310,12 +340,18 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
 
 
 
-static void form_Ct(double *Ct, int nx,  int nu, int ng, struct d_strmat *sDCt)
+static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int nu, int nb, int ng,
+    struct d_strmat *sDCt, struct d_strvec *sd)
 {
     // copy C
     d_cvt_strmat2mat(nx, ng, sDCt, nu, 0, &Ct[0], nx+nu);
     // copy D
     d_cvt_strmat2mat(nu, ng, sDCt, 0, 0, &Ct[nx*ng], nx+nu);
+    // copy lc
+    d_cvt_strvec2vec(ng, sd, nb, lc);
+    // copy uc
+    d_cvt_strvec2vec(ng, sd, 2*nb+ng, uc);
+
 }
 
 
@@ -327,15 +363,22 @@ int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
     int N = dims->N;
     int nx = dims->nx[0];
     int nu = dims->nu[0];
-    int dimA = nx*nx;
-    int dimB = nx*nu;
-    int dimz = nx + nu;
     int nDmax = get_maximum_number_of_inequality_constraints(dims);
-    int dimC = nDmax * dimz;
+    int nz = nx + nu;
 
     int size = sizeof(ocp_qp_qpdunes_workspace);
-    size += (dimA + dimB + dimC) * sizeof(double);  // ABt, Ct
-    size += (dimz * dimz + 3 * dimz) * sizeof(double);  // H, g, zLow, zUpp
+
+    size += nz*nz*sizeof(double);  // H
+    size += nx*nx*sizeof(double);  // Q
+    size += nu*nu*sizeof(double);  // R
+    size += nx*nu*sizeof(double);  // S
+    size += nz*sizeof(double);  // g
+    size += nx*nz*sizeof(double);  // ABt
+    size += nz*sizeof(double);  // b
+    size += nDmax*nz*sizeof(double);  // Ct
+    size += 2*nDmax*sizeof(double);  // lc, uc
+    size += 2*nz*sizeof(double);  // zLow, zUpp
+
     return size;
 }
 
@@ -346,16 +389,25 @@ static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory
     char *c_ptr = (char *)work;
     c_ptr += sizeof(ocp_qp_qpdunes_workspace);
 
-    assign_double(mem->dimz * mem->dimz, work->H, &c_ptr);
-    assign_double(mem->dimz, work->g, &c_ptr);
-    assign_double(mem->dimA + mem->dimB, work->ABt, &c_ptr);
-    assign_double(mem->dimC, work->Ct, &c_ptr);
-    assign_double(mem->dimz, work->zLow, &c_ptr);
-    assign_double(mem->dimz, work->zUpp, &c_ptr);
+    int nx = mem->nx;
+    int nu = mem->nu;
+    int nz = mem->nz;
+    int nDmax = mem->nDmax;
+
+    assign_double(nz*nz, &work->H, &c_ptr);
+    assign_double(nx*nx, &work->Q, &c_ptr);
+    assign_double(nu*nu, &work->R, &c_ptr);
+    assign_double(nx*nu, &work->S, &c_ptr);
+    assign_double(nz, &work->g, &c_ptr);
+    assign_double(nx*nz, &work->ABt, &c_ptr);
+    assign_double(nz, &work->b, &c_ptr);
+    assign_double(nDmax*nz, &work->Ct, &c_ptr);
+    assign_double(nDmax, &work->lc, &c_ptr);
+    assign_double(nDmax, &work->uc, &c_ptr);
+    assign_double(nz, &work->zLow, &c_ptr);
+    assign_double(nz, &work->zUpp, &c_ptr);
 }
 
-
-#if 0
 
 
 static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdunes_memory *mem,
@@ -364,41 +416,41 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
     return_t value = 0;
 
-    // TODO(dimitris): run this on first run!
-    // assert_stage_qp_solver(in);
+    assert(check_stage_qp_solver(args, in) == true);
 
     int N = in->dim->N;
-    int *nx = in->dim->nx;
-    int *nu = in->dim->nu;
+    int nx = in->dim->nx[0];
+    int nu = in->dim->nu[0];
     int *nb = in->dim->nb;
     int *ng = in->dim->ng;
 
     if (mem->firstRun == 1) {
         /* setup of intervals */
         for (int kk = 0; kk < N; ++kk) {
-            form_g(work->g, nx[kk], nu[kk], &in->rq[kk]);
-            form_bounds(work->zLow, work->zUpp, nx[kk], nu[kk], nb[kk], ng[kk], in->idxb[kk],
+            form_RSQ(work->R, work->S, work->Q, nx, nu, &in->RSQrq[kk]);
+            form_g(work->g, nx, nu, &in->rq[kk]);
+            form_bounds(work->zLow, work->zUpp, nx, nu, nb[kk], ng[kk], in->idxb[kk],
             &in->d[kk], args->options.QPDUNES_INFTY);
-            form_ABt(work->ABt, nx[kk], nu[kk], &in->BAbt[kk]);
+            form_dynamics(work->ABt, work->b, nx, nu, &in->BAbt[kk], &in->b[kk]);
 
-            if (mem->stageQpSolver == QPDUNES_WITH_QPOASES) {
+            if (args->stageQpSolver == QPDUNES_WITH_QPOASES) {
                 if (ng[kk] == 0) {
                     value = qpDUNES_setupRegularInterval(
-                        &(mem->qpData), mem->qpData.intervals[kk], 0, in->Q[kk],
-                        in->R[kk], in->S[kk], work->g, work->ABt, 0, 0,
-                        in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
+                        &(mem->qpData), mem->qpData.intervals[kk], 0, work->Q,
+                        work->R, work->S, work->g, work->ABt, 0, 0,
+                        work->b, work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
                 } else {
-                    form_Ct(work->Ct, nx[kk], nu[kk], ng[kk], &in->DCt[kk]);
+                    form_inequalities(work->Ct, work->lc, work->uc, nx, nu, nb[kk], ng[kk], &in->DCt[kk], &in->d[kk]);
                     value = qpDUNES_setupRegularInterval(
-                        &(mem->qpData), mem->qpData.intervals[kk], 0, in->Q[kk],
-                        in->R[kk], in->S[kk], work->g, work->ABt, 0, 0,
-                        in->b[kk], work->zLow, work->zUpp, 0, 0, 0, 0, work->Ct,
-                        in->lc[kk], in->uc[kk]);
+                        &(mem->qpData), mem->qpData.intervals[kk], 0, work->Q,
+                        work->R, work->S, work->g, work->ABt, 0, 0,
+                        work->b, work->zLow, work->zUpp, 0, 0, 0, 0, work->Ct,
+                        work->lc, work->uc);
                 }
             } else {  // do not pass S[kk] or Cx[kk]/Cu[kk] at all
                 value = qpDUNES_setupRegularInterval(
-                    &(mem->qpData), mem->qpData.intervals[kk], 0, in->Q[kk],
-                    in->R[kk], 0, work->g, work->ABt, 0, 0, in->b[kk],
+                    &(mem->qpData), mem->qpData.intervals[kk], 0, work->Q,
+                    work->R, 0, work->g, work->ABt, 0, 0, work->b,
                     work->zLow, work->zUpp, 0, 0, 0, 0, 0, 0, 0);
             }
             if (value != QPDUNES_OK) {
@@ -406,17 +458,19 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
                 return (int)value;
             }
         }
-        form_bounds(work->zLow, work->zUpp, nx[N], nu[N], nb[N], ng[N], in->idxb[N],
+        form_bounds(work->zLow, work->zUpp, nx, 0, nb[N], ng[N], in->idxb[N],
             &in->d[N], args->options.QPDUNES_INFTY);
+        form_RSQ(work->R, work->S, work->Q, nx, 0, &in->RSQrq[N]);
+        form_g(work->g, nx, 0, &in->rq[N]);  // work->g = q
         if (ng[N] == 0) {
             value = qpDUNES_setupFinalInterval(
-                &(mem->qpData), mem->qpData.intervals[N], in->Q[N], in->q[N],
+                &(mem->qpData), mem->qpData.intervals[N], work->Q, work->g,
                 work->zLow, work->zUpp, 0, 0, 0);
         } else {
-            form_Ct(work->Ct, nx[N], 0, ng[N], &in->DCt[N]);
+            form_inequalities(work->Ct, work->lc, work->uc, nx, 0, nb[N], ng[N], &in->DCt[N], &in->d[N]);
             value = qpDUNES_setupFinalInterval(
-                &(mem->qpData), mem->qpData.intervals[N], in->Q[N], in->q[N],
-                work->zLow, work->zUpp, work->Ct, in->lc[N], in->uc[N]);
+                &(mem->qpData), mem->qpData.intervals[N], work->Q, work->g,
+                work->zLow, work->zUpp, work->Ct, work->lc, work->uc);
         }
         if (value != QPDUNES_OK) {
             printf("Setup of qpDUNES failed on last interval\n");
@@ -432,23 +486,23 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
     } else {  // if mem->firstRun == 0
         if (args->isLinearMPC == 0) {
             for (int kk = 0; kk < N; kk++) {
-                form_H(work->H, nx[kk], nu[kk], &in->RSQrq[kk]);
-                form_g(work->g, nx[kk], nu[kk], &in->rq[kk]);
-                form_ABt(work->ABt, nx[kk], nu[kk], &in->BAbt[kk]);
+                form_H(work->H, nx, nu, &in->RSQrq[kk]);
+                form_g(work->g, nx, nu, &in->rq[kk]);
+                form_dynamics(work->ABt, work->b, nx, nu, &in->BAbt[kk], &in->b[kk]);
 
-                form_bounds(work->zLow, work->zUpp, nx[kk], nu[kk], nb[kk], ng[kk], in->idxb[kk],
+                form_bounds(work->zLow, work->zUpp, nx, nu, nb[kk], ng[kk], in->idxb[kk],
                     &in->d[kk], args->options.QPDUNES_INFTY);
                 if (ng[kk] == 0) {
                     value = qpDUNES_updateIntervalData(
                         &(mem->qpData), mem->qpData.intervals[kk], work->H,
-                        work->g, work->ABt, in->b[kk], work->zLow, work->zUpp,
+                        work->g, work->ABt, work->b, work->zLow, work->zUpp,
                         0, 0, 0, 0);
                 } else {
-                    form_Ct(work->Ct, nx[kk], nu[kk], ng[kk], &in->DCt[kk]);
+                    form_inequalities(work->Ct, work->lc, work->uc, nx, nu, nb[kk], ng[kk], &in->DCt[kk], &in->d[kk]);
                     value = qpDUNES_updateIntervalData(
                         &(mem->qpData), mem->qpData.intervals[kk], work->H,
-                        work->g, work->ABt, in->b[kk], work->zLow, work->zUpp,
-                        work->Ct, in->lc[kk], in->uc[kk], 0);
+                        work->g, work->ABt, work->b, work->zLow, work->zUpp,
+                        work->Ct, work->lc, work->uc, 0);
                 }
                 if (value != QPDUNES_OK) {
                     printf("Update of qpDUNES failed on interval %d\n", kk);
@@ -457,26 +511,28 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
                 // qpDUNES_printMatrixData( work->ABt, nx, nx+nu, "AB[%d]", kk
                 // );
             }
-            form_bounds(work->zLow, work->zUpp, in->nx[N], in->nu[N], in->nb[N], in->idxb[N],
-                in->lb[N], in->ub[N], args->options.QPDUNES_INFTY);
-            if (in->nc[N] == 0) {
+            form_bounds(work->zLow, work->zUpp, nx, 0, nb[N], ng[N], in->idxb[N],
+                &in->d[N], args->options.QPDUNES_INFTY);
+            form_RSQ(work->R, work->S, work->Q, nx, 0, &in->RSQrq[N]);
+            form_g(work->g, nx, 0, &in->rq[N]);  // work->g = q
+            if (ng[N] == 0) {
                 value = qpDUNES_updateIntervalData(
-                    &(mem->qpData), mem->qpData.intervals[N], in->Q[N],
-                    in->q[N], 0, 0, work->zLow, work->zUpp, 0, 0, 0, 0);
+                    &(mem->qpData), mem->qpData.intervals[N], work->Q,
+                    work->g, 0, 0, work->zLow, work->zUpp, 0, 0, 0, 0);
             } else {
-                form_Ct(work->Ct, nx[N], 0, ng[N], &in->DCt[N]);
+                form_inequalities(work->Ct, work->lc, work->uc, nx, 0, nb[N], ng[N], &in->DCt[N], &in->d[N]);
                 value = qpDUNES_updateIntervalData(
-                    &(mem->qpData), mem->qpData.intervals[N], in->Q[N],
-                    in->q[N], 0, 0, work->zLow, work->zUpp, work->Ct, in->lc[N],
-                    in->uc[N], 0);
+                    &(mem->qpData), mem->qpData.intervals[N], work->Q,
+                    work->g, 0, 0, work->zLow, work->zUpp, work->Ct, work->lc,
+                    work->uc, 0);
             }
             if (value != QPDUNES_OK) {
                 printf("Update of qpDUNES failed on last interval\n");
                 return (int)value;
             }
         } else {  // linear MPC
-            form_bounds(work->zLow, work->zUpp, in->nx[0], in->nu[0], in->nb[0], in->idxb[0],
-                in->lb[0], in->ub[0], args->options.QPDUNES_INFTY);
+            form_bounds(work->zLow, work->zUpp, nx, nu, nb[0], ng[0], in->idxb[0],
+                &in->d[0], args->options.QPDUNES_INFTY);
             value = qpDUNES_updateIntervalData(
                 &(mem->qpData), mem->qpData.intervals[0], 0, 0, 0, 0,
                 work->zLow, work->zUpp, 0, 0, 0, 0);
@@ -490,7 +546,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
     return (int)value;
 }
 
-
+#if 0
 
 static void fill_in_qp_out(const ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
 {

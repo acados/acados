@@ -50,24 +50,33 @@ typedef struct ocp_qp_qpdunes_args_ {
 
 
 typedef struct ocp_qp_qpdunes_memory_ {
-    int_t firstRun;
-    int_t dimA;
-    int_t dimB;
-    int_t dimC;    // maximum number of elements of matrix: [Cx Cu]
-    int_t dimz;
-    int_t nDmax;
+    int firstRun;
+    int nx;
+    int nu;
+    int nz;
+    int nDmax;  // max(dims->ng)
+    // TODO(dimitris): remove those:
+    int dimA;  // nx*nu
+    int dimB;  // nx*nu
+    int dimC;  // maximum number of elements of matrix: [Cx Cu]
+    int dimz;  // nx+nu
     qpData_t qpData;
-    // qpdunes_stage_qp_solver_t stageQpSolver;
 } ocp_qp_qpdunes_memory;
 
 
 typedef struct ocp_qp_qpdunes_workspace_ {
-    real_t *H;
-    real_t *g;
-    real_t *ABt;
-    real_t *Ct;
-    real_t *zLow;
-    real_t *zUpp;
+    double *H;
+    double *Q;
+    double *R;
+    double *S;
+    double *g;
+    double *ABt;
+    double *b;
+    double *Ct;
+    double *lc;
+    double *uc;
+    double *zLow;
+    double *zUpp;
 } ocp_qp_qpdunes_workspace;
 
 
