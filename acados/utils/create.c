@@ -219,6 +219,26 @@ dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
 
 
 
+dense_qp_res *create_dense_qp_res(dense_qp_dims *dims)
+{
+    int size = dense_qp_res_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    dense_qp_res *qp_res = assign_dense_qp_res(dims, ptr);
+    return qp_res;
+}
+
+
+
+dense_qp_res_ws *create_dense_qp_res_ws(dense_qp_dims *dims)
+{
+    int size = dense_qp_res_ws_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    dense_qp_res_ws *res_ws = assign_dense_qp_res_ws(dims, ptr);
+    return res_ws;
+}
+
+
+
 dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_dims *dims)
 {
     int size = dense_qp_hpipm_calculate_args_size(dims);
