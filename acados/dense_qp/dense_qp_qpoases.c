@@ -23,7 +23,6 @@
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
 #include "blasfeo_d_aux.h"
-#include "blasfeo_d_blas.h"
 // qpoases
 #include "qpOASES_e.h"
 // acados
@@ -92,16 +91,13 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 1 * nbd * sizeof(int);                 // idxb
     size += 1 * nvd * sizeof(double);              // prim_sol
     size += (nvd+ngd) * sizeof(double);  // dual_sol
-    size += sizeof(struct d_strvec); // tmp_nb
-    size += d_size_strvec(nbd); // tmp_nb
 
     if (ngd > 0)  // QProblem
         size += QProblem_calculateMemorySize(nvd, ngd);
     else  // QProblemB
         size += QProblemB_calculateMemorySize(nvd);
 
-    make_int_multiple_of(64, &size);
-    size += 64;
+    make_int_multiple_of(8, &size);
 
     return size;
 }
@@ -124,11 +120,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     mem = (dense_qp_qpoases_memory *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_memory);
 
-    assign_strvec_ptrs(1, &mem->tmp_nb, &c_ptr);
-
-    align_char_to(64, &c_ptr);
-
-    assign_strvec(nbd, mem->tmp_nb, &c_ptr);
+    assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     assign_double(nvd*nvd, &mem->H, &c_ptr);
     assign_double(nvd*ned, &mem->A, &c_ptr);
@@ -155,7 +147,6 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
         c_ptr += QProblemB_calculateMemorySize(nvd);
     }
 
-    // int data
     assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
@@ -204,7 +195,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     double *dual_sol = memory->dual_sol;
     QProblemB *QPB = memory->QPB;
     QProblem *QP = memory->QP;
-    struct d_strvec *tmp_nb = memory->tmp_nb;
 
     // extract dense qp size
     int nvd = qp_in->dim->nv;
@@ -306,20 +296,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
         else
             qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
         }
-
-    // set t to zero
-    dvecse_libstr(2*nbd+2*ngd, 0.0, qp_out->t, 0);
-
-    // compute slacks for general constraints
-    dgemv_t_libstr(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, nbd, qp_out->t, nbd);
-    dgemv_t_libstr(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
-
-    // compute slacks for bounds
-    dvecex_sp_libstr(nbd, 1.0, idxb, qp_out->v, 0, tmp_nb, 0);
-    daxpy_libstr(nbd, -1.0, qp_in->d, 0, qp_out->t, 0, qp_out->t, 0);
-    daxpy_libstr(nbd, 1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
-    daxpy_libstr(nbd, 1.0, tmp_nb, 0, qp_out->t, 0, qp_out->t, 0);
-    daxpy_libstr(nbd, -1.0, tmp_nb, 0, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
 
     // return
     // TODO(dimitris): cast qpoases return to acados return

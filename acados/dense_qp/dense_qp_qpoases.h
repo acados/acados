@@ -62,7 +62,6 @@ typedef struct dense_qp_qpoases_memory_ {
     void *QP;                  // NOTE(giaf): cast to QProblem to use
     double cputime;            // cputime of qpoases
     int nwsr;                  // performed number of working set recalculations
-    struct d_strvec *tmp_nb;
 } dense_qp_qpoases_memory;
 
 
