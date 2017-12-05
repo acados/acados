@@ -109,6 +109,21 @@ int main() {
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
+    * compute residuals
+    ************************************************/
+
+    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
+    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+    /************************************************
+    * compute infinity norm of residuals
+    ************************************************/
+
+    double res[4];
+    compute_ocp_qp_res_nrm_inf(qp_res, res);
+
+    /************************************************
     * print solution and stats
     ************************************************/
 
@@ -124,6 +139,8 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
+    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
+
     printf("\nSolution time with SOLVER = %d, averaged over %d runs: %5.2e seconds\n\n\n",
         qp_solver_name, NREP, time);
 
@@ -134,6 +151,8 @@ int main() {
     free(qp_in);
     free(qp_out);
     free(sol);
+    free(qp_res);
+    free(res_ws);
     free(arg);
     free(mem);
     free(work);

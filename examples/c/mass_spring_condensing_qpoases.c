@@ -142,7 +142,7 @@ int main() {
 
     dense_qp_qpoases_memory *tmp_mem = (dense_qp_qpoases_memory *) mem->solver_memory;
 
-    printf("\nNumber of workspace recalculations = %d\n\n\n", tmp_mem->nwsr);
+    printf("\nNumber of working-set recalculations = %d\n\n\n", tmp_mem->nwsr);
 
     print_ocp_qp_info(&min_info);
 

@@ -149,7 +149,7 @@ int main() {
            mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
            mem->hpipm_workspace->qp_res[3]);
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
+    printf("\nNumber of %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
         mem->hpipm_workspace->iter, NREP, time);
 
     /************************************************

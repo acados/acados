@@ -105,14 +105,6 @@ int main() {
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
-    * compute residuals
-    ************************************************/
-
-    ocp_qp_res *qp_res = create_ocp_qp_res(qp_in->dim);
-    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_in->dim);
-    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
-
-    /************************************************
     * print solution and stats
     ************************************************/
 
