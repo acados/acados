@@ -31,17 +31,13 @@ extern "C" {
 #include "acados_c/common.h"
 
 typedef enum {
-    OCP_QP_HPIPM,
-    OCP_QP_HPMPC,
-    OCP_QP_OOQP,
-    OCP_QP_QPDUNES,
     PARTIAL_CONDENSING_HPIPM,
     PARTIAL_CONDENSING_HPMPC,
     PARTIAL_CONDENSING_OOQP,
     PARTIAL_CONDENSING_QPDUNES,
-    CONDENSING_HPIPM,
-    CONDENSING_QPOASES,
-    CONDENSING_QORE
+    FULL_CONDENSING_HPIPM,
+    FULL_CONDENSING_QPOASES,
+    FULL_CONDENSING_QORE
 } ocp_qp_solver_t;
 
 typedef struct {
@@ -49,7 +45,7 @@ typedef struct {
 } ocp_qp_solver_plan;
 
 typedef struct {
-    ocp_qp_solver_fcn_ptrs *fcn_ptrs;
+    ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
@@ -84,9 +80,9 @@ void ocp_qp_initialize_default_args(ocp_qp_solver *solver);
 
 // EXPERT INTERFACE
 //
-int set_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_solver_fcn_ptrs *fcn_ptrs);
+int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs);
 //
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs, module_fcn_ptrs *submodule_fcn_ptrs);
+int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs);
 
 
 

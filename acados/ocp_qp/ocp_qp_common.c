@@ -32,7 +32,7 @@
 int ocp_qp_dims_calculate_size(int N)
 {
     int size = sizeof(ocp_qp_dims);
-    size += d_memsize_ocp_qp_dim(dims->N);
+    size += d_memsize_ocp_qp_dim(N);
     return size;
 }
 
@@ -55,11 +55,11 @@ ocp_qp_dims *assign_ocp_qp_dims(int N, void *raw_memory)
 
 
 
-int ocp_qp_in_calculate_size(int N)
+int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
-    size += ocp_qp_dims_calculate_size(N);
+    size += ocp_qp_dims_calculate_size(dims->N);
     return size;
 }
 
@@ -76,7 +76,7 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
     c_ptr += d_memsize_ocp_qp(dims);
 
     ocp_qp_dims *dims_copy = assign_ocp_qp_dims(dims->N, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(dims->N);
+    c_ptr += ocp_qp_dims_calculate_size(dims->N);
 
     dims_copy->N = dims->N;
 

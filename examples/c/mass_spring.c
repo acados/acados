@@ -29,9 +29,9 @@
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 // acados
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/utils/create.h"
 #include "acados/utils/math.h"
+// acados_c
+#include <acados_c/ocp_qp.h>
 
 
 /*****************************************************************************************

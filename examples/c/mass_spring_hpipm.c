@@ -21,12 +21,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 // acados
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_common_frontend.h"
-#include "acados/ocp_qp/ocp_qp_hpipm.h"
-#include "acados/utils/create.h"
-#include "acados/utils/timing.h"
-#include "acados/utils/types.h"
+// #include "acados/ocp_qp/ocp_qp_common.h"
+#include <acados/ocp_qp/ocp_qp_common_frontend.h>
+#include <acados/ocp_qp/ocp_qp_hpipm.h>
+// #include "acados/utils/create.h"
+#include <acados/utils/timing.h>
+// #include "acados/utils/types.h"
+#include <acados/ocp_qp/ocp_qp_sparse_solver.h>
+#include <acados_c/ocp_qp.h>
 
 #define ELIMINATE_X0
 #define NREP 100
@@ -65,12 +67,19 @@ int main() {
     /************************************************
     * ipm
     ************************************************/
+    ocp_qp_solver_plan plan;
+    plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    ocp_qp_hpipm_args *arg = ocp_qp_hpipm_create_arguments(qp_in->dim);
+    void *args = ocp_qp_create_args(&plan, qp_in->dim);
 
-    arg->hpipm_args->iter_max = 10;
+    // NOTE(nielsvd): will become:
+    //  set_option_int(args, "qp_solver.hpipm.iter_max", 10),
+    // or if ocp_qp_solvers are lifted to same level as sparse and full_condensing solvers:
+    //  set_option_int(args, "hpipm.iter_max", 10).
+    ((ocp_qp_partial_condensing_args *) ((ocp_qp_sparse_solver_args *) args)->pcond_args)->N2 = N;
+    ((ocp_qp_hpipm_args *) ((ocp_qp_sparse_solver_args *) args)->solver_args)->hpipm_args->iter_max = 10;
 
-    ocp_qp_hpipm_memory *mem = ocp_qp_hpipm_create_memory(qp_in->dim, arg);
+    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_in->dim, args);
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -78,7 +87,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_hpipm(qp_in, qp_out, arg, mem, NULL);
+        acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
 	}
 
     double time = acados_toc(&timer)/NREP;
@@ -118,12 +127,12 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
-           mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
-           mem->hpipm_workspace->qp_res[3], mem->hpipm_workspace->res_workspace->res_mu);
+    // printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
+    //        mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
+    //        mem->hpipm_workspace->qp_res[3], mem->hpipm_workspace->res_workspace->res_mu);
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        mem->hpipm_workspace->iter, NREP, time);
+    // printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
+    //     mem->hpipm_workspace->iter, NREP, time);
 
     /************************************************
     * free memory
@@ -132,8 +141,9 @@ int main() {
     free(qp_in);
     free(qp_out);
     free(sol);
-    free(arg);
-    free(mem);
+    free(qp_solver);
+    free(args);
+    // free(mem);
 
     return 0;
 }
