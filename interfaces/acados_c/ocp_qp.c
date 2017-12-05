@@ -171,7 +171,8 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
-    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+    module_fcn_ptrs submodule_fcn_ptrs;
+    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs, &submodule_fcn_ptrs);
 
     return fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
 }
@@ -181,7 +182,8 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
-    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+    module_fcn_ptrs submodule_fcn_ptrs;
+    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs, &submodule_fcn_ptrs);
 
     return fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
 }
@@ -204,7 +206,9 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
-    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+    module_fcn_ptrs submodule_fcn_ptrs;
+    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs, &submodule_fcn_ptrs);
+
 
     int bytes;
     
@@ -228,7 +232,8 @@ int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *arg
 ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
-    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+    module_fcn_ptrs submodule_fcn_ptrs;
+    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs, &submodule_fcn_ptrs);
 
     char *c_ptr = (char *) raw_memory;
 
@@ -299,7 +304,7 @@ int set_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_solver_fcn_ptrs 
 
 
 
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs)
+int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs, module_fcn_ptrs *submodule_fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;
 
