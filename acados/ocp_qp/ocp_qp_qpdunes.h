@@ -17,6 +17,8 @@
  *
  */
 
+#ifdef ACADOS_WITH_QPDUNES
+
 #ifndef ACADOS_OCP_QP_OCP_QP_QPDUNES_H_
 #define ACADOS_OCP_QP_OCP_QP_QPDUNES_H_
 
@@ -105,3 +107,5 @@ void ocp_qp_qpdunes_free_memory(void *mem_);
 #endif
 
 #endif  // ACADOS_OCP_QP_OCP_QP_QPDUNES_H_
+
+#endif  // ACADOS_WITH_QPDUNES

@@ -17,6 +17,8 @@
  *
  */
 
+#ifdef ACADOS_WITH_QPDUNES
+
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 
 //external
@@ -706,3 +708,5 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
     // TODO(dimitris): use acados return value
     return 0;
 }
+
+#endif  // ACADOS_WITH_QPDUNES

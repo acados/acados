@@ -17,9 +17,13 @@
  *
  */
 
+
 // external
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef ACADOS_WITH_QPDUNES
+
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
@@ -142,3 +146,12 @@ int main() {
 
     return 0;
 }
+
+#else
+
+int main( )
+{
+    printf("qpDUNES example skipped\n");
+}
+
+#endif

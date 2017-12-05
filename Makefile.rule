@@ -45,8 +45,11 @@ QPOASES_PATH = $(EXT_PATH)/qpoases
 # QORE path
 QORE_PATH = $(EXT_PATH)/qore
 
-# QQPDUNES path
+# QPDUNES path
 QPDUNES_PATH = $(EXT_PATH)/qpdunes
+
+# include QPDUNES
+USE_QPDUNES = 1
 
 # measure timings
 MEASURE_TIMINGS = 1
@@ -60,6 +63,10 @@ CFLAGS += #-O2 -fPIC
 
 # debugging flags
 CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
+
+ifeq ($(USE_QPDUNES), 1)
+CFLAGS += -DACADOS_WITH_QPDUNES
+endif
 
 # TEMP
 CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__
