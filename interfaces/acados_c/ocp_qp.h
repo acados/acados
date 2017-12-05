@@ -26,8 +26,7 @@ extern "C" {
 
 // acados
 #include <acados/ocp_qp/ocp_qp_common.h>
-#include <acados/utils/types.h>
-
+// acados_c
 #include "acados_c/common.h"
 
 typedef enum {

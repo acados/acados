@@ -73,9 +73,9 @@ int main() {
     void *args = ocp_qp_create_args(&plan, qp_in->dim);
 
     // NOTE(nielsvd): will become:
-    //  set_option_int(args, "qp_solver.hpipm.iter_max", 10),
+    //              set_option_int(args, "qp_solver.hpipm.iter_max", 10),
     // or if ocp_qp_solvers are lifted to same level as sparse and full_condensing solvers:
-    //  set_option_int(args, "hpipm.iter_max", 10).
+    //              set_option_int(args, "hpipm.iter_max", 10).
     ((ocp_qp_partial_condensing_args *) ((ocp_qp_sparse_solver_args *) args)->pcond_args)->N2 = N;
     // ((ocp_qp_hpipm_args *) ((ocp_qp_sparse_solver_args *) args)->solver_args)->hpipm_args->iter_max = 10;
 

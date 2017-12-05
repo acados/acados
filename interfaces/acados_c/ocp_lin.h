@@ -26,7 +26,8 @@ extern "C" {
 
 // acados
 #include <acados/ocp_lin/ocp_lin_common.h>
-#include <acados/utils/types.h>
+// acados_c
+#include "acados_c/common.h"
 
 typedef enum {
     GAUSS_NEWTON,
@@ -67,8 +68,6 @@ ocp_lin_method *ocp_lin_assign(ocp_lin_method_plan *plan, ocp_lin_dims *dims, vo
 ocp_lin_method *ocp_lin_create(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_);
 //
 int ocp_lin_solve(ocp_lin_method *solver, ocp_lin_in *qp_in, ocp_lin_out *qp_out);
-//
-void ocp_lin_initialize_default_args(ocp_lin_method *method);
 
 // EXPERT INTERFACE
 //

@@ -27,6 +27,8 @@ extern "C" {
 // acados
 #include <acados/sim/sim_common.h>
 #include <acados/utils/types.h>
+// acados_c
+#include "acados_c/common.h"
 
 typedef enum {
     PREVIOUS,
@@ -67,8 +69,6 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
 sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_);
 //
 int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
-//
-void sim_initialize_default_args(sim_solver *solver);
 
 // EXPERT INTERFACE
 //

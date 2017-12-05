@@ -87,13 +87,6 @@ int ocp_lin_solve(ocp_lin_method *solver, ocp_lin_in *qp_in, ocp_lin_out *qp_out
 
 
 
-void ocp_lin_initialize_default_args(ocp_lin_method *method)
-{
-
-}
-
-
-
 int set_ocp_lin_method_fcn_ptrs(ocp_lin_method_plan *plan, ocp_lin_method_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;

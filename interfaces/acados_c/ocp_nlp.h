@@ -26,10 +26,10 @@ extern "C" {
 
 // acados
 #include <acados/ocp_nlp/ocp_nlp_common.h>
-#include <acados/utils/types.h>
 // acados_c
-#include <acados_c/sim.h>
-#include <acados_c/ocp_qp.h>
+#include "acados_c/common.h"
+#include "acados_c/ocp_qp.h"
+#include "acados_c/sim.h"
 
 typedef enum {
     SQP_GN
@@ -69,8 +69,6 @@ ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, vo
 ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_);
 //
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out);
-//
-void ocp_nlp_initialize_default_args(ocp_nlp_solver *solver);
 
 // EXPERT INTERFACE
 //

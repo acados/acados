@@ -104,11 +104,6 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 
 
 
-void dense_qp_initialize_default_args(dense_qp_solver *solver)
-{
-
-}
-
 int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;

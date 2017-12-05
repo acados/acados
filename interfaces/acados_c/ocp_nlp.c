@@ -87,11 +87,6 @@ int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out
 
 
 
-void ocp_nlp_initialize_default_args(ocp_nlp_solver *solver)
-{
-
-}
-
 int set_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_plan *plan, ocp_nlp_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;

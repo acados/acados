@@ -103,13 +103,6 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
 
 
 
-void sim_initialize_default_args(sim_solver *solver)
-{
-
-}
-
-
-
 int set_sim_solver_fun_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;

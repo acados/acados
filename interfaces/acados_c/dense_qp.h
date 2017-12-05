@@ -26,7 +26,8 @@ extern "C" {
 
 // acados
 #include <acados/dense_qp/dense_qp_common.h>
-#include <acados/utils/types.h>
+// acados_c
+#include "acados_c/common.h"
 
 typedef enum {
     DENSE_QP_HPIPM,
@@ -67,8 +68,6 @@ dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims
 dense_qp_solver *dense_qp_create(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_);
 //
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
-//
-void dense_qp_initialize_default_args(dense_qp_solver *solver);
 
 // EXPERT INTERFACE
 //
