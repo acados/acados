@@ -19,6 +19,7 @@
 
 // external
 #include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -135,6 +136,9 @@ int main() {
 
     double res[4];
     compute_ocp_qp_res_nrm_inf(qp_res, res);
+    double max_res = 0.0;
+    for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
+    assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
 
     /************************************************
     * print solution and stats
