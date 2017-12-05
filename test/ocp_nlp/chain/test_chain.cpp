@@ -232,6 +232,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
 
                 ls_cost.y_ref[N] =
                     (real_t *)malloc(sizeof(*ls_cost.y_ref[N]) * (NX));
+                ls_cost.linear_cost[N] =
+                    (real_t *)calloc(NX, sizeof(*ls_cost.linear_cost[N]));
                 for (int_t j = 0; j < NX; j++) ls_cost.y_ref[N][j] = xref(j);
 
                 /************************************************
