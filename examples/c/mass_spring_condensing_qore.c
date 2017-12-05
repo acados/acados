@@ -58,6 +58,7 @@ int main() {
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
 
     /************************************************
     * ocp qp solution
@@ -66,7 +67,7 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
-    * qpoases
+    * qore
     ************************************************/
 
     ocp_qp_condensing_solver_args *arg = ocp_qp_condensing_solver_create_arguments(qp_in->dim, CONDENSING_QORE);
@@ -107,6 +108,23 @@ int main() {
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
+    * compute residuals
+    ************************************************/
+
+    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
+    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+    /************************************************
+    * extract residuals
+    ************************************************/
+
+    colmaj_ocp_qp_res *cm_qp_res;
+    void *memres = malloc(colmaj_ocp_qp_res_calculate_size(dims));
+    assign_colmaj_ocp_qp_res(dims, &cm_qp_res, memres);
+    convert_ocp_qp_res_to_colmaj(qp_res, cm_qp_res);
+
+    /************************************************
     * print solution and stats
     ************************************************/
 
@@ -122,7 +140,60 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\nSolution time averaged over %d runs: %5.2e seconds\n\n\n", NREP, time);
+    printf("\nres_r = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nu[ii], cm_qp_res->res_r[ii], 1);
+
+    printf("\nres_q = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], cm_qp_res->res_q[ii], 1);
+
+    printf("\nres_ls = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_ls[ii], 1);
+
+    printf("\nres_us = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_us[ii], 1);
+
+    printf("\nres_b = \n");
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], cm_qp_res->res_b[ii], 1);
+
+    printf("\nres_d_lb = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_d_lb[ii], 1);
+
+    printf("\nres_d_ub = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_d_ub[ii], 1);
+
+    printf("\nres_d_lg = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_d_lg[ii], 1);
+
+    printf("\nres_d_ug = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_d_ug[ii], 1);
+
+    printf("\nres_d_ls = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_d_ls[ii], 1);
+
+    printf("\nres_d_us = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_d_us[ii], 1);
+
+    printf("\nres_m_lb = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_m_lb[ii], 1);
+
+    printf("\nres_m_ub = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_m_ub[ii], 1);
+
+    printf("\nres_m_lg = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_m_lg[ii], 1);
+
+    printf("\nres_m_ug = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_m_ug[ii], 1);
+
+    printf("\nres_m_ls = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_m_ls[ii], 1);
+
+    printf("\nres_m_us = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_m_us[ii], 1);
+
+    dense_qp_qore_memory *tmp_mem = (dense_qp_qore_memory *) mem->solver_memory;
+
+    printf("\nNumber of iterations = %d\n\n\n", tmp_mem->num_iter);
 
     print_ocp_qp_info(&min_info);
 
@@ -133,6 +204,9 @@ int main() {
     free(qp_in);
     free(qp_out);
     free(sol);
+    free(cm_qp_res);
+    free(qp_res);
+    free(res_ws);
     free(arg);
     free(mem);
     free(work);

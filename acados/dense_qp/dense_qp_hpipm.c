@@ -155,6 +155,22 @@ int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *
 
     info->solve_QP_time = acados_toc(&qp_timer);
     info->total_time = acados_toc(&tot_timer);
+#if 0
+    int nvd = qp_in->dim->nv;
+    int ned = qp_in->dim->ne;
+    int ngd = qp_in->dim->ng;
+    int nbd = qp_in->dim->nb;
+    printf("ngd=%d nvd=%d\n", ngd, nvd);
+    printf("H:\n"); d_print_strmat(nvd,nvd,qp_in->Hv,0,0);
+    printf("C':\n"); d_print_strmat(ngd,nvd,qp_in->Ct,0,0);
+    printf("d_lg:\n"); d_print_tran_strvec(ngd,qp_in->d,nbd);
+    printf("d_ug:\n"); d_print_tran_strvec(ngd,qp_in->d,2*nbd+ngd);
+    printf("d_lb:\n"); d_print_tran_strvec(ngd,qp_in->d,0);
+    printf("d_ub:\n"); d_print_tran_strvec(ngd,qp_in->d,nbd+ngd);
+    printf("primal:\n"); d_print_tran_strvec(nvd,qp_out->v,0);
+    printf("dual:\n"); d_print_tran_strvec(2*nbd+2*ngd,qp_out->lam,0);
+    exit(1);
+#endif
 
     // check max number of iterations
     // TODO(dimitris): check ACADOS_MIN_STEP (not implemented in HPIPM yet)

@@ -26,14 +26,17 @@ extern "C" {
 #endif
 
 // hpipm
-#include "hpipm_d_dense_qp.h"
-#include "hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp_res.h"
 // acados
 #include "acados/utils/types.h"
 
 typedef struct d_dense_qp_dim dense_qp_dims;
 typedef struct d_dense_qp dense_qp_in;
 typedef struct d_dense_qp_sol dense_qp_out;
+typedef struct d_dense_qp_res dense_qp_res;
+typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 
 
 
@@ -63,7 +66,17 @@ dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory);
 int dense_qp_out_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory);
-
+//
+int dense_qp_res_calculate_size(dense_qp_dims *dims);
+//
+dense_qp_res *assign_dense_qp_res(dense_qp_dims *dims, void *raw_memory);
+//
+int dense_qp_res_ws_calculate_size(dense_qp_dims *dims);
+//
+dense_qp_res_ws *assign_dense_qp_res_ws(dense_qp_dims *dims, void *raw_memory);
+//
+void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
+//
 
 #ifdef __cplusplus
 } /* extern "C" */

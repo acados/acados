@@ -90,7 +90,7 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 2 * ngd * sizeof(double);              // d_lg d_ug
     size += 1 * nbd * sizeof(int);                 // idxb
     size += 1 * nvd * sizeof(double);              // prim_sol
-    size += (2 * nvd + 2 * ngd) * sizeof(double);  // dual_sol
+    size += (nvd+ngd) * sizeof(double);  // dual_sol
 
     if (ngd > 0)  // QProblem
         size += QProblem_calculateMemorySize(nvd, ngd);
@@ -134,7 +134,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     assign_double(ngd, &mem->d_lg, &c_ptr);
     assign_double(ngd, &mem->d_ug, &c_ptr);
     assign_double(nvd, &mem->prim_sol, &c_ptr);
-    assign_double(2*nvd + 2*ngd, &mem->dual_sol, &c_ptr);
+    assign_double(nvd+ngd, &mem->dual_sol, &c_ptr);
 
     // TODO(dimitris): update assign syntax in qpOASES
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
@@ -147,7 +147,6 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
         c_ptr += QProblemB_calculateMemorySize(nvd);
     }
 
-    // int data
     assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
@@ -203,8 +202,10 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
 
+    assert(ned == 0 && "ned != 0 not supported yet");
+
     // fill in the upper triangular of H in dense_qp
-    dtrtr_l_libstr(nvd, qp_in->Hg, 0, 0, qp_in->Hg, 0, 0);
+    dtrtr_l_libstr(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // dense qp row-major
     d_cvt_dense_qp_to_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
@@ -221,24 +222,21 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     }
 
     // cholesky factorization of H
-    //  dpotrf_l_libstr(nvd, qpd->Hg, 0, 0, sR, 0, 0);
+    // dpotrf_l_libstr(nvd, qpd->Hv, 0, 0, sR, 0, 0);
 
-    //  fill in upper triangular of R
-    //  dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
+    // fill in upper triangular of R
+    // dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
 
-    //  extract R
-    //  d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
+    // extract R
+    // d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
 
 #if 0
-    d_print_mat(nvd, nvd, H, nvd);
-    d_print_mat(nvd, nvd, R, nvd);
-    exit(1);
 #endif
 
     // cold start the dual solution with no active constraints
     int warm_start = args->warm_start;
     if (!warm_start) {
-        for (int ii = 0; ii < 2 * nvd + 2 * ngd; ii++)
+        for (int ii = 0; ii < nvd + ngd; ii++)
             dual_sol[ii] = 0;
     }
 
@@ -274,8 +272,9 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     memory->nwsr = nwsr;
 
 #if 0
-    d_print_mat(1, nvd, prim_sol, 1);
-    exit(1);
+    double cmpl = 0.0, feas = 0.0, stat = 0.0;
+    qpOASES_getKktViolation(nvd, ngd, H, g, C, d_lb, d_ub, d_lg, d_ug, prim_sol, dual_sol, &stat, &feas, &cmpl);
+    printf("\nstat=%e, feas=%e, cmpl=%e\n", stat, feas, cmpl);
 #endif
 
     info->solve_QP_time = acados_toc(&qp_timer);
@@ -286,17 +285,17 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
         qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nbd; ii++) {
-        if (dual_sol[ii] >= 0.0)
-            qp_out->lam->pa[ii] = dual_sol[ii];
+        if (dual_sol[idxb[ii]] >= 0.0)
+            qp_out->lam->pa[ii] = dual_sol[idxb[ii]];
         else
-            qp_out->lam->pa[nbd+ngd+ii] = - dual_sol[ii];
+            qp_out->lam->pa[nbd+ngd+ii] = - dual_sol[idxb[ii]];
     }
     for (int ii = 0; ii < ngd; ii++) {
-        if (dual_sol[nbd+ii] >= 0.0)
-            qp_out->lam->pa[nbd+ii] =   dual_sol[nbd+ii];
+        if (dual_sol[nvd+ii] >= 0.0)
+            qp_out->lam->pa[nbd+ii] =   dual_sol[nvd+ii];
         else
-            qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nbd+ii];
-    }
+            qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
+        }
 
     // return
     // TODO(dimitris): cast qpoases return to acados return
