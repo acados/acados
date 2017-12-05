@@ -36,7 +36,7 @@ typedef enum {
 
 typedef struct {
     ocp_linearization_method_t linearization_method;
-} ocp_linearization_config;
+} ocp_linearization_plan;
 
 typedef struct {
     ocp_linearization_method_fcn_ptrs *fcn_ptrs;
@@ -46,7 +46,7 @@ typedef struct {
     void *work;
 } ocp_linearization_method;
 
-// INPUT AND OUTPUT
+// INPUT, OUTPUT AND OPTIONS
 //
 ocp_linearization_in *create_ocp_linearization_in(ocp_linearization_dims *dims);
 //
@@ -54,11 +54,11 @@ ocp_linearization_out *create_ocp_linearization_out(ocp_linearization_dims *dims
 
 // BASIC INTERFACE
 //
-int ocp_linearization_calculate_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
+int ocp_linearization_calculate_size(ocp_linearization_dims *dims, void *args_);
 //
-ocp_linearization_method *ocp_linearization_assign(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory);
+ocp_linearization_method *ocp_linearization_assign(ocp_linearization_dims *dims, void *args_, void *raw_memory);
 //
-ocp_linearization_method *ocp_linearization_create(ocp_linearization_config *config, ocp_linearization_dims *dims);
+ocp_linearization_method *ocp_linearization_create(ocp_linearization_dims *dims, void *args_);
 //
 int ocp_linearization_solve(ocp_linearization_method *solver, ocp_linearization_in *qp_in, ocp_linearization_out *qp_out);
 //
@@ -67,19 +67,19 @@ void ocp_linearization_initialize_default_args(ocp_linearization_method *method)
 // EXPERT INTERFACE
 //
 //
-int ocp_linearization_calculate_args_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
+int ocp_linearization_calculate_args_size(ocp_linearization_dims *dims, void *args_);
 //
-void *ocp_linearization_assign_args(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory);
+void *ocp_linearization_assign_args(ocp_linearization_dims *dims, void *args_, void *raw_memory);
 //
-void *ocp_linearization_create_args(ocp_linearization_config *config, ocp_linearization_dims *dims);
+void *ocp_linearization_create_args(ocp_linearization_dims *dims, void *args_);
 //
-int ocp_linearization_calculate_memory_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
+int ocp_linearization_calculate_memory_size(ocp_linearization_dims *dims, void *args_);
 //
-void *ocp_linearization_assign_memory(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory);
+void *ocp_linearization_assign_memory(ocp_linearization_dims *dims, void *args_, void *raw_memory);
 //
-void *ocp_linearization_create_memory(ocp_linearization_config *config, ocp_linearization_dims *dims);
+void *ocp_linearization_create_memory(ocp_linearization_dims *dims, void *args_);
 //
-int ocp_linearization_calculate_workspace_size(ocp_linearization_config *config, ocp_linearization_dims *dims);
+int ocp_linearization_calculate_workspace_size(ocp_linearization_dims *dims, void *args_);
 
 
 #ifdef __cplusplus

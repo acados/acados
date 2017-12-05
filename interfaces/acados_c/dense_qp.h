@@ -36,7 +36,7 @@ typedef enum {
 
 typedef struct {
     dense_qp_solver_t qp_solver;
-} dense_qp_config;
+} dense_qp_plan;
 
 typedef struct {
     dense_qp_solver_fcn_ptrs *fcn_ptrs;
@@ -46,7 +46,7 @@ typedef struct {
     void *work;
 } dense_qp_solver;
 
-// INPUT AND OUTPUT
+// INPUT, OUTPUT AND OPTIONS
 //
 dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
 //
@@ -54,11 +54,11 @@ dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);
 
 // BASIC INTERFACE
 //
-int dense_qp_calculate_size(dense_qp_config *config, dense_qp_dims *dims);
+int dense_qp_calculate_size(dense_qp_dims *dims, void *args_);
 //
-dense_qp_solver *dense_qp_assign(dense_qp_config *config, dense_qp_dims *dims, void *raw_memory);
+dense_qp_solver *dense_qp_assign(dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-dense_qp_solver *dense_qp_create(dense_qp_config *config, dense_qp_dims *dims);
+dense_qp_solver *dense_qp_create(dense_qp_dims *dims, void *args_);
 //
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
 //
@@ -67,19 +67,19 @@ void dense_qp_initialize_default_args(dense_qp_solver *solver);
 // EXPERT INTERFACE
 //
 //
-int dense_qp_calculate_args_size(dense_qp_config *config, dense_qp_dims *dims);
+int dense_qp_calculate_args_size(dense_qp_dims *dims, void *args_);
 //
-void *dense_qp_assign_args(dense_qp_config *config, dense_qp_dims *dims, void *raw_memory);
+void *dense_qp_assign_args(dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-void *dense_qp_create_args(dense_qp_config *config, dense_qp_dims *dims);
+void *dense_qp_create_args(dense_qp_dims *dims, void *args_);
 //
-int dense_qp_calculate_memory_size(dense_qp_config *config, dense_qp_dims *dims);
+int dense_qp_calculate_memory_size(dense_qp_dims *dims, void *args_);
 //
-void *dense_qp_assign_memory(dense_qp_config *config, dense_qp_dims *dims, void *raw_memory);
+void *dense_qp_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-void *dense_qp_create_memory(dense_qp_config *config, dense_qp_dims *dims);
+void *dense_qp_create_memory(dense_qp_dims *dims, void *args_);
 //
-int dense_qp_calculate_workspace_size(dense_qp_config *config, dense_qp_dims *dims);
+int dense_qp_calculate_workspace_size(dense_qp_dims *dims, void *args_);
 
 
 #ifdef __cplusplus

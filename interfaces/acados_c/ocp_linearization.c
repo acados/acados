@@ -38,21 +38,21 @@ ocp_linearization_out *create_ocp_linearization_out(ocp_linearization_dims *dims
 
 
 
-int ocp_linearization_calculate_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
+int ocp_linearization_calculate_size(ocp_linearization_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-ocp_linearization_method *ocp_linearization_assign(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory)
+ocp_linearization_method *ocp_linearization_assign(ocp_linearization_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-ocp_linearization_method *ocp_linearization_create(ocp_linearization_config *config, ocp_linearization_dims *dims)
+ocp_linearization_method *ocp_linearization_create(ocp_linearization_dims *dims, void *args_)
 {
     return NULL;
 }
@@ -73,49 +73,49 @@ void ocp_linearization_initialize_default_args(ocp_linearization_method *method)
 
 
 
-int ocp_linearization_calculate_args_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
+int ocp_linearization_calculate_args_size(ocp_linearization_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-void *ocp_linearization_assign_args(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory)
+void *ocp_linearization_assign_args(ocp_linearization_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *ocp_linearization_create_args(ocp_linearization_config *config, ocp_linearization_dims *dims)
+void *ocp_linearization_create_args(ocp_linearization_dims *dims, void *args_)
 {
     return NULL;
 }
 
 
 
-int ocp_linearization_calculate_memory_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
+int ocp_linearization_calculate_memory_size(ocp_linearization_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-void *ocp_linearization_assign_memory(ocp_linearization_config *config, ocp_linearization_dims *dims, void *raw_memory)
+void *ocp_linearization_assign_memory(ocp_linearization_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *ocp_linearization_create_memory(ocp_linearization_config *config, ocp_linearization_dims *dims)
+void *ocp_linearization_create_memory(ocp_linearization_dims *dims, void *args_)
 {
     return NULL;
 }
 
 
 
-int ocp_linearization_calculate_workspace_size(ocp_linearization_config *config, ocp_linearization_dims *dims)
+int ocp_linearization_calculate_workspace_size(ocp_linearization_dims *dims, void *args_)
 {
     return 0;
 }

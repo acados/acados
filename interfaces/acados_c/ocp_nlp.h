@@ -36,9 +36,9 @@ typedef enum {
 } ocp_nlp_solver_t;
 
 typedef struct {
-    ocp_qp_config *ocp_qp_config;
-    sim_config **sim_config;
-} ocp_nlp_config;
+    ocp_qp_plan *ocp_qp_plan;
+    sim_plan **sim_plan;
+} ocp_nlp_plan;
 
 typedef struct {
     ocp_nlp_solver_fcn_ptrs *fcn_ptrs;
@@ -48,7 +48,7 @@ typedef struct {
     void *work;
 } ocp_nlp_solver;
 
-// INPUT AND OUTPUT
+// INPUT, OUTPUT AND OPTIONS
 //
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims);
 //
@@ -56,11 +56,11 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
 
 // BASIC INTERFACE
 //
-int ocp_nlp_calculate_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_calculate_size(ocp_nlp_dims *dims, void *args_);
 //
-ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory);
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_dims *dims, void *args_, void *raw_memory);
 //
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_config *config, ocp_nlp_dims *dims);
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_dims *dims, void *args_);
 //
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out);
 //
@@ -69,19 +69,19 @@ void ocp_nlp_initialize_default_args(ocp_nlp_solver *solver);
 // EXPERT INTERFACE
 //
 //
-int ocp_nlp_calculate_args_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_calculate_args_size(ocp_nlp_dims *dims, void *args_);
 //
-void *ocp_nlp_assign_args(ocp_nlp_config  *config, ocp_nlp_dims *dims, void *raw_memory);
+void *ocp_nlp_assign_args(ocp_nlp_plan  *plan, ocp_nlp_dims *dims, void *raw_memory);
 //
-void *ocp_nlp_create_args(ocp_nlp_config *config, ocp_nlp_dims *dims);
+void *ocp_nlp_create_args(ocp_nlp_dims *dims, void *args_);
 //
-int ocp_nlp_calculate_memory_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, void *args_);
 //
-void *ocp_nlp_assign_memory(ocp_nlp_config *config, ocp_nlp_dims *dims, void *raw_memory);
+void *ocp_nlp_assign_memory(ocp_nlp_dims *dims, void *args_, void *raw_memory);
 //
-void *ocp_nlp_create_memory(ocp_nlp_config *config, ocp_nlp_dims *dims);
+void *ocp_nlp_create_memory(ocp_nlp_dims *dims, void *args_);
 //
-int ocp_nlp_calculate_workspace_size(ocp_nlp_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, void *args_);
 
 
 #ifdef __cplusplus
