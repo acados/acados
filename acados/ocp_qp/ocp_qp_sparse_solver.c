@@ -184,8 +184,17 @@ int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_
     int size = sizeof(ocp_qp_sparse_solver_workspace);
     size += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
 
-    // @dimitris: dims here should be from the partialy condensed qp, or from the original one?
-    size += args->solver->calculate_workspace_size(dims, args->solver_args);
+    // set up dimesions of partially condensed qp
+    ocp_qp_dims *pcond_dims;
+    if (args->pcond_args->N2 < dims->N)
+    {
+        pcond_dims = args->pcond_args->pcond_dims;
+    } else
+    {
+        pcond_dims = dims;
+    }
+
+    size += args->solver->calculate_workspace_size(pcond_dims, args->solver_args);
 
     return size;
 }

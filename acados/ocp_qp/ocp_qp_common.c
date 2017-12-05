@@ -22,6 +22,7 @@
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
 #include "hpipm/include/hpipm_d_ocp_qp_res.h"
+#include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
 #include "hpipm/include/hpipm_d_ocp_qp_kkt.h"
 // acados
 #include "acados/utils/types.h"
