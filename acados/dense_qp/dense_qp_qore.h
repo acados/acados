@@ -63,6 +63,7 @@ typedef struct dense_qp_qore_memory_ {
     double *prim_sol;
     double *dual_sol;
     QoreProblemDense *QP;
+    int num_iter;
 } dense_qp_qore_memory;
 
 

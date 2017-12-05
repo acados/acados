@@ -26,6 +26,7 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/utils/create.h"
+#include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -94,8 +95,17 @@ int main() {
     acados_timer timer;
     acados_tic(&timer);
 
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    ocp_qp_info min_info;
+    min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
+
 	for (int rep = 0; rep < NREP; rep++) {
         acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem, work);
+
+        if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
+        if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
+        if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
+        if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
 	}
 
     double time = acados_toc(&timer)/NREP;
@@ -129,6 +139,8 @@ int main() {
 
     printf("\nSolution time for N2 = %d, averaged over %d runs: %5.2e seconds\n\n\n",
         arg->pcond_args->N2, NREP, time);
+
+    print_ocp_qp_info(&min_info);
 
     /************************************************
     * free memory

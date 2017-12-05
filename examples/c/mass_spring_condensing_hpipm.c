@@ -26,6 +26,7 @@
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/utils/create.h"
+#include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -54,6 +55,7 @@ int main() {
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
 
     /************************************************
     * ocp qp solution
@@ -76,8 +78,17 @@ int main() {
     acados_timer timer;
     acados_tic(&timer);
 
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    ocp_qp_info min_info;
+    min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
+
 	for (int rep = 0; rep < NREP; rep++) {
         acados_return = ocp_qp_condensing_solver(qp_in, qp_out, arg, mem, work);
+
+        if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
+        if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
+        if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
+        if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -92,6 +103,14 @@ int main() {
     void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
     assign_colmaj_ocp_qp_out(dims, &sol, memsol);
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
+
+    /************************************************
+    * compute residuals
+    ************************************************/
+
+    ocp_qp_res *qp_res = create_ocp_qp_res(qp_in->dim);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_in->dim);
+    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
 
     /************************************************
     * print solution and stats
@@ -109,10 +128,25 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
+    printf("\nres_g = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(nu[ii]+nx[ii]+2*ns[ii], qp_res->res_g+ii, 0);
+
+    printf("\nres_b = \n");
+    for (int ii = 0; ii < N; ii++) d_print_tran_strvec(nx[ii+1], qp_res->res_b+ii, 0);
+
+    printf("\nres_d = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_d+ii, 0);
+
+    printf("\nres_m = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_m+ii, 0);
+
+
     dense_qp_hpipm_memory *tmp_mem = (dense_qp_hpipm_memory *) mem->solver_memory;
 
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
         tmp_mem->hpipm_workspace->iter, NREP, time);
+
+    print_ocp_qp_info(&min_info);
 
     /************************************************
     * free memory

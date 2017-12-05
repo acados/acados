@@ -21,6 +21,8 @@
 
 #include "acados/utils/create.h"
 
+#include <stdlib.h>
+
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
@@ -54,6 +56,26 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
     void *ptr = acados_malloc(size, 1);
     ocp_qp_out *qp_out = assign_ocp_qp_out(dims, ptr);
     return qp_out;
+}
+
+
+
+ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims)
+{
+    int size = ocp_qp_res_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    ocp_qp_res *qp_res = assign_ocp_qp_res(dims, ptr);
+    return qp_res;
+}
+
+
+
+ocp_qp_res_ws *create_ocp_qp_res_ws(ocp_qp_dims *dims)
+{
+    int size = ocp_qp_res_ws_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    ocp_qp_res_ws *res_ws = assign_ocp_qp_res_ws(dims, ptr);
+    return res_ws;
 }
 
 
@@ -225,6 +247,26 @@ dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
 
 
 
+dense_qp_res *create_dense_qp_res(dense_qp_dims *dims)
+{
+    int size = dense_qp_res_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    dense_qp_res *qp_res = assign_dense_qp_res(dims, ptr);
+    return qp_res;
+}
+
+
+
+dense_qp_res_ws *create_dense_qp_res_ws(dense_qp_dims *dims)
+{
+    int size = dense_qp_res_ws_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    dense_qp_res_ws *res_ws = assign_dense_qp_res_ws(dims, ptr);
+    return res_ws;
+}
+
+
+
 dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_dims *dims)
 {
     int size = dense_qp_hpipm_calculate_args_size(dims);
@@ -315,6 +357,10 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, qp_solver_t 
     qp_solver.qp_solver_funs = &solver_funs;
 
     set_xcond_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
+
+    // NOTE(dimitris): can also directly pass sparse solver
+    // ocp_qp_solver qp_solver;
+    // set_qp_solver_fun_ptrs(qp_solver_name, &qp_solver);
 
     int return_value;
     sim_solver *sim_solvers = acados_malloc(sizeof(sim_solver), dims->N);

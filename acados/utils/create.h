@@ -43,6 +43,10 @@ ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
 
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
 
+ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims);
+
+ocp_qp_res_ws *create_ocp_qp_res_ws(ocp_qp_dims *dims);
+
 ocp_qp_hpipm_args *ocp_qp_hpipm_create_arguments(ocp_qp_dims *dims);
 
 ocp_qp_hpipm_memory *ocp_qp_hpipm_create_memory(ocp_qp_dims *dims, void *args_);
@@ -70,6 +74,10 @@ ocp_qp_condensing_solver_memory *ocp_qp_condensing_solver_create_memory(ocp_qp_d
 dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
 
 dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);
+
+dense_qp_res *create_dense_qp_res(dense_qp_dims *dims);
+
+dense_qp_res_ws *create_dense_qp_res_ws(dense_qp_dims *dims);
 
 dense_qp_hpipm_args *dense_qp_hpipm_create_arguments(dense_qp_dims *dims);
 

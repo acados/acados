@@ -26,6 +26,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
@@ -138,8 +139,18 @@ int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 
 int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+
+    acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
+
+    // cast data structures
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
     ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
+
+    info->interface_time = acados_toc(&interface_timer);
+    acados_tic(&qp_timer);
 
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
@@ -147,6 +158,9 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     int hpipm_status = d_solve_ocp_qp_ipm(qp_in, qp_out, args->hpipm_args, memory->hpipm_workspace);
 
     // printf("HPIPM iter = %d\n", memory->hpipm_workspace->iter);
+
+    info->solve_QP_time = acados_toc(&qp_timer);
+    info->total_time = acados_toc(&tot_timer);
 
     // check max number of iterations
     // TODO(dimitris): check ACADOS_MIN_STEP (not implemented in HPIPM yet)
