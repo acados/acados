@@ -122,7 +122,10 @@ void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    return fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
+    void *args = fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
+    fcn_ptrs.initialize_default_args(args);
+
+    return args;
 }
 
 
@@ -218,13 +221,6 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     return solver->fcn_ptrs->fun(qp_in, qp_out, solver->args, solver->mem, solver->work);
-}
-
-
-
-void ocp_qp_initialize_default_args(ocp_qp_solver *solver)
-{
-    solver->fcn_ptrs->initialize_default_args(solver->args);
 }
 
 

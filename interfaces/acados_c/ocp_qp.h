@@ -75,8 +75,6 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
 ocp_qp_solver *ocp_qp_create(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
-//
-void ocp_qp_initialize_default_args(ocp_qp_solver *solver);
 
 // EXPERT INTERFACE
 //
