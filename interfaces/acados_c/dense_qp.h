@@ -67,11 +67,11 @@ void dense_qp_initialize_default_args(dense_qp_solver *solver);
 // EXPERT INTERFACE
 //
 //
-int dense_qp_calculate_args_size(dense_qp_dims *dims, void *args_);
+int dense_qp_calculate_args_size(dense_qp_plan *plan, dense_qp_dims *dims);
 //
-void *dense_qp_assign_args(dense_qp_dims *dims, void *args_, void *raw_memory);
+void *dense_qp_assign_args(dense_qp_plan *plan, dense_qp_dims *dims, void *raw_memory);
 //
-void *dense_qp_create_args(dense_qp_dims *dims, void *args_);
+void *dense_qp_create_args(dense_qp_plan *plan, dense_qp_dims *dims);
 //
 int dense_qp_calculate_memory_size(dense_qp_dims *dims, void *args_);
 //

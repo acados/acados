@@ -66,11 +66,11 @@ void sim_initialize_default_args(sim_solver *solver);
 
 // EXPERT INTERFACE
 //
-int sim_calculate_args_size(sim_dims *dims, void *args_);
+int sim_calculate_args_size(sim_plan *plan, sim_dims *dims);
 //
-void *sim_assign_args(sim_dims *dims, void *args_, void *raw_memory);
+void *sim_assign_args(sim_plan *plan, sim_dims *dims, void *raw_memory);
 //
-void *sim_create_args(sim_dims *dims, void *args_);
+void *sim_create_args(sim_plan *plan, sim_dims *dims);
 //
 int sim_calculate_memory_size(sim_dims *dims, void *args_);
 //

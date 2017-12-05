@@ -67,11 +67,11 @@ void ocp_linearization_initialize_default_args(ocp_linearization_method *method)
 // EXPERT INTERFACE
 //
 //
-int ocp_linearization_calculate_args_size(ocp_linearization_dims *dims, void *args_);
+int ocp_linearization_calculate_args_size(ocp_linearization_plan *plan, ocp_linearization_dims *dims);
 //
-void *ocp_linearization_assign_args(ocp_linearization_dims *dims, void *args_, void *raw_memory);
+void *ocp_linearization_assign_args(ocp_linearization_plan *plan, ocp_linearization_dims *dims, void *raw_memory);
 //
-void *ocp_linearization_create_args(ocp_linearization_dims *dims, void *args_);
+void *ocp_linearization_create_args(ocp_linearization_plan *plan, ocp_linearization_dims *dims);
 //
 int ocp_linearization_calculate_memory_size(ocp_linearization_dims *dims, void *args_);
 //

@@ -90,21 +90,21 @@ void dense_qp_initialize_default_args(dense_qp_solver *solver)
 
 
 
-int dense_qp_calculate_args_size(dense_qp_dims *dims, void *args_)
+int dense_qp_calculate_args_size(dense_qp_plan *plan, dense_qp_dims *dims)
 {
     return 0;
 }
 
 
 
-void *dense_qp_assign_args(dense_qp_dims *dims, void *args_, void *raw_memory)
+void *dense_qp_assign_args(dense_qp_plan *plan, dense_qp_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *dense_qp_create_args(dense_qp_dims *dims, void *args_)
+void *dense_qp_create_args(dense_qp_plan *plan, dense_qp_dims *dims)
 {
     return NULL;
 }

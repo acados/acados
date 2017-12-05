@@ -69,11 +69,11 @@ void ocp_nlp_initialize_default_args(ocp_nlp_solver *solver);
 // EXPERT INTERFACE
 //
 //
-int ocp_nlp_calculate_args_size(ocp_nlp_dims *dims, void *args_);
+int ocp_nlp_calculate_args_size(ocp_nlp_plan *plan, ocp_nlp_dims *dims);
 //
 void *ocp_nlp_assign_args(ocp_nlp_plan  *plan, ocp_nlp_dims *dims, void *raw_memory);
 //
-void *ocp_nlp_create_args(ocp_nlp_dims *dims, void *args_);
+void *ocp_nlp_create_args(ocp_nlp_plan *plan, ocp_nlp_dims *dims);
 //
 int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, void *args_);
 //
