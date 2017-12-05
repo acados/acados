@@ -27,37 +27,6 @@
 #include <acados/utils/mem.h>
 
 
-int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver_fcn_ptrs *sim_solver)
-{
-    int return_value = ACADOS_SUCCESS;
-
-    switch (sim_solver_name)
-    {
-        case ERK:
-            sim_solver->fun = &sim_erk;
-            sim_solver->calculate_args_size = &sim_erk_opts_calculate_size;
-            sim_solver->assign_args = &sim_erk_assign_opts;
-            sim_solver->initialize_default_args = &sim_erk_initialize_default_args;
-            sim_solver->calculate_memory_size = &sim_erk_calculate_memory_size;
-            sim_solver->assign_memory = &sim_erk_assign_memory;
-            sim_solver->calculate_workspace_size = &sim_erk_calculate_workspace_size;
-            break;
-        case LIFTED_IRK:
-            sim_solver->fun = &sim_lifted_irk;
-            sim_solver->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
-            sim_solver->assign_args = &sim_lifted_irk_assign_opts;
-            sim_solver->initialize_default_args = &sim_lifted_irk_initialize_default_args;
-            sim_solver->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
-            sim_solver->assign_memory = &sim_lifted_irk_assign_memory;
-            sim_solver->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
-            break;
-        default:
-            return_value = ACADOS_FAILURE;
-    }
-    return return_value;
-}
-
-
 
 sim_in *create_sim_in(sim_dims *dims)
 {
@@ -81,6 +50,27 @@ sim_out *create_sim_out(sim_dims *dims)
     sim_out *out = assign_sim_out(dims, ptr);
 
     return out;
+}
+
+
+
+int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
+{
+    return NULL;
 }
 
 
@@ -120,49 +110,33 @@ void sim_initialize_default_args(sim_solver *solver)
 
 
 
-int sim_calculate_args_size(sim_plan *plan, sim_dims *dims)
+int set_sim_solver_fun_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs)
 {
-    return 0;
-}
+    int return_value = ACADOS_SUCCESS;
+    sim_solver_t sim_solver_name = plan->sim_solver;
 
-
-
-void *sim_assign_args(sim_plan *plan, sim_dims *dims, void *raw_memory)
-{
-    return NULL;
-}
-
-
-
-void *sim_create_args(sim_plan *plan, sim_dims *dims)
-{
-    return NULL;
-}
-
-
-
-int sim_calculate_memory_size(sim_dims *dims, void *args_)
-{
-    return 0;
-}
-
-
-
-void *sim_assign_memory(sim_dims *dims, void *args_, void *raw_memory)
-{
-    return NULL;
-}
-
-
-
-void *sim_create_memory(sim_dims *dims, void *args_)
-{
-    return NULL;
-}
-
-
-
-int sim_calculate_workspace_size(sim_dims *dims, void *args_)
-{
-    return 0;
+    switch (sim_solver_name)
+    {
+        case ERK:
+            fcn_ptrs->fun = &sim_erk;
+            fcn_ptrs->calculate_args_size = &sim_erk_opts_calculate_size;
+            fcn_ptrs->assign_args = &sim_erk_assign_opts;
+            fcn_ptrs->initialize_default_args = &sim_erk_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &sim_erk_calculate_memory_size;
+            fcn_ptrs->assign_memory = &sim_erk_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &sim_erk_calculate_workspace_size;
+            break;
+        case LIFTED_IRK:
+            fcn_ptrs->fun = &sim_lifted_irk;
+            fcn_ptrs->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
+            fcn_ptrs->assign_args = &sim_lifted_irk_assign_opts;
+            fcn_ptrs->initialize_default_args = &sim_lifted_irk_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
+            fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
+            break;
+        default:
+            return_value = ACADOS_FAILURE;
+    }
+    return return_value;
 }

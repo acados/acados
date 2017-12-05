@@ -24,98 +24,79 @@
 
 
 
-ocp_linearization_in *create_ocp_linearization_in(ocp_linearization_dims *dims)
+ocp_lin_in *create_ocp_lin_in(ocp_lin_dims *dims)
 {
     return NULL;
 }
 
 
 
-ocp_linearization_out *create_ocp_linearization_out(ocp_linearization_dims *dims)
+ocp_lin_out *create_ocp_lin_out(ocp_lin_dims *dims)
 {
     return NULL;
 }
 
 
 
-int ocp_linearization_calculate_size(ocp_linearization_dims *dims, void *args_)
+int ocp_lin_calculate_args_size(ocp_lin_method_plan *plan, ocp_lin_dims *dims)
 {
     return 0;
 }
 
 
 
-ocp_linearization_method *ocp_linearization_assign(ocp_linearization_dims *dims, void *args_, void *raw_memory)
+void *ocp_lin_assign_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-ocp_linearization_method *ocp_linearization_create(ocp_linearization_dims *dims, void *args_)
+void *ocp_lin_create_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims)
 {
     return NULL;
 }
 
 
 
-int ocp_linearization_solve(ocp_linearization_method *solver, ocp_linearization_in *qp_in, ocp_linearization_out *qp_out)
+int ocp_lin_calculate_size(ocp_lin_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-void ocp_linearization_initialize_default_args(ocp_linearization_method *method)
+ocp_lin_method *ocp_lin_assign(ocp_lin_dims *dims, void *args_, void *raw_memory)
 {
-
+    return NULL;
 }
 
 
 
-int ocp_linearization_calculate_args_size(ocp_linearization_plan *plan, ocp_linearization_dims *dims)
+ocp_lin_method *ocp_lin_create(ocp_lin_dims *dims, void *args_)
+{
+    return NULL;
+}
+
+
+
+int ocp_lin_solve(ocp_lin_method *solver, ocp_lin_in *qp_in, ocp_lin_out *qp_out)
 {
     return 0;
 }
 
 
 
-void *ocp_linearization_assign_args(ocp_linearization_plan *plan, ocp_linearization_dims *dims, void *raw_memory)
+void ocp_lin_initialize_default_args(ocp_lin_method *method)
 {
-    return NULL;
+
 }
 
 
 
-void *ocp_linearization_create_args(ocp_linearization_plan *plan, ocp_linearization_dims *dims)
+int set_ocp_lin_method_fcn_ptrs(ocp_lin_method_plan *plan, ocp_lin_method_fcn_ptrs *fcn_ptrs)
 {
-    return NULL;
-}
+    int return_value = ACADOS_SUCCESS;
 
-
-
-int ocp_linearization_calculate_memory_size(ocp_linearization_dims *dims, void *args_)
-{
-    return 0;
-}
-
-
-
-void *ocp_linearization_assign_memory(ocp_linearization_dims *dims, void *args_, void *raw_memory)
-{
-    return NULL;
-}
-
-
-
-void *ocp_linearization_create_memory(ocp_linearization_dims *dims, void *args_)
-{
-    return NULL;
-}
-
-
-
-int ocp_linearization_calculate_workspace_size(ocp_linearization_dims *dims, void *args_)
-{
-    return 0;
+    return return_value;
 }

@@ -36,7 +36,7 @@ typedef enum {
 
 typedef struct {
     sim_solver_t sim_solver;
-} sim_plan;
+} sim_solver_plan;
 
 typedef struct {
     sim_solver_fcn_ptrs *fcn_ptrs;
@@ -51,6 +51,12 @@ typedef struct {
 sim_in *create_sim_in(sim_dims *dims);
 //
 sim_out *create_sim_out(sim_dims *dims);
+//
+int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims);
+//
+void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory);
+//
+void *sim_create_args(sim_solver_plan *plan, sim_dims *dims);
 
 // BASIC INTERFACE
 //
@@ -66,20 +72,7 @@ void sim_initialize_default_args(sim_solver *solver);
 
 // EXPERT INTERFACE
 //
-int sim_calculate_args_size(sim_plan *plan, sim_dims *dims);
-//
-void *sim_assign_args(sim_plan *plan, sim_dims *dims, void *raw_memory);
-//
-void *sim_create_args(sim_plan *plan, sim_dims *dims);
-//
-int sim_calculate_memory_size(sim_dims *dims, void *args_);
-//
-void *sim_assign_memory(sim_dims *dims, void *args_, void *raw_memory);
-//
-void *sim_create_memory(sim_dims *dims, void *args_);
-//
-int sim_calculate_workspace_size(sim_dims *dims, void *args_);
-
+int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -38,6 +38,27 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
 
 
 
+int ocp_nlp_calculate_args_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *ocp_nlp_assign_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+void *ocp_nlp_create_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims)
+{
+    return NULL;
+}
+
+
+
 int ocp_nlp_calculate_size(ocp_nlp_dims *dims, void *args_)
 {
     return 0;
@@ -71,51 +92,9 @@ void ocp_nlp_initialize_default_args(ocp_nlp_solver *solver)
 
 }
 
-
-
-int ocp_nlp_calculate_args_size(ocp_nlp_plan *plan, ocp_nlp_dims *dims)
+int set_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_plan *plan, ocp_nlp_solver_fcn_ptrs *fcn_ptrs)
 {
-    return 0;
-}
+    int return_value = ACADOS_SUCCESS;
 
-
-
-void *ocp_nlp_assign_args(ocp_nlp_plan *plan, ocp_nlp_dims *dims, void *raw_memory)
-{
-    return NULL;
-}
-
-
-
-void *ocp_nlp_create_args(ocp_nlp_plan *plan, ocp_nlp_dims *dims)
-{
-    return NULL;
-}
-
-
-
-int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, void *args_)
-{
-    return 0;
-}
-
-
-
-void *ocp_nlp_assign_memory(ocp_nlp_dims *dims, void *args_, void *raw_memory)
-{
-    return NULL;
-}
-
-
-
-void *ocp_nlp_create_memory(ocp_nlp_dims *dims, void *args_)
-{
-    return NULL;
-}
-
-
-
-int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, void *args_)
-{
-    return 0;
+    return return_value;
 }

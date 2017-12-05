@@ -36,9 +36,9 @@ typedef enum {
 } ocp_nlp_solver_t;
 
 typedef struct {
-    ocp_qp_plan *ocp_qp_plan;
-    sim_plan **sim_plan;
-} ocp_nlp_plan;
+    ocp_qp_solver_plan *ocp_qp_solver_plan;
+    sim_solver_plan **sim_solver_plan;
+} ocp_nlp_solver_plan;
 
 typedef struct {
     ocp_nlp_solver_fcn_ptrs *fcn_ptrs;
@@ -53,6 +53,12 @@ typedef struct {
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims);
 //
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
+//
+int ocp_nlp_calculate_args_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims);
+//
+void *ocp_nlp_assign_args(ocp_nlp_solver_plan  *plan, ocp_nlp_dims *dims, void *raw_memory);
+//
+void *ocp_nlp_create_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims);
 
 // BASIC INTERFACE
 //
@@ -68,20 +74,7 @@ void ocp_nlp_initialize_default_args(ocp_nlp_solver *solver);
 
 // EXPERT INTERFACE
 //
-//
-int ocp_nlp_calculate_args_size(ocp_nlp_plan *plan, ocp_nlp_dims *dims);
-//
-void *ocp_nlp_assign_args(ocp_nlp_plan  *plan, ocp_nlp_dims *dims, void *raw_memory);
-//
-void *ocp_nlp_create_args(ocp_nlp_plan *plan, ocp_nlp_dims *dims);
-//
-int ocp_nlp_calculate_memory_size(ocp_nlp_dims *dims, void *args_);
-//
-void *ocp_nlp_assign_memory(ocp_nlp_dims *dims, void *args_, void *raw_memory);
-//
-void *ocp_nlp_create_memory(ocp_nlp_dims *dims, void *args_);
-//
-int ocp_nlp_calculate_workspace_size(ocp_nlp_dims *dims, void *args_);
+int set_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_plan *plan, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
 
 
 #ifdef __cplusplus
