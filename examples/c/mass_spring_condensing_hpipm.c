@@ -128,23 +128,13 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\nres_g = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(nu[ii]+nx[ii]+2*ns[ii], qp_res->res_g+ii, 0);
-
-    printf("\nres_b = \n");
-    for (int ii = 0; ii < N; ii++) d_print_tran_strvec(nx[ii+1], qp_res->res_b+ii, 0);
-
-    printf("\nres_d = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_d+ii, 0);
-
-    printf("\nres_m = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_m+ii, 0);
-
-
     dense_qp_hpipm_memory *tmp_mem = (dense_qp_hpipm_memory *) mem->solver_memory;
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        tmp_mem->hpipm_workspace->iter, NREP, time);
+    printf("\ninf norm res: %e, %e, %e, %e\n", tmp_mem->hpipm_workspace->qp_res[0],
+           tmp_mem->hpipm_workspace->qp_res[1], tmp_mem->hpipm_workspace->qp_res[2],
+           tmp_mem->hpipm_workspace->qp_res[3]);
+
+    printf("\nNumber of IPM iterations = %d\n\n\n", tmp_mem->hpipm_workspace->iter);
 
     print_ocp_qp_info(&min_info);
 

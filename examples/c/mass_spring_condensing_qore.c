@@ -116,13 +116,11 @@ int main() {
     compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
 
     /************************************************
-    * extract residuals
+    * compute infinity norm of residuals
     ************************************************/
 
-    colmaj_ocp_qp_res *cm_qp_res;
-    void *memres = malloc(colmaj_ocp_qp_res_calculate_size(dims));
-    assign_colmaj_ocp_qp_res(dims, &cm_qp_res, memres);
-    convert_ocp_qp_res_to_colmaj(qp_res, cm_qp_res);
+    double res[4];
+    compute_ocp_qp_res_nrm_inf(qp_res, res);
 
     /************************************************
     * print solution and stats
@@ -140,56 +138,7 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\nres_r = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nu[ii], cm_qp_res->res_r[ii], 1);
-
-    printf("\nres_q = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], cm_qp_res->res_q[ii], 1);
-
-    printf("\nres_ls = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_ls[ii], 1);
-
-    printf("\nres_us = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_us[ii], 1);
-
-    printf("\nres_b = \n");
-    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], cm_qp_res->res_b[ii], 1);
-
-    printf("\nres_d_lb = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_d_lb[ii], 1);
-
-    printf("\nres_d_ub = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_d_ub[ii], 1);
-
-    printf("\nres_d_lg = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_d_lg[ii], 1);
-
-    printf("\nres_d_ug = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_d_ug[ii], 1);
-
-    printf("\nres_d_ls = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_d_ls[ii], 1);
-
-    printf("\nres_d_us = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_d_us[ii], 1);
-
-    printf("\nres_m_lb = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_m_lb[ii], 1);
-
-    printf("\nres_m_ub = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nb[ii], cm_qp_res->res_m_ub[ii], 1);
-
-    printf("\nres_m_lg = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_m_lg[ii], 1);
-
-    printf("\nres_m_ug = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ng[ii], cm_qp_res->res_m_ug[ii], 1);
-
-    printf("\nres_m_ls = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_m_ls[ii], 1);
-
-    printf("\nres_m_us = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, ns[ii], cm_qp_res->res_m_us[ii], 1);
+    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
     dense_qp_qore_memory *tmp_mem = (dense_qp_qore_memory *) mem->solver_memory;
 
@@ -204,7 +153,6 @@ int main() {
     free(qp_in);
     free(qp_out);
     free(sol);
-    free(cm_qp_res);
     free(qp_res);
     free(res_ws);
     free(arg);
