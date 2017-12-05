@@ -110,33 +110,25 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
     int size = sizeof(sim_irk_workspace);
 
     size += 5*sizeof(struct d_strmat); // JG, JGf, JKf, JFK, S_forw
+    size += steps*sizeof(struct d_strmat); // JG_traj
+
     size += 4*sizeof(struct d_strvec); // rG, K, xt, xn
     size += 2*sizeof(struct d_strvec); // lambda,lambdaK
-
-    size += 2*sizeof(struct d_strvec *); // **xn_traj, **K_traj;
-    size += 2*steps*sizeof(struct d_strvec);  // number of strvec pointers
-
-    size += sizeof(struct d_strmat *); // JG_traj
-    size += steps*sizeof(struct d_strmat);
-
-    make_int_multiple_of(64, &size);
-    size += 1 * 64; 
-
+    size += 2*steps*sizeof(struct d_strvec);  // **xn_traj, **K_traj;
+    
     size += d_size_strmat(nx*ns, nx*ns); // JG
     size += 2*d_size_strmat(nx*ns, nx+nu); // JGf, JKf
     size += d_size_strmat(nx, nx*ns); // JFK
     size += d_size_strmat(nx, nx+nu); // S_forw
+    size += steps * d_size_strmat(nx*ns, nx*ns); // for JG_traj  
 
     size += 2*d_size_strvec(nx*ns); // rG, K
     size += 2*d_size_strvec(nx); // xt, x
-
     size += d_size_strvec(nx+nu); // lambda
     size += d_size_strvec(nx*ns); // lambdaK
-
     size += steps * d_size_strvec(nx); // for xn_traj
     size += steps * d_size_strvec(nx*ns); // for K_traj
-    size += steps * d_size_strmat(nx*ns, nx*ns); // for JG_traj  
-
+    
     size += nx * sizeof(double); //  rGt
     size += nx * (2*nx+nu) * sizeof(double); // jac_out
     size += nx * nx * sizeof(double); // Jt
@@ -145,10 +137,8 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
     size += nx *ns * (steps+1) * sizeof(int); // ipiv
 
-    // make_int_multiple_of(64, &size);
-    // size += 1 * 64; 
-
-    // printf("size calculated %d", size);
+    make_int_multiple_of(64, &size);
+    size += 1 * 64; 
 
     return size;
 }
@@ -169,14 +159,7 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
     sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
     c_ptr += sizeof(sim_irk_workspace);
 
-    workspace->xn_traj = (struct d_strvec **)c_ptr;
-    c_ptr += steps* sizeof(struct d_strvec *); 
-    
-    workspace->K_traj = (struct d_strvec **)c_ptr;
-    c_ptr += steps* sizeof(struct d_strvec *);
-
-    workspace->JG_traj = (struct d_strmat **)c_ptr;
-    c_ptr += steps* sizeof(struct d_strmat *);
+    assign_strmat_ptrs(steps, &workspace->JG_traj, &c_ptr);
 
     workspace->JG = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat); 
@@ -193,10 +176,9 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
     workspace->S_forw = (struct d_strmat *)c_ptr;
     c_ptr += sizeof(struct d_strmat);
 
-    for (int i=0;i<steps;i++){
-        workspace->JG_traj[i] = (struct d_strmat *)c_ptr;
-        c_ptr += sizeof(struct d_strmat);
-    }
+
+    assign_strvec_ptrs(steps, &workspace->xn_traj, &c_ptr);
+    assign_strvec_ptrs(steps, &workspace->K_traj, &c_ptr);
 
     workspace->rG = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
@@ -215,67 +197,45 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     workspace->lambdaK = (struct d_strvec *)c_ptr;
     c_ptr += sizeof(struct d_strvec);
-
-    for (int i=0;i<steps;i++){
-        workspace->xn_traj[i] = (struct d_strvec *)c_ptr;
-        c_ptr += sizeof(struct d_strvec);
-
-        workspace->K_traj[i] = (struct d_strvec *)c_ptr;
-        c_ptr += sizeof(struct d_strvec);
-    }
     
     align_char_to(64, &c_ptr);
 
     assign_strmat(nx*ns, nx*ns, workspace->JG, &c_ptr);
-
     assign_strmat(nx*ns, nx+nu, workspace->JGf, &c_ptr);
-
     assign_strmat(nx*ns, nx+nu, workspace->JKf, &c_ptr);
-
     assign_strmat(nx, nx*ns, workspace->JFK, &c_ptr);
-
     assign_strmat(nx, nx+nu, workspace->S_forw, &c_ptr);
-
     for (int i=0;i<steps;i++){
-        assign_strmat(nx*ns, nx*ns, workspace->JG_traj[i], &c_ptr);
+        assign_strmat(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     }
 
     assign_strvec(nx*ns, workspace->rG, &c_ptr);
-
     assign_strvec(nx*ns, workspace->K, &c_ptr);
-
     assign_strvec(nx, workspace->xt, &c_ptr);
-
     assign_strvec(nx, workspace->xn, &c_ptr);
-
     assign_strvec(nx+nu, workspace->lambda, &c_ptr);
-
     assign_strvec(nx*ns, workspace->lambdaK, &c_ptr);
-
     for (int i=0;i<steps;i++){
-        assign_strvec(nx, workspace->xn_traj[i], &c_ptr);
-        assign_strvec(nx*ns, workspace->K_traj[i], &c_ptr);    
+        assign_strvec(nx, &workspace->xn_traj[i], &c_ptr);
+        assign_strvec(nx*ns, &workspace->K_traj[i], &c_ptr);    
     }
 
     assign_double(nx, &workspace->rGt, &c_ptr);
-
     assign_double(nx * (2*nx+nu), &workspace->jac_out, &c_ptr);
-
     assign_double(nx * nx, &workspace->Jt, &c_ptr);
-
     assign_double(2*nx + nu, &workspace->ode_args, &c_ptr);
-
     assign_double(nx + nu, &workspace->S_adj_w, &c_ptr);
 
     assign_int(nx * ns* (steps+1) , &workspace->ipiv, &c_ptr);
 
-    // printf("\npointer moved: %d bytes\n", c_ptr - (char*)raw_memory);
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
     assert((char*)raw_memory + sim_irk_calculate_workspace_size(dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }
+
+
 
 void *sim_irk_create_memory(sim_dims *dims, void *opts_)
 {
@@ -334,9 +294,9 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     // for adjoint
     struct d_strvec *lambda = workspace->lambda;
     struct d_strvec *lambdaK = workspace->lambdaK;
-    struct d_strvec **xn_traj = workspace->xn_traj;
-    struct d_strvec **K_traj = workspace->K_traj;
-    struct d_strmat **JG_traj = workspace->JG_traj;
+    struct d_strvec *xn_traj = workspace->xn_traj;
+    struct d_strvec *K_traj = workspace->K_traj;
+    struct d_strmat *JG_traj = workspace->JG_traj;
     double *S_adj_in = workspace->S_adj_w;
 
     double *x_out = out->xn;
@@ -390,7 +350,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
         for(iter=0; iter<newton_iter; iter++){
 
             if (opts->sens_adj){
-                dveccp_libstr(nx, xn, 0, xn_traj[ss], 0);
+                dveccp_libstr(nx, xn, 0, &xn_traj[ss], 0);
             }
            
             for(ii=0; ii<num_stages; ii++){ // ii-th row of tableau   
@@ -462,7 +422,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
         }// end iter
 
         if (opts->sens_adj){
-            dveccp_libstr(nx*num_stages, K, 0, K_traj[ss], 0);
+            dveccp_libstr(nx*num_stages, K, 0, &K_traj[ss], 0);
         }
         
         // evaluate forward sensitivities
@@ -492,7 +452,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
 
                 in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
                 timing_ad += acados_toc(&timer_ad);
-                // maybe this part can also be written using blasfeo
+                
                 for (jj=0;jj<num_stages;jj++){
                     a = A_mat[ii+num_stages*jj];
                     if (a!=0){
@@ -514,7 +474,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                 ipiv[jj] = ipiv[(ss+1)*num_stages*nx + jj];
 
             if (opts->sens_adj){ // store the factorization and permutation
-                dgecp_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG_traj[ss], 0, 0);
+                dgecp_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, &JG_traj[ss], 0, 0);
             }
 
             // obtain JKf
@@ -541,7 +501,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
               
         for(ss=num_steps-1;ss>-1;ss--){
 
-            dveccp_libstr(nx, xn_traj[ss], 0, xt, 0);
+            dveccp_libstr(nx, &xn_traj[ss], 0, xt, 0);
 
             if (opts->sens_forw){ // evalute JGf and extract factorization
 
@@ -551,11 +511,11 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                         a = A_mat[ii+num_stages*jj];
                         if(a!=0){
                             a *= step;
-                            daxpy_libstr(nx, a, K_traj[ss], jj*nx, xt, 0, xt, 0);
+                            daxpy_libstr(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
                         }
                     }               
                     d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
-                    d_cvt_strvec2vec(nx, K_traj[ss], ii*nx, ode_args+nx);  
+                    d_cvt_strvec2vec(nx, &K_traj[ss], ii*nx, ode_args+nx);  
 
                     acados_tic(&timer_ad);
                     in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
@@ -574,11 +534,11 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                         a = A_mat[ii+num_stages*jj];
                         if(a!=0){
                             a *= step;
-                            daxpy_libstr(nx, a, K_traj[ss], jj*nx, xt, 0, xt, 0);
+                            daxpy_libstr(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
                         }
                     }               
                     d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
-                    d_cvt_strvec2vec(nx, K_traj[ss], ii*nx, ode_args+nx);  
+                    d_cvt_strvec2vec(nx, &K_traj[ss], ii*nx, ode_args+nx);  
 
                     acados_tic(&timer_ad);
                     in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
@@ -600,19 +560,19 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                             for (kk=0;kk<nx*nx;kk++)
                                 Jt[kk] += jac_out[nx*nx+kk];
                         }
-                        d_cvt_mat2strmat(nx, nx, Jt, nx, JG_traj[ss], ii*nx, jj*nx);            
+                        d_cvt_mat2strmat(nx, nx, Jt, nx, &JG_traj[ss], ii*nx, jj*nx);            
                     } // end jj     
                 } // end ii
 
                 // factorize JG
-                dgetrf_libstr(nx*num_stages, nx*num_stages, JG_traj[ss], 0, 0, JG_traj[ss], 0, 0, ipiv+(ss+1)*num_stages*nx); //
+                dgetrf_libstr(nx*num_stages, nx*num_stages, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv+(ss+1)*num_stages*nx); //
             }// else if/else
 
             dgemv_t_libstr(nx, nx*num_stages, -1.0, JFK, 0, 0, lambda, 0, 0.0, lambdaK, 0, lambdaK, 0);
 
-            dtrsv_utn_libstr(nx*num_stages, JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
+            dtrsv_utn_libstr(nx*num_stages, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
-            dtrsv_ltu_libstr(nx*num_stages, JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
+            dtrsv_ltu_libstr(nx*num_stages, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
             dvecpei_libstr(nx*num_stages, ipiv+(ss+1)*num_stages*nx, lambdaK, 0);
 

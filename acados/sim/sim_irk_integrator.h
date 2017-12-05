@@ -54,9 +54,9 @@ typedef struct {
     double *S_adj_w;
     int *ipiv; // index of pivot vector
 
-    struct d_strvec **xn_traj; // xn trajectory
-    struct d_strvec **K_traj;  // K trajectory
-    struct d_strmat **JG_traj; // JG trajectory
+    struct d_strvec *xn_traj; // xn trajectory
+    struct d_strvec *K_traj;  // K trajectory
+    struct d_strmat *JG_traj; // JG trajectory
 
 } sim_irk_workspace;
 

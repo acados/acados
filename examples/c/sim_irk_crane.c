@@ -21,15 +21,13 @@
 #include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
-#include <malloc.h>
-
 // #define M_PI 3.14159265358979323846
 
 int main() {
 
     int NREP = 500;
     acados_timer timer;
-    double Time1, Time2;
+    double Time1, Time2, Time3;
 
     int ii;
     int jj;
@@ -90,10 +88,7 @@ int main() {
     irk_opts->num_forw_sens = NF;
 
     int workspace_size = sim_irk_calculate_workspace_size(&dims, irk_opts);
-    // void *workspace = malloc(workspace_size);
-
-    void *workspace;
-    posix_memalign(&workspace, 64, workspace_size);
+    void *workspace = malloc(workspace_size);
 
     sim_out *out = create_sim_out(&dims);
 
@@ -108,6 +103,14 @@ int main() {
         sim_irk(in, out, irk_opts, NULL, workspace);
     Time2 = acados_toc(&timer)/NREP;
 
+    irk_opts->jac_reuse = false;
+    irk_opts->sens_forw = false;
+    irk_opts->sens_adj = true;
+    acados_tic(&timer);
+    for (ii=0;ii<NREP;ii++)
+        sim_irk(in, out, irk_opts, NULL, workspace);
+    Time3 = acados_toc(&timer)/NREP;
+
     printf("IRK Example for Inverted Pendulum:\n");
     printf("No. of Integration Steps: %d", irk_opts->num_steps);
 
@@ -120,6 +123,9 @@ int main() {
     printf("NO. of run: %d   Avg cpt: %8.5f[ms]\n", NREP, Time2*1000);
 
     printf("Speed Up Factor: %8.5f\n", Time1/Time2);
+
+    printf("IRK with Adjoint Sensitivity:\n");
+    printf("NO. of run: %d   Avg cpt: %8.5f[ms]\n", NREP, Time3*1000);
 
     // double *xn = out->xn;
 
