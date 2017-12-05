@@ -103,6 +103,8 @@ ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory);
 //
 void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
 //
+void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4]);
+//
 int set_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, void *qp_solver);
 //
 void set_xcond_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);

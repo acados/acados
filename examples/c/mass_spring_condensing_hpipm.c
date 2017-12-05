@@ -108,9 +108,19 @@ int main() {
     * compute residuals
     ************************************************/
 
-    ocp_qp_res *qp_res = create_ocp_qp_res(qp_in->dim);
-    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_in->dim);
+    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
     compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+    /************************************************
+    * compute infinity norm of residuals
+    ************************************************/
+
+    double res[4];
+    compute_ocp_qp_res_nrm_inf(qp_res, res);
+    double max_res = 0.0;
+    for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
+    assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
 
     /************************************************
     * print solution and stats
@@ -128,23 +138,11 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    printf("\nres_g = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(nu[ii]+nx[ii]+2*ns[ii], qp_res->res_g+ii, 0);
-
-    printf("\nres_b = \n");
-    for (int ii = 0; ii < N; ii++) d_print_tran_strvec(nx[ii+1], qp_res->res_b+ii, 0);
-
-    printf("\nres_d = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_d+ii, 0);
-
-    printf("\nres_m = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_tran_strvec(2*nb[ii]+2*ng[ii]+2*ns[ii], qp_res->res_m+ii, 0);
-
+    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
     dense_qp_hpipm_memory *tmp_mem = (dense_qp_hpipm_memory *) mem->solver_memory;
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        tmp_mem->hpipm_workspace->iter, NREP, time);
+    printf("\nNumber of IPM iterations = %d\n\n\n", tmp_mem->hpipm_workspace->iter);
 
     print_ocp_qp_info(&min_info);
 
@@ -155,6 +153,8 @@ int main() {
     free(qp_in);
     free(qp_out);
     free(sol);
+    free(qp_res);
+    free(res_ws);
     free(arg);
     free(mem);
     free(work);
