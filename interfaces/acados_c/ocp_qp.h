@@ -58,6 +58,8 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+ocp_qp_dims *create_ocp_qp_dims(int N);
+//
 ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
 //
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);

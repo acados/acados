@@ -21,7 +21,6 @@
 
 //external
 #include <stdlib.h>
-#include <string.h>
 //acados
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
@@ -134,10 +133,40 @@
 
 
 
-
-int calculate_dims_size(ocp_qp_dims *dims)
+void copy_dims(ocp_qp_dims *dest, ocp_qp_dims *src)
 {
-    return 0;
+    dest->N = src->N;
+
+    for (int ii = 0; ii < src->N+1; ii++)
+    {
+        dest->nx[ii] = src->nx[ii];
+        dest->nu[ii] = src->nu[ii];
+        dest->nb[ii] = src->nb[ii];
+        dest->ng[ii] = src->ng[ii];
+        dest->ns[ii] = src->ns[ii];
+        dest->nbu[ii] = src->nbu[ii];
+        dest->nbx[ii] = src->nbx[ii];
+    }
+}
+
+
+
+void copy_args(ocp_qp_solver_plan *plan, void *dest, void *src)
+{
+#warning "To be implemented!"
+}
+
+
+
+ocp_qp_dims *create_ocp_qp_dims(int N)
+{
+    int bytes = ocp_qp_dims_calculate_size(N);
+
+    void *ptr = malloc(bytes);
+
+    ocp_qp_dims *dims = assign_ocp_qp_dims(N, ptr);
+
+    return dims;
 }
 
 
@@ -215,8 +244,8 @@ int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *arg
     bytes = sizeof(ocp_qp_solver);
     
     bytes += sizeof(ocp_qp_solver_fcn_ptrs);
-    
-    bytes += calculate_dims_size(dims);
+
+    bytes += ocp_qp_dims_calculate_size(dims->N);
 
     bytes += ocp_qp_calculate_args_size(plan, dims);
 
@@ -237,23 +266,20 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
 
     char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_solver *solver;
-    solver = (ocp_qp_solver *) c_ptr;
+    ocp_qp_solver *solver = (ocp_qp_solver *)c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
     solver->fcn_ptrs = (ocp_qp_solver_fcn_ptrs *) c_ptr;
-    set_ocp_qp_solver_fcn_ptrs(plan, solver->fcn_ptrs);
     c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
+    set_ocp_qp_solver_fcn_ptrs(plan, solver->fcn_ptrs);
 
-    solver->dims = (ocp_qp_dims *) c_ptr;
-    int dims_size = calculate_dims_size(dims);
-    c_ptr += dims_size;
-    memcpy(solver->dims, dims, dims_size);
+    solver->dims = assign_ocp_qp_dims(dims->N, c_ptr);
+    c_ptr += ocp_qp_dims_calculate_size(dims->N);
+    copy_dims(solver->dims, dims);
 
     solver->args = ocp_qp_assign_args(plan, dims, c_ptr);
-    int args_size = ocp_qp_calculate_args_size(plan, dims);
-    c_ptr += args_size;
-    memcpy(solver->args, args_, args_size);
+    c_ptr += ocp_qp_calculate_args_size(plan, dims);
+    copy_args(plan, solver->args, args_);
 
     solver->mem = fcn_ptrs.assign_memory(dims, args_, c_ptr);
     c_ptr += fcn_ptrs.calculate_memory_size(dims, args_);

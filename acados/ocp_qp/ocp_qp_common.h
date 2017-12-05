@@ -64,6 +64,10 @@ typedef struct {
 
 
 //
+int ocp_qp_dims_calculate_size(int N);
+//
+ocp_qp_dims *assign_ocp_qp_dims(int N, void *raw_memory);
+//
 int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
 //
 ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory);
