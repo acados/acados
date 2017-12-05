@@ -77,6 +77,7 @@ typedef struct {
     double **res_m_ug;
     double **res_m_ls;
     double **res_m_us;
+    double res_nrm_inf[4];
 } colmaj_ocp_qp_res;
 
 
