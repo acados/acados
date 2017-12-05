@@ -3,9 +3,10 @@ include ../../Makefile.rule
 OBJS =
 
 OBJS += dense_qp.o
-OBJS += ocp_linearization.o
+OBJS += ocp_lin.o
 OBJS += ocp_nlp.o
 OBJS += ocp_qp.o
+OBJS += options.o
 OBJS += sim.o
 
 static_library: $(OBJS)

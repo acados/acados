@@ -76,21 +76,21 @@ void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims)
 
 
 
-int dense_qp_calculate_size(dense_qp_dims *dims, void *args_)
+int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-dense_qp_solver *dense_qp_assign(dense_qp_dims *dims, void *args_, void *raw_memory)
+dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-dense_qp_solver *dense_qp_create(dense_qp_dims *dims, void *args_)
+dense_qp_solver *dense_qp_create(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_)
 {
     return NULL;
 }

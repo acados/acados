@@ -75,21 +75,21 @@ void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
 
 
 
-int sim_calculate_size(sim_dims *dims, void *args_)
+int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-sim_solver *sim_assign(sim_dims *dims, void *args_, void *raw_memory)
+sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-sim_solver *sim_create(sim_dims *dims, void *args_)
+sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
     return NULL;
 }

@@ -60,11 +60,11 @@ void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims);
 
 // BASIC INTERFACE
 //
-int dense_qp_calculate_size(dense_qp_dims *dims, void *args_);
+int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_);
 //
-dense_qp_solver *dense_qp_assign(dense_qp_dims *dims, void *args_, void *raw_memory);
+dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-dense_qp_solver *dense_qp_create(dense_qp_dims *dims, void *args_);
+dense_qp_solver *dense_qp_create(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_);
 //
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
 //

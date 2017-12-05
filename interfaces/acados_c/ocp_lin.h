@@ -25,13 +25,13 @@ extern "C" {
 #endif
 
 // acados
-#include <acados/ocp_linearization/ocp_lin_common.h>
+#include <acados/ocp_lin/ocp_lin_common.h>
 #include <acados/utils/types.h>
 
 typedef enum {
-    ocp_lin_HPIPM,
-    ocp_lin_QORE,
-    ocp_lin_QPOASES
+    GAUSS_NEWTON,
+    EXACT_HESSIAN,
+    DOPUS
 } ocp_lin_method_t;
 
 typedef struct {
@@ -60,11 +60,11 @@ void *ocp_lin_create_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims);
 
 // BASIC INTERFACE
 //
-int ocp_lin_calculate_size(ocp_lin_dims *dims, void *args_);
+int ocp_lin_calculate_size(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_);
 //
-ocp_lin_method *ocp_lin_assign(ocp_lin_dims *dims, void *args_, void *raw_memory);
+ocp_lin_method *ocp_lin_assign(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_, void *raw_memory);
 //
-ocp_lin_method *ocp_lin_create(ocp_lin_dims *dims, void *args_);
+ocp_lin_method *ocp_lin_create(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_);
 //
 int ocp_lin_solve(ocp_lin_method *solver, ocp_lin_in *qp_in, ocp_lin_out *qp_out);
 //

@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_LINEARIZATION_OCP_LINEARIZATION_COMMON_H_
-#define ACADOS_OCP_LINEARIZATION_OCP_LINEARIZATION_COMMON_H_
+#ifndef ACADOS_OCP_LIN_OCP_LIN_COMMON_H_
+#define ACADOS_OCP_LIN_OCP_LIN_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,7 +53,7 @@ typedef struct {
     int *ns;  // number of soft constraints
     int *num_stages;
     int N;
-} ocp_linearization_dims;
+} ocp_lin_dims;
 
 typedef struct {
     void *cost;
@@ -67,7 +67,7 @@ typedef struct {
 
     // TODO(nielsvd): should go, old interface
     bool freezeSens;
-} ocp_linearization_in;
+} ocp_lin_in;
 
 typedef struct {
     const real_t **hess_l;  // TODO(nielsvd): Hessians of stage-wise
@@ -79,20 +79,20 @@ typedef struct {
     const real_t **h;       // TODO(nielsvd): rename. Evaluation of stage-wise
                             // integration operator.
     const real_t **g;       // Evaluation of stage-wise path constraints.
-} ocp_linearization_out;
+} ocp_lin_out;
 
 typedef struct {
-    int (*fun)(ocp_linearization_in *qp_in, ocp_linearization_out *qp_out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(ocp_linearization_dims *dims);
-    void *(*assign_args)(ocp_linearization_dims *dims, void *raw_memory);
+    int (*fun)(ocp_lin_in *qp_in, ocp_lin_out *qp_out, void *args, void *mem, void *work);
+    int (*calculate_args_size)(ocp_lin_dims *dims);
+    void *(*assign_args)(ocp_lin_dims *dims, void *raw_memory);
     void (*initialize_default_args)(void *args);
-    int (*calculate_memory_size)(ocp_linearization_dims *dims, void *args);
-    void *(*assign_memory)(ocp_linearization_dims *dims, void *args, void *raw_memory);
-    int (*calculate_workspace_size)(ocp_linearization_dims *dims, void *args);
-} ocp_linearization_method_fcn_ptrs;
+    int (*calculate_memory_size)(ocp_lin_dims *dims, void *args);
+    void *(*assign_memory)(ocp_lin_dims *dims, void *args, void *raw_memory);
+    int (*calculate_workspace_size)(ocp_lin_dims *dims, void *args);
+} ocp_lin_method_fcn_ptrs;
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_LINEARIZATION_OCP_LINEARIZATION_COMMON_H_
+#endif  // ACADOS_OCP_LIN_OCP_LIN_COMMON_H_

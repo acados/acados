@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados_c/ocp_linearization.h"
+#include "acados_c/ocp_lin.h"
 
 //external
 #include <stdlib.h>
@@ -59,21 +59,21 @@ void *ocp_lin_create_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims)
 
 
 
-int ocp_lin_calculate_size(ocp_lin_dims *dims, void *args_)
+int ocp_lin_calculate_size(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-ocp_lin_method *ocp_lin_assign(ocp_lin_dims *dims, void *args_, void *raw_memory)
+ocp_lin_method *ocp_lin_assign(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-ocp_lin_method *ocp_lin_create(ocp_lin_dims *dims, void *args_)
+ocp_lin_method *ocp_lin_create(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_)
 {
     return NULL;
 }

@@ -68,11 +68,11 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims);
 
 // BASIC INTERFACE
 //
-int ocp_qp_calculate_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_);
 //
-ocp_qp_solver *ocp_qp_assign(ocp_qp_dims *dims, void *args_, void *raw_memory);
+ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-ocp_qp_solver *ocp_qp_create(ocp_qp_dims *dims, void *args_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 //
@@ -80,7 +80,7 @@ void ocp_qp_initialize_default_args(ocp_qp_solver *solver);
 
 // EXPERT INTERFACE
 //
-int set_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_solver_fcn_ptrs *fcn_ptrs);
+int set_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs);
 
 
 #ifdef __cplusplus

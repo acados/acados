@@ -60,11 +60,11 @@ void *sim_create_args(sim_solver_plan *plan, sim_dims *dims);
 
 // BASIC INTERFACE
 //
-int sim_calculate_size(sim_dims *dims, void *args_);
+int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_);
 //
-sim_solver *sim_assign(sim_dims *dims, void *args_, void *raw_memory);
+sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory);
 //
-sim_solver *sim_create(sim_dims *dims, void *args_);
+sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_);
 //
 int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
 //

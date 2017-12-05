@@ -59,21 +59,21 @@ void *ocp_nlp_create_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims)
 
 
 
-int ocp_nlp_calculate_size(ocp_nlp_dims *dims, void *args_)
+int ocp_nlp_calculate_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_dims *dims, void *args_, void *raw_memory)
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_dims *dims, void *args_)
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_)
 {
     return NULL;
 }
