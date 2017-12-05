@@ -155,9 +155,11 @@ void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-void ocp_qp_qpdunes_initialize_default_args(qpdunes_options_t opts, void *args_)
+void ocp_qp_qpdunes_initialize_default_args(void *args_)
 {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
+
+    qpdunes_options_t opts = QPDUNES_NONLINEAR_MPC;
 
     args->stageQpSolver = QPDUNES_WITH_CLIPPING;
 

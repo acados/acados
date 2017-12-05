@@ -69,7 +69,7 @@ int main() {
     int size_args = ocp_qp_qpdunes_calculate_args_size(qp_in->dim);
     void *ptr_args = acados_malloc(size_args, 1);
     ocp_qp_qpdunes_args *arg = ocp_qp_qpdunes_assign_args(qp_in->dim, ptr_args);
-    ocp_qp_qpdunes_initialize_default_args(QPDUNES_DEFAULT_ARGUMENTS, arg);
+    ocp_qp_qpdunes_initialize_default_args(arg);
 
     arg->stageQpSolver = QPDUNES_WITH_QPOASES;
 
