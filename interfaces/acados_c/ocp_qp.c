@@ -36,9 +36,10 @@
 
 
 
-void copy_dims(ocp_qp_dims *dest, ocp_qp_dims *src)
+void ocp_qp_copy_dims(ocp_qp_dims *dest, ocp_qp_dims *src)
 {
     dest->N = src->N;
+    dest->memsize = src->memsize;
 
     for (int ii = 0; ii < src->N+1; ii++)
     {
@@ -54,7 +55,7 @@ void copy_dims(ocp_qp_dims *dest, ocp_qp_dims *src)
 
 
 
-void copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *dest, void *src)
+void ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *dest, void *src)
 {
     //TODO(nielsvd): remove the hack below. It breaks when the args used
     //                         to construct the solver gets out of scope.
@@ -203,11 +204,11 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
 
     solver->dims = assign_ocp_qp_dims(dims->N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
-    copy_dims(solver->dims, dims);
+    ocp_qp_copy_dims(solver->dims, dims);
 
     solver->args = ocp_qp_assign_args(plan, dims, c_ptr);
     c_ptr += ocp_qp_calculate_args_size(plan, dims);
-    copy_args(plan, dims, solver->args, args_);
+    ocp_qp_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

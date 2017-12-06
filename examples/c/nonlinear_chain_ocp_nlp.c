@@ -35,12 +35,13 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
-#include "acados/utils/create.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 #include "examples/c/chain_model/chain_model.h"
+
+#include <acados_c/legacy_create.h>
 
 #define NN 15
 #define TF 3.0

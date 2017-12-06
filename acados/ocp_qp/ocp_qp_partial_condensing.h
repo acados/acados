@@ -41,6 +41,7 @@ typedef struct ocp_qp_partial_condensing_memory_ {
 } ocp_qp_partial_condensing_memory;
 
 
+
 //
 int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims);
 //

@@ -49,6 +49,8 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+dense_qp_dims *create_dense_qp_dims();
+//
 dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
 //
 dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);

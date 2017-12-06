@@ -120,7 +120,7 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
 
 
 
-void ocp_qp_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_args *args,
+void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_args *args,
     ocp_qp_full_condensing_memory *mem, void *work)
 {
     d_expand_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);

@@ -173,7 +173,7 @@ int ocp_qp_full_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *ar
     int solver_status = args->solver->fun(memory->qpd_in, memory->qpd_out, args->solver_args, memory->solver_memory, work->solver_workspace);
 
     // expand
-    ocp_qp_expansion(memory->qpd_out, qp_out, args->cond_args, memory->cond_memory, work->cond_work);
+    ocp_qp_full_expansion(memory->qpd_out, qp_out, args->cond_args, memory->cond_memory, work->cond_work);
 
     // return
     return solver_status;

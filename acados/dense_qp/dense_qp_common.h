@@ -49,6 +49,10 @@ typedef struct {
 
 
 //
+int dense_qp_dims_calculate_size();
+//
+dense_qp_dims *assign_dense_qp_dims(void *raw_memory);
+//
 int dense_qp_in_calculate_size(dense_qp_dims *dims);
 //
 dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory);

@@ -19,14 +19,46 @@
 
 // external
 #include <assert.h>
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 // hpipm
 #include "hpipm_d_dense_qp.h"
 #include "hpipm_d_dense_qp_sol.h"
+#include "hpipm_d_dense_qp_dim.h"
 // acados
 #include "acados/utils/types.h"
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados/dense_qp/dense_qp_hpipm.h"
-#include "acados/dense_qp/dense_qp_qpoases.h"
+
+
+
+int dense_qp_dims_calculate_size()
+{
+    int size = sizeof(dense_qp_dims);
+
+    size += d_memsize_dense_qp_dim();
+
+    return size;
+}
+
+
+
+dense_qp_dims *assign_dense_qp_dims(void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    dense_qp_dims *dims = (dense_qp_dims *) c_ptr;
+    c_ptr += sizeof(dense_qp_dims);
+
+    d_create_dense_qp_dim(dims, c_ptr);
+    c_ptr += d_memsize_dense_qp_dim();
+
+    assert((char *) raw_memory + dense_qp_dims_calculate_size() == c_ptr);
+
+    return dims;
+}
 
 
 

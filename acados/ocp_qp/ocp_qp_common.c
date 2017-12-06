@@ -32,7 +32,9 @@
 int ocp_qp_dims_calculate_size(int N)
 {
     int size = sizeof(ocp_qp_dims);
+
     size += d_memsize_ocp_qp_dim(N);
+    
     return size;
 }
 

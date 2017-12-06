@@ -30,7 +30,7 @@
 
 
 
-void copy_dims(sim_dims *dest, sim_dims *src)
+void sim_copy_dims(sim_dims *dest, sim_dims *src)
 {
     dest->num_stages = src->num_stages;
 
@@ -41,7 +41,7 @@ void copy_dims(sim_dims *dest, sim_dims *src)
 
 
 
-void copy_args(sim_solver_plan *plan, sim_dims *dims, void *dest, void *src)
+void sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *dest, void *src)
 {
     //TODO(nielsvd): remove the hack below. It breaks when the args used
     //                         to construct the solver gets out of scope.
@@ -174,11 +174,11 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
 
     solver->dims = assign_sim_dims(c_ptr);
     c_ptr += sim_dims_calculate_size();
-    copy_dims(solver->dims, dims);
+    sim_copy_dims(solver->dims, dims);
 
     solver->args = solver->fcn_ptrs->assign_args(dims, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
-    copy_args(plan, dims, solver->args, args_);
+    sim_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

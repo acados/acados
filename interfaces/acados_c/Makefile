@@ -3,6 +3,7 @@ include ../../Makefile.rule
 OBJS =
 
 OBJS += dense_qp.o
+OBJS += legacy_create.o
 OBJS += ocp_lin.o
 OBJS += ocp_nlp.o
 OBJS += ocp_qp.o
