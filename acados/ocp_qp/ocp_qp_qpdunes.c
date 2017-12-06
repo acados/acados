@@ -299,8 +299,8 @@ static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct d_s
     d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, R, nu);
 
     // copy S
+    // d_cvt_strmat2mat(nx, nu, sRSQrq, nu, 0, S, nx);
     d_cvt_tran_strmat2mat(nx, nu, sRSQrq, nu, 0, S, nu);
-    // TODO(dimitris): OR d_cvt_strmat2mat(nx, nu, sRSQrq, nu, 0, S, nx);
 
     // printf("acados RSQ (nx = %d, nu = %d)\n", nx, nu);
     // d_print_strmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
@@ -308,8 +308,9 @@ static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct d_s
     // d_print_mat(nx, nx, Q, nx);
     // printf("qpDUNES R':\n");
     // d_print_mat(nu, nu, R, nu);
-    // printf("qpDUNES S':\n");  // TODO(dimitris): NOT SURE ABOUT DIMS HERE
-    // d_print_mat(nx, nu, S, nx);
+    // printf("qpDUNES S':\n");
+    // d_print_mat(nu, nx, S, nu);
+    // // d_print_mat(nx, nu, S, nx);
     // printf("********************************************\n\n");
 }
 
@@ -344,7 +345,7 @@ static void form_dynamics(double *ABt, double *b, int nx, int nu, struct d_strma
     // printf("qpDUNES A:\n");
     // d_print_mat(nx, nx, &ABt[0], nx+nu);
     // printf("qpDUNES B:\n");
-    // d_print_mat(nx, nu, &ABt[nx], nx+nu);
+    // d_print_mat(nu, nx, &ABt[nx], nx+nu);
     // printf("********************************************\n\n");
 }
 
@@ -380,12 +381,25 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int n
     // copy C
     d_cvt_strmat2mat(nx, ng, sDCt, nu, 0, &Ct[0], nx+nu);
     // copy D
-    d_cvt_strmat2mat(nu, ng, sDCt, 0, 0, &Ct[nx*ng], nx+nu);
+    d_cvt_strmat2mat(nu, ng, sDCt, 0, 0, &Ct[nx], nx+nu);
     // copy lc
     d_cvt_strvec2vec(ng, sd, nb, lc);
     // copy uc
     d_cvt_strvec2vec(ng, sd, 2*nb+ng, uc);
 
+    // printf("acados [D'; C'] (nx = %d, nu = %d)\n", nx, nu);
+    // d_print_strmat(sDCt->m, sDCt->n, sDCt, 0, 0);
+    // printf("qpDUNES C:\n");
+    // d_print_mat(nx, ng, &Ct[0], nx+nu);
+    // printf("qpDUNES D:\n");
+    // d_print_mat(nu, ng, &Ct[nx], nx+nu);
+    // printf("acados d (nx = %d, nu = %d)\n", nx, nu);
+    // d_print_tran_strvec(sd->m, sd, 0);
+    // printf("qpDUNES lc':\n");
+    // d_print_mat(1, ng, lc, 1);
+    // printf("qpDUNES uc':\n");
+    // d_print_mat(1, ng, uc, 1);
+    // printf("********************************************\n\n");
 }
 
 
