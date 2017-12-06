@@ -260,44 +260,57 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
 }
 
 
-// static void transpose_matrix(double *mat, int m, int n, double *tmp)
-// {
-//     for (int jj = 0; jj < n; jj++) {
-//         for (int ii = 0; ii < m; ii++) {
-//             tmp[ii * n + jj] = mat[jj * m + ii];
-//         }
-//     }
-//     for (int ii = 0; ii < m * n; ii++) mat[ii] = tmp[ii];
-// }
-
 
 static void form_H(double *H, int nx, int nu, struct d_strmat *sRSQrq)
 {
+    // make Q full
+    dtrtr_l_libstr(nx, sRSQrq, nu, nu, sRSQrq, nu, nu);
     // copy Q
     d_cvt_strmat2mat(nx, nx, sRSQrq, nu, nu, &H[0], nx+nu);
+
+    // make R full
+    dtrtr_l_libstr(nu, sRSQrq, 0, 0, sRSQrq, 0, 0);
     // copy R
     d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, &H[nx*(nx+nu) + nx], nx+nu);
-    // copy S
-    // TODO(dimitris): NOT SURE ABOUT DIMENSIONS OF S AND WHERE TO TRANSPOSE!
-    d_cvt_strmat2mat(nu, nx, sRSQrq, nu, 0, &H[nx], nx+nu);
-    d_cvt_tran_strmat2mat(nu, nx, sRSQrq, nu, 0, &H[nx*nx + nx*nu], nx+nu);
 
-    // printf("Hessian:\n");
+    // copy S
+    d_cvt_strmat2mat(nx, nu, sRSQrq, nu, 0, &H[nx*(nx+nu)], nx+nu);
+    d_cvt_tran_strmat2mat(nx, nu, sRSQrq, nu, 0, &H[nx], nx+nu);
+
+    // printf("acados RSQ (nx = %d, nu = %d)\n", nx, nu);
+    // d_print_strmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
+    // printf("qpDUNES Hessian:\n");
     // d_print_mat(nx+nu, nx+nu, H, nx+nu);
-    // exit(1);
+    // printf("********************************************\n\n");
 }
 
 
 
 static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct d_strmat *sRSQrq)
 {
+    // make Q full
+    dtrtr_l_libstr(nx, sRSQrq, nu, nu, sRSQrq, nu, nu);
     // copy Q
     d_cvt_strmat2mat(nx, nx, sRSQrq, nu, nu, Q, nx);
+
+    // make R full
+    dtrtr_l_libstr(nu, sRSQrq, 0, 0, sRSQrq, 0, 0);
     // copy R
     d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, R, nu);
+
     // copy S
-    // TODO(dimitris): NOT SURE ABOUT DIMENSIONS OF S AND WHERE TO TRANSPOSE!
-    d_cvt_strmat2mat(nu, nx, sRSQrq, nu, 0, S, nu);
+    d_cvt_tran_strmat2mat(nx, nu, sRSQrq, nu, 0, S, nu);
+    // TODO(dimitris): OR d_cvt_strmat2mat(nx, nu, sRSQrq, nu, 0, S, nx);
+
+    // printf("acados RSQ (nx = %d, nu = %d)\n", nx, nu);
+    // d_print_strmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
+    // printf("qpDUNES Q':\n");
+    // d_print_mat(nx, nx, Q, nx);
+    // printf("qpDUNES R':\n");
+    // d_print_mat(nu, nu, R, nu);
+    // printf("qpDUNES S':\n");  // TODO(dimitris): NOT SURE ABOUT DIMS HERE
+    // d_print_mat(nx, nu, S, nx);
+    // printf("********************************************\n\n");
 }
 
 
@@ -307,15 +320,32 @@ static void form_g(double *g, int nx, int nu, struct d_strvec *srq)
 {
     d_cvt_strvec2vec(nx, srq, nu, &g[0]);
     d_cvt_strvec2vec(nu, srq, 0, &g[nx]);
+
+    // printf("acados rq (nx = %d, nu = %d)\n", nx, nu);
+    // d_print_tran_strvec(srq->m, srq, 0);
+    // printf("qpDUNES g':\n");
+    // d_print_mat(1, nx+nu, g, 1);
+    // printf("********************************************\n\n");
 }
 
 
 
 static void form_dynamics(double *ABt, double *b, int nx, int nu, struct d_strmat *sBAbt, struct d_strvec *sb)
 {
-    d_cvt_strmat2mat(nx, nx, sBAbt, 0, nu, &ABt[0], nx);
-    d_cvt_strmat2mat(nx, nu, sBAbt, 0, 0, &ABt[nx*nx], nx);
+    // copy A
+    d_cvt_strmat2mat(nx, nx, sBAbt, nu, 0, &ABt[0], nx+nu);
+    // copy B
+    d_cvt_strmat2mat(nu, nx, sBAbt, 0, 0, &ABt[nx], nx+nu);
+    // copy b
     d_cvt_strvec2vec(nx, sb, 0, b);
+
+    // printf("acados [B'; A'] (nx = %d, nu = %d)\n", nx, nu);
+    // d_print_strmat(sBAbt->m-1, sBAbt->n, sBAbt, 0, 0);
+    // printf("qpDUNES A:\n");
+    // d_print_mat(nx, nx, &ABt[0], nx+nu);
+    // printf("qpDUNES B:\n");
+    // d_print_mat(nx, nu, &ABt[nx], nx+nu);
+    // printf("********************************************\n\n");
 }
 
 
@@ -336,7 +366,7 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
             zUpp[idxb[ii] + nx] = DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
         } else
         {  // state bounds
-            zLow[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii);  // lbk[ii]
+            zLow[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii);  // lb[ii]
             zUpp[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
         }
     }
@@ -568,9 +598,9 @@ static void fill_in_qp_out(ocp_qp_dims *dims, ocp_qp_out *out, ocp_qp_qpdunes_me
         //     out->u[kk][ii] = mem->qpData.intervals[kk]->z.data[nx[kk] + ii];
         // }
     }
-    // int nn = 0;
+    int nn = 0;
     for (int kk = 0; kk < N; kk++) {
-        d_cvt_vec2strvec(nx[kk+1], mem->qpData.lambda.data, &out->pi[kk], 0);
+        d_cvt_vec2strvec(nx[kk+1], &mem->qpData.lambda.data[kk*nx[kk+1]], &out->pi[kk], 0);
         // for (int ii = 0; ii < nx[kk + 1]; ii++) {
         //     out->pi[kk][ii] = mem->qpData.lambda.data[nn++];
         // }
