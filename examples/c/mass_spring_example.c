@@ -22,6 +22,7 @@
 #include <stdlib.h>
 // acados
 #include <acados_c/ocp_qp.h>
+#include <acados_c/options.h>
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>

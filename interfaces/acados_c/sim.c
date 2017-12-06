@@ -21,10 +21,51 @@
 
 //external
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 //acados
 #include <acados/sim/sim_erk_integrator.h>
 #include <acados/sim/sim_lifted_irk_integrator.h>
 #include <acados/utils/mem.h>
+
+
+
+void copy_dims(sim_dims *dest, sim_dims *src)
+{
+    dest->num_stages = src->num_stages;
+
+    dest->nx = src->nx;
+    
+    dest->nu = src->nu;
+}
+
+
+
+void copy_args(sim_solver_plan *plan, sim_dims *dims, void *dest, void *src)
+{
+    //TODO(nielsvd): remove the hack below. It breaks when the args used
+    //                         to construct the solver gets out of scope.
+    //               Should module_fcn_ptrs provide a copy args routine?
+
+#warning "Copy args is not properly implemented!"
+
+    int bytes = sim_calculate_args_size(plan, dims);
+
+    memcpy(dest, src, bytes);
+}
+
+
+
+sim_dims *create_sim_dims()
+{
+    int bytes = sim_dims_calculate_size();
+
+    void *ptr = malloc(bytes);
+
+    sim_dims *dims = assign_sim_dims(ptr);
+
+    return dims;
+}
 
 
 
@@ -56,59 +97,128 @@ sim_out *create_sim_out(sim_dims *dims)
 
 int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 {
-    return 0;
+    sim_solver_fcn_ptrs fcn_ptrs;
+
+    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+
+    int size = fcn_ptrs.calculate_args_size(dims);
+
+    return size;
 }
 
 
 
 void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
 {
-    return NULL;
+    sim_solver_fcn_ptrs fcn_ptrs;
+
+    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+
+    void *args = fcn_ptrs.assign_args(dims, raw_memory);
+
+    fcn_ptrs.initialize_default_args(dims, args);
+
+    return args;
 }
 
 
 
 void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
 {
-    return NULL;
+    int bytes = sim_calculate_args_size(plan, dims);
+
+    void *ptr = malloc(bytes);
+
+    void *args = sim_assign_args(plan, dims, ptr);
+
+    return args;
 }
 
 
 
 int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
-    return 0;
+    sim_solver_fcn_ptrs fcn_ptrs;
+
+    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+
+    int bytes = 0;
+
+    bytes += sizeof(sim_solver);
+
+    bytes += sizeof(sim_solver_fcn_ptrs);
+
+    bytes += sim_dims_calculate_size();
+
+    bytes += fcn_ptrs.calculate_args_size(dims);
+
+    bytes += fcn_ptrs.calculate_memory_size(dims, args_);
+
+    bytes += fcn_ptrs.calculate_workspace_size(dims, args_);
+
+    return bytes;
 }
 
 
 
 sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
 {
-    return NULL;
+    char *c_ptr = (char *) raw_memory;
+
+    sim_solver *solver = (sim_solver *) c_ptr;
+    c_ptr += sizeof(sim_solver);
+
+    solver->fcn_ptrs = (sim_solver_fcn_ptrs *) c_ptr;
+    c_ptr += sizeof(sim_solver_fcn_ptrs);
+    set_sim_solver_fcn_ptrs(plan, solver->fcn_ptrs);
+
+    solver->dims = assign_sim_dims(c_ptr);
+    c_ptr += sim_dims_calculate_size();
+    copy_dims(solver->dims, dims);
+
+    solver->args = solver->fcn_ptrs->assign_args(dims, c_ptr);
+    c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
+    copy_args(plan, dims, solver->args, args_);
+
+    solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
+    c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);
+
+    solver-> work = (void *) c_ptr;
+    c_ptr += solver->fcn_ptrs->calculate_workspace_size(dims, args_);
+
+    assert((char*)raw_memory + sim_calculate_size(plan, dims, args_) == c_ptr);
+
+    return solver;
 }
 
 
 
 sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
-    return NULL;
+    int bytes = sim_calculate_size(plan, dims, args_);
+
+    void *ptr = malloc(bytes);
+
+    sim_solver *solver = sim_assign(plan, dims, args_, ptr);
+
+    return solver;
 }
 
 
 
 int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
 {
-    return 0;
+    return solver->fcn_ptrs->fun(qp_in, qp_out, solver->args, solver->mem, solver->work);
 }
 
 
 
-int set_sim_solver_fun_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs)
+int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;
-    sim_solver_t sim_solver_name = plan->sim_solver;
+    sim_solver_t solver_name = plan->sim_solver;
 
-    switch (sim_solver_name)
+    switch (solver_name)
     {
         case ERK:
             fcn_ptrs->fun = &sim_erk;
@@ -131,5 +241,6 @@ int set_sim_solver_fun_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
         default:
             return_value = ACADOS_FAILURE;
     }
+
     return return_value;
 }

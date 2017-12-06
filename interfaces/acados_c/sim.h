@@ -50,6 +50,8 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+sim_dims *create_sim_dims();
+//
 sim_in *create_sim_in(sim_dims *dims);
 //
 sim_out *create_sim_out(sim_dims *dims);
@@ -73,6 +75,9 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
 // EXPERT INTERFACE
 //
 int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs);
+
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -21,6 +21,8 @@
 
 //external
 #include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 //acados
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
@@ -57,8 +59,11 @@ void copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *dest, void *sr
     //TODO(nielsvd): remove the hack below. It breaks when the args used
     //                         to construct the solver gets out of scope.
     //               Should module_fcn_ptrs provide a copy args routine?
+
 #warning "Copy args is not properly implemented!"
+
     int bytes = ocp_qp_calculate_args_size(plan, dims);
+    
     memcpy(dest, src, bytes);
 }
 
@@ -106,11 +111,16 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+
     module_fcn_ptrs submodule_fcn_ptrs;
+    
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+    
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    return fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
+    int size = fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
+
+    return size;
 }
 
 
@@ -118,11 +128,15 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+
     module_fcn_ptrs submodule_fcn_ptrs;
+    
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+    
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
     void *args = fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
+    
     fcn_ptrs.initialize_default_args(args);
 
     return args;
@@ -146,8 +160,11 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+
     module_fcn_ptrs submodule_fcn_ptrs;
+    
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+    
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
     int bytes;
@@ -160,7 +177,7 @@ int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *arg
 
     bytes += ocp_qp_dims_calculate_size(dims->N);
 
-    bytes += ocp_qp_calculate_args_size(plan, dims);
+    bytes += fcn_ptrs.calculate_args_size(dims, &submodule_fcn_ptrs);
 
     bytes += fcn_ptrs.calculate_memory_size(dims, args_);
 
@@ -175,7 +192,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
 {
     char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_solver *solver = (ocp_qp_solver *)c_ptr;
+    ocp_qp_solver *solver = (ocp_qp_solver *) c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
     solver->fcn_ptrs = (ocp_qp_xcond_solver_fcn_ptrs *) c_ptr;

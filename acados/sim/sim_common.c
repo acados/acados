@@ -30,6 +30,30 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 
 
+
+int sim_dims_calculate_size()
+{
+    int size = sizeof(sim_dims);
+    
+    return size;
+}
+
+
+
+sim_dims *assign_sim_dims(void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    sim_dims *dims = (sim_dims *) c_ptr;
+    c_ptr += sizeof(sim_dims);
+
+    assert((char *) raw_memory + sim_dims_calculate_size() == c_ptr);
+
+    return dims;
+}
+
+
+
 int sim_in_calculate_size(sim_dims *dims)
 {
     int size = sizeof(sim_in);
