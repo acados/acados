@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 
+#include <acados/utils/timing.h>
 #include <acados/utils/types.h>
 
 // TODO(nielsvd): move to acore?

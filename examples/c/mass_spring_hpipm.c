@@ -52,17 +52,19 @@ int main() {
     // TODO(dimitris): write a print_ocp_qp function
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    int N = qp_in->dim->N;
-    int *nx = qp_in->dim->nx;
-    int *nu = qp_in->dim->nu;
-    int *nb = qp_in->dim->nb;
-    int *ng = qp_in->dim->ng;
+    ocp_qp_dims *qp_dims = qp_dims;
+
+    int N = qp_dims->N;
+    int *nx = qp_dims->nx;
+    int *nu = qp_dims->nu;
+    int *nb = qp_dims->nb;
+    int *ng = qp_dims->ng;
 
     /************************************************
     * ocp qp solution
     ************************************************/
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
+    ocp_qp_out *qp_out = create_ocp_qp_out(qp_dims);
 
     /************************************************
     * ipm
@@ -70,7 +72,7 @@ int main() {
     ocp_qp_solver_plan plan;
     plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    void *args = ocp_qp_create_args(&plan, qp_in->dim);
+    void *args = ocp_qp_create_args(&plan, qp_dims);
 
     // NOTE(nielsvd): will become:
     //              set_option_int(args, "qp_solver.hpipm.iter_max", 10),
@@ -79,7 +81,7 @@ int main() {
     ((ocp_qp_partial_condensing_args *) ((ocp_qp_sparse_solver_args *) args)->pcond_args)->N2 = N;
     // ((ocp_qp_hpipm_args *) ((ocp_qp_sparse_solver_args *) args)->solver_args)->hpipm_args->iter_max = 10;
 
-    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_in->dim, args);
+    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -96,19 +98,17 @@ int main() {
     * extract solution
     ************************************************/
 
-    // ocp_qp_dims dims;
-    // dims.N = N;
-    // dims.nx = nx;
-    // dims.nu = nu;
-    // dims.nb = nb;
-    // dims.ns = ns;
-    // dims.ng = ng;
-
-    ocp_qp_dims *dims = qp_in->dim;
+    // ocp_qp_dims qp_dims;
+    // qp_dims.N = N;
+    // qp_dims.nx = nx;
+    // qp_dims.nu = nu;
+    // qp_dims.nb = nb;
+    // qp_dims.ns = ns;
+    // qp_dims.ng = ng;
 
     colmaj_ocp_qp_out *sol;
-    void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
-    assign_colmaj_ocp_qp_out(dims, &sol, memsol);
+    void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(qp_dims));
+    assign_colmaj_ocp_qp_out(qp_dims, &sol, memsol);
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************

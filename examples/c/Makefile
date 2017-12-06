@@ -5,10 +5,10 @@
 include ../../Makefile.rule
 
 
-examples: mass_spring_hpipm
+examples: mass_spring_example
 # examples: sim_erk_crane mass_spring_hpipm mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
 
-run_examples: run_mass_spring_hpipm
+run_examples: run_mass_spring_example
 # run_examples: run_sim_erk_crane run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
 
 CRANE_OBJS =
@@ -79,6 +79,12 @@ mass_spring_condensing_qore: mass_spring_condensing_qore.o
 	@echo " Example mass_spring_condensing_qore build complete."
 	@echo
 
+mass_spring_example: mass_spring_example.o
+	$(CC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) -lacados_c -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+	@echo
+	@echo " Example mass_spring_example build complete."
+	@echo
+
 OBJS =
 OBJS += chain_model/vde_chain_nm2.o
 OBJS += chain_model/jac_chain_nm2.o
@@ -126,6 +132,9 @@ run_mass_spring_condensing_qpoases:
 
 run_mass_spring_condensing_qore:
 	./mass_spring_condensing_qore.out
+
+run_mass_spring_example:
+	./mass_spring_example.out
 
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
