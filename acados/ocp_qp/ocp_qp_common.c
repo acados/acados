@@ -222,6 +222,42 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
 
 
+void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
+{
+    // loop index
+	int ii;
+
+	// extract ocp qp size
+	int N = qp_res->dim->N;
+	int *nx = qp_res->dim->nx;
+	int *nu = qp_res->dim->nu;
+	int *nb = qp_res->dim->nb;
+	int *ng = qp_res->dim->ng;
+    int *ns = qp_res->dim->ns;
+
+    // compute size of res_q, res_b, res_d and res_m
+    int nvt = 0;
+	int net = 0;
+    int nct = 0;
+
+    for(ii=0; ii<N; ii++)
+	{
+		nvt += nx[ii]+nu[ii]+2*ns[ii];
+		net += nx[ii+1];
+		nct += 2*nb[ii]+2*ng[ii]+2*ns[ii];
+	}
+	nvt += nx[ii]+nu[ii]+2*ns[ii];
+    nct += 2*nb[ii]+2*ng[ii]+2*ns[ii];
+
+    // compute infinity norms of residuals
+    dvecnrm_inf_libstr(nvt, qp_res->res_g, 0, &res[0]);
+	dvecnrm_inf_libstr(net, qp_res->res_b, 0, &res[1]);
+	dvecnrm_inf_libstr(nct, qp_res->res_d, 0, &res[2]);
+	dvecnrm_inf_libstr(nct, qp_res->res_m, 0, &res[3]);
+}
+
+
+
 // void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
 // {
 //     for (int ii = 0; ii < N+1; ii++)

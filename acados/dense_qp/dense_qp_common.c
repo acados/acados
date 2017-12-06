@@ -189,3 +189,19 @@ void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
     // compute residuals
     d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);
 }
+
+
+
+void compute_dense_qp_res_nrm_inf(dense_qp_res *qp_res, double res[4])
+{
+    int nv = qp_res->dim->nv;
+    int nb = qp_res->dim->nb;
+    int ne = qp_res->dim->ne;
+    int ng = qp_res->dim->ng;
+    int ns = qp_res->dim->ns;
+
+    dvecnrm_inf_libstr(nv+2*ns, qp_res->res_g, 0, &res[0]);
+    dvecnrm_inf_libstr(ne, qp_res->res_b, 0, &res[1]);
+    dvecnrm_inf_libstr(2*nb+2*ng+2*ns, qp_res->res_d, 0, &res[2]);
+    dvecnrm_inf_libstr(2*nb+2*ng+2*ns, qp_res->res_m, 0, &res[3]);
+}

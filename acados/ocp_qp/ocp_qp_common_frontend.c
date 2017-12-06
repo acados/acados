@@ -523,6 +523,8 @@ void convert_ocp_qp_res_to_colmaj(ocp_qp_res *qp_res, colmaj_ocp_qp_res *cm_qp_r
     double **res_m_ls = cm_qp_res->res_m_ls;
     double **res_m_us = cm_qp_res->res_m_us;
 
+    compute_ocp_qp_res_nrm_inf(qp_res, cm_qp_res->res_nrm_inf);
+
     d_cvt_ocp_qp_res_to_colmaj(qp_res, res_r, res_q, res_ls, res_us, res_b,
                                res_d_lb, res_d_ub, res_d_lg, res_d_ug, res_d_ls, res_d_us,
                                res_m_lb, res_m_ub, res_m_lg, res_m_ug, res_m_ls, res_m_us);
