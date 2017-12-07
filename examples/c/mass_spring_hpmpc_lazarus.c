@@ -31,7 +31,7 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -50,7 +50,6 @@ int main() {
     * ocp qp
     ************************************************/
 
-    // TODO(dimitris): write a print_ocp_qp function
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
     int N   = qp_in->dim->N;
