@@ -53,6 +53,8 @@ int ocp_qp_partial_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_pa
 //
 ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_assign_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args, void *raw_memory);
 //
+int ocp_qp_partial_condensing_calculate_workspace_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
+//
 void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_args *args, ocp_qp_partial_condensing_memory *mem, void *work);
 //
 void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_args *args, ocp_qp_partial_condensing_memory *mem, void *work);

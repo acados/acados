@@ -26,8 +26,9 @@
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados/utils/types.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 
 
 int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
@@ -154,27 +155,68 @@ void *ocp_qp_full_condensing_solver_assign_memory(ocp_qp_dims *dims, void *args_
 
 int ocp_qp_full_condensing_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 {
-    return sizeof(ocp_qp_full_condensing_solver_workspace);
+    ocp_qp_full_condensing_solver_args *args = (ocp_qp_full_condensing_solver_args *)args_;
+
+    dense_qp_dims ddims;
+    compute_dense_qp_dims(dims, &ddims);
+
+    int size = sizeof(ocp_qp_full_condensing_solver_workspace);
+    size += ocp_qp_full_condensing_calculate_workspace_size(dims, args->cond_args);
+    size += args->solver->calculate_workspace_size(&ddims, args->solver_args);
+
+    return size;
+}
+
+
+
+static void cast_workspace(ocp_qp_dims *dims, ocp_qp_full_condensing_solver_args *args, ocp_qp_full_condensing_solver_memory *mem, ocp_qp_full_condensing_solver_workspace *work)
+{
+    dense_qp_dims *ddims = mem->qpd_in->dim;
+
+
+    char *c_ptr = (char *) work;
+
+    c_ptr += sizeof(ocp_qp_full_condensing_solver_workspace);
+
+    work->cond_work = c_ptr;
+    c_ptr += ocp_qp_full_condensing_calculate_workspace_size(dims, args->cond_args);
+
+    work->solver_workspace = c_ptr;
+    c_ptr += args->solver->calculate_workspace_size(ddims, args->solver_args);
 }
 
 
 
 int ocp_qp_full_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer, cond_timer;
+    acados_tic(&tot_timer);
+
+    // cast data structures
     ocp_qp_full_condensing_solver_args *args = (ocp_qp_full_condensing_solver_args *) args_;
     ocp_qp_full_condensing_solver_memory *memory = (ocp_qp_full_condensing_solver_memory *) mem_;
-    // TODO(dimitris): also assign workspace once it contains data that need to be casted..
     ocp_qp_full_condensing_solver_workspace *work = (ocp_qp_full_condensing_solver_workspace *) work_;
 
+    // cast workspace
+    cast_workspace(qp_in->dim, args, memory, work);
+
     // condense
+    acados_tic(&cond_timer);
     ocp_qp_full_condensing(qp_in, memory->qpd_in, args->cond_args, memory->cond_memory, work->cond_work);
+    info->condensing_time = acados_toc(&cond_timer);
 
     // solve qp
     int solver_status = args->solver->fun(memory->qpd_in, memory->qpd_out, args->solver_args, memory->solver_memory, work->solver_workspace);
 
     // expand
+    acados_tic(&cond_timer);
     ocp_qp_full_expansion(memory->qpd_out, qp_out, args->cond_args, memory->cond_memory, work->cond_work);
+    info->condensing_time += acados_toc(&cond_timer);
 
+    info->total_time = acados_toc(&tot_timer);
+    info->solve_QP_time = ((dense_qp_info *)(memory->qpd_out->misc))->solve_QP_time;
+    info->interface_time = ((dense_qp_info *)(memory->qpd_out->misc))->interface_time;
     // return
     return solver_status;
 }

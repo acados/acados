@@ -30,6 +30,9 @@ extern "C" {
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
+// blasfeo
+#include "blasfeo_target.h"
+#include "blasfeo_common.h"
 
 typedef struct dense_qp_qpoases_args_ {
     double max_cputime;  // maximum cpu time in seconds

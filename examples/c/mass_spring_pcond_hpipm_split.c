@@ -19,6 +19,7 @@
 
 // external
 #include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 // acados_c
 #include <acados_c/ocp_qp.h>
@@ -101,13 +102,13 @@ int main() {
     ocp_qp_solver_plan plan;
     plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    void *args = ocp_qp_create_args(&plan, qp_dims);
+    void *arg = ocp_qp_create_args(&plan, qp_dims);
 
     // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
-    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N;
-    ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 10;
+    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)arg)->pcond_args)->N2 = N;
+    ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)arg)->solver_args)->hpipm_args->iter_max = 10;
 
-    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
+    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, arg);
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -137,6 +138,24 @@ int main() {
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
+    * compute residuals
+    ************************************************/
+
+    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
+    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+    /************************************************
+    * compute infinity norm of residuals
+    ************************************************/
+
+    double res[4];
+    compute_ocp_qp_res_nrm_inf(qp_res, res);
+    double max_res = 0.0;
+    for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
+    assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
+
+    /************************************************
     * print solution and stats
     ************************************************/
 
@@ -155,11 +174,9 @@ int main() {
     // NOTE(nielsvd): how can we improve/generalize this?
     ocp_qp_hpipm_memory *mem = (ocp_qp_hpipm_memory *)((ocp_qp_sparse_solver_memory *) qp_solver->mem)->solver_memory;
 
-    printf("\ninf norm res: %e, %e, %e, %e, %e\n", mem->hpipm_workspace->qp_res[0],
-           mem->hpipm_workspace->qp_res[1], mem->hpipm_workspace->qp_res[2],
-           mem->hpipm_workspace->qp_res[3], mem->hpipm_workspace->res_workspace->res_mu);
+    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
+    printf("\nNumber of %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
         mem->hpipm_workspace->iter, NREP, time);
 
     /************************************************
@@ -172,7 +189,9 @@ int main() {
     free(pcond_qp_out);
     free(sol);
     free(qp_solver);
-    free(args);
+    free(qp_res);
+    free(res_ws);
+    free(arg);
     free(pcond_args);
     free(pcond_mem);
     return 0;

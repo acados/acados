@@ -21,25 +21,27 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
-// acados_c
-#include <acados_c/dense_qp.h>
-#include <acados_c/legacy_create.h>
 // acados
-#include <acados/ocp_qp/ocp_qp_full_condensing.h>
-// NOTE(nielsvd): required to cast memory etc. should go.
-#include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
-#include <acados/dense_qp/dense_qp_hpipm.h>
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_common_frontend.h"
+#include "acados/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/utils/create.h"
+#include "acados/utils/print.h"
+#include "acados/utils/timing.h"
+#include "acados/utils/types.h"
 
-#define NREP 100
 #define ELIMINATE_X0
+#define NREP 100
 
 #include "./mass_spring.c"
+
 
 int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" acados + condensing + hpipm + expansion\n");
+    printf(" acados + partial condensing solver\n");
     printf("\n");
     printf("\n");
     printf("\n");
@@ -48,27 +50,14 @@ int main() {
     * ocp qp
     ************************************************/
 
+    // TODO(dimitris): write a print_ocp_qp function
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    ocp_qp_dims *qp_dims = qp_in->dim;
-
-    int N = qp_dims->N;
-    int *nx = qp_dims->nx;
-    int *nu = qp_dims->nu;
-    int *nb = qp_dims->nb;
-    int *ng = qp_dims->ng;
-
-    /************************************************
-    * dense qp
-    ************************************************/
-
-    dense_qp_dims ddims;
-    compute_dense_qp_dims(qp_in->dim, &ddims);
-
-    dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
-
-    ocp_qp_full_condensing_args *cond_args = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_args);
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
 
     /************************************************
     * ocp qp solution
@@ -77,37 +66,50 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
-    * dense sol
+    * partial condensing solver
     ************************************************/
 
-    dense_qp_out *qpd_out = create_dense_qp_out(&ddims);
+    // choose QP solver
+    qp_solver_t qp_solver_name = HPIPM;
 
-    /************************************************
-    * dense ipm
-    ************************************************/
+    // create partial condensing solver args
+    ocp_qp_sparse_solver_args *arg =
+        ocp_qp_sparse_solver_create_arguments(qp_in->dim, HPIPM);
 
-    dense_qp_solver_plan plan;
-    plan.qp_solver = DENSE_QP_HPIPM;
+    // change partial condensing arguments
+    arg->pcond_args->N2 = 10;
 
-    void *argd = dense_qp_create_args(&plan, &ddims);
+    // change qp solver arguments (cast required)
+    ocp_qp_hpipm_args *qpsolver_args = (ocp_qp_hpipm_args *) arg->solver_args;
+    qpsolver_args->hpipm_args->iter_max = 21;
+    // printf("maxIter = %d\n", qpsolver_args->hpipm_args->iter_max);
 
-    dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
+    // create partial condensing solver memory
+    ocp_qp_sparse_solver_memory *mem =
+        ocp_qp_sparse_solver_create_memory(qp_in->dim, arg);
+
+    // create partial condensing solver workspace
+    void *work = malloc(ocp_qp_sparse_solver_calculate_workspace_size(qp_in->dim, arg));
 
 	int acados_return;  // 0 normal; 1 max iter
 
     acados_timer timer;
     acados_tic(&timer);
 
-	for(int rep = 0; rep < NREP; rep++) {
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    ocp_qp_info min_info;
+    min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
 
-        ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
+	for (int rep = 0; rep < NREP; rep++) {
+        acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem, work);
 
-        acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
+        if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
+        if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
+        if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
+        if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
+	}
 
-        ocp_qp_full_expansion(qpd_out, qp_out, cond_args, cond_memory, NULL);
-    }
-
-    real_t time = acados_toc(&timer)/NREP;
+    double time = acados_toc(&timer)/NREP;
 
     /************************************************
     * extract solution
@@ -154,29 +156,24 @@ int main() {
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
 
-    // NOTE(nielsvd): how can we improve/generalize this?
-    dense_qp_hpipm_memory *mem = (dense_qp_hpipm_memory *)(qp_solver->mem);
-    
     printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
-    printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-        mem->hpipm_workspace->iter, NREP, time);
+    printf("\nN2 = %d\n\n\n", arg->pcond_args->N2);
+
+    print_ocp_qp_info(&min_info);
 
     /************************************************
     * free memory
     ************************************************/
 
     free(qp_in);
-    free(qpd_in);
     free(qp_out);
-    free(qpd_out);
     free(sol);
-    free(qp_solver);
     free(qp_res);
     free(res_ws);
-    free(argd);
-    free(cond_memory);
-    free(cond_args);
+    free(arg);
+    free(mem);
+    free(work);
 
-	return 0;
+    return 0;
 }

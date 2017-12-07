@@ -314,6 +314,114 @@ char *assign_colmaj_ocp_qp_out(ocp_qp_dims *dims, colmaj_ocp_qp_out **qp_out, vo
 
 
 
+int colmaj_ocp_qp_res_calculate_size(ocp_qp_dims *dims)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
+
+    int size = sizeof(colmaj_ocp_qp_res);
+
+    size += 1*N*sizeof(double *);  // res_b
+    size += 16*(N+1)*sizeof(double *);  // everything else
+
+    for (int k = 0; k <= N; k++) {
+        size += nu[k] * sizeof(double); // res_r
+        size += nx[k] * sizeof(double); // res_q
+        size += 2*ns[k] * sizeof(double); // res_ls, res_us
+
+        if (k < N)
+        {
+            size += nx[k+1] * sizeof(double); // res_b
+        }
+
+        size += 4*nb[k] * sizeof(double); // res_d_lb, res_d_ub, res_m_lb, res_m_ub
+        size += 4*ng[k] * sizeof(double); // res_d_lg, res_d_ug, res_m_lg, res_m_ug
+        size += 4*ns[k] * sizeof(double); // res_d_ls, res_d_us, res_m_ls, res_m_us
+    }
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+
+    return size;
+}
+
+
+
+char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, void *ptr)
+{
+    int N = dims->N;
+    int *nx = dims->nx;
+    int *nu = dims->nu;
+    int *nb = dims->nb;
+    int *ng = dims->ng;
+    int *ns = dims->ns;
+
+
+    // char pointer
+    char *c_ptr = (char *) ptr;
+
+    *qp_res = (colmaj_ocp_qp_res *) c_ptr;
+    c_ptr += sizeof(colmaj_ocp_qp_res);
+
+    // assign double pointers
+    assign_double_ptrs(N+1, &(*qp_res)->res_r,    &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_q,    &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_ls,   &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_us,   &c_ptr);
+    assign_double_ptrs(N,   &(*qp_res)->res_b,    &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_d_lb, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_d_ub, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_d_lg, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_d_ug, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_d_ls, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_d_us, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_m_lb, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_m_ub, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_m_lg, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_m_ug, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_m_ls, &c_ptr);
+    assign_double_ptrs(N+1, &(*qp_res)->res_m_us, &c_ptr);
+
+    // align data
+    align_char_to(8, &c_ptr);
+
+    // assign pointers to QP solution
+    for (int k = 0; k < N+1; k++) {
+
+        assign_double(nu[k], &(*qp_res)->res_r[k], &c_ptr);
+        assign_double(nx[k], &(*qp_res)->res_q[k], &c_ptr);
+        assign_double(ns[k], &(*qp_res)->res_ls[k], &c_ptr);
+        assign_double(ns[k], &(*qp_res)->res_us[k], &c_ptr);
+
+        if (k < N)
+        {
+            assign_double(nx[k+1], &(*qp_res)->res_b[k], &c_ptr);
+        }
+
+        assign_double(nb[k], &(*qp_res)->res_d_lb[k], &c_ptr);
+        assign_double(nb[k], &(*qp_res)->res_d_ub[k], &c_ptr);
+        assign_double(ng[k], &(*qp_res)->res_d_lg[k], &c_ptr);
+        assign_double(ng[k], &(*qp_res)->res_d_ug[k], &c_ptr);
+        assign_double(ns[k], &(*qp_res)->res_d_ls[k], &c_ptr);
+        assign_double(ns[k], &(*qp_res)->res_d_us[k], &c_ptr);
+
+        assign_double(nb[k], &(*qp_res)->res_m_lb[k], &c_ptr);
+        assign_double(nb[k], &(*qp_res)->res_m_ub[k], &c_ptr);
+        assign_double(ng[k], &(*qp_res)->res_m_lg[k], &c_ptr);
+        assign_double(ng[k], &(*qp_res)->res_m_ug[k], &c_ptr);
+        assign_double(ns[k], &(*qp_res)->res_m_ls[k], &c_ptr);
+        assign_double(ns[k], &(*qp_res)->res_m_us[k], &c_ptr);
+    }
+
+    return c_ptr;
+}
+
+
+
 void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
 {
     int N = cm_qp_in->N;
@@ -391,4 +499,33 @@ void convert_ocp_qp_out_to_colmaj(ocp_qp_out *qp_out, colmaj_ocp_qp_out *cm_qp_o
     // qp_in.ns = dims->ns;
 
     // d_cvt_ocp_qp_sol_to_colmaj(&qp_in, qp_out, sol->u, sol->x, ls, us, sol->pi, lam_lb, lam_ub, lam_lg, lam_ug, lam_ls, lam_us);
+}
+
+
+
+void convert_ocp_qp_res_to_colmaj(ocp_qp_res *qp_res, colmaj_ocp_qp_res *cm_qp_res)
+{
+    double **res_r    = cm_qp_res->res_r;
+    double **res_q    = cm_qp_res->res_q;
+    double **res_ls   = cm_qp_res->res_ls;
+    double **res_us   = cm_qp_res->res_us;
+    double **res_b    = cm_qp_res->res_b;
+    double **res_d_lb = cm_qp_res->res_d_lb;
+    double **res_d_ub = cm_qp_res->res_d_ub;
+    double **res_d_lg = cm_qp_res->res_d_lg;
+    double **res_d_ug = cm_qp_res->res_d_ug;
+    double **res_d_ls = cm_qp_res->res_d_ls;
+    double **res_d_us = cm_qp_res->res_d_us;
+    double **res_m_lb = cm_qp_res->res_m_lb;
+    double **res_m_ub = cm_qp_res->res_m_ub;
+    double **res_m_lg = cm_qp_res->res_m_lg;
+    double **res_m_ug = cm_qp_res->res_m_ug;
+    double **res_m_ls = cm_qp_res->res_m_ls;
+    double **res_m_us = cm_qp_res->res_m_us;
+
+    compute_ocp_qp_res_nrm_inf(qp_res, cm_qp_res->res_nrm_inf);
+
+    d_cvt_ocp_qp_res_to_colmaj(qp_res, res_r, res_q, res_ls, res_us, res_b,
+                               res_d_lb, res_d_ub, res_d_lg, res_d_ug, res_d_ls, res_d_us,
+                               res_m_lb, res_m_ub, res_m_lg, res_m_ug, res_m_ls, res_m_us);
 }
