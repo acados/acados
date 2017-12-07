@@ -202,17 +202,14 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 		nb_i = nb[ii];
 		ng_i = ng[ii];
 
-        // set t to zero
-        dvecse_libstr(2*nb_i+2*ng_i, 0.0, t+ii, 0);
-
         // compute slacks for general constraints
         dgemv_t_libstr(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
         dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
 
         // compute slacks for bounds
         dvecex_sp_libstr(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
-        daxpy_libstr(nb_i, -1.0, d+ii, 0, t+ii, 0, t+ii, 0);
-        daxpy_libstr(nb_i,  1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+        dveccpsc_libstr(nb_i, -1.0, d+ii, 0, t+ii, 0);
+        dveccpsc_libstr(nb_i,  1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
         daxpy_libstr(nb_i,  1.0, tmp_nbgM+0, 0, t+ii, 0, t+ii, 0);
         daxpy_libstr(nb_i, -1.0, tmp_nbgM+0, 0, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
     }
