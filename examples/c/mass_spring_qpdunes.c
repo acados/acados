@@ -67,19 +67,14 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
-    * ipm
+    * qpDUNES
     ************************************************/
 
-    int size_args = ocp_qp_qpdunes_calculate_args_size(qp_in->dim);
-    void *ptr_args = acados_malloc(size_args, 1);
-    ocp_qp_qpdunes_args *arg = ocp_qp_qpdunes_assign_args(qp_in->dim, ptr_args);
-    ocp_qp_qpdunes_initialize_default_args(arg);
+    ocp_qp_qpdunes_args *arg = ocp_qp_qpdunes_create_arguments(qp_in->dim);
 
     arg->stageQpSolver = QPDUNES_WITH_QPOASES;
 
-    int size_mem = ocp_qp_qpdunes_calculate_memory_size(qp_in->dim, arg);
-    void *ptr_mem = acados_malloc(size_mem, 1);
-    ocp_qp_qpdunes_memory *mem = ocp_qp_qpdunes_assign_memory(qp_in->dim, arg, ptr_mem);
+    ocp_qp_qpdunes_memory *mem = ocp_qp_qpdunes_create_memory(qp_in->dim, arg);
 
     int size_work = ocp_qp_qpdunes_calculate_workspace_size(qp_in->dim, arg);
     void *work = acados_malloc(size_work, 1);;

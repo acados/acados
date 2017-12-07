@@ -17,7 +17,7 @@
  *
  */
 
-// TODO(dimitris): revive linear MPC example, creates,
+// TODO(dimitris): revive linear MPC example, test clipping
 
 #ifdef ACADOS_WITH_QPDUNES
 
