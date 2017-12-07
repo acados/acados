@@ -23,6 +23,7 @@
 // acados
 #include <acados_c/ocp_qp.h>
 #include <acados_c/options.h>
+#include <acados_c/legacy_create.h>
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
@@ -114,6 +115,26 @@ int main() {
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
+     * compute residuals
+     ************************************************/
+
+    ocp_qp_res *qp_res = create_ocp_qp_res(qp_dims);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_dims);
+    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+    /************************************************
+     * compute infinity norm of residuals
+     ************************************************/
+
+    double res[4];
+    compute_ocp_qp_res_nrm_inf(qp_res, res);
+    double max_res = 0.0;
+    for (int ii = 0; ii < 4; ii++)
+        max_res = (res[ii] > max_res) ? res[ii] : max_res;
+    assert(max_res <= 1e6 * ACADOS_EPS &&
+           "The largest KKT residual greater than 1e6*ACADOS_EPS");
+
+    /************************************************
      * print solution and stats
      ************************************************/
 
@@ -136,11 +157,8 @@ int main() {
     dense_qp_qpoases_memory *fcond_qpoases_mem = (dense_qp_qpoases_memory *)((ocp_qp_full_condensing_solver_memory *) qp_solver->mem)->solver_memory;
     switch (plan.qp_solver) {
         case PARTIAL_CONDENSING_HPIPM:
-            printf("\ninf norm res: %e, %e, %e, %e, %e\n",
-                    pcond_hpipm_mem->hpipm_workspace->qp_res[0],
-                    pcond_hpipm_mem->hpipm_workspace->qp_res[1], pcond_hpipm_mem->hpipm_workspace->qp_res[2],
-                    pcond_hpipm_mem->hpipm_workspace->qp_res[3],
-                    pcond_hpipm_mem->hpipm_workspace->res_workspace->res_mu);
+            printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2],
+                   res[3]);
             printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
                     pcond_hpipm_mem->hpipm_workspace->iter, NREP, time);
             break;

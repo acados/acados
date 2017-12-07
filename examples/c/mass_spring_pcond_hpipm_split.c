@@ -105,10 +105,10 @@ int main() {
     void *arg = ocp_qp_create_args(&plan, qp_dims);
 
     // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
-    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)arg)->pcond_args)->N2 = N;
+    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)arg)->pcond_args)->N2 = pcond_args->N2;
     ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)arg)->solver_args)->hpipm_args->iter_max = 10;
 
-    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, arg);
+    ocp_qp_solver *qp_solver = ocp_qp_create(&plan,pcond_args->pcond_dims, arg);
 
 	int acados_return;  // 0 normal; 1 max iter
 
@@ -119,7 +119,7 @@ int main() {
 
         ocp_qp_partial_condensing(qp_in, pcond_qp_in, pcond_args, pcond_mem, NULL);
 
-        acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+        acados_return = ocp_qp_solve(qp_solver, pcond_qp_in, pcond_qp_out);
 
         ocp_qp_partial_expansion(pcond_qp_out, qp_out, pcond_args, pcond_mem, NULL);
 	}

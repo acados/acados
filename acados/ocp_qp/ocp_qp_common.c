@@ -19,11 +19,6 @@
 
 // external
 #include <assert.h>
-// blasfeo
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
@@ -34,6 +29,11 @@
 // acados
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+// blasfeo
+#include "blasfeo_target.h"
+#include "blasfeo_common.h"
+#include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 
 

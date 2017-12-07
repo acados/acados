@@ -203,7 +203,14 @@ int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_
 
 static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, ocp_qp_sparse_solver_memory *mem, ocp_qp_sparse_solver_workspace *work)
 {
-    ocp_qp_dims *pdims = mem->pcond_qp_in->dim;
+    ocp_qp_dims *pdims;
+    if (args->pcond_args->N2 < dims->N)
+    {
+        pdims = mem->pcond_qp_in->dim;
+    } else
+    {
+        pdims = dims;
+    }
 
     char *c_ptr = (char *) work;
 
