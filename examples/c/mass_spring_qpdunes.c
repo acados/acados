@@ -138,11 +138,14 @@ int main() {
     * free memory
     ************************************************/
 
+    // TODO(dimitris): there are still memory leaks from qpOASES
+    ocp_qp_qpdunes_free_memory(mem);
     free(qp_in);
     free(qp_out);
-    free(sol);
     free(arg);
     free(mem);
+    free(work);
+    free(sol);
 
     return 0;
 }

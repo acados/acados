@@ -57,11 +57,6 @@ typedef struct ocp_qp_qpdunes_memory_ {
     int nu;
     int nz;
     int nDmax;  // max(dims->ng)
-    // TODO(dimitris): remove those:
-    int dimA;  // nx*nu
-    int dimB;  // nx*nu
-    int dimC;  // maximum number of elements of matrix: [Cx Cu]
-    int dimz;  // nx+nu
     qpData_t qpData;
 } ocp_qp_qpdunes_memory;
 
@@ -96,11 +91,8 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
 int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_qpdunes(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *memory_, void *work_);
-
+//
 void ocp_qp_qpdunes_free_memory(void *mem_);
-
-// ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts);
-// ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_);
 
 #ifdef __cplusplus
 } /* extern "C" */
