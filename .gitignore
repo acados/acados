@@ -85,3 +85,4 @@ cmakelint
 *.srctrldb
 *.srctrlprj
 .vs
+examples/python/__pycache__/
