@@ -115,7 +115,7 @@ void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
     args->tol = 1e-8;
-    args->max_iter = 20;
+    args->max_iter = 100;
     args->mu0 = 1e3;
     args->warm_start = 0;
 
@@ -236,7 +236,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
         d_create_strvec(nx[ii+1], &hsb[ii], qp_in->b[ii].pa);
         d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
         d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
-        d_create_strmat(ng[ii], nu[ii]+nx[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
+        d_create_strmat(nu[ii]+nx[ii], ng[ii],&hsDCt[ii], qp_in->DCt[ii].pA);
         d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
 
         // initialize hsdux to primal input later usx will be subtracted
@@ -286,7 +286,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
 
     d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
     d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
-    d_create_strmat(ng[ii], nu[ii]+nx[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
+    d_create_strmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
     d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
 
     // initialize hsdux to primal input later usx will be subtracted
