@@ -80,13 +80,15 @@ static bool check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
     }
 
     // check for non-diagonal Q
+    int nu_k = nu;
     for (int kk = 0; kk < N+1; kk++)
     {
+        if (kk == N) nu_k = 0;
         for (int ii = 0; ii < nx; ii++)
         {
             for (int jj = 0; jj < nx; jj++)
             {
-                if ((ii != jj) && (DMATEL_LIBSTR(&qp_in->RSQrq[kk], ii+nu, jj+nu) != 0))
+                if ((ii != jj) && (DMATEL_LIBSTR(&qp_in->RSQrq[kk], ii+nu_k, jj+nu_k) != 0))
                 {
                     stageQpSolver = QPDUNES_WITH_QPOASES;
                 }
@@ -95,7 +97,7 @@ static bool check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
     }
 
     // check for non-diagonal R
-    for (int kk = 0; kk < N+1; kk++)
+    for (int kk = 0; kk < N; kk++)
     {
         for (int ii = 0; ii < nu; ii++)
         {
