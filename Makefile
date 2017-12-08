@@ -71,18 +71,11 @@ qpoases_static:
 	cp external/qpoases/bin/libqpOASES_e.a lib
 	
 qore_static: blasfeo_static
-	mkdir -p external/qore/external/blasfeo
-	cp external/blasfeo/include/*.h external/qore/external/blasfeo
-	cp external/blasfeo/lib/libblasfeo.a external/qore/external/blasfeo
 	( cd external/qore; $(MAKE) static_dense; )
 	mkdir -p include/qore
 	mkdir -p lib
 	cp external/qore/qp_types.h include/qore
-	#cp external/qore/KKTPACK_DENSE/include/*.h include/qore
-	#cp external/qore/KKTPACK_DENSE/source/*.h include/qore
-	#cp external/qore/QPCORE/include/*.h include/qore
 	cp external/qore/QPSOLVER_DENSE/include/*.h include/qore
-	#cp external/qore/QPSOLVER_DENSE/source/*.h include/qore
 	cp external/qore/bin/libqore_dense.a lib
 
 examples_c:
