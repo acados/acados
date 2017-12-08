@@ -178,10 +178,8 @@ void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
 
     // compute slacks for bounds
     dvecex_sp_libstr(nbd, 1.0, idxb, qp_out->v, 0, tmp_nbg+0, 0);
-    dveccpsc_libstr(nbd, -1.0, qp_in->d, 0, qp_out->t, 0);
-    dveccpsc_libstr(nbd,  1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd);
-    daxpy_libstr(nbd, 1.0, tmp_nbg+0, 0, qp_out->t, 0, qp_out->t, 0);
-    daxpy_libstr(nbd, -1.0, tmp_nbg+0, 0, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
+    daxpby_libstr(nbd, 1.0, tmp_nbg+0, 0, -1.0, qp_in->d, 0, qp_out->t, 0);
+    daxpby_libstr(nbd, -1.0, tmp_nbg+0, 0, 1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd);
 
     // compute residuals
     d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);

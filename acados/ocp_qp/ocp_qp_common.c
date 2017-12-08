@@ -208,10 +208,8 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
         // compute slacks for bounds
         dvecex_sp_libstr(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
-        dveccpsc_libstr(nb_i, -1.0, d+ii, 0, t+ii, 0);
-        dveccpsc_libstr(nb_i,  1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
-        daxpy_libstr(nb_i,  1.0, tmp_nbgM+0, 0, t+ii, 0, t+ii, 0);
-        daxpy_libstr(nb_i, -1.0, tmp_nbgM+0, 0, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+        daxpby_libstr(nb_i,  1.0, tmp_nbgM+0, 0, -1.0, d+ii, 0, t+ii, 0);
+        daxpby_libstr(nb_i, -1.0, tmp_nbgM+0, 0, 1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
     }
 
     d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
