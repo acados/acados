@@ -17,7 +17,7 @@
  *
  */
 
-// TODO(dimitris): revive linear MPC example, test clipping
+// TODO(dimitris): revive linear MPC example, return nIter
 
 #ifdef ACADOS_WITH_QPDUNES
 
@@ -145,7 +145,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default args
-    qpdunes_options_t opts = QPDUNES_DEFAULT_ARGUMENTS;
+    qpdunes_options_t opts = QPDUNES_NONLINEAR_MPC;
 
     args->stageQpSolver = QPDUNES_WITH_CLIPPING;
 
@@ -459,7 +459,9 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
             && (stageQps == QPDUNES_WITH_QPOASES)) && "Cannot use clipping for this QP");
 
         // if user specified qpOASES but clipping is detected, trick qpDUNES to detect qpOASES
-        if ((args->stageQpSolver == QPDUNES_WITH_QPOASES) && (stageQps == QPDUNES_WITH_CLIPPING))
+        // NOTE(dimitris): also needed when partial condensing is used because qpDUNES detects
+        // clipping on last stage and crashes..
+        if (args->stageQpSolver == QPDUNES_WITH_QPOASES)
         {
             // make Q[N] non diagonal
             DMATEL_LIBSTR(&in->RSQrq[N], 0, 1) += 1e-8;

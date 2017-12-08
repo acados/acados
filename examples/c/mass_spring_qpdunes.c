@@ -42,7 +42,7 @@ int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" acados + hpipm\n");
+    printf(" acados + qpDUNES\n");
     printf("\n");
     printf("\n");
     printf("\n");
