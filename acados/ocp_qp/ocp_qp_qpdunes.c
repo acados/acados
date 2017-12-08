@@ -51,7 +51,7 @@ static int get_maximum_number_of_inequality_constraints(ocp_qp_dims *dims)
 
 
 
-static bool check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
+static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
 {
     int N = qp_in->dim->N;
     int nx = qp_in->dim->nx[0];
@@ -110,18 +110,7 @@ static bool check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
             }
         }
     }
-    if (stageQpSolver == QPDUNES_WITH_QPOASES)
-    {
-        // NOTE(dimitris): the opposite is possible (i.e., use qpOASES for a clipping formulation)
-        if (args->stageQpSolver == QPDUNES_WITH_QPOASES)
-        {
-            return true;
-        } else
-        {
-            return false;
-        }
-    }
-    return true;
+    return stageQpSolver;
 }
 
 
@@ -156,7 +145,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default args
-    qpdunes_options_t opts = QPDUNES_NONLINEAR_MPC;
+    qpdunes_options_t opts = QPDUNES_DEFAULT_ARGUMENTS;
 
     args->stageQpSolver = QPDUNES_WITH_CLIPPING;
 
@@ -452,8 +441,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
 {
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
     return_t value = 0;
-
-    assert(check_stage_qp_solver(args, in) == true);
+    qpdunes_stage_qp_solver_t stageQps;
 
     int N = in->dim->N;
     int nx = in->dim->nx[0];
@@ -461,7 +449,23 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
     int *nb = in->dim->nb;
     int *ng = in->dim->ng;
 
-    if (mem->firstRun == 1) {
+    if (mem->firstRun == 1)
+    {
+        // check if qpDUNES will detect clipping or qpOASES
+        stageQps = check_stage_qp_solver(args, in);
+
+        // if user specified clipping but problem requires qpOASES, throw error
+        assert(!((args->stageQpSolver == QPDUNES_WITH_CLIPPING)
+            && (stageQps == QPDUNES_WITH_QPOASES)) && "Cannot use clipping for this QP");
+
+        // if user specified qpOASES but clipping is detected, trick qpDUNES to detect qpOASES
+        if ((args->stageQpSolver == QPDUNES_WITH_QPOASES) && (stageQps == QPDUNES_WITH_CLIPPING))
+        {
+            // make Q[N] non diagonal
+            DMATEL_LIBSTR(&in->RSQrq[N], 0, 1) += 1e-8;
+            DMATEL_LIBSTR(&in->RSQrq[N], 1, 0) += 1e-8;
+        }
+
         // setup of intervals
         for (int kk = 0; kk < N; ++kk) {
             form_RSQ(work->R, work->S, work->Q, nx, nu, &in->RSQrq[kk]);
