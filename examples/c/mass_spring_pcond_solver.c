@@ -25,13 +25,20 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
+#ifdef ACADOS_WITH_QPDUNES
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#else
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#endif
 #include "acados/utils/create.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#define ELIMINATE_X0
+#ifndef ACADOS_WITH_QPDUNES
+#define ELIMINATE_X0  // NOTE(dimitris): not supported by qpDUNES
+#endif
+
 #define NREP 100
 
 #include "./mass_spring.c"
@@ -70,19 +77,25 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    qp_solver_t qp_solver_name = HPIPM;
+    ocp_qp_solver_t qp_solver_name = HPIPM;
 
     // create partial condensing solver args
-    ocp_qp_sparse_solver_args *arg =
-        ocp_qp_sparse_solver_create_arguments(qp_in->dim, HPIPM);
+    #ifdef ACADOS_WITH_QPDUNES
+    ocp_qp_sparse_solver_args *arg = ocp_qp_sparse_solver_create_arguments(qp_in->dim, QPDUNES);
+    #else
+    ocp_qp_sparse_solver_args *arg = ocp_qp_sparse_solver_create_arguments(qp_in->dim, HPIPM);
+    #endif
 
     // change partial condensing arguments
-    arg->pcond_args->N2 = 10;
+    arg->pcond_args->N2 = 5;
 
-    // change qp solver arguments (cast required)
-    ocp_qp_hpipm_args *qpsolver_args = (ocp_qp_hpipm_args *) arg->solver_args;
-    qpsolver_args->hpipm_args->iter_max = 21;
-    // printf("maxIter = %d\n", qpsolver_args->hpipm_args->iter_max);
+    // change qp solver arguments
+    #ifdef ACADOS_WITH_QPDUNES
+    ((ocp_qp_qpdunes_args *)(arg->solver_args))->stageQpSolver = QPDUNES_WITH_QPOASES;
+    #else
+    ((ocp_qp_hpipm_args *)(arg->solver_args))->hpipm_args->iter_max = 21;
+    printf("maxIter = %d\n", ((ocp_qp_hpipm_args *)(arg->solver_args))->hpipm_args->iter_max);
+    #endif
 
     // create partial condensing solver memory
     ocp_qp_sparse_solver_memory *mem =
@@ -138,7 +151,10 @@ int main() {
     compute_ocp_qp_res_nrm_inf(qp_res, res);
     double max_res = 0.0;
     for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
+
+    #ifndef ACADOS_WITH_QPDUNES
     assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
+    #endif
 
     /************************************************
     * print solution and stats
