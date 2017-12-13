@@ -342,11 +342,11 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
         if (idxb[ii] < nu)
         {  // input bound
             zLow[idxb[ii] + nx] = DVECEL_LIBSTR(sd, ii);  // lb[ii]
-            zUpp[idxb[ii] + nx] = DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
+            zUpp[idxb[ii] + nx] = -DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
         } else
         {  // state bounds
             zLow[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii);  // lb[ii]
-            zUpp[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
+            zUpp[idxb[ii] - nu] = -DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
         }
     }
 }
@@ -356,6 +356,8 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
 static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int nu, int nb, int ng,
     struct d_strmat *sDCt, struct d_strvec *sd)
 {
+    int ii;
+
     // copy C
     d_cvt_strmat2mat(nx, ng, sDCt, nu, 0, &Ct[0], nx+nu);
     // copy D
@@ -364,6 +366,8 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int n
     d_cvt_strvec2vec(ng, sd, nb, lc);
     // copy uc
     d_cvt_strvec2vec(ng, sd, 2*nb+ng, uc);
+
+    for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 
     // printf("acados [D'; C'] (nx = %d, nu = %d)\n", nx, nu);
     // d_print_strmat(sDCt->m, sDCt->n, sDCt, 0, 0);
@@ -590,22 +594,53 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
 
 
 
-static void fill_in_qp_out(ocp_qp_dims *dims, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
+static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory *mem)
 {
-    int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
+    int N = in->dim->N;
+    int *nx = in->dim->nx;
+    int *nu = in->dim->nu;
+    int *ng = in->dim->ng;
+    int *nb = in->dim->nb;
+
+    int **idxb = in->idxb;
 
     for (int kk = 0; kk < N + 1; kk++)
     {
+        int nv = mem->qpData.intervals[kk]->nV;
+        double *dual_sol = &mem->qpData.intervals[kk]->y.data[0];
+
         d_cvt_vec2strvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
         d_cvt_vec2strvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
+
+        for (int ii = 0; ii < 2*nb[kk]+2*ng[kk]; ii++) out->lam[kk].pa[ii] = 0.0;
+
+        // qpdunes multipliers form pairs (lam_low, lam_upp), first for bounds, then for constraints
+        for (int ii = 0; ii < nb[kk]; ii++)
+        {
+            // flip bounds from [x u] to [u x]
+            if (ii < nx[kk])
+            {
+                out->lam[kk].pa[nu[kk]+ii] = dual_sol[2*idxb[kk][ii]];
+                out->lam[kk].pa[nb[kk]+ng[kk]+nu[kk]+ii] = dual_sol[2*idxb[kk][ii]+1];
+            }
+            else
+            {
+                out->lam[kk].pa[ii-nx[kk]] = dual_sol[2*idxb[kk][ii]];
+                out->lam[kk].pa[nb[kk]+ng[kk]+ii-nx[kk]] = dual_sol[2*idxb[kk][ii]+1];
+            }
+
+        }
+
+        for (int ii = 0; ii < ng[kk]; ii++)
+        {
+            out->lam[kk].pa[nb[kk]+ii] = dual_sol[2*nv+2*ii];
+            out->lam[kk].pa[2*nb[kk]+ng[kk]+ii] = dual_sol[2*nv+2*ii+1];
+        }
     }
     for (int kk = 0; kk < N; kk++)
     {
         d_cvt_vec2strvec(nx[kk+1], &mem->qpData.lambda.data[kk*nx[kk+1]], &out->pi[kk], 0);
     }
-    // TODO(dimitris): are multipliers of inequalities returned by qpDUNES?
 }
 
 
@@ -653,7 +688,7 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
         return (int)return_value;
     }
 
-    fill_in_qp_out(in->dim, out, mem);
+    fill_in_qp_out(in, out, mem);
 
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
