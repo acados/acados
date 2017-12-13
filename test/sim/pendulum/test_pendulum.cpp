@@ -23,7 +23,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "test/sim/pendulum/casadi/casadi_pendulum.h"
 #include "test/sim/pendulum/pendulum_helper.cpp"
 #include "test/test_utils/eigen.h"
 
@@ -38,8 +37,6 @@ TEST_CASE("ERK simulation with adjoint sensitivities", "[simulation]") {
     int_t NX = 4;
     int_t NU = 1;
     real_t T = 0.5;
-
-    int_t nhess = (int_t)(NX+NU+1)*(real_t)(NX+NU)/2.0;
 
     sim_in  sim_in, sim_in2;
     sim_out sim_out, sim_out2;

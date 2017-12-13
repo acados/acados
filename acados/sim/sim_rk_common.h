@@ -20,9 +20,13 @@
 #ifndef ACADOS_SIM_SIM_RK_COMMON_H_
 #define ACADOS_SIM_SIM_RK_COMMON_H_
 
-#include "acados/sim/sim_common.h"
 #include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
     int_t num_stages;
@@ -32,5 +36,9 @@ typedef struct {
 
     Newton_scheme scheme;
 } sim_RK_opts;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SIM_SIM_RK_COMMON_H_

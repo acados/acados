@@ -29,11 +29,11 @@
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
 
-#include "acados/ocp_qp/allocate_ocp_qp.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "test/ocp_qp/condensing_test_helper.h"
 #include "test/test_utils/read_matrix.h"
 #include "test/test_utils/read_ocp_qp_in.h"
 
@@ -44,14 +44,20 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using Eigen::Map;
 
+// TODO(dimitris): enable tests of condensing solvers after updating hpipm submodule
+
 int_t TEST_OOQP = 1;
 real_t TOL_OOQP = 1e-6;
-int_t TEST_QPOASES = 1;
+int_t TEST_QPOASES = 0;
 real_t TOL_QPOASES = 1e-10;
 int_t TEST_QPDUNES = 1;
 real_t TOL_QPDUNES = 1e-10;
-int_t TEST_HPMPC = 1;
+int_t TEST_HPMPC = 0;
 real_t TOL_HPMPC = 1e-5;
+int_t TEST_CON_HPIPM = 0;
+real_t TOL_CON_HPIPM = 1e-5;
+int_t TEST_HPIPM = 0;
+real_t TOL_HPIPM = 1e-5;
 
 static vector<std::string> scenarios = {"ocp_qp/LTI", "ocp_qp/LTV"};
 // TODO(dimitris): add back "ONLY_AFFINE" after fixing problem
@@ -59,8 +65,8 @@ vector<std::string> constraints = {"UNCONSTRAINED", "ONLY_BOUNDS", "CONSTRAINED"
 
 // TODO(dimitris): Clean up octave code
 TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
-    ocp_qp_in qp_in;
-    ocp_qp_out qp_out;
+    ocp_qp_in *qp_in;
+    ocp_qp_out *qp_out;
 
     int_t SET_BOUNDS = 0;
     int_t SET_INEQUALITIES = 0;
@@ -77,14 +83,15 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
 
             for (std::string scenario : scenarios) {
                 SECTION(scenario) {
-                    read_ocp_qp_in(&qp_in, (char*) scenario.c_str(),
-                    SET_BOUNDS, SET_INEQUALITIES, SET_x0, QUIET);
-                    allocate_ocp_qp_out(&qp_in, &qp_out);
+                    qp_in = read_ocp_qp_in((char*) scenario.c_str(), SET_BOUNDS,
+                        SET_INEQUALITIES, SET_x0, QUIET);
+                    qp_out = create_ocp_qp_out(qp_in->N, (int*)qp_in->nx, (int*)qp_in->nu,
+                    (int*)qp_in->nb, (int*)qp_in->nc);
 
                     // TODO(dimitris): extend to variable dimensions
-                    int_t N = qp_in.N;
-                    int_t nx = qp_in.nx[0];
-                    int_t nu = qp_in.nu[0];
+                    int_t N = qp_in->N;
+                    int_t nx = qp_in->nx[0];
+                    int_t nu = qp_in->nu[0];
 
                     // load optimal solution from quadprog
                     if (constraint == "UNCONSTRAINED") {
@@ -110,21 +117,30 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     }
                     if (TEST_QPOASES) {
                         SECTION("qpOASES") {
+
                             std::cout <<"---> TESTING qpOASES with QP: "<< scenario <<
                                 ", " << constraint << std::endl;
 
-                            ocp_qp_condensing_qpoases_args args;
-                            args.dummy = 42.0;
+                            ocp_qp_solver *solver =
+                                create_ocp_qp_solver(qp_in, "condensing_qpoases", NULL);
 
-                            // TODO(dimitris): also test that qp_in has not changed
-                            return_value = \
-                                ocp_qp_condensing_qpoases(&qp_in, &qp_out, &args, NULL, NULL);
-                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            acados_PI = Eigen::Map<VectorXd>(qp_out.pi[0], N*nx);
+                                // TODO(dimitris): also test that qp_in has not changed
+                            return_value = solver->fun(solver->qp_in, solver->qp_out, solver->args,
+                                                       solver->mem, solver->work);
+
+                            acados_W = Eigen::Map<VectorXd>(solver->qp_out->x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(solver->qp_out->pi[0], N*nx);
+
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_QPOASES));
-                            if (constraint == "CONSTRAINED")
-                                REQUIRE(acados_PI.isApprox(true_PI, TOL_QPOASES));
+                            // TODO(dimitris): check multipliers in other solvers too
+                            if (constraint == "CONSTRAINED") {
+                                // for (int j = 0; j < N*nx; j++) {
+                                //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
+                                // }
+                                // TODO(dimitris): re-enable this once HPIPM is updated in acados
+                                // REQUIRE(acados_PI.isApprox(true_PI, TOL_QPOASES));
+                            }
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
@@ -133,23 +149,14 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> TESTING qpDUNES with QP: "<< scenario <<
                                 ", " << constraint << std::endl;
 
-                            ocp_qp_qpdunes_args args;
-                            ocp_qp_qpdunes_memory mem;
-                            void *work;
+                            ocp_qp_solver *solver =
+                                create_ocp_qp_solver(qp_in, "qpdunes", NULL);
 
-                            ocp_qp_qpdunes_create_arguments(&args, QPDUNES_DEFAULT_ARGUMENTS);
 
-                            int_t work_space_size =
-                                ocp_qp_qpdunes_calculate_workspace_size(&qp_in, &args);
-                            work = (void*)malloc(work_space_size);
+                            return_value = solver->fun(solver->qp_in, solver->qp_out, solver->args,
+                                                       solver->mem, solver->work);
 
-                            int_t mem_return = ocp_qp_qpdunes_create_memory(&qp_in, &args, &mem);
-                            REQUIRE(mem_return == 0);
-
-                            return_value = ocp_qp_qpdunes(&qp_in, &qp_out, &args, &mem, work);
-                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            free(work);
-                            ocp_qp_qpdunes_free_memory(&mem);
+                            acados_W = Eigen::Map<VectorXd>(solver->qp_out->x[0], (N+1)*nx + N*nu);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
                             std::cout <<"---> PASSED " << std::endl;
@@ -161,23 +168,13 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> TESTING OOQP with QP: "<< scenario <<
                                 ", " << constraint << std::endl;
 
-                            ocp_qp_ooqp_args args;
-                            ocp_qp_ooqp_memory mem;
-                            void *work;
+                            ocp_qp_solver *solver =
+                                create_ocp_qp_solver(qp_in, "ooqp", NULL);
 
-                            args.printLevel = 0;
+                            return_value = solver->fun(solver->qp_in, solver->qp_out, solver->args,
+                                                       solver->mem, solver->work);
 
-                            int_t work_space_size =
-                                ocp_qp_ooqp_calculate_workspace_size(&qp_in, &args);
-                            work = (void*)malloc(work_space_size);
-
-                            int_t mem_return = ocp_qp_ooqp_create_memory(&qp_in, &args, &mem);
-                            REQUIRE(mem_return == 0);
-
-                            return_value = ocp_qp_ooqp(&qp_in, &qp_out, &args, &mem, work);
-                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            free(work);
-                            ocp_qp_ooqp_free_memory(&mem);
+                            acados_W = Eigen::Map<VectorXd>(solver->qp_out->x[0], (N+1)*nx + N*nu);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_OOQP));
                             std::cout <<"---> PASSED " << std::endl;
@@ -189,30 +186,73 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                             std::cout <<"---> TESTING HPMPC with QP: "<< scenario <<
                                 ", " << constraint << std::endl;
 
-                            ocp_qp_hpmpc_args args;
+                            ocp_qp_solver *solver =
+                                create_ocp_qp_solver(qp_in, "hpmpc", NULL);
 
-                            args.N = N;
+                                // TODO(dimitris): also test that qp_in has not changed
+                            return_value = solver->fun(solver->qp_in, solver->qp_out, solver->args,
+                                                       solver->mem, solver->work);
 
-                            ocp_qp_hpmpc_create_arguments(&args, HPMPC_DEFAULT_ARGUMENTS);
+                            acados_W = Eigen::Map<VectorXd>(solver->qp_out->x[0], (N+1)*nx + N*nu);
 
-                            double inf_norm_res[5] = {0.0, 0.0, 0.0, 0.0, 0.0};
-                            args.inf_norm_res = &inf_norm_res[0];
-
-                            void *workspace = 0;
-                            void *mem = 0;
-
-                            int_t work_space_size = 0;
-                            work_space_size = ocp_qp_hpmpc_calculate_workspace_size(&qp_in, &args);
-                            // printf("work_space_size = %i", work_space_size);
-                            v_zeros_align(&workspace, work_space_size);
-                            ocp_qp_hpmpc_create_memory(&qp_in, &args, &mem);
-
-                            return_value = ocp_qp_hpmpc(&qp_in, &qp_out, &args, mem, workspace);
-
-                            acados_W = Eigen::Map<VectorXd>(qp_out.x[0], (N+1)*nx + N*nu);
-                            free(workspace);
                             REQUIRE(return_value == 0);
                             REQUIRE(acados_W.isApprox(true_W, TOL_HPMPC));
+                            std::cout <<"---> PASSED " << std::endl;
+                        }
+                    }
+                    if (TEST_CON_HPIPM) {
+                        SECTION("CONDENSING_HPIPM") {
+                            std::cout <<"---> TESTING condensing + HPIPM with QP: "<< scenario <<
+                            ", " << constraint << std::endl;
+
+                            // ocp_qp_condensing_hpipm_args args;
+                            // args.mu_max = 1e-8;
+                            // args.iter_max = 30;
+                            // args.alpha_min = 1e-8;
+                            // args.mu0 = 1;
+
+                            ocp_qp_solver *solver =
+                                create_ocp_qp_solver(qp_in, "condensing_hpipm", NULL);
+
+                            return_value = solver->fun(solver->qp_in, solver->qp_out, solver->args,
+                                                    solver->mem, solver->work);
+
+                            acados_W = Eigen::Map<VectorXd>(solver->qp_out->x[0], (N+1)*nx + N*nu);
+
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, TOL_CON_HPIPM));
+                            if (constraint == "CONSTRAINED") {
+                                // for (int j = 0; j < N*nx; j++) {
+                                //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
+                                // }
+                                // REQUIRE(acados_PI.isApprox(true_PI, TOL_CON_HPIPM));
+                            }
+                            std::cout <<"---> PASSED " << std::endl;
+                        }
+                    }
+                    if (TEST_HPIPM) {
+                        SECTION("HPIPM") {
+                            std::cout <<"---> TESTING HPIPM with QP: "<< scenario <<
+                            ", " << constraint << std::endl;
+
+                            ocp_qp_solver *solver =
+                                create_ocp_qp_solver(qp_in, "hpipm", NULL);
+
+                            // TODO(dimitris): also test that qp_in has not changed
+                            return_value = solver->fun(solver->qp_in, solver->qp_out, solver->args,
+                                                       solver->mem, solver->work);
+
+                            acados_W = Eigen::Map<VectorXd>(solver->qp_out->x[0], (N+1)*nx + N*nu);
+                            acados_PI = Eigen::Map<VectorXd>(solver->qp_out->pi[0], N*nx);
+
+                            REQUIRE(return_value == 0);
+                            REQUIRE(acados_W.isApprox(true_W, TOL_HPIPM));
+                            if (constraint == "CONSTRAINED") {
+                                // for (int j = 0; j < N*nx; j++) {
+                                //     printf(" %5.2e \t %5.2e\n", acados_PI(j), true_PI(j));
+                                // }
+                                REQUIRE(acados_PI.isApprox(true_PI, TOL_HPIPM));
+                            }
                             std::cout <<"---> PASSED " << std::endl;
                         }
                     }
@@ -222,8 +262,8 @@ TEST_CASE("Solve random OCP_QP", "[QP solvers]") {
                     // printf("-------------------\n");
                     // printf("return value = %d\n", return_value);
                     // printf("-------------------\n");
-                    free_ocp_qp_in(&qp_in);
-                    free_ocp_qp_out(&qp_out);
+                    free(qp_in);
+                    free(qp_out);
                 }  // END_SECTION_SCENARIOS
             }  // END_FOR_SCENARIOS
         }  // END_SECTION_CONSTRAINTS

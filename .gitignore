@@ -58,13 +58,13 @@ Thumbs.db
 *external/coinhsl
 *external/matlab
 *external/download
+*external/casadi-matlab*
+*external/download_script
+*external/encrypted_script
+*external/encrypted_script_matlab
+
 *download_software
 *download_matlab
-
-# Auto-generated files #
-########################
-*experimental/dimitris/*/*.txt
-*experimental/dimitris/*/*.mat
 
 # Misc #
 ########

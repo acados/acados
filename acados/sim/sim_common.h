@@ -20,35 +20,42 @@
 #ifndef ACADOS_SIM_SIM_COMMON_H_
 #define ACADOS_SIM_SIM_COMMON_H_
 
-#include <stdbool.h>
-
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct {
     int_t nx;   // NX
     int_t nu;   // NU
+    int_t nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     real_t *x;  // x[NX]
     real_t *u;  // u[NU]
 
-    real_t *S_forw;     // forward seed
-    real_t *S_adj;      // backward seed
+    real_t *S_forw;  // forward seed
+    real_t *S_adj;   // backward seed
 
     bool sens_forw;
     bool sens_adj;
     bool sens_hess;
-    int_t nsens_forw;
+    int_t num_forw_sens;
 
-    int (*vde)(const real_t**, real_t**, int*, real_t*, int);
-    void (*VDE_forw)(const real_t*, real_t*,
-        int (*vde)(const real_t**, real_t**, int*, real_t*, int));
-    void (*VDE_adj)(const real_t*, real_t*);
-    void (*jac_fun)(const real_t*, real_t*);
+    casadi_function_t vde;
+    void (*forward_vde_wrapper)(const int_t, const int_t, const real_t *, real_t *,
+                                casadi_function_t);
+    casadi_function_t jac;
+    void (*jacobian_wrapper)(const int_t, const real_t *, real_t *, casadi_function_t);
+    casadi_function_t vde_adj;
+    void (*adjoint_vde_wrapper)(const int_t, const int_t, const real_t *, real_t *,
+                                casadi_function_t);
+    casadi_function_t discrete_model;
 
     real_t step;
-    uint nSteps;
+    uint num_steps;
 
-    real_t *grad_K;       // gradient correction
+    real_t *grad_K;  // gradient correction
 } sim_in;
 
 typedef struct {
@@ -58,23 +65,27 @@ typedef struct {
 } sim_info;
 
 typedef struct {
-    real_t *xn;         // xn[NX]
-    real_t *S_forw;     // S_forw[NX*(NX+NU)]
-    real_t *S_adj;      //
-    real_t *S_hess;     //
+    real_t *xn;      // xn[NX]
+    real_t *S_forw;  // S_forw[NX*(NX+NU)]
+    real_t *S_adj;   //
+    real_t *S_hess;  //
 
-    real_t *grad;       // gradient correction
+    real_t *grad;  // gradient correction
 
     sim_info *info;
 } sim_out;
 
 typedef struct {
-    int_t (*fun)(const sim_in*, sim_out*, void*, void*, void*);
+    int_t (*fun)(const sim_in *, sim_out *, void *, void *, void *);
     sim_in *in;
     sim_out *out;
     void *args;
     void *mem;
     void *work;
 } sim_solver;
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

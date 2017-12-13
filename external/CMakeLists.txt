@@ -17,17 +17,23 @@
 #
 #
 
+# TODO: The following definition should go ASAP!
+if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
+    set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")
+endif()
 set(TARGET "GENERIC" CACHE STRING "Target architecture")
 set(LA "HIGH_PERFORMANCE" CACHE STRING "Linear algebra optimization level")
+set(BLASFEO_HEADERS_INSTALLATION_DIRECTORY "include/blasfeo/include" CACHE STRING "")
+set(HPIPM_HEADERS_INSTALLATION_DIRECTORY "include/hpipm/include" CACHE STRING "")
+set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING "")
+
 add_subdirectory(blasfeo)
+add_subdirectory(hpipm)
 if((NOT CMAKE_C_COMPILER_ID MATCHES "MSVC") AND (NOT CMAKE_SYSTEM_NAME MATCHES "dSpace"))
-	include(external/hpmpc)
-	add_subdirectory(hpipm)
+	add_subdirectory(hpmpc)
 endif()
-add_subdirectory(qpDUNES-dev)
-add_subdirectory(qpOASES)
-if (NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/OOQP)
-        include(external/ooqp)
-    endif()
+add_subdirectory(qpdunes)
+add_subdirectory(qpoases)
+if (ACADOS_WITH_OOQP)
+    include(external/ooqp)
 endif()

@@ -73,7 +73,7 @@ macro(SWIG_GET_WRAPPER_DEPENDENCIES swigFile genWrapper language DEST_VARIABLE)
   foreach(it ${swig_getdeps_include_directories})
     set(swig_getdeps_include_dirs ${swig_getdeps_include_dirs} "-I${it}")
   endforeach()
-  EXECUTE_PROCESS(
+  execute_process(
     COMMAND ${SWIG_EXECUTABLE}
     -M -MF ${swig_getdeps_depsfile} ${swig_getdeps_extra_flags}
     ${CMAKE_SWIG_FLAGS} -${language}

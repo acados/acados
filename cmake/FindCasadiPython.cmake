@@ -21,33 +21,43 @@ find_package(PythonInterp 3 REQUIRED)
 
 # Try to find Casadi root directory
 find_path(
-    CASADIPYTHON_ROOT_DIR
+    CASADI_PYTHON_ROOT
     NAMES "casadi/casadi.py"
-    PATHS ENV PYTHONPATH
-)
-if (NOT CASADIPYTHON_ROOT_DIR)
+    HINTS ${CMAKE_SOURCE_DIR}/external/*
+    PATHS ENV PYTHONPATH)
+
+if(NOT CASADI_PYTHON_ROOT)
     message(FATAL_ERROR "Casadi not found!")
-endif ()
+endif()
 
 # Determine the version number
 execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" -c "from sys import path; path.append(r'${CASADIPYTHON_ROOT_DIR}');import casadi; print(casadi.CasadiMeta_getVersion())"
-    OUTPUT_VARIABLE CASADIPYTHON_VERSION
-)
-string(STRIP "${CASADIPYTHON_VERSION}" CASADIPYTHON_VERSION)
-string(SUBSTRING "${CASADIPYTHON_VERSION}" 0 1 CASADIPYTHON_MAJOR_VERSION)
-string(COMPARE EQUAL "${CASADIPYTHON_MAJOR_VERSION}" "3" FOUND_CASADIPYTHON_3)
-if (NOT FOUND_CASADIPYTHON_3)
-    message(FATAL_ERROR "Casadi version 3 required. Found version: ${CASADIPYTHON_VERSION}")
-endif ()
+    COMMAND "${PYTHON_EXECUTABLE}" -c "from sys import path; path.insert(0, r'${CASADI_PYTHON_ROOT}');import casadi; print(casadi.CasadiMeta_getVersion())"
+    OUTPUT_VARIABLE CASADI_PYTHON_VERSION)
+
+string(STRIP "${CASADI_PYTHON_VERSION}" CASADI_PYTHON_VERSION)
+string(SUBSTRING "${CASADI_PYTHON_VERSION}" 0 1 CASADI_PYTHON_MAJOR_VERSION)
+string(COMPARE EQUAL "${CASADI_PYTHON_MAJOR_VERSION}" "3" FOUND_CASADI_PYTHON_3)
+if(NOT FOUND_CASADI_PYTHON_3)
+    message(FATAL_ERROR "Casadi version 3 required. Found version: ${CASADI_PYTHON_VERSION}")
+endif()
 
 # Find Casadi libraries
-set(CASADIPYTHON_LIBRARY "${CASADIPYTHON_ROOT_DIR}/casadi")
-find_path(
-    CASADIPYTHON_INCLUDE_DIR 
-    NAMES casadi/casadi.hpp
-    PATHS ${CASADIPYTHON_ROOT_DIR}/include
-)
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(CasadiPython DEFAULT_MSG CASADIPYTHON_LIBRARY CASADIPYTHON_INCLUDE_DIR)
+find_library(CASADI_PYTHON_LIBRARY
+    NAMES casadi
+    PATHS
+        "${CASADI_PYTHON_ROOT}/casadi/"
+        "${CASADI_PYTHON_ROOT}/lib/"
+        "${CASADI_PYTHON_ROOT}/../*")
 
+find_path(CASADI_PYTHON_INCLUDE_DIR
+    NAMES casadi/casadi.hpp
+    PATHS
+        "${CASADI_PYTHON_ROOT}/include"
+        "${CASADI_PYTHON_ROOT}/../include"
+        "${CASADI_PYTHON_ROOT}/casadi/include")
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(CASADIPYTHON DEFAULT_MSG CASADI_PYTHON_LIBRARY CASADI_PYTHON_INCLUDE_DIR)
+
+mark_as_advanced(CASADI_PYTHON_INCLUDE_DIR)

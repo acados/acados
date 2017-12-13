@@ -17,24 +17,17 @@
 #
 #
 
-find_library(FORTRAN_LIBRARY NAMES libgfortran.so libgfortran.dylib gfortran
-    HINTS
-        /usr/lib/gcc/x86_64-linux-gnu/*
-        /usr/local/lib/gcc/*
-        ${CMAKE_FIND_ROOT_PATH}
-		$ENV{PATH}
-    CMAKE_FIND_ROOT_PATH_BOTH)
+list(REMOVE_ITEM CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 
-if (NOT FORTRAN_LIBRARY)
-	find_library(FORTRAN_LIBRARY gfortran-3
-		HINTS
-			/usr/lib/gcc/x86_64-linux-gnu/*
-			/usr/local/lib/gcc/*
-			${CMAKE_FIND_ROOT_PATH}
-			$ENV{PATH}
-		CMAKE_FIND_ROOT_PATH_BOTH)
-endif ()
+find_library(FORTRAN_LIBRARY
+    NAMES gfortran gfortran-3 gfortran-4
+    PATHS
+        "/usr/local/lib/gcc/*"
+        "/usr/lib/gcc/x86_64-linux-gnu/*"
+        "/usr/lib/gcc/arm-linux-gnueabihf/*"
+        "/usr/lib/gcc/x86_64-w64-mingw32/*"
+    CMAKE_FIND_ROOT_PATH_BOTH
+)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(FortranLibs FOUND_VAR FORTRANLIBS_FOUND
-                                         REQUIRED_VARS FORTRAN_LIBRARY)
+find_package_handle_standard_args(FortranLibs DEFAULT_MSG FORTRAN_LIBRARY)

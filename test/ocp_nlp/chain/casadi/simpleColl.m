@@ -30,7 +30,7 @@ function [G] = simpleColl(dae,tau_root,h)
     D(j) = full(out);
 
     % Evaluate the time derivative of the polynomial at all collocation points to get the coefficients of the continuity equation
-    tfcn = lfcn.tangent();
+    tfcn = Function('tfcn', {tau}, {tangent(L,tau)});
     for r=1:d+1
       out = tfcn(tau_root2(r));
       C(j,r) = full(out);

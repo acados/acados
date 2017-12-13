@@ -53,22 +53,40 @@ before_script:
     fi
 
 script:
+  - 'if [ "$TRAVIS_REPO_SLUG" == "acados/acados" -a "$TRAVIS_PULL_REQUEST" == "false" -a "$USE_MATLAB" == "true" ]; then
+       SWIG_MATLAB=ON;
+    fi'
   - cmake -E make_directory build
+<<<<<<< HEAD
   - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON ..
   - cmake --build build --target install --clean-first
   - cmake -E chdir build ctest --output-on-failure
   - rm -r build
   - rm -r $HOME/local/lib
+=======
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON ..
+  - cmake --build build --target lint
+  - cmake --build build
+  - cmake -E chdir build ctest --verbose --output-on-failure
+  - rm -r -f build
+>>>>>>> acados_master
   - cmake -E make_directory build
   - cmake -E chdir build cmake -DCMAKE_TOOLCHAIN_FILE=cmake/Toolchain-mingw32.cmake ..
   - cmake --build build --clean-first
-  - rm -r build
+  - rm -r -f build
   - cmake -E make_directory build
-  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=$SWIG_PYTHON -DCOVERAGE=$COVERAGE ..
+  - cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Debug -DUNIT_TESTS=ON -DSWIG_MATLAB=$SWIG_MATLAB -DSWIG_PYTHON=ON -DCOVERAGE=$COVERAGE -DCMAKE_INSTALL_PREFIX=$HOME/local ..
   - export CXX="$CXX -std=c++11" # needed for octave
+<<<<<<< HEAD
   - cmake --build build --target install --clean-first
   - cmake --build build --target lint
   - cmake -E chdir build ctest --output-on-failure
+=======
+  - cmake --build build
+  - cmake -E chdir build ctest --output-on-failure
+  - cmake --build build --target install
+  - python -c "import acados" # check installation
+>>>>>>> acados_master
   - cmake --build build --target acados_coverage || echo "Coverage report not generated"
   - pushd experimental/dang/esp32
   - ./test_all_linux.sh
@@ -76,4 +94,4 @@ script:
 after_success:
   - pushd build
   # Upload report to CodeCov
-  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi 
+  - if [ "$COVERAGE" == "lcov" ]; then bash <(curl -s https://codecov.io/bash); else echo "Codecov did not collect coverage reports"; fi

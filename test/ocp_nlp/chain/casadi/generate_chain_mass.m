@@ -31,6 +31,35 @@ N = 15;
 nx = (Nm-1)*2*3;
 nu = 3;
 
+% Trivial LS cost function
+cost_x = SX.sym('x',nx);
+cost_u = SX.sym('u',nu);
+cost_xu = [cost_x;cost_u];
+cost_y = [cost_x;cost_u];
+cost_jac_y = jacobian(cost_y,cost_xu);
+ls_cost = Function(['ls_cost_nm' num2str(Nm)], {cost_x,cost_u},{cost_y,cost_jac_y});
+
+opts = struct('mex', false);
+ls_cost.generate(['ls_cost_nm' num2str(Nm)], opts);
+
+% Trivial terminal LS cost function
+cost_yN = cost_x;
+cost_jac_yN = jacobian(cost_yN,cost_x);
+ls_costN = Function(['ls_costN_nm' num2str(Nm)], {cost_x}, {cost_yN, cost_jac_yN});
+ls_costN.generate(['ls_costN_nm' num2str(Nm)], opts);
+
+% Empty path constraints
+pathcon_g = SX.zeros(0);
+pathcon_jac_g = jacobian(pathcon_g, cost_xu);
+pathcon = Function(['pathcon_nm' num2str(Nm)], {cost_x, cost_u}, {pathcon_g, pathcon_jac_g});
+pathcon.generate(['pathcon_nm' num2str(Nm)], opts);
+
+% Empty terminal path constraints
+pathcon_gN = SX.zeros(0);
+pathcon_jac_gN = jacobian(pathcon_gN, cost_x);
+pathconN = Function(['pathconN_nm' num2str(Nm)], {cost_x}, {pathcon_gN, pathcon_jac_gN});
+pathconN.generate(['pathconN_nm' num2str(Nm)], opts);
+
 % State variables
 u = SX.sym('u',3);
 dae.p = u;
@@ -87,16 +116,28 @@ odeFun = Function(['ode_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacobian(d
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 
-vdeX = SX.zeros(nx,nx);
-vdeX = vdeX + jtimes(dae.ode,dae.x,Sx);
+Sx_dot = SX.sym('Sx_dot',nx,nx);
+Sp_dot = SX.sym('Sp_dot',nx,nu);
 
-vdeP = SX.zeros(nx,nu) + jacobian(dae.ode,dae.p);
-vdeP = vdeP + jtimes(dae.ode,dae.x,Sp);
+Sx_full = [Sx;Sx_dot];
+Sp_full = [Sp;Sp_dot];
 
-vdeFun = Function(['vde_chain_nm' num2str(Nm)],{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX,vdeP});
+x_dot = SX.sym('x_dot',nx,1);
 
-jacX = SX.zeros(nx,nx) + jacobian(dae.ode,dae.x);
-jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
+x_impl = [dae.x;x_dot];
+
+ode_impl = x_dot - dae.ode;
+
+vdeX = Sx_dot;
+vdeX = vdeX - jtimes(dae.ode,dae.x,Sx);
+
+vdeP = Sp_dot - jacobian(dae.ode,dae.p);
+vdeP = vdeP - jtimes(dae.ode,dae.x,Sp);
+
+vdeFun = Function(['vde_chain_nm' num2str(Nm)],{x_impl,Sx_full,Sp_full,dae.p},{ode_impl,vdeX,vdeP});
+
+jacX = SX.zeros(nx,2*nx) + jacobian(ode_impl,x_impl);
+jacFun = Function(['jac_chain_nm' num2str(Nm)],{x_impl,dae.p},{ode_impl,jacX});
 
 opts = struct('mex', false);
 vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);

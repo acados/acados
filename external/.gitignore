@@ -1,5 +1,2 @@
 eigen/
-casadi-octave-v3.1.1/
-casadi-octave-v3.2.2/
-casadi-py35-np1.9.1-v3.1.1/
-casadi/
+casadi*
