@@ -152,6 +152,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 0;
+        args->options.printLevel = 0;
     } else if (opts == QPDUNES_NONLINEAR_MPC) {
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 0;
@@ -164,6 +165,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
         printf("\nUnknown option (%d) for qpDUNES!\n", opts);
         args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 0;
+        args->options.printLevel = 0;
     }
 }
 
