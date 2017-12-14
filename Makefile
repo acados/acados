@@ -101,9 +101,10 @@ clean:
 	( cd examples/c; $(MAKE) clean )
 
 deep_clean: clean
-	( cd external/blasfeo; $(MAKE) clean )
+	( cd external/blasfeo; $(MAKE) deep_clean )
 	( cd external/hpipm; $(MAKE) clean )
 	( cd external/qpoases; $(MAKE) clean )
 	( cd external/qore; $(MAKE) purge )
+	( cd external/qpdunes; $(MAKE) clean )
 	rm -rf include
 	rm -rf lib
