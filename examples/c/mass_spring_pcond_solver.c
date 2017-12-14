@@ -48,7 +48,7 @@ int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" acados + partial condensing solver\n");
+    printf(" acados + partial condensing solvers\n");
     printf("\n");
     printf("\n");
     printf("\n");
@@ -73,123 +73,126 @@ int main() {
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
-    * partial condensing solver
+    * partial condensing solvers
     ************************************************/
 
-    // choose QP solver
-    ocp_qp_solver_t qp_solver_name = HPIPM;
-
-    // create partial condensing solver args
     #ifdef ACADOS_WITH_QPDUNES
-    ocp_qp_sparse_solver_args *arg = ocp_qp_sparse_solver_create_arguments(qp_in->dim, QPDUNES);
+    int num_of_solvers = 2;
+    ocp_qp_solver_t pcond_solvers[2] = {QPDUNES, HPIPM};
     #else
-    ocp_qp_sparse_solver_args *arg = ocp_qp_sparse_solver_create_arguments(qp_in->dim, HPIPM);
+    int num_of_solvers = 1;
+    ocp_qp_solver_t pcond_solvers[1] = {HPIPM};
     #endif
 
-    // change partial condensing arguments
-    arg->pcond_args->N2 = 5;
+    for (int ii = 0; ii < num_of_solvers; ii++)
+    {
+        ocp_qp_solver_t solver = pcond_solvers[ii];
+        ocp_qp_sparse_solver_args *arg = ocp_qp_sparse_solver_create_arguments(qp_in->dim, solver);
 
-    // change qp solver arguments
-    #ifdef ACADOS_WITH_QPDUNES
-    ((ocp_qp_qpdunes_args *)(arg->solver_args))->stageQpSolver = QPDUNES_WITH_QPOASES;
-    #else
-    ((ocp_qp_hpipm_args *)(arg->solver_args))->hpipm_args->iter_max = 21;
-    printf("maxIter = %d\n", ((ocp_qp_hpipm_args *)(arg->solver_args))->hpipm_args->iter_max);
-    #endif
+        // change partial condensing arguments
+        arg->pcond_args->N2 = 5;
 
-    // create partial condensing solver memory
-    ocp_qp_sparse_solver_memory *mem =
+        // set solver specific arguments and print solver name
+        switch(solver)
+        {
+            #ifdef ACADOS_WITH_QPDUNES
+            case QPDUNES:
+                printf("\nQPDUNES:\n\n");
+                ((ocp_qp_qpdunes_args *)(arg->solver_args))->stageQpSolver = QPDUNES_WITH_QPOASES;
+                break;
+            #endif
+            case HPIPM:
+                printf("\nHPIPM:\n\n");
+                ((ocp_qp_hpipm_args *)(arg->solver_args))->hpipm_args->iter_max = 21;
+                break;
+            default:
+                printf("\nUnknown solver!\n\n");
+                exit(1);
+        }
+
+        // create partial condensing solver memory
+        ocp_qp_sparse_solver_memory *mem =
         ocp_qp_sparse_solver_create_memory(qp_in->dim, arg);
 
-    // create partial condensing solver workspace
-    void *work = malloc(ocp_qp_sparse_solver_calculate_workspace_size(qp_in->dim, arg));
+        // create partial condensing solver workspace
+        void *work = malloc(ocp_qp_sparse_solver_calculate_workspace_size(qp_in->dim, arg));
 
-	int acados_return;  // 0 normal; 1 max iter
+        int acados_return;  // 0 normal; 1 max iter
 
-    acados_timer timer;
-    acados_tic(&timer);
+        acados_timer timer;
+        acados_tic(&timer);
 
-    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-    ocp_qp_info min_info;
-    min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
+        ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+        ocp_qp_info min_info;
+        min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
 
-	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem, work);
+        for (int rep = 0; rep < NREP; rep++) {
+            acados_return = ocp_qp_sparse_solver(qp_in, qp_out, arg, mem, work);
 
-        if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
-        if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
-        if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
-        if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
-	}
+            if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
+            if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
+            if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
+            if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
+        }
 
-    double time = acados_toc(&timer)/NREP;
+        double time = acados_toc(&timer)/NREP;
 
-    /************************************************
-    * extract solution
-    ************************************************/
+        /************************************************
+        * extract solution
+        ************************************************/
 
-    ocp_qp_dims *dims = qp_in->dim;
+        ocp_qp_dims *dims = qp_in->dim;
 
-    colmaj_ocp_qp_out *sol;
-    void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
-    assign_colmaj_ocp_qp_out(dims, &sol, memsol);
-    convert_ocp_qp_out_to_colmaj(qp_out, sol);
+        colmaj_ocp_qp_out *sol;
+        void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
+        assign_colmaj_ocp_qp_out(dims, &sol, memsol);
+        convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
-    /************************************************
-    * compute residuals
-    ************************************************/
+        /************************************************
+        * compute residuals
+        ************************************************/
 
-    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
-    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
-    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+        ocp_qp_res *qp_res = create_ocp_qp_res(dims);
+        ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
+        compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
 
-    /************************************************
-    * compute infinity norm of residuals
-    ************************************************/
+        /************************************************
+        * compute infinity norm of residuals
+        ************************************************/
 
-    double res[4];
-    compute_ocp_qp_res_nrm_inf(qp_res, res);
-    double max_res = 0.0;
-    for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
+        double res[4];
+        compute_ocp_qp_res_nrm_inf(qp_res, res);
+        double max_res = 0.0;
+        for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
 
-    #ifndef ACADOS_WITH_QPDUNES
-    assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
-    #endif
+        // solver specific checks
+        if (solver == HPIPM) assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
+        else assert(max_res <= 1e1*ACADOS_EPS && "The largest KKT residual greater than ACADOS_EPS");
 
-    /************************************************
-    * print solution and stats
-    ************************************************/
+        /************************************************
+        * print stats
+        ************************************************/
 
-    printf("\nu = \n");
-    for (int ii = 0; ii < N; ii++) d_print_mat(1, nu[ii], sol->u[ii], 1);
+        printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
-    printf("\nx = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
+        printf("\nN2 = %d\n\n\n", arg->pcond_args->N2);
 
-    printf("\npi = \n");
-    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
+        print_ocp_qp_info(&min_info);
 
-    printf("\nlam = \n");
-    for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
+        /************************************************
+        * free memory
+        ************************************************/
 
-    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
-
-    printf("\nN2 = %d\n\n\n", arg->pcond_args->N2);
-
-    print_ocp_qp_info(&min_info);
-
-    /************************************************
-    * free memory
-    ************************************************/
+        free(sol);
+        free(qp_res);
+        free(res_ws);
+        free(arg);
+        free(mem);
+        free(work);
+    }
 
     free(qp_in);
     free(qp_out);
-    free(sol);
-    free(qp_res);
-    free(res_ws);
-    free(arg);
-    free(mem);
-    free(work);
 
     return 0;
 }
