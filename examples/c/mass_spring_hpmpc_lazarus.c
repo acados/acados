@@ -88,7 +88,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_hpmpc(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_hpmpc(qp_in, qp_out, arg, mem, NULL);
 	}
 
     double time = acados_toc(&timer)/NREP;
@@ -124,8 +124,8 @@ int main() {
     printf("\nx = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
 
-    // printf("\npi = \n");
-    // for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
+    printf("\npi = \n");
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
 
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
