@@ -81,6 +81,7 @@ typedef struct {
     double condensing_time;
     double interface_time;
     double total_time;
+    int    num_iter;
 } ocp_qp_info;
 
 

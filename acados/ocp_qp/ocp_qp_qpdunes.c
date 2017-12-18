@@ -149,23 +149,17 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
 
     args->stageQpSolver = QPDUNES_WITH_CLIPPING;
 
+    args->options = qpDUNES_setupDefaultOptions();
+    args->isLinearMPC = 0;
+    args->options.printLevel = 0;
+    args->options.stationarityTolerance = 1e-12;
+
     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 0;
-        args->options.printLevel = 0;
     } else if (opts == QPDUNES_NONLINEAR_MPC) {
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 0;
-        args->options.printLevel = 0;
     } else if (opts == QPDUNES_LINEAR_MPC) {
-        args->options = qpDUNES_setupDefaultOptions();
         args->isLinearMPC = 1;
-        args->options.printLevel = 0;
     } else {
         printf("\nUnknown option (%d) for qpDUNES!\n", opts);
-        args->options = qpDUNES_setupDefaultOptions();
-        args->isLinearMPC = 0;
-        args->options.printLevel = 0;
     }
 }
 
@@ -694,6 +688,7 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
 
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
+    info->num_iter = mem->qpData.log.numIter;
 
     // TODO(dimitris): use acados return value
     return 0;
