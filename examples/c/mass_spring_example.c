@@ -37,6 +37,7 @@
 #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
 #endif
+#define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
 #define NREP 100
 
@@ -78,9 +79,11 @@ int main() {
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
         PARTIAL_CONDENSING_HPIPM,
+        #if ACADOS_WITH_QPDUNES
         PARTIAL_CONDENSING_QPDUNES,
+        #endif
         FULL_CONDENSING_HPIPM,
-        // FULL_CONDENSING_QORE,
+        FULL_CONDENSING_QORE,
         FULL_CONDENSING_QPOASES,
         -1  // NOTE(dimitris): -1 breaks the while loop of QP solvers
     };
@@ -92,8 +95,6 @@ int main() {
         plan.qp_solver = ocp_qp_solvers[ii];
 
         void *args = ocp_qp_create_args(&plan, qp_dims);
-
-        #warning FULL_CONDENSING_QORE broken
 
         // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
         switch (plan.qp_solver)
@@ -134,6 +135,7 @@ int main() {
         ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
         ocp_qp_info min_info;
 
+        // run QP solver NREP times and record min timings
         for (int rep = 0; rep < NREP; rep++)
         {
             acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
@@ -148,6 +150,7 @@ int main() {
             }
             else
             {
+                // TODO(dimitris): cold start qpDUNES to get rid of this
                 #ifndef ACADOS_WITH_QPDUNES
                 assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
                 #endif
@@ -161,15 +164,6 @@ int main() {
                     min_info.interface_time = info->interface_time;
             }
         }
-
-        /************************************************
-         * extract solution
-         ************************************************/
-
-        colmaj_ocp_qp_out *sol;
-        void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(qp_dims));
-        assign_colmaj_ocp_qp_out(qp_dims, &sol, memsol);
-        convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
         /************************************************
          * compute residuals
@@ -190,21 +184,8 @@ int main() {
             max_res = (res[ii] > max_res) ? res[ii] : max_res;
 
         /************************************************
-         * print solution and stats
+         * print stats
          ************************************************/
-
-        printf("\nu = \n");
-        for (int ii = 0; ii < N; ii++) d_print_mat(1, nu[ii], sol->u[ii], 1);
-
-        printf("\nx = \n");
-        for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
-
-        printf("\npi = \n");
-        for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii + 1], sol->pi[ii], 1);
-
-        printf("\nlam = \n");
-        for (int ii = 0; ii <= N; ii++)
-            d_print_mat(1, 2 * nb[ii] + 2 * ng[ii], sol->lam[ii], 1);
 
         printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
@@ -214,7 +195,6 @@ int main() {
          * free memory
          ************************************************/
 
-        free(sol);
         free(qp_solver);
         free(args);
 

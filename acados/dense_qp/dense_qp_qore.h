@@ -40,6 +40,7 @@ typedef struct dense_qp_qore_args_ {
     int warm_start;     // warm start with updated matrices H and C
     int warm_strategy;  // 0: ramp-up from zero homotopy; 1: setup homotopy from the previous solution
     int hot_start;      // hot start with unchanged matrices H and C
+    int dummy;          // NOTE(dimitris): needed to make struct multiple of 8 bytes!
 } dense_qp_qore_args;
 
 

@@ -33,7 +33,6 @@
 // acados_c
 #include <acados_c/ocp_qp.h>
 
-#define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
 /*****************************************************************************************
 * Mass-spring system: nx/2 masses connected each other with springs (in a row),
