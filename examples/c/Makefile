@@ -1,9 +1,6 @@
 # Author: Gianluca Frison
 
-\
-
 include ../../Makefile.rule
-
 
 ifeq ($(USE_QPDUNES), 1)
 CCC = $(CXX)
@@ -13,10 +10,8 @@ CCC = $(CC)
 LIBS = -lacados_c -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 endif
 
-# examples: mass_spring_example sim_erk_crane mass_spring_hpipm mass_spring_qpdunes mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
 examples: mass_spring_example sim_erk_crane mass_spring_pcond_hpipm_split mass_spring_fcond_hpipm_split nonlinear_chain_ocp_nlp
 
-# run_examples: run_mass_spring_example run_sim_erk_crane run_mass_spring_hpipm run_mass_spring_qpdunes run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
 run_examples: run_mass_spring_example run_sim_erk_crane run_mass_spring_pcond_hpipm_split run_mass_spring_fcond_hpipm_split run_nonlinear_chain_ocp_nlp
 
 CRANE_OBJS =
@@ -33,34 +28,16 @@ sim_erk_crane: $(CRANE_OBJS)
 	@echo " Example sim_erk_crane build complete."
 	@echo
 
-sim_irk_crane_yt: $(CRANE_OBJS)
-	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example sim_irk_crane_yt build complete."
-	@echo
+# sim_irk_crane_yt: $(CRANE_OBJS)
+# 	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+# 	@echo
+# 	@echo " Example sim_irk_crane_yt build complete."
+# 	@echo
 
-mass_spring_hpipm: mass_spring_hpipm.o
-	$(CCC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) $(LIBS)
+mass_spring_example: mass_spring_example.o
+	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example mass_spring_hpipm build complete."
-	@echo
-
-mass_spring_qpdunes: mass_spring_qpdunes.o
-	$(CCC) -o mass_spring_qpdunes.out mass_spring_qpdunes.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_qpdunes build complete."
-	@echo
-
-mass_spring_pcond_solver: mass_spring_pcond_solver.o
-	$(CCC) -o mass_spring_pcond_solver.out mass_spring_pcond_solver.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_pcond_solver build complete."
-	@echo
-
-mass_spring_cond_solver: mass_spring_cond_solver.o
-	$(CCC) -o mass_spring_cond_solver.out mass_spring_cond_solver.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_cond_solver build complete."
+	@echo " Example mass_spring_example build complete."
 	@echo
 
 mass_spring_pcond_hpipm_split: mass_spring_pcond_hpipm_split.o
@@ -73,30 +50,6 @@ mass_spring_fcond_hpipm_split: mass_spring_fcond_hpipm_split.o
 	$(CCC) -o mass_spring_fcond_hpipm_split.out mass_spring_fcond_hpipm_split.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_fcond_hpipm_split build complete."
-	@echo
-
-mass_spring_example: mass_spring_example.o
-	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_example build complete."
-	@echo
-
-mass_spring_condensing_hpipm: mass_spring_condensing_hpipm.o
-	$(CCC) -o mass_spring_condensing_hpipm.out mass_spring_condensing_hpipm.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_condensing_hpipm build complete."
-	@echo
-
-mass_spring_condensing_qpoases: mass_spring_condensing_qpoases.o
-	$(CCC) -o mass_spring_condensing_qpoases.out mass_spring_condensing_qpoases.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_condensing_qpoases build complete."
-	@echo
-
-mass_spring_condensing_qore: mass_spring_condensing_qore.o
-	$(CCC) -o mass_spring_condensing_qore.out mass_spring_condensing_qore.o $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example mass_spring_condensing_qore build complete."
 	@echo
 
 OBJS =
@@ -123,20 +76,14 @@ nonlinear_chain_ocp_nlp: $(OBJS)
 run_sim_erk_crane:
 	./sim_erk_crane.out
 
-run_mass_spring_hpipm:
-	./mass_spring_hpipm.out
-
-run_mass_spring_qpdunes:
-	./mass_spring_qpdunes.out
+run_mass_spring_example:
+	./mass_spring_example.out
 
 run_mass_spring_pcond_hpipm_split:
 	./mass_spring_pcond_hpipm_split.out
 
 run_mass_spring_fcond_hpipm_split:
 	./mass_spring_fcond_hpipm_split.out
-
-run_mass_spring_example:
-	./mass_spring_example.out
 
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
