@@ -76,7 +76,7 @@ mass_spring_fcond_hpipm_split: mass_spring_fcond_hpipm_split.o
 	@echo
 
 mass_spring_example: mass_spring_example.o
-	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) -lacados_c -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_example build complete."
 	@echo

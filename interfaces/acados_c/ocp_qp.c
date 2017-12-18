@@ -30,9 +30,12 @@
 #include <acados/dense_qp/dense_qp_qore.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
+#ifdef ACADOS_WITH_QPDUNES
+#include <acados/ocp_qp/ocp_qp_qpdunes.h>
+#endif
+
 // #include <acados/ocp_qp/ocp_qp_hpmpc.h>
 // #include <acados/ocp_qp/ocp_qp_ooqp.h>
-// #include <acados/ocp_qp/ocp_qp_qpdunes.h>
 
 
 
@@ -64,7 +67,7 @@ void ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *dest, v
 #warning "Copy args is not properly implemented!"
 
     int bytes = ocp_qp_calculate_args_size(plan, dims);
-    
+
     memcpy(dest, src, bytes);
 }
 
@@ -114,9 +117,9 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
 
     module_fcn_ptrs submodule_fcn_ptrs;
-    
+
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
-    
+
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
     int size = fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
@@ -131,13 +134,13 @@ void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
 
     module_fcn_ptrs submodule_fcn_ptrs;
-    
+
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
-    
+
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
     void *args = fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
-    
+
     fcn_ptrs.initialize_default_args(args);
 
     return args;
@@ -163,17 +166,17 @@ int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *arg
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
 
     module_fcn_ptrs submodule_fcn_ptrs;
-    
+
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
-    
+
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
     int bytes;
-    
+
     bytes = sizeof(ocp_qp_solver);
-    
+
     bytes += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
-    
+
     bytes += sizeof(module_fcn_ptrs);
 
     bytes += ocp_qp_dims_calculate_size(dims->N);
@@ -272,7 +275,23 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             return_value = ACADOS_FAILURE;
             break;
         case PARTIAL_CONDENSING_QPDUNES:
+            #ifdef ACADOS_WITH_QPDUNES
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
+                &ocp_qp_qpdunes_calculate_args_size;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
+                &ocp_qp_qpdunes_assign_args;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
+                &ocp_qp_qpdunes_initialize_default_args;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
+                &ocp_qp_qpdunes_calculate_memory_size;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
+                &ocp_qp_qpdunes_assign_memory;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
+                &ocp_qp_qpdunes_calculate_workspace_size;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_qpdunes;
+            #else
             return_value = ACADOS_FAILURE;
+            #endif
             break;
         case FULL_CONDENSING_HPIPM:
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
