@@ -85,7 +85,6 @@ int main() {
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     ocp_qp_info min_info;
     min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
-    min_info.num_iter = 10000;
 
 	for (int rep = 0; rep < NREP; rep++) {
         acados_return = ocp_qp_condensing_solver(qp_in, qp_out, arg, mem, work);
@@ -94,7 +93,10 @@ int main() {
         if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
         if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
         if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
-        if (info->num_iter < min_info.num_iter) min_info.num_iter = info->num_iter;
+        if (rep == 0)
+            min_info.num_iter = info->num_iter;
+        else
+            assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
     }
 
     double time = acados_toc(&timer)/NREP;

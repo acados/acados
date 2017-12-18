@@ -34,7 +34,7 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
-#define NREP 1
+#define NREP 2
 
 #include "./mass_spring.c"
 
