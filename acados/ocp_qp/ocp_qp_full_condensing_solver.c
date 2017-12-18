@@ -217,6 +217,7 @@ int ocp_qp_full_condensing_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *ar
     info->total_time = acados_toc(&tot_timer);
     info->solve_QP_time = ((dense_qp_info *)(memory->qpd_out->misc))->solve_QP_time;
     info->interface_time = ((dense_qp_info *)(memory->qpd_out->misc))->interface_time;
+    info->num_iter = ((dense_qp_info *)(memory->qpd_out->misc))->num_iter;
     // return
     return solver_status;
 }

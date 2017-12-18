@@ -513,7 +513,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 
             // NOTE!!!! ATM IDXB OF NLP IS FLIPPED WRT QP
             DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
-            DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
+            DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = - nlp->ub[i][j] + w[w_idx+nlp->idxb[i][j]];
 
             // if (nlp->idxb[i][j] < nu[i]) {
             //     DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
@@ -571,10 +571,10 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 // #ifdef FLIP_BOUNDS
         if (nlp->idxb[N][j] < nu[N]) {
             DVECEL_LIBSTR(&sd[N], j) = nlp->lb[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
-            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = nlp->ub[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
+            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - nlp->ub[N][j] + w[w_idx + nx[N] + nlp->idxb[N][j]];
         } else {
             DVECEL_LIBSTR(&sd[N], j) =  nlp->lb[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
-            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = nlp->ub[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
+            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - nlp->ub[N][j] + w[w_idx - nu[N] + nlp->idxb[N][j]];
         }
 // #else
 //         qp_lb[N][j] = nlp->lb[N][j] - w[w_idx+nlp->idxb[N][j]];

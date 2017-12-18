@@ -203,13 +203,14 @@ int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_
 
 static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, ocp_qp_sparse_solver_memory *mem, ocp_qp_sparse_solver_workspace *work)
 {
-    ocp_qp_dims *pdims;
+    // set up dimesions of partially condensed qp
+    ocp_qp_dims *pcond_dims;
     if (args->pcond_args->N2 < dims->N)
     {
-        pdims = mem->pcond_qp_in->dim;
+        pcond_dims = args->pcond_args->pcond_dims;
     } else
     {
-        pdims = dims;
+        pcond_dims = dims;
     }
 
     char *c_ptr = (char *) work;
@@ -220,7 +221,7 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, o
     c_ptr += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
 
     work->solver_work = c_ptr;
-    c_ptr += args->solver->calculate_workspace_size(pdims, args->solver_args);
+    c_ptr += args->solver->calculate_workspace_size(pcond_dims, args->solver_args);
 }
 
 
@@ -262,6 +263,7 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     info->total_time = acados_toc(&tot_timer);
     info->solve_QP_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->solve_QP_time;
     info->interface_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->interface_time;
+    info->num_iter = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->num_iter;
     // return
     return solver_status;
 }

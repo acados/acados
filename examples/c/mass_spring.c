@@ -33,6 +33,7 @@
 // acados_c
 #include <acados_c/ocp_qp.h>
 
+#define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
 /*****************************************************************************************
 * Mass-spring system: nx/2 masses connected each other with springs (in a row),
@@ -123,7 +124,14 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
     int N = 15;    // horizon length
     int nb_ = 11;  // number of box constrained inputs and states
     int ng_ = 0;   // 4;  // number of general constraints
-    int ngN = 4;   // number of general constraints at the last stage
+
+    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
+
+    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+    int ngN = num_of_stages_equal_to_zero;  // number of general constraints at the last stage
+    #else
+    int ngN = 0;
+    #endif
 
     int nbu = nu_ < nb_ ? nu_ : nb_;
     int nbx = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
@@ -279,11 +287,22 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
         ubN[jj] = +0.5;  // umax
         idxbN[jj] = jj;
     }
-    for (int jj = jj_end; jj < nb[N]; jj++) {
+    for (int jj = jj_end; jj < nb[N]; jj++)
+    {
         lbN[jj] = -4.0;  // xmin
         ubN[jj] = +4.0;  // xmax
         idxbN[jj] = jj;
     }
+
+    #ifndef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+    for (int jj = nu[N]; jj < num_of_stages_equal_to_zero; jj++)
+    {
+        lbN[jj] = 0.0;
+        ubN[jj] = 0.0;
+        idxbN[jj] = jj;
+    }
+    #endif
+
     //    int_print_mat(nb[N], 1, idxbN, nb[N]);
     //    d_print_mat(nb[N], 1, lbN, nb[N]);
 

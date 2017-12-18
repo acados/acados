@@ -19,6 +19,11 @@
 
 // external
 #include <assert.h>
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
@@ -29,11 +34,6 @@
 // acados
 #include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-// blasfeo
-#include "blasfeo_target.h"
-#include "blasfeo_common.h"
-#include "blasfeo_d_aux.h"
-#include "blasfeo_d_blas.h"
 
 
 
@@ -42,7 +42,7 @@ int ocp_qp_dims_calculate_size(int N)
     int size = sizeof(ocp_qp_dims);
 
     size += d_memsize_ocp_qp_dim(N);
-    
+
     return size;
 }
 
@@ -222,19 +222,14 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 		nb_i = nb[ii];
 		ng_i = ng[ii];
 
-        // set t to zero
-        dvecse_libstr(2*nb_i+2*ng_i, 0.0, t+ii, 0);
-
         // compute slacks for general constraints
         dgemv_t_libstr(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
-        dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
+        dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  -1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
 
         // compute slacks for bounds
         dvecex_sp_libstr(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
-        daxpy_libstr(nb_i, -1.0, d+ii, 0, t+ii, 0, t+ii, 0);
-        daxpy_libstr(nb_i,  1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
-        daxpy_libstr(nb_i,  1.0, tmp_nbgM+0, 0, t+ii, 0, t+ii, 0);
-        daxpy_libstr(nb_i, -1.0, tmp_nbgM+0, 0, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+        daxpby_libstr(nb_i,  1.0, tmp_nbgM+0, 0, -1.0, d+ii, 0, t+ii, 0);
+        daxpby_libstr(nb_i, -1.0, tmp_nbgM+0, 0, -1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
     }
 
     d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);

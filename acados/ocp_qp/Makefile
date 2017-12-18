@@ -7,6 +7,7 @@ OBJS =
 OBJS += ocp_qp_common.o
 OBJS += ocp_qp_common_frontend.o
 OBJS += ocp_qp_hpipm.o
+OBJS += ocp_qp_qpdunes.o
 OBJS += ocp_qp_partial_condensing.o
 OBJS += ocp_qp_full_condensing.o
 OBJS += ocp_qp_sparse_solver.o

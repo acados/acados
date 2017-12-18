@@ -71,7 +71,9 @@ int main() {
      * ipm
      ************************************************/
     ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_QPOASES;
+    plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+
+#warning FULL_CONDENSING_QORE broken
 
     void *args = ocp_qp_create_args(&plan, qp_dims);
 
@@ -96,14 +98,30 @@ int main() {
 
     int acados_return;  // 0 normal; 1 max iter
 
-    acados_timer timer;
-    acados_tic(&timer);
+    // acados_timer timer;
+    // acados_tic(&timer);
 
-    for (int rep = 0; rep < NREP; rep++) {
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    ocp_qp_info min_info;
+    min_info.total_time = min_info.condensing_time = min_info.solve_QP_time = min_info.interface_time = 1e10;
+
+    for (int rep = 0; rep < NREP; rep++)
+    {
         acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+
+        if (info->total_time < min_info.total_time) min_info.total_time = info->total_time;
+        if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
+        if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
+        if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
+        if (rep == 0)
+            min_info.num_iter = info->num_iter;
+        #ifndef ACADOS_WITH_QPDUNES
+        else
+            assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
+        #endif
     }
 
-    double time = acados_toc(&timer) / NREP;
+    // double time = acados_toc(&timer) / NREP;
 
     /************************************************
      * extract solution
@@ -131,8 +149,12 @@ int main() {
     double max_res = 0.0;
     for (int ii = 0; ii < 4; ii++)
         max_res = (res[ii] > max_res) ? res[ii] : max_res;
-    assert(max_res <= 1e6 * ACADOS_EPS &&
-           "The largest KKT residual greater than 1e6*ACADOS_EPS");
+
+    assert(max_res <= 1e6 * ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
+
+    /************************************************
+    * print stats
+    ************************************************/
 
     /************************************************
      * print solution and stats
@@ -151,27 +173,9 @@ int main() {
     for (int ii = 0; ii <= N; ii++)
         d_print_mat(1, 2 * nb[ii] + 2 * ng[ii], sol->lam[ii], 1);
 
-    // NOTE(nielsvd): how can we improve/generalize this?
-    ocp_qp_hpipm_memory *pcond_hpipm_mem = (ocp_qp_hpipm_memory *)((ocp_qp_sparse_solver_memory *) qp_solver->mem)->solver_memory;
-    dense_qp_hpipm_memory *fcond_hpipm_mem = (dense_qp_hpipm_memory *)((ocp_qp_full_condensing_solver_memory *) qp_solver->mem)->solver_memory;
-    dense_qp_qpoases_memory *fcond_qpoases_mem = (dense_qp_qpoases_memory *)((ocp_qp_full_condensing_solver_memory *) qp_solver->mem)->solver_memory;
-    switch (plan.qp_solver) {
-        case PARTIAL_CONDENSING_HPIPM:
-            printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2],
-                   res[3]);
-            printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
-                    pcond_hpipm_mem->hpipm_workspace->iter, NREP, time);
-            break;
-        case FULL_CONDENSING_HPIPM:
-            printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n", fcond_hpipm_mem->hpipm_workspace->iter, NREP, time);
-            break;
-        case FULL_CONDENSING_QORE:
-            // no post-processing
-            break;
-        case FULL_CONDENSING_QPOASES:
-            printf("\nSolution time for %d NWSR, averaged over %d runs: %5.2e seconds\n\n\n", fcond_qpoases_mem->nwsr, NREP, time);
-            break;
-    }
+    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
+
+    print_ocp_qp_info(&min_info);
 
     /************************************************
      * free memory

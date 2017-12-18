@@ -198,19 +198,14 @@ void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
 
     struct d_strvec *tmp_nbg = res_ws->tmp_nbg;
 
- 	// set t to zero
-    dvecse_libstr(2*nbd+2*ngd, 0.0, qp_out->t, 0);
-
     // compute slacks for general constraints
     dgemv_t_libstr(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, nbd, qp_out->t, nbd);
-    dgemv_t_libstr(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
+    dgemv_t_libstr(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
 
     // compute slacks for bounds
     dvecex_sp_libstr(nbd, 1.0, idxb, qp_out->v, 0, tmp_nbg+0, 0);
-    daxpy_libstr(nbd, -1.0, qp_in->d, 0, qp_out->t, 0, qp_out->t, 0);
-    daxpy_libstr(nbd, 1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
-    daxpy_libstr(nbd, 1.0, tmp_nbg+0, 0, qp_out->t, 0, qp_out->t, 0);
-    daxpy_libstr(nbd, -1.0, tmp_nbg+0, 0, qp_out->t, nbd+ngd, qp_out->t, nbd+ngd);
+    daxpby_libstr(nbd, 1.0, tmp_nbg+0, 0, -1.0, qp_in->d, 0, qp_out->t, 0);
+    daxpby_libstr(nbd, -1.0, tmp_nbg+0, 0, -1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd);
 
     // compute residuals
     d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);

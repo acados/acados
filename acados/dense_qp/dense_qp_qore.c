@@ -295,6 +295,7 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
 
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
+    info->num_iter = num_iter;
 
     // return
     // TODO(bnovoselnik): cast qore return to acados return

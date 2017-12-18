@@ -161,6 +161,7 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
     info->solve_QP_time = acados_toc(&qp_timer);
     info->total_time = acados_toc(&tot_timer);
+    info->num_iter = memory->hpipm_workspace->iter;
 
     // check max number of iterations
     // TODO(dimitris): check ACADOS_MIN_STEP (not implemented in HPIPM yet)

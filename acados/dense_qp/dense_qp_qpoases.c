@@ -303,6 +303,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
+    info->num_iter = nwsr;
 
     // printf("total time = \t\t\t%f\n", 1000*info->total_time);
     // printf("interface time = \t\t%f\n", 1000*info->interface_time);

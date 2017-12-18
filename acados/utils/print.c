@@ -367,5 +367,6 @@ void print_ocp_qp_info(ocp_qp_info *info)
     printf("QP time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->solve_QP_time, 100*info->solve_QP_time/info->total_time);
     printf("interface time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->interface_time, 100*info->interface_time/info->total_time);
     printf("misc \t\t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*misc, 100*misc/info->total_time);
+    printf("QP iter \t=\t%7d\n", info->num_iter);
     printf("***************************************************************\n\n");
 }
