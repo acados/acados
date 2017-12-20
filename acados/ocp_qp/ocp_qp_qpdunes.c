@@ -603,7 +603,9 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
     for (int kk = 0; kk < N + 1; kk++)
     {
         int nv = mem->qpData.intervals[kk]->nV;
+        int nc = mem->qpData.intervals[kk]->nD;
         double *dual_sol = &mem->qpData.intervals[kk]->y.data[0];
+        for (int ii = 0; ii < 2*nv + 2*nc; ii++) dual_sol[ii] = (dual_sol[ii] >= 0.0) ? dual_sol[ii] : 0.0;
 
         d_cvt_vec2strvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
         d_cvt_vec2strvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
