@@ -56,7 +56,6 @@ int main() {
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
-    int *ns = qp_in->dim->ns;
 
     /************************************************
     * ocp qp solution
@@ -147,5 +146,5 @@ int main() {
     free(arg);
     free(mem);
 
-    return 0;
+    return acados_return;
 }
