@@ -22,9 +22,7 @@
 // external
 #include <assert.h>
 #include <stdio.h>
-#if defined(EXT_DEPS)
 #include <stdlib.h>
-#endif
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -80,8 +78,6 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *
     size += dims->N*sizeof(sim_solver *);
     size += dims->N*sizeof(void *);  //sim_solvers_args
 
-    int return_value;
-
     for (int ii = 0; ii < dims->N; ii++)
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
@@ -123,8 +119,6 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond
 
     args->sim_solvers_args = (void **) c_ptr;
     c_ptr += dims->N*sizeof(void *);
-
-    int return_value, ns;
 
     for (int ii = 0; ii < dims->N; ii++)
     {

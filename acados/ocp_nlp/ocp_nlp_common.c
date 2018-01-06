@@ -113,7 +113,6 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 {
     char *c_ptr = (char *) raw_memory;
 
-    int padding = 0;
     int N = dims->N;
 
     ocp_nlp_in *in = (ocp_nlp_in *)c_ptr;
@@ -236,7 +235,6 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    int padding = 0;
     int N = dims->N;
 
     ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
