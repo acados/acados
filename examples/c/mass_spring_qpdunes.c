@@ -17,641 +17,163 @@
  *
  */
 
-#include <math.h>
+
+// external
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#ifdef ACADOS_WITH_QPDUNES
 
-// flush denormals to zero
-#if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
-    defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
-#include <xmmintrin.h>  // needed to flush to zero sub-normals with _MM_SET_FLUSH_ZERO_MODE (_MM_FLUSH_ZERO_ON); in the main()
-#endif
-
+// acados
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "acados/utils/math.h"
-#include "acados/utils/types.h"
+#include "acados/utils/create.h"
+#include "acados/utils/print.h"
 #include "acados/utils/timing.h"
+#include "acados/utils/types.h"
+#include "acados/utils/mem.h"
 
-#define NREP 100
+#define NREP 2
 
-// #define ELIMINATE_X0  // NOTE(dimitris): option NOT supported in qpDUNES
+#include "./mass_spring.c"
 
-/************************************************
-Mass-spring system: nx/2 masses connected each other with springs (in a row),
-and the first and the last one to walls. nu (<=nx) controls act on the first nu
-masses. The system is sampled with sampling time Ts.
-************************************************/
-void mass_spring_system(double Ts, int nx, int nu, double *A, double *B,
-                        double *b, double *x0) {
-    int nx2 = nx * nx;
-
-    int info = 0;
-
-    int pp = nx / 2;  // number of masses
-
-    /************************************************
-    * build the continuous time system
-    ************************************************/
-
-    double *T;
-    d_zeros(&T, pp, pp);
-    int ii;
-    for (ii = 0; ii < pp; ii++) T[ii * (pp + 1)] = -2;
-    for (ii = 0; ii < pp - 1; ii++) T[ii * (pp + 1) + 1] = 1;
-    for (ii = 1; ii < pp; ii++) T[ii * (pp + 1) - 1] = 1;
-
-    double *Z;
-    d_zeros(&Z, pp, pp);
-    double *I;
-    d_zeros(&I, pp, pp);
-    for (ii = 0; ii < pp; ii++) I[ii * (pp + 1)] = 1.0;  // = eye(pp);
-    double *Ac;
-    d_zeros(&Ac, nx, nx);
-    dmcopy(pp, pp, Z, pp, Ac, nx);
-    dmcopy(pp, pp, T, pp, Ac + pp, nx);
-    dmcopy(pp, pp, I, pp, Ac + pp * nx, nx);
-    dmcopy(pp, pp, Z, pp, Ac + pp * (nx + 1), nx);
-    free(T);
-    free(Z);
-    free(I);
-
-    d_zeros(&I, nu, nu);
-    for (ii = 0; ii < nu; ii++) I[ii * (nu + 1)] = 1.0;  // I = eye(nu);
-    double *Bc;
-    d_zeros(&Bc, nx, nu);
-    dmcopy(nu, nu, I, nu, Bc + pp, nx);
-    free(I);
-
-    /************************************************
-    * compute the discrete time system
-    ************************************************/
-
-    double *bb;
-    d_zeros(&bb, nx, 1);
-    dmcopy(nx, 1, bb, nx, b, nx);
-
-    dmcopy(nx, nx, Ac, nx, A, nx);
-    dscal_3l(nx2, Ts, A);
-    expm(nx, A);
-
-    d_zeros(&T, nx, nx);
-    d_zeros(&I, nx, nx);
-    for (ii = 0; ii < nx; ii++) I[ii * (nx + 1)] = 1.0;  // I = eye(nx);
-    dmcopy(nx, nx, A, nx, T, nx);
-    daxpy_3l(nx2, -1.0, I, T);
-    dgemm_nn_3l(nx, nu, nx, T, nx, Bc, nx, B, nx);
-
-    int *ipiv = (int *)malloc(nx * sizeof(int));
-    dgesv_3l(nx, nu, Ac, nx, ipiv, B, nx, &info);
-    free(ipiv);
-
-    free(Ac);
-    free(Bc);
-    free(bb);
-
-    /************************************************
-    * initial state
-    ************************************************/
-
-    if (nx == 4) {
-        x0[0] = 5;
-        x0[1] = 10;
-        x0[2] = 15;
-        x0[3] = 20;
-    } else {
-        int jj;
-        for (jj = 0; jj < nx; jj++) x0[jj] = 1;
-    }
-}
 
 int main() {
-
-#if defined(TARGET_X64_INTEL_HASWELL) || defined(TARGET_X64_INTEL_SABDY_BRIDGE) ||  \
-    defined(TARGET_X64_INTEL_CORE) || defined(TARGET_X86_AMD_BULLDOZER)
-    _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);  // flush to zero subnormals !!!
-                                                 // works only with one thread
-                                                 // !!!
-#endif
-
-    int ii, jj;
-
-    int rep, nrep = NREP;
-
-    int nx = 8;  // number of states (it has to be even for the mass-spring
-                  // system test problem)
-    int nu = 3;  // number of inputs (controllers) (it has to be at least 1 and
-                  // at most nx/2 for the mass-spring system test problem)
-    int N = 15;   // horizon length
-    int nb = 11;  // number of box constrained inputs and states
-    int ng = 0;  // 4;  // number of general constraints
-    int ngN = 4;  // 4;  // number of general constraints at the last stage
-
-    int nbu = nu < nb ? nu : nb;
-    int nbx = nb - nu > 0 ? nb - nu : 0;
-
-    // stage-wise variant size
-    int nxx[N + 1];
-#if defined(ELIMINATE_X0)
-    nxx[0] = 0;
-#else
-    nxx[0] = nx;
-#endif
-    for (ii = 1; ii <= N; ii++) nxx[ii] = nx;
-
-    int nuu[N + 1];
-    for (ii = 0; ii < N; ii++) nuu[ii] = nu;
-    nuu[N] = 0;
-
-    int nbb[N + 1];
-#if defined(ELIMINATE_X0)
-    nbb[0] = nbu;
-#else
-    nbb[0] = nb;
-#endif
-    for (ii = 1; ii < N; ii++) nbb[ii] = nb;
-    nbb[N] = nbx;
-
-    int ngg[N + 1];
-    for (ii = 0; ii < N; ii++) ngg[ii] = ng;
-    ngg[N] = ngN;
-
-    printf(
-        " Test problem: mass-spring system with %d masses and %d controls.\n",
-        nx / 2, nu);
     printf("\n");
-    printf(
-        " MPC problem size: %d states, %d inputs, %d horizon length, %d "
-        "two-sided box constraints, %d two-sided general constraints.\n",
-        nx, nu, N, nb, ng);
     printf("\n");
-    printf("qpDUNES\n");
+    printf("\n");
+    printf(" acados + qpDUNES\n");
+    printf("\n");
+    printf("\n");
     printf("\n");
 
     /************************************************
-    * dynamical system
+    * ocp qp
     ************************************************/
 
-    // state space matrices & initial state
-    double *A;
-    d_zeros(&A, nx, nx);  // states update matrix
-    double *B;
-    d_zeros(&B, nx, nu);  // inputs matrix
-    double *b;
-    d_zeros(&b, nx, 1);  // states offset
-    double *x0;
-    d_zeros(&x0, nx, 1);  // initial state
+    // TODO(dimitris): write a print_ocp_qp function
+    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
-    // mass-spring system
-    double Ts = 0.5;  // sampling time
-    mass_spring_system(Ts, nx, nu, A, B, b, x0);
-
-    for (jj = 0; jj < nx; jj++) b[jj] = 0.1;
-
-    for (jj = 0; jj < nx; jj++) x0[jj] = 0;
-    x0[0] = 2.5;
-    x0[1] = 2.5;
-
-    //    d_print_mat(nx, nx, A, nx);
-    //    d_print_mat(nx, nu, B, nx);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, x0, nx);
-
-#if defined(ELIMINATE_X0)
-    // compute b0 = b + A*x0
-    double *b0;
-    d_zeros(&b0, nx, 1);
-    dcopy_3l(nx, b, 1, b0, 1);
-    dgemv_n_3l(nx, nx, A, nx, x0, b0);
-    //    d_print_mat(nx, 1, b, nx);
-    //    d_print_mat(nx, 1, b0, nx);
-
-    // then A0 is a matrix of size 0x0
-    double *A0;
-    d_zeros(&A0, 0, 0);
-#endif
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
 
     /************************************************
-    * box constraints
+    * ocp qp solution
     ************************************************/
 
-#if defined (FLIP_BOUNDS)
-    int jj_end;
-#endif
-
-    int *idxb0;
-    int_zeros(&idxb0, nbb[0], 1);
-    double *lb0;
-    d_zeros(&lb0, nbb[0], 1);
-    double *ub0;
-    d_zeros(&ub0, nbb[0], 1);
-#if defined(ELIMINATE_X0)
-    for (jj = 0; jj < nbb[0]; jj++) {
-        lb0[jj] = - 0.5;  // umin
-        ub0[jj] = + 0.5;  // umin
-        idxb0[jj] = jj;
-    }
-#else
-#if defined (FLIP_BOUNDS)
-jj_end = nbu < nbb[0] ? nbu : nbb[0];
-for (jj = 0; jj < jj_end; jj++) {
-    lb0[jj] = - 0.5;  // umin
-    ub0[jj] = + 0.5;  // umax
-    idxb0[jj] = jj;
-}
-for ( ; jj < nbb[0]; jj++) {
-    lb0[jj] = x0[jj-nbu];  // initial state
-    ub0[jj] = x0[jj-nbu];  // initial state
-    idxb0[jj] = jj;
-}
-#else
-for (jj = 0; jj < nxx[0]; jj++) {
-    lb0[jj] = x0[jj];  // initial state
-    ub0[jj] = x0[jj];  // initial state
-    idxb0[jj] = jj;
-}
-for (jj = 0; jj < nbu; jj++) {
-    lb0[jj+nxx[0]] = -0.5;  // umin
-    ub0[jj+nxx[0]] = 0.5;   // umax
-    idxb0[jj+nxx[0]] = nxx[0]+jj;
-}
-#endif
-#endif
-    //    int_print_mat(nbb[0], 1, idxb0, nbb[0]);
-    //    d_print_mat(nbb[0], 1, lb0, nbb[0]);
-
-    int *idxb1;
-    int_zeros(&idxb1, nbb[1], 1);
-    double *lb1;
-    d_zeros(&lb1, nbb[1], 1);
-    double *ub1;
-    d_zeros(&ub1, nbb[1], 1);
-#if defined (FLIP_BOUNDS)
-    jj_end = nbu < nbb[1] ? nbu : nbb[1];
-    for (jj = 0; jj < jj_end; jj++) {
-        lb1[jj] = - 0.5;  // umin
-        ub1[jj] = + 0.5;  // umax
-        idxb1[jj] = jj;
-    }
-    for ( ; jj < nbb[1]; jj++) {
-        lb1[jj] = - 4.0;  // xmin
-        ub1[jj] = + 4.0;  // xmax
-        idxb1[jj] = jj;
-    }
-#else
-    for (jj = 0; jj < nbx; jj++) {
-        lb1[jj] = -4.0;  // xmin
-        ub1[jj] = 4.0;   // xmax
-        idxb1[jj] = jj;
-    }
-    for (; jj < nb; jj++) {
-        lb1[jj] = -0.5;  // umin
-        ub1[jj] = 0.5;   // umax
-        idxb1[jj] = jj;
-    }
-#endif
-    //    int_print_mat(nbb[1], 1, idxb1, nbb[1]);
-    //    d_print_mat(nbb[1], 1, lb1, nbb[1]);
-
-    int *idxbN;
-    int_zeros(&idxbN, nbb[N], 1);
-    double *lbN;
-    d_zeros(&lbN, nbb[N], 1);
-    double *ubN;
-    d_zeros(&ubN, nbb[N], 1);
-#if defined (FLIP_BOUNDS)
-    jj_end = nbu < nbb[N] ? nbu : nbb[N];
-    for (jj = 0; jj < jj_end; jj++) {
-        lbN[jj] = - 0.5;  // umin
-        ubN[jj] = + 0.5;  // umax
-        idxbN[jj] = jj;
-    }
-    for ( ; jj < nbb[N]; jj++) {
-        lbN[jj] = - 4.0;  // xmin
-        ubN[jj] = + 4.0;  // xmax
-        idxbN[jj] = jj;
-    }
-#else
-    for (jj = 0; jj < nbx; jj++) {
-        lbN[jj] = -4.0;  // xmin
-        ubN[jj] = 4.0;   // xmax
-        idxbN[jj] = jj;
-    }
-#endif
-    //    int_print_mat(nbb[N], 1, idxbN, nbb[N]);
-    //    d_print_mat(nbb[N], 1, lbN, nbb[N]);
+    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
 
     /************************************************
-    * general constraints
+    * qpDUNES
     ************************************************/
 
-    double *C;
-    d_zeros(&C, ng, nx);
-    double *D;
-    d_zeros(&D, ng, nu);
-    double *lg;
-    d_zeros(&lg, ng, 1);
-    double *ug;
-    d_zeros(&ug, ng, 1);
+    ocp_qp_qpdunes_args *arg = ocp_qp_qpdunes_create_arguments(qp_in->dim);
 
-    double *CN;
-    d_zeros(&CN, ngN, nx);
-    for (ii = 0; ii < ngN; ii++) CN[ii * (ngN + 1)] = 1.0;
-    //    d_print_mat(ngN, nx, CN, ngN);
-    double *lgN;
-    d_zeros(&lgN, ngN, 1);  // force all states to 0 at the last stage
-    double *ugN;
-    d_zeros(&ugN, ngN, 1);  // force all states to 0 at the last stage
+    arg->stageQpSolver = QPDUNES_WITH_QPOASES;
 
-    /************************************************
-    * cost function
-    ************************************************/
+    ocp_qp_qpdunes_memory *mem = ocp_qp_qpdunes_create_memory(qp_in->dim, arg);
 
-    double *Q;
-    d_zeros(&Q, nx, nx);
-    for (ii = 0; ii < nx; ii++) Q[ii * (nx + 1)] = 1.0;
+    int size_work = ocp_qp_qpdunes_calculate_workspace_size(qp_in->dim, arg);
+    void *work = acados_malloc(size_work, 1);;
 
-    double *R;
-    d_zeros(&R, nu, nu);
-    for (ii = 0; ii < nu; ii++) R[ii * (nu + 1)] = 2.0;
-
-    double *S;
-    d_zeros(&S, nu, nx);
-
-    double *q;
-    d_zeros(&q, nx, 1);
-    for (ii = 0; ii < nx; ii++) q[ii] = 0.1;
-
-    double *r;
-    d_zeros(&r, nu, 1);
-    for (ii = 0; ii < nu; ii++) r[ii] = 0.2;
-
-#if defined(ELIMINATE_X0)
-    // Q0 and q0 are matrices of size 0
-    double *Q0;
-    d_zeros(&Q0, 0, 0);
-    double *q0;
-    d_zeros(&q0, 0, 1);
-
-    // compute r0 = r + S*x0
-    double *r0;
-    d_zeros(&r0, nu, 1);
-    dcopy_3l(nu, r, 1, r0, 1);
-    dgemv_n_3l(nu, nx, S, nu, x0, r0);
-
-    // then S0 is a matrix of size nux0
-    double *S0;
-    d_zeros(&S0, nu, 0);
-#endif
-
-    /************************************************
-    * problems data
-    ************************************************/
-
-    double *hA[N];
-    double *hB[N];
-    double *hb[N];
-    double *hQ[N + 1];
-    double *hS[N];
-    double *hR[N];
-    double *hq[N + 1];
-    double *hr[N];
-    double *hlb[N + 1];
-    double *hub[N + 1];
-    int *hidxb[N + 1];
-    double *hC[N + 1];
-    double *hD[N];
-    double *hlg[N + 1];
-    double *hug[N + 1];
-
-#if defined(ELIMINATE_X0)
-    hA[0] = A0;
-    hb[0] = b0;
-    hQ[0] = Q0;
-    hS[0] = S0;
-    hq[0] = q0;
-    hr[0] = r0;
-#else
-    hA[0] = A;
-    hb[0] = b;
-    hQ[0] = Q;
-    hS[0] = S;
-    hq[0] = q;
-    hr[0] = r;
-#endif
-    hB[0] = B;
-    hR[0] = R;
-    hlb[0] = lb0;
-    hub[0] = ub0;
-    hidxb[0] = idxb0;
-    hC[0] = C;
-    hD[0] = D;
-    hlg[0] = lg;
-    hug[0] = ug;
-    for (ii = 1; ii < N; ii++) {
-        hA[ii] = A;
-        hB[ii] = B;
-        hb[ii] = b;
-        hQ[ii] = Q;
-        hS[ii] = S;
-        hR[ii] = R;
-        hq[ii] = q;
-        hr[ii] = r;
-        hlb[ii] = lb1;
-        hub[ii] = ub1;
-        hidxb[ii] = idxb1;
-        hC[ii] = C;
-        hD[ii] = D;
-        hlg[ii] = lg;
-        hug[ii] = ug;
-    }
-    hQ[N] = Q;  // or maybe initialize to the solution of the DARE???
-    hq[N] = q;  // or maybe initialize to the solution of the DARE???
-    hlb[N] = lbN;
-    hub[N] = ubN;
-    hidxb[N] = idxbN;
-    hC[N] = CN;
-    hlg[N] = lgN;
-    hug[N] = ugN;
-
-    /************************************************
-    * solution
-    ************************************************/
-
-    double *hx[N + 1];
-    double *hu[N];
-    double *hpi[N];
-    double *hlam[N+1];
-    double *ht[N+1];
-
-    for (ii = 0; ii < N; ii++) {
-        d_zeros(&hx[ii], nxx[ii], 1);
-        d_zeros(&hu[ii], nuu[ii], 1);
-        d_zeros(&hpi[ii], nxx[ii+1], 1);
-        d_zeros(&hlam[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&ht[ii], 2*nbb[ii]+2*ngg[ii], 1);
-    }
-    d_zeros(&hx[N], nxx[N], 1);
-    d_zeros(&hlam[N], 2*nbb[N]+2*ngg[N], 1);
-    d_zeros(&ht[N], 2*nbb[N]+2*ngg[N], 1);
-
-    /************************************************
-    * XXX initial guess
-    ************************************************/
-
-    double *hux_in[N+1];
-    double *hlam_in[N+1];
-    double *ht_in[N+1];
-
-    for (ii = 0; ii <= N; ii++) {
-        d_zeros(&hux_in[ii], nuu[ii]+nxx[ii], 1);
-        d_zeros(&hlam_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
-        d_zeros(&ht_in[ii], 2*nbb[ii]+2*ngg[ii], 1);
-    }
-
-    /************************************************
-    * create the in and out struct
-    ************************************************/
-
-    ocp_qp_in qp_in;
-    qp_in.N = N;
-    qp_in.nx = (const int *) nxx;
-    qp_in.nu = (const int *) nuu;
-    qp_in.nb = (const int *) nbb;
-    qp_in.nc = (const int *) ngg;
-    qp_in.A = (const double **) hA;
-    qp_in.B = (const double **) hB;
-    qp_in.b = (const double **) hb;
-    qp_in.Q = (const double **) hQ;
-    qp_in.S = (const double **) hS;
-    qp_in.R = (const double **) hR;
-    qp_in.q = (const double **) hq;
-    qp_in.r = (const double **) hr;
-    qp_in.idxb = (const int **) hidxb;
-    qp_in.lb = (const double **) hlb;
-    qp_in.ub = (const double **) hub;
-    qp_in.Cx = (const double **) hC;
-    qp_in.Cu = (const double **) hD;
-    qp_in.lc = (const double **) hlg;
-    qp_in.uc = (const double **) hug;
-
-    ocp_qp_out qp_out;
-    qp_out.x = hx;
-    qp_out.u = hu;
-    qp_out.pi = hpi;
-    qp_out.lam = hlam;
-    qp_out.t = ht;  // XXX why also the slack variables ???
-
-    /************************************************
-    * solver arguments
-    ************************************************/
-
-    ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_create_arguments(QPDUNES_LINEAR_MPC);
-
-    /************************************************
-    * workspace
-    ************************************************/
-
-    ocp_qp_qpdunes_memory *mem = NULL;
-
-    int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(&qp_in, args);
-    void *work = (void*)malloc(work_space_size);
-
-    /************************************************
-    * call the solver
-    ************************************************/
-
-    int return_value = 0;
+	int acados_return;
 
     acados_timer timer;
     acados_tic(&timer);
 
-//  nrep = 1;
-    for (rep = 0; rep < nrep; rep++) {
-        // NOTE(dimitris): creating memory again to avoid warm start
-        mem = ocp_qp_qpdunes_create_memory(&qp_in, args);
+	for (int rep = 0; rep < NREP; rep++) {
+        acados_return = ocp_qp_qpdunes(qp_in, qp_out, arg, mem, work);
+	}
 
-        // call the QP OCP solver
-        ocp_qp_qpdunes(&qp_in, &qp_out, args, mem, work);
-    }
+    double time = acados_toc(&timer)/NREP;
 
-    real_t time = acados_toc(&timer)/nrep;
+    /************************************************
+    * extract solution
+    ************************************************/
 
-    if (return_value == ACADOS_SUCCESS)
-        printf("\nACADOS status: solution found\n");
+    // ocp_qp_dims dims;
+    // dims.N = N;
+    // dims.nx = nx;
+    // dims.nu = nu;
+    // dims.nb = nb;
+    // dims.ns = ns;
+    // dims.ng = ng;
 
-    if (return_value == ACADOS_MAXITER)
-        printf("\nACADOS status: maximum number of iterations reached\n");
+    ocp_qp_dims *dims = qp_in->dim;
 
-    if (return_value == ACADOS_MINSTEP)
-        printf("\nACADOS status: below minimum step size length\n");
+    colmaj_ocp_qp_out *sol;
+    void *memsol = malloc(colmaj_ocp_qp_out_calculate_size(dims));
+    assign_colmaj_ocp_qp_out(dims, &sol, memsol);
+    convert_ocp_qp_out_to_colmaj(qp_out, sol);
+
+    /************************************************
+    * compute residuals
+    ************************************************/
+
+    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
+    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
+    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+    /************************************************
+    * compute infinity norm of residuals
+    ************************************************/
+
+    double res[4];
+    compute_ocp_qp_res_nrm_inf(qp_res, res);
+    double max_res = 0.0;
+    for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
+    // assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
+
+    /************************************************
+    * print solution and stats
+    ************************************************/
 
     printf("\nu = \n");
-    for (ii = 0; ii < N; ii++) d_print_mat(1, nuu[ii], hu[ii], 1);
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nu[ii], sol->u[ii], 1);
 
     printf("\nx = \n");
-    for (ii = 0; ii <= N; ii++) d_print_mat(1, nxx[ii], hx[ii], 1);
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
 
-    printf("\n");
-    printf(" Average solution time over %d runs: %5.2e seconds\n", nrep, time);
-    printf("\n\n");
+    printf("\npi = \n");
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
+
+    printf("\nlam = \n");
+    for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);
+
+    printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
+
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+
+    print_ocp_qp_info(info);
+
 
     /************************************************
     * free memory
     ************************************************/
 
-    d_free(A);
-    d_free(B);
-    d_free(b);
-    d_free(x0);
-    d_free(Q);
-    d_free(S);
-    d_free(R);
-    d_free(q);
-    d_free(r);
-#if defined(ELIMINATE_X0)
-    d_free(A0);
-    d_free(b0);
-    d_free(Q0);
-    d_free(S0);
-    d_free(q0);
-    d_free(r0);
-#endif
-    int_free(idxb0);
-    d_free(lb0);
-    d_free(ub0);
-    int_free(idxb1);
-    d_free(lb1);
-    d_free(ub1);
-    int_free(idxbN);
-    d_free(lbN);
-    d_free(ubN);
-    d_free(C);
-    d_free(D);
-    d_free(lg);
-    d_free(ug);
-    d_free(CN);
-    d_free(lgN);
-    d_free(ugN);
-
-    for (ii = 0; ii < N; ii++) {
-        d_free(hx[ii]);
-        d_free(hu[ii]);
-        d_free(hpi[ii]);
-        d_free(hlam[ii]);
-        d_free(ht[ii]);
-    }
-    d_free(hx[N]);
-    d_free(hlam[N]);
-    d_free(ht[N]);
-
+    // TODO(dimitris): there are still memory leaks from qpOASES
     ocp_qp_qpdunes_free_memory(mem);
+    free(qp_in);
+    free(qp_out);
+    free(qp_res);
+    free(res_ws);
+    free(arg);
+    free(mem);
     free(work);
+    free(sol);
 
     return 0;
 }
+
+#else
+
+int main( )
+{
+    printf("qpDUNES example skipped\n");
+}
+
+#endif

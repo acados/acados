@@ -155,6 +155,7 @@ int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *
 
     info->solve_QP_time = acados_toc(&qp_timer);
     info->total_time = acados_toc(&tot_timer);
+    info->num_iter = memory->hpipm_workspace->iter;
 #if 0
     int nvd = qp_in->dim->nv;
     int ned = qp_in->dim->ne;

@@ -31,6 +31,9 @@
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#ifdef ACADOS_WITH_QPDUNES
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#endif
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_qore.h"
@@ -203,19 +206,14 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 		nb_i = nb[ii];
 		ng_i = ng[ii];
 
-        // set t to zero
-        dvecse_libstr(2*nb_i+2*ng_i, 0.0, t+ii, 0);
-
         // compute slacks for general constraints
         dgemv_t_libstr(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
-        dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
+        dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  -1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
 
         // compute slacks for bounds
         dvecex_sp_libstr(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
-        daxpy_libstr(nb_i, -1.0, d+ii, 0, t+ii, 0, t+ii, 0);
-        daxpy_libstr(nb_i,  1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
-        daxpy_libstr(nb_i,  1.0, tmp_nbgM+0, 0, t+ii, 0, t+ii, 0);
-        daxpy_libstr(nb_i, -1.0, tmp_nbgM+0, 0, t+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+        daxpby_libstr(nb_i,  1.0, tmp_nbgM+0, 0, -1.0, d+ii, 0, t+ii, 0);
+        daxpby_libstr(nb_i, -1.0, tmp_nbgM+0, 0, -1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
     }
 
     d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
@@ -281,7 +279,7 @@ void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
 
 
 
-int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
+int set_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, void *qp_solver)
 {
     int return_value = ACADOS_SUCCESS;
 
@@ -305,6 +303,17 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((ocp_qp_solver *)qp_solver)->calculate_workspace_size = &ocp_qp_hpmpc_calculate_workspace_size;
             ((ocp_qp_solver *)qp_solver)->fun = &ocp_qp_hpmpc;
             break;
+        #ifdef ACADOS_WITH_QPDUNES
+        case QPDUNES:
+            ((ocp_qp_solver *)qp_solver)->calculate_args_size = &ocp_qp_qpdunes_calculate_args_size;
+            ((ocp_qp_solver *)qp_solver)->assign_args = &ocp_qp_qpdunes_assign_args;
+            ((ocp_qp_solver *)qp_solver)->initialize_default_args = &ocp_qp_qpdunes_initialize_default_args;
+            ((ocp_qp_solver *)qp_solver)->calculate_memory_size = &ocp_qp_qpdunes_calculate_memory_size;
+            ((ocp_qp_solver *)qp_solver)->assign_memory = &ocp_qp_qpdunes_assign_memory;
+            ((ocp_qp_solver *)qp_solver)->calculate_workspace_size = &ocp_qp_qpdunes_calculate_workspace_size;
+            ((ocp_qp_solver *)qp_solver)->fun = &ocp_qp_qpdunes;
+            break;
+        #endif
         case CONDENSING_HPIPM:
             ((dense_qp_solver *)qp_solver)->calculate_args_size = &dense_qp_hpipm_calculate_args_size;
             ((dense_qp_solver *)qp_solver)->assign_args = &dense_qp_hpipm_assign_args;
@@ -339,7 +348,7 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
 
 
 
-void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver)
+void set_xcond_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver)
 {
     if (qp_solver_name < CONDENSING_HPIPM)
     {

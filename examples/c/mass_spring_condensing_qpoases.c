@@ -93,6 +93,10 @@ int main() {
         if (info->condensing_time < min_info.condensing_time) min_info.condensing_time = info->condensing_time;
         if (info->solve_QP_time < min_info.solve_QP_time) min_info.solve_QP_time = info->solve_QP_time;
         if (info->interface_time < min_info.interface_time) min_info.interface_time = info->interface_time;
+        if (rep == 0)
+            min_info.num_iter = info->num_iter;
+        else
+            assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
     }
 
     double time = acados_toc(&timer)/NREP;

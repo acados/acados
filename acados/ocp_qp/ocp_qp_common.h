@@ -46,10 +46,11 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 typedef enum {
     HPIPM,
     HPMPC,
+    QPDUNES,
     CONDENSING_HPIPM,
     CONDENSING_QPOASES,
     CONDENSING_QORE
-} qp_solver_t;
+} ocp_qp_solver_t;
 
 
 typedef struct {
@@ -81,6 +82,7 @@ typedef struct {
     double condensing_time;
     double interface_time;
     double total_time;
+    int    num_iter;
 } ocp_qp_info;
 
 
@@ -105,9 +107,9 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 //
 void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4]);
 //
-int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver);
+int set_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, void *qp_solver);
 //
-void set_xcond_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
+void set_xcond_qp_solver_fun_ptrs(ocp_qp_solver_t qp_solver_name, ocp_qp_xcond_solver *qp_solver);
 
 #ifdef __cplusplus
 } /* extern "C" */

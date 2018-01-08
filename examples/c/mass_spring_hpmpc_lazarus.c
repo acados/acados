@@ -72,7 +72,7 @@ int main() {
 
     // arg->hpmpc_args->iter_max = 10;
 
-    ocp_qp_hpmpc_memory *mem = ocp_qp_hpmpc_create_memory(qp_in->dim, qp_in, arg);
+    ocp_qp_hpmpc_memory *mem = ocp_qp_hpmpc_create_memory(qp_in->dim, arg);
 
     // intialize variables
     for (int ii = 0; ii <= N;  ii++) {
