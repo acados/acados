@@ -45,6 +45,7 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 // NOTE(dimitris): contains both ocp_qp solvers and condensing with dense solvers
 typedef enum {
     HPIPM,
+    HPMPC,
     CONDENSING_HPIPM,
     CONDENSING_QPOASES,
     CONDENSING_QORE

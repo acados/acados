@@ -31,7 +31,7 @@
 #include "acados/utils/types.h"
 
 #define ELIMINATE_X0
-#define NREP 1000
+#define NREP 100
 
 #include "./mass_spring.c"
 
@@ -50,7 +50,6 @@ int main() {
     * ocp qp
     ************************************************/
 
-    // TODO(dimitris): write a print_ocp_qp function
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
 
     int N   = qp_in->dim->N;
@@ -89,7 +88,7 @@ int main() {
     acados_tic(&timer);
 
 	for (int rep = 0; rep < NREP; rep++) {
-        acados_return = ocp_qp_hpmpc(qp_in, qp_out, arg, mem);
+        acados_return = ocp_qp_hpmpc(qp_in, qp_out, arg, mem, NULL);
 	}
 
     double time = acados_toc(&timer)/NREP;
@@ -125,8 +124,8 @@ int main() {
     printf("\nx = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, nx[ii], sol->x[ii], 1);
 
-    // printf("\npi = \n");
-    // for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
+    printf("\npi = \n");
+    for (int ii = 0; ii < N; ii++) d_print_mat(1, nx[ii+1], sol->pi[ii], 1);
 
     printf("\nlam = \n");
     for (int ii = 0; ii <= N; ii++) d_print_mat(1, 2*nb[ii]+2*ng[ii], sol->lam[ii], 1);

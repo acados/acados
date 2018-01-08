@@ -30,6 +30,7 @@
 #include "acados/ocp_qp/ocp_qp_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_qore.h"
@@ -294,6 +295,15 @@ int set_qp_solver_fun_ptrs(qp_solver_t qp_solver_name, void *qp_solver)
             ((ocp_qp_solver *)qp_solver)->assign_memory = &ocp_qp_hpipm_assign_memory;
             ((ocp_qp_solver *)qp_solver)->calculate_workspace_size = &ocp_qp_hpipm_calculate_workspace_size;
             ((ocp_qp_solver *)qp_solver)->fun = &ocp_qp_hpipm;
+            break;
+        case HPMPC:
+            ((ocp_qp_solver *)qp_solver)->calculate_args_size = &ocp_qp_hpmpc_calculate_args_size;
+            ((ocp_qp_solver *)qp_solver)->assign_args = &ocp_qp_hpmpc_assign_args;
+            ((ocp_qp_solver *)qp_solver)->initialize_default_args = &ocp_qp_hpmpc_initialize_default_args;
+            ((ocp_qp_solver *)qp_solver)->calculate_memory_size = &ocp_qp_hpmpc_calculate_memory_size;
+            ((ocp_qp_solver *)qp_solver)->assign_memory = &ocp_qp_hpmpc_assign_memory;
+            ((ocp_qp_solver *)qp_solver)->calculate_workspace_size = &ocp_qp_hpmpc_calculate_workspace_size;
+            ((ocp_qp_solver *)qp_solver)->fun = &ocp_qp_hpmpc;
             break;
         case CONDENSING_HPIPM:
             ((dense_qp_solver *)qp_solver)->calculate_args_size = &dense_qp_hpipm_calculate_args_size;

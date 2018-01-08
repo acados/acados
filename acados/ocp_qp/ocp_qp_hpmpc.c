@@ -37,7 +37,8 @@
 #include "acados/utils/types.h"
 
 
-int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims) {
+int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
+{
     int_t N = dims->N;
     int_t size = sizeof(ocp_qp_hpmpc_args);
     size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
@@ -56,7 +57,10 @@ int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims) {
     return size;
 }
 
-void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory) {
+
+
+void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
+{
     ocp_qp_hpmpc_args *args;
     char *c_ptr = (char *) raw_memory;
     args = (ocp_qp_hpmpc_args *) c_ptr;
@@ -110,7 +114,6 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory) {
 
 
 
-
 void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
@@ -125,8 +128,7 @@ void ocp_qp_hpmpc_initialize_default_args(void *args_)
 
 
 
-
-int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_in *qp_in, void *args_)
+int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
@@ -134,7 +136,6 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_in *qp_in, void
     int *nx = (int *) dims->nx;
     int *nu = (int *) dims->nu;
     int *nb = (int *) dims->nb;
-    int **hidxb = (int **) qp_in->idxb;
     int *ng = (int *) dims->ng;
     int_t N2 = args->N2;
 
@@ -147,13 +148,11 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_in *qp_in, void
     for (ii = 0; ii <= N; ii++) {
         ws_size += nb[ii]*sizeof(int);  // hidxb_rev
     }
-    ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes(N, nx, \
-        nu, nb, hidxb, ng, N2);
+    ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu, nb, dims->nbx, dims->nbu, ng, N2);
 
     return ws_size;
 
 }
-
 
 
 
@@ -164,7 +163,14 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 
 
 
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_)
+int ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+{
+    return 0;
+}
+
+
+
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
 
