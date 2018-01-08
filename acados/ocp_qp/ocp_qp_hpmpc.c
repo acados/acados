@@ -242,8 +242,11 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
         d_create_strvec(nx[ii+1], &hsb[ii], qp_in->b[ii].pa);
         d_create_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
         d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
-        d_create_strmat(nu[ii]+nx[ii], ng[ii],&hsDCt[ii], qp_in->DCt[ii].pA);
+        d_create_strmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
         d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
+		// temporarily invert sign of upper bounds
+		dvecsc_libstr(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
+		dvecsc_libstr(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
 
         // initialize hsdux to primal input later usx will be subtracted
         d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
@@ -294,8 +297,11 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     d_create_strvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
     d_create_strmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
     d_create_strvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
-
-    // initialize hsdux to primal input later usx will be subtracted
+	// temporarily invert sign of upper bounds
+	dvecsc_libstr(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
+	dvecsc_libstr(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
+  
+	// initialize hsdux to primal input later usx will be subtracted
     d_create_strvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
     d_cvt_vec2strvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
     ptr_memory += (&hsdux[ii])->memory_size;
@@ -448,6 +454,13 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
 
-    // return
+    
+	// restore sign of upper bounds
+	for(int jj = 0; jj <=N; jj++) {
+		dvecsc_libstr(nb[jj], -1.0, &hsd[jj], nb[jj] + ng[jj]);
+		dvecsc_libstr(ng[jj], -1.0, &hsd[jj], 2*nb[jj] + ng[jj]);
+	}
+	
+	// return
     return acados_status;
 }
