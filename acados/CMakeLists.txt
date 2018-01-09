@@ -53,6 +53,7 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
         $<INSTALL_INTERFACE:include>)
 
 # HPMPC must come before BLASFEO!
@@ -79,6 +80,8 @@ if(NOT ACADOS_NO_TIMINGS)
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
+add_subdirectory(../interfaces/acados_c acados/interfaces)
+
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)
@@ -89,7 +92,7 @@ if(COVERAGE MATCHES "lcov")
 endif()
 
 target_compile_definitions(acados PRIVATE ALIGNMENT=64)
-target_compile_definitions(acados PRIVATE ACADOS_WITH_QPDUNES)
+target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
 target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES) # Needed for qpDUNES
 
 install(TARGETS acados EXPORT acadosTargets

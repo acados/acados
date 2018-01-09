@@ -61,12 +61,6 @@ int main() {
 
     ocp_qp_dims *qp_dims = qp_in->dim;
 
-    int N = qp_dims->N;
-    int *nx = qp_dims->nx;
-    int *nu = qp_dims->nu;
-    int *nb = qp_dims->nb;
-    int *ng = qp_dims->ng;
-
     /************************************************
      * ocp qp solution
      ************************************************/
@@ -88,15 +82,15 @@ int main() {
         FULL_CONDENSING_HPIPM,
         FULL_CONDENSING_QORE,
         FULL_CONDENSING_QPOASES,
-        -1  // NOTE(dimitris): -1 breaks the while loop of QP solvers
     };
 
     // choose values for N2 in partial condensing solvers
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
+    bool run_loop = true;
     int ii = 0;
-    while (ocp_qp_solvers[ii] != -1)
+    while (run_loop)
     {
         ocp_qp_solver_plan plan;
         plan.qp_solver = ocp_qp_solvers[ii];
@@ -141,6 +135,9 @@ int main() {
                 case FULL_CONDENSING_QPOASES:
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
+                    break;
+                default:
+                    run_loop = false;
                     break;
             }
 
