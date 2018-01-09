@@ -55,7 +55,6 @@ int main() {
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
-    int *ns = qp_in->dim->ns;
 
     /************************************************
     * ocp qp solution
@@ -75,8 +74,6 @@ int main() {
 
 	int acados_return; // 0 normal; 1 max iter
 
-    acados_timer timer;
-    acados_tic(&timer);
 
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     ocp_qp_info min_info;
@@ -94,8 +91,6 @@ int main() {
         else
             assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
     }
-
-    double time = acados_toc(&timer)/NREP;
 
     /************************************************
     * extract solution
@@ -163,5 +158,5 @@ int main() {
     free(mem);
     free(work);
 
-	return 0;
+	return acados_return;
 }
