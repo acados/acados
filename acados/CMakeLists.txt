@@ -41,7 +41,6 @@ endif()
 
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/sim/sim_discrete_model.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sm_gn.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sqp.c")
 
