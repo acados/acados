@@ -190,7 +190,7 @@ dense_qp_res_ws *assign_dense_qp_res_ws(dense_qp_dims *dims, void *raw_memory)
 void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws)
 {
     int nvd = qp_in->dim->nv;
-    int ned = qp_in->dim->ne;
+    // int ned = qp_in->dim->ne;
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
 

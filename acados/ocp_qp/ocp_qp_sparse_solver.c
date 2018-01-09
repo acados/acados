@@ -229,7 +229,7 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, o
 int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer, cond_timer;
+    acados_timer tot_timer, cond_timer;
     acados_tic(&tot_timer);
 
     // cast data structures

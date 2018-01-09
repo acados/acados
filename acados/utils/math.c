@@ -383,7 +383,7 @@ void padeapprox(int m, int row, double *A) {
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
         dgemm_nn_3l(row, row, row, A, row, A, row, A2, row);
-        double *temp;
+        double *temp = malloc(row*row*sizeof(double));
         //        dscal_(&row2, &d0, temp, &i1);
         dscal_3l(row2, 0, temp);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);

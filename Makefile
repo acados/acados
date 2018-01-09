@@ -21,6 +21,7 @@ OBJS += acados/dense_qp/dense_qp_qore.o
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
+OBJS += acados/ocp_qp/ocp_qp_hpmpc.o
 OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
@@ -40,7 +41,7 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 
 
-static_library: blasfeo_static hpipm_static qpoases_static qore_static qpdunes_static
+static_library: blasfeo_static hpipm_static qpoases_static qore_static hpmpc_static qpdunes_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -62,6 +63,13 @@ hpipm_static: blasfeo_static
 	mkdir -p lib
 	cp external/hpipm/include/*.h include/hpipm
 	cp external/hpipm/lib/libhpipm.a lib
+
+hpmpc_static: blasfeo_static
+	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo  )
+	mkdir -p include/hpmpc
+	mkdir -p lib
+	cp external/hpmpc/include/*.h include/hpmpc
+	cp external/hpmpc/libhpmpc.a lib
 
 qpoases_static:
 	( cd external/qpoases; $(MAKE) CC=$(CC) )
@@ -109,6 +117,7 @@ clean:
 deep_clean: clean
 	( cd external/blasfeo; $(MAKE) deep_clean )
 	( cd external/hpipm; $(MAKE) clean )
+	( cd external/hpmpc; $(MAKE) clean )
 	( cd external/qpoases; $(MAKE) clean )
 	( cd external/qore; $(MAKE) purge )
 	( cd external/qpdunes; $(MAKE) clean )

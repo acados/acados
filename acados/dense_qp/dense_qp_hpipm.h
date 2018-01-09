@@ -26,9 +26,9 @@ extern "C" {
 #endif
 
 // hpipm
-#include "hpipm_d_dense_qp.h"
-#include "hpipm_d_dense_qp_sol.h"
-#include "hpipm_d_dense_qp_ipm.h"
+#include "hpipm/include/hpipm_d_dense_qp.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp_ipm.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"

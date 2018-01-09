@@ -29,6 +29,7 @@
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
+#include <acados/ocp_qp/ocp_qp_hpmpc.h>
 #include <acados/ocp_qp/ocp_qp_qpdunes.h>
 #include <acados/dense_qp/dense_qp_hpipm.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
@@ -80,6 +81,7 @@ int main() {
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
         PARTIAL_CONDENSING_HPIPM,
+        PARTIAL_CONDENSING_HPMPC,
         #if ACADOS_WITH_QPDUNES
         PARTIAL_CONDENSING_QPDUNES,
         #endif
@@ -112,6 +114,11 @@ int main() {
                     printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
                     ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 30;
+                    break;
+                case PARTIAL_CONDENSING_HPMPC:
+                    printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
+                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+                    ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
                     break;
                 case PARTIAL_CONDENSING_QPDUNES:
                     printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);

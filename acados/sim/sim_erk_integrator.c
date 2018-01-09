@@ -209,7 +209,6 @@ void *sim_erk_create_memory(sim_dims *dims, void *opts_)
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    sim_erk_memory *mem = (sim_erk_memory *) mem_;
     sim_dims dims = {
         opts->num_stages,
         in->nx,

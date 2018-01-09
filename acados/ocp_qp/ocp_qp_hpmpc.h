@@ -52,34 +52,29 @@ typedef struct ocp_qp_hpmpc_args_ {
     int M;
 } ocp_qp_hpmpc_args;
 
-typedef void ocp_qp_hpmpc_memory;  // HPMPC does not have a memory struct
+// struct of the solver memory
+typedef struct ocp_qp_hpmpc_memory_ {
+    void *mem;
+} ocp_qp_hpmpc_memory;
 
-typedef void ocp_qp_hpmpc_workspace;  // // HPMPC does not have a workspace struct
 
-ocp_qp_hpmpc_args *ocp_qp_hpmpc_create_arguments(const ocp_qp_in *qp_in, hpmpc_options_t opts);
 
-int_t ocp_qp_hpmpc_calculate_memory_size(const ocp_qp_in *in, void *args_);
+int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims);
+//
+void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory);
+//
+void ocp_qp_hpmpc_initialize_default_args(void *args_);
+//
+int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+//
+void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+//
+int ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+//
+int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
 
-void *ocp_qp_hpmpc_create_memory(const ocp_qp_in *input, void *args_);
 
-void ocp_qp_hpmpc_free_memory(void *mem);
 
-int_t ocp_qp_hpmpc_calculate_workspace_size(const ocp_qp_in *in, void *args);
-
-int_t ocp_qp_hpmpc(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_,
-                   void *workspace_);
-
-// int ocp_qp_hpmpc_libstr_pt(ocp_qp_in *qp_in, ocp_qp_out *qp_out,
-//   ocp_qp_hpmpc_args *qp_args, int M, double sigma_mu, void *workspace);
-
-// TODO(Andrea): need to merge hpmpc in order to use this... (Body is ready)
-// int ocp_qp_hpnmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_hpmpc_args
-// *qp_args,
-//   void *workspace);
-
-void ocp_qp_hpmpc_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
-
-void ocp_qp_hpmpc_destroy(void *mem, void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

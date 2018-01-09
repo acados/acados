@@ -6,6 +6,7 @@ find_package(hpipm)
 find_package(hpmpc)
 find_package(qpdunes)
 find_package(qpOASES_e)
+find_package(qore)
 
 find_package(ooqp)
 find_package(OpenBLAS)

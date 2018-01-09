@@ -23,7 +23,6 @@
 #include <stdlib.h>
 
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_rk_common.h"
 #include "acados/utils/math.h"
 #include "acados/utils/types.h"
 

@@ -49,13 +49,13 @@ int align_char_to(int num, char **c_ptr) {
 }
 
 
-
+#ifdef _USE_VALGRIND_
 // print warning when by-passing pointer and allocating new memory (for debugging)
 static void print_warning ()
 {
     printf(" -- using dynamically allocated memory for debugging --\n");
 }
-
+#endif
 
 
 void *acados_malloc(size_t nitems, size_t size)

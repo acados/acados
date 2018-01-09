@@ -30,6 +30,7 @@
 #include <acados/dense_qp/dense_qp_qore.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
+#include <acados/ocp_qp/ocp_qp_hpmpc.h>
 #ifdef ACADOS_WITH_QPDUNES
 #include <acados/ocp_qp/ocp_qp_qpdunes.h>
 #endif
@@ -269,7 +270,19 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpipm;
             break;
         case PARTIAL_CONDENSING_HPMPC:
-            return_value = ACADOS_FAILURE;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
+                &ocp_qp_hpmpc_calculate_args_size;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
+                &ocp_qp_hpmpc_assign_args;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
+                &ocp_qp_hpmpc_initialize_default_args;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
+                &ocp_qp_hpmpc_calculate_memory_size;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
+                &ocp_qp_hpmpc_assign_memory;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
+                &ocp_qp_hpmpc_calculate_workspace_size;
+            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpmpc;
             break;
         case PARTIAL_CONDENSING_OOQP:
             return_value = ACADOS_FAILURE;

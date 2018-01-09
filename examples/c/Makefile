@@ -4,10 +4,10 @@ include ../../Makefile.rule
 
 ifeq ($(USE_QPDUNES), 1)
 CCC = $(CXX)
-LIBS = -lacados_c -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e  -lqpdunes -lqpOASES -lm -lblas
+LIBS = -lacados_c -lacore -lhpipm -lhpmpc -lqore_dense -lblasfeo -lqpOASES_e  -lqpdunes -lqpOASES -lm -lblas
 else
 CCC = $(CC)
-LIBS = -lacados_c -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+LIBS = -lacados_c -lacore -lhpipm -lhpmpc -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 endif
 
 examples: mass_spring_example sim_erk_crane mass_spring_pcond_hpipm_split mass_spring_fcond_hpipm_split nonlinear_chain_ocp_nlp
