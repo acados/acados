@@ -253,7 +253,7 @@ LangObject *new_sequence(const int_t length) {
 }
 
 template <typename T>
-LangObject *new_sequence_from(const T *array, const int_t length) {
+LangObject *new_sequence_from(T *array, const int_t length) {
     LangObject *sequence = new_sequence(length);
     for (int_t index = 0; index < length; index++) {
         if (typeid(T) == typeid(int_t))
@@ -418,7 +418,7 @@ LangObject *new_sequence_of_arrays(const int_t length) {
 }
 
 template<typename T>
-LangObject *new_sequence_from(const T **data, const int_t length,
+LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_rows, const int_t *nb_columns) {
 
     LangObject *sequence = new_sequence_of_arrays(length);
@@ -431,7 +431,7 @@ LangObject *new_sequence_from(const T **data, const int_t length,
 }
 
 template<typename T>
-LangObject *new_sequence_from(const T **data, const int_t length,
+LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_elems) {
 
     int_t nb_columns[length];
