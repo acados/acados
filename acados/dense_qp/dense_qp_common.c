@@ -196,16 +196,16 @@ void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
 
     int *idxb = qp_in->idxb;
 
-    struct d_strvec *tmp_nbg = res_ws->tmp_nbg;
+    struct blasfeo_dvec *tmp_nbg = res_ws->tmp_nbg;
 
     // compute slacks for general constraints
-    dgemv_t_libstr(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, nbd, qp_out->t, nbd);
-    dgemv_t_libstr(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
+    blasfeo_dgemv_t(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, nbd, qp_out->t, nbd);
+    blasfeo_dgemv_t(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
 
     // compute slacks for bounds
-    dvecex_sp_libstr(nbd, 1.0, idxb, qp_out->v, 0, tmp_nbg+0, 0);
-    daxpby_libstr(nbd, 1.0, tmp_nbg+0, 0, -1.0, qp_in->d, 0, qp_out->t, 0);
-    daxpby_libstr(nbd, -1.0, tmp_nbg+0, 0, -1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd);
+    blasfeo_dvecex_sp(nbd, 1.0, idxb, qp_out->v, 0, tmp_nbg+0, 0);
+    blasfeo_daxpby(nbd, 1.0, tmp_nbg+0, 0, -1.0, qp_in->d, 0, qp_out->t, 0);
+    blasfeo_daxpby(nbd, -1.0, tmp_nbg+0, 0, -1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd);
 
     // compute residuals
     d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);
@@ -221,8 +221,8 @@ void compute_dense_qp_res_nrm_inf(dense_qp_res *qp_res, double res[4])
     int ng = qp_res->dim->ng;
     int ns = qp_res->dim->ns;
 
-    dvecnrm_inf_libstr(nv+2*ns, qp_res->res_g, 0, &res[0]);
-    dvecnrm_inf_libstr(ne, qp_res->res_b, 0, &res[1]);
-    dvecnrm_inf_libstr(2*nb+2*ng+2*ns, qp_res->res_d, 0, &res[2]);
-    dvecnrm_inf_libstr(2*nb+2*ng+2*ns, qp_res->res_m, 0, &res[3]);
+    blasfeo_dvecnrm_inf(nv+2*ns, qp_res->res_g, 0, &res[0]);
+    blasfeo_dvecnrm_inf(ne, qp_res->res_b, 0, &res[1]);
+    blasfeo_dvecnrm_inf(2*nb+2*ng+2*ns, qp_res->res_d, 0, &res[2]);
+    blasfeo_dvecnrm_inf(2*nb+2*ng+2*ns, qp_res->res_m, 0, &res[3]);
 }

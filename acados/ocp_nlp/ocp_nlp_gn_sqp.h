@@ -78,7 +78,7 @@ typedef struct {
     void **sim_solvers_work;
 
     // SQP solver
-    struct d_strvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+    struct blasfeo_dvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
                                 // not using max(nx+nu) for parallelization in the future
 
 } ocp_nlp_gn_sqp_work;

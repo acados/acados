@@ -278,11 +278,11 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     }
 
 
-    size += (dims->N+1)*sizeof(struct d_strvec);  // tmp_vecs
+    size += (dims->N+1)*sizeof(struct blasfeo_dvec);  // tmp_vecs
 
     for (int ii = 0; ii < dims->N+1; ii++)
     {
-        size += d_size_strvec(qp_dims.nx[ii] + qp_dims.nu[ii]);
+        size += blasfeo_memsize_dvec(qp_dims.nx[ii] + qp_dims.nu[ii]);
     }
 
     make_int_multiple_of(64, &size);
@@ -369,7 +369,7 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
     // real_t **qp_Q = (real_t **) gn_sqp_mem->qp_solver->qp_in->Q;
     // real_t **qp_S = (real_t **) gn_sqp_mem->qp_solver->qp_in->S;
     // real_t **qp_R = (real_t **) gn_sqp_mem->qp_solver->qp_in->R;
-	struct d_strmat *sRSQrq = work->qp_in->RSQrq;
+	struct blasfeo_dmat *sRSQrq = work->qp_in->RSQrq;
 
     // TODO(rien): only for least squares cost with state and control reference atm
     for (int_t i = 0; i <= N; i++) {
@@ -379,17 +379,17 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
         // cost->W[i][nx[i]+1] = 77;
 
         // copy R
-        d_cvt_mat2strmat(nu[i], nu[i], &cost->W[i][nx[i]*(nx[i]+nu[i])+nx[i]], nx[i] + nu[i], &sRSQrq[i], 0, 0);
+        blasfeo_pack_dmat(nu[i], nu[i], &cost->W[i][nx[i]*(nx[i]+nu[i])+nx[i]], nx[i] + nu[i], &sRSQrq[i], 0, 0);
         // copy Q
-        d_cvt_mat2strmat(nx[i], nx[i], &cost->W[i][0], nx[i] + nu[i], &sRSQrq[i], nu[i], nu[i]);
+        blasfeo_pack_dmat(nx[i], nx[i], &cost->W[i][0], nx[i] + nu[i], &sRSQrq[i], nu[i], nu[i]);
         // copy S
-        d_cvt_tran_mat2strmat(nu[i], nx[i], &cost->W[i][nx[i]], nx[i] + nu[i], &sRSQrq[i], nu[i], 0);
+        blasfeo_pack_tran_dmat(nu[i], nx[i], &cost->W[i][nx[i]], nx[i] + nu[i], &sRSQrq[i], nu[i], 0);
 
         // printf("W = \n");
         // d_print_mat(nx[i]+nu[i], nx[i]+nu[i], cost->W[i], nx[i]+nu[i]);
 
         // printf("RSQrq=\n");
-        // d_print_strmat(nx[i]+nu[i]+1, nx[i]+nu[i], &sRSQrq[i], 0, 0);
+        // blasfeo_print_dmat(nx[i]+nu[i]+1, nx[i]+nu[i], &sRSQrq[i], 0, 0);
 
         // for (int_t j = 0; j < nx[i]; j++) {
         //     for (int_t k = 0; k < nx[i]; k++) {
@@ -444,16 +444,16 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
     int *ng = nlp->dims->ng;
 
     real_t *w = work->w;
-    struct d_strvec *stmp = work->tmp_vecs;
+    struct blasfeo_dvec *stmp = work->tmp_vecs;
 
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp->cost;
     real_t **y_ref = cost->y_ref;
 
-    struct d_strmat *sBAbt = work->qp_in->BAbt;
-    struct d_strvec *sb = work->qp_in->b;
-    struct d_strmat *sRSQrq = work->qp_in->RSQrq;
-    struct d_strvec *srq = work->qp_in->rq;
-    struct d_strvec *sd = work->qp_in->d;
+    struct blasfeo_dmat *sBAbt = work->qp_in->BAbt;
+    struct blasfeo_dvec *sb = work->qp_in->b;
+    struct blasfeo_dmat *sRSQrq = work->qp_in->RSQrq;
+    struct blasfeo_dvec *srq = work->qp_in->rq;
+    struct blasfeo_dvec *sd = work->qp_in->d;
 
     // real_t **qp_A = (real_t **) mem->qp_solver->qp_in->A;
     // real_t **qp_B = (real_t **) mem->qp_solver->qp_in->B;
@@ -476,21 +476,21 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         // TODO(rien): transition functions for changing dimensions not yet implemented!
 
         // convert b
-        d_cvt_vec2strvec(nx[i+1], work->sim_out[i]->xn, &sb[i], 0);
+        blasfeo_pack_dvec(nx[i+1], work->sim_out[i]->xn, &sb[i], 0);
         for (int j = 0; j < nx[i+1]; j++)
             DVECEL_LIBSTR(&sb[i], j) -= w[w_idx+nx[i]+nu[i]+j];
         // copy B
-        d_cvt_tran_mat2strmat(nx[i+1], nu[i], &work->sim_out[i]->S_forw[nx[i+1]*nx[i]], nx[i+1], &sBAbt[i], 0, 0);
+        blasfeo_pack_tran_dmat(nx[i+1], nu[i], &work->sim_out[i]->S_forw[nx[i+1]*nx[i]], nx[i+1], &sBAbt[i], 0, 0);
         // copy A
-        d_cvt_tran_mat2strmat(nx[i+1], nx[i], &work->sim_out[i]->S_forw[0], nx[i+1], &sBAbt[i], nu[i], 0);
+        blasfeo_pack_tran_dmat(nx[i+1], nx[i], &work->sim_out[i]->S_forw[0], nx[i+1], &sBAbt[i], nu[i], 0);
         // copy b
-        drowin_libstr(nx[i+1], 1.0, &sb[i], 0, &sBAbt[i], nu[i]+nx[i], 0);
+        blasfeo_drowin(nx[i+1], 1.0, &sb[i], 0, &sBAbt[i], nu[i]+nx[i], 0);
 
         // printf("AB = \n");
         // d_print_mat(nx[i+1], nx[i]+nu[i], sim[i].out->S_forw, nx[i+1]);
 
         // printf("ABbt=\n");
-        // d_print_strmat(nx[i]+nu[i]+1, nx[i+1], &sBAbt[i], 0, 0);
+        // blasfeo_print_dmat(nx[i]+nu[i]+1, nx[i+1], &sBAbt[i], 0, 0);
 
         // for (int_t j = 0; j < nx[i]; j++) {
         //     qp_b[i][j] = sim[i].out->xn[j] - w[w_idx+nx[i]+nu[i]+j];
@@ -537,7 +537,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         for (int j = 0; j < nu[i]; j++)
             DVECEL_LIBSTR(&stmp[i], j) = w[w_idx+nx[i]+j]-y_ref[i][nx[i]+j];
 
-        dsymv_l_libstr(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp[i], 0, 0.0, &srq[i], 0, &srq[i], 0);
+        blasfeo_dsymv_l(nu[i]+nx[i], nu[i]+nx[i], 1.0, &sRSQrq[i], 0, 0, &stmp[i], 0, 0.0, &srq[i], 0, &srq[i], 0);
 
         if (opts->scheme != NULL && opts->scheme->type != exact)
         {
@@ -546,7 +546,7 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
             for (int_t j = 0; j < nu[i]; j++)
                 DVECEL_LIBSTR(&srq[i], j) += work->sim_out[i]->grad[nx[i]+j];
         }
-        drowin_libstr(nu[i]+nx[i], 1.0, &srq[i], 0, &sRSQrq[i], nu[i]+nx[i], 0);
+        blasfeo_drowin(nu[i]+nx[i], 1.0, &srq[i], 0, &sRSQrq[i], nu[i]+nx[i], 0);
 
         // for (int_t j = 0; j < nx[i]; j++) {
         //     qp_q[i][j] = cost->W[i][j*(nx[i]+nu[i]+1)]*(w[w_idx+j]-y_ref[i][j]);
@@ -579,9 +579,9 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
 
     for (int j=0; j<nx[N]; j++)
         DVECEL_LIBSTR(&stmp[N], j) = w[w_idx+j]-y_ref[N][j];
-    dsymv_l_libstr(nx[N], nx[N], 1.0, &sRSQrq[N], 0, 0, &stmp[N], 0, 0.0, &srq[N], 0, &srq[N], 0);
+    blasfeo_dsymv_l(nx[N], nx[N], 1.0, &sRSQrq[N], 0, 0, &stmp[N], 0, 0.0, &srq[N], 0, &srq[N], 0);
 
-    drowin_libstr(nx[N], 1.0, &srq[N], 0, &sRSQrq[N], nx[N], 0);
+    blasfeo_drowin(nx[N], 1.0, &srq[N], 0, &sRSQrq[N], nx[N], 0);
 
     // for (int_t j = 0; j < nx[N]; j++)
     //     qp_q[N][j] = cost->W[N][j*(nx[N]+nu[N]+1)]*(w[w_idx+j]-y_ref[N][j]);

@@ -167,8 +167,8 @@ extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
                                                            int *nu, int *nb,
                                                            int *ng);
 
-extern int d_size_strmat(int m, int n);
-extern int d_size_strvec(int m);
+extern int blasfeo_memsize_dmat(int m, int n);
+extern int blasfeo_memsize_dvec(int m);
 // extern FILE *popen(char *command, const char *type);
 
 // Simple SQP example for acados
@@ -415,23 +415,23 @@ int main() {
 
     // Adding memory for data
     for (int ii = 0; ii < NN; ii++) {
-        work_space_size += d_size_strmat(nu[ii] + nx[ii] + 1, nx[ii + 1]);
-        work_space_size += d_size_strvec(nx[ii + 1]);
-        work_space_size += d_size_strmat(nu[ii] + nx[ii] + 1, nu[ii] + nx[ii]);
-        work_space_size += d_size_strvec(nu[ii] + nx[ii]);
-        work_space_size += d_size_strmat(nu[ii] + nx[ii] + 1, ngg[ii]);
-        work_space_size += d_size_strvec(2 * nb[ii] + 2 * ngg[ii]);
-        work_space_size += d_size_strvec(nu[ii] + nx[ii]);
-        work_space_size += d_size_strvec(nx[ii + 1]);
-        work_space_size += d_size_strvec(2 * nb[ii] + 2 * ngg[ii]);
-        work_space_size += d_size_strvec(2 * nb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dmat(nu[ii] + nx[ii] + 1, nx[ii + 1]);
+        work_space_size += blasfeo_memsize_dvec(nx[ii + 1]);
+        work_space_size += blasfeo_memsize_dmat(nu[ii] + nx[ii] + 1, nu[ii] + nx[ii]);
+        work_space_size += blasfeo_memsize_dvec(nu[ii] + nx[ii]);
+        work_space_size += blasfeo_memsize_dmat(nu[ii] + nx[ii] + 1, ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(2 * nb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(nu[ii] + nx[ii]);
+        work_space_size += blasfeo_memsize_dvec(nx[ii + 1]);
+        work_space_size += blasfeo_memsize_dvec(2 * nb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(2 * nb[ii] + 2 * ngg[ii]);
     }
 
-    work_space_size += d_size_strvec(nu[N] + nx[N]);
-    work_space_size += d_size_strvec(2 * nb[N] + 2 * ngg[N]);
-    work_space_size += d_size_strvec(nu[N] + nx[N]);
-    work_space_size += d_size_strvec(2 * nb[N] + 2 * ngg[N]);
-    work_space_size += d_size_strvec(2 * nb[N] + 2 * ngg[N]);
+    work_space_size += blasfeo_memsize_dvec(nu[N] + nx[N]);
+    work_space_size += blasfeo_memsize_dvec(2 * nb[N] + 2 * ngg[N]);
+    work_space_size += blasfeo_memsize_dvec(nu[N] + nx[N]);
+    work_space_size += blasfeo_memsize_dvec(2 * nb[N] + 2 * ngg[N]);
+    work_space_size += blasfeo_memsize_dvec(2 * nb[N] + 2 * ngg[N]);
 
     work_space_size += 1000 * sizeof(int);  // TODO(Andrea): need to fix this
 

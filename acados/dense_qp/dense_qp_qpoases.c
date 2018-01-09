@@ -203,7 +203,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     assert(ned == 0 && "ned != 0 not supported yet");
 
     // fill in the upper triangular of H in dense_qp
-    dtrtr_l_libstr(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
+    blasfeo_dtrtr_l(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 
     // dense qp row-major
     d_cvt_dense_qp_to_rowmaj(qp_in, H, g, A, b, idxb, d_lb0, d_ub0, C, d_lg, d_ug,
@@ -220,13 +220,13 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     }
 
     // cholesky factorization of H
-    // dpotrf_l_libstr(nvd, qpd->Hv, 0, 0, sR, 0, 0);
+    // blasfeo_dpotrf_l(nvd, qpd->Hv, 0, 0, sR, 0, 0);
 
     // fill in upper triangular of R
-    // dtrtr_l_libstr(nvd, sR, 0, 0, sR, 0, 0);
+    // blasfeo_dtrtr_l(nvd, sR, 0, 0, sR, 0, 0);
 
     // extract R
-    // d_cvt_strmat2mat(nvd, nvd, sR, 0, 0, R, nvd);
+    // blasfeo_unpack_dmat(nvd, nvd, sR, 0, 0, R, nvd);
 
 #if 0
 #endif
@@ -279,7 +279,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     acados_tic(&interface_timer);
 
     // copy prim_sol and dual_sol to qpd_sol
-    d_cvt_vec2strvec(nvd, prim_sol, qp_out->v, 0);
+    blasfeo_pack_dvec(nvd, prim_sol, qp_out->v, 0);
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
         qp_out->lam->pa[ii] = 0.0;
     for (int ii = 0; ii < nbd; ii++) {

@@ -41,7 +41,7 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 
 
-static_library: blasfeo_static hpipm_static qpoases_static qore_static hpmpc_static qpdunes_static
+static_library: blasfeo_static hpipm_static qpoases_static qore_static hpmpc_static qpdunes_static acados_c_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib

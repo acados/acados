@@ -155,20 +155,20 @@ int main() {
     printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
 
     if(erk_opts->sens_adj){
-        struct d_strmat sA;
-        d_create_strmat(nx, nx+nu, &sA, S_forw_out);
+        struct blasfeo_dmat sA;
+        blasfeo_create_dmat(nx, nx+nu, &sA, S_forw_out);
 
-        struct d_strvec sx;
-        d_create_strvec(nx, &sx, in->S_adj);
+        struct blasfeo_dvec sx;
+        blasfeo_create_dvec(nx, &sx, in->S_adj);
 
-        struct d_strvec sz;
+        struct blasfeo_dvec sz;
         void *mz;
-        v_zeros_align(&mz, d_size_strvec(nx+nu));
-        d_create_strvec(nx+nu, &sz, mz);
-        dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+        v_zeros_align(&mz, blasfeo_memsize_dvec(nx+nu));
+        blasfeo_create_dvec(nx+nu, &sz, mz);
+        blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
         printf("\nJac times lambdaX:\n");
-        d_print_tran_strvec(nx+nu, &sz, 0);
+        blasfeo_print_tran_dvec(nx+nu, &sz, 0);
 
         v_free_align(mz);
     }
