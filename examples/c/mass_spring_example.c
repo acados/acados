@@ -88,9 +88,13 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-    bool run_loop = true;
-    int ii = 0;
-    while (run_loop)
+    #if ACADOS_WITH_QPDUNES
+    int ii_max = 6;
+    #else
+    int ii_max = 5;
+    #endif
+
+    for (int ii = 0; ii < ii_max; ii++)
     {
         ocp_qp_solver_plan plan;
         plan.qp_solver = ocp_qp_solvers[ii];
@@ -136,8 +140,7 @@ int main() {
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
                     break;
-                default:
-                    run_loop = false;
+                case PARTIAL_CONDENSING_OOQP:
                     break;
             }
 
@@ -213,9 +216,6 @@ int main() {
             if (plan.qp_solver >= FULL_CONDENSING_HPIPM) break;
         }
         free(args);
-
-        // next QP solver
-        ii++;
     }
 
     free(qp_in);

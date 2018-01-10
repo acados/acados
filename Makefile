@@ -41,7 +41,9 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 
 
-static_library: blasfeo_static hpipm_static qpoases_static qore_static hpmpc_static qpdunes_static acados_c_static
+all: acados_c_static
+
+static_library: blasfeo_static hpipm_static qpoases_static qore_static hpmpc_static qpdunes_static
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -94,17 +96,17 @@ qpdunes_static:
 	cp external/qpdunes/src/libqpdunes.a lib
 	cp external/qpdunes/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
 
-acados_c_static:
+acados_c_static: static_library
 	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
 	mkdir -p include/acados_c
 	mkdir -p lib
 	cp -r interfaces/acados_c/*.h include/acados_c
 	mv interfaces/acados_c/libacados_c.a lib
 
-examples_c:
+examples_c: acados_c_static
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )
 
-run_examples_c:
+run_examples_c: examples_c
 	( cd examples/c; $(MAKE) run_examples )
 
 run_example_chain:
