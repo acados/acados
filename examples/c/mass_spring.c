@@ -152,6 +152,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
 
     int nb[N+1];
 #if defined(ELIMINATE_X0)
+    int nbu = nu_ < nb_ ? nu_ : nb_;
     nb[0] = nbu;
 #else
     nb[0] = nb_;
