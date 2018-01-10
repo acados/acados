@@ -132,7 +132,9 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
     int ngN = 0;
     #endif
 
+#if defined(ELIMINATE_X0)
 	int nbu = nu_<nb_ ? nu_ : nb_;
+#endif
     int nbx = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
 
     int nx[N+1];
@@ -153,7 +155,6 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
 
     int nb[N+1];
 #if defined(ELIMINATE_X0)
-    int nbu = nu_ < nb_ ? nu_ : nb_;
     nb[0] = nbu;
 #else
     nb[0] = nb_;
