@@ -140,6 +140,8 @@ int main() {
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
                     break;
+                case PARTIAL_CONDENSING_OOQP:
+                    break;
             }
 
             ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
