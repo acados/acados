@@ -34,6 +34,7 @@
 #include "hpmpc/include/mpc_aux.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
 
@@ -173,6 +174,11 @@ int ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+
+    acados_tic(&tot_timer);
+    acados_tic(&interface_timer);
 
     // initialize return code
     int acados_status = ACADOS_SUCCESS;
@@ -300,7 +306,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 	// temporarily invert sign of upper bounds
 	blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
-  
+
 	// initialize hsdux to primal input later usx will be subtracted
     blasfeo_create_dvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
     blasfeo_pack_dvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
@@ -357,6 +363,9 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
     work_ric = ptr_memory;
     ptr_memory+=d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
+
+    info->interface_time = acados_toc(&interface_timer);
+    acados_tic(&qp_timer);
 
     if (M < N){
         // update cost function matrices and vectors (box constraints)
@@ -428,12 +437,15 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
         // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
         // define and compute hsdpi (see function prototype).
-    } else{
+    } else {
         // IPM at the beginning
         hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, alpha_min,
           warm_start, stat, N, nx, nu, nb, hsidxb, ng, hsBAbt, hsRSQrq, hsDCt,
           hsd, hsux, compute_mult, hspi, hslam, hst, ptr_memory);  // recover original stage M
     }
+
+    info->solve_QP_time = acados_toc(&qp_timer);
+    acados_tic(&interface_timer);
 
     // copy result to qp_out
     for ( ii = 0; ii < N; ii++ ) {
@@ -454,13 +466,17 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
 
-    
+
 	// restore sign of upper bounds
 	for(int jj = 0; jj <=N; jj++) {
 		blasfeo_dvecsc(nb[jj], -1.0, &hsd[jj], nb[jj] + ng[jj]);
 		blasfeo_dvecsc(ng[jj], -1.0, &hsd[jj], 2*nb[jj] + ng[jj]);
 	}
-	
+
+    info->interface_time += acados_toc(&interface_timer);
+    info->total_time = acados_toc(&tot_timer);
+    info->num_iter = kk;
+
 	// return
     return acados_status;
 }
