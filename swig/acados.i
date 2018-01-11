@@ -19,6 +19,8 @@
 
 %module acados
 
+%rename($ignore, %$isclass) ""; // Only ignore all classes
+
 #if defined(SWIGMATLAB)
 typedef mxArray LangObject;
 #define NONE NULL
@@ -63,6 +65,7 @@ char compiler[16] = "cc";
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
+#include "acados_cpp/ocp_qp.h"
 
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
     if (!is_map(input))
@@ -77,6 +80,51 @@ bool is_valid_ocp_dimensions_map(const LangObject *input) {
         return false;
     }
     return true;
+}
+
+bool qp_dimensions_equal(const ocp_qp_dims *qp1, const ocp_qp_dims *qp2) {
+    if (qp1->N != qp2->N)
+        return false;
+    int_t N = qp1->N;
+    for (int_t i = 0; i < N; i++) {
+        if (qp1->nx[i] != qp2->nx[i])
+            return false;
+        else if (qp1->nu[i] != qp2->nu[i])
+            return false;
+        else if (qp1->nb[i] != qp2->nb[i])
+            return false;
+        else if (qp1->ng[i] != qp2->ng[i])
+            return false;
+    }
+    if (qp1->nx[N] != qp2->nx[N])
+        return false;
+    else if (qp1->nb[N] != qp2->nb[N])
+        return false;
+    else if (qp1->ng[N] != qp2->ng[N])
+        return false;
+    return true;
+}
+
+ocp_qp_dims *map_to_ocp_qp_dims(const LangObject *map) {
+    if (!is_valid_ocp_dimensions_map(map)) {
+        std::string err_msg =
+            std::string("Input must be a valid OCP %s that specifies at least N, nx, nu")
+            + std::string(LANG_MAP_NAME);
+        throw std::invalid_argument(err_msg);
+    }
+
+    int_t N = int_from(map, "N");
+    ocp_qp_dims *qp_dims = create_ocp_qp_dims(N);
+    fill_array_from(map, "nx", qp_dims->nx, N+1);
+    fill_array_from(map, "nu", qp_dims->nu, N+1);
+    fill_array_from(map, "nb", qp_dims->nb, N+1);
+    fill_array_from(map, "nc", qp_dims->ng, N+1);
+    qp_dims->nu[N] = 0;
+    // Default behavior is that initial state is fixed
+    if (!has(map, "nb")) {
+        qp_dims->nb[0] = qp_dims->nx[0];
+    }
+    return qp_dims;
 }
 
 LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
@@ -100,55 +148,32 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
-%rename($ignore, %$isclass) ""; // Only ignore all classes
+%rename("%s") OcpQp;
+%include "acados_cpp/ocp_qp.h"
+
 %rename("%s") ocp_qp_solver;
 %include "acados_c/ocp_qp.h"
 
-%{
-void ocp_qp_solver_blabla_set(ocp_qp_solver *solver, ocp_qp_in *blabla) {
-    solver->blabla = blabla;
-}
-
-void ocp_qp_solver_result_set(ocp_qp_solver *solver, ocp_qp_out *result) {
-    solver->result = result;
-}
-
-ocp_qp_in *ocp_qp_solver_blabla_get(ocp_qp_solver *solver) {
-    return solver->blabla;
-}
-
-ocp_qp_out *ocp_qp_solver_result_get(ocp_qp_solver *solver) {
-    return solver->result;
-}
-%}
-
 %extend ocp_qp_solver {
 
-    ocp_qp_in *blabla = NULL;
-    ocp_qp_out *result = NULL;
+    ocp_qp_solver(ocp_qp_solver_t solver_name, LangObject *dimensions, LangObject *options = NONE) {
 
-    ocp_qp_solver(ocp_qp_solver_t solver_name, ocp_qp_in *qp_in, LangObject *options = NONE) {
-        
-        ocp_qp_solver *solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver *));
-        
-        solver->blabla = qp_in;
-        solver->result = create_ocp_qp_out(blabla->dim);
-        
-        ocp_qp_dims *dims = qp_in->dim;
-        
+        ocp_qp_dims *dims = map_to_ocp_qp_dims(dimensions);
+
         ocp_qp_solver_plan plan;
         plan.qp_solver = solver_name;
         
         void *args = ocp_qp_create_args(&plan, dims);
-        // ocp_qp_solver *solver = ocp_qp_create(&plan, dims, args);
+        ocp_qp_solver *solver = ocp_qp_create(&plan, dims, args);
         return solver;
     }
 
-    LangObject *evaluate() {
-        int_t return_code = ocp_qp_solve($self, $self->blabla, $self->result);
-        if (return_code != 0) {
+    LangObject *evaluate(ocp_qp_in *input) {
+        ocp_qp_out *result = create_ocp_qp_out(input->dim);
+        int_t return_code = ocp_qp_solve($self, input, result);
+        if (return_code != 0)
             throw std::runtime_error("qp solver failed!");
-        }
-        return ocp_qp_output($self->blabla, $self->result);
+        return ocp_qp_output(input, result);
     }
+
 }

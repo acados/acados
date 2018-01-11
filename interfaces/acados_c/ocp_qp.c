@@ -78,7 +78,7 @@ ocp_qp_dims *create_ocp_qp_dims(int N)
 {
     int bytes = ocp_qp_dims_calculate_size(N);
 
-    void *ptr = malloc(bytes);
+    void *ptr = calloc(1, bytes);
 
     ocp_qp_dims *dims = assign_ocp_qp_dims(N, ptr);
 

@@ -80,7 +80,8 @@ if(NOT ACADOS_NO_TIMINGS)
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
-add_subdirectory(../interfaces/acados_c acados/interfaces)
+add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
+add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
 
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
