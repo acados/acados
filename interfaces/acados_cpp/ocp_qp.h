@@ -4,19 +4,16 @@
 
 class OcpQp {
     public:
-        OcpQp(int N, int numStates, int numControls, int numBounds = 0, int numConstraints = 0);
-        const int N;
+        OcpQp(int N,
+              std::vector<int> stateDimensions,
+              std::vector<int> controlDimensions,
+              std::vector<int> boundDimensions,
+              std::vector<int> constraintDimensions);
+
+        friend std::ostream& operator<<(std::ostream& oss, const OcpQp& qp);
 
     private:
-        void setStateDimensionAt(int index, int numStates);
-        void setStateDimensions(int numStates);
-        void setControlDimensionAt(int index, int numControls);
-        void setControlDimensions(int numControls);
-
-        std::vector<int> nx;
-        std::vector<int> nu;
-        std::vector<int> nb;
-        std::vector<int> nc;
+        void copyDimensions(std::vector<int> dimensions, int *dimension_ptr);
 
         ocp_qp_dims *dimensions;
         ocp_qp_in *qp;

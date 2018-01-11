@@ -19,6 +19,11 @@
 
 %module acados
 
+%include "std_vector.i"
+namespace std {
+    %template(vectori) vector<int>;
+};
+
 %rename($ignore, %$isclass) ""; // Only ignore all classes
 
 #if defined(SWIGMATLAB)
@@ -62,6 +67,8 @@ char compiler[16] = "cc";
 /        OCP 
 /  ----------------------*/
 %{
+
+#include <iostream>
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
@@ -150,6 +157,14 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %rename("%s") OcpQp;
 %include "acados_cpp/ocp_qp.h"
+
+%extend OcpQp {
+    char *__str__() {
+        static char tmp[1];
+        std::cout << *($self);
+        return tmp;
+    }
+}
 
 %rename("%s") ocp_qp_solver;
 %include "acados_c/ocp_qp.h"
