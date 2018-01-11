@@ -91,7 +91,7 @@ ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_in_calculate_size(dims);
 
-    void *ptr = malloc(bytes);
+    void *ptr = calloc(1, bytes);
 
     ocp_qp_in *in = assign_ocp_qp_in(dims, ptr);
 
