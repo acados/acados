@@ -70,15 +70,15 @@ void assign_int_ptrs(int n, int ***v, char **ptr);
 
 
 // allocate vector of pointers to strvecs and advance pointer
-void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr);
+void assign_strvec_ptrs(int n, struct blasfeo_dvec **sv, char **ptr);
 
 
 // allocate vector of pointers to strmats and advance pointer
-void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr);
+void assign_strmat_ptrs(int n, struct blasfeo_dmat **sm, char **ptr);
 
 
 // allocate vector of pointers to vector of pointers to strmats and advance pointer
-void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr);
+void assign_strmat_ptrs_to_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr);
 
 
 // allocate vector of ints and advance pointer
@@ -90,11 +90,11 @@ void assign_double(int n, double **v, char **ptr);
 
 
 // allocate strvec and advance pointer
-void assign_strvec(int n, struct d_strvec *sv, char **ptr);
+void assign_strvec(int n, struct blasfeo_dvec *sv, char **ptr);
 
 
 // allocate strmat and advance pointer
-void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr);
+void assign_strmat(int m, int n, struct blasfeo_dmat *sA, char **ptr);
 
 
 #ifdef __cplusplus

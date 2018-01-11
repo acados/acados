@@ -244,8 +244,8 @@ extern int d_ip2_res_mpc_hard_work_space_size_bytes_libstr(int N, int *nx,
 extern int d_back_ric_rec_work_space_size_bytes_libstr(int N, int *nx, int *nu,
     int *nb, int *ng);  // TODO(Andrea): ask Gian how to fix this
 
-extern  int d_size_strmat(int m, int n);
-extern  int d_size_strvec(int m);
+extern  int blasfeo_memsize_dmat(int m, int n);
+extern  int blasfeo_memsize_dvec(int m);
 // extern FILE *popen(char *command, const char *type);
 
 // Simple SQP example for acados

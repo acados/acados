@@ -187,26 +187,26 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         printf("k = %d\n\n", ii);
 
         printf("RSQrq =\n");
-        d_print_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
+        blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
 
         printf("rq =\n");
-        d_print_tran_strvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
 
 
         if (ii < N)
         {
             printf("BAbt =\n");
-            d_print_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &qp_in->BAbt[ii], 0 , 0);
+            blasfeo_print_dmat(nu[ii]+nx[ii]+1, nx[ii+1], &qp_in->BAbt[ii], 0 , 0);
 
             printf("b =\n");
-            d_print_tran_strvec(nx[ii+1], &qp_in->b[ii], 0);
+            blasfeo_print_tran_dvec(nx[ii+1], &qp_in->b[ii], 0);
         }
 
         printf("idxb = (nb = %d = %d + %d)\n", qp_in->dim->nb[ii], qp_in->dim->nbu[ii], qp_in->dim->nbx[ii]);
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
 
         printf("d =\n");
-        d_print_tran_strvec(2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
     }
 }
 
@@ -225,16 +225,16 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
         printf("k = %d\n\n", ii);
 
         printf("ux =\n");
-        d_print_tran_strvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
 
         if (ii < N)
         {
             printf("pi =\n");
-            d_print_tran_strvec(nx[ii], &qp_out->pi[ii], 0);
+            blasfeo_print_tran_dvec(nx[ii], &qp_out->pi[ii], 0);
         }
 
         printf("lam =\n");
-        d_print_tran_strvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
     }
 }
 
@@ -350,7 +350,7 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     int nv = qp_in->dim->nv;
 
     printf("H =\n");
-    d_print_strmat(nv, nv, qp_in->Hv, 0, 0);
+    blasfeo_print_dmat(nv, nv, qp_in->Hv, 0, 0);
     // TODO(dimitris): print all data
 }
 

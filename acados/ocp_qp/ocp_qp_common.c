@@ -204,14 +204,14 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 	int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
 
-    struct d_strmat *DCt = qp_in->DCt;
-    struct d_strvec *d = qp_in->d;
+    struct blasfeo_dmat *DCt = qp_in->DCt;
+    struct blasfeo_dvec *d = qp_in->d;
     int **idxb = qp_in->idxb;
 
-    struct d_strvec *ux = qp_out->ux;
-    struct d_strvec *t = qp_out->t;
+    struct blasfeo_dvec *ux = qp_out->ux;
+    struct blasfeo_dvec *t = qp_out->t;
 
-    struct d_strvec *tmp_nbgM = res_ws->tmp_nbgM;
+    struct blasfeo_dvec *tmp_nbgM = res_ws->tmp_nbgM;
 
     int nx_i, nu_i, nb_i, ng_i;
 
@@ -223,13 +223,13 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 		ng_i = ng[ii];
 
         // compute slacks for general constraints
-        dgemv_t_libstr(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
-        dgemv_t_libstr(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  -1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
+        blasfeo_dgemv_t(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
+        blasfeo_dgemv_t(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  -1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
 
         // compute slacks for bounds
-        dvecex_sp_libstr(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
-        daxpby_libstr(nb_i,  1.0, tmp_nbgM+0, 0, -1.0, d+ii, 0, t+ii, 0);
-        daxpby_libstr(nb_i, -1.0, tmp_nbgM+0, 0, -1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
+        blasfeo_dvecex_sp(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
+        blasfeo_daxpby(nb_i,  1.0, tmp_nbgM+0, 0, -1.0, d+ii, 0, t+ii, 0);
+        blasfeo_daxpby(nb_i, -1.0, tmp_nbgM+0, 0, -1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
     }
 
     d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
@@ -265,10 +265,10 @@ void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
     nct += 2*nb[ii]+2*ng[ii]+2*ns[ii];
 
     // compute infinity norms of residuals
-    dvecnrm_inf_libstr(nvt, qp_res->res_g, 0, &res[0]);
-	dvecnrm_inf_libstr(net, qp_res->res_b, 0, &res[1]);
-	dvecnrm_inf_libstr(nct, qp_res->res_d, 0, &res[2]);
-	dvecnrm_inf_libstr(nct, qp_res->res_m, 0, &res[3]);
+    blasfeo_dvecnrm_inf(nvt, qp_res->res_g, 0, &res[0]);
+	blasfeo_dvecnrm_inf(net, qp_res->res_b, 0, &res[1]);
+	blasfeo_dvecnrm_inf(nct, qp_res->res_d, 0, &res[2]);
+	blasfeo_dvecnrm_inf(nct, qp_res->res_m, 0, &res[3]);
 }
 
 

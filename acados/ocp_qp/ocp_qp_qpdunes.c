@@ -236,24 +236,24 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
 
 
 
-static void form_H(double *H, int nx, int nu, struct d_strmat *sRSQrq)
+static void form_H(double *H, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
     // make Q full
-    dtrtr_l_libstr(nx, sRSQrq, nu, nu, sRSQrq, nu, nu);
+    blasfeo_dtrtr_l(nx, sRSQrq, nu, nu, sRSQrq, nu, nu);
     // copy Q
-    d_cvt_strmat2mat(nx, nx, sRSQrq, nu, nu, &H[0], nx+nu);
+    blasfeo_unpack_dmat(nx, nx, sRSQrq, nu, nu, &H[0], nx+nu);
 
     // make R full
-    dtrtr_l_libstr(nu, sRSQrq, 0, 0, sRSQrq, 0, 0);
+    blasfeo_dtrtr_l(nu, sRSQrq, 0, 0, sRSQrq, 0, 0);
     // copy R
-    d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, &H[nx*(nx+nu) + nx], nx+nu);
+    blasfeo_unpack_dmat(nu, nu, sRSQrq, 0, 0, &H[nx*(nx+nu) + nx], nx+nu);
 
     // copy S
-    d_cvt_strmat2mat(nx, nu, sRSQrq, nu, 0, &H[nx*(nx+nu)], nx+nu);
-    d_cvt_tran_strmat2mat(nx, nu, sRSQrq, nu, 0, &H[nx], nx+nu);
+    blasfeo_unpack_dmat(nx, nu, sRSQrq, nu, 0, &H[nx*(nx+nu)], nx+nu);
+    blasfeo_unpack_tran_dmat(nx, nu, sRSQrq, nu, 0, &H[nx], nx+nu);
 
     // printf("acados RSQ (nx = %d, nu = %d)\n", nx, nu);
-    // d_print_strmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
+    // blasfeo_print_dmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
     // printf("qpDUNES Hessian:\n");
     // d_print_mat(nx+nu, nx+nu, H, nx+nu);
     // printf("********************************************\n\n");
@@ -261,23 +261,23 @@ static void form_H(double *H, int nx, int nu, struct d_strmat *sRSQrq)
 
 
 
-static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct d_strmat *sRSQrq)
+static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct blasfeo_dmat *sRSQrq)
 {
     // make Q full
-    dtrtr_l_libstr(nx, sRSQrq, nu, nu, sRSQrq, nu, nu);
+    blasfeo_dtrtr_l(nx, sRSQrq, nu, nu, sRSQrq, nu, nu);
     // copy Q
-    d_cvt_strmat2mat(nx, nx, sRSQrq, nu, nu, Q, nx);
+    blasfeo_unpack_dmat(nx, nx, sRSQrq, nu, nu, Q, nx);
 
     // make R full
-    dtrtr_l_libstr(nu, sRSQrq, 0, 0, sRSQrq, 0, 0);
+    blasfeo_dtrtr_l(nu, sRSQrq, 0, 0, sRSQrq, 0, 0);
     // copy R
-    d_cvt_strmat2mat(nu, nu, sRSQrq, 0, 0, R, nu);
+    blasfeo_unpack_dmat(nu, nu, sRSQrq, 0, 0, R, nu);
 
     // copy S
-    d_cvt_tran_strmat2mat(nx, nu, sRSQrq, nu, 0, S, nu);
+    blasfeo_unpack_tran_dmat(nx, nu, sRSQrq, nu, 0, S, nu);
 
     // printf("acados RSQ (nx = %d, nu = %d)\n", nx, nu);
-    // d_print_strmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
+    // blasfeo_print_dmat(sRSQrq->m-1, sRSQrq->n, sRSQrq, 0, 0);
     // printf("qpDUNES Q':\n");
     // d_print_mat(nx, nx, Q, nx);
     // printf("qpDUNES R':\n");
@@ -291,13 +291,13 @@ static void form_RSQ(double *R, double *S, double *Q, int nx, int nu, struct d_s
 
 
 
-static void form_g(double *g, int nx, int nu, struct d_strvec *srq)
+static void form_g(double *g, int nx, int nu, struct blasfeo_dvec *srq)
 {
-    d_cvt_strvec2vec(nx, srq, nu, &g[0]);
-    d_cvt_strvec2vec(nu, srq, 0, &g[nx]);
+    blasfeo_unpack_dvec(nx, srq, nu, &g[0]);
+    blasfeo_unpack_dvec(nu, srq, 0, &g[nx]);
 
     // printf("acados rq (nx = %d, nu = %d)\n", nx, nu);
-    // d_print_tran_strvec(srq->m, srq, 0);
+    // blasfeo_print_tran_dvec(srq->m, srq, 0);
     // printf("qpDUNES g':\n");
     // d_print_mat(1, nx+nu, g, 1);
     // printf("********************************************\n\n");
@@ -305,17 +305,17 @@ static void form_g(double *g, int nx, int nu, struct d_strvec *srq)
 
 
 
-static void form_dynamics(double *ABt, double *b, int nx, int nu, struct d_strmat *sBAbt, struct d_strvec *sb)
+static void form_dynamics(double *ABt, double *b, int nx, int nu, struct blasfeo_dmat *sBAbt, struct blasfeo_dvec *sb)
 {
     // copy A
-    d_cvt_strmat2mat(nx, nx, sBAbt, nu, 0, &ABt[0], nx+nu);
+    blasfeo_unpack_dmat(nx, nx, sBAbt, nu, 0, &ABt[0], nx+nu);
     // copy B
-    d_cvt_strmat2mat(nu, nx, sBAbt, 0, 0, &ABt[nx], nx+nu);
+    blasfeo_unpack_dmat(nu, nx, sBAbt, 0, 0, &ABt[nx], nx+nu);
     // copy b
-    d_cvt_strvec2vec(nx, sb, 0, b);
+    blasfeo_unpack_dvec(nx, sb, 0, b);
 
     // printf("acados [B'; A'] (nx = %d, nu = %d)\n", nx, nu);
-    // d_print_strmat(sBAbt->m-1, sBAbt->n, sBAbt, 0, 0);
+    // blasfeo_print_dmat(sBAbt->m-1, sBAbt->n, sBAbt, 0, 0);
     // printf("qpDUNES A:\n");
     // d_print_mat(nx, nx, &ABt[0], nx+nu);
     // printf("qpDUNES B:\n");
@@ -326,7 +326,7 @@ static void form_dynamics(double *ABt, double *b, int nx, int nu, struct d_strma
 
 
 static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int ng, int *idxb,
-    struct d_strvec *sd, double infty)
+    struct blasfeo_dvec *sd, double infty)
 {
     for (int ii = 0; ii < nx+nu; ii++)
     {
@@ -350,29 +350,29 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
 
 
 static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int nu, int nb, int ng,
-    struct d_strmat *sDCt, struct d_strvec *sd)
+    struct blasfeo_dmat *sDCt, struct blasfeo_dvec *sd)
 {
     int ii;
 
     // copy C
-    d_cvt_strmat2mat(nx, ng, sDCt, nu, 0, &Ct[0], nx+nu);
+    blasfeo_unpack_dmat(nx, ng, sDCt, nu, 0, &Ct[0], nx+nu);
     // copy D
-    d_cvt_strmat2mat(nu, ng, sDCt, 0, 0, &Ct[nx], nx+nu);
+    blasfeo_unpack_dmat(nu, ng, sDCt, 0, 0, &Ct[nx], nx+nu);
     // copy lc
-    d_cvt_strvec2vec(ng, sd, nb, lc);
+    blasfeo_unpack_dvec(ng, sd, nb, lc);
     // copy uc
-    d_cvt_strvec2vec(ng, sd, 2*nb+ng, uc);
+    blasfeo_unpack_dvec(ng, sd, 2*nb+ng, uc);
 
     for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 
     // printf("acados [D'; C'] (nx = %d, nu = %d)\n", nx, nu);
-    // d_print_strmat(sDCt->m, sDCt->n, sDCt, 0, 0);
+    // blasfeo_print_dmat(sDCt->m, sDCt->n, sDCt, 0, 0);
     // printf("qpDUNES C:\n");
     // d_print_mat(nx, ng, &Ct[0], nx+nu);
     // printf("qpDUNES D:\n");
     // d_print_mat(nu, ng, &Ct[nx], nx+nu);
     // printf("acados d (nx = %d, nu = %d)\n", nx, nu);
-    // d_print_tran_strvec(sd->m, sd, 0);
+    // blasfeo_print_tran_dvec(sd->m, sd, 0);
     // printf("qpDUNES lc':\n");
     // d_print_mat(1, ng, lc, 1);
     // printf("qpDUNES uc':\n");
@@ -607,8 +607,8 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
         double *dual_sol = &mem->qpData.intervals[kk]->y.data[0];
         for (int ii = 0; ii < 2*nv + 2*nc; ii++) dual_sol[ii] = (dual_sol[ii] >= 0.0) ? dual_sol[ii] : 0.0;
 
-        d_cvt_vec2strvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
-        d_cvt_vec2strvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
+        blasfeo_pack_dvec(nx[kk], &mem->qpData.intervals[kk]->z.data[0], &out->ux[kk], nu[kk]);
+        blasfeo_pack_dvec(nu[kk], &mem->qpData.intervals[kk]->z.data[nx[kk]], &out->ux[kk], 0);
 
         for (int ii = 0; ii < 2*nb[kk]+2*ng[kk]; ii++) out->lam[kk].pa[ii] = 0.0;
 
@@ -637,7 +637,7 @@ static void fill_in_qp_out(ocp_qp_in *in, ocp_qp_out *out, ocp_qp_qpdunes_memory
     }
     for (int kk = 0; kk < N; kk++)
     {
-        d_cvt_vec2strvec(nx[kk+1], &mem->qpData.lambda.data[kk*nx[kk+1]], &out->pi[kk], 0);
+        blasfeo_pack_dvec(nx[kk+1], &mem->qpData.lambda.data[kk*nx[kk+1]], &out->pi[kk], 0);
     }
 }
 

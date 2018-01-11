@@ -98,42 +98,42 @@ void assign_int_ptrs(int n, int ***v, char **ptr)
 
 
 
-void assign_strvec_ptrs(int n, struct d_strvec **sv, char **ptr)
+void assign_strvec_ptrs(int n, struct blasfeo_dvec **sv, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
-    *sv = (struct d_strvec *)acados_malloc(n, sizeof(struct d_strvec));
+    *sv = (struct blasfeo_dvec *)acados_malloc(n, sizeof(struct blasfeo_dvec));
 #else
-    *sv = (struct d_strvec *) *ptr;
-    *ptr += sizeof(struct d_strvec) * n;
+    *sv = (struct blasfeo_dvec *) *ptr;
+    *ptr += sizeof(struct blasfeo_dvec) * n;
 #endif
 }
 
 
 
-void assign_strmat_ptrs(int n, struct d_strmat **sm, char **ptr)
+void assign_strmat_ptrs(int n, struct blasfeo_dmat **sm, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
-    *sm = (struct d_strmat *)acados_malloc(n, sizeof(struct d_strmat));
+    *sm = (struct blasfeo_dmat *)acados_malloc(n, sizeof(struct blasfeo_dmat));
 #else
-    *sm = (struct d_strmat *) *ptr;
-    *ptr += sizeof(struct d_strmat) * n;
+    *sm = (struct blasfeo_dmat *) *ptr;
+    *ptr += sizeof(struct blasfeo_dmat) * n;
 #endif
 }
 
 
-void assign_strmat_ptrs_to_ptrs(int n, struct d_strmat ***sm, char **ptr)
+void assign_strmat_ptrs_to_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
-    *sm = (struct d_strmat **) acados_malloc(n, sizeof(struct d_strmat *));
+    *sm = (struct blasfeo_dmat **) acados_malloc(n, sizeof(struct blasfeo_dmat *));
 #else
-    *sm = (struct d_strmat **) *ptr;
-    *ptr += sizeof(struct d_strmat *) * n;
+    *sm = (struct blasfeo_dmat **) *ptr;
+    *ptr += sizeof(struct blasfeo_dmat *) * n;
 #endif
 }
 
@@ -167,22 +167,22 @@ void assign_double(int n, double **v, char **ptr)
 
 
 
-void assign_strvec(int n, struct d_strvec *sv, char **ptr)
+void assign_strvec(int n, struct blasfeo_dvec *sv, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "strvec not 8-byte aligned!");
 
 #ifdef _USE_VALGRIND_
-    d_allocate_strvec(n, sv);
+    blasfeo_allocate_dvec(n, sv);
     print_warning();
 #else
-    d_create_strvec(n, sv, *ptr);
-    *ptr += sv->memory_size;
+    blasfeo_create_dvec(n, sv, *ptr);
+    *ptr += sv->memsize;
 #endif
 }
 
 
 
-void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
+void assign_strmat(int m, int n, struct blasfeo_dmat *sA, char **ptr)
 {
 #ifdef LA_HIGH_PERFORMANCE
     assert((size_t)*ptr % 64 == 0 && "strmat not 64-byte aligned!");
@@ -191,11 +191,11 @@ void assign_strmat(int m, int n, struct d_strmat *sA, char **ptr)
 #endif
 
 #ifdef _USE_VALGRIND_
-    d_allocate_strmat(m, n, sA);
+    blasfeo_allocate_dmat(m, n, sA);
     print_warning();
 #else
-    d_create_strmat(m, n, sA, *ptr);
-    *ptr += sA->memory_size;
+    blasfeo_create_dmat(m, n, sA, *ptr);
+    *ptr += sA->memsize;
 #endif
 }
 
