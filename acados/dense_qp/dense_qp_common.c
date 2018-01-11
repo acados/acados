@@ -19,6 +19,7 @@
 
 // external
 #include <assert.h>
+#include <stddef.h>
 // hpipm
 #include "hpipm/include/hpipm_d_dense_qp.h"
 #include "hpipm/include/hpipm_d_dense_qp_sol.h"
