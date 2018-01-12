@@ -16,13 +16,17 @@ OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
 OBJS += acados/dense_qp/dense_qp_common.o
 OBJS += acados/dense_qp/dense_qp_hpipm.o
 OBJS += acados/dense_qp/dense_qp_qpoases.o
+ifeq ($(ACADOS_WITH_QORE), 1)
 OBJS += acados/dense_qp/dense_qp_qore.o
+endif
 # ocp qp
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
 OBJS += acados/ocp_qp/ocp_qp_hpmpc.o
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
+endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
@@ -115,6 +119,7 @@ run_example_chain:
 clean:
 	( cd acados; $(MAKE) clean )
 	( cd examples/c; $(MAKE) clean )
+	( cd interfaces/acados_c; $(MAKE) clean )
 
 deep_clean: clean
 	( cd external/blasfeo; $(MAKE) deep_clean )
@@ -123,6 +128,5 @@ deep_clean: clean
 	( cd external/qpoases; $(MAKE) clean )
 	( cd external/qore; $(MAKE) purge )
 	( cd external/qpdunes; $(MAKE) clean )
-	( cd interfaces/acados_c; $(MAKE) clean )
 	rm -rf include
 	rm -rf lib

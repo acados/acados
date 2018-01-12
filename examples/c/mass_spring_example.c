@@ -80,7 +80,9 @@ int main() {
         PARTIAL_CONDENSING_QPDUNES,
         #endif
         FULL_CONDENSING_HPIPM,
+        #ifdef ACADOS_WITH_QORE
         FULL_CONDENSING_QORE,
+        #endif
         FULL_CONDENSING_QPOASES,
     };
 
@@ -88,10 +90,12 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-    #if ACADOS_WITH_QPDUNES
     int ii_max = 6;
-    #else
-    int ii_max = 5;
+    #ifndef ACADOS_WITH_QPDUNES
+    ii_max--;
+    #endif
+    #ifndef ACADOS_WITH_QORE
+    ii_max--;
     #endif
 
     for (int ii = 0; ii < ii_max; ii++)
@@ -119,12 +123,14 @@ int main() {
                     ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
                     break;
                 case PARTIAL_CONDENSING_QPDUNES:
-                    printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
+                    printf("\nPartial condensing + qpDUNES ---> WRONG TIMINGS: SOLVER WARMSTARTED <--- (N2 = %d):\n\n", N2);
                     #ifdef ELIMINATE_X0
-                    assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!")
+                    assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
                     #endif
                     #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-                    ((ocp_qp_qpdunes_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->stageQpSolver = QPDUNES_WITH_QPOASES;
+                    ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
+                    ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
+                    qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
                     #endif
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
                     break;

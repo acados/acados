@@ -8,7 +8,9 @@ OBJS += ocp_qp_common.o
 OBJS += ocp_qp_common_frontend.o
 OBJS += ocp_qp_hpipm.o
 OBJS += ocp_qp_hpmpc.o
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += ocp_qp_qpdunes.o
+endif
 OBJS += ocp_qp_partial_condensing.o
 OBJS += ocp_qp_full_condensing.o
 OBJS += ocp_qp_sparse_solver.o

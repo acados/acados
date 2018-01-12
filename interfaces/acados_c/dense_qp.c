@@ -26,7 +26,9 @@
 //acados
 #include <acados/dense_qp/dense_qp_common.h>
 #include <acados/dense_qp/dense_qp_hpipm.h>
+#ifdef ACADOS_WITH_QORE
 #include <acados/dense_qp/dense_qp_qore.h>
+#endif
 #include <acados/dense_qp/dense_qp_qpoases.h>
 
 
@@ -66,7 +68,7 @@ dense_qp_dims *create_dense_qp_dims()
 
     dense_qp_dims *dims = assign_dense_qp_dims(ptr);
 
-    return dims; 
+    return dims;
 }
 
 
@@ -232,6 +234,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn
             fcn_ptrs->calculate_workspace_size = &dense_qp_hpipm_calculate_workspace_size;
             break;
         case DENSE_QP_QORE:
+            #ifdef ACADOS_WITH_QORE
             fcn_ptrs->fun = &dense_qp_qore;
             fcn_ptrs->calculate_args_size = &dense_qp_qore_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_qore_assign_args;
@@ -239,6 +242,9 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn
             fcn_ptrs->calculate_memory_size = &dense_qp_qore_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_qore_assign_memory;
             fcn_ptrs->calculate_workspace_size = &dense_qp_qore_calculate_workspace_size;
+            #else
+            return_value = ACADOS_FAILURE;
+            #endif
             break;
         case DENSE_QP_QPOASES:
             fcn_ptrs->fun = &dense_qp_qpoases;
