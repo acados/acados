@@ -221,14 +221,19 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
 #elif defined(SWIGPYTHON)
     PyObject *matrix = NULL;
     if (nb_cols == 1) {
+        T *data_copy = (T *) calloc(nb_rows, sizeof(T));
+        std::copy_n(data, nb_rows, data_copy);
         npy_intp npy_dims[1] = {nb_rows};
-        matrix = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(1, npy_dims, data_copy);
     } else {
+        T *data_copy = (T *) calloc(nb_rows * nb_cols, sizeof(T));
+        std::copy_n(data, nb_rows * nb_cols, data_copy);
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
-        matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(2, npy_dims, data_copy);
     }
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
+    
     return matrix;
 #endif
 }

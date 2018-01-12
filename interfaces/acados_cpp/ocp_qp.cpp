@@ -31,6 +31,30 @@ std::ostream& operator<<(std::ostream& oss, const OcpQp& qp) {
     return oss;
 }
 
+std::vector<double> OcpQp::getA(int i) {
+    int num_rows = dimensions->nx[i+1], num_cols = dimensions->nx[i];
+    double A_col_major[num_rows * num_cols];
+    blasfeo_unpack_tran_dmat(num_rows, num_cols, &(qp->BAbt[i]), dimensions->nu[i], 0,
+                             A_col_major, num_rows);
+    std::vector<double> A_raveled(num_rows * num_cols);
+    std::copy_n(A_col_major, num_rows * num_cols, A_raveled.begin());
+    return A_raveled;
+}
+
+int OcpQp::numRowsA(int i) {
+    if (i < 0 || i >= N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "[.");
+    return dimensions->nx[i+1];
+}
+
+int OcpQp::numColsA(int i) {
+    if (i < 0 || i >= N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "[.");
+    return dimensions->nx[i];
+}
+
 void OcpQp::setQ(int i, double *Q, int num_rows, int num_cols) {
     if (i < 0 || i > N)
         throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +

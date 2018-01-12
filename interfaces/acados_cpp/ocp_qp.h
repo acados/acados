@@ -12,6 +12,10 @@ class OcpQp {
 
         const int N;
 
+        std::vector<double> getA(int i);
+        int numRowsA(int i);
+        int numColsA(int i);
+
         void setQ(int i, double *Q, int num_rows, int num_cols);
         void setQ(int i, double *Q);
         

@@ -15,7 +15,12 @@ void OcpQp_A_set(OcpQp *qp, LangObject *input) {
 }
 
 LangObject *OcpQp_A_get(OcpQp *qp) {
-    return swig::from(trial);
+    std::vector<LangObject *> list_of_matrices;
+    for (int i = 0; i < qp->N; i++) {
+        int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
+        list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
+    }
+    return swig::from(list_of_matrices);
 }
 
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
