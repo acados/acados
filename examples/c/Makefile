@@ -2,13 +2,18 @@
 
 include ../../Makefile.rule
 
-ifeq ($(USE_QPDUNES), 1)
+LIBS = -lacados_c -lacore -lhpipm -lhpmpc -lqpOASES_e
+
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
 CCC = $(CXX)
-LIBS = -lacados_c -lacore -lhpipm -lhpmpc -lqore_dense -lblasfeo -lqpOASES_e  -lqpdunes -lqpOASES -lm -lblas
+LIBS+= -lqpdunes -lqpOASES
 else
 CCC = $(CC)
-LIBS = -lacados_c -lacore -lhpipm -lhpmpc -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
 endif
+ifeq ($(ACADOS_WITH_QORE), 1)
+LIBS+=-lqore_dense
+endif
+LIBS+=-lblasfeo -lm -lblas
 
 examples: mass_spring_example sim_erk_crane mass_spring_pcond_hpipm_split mass_spring_fcond_hpipm_split nonlinear_chain_ocp_nlp
 

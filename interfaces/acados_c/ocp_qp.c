@@ -27,7 +27,9 @@
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
 #include <acados/dense_qp/dense_qp_hpipm.h>
+#ifdef ACADOS_WITH_QORE
 #include <acados/dense_qp/dense_qp_qore.h>
+#endif
 #include <acados/dense_qp/dense_qp_qpoases.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
 #include <acados/ocp_qp/ocp_qp_hpmpc.h>
@@ -337,6 +339,7 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qpoases;
             break;
         case FULL_CONDENSING_QORE:
+            #ifdef ACADOS_WITH_QORE
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
                 &dense_qp_qore_calculate_args_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
@@ -350,6 +353,9 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
                 &dense_qp_qore_calculate_workspace_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qore;
+            #else
+            return_value = ACADOS_FAILURE;
+            #endif
         default:
             return_value = ACADOS_FAILURE;
     }
