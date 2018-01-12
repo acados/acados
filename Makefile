@@ -47,7 +47,15 @@ OBJS += acados/utils/mem.o
 
 all: acados_c_static
 
-static_library: blasfeo_static hpipm_static qpoases_static qore_static hpmpc_static qpdunes_static
+DEPS = blasfeo_static hpipm_static qpoases_static hpmpc_static
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
+DEPS += qpdunes_static
+endif
+ifeq ($(ACADOS_WITH_QORE), 1)
+DEPS += qore_static
+endif
+
+static_library: $(DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -121,6 +129,7 @@ clean:
 	( cd examples/c; $(MAKE) clean )
 	( cd interfaces/acados_c; $(MAKE) clean )
 
+# TODO(Dimitris): DO NOT CLEAN QORE IF DIR DOES NOT EXIST
 deep_clean: clean
 	( cd external/blasfeo; $(MAKE) deep_clean )
 	( cd external/hpipm; $(MAKE) clean )
