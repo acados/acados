@@ -30,14 +30,10 @@
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
 #include <acados/ocp_qp/ocp_qp_hpmpc.h>
-#ifdef ACADOS_WITH_QPDUNES
 #include <acados/ocp_qp/ocp_qp_qpdunes.h>
-#endif
 #include <acados/dense_qp/dense_qp_hpipm.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
-#ifdef ACADOS_WITH_QORE
 #include <acados/dense_qp/dense_qp_qore.h>
-#endif
 
 #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
@@ -126,28 +122,26 @@ int main() {
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
                     ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
                     break;
-                #if ACADOS_WITH_QPDUNES
                 case PARTIAL_CONDENSING_QPDUNES:
                     printf("\nPartial condensing + qpDUNES ---> WRONG TIMINGS: SOLVER WARMSTARTED <--- (N2 = %d):\n\n", N2);
                     #ifdef ELIMINATE_X0
-                    assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!")
+                    assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
                     #endif
                     #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-                    ((ocp_qp_qpdunes_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->stageQpSolver = QPDUNES_WITH_QPOASES;
+                    ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
+                    ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
+                    qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
                     #endif
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
                     break;
-                #endif
                 case FULL_CONDENSING_HPIPM:
                     printf("\nFull condensing + HPIPM:\n\n");
                     // default options
                     break;
-                #if ACADOS_WITH_QORE
                 case FULL_CONDENSING_QORE:
                     printf("\nFull condensing + QORE:\n\n");
                     // default options
                     break;
-                #endif
                 case FULL_CONDENSING_QPOASES:
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
