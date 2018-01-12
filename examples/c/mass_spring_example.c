@@ -160,7 +160,7 @@ int main() {
             // run QP solver NREP times and record min timings
             for (int rep = 0; rep < NREP; rep++)
             {
-                acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+                acados_return += ocp_qp_solve(qp_solver, qp_in, qp_out);
 
                 if (rep == 0)
                 {

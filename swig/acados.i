@@ -19,6 +19,11 @@
 
 %module acados
 
+%include "std_vector.i"
+namespace std {
+    %template(vectori) vector<int>;
+};
+
 %rename($ignore, %$isclass) ""; // Only ignore all classes
 
 #if defined(SWIGMATLAB)
@@ -62,6 +67,8 @@ char compiler[16] = "cc";
 /        OCP 
 /  ----------------------*/
 %{
+
+#include <iostream>
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
@@ -150,6 +157,85 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %rename("%s") OcpQp;
 %include "acados_cpp/ocp_qp.h"
+
+%extend OcpQp {
+
+    void setQ(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setQ(i, as_dpointer(input));
+    }
+
+    void setS(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setS(i, as_dpointer(input));
+    }
+
+    void setR(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setR(i, as_dpointer(input));
+    }
+
+    void setq(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setq(i, as_dpointer(input));
+    }
+
+    void setr(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setr(i, as_dpointer(input));
+    }
+
+    void setA(LangObject *input) {
+        for (int i = 0; i < $self->N; i++)
+            $self->setA(i, as_dpointer(input));
+    }
+
+    void setB(LangObject *input) {
+        for (int i = 0; i < $self->N; i++)
+            $self->setB(i, as_dpointer(input));
+    }
+
+    void setb(LangObject *input) {
+        for (int i = 0; i < $self->N; i++)
+            $self->setb(i, as_dpointer(input));
+    }
+
+    void setlb(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setlb(i, as_dpointer(input));
+    }
+
+    void setub(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setub(i, as_dpointer(input));
+    }
+
+    void setC(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setC(i, as_dpointer(input));
+    }
+
+    void setD(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setD(i, as_dpointer(input));
+    }
+
+    void setlg(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setlg(i, as_dpointer(input));
+    }
+
+    void setug(LangObject *input) {
+        for (int i = 0; i <= $self->N; i++)
+            $self->setug(i, as_dpointer(input));
+    }
+
+    char *__str__() {
+        static char tmp[1];
+        std::cout << *($self);
+        return tmp;
+    }
+}
 
 %rename("%s") ocp_qp_solver;
 %include "acados_c/ocp_qp.h"

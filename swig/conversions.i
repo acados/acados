@@ -183,6 +183,17 @@ bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_colu
 #endif
 }
 
+double *as_dpointer(LangObject *input) {
+    if (!is_matrix(input))
+        throw std::invalid_argument("Input is not of a valid matrix type.");
+#ifdef SWIGPYTHON
+    PyObject *matrix = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_ARRAY_FARRAY_RO);
+    if (matrix == NULL)
+        throw std::runtime_error("Something went wrong while converting matrix");
+    return (double *) PyArray_DATA((PyArrayObject *) matrix);
+#endif
+}
+
 template<typename T>
 LangObject *new_matrix(const int_t *dims, const T *data) {
     int_t nb_rows = dims[0];
