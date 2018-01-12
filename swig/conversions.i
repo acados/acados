@@ -158,32 +158,45 @@ bool is_matrix(const LangObject *input) {
 #endif
 }
 
-bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_columns) {
+int numRows(const LangObject *input) {
     if (!is_matrix(input))
-        return false;
+        throw std::invalid_argument("Input is not a valid matrix.");
 #if defined(SWIGMATLAB)
     const mwSize *dims = mxGetDimensions(input);
-    int_t input_rows = dims[0], input_cols = dims[1];
-    if (input_rows != nb_rows || input_cols != nb_columns)
-        return false;
-    return true;
+    return dims[0];
 #elif defined(SWIGPYTHON)
-    int nb_dims = PyArray_NDIM((PyArrayObject *) input);
     npy_intp *dims = PyArray_DIMS((PyArrayObject *) input);
-    if (dims[0] != nb_rows)
-        return false;
-    if (nb_dims == 1) {
-        if (nb_columns != 1)
-            return false;
-    } else {
-        if (dims[1] != nb_columns)
-            return false;
-    }
-    return true;
+    return dims[0];
 #endif
 }
 
-double *as_dpointer(LangObject *input) {
+int numColumns(const LangObject *input) {
+    if (!is_matrix(input))
+        throw std::invalid_argument("Input is not a valid matrix.");
+#if defined(SWIGMATLAB)
+    const mwSize *dims = mxGetDimensions(input);
+    return dims[1];
+#elif defined(SWIGPYTHON)
+    int nb_dims = PyArray_NDIM((PyArrayObject *) input);
+    npy_intp *dims = PyArray_DIMS((PyArrayObject *) input);
+    if (nb_dims == 1) {
+        // column vector
+        return 1;
+    } else {
+        return dims[1];
+    }
+#endif
+}
+
+bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_columns) {
+    if (!is_matrix(input))
+        return false;
+    if (nb_rows != numRows(input) || nb_columns != numColumns(input))
+        return false;
+    return true;
+}
+
+double *asDoublePointer(LangObject *input) {
     if (!is_matrix(input))
         throw std::invalid_argument("Input is not of a valid matrix type.");
 #ifdef SWIGPYTHON
