@@ -63,21 +63,6 @@ void ocp_qp_copy_dims(ocp_qp_dims *dest, ocp_qp_dims *src)
 
 
 
-void ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *dest, void *src)
-{
-    //TODO(nielsvd): remove the hack below. It breaks when the args used
-    //                         to construct the solver gets out of scope.
-    //               Should module_fcn_ptrs provide a copy args routine?
-
-#warning "Copy args is not properly implemented!"
-
-    int bytes = ocp_qp_calculate_args_size(plan, dims);
-
-    memcpy(dest, src, bytes);
-}
-
-
-
 ocp_qp_dims *create_ocp_qp_dims(int N)
 {
     int bytes = ocp_qp_dims_calculate_size(N);
@@ -174,6 +159,23 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 
 
 
+void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source)
+{
+    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+
+    module_fcn_ptrs submodule_fcn_ptrs;
+
+    fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+
+    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+
+    void *args = fcn_ptrs.copy_args(dims, fcn_ptrs.qp_solver, raw_memory, source);
+
+    return args;
+}
+
+
+
 int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
@@ -222,9 +224,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
     ocp_qp_copy_dims(solver->dims, dims);
 
-    solver->args = ocp_qp_assign_args(plan, dims, c_ptr);
+    solver->args = ocp_qp_copy_args(plan, dims, c_ptr, args_);
     c_ptr += ocp_qp_calculate_args_size(plan, dims);
-    ocp_qp_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

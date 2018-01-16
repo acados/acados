@@ -48,6 +48,8 @@ int sim_erk_opts_calculate_size(sim_dims *dims);
 
 void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory);
 
+void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source);
+
 void sim_erk_initialize_default_args(sim_dims *dims, void *opts_);
 
 int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_);

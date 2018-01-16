@@ -98,6 +98,14 @@ void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
 }
 
 
+
+void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source)
+{
+
+}
+
+
+
 void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_) {
     sim_rk_opts *opts = (sim_rk_opts*) opts_;
     enum Newton_type_collocation type = exact;

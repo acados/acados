@@ -73,6 +73,8 @@ int dense_qp_qore_calculate_args_size(dense_qp_dims *dims);
 //
 void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *raw_memory);
 //
+void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source);
+//
 void dense_qp_qore_initialize_default_args(void *args_);
 //
 int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_);

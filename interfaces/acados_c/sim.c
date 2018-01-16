@@ -41,21 +41,6 @@ void sim_copy_dims(sim_dims *dest, sim_dims *src)
 
 
 
-void sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *dest, void *src)
-{
-    //TODO(nielsvd): remove the hack below. It breaks when the args used
-    //                         to construct the solver gets out of scope.
-    //               Should module_fcn_ptrs provide a copy args routine?
-
-#warning "Copy args is not properly implemented!"
-
-    int bytes = sim_calculate_args_size(plan, dims);
-
-    memcpy(dest, src, bytes);
-}
-
-
-
 sim_dims *create_sim_dims()
 {
     int bytes = sim_dims_calculate_size();
@@ -136,6 +121,19 @@ void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
 
 
 
+void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
+{
+    sim_solver_fcn_ptrs fcn_ptrs;
+
+    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+
+    void *args = fcn_ptrs.copy_args(dims, raw_memory, source);
+
+    return args;
+}
+
+
+
 int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
@@ -176,9 +174,8 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
     c_ptr += sim_dims_calculate_size();
     sim_copy_dims(solver->dims, dims);
 
-    solver->args = solver->fcn_ptrs->assign_args(dims, c_ptr);
+    solver->args = solver->fcn_ptrs->copy_args(dims, c_ptr, args_);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
-    sim_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

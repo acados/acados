@@ -73,6 +73,14 @@ void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 }
 
 
+
+void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source)
+{
+
+}
+
+
+
 void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;

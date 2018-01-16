@@ -60,6 +60,17 @@ void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *raw_memory)
 
 
 
+void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source)
+{
+    dense_qp_qore_args *args;
+
+    args = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, raw_memory);
+
+    return (void *)args;
+}
+
+
+
 void dense_qp_qore_initialize_default_args(void *args_)
 {
     dense_qp_qore_args *args = (dense_qp_qore_args *)args_;

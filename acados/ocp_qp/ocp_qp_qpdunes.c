@@ -138,6 +138,13 @@ void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory)
 
 
 
+void *ocp_qp_qpdunes_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source)
+{
+    
+}
+
+
+
 void ocp_qp_qpdunes_initialize_default_args(void *args_)
 {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;

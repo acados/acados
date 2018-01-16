@@ -74,6 +74,11 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *r
     return (void*)args;
 }
 
+void *ocp_qp_sparse_solver_copy_args(ocp_qp_dims *dims, void *solver_, void *raw_memory, void *source)
+{
+    
+}
+
 
 
 void ocp_qp_sparse_solver_initialize_default_args(void *args_)

@@ -45,21 +45,6 @@ void dense_qp_copy_dims(dense_qp_dims *dest, dense_qp_dims *src)
 
 
 
-void dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *dest, void *src)
-{
-    //TODO(nielsvd): remove the hack below. It breaks when the args used
-    //                         to construct the solver gets out of scope.
-    //               Should module_fcn_ptrs provide a copy args routine?
-
-#warning "Copy args is not properly implemented!"
-
-    int bytes = dense_qp_calculate_args_size(plan, dims);
-
-    memcpy(dest, src, bytes);
-}
-
-
-
 dense_qp_dims *create_dense_qp_dims()
 {
     int bytes = dense_qp_dims_calculate_size();
@@ -140,6 +125,19 @@ void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims)
 
 
 
+void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory, void *source)
+{
+    dense_qp_solver_fcn_ptrs fcn_ptrs;
+
+    set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
+
+    void *args = fcn_ptrs.assign_args(dims, raw_memory, source);
+
+    return args;
+}
+
+
+
 int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_)
 {
     dense_qp_solver_fcn_ptrs fcn_ptrs;
@@ -180,9 +178,8 @@ dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims
     c_ptr += dense_qp_dims_calculate_size();
     dense_qp_copy_dims(solver->dims, dims);
 
-    solver->args = solver->fcn_ptrs->assign_args(dims, c_ptr);
+    solver->args = solver->fcn_ptrs->copy_args(dims, c_ptr, source);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
-    dense_qp_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

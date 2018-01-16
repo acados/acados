@@ -64,6 +64,13 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dim
 
 
 
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_dims *dims, void *mem, ocp_qp_full_condensing_args *source)
+{
+
+}
+
+
+
 int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args)
 {
     int size = 0;

@@ -84,6 +84,13 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_
 
 
 
+void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *solver_, void *raw_memory, void *source)
+{
+    
+}
+
+
+
 void ocp_qp_full_condensing_solver_initialize_default_args(void *args_)
 {
     ocp_qp_full_condensing_solver_args *args = (ocp_qp_full_condensing_solver_args *)args_;

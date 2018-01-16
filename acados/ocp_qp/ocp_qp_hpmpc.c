@@ -115,6 +115,13 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
 
 
 
+void *ocp_qp_hpmpc_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source)
+{
+    
+}
+
+
+
 void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
