@@ -32,7 +32,9 @@
 #endif
 #include <acados/dense_qp/dense_qp_qpoases.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
+#ifdef ACADOS_WITH_HPMPC
 #include <acados/ocp_qp/ocp_qp_hpmpc.h>
+#endif
 #ifdef ACADOS_WITH_QPDUNES
 #include <acados/ocp_qp/ocp_qp_qpdunes.h>
 #endif
@@ -123,10 +125,18 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 
     fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
 
-    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+    int status = set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
+    int size = -1;
 
-    int size = fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
-
+    if (status == ACADOS_SUCCESS)
+    {
+        size = fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
+    }
+    else
+    {
+        printf("\n\nSpecified solver interface not compiled with acados!\n\n");
+        exit(1);
+    }
     return size;
 }
 
@@ -272,6 +282,7 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpipm;
             break;
         case PARTIAL_CONDENSING_HPMPC:
+            #ifdef ACADOS_WITH_HPMPC
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
                 &ocp_qp_hpmpc_calculate_args_size;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
@@ -285,6 +296,9 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
                 &ocp_qp_hpmpc_calculate_workspace_size;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpmpc;
+            #else
+            return_value = ACADOS_FAILURE;
+            #endif
             break;
         case PARTIAL_CONDENSING_OOQP:
             return_value = ACADOS_FAILURE;
@@ -356,6 +370,7 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             #else
             return_value = ACADOS_FAILURE;
             #endif
+            break;
         default:
             return_value = ACADOS_FAILURE;
     }
@@ -366,8 +381,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
 
 int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs)
 {
-    int return_value = ACADOS_SUCCESS;
-
     ocp_qp_solver_t solver_name = plan->qp_solver;
 
     if (solver_name < FULL_CONDENSING_HPIPM)
@@ -405,7 +418,7 @@ int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solv
             &ocp_qp_full_condensing_solver;
     }
 
-    set_qp_solver_fcn_ptrs(plan, (module_fcn_ptrs *) fcn_ptrs->qp_solver);
+    int return_value = set_qp_solver_fcn_ptrs(plan, (module_fcn_ptrs *) fcn_ptrs->qp_solver);
 
     return return_value;
 }

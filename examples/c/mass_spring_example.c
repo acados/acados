@@ -75,7 +75,9 @@ int main() {
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
         PARTIAL_CONDENSING_HPIPM,
+        #if ACADOS_WITH_HPMPC
         PARTIAL_CONDENSING_HPMPC,
+        #endif
         #if ACADOS_WITH_QPDUNES
         PARTIAL_CONDENSING_QPDUNES,
         #endif
@@ -91,6 +93,9 @@ int main() {
     int N2_values[3] = {15, 5, 3};
 
     int ii_max = 6;
+    #ifndef ACADOS_WITH_HPMPC
+    ii_max--;
+    #endif
     #ifndef ACADOS_WITH_QPDUNES
     ii_max--;
     #endif

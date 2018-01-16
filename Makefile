@@ -23,7 +23,9 @@ endif
 OBJS += acados/ocp_qp/ocp_qp_common.o
 OBJS += acados/ocp_qp/ocp_qp_common_frontend.o
 OBJS += acados/ocp_qp/ocp_qp_hpipm.o
+ifeq ($(ACADOS_WITH_HPMPC), 1)
 OBJS += acados/ocp_qp/ocp_qp_hpmpc.o
+endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 endif
@@ -47,7 +49,10 @@ OBJS += acados/utils/mem.o
 
 all: acados_c_static
 
-DEPS = blasfeo_static hpipm_static qpoases_static hpmpc_static
+DEPS = blasfeo_static hpipm_static qpoases_static
+ifeq ($(ACADOS_WITH_HPMPC), 1)
+DEPS += hpmpc_static
+endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 DEPS += qpdunes_static
 endif

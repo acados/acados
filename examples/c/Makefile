@@ -2,8 +2,11 @@
 
 include ../../Makefile.rule
 
-LIBS = -lacados_c -lacore -lhpipm -lhpmpc -lqpOASES_e
+LIBS = -lacados_c -lacore -lhpipm -lqpOASES_e
 
+ifeq ($(ACADOS_WITH_HPMPC), 1)
+LIBS+=-lhpmpc
+endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 CCC = $(CXX)
 LIBS+= -lqpdunes -lqpOASES
