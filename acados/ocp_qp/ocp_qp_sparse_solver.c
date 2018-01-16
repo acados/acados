@@ -57,7 +57,7 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *r
     args->solver = (ocp_qp_solver_fcn_ptrs*) c_ptr;
     c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
 
-    copy_module_pointers_to_args(args->solver, solver);
+    *args->solver = *solver;
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 

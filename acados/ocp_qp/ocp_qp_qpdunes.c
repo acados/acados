@@ -151,6 +151,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     args->isLinearMPC = 0;
     args->options.printLevel = 0;
     args->options.stationarityTolerance = 1e-12;
+    args->warmstart = 1;
 
     if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
     } else if (opts == QPDUNES_NONLINEAR_MPC) {
@@ -446,6 +447,18 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
     int nu = in->dim->nu[0];
     int *nb = in->dim->nb;
     int *ng = in->dim->ng;
+
+    // coldstart
+    if (args->warmstart == 0)
+    {
+        for (int ii = 0; ii < N; ii++)
+        {
+            for (int jj = 0; jj < nx; jj++)
+            {
+                mem->qpData.lambda.data[ii*nx+jj] = 0.0;
+            }
+        }
+    }
 
     if (mem->firstRun == 1)
     {

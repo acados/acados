@@ -7,7 +7,9 @@ OBJS =
 OBJS += ocp_qp_common.o
 OBJS += ocp_qp_common_frontend.o
 OBJS += ocp_qp_hpipm.o
+ifeq ($(ACADOS_WITH_HPMPC), 1)
 OBJS += ocp_qp_hpmpc.o
+endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += ocp_qp_qpdunes.o
 endif

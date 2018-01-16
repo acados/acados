@@ -62,7 +62,7 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_
     args->solver = (dense_qp_solver_fcn_ptrs*) c_ptr;
     c_ptr += sizeof(dense_qp_solver_fcn_ptrs);
 
-    copy_module_pointers_to_args(args->solver, solver);
+    *args->solver = *solver;
 
     dense_qp_dims ddims;
     compute_dense_qp_dims(dims, &ddims);

@@ -75,7 +75,9 @@ int main() {
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
         PARTIAL_CONDENSING_HPIPM,
+        #if ACADOS_WITH_HPMPC
         PARTIAL_CONDENSING_HPMPC,
+        #endif
         #if ACADOS_WITH_QPDUNES
         PARTIAL_CONDENSING_QPDUNES,
         #endif
@@ -91,6 +93,9 @@ int main() {
     int N2_values[3] = {15, 5, 3};
 
     int ii_max = 6;
+    #ifndef ACADOS_WITH_HPMPC
+    ii_max--;
+    #endif
     #ifndef ACADOS_WITH_QPDUNES
     ii_max--;
     #endif
@@ -123,15 +128,16 @@ int main() {
                     ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
                     break;
                 case PARTIAL_CONDENSING_QPDUNES:
-                    printf("\nPartial condensing + qpDUNES ---> WRONG TIMINGS: SOLVER WARMSTARTED <--- (N2 = %d):\n\n", N2);
+                    printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
                     #ifdef ELIMINATE_X0
                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
                     #endif
-                    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
                     ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
                     ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
+                    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
                     qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
                     #endif
+                    qpdunes_args->warmstart = 0;
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
                     break;
                 case FULL_CONDENSING_HPIPM:
@@ -152,7 +158,7 @@ int main() {
 
             ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
 
-            int acados_return;
+            int acados_return = 0;
 
             ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
             ocp_qp_info min_info;
@@ -172,10 +178,8 @@ int main() {
                 }
                 else
                 {
-                    // TODO(dimitris): cold start qpDUNES to get rid of this
-                    #ifndef ACADOS_WITH_QPDUNES
                     assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
-                    #endif
+
                     if (info->total_time < min_info.total_time)
                         min_info.total_time = info->total_time;
                     if (info->condensing_time < min_info.condensing_time)
