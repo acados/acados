@@ -152,7 +152,7 @@ int main() {
 
             ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
 
-            int acados_return;
+            int acados_return = 0;
 
             ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
             ocp_qp_info min_info;

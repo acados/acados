@@ -45,8 +45,6 @@ typedef struct {
 } module_solver;
 
 
-void copy_module_pointers_to_args(void *solver_in_args_, void *solver_);
-
 
 // make int counter of memory multiple of a number (typically 8 or 64)
 void make_int_multiple_of(int num, int *size);

@@ -370,30 +370,39 @@ int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solv
 
     ocp_qp_solver_t solver_name = plan->qp_solver;
 
-    if (solver_name < FULL_CONDENSING_HPIPM) {
+    if (solver_name < FULL_CONDENSING_HPIPM)
+    {
         fcn_ptrs->calculate_args_size =
             &ocp_qp_sparse_solver_calculate_args_size;
-        fcn_ptrs->assign_args = &ocp_qp_sparse_solver_assign_args;
+        fcn_ptrs->assign_args =
+            &ocp_qp_sparse_solver_assign_args;
         fcn_ptrs->initialize_default_args =
             &ocp_qp_sparse_solver_initialize_default_args;
         fcn_ptrs->calculate_memory_size =
             &ocp_qp_sparse_solver_calculate_memory_size;
-        fcn_ptrs->assign_memory = &ocp_qp_sparse_solver_assign_memory;
+        fcn_ptrs->assign_memory =
+            &ocp_qp_sparse_solver_assign_memory;
         fcn_ptrs->calculate_workspace_size =
             &ocp_qp_sparse_solver_calculate_workspace_size;
-        fcn_ptrs->fun = &ocp_qp_sparse_solver;
-    } else {
+        fcn_ptrs->fun =
+            &ocp_qp_sparse_solver;
+    }
+    else
+    {
         fcn_ptrs->calculate_args_size =
             &ocp_qp_full_condensing_solver_calculate_args_size;
-        fcn_ptrs->assign_args = &ocp_qp_full_condensing_solver_assign_args;
+        fcn_ptrs->assign_args =
+            &ocp_qp_full_condensing_solver_assign_args;
         fcn_ptrs->initialize_default_args =
             &ocp_qp_full_condensing_solver_initialize_default_args;
         fcn_ptrs->calculate_memory_size =
             &ocp_qp_full_condensing_solver_calculate_memory_size;
-        fcn_ptrs->assign_memory = &ocp_qp_full_condensing_solver_assign_memory;
+        fcn_ptrs->assign_memory =
+            &ocp_qp_full_condensing_solver_assign_memory;
         fcn_ptrs->calculate_workspace_size =
             &ocp_qp_full_condensing_solver_calculate_workspace_size;
-        fcn_ptrs->fun = &ocp_qp_full_condensing_solver;
+        fcn_ptrs->fun =
+            &ocp_qp_full_condensing_solver;
     }
 
     set_qp_solver_fcn_ptrs(plan, (module_fcn_ptrs *) fcn_ptrs->qp_solver);
