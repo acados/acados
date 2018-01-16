@@ -7,7 +7,8 @@ class OcpQp {
         OcpQp(int N,
               std::vector<int> stateDimensions,
               std::vector<int> controlDimensions,
-              std::vector<int> boundDimensions,
+              std::vector<int> stateBoundDimensions,
+              std::vector<int> controlBoundDimensions,
               std::vector<int> constraintDimensions);
 
         const int N;
@@ -15,6 +16,45 @@ class OcpQp {
         std::vector<double> getA(int i);
         int numRowsA(int i);
         int numColsA(int i);
+
+        int numRowsB(int i);
+        int numColsB(int i);
+
+        int numRowsb(int i);
+        int numColsb(int i);
+
+        int numRowsQ(int i);
+        int numColsQ(int i);
+
+        int numRowsR(int i);
+        int numColsR(int i);
+
+        int numRowsS(int i);
+        int numColsS(int i);
+
+        int numRowsq(int i);
+        int numColsq(int i);
+
+        int numRowsr(int i);
+        int numColsr(int i);
+
+        int numRowslb(int i);
+        int numColslb(int i);
+
+        int numRowsub(int i);
+        int numColsub(int i);
+
+        int numRowsC(int i);
+        int numColsC(int i);
+
+        int numRowsD(int i);
+        int numColsD(int i);
+
+        int numRowslg(int i);
+        int numColslg(int i);
+
+        int numRowsug(int i);
+        int numColsug(int i);
 
         void setQ(int i, double *Q, int num_rows, int num_cols);
         void setQ(int i, double *Q);
@@ -61,7 +101,6 @@ class OcpQp {
 
         friend std::ostream& operator<<(std::ostream& oss, const OcpQp& qp);
 
-    private:
         void copyDimensions(std::vector<int> dimensions, int *dimension_ptr);
 
         ocp_qp_dims *dimensions;
