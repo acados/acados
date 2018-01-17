@@ -76,7 +76,7 @@ void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 
 void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)
 {
-    sim_rk_opts *source = (sim_rk_opts *)source;
+    sim_rk_opts *source = (sim_rk_opts *)source_;
     sim_rk_opts *dest;
 
     dest = sim_erk_assign_opts(dims, raw_memory);

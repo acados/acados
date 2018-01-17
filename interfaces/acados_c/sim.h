@@ -62,7 +62,7 @@ void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory);
 //
 void *sim_create_args(sim_solver_plan *plan, sim_dims *dims);
 //
-void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source_);
+void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //

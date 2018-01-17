@@ -50,7 +50,7 @@ int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims);
 //
 ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory);
 //
-ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_full_condensing_args *source);
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_full_condensing_args *source_);
 //
 int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);
 //

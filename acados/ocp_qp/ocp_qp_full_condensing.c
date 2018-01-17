@@ -64,7 +64,7 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dim
 
 
 
-ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_full_condensing_args *source)
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_full_condensing_args *source_)
 {
     ocp_qp_full_condensing_args *dest;
 

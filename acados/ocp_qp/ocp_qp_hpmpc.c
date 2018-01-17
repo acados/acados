@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -127,7 +128,7 @@ void *ocp_qp_hpmpc_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
     dest->mu0 = source->mu0;
     dest->warm_start = source->warm_start;
     dest->N2 = source->N2;
-    dest->out_iter = source->outer_iter;
+    dest->out_iter = source->out_iter;
     dest->sigma_mu = source->sigma_mu;
     dest->N = source->N;
     dest->M = source->M;
