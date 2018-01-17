@@ -63,7 +63,7 @@ int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *s
 //
 void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory);
 //
-void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *solver_, void *raw_memory, void *source);
+void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_);
 //
 void ocp_qp_full_condensing_solver_initialize_default_args(void *args_);
 //

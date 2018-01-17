@@ -121,7 +121,7 @@ void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
 
 
 
-void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
+void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source_)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
 

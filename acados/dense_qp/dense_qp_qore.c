@@ -60,13 +60,20 @@ void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *raw_memory)
 
 
 
-void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source)
+void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
 {
-    dense_qp_qore_args *args;
+    dense_qp_qore_args *source = (dense_qp_qore_args *)source_;
+    dense_qp_qore_args *dest;
 
-    args = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, raw_memory);
+    dest = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, raw_memory);
 
-    return (void *)args;
+    dest->prtfreq = source->prtfreq;
+    dest->warm_start = source->warm_start;
+    dest->warm_strategy = source->warm_strategy;
+    dest->nsmax = source->nsmax;
+    dest->hot_start = source->hot_start;
+
+    return (void *)dest;
 }
 
 

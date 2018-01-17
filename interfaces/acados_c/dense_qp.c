@@ -125,7 +125,7 @@ void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims)
 
 
 
-void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory, void *source)
+void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory, void *source_)
 {
     dense_qp_solver_fcn_ptrs fcn_ptrs;
 

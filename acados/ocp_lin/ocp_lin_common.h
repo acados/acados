@@ -85,7 +85,7 @@ typedef struct {
     int (*fun)(ocp_lin_in *qp_in, ocp_lin_out *qp_out, void *args, void *mem, void *work);
     int (*calculate_args_size)(ocp_lin_dims *dims);
     void *(*assign_args)(ocp_lin_dims *dims, void *raw_memory);
-    void *(*copy_args)(ocp_lin_dims *dims, void *raw_memory, void *source);
+    void *(*copy_args)(ocp_lin_dims *dims, void *raw_memory, void *source_);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(ocp_lin_dims *dims, void *args);
     void *(*assign_memory)(ocp_lin_dims *dims, void *args, void *raw_memory);

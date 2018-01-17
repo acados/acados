@@ -59,7 +59,7 @@ void *ocp_lin_create_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims)
 
 
 
-void *ocp_lin_copy_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *raw_memory, void *source)
+void *ocp_lin_copy_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *raw_memory, void *source_)
 {
     return NULL;
 }

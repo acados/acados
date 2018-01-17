@@ -44,7 +44,7 @@ typedef struct {
     int (*fun)(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args, void *mem, void *work);
     int (*calculate_args_size)(dense_qp_dims *dims);
     void *(*assign_args)(dense_qp_dims *dims, void *raw_memory);
-    void *(*copy_args)(dense_qp_dims *dims, void *raw_memory, void *source);
+    void *(*copy_args)(dense_qp_dims *dims, void *raw_memory, void *source_);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(dense_qp_dims *dims, void *args);
     void *(*assign_memory)(dense_qp_dims *dims, void *args, void *raw_memory);
