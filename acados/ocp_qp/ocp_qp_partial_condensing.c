@@ -67,7 +67,15 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
 
 ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *mem, ocp_qp_partial_condensing_args *source)
 {
+    ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
+    ocp_qp_partial_condensing_args *dest;
 
+    dest = ocp_qp_partial_condensing_assign_args(dims, raw_memory);
+
+    dest->N2 = source->N2;
+    dest->pcond_dims->N = source->pcond_dims->N
+
+    return dest;
 }
 
 
