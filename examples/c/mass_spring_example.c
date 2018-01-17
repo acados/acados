@@ -29,11 +29,17 @@
 #include <acados/ocp_qp/ocp_qp_sparse_solver.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
+#ifdef ACADOS_WITH_HPMPC
 #include <acados/ocp_qp/ocp_qp_hpmpc.h>
+#endif
+#ifdef ACADOS_WITH_QPDUNES
 #include <acados/ocp_qp/ocp_qp_qpdunes.h>
+#endif
 #include <acados/dense_qp/dense_qp_hpipm.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
+#ifdef ACADOS_WITH_QORE
 #include <acados/dense_qp/dense_qp_qore.h>
+#endif
 
 #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
@@ -123,11 +129,14 @@ int main() {
                     ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 30;
                     break;
                 case PARTIAL_CONDENSING_HPMPC:
+#ifdef ACADOS_WITH_HPMPC
                     printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
                     ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
+#endif
                     break;
                 case PARTIAL_CONDENSING_QPDUNES:
+#ifdef ACADOS_WITH_QPDUNES
                     printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
                     #ifdef ELIMINATE_X0
                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
@@ -139,15 +148,18 @@ int main() {
                     #endif
                     qpdunes_args->warmstart = 0;
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+#endif
                     break;
                 case FULL_CONDENSING_HPIPM:
                     printf("\nFull condensing + HPIPM:\n\n");
                     // default options
                     break;
                 case FULL_CONDENSING_QORE:
+#ifdef ACADOS_WITH_QORE
                     printf("\nFull condensing + QORE:\n\n");
                     // default options
                     break;
+#endif
                 case FULL_CONDENSING_QPOASES:
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
