@@ -199,7 +199,9 @@ bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_colu
 double *asDoublePointer(LangObject *input) {
     if (!is_matrix(input))
         throw std::invalid_argument("Input is not of a valid matrix type.");
-#ifdef SWIGPYTHON
+#if defined(SWIGMATLAB)
+    return (double *) mxGetData(input);
+#elif defined(SWIGPYTHON)
     PyObject *matrix = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_ARRAY_FARRAY_RO);
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while converting matrix");

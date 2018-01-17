@@ -3,15 +3,15 @@
 #include <iterator>
 #include <string>
 
-#include "acados_cpp/ocp_qp.h"
+#include "acados_cpp/OcpQp.h"
 
 #include "acados_c/ocp_qp.h"
 #include "acados/utils/print.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 
 
-OcpQp::OcpQp(int N, std::vector<int> nx, std::vector<int> nu, std::vector<int> nb,
-             std::vector<int> nc) : N(N), dimensions(nullptr), qp(nullptr) {
+OcpQp::OcpQp(int N, std::vector<int> nx, std::vector<int> nu, std::vector<int> nbx, 
+             std::vector<int> nbu, std::vector<int> nc) : N(N), dimensions(nullptr), qp(nullptr) {
 
     if (N <= 0) throw std::invalid_argument("Number of stages must be positive");
 
@@ -20,8 +20,15 @@ OcpQp::OcpQp(int N, std::vector<int> nx, std::vector<int> nu, std::vector<int> n
 
     copyDimensions(nx, dimensions->nx);
     copyDimensions(nu, dimensions->nu);
+    copyDimensions(nbx, dimensions->nbx);
+    copyDimensions(nbu, dimensions->nbu);
+    std::vector<int> nb(N+1);
+    for(int i = 0; i <= N; i++)
+        nb.at(i) = nbx.at(i) + nbu.at(i);
     copyDimensions(nb, dimensions->nb);
     copyDimensions(nc, dimensions->ng);
+    std::vector<int> ns(N+1);
+    copyDimensions(ns, dimensions->ns);
 
     qp = create_ocp_qp_in(dimensions);
 }
@@ -53,6 +60,188 @@ int OcpQp::numColsA(int i) {
         throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
             std::to_string(N) + "[.");
     return dimensions->nx[i];
+}
+
+int OcpQp::numRowsB(int i) {
+    if (i < 0 || i >= N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "[.");
+    return dimensions->nx[i+1];
+}
+
+int OcpQp::numColsB(int i) {
+    if (i < 0 || i >= N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "[.");
+    return dimensions->nu[i];
+}
+
+int OcpQp::numRowsb(int i) {
+    if (i < 0 || i >= N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "[.");
+    return dimensions->nx[i+1];
+}
+
+int OcpQp::numColsb(int i) {
+    if (i < 0 || i >= N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "[.");
+    return 1;
+}
+
+int OcpQp::numRowsQ(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nx[i];
+}
+
+int OcpQp::numColsQ(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nx[i];
+}
+
+int OcpQp::numRowsS(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nu[i];
+}
+
+int OcpQp::numColsS(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nx[i];
+}
+
+int OcpQp::numRowsR(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nu[i];
+}
+
+int OcpQp::numColsR(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nu[i];
+}
+
+int OcpQp::numRowsq(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nx[i];
+}
+
+int OcpQp::numColsq(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return 1;
+}
+
+int OcpQp::numRowsr(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nu[i];
+}
+
+int OcpQp::numColsr(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return 1;
+}
+
+int OcpQp::numRowslb(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nb[i];
+}
+
+int OcpQp::numColslb(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return 1;
+}
+
+int OcpQp::numRowsub(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nb[i];
+}
+
+int OcpQp::numColsub(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return 1;
+}
+
+int OcpQp::numRowsC(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->ng[i];
+}
+
+int OcpQp::numColsC(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nx[i];
+}
+
+int OcpQp::numRowsD(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->ng[i];
+}
+
+int OcpQp::numColsD(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->nu[i];
+}
+
+int OcpQp::numRowslg(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->ng[i];
+}
+
+int OcpQp::numColslg(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return 1;
+}
+
+int OcpQp::numRowsug(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return dimensions->ng[i];
+}
+
+int OcpQp::numColsug(int i) {
+    if (i < 0 || i > N)
+        throw std::out_of_range("Index " + std::to_string(i) + " needs to be in [0, N=" +
+            std::to_string(N) + "].");
+    return 1;
 }
 
 void OcpQp::setQ(int i, double *Q, int num_rows, int num_cols) {

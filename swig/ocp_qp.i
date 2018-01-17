@@ -4,23 +4,23 @@
 #include <iostream>
 #include <vector>
 
-#include "acados_cpp/ocp_qp.h"
+#include "acados_cpp/OcpQp.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
 
-void OcpQp_A_set(OcpQp *qp, LangObject *input) {
+void OcpQp_A_set(OcpQp *qp, std::vector<LangObject *> *input) {
     for (int i = 0; i < qp->N; i++)
-        qp->setA(i, asDoublePointer(input), numRows(input), numColumns(input));
+        qp->setA(i, asDoublePointer(input->at(i)), numRows(input->at(i)), numColumns(input->at(i)));
 }
 
-LangObject *OcpQp_A_get(OcpQp *qp) {
-    std::vector<LangObject *> list_of_matrices;
+std::vector<LangObject *> *OcpQp_A_get(OcpQp *qp) {
+    std::vector<LangObject *> *list_of_matrices = new std::vector<LangObject *>(qp->N);
     for (int i = 0; i < qp->N; i++) {
         int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
-        list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
+        list_of_matrices->push_back(new_matrix(dims, qp->getA(i).data()));
     }
-    return swig::from(list_of_matrices);
+    return list_of_matrices;
 }
 
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
@@ -105,11 +105,11 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %}
 
 %rename("%s") OcpQp;
-%include "acados_cpp/ocp_qp.h"
+%include "acados_cpp/OcpQp.h"
 
 %extend OcpQp {
 
-    LangObject *A;
+    std::vector<LangObject *> A;
 
     void setQ(LangObject *input) {
         for (int i = 0; i <= $self->N; i++)
@@ -188,29 +188,33 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     }
 }
 
+%rename("%s") d_ocp_qp_sol;
+%include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+
+%rename("%s") ocp_qp_info;
+%include "acados/ocp_qp/ocp_qp_common.h"
+
 %rename("%s") ocp_qp_solver;
 %include "acados_c/ocp_qp.h"
 
 %extend ocp_qp_solver {
 
-    ocp_qp_solver(ocp_qp_solver_t solver_name, LangObject *dimensions, LangObject *options = NONE) {
-
-        ocp_qp_dims *dims = map_to_ocp_qp_dims(dimensions);
+    ocp_qp_solver(ocp_qp_solver_t solver_name, const OcpQp& qp, LangObject *options = NONE) {
 
         ocp_qp_solver_plan plan;
         plan.qp_solver = solver_name;
         
-        void *args = ocp_qp_create_args(&plan, dims);
-        ocp_qp_solver *solver = ocp_qp_create(&plan, dims, args);
+        void *args = ocp_qp_create_args(&plan, qp.dimensions);
+        ocp_qp_solver *solver = ocp_qp_create(&plan, qp.dimensions, args);
         return solver;
     }
 
-    LangObject *evaluate(ocp_qp_in *input) {
-        ocp_qp_out *result = create_ocp_qp_out(input->dim);
-        int_t return_code = ocp_qp_solve($self, input, result);
+    d_ocp_qp_sol *evaluate(const OcpQp& input) {
+        d_ocp_qp_sol *result = create_ocp_qp_out(input.dimensions);
+        int_t return_code = ocp_qp_solve($self, input.qp, result);
         if (return_code != 0)
             throw std::runtime_error("qp solver failed!");
-        return ocp_qp_output(input, result);
+        return result;
     }
 
 }
