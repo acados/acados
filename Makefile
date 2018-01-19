@@ -6,6 +6,7 @@ include ./Makefile.rule
 
 
 
+# acados sources
 OBJS =
 
 # ocp nlp
@@ -47,20 +48,28 @@ OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
 
 
-all: acados_c_static
 
-DEPS = blasfeo_static hpipm_static qpoases_static
+# acados dependencies
+STATIC_DEPS = blasfeo_static hpipm_static qpoases_static
+CLEAN_DEPS = blasfeo_clean hpipm_clean qpoases_clean
 ifeq ($(ACADOS_WITH_HPMPC), 1)
-DEPS += hpmpc_static
+STATIC_DEPS += hpmpc_static
+CLEAN_DEPS += hpmpc_clean
 endif
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
-DEPS += qpdunes_static
+STATIC_DEPS += qpdunes_static
+CLEAN_DEPS += qpdunes_clean
 endif
 ifeq ($(ACADOS_WITH_QORE), 1)
-DEPS += qore_static
+STATIC_DEPS += qore_static
+CLEAN_DEPS += qore_clean
 endif
 
-static_library: $(DEPS)
+
+
+all: acados_c_static
+
+acados_static: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
 	ar rcs libacore.a $(OBJS)
 	mkdir -p lib
@@ -70,50 +79,51 @@ static_library: $(DEPS)
 	@echo
 
 blasfeo_static:
-	( cd external/blasfeo; $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
+	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
 	mkdir -p include/blasfeo
 	mkdir -p lib
-	cp external/blasfeo/include/*.h include/blasfeo
-	cp external/blasfeo/lib/libblasfeo.a lib
+	cp $(BLASFEO_PATH)/include/*.h include/blasfeo
+	cp $(BLASFEO_PATH)/lib/libblasfeo.a lib
 
 hpipm_static: blasfeo_static
-	( cd external/hpipm; $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo )
+	( cd $(HPIPM_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(BLASFEO_PATH) )
 	mkdir -p include/hpipm
 	mkdir -p lib
-	cp external/hpipm/include/*.h include/hpipm
-	cp external/hpipm/lib/libhpipm.a lib
+	cp $(HPIPM_PATH)/include/*.h include/hpipm
+	cp $(HPIPM_PATH)/lib/libhpipm.a lib
 
 hpmpc_static: blasfeo_static
-	( cd external/hpmpc; $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(TOP)/external/blasfeo  )
+	( cd $(HPMPC_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(BLASFEO_PATH)  )
 	mkdir -p include/hpmpc
 	mkdir -p lib
-	cp external/hpmpc/include/*.h include/hpmpc
-	cp external/hpmpc/libhpmpc.a lib
+	cp $(HPMPC_PATH)/include/*.h include/hpmpc
+	cp $(HPMPC_PATH)/libhpmpc.a lib
 
 qpoases_static:
-	( cd external/qpoases; $(MAKE) CC=$(CC) )
+	( cd $(QPOASES_PATH); $(MAKE) CC=$(CC) )
 	mkdir -p include/qpoases
 	mkdir -p lib
-	cp -r external/qpoases/include/* include/qpoases
-	cp external/qpoases/bin/libqpOASES_e.a lib
+	cp -r $(QPOASES_PATH)/include/* include/qpoases
+	cp $(QPOASES_PATH)/bin/libqpOASES_e.a lib
 
+# TODO how is BLASFEO path set for QORE ?????
 qore_static: blasfeo_static
-	( cd external/qore; $(MAKE) static_dense; )
+	( cd $(QORE_PATH); $(MAKE) static_dense; )
 	mkdir -p include/qore
 	mkdir -p lib
-	cp external/qore/qp_types.h include/qore
-	cp external/qore/QPSOLVER_DENSE/include/*.h include/qore
-	cp external/qore/bin/libqore_dense.a lib
+	cp $(QORE_PATH)/qp_types.h include/qore
+	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore
+	cp $(QORE_PATH)/bin/libqore_dense.a lib
 
 qpdunes_static:
-	( cd external/qpdunes; $(MAKE) CC=$(CC) )
+	( cd $(QPDUNES_PATH); $(MAKE) CC=$(CC) )
 	mkdir -p include/qpdunes
 	mkdir -p lib
-	cp -r external/qpdunes/include/* include/qpdunes
-	cp external/qpdunes/src/libqpdunes.a lib
-	cp external/qpdunes/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
+	cp -r $(QPDUNES_PATH)/include/* include/qpdunes
+	cp $(QPDUNES_PATH)/src/libqpdunes.a lib
+	cp $(QPDUNES_PATH)/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
 
-acados_c_static: static_library
+acados_c_static: acados_static
 	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
 	mkdir -p include/acados_c
 	mkdir -p lib
@@ -134,13 +144,24 @@ clean:
 	( cd examples/c; $(MAKE) clean )
 	( cd interfaces/acados_c; $(MAKE) clean )
 
-# TODO(Dimitris): DO NOT CLEAN QORE IF DIR DOES NOT EXIST
-deep_clean: clean
-	( cd external/blasfeo; $(MAKE) deep_clean )
-	( cd external/hpipm; $(MAKE) clean )
-	( cd external/hpmpc; $(MAKE) clean )
-	( cd external/qpoases; $(MAKE) clean )
-	( cd external/qore; $(MAKE) purge )
-	( cd external/qpdunes; $(MAKE) clean )
+blasfeo_clean:
+	( cd $(BLASFEO_PATH); $(MAKE) clean )
+
+hpipm_clean:
+	( cd $(HPIPM_PATH); $(MAKE) clean )
+
+hpmpc_clean:
+	( cd $(HPMPC_PATH); $(MAKE) clean )
+
+qpoases_clean:
+	( cd $(QPOASES_PATH); $(MAKE) clean )
+
+qore_clean:
+	( cd $(QORE_PATH); $(MAKE) purge )
+
+qpdunes_clean:
+	( cd $(QPDUNES_PATH); $(MAKE) clean )
+
+deep_clean: clean $(CLEAN_DEPS)
 	rm -rf include
 	rm -rf lib
