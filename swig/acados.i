@@ -19,19 +19,29 @@
 
 %module acados
 
-%include "std_vector.i"
-namespace std {
-    %template(vectori) vector<int>;
-};
-
-%rename($ignore, %$isclass) ""; // Only ignore all classes
+// %rename($ignore, %$isclass) ""; // Only ignore all classes
 
 #if defined(SWIGMATLAB)
 typedef mxArray LangObject;
+%{
+typedef mxArray LangObject;
+%}
 #define NONE NULL
 #elif defined(SWIGPYTHON)
 typedef PyObject LangObject;
+%{
+typedef PyObject LangObject;
+%}
 #define NONE Py_None
+#endif
+
+%include "std_vector.i"
+namespace std {
+    %template(vectori) vector<int>;
+    %template(vectorL) vector<LangObject *>;
+};
+
+#if defined(SWIGPYTHON)
 %{
 #define SWIG_FILE_WITH_INIT
 %}
