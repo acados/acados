@@ -80,46 +80,46 @@ acados_static: $(STATIC_DEPS)
 
 blasfeo_static:
 	( cd $(BLASFEO_PATH); $(MAKE) static_library CC=$(CC) LA=$(BLASFEO_VERSION) TARGET=$(BLASFEO_TARGET) )
-	mkdir -p include/blasfeo
+	mkdir -p include/blasfeo/include
 	mkdir -p lib
-	cp $(BLASFEO_PATH)/include/*.h include/blasfeo
+	cp $(BLASFEO_PATH)/include/*.h include/blasfeo/include
 	cp $(BLASFEO_PATH)/lib/libblasfeo.a lib
 
 hpipm_static: blasfeo_static
 	( cd $(HPIPM_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPIPM_TARGET) BLASFEO_PATH=$(BLASFEO_PATH) )
-	mkdir -p include/hpipm
+	mkdir -p include/hpipm/include
 	mkdir -p lib
-	cp $(HPIPM_PATH)/include/*.h include/hpipm
+	cp $(HPIPM_PATH)/include/*.h include/hpipm/include
 	cp $(HPIPM_PATH)/lib/libhpipm.a lib
 
 hpmpc_static: blasfeo_static
 	( cd $(HPMPC_PATH); $(MAKE) static_library CC=$(CC) TARGET=$(HPMPC_TARGET) BLASFEO_PATH=$(BLASFEO_PATH)  )
-	mkdir -p include/hpmpc
+	mkdir -p include/hpmpc/include
 	mkdir -p lib
-	cp $(HPMPC_PATH)/include/*.h include/hpmpc
+	cp $(HPMPC_PATH)/include/*.h include/hpmpc/include
 	cp $(HPMPC_PATH)/libhpmpc.a lib
 
 qpoases_static:
 	( cd $(QPOASES_PATH); $(MAKE) CC=$(CC) )
-	mkdir -p include/qpoases
+	mkdir -p include/qpoases/include
 	mkdir -p lib
-	cp -r $(QPOASES_PATH)/include/* include/qpoases
+	cp -r $(QPOASES_PATH)/include/* include/qpoases/include
 	cp $(QPOASES_PATH)/bin/libqpOASES_e.a lib
 
 # TODO how is BLASFEO path set for QORE ?????
 qore_static: blasfeo_static
 	( cd $(QORE_PATH); $(MAKE) static_dense; )
-	mkdir -p include/qore
+	mkdir -p include/qore/include
 	mkdir -p lib
-	cp $(QORE_PATH)/qp_types.h include/qore
-	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore
+	cp $(QORE_PATH)/qp_types.h include/qore/include
+	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore/include
 	cp $(QORE_PATH)/bin/libqore_dense.a lib
 
 qpdunes_static:
 	( cd $(QPDUNES_PATH); $(MAKE) CC=$(CC) )
-	mkdir -p include/qpdunes
+	mkdir -p include/qpdunes/include
 	mkdir -p lib
-	cp -r $(QPDUNES_PATH)/include/* include/qpdunes
+	cp -r $(QPDUNES_PATH)/include/* include/qpdunes/include
 	cp $(QPDUNES_PATH)/src/libqpdunes.a lib
 	cp $(QPDUNES_PATH)/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
 
