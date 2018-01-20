@@ -9,18 +9,18 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
 
-void OcpQp_A_set(OcpQp *qp, std::vector<LangObject *> *input) {
+void OcpQp_A_set(OcpQp *qp, LangObject *input) {
     for (int i = 0; i < qp->N; i++)
-        qp->setA(i, asDoublePointer(input->at(i)), numRows(input->at(i)), numColumns(input->at(i)));
+        qp->setA(i, asDoublePointer(input), numRows(input), numColumns(input));
 }
 
-std::vector<LangObject *> *OcpQp_A_get(OcpQp *qp) {
-    std::vector<LangObject *> *list_of_matrices = new std::vector<LangObject *>(qp->N);
+LangObject *OcpQp_A_get(OcpQp *qp) {
+    std::vector<LangObject *> list_of_matrices;
     for (int i = 0; i < qp->N; i++) {
         int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
-        list_of_matrices->push_back(new_matrix(dims, qp->getA(i).data()));
+        list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
     }
-    return list_of_matrices;
+    return swig::from(list_of_matrices);
 }
 
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
@@ -109,7 +109,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %extend OcpQp {
 
-    std::vector<LangObject *> A;
+    LangObject *A;
 
     void setQ(LangObject *input) {
         for (int i = 0; i <= $self->N; i++)
