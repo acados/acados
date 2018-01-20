@@ -11,6 +11,13 @@ class OcpQp {
               std::vector<int> controlBoundDimensions,
               std::vector<int> constraintDimensions);
 
+        OcpQp(int N,
+              int stateDimensions,
+              int controlDimensions,
+              int stateBoundDimensions = 0,
+              int controlBoundDimensions = 0,
+              int constraintDimensions = 0);
+
         const int N;
 
         std::vector<double> getA(int i);

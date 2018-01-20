@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iterator>
 #include <string>
+#include <stdexcept>
 
 #include "acados_cpp/OcpQp.h"
 
@@ -32,6 +33,10 @@ OcpQp::OcpQp(int N, std::vector<int> nx, std::vector<int> nu, std::vector<int> n
 
     qp = create_ocp_qp_in(dimensions);
 }
+
+OcpQp::OcpQp(int N, int nx, int nu, int nbx, int nbu, int nc)
+    : OcpQp(N, std::vector<int>(N+1, nx), std::vector<int>(N+1, nu), std::vector<int>(N+1, nbx),
+      std::vector<int>(N+1, nbu), std::vector<int>(N+1, nc)) {}
 
 std::ostream& operator<<(std::ostream& oss, const OcpQp& qp) {
     print_ocp_qp_in(qp.qp);
