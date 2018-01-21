@@ -38,6 +38,7 @@ typedef PyObject LangObject;
 %include "std_vector.i"
 namespace std {
     %template(vectori) vector<int>;
+    %template(vectord) vector<double>;
     %template(vectorL) vector<LangObject *>;
 };
 

@@ -4,17 +4,21 @@
 #include <iostream>
 #include <vector>
 
-#include "acados_cpp/OcpQp.h"
+#include "acados_cpp/OcpQp.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
 
-void OcpQp_A_set(OcpQp *qp, LangObject *input) {
-    for (int i = 0; i < qp->N; i++)
-        qp->setA(i, asDoublePointer(input), numRows(input), numColumns(input));
+void acados_OcpQp_A_sequence_set(acados::OcpQp *qp, LangObject *input) {
+    for (int i = 0; i < qp->N; i++) {
+        int nbElems = numRows(input) * numColumns(input);
+        std::vector<double> tmp(nbElems);
+        std::copy_n(asDoublePointer(input), nbElems, tmp.begin());
+        // qp->update(i, qp->A, tmp);
+    }
 }
 
-LangObject *OcpQp_A_get(OcpQp *qp) {
+LangObject *acados_OcpQp_A_sequence_get(acados::OcpQp *qp) {
     std::vector<LangObject *> list_of_matrices;
     for (int i = 0; i < qp->N; i++) {
         int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
@@ -104,12 +108,11 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
-%rename("%s") OcpQp;
-%include "acados_cpp/OcpQp.h"
+%include "acados_cpp/OcpQp.hpp"
 
-%extend OcpQp {
+%extend acados::OcpQp {
 
-    LangObject *A;
+    LangObject *A_sequence;
 
     void setQ(LangObject *input) {
         for (int i = 0; i <= $self->N; i++)
@@ -188,18 +191,15 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     }
 }
 
-%rename("%s") d_ocp_qp_sol;
 %include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 
-%rename("%s") ocp_qp_info;
 %include "acados/ocp_qp/ocp_qp_common.h"
 
-%rename("%s") ocp_qp_solver;
 %include "acados_c/ocp_qp.h"
 
 %extend ocp_qp_solver {
 
-    ocp_qp_solver(ocp_qp_solver_t solver_name, const OcpQp& qp, LangObject *options = NONE) {
+    ocp_qp_solver(ocp_qp_solver_t solver_name, const acados::OcpQp& qp, LangObject *options = NONE) {
 
         ocp_qp_solver_plan plan;
         plan.qp_solver = solver_name;
@@ -209,7 +209,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
         return solver;
     }
 
-    d_ocp_qp_sol *evaluate(const OcpQp& input) {
+    d_ocp_qp_sol *evaluate(const acados::OcpQp& input) {
         d_ocp_qp_sol *result = create_ocp_qp_out(input.dimensions);
         int_t return_code = ocp_qp_solve($self, input.qp, result);
         if (return_code != 0)

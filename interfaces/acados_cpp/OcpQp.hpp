@@ -1,9 +1,22 @@
+
+// #include <utility>
 #include <vector>
 
 #include "acados_c/ocp_qp.h"
 
+namespace acados {
+
 class OcpQp {
+
     public:
+
+        enum CostMatrix {Q, S, R};
+        enum CostVector {q, r};
+        enum DynamicsMatrix {A, B};
+        enum DynamicsVector {b};
+        enum Bound {lbx, ubx, lbu, ubu, lg, ug};
+        enum ConstraintMatrix {C, D};
+
         OcpQp(int N,
               std::vector<int> stateDimensions,
               std::vector<int> controlDimensions,
@@ -110,6 +123,13 @@ class OcpQp {
 
         void copyDimensions(std::vector<int> dimensions, int *dimension_ptr);
 
+        std::pair<int, int> dims(Field elem, int stage);
+        std::pair<int, int> offset(Field elem, int stage);
+
+        void update(int stage, Field elem, std::vector<double> v);
+
         ocp_qp_dims *dimensions;
         ocp_qp_in *qp;
 };
+
+}  // namespace acados

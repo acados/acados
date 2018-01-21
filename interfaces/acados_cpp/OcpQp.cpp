@@ -4,12 +4,13 @@
 #include <string>
 #include <stdexcept>
 
-#include "acados_cpp/OcpQp.h"
+#include "acados_cpp/OcpQp.hpp"
 
 #include "acados_c/ocp_qp.h"
 #include "acados/utils/print.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 
+namespace acados {
 
 OcpQp::OcpQp(int N, std::vector<int> nx, std::vector<int> nu, std::vector<int> nbx, 
              std::vector<int> nbu, std::vector<int> nc) : N(N), dimensions(nullptr), qp(nullptr) {
@@ -523,3 +524,101 @@ void OcpQp::copyDimensions(std::vector<int> dimensions, int *dimension_ptr) {
     std::copy(dimensions.begin(), dimensions.end(), dimension_ptr);
 }
 
+std::pair<int, int> OcpQp::dims(CostMatrix field, int stage) {
+    switch(elem) {
+        case Q:
+            return std::make_pair(dimensions->nx[stage], dimensions->nx[stage]);
+        case S:
+            return std::make_pair(dimensions->nu[stage], dimensions->nx[stage]);
+        case R:
+            return std::make_pair(dimensions->nu[stage], dimensions->nu[stage]);
+        default:
+            throw std::invalid_argument("Field is not");
+    }
+}
+        case q:
+            return std::make_pair(dimensions->nx[stage], 1);
+        case r:
+            return std::make_pair(dimensions->nu[stage], 1);
+        case A:
+            return std::make_pair(dimensions->nx[stage+1], dimensions->nx[stage]);
+        case B:
+            return std::make_pair(dimensions->nx[stage+1], dimensions->nu[stage]);
+        case b:
+            return std::make_pair(dimensions->nx[stage+1], 1);
+        case lbx:
+            return std::make_pair(dimensions->nbx[stage], 1);
+        case ubx:
+            return std::make_pair(dimensions->nbx[stage], 1);
+        case lbu:
+            return std::make_pair(dimensions->nbu[stage], 1);
+        case ubu:
+            return std::make_pair(dimensions->nbu[stage], 1);
+        case C:
+            return std::make_pair(dimensions->nx[stage], dimensions->ng[stage]);
+        case D:
+            return std::make_pair(dimensions->nu[stage], dimensions->ng[stage]);
+        case lg:
+            return std::make_pair(dimensions->ng[stage], 1);
+        case ug:
+            return std::make_pair(dimensions->ng[stage], 1);
+
+    }
+}
+
+std::pair<int, int> OcpQp::offset(Field elem, int stage) {
+    switch(elem) {
+        case Q:
+            return std::make_pair(dimensions->nu[stage], dimensions->nu[stage]);
+        case S:
+            return std::make_pair(dimensions->nu[stage], 0);
+        case R:
+            return std::make_pair(0, 0);
+        case q:
+            return std::make_pair(dimensions->nu[stage] + dimensions->nx[stage], dimensions->nu[stage]);
+        case r:
+            return std::make_pair(dimensions->nu[stage] + dimensions->nx[stage], 0);
+        case A:
+            return std::make_pair(dimensions->nu[stage], 0);
+        case B:
+            return std::make_pair(0, 0);
+        case b:
+            return std::make_pair(dimensions->nu[i] + dimensions->nx[i], 0);
+        case C:
+            return std::make_pair(dimensions->nu[stage], 0);
+        case D:
+            return std::make_pair(0, 0);
+        default:
+            throw std::invalid_argument("OCP QP does not have such field");
+    }
+}
+
+int OcpQp::offset(Field elem, int stage) {
+    switch(elem) {
+        case lbx:
+            return dimensions->nbu[stage];
+        case ubx:
+            return dimensions->nbu[stage];
+        case lbu:
+            return 0;
+        case ubu:
+            return 0;
+        case lg:
+            return dimensions->nb[stage];
+        case ug:
+            return 2*dimensions->nb[stage] + dimensions->ng[stage];
+        default:
+            throw std::invalid_argument("OCP QP does not have such field");
+    }
+}
+
+void OcpQp::update(int stage, CostMatrix field, std::vector<double> v) {
+    std::pair<int, int> dim = dims(field, stage), offt = offset(field, stage);
+    blasfeo_pack_tran_dmat(dim.first, dim.second, v.data(), dim.first, &(qp->BAbt[stage]), offt.first, offt.second);
+}
+
+void OcpQp::update(int stage, Field elem, std::vector<double> v) {
+
+}
+
+}  // namespace acados
