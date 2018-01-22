@@ -4,28 +4,28 @@
 #include <iostream>
 #include <vector>
 
-#include "acados_cpp/OcpQp.hpp"
+#include "acados_cpp/ocp_qp.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados_c/ocp_qp.h"
 
-void acados_OcpQp_A_sequence_set(acados::OcpQp *qp, LangObject *input) {
-    for (int i = 0; i < qp->N; i++) {
-        int nbElems = numRows(input) * numColumns(input);
-        std::vector<double> tmp(nbElems);
-        std::copy_n(asDoublePointer(input), nbElems, tmp.begin());
-        // qp->update(i, qp->A, tmp);
-    }
-}
+// void acados_OcpQp_A_sequence_set(acados::OcpQp *qp, LangObject *input) {
+//     for (int i = 0; i < qp->N; i++) {
+//         int nbElems = numRows(input) * numColumns(input);
+//         std::vector<double> tmp(nbElems);
+//         std::copy_n(asDoublePointer(input), nbElems, tmp.begin());
+//         qp->update(qp->A, tmp);
+//     }
+// }
 
-LangObject *acados_OcpQp_A_sequence_get(acados::OcpQp *qp) {
-    std::vector<LangObject *> list_of_matrices;
-    for (int i = 0; i < qp->N; i++) {
-        int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
-        list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
-    }
-    return swig::from(list_of_matrices);
-}
+// LangObject *acados_OcpQp_A_sequence_get(acados::OcpQp *qp) {
+//     std::vector<LangObject *> list_of_matrices;
+//     for (int i = 0; i < qp->N; i++) {
+//         int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
+//         list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
+//     }
+//     return swig::from(list_of_matrices);
+// }
 
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
     if (!is_map(input))
@@ -108,80 +108,34 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
-%include "acados_cpp/OcpQp.hpp"
+%ignore extract;
+%include "acados_cpp/ocp_qp.hpp"
 
-%extend acados::OcpQp {
+%rename("%s") extract;
 
-    LangObject *A_sequence;
+%{
+using std::vector;
+using std::string;
+%}
 
-    void setQ(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setQ(i, asDoublePointer(input));
+%extend acados::ocp_qp {
+
+    LangObject *extract(string field) {
+        vector<vector<double>> tmp = $self->extract(field);
+        vector<LangObject *> result;
+        int dims_array[2] = {2, 3};
+        double data[6] = {0, 0, 0, 0, 0, 0};
+        result.push_back(new_matrix(dims_array, data));
+        result.push_back(new_matrix(dims_array, data));
+        result.push_back(new_matrix(dims_array, data));
+        result.push_back(new_matrix(dims_array, data));
+        LangObject *obj = swig::from(result);
+        Py_INCREF(obj);
+        return obj;
     }
 
-    void setS(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setS(i, asDoublePointer(input));
-    }
-
-    void setR(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setR(i, asDoublePointer(input));
-    }
-
-    void setq(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setq(i, asDoublePointer(input));
-    }
-
-    void setr(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setr(i, asDoublePointer(input));
-    }
-
-    void setA(LangObject *input) {
-        for (int i = 0; i < $self->N; i++)
-            $self->setA(i, asDoublePointer(input));
-    }
-
-    void setB(LangObject *input) {
-        for (int i = 0; i < $self->N; i++)
-            $self->setB(i, asDoublePointer(input));
-    }
-
-    void setb(LangObject *input) {
-        for (int i = 0; i < $self->N; i++)
-            $self->setb(i, asDoublePointer(input));
-    }
-
-    void setlb(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setlb(i, asDoublePointer(input));
-    }
-
-    void setub(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setub(i, asDoublePointer(input));
-    }
-
-    void setC(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setC(i, asDoublePointer(input));
-    }
-
-    void setD(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setD(i, asDoublePointer(input));
-    }
-
-    void setlg(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setlg(i, asDoublePointer(input));
-    }
-
-    void setug(LangObject *input) {
-        for (int i = 0; i <= $self->N; i++)
-            $self->setug(i, asDoublePointer(input));
+    vector<string> fields() {
+        return vector<string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
     }
 
     char *__str__() {
@@ -195,26 +149,26 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %include "acados/ocp_qp/ocp_qp_common.h"
 
-%include "acados_c/ocp_qp.h"
+// %include "acados_c/ocp_qp.h"
 
-%extend ocp_qp_solver {
+// %extend ocp_qp_solver {
 
-    ocp_qp_solver(ocp_qp_solver_t solver_name, const acados::OcpQp& qp, LangObject *options = NONE) {
+//     ocp_qp_solver(ocp_qp_solver_t solver_name, const acados::OcpQp& qp, LangObject *options = NONE) {
 
-        ocp_qp_solver_plan plan;
-        plan.qp_solver = solver_name;
+//         ocp_qp_solver_plan plan;
+//         plan.qp_solver = solver_name;
         
-        void *args = ocp_qp_create_args(&plan, qp.dimensions);
-        ocp_qp_solver *solver = ocp_qp_create(&plan, qp.dimensions, args);
-        return solver;
-    }
+//         void *args = ocp_qp_create_args(&plan, qp.dimensions);
+//         ocp_qp_solver *solver = ocp_qp_create(&plan, qp.dimensions, args);
+//         return solver;
+//     }
 
-    d_ocp_qp_sol *evaluate(const acados::OcpQp& input) {
-        d_ocp_qp_sol *result = create_ocp_qp_out(input.dimensions);
-        int_t return_code = ocp_qp_solve($self, input.qp, result);
-        if (return_code != 0)
-            throw std::runtime_error("qp solver failed!");
-        return result;
-    }
+//     d_ocp_qp_sol *evaluate(const acados::OcpQp& input) {
+//         d_ocp_qp_sol *result = create_ocp_qp_out(input.dimensions);
+//         int_t return_code = ocp_qp_solve($self, input.qp, result);
+//         if (return_code != 0)
+//             throw std::runtime_error("qp solver failed!");
+//         return result;
+//     }
 
-}
+// }

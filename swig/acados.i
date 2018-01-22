@@ -35,12 +35,22 @@ typedef PyObject LangObject;
 #define NONE Py_None
 #endif
 
+%include "stl.i"
+%include "std_string.i"
+
 %include "std_vector.i"
 namespace std {
-    %template(vectori) vector<int>;
-    %template(vectord) vector<double>;
-    %template(vectorL) vector<LangObject *>;
+    %template(vector_i) vector<int>;
+    %template(vector_d) vector<double>;
+    %template(vector_string) vector<string>;
+    %template(vector_O) vector<LangObject *>;
+    %template(vector_vector_d) vector< vector<double> >;
 };
+
+%include "std_pair.i"
+namespace std {
+    %template(pairii) pair<int, int>;
+}
 
 #if defined(SWIGPYTHON)
 %{
@@ -51,11 +61,11 @@ namespace std {
 %include "exception.i"
 
 %exception {
-  try {
-    $action
-  } catch (const std::exception& e) {
-    SWIG_exception(SWIG_RuntimeError, e.what());
-  }
+    try {
+        $action
+    } catch (const std::exception& e) {
+        SWIG_exception(SWIG_RuntimeError, e.what());
+    }
 }
 
 %include "conversions.i"

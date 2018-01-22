@@ -17,22 +17,6 @@
  *
  */
 
-%typemap(in) double * {
-    if (!is_matrix($input, arg1->numRows$1_name(arg2), arg1->numCols$1_name(arg2))) {
-        SWIG_exception(SWIG_ValueError, "Matrix has wrong dimensions.");
-        SWIG_fail;
-    }
-    $1 = asDoublePointer($input);
-}
-
-%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) double * {
-#if defined(SWIGMATLAB)
-    $1 = (mxIsNumeric($input) ? 1 : 0);
-#elif defined(SWIGPYTHON)
-    $1 = (PyArray_Check($input) ? 1 : 0);
-#endif
-}
-
 %typemap(in) std::vector<double> {
     if (!is_matrix($input)) {
         SWIG_exception(SWIG_ValueError, "Input is not of valid matrix type.");
@@ -43,14 +27,6 @@
     std::vector<double> tmp(nbElems);
     std::copy_n(asDoublePointer($input), nbElems, tmp.begin());
     $1 = tmp;
-}
-
-%typemap(typecheck, precedence=5000) std::vector<double> {
-#if defined(SWIGMATLAB)
-    $1 = (mxIsNumeric($input) ? 1 : 0);
-#elif defined(SWIGPYTHON)
-    $1 = (PyArray_Check($input) ? 1 : 0);
-#endif
 }
 
 %typemap(in) int_t N {
