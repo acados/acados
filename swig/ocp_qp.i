@@ -121,7 +121,11 @@ using std::string;
 %extend acados::ocp_qp {
 
     LangObject *extract(string field) {
-        return swig::from($self->extract(field));;
+        vector<vector<double>> tmp = $self->extract(field);
+        vector<LangObject *> result;
+        for (int i = 0; i < tmp.size(); ++i)
+            result.push_back(new_matrix($self->dimensions(field, i), tmp.at(i).data()));
+        return swig::from(result);
     }
 
     vector<string> fields() {

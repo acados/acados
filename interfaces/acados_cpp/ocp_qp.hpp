@@ -31,12 +31,12 @@ public:
 
     friend std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp);
 
+    std::pair<int, int> dimensions(string field, int stage);
+
     const int N;
 
 private:
     
-    std::pair<int, int> dimensions(string field, int stage);
-
     void write_dimensions(vector<int> dims, int *ptr);
 
     void check_range(string field, int stage);

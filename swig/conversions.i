@@ -66,6 +66,7 @@ PyObject *copy_module = NULL;
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 #include <typeinfo>
 
 #if defined(SWIGMATLAB)
@@ -210,9 +211,9 @@ double *asDoublePointer(LangObject *input) {
 }
 
 template<typename T>
-LangObject *new_matrix(const int_t *dims, const T *data) {
-    int_t nb_rows = dims[0];
-    int_t nb_cols = dims[1];
+LangObject *new_matrix(std::pair<int, int> dimensions, const T *data) {
+    int_t nb_rows = dimensions.first;
+    int_t nb_cols = dimensions.second;
 #if defined(SWIGMATLAB)
     mxArray *matrix = mxCreateNumericMatrix(nb_rows, nb_cols, get_numeric_type<T>(), mxREAL);
     T *new_array = (T *) mxCalloc(nb_rows*nb_cols, sizeof(T));
@@ -453,7 +454,7 @@ LangObject *new_sequence_from(T **data, const int_t length,
 
     LangObject *sequence = new_sequence_of_arrays(length);
     for (int_t index = 0; index < length; index++) {
-        int_t dims[2] = {nb_rows[index], nb_columns[index]};
+        auto dims = std::make_pair(nb_rows[index], nb_columns[index]);
         LangObject *item = new_matrix<T>(dims, data[index]);
         to(sequence, index, item);
     }
