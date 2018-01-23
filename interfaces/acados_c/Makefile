@@ -2,6 +2,18 @@ include ../../Makefile.rule
 
 OBJS =
 
+OBJS += dense_qp/dense_qp_hpipm.o
+OBJS += dense_qp/dense_qp_qore.o
+OBJS += dense_qp/dense_qp_qpoases.o
+OBJS += ocp_qp/ocp_qp_full_condensing_solver.o
+OBJS += ocp_qp/ocp_qp_full_condensing.o
+OBJS += ocp_qp/ocp_qp_hpipm.o
+OBJS += ocp_qp/ocp_qp_hpmpc.o
+OBJS += ocp_qp/ocp_qp_partial_condensing.o
+OBJS += ocp_qp/ocp_qp_qpdunes.o
+OBJS += ocp_qp/ocp_qp_sparse_solver.o
+OBJS += sim/sim_erk_integrator.o
+OBJS += sim/sim_lifted_irk_integrator.o
 OBJS += dense_qp.o
 OBJS += legacy_create.o
 OBJS += ocp_lin.o

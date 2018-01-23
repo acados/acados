@@ -19,6 +19,8 @@
 
 #include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
 
+#include "acados_c/ocp_qp/ocp_qp_full_condensing.h"
+
 
 
 void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)

@@ -185,7 +185,7 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
     c_ptr += sim_dims_calculate_size();
     sim_copy_dims(solver->dims, dims);
 
-    solver->args = solver->fcn_ptrs->copy_args(dims, c_ptr, args_);
+    solver->args = sim_copy_args(plan, dims, c_ptr, args_);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
