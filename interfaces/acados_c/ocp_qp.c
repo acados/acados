@@ -23,20 +23,20 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-//acados
-#include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
-#include <acados/ocp_qp/ocp_qp_sparse_solver.h>
-#include <acados/dense_qp/dense_qp_hpipm.h>
+//acados_c
+#include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados_c/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados_c/dense_qp/dense_qp_hpipm.h"
 #ifdef ACADOS_WITH_QORE
-#include <acados/dense_qp/dense_qp_qore.h>
+#include "acados_c/dense_qp/dense_qp_qore.h"
 #endif
-#include <acados/dense_qp/dense_qp_qpoases.h>
-#include <acados/ocp_qp/ocp_qp_hpipm.h>
+#include "acados_c/dense_qp/dense_qp_qpoases.h"
+#include "acados_c/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
-#include <acados/ocp_qp/ocp_qp_hpmpc.h>
+#include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
 #endif
 #ifdef ACADOS_WITH_QPDUNES
-#include <acados/ocp_qp/ocp_qp_qpdunes.h>
+#include "acados_c/ocp_qp/ocp_qp_qpdunes.h"
 #endif
 
 // #include <acados/ocp_qp/ocp_qp_hpmpc.h>
@@ -272,8 +272,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
                 &ocp_qp_hpipm_calculate_args_size;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
                 &ocp_qp_hpipm_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *)fcn_ptrs)->copy_args =
-                &ocp_qp_hpipm_copy_args;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
                 &ocp_qp_hpipm_initialize_default_args;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
@@ -290,8 +288,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
                 &ocp_qp_hpmpc_calculate_args_size;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
                 &ocp_qp_hpmpc_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *)fcn_ptrs)->copy_args =
-                &ocp_qp_hpmpc_copy_args;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
                 &ocp_qp_hpmpc_initialize_default_args;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
@@ -314,8 +310,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
                 &ocp_qp_qpdunes_calculate_args_size;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
                 &ocp_qp_qpdunes_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *)fcn_ptrs)->copy_args =
-                &ocp_qp_qpdunes_copy_args;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
                 &ocp_qp_qpdunes_initialize_default_args;
             ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
@@ -334,8 +328,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
                 &dense_qp_hpipm_calculate_args_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
                 &dense_qp_hpipm_assign_args;
-            ((dense_qp_solver_fcn_ptrs *)fcn_ptrs)->copy_args =
-                &dense_qp_hpipm_copy_args;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
                 &dense_qp_hpipm_initialize_default_args;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
@@ -351,8 +343,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
                 &dense_qp_qpoases_calculate_args_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
                 &dense_qp_qpoases_assign_args;
-            ((dense_qp_solver_fcn_ptrs *)fcn_ptrs)->copy_args =
-                &dense_qp_qpoases_copy_args;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
                 &dense_qp_qpoases_initialize_default_args;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
@@ -369,8 +359,6 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
                 &dense_qp_qore_calculate_args_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
                 &dense_qp_qore_assign_args;
-            ((dense_qp_solver_fcn_ptrs *)fcn_ptrs)->copy_args =
-                &dense_qp_qore_copy_args;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
                 &dense_qp_qore_initialize_default_args;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
@@ -402,7 +390,6 @@ int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solv
             &ocp_qp_sparse_solver_calculate_args_size;
         fcn_ptrs->assign_args =
             &ocp_qp_sparse_solver_assign_args;
-        fcn_ptrs->copy_args = &ocp_qp_sparse_solver_copy_args;
         fcn_ptrs->initialize_default_args =
             &ocp_qp_sparse_solver_initialize_default_args;
         fcn_ptrs->calculate_memory_size =
@@ -420,7 +407,6 @@ int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solv
             &ocp_qp_full_condensing_solver_calculate_args_size;
         fcn_ptrs->assign_args =
             &ocp_qp_full_condensing_solver_assign_args;
-        fcn_ptrs->copy_args = &ocp_qp_full_condensing_solver_copy_args;
         fcn_ptrs->initialize_default_args =
             &ocp_qp_full_condensing_solver_initialize_default_args;
         fcn_ptrs->calculate_memory_size =

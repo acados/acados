@@ -24,9 +24,10 @@
 #include <assert.h>
 #include <string.h>
 //acados
-#include <acados/sim/sim_erk_integrator.h>
-#include <acados/sim/sim_lifted_irk_integrator.h>
 #include <acados/utils/mem.h>
+//acados_c
+#include "acados_c/sim/sim_erk_integrator.h"
+#include "acados_c/sim/sim_lifted_irk_integrator.h"
 
 
 
@@ -223,7 +224,6 @@ int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
             fcn_ptrs->fun = &sim_erk;
             fcn_ptrs->calculate_args_size = &sim_erk_opts_calculate_size;
             fcn_ptrs->assign_args = &sim_erk_assign_opts;
-            fcn_ptrs->copy_args = &sim_erk_copy_opts;
             fcn_ptrs->initialize_default_args = &sim_erk_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &sim_erk_calculate_memory_size;
             fcn_ptrs->assign_memory = &sim_erk_assign_memory;
@@ -233,7 +233,6 @@ int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
             fcn_ptrs->fun = &sim_lifted_irk;
             fcn_ptrs->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
             fcn_ptrs->assign_args = &sim_lifted_irk_assign_opts;
-            fcn_ptrs->copy_args = &sim_lifted_irk_copy_opts;
             fcn_ptrs->initialize_default_args = &sim_lifted_irk_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
             fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;
