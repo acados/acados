@@ -81,8 +81,6 @@ int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims);
 //
 void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory);
 //
-void *ocp_qp_qpdunes_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_);
-//
 void ocp_qp_qpdunes_initialize_default_args(void *args_);
 //
 int ocp_qp_qpdunes_calculate_memory_size(ocp_qp_dims *dims, void *args_);

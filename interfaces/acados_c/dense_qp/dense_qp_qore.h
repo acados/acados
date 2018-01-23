@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+#include <acados/dense_qp/dense_qp_qore.h>
+
+//
+void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

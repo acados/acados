@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+#include <acados/ocp_qp/ocp_qp_partial_condensing.h>
+
+//
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

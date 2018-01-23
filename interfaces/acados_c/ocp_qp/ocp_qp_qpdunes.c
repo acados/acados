@@ -18,3 +18,20 @@
  */
 
 #include "acados_c/ocp_qp/ocp_qp_qpdunes.h"
+
+
+
+void *ocp_qp_qpdunes_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
+{
+    ocp_qp_qpdunes_args *source = (ocp_qp_qpdunes_args *) source_;
+    ocp_qp_qpdunes_args *dest;
+
+    dest = (ocp_qp_qpdunes_args *) ocp_qp_qpdunes_assign_args(dims, raw_memory);
+
+    dest->options = source->options;
+    dest->stageQpSolver = source->stageQpSolver;
+    dest->warmstart = source->warmstart;
+    dest->isLinearMPC = source->isLinearMPC;
+
+    return (void *)dest;
+}

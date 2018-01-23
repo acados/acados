@@ -18,3 +18,14 @@
  */
 
 #include "acados_c/ocp_qp/ocp_qp_full_condensing.h"
+
+
+
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_full_condensing_args *source_)
+{
+    ocp_qp_full_condensing_args *dest;
+
+    dest = ocp_qp_full_condensing_assign_args(dims, raw_memory);
+
+    return dest;
+}

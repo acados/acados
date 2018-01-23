@@ -18,3 +18,19 @@
  */
 
 #include "acados_c/dense_qp/dense_qp_qpoases.h"
+
+
+
+void *dense_qp_qpoases_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+{
+    dense_qp_qpoases_args *source = (dense_qp_qpoases_args *) source_;
+    dense_qp_qpoases_args *dest;
+
+    dest = (dense_qp_qpoases_args *) dense_qp_qpoases_assign_args(dims, raw_memory);
+
+    dest->max_cputime = source->max_cputime;
+    dest->warm_start = source->warm_start;
+    dest->max_nwsr = source->max_nwsr;
+
+    return (void *)dest;
+}

@@ -76,22 +76,6 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *r
 
 
 
-void *ocp_qp_sparse_solver_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
-{
-    ocp_qp_sparse_solver_args *source = (ocp_qp_sparse_solver_args *) source_;
-    ocp_qp_sparse_solver_args *dest;
-
-    dest = ocp_qp_sparse_solver_assign_args(dims, source->solver, raw_memory);
-
-    ocp_qp_partial_condensing_copy_args(dims, dest->pcond_args, source->pcond_args);
-
-    dest->solver->copy_args(dims, dest->solver_args, source->solver_args);
-
-    return (void *) dest;
-}
-
-
-
 void ocp_qp_sparse_solver_initialize_default_args(void *args_)
 {
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;

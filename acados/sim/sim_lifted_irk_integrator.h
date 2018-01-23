@@ -78,8 +78,6 @@ int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
 
 void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory);
 
-void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source_);
-
 void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_);
 
 int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts);

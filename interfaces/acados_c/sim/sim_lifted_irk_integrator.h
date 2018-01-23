@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+#include <acados/sim/sim_lifted_irk_integrator.h>
+
+//
+void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source_);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -65,21 +65,6 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
 
 
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_)
-{
-    ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
-    ocp_qp_partial_condensing_args *dest;
-
-    dest = ocp_qp_partial_condensing_assign_args(dims, raw_memory);
-
-    dest->N2 = source->N2;
-    dest->pcond_dims->N = source->pcond_dims->N;
-
-    return dest;
-}
-
-
-
 void ocp_qp_partial_condensing_initialize_default_args(ocp_qp_partial_condensing_args *args)
 {
     args->N2 = 5;  // new horizon length

@@ -24,6 +24,11 @@
 extern "C" {
 #endif
 
+#include <acados/ocp_qp/ocp_qp_hpipm.h>
+
+//
+void *ocp_qp_hpipm_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

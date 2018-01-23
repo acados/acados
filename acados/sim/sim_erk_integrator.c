@@ -74,35 +74,6 @@ void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 
 
 
-void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)
-{
-    sim_rk_opts *source = (sim_rk_opts *)source_;
-    sim_rk_opts *dest;
-
-    dest = sim_erk_assign_opts(dims, raw_memory);
-
-    dest->interval = source->interval;
-    dest->num_stages = source->num_stages;
-    dest->num_steps = source->num_steps;
-    dest->num_forw_sens = source->num_forw_sens;
-    dest->sens_forw = source->sens_forw;
-    dest->sens_adj = source->sens_adj;
-    dest->sens_hess = source->sens_hess;
-    dest->newton_iter = source->newton_iter;
-
-    int ns = dims->num_stages;
-
-    memcpy(dest->A_mat, source->A_mat, ns*ns*sizeof(double));
-    memcpy(dest->c_vec, source->c_vec, ns*sizeof(double));
-    memcpy(dest->b_vec, source->b_vec, ns*sizeof(double));
-
-    dest->scheme = NULL;
-
-    return (void *)dest;
-}
-
-
-
 void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
