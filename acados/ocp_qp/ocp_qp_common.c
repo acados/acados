@@ -233,6 +233,8 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
     }
 
     d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
+	
+	return;
 }
 
 
@@ -249,6 +251,43 @@ void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
 	int *nb = qp_res->dim->nb;
 	int *ng = qp_res->dim->ng;
     int *ns = qp_res->dim->ns;
+
+#if 1
+	
+	double tmp;
+
+	res[0] = 0.0;
+	for (ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecnrm_inf(nx[ii]+nu[ii]+2*ns[ii], &qp_res->res_g[ii], 0, &tmp);
+		res[0] = tmp > res[0] ? tmp : res[0];
+	}
+		
+	res[1] = 0.0;
+	for (ii=0; ii<N; ii++)
+	{
+		blasfeo_dvecnrm_inf(nx[ii+1], &qp_res->res_b[ii], 0, &tmp);
+		res[1] = tmp > res[1] ? tmp : res[1];
+	}
+		
+	res[2] = 0.0;
+	for (ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_res->res_d[ii], 0, &tmp);
+		res[2] = tmp > res[2] ? tmp : res[2];
+	}
+		
+	res[3] = 0.0;
+	for (ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_res->res_m[ii], 0, &tmp);
+		res[3] = tmp > res[3] ? tmp : res[3];
+	}
+		
+
+#else
+
+	// XXX this should be avoided, since it does employ strucutre of the HPIPM core that may change !!!
 
     // compute size of res_q, res_b, res_d and res_m
     int nvt = 0;
@@ -269,6 +308,11 @@ void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
 	blasfeo_dvecnrm_inf(net, qp_res->res_b, 0, &res[1]);
 	blasfeo_dvecnrm_inf(nct, qp_res->res_d, 0, &res[2]);
 	blasfeo_dvecnrm_inf(nct, qp_res->res_m, 0, &res[3]);
+
+#endif
+
+	return;
+
 }
 
 
