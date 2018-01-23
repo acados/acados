@@ -127,11 +127,24 @@ void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims)
 
 void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory, void *source)
 {
-    dense_qp_solver_fcn_ptrs fcn_ptrs;
+    dense_qp_solver_t solver_name = plan->qp_solver;
 
-    set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
+    void *args;
 
-    void *args = fcn_ptrs.copy_args(dims, raw_memory, source);
+    switch (solver_name)
+    {
+        case DENSE_QP_HPIPM:
+            args = dense_qp_hpipm_copy_args(dims, raw_memory_source);
+            break;
+        case DENSE_QP_QORE:
+            #ifdef ACADOS_WITH_QORE
+            args = dense_qp_qore_copy_args(dims, raw_memory_source);
+            #endif
+            break;
+        case DENSE_QP_QPOASES:
+            args = dense_qp_qpoases_copy_args(dims, raw_memory_source);
+            break;
+    }
 
     return args;
 }
@@ -178,7 +191,7 @@ dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims
     c_ptr += dense_qp_dims_calculate_size();
     dense_qp_copy_dims(solver->dims, dims);
 
-    solver->args = solver->fcn_ptrs->copy_args(dims, c_ptr, args_);
+    solver->args = dense_qp_copy_args(plan, dims, c_ptr, args);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);

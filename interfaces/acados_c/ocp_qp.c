@@ -161,15 +161,48 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 
 void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_solver_t solver_name = plan->qp_solver;
 
-    module_fcn_ptrs submodule_fcn_ptrs;
+    void *args;
 
-    fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+    if (solver_name < FULL_CONDENSING_HPIPM)
+    {
+        args = ocp_qp_sparse_solver_copy_args(dims, raw_memory, source);
+    }
+    else
+    {
+        args = ocp_qp_full_condensing_solver_copy_args(dims, raw_memory, source);
+    }
 
-    set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
-
-    void *args = fcn_ptrs.copy_args(dims, raw_memory, source);
+    switch (solver_name) {
+        case PARTIAL_CONDENSING_HPIPM:
+            ocp_qp_hpipm_copy_args(dims, args->solver_args, source->solver_args);
+            break;
+        case PARTIAL_CONDENSING_HPMPC:
+            #ifdef ACADOS_WITH_HPMPC
+            ocp_qp_hpmpc_copy_args(dims, args->solver_args, source->solver_args);
+            #endif
+            break;
+        case PARTIAL_CONDENSING_OOQP:
+            // ocp_qp_ooqp_copy_args(dims, args->solver_args, source->solver_args);
+            break;
+        case PARTIAL_CONDENSING_QPDUNES:
+            #ifdef ACADOS_WITH_QPDUNES
+            ocp_qp_qpdunes_copy_args(dims, args->solver_args, source->solver_args);
+            #endif
+            break;
+        case FULL_CONDENSING_HPIPM:
+            dense_qp_hpipm_copy_args(dims, args->solver_args, source->solver_args);
+            break;
+        case FULL_CONDENSING_QPOASES:
+            dense_qp_qpoases_copy_args(dims, args->solver_args, source->solver_args);
+            break;
+        case FULL_CONDENSING_QORE:
+            #ifdef ACADOS_WITH_QORE
+            dense_qp_qore_copy_args(dims, args->solver_args, source->solver_args);
+            #endif
+            break;
+    }
 
     return args;
 }

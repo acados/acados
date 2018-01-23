@@ -19,6 +19,8 @@
 
 #include "acados_c/sim/sim_lifted_irk_integrator.h"
 
+#include <string.h>
+
 
 
 void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)

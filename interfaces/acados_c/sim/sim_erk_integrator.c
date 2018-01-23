@@ -19,6 +19,8 @@
 
 #include "acados_c/sim/sim_erk_integrator.h"
 
+#include <string.h>
+
 
 
 void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)

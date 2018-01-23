@@ -124,11 +124,19 @@ void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
 
 void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
 {
-    sim_solver_fcn_ptrs fcn_ptrs;
+    sim_solver_t solver_name = plan->sim_solver;
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+    void *args;
 
-    void *args = fcn_ptrs.copy_args(dims, raw_memory, source);
+    switch (solver_name)
+    {
+        case ERK:
+            args = sim_erk_copy_opts(dims, raw_memory, source);
+            break;
+        case LIFTED_IRK:
+            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
+            break;
+    }
 
     return args;
 }

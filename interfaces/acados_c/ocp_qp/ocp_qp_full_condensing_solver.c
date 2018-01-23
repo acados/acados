@@ -33,7 +33,7 @@ void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *raw_memor
 
     ocp_qp_full_condensing_copy_args(dims, dest->cond_args, source->cond_args);
 
-    dest->solver->copy_args(&ddims, dest->solver_args, source->solver_args);
+    // dest->solver->copy_args(&ddims, dest->solver_args, source->solver_args);
 
     return (void*)dest;
 }

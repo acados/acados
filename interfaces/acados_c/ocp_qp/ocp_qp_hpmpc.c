@@ -19,6 +19,8 @@
 
 #include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
 
+#include <string.h>
+
 
 
 void *ocp_qp_hpmpc_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
