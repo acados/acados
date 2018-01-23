@@ -43,7 +43,7 @@ private:
     
     void check_nb_elements(string, int stage, int nb_elems);
 
-    static std::map<string, std::function<void(int, double *, ocp_qp_in *)>> extract_functions;
+    static std::map<string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 
     ocp_qp_in *qp;
 };

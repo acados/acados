@@ -121,17 +121,7 @@ using std::string;
 %extend acados::ocp_qp {
 
     LangObject *extract(string field) {
-        vector<vector<double>> tmp = $self->extract(field);
-        vector<LangObject *> result;
-        int dims_array[2] = {2, 3};
-        double data[6] = {0, 0, 0, 0, 0, 0};
-        result.push_back(new_matrix(dims_array, data));
-        result.push_back(new_matrix(dims_array, data));
-        result.push_back(new_matrix(dims_array, data));
-        result.push_back(new_matrix(dims_array, data));
-        LangObject *obj = swig::from(result);
-        Py_INCREF(obj);
-        return obj;
+        return swig::from($self->extract(field));;
     }
 
     vector<string> fields() {

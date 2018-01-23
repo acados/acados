@@ -57,58 +57,58 @@ void ocp_qp::update(std::string field, int stage, std::vector<double> v) {
     check_nb_elements(field, stage, v.size());
 
     if (field == "Q")
-        d_update_Q(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_Q(stage, v.data(), qp);
     else if (field == "S")
-        d_update_S(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_S(stage, v.data(), qp);
     else if (field == "R")
-        d_update_R(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_R(stage, v.data(), qp);
     else if (field == "q")
-        d_update_q(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_q(stage, v.data(), qp);
     else if (field == "r")
-        d_update_r(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_r(stage, v.data(), qp);
     else if (field == "A")
-        d_update_A(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_A(stage, v.data(), qp);
     else if (field == "B")
-        d_update_B(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_B(stage, v.data(), qp);
     else if (field == "b")
-        d_update_b(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_b(stage, v.data(), qp);
     else if (field == "lbx")
-        d_update_lbx(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_lbx(stage, v.data(), qp);
     else if (field == "ubx")
-        d_update_ubx(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_ubx(stage, v.data(), qp);
     else if (field == "lbu")
-        d_update_lbu(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_lbu(stage, v.data(), qp);
     else if (field == "ubu")
-        d_update_ubu(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_ubu(stage, v.data(), qp);
     else if (field == "C")
-        d_update_C(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_C(stage, v.data(), qp);
     else if (field == "D")
-        d_update_D(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_D(stage, v.data(), qp);
     else if (field == "lg")
-        d_update_lg(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_lg(stage, v.data(), qp);
     else if (field == "ug")
-        d_update_ug(stage, v.data(), qp);
+        d_cvt_colmaj_to_ocp_qp_ug(stage, v.data(), qp);
     else
         throw std::invalid_argument("OCP QP does not contain field " + field);
 }
 
-std::map<string, std::function<void(int, double *, ocp_qp_in *)>> ocp_qp::extract_functions = {
-        {"Q", d_copy_Q},
-        {"S", d_copy_S},
-        {"R", d_copy_R},
-        {"q", d_copy_q},
-        {"r", d_copy_r},
-        {"A", d_copy_A},
-        {"B", d_copy_B},
-        {"b", d_copy_b},
-        {"lbx", d_copy_lbx},
-        {"ubx", d_copy_ubx},
-        {"lbu", d_copy_lbu},
-        {"ubu", d_copy_ubu},
-        {"C", d_copy_C},
-        {"D", d_copy_D},
-        {"lg", d_copy_lg},
-        {"ug", d_copy_ug}
+std::map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
+        {"Q", d_cvt_ocp_qp_to_colmaj_Q},
+        {"S", d_cvt_ocp_qp_to_colmaj_S},
+        {"R", d_cvt_ocp_qp_to_colmaj_R},
+        {"q", d_cvt_ocp_qp_to_colmaj_q},
+        {"r", d_cvt_ocp_qp_to_colmaj_r},
+        {"A", d_cvt_ocp_qp_to_colmaj_A},
+        {"B", d_cvt_ocp_qp_to_colmaj_B},
+        {"b", d_cvt_ocp_qp_to_colmaj_b},
+        {"lbx", d_cvt_ocp_qp_to_colmaj_lbx},
+        {"ubx", d_cvt_ocp_qp_to_colmaj_ubx},
+        {"lbu", d_cvt_ocp_qp_to_colmaj_lbu},
+        {"ubu", d_cvt_ocp_qp_to_colmaj_ubu},
+        {"C", d_cvt_ocp_qp_to_colmaj_C},
+        {"D", d_cvt_ocp_qp_to_colmaj_D},
+        {"lg", d_cvt_ocp_qp_to_colmaj_lg},
+        {"ug", d_cvt_ocp_qp_to_colmaj_ug}
     };
 
 
@@ -120,7 +120,7 @@ vector< vector<double> > ocp_qp::extract(std::string field) {
     for (int i = 0; i <= last_index; i++) {
         auto dims = dimensions(field, i);
         vector<double> v(dims.first * dims.second);
-        extract_functions[field](i, v.data(), qp);
+        extract_functions[field](i, qp, v.data());
         result.push_back(v);
     }
     return result;

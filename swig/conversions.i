@@ -235,7 +235,6 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
     }
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
-    
     return matrix;
 #endif
 }
