@@ -4,10 +4,12 @@
 #include <iostream>
 #include <vector>
 
+#include "acados_c/ocp_qp.h"
 #include "acados_cpp/ocp_qp.hpp"
+#include "acados_cpp/ocp_qp_solution.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados_c/ocp_qp.h"
+#include "acados/utils/print.h"
 
 // void acados_OcpQp_A_sequence_set(acados::OcpQp *qp, LangObject *input) {
 //     for (int i = 0; i < qp->N; i++) {
@@ -109,8 +111,10 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %}
 
 %ignore extract;
+%rename("$ignore", %$isconstructor) ocp_qp;
 %include "acados_cpp/ocp_qp.hpp"
 
+%rename("%s", %$isconstructor) ocp_qp;
 %rename("%s") extract;
 
 %{
@@ -119,6 +123,19 @@ using std::string;
 %}
 
 %extend acados::ocp_qp {
+
+    ocp_qp(int N = 10, int nx = 2, int nu = 1, int nbx = 0, int nbu = 0, int ng = 0, bool fix_x0 = true) {
+        if (fix_x0 == false)
+            return new acados::ocp_qp(N, nx, nu, nbx, nbu, ng);
+        vector<int> nbx_v(N+1, 0);
+        nbx_v.at(0) = nx;
+        acados::ocp_qp *qp = new acados::ocp_qp(N, vector<int>(N+1, nx), vector<int>(N+1, nu), nbx_v,
+                                  vector<int>(N+1, nbu), vector<int>(N+1, ng));
+        std::vector<int> idx(nx);
+        std::iota(std::begin(idx), std::end(idx), 0);
+        qp->state_bounds_indices(0, idx);
+        return qp;
+    }
 
     LangObject *extract(string field) {
         vector<vector<double>> tmp = $self->extract(field);
@@ -139,30 +156,48 @@ using std::string;
     }
 }
 
-%include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+// %include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 
-%include "acados/ocp_qp/ocp_qp_common.h"
+// %include "acados/ocp_qp/ocp_qp_common.h"
 
-// %include "acados_c/ocp_qp.h"
+%include "acados_c/ocp_qp.h"
 
-// %extend ocp_qp_solver {
+%ignore states;
+%include "acados_cpp/ocp_qp_solution.hpp"
 
-//     ocp_qp_solver(ocp_qp_solver_t solver_name, const acados::OcpQp& qp, LangObject *options = NONE) {
+%rename("%s") states;
 
-//         ocp_qp_solver_plan plan;
-//         plan.qp_solver = solver_name;
+%extend acados::ocp_qp_solution {
+
+    LangObject *states() {
+        vector<vector<double>> tmp = $self->states();
+        vector<LangObject *> result;
+        for (int i = 0; i < tmp.size(); ++i)
+            result.push_back(new_matrix(std::make_pair(tmp.at(i).size(), 1), tmp.at(i).data()));
+        return swig::from(result);
+    }
+
+}
+
+%extend ocp_qp_solver {
+
+    ocp_qp_solver(ocp_qp_solver_t solver_name, const acados::ocp_qp& qp, LangObject *options = NONE) {
+
+        ocp_qp_solver_plan plan;
+        plan.qp_solver = solver_name;
         
-//         void *args = ocp_qp_create_args(&plan, qp.dimensions);
-//         ocp_qp_solver *solver = ocp_qp_create(&plan, qp.dimensions, args);
-//         return solver;
-//     }
+        void *args = ocp_qp_create_args(&plan, qp.qp->dim);
+        ocp_qp_solver *solver = ocp_qp_create(&plan, qp.qp->dim, args);
+        return solver;
+    }
 
-//     d_ocp_qp_sol *evaluate(const acados::OcpQp& input) {
-//         d_ocp_qp_sol *result = create_ocp_qp_out(input.dimensions);
-//         int_t return_code = ocp_qp_solve($self, input.qp, result);
-//         if (return_code != 0)
-//             throw std::runtime_error("qp solver failed!");
-//         return result;
-//     }
+    const acados::ocp_qp_solution evaluate(const acados::ocp_qp& input) {
+        d_ocp_qp_sol *result = create_ocp_qp_out(input.qp->dim);
+        int_t return_code = ocp_qp_solve($self, input.qp, result);
+        if (return_code != 0)
+            throw std::runtime_error("qp solver failed!");
+        // print_ocp_qp_out(result);
+        return acados::ocp_qp_solution(result);
+    }
 
-// }
+}

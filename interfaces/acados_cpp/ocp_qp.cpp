@@ -1,15 +1,18 @@
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
-#include <string>
 #include <stdexcept>
 
 #include "acados_cpp/ocp_qp.hpp"
 
 #include "acados_c/ocp_qp.h"
 #include "acados/utils/print.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
+
+namespace std {
+    std::string to_string(std::pair<int, int> p) {
+        return "( " + std::to_string(p.first) + ", " + std::to_string(p.second) + " )";
+    }
+}
 
 namespace acados {
 
@@ -91,6 +94,33 @@ void ocp_qp::update(std::string field, int stage, std::vector<double> v) {
     else
         throw std::invalid_argument("OCP QP does not contain field " + field);
 }
+
+void ocp_qp::update(string field, vector<double> v) {
+    int last_stage = N;
+    if (field == "A" || field == "B" || field == "b")
+        last_stage = N-1;
+    
+    for (int stage = 0; stage <= last_stage; ++stage)
+        update(field, stage, v);
+}
+
+
+void ocp_qp::state_bounds_indices(int stage, vector<int> v) {
+    int nb_state_bounds = qp->dim->nbx[stage];
+    if (nb_state_bounds != v.size())
+        throw std::invalid_argument("I need " + std::to_string(nb_state_bounds) + "indices.");
+    for (int i = 0; i < nb_state_bounds; ++i)
+        qp->idxb[stage][qp->dim->nbu[stage]+i] = qp->dim->nu[stage]+v.at(i);
+}
+
+void ocp_qp::control_bounds_indices(int stage, vector<int> v) {
+    int nb_control_bounds = qp->dim->nbu[stage];
+    if (nb_control_bounds != v.size())
+        throw std::invalid_argument("I need " + std::to_string(nb_control_bounds) + "indices.");
+    for (int i = 0; i < nb_control_bounds; ++i)
+        qp->idxb[stage][i] = v.at(i);
+}
+
 
 std::map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
         {"Q", d_cvt_ocp_qp_to_colmaj_Q},
@@ -233,12 +263,16 @@ std::pair<int, int> ocp_qp::dimensions(std::string field, int stage) {
         throw std::invalid_argument("OCP QP does not contain field " + field);
 }
 
+static bool match(std::pair<int, int> dims, int nb_elems) {
+    int nb_expected_elems = dims.first * dims.second;
+    if (nb_expected_elems == 0 || nb_expected_elems == nb_elems)
+        return true;
+    return false;
+}
+
 void ocp_qp::check_nb_elements(std::string field, int stage, int nb_elems) {
-    auto dims = dimensions(field, stage);
-    auto nb_expected_elems = dims.first * dims.second;
-    if (nb_elems != nb_expected_elems)
-        throw std::invalid_argument("Vector needs " + std::to_string(nb_expected_elems)
-                                    + " elements.");
+    if (!match(dimensions(field, stage), nb_elems))
+        throw std::invalid_argument("Need " + std::to_string(dimensions(field, stage)) + " elements.");
 }
 
 }  // namespace acados

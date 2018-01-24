@@ -82,4 +82,5 @@ char compiler[16] = "cc";
 // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 %}
 
+%feature("autodoc", "3");
 %include "ocp_qp.i"

@@ -29,6 +29,27 @@
     $1 = tmp;
 }
 
+%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) std::vector<double> {
+#if defined(SWIGMATLAB)
+    $1 = (mxIsNumeric($input) ? 1 : 0);
+#elif defined(SWIGPYTHON)
+    $1 = (PyArray_Check($input) ? 1 : 0);
+#endif
+}
+
+%typemap(out) ocp_qp_info {
+#if defined(SWIGMATLAB)
+#elif defined(SWIGPYTHON)
+    PyObject *dict = PyDict_New();
+    PyDict_SetItemString(dict, "num_iter", PyLong_FromLong($1.num_iter));
+    PyDict_SetItemString(dict, "qp_solver_time", PyFloat_FromDouble($1.solve_QP_time));
+    PyDict_SetItemString(dict, "condensing_time", PyLong_FromDouble($1.condensing_time));
+    PyDict_SetItemString(dict, "interface_time", PyLong_FromDouble($1.interface_time));
+    PyDict_SetItemString(dict, "total_time", PyLong_FromDouble($1.total_time));
+    $result = dict;
+#endif
+}
+
 %typemap(in) int_t N {
     $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");

@@ -21,6 +21,11 @@ public:
     ocp_qp(int N, int nx, int nu, int nbx = 0, int nbu = 0, int ng = 0);
 
     void update(string field, int stage, vector<double> v);
+    void update(string field, vector<double> v);
+
+    void state_bounds_indices(int stage, vector<int> v);
+    void control_bounds_indices(int stage, vector<int> v);
+
     vector< vector<double> > extract(string field);
 
     vector<int> nx();
@@ -35,6 +40,8 @@ public:
 
     const int N;
 
+    ocp_qp_in *qp;
+
 private:
     
     void write_dimensions(vector<int> dims, int *ptr);
@@ -45,7 +52,6 @@ private:
 
     static std::map<string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 
-    ocp_qp_in *qp;
 };
 
 }  // namespace acados
