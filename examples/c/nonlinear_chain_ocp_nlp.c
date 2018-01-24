@@ -236,6 +236,7 @@ int main() {
     nb[NN] = nbu[NN]+nbx[NN];
 
     // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
+	// TODO put this stuff in a function !!!!!!
     ocp_nlp_dims dims;
     dims.N  = NN;
     dims.nx = nx;
@@ -243,6 +244,7 @@ int main() {
     dims.ng = nc;
     dims.nbx = nbx;
     dims.nbu = nbu;
+    dims.nb = nb;
     dims.nh = nh;
     dims.ns = ns;
 
@@ -347,21 +349,15 @@ int main() {
     }
 
 	// stage-wise
-//    nlp->lb[0] = lb0;
-//    nlp->ub[0] = ub0;
 	blasfeo_pack_dvec(nb[0], lb0, nlp->d+0, 0);
 	blasfeo_pack_dvec(nb[0], ub0, nlp->d+0, nb[0]+ng[0]);
     nlp->idxb[0] = idxb0;
     for (int i = 1; i < NN; i++)
 	{
-//        nlp->lb[i] = lb1;
- //       nlp->ub[i] = ub1;
 		blasfeo_pack_dvec(nb[i], lb1, nlp->d+i, 0);
 		blasfeo_pack_dvec(nb[i], ub1, nlp->d+i, nb[i]+ng[i]);
         nlp->idxb[i] = idxb1;
     }
-//    nlp->lb[NN] = lbN;
-//    nlp->ub[NN] = ubN;
 	blasfeo_pack_dvec(nb[NN], lbN, nlp->d+NN, 0);
 	blasfeo_pack_dvec(nb[NN], ubN, nlp->d+NN, nb[NN]+ng[NN]);
     nlp->idxb[NN] = idxbN;
