@@ -1,20 +1,25 @@
 import acados.*
 
-qp = ocp_qp(struct('N',5, 'nx',2, 'nu', 1));
+qp = ocp_qp(5, 2, 1);
 
 % specify OCP
-qp.A = [0 0; 1 0];
-qp.B = [0; 1];
-qp.Q = eye(2);
-qp.R = 1;
+qp.update('A', [0 1; 0 0]);
+qp.update('B', [0; 1]);
+qp.update('Q', eye(2));
+qp.update('R', 1);
 
 % specify initial condition
 x0 = [1; 1];
-qp.lb{1} = x0;
-qp.ub{1} = x0;
+qp.update('lbx', 0, x0);
+qp.update('ubx', 0, x0);
 
 % solve QP
-solver = ocp_qp_solver('qpdunes', qp);
-output = solver.evaluate();
-assert(abs(-0.5 - output.controls{1}) < 1e-8)
-disp(output.states)
+disp(qp);
+solver = ocp_qp_solver(FULL_CONDENSING_QPOASES, qp);
+output = solver.evaluate(qp);
+
+xopt = output.states();
+
+for i=1:numel(xopt)
+    disp(xopt{i})
+end

@@ -239,6 +239,75 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
 }
 
 
+void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in)
+{
+    int N = qp_in->dim->N;
+    int *nx = qp_in->dim->nx;
+    int *nu = qp_in->dim->nu;
+    int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+
+    char *str = string_out;
+
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        string_out += sprintf(string_out, "k = %d\n\n", ii);
+
+        string_out += sprintf(string_out, "RSQrq =\n");
+        blasfeo_print_to_string_dmat(&string_out, nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
+
+        string_out += sprintf(string_out, "rq =\n");
+        blasfeo_print_to_string_tran_dvec(&string_out, nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+
+
+        if (ii < N)
+        {
+            string_out += sprintf(string_out, "BAbt =\n");
+            blasfeo_print_to_string_dmat(&string_out, nu[ii]+nx[ii]+1, nx[ii+1], &qp_in->BAbt[ii], 0 , 0);
+
+            string_out += sprintf(string_out, "b =\n");
+            blasfeo_print_to_string_tran_dvec(&string_out, nx[ii+1], &qp_in->b[ii], 0);
+        }
+
+        string_out += sprintf(string_out, "idxb = (nb = %d = %d + %d)\n", qp_in->dim->nb[ii], qp_in->dim->nbu[ii], qp_in->dim->nbx[ii]);
+        int_print_to_string_mat(&string_out, 1, nb[ii], qp_in->idxb[ii], 1);
+
+        string_out += sprintf(string_out, "d =\n");
+        blasfeo_print_to_string_tran_dvec(&string_out, 2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
+    }
+}
+
+
+
+void print_ocp_qp_out_to_string(char *string_out, ocp_qp_out *qp_out)
+{
+    int N = qp_out->dim->N;
+    int *nx = qp_out->dim->nx;
+    int *nu = qp_out->dim->nu;
+    int *nb = qp_out->dim->nb;
+    int *ng = qp_out->dim->ng;
+
+
+
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        string_out += sprintf(string_out, "k = %d\n\n", ii);
+
+        string_out += sprintf(string_out, "ux =\n");
+        blasfeo_print_to_string_tran_dvec(&string_out, nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+
+        if (ii < N)
+        {
+            string_out += sprintf(string_out, "pi =\n");
+            blasfeo_print_to_string_tran_dvec(&string_out, nx[ii], &qp_out->pi[ii], 0);
+        }
+
+        string_out += sprintf(string_out, "lam =\n");
+        blasfeo_print_to_string_tran_dvec(&string_out, 2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+    }
+}
+
+
 
 void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp)
 {

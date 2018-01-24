@@ -108,7 +108,7 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_out_calculate_size(dims);
 
-    void *ptr = malloc(bytes);
+    void *ptr = calloc(1, bytes);
 
     ocp_qp_out *out = assign_ocp_qp_out(dims, ptr);
 
@@ -165,7 +165,7 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 {
     int bytes = ocp_qp_calculate_args_size(plan, dims);
 
-    void *ptr = malloc(bytes);
+    void *ptr = calloc(1, bytes);
 
     void *args = ocp_qp_assign_args(plan, dims, ptr);
 
@@ -243,7 +243,7 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
 {
     int bytes = ocp_qp_calculate_size(plan, dims, args_);
 
-    void *ptr = malloc(bytes);
+    void *ptr = calloc(1, bytes);
 
     ocp_qp_solver *solver = ocp_qp_assign(plan, dims, args_, ptr);
 

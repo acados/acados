@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <stdexcept>
 
@@ -188,7 +189,9 @@ std::vector<int> ocp_qp::ng() {
 }
 
 std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp) {
-    print_ocp_qp_in(qp.qp);
+    static char a[10000];
+    print_ocp_qp_in_to_string(a, qp.qp);
+    oss << a;
     return oss;
 }
 

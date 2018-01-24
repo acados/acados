@@ -38,14 +38,22 @@
 }
 
 %typemap(out) ocp_qp_info {
+    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
 #if defined(SWIGMATLAB)
+    mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
+    mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));
+    mxSetField(mat_struct, 1, fields[1], mxCreateDoubleScalar($1.solve_QP_time));
+    mxSetField(mat_struct, 2, fields[2], mxCreateDoubleScalar($1.condensing_time));
+    mxSetField(mat_struct, 3, fields[3], mxCreateDoubleScalar($1.interface_time));
+    mxSetField(mat_struct, 4, fields[4], mxCreateDoubleScalar($1.total_time));
+    $result = mat_struct;
 #elif defined(SWIGPYTHON)
     PyObject *dict = PyDict_New();
-    PyDict_SetItemString(dict, "num_iter", PyLong_FromLong($1.num_iter));
-    PyDict_SetItemString(dict, "qp_solver_time", PyFloat_FromDouble($1.solve_QP_time));
-    PyDict_SetItemString(dict, "condensing_time", PyLong_FromDouble($1.condensing_time));
-    PyDict_SetItemString(dict, "interface_time", PyLong_FromDouble($1.interface_time));
-    PyDict_SetItemString(dict, "total_time", PyLong_FromDouble($1.total_time));
+    PyDict_SetItemString(dict, fields[0], PyLong_FromLong($1.num_iter));
+    PyDict_SetItemString(dict, fields[1], PyFloat_FromDouble($1.solve_QP_time));
+    PyDict_SetItemString(dict, fields[2], PyLong_FromDouble($1.condensing_time));
+    PyDict_SetItemString(dict, fields[3], PyLong_FromDouble($1.interface_time));
+    PyDict_SetItemString(dict, fields[4], PyLong_FromDouble($1.total_time));
     $result = dict;
 #endif
 }

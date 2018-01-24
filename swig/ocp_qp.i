@@ -2,6 +2,8 @@
 %{
 
 #include <iostream>
+#include <numeric>
+#include <sstream>
 #include <vector>
 
 #include "acados_c/ocp_qp.h"
@@ -125,6 +127,7 @@ using std::string;
 %extend acados::ocp_qp {
 
     ocp_qp(int N = 10, int nx = 2, int nu = 1, int nbx = 0, int nbu = 0, int ng = 0, bool fix_x0 = true) {
+        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
         if (fix_x0 == false)
             return new acados::ocp_qp(N, nx, nu, nbx, nbu, ng);
         vector<int> nbx_v(N+1, 0);
@@ -150,8 +153,11 @@ using std::string;
     }
 
     char *__str__() {
-        static char tmp[1];
-        std::cout << *($self);
+        static char tmp[10000];
+        std::ostringstream stream;
+        stream << *($self);
+        std::string a = stream.str();
+        std::copy(std::begin(a), std::end(a), tmp);
         return tmp;
     }
 }
@@ -192,11 +198,11 @@ using std::string;
     }
 
     const acados::ocp_qp_solution evaluate(const acados::ocp_qp& input) {
+        print_ocp_qp_in(input.qp);
         d_ocp_qp_sol *result = create_ocp_qp_out(input.qp->dim);
         int_t return_code = ocp_qp_solve($self, input.qp, result);
         if (return_code != 0)
             throw std::runtime_error("qp solver failed!");
-        // print_ocp_qp_out(result);
         return acados::ocp_qp_solution(result);
     }
 
