@@ -209,6 +209,7 @@ int main() {
     int nu[NN + 1] = {0};
     int nbx[NN + 1] = {0};
     int nbu[NN + 1] = {0};
+    int nb[NN + 1] = {0};
     int nc[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
@@ -218,6 +219,7 @@ int main() {
     nu[0] = NU;
     nbx[0] = nx[0];
     nbu[0] = nu[0];
+    nb[0] = nbu[0]+nbx[0];
 
     for (int i = 1; i < NN; i++)
     {
@@ -225,11 +227,13 @@ int main() {
         nu[i] = NU;
         nbx[i] = NMF;
         nbu[i] = NU;
+		nb[i] = nbu[i]+nbx[i];
     }
 
     nx[NN] = NX;
     nbx[NN] = NX;
     nbu[NN] = 0;
+    nb[NN] = nbu[NN]+nbx[NN];
 
     // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
     ocp_nlp_dims dims;
@@ -293,7 +297,6 @@ int main() {
 
 
     // Box constraints
-    int *nb = nlp->dims->nb;
 
 	// idxb0
     int idxb0[nb[0]];
@@ -344,16 +347,23 @@ int main() {
     }
 
 	// stage-wise
-    nlp->lb[0] = lb0;
-    nlp->ub[0] = ub0;
+//    nlp->lb[0] = lb0;
+//    nlp->ub[0] = ub0;
+	blasfeo_pack_dvec(nb[0], lb0, nlp->d+0, 0);
+	blasfeo_pack_dvec(nb[0], ub0, nlp->d+0, nb[0]+ng[0]);
     nlp->idxb[0] = idxb0;
-    for (int i = 1; i < NN; i++) {
-        nlp->lb[i] = lb1;
-        nlp->ub[i] = ub1;
+    for (int i = 1; i < NN; i++)
+	{
+//        nlp->lb[i] = lb1;
+ //       nlp->ub[i] = ub1;
+		blasfeo_pack_dvec(nb[i], lb1, nlp->d+i, 0);
+		blasfeo_pack_dvec(nb[i], ub1, nlp->d+i, nb[i]+ng[i]);
         nlp->idxb[i] = idxb1;
     }
-    nlp->lb[NN] = lbN;
-    nlp->ub[NN] = ubN;
+//    nlp->lb[NN] = lbN;
+//    nlp->ub[NN] = ubN;
+	blasfeo_pack_dvec(nb[NN], lbN, nlp->d+NN, 0);
+	blasfeo_pack_dvec(nb[NN], ubN, nlp->d+NN, nb[NN]+ng[NN]);
     nlp->idxb[NN] = idxbN;
 
     /************************************************
