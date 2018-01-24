@@ -20,10 +20,12 @@
 #include "acados/utils/casadi_wrapper.h"
 
 #include <assert.h>
-
 #include <stdlib.h>
 
-int_t nnz_output(const int_t *sparsity) {
+
+
+int_t nnz_output(const int_t *sparsity)
+{
     int_t nnz = 0;
     if (sparsity != NULL) {
         const int_t nrow = sparsity[0];
@@ -42,8 +44,10 @@ int_t nnz_output(const int_t *sparsity) {
     return nnz;
 }
 
-void densify(const real_t *sparse_in, real_t *dense_out,
-             const int_t *sparsity) {
+
+
+void densify(const real_t *sparse_in, real_t *dense_out, const int_t *sparsity)
+{
     const int_t nrow = sparsity[0];
     const int_t ncol = sparsity[1];
     const int_t dense = sparsity[2];
@@ -67,17 +71,73 @@ void densify(const real_t *sparse_in, real_t *dense_out,
     }
 }
 
-casadi_wrapper_args *casadi_wrapper_create_arguments() {
-    casadi_wrapper_args *args =
-        (casadi_wrapper_args *)malloc(sizeof(casadi_wrapper_args));
-    args->fun = NULL;
-    args->dims = NULL;
 
-    return args;
+
+int casadi_wrapper_calculate_args_size(casadi_wrapper_dims *dims)
+{
+    int size = sizeof(casadi_wrapper_args);
+
+    return size;
 }
 
-int_t casadi_wrapper_calculate_workspace_size(const casadi_wrapper_in *cw_in,
-                                              casadi_wrapper_args *args) {
+
+
+void *casadi_wrapper_assign_args(casadi_wrapper_dims *dims, void *raw_memory)
+{
+    casadi_wrapper_args *args;
+
+    char *c_ptr = (char *) raw_memory;
+
+    args = (casadi_wrapper_args *) c_ptr;
+    c_ptr += sizeof(casadi_wrapper_args);
+
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    assert((char*)raw_memory + casadi_wrapper_calculate_args_size(dims) == c_ptr);
+
+    return (void *)args;
+}
+
+
+
+void casadi_wrapper_initialize_default_args(casadi_wrapper_args *args)
+{
+    args->fun = NULL;
+    args->dims = NULL;
+    args->sparsity = NULL;
+}
+
+
+
+int casadi_wrapper_calculate_memory_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args)
+{
+    int size = sizeof(casadi_wrapper_memory);
+
+    return size;
+}
+
+
+
+void *casadi_wrapper_assign_memory(casadi_wrapper_dims *dims, casadi_wrapper_args *args, void *raw_memory)
+{
+    casadi_wrapper_memory *mem;
+
+    char *c_ptr = (char *) raw_memory;
+
+    args = (casadi_wrapper_memory *) c_ptr;
+    c_ptr += sizeof(casadi_wrapper_memory);
+
+    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+
+    assert((char*)raw_memory + casadi_wrapper_calculate_memory_size(dims, args) == c_ptr);
+
+    return (void *)mem;
+}
+
+
+
+int casadi_wrapper_calculate_workspace_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args)
+{
     int_t size = sizeof(casadi_wrapper_workspace);
 
     int_t sz_arg, sz_res, sz_iw, sz_w;
@@ -103,10 +163,10 @@ int_t casadi_wrapper_calculate_workspace_size(const casadi_wrapper_in *cw_in,
     return size;
 }
 
-char *casadi_wrapper_assign_workspace(const casadi_wrapper_in *cw_in,
-                                      casadi_wrapper_args *args,
-                                      casadi_wrapper_workspace **work,
-                                      void *raw_memory) {
+
+
+static void cast_workspace(casadi_wrapper_dims *dims, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work)
+{
     int_t sz_arg, sz_res, sz_iw, sz_w;
     args->dims(&sz_arg, &sz_res, &sz_iw, &sz_w);
 
@@ -114,80 +174,59 @@ char *casadi_wrapper_assign_workspace(const casadi_wrapper_in *cw_in,
     if (sz_arg < 3) sz_arg = 3;
     if (sz_res < 3) sz_res = 3;
 
-    char *c_ptr = (char *)raw_memory;
-
-    *work = (casadi_wrapper_workspace *)c_ptr;
+    char *c_ptr = (char *) work;
     c_ptr += sizeof(casadi_wrapper_workspace);
 
-    (*work)->arg = (const real_t **)c_ptr;
+    work->arg = (const real_t **)c_ptr;
     c_ptr += sz_arg * sizeof(real_t *);
 
-    (*work)->res = (real_t **)c_ptr;
+    work->res = (real_t **)c_ptr;
     c_ptr += sz_res * sizeof(real_t *);
 
-    (*work)->iw = (int_t *)c_ptr;
+    work->iw = (int_t *)c_ptr;
     c_ptr += sz_iw * sizeof(int_t);
 
-    (*work)->w = (real_t *)c_ptr;
+    work->w = (real_t *)c_ptr;
     c_ptr += sz_w * sizeof(real_t);
 
-    (*work)->sparse_res = (real_t **)c_ptr;
+    work->sparse_res = (real_t **)c_ptr;
     c_ptr += 3 * sizeof(real_t *);
 
-    (*work)->sparse_res[0] = (real_t *)c_ptr;
+    work->sparse_res[0] = (real_t *)c_ptr;
     c_ptr += nnz_output(args->sparsity(0)) * sizeof(real_t);
 
-    (*work)->sparse_res[1] = (real_t *)c_ptr;
+    work->sparse_res[1] = (real_t *)c_ptr;
     c_ptr += nnz_output(args->sparsity(1)) * sizeof(real_t);
 
-    (*work)->sparse_res[2] = (real_t *)c_ptr;
+    work->sparse_res[2] = (real_t *)c_ptr;
     c_ptr += nnz_output(args->sparsity(2)) * sizeof(real_t);
-
-    return c_ptr;
 }
 
-casadi_wrapper_workspace *casadi_wrapper_create_workspace(
-    const casadi_wrapper_in *cw_in, casadi_wrapper_args *args) {
-    casadi_wrapper_workspace *work;
 
-    int_t workspace_size = casadi_wrapper_calculate_workspace_size(cw_in, args);
-    void *raw_memory_ptr = malloc(workspace_size);
 
-    char *ptr_end =
-        casadi_wrapper_assign_workspace(cw_in, args, &work, raw_memory_ptr);
-    assert((char *)raw_memory_ptr + workspace_size >= ptr_end);
-    (void)ptr_end;
-
-    return work;
-}
-
-int_t casadi_wrapper(const casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out,
-                     casadi_wrapper_args *args,
-                     casadi_wrapper_workspace *work) {
+int casadi_wrapper(casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work)
+{
     work->arg[0] = cw_in->x;
     work->arg[1] = cw_in->u;
     work->arg[2] = cw_in->p;
+    work->arg[3] = cw_in->mul;
 
-    work->res[0] = work->sparse_res[0];
-    work->res[1] = cw_in->compute_jac ? work->sparse_res[1] : NULL;
-    work->res[2] = cw_in->compute_hess ? work->sparse_res[2] : NULL;
+    work->res[0] = cw_in->compute_y ? work->sparse_res[0] : NULL;
+    work->res[1] = cw_in->compute_jac_y ? work->sparse_res[1] : NULL;
+    work->res[2] = cw_in->compute_grad_mul_y ? work->sparse_res[2] : NULL;
+    work->res[3] = cw_in->compute_hess_mul_y ? work->sparse_res[3] : NULL;
 
     int_t output = args->fun(work->arg, work->res, work->iw, work->w, 0);
 
     // Densify
-    densify(work->sparse_res[0], cw_out->y, args->sparsity(0));
-    if (cw_in->compute_jac)
+    if (cw_in->compute_y)
+        densify(work->sparse_res[0], cw_out->y, args->sparsity(0));
+    if (cw_in->compute_jac_y)
         densify(work->sparse_res[1], cw_out->jac_y, args->sparsity(1));
-    if (cw_in->compute_hess)
-        densify(work->sparse_res[2], cw_out->hess_y, args->sparsity(2));
+    if (cw_in->compute_grad_mul_y)
+        densify(work->sparse_res[2], cw_out->grad_mul_y, args->sparsity(2));
+    if (cw_in->compute_hess_mul_y)
+        densify(work->sparse_res[3], cw_out->hess_mul_y, args->sparsity(3));
 
     return output;
 }
-
-void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in,
-                               casadi_wrapper_args *args,
-                               casadi_wrapper_workspace **work) {
-    *work = casadi_wrapper_create_workspace(cw_in, args);
-}
-
-void casadi_wrapper_destroy(casadi_wrapper_workspace *work) { free(work); }

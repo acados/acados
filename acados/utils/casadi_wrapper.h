@@ -27,18 +27,26 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef struct {
-    const real_t *x;
-    const real_t *u;
-    const real_t *p;
+    int dummy;
+} casadi_wrapper_dims;
 
-    bool compute_jac;
-    bool compute_hess;
+typedef struct {
+    double *x;
+    double *u;
+    double *p;
+    double *mul;
+
+    bool compute_y;
+    bool compute_jac_y;
+    bool compute_grad_mul_y;
+    bool compute_hess_mul_y;
 } casadi_wrapper_in;
 
 typedef struct {
-    real_t *y;
-    real_t *jac_y;
-    real_t *hess_y;
+    double *y;
+    double *jac_y;
+    double *grad_mul_y;
+    double *hess_mul_y;
 } casadi_wrapper_out;
 
 typedef struct {
@@ -48,6 +56,10 @@ typedef struct {
 } casadi_wrapper_args;
 
 typedef struct {
+    int dummy;
+} casadi_wrapper_memory;
+
+typedef struct {
     const real_t **arg;
     real_t **res;
     int_t *iw;
@@ -55,27 +67,20 @@ typedef struct {
     real_t **sparse_res;
 } casadi_wrapper_workspace;
 
-casadi_wrapper_args *casadi_wrapper_create_arguments();
-
-int_t casadi_wrapper_calculate_workspace_size(const casadi_wrapper_in *cw_in,
-                                              casadi_wrapper_args *args);
-
-char *casadi_wrapper_assign_workspace(const casadi_wrapper_in *cw_in,
-                                      casadi_wrapper_args *args,
-                                      casadi_wrapper_workspace **work,
-                                      void *raw_memory);
-
-casadi_wrapper_workspace *casadi_wrapper_create_workspace(
-    const casadi_wrapper_in *cw_in, casadi_wrapper_args *args);
-
-int_t casadi_wrapper(const casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out,
-                     casadi_wrapper_args *args, casadi_wrapper_workspace *work);
-
-void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in,
-                               casadi_wrapper_args *args,
-                               casadi_wrapper_workspace **work);
-
-void casadi_wrapper_destroy(casadi_wrapper_workspace *work);
+//
+int casadi_wrapper_calculate_args_size(casadi_wrapper_dims *dims);
+//
+void *casadi_wrapper_assign_args(casadi_wrapper_dims *dims, void *raw_memory);
+//
+void casadi_wrapper_initialize_default_args(casadi_wrapper_args *args);
+//
+int casadi_wrapper_calculate_memory_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args);
+//
+void *casadi_wrapper_assign_memory(casadi_wrapper_dims *dims, casadi_wrapper_args *args, void *raw_memory);
+//
+int casadi_wrapper_calculate_workspace_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args);
+//
+int casadi_wrapper(casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work);
 
 #ifdef __cplusplus
 } /* extern "C" */
