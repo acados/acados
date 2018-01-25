@@ -3,14 +3,20 @@ include ../../Makefile.rule
 OBJS =
 
 OBJS += dense_qp/dense_qp_hpipm.o
+ifeq ($(ACADOS_WITH_QORE), 1)
 OBJS += dense_qp/dense_qp_qore.o
+endif
 OBJS += dense_qp/dense_qp_qpoases.o
 OBJS += ocp_qp/ocp_qp_full_condensing_solver.o
 OBJS += ocp_qp/ocp_qp_full_condensing.o
 OBJS += ocp_qp/ocp_qp_hpipm.o
+ifeq ($(ACADOS_WITH_HPMPC), 1)
 OBJS += ocp_qp/ocp_qp_hpmpc.o
+endif
 OBJS += ocp_qp/ocp_qp_partial_condensing.o
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += ocp_qp/ocp_qp_qpdunes.o
+endif
 OBJS += ocp_qp/ocp_qp_sparse_solver.o
 OBJS += sim/sim_erk_integrator.o
 OBJS += sim/sim_lifted_irk_integrator.o

@@ -502,30 +502,49 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         //         qp_B[i][j*nx[i]+k] = sim[i].out->S_forw[(nx[i]+j)*nx[i]+k];
 
         // Update bounds:
-        for (int_t j = 0; j < nb[i]; j++) {
+        for (int_t j = 0; j < nb[i]; j++)
+		{
 // #ifdef FLIP_BOUNDS
 
+#if 0
             // NOTE!!!! ATM IDXB OF NLP IS FLIPPED WRT QP
             DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
             DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = - nlp->ub[i][j] + w[w_idx+nlp->idxb[i][j]];
 
-            // if (nlp->idxb[i][j] < nu[i]) {
-            //     DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-            //     DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-            //     // qp_lb[i][j] = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-            //     // qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
-            // } else {
-            //     DVECEL_LIBSTR(&sd[i], j) = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-            //     DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-            //     // qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-            //     // qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
-            // }
+#else
+
+			if (nlp->idxb[i][j] < nu[i]) // input
+			{
+//				DVECEL_LIBSTR(&sd[i], j)             =   nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+//				DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = - nlp->ub[i][j] + w[w_idx + nx[i] + nlp->idxb[i][j]];
+				DVECEL_LIBSTR(&sd[i], j)             =   DVECEL_LIBSTR(nlp->d+i, j)             - w[w_idx + nx[i] + nlp->idxb[i][j]];
+				DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = - DVECEL_LIBSTR(nlp->d+i, j+nb[i]+ng[i]) + w[w_idx + nx[i] + nlp->idxb[i][j]];
+				// qp_lb[i][j] = nlp->lb[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+				// qp_ub[i][j] = nlp->ub[i][j] - w[w_idx + nx[i] + nlp->idxb[i][j]];
+			}
+			else // state
+			{
+//				DVECEL_LIBSTR(&sd[i], j)             =   nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+//				DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = - nlp->ub[i][j] + w[w_idx - nu[i] + nlp->idxb[i][j]];
+				DVECEL_LIBSTR(&sd[i], j)             =   DVECEL_LIBSTR(nlp->d+i, j)             - w[w_idx - nu[i] + nlp->idxb[i][j]];
+				DVECEL_LIBSTR(&sd[i], j+nb[i]+ng[i]) = - DVECEL_LIBSTR(nlp->d+i, j+nb[i]+ng[i]) + w[w_idx - nu[i] + nlp->idxb[i][j]];
+				// qp_lb[i][j] = nlp->lb[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+				// qp_ub[i][j] = nlp->ub[i][j] - w[w_idx - nu[i] + nlp->idxb[i][j]];
+			}
+
+#endif
 
 // #else
 //             qp_lb[i][j] = nlp->lb[i][j] - w[w_idx+nlp->idxb[i][j]];
 //             qp_ub[i][j] = nlp->ub[i][j] - w[w_idx+nlp->idxb[i][j]];
 // #endif
         }
+//		if(i==0)
+//		{
+//		blasfeo_print_tran_dvec(2*nb[i]+2*ng[i], nlp->d+i, 0);
+//		d_print_mat(1, nu[i]+nx[i], w+w_idx, 1);
+//		blasfeo_print_tran_dvec(2*nb[i]+2*ng[i], &sd[i], 0);
+//		}
 
         // Update gradients
         // TODO(rien): only for diagonal Q, R matrices atm
@@ -561,14 +580,20 @@ static void multiple_shooting(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_args *args, 
         w_idx += nx[i]+nu[i];
     }
 
-    for (int_t j = 0; j < nb[N]; j++) {
+    for (int_t j = 0; j < nb[N]; j++) // input
+	{
 // #ifdef FLIP_BOUNDS
-        if (nlp->idxb[N][j] < nu[N]) {
-            DVECEL_LIBSTR(&sd[N], j) = nlp->lb[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
-            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - nlp->ub[N][j] + w[w_idx + nx[N] + nlp->idxb[N][j]];
-        } else {
-            DVECEL_LIBSTR(&sd[N], j) =  nlp->lb[N][j] - w[w_idx - nu[N] + nlp->idxb[N][j]];
-            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - nlp->ub[N][j] + w[w_idx - nu[N] + nlp->idxb[N][j]];
+        if (nlp->idxb[N][j] < nu[N])
+		{
+//            DVECEL_LIBSTR(&sd[N], j)             =   nlp->lb[N][j] - w[w_idx + nx[N] + nlp->idxb[N][j]];
+//            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - nlp->ub[N][j] + w[w_idx + nx[N] + nlp->idxb[N][j]];
+            DVECEL_LIBSTR(&sd[N], j)             =   DVECEL_LIBSTR(nlp->d+N, j)             - w[w_idx + nx[N] + nlp->idxb[N][j]];
+            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - DVECEL_LIBSTR(nlp->d+N, j+nb[N]+ng[N]) + w[w_idx + nx[N] + nlp->idxb[N][j]];
+        }
+		else // state
+		{
+            DVECEL_LIBSTR(&sd[N], j)             =   DVECEL_LIBSTR(nlp->d+N, j)             - w[w_idx - nu[N] + nlp->idxb[N][j]];
+            DVECEL_LIBSTR(&sd[N], j+nb[N]+ng[N]) = - DVECEL_LIBSTR(nlp->d+N, j+nb[N]+ng[N]) + w[w_idx - nu[N] + nlp->idxb[N][j]];
         }
 // #else
 //         qp_lb[N][j] = nlp->lb[N][j] - w[w_idx+nlp->idxb[N][j]];
@@ -684,15 +709,18 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
     // TODO(dimitris): move somewhere else (not needed after new nlp_in)
     int_t **qp_idxb = (int_t **) work->qp_in->idxb;
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nb[i]; j++) {
-            if (nlp_in->idxb[i][j] < nx[i]) {
-                // state bound
-                qp_idxb[i][j] = nlp_in->idxb[i][j]+nu[i];
-            } else {
-                // input bound
-                qp_idxb[i][j] = nlp_in->idxb[i][j]-nx[i];
-            }
+    for (int_t i = 0; i <= N; i++)
+	{
+        for (int_t j = 0; j < nb[i]; j++)
+		{
+			qp_idxb[i][j] = nlp_in->idxb[i][j];
+//            if (nlp_in->idxb[i][j] < nx[i]) {
+//                // state bound
+//                qp_idxb[i][j] = nlp_in->idxb[i][j]+nu[i];
+//            } else {
+//                // input bound
+//                qp_idxb[i][j] = nlp_in->idxb[i][j]-nx[i];
+//            }
         }
     }
 

@@ -68,7 +68,13 @@ void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int s
 // TODO(dimitris): fix order of funs
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 {
+	// extract dims
     int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
 
     int size = sizeof(ocp_nlp_in);
 
@@ -76,7 +82,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
     size += 8*sizeof(int)*(N+1);  // dims
 
     size += sizeof(int *)*(N+1);  // idxb
-    size += 2*sizeof(double *)*(N+1);  // lb, ub
+//    size += 2*sizeof(double *)*(N+1);  // lb, ub
+	size += 1*(N+1)*sizeof(struct blasfeo_dvec); // d
 
     size += 4*sizeof(double *)*(N+1);  // lg, ug, Cx, Cu
 
@@ -89,7 +96,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
     for (int ii = 0; ii < N+1; ii++)
     {
         size += sizeof(int)*(dims->nbx[ii]+dims->nbu[ii]);  // idxb
-        size += 2*sizeof(double)*(dims->nbx[ii]+dims->nbu[ii]);  // lb, ub
+//        size += 2*sizeof(double)*(dims->nbx[ii]+dims->nbu[ii]);  // lb, ub
+		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // d
 
         size += 2*sizeof(double)*dims->ng[ii];  // lg, ug
         size += sizeof(double)*dims->nx[ii]*dims->ng[ii];  // Cx
@@ -114,7 +122,14 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     char *c_ptr = (char *) raw_memory;
 
     int padding = 0;
+
+	// extract sizes
     int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
 
     ocp_nlp_in *in = (ocp_nlp_in *)c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
@@ -136,8 +151,9 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 
     // double pointers
     assign_int_ptrs(N+1, &in->idxb, &c_ptr);
-    assign_double_ptrs(N+1, &in->lb, &c_ptr);
-    assign_double_ptrs(N+1, &in->ub, &c_ptr);
+//    assign_double_ptrs(N+1, &in->lb, &c_ptr);
+//    assign_double_ptrs(N+1, &in->ub, &c_ptr);
+	assign_strvec_ptrs(N+1, &in->d, &c_ptr);
 
     assign_double_ptrs(N+1, &in->lg, &c_ptr);
     assign_double_ptrs(N+1, &in->ug, &c_ptr);
@@ -155,8 +171,9 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     // doubles
     for (int ii = 0; ii < N+1; ii++)
     {
-        assign_double(dims->nbx[ii]+dims->nbu[ii], &in->lb[ii], &c_ptr);
-        assign_double(dims->nbx[ii]+dims->nbu[ii], &in->ub[ii], &c_ptr);
+//        assign_double(dims->nbx[ii]+dims->nbu[ii], &in->lb[ii], &c_ptr);
+//        assign_double(dims->nbx[ii]+dims->nbu[ii], &in->ub[ii], &c_ptr);
+		assign_strvec(2*nb[ii]+2*ng[ii], in->d+ii, &c_ptr);
 
         assign_double(dims->ng[ii], &in->lg[ii], &c_ptr);
         assign_double(dims->ng[ii], &in->ug[ii], &c_ptr);

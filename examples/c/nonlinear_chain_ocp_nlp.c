@@ -209,6 +209,7 @@ int main() {
     int nu[NN + 1] = {0};
     int nbx[NN + 1] = {0};
     int nbu[NN + 1] = {0};
+    int nb[NN + 1] = {0};
     int nc[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
@@ -218,6 +219,7 @@ int main() {
     nu[0] = NU;
     nbx[0] = nx[0];
     nbu[0] = nu[0];
+    nb[0] = nbu[0]+nbx[0];
 
     for (int i = 1; i < NN; i++)
     {
@@ -225,13 +227,16 @@ int main() {
         nu[i] = NU;
         nbx[i] = NMF;
         nbu[i] = NU;
+		nb[i] = nbu[i]+nbx[i];
     }
 
     nx[NN] = NX;
     nbx[NN] = NX;
     nbu[NN] = 0;
+    nb[NN] = nbu[NN]+nbx[NN];
 
     // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
+	// TODO put this stuff in a function !!!!!!
     ocp_nlp_dims dims;
     dims.N  = NN;
     dims.nx = nx;
@@ -239,6 +244,7 @@ int main() {
     dims.ng = nc;
     dims.nbx = nbx;
     dims.nbu = nbu;
+    dims.nb = nb;
     dims.nh = nh;
     dims.ns = ns;
 
@@ -254,14 +260,10 @@ int main() {
     // Problem data
     double wall_pos = -0.01;
     double UMAX = 10;
-    double lb0[NX+NU], ub0[NX+NU];
-    read_initial_state(NX, NMF, lb0);
-    read_initial_state(NX, NMF, ub0);
-    for (int i = NX; i < NX+NU; i++) {
-        lb0[i] = -UMAX;
-        ub0[i] = +UMAX;
-    }
-    double lb[NMF+NU], ub[NMF+NU];
+
+	double x_pos_inf = +1e4;
+	double x_neg_inf = -1e4;
+
     double xref[NX];
     read_final_state(NX, NMF, xref);
     double uref[3] = {0.0, 0.0, 0.0};
@@ -269,11 +271,6 @@ int main() {
     for (int i = 0; i < NX; i++)
         diag_cost_x[i] = 1e-2;
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
-    double x_pos_inf[NX], x_neg_inf[NX];
-    for (int i = 0; i < NX; i++) {
-        x_pos_inf[i] = +1e4;
-        x_neg_inf[i] = -1e4;
-    }
 
     // Least-squares cost
     ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp->cost;
@@ -299,37 +296,71 @@ int main() {
     if (scheme > 2)
         nlp->freezeSens = true;
 
-    // Box constraints
-    int *nb = nlp->dims->nb;
 
-    int idxb_0[nb[0]], idxb_1[nb[1]], idxb_N[nb[NN]];
+
+    // Box constraints
+
+	// idxb0
+    int idxb0[nb[0]];
     for (int i = 0; i < nb[0]; i++)
-        idxb_0[i] = i;
-    for (int i = 0; i < NMF; i++)
-        idxb_1[i] = 6*i + 1;
+        idxb0[i] = i;
+
+	// idxb1
+	int idxb1[nb[1]];
     for (int i = 0; i < NU; i++)
-        idxb_1[NMF+i] = NX+i;
+        idxb1[i] = i;
+    for (int i = 0; i < NMF; i++)
+        idxb1[NU+i] = NU + 6*i + 1;
+
+	// idxbN
+	int idxbN[nb[NN]];
     for (int i = 0; i < nb[NN]; i++)
-        idxb_N[i] = i;
-    nlp->lb[0] = lb0;
-    nlp->ub[0] = ub0;
-    nlp->idxb[0] = idxb_0;
-    for (int j = 0; j < NMF; j++) {
-        lb[j] = wall_pos;  // wall position
-        ub[j] = 1e4;
+        idxbN[i] = i;
+
+	// lb0, ub0
+    double lb0[NX+NU], ub0[NX+NU];
+    for (int i = 0; i < NU; i++)
+	{
+        lb0[i] = -UMAX;
+        ub0[i] = +UMAX;
     }
-    for (int j = 0; j < NU; j++) {
-        lb[NMF+j] = -UMAX;  // umin
-        ub[NMF+j] = +UMAX;  // umax
+    read_initial_state(NX, NMF, lb0+NU);
+    read_initial_state(NX, NMF, ub0+NU);
+
+	// lb1, ub1
+    double lb1[NMF+NU], ub1[NMF+NU];
+    for (int j = 0; j < NU; j++)
+	{
+        lb1[j] = -UMAX;  // umin
+        ub1[j] = +UMAX;  // umax
     }
-    for (int i = 1; i < NN; i++) {
-        nlp->lb[i] = lb;
-        nlp->ub[i] = ub;
-        nlp->idxb[i] = idxb_1;
+    for (int j = 0; j < NMF; j++)
+	{
+        lb1[NU+j] = wall_pos;  // wall position
+        ub1[NU+j] = x_pos_inf;
     }
-    nlp->lb[NN] = x_neg_inf;
-    nlp->ub[NN] = x_pos_inf;
-    nlp->idxb[NN] = idxb_N;
+
+	// lbN, ubN
+    double lbN[NX], ubN[NX];
+    for (int i = 0; i < NX; i++)
+	{
+        lbN[i] = x_neg_inf;
+        ubN[i] = x_pos_inf;
+    }
+
+	// stage-wise
+	blasfeo_pack_dvec(nb[0], lb0, nlp->d+0, 0);
+	blasfeo_pack_dvec(nb[0], ub0, nlp->d+0, nb[0]+ng[0]);
+    nlp->idxb[0] = idxb0;
+    for (int i = 1; i < NN; i++)
+	{
+		blasfeo_pack_dvec(nb[i], lb1, nlp->d+i, 0);
+		blasfeo_pack_dvec(nb[i], ub1, nlp->d+i, nb[i]+ng[i]);
+        nlp->idxb[i] = idxb1;
+    }
+	blasfeo_pack_dvec(nb[NN], lbN, nlp->d+NN, 0);
+	blasfeo_pack_dvec(nb[NN], ubN, nlp->d+NN, nb[NN]+ng[NN]);
+    nlp->idxb[NN] = idxbN;
 
     /************************************************
     * gn_sqp args

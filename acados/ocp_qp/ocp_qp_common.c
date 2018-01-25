@@ -114,6 +114,7 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
+    size += ocp_qp_dims_calculate_size(dims->N);
     size += sizeof(ocp_qp_info);
     return size;
 }
@@ -132,6 +133,24 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
 
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(ocp_qp_info);
+
+    ocp_qp_dims *dims_copy = assign_ocp_qp_dims(dims->N, c_ptr);
+    c_ptr += ocp_qp_dims_calculate_size(dims->N);
+
+    dims_copy->N = dims->N;
+
+    for (int ii = 0; ii < dims->N+1; ii++)
+    {
+        dims_copy->nx[ii] = dims->nx[ii];
+        dims_copy->nu[ii] = dims->nu[ii];
+        dims_copy->nb[ii] = dims->nb[ii];
+        dims_copy->ng[ii] = dims->ng[ii];
+        dims_copy->ns[ii] = dims->ns[ii];
+        dims_copy->nbu[ii] = dims->nbu[ii];
+        dims_copy->nbx[ii] = dims->nbx[ii];
+    }
+
+    qp_out->dim = dims_copy;
 
     assert((char*) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
 
