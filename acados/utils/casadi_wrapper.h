@@ -33,6 +33,8 @@ typedef struct {
 typedef struct {
     double *x;
     double *u;
+    double *z;
+    double *xdot;
     double *p;
     double *mul;
 
