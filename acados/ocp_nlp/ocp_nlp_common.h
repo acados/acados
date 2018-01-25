@@ -80,11 +80,12 @@ typedef struct {
 
 
 
-typedef struct {
-    double **x;
-    double **u;
-    double **pi;
-    double **lam;
+typedef struct
+{
+	struct blasfeo_dvec *ux;
+	struct blasfeo_dvec *pi;
+	struct blasfeo_dvec *lam;
+	int memsize;
 } ocp_nlp_out;
 
 

@@ -49,6 +49,10 @@
 #define MAX_SQP_ITERS 20
 #define NREP 1
 
+
+//#define BC_AS_GC
+
+
 enum sensitivities_scheme {
     EXACT_NEWTON,
     INEXACT_NEWTON,
@@ -210,16 +214,23 @@ int main() {
     int nbx[NN + 1] = {0};
     int nbu[NN + 1] = {0};
     int nb[NN + 1] = {0};
-    int nc[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
     int nh[NN+1] = {0};
 
     nx[0] = NX;
     nu[0] = NU;
+#ifdef BC_AS_GC
+    nbx[0] = 0;
+    nbu[0] = 0;
+	nb[0] = 0;
+    ng[0] = nu[0]+nx[0];
+#else
     nbx[0] = nx[0];
     nbu[0] = nu[0];
     nb[0] = nbu[0]+nbx[0];
+	ng[0] = 0;
+#endif
 
     for (int i = 1; i < NN; i++)
     {
@@ -228,12 +239,14 @@ int main() {
         nbx[i] = NMF;
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
+		ng[i] = 0;
     }
 
     nx[NN] = NX;
     nbx[NN] = NX;
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
+	ng[NN] = 0;
 
     // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
 	// TODO put this stuff in a function !!!!!!
@@ -241,7 +254,7 @@ int main() {
     dims.N  = NN;
     dims.nx = nx;
     dims.nu = nu;
-    dims.ng = nc;
+    dims.ng = ng;
     dims.nbx = nbx;
     dims.nbu = nbu;
     dims.nb = nb;
@@ -362,6 +375,27 @@ int main() {
 	blasfeo_pack_dvec(nb[NN], ubN, nlp->d+NN, nb[NN]+ng[NN]);
     nlp->idxb[NN] = idxbN;
 
+
+	// General constraints
+	if (ng[0]>0)
+	{
+		for (int ii=0; ii<nu[0]; ii++)
+			nlp->Cu[0][ii*(ng[0]+1)] = 1.0;
+		for (int ii=0; ii<nx[0]; ii++)
+			nlp->Cx[0][nu[0]+ii*(ng[0]+1)] = 1.0;
+		for (int ii=0; ii<nu[0]+nx[0]; ii++)
+			nlp->lg[0][ii] = lb0[ii];
+		for (int ii=0; ii<nu[0]+nx[0]; ii++)
+			nlp->ug[0][ii] = ub0[ii];
+	}
+#if 0
+	d_print_mat(ng[0], nu[0], nlp->Cu[0], ng[0]);
+	d_print_mat(ng[0], nx[0], nlp->Cx[0], ng[0]);
+	d_print_mat(1, ng[0], nlp->lg[0], 1);
+	d_print_mat(1, ng[0], nlp->ug[0], 1);
+//	exit(1);
+#endif
+
     /************************************************
     * gn_sqp args
     ************************************************/
@@ -438,14 +472,18 @@ int main() {
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
-        d_print_mat(1, nu[k], nlp_out->u[k], 1);
+		blasfeo_print_tran_dvec(nu[k], nlp_out->ux+k, 0);
+//        d_print_mat(1, nu[k], nlp_out->u[k], 1);
         printf("x[%d] = \n", k);
-        d_print_mat(1, nx[k], nlp_out->x[k], 1);
+		blasfeo_print_tran_dvec(nx[k], nlp_out->ux+k, nu[k]);
+//        d_print_mat(1, nx[k], nlp_out->x[k], 1);
     }
     printf("u[N-1] = \n");
-    d_print_mat(1, nu[NN-1], nlp_out->u[NN-1], 1);
+//    d_print_mat(1, nu[NN-1], nlp_out->u[NN-1], 1);
+	blasfeo_print_tran_dvec(nu[NN-1], nlp_out->ux+NN-1, 0);
     printf("x[N] = \n");
-    d_print_mat(1, nx[NN], nlp_out->x[NN], 1);
+//    d_print_mat(1, nx[NN], nlp_out->x[NN], 1);
+	blasfeo_print_tran_dvec(nx[NN], nlp_out->ux+NN, nu[NN]);
 
     /************************************************
     * free memory

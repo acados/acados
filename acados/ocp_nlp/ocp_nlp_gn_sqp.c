@@ -651,14 +651,19 @@ static void store_trajectories(const ocp_nlp_in *nlp, ocp_nlp_gn_sqp_memory *mem
     int *nu = nlp->dims->nu;
 
     int_t w_idx = 0;
-    for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; j < nx[i]; j++) {
+    for (int_t i = 0; i <= N; i++)
+	{
+		blasfeo_pack_dvec(nu[i], w+w_idx+nx[i], out->ux+i, 0);
+		blasfeo_pack_dvec(nx[i], w+w_idx, out->ux+i, nu[i]);
+        for (int_t j = 0; j < nx[i]; j++)
+		{
             memory->x[i][j] = w[w_idx+j];
-            out->x[i][j] = w[w_idx+j];
+//            out->x[i][j] = w[w_idx+j];
         }
-        for (int_t j = 0; j < nu[i]; j++) {
+        for (int_t j = 0; j < nu[i]; j++)
+		{
             memory->u[i][j] = w[w_idx+nx[i]+j];
-            out->u[i][j] = w[w_idx+nx[i]+j];
+//            out->u[i][j] = w[w_idx+nx[i]+j];
         }
         w_idx += nx[i] + nu[i];
     }

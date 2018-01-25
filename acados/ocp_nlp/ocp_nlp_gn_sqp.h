@@ -63,9 +63,13 @@ typedef struct {
 
 
 
-typedef struct {
+typedef struct
+{
     // TODO(dimitris): move tmp_vecs up
+	// nlp workspace
     double *w;
+//	struct blasfeo_dvec *w;
+//	ocp_qp_out *w;
 
     // QP solver
     ocp_qp_in *qp_in;
