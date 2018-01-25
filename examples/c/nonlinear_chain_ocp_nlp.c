@@ -500,4 +500,7 @@ int main() {
     free(nlp_work);
     free(nlp_mem);
     free(nlp_args);
+
+	return 0;
+
 }

@@ -65,11 +65,6 @@ typedef struct {
 
 typedef struct
 {
-    // TODO(dimitris): move tmp_vecs up
-	// nlp workspace
-//    double *w;
-//	struct blasfeo_dvec *w;
-//	ocp_qp_out *w;
 
     // QP solver
     ocp_qp_in *qp_in;
@@ -87,6 +82,7 @@ typedef struct
                                 // not using max(nx+nu) for parallelization in the future
 
 } ocp_nlp_gn_sqp_work;
+
 
 
 int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);

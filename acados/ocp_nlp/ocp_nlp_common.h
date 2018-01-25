@@ -44,14 +44,16 @@ typedef struct {
 
 
 
-typedef struct {
+typedef struct
+{
     double **W;
     double **y_ref;
 } ocp_nlp_ls_cost;
 
 
 
-typedef struct {
+typedef struct
+{
     ocp_nlp_dims *dims;
 
     // TODO(dimitris): decide on the blasfeo format for those fields
@@ -87,6 +89,7 @@ typedef struct
 	struct blasfeo_dvec *ux;
 	struct blasfeo_dvec *pi;
 	struct blasfeo_dvec *lam;
+	struct blasfeo_dvec *t;
 	int memsize;
 } ocp_nlp_out;
 

@@ -343,18 +343,18 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 
 	size += ocp_nlp_dims_calculate_size(N);
 
-	size += 2*(N+1)*sizeof(struct blasfeo_dvec); // ux lam
+	size += 3*(N+1)*sizeof(struct blasfeo_dvec); // ux lam
 	size += 1*N*sizeof(struct blasfeo_dvec); // pi
 
     for (ii = 0; ii < N; ii++)
     {
 		size += 1*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // ux
 		size += 1*blasfeo_memsize_dvec(nx[ii+1]); // pi
-		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // lam
+		size += 2*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // lam t
     }
 	ii = N;
 	size += 1*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // ux
-	size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // lam
+	size += 2*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // lam t
 
 	size += 8; // initial align
 	size += 8; // blasfeo_struct align
@@ -399,6 +399,7 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 	assign_blasfeo_dvec_structs(N+1, &out->ux, &c_ptr);
 	assign_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
 	assign_blasfeo_dvec_structs(N+1, &out->lam, &c_ptr);
+	assign_blasfeo_dvec_structs(N+1, &out->t, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
@@ -415,9 +416,14 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 		assign_blasfeo_dvec_mem(nx[ii+1], out->pi+ii, &c_ptr);
     }
 	// lam
-    for (int ii = 0; ii <= N; ii++)
+    for (ii = 0; ii <= N; ii++)
     {
 		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], out->lam+ii, &c_ptr);
+    }
+	// t
+    for (ii = 0; ii <= N; ii++)
+    {
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], out->t+ii, &c_ptr);
     }
 
 	out->memsize = ocp_nlp_out_calculate_size(dims);
