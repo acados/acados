@@ -67,7 +67,7 @@ typedef struct
 {
     // TODO(dimitris): move tmp_vecs up
 	// nlp workspace
-    double *w;
+//    double *w;
 //	struct blasfeo_dvec *w;
 //	ocp_qp_out *w;
 
@@ -82,7 +82,8 @@ typedef struct
     void **sim_solvers_work;
 
     // SQP solver
-    struct blasfeo_dvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+	struct blasfeo_dvec *tmp_nbg;
+    struct blasfeo_dvec *tmp_nux;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
                                 // not using max(nx+nu) for parallelization in the future
 
 } ocp_nlp_gn_sqp_work;

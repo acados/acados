@@ -45,8 +45,14 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
 
 void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
+
+// ocp nlp
 void ocp_nlp_dims_print(ocp_nlp_dims *dims);
 
+void ocp_nlp_out_print(ocp_nlp_out *nlp_out);
+
+
+// ocp qp
 void print_ocp_qp_dims(ocp_qp_dims *dims);
 
 void print_dense_qp_dims(dense_qp_dims *dims);

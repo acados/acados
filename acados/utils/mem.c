@@ -70,6 +70,7 @@ void *acados_malloc(size_t nitems, size_t size)
 
 
 
+// TODO rename all of them assign_advance !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 void assign_double_ptrs(int n, double ***v, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");

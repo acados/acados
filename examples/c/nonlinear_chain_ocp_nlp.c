@@ -259,7 +259,7 @@ int main() {
 
 	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, dims);
 
-	ocp_nlp_dims_print(dims);
+//	ocp_nlp_dims_print(dims);
 
 
     /************************************************
@@ -267,9 +267,11 @@ int main() {
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-    ocp_nlp_in *nlp = create_ocp_nlp_in(dims, d);
+    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d);
 
-    // NOTE(dimitris): use nlp->dims instead of &dims from now on since nb is filled with nbx+nbu!
+//	ocp_nlp_dims_print(nlp_in->dims);
+
+    // NOTE(dimitris): use nlp_in->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
     // Problem data
     double wall_pos = -0.01;
@@ -287,7 +289,7 @@ int main() {
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
 
     // Least-squares cost
-    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp->cost;
+    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp_in->cost;
     for (int i = 0; i < NN; i++) {
         for (int j = 0; j < NX; j++)
             ls_cost->W[i][j * (NX + NU + 1)] = diag_cost_x[j];
@@ -299,16 +301,16 @@ int main() {
             ls_cost->y_ref[i][NX+j] = uref[j];
     }
     for (int j = 0; j < NX; j++)
-        ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
+        ((ocp_nlp_ls_cost *) nlp_in->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
     for (int jj = 0; jj < NN; jj++)
     {
-        select_model(NMF, nlp);
+        select_model(NMF, nlp_in);
     }
 
-    nlp->freezeSens = false;
+    nlp_in->freezeSens = false;
     if (scheme > 2)
-        nlp->freezeSens = true;
+        nlp_in->freezeSens = true;
 
 
 
@@ -363,37 +365,37 @@ int main() {
     }
 
 	// stage-wise
-	blasfeo_pack_dvec(nb[0], lb0, nlp->d+0, 0);
-	blasfeo_pack_dvec(nb[0], ub0, nlp->d+0, nb[0]+ng[0]);
-    nlp->idxb[0] = idxb0;
+	blasfeo_pack_dvec(nb[0], lb0, nlp_in->d+0, 0);
+	blasfeo_pack_dvec(nb[0], ub0, nlp_in->d+0, nb[0]+ng[0]);
+    nlp_in->idxb[0] = idxb0;
     for (int i = 1; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nb[i], lb1, nlp->d+i, 0);
-		blasfeo_pack_dvec(nb[i], ub1, nlp->d+i, nb[i]+ng[i]);
-        nlp->idxb[i] = idxb1;
+		blasfeo_pack_dvec(nb[i], lb1, nlp_in->d+i, 0);
+		blasfeo_pack_dvec(nb[i], ub1, nlp_in->d+i, nb[i]+ng[i]);
+        nlp_in->idxb[i] = idxb1;
     }
-	blasfeo_pack_dvec(nb[NN], lbN, nlp->d+NN, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, nlp->d+NN, nb[NN]+ng[NN]);
-    nlp->idxb[NN] = idxbN;
+	blasfeo_pack_dvec(nb[NN], lbN, nlp_in->d+NN, 0);
+	blasfeo_pack_dvec(nb[NN], ubN, nlp_in->d+NN, nb[NN]+ng[NN]);
+    nlp_in->idxb[NN] = idxbN;
 
 
 	// General constraints
 	if (ng[0]>0)
 	{
 		for (int ii=0; ii<nu[0]; ii++)
-			nlp->Cu[0][ii*(ng[0]+1)] = 1.0;
+			nlp_in->Cu[0][ii*(ng[0]+1)] = 1.0;
 		for (int ii=0; ii<nx[0]; ii++)
-			nlp->Cx[0][nu[0]+ii*(ng[0]+1)] = 1.0;
+			nlp_in->Cx[0][nu[0]+ii*(ng[0]+1)] = 1.0;
 		for (int ii=0; ii<nu[0]+nx[0]; ii++)
-			nlp->lg[0][ii] = lb0[ii];
+			nlp_in->lg[0][ii] = lb0[ii];
 		for (int ii=0; ii<nu[0]+nx[0]; ii++)
-			nlp->ug[0][ii] = ub0[ii];
+			nlp_in->ug[0][ii] = ub0[ii];
 	}
 #if 0
-	d_print_mat(ng[0], nu[0], nlp->Cu[0], ng[0]);
-	d_print_mat(ng[0], nx[0], nlp->Cx[0], ng[0]);
-	d_print_mat(1, ng[0], nlp->lg[0], 1);
-	d_print_mat(1, ng[0], nlp->ug[0], 1);
+	d_print_mat(ng[0], nu[0], nlp_in->Cu[0], ng[0]);
+	d_print_mat(ng[0], nx[0], nlp_in->Cx[0], ng[0]);
+	d_print_mat(1, ng[0], nlp_in->lg[0], 1);
+	d_print_mat(1, ng[0], nlp_in->ug[0], 1);
 //	exit(1);
 #endif
 
@@ -414,9 +416,9 @@ int main() {
         num_stages[ii] = 4;
     }
 
-    nlp->dims->num_stages = num_stages;
+    nlp_in->dims->num_stages = num_stages;
 
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp_in->dims, qp_solver_name, sim_solver_names);
     for (int i = 0; i < NN; ++i) {
         sim_rk_opts *sim_opts = nlp_args->sim_solvers_args[i];
         sim_opts->interval = TF/NN;
@@ -428,13 +430,15 @@ int main() {
     * ocp_nlp out
     ************************************************/
 
-    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp->dims);
+    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp_in->dims);
+
+//	ocp_nlp_dims_print(nlp_out->dims);
 
     /************************************************
     * gn_sqp memory
     ************************************************/
 
-    ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp->dims, nlp_args);
+    ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp_in->dims, nlp_args);
 
     // TODO(dimitris): users shouldn't write directly on memory..
     for (int i = 0; i < NN; i++) {
@@ -450,7 +454,7 @@ int main() {
     * gn_sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
+    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in->dims, nlp_args);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
@@ -464,7 +468,7 @@ int main() {
 
     for (int rep = 0; rep < NREP; rep++)
     {
-        status = ocp_nlp_gn_sqp(nlp, nlp_out, nlp_args, nlp_mem, nlp_work);
+        status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work);
     }
 
     double time = acados_toc(&timer)/NREP;
@@ -491,7 +495,7 @@ int main() {
     ************************************************/
 
 	free(dims_mem);
-    free(nlp);
+    free(nlp_in);
     free(nlp_out);
     free(nlp_work);
     free(nlp_mem);
