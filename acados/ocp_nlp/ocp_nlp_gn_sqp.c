@@ -382,6 +382,9 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
 {
 
+	// loop index
+	int i;
+
     int N = nlp_in->dims->N;
     int *nx = nlp_in->dims->nx;
     int *nu = nlp_in->dims->nu;
@@ -391,7 +394,7 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
 	struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
 
     // TODO(rien): only for least squares cost with state and control reference atm
-    for (int_t i = 0; i <= N; i++)
+    for (i = 0; i <= N; i++)
 	{
 
         // R
@@ -402,6 +405,31 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
         blasfeo_pack_tran_dmat(nu[i], nx[i], &cost->W[i][nx[i]], nx[i] + nu[i], &RSQrq[i], nu[i], 0);
 
     }
+
+	return;
+
+}
+
+
+
+static void initialize_constraints(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
+{
+
+	// loop index
+	int i;
+
+    int N = nlp_in->dims->N;
+    int *nx = nlp_in->dims->nx;
+    int *nu = nlp_in->dims->nu;
+    int *ng = nlp_in->dims->ng;
+
+	struct blasfeo_dmat *DCt = work->qp_in->DCt;
+
+	// initialize general constraints matrix
+    for (i = 0; i <= N; i++)
+	{
+		blasfeo_dgecp(nu[i]+nx[i], ng[i], nlp_in->DCt+i, 0, 0, DCt+i, 0, 0);
+	}
 
 	return;
 
@@ -453,6 +481,7 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
     struct blasfeo_dvec *b = work->qp_in->b;
     struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
     struct blasfeo_dvec *rq = work->qp_in->rq;
+	struct blasfeo_dmat *DCt = work->qp_in->DCt;
     struct blasfeo_dvec *d = work->qp_in->d;
 
 	// initial stages
@@ -478,10 +507,11 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
         blasfeo_drowin(nx[i+1], 1.0, &b[i], 0, &BAbt[i], nu[i]+nx[i], 0); // XXX needed ???
 
 
-		// box constraints
+		// box and general constraints
 		blasfeo_dvecex_sp(nb[i], 1.0, nlp_in->idxb[i], nlp_out->ux+i, 0, tmp_nbg+i, 0);
-		blasfeo_daxpy(nb[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, d+i, 0);
-		blasfeo_daxpy(nb[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
+		blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb[i], tmp_nbg+i, nb[i]);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, d+i, 0);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
 
         // gradient
         // TODO(rien): only for least squares cost with state and control reference atm
@@ -507,10 +537,11 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	// last stage
 	i = N;
 
-	// box constraints
+	// box and general constraints
 	blasfeo_dvecex_sp(nb[i], 1.0, nlp_in->idxb[i], nlp_out->ux+i, 0, tmp_nbg+i, 0);
-	blasfeo_daxpy(nb[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, d+i, 0);
-	blasfeo_daxpy(nb[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
+	blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb[i], tmp_nbg+i, nb[i]);
+	blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, d+i, 0);
+	blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
 
 	// gradient
 	blasfeo_pack_dvec(nu[i], y_ref[i]+nx[i], tmp_nux+i, 0);
@@ -631,6 +662,8 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     }
 
     initialize_objective(nlp_in, args, mem, work);
+
+    initialize_constraints(nlp_in, mem, work);
 
     initialize_trajectories(nlp_out, mem, work);
 

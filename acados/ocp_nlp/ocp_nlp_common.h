@@ -58,14 +58,8 @@ typedef struct
 
     // TODO(dimitris): decide on the blasfeo format for those fields
     int **idxb;
-//    double **lb;
-//    double **ub;
 	struct blasfeo_dvec *d;
-
-    double **Cx;
-    double **Cu;
-    double **lg;
-    double **ug;
+	struct blasfeo_dmat *DCt;
 
     double **lh;
     double **uh;

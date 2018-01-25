@@ -50,7 +50,7 @@
 #define NREP 1
 
 
-//#define BC_AS_GC
+#define BC_AS_GC
 
 
 enum sensitivities_scheme {
@@ -382,20 +382,25 @@ int main() {
 	// General constraints
 	if (ng[0]>0)
 	{
+		double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
 		for (int ii=0; ii<nu[0]; ii++)
-			nlp_in->Cu[0][ii*(ng[0]+1)] = 1.0;
+			Cu0[ii*(ng[0]+1)] = 1.0;
+
+		double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
 		for (int ii=0; ii<nx[0]; ii++)
-			nlp_in->Cx[0][nu[0]+ii*(ng[0]+1)] = 1.0;
-		for (int ii=0; ii<nu[0]+nx[0]; ii++)
-			nlp_in->lg[0][ii] = lb0[ii];
-		for (int ii=0; ii<nu[0]+nx[0]; ii++)
-			nlp_in->ug[0][ii] = ub0[ii];
+			Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
+
+		blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], nlp_in->DCt+0, 0, 0);
+		blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], nlp_in->DCt+0, nu[0], 0);
+		blasfeo_pack_dvec(ng[0], lb0, nlp_in->d+0, nb[0]);
+		blasfeo_pack_dvec(ng[0], ub0, nlp_in->d+0, 2*nb[0]+ng[0]);
+
+		free(Cu0);
+		free(Cx0);
 	}
 #if 0
-	d_print_mat(ng[0], nu[0], nlp_in->Cu[0], ng[0]);
-	d_print_mat(ng[0], nx[0], nlp_in->Cx[0], ng[0]);
-	d_print_mat(1, ng[0], nlp_in->lg[0], 1);
-	d_print_mat(1, ng[0], nlp_in->ug[0], 1);
+	blasfeo_print_dmat(nu[0]+nx[0], ng[0], nlp_in->DCt+0, 0, 0);
+	blasfeo_print_tran_dvec(2*nb[0]+2*ng[0], nlp_in->d+0, 0);
 //	exit(1);
 #endif
 
@@ -478,16 +483,12 @@ int main() {
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
 		blasfeo_print_tran_dvec(nu[k], nlp_out->ux+k, 0);
-//        d_print_mat(1, nu[k], nlp_out->u[k], 1);
         printf("x[%d] = \n", k);
 		blasfeo_print_tran_dvec(nx[k], nlp_out->ux+k, nu[k]);
-//        d_print_mat(1, nx[k], nlp_out->x[k], 1);
     }
     printf("u[N-1] = \n");
-//    d_print_mat(1, nu[NN-1], nlp_out->u[NN-1], 1);
 	blasfeo_print_tran_dvec(nu[NN-1], nlp_out->ux+NN-1, 0);
     printf("x[N] = \n");
-//    d_print_mat(1, nx[NN], nlp_out->x[NN], 1);
 	blasfeo_print_tran_dvec(nx[NN], nlp_out->ux+NN, nu[NN]);
 
     /************************************************
