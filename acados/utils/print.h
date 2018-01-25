@@ -27,6 +27,7 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows, const int_t ncols);
@@ -43,6 +44,8 @@ void print_int_array(char *file_name, const int_t *array, int_t size);
 void read_matrix(const char *file_name, real_t *array, const int_t nrows, const int_t ncols);
 
 void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
+
+void ocp_nlp_dims_print(ocp_nlp_dims *dims);
 
 void print_ocp_qp_dims(ocp_qp_dims *dims);
 

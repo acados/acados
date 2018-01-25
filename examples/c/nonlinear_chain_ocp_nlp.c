@@ -248,25 +248,26 @@ int main() {
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
 
-    // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
-	// TODO put this stuff in a function !!!!!!
-    ocp_nlp_dims dims;
-    dims.N  = NN;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.ng = ng;
-    dims.nbx = nbx;
-    dims.nbu = nbu;
-    dims.nb = nb;
-    dims.nh = nh;
-    dims.ns = ns;
+    /************************************************
+    * nlp_dims
+    ************************************************/
+
+	int dims_size = ocp_nlp_dims_calculate_size(NN);
+	void *dims_mem = malloc(dims_size);
+
+	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
+
+	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, dims);
+
+	ocp_nlp_dims_print(dims);
+
 
     /************************************************
     * nlp_in (wip)
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-    ocp_nlp_in *nlp = create_ocp_nlp_in(&dims, d);
+    ocp_nlp_in *nlp = create_ocp_nlp_in(dims, d);
 
     // NOTE(dimitris): use nlp->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
@@ -489,6 +490,7 @@ int main() {
     * free memory
     ************************************************/
 
+	free(dims_mem);
     free(nlp);
     free(nlp_out);
     free(nlp_work);

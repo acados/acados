@@ -39,6 +39,7 @@ typedef struct {
     int *ns;  // number of soft constraints
     int *num_stages;
     int N;
+	int memsize;
 } ocp_nlp_dims;
 
 
@@ -82,6 +83,7 @@ typedef struct {
 
 typedef struct
 {
+    ocp_nlp_dims *dims;
 	struct blasfeo_dvec *ux;
 	struct blasfeo_dvec *pi;
 	struct blasfeo_dvec *lam;
@@ -117,6 +119,13 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
+
+
+// dims
+int ocp_nlp_dims_calculate_size(int N);
+ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
+void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, ocp_nlp_dims *dims);
+void ocp_nlp_dims_copy(ocp_nlp_dims *in, ocp_nlp_dims *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

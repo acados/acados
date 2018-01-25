@@ -146,6 +146,24 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows,
 }
 
 
+
+void ocp_nlp_dims_print(ocp_nlp_dims *dims)
+{
+    int N = dims->N;
+
+    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\ths\tns\n");
+
+    for (int kk = 0; kk < N+1; kk++)
+    {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
+            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->nh[kk], dims->ns[kk]);
+    }
+
+    printf("\nmemsize = %d\n", dims->memsize);
+}
+
+
+
 void print_ocp_qp_dims(ocp_qp_dims *dims)
 {
     int N = dims->N;
