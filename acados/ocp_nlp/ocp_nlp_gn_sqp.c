@@ -309,13 +309,13 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     assign_double(mem->num_vars, &work->w, &c_ptr);
 
     // set up local SQP data
-    assign_strvec_ptrs(N+1, &work->tmp_vecs, &c_ptr);
+    assign_blasfeo_dvec_structs(N+1, &work->tmp_vecs, &c_ptr);
 
     align_char_to(64, &c_ptr);
 
     for (int ii = 0; ii < N+1; ii++)
     {
-        assign_strvec(nx[ii]+nu[ii], &work->tmp_vecs[ii], &c_ptr);
+        assign_blasfeo_dvec_mem(nx[ii]+nu[ii], &work->tmp_vecs[ii], &c_ptr);
     }
 
     // set up QP solver

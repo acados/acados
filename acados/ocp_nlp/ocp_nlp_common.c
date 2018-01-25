@@ -153,7 +153,7 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     assign_int_ptrs(N+1, &in->idxb, &c_ptr);
 //    assign_double_ptrs(N+1, &in->lb, &c_ptr);
 //    assign_double_ptrs(N+1, &in->ub, &c_ptr);
-	assign_strvec_ptrs(N+1, &in->d, &c_ptr);
+	assign_blasfeo_dvec_structs(N+1, &in->d, &c_ptr);
 
     assign_double_ptrs(N+1, &in->lg, &c_ptr);
     assign_double_ptrs(N+1, &in->ug, &c_ptr);
@@ -173,7 +173,7 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     {
 //        assign_double(dims->nbx[ii]+dims->nbu[ii], &in->lb[ii], &c_ptr);
 //        assign_double(dims->nbx[ii]+dims->nbu[ii], &in->ub[ii], &c_ptr);
-		assign_strvec(2*nb[ii]+2*ng[ii], in->d+ii, &c_ptr);
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], in->d+ii, &c_ptr);
 
         assign_double(dims->ng[ii], &in->lg[ii], &c_ptr);
         assign_double(dims->ng[ii], &in->ug[ii], &c_ptr);
@@ -287,9 +287,9 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 	align_char_to(8, &c_ptr);
 
 	// blasfeo_dvec_struct
-	assign_strvec_ptrs(N+1, &out->ux, &c_ptr);
-	assign_strvec_ptrs(N, &out->pi, &c_ptr);
-	assign_strvec_ptrs(N+1, &out->lam, &c_ptr);
+	assign_blasfeo_dvec_structs(N+1, &out->ux, &c_ptr);
+	assign_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
+	assign_blasfeo_dvec_structs(N+1, &out->lam, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
@@ -298,17 +298,17 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 	// ux
     for (ii = 0; ii <= N; ii++)
     {
-		assign_strvec(nu[ii]+nx[ii], out->ux+ii, &c_ptr);
+		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], out->ux+ii, &c_ptr);
     }
 	// pi
     for (ii = 0; ii <= N; ii++)
     {
-		assign_strvec(nx[ii+1], out->pi+ii, &c_ptr);
+		assign_blasfeo_dvec_mem(nx[ii+1], out->pi+ii, &c_ptr);
     }
 	// lam
     for (int ii = 0; ii <= N; ii++)
     {
-		assign_strvec(2*nb[ii]+2*ng[ii], out->lam+ii, &c_ptr);
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], out->lam+ii, &c_ptr);
     }
 
 	out->memsize = ocp_nlp_out_calculate_size(dims);

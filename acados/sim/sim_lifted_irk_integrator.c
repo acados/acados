@@ -216,8 +216,8 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
     assign_double_ptrs(num_sys, &memory->sys_mat2, &c_ptr);
     assign_int_ptrs(num_sys, &memory->ipiv2, &c_ptr);
     assign_double_ptrs(num_sys, &memory->sys_sol2, &c_ptr);
-    assign_strmat_ptrs_to_ptrs(num_sys, &memory->str_mat2, &c_ptr);
-    assign_strmat_ptrs_to_ptrs(num_sys, &memory->str_sol2, &c_ptr);
+    assign_blasfeo_dmat_ptrs(num_sys, &memory->str_mat2, &c_ptr);
+    assign_blasfeo_dmat_ptrs(num_sys, &memory->str_sol2, &c_ptr);
 
     align_char_to(8, &c_ptr);
 
@@ -275,16 +275,16 @@ void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory
             dim_sys = nx;
 
 #if defined(LA_HIGH_PERFORMANCE)
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
+        assign_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
+        assign_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
 #elif defined(LA_REFERENCE)
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
+        assign_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
         d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
         c_ptr += dim_sys * sizeof(double);
 #else  // LA_BLAS
-        assign_strmat(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
-        assign_strmat(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
+        assign_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
 #endif  // LA_HIGH_PERFORMANCE
         blasfeo_dgesc(dim_sys, dim_sys, 0.0, memory->str_mat2[i], 0, 0);
         blasfeo_dgesc(dim_sys, 1 + nf, 0.0, memory->str_sol2[i], 0, 0);

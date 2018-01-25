@@ -98,7 +98,7 @@ void assign_int_ptrs(int n, int ***v, char **ptr)
 
 
 
-void assign_strvec_ptrs(int n, struct blasfeo_dvec **sv, char **ptr)
+void assign_blasfeo_dvec_structs(int n, struct blasfeo_dvec **sv, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
 
@@ -112,7 +112,7 @@ void assign_strvec_ptrs(int n, struct blasfeo_dvec **sv, char **ptr)
 
 
 
-void assign_strmat_ptrs(int n, struct blasfeo_dmat **sm, char **ptr)
+void assign_blasfeo_dmat_structs(int n, struct blasfeo_dmat **sm, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
 
@@ -125,7 +125,7 @@ void assign_strmat_ptrs(int n, struct blasfeo_dmat **sm, char **ptr)
 }
 
 
-void assign_strmat_ptrs_to_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr)
+void assign_blasfeo_dmat_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "pointer not 8-byte aligned!");
 
@@ -167,7 +167,7 @@ void assign_double(int n, double **v, char **ptr)
 
 
 
-void assign_strvec(int n, struct blasfeo_dvec *sv, char **ptr)
+void assign_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "strvec not 8-byte aligned!");
 
@@ -182,7 +182,7 @@ void assign_strvec(int n, struct blasfeo_dvec *sv, char **ptr)
 
 
 
-void assign_strmat(int m, int n, struct blasfeo_dmat *sA, char **ptr)
+void assign_blasfeo_dmat_mem(int m, int n, struct blasfeo_dmat *sA, char **ptr)
 {
 #ifdef LA_HIGH_PERFORMANCE
     assert((size_t)*ptr % 64 == 0 && "strmat not 64-byte aligned!");
