@@ -34,9 +34,11 @@ extern "C" {
 * dims
 ************************************************/
 
+/* ocp_nlp */
+
 typedef struct
 {
-	void *ocp_nlp_cost_dims;
+	void *cost_dims;
     int *nx;
     int *nu;
     int *nb;  // nbx + nbu
@@ -59,6 +61,8 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 
 
 
+/* ocp_nlp_cost_ls */
+
 typedef struct
 {
 	int *nv; // number of variables
@@ -75,6 +79,7 @@ ocp_nlp_cost_ls_dims *ocp_nlp_cost_ls_dims_assign(int N, void *raw_memory);
 void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
 
 
+
 /************************************************
 * cost
 ************************************************/
@@ -84,7 +89,13 @@ typedef struct
 	ocp_nlp_cost_ls_dims *dims;
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;
+	int memsize;
 } ocp_nlp_cost_ls;
+
+//
+int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims);
+//
+ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_memory);
 
 
 
@@ -106,6 +117,7 @@ typedef struct
     // ocp_nlp_function *h;  // nonlinear path constraints
 
     void *cost;
+
     casadi_function_t *vde;
     casadi_function_t *vde_adj;
     casadi_function_t *jac;
@@ -114,6 +126,11 @@ typedef struct
 
     bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
 } ocp_nlp_in;
+
+//
+int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
 
 
 
@@ -131,7 +148,16 @@ typedef struct
 	int memsize;
 } ocp_nlp_out;
 
+//
+int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
+
+
+/************************************************
+* ?????
+************************************************/
 
 typedef struct {
     int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
@@ -150,14 +176,6 @@ typedef struct {
 int number_of_primal_vars(ocp_nlp_dims *dims);
 
 void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
-//
-int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
-//
-int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
 
