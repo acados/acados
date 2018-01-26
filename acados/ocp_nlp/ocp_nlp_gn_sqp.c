@@ -436,7 +436,7 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
     struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
 
     ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp_in->cost;
-    real_t **y_ref = cost->y_ref;
+    struct blasfeo_dvec *y_ref = cost->y_ref;
 
     struct blasfeo_dmat *BAbt = work->qp_in->BAbt;
     struct blasfeo_dvec *b = work->qp_in->b;
@@ -476,9 +476,7 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 
         // gradient
         // TODO(rien): only for least squares cost with state and control reference atm
-		blasfeo_pack_dvec(nu[i], y_ref[i]+nx[i], tmp_nux+i, 0);
-		blasfeo_pack_dvec(nx[i], y_ref[i], tmp_nux+i, nu[i]);
-		blasfeo_daxpy(nu[i]+nx[i], -1.0, tmp_nux+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
+		blasfeo_daxpy(nu[i]+nx[i], -1.0, y_ref+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
 
         blasfeo_dsymv_l(nu[i]+nx[i], nu[i]+nx[i], 1.0, &RSQrq[i], 0, 0, &tmp_nux[i], 0, 0.0, &rq[i], 0, &rq[i], 0);
 
@@ -505,9 +503,7 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
 
 	// gradient
-	blasfeo_pack_dvec(nu[i], y_ref[i]+nx[i], tmp_nux+i, 0);
-	blasfeo_pack_dvec(nx[i], y_ref[i], tmp_nux+i, nu[i]);
-	blasfeo_daxpy(nu[i]+nx[i], -1.0, tmp_nux+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
+	blasfeo_daxpy(nu[i]+nx[i], -1.0, y_ref+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
 
     blasfeo_dsymv_l(nx[N], nx[N], 1.0, &RSQrq[N], 0, 0, &tmp_nux[N], 0, 0.0, &rq[N], 0, &rq[N], 0);
 

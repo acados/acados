@@ -300,12 +300,10 @@ int main() {
             DMATEL_LIBSTR(ls_cost->W+i, nu[i]+j, nu[i]+j) = diag_cost_x[j];
 	}
 
-
-    for (int i = 0; i < NN; i++) {
-        for (int j = 0; j < NX; j++)
-            ls_cost->y_ref[i][j] = xref[j];
-        for (int j = 0; j < NU; j++)
-            ls_cost->y_ref[i][NX+j] = uref[j];
+    for (int i = 0; i < NN; i++)
+	{
+		blasfeo_pack_dvec(nu[i], uref, ls_cost->y_ref+i, 0);
+		blasfeo_pack_dvec(nx[i], xref, ls_cost->y_ref+i, nu[i]);
     }
 
     for (int jj = 0; jj < NN; jj++)
