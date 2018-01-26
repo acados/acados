@@ -217,6 +217,8 @@ int main() {
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
     int nh[NN+1] = {0};
+	int nv[NN+1] = {0};
+	int ny[NN+1] = {0};
 
     nx[0] = NX;
     nu[0] = NU;
@@ -231,6 +233,8 @@ int main() {
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 #endif
+	nv[0] = nx[0]+nu[0];
+	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
     {
@@ -240,24 +244,36 @@ int main() {
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
+		nv[i] = nx[i]+nu[i];
+		ny[i] = nx[i]+nu[i];
     }
 
     nx[NN] = NX;
+    nu[NN] = 0;
     nbx[NN] = NX;
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
+	nv[NN] = nx[NN]+nu[NN];
+	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************
-    * nlp_dims
+    * ocp_nlp_dims
     ************************************************/
+
+	/* ocp_nlp_cost_ls_dims */
+
+	int cost_dims_size = ocp_nlp_cost_ls_dims_calculate_size(NN);
+	void *cost_dims_mem = malloc(cost_dims_size);
+	ocp_nlp_cost_ls_dims *cost_dims = ocp_nlp_cost_ls_dims_assign(NN, cost_dims_mem);
+	ocp_nlp_cost_ls_dims_init(nv, ny, cost_dims);
+
+	/* ocp_nlp_dims */
 
 	int dims_size = ocp_nlp_dims_calculate_size(NN);
 	void *dims_mem = malloc(dims_size);
-
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-
-	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, dims);
+	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, cost_dims, dims);
 
 //	ocp_nlp_dims_print(dims);
 
@@ -289,21 +305,21 @@ int main() {
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
 
     // Least-squares cost
-    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp_in->cost;
+    ocp_nlp_cost_ls *cost_ls = (ocp_nlp_cost_ls *) nlp_in->cost;
 
 	for (int i=0; i<=NN; i++)
 	{
-		blasfeo_dgese(nu[i]+nx[i], nu[i]+nx[i], 0.0, ls_cost->W+i, 0, 0);
+		blasfeo_dgese(nu[i]+nx[i], nu[i]+nx[i], 0.0, cost_ls->W+i, 0, 0);
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(ls_cost->W+i, j, j) = diag_cost_u[j];
+            DMATEL_LIBSTR(cost_ls->W+i, j, j) = diag_cost_u[j];
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(ls_cost->W+i, nu[i]+j, nu[i]+j) = diag_cost_x[j];
+            DMATEL_LIBSTR(cost_ls->W+i, nu[i]+j, nu[i]+j) = diag_cost_x[j];
 	}
 
     for (int i = 0; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nu[i], uref, ls_cost->y_ref+i, 0);
-		blasfeo_pack_dvec(nx[i], xref, ls_cost->y_ref+i, nu[i]);
+		blasfeo_pack_dvec(nu[i], uref, cost_ls->y_ref+i, 0);
+		blasfeo_pack_dvec(nx[i], xref, cost_ls->y_ref+i, nu[i]);
     }
 
     for (int jj = 0; jj < NN; jj++)

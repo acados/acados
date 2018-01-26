@@ -375,7 +375,7 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
     int *nx = nlp_in->dims->nx;
     int *nu = nlp_in->dims->nu;
 
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost*) nlp_in->cost;
+    ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls*) nlp_in->cost;
 
 	struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
 
@@ -435,7 +435,7 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
     struct blasfeo_dvec *tmp_nux = work->tmp_nux;
     struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
 
-    ocp_nlp_ls_cost *cost = (ocp_nlp_ls_cost *) nlp_in->cost;
+    ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls *) nlp_in->cost;
     struct blasfeo_dvec *y_ref = cost->y_ref;
 
     struct blasfeo_dmat *BAbt = work->qp_in->BAbt;

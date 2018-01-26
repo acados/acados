@@ -28,7 +28,15 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
+
+
+/************************************************
+* dims
+************************************************/
+
+typedef struct
+{
+	void *ocp_nlp_cost_dims;
     int *nx;
     int *nu;
     int *nb;  // nbx + nbu
@@ -42,15 +50,49 @@ typedef struct {
 	int memsize;
 } ocp_nlp_dims;
 
+//
+int ocp_nlp_dims_calculate_size(int N);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
+//
+void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *ocp_nlp_cost_dims, ocp_nlp_dims *dims);
+//
+void ocp_nlp_dims_copy(ocp_nlp_dims *in, ocp_nlp_dims *out);
+
 
 
 typedef struct
 {
+	int *nv; // number of variables
+	int *ny; // number of outputs
+    int N;
+	int memsize;
+} ocp_nlp_cost_ls_dims;
+
+//
+int ocp_nlp_cost_ls_dims_calculate_size(int N);
+//
+ocp_nlp_cost_ls_dims *ocp_nlp_cost_ls_dims_assign(int N, void *raw_memory);
+//
+void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
+
+
+/************************************************
+* cost
+************************************************/
+
+typedef struct
+{
+	ocp_nlp_cost_ls_dims *dims;
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;
-} ocp_nlp_ls_cost;
+} ocp_nlp_cost_ls;
 
 
+
+/************************************************
+* in
+************************************************/
 
 typedef struct
 {
@@ -76,6 +118,10 @@ typedef struct
 } ocp_nlp_in;
 
 
+
+/************************************************
+* out
+************************************************/
 
 typedef struct
 {
@@ -117,12 +163,6 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
 
-
-// dims
-int ocp_nlp_dims_calculate_size(int N);
-ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
-void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, ocp_nlp_dims *dims);
-void ocp_nlp_dims_copy(ocp_nlp_dims *in, ocp_nlp_dims *out);
 
 #ifdef __cplusplus
 } /* extern "C" */
