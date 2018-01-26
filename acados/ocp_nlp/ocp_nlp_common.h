@@ -46,7 +46,7 @@ typedef struct {
 
 typedef struct
 {
-    double **W;
+	struct blasfeo_dmat *W;
     double **y_ref;
 } ocp_nlp_ls_cost;
 

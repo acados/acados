@@ -383,12 +383,8 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
     for (i = 0; i <= N; i++)
 	{
 
-        // R
-        blasfeo_pack_dmat(nu[i], nu[i], &cost->W[i][nx[i]*(nx[i]+nu[i])+nx[i]], nx[i] + nu[i], &RSQrq[i], 0, 0);
-        // Q
-        blasfeo_pack_dmat(nx[i], nx[i], &cost->W[i][0], nx[i] + nu[i], &RSQrq[i], nu[i], nu[i]);
-        // S
-        blasfeo_pack_tran_dmat(nu[i], nx[i], &cost->W[i][nx[i]], nx[i] + nu[i], &RSQrq[i], nu[i], 0);
+		// R S Q
+		blasfeo_dgecp(nu[i]+nx[i], nu[i]+nx[i], cost->W+i, 0, 0, RSQrq+i, 0, 0);
 
     }
 

@@ -191,7 +191,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 
     // TODO(dimitris): check arguments for cost type
     size += sizeof(ocp_nlp_ls_cost);
-    size += 2*sizeof(double *)*(N+1);  // W, yref
+    size += 1*sizeof(double *)*(N+1);  // yref
+	size += 1*(N+1)*sizeof(struct blasfeo_dmat); // W
 
     for (int ii = 0; ii < N+1; ii++)
     {
@@ -201,7 +202,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 
         size += 2*sizeof(double)*nh[ii];  // lh, uh
 
-        size += sizeof(double)*(nx[ii]+nu[ii])*(nx[ii]+nu[ii]);  // W
+		size += 1*blasfeo_memsize_dmat(nu[ii]+nx[ii], nu[ii]+nx[ii]); // W
         size += sizeof(double)*(nx[ii]+nu[ii]);  // yref
     }
 
@@ -266,23 +267,28 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     assign_double_ptrs(N+1, &in->lh, &c_ptr);
     assign_double_ptrs(N+1, &in->uh, &c_ptr);
 
-    assign_double_ptrs(N+1, &cost->W, &c_ptr);
     assign_double_ptrs(N+1, &cost->y_ref, &c_ptr);
 
 	// blasfeo_structs
 	assign_blasfeo_dvec_structs(N+1, &in->d, &c_ptr);
 	assign_blasfeo_dmat_structs(N+1, &in->DCt, &c_ptr);
+	assign_blasfeo_dmat_structs(N+1, &cost->W, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
 	// blasfeo_dmat
-    for (ii = 0; ii <= N; ii++)
-		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], in->d+ii, &c_ptr);
-
-	// blasfeo_dvec
+	// DCt
     for (ii = 0; ii <= N; ii++)
 		assign_blasfeo_dmat_mem(nu[ii]+nx[ii], ng[ii], in->DCt+ii, &c_ptr);
+	// W
+    for (ii = 0; ii <= N; ii++)
+		assign_blasfeo_dmat_mem(nu[ii]+nx[ii], nu[ii]+nx[ii], cost->W+ii, &c_ptr);
+
+	// blasfeo_dvec
+	// d
+    for (ii = 0; ii <= N; ii++)
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], in->d+ii, &c_ptr);
 
     // doubles
     for (ii = 0; ii <= N; ii++)
@@ -290,7 +296,6 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
         assign_double(dims->nh[ii], &in->lh[ii], &c_ptr);
         assign_double(dims->nh[ii], &in->uh[ii], &c_ptr);
 
-        assign_double((dims->nx[ii]+dims->nu[ii])*(dims->nx[ii]+dims->nu[ii]), &cost->W[ii], &c_ptr);
         assign_double(dims->nx[ii]+dims->nu[ii], &cost->y_ref[ii], &c_ptr);
     }
 
