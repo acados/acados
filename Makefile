@@ -173,5 +173,6 @@ qpdunes_clean:
 	( cd $(QPDUNES_PATH); $(MAKE) clean )
 
 deep_clean: clean $(CLEAN_DEPS)
+	( cd examples/c; $(MAKE) deep_clean )
 	rm -rf include
 	rm -rf lib

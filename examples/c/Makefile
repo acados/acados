@@ -141,6 +141,9 @@ run_nonlinear_chain_ocp_nlp:
 
 
 clean:
-	rm -f chain_model/*.o
 	rm -f *.o
 	rm -f *.out
+
+deep_clean: clean
+	rm -f chain_model/*.o
+
