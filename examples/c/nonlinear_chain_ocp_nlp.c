@@ -395,8 +395,8 @@ int main() {
 		blasfeo_pack_dvec(ng[0], lb0, nlp_in->d+0, nb[0]);
 		blasfeo_pack_dvec(ng[0], ub0, nlp_in->d+0, 2*nb[0]+ng[0]);
 
-		free(Cu0);
-		free(Cx0);
+		d_free(Cu0);
+		d_free(Cx0);
 	}
 #if 0
 	blasfeo_print_dmat(nu[0]+nx[0], ng[0], nlp_in->DCt+0, 0, 0);
@@ -445,16 +445,6 @@ int main() {
 
     ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp_in->dims, nlp_args);
 
-    // TODO(dimitris): users shouldn't write directly on memory..
-    for (int i = 0; i < NN; i++) {
-        for (int j = 0; j < NX; j++)
-            nlp_mem->x[i][j] = xref[j];  // resX(j,i)
-        for (int j = 0; j < NU; j++)
-            nlp_mem->u[i][j] = uref[j];  // resU(j, i)
-    }
-    for (int j = 0; j < NX; j++)
-        nlp_mem->x[NN][j] = xref[j];  // resX(j, NN)
-
     /************************************************
     * gn_sqp workspace
     ************************************************/
@@ -473,6 +463,14 @@ int main() {
 
     for (int rep = 0; rep < NREP; rep++)
     {
+		// warm start output initial guess of solution
+		for (int i=0; i<=NN; i++)
+		{
+			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
+			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+		}
+
+		// call nlp solver
         status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work);
     }
 

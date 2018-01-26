@@ -36,7 +36,8 @@ extern "C" {
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
-typedef struct {
+typedef struct
+{
     int maxIter;
     // QP solver
     ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
@@ -48,13 +49,8 @@ typedef struct {
 
 
 
-typedef struct {
-    int num_vars;
-    double **x;
-    double **u;
-    double **pi;
-    double **lam;
-
+typedef struct
+{
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
