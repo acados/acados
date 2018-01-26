@@ -183,39 +183,7 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
     for (ii = 0; ii < N+1; ii++)
         dims->ns[ii] = ns[ii];
 	// cost
-	// XXX this is not a deep copy !!!!!!
 	dims->ocp_nlp_cost_dims = ocp_nlp_cost_dims;
-
-	return;
-}
-
-
-
-void ocp_nlp_dims_copy(ocp_nlp_dims *in, ocp_nlp_dims *out)
-{
-	// loop index
-	int ii;
-
-	int N = out->N;
-
-    for (ii = 0; ii < N+1; ii++)
-        out->nx[ii] = in->nx[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->nu[ii] = in->nu[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->nb[ii] = in->nb[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->nbx[ii] = in->nbx[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->nbu[ii] = in->nbu[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->ng[ii] = in->ng[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->nh[ii] = in->nh[ii];
-    for (ii = 0; ii < N+1; ii++)
-        out->ns[ii] = in->ns[ii];
-	// XXX this is not a deep copy !!!!!!
-	out->ocp_nlp_cost_dims = in->ocp_nlp_cost_dims;
 
 	return;
 }
@@ -230,75 +198,6 @@ void ocp_nlp_dims_copy(ocp_nlp_dims *in, ocp_nlp_dims *out)
 * in
 ************************************************/
 
-/************************************************
-* out
-************************************************/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-int number_of_primal_vars(ocp_nlp_dims *dims)
-{
-    int num_vars = 0;
-    for (int ii = 0; ii <= dims->N; ii++) {
-        num_vars += dims->nx[ii] + dims->nu[ii];
-    }
-    return num_vars;
-}
-
-
-
-void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
-{
-    qp_dims->N = nlp_dims->N;
-    qp_dims->nx = nlp_dims->nx;
-    qp_dims->nu = nlp_dims->nu;
-    qp_dims->nb = nlp_dims->nb;
-    qp_dims->nbx = nlp_dims->nbx;
-    qp_dims->nbu = nlp_dims->nbu;
-    qp_dims->ng = nlp_dims->ng;
-    qp_dims->ns = nlp_dims->ns;
-
-    // TODO(dimitris): probably redundant (can also remove hpipm header)
-    qp_dims->memsize = d_memsize_ocp_qp_dim(qp_dims->N);
-}
-
-
-
-void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage)
-{
-    sim_dims->nx = nlp_dims->nx[stage];
-    sim_dims->nu = nlp_dims->nu[stage];
-    sim_dims->num_stages = nlp_dims->num_stages[stage];
-}
-
-
-
 // TODO(dimitris): fix order of funs
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 {
@@ -312,10 +211,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 	int *nh = dims->nh;
 
     int size = sizeof(ocp_nlp_in);
-
-//    size += sizeof(ocp_nlp_dims);
-//    size += 8*(N+1)*sizeof(int);  // dims
-	size += ocp_nlp_dims_calculate_size(N);
 
     size += sizeof(int *)*(N+1);  // idxb
 	size += 1*(N+1)*sizeof(struct blasfeo_dvec); // d
@@ -373,12 +268,12 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 	// initial align
 	align_char_to(8, &c_ptr);
 
+	// struct
     ocp_nlp_in *in = (ocp_nlp_in *) c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
 
-	in->dims = ocp_nlp_dims_assign(N, c_ptr);
-	c_ptr += in->dims->memsize;
-	ocp_nlp_dims_copy(dims, in->dims);
+	// dims
+	in->dims = dims;
 
     // TODO(dimitris): check arguments for cost type
     ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls *)c_ptr;
@@ -445,6 +340,10 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 
 
 
+/************************************************
+* out
+************************************************/
+
 int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 {
 	// loop index
@@ -459,8 +358,6 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 	int *ns = dims->ns;
 
     int size = sizeof(ocp_nlp_out);
-
-	size += ocp_nlp_dims_calculate_size(N);
 
 	size += 3*(N+1)*sizeof(struct blasfeo_dvec); // ux lam
 	size += 1*N*sizeof(struct blasfeo_dvec); // pi
@@ -507,9 +404,7 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
     ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
     c_ptr += sizeof(ocp_nlp_out);
 
-	out->dims = ocp_nlp_dims_assign(N, c_ptr);
-	c_ptr += out->dims->memsize;
-	ocp_nlp_dims_copy(dims, out->dims);
+	out->dims = dims;
 
 	// blasfeo_struct align
 	align_char_to(8, &c_ptr);
@@ -547,3 +442,71 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 
     return out;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************
+* ???
+************************************************/
+
+int number_of_primal_vars(ocp_nlp_dims *dims)
+{
+    int num_vars = 0;
+    for (int ii = 0; ii <= dims->N; ii++) {
+        num_vars += dims->nx[ii] + dims->nu[ii];
+    }
+    return num_vars;
+}
+
+
+
+void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
+{
+    qp_dims->N = nlp_dims->N;
+    qp_dims->nx = nlp_dims->nx;
+    qp_dims->nu = nlp_dims->nu;
+    qp_dims->nb = nlp_dims->nb;
+    qp_dims->nbx = nlp_dims->nbx;
+    qp_dims->nbu = nlp_dims->nbu;
+    qp_dims->ng = nlp_dims->ng;
+    qp_dims->ns = nlp_dims->ns;
+
+    // TODO(dimitris): probably redundant (can also remove hpipm header)
+    qp_dims->memsize = d_memsize_ocp_qp_dim(qp_dims->N);
+}
+
+
+
+void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage)
+{
+    sim_dims->nx = nlp_dims->nx[stage];
+    sim_dims->nu = nlp_dims->nu[stage];
+    sim_dims->num_stages = nlp_dims->num_stages[stage];
+}
+
+
+
+

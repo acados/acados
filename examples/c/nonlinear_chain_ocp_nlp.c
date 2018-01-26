@@ -512,6 +512,7 @@ int main() {
     * free memory
     ************************************************/
 
+	free(cost_dims_mem);
 	free(dims_mem);
     free(nlp_in);
     free(nlp_out);
