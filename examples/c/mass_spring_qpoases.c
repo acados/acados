@@ -457,8 +457,9 @@ int main() {
     printf("\n");
     printf(
         " MPC problem size: %d states, %d inputs, %d horizon length, %d "
-        "two-sided box constraints, %d two-sided general constraints.\n",
-        nx, nu, N, nb, ng);
+        "two-sided box constraints, %d two-sided general constraints, "
+        "%d terminal constraints.\n",
+        nx, nu, NN, nb, ng, ngN);
     printf("\n");
 
     /************************************************

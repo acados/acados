@@ -2,16 +2,34 @@
 
 PROJECT=chen_nmpc_qpoases
 
-python3 script_test_nmpc_qpoases/test_nmpc_qpoases.py ../../.. $PROJECT
+python3 script_chen_nmpc_qpoases/test_chen_nmpc_qpoases.py ../../.. $PROJECT
 cd $PROJECT
 make "PROJECT=$PROJECT"
 bin/$PROJECT.exe
 make clean "PROJECT=$PROJECT"
 cd ..
 
-PROJECT=ocp_qp_hpmpc
+PROJECT=mass_spring_hpmpc
 
-python3 script_test_ocp_qp_hpmpc/test_ocp_qp_hpmpc.py ../../.. $PROJECT
+python3 script_mass_spring_hpmpc/test_mass_spring_hpmpc.py ../../.. $PROJECT
+cd $PROJECT
+make "PROJECT=$PROJECT"
+bin/$PROJECT.exe
+make clean "PROJECT=$PROJECT"
+cd ..
+
+PROJECT=mass_spring_qpoases
+
+python3 script_mass_spring_qpoases/test_mass_spring_qpoases.py ../../.. $PROJECT
+cd $PROJECT
+make "PROJECT=$PROJECT"
+bin/$PROJECT.exe
+make clean "PROJECT=$PROJECT"
+cd ..
+
+PROJECT=pendulum_partial_tightening
+
+python3 script_pendulum_partial_tightening/test_pendulum_partial_tightening.py ../../.. $PROJECT
 cd $PROJECT
 make "PROJECT=$PROJECT"
 bin/$PROJECT.exe
