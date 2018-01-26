@@ -73,6 +73,9 @@ typedef struct
     void **sim_solvers_work;
 
     // SQP solver
+	// XXX take Max ?????
+	struct blasfeo_dmat *tmp_ny_ny;
+	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
     struct blasfeo_dvec *tmp_nux;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
                                 // not using max(nx+nu) for parallelization in the future

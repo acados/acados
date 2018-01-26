@@ -242,6 +242,9 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 	int *nb = dims->nb;
 	int *ng = dims->ng;
 	int *ns = dims->ns;
+	ocp_nlp_cost_ls_dims *cost_dims = dims->cost_dims;
+	int *nv = cost_dims->nv;
+	int *ny = cost_dims->ny;
 
     int size = 0;
 
@@ -271,15 +274,19 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
 
     size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_nux tmp_nbg
+    size += 2*(N+1)*sizeof(struct blasfeo_dmat); // tmp_ny_ny tmp_nv_ny
 
     for (ii = 0; ii < N+1; ii++)
     {
-        size += blasfeo_memsize_dvec(nx[ii] + nu[ii]);
-        size += blasfeo_memsize_dvec(nb[ii] + ng[ii]);
+        size += blasfeo_memsize_dvec(nx[ii]+nu[ii]); // tmp_nux
+        size += blasfeo_memsize_dvec(nb[ii]+ng[ii]); // tmp_nbg
+        size += blasfeo_memsize_dmat(ny[ii], ny[ii]); // tmp_ny_ny
+        size += blasfeo_memsize_dmat(nv[ii], ny[ii]); // tmp_nv_ny
     }
 
+    size += 64;
+
     make_int_multiple_of(64, &size);
-    size += 1 * 64;
 
     return size;
 }
@@ -297,6 +304,9 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     int *nu = mem->dims->nu;
     int *nb = mem->dims->nb;
     int *ng = mem->dims->ng;
+	ocp_nlp_cost_ls_dims *cost_dims = mem->dims->cost_dims;
+	int *nv = cost_dims->nv;
+	int *ny = cost_dims->ny;
 
     ocp_qp_dims qp_dims;
     cast_nlp_dims_to_qp_dims(&qp_dims, mem->dims);
@@ -304,18 +314,30 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     // set up local SQP data
     assign_blasfeo_dvec_structs(N+1, &work->tmp_nux, &c_ptr);
     assign_blasfeo_dvec_structs(N+1, &work->tmp_nbg, &c_ptr);
+    assign_blasfeo_dmat_structs(N+1, &work->tmp_ny_ny, &c_ptr);
+    assign_blasfeo_dmat_structs(N+1, &work->tmp_nv_ny, &c_ptr);
 
     align_char_to(64, &c_ptr);
 
+	// tmp_ny_ny
+    for (int ii = 0; ii <= N; ii++)
+    {
+        assign_blasfeo_dmat_mem(ny[ii], ny[ii], work->tmp_ny_ny+ii, &c_ptr);
+    }
+	// tmp_nv_ny
+    for (int ii = 0; ii <= N; ii++)
+    {
+        assign_blasfeo_dmat_mem(nv[ii], ny[ii], work->tmp_nv_ny+ii, &c_ptr);
+    }
 	// tmp_nux
     for (int ii = 0; ii <= N; ii++)
     {
-        assign_blasfeo_dvec_mem(nx[ii]+nu[ii], &work->tmp_nux[ii], &c_ptr);
+        assign_blasfeo_dvec_mem(nx[ii]+nu[ii], work->tmp_nux+ii, &c_ptr);
     }
 	// tmp_nbg
     for (int ii = 0; ii <= N; ii++)
     {
-        assign_blasfeo_dvec_mem(nb[ii]+ng[ii], &work->tmp_nbg[ii], &c_ptr);
+        assign_blasfeo_dvec_mem(nb[ii]+ng[ii], work->tmp_nbg+ii, &c_ptr);
     }
 
     // set up QP solver
@@ -374,6 +396,9 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
     int N = nlp_in->dims->N;
     int *nx = nlp_in->dims->nx;
     int *nu = nlp_in->dims->nu;
+	ocp_nlp_cost_ls_dims *cost_dims = nlp_in->dims->cost_dims;
+	int *nv = cost_dims->nv;
+	int *ny = cost_dims->ny;
 
     ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls*) nlp_in->cost;
 
@@ -383,8 +408,19 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
     for (i = 0; i <= N; i++)
 	{
 
-		// R S Q
+#if 0
+
+		// identity Cyt
 		blasfeo_dgecp(nu[i]+nx[i], nu[i]+nx[i], cost->W+i, 0, 0, RSQrq+i, 0, 0);
+
+#else
+		
+		// general Cyt
+		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, work->tmp_ny_ny+i, 0, 0);
+		blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, work->tmp_ny_ny+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
+		blasfeo_dsyrk_ln(nv[i], ny[i], 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
+
+#endif
 
     }
 
@@ -431,11 +467,15 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
     int *nu = nlp_in->dims->nu;
     int *nb = nlp_in->dims->nb;
     int *ng = nlp_in->dims->ng;
+	ocp_nlp_cost_ls_dims *cost_dims = nlp_in->dims->cost_dims;
+	int *nv = cost_dims->nv;
+	int *ny = cost_dims->ny;
 
     struct blasfeo_dvec *tmp_nux = work->tmp_nux;
     struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
 
     ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls *) nlp_in->cost;
+    struct blasfeo_dmat *Cyt = cost->Cyt;
     struct blasfeo_dvec *y_ref = cost->y_ref;
 
     struct blasfeo_dmat *BAbt = work->qp_in->BAbt;
@@ -476,7 +516,13 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 
         // gradient
         // TODO(rien): only for least squares cost with state and control reference atm
+#if 0
+		// identity Cyt
 		blasfeo_daxpy(nu[i]+nx[i], -1.0, y_ref+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
+#else
+		// general Cyt
+		blasfeo_dgemv_t(nv[i], ny[i], 1.0, Cyt+i, 0, 0, nlp_out->ux+i, 0, -1.0, y_ref+i, 0, tmp_nux+i, 0);
+#endif
 
         blasfeo_dsymv_l(nu[i]+nx[i], nu[i]+nx[i], 1.0, &RSQrq[i], 0, 0, &tmp_nux[i], 0, 0.0, &rq[i], 0, &rq[i], 0);
 
@@ -503,7 +549,13 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
 
 	// gradient
+#if 0
+	// identity Cyt
 	blasfeo_daxpy(nu[i]+nx[i], -1.0, y_ref+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
+#else
+	// general Cyt
+	blasfeo_dgemv_t(nv[i], ny[i], 1.0, Cyt+i, 0, 0, nlp_out->ux+i, 0, -1.0, y_ref+i, 0, tmp_nux+i, 0);
+#endif
 
     blasfeo_dsymv_l(nx[N], nx[N], 1.0, &RSQrq[N], 0, 0, &tmp_nux[N], 0, 0.0, &rq[N], 0, &rq[N], 0);
 

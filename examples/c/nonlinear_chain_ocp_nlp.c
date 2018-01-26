@@ -307,15 +307,26 @@ int main() {
     // Least-squares cost
     ocp_nlp_cost_ls *cost_ls = (ocp_nlp_cost_ls *) nlp_in->cost;
 
+	// W
 	for (int i=0; i<=NN; i++)
 	{
-		blasfeo_dgese(nu[i]+nx[i], nu[i]+nx[i], 0.0, cost_ls->W+i, 0, 0);
+		blasfeo_dgese(ny[i], ny[i], 0.0, cost_ls->W+i, 0, 0);
         for (int j = 0; j < nu[i]; j++)
             DMATEL_LIBSTR(cost_ls->W+i, j, j) = diag_cost_u[j];
         for (int j = 0; j < nx[i]; j++)
             DMATEL_LIBSTR(cost_ls->W+i, nu[i]+j, nu[i]+j) = diag_cost_x[j];
 	}
 
+	// Cyt
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(nv[i], ny[i], 0.0, cost_ls->Cyt+i, 0, 0);
+		int n_min = ny[i]<nv[i] ? ny[i] : nv[i];
+        for (int j = 0; j < n_min; j++)
+            DMATEL_LIBSTR(cost_ls->Cyt+i, j, j) = 1.0;
+	}
+
+	// y_ref
     for (int i = 0; i < NN; i++)
 	{
 		blasfeo_pack_dvec(nu[i], uref, cost_ls->y_ref+i, 0);

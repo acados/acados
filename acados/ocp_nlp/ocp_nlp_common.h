@@ -87,6 +87,7 @@ void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
 typedef struct
 {
 	ocp_nlp_cost_ls_dims *dims;
+	struct blasfeo_dmat *Cyt;
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;
 	int memsize;
