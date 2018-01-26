@@ -29,9 +29,9 @@
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
 // acados
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/utils/create.h"
 #include "acados/utils/math.h"
+// acados_c
+#include <acados_c/ocp_qp.h>
 
 
 /*****************************************************************************************
@@ -123,9 +123,18 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
     int N = 15;    // horizon length
     int nb_ = 11;  // number of box constrained inputs and states
     int ng_ = 0;   // 4;  // number of general constraints
-    int ngN = 4;   // number of general constraints at the last stage
 
-    int nbu = nu_ < nb_ ? nu_ : nb_;
+    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
+
+    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+    int ngN = num_of_stages_equal_to_zero;  // number of general constraints at the last stage
+    #else
+    int ngN = 0;
+    #endif
+
+#if defined(ELIMINATE_X0)
+	int nbu = nu_<nb_ ? nu_ : nb_;
+#endif
     int nbx = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
 
     int nx[N+1];
@@ -279,11 +288,22 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
         ubN[jj] = +0.5;  // umax
         idxbN[jj] = jj;
     }
-    for (int jj = jj_end; jj < nb[N]; jj++) {
+    for (int jj = jj_end; jj < nb[N]; jj++)
+    {
         lbN[jj] = -4.0;  // xmin
         ubN[jj] = +4.0;  // xmax
         idxbN[jj] = jj;
     }
+
+    #ifndef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+    for (int jj = nu[N]; jj < num_of_stages_equal_to_zero; jj++)
+    {
+        lbN[jj] = 0.0;
+        ubN[jj] = 0.0;
+        idxbN[jj] = jj;
+    }
+    #endif
+
     //    int_print_mat(nb[N], 1, idxbN, nb[N]);
     //    d_print_mat(nb[N], 1, lbN, nb[N]);
 

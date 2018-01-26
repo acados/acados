@@ -1,14 +1,52 @@
 # Author: Gianluca Frison
 
-\
+
 
 include ../../Makefile.rule
 
 
 
-examples: sim_erk_crane sim_irk_crane mass_spring_hpipm mass_spring_pcond_solver mass_spring_cond_solver mass_spring_pcond_hpipm_split mass_spring_condensing_hpipm_split mass_spring_condensing_hpipm mass_spring_condensing_qpoases mass_spring_condensing_qore nonlinear_chain_ocp_nlp
+LIBS = -lacados_c -lacore -lhpipm -lqpOASES_e
 
-run_examples: run_sim_erk_crane run_sim_irk_crane run_mass_spring_hpipm run_mass_spring_pcond_solver run_mass_spring_cond_solver run_mass_spring_pcond_hpipm_split run_mass_spring_condensing_hpipm_split run_mass_spring_condensing_hpipm run_mass_spring_condensing_qpoases run_mass_spring_condensing_qore run_nonlinear_chain_ocp_nlp
+ifeq ($(ACADOS_WITH_HPMPC), 1)
+LIBS+=-lhpmpc
+endif
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
+CCC = $(CXX)
+LIBS+= -lqpdunes -lqpOASES
+else
+CCC = $(CC)
+endif
+ifeq ($(ACADOS_WITH_QORE), 1)
+LIBS+=-lqore_dense
+endif
+LIBS+=-lblasfeo -lm -lblas
+
+
+
+EXAMPLES =
+EXAMPLES += mass_spring_example
+EXAMPLES += sim_erk_crane
+EXAMPLES += sim_irk_crane
+EXAMPLES += mass_spring_pcond_hpipm_split
+EXAMPLES += mass_spring_fcond_hpipm_split
+EXAMPLES += nonlinear_chain_ocp_nlp
+
+examples: $(EXAMPLES)
+
+
+
+RUN_EXAMPLES =
+RUN_EXAMPLES += run_mass_spring_example
+RUN_EXAMPLES += run_sim_erk_crane
+RUN_EXAMPLES += run_sim_irk_crane
+RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
+RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
+RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+
+run_examples: $(RUN_EXAMPLES)
+
+
 
 CRANE_OBJS =
 CRANE_OBJS += crane_model/jac_model.o
@@ -21,121 +59,103 @@ CRANE_OBJS += crane_model/impl_jac_x.o
 CRANE_OBJS += crane_model/impl_jac_xdot.o
 CRANE_OBJS += crane_model/impl_jac_u.o
 
-sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
-	$(CC) -o sim_erk_crane.out sim_erk_crane.o $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+sim_erk_crane: $(CRANE_OBJS)
+	$(CCC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
 
-sim_irk_crane: $(CRANE_OBJS) sim_irk_crane.o
-	$(CC) -o sim_irk_crane.out sim_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+
+
+sim_irk_crane_yt: $(CRANE_OBJS)
+	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example sim_irk_crane build complete."
+	@echo " Example sim_irk_crane_yt build complete."
 	@echo
 
-mass_spring_hpipm: mass_spring_hpipm.o
-	$(CC) -o mass_spring_hpipm.out mass_spring_hpipm.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+
+
+mass_spring_example: mass_spring_example.o
+	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example mass_spring_hpipm build complete."
+	@echo " Example mass_spring_example build complete."
 	@echo
 
-mass_spring_pcond_solver: mass_spring_pcond_solver.o
-	$(CC) -o mass_spring_pcond_solver.out mass_spring_pcond_solver.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
-	@echo
-	@echo " Example mass_spring_pcond_solver build complete."
-	@echo
 
-mass_spring_cond_solver: mass_spring_cond_solver.o
-	$(CC) -o mass_spring_cond_solver.out mass_spring_cond_solver.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
-	@echo
-	@echo " Example mass_spring_cond_solver build complete."
-	@echo
 
 mass_spring_pcond_hpipm_split: mass_spring_pcond_hpipm_split.o
-	$(CC) -o mass_spring_pcond_hpipm_split.out mass_spring_pcond_hpipm_split.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+	$(CCC) -o mass_spring_pcond_hpipm_split.out mass_spring_pcond_hpipm_split.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_pcond_hpipm_split build complete."
 	@echo
 
-mass_spring_condensing_hpipm_split: mass_spring_condensing_hpipm_split.o
-	$(CC) -o mass_spring_condensing_hpipm_split.out mass_spring_condensing_hpipm_split.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+
+
+mass_spring_fcond_hpipm_split: mass_spring_fcond_hpipm_split.o
+	$(CCC) -o mass_spring_fcond_hpipm_split.out mass_spring_fcond_hpipm_split.o $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example mass_spring_condensing_hpipm_split build complete."
+	@echo " Example mass_spring_fcond_hpipm_split build complete."
 	@echo
 
-mass_spring_condensing_hpipm: mass_spring_condensing_hpipm.o
-	$(CC) -o mass_spring_condensing_hpipm.out mass_spring_condensing_hpipm.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
-	@echo
-	@echo " Example mass_spring_condensing_hpipm build complete."
-	@echo
 
-mass_spring_condensing_qpoases: mass_spring_condensing_qpoases.o
-	$(CC) -o mass_spring_condensing_qpoases.out mass_spring_condensing_qpoases.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
-	@echo
-	@echo " Example mass_spring_condensing_qpoases build complete."
-	@echo
 
-mass_spring_condensing_qore: mass_spring_condensing_qore.o
-	$(CC) -o mass_spring_condensing_qore.out mass_spring_condensing_qore.o $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
-	@echo
-	@echo " Example mass_spring_condensing_qore build complete."
-	@echo
+CHAIN_OBJS =
+CHAIN_OBJS += chain_model/vde_chain_nm2.o
+CHAIN_OBJS += chain_model/jac_chain_nm2.o
+CHAIN_OBJS += chain_model/vde_adj_chain_nm2.o
+CHAIN_OBJS += chain_model/vde_hess_chain_nm2.o
+CHAIN_OBJS += chain_model/vde_chain_nm3.o
+CHAIN_OBJS += chain_model/jac_chain_nm3.o
+CHAIN_OBJS += chain_model/vde_adj_chain_nm3.o
+CHAIN_OBJS += chain_model/vde_hess_chain_nm3.o
+CHAIN_OBJS += chain_model/vde_chain_nm4.o
+CHAIN_OBJS += chain_model/jac_chain_nm4.o
+CHAIN_OBJS += chain_model/vde_adj_chain_nm4.o
+CHAIN_OBJS += chain_model/vde_hess_chain_nm4.o
+CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
 
-OBJS =
-OBJS += chain_model/vde_chain_nm2.o
-OBJS += chain_model/jac_chain_nm2.o
-OBJS += chain_model/vde_adj_chain_nm2.o
-OBJS += chain_model/vde_hess_chain_nm2.o
-OBJS += chain_model/vde_chain_nm3.o
-OBJS += chain_model/jac_chain_nm3.o
-OBJS += chain_model/vde_adj_chain_nm3.o
-OBJS += chain_model/vde_hess_chain_nm3.o
-OBJS += chain_model/vde_chain_nm4.o
-OBJS += chain_model/jac_chain_nm4.o
-OBJS += chain_model/vde_adj_chain_nm4.o
-OBJS += chain_model/vde_hess_chain_nm4.o
-OBJS += nonlinear_chain_ocp_nlp.o
-
-nonlinear_chain_ocp_nlp: $(OBJS)
-	$(CC) -o nonlinear_chain_ocp_nlp.out $(OBJS) $(LDFLAGS) -lacore -lhpipm -lqore_dense -lblasfeo -lqpOASES_e -lm -lblas
+nonlinear_chain_ocp_nlp: $(CHAIN_OBJS)
+	$(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example nonlinear_chain_ocp_nlp build complete."
 	@echo
 
+
+
 run_sim_erk_crane:
 	./sim_erk_crane.out
+
+
 
 run_sim_irk_crane:
 	./sim_irk_crane.out
 
-run_mass_spring_hpipm:
-	./mass_spring_hpipm.out
+
+
+run_mass_spring_example:
+	./mass_spring_example.out
+
+
 
 run_mass_spring_pcond_hpipm_split:
 	./mass_spring_pcond_hpipm_split.out
 
-run_mass_spring_pcond_solver:
-	./mass_spring_pcond_solver.out
 
-run_mass_spring_cond_solver:
-	./mass_spring_cond_solver.out
 
-run_mass_spring_condensing_hpipm_split:
-	./mass_spring_condensing_hpipm_split.out
+run_mass_spring_fcond_hpipm_split:
+	./mass_spring_fcond_hpipm_split.out
 
-run_mass_spring_condensing_hpipm:
-	./mass_spring_condensing_hpipm.out
 
-run_mass_spring_condensing_qpoases:
-	./mass_spring_condensing_qpoases.out
-
-run_mass_spring_condensing_qore:
-	./mass_spring_condensing_qore.out
 
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
 
+
+
 clean:
-	rm -f chain_model/*.o
 	rm -f *.o
 	rm -f *.out
+
+deep_clean: clean
+	rm -f chain_model/*.o
+

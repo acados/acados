@@ -32,7 +32,7 @@ extern "C" {
 
 typedef struct ocp_qp_sparse_solver_args_ {
     ocp_qp_partial_condensing_args *pcond_args;
-    ocp_qp_solver *solver;
+    ocp_qp_solver_fcn_ptrs *solver;
     void *solver_args;
 } ocp_qp_sparse_solver_args;
 
@@ -49,7 +49,7 @@ typedef struct ocp_qp_sparse_solver_memory_ {
 
 typedef struct ocp_qp_sparse_solver_workspace_ {
     void *pcond_work;
-    void *solver_workspace;
+    void *solver_work;
     // TODO(dimitris): move from memory to workspace
     // ocp_qp_in *pcond_qp_in;
     // ocp_qp_out *pcond_qp_out;

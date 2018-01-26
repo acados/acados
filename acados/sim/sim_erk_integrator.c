@@ -74,6 +74,7 @@ void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 }
 
 
+
 void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
@@ -81,8 +82,7 @@ void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
 
     assert(opts->num_stages == 4 && "only number of stages = 4 implemented!");
 
-    memcpy(opts->A_mat,
-        ((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
+    memcpy(opts->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
         sizeof(*opts->A_mat) * (ns * ns));
     memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
         sizeof(*opts->b_vec) * (ns));
@@ -202,7 +202,7 @@ void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 void *sim_erk_create_memory(sim_dims *dims, void *opts_)
 {
     int bytes = sim_erk_calculate_memory_size(dims, opts_);
-    void *ptr = malloc(bytes);
+    void *ptr = acados_malloc(bytes, 1);
     sim_erk_memory *memory = sim_erk_assign_memory(dims, opts_, ptr);
 
     return (void *)memory;
@@ -211,7 +211,6 @@ void *sim_erk_create_memory(sim_dims *dims, void *opts_)
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    sim_erk_memory *mem = (sim_erk_memory *) mem_;
     sim_dims dims = {
         opts->num_stages,
         in->nx,

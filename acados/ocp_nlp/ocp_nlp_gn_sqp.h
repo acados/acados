@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+// acados_c
+#include <acados_c/ocp_qp.h>
+#include <acados_c/sim.h>
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/sim/sim_collocation.h"
@@ -33,25 +36,21 @@ extern "C" {
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
-typedef struct {
+typedef struct
+{
     int maxIter;
     // QP solver
-    ocp_qp_xcond_solver *qp_solver;
+    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
     void *qp_solver_args;
     // integrators
-    sim_solver **sim_solvers;
+    sim_solver_fcn_ptrs **sim_solvers;
     void **sim_solvers_args;
 } ocp_nlp_gn_sqp_args;
 
 
 
-typedef struct {
-    int num_vars;
-    double **x;
-    double **u;
-    double **pi;
-    double **lam;
-
+typedef struct
+{
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
@@ -60,9 +59,8 @@ typedef struct {
 
 
 
-typedef struct {
-    // TODO(dimitris): move tmp_vecs up
-    double *w;
+typedef struct
+{
 
     // QP solver
     ocp_qp_in *qp_in;
@@ -75,15 +73,17 @@ typedef struct {
     void **sim_solvers_work;
 
     // SQP solver
-    struct d_strvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+	struct blasfeo_dvec *tmp_nbg;
+    struct blasfeo_dvec *tmp_nux;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
                                 // not using max(nx+nu) for parallelization in the future
 
 } ocp_nlp_gn_sqp_work;
 
 
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver *sim_solvers);
+
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
 //
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver *qp_solver, sim_solver *sim_solvers, void *raw_memory);
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
 //
 int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
 //

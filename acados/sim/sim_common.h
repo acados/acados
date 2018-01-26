@@ -26,12 +26,6 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-typedef enum {
-    PREVIOUS,
-    ERK,
-    LIFTED_IRK
-} sim_solver_t;
-
 
 typedef struct {
     int num_stages;
@@ -124,7 +118,6 @@ typedef struct {
 
 } sim_rk_opts;
 
-
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
     int (*calculate_args_size)(sim_dims *dims);
@@ -133,20 +126,18 @@ typedef struct {
     int (*calculate_memory_size)(sim_dims *dims, void *args);
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
-} sim_solver;
+} sim_solver_fcn_ptrs;
+
+int sim_dims_calculate_size();
+
+sim_dims *assign_sim_dims(void *raw_memory);
 
 int sim_in_calculate_size(sim_dims *dims);
 
 sim_in *assign_sim_in(sim_dims *dims, void *raw_memory);
 
-sim_in *create_sim_in(sim_dims *dims);
-
 int sim_out_calculate_size(sim_dims *dims);
 
 sim_out *assign_sim_out(sim_dims *dims, void *raw_memory);
-
-sim_out *create_sim_out(sim_dims *dims);
-
-int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

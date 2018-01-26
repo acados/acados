@@ -158,28 +158,54 @@ bool is_matrix(const LangObject *input) {
 #endif
 }
 
-bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_columns) {
+int numRows(const LangObject *input) {
     if (!is_matrix(input))
-        return false;
+        throw std::invalid_argument("Input is not a valid matrix.");
 #if defined(SWIGMATLAB)
     const mwSize *dims = mxGetDimensions(input);
-    int_t input_rows = dims[0], input_cols = dims[1];
-    if (input_rows != nb_rows || input_cols != nb_columns)
-        return false;
-    return true;
+    return dims[0];
+#elif defined(SWIGPYTHON)
+    npy_intp *dims = PyArray_DIMS((PyArrayObject *) input);
+    return dims[0];
+#endif
+}
+
+int numColumns(const LangObject *input) {
+    if (!is_matrix(input))
+        throw std::invalid_argument("Input is not a valid matrix.");
+#if defined(SWIGMATLAB)
+    const mwSize *dims = mxGetDimensions(input);
+    return dims[1];
 #elif defined(SWIGPYTHON)
     int nb_dims = PyArray_NDIM((PyArrayObject *) input);
     npy_intp *dims = PyArray_DIMS((PyArrayObject *) input);
-    if (dims[0] != nb_rows)
-        return false;
     if (nb_dims == 1) {
-        if (nb_columns != 1)
-            return false;
+        // column vector
+        return 1;
     } else {
-        if (dims[1] != nb_columns)
-            return false;
+        return dims[1];
     }
+#endif
+}
+
+bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_columns) {
+    if (!is_matrix(input))
+        return false;
+    if (nb_rows != numRows(input) || nb_columns != numColumns(input))
+        return false;
     return true;
+}
+
+double *asDoublePointer(LangObject *input) {
+    if (!is_matrix(input))
+        throw std::invalid_argument("Input is not of a valid matrix type.");
+#if defined(SWIGMATLAB)
+    return (double *) mxGetData(input);
+#elif defined(SWIGPYTHON)
+    PyObject *matrix = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_ARRAY_FARRAY_RO);
+    if (matrix == NULL)
+        throw std::runtime_error("Something went wrong while converting matrix");
+    return (double *) PyArray_DATA((PyArrayObject *) matrix);
 #endif
 }
 
@@ -197,14 +223,19 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
 #elif defined(SWIGPYTHON)
     PyObject *matrix = NULL;
     if (nb_cols == 1) {
+        T *data_copy = (T *) calloc(nb_rows, sizeof(T));
+        std::copy_n(data, nb_rows, data_copy);
         npy_intp npy_dims[1] = {nb_rows};
-        matrix = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(1, npy_dims, data_copy);
     } else {
+        T *data_copy = (T *) calloc(nb_rows * nb_cols, sizeof(T));
+        std::copy_n(data, nb_rows * nb_cols, data_copy);
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
-        matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(2, npy_dims, data_copy);
     }
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
+    
     return matrix;
 #endif
 }
@@ -253,7 +284,7 @@ LangObject *new_sequence(const int_t length) {
 }
 
 template <typename T>
-LangObject *new_sequence_from(const T *array, const int_t length) {
+LangObject *new_sequence_from(T *array, const int_t length) {
     LangObject *sequence = new_sequence(length);
     for (int_t index = 0; index < length; index++) {
         if (typeid(T) == typeid(int_t))
@@ -418,7 +449,7 @@ LangObject *new_sequence_of_arrays(const int_t length) {
 }
 
 template<typename T>
-LangObject *new_sequence_from(const T **data, const int_t length,
+LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_rows, const int_t *nb_columns) {
 
     LangObject *sequence = new_sequence_of_arrays(length);
@@ -431,7 +462,7 @@ LangObject *new_sequence_from(const T **data, const int_t length,
 }
 
 template<typename T>
-LangObject *new_sequence_from(const T **data, const int_t length,
+LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_elems) {
 
     int_t nb_columns[length];

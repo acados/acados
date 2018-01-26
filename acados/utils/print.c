@@ -18,9 +18,11 @@
  */
 
 // external
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -144,6 +146,24 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows,
 }
 
 
+
+void ocp_nlp_dims_print(ocp_nlp_dims *dims)
+{
+    int N = dims->N;
+
+    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\ths\tns\n");
+
+    for (int kk = 0; kk < N+1; kk++)
+    {
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
+            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->nh[kk], dims->ns[kk]);
+    }
+
+    printf("\nmemsize = %d\n", dims->memsize);
+}
+
+
+
 void print_ocp_qp_dims(ocp_qp_dims *dims)
 {
     int N = dims->N;
@@ -180,60 +200,227 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
 
+#if 1
+	printf("BAbt =\n");
+    for (int ii = 0; ii < N; ii++)
+    {
+		blasfeo_print_dmat(nu[ii]+nx[ii]+1, nx[ii+1], &qp_in->BAbt[ii], 0 , 0);
+	}
+
+	printf("b =\n");
+    for (int ii = 0; ii < N; ii++)
+    {
+		blasfeo_print_tran_dvec(nx[ii+1], &qp_in->b[ii], 0);
+	}
+
+	printf("RSQrq =\n");
+    for (int ii = 0; ii < N+1; ii++)
+	{
+        blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
+	}
+
+	printf("rq =\n");
+    for (int ii = 0; ii < N+1; ii++)
+	{
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+	}
+
+	printf("d =\n");
+    for (int ii = 0; ii < N+1; ii++)
+	{
+		blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
+	}
+
+	printf("idxb =\n");
+    for (int ii = 0; ii < N+1; ii++)
+	{
+		int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
+	}
+
+	printf("DCt =\n");
+    for (int ii = 0; ii < N+1; ii++)
+	{
+        blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &qp_in->DCt[ii], 0 , 0);
+	}
+
+#else
+
     for (int ii = 0; ii < N+1; ii++)
     {
         printf("k = %d\n\n", ii);
 
         printf("RSQrq =\n");
-        d_print_strmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
+        blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
 
         printf("rq =\n");
-        d_print_tran_strvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
 
 
         if (ii < N)
         {
             printf("BAbt =\n");
-            d_print_strmat(nu[ii]+nx[ii]+1, nx[ii+1], &qp_in->BAbt[ii], 0 , 0);
+            blasfeo_print_dmat(nu[ii]+nx[ii]+1, nx[ii+1], &qp_in->BAbt[ii], 0 , 0);
 
             printf("b =\n");
-            d_print_tran_strvec(nx[ii+1], &qp_in->b[ii], 0);
+            blasfeo_print_tran_dvec(nx[ii+1], &qp_in->b[ii], 0);
         }
+
+        printf("d =\n");
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
 
         printf("idxb = (nb = %d = %d + %d)\n", qp_in->dim->nb[ii], qp_in->dim->nbu[ii], qp_in->dim->nbx[ii]);
         int_print_mat(1, nb[ii], qp_in->idxb[ii], 1);
 
-        printf("d =\n");
-        d_print_tran_strvec(2*nb[ii]+2*ng[ii], &qp_in->d[ii], 0);
+		printf("DCt =\n");
+        blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &qp_in->DCt[ii], 0 , 0);
     }
+
+#endif
+	return;
 }
 
 
 
 void print_ocp_qp_out(ocp_qp_out *qp_out)
 {
+
+	int ii;
+
     int N = qp_out->dim->N;
     int *nx = qp_out->dim->nx;
     int *nu = qp_out->dim->nu;
     int *nb = qp_out->dim->nb;
     int *ng = qp_out->dim->ng;
 
-    for (int ii = 0; ii < N+1; ii++)
+#if 1
+
+	printf("ux =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+
+	printf("pi =\n");
+	for (ii=0; ii<N; ii++)
+		blasfeo_print_tran_dvec(nx[ii+1], &qp_out->pi[ii], 0);
+
+	printf("lam =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+
+	printf("t =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->t[ii], 0);
+
+#else
+
+    for (ii = 0; ii < N+1; ii++)
     {
         printf("k = %d\n\n", ii);
 
         printf("ux =\n");
-        d_print_tran_strvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
 
         if (ii < N)
         {
             printf("pi =\n");
-            d_print_tran_strvec(nx[ii], &qp_out->pi[ii], 0);
+            blasfeo_print_tran_dvec(nx[ii], &qp_out->pi[ii], 0);
         }
 
         printf("lam =\n");
-        d_print_tran_strvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
     }
+
+#endif
+	return;
+
+}
+
+
+
+void ocp_nlp_out_print(ocp_nlp_out *nlp_out)
+{
+
+	int ii;
+
+    int N = nlp_out->dims->N;
+    int *nx = nlp_out->dims->nx;
+    int *nu = nlp_out->dims->nu;
+    int *nb = nlp_out->dims->nb;
+    int *ng = nlp_out->dims->ng;
+
+#if 1
+
+	printf("\nN = %d\n", N);
+	printf("ux =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &nlp_out->ux[ii], 0);
+
+	printf("pi =\n");
+	for (ii=0; ii<N; ii++)
+		blasfeo_print_tran_dvec(nx[ii+1], &nlp_out->pi[ii], 0);
+
+	printf("lam =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &nlp_out->lam[ii], 0);
+
+//	printf("t =\n");
+//	for (ii=0; ii<=N; ii++)
+//        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &nlp_out->t[ii], 0);
+
+#else
+
+    for (ii = 0; ii < N+1; ii++)
+    {
+        printf("k = %d\n\n", ii);
+
+        printf("ux =\n");
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &nlp_out->ux[ii], 0);
+
+        if (ii < N)
+        {
+            printf("pi =\n");
+            blasfeo_print_tran_dvec(nx[ii], &nlp_out->pi[ii], 0);
+        }
+
+        printf("lam =\n");
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &nlp_out->lam[ii], 0);
+    }
+
+#endif
+	return;
+
+}
+
+
+
+void print_ocp_qp_res(ocp_qp_res *qp_res)
+{
+
+	int ii;
+
+    int N = qp_res->dim->N;
+    int *nx = qp_res->dim->nx;
+    int *nu = qp_res->dim->nu;
+    int *nb = qp_res->dim->nb;
+    int *ng = qp_res->dim->ng;
+
+	printf("res_g =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(nu[ii]+nx[ii], &qp_res->res_g[ii], 0);
+
+	printf("res_b =\n");
+	for (ii=0; ii<N; ii++)
+		blasfeo_print_exp_tran_dvec(nx[ii+1], &qp_res->res_b[ii], 0);
+
+	printf("res_d =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &qp_res->res_d[ii], 0);
+
+	printf("res_m =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &qp_res->res_m[ii], 0);
+
+	return;
+
 }
 
 
@@ -348,6 +535,23 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     int nv = qp_in->dim->nv;
 
     printf("H =\n");
-    d_print_strmat(nv, nv, qp_in->Hg, 0, 0);
+    blasfeo_print_dmat(nv, nv, qp_in->Hv, 0, 0);
     // TODO(dimitris): print all data
+}
+
+
+
+void print_ocp_qp_info(ocp_qp_info *info)
+{
+    double misc = info->total_time - info->condensing_time - info->solve_QP_time - info->interface_time;
+    assert((misc >= 0 || fabs(misc) <= ACADOS_EPS) && "sum of timings larger than total time!");
+
+    printf("\n***************************************************************\n");
+    printf("total time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->total_time, 100.0);
+    printf("condensing time =\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->condensing_time, 100*info->condensing_time/info->total_time);
+    printf("QP time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->solve_QP_time, 100*info->solve_QP_time/info->total_time);
+    printf("interface time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->interface_time, 100*info->interface_time/info->total_time);
+    printf("misc \t\t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*misc, 100*misc/info->total_time);
+    printf("QP iter \t=\t%7d\n", info->num_iter);
+    printf("***************************************************************\n\n");
 }

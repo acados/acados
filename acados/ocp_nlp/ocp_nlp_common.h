@@ -39,29 +39,27 @@ typedef struct {
     int *ns;  // number of soft constraints
     int *num_stages;
     int N;
+	int memsize;
 } ocp_nlp_dims;
 
 
 
-typedef struct {
+typedef struct
+{
     double **W;
     double **y_ref;
 } ocp_nlp_ls_cost;
 
 
 
-typedef struct {
+typedef struct
+{
     ocp_nlp_dims *dims;
 
     // TODO(dimitris): decide on the blasfeo format for those fields
     int **idxb;
-    double **lb;
-    double **ub;
-
-    double **Cx;
-    double **Cu;
-    double **lg;
-    double **ug;
+	struct blasfeo_dvec *d;
+	struct blasfeo_dmat *DCt;
 
     double **lh;
     double **uh;
@@ -79,12 +77,31 @@ typedef struct {
 
 
 
-typedef struct {
-    double **x;
-    double **u;
-    double **pi;
-    double **lam;
+typedef struct
+{
+    ocp_nlp_dims *dims;
+	struct blasfeo_dvec *ux;
+	struct blasfeo_dvec *pi;
+	struct blasfeo_dvec *lam;
+	struct blasfeo_dvec *t;
+	int memsize;
 } ocp_nlp_out;
+
+
+
+typedef struct {
+    int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
+    int (*calculate_args_size)(ocp_nlp_dims *dims, void *solver_);
+    void *(*assign_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory);
+    void *(*copy_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory, void *source_);
+    void (*initialize_default_args)(void *args);
+    int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
+    void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
+    int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
+    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
+    sim_solver_fcn_ptrs **sim_solvers;
+    // TODO(nielsvd): add cost and nonlinear constraints
+} ocp_nlp_solver_fcn_ptrs;
 
 int number_of_primal_vars(ocp_nlp_dims *dims);
 
@@ -99,6 +116,13 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
+
+
+// dims
+int ocp_nlp_dims_calculate_size(int N);
+ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
+void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, ocp_nlp_dims *dims);
+void ocp_nlp_dims_copy(ocp_nlp_dims *in, ocp_nlp_dims *out);
 
 #ifdef __cplusplus
 } /* extern "C" */

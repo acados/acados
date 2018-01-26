@@ -27,6 +27,7 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows, const int_t ncols);
@@ -44,6 +45,14 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows, const 
 
 void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
+
+// ocp nlp
+void ocp_nlp_dims_print(ocp_nlp_dims *dims);
+
+void ocp_nlp_out_print(ocp_nlp_out *nlp_out);
+
+
+// ocp qp
 void print_ocp_qp_dims(ocp_qp_dims *dims);
 
 void print_dense_qp_dims(dense_qp_dims *dims);
@@ -52,6 +61,8 @@ void print_ocp_qp_in(ocp_qp_in *qp_in);
 
 void print_ocp_qp_out(ocp_qp_out *qp_out);
 
+void print_ocp_qp_res(ocp_qp_res *qp_res);
+
 void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp);
 
 void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp);
@@ -59,6 +70,8 @@ void print_colmaj_ocp_qp_in_to_file(colmaj_ocp_qp_in *qp);
 void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp_out *out);
 
 void print_dense_qp_in(dense_qp_in *qp_in);
+
+void print_ocp_qp_info(ocp_qp_info *info);
 
 #ifdef __cplusplus
 } /* extern "C" */

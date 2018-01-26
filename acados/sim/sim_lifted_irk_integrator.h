@@ -43,8 +43,8 @@ typedef struct {
     real_t *sys_sol_trans;
 
     real_t *trans;
-    struct d_strmat *str_mat;
-    struct d_strmat *str_sol;
+    struct blasfeo_dmat *str_mat;
+    struct blasfeo_dmat *str_sol;
 
     real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
@@ -69,8 +69,8 @@ typedef struct {
     int_t **ipiv2;
     real_t **sys_sol2;
 
-    struct d_strmat **str_mat2;
-    struct d_strmat **str_sol2;
+    struct blasfeo_dmat **str_mat2;
+    struct blasfeo_dmat **str_sol2;
 
 } sim_lifted_irk_memory;
 

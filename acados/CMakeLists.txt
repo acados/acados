@@ -39,20 +39,28 @@ if(NOT ACADOS_WITH_OOQP)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
 endif()
 
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/sim/sim_discrete_model.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sm_gn.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sqp.c")
+
 # Define acados library
 add_library(acados ${ACADOS_SRC})
 
 target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # to be able to include "acados/header.h"
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
         $<INSTALL_INTERFACE:include>)
 
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
     target_link_libraries(acados PUBLIC hpmpc)
 endif()
-target_link_libraries(acados PUBLIC hpipm qpOASES_e blasfeo qpdunes)
+target_link_libraries(acados PUBLIC hpipm qpOASES_e qore blasfeo qpdunes)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
@@ -72,6 +80,9 @@ if(NOT ACADOS_NO_TIMINGS)
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
+add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
+add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
     include(CodeCoverage)
@@ -82,7 +93,8 @@ if(COVERAGE MATCHES "lcov")
 endif()
 
 target_compile_definitions(acados PRIVATE ALIGNMENT=64)
-target_compile_definitions(acados PRIVATE USE_ACADOS_TYPES) # Needed for qpDUNES
+target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
+target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES) # Needed for qpDUNES
 
 install(TARGETS acados EXPORT acadosTargets
     LIBRARY DESTINATION lib

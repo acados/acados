@@ -30,6 +30,30 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 
 
+
+int sim_dims_calculate_size()
+{
+    int size = sizeof(sim_dims);
+    
+    return size;
+}
+
+
+
+sim_dims *assign_sim_dims(void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    sim_dims *dims = (sim_dims *) c_ptr;
+    c_ptr += sizeof(sim_dims);
+
+    assert((char *) raw_memory + sim_dims_calculate_size() == c_ptr);
+
+    return dims;
+}
+
+
+
 int sim_in_calculate_size(sim_dims *dims)
 {
     int size = sizeof(sim_in);
@@ -77,19 +101,6 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     return in;
 }
 
-
-
-// TODO(dimitris): move to create.c
-sim_in *create_sim_in(sim_dims *dims)
-{
-    int bytes = sim_in_calculate_size(dims);
-
-    void *ptr = acados_malloc(bytes, 1);
-
-    sim_in *in = assign_sim_in(dims, ptr);
-
-    return in;
-}
 
 
 
@@ -141,49 +152,4 @@ sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
     assert((char*)raw_memory + sim_out_calculate_size(dims) >= c_ptr);
 
     return out;
-}
-
-
-
-sim_out *create_sim_out(sim_dims *dims)
-{
-    int bytes = sim_out_calculate_size(dims);
-
-    void *ptr = malloc(bytes);
-
-    sim_out *out = assign_sim_out(dims, ptr);
-
-    return out;
-}
-
-
-
-int set_sim_solver_fun_ptrs(sim_solver_t sim_solver_name, sim_solver *sim_solver)
-{
-    int return_value = ACADOS_SUCCESS;
-
-    switch (sim_solver_name)
-    {
-        case ERK:
-            sim_solver->fun = &sim_erk;
-            sim_solver->calculate_args_size = &sim_erk_opts_calculate_size;
-            sim_solver->assign_args = &sim_erk_assign_opts;
-            sim_solver->initialize_default_args = &sim_erk_initialize_default_args;
-            sim_solver->calculate_memory_size = &sim_erk_calculate_memory_size;
-            sim_solver->assign_memory = &sim_erk_assign_memory;
-            sim_solver->calculate_workspace_size = &sim_erk_calculate_workspace_size;
-            break;
-        case LIFTED_IRK:
-            sim_solver->fun = &sim_lifted_irk;
-            sim_solver->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
-            sim_solver->assign_args = &sim_lifted_irk_assign_opts;
-            sim_solver->initialize_default_args = &sim_lifted_irk_initialize_default_args;
-            sim_solver->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
-            sim_solver->assign_memory = &sim_lifted_irk_assign_memory;
-            sim_solver->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
-            break;
-        default:
-            return_value = ACADOS_FAILURE;
-    }
-    return return_value;
 }

@@ -534,19 +534,19 @@ int main() {
 
     // Adding memory for data
     for (int ii = 0; ii <= N; ii++) {
-        work_space_size += d_size_strmat(nuu[ii] + nxx[ii] + 1, nxx[ii + 1]);
-        work_space_size += d_size_strvec(nxx[ii + 1]);
+        work_space_size += blasfeo_memsize_dmat(nuu[ii] + nxx[ii] + 1, nxx[ii + 1]);
+        work_space_size += blasfeo_memsize_dvec(nxx[ii + 1]);
         work_space_size +=
-            d_size_strmat(nuu[ii] + nxx[ii] + 1, nuu[ii] + nxx[ii]);
-        work_space_size += d_size_strvec(nuu[ii] + nxx[ii]);
-        work_space_size += d_size_strmat(nuu[ii] + nxx[ii] + 1, ngg[ii]);
-        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
-        work_space_size += d_size_strvec(nuu[ii] + nxx[ii]);
-        work_space_size += d_size_strvec(nxx[ii + 1]);
-        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
-        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
-        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
-        work_space_size += d_size_strvec(2 * nbb[ii] + 2 * ngg[ii]);
+            blasfeo_memsize_dmat(nuu[ii] + nxx[ii] + 1, nuu[ii] + nxx[ii]);
+        work_space_size += blasfeo_memsize_dvec(nuu[ii] + nxx[ii]);
+        work_space_size += blasfeo_memsize_dmat(nuu[ii] + nxx[ii] + 1, ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(nuu[ii] + nxx[ii]);
+        work_space_size += blasfeo_memsize_dvec(nxx[ii + 1]);
+        work_space_size += blasfeo_memsize_dvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(2 * nbb[ii] + 2 * ngg[ii]);
+        work_space_size += blasfeo_memsize_dvec(2 * nbb[ii] + 2 * ngg[ii]);
     }
 
     work_space_size += 10000 * sizeof(double) * (N + 1);

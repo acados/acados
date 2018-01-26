@@ -17,6 +17,23 @@
  *
  */
 
+%typemap(in) double * {
+    if (!is_matrix($input, arg1->numRows$1_name(arg2), arg1->numCols$1_name(arg2))) {
+        SWIG_exception(SWIG_ValueError, "Matrix has wrong dimensions");
+        SWIG_fail;
+    }
+    $1 = asDoublePointer($input);
+}
+
+%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) double * {
+#if defined(SWIGMATLAB)
+    $1 = (mxIsNumeric($input) ? 1 : 0);
+#elif defined(SWIGPYTHON)
+    $1 = (PyArray_Check($input) ? 1 : 0);
+#endif
+}
+
+
 %typemap(in) int_t N {
     $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
@@ -61,17 +78,6 @@
 
 %typemap(out) const int_t * nc {
     $result = new_sequence_from($1, arg1->N+1);
-}
-
-%typemap(in) const real_t ** A {
-    $1 = ($1_ltype) arg1->$1_name;
-    fill_array_from($input, $1, arg1->N, &(arg1->nx[1]), &(arg1->nx[0]));
-}
-
-%typemap(out) const real_t ** A {
-    const int_t *nb_rows = &arg1->nx[1];
-    const int_t *nb_cols = &arg1->nx[0];
-    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_rows, nb_cols);
 }
 
 %typemap(in) const real_t ** B {

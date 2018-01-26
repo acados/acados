@@ -19,14 +19,50 @@
 
 // external
 #include <assert.h>
+#include <stddef.h>
 // hpipm
-#include "hpipm_d_dense_qp.h"
-#include "hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp.h"
+#include "hpipm/include/hpipm_d_dense_qp_sol.h"
+#include "hpipm/include/hpipm_d_dense_qp_res.h"
+#include "hpipm/include/hpipm_d_dense_qp_ipm.h"
+#include "hpipm/include/hpipm_d_dense_qp_kkt.h"
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/utils/types.h"
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados/dense_qp/dense_qp_hpipm.h"
-#include "acados/dense_qp/dense_qp_qpoases.h"
+
+
+int dense_qp_dims_calculate_size()
+{
+    int size = sizeof(dense_qp_dims);
+
+    size += d_memsize_dense_qp_dim();
+
+    return size;
+}
+
+
+
+dense_qp_dims *assign_dense_qp_dims(void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    dense_qp_dims *dims = (dense_qp_dims *) c_ptr;
+    c_ptr += sizeof(dense_qp_dims);
+
+    d_create_dense_qp_dim(dims, c_ptr);
+    c_ptr += d_memsize_dense_qp_dim();
+
+    assert((char *) raw_memory + dense_qp_dims_calculate_size() == c_ptr);
+
+    return dims;
+}
+
 
 
 
@@ -72,7 +108,7 @@ int dense_qp_out_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_out);
     size += d_memsize_dense_qp_sol(dims);
-
+    size += sizeof(dense_qp_info);
     return size;
 }
 
@@ -90,7 +126,104 @@ dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory)
     d_create_dense_qp_sol(dims, qp_out, c_ptr);
     c_ptr += d_memsize_dense_qp_sol(dims);
 
+    qp_out->misc = (void *) c_ptr;
+    c_ptr += sizeof(dense_qp_info);
+
     assert((char*)raw_memory + dense_qp_out_calculate_size(dims) == c_ptr);
 
     return qp_out;
+}
+
+
+
+int dense_qp_res_calculate_size(dense_qp_dims *dims)
+{
+    int size = sizeof(dense_qp_res);
+    size += d_memsize_dense_qp_res(dims);
+    return size;
+}
+
+
+
+dense_qp_res *assign_dense_qp_res(dense_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    dense_qp_res *qp_res = (dense_qp_res *) c_ptr;
+    c_ptr += sizeof(dense_qp_res);
+
+    d_create_dense_qp_res(dims, qp_res, c_ptr);
+    c_ptr += d_memsize_dense_qp_res(dims);
+
+    assert((char*) raw_memory + dense_qp_res_calculate_size(dims) == c_ptr);
+
+    return qp_res;
+}
+
+
+
+int dense_qp_res_ws_calculate_size(dense_qp_dims *dims)
+{
+    int size = sizeof(dense_qp_res_ws);
+    size += d_memsize_dense_qp_res_workspace(dims);
+    return size;
+}
+
+
+
+dense_qp_res_ws *assign_dense_qp_res_ws(dense_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    dense_qp_res_ws *res_ws = (dense_qp_res_ws *) c_ptr;
+    c_ptr += sizeof(dense_qp_res_ws);
+
+    d_create_dense_qp_res_workspace(dims, res_ws, c_ptr);
+    c_ptr += d_memsize_dense_qp_res_workspace(dims);
+
+    assert((char*) raw_memory + dense_qp_res_ws_calculate_size(dims) == c_ptr);
+
+    return res_ws;
+}
+
+
+
+void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws)
+{
+    int nvd = qp_in->dim->nv;
+    // int ned = qp_in->dim->ne;
+    int ngd = qp_in->dim->ng;
+    int nbd = qp_in->dim->nb;
+
+    int *idxb = qp_in->idxb;
+
+    struct blasfeo_dvec *tmp_nbg = res_ws->tmp_nbg;
+
+    // compute slacks for general constraints
+    blasfeo_dgemv_t(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, nbd, qp_out->t, nbd);
+    blasfeo_dgemv_t(nvd, ngd, -1.0, qp_in->Ct, 0, 0, qp_out->v, 0, -1.0, qp_in->d, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
+
+    // compute slacks for bounds
+    blasfeo_dvecex_sp(nbd, 1.0, idxb, qp_out->v, 0, tmp_nbg+0, 0);
+    blasfeo_daxpby(nbd, 1.0, tmp_nbg+0, 0, -1.0, qp_in->d, 0, qp_out->t, 0);
+    blasfeo_daxpby(nbd, -1.0, tmp_nbg+0, 0, -1.0, qp_in->d, nbd+ngd, qp_out->t, nbd+ngd);
+
+    // compute residuals
+    d_compute_res_dense_qp(qp_in, qp_out, qp_res, res_ws);
+}
+
+
+
+void compute_dense_qp_res_nrm_inf(dense_qp_res *qp_res, double res[4])
+{
+    int nv = qp_res->dim->nv;
+    int nb = qp_res->dim->nb;
+    int ne = qp_res->dim->ne;
+    int ng = qp_res->dim->ng;
+    int ns = qp_res->dim->ns;
+
+    blasfeo_dvecnrm_inf(nv+2*ns, qp_res->res_g, 0, &res[0]);
+    blasfeo_dvecnrm_inf(ne, qp_res->res_b, 0, &res[1]);
+    blasfeo_dvecnrm_inf(2*nb+2*ng+2*ns, qp_res->res_d, 0, &res[2]);
+    blasfeo_dvecnrm_inf(2*nb+2*ng+2*ns, qp_res->res_m, 0, &res[3]);
 }

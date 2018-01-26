@@ -26,11 +26,11 @@ EXT_PATH = $(TOP)/external
 # BLASFEO path
 BLASFEO_PATH = $(EXT_PATH)/blasfeo
 # BLASFEO version
-#BLASFEO_VERSION = HIGH_PERFORMANCE
-BLASFEO_VERSION = REFERENCE
+BLASFEO_VERSION = HIGH_PERFORMANCE
+#BLASFEO_VERSION = REFERENCE
 # BLASFEO target
-#BLASFEO_TARGET = X64_INTEL_HASWELL
-BLASFEO_TARGET = X64_INTEL_SANDY_BRIDGE
+BLASFEO_TARGET = X64_INTEL_HASWELL
+#BLASFEO_TARGET = X64_INTEL_SANDY_BRIDGE
 #BLASFEO_TARGET = X64_INTEL_CORE
 #BLASFEO_TARGET = GENERIC
 
@@ -39,24 +39,51 @@ HPIPM_PATH = $(EXT_PATH)/hpipm
 # HPIPM target
 HPIPM_TARGET = GENERIC
 
+# HPMPC path
+HPMPC_PATH = $(EXT_PATH)/hpmpc
+# HPMPC target
+HPMPC_TARGET = X64_AVX
+
 # qpOASES path
 QPOASES_PATH = $(EXT_PATH)/qpoases
 
 # QORE path
 QORE_PATH = $(EXT_PATH)/qore
 
+# QPDUNES path
+QPDUNES_PATH = $(EXT_PATH)/qpdunes
+
+# include HPMPC
+ACADOS_WITH_HPMPC = 0
+
+# include QPDUNES
+ACADOS_WITH_QPDUNES = 1
+
+# include QORE
+ACADOS_WITH_QORE = 1
+
 # measure timings
 MEASURE_TIMINGS = 1
 
 
 # compiler flags
-CFLAGS  =
+CFLAGS=
 
 # optimization flags
 CFLAGS += #-O2 -fPIC
 
 # debugging flags
-CFLAGS  += #-g #-Wall -pedantic -Wfloat-equal #-pg
+CFLAGS  += #-g -Wall -pedantic -Wfloat-equal #-pg
+
+ifeq ($(ACADOS_WITH_HPMPC), 1)
+CFLAGS += -DACADOS_WITH_HPMPC
+endif
+ifeq ($(ACADOS_WITH_QPDUNES), 1)
+CFLAGS += -DACADOS_WITH_QPDUNES
+endif
+ifeq ($(ACADOS_WITH_QORE), 1)
+CFLAGS += -DACADOS_WITH_QORE
+endif
 
 # TEMP
 CFLAGS += -g -O0 -DRUNTIME_CHECKS -DEXT_DEPS -DALIGNMENT=64 -D__DEBUG__
@@ -67,5 +94,5 @@ CFLAGS += -DMEASURE_TIMINGS
 endif
 
 # search directories
-CFLAGS += -I$(TOP) -I$(EXT_PATH) -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore
-LDFLAGS += -L$(TOP)/lib -L$(BLASFEO_PATH)/lib -L$(HPIPM_PATH)/lib -L$(QPOASES_PATH)/bin
+CFLAGS += -I$(TOP) -I$(TOP)/interfaces -I$(TOP)/include -I$(BLASFEO_PATH)/include -I$(HPIPM_PATH)/include -I$(HPMPC_PATH)/include -I$(QPOASES_PATH)/include -I$(TOP)/include/qore/include -I$(QPDUNES_PATH)/include
+LDFLAGS += -L$(TOP)/lib

@@ -1,0 +1,5 @@
+
+set(INTERFACES_ACADOS_CPP_SRC
+    ${CMAKE_CURRENT_SOURCE_DIR}/OcpQp.cpp)
+
+target_sources(acados PRIVATE ${INTERFACES_ACADOS_CPP_SRC})
