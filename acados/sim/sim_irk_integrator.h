@@ -33,19 +33,19 @@ typedef struct {
 
 typedef struct {
 
-    struct d_strmat *JG; // jacobian of G over K (nx*ns, nx*ns)
-    struct d_strmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
-    struct d_strmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
-    struct d_strmat *JFK; // jacobian of F over K (nx, nx*ns) 
-    struct d_strmat *S_forw; // forward sensitivities
+    struct blasfeo_dmat *JG; // jacobian of G over K (nx*ns, nx*ns)
+    struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *JFK; // jacobian of F over K (nx, nx*ns) 
+    struct blasfeo_dmat *S_forw; // forward sensitivities
 
-    struct d_strvec *rG; // residuals of G (nx*ns)
-    struct d_strvec *K; // internal variables (nx*ns)
-    struct d_strvec *xt; // temporary x
-    struct d_strvec *xn; // x at each integration step
+    struct blasfeo_dvec *rG; // residuals of G (nx*ns)
+    struct blasfeo_dvec *K; // internal variables (nx*ns)
+    struct blasfeo_dvec *xt; // temporary x
+    struct blasfeo_dvec *xn; // x at each integration step
     
-    struct d_strvec *lambda; // adjoint seed (nx+nu)
-    struct d_strvec *lambdaK; // auxiliary variable (nx*ns)
+    struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
+    struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
     
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
@@ -54,9 +54,9 @@ typedef struct {
     double *S_adj_w;
     int *ipiv; // index of pivot vector
 
-    struct d_strvec *xn_traj; // xn trajectory
-    struct d_strvec *K_traj;  // K trajectory
-    struct d_strmat *JG_traj; // JG trajectory
+    struct blasfeo_dvec *xn_traj; // xn trajectory
+    struct blasfeo_dvec *K_traj;  // K trajectory
+    struct blasfeo_dmat *JG_traj; // JG trajectory
 
 } sim_irk_workspace;
 

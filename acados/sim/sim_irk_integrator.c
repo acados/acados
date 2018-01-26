@@ -109,25 +109,25 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
     int size = sizeof(sim_irk_workspace);
 
-    size += 5*sizeof(struct d_strmat); // JG, JGf, JKf, JFK, S_forw
-    size += steps*sizeof(struct d_strmat); // JG_traj
+    size += 5*sizeof(struct blasfeo_dmat); // JG, JGf, JKf, JFK, S_forw
+    size += steps*sizeof(struct blasfeo_dmat); // JG_traj
 
-    size += 4*sizeof(struct d_strvec); // rG, K, xt, xn
-    size += 2*sizeof(struct d_strvec); // lambda,lambdaK
-    size += 2*steps*sizeof(struct d_strvec);  // **xn_traj, **K_traj;
+    size += 4*sizeof(struct blasfeo_dvec); // rG, K, xt, xn
+    size += 2*sizeof(struct blasfeo_dvec); // lambda,lambdaK
+    size += 2*steps*sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj;
     
-    size += d_size_strmat(nx*ns, nx*ns); // JG
-    size += 2*d_size_strmat(nx*ns, nx+nu); // JGf, JKf
-    size += d_size_strmat(nx, nx*ns); // JFK
-    size += d_size_strmat(nx, nx+nu); // S_forw
-    size += steps * d_size_strmat(nx*ns, nx*ns); // for JG_traj  
+    size += blasfeo_memsize_dmat(nx*ns, nx*ns); // JG
+    size += 2*blasfeo_memsize_dmat(nx*ns, nx+nu); // JGf, JKf
+    size += blasfeo_memsize_dmat(nx, nx*ns); // JFK
+    size += blasfeo_memsize_dmat(nx, nx+nu); // S_forw
+    size += steps * blasfeo_memsize_dmat(nx*ns, nx*ns); // for JG_traj  
 
-    size += 2*d_size_strvec(nx*ns); // rG, K
-    size += 2*d_size_strvec(nx); // xt, x
-    size += d_size_strvec(nx+nu); // lambda
-    size += d_size_strvec(nx*ns); // lambdaK
-    size += steps * d_size_strvec(nx); // for xn_traj
-    size += steps * d_size_strvec(nx*ns); // for K_traj
+    size += 2*blasfeo_memsize_dvec(nx*ns); // rG, K
+    size += 2*blasfeo_memsize_dvec(nx); // xt, x
+    size += blasfeo_memsize_dvec(nx+nu); // lambda
+    size += blasfeo_memsize_dvec(nx*ns); // lambdaK
+    size += steps * blasfeo_memsize_dvec(nx); // for xn_traj
+    size += steps * blasfeo_memsize_dvec(nx*ns); // for K_traj
     
     size += nx * sizeof(double); //  rGt
     size += nx * (2*nx+nu) * sizeof(double); // jac_out
@@ -161,42 +161,42 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     assign_strmat_ptrs(steps, &workspace->JG_traj, &c_ptr);
 
-    workspace->JG = (struct d_strmat *)c_ptr;
-    c_ptr += sizeof(struct d_strmat); 
+    workspace->JG = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat); 
 
-    workspace->JGf = (struct d_strmat *)c_ptr;
-    c_ptr += sizeof(struct d_strmat);
+    workspace->JGf = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
 
-    workspace->JKf = (struct d_strmat *)c_ptr;
-    c_ptr += sizeof(struct d_strmat);
+    workspace->JKf = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
 
-    workspace->JFK = (struct d_strmat *)c_ptr;
-    c_ptr += sizeof(struct d_strmat);
+    workspace->JFK = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
 
-    workspace->S_forw = (struct d_strmat *)c_ptr;
-    c_ptr += sizeof(struct d_strmat);
+    workspace->S_forw = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
 
 
     assign_strvec_ptrs(steps, &workspace->xn_traj, &c_ptr);
     assign_strvec_ptrs(steps, &workspace->K_traj, &c_ptr);
 
-    workspace->rG = (struct d_strvec *)c_ptr;
-    c_ptr += sizeof(struct d_strvec);
+    workspace->rG = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->K = (struct d_strvec *)c_ptr;
-    c_ptr += sizeof(struct d_strvec);
+    workspace->K = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->xt = (struct d_strvec *)c_ptr;
-    c_ptr += sizeof(struct d_strvec);
+    workspace->xt = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->xn = (struct d_strvec *)c_ptr;
-    c_ptr += sizeof(struct d_strvec);
+    workspace->xn = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->lambda = (struct d_strvec *)c_ptr;
-    c_ptr += sizeof(struct d_strvec);
+    workspace->lambda = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
 
-    workspace->lambdaK = (struct d_strvec *)c_ptr;
-    c_ptr += sizeof(struct d_strvec);
+    workspace->lambdaK = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
     
     align_char_to(64, &c_ptr);
 
@@ -281,22 +281,22 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     double *Jt = workspace->Jt;
     double *ode_args = workspace->ode_args;
     int *ipiv = workspace->ipiv;
-	struct d_strmat *JG = workspace->JG;
-	struct d_strvec *rG = workspace->rG;
-    struct d_strvec *K = workspace->K;
-    struct d_strmat *JGf = workspace->JGf;
-    struct d_strmat *JKf = workspace->JKf;
-    struct d_strvec *xt = workspace->xt;
-    struct d_strvec *xn = workspace->xn;
-    struct d_strmat *JFK = workspace->JFK;
-    struct d_strmat *S_forw = workspace->S_forw;
+	struct blasfeo_dmat *JG = workspace->JG;
+	struct blasfeo_dvec *rG = workspace->rG;
+    struct blasfeo_dvec *K = workspace->K;
+    struct blasfeo_dmat *JGf = workspace->JGf;
+    struct blasfeo_dmat *JKf = workspace->JKf;
+    struct blasfeo_dvec *xt = workspace->xt;
+    struct blasfeo_dvec *xn = workspace->xn;
+    struct blasfeo_dmat *JFK = workspace->JFK;
+    struct blasfeo_dmat *S_forw = workspace->S_forw;
 
     // for adjoint
-    struct d_strvec *lambda = workspace->lambda;
-    struct d_strvec *lambdaK = workspace->lambdaK;
-    struct d_strvec *xn_traj = workspace->xn_traj;
-    struct d_strvec *K_traj = workspace->K_traj;
-    struct d_strmat *JG_traj = workspace->JG_traj;
+    struct blasfeo_dvec *lambda = workspace->lambda;
+    struct blasfeo_dvec *lambdaK = workspace->lambdaK;
+    struct blasfeo_dvec *xn_traj = workspace->xn_traj;
+    struct blasfeo_dvec *K_traj = workspace->K_traj;
+    struct blasfeo_dmat *JG_traj = workspace->JG_traj;
     double *S_adj_in = workspace->S_adj_w;
 
     double *x_out = out->xn;
@@ -307,26 +307,26 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     double timing_ad = 0.0;
 
     // initialize
-    dgese_libstr(nx*num_stages, nx*num_stages, 0.0, JG, 0, 0);
-    dgese_libstr(nx*num_stages, nx+nu, 0.0, JGf, 0, 0);
-    dgese_libstr(nx*num_stages, nx+nu, 0.0, JKf, 0, 0);
+    blasfeo_dgese(nx*num_stages, nx*num_stages, 0.0, JG, 0, 0);
+    blasfeo_dgese(nx*num_stages, nx+nu, 0.0, JGf, 0, 0);
+    blasfeo_dgese(nx*num_stages, nx+nu, 0.0, JKf, 0, 0);
     for (ii=0;ii<num_stages;ii++){
         b = step * b_vec[ii];
-        ddiare_libstr(nx, b, JFK, 0, ii*nx);
+        blasfeo_ddiare(nx, b, JFK, 0, ii*nx);
     }
-    d_cvt_mat2strmat(nx, nx+nu, S_forw_in, nx, S_forw, 0, 0);
+    blasfeo_pack_dmat(nx, nx+nu, S_forw_in, nx, S_forw, 0, 0);
 
-    dvecse_libstr(nx*num_stages, 0.0, rG, 0);
-    dvecse_libstr(nx*num_stages, 0.0, K, 0);
-    d_cvt_vec2strvec(nx, x, xn, 0);
+    blasfeo_dvecse(nx*num_stages, 0.0, rG, 0);
+    blasfeo_dvecse(nx*num_stages, 0.0, K, 0);
+    blasfeo_pack_dvec(nx, x, xn, 0);
 
-    dvecse_libstr(nx*num_stages, 0.0, lambdaK, 0);
+    blasfeo_dvecse(nx*num_stages, 0.0, lambdaK, 0);
 
     for(kk=0;kk<nx;kk++)
         S_adj_in[kk] = in->S_adj[kk];
     for(kk=0;kk<nu;kk++)
         S_adj_in[nx+kk] = 0.0;
-    d_cvt_vec2strvec(nx+nu, S_adj_in, lambda, 0);
+    blasfeo_pack_dvec(nx+nu, S_adj_in, lambda, 0);
     
     for (kk=0;kk<2*nx;kk++) //initialize x,xdot with zeros
         ode_args[kk] = 0.0;
@@ -350,31 +350,31 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
         for(iter=0; iter<newton_iter; iter++){
 
             if (opts->sens_adj){
-                dveccp_libstr(nx, xn, 0, &xn_traj[ss], 0);
+                blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
             }
            
             for(ii=0; ii<num_stages; ii++){ // ii-th row of tableau   
                     
                 // take x(n); copy a strvec into a strvec
-                dveccp_libstr(nx, xn, 0, xt, 0);
+                blasfeo_dveccp(nx, xn, 0, xt, 0);
 
                 for(jj=0; jj<num_stages; jj++){ // jj-th col of tableau
                     a = A_mat[ii+num_stages*jj];
                     if(a!=0){           // xt = xt + T_int * a[i,j]*K_j
                         a *= step; 
-                        daxpy_libstr(nx, a, K, jj*nx, xt, 0, xt, 0); 
+                        blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0); 
                     }
                 }
                 // put xn+sum kj into first nx elements of ode_arg               
-                d_cvt_strvec2vec(nx, xt, 0, ode_args);
+                blasfeo_unpack_dvec(nx, xt, 0, ode_args);
                     
                 // put ki into the next nx elements of ode_args
-                d_cvt_strvec2vec(nx, K, ii*nx, ode_args+nx);      
+                blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);      
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt 
                 in->eval_impl_res(nx, nu, ode_args, rGt, in->impl_ode);
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
-                d_cvt_vec2strvec(nx, rGt, rG, ii*nx);
+                blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
                     
                 if ( (ss==0 && iter==0 && opts->jac_reuse) || (!opts->jac_reuse) ){
                     // compute the jacobian of implicit ode
@@ -396,7 +396,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                                 Jt[kk] += jac_out[nx*nx+kk];
                         }
                         // fill in the ii-th, jj-th block of JG
-                        d_cvt_mat2strmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);
+                        blasfeo_pack_dmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);
                     } // end jj
                 }
             } // end ii
@@ -404,25 +404,25 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
             //DGETRF computes an LU factorization of a general M-by-N matrix A
             //using partial pivoting with row interchanges.
             if ( (ss==0 && iter==0 && opts->jac_reuse) || (!opts->jac_reuse) ){
-                dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
+                blasfeo_dgetrf_rowpivot(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
             }
         
             // permute also the r.h.s
-            dvecpe_libstr(nx*num_stages, ipiv, rG, 0);
+            blasfeo_dvecpe(nx*num_stages, ipiv, rG, 0);
 
             // solve JG * y = rG, JG on the (l)eft, (l)ower-trian, (n)o-trans
             //                    (u)nit trian
-            dtrsv_lnu_libstr(nx*num_stages, JG, 0, 0, rG, 0, rG, 0);
+            blasfeo_dtrsv_lnu(nx*num_stages, JG, 0, 0, rG, 0, rG, 0);
             
             // solve JG * x = rG, JG on the (l)eft, (u)pper-trian, (n)o-trans
             //                    (n)o unit trian , and store x in rG
-            dtrsv_unn_libstr(nx*num_stages, JG, 0, 0, rG, 0, rG, 0);
+            blasfeo_dtrsv_unn(nx*num_stages, JG, 0, 0, rG, 0, rG, 0);
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
-            daxpy_libstr(nx*num_stages, -1.0, rG, 0, K, 0, K, 0);
+            blasfeo_daxpy(nx*num_stages, -1.0, rG, 0, K, 0, K, 0);
         }// end iter
 
         if (opts->sens_adj){
-            dveccp_libstr(nx*num_stages, K, 0, &K_traj[ss], 0);
+            blasfeo_dveccp(nx*num_stages, K, 0, &K_traj[ss], 0);
         }
         
         // evaluate forward sensitivities
@@ -431,24 +431,24 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
             // evaluate JG(xn,Kn)         
             for(ii=0; ii<num_stages; ii++){  
 
-                dveccp_libstr(nx, xn, 0, xt, 0);
+                blasfeo_dveccp(nx, xn, 0, xt, 0);
                 //compute xt = final x;
                 for(jj=0; jj<num_stages; jj++){ 
                     a = A_mat[ii+num_stages*jj];
                     if(a!=0){
                         a *= step;
-                        daxpy_libstr(nx, a, K, jj*nx, xt, 0, xt, 0);
+                        blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
                     }
                 }               
-                d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
-                d_cvt_strvec2vec(nx, K, ii*nx, ode_args+nx);  
+                blasfeo_unpack_dvec(nx, xt, 0, ode_args);                                           
+                blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);  
                 
                 acados_tic(&timer_ad);
                 in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                d_cvt_mat2strmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+                blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
                 in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-                d_cvt_mat2strmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
                 in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
                 timing_ad += acados_toc(&timer_ad);
@@ -464,34 +464,34 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                         for (kk=0;kk<nx*nx;kk++)
                             Jt[kk] += jac_out[nx*nx+kk];
                     }
-                    d_cvt_mat2strmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);            
+                    blasfeo_pack_dmat(nx, nx, Jt, nx, JG, ii*nx, jj*nx);            
                 } // end jj     
             } // end ii
 
             // factorize JG
-            dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv+(ss+1)*num_stages*nx);
+            blasfeo_dgetrf_rowpivot(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv+(ss+1)*num_stages*nx);
             for (jj=0;jj<nx*num_stages;jj++)
                 ipiv[jj] = ipiv[(ss+1)*num_stages*nx + jj];
 
             if (opts->sens_adj){ // store the factorization and permutation
-                dgecp_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, &JG_traj[ss], 0, 0);
+                blasfeo_dgecp(nx*num_stages, nx*num_stages, JG, 0, 0, &JG_traj[ss], 0, 0);
             }
 
             // obtain JKf
-            dgemm_nn_libstr(nx*num_stages, nx, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
-            dgemm_nn_libstr(nx*num_stages, nu, nx, 1.0, JGf, 0, 0, S_forw, 0, nx, 1.0, JGf, 0, nx, JKf, 0, nx);  
-            drowpe_libstr(nx*num_stages, ipiv, JKf);
-            dtrsm_llnu_libstr(nx*num_stages, nx+nu, 1.0, JG, 0, 0, JKf, 0, 0, JKf, 0, 0); 
-            dtrsm_lunn_libstr(nx*num_stages, nx+nu, 1.0, JG, 0, 0, JKf, 0, 0, JKf, 0, 0);
+            blasfeo_dgemm_nn(nx*num_stages, nx, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
+            blasfeo_dgemm_nn(nx*num_stages, nu, nx, 1.0, JGf, 0, 0, S_forw, 0, nx, 1.0, JGf, 0, nx, JKf, 0, nx);  
+            blasfeo_drowpe(nx*num_stages, ipiv, JKf);
+            blasfeo_dtrsm_llnu(nx*num_stages, nx+nu, 1.0, JG, 0, 0, JKf, 0, 0, JKf, 0, 0); 
+            blasfeo_dtrsm_lunn(nx*num_stages, nx+nu, 1.0, JG, 0, 0, JKf, 0, 0, JKf, 0, 0);
 
             // update forward sensitivity
-            dgemm_nn_libstr(nx, nx+nu, nx*num_stages, -1.0, JFK, 0, 0, JKf, 0, 0, 1.0, S_forw, 0, 0, S_forw, 0, 0);
+            blasfeo_dgemm_nn(nx, nx+nu, nx*num_stages, -1.0, JFK, 0, 0, JKf, 0, 0, 1.0, S_forw, 0, 0, S_forw, 0, 0);
         }
 
         // obtain x(n+1)
         for(ii=0;ii<num_stages;ii++){
             b = step * b_vec[ii];
-            daxpy_libstr(nx, b, K, ii*nx, xn, 0, xn, 0);          
+            blasfeo_daxpy(nx, b, K, ii*nx, xn, 0, xn, 0);          
         }
             
     }// end int step ss
@@ -501,7 +501,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
               
         for(ss=num_steps-1;ss>-1;ss--){
 
-            dveccp_libstr(nx, &xn_traj[ss], 0, xt, 0);
+            blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
 
             if (opts->sens_forw){ // evalute JGf and extract factorization
 
@@ -511,18 +511,18 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                         a = A_mat[ii+num_stages*jj];
                         if(a!=0){
                             a *= step;
-                            daxpy_libstr(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
+                            blasfeo_daxpy(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
                         }
                     }               
-                    d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
-                    d_cvt_strvec2vec(nx, &K_traj[ss], ii*nx, ode_args+nx);  
+                    blasfeo_unpack_dvec(nx, xt, 0, ode_args);                                           
+                    blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);  
 
                     acados_tic(&timer_ad);
                     in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                    d_cvt_mat2strmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
                     in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-                    d_cvt_mat2strmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                     timing_ad += acados_toc(&timer_ad);
                 }
             
@@ -534,18 +534,18 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                         a = A_mat[ii+num_stages*jj];
                         if(a!=0){
                             a *= step;
-                            daxpy_libstr(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
+                            blasfeo_daxpy(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
                         }
                     }               
-                    d_cvt_strvec2vec(nx, xt, 0, ode_args);                                           
-                    d_cvt_strvec2vec(nx, &K_traj[ss], ii*nx, ode_args+nx);  
+                    blasfeo_unpack_dvec(nx, xt, 0, ode_args);                                           
+                    blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);  
 
                     acados_tic(&timer_ad);
                     in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                    d_cvt_mat2strmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
                     in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-                    d_cvt_mat2strmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
                     in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
                     timing_ad += acados_toc(&timer_ad);
@@ -560,33 +560,33 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                             for (kk=0;kk<nx*nx;kk++)
                                 Jt[kk] += jac_out[nx*nx+kk];
                         }
-                        d_cvt_mat2strmat(nx, nx, Jt, nx, &JG_traj[ss], ii*nx, jj*nx);            
+                        blasfeo_pack_dmat(nx, nx, Jt, nx, &JG_traj[ss], ii*nx, jj*nx);            
                     } // end jj     
                 } // end ii
 
                 // factorize JG
-                dgetrf_libstr(nx*num_stages, nx*num_stages, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv+(ss+1)*num_stages*nx); //
+                blasfeo_dgetrf_rowpivot(nx*num_stages, nx*num_stages, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv+(ss+1)*num_stages*nx); //
             }// else if/else
 
-            dgemv_t_libstr(nx, nx*num_stages, -1.0, JFK, 0, 0, lambda, 0, 0.0, lambdaK, 0, lambdaK, 0);
+            blasfeo_dgemv_t(nx, nx*num_stages, -1.0, JFK, 0, 0, lambda, 0, 0.0, lambdaK, 0, lambdaK, 0);
 
-            dtrsv_utn_libstr(nx*num_stages, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
+            blasfeo_dtrsv_utn(nx*num_stages, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
-            dtrsv_ltu_libstr(nx*num_stages, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
+            blasfeo_dtrsv_ltu(nx*num_stages, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
-            dvecpei_libstr(nx*num_stages, ipiv+(ss+1)*num_stages*nx, lambdaK, 0);
+            blasfeo_dvecpei(nx*num_stages, ipiv+(ss+1)*num_stages*nx, lambdaK, 0);
 
-            dgemv_t_libstr(nx*num_stages, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
+            blasfeo_dgemv_t(nx*num_stages, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
         }
     }
 
     // extract output
 
-    d_cvt_strvec2vec(nx, xn, 0, x_out);
+    blasfeo_unpack_dvec(nx, xn, 0, x_out);
 
-    d_cvt_strmat2mat(nx, nx+nu, S_forw, 0, 0, S_forw_out, nx);
+    blasfeo_unpack_dmat(nx, nx+nu, S_forw, 0, 0, S_forw_out, nx);
 
-    d_cvt_strvec2vec(nx+nu, lambda, 0, S_adj_out);
+    blasfeo_unpack_dvec(nx+nu, lambda, 0, S_adj_out);
 
     out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = 0.0;
