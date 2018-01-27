@@ -387,7 +387,7 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
 
 
-static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
+static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
 {
 
 	// loop index
@@ -430,21 +430,32 @@ static void initialize_objective(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *
 
 
 
-static void initialize_constraints(const ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
+static void initialize_constraints(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
 {
 
 	// loop index
-	int i;
+	int i, j;
 
     int N = nlp_in->dims->N;
     int *nx = nlp_in->dims->nx;
     int *nu = nlp_in->dims->nu;
+    int *nb = nlp_in->dims->nb;
     int *ng = nlp_in->dims->ng;
 
 	struct blasfeo_dmat *DCt = work->qp_in->DCt;
+	int **idxb = work->qp_in->idxb;
+
+	// initialize idxb
+	for (i=0; i<=N; i++)
+	{
+		for (j=0; j<nb[i]; j++)
+		{
+			idxb[i][j] = nlp_in->idxb[i][j];
+		}
+	}
 
 	// initialize general constraints matrix
-    for (i = 0; i <= N; i++)
+    for (i=0; i<=N; i++)
 	{
 		blasfeo_dgecp(nu[i]+nx[i], ng[i], nlp_in->DCt+i, 0, 0, DCt+i, 0, 0);
 	}
@@ -650,16 +661,6 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     initialize_objective(nlp_in, args, mem, work);
 
     initialize_constraints(nlp_in, mem, work);
-
-    // TODO(dimitris): move somewhere else (not needed after new nlp_in)
-    int_t **qp_idxb = (int_t **) work->qp_in->idxb;
-    for (int_t i = 0; i <= N; i++)
-	{
-        for (int_t j = 0; j < nb[i]; j++)
-		{
-			qp_idxb[i][j] = nlp_in->idxb[i][j];
-        }
-    }
 
     int_t max_sqp_iterations =  args->maxIter;
 
