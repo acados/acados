@@ -157,6 +157,57 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
 
 
 /************************************************
+* memory
+************************************************/
+
+typedef struct
+{
+    ocp_nlp_dims *dims;
+	struct blasfeo_dvec *cost_grad;
+	struct blasfeo_dvec *dyn_for;
+	struct blasfeo_dvec *dyn_adj;
+	struct blasfeo_dvec *ineq_for;
+	struct blasfeo_dvec *ineq_adj;
+	int memsize;
+} ocp_nlp_mem;
+
+
+//
+int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory);
+
+
+
+/************************************************
+* residuals
+************************************************/
+
+typedef struct
+{
+    ocp_nlp_dims *dims;
+	struct blasfeo_dvec *res_g;
+	struct blasfeo_dvec *res_b;
+	struct blasfeo_dvec *res_d;
+	struct blasfeo_dvec *res_m;
+	int memsize;
+} ocp_nlp_res;
+
+typedef struct
+{
+	int memsize;
+} ocp_nlp_res_work;
+
+//
+int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_mem *mem); //ocp_nlp_res_workspace *work);
+
+
+
+/************************************************
 * ?????
 ************************************************/
 

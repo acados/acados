@@ -51,6 +51,8 @@ void ocp_nlp_dims_print(ocp_nlp_dims *dims);
 
 void ocp_nlp_out_print(ocp_nlp_out *nlp_out);
 
+void ocp_nlp_res_print(ocp_nlp_res *nlp_res);
+
 
 // ocp qp
 void print_ocp_qp_dims(ocp_qp_dims *dims);

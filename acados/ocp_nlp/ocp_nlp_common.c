@@ -25,8 +25,14 @@
 #include <string.h>
 #include <assert.h>
 
-#include "acados/utils/mem.h"
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+// hpipm
 #include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+// acados
+#include "acados/utils/mem.h"
 
 
 
@@ -294,6 +300,9 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 // TODO(dimitris): fix order of funs
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 {
+	// loop index
+	int ii;
+
 	// extract dims
     int N = dims->N;
 	int *nx = dims->nx;
@@ -315,7 +324,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 	ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims->cost_dims;
 	size += ocp_nlp_cost_ls_calculate_size(cost_dims); // cost
 
-    for (int ii = 0; ii < N+1; ii++)
+    for (ii = 0; ii < N+1; ii++)
     {
         size += sizeof(int)*(nb[ii]);  // idxb
 		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // d
@@ -389,7 +398,9 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
     assign_double_ptrs(N+1, &in->uh, &c_ptr);
 
 	// blasfeo_structs
+	// d
 	assign_blasfeo_dvec_structs(N+1, &in->d, &c_ptr);
+	// DCt
 	assign_blasfeo_dmat_structs(N+1, &in->DCt, &c_ptr);
 
 	// blasfeo_mem align
@@ -529,6 +540,261 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
     return out;
 }
 
+
+
+/************************************************
+* memory
+************************************************/
+
+int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims)
+{
+	// loop index
+	int ii;
+
+	// extract dims
+    int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
+
+    int size = sizeof(ocp_nlp_mem);
+
+	size += 4*(N+1)*sizeof(struct blasfeo_dvec); // cost_grad dyn_adj ineq_for ineq_adj
+	size += 1*N*sizeof(struct blasfeo_dvec); // dyn_for
+
+	for(ii=0; ii<N; ii++)
+	{
+		size += 3*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // cost_grad dyn_adj ineq_adj
+		size += 1*blasfeo_memsize_dvec(nx[ii+1]); // dyn_for
+		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // ineq_for
+	}
+	ii = N;
+	size += 3*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // cost_grad dyn_adj ineq_adj
+	size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // ineq_for
+
+	size += 8; // initial align
+	size += 8; // blasfeo_struct align
+	size += 64; // blasfeo_mem align
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+
+	// loop index
+	int ii;
+
+    char *c_ptr = (char *) raw_memory;
+
+	// extract sizes
+    int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
+
+	// initial align
+	align_char_to(8, &c_ptr);
+
+	// struct
+    ocp_nlp_mem *mem = (ocp_nlp_mem *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_mem);
+
+	// dims
+	mem->dims = dims;
+
+	// blasfeo_struct align
+	align_char_to(8, &c_ptr);
+
+	// cost_grad
+	assign_blasfeo_dvec_structs(N+1, &mem->cost_grad, &c_ptr);
+	// dyn_for
+	assign_blasfeo_dvec_structs(N, &mem->dyn_for, &c_ptr);
+	// dyn_adj
+	assign_blasfeo_dvec_structs(N+1, &mem->dyn_adj, &c_ptr);
+	// ineq_for
+	assign_blasfeo_dvec_structs(N+1, &mem->ineq_for, &c_ptr);
+	// ineq_adj
+	assign_blasfeo_dvec_structs(N+1, &mem->ineq_adj, &c_ptr);
+
+	// blasfeo_mem align
+	align_char_to(64, &c_ptr);
+
+	// cost_grad
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], mem->cost_grad+ii, &c_ptr);
+	// dyn_for
+	for (ii=0; ii<N; ii++)
+		assign_blasfeo_dvec_mem(nx[ii+1], mem->dyn_for+ii, &c_ptr);
+	// dyn_adj
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], mem->dyn_adj+ii, &c_ptr);
+	// ineq_for
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], mem->ineq_for+ii, &c_ptr);
+	// ineq_adj
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], mem->ineq_adj+ii, &c_ptr);
+	
+	mem->memsize = ocp_nlp_mem_calculate_size(dims);
+
+	return mem;
+
+}
+
+
+
+/************************************************
+* residuals
+************************************************/
+
+int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
+{
+	// loop index
+	int ii;
+
+	// extract dims
+    int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
+	int *nh = dims->nh;
+
+    int size = sizeof(ocp_nlp_res);
+
+	size += 3*(N+1)*sizeof(struct blasfeo_dvec); // res_g res_d res_m
+	size += 1*N*sizeof(struct blasfeo_dvec); // res_b
+
+	for(ii=0; ii<N; ii++)
+	{
+		size += 1*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // res_g
+		size += 1*blasfeo_memsize_dvec(nx[ii+1]); // res_b
+		size += 2*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // res_d res_m
+	}
+	ii = N;
+	size += 1*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // res_g
+	size += 2*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // res_d res_m
+
+	size += 8; // initial align
+	size += 8; // blasfeo_struct align
+	size += 64; // blasfeo_mem align
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+
+	// loop index
+	int ii;
+
+    char *c_ptr = (char *) raw_memory;
+
+	// extract sizes
+    int N = dims->N;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *nb = dims->nb;
+	int *ng = dims->ng;
+	int *ns = dims->ns;
+
+	// initial align
+	align_char_to(8, &c_ptr);
+
+	// struct
+    ocp_nlp_res *res = (ocp_nlp_res *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_res);
+
+	// dims
+	res->dims = dims;
+
+	// blasfeo_struct align
+	align_char_to(8, &c_ptr);
+
+	// res_g
+	assign_blasfeo_dvec_structs(N+1, &res->res_g, &c_ptr);
+	// res_b
+	assign_blasfeo_dvec_structs(N, &res->res_b, &c_ptr);
+	// res_d
+	assign_blasfeo_dvec_structs(N+1, &res->res_d, &c_ptr);
+	// res_m
+	assign_blasfeo_dvec_structs(N+1, &res->res_m, &c_ptr);
+
+	// blasfeo_mem align
+	align_char_to(64, &c_ptr);
+
+	// res_g
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], res->res_g+ii, &c_ptr);
+	// res_b
+	for (ii=0; ii<N; ii++)
+		assign_blasfeo_dvec_mem(nx[ii+1], res->res_b+ii, &c_ptr);
+	// res_d
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], res->res_d+ii, &c_ptr);
+	// res_m
+	for (ii=0; ii<=N; ii++)
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], res->res_m+ii, &c_ptr);
+	
+	res->memsize = ocp_nlp_res_calculate_size(dims);
+
+	return res;
+
+}
+
+
+
+void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_mem *mem) //, ocp_nlp_res_workspace *work)
+{
+
+	// loop index
+	int ii;
+
+	// extract dims
+    int N = in->dims->N;
+    int *nx = in->dims->nx;
+    int *nu = in->dims->nu;
+    int *nb = in->dims->nb;
+    int *ng = in->dims->ng;
+
+	// res_g
+	for (ii=0; ii<=N; ii++)
+		blasfeo_daxpy(nu[ii]+nx[ii], -1.0, mem->dyn_adj+ii, 0, mem->cost_grad+ii, 0, res->res_g+ii, 0);
+	for (ii=0; ii<=N; ii++)
+		blasfeo_daxpy(nu[ii]+nx[ii], -1.0, mem->ineq_adj+ii, 0, res->res_g+ii, 0, res->res_g+ii, 0);
+
+	// res_b
+	for (ii=0; ii<N; ii++)
+		blasfeo_dveccp(nx[ii+1], mem->dyn_for+ii, 0, res->res_b+ii, 0);
+
+	// res_d
+	for (ii=0; ii<=N; ii++)
+		blasfeo_dveccp(2*nb[ii]+2*ng[ii], mem->ineq_for+ii, 0, res->res_d+ii, 0);
+	
+	// res_m
+	double tmp;
+	for (ii=0; ii<=N; ii++)
+		tmp = blasfeo_dvecmuldot(2*nb[ii]+2*ng[ii], out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
+
+	return;
+
+}
 
 
 

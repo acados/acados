@@ -392,6 +392,39 @@ void ocp_nlp_out_print(ocp_nlp_out *nlp_out)
 
 
 
+void ocp_nlp_res_print(ocp_nlp_res *nlp_res)
+{
+
+	int ii;
+
+    int N = nlp_res->dims->N;
+    int *nx = nlp_res->dims->nx;
+    int *nu = nlp_res->dims->nu;
+    int *nb = nlp_res->dims->nb;
+    int *ng = nlp_res->dims->ng;
+
+	printf("res_g =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(nu[ii]+nx[ii], &nlp_res->res_g[ii], 0);
+
+	printf("res_b =\n");
+	for (ii=0; ii<N; ii++)
+		blasfeo_print_exp_tran_dvec(nx[ii+1], &nlp_res->res_b[ii], 0);
+
+	printf("res_d =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &nlp_res->res_d[ii], 0);
+
+	printf("res_m =\n");
+	for (ii=0; ii<=N; ii++)
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &nlp_res->res_m[ii], 0);
+
+	return;
+
+}
+
+
+
 void print_ocp_qp_res(ocp_qp_res *qp_res)
 {
 

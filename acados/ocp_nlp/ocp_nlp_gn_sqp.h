@@ -55,6 +55,13 @@ typedef struct
     void *qp_solver_mem;
 
     void **sim_solvers_mem;
+
+    // residuals
+	ocp_nlp_res *nlp_res;
+
+	// nlp memory
+	ocp_nlp_mem *nlp_mem;
+
 } ocp_nlp_gn_sqp_memory;
 
 
@@ -72,13 +79,14 @@ typedef struct
     sim_out **sim_out;
     void **sim_solvers_work;
 
-    // SQP solver
-	// XXX take Max ?????
+	// temporary stuff
+    // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+    // not using max(nx+nu) for parallelization in the future
+	// XXX take Max instead ?????
 	struct blasfeo_dmat *tmp_ny_ny;
 	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
-    struct blasfeo_dvec *tmp_nux;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
-                                // not using max(nx+nu) for parallelization in the future
+    struct blasfeo_dvec *tmp_nux;
 
 } ocp_nlp_gn_sqp_work;
 

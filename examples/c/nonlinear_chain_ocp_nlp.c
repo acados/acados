@@ -46,11 +46,11 @@
 #define NN 15
 #define TF 3.0
 #define Ns 2
-#define MAX_SQP_ITERS 20
+#define MAX_SQP_ITERS 10
 #define NREP 1
 
 
-#define BC_AS_GC
+//#define BC_AS_GC
 
 
 enum sensitivities_scheme {
@@ -440,6 +440,7 @@ int main() {
 
     // choose QP solver
     ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
+//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
 
     // set up args with nested structs
     sim_solver_t sim_solver_names[NN];
@@ -505,6 +506,12 @@ int main() {
     }
 
     double time = acados_toc(&timer)/NREP;
+
+	printf("\nresiduals\n");
+	ocp_nlp_res_print(nlp_mem->nlp_res);
+
+	printf("\nsolution\n");
+	ocp_nlp_out_print(nlp_out);
 
     printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, MAX_SQP_ITERS, time*1e3);
 
