@@ -190,6 +190,10 @@ typedef struct
 	struct blasfeo_dvec *res_b;
 	struct blasfeo_dvec *res_d;
 	struct blasfeo_dvec *res_m;
+	double inf_norm_res_g;
+	double inf_norm_res_b;
+	double inf_norm_res_d;
+	double inf_norm_res_m;
 	int memsize;
 } ocp_nlp_res;
 

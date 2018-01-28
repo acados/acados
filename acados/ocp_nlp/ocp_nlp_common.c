@@ -773,26 +773,46 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
     int *nb = in->dims->nb;
     int *ng = in->dims->ng;
 
+	double tmp_res;
+
 	// res_g
+	res->inf_norm_res_g = 0.0;
 	for (ii=0; ii<=N; ii++)
+	{
 		blasfeo_daxpy(nu[ii]+nx[ii], -1.0, mem->dyn_adj+ii, 0, mem->cost_grad+ii, 0, res->res_g+ii, 0);
-	for (ii=0; ii<=N; ii++)
 		blasfeo_daxpy(nu[ii]+nx[ii], -1.0, mem->ineq_adj+ii, 0, res->res_g+ii, 0, res->res_g+ii, 0);
+		blasfeo_dvecnrm_inf(nu[ii]+nx[ii], res->res_g+ii, 0, &tmp_res);
+		res->inf_norm_res_g = tmp_res>res->inf_norm_res_g ? tmp_res : res->inf_norm_res_g;
+	}
 
 	// res_b
+	res->inf_norm_res_b = 0.0;
 	for (ii=0; ii<N; ii++)
+	{
 		blasfeo_dveccp(nx[ii+1], mem->dyn_for+ii, 0, res->res_b+ii, 0);
+		blasfeo_dvecnrm_inf(nx[ii+1], res->res_b+ii, 0, &tmp_res);
+		res->inf_norm_res_b = tmp_res>res->inf_norm_res_b ? tmp_res : res->inf_norm_res_b;
+	}
 
 	// res_d
-	// XXX add slacks here ???
+	res->inf_norm_res_d = 0.0;
 	for (ii=0; ii<=N; ii++)
-		blasfeo_dveccp(2*nb[ii]+2*ng[ii], mem->ineq_for+ii, 0, res->res_d+ii, 0);
+	{
+		blasfeo_daxpy(2*nb[ii]+2*ng[ii], 1.0, out->t+ii, 0, mem->ineq_for+ii, 0, res->res_d+ii, 0);
+		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii], res->res_d+ii, 0, &tmp_res);
+		res->inf_norm_res_d = tmp_res>res->inf_norm_res_d ? tmp_res : res->inf_norm_res_d;
+	}
 	
 	// res_m
 	double tmp;
 	// TODO add blasfeo_dvecmul
+	res->inf_norm_res_m = 0.0;
 	for (ii=0; ii<=N; ii++)
+	{
 		tmp = blasfeo_dvecmuldot(2*nb[ii]+2*ng[ii], out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
+		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii], res->res_m+ii, 0, &tmp_res);
+		res->inf_norm_res_m = tmp_res>res->inf_norm_res_m ? tmp_res : res->inf_norm_res_m;
+	}
 
 	return;
 

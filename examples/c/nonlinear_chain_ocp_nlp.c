@@ -461,6 +461,10 @@ int main() {
     }
 
     nlp_args->maxIter = MAX_SQP_ITERS;
+    nlp_args->min_res_g = 1e-9;
+    nlp_args->min_res_b = 1e-9;
+    nlp_args->min_res_d = 1e-9;
+    nlp_args->min_res_m = 1e-9;
 
     /************************************************
     * ocp_nlp out
@@ -513,7 +517,7 @@ int main() {
 	printf("\nsolution\n");
 	ocp_nlp_out_print(nlp_out);
 
-    printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, MAX_SQP_ITERS, time*1e3);
+    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, nlp_mem->sqp_iter, time*1e3);
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);

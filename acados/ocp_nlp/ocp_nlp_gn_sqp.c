@@ -141,6 +141,13 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond
         c_ptr += args->sim_solvers[ii]->calculate_args_size(&sim_dims);
     }
 
+	// default arguments
+	args->maxIter = 20;
+	args->min_res_g = 1e-12;
+	args->min_res_b = 1e-12;
+	args->min_res_d = 1e-12;
+	args->min_res_m = 1e-12;
+
     assert((char*)raw_memory + ocp_nlp_gn_sqp_calculate_args_size(dims, qp_solver, sim_solvers) == c_ptr);
 
     return args;
@@ -577,7 +584,8 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 //		blasfeo_print_tran_dvec(2*nb[i]+2*ng[i], d+i, 0);
 
 		// XXX nlp_mem: ineq_for
-		blasfeo_daxpy(2*nb[i]+2*ng[i], 1.0, nlp_out->t+i, 0, d+i, 0, nlp_mem->ineq_for+i, 0);
+//		blasfeo_daxpy(2*nb[i]+2*ng[i], 1.0, nlp_out->t+i, 0, d+i, 0, nlp_mem->ineq_for+i, 0);
+		blasfeo_dveccp(2*nb[i]+2*ng[i], d+i, 0, nlp_mem->ineq_for+i, 0);
 		// XXX nlp_mem: ineq_adj
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_mem->ineq_adj+i, 0);
 		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_out->lam+i, nb[i]+ng[i], nlp_out->lam+i, 0, tmp_nbg+i, 0);
@@ -716,8 +724,9 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     acados_tic(&timer);
 
 	// main sqp loop
-    int_t max_sqp_iterations =  args->maxIter;
-    for (int_t sqp_iter = 0; sqp_iter < max_sqp_iterations; sqp_iter++)
+    int max_sqp_iterations =  args->maxIter;
+	int sqp_iter = 0;
+    for ( ; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
 
         multiple_shooting(nlp_in, nlp_out, args, mem, work);
@@ -726,6 +735,21 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 		ocp_nlp_res_compute(nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
 
 		// TODO exit conditions on residuals
+		if( mem->nlp_res->inf_norm_res_g < args->min_res_g &
+			mem->nlp_res->inf_norm_res_b < args->min_res_b &
+			mem->nlp_res->inf_norm_res_d < args->min_res_d &
+			mem->nlp_res->inf_norm_res_m < args->min_res_m )
+		{
+
+			// save sqp iterations number
+			mem->sqp_iter = sqp_iter;
+
+			// stop timer
+			total_time += acados_toc(&timer);
+
+			return 0;
+
+		}
 
 //print_ocp_qp_in(work->qp_in);
 //exit(1);
@@ -767,6 +791,10 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 
 //	ocp_nlp_out_print(nlp_out);
 
-    return 0;
+	// save sqp iterations number
+	mem->sqp_iter = sqp_iter;
+
+	// maximum number of iterations reached
+    return 1;
 
 }

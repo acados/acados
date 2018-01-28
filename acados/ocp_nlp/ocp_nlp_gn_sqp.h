@@ -39,6 +39,10 @@ extern "C" {
 typedef struct
 {
     int maxIter;
+	double min_res_g;
+	double min_res_b;
+	double min_res_d;
+	double min_res_m;
     // QP solver
     ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
     void *qp_solver_args;
@@ -61,6 +65,8 @@ typedef struct
 
 	// nlp memory
 	ocp_nlp_mem *nlp_mem;
+
+	int sqp_iter;
 
 } ocp_nlp_gn_sqp_memory;
 
