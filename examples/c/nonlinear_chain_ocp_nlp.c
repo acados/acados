@@ -50,7 +50,7 @@
 #define NREP 1
 
 
-//#define BC_AS_GC
+#define BC_AS_GC
 
 
 enum sensitivities_scheme {

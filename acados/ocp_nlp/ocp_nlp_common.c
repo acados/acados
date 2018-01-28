@@ -784,11 +784,13 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
 		blasfeo_dveccp(nx[ii+1], mem->dyn_for+ii, 0, res->res_b+ii, 0);
 
 	// res_d
+	// XXX add slacks here ???
 	for (ii=0; ii<=N; ii++)
 		blasfeo_dveccp(2*nb[ii]+2*ng[ii], mem->ineq_for+ii, 0, res->res_d+ii, 0);
 	
 	// res_m
 	double tmp;
+	// TODO add blasfeo_dvecmul
 	for (ii=0; ii<=N; ii++)
 		tmp = blasfeo_dvecmuldot(2*nb[ii]+2*ng[ii], out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
 

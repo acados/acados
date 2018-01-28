@@ -97,7 +97,8 @@ int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_)
     if (args->pcond_args->N2 < dims->N)
     {
         pcond_dims = args->pcond_args->pcond_dims;
-    } else
+    }
+	else
     {
         pcond_dims = dims;
     }
@@ -132,7 +133,8 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
     if (args->pcond_args->N2 < dims->N)
     {
         pcond_dims = args->pcond_args->pcond_dims;
-    } else
+    }
+	else
     {
         pcond_dims = dims;
     }
@@ -145,7 +147,8 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
     if (args->pcond_args->N2 < dims->N) {
         mem->pcond_memory = ocp_qp_partial_condensing_assign_memory(dims, args->pcond_args, c_ptr);
         c_ptr += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_args);
-    } else
+    }
+	else
     {
         mem->pcond_memory = NULL;
     }
@@ -158,7 +161,8 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
     if (args->pcond_args->N2 < dims->N) {
         mem->pcond_qp_in = assign_ocp_qp_in(pcond_dims, c_ptr);
         c_ptr += ocp_qp_in_calculate_size(pcond_dims);
-    } else
+    }
+	else
     {
         mem->pcond_qp_in = NULL;
     }
@@ -166,7 +170,9 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
     if (args->pcond_args->N2 < dims->N) {
         mem->pcond_qp_out = assign_ocp_qp_out(pcond_dims, c_ptr);
         c_ptr += ocp_qp_out_calculate_size(pcond_dims);
-    } else {
+    }
+	else
+	{
         mem->pcond_qp_out = NULL;
     }
 
@@ -189,7 +195,8 @@ int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_
     if (args->pcond_args->N2 < dims->N)
     {
         pcond_dims = args->pcond_args->pcond_dims;
-    } else
+    }
+	else
     {
         pcond_dims = dims;
     }
@@ -208,7 +215,8 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, o
     if (args->pcond_args->N2 < dims->N)
     {
         pcond_dims = args->pcond_args->pcond_dims;
-    } else
+    }
+	else
     {
         pcond_dims = dims;
     }
@@ -238,13 +246,17 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     ocp_qp_sparse_solver_workspace *work = (ocp_qp_sparse_solver_workspace *) work_;
 
     // cast workspace
+//	print_ocp_qp_dims(qp_in->dim);
     cast_workspace(qp_in->dim, args, memory, work);
 
+//	print_ocp_qp_in(qp_in);
     // condense
     acados_tic(&cond_timer);
     if (args->pcond_args->N2 < qp_in->dim->N) {
         ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory, work->pcond_work);
-    } else {
+    }
+	else
+	{
         memory->pcond_qp_in = qp_in;
         memory->pcond_qp_out = qp_out;
     }
@@ -252,6 +264,9 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
 
     // solve qp
     int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
+//	print_ocp_qp_dims(memory->pcond_qp_out->dim);
+//	print_ocp_qp_in(memory->pcond_qp_in);
+//	print_ocp_qp_out(memory->pcond_qp_out);
 
     // expand
     acados_tic(&cond_timer);
@@ -259,6 +274,8 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
         ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory, work->pcond_work);
     }
     info->condensing_time += acados_toc(&cond_timer);
+//	print_ocp_qp_out(qp_out);
+//	exit(1);
 
     info->total_time = acados_toc(&tot_timer);
     info->solve_QP_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->solve_QP_time;
