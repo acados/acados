@@ -37,15 +37,15 @@
 #endif
 }
 
-%typemap(out) ocp_qp_info {
+%typemap(out) ocp_qp_info  {
     const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
 #if defined(SWIGMATLAB)
     mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
     mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));
-    mxSetField(mat_struct, 1, fields[1], mxCreateDoubleScalar($1.solve_QP_time));
-    mxSetField(mat_struct, 2, fields[2], mxCreateDoubleScalar($1.condensing_time));
-    mxSetField(mat_struct, 3, fields[3], mxCreateDoubleScalar($1.interface_time));
-    mxSetField(mat_struct, 4, fields[4], mxCreateDoubleScalar($1.total_time));
+    mxSetField(mat_struct, 0, fields[1], mxCreateDoubleScalar($1.solve_QP_time));
+    mxSetField(mat_struct, 0, fields[2], mxCreateDoubleScalar($1.condensing_time));
+    mxSetField(mat_struct, 0, fields[3], mxCreateDoubleScalar($1.interface_time));
+    mxSetField(mat_struct, 0, fields[4], mxCreateDoubleScalar($1.total_time));
     $result = mat_struct;
 #elif defined(SWIGPYTHON)
     PyObject *dict = PyDict_New();

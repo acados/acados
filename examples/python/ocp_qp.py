@@ -16,7 +16,7 @@ qp.update('lbx', 0, x0)
 qp.update('ubx', 0, x0)
 
 # solve QP
-solver = ocp_qp_solver(FULL_CONDENSING_HPIPM, qp)
+solver = ocp_qp_solver(FULL_CONDENSING_QPOASES, qp)
 # Unpack the solution
 output = solver.evaluate(qp)
 # Inspect the output struct
