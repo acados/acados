@@ -46,7 +46,7 @@
 #define NN 15
 #define TF 3.0
 #define Ns 2
-#define MAX_SQP_ITERS 20
+#define MAX_SQP_ITERS 10
 #define NREP 1
 
 
@@ -217,6 +217,8 @@ int main() {
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
     int nh[NN+1] = {0};
+	int nv[NN+1] = {0};
+	int ny[NN+1] = {0};
 
     nx[0] = NX;
     nu[0] = NU;
@@ -231,6 +233,8 @@ int main() {
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 #endif
+	nv[0] = nx[0]+nu[0];
+	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
     {
@@ -240,24 +244,36 @@ int main() {
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
+		nv[i] = nx[i]+nu[i];
+		ny[i] = nx[i]+nu[i];
     }
 
     nx[NN] = NX;
+    nu[NN] = 0;
     nbx[NN] = NX;
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
+	nv[NN] = nx[NN]+nu[NN];
+	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************
-    * nlp_dims
+    * ocp_nlp_dims
     ************************************************/
+
+	/* ocp_nlp_cost_ls_dims */
+
+	int cost_dims_size = ocp_nlp_cost_ls_dims_calculate_size(NN);
+	void *cost_dims_mem = malloc(cost_dims_size);
+	ocp_nlp_cost_ls_dims *cost_dims = ocp_nlp_cost_ls_dims_assign(NN, cost_dims_mem);
+	ocp_nlp_cost_ls_dims_init(nv, ny, cost_dims);
+
+	/* ocp_nlp_dims */
 
 	int dims_size = ocp_nlp_dims_calculate_size(NN);
 	void *dims_mem = malloc(dims_size);
-
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-
-	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, dims);
+	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, cost_dims, dims);
 
 //	ocp_nlp_dims_print(dims);
 
@@ -289,19 +305,33 @@ int main() {
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
 
     // Least-squares cost
-    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp_in->cost;
-    for (int i = 0; i < NN; i++) {
-        for (int j = 0; j < NX; j++)
-            ls_cost->W[i][j * (NX + NU + 1)] = diag_cost_x[j];
-        for (int j = 0; j < NU; j++)
-            ls_cost->W[i][(NX + j) * (NX + NU + 1)] = diag_cost_u[j];
-        for (int j = 0; j < NX; j++)
-            ls_cost->y_ref[i][j] = xref[j];
-        for (int j = 0; j < NU; j++)
-            ls_cost->y_ref[i][NX+j] = uref[j];
+    ocp_nlp_cost_ls *cost_ls = (ocp_nlp_cost_ls *) nlp_in->cost;
+
+	// W
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(ny[i], ny[i], 0.0, cost_ls->W+i, 0, 0);
+        for (int j = 0; j < nu[i]; j++)
+            DMATEL_LIBSTR(cost_ls->W+i, j, j) = diag_cost_u[j];
+        for (int j = 0; j < nx[i]; j++)
+            DMATEL_LIBSTR(cost_ls->W+i, nu[i]+j, nu[i]+j) = diag_cost_x[j];
+	}
+
+	// Cyt
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(nv[i], ny[i], 0.0, cost_ls->Cyt+i, 0, 0);
+		int n_min = ny[i]<nv[i] ? ny[i] : nv[i];
+        for (int j = 0; j < n_min; j++)
+            DMATEL_LIBSTR(cost_ls->Cyt+i, j, j) = 1.0;
+	}
+
+	// y_ref
+    for (int i = 0; i < NN; i++)
+	{
+		blasfeo_pack_dvec(nu[i], uref, cost_ls->y_ref+i, 0);
+		blasfeo_pack_dvec(nx[i], xref, cost_ls->y_ref+i, nu[i]);
     }
-    for (int j = 0; j < NX; j++)
-        ((ocp_nlp_ls_cost *) nlp_in->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
     for (int jj = 0; jj < NN; jj++)
     {
@@ -410,6 +440,7 @@ int main() {
 
     // choose QP solver
     ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
+//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
 
     // set up args with nested structs
     sim_solver_t sim_solver_names[NN];
@@ -430,6 +461,10 @@ int main() {
     }
 
     nlp_args->maxIter = MAX_SQP_ITERS;
+    nlp_args->min_res_g = 1e-9;
+    nlp_args->min_res_b = 1e-9;
+    nlp_args->min_res_d = 1e-9;
+    nlp_args->min_res_m = 1e-9;
 
     /************************************************
     * ocp_nlp out
@@ -476,7 +511,13 @@ int main() {
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, MAX_SQP_ITERS, time*1e3);
+	printf("\nresiduals\n");
+	ocp_nlp_res_print(nlp_mem->nlp_res);
+
+	printf("\nsolution\n");
+	ocp_nlp_out_print(nlp_out);
+
+    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, nlp_mem->sqp_iter, time*1e3);
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
@@ -493,6 +534,7 @@ int main() {
     * free memory
     ************************************************/
 
+	free(cost_dims_mem);
 	free(dims_mem);
     free(nlp_in);
     free(nlp_out);
