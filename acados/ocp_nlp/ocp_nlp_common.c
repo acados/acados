@@ -214,6 +214,7 @@ int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims)
 
     size += sizeof(ocp_nlp_cost_ls);
 
+	size += 1*(N+1)*sizeof(int); // nls_mask
 	size += 2*(N+1)*sizeof(struct blasfeo_dmat); // W Cyt
 	size += 1*(N+1)*sizeof(struct blasfeo_dvec); // y_ref
 
@@ -256,6 +257,9 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 
 	// dims
 	cost->dims = dims;
+
+	// nls mask
+	assign_int(N+1, &cost->nls_mask, &c_ptr);
 
 	// blasfeo_struct align
 	align_char_to(8, &c_ptr);

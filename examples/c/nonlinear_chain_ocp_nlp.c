@@ -307,6 +307,10 @@ int main() {
     // Least-squares cost
     ocp_nlp_cost_ls *cost_ls = (ocp_nlp_cost_ls *) nlp_in->cost;
 
+	// nls mask
+	for (int i=0; i<=NN; i++)
+		cost_ls->nls_mask[i] = 0;
+
 	// W
 	for (int i=0; i<=NN; i++)
 	{

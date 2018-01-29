@@ -90,6 +90,7 @@ typedef struct
 	struct blasfeo_dmat *Cyt;
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;
+	int *nls_mask; // nonlinear least squares mask
 	int memsize;
 } ocp_nlp_cost_ls;
 
@@ -108,7 +109,6 @@ typedef struct
 {
     ocp_nlp_dims *dims;
 
-    // TODO(dimitris): decide on the blasfeo format for those fields
     int **idxb;
 	struct blasfeo_dvec *d;
 	struct blasfeo_dmat *DCt;
@@ -117,6 +117,8 @@ typedef struct
     double **uh;
     // ocp_nlp_function *h;  // nonlinear path constraints
 
+	// TODO array of structures or structures of arrays ???
+	// void **cost; // ???
     void *cost;
 
     casadi_function_t *vde;
@@ -186,21 +188,16 @@ ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory);
 typedef struct
 {
     ocp_nlp_dims *dims;
-	struct blasfeo_dvec *res_g;
-	struct blasfeo_dvec *res_b;
-	struct blasfeo_dvec *res_d;
-	struct blasfeo_dvec *res_m;
+	struct blasfeo_dvec *res_g; // stationarity
+	struct blasfeo_dvec *res_b; // dynamics
+	struct blasfeo_dvec *res_d; // inequality constraints
+	struct blasfeo_dvec *res_m; // complementarity
 	double inf_norm_res_g;
 	double inf_norm_res_b;
 	double inf_norm_res_d;
 	double inf_norm_res_m;
 	int memsize;
 } ocp_nlp_res;
-
-typedef struct
-{
-	int memsize;
-} ocp_nlp_res_work;
 
 //
 int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
