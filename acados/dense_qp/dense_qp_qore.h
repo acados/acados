@@ -33,7 +33,7 @@ extern "C" {
 
 typedef struct dense_qp_qore_args_ {
     int nsmax;          // maximum size of Schur complement
-    int prtfreq;        // print frequency,
+    int print_freq;     // print frequency,
                         // prtfreq  < 0: disable printing;
                         // prtfreq == 0: print on each call and include working set changes;
                         // prtfreq  > 0: print on every prtfreq seconds, but do not include working set changes;
