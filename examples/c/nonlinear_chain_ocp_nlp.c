@@ -93,24 +93,25 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
 
 static void select_model(const int num_free_masses, ocp_nlp_in *nlp)
 {
+	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp->model;
     for (int ii = 0; ii < nlp->dims->N; ii++)
     {
         switch (num_free_masses)
         {
             case 1:
-                nlp->vde[ii] = &vde_chain_nm2;
-                nlp->jac[ii] = &jac_chain_nm2;
-                nlp->vde_adj[ii] = &vde_hess_chain_nm2;
+                model->vde[ii] = &vde_chain_nm2;
+                model->jac[ii] = &jac_chain_nm2;
+                model->vde_adj[ii] = &vde_hess_chain_nm2;
                 break;
             case 2:
-                nlp->vde[ii] = &vde_chain_nm3;
-                nlp->jac[ii] = &jac_chain_nm3;
-                nlp->vde_adj[ii] = &vde_hess_chain_nm3;
+                model->vde[ii] = &vde_chain_nm3;
+                model->jac[ii] = &jac_chain_nm3;
+                model->vde_adj[ii] = &vde_hess_chain_nm3;
                 break;
             case 3:
-                nlp->vde[ii] = &vde_chain_nm4;
-                nlp->jac[ii] = &jac_chain_nm4;
-                nlp->vde_adj[ii] = &vde_hess_chain_nm4;
+                model->vde[ii] = &vde_chain_nm4;
+                model->jac[ii] = &jac_chain_nm4;
+                model->vde_adj[ii] = &vde_hess_chain_nm4;
                 break;
             default:
                 printf("Problem size not available\n");

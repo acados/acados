@@ -197,6 +197,70 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 
 
 /************************************************
+* model
+************************************************/
+
+/* explicit ODEs */
+
+int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
+{
+	// loop index
+	int ii;
+
+	// extract dims
+	int N = dims->N;
+
+	int size = 0;
+
+	size += sizeof(ocp_nlp_model_expl);
+
+    size += 3*N*sizeof(casadi_function_t *);  // vde vde_adj jac
+
+	size += 8; // initial align
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+	
+    char *c_ptr = (char *) raw_memory;
+
+	// extract sizes
+    int N = dims->N;
+
+	// struct
+    ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_model_expl);
+
+	// dims
+	model->dims = dims;
+
+	// model
+	// TODO in mem.c, casadi_function_assign_advance ???
+    model->vde = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    model->vde_adj = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    model->jac = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+
+	model->memsize = ocp_nlp_model_expl_calculate_size(dims);
+
+    assert((char *) raw_memory + model->memsize >= c_ptr);
+
+	return model;
+
+}
+
+
+
+/************************************************
 * cost
 ************************************************/
 
@@ -328,6 +392,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 	ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims->cost_dims;
 	size += ocp_nlp_cost_ls_calculate_size(cost_dims); // cost
 
+	size += ocp_nlp_model_expl_calculate_size(dims); // model
+
     for (ii = 0; ii < N+1; ii++)
     {
         size += sizeof(int)*(nb[ii]);  // idxb
@@ -337,8 +403,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
         size += 2*sizeof(double)*nh[ii];  // lh, uh
 
     }
-
-    size += 3*N*sizeof(casadi_function_t *);  // vde, vde_adj, jac
 
 	size += 8; // initial align
 	size += 8; // pointers align
@@ -385,12 +449,9 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 	c_ptr += cost->memsize;
 
 	// model
-    in->vde = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
-    in->vde_adj = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
-    in->jac = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
+	ocp_nlp_model_expl *model = ocp_nlp_model_expl_assign(dims, c_ptr);
+	in->model = model;
+	c_ptr += model->memsize;
 
 	// pointers align
 	align_char_to(8, &c_ptr);

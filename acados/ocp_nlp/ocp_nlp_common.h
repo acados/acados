@@ -102,6 +102,28 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 
 
 /************************************************
+* model
+************************************************/
+
+/* explicit ODEs */
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO model dims ???
+    casadi_function_t *vde;
+    casadi_function_t *vde_adj;
+    casadi_function_t *jac;
+	int memsize;
+} ocp_nlp_model_expl;
+
+//
+int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memory);
+
+
+
+/************************************************
 * in
 ************************************************/
 
@@ -120,10 +142,7 @@ typedef struct
 	// TODO array of structures or structures of arrays ???
 	// void **cost; // ???
     void *cost;
-
-    casadi_function_t *vde;
-    casadi_function_t *vde_adj;
-    casadi_function_t *jac;
+	void *model;
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 

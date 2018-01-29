@@ -744,14 +744,15 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     sim_rk_opts *sim_opts;
 
     // set up integrators
+	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp_in->model;
     for (int ii = 0; ii < N; ii++)
     {
         sim_opts = args->sim_solvers_args[ii];
         work->sim_in[ii]->step = sim_opts->interval/sim_opts->num_steps;
 
-        work->sim_in[ii]->vde = nlp_in->vde[ii];
-        work->sim_in[ii]->jac = nlp_in->jac[ii];
-        work->sim_in[ii]->vde_adj = nlp_in->vde_adj[ii];
+        work->sim_in[ii]->vde = model->vde[ii];
+        work->sim_in[ii]->jac = model->jac[ii];
+        work->sim_in[ii]->vde_adj = model->vde_adj[ii];
         work->sim_in[ii]->forward_vde_wrapper = &vde_fun;
         work->sim_in[ii]->jacobian_wrapper = &jac_fun;
         work->sim_in[ii]->adjoint_vde_wrapper = &vde_hess_fun;
