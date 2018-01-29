@@ -168,22 +168,8 @@ using std::string;
 
 %include "acados_c/ocp_qp.h"
 
-%ignore states;
+
 %include "acados_cpp/ocp_qp_solution.hpp"
-
-%rename("%s") states;
-
-%extend acados::ocp_qp_solution {
-
-    LangObject *states() {
-        vector<vector<double>> tmp = $self->states();
-        vector<LangObject *> result;
-        for (int i = 0; i < tmp.size(); ++i)
-            result.push_back(new_matrix(std::make_pair(tmp.at(i).size(), 1), tmp.at(i).data()));
-        return swig::from(result);
-    }
-
-}
 
 %extend ocp_qp_solver {
 

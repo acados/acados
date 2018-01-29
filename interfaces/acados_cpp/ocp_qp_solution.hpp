@@ -14,9 +14,10 @@ public:
     ocp_qp_solution(ocp_qp_out *solution);
 
     vector<vector<double>> states();
-    // vector<vector<double>> controls();
-    // vector<vector<double>> eq_multipliers();
-    // vector<vector<double>> ineq_multipliers();
+    vector<vector<double>> controls();
+    vector<vector<double>> lag_mul_dynamics();
+    vector<vector<double>> lag_mul_bounds();
+    vector<vector<double>> lag_mul_constraints();
     ocp_qp_info info();
 
     const int N;

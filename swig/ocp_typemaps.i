@@ -37,6 +37,14 @@
 #endif
 }
 
+%typemap(out) std::vector< std::vector<double> > {
+    std::vector<LangObject *> tmp;
+    for (int i = 0; i < $1.size(); ++i)
+        tmp.push_back(new_matrix(std::make_pair($1.at(i).size(), 1), $1.at(i).data()));
+    $result = swig::from(tmp);
+}
+
+
 %typemap(out) ocp_qp_info  {
     const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
 #if defined(SWIGMATLAB)
