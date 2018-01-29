@@ -304,7 +304,9 @@ int main() {
         diag_cost_x[i] = 1e-2;
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
 
-    // Least-squares cost
+
+
+    /* least-squares cost */
     ocp_nlp_cost_ls *cost_ls = (ocp_nlp_cost_ls *) nlp_in->cost;
 
 	// nls mask
@@ -341,6 +343,8 @@ int main() {
     {
         select_model(NMF, nlp_in);
     }
+
+
 
     nlp_in->freezeSens = false;
     if (scheme > 2)

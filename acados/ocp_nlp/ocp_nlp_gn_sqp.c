@@ -565,9 +565,9 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 			// A
 			blasfeo_pack_tran_dmat(nx[i+1], nx[i], &work->sim_out[i]->S_forw[0], nx[i+1], &BAbt[i], nu[i], 0);
 
-			// XXX nlp mem: dyn_for
-			blasfeo_pack_dvec(nx[i+1], work->sim_out[i]->xn, nlp_mem->dyn_for+i, 0);
-			blasfeo_daxpy(nx[i+1], -1.0, nlp_out->ux+i+1, nu[i+1], nlp_mem->dyn_for+i, 0, nlp_mem->dyn_for+i, 0);
+			// XXX nlp mem: dyn_fun
+			blasfeo_pack_dvec(nx[i+1], work->sim_out[i]->xn, nlp_mem->dyn_fun+i, 0);
+			blasfeo_daxpy(nx[i+1], -1.0, nlp_out->ux+i+1, nu[i+1], nlp_mem->dyn_fun+i, 0, nlp_mem->dyn_fun+i, 0);
 			// XXX nlp mem: dyn_adj
 			blasfeo_dgemv_n(nu[i]+nx[i], nx[i+1], -1.0, BAbt+i, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
 		}
@@ -581,11 +581,11 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 		// constraints
 		// TODO merge dgemv_n and dgemv_t
 
-		// XXX nlp_mem: ineq_for
+		// XXX nlp_mem: ineq_fun
 		blasfeo_dvecex_sp(nb[i], 1.0, nlp_in->idxb[i], nlp_out->ux+i, 0, tmp_nbg+i, 0);
 		blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb[i], tmp_nbg+i, nb[i]);
-		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, nlp_mem->ineq_for+i, 0);
-		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, nlp_mem->ineq_for+i, nb[i]+ng[i]);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, nlp_mem->ineq_fun+i, 0);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, nlp_mem->ineq_fun+i, nb[i]+ng[i]);
 
 		// XXX nlp_mem: ineq_adj
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_mem->ineq_adj+i, 0);
@@ -662,7 +662,6 @@ static void sqp_update_qp_rhs(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	{
 
 		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, rq+i, 0);
-
         blasfeo_drowin(nu[i]+nx[i], 1.0, rq+i, 0, RSQrq+i, nu[i]+nx[i], 0); // XXX needed ???
 
 	}
@@ -670,7 +669,7 @@ static void sqp_update_qp_rhs(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	// b
 	for (i=0; i<N; i++)
 	{
-		blasfeo_dveccp(nx[i+1], nlp_mem->dyn_for+i, 0, b+i, 0);
+		blasfeo_dveccp(nx[i+1], nlp_mem->dyn_fun+i, 0, b+i, 0);
 		blasfeo_drowin(nx[i+1], 1.0, b+i, 0, BAbt+i, nu[i]+nx[i], 0); // XXX needed ???
 	}
 
@@ -678,8 +677,7 @@ static void sqp_update_qp_rhs(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	for (i=0; i<=N; i++)
 	{
 
-		// TODO use ineq_fun instead for nonlinear constraints !!!
-		blasfeo_dveccp(2*nb[i]+2*ng[i], nlp_mem->ineq_for+i, 0, d+i, 0);
+		blasfeo_dveccp(2*nb[i]+2*ng[i], nlp_mem->ineq_fun+i, 0, d+i, 0);
 
 	}
 

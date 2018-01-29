@@ -166,9 +166,9 @@ typedef struct
 {
     ocp_nlp_dims *dims;
 	struct blasfeo_dvec *cost_grad;
-	struct blasfeo_dvec *dyn_for;
+	struct blasfeo_dvec *dyn_fun;
 	struct blasfeo_dvec *dyn_adj;
-	struct blasfeo_dvec *ineq_for;
+	struct blasfeo_dvec *ineq_fun;
 	struct blasfeo_dvec *ineq_adj;
 	int memsize;
 } ocp_nlp_mem;
