@@ -160,3 +160,18 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_
     ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
     return mem;
 }
+
+
+
+sim_rk_opts *create_sim_irk_opts(sim_dims *dims)
+{
+    int size = sim_irk_opts_calculate_size(dims);
+
+    void *ptr = acados_malloc(size, 1);
+
+    sim_rk_opts *opts = sim_irk_assign_opts(dims, ptr);
+
+    sim_irk_initialize_default_args(dims, opts);
+
+    return opts;
+}

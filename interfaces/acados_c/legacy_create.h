@@ -30,6 +30,7 @@ extern "C" {
 #include <acados/ocp_nlp/ocp_nlp_gn_sqp.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing.h>
 #include <acados/ocp_qp/ocp_qp_partial_condensing.h>
+#include <acados/sim/sim_irk_integrator.h>
 // acados_c
 #include "acados_c/common.h"
 
@@ -52,6 +53,8 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
 
 ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+
+sim_rk_opts *create_sim_irk_opts(sim_dims *dims);
 
 #ifdef __cplusplus
 } /* extern "C" */

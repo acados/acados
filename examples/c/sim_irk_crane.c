@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// TODO(dimitris): add intergrator to c interface and clean this up
+#include <acados_c/sim.h>
+#include <acados_c/options.h>
+#include "interfaces/acados_c/legacy_create.h"
+
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_casadi_wrapper.h"
@@ -9,8 +14,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "acados/utils/create.h"
-
 #include "examples/c/crane_model/crane_model.h"
 
 // blasfeo
@@ -97,6 +100,10 @@ int main() {
         sim_irk(in, out, irk_opts, NULL, workspace);
     Time1 = acados_toc(&timer)/NREP;
 
+    // printf("\nS_forw_out (blasfeo): \n");
+    // blasfeo_print_dmat(nx, NF, ((sim_irk_workspace *)workspace)->S_forw,0 ,0);
+    // exit(1);
+
     irk_opts->jac_reuse = true;
     acados_tic(&timer);
     for (ii=0;ii<NREP;ii++)
@@ -127,12 +134,12 @@ int main() {
     printf("IRK with Adjoint Sensitivity:\n");
     printf("NO. of run: %d   Avg cpt: %8.5f[ms]\n", NREP, Time3*1000);
 
-    // double *xn = out->xn;
+    double *xn = out->xn;
 
-    // printf("\nxn: \n");
-    // for (ii=0;ii<nx;ii++)
-    //     printf("%8.5f ",xn[ii]);
-    // printf("\n");
+    printf("\nxn: \n");
+    for (ii=0;ii<nx;ii++)
+        printf("%8.5f ",xn[ii]);
+    printf("\n");
 
     // double *S_forw_out;
     // if(irk_opts->sens_forw){

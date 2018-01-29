@@ -59,18 +59,18 @@ CRANE_OBJS += crane_model/impl_jac_x.o
 CRANE_OBJS += crane_model/impl_jac_xdot.o
 CRANE_OBJS += crane_model/impl_jac_u.o
 
-sim_erk_crane: $(CRANE_OBJS)
-	$(CCC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
+	$(CCC) -o sim_erk_crane.out sim_erk_crane.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
 
 
 
-sim_irk_crane_yt: $(CRANE_OBJS)
-	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+sim_irk_crane: $(CRANE_OBJS) sim_irk_crane.o
+	$(CCC) -o sim_irk_crane.out  sim_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example sim_irk_crane_yt build complete."
+	@echo " Example sim_irk_crane build complete."
 	@echo
 
 
