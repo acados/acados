@@ -184,7 +184,6 @@ using std::string;
     }
 
     const acados::ocp_qp_solution evaluate(const acados::ocp_qp& input) {
-        print_ocp_qp_in(input.qp);
         d_ocp_qp_sol *result = create_ocp_qp_out(input.qp->dim);
         int_t return_code = ocp_qp_solve($self, input.qp, result);
         if (return_code != 0)
