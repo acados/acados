@@ -46,8 +46,12 @@
 #define NN 15
 #define TF 3.0
 #define Ns 2
-#define MAX_SQP_ITERS 20
+#define MAX_SQP_ITERS 10
 #define NREP 1
+
+
+#define BC_AS_GC
+
 
 enum sensitivities_scheme {
     EXACT_NEWTON,
@@ -89,24 +93,25 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
 
 static void select_model(const int num_free_masses, ocp_nlp_in *nlp)
 {
+	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp->model;
     for (int ii = 0; ii < nlp->dims->N; ii++)
     {
         switch (num_free_masses)
         {
             case 1:
-                nlp->vde[ii] = &vde_chain_nm2;
-                nlp->jac[ii] = &jac_chain_nm2;
-                nlp->vde_adj[ii] = &vde_hess_chain_nm2;
+                model->vde[ii] = &vde_chain_nm2;
+                model->jac[ii] = &jac_chain_nm2;
+                model->vde_adj[ii] = &vde_hess_chain_nm2;
                 break;
             case 2:
-                nlp->vde[ii] = &vde_chain_nm3;
-                nlp->jac[ii] = &jac_chain_nm3;
-                nlp->vde_adj[ii] = &vde_hess_chain_nm3;
+                model->vde[ii] = &vde_chain_nm3;
+                model->jac[ii] = &jac_chain_nm3;
+                model->vde_adj[ii] = &vde_hess_chain_nm3;
                 break;
             case 3:
-                nlp->vde[ii] = &vde_chain_nm4;
-                nlp->jac[ii] = &jac_chain_nm4;
-                nlp->vde_adj[ii] = &vde_hess_chain_nm4;
+                model->vde[ii] = &vde_chain_nm4;
+                model->jac[ii] = &jac_chain_nm4;
+                model->vde_adj[ii] = &vde_hess_chain_nm4;
                 break;
             default:
                 printf("Problem size not available\n");
@@ -210,16 +215,27 @@ int main() {
     int nbx[NN + 1] = {0};
     int nbu[NN + 1] = {0};
     int nb[NN + 1] = {0};
-    int nc[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
     int nh[NN+1] = {0};
+	int nv[NN+1] = {0};
+	int ny[NN+1] = {0};
 
     nx[0] = NX;
     nu[0] = NU;
+#ifdef BC_AS_GC
+    nbx[0] = 0;
+    nbu[0] = 0;
+	nb[0] = 0;
+    ng[0] = nu[0]+nx[0];
+#else
     nbx[0] = nx[0];
     nbu[0] = nu[0];
     nb[0] = nbu[0]+nbx[0];
+	ng[0] = 0;
+#endif
+	nv[0] = nx[0]+nu[0];
+	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
     {
@@ -228,34 +244,51 @@ int main() {
         nbx[i] = NMF;
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
+		ng[i] = 0;
+		nv[i] = nx[i]+nu[i];
+		ny[i] = nx[i]+nu[i];
     }
 
     nx[NN] = NX;
+    nu[NN] = 0;
     nbx[NN] = NX;
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
+	ng[NN] = 0;
+	nv[NN] = nx[NN]+nu[NN];
+	ny[NN] = nx[NN]+nu[NN];
 
-    // TODO(dimitris): if dims were defined stage-wise, we could do directly ocp_nlp_dims dims[N]..
-	// TODO put this stuff in a function !!!!!!
-    ocp_nlp_dims dims;
-    dims.N  = NN;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.ng = nc;
-    dims.nbx = nbx;
-    dims.nbu = nbu;
-    dims.nb = nb;
-    dims.nh = nh;
-    dims.ns = ns;
+    /************************************************
+    * ocp_nlp_dims
+    ************************************************/
+
+	/* ocp_nlp_cost_ls_dims */
+
+	int cost_dims_size = ocp_nlp_cost_ls_dims_calculate_size(NN);
+	void *cost_dims_mem = malloc(cost_dims_size);
+	ocp_nlp_cost_ls_dims *cost_dims = ocp_nlp_cost_ls_dims_assign(NN, cost_dims_mem);
+	ocp_nlp_cost_ls_dims_init(nv, ny, cost_dims);
+
+	/* ocp_nlp_dims */
+
+	int dims_size = ocp_nlp_dims_calculate_size(NN);
+	void *dims_mem = malloc(dims_size);
+	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
+	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, cost_dims, dims);
+
+//	ocp_nlp_dims_print(dims);
+
 
     /************************************************
     * nlp_in (wip)
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-    ocp_nlp_in *nlp = create_ocp_nlp_in(&dims, d);
+    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d);
 
-    // NOTE(dimitris): use nlp->dims instead of &dims from now on since nb is filled with nbx+nbu!
+//	ocp_nlp_dims_print(nlp_in->dims);
+
+    // NOTE(dimitris): use nlp_in->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
     // Problem data
     double wall_pos = -0.01;
@@ -272,29 +305,51 @@ int main() {
         diag_cost_x[i] = 1e-2;
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
 
-    // Least-squares cost
-    ocp_nlp_ls_cost *ls_cost = (ocp_nlp_ls_cost *) nlp->cost;
-    for (int i = 0; i < NN; i++) {
-        for (int j = 0; j < NX; j++)
-            ls_cost->W[i][j * (NX + NU + 1)] = diag_cost_x[j];
-        for (int j = 0; j < NU; j++)
-            ls_cost->W[i][(NX + j) * (NX + NU + 1)] = diag_cost_u[j];
-        for (int j = 0; j < NX; j++)
-            ls_cost->y_ref[i][j] = xref[j];
-        for (int j = 0; j < NU; j++)
-            ls_cost->y_ref[i][NX+j] = uref[j];
+
+
+    /* least-squares cost */
+    ocp_nlp_cost_ls *cost_ls = (ocp_nlp_cost_ls *) nlp_in->cost;
+
+	// nls mask
+	for (int i=0; i<=NN; i++)
+		cost_ls->nls_mask[i] = 0;
+
+	// W
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(ny[i], ny[i], 0.0, cost_ls->W+i, 0, 0);
+        for (int j = 0; j < nu[i]; j++)
+            DMATEL_LIBSTR(cost_ls->W+i, j, j) = diag_cost_u[j];
+        for (int j = 0; j < nx[i]; j++)
+            DMATEL_LIBSTR(cost_ls->W+i, nu[i]+j, nu[i]+j) = diag_cost_x[j];
+	}
+
+	// Cyt
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(nv[i], ny[i], 0.0, cost_ls->Cyt+i, 0, 0);
+		int n_min = ny[i]<nv[i] ? ny[i] : nv[i];
+        for (int j = 0; j < n_min; j++)
+            DMATEL_LIBSTR(cost_ls->Cyt+i, j, j) = 1.0;
+	}
+
+	// y_ref
+    for (int i = 0; i < NN; i++)
+	{
+		blasfeo_pack_dvec(nu[i], uref, cost_ls->y_ref+i, 0);
+		blasfeo_pack_dvec(nx[i], xref, cost_ls->y_ref+i, nu[i]);
     }
-    for (int j = 0; j < NX; j++)
-        ((ocp_nlp_ls_cost *) nlp->cost)->W[NN][j * (NX + 1)] = diag_cost_x[j];
 
     for (int jj = 0; jj < NN; jj++)
     {
-        select_model(NMF, nlp);
+        select_model(NMF, nlp_in);
     }
 
-    nlp->freezeSens = false;
+
+
+    nlp_in->freezeSens = false;
     if (scheme > 2)
-        nlp->freezeSens = true;
+        nlp_in->freezeSens = true;
 
 
 
@@ -349,18 +404,44 @@ int main() {
     }
 
 	// stage-wise
-	blasfeo_pack_dvec(nb[0], lb0, nlp->d+0, 0);
-	blasfeo_pack_dvec(nb[0], ub0, nlp->d+0, nb[0]+ng[0]);
-    nlp->idxb[0] = idxb0;
+	blasfeo_pack_dvec(nb[0], lb0, nlp_in->d+0, 0);
+	blasfeo_pack_dvec(nb[0], ub0, nlp_in->d+0, nb[0]+ng[0]);
+    nlp_in->idxb[0] = idxb0;
     for (int i = 1; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nb[i], lb1, nlp->d+i, 0);
-		blasfeo_pack_dvec(nb[i], ub1, nlp->d+i, nb[i]+ng[i]);
-        nlp->idxb[i] = idxb1;
+		blasfeo_pack_dvec(nb[i], lb1, nlp_in->d+i, 0);
+		blasfeo_pack_dvec(nb[i], ub1, nlp_in->d+i, nb[i]+ng[i]);
+        nlp_in->idxb[i] = idxb1;
     }
-	blasfeo_pack_dvec(nb[NN], lbN, nlp->d+NN, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, nlp->d+NN, nb[NN]+ng[NN]);
-    nlp->idxb[NN] = idxbN;
+	blasfeo_pack_dvec(nb[NN], lbN, nlp_in->d+NN, 0);
+	blasfeo_pack_dvec(nb[NN], ubN, nlp_in->d+NN, nb[NN]+ng[NN]);
+    nlp_in->idxb[NN] = idxbN;
+
+
+	// General constraints
+	if (ng[0]>0)
+	{
+		double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
+		for (int ii=0; ii<nu[0]; ii++)
+			Cu0[ii*(ng[0]+1)] = 1.0;
+
+		double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
+		for (int ii=0; ii<nx[0]; ii++)
+			Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
+
+		blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], nlp_in->DCt+0, 0, 0);
+		blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], nlp_in->DCt+0, nu[0], 0);
+		blasfeo_pack_dvec(ng[0], lb0, nlp_in->d+0, nb[0]);
+		blasfeo_pack_dvec(ng[0], ub0, nlp_in->d+0, 2*nb[0]+ng[0]);
+
+		d_free(Cu0);
+		d_free(Cx0);
+	}
+#if 0
+	blasfeo_print_dmat(nu[0]+nx[0], ng[0], nlp_in->DCt+0, 0, 0);
+	blasfeo_print_tran_dvec(2*nb[0]+2*ng[0], nlp_in->d+0, 0);
+//	exit(1);
+#endif
 
     /************************************************
     * gn_sqp args
@@ -368,6 +449,7 @@ int main() {
 
     // choose QP solver
     ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
+//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
 
     // set up args with nested structs
     sim_solver_t sim_solver_names[NN];
@@ -379,43 +461,39 @@ int main() {
         num_stages[ii] = 4;
     }
 
-    nlp->dims->num_stages = num_stages;
+    nlp_in->dims->num_stages = num_stages;
 
-    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp->dims, qp_solver_name, sim_solver_names);
+    ocp_nlp_gn_sqp_args *nlp_args = ocp_nlp_gn_sqp_create_args(nlp_in->dims, qp_solver_name, sim_solver_names);
     for (int i = 0; i < NN; ++i) {
         sim_rk_opts *sim_opts = nlp_args->sim_solvers_args[i];
         sim_opts->interval = TF/NN;
     }
 
     nlp_args->maxIter = MAX_SQP_ITERS;
+    nlp_args->min_res_g = 1e-9;
+    nlp_args->min_res_b = 1e-9;
+    nlp_args->min_res_d = 1e-9;
+    nlp_args->min_res_m = 1e-9;
 
     /************************************************
     * ocp_nlp out
     ************************************************/
 
-    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp->dims);
+    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp_in->dims);
+
+//	ocp_nlp_dims_print(nlp_out->dims);
 
     /************************************************
     * gn_sqp memory
     ************************************************/
 
-    ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp->dims, nlp_args);
-
-    // TODO(dimitris): users shouldn't write directly on memory..
-    for (int i = 0; i < NN; i++) {
-        for (int j = 0; j < NX; j++)
-            nlp_mem->x[i][j] = xref[j];  // resX(j,i)
-        for (int j = 0; j < NU; j++)
-            nlp_mem->u[i][j] = uref[j];  // resU(j, i)
-    }
-    for (int j = 0; j < NX; j++)
-        nlp_mem->x[NN][j] = xref[j];  // resX(j, NN)
+    ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp_in->dims, nlp_args);
 
     /************************************************
     * gn_sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp->dims, nlp_args);
+    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in->dims, nlp_args);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
@@ -429,31 +507,50 @@ int main() {
 
     for (int rep = 0; rep < NREP; rep++)
     {
-        status = ocp_nlp_gn_sqp(nlp, nlp_out, nlp_args, nlp_mem, nlp_work);
+		// warm start output initial guess of solution
+		for (int i=0; i<=NN; i++)
+		{
+			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
+			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+		}
+
+		// call nlp solver
+        status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work);
     }
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\nstatus = %i, iterations (fixed) = %d total time = %f ms\n\n", status, MAX_SQP_ITERS, time*1e3);
+	printf("\nresiduals\n");
+	ocp_nlp_res_print(nlp_mem->nlp_res);
+
+	printf("\nsolution\n");
+	ocp_nlp_out_print(nlp_out);
+
+    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, nlp_mem->sqp_iter, time*1e3);
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
-        d_print_mat(1, nu[k], nlp_out->u[k], 1);
+		blasfeo_print_tran_dvec(nu[k], nlp_out->ux+k, 0);
         printf("x[%d] = \n", k);
-        d_print_mat(1, nx[k], nlp_out->x[k], 1);
+		blasfeo_print_tran_dvec(nx[k], nlp_out->ux+k, nu[k]);
     }
     printf("u[N-1] = \n");
-    d_print_mat(1, nu[NN-1], nlp_out->u[NN-1], 1);
+	blasfeo_print_tran_dvec(nu[NN-1], nlp_out->ux+NN-1, 0);
     printf("x[N] = \n");
-    d_print_mat(1, nx[NN], nlp_out->x[NN], 1);
+	blasfeo_print_tran_dvec(nx[NN], nlp_out->ux+NN, nu[NN]);
 
     /************************************************
     * free memory
     ************************************************/
 
-    free(nlp);
+	free(cost_dims_mem);
+	free(dims_mem);
+    free(nlp_in);
     free(nlp_out);
     free(nlp_work);
     free(nlp_mem);
     free(nlp_args);
+
+	return 0;
+
 }

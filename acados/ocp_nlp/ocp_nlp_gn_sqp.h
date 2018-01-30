@@ -36,8 +36,19 @@ extern "C" {
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
-typedef struct {
+
+
+/************************************************
+* arguments
+************************************************/
+
+typedef struct
+{
     int maxIter;
+	double min_res_g;
+	double min_res_b;
+	double min_res_d;
+	double min_res_m;
     // QP solver
     ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
     void *qp_solver_args;
@@ -46,26 +57,47 @@ typedef struct {
     void **sim_solvers_args;
 } ocp_nlp_gn_sqp_args;
 
+//
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
+//
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
 
 
-typedef struct {
-    int num_vars;
-    double **x;
-    double **u;
-    double **pi;
-    double **lam;
 
+/************************************************
+* memory
+************************************************/
+
+typedef struct
+{
     ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
     void **sim_solvers_mem;
+
+    // residuals
+	ocp_nlp_res *nlp_res;
+
+	// nlp memory
+	ocp_nlp_mem *nlp_mem;
+
+	int sqp_iter;
+
 } ocp_nlp_gn_sqp_memory;
 
+//
+int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+//
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, void *raw_memory);
 
 
-typedef struct {
-    // TODO(dimitris): move tmp_vecs up
-    double *w;
+
+/************************************************
+* workspace
+************************************************/
+
+typedef struct
+{
 
     // QP solver
     ocp_qp_in *qp_in;
@@ -77,25 +109,30 @@ typedef struct {
     sim_out **sim_out;
     void **sim_solvers_work;
 
-    // SQP solver
-    struct blasfeo_dvec *tmp_vecs;  // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
-                                // not using max(nx+nu) for parallelization in the future
+	// temporary stuff
+    // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+    // not using max(nx+nu) for parallelization in the future
+	// XXX take Max instead ?????
+	struct blasfeo_dmat *tmp_ny_ny;
+	struct blasfeo_dmat *tmp_nv_ny;
+	struct blasfeo_dvec *tmp_nbg;
+    struct blasfeo_dvec *tmp_nux;
 
 } ocp_nlp_gn_sqp_work;
 
-
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
-//
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
-//
-int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
-//
-ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, void *raw_memory);
 //
 int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+
+
+
+/************************************************
+* solver
+************************************************/
+
 //
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
-//
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
