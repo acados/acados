@@ -23,20 +23,20 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-//acados
-#include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
-#include <acados/ocp_qp/ocp_qp_sparse_solver.h>
-#include <acados/dense_qp/dense_qp_hpipm.h>
+//acados_c
+#include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados_c/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados_c/dense_qp/dense_qp_hpipm.h"
 #ifdef ACADOS_WITH_QORE
-#include <acados/dense_qp/dense_qp_qore.h>
+#include "acados_c/dense_qp/dense_qp_qore.h"
 #endif
-#include <acados/dense_qp/dense_qp_qpoases.h>
-#include <acados/ocp_qp/ocp_qp_hpipm.h>
+#include "acados_c/dense_qp/dense_qp_qpoases.h"
+#include "acados_c/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
-#include <acados/ocp_qp/ocp_qp_hpmpc.h>
+#include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
 #endif
 #ifdef ACADOS_WITH_QPDUNES
-#include <acados/ocp_qp/ocp_qp_qpdunes.h>
+#include "acados_c/ocp_qp/ocp_qp_qpdunes.h"
 #endif
 
 // #include <acados/ocp_qp/ocp_qp_hpmpc.h>
@@ -59,21 +59,6 @@ void ocp_qp_copy_dims(ocp_qp_dims *dest, ocp_qp_dims *src)
         dest->nbu[ii] = src->nbu[ii];
         dest->nbx[ii] = src->nbx[ii];
     }
-}
-
-
-
-void ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *dest, void *src)
-{
-    //TODO(nielsvd): remove the hack below. It breaks when the args used
-    //                         to construct the solver gets out of scope.
-    //               Should module_fcn_ptrs provide a copy args routine?
-
-#warning "Copy args is not properly implemented!"
-
-    int bytes = ocp_qp_calculate_args_size(plan, dims);
-
-    memcpy(dest, src, bytes);
 }
 
 
@@ -174,6 +159,57 @@ void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 
 
 
+void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source)
+{
+    ocp_qp_solver_t solver_name = plan->qp_solver;
+
+    void *args;
+
+    // TODO(nielsvd): get rid of two stage args copy.
+    if (solver_name < FULL_CONDENSING_HPIPM)
+    {
+        args = ocp_qp_sparse_solver_copy_args(dims, raw_memory, source);
+    }
+    else
+    {
+        args = ocp_qp_full_condensing_solver_copy_args(dims, raw_memory, source);
+    }
+
+    switch (solver_name) {
+        case PARTIAL_CONDENSING_HPIPM:
+            ocp_qp_hpipm_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            break;
+        case PARTIAL_CONDENSING_HPMPC:
+            #ifdef ACADOS_WITH_HPMPC
+            ocp_qp_hpmpc_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            #endif
+            break;
+        case PARTIAL_CONDENSING_OOQP:
+            // ocp_qp_ooqp_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            break;
+        case PARTIAL_CONDENSING_QPDUNES:
+            #ifdef ACADOS_WITH_QPDUNES
+            ocp_qp_qpdunes_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            #endif
+            break;
+        case FULL_CONDENSING_HPIPM:
+            dense_qp_hpipm_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            break;
+        case FULL_CONDENSING_QPOASES:
+            dense_qp_qpoases_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            break;
+        case FULL_CONDENSING_QORE:
+            #ifdef ACADOS_WITH_QORE
+            dense_qp_qore_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            #endif
+            break;
+    }
+
+    return args;
+}
+
+
+
 int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
@@ -222,9 +258,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
     ocp_qp_copy_dims(solver->dims, dims);
 
-    solver->args = ocp_qp_assign_args(plan, dims, c_ptr);
+    solver->args = ocp_qp_copy_args(plan, dims, c_ptr, args_);
     c_ptr += ocp_qp_calculate_args_size(plan, dims);
-    ocp_qp_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

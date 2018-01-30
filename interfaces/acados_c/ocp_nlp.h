@@ -59,6 +59,8 @@ int ocp_nlp_calculate_args_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims);
 void *ocp_nlp_assign_args(ocp_nlp_solver_plan  *plan, ocp_nlp_dims *dims, void *raw_memory);
 //
 void *ocp_nlp_create_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims);
+//
+void *ocp_nlp_copy_args(ocp_nlp_solver_plan  *plan, ocp_nlp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //

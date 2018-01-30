@@ -43,9 +43,9 @@ int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dims *dims, void *mem)
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory)
 {
-    char *c_ptr = (char *) mem;
+    char *c_ptr = (char *) raw_memory;
 
     ocp_qp_partial_condensing_args *args = (ocp_qp_partial_condensing_args *)c_ptr;
     c_ptr += sizeof(ocp_qp_partial_condensing_args);
@@ -58,7 +58,7 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
     d_create_ocp_qp_dim(dims->N, args->pcond_dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_dim(dims->N);
 
-    assert((char*)mem + ocp_qp_partial_condensing_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_partial_condensing_calculate_args_size(dims) == c_ptr);
 
     return args;
 }

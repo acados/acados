@@ -24,9 +24,10 @@
 #include <assert.h>
 #include <string.h>
 //acados
-#include <acados/sim/sim_erk_integrator.h>
-#include <acados/sim/sim_lifted_irk_integrator.h>
 #include <acados/utils/mem.h>
+//acados_c
+#include "acados_c/sim/sim_erk_integrator.h"
+#include "acados_c/sim/sim_lifted_irk_integrator.h"
 
 
 
@@ -37,21 +38,6 @@ void sim_copy_dims(sim_dims *dest, sim_dims *src)
     dest->nx = src->nx;
     
     dest->nu = src->nu;
-}
-
-
-
-void sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *dest, void *src)
-{
-    //TODO(nielsvd): remove the hack below. It breaks when the args used
-    //                         to construct the solver gets out of scope.
-    //               Should module_fcn_ptrs provide a copy args routine?
-
-#warning "Copy args is not properly implemented!"
-
-    int bytes = sim_calculate_args_size(plan, dims);
-
-    memcpy(dest, src, bytes);
 }
 
 
@@ -136,6 +122,27 @@ void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
 
 
 
+void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
+{
+    sim_solver_t solver_name = plan->sim_solver;
+
+    void *args;
+
+    switch (solver_name)
+    {
+        case ERK:
+            args = sim_erk_copy_opts(dims, raw_memory, source);
+            break;
+        case LIFTED_IRK:
+            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
+            break;
+    }
+
+    return args;
+}
+
+
+
 int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
@@ -165,6 +172,8 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
 {
     char *c_ptr = (char *) raw_memory;
 
+    sim_rk_opts *args = (sim_rk_opts *)args_;
+
     sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);
 
@@ -176,9 +185,8 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
     c_ptr += sim_dims_calculate_size();
     sim_copy_dims(solver->dims, dims);
 
-    solver->args = solver->fcn_ptrs->assign_args(dims, c_ptr);
+    solver->args = sim_copy_args(plan, dims, c_ptr, args_);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
-    sim_copy_args(plan, dims, solver->args, args_);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

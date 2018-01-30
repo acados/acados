@@ -59,6 +59,13 @@ void *ocp_nlp_create_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims)
 
 
 
+void *ocp_nlp_copy_args(ocp_nlp_solver_plan  *plan, ocp_nlp_dims *dims, void *raw_memory, void *source)
+{
+    return NULL;
+}
+
+
+
 int ocp_nlp_calculate_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_)
 {
     return 0;

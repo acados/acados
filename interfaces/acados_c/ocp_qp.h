@@ -65,6 +65,8 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims);
 void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory);
 //
 void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims);
+//
+void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
