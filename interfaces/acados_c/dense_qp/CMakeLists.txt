@@ -1,0 +1,7 @@
+
+set(INTERFACES_ACADOS_C_DENSE_QP_SRC
+${CMAKE_CURRENT_SOURCE_DIR}/dense_qp_hpipm.c
+${CMAKE_CURRENT_SOURCE_DIR}/dense_qp_qore.c
+${CMAKE_CURRENT_SOURCE_DIR}/dense_qp_qpoases.c)
+
+target_sources(acados PRIVATE ${INTERFACES_ACADOS_C_DENSE_QP_SRC})
