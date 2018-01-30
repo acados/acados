@@ -4,6 +4,7 @@ include ../../Makefile.rule
 
 OBJS =
 
+OBJS += casadi_wrapper.o
 OBJS += math.o
 OBJS += copy.o
 OBJS += print.o

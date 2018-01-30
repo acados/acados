@@ -77,6 +77,13 @@ void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in,
 
 void casadi_wrapper_destroy(casadi_wrapper_workspace *work);
 
+
+
+void densify(const real_t *sparse_in, real_t *dense_out, const int_t *sparsity);
+
+
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

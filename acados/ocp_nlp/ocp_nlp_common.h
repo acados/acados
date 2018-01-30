@@ -87,10 +87,12 @@ void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
 typedef struct
 {
 	ocp_nlp_cost_ls_dims *dims;
+	casadi_function_t *nls_cost; // nonlinear least square cost
+	int **nls_cost_sparsity_jac; // pointer to sparsity pattern of jacobian
+	int *nls_mask; // nonlinear least squares mask
 	struct blasfeo_dmat *Cyt;
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;
-	int *nls_mask; // nonlinear least squares mask
 	int memsize;
 } ocp_nlp_cost_ls;
 

@@ -91,9 +91,12 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
            num_free_masses, num_stages, scheme_name);
 }
 
+
+
 static void select_model(const int num_free_masses, ocp_nlp_in *nlp)
 {
 	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp->model;
+
     for (int ii = 0; ii < nlp->dims->N; ii++)
     {
         switch (num_free_masses)
@@ -120,6 +123,64 @@ static void select_model(const int num_free_masses, ocp_nlp_in *nlp)
         }
     }
 }
+
+
+
+static void select_cost(const int num_free_masses, ocp_nlp_in *nlp)
+{
+	int ii;
+
+	int N = nlp->dims->N;
+
+	ocp_nlp_cost_ls *cost = nlp->cost;
+
+    for (ii = 0; ii < nlp->dims->N; ii++)
+    {
+        switch (num_free_masses)
+        {
+            case 1:
+                cost->nls_cost[ii] = &ls_cost_nm2;
+				cost->nls_cost_sparsity_jac[ii] = (int *) ls_cost_nm2_sparsity_out(1);
+                break;
+            case 2:
+                cost->nls_cost[ii] = &ls_cost_nm3;
+				cost->nls_cost_sparsity_jac[ii] = (int *) ls_cost_nm3_sparsity_out(1);
+                break;
+            case 3:
+                cost->nls_cost[ii] = &ls_cost_nm4;
+				cost->nls_cost_sparsity_jac[ii] = (int *) ls_cost_nm4_sparsity_out(1);
+                break;
+            default:
+                printf("Problem size not available\n");
+                exit(1);
+                break;
+        }
+    }
+	// last stage
+	ii = N;
+	switch (num_free_masses)
+	{
+		case 1:
+			cost->nls_cost[ii] = &ls_costN_nm2;
+			cost->nls_cost_sparsity_jac[ii] = (int *) ls_costN_nm2_sparsity_out(1);
+			break;
+		case 2:
+			cost->nls_cost[ii] = &ls_costN_nm3;
+			cost->nls_cost_sparsity_jac[ii] = (int *) ls_costN_nm3_sparsity_out(1);
+			break;
+		case 3:
+			cost->nls_cost[ii] = &ls_costN_nm4;
+			cost->nls_cost_sparsity_jac[ii] = (int *) ls_costN_nm4_sparsity_out(1);
+			break;
+		default:
+			printf("Problem size not available\n");
+			exit(1);
+			break;
+	}
+
+	return;
+}
+
 
 
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
@@ -312,8 +373,11 @@ int main() {
 
 	// nls mask
 	for (int i=0; i<=NN; i++)
-		cost_ls->nls_mask[i] = 0;
-
+		cost_ls->nls_mask[i] = 1;
+	
+	// nls cost
+	select_cost(NMF, nlp_in);
+	
 	// W
 	for (int i=0; i<=NN; i++)
 	{
@@ -344,6 +408,26 @@ int main() {
     {
         select_model(NMF, nlp_in);
     }
+
+
+
+#if 0
+double *tmp_in; d_zeros(&tmp_in, NU+NX, 1);
+for (int i=0; i<NU+NX; i++)
+	tmp_in[i] = i;
+d_print_mat(1, NU+NX, tmp_in, 1);
+double *tmp_out; d_zeros(&tmp_out, (NU+NX)*(NU+NX+1), 1);
+ls_cost_fun(NX, NU, tmp_in, tmp_out, cost_ls->nls_cost[0]);
+d_print_mat(1, NU+NX, tmp_out, 1);
+d_print_mat(NU+NX, NU+NX, tmp_out+NU+NX, NU+NX);
+printf("\nnnz = %d\n", nnz_output(ls_cost_nm4_sparsity_out(1)));
+double *tmp_out_dense; d_zeros(&tmp_out_dense, (NU+NX)*(NU+NX+1), 1);
+densify(tmp_out, tmp_out_dense, ls_cost_nm4_sparsity_out(0));
+densify(tmp_out+NX+NU, tmp_out_dense+NX+NU, cost_ls->nls_cost_sparsity_jac[0]);
+d_print_mat(1, NU+NX, tmp_out_dense, 1);
+d_print_mat(NU+NX, NU+NX, tmp_out_dense+NU+NX, NU+NX);
+exit(1);
+#endif
 
 
 

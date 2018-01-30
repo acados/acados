@@ -26,6 +26,11 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
+// TODO move somewhere else
+void ls_cost_fun(int nx, int nu, double *in, double *out, casadi_function_t ls_cost);
+
+
+
 void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde);
 
 void jac_fun(const int_t nx, const real_t *in, real_t *out, casadi_function_t jac);

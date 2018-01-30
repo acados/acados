@@ -39,6 +39,7 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
+#include "acados/utils/casadi_wrapper.h"
 
 
 
@@ -316,6 +317,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 	// temporary stuff
     size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_nux tmp_nbg
     size += 2*(N+1)*sizeof(struct blasfeo_dmat); // tmp_ny_ny tmp_nv_ny
+	size += 3*(N+1)*sizeof(double *); // d_tmp_nv d_tmp_ny_nv_1 d_tmp_ny_nv_2
 
     for (ii = 0; ii < N+1; ii++)
     {
@@ -323,6 +325,8 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
         size += blasfeo_memsize_dvec(nb[ii]+ng[ii]); // tmp_nbg
         size += blasfeo_memsize_dmat(ny[ii], ny[ii]); // tmp_ny_ny
         size += blasfeo_memsize_dmat(nv[ii], ny[ii]); // tmp_nv_ny
+		size += 1*nv[ii]*sizeof(double); // d_tmp_nv
+		size += 2*(ny[ii]+ny[ii]*nv[ii])*sizeof(double); // d_tmp_ny_nv_1 d_tmp_ny_nv_2
     }
 
     size += 8; // blasfeo_struct align
@@ -355,6 +359,17 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
 	// blasfeo_struct align
     align_char_to(8, &c_ptr);
+
+	assign_double_ptrs(N+1, &work->d_tmp_nv, &c_ptr);
+	assign_double_ptrs(N+1, &work->d_tmp_ny_nv_1, &c_ptr);
+	assign_double_ptrs(N+1, &work->d_tmp_ny_nv_2, &c_ptr);
+
+	for (int ii=0; ii<=N; ii++)
+		assign_double(nv[ii], work->d_tmp_nv+ii, &c_ptr);
+	for (int ii=0; ii<=N; ii++)
+		assign_double(ny[ii]+ny[ii]*nv[ii], work->d_tmp_ny_nv_1+ii, &c_ptr);
+	for (int ii=0; ii<=N; ii++)
+		assign_double(ny[ii]+ny[ii]*nv[ii], work->d_tmp_ny_nv_2+ii, &c_ptr);
 
     // set up local SQP data
     assign_blasfeo_dvec_structs(N+1, &work->tmp_nux, &c_ptr);
@@ -603,10 +618,19 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 		if (cost->nls_mask[i]!=0)
 		{
 			// TODO evaluate nonlinear constraints into Cyt
+			blasfeo_unpack_dvec(nu[i], nlp_out->ux+i, 0, work->d_tmp_nv[i]+nx[i]);
+			blasfeo_unpack_dvec(nx[i], nlp_out->ux+i, nu[i], work->d_tmp_nv[i]);
+			ls_cost_fun(nx[i], nu[i], work->d_tmp_nv[i], work->d_tmp_ny_nv_1[i], cost->nls_cost[i]);
+			densify(work->d_tmp_ny_nv_1[i]+nv[i], work->d_tmp_ny_nv_2[i]+nv[i], cost->nls_cost_sparsity_jac[i]);
+			blasfeo_pack_tran_dmat(ny[i], nv[i], work->d_tmp_ny_nv_2[i]+ny[i], ny[i], cost->Cyt+i, 0, 0);
+
+			// TODO do something with the function evaluation !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 			blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, work->tmp_ny_ny+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
 			blasfeo_dsyrk_ln(nv[i], ny[i], 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
 		}
+
+		// TODO add nlp_mem cost_fun !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		// XXX nlp_mem: cost_grad
 
