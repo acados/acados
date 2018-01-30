@@ -15,6 +15,8 @@ endif()
 include_directories(${PYTHON_INCLUDE_DIRS})
 include_directories(${PYTHON_NUMPY_INCLUDE_DIR})
 
+set(CMAKE_SWIG_FLAGS "-keyword")
+
 set_source_files_properties(../acados.i PROPERTIES CPLUSPLUS ON)
 
 swig_add_module(acados python ../acados.i)

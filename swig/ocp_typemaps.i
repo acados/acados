@@ -17,15 +17,19 @@
  *
  */
 
-%typemap(in) double * {
-    if (!is_matrix($input, arg1->numRows$1_name(arg2), arg1->numCols$1_name(arg2))) {
-        SWIG_exception(SWIG_ValueError, "Matrix has wrong dimensions");
+%typemap(in) std::vector<double> {
+    if (!is_matrix($input)) {
+        SWIG_exception(SWIG_ValueError, "Input is not of valid matrix type.");
         SWIG_fail;
     }
-    $1 = asDoublePointer($input);
+    int nbRows = numRows($input), nbCols = numColumns($input);
+    int nbElems = nbRows * nbCols;
+    std::vector<double> tmp(nbElems);
+    std::copy_n(asDoublePointer($input), nbElems, tmp.begin());
+    $1 = tmp;
 }
 
-%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) double * {
+%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) std::vector<double> {
 #if defined(SWIGMATLAB)
     $1 = (mxIsNumeric($input) ? 1 : 0);
 #elif defined(SWIGPYTHON)
@@ -33,6 +37,34 @@
 #endif
 }
 
+%typemap(out) std::vector< std::vector<double> > {
+    std::vector<LangObject *> tmp;
+    for (int i = 0; i < $1.size(); ++i)
+        tmp.push_back(new_matrix(std::make_pair($1.at(i).size(), 1), $1.at(i).data()));
+    $result = swig::from(tmp);
+}
+
+
+%typemap(out) ocp_qp_info  {
+    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
+#if defined(SWIGMATLAB)
+    mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
+    mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));
+    mxSetField(mat_struct, 0, fields[1], mxCreateDoubleScalar($1.solve_QP_time));
+    mxSetField(mat_struct, 0, fields[2], mxCreateDoubleScalar($1.condensing_time));
+    mxSetField(mat_struct, 0, fields[3], mxCreateDoubleScalar($1.interface_time));
+    mxSetField(mat_struct, 0, fields[4], mxCreateDoubleScalar($1.total_time));
+    $result = mat_struct;
+#elif defined(SWIGPYTHON)
+    PyObject *dict = PyDict_New();
+    PyDict_SetItemString(dict, fields[0], PyLong_FromLong($1.num_iter));
+    PyDict_SetItemString(dict, fields[1], PyFloat_FromDouble($1.solve_QP_time));
+    PyDict_SetItemString(dict, fields[2], PyLong_FromDouble($1.condensing_time));
+    PyDict_SetItemString(dict, fields[3], PyLong_FromDouble($1.interface_time));
+    PyDict_SetItemString(dict, fields[4], PyLong_FromDouble($1.total_time));
+    $result = dict;
+#endif
+}
 
 %typemap(in) int_t N {
     $1 = ($1_ltype) arg1->$1_name;
