@@ -25,19 +25,9 @@ extern "C" {
 #endif
 
 #include "acados/utils/types.h"
+#include "acados/utils/external_function.h"
 
-typedef struct {
-    int dummy;
-} casadi_wrapper_dims;
 
-typedef struct {
-    double **inputs;
-    bool *compute_output;
-} casadi_wrapper_in;
-
-typedef struct {
-    double **outputs;
-} casadi_wrapper_out;
 
 typedef struct {
     int_t (*fun)(const real_t **, real_t **, int_t *, real_t *, int_t);
@@ -45,9 +35,13 @@ typedef struct {
     const int_t *(*sparsity)(int_t);
 } casadi_wrapper_args;
 
+
+
 typedef struct {
     int dummy;
 } casadi_wrapper_memory;
+
+
 
 typedef struct {
     const real_t **arg;
@@ -57,20 +51,22 @@ typedef struct {
     real_t **sparse_res;
 } casadi_wrapper_workspace;
 
+
+
 //
-int casadi_wrapper_calculate_args_size(casadi_wrapper_dims *dims);
+int casadi_wrapper_calculate_args_size(external_function_dims *dims);
 //
-void *casadi_wrapper_assign_args(casadi_wrapper_dims *dims, void *raw_memory);
+void *casadi_wrapper_assign_args(external_function_dims *dims, void *raw_memory);
 //
-void casadi_wrapper_initialize_default_args(casadi_wrapper_args *args);
+void external_function_initialize_default_args(void *args_);
 //
-int casadi_wrapper_calculate_memory_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args);
+int casadi_wrapper_calculate_memory_size(external_function_dims *dims, void *args_);
 //
-void *casadi_wrapper_assign_memory(casadi_wrapper_dims *dims, casadi_wrapper_args *args, void *raw_memory);
+void *casadi_wrapper_assign_memory(external_function_dims *dims, void *args_, void *raw_memory);
 //
-int casadi_wrapper_calculate_workspace_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args);
+int casadi_wrapper_calculate_workspace_size(external_function_dims *dims, void *args_);
 //
-int casadi_wrapper(casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work);
+int casadi_wrapper(external_function_in *ef_in, external_function_out *ef_out, void *args_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

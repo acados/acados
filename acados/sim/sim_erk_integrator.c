@@ -30,10 +30,10 @@
 #include "acados/sim/sim_casadi_wrapper.h"
 
 
-int sim_erk_opts_calculate_size(sim_dims *dims)
+int sim_erk_integrator_calculate_args_size(sim_dims *dims)
 {
 
-    int size = sizeof(sim_rk_opts);
+    int size = sizeof(sim_erk_integrator_args);
 
     int ns = dims->num_stages;
     size += ns * ns * sizeof(double);  // A_mat
@@ -48,12 +48,12 @@ int sim_erk_opts_calculate_size(sim_dims *dims)
 
 
 
-void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
+void *sim_erk_integrator_assign_args(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
-    c_ptr += sizeof(sim_rk_opts);
+    sim_erk_integrator_args *opts = (sim_erk_integrator_args *) c_ptr;
+    c_ptr += sizeof(sim_erk_integrator_args);
 
     int ns = dims->num_stages;
     opts->num_stages = ns;
@@ -66,17 +66,14 @@ void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory)
 
     assert((char*)raw_memory + sim_erk_opts_calculate_size(dims) >= c_ptr);
 
-    opts->newton_iter = 0;
-    opts->scheme = NULL;
-
     return (void *)opts;
 }
 
 
 
-void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
+void sim_erk_integrator_initialize_default_args(void *args_)
 {
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_erk_integrator_args *opts = (sim_erk_integrator_args *) opts_;
     int ns = opts->num_stages;
 
     assert(opts->num_stages == 4 && "only number of stages = 4 implemented!");
@@ -96,19 +93,23 @@ void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
 }
 
 
-int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_)
+int sim_erk_integrator_calculate_memory_size(sim_dims *dims, void *args_)
 {
     return 0;
 }
 
-void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory)
+
+
+void *sim_erk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
-int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
+
+
+int sim_erk_integrator_calculate_workspace_size(sim_dims *dims, void *args_)
 {
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_erk_integrator_args *opts = (sim_erk_integrator_args *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -119,7 +120,7 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
     int nhess = (NF + 1) * NF / 2;
     uint num_steps = opts->num_steps;  // number of steps
 
-    int size = sizeof(sim_erk_workspace);
+    int size = sizeof(sim_erk_integrator_workspace);
 
     size += (nX + nu) * sizeof(double); // rhs_forw_in
 
@@ -147,9 +148,9 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
     return size;
 }
 
-void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
+void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 {
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_erk_integrator_args *opts = (sim_erk_integrator_args *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -162,8 +163,8 @@ void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     char *c_ptr = (char *)raw_memory;
 
-    sim_erk_workspace *workspace = (sim_erk_workspace *) c_ptr;
-    c_ptr += sizeof(sim_erk_workspace);
+    sim_erk_integrator_workspace *workspace = (sim_erk_integrator_workspace *) c_ptr;
+    c_ptr += sizeof(sim_erk_integrator_workspace);
 
     align_char_to(8, &c_ptr);
 
@@ -198,24 +199,15 @@ void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
 
 
-void *sim_erk_create_memory(sim_dims *dims, void *opts_)
+int sim_erk_integrator(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
-    int bytes = sim_erk_calculate_memory_size(dims, opts_);
-    void *ptr = acados_malloc(bytes, 1);
-    sim_erk_memory *memory = sim_erk_assign_memory(dims, opts_, ptr);
-
-    return (void *)memory;
-}
-
-int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
-{
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    sim_erk_integrator_args *opts = (sim_erk_integrator_args *) opts_;
     sim_dims dims = {
         opts->num_stages,
         in->nx,
         in->nu
     };
-    sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(&dims, opts, work_);
+    sim_erk_integrator_workspace *workspace = (sim_erk_integrator_workspace *) cast_workspace(&dims, opts, work_);
 
     int i, j, s, istep;
     double a = 0, b =0; // temp values of A_mat and b_vec
@@ -294,6 +286,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
             in->forward_vde_wrapper(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
             timing_ad += acados_toc(&timer_ad)*1000;
         }
+        
         for (s = 0; s < num_stages; s++){
             b = step * b_vec[s];
             for (i = 0; i < nX; i++)

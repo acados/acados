@@ -73,7 +73,7 @@ void densify(const double *sparse_in, double *dense_out, const int *sparsity)
 
 
 
-int casadi_wrapper_calculate_args_size(casadi_wrapper_dims *dims)
+int casadi_wrapper_calculate_args_size(external_function_dims *dims)
 {
     int size = sizeof(casadi_wrapper_args);
 
@@ -82,7 +82,7 @@ int casadi_wrapper_calculate_args_size(casadi_wrapper_dims *dims)
 
 
 
-void *casadi_wrapper_assign_args(casadi_wrapper_dims *dims, void *raw_memory)
+void *casadi_wrapper_assign_args(external_function_dims *dims, void *raw_memory)
 {
     casadi_wrapper_args *args;
 
@@ -100,8 +100,10 @@ void *casadi_wrapper_assign_args(casadi_wrapper_dims *dims, void *raw_memory)
 
 
 
-void casadi_wrapper_initialize_default_args(casadi_wrapper_args *args)
+void external_function_initialize_default_args(void *args_)
 {
+    casadi_wrapper_args *args = (casadi_wrapper_args *)args_;
+    
     args->fun = NULL;
     args->dims = NULL;
     args->sparsity = NULL;
@@ -109,7 +111,7 @@ void casadi_wrapper_initialize_default_args(casadi_wrapper_args *args)
 
 
 
-int casadi_wrapper_calculate_memory_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args)
+int casadi_wrapper_calculate_memory_size(external_function_dims *dims, void *args_)
 {
     int size = sizeof(casadi_wrapper_memory);
 
@@ -118,8 +120,10 @@ int casadi_wrapper_calculate_memory_size(casadi_wrapper_dims *dims, casadi_wrapp
 
 
 
-void *casadi_wrapper_assign_memory(casadi_wrapper_dims *dims, casadi_wrapper_args *args, void *raw_memory)
+void *casadi_wrapper_assign_memory(external_function_dims *dims, void *args_, void *raw_memory)
 {
+    casadi_wrapper_args *args = (casadi_wrapper_args *)args_;
+
     casadi_wrapper_memory *mem;
 
     char *c_ptr = (char *) raw_memory;
@@ -136,8 +140,9 @@ void *casadi_wrapper_assign_memory(casadi_wrapper_dims *dims, casadi_wrapper_arg
 
 
 
-int casadi_wrapper_calculate_workspace_size(casadi_wrapper_dims *dims, casadi_wrapper_args *args)
+int casadi_wrapper_calculate_workspace_size(external_function_dims *dims, void *args_)
 {
+    casadi_wrapper_args *args = (casadi_wrapper_args *)args_;
     int size = sizeof(casadi_wrapper_workspace);
 
     int sz_arg, sz_res, sz_iw, sz_w;
@@ -159,7 +164,7 @@ int casadi_wrapper_calculate_workspace_size(casadi_wrapper_dims *dims, casadi_wr
 
 
 
-static void cast_workspace(casadi_wrapper_dims *dims, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work)
+static void cast_workspace(casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work)
 {
     int sz_arg, sz_res, sz_iw, sz_w;
     args->dims(&sz_arg, &sz_res, &sz_iw, &sz_w);
@@ -190,25 +195,31 @@ static void cast_workspace(casadi_wrapper_dims *dims, casadi_wrapper_args *args,
 
 
 
-int casadi_wrapper(casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work)
+int casadi_wrapper(external_function_in *ef_in, external_function_out *ef_out, void *args_, void *mem_, void *work_)
 {
+    casadi_wrapper_args *args = (casadi_wrapper_args *) args_;
+    casadi_wrapper_workspace *mem = (casadi_wrapper_memory *) mem_;
+    casadi_wrapper_workspace *work = (casadi_wrapper_workspace *) work_;
+
+    cast_workspace(args, mem, work);
+
     int sz_arg, sz_res;
     args->dims(&sz_arg, &sz_res, NULL, NULL);
 
     for (int i=0; i<sz_arg; i++) {
-        work->arg[i] = cw_in->inputs[i];
+        work->arg[i] = ef_in->inputs[i];
     }
 
     for (int i=0; i<sz_res; i++) {
-        work->res[i] = cw_in->compute_output[i] ? work->sparse_res[i] : NULL;
+        work->res[i] = ef_in->compute_output[i] ? work->sparse_res[i] : NULL;
     }
 
     int output = args->fun(work->arg, work->res, work->iw, work->w, 0);
 
     // Densify
     for (int i=0; i<sz_res; i++) {
-        if (cw_in->compute_output[i])
-            densify(work->sparse_res[i], cw_out->outputs[i], args->sparsity(i));
+        if (ef_in->compute_output[i])
+            densify(work->sparse_res[i], ef_out->outputs[i], args->sparsity(i));
     }
 
     return output;
