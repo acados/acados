@@ -73,7 +73,7 @@ void densify(const double *sparse_in, double *dense_out, const int *sparsity)
 
 
 
-int casadi_wrapper_calculate_args_size(external_function_dims *dims)
+int casadi_wrapper_calculate_args_size(external_function_dims *dims, void *submodules_)
 {
     int size = sizeof(casadi_wrapper_args);
 
@@ -82,7 +82,7 @@ int casadi_wrapper_calculate_args_size(external_function_dims *dims)
 
 
 
-void *casadi_wrapper_assign_args(external_function_dims *dims, void *raw_memory)
+void *casadi_wrapper_assign_args(external_function_dims *dims, void *submodules_, void *raw_memory)
 {
     casadi_wrapper_args *args;
 
@@ -93,7 +93,7 @@ void *casadi_wrapper_assign_args(external_function_dims *dims, void *raw_memory)
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    assert((char*)raw_memory + casadi_wrapper_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + casadi_wrapper_calculate_args_size(dims, submodules_) == c_ptr);
 
     return (void *)args;
 }
@@ -103,7 +103,7 @@ void *casadi_wrapper_assign_args(external_function_dims *dims, void *raw_memory)
 void external_function_initialize_default_args(void *args_)
 {
     casadi_wrapper_args *args = (casadi_wrapper_args *)args_;
-    
+
     args->fun = NULL;
     args->dims = NULL;
     args->sparsity = NULL;
@@ -128,7 +128,7 @@ void *casadi_wrapper_assign_memory(external_function_dims *dims, void *args_, vo
 
     char *c_ptr = (char *) raw_memory;
 
-    args = (casadi_wrapper_memory *) c_ptr;
+    mem = (casadi_wrapper_memory *) c_ptr;
     c_ptr += sizeof(casadi_wrapper_memory);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");

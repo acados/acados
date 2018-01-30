@@ -27,6 +27,8 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
+
+
 typedef struct {
     // Options
     double interval;
@@ -54,12 +56,16 @@ typedef struct {
     void *hess_vde_args;
 } sim_erk_integrator_args;
 
+
+
 typedef struct {
     // Memory for functions
     void *forward_vde_mem;
     void *adjoint_vde_mem;
     void *hess_vde_mem;
 } sim_erk_integrator_memory;
+
+
 
 typedef struct {
     double *rhs_forw_in;  // x + S + p
@@ -77,10 +83,20 @@ typedef struct {
     void *hess_vde_work;
 } sim_erk_integrator_workspace;
 
+
+
+typedef struct {
+    external_function_fcn_ptrs *forward_vde;
+    external_function_fcn_ptrs *adjoint_vde;
+    external_function_fcn_ptrs *hess_vde;
+} sim_erk_integrator_submodules;
+
+
+
 //
-int sim_erk_integrator_calculate_args_size(sim_dims *dims);
+int sim_erk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
 //
-void *sim_erk_integrator_assign_args(sim_dims *dims, void *raw_memory);
+void *sim_erk_integrator_assign_args(sim_dims *dims, void *submodules_, void *raw_memory);
 //
 void sim_erk_integrator_initialize_default_args(void *args_);
 //
@@ -90,7 +106,7 @@ void *sim_erk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_me
 //
 int sim_erk_integrator_calculate_workspace_size(sim_dims *dims, void *args_);
 //
-int sim_erk_integrator(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

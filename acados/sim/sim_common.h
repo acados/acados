@@ -27,11 +27,13 @@
 #include "acados/utils/types.h"
 
 
+
 typedef struct {
     int num_stages;
     int nx;
     int nu;
 } sim_dims;
+
 
 
 typedef struct {
@@ -50,11 +52,13 @@ typedef struct {
 } sim_in;
 
 
+
 typedef struct {
     double CPUtime;
     double LAtime;
     double ADtime;
 } sim_info;
+
 
 
 typedef struct {
@@ -69,26 +73,32 @@ typedef struct {
 } sim_out;
 
 
+
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(sim_dims *dims);
-    void *(*assign_args)(sim_dims *dims, void *raw_memory);
+    int (*calculate_args_size)(sim_dims *dims, void *submodules);
+    void *(*assign_args)(sim_dims *dims, void *submodules, void *raw_memory);
     void (*initialize_default_args)(sim_dims *dims, void *args);
     int (*calculate_memory_size)(sim_dims *dims, void *args);
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
 } sim_solver_fcn_ptrs;
 
+
+
+//
 int sim_dims_calculate_size();
-
+//
 sim_dims *assign_sim_dims(void *raw_memory);
-
+//
 int sim_in_calculate_size(sim_dims *dims);
-
+//
 sim_in *assign_sim_in(sim_dims *dims, void *raw_memory);
-
+//
 int sim_out_calculate_size(sim_dims *dims);
-
+//
 sim_out *assign_sim_out(sim_dims *dims, void *raw_memory);
+
+
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

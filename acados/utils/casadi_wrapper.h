@@ -54,9 +54,9 @@ typedef struct {
 
 
 //
-int casadi_wrapper_calculate_args_size(external_function_dims *dims);
+int casadi_wrapper_calculate_args_size(external_function_dims *dims, void *submodules_);
 //
-void *casadi_wrapper_assign_args(external_function_dims *dims, void *raw_memory);
+void *casadi_wrapper_assign_args(external_function_dims *dims, void *submodules_, void *raw_memory);
 //
 void external_function_initialize_default_args(void *args_);
 //
