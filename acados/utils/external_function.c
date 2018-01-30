@@ -19,6 +19,10 @@
 
 #include "acados/utils/external_function.h"
 
+#include <assert.h>
+
+#include "acados/utils/mem.h"
+
 
 
 int external_function_dims_calculate_size(int num_inputs, int num_outputs)

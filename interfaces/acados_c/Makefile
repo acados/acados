@@ -19,7 +19,7 @@ OBJS += ocp_qp/ocp_qp_qpdunes.o
 endif
 OBJS += ocp_qp/ocp_qp_sparse_solver.o
 OBJS += sim/sim_erk_integrator.o
-OBJS += sim/sim_lifted_irk_integrator.o
+# OBJS += sim/sim_lifted_irk_integrator.o
 OBJS += dense_qp.o
 OBJS += legacy_create.o
 OBJS += ocp_lin.o

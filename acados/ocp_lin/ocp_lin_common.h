@@ -35,10 +35,10 @@ typedef struct {
 
     int_t ny;
 
-    casadi_wrapper_in *in;
-    casadi_wrapper_out *out;
-    casadi_wrapper_args *args;
-    casadi_wrapper_workspace *work;
+    external_function_in *in;
+    external_function_out *out;
+    void *args;
+    void *work;
 } ocp_nlp_function;
 
 typedef struct {

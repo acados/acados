@@ -25,9 +25,6 @@
 #include <string.h>
 //acados
 #include <acados/utils/mem.h>
-//acados_c
-#include "acados_c/sim/sim_erk_integrator.h"
-#include "acados_c/sim/sim_lifted_irk_integrator.h"
 
 
 
@@ -131,7 +128,7 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
     switch (solver_name)
     {
         case ERK:
-            args = sim_erk_copy_opts(dims, raw_memory, source);
+            args = sim_erk_integrator_copy_args(dims, raw_memory, source);
             break;
         case LIFTED_IRK:
             args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
@@ -172,7 +169,7 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
 {
     char *c_ptr = (char *) raw_memory;
 
-    sim_rk_opts *args = (sim_rk_opts *)args_;
+    sim_erk_integrator_args *args = (sim_erk_integrator_args *)args_;
 
     sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);
@@ -229,13 +226,13 @@ int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
     switch (solver_name)
     {
         case ERK:
-            fcn_ptrs->fun = &sim_erk;
-            fcn_ptrs->calculate_args_size = &sim_erk_opts_calculate_size;
-            fcn_ptrs->assign_args = &sim_erk_assign_opts;
-            fcn_ptrs->initialize_default_args = &sim_erk_initialize_default_args;
-            fcn_ptrs->calculate_memory_size = &sim_erk_calculate_memory_size;
-            fcn_ptrs->assign_memory = &sim_erk_assign_memory;
-            fcn_ptrs->calculate_workspace_size = &sim_erk_calculate_workspace_size;
+            fcn_ptrs->fun = &sim_erk_integrator;
+            fcn_ptrs->calculate_args_size = &sim_erk_integrator_calculate_args_size;
+            fcn_ptrs->assign_args = &sim_erk_integrator_assign_args;
+            fcn_ptrs->initialize_default_args = &sim_erk_integrator_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &sim_erk_integrator_calculate_memory_size;
+            fcn_ptrs->assign_memory = &sim_erk_integrator_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &sim_erk_integrator_calculate_workspace_size;
             break;
         case LIFTED_IRK:
             fcn_ptrs->fun = &sim_lifted_irk;

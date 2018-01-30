@@ -23,12 +23,18 @@
 
 
 
-void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)
+void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_)
 {
-    sim_rk_opts *source = (sim_rk_opts *)source_;
-    sim_rk_opts *dest;
+    sim_erk_integrator_args *source = (sim_erk_integrator_args *)source_;
+    sim_erk_integrator_args *dest;
 
-    dest = sim_erk_assign_opts(dims, raw_memory);
+    sim_erk_integrator_submodules submodules = {
+        source->forward_vde,
+        source->adjoint_vde,
+        source->hess_vde
+    };
+
+    dest = sim_erk_integrator_assign_args(dims, &submodules, raw_memory);
 
     dest->interval = source->interval;
     dest->num_stages = source->num_stages;
@@ -37,15 +43,12 @@ void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)
     dest->sens_forw = source->sens_forw;
     dest->sens_adj = source->sens_adj;
     dest->sens_hess = source->sens_hess;
-    dest->newton_iter = source->newton_iter;
 
     int ns = dims->num_stages;
 
     memcpy(dest->A_mat, source->A_mat, ns*ns*sizeof(double));
     memcpy(dest->c_vec, source->c_vec, ns*sizeof(double));
     memcpy(dest->b_vec, source->b_vec, ns*sizeof(double));
-
-    dest->scheme = NULL;
 
     return (void *)dest;
 }

@@ -27,7 +27,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 
-#include "acados/sim/sim_casadi_wrapper.h"
+#include "acados/utils/external_function.h"
 
 #define FW_VDE_NUMIN 4
 #define FW_VDE_NUMOUT 3
@@ -50,8 +50,8 @@ static int adjoint_vde_output_dims[ADJ_VDE_NUMOUT] = {0};
 static external_function_dims adjoint_vde_dims = {
     ADJ_VDE_NUMIN,
     ADJ_VDE_NUMOUT,
-    adj_vde_input_dims,
-    adj_vde_output_dims
+    adjoint_vde_input_dims,
+    adjoint_vde_output_dims
 };
 
 static int hess_vde_input_dims[HESS_VDE_NUMIN] = {0};
@@ -142,14 +142,14 @@ void *sim_erk_integrator_assign_args(sim_dims *dims, void *submodules_, void *ra
         c_ptr += submodules->hess_vde->calculate_args_size(&hess_vde_dims, NULL);
     }
 
-    assert((char*)raw_memory + sim_erk_integrator_args_calculate_size(dims, submodules_) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_integrator_calculate_args_size(dims, submodules_) >= c_ptr);
 
     return (void *)args;
 }
 
 
 
-void sim_erk_integrator_initialize_default_args(void *args_)
+void sim_erk_integrator_initialize_default_args(sim_dims *dims, void *args_)
 {
     sim_erk_integrator_args *args = (sim_erk_integrator_args *) args_;
     int ns = args->num_stages;
@@ -210,7 +210,7 @@ void *sim_erk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_me
     char *c_ptr = (char *) raw_memory;
 
     mem = (sim_erk_integrator_memory *) c_ptr;
-    c_ptr += sizeof(casadi_wrapper_memory);
+    c_ptr += sizeof(sim_erk_integrator_memory);
 
     if (args->sens_forw) {
         mem->forward_vde_mem = args->forward_vde->assign_memory(&forward_vde_dims, args->forward_vde_args, c_ptr);
@@ -334,36 +334,36 @@ void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
     }
 
     if (args->sens_forw) {
-        workspace->forward_vde_work = args->forward_vde->assign_workspace(&forward_vde_dims, args->forward_vde_args, c_ptr);
+        workspace->forward_vde_work = (void *) c_ptr;
         c_ptr += args->forward_vde->calculate_workspace_size(&forward_vde_dims, args->forward_vde_args);
     } 
 
     if (args->sens_adj) {
-        workspace->adjoint_vde_work = args->adjoint_vde->assign_workspace(&adjoint_vde_dims, args->adjoint_vde_args, c_ptr);
+        workspace->adjoint_vde_work = (void *) c_ptr;
         c_ptr += args->adjoint_vde->calculate_workspace_size(&adjoint_vde_dims, args->adjoint_vde_args);
     }
 
     if (args->sens_hess) {
-        workpace->hess_vde_work = args->hess_vde->assign_workspace(&hess_vde_dims, args->hess_vde_args, c_ptr);
+        workspace->hess_vde_work = (void *) c_ptr;
         c_ptr += args->hess_vde->calculate_workspace_size(&hess_vde_dims, args->hess_vde_args);
     }
 
-    assert((char*)raw_memory + sim_erk_calculate_workspace_size(dims, args_) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_integrator_calculate_workspace_size(dims, args_) >= c_ptr);
 
     return (void *)workspace;
 }
 
 
 
-void compute_forward_vde(const int_t nx, const int_t nu, const real_t *in, real_t *out, 
+void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
                          sim_erk_integrator_args *args,
                          sim_erk_integrator_memory *mem,
                          sim_erk_integrator_workspace *work) 
 {
-    const double *x = in;
-    const double *Sx = in + nx;
-    const double *Su = in + nx + nx * nx;
-    const double *u = in + nx + nx * (nx + nu);
+    double *x = in;
+    double *Sx = in + nx;
+    double *Su = in + nx + nx * nx;
+    double *u = in + nx + nx * (nx + nu);
 
     double *x_out = out;
     double *Sx_out = out + nx;
@@ -375,33 +375,33 @@ void compute_forward_vde(const int_t nx, const int_t nu, const real_t *in, real_
     fw_in_inputs[2] = Su;
     fw_in_inputs[3] = u;
 
-    bool fw_in_compute_output[FW_VDE_NUMOUT]{true};
+    bool fw_in_compute_output[FW_VDE_NUMOUT] = {true, true, true};
 
     double *fw_out_outputs[FW_VDE_NUMOUT];
     fw_out_outputs[0] = x_out;
     fw_out_outputs[1] = Sx_out;
     fw_out_outputs[2] = Su_out;
 
-    external_function_in fw_in;
-    fw_in.inputs = fw_in_inputs;
-    fw_in.compute_output = fw_in_compute_output;
+    external_function_in fw_vde_in;
+    fw_vde_in.inputs = fw_in_inputs;
+    fw_vde_in.compute_output = fw_in_compute_output;
 
-    external_function_out fw_out;
-    fw_out.outputs = fw_out_outputs;
+    external_function_out fw_vde_out;
+    fw_vde_out.outputs = fw_out_outputs;
 
-    args->forward_vde->fun(&fw_in, &fw_out, args->forward_vde_args, mem->forward_vde_mem, work->forward_vde_work);
+    args->forward_vde->fun(&fw_vde_in, &fw_vde_out, args->forward_vde_args, mem->forward_vde_mem, work->forward_vde_work);
 }
 
 
 
-void compute_adjoint_vde(const int_t nx, const int_t nu, const real_t *in, real_t *out, 
+void compute_adjoint_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
                          sim_erk_integrator_args *args,
                          sim_erk_integrator_memory *mem,
                          sim_erk_integrator_workspace *work)
 {
-    const real_t *x = in;
-    const real_t *lambdaX = in + nx;
-    const real_t *u = in + 2 * nx;
+    real_t *x = in;
+    real_t *lambdaX = in + nx;
+    real_t *u = in + 2 * nx;
 
     real_t *adj_out = out;
 
@@ -410,31 +410,31 @@ void compute_adjoint_vde(const int_t nx, const int_t nu, const real_t *in, real_
     adj_in_inputs[1] = lambdaX;
     adj_in_inputs[2] = u;
 
-    bool adj_in_compute_output[ADJ_VDE_NUMOUT]{true};
+    bool adj_in_compute_output[ADJ_VDE_NUMOUT] = {true};
 
     double *adj_out_outputs[ADJ_VDE_NUMOUT];
     adj_out_outputs[0] = adj_out;
 
-    external_function_in adj_in;
-    adj_in.inputs = adj_in_inputs;
-    adj_in.compute_output = adj_in_compute_output;
+    external_function_in adj_vde_in;
+    adj_vde_in.inputs = adj_in_inputs;
+    adj_vde_in.compute_output = adj_in_compute_output;
 
-    external_function_out adj_out;
-    adj_out.outputs = adj_out_outputs;
+    external_function_out adj_vde_out;
+    adj_vde_out.outputs = adj_out_outputs;
 
-    args->adjoint_vde->fun(&adj_in, &adj_out, args->adjoint_vde_args, mem->adjoint_vde_mem, work->adjoint_vde_work);
+    args->adjoint_vde->fun(&adj_vde_in, &adj_vde_out, args->adjoint_vde_args, mem->adjoint_vde_mem, work->adjoint_vde_work);
 }
 
-void compute_hess_vde(const int_t nx, const int_t nu, const real_t *in, real_t *out, 
+void compute_hess_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
                       sim_erk_integrator_args *args,
                       sim_erk_integrator_memory *mem,
                       sim_erk_integrator_workspace *work)
 {
-    const double *x = in;
-    const double *Sx = in + nx;
-    const double *Su = in + nx + nx * nx;
-    const double *lambdaX = in + nx * (1 + nx + nu);
-    const double *u = in + nx * (2 + nx + nu);
+    double *x = in;
+    double *Sx = in + nx;
+    double *Su = in + nx + nx * nx;
+    double *lambdaX = in + nx * (1 + nx + nu);
+    double *u = in + nx * (2 + nx + nu);
 
     double *adj_out = out;
     double *hess_out = out + nx + nu;
@@ -446,20 +446,20 @@ void compute_hess_vde(const int_t nx, const int_t nu, const real_t *in, real_t *
     hess_in_inputs[3] = lambdaX;
     hess_in_inputs[4] = u;
 
-    bool hess_in_compute_output [HESS_VDE_NUMOUT] {true, true};
+    bool hess_in_compute_output [HESS_VDE_NUMOUT] = {true, true};
 
     double *hess_out_outputs[HESS_VDE_NUMOUT];
     hess_out_outputs[0] = adj_out;
     hess_out_outputs[1] = hess_out;
 
-    external_function_in hess_in;
-    hess_in.inputs = hess_in_inputs;
-    hess_in.compute_output = hess_in_compute_output;
+    external_function_in hess_vde_in;
+    hess_vde_in.inputs = hess_in_inputs;
+    hess_vde_in.compute_output = hess_in_compute_output;
 
-    external_function_out hess_out;
-    hess_out.outputs = hess_out_outputs;
+    external_function_out hess_vde_out;
+    hess_vde_out.outputs = hess_out_outputs;
 
-    args->hess_vde->fun(&hess_in, &hess_out, args->hess_vde_args, mem->hess_vde_mem, work->hess_vde_work);
+    args->hess_vde->fun(&hess_vde_in, &hess_vde_out, args->hess_vde_args, mem->hess_vde_mem, work->hess_vde_work);
 }
 
 

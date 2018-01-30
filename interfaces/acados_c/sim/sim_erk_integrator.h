@@ -26,8 +26,12 @@ extern "C" {
 
 #include <acados/sim/sim_erk_integrator.h>
 
+typedef struct {
+
+} sim_erk_ext_fcns;
+
 //
-void *sim_erk_copy_opts(sim_dims *dims, void *raw_memory, void *source_);
+void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
 
 #ifdef __cplusplus
 } /* extern "C" */

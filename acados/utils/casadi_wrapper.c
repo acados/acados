@@ -198,7 +198,7 @@ static void cast_workspace(casadi_wrapper_args *args, casadi_wrapper_memory *mem
 int casadi_wrapper(external_function_in *ef_in, external_function_out *ef_out, void *args_, void *mem_, void *work_)
 {
     casadi_wrapper_args *args = (casadi_wrapper_args *) args_;
-    casadi_wrapper_workspace *mem = (casadi_wrapper_memory *) mem_;
+    casadi_wrapper_memory *mem = (casadi_wrapper_memory *) mem_;
     casadi_wrapper_workspace *work = (casadi_wrapper_workspace *) work_;
 
     cast_workspace(args, mem, work);

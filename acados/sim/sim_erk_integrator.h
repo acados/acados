@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/sim/sim_common.h"
+#include "acados/utils/external_function.h"
 #include "acados/utils/types.h"
 
 
@@ -98,7 +99,7 @@ int sim_erk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
 //
 void *sim_erk_integrator_assign_args(sim_dims *dims, void *submodules_, void *raw_memory);
 //
-void sim_erk_integrator_initialize_default_args(void *args_);
+void sim_erk_integrator_initialize_default_args(sim_dims *dims, void *args_);
 //
 int sim_erk_integrator_calculate_memory_size(sim_dims *dims, void *args_);
 //

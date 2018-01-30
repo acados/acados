@@ -26,6 +26,10 @@ extern "C" {
 
 #include <acados/sim/sim_lifted_irk_integrator.h>
 
+typedef struct {
+
+} sim_irk_ext_fcns;
+
 //
 void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source_);
 
