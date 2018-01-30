@@ -455,9 +455,10 @@ static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, 
 		// general Cyt
 
 		// TODO recompute factorization only if W are re-tuned ???
-		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, work->tmp_ny_ny+i, 0, 0);
+		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, work->tmp_ny_ny+i, 0, 0); // TODO move in the memory
 
 		// linear ls
+		// TODO avoid recomputing the Hessian if both W and Cyt do not change
 		if (cost->nls_mask[i]==0)
 		{
 			blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, work->tmp_ny_ny+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
@@ -636,7 +637,7 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 
 
 // update QP rhs for SQP (step prim var, abs dual var)
-static void sqp_update_qp_rhs(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
+static void sqp_update_qp_vectors(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
 {
 
 	// loop index
@@ -786,7 +787,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
         multiple_shooting(nlp_in, nlp_out, args, mem, work);
 
 		// update QP rhs for SQP (step prim var, abs dual var)
-        sqp_update_qp_rhs(nlp_in, nlp_out, args, mem, work);
+        sqp_update_qp_vectors(nlp_in, nlp_out, args, mem, work);
 
 		// compute nlp residuals
 		ocp_nlp_res_compute(nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
