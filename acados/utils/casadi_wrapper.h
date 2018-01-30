@@ -31,24 +31,12 @@ typedef struct {
 } casadi_wrapper_dims;
 
 typedef struct {
-    double *x;
-    double *u;
-    double *z;
-    double *xdot;
-    double *p;
-    double *mul;
-
-    bool compute_y;
-    bool compute_jac_y;
-    bool compute_grad_mul_y;
-    bool compute_hess_mul_y;
+    double **inputs;
+    bool *compute_output;
 } casadi_wrapper_in;
 
 typedef struct {
-    double *y;
-    double *jac_y;
-    double *grad_mul_y;
-    double *hess_mul_y;
+    double **outputs;
 } casadi_wrapper_out;
 
 typedef struct {

@@ -143,20 +143,14 @@ int casadi_wrapper_calculate_workspace_size(casadi_wrapper_dims *dims, casadi_wr
     int sz_arg, sz_res, sz_iw, sz_w;
     args->dims(&sz_arg, &sz_res, &sz_iw, &sz_w);
 
-    // Allocate for three inputs and outputs
-    if (sz_arg < 5) sz_arg = 5;
-    if (sz_res < 4) sz_res = 4;
-
-    // Fixed input dimension: x, u, xdot, p, mul
     size += sz_arg * sizeof(double *);
-    // Fixed output dimension: f, df/d(x,u,z,xdot), (d^2 f)/d(x,u)^2
     size += sz_res * sizeof(double *);
     size += sz_iw * sizeof(int);
     size += sz_w * sizeof(double);
 
     // Workspace for temporary sparse matrix storage
-    size += 4 * sizeof(double *);
-    for (int i=0; i<4; i++) {
+    size += sz_res * sizeof(double *);
+    for (int i=0; i<sz_res; i++) {
         size += nnz_output(args->sparsity(i)) * sizeof(double);
     }
 
@@ -169,10 +163,6 @@ static void cast_workspace(casadi_wrapper_dims *dims, casadi_wrapper_args *args,
 {
     int sz_arg, sz_res, sz_iw, sz_w;
     args->dims(&sz_arg, &sz_res, &sz_iw, &sz_w);
-
-    // Allocate for three inputs and outputs
-    if (sz_arg < 5) sz_arg = 5;
-    if (sz_res < 4) sz_res = 4;
 
     char *c_ptr = (char *) work;
     c_ptr += sizeof(casadi_wrapper_workspace);
@@ -190,9 +180,9 @@ static void cast_workspace(casadi_wrapper_dims *dims, casadi_wrapper_args *args,
     c_ptr += sz_w * sizeof(double);
 
     work->sparse_res = (double **)c_ptr;
-    c_ptr += 4 * sizeof(double *);
+    c_ptr += sz_res * sizeof(double *);
 
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<sz_res; i++) {
         work->sparse_res[i] = (double *)c_ptr;
         c_ptr += nnz_output(args->sparsity(i)) * sizeof(double);
     }
@@ -202,29 +192,24 @@ static void cast_workspace(casadi_wrapper_dims *dims, casadi_wrapper_args *args,
 
 int casadi_wrapper(casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out, casadi_wrapper_args *args, casadi_wrapper_memory *mem, casadi_wrapper_workspace *work)
 {
-    work->arg[0] = cw_in->x;
-    work->arg[1] = cw_in->u;
-    work->arg[2] = cw_in->z;
-    work->arg[3] = cw_in->xdot;
-    work->arg[4] = cw_in->p;
-    work->arg[5] = cw_in->mul;
+    int sz_arg, sz_res;
+    args->dims(&sz_arg, &sz_res, NULL, NULL);
 
-    work->res[0] = cw_in->compute_y ? work->sparse_res[0] : NULL;
-    work->res[1] = cw_in->compute_jac_y ? work->sparse_res[1] : NULL;
-    work->res[2] = cw_in->compute_grad_mul_y ? work->sparse_res[2] : NULL;
-    work->res[3] = cw_in->compute_hess_mul_y ? work->sparse_res[3] : NULL;
+    for (int i=0; i<sz_arg; i++) {
+        work->arg[i] = cw_in->inputs[i];
+    }
+
+    for (int i=0; i<sz_res; i++) {
+        work->res[i] = cw_in->compute_output[i] ? work->sparse_res[i] : NULL;
+    }
 
     int output = args->fun(work->arg, work->res, work->iw, work->w, 0);
 
     // Densify
-    if (cw_in->compute_y)
-        densify(work->sparse_res[0], cw_out->y, args->sparsity(0));
-    if (cw_in->compute_jac_y)
-        densify(work->sparse_res[1], cw_out->jac_y, args->sparsity(1));
-    if (cw_in->compute_grad_mul_y)
-        densify(work->sparse_res[2], cw_out->grad_mul_y, args->sparsity(2));
-    if (cw_in->compute_hess_mul_y)
-        densify(work->sparse_res[3], cw_out->hess_mul_y, args->sparsity(3));
+    for (int i=0; i<sz_res; i++) {
+        if (cw_in->compute_output[i])
+            densify(work->sparse_res[i], cw_out->outputs[i], args->sparsity(i));
+    }
 
     return output;
 }
