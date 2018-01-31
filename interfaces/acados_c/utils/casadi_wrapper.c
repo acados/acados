@@ -17,20 +17,11 @@
  *
  */
 
-#ifndef ACADOS_C_SIM_SIM_ERK_INTEGRATOR_H_
-#define ACADOS_C_SIM_SIM_ERK_INTEGRATOR_H_
+#include "acados_c/utils/casadi_wrapper.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-#include <acados/sim/sim_erk_integrator.h>
 
-//
-void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
-
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#endif  // ACADOS_C_SIM_SIM_ERK_INTEGRATOR_H_
+void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_)
+{
+    return NULL;
+}

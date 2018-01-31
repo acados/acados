@@ -28,8 +28,6 @@ extern "C" {
 #include <acados/sim/sim_common.h>
 #include <acados/utils/types.h>
 // acados_c
-#include "acados_c/sim/sim_erk_integrator.h"
-#include "acados_c/sim/sim_lifted_irk_integrator.h"
 #include "acados_c/common.h"
 
 typedef enum {
@@ -40,8 +38,6 @@ typedef enum {
 
 typedef struct {
     sim_solver_t sim_solver;
-    sim_erk_ext_fcns erk_ext_fcns;
-    sim_irk_ext_fcns irk_ext_fcns;
 } sim_solver_plan;
 
 typedef struct {
