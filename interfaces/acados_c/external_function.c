@@ -38,49 +38,49 @@ external_function_out *create_external_function_out(external_function_dims *dims
 
 
 
-int external_function_calculate_args_size(external_function_solver_plan *plan, external_function_dims *dims)
+int external_function_calculate_args_size(external_function_solver_config *config, external_function_dims *dims)
 {
     return 0;
 }
 
 
 
-void *external_function_assign_args(external_function_solver_plan *plan, external_function_dims *dims, void *raw_memory)
+void *external_function_assign_args(external_function_solver_config *config, external_function_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *external_function_create_args(external_function_solver_plan *plan, external_function_dims *dims)
+void *external_function_create_args(external_function_solver_config *config, external_function_dims *dims)
 {
     return NULL;
 }
 
 
 
-void *external_function_copy_args(external_function_solver_plan  *plan, external_function_dims *dims, void *raw_memory, void *source)
+void *external_function_copy_args(external_function_solver_config  *config, external_function_dims *dims, void *raw_memory, void *source)
 {
     return NULL;
 }
 
 
 
-int external_function_calculate_size(external_function_solver_plan *plan, external_function_dims *dims, void *args_)
+int external_function_calculate_size(external_function_solver_config *config, external_function_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-external_function_solver *external_function_assign(external_function_solver_plan *plan, external_function_dims *dims, void *args_, void *raw_memory)
+external_function_solver *external_function_assign(external_function_solver_config *config, external_function_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-external_function_solver *external_function_create(external_function_solver_plan *plan, external_function_dims *dims, void *args_)
+external_function_solver *external_function_create(external_function_solver_config *config, external_function_dims *dims, void *args_)
 {
     return NULL;
 }
@@ -94,7 +94,7 @@ int external_function_eval(external_function_solver *solver, external_function_i
 
 
 
-int set_external_function_solver_fcn_ptrs(external_function_solver_plan *plan, external_function_solver_fcn_ptrs *fcn_ptrs)
+int set_external_function_solver_fcn_ptrs(external_function_solver_config *config, external_function_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;
 

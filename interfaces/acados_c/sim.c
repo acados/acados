@@ -78,11 +78,11 @@ sim_out *create_sim_out(sim_dims *dims)
 
 
 
-int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
+int sim_calculate_args_size(sim_solver_config *config, sim_dims *dims)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+    set_sim_solver_fcn_ptrs(config, &fcn_ptrs);
 
     int size = fcn_ptrs.calculate_args_size(dims);
 
@@ -91,11 +91,11 @@ int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 
 
 
-void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
+void *sim_assign_args(sim_solver_config *config, sim_dims *dims, void *raw_memory)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+    set_sim_solver_fcn_ptrs(config, &fcn_ptrs);
 
     void *args = fcn_ptrs.assign_args(dims, raw_memory);
 
@@ -106,22 +106,22 @@ void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
 
 
 
-void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
+void *sim_create_args(sim_solver_config *config, sim_dims *dims)
 {
-    int bytes = sim_calculate_args_size(plan, dims);
+    int bytes = sim_calculate_args_size(config, dims);
 
     void *ptr = malloc(bytes);
 
-    void *args = sim_assign_args(plan, dims, ptr);
+    void *args = sim_assign_args(config, dims, ptr);
 
     return args;
 }
 
 
 
-void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
+void *sim_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source)
 {
-    sim_solver_t solver_name = plan->sim_solver;
+    sim_solver_t solver_name = config->sim_solver;
 
     void *args;
 
@@ -140,11 +140,11 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
 
 
 
-int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
+int sim_calculate_size(sim_solver_config *config, sim_dims *dims, void *args_)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+    set_sim_solver_fcn_ptrs(config, &fcn_ptrs);
 
     int bytes = 0;
 
@@ -165,7 +165,7 @@ int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 
 
 
-sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
+sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *args_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -176,13 +176,13 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
 
     solver->fcn_ptrs = (sim_solver_fcn_ptrs *) c_ptr;
     c_ptr += sizeof(sim_solver_fcn_ptrs);
-    set_sim_solver_fcn_ptrs(plan, solver->fcn_ptrs);
+    set_sim_solver_fcn_ptrs(config, solver->fcn_ptrs);
 
     solver->dims = assign_sim_dims(c_ptr);
     c_ptr += sim_dims_calculate_size();
     sim_copy_dims(solver->dims, dims);
 
-    solver->args = sim_copy_args(plan, dims, c_ptr, args_);
+    solver->args = sim_copy_args(config, dims, c_ptr, args_);
     c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
@@ -191,20 +191,20 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
     solver-> work = (void *) c_ptr;
     c_ptr += solver->fcn_ptrs->calculate_workspace_size(dims, args_);
 
-    assert((char*)raw_memory + sim_calculate_size(plan, dims, args_) == c_ptr);
+    assert((char*)raw_memory + sim_calculate_size(config, dims, args_) == c_ptr);
 
     return solver;
 }
 
 
 
-sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_)
+sim_solver *sim_create(sim_solver_config *config, sim_dims *dims, void *args_)
 {
-    int bytes = sim_calculate_size(plan, dims, args_);
+    int bytes = sim_calculate_size(config, dims, args_);
 
     void *ptr = malloc(bytes);
 
-    sim_solver *solver = sim_assign(plan, dims, args_, ptr);
+    sim_solver *solver = sim_assign(config, dims, args_, ptr);
 
     return solver;
 }
@@ -218,10 +218,10 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
 
 
 
-int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs)
+int set_sim_solver_fcn_ptrs(sim_solver_config *config, sim_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;
-    sim_solver_t solver_name = plan->sim_solver;
+    sim_solver_t solver_name = config->sim_solver;
 
     switch (solver_name)
     {

@@ -114,18 +114,18 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solve
     module_fcn_ptrs solver_funs;
     qp_solver.qp_solver = &solver_funs;
 
-    ocp_qp_solver_plan qp_plan;
-    qp_plan.qp_solver = qp_solver_name;
-    set_ocp_qp_xcond_solver_fcn_ptrs(&qp_plan, &qp_solver);
+    ocp_qp_solver_config qp_config;
+    qp_config.qp_solver = qp_solver_name;
+    set_ocp_qp_xcond_solver_fcn_ptrs(&qp_config, &qp_solver);
 
     int return_value;
     sim_solver_fcn_ptrs *sim_solvers = acados_malloc(sizeof(sim_solver_fcn_ptrs), dims->N);
-    sim_solver_plan sim_plan;
+    sim_solver_config sim_config;
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        sim_plan.sim_solver = sim_solver_names[ii];
-        return_value = set_sim_solver_fcn_ptrs(&sim_plan, &sim_solvers[ii]);
+        sim_config.sim_solver = sim_solver_names[ii];
+        return_value = set_sim_solver_fcn_ptrs(&sim_config, &sim_solvers[ii]);
         assert(return_value == ACADOS_SUCCESS);
     }
 

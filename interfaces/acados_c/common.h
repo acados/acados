@@ -39,10 +39,6 @@ typedef struct {
     int (*calculate_workspace_size)(void *);
 } module_fcn_ptrs;
 
-typedef struct {
-
-} external_function_plan;
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
