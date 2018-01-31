@@ -50,6 +50,8 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+ocp_nlp_dims *create_ocp_nlp_dims();
+//
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims);
 //
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);

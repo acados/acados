@@ -201,8 +201,6 @@ sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *args_, v
 {
     char *c_ptr = (char *) raw_memory;
 
-    sim_erk_integrator_args *args = (sim_erk_integrator_args *)args_;
-
     sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);
 

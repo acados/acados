@@ -100,7 +100,7 @@ void *casadi_wrapper_assign_args(external_function_dims *dims, void *submodules_
 
 
 
-void external_function_initialize_default_args(void *args_)
+void casadi_wrapper_initialize_default_args(void *args_)
 {
     casadi_wrapper_args *args = (casadi_wrapper_args *)args_;
 

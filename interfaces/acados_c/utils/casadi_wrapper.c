@@ -25,5 +25,14 @@
 
 void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_)
 {
-    return NULL;
+    casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
+    casadi_wrapper_args *dest;
+
+    dest->fun = source->fun;
+
+    dest->dims = source->dims;
+
+    dest->sparsity = source->sparsity;
+    
+    return (void *)dest;
 }

@@ -24,6 +24,13 @@
 
 
 
+ocp_lin_dims *create_ocp_lin_dims()
+{
+    return NULL;
+}
+
+
+
 ocp_lin_in *create_ocp_lin_in(ocp_lin_dims *dims)
 {
     return NULL;

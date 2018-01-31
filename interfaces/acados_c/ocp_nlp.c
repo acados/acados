@@ -24,6 +24,13 @@
 
 
 
+ocp_nlp_dims *create_ocp_nlp_dims()
+{
+
+}
+
+
+
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims)
 {
     return NULL;

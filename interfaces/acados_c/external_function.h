@@ -47,7 +47,7 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
-external_function_dims *create_external_function_dims();
+external_function_dims *create_external_function_dims(int num_inputs, int num_outputs);
 //
 external_function_in *create_external_function_in(external_function_dims *dims);
 //
@@ -69,7 +69,7 @@ external_function *external_function_assign(external_function_config *config, ex
 //
 external_function *external_function_create(external_function_config *config, external_function_dims *dims, void *args_);
 //
-int external_function_eval(external_function *solver, external_function_in *qp_in, external_function_out *qp_out);
+int external_function_eval(external_function *ext_fun, external_function_in *ef_in, external_function_out *ef_out);
 
 // EXPERT INTERFACE
 //

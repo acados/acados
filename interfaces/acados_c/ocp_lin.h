@@ -49,6 +49,8 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+ocp_lin_dims *create_ocp_lin_dims();
+//
 ocp_lin_in *create_ocp_lin_in(ocp_lin_dims *dims);
 //
 ocp_lin_out *create_ocp_lin_out(ocp_lin_dims *dims);
