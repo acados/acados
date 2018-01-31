@@ -134,7 +134,7 @@ ocp_qp::ocp_qp(uint N, uint nx, uint nu, uint nbx, uint nbu, uint ng)
     : ocp_qp(std::vector<uint>(N+1, nx), std::vector<uint>(N+1, nu), std::vector<uint>(N+1, nbx),
       std::vector<uint>(N+1, nbu), std::vector<uint>(N+1, ng)) {}
 
-void ocp_qp::update(std::string field, uint stage, std::vector<double> v) {
+void ocp_qp::set(std::string field, uint stage, std::vector<double> v) {
 
     check_range(field, stage);
     check_nb_elements(field, stage, v.size());
@@ -175,13 +175,13 @@ void ocp_qp::update(std::string field, uint stage, std::vector<double> v) {
         throw std::invalid_argument("OCP QP does not contain field " + field);
 }
 
-void ocp_qp::update(string field, vector<double> v) {
+void ocp_qp::set(string field, vector<double> v) {
     uint last_stage = N;
     if (field == "A" || field == "B" || field == "b")
         last_stage = N-1;
     
     for (uint stage = 0; stage <= last_stage; ++stage)
-        update(field, stage, v);
+        set(field, stage, v);
 }
 
 

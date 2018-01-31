@@ -13,24 +13,6 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
 
-// void acados_OcpQp_A_sequence_set(acados::OcpQp *qp, LangObject *input) {
-//     for (int i = 0; i < qp->N; i++) {
-//         int nbElems = numRows(input) * numColumns(input);
-//         std::vector<double> tmp(nbElems);
-//         std::copy_n(asDoublePointer(input), nbElems, tmp.begin());
-//         qp->update(qp->A, tmp);
-//     }
-// }
-
-// LangObject *acados_OcpQp_A_sequence_get(acados::OcpQp *qp) {
-//     std::vector<LangObject *> list_of_matrices;
-//     for (int i = 0; i < qp->N; i++) {
-//         int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
-//         list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
-//     }
-//     return swig::from(list_of_matrices);
-// }
-
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
     if (!is_map(input))
         return false;

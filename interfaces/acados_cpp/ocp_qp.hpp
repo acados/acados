@@ -29,8 +29,8 @@ public:
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
 
-    void update(string field, uint stage, vector<double> v);
-    void update(string field, vector<double> v);
+    void set(string field, uint stage, vector<double> v);
+    void set(string field, vector<double> v);
 
     ocp_qp_solution solve(string solver_name, map<string, option_t> options = {});
 
