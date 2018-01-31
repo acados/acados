@@ -116,7 +116,9 @@ typedef struct
 	struct blasfeo_dmat *tmp_ny_ny;
 	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
-    struct blasfeo_dvec *tmp_nux;
+    struct blasfeo_dvec *tmp_ny;
+
+    struct blasfeo_dvec *ls_res;
 
 } ocp_nlp_gn_sqp_work;
 
