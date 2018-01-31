@@ -214,7 +214,7 @@ int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
 
 	size += sizeof(ocp_nlp_model_expl);
 
-    size += 3*N*sizeof(casadi_function_t *);  // vde vde_adj jac
+    size += 3*N*sizeof(casadi_function_t);  // vde vde_adj jac
 
 	size += 8; // initial align
 
