@@ -70,6 +70,7 @@ ocp_qp_dims *create_ocp_qp_dims(int N)
     void *ptr = calloc(1, bytes);
 
     ocp_qp_dims *dims = assign_ocp_qp_dims(N, ptr);
+    dims->N = N;
 
     return dims;
 }
