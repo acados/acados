@@ -29,6 +29,7 @@ extern "C" {
 #include <acados/utils/types.h>
 // acados_c
 #include "acados_c/common.h"
+#include "acados_c/external_function.h"
 
 typedef enum {
     PREVIOUS,
@@ -38,6 +39,7 @@ typedef enum {
 
 typedef struct {
     sim_solver_t sim_solver;
+    external_function_config ef_config;
 } sim_solver_config;
 
 typedef struct {

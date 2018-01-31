@@ -19,6 +19,8 @@
 
 #include "acados_c/utils/casadi_wrapper.h"
 
+#include <stdlib.h>
+
 
 
 void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_)

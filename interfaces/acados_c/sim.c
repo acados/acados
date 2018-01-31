@@ -25,6 +25,9 @@
 #include <string.h>
 //acados
 #include <acados/utils/mem.h>
+//acados_c
+#include "acados_c/sim/sim_erk_integrator.h"
+#include "acados_c/sim/sim_lifted_irk_integrator.h"
 
 
 
@@ -78,13 +81,39 @@ sim_out *create_sim_out(sim_dims *dims)
 
 
 
+void *set_submodules_fcn_ptrs(sim_solver_config *config, sim_erk_integrator_submodules *erk_submodules)
+{
+    void *submodules;
+
+    sim_solver_t solver_name = config->sim_solver;
+
+    switch (solver_name) {
+        case ERK:
+            set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->forward_vde));
+            set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->adjoint_vde));
+            set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->hess_vde));
+            submodules = (void *) &erk_submodules;
+            break;
+        case LIFTED_IRK:
+            submodules = NULL;
+            break;
+    }
+
+    return submodules;
+}
+
+
+
 int sim_calculate_args_size(sim_solver_config *config, sim_dims *dims)
 {
     sim_solver_fcn_ptrs fcn_ptrs;
 
     set_sim_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    int size = fcn_ptrs.calculate_args_size(dims);
+    sim_erk_integrator_submodules erk_submodules;
+    void *submodules = set_submodules_fcn_ptrs(config, &erk_submodules);
+
+    int size = fcn_ptrs.calculate_args_size(dims, submodules);
 
     return size;
 }
@@ -97,7 +126,10 @@ void *sim_assign_args(sim_solver_config *config, sim_dims *dims, void *raw_memor
 
     set_sim_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    void *args = fcn_ptrs.assign_args(dims, raw_memory);
+    sim_erk_integrator_submodules erk_submodules;
+    void *submodules = set_submodules_fcn_ptrs(config, &erk_submodules);
+
+    void *args = fcn_ptrs.assign_args(dims, submodules, raw_memory);
 
     fcn_ptrs.initialize_default_args(dims, args);
 
@@ -154,7 +186,7 @@ int sim_calculate_size(sim_solver_config *config, sim_dims *dims, void *args_)
 
     bytes += sim_dims_calculate_size();
 
-    bytes += fcn_ptrs.calculate_args_size(dims);
+    bytes += sim_calculate_args_size(config, dims);
 
     bytes += fcn_ptrs.calculate_memory_size(dims, args_);
 
@@ -183,7 +215,7 @@ sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *args_, v
     sim_copy_dims(solver->dims, dims);
 
     solver->args = sim_copy_args(config, dims, c_ptr, args_);
-    c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
+    c_ptr += sim_calculate_args_size(config, dims);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);
@@ -236,8 +268,8 @@ int set_sim_solver_fcn_ptrs(sim_solver_config *config, sim_solver_fcn_ptrs *fcn_
             break;
         case LIFTED_IRK:
             fcn_ptrs->fun = &sim_lifted_irk;
-            fcn_ptrs->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
-            fcn_ptrs->assign_args = &sim_lifted_irk_assign_opts;
+            // fcn_ptrs->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
+            // fcn_ptrs->assign_args = &sim_lifted_irk_assign_opts;
             fcn_ptrs->initialize_default_args = &sim_lifted_irk_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
             fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;

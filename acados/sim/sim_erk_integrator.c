@@ -77,18 +77,12 @@ int sim_erk_integrator_calculate_args_size(sim_dims *dims, void *submodules_)
 
     size += 3*sizeof(external_function_fcn_ptrs);
 
-    if (submodules->forward_vde != NULL) {
-        size += submodules->forward_vde->calculate_args_size(&forward_vde_dims, NULL);
-    }
-
-    if (submodules->adjoint_vde != NULL) {
-        size += submodules->adjoint_vde->calculate_args_size(&adjoint_vde_dims, NULL);
-    }
-
-    if (submodules->hess_vde != NULL) {
-        size += submodules->hess_vde->calculate_args_size(&hess_vde_dims, NULL);
-    }
-
+    size += submodules->forward_vde.calculate_args_size(&forward_vde_dims, NULL);
+    
+    size += submodules->adjoint_vde.calculate_args_size(&adjoint_vde_dims, NULL);
+    
+    size += submodules->hess_vde.calculate_args_size(&hess_vde_dims, NULL);
+    
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
@@ -124,24 +118,18 @@ void *sim_erk_integrator_assign_args(sim_dims *dims, void *submodules_, void *ra
     args->hess_vde = (external_function_fcn_ptrs *) c_ptr;
     c_ptr += sizeof(external_function_fcn_ptrs);
 
-    if (submodules->forward_vde != NULL) {
-        *(args->forward_vde) = *(submodules->forward_vde);
-        args->forward_vde_args = submodules->forward_vde->assign_args(&forward_vde_dims, NULL, c_ptr);
-        c_ptr += submodules->forward_vde->calculate_args_size(&forward_vde_dims, NULL);
-    }
+    *(args->forward_vde) = submodules->forward_vde;
+    args->forward_vde_args = submodules->forward_vde.assign_args(&forward_vde_dims, NULL, c_ptr);
+    c_ptr += submodules->forward_vde.calculate_args_size(&forward_vde_dims, NULL);
 
-    if (submodules->adjoint_vde != NULL) {
-        *(args->adjoint_vde) = *(submodules->adjoint_vde);
-        args->adjoint_vde_args = submodules->adjoint_vde->assign_args(&adjoint_vde_dims, NULL, c_ptr);
-        c_ptr += submodules->adjoint_vde->calculate_args_size(&adjoint_vde_dims, NULL);
-    }
-
-    if (submodules->hess_vde != NULL) {
-        *(args->hess_vde) = *(submodules->hess_vde);
-        args->hess_vde_args = submodules->hess_vde->assign_args(&hess_vde_dims, NULL, c_ptr);
-        c_ptr += submodules->hess_vde->calculate_args_size(&hess_vde_dims, NULL);
-    }
-
+    *(args->adjoint_vde) = submodules->adjoint_vde;
+    args->adjoint_vde_args = submodules->adjoint_vde.assign_args(&adjoint_vde_dims, NULL, c_ptr);
+    c_ptr += submodules->adjoint_vde.calculate_args_size(&adjoint_vde_dims, NULL);
+    
+    *(args->hess_vde) = submodules->hess_vde;
+    args->hess_vde_args = submodules->hess_vde.assign_args(&hess_vde_dims, NULL, c_ptr);
+    c_ptr += submodules->hess_vde.calculate_args_size(&hess_vde_dims, NULL);
+    
     assert((char*)raw_memory + sim_erk_integrator_calculate_args_size(dims, submodules_) >= c_ptr);
 
     return (void *)args;

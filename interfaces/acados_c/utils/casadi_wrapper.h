@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#include <acados/utils/casadi_wrappers.h>
+#include <acados/utils/casadi_wrapper.h>
 
 //
 void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_);

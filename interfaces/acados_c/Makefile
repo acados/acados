@@ -20,7 +20,9 @@ endif
 OBJS += ocp_qp/ocp_qp_sparse_solver.o
 OBJS += sim/sim_erk_integrator.o
 # OBJS += sim/sim_lifted_irk_integrator.o
+OBJS += utils/casadi_wrapper.o
 OBJS += dense_qp.o
+OBJS += external_function.o
 OBJS += legacy_create.o
 OBJS += ocp_lin.o
 # OBJS += ocp_nlp.o

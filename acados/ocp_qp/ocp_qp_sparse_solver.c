@@ -66,6 +66,7 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *r
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
+    // QUESTION(nielsvd): why dims and not pcond_dims?
     args->solver_args = args->solver->assign_args(dims, c_ptr);
     c_ptr += args->solver->calculate_args_size(dims);
 

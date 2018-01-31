@@ -30,7 +30,7 @@ extern "C" {
 #include "acados_c/common.h"
 
 typedef enum {
-    EXTERNAL_FUNCTION_CASADI
+    CASADI_WRAPPER
 } external_function_t;
 
 typedef struct {
@@ -74,6 +74,9 @@ int external_function_eval(external_function *solver, external_function_in *qp_i
 // EXPERT INTERFACE
 //
 int set_external_function_fcn_ptrs(external_function_config *config, external_function_fcn_ptrs *fcn_ptrs);
+
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

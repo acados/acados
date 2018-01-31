@@ -87,9 +87,9 @@ typedef struct {
 
 
 typedef struct {
-    external_function_fcn_ptrs *forward_vde;
-    external_function_fcn_ptrs *adjoint_vde;
-    external_function_fcn_ptrs *hess_vde;
+    external_function_fcn_ptrs forward_vde;
+    external_function_fcn_ptrs adjoint_vde;
+    external_function_fcn_ptrs hess_vde;
 } sim_erk_integrator_submodules;
 
 

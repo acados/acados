@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+//acados
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
 //acados_c
 #include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados_c/ocp_qp/ocp_qp_sparse_solver.h"
@@ -175,6 +177,9 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
         args = ocp_qp_full_condensing_solver_copy_args(dims, raw_memory, source);
     }
 
+    // QUESTION(nielsvd): do we need pcond_dims or dims for the partial condensing solvers?
+    dense_qp_dims ddims;
+    compute_dense_qp_dims(dims, &ddims);
     switch (solver_name) {
         case PARTIAL_CONDENSING_HPIPM:
             ocp_qp_hpipm_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
@@ -193,14 +198,14 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
             #endif
             break;
         case FULL_CONDENSING_HPIPM:
-            dense_qp_hpipm_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_hpipm_copy_args(&ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QPOASES:
-            dense_qp_qpoases_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_qpoases_copy_args(&ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QORE:
             #ifdef ACADOS_WITH_QORE
-            dense_qp_qore_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_qore_copy_args(&ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             #endif
             break;
     }
