@@ -1,6 +1,8 @@
 
 #include "acados_cpp/ocp_qp_dimensions.hpp"
 
+#include <algorithm>
+
 using std::map;
 using std::string;
 using std::vector;

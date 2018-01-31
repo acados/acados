@@ -3,6 +3,7 @@
 #define ACADOS_INTERFACES_ACADOS_CPP_OCP_QP_DIMENSIONS_HPP_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
