@@ -81,6 +81,10 @@ typedef struct
 	// nlp memory
 	ocp_nlp_mem *nlp_mem;
 
+	
+	struct blasfeo_dmat *W_chol; // cholesky factor of weight matrix
+    struct blasfeo_dvec *ls_res; // least-squares residual r(x)
+
 	int sqp_iter;
 
 } ocp_nlp_gn_sqp_memory;
@@ -113,12 +117,9 @@ typedef struct
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
     // not using max(nx+nu) for parallelization in the future
 	// XXX take Max instead ?????
-	struct blasfeo_dmat *tmp_ny_ny;
 	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
     struct blasfeo_dvec *tmp_ny;
-
-    struct blasfeo_dvec *ls_res;
 
 } ocp_nlp_gn_sqp_work;
 
