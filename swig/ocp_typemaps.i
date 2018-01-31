@@ -17,6 +17,23 @@
  *
  */
 
+
+%typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
+#if defined(SWIGMATLAB)
+    $1 = mxIsScalar($input) ? 1 : 0;
+#elif defined(SWIGPYTHON)
+    $1 = PyInt_Check($input) ? 1 : 0;
+#endif
+}
+
+%typemap(in) uint {
+#if defined(SWIGMATLAB)
+    $1 = static_cast<uint>(mxGetScalar($input));
+#elif defined(SWIGPYTHON)
+    $1 = static_cast<uint>(PyInt_AsLong($input));
+#endif
+}
+
 %typemap(in) std::vector<double> {
     if (!is_matrix($input)) {
         SWIG_exception(SWIG_ValueError, "Input is not of valid matrix type.");
