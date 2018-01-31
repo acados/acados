@@ -19,8 +19,6 @@
 
 %module acados
 
-// %rename($ignore, %$isclass) ""; // Only ignore all classes
-
 #if defined(SWIGMATLAB)
 typedef mxArray LangObject;
 %{
@@ -33,9 +31,11 @@ typedef PyObject LangObject;
 typedef PyObject LangObject;
 %}
 #define NONE Py_None
+%ignore SwigPyIterator;
+%ignore SwigPyIterator_swigregister;
 #endif
 
-%include "stl.i"
+%include "std_map.i"
 %include "std_string.i"
 
 %include "std_vector.i"

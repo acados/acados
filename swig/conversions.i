@@ -26,30 +26,30 @@ import_array();
 #endif
 
 #if defined(SWIGPYTHON)
-%pythoncode %{
-from numpy import copy, copyto
+// %pythoncode %{
+// from numpy import copy, copyto
 
-class sequence_of_arrays(list):
-    def __init__(self):
-        super().__init__()
-    def __init__(self, iterable):
-        super().__init__(iterable)
-    def __getitem__(self, k):
-        return copy(super().__getitem__(k))
-    def __setitem__(self, k, v):
-        try:
-            indices_to_set = range(*k.indices(len(self)))
-        except AttributeError:
-            # k is probably an integer
-            try:
-                indices_to_set = [int(k)]
-            except TypeError:
-                # k is probably tuple
-                indices_to_set = k
-        for index in indices_to_set:
-            copyto(super().__getitem__(index), v)
+// class sequence_of_arrays(list):
+//     def __init__(self):
+//         super().__init__()
+//     def __init__(self, iterable):
+//         super().__init__(iterable)
+//     def __getitem__(self, k):
+//         return copy(super().__getitem__(k))
+//     def __setitem__(self, k, v):
+//         try:
+//             indices_to_set = range(*k.indices(len(self)))
+//         except AttributeError:
+//             # k is probably an integer
+//             try:
+//                 indices_to_set = [int(k)]
+//             except TypeError:
+//                 # k is probably tuple
+//                 indices_to_set = k
+//         for index in indices_to_set:
+//             copyto(super().__getitem__(index), v)
 
-%}
+// %}
 
 %{
 // Global variable for Python module

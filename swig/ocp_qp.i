@@ -98,8 +98,6 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %rename("$ignore", %$isconstructor) ocp_qp_solution;
 %include "acados_cpp/ocp_qp_solution.hpp"
-
-%ignore make_dimensions_ptr;
 %ignore extract;
 %rename("$ignore", %$isconstructor) ocp_qp;
 %include "acados_cpp/ocp_qp.hpp"
@@ -148,11 +146,3 @@ using std::string;
         return tmp;
     }
 }
-
-// %include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-
-// %include "acados/ocp_qp/ocp_qp_common.h"
-
-%ignore ocp_qp_solve;
-%ignore ocp_qp_solver;
-%include "acados_c/ocp_qp.h"
