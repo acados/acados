@@ -213,7 +213,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     double alpha_min = 1e-8;
     double *stat = (double*)ptr_memory;
     ptr_memory+=sizeof(double)*k_max*6;
-    int compute_mult = 1;
+	align_char_to(64, &ptr_memory);
+	int compute_mult = 1;
 
 
     struct blasfeo_dmat *hsmatdummy = NULL;
@@ -242,6 +243,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     struct blasfeo_dvec hsdt[N+1];
     struct blasfeo_dvec hslamt[N+1];  // to be checked
 
+	// qp_in loop
     for ( ii = 0; ii < N; ii++ ) {
 
         blasfeo_create_dmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], qp_in->BAbt[ii].pA);
@@ -253,6 +255,34 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 		// temporarily invert sign of upper bounds
 		blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 		blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
+    }
+   
+    ii = N;
+	// ocp_in loop
+    blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
+    blasfeo_create_dvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
+    blasfeo_create_dmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
+    blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
+	// temporarily invert sign of upper bounds
+	blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
+	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
+   	
+	// dmat loop	
+	for ( ii = 0; ii < N; ii++ ) {
+
+        /* blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory); */
+		assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
+        /* ptr_memory += (&hsL[ii])->memsize; */
+    }
+   
+    ii = N;
+	// dmat loop
+	/* blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory); */
+	assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
+	/* ptr_memory += (&hsL[ii])->memsize; */
+   	
+	// dvec loop	
+	for ( ii = 0; ii < N; ii++ ) {
 
         // initialize hsdux to primal input later usx will be subtracted
         blasfeo_create_dvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
@@ -277,10 +307,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
         blasfeo_create_dvec(nx[ii+1], &hsPb[ii+1], ptr_memory);
         ptr_memory += (&hsPb[ii+1])->memsize;
-        blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-        ptr_memory += (&hsL[ii])->memsize;
-        //      blasfeo_create_dmat(nx[ii], nx[ii], &hsLxt[ii], ptr_memory);
-        //      ptr_memory += (&hsLxt[ii])->memsize;
 
         blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
         ptr_memory += (&hstinv[ii])->memsize;
@@ -298,15 +324,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     }
 
     ii = N;
-
-    blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
-    blasfeo_create_dvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
-    blasfeo_create_dmat(nu[ii]+nx[ii], ng[ii], &hsDCt[ii], qp_in->DCt[ii].pA);
-    blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hsd[ii], qp_in->d[ii].pa);
-	// temporarily invert sign of upper bounds
-	blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
-	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
-
+	// dvec loop	
 	// initialize hsdux to primal input later usx will be subtracted
     blasfeo_create_dvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
     blasfeo_pack_dvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
@@ -326,9 +344,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     blasfeo_pack_dvec(2*nb[ii]+2*ng[ii], hpmpc_args->t0[ii], &hst[ii], 0);
     ptr_memory += (&hst[ii])->memsize;
 
-    blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-    ptr_memory += (&hsL[ii])->memsize;
-
     blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
     ptr_memory += (&hslamt[ii])->memsize;
 
@@ -343,7 +358,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hsdt[ii], ptr_memory);
     ptr_memory += (&hsdt[ii])->memsize;
 
-    real_t sigma_mu = hpmpc_args->sigma_mu;
+    
+	real_t sigma_mu = hpmpc_args->sigma_mu;
 
     int nuM;
     int nbM;
