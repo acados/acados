@@ -130,10 +130,9 @@ using std::vector;
 using std::string;
 %}
 
-%extend ocp_qp {
+%extend acados::ocp_qp {
 
     ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint nbx = 0, uint nbu = 0, uint ng = 0, bool fix_x0 = true) {
-        // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
         if (fix_x0 == false)
             return new acados::ocp_qp(N, nx, nu, nbx, nbu, ng);
         vector<uint> nbx_v(N+1, 0);

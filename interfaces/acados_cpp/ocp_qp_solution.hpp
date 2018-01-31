@@ -16,6 +16,8 @@ public:
 
     ocp_qp_solution(std::unique_ptr<ocp_qp_out> solution);
 
+    ocp_qp_solution(ocp_qp_solution&& other);
+
     ocp_qp_solution(const ocp_qp_solution& other);
 
     vector<vector<double>> states();

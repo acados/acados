@@ -1,6 +1,6 @@
 from numpy import array, diag
 
-from acados import ocp_qp, ocp_qp_solver, FULL_CONDENSING_QPOASES, PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_HPIPM
+from acados import ocp_qp
 
 qp = ocp_qp(N=5, nx=2, nu=1)
 
@@ -16,9 +16,7 @@ qp.update('lbx', 0, x0)
 qp.update('ubx', 0, x0)
 
 # solve QP
-solver = ocp_qp_solver(FULL_CONDENSING_QPOASES, qp)
-# Unpack the solution
-output = solver.evaluate(qp)
+output = qp.solve("qpoases")
 # Inspect the output struct
 print(output.states())
 print(output.info())

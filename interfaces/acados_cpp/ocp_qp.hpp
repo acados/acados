@@ -31,11 +31,16 @@ public:
     void update(string field, uint stage, vector<double> v);
     void update(string field, vector<double> v);
 
-    ocp_qp_solution solve(string solver_name, map<string, option_t> options);
+    ocp_qp_solution solve(string solver_name, map<string, option_t> options = {});
 
     vector< vector<double> > extract(string field);
 
     const map<string, vector<uint>> dimensions() const;
+
+    std::pair<uint, uint> dimensions(string field, uint stage);
+
+    void state_bounds_indices(uint stage, vector<uint> v);
+    void control_bounds_indices(uint stage, vector<uint> v);
 
     const uint N;
 
@@ -44,11 +49,6 @@ private:
     void check_range(string field, uint stage);
     
     void check_nb_elements(string, uint stage, uint nb_elems);
-
-    std::pair<uint, uint> dimensions(string field, uint stage);
-
-    void state_bounds_indices(uint stage, vector<uint> v);
-    void control_bounds_indices(uint stage, vector<uint> v);
 
     vector<uint> nx() const;
     vector<uint> nu() const;

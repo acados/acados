@@ -3,6 +3,7 @@
 
 #include "acados_cpp/ocp_qp_dimensions.hpp"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
 
 namespace acados {
 
@@ -14,6 +15,11 @@ ocp_qp_solution::ocp_qp_solution(std::unique_ptr<ocp_qp_out> solution)
     qp_out = std::move(solution);
 
 }
+
+ocp_qp_solution::ocp_qp_solution(ocp_qp_solution&& other) : N(other.N), qp_out(nullptr) {
+    std::swap(qp_out, other.qp_out);
+}
+
 
 ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution& other) : N(other.N), qp_out(nullptr) {
     
@@ -29,6 +35,21 @@ ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution& other) : N(other.N), qp_
 
     qp_out = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dims.get()));
 
+    for (int i = 0; i <= N; ++i) {
+        blasfeo_dveccp(dims->nx[i]+dims->nu[i], &other.qp_out->ux[i], 0, &qp_out->ux[i], 0);
+        if (i < N) blasfeo_dveccp(dims->nx[i+1], &other.qp_out->pi[i], 0, &qp_out->pi[i], 0);
+        blasfeo_dveccp(2*dims->nb[i]+2*dims->ng[i], &other.qp_out->lam[i], 0, &qp_out->lam[i], 0);
+        blasfeo_dveccp(2*dims->nb[i]+2*dims->ng[i]+2*dims->ns[i], &other.qp_out->t[i], 0, &qp_out->t[i], 0);
+    }
+
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    info->num_iter = ((ocp_qp_info *) other.qp_out->misc)->num_iter;
+    info->solve_QP_time = ((ocp_qp_info *) other.qp_out->misc)->solve_QP_time;
+    info->condensing_time = ((ocp_qp_info *) other.qp_out->misc)->condensing_time;
+    info->interface_time = ((ocp_qp_info *) other.qp_out->misc)->interface_time;
+    info->total_time = ((ocp_qp_info *) other.qp_out->misc)->total_time;
+    
+    qp_out->memsize = other.qp_out->memsize;
 }
 
 

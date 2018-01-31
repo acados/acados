@@ -190,7 +190,7 @@ ocp_qp_solution ocp_qp::solve(string solver_name, map<string, acados::option_t> 
     if (solver == nullptr) {
         ocp_qp_solver_plan plan = string_to_plan(solver_name, options);
 
-        solver = std::unique_ptr<::ocp_qp_solver>(ocp_qp_create(&plan, dim.get(),
+        solver = std::unique_ptr<ocp_qp_solver>(ocp_qp_create(&plan, dim.get(),
                                                     ocp_qp_create_args(&plan, dim.get())));
     }
 

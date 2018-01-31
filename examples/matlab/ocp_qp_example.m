@@ -14,9 +14,7 @@ qp.update('lbx', 0, x0);
 qp.update('ubx', 0, x0);
 
 % solve QP
-disp(qp);
-solver = ocp_qp_solver(FULL_CONDENSING_QPOASES, qp);
-output = solver.evaluate(qp);
+output = qp.solve('qpoases');
 
 xopt = output.states();
 
