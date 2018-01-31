@@ -2,37 +2,6 @@
 
 #include "acados/sim/sim_casadi_wrapper.h"
 
-// TODO move somewhere else
-void ls_cost_fun(int nx, int nu, double *in, double *out, casadi_function_t cost)
-{
-	
-	const double *x = in;
-	const double *u = in + nx;
-
-	double *func = out;
-	double *grad = out + nu + nx;
-
-	int casadi_mem = 0;
-	int *casadi_iw = NULL;
-	double *casadi_w = NULL;
-
-	const double *casadi_arg[2];
-	double *casadi_res[2];
-
-	casadi_arg[0] = x;
-	casadi_arg[1] = u;
-
-	casadi_res[0] = func;
-	casadi_res[1] = grad;
-
-	cost(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
-
-	return;
-
-}
-
-
-
 void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde) {
 
     const double *x = in;

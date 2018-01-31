@@ -113,14 +113,10 @@ typedef struct
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
     // not using max(nx+nu) for parallelization in the future
 	// XXX take Max instead ?????
-	struct blasfeo_dmat *tmp_ny_ny; // TODO move to memory
+	struct blasfeo_dmat *tmp_ny_ny;
 	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
     struct blasfeo_dvec *tmp_nux;
-
-	double **d_tmp_nv;
-	double **d_tmp_ny_nv_1;
-	double **d_tmp_ny_nv_2;
 
 } ocp_nlp_gn_sqp_work;
 

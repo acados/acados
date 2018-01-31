@@ -41,7 +41,6 @@ OBJS += acados/sim/sim_erk_integrator.o
 OBJS += acados/sim/sim_lifted_irk_integrator.o
 OBJS += acados/sim/sim_common.o
 # utils
-OBJS += acados/utils/casadi_wrapper.o
 OBJS += acados/utils/math.o
 OBJS += acados/utils/copy.o
 OBJS += acados/utils/print.o
