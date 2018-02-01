@@ -72,7 +72,8 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_
     args->cond_args = ocp_qp_full_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_full_condensing_calculate_args_size(dims);
 
-    assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    // assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
+    align_char_to(8, &c_ptr);
 
     args->solver_args = args->solver->assign_args(&ddims, c_ptr);
     c_ptr += args->solver->calculate_args_size(&ddims);
