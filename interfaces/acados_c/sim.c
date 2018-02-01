@@ -92,7 +92,7 @@ void *set_submodules_fcn_ptrs(sim_solver_config *config, sim_erk_integrator_subm
             set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->forward_vde));
             set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->adjoint_vde));
             set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->hess_vde));
-            submodules = (void *) &erk_submodules;
+            submodules = (void *) erk_submodules;
             break;
         case LIFTED_IRK:
             submodules = NULL;
@@ -160,10 +160,10 @@ void *sim_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory,
     switch (solver_name)
     {
         case ERK:
-            args = sim_erk_integrator_copy_args(dims, raw_memory, source);
+            args = sim_erk_integrator_copy_args(config, dims, raw_memory, source);
             break;
         case LIFTED_IRK:
-            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
+            // args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
             break;
     }
 
@@ -265,13 +265,13 @@ int set_sim_solver_fcn_ptrs(sim_solver_config *config, sim_solver_fcn_ptrs *fcn_
             fcn_ptrs->calculate_workspace_size = &sim_erk_integrator_calculate_workspace_size;
             break;
         case LIFTED_IRK:
-            fcn_ptrs->fun = &sim_lifted_irk;
+            // fcn_ptrs->fun = &sim_lifted_irk;
             // fcn_ptrs->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
             // fcn_ptrs->assign_args = &sim_lifted_irk_assign_opts;
-            fcn_ptrs->initialize_default_args = &sim_lifted_irk_initialize_default_args;
-            fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
-            fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;
-            fcn_ptrs->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
+            // fcn_ptrs->initialize_default_args = &sim_lifted_irk_initialize_default_args;
+            // fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
+            // fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;
+            // fcn_ptrs->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
             break;
         default:
             return_value = ACADOS_FAILURE;

@@ -24,10 +24,11 @@
 // acados
 #include <acados_c/sim.h>
 #include <acados_c/options.h>
+#include <acados_c/utils/casadi_wrapper.h>
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
-#include <acados/sim/sim_casadi_wrapper.h>
+// #include <acados/sim/sim_casadi_wrapper.h>
 
 #include "examples/c/crane_model/crane_model.h"
 
@@ -56,32 +57,40 @@ int main() {
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
-    sim_solver_plan plan;
-    plan.sim_solver = ERK;
+    sim_solver_config config;
+    config.sim_solver = ERK;
+    config.ef_config.type = CASADI_WRAPPER;
 
     sim_dims dims;
     dims.num_stages = num_stages;
     dims.nx = nx;
-    dims.nu = nu;
+    dims.nu = nu;    
 
-    void *args = sim_create_args(&plan, &dims);
+    void *args = sim_create_args(&config, &dims);
     
-    sim_rk_opts *erk_opts = (sim_rk_opts *) args;
-    erk_opts->num_steps = 4;
-    erk_opts->sens_forw = true;
-    erk_opts->sens_adj = false;
-    erk_opts->sens_hess = false;
+    sim_erk_integrator_args *erk_args = (sim_erk_integrator_args *) args;
+    erk_args->num_steps = 4;
+    erk_args->sens_forw = true;
+    erk_args->sens_adj = false;
+    erk_args->sens_hess = false;
     // TODO(dimitris): SET IN DEFAULT ARGS
-    erk_opts->num_forw_sens = NF;
+    erk_args->num_forw_sens = NF;
+    // Forward VDE
+    ((casadi_wrapper_args *)(erk_args->forward_vde_args))->fun = &vdeFun;
+    ((casadi_wrapper_args *)(erk_args->forward_vde_args))->dims = &vdeFun_work;
+    ((casadi_wrapper_args *)(erk_args->forward_vde_args))->sparsity = &vdeFun_sparsity_out;
+    // Adjoint VDE
+    ((casadi_wrapper_args *)(erk_args->adjoint_vde_args))->fun = &adjFun;
+    ((casadi_wrapper_args *)(erk_args->adjoint_vde_args))->dims = &adjFun_work;
+    ((casadi_wrapper_args *)(erk_args->adjoint_vde_args))->sparsity = &adjFun_sparsity_out;
+    // Hessian VDE
+    ((casadi_wrapper_args *)(erk_args->hess_vde_args))->fun = &hessFun;
+    ((casadi_wrapper_args *)(erk_args->hess_vde_args))->dims = &hessFun_work;
+    ((casadi_wrapper_args *)(erk_args->hess_vde_args))->sparsity = &hessFun_sparsity_out;
+
 
     sim_in *in = create_sim_in(&dims);
-    in->step = T / erk_opts->num_steps;
-    in->vde = &vdeFun;
-    in->vde_adj = &adjFun;
-    in->hess = &hessFun;
-    in->forward_vde_wrapper = &vde_fun;
-    in->adjoint_vde_wrapper = &vde_adj_fun;
-    in->Hess_fun = &vde_hess_fun;
+    in->step = T / erk_args->num_steps;
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
@@ -98,7 +107,7 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
-    sim_solver *solver = sim_create(&plan, &dims, args);
+    sim_solver *solver = sim_create(&config, &dims, args);
 
     sim_out *out = create_sim_out(&dims);
 
@@ -112,7 +121,7 @@ int main() {
     printf("\n");
 
     double *S_forw_out;
-    if(erk_opts->sens_forw){
+    if(erk_args->sens_forw){
         S_forw_out = out->S_forw;
         printf("\nS_forw_out: \n");
         for (ii=0;ii<nx;ii++){
@@ -123,7 +132,7 @@ int main() {
     }
 
     double *S_adj_out;
-    if(erk_opts->sens_adj){
+    if(erk_args->sens_adj){
         S_adj_out = out->S_adj;
         printf("\nS_adj_out: \n");
         for (ii=0;ii<nx+nu;ii++){
@@ -133,7 +142,7 @@ int main() {
     }
 
     double *S_hess_out;
-    if(erk_opts->sens_hess){
+    if(erk_args->sens_hess){
         double zero = 0.0;
         S_hess_out = out->S_hess;
         printf("\nS_hess_out: \n");
@@ -154,7 +163,7 @@ int main() {
     printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
     printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
 
-    if(erk_opts->sens_adj){
+    if(erk_args->sens_adj){
         struct blasfeo_dmat sA;
         blasfeo_create_dmat(nx, nx+nu, &sA, S_forw_out);
 

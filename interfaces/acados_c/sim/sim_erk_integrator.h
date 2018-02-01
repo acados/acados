@@ -25,9 +25,10 @@ extern "C" {
 #endif
 
 #include <acados/sim/sim_erk_integrator.h>
+#include "acados_c/sim.h"
 
 //
-void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
+void *sim_erk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_);
 
 #ifdef __cplusplus
 } /* extern "C" */

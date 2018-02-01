@@ -8,8 +8,17 @@ extern "C" {
 #endif
 
 int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+const int* vdeFun_sparsity_out(int i);
+int vdeFun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
+
 int adjFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+const int* adjFun_sparsity_out(int i);
+int adjFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
+
 int hessFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+const int* hessFun_sparsity_out(int i);
+int hessFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
+
 int impl_odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int impl_jacFun_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int impl_jacFun_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);

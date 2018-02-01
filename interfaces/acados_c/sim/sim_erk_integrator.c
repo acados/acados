@@ -21,17 +21,19 @@
 
 #include <string.h>
 
+#include "acados_c/external_function.h"
 
 
-void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_)
+
+void *sim_erk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_)
 {
     sim_erk_integrator_args *source = (sim_erk_integrator_args *)source_;
     sim_erk_integrator_args *dest;
 
     sim_erk_integrator_submodules submodules = {
-        source->forward_vde,
-        source->adjoint_vde,
-        source->hess_vde
+        *(source->forward_vde),
+        *(source->adjoint_vde),
+        *(source->hess_vde)
     };
 
     dest = sim_erk_integrator_assign_args(dims, &submodules, raw_memory);
@@ -49,6 +51,13 @@ void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *sourc
     memcpy(dest->A_mat, source->A_mat, ns*ns*sizeof(double));
     memcpy(dest->c_vec, source->c_vec, ns*sizeof(double));
     memcpy(dest->b_vec, source->b_vec, ns*sizeof(double));
+
+    extern external_function_dims forward_vde_dims;
+    extern external_function_dims adjoint_vde_dims;
+    extern external_function_dims hess_vde_dims;
+    external_function_copy_args(&config->ef_config, &forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
+    external_function_copy_args(&config->ef_config, &adjoint_vde_dims, dest->adjoint_vde_args, source->adjoint_vde_args);
+    external_function_copy_args(&config->ef_config, &hess_vde_dims, dest->hess_vde_args, source->hess_vde_args);
 
     return (void *)dest;
 }

@@ -105,10 +105,10 @@ CHAIN_OBJS += chain_model/vde_chain_nm4.o
 CHAIN_OBJS += chain_model/jac_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_hess_chain_nm4.o
-CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
+# CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
 
 nonlinear_chain_ocp_nlp: $(CHAIN_OBJS)
-	$(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)
+	# $(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example nonlinear_chain_ocp_nlp build complete."
 	@echo

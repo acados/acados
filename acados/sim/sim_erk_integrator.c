@@ -36,27 +36,27 @@
 #define HESS_VDE_NUMIN 5
 #define HESS_VDE_NUMOUT 2
 
-static int forward_vde_input_dims[FW_VDE_NUMIN] = {0};
-static int forward_vde_output_dims[FW_VDE_NUMOUT] = {0};
-static external_function_dims forward_vde_dims = {
+int forward_vde_input_dims[FW_VDE_NUMIN] = {0};
+int forward_vde_output_dims[FW_VDE_NUMOUT] = {0};
+external_function_dims forward_vde_dims = {
     FW_VDE_NUMIN,
     FW_VDE_NUMOUT,
     forward_vde_input_dims,
     forward_vde_output_dims
 };
 
-static int adjoint_vde_input_dims[ADJ_VDE_NUMIN] = {0};
-static int adjoint_vde_output_dims[ADJ_VDE_NUMOUT] = {0};
-static external_function_dims adjoint_vde_dims = {
+int adjoint_vde_input_dims[ADJ_VDE_NUMIN] = {0};
+int adjoint_vde_output_dims[ADJ_VDE_NUMOUT] = {0};
+external_function_dims adjoint_vde_dims = {
     ADJ_VDE_NUMIN,
     ADJ_VDE_NUMOUT,
     adjoint_vde_input_dims,
     adjoint_vde_output_dims
 };
 
-static int hess_vde_input_dims[HESS_VDE_NUMIN] = {0};
-static int hess_vde_output_dims[HESS_VDE_NUMOUT] = {0};
-static external_function_dims hess_vde_dims = {
+int hess_vde_input_dims[HESS_VDE_NUMIN] = {0};
+int hess_vde_output_dims[HESS_VDE_NUMOUT] = {0};
+external_function_dims hess_vde_dims = {
     HESS_VDE_NUMIN,
     HESS_VDE_NUMOUT,
     hess_vde_input_dims,

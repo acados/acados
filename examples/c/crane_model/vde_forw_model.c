@@ -4,147 +4,162 @@
 extern "C" {
 #endif
 
+/* How to prefix internal symbols */
 #ifdef CODEGEN_PREFIX
   #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
-#else /* CODEGEN_PREFIX */
+#else
   #define CASADI_PREFIX(ID) vde_forw_model_ ## ID
-#endif /* CODEGEN_PREFIX */
+#endif
 
 #include <math.h>
 
-#ifndef real_t
-#define real_t double
-#endif /* real_t */
+#ifndef casadi_real
+#define casadi_real double
+#endif
 
 #define to_double(x) (double) x
 #define to_int(x) (int) x
 #define CASADI_CAST(x,y) (x) y
+
 /* Pre-c99 compatibility */
 #if __STDC_VERSION__ < 199901L
-real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
-#define fmin(x,y) CASADI_PREFIX(fmin)(x,y)
-real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
-#define fmax(x,y) CASADI_PREFIX(fmax)(x,y)
+  #define fmin CASADI_PREFIX(fmin)
+  casadi_real fmin(casadi_real x, casadi_real y) { return x<y ? x : y;}
+  #define fmax CASADI_PREFIX(fmax)
+  casadi_real fmax(casadi_real x, casadi_real y) { return x>y ? x : y;}
 #endif
 
+/* CasADi extensions */
+#define sq CASADI_PREFIX(sq)
+casadi_real sq(casadi_real x) { return x*x;}
+#define sign CASADI_PREFIX(sign)
+casadi_real CASADI_PREFIX(sign)(casadi_real x) { return x<0 ? -1 : x>0 ? 1 : x;}
+#define twice CASADI_PREFIX(twice)
+casadi_real twice(casadi_real x) { return x+x;}
+#define if_else CASADI_PREFIX(if_else)
+casadi_real if_else(casadi_real c, casadi_real x, casadi_real y) { return c!=0 ? x : y;}
+
+/* Add prefix to internal symbols */
+#define casadi_f0 CASADI_PREFIX(f0)
+#define casadi_s0 CASADI_PREFIX(s0)
+#define casadi_s1 CASADI_PREFIX(s1)
+#define casadi_s2 CASADI_PREFIX(s2)
+
+/* Printing routine */
 #define PRINTF printf
+
+/* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
-#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
-#if defined(STATIC_LINKED)
-#define CASADI_SYMBOL_EXPORT
-#else /* defined(STATIC_LINKED) */
-#define CASADI_SYMBOL_EXPORT __declspec(dllexport)
-#endif /* defined(STATIC_LINKED) */
-#elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
-#define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
-#else /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#define CASADI_SYMBOL_EXPORT
-#endif /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#endif /* CASADI_SYMBOL_EXPORT */
-real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
-#define sq(x) CASADI_PREFIX(sq)(x)
+  #if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+    #if defined(STATIC_LINKED)
+      #define CASADI_SYMBOL_EXPORT
+    #else
+      #define CASADI_SYMBOL_EXPORT __declspec(dllexport)
+    #endif
+  #elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+    #define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
+  #else
+    #define CASADI_SYMBOL_EXPORT
+  #endif
+#endif
 
-real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
-#define sign(x) CASADI_PREFIX(sign)(x)
+static const int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
+static const int casadi_s1[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+static const int casadi_s2[5] = {1, 1, 0, 1, 0};
 
-static const int CASADI_PREFIX(s0)[8] = {4, 1, 0, 4, 0, 1, 2, 3};
-#define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
-#define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[5] = {1, 1, 0, 1, 0};
-#define s2 CASADI_PREFIX(s2)
-/* vdeFun */
-CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t a0=arg[0] ? arg[0][2] : 0;
+/* vdeFun:(i0[4],i1[4x4],i2[4],i3)->(o0[4],o1[4x4],o2[4]) */
+static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem) {
+  casadi_real a0, a1, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a3, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a4, a40, a41, a42, a43, a5, a6, a7, a8, a9;
+  a0=arg[0] ? arg[0][2] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][3] : 0;
   if (res[0]!=0) res[0][1]=a0;
-  real_t a1=arg[0] ? arg[0][1] : 0;
-  real_t a2=sin(a1);
-  real_t a3=-8.0000000000000016e-02;
-  a2=(a3*a2);
-  real_t a4=sq(a0);
-  real_t a5=(a2*a4);
-  real_t a6=arg[3] ? arg[3][0] : 0;
+  a1=-8.0000000000000016e-02;
+  a2=arg[0] ? arg[0][1] : 0;
+  a3=sin(a2);
+  a3=(a1*a3);
+  a4=sq(a0);
+  a5=(a3*a4);
+  a6=arg[3] ? arg[3][0] : 0;
   a5=(a5+a6);
-  real_t a7=cos(a1);
-  real_t a8=9.8100000000000009e-01;
-  a7=(a8*a7);
-  real_t a9=sin(a1);
-  real_t a10=(a7*a9);
+  a7=9.8100000000000009e-01;
+  a8=cos(a2);
+  a8=(a7*a8);
+  a9=sin(a2);
+  a10=(a8*a9);
   a5=(a5+a10);
-  a10=cos(a1);
-  real_t a11=sq(a10);
-  real_t a12=1.0000000000000001e-01;
-  a11=(a12*a11);
-  real_t a13=1.1000000000000001e+00;
-  a11=(a13-a11);
-  a5=(a5/a11);
+  a10=1.1000000000000001e+00;
+  a11=1.0000000000000001e-01;
+  a12=cos(a2);
+  a13=sq(a12);
+  a13=(a11*a13);
+  a13=(a10-a13);
+  a5=(a5/a13);
   if (res[0]!=0) res[0][2]=a5;
-  real_t a14=cos(a1);
-  a14=(a3*a14);
-  real_t a15=sin(a1);
-  real_t a16=(a14*a15);
-  real_t a17=sq(a0);
-  real_t a18=(a16*a17);
-  real_t a19=cos(a1);
-  real_t a20=(a6*a19);
+  a14=cos(a2);
+  a14=(a1*a14);
+  a15=sin(a2);
+  a16=(a14*a15);
+  a17=sq(a0);
+  a18=(a16*a17);
+  a19=cos(a2);
+  a20=(a6*a19);
   a18=(a18+a20);
-  a20=sin(a1);
-  a20=(a8*a20);
+  a20=sin(a2);
+  a20=(a7*a20);
   a18=(a18+a20);
-  a20=sin(a1);
-  real_t a21=9.8100000000000005e+00;
-  a20=(a21*a20);
-  a18=(a18+a20);
-  a20=cos(a1);
-  real_t a22=sq(a20);
-  a22=(a12*a22);
-  a13=(a13-a22);
-  a22=8.0000000000000004e-01;
-  a13=(a22*a13);
-  a18=(a18/a13);
+  a20=9.8100000000000005e+00;
+  a21=sin(a2);
+  a21=(a20*a21);
+  a18=(a18+a21);
+  a21=8.0000000000000004e-01;
+  a22=cos(a2);
+  a23=sq(a22);
+  a23=(a11*a23);
+  a10=(a10-a23);
+  a10=(a21*a10);
+  a18=(a18/a10);
   if (res[0]!=0) res[0][3]=a18;
-  real_t a23=arg[1] ? arg[1][2] : 0;
+  a23=arg[1] ? arg[1][2] : 0;
   if (res[1]!=0) res[1][0]=a23;
   a23=arg[1] ? arg[1][3] : 0;
   if (res[1]!=0) res[1][1]=a23;
-  real_t a24=cos(a1);
-  real_t a25=arg[1] ? arg[1][1] : 0;
-  real_t a26=(a24*a25);
-  a26=(a3*a26);
+  a24=cos(a2);
+  a25=arg[1] ? arg[1][1] : 0;
+  a26=(a24*a25);
+  a26=(a1*a26);
   a26=(a4*a26);
-  real_t a27=(a0+a0);
-  real_t a28=(a27*a23);
-  a28=(a2*a28);
+  a27=(a0+a0);
+  a28=(a27*a23);
+  a28=(a3*a28);
   a26=(a26+a28);
-  a28=cos(a1);
-  real_t a29=(a28*a25);
-  a29=(a7*a29);
-  real_t a30=sin(a1);
-  real_t a31=(a30*a25);
-  a31=(a8*a31);
+  a28=cos(a2);
+  a29=(a28*a25);
+  a29=(a8*a29);
+  a30=sin(a2);
+  a31=(a30*a25);
+  a31=(a7*a31);
   a31=(a9*a31);
   a29=(a29-a31);
   a26=(a26+a29);
-  a26=(a26/a11);
-  a29=(a5/a11);
-  a31=(a10+a10);
-  real_t a32=sin(a1);
-  real_t a33=(a32*a25);
+  a26=(a26/a13);
+  a29=(a5/a13);
+  a31=(a12+a12);
+  a32=sin(a2);
+  a33=(a32*a25);
   a33=(a31*a33);
-  a33=(a12*a33);
+  a33=(a11*a33);
   a33=(a29*a33);
   a26=(a26-a33);
   if (res[1]!=0) res[1][2]=a26;
-  a26=cos(a1);
+  a26=cos(a2);
   a33=(a26*a25);
   a33=(a14*a33);
-  real_t a34=sin(a1);
-  real_t a35=(a34*a25);
-  a35=(a3*a35);
+  a34=sin(a2);
+  a35=(a34*a25);
+  a35=(a1*a35);
   a35=(a15*a35);
   a33=(a33-a35);
   a33=(a17*a33);
@@ -152,26 +167,26 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   a23=(a35*a23);
   a23=(a16*a23);
   a33=(a33+a23);
-  a23=sin(a1);
-  real_t a36=(a23*a25);
+  a23=sin(a2);
+  a36=(a23*a25);
   a36=(a6*a36);
   a33=(a33-a36);
-  a36=cos(a1);
-  real_t a37=(a36*a25);
-  a37=(a8*a37);
+  a36=cos(a2);
+  a37=(a36*a25);
+  a37=(a7*a37);
   a33=(a33+a37);
-  a37=cos(a1);
-  real_t a38=(a37*a25);
-  a38=(a21*a38);
+  a37=cos(a2);
+  a38=(a37*a25);
+  a38=(a20*a38);
   a33=(a33+a38);
-  a33=(a33/a13);
-  a38=(a18/a13);
-  real_t a39=(a20+a20);
-  real_t a40=sin(a1);
+  a33=(a33/a10);
+  a38=(a18/a10);
+  a39=(a22+a22);
+  a40=sin(a2);
   a25=(a40*a25);
   a25=(a39*a25);
-  a25=(a12*a25);
-  a25=(a22*a25);
+  a25=(a11*a25);
+  a25=(a21*a25);
   a25=(a38*a25);
   a33=(a33-a25);
   if (res[1]!=0) res[1][3]=a33;
@@ -180,30 +195,30 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   a33=arg[1] ? arg[1][7] : 0;
   if (res[1]!=0) res[1][5]=a33;
   a25=arg[1] ? arg[1][5] : 0;
-  real_t a41=(a24*a25);
-  a41=(a3*a41);
+  a41=(a24*a25);
+  a41=(a1*a41);
   a41=(a4*a41);
-  real_t a42=(a27*a33);
-  a42=(a2*a42);
+  a42=(a27*a33);
+  a42=(a3*a42);
   a41=(a41+a42);
   a42=(a28*a25);
-  a42=(a7*a42);
-  real_t a43=(a30*a25);
-  a43=(a8*a43);
+  a42=(a8*a42);
+  a43=(a30*a25);
+  a43=(a7*a43);
   a43=(a9*a43);
   a42=(a42-a43);
   a41=(a41+a42);
-  a41=(a41/a11);
+  a41=(a41/a13);
   a42=(a32*a25);
   a42=(a31*a42);
-  a42=(a12*a42);
+  a42=(a11*a42);
   a42=(a29*a42);
   a41=(a41-a42);
   if (res[1]!=0) res[1][6]=a41;
   a41=(a26*a25);
   a41=(a14*a41);
   a42=(a34*a25);
-  a42=(a3*a42);
+  a42=(a1*a42);
   a42=(a15*a42);
   a41=(a41-a42);
   a41=(a17*a41);
@@ -214,16 +229,16 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   a33=(a6*a33);
   a41=(a41-a33);
   a33=(a36*a25);
-  a33=(a8*a33);
+  a33=(a7*a33);
   a41=(a41+a33);
   a33=(a37*a25);
-  a33=(a21*a33);
+  a33=(a20*a33);
   a41=(a41+a33);
-  a41=(a41/a13);
+  a41=(a41/a10);
   a25=(a40*a25);
   a25=(a39*a25);
-  a25=(a12*a25);
-  a25=(a22*a25);
+  a25=(a11*a25);
+  a25=(a21*a25);
   a25=(a38*a25);
   a41=(a41-a25);
   if (res[1]!=0) res[1][7]=a41;
@@ -233,29 +248,29 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   if (res[1]!=0) res[1][9]=a41;
   a25=arg[1] ? arg[1][9] : 0;
   a33=(a24*a25);
-  a33=(a3*a33);
+  a33=(a1*a33);
   a33=(a4*a33);
   a42=(a27*a41);
-  a42=(a2*a42);
+  a42=(a3*a42);
   a33=(a33+a42);
   a42=(a28*a25);
-  a42=(a7*a42);
+  a42=(a8*a42);
   a43=(a30*a25);
-  a43=(a8*a43);
+  a43=(a7*a43);
   a43=(a9*a43);
   a42=(a42-a43);
   a33=(a33+a42);
-  a33=(a33/a11);
+  a33=(a33/a13);
   a42=(a32*a25);
   a42=(a31*a42);
-  a42=(a12*a42);
+  a42=(a11*a42);
   a42=(a29*a42);
   a33=(a33-a42);
   if (res[1]!=0) res[1][10]=a33;
   a33=(a26*a25);
   a33=(a14*a33);
   a42=(a34*a25);
-  a42=(a3*a42);
+  a42=(a1*a42);
   a42=(a15*a42);
   a33=(a33-a42);
   a33=(a17*a33);
@@ -266,16 +281,16 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   a41=(a6*a41);
   a33=(a33-a41);
   a41=(a36*a25);
-  a41=(a8*a41);
+  a41=(a7*a41);
   a33=(a33+a41);
   a41=(a37*a25);
-  a41=(a21*a41);
+  a41=(a20*a41);
   a33=(a33+a41);
-  a33=(a33/a13);
+  a33=(a33/a10);
   a25=(a40*a25);
   a25=(a39*a25);
-  a25=(a12*a25);
-  a25=(a22*a25);
+  a25=(a11*a25);
+  a25=(a21*a25);
   a25=(a38*a25);
   a33=(a33-a25);
   if (res[1]!=0) res[1][11]=a33;
@@ -285,29 +300,29 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   if (res[1]!=0) res[1][13]=a33;
   a25=arg[1] ? arg[1][13] : 0;
   a24=(a24*a25);
-  a24=(a3*a24);
+  a24=(a1*a24);
   a24=(a4*a24);
   a27=(a27*a33);
-  a27=(a2*a27);
+  a27=(a3*a27);
   a24=(a24+a27);
   a28=(a28*a25);
-  a28=(a7*a28);
+  a28=(a8*a28);
   a30=(a30*a25);
-  a30=(a8*a30);
+  a30=(a7*a30);
   a30=(a9*a30);
   a28=(a28-a30);
   a24=(a24+a28);
-  a24=(a24/a11);
+  a24=(a24/a13);
   a32=(a32*a25);
   a31=(a31*a32);
-  a31=(a12*a31);
+  a31=(a11*a31);
   a29=(a29*a31);
   a24=(a24-a29);
   if (res[1]!=0) res[1][14]=a24;
   a26=(a26*a25);
   a26=(a14*a26);
   a34=(a34*a25);
-  a34=(a3*a34);
+  a34=(a1*a34);
   a34=(a15*a34);
   a26=(a26-a34);
   a26=(a17*a26);
@@ -318,16 +333,16 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   a23=(a6*a23);
   a26=(a26-a23);
   a36=(a36*a25);
-  a36=(a8*a36);
+  a36=(a7*a36);
   a26=(a26+a36);
   a37=(a37*a25);
-  a37=(a21*a37);
+  a37=(a20*a37);
   a26=(a26+a37);
-  a26=(a26/a13);
+  a26=(a26/a10);
   a40=(a40*a25);
   a39=(a39*a40);
-  a39=(a12*a39);
-  a39=(a22*a39);
+  a39=(a11*a39);
+  a39=(a21*a39);
   a38=(a38*a39);
   a26=(a26-a38);
   if (res[1]!=0) res[1][15]=a26;
@@ -335,75 +350,79 @@ CASADI_SYMBOL_EXPORT int vdeFun(const real_t** arg, real_t** res, int* iw, real_
   if (res[2]!=0) res[2][0]=a26;
   a26=arg[2] ? arg[2][3] : 0;
   if (res[2]!=0) res[2][1]=a26;
-  a38=cos(a1);
-  a39=arg[2] ? arg[2][1] : 0;
-  a38=(a38*a39);
-  a38=(a3*a38);
-  a4=(a4*a38);
-  a38=(a0+a0);
-  a38=(a38*a26);
-  a2=(a2*a38);
-  a4=(a4+a2);
-  a2=cos(a1);
-  a2=(a2*a39);
-  a7=(a7*a2);
-  a2=sin(a1);
-  a2=(a2*a39);
-  a2=(a8*a2);
-  a9=(a9*a2);
-  a7=(a7-a9);
-  a4=(a4+a7);
-  a4=(a4/a11);
-  a5=(a5/a11);
-  a10=(a10+a10);
-  a7=sin(a1);
-  a7=(a7*a39);
-  a10=(a10*a7);
-  a10=(a12*a10);
-  a5=(a5*a10);
+  a38=(1./a13);
+  a39=cos(a2);
+  a40=arg[2] ? arg[2][1] : 0;
+  a39=(a39*a40);
+  a39=(a1*a39);
+  a4=(a4*a39);
+  a39=(a0+a0);
+  a39=(a39*a26);
+  a3=(a3*a39);
+  a4=(a4+a3);
+  a3=cos(a2);
+  a3=(a3*a40);
+  a8=(a8*a3);
+  a3=sin(a2);
+  a3=(a3*a40);
+  a3=(a7*a3);
+  a9=(a9*a3);
+  a8=(a8-a9);
+  a4=(a4+a8);
+  a4=(a4/a13);
+  a5=(a5/a13);
+  a12=(a12+a12);
+  a13=sin(a2);
+  a13=(a13*a40);
+  a12=(a12*a13);
+  a12=(a11*a12);
+  a5=(a5*a12);
   a4=(a4-a5);
-  a11=(1./a11);
-  a11=(a11+a4);
-  if (res[2]!=0) res[2][2]=a11;
-  a19=(a19/a13);
-  a11=cos(a1);
-  a11=(a11*a39);
-  a14=(a14*a11);
-  a11=sin(a1);
-  a11=(a11*a39);
-  a3=(a3*a11);
-  a15=(a15*a3);
+  a38=(a38+a4);
+  if (res[2]!=0) res[2][2]=a38;
+  a19=(a19/a10);
+  a38=cos(a2);
+  a38=(a38*a40);
+  a14=(a14*a38);
+  a38=sin(a2);
+  a38=(a38*a40);
+  a1=(a1*a38);
+  a15=(a15*a1);
   a14=(a14-a15);
   a17=(a17*a14);
   a0=(a0+a0);
   a0=(a0*a26);
   a16=(a16*a0);
   a17=(a17+a16);
-  a16=sin(a1);
-  a16=(a16*a39);
+  a16=sin(a2);
+  a16=(a16*a40);
   a6=(a6*a16);
   a17=(a17-a6);
-  a6=cos(a1);
-  a6=(a6*a39);
-  a8=(a8*a6);
-  a17=(a17+a8);
-  a8=cos(a1);
-  a8=(a8*a39);
-  a21=(a21*a8);
-  a17=(a17+a21);
-  a17=(a17/a13);
-  a18=(a18/a13);
-  a20=(a20+a20);
-  a1=sin(a1);
-  a1=(a1*a39);
-  a20=(a20*a1);
-  a12=(a12*a20);
-  a22=(a22*a12);
-  a18=(a18*a22);
+  a6=cos(a2);
+  a6=(a6*a40);
+  a7=(a7*a6);
+  a17=(a17+a7);
+  a7=cos(a2);
+  a7=(a7*a40);
+  a20=(a20*a7);
+  a17=(a17+a20);
+  a17=(a17/a10);
+  a18=(a18/a10);
+  a22=(a22+a22);
+  a2=sin(a2);
+  a2=(a2*a40);
+  a22=(a22*a2);
+  a11=(a11*a22);
+  a21=(a21*a11);
+  a18=(a18*a21);
   a17=(a17-a18);
   a19=(a19+a17);
   if (res[2]!=0) res[2][3]=a19;
   return 0;
+}
+
+CASADI_SYMBOL_EXPORT int vdeFun(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem){
+  return casadi_f0(arg, res, iw, w, mem);
 }
 
 CASADI_SYMBOL_EXPORT void vdeFun_incref(void) {
@@ -437,19 +456,19 @@ CASADI_SYMBOL_EXPORT const char* vdeFun_name_out(int i){
 
 CASADI_SYMBOL_EXPORT const int* vdeFun_sparsity_in(int i) {
   switch (i) {
-    case 0: return s0;
-    case 1: return s1;
-    case 2: return s0;
-    case 3: return s2;
+    case 0: return casadi_s0;
+    case 1: return casadi_s1;
+    case 2: return casadi_s0;
+    case 3: return casadi_s2;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const int* vdeFun_sparsity_out(int i) {
   switch (i) {
-    case 0: return s0;
-    case 1: return s1;
-    case 2: return s0;
+    case 0: return casadi_s0;
+    case 1: return casadi_s1;
+    case 2: return casadi_s0;
     default: return 0;
   }
 }
