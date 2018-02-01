@@ -164,7 +164,8 @@ int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+
+	dense_qp_info *info = (dense_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
@@ -252,7 +253,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
         QProblem_printProperties(QP);
 		if (args->use_precomputed_choleski == 1) {
 			return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-				NULL, dual_sol, NULL, NULL, memory->R);  // NULL or 0
+				NULL, NULL, NULL, NULL, memory->R);  // NULL or 0
 		} else {
 			return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
 				NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
