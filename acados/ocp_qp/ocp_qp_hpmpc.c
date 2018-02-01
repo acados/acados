@@ -268,18 +268,12 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
    	
 	// dmat loop	
-	for ( ii = 0; ii < N; ii++ ) {
-
-        /* blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory); */
+	for ( ii = 0; ii < N; ii++ ) 
 		assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-        /* ptr_memory += (&hsL[ii])->memsize; */
-    }
    
     ii = N;
 	// dmat loop
-	/* blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory); */
 	assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-	/* ptr_memory += (&hsL[ii])->memsize; */
    	
 	// dvec loop	
 	for ( ii = 0; ii < N; ii++ ) {
