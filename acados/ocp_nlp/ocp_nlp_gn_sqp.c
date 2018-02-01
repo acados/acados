@@ -595,6 +595,7 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
 			blasfeo_pack_dvec(nx[i+1], work->sim_out[i]->xn, nlp_mem->dyn_fun+i, 0);
 			blasfeo_daxpy(nx[i+1], -1.0, nlp_out->ux+i+1, nu[i+1], nlp_mem->dyn_fun+i, 0, nlp_mem->dyn_fun+i, 0);
 			// nlp mem: dyn_adj
+			// TODO unless already computed in the simulation
 			blasfeo_dgemv_n(nu[i]+nx[i], nx[i+1], -1.0, BAbt+i, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
 		}
 
@@ -645,7 +646,7 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
         blasfeo_dsymv_l(ny[i], ny[i], 1.0, cost->W+i, 0, 0, ls_res+i, 0, 0.0, tmp_ny+i, 0, tmp_ny+i, 0);
 		blasfeo_dgemv_n(nv[i], ny[i], 1.0, Cyt+i, 0, 0, tmp_ny+i, 0, 0.0, nlp_mem->cost_grad+i, 0, nlp_mem->cost_grad+i, 0);
 
-		// TODO where should the update happen??? move to qp update ???
+		// TODO(rien) where should the update happen??? move to qp update ???
 		if(i<N)
 		{
 			sim_rk_opts *opts = (sim_rk_opts*) args->sim_solvers_args[i];

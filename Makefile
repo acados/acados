@@ -46,6 +46,7 @@ OBJS += acados/utils/copy.o
 OBJS += acados/utils/print.o
 OBJS += acados/utils/timing.o
 OBJS += acados/utils/mem.o
+OBJS += acados/utils/external_function.o
 
 
 

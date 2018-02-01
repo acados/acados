@@ -93,19 +93,28 @@ mass_spring_fcond_hpipm_split: mass_spring_fcond_hpipm_split.o
 
 
 CHAIN_OBJS =
+CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
+# 2 masses
 CHAIN_OBJS += chain_model/vde_chain_nm2.o
 CHAIN_OBJS += chain_model/jac_chain_nm2.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm2.o
 CHAIN_OBJS += chain_model/vde_hess_chain_nm2.o
+CHAIN_OBJS += chain_model/ls_cost_nm2.o
+CHAIN_OBJS += chain_model/ls_costN_nm2.o
+# 3 masses
 CHAIN_OBJS += chain_model/vde_chain_nm3.o
 CHAIN_OBJS += chain_model/jac_chain_nm3.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm3.o
 CHAIN_OBJS += chain_model/vde_hess_chain_nm3.o
+CHAIN_OBJS += chain_model/ls_cost_nm3.o
+CHAIN_OBJS += chain_model/ls_costN_nm3.o
+# 4 masses
 CHAIN_OBJS += chain_model/vde_chain_nm4.o
 CHAIN_OBJS += chain_model/jac_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_hess_chain_nm4.o
-CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
+CHAIN_OBJS += chain_model/ls_cost_nm4.o
+CHAIN_OBJS += chain_model/ls_costN_nm4.o
 
 nonlinear_chain_ocp_nlp: $(CHAIN_OBJS)
 	$(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)

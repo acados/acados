@@ -79,6 +79,15 @@ int ls_cost_nm7_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int ls_cost_nm8_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int ls_cost_nm9_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 
+const int* ls_cost_nm2_sparsity_in(int i);
+const int* ls_cost_nm3_sparsity_in(int i);
+const int* ls_cost_nm4_sparsity_in(int i);
+const int* ls_cost_nm5_sparsity_in(int i);
+const int* ls_cost_nm6_sparsity_in(int i);
+const int* ls_cost_nm7_sparsity_in(int i);
+const int* ls_cost_nm8_sparsity_in(int i);
+const int* ls_cost_nm9_sparsity_in(int i);
+
 const int* ls_cost_nm2_sparsity_out(int i);
 const int* ls_cost_nm3_sparsity_out(int i);
 const int* ls_cost_nm4_sparsity_out(int i);
