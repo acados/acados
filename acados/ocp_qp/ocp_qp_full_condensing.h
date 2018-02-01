@@ -33,7 +33,8 @@ extern "C" {
 
 
 typedef struct ocp_qp_full_condensing_args_ {
-    double dummy;
+	int condense_rhs_only;
+	int dummy;
 } ocp_qp_full_condensing_args;
 
 
@@ -49,6 +50,8 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims);
 int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims);
 //
 ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory);
+//
+void ocp_qp_full_condensing_initialize_default_args(ocp_qp_full_condensing_args *args);
 //
 int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);
 //
