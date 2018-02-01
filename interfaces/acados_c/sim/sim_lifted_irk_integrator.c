@@ -23,7 +23,7 @@
 
 
 
-void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)
+void *sim_lifted_irk_copy_opts(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_)
 {
     sim_rk_opts *source = (sim_rk_opts *) source_;
     sim_rk_opts *dest;

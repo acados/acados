@@ -21,7 +21,7 @@
 
 
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_)
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_)
 {
     ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
     ocp_qp_partial_condensing_args *dest;

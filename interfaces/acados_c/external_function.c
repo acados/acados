@@ -135,7 +135,7 @@ void *external_function_copy_args(external_function_config  *config, external_fu
     switch (function_type)
     {
         case CASADI_WRAPPER:
-            args = casadi_wrapper_copy_args(dims, raw_memory, source);
+            args = casadi_wrapper_copy_args(config, dims, raw_memory, source);
             break;
     }
 

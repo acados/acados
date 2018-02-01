@@ -167,14 +167,14 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
 
     void *args;
 
-    // TODO(nielsvd): get rid of two stage args copy.
+    // TODO(nielsvd): get rid of two stage args copy, properly implement submodules.
     if (solver_name < FULL_CONDENSING_HPIPM)
     {
-        args = ocp_qp_sparse_solver_copy_args(dims, raw_memory, source);
+        args = ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
     }
     else
     {
-        args = ocp_qp_full_condensing_solver_copy_args(dims, raw_memory, source);
+        args = ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
     }
 
     // QUESTION(nielsvd): do we need pcond_dims or dims for the partial condensing solvers?
@@ -182,30 +182,30 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
     compute_dense_qp_dims(dims, &ddims);
     switch (solver_name) {
         case PARTIAL_CONDENSING_HPIPM:
-            ocp_qp_hpipm_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            ocp_qp_hpipm_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
             break;
         case PARTIAL_CONDENSING_HPMPC:
             #ifdef ACADOS_WITH_HPMPC
-            ocp_qp_hpmpc_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            ocp_qp_hpmpc_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
             #endif
             break;
         case PARTIAL_CONDENSING_OOQP:
-            // ocp_qp_ooqp_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            // ocp_qp_ooqp_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
             break;
         case PARTIAL_CONDENSING_QPDUNES:
             #ifdef ACADOS_WITH_QPDUNES
-            ocp_qp_qpdunes_copy_args(dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            ocp_qp_qpdunes_copy_args(NULL, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
             #endif
             break;
         case FULL_CONDENSING_HPIPM:
-            dense_qp_hpipm_copy_args(&ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_hpipm_copy_args(NULL, &ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QPOASES:
-            dense_qp_qpoases_copy_args(&ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_qpoases_copy_args(NULL, &ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QORE:
             #ifdef ACADOS_WITH_QORE
-            dense_qp_qore_copy_args(&ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_qore_copy_args(NULL, &ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             #endif
             break;
     }

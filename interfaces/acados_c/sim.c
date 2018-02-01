@@ -163,7 +163,7 @@ void *sim_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory,
             args = sim_erk_integrator_copy_args(config, dims, raw_memory, source);
             break;
         case LIFTED_IRK:
-            // args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
+            // args = sim_lifted_irk_copy_opts(config, dims, raw_memory, source);
             break;
     }
 

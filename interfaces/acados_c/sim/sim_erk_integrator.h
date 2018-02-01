@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 #include <acados/sim/sim_erk_integrator.h>
+
 #include "acados_c/sim.h"
 
 //

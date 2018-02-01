@@ -23,7 +23,7 @@
 
 
 
-void *ocp_qp_hpmpc_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
+void *ocp_qp_hpmpc_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
 {
     ocp_qp_hpmpc_args *source = (ocp_qp_hpmpc_args *)source_;
     ocp_qp_hpmpc_args *dest;

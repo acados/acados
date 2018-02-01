@@ -23,7 +23,7 @@
 
 
 
-void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_)
+void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_)
 {
     casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
     casadi_wrapper_args *dest;

@@ -135,15 +135,15 @@ void *dense_qp_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, vo
     switch (solver_name)
     {
         case DENSE_QP_HPIPM:
-            args = dense_qp_hpipm_copy_args(dims, raw_memory, source);
+            args = dense_qp_hpipm_copy_args(config, dims, raw_memory, source);
             break;
         case DENSE_QP_QORE:
             #ifdef ACADOS_WITH_QORE
-            args = dense_qp_qore_copy_args(dims, raw_memory, source);
+            args = dense_qp_qore_copy_args(config, dims, raw_memory, source);
             #endif
             break;
         case DENSE_QP_QPOASES:
-            args = dense_qp_qpoases_copy_args(dims, raw_memory, source);
+            args = dense_qp_qpoases_copy_args(config, dims, raw_memory, source);
             break;
     }
 
