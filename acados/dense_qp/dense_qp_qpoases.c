@@ -65,6 +65,7 @@ void dense_qp_qpoases_initialize_default_args(void *args_)
     args->max_cputime = 1000.0;
     args->warm_start = 0;
     args->max_nwsr = 1000;
+	/* args->use_precomputed_choleski = 0; */
 }
 
 
@@ -249,11 +250,16 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
         QProblemCON(QP, nvd, ngd, HST_POSDEF);
         QProblem_setPrintLevel(QP, PL_MEDIUM);
         QProblem_printProperties(QP);
-        return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-            NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
-        //            NULL, NULL, NULL, NULL);
-        //            NULL, NULL, NULL, R);  // to provide Cholesky factor
-        QProblem_getPrimalSolution(QP, prim_sol);
+		if (args->use_precomputed_choleski == 1) {
+			return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+				NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
+		} else {
+			return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+				NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
+			//            NULL, NULL, NULL, NULL);
+			//            NULL, NULL, NULL, R);  // to provide Cholesky factor
+		}
+		QProblem_getPrimalSolution(QP, prim_sol);
         QProblem_getDualSolution(QP, dual_sol);
     } else {  // QProblemB
         QProblemBCON(QPB, nvd, HST_POSDEF);

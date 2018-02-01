@@ -67,6 +67,8 @@ typedef struct dense_qp_qpoases_args_ {
     double max_cputime;  // maximum cpu time in seconds
     int max_nwsr;        // maximum number of working set recalculations
     int warm_start;      // warm start with dual_sol in memory
+	int use_precomputed_choleski;
+	int dummy;
 } dense_qp_qpoases_args;
 
 
