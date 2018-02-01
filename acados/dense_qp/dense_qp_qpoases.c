@@ -82,6 +82,7 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     int size = sizeof(dense_qp_qpoases_memory);
 
     size += 1 * nvd * nvd * sizeof(double);        // H
+	size += 1 * nvd * nvd * sizeof(double);        // R
     size += 1 * nvd * ned * sizeof(double);        // A
     size += 1 * nvd * ngd * sizeof(double);        // C
     size += 3 * nvd * sizeof(double);              // g d_lb d_ub
@@ -122,6 +123,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     assign_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_double(nvd*nvd, &mem->R, &c_ptr);
     assign_double(nvd*ned, &mem->A, &c_ptr);
     assign_double(nvd*ngd, &mem->C, &c_ptr);
     assign_double(nvd, &mem->g, &c_ptr);
