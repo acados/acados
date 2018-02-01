@@ -63,6 +63,11 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dim
 }
 
 
+void ocp_qp_full_condensing_initialize_default_args(ocp_qp_full_condensing_args *args) {
+	
+	// condense both Hessian and gradient by default
+	args->condense_rhs_only = 0;
+}
 
 int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args)
 {
@@ -115,6 +120,13 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
     mem->qp_in = in;
 
     // convert to dense qp structure
+	if(args->condense_rhs_only == 1) {
+		// condense gradient only
+		d_cond_rhs_qp_ocp2dense(in, out, mem->hpipm_workspace);
+	} else {
+		// condense gradient and Hessian
+		d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);
+	}
     d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);
 }
 
