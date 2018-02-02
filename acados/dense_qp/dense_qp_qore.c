@@ -64,7 +64,7 @@ void dense_qp_qore_initialize_default_args(void *args_)
 {
     dense_qp_qore_args *args = (dense_qp_qore_args *)args_;
 
-    args->prtfreq = -1;
+    args->print_freq = -1;
     args->warm_start = 0;
     args->warm_strategy = 0;
     args->nsmax = 400;
@@ -241,7 +241,7 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     }
 
     // solve dense qp
-    int prtfreq = args->prtfreq;
+    int print_freq = args->print_freq;
     int warm_start = args->warm_start;
     int warm_strategy = args->warm_strategy;
     int hot_start = args->hot_start;
@@ -260,7 +260,7 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
         QPDenseSetData(QP, nvd, ngd, Ct, H);
     }
 
-    QPDenseSetInt(QP, "prtfreq", prtfreq);
+    QPDenseSetInt(QP, "prtfreq", print_freq);
     return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );

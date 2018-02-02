@@ -11,6 +11,7 @@ OBJS += external_function.o
 OBJS += print.o
 OBJS += timing.o
 OBJS += mem.o
+OBJS += external_function_generic.o
 
 obj: $(OBJS)
 

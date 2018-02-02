@@ -50,6 +50,33 @@ typedef struct {
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
+<<<<<<< HEAD
+=======
+    casadi_function_t vde;
+    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
+
+    casadi_function_t vde_adj;
+    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
+
+    casadi_function_t jac;
+    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
+
+    casadi_function_t hess;
+    void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);
+
+    casadi_function_t impl_ode;
+    void (*eval_impl_res)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
+
+    casadi_function_t impl_jac_x;
+    void (*eval_impl_jac_x)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
+
+    casadi_function_t impl_jac_xdot;
+    void (*eval_impl_jac_xdot)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
+
+    casadi_function_t impl_jac_u;
+    void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
+
+>>>>>>> upstream/new_core
     double step;
 
 } sim_in;
@@ -70,12 +97,36 @@ typedef struct {
     double *S_adj;   //
     double *S_hess;  //
 
-    double *grad;  // gradient correction    
+    double *grad;  // gradient correction
 
     sim_info *info;
 } sim_out;
 
 
+<<<<<<< HEAD
+=======
+typedef struct {
+
+    double interval;
+    int num_stages;
+
+    int num_steps;
+    int num_forw_sens;
+
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
+
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+
+    // for explicit integrators: newton_iter == 0 && scheme == NULL
+    int newton_iter;
+    Newton_scheme *scheme;
+
+} sim_rk_opts;
+>>>>>>> upstream/new_core
 
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);

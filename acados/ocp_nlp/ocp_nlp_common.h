@@ -27,6 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
+#include "acados/utils/external_function_generic.h"
 
 
 
@@ -87,6 +88,7 @@ void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
 typedef struct
 {
 	ocp_nlp_cost_ls_dims *dims;
+	external_function_generic **nls_jac; // array of N+1 pointers; evaluation and jacobian of ls residuals
 	struct blasfeo_dmat *Cyt;
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;

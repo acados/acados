@@ -59,7 +59,7 @@ void *ocp_qp_hpmpc_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, vo
         memcpy(dest->t0[i], source->t0[i], sz);
     }
     sz = 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
-    memcpy(source->inf_norm_res, source->inf_norm_res, sz);
+    memcpy(dest->inf_norm_res, source->inf_norm_res, sz);
 
     return (void *)dest;
 }
