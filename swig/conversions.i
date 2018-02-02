@@ -396,12 +396,24 @@ real_t real_from(const LangObject *map, const char *key) {
 #endif
 }
 
-bool is_valid_option(const LangObject *input) {
+bool is_string(LangObject *input) {
 #if defined(SWIGMATLAB)
-    return mxIsChar(input) || is_sequence(input) || mxIsNumeric(input) || mxIsLogicalScalar(input);
+    return mxIsChar(input);
 #elif defined(SWIGPYTHON)
-    return PyString_Check(input) || is_sequence(input) || PyArray_Check(input) || PyBool_Check(input);
+    return PyUnicode_Check(input);
 #endif
+}
+
+bool is_boolean(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsLogicalScalar(input);
+#elif defined(SWIGPYTHON)
+    return PyBool_Check(input);
+#endif
+}
+
+bool is_valid_option_type(LangObject *input) {
+    return is_integer(input) || is_real(input) || is_matrix(input) || is_map(input) || is_string(input) || is_boolean(input);
 }
 
 void to(LangObject *sequence, const int_t index, LangObject *item) {
@@ -721,5 +733,27 @@ void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t
         fill_array_from(item, array, array_length);
     }
 }
+
+#include "acados_cpp/options.hpp"
+
+namespace acados {
+
+template<typename T>
+option_t *as_option_ptr(T val) {
+    return new option<T>(val);
+}
+
+template<>
+option_t *as_option_ptr(LangObject *val) {
+    if (is_integer(val))
+        return new option<int>(int_from(val));
+    else if (is_real(val))
+        return new option<double>(real_from(val));
+    else if (is_boolean(val))
+        return new option<bool>(val);
+    else throw std::invalid_argument("Option does not have a valid type");
+}
+
+}  // namespace acados
 
 %}

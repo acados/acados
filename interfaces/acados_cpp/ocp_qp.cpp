@@ -185,7 +185,7 @@ void ocp_qp::set(string field, vector<double> v) {
 }
 
 
-ocp_qp_solution ocp_qp::solve(string solver_name, map<string, acados::option_t *> options) {
+ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> options) {
 
     if (solver == nullptr) {
         ocp_qp_solver_plan plan = string_to_plan(solver_name, options);

@@ -138,10 +138,6 @@ using std::string;
         return vector<string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
     }
 
-    ocp_qp_solution operator()(std::map<std::string, option_t *> options) {
-        return $self->solve("qpoases", options);
-    }
-
     char *__str__() {
         static char tmp[10000];
         std::ostringstream stream;
