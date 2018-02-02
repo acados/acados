@@ -59,7 +59,7 @@ int main() {
     xref[1] = M_PI;
 
     sim_solver_config config;
-    config.sim_solver = LIFTED_IRK;
+    config.sim_solver = ERK;
     config.ef_config.type = CASADI_WRAPPER;
 
     sim_dims dims;
