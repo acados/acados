@@ -27,7 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
-#include "acados/utils/external_function.h"
+#include "acados/utils/external_function_generic.h"
 
 
 

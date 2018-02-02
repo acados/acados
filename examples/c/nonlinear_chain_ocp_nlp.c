@@ -39,7 +39,7 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "acados/utils/external_function.h"
+#include "acados/utils/external_function_generic.h"
 #include "examples/c/chain_model/chain_model.h"
 
 #include <acados_c/legacy_create.h>

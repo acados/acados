@@ -18,7 +18,7 @@
  */
 
 #include "acados/utils/mem.h"
-#include "acados/utils/external_function.h"
+#include "acados/utils/external_function_generic.h"
 
 #include <assert.h>
 
