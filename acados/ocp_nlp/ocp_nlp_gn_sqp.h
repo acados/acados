@@ -121,6 +121,9 @@ typedef struct
 	struct blasfeo_dvec *tmp_nbg;
     struct blasfeo_dvec *tmp_ny;
 
+	double **ls_cost_in;
+	double **ls_cost_jac_out;
+
 } ocp_nlp_gn_sqp_work;
 
 //

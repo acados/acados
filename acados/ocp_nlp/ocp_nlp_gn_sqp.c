@@ -351,14 +351,17 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
 
 	// temporary stuff
-    size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_ny tmp_nbg
+    size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_ny, tmp_nbg
     size += 1*(N+1)*sizeof(struct blasfeo_dmat); // tmp_nv_ny
+	size += 2*(N+1)*sizeof(double *); // ls_cost_in, ls_cost_jac_out
 
     for (ii = 0; ii < N+1; ii++)
     {
         size += 1*blasfeo_memsize_dvec(ny[ii]); // tmp_ny
         size += 1*blasfeo_memsize_dvec(nb[ii]+ng[ii]); // tmp_nbg
         size += 1*blasfeo_memsize_dmat(nv[ii], ny[ii]); // tmp_nv_ny
+		size += 1*nv[ii]*sizeof(double); // ls_cost_in
+		size += 1*(ny[ii]+ny[ii]*nv[ii])*sizeof(double); // ls_cost_jac_out
     }
 
     size += 8; // blasfeo_struct align
@@ -396,6 +399,14 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     assign_blasfeo_dvec_structs(N+1, &work->tmp_ny, &c_ptr);
     assign_blasfeo_dvec_structs(N+1, &work->tmp_nbg, &c_ptr);
     assign_blasfeo_dmat_structs(N+1, &work->tmp_nv_ny, &c_ptr);
+
+	// ls_cost_in
+	assign_double_ptrs(N+1, &work->ls_cost_in, &c_ptr);
+	for (int ii=0; ii<=N; ii++)
+		assign_double(nv[ii], &work->ls_cost_in[ii], &c_ptr);
+	assign_double_ptrs(N+1, &work->ls_cost_jac_out, &c_ptr);
+	for (int ii=0; ii<=N; ii++)
+		assign_double(ny[ii]+ny[ii]+nv[ii], &work->ls_cost_jac_out[ii], &c_ptr);
 
 	// blasfeo_mem align
     align_char_to(64, &c_ptr);
@@ -480,7 +491,7 @@ static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, 
 		// general Cyt
 
 		// TODO recompute factorization only if W are re-tuned ???
-		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, mem->W_chol+i, 0, 0); // TODO move in the memory
+		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, mem->W_chol+i, 0, 0);
 
 		// linear ls
 		// TODO avoid recomputing the Hessian if both W and Cyt do not change
@@ -633,8 +644,20 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
 		}
 		else // nonlinear ls
 		{
-			// TODO evaluate ls residuals into ls_res
-			// TODO evaluate Jacobian into Cyt
+			// unpack ls cost input
+			blasfeo_unpack_dvec(nu[i], nlp_out->ux+i, 0, work->ls_cost_in[i]+nx[i]);
+			blasfeo_unpack_dvec(nx[i], nlp_out->ux+i, nu[i], work->ls_cost_in[i]);
+
+			// evaluate external function (that assumes variables stacked as [x; u] )
+			cost->nls_jac[i]->evaluate(cost->nls_jac[i], work->ls_cost_in[i], work->ls_cost_jac_out[i]);
+
+			// pack residuals into ls_res
+			blasfeo_pack_dvec(ny[i], work->ls_cost_jac_out[i], ls_res+i, 0);
+			// pack jacobian into Cyt
+			blasfeo_pack_tran_dmat(ny[i], nx[i], work->ls_cost_jac_out[i]+ny[i], ny[i], cost->Cyt+i, nu[i], 0);
+			blasfeo_pack_tran_dmat(ny[i], nu[i], work->ls_cost_jac_out[i]+ny[i]+ny[i]*nx[i], ny[i], cost->Cyt+i, 0, 0);
+
+			blasfeo_daxpy(ny[i], -1.0, y_ref+i, 0, ls_res+i, 0, ls_res+i, 0);
 
 			blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, W_chol+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
 			blasfeo_dsyrk_ln(nv[i], ny[i], 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
@@ -661,7 +684,6 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
 
     }
 
-	// return
 	return;
 
 }
