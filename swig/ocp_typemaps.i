@@ -17,6 +17,38 @@
  *
  */
 
+%include "std_map.i"
+
+%typemap(in) std::map<std::string, acados::option_t *> {
+    std::map<std::string, acados::option_t *> tmp;
+#if defined(SWIGMATLAB)
+    for (int i = 0; i < num_elems($input); ++i) {
+        const char *fieldname = mxGetFieldNameByNumber($input, i);
+        mxArray *field = mxGetField($input, 0, fieldname);
+        acados::option_t **opt = &tmp[std::string(fieldname)];
+        swig::asptr(field, opt);
+    }
+#elif defined(SWIGPYTHON)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next($input, &pos, &key, &value))
+        $1 = $1 && PyString_Check(key) && is_valid_option(value);
+#endif
+    $1 = tmp;
+}
+
+%typemap(typecheck) std::map<std::string, acados::option_t *> {
+    $1 = is_map($input) ? 1 : 0;
+#if defined(SWIGMATLAB)
+    for (int i = 0; i < num_elems($input); ++i)
+        $1 = $1 && is_valid_option(mxGetField($input, 0, mxGetFieldNameByNumber($input, i)));
+#elif defined(SWIGPYTHON)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next($input, &pos, &key, &value))
+        $1 = $1 && PyString_Check(key) && is_valid_option(value);
+#endif
+}
 
 %typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
 #if defined(SWIGMATLAB)

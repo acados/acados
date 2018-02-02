@@ -32,7 +32,7 @@ public:
     void set(string field, uint stage, vector<double> v);
     void set(string field, vector<double> v);
 
-    ocp_qp_solution solve(string solver_name, map<string, option_t> options = {});
+    ocp_qp_solution solve(string solver_name, map<string, option_t *> options = {});
 
     vector< vector<double> > extract(string field);
 

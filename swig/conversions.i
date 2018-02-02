@@ -325,6 +325,8 @@ bool is_map(const LangObject *object) {
 #if defined(SWIGMATLAB)
     if (!mxIsStruct(object))
         return false;
+    if (mxGetNumberOfElements(object) != 1)
+        return false;
 #elif defined(SWIGPYTHON)
     if (!PyDict_Check(object))
         return false;
@@ -341,6 +343,14 @@ bool has(const LangObject *map, const char *key) {
         return false;
 #endif
     return true;
+}
+
+int num_elems(const LangObject *map) {
+#if defined(SWIGMATLAB)
+    return mxGetNumberOfFields(map);
+#elif defined(SWIGPYTHON)
+    return PyDict_Size((PyObject *) map);
+#endif
 }
 
 LangObject *from(const LangObject *map, const char *key) {
@@ -383,6 +393,14 @@ real_t real_from(const LangObject *map, const char *key) {
     return (real_t) mxGetScalar(value);
 #elif defined(SWIGPYTHON)
     return (real_t) PyFloat_AsDouble(value);
+#endif
+}
+
+bool is_valid_option(const LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsChar(input) || is_sequence(input) || mxIsNumeric(input) || mxIsLogicalScalar(input);
+#elif defined(SWIGPYTHON)
+    return PyString_Check(input) || is_sequence(input) || PyArray_Check(input) || PyBool_Check(input);
 #endif
 }
 

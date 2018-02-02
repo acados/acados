@@ -9,6 +9,7 @@
 #include "acados_c/ocp_qp.h"
 #include "acados_cpp/ocp_qp.hpp"
 #include "acados_cpp/ocp_qp_solution.hpp"
+#include "acados_cpp/options.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
@@ -135,6 +136,10 @@ using std::string;
 
     vector<string> fields() {
         return vector<string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
+    }
+
+    ocp_qp_solution operator()(std::map<std::string, option_t *> options) {
+        return $self->solve("qpoases", options);
     }
 
     char *__str__() {
