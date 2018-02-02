@@ -34,7 +34,8 @@ extern "C" {
 
 typedef struct
 {
-	void (* wrapper) (void *, double *, double *);
+	void (* evaluate) (void *, double *, double *); // has to be in the first position
+	// other members
 } external_function_generic;
 
 
@@ -45,9 +46,9 @@ typedef struct
 
 typedef struct
 {
-	void (* wrapper) (void *, double *, double *);
+	void (* evaluate) (void *, double *, double *);
 	int (*casadi_fun) (const double **, double **, int *, double *, int);
-	int (*casadi_dims) (int *, int *, int *, int *);
+	int (*casadi_work) (int *, int *, int *, int *);
 	const int * (*casadi_sparsity_in) (int);
 	const int * (*casadi_sparsity_out) (int);
 	double **args;

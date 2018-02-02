@@ -285,22 +285,15 @@ int main() {
     ************************************************/
 
 	external_function_casadi casadi_fun;
-	casadi_fun.wrapper = &external_function_casadi_wrapper;
-
 	casadi_fun.casadi_fun = &ls_cost_nm4;
-	casadi_fun.casadi_dims = &ls_cost_nm4_work;
+	casadi_fun.casadi_work = &ls_cost_nm4_work;
 	casadi_fun.casadi_sparsity_in = &ls_cost_nm4_sparsity_in;
 	casadi_fun.casadi_sparsity_out = &ls_cost_nm4_sparsity_out;
 
 	int casadi_fun_size = external_function_casadi_calculate_size(&casadi_fun);
-//	printf("\ncasadi fun size = %d\n", casadi_fun_size);
-
 	void *casadi_fun_mem = malloc(casadi_fun_size);
-
 	external_function_casadi_assign(&casadi_fun, casadi_fun_mem);
 
-//	printf("\n%d %d\n", casadi_fun.args_size[0], casadi_fun.args_size[1]);
-//	printf("\n%d %d\n", casadi_fun.res_size[0], casadi_fun.res_size[1]);
 
 	double *in_tmp; d_zeros(&in_tmp, NU+NX, 1);
 	double *out_tmp; d_zeros(&out_tmp, (NU+NX+1)*(NU+NX), 1);
@@ -314,7 +307,7 @@ int main() {
 	external_function_generic *generic_fun = (external_function_generic *) &casadi_fun;
 
 	// evaluate as generic external function
-	generic_fun->wrapper(generic_fun, in_tmp, out_tmp);
+	generic_fun->evaluate(generic_fun, in_tmp, out_tmp);
 
 	d_print_mat(1, NU+NX, out_tmp, 1);
 	d_print_mat(NU+NX, NU+NX, out_tmp+NU+NX, NU+NX);

@@ -98,10 +98,13 @@ static void casadi_densify(const double *sparse_in, double *dense_out, const int
 int external_function_casadi_calculate_size(external_function_casadi *fun)
 {
 
+	// casadi wrapper as evaluate
+	fun->evaluate = &external_function_casadi_wrapper;
+
 	// loop index
 	int ii;
 
-	fun->casadi_dims(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
+	fun->casadi_work(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
 
 	// args
 	fun->args_size_tot = 0;
