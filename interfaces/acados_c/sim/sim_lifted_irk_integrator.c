@@ -23,12 +23,17 @@
 
 
 
-void *sim_lifted_irk_copy_opts(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_)
+void *sim_lifted_irk_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_)
 {
-    sim_rk_opts *source = (sim_rk_opts *) source_;
-    sim_rk_opts *dest;
+    sim_lifted_irk_integrator_args *source = (sim_lifted_irk_integrator_args *) source_;
+    sim_lifted_irk_integrator_args *dest;
 
-    dest = sim_lifted_irk_assign_opts(dims, raw_memory);
+    sim_lifted_irk_integrator_submodules submodules = {
+        *(source->forward_vde),
+        *(source->jacobian_ode)
+    };
+
+    dest = sim_lifted_irk_integrator_assign_args(dims, &submodules, raw_memory);
 
     dest->interval = source->interval;
     dest->num_stages = source->num_stages;
@@ -53,7 +58,12 @@ void *sim_lifted_irk_copy_opts(sim_solver_config *config, sim_dims *dims, void *
     memcpy(dest->scheme->transf2, source->scheme->transf2, ns*ns*sizeof(double));
     memcpy(dest->scheme->transf1_T, source->scheme->transf1_T, ns*ns*sizeof(double));
     memcpy(dest->scheme->transf2_T, source->scheme->transf2_T, ns*ns*sizeof(double));
-    dest->scheme->low_tria = NULL; // TODO(nielsvd): find out what's the purpose of this variable.
+    dest->scheme->low_tria = source->scheme->low_tria;
+
+    extern external_function_dims sim_lifted_irk_forward_vde_dims;
+    extern external_function_dims sim_lifted_irk_jacobian_ode_dims;
+    external_function_copy_args(&config->ef_config, &sim_lifted_irk_forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
+    external_function_copy_args(&config->ef_config, &sim_lifted_irk_jacobian_ode_dims, dest->jacobian_ode_args, source->jacobian_ode_args);
 
     return (void *)dest;
 }

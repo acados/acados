@@ -52,12 +52,12 @@ void *sim_erk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, vo
     memcpy(dest->c_vec, source->c_vec, ns*sizeof(double));
     memcpy(dest->b_vec, source->b_vec, ns*sizeof(double));
 
-    extern external_function_dims forward_vde_dims;
-    extern external_function_dims adjoint_vde_dims;
-    extern external_function_dims hess_vde_dims;
-    external_function_copy_args(&config->ef_config, &forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
-    external_function_copy_args(&config->ef_config, &adjoint_vde_dims, dest->adjoint_vde_args, source->adjoint_vde_args);
-    external_function_copy_args(&config->ef_config, &hess_vde_dims, dest->hess_vde_args, source->hess_vde_args);
+    extern external_function_dims sim_erk_forward_vde_dims;
+    extern external_function_dims sim_erk_adjoint_vde_dims;
+    extern external_function_dims sim_erk_hess_vde_dims;
+    external_function_copy_args(&config->ef_config, &sim_erk_forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
+    external_function_copy_args(&config->ef_config, &sim_erk_adjoint_vde_dims, dest->adjoint_vde_args, source->adjoint_vde_args);
+    external_function_copy_args(&config->ef_config, &sim_erk_hess_vde_dims, dest->hess_vde_args, source->hess_vde_args);
 
     return (void *)dest;
 }

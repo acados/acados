@@ -29,7 +29,7 @@ extern "C" {
 #include "acados_c/sim.h"
 
 //
-void *sim_lifted_irk_copy_opts(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_);
+void *sim_lifted_irk_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_);
 
 #ifdef __cplusplus
 } /* extern "C" */

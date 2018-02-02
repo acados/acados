@@ -26,28 +26,43 @@ extern "C" {
 
 #include "acados/sim/sim_collocation.h"
 #include "acados/sim/sim_common.h"
+#include "acados/utils/external_function.h"
 #include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 
+
+
 typedef struct {
-    real_t *rhs_in;
-    real_t *jac_tmp;
-    real_t **VDE_tmp;
-    real_t *out_tmp;
-    int_t *ipiv;
+    // Options
+    double interval;
+    int num_stages;
 
-    real_t *sys_mat;
-    real_t *sys_sol;
-    real_t *sys_sol_trans;
+    int num_steps;
+    int num_forw_sens;
 
-    real_t *trans;
-    struct blasfeo_dmat *str_mat;
-    struct blasfeo_dmat *str_sol;
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
 
-    real_t *out_adj_tmp;
-} sim_lifted_irk_workspace;
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+
+    int newton_iter;
+    Newton_scheme *scheme;
+
+    // Function pointers
+    external_function_fcn_ptrs *forward_vde;
+    external_function_fcn_ptrs *jacobian_ode;
+
+    // Arguments for functions
+    void *forward_vde_args;
+    void *jacobian_ode_args;
+} sim_lifted_irk_integrator_args;
+
+
 
 typedef struct {
 
@@ -72,34 +87,60 @@ typedef struct {
     struct blasfeo_dmat **str_mat2;
     struct blasfeo_dmat **str_sol2;
 
-} sim_lifted_irk_memory;
+    // Memory for functions
+    void *forward_vde_mem;
+    void *jacobian_ode_mem;
+} sim_lifted_irk_integrator_memory;
 
-int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
 
-void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory);
 
-void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_);
+typedef struct {
+    real_t *rhs_in;
+    real_t *jac_tmp;
+    real_t **VDE_tmp;
+    real_t *out_tmp;
+    int_t *ipiv;
 
-int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts);
+    real_t *sys_mat;
+    real_t *sys_sol;
+    real_t *sys_sol_trans;
 
-void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
+    real_t *trans;
+    struct blasfeo_dmat *str_mat;
+    struct blasfeo_dmat *str_sol;
 
-int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem, void *work);
+    real_t *out_adj_tmp;
 
-int sim_lifted_irk_calculate_workspace_size(sim_dims *in, void *args);
+    // Workspace for functions
+    void *forward_vde_work;
+    void *jacobian_ode_work;
+} sim_lifted_irk_integrator_workspace;
 
-void sim_irk_create_arguments(void *args, const int_t num_stages, const char* name);
 
-void sim_lifted_irk_initialize(const sim_in *in, void *args_, void *mem_,
-                               void **work);
-void sim_lifted_irk_destroy(void *mem, void *work);
 
-void sim_irk_control_collocation(void *args, int_t num_stages,
-                                 const char *name);
+typedef struct {
+    external_function_fcn_ptrs forward_vde;
+    external_function_fcn_ptrs jacobian_ode;
+} sim_lifted_irk_integrator_submodules;
 
-void sim_irk_create_Newton_scheme(void *args, int_t num_stages,
-                                  const char *name,
-                                  enum Newton_type_collocation type);
+
+
+//
+int sim_lifted_irk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
+//
+void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void *submodules_, void *raw_memory);
+//
+void sim_lifted_irk_integrator_initialize_default_args(sim_dims *dims, void *args_);
+//
+int sim_lifted_irk_integrator_calculate_memory_size(sim_dims *dims, void *args_);
+//
+void *sim_lifted_irk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_memory);
+//
+int sim_lifted_irk_integrator_calculate_workspace_size(sim_dims *dims, void *args_);
+//
+int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *work_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
