@@ -67,6 +67,8 @@ void ocp_qp_full_condensing_initialize_default_args(ocp_qp_full_condensing_args 
 	
 	// condense both Hessian and gradient by default
 	args->condense_rhs_only = 0;
+	// expand only primal solution (linear MPC, Gauss-Newton)
+	args->expand_primal_sol_only = 0;
 }
 
 int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args)
@@ -127,7 +129,6 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
 		// condense gradient and Hessian
 		d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);
 	}
-    d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);
 }
 
 
@@ -135,5 +136,10 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
 void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_args *args,
     ocp_qp_full_condensing_memory *mem, void *work)
 {
-    d_expand_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);
+	if(args->expand_primal_sol_only == 1) {
+		d_expand_primal_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);
+	} else {
+		d_expand_sol_dense2ocp(mem->qp_in, in, out, mem->hpipm_workspace);
+
+	}
 }

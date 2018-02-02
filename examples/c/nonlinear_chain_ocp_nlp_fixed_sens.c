@@ -449,7 +449,8 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
+	ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_QPOASES;
+    /* ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM; */
 //    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
 
     // set up args with nested structs

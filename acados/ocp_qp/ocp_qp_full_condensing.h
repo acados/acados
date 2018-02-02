@@ -34,7 +34,7 @@ extern "C" {
 
 typedef struct ocp_qp_full_condensing_args_ {
 	int condense_rhs_only;
-	int dummy;
+	int expand_primal_sol_only;
 } ocp_qp_full_condensing_args;
 
 
