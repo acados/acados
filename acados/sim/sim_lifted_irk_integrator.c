@@ -463,6 +463,7 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
     
     int nx = dims->nx;
     int nu = dims->nu;
+    int np = dims->np;
 
     int num_stages = args->num_stages;
     int NF = args->num_forw_sens;

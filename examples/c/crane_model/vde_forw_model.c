@@ -69,7 +69,7 @@ static const int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 static const int casadi_s1[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
 static const int casadi_s2[5] = {1, 1, 0, 1, 0};
 
-/* vdeFun:(i0[4],i1[4x4],i2[4],i3)->(o0[4],o1[4x4],o2[4]) */
+/* vdeFun:(i0[4],i1[4x4],i2[4],i3,i4)->(o0[4],o1[4x4],o2[4]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a2, a20, a21, a22, a23, a24, a25, a26, a27, a28, a29, a3, a30, a31, a32, a33, a34, a35, a36, a37, a38, a39, a4, a40, a41, a42, a43, a5, a6, a7, a8, a9;
   a0=arg[0] ? arg[0][2] : 0;
@@ -90,13 +90,14 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a9=sin(a2);
   a10=(a8*a9);
   a5=(a5+a10);
-  a10=1.1000000000000001e+00;
+  a10=arg[4] ? arg[4][0] : 0;
   a11=1.0000000000000001e-01;
-  a12=cos(a2);
-  a13=sq(a12);
-  a13=(a11*a13);
-  a13=(a10-a13);
-  a5=(a5/a13);
+  a12=(a10+a11);
+  a13=cos(a2);
+  a14=sq(a13);
+  a14=(a11*a14);
+  a12=(a12-a14);
+  a5=(a5/a12);
   if (res[0]!=0) res[0][2]=a5;
   a14=cos(a2);
   a14=(a1*a14);
@@ -111,10 +112,12 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a20=(a7*a20);
   a18=(a18+a20);
   a20=9.8100000000000005e+00;
+  a20=(a20*a10);
   a21=sin(a2);
   a21=(a20*a21);
   a18=(a18+a21);
   a21=8.0000000000000004e-01;
+  a10=(a10+a11);
   a22=cos(a2);
   a23=sq(a22);
   a23=(a11*a23);
@@ -144,9 +147,9 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a31=(a9*a31);
   a29=(a29-a31);
   a26=(a26+a29);
-  a26=(a26/a13);
-  a29=(a5/a13);
-  a31=(a12+a12);
+  a26=(a26/a12);
+  a29=(a5/a12);
+  a31=(a13+a13);
   a32=sin(a2);
   a33=(a32*a25);
   a33=(a31*a33);
@@ -208,7 +211,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a43=(a9*a43);
   a42=(a42-a43);
   a41=(a41+a42);
-  a41=(a41/a13);
+  a41=(a41/a12);
   a42=(a32*a25);
   a42=(a31*a42);
   a42=(a11*a42);
@@ -260,7 +263,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a43=(a9*a43);
   a42=(a42-a43);
   a33=(a33+a42);
-  a33=(a33/a13);
+  a33=(a33/a12);
   a42=(a32*a25);
   a42=(a31*a42);
   a42=(a11*a42);
@@ -312,7 +315,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a30=(a9*a30);
   a28=(a28-a30);
   a24=(a24+a28);
-  a24=(a24/a13);
+  a24=(a24/a12);
   a32=(a32*a25);
   a31=(a31*a32);
   a31=(a11*a31);
@@ -350,7 +353,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   if (res[2]!=0) res[2][0]=a26;
   a26=arg[2] ? arg[2][3] : 0;
   if (res[2]!=0) res[2][1]=a26;
-  a38=(1./a13);
+  a38=(1./a12);
   a39=cos(a2);
   a40=arg[2] ? arg[2][1] : 0;
   a39=(a39*a40);
@@ -369,14 +372,14 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a9=(a9*a3);
   a8=(a8-a9);
   a4=(a4+a8);
-  a4=(a4/a13);
-  a5=(a5/a13);
-  a12=(a12+a12);
-  a13=sin(a2);
-  a13=(a13*a40);
-  a12=(a12*a13);
-  a12=(a11*a12);
-  a5=(a5*a12);
+  a4=(a4/a12);
+  a5=(a5/a12);
+  a13=(a13+a13);
+  a12=sin(a2);
+  a12=(a12*a40);
+  a13=(a13*a12);
+  a13=(a11*a13);
+  a5=(a5*a13);
   a4=(a4-a5);
   a38=(a38+a4);
   if (res[2]!=0) res[2][2]=a38;
@@ -431,7 +434,7 @@ CASADI_SYMBOL_EXPORT void vdeFun_incref(void) {
 CASADI_SYMBOL_EXPORT void vdeFun_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int vdeFun_n_in(void) { return 4;}
+CASADI_SYMBOL_EXPORT int vdeFun_n_in(void) { return 5;}
 
 CASADI_SYMBOL_EXPORT int vdeFun_n_out(void) { return 3;}
 
@@ -441,6 +444,7 @@ CASADI_SYMBOL_EXPORT const char* vdeFun_name_in(int i){
     case 1: return "i1";
     case 2: return "i2";
     case 3: return "i3";
+    case 4: return "i4";
     default: return 0;
   }
 }
@@ -460,6 +464,7 @@ CASADI_SYMBOL_EXPORT const int* vdeFun_sparsity_in(int i) {
     case 1: return casadi_s1;
     case 2: return casadi_s0;
     case 3: return casadi_s2;
+    case 4: return casadi_s2;
     default: return 0;
   }
 }
@@ -474,7 +479,7 @@ CASADI_SYMBOL_EXPORT const int* vdeFun_sparsity_out(int i) {
 }
 
 CASADI_SYMBOL_EXPORT int vdeFun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 4;
+  if (sz_arg) *sz_arg = 5;
   if (sz_res) *sz_res = 3;
   if (sz_iw) *sz_iw = 0;
   if (sz_w) *sz_w = 44;

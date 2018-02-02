@@ -224,6 +224,8 @@ void *sim_erk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_me
         c_ptr += args->hess_vde->calculate_memory_size(&sim_erk_hess_vde_dims, args->hess_vde_args);
     }
 
+    align_char_to(8, &c_ptr);
+
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     assert((char*)raw_memory + sim_erk_integrator_calculate_memory_size(dims, args_) >= c_ptr);

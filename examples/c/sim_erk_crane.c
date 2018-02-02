@@ -50,6 +50,7 @@ int main() {
 
     int nx = 4;
     int nu = 1;
+    int np = 1;
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
@@ -59,13 +60,14 @@ int main() {
     xref[1] = M_PI;
 
     sim_solver_config config;
-    config.sim_solver = ERK;
+    config.sim_solver = LIFTED_IRK;
     config.ef_config.type = CASADI_WRAPPER;
 
     sim_dims dims;
     dims.num_stages = num_stages;
     dims.nx = nx;
     dims.nu = nu;
+    dims.np = np;
 
     void *args = sim_create_args(&config, &dims);
     int num_steps = 4;
@@ -122,6 +124,9 @@ int main() {
     }
     for (ii = 0;ii < nu; ii++){
         in->u[ii] = 1.0;
+    }
+    for (ii = 0;ii < np; ii++){
+        in->p[ii] = 1.0;
     }
 
     for (ii = 0; ii < nx * NF; ii++)

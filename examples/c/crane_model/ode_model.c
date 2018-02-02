@@ -67,9 +67,9 @@ casadi_real if_else(casadi_real c, casadi_real x, casadi_real y) { return c!=0 ?
 static const int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 static const int casadi_s1[5] = {1, 1, 0, 1, 0};
 
-/* odeFun:(i0[4],i1)->(o0[4]) */
+/* odeFun:(i0[4],i1,i2)->(o0[4]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem) {
-  casadi_real a0, a1, a2, a3, a4, a5, a6, a7, a8;
+  casadi_real a0, a1, a2, a3, a4, a5, a6, a7, a8, a9;
   a0=arg[0] ? arg[0][2] : 0;
   if (res[0]!=0) res[0][0]=a0;
   a0=arg[0] ? arg[0][3] : 0;
@@ -88,12 +88,13 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a7=sin(a2);
   a6=(a6*a7);
   a3=(a3+a6);
-  a6=1.1000000000000001e+00;
+  a6=arg[2] ? arg[2][0] : 0;
   a7=1.0000000000000001e-01;
-  a8=cos(a2);
-  a8=sq(a8);
-  a8=(a7*a8);
-  a8=(a6-a8);
+  a8=(a6+a7);
+  a9=cos(a2);
+  a9=sq(a9);
+  a9=(a7*a9);
+  a8=(a8-a9);
   a3=(a3/a8);
   if (res[0]!=0) res[0][2]=a3;
   a3=cos(a2);
@@ -109,10 +110,12 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   a5=(a5*a4);
   a1=(a1+a5);
   a5=9.8100000000000005e+00;
+  a5=(a5*a6);
   a4=sin(a2);
   a5=(a5*a4);
   a1=(a1+a5);
   a5=8.0000000000000004e-01;
+  a6=(a6+a7);
   a2=cos(a2);
   a2=sq(a2);
   a7=(a7*a2);
@@ -133,7 +136,7 @@ CASADI_SYMBOL_EXPORT void odeFun_incref(void) {
 CASADI_SYMBOL_EXPORT void odeFun_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int odeFun_n_in(void) { return 2;}
+CASADI_SYMBOL_EXPORT int odeFun_n_in(void) { return 3;}
 
 CASADI_SYMBOL_EXPORT int odeFun_n_out(void) { return 1;}
 
@@ -141,6 +144,7 @@ CASADI_SYMBOL_EXPORT const char* odeFun_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
+    case 2: return "i2";
     default: return 0;
   }
 }
@@ -156,6 +160,7 @@ CASADI_SYMBOL_EXPORT const int* odeFun_sparsity_in(int i) {
   switch (i) {
     case 0: return casadi_s0;
     case 1: return casadi_s1;
+    case 2: return casadi_s1;
     default: return 0;
   }
 }
@@ -168,10 +173,10 @@ CASADI_SYMBOL_EXPORT const int* odeFun_sparsity_out(int i) {
 }
 
 CASADI_SYMBOL_EXPORT int odeFun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 2;
+  if (sz_arg) *sz_arg = 3;
   if (sz_res) *sz_res = 1;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 9;
+  if (sz_w) *sz_w = 10;
   return 0;
 }
 

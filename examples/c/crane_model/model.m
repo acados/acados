@@ -5,7 +5,6 @@ close all;
 import casadi.*
 
 % constants
-M = 1;
 m = 0.1;
 g = 9.81;
 l = 0.8;
@@ -18,11 +17,15 @@ dtheta = SX.sym('dtheta');
 
 F = SX.sym('F');
 
+M = SX.sym('M');
+
 x = [x1; theta; v1; dtheta];
 u = F;
+p = M;
 
 nx = length(x);
 nu = length(u);
+np = length(p);
 
 % ODE system
 
@@ -31,7 +34,7 @@ f_expl = [   v1; ...
              (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
              (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
         
-odeFun = Function('odeFun',{x,u},{f_expl});
+odeFun = Function('odeFun',{x,u,p},{f_expl});
 
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
@@ -42,15 +45,15 @@ vdeX = jtimes(f_expl,x,Sx);
 vdeP = jacobian(f_expl,u);
 vdeP = vdeP + jtimes(f_expl,x,Sp);
 
-vdeFun = Function('vdeFun',{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
+vdeFun = Function('vdeFun',{x,Sx,Sp,u,p},{f_expl,vdeX,vdeP});
 
 jacX = jacobian(f_expl,x);
-jacFun = Function('jacFun',{x,u},{f_expl,jacX});
+jacFun = Function('jacFun',{x,u,p},{f_expl,jacX});
 
 adj = jtimes(f_expl,[x;u],lambdaX,true);
 % adj = jtimes(f_expl,[u;x],lambdaX,true);
 
-adjFun = Function('adjFun',{x,lambdaX,u},{adj});
+adjFun = Function('adjFun',{x,lambdaX,u,p},{adj});
 
 S_forw = vertcat(horzcat(Sx, Sp), horzcat(zeros(nu,nx), eye(nu)));
 hess = S_forw.'*jtimes(adj,[x;u],S_forw);
@@ -61,7 +64,7 @@ for j = 1:nx+nu
     end
 end
 
-hessFun = Function('hessFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
+hessFun = Function('hessFun',{x,Sx,Sp,lambdaX,u,p},{adj,hess2});
 
 opts = struct('mex', false);
 odeFun.generate(['ode_model'], opts);
