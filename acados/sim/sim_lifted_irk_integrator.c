@@ -1336,8 +1336,8 @@ int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_,
                     }
                 }
             }
-            rhs_in[nx * (1 + NF) + nu] = ((double)istep + c_vec[s1]) /
-                                         ((double)args->num_steps);  // time
+            rhs_in[nx * (1 + NF) + nu + np] = ((double)istep + c_vec[s1]) /
+                                              ((double)args->num_steps);  // time
 
             acados_tic(&timer_ad);
 
