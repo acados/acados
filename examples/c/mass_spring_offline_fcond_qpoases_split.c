@@ -29,9 +29,11 @@
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/dense_qp/dense_qp_hpipm.h>
+#include <acados/dense_qp/dense_qp_qpoases.h>
 
-#define NREP 100
+#define NREP 1
 #define ELIMINATE_X0
+#define TEMP_QPOASES 1
 
 #include "./mass_spring.c"
 
@@ -87,20 +89,49 @@ int main() {
     ************************************************/
 
     dense_qp_solver_plan plan;
-    plan.qp_solver = DENSE_QP_HPIPM;
+	if ( TEMP_QPOASES ) {
+		plan.qp_solver = DENSE_QP_QPOASES;
+	} else {
+    	plan.qp_solver = DENSE_QP_HPIPM;
+	}
 
     void *argd = dense_qp_create_args(&plan, &ddims);
 
-    dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
-
+	
+	if ( TEMP_QPOASES ) {
+		dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)argd; 
+		args->use_precomputed_choleski = 1;
+		cond_args->condense_rhs_only = 1;
+	}
+	
+	dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
+	
 	int acados_return;  // 0 normal; 1 max iter
 
-    acados_timer timer;
+	acados_timer timer;
     acados_tic(&timer);
 
 	for(int rep = 0; rep < NREP; rep++) {
 
         ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
+
+		if ( TEMP_QPOASES ) {
+			
+			int nvd = qpd_in->dim->nv;
+			
+			struct blasfeo_dmat sR;
+			blasfeo_allocate_dmat(nvd, nvd, &sR);
+			
+			// cholesky factorization of H
+			dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
+			blasfeo_dpotrf_l(nvd, qpd_in->Hv, 0, 0, &sR, 0, 0);
+
+			/* // fill in upper triangular of R */
+			blasfeo_dtrtr_l(nvd, &sR, 0, 0, &sR, 0, 0); 
+
+			/* // extract R */
+			blasfeo_unpack_dmat(nvd, nvd, &sR, 0, 0, qpoases_solver_mem->R, nvd); 
+		}
 
         acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 
