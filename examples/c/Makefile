@@ -29,7 +29,7 @@ EXAMPLES += mass_spring_example
 EXAMPLES += sim_erk_crane
 EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
-EXAMPLES += nonlinear_chain_ocp_nlp
+# EXAMPLES += nonlinear_chain_ocp_nlp
 
 examples: $(EXAMPLES)
 
@@ -40,7 +40,7 @@ RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_sim_erk_crane
 RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+# RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -113,12 +113,7 @@ CHAIN_OBJS += chain_model/vde_chain_nm4.o
 CHAIN_OBJS += chain_model/jac_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_hess_chain_nm4.o
-<<<<<<< HEAD
 # CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
-=======
-CHAIN_OBJS += chain_model/ls_cost_nm4.o
-CHAIN_OBJS += chain_model/ls_costN_nm4.o
->>>>>>> upstream/new_core
 
 nonlinear_chain_ocp_nlp: $(CHAIN_OBJS)
 	# $(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)

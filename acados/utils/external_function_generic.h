@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_UTILS_EXTERNAL_FUNCTION_H_
-#define ACADOS_UTILS_EXTERNAL_FUNCTION_H_
+#ifndef ACADOS_UTILS_EXTERNAL_FUNCTION_GENERIC_H_
+#define ACADOS_UTILS_EXTERNAL_FUNCTION_GENERIC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,4 +78,4 @@ void external_function_casadi_wrapper(void *self, double *in, double *out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_UTILS_EXTERNAL_FUNCTION_H_
+#endif  // ACADOS_UTILS_EXTERNAL_FUNCTION_GENERIC_H_
