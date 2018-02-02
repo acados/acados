@@ -32,6 +32,7 @@ typedef struct {
     int num_stages;
     int nx;
     int nu;
+    int np;
 } sim_dims;
 
 
@@ -39,10 +40,12 @@ typedef struct {
 typedef struct {
     int nx;   // NX
     int nu;   // NU
+    int np;   // NP
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
     double *u;  // u[NU]
+    double *p;  // p[NU]
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed

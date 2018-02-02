@@ -36,9 +36,9 @@
 
 
 
-#define FW_VDE_NUMIN 4
+#define FW_VDE_NUMIN 5
 #define FW_VDE_NUMOUT 3
-#define JAC_ODE_NUMIN 2
+#define JAC_ODE_NUMIN 3
 #define JAC_ODE_NUMOUT 2
 
 
@@ -394,6 +394,7 @@ int sim_lifted_irk_integrator_calculate_workspace_size(sim_dims *dims, void *arg
 {
     int nx = dims->nx;
     int nu = dims->nu;
+    int np = dims->np;
     sim_lifted_irk_integrator_args *args = (sim_lifted_irk_integrator_args *) args_;
     int num_stages = args->num_stages;
     int NF = args->num_forw_sens;
@@ -406,27 +407,27 @@ int sim_lifted_irk_integrator_calculate_workspace_size(sim_dims *dims, void *arg
     }
 
     int size = sizeof(sim_lifted_irk_integrator_workspace);
-    size += (nx * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
-    size += (nx * (1 + NF)) * sizeof(real_t);           // out_tmp
+    size += (nx * (1 + NF) + nu + np + 1) * sizeof(double);  // rhs_in
+    size += (nx * (1 + NF)) * sizeof(double);           // out_tmp
     if (args->scheme->type == exact) {
         size += (dim_sys) * sizeof(int);             // ipiv
-        size += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
+        size += (dim_sys * dim_sys) * sizeof(double);  // sys_mat
     }
-    size += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
-    size += (num_stages) * sizeof(real_t *);                  // VDE_tmp
-    size += (num_stages * nx * (1 + NF)) * sizeof(real_t);    // VDE_tmp[...]
-    size += (nx * (nx + 1)) * sizeof(real_t);                 // jac_tmp
+    size += ((num_stages * nx) * (1 + NF)) * sizeof(double);  // sys_sol
+    size += (num_stages) * sizeof(double *);                  // VDE_tmp
+    size += (num_stages * nx * (1 + NF)) * sizeof(double);    // VDE_tmp[...]
+    size += (nx * (nx + 1)) * sizeof(double);                 // jac_tmp
 
     if (args->scheme->type == simplified_in ||
         args->scheme->type == simplified_inis) {
         size +=
-            ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
-        size += (num_stages * num_stages) * sizeof(real_t);   // trans
+            ((num_stages * nx) * (1 + NF)) * sizeof(double);  // sys_sol_trans
+        size += (num_stages * num_stages) * sizeof(double);   // trans
     }
 
     if (args->scheme->type == simplified_in ||
         args->scheme->type == simplified_inis) {
-        size += (nx) * sizeof(real_t);  // out_adj_tmp
+        size += (nx) * sizeof(double);  // out_adj_tmp
     }
 
 #if !TRIPLE_LOOP
@@ -478,40 +479,40 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
     sim_lifted_irk_integrator_workspace *work = (sim_lifted_irk_integrator_workspace *) c_ptr;
     c_ptr += sizeof(sim_lifted_irk_integrator_workspace);
 
-    work->rhs_in = (real_t *)c_ptr;
-    c_ptr += (nx * (1 + NF) + nu + 1) * sizeof(real_t);  // rhs_in
-    work->out_tmp = (real_t *)c_ptr;
-    c_ptr += (nx * (1 + NF)) * sizeof(real_t);  // out_tmp
+    work->rhs_in = (double *)c_ptr;
+    c_ptr += (nx * (1 + NF) + nu + np + 1) * sizeof(double);  // rhs_in
+    work->out_tmp = (double *)c_ptr;
+    c_ptr += (nx * (1 + NF)) * sizeof(double);  // out_tmp
     if (args->scheme->type == exact) {
         work->ipiv = (int *)c_ptr;
         c_ptr += (dim_sys) * sizeof(int);  // ipiv
-        work->sys_mat = (real_t *)c_ptr;
-        c_ptr += (dim_sys * dim_sys) * sizeof(real_t);  // sys_mat
+        work->sys_mat = (double *)c_ptr;
+        c_ptr += (dim_sys * dim_sys) * sizeof(double);  // sys_mat
     }
-    work->sys_sol = (real_t *)c_ptr;
-    c_ptr += ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol
-    work->VDE_tmp = (real_t **)c_ptr;
-    c_ptr += (num_stages) * sizeof(real_t *);  // VDE_tmp
+    work->sys_sol = (double *)c_ptr;
+    c_ptr += ((num_stages * nx) * (1 + NF)) * sizeof(double);  // sys_sol
+    work->VDE_tmp = (double **)c_ptr;
+    c_ptr += (num_stages) * sizeof(double *);  // VDE_tmp
     for (int i = 0; i < num_stages; i++) {
-        work->VDE_tmp[i] = (real_t *)c_ptr;
-        c_ptr += (nx * (1 + NF)) * sizeof(real_t);  // VDE_tmp[i]
+        work->VDE_tmp[i] = (double *)c_ptr;
+        c_ptr += (nx * (1 + NF)) * sizeof(double);  // VDE_tmp[i]
     }
-    work->jac_tmp = (real_t *)c_ptr;
-    c_ptr += (nx * (nx + 1)) * sizeof(real_t);  // jac_tmp
+    work->jac_tmp = (double *)c_ptr;
+    c_ptr += (nx * (nx + 1)) * sizeof(double);  // jac_tmp
 
     if (args->scheme->type == simplified_in ||
         args->scheme->type == simplified_inis) {
-        work->sys_sol_trans = (real_t *)c_ptr;
+        work->sys_sol_trans = (double *)c_ptr;
         c_ptr +=
-            ((num_stages * nx) * (1 + NF)) * sizeof(real_t);  // sys_sol_trans
-        work->trans = (real_t *)c_ptr;
-        c_ptr += (num_stages * num_stages) * sizeof(real_t);  // trans
+            ((num_stages * nx) * (1 + NF)) * sizeof(double);  // sys_sol_trans
+        work->trans = (double *)c_ptr;
+        c_ptr += (num_stages * num_stages) * sizeof(double);  // trans
     }
 
     if (args->scheme->type == simplified_in ||
         args->scheme->type == simplified_inis) {
-        work->out_adj_tmp = (real_t *)c_ptr;
-        c_ptr += (nx) * sizeof(real_t);  // out_adj_tmp
+        work->out_adj_tmp = (double *)c_ptr;
+        c_ptr += (nx) * sizeof(double);  // out_adj_tmp
     }
 
 #if !TRIPLE_LOOP
@@ -561,7 +562,7 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 
 
 
-static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
+static void compute_forward_vde(const int nx, const int nu, const int np, double *in, double *out, 
                          sim_lifted_irk_integrator_args *args,
                          sim_lifted_irk_integrator_memory *mem,
                          sim_lifted_irk_integrator_workspace *work) 
@@ -570,6 +571,7 @@ static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real
     double *Sx = in + nx;
     double *Su = in + nx + nx * nx;
     double *u = in + nx + nx * (nx + nu);
+    double *p = in + nx + nx * (nx + nu) + nu;
 
     double *x_out = out;
     double *Sx_out = out + nx;
@@ -580,6 +582,7 @@ static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real
     fw_in_inputs[1] = Sx;
     fw_in_inputs[2] = Su;
     fw_in_inputs[3] = u;
+    fw_in_inputs[4] = p;
 
     bool fw_in_compute_output[FW_VDE_NUMOUT] = {true, true, true};
 
@@ -600,13 +603,14 @@ static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real
 
 
 
-static void compute_jacobian_ode(const int_t nx, real_t *in, real_t *out, 
+static void compute_jacobian_ode(const int nx, const int nu, const int np, double *in, double *out, 
                          sim_lifted_irk_integrator_args *args,
                          sim_lifted_irk_integrator_memory *mem,
                          sim_lifted_irk_integrator_workspace *work) 
 {
     double *x = in;
     double *u = in + nx;
+    double *p = in + nx + nu;
 
     double *x_out = out;
     double *jac_out = out + nx;
@@ -614,6 +618,7 @@ static void compute_jacobian_ode(const int_t nx, real_t *in, real_t *out,
     double *jac_in_inputs[JAC_ODE_NUMIN];
     jac_in_inputs[0] = x;
     jac_in_inputs[1] = u;
+    jac_in_inputs[2] = p;
 
     bool jac_in_compute_output[JAC_ODE_NUMOUT] = {true, true};
 
@@ -642,11 +647,11 @@ static void compute_jacobian_ode(const int_t nx, real_t *in, real_t *out,
 
 
 
-real_t LU_system_ACADO(real_t *const A, int *const perm, int dim)
+double LU_system_ACADO(double *const A, int *const perm, int dim)
 {
-    real_t det;
-    real_t swap;
-    real_t valueMax;
+    double det;
+    double swap;
+    double valueMax;
 //    printf("LU_system_ACADO, dim: %d \n", dim);
 
 #if !CODE_GENERATION
@@ -698,7 +703,7 @@ real_t LU_system_ACADO(real_t *const A, int *const perm, int dim)
 
 
 
-real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
+double solve_system_ACADO(double *const A, double *const b, int *const perm,
                           int dim, int dim2)
 {
     int i, j, k;
@@ -711,9 +716,9 @@ real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
     dim += 0;
     dim2 += 0;
 #endif
-    real_t *bPerm;
-    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
-    real_t tmp_var;
+    double *bPerm;
+    bPerm = (double *) calloc(DIM*DIM_RHS, sizeof(double));
+    double tmp_var;
 
     for (i = 0; i < DIM; ++i) {
         index1 = perm[i];
@@ -749,7 +754,7 @@ real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
 
 
 
-real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
+double solve_system_trans_ACADO(double *const A, double *const b,
                                 int *const perm, int dim, int dim2)
 {
     int i, j, k;
@@ -763,9 +768,9 @@ real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
     dim += 0;
     dim2 += 0;
 #endif
-    real_t *bPerm;
-    bPerm = (real_t *) calloc(DIM*DIM_RHS, sizeof(real_t));
-    real_t tmp_var;
+    double *bPerm;
+    bPerm = (double *) calloc(DIM*DIM_RHS, sizeof(double));
+    double tmp_var;
 
     for (k = 0; k < DIM * DIM_RHS; ++k) {
         bPerm[k] = b[k];
@@ -801,7 +806,7 @@ real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
 
 #endif
 
-void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
+void transform_mat(double *mat, double *trans, double *mat_trans,
                    const int stages, const int n, const int m)
 {
     //    print_matrix_name("stdout", "trans", trans, stages, stages);
@@ -821,7 +826,7 @@ void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
     }
 }
 
-void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
+void transform_vec(double *mat, double *trans, double *mat_trans,
                    const int stages, const int n)
 {
     for (int i = 0; i < stages * n; i++) mat_trans[i] = 0.0;
@@ -838,7 +843,7 @@ void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
 
 
 
-void construct_subsystems(real_t *mat, real_t **mat2, const int stages,
+void construct_subsystems(double *mat, double **mat2, const int stages,
                           const int n, const int m)
 {
     int idx = 0;
@@ -870,7 +875,7 @@ void construct_subsystems(real_t *mat, real_t **mat2, const int stages,
 
 
 
-void destruct_subsystems(real_t *mat, real_t **mat2, const int stages,
+void destruct_subsystems(double *mat, double **mat2, const int stages,
                          const int n, const int m)
 {
     int idx = 0;
@@ -904,25 +909,26 @@ void destruct_subsystems(real_t *mat, real_t **mat2, const int stages,
 
 void form_linear_system_matrix(int istep, const sim_in *in, void *args_,
                                sim_lifted_irk_integrator_memory *mem,
-                               sim_lifted_irk_integrator_workspace *work, real_t *sys_mat,
-                               real_t **sys_mat2, real_t timing_ad)
+                               sim_lifted_irk_integrator_workspace *work, double *sys_mat,
+                               double **sys_mat2, double timing_ad)
 {
     int nx = in->nx;
     int nu = in->nu;
-    real_t H_INT = in->step;
+    int np = in->np;
+    double H_INT = in->step;
     sim_lifted_irk_integrator_args *args = (sim_lifted_irk_integrator_args *) args_;
     int num_stages = args->num_stages;
-    real_t *A_mat = args->A_mat;
-    real_t *c_vec = args->c_vec;
+    double *A_mat = args->A_mat;
+    double *c_vec = args->c_vec;
 
-    real_t tmp_eig, tmp_eig2;
+    double tmp_eig, tmp_eig2;
     acados_timer timer_ad;
-    real_t *out_tmp = work->out_tmp;
-    real_t *rhs_in = work->rhs_in;
-    real_t *jac_tmp = work->jac_tmp;
+    double *out_tmp = work->out_tmp;
+    double *rhs_in = work->rhs_in;
+    double *jac_tmp = work->jac_tmp;
 
-    real_t **jac_traj = mem->jac_traj;
-    real_t *K_traj = mem->K_traj;
+    double **jac_traj = mem->jac_traj;
+    double *K_traj = mem->K_traj;
 
     int i, j, s1, s2;
     if ((args->scheme->type == simplified_in ||
@@ -964,6 +970,7 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args_,
             rhs_in[i] = out_tmp[i];
         }
         for (i = 0; i < nu; i++) rhs_in[nx + i] = in->u[i];
+        for (i = 0; i < np; i++) rhs_in[nx + nu + i] = in->p[i];
         rhs_in[nx + nu] = (istep + c_vec[s1]) / args->num_steps;  // time
         for (s2 = 0; s2 < num_stages; s2++) {
             for (i = 0; i < nx; i++) {
@@ -973,7 +980,7 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args_,
         }
         acados_tic(&timer_ad);
 
-        compute_jacobian_ode(nx, rhs_in, jac_tmp, args, mem, work);  // k evaluation 
+        compute_jacobian_ode(nx, nu, np, rhs_in, jac_tmp, args, mem, work);  // k evaluation 
 
         timing_ad += acados_toc(&timer_ad);
         //                }
@@ -1031,6 +1038,7 @@ int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_,
 {
     int nx = in->nx;
     int nu = in->nu;
+    int np = in->np;
     sim_lifted_irk_integrator_args *args = (sim_lifted_irk_integrator_args *) args_;
     int num_stages = args->num_stages;
     int dim_sys = num_stages * nx;
@@ -1039,40 +1047,41 @@ int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_,
     sim_dims dims = {
         args->num_stages,
         in->nx,
-        in->nu
+        in->nu,
+        in->np
     };
 
     sim_lifted_irk_integrator_memory *mem = (sim_lifted_irk_integrator_memory *) mem_;
     sim_lifted_irk_integrator_workspace *work = (sim_lifted_irk_integrator_workspace *) cast_workspace(&dims, args, work_);
     
-    real_t H_INT = in->step;
+    double H_INT = in->step;
     int NF = args->num_forw_sens;
 
-    real_t *A_mat = args->A_mat;
-    real_t *b_vec = args->b_vec;
-    real_t *c_vec = args->c_vec;
+    double *A_mat = args->A_mat;
+    double *b_vec = args->b_vec;
+    double *c_vec = args->c_vec;
 
-    real_t **VDE_tmp = work->VDE_tmp;
-    real_t *out_tmp = work->out_tmp;
-    real_t *rhs_in = work->rhs_in;
+    double **VDE_tmp = work->VDE_tmp;
+    double *out_tmp = work->out_tmp;
+    double *rhs_in = work->rhs_in;
 
-    real_t **jac_traj = mem->jac_traj;
+    double **jac_traj = mem->jac_traj;
 
-    real_t *K_traj = mem->K_traj;
-    real_t *DK_traj = mem->DK_traj;
-    real_t *delta_DK_traj = mem->delta_DK_traj;
-    real_t *mu_traj = mem->mu_traj;
-    real_t *adj_traj = mem->adj_traj;
+    double *K_traj = mem->K_traj;
+    double *DK_traj = mem->DK_traj;
+    double *delta_DK_traj = mem->delta_DK_traj;
+    double *mu_traj = mem->mu_traj;
+    double *adj_traj = mem->adj_traj;
 
-    real_t *adj_tmp = work->out_adj_tmp;
+    double *adj_tmp = work->out_adj_tmp;
 
     int *ipiv = work->ipiv;    // pivoting vector
     int **ipiv2 = mem->ipiv2;  // pivoting vector
-    real_t *sys_mat = work->sys_mat;
-    real_t **sys_mat2 = mem->sys_mat2;
-    real_t *sys_sol = work->sys_sol;
-    real_t **sys_sol2 = mem->sys_sol2;
-    real_t *sys_sol_trans = work->sys_sol_trans;
+    double *sys_mat = work->sys_mat;
+    double **sys_mat2 = mem->sys_mat2;
+    double *sys_sol = work->sys_sol;
+    double **sys_sol2 = mem->sys_sol2;
+    double *sys_sol_trans = work->sys_sol_trans;
 #if !TRIPLE_LOOP
     struct blasfeo_dmat *str_mat = work->str_mat;
     struct blasfeo_dmat **str_mat2 = mem->str_mat2;
@@ -1082,8 +1091,8 @@ int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_,
 #endif  // !TRIPLE_LOOP
 
     acados_timer timer, timer_la, timer_ad;
-    real_t timing_la = 0.0;
-    real_t timing_ad = 0.0;
+    double timing_la = 0.0;
+    double timing_ad = 0.0;
 
     assert(NF == nx + nu && "Not implemented yet for other num_forw_sens");
 
@@ -1093,6 +1102,7 @@ int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_,
         out_tmp[nx + i] = in->S_forw[i];  // sensitivities
 
     for (i = 0; i < nu; i++) rhs_in[nx * (1 + NF) + i] = in->u[i];
+    for (i = 0; i < np; i++) rhs_in[nx * (1 + NF) + nu + i] = in->p[i];
 
     if (args->scheme->type == simplified_in ||
         args->scheme->type == simplified_inis) {
@@ -1325,12 +1335,12 @@ int sim_lifted_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_,
                     }
                 }
             }
-            rhs_in[nx * (1 + NF) + nu] = ((real_t)istep + c_vec[s1]) /
-                                         ((real_t)args->num_steps);  // time
+            rhs_in[nx * (1 + NF) + nu] = ((double)istep + c_vec[s1]) /
+                                         ((double)args->num_steps);  // time
 
             acados_tic(&timer_ad);
 
-            compute_forward_vde(nx, nu, rhs_in, VDE_tmp[s1], args, mem, work); // k evaluation
+            compute_forward_vde(nx, nu, np, rhs_in, VDE_tmp[s1], args, mem, work); // k evaluation
 
             timing_ad += acados_toc(&timer_ad);
 

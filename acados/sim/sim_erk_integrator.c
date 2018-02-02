@@ -31,11 +31,11 @@
 
 
 
-#define FW_VDE_NUMIN 4
+#define FW_VDE_NUMIN 5
 #define FW_VDE_NUMOUT 3
-#define ADJ_VDE_NUMIN 3
+#define ADJ_VDE_NUMIN 4
 #define ADJ_VDE_NUMOUT 1
-#define HESS_VDE_NUMIN 5
+#define HESS_VDE_NUMIN 6
 #define HESS_VDE_NUMOUT 2
 
 
@@ -153,11 +153,11 @@ void sim_erk_integrator_initialize_default_args(sim_dims *dims, void *args_)
 
     assert(args->num_stages == 4 && "only number of stages = 4 implemented!");
 
-    memcpy(args->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
+    memcpy(args->A_mat,((double[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
         sizeof(*args->A_mat) * (ns * ns));
-    memcpy(args->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
+    memcpy(args->b_vec, ((double[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
         sizeof(*args->b_vec) * (ns));
-    memcpy(args->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
+    memcpy(args->c_vec, ((double[]){0.0, 0.5, 0.5, 1.0}),
         sizeof(*args->c_vec) * (ns));
 
     args->num_steps = 2;
@@ -239,6 +239,7 @@ int sim_erk_integrator_calculate_workspace_size(sim_dims *dims, void *args_)
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int np = dims->np;
     int NF = args->num_forw_sens;
 
     int num_stages = args->num_stages; // number of stages
@@ -248,7 +249,7 @@ int sim_erk_integrator_calculate_workspace_size(sim_dims *dims, void *args_)
 
     int size = sizeof(sim_erk_integrator_workspace);
 
-    size += (nX + nu) * sizeof(double); // rhs_forw_in
+    size += (nX + nu + np) * sizeof(double); // rhs_forw_in
 
     if(args->sens_adj){
         size += num_steps * num_stages * nX * sizeof(double); // K_traj
@@ -259,11 +260,11 @@ int sim_erk_integrator_calculate_workspace_size(sim_dims *dims, void *args_)
     }
 
     if (args->sens_hess && args->sens_adj){
-        size += (nx + nX + nu) * sizeof(double); //rhs_adj_in
+        size += (nx + nX + nu + np) * sizeof(double); //rhs_adj_in
         size += (nx + nu + nhess) * sizeof(double); //out_adj_tmp
         size += num_stages * (nx + nu + nhess) * sizeof(double); //adj_traj
     }else if (args->sens_adj){
-        size += (nx * 2 + nu) * sizeof(double); //rhs_adj_in
+        size += (nx * 2 + nu + np) * sizeof(double); //rhs_adj_in
         size += (nx + nu)* sizeof(double); //out_adj_tmp
         size += num_stages * (nx + nu) * sizeof(double); //adj_traj
     }
@@ -292,6 +293,7 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int np = dims->np;
     int NF = args->num_forw_sens;
 
     int num_stages = args->num_stages; // number of stages
@@ -306,7 +308,7 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(nX + nu, &workspace->rhs_forw_in, &c_ptr);
+    assign_double(nX + nu + np, &workspace->rhs_forw_in, &c_ptr);
 
     if(args->sens_adj)
     {
@@ -320,12 +322,12 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 
     if (args->sens_hess && args->sens_adj)
     {
-        assign_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
+        assign_double(nx+nX+nu+np, &workspace->rhs_adj_in, &c_ptr);
         assign_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
         assign_double(num_stages*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
     } else if (args->sens_adj)
     {
-        assign_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
+        assign_double((nx*2+nu+np), &workspace->rhs_adj_in, &c_ptr);
         assign_double(nx+nu, &workspace->out_adj_tmp, &c_ptr);
         assign_double(num_stages*(nx+nu), &workspace->adj_traj, &c_ptr);
     }
@@ -352,7 +354,7 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 
 
 
-static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
+static void compute_forward_vde(const int nx, const int nu, const int np, double *in, double *out, 
                          sim_erk_integrator_args *args,
                          sim_erk_integrator_memory *mem,
                          sim_erk_integrator_workspace *work) 
@@ -361,6 +363,7 @@ static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real
     double *Sx = in + nx;
     double *Su = in + nx + nx * nx;
     double *u = in + nx + nx * (nx + nu);
+    double *p = in + nx + nx * (nx + nu) + nu;
 
     double *x_out = out;
     double *Sx_out = out + nx;
@@ -371,6 +374,7 @@ static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real
     fw_in_inputs[1] = Sx;
     fw_in_inputs[2] = Su;
     fw_in_inputs[3] = u;
+    fw_in_inputs[4] = p;
 
     bool fw_in_compute_output[FW_VDE_NUMOUT] = {true, true, true};
 
@@ -391,21 +395,23 @@ static void compute_forward_vde(const int_t nx, const int_t nu, real_t *in, real
 
 
 
-static void compute_adjoint_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
+static void compute_adjoint_vde(const int nx, const int nu, const int np, double *in, double *out, 
                          sim_erk_integrator_args *args,
                          sim_erk_integrator_memory *mem,
                          sim_erk_integrator_workspace *work)
 {
-    real_t *x = in;
-    real_t *lambdaX = in + nx;
-    real_t *u = in + 2 * nx;
+    double *x = in;
+    double *lambdaX = in + nx;
+    double *u = in + 2 * nx;
+    double *p = in + 2 * nx + nu;
 
-    real_t *adj_out = out;
+    double *adj_out = out;
 
     double *adj_in_inputs[ADJ_VDE_NUMIN];
     adj_in_inputs[0] = x;
     adj_in_inputs[1] = lambdaX;
     adj_in_inputs[2] = u;
+    adj_in_inputs[3] = p;
 
     bool adj_in_compute_output[ADJ_VDE_NUMOUT] = {true};
 
@@ -422,7 +428,7 @@ static void compute_adjoint_vde(const int_t nx, const int_t nu, real_t *in, real
     args->adjoint_vde->fun(&adj_vde_in, &adj_vde_out, args->adjoint_vde_args, mem->adjoint_vde_mem, work->adjoint_vde_work);
 }
 
-static void compute_hess_vde(const int_t nx, const int_t nu, real_t *in, real_t *out, 
+static void compute_hess_vde(const int nx, const int nu, const int np, double *in, double *out, 
                       sim_erk_integrator_args *args,
                       sim_erk_integrator_memory *mem,
                       sim_erk_integrator_workspace *work)
@@ -432,6 +438,7 @@ static void compute_hess_vde(const int_t nx, const int_t nu, real_t *in, real_t 
     double *Su = in + nx + nx * nx;
     double *lambdaX = in + nx * (1 + nx + nu);
     double *u = in + nx * (2 + nx + nu);
+    double *p = in + nx * (2 + nx + nu) + nu;
 
     double *adj_out = out;
     double *hess_out = out + nx + nu;
@@ -442,6 +449,7 @@ static void compute_hess_vde(const int_t nx, const int_t nu, real_t *in, real_t 
     hess_in_inputs[2] = Su;
     hess_in_inputs[3] = lambdaX;
     hess_in_inputs[4] = u;
+    hess_in_inputs[5] = p;
 
     bool hess_in_compute_output [HESS_VDE_NUMOUT] = {true, true};
 
@@ -467,7 +475,8 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
     sim_dims dims = {
         args->num_stages,
         in->nx,
-        in->nu
+        in->nu,
+        in->np
     };
     sim_erk_integrator_memory *memory = (sim_erk_integrator_memory *) mem_;
     sim_erk_integrator_workspace *workspace = (sim_erk_integrator_workspace *) cast_workspace(&dims, args, work_);
@@ -476,6 +485,7 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
     double a = 0, b =0; // temp values of A_mat and b_vec
     int nx = in->nx;
     int nu = in->nu;
+    int np = in->np;
 
     int NF = args->num_forw_sens;
     if (!args->sens_forw)
@@ -486,6 +496,7 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
 
     double *x = in->x;
     double *u = in->u;
+    double *p = in->p;
     double *S_forw_in = in->S_forw;
     int num_steps = args->num_steps;
     double step = in->step;
@@ -524,6 +535,9 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
     for (i = 0; i < nu; i++)
         rhs_forw_in[nX + i] = u[i]; // controls
 
+    for (i = 0; i < np; i++) 
+        rhs_forw_in[nX + nu + i] = p[i];  // parameters
+
     // FORWARD SWEEP:
     for (istep = 0; istep < num_steps; istep++) {
         if (args->sens_adj) {
@@ -546,7 +560,7 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
             }
 
             acados_tic(&timer_ad);
-            compute_forward_vde(nx, nu, rhs_forw_in, K_traj+s*nX, args, memory, workspace);
+            compute_forward_vde(nx, nu, np, rhs_forw_in, K_traj+s*nX, args, memory, workspace);
             timing_ad += acados_toc(&timer_ad)*1000;
         }
         
@@ -585,6 +599,9 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
         for (i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = u[i];
 
+        for (i = 0; i < np; i++)
+            rhs_adj_in[nForw + nx + nu + i] = p[i];
+
         for (istep = num_steps - 1; istep > -1; istep--) {
             K_traj = workspace->K_traj + istep * num_stages * nX;
             forw_traj = workspace->out_forw_traj + (istep+1) * nX;
@@ -613,9 +630,9 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
                 }
                 acados_tic(&timer_ad);
                 if (args->sens_hess){
-                    compute_hess_vde(nx, nu, rhs_adj_in, adj_traj+s*nAdj, args, memory, workspace);
+                    compute_hess_vde(nx, nu, np, rhs_adj_in, adj_traj+s*nAdj, args, memory, workspace);
                 }else{
-                    compute_adjoint_vde(nx, nu, rhs_adj_in, adj_traj+s*nAdj, args, memory, workspace);
+                    compute_adjoint_vde(nx, nu, np, rhs_adj_in, adj_traj+s*nAdj, args, memory, workspace);
                 }
                 timing_ad += acados_toc(&timer_ad);
 

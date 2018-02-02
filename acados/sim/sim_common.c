@@ -60,11 +60,13 @@ int sim_in_calculate_size(sim_dims *dims)
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int np = dims->np;
 
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += (nx + nu) * sizeof(double);  // S_adj
+    size += np * sizeof(double);  // p
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -83,11 +85,13 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
 
     int nx = dims->nx;
     int nu = dims->nu;
+    int np = dims->np;
     int NF = nx+nu;
 
     // TODO(dimitris): USE DIMS INSIDE SIM_IN INSTEAD!
     in->nx = nx;
     in->nu = nu;
+    in->np = np;
 
     align_char_to(8, &c_ptr);
 
@@ -95,6 +99,7 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     assign_double(nu, &in->u, &c_ptr);
     assign_double(nx * NF, &in->S_forw, &c_ptr);
     assign_double(NF, &in->S_adj, &c_ptr);
+    assign_double(np, &in->p, &c_ptr);
 
     assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
 
