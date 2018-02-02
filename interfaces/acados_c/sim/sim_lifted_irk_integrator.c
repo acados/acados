@@ -23,7 +23,7 @@
 
 
 
-void *sim_lifted_irk_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_)
+void *sim_lifted_irk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_)
 {
     sim_lifted_irk_integrator_args *source = (sim_lifted_irk_integrator_args *) source_;
     sim_lifted_irk_integrator_args *dest;

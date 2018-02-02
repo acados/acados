@@ -106,7 +106,7 @@ void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void *submodules_, v
     char *c_ptr = (char *)raw_memory;
 
     sim_lifted_irk_integrator_args *args = (sim_lifted_irk_integrator_args *)c_ptr;
-    c_ptr += sizeof(sim_lifted_irk_integrator);
+    c_ptr += sizeof(sim_lifted_irk_integrator_args);
 
     int ns = dims->num_stages;
     args->num_stages = ns;

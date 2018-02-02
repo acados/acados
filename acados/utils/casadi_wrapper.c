@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include <acados/utils/mem.h>
+
 
 
 int nnz_output(const int *sparsity)
@@ -115,6 +117,8 @@ int casadi_wrapper_calculate_memory_size(external_function_dims *dims, void *arg
 {
     int size = sizeof(casadi_wrapper_memory);
 
+    size += 1*8;
+
     return size;
 }
 
@@ -131,9 +135,11 @@ void *casadi_wrapper_assign_memory(external_function_dims *dims, void *args_, vo
     mem = (casadi_wrapper_memory *) c_ptr;
     c_ptr += sizeof(casadi_wrapper_memory);
 
+    align_char_to(8, &c_ptr);
+
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    assert((char*)raw_memory + casadi_wrapper_calculate_memory_size(dims, args) == c_ptr);
+    assert((char*)raw_memory + casadi_wrapper_calculate_memory_size(dims, args) >= c_ptr);
 
     return (void *)mem;
 }

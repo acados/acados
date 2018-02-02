@@ -11,6 +11,10 @@ int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 const int* vdeFun_sparsity_out(int i);
 int vdeFun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 
+int jacFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+const int* jacFun_sparsity_out(int i);
+int jacFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
+
 int adjFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 const int* adjFun_sparsity_out(int i);
 int adjFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
