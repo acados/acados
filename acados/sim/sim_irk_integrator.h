@@ -33,10 +33,9 @@ typedef struct {
 
 typedef struct {
 
-    struct blasfeo_dmat *JG; // jacobian of G over K (nx*ns, nx*ns)
+    struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
     struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
-    struct blasfeo_dmat *JFK; // jacobian of F over K (nx, nx*ns) XXX F is linear in K, this is inefficient !!!
     struct blasfeo_dmat *S_forw; // forward sensitivities
 
     struct blasfeo_dvec *rG; // residuals of G (nx*ns)
@@ -56,7 +55,7 @@ typedef struct {
 
     struct blasfeo_dvec *xn_traj; // xn trajectory
     struct blasfeo_dvec *K_traj;  // K trajectory
-    struct blasfeo_dmat *JG_traj; // JG trajectory
+    struct blasfeo_dmat *JG_traj; // JGK trajectory
 
 } sim_irk_workspace;
 

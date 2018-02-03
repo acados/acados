@@ -98,15 +98,20 @@ void sim_erk_initialize_default_args(sim_dims *dims, void *opts_)
 }
 
 
+
 int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_)
 {
     return 0;
 }
 
+
+
 void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
+
+
 
 int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 {
@@ -114,11 +119,11 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
     int nx = dims->nx;
     int nu = dims->nu;
-    int NF = opts->num_forw_sens;
+    int nf = opts->num_forw_sens;
 
     int num_stages = opts->num_stages; // number of stages
-    int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
-    int nhess = (NF + 1) * NF / 2;
+    int nX = nx*(1+nf); // (nx) for ODE and (nf*nx) for VDE
+    int nhess = (nf + 1) * nf / 2;
     uint num_steps = opts->num_steps;  // number of steps
 
     int size = sizeof(sim_erk_workspace);
@@ -149,17 +154,19 @@ int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_)
     return size;
 }
 
+
+
 void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
-    int NF = opts->num_forw_sens;
+    int nf = opts->num_forw_sens;
 
     int num_stages = opts->num_stages; // number of stages
-    int nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
-    int nhess = (NF + 1) * NF / 2;
+    int nX = nx*(1+nf); // (nx) for ODE and (nf*nx) for VDE
+    int nhess = (nf + 1) * nf / 2;
     int num_steps = opts->num_steps;  // number of steps
 
     char *c_ptr = (char *)raw_memory;
@@ -209,10 +216,13 @@ void *sim_erk_create_memory(sim_dims *dims, void *opts_)
     return (void *)memory;
 }
 
+
+
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    sim_dims dims = {
+    sim_dims dims = 
+	{
         opts->num_stages,
         in->nx,
         in->nu
@@ -224,12 +234,12 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     int nx = in->nx;
     int nu = in->nu;
 
-    int NF = opts->num_forw_sens;
+    int nf = opts->num_forw_sens;
     if (!opts->sens_forw)
-        NF = 0;
+        nf = 0;
 
-    int nhess = (NF + 1) * NF / 2;
-    int nX = nx * (1 + NF);
+    int nhess = (nf + 1) * nf / 2;
+    int nX = nx * (1 + nf);
 
     double *x = in->x;
     double *u = in->u;
@@ -261,18 +271,22 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     double timing_ad = 0.0;
 
     acados_tic(&timer);
+
+/************************************************
+* forward sweep
+************************************************/
+
+	// initialize integrator variables
     for (i = 0; i < nx; i++)
         forw_traj[i] = x[i];  // x0
     if (opts->sens_forw)
 	{
-        for (i = 0; i < nx * NF; i++)
+        for (i = 0; i < nx * nf; i++)
             forw_traj[nx + i] = S_forw_in[i];  // sensitivities
     }
-
     for (i = 0; i < nu; i++)
         rhs_forw_in[nX + i] = u[i]; // controls
 
-    // FORWARD SWEEP:
     for (istep = 0; istep < num_steps; istep++)
 	{
         if (opts->sens_adj)
@@ -310,17 +324,24 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
         }
     }
 
+	// store trajectory
     for (i = 0; i < nx; i++)
         xn[i] = forw_traj[i];
+	// store forward sensitivities
     if (opts->sens_forw)
 	{
-        for (i = 0; i < nx * NF; i++)
+        for (i = 0; i < nx * nf; i++)
             S_forw_out[i] = forw_traj[nx + i];
     }
 
-    // ADJOINT SWEEP:
+/************************************************
+* adjoint sweep
+************************************************/
+
     if (opts->sens_adj)
 	{
+
+		// initialize integrator variables
         for (i = 0; i < nx; i++)
             adj_tmp[i] = S_adj_in[i];
         for (i = 0; i < nu; i++)
@@ -336,7 +357,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 adj_tmp[nx + nu + i] = 0.0;
         }
 
-        printf("\nnFOrw=%d nAdj=%d\n", nForw, nAdj);
+//        printf("\nnFOrw=%d nAdj=%d\n", nForw, nAdj);
 
         for (i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = u[i];
@@ -391,16 +412,24 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 for (i = 0; i < nAdj; i++)
                     adj_tmp[i] += adj_traj[s * nAdj + i];  // ERK step
         }
+
+		// store adjoint sensitivities
         for (i = 0; i < nx + nu; i++)
             S_adj_out[i] = adj_tmp[i];
+		// store hessian
         if (opts->sens_hess)
 		{
             for (i = 0; i < nhess; i++)
                 S_hess_out[i] = adj_tmp[nx + nu + i];
         }
     }
+
+	// store timings
     out->info->CPUtime = acados_toc(&timer)*1000;
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad*1000;
+
+	// return
     return 0;  // success
+
 }
