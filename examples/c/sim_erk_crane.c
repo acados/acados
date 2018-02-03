@@ -235,6 +235,7 @@ int main()
 
 	free(exfun_forw_vde_mem);
 	free(exfun_adj_vde_mem);
+	free(exfun_hess_vde_mem);
 
     free(xref);
     free(in);

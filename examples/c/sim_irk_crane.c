@@ -184,6 +184,7 @@ int main() {
     Time3 = acados_toc(&timer)/NREP;
 #endif
 
+#if 0
     printf("IRK Example for Inverted Pendulum:\n");
     printf("No. of Integration Steps: %d", irk_opts->num_steps);
 
@@ -199,6 +200,7 @@ int main() {
 
     printf("IRK with Adjoint Sensitivity:\n");
     printf("NO. of run: %d   Avg cpt: %8.5f[ms]\n", NREP, Time3*1000);
+#endif
 
     double *xn = out->xn;
 
@@ -246,28 +248,37 @@ int main() {
     }
 
 
-    // printf("\n");
-    // printf("cpt: %8.5f [ms]\n", out->info->CPUtime*1000);
-    // printf("AD cpt: %8.5f [ms]\n", out->info->ADtime*1000);
+    printf("\n");
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
 
-    // if(irk_opts->sens_adj && irk_opts->sens_forw){
-    //     struct d_strmat sA;
-    //     d_create_strmat(nx, nx+nu, &sA, S_forw_out);
+    if(irk_opts->sens_adj){
+        struct blasfeo_dmat sA;
+		blasfeo_allocate_dmat(nx, nx+nu, &sA);
+		blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
 
-    //     struct d_strvec sx;
-    //     d_create_strvec(nx, &sx, in->S_adj);
+        struct blasfeo_dvec sx;
+		blasfeo_allocate_dvec(nx, &sx);
+		blasfeo_pack_dvec(nx, in->S_adj, &sx, 0);
 
-    //     struct d_strvec sz;
-    //     void *mz;
-    //     v_zeros_align(&mz, d_size_strvec(nx+nu));
-    //     d_create_strvec(nx+nu, &sz, mz);
-    //     dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+        struct blasfeo_dvec sz;
+		blasfeo_allocate_dvec(nx+nu, &sz);
+//		blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
+//		blasfeo_print_tran_dvec(nx, &sx, 0);
+        blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
-    //     printf("\nJac times lambdaX:\n");
-    //     d_print_tran_strvec(nx+nu, &sz, 0);
+        printf("\nJac times lambdaX:\n");
+        blasfeo_print_tran_dvec(nx+nu, &sz, 0);
 
-    //     v_free_align(mz);
-    // }
+		blasfeo_free_dmat(&sA);
+		blasfeo_free_dvec(&sx);
+		blasfeo_free_dvec(&sz);
+    }
+
+	free(exfun_ode_mem);
+	free(exfun_jac_x_ode_mem);
+	free(exfun_jac_xdot_ode_mem);
+	free(exfun_jac_u_ode_mem);
 
     free(xref);
     free(irk_opts);

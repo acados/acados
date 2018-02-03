@@ -311,6 +311,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     blasfeo_dgese(nx*num_stages, nx*num_stages, 0.0, JG, 0, 0);
     blasfeo_dgese(nx*num_stages, nx+nu, 0.0, JGf, 0, 0);
     blasfeo_dgese(nx*num_stages, nx+nu, 0.0, JKf, 0, 0);
+	blasfeo_dgese(nx, nx*num_stages, 0.0, JFK, 0, 0);
+	// XXX F is linear in K, this is inefficient !!!
     for (ii=0;ii<num_stages;ii++)
 	{
         b = step * b_vec[ii];
@@ -357,7 +359,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
                 blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
             }
 
-            for(ii=0; ii<num_stages; ii++){ // ii-th row of tableau
+            for(ii=0; ii<num_stages; ii++) // ii-th row of tableau
+			{
 
                 // take x(n); copy a strvec into a strvec
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
@@ -445,7 +448,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
 		{
 
             // evaluate JG(xn,Kn)
-            for(ii=0; ii<num_stages; ii++){
+            for(ii=0; ii<num_stages; ii++)
+			{
 
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
                 //compute xt = final x;
@@ -510,6 +514,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
             blasfeo_dtrsm_lunn(nx*num_stages, nx+nu, 1.0, JG, 0, 0, JKf, 0, 0, JKf, 0, 0);
 
             // update forward sensitivity
+			// XXX F is linear in K, this is inefficient !!!
             blasfeo_dgemm_nn(nx, nx+nu, nx*num_stages, -1.0, JFK, 0, 0, JKf, 0, 0, 1.0, S_forw, 0, 0, S_forw, 0, 0);
         }
 
@@ -523,7 +528,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_){
     }// end int step ss
 
     // evaluate backwards
-    if (opts->sens_adj){
+    if (opts->sens_adj)
+	{
 
         for(ss=num_steps-1;ss>-1;ss--)
 		{
