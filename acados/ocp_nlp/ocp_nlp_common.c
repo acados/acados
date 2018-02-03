@@ -197,6 +197,70 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 
 
 /************************************************
+* model
+************************************************/
+
+/* explicit ODEs */
+
+int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
+{
+	// loop index
+	int ii;
+
+	// extract dims
+	int N = dims->N;
+
+	int size = 0;
+
+	size += sizeof(ocp_nlp_model_expl);
+
+    size += 3*N*sizeof(casadi_function_t);  // vde vde_adj jac
+
+	size += 8; // initial align
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+	
+    char *c_ptr = (char *) raw_memory;
+
+	// extract sizes
+    int N = dims->N;
+
+	// struct
+    ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_model_expl);
+
+	// dims
+	model->dims = dims;
+
+	// model
+	// TODO in mem.c, casadi_function_assign_advance ???
+    model->vde = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    model->vde_adj = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+    model->jac = (casadi_function_t *) c_ptr;
+    c_ptr += N*sizeof(casadi_function_t);
+
+	model->memsize = ocp_nlp_model_expl_calculate_size(dims);
+
+    assert((char *) raw_memory + model->memsize >= c_ptr);
+
+	return model;
+
+}
+
+
+
+/************************************************
 * cost
 ************************************************/
 
@@ -214,8 +278,10 @@ int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims)
 
     size += sizeof(ocp_nlp_cost_ls);
 
+	size += 1*(N+1)*sizeof(int); // nls_mask
 	size += 2*(N+1)*sizeof(struct blasfeo_dmat); // W Cyt
 	size += 1*(N+1)*sizeof(struct blasfeo_dvec); // y_ref
+	size += 1*(N+1)*sizeof(external_function_generic *); // nls_jac
 
     for (ii = 0; ii < N+1; ii++)
     {
@@ -257,6 +323,9 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 	// dims
 	cost->dims = dims;
 
+	// nls mask
+	assign_int(N+1, &cost->nls_mask, &c_ptr);
+
 	// blasfeo_struct align
 	align_char_to(8, &c_ptr);
 
@@ -266,6 +335,9 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 	assign_blasfeo_dmat_structs(N+1, &cost->Cyt, &c_ptr);
 	// y_ref
 	assign_blasfeo_dvec_structs(N+1, &cost->y_ref, &c_ptr);
+	// nls_jac
+	cost->nls_jac = (external_function_generic **) c_ptr;
+	c_ptr += (N+1)*sizeof(external_function_generic *);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
@@ -324,6 +396,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 	ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims->cost_dims;
 	size += ocp_nlp_cost_ls_calculate_size(cost_dims); // cost
 
+	size += ocp_nlp_model_expl_calculate_size(dims); // model
+
     for (ii = 0; ii < N+1; ii++)
     {
         size += sizeof(int)*(nb[ii]);  // idxb
@@ -333,8 +407,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
         size += 2*sizeof(double)*nh[ii];  // lh, uh
 
     }
-
-    size += 3*N*sizeof(casadi_function_t *);  // vde, vde_adj, jac
 
 	size += 8; // initial align
 	size += 8; // pointers align
@@ -381,12 +453,9 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 	c_ptr += cost->memsize;
 
 	// model
-    in->vde = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
-    in->vde_adj = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
-    in->jac = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
+	ocp_nlp_model_expl *model = ocp_nlp_model_expl_assign(dims, c_ptr);
+	in->model = model;
+	c_ptr += model->memsize;
 
 	// pointers align
 	align_char_to(8, &c_ptr);
@@ -561,18 +630,18 @@ int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims)
 
     int size = sizeof(ocp_nlp_mem);
 
-	size += 4*(N+1)*sizeof(struct blasfeo_dvec); // cost_grad dyn_adj ineq_for ineq_adj
-	size += 1*N*sizeof(struct blasfeo_dvec); // dyn_for
+	size += 4*(N+1)*sizeof(struct blasfeo_dvec); // cost_grad dyn_adj ineq_fun ineq_adj
+	size += 1*N*sizeof(struct blasfeo_dvec); // dyn_fun
 
 	for(ii=0; ii<N; ii++)
 	{
 		size += 3*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // cost_grad dyn_adj ineq_adj
-		size += 1*blasfeo_memsize_dvec(nx[ii+1]); // dyn_for
-		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // ineq_for
+		size += 1*blasfeo_memsize_dvec(nx[ii+1]); // dyn_fun
+		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // ineq_fun
 	}
 	ii = N;
 	size += 3*blasfeo_memsize_dvec(nu[ii]+nx[ii]); // cost_grad dyn_adj ineq_adj
-	size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // ineq_for
+	size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // ineq_fun
 
 	size += 8; // initial align
 	size += 8; // blasfeo_struct align
@@ -617,12 +686,12 @@ ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory)
 
 	// cost_grad
 	assign_blasfeo_dvec_structs(N+1, &mem->cost_grad, &c_ptr);
-	// dyn_for
-	assign_blasfeo_dvec_structs(N, &mem->dyn_for, &c_ptr);
+	// dyn_fun
+	assign_blasfeo_dvec_structs(N, &mem->dyn_fun, &c_ptr);
 	// dyn_adj
 	assign_blasfeo_dvec_structs(N+1, &mem->dyn_adj, &c_ptr);
-	// ineq_for
-	assign_blasfeo_dvec_structs(N+1, &mem->ineq_for, &c_ptr);
+	// ineq_fun
+	assign_blasfeo_dvec_structs(N+1, &mem->ineq_fun, &c_ptr);
 	// ineq_adj
 	assign_blasfeo_dvec_structs(N+1, &mem->ineq_adj, &c_ptr);
 
@@ -632,15 +701,15 @@ ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory)
 	// cost_grad
 	for (ii=0; ii<=N; ii++)
 		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], mem->cost_grad+ii, &c_ptr);
-	// dyn_for
+	// dyn_fun
 	for (ii=0; ii<N; ii++)
-		assign_blasfeo_dvec_mem(nx[ii+1], mem->dyn_for+ii, &c_ptr);
+		assign_blasfeo_dvec_mem(nx[ii+1], mem->dyn_fun+ii, &c_ptr);
 	// dyn_adj
 	for (ii=0; ii<=N; ii++)
 		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], mem->dyn_adj+ii, &c_ptr);
-	// ineq_for
+	// ineq_fun
 	for (ii=0; ii<=N; ii++)
-		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], mem->ineq_for+ii, &c_ptr);
+		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], mem->ineq_fun+ii, &c_ptr);
 	// ineq_adj
 	for (ii=0; ii<=N; ii++)
 		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], mem->ineq_adj+ii, &c_ptr);
@@ -789,7 +858,7 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
 	res->inf_norm_res_b = 0.0;
 	for (ii=0; ii<N; ii++)
 	{
-		blasfeo_dveccp(nx[ii+1], mem->dyn_for+ii, 0, res->res_b+ii, 0);
+		blasfeo_dveccp(nx[ii+1], mem->dyn_fun+ii, 0, res->res_b+ii, 0);
 		blasfeo_dvecnrm_inf(nx[ii+1], res->res_b+ii, 0, &tmp_res);
 		res->inf_norm_res_b = tmp_res>res->inf_norm_res_b ? tmp_res : res->inf_norm_res_b;
 	}
@@ -798,7 +867,7 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
 	res->inf_norm_res_d = 0.0;
 	for (ii=0; ii<=N; ii++)
 	{
-		blasfeo_daxpy(2*nb[ii]+2*ng[ii], 1.0, out->t+ii, 0, mem->ineq_for+ii, 0, res->res_d+ii, 0);
+		blasfeo_daxpy(2*nb[ii]+2*ng[ii], 1.0, out->t+ii, 0, mem->ineq_fun+ii, 0, res->res_d+ii, 0);
 		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii], res->res_d+ii, 0, &tmp_res);
 		res->inf_norm_res_d = tmp_res>res->inf_norm_res_d ? tmp_res : res->inf_norm_res_d;
 	}

@@ -63,6 +63,10 @@ void print_ocp_qp_in(ocp_qp_in *qp_in);
 
 void print_ocp_qp_out(ocp_qp_out *qp_out);
 
+void print_ocp_qp_in_to_string(char string_out[], ocp_qp_in *qp_in);
+
+void print_ocp_qp_out_to_string(char string_out[], ocp_qp_out *qp_out);
+
 void print_ocp_qp_res(ocp_qp_res *qp_res);
 
 void print_colmaj_ocp_qp_in(colmaj_ocp_qp_in *qp);

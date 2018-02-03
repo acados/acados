@@ -172,6 +172,9 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
     int *nu = dims->nu;
     int *nb = dims->nb;
     int *ng = dims->ng;
+	ocp_nlp_cost_ls_dims *cost_dims = dims->cost_dims;
+	int *nv = cost_dims->nv;
+	int *ny = cost_dims->ny;
 
     int size = 0;
 
@@ -199,7 +202,21 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 	// nlp mem
 	size += ocp_nlp_mem_calculate_size(dims);
 
+	// blasfeo stuff
+    size += 1*(N+1)*sizeof(struct blasfeo_dmat); // W_chol
+    size += 1*(N+1)*sizeof(struct blasfeo_dvec); // ls_res
+
+    for (ii = 0; ii < N+1; ii++)
+    {
+        size += 1*blasfeo_memsize_dvec(ny[ii]); // tmp_ny ls_res
+        size += 1*blasfeo_memsize_dmat(ny[ii], ny[ii]); // W_chol
+    }
+
     size += 8; // initial align
+    size += 8; // blasfeo_struct align
+    size += 64; // blasfeo_mem align
+
+//    make_int_multiple_of(64, &size);
 
     return size;
 }
@@ -219,6 +236,9 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
     int *nu = dims->nu;
     int *nb = dims->nb;
     int *ng = dims->ng;
+	ocp_nlp_cost_ls_dims *cost_dims = dims->cost_dims;
+	int *nv = cost_dims->nv;
+	int *ny = cost_dims->ny;
 
     ocp_qp_dims qp_dims;
     cast_nlp_dims_to_qp_dims(&qp_dims, dims);
@@ -253,6 +273,23 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 	// nlp mem
 	mem->nlp_mem = ocp_nlp_mem_assign(dims, c_ptr);
 	c_ptr += mem->nlp_mem->memsize;
+
+	// blasfeo_struct align
+    align_char_to(8, &c_ptr);
+
+    // set up local SQP data
+    assign_blasfeo_dmat_structs(N+1, &mem->W_chol, &c_ptr);
+    assign_blasfeo_dvec_structs(N+1, &mem->ls_res, &c_ptr);
+
+	// blasfeo_mem align
+    align_char_to(64, &c_ptr);
+
+	// W_chol
+    for (int ii = 0; ii <= N; ii++)
+        assign_blasfeo_dmat_mem(ny[ii], ny[ii], mem->W_chol+ii, &c_ptr);
+	// ls_res
+    for (int ii = 0; ii <= N; ii++)
+        assign_blasfeo_dvec_mem(ny[ii], mem->ls_res+ii, &c_ptr);
 
 	// dims
     mem->dims = dims;
@@ -314,15 +351,17 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
 
 	// temporary stuff
-    size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_nux tmp_nbg
-    size += 2*(N+1)*sizeof(struct blasfeo_dmat); // tmp_ny_ny tmp_nv_ny
+    size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_ny, tmp_nbg
+    size += 1*(N+1)*sizeof(struct blasfeo_dmat); // tmp_nv_ny
+	size += 2*(N+1)*sizeof(double *); // ls_cost_in, ls_cost_jac_out
 
     for (ii = 0; ii < N+1; ii++)
     {
-        size += blasfeo_memsize_dvec(nx[ii]+nu[ii]); // tmp_nux
-        size += blasfeo_memsize_dvec(nb[ii]+ng[ii]); // tmp_nbg
-        size += blasfeo_memsize_dmat(ny[ii], ny[ii]); // tmp_ny_ny
-        size += blasfeo_memsize_dmat(nv[ii], ny[ii]); // tmp_nv_ny
+        size += 1*blasfeo_memsize_dvec(ny[ii]); // tmp_ny
+        size += 1*blasfeo_memsize_dvec(nb[ii]+ng[ii]); // tmp_nbg
+        size += 1*blasfeo_memsize_dmat(nv[ii], ny[ii]); // tmp_nv_ny
+		size += 1*nv[ii]*sizeof(double); // ls_cost_in
+		size += 1*(ny[ii]+ny[ii]*nv[ii])*sizeof(double); // ls_cost_jac_out
     }
 
     size += 8; // blasfeo_struct align
@@ -357,23 +396,27 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     align_char_to(8, &c_ptr);
 
     // set up local SQP data
-    assign_blasfeo_dvec_structs(N+1, &work->tmp_nux, &c_ptr);
+    assign_blasfeo_dvec_structs(N+1, &work->tmp_ny, &c_ptr);
     assign_blasfeo_dvec_structs(N+1, &work->tmp_nbg, &c_ptr);
-    assign_blasfeo_dmat_structs(N+1, &work->tmp_ny_ny, &c_ptr);
     assign_blasfeo_dmat_structs(N+1, &work->tmp_nv_ny, &c_ptr);
+
+	// ls_cost_in
+	assign_double_ptrs(N+1, &work->ls_cost_in, &c_ptr);
+	for (int ii=0; ii<=N; ii++)
+		assign_double(nv[ii], &work->ls_cost_in[ii], &c_ptr);
+	assign_double_ptrs(N+1, &work->ls_cost_jac_out, &c_ptr);
+	for (int ii=0; ii<=N; ii++)
+		assign_double(ny[ii]+ny[ii]+nv[ii], &work->ls_cost_jac_out[ii], &c_ptr);
 
 	// blasfeo_mem align
     align_char_to(64, &c_ptr);
 
-	// tmp_ny_ny
-    for (int ii = 0; ii <= N; ii++)
-        assign_blasfeo_dmat_mem(ny[ii], ny[ii], work->tmp_ny_ny+ii, &c_ptr);
 	// tmp_nv_ny
     for (int ii = 0; ii <= N; ii++)
         assign_blasfeo_dmat_mem(nv[ii], ny[ii], work->tmp_nv_ny+ii, &c_ptr);
-	// tmp_nux
+	// tmp_ny
     for (int ii = 0; ii <= N; ii++)
-        assign_blasfeo_dvec_mem(nx[ii]+nu[ii], work->tmp_nux+ii, &c_ptr);
+        assign_blasfeo_dvec_mem(ny[ii], work->tmp_ny+ii, &c_ptr);
 	// tmp_nbg
     for (int ii = 0; ii <= N; ii++)
         assign_blasfeo_dvec_mem(nb[ii]+ng[ii], work->tmp_nbg+ii, &c_ptr);
@@ -425,7 +468,7 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
 
 
-static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
+static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
 {
 
 	// loop index
@@ -445,19 +488,18 @@ static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, 
     for (i = 0; i <= N; i++)
 	{
 
-#if 0
-
-		// identity Cyt
-		blasfeo_dgecp(nu[i]+nx[i], nu[i]+nx[i], cost->W+i, 0, 0, RSQrq+i, 0, 0);
-
-#else
-		
 		// general Cyt
-		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, work->tmp_ny_ny+i, 0, 0);
-		blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, work->tmp_ny_ny+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
-		blasfeo_dsyrk_ln(nv[i], ny[i], 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
 
-#endif
+		// TODO recompute factorization only if W are re-tuned ???
+		blasfeo_dpotrf_l(ny[i], cost->W+i, 0, 0, mem->W_chol+i, 0, 0);
+
+		// linear ls
+		// TODO avoid recomputing the Hessian if both W and Cyt do not change
+		if (cost->nls_mask[i]==0)
+		{
+			blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, mem->W_chol+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
+			blasfeo_dsyrk_ln(nv[i], ny[i], 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
+		}
 
     }
 
@@ -467,7 +509,7 @@ static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, 
 
 
 
-static void initialize_constraints(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *gn_sqp_mem, ocp_nlp_gn_sqp_work *work)
+static void initialize_constraints(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
 {
 
 	// loop index
@@ -503,7 +545,7 @@ static void initialize_constraints(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *gn
 
 
 
-static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
+static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
 {
 
 	// loop index
@@ -519,30 +561,30 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 	int *nv = cost_dims->nv;
 	int *ny = cost_dims->ny;
 
-    struct blasfeo_dvec *tmp_nux = work->tmp_nux;
-    struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
-
     ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls *) nlp_in->cost;
     struct blasfeo_dmat *Cyt = cost->Cyt;
     struct blasfeo_dvec *y_ref = cost->y_ref;
 
+    struct blasfeo_dmat *W_chol = mem->W_chol;
+    struct blasfeo_dvec *ls_res = mem->ls_res;
+
+    struct blasfeo_dvec *tmp_ny = work->tmp_ny;
+    struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
+
     struct blasfeo_dmat *BAbt = work->qp_in->BAbt;
-    struct blasfeo_dvec *b = work->qp_in->b;
     struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
-    struct blasfeo_dvec *rq = work->qp_in->rq;
 	struct blasfeo_dmat *DCt = work->qp_in->DCt;
-    struct blasfeo_dvec *d = work->qp_in->d;
 
 	ocp_nlp_mem *nlp_mem = mem->nlp_mem;
 
-	// initial stages
     for (i = 0; i <= N; i++)
     {
 
-		// XXX nlp mem: dyn_adj
+		// dynamics
+
+		// nlp mem: dyn_adj
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_mem->dyn_adj+i, 0);
 
-		// dynamic
 		if (i<N)
 		{
 			// pass state and control to integrator
@@ -559,75 +601,141 @@ static void multiple_shooting(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_
 			blasfeo_pack_tran_dmat(nx[i+1], nu[i], &work->sim_out[i]->S_forw[nx[i+1]*nx[i]], nx[i+1], &BAbt[i], 0, 0);
 			// A
 			blasfeo_pack_tran_dmat(nx[i+1], nx[i], &work->sim_out[i]->S_forw[0], nx[i+1], &BAbt[i], nu[i], 0);
-			// b
-			blasfeo_pack_dvec(nx[i+1], work->sim_out[i]->xn, &b[i], 0);
-			blasfeo_daxpy(nx[i+1], -1.0, nlp_out->ux+i+1, nu[i+1], b+i, 0, b+i, 0);
-			blasfeo_drowin(nx[i+1], 1.0, &b[i], 0, &BAbt[i], nu[i]+nx[i], 0); // XXX needed ???
 
-			// XXX nlp mem: dyn_for
-			blasfeo_dveccp(nx[i+1], b+i, 0, nlp_mem->dyn_for+i, 0);
-			// XXX nlp mem: dyn_adj
+			// nlp mem: dyn_fun
+			blasfeo_pack_dvec(nx[i+1], work->sim_out[i]->xn, nlp_mem->dyn_fun+i, 0);
+			blasfeo_daxpy(nx[i+1], -1.0, nlp_out->ux+i+1, nu[i+1], nlp_mem->dyn_fun+i, 0, nlp_mem->dyn_fun+i, 0);
+			// nlp mem: dyn_adj
+			// TODO unless already computed in the simulation
 			blasfeo_dgemv_n(nu[i]+nx[i], nx[i+1], -1.0, BAbt+i, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
 		}
 
-		// XXX nlp mem: dyn_adj
+		// nlp mem: dyn_adj
 		if(i>0)
 			blasfeo_daxpy(nx[i], 1.0, nlp_out->pi+i-1, 0, nlp_mem->dyn_adj+i, nu[i], nlp_mem->dyn_adj+i, nu[i]);
 
 
-		// box and general constraints
+
+		// constraints
+		// TODO merge dgemv_n and dgemv_t for general linear constraints
+
+		// nlp_mem: ineq_fun
 		blasfeo_dvecex_sp(nb[i], 1.0, nlp_in->idxb[i], nlp_out->ux+i, 0, tmp_nbg+i, 0);
 		blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb[i], tmp_nbg+i, nb[i]);
-		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, d+i, 0);
-		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, d+i, nb[i]+ng[i]);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, nlp_mem->ineq_fun+i, 0);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, nlp_mem->ineq_fun+i, nb[i]+ng[i]);
 
-//		blasfeo_print_tran_dvec(2*nb[i]+2*ng[i], d+i, 0);
-
-		// XXX nlp_mem: ineq_for
-//		blasfeo_daxpy(2*nb[i]+2*ng[i], 1.0, nlp_out->t+i, 0, d+i, 0, nlp_mem->ineq_for+i, 0);
-		blasfeo_dveccp(2*nb[i]+2*ng[i], d+i, 0, nlp_mem->ineq_for+i, 0);
-		// XXX nlp_mem: ineq_adj
+		// nlp_mem: ineq_adj
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_mem->ineq_adj+i, 0);
 		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_out->lam+i, nb[i]+ng[i], nlp_out->lam+i, 0, tmp_nbg+i, 0);
 		blasfeo_dvecad_sp(nb[i], 1.0, tmp_nbg+i, 0, nlp_in->idxb[i], nlp_mem->ineq_adj+i, 0);
 		blasfeo_dgemv_n(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, tmp_nbg+i, nb[i], 1.0, nlp_mem->ineq_adj+i, 0, nlp_mem->ineq_adj+i, 0);
-//		printf("\nii = %d\n", i);
-//		blasfeo_print_tran_dvec(2*nb[i]+2*ng[i], nlp_out->lam+i, 0);
-//		blasfeo_print_tran_dvec(nb[i]+ng[i], tmp_nbg+i, 0);
-//		blasfeo_print_tran_dvec(nu[i]+nx[i], nlp_mem->ineq_adj+i, 0);
 
-        // gradient
-#if 0
-		// identity Cyt
-		blasfeo_daxpy(nu[i]+nx[i], -1.0, y_ref+i, 0, nlp_out->ux+i, 0, tmp_nux+i, 0);
-#else
+
+
+        // cost
 		// general Cyt
-		blasfeo_dgemv_t(nv[i], ny[i], 1.0, Cyt+i, 0, 0, nlp_out->ux+i, 0, -1.0, y_ref+i, 0, tmp_nux+i, 0);
-#endif
 
-        blasfeo_dsymv_l(nu[i]+nx[i], nu[i]+nx[i], 1.0, &RSQrq[i], 0, 0, &tmp_nux[i], 0, 0.0, &rq[i], 0, &rq[i], 0);
+		if (cost->nls_mask[i]==0) // linear ls
+		{
 
+			blasfeo_dgemv_t(nv[i], ny[i], 1.0, Cyt+i, 0, 0, nlp_out->ux+i, 0, -1.0, y_ref+i, 0, ls_res+i, 0);
+
+		}
+		else // nonlinear ls
+		{
+			// unpack ls cost input
+			blasfeo_unpack_dvec(nu[i], nlp_out->ux+i, 0, work->ls_cost_in[i]+nx[i]);
+			blasfeo_unpack_dvec(nx[i], nlp_out->ux+i, nu[i], work->ls_cost_in[i]);
+
+			// evaluate external function (that assumes variables stacked as [x; u] )
+			cost->nls_jac[i]->evaluate(cost->nls_jac[i], work->ls_cost_in[i], work->ls_cost_jac_out[i]);
+
+			// pack residuals into ls_res
+			blasfeo_pack_dvec(ny[i], work->ls_cost_jac_out[i], ls_res+i, 0);
+			// pack jacobian into Cyt
+			blasfeo_pack_tran_dmat(ny[i], nx[i], work->ls_cost_jac_out[i]+ny[i], ny[i], cost->Cyt+i, nu[i], 0);
+			blasfeo_pack_tran_dmat(ny[i], nu[i], work->ls_cost_jac_out[i]+ny[i]+ny[i]*nx[i], ny[i], cost->Cyt+i, 0, 0);
+
+			blasfeo_daxpy(ny[i], -1.0, y_ref+i, 0, ls_res+i, 0, ls_res+i, 0);
+
+			blasfeo_dtrmm_rlnn(nv[i], ny[i], 1.0, W_chol+i, 0, 0, cost->Cyt+i, 0, 0, work->tmp_nv_ny+i, 0, 0);
+			blasfeo_dsyrk_ln(nv[i], ny[i], 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
+		}
+
+		// nlp_mem: cost_grad
+
+		// TODO use lower triangular chol of W to save n_y^2 flops
+        blasfeo_dsymv_l(ny[i], ny[i], 1.0, cost->W+i, 0, 0, ls_res+i, 0, 0.0, tmp_ny+i, 0, tmp_ny+i, 0);
+		blasfeo_dgemv_n(nv[i], ny[i], 1.0, Cyt+i, 0, 0, tmp_ny+i, 0, 0.0, nlp_mem->cost_grad+i, 0, nlp_mem->cost_grad+i, 0);
+
+		// TODO(rien) where should the update happen??? move to qp update ???
 		if(i<N)
 		{
 			sim_rk_opts *opts = (sim_rk_opts*) args->sim_solvers_args[i];
 			if (opts->scheme != NULL && opts->scheme->type != exact)
 			{
 				for (int_t j = 0; j < nx[i]; j++)
-					DVECEL_LIBSTR(&rq[i], nu[i]+j) += work->sim_out[i]->grad[j];
+					DVECEL_LIBSTR(nlp_mem->cost_grad+i, nu[i]+j) += work->sim_out[i]->grad[j];
 				for (int_t j = 0; j < nu[i]; j++)
-					DVECEL_LIBSTR(&rq[i], j) += work->sim_out[i]->grad[nx[i]+j];
+					DVECEL_LIBSTR(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx[i]+j];
 			}
 		}
 
-        blasfeo_drowin(nu[i]+nx[i], 1.0, &rq[i], 0, &RSQrq[i], nu[i]+nx[i], 0); // XXX needed ???
-
-		// XXX nlp_mem: cost_grad
-		// XXX before the previous update for inexact schemes ???
-		blasfeo_dveccp(nu[i]+nx[i], rq+i, 0, nlp_mem->cost_grad+i, 0);
-
     }
 
-	// return
+	return;
+
+}
+
+
+
+// update QP rhs for SQP (step prim var, abs dual var)
+static void sqp_update_qp_vectors(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
+{
+
+	// loop index
+	int i;
+
+	// extract dims
+    int N = nlp_in->dims->N;
+    int *nx = nlp_in->dims->nx;
+    int *nu = nlp_in->dims->nu;
+    int *nb = nlp_in->dims->nb;
+    int *ng = nlp_in->dims->ng;
+
+    struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
+    struct blasfeo_dvec *rq = work->qp_in->rq;
+    struct blasfeo_dmat *BAbt = work->qp_in->BAbt;
+    struct blasfeo_dvec *b = work->qp_in->b;
+    struct blasfeo_dvec *d = work->qp_in->d;
+
+	ocp_nlp_mem *nlp_mem = mem->nlp_mem;
+
+	// g
+	for (i=0; i<=N; i++)
+	{
+
+		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, rq+i, 0);
+        blasfeo_drowin(nu[i]+nx[i], 1.0, rq+i, 0, RSQrq+i, nu[i]+nx[i], 0); // XXX needed ???
+
+	}
+
+	// b
+	for (i=0; i<N; i++)
+	{
+		blasfeo_dveccp(nx[i+1], nlp_mem->dyn_fun+i, 0, b+i, 0);
+		blasfeo_drowin(nx[i+1], 1.0, b+i, 0, BAbt+i, nu[i]+nx[i], 0); // XXX needed ???
+	}
+
+	// d
+	for (i=0; i<=N; i++)
+	{
+
+		blasfeo_dveccp(2*nb[i]+2*ng[i], nlp_mem->ineq_fun+i, 0, d+i, 0);
+
+	}
+
 	return;
 
 }
@@ -691,14 +799,15 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     sim_rk_opts *sim_opts;
 
     // set up integrators
+	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp_in->model;
     for (int ii = 0; ii < N; ii++)
     {
         sim_opts = args->sim_solvers_args[ii];
         work->sim_in[ii]->step = sim_opts->interval/sim_opts->num_steps;
 
-        work->sim_in[ii]->vde = nlp_in->vde[ii];
-        work->sim_in[ii]->jac = nlp_in->jac[ii];
-        work->sim_in[ii]->vde_adj = nlp_in->vde_adj[ii];
+        work->sim_in[ii]->vde = model->vde[ii];
+        work->sim_in[ii]->jac = model->jac[ii];
+        work->sim_in[ii]->vde_adj = model->vde_adj[ii];
         work->sim_in[ii]->forward_vde_wrapper = &vde_fun;
         work->sim_in[ii]->jacobian_wrapper = &jac_fun;
         work->sim_in[ii]->adjoint_vde_wrapper = &vde_hess_fun;
@@ -729,7 +838,10 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     for ( ; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
 
-        multiple_shooting(nlp_in, nlp_out, args, mem, work);
+        linearize_update_qp_matrices(nlp_in, nlp_out, args, mem, work);
+
+		// update QP rhs for SQP (step prim var, abs dual var)
+        sqp_update_qp_vectors(nlp_in, nlp_out, args, mem, work);
 
 		// compute nlp residuals
 		ocp_nlp_res_compute(nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);

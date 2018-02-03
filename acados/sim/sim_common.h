@@ -51,7 +51,6 @@ typedef struct {
     casadi_function_t vde_adj;
     void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
 
-    // TODO(dimitris): @yutao why was this commented out?
     casadi_function_t jac;
     void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
 
@@ -88,17 +87,17 @@ typedef struct {
     double *S_adj;   //
     double *S_hess;  //
 
-    double *grad;  // gradient correction    
+    double *grad;  // gradient correction
 
     sim_info *info;
 } sim_out;
 
 
 typedef struct {
-    
+
     double interval;
     int num_stages;
-    
+
     int num_steps;
     int num_forw_sens;
 

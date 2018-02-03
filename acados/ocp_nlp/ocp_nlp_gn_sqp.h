@@ -36,6 +36,12 @@ extern "C" {
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 
+
+
+/************************************************
+* arguments
+************************************************/
+
 typedef struct
 {
     int maxIter;
@@ -51,7 +57,16 @@ typedef struct
     void **sim_solvers_args;
 } ocp_nlp_gn_sqp_args;
 
+//
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
+//
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
 
+
+
+/************************************************
+* memory
+************************************************/
 
 typedef struct
 {
@@ -66,11 +81,24 @@ typedef struct
 	// nlp memory
 	ocp_nlp_mem *nlp_mem;
 
+	
+	struct blasfeo_dmat *W_chol; // cholesky factor of weight matrix
+    struct blasfeo_dvec *ls_res; // least-squares residual r(x)
+
 	int sqp_iter;
 
 } ocp_nlp_gn_sqp_memory;
 
+//
+int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+//
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, void *raw_memory);
 
+
+
+/************************************************
+* workspace
+************************************************/
 
 typedef struct
 {
@@ -89,27 +117,28 @@ typedef struct
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
     // not using max(nx+nu) for parallelization in the future
 	// XXX take Max instead ?????
-	struct blasfeo_dmat *tmp_ny_ny;
 	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
-    struct blasfeo_dvec *tmp_nux;
+    struct blasfeo_dvec *tmp_ny;
+
+	double **ls_cost_in;
+	double **ls_cost_jac_out;
 
 } ocp_nlp_gn_sqp_work;
 
-
-
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
-//
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
-//
-int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
-//
-ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, void *raw_memory);
 //
 int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+
+
+
+/************************************************
+* solver
+************************************************/
+
 //
 int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
-//
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
