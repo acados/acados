@@ -47,14 +47,31 @@ typedef struct {
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
+
+
 	/* external functions */
 
+	// explicit ode
+	// TODO
+	// jacobian explicit ode
+	// TODO
+	// hessian explicit ode
+	external_function_generic *exfun_hess_ode_expl;
 	// forward explicit vde
 	external_function_generic *exfun_forw_vde_expl;
 	// adjoint explicit vde
 	external_function_generic *exfun_adj_vde_expl;
-	// hessian explicit ode
-	external_function_generic *exfun_hess_ode_expl;
+
+	// implicit ode
+	external_function_generic *exfun_ode_impl;
+	// jac_x implicit ode
+	external_function_generic *exfun_jac_x_ode_impl;
+	// jac_xdot implicit ode
+	external_function_generic *exfun_jac_xdot_ode_impl;
+	// jac_u implicit ode
+	external_function_generic *exfun_jac_u_ode_impl;
+
+
 
 	/* casadi functions */
 

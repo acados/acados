@@ -27,9 +27,9 @@
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
-#include <acados/sim/sim_casadi_wrapper.h>
+//#include <acados/sim/sim_casadi_wrapper.h>
 #include "acados/utils/external_function_generic.h"
-
+// crane model
 #include "examples/c/crane_model/crane_model.h"
 
 // blasfeo
@@ -51,7 +51,7 @@ int main()
 * external functions
 ************************************************/
 
-	// forward VDE
+	// forward explicit VDE
 
 	external_function_casadi exfun_forw_vde;
 	exfun_forw_vde.casadi_fun = &vdeFun;
@@ -63,7 +63,7 @@ int main()
 	void *exfun_forw_vde_mem = malloc(exfun_forw_vde_size);
 	external_function_casadi_assign(&exfun_forw_vde, exfun_forw_vde_mem);
 
-	// adjoint VDE
+	// adjoint explicit VDE
 
 	external_function_casadi exfun_adj_vde;
 	exfun_adj_vde.casadi_fun = &adjFun;
@@ -75,7 +75,7 @@ int main()
 	void *exfun_adj_vde_mem = malloc(exfun_adj_vde_size);
 	external_function_casadi_assign(&exfun_adj_vde, exfun_adj_vde_mem);
 
-	// hessian ODE
+	// hessian explicit ODE
 
 	external_function_casadi exfun_hess_ode;
 	exfun_hess_ode.casadi_fun = &hessFun;
@@ -118,19 +118,20 @@ int main()
     erk_opts->num_steps = 4;
     erk_opts->sens_forw = true;
     erk_opts->sens_adj = true;
-    erk_opts->sens_hess = true;
+    erk_opts->sens_hess = false;
     // TODO(dimitris): SET IN DEFAULT ARGS
     erk_opts->num_forw_sens = NF;
 
+	// sim in
     sim_in *in = create_sim_in(&dims);
     in->step = T / erk_opts->num_steps;
 	// casadi functins & wrappers
-    in->vde = &vdeFun;
-    in->vde_adj = &adjFun;
-    in->hess = &hessFun;
-    in->forward_vde_wrapper = &vde_fun;
-    in->adjoint_vde_wrapper = &vde_adj_fun;
-    in->Hess_fun = &vde_hess_fun;
+//    in->vde = &vdeFun;
+//    in->vde_adj = &adjFun;
+//    in->hess = &hessFun;
+//    in->forward_vde_wrapper = &vde_fun;
+//    in->adjoint_vde_wrapper = &vde_adj_fun;
+//    in->Hess_fun = &vde_hess_fun;
 	// external functions
 	in->exfun_forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
 	in->exfun_adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
@@ -172,7 +173,7 @@ int main()
         printf("\nS_forw_out: \n");
         for (ii=0;ii<nx;ii++){
             for (jj=0;jj<NF;jj++)
-                printf("%8.5f ",S_forw_out[jj*nx+ii]);
+                printf("%8.5f ", S_forw_out[jj*nx+ii]);
             printf("\n");
         }
     }
@@ -182,7 +183,7 @@ int main()
         S_adj_out = out->S_adj;
         printf("\nS_adj_out: \n");
         for (ii=0;ii<nx+nu;ii++){
-            printf("%8.5f ",S_adj_out[ii]);
+            printf("%8.5f ", S_adj_out[ii]);
         }
         printf("\n");
     }
@@ -195,9 +196,9 @@ int main()
         for (ii=0;ii<NF;ii++){
             for (jj=0;jj<NF;jj++){
                 if (jj>ii){
-                    printf("%8.5f ",zero);
+                    printf("%8.5f ", zero);
                 }else{
-                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
+                    printf("%8.5f ", S_hess_out[jj*NF+ii]);
                 }
             }
             printf("\n");

@@ -25,12 +25,33 @@ int hessFun_work(int *, int *, int *, int *);
 const int *hessFun_sparsity_in(int);
 const int *hessFun_sparsity_out(int);
 
+/* implicit ODE */
 
-
+// implicit ODE
 int impl_odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int impl_odeFun_work(int *, int *, int *, int *);
+const int *impl_odeFun_sparsity_in(int);
+const int *impl_odeFun_sparsity_out(int);
+
+// jac_x implicit ODE
 int impl_jacFun_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int impl_jacFun_x_work(int *, int *, int *, int *);
+const int *impl_jacFun_x_sparsity_in(int);
+const int *impl_jacFun_x_sparsity_out(int);
+
+// jax_xdot implicit ODE
 int impl_jacFun_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int impl_jacFun_xdot_work(int *, int *, int *, int *);
+const int *impl_jacFun_xdot_sparsity_in(int);
+const int *impl_jacFun_xdot_sparsity_out(int);
+
+// jax_u implicit ODE
 int impl_jacFun_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int impl_jacFun_u_work(int *, int *, int *, int *);
+const int *impl_jacFun_u_sparsity_in(int);
+const int *impl_jacFun_u_sparsity_out(int);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */
