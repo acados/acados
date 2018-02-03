@@ -26,6 +26,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+#include "acados/utils/external_function_generic.h"
+
 
 typedef struct {
     int num_stages;
@@ -44,6 +46,17 @@ typedef struct {
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
+
+	/* external functions */
+
+	// forward explicit vde
+	external_function_generic *exfun_forw_vde_expl;
+	// adjoint explicit vde
+	external_function_generic *exfun_adj_vde_expl;
+	// hessian explicit ode
+	external_function_generic *exfun_hess_ode_expl;
+
+	/* casadi functions */
 
     casadi_function_t vde;
     void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);

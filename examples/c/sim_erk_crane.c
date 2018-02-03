@@ -28,6 +28,7 @@
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
 #include <acados/sim/sim_casadi_wrapper.h>
+#include "acados/utils/external_function_generic.h"
 
 #include "examples/c/crane_model/crane_model.h"
 
@@ -41,7 +42,54 @@
 
 // #define M_PI 3.14159265358979323846
 
-int main() {
+
+
+int main()
+{
+
+/************************************************
+* external functions
+************************************************/
+
+	// forward VDE
+
+	external_function_casadi exfun_forw_vde;
+	exfun_forw_vde.casadi_fun = &vdeFun;
+	exfun_forw_vde.casadi_work = &vdeFun_work;
+	exfun_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
+	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
+
+	int exfun_forw_vde_size = external_function_casadi_calculate_size(&exfun_forw_vde);
+	void *exfun_forw_vde_mem = malloc(exfun_forw_vde_size);
+	external_function_casadi_assign(&exfun_forw_vde, exfun_forw_vde_mem);
+
+	// adjoint VDE
+
+	external_function_casadi exfun_adj_vde;
+	exfun_adj_vde.casadi_fun = &adjFun;
+	exfun_adj_vde.casadi_work = &adjFun_work;
+	exfun_adj_vde.casadi_sparsity_in = &adjFun_sparsity_in;
+	exfun_adj_vde.casadi_sparsity_out = &adjFun_sparsity_out;
+
+	int exfun_adj_vde_size = external_function_casadi_calculate_size(&exfun_adj_vde);
+	void *exfun_adj_vde_mem = malloc(exfun_adj_vde_size);
+	external_function_casadi_assign(&exfun_adj_vde, exfun_adj_vde_mem);
+
+	// hessian ODE
+
+	external_function_casadi exfun_hess_ode;
+	exfun_hess_ode.casadi_fun = &hessFun;
+	exfun_hess_ode.casadi_work = &hessFun_work;
+	exfun_hess_ode.casadi_sparsity_in = &hessFun_sparsity_in;
+	exfun_hess_ode.casadi_sparsity_out = &hessFun_sparsity_out;
+
+	int exfun_hess_vde_size = external_function_casadi_calculate_size(&exfun_hess_ode);
+	void *exfun_hess_vde_mem = malloc(exfun_hess_vde_size);
+	external_function_casadi_assign(&exfun_hess_ode, exfun_hess_vde_mem);
+
+/************************************************
+* bla bla bla
+************************************************/
 
     int ii;
     int jj;
@@ -69,19 +117,26 @@ int main() {
     sim_rk_opts *erk_opts = (sim_rk_opts *) args;
     erk_opts->num_steps = 4;
     erk_opts->sens_forw = true;
-    erk_opts->sens_adj = false;
-    erk_opts->sens_hess = false;
+    erk_opts->sens_adj = true;
+    erk_opts->sens_hess = true;
     // TODO(dimitris): SET IN DEFAULT ARGS
     erk_opts->num_forw_sens = NF;
 
     sim_in *in = create_sim_in(&dims);
     in->step = T / erk_opts->num_steps;
+	// casadi functins & wrappers
     in->vde = &vdeFun;
     in->vde_adj = &adjFun;
     in->hess = &hessFun;
     in->forward_vde_wrapper = &vde_fun;
     in->adjoint_vde_wrapper = &vde_adj_fun;
     in->Hess_fun = &vde_hess_fun;
+	// external functions
+	in->exfun_forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
+	in->exfun_adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
+	in->exfun_hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
+
+
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
@@ -156,22 +211,29 @@ int main() {
 
     if(erk_opts->sens_adj){
         struct blasfeo_dmat sA;
-        blasfeo_create_dmat(nx, nx+nu, &sA, S_forw_out);
+		blasfeo_allocate_dmat(nx, nx+nu, &sA);
+		blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
 
         struct blasfeo_dvec sx;
-        blasfeo_create_dvec(nx, &sx, in->S_adj);
+		blasfeo_allocate_dvec(nx, &sx);
+		blasfeo_pack_dvec(nx, in->S_adj, &sx, 0);
 
         struct blasfeo_dvec sz;
-        void *mz;
-        v_zeros_align(&mz, blasfeo_memsize_dvec(nx+nu));
-        blasfeo_create_dvec(nx+nu, &sz, mz);
+		blasfeo_allocate_dvec(nx+nu, &sz);
+//		blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
+//		blasfeo_print_tran_dvec(nx, &sx, 0);
         blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
         printf("\nJac times lambdaX:\n");
         blasfeo_print_tran_dvec(nx+nu, &sz, 0);
 
-        v_free_align(mz);
+		blasfeo_free_dmat(&sA);
+		blasfeo_free_dvec(&sx);
+		blasfeo_free_dvec(&sz);
     }
+
+	free(exfun_forw_vde_mem);
+	free(exfun_adj_vde_mem);
 
     free(xref);
     free(in);
