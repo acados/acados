@@ -49,6 +49,10 @@ file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
 
+add_executable(sim_erk_wt sim_erk_wt.c)
+target_link_libraries(sim_erk_wt acados)
+add_test(sim_erk_wt sim_erk_wt)
+
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
@@ -63,6 +67,9 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
     # target_link_libraries(mass_spring_qpoases_example acados)
     # add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
+
+
+
 
 #     add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
 #     target_link_libraries(mass_spring_qpdunes_example acados)

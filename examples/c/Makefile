@@ -30,6 +30,7 @@ EXAMPLES += sim_erk_crane
 EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
 EXAMPLES += nonlinear_chain_ocp_nlp
+EXAMPLES += sim_erk_wt
 
 examples: $(EXAMPLES)
 
@@ -41,6 +42,8 @@ RUN_EXAMPLES += run_sim_erk_crane
 RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+RUN_EXAMPLES += sim_erk_wt
+
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -59,6 +62,22 @@ sim_erk_crane: $(CRANE_OBJS)
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
+	
+
+WT_OBJS =
+WT_OBJS += simple_wt_model/jac_model.o
+WT_OBJS += simple_wt_model/ode_model.o
+WT_OBJS += simple_wt_model/vde_adj_model.o
+WT_OBJS += simple_wt_model/vde_forw_model.o
+WT_OBJS += simple_wt_model/vde_hess_model.o
+WT_OBJS += sim_erk_wt.o
+
+sim_erk_wt: $(WT_OBJS)
+	$(CCC) -o sim_erk_wt.out  $(WT_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_erk_wt build complete."
+	@echo
+
 
 # sim_irk_crane_yt: $(CRANE_OBJS)
 # 	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
@@ -147,6 +166,9 @@ run_mass_spring_fcond_hpipm_split:
 run_nonlinear_chain_ocp_nlp:
 	./nonlinear_chain_ocp_nlp.out
 
+
+run_sim_erk_wt:
+	./sim_erk_wt.out
 
 
 clean:
