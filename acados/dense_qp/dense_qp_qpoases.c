@@ -249,45 +249,73 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     int nwsr = args->max_nwsr;
     double cputime = args->max_cputime;
     int return_flag = 0;
-    if (ngd > 0) {  // QProblem
-        QProblemCON(QP, nvd, ngd, HST_POSDEF);
-        QProblem_setPrintLevel(QP, PL_MEDIUM);
-        /* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
-        QProblem_printProperties(QP);
-		if (args->use_precomputed_choleski == 1) {
-			static Options options;
-
-			Options_setToDefault( &options );
-			options.initialStatusBounds = ST_INACTIVE;
-			QProblemB_setOptions( QP, options );
-			return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-				NULL, NULL, NULL, NULL, memory->R);  // NULL or 0
+	if (args->hotstart == 1) { // only to be used with fixed data matrices!
+		if (ngd > 0) {  // QProblem
+			if (memory->first_it == 1) {
+				QProblemCON(QP, nvd, ngd, HST_UNKNOWN);
+				QProblem_setPrintLevel(QP, PL_MEDIUM);
+				/* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
+				QProblem_printProperties(QP);
+				QProblem_init(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime );
+				memory->first_it = 0;
+			} else {	
+				/* exit(1); */
+				QProblem_hotstart(QP, g, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime);
+			}
 		} else {
-			return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-				NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
-		}
-		QProblem_getPrimalSolution(QP, prim_sol);
-        QProblem_getDualSolution(QP, dual_sol);
-    } else {  // QProblemB
-        QProblemBCON(QPB, nvd, HST_POSDEF);
-        QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-        /* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
-        QProblemB_printProperties(QPB);
-		if (args->use_precomputed_choleski == 1) {
-			static Options options;
+			if (memory->first_it == 1) {
+				QProblemBCON(QPB, nvd, HST_UNKNOWN);
+				QProblemB_setPrintLevel(QPB, PL_MEDIUM);
+				/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
+				QProblemB_printProperties(QPB);
+				QProblemB_init(QP, H, g, d_lb, d_ub, &nwsr, &cputime);
+				memory->first_it = 0;
 
-			Options_setToDefault( &options );
-			options.initialStatusBounds = ST_INACTIVE;
-			QProblemB_setOptions( QPB, options );
-			return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
-				NULL, NULL, NULL, memory->R);  // NULL or 0
-		} else {
-			return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
-				dual_sol, NULL, NULL, NULL);  // NULL or 0
+			} else {	
+				QProblemB_hotstart(QP, g, d_lb, d_ub, &nwsr, &cputime);
+			}
 		}
-		QProblemB_getPrimalSolution(QPB, prim_sol);
-        QProblemB_getDualSolution(QPB, dual_sol);
-    }
+	} else {
+		if (ngd > 0) {  // QProblem
+			QProblemCON(QP, nvd, ngd, HST_POSDEF);
+			QProblem_setPrintLevel(QP, PL_MEDIUM);
+			/* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
+			QProblem_printProperties(QP);
+			if (args->use_precomputed_choleski == 1) {
+				static Options options;
+
+				Options_setToDefault( &options );
+				options.initialStatusBounds = ST_INACTIVE;
+				QProblemB_setOptions( QP, options );
+				return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+					NULL, NULL, NULL, NULL, memory->R);  // NULL or 0
+			} else {
+				return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+					NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
+			}
+			QProblem_getPrimalSolution(QP, prim_sol);
+			QProblem_getDualSolution(QP, dual_sol);
+		} else {  // QProblemB
+			QProblemBCON(QPB, nvd, HST_POSDEF);
+			QProblemB_setPrintLevel(QPB, PL_MEDIUM);
+			/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
+			QProblemB_printProperties(QPB);
+			if (args->use_precomputed_choleski == 1) {
+				static Options options;
+
+				Options_setToDefault( &options );
+				options.initialStatusBounds = ST_INACTIVE;
+				QProblemB_setOptions( QPB, options );
+				return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
+					NULL, NULL, NULL, memory->R);  // NULL or 0
+			} else {
+				return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
+					dual_sol, NULL, NULL, NULL);  // NULL or 0
+			}
+			QProblemB_getPrimalSolution(QPB, prim_sol);
+			QProblemB_getDualSolution(QPB, dual_sol);
+		}
+	}
 
     // save solution statistics to memory
     memory->cputime = cputime;

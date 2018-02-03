@@ -32,6 +32,7 @@ void *dense_qp_qpoases_copy_args(dense_qp_dims *dims, void *raw_memory, void *so
     dest->warm_start = source->warm_start;
     dest->max_nwsr = source->max_nwsr;
     dest->use_precomputed_choleski = source->use_precomputed_choleski;
+    dest->hotstart = source->hotstart;
 
     return (void *)dest;
 }
