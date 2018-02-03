@@ -27,7 +27,8 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 
-#include "acados/sim/sim_casadi_wrapper.h"
+//#include "acados/sim/sim_casadi_wrapper.h"
+
 
 
 int sim_erk_opts_calculate_size(sim_dims *dims)
@@ -299,7 +300,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
             acados_tic(&timer_ad);
 //            in->forward_vde_wrapper(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
             in->exfun_forw_vde_expl->evaluate(in->exfun_forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
-            timing_ad += acados_toc(&timer_ad)*1000;
+            timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++)
 		{
@@ -400,6 +401,6 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     }
     out->info->CPUtime = acados_toc(&timer)*1000;
     out->info->LAtime = 0.0;
-    out->info->ADtime = timing_ad;
+    out->info->ADtime = timing_ad*1000;
     return 0;  // success
 }

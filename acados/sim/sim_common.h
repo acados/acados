@@ -29,11 +29,13 @@
 #include "acados/utils/external_function_generic.h"
 
 
+
 typedef struct {
     int num_stages;
     int nx;
     int nu;
 } sim_dims;
+
 
 
 typedef struct {
@@ -46,8 +48,6 @@ typedef struct {
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
-
-
 
 	/* external functions */
 
@@ -70,8 +70,6 @@ typedef struct {
 	external_function_generic *exfun_jac_xdot_ode_impl;
 	// jac_u implicit ode
 	external_function_generic *exfun_jac_u_ode_impl;
-
-
 
 	/* casadi functions */
 
@@ -104,14 +102,18 @@ typedef struct {
 } sim_in;
 
 
-typedef struct {
+
+typedef struct
+{
     double CPUtime;
     double LAtime;
     double ADtime;
 } sim_info;
 
 
-typedef struct {
+
+typedef struct
+{
     double *xn;      // xn[NX]
     double *S_forw;  // S_forw[NX*(NX+NU)]
     double *S_adj;   //
@@ -123,7 +125,9 @@ typedef struct {
 } sim_out;
 
 
-typedef struct {
+
+typedef struct
+{
 
     double interval;
     int num_stages;
@@ -147,6 +151,8 @@ typedef struct {
 
 } sim_rk_opts;
 
+
+
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
     int (*calculate_args_size)(sim_dims *dims);
@@ -156,6 +162,8 @@ typedef struct {
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
 } sim_solver_fcn_ptrs;
+
+
 
 int sim_dims_calculate_size();
 

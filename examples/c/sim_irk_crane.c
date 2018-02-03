@@ -31,7 +31,7 @@
 int main() {
 
 /************************************************
-* external functions
+* create external functions
 ************************************************/
 
 	// implicit ODE
@@ -103,22 +103,37 @@ int main() {
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
+/************************************************
+* sim dims
+************************************************/
+
     sim_dims dims;
     dims.num_stages = num_stages;
     dims.nx = nx;
     dims.nu = nu;
 
-    // the function to create opts should not be named by erk
+/************************************************
+* sim opts
+************************************************/
+
     sim_rk_opts *irk_opts = create_sim_irk_opts(&dims);
 
-    sim_in *in = create_sim_in(&dims);
-
     irk_opts->num_steps = 2;
-    in->step = T / irk_opts->num_steps;
     irk_opts->sens_forw = true;
     irk_opts->sens_adj = true;
     irk_opts->sens_hess = false;
     irk_opts->jac_reuse = false;
+
+    // TODO(dimitris): SET IN DEFAULT ARGS
+    irk_opts->num_forw_sens = NF;
+
+/************************************************
+* sim in
+************************************************/
+
+    sim_in *in = create_sim_in(&dims);
+
+    in->step = T / irk_opts->num_steps;
 
 	// casadi functins & wrappers
 //    in->impl_ode = &impl_odeFun;
@@ -151,13 +166,22 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
-    // TODO(dimitris): SET IN DEFAULT ARGS
-    irk_opts->num_forw_sens = NF;
+/************************************************
+* workspace
+************************************************/
 
     int workspace_size = sim_irk_calculate_workspace_size(&dims, irk_opts);
     void *workspace = malloc(workspace_size);
 
+/************************************************
+* out
+************************************************/
+
     sim_out *out = create_sim_out(&dims);
+
+/************************************************
+* call integrator
+************************************************/
 
     acados_tic(&timer);
     for (ii=0;ii<NREP;ii++)
@@ -183,6 +207,10 @@ int main() {
         sim_irk(in, out, irk_opts, NULL, workspace);
     Time3 = acados_toc(&timer)/NREP;
 #endif
+
+/************************************************
+* printing
+************************************************/
 
 #if 0
     printf("IRK Example for Inverted Pendulum:\n");
@@ -274,6 +302,10 @@ int main() {
 		blasfeo_free_dvec(&sx);
 		blasfeo_free_dvec(&sz);
     }
+
+/************************************************
+* free
+************************************************/
 
 	free(exfun_ode_mem);
 	free(exfun_jac_x_ode_mem);
