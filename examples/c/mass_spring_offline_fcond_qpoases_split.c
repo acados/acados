@@ -128,10 +128,10 @@ int main() {
 		dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
 		blasfeo_dpotrf_l(nvd, qpd_in->Hv, 0, 0, &sR, 0, 0);
 
-		/* // fill in upper triangular of R */
+		// fill in upper triangular of R 
 		blasfeo_dtrtr_l(nvd, &sR, 0, 0, &sR, 0, 0); 
 
-		/* // extract R */
+		// extract R 
 		blasfeo_unpack_dmat(nvd, nvd, &sR, 0, 0, qpoases_solver_mem->R, nvd); 
 	} 
 
@@ -149,10 +149,10 @@ int main() {
 			dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
 			blasfeo_dpotrf_l(nvd, qpd_in->Hv, 0, 0, &sR, 0, 0);
 
-			/* // fill in upper triangular of R */
+			// fill in upper triangular of R
 			blasfeo_dtrtr_l(nvd, &sR, 0, 0, &sR, 0, 0); 
 
-			/* // extract R */
+			// extract R
 			blasfeo_unpack_dmat(nvd, nvd, &sR, 0, 0, qpoases_solver_mem->R, nvd); 
 		}
 
@@ -192,7 +192,10 @@ int main() {
     compute_ocp_qp_res_nrm_inf(qp_res, res);
     double max_res = 0.0;
     for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
-    /* assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS"); */
+    // assertion switched off when using primal-only expansion (no multipliers computed)
+	if (cond_args->expand_primal_sol_only == 0) {
+		assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS"); 
+	}
 
     /************************************************
     * print solution and stats
