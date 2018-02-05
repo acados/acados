@@ -34,7 +34,7 @@
 #define NREP 100
 #define ELIMINATE_X0
 #define OFFLINE_CONDENSING 1
-#define BLASFEO_CHOLESKI 1
+#define BLASFEO_CHOLESKI 0
 
 #include "./mass_spring.c"
 
