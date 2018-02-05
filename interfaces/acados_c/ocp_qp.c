@@ -195,7 +195,7 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
             break;
         case PARTIAL_CONDENSING_QPDUNES:
             #ifdef ACADOS_WITH_QPDUNES
-            ocp_qp_qpdunes_copy_args(NULL, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            ocp_qp_qpdunes_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
             #endif
             break;
         case FULL_CONDENSING_HPIPM:
