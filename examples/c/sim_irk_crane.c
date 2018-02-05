@@ -124,9 +124,6 @@ int main() {
     irk_opts->sens_hess = false;
     irk_opts->jac_reuse = false;
 
-    // TODO(dimitris): SET IN DEFAULT ARGS
-    irk_opts->num_forw_sens = NF;
-
 /************************************************
 * sim in
 ************************************************/
@@ -167,17 +164,17 @@ int main() {
         in->S_adj[ii] = 1.0;
 
 /************************************************
+* out
+************************************************/
+
+    sim_out *out = create_sim_out(&dims);
+
+/************************************************
 * workspace
 ************************************************/
 
     int workspace_size = sim_irk_calculate_workspace_size(&dims, irk_opts);
     void *workspace = malloc(workspace_size);
-
-/************************************************
-* out
-************************************************/
-
-    sim_out *out = create_sim_out(&dims);
 
 /************************************************
 * call integrator
@@ -277,8 +274,8 @@ int main() {
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
+    printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 
     if(irk_opts->sens_adj){
         struct blasfeo_dmat sA;

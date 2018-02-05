@@ -425,9 +425,9 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     }
 
 	// store timings
-    out->info->CPUtime = acados_toc(&timer)*1000;
+    out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = 0.0;
-    out->info->ADtime = timing_ad*1000;
+    out->info->ADtime = timing_ad;
 
 	// return
     return 0;  // success

@@ -122,6 +122,63 @@ void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 
 
 
+static void select_model_casadi(int N, int num_free_masses, external_function_casadi *forw_vde, external_function_casadi *jac_ode)
+{
+	// loop index
+	int ii;
+
+	switch (num_free_masses)
+	{
+		case 1:
+			for (ii = 0; ii < N; ii++)
+			{
+				forw_vde[ii].casadi_fun = &vde_chain_nm2;
+				forw_vde[ii].casadi_work = &vde_chain_nm2_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm2_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm2_sparsity_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm2;
+				jac_ode[ii].casadi_work = &jac_chain_nm2_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm2_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm2_sparsity_out;
+			}
+			break;
+		case 2:
+			for (ii = 0; ii < N; ii++)
+			{
+				forw_vde[ii].casadi_fun = &vde_chain_nm3;
+				forw_vde[ii].casadi_work = &vde_chain_nm3_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm3_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm3_sparsity_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm3;
+				jac_ode[ii].casadi_work = &jac_chain_nm3_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm3_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm3_sparsity_out;
+			}
+			break;
+		case 3:
+			for (ii = 0; ii < N; ii++)
+			{
+				forw_vde[ii].casadi_fun = &vde_chain_nm4;
+				forw_vde[ii].casadi_work = &vde_chain_nm4_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm4_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm4_sparsity_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm4;
+				jac_ode[ii].casadi_work = &jac_chain_nm4_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm4_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm4_sparsity_out;
+			}
+			break;
+		default:
+			printf("Problem size not available\n");
+			exit(1);
+			break;
+	}
+
+	return;
+}
+
+
+
 static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_function_casadi *ls_cost_jac)
 {
 	// loop index
@@ -369,10 +426,44 @@ int main() {
 
 
     /************************************************
-    * nonlinear least squares: evaluation and jacobian of residuals
+    * model
     ************************************************/
 
 	char *c_ptr;
+	external_function_casadi forw_vde_casadi[NN];
+	external_function_casadi jac_ode_casadi[NN];
+
+	select_model_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi);
+
+	// compute sizes
+	int forw_vde_casadi_size[NN];
+	int jac_ode_casadi_size[NN];
+	int sim_casadi_size_tot = 0;
+	for (int ii=0; ii<NN; ii++)
+	{
+		forw_vde_casadi_size[ii] = external_function_casadi_calculate_size(forw_vde_casadi+ii);
+		sim_casadi_size_tot += forw_vde_casadi_size[ii];
+		jac_ode_casadi_size[ii] = external_function_casadi_calculate_size(jac_ode_casadi+ii);
+		sim_casadi_size_tot += jac_ode_casadi_size[ii];
+	}
+
+	// allocate memory
+	void *sim_casadi_mem = malloc(sim_casadi_size_tot);
+
+	// assign
+	c_ptr = sim_casadi_mem;
+	for (int ii=0; ii<NN; ii++)
+	{
+		external_function_casadi_assign(forw_vde_casadi+ii, c_ptr);
+		c_ptr += forw_vde_casadi_size[ii];
+		external_function_casadi_assign(jac_ode_casadi+ii, c_ptr);
+		c_ptr += jac_ode_casadi_size[ii];
+	}
+
+    /************************************************
+    * nonlinear least squares: evaluation and jacobian of residuals
+    ************************************************/
+
 	external_function_casadi ls_cost_jac_casadi[NN+1];
 
 	select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
@@ -485,6 +576,11 @@ int main() {
     {
         select_model(NMF, nlp_in);
     }
+	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp_in->model;
+	for (int i=0; i<NN; i++)
+		model->exfun_forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
+	for (int i=0; i<NN; i++)
+		model->exfun_jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
 
 
 

@@ -54,6 +54,7 @@ typedef struct {
 	// explicit ode
 	// TODO
 	// jacobian explicit ode
+	external_function_generic *exfun_jac_ode_expl;
 	// TODO
 	// hessian explicit ode
 	external_function_generic *exfun_hess_ode_expl;
@@ -105,9 +106,9 @@ typedef struct {
 
 typedef struct
 {
-    double CPUtime;
-    double LAtime;
-    double ADtime;
+    double CPUtime; // in seconds
+    double LAtime; // in seconds
+    double ADtime; // in seconds
 } sim_info;
 
 

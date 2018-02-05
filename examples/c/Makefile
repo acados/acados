@@ -28,6 +28,7 @@ EXAMPLES =
 EXAMPLES += mass_spring_example
 EXAMPLES += sim_erk_crane
 EXAMPLES += sim_irk_crane
+EXAMPLES += sim_lifted_irk_crane
 EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
 EXAMPLES += nonlinear_chain_ocp_nlp
@@ -40,6 +41,7 @@ RUN_EXAMPLES =
 RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_sim_erk_crane
 RUN_EXAMPLES += run_sim_irk_crane
+RUN_EXAMPLES += run_sim_lifted_irk_crane
 RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
@@ -49,8 +51,8 @@ run_examples: $(RUN_EXAMPLES)
 
 
 CRANE_OBJS =
-CRANE_OBJS += crane_model/jac_model.o
 CRANE_OBJS += crane_model/ode_model.o
+CRANE_OBJS += crane_model/jac_model.o
 CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
@@ -71,6 +73,14 @@ sim_irk_crane: $(CRANE_OBJS) sim_irk_crane.o
 	$(CCC) -o sim_irk_crane.out  sim_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_irk_crane build complete."
+	@echo
+
+
+
+sim_lifted_irk_crane: $(CRANE_OBJS) sim_lifted_irk_crane.o
+	$(CCC) -o sim_lifted_irk_crane.out  sim_lifted_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_lifted_irk_crane build complete."
 	@echo
 
 
@@ -138,6 +148,11 @@ run_sim_erk_crane:
 
 run_sim_irk_crane:
 	./sim_irk_crane.out
+
+
+
+run_sim_lifted_irk_crane:
+	./sim_lifted_irk_crane.out
 
 
 

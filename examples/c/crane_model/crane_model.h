@@ -24,6 +24,11 @@ int hessFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int hessFun_work(int *, int *, int *, int *);
 const int *hessFun_sparsity_in(int);
 const int *hessFun_sparsity_out(int);
+// hessian explicit ODE
+int jacFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int jacFun_work(int *, int *, int *, int *);
+const int *jacFun_sparsity_in(int);
+const int *jacFun_sparsity_out(int);
 
 /* implicit ODE */
 

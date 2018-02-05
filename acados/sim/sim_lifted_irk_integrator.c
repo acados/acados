@@ -35,6 +35,7 @@
 #include "acados/utils/print.h"
 
 
+
 int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
 {
 
@@ -64,6 +65,7 @@ int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
 
 
 
+// TODO return pointer to sim_rk_opts instead
 void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
@@ -99,16 +101,27 @@ void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
 
 
 
-void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_) {
+void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_)
+{
+	// cast opts
     sim_rk_opts *opts = (sim_rk_opts*) opts_;
+
     enum Newton_type_collocation type = exact;
     opts->scheme->type = type;
     opts->scheme->freeze = false;
+
+	// gauss collocation nodes
     get_Gauss_nodes(opts->num_stages, opts->c_vec);
+	// butcher tableau
     create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
-    if (dims->num_stages <= 15 && (type == simplified_in || type == simplified_inis)) {
+
+	// ???
+    if (dims->num_stages <= 15 && (type == simplified_in || type == simplified_inis))
+	{
         read_Gauss_simplified(opts->num_stages, opts->scheme);
-    } else {
+    }
+	else
+	{
         opts->scheme->type = exact;
     }
 
@@ -117,7 +130,10 @@ void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_) {
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+
+	return;
 }
+
 
 
 int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts_) {
@@ -194,6 +210,8 @@ int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts_) {
     size += 2 * 8;
     return size;
 }
+
+
 
 void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory) {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
@@ -378,6 +396,7 @@ int sim_lifted_irk_calculate_workspace_size(sim_dims *dims, void *args) {
 }
 
 
+
 static void sim_lifted_irk_cast_workspace(sim_lifted_irk_workspace *work,
                                           const sim_in *in, void *args) {
     int nx = in->nx;
@@ -526,6 +545,8 @@ real_t LU_system_ACADO(real_t *const A, int *const perm, int dim) {
     return det;
 }
 
+
+
 real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
                           int dim, int dim2) {
     int i, j, k;
@@ -573,6 +594,8 @@ real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
     }
     return 0;
 }
+
+
 
 real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
                                 int *const perm, int dim, int dim2) {
@@ -625,6 +648,8 @@ real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
 
 #endif
 
+
+
 void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
                    const int stages, const int n, const int m) {
     //    print_matrix_name("stdout", "trans", trans, stages, stages);
@@ -644,6 +669,8 @@ void transform_mat(real_t *mat, real_t *trans, real_t *mat_trans,
     }
 }
 
+
+
 void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
                    const int stages, const int n) {
     for (int i = 0; i < stages * n; i++) mat_trans[i] = 0.0;
@@ -656,6 +683,8 @@ void transform_vec(real_t *mat, real_t *trans, real_t *mat_trans,
         }
     }
 }
+
+
 
 void construct_subsystems(real_t *mat, real_t **mat2, const int stages,
                           const int n, const int m) {
@@ -686,6 +715,8 @@ void construct_subsystems(real_t *mat, real_t **mat2, const int stages,
     }
 }
 
+
+
 void destruct_subsystems(real_t *mat, real_t **mat2, const int stages,
                          const int n, const int m) {
     int idx = 0;
@@ -714,6 +745,8 @@ void destruct_subsystems(real_t *mat, real_t **mat2, const int stages,
         idx++;
     }
 }
+
+
 
 void form_linear_system_matrix(int istep, const sim_in *in, void *args,
                                sim_lifted_irk_memory *mem,
@@ -784,7 +817,8 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args,
             }
         }
         acados_tic(&timer_ad);
-        in->jacobian_wrapper(nx, rhs_in, jac_tmp, in->jac);  // k evaluation
+//        in->jacobian_wrapper(nx, rhs_in, jac_tmp, in->jac);  // k evaluation
+        in->exfun_jac_ode_expl->evaluate(in->exfun_jac_ode_expl, rhs_in, jac_tmp);  // k evaluation
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme->type == simplified_in ||
@@ -834,6 +868,8 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args,
         }
     }
 }
+
+
 
 int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_) {
 
@@ -1123,7 +1159,8 @@ int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_
             rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) opts->num_steps);  // time
 
             acados_tic(&timer_ad);
-            in->forward_vde_wrapper(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
+//            in->forward_vde_wrapper(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
+            in->exfun_forw_vde_expl->evaluate(in->exfun_forw_vde_expl, rhs_in, VDE_tmp[s1]);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:

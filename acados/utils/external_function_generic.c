@@ -132,6 +132,7 @@ int external_function_casadi_calculate_size(external_function_casadi *fun)
 	size += fun->res_size_tot*sizeof(double); // res
 	size += fun->w_size*sizeof(double); // w
 
+    size += 8; // initial align
     size += 8; // align to double
 
 //	make_int_multiple_of(64, &size);
@@ -151,6 +152,9 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 	char *c_ptr = raw_memory;
 
 	// double pointers
+
+	// initial align
+    align_char_to(8, &c_ptr);
 
 	// args
 	assign_double_ptrs(fun->args_num, &fun->args, &c_ptr);
