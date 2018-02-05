@@ -61,7 +61,7 @@ int main() {
 
     sim_solver_config config;
     config.sim_solver = ERK;
-    config.ef_config.type = CASADI_WRAPPER;
+    config.extfun_config.type = CASADI_WRAPPER;
 
     sim_dims dims;
     dims.num_stages = num_stages;

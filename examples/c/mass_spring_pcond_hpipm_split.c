@@ -67,7 +67,7 @@ int main() {
 
 
     ocp_qp_partial_condensing_args *pcond_args =
-        ocp_qp_partial_condensing_create_arguments(qp_in->dim);
+        ocp_qp_partial_condensing_create_arguments(qp_in->dim, NULL);
 
     pcond_args->N2 = 4;
 

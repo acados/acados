@@ -232,42 +232,44 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
 
     switch (solver_name) {
         case SPARSE_QP_HPIPM:
-            ocp_qp_hpipm_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_hpipm_copy_args(config, dims, raw_memory, source);
             break;
         case SPARSE_QP_HPMPC:
 #ifdef ACADOS_WITH_HPMPC
-            ocp_qp_hpmpc_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_hpmpc_copy_args(config, dims, raw_memory, source);
 #endif
             break;
         case SPARSE_QP_OOQP:
-            // ocp_qp_ooqp_copy_args(config, dims, raw_memory, source);
+            // args = ocp_qp_ooqp_copy_args(config, dims, raw_memory, source);
             break;
         case SPARSE_QP_QPDUNES:
 #ifdef ACADOS_WITH_QPDUNES
-            ocp_qp_qpdunes_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_qpdunes_copy_args(config, dims, raw_memory, source);
 #endif
             break;
         case PARTIAL_CONDENSING_HPIPM:
-            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case PARTIAL_CONDENSING_HPMPC:
-            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case PARTIAL_CONDENSING_OOQP:
-            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case PARTIAL_CONDENSING_QPDUNES:
-            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case FULL_CONDENSING_HPIPM:
-            ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
             break;
         case FULL_CONDENSING_QPOASES:
-            ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
             break;
         case FULL_CONDENSING_QORE:
-            ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
+            args = ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
             break;
+        default:
+            args = NULL;
     }
 
     return args;
@@ -313,6 +315,7 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_config *config, ocp_qp_dims *dims, vo
 
     solver->fcn_ptrs = (ocp_qp_solver_fcn_ptrs *) c_ptr;
     c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
+    set_ocp_qp_solver_fcn_ptrs(config, solver->fcn_ptrs);
 
     solver->dims = assign_ocp_qp_dims(dims->N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
