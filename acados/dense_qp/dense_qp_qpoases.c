@@ -151,6 +151,9 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
+	
+	// assign default values to fields stored in the memory
+	mem->first_it = 1; // only used if hotstart (only constant data matrices) is enabled
 
     return mem;
 }
@@ -252,27 +255,43 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 	if (args->hotstart == 1) { // only to be used with fixed data matrices!
 		if (ngd > 0) {  // QProblem
 			if (memory->first_it == 1) {
-				QProblemCON(QP, nvd, ngd, HST_UNKNOWN);
+				QProblemCON(QP, nvd, ngd, HST_POSDEF);
 				QProblem_setPrintLevel(QP, PL_MEDIUM);
 				/* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
 				QProblem_printProperties(QP);
-				QProblem_init(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime );
+				static Options options;
+
+				Options_setToDefault( &options );
+				options.initialStatusBounds = ST_INACTIVE;
+				QProblem_setOptions( QP, options );
+				return_flag = QProblem_init(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime );
 				memory->first_it = 0;
+				
+				QProblem_getPrimalSolution(QP, prim_sol);
+				QProblem_getDualSolution(QP, dual_sol);
 			} else {	
 				/* exit(1); */
-				QProblem_hotstart(QP, g, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime);
+				return_flag = QProblem_hotstart(QP, g, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime);
 			}
 		} else {
 			if (memory->first_it == 1) {
-				QProblemBCON(QPB, nvd, HST_UNKNOWN);
+				QProblemBCON(QPB, nvd, HST_POSDEF);
 				QProblemB_setPrintLevel(QPB, PL_MEDIUM);
 				/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
 				QProblemB_printProperties(QPB);
-				QProblemB_init(QP, H, g, d_lb, d_ub, &nwsr, &cputime);
+				static Options options;
+
+				Options_setToDefault( &options );
+				options.initialStatusBounds = ST_INACTIVE;
+				QProblemB_setOptions( QPB, options );
+				QProblemB_init(QPB, H, g, d_lb, d_ub, &nwsr, &cputime);
 				memory->first_it = 0;
+				
+				QProblemB_getPrimalSolution(QPB, prim_sol);
+				QProblemB_getDualSolution(QPB, dual_sol);
 
 			} else {	
-				QProblemB_hotstart(QP, g, d_lb, d_ub, &nwsr, &cputime);
+				QProblemB_hotstart(QPB, g, d_lb, d_ub, &nwsr, &cputime);
 			}
 		}
 	} else {
@@ -286,7 +305,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 
 				Options_setToDefault( &options );
 				options.initialStatusBounds = ST_INACTIVE;
-				QProblemB_setOptions( QP, options );
+				QProblem_setOptions( QP, options );
 				return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
 					NULL, NULL, NULL, NULL, memory->R);  // NULL or 0
 			} else {

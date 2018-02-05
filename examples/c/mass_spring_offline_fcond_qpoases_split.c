@@ -34,7 +34,7 @@
 #define NREP 100
 #define ELIMINATE_X0
 #define OFFLINE_CONDENSING 1
-#define BLASFEO_CHOLESKI 0
+#define BLASFEO_CHOLESKI 1
 
 #include "./mass_spring.c"
 
@@ -107,7 +107,6 @@ int main() {
 
 	if (OFFLINE_CONDENSING == 1) {
 		args->hotstart = 1; 
-		args->hotstart = 1; 
 	}
 	
 	dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
@@ -127,7 +126,6 @@ int main() {
 		
 		// cholesky factorization of H
 		dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
-		qpoases_solver_mem->first_it = 1;
 		blasfeo_dpotrf_l(nvd, qpd_in->Hv, 0, 0, &sR, 0, 0);
 
 		/* // fill in upper triangular of R */
