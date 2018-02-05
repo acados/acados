@@ -34,7 +34,7 @@
 #include "acados/utils/timing.h"
 
 
-int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
+int dense_qp_qore_calculate_args_size(dense_qp_dims *dims, void *submodules_)
 {
     int size = 0;
     size += sizeof(dense_qp_qore_args);
@@ -44,7 +44,7 @@ int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
 
 
 
-void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *submodules_, void *raw_memory)
 {
     dense_qp_qore_args *args;
 

@@ -42,8 +42,8 @@ typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 
 typedef struct {
     int (*fun)(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(dense_qp_dims *dims);
-    void *(*assign_args)(dense_qp_dims *dims, void *raw_memory);
+    int (*calculate_args_size)(dense_qp_dims *dims, void *submodules_);
+    void *(*assign_args)(dense_qp_dims *dims, void *submodules_, void *raw_memory);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(dense_qp_dims *dims, void *args);
     void *(*assign_memory)(dense_qp_dims *dims, void *args, void *raw_memory);

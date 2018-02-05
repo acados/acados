@@ -56,10 +56,17 @@ typedef struct ocp_qp_sparse_solver_workspace_ {
 } ocp_qp_sparse_solver_workspace;
 
 
+
+typedef struct ocp_qp_sparse_solver_submodules_ {
+    ocp_qp_solver_fcn_ptrs qpsol;
+} ocp_qp_sparse_solver_submodules;
+
+
+
 //
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_);
+int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory);
+void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
 //
 void ocp_qp_sparse_solver_initialize_default_args(void *args_);
 //

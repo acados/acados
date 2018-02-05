@@ -45,9 +45,9 @@ typedef struct ocp_qp_hpipm_memory_ {
 } ocp_qp_hpipm_memory;
 
 //
-int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
 //
 void ocp_qp_hpipm_initialize_default_args(void *args_);
 //

@@ -44,11 +44,13 @@ typedef struct ocp_qp_full_condensing_memory_ {
     ocp_qp_in *qp_in;
 } ocp_qp_full_condensing_memory;
 
+
+
 void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims);
 //
-int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
 //
 int ocp_qp_full_condensing_calculate_memory_size(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);
 //

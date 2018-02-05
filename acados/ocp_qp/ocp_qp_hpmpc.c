@@ -38,7 +38,7 @@
 #include "acados/utils/types.h"
 
 
-int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
     int_t N = dims->N;
     int_t size = sizeof(ocp_qp_hpmpc_args);
@@ -60,7 +60,7 @@ int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory)
 {
     ocp_qp_hpmpc_args *args;
     char *c_ptr = (char *) raw_memory;

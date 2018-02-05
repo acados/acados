@@ -29,7 +29,7 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
+int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
     ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
 
@@ -45,7 +45,7 @@ int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 
 
 
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
+void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory)
 {
     ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
 

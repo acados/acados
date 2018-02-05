@@ -59,9 +59,9 @@ typedef struct ocp_qp_hpmpc_memory_ {
 
 
 
-int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
 //
 void ocp_qp_hpmpc_initialize_default_args(void *args_);
 //

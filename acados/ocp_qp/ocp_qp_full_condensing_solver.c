@@ -31,7 +31,7 @@
 #include "acados/utils/types.h"
 
 
-int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
+int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
     dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
 
@@ -50,7 +50,7 @@ int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *s
 
 
 
-void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
+void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory)
 {
     dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
 

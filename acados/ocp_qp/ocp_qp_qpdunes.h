@@ -29,6 +29,8 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
+
+
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
     QPDUNES_LINEAR_MPC,    // TODO(dimitris): implement
@@ -36,10 +38,12 @@ typedef enum qpdunes_options_t_ {
 } qpdunes_options_t;
 
 
+
 typedef enum {
     QPDUNES_WITH_QPOASES,
     QPDUNES_WITH_CLIPPING
 } qpdunes_stage_qp_solver_t;
+
 
 
 typedef struct ocp_qp_qpdunes_args_ {
@@ -50,6 +54,7 @@ typedef struct ocp_qp_qpdunes_args_ {
 } ocp_qp_qpdunes_args;
 
 
+
 typedef struct ocp_qp_qpdunes_memory_ {
     int firstRun;
     int nx;
@@ -58,6 +63,7 @@ typedef struct ocp_qp_qpdunes_memory_ {
     int nDmax;  // max(dims->ng)
     qpData_t qpData;
 } ocp_qp_qpdunes_memory;
+
 
 
 typedef struct ocp_qp_qpdunes_workspace_ {
@@ -76,10 +82,11 @@ typedef struct ocp_qp_qpdunes_workspace_ {
 } ocp_qp_qpdunes_workspace;
 
 
+
 //
-int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
 //
 void ocp_qp_qpdunes_initialize_default_args(void *args_);
 //
