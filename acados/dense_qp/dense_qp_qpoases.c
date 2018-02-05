@@ -269,7 +269,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 				QProblem_getPrimalSolution(QP, prim_sol);
 				QProblem_getDualSolution(QP, dual_sol);
 			} else {	
-				/* exit(1); */
 				return_flag = QProblem_hotstart(QP, g, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime);
 			}
 		} else {
