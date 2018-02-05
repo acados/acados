@@ -103,22 +103,84 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
     return out;
 }
 
+void *set_submodules_fcn_ptrs(
+    ocp_qp_solver_config *config,
+    ocp_qp_full_condensing_solver_submodules *full_condensing_solver_submodules,
+    ocp_qp_sparse_solver_submodules *sparse_solver_submodules)
+{
+    void *submodules;
+
+    ocp_qp_solver_t solver_name = config->qp_solver;
+
+    int status = ACADOS_SUCCESS;
+    dense_qp_solver_config full_condensing_solver_submodules_config;
+    ocp_qp_solver_config sparse_solver_submodules_config;
+    switch (solver_name) {
+        case PARTIAL_CONDENSING_HPIPM:
+            sparse_solver_submodules_config.qp_solver = SPARSE_QP_HPIPM;
+            status = set_ocp_qp_solver_fcn_ptrs(&sparse_solver_submodules_config, &(sparse_solver_submodules->qpsol));
+            submodules = (void *) sparse_solver_submodules;
+            break;
+        case PARTIAL_CONDENSING_HPMPC:
+            sparse_solver_submodules_config.qp_solver = SPARSE_QP_HPMPC;
+            status = set_ocp_qp_solver_fcn_ptrs(&sparse_solver_submodules_config, &(sparse_solver_submodules->qpsol));
+            submodules = (void *) sparse_solver_submodules;
+            break;
+        case PARTIAL_CONDENSING_OOQP:
+            sparse_solver_submodules_config.qp_solver = SPARSE_QP_OOQP;
+            status = set_ocp_qp_solver_fcn_ptrs(&sparse_solver_submodules_config, &(sparse_solver_submodules->qpsol));
+            submodules = (void *) sparse_solver_submodules;
+            break;
+        case PARTIAL_CONDENSING_QPDUNES:
+            sparse_solver_submodules_config.qp_solver = SPARSE_QP_QPDUNES;
+            status = set_ocp_qp_solver_fcn_ptrs(&sparse_solver_submodules_config, &(sparse_solver_submodules->qpsol));
+            submodules = (void *) sparse_solver_submodules;
+            break;
+        case FULL_CONDENSING_HPIPM:
+            full_condensing_solver_submodules_config.qp_solver = DENSE_QP_HPIPM;
+            status = set_dense_qp_solver_fcn_ptrs(&full_condensing_solver_submodules_config, &(full_condensing_solver_submodules->qpsol));
+            submodules = (void *) full_condensing_solver_submodules;
+            break;
+        case FULL_CONDENSING_QPOASES:
+            full_condensing_solver_submodules_config.qp_solver = DENSE_QP_QPOASES;
+            status = set_dense_qp_solver_fcn_ptrs(&full_condensing_solver_submodules_config, &(full_condensing_solver_submodules->qpsol));
+            submodules = (void *) full_condensing_solver_submodules;
+            break;
+        case FULL_CONDENSING_QORE:
+            full_condensing_solver_submodules_config.qp_solver = DENSE_QP_QORE;
+            status = set_dense_qp_solver_fcn_ptrs(&full_condensing_solver_submodules_config, &(full_condensing_solver_submodules->qpsol));
+            submodules = (void *) full_condensing_solver_submodules;
+            break;
+        default:
+            submodules = NULL;
+    }
+
+    if (status != ACADOS_SUCCESS)
+    {
+        printf("\n\nSpecified solver interface not compiled with acados!\n\n");
+        exit(1);
+    }
+
+    return submodules;
+}
+
 
 
 int ocp_qp_calculate_args_size(ocp_qp_solver_config *config, ocp_qp_dims *dims)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_solver_fcn_ptrs fcn_ptrs;
 
-    module_fcn_ptrs submodule_fcn_ptrs;
+    int status = set_ocp_qp_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+    ocp_qp_full_condensing_solver_submodules full_condensing_solver_submodules;
+    ocp_qp_sparse_solver_submodules sparse_solver_submodules;
+    void *submodules = set_submodules_fcn_ptrs(config, &full_condensing_solver_submodules, &sparse_solver_submodules);
 
-    int status = set_ocp_qp_xcond_solver_fcn_ptrs(config, &fcn_ptrs);
     int size = -1;
 
     if (status == ACADOS_SUCCESS)
     {
-        size = fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
+        size = fcn_ptrs.calculate_args_size(dims, submodules);
     }
     else
     {
@@ -132,15 +194,15 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_config *config, ocp_qp_dims *dims)
 
 void *ocp_qp_assign_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_solver_fcn_ptrs fcn_ptrs;
 
-    module_fcn_ptrs submodule_fcn_ptrs;
+    set_ocp_qp_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
+    ocp_qp_full_condensing_solver_submodules full_condensing_solver_submodules;
+    ocp_qp_sparse_solver_submodules sparse_solver_submodules;
+    void *submodules = set_submodules_fcn_ptrs(config, &full_condensing_solver_submodules, &sparse_solver_submodules);
 
-    set_ocp_qp_xcond_solver_fcn_ptrs(config, &fcn_ptrs);
-
-    void *args = fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
+    void *args = fcn_ptrs.assign_args(dims, submodules, raw_memory);
 
     fcn_ptrs.initialize_default_args(args);
 
@@ -168,46 +230,43 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
 
     void *args;
 
-    // TODO(nielsvd): get rid of two stage args copy, properly implement submodules.
-    if (solver_name < FULL_CONDENSING_HPIPM)
-    {
-        args = ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
-    }
-    else
-    {
-        args = ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
-    }
-
-    // QUESTION(nielsvd): do we need pcond_dims or dims for the partial condensing solvers?
-    dense_qp_dims ddims;
-    compute_dense_qp_dims(dims, &ddims);
     switch (solver_name) {
+        case SPARSE_QP_HPIPM:
+            ocp_qp_hpipm_copy_args(config, dims, raw_memory, source);
+            break;
+        case SPARSE_QP_HPMPC:
+#ifdef ACADOS_WITH_HPMPC
+            ocp_qp_hpmpc_copy_args(config, dims, raw_memory, source);
+#endif
+            break;
+        case SPARSE_QP_OOQP:
+            // ocp_qp_ooqp_copy_args(config, dims, raw_memory, source);
+            break;
+        case SPARSE_QP_QPDUNES:
+#ifdef ACADOS_WITH_QPDUNES
+            ocp_qp_qpdunes_copy_args(config, dims, raw_memory, source);
+#endif
+            break;
         case PARTIAL_CONDENSING_HPIPM:
-            ocp_qp_hpipm_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case PARTIAL_CONDENSING_HPMPC:
-            #ifdef ACADOS_WITH_HPMPC
-            ocp_qp_hpmpc_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
-            #endif
+            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case PARTIAL_CONDENSING_OOQP:
-            // ocp_qp_ooqp_copy_args(config, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
+            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case PARTIAL_CONDENSING_QPDUNES:
-            #ifdef ACADOS_WITH_QPDUNES
-            ocp_qp_qpdunes_copy_args(NULL, dims, ((ocp_qp_sparse_solver_args *)args)->solver_args, ((ocp_qp_sparse_solver_args *)source)->solver_args);
-            #endif
+            ocp_qp_sparse_solver_copy_args(config, dims, raw_memory, source);
             break;
         case FULL_CONDENSING_HPIPM:
-            dense_qp_hpipm_copy_args(NULL, &ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
             break;
         case FULL_CONDENSING_QPOASES:
-            dense_qp_qpoases_copy_args(NULL, &ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
             break;
         case FULL_CONDENSING_QORE:
-            #ifdef ACADOS_WITH_QORE
-            dense_qp_qore_copy_args(NULL, &ddims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
-            #endif
+            ocp_qp_full_condensing_solver_copy_args(config, dims, raw_memory, source);
             break;
     }
 
@@ -218,25 +277,23 @@ void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *ra
 
 int ocp_qp_calculate_size(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_solver_fcn_ptrs fcn_ptrs;
 
-    module_fcn_ptrs submodule_fcn_ptrs;
+    set_ocp_qp_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    fcn_ptrs.qp_solver = &submodule_fcn_ptrs;
-
-    set_ocp_qp_xcond_solver_fcn_ptrs(config, &fcn_ptrs);
+    ocp_qp_full_condensing_solver_submodules full_condensing_solver_submodules;
+    ocp_qp_sparse_solver_submodules sparse_solver_submodules;
+    void *submodules = set_submodules_fcn_ptrs(config, &full_condensing_solver_submodules, &sparse_solver_submodules);
 
     int bytes;
 
     bytes = sizeof(ocp_qp_solver);
 
-    bytes += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
-
-    bytes += sizeof(module_fcn_ptrs);
+    bytes += sizeof(ocp_qp_solver_fcn_ptrs);
 
     bytes += ocp_qp_dims_calculate_size(dims->N);
 
-    bytes += fcn_ptrs.calculate_args_size(dims, &submodule_fcn_ptrs);
+    bytes += fcn_ptrs.calculate_args_size(dims, submodules);
 
     bytes += fcn_ptrs.calculate_memory_size(dims, args_);
 
@@ -254,11 +311,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_config *config, ocp_qp_dims *dims, vo
     ocp_qp_solver *solver = (ocp_qp_solver *) c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
-    solver->fcn_ptrs = (ocp_qp_xcond_solver_fcn_ptrs *) c_ptr;
-    c_ptr += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
-    solver->fcn_ptrs->qp_solver = (void *) c_ptr;
-    c_ptr += sizeof(module_fcn_ptrs);
-    set_ocp_qp_xcond_solver_fcn_ptrs(config, solver->fcn_ptrs);
+    solver->fcn_ptrs = (ocp_qp_solver_fcn_ptrs *) c_ptr;
+    c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
 
     solver->dims = assign_ocp_qp_dims(dims->N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
@@ -300,166 +354,106 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 
 
 
-int set_qp_solver_fcn_ptrs(ocp_qp_solver_config *config, module_fcn_ptrs *fcn_ptrs)
+void set_ocp_qp_full_condensing_solver_fcn_ptrs(ocp_qp_solver_fcn_ptrs *fcn_ptrs)
 {
-    int return_value = ACADOS_SUCCESS;
-
-    ocp_qp_solver_t solver_name = config->qp_solver;
-
-    switch (solver_name) {
-        case PARTIAL_CONDENSING_HPIPM:
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &ocp_qp_hpipm_calculate_args_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &ocp_qp_hpipm_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &ocp_qp_hpipm_initialize_default_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &ocp_qp_hpipm_calculate_memory_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &ocp_qp_hpipm_assign_memory;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &ocp_qp_hpipm_calculate_workspace_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpipm;
-            break;
-        case PARTIAL_CONDENSING_HPMPC:
-            #ifdef ACADOS_WITH_HPMPC
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &ocp_qp_hpmpc_calculate_args_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &ocp_qp_hpmpc_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &ocp_qp_hpmpc_initialize_default_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &ocp_qp_hpmpc_calculate_memory_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &ocp_qp_hpmpc_assign_memory;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &ocp_qp_hpmpc_calculate_workspace_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpmpc;
-            #else
-            return_value = ACADOS_FAILURE;
-            #endif
-            break;
-        case PARTIAL_CONDENSING_OOQP:
-            return_value = ACADOS_FAILURE;
-            break;
-        case PARTIAL_CONDENSING_QPDUNES:
-            #ifdef ACADOS_WITH_QPDUNES
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &ocp_qp_qpdunes_calculate_args_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &ocp_qp_qpdunes_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &ocp_qp_qpdunes_initialize_default_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &ocp_qp_qpdunes_calculate_memory_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &ocp_qp_qpdunes_assign_memory;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &ocp_qp_qpdunes_calculate_workspace_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_qpdunes;
-            #else
-            return_value = ACADOS_FAILURE;
-            #endif
-            break;
-        case FULL_CONDENSING_HPIPM:
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &dense_qp_hpipm_calculate_args_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &dense_qp_hpipm_assign_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &dense_qp_hpipm_initialize_default_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &dense_qp_hpipm_calculate_memory_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &dense_qp_hpipm_assign_memory;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &dense_qp_hpipm_calculate_workspace_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_hpipm;
-            break;
-        case FULL_CONDENSING_QPOASES:
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &dense_qp_qpoases_calculate_args_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &dense_qp_qpoases_assign_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &dense_qp_qpoases_initialize_default_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &dense_qp_qpoases_calculate_memory_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &dense_qp_qpoases_assign_memory;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &dense_qp_qpoases_calculate_workspace_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qpoases;
-            break;
-        case FULL_CONDENSING_QORE:
-            #ifdef ACADOS_WITH_QORE
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &dense_qp_qore_calculate_args_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &dense_qp_qore_assign_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &dense_qp_qore_initialize_default_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &dense_qp_qore_calculate_memory_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &dense_qp_qore_assign_memory;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &dense_qp_qore_calculate_workspace_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qore;
-            #else
-            return_value = ACADOS_FAILURE;
-            #endif
-            break;
-        default:
-            return_value = ACADOS_FAILURE;
-    }
-    return return_value;
+    fcn_ptrs->calculate_args_size = &ocp_qp_full_condensing_solver_calculate_args_size;
+    fcn_ptrs->assign_args = &ocp_qp_full_condensing_solver_assign_args;
+    fcn_ptrs->initialize_default_args = &ocp_qp_full_condensing_solver_initialize_default_args;
+    fcn_ptrs->calculate_memory_size = &ocp_qp_full_condensing_solver_calculate_memory_size;
+    fcn_ptrs->assign_memory = &ocp_qp_full_condensing_solver_assign_memory;
+    fcn_ptrs->calculate_workspace_size = &ocp_qp_full_condensing_solver_calculate_workspace_size;
+    fcn_ptrs->fun = &ocp_qp_full_condensing_solver;
 }
 
 
 
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_config *config, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs)
+void set_ocp_qp_partial_condensing_solver_fcn_ptrs(ocp_qp_solver_fcn_ptrs *fcn_ptrs)
 {
+    fcn_ptrs->calculate_args_size = &ocp_qp_sparse_solver_calculate_args_size;
+    fcn_ptrs->assign_args = &ocp_qp_sparse_solver_assign_args;
+    fcn_ptrs->initialize_default_args = &ocp_qp_sparse_solver_initialize_default_args;
+    fcn_ptrs->calculate_memory_size = &ocp_qp_sparse_solver_calculate_memory_size;
+    fcn_ptrs->assign_memory = &ocp_qp_sparse_solver_assign_memory;
+    fcn_ptrs->calculate_workspace_size = &ocp_qp_sparse_solver_calculate_workspace_size;
+    fcn_ptrs->fun = &ocp_qp_sparse_solver;
+}
+
+
+
+int set_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_config *config, ocp_qp_solver_fcn_ptrs *fcn_ptrs)
+{
+    int return_value = ACADOS_SUCCESS;
     ocp_qp_solver_t solver_name = config->qp_solver;
 
-    if (solver_name < FULL_CONDENSING_HPIPM)
-    {
-        fcn_ptrs->calculate_args_size =
-            &ocp_qp_sparse_solver_calculate_args_size;
-        fcn_ptrs->assign_args =
-            &ocp_qp_sparse_solver_assign_args;
-        fcn_ptrs->initialize_default_args =
-            &ocp_qp_sparse_solver_initialize_default_args;
-        fcn_ptrs->calculate_memory_size =
-            &ocp_qp_sparse_solver_calculate_memory_size;
-        fcn_ptrs->assign_memory =
-            &ocp_qp_sparse_solver_assign_memory;
-        fcn_ptrs->calculate_workspace_size =
-            &ocp_qp_sparse_solver_calculate_workspace_size;
-        fcn_ptrs->fun =
-            &ocp_qp_sparse_solver;
+    switch (solver_name) {
+        case SPARSE_QP_HPIPM:
+            fcn_ptrs->calculate_args_size = &ocp_qp_hpipm_calculate_args_size;
+            fcn_ptrs->assign_args = &ocp_qp_hpipm_assign_args;
+            fcn_ptrs->initialize_default_args = &ocp_qp_hpipm_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &ocp_qp_hpipm_calculate_memory_size;
+            fcn_ptrs->assign_memory = &ocp_qp_hpipm_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &ocp_qp_hpipm_calculate_workspace_size;
+            fcn_ptrs->fun = &ocp_qp_hpipm;
+            break;
+        case SPARSE_QP_HPMPC:
+#ifdef ACADOS_WITH_HPMPC
+            fcn_ptrs->calculate_args_size = &ocp_qp_hpmpc_calculate_args_size;
+            fcn_ptrs->assign_args = &ocp_qp_hpmpc_assign_args;
+            fcn_ptrs->initialize_default_args = &ocp_qp_hpmpc_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &ocp_qp_hpmpc_calculate_memory_size;
+            fcn_ptrs->assign_memory = &ocp_qp_hpmpc_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &ocp_qp_hpmpc_calculate_workspace_size;
+            fcn_ptrs->fun = &ocp_qp_hpmpc;
+#else
+            return_value = ACADOS_FAILURE;
+#endif
+            break;
+        case SPARSE_QP_OOQP:
+            // fcn_ptrs->calculate_args_size = &ocp_qp_ooqp_calculate_args_size;
+            // fcn_ptrs->assign_args = &ocp_qp_ooqp_assign_args;
+            // fcn_ptrs->initialize_default_args = &ocp_qp_ooqp_initialize_default_args;
+            // fcn_ptrs->calculate_memory_size = &ocp_qp_ooqp_calculate_memory_size;
+            // fcn_ptrs->assign_memory = &ocp_qp_ooqp_assign_memory;
+            // fcn_ptrs->calculate_workspace_size = &ocp_qp_ooqp_calculate_workspace_size;
+            // fcn_ptrs->fun = &ocp_qp_ooqp;
+            break;
+        case SPARSE_QP_QPDUNES:
+#ifdef ACADOS_WITH_QPDUNES
+            fcn_ptrs->calculate_args_size = &ocp_qp_qpdunes_calculate_args_size;
+            fcn_ptrs->assign_args = &ocp_qp_qpdunes_assign_args;
+            fcn_ptrs->initialize_default_args = &ocp_qp_qpdunes_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &ocp_qp_qpdunes_calculate_memory_size;
+            fcn_ptrs->assign_memory = &ocp_qp_qpdunes_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &ocp_qp_qpdunes_calculate_workspace_size;
+            fcn_ptrs->fun = &ocp_qp_qpdunes;
+#else
+            return_value = ACADOS_FAILURE;
+#endif
+            break;
+        case PARTIAL_CONDENSING_HPIPM:
+            set_ocp_qp_partial_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        case PARTIAL_CONDENSING_HPMPC:
+            set_ocp_qp_partial_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        case PARTIAL_CONDENSING_OOQP:
+            set_ocp_qp_partial_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        case PARTIAL_CONDENSING_QPDUNES:
+            set_ocp_qp_partial_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        case FULL_CONDENSING_HPIPM:
+            set_ocp_qp_full_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        case FULL_CONDENSING_QPOASES:
+            set_ocp_qp_full_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        case FULL_CONDENSING_QORE:
+            set_ocp_qp_full_condensing_solver_fcn_ptrs(fcn_ptrs);
+            break;
+        default:
+            return_value = ACADOS_FAILURE;
     }
-    else
-    {
-        fcn_ptrs->calculate_args_size =
-            &ocp_qp_full_condensing_solver_calculate_args_size;
-        fcn_ptrs->assign_args =
-            &ocp_qp_full_condensing_solver_assign_args;
-        fcn_ptrs->initialize_default_args =
-            &ocp_qp_full_condensing_solver_initialize_default_args;
-        fcn_ptrs->calculate_memory_size =
-            &ocp_qp_full_condensing_solver_calculate_memory_size;
-        fcn_ptrs->assign_memory =
-            &ocp_qp_full_condensing_solver_assign_memory;
-        fcn_ptrs->calculate_workspace_size =
-            &ocp_qp_full_condensing_solver_calculate_workspace_size;
-        fcn_ptrs->fun =
-            &ocp_qp_full_condensing_solver;
-    }
-
-    int return_value = set_qp_solver_fcn_ptrs(config, (module_fcn_ptrs *) fcn_ptrs->qp_solver);
 
     return return_value;
 }

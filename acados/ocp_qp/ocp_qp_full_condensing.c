@@ -57,7 +57,7 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dim
     ocp_qp_full_condensing_args *args = (ocp_qp_full_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_args);
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_calculate_args_size(dims, submodules_) == c_ptr);
 
     return args;
 }

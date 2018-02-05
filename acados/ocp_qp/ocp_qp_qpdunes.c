@@ -131,7 +131,7 @@ void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw
     args = (ocp_qp_qpdunes_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_qpdunes_args);
 
-    assert((char*)raw_memory + ocp_qp_qpdunes_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_qpdunes_calculate_args_size(dims, submodules_) == c_ptr);
 
     return (void *)args;
 }

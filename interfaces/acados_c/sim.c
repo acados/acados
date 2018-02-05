@@ -89,14 +89,14 @@ void *set_submodules_fcn_ptrs(sim_solver_config *config, sim_erk_integrator_subm
 
     switch (solver_name) {
         case ERK:
-            set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->forward_vde));
-            set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->adjoint_vde));
-            set_external_function_fcn_ptrs(&(config->ef_config), &(erk_submodules->hess_vde));
+            set_external_function_fcn_ptrs(&(config->extfun_config), &(erk_submodules->forward_vde));
+            set_external_function_fcn_ptrs(&(config->extfun_config), &(erk_submodules->adjoint_vde));
+            set_external_function_fcn_ptrs(&(config->extfun_config), &(erk_submodules->hess_vde));
             submodules = (void *) erk_submodules;
             break;
         case LIFTED_IRK:
-            set_external_function_fcn_ptrs(&(config->ef_config), &(lifted_irk_submodules->forward_vde));
-            set_external_function_fcn_ptrs(&(config->ef_config), &(lifted_irk_submodules->jacobian_ode));
+            set_external_function_fcn_ptrs(&(config->extfun_config), &(lifted_irk_submodules->forward_vde));
+            set_external_function_fcn_ptrs(&(config->extfun_config), &(lifted_irk_submodules->jacobian_ode));
             submodules = (void *) lifted_irk_submodules;
             break;
     }

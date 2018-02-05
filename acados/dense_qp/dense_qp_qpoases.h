@@ -63,6 +63,8 @@ extern "C" {
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
 
+
+
 typedef struct dense_qp_qpoases_args_ {
     double max_cputime;  // maximum cpu time in seconds
     int max_nwsr;        // maximum number of working set recalculations

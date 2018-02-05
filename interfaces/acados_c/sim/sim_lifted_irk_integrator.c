@@ -62,8 +62,8 @@ void *sim_lifted_irk_integrator_copy_args(sim_solver_config *config, sim_dims *d
 
     extern external_function_dims sim_lifted_irk_forward_vde_dims;
     extern external_function_dims sim_lifted_irk_jacobian_ode_dims;
-    external_function_copy_args(&config->ef_config, &sim_lifted_irk_forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
-    external_function_copy_args(&config->ef_config, &sim_lifted_irk_jacobian_ode_dims, dest->jacobian_ode_args, source->jacobian_ode_args);
+    external_function_copy_args(&config->extfun_config, &sim_lifted_irk_forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
+    external_function_copy_args(&config->extfun_config, &sim_lifted_irk_jacobian_ode_dims, dest->jacobian_ode_args, source->jacobian_ode_args);
 
     return (void *)dest;
 }

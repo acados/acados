@@ -31,16 +31,22 @@ extern "C" {
 #include "acados_c/common.h"
 #include "acados_c/external_function.h"
 
+
+
 typedef enum {
     PREVIOUS,
     ERK,
     LIFTED_IRK
 } sim_solver_t;
 
+
+
 typedef struct {
     sim_solver_t sim_solver;
-    external_function_config ef_config;
+    external_function_config extfun_config;
 } sim_solver_config;
+
+
 
 typedef struct {
     sim_solver_fcn_ptrs *fcn_ptrs;
@@ -49,6 +55,8 @@ typedef struct {
     void *mem;
     void *work;
 } sim_solver;
+
+
 
 // INPUT, OUTPUT AND OPTIONS
 //

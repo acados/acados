@@ -26,7 +26,7 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_solve
     ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
     ocp_qp_partial_condensing_args *dest;
 
-    dest = ocp_qp_partial_condensing_assign_args(dims, raw_memory);
+    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
     dest->N2 = source->N2;
     dest->pcond_dims->N = source->pcond_dims->N;

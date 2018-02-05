@@ -19,20 +19,51 @@
 
 #include "acados_c/ocp_qp/ocp_qp_sparse_solver.h"
 
+#include <stdlib.h>
+
+#include "acados_c/ocp_qp/ocp_qp_hpipm.h"
+#ifdef ACADOS_WITH_HPMPC
+#include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
+#endif
 #include "acados_c/ocp_qp/ocp_qp_partial_condensing.h"
-
-
+#ifdef ACADOS_WITH_QPDUNES
+#include "acados_c/ocp_qp/ocp_qp_qpdunes.h"
+#endif
 
 void *ocp_qp_sparse_solver_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
 {
     ocp_qp_sparse_solver_args *source = (ocp_qp_sparse_solver_args *) source_;
     ocp_qp_sparse_solver_args *dest;
 
-    dest = ocp_qp_sparse_solver_assign_args(dims, source->solver, raw_memory);
+    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
     ocp_qp_partial_condensing_copy_args(config, dims, dest->pcond_args, source->pcond_args);
 
-    // dest->solver->copy_args(dims, dest->solver_args, source->solver_args);
+    ocp_qp_solver_t solver_name = config->qp_solver;
+
+    ocp_qp_solver_config solver_config;
+    switch(solver_name) {
+        case PARTIAL_CONDENSING_HPIPM:
+            solver_config.qp_solver = SPARSE_QP_HPIPM;
+            ocp_qp_hpipm_copy_args(&solver_config, dims, dest->solver_args, source->solver_args);
+            break;
+        case PARTIAL_CONDENSING_HPMPC:
+            solver_config.qp_solver = SPARSE_QP_HPMPC;
+            ocp_qp_hpmpc_copy_args(&solver_config, dims, dest->solver_args, source->solver_args);
+            break;
+        case PARTIAL_CONDENSING_OOQP:
+            // solver_config.qp_solver = SPARSE_QP_OOQP;
+            // ocp_qp_ooqp_copy_args(&solver_config, dims, dest->solver_args, source->solver_args);
+            break;
+        case PARTIAL_CONDENSING_QPDUNES:
+            solver_config.qp_solver = SPARSE_QP_QPDUNES;
+            ocp_qp_qpdunes_copy_args(&solver_config, dims, dest->solver_args, source->solver_args);
+            break;
+        default:
+            printf(
+                "\n\nSpecified solver is does not employ partial condensing!\n\n");
+            exit(1);
+    }
 
     return (void *) dest;
 }

@@ -25,7 +25,7 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_copy_args(ocp_qp_solver_conf
 {
     ocp_qp_full_condensing_args *dest;
 
-    dest = ocp_qp_full_condensing_assign_args(dims, raw_memory);
+    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
     return dest;
 }

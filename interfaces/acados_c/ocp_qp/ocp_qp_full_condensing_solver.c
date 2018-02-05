@@ -19,7 +19,13 @@
 
 #include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
 
+#include <stdlib.h>
+
+#include "acados_c/dense_qp/dense_qp_hpipm.h"
+#include "acados_c/dense_qp/dense_qp_qpoases.h"
+#include "acados_c/dense_qp/dense_qp_qore.h"
 #include "acados_c/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados_c/dense_qp.h"
 
 
 
@@ -28,14 +34,34 @@ void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_solver_config *config, ocp_
     ocp_qp_full_condensing_solver_args *source = (ocp_qp_full_condensing_solver_args *) source_;
     ocp_qp_full_condensing_solver_args *dest;
 
-    dense_qp_dims ddims;
-    compute_dense_qp_dims(dims, &ddims);
-
-    dest = ocp_qp_full_condensing_solver_assign_args(dims, source->solver, raw_memory);
+    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
     ocp_qp_full_condensing_copy_args(config, dims, dest->cond_args, source->cond_args);
 
-    // dest->solver->copy_args(&ddims, dest->solver_args, source->solver_args);
+    dense_qp_dims ddims;
+    compute_dense_qp_dims(dims, &ddims);
+
+    ocp_qp_solver_t solver_name = config->qp_solver;
+
+    dense_qp_solver_config solver_config;
+    switch(solver_name) {
+        case FULL_CONDENSING_HPIPM:
+            solver_config.qp_solver = DENSE_QP_HPIPM;
+            dense_qp_hpipm_copy_args(&solver_config, &ddims, dest->solver_args, source->solver_args);
+            break;
+        case FULL_CONDENSING_QPOASES:
+            solver_config.qp_solver = DENSE_QP_QPOASES;
+            dense_qp_qpoases_copy_args(&solver_config, &ddims, dest->solver_args, source->solver_args);
+            break;
+        case FULL_CONDENSING_QORE:
+            solver_config.qp_solver = DENSE_QP_QORE;
+            dense_qp_qore_copy_args(&solver_config, &ddims, dest->solver_args, source->solver_args);
+            break;
+        default:
+            printf(
+                "\n\nSpecified solver is does not employ full condensing!\n\n");
+            exit(1);
+    }
 
     return (void*)dest;
 }

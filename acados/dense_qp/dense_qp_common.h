@@ -51,12 +51,14 @@ typedef struct {
 } dense_qp_solver_fcn_ptrs;
 
 
+
 typedef struct {
     double solve_QP_time;
     double interface_time;
     double total_time;
     int    num_iter;
 } dense_qp_info;
+
 
 
 //

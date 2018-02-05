@@ -28,7 +28,7 @@ void *ocp_qp_hpmpc_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, vo
     ocp_qp_hpmpc_args *source = (ocp_qp_hpmpc_args *)source_;
     ocp_qp_hpmpc_args *dest;
 
-    dest = (ocp_qp_hpmpc_args *)ocp_qp_hpmpc_assign_args(dims, raw_memory);
+    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
     dest->tol = source->tol;
     dest->max_iter = source->max_iter;

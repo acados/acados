@@ -31,14 +31,14 @@
 
 int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
-    ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
+    ocp_qp_sparse_solver_submodules *submodules = (ocp_qp_sparse_solver_submodules *) submodules_;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_args);
     size += sizeof(ocp_qp_solver_fcn_ptrs);
 
-    size += ocp_qp_partial_condensing_calculate_args_size(dims);
-    size += solver->calculate_args_size(dims);
+    size += ocp_qp_partial_condensing_calculate_args_size(dims, NULL);
+    size += submodules->qpsol.calculate_args_size(dims, NULL);
 
     return size;
 }
@@ -47,7 +47,7 @@ int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules
 
 void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory)
 {
-    ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
+    ocp_qp_sparse_solver_submodules *submodules = (ocp_qp_sparse_solver_submodules *) submodules_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -57,20 +57,20 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *submodules_, voi
     args->solver = (ocp_qp_solver_fcn_ptrs*) c_ptr;
     c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
 
-    *args->solver = *solver;
+    *args->solver = submodules->qpsol;
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    args->pcond_args = ocp_qp_partial_condensing_assign_args(dims, c_ptr);
-    c_ptr += ocp_qp_partial_condensing_calculate_args_size(dims);
+    args->pcond_args = ocp_qp_partial_condensing_assign_args(dims, NULL, c_ptr);
+    c_ptr += ocp_qp_partial_condensing_calculate_args_size(dims, NULL);
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     // QUESTION(nielsvd): why dims and not pcond_dims?
-    args->solver_args = args->solver->assign_args(dims, c_ptr);
-    c_ptr += args->solver->calculate_args_size(dims);
+    args->solver_args = args->solver->assign_args(dims, NULL, c_ptr);
+    c_ptr += args->solver->calculate_args_size(dims, NULL);
 
-    assert((char*)raw_memory + ocp_qp_sparse_solver_calculate_args_size(dims, solver) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_sparse_solver_calculate_args_size(dims, submodules_) == c_ptr);
 
     return (void*)args;
 }

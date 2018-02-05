@@ -30,7 +30,13 @@ extern "C" {
 // acados_c
 #include "acados_c/common.h"
 
+
+
 typedef enum {
+    SPARSE_QP_HPIPM,
+    SPARSE_QP_HPMPC,
+    SPARSE_QP_OOQP,
+    SPARSE_QP_QPDUNES,
     PARTIAL_CONDENSING_HPIPM,
     PARTIAL_CONDENSING_HPMPC,
     PARTIAL_CONDENSING_OOQP,
@@ -40,17 +46,23 @@ typedef enum {
     FULL_CONDENSING_QORE
 } ocp_qp_solver_t;
 
+
+
 typedef struct {
     ocp_qp_solver_t qp_solver;
 } ocp_qp_solver_config;
 
+
+
 typedef struct {
-    ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs;
+    ocp_qp_solver_fcn_ptrs *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
     void *work;
 } ocp_qp_solver;
+
+
 
 // INPUT, OUTPUT AND OPTIONS
 //
@@ -80,9 +92,7 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 // EXPERT INTERFACE
 //
-int set_qp_solver_fcn_ptrs(ocp_qp_solver_config *config, module_fcn_ptrs *fcn_ptrs);
-//
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_config *config, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs);
+int set_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_config *config, ocp_qp_solver_fcn_ptrs *fcn_ptrs);
 
 
 

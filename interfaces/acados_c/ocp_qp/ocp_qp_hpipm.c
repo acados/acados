@@ -26,7 +26,7 @@ void *ocp_qp_hpipm_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, vo
     ocp_qp_hpipm_args *source = (ocp_qp_hpipm_args *) source_;
     ocp_qp_hpipm_args *dest;
 
-    dest = (ocp_qp_hpipm_args *) ocp_qp_hpipm_assign_args(dims, raw_memory);
+    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
     *dest->hpipm_args = *source->hpipm_args;
 

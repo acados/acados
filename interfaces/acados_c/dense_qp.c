@@ -91,7 +91,7 @@ int dense_qp_calculate_args_size(dense_qp_solver_config *config, dense_qp_dims *
 
     set_dense_qp_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    int size = fcn_ptrs.calculate_args_size(dims);
+    int size = fcn_ptrs.calculate_args_size(dims, NULL);
 
     return size;
 }
@@ -104,7 +104,7 @@ void *dense_qp_assign_args(dense_qp_solver_config *config, dense_qp_dims *dims, 
 
     set_dense_qp_solver_fcn_ptrs(config, &fcn_ptrs);
 
-    void *args = fcn_ptrs.assign_args(dims, raw_memory);
+    void *args = fcn_ptrs.assign_args(dims, NULL, raw_memory);
 
     fcn_ptrs.initialize_default_args(args);
 
@@ -166,7 +166,7 @@ int dense_qp_calculate_size(dense_qp_solver_config *config, dense_qp_dims *dims,
 
     bytes += dense_qp_dims_calculate_size();
 
-    bytes += fcn_ptrs.calculate_args_size(dims);
+    bytes += fcn_ptrs.calculate_args_size(dims, NULL);
 
     bytes += fcn_ptrs.calculate_memory_size(dims, args_);
 
@@ -193,7 +193,7 @@ dense_qp_solver *dense_qp_assign(dense_qp_solver_config *config, dense_qp_dims *
     dense_qp_copy_dims(solver->dims, dims);
 
     solver->args = dense_qp_copy_args(config, dims, c_ptr, args_);
-    c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
+    c_ptr += solver->fcn_ptrs->calculate_args_size(dims, NULL);
 
     solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);

@@ -33,7 +33,7 @@
 
 int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
-    dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
+    ocp_qp_full_condensing_solver_submodules *submodules = (ocp_qp_full_condensing_solver_submodules *) submodules_;
 
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_solver_args);
@@ -42,8 +42,8 @@ int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *s
     dense_qp_dims ddims;
     compute_dense_qp_dims(dims, &ddims);
 
-    size += ocp_qp_full_condensing_calculate_args_size(dims);
-    size += solver->calculate_args_size(&ddims);
+    size += ocp_qp_full_condensing_calculate_args_size(dims, NULL);
+    size += submodules->qpsol.calculate_args_size(&ddims, NULL);
 
     return size;
 }
@@ -52,7 +52,7 @@ int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *s
 
 void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory)
 {
-    dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
+    ocp_qp_full_condensing_solver_submodules *submodules = (ocp_qp_full_condensing_solver_submodules *) submodules_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -62,23 +62,23 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *submodu
     args->solver = (dense_qp_solver_fcn_ptrs*) c_ptr;
     c_ptr += sizeof(dense_qp_solver_fcn_ptrs);
 
-    *args->solver = *solver;
+    *args->solver = submodules->qpsol;
 
     dense_qp_dims ddims;
     compute_dense_qp_dims(dims, &ddims);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    args->cond_args = ocp_qp_full_condensing_assign_args(dims, c_ptr);
-    c_ptr += ocp_qp_full_condensing_calculate_args_size(dims);
+    args->cond_args = ocp_qp_full_condensing_assign_args(dims, NULL, c_ptr);
+    c_ptr += ocp_qp_full_condensing_calculate_args_size(dims, NULL);
 
     // assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
     align_char_to(8, &c_ptr);
 
-    args->solver_args = args->solver->assign_args(&ddims, c_ptr);
-    c_ptr += args->solver->calculate_args_size(&ddims);
+    args->solver_args = args->solver->assign_args(&ddims, NULL, c_ptr);
+    c_ptr += args->solver->calculate_args_size(&ddims, NULL);
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_solver_calculate_args_size(dims, solver) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_solver_calculate_args_size(dims, submodules_) == c_ptr);
 
     return (void*)args;
 }

@@ -58,7 +58,7 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
     d_create_ocp_qp_dim(dims->N, args->pcond_dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_dim(dims->N);
 
-    assert((char*)raw_memory + ocp_qp_partial_condensing_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_partial_condensing_calculate_args_size(dims, submodules_) == c_ptr);
 
     return args;
 }
