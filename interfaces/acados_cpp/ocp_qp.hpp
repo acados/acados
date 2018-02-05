@@ -51,6 +51,10 @@ private:
     
     void check_nb_elements(string, uint stage, uint nb_elems);
 
+    void update_option(string option_name, option_t *opt_p);
+
+    void flatten(map<string, option_t *>& input, map<string, option_t *>& output);
+
     vector<uint> nx() const;
     vector<uint> nu() const;
     vector<uint> nbx() const;

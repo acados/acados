@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/Users/robin/acados/build/swig/python')
+
 from numpy import array, diag, inf
 
 from acados import ocp_qp

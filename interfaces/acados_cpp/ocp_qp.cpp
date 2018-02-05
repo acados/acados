@@ -8,6 +8,7 @@
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp.h"
+#include "acados_c/options.h"
 
 namespace std {
     std::string to_string(std::pair<uint, uint> p) {
@@ -189,17 +190,51 @@ ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> option
 
     if (solver == nullptr) {
         ocp_qp_solver_plan plan = string_to_plan(solver_name, options);
-
         solver = std::unique_ptr<ocp_qp_solver>(ocp_qp_create(&plan, dim.get(),
                                                     ocp_qp_create_args(&plan, dim.get())));
     }
 
+    solver->fcn_ptrs->initialize_default_args(solver->args);
+
+    map<string, option_t *> solver_options;
+    solver_options[solver_name] = new option<map<string, option_t *>>(options);
+
+    auto flattened_options = map<string, option_t *>();
+    flatten(solver_options, flattened_options);
+
+    for (auto opt : flattened_options)
+        update_option(opt.first, opt.second);
+    delete solver_options[solver_name];
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
     if (return_code != 0)
         throw std::runtime_error("qp solver failed with error code " + std::to_string(return_code));
     return ocp_qp_solution(std::move(result));
+}
 
+
+void ocp_qp::update_option(string option_name, option_t *opt_p) {
+    bool found = set_option_int(solver->args, option_name.c_str(), std::to_int(opt_p));
+    found |= set_option_double(solver->args, option_name.c_str(), std::to_double(opt_p));
+    // updated |= set_option_int_array(solver.c_str(), solver->args, option.c_str(), std::to_int(opt_p));
+    // updated |= set_option_double_array(solver.c_str(), solver->args, option.c_str(), std::to_int(opt_p));
+    if (!found)
+        throw std::invalid_argument("Option " + option_name + " not known.");
+}
+
+
+void ocp_qp::flatten(map<string, option_t *>& input, map<string, option_t *>& output) {
+    for (auto opt : input) {
+        if (opt.second->nested()) {
+            for (auto nested_opt : *opt.second) {
+                input.erase(opt.first);
+                input[opt.first + "." + nested_opt.first] = nested_opt.second;
+                flatten(input, output);
+            }
+        } else {
+            output[opt.first] = opt.second;
+        }
+    }
 }
 
 void ocp_qp::state_bounds_indices(uint stage, vector<uint> v) {
