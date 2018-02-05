@@ -23,8 +23,8 @@ endif
 LIBS+=-lblasfeo -lm -lblas
 
 # Comment this out to enable using gprof
-CFLAGS  += -pg
-LDFLAGS += -pg
+# CFLAGS  += -pg
+# LDFLAGS += -pg
 
 EXAMPLES =
 EXAMPLES += mass_spring_example
