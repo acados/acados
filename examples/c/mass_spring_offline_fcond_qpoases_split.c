@@ -143,7 +143,6 @@ int main() {
     acados_tic(&timer);
 
 	for(int rep = 0; rep < NREP; rep++) {
-
 		if(OFFLINE_CONDENSING == 0 && BLASFEO_CHOLESKI == 1) {
 			// cholesky factorization of H
 			dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
