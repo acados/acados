@@ -2,6 +2,7 @@
 #ifndef ACADOS_INTERFACES_ACADOS_CPP_OCP_QP_SOLUTION_HPP_
 #define ACADOS_INTERFACES_ACADOS_CPP_OCP_QP_SOLUTION_HPP_
 
+#include <memory>
 #include <vector>
 
 #include "acados/ocp_qp/ocp_qp_common.h"

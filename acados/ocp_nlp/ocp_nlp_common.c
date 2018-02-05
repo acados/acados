@@ -214,7 +214,7 @@ int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
 
 	size += sizeof(ocp_nlp_model_expl);
 
-    size += 3*N*sizeof(casadi_function_t *);  // vde vde_adj jac
+    size += 3*N*sizeof(casadi_function_t);  // vde vde_adj jac
 
 	size += 8; // initial align
 
@@ -281,6 +281,7 @@ int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims)
 	size += 1*(N+1)*sizeof(int); // nls_mask
 	size += 2*(N+1)*sizeof(struct blasfeo_dmat); // W Cyt
 	size += 1*(N+1)*sizeof(struct blasfeo_dvec); // y_ref
+	size += 1*(N+1)*sizeof(external_function_generic *); // nls_jac
 
     for (ii = 0; ii < N+1; ii++)
     {
@@ -334,6 +335,9 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 	assign_blasfeo_dmat_structs(N+1, &cost->Cyt, &c_ptr);
 	// y_ref
 	assign_blasfeo_dvec_structs(N+1, &cost->y_ref, &c_ptr);
+	// nls_jac
+	cost->nls_jac = (external_function_generic **) c_ptr;
+	c_ptr += (N+1)*sizeof(external_function_generic *);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);

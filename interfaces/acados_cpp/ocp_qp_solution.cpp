@@ -1,6 +1,8 @@
 
 #include "acados_cpp/ocp_qp_solution.hpp"
 
+#include <algorithm>
+
 #include "acados_cpp/ocp_qp_dimensions.hpp"
 #include "hpipm/include/hpipm_d_ocp_qp_sol.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
