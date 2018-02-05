@@ -239,9 +239,9 @@ int adjFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a20=(a20-a8);
   a7=(a7-a20);
   if (res[0]!=0) res[0][5]=a7;
-  a7=arg[1] ? arg[1][3] : 0;
-  if (res[0]!=0) res[0][6]=a7;
   a7=arg[1] ? arg[1][2] : 0;
+  if (res[0]!=0) res[0][6]=a7;
+  a7=arg[1] ? arg[1][3] : 0;
   if (res[0]!=0) res[0][7]=a7;
   return 0;
 }

@@ -84,9 +84,6 @@ int main() {
     double FA0 = 0.5*rho * A*Ct0*w0*w0;
     double T0  = r*TA0;
     double x0  = FA0/K;
-    printf("%8.5f ",T0);
-    printf("%8.5f ",TA0);
-    printf("%8.5f ",r);
 
 
     double *xref;
@@ -133,8 +130,10 @@ int main() {
     for (ii = 0;ii < nu; ii++){
         in->u[ii] = 0.0;
     }
+    //in->u[0]= 52.1729289013845;
+    //in->u[1]=-172.7705302330489;
 
-    printf("\nxn: \n");
+    printf("\nx0: \n");
     for (ii=0;ii<nx;ii++)
         printf("%8.5f ",xref[ii]);
     printf("\n");

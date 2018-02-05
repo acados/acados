@@ -96,9 +96,9 @@ int odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   if (res[0]!=0) res[0][0]=a9;
   a9=arg[0] ? arg[0][2] : 0;
   if (res[0]!=0) res[0][1]=a9;
-  a9=arg[1] ? arg[1][1] : 0;
-  if (res[0]!=0) res[0][2]=a9;
   a9=arg[1] ? arg[1][0] : 0;
+  if (res[0]!=0) res[0][2]=a9;
+  a9=arg[1] ? arg[1][1] : 0;
   if (res[0]!=0) res[0][3]=a9;
   if (res[0]!=0) res[0][4]=a3;
   a9=-1917000.;

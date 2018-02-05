@@ -101,11 +101,11 @@ int impl_odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a1=(a1-a9);
   if (res[0]!=0) res[0][1]=a1;
   a1=arg[1] ? arg[1][2] : 0;
-  a9=arg[2] ? arg[2][1] : 0;
+  a9=arg[2] ? arg[2][0] : 0;
   a1=(a1-a9);
   if (res[0]!=0) res[0][2]=a1;
   a1=arg[1] ? arg[1][3] : 0;
-  a9=arg[2] ? arg[2][0] : 0;
+  a9=arg[2] ? arg[2][1] : 0;
   a1=(a1-a9);
   if (res[0]!=0) res[0][3]=a1;
   a1=arg[1] ? arg[1][4] : 0;

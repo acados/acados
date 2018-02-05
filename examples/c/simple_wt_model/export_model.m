@@ -61,7 +61,7 @@ f_expl = vertcat( TA-T/(J*r), ...
              1/M*(-K * x_w -xi*x_wdot)+FA  );
          
 x = vertcat( Omega, theta, dtheta, T, x_w, x_wdot);
-u = vertcat( uT, utheta);
+u = vertcat( utheta, uT);
 
 x1 = vertcat( Omega, theta, dtheta, T, x_w, x_wdot);
 x2 = [];
@@ -156,6 +156,9 @@ if EXPORT_ACADOS
     jacX = SX.zeros(nx,nx) + jacobian(f_expl,x);
     jacFun = Function('jacFun',{x,u},{f_expl,jacX});
     
+    odeFun.generate(['ode_model'], opts);
+    
+    vdeFun.generate(['vde_forw_model'], opts);
     jacFun.generate(['jac_model'], opts);
     adjFun.generate(['vde_adj_model'], opts);
     hessFun.generate(['vde_hess_model'], opts);

@@ -245,9 +245,9 @@ int hessFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   a54=(a54-a59);
   a48=(a48-a54);
   if (res[0]!=0) res[0][5]=a48;
-  a48=arg[3] ? arg[3][3] : 0;
-  if (res[0]!=0) res[0][6]=a48;
   a48=arg[3] ? arg[3][2] : 0;
+  if (res[0]!=0) res[0][6]=a48;
+  a48=arg[3] ? arg[3][3] : 0;
   if (res[0]!=0) res[0][7]=a48;
   a48=(a8+a8);
   a54=arg[1] ? arg[1][0] : 0;
