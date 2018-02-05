@@ -205,7 +205,7 @@ ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> option
 void ocp_qp::state_bounds_indices(uint stage, vector<uint> v) {
     uint nb_state_bounds = qp->dim->nbx[stage];
     if (nb_state_bounds != v.size())
-        throw std::invalid_argument("I need " + std::to_string(nb_state_bounds) + "indices.");
+        throw std::invalid_argument("I need " + std::to_string(nb_state_bounds) + " indices.");
     for (uint i = 0; i < nb_state_bounds; ++i)
         qp->idxb[stage][qp->dim->nbu[stage]+i] = qp->dim->nu[stage]+v.at(i);
 }
@@ -213,7 +213,7 @@ void ocp_qp::state_bounds_indices(uint stage, vector<uint> v) {
 void ocp_qp::control_bounds_indices(uint stage, vector<uint> v) {
     uint nb_control_bounds = qp->dim->nbu[stage];
     if (nb_control_bounds != v.size())
-        throw std::invalid_argument("I need " + std::to_string(nb_control_bounds) + "indices.");
+        throw std::invalid_argument("I need " + std::to_string(nb_control_bounds) + " indices.");
     for (uint i = 0; i < nb_control_bounds; ++i)
         qp->idxb[stage][i] = v.at(i);
 }

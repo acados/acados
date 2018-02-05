@@ -117,12 +117,22 @@ using std::string;
         if (fix_x0 == false)
             return new acados::ocp_qp(N, nx, nu, nbx, nbu, ng);
         vector<uint> nbx_v(N+1, 0);
-        nbx_v.at(0) = nx;
+        if (nbx == 0)
+            nbx_v.at(0) = nx;
+        else
+            std::fill(std::begin(nbx_v), std::end(nbx_v), nbx);
         acados::ocp_qp *qp = new acados::ocp_qp(vector<uint>(N+1, nx), vector<uint>(N+1, nu), nbx_v,
                                   vector<uint>(N+1, nbu), vector<uint>(N+1, ng));
-        std::vector<uint> idx(nx);
-        std::iota(std::begin(idx), std::end(idx), 0);
-        qp->state_bounds_indices(0, idx);
+        for (int i = 0; i <= N; ++i) {
+            std::vector<uint> idx_states(nbx);
+            std::iota(std::begin(idx_states), std::end(idx_states), 0);
+            qp->state_bounds_indices(i, idx_states);
+        }
+        for (int i = 0; i <= N; ++i) {
+            std::vector<uint> idx_controls(nbu);
+            std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
+            qp->control_bounds_indices(i, idx_controls);
+        }
         return qp;
     }
 
