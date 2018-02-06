@@ -695,7 +695,8 @@ int_t ocp_qp_ooqp(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memor
     fill_in_qp_out(in, out, work);
 
     int acados_status = ooqp_status;
-    if (ooqp_status == 0) acados_status = ACADOS_SUCCESS;
+    if (ooqp_status == SUCCESSFUL_TERMINATION) acados_status = ACADOS_SUCCESS;
+    if (ooqp_status == MAX_ITS_EXCEEDED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }
 

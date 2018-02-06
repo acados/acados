@@ -240,21 +240,17 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     info->interface_time = acados_toc(&interface_timer);
 
     // solve dense qp
-    int print_freq = args->print_freq;
-    int warm_start = args->warm_start;
-    int warm_strategy = args->warm_strategy;
-    int hot_start = args->hot_start;
-
     acados_tic(&qp_timer);
 
-    if (warm_start) {
-        QPDenseSetInt(QP, "warmstrategy", warm_strategy);
+    if (args->warm_start) {
+        QPDenseSetInt(QP, "warmstrategy", args->warm_strategy);
         QPDenseUpdateMatrices(QP, nvd, ngd, Ct, H);
-    } else if (!hot_start) {
+    } else if (!args->hot_start) {
         QPDenseSetData(QP, nvd, ngd, Ct, H);
     }
 
-    QPDenseSetInt(QP, "prtfreq", print_freq);
+    QPDenseSetInt(QP, "maxiter", args->max_iter);
+    QPDenseSetInt(QP, "prtfreq", args->print_freq);
     int qore_status = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );

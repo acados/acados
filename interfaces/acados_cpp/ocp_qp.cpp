@@ -134,8 +134,14 @@ ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> option
     delete solver_options[solver_name];
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
-    if (return_code != 0)
-        throw std::runtime_error("qp solver failed with error code " + std::to_string(return_code));
+    if (return_code != ACADOS_SUCCESS) {
+        if (return_code == ACADOS_MAXITER)
+            throw std::runtime_error("QP solver " + solver_name + " reached maximum number of iterations.");
+        else if (return_code == ACADOS_MINSTEP)
+            throw std::runtime_error("QP solver " + solver_name + " reached minimum step size.");
+        else
+            throw std::runtime_error("QP solver " + solver_name + " failed with solver-specific error code " + std::to_string(return_code));
+    }
     return ocp_qp_solution(std::move(result));
 }
 

@@ -364,28 +364,12 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int n
 
     for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 
-    // printf("acados [D'; C'] (nx = %d, nu = %d)\n", nx, nu);
-    // blasfeo_print_dmat(sDCt->m, sDCt->n, sDCt, 0, 0);
-    // printf("qpDUNES C:\n");
-    // d_print_mat(nx, ng, &Ct[0], nx+nu);
-    // printf("qpDUNES D:\n");
-    // d_print_mat(nu, ng, &Ct[nx], nx+nu);
-    // printf("acados d (nx = %d, nu = %d)\n", nx, nu);
-    // blasfeo_print_tran_dvec(sd->m, sd, 0);
-    // printf("qpDUNES lc':\n");
-    // d_print_mat(1, ng, lc, 1);
-    // printf("qpDUNES uc':\n");
-    // d_print_mat(1, ng, uc, 1);
-    // printf("********************************************\n\n");
 }
 
 
 
 int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
-
-    int N = dims->N;
     int nx = dims->nx[0];
     int nu = dims->nu[0];
     int nDmax = get_maximum_number_of_inequality_constraints(dims);
@@ -450,15 +434,11 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
 
     // coldstart
     if (args->warmstart == 0)
-    {
         for (int ii = 0; ii < N; ii++)
-        {
             for (int jj = 0; jj < nx; jj++)
-            {
                 mem->qpData.lambda.data[ii*nx+jj] = 0.0;
-            }
-        }
-    }
+
+    mem->qpData.options.maxIter = args->options.maxIter;
 
     if (mem->firstRun == 1)
     {
@@ -692,5 +672,6 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
     
     int acados_status = qpdunes_status;
     if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
+    if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }

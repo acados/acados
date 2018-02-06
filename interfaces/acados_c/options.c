@@ -97,6 +97,8 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->options.printLevel = value;
             else if (!strcmp(token, "warm_start"))
                 args->warmstart = value;
+            else if (!strcmp(token, "max_iter"))
+                args->options.maxIter = value;
             else return false;
         } else if (!strcmp(token, "qore")) {
             token = strsep(&option_cpy, ".");
@@ -112,12 +114,14 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->nsmax = value;
             else if (!strcmp(token, "hot_start"))
                 args->hot_start = value;
+            else if (!strcmp(token, "max_iter"))
+                args->max_iter = value;
             else return false;
         } else if (!strcmp(token, "qpoases")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_args *cond_args = (ocp_qp_full_condensing_solver_args *) args_;
             dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) cond_args->solver_args;
-            if (!strcmp(token, "max_nwsr"))
+            if (!strcmp(token, "max_iter"))
                 args->max_nwsr = value;
             else if (!strcmp(token, "warm_start"))
                 args->warm_start = value;
