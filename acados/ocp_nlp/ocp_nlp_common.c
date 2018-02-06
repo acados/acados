@@ -197,12 +197,12 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 
 
 /************************************************
-* model
+* dynamics
 ************************************************/
 
 /* explicit ODEs */
 
-int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
+int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims)
 {
 	// loop index
 	int ii;
@@ -212,7 +212,7 @@ int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
 
 	int size = 0;
 
-	size += sizeof(ocp_nlp_model_expl);
+	size += sizeof(ocp_nlp_dynamics_erk);
 
 	size += 3*(N+1)*sizeof(external_function_generic *); // exfun_forw_vde, exfun_adj_vde, exfun_jac_ode
 
@@ -226,7 +226,7 @@ int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
 
 
 
-ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memory)
+ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_memory)
 {
 	
     char *c_ptr = (char *) raw_memory;
@@ -235,28 +235,28 @@ ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memo
     int N = dims->N;
 
 	// struct
-    ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_model_expl);
+    ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_erk);
 
 	// dims
-	model->dims = dims;
+	dynamics->dims = dims;
 
-	// model
+	// dynamics
 	// exfun_forw_vde
-	model->exfun_forw_vde = (external_function_generic **) c_ptr;
+	dynamics->exfun_forw_vde = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
 	// exfun_adj_vde
-	model->exfun_adj_vde = (external_function_generic **) c_ptr;
+	dynamics->exfun_adj_vde = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
 	// exfun_jac_ode
-	model->exfun_jac_ode = (external_function_generic **) c_ptr;
+	dynamics->exfun_jac_ode = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
 
-	model->memsize = ocp_nlp_model_expl_calculate_size(dims);
+	dynamics->memsize = ocp_nlp_dynamics_erk_calculate_size(dims);
 
-    assert((char *) raw_memory + model->memsize >= c_ptr);
+    assert((char *) raw_memory + dynamics->memsize >= c_ptr);
 
-	return model;
+	return dynamics;
 
 }
 
@@ -398,7 +398,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 	ocp_nlp_cost_ls_dims *cost_dims = (ocp_nlp_cost_ls_dims *) dims->cost_dims;
 	size += ocp_nlp_cost_ls_calculate_size(cost_dims); // cost
 
-	size += ocp_nlp_model_expl_calculate_size(dims); // model
+	size += ocp_nlp_dynamics_erk_calculate_size(dims); // dynamics
 
     for (ii = 0; ii < N+1; ii++)
     {
@@ -454,10 +454,10 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 	in->cost = cost;
 	c_ptr += cost->memsize;
 
-	// model
-	ocp_nlp_model_expl *model = ocp_nlp_model_expl_assign(dims, c_ptr);
-	in->model = model;
-	c_ptr += model->memsize;
+	// dynamics
+	ocp_nlp_dynamics_erk *dynamics = ocp_nlp_dynamics_erk_assign(dims, c_ptr);
+	in->dynamics = dynamics;
+	c_ptr += dynamics->memsize;
 
 	// pointers align
 	align_char_to(8, &c_ptr);

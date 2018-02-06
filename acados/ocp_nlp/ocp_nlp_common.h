@@ -104,24 +104,24 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 
 
 /************************************************
-* model
+* dynamics
 ************************************************/
 
-/* explicit ODEs */
+/* ERK */
 
 typedef struct
 {
-	ocp_nlp_dims *dims; // TODO model dims ???
+	ocp_nlp_dims *dims; // TODO dynamics dims ???
 	external_function_generic **exfun_forw_vde;
 	external_function_generic **exfun_adj_vde;
 	external_function_generic **exfun_jac_ode;
 	int memsize;
-} ocp_nlp_model_expl;
+} ocp_nlp_dynamics_erk;
 
 //
-int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims);
+int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims);
 //
-ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memory);
+ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_memory);
 
 
 
@@ -144,7 +144,7 @@ typedef struct
 	// TODO array of structures or structures of arrays ???
 	// void **cost; // ???
     void *cost;
-	void *model;
+	void *dynamics;
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 

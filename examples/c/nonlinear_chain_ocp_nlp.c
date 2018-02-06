@@ -127,7 +127,7 @@ void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 
 
 
-static void select_model_casadi(int N, int num_free_masses, external_function_casadi *forw_vde, external_function_casadi *jac_ode)
+static void select_dynamics_casadi(int N, int num_free_masses, external_function_casadi *forw_vde, external_function_casadi *jac_ode)
 {
 	// loop index
 	int ii;
@@ -399,13 +399,13 @@ int main() {
 
 
     /************************************************
-    * model
+    * dynamics
     ************************************************/
 
 	external_function_casadi forw_vde_casadi[NN];
 	external_function_casadi jac_ode_casadi[NN];
 
-	select_model_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi);
+	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi);
 
 	create_array_external_function_casadi(NN, forw_vde_casadi);
 	create_array_external_function_casadi(NN, jac_ode_casadi);
@@ -504,11 +504,11 @@ int main() {
 
 
 	/* explicit ode */
-	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp_in->model;
+	ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) nlp_in->dynamics;
 	for (int i=0; i<NN; i++)
-		model->exfun_forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
+		dynamics->exfun_forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
 	for (int i=0; i<NN; i++)
-		model->exfun_jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
+		dynamics->exfun_jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
 
 
 
