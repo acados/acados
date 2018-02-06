@@ -14,7 +14,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include <acados/sim/sim_casadi_wrapper.h>
 #include "acados/utils/external_function_generic.h"
 // crane model
 #include "examples/c/crane_model/crane_model.h"
@@ -115,8 +114,8 @@ int main() {
     in->step = T / sim_opts->num_steps;
 
 	// external functions
-	in->exfun_forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
-	in->exfun_jac_ode_expl = (external_function_generic *) &exfun_jac;
+	in->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
+	in->jac_ode_expl = (external_function_generic *) &exfun_jac;
 
 
 

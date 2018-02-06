@@ -9,7 +9,6 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_casadi_wrapper.h"
 
 #include "external/blasfeo/include/blasfeo_target.h"
 #include "external/blasfeo/include/blasfeo_common.h"
@@ -378,8 +377,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
-//                in->eval_impl_res(nx, nu, ode_args, rGt, in->impl_ode);
-                in->exfun_ode_impl->evaluate(in->exfun_ode_impl, ode_args, rGt);
+                in->ode_impl->evaluate(in->ode_impl, ode_args, rGt);
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
@@ -387,10 +385,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 				{
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
-//                    in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                    in->exfun_jac_x_ode_impl->evaluate(in->exfun_jac_x_ode_impl, ode_args, jac_out);
-//                    in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
-                    in->exfun_jac_xdot_ode_impl->evaluate(in->exfun_jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                    in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
+                    in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
 
                     // compute the blocks of JGK
@@ -463,16 +459,13 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 acados_tic(&timer_ad);
-//                in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                in->exfun_jac_x_ode_impl->evaluate(in->exfun_jac_x_ode_impl, ode_args, jac_out);
+                in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-//                in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-                in->exfun_jac_u_ode_impl->evaluate(in->exfun_jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                in->jac_u_ode_impl->evaluate(in->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
-//                in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
-				in->exfun_jac_xdot_ode_impl->evaluate(in->exfun_jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+				in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                 timing_ad += acados_toc(&timer_ad);
 
                 for (jj=0;jj<ns;jj++)
@@ -550,12 +543,10 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-//                    in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                    in->exfun_jac_x_ode_impl->evaluate(in->exfun_jac_x_ode_impl, ode_args, jac_out);
+                    in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-//                    in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-					in->exfun_jac_u_ode_impl->evaluate(in->exfun_jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+					in->jac_u_ode_impl->evaluate(in->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                     timing_ad += acados_toc(&timer_ad);
                 }
@@ -580,16 +571,13 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-//                    in->eval_impl_jac_x(nx, nu, ode_args, jac_out, in->impl_jac_x);
-                    in->exfun_jac_x_ode_impl->evaluate(in->exfun_jac_x_ode_impl, ode_args, jac_out);
+                    in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-//                    in->eval_impl_jac_u(nx, nu, ode_args, jac_out+2*nx*nx, in->impl_jac_u);
-					in->exfun_jac_u_ode_impl->evaluate(in->exfun_jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+					in->jac_u_ode_impl->evaluate(in->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
-//                    in->eval_impl_jac_xdot(nx, nu, ode_args, jac_out+nx*nx, in->impl_jac_xdot);
-                    in->exfun_jac_xdot_ode_impl->evaluate(in->exfun_jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                    in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
                     for (jj=0;jj<ns;jj++)
 					{

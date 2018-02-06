@@ -312,8 +312,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
             }
 
             acados_tic(&timer_ad);
-//            in->forward_vde_wrapper(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
-            in->exfun_forw_vde_expl->evaluate(in->exfun_forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+            in->forw_vde_expl->evaluate(in->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++)
@@ -394,13 +393,11 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 acados_tic(&timer_ad);
                 if (opts->sens_hess)
 				{
-//                    in->Hess_fun(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->hess);
-                    in->exfun_hess_ode_expl->evaluate(in->exfun_hess_ode_expl, rhs_adj_in, adj_traj+s*nAdj);
+                    in->hess_ode_expl->evaluate(in->hess_ode_expl, rhs_adj_in, adj_traj+s*nAdj);
                 }
 				else
 				{
-//                    in->adjoint_vde_wrapper(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->vde_adj); // adjoint VDE evaluation
-                    in->exfun_adj_vde_expl->evaluate(in->exfun_adj_vde_expl, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
+                    in->adj_vde_expl->evaluate(in->adj_vde_expl, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
 

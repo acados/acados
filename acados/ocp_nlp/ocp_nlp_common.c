@@ -200,7 +200,7 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 * dynamics
 ************************************************/
 
-/* explicit ODEs */
+/* ERK */
 
 int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims)
 {
@@ -214,7 +214,7 @@ int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims)
 
 	size += sizeof(ocp_nlp_dynamics_erk);
 
-	size += 3*(N+1)*sizeof(external_function_generic *); // exfun_forw_vde, exfun_adj_vde, exfun_jac_ode
+	size += 3*(N+1)*sizeof(external_function_generic *); // forw_vde, adj_vde, jac_ode
 
 	size += 8; // initial align
 
@@ -242,14 +242,79 @@ ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_
 	dynamics->dims = dims;
 
 	// dynamics
-	// exfun_forw_vde
-	dynamics->exfun_forw_vde = (external_function_generic **) c_ptr;
+	// forw_vde
+	dynamics->forw_vde = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
-	// exfun_adj_vde
-	dynamics->exfun_adj_vde = (external_function_generic **) c_ptr;
+	// adj_vde
+	dynamics->adj_vde = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
-	// exfun_jac_ode
-	dynamics->exfun_jac_ode = (external_function_generic **) c_ptr;
+	// jac_ode
+	dynamics->jac_ode = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+
+	dynamics->memsize = ocp_nlp_dynamics_erk_calculate_size(dims);
+
+    assert((char *) raw_memory + dynamics->memsize >= c_ptr);
+
+	return dynamics;
+
+}
+
+
+
+/* IRK */
+
+int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims)
+{
+	// loop index
+	int ii;
+
+	// extract dims
+	int N = dims->N;
+
+	int size = 0;
+
+	size += sizeof(ocp_nlp_dynamics_irk);
+
+	size += 4*(N+1)*sizeof(external_function_generic *); // ode, jac_x, jac_xdot, jac_u
+
+	size += 8; // initial align
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+	
+    char *c_ptr = (char *) raw_memory;
+
+	// extract sizes
+    int N = dims->N;
+
+	// struct
+    ocp_nlp_dynamics_irk *dynamics = (ocp_nlp_dynamics_irk *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_irk);
+
+	// dims
+	dynamics->dims = dims;
+
+	// dynamics
+	// jac_u
+	dynamics->ode = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+	// jac_x
+	dynamics->jac_x = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+	// jac_xdot
+	dynamics->jac_xdot = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+	// jac_u
+	dynamics->jac_u = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
 
 	dynamics->memsize = ocp_nlp_dynamics_erk_calculate_size(dims);
@@ -265,6 +330,8 @@ ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_
 /************************************************
 * cost
 ************************************************/
+
+/* least squares */
 
 int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims)
 {

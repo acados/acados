@@ -30,7 +30,6 @@
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/sim/sim_casadi_wrapper.h"
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -506,9 +505,9 @@ int main() {
 	/* explicit ode */
 	ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) nlp_in->dynamics;
 	for (int i=0; i<NN; i++)
-		dynamics->exfun_forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
+		dynamics->forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
 	for (int i=0; i<NN; i++)
-		dynamics->exfun_jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
+		dynamics->jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
 
 
 

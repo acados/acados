@@ -32,7 +32,6 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_collocation.h"
 #include "acados/utils/print.h"
@@ -806,9 +805,9 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
         work->sim_in[ii]->step = sim_opts->interval/sim_opts->num_steps;
 
 		// external function
-        work->sim_in[ii]->exfun_forw_vde_expl = dynamics->exfun_forw_vde[ii];
-        work->sim_in[ii]->exfun_adj_vde_expl = dynamics->exfun_adj_vde[ii];
-        work->sim_in[ii]->exfun_jac_ode_expl = dynamics->exfun_jac_ode[ii];
+        work->sim_in[ii]->forw_vde_expl = dynamics->forw_vde[ii];
+        work->sim_in[ii]->adj_vde_expl = dynamics->adj_vde[ii];
+        work->sim_in[ii]->jac_ode_expl = dynamics->jac_ode[ii];
 		// TODO others
 
         // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!

@@ -817,8 +817,7 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args,
             }
         }
         acados_tic(&timer_ad);
-//        in->jacobian_wrapper(nx, rhs_in, jac_tmp, in->jac);  // k evaluation
-        in->exfun_jac_ode_expl->evaluate(in->exfun_jac_ode_expl, rhs_in, jac_tmp);  // k evaluation
+        in->jac_ode_expl->evaluate(in->jac_ode_expl, rhs_in, jac_tmp);  // k evaluation
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme->type == simplified_in ||
@@ -1159,8 +1158,7 @@ int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_
             rhs_in[nx*(1+NF)+nu] = ((real_t) istep+c_vec[s1])/((real_t) opts->num_steps);  // time
 
             acados_tic(&timer_ad);
-//            in->forward_vde_wrapper(nx, nu, rhs_in, VDE_tmp[s1], in->vde);  // k evaluation
-            in->exfun_forw_vde_expl->evaluate(in->exfun_forw_vde_expl, rhs_in, VDE_tmp[s1]);  // k evaluation
+            in->forw_vde_expl->evaluate(in->forw_vde_expl, rhs_in, VDE_tmp[s1]);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:

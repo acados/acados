@@ -127,20 +127,11 @@ int main() {
 
     in->step = T / irk_opts->num_steps;
 
-	// casadi functins & wrappers
-//    in->impl_ode = &impl_odeFun;
-//    in->eval_impl_res = &impl_ode_fun;
-//    in->impl_jac_x = &impl_jacFun_x;
-//    in->eval_impl_jac_x = &impl_jac_x_fun;
-//    in->impl_jac_xdot = &impl_jacFun_xdot;
-//    in->eval_impl_jac_xdot = &impl_jac_xdot_fun;
-//    in->impl_jac_u = &impl_jacFun_u;
-//    in->eval_impl_jac_u = &impl_jac_u_fun;
 	// external functions
-	in->exfun_ode_impl = (external_function_generic *) &exfun_ode;
-	in->exfun_jac_x_ode_impl = (external_function_generic *) &exfun_jac_x_ode;
-	in->exfun_jac_xdot_ode_impl = (external_function_generic *) &exfun_jac_xdot_ode;
-	in->exfun_jac_u_ode_impl = (external_function_generic *) &exfun_jac_u_ode;
+	in->ode_impl = (external_function_generic *) &exfun_ode;
+	in->jac_x_ode_impl = (external_function_generic *) &exfun_jac_x_ode;
+	in->jac_xdot_ode_impl = (external_function_generic *) &exfun_jac_xdot_ode;
+	in->jac_u_ode_impl = (external_function_generic *) &exfun_jac_u_ode;
 
 
     for (ii = 0; ii < nx; ii++) {

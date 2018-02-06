@@ -112,9 +112,9 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 typedef struct
 {
 	ocp_nlp_dims *dims; // TODO dynamics dims ???
-	external_function_generic **exfun_forw_vde;
-	external_function_generic **exfun_adj_vde;
-	external_function_generic **exfun_jac_ode;
+	external_function_generic **forw_vde;
+	external_function_generic **adj_vde;
+	external_function_generic **jac_ode;
 	int memsize;
 } ocp_nlp_dynamics_erk;
 
@@ -122,6 +122,25 @@ typedef struct
 int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_memory);
+
+
+
+/* IRK */
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO dynamics dims ???
+	external_function_generic **ode;
+	external_function_generic **jac_x;
+	external_function_generic **jac_xdot;
+	external_function_generic **jac_u;
+	int memsize;
+} ocp_nlp_dynamics_irk;
+
+//
+int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_memory);
 
 
 

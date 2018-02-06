@@ -141,17 +141,10 @@ int main()
 
     in->step = T / erk_opts->num_steps;
 
-	// casadi functins & wrappers
-//    in->vde = &vdeFun;
-//    in->vde_adj = &adjFun;
-//    in->hess = &hessFun;
-//    in->forward_vde_wrapper = &vde_fun;
-//    in->adjoint_vde_wrapper = &vde_adj_fun;
-//    in->Hess_fun = &vde_hess_fun;
 	// external functions
-	in->exfun_forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
-	in->exfun_adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
-	in->exfun_hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
+	in->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
+	in->adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
+	in->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
 
 
 
