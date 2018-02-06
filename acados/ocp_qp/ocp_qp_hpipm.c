@@ -73,7 +73,7 @@ void ocp_qp_hpipm_initialize_default_args(void *args_)
 
     d_set_default_ocp_qp_ipm_arg(args->hpipm_args);
 	// overwrite some default options
-    args->hpipm_args->res_g_max = 1e-6;
+    args->hpipm_args->res_g_max = 1e-11; // otherwise inaccurate for Python/MATLAB qp example
     args->hpipm_args->res_b_max = 1e-8;
     args->hpipm_args->res_d_max = 1e-8;
     args->hpipm_args->res_m_max = 1e-8;

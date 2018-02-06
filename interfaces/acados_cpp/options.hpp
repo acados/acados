@@ -54,7 +54,7 @@ public:
     }
 
     inline double as_double() override {
-        return static_cast<int>(value);
+        return static_cast<double>(value);
     }
 
     ~option() override = default;

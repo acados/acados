@@ -26,4 +26,4 @@ for solver_name in ("sparse_hpipm", "condensing_hpipm", "hpmpc", "qpdunes", "qor
     output = qp.solve(solver_name)
     print(output.states())
     print(output.info())
-    print("----------------")
+    print()
