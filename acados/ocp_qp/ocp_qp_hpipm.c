@@ -142,31 +142,24 @@ int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
-    acados_tic(&tot_timer);
-    acados_tic(&interface_timer);
-
-    // cast data structures
+     acados_tic(&tot_timer);
+   // cast data structures
     ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
     ocp_qp_hpipm_memory *memory = (ocp_qp_hpipm_memory *) mem_;
 
-    info->interface_time = acados_toc(&interface_timer);
-    acados_tic(&qp_timer);
-
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
     // solve ipm
+    acados_tic(&qp_timer);
     int hpipm_status = d_solve_ocp_qp_ipm(qp_in, qp_out, args->hpipm_args, memory->hpipm_workspace);
 
-    // printf("HPIPM iter = %d\n", memory->hpipm_workspace->iter);
-
     info->solve_QP_time = acados_toc(&qp_timer);
+    info->interface_time = 0;  // there are no conversions for hpipm
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = memory->hpipm_workspace->iter;
 
-    // check max number of iterations
-    // TODO(dimitris): check ACADOS_MIN_STEP (not implemented in HPIPM yet)
+    // check exit conditions
+    int acados_status = hpipm_status;
+    if (hpipm_status == 0) acados_status = ACADOS_SUCCESS;
     if (hpipm_status == 1) acados_status = ACADOS_MAXITER;
-
-    // return
+    if (hpipm_status == 2) acados_status = ACADOS_MINSTEP;
     return acados_status;
 }

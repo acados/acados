@@ -171,14 +171,10 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
-    acados_tic(&interface_timer);
 
     // cast structures
     dense_qp_qore_args *args = (dense_qp_qore_args *)args_;
     dense_qp_qore_memory *memory = (dense_qp_qore_memory *)memory_;
-
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
 
     // extract qpoases data
     double *H = memory->H;
@@ -208,6 +204,8 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     int nbd = qp_in->dim->nb;
 
     assert(ned == 0 && "ned != 0 not supported yet");
+
+    acados_tic(&interface_timer);
 
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
@@ -239,39 +237,30 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
 			Ct[j+i*nvd] = C[i+j*ngd];
 		}
     }
+    info->interface_time = acados_toc(&interface_timer);
 
     // solve dense qp
     int print_freq = args->print_freq;
     int warm_start = args->warm_start;
     int warm_strategy = args->warm_strategy;
     int hot_start = args->hot_start;
-    int return_flag = 0;
 
-    info->interface_time = acados_toc(&interface_timer);
     acados_tic(&qp_timer);
 
-    if (warm_start)
-    {
+    if (warm_start) {
         QPDenseSetInt(QP, "warmstrategy", warm_strategy);
         QPDenseUpdateMatrices(QP, nvd, ngd, Ct, H);
-    }
-    else if (!hot_start)
-    {
+    } else if (!hot_start) {
         QPDenseSetData(QP, nvd, ngd, Ct, H);
     }
 
     QPDenseSetInt(QP, "prtfreq", print_freq);
-    return_flag = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
+    int qore_status = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );
     QPDenseGetDblVector( QP, "dualsol", dual_sol );
     QPDenseGetInt(QP, "itercount", &num_iter);
     memory->num_iter = num_iter;
-
-#if 0
-    d_print_mat(1, nvd, prim_sol, 1);
-    exit(1);
-#endif
 
     info->solve_QP_time = acados_toc(&qp_timer);
     acados_tic(&interface_timer);
@@ -297,8 +286,8 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = num_iter;
 
-    // return
-    // TODO(bnovoselnik): cast qore return to acados return
-    acados_status = return_flag;
+    int acados_status = qore_status;
+    if (qore_status == QPSOLVER_DENSE_OK) acados_status = ACADOS_SUCCESS;
+    if (qore_status == QPSOLVER_DENSE_ITER_LIMIT) acados_status = ACADOS_MAXITER;
     return acados_status;
 }

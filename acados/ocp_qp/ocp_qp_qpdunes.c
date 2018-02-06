@@ -664,45 +664,33 @@ void ocp_qp_qpdunes_free_memory(void *mem_)
 
 int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_)
 {
-    ocp_qp_info *info = (ocp_qp_info *) out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer;
 
+    acados_timer tot_timer, qp_timer, interface_timer;
+    ocp_qp_info *info = (ocp_qp_info *) out->misc;
     acados_tic(&tot_timer);
-    acados_tic(&interface_timer);
 
     // cast data structures
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
 
-    return_t return_value;
-    // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
-
-    cast_workspace(work, mem);
-
-    // TODO(dimitris): move blasfeo conversions from update_memory before this timer?
-    info->interface_time = acados_toc(&interface_timer);
-    acados_tic(&qp_timer);
-
-    update_memory(in, args, mem, work);
-
-    return_value = qpDUNES_solve(&(mem->qpData));
-
-    info->solve_QP_time = acados_toc(&qp_timer);
     acados_tic(&interface_timer);
+    cast_workspace(work, mem);
+    update_memory(in, args, mem, work);
+    info->interface_time = acados_toc(&interface_timer);
 
-    if (return_value != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
-    {
-        printf("qpDUNES failed to solve the QP. Error code: %d\n", return_value);
-        return (int)return_value;
-    }
-
+    acados_tic(&qp_timer);
+    return_t qpdunes_status = qpDUNES_solve(&(mem->qpData));
+    info->solve_QP_time = acados_toc(&qp_timer);
+    
+    acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);
-
     info->interface_time += acados_toc(&interface_timer);
+
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = mem->qpData.log.numIter;
-
-    // TODO(dimitris): use acados return value
-    return 0;
+    
+    int acados_status = qpdunes_status;
+    if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
+    return acados_status;
 }
