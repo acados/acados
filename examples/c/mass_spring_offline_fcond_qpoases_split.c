@@ -32,7 +32,7 @@
 #include <acados/dense_qp/dense_qp_qpoases.h>
 
 #define NREP 1
-/* #define ELIMINATE_X0 */
+// #define ELIMINATE_X0 
 #define OFFLINE_CONDENSING 1
 #define BLASFEO_CHOLESKY 0
 
@@ -91,7 +91,7 @@ int main() {
     dense_qp_out *qpd_out = create_dense_qp_out(&ddims);
 
     /************************************************
-    * dense qpoases 
+    * dense ipm
     ************************************************/
 
     dense_qp_solver_plan plan;
@@ -117,7 +117,7 @@ int main() {
 	
 	ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
 	dense_qp_qpoases_memory *qpoases_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
-	// printf("gradient with full condensing:\n\n");	
+	printf("gradient with full condensing:\n\n");	
 	
 	// for(int i = 0; i < nvd; i++) 
 	// 	printf("g[i]=%f\n", qpd_in->g->pa[i]); 
@@ -248,4 +248,4 @@ int main() {
     free(cond_args);
 
 	return 0;
-
+}
