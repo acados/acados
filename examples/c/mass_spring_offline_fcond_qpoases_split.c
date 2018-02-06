@@ -31,10 +31,10 @@
 #include <acados/dense_qp/dense_qp_hpipm.h>
 #include <acados/dense_qp/dense_qp_qpoases.h>
 
-#define NREP 100
-#define ELIMINATE_X0
+#define NREP 1
+/* #define ELIMINATE_X0 */
 #define OFFLINE_CONDENSING 1
-#define BLASFEO_CHOLESKI 0
+#define BLASFEO_CHOLESKY 0
 
 #include "./mass_spring.c"
 
@@ -101,8 +101,8 @@ int main() {
 
 	dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)argd; 
 	
-	if (BLASFEO_CHOLESKI == 1) {
-		args->use_precomputed_choleski = 1;
+	if (BLASFEO_CHOLESKY == 1) {
+		args->use_precomputed_cholesky = 1;
 	}
 
 	if (OFFLINE_CONDENSING == 1) {
@@ -116,6 +116,11 @@ int main() {
 	int nvd = qpd_in->dim->nv;
 	
 	ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
+	dense_qp_qpoases_memory *qpoases_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
+	printf("gradient with full condensing:\n\n");	
+	
+	/* for(int i = 0; i < nvd; i++) */
+	/* 	printf("g[i]=%f\n", qpd_in->g->pa[i]); */
 	
 	struct blasfeo_dmat sR;
 	blasfeo_allocate_dmat(nvd, nvd, &sR);
@@ -135,7 +140,13 @@ int main() {
 		blasfeo_unpack_dmat(nvd, nvd, &sR, 0, 0, qpoases_solver_mem->R, nvd); 
 	} 
 
-	ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL); 
+	ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);  
+	
+	/* printf("gradient with gradient-only condensing:\n\n"); */	
+	/* for(int i = 0; i < nvd; i++) */
+	/* 	printf("g[i]=%f\n", qpd_in->g->pa[i]); */
+
+
 	acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 	ocp_qp_full_expansion(qpd_out, qp_out, cond_args, cond_memory, NULL);
 	
@@ -143,7 +154,7 @@ int main() {
     acados_tic(&timer);
 
 	for(int rep = 0; rep < NREP; rep++) {
-		if(OFFLINE_CONDENSING == 0 && BLASFEO_CHOLESKI == 1) {
+		if(OFFLINE_CONDENSING == 0 && BLASFEO_CHOLESKY == 1) {
 			// cholesky factorization of H
 			dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
 			blasfeo_dpotrf_l(nvd, qpd_in->Hv, 0, 0, &sR, 0, 0);
@@ -193,7 +204,7 @@ int main() {
     for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
     // assertion switched off when using primal-only expansion (no multipliers computed)
 	if (cond_args->expand_primal_sol_only == 0) {
-		assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS"); 
+		/* assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS"); */ 
 	}
 
     /************************************************

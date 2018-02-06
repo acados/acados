@@ -65,7 +65,7 @@ void dense_qp_qpoases_initialize_default_args(void *args_)
     args->max_cputime = 1000.0;
     args->warm_start = 0;
     args->max_nwsr = 1000;
-	/* args->use_precomputed_choleski = 0; */
+	/* args->use_precomputed_cholesky = 0; */
 }
 
 
@@ -277,7 +277,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 				QProblemB_setPrintLevel(QPB, PL_MEDIUM);
 				/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
 				QProblemB_printProperties(QPB);
-				static Options options;
+				/* static Options options; */
 
 				Options_setToDefault( &options );
 				options.initialStatusBounds = ST_INACTIVE;
@@ -298,12 +298,12 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 			QProblem_setPrintLevel(QP, PL_MEDIUM);
 			/* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
 			QProblem_printProperties(QP);
-			if (args->use_precomputed_choleski == 1) {
-				static Options options;
+			if (args->use_precomputed_cholesky == 1) {
+				/* static Options options; */
 
-				Options_setToDefault( &options );
-				options.initialStatusBounds = ST_INACTIVE;
-				QProblem_setOptions( QP, options );
+				/* Options_setToDefault( &options ); */
+				/* options.initialStatusBounds = ST_INACTIVE; */
+				/* QProblem_setOptions( QP, options ); */
 				return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
 					NULL, NULL, NULL, NULL, memory->R);  // NULL or 0
 			} else {
@@ -317,12 +317,12 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 			QProblemB_setPrintLevel(QPB, PL_MEDIUM);
 			/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
 			QProblemB_printProperties(QPB);
-			if (args->use_precomputed_choleski == 1) {
-				static Options options;
+			if (args->use_precomputed_cholesky == 1) {
+				/* static Options options; */
 
-				Options_setToDefault( &options );
-				options.initialStatusBounds = ST_INACTIVE;
-				QProblemB_setOptions( QPB, options );
+				/* Options_setToDefault( &options ); */
+				/* options.initialStatusBounds = ST_INACTIVE; */
+				/* QProblemB_setOptions( QPB, options ); */
 				return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
 					NULL, NULL, NULL, memory->R);  // NULL or 0
 			} else {
