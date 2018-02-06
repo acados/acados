@@ -97,9 +97,9 @@
     PyObject *dict = PyDict_New();
     PyDict_SetItemString(dict, fields[0], PyLong_FromLong($1.num_iter));
     PyDict_SetItemString(dict, fields[1], PyFloat_FromDouble($1.solve_QP_time));
-    PyDict_SetItemString(dict, fields[2], PyLong_FromDouble($1.condensing_time));
-    PyDict_SetItemString(dict, fields[3], PyLong_FromDouble($1.interface_time));
-    PyDict_SetItemString(dict, fields[4], PyLong_FromDouble($1.total_time));
+    PyDict_SetItemString(dict, fields[2], PyFloat_FromDouble($1.condensing_time));
+    PyDict_SetItemString(dict, fields[3], PyFloat_FromDouble($1.interface_time));
+    PyDict_SetItemString(dict, fields[4], PyFloat_FromDouble($1.total_time));
     $result = dict;
 #endif
 }
