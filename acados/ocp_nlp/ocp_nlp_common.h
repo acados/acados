@@ -145,6 +145,27 @@ ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_
 
 
 /************************************************
+* constraints
+************************************************/
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO constraints dims ???
+    int **idxb;
+	struct blasfeo_dvec *d;
+	struct blasfeo_dmat *DCt;
+	int memsize;
+}
+ocp_nlp_constraints;
+
+//
+int ocp_nlp_constraints_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_memory);
+
+
+
+/************************************************
 * in
 ************************************************/
 
@@ -152,18 +173,15 @@ typedef struct
 {
     ocp_nlp_dims *dims;
 
-    int **idxb;
-	struct blasfeo_dvec *d;
-	struct blasfeo_dmat *DCt;
-
-    double **lh;
-    double **uh;
+    // double **lh;
+    // double **uh;
     // ocp_nlp_function *h;  // nonlinear path constraints
 
 	// TODO array of structures or structures of arrays ???
 	// void **cost; // ???
     void *cost;
 	void *dynamics;
+	void *constraints;
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 

@@ -523,19 +523,21 @@ static void initialize_constraints(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *me
 	struct blasfeo_dmat *DCt = work->qp_in->DCt;
 	int **idxb = work->qp_in->idxb;
 
+	ocp_nlp_constraints *constraints = nlp_in->constraints;
+
 	// initialize idxb
 	for (i=0; i<=N; i++)
 	{
 		for (j=0; j<nb[i]; j++)
 		{
-			idxb[i][j] = nlp_in->idxb[i][j];
+			idxb[i][j] = constraints->idxb[i][j];
 		}
 	}
 
 	// initialize general constraints matrix
     for (i=0; i<=N; i++)
 	{
-		blasfeo_dgecp(nu[i]+nx[i], ng[i], nlp_in->DCt+i, 0, 0, DCt+i, 0, 0);
+		blasfeo_dgecp(nu[i]+nx[i], ng[i], constraints->DCt+i, 0, 0, DCt+i, 0, 0);
 	}
 
 	return;
@@ -563,6 +565,8 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
     ocp_nlp_cost_ls *cost = (ocp_nlp_cost_ls *) nlp_in->cost;
     struct blasfeo_dmat *Cyt = cost->Cyt;
     struct blasfeo_dvec *y_ref = cost->y_ref;
+
+	ocp_nlp_constraints *constraints = nlp_in->constraints;
 
     struct blasfeo_dmat *W_chol = mem->W_chol;
     struct blasfeo_dvec *ls_res = mem->ls_res;
@@ -619,15 +623,15 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
 		// TODO merge dgemv_n and dgemv_t for general linear constraints
 
 		// nlp_mem: ineq_fun
-		blasfeo_dvecex_sp(nb[i], 1.0, nlp_in->idxb[i], nlp_out->ux+i, 0, tmp_nbg+i, 0);
+		blasfeo_dvecex_sp(nb[i], 1.0, constraints->idxb[i], nlp_out->ux+i, 0, tmp_nbg+i, 0);
 		blasfeo_dgemv_t(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb[i], tmp_nbg+i, nb[i]);
-		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, nlp_in->d+i, 0, nlp_mem->ineq_fun+i, 0);
-		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_in->d+i, nb[i]+ng[i], tmp_nbg+i, 0, nlp_mem->ineq_fun+i, nb[i]+ng[i]);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, tmp_nbg+i, 0, constraints->d+i, 0, nlp_mem->ineq_fun+i, 0);
+		blasfeo_daxpy(nb[i]+ng[i], -1.0, constraints->d+i, nb[i]+ng[i], tmp_nbg+i, 0, nlp_mem->ineq_fun+i, nb[i]+ng[i]);
 
 		// nlp_mem: ineq_adj
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_mem->ineq_adj+i, 0);
 		blasfeo_daxpy(nb[i]+ng[i], -1.0, nlp_out->lam+i, nb[i]+ng[i], nlp_out->lam+i, 0, tmp_nbg+i, 0);
-		blasfeo_dvecad_sp(nb[i], 1.0, tmp_nbg+i, 0, nlp_in->idxb[i], nlp_mem->ineq_adj+i, 0);
+		blasfeo_dvecad_sp(nb[i], 1.0, tmp_nbg+i, 0, constraints->idxb[i], nlp_mem->ineq_adj+i, 0);
 		blasfeo_dgemv_n(nu[i]+nx[i], ng[i], 1.0, DCt+i, 0, 0, tmp_nbg+i, nb[i], 1.0, nlp_mem->ineq_adj+i, 0, nlp_mem->ineq_adj+i, 0);
 
 
