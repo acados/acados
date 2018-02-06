@@ -66,6 +66,7 @@ void dense_qp_qpoases_initialize_default_args(void *args_)
     args->warm_start = 0;
     args->max_nwsr = 1000;
 	args->use_precomputed_cholesky = 0;
+	args->hotstart = 0;
 }
 
 
