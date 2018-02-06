@@ -124,22 +124,22 @@ void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condens
     // convert to dense qp structure
 	if(args->condense_rhs_only == 1) {
 		// condense gradient only
-		/* d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace); */
+		// d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);
 		d_cond_rhs_qp_ocp2dense(in, out, mem->hpipm_workspace);
 	} else {
 		// condense gradient and Hessian
 
 		d_cond_qp_ocp2dense(in, out, mem->hpipm_workspace);
 
-		/* printf("gradient with gradient-only condensing:\n\n"); */	
-		/* for(int i = 0; i < 45; i++) */
-		/* 	printf("g[i]=%f\n", out->g->pa[i]); */
+		// printf("gradient with gradient-only condensing:\n\n");	
+		// for(int i = 0; i < 45; i++)
+		//	printf("g[i]=%f\n", out->g->pa[i]);
 
-		/* d_cond_rhs_qp_ocp2dense(in, out, mem->hpipm_workspace); */
+		// d_cond_rhs_qp_ocp2dense(in, out, mem->hpipm_workspace);
 
-		/* printf("gradient with gradient-only condensing:\n\n"); */	
-		/* for(int i = 0; i < 45; i++) */
-		/* 	printf("g[i]=%f\n", out->g->pa[i]); */
+		// printf("gradient with gradient-only condensing:\n\n");	
+		// for(int i = 0; i < 45; i++)
+		//	printf("g[i]=%f\n", out->g->pa[i]);
 	}
 }
 

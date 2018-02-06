@@ -65,7 +65,7 @@ void dense_qp_qpoases_initialize_default_args(void *args_)
     args->max_cputime = 1000.0;
     args->warm_start = 0;
     args->max_nwsr = 1000;
-	/* args->use_precomputed_cholesky = 0; */
+	args->use_precomputed_cholesky = 0;
 }
 
 
@@ -91,7 +91,7 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 2 * ngd * sizeof(double);              // d_lg d_ug
     size += 1 * nbd * sizeof(int);                 // idxb
     size += 1 * nvd * sizeof(double);              // prim_sol
-    size += (nvd+ngd) * sizeof(double);  // dual_sol
+    size += (nvd+ngd) * sizeof(double);            // dual_sol
 
     if (ngd > 0)  // QProblem
         size += QProblem_calculateMemorySize(nvd, ngd);
@@ -256,7 +256,7 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 			if (memory->first_it == 1) {
 				QProblemCON(QP, nvd, ngd, HST_POSDEF);
 				QProblem_setPrintLevel(QP, PL_MEDIUM);
-				/* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
+				// QProblem_setPrintLevel(QP, PL_DEBUG_ITER); 
 				QProblem_printProperties(QP);
 				static Options options;
 
@@ -275,9 +275,9 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 			if (memory->first_it == 1) {
 				QProblemBCON(QPB, nvd, HST_POSDEF);
 				QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-				/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
+				// QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); 
 				QProblemB_printProperties(QPB);
-				/* static Options options; */
+				// static Options options; 
 
 				Options_setToDefault( &options );
 				options.initialStatusBounds = ST_INACTIVE;
@@ -296,14 +296,14 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 		if (ngd > 0) {  // QProblem
 			QProblemCON(QP, nvd, ngd, HST_POSDEF);
 			QProblem_setPrintLevel(QP, PL_MEDIUM);
-			/* QProblem_setPrintLevel(QP, PL_DEBUG_ITER); */
+			// QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
 			QProblem_printProperties(QP);
 			if (args->use_precomputed_cholesky == 1) {
-				/* static Options options; */
+				// static Options options; 
 
-				/* Options_setToDefault( &options ); */
-				/* options.initialStatusBounds = ST_INACTIVE; */
-				/* QProblem_setOptions( QP, options ); */
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblem_setOptions( QP, options );
 				return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
 					NULL, NULL, NULL, NULL, memory->R);  // NULL or 0
 			} else {
@@ -315,14 +315,14 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 		} else {  // QProblemB
 			QProblemBCON(QPB, nvd, HST_POSDEF);
 			QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-			/* QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); */
+			// QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); 
 			QProblemB_printProperties(QPB);
 			if (args->use_precomputed_cholesky == 1) {
-				/* static Options options; */
+				// static Options options;
 
-				/* Options_setToDefault( &options ); */
-				/* options.initialStatusBounds = ST_INACTIVE; */
-				/* QProblemB_setOptions( QPB, options ); */
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblemB_setOptions( QPB, options );
 				return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
 					NULL, NULL, NULL, memory->R);  // NULL or 0
 			} else {
