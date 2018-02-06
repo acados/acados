@@ -241,38 +241,6 @@ static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_funct
 
 
 
-static void select_model(const int num_free_masses, ocp_nlp_in *nlp)
-{
-	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp->model;
-    for (int ii = 0; ii < nlp->dims->N; ii++)
-    {
-        switch (num_free_masses)
-        {
-            case 1:
-                model->vde[ii] = &vde_chain_nm2;
-                model->jac[ii] = &jac_chain_nm2;
-                model->vde_adj[ii] = &vde_hess_chain_nm2;
-                break;
-            case 2:
-                model->vde[ii] = &vde_chain_nm3;
-                model->jac[ii] = &jac_chain_nm3;
-                model->vde_adj[ii] = &vde_hess_chain_nm3;
-                break;
-            case 3:
-                model->vde[ii] = &vde_chain_nm4;
-                model->jac[ii] = &jac_chain_nm4;
-                model->vde_adj[ii] = &vde_hess_chain_nm4;
-                break;
-            default:
-                printf("Problem size not available\n");
-                exit(1);
-                break;
-        }
-    }
-}
-
-
-
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
 {
     FILE *initial_states_file;
@@ -536,10 +504,6 @@ int main() {
 
 
 	/* explicit ode */
-    for (int jj = 0; jj < NN; jj++)
-    {
-        select_model(NMF, nlp_in);
-    }
 	ocp_nlp_model_expl *model = (ocp_nlp_model_expl *) nlp_in->model;
 	for (int i=0; i<NN; i++)
 		model->exfun_forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
@@ -659,6 +623,7 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = LIFTED_IRK;
+//        sim_solver_names[ii] = ERK;
         num_stages[ii] = 4;
     }
 

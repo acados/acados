@@ -214,8 +214,7 @@ int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
 
 	size += sizeof(ocp_nlp_model_expl);
 
-    size += 3*N*sizeof(casadi_function_t);  // vde vde_adj jac
-	size += 2*(N+1)*sizeof(external_function_generic *); // exfun_forw_vde, exfun_jac_ode
+	size += 3*(N+1)*sizeof(external_function_generic *); // exfun_forw_vde, exfun_adj_vde, exfun_jac_ode
 
 	size += 8; // initial align
 
@@ -243,15 +242,11 @@ ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memo
 	model->dims = dims;
 
 	// model
-	// TODO in mem.c, casadi_function_assign_advance ???
-    model->vde = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
-    model->vde_adj = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
-    model->jac = (casadi_function_t *) c_ptr;
-    c_ptr += N*sizeof(casadi_function_t);
 	// exfun_forw_vde
 	model->exfun_forw_vde = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+	// exfun_adj_vde
+	model->exfun_adj_vde = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
 	// exfun_jac_ode
 	model->exfun_jac_ode = (external_function_generic **) c_ptr;

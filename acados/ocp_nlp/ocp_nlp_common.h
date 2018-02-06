@@ -112,10 +112,8 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 typedef struct
 {
 	ocp_nlp_dims *dims; // TODO model dims ???
-    casadi_function_t *vde; // TODO remove !!!
-    casadi_function_t *vde_adj; // TODO remove !!!
-    casadi_function_t *jac; // TODO remove !!!
 	external_function_generic **exfun_forw_vde;
+	external_function_generic **exfun_adj_vde;
 	external_function_generic **exfun_jac_ode;
 	int memsize;
 } ocp_nlp_model_expl;
