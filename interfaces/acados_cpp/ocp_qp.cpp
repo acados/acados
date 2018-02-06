@@ -18,15 +18,14 @@ namespace std {
 
 namespace acados {
 
-static ocp_qp_solver_plan string_to_plan(string solver, map<string, option_t *> options) {
+static ocp_qp_solver_plan string_to_plan(string solver) {
 
     ocp_qp_solver_plan plan;
 
-    if (solver == "hpipm") {
-        if (options.count("condensing") || options.count("full_condensing"))
-            plan.qp_solver = FULL_CONDENSING_HPIPM;
-        else
-            plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    if (solver == "condensing_hpipm") {
+        plan.qp_solver = FULL_CONDENSING_HPIPM;
+    } else if (solver == "sparse_hpipm") {
+        plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
     } else if (solver == "hpmpc") {
         plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
     } else if (solver == "ooqp") {
@@ -189,7 +188,7 @@ void ocp_qp::set(string field, vector<double> v) {
 ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> options) {
 
     if (solver == nullptr) {
-        ocp_qp_solver_plan plan = string_to_plan(solver_name, options);
+        ocp_qp_solver_plan plan = string_to_plan(solver_name);
         solver = std::unique_ptr<ocp_qp_solver>(ocp_qp_create(&plan, dim.get(),
                                                     ocp_qp_create_args(&plan, dim.get())));
     }

@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "acados_c/dense_qp/dense_qp_qpoases.h"
+#include "acados_c/dense_qp/dense_qp_hpipm.h"
 #include "acados_c/ocp_qp/ocp_qp_hpipm.h"
 #include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
 #include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
@@ -41,9 +42,17 @@ bool set_option_int(void *args_, const char *option, const int value)
     token = strsep(&option_cpy, ".");
     while (token) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "hpipm")) {
+        if (!strcmp(token, "sparse_hpipm")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
+            if (!strcmp(token, "max_iter"))
+                args->hpipm_args->iter_max = value;
+            else if (!strcmp(token, "max_stat"))
+                args->hpipm_args->stat_max = value;
+            else return false;
+        } else if (!strcmp(token, "condensing_hpipm")) {
+            token = strsep(&option_cpy, ".");
+            dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) args_;
             if (!strcmp(token, "max_iter"))
                 args->hpipm_args->iter_max = value;
             else if (!strcmp(token, "max_stat"))
