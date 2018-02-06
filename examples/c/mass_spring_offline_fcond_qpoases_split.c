@@ -91,7 +91,7 @@ int main() {
     dense_qp_out *qpd_out = create_dense_qp_out(&ddims);
 
     /************************************************
-    * dense ipm
+    * dense qpoases 
     ************************************************/
 
     dense_qp_solver_plan plan;
@@ -117,10 +117,10 @@ int main() {
 	
 	ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
 	dense_qp_qpoases_memory *qpoases_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
-	printf("gradient with full condensing:\n\n");	
+	// printf("gradient with full condensing:\n\n");	
 	
-	/* for(int i = 0; i < nvd; i++) */
-	/* 	printf("g[i]=%f\n", qpd_in->g->pa[i]); */
+	// for(int i = 0; i < nvd; i++) 
+	// 	printf("g[i]=%f\n", qpd_in->g->pa[i]); 
 	
 	struct blasfeo_dmat sR;
 	blasfeo_allocate_dmat(nvd, nvd, &sR);
@@ -142,9 +142,9 @@ int main() {
 
 	ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);  
 	
-	/* printf("gradient with gradient-only condensing:\n\n"); */	
-	/* for(int i = 0; i < nvd; i++) */
-	/* 	printf("g[i]=%f\n", qpd_in->g->pa[i]); */
+	// printf("gradient with gradient-only condensing:\n\n");	
+	// for(int i = 0; i < nvd; i++) 
+	// 	printf("g[i]=%f\n", qpd_in->g->pa[i]); 
 
 
 	acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
@@ -248,4 +248,4 @@ int main() {
     free(cond_args);
 
 	return 0;
-}
+
