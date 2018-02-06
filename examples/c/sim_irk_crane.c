@@ -26,7 +26,10 @@
 #include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
-// #define M_PI 3.14159265358979323846
+// c interface
+#include <acados_c/external_function_generic.h>
+
+
 
 int main() {
 
@@ -42,9 +45,7 @@ int main() {
 	exfun_ode.casadi_sparsity_in = &impl_odeFun_sparsity_in;
 	exfun_ode.casadi_sparsity_out = &impl_odeFun_sparsity_out;
 
-	int exfun_ode_size = external_function_casadi_calculate_size(&exfun_ode);
-	void *exfun_ode_mem = malloc(exfun_ode_size);
-	external_function_casadi_assign(&exfun_ode, exfun_ode_mem);
+	create_external_function_casadi(&exfun_ode);
 
 	// jac_x implicit ODE
 
@@ -54,9 +55,7 @@ int main() {
 	exfun_jac_x_ode.casadi_sparsity_in = &impl_jacFun_x_sparsity_in;
 	exfun_jac_x_ode.casadi_sparsity_out = &impl_jacFun_x_sparsity_out;
 
-	int exfun_jac_x_ode_size = external_function_casadi_calculate_size(&exfun_jac_x_ode);
-	void *exfun_jac_x_ode_mem = malloc(exfun_jac_x_ode_size);
-	external_function_casadi_assign(&exfun_jac_x_ode, exfun_jac_x_ode_mem);
+	create_external_function_casadi(&exfun_jac_x_ode);
 
 	// jac_xdot implicit ODE
 
@@ -66,9 +65,7 @@ int main() {
 	exfun_jac_xdot_ode.casadi_sparsity_in = &impl_jacFun_xdot_sparsity_in;
 	exfun_jac_xdot_ode.casadi_sparsity_out = &impl_jacFun_xdot_sparsity_out;
 
-	int exfun_jac_xdot_ode_size = external_function_casadi_calculate_size(&exfun_jac_xdot_ode);
-	void *exfun_jac_xdot_ode_mem = malloc(exfun_jac_xdot_ode_size);
-	external_function_casadi_assign(&exfun_jac_xdot_ode, exfun_jac_xdot_ode_mem);
+	create_external_function_casadi(&exfun_jac_xdot_ode);
 
 	// jac_u implicit ODE
 
@@ -78,9 +75,7 @@ int main() {
 	exfun_jac_u_ode.casadi_sparsity_in = &impl_jacFun_u_sparsity_in;
 	exfun_jac_u_ode.casadi_sparsity_out = &impl_jacFun_u_sparsity_out;
 
-	int exfun_jac_u_ode_size = external_function_casadi_calculate_size(&exfun_jac_u_ode);
-	void *exfun_jac_u_ode_mem = malloc(exfun_jac_u_ode_size);
-	external_function_casadi_assign(&exfun_jac_u_ode, exfun_jac_u_ode_mem);
+	create_external_function_casadi(&exfun_jac_u_ode);
 
 /************************************************
 * bla bla bla
@@ -304,10 +299,10 @@ int main() {
 * free
 ************************************************/
 
-	free(exfun_ode_mem);
-	free(exfun_jac_x_ode_mem);
-	free(exfun_jac_xdot_ode_mem);
-	free(exfun_jac_u_ode_mem);
+	free_external_function_casadi(&exfun_ode);
+	free_external_function_casadi(&exfun_jac_x_ode);
+	free_external_function_casadi(&exfun_jac_xdot_ode);
+	free_external_function_casadi(&exfun_jac_u_ode);
 
     free(xref);
     free(irk_opts);

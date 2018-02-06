@@ -27,6 +27,7 @@ OBJS += ocp_lin.o
 OBJS += ocp_qp.o
 OBJS += options.o
 OBJS += sim.o
+OBJS += external_function_generic.o
 
 static_library: $(OBJS)
 	ar rcs libacados_c.a $(OBJS)

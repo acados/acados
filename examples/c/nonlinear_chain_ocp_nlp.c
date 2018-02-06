@@ -40,9 +40,14 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
+
 #include "examples/c/chain_model/chain_model.h"
 
+// c interface
 #include <acados_c/legacy_create.h>
+#include <acados_c/external_function_generic.h>
+
+
 
 #define NN 15
 #define TF 3.0
@@ -429,64 +434,23 @@ int main() {
     * model
     ************************************************/
 
-	char *c_ptr;
 	external_function_casadi forw_vde_casadi[NN];
 	external_function_casadi jac_ode_casadi[NN];
 
 	select_model_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi);
 
-	// compute sizes
-	int forw_vde_casadi_size[NN];
-	int jac_ode_casadi_size[NN];
-	int sim_casadi_size_tot = 0;
-	for (int ii=0; ii<NN; ii++)
-	{
-		forw_vde_casadi_size[ii] = external_function_casadi_calculate_size(forw_vde_casadi+ii);
-		sim_casadi_size_tot += forw_vde_casadi_size[ii];
-		jac_ode_casadi_size[ii] = external_function_casadi_calculate_size(jac_ode_casadi+ii);
-		sim_casadi_size_tot += jac_ode_casadi_size[ii];
-	}
-
-	// allocate memory
-	void *sim_casadi_mem = malloc(sim_casadi_size_tot);
-
-	// assign
-	c_ptr = sim_casadi_mem;
-	for (int ii=0; ii<NN; ii++)
-	{
-		external_function_casadi_assign(forw_vde_casadi+ii, c_ptr);
-		c_ptr += forw_vde_casadi_size[ii];
-		external_function_casadi_assign(jac_ode_casadi+ii, c_ptr);
-		c_ptr += jac_ode_casadi_size[ii];
-	}
+	create_array_external_function_casadi(NN, forw_vde_casadi);
+	create_array_external_function_casadi(NN, jac_ode_casadi);
 
     /************************************************
-    * nonlinear least squares: evaluation and jacobian of residuals
+    * nonlinear least squares
     ************************************************/
 
 	external_function_casadi ls_cost_jac_casadi[NN+1];
 
 	select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
 
-	// compute sizes
-	int ls_cost_jac_casadi_size[NN+1];
-	int ls_cost_jac_casadi_size_tot = 0;
-	for (int ii=0; ii<=NN; ii++)
-	{
-		ls_cost_jac_casadi_size[ii] = external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
-		ls_cost_jac_casadi_size_tot += ls_cost_jac_casadi_size[ii];
-	}
-
-	// allocate memory
-	void *ls_cost_jac_casadi_mem = malloc(ls_cost_jac_casadi_size_tot);
-
-	// assign
-	c_ptr = ls_cost_jac_casadi_mem;
-	for (int ii=0; ii<=NN; ii++)
-	{
-		external_function_casadi_assign(ls_cost_jac_casadi+ii, c_ptr);
-		c_ptr += ls_cost_jac_casadi_size[ii];
-	}
+	create_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
 
     /************************************************
     * nlp_in (wip)
@@ -780,7 +744,10 @@ int main() {
     * free memory
     ************************************************/
 
-	free(ls_cost_jac_casadi_mem);
+	free_array_external_function_casadi(NN, forw_vde_casadi);
+	free_array_external_function_casadi(NN, jac_ode_casadi);
+	free_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
+
 	free(cost_dims_mem);
 	free(dims_mem);
     free(nlp_in);

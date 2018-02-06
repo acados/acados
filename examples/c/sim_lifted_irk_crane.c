@@ -27,7 +27,10 @@
 #include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
-// #define M_PI 3.14159265358979323846
+// c interface
+#include <acados_c/external_function_generic.h>
+
+
 
 int main() {
 
@@ -43,9 +46,7 @@ int main() {
 	exfun_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
 	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
 
-	int exfun_forw_vde_size = external_function_casadi_calculate_size(&exfun_forw_vde);
-	void *exfun_forw_vde_mem = malloc(exfun_forw_vde_size);
-	external_function_casadi_assign(&exfun_forw_vde, exfun_forw_vde_mem);
+	create_external_function_casadi(&exfun_forw_vde);
 
 	// jacobian explicit ODE
 
@@ -55,9 +56,7 @@ int main() {
 	exfun_jac.casadi_sparsity_in = &jacFun_sparsity_in;
 	exfun_jac.casadi_sparsity_out = &jacFun_sparsity_out;
 
-	int exfun_jac_size = external_function_casadi_calculate_size(&exfun_jac);
-	void *exfun_jac_mem = malloc(exfun_jac_size);
-	external_function_casadi_assign(&exfun_jac, exfun_jac_mem);
+	create_external_function_casadi(&exfun_jac);
 
 /************************************************
 * bla bla bla
@@ -255,8 +254,8 @@ int main() {
 * free
 ************************************************/
 
-	free(exfun_forw_vde_mem);
-	free(exfun_jac_mem);
+	free_external_function_casadi(&exfun_forw_vde);
+	free_external_function_casadi(&exfun_jac);
 
     free(xref);
 	free(sim_opts_mem);

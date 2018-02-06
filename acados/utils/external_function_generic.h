@@ -47,6 +47,7 @@ typedef struct
 typedef struct
 {
 	void (* evaluate) (void *, double *, double *);
+	void *ptr_ext_mem; // pointer to external memory
 	int (*casadi_fun) (const double **, double **, int *, double *, int);
 	int (*casadi_work) (int *, int *, int *, int *);
 	const int * (*casadi_sparsity_in) (int);

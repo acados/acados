@@ -149,6 +149,10 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 	// loop index
 	int ii;
 
+	// save initial pointer to external memory
+	fun->ptr_ext_mem = raw_memory;
+
+	// char pointer for byte advances
 	char *c_ptr = raw_memory;
 
 	// double pointers
