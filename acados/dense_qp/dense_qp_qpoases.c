@@ -259,11 +259,11 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 				QProblem_setPrintLevel(QP, PL_MEDIUM);
 				// QProblem_setPrintLevel(QP, PL_DEBUG_ITER); 
 				QProblem_printProperties(QP);
-				static Options options;
+				// static Options options;
 
-				Options_setToDefault( &options );
-				options.initialStatusBounds = ST_INACTIVE;
-				QProblem_setOptions( QP, options );
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblem_setOptions( QP, options );
 				return_flag = QProblem_init(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime );
 				memory->first_it = 0;
 				
@@ -280,9 +280,9 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 				QProblemB_printProperties(QPB);
 				// static Options options; 
 
-				Options_setToDefault( &options );
-				options.initialStatusBounds = ST_INACTIVE;
-				QProblemB_setOptions( QPB, options );
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblemB_setOptions( QPB, options );
 				QProblemB_init(QPB, H, g, d_lb, d_ub, &nwsr, &cputime);
 				memory->first_it = 0;
 				
