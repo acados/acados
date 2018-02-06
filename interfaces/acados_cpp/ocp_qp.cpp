@@ -10,83 +10,10 @@
 #include "acados_c/ocp_qp.h"
 #include "acados_c/options.h"
 
-namespace std {
-    std::string to_string(std::pair<uint, uint> p) {
-        return "( " + std::to_string(p.first) + ", " + std::to_string(p.second) + " )";
-    }
-}
+#include "acados_cpp/hpipm_helper.hpp"
+#include "acados_cpp/pair.hpp"
 
 namespace acados {
-
-static ocp_qp_solver_plan string_to_plan(string solver) {
-
-    ocp_qp_solver_plan plan;
-
-    if (solver == "condensing_hpipm") {
-        plan.qp_solver = FULL_CONDENSING_HPIPM;
-    } else if (solver == "sparse_hpipm") {
-        plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-    } else if (solver == "hpmpc") {
-        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
-    } else if (solver == "ooqp") {
-        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
-    } else if (solver == "qpdunes") {
-        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
-    } else if (solver == "qpoases") {
-        plan.qp_solver = FULL_CONDENSING_QPOASES;
-    } else if (solver == "qore") {
-        plan.qp_solver = FULL_CONDENSING_QORE;
-    } else {
-        throw std::invalid_argument("Solver not known.");
-    }
-    return plan;
-}
-
-#define num_rows_Q(stage, dim) (dim->nx[stage])
-
-#define num_cols_Q(stage, dim) (dim->nx[stage])
-
-#define num_rows_S(stage, dim) (dim->nu[stage])
-
-#define num_cols_S(stage, dim) (dim->nx[stage])
-
-#define num_rows_R(stage, dim) (dim->nu[stage])
-
-#define num_cols_R(stage, dim) (dim->nu[stage])
-
-#define num_elems_q(stage, dim) (dim->nx[stage])
-
-#define num_elems_r(stage, dim) (dim->nu[stage])
-
-#define num_rows_A(stage, dim) (dim->nx[stage+1])
-
-#define num_cols_A(stage, dim) (dim->nx[stage])
-
-#define num_rows_B(stage, dim) (dim->nx[stage+1])
-
-#define num_cols_B(stage, dim) (dim->nu[stage])
-
-#define num_elems_b(stage, dim) (dim->nx[stage+1])
-
-#define num_elems_lbx(stage, dim) (dim->nbx[stage])
-
-#define num_elems_lbu(stage, dim) (dim->nbu[stage])
-
-#define num_elems_ubx(stage, dim) (dim->nbx[stage])
-
-#define num_elems_ubu(stage, dim) (dim->nbu[stage])
-
-#define num_rows_C(stage, dim) (dim->ng[stage])
-
-#define num_cols_C(stage, dim) (dim->nx[stage])
-
-#define num_rows_D(stage, dim) (dim->ng[stage])
-
-#define num_cols_D(stage, dim) (dim->nu[stage])
-
-#define num_elems_lg(stage, dim) (dim->ng[stage])
-
-#define num_elems_ug(stage, dim) (dim->ng[stage])
 
 ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, 
              std::vector<uint> nbu, std::vector<uint> ng) : N(nx.size()-1), qp(nullptr), solver(nullptr) {
@@ -105,7 +32,7 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     std::copy_n(std::begin(nx), N+1, dim->nx);
 
     // controls
-    if (nu.size() == N) nu.at(N) = 0;
+    if (nu.size() == (N+1)) nu.at(N) = 0;
     std::copy_n(std::begin(nu), N+1, dim->nu);
 
     // bounds
@@ -184,13 +111,14 @@ void ocp_qp::set(string field, vector<double> v) {
         set(field, stage, v);
 }
 
+static ocp_qp_solver_plan string_to_plan(string solver);
 
 ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> options) {
 
-    if (solver == nullptr) {
+    if (cached_solver != solver_name) {
+        cached_solver = solver_name;
         ocp_qp_solver_plan plan = string_to_plan(solver_name);
-        solver = std::unique_ptr<ocp_qp_solver>(ocp_qp_create(&plan, dim.get(),
-                                                    ocp_qp_create_args(&plan, dim.get())));
+        solver.reset(ocp_qp_create(&plan, dim.get(), ocp_qp_create_args(&plan, dim.get())));
     }
 
     solver->fcn_ptrs->initialize_default_args(solver->args);
@@ -393,6 +321,30 @@ static bool match(std::pair<uint, uint> dims, uint nb_elems) {
 void ocp_qp::check_nb_elements(std::string field, uint stage, uint nb_elems) {
     if (!match(dimensions(field, stage), nb_elems))
         throw std::invalid_argument("Need " + std::to_string(dimensions(field, stage)) + " elements.");
+}
+
+ocp_qp_solver_plan string_to_plan(string solver) {
+
+    ocp_qp_solver_plan plan;
+
+    if (solver == "condensing_hpipm") {
+        plan.qp_solver = FULL_CONDENSING_HPIPM;
+    } else if (solver == "sparse_hpipm") {
+        plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    } else if (solver == "hpmpc") {
+        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    } else if (solver == "ooqp") {
+        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
+    } else if (solver == "qpdunes") {
+        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
+    } else if (solver == "qpoases") {
+        plan.qp_solver = FULL_CONDENSING_QPOASES;
+    } else if (solver == "qore") {
+        plan.qp_solver = FULL_CONDENSING_QORE;
+    } else {
+        throw std::invalid_argument("Solver not known.");
+    }
+    return plan;
 }
 
 }  // namespace acados

@@ -94,6 +94,7 @@ endif()
 
 target_compile_definitions(acados PRIVATE ALIGNMENT=64)
 target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
+target_compile_definitions(acados PUBLIC ACADOS_WITH_QORE)
 target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES) # Needed for qpDUNES
 
 install(TARGETS acados EXPORT acadosTargets

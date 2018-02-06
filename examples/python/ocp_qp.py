@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/Users/robin/acados/build/swig/python')
 
 from numpy import array, diag, inf
 
@@ -22,8 +20,10 @@ x0 = array([1, 1])
 qp.set('lbx', 0, x0)
 qp.set('ubx', 0, x0)
 
-# solve QP
-output = qp.solve("qpoases", {'max_nwsr': 5})
-# Inspect the output struct
-print(output.states())
-print(output.info())
+# solve QP and print solution
+for solver_name in ("sparse_hpipm", "condensing_hpipm", "hpmpc", "qpdunes", "qore", "qpoases"):
+    print(solver_name + ": ")
+    output = qp.solve(solver_name)
+    print(output.states())
+    print(output.info())
+    print("----------------")

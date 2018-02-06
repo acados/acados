@@ -65,6 +65,8 @@ private:
 
     std::unique_ptr<ocp_qp_solver> solver;
 
+    std::string cached_solver;
+
     std::unique_ptr<ocp_qp_dims> dim;
 
     static std::map<string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
