@@ -253,7 +253,7 @@ void ocp_qp::control_bounds_indices(uint stage, vector<uint> v) {
 }
 
 
-std::map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
+map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
         {"Q", d_cvt_ocp_qp_to_colmaj_Q},
         {"S", d_cvt_ocp_qp_to_colmaj_S},
         {"R", d_cvt_ocp_qp_to_colmaj_R},

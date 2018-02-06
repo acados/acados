@@ -21,11 +21,14 @@
 
 #include <string.h>
 
-#include "acados_c/dense_qp/dense_qp_qpoases.h"
-#include "acados_c/dense_qp/dense_qp_hpipm.h"
-#include "acados_c/ocp_qp/ocp_qp_hpipm.h"
-#include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
-#include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_qore.h"
+#include "acados/dense_qp/dense_qp_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp/ocp_qp_ooqp.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 
 int get_option_int(const void *args_, const char *option)
 {
@@ -74,6 +77,35 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->N = value;
             else if (!strcmp(token, "M"))
                 args->M = value;
+            else return false;
+        } else if (!strcmp(token, "ooqp")) {
+            token = strsep(&option_cpy, ".");
+            ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *) args_;
+            if (!strcmp(token, "print_level"))
+                args->printLevel = value;
+            else return false;
+        } else if (!strcmp(token, "qpdunes")) {
+            token = strsep(&option_cpy, ".");
+            ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
+            if (!strcmp(token, "print_level"))
+                args->options.printLevel = value;
+            else if (!strcmp(token, "warm_start"))
+                args->warmstart = value;
+            else return false;
+        } else if (!strcmp(token, "qore")) {
+            token = strsep(&option_cpy, ".");
+            ocp_qp_full_condensing_solver_args *cond_args = (ocp_qp_full_condensing_solver_args *) args_;
+            dense_qp_qore_args *args = (dense_qp_qore_args *) cond_args->solver_args;
+            if (!strcmp(token, "print_freq"))
+                args->print_freq = value;
+            else if (!strcmp(token, "warm_start"))
+                args->warm_start = value;
+            else if (!strcmp(token, "warm_strategy"))
+                args->warm_strategy = value;
+            else if (!strcmp(token, "nsmax"))
+                args->nsmax = value;
+            else if (!strcmp(token, "hot_start"))
+                args->hot_start = value;
             else return false;
         } else if (!strcmp(token, "qpoases")) {
             token = strsep(&option_cpy, ".");
@@ -124,40 +156,66 @@ bool set_option_double(void *args_, const char *option, const double value)
     strcpy(option_cpy, option);
     while ((token = strsep(&option_cpy, "."))) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_qp") || !strcmp(token, "condensing_qp")) {
-            set_option_double(args_, option_cpy, value);
-        } else if (!strcmp(token, "hpipm")) {
+        if (!strcmp(token, "sparse_hpipm")) {
+            token = strsep(&option_cpy, ".");
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) args_;
-            if (!strcmp(option, "res_g_max"))
+            if (!strcmp(token, "res_g_max"))
                 args->hpipm_args->res_g_max = value;
-            else if (!strcmp(option, "res_b_max"))
+            else if (!strcmp(token, "res_b_max"))
                 args->hpipm_args->res_b_max = value;
-            else if (!strcmp(option, "res_d_max"))
+            else if (!strcmp(token, "res_d_max"))
                 args->hpipm_args->res_d_max = value;
-            else if (!strcmp(option, "res_m_max"))
+            else if (!strcmp(token, "res_m_max"))
                 args->hpipm_args->res_m_max = value;
-            else if (!strcmp(option, "alpha_min"))
+            else if (!strcmp(token, "alpha_min"))
                 args->hpipm_args->alpha_min = value;
-            else if (!strcmp(option, "mu0"))
+            else if (!strcmp(token, "mu0"))
+                args->hpipm_args->mu0 = value;
+            else return false;
+        } else if (!strcmp(token, "condensing_hpipm")) {
+            token = strsep(&option_cpy, ".");
+            dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) args_;
+            if (!strcmp(token, "res_g_max"))
+                args->hpipm_args->res_g_max = value;
+            else if (!strcmp(token, "res_b_max"))
+                args->hpipm_args->res_b_max = value;
+            else if (!strcmp(token, "res_d_max"))
+                args->hpipm_args->res_d_max = value;
+            else if (!strcmp(token, "res_m_max"))
+                args->hpipm_args->res_m_max = value;
+            else if (!strcmp(token, "alpha_min"))
+                args->hpipm_args->alpha_min = value;
+            else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
         } else if (!strcmp(token, "hpmpc")) {
+            token = strsep(&option_cpy, ".");
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) args_;
-            if (!strcmp(option, "tol"))
+            if (!strcmp(token, "tol"))
                 args->tol = value;
-            else if (!strcmp(option, "mu0"))
+            else if (!strcmp(token, "mu0"))
                 args->mu0 = value;
             // partial tightening
-            else if (!strcmp(option, "sigma_mu"))
+            else if (!strcmp(token, "sigma_mu"))
                 args->sigma_mu = value;
             else return false;
+        } else if (!strcmp(token, "qpdunes")) {
+            token = strsep(&option_cpy, ".");
+            ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) args_;
+            if (!strcmp(token, "tolerance"))
+                args->options.stationarityTolerance = value;
+            else return false;
         } else if (!strcmp(token, "qpoases")) {
+            token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_args *cond_args = (ocp_qp_full_condensing_solver_args *) args_;
             dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) cond_args->solver_args;
             if (!strcmp(option, "max_cputime"))
                 args->max_cputime = value;
             else return false;
+        } else {
+            return false;
         }
+        token = strsep(&option_cpy, ".");
     }
     return true;
 }
