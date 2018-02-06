@@ -114,13 +114,6 @@ int main() {
 
     in->step = T / sim_opts->num_steps;
 
-	// casadi functins & wrappers
-    in->vde = &vdeFun;
-    in->jac = &jacFun;
-//    in->hess = &hessFun;
-    in->forward_vde_wrapper = &vde_fun;
-    in->jacobian_wrapper = &jac_fun;
-//    in->Hess_fun = &vde_hess_fun;
 	// external functions
 	in->exfun_forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
 	in->exfun_jac_ode_expl = (external_function_generic *) &exfun_jac;

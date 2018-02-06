@@ -71,32 +71,6 @@ typedef struct {
 	// jac_u implicit ode
 	external_function_generic *exfun_jac_u_ode_impl;
 
-	/* casadi functions */
-
-    casadi_function_t vde;
-    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t vde_adj;
-    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t jac;
-    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t hess;
-    void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t impl_ode;
-    void (*eval_impl_res)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
-
-    casadi_function_t impl_jac_x;
-    void (*eval_impl_jac_x)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_xdot;
-    void (*eval_impl_jac_xdot)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_u;
-    void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
     double step;
 
 } sim_in;
