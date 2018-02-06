@@ -228,9 +228,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // extract R
     // blasfeo_unpack_dmat(nvd, nvd, sR, 0, 0, R, nvd);
 
-#if 0
-#endif
-
     // cold start the dual solution with no active constraints
     int warm_start = args->warm_start;
     if (!warm_start) {
@@ -245,22 +242,21 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     int nwsr = args->max_nwsr;
     double cputime = args->max_cputime;
     int return_flag = 0;
-    if (ngd > 0) {  // QProblem
+    if (ngd > 0) {  // QProblem with affine constraints
         QProblemCON(QP, nvd, ngd, HST_POSDEF);
         QProblem_setPrintLevel(QP, PL_MEDIUM);
         QProblem_printProperties(QP);
         return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-            NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
-        //            NULL, NULL, NULL, NULL);
-        //            NULL, NULL, NULL, R);  // to provide Cholesky factor
+            /* primal_sol */ NULL, dual_sol, 
+            /* guessed bounds */ NULL, /* guessed constraints */ NULL, /* R */ NULL);
         QProblem_getPrimalSolution(QP, prim_sol);
         QProblem_getDualSolution(QP, dual_sol);
-    } else {  // QProblemB
+    } else {  // QProblemB with only bounds
         QProblemBCON(QPB, nvd, HST_POSDEF);
         QProblemB_setPrintLevel(QPB, PL_MEDIUM);
         QProblemB_printProperties(QPB);
         return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
-            NULL, dual_sol, NULL, NULL);  // NULL or 0
+            /* primal_sol */ NULL, dual_sol, /* guessed bounds */ NULL, /* R */ NULL);
         QProblemB_getPrimalSolution(QPB, prim_sol);
         QProblemB_getDualSolution(QPB, dual_sol);
     }
@@ -295,19 +291,12 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
             qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
         }
 
-    // return
     // TODO(dimitris): cast qpoases return to acados return
     acados_status = return_flag;
 
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
-
-    // printf("total time = \t\t\t%f\n", 1000*info->total_time);
-    // printf("interface time = \t\t%f\n", 1000*info->interface_time);
-    // printf("qp time = \t\t\t%f\n", 1000*info->solve_QP_time);
-    // printf("total time from qpOASES = \t%f\n", 1000*cputime);  // does not include getSolution
-    // printf("**************\n");
 
     return acados_status;
 }
