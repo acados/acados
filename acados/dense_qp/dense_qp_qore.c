@@ -32,7 +32,8 @@
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
-
+// qore
+#include "qproblem_dense.h"
 
 int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
 {
@@ -69,6 +70,7 @@ void dense_qp_qore_initialize_default_args(void *args_)
     args->warm_strategy = 0;
     args->nsmax = 400;
     args->hot_start = 0;
+    args->max_iter = 100;
 }
 
 
@@ -251,7 +253,8 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
 
     QPDenseSetInt(QP, "maxiter", args->max_iter);
     QPDenseSetInt(QP, "prtfreq", args->print_freq);
-    int qore_status = QPDenseOptimize( QP, lb, ub, g, 0, 0 );
+    QPDenseOptimize( QP, lb, ub, g, 0, 0 );
+    int qore_status = QP->status;
 
     QPDenseGetDblVector( QP, "primalsol", prim_sol );
     QPDenseGetDblVector( QP, "dualsol", dual_sol );
@@ -283,7 +286,7 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     info->num_iter = num_iter;
 
     int acados_status = qore_status;
-    if (qore_status == QPSOLVER_DENSE_OK) acados_status = ACADOS_SUCCESS;
+    if (qore_status == QPSOLVER_DENSE_OPTIMAL) acados_status = ACADOS_SUCCESS;
     if (qore_status == QPSOLVER_DENSE_ITER_LIMIT) acados_status = ACADOS_MAXITER;
     return acados_status;
 }

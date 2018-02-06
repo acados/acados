@@ -51,6 +51,10 @@ target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # to be able to include "acados/header.h"
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
