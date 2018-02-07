@@ -4,6 +4,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <cstdlib>
+#include <cmath>
 
 #include "acados_cpp/ocp_qp.hpp"
 
@@ -12,7 +13,7 @@
 #include "acados_c/options.h"
 
 #include "acados_cpp/hpipm_helper.hpp"
-#include "acados_cpp/pair.hpp"
+#include "acados_cpp/utils.hpp"
 
 namespace acados {
 
@@ -32,7 +33,7 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     if (!is_valid_nu || nbx.size() != expected_size || !is_valid_nbu || ng.size() != expected_size)
         throw std::invalid_argument("All dimensions should have length N+1");
 
-    dim = std::unique_ptr<ocp_qp_dims>(create_ocp_qp_dims(N));
+    auto dim = std::unique_ptr<ocp_qp_dims>(create_ocp_qp_dims(N));
 
     // states
     std::copy_n(std::begin(nx), N+1, dim->nx);
@@ -121,7 +122,7 @@ static ocp_qp_solver_plan string_to_plan(string solver);
 void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
     cached_solver = solver_name;
     ocp_qp_solver_plan plan = string_to_plan(solver_name);
-    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_create_args(&plan, dim.get()), std::free);
+    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_create_args(&plan, qp->dim), std::free);
     
     map<string, option_t *> solver_options;
     auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
@@ -138,27 +139,60 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
         if (!found)
             throw std::invalid_argument("Option " + option_name + " not known.");
     }
-    solver.reset(ocp_qp_create(&plan, dim.get(), args.get()));
+    solver.reset(ocp_qp_create(&plan, qp->dim, args.get()));
 }
 
-// void ocp_qp::fit_bounds() {
-    // vector<vector<double>> lbx = extract("lbx");
-    // vector<vector<double>> ubx = extract("ubx");
-    // vector<vector<double>> lbu = extract("lbu");
-    // vector<vector<double>> ubu = extract("ubu");
-    // for (int i = 0; i <= N; ++i) {
-    //     int nbx = 0;
-    //     for (int j = 0; j < lbx.size(); ++j)
-
-    // }
-// }
+void ocp_qp::squeeze_dimensions() {
+    vector<vector<double>> lbx = extract("lbx");
+    vector<vector<double>> ubx = extract("ubx");
+    vector<vector<double>> lbu = extract("lbu");
+    vector<vector<double>> ubu = extract("ubu");
+    
+    vector<uint> nbx;
+    vector<vector<uint>> idxb;
+    vector<vector<double>> lower_bound, upper_bound;
+    for (int stage = 0; stage <= N; ++stage) {
+        vector<uint> idxb_stage;
+        vector<double> lower_bound_stage, upper_bound_stage;
+        for (int idx = 0; idx < qp->dim->nx[stage]; ++idx) {
+            double lb = lbx.at(stage).at(idx), ub = ubx.at(stage).at(idx);
+            if (lb != -INFINITY || ub != +INFINITY) {
+                // we have a double-sided bound at this index
+                idxb_stage.push_back(idx);
+                lower_bound_stage.push_back(isfinite(lb) ? lb : ACADOS_NEG_INFTY);
+                upper_bound_stage.push_back(isfinite(ub) ? ub : ACADOS_POS_INFTY);
+            }
+        }
+        lower_bound.push_back(lower_bound_stage);
+        upper_bound.push_back(upper_bound_stage);
+        nbx.push_back(idxb_stage.size());
+        idxb.push_back(idxb_stage);
+    }
+    d_change_bounds_dimensions_ocp_qp(qp->dim->nbu, reinterpret_cast<int *>(nbx.data()), qp.get());
+    for (int stage = 0; stage <= N; ++stage) {
+        set("lbx", stage, lower_bound.at(stage));
+        set("ubx", stage, upper_bound.at(stage));
+        set("lbu", stage, lbu.at(stage));
+        set("ubu", stage, ubu.at(stage));
+        state_bounds_indices(stage, idxb.at(stage));
+    }
+    // Re-assign the memory, because the internal structure depends on the dimensions.
+    solver->fcn_ptrs->assign_memory(qp->dim, solver->args, solver->mem);
+}
 
 ocp_qp_solution ocp_qp::solve() {
 
-    // fit_bounds();
+    squeeze_dimensions();
 
-    auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
+    auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(qp->dim));
+
+    std::cout << *this;
+
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
+
+    // expand again
+    d_change_bounds_dimensions_ocp_qp(qp->dim->nu, qp->dim->nx, qp.get());
+
     if (return_code != ACADOS_SUCCESS) {
         if (return_code == ACADOS_MAXITER)
             throw std::runtime_error("QP solver " + cached_solver + " reached maximum number of iterations.");
