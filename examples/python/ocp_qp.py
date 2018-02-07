@@ -23,7 +23,8 @@ qp.set('ubx', 0, x0)
 # solve QP and print solution
 for solver_name in ("sparse_hpipm", "condensing_hpipm", "hpmpc", "qpdunes", "qore", "qpoases"):
     print(solver_name + ": ")
-    output = qp.solve(solver_name)
+    qp.initialize_solver(solver_name)
+    output = qp.solve()
     print(output.states())
     print(output.info())
     print()

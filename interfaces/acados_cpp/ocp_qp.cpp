@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
+#include <cstdlib>
 
 #include "acados_cpp/ocp_qp.hpp"
 
@@ -113,47 +114,43 @@ void ocp_qp::set(string field, vector<double> v) {
 
 static ocp_qp_solver_plan string_to_plan(string solver);
 
-ocp_qp_solution ocp_qp::solve(string solver_name, map<string, option_t *> options) {
-
-    if (cached_solver != solver_name) {
-        cached_solver = solver_name;
-        ocp_qp_solver_plan plan = string_to_plan(solver_name);
-        solver.reset(ocp_qp_create(&plan, dim.get(), ocp_qp_create_args(&plan, dim.get())));
-    }
-
-    solver->fcn_ptrs->initialize_default_args(solver->args);
-
+void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
+    cached_solver = solver_name;
+    ocp_qp_solver_plan plan = string_to_plan(solver_name);
+    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_create_args(&plan, dim.get()), std::free);
+    
     map<string, option_t *> solver_options;
-    solver_options[solver_name] = new option<map<string, option_t *>>(options);
+    auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
+    solver_options[solver_name] = nested_options.get();
 
     auto flattened_options = map<string, option_t *>();
     flatten(solver_options, flattened_options);
 
-    for (auto opt : flattened_options)
-        update_option(opt.first, opt.second);
-    delete solver_options[solver_name];
+    for (auto opt : flattened_options) {
+        string option_name = opt.first;
+        option_t *opt_p = opt.second;
+        bool found = set_option_int(args.get(), option_name.c_str(), std::to_int(opt_p));
+        found |= set_option_double(args.get(), option_name.c_str(), std::to_double(opt_p));
+        if (!found)
+            throw std::invalid_argument("Option " + option_name + " not known.");
+    }
+    solver.reset(ocp_qp_create(&plan, dim.get(), args.get()));
+}
+
+ocp_qp_solution ocp_qp::solve() {
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
     if (return_code != ACADOS_SUCCESS) {
         if (return_code == ACADOS_MAXITER)
-            throw std::runtime_error("QP solver " + solver_name + " reached maximum number of iterations.");
+            throw std::runtime_error("QP solver " + cached_solver + " reached maximum number of iterations.");
         else if (return_code == ACADOS_MINSTEP)
-            throw std::runtime_error("QP solver " + solver_name + " reached minimum step size.");
+            throw std::runtime_error("QP solver " + cached_solver + " reached minimum step size.");
         else
-            throw std::runtime_error("QP solver " + solver_name + " failed with solver-specific error code " + std::to_string(return_code));
+            throw std::runtime_error("QP solver " + cached_solver + " failed with solver-specific error code " + std::to_string(return_code));
     }
     return ocp_qp_solution(std::move(result));
 }
 
-
-void ocp_qp::update_option(string option_name, option_t *opt_p) {
-    bool found = set_option_int(solver->args, option_name.c_str(), std::to_int(opt_p));
-    found |= set_option_double(solver->args, option_name.c_str(), std::to_double(opt_p));
-    // updated |= set_option_int_array(solver.c_str(), solver->args, option.c_str(), std::to_int(opt_p));
-    // updated |= set_option_double_array(solver.c_str(), solver->args, option.c_str(), std::to_int(opt_p));
-    if (!found)
-        throw std::invalid_argument("Option " + option_name + " not known.");
-}
 
 
 void ocp_qp::flatten(map<string, option_t *>& input, map<string, option_t *>& output) {

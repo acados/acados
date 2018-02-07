@@ -32,7 +32,9 @@ public:
     void set(string field, uint stage, vector<double> v);
     void set(string field, vector<double> v);
 
-    ocp_qp_solution solve(string solver_name, map<string, option_t *> options = {});
+    void initialize_solver(string solver_name, map<string, option_t *> options = {});
+
+    ocp_qp_solution solve();
 
     vector< vector<double> > extract(string field);
 
@@ -50,8 +52,6 @@ private:
     void check_range(string field, uint stage);
     
     void check_nb_elements(string, uint stage, uint nb_elems);
-
-    void update_option(string option_name, option_t *opt_p);
 
     void flatten(map<string, option_t *>& input, map<string, option_t *>& output);
 
