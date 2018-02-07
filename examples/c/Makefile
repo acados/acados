@@ -31,6 +31,7 @@ EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
 EXAMPLES += nonlinear_chain_ocp_nlp
 EXAMPLES += sim_erk_wt
+EXAMPLES += sim_gnsf_crane
 
 examples: $(EXAMPLES)
 
@@ -78,6 +79,15 @@ sim_erk_wt: $(WT_OBJS)
 	@echo " Example sim_erk_wt build complete."
 	@echo
 
+
+CRANE_GNSF_OBJS =
+CRANE_GNSF_OBJS += sim_gnsf_crane.o
+
+sim_gnsf_crane: $(CRANE_GNSF_OBJS)
+	$(CCC) -o sim_gnsf_crane.out  $(CRANE_GNSF_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_gnsf_crane build complete."
+	@echo
 
 # sim_irk_crane_yt: $(CRANE_OBJS)
 # 	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
