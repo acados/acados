@@ -3,90 +3,18 @@
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
+#include <cstdlib>
 
 #include "acados_cpp/ocp_qp.hpp"
 
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp.h"
+#include "acados_c/options.h"
 
-namespace std {
-    std::string to_string(std::pair<uint, uint> p) {
-        return "( " + std::to_string(p.first) + ", " + std::to_string(p.second) + " )";
-    }
-}
+#include "acados_cpp/hpipm_helper.hpp"
+#include "acados_cpp/pair.hpp"
 
 namespace acados {
-
-static ocp_qp_solver_plan string_to_plan(string solver, map<string, option_t> options) {
-
-    ocp_qp_solver_plan plan;
-
-    if (solver == "hpipm") {
-        if (options.count("condensing") || options.count("full_condensing"))
-            plan.qp_solver = FULL_CONDENSING_HPIPM;
-        else
-            plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-    } else if (solver == "hpmpc") {
-        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
-    } else if (solver == "ooqp") {
-        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
-    } else if (solver == "qpdunes") {
-        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
-    } else if (solver == "qpoases") {
-        plan.qp_solver = FULL_CONDENSING_QPOASES;
-    } else if (solver == "qore") {
-        plan.qp_solver = FULL_CONDENSING_QORE;
-    } else {
-        throw std::invalid_argument("Solver not known.");
-    }
-    return plan;
-}
-
-#define num_rows_Q(stage, dim) (dim->nx[stage])
-
-#define num_cols_Q(stage, dim) (dim->nx[stage])
-
-#define num_rows_S(stage, dim) (dim->nu[stage])
-
-#define num_cols_S(stage, dim) (dim->nx[stage])
-
-#define num_rows_R(stage, dim) (dim->nu[stage])
-
-#define num_cols_R(stage, dim) (dim->nu[stage])
-
-#define num_elems_q(stage, dim) (dim->nx[stage])
-
-#define num_elems_r(stage, dim) (dim->nu[stage])
-
-#define num_rows_A(stage, dim) (dim->nx[stage+1])
-
-#define num_cols_A(stage, dim) (dim->nx[stage])
-
-#define num_rows_B(stage, dim) (dim->nx[stage+1])
-
-#define num_cols_B(stage, dim) (dim->nu[stage])
-
-#define num_elems_b(stage, dim) (dim->nx[stage+1])
-
-#define num_elems_lbx(stage, dim) (dim->nbx[stage])
-
-#define num_elems_lbu(stage, dim) (dim->nbu[stage])
-
-#define num_elems_ubx(stage, dim) (dim->nbx[stage])
-
-#define num_elems_ubu(stage, dim) (dim->nbu[stage])
-
-#define num_rows_C(stage, dim) (dim->ng[stage])
-
-#define num_cols_C(stage, dim) (dim->nx[stage])
-
-#define num_rows_D(stage, dim) (dim->ng[stage])
-
-#define num_cols_D(stage, dim) (dim->nu[stage])
-
-#define num_elems_lg(stage, dim) (dim->ng[stage])
-
-#define num_elems_ug(stage, dim) (dim->ng[stage])
 
 ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, 
              std::vector<uint> nbu, std::vector<uint> ng) : N(nx.size()-1), qp(nullptr), solver(nullptr) {
@@ -105,7 +33,7 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     std::copy_n(std::begin(nx), N+1, dim->nx);
 
     // controls
-    if (nu.size() == N) nu.at(N) = 0;
+    if (nu.size() == (N+1)) nu.at(N) = 0;
     std::copy_n(std::begin(nu), N+1, dim->nu);
 
     // bounds
@@ -134,7 +62,7 @@ ocp_qp::ocp_qp(uint N, uint nx, uint nu, uint nbx, uint nbu, uint ng)
     : ocp_qp(std::vector<uint>(N+1, nx), std::vector<uint>(N+1, nu), std::vector<uint>(N+1, nbx),
       std::vector<uint>(N+1, nbu), std::vector<uint>(N+1, ng)) {}
 
-void ocp_qp::update(std::string field, uint stage, std::vector<double> v) {
+void ocp_qp::set(std::string field, uint stage, std::vector<double> v) {
 
     check_range(field, stage);
     check_nb_elements(field, stage, v.size());
@@ -175,37 +103,74 @@ void ocp_qp::update(std::string field, uint stage, std::vector<double> v) {
         throw std::invalid_argument("OCP QP does not contain field " + field);
 }
 
-void ocp_qp::update(string field, vector<double> v) {
+void ocp_qp::set(string field, vector<double> v) {
     uint last_stage = N;
     if (field == "A" || field == "B" || field == "b")
         last_stage = N-1;
     
     for (uint stage = 0; stage <= last_stage; ++stage)
-        update(field, stage, v);
+        set(field, stage, v);
+}
+
+static ocp_qp_solver_plan string_to_plan(string solver);
+
+void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
+    cached_solver = solver_name;
+    ocp_qp_solver_plan plan = string_to_plan(solver_name);
+    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_create_args(&plan, dim.get()), std::free);
+    
+    map<string, option_t *> solver_options;
+    auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
+    solver_options[solver_name] = nested_options.get();
+
+    auto flattened_options = map<string, option_t *>();
+    flatten(solver_options, flattened_options);
+
+    for (auto opt : flattened_options) {
+        string option_name = opt.first;
+        option_t *opt_p = opt.second;
+        bool found = set_option_int(args.get(), option_name.c_str(), std::to_int(opt_p));
+        found |= set_option_double(args.get(), option_name.c_str(), std::to_double(opt_p));
+        if (!found)
+            throw std::invalid_argument("Option " + option_name + " not known.");
+    }
+    solver.reset(ocp_qp_create(&plan, dim.get(), args.get()));
+}
+
+ocp_qp_solution ocp_qp::solve() {
+    auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
+    int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
+    if (return_code != ACADOS_SUCCESS) {
+        if (return_code == ACADOS_MAXITER)
+            throw std::runtime_error("QP solver " + cached_solver + " reached maximum number of iterations.");
+        else if (return_code == ACADOS_MINSTEP)
+            throw std::runtime_error("QP solver " + cached_solver + " reached minimum step size.");
+        else
+            throw std::runtime_error("QP solver " + cached_solver + " failed with solver-specific error code " + std::to_string(return_code));
+    }
+    return ocp_qp_solution(std::move(result));
 }
 
 
-ocp_qp_solution ocp_qp::solve(string solver_name, map<string, acados::option_t> options) {
 
-    if (solver == nullptr) {
-        ocp_qp_solver_plan plan = string_to_plan(solver_name, options);
-
-        solver = std::unique_ptr<ocp_qp_solver>(ocp_qp_create(&plan, dim.get(),
-                                                    ocp_qp_create_args(&plan, dim.get())));
+void ocp_qp::flatten(map<string, option_t *>& input, map<string, option_t *>& output) {
+    for (auto opt : input) {
+        if (opt.second->nested()) {
+            for (auto nested_opt : *opt.second) {
+                input.erase(opt.first);
+                input[opt.first + "." + nested_opt.first] = nested_opt.second;
+                flatten(input, output);
+            }
+        } else {
+            output[opt.first] = opt.second;
+        }
     }
-
-    auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
-    int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
-    if (return_code != 0)
-        throw std::runtime_error("qp solver failed with error code " + std::to_string(return_code));
-    return ocp_qp_solution(std::move(result));
-
 }
 
 void ocp_qp::state_bounds_indices(uint stage, vector<uint> v) {
     uint nb_state_bounds = qp->dim->nbx[stage];
     if (nb_state_bounds != v.size())
-        throw std::invalid_argument("I need " + std::to_string(nb_state_bounds) + "indices.");
+        throw std::invalid_argument("I need " + std::to_string(nb_state_bounds) + " indices.");
     for (uint i = 0; i < nb_state_bounds; ++i)
         qp->idxb[stage][qp->dim->nbu[stage]+i] = qp->dim->nu[stage]+v.at(i);
 }
@@ -213,13 +178,13 @@ void ocp_qp::state_bounds_indices(uint stage, vector<uint> v) {
 void ocp_qp::control_bounds_indices(uint stage, vector<uint> v) {
     uint nb_control_bounds = qp->dim->nbu[stage];
     if (nb_control_bounds != v.size())
-        throw std::invalid_argument("I need " + std::to_string(nb_control_bounds) + "indices.");
+        throw std::invalid_argument("I need " + std::to_string(nb_control_bounds) + " indices.");
     for (uint i = 0; i < nb_control_bounds; ++i)
         qp->idxb[stage][i] = v.at(i);
 }
 
 
-std::map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
+map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
         {"Q", d_cvt_ocp_qp_to_colmaj_Q},
         {"S", d_cvt_ocp_qp_to_colmaj_S},
         {"R", d_cvt_ocp_qp_to_colmaj_R},
@@ -359,6 +324,30 @@ static bool match(std::pair<uint, uint> dims, uint nb_elems) {
 void ocp_qp::check_nb_elements(std::string field, uint stage, uint nb_elems) {
     if (!match(dimensions(field, stage), nb_elems))
         throw std::invalid_argument("Need " + std::to_string(dimensions(field, stage)) + " elements.");
+}
+
+ocp_qp_solver_plan string_to_plan(string solver) {
+
+    ocp_qp_solver_plan plan;
+
+    if (solver == "condensing_hpipm") {
+        plan.qp_solver = FULL_CONDENSING_HPIPM;
+    } else if (solver == "sparse_hpipm") {
+        plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    } else if (solver == "hpmpc") {
+        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    } else if (solver == "ooqp") {
+        plan.qp_solver = PARTIAL_CONDENSING_OOQP;
+    } else if (solver == "qpdunes") {
+        plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
+    } else if (solver == "qpoases") {
+        plan.qp_solver = FULL_CONDENSING_QPOASES;
+    } else if (solver == "qore") {
+        plan.qp_solver = FULL_CONDENSING_QORE;
+    } else {
+        throw std::invalid_argument("Solver not known.");
+    }
+    return plan;
 }
 
 }  // namespace acados

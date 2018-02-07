@@ -29,10 +29,12 @@ public:
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
 
-    void update(string field, uint stage, vector<double> v);
-    void update(string field, vector<double> v);
+    void set(string field, uint stage, vector<double> v);
+    void set(string field, vector<double> v);
 
-    ocp_qp_solution solve(string solver_name, map<string, option_t> options = {});
+    void initialize_solver(string solver_name, map<string, option_t *> options = {});
+
+    ocp_qp_solution solve();
 
     vector< vector<double> > extract(string field);
 
@@ -51,6 +53,8 @@ private:
     
     void check_nb_elements(string, uint stage, uint nb_elems);
 
+    void flatten(map<string, option_t *>& input, map<string, option_t *>& output);
+
     vector<uint> nx() const;
     vector<uint> nu() const;
     vector<uint> nbx() const;
@@ -60,6 +64,8 @@ private:
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
+
+    std::string cached_solver;
 
     std::unique_ptr<ocp_qp_dims> dim;
 

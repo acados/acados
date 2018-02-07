@@ -17,6 +17,27 @@
  *
  */
 
+%include "std_map.i";
+
+%typemap(in) std::map<std::string, acados::option_t *> {
+    std::map<std::string, acados::option_t *> tmp;
+#if defined(SWIGMATLAB)
+    for (int i = 0; i < num_elems($input); ++i) {
+        const char *key = mxGetFieldNameByNumber($input, i);
+        mxArray *value = mxGetField($input, 0, key);
+        tmp[std::string(key)] = acados::as_option_ptr(value);
+    }
+#elif defined(SWIGPYTHON)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next($input, &pos, &key, &value)) {
+        if (!PyUnicode_Check(key))
+            throw std::invalid_argument("Key must be a string");
+        tmp[std::string(PyUnicode_AsUTF8AndSize(key, NULL))] = acados::as_option_ptr(value);
+    }
+#endif
+    $1 = tmp;
+}
 
 %typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
 #if defined(SWIGMATLAB)
@@ -76,9 +97,9 @@
     PyObject *dict = PyDict_New();
     PyDict_SetItemString(dict, fields[0], PyLong_FromLong($1.num_iter));
     PyDict_SetItemString(dict, fields[1], PyFloat_FromDouble($1.solve_QP_time));
-    PyDict_SetItemString(dict, fields[2], PyLong_FromDouble($1.condensing_time));
-    PyDict_SetItemString(dict, fields[3], PyLong_FromDouble($1.interface_time));
-    PyDict_SetItemString(dict, fields[4], PyLong_FromDouble($1.total_time));
+    PyDict_SetItemString(dict, fields[2], PyFloat_FromDouble($1.condensing_time));
+    PyDict_SetItemString(dict, fields[3], PyFloat_FromDouble($1.interface_time));
+    PyDict_SetItemString(dict, fields[4], PyFloat_FromDouble($1.total_time));
     $result = dict;
 #endif
 }

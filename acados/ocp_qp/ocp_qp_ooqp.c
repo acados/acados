@@ -672,9 +672,6 @@ int_t ocp_qp_ooqp(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memor
     ocp_qp_ooqp_memory *mem = (ocp_qp_ooqp_memory *)memory_;
     ocp_qp_ooqp_workspace *work = (ocp_qp_ooqp_workspace *)work_;
 
-    int return_value;
-    // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
-
     if (0) print_inputs(mem);
 
     // NOTE: has to be called after setting up the memory which contains the problem dimensions
@@ -683,6 +680,7 @@ int_t ocp_qp_ooqp(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memor
 
     // TODO(dimitris): implement dense OOQP
     // call sparse OOQP
+    int ooqp_status;
     qpsolvesp(mem->c, mem->nx,
         mem->irowQ, mem->nnzQ, mem->jcolQ, mem->dQ,
         mem->xlow, mem->ixlow, mem->xupp, mem->ixupp,
@@ -691,12 +689,15 @@ int_t ocp_qp_ooqp(const ocp_qp_in *in, ocp_qp_out *out, void *args_, void *memor
         mem->irowC, mem->nnzC, mem->jcolC, mem->dC,
         mem->clow, mem->mz, mem->iclow, mem->cupp, mem->icupp,
         work->x, work->gamma, work->phi, work->y, work->z, work->lambda, work->pi,
-        &work->objectiveValue, args->printLevel, &return_value);
+        &work->objectiveValue, args->printLevel, &ooqp_status);
 
     if (0) print_outputs(mem, work, return_value);
     fill_in_qp_out(in, out, work);
 
-    return return_value;
+    int acados_status = ooqp_status;
+    if (ooqp_status == SUCCESSFUL_TERMINATION) acados_status = ACADOS_SUCCESS;
+    if (ooqp_status == MAX_ITS_EXCEEDED) acados_status = ACADOS_MAXITER;
+    return acados_status;
 }
 
 void ocp_qp_ooqp_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work) {
