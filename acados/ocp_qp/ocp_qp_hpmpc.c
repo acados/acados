@@ -176,12 +176,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
-
     acados_tic(&tot_timer);
-    acados_tic(&interface_timer);
-
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
 
     // loop index
     int ii, jj;
@@ -242,6 +237,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     struct blasfeo_dvec hsdlam[N+1];  // to be checked
     struct blasfeo_dvec hsdt[N+1];
     struct blasfeo_dvec hslamt[N+1];  // to be checked
+
+    acados_tic(&interface_timer);
 
 	// qp_in loop
     for ( ii = 0; ii < N; ii++ ) {
@@ -473,10 +470,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
     hpmpc_args->out_iter = kk;
 
-    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
-    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
-
-
 	// restore sign of upper bounds
 	for(int jj = 0; jj <=N; jj++) {
 		blasfeo_dvecsc(nb[jj], -1.0, &hsd[jj], nb[jj] + ng[jj]);
@@ -487,6 +480,9 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = kk;
 
-	// return
+    int acados_status = hpmpc_status;
+    if (hpmpc_status == 0) acados_status = ACADOS_SUCCESS;
+    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
+    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
     return acados_status;
 }
