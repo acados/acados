@@ -377,6 +377,25 @@ int main() {
 	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************
+    * config
+    ************************************************/
+
+	// set up function pointers struct
+	ocp_nlp_solver_fcn_ptrs nlp_fcn_ptrs;
+
+	// cost: least squares
+	nlp_fcn_ptrs.cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
+	nlp_fcn_ptrs.cost_assign = &ocp_nlp_cost_ls_assign;
+
+	// dynamics: ERK
+	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
+	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_erk_assign;
+
+	// constraitns
+	nlp_fcn_ptrs.constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
+	nlp_fcn_ptrs.constraints_assign = &ocp_nlp_constraints_assign;
+
+    /************************************************
     * ocp_nlp_dims
     ************************************************/
 
@@ -401,8 +420,8 @@ int main() {
     * dynamics
     ************************************************/
 
-	external_function_casadi forw_vde_casadi[NN];
-	external_function_casadi jac_ode_casadi[NN];
+	external_function_casadi forw_vde_casadi[NN]; // XXX varible size array
+	external_function_casadi jac_ode_casadi[NN]; // XXX varible size array
 
 	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi);
 
@@ -413,7 +432,7 @@ int main() {
     * nonlinear least squares
     ************************************************/
 
-	external_function_casadi ls_cost_jac_casadi[NN+1];
+	external_function_casadi ls_cost_jac_casadi[NN+1]; // XXX varible size array
 
 	select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
 
@@ -424,7 +443,7 @@ int main() {
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d);
+    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d, &nlp_fcn_ptrs);
 
 //	ocp_nlp_dims_print(nlp_in->dims);
 
