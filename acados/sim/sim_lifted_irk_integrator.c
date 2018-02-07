@@ -163,7 +163,7 @@ void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void **submodules_, 
         args->submodules.jacobian_ode = NULL;
     }
 
-    assert((char *)raw_memory + sim_lifted_irk_integrator_calculate_args_size(dims, submodules_) >= c_ptr);
+    assert((char *)raw_memory + sim_lifted_irk_integrator_calculate_args_size(dims, *submodules_) >= c_ptr);
 
     // Update submodules pointer
     *submodules_ = (void *) &(args->submodules);

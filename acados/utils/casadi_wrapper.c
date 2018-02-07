@@ -95,7 +95,7 @@ void *casadi_wrapper_assign_args(external_function_dims *dims, void **submodules
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    assert((char*)raw_memory + casadi_wrapper_calculate_args_size(dims, submodules_) == c_ptr);
+    assert((char*)raw_memory + casadi_wrapper_calculate_args_size(dims, *submodules_) == c_ptr);
 
     // Update submodules pointer
     *submodules_ = NULL;
@@ -110,7 +110,8 @@ void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, v
     casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
     casadi_wrapper_args *dest;
 
-    dest = casadi_wrapper_assign_args(dims, NULL, raw_memory);
+    void *submodules = NULL;
+    dest = casadi_wrapper_assign_args(dims, &submodules, raw_memory);
 
     dest->fun = source->fun;
 

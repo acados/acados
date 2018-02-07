@@ -94,7 +94,11 @@ int external_function_calculate_args_size(external_function_fcn_ptrs *fcn_ptrs, 
 
 void *external_function_assign_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *raw_memory)
 {
-    return fcn_ptrs->assign_args(dims, fcn_ptrs->submodules, raw_memory);
+    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
+
+    fcn_ptrs->initialize_default_args(args);
+
+    return args;
 }
 
 
@@ -157,11 +161,11 @@ external_function *external_function_assign(external_function_fcn_ptrs *fcn_ptrs
     ext_fun->args = external_function_copy_args(fcn_ptrs, dims, c_ptr, args_);
     c_ptr += external_function_calculate_args_size(fcn_ptrs, dims);
 
-    ext_fun->mem = ext_fun->fcn_ptrs->assign_memory(dims, args_, c_ptr);
+    ext_fun->mem = fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += ext_fun->fcn_ptrs->calculate_memory_size(dims, args_);
 
     ext_fun->work = (void *) c_ptr;
-    c_ptr += ext_fun->fcn_ptrs->calculate_workspace_size(dims, args_);
+    c_ptr += fcn_ptrs->calculate_workspace_size(dims, args_);
 
     assert((char*)raw_memory + external_function_calculate_size(fcn_ptrs, dims, args_) == c_ptr);
 

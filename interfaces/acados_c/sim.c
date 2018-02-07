@@ -90,7 +90,11 @@ int sim_calculate_args_size(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims)
 
 void *sim_assign_args(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *raw_memory)
 {
-    return fcn_ptrs->assign_args(dims, fcn_ptrs->submodules, raw_memory);
+    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
+
+    fcn_ptrs->initialize_default_args(dims, args);
+
+    return args;
 }
 
 
@@ -152,11 +156,11 @@ sim_solver *sim_assign(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *args
     solver->args = sim_copy_args(fcn_ptrs, dims, c_ptr, args_);
     c_ptr += sim_calculate_args_size(fcn_ptrs, dims);
 
-    solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
-    c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);
+    solver->mem = fcn_ptrs->assign_memory(dims, args_, c_ptr);
+    c_ptr += fcn_ptrs->calculate_memory_size(dims, args_);
 
     solver->work = (void *) c_ptr;
-    c_ptr += solver->fcn_ptrs->calculate_workspace_size(dims, args_);
+    c_ptr += fcn_ptrs->calculate_workspace_size(dims, args_);
 
     assert((char*)raw_memory + sim_calculate_size(fcn_ptrs, dims, args_) == c_ptr);
 

@@ -166,7 +166,7 @@ void *sim_erk_integrator_assign_args(sim_dims *dims, void **submodules_, void *r
         args->submodules.hess_vde = NULL;
     }
 
-    assert((char*)raw_memory + sim_erk_integrator_calculate_args_size(dims, submodules_) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_integrator_calculate_args_size(dims, *submodules_) >= c_ptr);
 
     // Update submodules pointer
     *submodules_ = (void *) &(args->submodules);
@@ -625,7 +625,7 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
 
             acados_tic(&timer_ad);
             compute_forward_vde(nx, nu, np, rhs_forw_in, K_traj+s*nX, args, memory, workspace);
-            timing_ad += acados_toc(&timer_ad)*1000;
+            timing_ad += acados_toc(&timer_ad);
         }
         
         for (s = 0; s < num_stages; s++){
@@ -715,7 +715,7 @@ int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *
                 S_hess_out[i] = adj_tmp[nx + nu + i];
         }
     }
-    out->info->CPUtime = acados_toc(&timer)*1000;
+    out->info->CPUtime = acados_toc(&timer);
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
     return 0;  // success
