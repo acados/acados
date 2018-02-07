@@ -214,7 +214,7 @@ int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims)
 
 	size += sizeof(ocp_nlp_dynamics_erk);
 
-	size += 3*(N+1)*sizeof(external_function_generic *); // forw_vde, adj_vde, jac_ode
+	size += 3*N*sizeof(external_function_generic *); // forw_vde, adj_vde, jac_ode
 
 	size += 8; // initial align
 
@@ -260,6 +260,26 @@ ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_
 
 
 
+void ocp_nlp_dynamics_erk_to_sim_in(ocp_nlp_dynamics_erk *dynamics, sim_in **sim)
+{
+
+	int ii;
+
+	int N = dynamics->dims->N;
+
+	for (ii=0; ii<N; ii++)
+	{
+		sim[ii]->forw_vde_expl = dynamics->forw_vde[ii];
+		sim[ii]->adj_vde_expl = dynamics->adj_vde[ii];
+		sim[ii]->jac_ode_expl = dynamics->jac_ode[ii];
+	}
+
+	return;
+
+}
+
+
+
 /* IRK */
 
 int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims)
@@ -274,7 +294,7 @@ int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims)
 
 	size += sizeof(ocp_nlp_dynamics_irk);
 
-	size += 4*(N+1)*sizeof(external_function_generic *); // ode, jac_x, jac_xdot, jac_u
+	size += 4*N*sizeof(external_function_generic *); // ode, jac_x, jac_xdot, jac_u
 
 	size += 8; // initial align
 
@@ -315,9 +335,109 @@ ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_
 	dynamics->jac_u = (external_function_generic **) c_ptr;
 	c_ptr += N*sizeof(external_function_generic *);
 
-    assert((char *) raw_memory + ocp_nlp_dynamics_erk_calculate_size(dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dynamics_irk_calculate_size(dims) >= c_ptr);
 
 	return dynamics;
+
+}
+
+
+
+void ocp_nlp_dynamics_irk_to_sim_in(ocp_nlp_dynamics_irk *dynamics, sim_in **sim)
+{
+
+	int ii;
+
+	int N = dynamics->dims->N;
+
+	for (ii=0; ii<N; ii++)
+	{
+		sim[ii]->ode_impl = dynamics->ode[ii];
+		sim[ii]->jac_x_ode_impl = dynamics->jac_x[ii];
+		sim[ii]->jac_xdot_ode_impl = dynamics->jac_xdot[ii];
+		sim[ii]->jac_u_ode_impl = dynamics->jac_u[ii];
+	}
+
+	return;
+
+}
+
+
+
+/* lifted IRK */
+
+int ocp_nlp_dynamics_lifted_irk_calculate_size(ocp_nlp_dims *dims)
+{
+	// loop index
+	int ii;
+
+	// extract dims
+	int N = dims->N;
+
+	int size = 0;
+
+	size += sizeof(ocp_nlp_dynamics_lifted_irk);
+
+	size += 2*N*sizeof(external_function_generic *); // forw_vde, jac_ode
+
+	size += 8; // initial align
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+ocp_nlp_dynamics_lifted_irk *ocp_nlp_dynamics_lifted_irk_assign(ocp_nlp_dims *dims, void *raw_memory)
+{
+	
+    char *c_ptr = (char *) raw_memory;
+
+	// extract sizes
+    int N = dims->N;
+
+	// struct
+    ocp_nlp_dynamics_lifted_irk *dynamics = (ocp_nlp_dynamics_lifted_irk *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_lifted_irk);
+
+	// dims
+	dynamics->dims = dims;
+
+	// dynamics
+	// forw_vde
+	dynamics->forw_vde = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+	// adj_vde
+//	dynamics->adj_vde = (external_function_generic **) c_ptr;
+//	c_ptr += N*sizeof(external_function_generic *);
+	// jac_ode
+	dynamics->jac_ode = (external_function_generic **) c_ptr;
+	c_ptr += N*sizeof(external_function_generic *);
+
+    assert((char *) raw_memory + ocp_nlp_dynamics_lifted_irk_calculate_size(dims) >= c_ptr);
+
+	return dynamics;
+
+}
+
+
+
+void ocp_nlp_dynamics_lifted_irk_to_sim_in(ocp_nlp_dynamics_lifted_irk *dynamics, sim_in **sim)
+{
+
+	int ii;
+
+	int N = dynamics->dims->N;
+
+	for (ii=0; ii<N; ii++)
+	{
+		sim[ii]->forw_vde_expl = dynamics->forw_vde[ii];
+		sim[ii]->jac_ode_expl = dynamics->jac_ode[ii];
+	}
+
+	return;
 
 }
 

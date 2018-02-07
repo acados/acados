@@ -114,6 +114,15 @@ typedef struct
 	external_function_generic **jac_u;
 } ocp_nlp_dynamics_irk;
 
+/* lifted IRK */
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO dynamics dims ???
+	external_function_generic **forw_vde;
+	external_function_generic **jac_ode;
+} ocp_nlp_dynamics_lifted_irk;
+
 
 
 /************************************************
@@ -222,6 +231,7 @@ typedef struct
 	// dynamics
 	int (*dynamics_calculate_size) (ocp_nlp_dims *); // calculate size
 	void *(*dynamics_assign) (ocp_nlp_dims *, void *); // assign
+	void (*dynamics_to_sim_in) (void *, sim_in **);
 
 	// constraints
 	int (*constraints_calculate_size) (ocp_nlp_dims *); // calculate size
@@ -292,6 +302,8 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_erk_to_sim_in(ocp_nlp_dynamics_erk *dynamics, sim_in **sim);
 
 /* IRK */
 
@@ -299,6 +311,17 @@ ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_
 int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_irk_to_sim_in(ocp_nlp_dynamics_irk *dynamics, sim_in **sim);
+
+/* lifted IRK */
+
+//
+int ocp_nlp_dynamics_lifted_irk_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_dynamics_lifted_irk *ocp_nlp_dynamics_lifted_irk_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_lifted_irk_to_sim_in(ocp_nlp_dynamics_lifted_irk *dynamics, sim_in **sim);
 
 /************************************************
 * constraints

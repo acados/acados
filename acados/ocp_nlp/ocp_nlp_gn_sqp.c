@@ -788,7 +788,7 @@ static void update_variables(const ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *ar
 
 
 // Simple fixed-step Gauss-Newton based SQP routine
-int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_)
+int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_, ocp_nlp_solver_fcn_ptrs *fcn_ptrs)
 {
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) work_;
     ocp_nlp_gn_sqp_cast_workspace(work, mem, args);
@@ -802,17 +802,14 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     sim_rk_opts *sim_opts;
 
     // set up integrators
-	ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) nlp_in->dynamics;
+
+	// copy function pointers
+	fcn_ptrs->dynamics_to_sim_in(nlp_in->dynamics, work->sim_in);
+
     for (int ii = 0; ii < N; ii++)
     {
         sim_opts = args->sim_solvers_args[ii];
         work->sim_in[ii]->step = sim_opts->interval/sim_opts->num_steps;
-
-		// external function
-        work->sim_in[ii]->forw_vde_expl = dynamics->forw_vde[ii];
-        work->sim_in[ii]->adj_vde_expl = dynamics->adj_vde[ii];
-        work->sim_in[ii]->jac_ode_expl = dynamics->jac_ode[ii];
-		// TODO others
 
         // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!
         for (int jj = 0; jj < nx[ii+1] * (nx[ii] + nu[ii]); jj++)

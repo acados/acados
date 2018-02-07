@@ -380,6 +380,13 @@ int main() {
     * config
     ************************************************/
 
+    // choose QP solver
+    ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
+//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
+
+    // set up args with nested structs
+    sim_solver_t sim_solver_names[NN];
+
 	// set up function pointers struct
 	ocp_nlp_solver_fcn_ptrs nlp_fcn_ptrs;
 
@@ -387,9 +394,28 @@ int main() {
 	nlp_fcn_ptrs.cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
 	nlp_fcn_ptrs.cost_assign = &ocp_nlp_cost_ls_assign;
 
+#define DYN_ERK
+
+#ifdef DYN_ERK
 	// dynamics: ERK
 	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
 	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_erk_assign;
+	nlp_fcn_ptrs.dynamics_to_sim_in = &ocp_nlp_dynamics_erk_to_sim_in;
+    for (int ii = 0; ii < NN; ii++)
+    {
+        sim_solver_names[ii] = ERK;
+    }
+
+#else
+	// dynamics: lifted IRK
+	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_lifted_irk_calculate_size;
+	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_lifted_irk_assign;
+	nlp_fcn_ptrs.dynamics_to_sim_in = &ocp_nlp_dynamics_lifted_irk_to_sim_in;
+    for (int ii = 0; ii < NN; ii++)
+    {
+        sim_solver_names[ii] = LIFTED_IRK;
+    }
+#endif
 
 	// constraitns
 	nlp_fcn_ptrs.constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
@@ -523,7 +549,11 @@ int main() {
 
 
 	/* explicit ode */
+#ifdef DYN_ERK
 	ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) nlp_in->dynamics;
+#else
+	ocp_nlp_dynamics_lifted_irk *dynamics = (ocp_nlp_dynamics_lifted_irk *) nlp_in->dynamics;
+#endif
 	for (int i=0; i<NN; i++)
 		dynamics->forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
 	for (int i=0; i<NN; i++)
@@ -633,18 +663,9 @@ int main() {
     * gn_sqp args
     ************************************************/
 
-    // choose QP solver
-    ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
-//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
-
-    // set up args with nested structs
-    sim_solver_t sim_solver_names[NN];
     int num_stages[NN];
-
     for (int ii = 0; ii < NN; ii++)
     {
-        sim_solver_names[ii] = LIFTED_IRK;
-//        sim_solver_names[ii] = ERK;
         num_stages[ii] = 4;
     }
 
@@ -702,7 +723,7 @@ int main() {
 		}
 
 		// call nlp solver
-        status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work);
+        status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work, &nlp_fcn_ptrs);
     }
 
     double time = acados_toc(&timer)/NREP;
