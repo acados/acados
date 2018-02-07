@@ -80,11 +80,12 @@ typedef struct {
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
     int (*calculate_args_size)(sim_dims *dims, void *submodules);
-    void *(*assign_args)(sim_dims *dims, void *submodules, void *raw_memory);
+    void *(*assign_args)(sim_dims *dims, void **submodules, void *raw_memory);
     void (*initialize_default_args)(sim_dims *dims, void *args);
     int (*calculate_memory_size)(sim_dims *dims, void *args);
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
+    void *submodules;
 } sim_solver_fcn_ptrs;
 
 

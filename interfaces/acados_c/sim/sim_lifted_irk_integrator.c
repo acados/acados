@@ -29,8 +29,8 @@ void *sim_lifted_irk_integrator_copy_args(sim_solver_config *config, sim_dims *d
     sim_lifted_irk_integrator_args *dest;
 
     sim_lifted_irk_integrator_submodules submodules = {
-        *(source->forward_vde),
-        *(source->jacobian_ode)
+        source->forward_vde,
+        source->jacobian_ode
     };
 
     dest = sim_lifted_irk_integrator_assign_args(dims, &submodules, raw_memory);

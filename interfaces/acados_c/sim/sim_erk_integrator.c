@@ -31,9 +31,9 @@ void *sim_erk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, vo
     sim_erk_integrator_args *dest;
 
     sim_erk_integrator_submodules submodules = {
-        *(source->forward_vde),
-        *(source->adjoint_vde),
-        *(source->hess_vde)
+        source->forward_vde,
+        source->adjoint_vde,
+        source->hess_vde
     };
 
     dest = sim_erk_integrator_assign_args(dims, &submodules, raw_memory);
