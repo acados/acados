@@ -105,6 +105,24 @@ void *casadi_wrapper_assign_args(external_function_dims *dims, void **submodules
 
 
 
+void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_)
+{
+    casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
+    casadi_wrapper_args *dest;
+
+    dest = casadi_wrapper_assign_args(dims, NULL, raw_memory);
+
+    dest->fun = source->fun;
+
+    dest->dims = source->dims;
+
+    dest->sparsity = source->sparsity;
+    
+    return (void *)dest;
+}
+
+
+
 void casadi_wrapper_initialize_default_args(void *args_)
 {
     casadi_wrapper_args *args = (casadi_wrapper_args *)args_;

@@ -29,7 +29,11 @@ extern "C" {
 #include "acados_c/external_function.h"
 
 //
-void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_);
+// void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_);
+//
+int casadi_wrapper_calculate_submodules_size(external_function_config *config, external_function_dims *dims);
+//
+void *casadi_wrapper_assign_submodules(external_function_config *config, external_function_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */

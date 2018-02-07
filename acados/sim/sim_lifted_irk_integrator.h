@@ -125,9 +125,11 @@ typedef struct {
 
 
 //
-int sim_lifted_irk_integrator_calculate_args_size(sim_dims *dims, void **submodules_);
+int sim_lifted_irk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
 //
 void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void **submodules_, void *raw_memory);
+//
+void *sim_lifted_irk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
 //
 void sim_lifted_irk_integrator_initialize_default_args(sim_dims *dims, void *args_);
 //
