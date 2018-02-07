@@ -21,11 +21,16 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
 
     if (N <= 0) throw std::invalid_argument("Number of stages must be positive");
 
+    if (nu.at(N) != 0 || nbu.at(N) != 0) {
+        nu.at(N) = 0;
+        nbu.at(N) = 0;
+    }
+
     uint expected_size = nx.size();
     bool is_valid_nu = (nu.size() == expected_size || nu.size() == expected_size-1);
-    if (!is_valid_nu || nbx.size() != expected_size || nbu.size() != expected_size
-        || ng.size() != expected_size)
-            throw std::invalid_argument("Number of stages should be N");
+    bool is_valid_nbu = (nbu.size() == expected_size || nbu.size() == expected_size-1);
+    if (!is_valid_nu || nbx.size() != expected_size || !is_valid_nbu || ng.size() != expected_size)
+        throw std::invalid_argument("All dimensions should have length N+1");
 
     dim = std::unique_ptr<ocp_qp_dims>(create_ocp_qp_dims(N));
 
@@ -33,7 +38,6 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     std::copy_n(std::begin(nx), N+1, dim->nx);
 
     // controls
-    if (nu.size() == (N+1)) nu.at(N) = 0;
     std::copy_n(std::begin(nu), N+1, dim->nu);
 
     // bounds
@@ -137,7 +141,22 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
     solver.reset(ocp_qp_create(&plan, dim.get(), args.get()));
 }
 
+// void ocp_qp::fit_bounds() {
+    // vector<vector<double>> lbx = extract("lbx");
+    // vector<vector<double>> ubx = extract("ubx");
+    // vector<vector<double>> lbu = extract("lbu");
+    // vector<vector<double>> ubu = extract("ubu");
+    // for (int i = 0; i <= N; ++i) {
+    //     int nbx = 0;
+    //     for (int j = 0; j < lbx.size(); ++j)
+
+    // }
+// }
+
 ocp_qp_solution ocp_qp::solve() {
+
+    // fit_bounds();
+
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dim.get()));
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
     if (return_code != ACADOS_SUCCESS) {

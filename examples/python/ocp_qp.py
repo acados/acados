@@ -3,7 +3,7 @@ from numpy import array, diag, inf
 
 from acados import ocp_qp
 
-qp = ocp_qp(N=5, nx=2, nu=1, nbx=2)
+qp = ocp_qp(N=5, nx=2, nu=1)
 
 # specify OCP
 qp.set('A', array([[0, 1], [0, 0]]))
@@ -14,6 +14,9 @@ qp.set('R', diag([1]))
 # specify bounds
 qp.set("lbx", array([0.5, 0.5]))
 qp.set("ubx", array([2, 2]))
+
+qp.set("lbu", array([-100]))
+qp.set("ubu", array([+100]))
 
 # specify initial condition
 x0 = array([1, 1])
