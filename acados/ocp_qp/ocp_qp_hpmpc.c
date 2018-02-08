@@ -36,6 +36,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/mem.h"
 
 
 int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
@@ -253,7 +254,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 		blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 		blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
     }
-   
+
     ii = N;
 	// ocp_in loop
     blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
@@ -263,16 +264,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 	// temporarily invert sign of upper bounds
 	blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
-   	
-	// dmat loop	
-	for ( ii = 0; ii < N; ii++ ) 
+
+	// dmat loop
+	for ( ii = 0; ii < N; ii++ )
 		assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-   
+
     ii = N;
 	// dmat loop
 	assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-   	
-	// dvec loop	
+
+	// dvec loop
 	for ( ii = 0; ii < N; ii++ ) {
 
         // initialize hsdux to primal input later usx will be subtracted
@@ -315,7 +316,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     }
 
     ii = N;
-	// dvec loop	
+	// dvec loop
 	// initialize hsdux to primal input later usx will be subtracted
     blasfeo_create_dvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
     blasfeo_pack_dvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
@@ -349,7 +350,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hsdt[ii], ptr_memory);
     ptr_memory += (&hsdt[ii])->memsize;
 
-    
+
 	real_t sigma_mu = hpmpc_args->sigma_mu;
 
     int nuM;
