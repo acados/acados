@@ -46,7 +46,7 @@
 #endif
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-#define NREP 1
+#define NREP 100
 
 #include "./mass_spring.c"
 
