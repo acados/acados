@@ -85,71 +85,47 @@ external_function_out *create_external_function_out(external_function_dims *dims
 
 
 
-int external_function_calculate_args_size(external_function_config *config, external_function_dims *dims)
+int external_function_calculate_args_size(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims)
 {
-    external_function_fcn_ptrs fcn_ptrs;
-
-    set_external_function_fcn_ptrs(config, &fcn_ptrs);
-
-    int size = fcn_ptrs.calculate_args_size(dims, NULL);
-
-    return size;
+    return fcn_ptrs->calculate_args_size(dims, fcn_ptrs->submodules);
 }
 
 
 
-void *external_function_assign_args(external_function_config *config, external_function_dims *dims, void *raw_memory)
+void *external_function_assign_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *raw_memory)
 {
-    external_function_fcn_ptrs fcn_ptrs;
+    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
 
-    set_external_function_fcn_ptrs(config, &fcn_ptrs);
-
-    void *args = fcn_ptrs.assign_args(dims, NULL, raw_memory);
-
-    fcn_ptrs.initialize_default_args(args);
+    fcn_ptrs->initialize_default_args(args);
 
     return args;
 }
 
 
 
-void *external_function_create_args(external_function_config *config, external_function_dims *dims)
+void *external_function_create_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims)
 {
-    int bytes = external_function_calculate_args_size(config, dims);
+    int bytes = external_function_calculate_args_size(fcn_ptrs, dims);
 
     void *ptr = malloc(bytes);
 
-    void *args = external_function_assign_args(config, dims, ptr);
+    void *args = external_function_assign_args(fcn_ptrs, dims, ptr);
 
     return args;
 }
 
 
 
-void *external_function_copy_args(external_function_config  *config, external_function_dims *dims, void *raw_memory, void *source)
+void *external_function_copy_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *raw_memory, void *source)
 {
-    external_function_t function_type = config->type;
-
-    void *args;
-
-    switch (function_type)
-    {
-        case CASADI_WRAPPER:
-            args = casadi_wrapper_copy_args(config, dims, raw_memory, source);
-            break;
-    }
-
-    return args;
+    return fcn_ptrs->copy_args(dims, raw_memory, source);
 }
 
 
 
-int external_function_calculate_size(external_function_config *config, external_function_dims *dims, void *args_)
+
+int external_function_calculate_size(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *args_)
 {
-    external_function_fcn_ptrs fcn_ptrs;
-
-    set_external_function_fcn_ptrs(config, &fcn_ptrs);
-
     int bytes = 0;
 
     bytes += sizeof(external_function);
@@ -158,18 +134,18 @@ int external_function_calculate_size(external_function_config *config, external_
 
     bytes += external_function_dims_calculate_size(dims->num_inputs, dims->num_outputs);
 
-    bytes += external_function_calculate_args_size(config, dims);
+    bytes += external_function_calculate_args_size(fcn_ptrs, dims);
 
-    bytes += fcn_ptrs.calculate_memory_size(dims, args_);
+    bytes += fcn_ptrs->calculate_memory_size(dims, args_);
 
-    bytes += fcn_ptrs.calculate_workspace_size(dims, args_);
+    bytes += fcn_ptrs->calculate_workspace_size(dims, args_);
 
     return bytes;
 }
 
 
 
-external_function *external_function_assign(external_function_config *config, external_function_dims *dims, void *args_, void *raw_memory)
+external_function *external_function_assign(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *args_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -178,35 +154,38 @@ external_function *external_function_assign(external_function_config *config, ex
 
     ext_fun->fcn_ptrs = (external_function_fcn_ptrs *) c_ptr;
     c_ptr += sizeof(external_function_fcn_ptrs);
-    set_external_function_fcn_ptrs(config, ext_fun->fcn_ptrs);
 
     ext_fun->dims = assign_external_function_dims(dims->num_inputs, dims->num_outputs, c_ptr);
     c_ptr += external_function_dims_calculate_size(dims->num_inputs, dims->num_outputs);
-    external_function_copy_dims(ext_fun->dims, dims);
 
-    ext_fun->args = external_function_copy_args(config, dims, c_ptr, args_);
-    c_ptr += external_function_calculate_args_size(config, dims);
+    ext_fun->args = external_function_copy_args(fcn_ptrs, dims, c_ptr, args_);
+    c_ptr += external_function_calculate_args_size(fcn_ptrs, dims);
 
-    ext_fun->mem = ext_fun->fcn_ptrs->assign_memory(dims, args_, c_ptr);
+    ext_fun->mem = fcn_ptrs->assign_memory(dims, args_, c_ptr);
     c_ptr += ext_fun->fcn_ptrs->calculate_memory_size(dims, args_);
 
     ext_fun->work = (void *) c_ptr;
-    c_ptr += ext_fun->fcn_ptrs->calculate_workspace_size(dims, args_);
+    c_ptr += fcn_ptrs->calculate_workspace_size(dims, args_);
 
-    assert((char*)raw_memory + external_function_calculate_size(config, dims, args_) == c_ptr);
+    assert((char*)raw_memory + external_function_calculate_size(fcn_ptrs, dims, args_) == c_ptr);
+
+    *ext_fun->fcn_ptrs = *fcn_ptrs;
+    ext_fun->fcn_ptrs->submodules = NULL;
+
+    external_function_copy_dims(ext_fun->dims, dims);
 
     return ext_fun;
 }
 
 
 
-external_function *external_function_create(external_function_config *config, external_function_dims *dims, void *args_)
+external_function *external_function_create(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *args_)
 {
-    int bytes = external_function_calculate_size(config, dims, args_);
+    int bytes = external_function_calculate_size(fcn_ptrs, dims, args_);
 
     void *ptr = malloc(bytes);
 
-    external_function *ext_fun = external_function_assign(config, dims, args_, ptr);
+    external_function *ext_fun = external_function_assign(fcn_ptrs, dims, args_, ptr);
 
     return ext_fun;
 }
@@ -216,6 +195,88 @@ external_function *external_function_create(external_function_config *config, ex
 int external_function_eval(external_function *ext_fun, external_function_in *ef_in, external_function_out *ef_out)
 {
     return ext_fun->fcn_ptrs->fun(ef_in, ef_out, ext_fun->args, ext_fun->mem, ext_fun->work);
+}
+
+
+
+int external_function_calculate_submodules_size(external_function_config *config, external_function_dims *dims)
+{
+    int size;
+
+    external_function_t function_type = config->type;
+
+    switch (function_type)
+    {
+        case CASADI_WRAPPER:
+            size = casadi_wrapper_calculate_submodules_size(config, dims);
+            break;
+        default:
+            size = 0;
+    }
+
+    return size;
+}
+
+
+
+void *external_function_assign_submodules(external_function_config *config, external_function_dims *dims, void *raw_memory)
+{
+    void *submodules;
+
+    external_function_t function_type = config->type;
+
+    switch (function_type) {
+        case CASADI_WRAPPER:
+            submodules = casadi_wrapper_assign_submodules(config, dims, raw_memory);
+            break;
+        default:
+            submodules = NULL;
+    }
+
+    return submodules;
+}
+
+
+
+int calculate_external_function_fcn_ptrs_size(external_function_config *config, external_function_dims *dims)
+{
+    int size = sizeof(external_function_fcn_ptrs);
+
+    size += external_function_calculate_submodules_size(config, dims);
+
+    return size;
+}
+
+
+
+void *assign_external_function_fcn_ptrs(external_function_config *config, external_function_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *)raw_memory;
+
+    external_function_fcn_ptrs *fcn_ptrs = (external_function_fcn_ptrs *)c_ptr;
+    c_ptr += sizeof(external_function_fcn_ptrs);
+
+    set_external_function_fcn_ptrs(config, fcn_ptrs);
+
+    fcn_ptrs->submodules = external_function_assign_submodules(config, dims, c_ptr);
+    c_ptr += external_function_calculate_submodules_size(config, dims);
+
+    assert((char*)raw_memory + calculate_external_function_fcn_ptrs_size(config, dims) == c_ptr);
+
+    return (void *)fcn_ptrs;
+}
+
+
+
+void *create_external_function_fcn_ptrs(external_function_config *config, external_function_dims *dims)
+{
+    int bytes = calculate_external_function_fcn_ptrs_size(config, dims);
+
+    void *ptr = malloc(bytes);
+
+    external_function_fcn_ptrs *fcn_ptrs = assign_external_function_fcn_ptrs(config, dims, ptr);
+
+    return fcn_ptrs;
 }
 
 
@@ -232,6 +293,7 @@ int set_external_function_fcn_ptrs(external_function_config *config, external_fu
             fcn_ptrs->fun = &casadi_wrapper;
             fcn_ptrs->calculate_args_size = &casadi_wrapper_calculate_args_size;
             fcn_ptrs->assign_args = &casadi_wrapper_assign_args;
+            fcn_ptrs->copy_args = &casadi_wrapper_copy_args;
             fcn_ptrs->initialize_default_args = &casadi_wrapper_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &casadi_wrapper_calculate_memory_size;
             fcn_ptrs->assign_memory = &casadi_wrapper_assign_memory;

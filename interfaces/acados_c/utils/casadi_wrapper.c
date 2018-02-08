@@ -23,18 +23,32 @@
 
 
 
-void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_)
-{
-    casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
-    casadi_wrapper_args *dest;
+// void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_)
+// {
+//     casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
+//     casadi_wrapper_args *dest;
 
-    dest = casadi_wrapper_assign_args(dims, NULL, raw_memory);
+//     dest = casadi_wrapper_assign_args(dims, NULL, raw_memory);
 
-    dest->fun = source->fun;
+//     dest->fun = source->fun;
 
-    dest->dims = source->dims;
+//     dest->dims = source->dims;
 
-    dest->sparsity = source->sparsity;
+//     dest->sparsity = source->sparsity;
     
-    return (void *)dest;
+//     return (void *)dest;
+// }
+
+
+
+int casadi_wrapper_calculate_submodules_size(external_function_config *config, external_function_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *casadi_wrapper_assign_submodules(external_function_config *config, external_function_dims *dims, void *raw_memory)
+{
+    return NULL;
 }

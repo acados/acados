@@ -29,7 +29,11 @@ extern "C" {
 #include "acados_c/sim.h"
 
 //
-void *sim_erk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_);
+// void *sim_erk_integrator_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source_);
+//
+int sim_erk_integrator_calculate_submodules_size(sim_solver_config *config, sim_dims *dims);
+//
+void *sim_erk_integrator_assign_submodules(sim_solver_config *config, sim_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */

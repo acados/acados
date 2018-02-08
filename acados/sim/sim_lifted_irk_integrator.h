@@ -35,6 +35,13 @@ extern "C" {
 
 
 typedef struct {
+    external_function_fcn_ptrs *forward_vde;
+    external_function_fcn_ptrs *jacobian_ode;
+} sim_lifted_irk_integrator_submodules;
+
+
+
+typedef struct {
     // Options
     double interval;
     int num_stages;
@@ -53,9 +60,8 @@ typedef struct {
     int newton_iter;
     Newton_scheme *scheme;
 
-    // Function pointers
-    external_function_fcn_ptrs *forward_vde;
-    external_function_fcn_ptrs *jacobian_ode;
+    // Submodules
+    sim_lifted_irk_integrator_submodules submodules;
 
     // Arguments for functions
     void *forward_vde_args;
@@ -118,17 +124,12 @@ typedef struct {
 
 
 
-typedef struct {
-    external_function_fcn_ptrs forward_vde;
-    external_function_fcn_ptrs jacobian_ode;
-} sim_lifted_irk_integrator_submodules;
-
-
-
 //
 int sim_lifted_irk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
 //
-void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void *submodules_, void *raw_memory);
+void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void **submodules_, void *raw_memory);
+//
+void *sim_lifted_irk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
 //
 void sim_lifted_irk_integrator_initialize_default_args(sim_dims *dims, void *args_);
 //

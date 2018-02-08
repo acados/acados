@@ -61,7 +61,7 @@ int main() {
 
     sim_solver_config config;
     config.sim_solver = ERK;
-    config.extfun_config.type = CASADI_WRAPPER;
+    config.extfun.type = CASADI_WRAPPER;
 
     sim_dims dims;
     dims.num_stages = num_stages;
@@ -69,7 +69,9 @@ int main() {
     dims.nu = nu;
     dims.np = np;
 
-    void *args = sim_create_args(&config, &dims);
+    sim_solver_fcn_ptrs *fcn_ptrs = create_sim_solver_fcn_ptrs(&config, &dims);
+
+    void *args = sim_create_args(fcn_ptrs, &dims);
     int num_steps = 4;
     bool sens_forw= true;
     bool sens_adj = false;
@@ -137,7 +139,9 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
-    sim_solver *solver = sim_create(&config, &dims, args);
+    sim_solver *solver = sim_create(fcn_ptrs, &dims, args);
+
+    free(fcn_ptrs);
 
     sim_out *out = create_sim_out(&dims);
 

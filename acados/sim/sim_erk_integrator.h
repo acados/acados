@@ -31,6 +31,14 @@ extern "C" {
 
 
 typedef struct {
+    external_function_fcn_ptrs *forward_vde;
+    external_function_fcn_ptrs *adjoint_vde;
+    external_function_fcn_ptrs *hess_vde;
+} sim_erk_integrator_submodules;
+
+
+
+typedef struct {
     // Options
     double interval;
     int num_stages;
@@ -46,10 +54,8 @@ typedef struct {
     bool sens_adj;
     bool sens_hess;
 
-    // Function pointers
-    external_function_fcn_ptrs *forward_vde;
-    external_function_fcn_ptrs *adjoint_vde;
-    external_function_fcn_ptrs *hess_vde;
+    // Submodules
+    sim_erk_integrator_submodules submodules;
 
     // Arguments for functions
     void *forward_vde_args;
@@ -86,18 +92,12 @@ typedef struct {
 
 
 
-typedef struct {
-    external_function_fcn_ptrs forward_vde;
-    external_function_fcn_ptrs adjoint_vde;
-    external_function_fcn_ptrs hess_vde;
-} sim_erk_integrator_submodules;
-
-
-
 //
 int sim_erk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
 //
-void *sim_erk_integrator_assign_args(sim_dims *dims, void *submodules_, void *raw_memory);
+void *sim_erk_integrator_assign_args(sim_dims *dims, void **submodules_, void *raw_memory);
+//
+void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
 //
 void sim_erk_integrator_initialize_default_args(sim_dims *dims, void *args_);
 //

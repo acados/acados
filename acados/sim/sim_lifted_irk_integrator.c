@@ -88,8 +88,14 @@ int sim_lifted_irk_integrator_calculate_args_size(sim_dims *dims, void *submodul
     size += ns*ns * sizeof(double);  // transf2_T
 
     size += 2*sizeof(external_function_fcn_ptrs);
-    size += submodules->forward_vde.calculate_args_size(&sim_lifted_irk_forward_vde_dims, NULL);
-    size += submodules->jacobian_ode.calculate_args_size(&sim_lifted_irk_jacobian_ode_dims, NULL);
+
+    if (submodules->forward_vde != NULL) {
+        size += submodules->forward_vde->calculate_args_size(&sim_lifted_irk_forward_vde_dims, submodules->forward_vde->submodules);
+    }
+
+    if (submodules->jacobian_ode != NULL) {
+        size += submodules->jacobian_ode->calculate_args_size(&sim_lifted_irk_jacobian_ode_dims, submodules->jacobian_ode->submodules);
+    }
 
     make_int_multiple_of(8, &size);
     size += 2 * 8;
@@ -99,9 +105,9 @@ int sim_lifted_irk_integrator_calculate_args_size(sim_dims *dims, void *submodul
 
 
 
-void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void *submodules_, void *raw_memory)
+void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void **submodules_, void *raw_memory)
 {
-    sim_lifted_irk_integrator_submodules *submodules = (sim_lifted_irk_integrator_submodules *) submodules_;
+    sim_lifted_irk_integrator_submodules *submodules = (sim_lifted_irk_integrator_submodules *) *submodules_;
     
     char *c_ptr = (char *)raw_memory;
 
@@ -129,24 +135,84 @@ void *sim_lifted_irk_integrator_assign_args(sim_dims *dims, void *submodules_, v
     assign_double(ns * ns, &args->scheme->transf1_T, &c_ptr);
     assign_double(ns * ns, &args->scheme->transf2_T, &c_ptr);
 
-    args->forward_vde = (external_function_fcn_ptrs *) c_ptr;
-    c_ptr += sizeof(external_function_fcn_ptrs);
+    if (submodules->forward_vde != NULL) {
+        args->submodules.forward_vde = (external_function_fcn_ptrs *)c_ptr;
+        c_ptr += sizeof(external_function_fcn_ptrs);
 
-    args->jacobian_ode = (external_function_fcn_ptrs *) c_ptr;
-    c_ptr += sizeof(external_function_fcn_ptrs);
+        void *forward_vde_submodules = submodules->forward_vde->submodules;
+        args->forward_vde_args = submodules->forward_vde->assign_args(&sim_lifted_irk_forward_vde_dims, &(forward_vde_submodules), c_ptr);
+        c_ptr += submodules->forward_vde->calculate_args_size(&sim_lifted_irk_forward_vde_dims, submodules->forward_vde->submodules);
 
-    *(args->forward_vde) = submodules->forward_vde;
-    args->forward_vde_args = submodules->forward_vde.assign_args(&sim_lifted_irk_forward_vde_dims, NULL, c_ptr);
-    c_ptr += submodules->forward_vde.calculate_args_size(&sim_lifted_irk_forward_vde_dims, NULL);
+        *(args->submodules.forward_vde) = *(submodules->forward_vde);
+        args->submodules.forward_vde->submodules = forward_vde_submodules;
+    } else {
+        args->submodules.forward_vde = NULL;
+    }
 
-    *(args->jacobian_ode) = submodules->jacobian_ode;
-    args->jacobian_ode_args = submodules->jacobian_ode.assign_args(&sim_lifted_irk_jacobian_ode_dims, NULL, c_ptr);
-    c_ptr += submodules->jacobian_ode.calculate_args_size(&sim_lifted_irk_jacobian_ode_dims, NULL);
+    if (submodules->jacobian_ode != NULL) {
+        args->submodules.jacobian_ode = (external_function_fcn_ptrs *)c_ptr;
+        c_ptr += sizeof(external_function_fcn_ptrs);
 
-    assert((char *)raw_memory + sim_lifted_irk_integrator_calculate_args_size(dims, submodules_) >=
-           c_ptr);
+        void *jacobian_ode_submodules = submodules->jacobian_ode->submodules;
+        args->jacobian_ode_args = submodules->jacobian_ode->assign_args(&sim_lifted_irk_jacobian_ode_dims, &(jacobian_ode_submodules), c_ptr);
+        c_ptr += submodules->jacobian_ode->calculate_args_size(&sim_lifted_irk_jacobian_ode_dims, submodules->jacobian_ode->submodules);
+
+        *(args->submodules.jacobian_ode) = *(submodules->jacobian_ode);
+        args->submodules.jacobian_ode->submodules = jacobian_ode_submodules;
+    } else {
+        args->submodules.jacobian_ode = NULL;
+    }
+
+    assert((char *)raw_memory + sim_lifted_irk_integrator_calculate_args_size(dims, *submodules_) >= c_ptr);
+
+    // Update submodules pointer
+    *submodules_ = (void *) &(args->submodules);
 
     return (void *)args;
+}
+
+
+
+void *sim_lifted_irk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_)
+{
+    sim_lifted_irk_integrator_args *source = (sim_lifted_irk_integrator_args *) source_;
+    sim_lifted_irk_integrator_args *dest;
+
+    sim_lifted_irk_integrator_submodules *submodules = &source->submodules;
+
+    dest = sim_lifted_irk_integrator_assign_args(dims, (void **) &submodules, raw_memory);
+
+    dest->interval = source->interval;
+    dest->num_stages = source->num_stages;
+    dest->num_steps = source->num_steps;
+    dest->num_forw_sens = source->num_forw_sens;
+    dest->sens_forw = source->sens_forw;
+    dest->sens_adj = source->sens_adj;
+    dest->sens_hess = source->sens_hess;
+    dest->newton_iter = source->newton_iter;
+
+    int ns = dims->num_stages;
+
+    memcpy(dest->A_mat, source->A_mat, ns*ns*sizeof(double));
+    memcpy(dest->c_vec, source->c_vec, ns*sizeof(double));
+    memcpy(dest->b_vec, source->b_vec, ns*sizeof(double));
+
+    dest->scheme->type = source->scheme->type;
+    dest->scheme->single = source->scheme->single;
+    dest->scheme->freeze = source->scheme->freeze;
+    memcpy(dest->scheme->eig, source->scheme->eig, ns*sizeof(double));
+    memcpy(dest->scheme->transf1, source->scheme->transf1, ns*ns*sizeof(double));
+    memcpy(dest->scheme->transf2, source->scheme->transf2, ns*ns*sizeof(double));
+    memcpy(dest->scheme->transf1_T, source->scheme->transf1_T, ns*ns*sizeof(double));
+    memcpy(dest->scheme->transf2_T, source->scheme->transf2_T, ns*ns*sizeof(double));
+    dest->scheme->low_tria = source->scheme->low_tria;
+
+    extern external_function_dims sim_lifted_irk_forward_vde_dims;
+    extern external_function_dims sim_lifted_irk_jacobian_ode_dims;
+    source->submodules.forward_vde->copy_args(&sim_lifted_irk_forward_vde_dims, dest->forward_vde_args, source->forward_vde_args);
+    source->submodules.jacobian_ode->copy_args(&sim_lifted_irk_jacobian_ode_dims, dest->jacobian_ode_args, source->jacobian_ode_args);
+
+    return (void *)dest;
 }
 
 
@@ -171,8 +237,8 @@ void sim_lifted_irk_integrator_initialize_default_args(sim_dims *dims, void *arg
     args->sens_adj = false;
     args->sens_hess = false;
 
-    args->forward_vde->initialize_default_args(args->forward_vde_args);
-    args->jacobian_ode->initialize_default_args(args->jacobian_ode_args);
+    args->submodules.forward_vde->initialize_default_args(args->forward_vde_args);
+    args->submodules.jacobian_ode->initialize_default_args(args->jacobian_ode_args);
 }
 
 
@@ -250,9 +316,9 @@ int sim_lifted_irk_integrator_calculate_memory_size(sim_dims *dims, void *args_)
     }
 #endif  // !TRIPLE_LOOP
 
-    size += args->forward_vde->calculate_memory_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
+    size += args->submodules.forward_vde->calculate_memory_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
     
-    size += args->jacobian_ode->calculate_memory_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
+    size += args->submodules.jacobian_ode->calculate_memory_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
 
     size += 2 * 8;
     return size;
@@ -358,11 +424,11 @@ void *sim_lifted_irk_integrator_assign_memory(sim_dims *dims, void *args_, void 
     }
 #endif  // !TRIPLE_LOOP
 
-    memory->forward_vde_mem = args->forward_vde->assign_memory(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args, c_ptr);
-    c_ptr += args->forward_vde->calculate_memory_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
+    memory->forward_vde_mem = args->submodules.forward_vde->assign_memory(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args, c_ptr);
+    c_ptr += args->submodules.forward_vde->calculate_memory_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
 
-    memory->jacobian_ode_mem = args->jacobian_ode->assign_memory(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args, c_ptr);
-    c_ptr += args->jacobian_ode->calculate_memory_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
+    memory->jacobian_ode_mem = args->submodules.jacobian_ode->assign_memory(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args, c_ptr);
+    c_ptr += args->submodules.jacobian_ode->calculate_memory_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
 
     assert((char*)raw_memory + sim_lifted_irk_integrator_calculate_memory_size(dims, args) >= c_ptr);
 
@@ -448,9 +514,9 @@ int sim_lifted_irk_integrator_calculate_workspace_size(sim_dims *dims, void *arg
     size += size_strmat;
 #endif  // !TRIPLE_LOOP
 
-    size += args->forward_vde->calculate_workspace_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
+    size += args->submodules.forward_vde->calculate_workspace_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
     
-    size += args->jacobian_ode->calculate_workspace_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
+    size += args->submodules.jacobian_ode->calculate_workspace_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
 
     return size;
 }
@@ -551,10 +617,10 @@ static void *cast_workspace(sim_dims *dims, void *args_, void *raw_memory)
 #endif  // !TRIPLE_LOOP
 
     work->forward_vde_work = (void *) c_ptr;
-    c_ptr += args->forward_vde->calculate_workspace_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
+    c_ptr += args->submodules.forward_vde->calculate_workspace_size(&sim_lifted_irk_forward_vde_dims, args->forward_vde_args);
 
     work->jacobian_ode_work = (void *) c_ptr;
-    c_ptr += args->jacobian_ode->calculate_workspace_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
+    c_ptr += args->submodules.jacobian_ode->calculate_workspace_size(&sim_lifted_irk_jacobian_ode_dims, args->jacobian_ode_args);
 
     assert((char*)work + sim_lifted_irk_integrator_calculate_workspace_size(dims, args_) >= c_ptr);
 
@@ -599,7 +665,7 @@ static void compute_forward_vde(const int nx, const int nu, const int np, double
     external_function_out fw_vde_out;
     fw_vde_out.outputs = fw_out_outputs;
 
-    args->forward_vde->fun(&fw_vde_in, &fw_vde_out, args->forward_vde_args, mem->forward_vde_mem, work->forward_vde_work);
+    args->submodules.forward_vde->fun(&fw_vde_in, &fw_vde_out, args->forward_vde_args, mem->forward_vde_mem, work->forward_vde_work);
 }
 
 
@@ -634,7 +700,7 @@ static void compute_jacobian_ode(const int nx, const int nu, const int np, doubl
     external_function_out jac_ode_out;
     jac_ode_out.outputs = jac_out_outputs;
 
-    args->forward_vde->fun(&jac_ode_in, &jac_ode_out, args->jacobian_ode_args, mem->jacobian_ode_mem, work->jacobian_ode_work);
+    args->submodules.forward_vde->fun(&jac_ode_in, &jac_ode_out, args->jacobian_ode_args, mem->jacobian_ode_mem, work->jacobian_ode_work);
 }
 
 

@@ -43,7 +43,7 @@ typedef enum {
 
 typedef struct {
     sim_solver_t sim_solver;
-    external_function_config extfun_config;
+    external_function_config extfun;
 } sim_solver_config;
 
 
@@ -66,23 +66,35 @@ sim_in *create_sim_in(sim_dims *dims);
 //
 sim_out *create_sim_out(sim_dims *dims);
 //
-int sim_calculate_args_size(sim_solver_config *config, sim_dims *dims);
+int sim_calculate_args_size(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims);
 //
-void *sim_assign_args(sim_solver_config *config, sim_dims *dims, void *raw_memory);
+void *sim_assign_args(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *raw_memory);
 //
-void *sim_create_args(sim_solver_config *config, sim_dims *dims);
+void *sim_create_args(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims);
 //
-void *sim_copy_args(sim_solver_config *config, sim_dims *dims, void *raw_memory, void *source);
+void *sim_copy_args(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int sim_calculate_size(sim_solver_config *config, sim_dims *dims, void *args_);
+int sim_calculate_size(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *args_);
 //
-sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *args_, void *raw_memory);
+sim_solver *sim_assign(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *args_, void *raw_memory);
 //
-sim_solver *sim_create(sim_solver_config *config, sim_dims *dims, void *args_);
+sim_solver *sim_create(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *args_);
 //
 int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
+
+// OPTIONS BASED CONFIGURATION STRATEGY
+//
+int sim_calculate_submodules_size(sim_solver_config *config, sim_dims *dims);
+//
+void *sim_assign_submodules(sim_solver_config *config, sim_dims *dims, void *raw_memory);
+//
+int calculate_sim_solver_fcn_ptrs_size(sim_solver_config *config, sim_dims *dims);
+//
+void *assign_sim_solver_fcn_ptrs(sim_solver_config *config, sim_dims *dims, void *raw_memory);
+//
+void *create_sim_solver_fcn_ptrs(sim_solver_config *config, sim_dims *dims);
 
 // EXPERT INTERFACE
 //

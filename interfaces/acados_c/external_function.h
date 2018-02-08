@@ -53,23 +53,35 @@ external_function_in *create_external_function_in(external_function_dims *dims);
 //
 external_function_out *create_external_function_out(external_function_dims *dims);
 //
-int external_function_calculate_args_size(external_function_config *config, external_function_dims *dims);
+int external_function_calculate_args_size(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims);
 //
-void *external_function_assign_args(external_function_config *config, external_function_dims *dims, void *raw_memory);
+void *external_function_assign_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *raw_memory);
 //
-void *external_function_create_args(external_function_config *config, external_function_dims *dims);
+void *external_function_create_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims);
 //
-void *external_function_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source);
+void *external_function_copy_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int external_function_calculate_size(external_function_config *config, external_function_dims *dims, void *args_);
+int external_function_calculate_size(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *args_);
 //
-external_function *external_function_assign(external_function_config *config, external_function_dims *dims, void *args_, void *raw_memory);
+external_function *external_function_assign(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *args_, void *raw_memory);
 //
-external_function *external_function_create(external_function_config *config, external_function_dims *dims, void *args_);
+external_function *external_function_create(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *args_);
 //
 int external_function_eval(external_function *ext_fun, external_function_in *ef_in, external_function_out *ef_out);
+
+// OPTIONS BASED CONFIGURATION STRATEGY
+//
+int external_function_calculate_submodules_size(external_function_config *config, external_function_dims *dims);
+//
+void *external_function_assign_submodules(external_function_config *config, external_function_dims *dims, void *raw_memory);
+//
+int calculate_external_function_fcn_ptrs_size(external_function_config *config, external_function_dims *dims);
+//
+void *assign_external_function_fcn_ptrs(external_function_config *config, external_function_dims *dims, void *raw_memory);
+//
+void *create_external_function_fcn_ptrs(external_function_config *config, external_function_dims *dims);
 
 // EXPERT INTERFACE
 //

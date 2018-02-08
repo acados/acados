@@ -53,11 +53,13 @@ typedef struct {
 typedef struct {
     int (*fun)(external_function_in *in, external_function_out *out, void *args, void *mem, void *work);
     int (*calculate_args_size)(external_function_dims *dims, void *submodules);
-    void *(*assign_args)(external_function_dims *dims, void *submodules, void *raw_memory);
+    void *(*assign_args)(external_function_dims *dims, void **submodules, void *raw_memory);
+    void *(*copy_args)(external_function_dims *dims, void *raw_memory, void *source_);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(external_function_dims *dims, void *args);
     void *(*assign_memory)(external_function_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(external_function_dims *dims, void *args);
+    void *submodules;
 } external_function_fcn_ptrs;
 
 
