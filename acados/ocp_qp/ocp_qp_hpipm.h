@@ -32,13 +32,14 @@ extern "C" {
 
 
 
+// TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of arguments to the solver
 typedef struct ocp_qp_hpipm_args_ {
     struct d_ocp_qp_ipm_arg *hpipm_args;
 } ocp_qp_hpipm_args;
 
 
-
+// TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of the solver memory
 typedef struct ocp_qp_hpipm_memory_ {
     struct d_ocp_qp_ipm_workspace *hpipm_workspace;

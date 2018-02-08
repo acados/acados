@@ -26,30 +26,30 @@ import_array();
 #endif
 
 #if defined(SWIGPYTHON)
-%pythoncode %{
-from numpy import copy, copyto
+// %pythoncode %{
+// from numpy import copy, copyto
 
-class sequence_of_arrays(list):
-    def __init__(self):
-        super().__init__()
-    def __init__(self, iterable):
-        super().__init__(iterable)
-    def __getitem__(self, k):
-        return copy(super().__getitem__(k))
-    def __setitem__(self, k, v):
-        try:
-            indices_to_set = range(*k.indices(len(self)))
-        except AttributeError:
-            # k is probably an integer
-            try:
-                indices_to_set = [int(k)]
-            except TypeError:
-                # k is probably tuple
-                indices_to_set = k
-        for index in indices_to_set:
-            copyto(super().__getitem__(index), v)
+// class sequence_of_arrays(list):
+//     def __init__(self):
+//         super().__init__()
+//     def __init__(self, iterable):
+//         super().__init__(iterable)
+//     def __getitem__(self, k):
+//         return copy(super().__getitem__(k))
+//     def __setitem__(self, k, v):
+//         try:
+//             indices_to_set = range(*k.indices(len(self)))
+//         except AttributeError:
+//             # k is probably an integer
+//             try:
+//                 indices_to_set = [int(k)]
+//             except TypeError:
+//                 # k is probably tuple
+//                 indices_to_set = k
+//         for index in indices_to_set:
+//             copyto(super().__getitem__(index), v)
 
-%}
+// %}
 
 %{
 // Global variable for Python module
@@ -325,6 +325,8 @@ bool is_map(const LangObject *object) {
 #if defined(SWIGMATLAB)
     if (!mxIsStruct(object))
         return false;
+    if (mxGetNumberOfElements(object) != 1)
+        return false;
 #elif defined(SWIGPYTHON)
     if (!PyDict_Check(object))
         return false;
@@ -341,6 +343,14 @@ bool has(const LangObject *map, const char *key) {
         return false;
 #endif
     return true;
+}
+
+int num_elems(const LangObject *map) {
+#if defined(SWIGMATLAB)
+    return mxGetNumberOfFields(map);
+#elif defined(SWIGPYTHON)
+    return PyDict_Size((PyObject *) map);
+#endif
 }
 
 LangObject *from(const LangObject *map, const char *key) {
@@ -384,6 +394,26 @@ real_t real_from(const LangObject *map, const char *key) {
 #elif defined(SWIGPYTHON)
     return (real_t) PyFloat_AsDouble(value);
 #endif
+}
+
+bool is_string(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsChar(input);
+#elif defined(SWIGPYTHON)
+    return PyUnicode_Check(input);
+#endif
+}
+
+bool is_boolean(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsLogicalScalar(input);
+#elif defined(SWIGPYTHON)
+    return PyBool_Check(input);
+#endif
+}
+
+bool is_valid_option_type(LangObject *input) {
+    return is_integer(input) || is_real(input) || is_matrix(input) || is_map(input) || is_string(input) || is_boolean(input);
 }
 
 void to(LangObject *sequence, const int_t index, LangObject *item) {
@@ -703,5 +733,27 @@ void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t
         fill_array_from(item, array, array_length);
     }
 }
+
+#include "acados_cpp/options.hpp"
+
+namespace acados {
+
+template<typename T>
+option_t *as_option_ptr(T val) {
+    return new option<T>(val);
+}
+
+template<>
+option_t *as_option_ptr(LangObject *val) {
+    if (is_integer(val))
+        return new option<int>(int_from(val));
+    else if (is_real(val))
+        return new option<double>(real_from(val));
+    else if (is_boolean(val))
+        return new option<bool>(val);
+    else throw std::invalid_argument("Option does not have a valid type");
+}
+
+}  // namespace acados
 
 %}

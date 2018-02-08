@@ -22,13 +22,16 @@ LIBS+=-lqore_dense
 endif
 LIBS+=-lblasfeo -lm -lblas
 
-
+# Comment this out to enable using gprof
+# CFLAGS  += -pg
+# LDFLAGS += -pg
 
 EXAMPLES =
 EXAMPLES += mass_spring_example
 EXAMPLES += sim_erk_crane
 EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
+EXAMPLES += mass_spring_offline_fcond_qpoases_split
 # EXAMPLES += nonlinear_chain_ocp_nlp
 
 examples: $(EXAMPLES)
@@ -40,6 +43,7 @@ RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_sim_erk_crane
 RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
+RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
 # RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 
 run_examples: $(RUN_EXAMPLES)
@@ -91,6 +95,12 @@ mass_spring_fcond_hpipm_split: mass_spring_fcond_hpipm_split.o
 	@echo
 
 
+mass_spring_offline_fcond_qpoases_split: mass_spring_offline_fcond_qpoases_split.o
+	$(CCC) -o mass_spring_offline_fcond_qpoases_split.out mass_spring_offline_fcond_qpoases_split.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example mass_spring_offline_fcond_qpoases_split build complete."
+	@echo
+
 
 CHAIN_OBJS =
 CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
@@ -140,6 +150,11 @@ run_mass_spring_pcond_hpipm_split:
 
 run_mass_spring_fcond_hpipm_split:
 	./mass_spring_fcond_hpipm_split.out
+
+
+
+run_mass_spring_offline_fcond_qpoases_split:
+	./mass_spring_offline_fcond_qpoases_split.out
 
 
 

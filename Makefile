@@ -115,6 +115,10 @@ qore_static: blasfeo_static
 	mkdir -p lib
 	cp $(QORE_PATH)/qp_types.h include/qore/include
 	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore/include
+	cp $(QORE_PATH)/QPSOLVER_DENSE/source/*.h include/qore/include
+	cp $(QORE_PATH)/KKTPACK_DENSE/source/*.h include/qore/include
+	cp $(QORE_PATH)/KKTPACK_DENSE/include/*.h include/qore/include
+	cp $(QORE_PATH)/QPCORE/include/*.h include/qore/include
 	cp $(QORE_PATH)/bin/libqore_dense.a lib
 
 qpdunes_static:

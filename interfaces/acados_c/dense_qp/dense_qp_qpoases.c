@@ -31,6 +31,8 @@ void *dense_qp_qpoases_copy_args(dense_qp_solver_config *config, dense_qp_dims *
     dest->max_cputime = source->max_cputime;
     dest->warm_start = source->warm_start;
     dest->max_nwsr = source->max_nwsr;
+    dest->use_precomputed_cholesky = source->use_precomputed_cholesky;
+    dest->hotstart = source->hotstart;
 
     return (void *)dest;
 }
