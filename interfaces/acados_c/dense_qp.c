@@ -308,6 +308,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_solver
             fcn_ptrs->fun = &dense_qp_hpipm;
             fcn_ptrs->calculate_args_size = &dense_qp_hpipm_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_hpipm_assign_args;
+            fcn_ptrs->copy_args = &dense_qp_hpipm_copy_args;
             fcn_ptrs->initialize_default_args = &dense_qp_hpipm_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &dense_qp_hpipm_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_hpipm_assign_memory;
@@ -318,6 +319,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_solver
             fcn_ptrs->fun = &dense_qp_qore;
             fcn_ptrs->calculate_args_size = &dense_qp_qore_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_qore_assign_args;
+            fcn_ptrs->copy_args = &dense_qp_qore_copy_args;
             fcn_ptrs->initialize_default_args = &dense_qp_qore_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &dense_qp_qore_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_qore_assign_memory;
@@ -330,6 +332,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_solver
             fcn_ptrs->fun = &dense_qp_qpoases;
             fcn_ptrs->calculate_args_size = &dense_qp_qpoases_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_qpoases_assign_args;
+            fcn_ptrs->copy_args = &dense_qp_qpoases_copy_args;
             fcn_ptrs->initialize_default_args = &dense_qp_qpoases_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &dense_qp_qpoases_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_qpoases_assign_memory;
