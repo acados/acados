@@ -113,26 +113,20 @@ using std::string;
 
 %extend acados::ocp_qp {
 
-    ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint nbx = 0, uint nbu = 0, uint ng = 0, bool fix_x0 = true) {
-        if (fix_x0 == false)
-            return new acados::ocp_qp(N, nx, nu, nbx, nbu, ng);
-        vector<uint> nbx_v(N+1, 0);
-        if (nbx == 0)
-            nbx_v.at(0) = nx;
-        else
-            std::fill(std::begin(nbx_v), std::end(nbx_v), nbx);
-        acados::ocp_qp *qp = new acados::ocp_qp(vector<uint>(N+1, nx), vector<uint>(N+1, nu), nbx_v,
-                                  vector<uint>(N+1, nbu), vector<uint>(N+1, ng));
-        for (int i = 0; i <= N; ++i) {
-            std::vector<uint> idx_states(nbx);
-            std::iota(std::begin(idx_states), std::end(idx_states), 0);
-            qp->state_bounds_indices(i, idx_states);
-        }
-        for (int i = 0; i <= N; ++i) {
-            std::vector<uint> idx_controls(nbu);
-            std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
-            qp->control_bounds_indices(i, idx_controls);
-        }
+    ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint ng = 0, bool fix_x0 = true) {
+
+        auto qp = new acados::ocp_qp(N, nx, nu, nx, nu, ng);
+
+        std::vector<uint> idx_states(nx);
+        std::iota(std::begin(idx_states), std::end(idx_states), 0);
+        for (int i = 0; i <= N; ++i)
+            qp->bounds_indices("x", i, idx_states);
+
+        std::vector<uint> idx_controls(nu);
+        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
+        for (int i = 0; i < N; ++i)
+            qp->bounds_indices("u", i, idx_controls);
+
         return qp;
     }
 
