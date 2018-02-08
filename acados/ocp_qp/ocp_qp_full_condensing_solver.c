@@ -67,7 +67,8 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void **submod
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    args->cond_args = ocp_qp_full_condensing_assign_args(dims, NULL, c_ptr);
+    void *fcond_submodules = NULL;
+    args->cond_args = ocp_qp_full_condensing_assign_args(dims, &fcond_submodules, c_ptr);
     c_ptr += ocp_qp_full_condensing_calculate_args_size(dims, NULL);
 
 	align_char_to(8, &c_ptr);
@@ -76,7 +77,7 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void **submod
     args->solver_args = submodules->solver->assign_args(&ddims, &solver_submodules, c_ptr);
     c_ptr += submodules->solver->calculate_args_size(&ddims, submodules->solver->submodules);
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_solver_calculate_args_size(dims, submodules_) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_solver_calculate_args_size(dims, *submodules_) == c_ptr);
 
     // Update submodules' fcn_ptrs
     *(args->submodules.solver) = *(submodules->solver);
@@ -98,7 +99,7 @@ void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *raw_memor
 
     ocp_qp_full_condensing_solver_submodules *submodules = &source->submodules;
 
-    dest = ocp_qp_full_condensing_solver_assign_args(dims, &submodules, raw_memory);
+    dest = ocp_qp_full_condensing_solver_assign_args(dims, (void **)&submodules, raw_memory);
 
     ocp_qp_full_condensing_copy_args(dims, dest->cond_args, source->cond_args);
 

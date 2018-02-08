@@ -24,6 +24,12 @@
 // acados_c
 #include <acados_c/dense_qp.h>
 #include <acados_c/legacy_create.h>
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include <acados/ocp_qp/ocp_qp_full_condensing.h>
 // NOTE(nielsvd): required to cast memory etc. should go.

@@ -60,7 +60,7 @@ void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void **submodules_, void *
     d_create_dense_qp_ipm_arg(dims, args->hpipm_args, c_ptr);
     c_ptr += d_memsize_dense_qp_ipm_arg(dims);
 
-    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims, submodules_) == c_ptr);
+    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims, *submodules_) == c_ptr);
 
     // Update submodules pointer
     *submodules_ = NULL;

@@ -46,7 +46,7 @@
 #endif
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-#define NREP 100
+#define NREP 1
 
 #include "./mass_spring.c"
 
@@ -202,8 +202,6 @@ int main() {
 
             ocp_qp_solver *qp_solver = ocp_qp_create(fcn_ptrs, qp_dims, args);
 
-            free(fcn_ptrs);
-
             int acados_return = 0;
 
             ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
@@ -284,6 +282,7 @@ int main() {
             // if (config.qp_solver >= FULL_CONDENSING_HPIPM) break;
         }
         free(args);
+        free(fcn_ptrs);
     }
 
     free(qp_in);

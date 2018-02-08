@@ -55,7 +55,7 @@ void *dense_qp_qore_assign_args(dense_qp_dims *dims, void **submodules_, void *r
     args = (dense_qp_qore_args *) c_ptr;
     c_ptr += sizeof(dense_qp_qore_args);
 
-    assert((char*)raw_memory + dense_qp_qore_calculate_args_size(dims, submodules_) == c_ptr);
+    assert((char*)raw_memory + dense_qp_qore_calculate_args_size(dims, *submodules_) == c_ptr);
 
     // Update submodules pointer
     *submodules_ = NULL;
