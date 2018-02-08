@@ -67,6 +67,8 @@ typedef struct dense_qp_qpoases_args_ {
     double max_cputime;  // maximum cpu time in seconds
     int max_nwsr;        // maximum number of working set recalculations
     int warm_start;      // warm start with dual_sol in memory
+	int use_precomputed_cholesky;
+	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities) 
 } dense_qp_qpoases_args;
 
 
@@ -91,6 +93,7 @@ typedef struct dense_qp_qpoases_memory_ {
     void *QP;                  // NOTE(giaf): cast to QProblem to use
     double cputime;            // cputime of qpoases
     int nwsr;                  // performed number of working set recalculations
+	int first_it;              // to be used with hotstart
 } dense_qp_qpoases_memory;
 
 
