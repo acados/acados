@@ -45,21 +45,21 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
 
 
 
-int ocp_nlp_calculate_args_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+int ocp_nlp_calculate_args_size(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims)
 {
     return 0;
 }
 
 
 
-void *ocp_nlp_assign_args(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory)
+void *ocp_nlp_assign_args(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *ocp_nlp_create_args(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+void *ocp_nlp_create_args(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims)
 {
     return NULL;
 }
@@ -73,21 +73,21 @@ void *ocp_nlp_copy_args(ocp_nlp_solver_config  *config, ocp_nlp_dims *dims, void
 
 
 
-int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_)
+int ocp_nlp_calculate_size(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_, void *raw_memory)
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_)
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *args_)
 {
     return NULL;
 }
@@ -97,6 +97,41 @@ ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out)
 {
     return 0;
+}
+
+
+
+int ocp_nlp_calculate_submodules_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *ocp_nlp_assign_submodules(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+int calculate_ocp_nlp_solver_fcn_ptrs_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *assign_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+void *create_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+{
+    return NULL;
 }
 
 

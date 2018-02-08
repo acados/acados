@@ -72,23 +72,35 @@ ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
 //
 ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
 //
-int ocp_qp_calculate_args_size(ocp_qp_solver_config *config, ocp_qp_dims *dims);
+int ocp_qp_calculate_args_size(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims);
 //
-void *ocp_qp_assign_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_assign_args(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims, void *raw_memory);
 //
-void *ocp_qp_create_args(ocp_qp_solver_config *config, ocp_qp_dims *dims);
+void *ocp_qp_create_args(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims);
 //
-void *ocp_qp_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source);
+void *ocp_qp_copy_args(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int ocp_qp_calculate_size(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *args_);
+int ocp_qp_calculate_size(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims, void *args_);
 //
-ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *args_, void *raw_memory);
+ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-ocp_qp_solver *ocp_qp_create(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *args_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+
+// OPTIONS BASED CONFIGURATION STRATEGY
+//
+int ocp_qp_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims);
+//
+void *ocp_qp_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory);
+//
+int calculate_ocp_qp_solver_fcn_ptrs_size(ocp_qp_solver_config *config, ocp_qp_dims *dims);
+//
+void *assign_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory);
+//
+void *create_ocp_qp_solver_fcn_ptrs(ocp_qp_solver_config *config, ocp_qp_dims *dims);
 
 // EXPERT INTERFACE
 //

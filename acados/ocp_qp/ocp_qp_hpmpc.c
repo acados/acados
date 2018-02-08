@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -62,7 +63,7 @@ int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 
 
 
-void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory)
+void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     ocp_qp_hpmpc_args *args;
     char *c_ptr = (char *) raw_memory;
@@ -112,7 +113,56 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_m
     }
     args->inf_norm_res = (real_t *) c_ptr;
     c_ptr += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+
+    // Update submodules pointer
+    *submodules_ = NULL;
+
     return (void *)args;
+}
+
+
+
+void *ocp_qp_hpmpc_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
+{
+    ocp_qp_hpmpc_args *source = (ocp_qp_hpmpc_args *)source_;
+    ocp_qp_hpmpc_args *dest;
+
+    void *submodules;
+
+    dest = ocp_qp_hpmpc_assign_args(dims, &submodules, raw_memory);
+
+    dest->tol = source->tol;
+    dest->max_iter = source->max_iter;
+    dest->mu0 = source->mu0;
+    dest->warm_start = source->warm_start;
+    dest->N2 = source->N2;
+    dest->out_iter = source->out_iter;
+    dest->sigma_mu = source->sigma_mu;
+    dest->N = source->N;
+    dest->M = source->M;
+
+    int_t N = dims->N;
+    int_t sz;
+    for (int_t i = 0; i <= N; i++) {
+        sz = (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+        memcpy(dest->ux0[i], source->ux0[i], sz);
+    }
+    for (int_t i = 1; i <= N; i++) {
+        sz = dims->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+        memcpy(dest->pi0[i], source->pi0[i], sz);
+    }
+    for (int_t i = 0; i <= N; i++) {
+        sz = (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+        memcpy(dest->lam0[i], source->lam0[i], sz);
+    }
+    for (int_t i = 0; i <= N; i++) {
+        sz = (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+        memcpy(dest->t0[i], source->t0[i], sz);
+    }
+    sz = 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+    memcpy(dest->inf_norm_res, source->inf_norm_res, sz);
+
+    return (void *)dest;
 }
 
 

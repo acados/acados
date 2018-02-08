@@ -29,7 +29,11 @@ extern "C" {
 #include "acados_c/ocp_qp.h"
 
 //
-void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_);
+// void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_);
+//
+int ocp_qp_full_condensing_solver_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims);
+//
+void *ocp_qp_full_condensing_solver_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */

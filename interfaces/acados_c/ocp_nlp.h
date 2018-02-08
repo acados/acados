@@ -28,7 +28,7 @@ extern "C" {
 #include <acados/ocp_nlp/ocp_nlp_common.h>
 // acados_c
 #include "acados_c/common.h"
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_nlp.h"
 #include "acados_c/sim.h"
 
 typedef enum {
@@ -36,7 +36,7 @@ typedef enum {
 } ocp_nlp_solver_t;
 
 typedef struct {
-    ocp_qp_solver_config *ocp_qp_solver_config;
+    ocp_nlp_solver_config *ocp_nlp_solver_config;
     sim_solver_config **sim_solver_config;
 } ocp_nlp_solver_config;
 
@@ -56,23 +56,35 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims);
 //
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
 //
-int ocp_nlp_calculate_args_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+int ocp_nlp_calculate_args_size(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims);
 //
 void *ocp_nlp_assign_args(ocp_nlp_solver_config  *config, ocp_nlp_dims *dims, void *raw_memory);
 //
-void *ocp_nlp_create_args(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+void *ocp_nlp_create_args(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims);
 //
 void *ocp_nlp_copy_args(ocp_nlp_solver_config  *config, ocp_nlp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_);
+int ocp_nlp_calculate_size(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *args_);
 //
-ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_, void *raw_memory);
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *args_, void *raw_memory);
 //
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_);
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_fcn_ptrs *fcn_ptrs, ocp_nlp_dims *dims, void *args_);
 //
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out);
+
+// OPTIONS BASED CONFIGURATION STRATEGY
+//
+int ocp_nlp_calculate_submodules_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+void *ocp_nlp_assign_submodules(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
+//
+int calculate_ocp_nlp_solver_fcn_ptrs_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+void *assign_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
+//
+void *create_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 
 // EXPERT INTERFACE
 //

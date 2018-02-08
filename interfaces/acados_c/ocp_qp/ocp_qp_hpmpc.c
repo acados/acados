@@ -19,47 +19,59 @@
 
 #include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
 
-#include <string.h>
+
+
+// void *ocp_qp_hpmpc_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
+// {
+//     ocp_qp_hpmpc_args *source = (ocp_qp_hpmpc_args *)source_;
+//     ocp_qp_hpmpc_args *dest;
+
+//     dest = ocp_qp_assign_args(config, dims, raw_memory);
+
+//     dest->tol = source->tol;
+//     dest->max_iter = source->max_iter;
+//     dest->mu0 = source->mu0;
+//     dest->warm_start = source->warm_start;
+//     dest->N2 = source->N2;
+//     dest->out_iter = source->out_iter;
+//     dest->sigma_mu = source->sigma_mu;
+//     dest->N = source->N;
+//     dest->M = source->M;
+
+//     int_t N = dims->N;
+//     int_t sz;
+//     for (int_t i = 0; i <= N; i++) {
+//         sz = (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+//         memcpy(dest->ux0[i], source->ux0[i], sz);
+//     }
+//     for (int_t i = 1; i <= N; i++) {
+//         sz = dims->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+//         memcpy(dest->pi0[i], source->pi0[i], sz);
+//     }
+//     for (int_t i = 0; i <= N; i++) {
+//         sz = (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+//         memcpy(dest->lam0[i], source->lam0[i], sz);
+//     }
+//     for (int_t i = 0; i <= N; i++) {
+//         sz = (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+//         memcpy(dest->t0[i], source->t0[i], sz);
+//     }
+//     sz = 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+//     memcpy(dest->inf_norm_res, source->inf_norm_res, sz);
+
+//     return (void *)dest;
+// }
 
 
 
-void *ocp_qp_hpmpc_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
+int ocp_qp_hpmpc_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims)
 {
-    ocp_qp_hpmpc_args *source = (ocp_qp_hpmpc_args *)source_;
-    ocp_qp_hpmpc_args *dest;
+    return 0;
+}
 
-    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
-    dest->tol = source->tol;
-    dest->max_iter = source->max_iter;
-    dest->mu0 = source->mu0;
-    dest->warm_start = source->warm_start;
-    dest->N2 = source->N2;
-    dest->out_iter = source->out_iter;
-    dest->sigma_mu = source->sigma_mu;
-    dest->N = source->N;
-    dest->M = source->M;
 
-    int_t N = dims->N;
-    int_t sz;
-    for (int_t i = 0; i <= N; i++) {
-        sz = (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
-        memcpy(dest->ux0[i], source->ux0[i], sz);
-    }
-    for (int_t i = 1; i <= N; i++) {
-        sz = dims->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
-        memcpy(dest->pi0[i], source->pi0[i], sz);
-    }
-    for (int_t i = 0; i <= N; i++) {
-        sz = (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
-        memcpy(dest->lam0[i], source->lam0[i], sz);
-    }
-    for (int_t i = 0; i <= N; i++) {
-        sz = (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
-        memcpy(dest->t0[i], source->t0[i], sz);
-    }
-    sz = 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
-    memcpy(dest->inf_norm_res, source->inf_norm_res, sz);
-
-    return (void *)dest;
+void *ocp_qp_hpmpc_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    return NULL;
 }

@@ -21,17 +21,31 @@
 
 
 
-void *ocp_qp_qpdunes_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
+// void *ocp_qp_qpdunes_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
+// {
+//     ocp_qp_qpdunes_args *source = (ocp_qp_qpdunes_args *) source_;
+//     ocp_qp_qpdunes_args *dest;
+
+//     dest = ocp_qp_assign_args(config, dims, raw_memory);
+
+//     dest->options = source->options;
+//     dest->stageQpSolver = source->stageQpSolver;
+//     dest->warmstart = source->warmstart;
+//     dest->isLinearMPC = source->isLinearMPC;
+
+//     return (void *)dest;
+// }
+
+
+
+int ocp_qp_qpdunes_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims)
 {
-    ocp_qp_qpdunes_args *source = (ocp_qp_qpdunes_args *) source_;
-    ocp_qp_qpdunes_args *dest;
+    return 0;
+}
 
-    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
-    dest->options = source->options;
-    dest->stageQpSolver = source->stageQpSolver;
-    dest->warmstart = source->warmstart;
-    dest->isLinearMPC = source->isLinearMPC;
 
-    return (void *)dest;
+void *ocp_qp_qpdunes_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    return NULL;
 }

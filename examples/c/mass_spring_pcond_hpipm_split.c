@@ -102,14 +102,18 @@ int main() {
     ocp_qp_solver_config config;
     config.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    void *arg = ocp_qp_create_args(&config, qp_dims);
+    ocp_qp_solver_fcn_ptrs *fcn_ptrs = create_ocp_qp_solver_fcn_ptrs(&config, qp_dims);
+
+    void *arg = ocp_qp_create_args(fcn_ptrs, qp_dims);
 
     // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)arg)->pcond_args)->N2 = pcond_args->N2;
     ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)arg)->solver_args)->hpipm_args->iter_max = 10;
     ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)arg)->solver_args)->hpipm_args->res_g_max = 1e-8;
 
-    ocp_qp_solver *qp_solver = ocp_qp_create(&config,pcond_args->pcond_dims, arg);
+    ocp_qp_solver *qp_solver = ocp_qp_create(fcn_ptrs,pcond_args->pcond_dims, arg);
+
+    free(fcn_ptrs);
 
 	int acados_return;  // 0 normal; 1 max iter
 

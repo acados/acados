@@ -49,7 +49,10 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_create_arguments(ocp_qp_dims
 {
     int size = ocp_qp_full_condensing_calculate_args_size(dims, submodules_);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_full_condensing_args *args = ocp_qp_full_condensing_assign_args(dims, submodules_, ptr);
+
+    void *submodules = submodules_;
+    ocp_qp_full_condensing_args *args = ocp_qp_full_condensing_assign_args(dims, &submodules, ptr);
+
     return args;
 }
 
@@ -69,8 +72,12 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_create_arguments(ocp_q
 {
     int size = ocp_qp_partial_condensing_calculate_args_size(dims, submodules_);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_partial_condensing_args *args = ocp_qp_partial_condensing_assign_args(dims, submodules_, ptr);
+
+    void *submodules = submodules_;
+    ocp_qp_partial_condensing_args *args = ocp_qp_partial_condensing_assign_args(dims, &submodules, ptr);
+    
     ocp_qp_partial_condensing_initialize_default_args(args);
+    
     return args;
 }
 

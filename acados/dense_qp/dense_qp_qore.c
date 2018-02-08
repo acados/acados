@@ -46,7 +46,7 @@ int dense_qp_qore_calculate_args_size(dense_qp_dims *dims, void *submodules_)
 
 
 
-void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *submodules_, void *raw_memory)
+void *dense_qp_qore_assign_args(dense_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     dense_qp_qore_args *args;
 
@@ -57,7 +57,31 @@ void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *submodules_, void *ra
 
     assert((char*)raw_memory + dense_qp_qore_calculate_args_size(dims, submodules_) == c_ptr);
 
+    // Update submodules pointer
+    *submodules_ = NULL;
+
     return (void *)args;
+}
+
+
+
+void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+{
+    dense_qp_qore_args *source = (dense_qp_qore_args *)source_;
+    dense_qp_qore_args *dest;
+
+    void *submodules;
+
+    dest = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, &submodules, raw_memory);
+
+    dest->print_freq = source->print_freq;
+    dest->warm_start = source->warm_start;
+    dest->warm_strategy = source->warm_strategy;
+    dest->nsmax = source->nsmax;
+    dest->hot_start = source->hot_start;
+    dest->max_iter = source->max_iter;
+
+    return (void *)dest;
 }
 
 

@@ -21,14 +21,28 @@
 
 
 
-void *ocp_qp_hpipm_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
+// void *ocp_qp_hpipm_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, void *source_)
+// {
+//     ocp_qp_hpipm_args *source = (ocp_qp_hpipm_args *) source_;
+//     ocp_qp_hpipm_args *dest;
+
+//     dest = ocp_qp_assign_args(config, dims, raw_memory);
+
+//     *dest->hpipm_args = *source->hpipm_args;
+
+//     return (void *)dest;
+// }
+
+
+
+int ocp_qp_hpipm_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims)
 {
-    ocp_qp_hpipm_args *source = (ocp_qp_hpipm_args *) source_;
-    ocp_qp_hpipm_args *dest;
+    return 0;
+}
 
-    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
-    *dest->hpipm_args = *source->hpipm_args;
 
-    return (void *)dest;
+void *ocp_qp_hpipm_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    return NULL;
 }

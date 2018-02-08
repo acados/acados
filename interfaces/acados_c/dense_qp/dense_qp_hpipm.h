@@ -29,7 +29,11 @@ extern "C" {
 #include "acados_c/dense_qp.h"
 
 //
-void *dense_qp_hpipm_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_);
+// void *dense_qp_hpipm_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_);
+//
+int dense_qp_hpipm_calculate_submodules_size(dense_qp_solver_config *config, dense_qp_dims *dims);
+//
+void *dense_qp_hpipm_assign_submodules(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -45,7 +45,9 @@ typedef struct ocp_qp_partial_condensing_memory_ {
 //
 int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dims *dims, void **submodules_, void *raw_memory);
+//
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_);
 //
 void ocp_qp_partial_condensing_initialize_default_args(ocp_qp_partial_condensing_args *args);
 //

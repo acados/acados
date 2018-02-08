@@ -55,23 +55,35 @@ dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
 //
 dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);
 //
-int dense_qp_calculate_args_size(dense_qp_solver_config *config, dense_qp_dims *dims);
+int dense_qp_calculate_args_size(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims);
 //
-void *dense_qp_assign_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory);
+void *dense_qp_assign_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *raw_memory);
 //
-void *dense_qp_create_args(dense_qp_solver_config *config, dense_qp_dims *dims);
+void *dense_qp_create_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims);
 //
-void *dense_qp_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source);
+void *dense_qp_copy_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int dense_qp_calculate_size(dense_qp_solver_config *config, dense_qp_dims *dims, void *args_);
+int dense_qp_calculate_size(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *args_);
 //
-dense_qp_solver *dense_qp_assign(dense_qp_solver_config *config, dense_qp_dims *dims, void *args_, void *raw_memory);
+dense_qp_solver *dense_qp_assign(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-dense_qp_solver *dense_qp_create(dense_qp_solver_config *config, dense_qp_dims *dims, void *args_);
+dense_qp_solver *dense_qp_create(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *args_);
 //
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
+
+// OPTIONS BASED CONFIGURATION STRATEGY
+//
+int dense_qp_calculate_submodules_size(dense_qp_solver_config *config, dense_qp_dims *dims);
+//
+void *dense_qp_assign_submodules(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory);
+//
+int calculate_dense_qp_solver_fcn_ptrs_size(dense_qp_solver_config *config, dense_qp_dims *dims);
+//
+void *assign_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory);
+//
+void *create_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_dims *dims);
 
 // EXPERT INTERFACE
 //

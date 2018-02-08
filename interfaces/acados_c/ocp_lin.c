@@ -45,49 +45,49 @@ ocp_lin_out *create_ocp_lin_out(ocp_lin_dims *dims)
 
 
 
-int ocp_lin_calculate_args_size(ocp_lin_method_config *config, ocp_lin_dims *dims)
+int ocp_lin_calculate_args_size(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims)
 {
     return 0;
 }
 
 
 
-void *ocp_lin_assign_args(ocp_lin_method_config *config, ocp_lin_dims *dims, void *raw_memory)
+void *ocp_lin_assign_args(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-void *ocp_lin_create_args(ocp_lin_method_config *config, ocp_lin_dims *dims)
+void *ocp_lin_create_args(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims)
 {
     return NULL;
 }
 
 
 
-void *ocp_lin_copy_args(ocp_lin_method_config *config, ocp_lin_dims *dims, void *raw_memory, void *source)
+void *ocp_lin_copy_args(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims, void *raw_memory, void *source)
 {
     return NULL;
 }
 
 
 
-int ocp_lin_calculate_size(ocp_lin_method_config *config, ocp_lin_dims *dims, void *args_)
+int ocp_lin_calculate_size(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-ocp_lin_method *ocp_lin_assign(ocp_lin_method_config *config, ocp_lin_dims *dims, void *args_, void *raw_memory)
+ocp_lin_method *ocp_lin_assign(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims, void *args_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-ocp_lin_method *ocp_lin_create(ocp_lin_method_config *config, ocp_lin_dims *dims, void *args_)
+ocp_lin_method *ocp_lin_create(ocp_lin_method_fcn_ptrs *fcn_ptrs, ocp_lin_dims *dims, void *args_)
 {
     return NULL;
 }
@@ -97,6 +97,41 @@ ocp_lin_method *ocp_lin_create(ocp_lin_method_config *config, ocp_lin_dims *dims
 int ocp_lin_solve(ocp_lin_method *solver, ocp_lin_in *qp_in, ocp_lin_out *qp_out)
 {
     return 0;
+}
+
+
+
+int ocp_lin_calculate_submodules_size(ocp_lin_method_config *config, ocp_lin_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *ocp_lin_assign_submodules(ocp_lin_method_config *config, ocp_lin_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+int calculate_ocp_lin_solver_fcn_ptrs_size(ocp_lin_method_config *config, ocp_lin_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *assign_ocp_lin_solver_fcn_ptrs(ocp_lin_method_config *config, ocp_lin_dims *dims, void *raw_memory)
+{
+    return NULL;
+}
+
+
+
+void *create_ocp_lin_solver_fcn_ptrs(ocp_lin_method_config *config, ocp_lin_dims *dims)
+{
+    return NULL;
 }
 
 

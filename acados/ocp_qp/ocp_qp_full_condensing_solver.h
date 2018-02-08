@@ -31,9 +31,16 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
+
+typedef struct ocp_qp_full_condensing_solver_submodules_ {
+    dense_qp_solver_fcn_ptrs *solver;
+} ocp_qp_full_condensing_solver_submodules;
+
+
+
 typedef struct ocp_qp_full_condensing_solver_args_ {
     ocp_qp_full_condensing_args *cond_args;
-    dense_qp_solver_fcn_ptrs *solver;
+    ocp_qp_full_condensing_solver_submodules submodules;
     void *solver_args;
 } ocp_qp_full_condensing_solver_args;
 
@@ -58,16 +65,12 @@ typedef struct ocp_qp_full_condensing_solver_workspace_ {
 
 
 
-typedef struct ocp_qp_full_condensing_solver_submodules_ {
-    dense_qp_solver_fcn_ptrs qpsol;
-} ocp_qp_full_condensing_solver_submodules;
-
-
-
 //
 int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *submodules_);
 //
-void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *submodules_, void *raw_memory);
+void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void **submodules_, void *raw_memory);
+//
+void *ocp_qp_full_condensing_solver_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_);
 //
 void ocp_qp_full_condensing_solver_initialize_default_args(void *args_);
 //

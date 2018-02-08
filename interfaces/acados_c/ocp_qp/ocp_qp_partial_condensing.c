@@ -21,15 +21,29 @@
 
 
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_)
+// ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_)
+// {
+//     ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
+//     ocp_qp_partial_condensing_args *dest;
+
+//     dest = ocp_qp_assign_args(config, dims, raw_memory);
+
+//     dest->N2 = source->N2;
+//     dest->pcond_dims->N = source->pcond_dims->N;
+
+//     return dest;
+// }
+
+
+
+int ocp_qp_partial_condensing_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims)
 {
-    ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
-    ocp_qp_partial_condensing_args *dest;
+    return 0;
+}
 
-    dest = ocp_qp_assign_args(config, dims, raw_memory);
 
-    dest->N2 = source->N2;
-    dest->pcond_dims->N = source->pcond_dims->N;
 
-    return dest;
+void *ocp_qp_partial_condensing_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    return NULL;
 }

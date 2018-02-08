@@ -43,7 +43,7 @@ int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims, void *submodules_)
 
 
 
-void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *submodules_, void *raw_memory)
+void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     dense_qp_hpipm_args *args;
 
@@ -62,7 +62,26 @@ void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *submodules_, void *r
 
     assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims, submodules_) == c_ptr);
 
+    // Update submodules pointer
+    *submodules_ = NULL;
+
     return (void *)args;
+}
+
+
+
+void *dense_qp_hpipm_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+{
+    dense_qp_hpipm_args *source = (dense_qp_hpipm_args *)source_;
+    dense_qp_hpipm_args *dest;
+
+    void *submodules;
+
+    dest = (dense_qp_hpipm_args *) dense_qp_hpipm_assign_args(dims, &submodules, raw_memory);
+
+    *dest->hpipm_args = *source->hpipm_args;
+
+    return (void *)dest;
 }
 
 
