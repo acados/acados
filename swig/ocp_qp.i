@@ -120,12 +120,12 @@ using std::string;
         std::vector<uint> idx_states(nx);
         std::iota(std::begin(idx_states), std::end(idx_states), 0);
         for (int i = 0; i <= N; ++i)
-            qp->state_bounds_indices(i, idx_states);
+            qp->bounds_indices("x", i, idx_states);
 
         std::vector<uint> idx_controls(nu);
         std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
         for (int i = 0; i < N; ++i)
-            qp->control_bounds_indices(i, idx_controls);
+            qp->bounds_indices("u", i, idx_controls);
 
         return qp;
     }

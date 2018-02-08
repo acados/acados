@@ -12,11 +12,11 @@ namespace std {
 
     template<typename T>
     std::string to_string(std::vector<T> v) {
-        std::string result_string;
+        std::string result_string = " vector of length " + std::to_string(v.size()) + ": [\n ";
         for(auto it : v) {
             result_string += std::to_string(it) + ", ";
         }
-        return result_string;
+        return result_string + "]\n";
     }
 }  // namespace std
 

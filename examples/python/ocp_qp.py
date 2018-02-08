@@ -12,11 +12,11 @@ qp.set('Q', diag([1, 1]))
 qp.set('R', diag([1]))
 
 # specify bounds
-qp.set("lbx", array([0.5, -inf]))
-qp.set("ubx", array([2.0, +inf]))
+# qp.set("lbx", array([0.5, -inf]))
+# qp.set("ubx", array([2.0, +inf]))
 
-qp.set("lbu", array([-100]))
-qp.set("ubu", array([+100]))
+# qp.set("lbu", array([-inf]))
+# qp.set("ubu", array([+inf]))
 
 # specify initial condition
 x0 = array([1, 1])

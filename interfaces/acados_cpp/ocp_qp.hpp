@@ -38,12 +38,13 @@ public:
 
     vector< vector<double> > extract(string field);
 
-    const map<string, vector<uint>> dimensions() const;
+    map<string, vector<uint>> dimensions();
 
     std::pair<uint, uint> dimensions(string field, uint stage);
 
-    void state_bounds_indices(uint stage, vector<uint> v);
-    void control_bounds_indices(uint stage, vector<uint> v);
+    void bounds_indices(std::string name, uint stage, vector<uint> v);
+
+    std::vector<std::vector<uint>> bounds_indices(string name);
 
     const uint N;
 
@@ -51,17 +52,19 @@ private:
     
     void squeeze_dimensions();
 
+    void expand_dimensions();
+
     void check_range(string field, uint stage);
     
     void check_nb_elements(string, uint stage, uint nb_elems);
 
     void flatten(map<string, option_t *>& input, map<string, option_t *>& output);
 
-    vector<uint> nx() const;
-    vector<uint> nu() const;
-    vector<uint> nbx() const;
-    vector<uint> nbu() const;
-    vector<uint> ng() const;
+    vector<uint> nx();
+    vector<uint> nu();
+    vector<uint> nbx();
+    vector<uint> nbu();
+    vector<uint> ng();
 
     std::unique_ptr<ocp_qp_in> qp;
 

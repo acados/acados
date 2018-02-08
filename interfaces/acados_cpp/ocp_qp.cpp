@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <stdexcept>
 #include <cstdlib>
 #include <cmath>
@@ -58,6 +59,17 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     std::copy_n(std::begin(ns), N+1, dim->ns);
 
     qp = std::unique_ptr<ocp_qp_in>(create_ocp_qp_in(dim.get()));
+
+    for (int stage = 0; stage <= N; ++stage) {
+        auto lbx = vector<double>(qp->dim->nbx[stage], -INFINITY);
+        set("lbx", stage, lbx);
+        auto ubx = vector<double>(qp->dim->nbx[stage], +INFINITY);
+        set("ubx", stage, ubx);
+        auto lbu = vector<double>(qp->dim->nbu[stage], -INFINITY);
+        set("lbu", stage, lbu);
+        auto ubu = vector<double>(qp->dim->nbu[stage], +INFINITY);
+        set("ubu", stage, ubu);
+    }
 }
 
 ocp_qp::ocp_qp(map<string, vector<uint>> dims)
@@ -143,19 +155,20 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
 }
 
 void ocp_qp::squeeze_dimensions() {
-    vector<vector<double>> lbx = extract("lbx");
-    vector<vector<double>> ubx = extract("ubx");
-    vector<vector<double>> lbu = extract("lbu");
-    vector<vector<double>> ubu = extract("ubu");
+    auto all_lbx = extract("lbx");
+    auto all_ubx = extract("ubx");
+    auto all_lbu = extract("lbu");
+    auto all_ubu = extract("ubu");
     
-    vector<uint> nbx;
-    vector<vector<uint>> idxb;
-    vector<vector<double>> lower_bound, upper_bound;
+    // States
+    vector<int> nbx;
+    vector<vector<uint>> idxbx;
+    vector<vector<double>> lower_boundx, upper_boundx;
     for (int stage = 0; stage <= N; ++stage) {
         vector<uint> idxb_stage;
         vector<double> lower_bound_stage, upper_bound_stage;
-        for (int idx = 0; idx < qp->dim->nx[stage]; ++idx) {
-            double lb = lbx.at(stage).at(idx), ub = ubx.at(stage).at(idx);
+        for (int idx = 0; idx < dimensions()["nbx"].at(stage); ++idx) {
+            double lb = all_lbx.at(stage).at(idx), ub = all_ubx.at(stage).at(idx);
             if (lb != -INFINITY || ub != +INFINITY) {
                 // we have a double-sided bound at this index
                 idxb_stage.push_back(idx);
@@ -163,21 +176,119 @@ void ocp_qp::squeeze_dimensions() {
                 upper_bound_stage.push_back(isfinite(ub) ? ub : ACADOS_POS_INFTY);
             }
         }
-        lower_bound.push_back(lower_bound_stage);
-        upper_bound.push_back(upper_bound_stage);
+        lower_boundx.push_back(lower_bound_stage);
+        upper_boundx.push_back(upper_bound_stage);
         nbx.push_back(idxb_stage.size());
-        idxb.push_back(idxb_stage);
+        idxbx.push_back(idxb_stage);
     }
-    d_change_bounds_dimensions_ocp_qp(qp->dim->nbu, reinterpret_cast<int *>(nbx.data()), qp.get());
+
+    // Controls
+    vector<int> nbu;
+    vector<vector<uint>> idxbu;
+    vector<vector<double>> lower_boundu, upper_boundu;
     for (int stage = 0; stage <= N; ++stage) {
-        set("lbx", stage, lower_bound.at(stage));
-        set("ubx", stage, upper_bound.at(stage));
-        set("lbu", stage, lbu.at(stage));
-        set("ubu", stage, ubu.at(stage));
-        state_bounds_indices(stage, idxb.at(stage));
+        vector<uint> idxb_stage;
+        vector<double> lower_bound_stage, upper_bound_stage;
+        for (int idx = 0; idx < dimensions()["nbu"].at(stage); ++idx) {
+            double lb = all_lbu.at(stage).at(idx), ub = all_ubu.at(stage).at(idx);
+            if (lb != -INFINITY || ub != +INFINITY) {
+                // we have a double-sided bound at this index
+                idxb_stage.push_back(idx);
+                lower_bound_stage.push_back(isfinite(lb) ? lb : ACADOS_NEG_INFTY);
+                upper_bound_stage.push_back(isfinite(ub) ? ub : ACADOS_POS_INFTY);
+            }
+        }
+        lower_boundu.push_back(lower_bound_stage);
+        upper_boundu.push_back(upper_bound_stage);
+        nbu.push_back(idxb_stage.size());
+        idxbu.push_back(idxb_stage);
+    }
+    d_change_bounds_dimensions_ocp_qp(nbu.data(), nbx.data(), qp.get());
+    for (int stage = 0; stage <= N; ++stage) {
+        set("lbx", stage, lower_boundx.at(stage));
+        set("ubx", stage, upper_boundx.at(stage));
+        bounds_indices("x", stage, idxbx.at(stage));
+        set("lbu", stage, lower_boundu.at(stage));
+        set("ubu", stage, upper_boundu.at(stage));
+        bounds_indices("u", stage, idxbu.at(stage));
     }
     // Re-assign the memory, because the internal structure depends on the dimensions.
     solver->fcn_ptrs->assign_memory(qp->dim, solver->args, solver->mem);
+}
+
+void ocp_qp::expand_dimensions() {
+
+    auto all_lbx = extract("lbx");
+    auto all_ubx = extract("ubx");
+
+    // States
+
+    auto idxbx = bounds_indices("x");
+
+    vector<vector<double>> lower_boundx, upper_boundx;
+    for (int stage = 0; stage <= N; ++stage) {
+        vector<double> lower_bound_stage, upper_bound_stage;
+        int bound_index = 0;
+        for (int state_idx = 0; state_idx < qp->dim->nx[stage]; ++state_idx) {
+            double lb, ub;
+            if (bound_index < qp->dim->nbx[stage] && state_idx == idxbx.at(stage).at(bound_index)) {
+                lb = all_lbx.at(stage).at(bound_index);
+                ub = all_ubx.at(stage).at(bound_index);
+                ++bound_index;
+            } else {
+                lb = -INFINITY;
+                ub = +INFINITY;
+            }
+            lower_bound_stage.push_back(lb);
+            upper_bound_stage.push_back(ub);
+        }
+        lower_boundx.push_back(lower_bound_stage);
+        upper_boundx.push_back(upper_bound_stage);
+    }
+
+    // Controls
+
+    auto all_lbu = extract("lbu");
+    auto all_ubu = extract("ubu");
+
+    auto idxbu = bounds_indices("x");
+
+    vector<vector<double>> lower_boundu, upper_boundu;
+    for (int stage = 0; stage <= N; ++stage) {
+        vector<double> lower_bound_control, upper_bound_control;
+        int bound_index = 0;
+        for (int control_idx = 0; control_idx < qp->dim->nu[stage]; ++control_idx) {
+            double lb, ub;
+            if (bound_index < qp->dim->nbu[stage] && control_idx == idxbu.at(stage).at(bound_index)) {
+                lb = all_lbu.at(stage).at(bound_index);
+                ub = all_ubu.at(stage).at(bound_index);
+                ++bound_index;
+            } else {
+                lb = -INFINITY;
+                ub = +INFINITY;
+            }
+            lower_bound_control.push_back(lb);
+            upper_bound_control.push_back(ub);
+        }
+        lower_boundu.push_back(lower_bound_control);
+        upper_boundu.push_back(upper_bound_control);
+    }
+
+    d_change_bounds_dimensions_ocp_qp(qp->dim->nu, qp->dim->nx, qp.get());
+    
+    for (int stage = 0; stage <= N; ++stage) {
+        set("lbx", stage, lower_boundx.at(stage));
+        set("ubx", stage, upper_boundx.at(stage));
+        vector<uint> idx_states(qp->dim->nx[stage]);
+        std::iota(std::begin(idx_states), std::end(idx_states), 0);
+        bounds_indices("x", stage, idx_states);
+
+        set("lbu", stage, lower_boundu.at(stage));
+        set("ubu", stage, upper_boundu.at(stage));
+        vector<uint> idx_controls(qp->dim->nu[stage]);
+        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
+        bounds_indices("u", stage, idx_controls);
+    }
 }
 
 ocp_qp_solution ocp_qp::solve() {
@@ -186,12 +297,9 @@ ocp_qp_solution ocp_qp::solve() {
 
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(qp->dim));
 
-    std::cout << *this;
-
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
 
-    // expand again
-    d_change_bounds_dimensions_ocp_qp(qp->dim->nu, qp->dim->nx, qp.get());
+    expand_dimensions();
 
     if (return_code != ACADOS_SUCCESS) {
         if (return_code == ACADOS_MAXITER)
@@ -220,22 +328,42 @@ void ocp_qp::flatten(map<string, option_t *>& input, map<string, option_t *>& ou
     }
 }
 
-void ocp_qp::state_bounds_indices(uint stage, vector<uint> v) {
-    uint nb_state_bounds = qp->dim->nbx[stage];
-    if (nb_state_bounds != v.size())
-        throw std::invalid_argument("I need " + std::to_string(nb_state_bounds) + " indices.");
-    for (uint i = 0; i < nb_state_bounds; ++i)
-        qp->idxb[stage][qp->dim->nbu[stage]+i] = qp->dim->nu[stage]+v.at(i);
+vector<vector<uint>> ocp_qp::bounds_indices(string name) {
+    
+    vector<vector<uint>> idxb;
+    if (name == "x") {
+        for (uint stage = 0; stage <= N; ++stage) {
+            int nb_bounds = qp->dim->nbx[stage];
+            idxb.push_back(vector<uint>(nb_bounds));
+            std::copy_n(qp->idxb[stage], nb_bounds, std::begin(idxb.at(stage)));
+        }
+    } else if (name == "u") {
+        for (uint stage = 0; stage <= N; ++stage) {
+            int nb_bounds = qp->dim->nbu[stage];
+            idxb.push_back(vector<uint>(nb_bounds));
+            std::copy_n(qp->idxb[stage], nb_bounds, std::begin(idxb.at(stage)));
+        }
+    } else throw std::invalid_argument("Can only get bounds from x and u, you gave: '" + name + "'.");
+    return idxb;
 }
 
-void ocp_qp::control_bounds_indices(uint stage, vector<uint> v) {
-    uint nb_control_bounds = qp->dim->nbu[stage];
-    if (nb_control_bounds != v.size())
-        throw std::invalid_argument("I need " + std::to_string(nb_control_bounds) + " indices.");
-    for (uint i = 0; i < nb_control_bounds; ++i)
-        qp->idxb[stage][i] = v.at(i);
+void ocp_qp::bounds_indices(string name, uint stage, vector<uint> v) {
+    uint nb_bounds;
+    if (name == "x")
+        nb_bounds = qp->dim->nbx[stage];
+    else if (name == "u")
+        nb_bounds = qp->dim->nbu[stage];
+    else
+        throw std::invalid_argument("Can only set bounds on x and u, you gave: '" + name + "'.");
+    
+    if (nb_bounds != v.size())
+        throw std::invalid_argument("I need " + std::to_string(nb_bounds) + " indices, you gave " + std::to_string(v.size()) + ".");
+    for (uint i = 0; i < nb_bounds; ++i)
+        if (name == "x")
+            qp->idxb[stage][qp->dim->nbu[stage]+i] = qp->dim->nu[stage]+v.at(i);
+        else if (name == "u")
+            qp->idxb[stage][i] = v.at(i);
 }
-
 
 map<string, std::function<void(int, ocp_qp_in *, double *)>> ocp_qp::extract_functions = {
         {"Q", d_cvt_ocp_qp_to_colmaj_Q},
@@ -272,36 +400,36 @@ vector< vector<double> > ocp_qp::extract(std::string field) {
 }
 
 
-const map<string, vector<uint>> ocp_qp::dimensions() const {
+map<string, vector<uint>> ocp_qp::dimensions() {
     return {{"nx", nx()}, {"nu", nu()}, {"nbx", nbx()}, {"nbu", nbu()}, {"ng", ng()}};
 }
 
 
-std::vector<uint> ocp_qp::nx() const {
+std::vector<uint> ocp_qp::nx() {
     std::vector<uint> tmp(N+1);
     std::copy_n(qp->dim->nx, N+1, tmp.begin());
     return tmp;
 }
 
-std::vector<uint> ocp_qp::nu() const {
+std::vector<uint> ocp_qp::nu() {
     std::vector<uint> tmp(N+1);
     std::copy_n(qp->dim->nu, N+1, tmp.begin());
     return tmp;
 }
 
-std::vector<uint> ocp_qp::nbx() const {
+std::vector<uint> ocp_qp::nbx() {
     std::vector<uint> tmp(N+1);
     std::copy_n(qp->dim->nbx, N+1, tmp.begin());
     return tmp;
 }
 
-std::vector<uint> ocp_qp::nbu() const {
+std::vector<uint> ocp_qp::nbu() {
     std::vector<uint> tmp(N+1);
     std::copy_n(qp->dim->nbu, N+1, tmp.begin());
     return tmp;
 }
 
-std::vector<uint> ocp_qp::ng() const {
+std::vector<uint> ocp_qp::ng() {
     std::vector<uint> tmp(N+1);
     std::copy_n(qp->dim->ng, N+1, tmp.begin());
     return tmp;
@@ -376,7 +504,7 @@ static bool match(std::pair<uint, uint> dims, uint nb_elems) {
 
 void ocp_qp::check_nb_elements(std::string field, uint stage, uint nb_elems) {
     if (!match(dimensions(field, stage), nb_elems))
-        throw std::invalid_argument("Need " + std::to_string(dimensions(field, stage)) + " elements.");
+        throw std::invalid_argument("I need " + std::to_string(dimensions(field, stage)) + " elements but got " + std::to_string(nb_elems) + ".");
 }
 
 ocp_qp_solver_plan string_to_plan(string solver) {

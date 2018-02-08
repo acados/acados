@@ -32,8 +32,6 @@
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
-// qore
-#include "qproblem_dense.h"
 
 int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
 {
