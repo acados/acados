@@ -29,39 +29,48 @@ public:
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
 
-    void update(string field, uint stage, vector<double> v);
-    void update(string field, vector<double> v);
+    void set(string field, uint stage, vector<double> v);
+    void set(string field, vector<double> v);
 
-    ocp_qp_solution solve(string solver_name, map<string, option_t> options = {});
+    void initialize_solver(string solver_name, map<string, option_t *> options = {});
+
+    ocp_qp_solution solve();
 
     vector< vector<double> > extract(string field);
 
-    const map<string, vector<uint>> dimensions() const;
+    map<string, vector<uint>> dimensions();
 
     std::pair<uint, uint> dimensions(string field, uint stage);
 
-    void state_bounds_indices(uint stage, vector<uint> v);
-    void control_bounds_indices(uint stage, vector<uint> v);
+    void bounds_indices(std::string name, uint stage, vector<uint> v);
+
+    std::vector<std::vector<uint>> bounds_indices(string name);
 
     const uint N;
 
 private:
     
+    void squeeze_dimensions();
+
+    void expand_dimensions();
+
     void check_range(string field, uint stage);
     
     void check_nb_elements(string, uint stage, uint nb_elems);
 
-    vector<uint> nx() const;
-    vector<uint> nu() const;
-    vector<uint> nbx() const;
-    vector<uint> nbu() const;
-    vector<uint> ng() const;
+    void flatten(map<string, option_t *>& input, map<string, option_t *>& output);
+
+    vector<uint> nx();
+    vector<uint> nu();
+    vector<uint> nbx();
+    vector<uint> nbu();
+    vector<uint> ng();
 
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
 
-    std::unique_ptr<ocp_qp_dims> dim;
+    std::string cached_solver;
 
     static std::map<string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 
