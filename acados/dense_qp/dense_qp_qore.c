@@ -32,8 +32,6 @@
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
-// qore
-#include "qproblem_dense.h"
 
 int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
 {
@@ -251,7 +249,8 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     QPDenseSetInt(QP, "maxiter", args->max_iter);
     QPDenseSetInt(QP, "prtfreq", args->print_freq);
     QPDenseOptimize( QP, lb, ub, g, 0, 0 );
-    int qore_status = QP->status;
+    int qore_status;
+    QPDenseGetInt(QP, "status", &qore_status);
 
     double *prim_sol = memory->prim_sol;
     double *dual_sol = memory->dual_sol;
