@@ -25,27 +25,70 @@ extern "C" {
 #endif
 
 #include "acados/sim/sim_common.h"
+#include "acados/utils/external_function.h"
 #include "acados/utils/types.h"
 
-typedef struct {
 
-} sim_irk_memory;
 
 typedef struct {
+    external_function_fcn_ptrs *impl_res;
+    external_function_fcn_ptrs *impl_jac;
+} sim_irk_integrator_submodules;
 
-    struct d_strmat *JG; // jacobian of G over K (nx*ns, nx*ns)
-    struct d_strmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
-    struct d_strmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
-    struct d_strmat *JFK; // jacobian of F over K (nx, nx*ns) 
-    struct d_strmat *S_forw; // forward sensitivities
 
-    struct d_strvec *rG; // residuals of G (nx*ns)
-    struct d_strvec *K; // internal variables (nx*ns)
-    struct d_strvec *xt; // temporary x
-    struct d_strvec *xn; // x at each integration step
+
+typedef struct {
+    // Options
+    double interval;
+    int num_stages;
+
+    int num_steps;
+    int num_forw_sens;
+
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
+
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+
+    int newton_iter;
+    bool jac_reuse;
+
+    // Submodules
+    sim_irk_integrator_submodules submodules;
+
+    // Arguments for functions
+    void *impl_res_args;
+    void *impl_jac_args;
+} sim_irk_integrator_args;
+
+
+
+typedef struct {
+    // Memory for functions
+    void *impl_res_mem;
+    void *impl_jac_mem;
+} sim_irk_integrator_memory;
+
+
+
+typedef struct {
+
+    struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
+    struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
+    // struct blasfeo_dmat *JFK; // jacobian of F over K (nx, nx*ns) 
+    struct blasfeo_dmat *S_forw; // forward sensitivities
+
+    struct blasfeo_dvec *rG; // residuals of G (nx*ns)
+    struct blasfeo_dvec *K; // internal variables (nx*ns)
+    struct blasfeo_dvec *xt; // temporary x
+    struct blasfeo_dvec *xn; // x at each integration step
     
-    struct d_strvec *lambda; // adjoint seed (nx+nu)
-    struct d_strvec *lambdaK; // auxiliary variable (nx*ns)
+    struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
+    struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
     
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
@@ -54,27 +97,34 @@ typedef struct {
     double *S_adj_w;
     int *ipiv; // index of pivot vector
 
-    struct d_strvec *xn_traj; // xn trajectory
-    struct d_strvec *K_traj;  // K trajectory
-    struct d_strmat *JG_traj; // JG trajectory
+    struct blasfeo_dvec *xn_traj; // xn trajectory
+    struct blasfeo_dvec *K_traj;  // K trajectory
+    struct blasfeo_dmat *JG_traj; // JG trajectory
 
-} sim_irk_workspace;
+    // Workspace for functions
+    void *impl_res_work;
+    void *impl_jac_work;
 
-int sim_irk_opts_calculate_size(sim_dims *dims);
+} sim_irk_integrator_workspace;
 
-void *sim_irk_assign_opts(sim_dims *dims, void *raw_memory);
 
-void sim_irk_initialize_default_args(sim_dims *dims, void *opts_);
 
-int sim_irk_calculate_memory_size(sim_dims *dims, void *opts_);
-
-void *sim_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
-
-void *sim_irk_create_memory(sim_dims *dims, void *opts_);
-
-int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
-
-int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_);
+//
+int sim_irk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
+//
+void *sim_irk_integrator_assign_args(sim_dims *dims, void **submodules_, void *raw_memory);
+//
+void *sim_irk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
+//
+void sim_irk_integrator_initialize_default_args(sim_dims *dims, void *args_);
+//
+int sim_irk_integrator_calculate_memory_size(sim_dims *dims, void *args_);
+//
+void *sim_irk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_memory);
+//
+int sim_irk_integrator_calculate_workspace_size(sim_dims *dims, void *args_);
+//
+int sim_irk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

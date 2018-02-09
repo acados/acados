@@ -34,6 +34,7 @@ extern "C" {
 typedef enum {
     PREVIOUS,
     ERK,
+    IRK,
     LIFTED_IRK
 } sim_solver_t;
 

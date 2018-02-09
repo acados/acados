@@ -57,12 +57,10 @@ CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
 CRANE_OBJS += crane_model/impl_ode.o
-CRANE_OBJS += crane_model/impl_jac_x.o
-CRANE_OBJS += crane_model/impl_jac_xdot.o
-CRANE_OBJS += crane_model/impl_jac_u.o
+CRANE_OBJS += crane_model/impl_jac.o
 
-sim_erk_crane: $(CRANE_OBJS)
-	$(CCC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
+	$(CCC) -o sim_erk_crane.out sim_erk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
