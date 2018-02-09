@@ -133,7 +133,8 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
 
-    int N = dims->N;
+    int M = args->M;
+	int N = dims->N;
     int *nx = (int *) dims->nx;
     int *nu = (int *) dims->nu;
     int *nb = (int *) dims->nb;
@@ -144,12 +145,26 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 
     int ii;
     int_t max_ip_iter = args->max_iter;
-    ws_size = 8 + 5*max_ip_iter*sizeof(double);
+    ws_size = 8 + 6*max_ip_iter*sizeof(double);
     //        ws_size += 1 * (N + 1) * sizeof(int *);  // hidxb_rev
     for (ii = 0; ii <= N; ii++) {
         ws_size += nb[ii]*sizeof(int);  // hidxb_rev
     }
     ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu, nb, dims->nbx, dims->nbu, ng, N2);
+	// allocate memory for partial tighthening by default
+	ws_size += d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
+
+	// extra variables for partial tightening
+	for ( ii = 0; ii < N; ii++ ) { 
+		ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);
+		ws_size += sizeof(double)*(nx[ii+1]);
+	}
+
+    ii = N;
+	ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);
+	ws_size += sizeof(double)*(nx[ii+1]);
+    
+    ws_size += 2*sizeof(double)*(nx[M]+1)*nx[M];
 
     return ws_size;
 
@@ -209,10 +224,13 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     double *stat = (double*)ptr_memory;
     ptr_memory+=sizeof(double)*k_max*6;
 	align_char_to(64, &ptr_memory);
+	ptr_memory = (double *)ptr_memory;
 	int compute_mult = 1;
 
 
-    struct blasfeo_dmat *hsmatdummy = NULL;
+	// common to all implementations (as opposed to 
+	// partial-tigthening specific below)
+	struct blasfeo_dmat *hsmatdummy = NULL;
     struct blasfeo_dvec *hsvecdummy = NULL;
 
     struct blasfeo_dmat hsBAbt[N+1];
@@ -229,14 +247,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     struct blasfeo_dvec hspi[N+1];
     struct blasfeo_dvec hslam[N+1];
     struct blasfeo_dvec hst[N+1];
+
+	struct blasfeo_dvec hsdlam[N+1];  // to be checked
+	struct blasfeo_dvec hsdt[N+1];
+	struct blasfeo_dvec hslamt[N+1];  // to be checked
+
+	// partial tightening-specific
     struct blasfeo_dvec hsPb[N+1];
     struct blasfeo_dmat hsL[N+1];
     //    struct blasfeo_dmat hsLxt[N+1];
     struct blasfeo_dmat hsric_work_mat[2];
-
-    struct blasfeo_dvec hsdlam[N+1];  // to be checked
-    struct blasfeo_dvec hsdt[N+1];
-    struct blasfeo_dvec hslamt[N+1];  // to be checked
 
     acados_tic(&interface_timer);
 
@@ -265,13 +285,18 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
    	
 	// dmat loop	
-	for ( ii = 0; ii < N; ii++ ) 
-		assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-   
+	for ( ii = 0; ii < N; ii++ ) { 
+		// partial tightening-specific
+		blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
+		ptr_memory += (&hsL[ii])->memsize;
+	}
+
     ii = N;
 	// dmat loop
-	assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-   	
+	// partial tightening-specific
+	blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
+	ptr_memory += (&hsL[ii])->memsize;
+	
 	// dvec loop	
 	for ( ii = 0; ii < N; ii++ ) {
 
@@ -296,8 +321,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
         blasfeo_pack_dvec(2*nb[ii]+2*ng[ii], hpmpc_args->t0[ii], &hst[ii], 0);
         ptr_memory += (&hst[ii])->memsize;
 
-        blasfeo_create_dvec(nx[ii+1], &hsPb[ii+1], ptr_memory);
-        ptr_memory += (&hsPb[ii+1])->memsize;
 
         blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hstinv[ii], ptr_memory);
         ptr_memory += (&hstinv[ii])->memsize;
@@ -312,6 +335,10 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
         ptr_memory += (&hsdt[ii])->memsize;
         blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
         ptr_memory += (&hslamt[ii])->memsize;
+	
+		// partial tightening specific	
+		blasfeo_create_dvec(nx[ii+1], &hsPb[ii+1], ptr_memory);
+		ptr_memory += (&hsPb[ii+1])->memsize;
     }
 
     ii = N;
@@ -358,6 +385,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     struct blasfeo_dmat sLxM;
     struct blasfeo_dmat sPpM;
 
+	// partial tightening specific
+
     blasfeo_create_dmat(nx[M]+1, nx[M], &sLxM, ptr_memory);
     ptr_memory += (&sLxM)->memsize;
     blasfeo_create_dmat(nx[M]+1, nx[M], &sPpM, ptr_memory);
@@ -374,7 +403,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     info->interface_time = acados_toc(&interface_timer);
     acados_tic(&qp_timer);
 
-    if (M < N){
+    if (M < N) {
         // update cost function matrices and vectors (box constraints)
         d_update_hessian_gradient_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M], \
           &hsd[M], sigma_mu, &hst[M], &hstinv[M], &hslam[M], &hslamt[M], &hsdlam[M], \
@@ -457,7 +486,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     // copy result to qp_out
     for ( ii = 0; ii < N; ii++ ) {
         blasfeo_dveccp(nx[ii] + nu[ii], &hsux[ii], 0, &qp_out->ux[ii], 0);
-        blasfeo_dveccp(nx[ii], &hspi[ii], 0, &qp_out->pi[ii], 0);
+        blasfeo_dveccp(nx[ii+1], &hspi[ii+1], 0, &qp_out->pi[ii], 0);
         blasfeo_dveccp(2*nb[ii]+2*ng[ii], &hslam[ii], 0, &qp_out->lam[ii], 0);
         blasfeo_dveccp(2*nb[ii]+2*ng[ii], &hst[ii], 0, &qp_out->t[ii], 0);
 
@@ -468,7 +497,10 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     blasfeo_dveccp(2*nb[ii]+2*ng[ii], &hslam[ii], 0, &qp_out->lam[ii], 0);
     blasfeo_dveccp(2*nb[ii]+2*ng[ii], &hst[ii], 0, &qp_out->t[ii], 0);
 
-    hpmpc_args->out_iter = kk;
+	// for (ii=0; ii<N; ii++)
+	// 	blasfeo_print_tran_dvec(nx[ii+1], &qp_out->pi[ii], 0);
+    
+	hpmpc_args->out_iter = kk;
 
 	// restore sign of upper bounds
 	for(int jj = 0; jj <=N; jj++) {
