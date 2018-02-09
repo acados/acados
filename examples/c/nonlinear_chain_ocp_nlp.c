@@ -41,6 +41,7 @@
 #include "acados/utils/external_function_generic.h"
 
 #include "examples/c/chain_model/chain_model.h"
+#include "examples/c/implicit_chain_model/chain_model_impl.h"
 
 // c interface
 #include <acados_c/legacy_create.h>
@@ -55,7 +56,11 @@
 #define NREP 1
 
 
+// process box constraints as general constraints
 #define BC_AS_GC
+
+// dynamics: 0 erk, 1 lifter_irk, 2 irk
+#define DYNAMICS 2
 
 
 enum sensitivities_scheme {
@@ -126,7 +131,7 @@ void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 
 
 
-static void select_dynamics_casadi(int N, int num_free_masses, external_function_casadi *forw_vde, external_function_casadi *jac_ode)
+static void select_dynamics_casadi(int N, int num_free_masses, external_function_casadi *forw_vde, external_function_casadi *jac_ode, external_function_casadi *impl_ode, external_function_casadi *impl_jac_x, external_function_casadi *impl_jac_xdot, external_function_casadi *impl_jac_u)
 {
 	// loop index
 	int ii;
@@ -136,6 +141,7 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 		case 1:
 			for (ii = 0; ii < N; ii++)
 			{
+#if DYNAMICS==0 | DYNAMICS==1
 				forw_vde[ii].casadi_fun = &vde_chain_nm2;
 				forw_vde[ii].casadi_work = &vde_chain_nm2_work;
 				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm2_sparsity_in;
@@ -144,11 +150,30 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				jac_ode[ii].casadi_work = &jac_chain_nm2_work;
 				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm2_sparsity_in;
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm2_sparsity_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm2;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm2_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm2_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm2_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm2;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm2_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm2_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm2_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_xdot_chain_nm2;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_xdot_chain_nm2_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm2_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm2_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_u_chain_nm2;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_u_chain_nm2_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm2_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm2_sparsity_out;
+#endif
 			}
 			break;
 		case 2:
 			for (ii = 0; ii < N; ii++)
 			{
+#if DYNAMICS==0 | DYNAMICS==1
 				forw_vde[ii].casadi_fun = &vde_chain_nm3;
 				forw_vde[ii].casadi_work = &vde_chain_nm3_work;
 				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm3_sparsity_in;
@@ -157,11 +182,30 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				jac_ode[ii].casadi_work = &jac_chain_nm3_work;
 				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm3_sparsity_in;
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm3_sparsity_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm3;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm3_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm3_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm3_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm3;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm3_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm3_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm3_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_xdot_chain_nm3;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_xdot_chain_nm3_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm3_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm3_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_u_chain_nm3;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_u_chain_nm3_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm3_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm3_sparsity_out;
+#endif
 			}
 			break;
 		case 3:
 			for (ii = 0; ii < N; ii++)
 			{
+#if DYNAMICS==0 | DYNAMICS==1
 				forw_vde[ii].casadi_fun = &vde_chain_nm4;
 				forw_vde[ii].casadi_work = &vde_chain_nm4_work;
 				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm4_sparsity_in;
@@ -170,6 +214,24 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				jac_ode[ii].casadi_work = &jac_chain_nm4_work;
 				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm4_sparsity_in;
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm4_sparsity_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm4;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm4_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm4_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm4_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm4;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm4_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm4_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm4_sparsity_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm4;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm4_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm4_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm4_sparsity_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm4;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm4_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm4_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm4_sparsity_out;
+#endif
 			}
 			break;
 		default:
@@ -394,9 +456,7 @@ int main() {
 	nlp_fcn_ptrs.cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
 	nlp_fcn_ptrs.cost_assign = &ocp_nlp_cost_ls_assign;
 
-#define DYN_ERK
-
-#ifdef DYN_ERK
+#if DYNAMICS==0
 	// dynamics: ERK
 	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
 	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_erk_assign;
@@ -406,7 +466,7 @@ int main() {
         sim_solver_names[ii] = ERK;
     }
 
-#else
+#elif DYNAMICS==1
 	// dynamics: lifted IRK
 	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_lifted_irk_calculate_size;
 	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_lifted_irk_assign;
@@ -414,6 +474,15 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = LIFTED_IRK;
+    }
+#else
+	// dynamics: IRK
+	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_irk_calculate_size;
+	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_irk_assign;
+	nlp_fcn_ptrs.dynamics_to_sim_in = &ocp_nlp_dynamics_irk_to_sim_in;
+    for (int ii = 0; ii < NN; ii++)
+    {
+        sim_solver_names[ii] = IRK;
     }
 #endif
 
@@ -446,13 +515,26 @@ int main() {
     * dynamics
     ************************************************/
 
+	// explicit
 	external_function_casadi forw_vde_casadi[NN]; // XXX varible size array
 	external_function_casadi jac_ode_casadi[NN]; // XXX varible size array
+	// implicit
+	external_function_casadi impl_ode_casadi[NN]; // XXX varible size array
+	external_function_casadi impl_jac_x_casadi[NN]; // XXX varible size array
+	external_function_casadi impl_jac_xdot_casadi[NN]; // XXX varible size array
+	external_function_casadi impl_jac_u_casadi[NN]; // XXX varible size array
 
-	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi);
+	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi, impl_ode_casadi, impl_jac_x_casadi, impl_jac_xdot_casadi, impl_jac_u_casadi);
 
+#if DYNAMICS==0 | DYNAMICS==1
 	create_array_external_function_casadi(NN, forw_vde_casadi);
 	create_array_external_function_casadi(NN, jac_ode_casadi);
+#else
+	create_array_external_function_casadi(NN, impl_ode_casadi);
+	create_array_external_function_casadi(NN, impl_jac_x_casadi);
+	create_array_external_function_casadi(NN, impl_jac_xdot_casadi);
+	create_array_external_function_casadi(NN, impl_jac_u_casadi);
+#endif
 
     /************************************************
     * nonlinear least squares
@@ -549,15 +631,29 @@ int main() {
 
 
 	/* explicit ode */
-#ifdef DYN_ERK
+#if DYNAMICS==0
 	ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) nlp_in->dynamics;
-#else
-	ocp_nlp_dynamics_lifted_irk *dynamics = (ocp_nlp_dynamics_lifted_irk *) nlp_in->dynamics;
-#endif
 	for (int i=0; i<NN; i++)
 		dynamics->forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
 	for (int i=0; i<NN; i++)
 		dynamics->jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
+#elif DYNAMICS==1
+	ocp_nlp_dynamics_lifted_irk *dynamics = (ocp_nlp_dynamics_lifted_irk *) nlp_in->dynamics;
+	for (int i=0; i<NN; i++)
+		dynamics->forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
+	for (int i=0; i<NN; i++)
+		dynamics->jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
+#else
+	ocp_nlp_dynamics_irk *dynamics = (ocp_nlp_dynamics_irk *) nlp_in->dynamics;
+	for (int i=0; i<NN; i++)
+		dynamics->ode[i] = (external_function_generic *) &impl_ode_casadi[i];
+	for (int i=0; i<NN; i++)
+		dynamics->jac_x[i] = (external_function_generic *) &impl_jac_x_casadi[i];
+	for (int i=0; i<NN; i++)
+		dynamics->jac_xdot[i] = (external_function_generic *) &impl_jac_xdot_casadi[i];
+	for (int i=0; i<NN; i++)
+		dynamics->jac_u[i] = (external_function_generic *) &impl_jac_u_casadi[i];
+#endif
 
 
 
@@ -666,7 +762,11 @@ int main() {
     int num_stages[NN];
     for (int ii = 0; ii < NN; ii++)
     {
+#if DYNAMICS==0 | DYNAMICS==1
         num_stages[ii] = 4;
+#else
+        num_stages[ii] = 3;
+#endif
     }
 
     nlp_in->dims->num_stages = num_stages;
@@ -675,6 +775,9 @@ int main() {
     for (int i = 0; i < NN; ++i) {
         sim_rk_opts *sim_opts = nlp_args->sim_solvers_args[i];
         sim_opts->interval = TF/NN;
+#if DYNAMICS==2
+		sim_opts->jac_reuse = true;
+#endif
     }
 
     nlp_args->maxIter = MAX_SQP_ITERS;
