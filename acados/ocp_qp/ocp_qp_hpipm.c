@@ -31,7 +31,7 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
     int size = 0;
     size += sizeof(ocp_qp_hpipm_args);
@@ -43,7 +43,7 @@ int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     ocp_qp_hpipm_args *args;
 
@@ -60,9 +60,28 @@ void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp_ipm_arg(dims, args->hpipm_args, c_ptr);
     c_ptr += d_memsize_ocp_qp_ipm_arg(dims);
 
-    assert((char*)raw_memory + ocp_qp_hpipm_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_hpipm_calculate_args_size(dims, *submodules_) == c_ptr);
+
+    // Update submodules pointer
+    *submodules_ = NULL;
 
     return (void *)args;
+}
+
+
+
+void *ocp_qp_hpipm_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
+{
+    ocp_qp_hpipm_args *source = (ocp_qp_hpipm_args *) source_;
+    ocp_qp_hpipm_args *dest;
+
+    void *submodules;
+
+    dest = ocp_qp_hpipm_assign_args(dims, &submodules, raw_memory);
+
+    *dest->hpipm_args = *source->hpipm_args;
+
+    return (void *)dest;
 }
 
 

@@ -67,7 +67,7 @@ int main() {
 
     dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
 
-    ocp_qp_full_condensing_args *cond_args = ocp_qp_full_condensing_create_arguments(qp_in->dim);
+    ocp_qp_full_condensing_args *cond_args = ocp_qp_full_condensing_create_arguments(qp_in->dim, NULL);
     ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_args);
 
     /************************************************
@@ -86,12 +86,16 @@ int main() {
     * dense ipm
     ************************************************/
 
-    dense_qp_solver_plan plan;
-    plan.qp_solver = DENSE_QP_HPIPM;
+    dense_qp_solver_config config;
+    config.qp_solver = DENSE_QP_HPIPM;
 
-    void *argd = dense_qp_create_args(&plan, &ddims);
+    dense_qp_solver_fcn_ptrs *fcn_ptrs = create_dense_qp_solver_fcn_ptrs(&config, &ddims);
 
-    dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
+    void *argd = dense_qp_create_args(fcn_ptrs, &ddims);
+
+    dense_qp_solver *qp_solver = dense_qp_create(fcn_ptrs, &ddims, argd);
+
+    free(fcn_ptrs);
 
 	int acados_return;  // 0 normal; 1 max iter
 

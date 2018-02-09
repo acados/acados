@@ -24,10 +24,13 @@
 // acados
 #include <acados_c/sim.h>
 #include <acados_c/options.h>
+#include <acados_c/utils/casadi_wrapper.h>
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
-#include <acados/sim/sim_casadi_wrapper.h>
+#include <acados/sim/sim_irk_integrator.h>
+#include <acados/sim/sim_lifted_irk_integrator.h>
+// #include <acados/sim/sim_casadi_wrapper.h>
 
 #include "examples/c/crane_model/crane_model.h"
 
@@ -48,6 +51,7 @@ int main() {
 
     int nx = 4;
     int nu = 1;
+    int np = 1;
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
@@ -56,38 +60,96 @@ int main() {
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
-    sim_solver_plan plan;
-    plan.sim_solver = ERK;
+    sim_solver_config config;
+    config.sim_solver = ERK;
+    config.extfun.type = CASADI_WRAPPER;
+
+    if (config.sim_solver == IRK) num_stages = 3; // TODO(nielsvd): IRK integrator only supports 3 stages atm
 
     sim_dims dims;
     dims.num_stages = num_stages;
     dims.nx = nx;
     dims.nu = nu;
+    dims.np = np;
 
-    void *args = sim_create_args(&plan, &dims);
-    
-    sim_rk_opts *erk_opts = (sim_rk_opts *) args;
-    erk_opts->num_steps = 4;
-    erk_opts->sens_forw = true;
-    erk_opts->sens_adj = false;
-    erk_opts->sens_hess = false;
-    // TODO(dimitris): SET IN DEFAULT ARGS
-    erk_opts->num_forw_sens = NF;
+    sim_solver_fcn_ptrs *fcn_ptrs = create_sim_solver_fcn_ptrs(&config, &dims);
+
+    void *args = sim_create_args(fcn_ptrs, &dims);
+    int num_steps = 4;
+    bool sens_forw= true;
+    bool sens_adj = false;
+    bool sens_hess = false;
+
+    sim_erk_integrator_args *erk_args = (sim_erk_integrator_args *)args;
+    sim_irk_integrator_args *irk_args = (sim_irk_integrator_args *)args;
+    sim_lifted_irk_integrator_args *lifted_irk_args = (sim_lifted_irk_integrator_args *)args;
+    switch (config.sim_solver) {
+        case ERK:
+            erk_args->num_steps = num_steps;
+            erk_args->sens_forw = sens_forw;
+            erk_args->sens_adj = sens_adj;
+            erk_args->sens_hess = sens_hess;
+            // TODO(dimitris): SET IN DEFAULT ARGS
+            erk_args->num_forw_sens = NF;
+            // Forward VDE
+            ((casadi_wrapper_args *)(erk_args->forward_vde_args))->fun = &vdeFun;
+            ((casadi_wrapper_args *)(erk_args->forward_vde_args))->dims = &vdeFun_work;
+            ((casadi_wrapper_args *)(erk_args->forward_vde_args))->sparsity = &vdeFun_sparsity_out;
+            // Adjoint VDE
+            ((casadi_wrapper_args *)(erk_args->adjoint_vde_args))->fun = &adjFun;
+            ((casadi_wrapper_args *)(erk_args->adjoint_vde_args))->dims = &adjFun_work;
+            ((casadi_wrapper_args *)(erk_args->adjoint_vde_args))->sparsity = &adjFun_sparsity_out;
+            // Hessian VDE
+            ((casadi_wrapper_args *)(erk_args->hess_vde_args))->fun = &hessFun;
+            ((casadi_wrapper_args *)(erk_args->hess_vde_args))->dims = &hessFun_work;
+            ((casadi_wrapper_args *)(erk_args->hess_vde_args))->sparsity = &hessFun_sparsity_out;
+            break;
+        case IRK:
+            irk_args->num_steps = num_steps;
+            irk_args->sens_forw = sens_forw;
+            irk_args->sens_adj = sens_adj;
+            irk_args->sens_hess = sens_hess;
+            irk_args->jac_reuse = false;
+            // TODO(dimitris): SET IN DEFAULT ARGS
+            irk_args->num_forw_sens = NF;
+            // Implicit ODE
+            ((casadi_wrapper_args *)(irk_args->impl_res_args))->fun = &impl_odeFun;
+            ((casadi_wrapper_args *)(irk_args->impl_res_args))->dims = &impl_odeFun_work;
+            ((casadi_wrapper_args *)(irk_args->impl_res_args))->sparsity = &impl_odeFun_sparsity_out;
+            // Jacobians of implicit ODE
+            ((casadi_wrapper_args *)(irk_args->impl_jac_args))->fun = &impl_jacFun;
+            ((casadi_wrapper_args *)(irk_args->impl_jac_args))->dims = &impl_jacFun_work;
+            ((casadi_wrapper_args *)(irk_args->impl_jac_args))->sparsity = &impl_jacFun_sparsity_out;
+            break;
+        case LIFTED_IRK:
+            lifted_irk_args->num_steps = num_steps;
+            lifted_irk_args->sens_forw = sens_forw;
+            lifted_irk_args->sens_adj = sens_adj;
+            lifted_irk_args->sens_hess = sens_hess;
+            // TODO(dimitris): SET IN DEFAULT ARGS
+            lifted_irk_args->num_forw_sens = NF;
+            // Forward VDE
+            ((casadi_wrapper_args *)(lifted_irk_args->forward_vde_args))->fun = &vdeFun;
+            ((casadi_wrapper_args *)(lifted_irk_args->forward_vde_args))->dims = &vdeFun_work;
+            ((casadi_wrapper_args *)(lifted_irk_args->forward_vde_args))->sparsity = &vdeFun_sparsity_out;
+            // Adjoint VDE
+            ((casadi_wrapper_args *)(lifted_irk_args->jacobian_ode_args))->fun = &jacFun;
+            ((casadi_wrapper_args *)(lifted_irk_args->jacobian_ode_args))->dims = &jacFun_work;
+            ((casadi_wrapper_args *)(lifted_irk_args->jacobian_ode_args))->sparsity = &jacFun_sparsity_out;
+            break;
+    }
 
     sim_in *in = create_sim_in(&dims);
-    in->step = T / erk_opts->num_steps;
-    in->vde = &vdeFun;
-    in->vde_adj = &adjFun;
-    in->hess = &hessFun;
-    in->forward_vde_wrapper = &vde_fun;
-    in->adjoint_vde_wrapper = &vde_adj_fun;
-    in->Hess_fun = &vde_hess_fun;
+    in->step = T / num_steps;
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
     }
     for (ii = 0;ii < nu; ii++){
         in->u[ii] = 1.0;
+    }
+    for (ii = 0;ii < np; ii++){
+        in->p[ii] = 1.0;
     }
 
     for (ii = 0; ii < nx * NF; ii++)
@@ -98,7 +160,9 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
-    sim_solver *solver = sim_create(&plan, &dims, args);
+    sim_solver *solver = sim_create(fcn_ptrs, &dims, args);
+
+    free(fcn_ptrs);
 
     sim_out *out = create_sim_out(&dims);
 
@@ -112,7 +176,7 @@ int main() {
     printf("\n");
 
     double *S_forw_out;
-    if(erk_opts->sens_forw){
+    if(sens_forw){
         S_forw_out = out->S_forw;
         printf("\nS_forw_out: \n");
         for (ii=0;ii<nx;ii++){
@@ -123,7 +187,7 @@ int main() {
     }
 
     double *S_adj_out;
-    if(erk_opts->sens_adj){
+    if(sens_adj){
         S_adj_out = out->S_adj;
         printf("\nS_adj_out: \n");
         for (ii=0;ii<nx+nu;ii++){
@@ -133,7 +197,7 @@ int main() {
     }
 
     double *S_hess_out;
-    if(erk_opts->sens_hess){
+    if(sens_hess){
         double zero = 0.0;
         S_hess_out = out->S_hess;
         printf("\nS_hess_out: \n");
@@ -151,10 +215,10 @@ int main() {
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
 
-    if(erk_opts->sens_adj){
+    if(sens_adj){
         struct blasfeo_dmat sA;
         blasfeo_create_dmat(nx, nx+nu, &sA, S_forw_out);
 

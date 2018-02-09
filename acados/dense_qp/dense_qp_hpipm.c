@@ -30,7 +30,8 @@
 #include "acados/utils/timing.h"
 
 
-int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims)
+
+int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims, void *submodules_)
 {
     int size = 0;
     size += sizeof(dense_qp_hpipm_args);
@@ -42,7 +43,7 @@ int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims)
 
 
 
-void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     dense_qp_hpipm_args *args;
 
@@ -59,9 +60,28 @@ void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory)
     d_create_dense_qp_ipm_arg(dims, args->hpipm_args, c_ptr);
     c_ptr += d_memsize_dense_qp_ipm_arg(dims);
 
-    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + dense_qp_hpipm_calculate_args_size(dims, *submodules_) == c_ptr);
+
+    // Update submodules pointer
+    *submodules_ = NULL;
 
     return (void *)args;
+}
+
+
+
+void *dense_qp_hpipm_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+{
+    dense_qp_hpipm_args *source = (dense_qp_hpipm_args *)source_;
+    dense_qp_hpipm_args *dest;
+
+    void *submodules;
+
+    dest = (dense_qp_hpipm_args *) dense_qp_hpipm_assign_args(dims, &submodules, raw_memory);
+
+    *dest->hpipm_args = *source->hpipm_args;
+
+    return (void *)dest;
 }
 
 

@@ -32,7 +32,7 @@
 #include "hpipm/include/hpipm_d_cond.h"
 #include "hpipm/include/hpipm_d_part_cond.h"
 
-int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
     int size = 0;
     size += sizeof(ocp_qp_partial_condensing_args);
@@ -43,7 +43,7 @@ int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -58,9 +58,29 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_assign_args(ocp_qp_dim
     d_create_ocp_qp_dim(dims->N, args->pcond_dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_dim(dims->N);
 
-    assert((char*)raw_memory + ocp_qp_partial_condensing_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_partial_condensing_calculate_args_size(dims, *submodules_) == c_ptr);
+
+    // Update submodules pointer
+    *submodules_ = NULL;
 
     return args;
+}
+
+
+
+ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_)
+{
+    ocp_qp_partial_condensing_args *source = (ocp_qp_partial_condensing_args *) source_;
+    ocp_qp_partial_condensing_args *dest;
+
+    void *submodules;
+
+    dest = ocp_qp_partial_condensing_assign_args(dims, &submodules, raw_memory);
+
+    dest->N2 = source->N2;
+    dest->pcond_dims->N = source->pcond_dims->N;
+
+    return dest;
 }
 
 

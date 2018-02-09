@@ -26,8 +26,14 @@ extern "C" {
 
 #include <acados/ocp_qp/ocp_qp_partial_condensing.h>
 
+#include "acados_c/ocp_qp.h"
+
 //
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_);
+// ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_copy_args(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory, ocp_qp_partial_condensing_args *source_);
+//
+int ocp_qp_partial_condensing_calculate_submodules_size(ocp_qp_solver_config *config, ocp_qp_dims *dims);
+//
+void *ocp_qp_partial_condensing_assign_submodules(ocp_qp_solver_config *config, ocp_qp_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */

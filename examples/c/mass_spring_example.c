@@ -80,6 +80,13 @@ int main() {
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
+        SPARSE_QP_HPIPM,
+        #if ACADOS_WITH_HPMPC
+        SPARSE_QP_HPMPC,
+        #endif
+        #if ACADOS_WITH_QPDUNES
+        SPARSE_QP_QPDUNES,
+        #endif
         PARTIAL_CONDENSING_HPIPM,
         #if ACADOS_WITH_HPMPC
         PARTIAL_CONDENSING_HPMPC,
@@ -98,7 +105,7 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-    int ii_max = 6;
+    int ii_max = 9;
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
     #endif
@@ -111,18 +118,43 @@ int main() {
 
     for (int ii = 0; ii < ii_max; ii++)
     {
-        ocp_qp_solver_plan plan;
-        plan.qp_solver = ocp_qp_solvers[ii];
+        ocp_qp_solver_config config;
+        config.qp_solver = ocp_qp_solvers[ii];
 
-        void *args = ocp_qp_create_args(&plan, qp_dims);
+        ocp_qp_solver_fcn_ptrs *fcn_ptrs = create_ocp_qp_solver_fcn_ptrs(&config, qp_dims);
+
+        void *args = ocp_qp_create_args(fcn_ptrs, qp_dims);
 
         for (int jj = 0; jj < num_N2_values; jj++)
         {
             int N2 = N2_values[jj];
 
             // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
-            switch (plan.qp_solver)
+#ifdef ACADOS_WITH_QPDUNES
+            ocp_qp_qpdunes_args *qpdunes_args;
+#endif
+            switch (config.qp_solver)
             {
+                case SPARSE_QP_HPIPM:
+                    printf("\nHPIPM:\n\n");
+                    ((ocp_qp_hpipm_args *) args)->hpipm_args->iter_max = 30;
+                    break;
+                case SPARSE_QP_HPMPC:
+#ifdef ACADOS_WITH_HPMPC
+                    printf("\nHPMPC:\n\n");
+                    ((ocp_qp_hpmpc_args *)args)->max_iter = 30;
+#endif
+                    break;
+                case SPARSE_QP_QPDUNES:
+#ifdef ACADOS_WITH_QPDUNES
+                    printf("\nQPDUNES:\n\n");
+                    qpdunes_args = (ocp_qp_qpdunes_args *)args;
+                    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+                    qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
+                    #endif
+                    qpdunes_args->warmstart = 0;
+#endif
+                    break;
                 case PARTIAL_CONDENSING_HPIPM:
                     printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
                     ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
@@ -142,7 +174,7 @@ int main() {
                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
                     #endif
                     ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
-                    ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
+                    qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
                     #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
                     qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
                     #endif
@@ -168,7 +200,7 @@ int main() {
                     break;
             }
 
-            ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
+            ocp_qp_solver *qp_solver = ocp_qp_create(fcn_ptrs, qp_dims, args);
 
             int acados_return = 0;
 
@@ -247,9 +279,10 @@ int main() {
 
             free(qp_solver);
 
-            if (plan.qp_solver >= FULL_CONDENSING_HPIPM) break;
+            // if (config.qp_solver >= FULL_CONDENSING_HPIPM) break;
         }
         free(args);
+        free(fcn_ptrs);
     }
 
     free(qp_in);

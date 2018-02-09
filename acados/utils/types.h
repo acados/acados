@@ -35,6 +35,7 @@ typedef double real_t;
 typedef unsigned int uint;
 typedef int int_t;
 
+// TODO(nielsvd): should be obsolete soon,remove
 typedef int (*casadi_function_t)(const double** arg, double** res, int* iw, double* w, int mem);
 
 // enum of return values

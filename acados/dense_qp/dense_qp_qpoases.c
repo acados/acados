@@ -32,7 +32,8 @@
 #include "acados/utils/timing.h"
 
 
-int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
+
+int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims, void *submodules_)
 {
     int size = 0;
     size += sizeof(dense_qp_qpoases_args);
@@ -42,7 +43,7 @@ int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims)
 
 
 
-void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     dense_qp_qpoases_args *args;
 
@@ -51,9 +52,32 @@ void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory)
     args = (dense_qp_qpoases_args *) c_ptr;
     c_ptr += sizeof(dense_qp_qpoases_args);
 
-    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + dense_qp_qpoases_calculate_args_size(dims, *submodules_) == c_ptr);
+
+    // Update submodules pointer
+    *submodules_ = NULL;
 
     return (void *)args;
+}
+
+
+
+void *dense_qp_qpoases_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+{
+    dense_qp_qpoases_args *source = (dense_qp_qpoases_args *) source_;
+    dense_qp_qpoases_args *dest;
+
+    void *submodules;
+
+    dest = (dense_qp_qpoases_args *) dense_qp_qpoases_assign_args(dims, &submodules, raw_memory);
+
+    dest->max_cputime = source->max_cputime;
+    dest->warm_start = source->warm_start;
+    dest->max_nwsr = source->max_nwsr;
+    dest->use_precomputed_cholesky = source->use_precomputed_cholesky;
+    dest->hotstart = source->hotstart;
+
+    return (void *)dest;
 }
 
 

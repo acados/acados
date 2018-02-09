@@ -85,79 +85,46 @@ dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
 
 
 
-int dense_qp_calculate_args_size(dense_qp_solver_plan *plan, dense_qp_dims *dims)
+int dense_qp_calculate_args_size(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims)
 {
-    dense_qp_solver_fcn_ptrs fcn_ptrs;
-
-    set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
-
-    int size = fcn_ptrs.calculate_args_size(dims);
-
-    return size;
+    return fcn_ptrs->calculate_args_size(dims, fcn_ptrs->submodules);
 }
 
 
 
-void *dense_qp_assign_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_assign_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *raw_memory)
 {
-    dense_qp_solver_fcn_ptrs fcn_ptrs;
+    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
 
-    set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
-
-    void *args = fcn_ptrs.assign_args(dims, raw_memory);
-
-    fcn_ptrs.initialize_default_args(args);
+    fcn_ptrs->initialize_default_args(args);
 
     return args;
 }
 
 
 
-void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims)
+void *dense_qp_create_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims)
 {
-    int bytes = dense_qp_calculate_args_size(plan, dims);
+    int bytes = dense_qp_calculate_args_size(fcn_ptrs, dims);
 
     void *ptr = malloc(bytes);
 
-    void *args = dense_qp_assign_args(plan, dims, ptr);
+    void *args = dense_qp_assign_args(fcn_ptrs, dims, ptr);
 
     return args;
 }
 
 
 
-void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory, void *source)
+void *dense_qp_copy_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *raw_memory, void *source)
 {
-    dense_qp_solver_t solver_name = plan->qp_solver;
-
-    void *args;
-
-    switch (solver_name)
-    {
-        case DENSE_QP_HPIPM:
-            args = dense_qp_hpipm_copy_args(dims, raw_memory, source);
-            break;
-        case DENSE_QP_QORE:
-            #ifdef ACADOS_WITH_QORE
-            args = dense_qp_qore_copy_args(dims, raw_memory, source);
-            #endif
-            break;
-        case DENSE_QP_QPOASES:
-            args = dense_qp_qpoases_copy_args(dims, raw_memory, source);
-            break;
-    }
-
-    return args;
+    return fcn_ptrs->copy_args(dims, raw_memory, source);
 }
 
 
 
-int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_)
+int dense_qp_calculate_size(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *args_)
 {
-    dense_qp_solver_fcn_ptrs fcn_ptrs;
-
-    set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
-
     int bytes = 0;
 
     bytes += sizeof(dense_qp_solver);
@@ -166,18 +133,18 @@ int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, voi
 
     bytes += dense_qp_dims_calculate_size();
 
-    bytes += fcn_ptrs.calculate_args_size(dims);
+    bytes += dense_qp_calculate_args_size(fcn_ptrs, dims);
 
-    bytes += fcn_ptrs.calculate_memory_size(dims, args_);
+    bytes += fcn_ptrs->calculate_memory_size(dims, args_);
 
-    bytes += fcn_ptrs.calculate_workspace_size(dims, args_);
+    bytes += fcn_ptrs->calculate_workspace_size(dims, args_);
 
     return bytes;
 }
 
 
 
-dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_, void *raw_memory)
+dense_qp_solver *dense_qp_assign(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *args_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -186,35 +153,38 @@ dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims
 
     solver->fcn_ptrs = (dense_qp_solver_fcn_ptrs *) c_ptr;
     c_ptr += sizeof(dense_qp_solver_fcn_ptrs);
-    set_dense_qp_solver_fcn_ptrs(plan, solver->fcn_ptrs);
 
     solver->dims = assign_dense_qp_dims(c_ptr);
     c_ptr += dense_qp_dims_calculate_size();
-    dense_qp_copy_dims(solver->dims, dims);
 
-    solver->args = dense_qp_copy_args(plan, dims, c_ptr, args_);
-    c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
+    solver->args = dense_qp_copy_args(fcn_ptrs, dims, c_ptr, args_);
+    c_ptr += dense_qp_calculate_args_size(fcn_ptrs, dims);
 
-    solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
-    c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);
+    solver->mem = fcn_ptrs->assign_memory(dims, args_, c_ptr);
+    c_ptr += fcn_ptrs->calculate_memory_size(dims, args_);
 
     solver-> work = (void *) c_ptr;
-    c_ptr += solver->fcn_ptrs->calculate_workspace_size(dims, args_);
+    c_ptr += fcn_ptrs->calculate_workspace_size(dims, args_);
 
-    assert((char*)raw_memory + dense_qp_calculate_size(plan, dims, args_) == c_ptr);
+    assert((char*)raw_memory + dense_qp_calculate_size(fcn_ptrs, dims, args_) == c_ptr);
+
+    *solver->fcn_ptrs = *fcn_ptrs;
+    solver->fcn_ptrs->submodules = NULL;
+
+    dense_qp_copy_dims(solver->dims, dims);
 
     return solver;
 }
 
 
 
-dense_qp_solver *dense_qp_create(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_)
+dense_qp_solver *dense_qp_create(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *args_)
 {
-    int bytes = dense_qp_calculate_size(plan, dims, args_);
+    int bytes = dense_qp_calculate_size(fcn_ptrs, dims, args_);
 
     void *ptr = malloc(bytes);
 
-    dense_qp_solver *solver = dense_qp_assign(plan, dims, args_, ptr);
+    dense_qp_solver *solver = dense_qp_assign(fcn_ptrs, dims, args_, ptr);
 
     return solver;
 }
@@ -228,10 +198,109 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 
 
 
-int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn_ptrs *fcn_ptrs)
+int dense_qp_calculate_submodules_size(dense_qp_solver_config *config, dense_qp_dims *dims)
+{
+    dense_qp_solver_t solver_name = config->qp_solver;
+
+    int size;
+
+    switch (solver_name)
+    {
+        case DENSE_QP_HPIPM:
+            size = dense_qp_hpipm_calculate_submodules_size(config, dims);
+            break;
+        case DENSE_QP_QORE:
+#ifdef ACADOS_WITH_QORE
+            size = dense_qp_qore_calculate_submodules_size(config, dims);
+#endif
+            break;
+        case DENSE_QP_QPOASES:
+            size = dense_qp_qpoases_calculate_submodules_size(config, dims);
+            break;
+        default:
+            size = 0;
+    }
+
+    return size;
+}
+
+
+
+void *dense_qp_assign_submodules(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory)
+{
+    dense_qp_solver_t solver_name = config->qp_solver;
+
+    void *submodules;
+
+    switch (solver_name)
+    {
+        case DENSE_QP_HPIPM:
+            submodules = dense_qp_hpipm_assign_submodules(config, dims, raw_memory);
+            break;
+        case DENSE_QP_QORE:
+#ifdef ACADOS_WITH_QORE
+            submodules = dense_qp_qore_assign_submodules(config, dims, raw_memory);
+#endif
+            break;
+        case DENSE_QP_QPOASES:
+            submodules = dense_qp_qpoases_assign_submodules(config, dims, raw_memory);
+            break;
+        default:
+            submodules = NULL;
+    }
+
+    return submodules;
+}
+
+
+
+int calculate_dense_qp_solver_fcn_ptrs_size(dense_qp_solver_config *config, dense_qp_dims *dims)
+{
+    int size = sizeof(dense_qp_solver_fcn_ptrs);
+
+    size += dense_qp_calculate_submodules_size(config, dims);
+
+    return size;
+}
+
+
+
+void *assign_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *)raw_memory;
+
+    dense_qp_solver_fcn_ptrs *fcn_ptrs = (dense_qp_solver_fcn_ptrs *)c_ptr;
+    c_ptr += sizeof(dense_qp_solver_fcn_ptrs);
+
+    set_dense_qp_solver_fcn_ptrs(config, fcn_ptrs);
+
+    fcn_ptrs->submodules = dense_qp_assign_submodules(config, dims, c_ptr);
+    c_ptr += dense_qp_calculate_submodules_size(config, dims);
+
+    assert((char*)raw_memory + calculate_dense_qp_solver_fcn_ptrs_size(config, dims) == c_ptr);
+
+    return (void *)fcn_ptrs;
+}
+
+
+
+void *create_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_dims *dims)
+{
+    int bytes = calculate_dense_qp_solver_fcn_ptrs_size(config, dims);
+
+    void *ptr = malloc(bytes);
+
+    dense_qp_solver_fcn_ptrs *fcn_ptrs = assign_dense_qp_solver_fcn_ptrs(config, dims, ptr);
+
+    return fcn_ptrs;
+}
+
+
+
+int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_config *config, dense_qp_solver_fcn_ptrs *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;
-    dense_qp_solver_t solver_name = plan->qp_solver;
+    dense_qp_solver_t solver_name = config->qp_solver;
 
     switch (solver_name)
     {
@@ -239,6 +308,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn
             fcn_ptrs->fun = &dense_qp_hpipm;
             fcn_ptrs->calculate_args_size = &dense_qp_hpipm_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_hpipm_assign_args;
+            fcn_ptrs->copy_args = &dense_qp_hpipm_copy_args;
             fcn_ptrs->initialize_default_args = &dense_qp_hpipm_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &dense_qp_hpipm_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_hpipm_assign_memory;
@@ -249,6 +319,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn
             fcn_ptrs->fun = &dense_qp_qore;
             fcn_ptrs->calculate_args_size = &dense_qp_qore_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_qore_assign_args;
+            fcn_ptrs->copy_args = &dense_qp_qore_copy_args;
             fcn_ptrs->initialize_default_args = &dense_qp_qore_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &dense_qp_qore_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_qore_assign_memory;
@@ -261,6 +332,7 @@ int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn
             fcn_ptrs->fun = &dense_qp_qpoases;
             fcn_ptrs->calculate_args_size = &dense_qp_qpoases_calculate_args_size;
             fcn_ptrs->assign_args = &dense_qp_qpoases_assign_args;
+            fcn_ptrs->copy_args = &dense_qp_qpoases_copy_args;
             fcn_ptrs->initialize_default_args = &dense_qp_qpoases_initialize_default_args;
             fcn_ptrs->calculate_memory_size = &dense_qp_qpoases_calculate_memory_size;
             fcn_ptrs->assign_memory = &dense_qp_qpoases_assign_memory;

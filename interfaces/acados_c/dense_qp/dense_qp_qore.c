@@ -21,19 +21,33 @@
 
 
 
-void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+// void *dense_qp_qore_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_)
+// {
+//     dense_qp_qore_args *source = (dense_qp_qore_args *)source_;
+//     dense_qp_qore_args *dest;
+
+//     dest = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, raw_memory);
+
+//     dest->print_freq = source->print_freq;
+//     dest->warm_start = source->warm_start;
+//     dest->warm_strategy = source->warm_strategy;
+//     dest->nsmax = source->nsmax;
+//     dest->hot_start = source->hot_start;
+//     dest->max_iter = source->max_iter;
+
+//     return (void *)dest;
+// }
+
+
+
+int dense_qp_qore_calculate_submodules_size(dense_qp_solver_config *config, dense_qp_dims *dims)
 {
-    dense_qp_qore_args *source = (dense_qp_qore_args *)source_;
-    dense_qp_qore_args *dest;
+    return 0;
+}
 
-    dest = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, raw_memory);
 
-    dest->print_freq = source->print_freq;
-    dest->warm_start = source->warm_start;
-    dest->warm_strategy = source->warm_strategy;
-    dest->nsmax = source->nsmax;
-    dest->hot_start = source->hot_start;
-    dest->max_iter = source->max_iter;
 
-    return (void *)dest;
+void *dense_qp_qore_assign_submodules(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory)
+{
+    return NULL;
 }

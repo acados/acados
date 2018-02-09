@@ -28,11 +28,11 @@ LIBS+=-lblasfeo -lm -lblas
 
 EXAMPLES =
 EXAMPLES += mass_spring_example
-EXAMPLES += sim_erk_crane
+EXAMPLES += sim_crane
 EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
 EXAMPLES += mass_spring_offline_fcond_qpoases_split
-EXAMPLES += nonlinear_chain_ocp_nlp
+# EXAMPLES += nonlinear_chain_ocp_nlp
 
 examples: $(EXAMPLES)
 
@@ -40,11 +40,11 @@ examples: $(EXAMPLES)
 
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_mass_spring_example
-RUN_EXAMPLES += run_sim_erk_crane
+RUN_EXAMPLES += run_sim_crane
 RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+# RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -56,20 +56,15 @@ CRANE_OBJS += crane_model/ode_model.o
 CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
-CRANE_OBJS += sim_erk_crane.o
+CRANE_OBJS += crane_model/impl_ode.o
+CRANE_OBJS += crane_model/impl_jac.o
 
-sim_erk_crane: $(CRANE_OBJS)
-	$(CCC) -o sim_erk_crane.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+sim_crane: $(CRANE_OBJS) sim_crane.o
+	$(CCC) -o sim_crane.out sim_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example sim_erk_crane build complete."
+	@echo " Example sim_crane build complete."
 	@echo
-
-# sim_irk_crane_yt: $(CRANE_OBJS)
-# 	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
-# 	@echo
-# 	@echo " Example sim_irk_crane_yt build complete."
-# 	@echo
-
+	
 
 
 mass_spring_example: mass_spring_example.o
@@ -123,19 +118,18 @@ CHAIN_OBJS += chain_model/vde_chain_nm4.o
 CHAIN_OBJS += chain_model/jac_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_adj_chain_nm4.o
 CHAIN_OBJS += chain_model/vde_hess_chain_nm4.o
-CHAIN_OBJS += chain_model/ls_cost_nm4.o
-CHAIN_OBJS += chain_model/ls_costN_nm4.o
+# CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
 
 nonlinear_chain_ocp_nlp: $(CHAIN_OBJS)
-	$(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)
+	# $(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example nonlinear_chain_ocp_nlp build complete."
 	@echo
 
 
 
-run_sim_erk_crane:
-	./sim_erk_crane.out
+run_sim_crane:
+	./sim_crane.out
 
 
 

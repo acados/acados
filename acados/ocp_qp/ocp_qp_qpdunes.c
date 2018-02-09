@@ -113,7 +113,7 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_args *args
 
 
 
-int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims, void *submodules_)
 {
     int size = 0;
     size += sizeof(ocp_qp_qpdunes_args);
@@ -122,7 +122,7 @@ int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void **submodules_, void *raw_memory)
 {
     ocp_qp_qpdunes_args *args;
 
@@ -131,9 +131,31 @@ void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory)
     args = (ocp_qp_qpdunes_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_qpdunes_args);
 
-    assert((char*)raw_memory + ocp_qp_qpdunes_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_qpdunes_calculate_args_size(dims, *submodules_) == c_ptr);
+
+    // Update submodules pointer
+    *submodules_ = NULL;
 
     return (void *)args;
+}
+
+
+
+void *ocp_qp_qpdunes_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
+{
+    ocp_qp_qpdunes_args *source = (ocp_qp_qpdunes_args *) source_;
+    ocp_qp_qpdunes_args *dest;
+
+    void *submodules;
+
+    dest = ocp_qp_qpdunes_assign_args(dims, &submodules, raw_memory);
+
+    dest->options = source->options;
+    dest->stageQpSolver = source->stageQpSolver;
+    dest->warmstart = source->warmstart;
+    dest->isLinearMPC = source->isLinearMPC;
+
+    return (void *)dest;
 }
 
 

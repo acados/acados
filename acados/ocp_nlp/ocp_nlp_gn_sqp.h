@@ -50,7 +50,7 @@ typedef struct
 	double min_res_d;
 	double min_res_m;
     // QP solver
-    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
+    ocp_qp_solver_fcn_ptrs *qp_solver;
     void *qp_solver_args;
     // integrators
     sim_solver_fcn_ptrs **sim_solvers;
@@ -58,9 +58,9 @@ typedef struct
 } ocp_nlp_gn_sqp_args;
 
 //
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
 //
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
 
 
 

@@ -37,6 +37,7 @@
 #include "acados/dense_qp/dense_qp_common.h"
 
 
+
 int dense_qp_dims_calculate_size()
 {
     int size = sizeof(dense_qp_dims);

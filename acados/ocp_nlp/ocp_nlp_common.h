@@ -242,8 +242,8 @@ typedef struct {
     int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
     void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
-    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
-    sim_solver_fcn_ptrs **sim_solvers;
+    // ocp_qp_solver_fcn_ptrs *qp_solver;
+    // sim_solver_fcn_ptrs **sim_solvers;
     // TODO(nielsvd): add cost and nonlinear constraints
 } ocp_nlp_solver_fcn_ptrs;
 

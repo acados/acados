@@ -35,10 +35,10 @@ typedef struct {
 
     int_t ny;
 
-    casadi_wrapper_in *in;
-    casadi_wrapper_out *out;
-    casadi_wrapper_args *args;
-    casadi_wrapper_workspace *work;
+    external_function_in *in;
+    external_function_out *out;
+    void *args;
+    void *work;
 } ocp_nlp_function;
 
 typedef struct {
@@ -83,13 +83,14 @@ typedef struct {
 
 typedef struct {
     int (*fun)(ocp_lin_in *qp_in, ocp_lin_out *qp_out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(ocp_lin_dims *dims);
-    void *(*assign_args)(ocp_lin_dims *dims, void *raw_memory);
-    void *(*copy_args)(ocp_lin_dims *dims, void *raw_memory, void *source_);
+    int (*calculate_args_size)(ocp_lin_dims *dims, void *submodules);
+    void *(*assign_args)(ocp_lin_dims *dims, void **submodules, void *raw_memory);
+    void *(*copy_args)(ocp_lin_dims *dims, void *raw_memory, void *source);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(ocp_lin_dims *dims, void *args);
     void *(*assign_memory)(ocp_lin_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_lin_dims *dims, void *args);
+    void *submodules;
 } ocp_lin_method_fcn_ptrs;
 
 #ifdef __cplusplus

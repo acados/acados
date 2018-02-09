@@ -34,10 +34,12 @@ extern "C" {
 
 
 // TODO(dimitris): probably does not belong here
+// TODO(nielsvd): this struct-definition can probably be removed, verify.
 typedef struct {
     int (*fun)(void *);
     int (*calculate_args_size)(void *);
     void *(*assign_args)(void *);
+    void *(*copy_args)(void *);
     void (*initialize_default_args)(void *);
     int (*calculate_memory_size)(void *);
     void *(*assign_memory)(void *);

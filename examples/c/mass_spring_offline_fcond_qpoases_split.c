@@ -24,6 +24,12 @@
 // acados_c
 #include <acados_c/dense_qp.h>
 #include <acados_c/legacy_create.h>
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include <acados/ocp_qp/ocp_qp_full_condensing.h>
 // NOTE(nielsvd): required to cast memory etc. should go.
@@ -74,7 +80,7 @@ int main() {
 
     dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
 
-    ocp_qp_full_condensing_args *cond_args = ocp_qp_full_condensing_create_arguments(qp_in->dim);
+    ocp_qp_full_condensing_args *cond_args = ocp_qp_full_condensing_create_arguments(qp_in->dim, NULL);
 	ocp_qp_full_condensing_initialize_default_args(cond_args);
 	ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_args);
 
@@ -94,10 +100,12 @@ int main() {
     * dense qpoases
     ************************************************/
 
-    dense_qp_solver_plan plan;
-	plan.qp_solver = DENSE_QP_QPOASES;
+    dense_qp_solver_config config;
+	config.qp_solver = DENSE_QP_QPOASES;
 
-    void *argd = dense_qp_create_args(&plan, &ddims);
+    dense_qp_solver_fcn_ptrs *fcn_ptrs = create_dense_qp_solver_fcn_ptrs(&config, &ddims);
+
+    void *argd = dense_qp_create_args(fcn_ptrs, &ddims);
 
 	dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)argd; 
 	
@@ -109,7 +117,9 @@ int main() {
 		args->hotstart = 1; 
 	}
 	
-	dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
+	dense_qp_solver *qp_solver = dense_qp_create(fcn_ptrs, &ddims, argd);
+
+    free(fcn_ptrs);
 	
 	int acados_return;  // 0 normal; 1 max iter
 

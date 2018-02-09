@@ -25,14 +25,56 @@ extern "C" {
 #endif
 
 #include "acados/sim/sim_common.h"
+#include "acados/utils/external_function.h"
 #include "acados/utils/types.h"
 
-typedef struct {
 
-} sim_erk_memory;
 
 typedef struct {
+    external_function_fcn_ptrs *forward_vde;
+    external_function_fcn_ptrs *adjoint_vde;
+    external_function_fcn_ptrs *hess_vde;
+} sim_erk_integrator_submodules;
 
+
+
+typedef struct {
+    // Options
+    double interval;
+    int num_stages;
+
+    int num_steps;
+    int num_forw_sens;
+
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
+
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+
+    // Submodules
+    sim_erk_integrator_submodules submodules;
+
+    // Arguments for functions
+    void *forward_vde_args;
+    void *adjoint_vde_args;
+    void *hess_vde_args;
+} sim_erk_integrator_args;
+
+
+
+typedef struct {
+    // Memory for functions
+    void *forward_vde_mem;
+    void *adjoint_vde_mem;
+    void *hess_vde_mem;
+} sim_erk_integrator_memory;
+
+
+
+typedef struct {
     double *rhs_forw_in;  // x + S + p
 
     double *K_traj; // (stages *nX) or (steps*stages*nX) for adj
@@ -42,23 +84,30 @@ typedef struct {
     double *out_adj_tmp;
     double *adj_traj;
 
-} sim_erk_workspace;
+    // Workspace for functions
+    void *forward_vde_work;
+    void *adjoint_vde_work;
+    void *hess_vde_work;
+} sim_erk_integrator_workspace;
 
-int sim_erk_opts_calculate_size(sim_dims *dims);
 
-void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory);
 
-void sim_erk_initialize_default_args(sim_dims *dims, void *opts_);
-
-int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_);
-
-void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
-
-void *sim_erk_create_memory(sim_dims *dims, void *opts_);
-
-int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
-
-int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_);
+//
+int sim_erk_integrator_calculate_args_size(sim_dims *dims, void *submodules_);
+//
+void *sim_erk_integrator_assign_args(sim_dims *dims, void **submodules_, void *raw_memory);
+//
+void *sim_erk_integrator_copy_args(sim_dims *dims, void *raw_memory, void *source_);
+//
+void sim_erk_integrator_initialize_default_args(sim_dims *dims, void *args_);
+//
+int sim_erk_integrator_calculate_memory_size(sim_dims *dims, void *args_);
+//
+void *sim_erk_integrator_assign_memory(sim_dims *dims, void *args_, void *raw_memory);
+//
+int sim_erk_integrator_calculate_workspace_size(sim_dims *dims, void *args_);
+//
+int sim_erk_integrator(sim_in *in, sim_out *out, void *args_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */
