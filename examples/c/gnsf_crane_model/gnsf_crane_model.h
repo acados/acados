@@ -8,8 +8,10 @@ extern "C" {
 #endif
 
 // int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int get_ints(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int KKmat_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int res_inc_Jff_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int jac_res_ffx1u_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

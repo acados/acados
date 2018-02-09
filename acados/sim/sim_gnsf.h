@@ -36,51 +36,48 @@ typedef struct {
     int nx2;
     int num_steps;
     int n_out;
+    int nff;
 } gnsf_dims;
 
+typedef struct {
+    double *ff;
+    double *x0_1;
+    double *u_0;
+} gnsf_res_in;
+
+// TODO
 
 typedef struct {
-    int nx;   // NX
-    int nu;   // NU
-    int nz;
+    double *xf; //TODO
+} gnsf_out;
 
-    // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
-    double *x;  // x[NX]
-    double *u;  // u[NU]
+typedef struct {
+    double *A_dt;
+    double *b_dt;
+    double *c_butcher;
+
+    double *x_0;
+    double *u_0;
+
+    double *KKf; //etc...
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
- /*   casadi_function_t vde;
-    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
+        // casadi_functions
+    casadi_function_t jac_res_ffx1u;
+    void (*jac_res_ffx1u_wrapped)(const int, const int, const double *, double *, casadi_function_t);
 
-    casadi_function_t vde_adj;
-    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t jac;
-    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t hess;
-    void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t impl_ode;
-    void (*eval_impl_res)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
-
-    casadi_function_t impl_jac_x;
-    void (*eval_impl_jac_x)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_xdot;
-    void (*eval_impl_jac_xdot)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_u;
-    void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    double step; */
     casadi_function_t res_inc_Jff;
-    void (*res_inc_Jff_wrapper)(const int, const int, const double *, double *, casadi_function_t);
+    void (*res_inc_Jff_wrapped)(const int, const int, const double *, double *, casadi_function_t);
 
 } gnsf_in;
 
+typedef struct {
+    double *KKf;
+    double *KKx;
+    double *KKu;
+} gnsf_fixed;
 /*
 typedef struct {
     double CPUtime;
@@ -104,26 +101,23 @@ typedef struct {
 typedef struct {
 //    double interval;
 //    int num_stages;
-
     int num_steps;
 //    int num_forw_sens;
-/*
-    double *A_mat;
-    double *c_vec;
-    double *b_vec;
-*/
     bool sens_forw;
     bool sens_adj;
     bool sens_hess;
-
-    // for explicit integrators: newton_iter == 0 && scheme == NULL
     int newton_iter;
    // Newton_scheme *scheme;
-
 } sim_gnsf_opts;
 
-void print_gnsf_dims(gnsf_dims dims);
-
+void print_gnsf_dims(gnsf_dims* dims);
+void print_gnsf_res_in( gnsf_dims dims, double* res_in );
+void print_gnsf_res_out( gnsf_dims dims, double* res_out );
+void gnsf_get_dims( gnsf_dims* dims, casadi_function_t get_ints_fun);
+// void gnsf_get_KK_mat( gnsf_in *in, casadi_function_t KK_mat_fun);
+void gnsf_get_KK_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun);
+void gnsf_simulate( gnsf_dims* dims, gnsf_in* in, gnsf_out out);
+void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 /*
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
