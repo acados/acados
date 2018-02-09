@@ -24,9 +24,12 @@ const int* hessFun_sparsity_out(int i);
 int hessFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
 
 int impl_odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+const int* impl_odeFun_sparsity_out(int i);
+int impl_odeFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
+
+int impl_jacFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+const int* impl_jacFun_sparsity_out(int i);
+int impl_jacFun_work(int* sz_arg, int* sz_res, int* sz_iw, int* sz_w);
 
 #ifdef __cplusplus
 } /* extern "C" */

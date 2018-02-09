@@ -28,6 +28,7 @@
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
+#include <acados/sim/sim_irk_integrator.h>
 #include <acados/sim/sim_lifted_irk_integrator.h>
 // #include <acados/sim/sim_casadi_wrapper.h>
 
@@ -63,6 +64,8 @@ int main() {
     config.sim_solver = ERK;
     config.extfun.type = CASADI_WRAPPER;
 
+    if (config.sim_solver == IRK) num_stages = 3; // TODO(nielsvd): IRK integrator only supports 3 stages atm
+
     sim_dims dims;
     dims.num_stages = num_stages;
     dims.nx = nx;
@@ -78,6 +81,7 @@ int main() {
     bool sens_hess = false;
 
     sim_erk_integrator_args *erk_args = (sim_erk_integrator_args *)args;
+    sim_irk_integrator_args *irk_args = (sim_irk_integrator_args *)args;
     sim_lifted_irk_integrator_args *lifted_irk_args = (sim_lifted_irk_integrator_args *)args;
     switch (config.sim_solver) {
         case ERK:
@@ -99,6 +103,23 @@ int main() {
             ((casadi_wrapper_args *)(erk_args->hess_vde_args))->fun = &hessFun;
             ((casadi_wrapper_args *)(erk_args->hess_vde_args))->dims = &hessFun_work;
             ((casadi_wrapper_args *)(erk_args->hess_vde_args))->sparsity = &hessFun_sparsity_out;
+            break;
+        case IRK:
+            irk_args->num_steps = num_steps;
+            irk_args->sens_forw = sens_forw;
+            irk_args->sens_adj = sens_adj;
+            irk_args->sens_hess = sens_hess;
+            irk_args->jac_reuse = false;
+            // TODO(dimitris): SET IN DEFAULT ARGS
+            irk_args->num_forw_sens = NF;
+            // Implicit ODE
+            ((casadi_wrapper_args *)(irk_args->impl_res_args))->fun = &impl_odeFun;
+            ((casadi_wrapper_args *)(irk_args->impl_res_args))->dims = &impl_odeFun_work;
+            ((casadi_wrapper_args *)(irk_args->impl_res_args))->sparsity = &impl_odeFun_sparsity_out;
+            // Jacobians of implicit ODE
+            ((casadi_wrapper_args *)(irk_args->impl_jac_args))->fun = &impl_jacFun;
+            ((casadi_wrapper_args *)(irk_args->impl_jac_args))->dims = &impl_jacFun_work;
+            ((casadi_wrapper_args *)(irk_args->impl_jac_args))->sparsity = &impl_jacFun_sparsity_out;
             break;
         case LIFTED_IRK:
             lifted_irk_args->num_steps = num_steps;
@@ -194,8 +215,8 @@ int main() {
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
 
     if(sens_adj){
         struct blasfeo_dmat sA;

@@ -76,21 +76,17 @@ hessFun.generate(['vde_hess_model'], opts);
 x_dot = SX.sym('x_dot',nx,1);         
 f_impl = (x_dot - f_expl); %% add SX.zeros to densify the output
 
-impl_odeFun = Function('impl_odeFun',{x,x_dot,u},{f_impl});
+impl_odeFun = Function('impl_odeFun',{x,x_dot,u,p},{f_impl});
 jac_x = jacobian(f_impl,x);
 jac_xdot = jacobian(f_impl,x_dot);
 jac_u = jacobian(f_impl,u);
 
-impl_jacFun_x = Function('impl_jacFun_x',{x,x_dot,u},{jac_x});
-impl_jacFun_xdot = Function('impl_jacFun_xdot',{x,x_dot,u},{jac_xdot});
-impl_jacFun_u = Function('impl_jacFun_u',{x,x_dot,u},{jac_u});
+impl_jacFun = Function('impl_jacFun',{x,x_dot,u,p},{jac_x,jac_xdot,jac_u});
 
 opts = struct('mex', false);
 % 
-% impl_odeFun.generate(['impl_ode'],opts);
-% impl_jacFun_x.generate(['impl_jac_x'],opts);
-% impl_jacFun_xdot.generate(['impl_jac_xdot'],opts);
-% impl_jacFun_u.generate(['impl_jac_u'],opts);
+impl_odeFun.generate(['impl_ode'],opts);
+impl_jacFun.generate(['impl_jac'],opts);
 
 x0 = [0;3.14;0;0];
 u0 = 0;
@@ -98,8 +94,6 @@ k0 = 0*ones(4,1);
 
 % odeFun(x0,u0)
 
-impl_odeFun(x0,k0,u0)
+impl_odeFun(x0,k0,u0,1)
 
-impl_jacFun_x(x0,k0,u0)
-impl_jacFun_xdot(x0,k0,u0)
-impl_jacFun_u(x0,k0,u0)
+impl_jacFun(x0,k0,u0,1)

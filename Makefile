@@ -37,6 +37,7 @@ OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
 # sim
 OBJS += acados/sim/sim_collocation.o
 OBJS += acados/sim/sim_erk_integrator.o
+OBJS += acados/sim/sim_irk_integrator.o
 OBJS += acados/sim/sim_lifted_irk_integrator.o
 OBJS += acados/sim/sim_common.o
 # utils
