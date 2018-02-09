@@ -22,13 +22,19 @@
 #include <string.h>
 
 #include "acados/dense_qp/dense_qp_hpipm.h"
+#ifdef ACADOS_WITH_QORE
 #include "acados/dense_qp/dense_qp_qore.h"
+#endif
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#endif
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
+#ifdef ACADOS_WITH_QPDUNES
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#endif
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 
 int get_option_int(const void *args_, const char *option)
@@ -46,7 +52,8 @@ bool set_option_int(void *args_, const char *option, const int value)
     token = strsep(&option_cpy, ".");
     while (token) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm")) {
+        if (!strcmp(token, "sparse_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
@@ -55,7 +62,9 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_args->stat_max = value;
             else return false;
-        } else if (!strcmp(token, "condensing_hpipm")) {
+        }
+		else if (!strcmp(token, "condensing_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) sparse_args->solver_args;
@@ -64,7 +73,10 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_args->stat_max = value;
             else return false;
-        } else if (!strcmp(token, "hpmpc")) {
+        }
+#ifdef ACADOS_WITH_HPMPC
+		else if (!strcmp(token, "hpmpc"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
@@ -82,14 +94,20 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "M"))
                 args->M = value;
             else return false;
-        } else if (!strcmp(token, "ooqp")) {
+        }
+#endif
+		else if (!strcmp(token, "ooqp"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_ooqp_args *args = (ocp_qp_ooqp_args *) sparse_args->solver_args;
             if (!strcmp(token, "print_level"))
                 args->printLevel = value;
             else return false;
-        } else if (!strcmp(token, "qpdunes")) {
+        }
+#ifdef ACADOS_WITH_QPDUNES
+		else if (!strcmp(token, "qpdunes"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) sparse_args->solver_args;
@@ -100,7 +118,11 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_iter"))
                 args->options.maxIter = value;
             else return false;
-        } else if (!strcmp(token, "qore")) {
+        }
+#endif
+#ifdef ACADOS_WITH_QORE
+		else if (!strcmp(token, "qore"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_args *cond_args = (ocp_qp_full_condensing_solver_args *) args_;
             dense_qp_qore_args *args = (dense_qp_qore_args *) cond_args->solver_args;
@@ -117,7 +139,10 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_iter"))
                 args->max_iter = value;
             else return false;
-        } else if (!strcmp(token, "qpoases")) {
+        }
+#endif
+		else if (!strcmp(token, "qpoases"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_args *cond_args = (ocp_qp_full_condensing_solver_args *) args_;
             dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) cond_args->solver_args;
@@ -126,7 +151,9 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "warm_start"))
                 args->warm_start = value;
             else return false;
-        } else {
+        }
+		else
+		{
             return false;
         }
         token = strsep(&option_cpy, ".");
@@ -166,7 +193,8 @@ bool set_option_double(void *args_, const char *option, const double value)
     strcpy(option_cpy, option);
     while ((token = strsep(&option_cpy, "."))) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm")) {
+        if (!strcmp(token, "sparse_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
@@ -183,7 +211,9 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
-        } else if (!strcmp(token, "condensing_hpipm")) {
+        }
+		else if (!strcmp(token, "condensing_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) sparse_args->solver_args;
@@ -200,7 +230,10 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
-        } else if (!strcmp(token, "hpmpc")) {
+        }
+#ifdef ACADOS_WITH_HPMPC
+		else if (!strcmp(token, "hpmpc"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
@@ -212,21 +245,30 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "sigma_mu"))
                 args->sigma_mu = value;
             else return false;
-        } else if (!strcmp(token, "qpdunes")) {
+        }
+#endif
+#ifdef ACADOS_WITH_QPDUNES
+		else if (!strcmp(token, "qpdunes"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) sparse_args->solver_args;
             if (!strcmp(token, "tolerance"))
                 args->options.stationarityTolerance = value;
             else return false;
-        } else if (!strcmp(token, "qpoases")) {
+        }
+#endif
+		else if (!strcmp(token, "qpoases"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_args *cond_args = (ocp_qp_full_condensing_solver_args *) args_;
             dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) cond_args->solver_args;
             if (!strcmp(option, "max_cputime"))
                 args->max_cputime = value;
             else return false;
-        } else {
+        }
+		else
+		{
             return false;
         }
         token = strsep(&option_cpy, ".");
