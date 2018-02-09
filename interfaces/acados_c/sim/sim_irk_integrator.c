@@ -31,10 +31,10 @@ int sim_irk_integrator_calculate_submodules_size(sim_solver_config *config, sim_
     int size = sizeof(sim_irk_integrator_submodules);
 
     extern external_function_dims sim_irk_impl_res_dims;
-    size += calculate_external_function_fcn_ptrs_size(&config->ef_config, &sim_irk_impl_res_dims);
+    size += calculate_external_function_fcn_ptrs_size(&config->extfun, &sim_irk_impl_res_dims);
 
     extern external_function_dims sim_irk_impl_jac_dims;
-    size += calculate_external_function_fcn_ptrs_size(&config->ef_config, &sim_irk_impl_jac_dims);
+    size += calculate_external_function_fcn_ptrs_size(&config->extfun, &sim_irk_impl_jac_dims);
 
     return size;
 }
@@ -51,12 +51,12 @@ void *sim_irk_integrator_assign_submodules(sim_solver_config *config, sim_dims *
     c_ptr += sizeof(sim_irk_integrator_submodules);
 
     extern external_function_dims sim_irk_impl_res_dims;
-    submodules->impl_res = assign_external_function_fcn_ptrs(&config->ef_config, &sim_irk_impl_res_dims, c_ptr);
-    c_ptr += calculate_external_function_fcn_ptrs_size(&config->ef_config, &sim_irk_impl_res_dims);
+    submodules->impl_res = assign_external_function_fcn_ptrs(&config->extfun, &sim_irk_impl_res_dims, c_ptr);
+    c_ptr += calculate_external_function_fcn_ptrs_size(&config->extfun, &sim_irk_impl_res_dims);
 
     extern external_function_dims sim_irk_impl_jac_dims;
-    submodules->impl_jac = assign_external_function_fcn_ptrs(&config->ef_config, &sim_irk_impl_jac_dims, c_ptr);
-    c_ptr += calculate_external_function_fcn_ptrs_size(&config->ef_config, &sim_irk_impl_jac_dims);
+    submodules->impl_jac = assign_external_function_fcn_ptrs(&config->extfun, &sim_irk_impl_jac_dims, c_ptr);
+    c_ptr += calculate_external_function_fcn_ptrs_size(&config->extfun, &sim_irk_impl_jac_dims);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
