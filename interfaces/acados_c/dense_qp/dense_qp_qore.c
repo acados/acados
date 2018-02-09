@@ -33,6 +33,7 @@ void *dense_qp_qore_copy_args(dense_qp_solver_config *config, dense_qp_dims *dim
     dest->warm_strategy = source->warm_strategy;
     dest->nsmax = source->nsmax;
     dest->hot_start = source->hot_start;
+    dest->max_iter = source->max_iter;
 
     return (void *)dest;
 }

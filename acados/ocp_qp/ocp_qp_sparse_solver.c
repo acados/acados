@@ -249,32 +249,30 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     // cast workspace
     cast_workspace(qp_in->dim, args, memory, work);
 
-    // condense
-    acados_tic(&cond_timer);
-    if (args->pcond_args->N2 < qp_in->dim->N) {
+    if (args->pcond_args->N2 < qp_in->dim->N) {  // condensing
+        acados_tic(&cond_timer);
         ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory, work->pcond_work);
-    }
-	else
-	{
+        info->condensing_time = acados_toc(&cond_timer);
+    } else {
         memory->pcond_qp_in = qp_in;
         memory->pcond_qp_out = qp_out;
+        info->condensing_time = 0;
     }
-    info->condensing_time = acados_toc(&cond_timer);
 
     // solve qp
     int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
 
     // expand
-    acados_tic(&cond_timer);
     if (args->pcond_args->N2 < qp_in->dim->N) {
+        acados_tic(&cond_timer);
         ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory, work->pcond_work);
+        info->condensing_time += acados_toc(&cond_timer);
     }
-    info->condensing_time += acados_toc(&cond_timer);
 
     info->total_time = acados_toc(&tot_timer);
     info->solve_QP_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->solve_QP_time;
     info->interface_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->interface_time;
     info->num_iter = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->num_iter;
-    // return
+
     return solver_status;
 }

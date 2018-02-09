@@ -65,6 +65,8 @@ void dense_qp_qpoases_initialize_default_args(void *args_)
     args->max_cputime = 1000.0;
     args->warm_start = 0;
     args->max_nwsr = 1000;
+	args->use_precomputed_cholesky = 0;
+	args->hotstart = 0;
 }
 
 
@@ -81,6 +83,7 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     int size = sizeof(dense_qp_qpoases_memory);
 
     size += 1 * nvd * nvd * sizeof(double);        // H
+	size += 1 * nvd * nvd * sizeof(double);        // R
     size += 1 * nvd * ned * sizeof(double);        // A
     size += 1 * nvd * ngd * sizeof(double);        // C
     size += 3 * nvd * sizeof(double);              // g d_lb d_ub
@@ -89,7 +92,7 @@ int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_)
     size += 2 * ngd * sizeof(double);              // d_lg d_ug
     size += 1 * nbd * sizeof(int);                 // idxb
     size += 1 * nvd * sizeof(double);              // prim_sol
-    size += (nvd+ngd) * sizeof(double);  // dual_sol
+    size += (nvd+ngd) * sizeof(double);            // dual_sol
 
     if (ngd > 0)  // QProblem
         size += QProblem_calculateMemorySize(nvd, ngd);
@@ -121,6 +124,7 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     assign_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_double(nvd*nvd, &mem->R, &c_ptr);
     assign_double(nvd*ned, &mem->A, &c_ptr);
     assign_double(nvd*ngd, &mem->C, &c_ptr);
     assign_double(nvd, &mem->g, &c_ptr);
@@ -148,6 +152,9 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
     assign_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_calculate_memory_size(dims, args_) >= c_ptr);
+	
+	// assign default values to fields stored in the memory
+	mem->first_it = 1; // only used if hotstart (only constant data matrices) is enabled
 
     return mem;
 }
@@ -163,7 +170,7 @@ int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_)
 
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
-    dense_qp_info *info = (dense_qp_info *) qp_out->misc;
+	dense_qp_info *info = (dense_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
 
     acados_tic(&tot_timer);
@@ -172,9 +179,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // cast structures
     dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)args_;
     dense_qp_qpoases_memory *memory = (dense_qp_qpoases_memory *)memory_;
-
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
 
     // extract qpoases data
     double *H = memory->H;
@@ -228,9 +232,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // extract R
     // blasfeo_unpack_dmat(nvd, nvd, sR, 0, 0, R, nvd);
 
-#if 0
-#endif
-
     // cold start the dual solution with no active constraints
     int warm_start = args->warm_start;
     if (!warm_start) {
@@ -244,40 +245,98 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     // solve dense qp
     int nwsr = args->max_nwsr;
     double cputime = args->max_cputime;
-    int return_flag = 0;
-    if (ngd > 0) {  // QProblem
-        QProblemCON(QP, nvd, ngd, HST_POSDEF);
-        QProblem_setPrintLevel(QP, PL_MEDIUM);
-        QProblem_printProperties(QP);
-        return_flag = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
-            NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
-        //            NULL, NULL, NULL, NULL);
-        //            NULL, NULL, NULL, R);  // to provide Cholesky factor
-        QProblem_getPrimalSolution(QP, prim_sol);
-        QProblem_getDualSolution(QP, dual_sol);
-    } else {  // QProblemB
-        QProblemBCON(QPB, nvd, HST_POSDEF);
-        QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-        QProblemB_printProperties(QPB);
-        return_flag = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
-            NULL, dual_sol, NULL, NULL);  // NULL or 0
-        QProblemB_getPrimalSolution(QPB, prim_sol);
-        QProblemB_getDualSolution(QPB, dual_sol);
-    }
+    
+	int qpoases_status = 0;
+	if (args->hotstart == 1) { // only to be used with fixed data matrices!
+		if (ngd > 0) {  // QProblem
+			if (memory->first_it == 1) {
+				QProblemCON(QP, nvd, ngd, HST_POSDEF);
+				QProblem_setPrintLevel(QP, PL_MEDIUM);
+				// QProblem_setPrintLevel(QP, PL_DEBUG_ITER); 
+				QProblem_printProperties(QP);
+				// static Options options;
+
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblem_setOptions( QP, options );
+				qpoases_status = QProblem_init(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime );
+				memory->first_it = 0;
+				
+				QProblem_getPrimalSolution(QP, prim_sol);
+				QProblem_getDualSolution(QP, dual_sol);
+			} else {	
+				qpoases_status = QProblem_hotstart(QP, g, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime);
+			}
+		} else {
+			if (memory->first_it == 1) {
+				QProblemBCON(QPB, nvd, HST_POSDEF);
+				QProblemB_setPrintLevel(QPB, PL_MEDIUM);
+				// QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); 
+				QProblemB_printProperties(QPB);
+				// static Options options; 
+
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblemB_setOptions( QPB, options );
+				QProblemB_init(QPB, H, g, d_lb, d_ub, &nwsr, &cputime);
+				memory->first_it = 0;
+				
+				QProblemB_getPrimalSolution(QPB, prim_sol);
+				QProblemB_getDualSolution(QPB, dual_sol);
+
+			} else {	
+				QProblemB_hotstart(QPB, g, d_lb, d_ub, &nwsr, &cputime);
+			}
+		}
+	} else {
+		if (ngd > 0) {  // QProblem
+			QProblemCON(QP, nvd, ngd, HST_POSDEF);
+			QProblem_setPrintLevel(QP, PL_MEDIUM);
+			// QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
+			QProblem_printProperties(QP);
+			if (args->use_precomputed_cholesky == 1) {
+				// static Options options; 
+
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblem_setOptions( QP, options );
+				qpoases_status = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+					/* primal_sol */ NULL, /* dual sol */ NULL, 
+					/* guessed bounds */ NULL, /* guessed constraints */ NULL, /* R */ memory->R); // NULL or 0
+			} else {
+				qpoases_status = QProblem_initW(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime,
+					NULL, dual_sol, NULL, NULL, NULL);  // NULL or 0
+			}
+			QProblem_getPrimalSolution(QP, prim_sol);
+			QProblem_getDualSolution(QP, dual_sol);
+		} else {  // QProblemB
+			QProblemBCON(QPB, nvd, HST_POSDEF);
+			QProblemB_setPrintLevel(QPB, PL_MEDIUM);
+			// QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER); 
+			QProblemB_printProperties(QPB);
+			if (args->use_precomputed_cholesky == 1) {
+				// static Options options;
+
+				// Options_setToDefault( &options );
+				// options.initialStatusBounds = ST_INACTIVE;
+				// QProblemB_setOptions( QPB, options );
+				qpoases_status = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
+					/* primal_sol */ NULL, /* dual sol */ NULL, /* guessed bounds */ NULL, /* R */ memory->R);  // NULL or 0
+			} else {
+				qpoases_status = QProblemB_initW(QPB, H, g, d_lb, d_ub, &nwsr, &cputime,
+					/* primal sol */ NULL, /* dual sol */ dual_sol, /* guessed bounds */ NULL, /* R */ NULL);  // NULL or 0
+			}
+			QProblemB_getPrimalSolution(QPB, prim_sol);
+			QProblemB_getDualSolution(QPB, dual_sol);
+		}
+	}
 
     // save solution statistics to memory
     memory->cputime = cputime;
     memory->nwsr = nwsr;
-
-#if 0
-    double cmpl = 0.0, feas = 0.0, stat = 0.0;
-    qpOASES_getKktViolation(nvd, ngd, H, g, C, d_lb, d_ub, d_lg, d_ug, prim_sol, dual_sol, &stat, &feas, &cmpl);
-    printf("\nstat=%e, feas=%e, cmpl=%e\n", stat, feas, cmpl);
-#endif
-
     info->solve_QP_time = acados_toc(&qp_timer);
+    
     acados_tic(&interface_timer);
-
     // copy prim_sol and dual_sol to qpd_sol
     blasfeo_pack_dvec(nvd, prim_sol, qp_out->v, 0);
     for (int ii = 0; ii < 2*nbd+2*ngd; ii++)
@@ -295,19 +354,12 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
             qp_out->lam->pa[2*nbd+ngd+ii] = - dual_sol[nvd+ii];
         }
 
-    // return
-    // TODO(dimitris): cast qpoases return to acados return
-    acados_status = return_flag;
-
     info->interface_time += acados_toc(&interface_timer);
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
 
-    // printf("total time = \t\t\t%f\n", 1000*info->total_time);
-    // printf("interface time = \t\t%f\n", 1000*info->interface_time);
-    // printf("qp time = \t\t\t%f\n", 1000*info->solve_QP_time);
-    // printf("total time from qpOASES = \t%f\n", 1000*cputime);  // does not include getSolution
-    // printf("**************\n");
-
+    int acados_status = qpoases_status;
+    if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;
+    if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }
