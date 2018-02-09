@@ -9,7 +9,6 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_casadi_wrapper.h"
 
 #include "external/blasfeo/include/blasfeo_target.h"
 #include "external/blasfeo/include/blasfeo_common.h"
