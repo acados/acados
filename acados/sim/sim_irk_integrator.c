@@ -127,6 +127,9 @@ void *sim_irk_integrator_assign_args(sim_dims *dims, void **submodules_, void *r
 
     args->newton_iter = 3;
 
+    // Update submodules pointer
+    *submodules_ = (void *)&(args->submodules);
+
     return (void *)args;
 }
 
