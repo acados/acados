@@ -194,8 +194,8 @@ int main() {
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
 
     if(sens_adj){
         struct blasfeo_dmat sA;
