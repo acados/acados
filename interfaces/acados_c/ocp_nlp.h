@@ -36,9 +36,9 @@ typedef enum {
 } ocp_nlp_solver_t;
 
 typedef struct {
-    ocp_qp_solver_plan *ocp_qp_solver_plan;
-    sim_solver_plan **sim_solver_plan;
-} ocp_nlp_solver_plan;
+    ocp_qp_solver_config *ocp_qp_solver_config;
+    sim_solver_config **sim_solver_config;
+} ocp_nlp_solver_config;
 
 typedef struct {
     ocp_nlp_solver_fcn_ptrs *fcn_ptrs;
@@ -50,31 +50,33 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+ocp_nlp_dims *create_ocp_nlp_dims();
+//
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims);
 //
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
 //
-int ocp_nlp_calculate_args_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims);
+int ocp_nlp_calculate_args_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-void *ocp_nlp_assign_args(ocp_nlp_solver_plan  *plan, ocp_nlp_dims *dims, void *raw_memory);
+void *ocp_nlp_assign_args(ocp_nlp_solver_config  *config, ocp_nlp_dims *dims, void *raw_memory);
 //
-void *ocp_nlp_create_args(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims);
+void *ocp_nlp_create_args(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-void *ocp_nlp_copy_args(ocp_nlp_solver_plan  *plan, ocp_nlp_dims *dims, void *raw_memory, void *source);
+void *ocp_nlp_copy_args(ocp_nlp_solver_config  *config, ocp_nlp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int ocp_nlp_calculate_size(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_);
+int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_);
 //
-ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_, void *raw_memory);
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_, void *raw_memory);
 //
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_plan *plan, ocp_nlp_dims *dims, void *args_);
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *args_);
 //
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out);
 
 // EXPERT INTERFACE
 //
-int set_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_plan *plan, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
+int set_ocp_nlp_solver_fcn_ptrs(ocp_nlp_solver_config *config, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
 
 
 #ifdef __cplusplus

@@ -17,22 +17,26 @@
  *
  */
 
-#ifndef ACADOS_C_DENSE_QP_DENSE_QP_HPIPM_H_
-#define ACADOS_C_DENSE_QP_DENSE_QP_HPIPM_H_
+#ifndef ACADOS_C_UTILS_CASADI_WRAPPER_H_
+#define ACADOS_C_UTILS_CASADI_WRAPPER_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <acados/dense_qp/dense_qp_hpipm.h>
+#include <acados/utils/casadi_wrapper.h>
 
-#include "acados_c/dense_qp.h"
+#include "acados_c/external_function.h"
 
 //
-void *dense_qp_hpipm_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_);
+// void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_);
+//
+int casadi_wrapper_calculate_submodules_size(external_function_config *config, external_function_dims *dims);
+//
+void *casadi_wrapper_assign_submodules(external_function_config *config, external_function_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_DENSE_QP_DENSE_QP_HPIPM_H_
+#endif  // ACADOS_C_UTILS_CASADI_WRAPPER_H_

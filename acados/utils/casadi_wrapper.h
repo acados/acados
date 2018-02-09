@@ -25,27 +25,23 @@ extern "C" {
 #endif
 
 #include "acados/utils/types.h"
+#include "acados/utils/external_function.h"
 
-typedef struct {
-    const real_t *x;
-    const real_t *u;
-    const real_t *p;
 
-    bool compute_jac;
-    bool compute_hess;
-} casadi_wrapper_in;
-
-typedef struct {
-    real_t *y;
-    real_t *jac_y;
-    real_t *hess_y;
-} casadi_wrapper_out;
 
 typedef struct {
     int_t (*fun)(const real_t **, real_t **, int_t *, real_t *, int_t);
     int_t (*dims)(int_t *, int_t *, int_t *, int_t *);
     const int_t *(*sparsity)(int_t);
 } casadi_wrapper_args;
+
+
+
+typedef struct {
+    int dummy;
+} casadi_wrapper_memory;
+
+
 
 typedef struct {
     const real_t **arg;
@@ -55,27 +51,24 @@ typedef struct {
     real_t **sparse_res;
 } casadi_wrapper_workspace;
 
-casadi_wrapper_args *casadi_wrapper_create_arguments();
 
-int_t casadi_wrapper_calculate_workspace_size(const casadi_wrapper_in *cw_in,
-                                              casadi_wrapper_args *args);
 
-char *casadi_wrapper_assign_workspace(const casadi_wrapper_in *cw_in,
-                                      casadi_wrapper_args *args,
-                                      casadi_wrapper_workspace **work,
-                                      void *raw_memory);
-
-casadi_wrapper_workspace *casadi_wrapper_create_workspace(
-    const casadi_wrapper_in *cw_in, casadi_wrapper_args *args);
-
-int_t casadi_wrapper(const casadi_wrapper_in *cw_in, casadi_wrapper_out *cw_out,
-                     casadi_wrapper_args *args, casadi_wrapper_workspace *work);
-
-void casadi_wrapper_initialize(const casadi_wrapper_in *cw_in,
-                               casadi_wrapper_args *args,
-                               casadi_wrapper_workspace **work);
-
-void casadi_wrapper_destroy(casadi_wrapper_workspace *work);
+//
+int casadi_wrapper_calculate_args_size(external_function_dims *dims, void *submodules_);
+//
+void *casadi_wrapper_assign_args(external_function_dims *dims, void **submodules_, void *raw_memory);
+//
+void *casadi_wrapper_copy_args(external_function_dims *dims, void *raw_memory, void *source_);
+//
+void casadi_wrapper_initialize_default_args(void *args_);
+//
+int casadi_wrapper_calculate_memory_size(external_function_dims *dims, void *args_);
+//
+void *casadi_wrapper_assign_memory(external_function_dims *dims, void *args_, void *raw_memory);
+//
+int casadi_wrapper_calculate_workspace_size(external_function_dims *dims, void *args_);
+//
+int casadi_wrapper(external_function_in *ef_in, external_function_out *ef_out, void *args_, void *mem_, void *work_);
 
 #ifdef __cplusplus
 } /* extern "C" */

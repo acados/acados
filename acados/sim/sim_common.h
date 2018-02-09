@@ -27,51 +27,33 @@
 #include "acados/utils/types.h"
 
 
+
 typedef struct {
     int num_stages;
     int nx;
     int nu;
+    int np;
 } sim_dims;
+
 
 
 typedef struct {
     int nx;   // NX
     int nu;   // NU
+    int np;   // NP
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
     double *u;  // u[NU]
+    double *p;  // p[NU]
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
-    casadi_function_t vde;
-    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t vde_adj;
-    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t jac;
-    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t hess;
-    void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t impl_ode;
-    void (*eval_impl_res)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
-
-    casadi_function_t impl_jac_x;
-    void (*eval_impl_jac_x)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_xdot;
-    void (*eval_impl_jac_xdot)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_u;
-    void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
     double step;
 
 } sim_in;
+
 
 
 typedef struct {
@@ -79,6 +61,7 @@ typedef struct {
     double LAtime;
     double ADtime;
 } sim_info;
+
 
 
 typedef struct {
@@ -93,48 +76,34 @@ typedef struct {
 } sim_out;
 
 
-typedef struct {
-
-    double interval;
-    int num_stages;
-
-    int num_steps;
-    int num_forw_sens;
-
-    double *A_mat;
-    double *c_vec;
-    double *b_vec;
-
-    bool sens_forw;
-    bool sens_adj;
-    bool sens_hess;
-
-    // for explicit integrators: newton_iter == 0 && scheme == NULL
-    int newton_iter;
-    Newton_scheme *scheme;
-
-} sim_rk_opts;
 
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(sim_dims *dims);
-    void *(*assign_args)(sim_dims *dims, void *raw_memory);
+    int (*calculate_args_size)(sim_dims *dims, void *submodules);
+    void *(*assign_args)(sim_dims *dims, void **submodules, void *raw_memory);
+    void *(*copy_args)(sim_dims *dims, void *raw_memory, void *source_);
     void (*initialize_default_args)(sim_dims *dims, void *args);
     int (*calculate_memory_size)(sim_dims *dims, void *args);
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
+    void *submodules;
 } sim_solver_fcn_ptrs;
 
+
+
+//
 int sim_dims_calculate_size();
-
+//
 sim_dims *assign_sim_dims(void *raw_memory);
-
+//
 int sim_in_calculate_size(sim_dims *dims);
-
+//
 sim_in *assign_sim_in(sim_dims *dims, void *raw_memory);
-
+//
 int sim_out_calculate_size(sim_dims *dims);
-
+//
 sim_out *assign_sim_out(sim_dims *dims, void *raw_memory);
+
+
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

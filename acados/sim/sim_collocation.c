@@ -240,8 +240,7 @@ void create_Butcher_table(const int_t num_stages, const real_t *nodes,
         for (i = 0; i < num_stages; i++) {
             A[i * num_stages + k] = 0.0;
             for (j = 0; j < num_stages; j++) {
-                A[i * num_stages + k] =
-                    A[i * num_stages + k] +
+                A[i * num_stages + k] +=
                     pow(nodes[k], j + 1) / (j + 1) * rhs[i * num_stages + j];
             }
         }

@@ -111,17 +111,17 @@ int main() {
 
     for (int ii = 0; ii < ii_max; ii++)
     {
-        ocp_qp_solver_plan plan;
-        plan.qp_solver = ocp_qp_solvers[ii];
+        ocp_qp_solver_config config;
+        config.qp_solver = ocp_qp_solvers[ii];
 
-        void *args = ocp_qp_create_args(&plan, qp_dims);
+        void *args = ocp_qp_create_args(&config, qp_dims);
 
         for (int jj = 0; jj < num_N2_values; jj++)
         {
             int N2 = N2_values[jj];
 
             // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
-            switch (plan.qp_solver)
+            switch (config.qp_solver)
             {
                 case PARTIAL_CONDENSING_HPIPM:
                     printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
@@ -168,7 +168,7 @@ int main() {
                     break;
             }
 
-            ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
+            ocp_qp_solver *qp_solver = ocp_qp_create(&config, qp_dims, args);
 
             int acados_return = 0;
 
@@ -247,7 +247,7 @@ int main() {
 
             free(qp_solver);
 
-            if (plan.qp_solver >= FULL_CONDENSING_HPIPM) break;
+            if (config.qp_solver >= FULL_CONDENSING_HPIPM) break;
         }
         free(args);
     }

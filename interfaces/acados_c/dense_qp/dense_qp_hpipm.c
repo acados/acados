@@ -21,7 +21,7 @@
 
 
 
-void *dense_qp_hpipm_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
+void *dense_qp_hpipm_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_)
 {
     dense_qp_hpipm_args *source = (dense_qp_hpipm_args *)source_;
     dense_qp_hpipm_args *dest;

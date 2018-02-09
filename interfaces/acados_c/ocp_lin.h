@@ -37,7 +37,7 @@ typedef enum {
 
 typedef struct {
     ocp_lin_method_t lin_method;
-} ocp_lin_method_plan;
+} ocp_lin_method_config;
 
 typedef struct {
     ocp_lin_method_fcn_ptrs *fcn_ptrs;
@@ -49,31 +49,33 @@ typedef struct {
 
 // INPUT, OUTPUT AND OPTIONS
 //
+ocp_lin_dims *create_ocp_lin_dims();
+//
 ocp_lin_in *create_ocp_lin_in(ocp_lin_dims *dims);
 //
 ocp_lin_out *create_ocp_lin_out(ocp_lin_dims *dims);
 //
-int ocp_lin_calculate_args_size(ocp_lin_method_plan *plan, ocp_lin_dims *dims);
+int ocp_lin_calculate_args_size(ocp_lin_method_config *config, ocp_lin_dims *dims);
 //
-void *ocp_lin_assign_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *raw_memory);
+void *ocp_lin_assign_args(ocp_lin_method_config *config, ocp_lin_dims *dims, void *raw_memory);
 //
-void *ocp_lin_create_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims);
+void *ocp_lin_create_args(ocp_lin_method_config *config, ocp_lin_dims *dims);
 //
-void *ocp_lin_copy_args(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *raw_memory, void *source);
+void *ocp_lin_copy_args(ocp_lin_method_config *config, ocp_lin_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int ocp_lin_calculate_size(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_);
+int ocp_lin_calculate_size(ocp_lin_method_config *config, ocp_lin_dims *dims, void *args_);
 //
-ocp_lin_method *ocp_lin_assign(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_, void *raw_memory);
+ocp_lin_method *ocp_lin_assign(ocp_lin_method_config *config, ocp_lin_dims *dims, void *args_, void *raw_memory);
 //
-ocp_lin_method *ocp_lin_create(ocp_lin_method_plan *plan, ocp_lin_dims *dims, void *args_);
+ocp_lin_method *ocp_lin_create(ocp_lin_method_config *config, ocp_lin_dims *dims, void *args_);
 //
 int ocp_lin_solve(ocp_lin_method *solver, ocp_lin_in *qp_in, ocp_lin_out *qp_out);
 
 // EXPERT INTERFACE
 //
-int set_ocp_lin_method_fcn_ptrs(ocp_lin_method_plan *plan, ocp_lin_method_fcn_ptrs *fcn_ptrs);
+int set_ocp_lin_method_fcn_ptrs(ocp_lin_method_config *config, ocp_lin_method_fcn_ptrs *fcn_ptrs);
 
 
 #ifdef __cplusplus

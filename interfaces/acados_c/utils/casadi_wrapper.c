@@ -17,22 +17,38 @@
  *
  */
 
-#ifndef ACADOS_C_DENSE_QP_DENSE_QP_HPIPM_H_
-#define ACADOS_C_DENSE_QP_DENSE_QP_HPIPM_H_
+#include "acados_c/utils/casadi_wrapper.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdlib.h>
 
-#include <acados/dense_qp/dense_qp_hpipm.h>
 
-#include "acados_c/dense_qp.h"
 
-//
-void *dense_qp_hpipm_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_);
+// void *casadi_wrapper_copy_args(external_function_config *config, external_function_dims *dims, void *raw_memory, void *source_)
+// {
+//     casadi_wrapper_args *source = (casadi_wrapper_args *)source_;
+//     casadi_wrapper_args *dest;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+//     dest = casadi_wrapper_assign_args(dims, NULL, raw_memory);
 
-#endif  // ACADOS_DENSE_QP_DENSE_QP_HPIPM_H_
+//     dest->fun = source->fun;
+
+//     dest->dims = source->dims;
+
+//     dest->sparsity = source->sparsity;
+    
+//     return (void *)dest;
+// }
+
+
+
+int casadi_wrapper_calculate_submodules_size(external_function_config *config, external_function_dims *dims)
+{
+    return 0;
+}
+
+
+
+void *casadi_wrapper_assign_submodules(external_function_config *config, external_function_dims *dims, void *raw_memory)
+{
+    return NULL;
+}

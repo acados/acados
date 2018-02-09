@@ -86,12 +86,12 @@ int main() {
     * dense ipm
     ************************************************/
 
-    dense_qp_solver_plan plan;
-    plan.qp_solver = DENSE_QP_HPIPM;
+    dense_qp_solver_config config;
+    config.qp_solver = DENSE_QP_HPIPM;
 
-    void *argd = dense_qp_create_args(&plan, &ddims);
+    void *argd = dense_qp_create_args(&config, &ddims);
 
-    dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
+    dense_qp_solver *qp_solver = dense_qp_create(&config, &ddims, argd);
 
 	int acados_return;  // 0 normal; 1 max iter
 

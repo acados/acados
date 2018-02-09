@@ -17,22 +17,24 @@
  *
  */
 
-#ifndef ACADOS_C_DENSE_QP_DENSE_QP_HPIPM_H_
-#define ACADOS_C_DENSE_QP_DENSE_QP_HPIPM_H_
+#ifndef ACADOS_C_SIM_SIM_IRK_INTEGRATOR_H_
+#define ACADOS_C_SIM_SIM_IRK_INTEGRATOR_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <acados/dense_qp/dense_qp_hpipm.h>
+#include <acados/sim/sim_irk_integrator.h>
 
-#include "acados_c/dense_qp.h"
+#include "acados_c/sim.h"
 
 //
-void *dense_qp_hpipm_copy_args(dense_qp_solver_config *config, dense_qp_dims *dims, void *raw_memory, void *source_);
+int sim_irk_integrator_calculate_submodules_size(sim_solver_config *config, sim_dims *dims);
+//
+void *sim_irk_integrator_assign_submodules(sim_solver_config *config, sim_dims *dims, void *raw_memory);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_DENSE_QP_DENSE_QP_HPIPM_H_
+#endif  // ACADOS_C_SIM_SIM_IRK_INTEGRATOR_H_
