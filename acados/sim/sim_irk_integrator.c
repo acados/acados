@@ -53,9 +53,6 @@ void *sim_irk_assign_opts(sim_dims *dims, void *raw_memory)
 
     assert((char*)raw_memory + sim_irk_opts_calculate_size(dims) >= c_ptr);
 
-    opts->newton_iter = 3;
-    opts->scheme = NULL;
-
     return (void *)opts;
 }
 
@@ -63,27 +60,55 @@ void *sim_irk_assign_opts(sim_dims *dims, void *raw_memory)
 
 void sim_irk_initialize_default_args(sim_dims *dims, void *opts_)
 {
+	// loop index
+	int ii;
+
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
     int ns = opts->num_stages;
 
+#if 0
+	// XXX only 3-stages IRK implemented ATM
     assert(ns == 3 && "only number of stages = 3 implemented!");
 
-    memcpy(opts->A_mat,
-        ((real_t[]){0.1389, 0.3003, 0.2680 ,
-        -0.0360, 0.2222, 0.4804,
-        0.0098, -0.0225, 0.1389}),
-        sizeof(*opts->A_mat) * (ns * ns));
-    memcpy(opts->b_vec, ((real_t[]){0.2778, 0.4444, 0.2778}),
-        sizeof(*opts->b_vec) * (ns));
-    memcpy(opts->c_vec, ((real_t[]){0.1127, 0.5, 0.8873}),
-        sizeof(*opts->c_vec) * (ns));
+	// XXX hard-coded butcher tableau ATM
+	double A3[] = { 0.1389,  0.3003,  0.2680,
+	               -0.0360,  0.2222,  0.4804,
+	                0.0098, -0.0225,  0.1389};
 
+	double b3[] = { 0.2778,  0.4444,  0.2778};
+
+	double c3[] = { 0.1127,  0.5000,  0.8873};
+
+	// copy butcher tableau
+	for (ii=0; ii<ns*ns; ii++)
+		opts->A_mat[ii] = A3[ii];
+	
+	for (ii=0; ii<ns; ii++)
+		opts->b_vec[ii] = b3[ii];
+
+	for (ii=0; ii<ns; ii++)
+		opts->c_vec[ii] = c3[ii];
+
+#else
+
+	// gauss collocation nodes
+    get_Gauss_nodes(opts->num_stages, opts->c_vec);
+	// butcher tableau
+    create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
+
+#endif
+
+	// default options
+    opts->newton_iter = 3;
+    opts->scheme = NULL;
     opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
     opts->jac_reuse = false;
+
+	return;
 }
 
 
@@ -347,6 +372,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     for(ss=0; ss<num_steps; ss++){
 
         //  obtain Kn
+		// TODO add exit condition on residuals ???
         for(iter=0; iter<newton_iter; iter++)
 		{
 
@@ -366,7 +392,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                     a = A_mat[ii+ns*jj];
                     if(a!=0)
 					{           // xt = xt + T_int * a[i,j]*K_j
-                        a *= step;
+						a *= step;
                         blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
                     }
                 }
@@ -381,7 +407,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
-                if ( (ss==0 && iter==0 && opts->jac_reuse) || (!opts->jac_reuse) )
+                if ( (opts->jac_reuse & ss==0 & iter==0) | (!opts->jac_reuse) )
 				{
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
@@ -397,11 +423,11 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 						{
                             a *= step;
                             for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] = a* jac_out[kk];
+                                Jt[kk] = a * jac_out[kk];
                         }
                         if(jj==ii)
 						{
-                            for (kk=0;kk<nx*nx;kk++)
+                            for (kk=0; kk<nx*nx; kk++)
                                 Jt[kk] += jac_out[nx*nx+kk];
                         }
                         // fill in the ii-th, jj-th block of JGK
@@ -412,7 +438,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
             //DGETRF computes an LU factorization of a general M-by-N matrix A
             //using partial pivoting with row interchanges.
-            if ( (ss==0 && iter==0 && opts->jac_reuse) || (!opts->jac_reuse) )
+			if ( (opts->jac_reuse & ss==0 & iter==0) | (!opts->jac_reuse) )
 			{
                 blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
             }
@@ -459,6 +485,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 acados_tic(&timer_ad);
+
                 in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
@@ -466,6 +493,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
 				in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+
                 timing_ad += acados_toc(&timer_ad);
 
                 for (jj=0;jj<ns;jj++)
@@ -497,6 +525,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
             }
 
             // obtain JKf
+			// TODO add the option to use VDE instead of dgemm ???
             blasfeo_dgemm_nn(nx*ns, nx, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
             blasfeo_dgemm_nn(nx*ns, nu, nx, 1.0, JGf, 0, 0, S_forw, 0, nx, 1.0, JGf, 0, nx, JKf, 0, nx);
             blasfeo_drowpe(nx*ns, ipiv, JKf);

@@ -765,7 +765,7 @@ int main() {
 #if DYNAMICS==0 | DYNAMICS==1
         num_stages[ii] = 4;
 #else
-        num_stages[ii] = 3;
+        num_stages[ii] = 4;
 #endif
     }
 
