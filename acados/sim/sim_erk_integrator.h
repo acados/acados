@@ -27,11 +27,17 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
 
+
+typedef struct
+{
+	// no memory
 } sim_erk_memory;
 
-typedef struct {
+
+
+typedef struct
+{
 
     double *rhs_forw_in;  // x + S + p
 
@@ -44,6 +50,8 @@ typedef struct {
 
 } sim_erk_workspace;
 
+
+
 int sim_erk_opts_calculate_size(sim_dims *dims);
 
 void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory);
@@ -54,11 +62,11 @@ int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_);
 
 void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
 
-void *sim_erk_create_memory(sim_dims *dims, void *opts_);
-
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
 int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

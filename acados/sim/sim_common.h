@@ -22,9 +22,12 @@
 
 #include <stdbool.h>
 
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+
+#include "acados/utils/external_function_generic.h"
+
 
 
 typedef struct {
@@ -32,6 +35,7 @@ typedef struct {
     int nx;
     int nu;
 } sim_dims;
+
 
 
 typedef struct {
@@ -45,43 +49,45 @@ typedef struct {
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
-    casadi_function_t vde;
-    void (*forward_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
+	/* external functions */
 
-    casadi_function_t vde_adj;
-    void (*adjoint_vde_wrapper)(const int, const int, const double *, double *, casadi_function_t);
+	// explicit ode
+	external_function_generic *ode_expl;
+	// jacobian explicit ode
+	external_function_generic *jac_ode_expl;
+	// hessian explicit ode
+	external_function_generic *hess_ode_expl;
+	// forward explicit vde
+	external_function_generic *forw_vde_expl;
+	// adjoint explicit vde
+	external_function_generic *adj_vde_expl;
 
-    casadi_function_t jac;
-    void (*jacobian_wrapper)(const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t hess;
-    void (*Hess_fun)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t impl_ode;
-    void (*eval_impl_res)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
-
-    casadi_function_t impl_jac_x;
-    void (*eval_impl_jac_x)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_xdot;
-    void (*eval_impl_jac_xdot)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
-
-    casadi_function_t impl_jac_u;
-    void (*eval_impl_jac_u)(const int, const int, const double *, double *, casadi_function_t); // function pointer to jacobian of implicit ode
+	// implicit ode
+	external_function_generic *ode_impl;
+	// jac_x implicit ode
+	external_function_generic *jac_x_ode_impl;
+	// jac_xdot implicit ode
+	external_function_generic *jac_xdot_ode_impl;
+	// jac_u implicit ode
+	external_function_generic *jac_u_ode_impl;
 
     double step;
 
 } sim_in;
 
 
-typedef struct {
-    double CPUtime;
-    double LAtime;
-    double ADtime;
+
+typedef struct
+{
+    double CPUtime; // in seconds
+    double LAtime; // in seconds
+    double ADtime; // in seconds
 } sim_info;
 
 
-typedef struct {
+
+typedef struct
+{
     double *xn;      // xn[NX]
     double *S_forw;  // S_forw[NX*(NX+NU)]
     double *S_adj;   //
@@ -93,7 +99,9 @@ typedef struct {
 } sim_out;
 
 
-typedef struct {
+
+typedef struct
+{
 
     double interval;
     int num_stages;
@@ -109,11 +117,18 @@ typedef struct {
     bool sens_adj;
     bool sens_hess;
 
-    // for explicit integrators: newton_iter == 0 && scheme == NULL
+    // for explicit integrators: newton_iter == 0 && scheme == NULL 
+    // && jac_reuse=false
     int newton_iter;
+    bool jac_reuse;
     Newton_scheme *scheme;
 
+	// work space
+	void *work;
+
 } sim_rk_opts;
+
+
 
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
@@ -124,6 +139,8 @@ typedef struct {
     void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(sim_dims *dims, void *args);
 } sim_solver_fcn_ptrs;
+
+
 
 int sim_dims_calculate_size();
 

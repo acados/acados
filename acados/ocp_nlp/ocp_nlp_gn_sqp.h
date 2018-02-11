@@ -29,7 +29,7 @@ extern "C" {
 #include <acados_c/sim.h>
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h" // TODO remove ???
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 // blasfeo
@@ -136,7 +136,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 ************************************************/
 
 //
-int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
+int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
 
 
 

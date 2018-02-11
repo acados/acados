@@ -24,12 +24,14 @@
 extern "C" {
 #endif
 
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
+
+
 
 typedef struct {
     real_t *rhs_in;
@@ -48,6 +50,8 @@ typedef struct {
 
     real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
+
+
 
 typedef struct {
 
@@ -73,6 +77,8 @@ typedef struct {
     struct blasfeo_dmat **str_sol2;
 
 } sim_lifted_irk_memory;
+
+
 
 int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
 

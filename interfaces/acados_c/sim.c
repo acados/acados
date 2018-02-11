@@ -27,6 +27,7 @@
 #include <acados/utils/mem.h>
 //acados_c
 #include "acados_c/sim/sim_erk_integrator.h"
+#include "acados_c/sim/sim_irk_integrator.h"
 #include "acados_c/sim/sim_lifted_irk_integrator.h"
 
 
@@ -136,6 +137,9 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
         case LIFTED_IRK:
             args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
             break;
+//		TODO
+//        case IRK:
+//            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
     }
 
     return args;
@@ -245,6 +249,15 @@ int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
             fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
             fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;
             fcn_ptrs->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
+            break;
+        case IRK:
+            fcn_ptrs->fun = &sim_irk;
+            fcn_ptrs->calculate_args_size = &sim_irk_opts_calculate_size;
+            fcn_ptrs->assign_args = &sim_irk_assign_opts;
+            fcn_ptrs->initialize_default_args = &sim_irk_initialize_default_args;
+            fcn_ptrs->calculate_memory_size = &sim_irk_calculate_memory_size;
+            fcn_ptrs->assign_memory = &sim_irk_assign_memory;
+            fcn_ptrs->calculate_workspace_size = &sim_irk_calculate_workspace_size;
             break;
         default:
             return_value = ACADOS_FAILURE;

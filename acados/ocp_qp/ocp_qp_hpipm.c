@@ -73,7 +73,7 @@ void ocp_qp_hpipm_initialize_default_args(void *args_)
 
     d_set_default_ocp_qp_ipm_arg(args->hpipm_args);
 	// overwrite some default options
-    args->hpipm_args->res_g_max = 1e-11; // otherwise inaccurate for Python/MATLAB qp example
+    args->hpipm_args->res_g_max = 1e-6; // otherwise inaccurate for Python/MATLAB qp example // then you can increase the accuracy just in Python/MATLAB qp example, 1e-11 is too high to be robust in general, and just makes the solution diverge at late IPM iterations
     args->hpipm_args->res_b_max = 1e-8;
     args->hpipm_args->res_d_max = 1e-8;
     args->hpipm_args->res_m_max = 1e-8;

@@ -22,11 +22,12 @@ OBJS += sim/sim_erk_integrator.o
 OBJS += sim/sim_lifted_irk_integrator.o
 OBJS += dense_qp.o
 OBJS += legacy_create.o
-OBJS += ocp_lin.o
-# OBJS += ocp_nlp.o
+#OBJS += ocp_lin.o
+#OBJS += ocp_nlp.o
 OBJS += ocp_qp.o
 OBJS += options.o
 OBJS += sim.o
+OBJS += external_function_generic.o
 
 static_library: $(OBJS)
 	ar rcs libacados_c.a $(OBJS)

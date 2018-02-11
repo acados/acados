@@ -27,8 +27,9 @@
 // NOTE(nielsvd): required to cast memory etc. should go.
 #include <acados/sim/sim_common.h>
 #include <acados/sim/sim_erk_integrator.h>
-#include <acados/sim/sim_casadi_wrapper.h>
-
+//#include <acados/sim/sim_casadi_wrapper.h>
+#include "acados/utils/external_function_generic.h"
+// crane model
 #include "examples/c/crane_model/crane_model.h"
 
 // blasfeo
@@ -39,9 +40,55 @@
 #include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
 #include <blasfeo/include/blasfeo_d_blas.h>
 
-// #define M_PI 3.14159265358979323846
+// c interface
+#include <acados_c/external_function_generic.h>
 
-int main() {
+
+
+int main()
+{
+
+/************************************************
+* external functions
+************************************************/
+
+	// forward explicit VDE
+
+	external_function_casadi exfun_forw_vde;
+	exfun_forw_vde.casadi_fun = &vdeFun;
+	exfun_forw_vde.casadi_work = &vdeFun_work;
+	exfun_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
+	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
+
+	create_external_function_casadi(&exfun_forw_vde);
+
+	// adjoint explicit VDE
+
+	external_function_casadi exfun_adj_vde;
+	exfun_adj_vde.casadi_fun = &adjFun;
+	exfun_adj_vde.casadi_work = &adjFun_work;
+	exfun_adj_vde.casadi_sparsity_in = &adjFun_sparsity_in;
+	exfun_adj_vde.casadi_sparsity_out = &adjFun_sparsity_out;
+
+	create_external_function_casadi(&exfun_adj_vde);
+
+	// hessian explicit ODE
+
+	external_function_casadi exfun_hess_ode;
+	exfun_hess_ode.casadi_fun = &hessFun;
+	exfun_hess_ode.casadi_work = &hessFun_work;
+	exfun_hess_ode.casadi_sparsity_in = &hessFun_sparsity_in;
+	exfun_hess_ode.casadi_sparsity_out = &hessFun_sparsity_out;
+
+	create_external_function_casadi(&exfun_hess_ode);
+
+/************************************************
+* bla bla bla
+************************************************/
+
+    int NREP = 500;
+    acados_timer timer;
+    double Time1, Time2, Time3;
 
     int ii;
     int jj;
@@ -56,32 +103,50 @@ int main() {
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
-    sim_solver_plan plan;
-    plan.sim_solver = ERK;
+/************************************************
+* sim dims
+************************************************/
 
     sim_dims dims;
     dims.num_stages = num_stages;
     dims.nx = nx;
     dims.nu = nu;
 
+/************************************************
+* sim plan (what is that ???)
+************************************************/
+
+    sim_solver_plan plan;
+    plan.sim_solver = ERK;
+
+/************************************************
+* sim opts
+************************************************/
+
     void *args = sim_create_args(&plan, &dims);
     
     sim_rk_opts *erk_opts = (sim_rk_opts *) args;
     erk_opts->num_steps = 4;
     erk_opts->sens_forw = true;
-    erk_opts->sens_adj = false;
+    erk_opts->sens_adj = true;
     erk_opts->sens_hess = false;
     // TODO(dimitris): SET IN DEFAULT ARGS
     erk_opts->num_forw_sens = NF;
 
+/************************************************
+* sim in
+************************************************/
+
     sim_in *in = create_sim_in(&dims);
+
     in->step = T / erk_opts->num_steps;
-    in->vde = &vdeFun;
-    in->vde_adj = &adjFun;
-    in->hess = &hessFun;
-    in->forward_vde_wrapper = &vde_fun;
-    in->adjoint_vde_wrapper = &vde_adj_fun;
-    in->Hess_fun = &vde_hess_fun;
+
+	// external functions
+	in->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
+	in->adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
+	in->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
+
+
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
@@ -98,13 +163,32 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
-    sim_solver *solver = sim_create(&plan, &dims, args);
+/************************************************
+* workspace
+************************************************/
 
     sim_out *out = create_sim_out(&dims);
 
-    int flag = sim_solve(solver, in, out);
+/************************************************
+* sim solver
+************************************************/
+
+    sim_solver *solver = sim_create(&plan, &dims, args);
+
+/************************************************
+* call integrator
+************************************************/
+
+    acados_tic(&timer);
+    for (ii=0;ii<NREP;ii++)
+		sim_solve(solver, in, out);
+    Time1 = acados_toc(&timer)/NREP;
 
     double *xn = out->xn;
+
+/************************************************
+* printing
+************************************************/
 
     printf("\nxn: \n");
     for (ii=0;ii<nx;ii++)
@@ -117,7 +201,7 @@ int main() {
         printf("\nS_forw_out: \n");
         for (ii=0;ii<nx;ii++){
             for (jj=0;jj<NF;jj++)
-                printf("%8.5f ",S_forw_out[jj*nx+ii]);
+                printf("%8.5f ", S_forw_out[jj*nx+ii]);
             printf("\n");
         }
     }
@@ -127,7 +211,7 @@ int main() {
         S_adj_out = out->S_adj;
         printf("\nS_adj_out: \n");
         for (ii=0;ii<nx+nu;ii++){
-            printf("%8.5f ",S_adj_out[ii]);
+            printf("%8.5f ", S_adj_out[ii]);
         }
         printf("\n");
     }
@@ -140,9 +224,9 @@ int main() {
         for (ii=0;ii<NF;ii++){
             for (jj=0;jj<NF;jj++){
                 if (jj>ii){
-                    printf("%8.5f ",zero);
+                    printf("%8.5f ", zero);
                 }else{
-                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
+                    printf("%8.5f ", S_hess_out[jj*NF+ii]);
                 }
             }
             printf("\n");
@@ -151,32 +235,44 @@ int main() {
 
 
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime*1000);
+    printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 
     if(erk_opts->sens_adj){
         struct blasfeo_dmat sA;
-        blasfeo_create_dmat(nx, nx+nu, &sA, S_forw_out);
+		blasfeo_allocate_dmat(nx, nx+nu, &sA);
+		blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
 
         struct blasfeo_dvec sx;
-        blasfeo_create_dvec(nx, &sx, in->S_adj);
+		blasfeo_allocate_dvec(nx, &sx);
+		blasfeo_pack_dvec(nx, in->S_adj, &sx, 0);
 
         struct blasfeo_dvec sz;
-        void *mz;
-        v_zeros_align(&mz, blasfeo_memsize_dvec(nx+nu));
-        blasfeo_create_dvec(nx+nu, &sz, mz);
+		blasfeo_allocate_dvec(nx+nu, &sz);
+//		blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
+//		blasfeo_print_tran_dvec(nx, &sx, 0);
         blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
         printf("\nJac times lambdaX:\n");
         blasfeo_print_tran_dvec(nx+nu, &sz, 0);
 
-        v_free_align(mz);
+		blasfeo_free_dmat(&sA);
+		blasfeo_free_dvec(&sx);
+		blasfeo_free_dvec(&sz);
     }
+
+/************************************************
+* free
+************************************************/
+
+	free_external_function_casadi(&exfun_forw_vde);
+	free_external_function_casadi(&exfun_adj_vde);
+	free_external_function_casadi(&exfun_hess_ode);
 
     free(xref);
     free(in);
     free(solver);
     free(out);
 
-    return flag;
+    return 0;
 }
