@@ -69,8 +69,6 @@ int sim_irk_calculate_memory_size(sim_dims *dims, void *opts_);
 
 void *sim_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
 
-void *sim_irk_create_memory(sim_dims *dims, void *opts_);
-
 int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
 int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_);

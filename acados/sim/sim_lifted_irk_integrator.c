@@ -613,6 +613,7 @@ real_t solve_system_ACADO(real_t *const A, real_t *const b, int *const perm,
     for (k = 0; k < DIM * DIM_RHS; ++k) {
         b[k] = bPerm[k];
     }
+	free(bPerm);
     return 0;
 }
 
@@ -664,6 +665,7 @@ real_t solve_system_trans_ACADO(real_t *const A, real_t *const b,
             b[j * DIM + index1] = bPerm[j * DIM + i];
         }
     }
+	free(bPerm);
     return 0;
 }
 

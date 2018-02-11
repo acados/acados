@@ -281,18 +281,6 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
 
 
-void *sim_irk_create_memory(sim_dims *dims, void *opts_)
-{
-
-    int bytes = sim_irk_calculate_memory_size(dims, opts_);
-    void *ptr = malloc(bytes);
-    sim_irk_memory *memory = sim_irk_assign_memory(dims, opts_, ptr);
-
-    return (void *)memory;
-}
-
-
-
 int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 

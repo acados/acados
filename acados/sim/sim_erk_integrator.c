@@ -207,17 +207,6 @@ void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
 
 
-void *sim_erk_create_memory(sim_dims *dims, void *opts_)
-{
-    int bytes = sim_erk_calculate_memory_size(dims, opts_);
-    void *ptr = acados_malloc(bytes, 1);
-    sim_erk_memory *memory = sim_erk_assign_memory(dims, opts_, ptr);
-
-    return (void *)memory;
-}
-
-
-
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
