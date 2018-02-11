@@ -203,8 +203,6 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
 
-    assert(ned == 0 && "ned != 0 not supported yet");
-
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
 

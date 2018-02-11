@@ -199,8 +199,6 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
 
-    assert(ned == 0 && "ned != 0 not supported yet");
-
     acados_tic(&interface_timer);
 
     // fill in the upper triangular of H in dense_qp

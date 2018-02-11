@@ -194,18 +194,14 @@ void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_me
             #endif
             break;
         case FULL_CONDENSING_HPIPM:
-            // TODO(roversch): Implement ocp_qp_dims -> dense_qp_dims
-            return NULL;
-            // dense_qp_hpipm_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_hpipm_copy_args((dense_qp_dims *)dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QPOASES:
-            return NULL;
-            // dense_qp_qpoases_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_qpoases_copy_args((dense_qp_dims *)dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QORE:
             #ifdef ACADOS_WITH_QORE
-            return NULL;
-            // dense_qp_qore_copy_args(dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            dense_qp_qore_copy_args((dense_qp_dims *)dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             #endif
             break;
     }
