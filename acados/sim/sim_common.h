@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 

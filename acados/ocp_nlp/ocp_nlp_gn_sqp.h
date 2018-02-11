@@ -29,7 +29,7 @@ extern "C" {
 #include <acados_c/sim.h>
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h" // TODO remove ???
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 // blasfeo

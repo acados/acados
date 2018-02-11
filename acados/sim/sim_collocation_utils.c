@@ -17,7 +17,7 @@
  *
  */
 
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h"
 
 #include <math.h>
 #include <stdlib.h>
