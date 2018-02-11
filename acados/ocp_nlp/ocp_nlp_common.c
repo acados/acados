@@ -204,8 +204,6 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 
 int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims)
 {
-	// loop index
-	int ii;
 
 	// extract dims
 	int N = dims->N;
@@ -372,8 +370,6 @@ ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_me
 // TODO(dimitris): fix order of funs
 int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 {
-	// loop index
-	int ii;
 
 	// extract dims
     int N = dims->N;
@@ -381,7 +377,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 	int *nh = dims->nh;
 
     int size = sizeof(ocp_nlp_in);
@@ -398,7 +393,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 
 	size += ocp_nlp_model_expl_calculate_size(dims); // model
 
-    for (ii = 0; ii < N+1; ii++)
+    for (int ii = 0; ii < N+1; ii++)
     {
         size += sizeof(int)*(nb[ii]);  // idxb
 		size += 1*blasfeo_memsize_dvec(2*nb[ii]+2*ng[ii]); // d
@@ -423,9 +418,6 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims)
 ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory)
 {
 
-	// loop index
-	int ii;
-
     char *c_ptr = (char *) raw_memory;
 
 	// extract sizes
@@ -434,7 +426,6 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -477,23 +468,23 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 
 	// blasfeo_dmat
 	// DCt
-    for (ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii <= N; ++ii)
 		assign_blasfeo_dmat_mem(nu[ii]+nx[ii], ng[ii], in->DCt+ii, &c_ptr);
 
 	// blasfeo_dvec
 	// d
-    for (ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii <= N; ++ii)
 		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], in->d+ii, &c_ptr);
 
     // doubles
-    for (ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii <= N; ++ii)
     {
         assign_double(dims->nh[ii], &in->lh[ii], &c_ptr);
         assign_double(dims->nh[ii], &in->uh[ii], &c_ptr);
     }
 
     // ints
-    for (ii = 0; ii < N+1; ii++)
+    for (int ii = 0; ii < N+1; ++ii)
     {
         assign_int(dims->nbx[ii]+dims->nbu[ii], &in->idxb[ii], &c_ptr);
     }
@@ -520,7 +511,6 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 
     int size = sizeof(ocp_nlp_out);
 
@@ -550,8 +540,6 @@ int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims)
 
 ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 {
-	// loop index
-	int ii;
 
 	// extract sizes
     int N = dims->N;
@@ -559,7 +547,6 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -589,16 +576,16 @@ ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory)
 
 	// blasfeo_dvec
 	// ux
-    for (ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii <= N; ++ii)
 		assign_blasfeo_dvec_mem(nu[ii]+nx[ii], out->ux+ii, &c_ptr);
 	// pi
-    for (ii = 0; ii < N; ii++)
+    for (int ii = 0; ii < N; ++ii)
 		assign_blasfeo_dvec_mem(nx[ii+1], out->pi+ii, &c_ptr);
 	// lam
-    for (ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii <= N; ++ii)
 		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], out->lam+ii, &c_ptr);
 	// t
-    for (ii = 0; ii <= N; ii++)
+    for (int ii = 0; ii <= N; ++ii)
 		assign_blasfeo_dvec_mem(2*nb[ii]+2*ng[ii], out->t+ii, &c_ptr);
 
 	// memsize
@@ -626,7 +613,6 @@ int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 
     int size = sizeof(ocp_nlp_mem);
 
@@ -669,7 +655,6 @@ ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -737,8 +722,6 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
-	int *nh = dims->nh;
 
     int size = sizeof(ocp_nlp_res);
 
@@ -781,7 +764,6 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -873,12 +855,11 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
 	}
 	
 	// res_m
-	double tmp;
-	// TODO add blasfeo_dvecmul
+	// TODO(giaf): add blasfeo_dvecmul
 	res->inf_norm_res_m = 0.0;
 	for (ii=0; ii<=N; ii++)
 	{
-		tmp = blasfeo_dvecmuldot(2*nb[ii]+2*ng[ii], out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
+		// tmp = blasfeo_dvecmuldot(2*nb[ii]+2*ng[ii], out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
 		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii], res->res_m+ii, 0, &tmp_res);
 		res->inf_norm_res_m = tmp_res>res->inf_norm_res_m ? tmp_res : res->inf_norm_res_m;
 	}

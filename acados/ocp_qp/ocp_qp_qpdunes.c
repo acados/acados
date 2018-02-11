@@ -188,7 +188,6 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     // initialize memory
     int N, nx, nu;
     uint *nD_ptr = 0;
-    return_t return_value;
 
     N = dims->N;
     nx = dims->nx[0];
@@ -201,13 +200,14 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     mem->nDmax = get_maximum_number_of_inequality_constraints(dims);
 
     // Check for constant dimensions
+    // TODO(roversch): Move this up the call stack?
     for (int kk = 1; kk < N; kk++)
     {
-        assert(dims->nx[kk] == nx && "qpDUNES does not support varying dimensions");
-        assert(dims->nu[kk] == nu && "qpDUNES does not support varying dimensions");
+        if (dims->nx[kk] != nx || dims->nu[kk] != nu)
+            return NULL;
     }
-    assert(dims->nx[N] == nx && "qpDUNES does not support varying dimensions");
-    assert(dims->nu[N] == 0 && "qpDUNES does not support nu > 0 on terminal stage");
+    if (dims->nx[N] != nx || dims->nu[N] != 0)
+        return NULL;
 
     if (args->stageQpSolver == QPDUNES_WITH_QPOASES)
     {
@@ -227,8 +227,9 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     }
 
     // qpDUNES memory allocation
-    return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
-    assert(return_value == QPDUNES_OK && "Setup of the QP solver failed\n");
+    return_t return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
+    if (return_value != QPDUNES_OK)
+        return NULL;
 
     return mem;
 }
@@ -445,9 +446,8 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
         // check if qpDUNES will detect clipping or qpOASES
         stageQps = check_stage_qp_solver(args, in);
 
-        // if user specified clipping but problem requires qpOASES, throw error
-        assert(!((args->stageQpSolver == QPDUNES_WITH_CLIPPING)
-            && (stageQps == QPDUNES_WITH_QPOASES)) && "Cannot use clipping for this QP");
+        if (args->stageQpSolver == QPDUNES_WITH_CLIPPING && stageQps == QPDUNES_WITH_QPOASES)
+            return QPDUNES_ERR_INVALID_ARGUMENT;  // user specified clipping but problem requires qpOASES
 
         // if user specified qpOASES but clipping is detected, trick qpDUNES to detect qpOASES
         // NOTE(dimitris): also needed when partial condensing is used because qpDUNES detects

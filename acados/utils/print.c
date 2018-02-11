@@ -465,8 +465,6 @@ void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in)
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
 
-    char *str = string_out;
-
     for (int ii = 0; ii < N+1; ii++)
     {
         string_out += sprintf(string_out, "k = %d\n\n", ii);

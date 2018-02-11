@@ -126,7 +126,7 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
 {
     sim_solver_t solver_name = plan->sim_solver;
 
-    void *args;
+    void *args = NULL;
 
     switch (solver_name)
     {
@@ -171,8 +171,6 @@ int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-
-    sim_rk_opts *args = (sim_rk_opts *)args_;
 
     sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);

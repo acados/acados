@@ -17,6 +17,11 @@
 #
 #
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+endif()
+
 # TODO: The following definition should go ASAP!
 if(CMAKE_SYSTEM_NAME MATCHES "dSpace")
     set(EXT_DEP OFF CACHE BOOL "Compile external dependencies in BLASFEO")

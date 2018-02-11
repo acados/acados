@@ -19,8 +19,6 @@
 
 #include "acados_c/options.h"
 
-#include <string.h>
-
 #include "acados/dense_qp/dense_qp_hpipm.h"
 #include "acados/dense_qp/dense_qp_qore.h"
 #include "acados/dense_qp/dense_qp_qpoases.h"
@@ -30,6 +28,7 @@
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados/utils/strsep.h"
 
 int get_option_int(const void *args_, const char *option)
 {

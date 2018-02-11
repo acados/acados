@@ -11,7 +11,7 @@ namespace acados {
 
 bool valid_dimensions(map<string, vector<uint>> dims) {
 
-    int expected_size = dims["nx"].size();
+    auto expected_size = dims["nx"].size();
     if (expected_size <= 0)
         return false;
 
