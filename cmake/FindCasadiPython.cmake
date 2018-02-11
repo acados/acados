@@ -33,7 +33,15 @@ endif()
 # Determine the version number
 execute_process(
     COMMAND "${PYTHON_EXECUTABLE}" -c "from sys import path; path.insert(0, r'${CASADI_PYTHON_ROOT}');import casadi; print(casadi.CasadiMeta_getVersion())"
-    OUTPUT_VARIABLE CASADI_PYTHON_VERSION)
+    OUTPUT_VARIABLE CASADI_PYTHON_VERSION
+    ERROR_QUIET)
+
+if(NOT CASADI_PYTHON_VERSION)
+    execute_process(
+        COMMAND "${PYTHON_EXECUTABLE}" -c "from sys import path; path.insert(0, r'${CASADI_PYTHON_ROOT}');import casadi; print(casadi.CasadiMeta_version())"
+        OUTPUT_VARIABLE CASADI_PYTHON_VERSION
+        ERROR_QUIET)
+endif()
 
 string(STRIP "${CASADI_PYTHON_VERSION}" CASADI_PYTHON_VERSION)
 string(SUBSTRING "${CASADI_PYTHON_VERSION}" 0 1 CASADI_PYTHON_MAJOR_VERSION)
