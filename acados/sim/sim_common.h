@@ -123,6 +123,9 @@ typedef struct
     bool jac_reuse;
     Newton_scheme *scheme;
 
+	// work space
+	void *work;
+
 } sim_rk_opts;
 
 

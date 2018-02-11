@@ -60,7 +60,7 @@
 #define BC_AS_GC
 
 // dynamics: 0 erk, 1 lifter_irk, 2 irk
-#define DYNAMICS 2
+#define DYNAMICS 1
 
 
 enum sensitivities_scheme {
@@ -762,10 +762,13 @@ int main() {
     int num_stages[NN];
     for (int ii = 0; ii < NN; ii++)
     {
-#if DYNAMICS==0 | DYNAMICS==1
+		// 4th order schemes
+#if DYNAMICS==0
+		// ERK4
         num_stages[ii] = 4;
 #else
-        num_stages[ii] = 4;
+		// GL2: 2 stages Gauss-Legendre
+        num_stages[ii] = 2;
 #endif
     }
 

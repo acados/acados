@@ -20,12 +20,21 @@
 int sim_irk_opts_calculate_size(sim_dims *dims)
 {
 
-    int size = sizeof(sim_rk_opts);
-
+	// extract ds
     int ns = dims->num_stages;
+
+    int size = 0;
+
+    size += sizeof(sim_rk_opts);
+
     size += ns * ns * sizeof(double);  // A_mat
     size += ns * sizeof(double);  // b_vec
     size += ns * sizeof(double);  // c_vec
+
+	int tmp0 = gauss_nodes_work_calculate_size(ns);
+	int tmp1 = butcher_table_work_calculate_size(ns);
+	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
+	size += work_size; // work
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -50,6 +59,13 @@ void *sim_irk_assign_opts(sim_dims *dims, void *raw_memory)
     assign_double(ns*ns, &opts->A_mat, &c_ptr);
     assign_double(ns, &opts->b_vec, &c_ptr);
     assign_double(ns, &opts->c_vec, &c_ptr);
+
+	// work
+	int tmp0 = gauss_nodes_work_calculate_size(ns);
+	int tmp1 = butcher_table_work_calculate_size(ns);
+	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
+	opts->work = c_ptr;
+	c_ptr += work_size;
 
     assert((char*)raw_memory + sim_irk_opts_calculate_size(dims) >= c_ptr);
 
@@ -92,9 +108,10 @@ void sim_irk_initialize_default_args(sim_dims *dims, void *opts_)
 #else
 
 	// gauss collocation nodes
-    get_Gauss_nodes(opts->num_stages, opts->c_vec);
+    gauss_nodes(opts->num_stages, opts->c_vec, opts->work);
+
 	// butcher tableau
-    create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
+    butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
 #endif
 

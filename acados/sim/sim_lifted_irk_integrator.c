@@ -39,9 +39,13 @@
 int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
 {
 
-    int size = sizeof(sim_rk_opts);
-
+	// extract ds
     int ns = dims->num_stages;
+
+    int size = 0;
+
+    size += sizeof(sim_rk_opts);
+
     size += ns * ns * sizeof(double);  // A_mat
     size += ns * sizeof(double);  // b_vec
     size += ns * sizeof(double);  // c_vec
@@ -56,6 +60,13 @@ int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
     size += ns*ns * sizeof(double);  // transf2
     size += ns*ns * sizeof(double);  // transf1_T
     size += ns*ns * sizeof(double);  // transf2_T
+
+	int tmp0 = gauss_nodes_work_calculate_size(ns);
+	int tmp1 = butcher_table_work_calculate_size(ns);
+	int tmp2 = gauss_simplified_work_calculate_size(ns);
+	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
+	work_size = tmp2>work_size ? tmp2 : work_size;
+	size += work_size; // work
 
     make_int_multiple_of(8, &size);
     size += 2 * 8;
@@ -94,6 +105,15 @@ void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory)
     assign_double(ns*ns, &opts->scheme->transf1_T, &c_ptr);
     assign_double(ns*ns, &opts->scheme->transf2_T, &c_ptr);
 
+	// work
+	int tmp0 = gauss_nodes_work_calculate_size(ns);
+	int tmp1 = butcher_table_work_calculate_size(ns);
+	int tmp2 = gauss_simplified_work_calculate_size(ns);
+	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
+	work_size = tmp2>work_size ? tmp2 : work_size;
+	opts->work = c_ptr;
+	c_ptr += work_size;
+
     assert((char*)raw_memory + sim_lifted_irk_opts_calculate_size(dims) >= c_ptr);
 
     return (void *)opts;
@@ -111,14 +131,15 @@ void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_)
     opts->scheme->freeze = false;
 
 	// gauss collocation nodes
-    get_Gauss_nodes(opts->num_stages, opts->c_vec);
+    gauss_nodes(opts->num_stages, opts->c_vec, opts->work);
+
 	// butcher tableau
-    create_Butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat);
+    butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
 	// ???
     if (dims->num_stages <= 15 && (type == simplified_in || type == simplified_inis))
 	{
-        read_Gauss_simplified(opts->num_stages, opts->scheme);
+        gauss_simplified(opts->num_stages, opts->scheme, opts->work);
     }
 	else
 	{
