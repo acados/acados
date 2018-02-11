@@ -172,8 +172,8 @@ void ocp_qp::squeeze_dimensions() {
             if (lb != -INFINITY || ub != +INFINITY) {
                 // we have a double-sided bound at this index
                 idxb_stage.push_back(idx);
-                lower_bound_stage.push_back(isfinite(lb) ? lb : ACADOS_NEG_INFTY);
-                upper_bound_stage.push_back(isfinite(ub) ? ub : ACADOS_POS_INFTY);
+                lower_bound_stage.push_back(std::isfinite(lb) ? lb : ACADOS_NEG_INFTY);
+                upper_bound_stage.push_back(std::isfinite(ub) ? ub : ACADOS_POS_INFTY);
             }
         }
         lower_boundx.push_back(lower_bound_stage);
@@ -194,8 +194,8 @@ void ocp_qp::squeeze_dimensions() {
             if (lb != -INFINITY || ub != +INFINITY) {
                 // we have a double-sided bound at this index
                 idxb_stage.push_back(idx);
-                lower_bound_stage.push_back(isfinite(lb) ? lb : ACADOS_NEG_INFTY);
-                upper_bound_stage.push_back(isfinite(ub) ? ub : ACADOS_POS_INFTY);
+                lower_bound_stage.push_back(std::isfinite(lb) ? lb : ACADOS_NEG_INFTY);
+                upper_bound_stage.push_back(std::isfinite(ub) ? ub : ACADOS_POS_INFTY);
             }
         }
         lower_boundu.push_back(lower_bound_stage);
