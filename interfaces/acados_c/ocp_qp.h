@@ -24,10 +24,8 @@
 extern "C" {
 #endif
 
-// acados
-#include <acados/ocp_qp/ocp_qp_common.h>
-#include <acados/ocp_qp/ocp_qp_common_frontend.h>
-// acados_c
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados_c/common.h"
 
 typedef enum {

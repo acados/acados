@@ -58,7 +58,8 @@ target_include_directories(acados
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
-        $<INSTALL_INTERFACE:include>)
+        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/blasfeo/include>)
 
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
