@@ -73,11 +73,11 @@ void print_gnsf_res_out( gnsf_dims dims, double *res_out )
 {
     printf("res_out res_val = \n");    
     for (int i=0; i<dims.nff; i++)
-        printf("\t%5.8f\n", res_out[i]);
+        printf("\t%5.5f\n", res_out[i]);
     printf("\nres_out J_res_ff = \n");
     for (int i=0; i<dims.nff; i++){
         for (int j=1; j<dims.nff+1; j++){
-            printf("\t %5.8f", res_out[i+j*dims.nff]);}
+            printf("\t %5.5f", res_out[i+j*dims.nff]);}
         printf("\n");
     }
 }
@@ -140,22 +140,77 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_in *in, gnsf_out out)
     int res_out_size = dims->nff * (1 + dims->nff);
     res_out = (double*) calloc(res_out_size, sizeof(double));
 
-    res_in[2+dims->nff] = 0.8;
+    int *ipiv = (int*) calloc(dims->nff, sizeof(int));
+    
+    // res_in[2+dims->nff] = 0.8;
 
-    in->A_dt[0] = 1.0;
-    printf("%f",in->A_dt[0]);
+    // in->A_dt[0] = 1.0;
+    // printf("%f",in->A_dt[0]);
+    // printf("u = \t%f\n", in->u[0]);
+    // printf("u = \t%f\n", in->u[1]);
+int newton_max = 1;
+struct blasfeo_dmat J_r_ff; // store the the jacobian of the residual w.r.t. ff
+struct blasfeo_dvec ff;
+struct blasfeo_dvec res_val;
+blasfeo_allocate_dmat(dims->nff, dims->nff, &J_r_ff);
+blasfeo_allocate_dvec(dims->nff, &ff);
+blasfeo_allocate_dvec(dims->nff, &res_val);
 
+
+for (int iter = 0; iter < newton_max; iter++) { // NEWTON-ITERATION
+    // set input for residual function
+    blasfeo_unpack_dvec(dims->nff, &ff, 0, res_in);
+    for (int i = 0; i<dims->nx1; i++) {
+        res_in[i+dims->nff] = in->x[i];
+    }
+    for (int i = 0; i<dims->nu; i++) {
+        res_in[i+dims->nff+dims->nx1] = in->u[i];
+    }
+    // evaluate residual and neccessary jacobians & pack into blasfeo mat/vec
     print_gnsf_res_in( *dims, res_in );
     res_inc_Jff_wrapped(dims->nx1, dims->nu, dims->n_out, dims->num_stages, res_in, res_out, in->res_inc_Jff);
-    print_gnsf_res_out( *dims, res_out );
-
-    struct blasfeo_dmat res_inc_jac;
-    blasfeo_allocate_dmat(dims->nff, dims->nff+1, &res_inc_jac);
+    // print_gnsf_res_out( *dims, res_out );
+    blasfeo_pack_dvec(dims->nff, res_out, &res_val, 0);
     // void blasfeo_pack_dmat(int m, int n, double *A, int lda, struct blasfeo_dmat *sB, int bi, int bj);
+    blasfeo_pack_dmat(dims->nff, dims->nff, res_out+dims->nff, dims->nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
 
-    blasfeo_pack_dmat(1, 1, in->A_dt, 1, &res_inc_jac, 0, 0);
+    if (0); {
+        printf("\nJ_r_ff = \n");
+        blasfeo_print_dmat(dims->nff, dims->nff, &J_r_ff, 0,0);
+        printf("\n residual value = \n");
+        blasfeo_print_dvec(dims->nff, &res_val, 0);
+    }
 
-    blasfeo_print_dmat(dims->nff, dims->nff+1, &res_inc_jac, 0,0);
+    // // D <= lu( C ) ; no pivoting
+    // void blasfeo_dgetrf_nopivot(int m, int n, struct blasfeo_dmat *sC, int ci, int cj, struct blasfeo_dmat *sD, int di, int dj);
+    blasfeo_dgetrf_nopivot(dims->nff, dims->nff, &J_r_ff, 0,0, &J_r_ff, 0, 0); // invert J_r_ff
+    // for (int i = 0; i < dims->nff; i++) {
+    //     printf("%f \t", ipiv[i]);
+    // }
 
-    blasfeo_free_dmat(&res_inc_jac);
+    // printf("\n After LU-fac; r_J_r_ffx1u = \n");
+    // blasfeo_print_dmat(dims->nff, 1+dims->nff+dims->nx1+dims->nu, &r_J_r_ffx1u, 0,0);
+    // z <= inv(A) * x, A (m)x(m) upper, not_transposed, not_unit
+    blasfeo_dtrsv_unn(dims->nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+
+// z <= inv( A ) * x, A (m)x(m) lower, not_transposed, unit
+// void blasfeo_dtrsv_lnu(int m, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dvec *sx, int xi, struct blasfeo_dvec *sz, int zi);
+    blasfeo_dtrsv_lnu(dims->nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+    // z = y + alpha*x
+// void blasfeo_daxpy(int kmax, double alpha, struct blasfeo_dvec *sx, int xi, struct blasfeo_dvec *sy, int yi, struct blasfeo_dvec *sz, int zi);
+    blasfeo_daxpy(dims->nff, -1.0, &res_val, 0, &ff, 0, &ff, 0);
+
+    // blasfeo_dtrsm_lunn(dims->nff, 1, 1.0, &r_J_r_ffx1u, 0, 1, &r_J_r_ffx1u, 0, 0, &delta_ff, 0, 0);
+// D <= alpha * A^{-1} * B , with A lower triangular with unit diagonal
+// void blasfeo_dtrsm_llnu(int m, int n, double alpha, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sB, int bi, int bj, struct blasfeo_dmat *sD, int di, int dj);
+    // blasfeo_dtrsm_llnu(dims->nff, 1, 1.0, &r_J_r_ffx1u, 0, 1, &delta_ff, 0, 0, &delta_ff, 0, 0); // TODO put alpha = -1; but not implemented in blasfeo HP yet
+    printf("\n ff =  \n");
+    blasfeo_print_dvec(dims->nff, &ff, 0);
+}
+
+
+
+    blasfeo_free_dmat(&J_r_ff);
+    blasfeo_free_dvec(&ff);
+    blasfeo_free_dvec(&res_val);
 }

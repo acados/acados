@@ -69,7 +69,12 @@ int main() {
     gnsf_in in;
     in.res_inc_Jff = res_inc_Jff_fun;
     gnsf_out out;
-    in.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double));
+    in.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
+    in.u = (double*) calloc(dims.nu, sizeof(double));
+    in.x = (double*) calloc(dims.nx, sizeof(double));
+    in.x[2] = 0.8;
+    *in.u = 40.1081;
+    in.u[1] = -50.4467;
 
     gnsf_simulate( &dims, &in, out );
 

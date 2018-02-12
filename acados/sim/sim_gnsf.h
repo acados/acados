@@ -56,8 +56,8 @@ typedef struct {
     double *b_dt;
     double *c_butcher;
 
-    double *x_0;
-    double *u_0;
+    double *x;
+    double *u;
 
     double *KKf; //etc...
 
