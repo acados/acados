@@ -1,6 +1,11 @@
 # Linter
 find_package(PythonInterp 3)
 
+if(NOT PYTHONINTERP_FOUND)
+    message("Python not found: disabling lint")
+    return()
+endif()
+
 set(FIND_FILES_TO_LINT find acados test examples swig -type f -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.i")
 set(FIND_FILES_TO_LINT ${CMAKE_COMMAND} -E chdir ${PROJECT_SOURCE_DIR} ${FIND_FILES_TO_LINT})
 execute_process(COMMAND ${FIND_FILES_TO_LINT} OUTPUT_VARIABLE FILES_TO_LINT)

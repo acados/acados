@@ -26,11 +26,7 @@ endif()
 
 project(acados LANGUAGES C CXX)
 
-# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
-#     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-# endif()
-
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 if(CMAKE_SYSTEM MATCHES "Windows")		
@@ -59,6 +55,7 @@ message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_MACOSX_RPATH TRUE)
 # set(CMAKE_INSTALL_RPATH "\$ORIGIN")
 # SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
@@ -70,7 +67,6 @@ if(EXISTS ${PROJECT_SOURCE_DIR}/external/qore AND NOT CMAKE_BUILD_TYPE MATCHES N
     set(ACADOS_WITH_QORE ON CACHE BOOL "Add QORE solver")
 endif()
 
-set(CMAKE_MACOSX_RPATH TRUE)
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 # Configure acados
 add_subdirectory(acados)
@@ -104,8 +100,4 @@ add_custom_target(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint
-if (NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
-include(lint)
-else()
-message(STATUS "Skipping lint (python not found).")
-endif()
+include(Lint)
