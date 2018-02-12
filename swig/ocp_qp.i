@@ -95,6 +95,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
+%ignore operator<<;
 %include "acados_cpp/options.hpp"
 
 %rename("$ignore", %$isconstructor) ocp_qp_solution;
