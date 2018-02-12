@@ -30,7 +30,8 @@
 
 
 
-typedef struct {
+typedef struct
+{
     int num_stages;
     int nx;
     int nu;
@@ -38,7 +39,8 @@ typedef struct {
 
 
 
-typedef struct {
+typedef struct
+{
     int nx;   // NX
     int nu;   // NU
 
@@ -48,6 +50,8 @@ typedef struct {
 
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
+
+	void *method_data;
 
 	/* external functions */
 
@@ -71,7 +75,7 @@ typedef struct {
 	// jac_u implicit ode
 	external_function_generic *jac_u_ode_impl;
 
-    double step;
+    double step; // simulation time T instead ???
 
 } sim_in;
 
@@ -130,28 +134,29 @@ typedef struct
 
 
 
-typedef struct {
-    int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(sim_dims *dims);
-    void *(*assign_args)(sim_dims *dims, void *raw_memory);
-    void (*initialize_default_args)(sim_dims *dims, void *args);
-    int (*calculate_memory_size)(sim_dims *dims, void *args);
-    void *(*assign_memory)(sim_dims *dims, void *args, void *raw_memory);
-    int (*calculate_workspace_size)(sim_dims *dims, void *args);
+typedef struct
+{
+    int (*fun) (sim_in *in, sim_out *out, void *args, void *mem, void *work);
+    int (*opts_calculate_size) (sim_dims *dims);
+    void *(*opts_assign) (sim_dims *dims, void *raw_memory);
+    void (*opts_initialize_default) (sim_dims *dims, void *args);
+    int (*memory_calculate_size) (sim_dims *dims, void *args);
+    void *(*memory_assign) (sim_dims *dims, void *args, void *raw_memory);
+    int (*workspace_calculate_size) (sim_dims *dims, void *args);
 } sim_solver_fcn_ptrs;
 
 
 
 int sim_dims_calculate_size();
 
-sim_dims *assign_sim_dims(void *raw_memory);
+sim_dims *sim_dims_assign(void *raw_memory);
 
 int sim_in_calculate_size(sim_dims *dims);
 
-sim_in *assign_sim_in(sim_dims *dims, void *raw_memory);
+sim_in *sim_in_assign(sim_dims *dims, void *raw_memory);
 
 int sim_out_calculate_size(sim_dims *dims);
 
-sim_out *assign_sim_out(sim_dims *dims, void *raw_memory);
+sim_out *sim_out_assign(sim_dims *dims, void *raw_memory);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

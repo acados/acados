@@ -40,7 +40,7 @@ int sim_dims_calculate_size()
 
 
 
-sim_dims *assign_sim_dims(void *raw_memory)
+sim_dims *sim_dims_assign(void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -74,7 +74,7 @@ int sim_in_calculate_size(sim_dims *dims)
 
 
 
-sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
+sim_in *sim_in_assign(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -127,7 +127,7 @@ int sim_out_calculate_size(sim_dims *dims)
 
 
 
-sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
+sim_out *sim_out_assign(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 

@@ -49,7 +49,7 @@ sim_dims *create_sim_dims()
 
     void *ptr = malloc(bytes);
 
-    sim_dims *dims = assign_sim_dims(ptr);
+    sim_dims *dims = sim_dims_assign(ptr);
 
     return dims;
 }
@@ -62,7 +62,7 @@ sim_in *create_sim_in(sim_dims *dims)
 
     void *ptr = acados_malloc(bytes, 1);
 
-    sim_in *in = assign_sim_in(dims, ptr);
+    sim_in *in = sim_in_assign(dims, ptr);
 
     return in;
 }
@@ -75,7 +75,7 @@ sim_out *create_sim_out(sim_dims *dims)
 
     void *ptr = malloc(bytes);
 
-    sim_out *out = assign_sim_out(dims, ptr);
+    sim_out *out = sim_out_assign(dims, ptr);
 
     return out;
 }
@@ -88,7 +88,7 @@ int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    int size = fcn_ptrs.calculate_args_size(dims);
+    int size = fcn_ptrs.opts_calculate_size(dims);
 
     return size;
 }
@@ -101,9 +101,9 @@ void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    void *args = fcn_ptrs.assign_args(dims, raw_memory);
+    void *args = fcn_ptrs.opts_assign(dims, raw_memory);
 
-    fcn_ptrs.initialize_default_args(dims, args);
+    fcn_ptrs.opts_initialize_default(dims, args);
 
     return args;
 }
@@ -161,11 +161,11 @@ int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 
     bytes += sim_dims_calculate_size();
 
-    bytes += fcn_ptrs.calculate_args_size(dims);
+    bytes += fcn_ptrs.opts_calculate_size(dims);
 
-    bytes += fcn_ptrs.calculate_memory_size(dims, args_);
+    bytes += fcn_ptrs.memory_calculate_size(dims, args_);
 
-    bytes += fcn_ptrs.calculate_workspace_size(dims, args_);
+    bytes += fcn_ptrs.workspace_calculate_size(dims, args_);
 
     return bytes;
 }
@@ -185,18 +185,18 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
     c_ptr += sizeof(sim_solver_fcn_ptrs);
     set_sim_solver_fcn_ptrs(plan, solver->fcn_ptrs);
 
-    solver->dims = assign_sim_dims(c_ptr);
+    solver->dims = sim_dims_assign(c_ptr);
     c_ptr += sim_dims_calculate_size();
     sim_copy_dims(solver->dims, dims);
 
     solver->args = sim_copy_args(plan, dims, c_ptr, args_);
-    c_ptr += solver->fcn_ptrs->calculate_args_size(dims);
+    c_ptr += solver->fcn_ptrs->opts_calculate_size(dims);
 
-    solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
-    c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);
+    solver->mem = solver->fcn_ptrs->memory_assign(dims, args_, c_ptr);
+    c_ptr += solver->fcn_ptrs->memory_calculate_size(dims, args_);
 
     solver-> work = (void *) c_ptr;
-    c_ptr += solver->fcn_ptrs->calculate_workspace_size(dims, args_);
+    c_ptr += solver->fcn_ptrs->workspace_calculate_size(dims, args_);
 
     assert((char*)raw_memory + sim_calculate_size(plan, dims, args_) == c_ptr);
 
@@ -234,30 +234,30 @@ int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
     {
         case ERK:
             fcn_ptrs->fun = &sim_erk;
-            fcn_ptrs->calculate_args_size = &sim_erk_opts_calculate_size;
-            fcn_ptrs->assign_args = &sim_erk_assign_opts;
-            fcn_ptrs->initialize_default_args = &sim_erk_initialize_default_args;
-            fcn_ptrs->calculate_memory_size = &sim_erk_calculate_memory_size;
-            fcn_ptrs->assign_memory = &sim_erk_assign_memory;
-            fcn_ptrs->calculate_workspace_size = &sim_erk_calculate_workspace_size;
+            fcn_ptrs->opts_calculate_size = &sim_erk_opts_calculate_size;
+            fcn_ptrs->opts_assign = &sim_erk_opts_assign;
+            fcn_ptrs->opts_initialize_default = &sim_erk_opts_initialize_default;
+            fcn_ptrs->memory_calculate_size = &sim_erk_memory_calculate_size;
+            fcn_ptrs->memory_assign = &sim_erk_memory_assign;
+            fcn_ptrs->workspace_calculate_size = &sim_erk_workspace_calculate_size;
             break;
         case LIFTED_IRK:
             fcn_ptrs->fun = &sim_lifted_irk;
-            fcn_ptrs->calculate_args_size = &sim_lifted_irk_opts_calculate_size;
-            fcn_ptrs->assign_args = &sim_lifted_irk_assign_opts;
-            fcn_ptrs->initialize_default_args = &sim_lifted_irk_initialize_default_args;
-            fcn_ptrs->calculate_memory_size = &sim_lifted_irk_calculate_memory_size;
-            fcn_ptrs->assign_memory = &sim_lifted_irk_assign_memory;
-            fcn_ptrs->calculate_workspace_size = &sim_lifted_irk_calculate_workspace_size;
+            fcn_ptrs->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
+            fcn_ptrs->opts_assign = &sim_lifted_irk_assign_opts;
+            fcn_ptrs->opts_initialize_default = &sim_lifted_irk_initialize_default_args;
+            fcn_ptrs->memory_calculate_size = &sim_lifted_irk_calculate_memory_size;
+            fcn_ptrs->memory_assign = &sim_lifted_irk_assign_memory;
+            fcn_ptrs->workspace_calculate_size = &sim_lifted_irk_calculate_workspace_size;
             break;
         case IRK:
             fcn_ptrs->fun = &sim_irk;
-            fcn_ptrs->calculate_args_size = &sim_irk_opts_calculate_size;
-            fcn_ptrs->assign_args = &sim_irk_assign_opts;
-            fcn_ptrs->initialize_default_args = &sim_irk_initialize_default_args;
-            fcn_ptrs->calculate_memory_size = &sim_irk_calculate_memory_size;
-            fcn_ptrs->assign_memory = &sim_irk_assign_memory;
-            fcn_ptrs->calculate_workspace_size = &sim_irk_calculate_workspace_size;
+            fcn_ptrs->opts_calculate_size = &sim_irk_opts_calculate_size;
+            fcn_ptrs->opts_assign = &sim_irk_assign_opts;
+            fcn_ptrs->opts_initialize_default = &sim_irk_initialize_default_args;
+            fcn_ptrs->memory_calculate_size = &sim_irk_calculate_memory_size;
+            fcn_ptrs->memory_assign = &sim_irk_assign_memory;
+            fcn_ptrs->workspace_calculate_size = &sim_irk_calculate_workspace_size;
             break;
         default:
             return_value = ACADOS_FAILURE;
