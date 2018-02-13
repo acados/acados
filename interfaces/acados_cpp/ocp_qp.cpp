@@ -16,6 +16,10 @@
 #include "acados_cpp/hpipm_helper.hpp"
 #include "acados_cpp/utils.hpp"
 
+using std::map;
+using std::string;
+using std::vector;
+
 namespace acados {
 
 ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, 

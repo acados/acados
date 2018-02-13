@@ -31,9 +31,9 @@ typedef PyObject LangObject;
 typedef PyObject LangObject;
 %}
 #define NONE Py_None
-%ignore SwigPyIterator;
-%ignore SwigPyIterator_swigregister;
 #endif
+
+%include "acados/utils/types.h"
 
 %include "std_string.i"
 
@@ -46,7 +46,7 @@ namespace std {
 
 %include "std_pair.i"
 namespace std {
-    %template(pair_ii) pair<int, int>;
+    %template(pair_ii) pair<uint, uint>;
 }
 
 #if defined(SWIGPYTHON)
