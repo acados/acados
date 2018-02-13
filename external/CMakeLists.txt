@@ -34,15 +34,24 @@ set(HPMPC_HEADERS_INSTALLATION_DIRECTORY "include/hpmpc/include" CACHE STRING ""
 
 add_subdirectory(blasfeo)
 add_subdirectory(hpipm)
-if((NOT CMAKE_C_COMPILER_ID MATCHES "MSVC") AND (NOT CMAKE_SYSTEM_NAME MATCHES "dSpace"))
+
+if(ACADOS_WITH_HPMPC)
 	add_subdirectory(hpmpc)
 endif()
+
 if(ACADOS_WITH_QORE)
     set(QORE_DENSE TRUE CACHE BOOL "Build dense qore library")
     add_subdirectory(qore)
 endif()
-add_subdirectory(qpdunes)
-add_subdirectory(qpoases)
+
+if(ACADOS_WITH_QPDUNES)
+    add_subdirectory(qpdunes)
+endif()
+
+if(ACADOS_WITH_QPOASES)
+    add_subdirectory(qpoases)
+endif()
+
 if (ACADOS_WITH_OOQP)
     include(external/ooqp)
 endif()
