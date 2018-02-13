@@ -65,7 +65,10 @@ target_include_directories(acados
 if(ACADOS_WITH_HPMPC)
     target_link_libraries(acados PUBLIC hpmpc)
 endif()
-target_link_libraries(acados PUBLIC hpipm qpOASES_e qore blasfeo qpdunes)
+if(ACADOS_WITH_QORE)
+    target_link_libraries(acados PUBLIC qore)
+endif()
+target_link_libraries(acados PUBLIC hpipm qpOASES_e blasfeo qpdunes)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)

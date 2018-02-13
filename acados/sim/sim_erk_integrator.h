@@ -28,7 +28,7 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef struct {
-
+    int dummy;
 } sim_erk_memory;
 
 typedef struct {

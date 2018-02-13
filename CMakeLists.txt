@@ -29,11 +29,6 @@ project(acados LANGUAGES C CXX)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
-if(CMAKE_SYSTEM MATCHES "Windows")		
-    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")		
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")		
-endif()
-
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release
