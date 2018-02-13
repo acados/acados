@@ -48,6 +48,11 @@
 #include <acados_c/external_function_generic.h>
 
 
+// temp
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
+
+
+
 
 #define NN 15
 #define TF 3.0
@@ -450,17 +455,17 @@ int main() {
     sim_solver_t sim_solver_names[NN];
 
 	// set up function pointers struct
-	ocp_nlp_solver_fcn_ptrs nlp_fcn_ptrs;
+	ocp_nlp_solver_config nlp_config;
 
 	// cost: least squares
-	nlp_fcn_ptrs.cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
-	nlp_fcn_ptrs.cost_assign = &ocp_nlp_cost_ls_assign;
+	nlp_config.cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
+	nlp_config.cost_assign = &ocp_nlp_cost_ls_assign;
 
 #if DYNAMICS==0
 	// dynamics: ERK
-	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
-	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_erk_assign;
-	nlp_fcn_ptrs.dynamics_to_sim_in = &ocp_nlp_dynamics_erk_to_sim_in;
+	nlp_config.dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
+	nlp_config.dynamics_assign = &ocp_nlp_dynamics_erk_assign;
+	nlp_config.dynamics_to_sim_in = &ocp_nlp_dynamics_erk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = ERK;
@@ -468,18 +473,18 @@ int main() {
 
 #elif DYNAMICS==1
 	// dynamics: lifted IRK
-	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_lifted_irk_calculate_size;
-	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_lifted_irk_assign;
-	nlp_fcn_ptrs.dynamics_to_sim_in = &ocp_nlp_dynamics_lifted_irk_to_sim_in;
+	nlp_config.dynamics_calculate_size = &ocp_nlp_dynamics_lifted_irk_calculate_size;
+	nlp_config.dynamics_assign = &ocp_nlp_dynamics_lifted_irk_assign;
+	nlp_config.dynamics_to_sim_in = &ocp_nlp_dynamics_lifted_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = LIFTED_IRK;
     }
 #else
 	// dynamics: IRK
-	nlp_fcn_ptrs.dynamics_calculate_size = &ocp_nlp_dynamics_irk_calculate_size;
-	nlp_fcn_ptrs.dynamics_assign = &ocp_nlp_dynamics_irk_assign;
-	nlp_fcn_ptrs.dynamics_to_sim_in = &ocp_nlp_dynamics_irk_to_sim_in;
+	nlp_config.dynamics_calculate_size = &ocp_nlp_dynamics_irk_calculate_size;
+	nlp_config.dynamics_assign = &ocp_nlp_dynamics_irk_assign;
+	nlp_config.dynamics_to_sim_in = &ocp_nlp_dynamics_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = IRK;
@@ -487,8 +492,33 @@ int main() {
 #endif
 
 	// constraitns
-	nlp_fcn_ptrs.constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
-	nlp_fcn_ptrs.constraints_assign = &ocp_nlp_constraints_assign;
+	nlp_config.constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
+	nlp_config.constraints_assign = &ocp_nlp_constraints_assign;
+
+	// qp solver
+	ocp_qp_xcond_solver_config config_qp;
+	ocp_qp_hpipm_config_initialize_default(&config_qp);
+	nlp_config.qp_solver = &config_qp;
+
+	// sim
+	sim_solver_config *config_sim_ptrs[NN];
+	sim_solver_config config_sim[NN];
+	for (int ii=0; ii<NN; ii++)
+		config_sim_ptrs[ii] = config_sim+ii;
+#if DYNAMICS==0
+	// erk
+	for (int ii=0; ii<NN; ii++)
+		sim_erk_config_initialize_default(&config_sim[ii]);
+#elif DYNAMICS==1
+	// irk
+	for (int ii=0; ii<NN; ii++)
+		sim_irk_config_initialize_default(&config_sim[ii]);
+#else
+	// lifted irk
+	for (int ii=0; ii<NN; ii++)
+		sim_lifted_irk_config_initialize_default(&config_sim[ii]);
+#endif
+	nlp_config.sim_solvers = config_sim_ptrs;
 
     /************************************************
     * ocp_nlp_dims
@@ -551,7 +581,7 @@ int main() {
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d, &nlp_fcn_ptrs);
+    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d, &nlp_config);
 
 //	ocp_nlp_dims_print(nlp_in->dims);
 
@@ -783,6 +813,16 @@ int main() {
 #endif
     }
 
+
+
+	// XXX hack: overwrite config with hand-setted one
+//	nlp_args->qp_solver = &config_qp;
+//	nlp_args->sim_solvers = config_sim_ptrs;
+//	for (int ii=0; ii<NN; ii++)
+//		nlp_args->sim_solvers[ii] = config_sim_ptrs[ii];
+
+
+
     nlp_args->maxIter = MAX_SQP_ITERS;
     nlp_args->min_res_g = 1e-9;
     nlp_args->min_res_b = 1e-9;
@@ -807,7 +847,7 @@ int main() {
     * gn_sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in->dims, nlp_args);
+    int workspace_size = ocp_nlp_gn_sqp_calculate_workspace_size(nlp_in->dims, nlp_args, &nlp_config);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
@@ -829,7 +869,7 @@ int main() {
 		}
 
 		// call nlp solver
-        status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work, &nlp_fcn_ptrs);
+        status = ocp_nlp_gn_sqp(nlp_in, nlp_out, nlp_args, nlp_mem, nlp_work, &nlp_config);
     }
 
     double time = acados_toc(&timer)/NREP;

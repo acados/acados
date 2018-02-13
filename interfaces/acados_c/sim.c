@@ -56,13 +56,13 @@ sim_dims *create_sim_dims()
 
 
 
-sim_in *create_sim_in(sim_dims *dims)
+sim_in *create_sim_in(sim_dims *dims, sim_solver_config *config)
 {
-    int bytes = sim_in_calculate_size(dims);
+    int bytes = sim_in_calculate_size(dims, config);
 
     void *ptr = acados_malloc(bytes, 1);
 
-    sim_in *in = sim_in_assign(dims, ptr);
+    sim_in *in = sim_in_assign(dims, ptr, config);
 
     return in;
 }
@@ -84,7 +84,7 @@ sim_out *create_sim_out(sim_dims *dims)
 
 int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 {
-    sim_solver_fcn_ptrs fcn_ptrs;
+    sim_solver_config fcn_ptrs;
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -97,7 +97,7 @@ int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 
 void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
 {
-    sim_solver_fcn_ptrs fcn_ptrs;
+    sim_solver_config fcn_ptrs;
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -149,7 +149,7 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
 
 int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
-    sim_solver_fcn_ptrs fcn_ptrs;
+    sim_solver_config fcn_ptrs;
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -157,7 +157,7 @@ int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 
     bytes += sizeof(sim_solver);
 
-    bytes += sizeof(sim_solver_fcn_ptrs);
+    bytes += sizeof(sim_solver_config);
 
     bytes += sim_dims_calculate_size();
 
@@ -181,8 +181,8 @@ sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void 
     sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);
 
-    solver->fcn_ptrs = (sim_solver_fcn_ptrs *) c_ptr;
-    c_ptr += sizeof(sim_solver_fcn_ptrs);
+    solver->fcn_ptrs = (sim_solver_config *) c_ptr;
+    c_ptr += sizeof(sim_solver_config);
     set_sim_solver_fcn_ptrs(plan, solver->fcn_ptrs);
 
     solver->dims = sim_dims_assign(c_ptr);
@@ -225,7 +225,7 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
 
 
 
-int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs)
+int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_config *fcn_ptrs)
 {
     int return_value = ACADOS_SUCCESS;
     sim_solver_t solver_name = plan->sim_solver;
@@ -233,31 +233,13 @@ int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs
     switch (solver_name)
     {
         case ERK:
-            fcn_ptrs->fun = &sim_erk;
-            fcn_ptrs->opts_calculate_size = &sim_erk_opts_calculate_size;
-            fcn_ptrs->opts_assign = &sim_erk_opts_assign;
-            fcn_ptrs->opts_initialize_default = &sim_erk_opts_initialize_default;
-            fcn_ptrs->memory_calculate_size = &sim_erk_memory_calculate_size;
-            fcn_ptrs->memory_assign = &sim_erk_memory_assign;
-            fcn_ptrs->workspace_calculate_size = &sim_erk_workspace_calculate_size;
+			sim_erk_config_initialize_default(fcn_ptrs);
             break;
         case LIFTED_IRK:
-            fcn_ptrs->fun = &sim_lifted_irk;
-            fcn_ptrs->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
-            fcn_ptrs->opts_assign = &sim_lifted_irk_assign_opts;
-            fcn_ptrs->opts_initialize_default = &sim_lifted_irk_initialize_default_args;
-            fcn_ptrs->memory_calculate_size = &sim_lifted_irk_calculate_memory_size;
-            fcn_ptrs->memory_assign = &sim_lifted_irk_assign_memory;
-            fcn_ptrs->workspace_calculate_size = &sim_lifted_irk_calculate_workspace_size;
+			sim_lifted_irk_config_initialize_default(fcn_ptrs);
             break;
         case IRK:
-            fcn_ptrs->fun = &sim_irk;
-            fcn_ptrs->opts_calculate_size = &sim_irk_opts_calculate_size;
-            fcn_ptrs->opts_assign = &sim_irk_assign_opts;
-            fcn_ptrs->opts_initialize_default = &sim_irk_initialize_default_args;
-            fcn_ptrs->memory_calculate_size = &sim_irk_calculate_memory_size;
-            fcn_ptrs->memory_assign = &sim_irk_assign_memory;
-            fcn_ptrs->workspace_calculate_size = &sim_irk_calculate_workspace_size;
+			sim_irk_config_initialize_default(fcn_ptrs);
             break;
         default:
             return_value = ACADOS_FAILURE;

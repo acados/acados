@@ -33,17 +33,17 @@
 
 int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 {
-    dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
+    dense_qp_solver_config *solver = (dense_qp_solver_config *)solver_;
 
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_solver_args);
-    size += sizeof(dense_qp_solver_fcn_ptrs);
+    size += sizeof(dense_qp_solver_config);
 
     dense_qp_dims ddims;
     compute_dense_qp_dims(dims, &ddims);
 
     size += ocp_qp_full_condensing_calculate_args_size(dims);
-    size += solver->calculate_args_size(&ddims);
+    size += solver->opts_calculate_size(&ddims);
 
     return size;
 }
@@ -52,15 +52,15 @@ int ocp_qp_full_condensing_solver_calculate_args_size(ocp_qp_dims *dims, void *s
 
 void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
 {
-    dense_qp_solver_fcn_ptrs *solver = (dense_qp_solver_fcn_ptrs *)solver_;
+    dense_qp_solver_config *solver = (dense_qp_solver_config *)solver_;
 
     char *c_ptr = (char *) raw_memory;
 
     ocp_qp_full_condensing_solver_args *args = (ocp_qp_full_condensing_solver_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_solver_args);
 
-    args->solver = (dense_qp_solver_fcn_ptrs*) c_ptr;
-    c_ptr += sizeof(dense_qp_solver_fcn_ptrs);
+    args->solver = (dense_qp_solver_config*) c_ptr;
+    c_ptr += sizeof(dense_qp_solver_config);
 
     *args->solver = *solver;
 
@@ -74,8 +74,8 @@ void *ocp_qp_full_condensing_solver_assign_args(ocp_qp_dims *dims, void *solver_
 
 	align_char_to(8, &c_ptr);
 
-    args->solver_args = args->solver->assign_args(&ddims, c_ptr);
-    c_ptr += args->solver->calculate_args_size(&ddims);
+    args->solver_args = args->solver->opts_assign(&ddims, c_ptr);
+    c_ptr += args->solver->opts_calculate_size(&ddims);
 
     assert((char*)raw_memory + ocp_qp_full_condensing_solver_calculate_args_size(dims, solver) == c_ptr);
 
@@ -88,7 +88,7 @@ void ocp_qp_full_condensing_solver_initialize_default_args(void *args_)
 {
     ocp_qp_full_condensing_solver_args *args = (ocp_qp_full_condensing_solver_args *)args_;
     ocp_qp_full_condensing_initialize_default_args(args->cond_args);
-    args->solver->initialize_default_args(args->solver_args);
+    args->solver->opts_initialize_default(args->solver_args);
 }
 
 
@@ -104,7 +104,7 @@ int ocp_qp_full_condensing_solver_calculate_memory_size(ocp_qp_dims *dims, void 
     size += sizeof(ocp_qp_full_condensing_solver_memory);
 
     size += ocp_qp_full_condensing_calculate_memory_size(dims, args->cond_args);
-    size += args->solver->calculate_memory_size(&ddims, args->solver_args);
+    size += args->solver->memory_calculate_size(&ddims, args->solver_args);
 
     size += dense_qp_in_calculate_size(&ddims);
     size += dense_qp_out_calculate_size(&ddims);
@@ -133,8 +133,8 @@ void *ocp_qp_full_condensing_solver_assign_memory(ocp_qp_dims *dims, void *args_
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    mem->solver_memory = args->solver->assign_memory(&ddims, args->solver_args, c_ptr);
-    c_ptr += args->solver->calculate_memory_size(&ddims, args->solver_args);
+    mem->solver_memory = args->solver->memory_assign(&ddims, args->solver_args, c_ptr);
+    c_ptr += args->solver->memory_calculate_size(&ddims, args->solver_args);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
@@ -162,7 +162,7 @@ int ocp_qp_full_condensing_solver_calculate_workspace_size(ocp_qp_dims *dims, vo
 
     int size = sizeof(ocp_qp_full_condensing_solver_workspace);
     size += ocp_qp_full_condensing_calculate_workspace_size(dims, args->cond_args);
-    size += args->solver->calculate_workspace_size(&ddims, args->solver_args);
+    size += args->solver->workspace_calculate_size(&ddims, args->solver_args);
 
     return size;
 }
@@ -182,7 +182,7 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_full_condensing_solver_args
     c_ptr += ocp_qp_full_condensing_calculate_workspace_size(dims, args->cond_args);
 
     work->solver_workspace = c_ptr;
-    c_ptr += args->solver->calculate_workspace_size(ddims, args->solver_args);
+    c_ptr += args->solver->workspace_calculate_size(ddims, args->solver_args);
 }
 
 

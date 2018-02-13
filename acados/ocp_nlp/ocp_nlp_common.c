@@ -36,6 +36,13 @@
 
 
 
+// TODO remove !!!!!!!!!!!!1
+#include "acados/sim/sim_erk_integrator.h"
+#include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_lifted_irk_integrator.h"
+
+
+
 /************************************************
 * dims
 ************************************************/
@@ -269,9 +276,11 @@ void ocp_nlp_dynamics_erk_to_sim_in(ocp_nlp_dynamics_erk *dynamics, sim_in **sim
 
 	for (ii=0; ii<N; ii++)
 	{
-		sim[ii]->forw_vde_expl = dynamics->forw_vde[ii];
-		sim[ii]->adj_vde_expl = dynamics->adj_vde[ii];
-		sim[ii]->jac_ode_expl = dynamics->jac_ode[ii];
+		erk_model *model = sim[ii]->model;
+
+		model->forw_vde_expl = dynamics->forw_vde[ii];
+		model->adj_vde_expl = dynamics->adj_vde[ii];
+		model->jac_ode_expl = dynamics->jac_ode[ii];
 	}
 
 	return;
@@ -352,10 +361,12 @@ void ocp_nlp_dynamics_irk_to_sim_in(ocp_nlp_dynamics_irk *dynamics, sim_in **sim
 
 	for (ii=0; ii<N; ii++)
 	{
-		sim[ii]->ode_impl = dynamics->ode[ii];
-		sim[ii]->jac_x_ode_impl = dynamics->jac_x[ii];
-		sim[ii]->jac_xdot_ode_impl = dynamics->jac_xdot[ii];
-		sim[ii]->jac_u_ode_impl = dynamics->jac_u[ii];
+		irk_model *model = sim[ii]->model;
+
+		model->ode_impl = dynamics->ode[ii];
+		model->jac_x_ode_impl = dynamics->jac_x[ii];
+		model->jac_xdot_ode_impl = dynamics->jac_xdot[ii];
+		model->jac_u_ode_impl = dynamics->jac_u[ii];
 	}
 
 	return;
@@ -433,8 +444,10 @@ void ocp_nlp_dynamics_lifted_irk_to_sim_in(ocp_nlp_dynamics_lifted_irk *dynamics
 
 	for (ii=0; ii<N; ii++)
 	{
-		sim[ii]->forw_vde_expl = dynamics->forw_vde[ii];
-		sim[ii]->jac_ode_expl = dynamics->jac_ode[ii];
+		lifted_irk_model *model = sim[ii]->model;
+
+		model->forw_vde_expl = dynamics->forw_vde[ii];
+		model->jac_ode_expl = dynamics->jac_ode[ii];
 	}
 
 	return;
@@ -657,17 +670,17 @@ ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_me
 ************************************************/
 
 // TODO(dimitris): fix order of funs
-int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_fcn_ptrs *fcn_ptrs)
+int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_config *config)
 {
 
     int size = sizeof(ocp_nlp_in);
 
     // TODO(dimitris): check arguments for cost type
-	size += fcn_ptrs->cost_calculate_size(dims->cost_dims); // cost
+	size += config->cost_calculate_size(dims->cost_dims); // cost
 
-	size += fcn_ptrs->dynamics_calculate_size(dims); // dynamics
+	size += config->dynamics_calculate_size(dims); // dynamics
 
-	size += fcn_ptrs->constraints_calculate_size(dims); // constraints
+	size += config->constraints_calculate_size(dims); // constraints
 
 	size += 8; // initial align
 
@@ -679,7 +692,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_fcn_ptrs *fcn_p
 
 
 // TODO(dimitris): move num_stages inside args, as nested integrator args
-ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory, ocp_nlp_solver_fcn_ptrs *fcn_ptrs)
+ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory, ocp_nlp_solver_config *config)
 {
 
     char *c_ptr = (char *) raw_memory;
@@ -696,18 +709,18 @@ ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memo
 
 	// cost
     // TODO(dimitris): check arguments for cost type
-	in->cost = fcn_ptrs->cost_assign(dims->cost_dims, c_ptr);
-	c_ptr += fcn_ptrs->cost_calculate_size(dims->cost_dims);
+	in->cost = config->cost_assign(dims->cost_dims, c_ptr);
+	c_ptr += config->cost_calculate_size(dims->cost_dims);
 
 	// dynamics
-	in->dynamics = fcn_ptrs->dynamics_assign(dims, c_ptr);
-	c_ptr += fcn_ptrs->dynamics_calculate_size(dims);
+	in->dynamics = config->dynamics_assign(dims, c_ptr);
+	c_ptr += config->dynamics_calculate_size(dims);
 
 	// constraints
-	in->constraints = fcn_ptrs->constraints_assign(dims, c_ptr);
-	c_ptr += fcn_ptrs->constraints_calculate_size(dims);
+	in->constraints = config->constraints_assign(dims, c_ptr);
+	c_ptr += config->constraints_calculate_size(dims);
 
-    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims, fcn_ptrs) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_in_calculate_size(dims, config) >= c_ptr);
 
     return in;
 }

@@ -487,3 +487,22 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
     return acados_status;
 }
+
+
+
+void ocp_qp_hpmpc_config_initialize_default(void *config_)
+{
+
+	ocp_qp_solver_config *config = config_;
+
+	config->opts_calculate_size = &ocp_qp_hpmpc_calculate_args_size;
+	config->opts_assign = &ocp_qp_hpmpc_assign_args;
+	config->opts_initialize_default = &ocp_qp_hpmpc_initialize_default_args;
+	config->memory_calculate_size = &ocp_qp_hpmpc_calculate_memory_size;
+	config->memory_assign = &ocp_qp_hpmpc_assign_memory;
+	config->workspace_calculate_size = &ocp_qp_hpmpc_calculate_workspace_size;
+	config->fun = &ocp_qp_hpmpc;
+
+	return;
+
+}

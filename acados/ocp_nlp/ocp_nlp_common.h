@@ -246,10 +246,9 @@ typedef struct
     int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
     void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
-    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
-    sim_solver_fcn_ptrs **sim_solvers;
-    // TODO(nielsvd): add cost and nonlinear constraints
-} ocp_nlp_solver_fcn_ptrs;
+    ocp_qp_xcond_solver_config *qp_solver;
+    sim_solver_config **sim_solvers;
+} ocp_nlp_solver_config;
 
 
 
@@ -337,9 +336,9 @@ ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_me
 ************************************************/
 
 //
-int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
+int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_config *config);
 //
-ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
+ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory, ocp_nlp_solver_config *config);
 
 /************************************************
 * out

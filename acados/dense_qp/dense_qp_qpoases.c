@@ -363,3 +363,22 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
     if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }
+
+
+
+void dense_qp_qpoases_config_initialize_default(void *config_)
+{
+
+	dense_qp_solver_config *config = config_;
+
+	config->fun = &dense_qp_qpoases;
+	config->opts_calculate_size = &dense_qp_qpoases_calculate_args_size;
+	config->opts_assign = &dense_qp_qpoases_assign_args;
+	config->opts_initialize_default = &dense_qp_qpoases_initialize_default_args;
+	config->memory_calculate_size = &dense_qp_qpoases_calculate_memory_size;
+	config->memory_assign = &dense_qp_qpoases_assign_memory;
+	config->workspace_calculate_size = &dense_qp_qpoases_calculate_workspace_size;
+
+	return;
+
+}

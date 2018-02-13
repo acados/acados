@@ -675,3 +675,22 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
     if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;
     return acados_status;
 }
+
+
+
+void ocp_qp_qpdunes_config_initialize_default(void *config_)
+{
+
+	ocp_qp_solver_config *config = config_;
+
+	config->opts_calculate_size = &ocp_qp_qpdunes_calculate_args_size;
+	config->opts_assign = &ocp_qp_qpdunes_assign_args;
+	config->opts_initialize_default = &ocp_qp_qpdunes_initialize_default_args;
+	config->memory_calculate_size = &ocp_qp_qpdunes_calculate_memory_size;
+	config->memory_assign = &ocp_qp_qpdunes_assign_memory;
+	config->workspace_calculate_size = &ocp_qp_qpdunes_calculate_workspace_size;
+	config->fun = &ocp_qp_qpdunes;
+
+	return;
+
+}

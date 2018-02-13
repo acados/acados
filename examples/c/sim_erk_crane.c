@@ -74,6 +74,8 @@ int main()
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
+
+
 #ifdef NO_C_INTERFACE
 
 /************************************************
@@ -120,15 +122,9 @@ int main()
 * sim config
 ************************************************/
 
-	sim_solver_fcn_ptrs config;
+	sim_solver_config config;
 
-	config.fun = &sim_erk;
-	config.opts_calculate_size = &sim_erk_opts_calculate_size;
-	config.opts_assign = &sim_erk_opts_assign;
-	config.opts_initialize_default = &sim_erk_opts_initialize_default;
-	config.memory_calculate_size = &sim_erk_memory_calculate_size;
-	config.memory_assign = &sim_erk_memory_assign;
-	config.workspace_calculate_size = &sim_erk_workspace_calculate_size;
+	sim_erk_config_initialize_default(&config);
 
 /************************************************
 * sim dims
@@ -172,17 +168,17 @@ int main()
 * sim in
 ************************************************/
 
-	int in_size = sim_in_calculate_size(dims);
+	int in_size = sim_in_calculate_size(dims, &config);
 	void *in_mem = malloc(in_size);
-	sim_in *in = sim_in_assign(dims, in_mem);
+	sim_in *in = sim_in_assign(dims, in_mem, &config);
 
-	// TODO move step into opts ???
-    in->step = T / opts->num_steps;
+    in->T = T;
 
 	// external functions
-	in->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
-	in->adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
-	in->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
+	erk_model *model = in->model;
+	model->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
+	model->adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
+	model->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
 
 	// x
     for (ii = 0; ii < nx; ii++) {
@@ -307,6 +303,7 @@ int main()
 	free(forw_vde_mem);
 	free(adj_vde_mem);
 	free(hess_ode_mem);
+
 	free(dims_mem);
 	free(opts_mem);
 	free(mem_mem);
@@ -314,9 +311,11 @@ int main()
 	free(in_mem);
 	free(out_mem);
 
-printf("\nsuccess!\n\n");
+
 
 #else
+
+
 
 /************************************************
 * external functions
@@ -388,7 +387,7 @@ printf("\nsuccess!\n\n");
 
     sim_in *in = create_sim_in(&dims);
 
-    in->step = T / erk_opts->num_steps;
+    in->T = T;
 
 	// external functions
 	in->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
@@ -524,6 +523,8 @@ printf("\nsuccess!\n\n");
     free(out);
 
 #endif
+
+	printf("\nsuccess!\n\n");
 
     return 0;
 }

@@ -28,7 +28,7 @@ void *sim_lifted_irk_copy_opts(sim_dims *dims, void *raw_memory, void *source_)
     sim_rk_opts *source = (sim_rk_opts *) source_;
     sim_rk_opts *dest;
 
-    dest = sim_lifted_irk_assign_opts(dims, raw_memory);
+    dest = sim_lifted_irk_opts_assign(dims, raw_memory);
 
     dest->interval = source->interval;
     dest->num_stages = source->num_stages;

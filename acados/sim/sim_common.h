@@ -41,8 +41,8 @@ typedef struct
 
 typedef struct
 {
-    int nx;   // NX
-    int nu;   // NU
+
+	sim_dims *dims;	
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
@@ -51,31 +51,9 @@ typedef struct
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
-	void *method_data;
+	void *model;
 
-	/* external functions */
-
-	// explicit ode
-	external_function_generic *ode_expl;
-	// jacobian explicit ode
-	external_function_generic *jac_ode_expl;
-	// hessian explicit ode
-	external_function_generic *hess_ode_expl;
-	// forward explicit vde
-	external_function_generic *forw_vde_expl;
-	// adjoint explicit vde
-	external_function_generic *adj_vde_expl;
-
-	// implicit ode
-	external_function_generic *ode_impl;
-	// jac_x implicit ode
-	external_function_generic *jac_x_ode_impl;
-	// jac_xdot implicit ode
-	external_function_generic *jac_xdot_ode_impl;
-	// jac_u implicit ode
-	external_function_generic *jac_u_ode_impl;
-
-    double step; // simulation time T instead ???
+	double T; // simulation time
 
 } sim_in;
 
@@ -143,7 +121,10 @@ typedef struct
     int (*memory_calculate_size) (sim_dims *dims, void *args);
     void *(*memory_assign) (sim_dims *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size) (sim_dims *dims, void *args);
-} sim_solver_fcn_ptrs;
+	int (*model_calculate_size) (sim_dims *dims);
+	void *(*model_assign) (sim_dims *dims, void *raw_memory);
+	void (*config_initialize_default) (void *);
+} sim_solver_config;
 
 
 
@@ -151,9 +132,9 @@ int sim_dims_calculate_size();
 
 sim_dims *sim_dims_assign(void *raw_memory);
 
-int sim_in_calculate_size(sim_dims *dims);
+int sim_in_calculate_size(sim_dims *dims, sim_solver_config *config);
 
-sim_in *sim_in_assign(sim_dims *dims, void *raw_memory);
+sim_in *sim_in_assign(sim_dims *dims, void *raw_memory, sim_solver_config *config);
 
 int sim_out_calculate_size(sim_dims *dims);
 

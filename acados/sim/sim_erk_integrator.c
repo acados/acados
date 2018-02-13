@@ -31,12 +31,12 @@
 
 
 
-int sim_erk_data_calculate_size(sim_dims *dims)
+int sim_erk_model_calculate_size(sim_dims *dims)
 {
 
 	int size = 0;
 
-	size += sizeof(erk_data);
+	size += sizeof(erk_model);
 
 	return size;
 
@@ -44,15 +44,15 @@ int sim_erk_data_calculate_size(sim_dims *dims)
 
 
 
-void *sim_erk_data_assign(sim_dims *dims, void *raw_memory)
+void *sim_erk_model_assign(sim_dims *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
 
-	erk_data *data = (erk_data *) c_ptr;
-	c_ptr += sizeof(erk_data);
+	erk_model *model = (erk_model *) c_ptr;
+	c_ptr += sizeof(erk_model);
 
-	return data;
+	return model;
 
 }
 
@@ -237,18 +237,13 @@ void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    sim_dims dims = 
-	{
-        opts->num_stages,
-        in->nx,
-        in->nu
-    };
-    sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(&dims, opts, work_);
+    sim_dims *dims = in->dims;
+    sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(dims, opts, work_);
 
     int i, j, s, istep;
     double a = 0, b =0; // temp values of A_mat and b_vec
-    int nx = in->nx;
-    int nu = in->nu;
+    int nx = dims->nx;
+    int nu = dims->nu;
 
     int nf = opts->num_forw_sens;
     if (!opts->sens_forw)
@@ -261,7 +256,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     double *u = in->u;
     double *S_forw_in = in->S_forw;
     int num_steps = opts->num_steps;
-    double step = in->step;
+    double step = in->T/num_steps;
 
     double *S_adj_in = in->S_adj;
 
@@ -282,6 +277,8 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
     double *S_hess_out = out->S_hess;
+
+	erk_model *model = in->model;
 
     acados_timer timer, timer_ad;
     double timing_ad = 0.0;
@@ -328,7 +325,7 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
             }
 
             acados_tic(&timer_ad);
-            in->forw_vde_expl->evaluate(in->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+            model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < num_stages; s++)
@@ -409,11 +406,11 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 acados_tic(&timer_ad);
                 if (opts->sens_hess)
 				{
-                    in->hess_ode_expl->evaluate(in->hess_ode_expl, rhs_adj_in, adj_traj+s*nAdj);
+                    model->hess_ode_expl->evaluate(model->hess_ode_expl, rhs_adj_in, adj_traj+s*nAdj);
                 }
 				else
 				{
-                    in->adj_vde_expl->evaluate(in->adj_vde_expl, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
+                    model->adj_vde_expl->evaluate(model->adj_vde_expl, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
 
@@ -444,5 +441,27 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
 	// return
     return 0;  // success
+
+}
+
+
+
+void sim_erk_config_initialize_default(void *config_)
+{
+
+	sim_solver_config *config = config_;
+
+	config->fun = &sim_erk;
+	config->opts_calculate_size = &sim_erk_opts_calculate_size;
+	config->opts_assign = &sim_erk_opts_assign;
+	config->opts_initialize_default = &sim_erk_opts_initialize_default;
+	config->memory_calculate_size = &sim_erk_memory_calculate_size;
+	config->memory_assign = &sim_erk_memory_assign;
+	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
+	config->model_calculate_size = &sim_erk_model_calculate_size;
+	config->model_assign = &sim_erk_model_assign;
+	config->config_initialize_default = &sim_erk_config_initialize_default;
+
+	return;
 
 }

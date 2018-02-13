@@ -17,6 +17,35 @@
 #include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
+
+
+int sim_irk_model_calculate_size(sim_dims *dims)
+{
+
+	int size = 0;
+
+	size += sizeof(irk_model);
+
+	return size;
+
+}
+
+
+
+void *sim_irk_model_assign(sim_dims *dims, void *raw_memory)
+{
+
+	char *c_ptr = (char *) raw_memory;
+
+	irk_model *data = (irk_model *) c_ptr;
+	c_ptr += sizeof(irk_model);
+
+	return data;
+
+}
+
+
+
 int sim_irk_opts_calculate_size(sim_dims *dims)
 {
 
@@ -44,7 +73,7 @@ int sim_irk_opts_calculate_size(sim_dims *dims)
 
 
 
-void *sim_irk_assign_opts(sim_dims *dims, void *raw_memory)
+void *sim_irk_opts_assign(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -74,7 +103,7 @@ void *sim_irk_assign_opts(sim_dims *dims, void *raw_memory)
 
 
 
-void sim_irk_initialize_default_args(sim_dims *dims, void *opts_)
+void sim_irk_opts_initialize_default(sim_dims *dims, void *opts_)
 {
 	// loop index
 	int ii;
@@ -130,21 +159,21 @@ void sim_irk_initialize_default_args(sim_dims *dims, void *opts_)
 
 
 
-int sim_irk_calculate_memory_size(sim_dims *dims, void *opts_)
+int sim_irk_memory_calculate_size(sim_dims *dims, void *opts_)
 {
     return 0;
 }
 
 
 
-void *sim_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
+int sim_irk_workspace_calculate_size(sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
@@ -191,7 +220,7 @@ int sim_irk_calculate_workspace_size(sim_dims *dims, void *opts_)
 
 
 
-void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_irk_workspace_cast(sim_dims *dims, void *opts_, void *raw_memory)
 {
 
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
@@ -274,7 +303,7 @@ void *sim_irk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
-    assert((char*)raw_memory + sim_irk_calculate_workspace_size(dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_workspace_calculate_size(dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }
@@ -287,29 +316,24 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
     sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
-    sim_dims dims =
-	{
-        opts->num_stages,
-        in->nx,
-        in->nu
-    };
-    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_cast_workspace(&dims, opts, work_);
+    sim_dims *dims = in->dims;
+    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(dims, opts, work_);
 
     int ii, jj, iter, kk, ss;
     double a;
 
-    int nx = in->nx;
-	int nu = in->nu;
-    int num_steps = opts->num_steps;
+    int nx = dims->nx;
+	int nu = dims->nu;
     double *x = in->x;
 	double *u = in->u;
-    double step = in->step;
     double *S_forw_in = in->S_forw;
 
     int ns = opts->num_stages;
     int newton_iter = opts->newton_iter;
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
+    int num_steps = opts->num_steps;
+    double step = in->T/num_steps;
 
 	double *rGt = workspace->rGt;
 	double *jac_out = workspace->jac_out;
@@ -336,6 +360,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
+
+	irk_model *model = in->model;
 
     acados_timer timer, timer_ad;
     double timing_ad = 0.0;
@@ -408,7 +434,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
-                in->ode_impl->evaluate(in->ode_impl, ode_args, rGt);
+                model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
@@ -416,8 +442,8 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 				{
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
-                    in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
-                    in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
 
                     // compute the blocks of JGK
@@ -491,13 +517,13 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
                 acados_tic(&timer_ad);
 
-                in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
+                model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-                in->jac_u_ode_impl->evaluate(in->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
-				in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+				model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
 
                 timing_ad += acados_toc(&timer_ad);
 
@@ -577,10 +603,10 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
+                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-					in->jac_u_ode_impl->evaluate(in->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+					model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                     timing_ad += acados_toc(&timer_ad);
                 }
@@ -605,13 +631,13 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    in->jac_x_ode_impl->evaluate(in->jac_x_ode_impl, ode_args, jac_out);
+                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-					in->jac_u_ode_impl->evaluate(in->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+					model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
-                    in->jac_xdot_ode_impl->evaluate(in->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                    model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
                     for (jj=0;jj<ns;jj++)
 					{
@@ -661,4 +687,25 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
     out->info->ADtime = timing_ad;
 
     return 0;
+}
+
+
+
+void sim_irk_config_initialize_default(void *config_)
+{
+
+	sim_solver_config *config = config_;
+
+	config->fun = &sim_irk;
+	config->opts_calculate_size = &sim_irk_opts_calculate_size;
+	config->opts_assign = &sim_irk_opts_assign;
+	config->opts_initialize_default = &sim_irk_opts_initialize_default;
+	config->memory_calculate_size = &sim_irk_memory_calculate_size;
+	config->memory_assign = &sim_irk_memory_assign;
+	config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
+	config->model_calculate_size = &sim_irk_model_calculate_size;
+	config->model_assign = &sim_irk_model_assign;
+
+	return;
+
 }

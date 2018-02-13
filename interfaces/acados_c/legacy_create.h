@@ -46,7 +46,7 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_create_arguments(ocp_q
 
 ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
 
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, ocp_nlp_solver_fcn_ptrs *fcn_ptrs);
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, ocp_nlp_solver_config *config);
 
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
 

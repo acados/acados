@@ -69,26 +69,26 @@ static int get_max_sim_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *a
 
 
 
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers)
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_config *qp_solver, sim_solver_config *sim_solvers)
 {
     int size = 0;
 
     ocp_qp_dims qp_dims;
     cast_nlp_dims_to_qp_dims(&qp_dims, dims);
     size += sizeof(ocp_nlp_gn_sqp_args);
-    size += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
+    size += sizeof(ocp_qp_xcond_solver_config);
 
-    size += qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver);
+    size += qp_solver->opts_calculate_size(&qp_dims, qp_solver->qp_solver);
 
     sim_dims sim_dims;
 
-    size += dims->N*sizeof(sim_solver_fcn_ptrs *);
+    size += dims->N*sizeof(sim_solver_config *);
     size += dims->N*sizeof(void *);  //sim_solvers_args
 
     for (int ii = 0; ii < dims->N; ii++)
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-        size += sizeof(sim_solver_fcn_ptrs);
+        size += sizeof(sim_solver_config);
         size += sim_solvers[ii].opts_calculate_size(&sim_dims);
     }
 
@@ -97,7 +97,7 @@ int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_f
 
 
 
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory)
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_config *qp_solver, sim_solver_config *sim_solvers, void *raw_memory)
 {
     ocp_nlp_gn_sqp_args *args;
 
@@ -109,19 +109,19 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond
     args = (ocp_nlp_gn_sqp_args *) c_ptr;
     c_ptr += sizeof(ocp_nlp_gn_sqp_args);
 
-    args->qp_solver = (ocp_qp_xcond_solver_fcn_ptrs*) c_ptr;
-    c_ptr += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
+    args->qp_solver = (ocp_qp_xcond_solver_config*) c_ptr;
+    c_ptr += sizeof(ocp_qp_xcond_solver_config);
 
     // copy function pointers
     *args->qp_solver = *qp_solver;
 
-    args->qp_solver_args = args->qp_solver->assign_args(&qp_dims, qp_solver->qp_solver, c_ptr);
-    c_ptr += args->qp_solver->calculate_args_size(&qp_dims, qp_solver->qp_solver);
+    args->qp_solver_args = args->qp_solver->opts_assign(&qp_dims, qp_solver->qp_solver, c_ptr);
+    c_ptr += args->qp_solver->opts_calculate_size(&qp_dims, qp_solver->qp_solver);
 
     sim_dims sim_dims;
 
-    args->sim_solvers = (sim_solver_fcn_ptrs **) c_ptr;
-    c_ptr += dims->N*sizeof(sim_solver_fcn_ptrs *);
+    args->sim_solvers = (sim_solver_config **) c_ptr;
+    c_ptr += dims->N*sizeof(sim_solver_config *);
 
     args->sim_solvers_args = (void **) c_ptr;
     c_ptr += dims->N*sizeof(void *);
@@ -130,8 +130,8 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
 
-        args->sim_solvers[ii] = (sim_solver_fcn_ptrs *) c_ptr;
-        c_ptr += sizeof(sim_solver_fcn_ptrs);
+        args->sim_solvers[ii] = (sim_solver_config *) c_ptr;
+        c_ptr += sizeof(sim_solver_config);
 
         // copy function pointers
         *args->sim_solvers[ii] = sim_solvers[ii];
@@ -183,7 +183,7 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     size += sizeof(ocp_nlp_gn_sqp_memory);
 
-    size += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
+    size += args->qp_solver->memory_calculate_size(&qp_dims, args->qp_solver_args);
 
     sim_dims sim_dims;
 
@@ -249,8 +249,8 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
     c_ptr += sizeof(ocp_nlp_gn_sqp_memory);
 
     // QP solver
-    mem->qp_solver_mem = args->qp_solver->assign_memory(&qp_dims, args->qp_solver_args, c_ptr);
-    c_ptr += args->qp_solver->calculate_memory_size(&qp_dims, args->qp_solver_args);
+    mem->qp_solver_mem = args->qp_solver->memory_assign(&qp_dims, args->qp_solver_args, c_ptr);
+    c_ptr += args->qp_solver->memory_calculate_size(&qp_dims, args->qp_solver_args);
 
     // integrators
     sim_dims sim_dims;
@@ -306,7 +306,7 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 
 
 
-int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args)
+int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, ocp_nlp_solver_config *config)
 {
 	// loop index
 	int ii;
@@ -331,7 +331,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
     size += ocp_qp_in_calculate_size(&qp_dims);
     size += ocp_qp_out_calculate_size(&qp_dims);
-    size += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
+    size += args->qp_solver->workspace_calculate_size(&qp_dims, args->qp_solver_args);
 
     sim_dims sim_dims;
 
@@ -344,7 +344,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     for (ii = 0; ii < N; ii++)
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-        size += sim_in_calculate_size(&sim_dims);
+        size += sim_in_calculate_size(&sim_dims, config->sim_solvers[ii]);
         size += sim_out_calculate_size(&sim_dims);
     }
 
@@ -373,7 +373,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
 
 
-void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_args *args)
+void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_args *args, ocp_nlp_solver_config *config)
 {
     char *c_ptr = (char *)work;
     c_ptr += sizeof(ocp_nlp_gn_sqp_work);
@@ -427,7 +427,7 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     c_ptr += ocp_qp_out_calculate_size(&qp_dims);
 
     work->qp_work = (void *)c_ptr;
-    c_ptr += args->qp_solver->calculate_workspace_size(&qp_dims, args->qp_solver_args);
+    c_ptr += args->qp_solver->workspace_calculate_size(&qp_dims, args->qp_solver_args);
 
     // set up integrators
     sim_dims sim_dims;
@@ -448,15 +448,15 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, mem->dims, ii);
 
-        work->sim_in[ii] = sim_in_assign(&sim_dims, c_ptr);
-        c_ptr += sim_in_calculate_size(&sim_dims);
+        work->sim_in[ii] = sim_in_assign(&sim_dims, c_ptr, config->sim_solvers[ii]);
+        c_ptr += sim_in_calculate_size(&sim_dims, config->sim_solvers[ii]);
         work->sim_out[ii] = sim_out_assign(&sim_dims, c_ptr);
         c_ptr += sim_out_calculate_size(&sim_dims);
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }
 
-    assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, args) >= c_ptr);
+    assert((char *)work + ocp_nlp_gn_sqp_calculate_workspace_size(mem->dims, args, config) >= c_ptr);
 }
 
 
@@ -546,7 +546,7 @@ static void initialize_constraints(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *me
 
 
 
-static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
+static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work, ocp_nlp_solver_config *config)
 {
 
 	// loop index
@@ -595,7 +595,7 @@ static void linearize_update_qp_matrices(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_ou
 			blasfeo_unpack_dvec(nx[i], nlp_out->ux+i, nu[i], work->sim_in[i]->x);
 
 			// call integrator
-			args->sim_solvers[i]->fun(work->sim_in[i], work->sim_out[i], args->sim_solvers_args[i],
+			config->sim_solvers[i]->fun(work->sim_in[i], work->sim_out[i], args->sim_solvers_args[i],
 				mem->sim_solvers_mem[i], work->sim_solvers_work[i]);
 
 			// TODO(rien): transition functions for changing dimensions not yet implemented!
@@ -788,10 +788,10 @@ static void update_variables(const ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *ar
 
 
 // Simple fixed-step Gauss-Newton based SQP routine
-int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_, ocp_nlp_solver_fcn_ptrs *fcn_ptrs)
+int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_, ocp_nlp_solver_config *config)
 {
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) work_;
-    ocp_nlp_gn_sqp_cast_workspace(work, mem, args);
+    ocp_nlp_gn_sqp_cast_workspace(work, mem, args, config);
 
     int N = nlp_in->dims->N;
     int *nx = nlp_in->dims->nx;
@@ -804,12 +804,12 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     // set up integrators
 
 	// copy function pointers
-	fcn_ptrs->dynamics_to_sim_in(nlp_in->dynamics, work->sim_in);
+	config->dynamics_to_sim_in(nlp_in->dynamics, work->sim_in);
 
     for (int ii = 0; ii < N; ii++)
     {
         sim_opts = args->sim_solvers_args[ii];
-        work->sim_in[ii]->step = sim_opts->interval/sim_opts->num_steps;
+        work->sim_in[ii]->T = sim_opts->interval;
 
         // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!
         for (int jj = 0; jj < nx[ii+1] * (nx[ii] + nu[ii]); jj++)
@@ -837,7 +837,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     for ( ; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
 
-        linearize_update_qp_matrices(nlp_in, nlp_out, args, mem, work);
+        linearize_update_qp_matrices(nlp_in, nlp_out, args, mem, work, config);
 
 		// update QP rhs for SQP (step prim var, abs dual var)
         sqp_update_qp_vectors(nlp_in, nlp_out, args, mem, work);
