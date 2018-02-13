@@ -107,11 +107,6 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %rename("%s", %$isconstructor) ocp_qp;
 %rename("%s") extract;
 
-%{
-using std::vector;
-using std::string;
-%}
-
 %extend acados::ocp_qp {
 
     ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint ng = 0, bool fix_x0 = true) {
@@ -131,16 +126,16 @@ using std::string;
         return qp;
     }
 
-    LangObject *extract(string field) {
-        vector<vector<double>> tmp = $self->extract(field);
-        vector<LangObject *> result;
+    LangObject *extract(std::string field) {
+        std::vector<std::vector<double>> tmp = $self->extract(field);
+        std::vector<LangObject *> result;
         for (int i = 0; i < tmp.size(); ++i)
             result.push_back(new_matrix($self->dimensions(field, i), tmp.at(i).data()));
         return swig::from(result);
     }
 
-    vector<string> fields() {
-        return vector<string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
+    std::vector<std::string> fields() {
+        return std::vector<std::string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
     }
 
     char *__str__() {

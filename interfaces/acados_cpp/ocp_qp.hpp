@@ -13,38 +13,34 @@
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
 
-using std::vector;
-using std::string;
-using std::map;
-
 namespace acados {
 
 class ocp_qp {
 
 public:
 
-    ocp_qp(vector<uint> nx, vector<uint> nu, vector<uint> nbx, vector<uint> nbu, vector<uint> ng);
+    ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu, std::vector<uint> ng);
 
-    ocp_qp(map<string, vector<uint>>);
+    ocp_qp(std::map<std::string, std::vector<uint>>);
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
 
-    void set(string field, uint stage, vector<double> v);
-    void set(string field, vector<double> v);
+    void set(std::string field, uint stage, std::vector<double> v);
+    void set(std::string field, std::vector<double> v);
 
-    void initialize_solver(string solver_name, map<string, option_t *> options = {});
+    void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
     ocp_qp_solution solve();
 
-    vector< vector<double> > extract(string field);
+    std::vector< std::vector<double> > extract(std::string field);
 
-    map<string, vector<uint>> dimensions();
+    std::map<std::string, std::vector<uint>> dimensions();
 
-    std::pair<uint, uint> dimensions(string field, uint stage);
+    std::pair<uint, uint> dimensions(std::string field, uint stage);
 
-    void bounds_indices(std::string name, uint stage, vector<uint> v);
+    void bounds_indices(std::string name, uint stage, std::vector<uint> v);
 
-    std::vector<std::vector<uint>> bounds_indices(string name);
+    std::vector<std::vector<uint>> bounds_indices(std::string name);
 
     const uint N;
 
@@ -54,17 +50,17 @@ private:
 
     void expand_dimensions();
 
-    void check_range(string field, uint stage);
+    void check_range(std::string field, uint stage);
     
-    void check_nb_elements(string, uint stage, uint nb_elems);
+    void check_nb_elements(std::string, uint stage, uint nb_elems);
 
-    void flatten(map<string, option_t *>& input, map<string, option_t *>& output);
+    void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);
 
-    vector<uint> nx();
-    vector<uint> nu();
-    vector<uint> nbx();
-    vector<uint> nbu();
-    vector<uint> ng();
+    std::vector<uint> nx();
+    std::vector<uint> nu();
+    std::vector<uint> nbx();
+    std::vector<uint> nbu();
+    std::vector<uint> ng();
 
     std::unique_ptr<ocp_qp_in> qp;
 
@@ -72,7 +68,7 @@ private:
 
     std::string cached_solver;
 
-    static std::map<string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
+    static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 
     friend std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp);
 
