@@ -2,7 +2,7 @@
 find_package(PythonInterp 3)
 
 if(NOT PYTHONINTERP_FOUND)
-    message("Python not found: disabling lint")
+    message(STATUS "Python not found: disabling lint")
     return()
 endif()
 
