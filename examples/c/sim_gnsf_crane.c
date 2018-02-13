@@ -41,9 +41,12 @@
 int main() {
 
     gnsf_dims dims;
+    printf("\n %d \n", dims.nx);
     gnsf_fixed fix;
     // gnsf_allocate_fixed(&dims,&fix);
     gnsf_get_dims(&dims, get_ints_fun);
+    dims.num_steps = 2;
+    printf("\n %d \n", dims.nx);
     gnsf_get_KK_mat(&dims, &fix, KKmat_fun);
     
     //sim_rk_opts *erk_opts = (sim_rk_opts *) args;
@@ -72,11 +75,12 @@ int main() {
     in.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
     in.u = (double*) calloc(dims.nu, sizeof(double));
     in.x = (double*) calloc(dims.nx, sizeof(double));
+
     in.x[2] = 0.8;
     *in.u = 40.1081;
     in.u[1] = -50.4467;
 
-    gnsf_simulate( &dims, &in, out );
+    gnsf_simulate( &dims, &fix, &in, out );
 
     // free(res_out);
     return 0;

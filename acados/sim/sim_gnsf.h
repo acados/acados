@@ -26,6 +26,14 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_d_kernel.h"
+#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+
 
 typedef struct {
     int num_stages;
@@ -36,7 +44,6 @@ typedef struct {
     int nx2;
     int num_steps;
     int n_out;
-    int nff;
 } gnsf_dims;
 
 typedef struct {
@@ -74,9 +81,9 @@ typedef struct {
 } gnsf_in;
 
 typedef struct {
-    double *KKf;
-    double *KKx;
-    double *KKu;
+    struct blasfeo_dmat KKf;
+    struct blasfeo_dmat KKx;
+    struct blasfeo_dmat KKu;
 } gnsf_fixed;
 /*
 typedef struct {
@@ -111,12 +118,12 @@ typedef struct {
 } sim_gnsf_opts;
 
 void print_gnsf_dims(gnsf_dims* dims);
-void print_gnsf_res_in( gnsf_dims dims, double* res_in );
-void print_gnsf_res_out( gnsf_dims dims, double* res_out );
+void print_gnsf_res_in( gnsf_dims* dims, double* res_in );
+void print_gnsf_res_out( gnsf_dims* dims, double* res_out );
 void gnsf_get_dims( gnsf_dims* dims, casadi_function_t get_ints_fun);
 // void gnsf_get_KK_mat( gnsf_in *in, casadi_function_t KK_mat_fun);
 void gnsf_get_KK_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun);
-void gnsf_simulate( gnsf_dims* dims, gnsf_in* in, gnsf_out out);
+void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, gnsf_out out);
 void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 /*
 typedef struct {
