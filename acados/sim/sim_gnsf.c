@@ -130,6 +130,74 @@ void gnsf_get_KK_mat(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t KK_mat_
     // d_print_mat(dims->num_stages* dims->nx1, dims->nx1, fix->KKx, dims->nx1 *dims->num_stages);
 }
 
+void gnsf_get_ZZ_mat(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun)
+{
+    int nZ = dims->nz * dims->num_stages;
+    int nff = dims->num_stages * dims->n_out;
+    double *out;
+    out = (double*) calloc((nZ) * (nff + dims->nx1 + dims->nu),sizeof(double));
+    // export_from_ML_wrapped(fix->KKf, fix->KKf, KK_mat_fun);
+    export_from_ML_wrapped(out, out, KK_mat_fun);
+    blasfeo_allocate_dmat(nZ, nff      , &fix->ZZf);
+    blasfeo_allocate_dmat(nZ, dims->nx1, &fix->ZZx);
+    blasfeo_allocate_dmat(nZ, dims->nu , &fix->ZZu);
+    blasfeo_pack_dmat(nZ, nff, out                                                        , nZ, &fix->ZZf, 0, 0);
+    blasfeo_pack_dmat(nZ, dims->nx1, out + dims->nx1 *dims->num_stages*nff                , nZ, &fix->ZZx, 0, 0);
+    blasfeo_pack_dmat(nZ, dims->nu, out + (dims->nx1 *dims->num_stages)*(nff + dims->nx1) , nZ, &fix->ZZu, 0, 0);
+    printf("ZZf Mat\n");
+    blasfeo_print_dmat(nZ, nff, &fix->ZZf, 0,0);
+    printf("ZZx Mat\n");
+    blasfeo_print_dmat(nZ, dims->nx1, &fix->ZZx, 0,0);
+    printf("ZZu Mat \n");
+    blasfeo_print_dmat(nZ, dims->nu , &fix->ZZu, 0,0);
+}
+
+void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butcher_fun)
+{
+    double *out;
+    out = (double*) calloc(dims->num_stages * (2+ dims->num_stages),sizeof(double));
+    export_from_ML_wrapped(out, out, Butcher_fun);
+    fix->A_dt = &out[0];
+    fix->b_dt = &out[dims->num_stages * dims->num_stages];
+    fix->c    = &out[dims->num_stages * (dims->num_stages+1)];
+    d_print_e_mat(dims->num_stages, dims->num_stages, fix->A_dt, dims->num_stages);
+    // printf("%d",dims->num_stages);
+    // fix->A_dt = (double*) calloc(dims->num_stages * dims->num_stages, sizeof(double));
+    // fix->A_butcher = (double*) calloc(dims->num_stages * dims->num_stages, sizeof(double));
+    // // fix->dt = 0.0025;
+    // // fix->b_dt = (double*) calloc(dims->num_stages, sizeof(double));
+    // // fix->c    = (double*) calloc(dims->num_stages, sizeof(double));
+    // fix->A_butcher[0] = 0.086961218376613;
+    // fix->A_butcher[1] = 0.188113390907761;
+    // fix->A_butcher[2] = 0.167184974461456;
+    // fix->A_butcher[3] = 0.177475187009790;
+    // fix->A_butcher[4] = -0.02660256900502;
+    // fix->A_butcher[5] = 0.163029269279675;
+    // fix->A_butcher[6] = 0.353952685725980;
+    // fix->A_butcher[7] = 0.313448462361803;
+    // fix->A_butcher[8] = 0.012626331546231;
+    // fix->A_butcher[9] = -0.027877891817945;
+    // fix->A_butcher[10] = 0.163045524628359;
+    // fix->A_butcher[11] = 0.352677362913056;
+    // fix->A_butcher[12] = -0.003554980917825;
+    // fix->A_butcher[13] = 0.006735231630509;
+    // fix->A_butcher[14] = -0.014193184815796;
+    // fix->A_butcher[15] = 0.086958987715352;
+    // for (int i = 0; i < dims->num_stages * dims->num_stages; i++) {
+    //     fix->A_dt[i] = fix->dt * fix->A_butcher[i];
+    // }
+    // // fix->b_dt[0] = 0.000434797667092129;
+    // // fix->b_dt[1] = 0.000815197004101065;
+    // // fix->b_dt[2] = 0.000815166642952058;
+    // // fix->b_dt[3] = 0.000434838685854747;
+
+    // printf("\n A_butcher = \n");
+    // d_print_mat(dims->num_stages, dims->num_stages, fix->A_butcher, dims->num_stages);
+
+    // // printf("\n A_dt = \n");
+    // // d_print_mat_e(dims->num_stages, dims->num_stages, fix->A_dt, dims->num_stages);
+}
+
 
 // void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix){ // Didnt really work..
 //     fix->KKf = calloc(dims->nx1 * dims->num_stages * (nff + dims->nu + dims->nx1), sizeof(double));
@@ -141,10 +209,11 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
 {
     int nff = dims->n_out * dims->num_stages;
     int nK1 = dims->num_stages * dims->nx1;
+    int nZ  = dims->num_stages * dims->nz;
     printf("GENERALIZED NONLINEAR STATIC FEEDBACK (GNSF) SIMULATION \n");
     print_gnsf_dims(dims);
-    printf("KKu Mat \n");
-    blasfeo_print_dmat(nK1, dims->nu , &fix->KKu, 0,0);
+    // printf("KKu Mat \n");
+    // blasfeo_print_dmat(nK1, dims->nu , &fix->KKu, 0,0);
 
     double *res_in;
     double *K1_traj;
@@ -153,8 +222,6 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     int K1_traj_size = dims->num_stages * dims->nx1 * dims->num_steps;
     int ff_traj_size = nff * dims->num_steps;
     res_in  = (double*) calloc(res_in_size , sizeof(double));
-    K1_traj = (double*) calloc(K1_traj_size, sizeof(double));
-    ff_traj = (double*) calloc(ff_traj_size, sizeof(double));
 
 
     double *res_out;
@@ -165,26 +232,29 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     
     // res_in[2+nff] = 0.8;
 
-    // in->A_dt[0] = 1.0;
-    // printf("%f",in->A_dt[0]);
     // printf("u = \t%f\n", in->u[0]);
     // printf("u = \t%f\n", in->u[1]);
     int newton_max = 1;
     struct blasfeo_dmat J_r_ff; // store the the jacobian of the residual w.r.t. ff
     struct blasfeo_dvec ff_val[dims->num_steps];
     struct blasfeo_dvec K1_val[dims->num_steps];
+    struct blasfeo_dvec x1_val[dims->num_steps];
+    struct blasfeo_dvec Z_val[dims->num_steps];
     struct blasfeo_dvec res_val;
     struct blasfeo_dvec u0;
     struct blasfeo_dvec x0_1;    
-    blasfeo_allocate_dmat(nff, nff, &J_r_ff);
-    blasfeo_allocate_dvec(nff, &res_val);
-    blasfeo_allocate_dvec(dims->nu, &u0);
+    blasfeo_allocate_dmat(nff, nff, &J_r_ff); //J_r_ff
+    blasfeo_allocate_dvec(nff, &res_val);   //res_val
+    blasfeo_allocate_dvec(dims->nu, &u0); // u0
     blasfeo_pack_dvec(dims->nu, in->u, &u0, 0);
-    blasfeo_allocate_dvec(dims->nx1, &x0_1);
-    blasfeo_pack_dvec(dims->nx1, in->x, &x0_1, 0);  
+    blasfeo_allocate_dvec(dims->nx1, &x0_1); // x0_1
+    blasfeo_pack_dvec(dims->nx1, in->x, &x0_1, 0);
+
     for (int ss = 0; ss < dims->num_steps; ss++) {
         blasfeo_allocate_dvec(nK1, &K1_val[ss]);
+        blasfeo_allocate_dvec(nK1, &x1_val[ss]);
         blasfeo_allocate_dvec(nff, &ff_val[ss]);
+        blasfeo_allocate_dvec(nZ,  &Z_val[ss]);
     }
 
     for (int ss = 0; ss < 1; ss++) { // TODO: replace 1 with dim num_steps
@@ -238,31 +308,40 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
         // K1_val = s.KKf * fftraj(:,ss) + s.KKu * u0 + s.KKx * x0_1;
         // z <= beta * y + alpha * A * x
 // void blasfeo_dgemv_n(int m, int n, double alpha, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dvec *sx, int xi, double beta, struct blasfeo_dvec *sy, int yi, struct blasfeo_dvec *sz, int zi);
-    blasfeo_dgemv_n(nK1, nff,       1.0, &fix->KKf, 0, 0, &ff_val[ss], 0, 0.0, &K1_val[ss], 0, &K1_val[ss], 0);
+        blasfeo_dgemv_n(nK1, nff,       1.0, &fix->KKf, 0, 0, &ff_val[ss], 0, 0.0, &K1_val[ss], 0, &K1_val[ss], 0);
+        blasfeo_dgemv_n(nK1, dims->nu , 1.0, &fix->KKu, 0, 0, &u0        , 0, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
+        blasfeo_dgemv_n(nK1, dims->nx1, 1.0, &fix->KKx, 0, 0, &x0_1,       0, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
+        printf("\n K1_val =  \n");
+        blasfeo_print_dvec(nK1, &K1_val[ss],0);
 
-    printf("KKf Mat\n");
-    blasfeo_print_dmat(nK1, nff, &fix->KKf, 0,0);
-    printf("KKx Mat\n");
-    blasfeo_print_dmat(nK1, dims->nx1, &fix->KKx, 0,0);
-    printf("KKu Mat \n");
-    blasfeo_print_dmat(nK1, dims->nu , &fix->KKu, 0,0);
+        blasfeo_dgemv_n(nZ, nff,       1.0, &fix->ZZf, 0, 0, &ff_val[ss], 0, 0.0, &Z_val[ss], 0, &Z_val[ss], 0);
+        blasfeo_dgemv_n(nZ, dims->nu , 1.0, &fix->ZZu, 0, 0, &u0        , 0, 1.0, &Z_val[ss], 0, &Z_val[ss], 0);
+        blasfeo_dgemv_n(nZ, dims->nx1, 1.0, &fix->ZZx, 0, 0, &x0_1,       0, 1.0, &Z_val[ss], 0, &Z_val[ss], 0);
+        printf("\n Z_val =  \n");
+        blasfeo_print_dvec(nZ, &Z_val[ss],0);
+        // printf("%f\n",&fix->A_dt+1);
+        // build x1 stage values
+        for (int ii = 0; ii < dims->num_stages; ii++){
+            blasfeo_daxpy(dims->nx1, 0.0, &x1_val[ss], 0, &x0_1, 0, &x1_val[ss], dims->nx1 * ii);
+            for (int jj = 0; jj <dims->num_stages; jj++) {
+                blasfeo_daxpy(dims->nx1, fix->A_dt[ii+dims->num_stages*jj], &K1_val[ss], dims->nx1*jj, &x1_val[ss], dims->nx1*ii, &x1_val[ss], dims->nx1*ii);
+            }
+        }
+        printf("x1_val = \n");
+        blasfeo_print_exp_dvec(nK1, &x1_val[ss], 0);
 
-    blasfeo_print_dvec(nK1, &K1_val[ss],0);
-    blasfeo_print_dvec(dims->nu, &u0, 0);
-
-
-    blasfeo_dgemv_n(nK1, dims->nu , 1.0, &fix->KKu, 0, 0, &u0        , 0, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
-    blasfeo_dgemv_n(nK1, dims->nx1, 1.0, &fix->KKx, 0, 0, &x0_1, 0, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
-    blasfeo_print_dvec(nK1, &K1_val[ss],0);
-
-
+        
 
     }
 
 
 // free memory
     for (int ss = 0; ss < dims->num_steps; ss++) {
-        blasfeo_free_dvec(&ff_val[ss]);        
+        blasfeo_free_dvec(&ff_val[ss]);
+        blasfeo_free_dvec(&x1_val[ss]);
+        blasfeo_free_dvec(&K1_val[ss]);
+        blasfeo_free_dvec(&Z_val[ss]);
+
     }
     blasfeo_free_dmat(&J_r_ff);
     blasfeo_free_dvec(&res_val);

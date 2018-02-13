@@ -26,12 +26,12 @@
 // #include <acados_c/options.h>
 
 #include <acados/sim/sim_gnsf.h>
-//#include <acados/sim/sim_erk_integrator.h>
+#include <acados/sim/sim_common.h>
 #include <acados/sim/sim_gnsf_casadi_wrapper.h>
 
 #include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
-// // blasfeo
+// blasfeo
 // #include <blasfeo/include/blasfeo_target.h>
 // #include <blasfeo/include/blasfeo_common.h>
 // #include <blasfeo/include/blasfeo_d_aux.h>
@@ -41,13 +41,17 @@
 int main() {
 
     gnsf_dims dims;
-    printf("\n %d \n", dims.nx);
     gnsf_fixed fix;
+    sim_rk_opts opts;
+    // opts.A_mat = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double));
+    // *opts.A_mat = 1;
+    
     // gnsf_allocate_fixed(&dims,&fix);
     gnsf_get_dims(&dims, get_ints_fun);
     dims.num_steps = 2;
-    printf("\n %d \n", dims.nx);
     gnsf_get_KK_mat(&dims, &fix, KKmat_fun);
+    gnsf_get_ZZ_mat(&dims, &fix, ZZmat_fun);
+    
     
     //sim_rk_opts *erk_opts = (sim_rk_opts *) args;
     //erk_opts->num_steps = 4;
@@ -72,14 +76,15 @@ int main() {
     gnsf_in in;
     in.res_inc_Jff = res_inc_Jff_fun;
     gnsf_out out;
-    in.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
+    fix.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
     in.u = (double*) calloc(dims.nu, sizeof(double));
     in.x = (double*) calloc(dims.nx, sizeof(double));
 
     in.x[2] = 0.8;
     *in.u = 40.1081;
     in.u[1] = -50.4467;
-
+    printf("test\n");
+    gnsf_get_butcher(&dims, &fix, Butcher_fun);
     gnsf_simulate( &dims, &fix, &in, out );
 
     // free(res_out);

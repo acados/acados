@@ -84,6 +84,17 @@ typedef struct {
     struct blasfeo_dmat KKf;
     struct blasfeo_dmat KKx;
     struct blasfeo_dmat KKu;
+
+    struct blasfeo_dmat ZZf;
+    struct blasfeo_dmat ZZx;
+    struct blasfeo_dmat ZZu;
+
+    double* A_dt;
+    double* A_butcher;
+    double* b_dt;
+    double* c;
+    double dt;
+
 } gnsf_fixed;
 /*
 typedef struct {
@@ -123,6 +134,8 @@ void print_gnsf_res_out( gnsf_dims* dims, double* res_out );
 void gnsf_get_dims( gnsf_dims* dims, casadi_function_t get_ints_fun);
 // void gnsf_get_KK_mat( gnsf_in *in, casadi_function_t KK_mat_fun);
 void gnsf_get_KK_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun);
+void gnsf_get_ZZ_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t ZZ_mat_fun);
+void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butcher_fun);
 void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, gnsf_out out);
 void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 /*
