@@ -30,6 +30,7 @@ extern "C" {
 
 void res_inc_Jff_wrapped(const int nx1, const int nu, const int n_out, const int num_stages, const real_t *in, real_t *out, casadi_function_t res_inc_Jff_fun);
 void jac_res_ffx1u_wrapped(const int nx1, const int nu, const int n_out, const int num_stages, const real_t *in, real_t *out, casadi_function_t res_inc_Jff_fun);
+void f_LO_inc_J_x1k1uz_wrapped(const int nx1, const int nz, const real_t *in, real_t *out, casadi_function_t f_LO_inc_J_x1k1uz_fun);
 void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t get_ints_fun);
 // void KKmat_wrapped( const real_t *in, real_t *out, casadi_function_t KKmat_fun);
 // void vde_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t vde);

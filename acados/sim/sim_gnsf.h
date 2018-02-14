@@ -77,6 +77,9 @@ typedef struct {
 
     casadi_function_t res_inc_Jff;
     void (*res_inc_Jff_wrapped)(const int, const int, const double *, double *, casadi_function_t);
+    
+    casadi_function_t f_LO_inc_J_x1k1uz;
+    void (*f_LO_inc_J_x1k1uz_wrapped)(const int, const int, const double *, double *, casadi_function_t);
 
 } gnsf_in;
 
@@ -88,6 +91,8 @@ typedef struct {
     struct blasfeo_dmat ZZf;
     struct blasfeo_dmat ZZx;
     struct blasfeo_dmat ZZu;
+
+    struct blasfeo_dmat A_LO;
 
     double* A_dt;
     double* A_butcher;

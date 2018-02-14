@@ -54,6 +54,32 @@ void jac_res_ffx1u_wrapped(const int nx1, const int nu, const int n_out, const i
     jac_res_ffx1u_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
 
+void f_LO_inc_J_x1k1uz_wrapped(const int nx1, const int nz, const real_t *in, real_t *out, casadi_function_t f_LO_inc_J_x1k1uz_fun) {
+
+    const double *k1 = in;
+    const double *x1 = in + nx1;
+    const double *z = in + 2*nx1;
+    const double *u  = in + 2*nx1 + nz;
+
+    // double *res_inc_Jff_out = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[4];
+    double *casadi_res[1];
+
+    casadi_arg[0] = k1;
+    casadi_arg[1] = x1;
+    casadi_arg[2] = z;
+    casadi_arg[3] = u;
+
+    casadi_res[0] = out;
+
+    f_LO_inc_J_x1k1uz_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
 
 void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t get_ints_fun){
     

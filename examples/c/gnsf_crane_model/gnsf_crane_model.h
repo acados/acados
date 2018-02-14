@@ -14,6 +14,7 @@ int ZZmat_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int Butcher_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int res_inc_Jff_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int jac_res_ffx1u_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int f_LO_inc_J_x1k1uz_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

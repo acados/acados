@@ -75,18 +75,18 @@ int main() {
 
     gnsf_in in;
     in.res_inc_Jff = res_inc_Jff_fun;
+    in.f_LO_inc_J_x1k1uz = f_LO_inc_J_x1k1uz_fun;
     gnsf_out out;
     fix.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
     in.u = (double*) calloc(dims.nu, sizeof(double));
     in.x = (double*) calloc(dims.nx, sizeof(double));
 
     in.x[2] = 0.8;
-    *in.u = 40.1081;
-    in.u[1] = -50.4467;
+    in.u[0] = 40.108149413030752;
+    in.u[1] = -50.446662212534974;
     printf("test\n");
     gnsf_get_butcher(&dims, &fix, Butcher_fun);
     gnsf_simulate( &dims, &fix, &in, out );
 
-    // free(res_out);
     return 0;
 }
