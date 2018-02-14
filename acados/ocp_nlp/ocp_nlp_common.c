@@ -92,10 +92,10 @@ void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims)
 
 	// nv
     for (ii = 0; ii < N+1; ii++)
-        dims->nv[ii] = nv[ii];
+		dims->nv[ii] = nv[ii];
 	// ny
     for (ii = 0; ii < N+1; ii++)
-        dims->ny[ii] = ny[ii];
+		dims->ny[ii] = ny[ii];
 
 	return;
 }
@@ -165,29 +165,30 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 	int N = dims->N;
 
 	// nx
-    for (ii = 0; ii < N+1; ii++)
-        dims->nx[ii] = nx[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->nx[ii] = nx[ii];
 	// nu
-    for (ii = 0; ii < N+1; ii++)
-        dims->nu[ii] = nu[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->nu[ii] = nu[ii];
 	// nbx
-    for (ii = 0; ii < N+1; ii++)
-        dims->nb[ii] = nbx[ii]+nbu[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->nb[ii] = nbx[ii]+nbu[ii];
 	// nbu
-    for (ii = 0; ii < N+1; ii++)
-        dims->nbx[ii] = nbx[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->nbx[ii] = nbx[ii];
 	// nb
-    for (ii = 0; ii < N+1; ii++)
-        dims->nbu[ii] = nbu[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->nbu[ii] = nbu[ii];
 	// ng
-    for (ii = 0; ii < N+1; ii++)
-        dims->ng[ii] = ng[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->ng[ii] = ng[ii];
 	// nh
-    for (ii = 0; ii < N+1; ii++)
-        dims->nh[ii] = nh[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->nh[ii] = nh[ii];
 	// ns
-    for (ii = 0; ii < N+1; ii++)
-        dims->ns[ii] = ns[ii];
+	for (ii = 0; ii < N+1; ii++)
+		dims->ns[ii] = ns[ii];
+	
 	// cost
 	dims->cost_dims = cost_dims;
 

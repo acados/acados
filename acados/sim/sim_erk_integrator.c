@@ -336,13 +336,14 @@ int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 // forward variables:
                 for (i = 0; i < nForw; i++)
                     rhs_adj_in[i] = forw_traj[i]; // extract x trajectory
-                for (j = 0; j < s; j++)
+                for (j = 0; j < s; j++) {
                     a = A_mat[j * num_stages + s];
                     if (a!=0){
                         a*=step;
                         for (i = 0; i < nForw; i++)
                             rhs_adj_in[i] += a *K_traj[j * nX + i];
                     } // plus k traj
+                }
                 // adjoint variables:
                 b = step * b_vec[s];
                 for (i = 0; i < nx; i++)
