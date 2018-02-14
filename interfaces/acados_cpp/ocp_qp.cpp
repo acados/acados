@@ -337,15 +337,17 @@ vector<vector<uint>> ocp_qp::bounds_indices(string name) {
     vector<vector<uint>> idxb;
     if (name == "x") {
         for (uint stage = 0; stage <= N; ++stage) {
-            int nb_bounds = qp->dim->nbx[stage];
-            idxb.push_back(vector<uint>(nb_bounds));
-            std::copy_n(qp->idxb[stage], nb_bounds, std::begin(idxb.at(stage)));
+            idxb.push_back(vector<uint>());
+            for(int i = 0; i < qp->dim->nb[stage]; ++i)
+                if (qp->idxb[stage][i] >= qp->dim->nu[stage])
+                    idxb.at(stage).push_back(qp->idxb[stage][i] - qp->dim->nu[stage]);
         }
     } else if (name == "u") {
         for (uint stage = 0; stage <= N; ++stage) {
-            int nb_bounds = qp->dim->nbu[stage];
-            idxb.push_back(vector<uint>(nb_bounds));
-            std::copy_n(qp->idxb[stage], nb_bounds, std::begin(idxb.at(stage)));
+            idxb.push_back(vector<uint>());
+            for(int i = 0; i < qp->dim->nb[stage]; ++i)
+                if (qp->idxb[stage][i] < qp->dim->nu[stage])
+                    idxb.at(stage).push_back(qp->idxb[stage][i]);
         }
     } else throw std::invalid_argument("Can only get bounds from x and u, you gave: '" + name + "'.");
     return idxb;
@@ -440,7 +442,7 @@ std::vector<uint> ocp_qp::ng() {
 }
 
 std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp) {
-    static char a[10000];
+    static char a[1000000];
     print_ocp_qp_in_to_string(a, qp.qp.get());
     oss << a;
     return oss;

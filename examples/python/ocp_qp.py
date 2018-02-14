@@ -24,8 +24,7 @@ qp.set('lbx', 0, x0)
 qp.set('ubx', 0, x0)
 
 # solve QP and print solution
-# for solver_name in ("sparse_hpipm", "condensing_hpipm", "hpmpc", "qpdunes", "qore", "qpoases"):
-for solver_name in ("sparse_hpipm",):
+for solver_name in ("sparse_hpipm", "condensing_hpipm"):#, "hpmpc", "qpdunes", "qore", "qpoases"):
     print(solver_name + ": ")
     qp.initialize_solver(solver_name)
     output = qp.solve()

@@ -139,7 +139,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     }
 
     char *__str__() {
-        static char tmp[10000];
+        static char tmp[1000000];
         std::ostringstream stream;
         stream << *($self);
         std::string a = stream.str();
