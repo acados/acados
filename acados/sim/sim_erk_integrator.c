@@ -210,11 +210,11 @@ void *sim_erk_create_memory(sim_dims *dims, void *opts_)
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    sim_dims dims = {
-        opts->num_stages,
-        in->nx,
-        in->nu
-    };
+    sim_dims dims;
+    dims.num_stages = opts->num_stages;
+    dims.nx = in->nx;
+    dims.nu = in->nu;
+
     sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(&dims, opts, work_);
 
     int i, j, s, istep;

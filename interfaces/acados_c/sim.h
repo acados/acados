@@ -31,7 +31,6 @@ extern "C" {
 #include "acados_c/common.h"
 
 typedef enum {
-    PREVIOUS,
     ERK,
     LIFTED_IRK
 } sim_solver_t;

@@ -194,9 +194,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     acados_timer tot_timer, qp_timer, interface_timer;
     acados_tic(&tot_timer);
 
-    // loop index
-    int ii, jj;
-
     // extract input struct members
     int N = qp_in->dim->N;
     int *nx = (int *) qp_in->dim->nx;
@@ -262,7 +259,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     acados_tic(&interface_timer);
 
 	// qp_in loop
-    for ( ii = 0; ii < N; ii++ ) {
+    for (int ii = 0; ii < N; ++ii) {
 
         blasfeo_create_dmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], qp_in->BAbt[ii].pA);
         blasfeo_create_dvec(nx[ii+1], &hsb[ii], qp_in->b[ii].pa);
@@ -275,7 +272,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 		blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
     }
 
-    ii = N;
+    int ii = N;
 	// ocp_in loop
     blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
     blasfeo_create_dvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);

@@ -145,6 +145,9 @@ void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *
         case DENSE_QP_QPOASES:
             args = dense_qp_qpoases_copy_args(dims, raw_memory, source);
             break;
+        default:
+            args = NULL;
+            break;
     }
 
     return args;

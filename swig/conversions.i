@@ -495,10 +495,12 @@ template<typename T>
 LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_elems) {
 
-    int_t nb_columns[length];
+    int_t *nb_columns = (int_t *) calloc(length, sizeof(int_t));
     for (int_t i = 0; i < length; i++)
         nb_columns[i] = 1;
-    return new_sequence_from(data, length, nb_elems, nb_columns);
+    LangObject *result = new_sequence_from(data, length, nb_elems, nb_columns);
+    free(nb_columns);
+    return result;
 }
 
 bool dimensions_match(const LangObject *matrix, const int_t *nb_rows, const int_t *nb_cols,
