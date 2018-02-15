@@ -259,7 +259,13 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     }
 
     // solve qp
-    int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
+    int solver_status;
+    if (memory->solver_memory != NULL) {
+        print_ocp_qp_in(memory->pcond_qp_in);
+        solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
+    } else {
+        solver_status = ACADOS_FAILURE;
+    }
 
     // expand
     if (args->pcond_args->N2 < qp_in->dim->N) {
