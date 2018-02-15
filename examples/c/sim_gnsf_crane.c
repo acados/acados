@@ -77,6 +77,7 @@ int main() {
     gnsf_in in;
     in.res_inc_Jff = res_inc_Jff_fun;
     in.f_LO_inc_J_x1k1uz = f_LO_inc_J_x1k1uz_fun;
+    in.jac_res_ffx1u = jac_res_ffx1u_fun;
     gnsf_out out;
     fix.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
     in.u = (double*) calloc(dims.nu, sizeof(double));
