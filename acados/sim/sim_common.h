@@ -105,8 +105,8 @@ typedef struct
     bool jac_reuse;
     Newton_scheme *scheme;
 
-	// work space
-	void *work;
+    // work space
+    void *work;
 
 } sim_rk_opts;
 
@@ -121,9 +121,9 @@ typedef struct
     int (*memory_calculate_size) (sim_dims *dims, void *args);
     void *(*memory_assign) (sim_dims *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size) (sim_dims *dims, void *args);
-	int (*model_calculate_size) (sim_dims *dims);
-	void *(*model_assign) (sim_dims *dims, void *raw_memory);
-	void (*config_initialize_default) (void *);
+    int (*model_calculate_size) (sim_dims *dims);
+    void *(*model_assign) (sim_dims *dims, void *raw_memory);
+    void (*config_initialize_default) (void *);
 } sim_solver_config;
 
 
