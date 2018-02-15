@@ -148,6 +148,11 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
         case ERK:
             args = sim_erk_copy_opts(dims, raw_memory, source);
             break;
+        case IRK:
+            // TODO(dimitris): NOT IMPLEMENTED YET
+            exit(1);
+            // args = sim_irk_copy_opts(dims, raw_memory, source);
+            break;
         case LIFTED_IRK:
             args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
             break;

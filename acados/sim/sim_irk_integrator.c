@@ -105,13 +105,11 @@ void *sim_irk_opts_assign(sim_dims *dims, void *raw_memory)
 
 void sim_irk_opts_initialize_default(sim_dims *dims, void *opts_)
 {
-	// loop index
-	int ii;
-
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    int ns = opts->num_stages;
 
 #if 0
+    int ns = opts->num_stages;
+
 	// XXX only 3-stages IRK implemented ATM
     assert(ns == 3 && "only number of stages = 3 implemented!");
 
@@ -127,7 +125,7 @@ void sim_irk_opts_initialize_default(sim_dims *dims, void *opts_)
 	// copy butcher tableau
 	for (ii=0; ii<ns*ns; ii++)
 		opts->A_mat[ii] = A3[ii];
-	
+
 	for (ii=0; ii<ns; ii++)
 		opts->b_vec[ii] = b3[ii];
 
@@ -314,7 +312,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    sim_irk_memory *mem = (sim_irk_memory *) mem_;
+    // sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
     sim_dims *dims = in->dims;
     sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(dims, opts, work_);
@@ -438,7 +436,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
-                if ( (opts->jac_reuse & ss==0 & iter==0) | (!opts->jac_reuse) )
+                if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
 				{
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
@@ -469,7 +467,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
             //DGETRF computes an LU factorization of a general M-by-N matrix A
             //using partial pivoting with row interchanges.
-			if ( (opts->jac_reuse & ss==0 & iter==0) | (!opts->jac_reuse) )
+			if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
 			{
                 blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
             }
