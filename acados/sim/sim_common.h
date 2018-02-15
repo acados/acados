@@ -42,7 +42,7 @@ typedef struct
 typedef struct
 {
 
-	sim_dims *dims;	
+    sim_dims *dims;	
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
@@ -51,9 +51,9 @@ typedef struct
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
-	void *model;
+    void *model;
 
-	double T; // simulation time
+    double T; // simulation time
 
 } sim_in;
 
