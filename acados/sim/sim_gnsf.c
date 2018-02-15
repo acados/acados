@@ -384,7 +384,14 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
         jac_res_ffx1u_wrapped(dims->nx1, dims->nu, dims->n_out, dims->num_stages, res_in, res_out, in->jac_res_ffx1u);
         blasfeo_pack_dmat(nff, nff, &res_out[0], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
         blasfeo_pack_dmat(nff, dims->nx1+ dims->nu, &res_out[nff*nff], nff, &J_r_x1u, 0, 0); // pack residual result into blasfeo struct
-        blasfeo_print_exp_dmat(nff, dims->nx1+ dims->nu, &J_r_x1u, 0, 0);
+        // blasfeo_print_exp_dmat(nff, dims->nx1+ dims->nu, &J_r_x1u, 0, 0);
+
+        blasfeo_dgetrf_nopivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0); // invert J_r_ff
+        blasfeo_dtrsm_lunn(nff, dims->nx1 + dims->nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
+        blasfeo_dtrsm_llnu(nff, dims->nx1 + dims->nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
+        blasfeo_dgemm_nn(nff, dims->nx1 + dims->nu, 1, 0.0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0, -1.0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0); // J_r_x1u = - J_r_x1u, because alpha=-1.0 not supported above;
+        printf("dff_dx1u= \n");
+        blasfeo_print_exp_dmat(nff, dims->nx1 + dims->nu, &J_r_x1u, 0, 0);
 
     }
     // printf("x0_traj 1st:\n");
