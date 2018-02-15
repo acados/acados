@@ -86,6 +86,7 @@ CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/KKmat_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/ZZmat_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/Butcher_fun.o
+CRANE_GNSF_OBJS += gnsf_crane_model/ALO_M2_dK2dx2_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/f_LO_inc_J_x1k1uz_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/jac_res_ffx1u_fun.o
 CRANE_GNSF_OBJS += sim_gnsf_crane.o

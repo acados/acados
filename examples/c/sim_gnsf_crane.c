@@ -48,9 +48,10 @@ int main() {
     
     // gnsf_allocate_fixed(&dims,&fix);
     gnsf_get_dims(&dims, get_ints_fun);
-    dims.num_steps = 2;
+    // dims.num_steps = 2;
     gnsf_get_KK_mat(&dims, &fix, KKmat_fun);
     gnsf_get_ZZ_mat(&dims, &fix, ZZmat_fun);
+    gnsf_get_ALO_M2_dK2dx2( &dims, &fix, ALO_M2_dK2dx2_fun);
     
     
     //sim_rk_opts *erk_opts = (sim_rk_opts *) args;
@@ -87,6 +88,7 @@ int main() {
     printf("test\n");
     gnsf_get_butcher(&dims, &fix, Butcher_fun);
     gnsf_simulate( &dims, &fix, &in, out );
+    // blasfeo_free_dmat( &fix.ALO);
 
     return 0;
 }

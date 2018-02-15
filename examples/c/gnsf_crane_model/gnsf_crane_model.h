@@ -10,6 +10,7 @@ extern "C" {
 // int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int KKmat_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int ALO_M2_dK2dx2_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int ZZmat_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int Butcher_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int res_inc_Jff_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);

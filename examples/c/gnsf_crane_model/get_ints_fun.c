@@ -51,7 +51,7 @@ int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) 
   if (res[0]!=0) res[0][4]=a1;
   a1=4.;
   if (res[0]!=0) res[0][5]=a1;
-  a1=40.;
+  a1=5.;
   if (res[0]!=0) res[0][6]=a1;
   if (res[0]!=0) res[0][7]=a0;
   return 0;

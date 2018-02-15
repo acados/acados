@@ -92,7 +92,10 @@ typedef struct {
     struct blasfeo_dmat ZZx;
     struct blasfeo_dmat ZZu;
 
-    struct blasfeo_dmat A_LO;
+    struct blasfeo_dmat ALO;
+    struct blasfeo_dmat M2inv;
+    struct blasfeo_dmat dK2_dx2;
+
 
     double* A_dt;
     double* A_butcher;
@@ -140,6 +143,7 @@ void gnsf_get_dims( gnsf_dims* dims, casadi_function_t get_ints_fun);
 // void gnsf_get_KK_mat( gnsf_in *in, casadi_function_t KK_mat_fun);
 void gnsf_get_KK_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun);
 void gnsf_get_ZZ_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t ZZ_mat_fun);
+void gnsf_get_ALO_M2_dK2dx2(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t ALO_M2_dK2dx2_fun);
 void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butcher_fun);
 void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, gnsf_out out);
 void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
