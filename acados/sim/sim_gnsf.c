@@ -217,14 +217,18 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     // allocate blasfeo structures
     struct blasfeo_dmat J_r_ff; // store the the jacobian of the residual w.r.t. ff
     struct blasfeo_dmat J_r_x1u;
+    struct blasfeo_dmat dK1_dx1;
+    struct blasfeo_dmat dK1_du;
+    struct blasfeo_dmat dZ_dx1;
+    struct blasfeo_dmat dZ_du;
+    struct blasfeo_dmat f_LO_jac[dims->num_steps];
+
     struct blasfeo_dvec ff_val[dims->num_steps];
     struct blasfeo_dvec K1_val[dims->num_steps];
     struct blasfeo_dvec x1_val[dims->num_steps];
     struct blasfeo_dvec Z_val[dims->num_steps];
     struct blasfeo_dvec f_LO_val[dims->num_steps];
-    struct blasfeo_dmat f_LO_jac[dims->num_steps];
     struct blasfeo_dvec K2_val;
-
     struct blasfeo_dvec x0_traj;
     struct blasfeo_dvec res_val;
     struct blasfeo_dvec u0;
@@ -234,6 +238,12 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     blasfeo_allocate_dvec((dims->num_steps +1) * dims->nx, &x0_traj);   // x0_traj
     blasfeo_allocate_dmat(nff, nff, &J_r_ff); //J_r_ff
     blasfeo_allocate_dmat(nff, dims->nx1 + dims->nu, &J_r_x1u); //    J_r_x1u
+    
+    blasfeo_allocate_dmat(nK1, dims->nx1, &dK1_dx1); //   dK1_dx1
+    blasfeo_allocate_dmat(nK1, dims->nu,  &dK1_du); //    dK1_du
+    blasfeo_allocate_dmat(nZ, dims->nx1, &dZ_dx1); //   dZ_dx1
+    blasfeo_allocate_dmat(nZ, dims->nu,  &dZ_du); //    dZ_du
+
     blasfeo_allocate_dvec(nff, &res_val);   //res_val
     blasfeo_allocate_dvec(dims->nu, &u0); // u0
     blasfeo_pack_dvec(dims->nu, in->u, &u0, 0);
@@ -359,7 +369,6 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
         // blasfeo_print_exp_dvec(dims->num_stages * dims->nx2, &f_LO_val[ss], 0);
         // blasfeo_print_dmat(    dims->num_stages * dims->nx2, 2*dims->nx1 + dims->nz + dims->nu, &f_LO_jac[ss],0,0);
 
-        // TODO: M2inv einlesen, K2_val = - s.M2inv * f_LO_traj(ind_f_LO,1);
         // z <= beta * y + alpha * A * x
         blasfeo_dgemv_n( nK2, nK2, -1.0, &fix->M2inv, 0, 0, &f_LO_val[ss], 0, 0.0, &K2_val, 0, &K2_val, 0);
         // printf("K2_val = \n");
@@ -389,17 +398,33 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
         blasfeo_dgetrf_nopivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0); // invert J_r_ff
         blasfeo_dtrsm_lunn(nff, dims->nx1 + dims->nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
         blasfeo_dtrsm_llnu(nff, dims->nx1 + dims->nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
-        blasfeo_dgemm_nn(nff, dims->nx1 + dims->nu, 1, 0.0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0, -1.0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0); // J_r_x1u = - J_r_x1u, because alpha=-1.0 not supported above;
-        printf("dff_dx1u= \n");
-        blasfeo_print_exp_dmat(nff, dims->nx1 + dims->nu, &J_r_x1u, 0, 0);
+        // blasfeo_dgemm_nn(nff, dims->nx1 + dims->nu, 1, 0.0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0, -1.0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0); // J_r_x1u = - J_r_x1u, because alpha=-1.0 not supported above;
+        // printf("-dff_dx1u= \n");
+        // blasfeo_print_exp_dmat(nff, dims->nx1 + dims->nu, &J_r_x1u, 0, 0);
+
+        // D <= beta * C + alpha * A * B
+        blasfeo_dgemm_nn(nK1, dims->nx1, nff, -1.0, &fix->KKf, 0, 0, &J_r_x1u, 0,  0,        1.0, &fix->KKx, 0, 0, &dK1_dx1, 0, 0);
+        blasfeo_dgemm_nn(nK1, dims->nu,  nff, -1.0, &fix->KKf, 0, 0, &J_r_x1u, 0, dims->nx1, 1.0, &fix->KKu, 0, 0, &dK1_du , 0, 0);
+
+        blasfeo_dgemm_nn(nZ, dims->nx1, nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, 0,         1.0, &fix->ZZx, 0, 0, &dZ_dx1, 0, 0);
+        blasfeo_dgemm_nn(nZ, dims->nu, nff, -1.0,  &fix->ZZf, 0, 0, &J_r_x1u, 0, dims->nx1, 1.0, &fix->ZZu, 0, 0, &dZ_du, 0, 0);
+
+        // printf("dK1_dx1 = \n");
+        // blasfeo_print_exp_dmat(nK1, dims->nx1, &dK1_dx1, 0, 0);
+        // printf("dK1_du = \n");
+        // blasfeo_print_exp_dmat(nK1, dims->nu, &dK1_du, 0, 0);
+
+        // printf("dZ_dx1 = \n");
+        // blasfeo_print_exp_dmat(nZ, dims->nx1, &dZ_dx1, 0, 0);
+        // printf("dZ_du = \n"); // TODO: check this out, is it wrong?! error w.r.t. matlab solution is E-9, actually i double checked...
+
+
 
     }
     // printf("x0_traj 1st:\n");
     // blasfeo_print_exp_dvec(dims->nx , &x0_traj, dims->nx);
     // printf("x0_traj last:\n");
     // blasfeo_print_exp_dvec(dims->nx , &x0_traj, dims->num_steps*dims->nx);
-
-
 
 // free memory
     for (int ss = 0; ss < dims->num_steps; ss++) {
@@ -412,6 +437,12 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     }
     blasfeo_free_dmat(&J_r_ff);
     blasfeo_free_dmat(&J_r_x1u);
+    blasfeo_free_dmat(&dK1_dx1);
+    blasfeo_free_dmat(&dK1_du);
+    blasfeo_free_dmat(&dZ_dx1);
+    blasfeo_free_dmat(&dZ_du);
+
+
     blasfeo_free_dvec(&res_val);
     blasfeo_free_dvec(&u0);
     blasfeo_free_dvec(&x0_1);
