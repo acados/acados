@@ -145,7 +145,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default args
     qpdunes_options_t opts = QPDUNES_NONLINEAR_MPC;
 
-    args->stageQpSolver = QPDUNES_WITH_CLIPPING;
+    args->stageQpSolver = QPDUNES_WITH_QPOASES;
 
     args->options = qpDUNES_setupDefaultOptions();
     args->isLinearMPC = 0;
@@ -656,11 +656,13 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
 
     acados_tic(&interface_timer);
     cast_workspace(work, mem);
-    update_memory(in, args, mem, work);
+    return_t qpdunes_status = update_memory(in, args, mem, work);
+    if (qpdunes_status != QPDUNES_OK)
+        return qpdunes_status;
     info->interface_time = acados_toc(&interface_timer);
 
     acados_tic(&qp_timer);
-    return_t qpdunes_status = qpDUNES_solve(&(mem->qpData));
+    qpdunes_status = qpDUNES_solve(&(mem->qpData));
     info->solve_QP_time = acados_toc(&qp_timer);
     
     acados_tic(&interface_timer);
