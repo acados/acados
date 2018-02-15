@@ -114,7 +114,8 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *di
 
 void *ocp_qp_assign_args(ocp_qp_solver_fcn_ptrs *fcn_ptrs, ocp_qp_dims *dims, void *raw_memory)
 {
-    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
+    void *submodules = fcn_ptrs->submodules;
+    void *args = fcn_ptrs->assign_args(dims, &submodules, raw_memory);
 
     fcn_ptrs->initialize_default_args(args);
 

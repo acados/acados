@@ -91,7 +91,8 @@ int sim_calculate_args_size(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims)
 
 void *sim_assign_args(sim_solver_fcn_ptrs *fcn_ptrs, sim_dims *dims, void *raw_memory)
 {
-    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
+    void *submodules = fcn_ptrs->submodules;
+    void *args = fcn_ptrs->assign_args(dims, &submodules, raw_memory);
 
     fcn_ptrs->initialize_default_args(dims, args);
 

@@ -94,7 +94,8 @@ int external_function_calculate_args_size(external_function_fcn_ptrs *fcn_ptrs, 
 
 void *external_function_assign_args(external_function_fcn_ptrs *fcn_ptrs, external_function_dims *dims, void *raw_memory)
 {
-    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
+    void *submodules = fcn_ptrs->submodules;
+    void *args = fcn_ptrs->assign_args(dims, &submodules, raw_memory);
 
     fcn_ptrs->initialize_default_args(args);
 

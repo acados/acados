@@ -94,7 +94,8 @@ int dense_qp_calculate_args_size(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_di
 
 void *dense_qp_assign_args(dense_qp_solver_fcn_ptrs *fcn_ptrs, dense_qp_dims *dims, void *raw_memory)
 {
-    void *args = fcn_ptrs->assign_args(dims, &fcn_ptrs->submodules, raw_memory);
+    void *submodules = fcn_ptrs->submodules;
+    void *args = fcn_ptrs->assign_args(dims, &submodules, raw_memory);
 
     fcn_ptrs->initialize_default_args(args);
 
