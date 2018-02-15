@@ -95,6 +95,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
+%ignore operator<<;
 %include "acados_cpp/options.hpp"
 
 %rename("$ignore", %$isconstructor) ocp_qp_solution;
@@ -105,11 +106,6 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %rename("%s", %$isconstructor) ocp_qp;
 %rename("%s") extract;
-
-%{
-using std::vector;
-using std::string;
-%}
 
 %extend acados::ocp_qp {
 
@@ -130,20 +126,20 @@ using std::string;
         return qp;
     }
 
-    LangObject *extract(string field) {
-        vector<vector<double>> tmp = $self->extract(field);
-        vector<LangObject *> result;
+    LangObject *extract(std::string field) {
+        std::vector<std::vector<double>> tmp = $self->extract(field);
+        std::vector<LangObject *> result;
         for (int i = 0; i < tmp.size(); ++i)
             result.push_back(new_matrix($self->dimensions(field, i), tmp.at(i).data()));
         return swig::from(result);
     }
 
-    vector<string> fields() {
-        return vector<string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
+    std::vector<std::string> fields() {
+        return std::vector<std::string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
     }
 
     char *__str__() {
-        static char tmp[10000];
+        static char tmp[1000000];
         std::ostringstream stream;
         stream << *($self);
         std::string a = stream.str();

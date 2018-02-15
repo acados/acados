@@ -73,7 +73,7 @@ void ocp_qp_hpipm_initialize_default_args(void *args_)
 
     d_set_default_ocp_qp_ipm_arg(args->hpipm_args);
 	// overwrite some default options
-    args->hpipm_args->res_g_max = 1e-6; // otherwise inaccurate for Python/MATLAB qp example // then you can increase the accuracy just in Python/MATLAB qp example, 1e-11 is too high to be robust in general, and just makes the solution diverge at late IPM iterations
+    args->hpipm_args->res_g_max = 1e-6;
     args->hpipm_args->res_b_max = 1e-8;
     args->hpipm_args->res_d_max = 1e-8;
     args->hpipm_args->res_m_max = 1e-8;
@@ -140,7 +140,7 @@ int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer;
+    acados_timer tot_timer, qp_timer;
 
      acados_tic(&tot_timer);
    // cast data structures

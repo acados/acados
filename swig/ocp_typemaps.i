@@ -39,6 +39,10 @@
     $1 = tmp;
 }
 
+%typemap(typecheck) std::map<std::string, acados::option_t *> {
+    $1 = is_map($input) ? 1 : 0;
+}
+
 %typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
 #if defined(SWIGMATLAB)
     $1 = mxIsScalar($input) ? 1 : 0;

@@ -167,12 +167,7 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
 	// extract dims
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *nb = dims->nb;
-    int *ng = dims->ng;
 	ocp_nlp_cost_ls_dims *cost_dims = dims->cost_dims;
-	int *nv = cost_dims->nv;
 	int *ny = cost_dims->ny;
 
     int size = 0;
@@ -231,12 +226,7 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_
 
 	// extract dims
     int N = dims->N;
-    int *nx = dims->nx;
-    int *nu = dims->nu;
-    int *nb = dims->nb;
-    int *ng = dims->ng;
 	ocp_nlp_cost_ls_dims *cost_dims = dims->cost_dims;
-	int *nv = cost_dims->nv;
 	int *ny = cost_dims->ny;
 
     ocp_qp_dims qp_dims;
@@ -313,11 +303,8 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
 	// extract dims
 	int N = dims->N;
-	int *nx = dims->nx;
-	int *nu = dims->nu;
 	int *nb = dims->nb;
 	int *ng = dims->ng;
-	int *ns = dims->ns;
 	ocp_nlp_cost_ls_dims *cost_dims = dims->cost_dims;
 	int *nv = cost_dims->nv;
 	int *ny = cost_dims->ny;
@@ -380,8 +367,6 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
 	// extract dims
     int N = mem->dims->N;
-    int *nx = mem->dims->nx;
-    int *nu = mem->dims->nu;
     int *nb = mem->dims->nb;
     int *ng = mem->dims->ng;
 	ocp_nlp_cost_ls_dims *cost_dims = mem->dims->cost_dims;
@@ -470,12 +455,7 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
 {
 
-	// loop index
-	int i;
-
     int N = nlp_in->dims->N;
-    int *nx = nlp_in->dims->nx;
-    int *nu = nlp_in->dims->nu;
 	ocp_nlp_cost_ls_dims *cost_dims = nlp_in->dims->cost_dims;
 	int *nv = cost_dims->nv;
 	int *ny = cost_dims->ny;
@@ -484,7 +464,7 @@ static void initialize_objective(ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_args *args, 
 
 	struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
 
-    for (i = 0; i <= N; i++)
+    for (int i = 0; i <= N; ++i)
 	{
 
 		// general Cyt
@@ -796,8 +776,6 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
     int N = nlp_in->dims->N;
     int *nx = nlp_in->dims->nx;
     int *nu = nlp_in->dims->nu;
-    int *nb = nlp_in->dims->nb;
-    int *ng = nlp_in->dims->ng;
 
     sim_rk_opts *sim_opts;
 
@@ -846,10 +824,10 @@ int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args
 		ocp_nlp_res_compute(nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
 
 		// TODO exit conditions on residuals
-		if( mem->nlp_res->inf_norm_res_g < args->min_res_g &
-			mem->nlp_res->inf_norm_res_b < args->min_res_b &
-			mem->nlp_res->inf_norm_res_d < args->min_res_d &
-			mem->nlp_res->inf_norm_res_m < args->min_res_m )
+		if( (mem->nlp_res->inf_norm_res_g < args->min_res_g) &
+			(mem->nlp_res->inf_norm_res_b < args->min_res_b) &
+			(mem->nlp_res->inf_norm_res_d < args->min_res_d) &
+			(mem->nlp_res->inf_norm_res_m < args->min_res_m) )
 		{
 
 			// save sqp iterations number

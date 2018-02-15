@@ -37,7 +37,7 @@ void sim_copy_dims(sim_dims *dest, sim_dims *src)
     dest->num_stages = src->num_stages;
 
     dest->nx = src->nx;
-    
+
     dest->nu = src->nu;
 }
 
@@ -84,7 +84,14 @@ sim_out *create_sim_out(sim_dims *dims)
 
 int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 {
-    sim_solver_config fcn_ptrs;
+    sim_solver_config fcn_ptrs = {
+        .fun = NULL,
+        .opts_calculate_size = NULL,
+        .opts_assign = NULL,
+        .opts_initialize_default = NULL,
+        .memory_calculate_size = NULL,
+        .memory_assign = NULL,
+        .workspace_calculate_size = NULL};
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -97,7 +104,14 @@ int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
 
 void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
 {
-    sim_solver_config fcn_ptrs;
+    sim_solver_config fcn_ptrs = {
+        .fun = NULL,
+        .opts_calculate_size = NULL,
+        .opts_assign = NULL,
+        .opts_initialize_default = NULL,
+        .memory_calculate_size = NULL,
+        .memory_assign = NULL,
+        .workspace_calculate_size = NULL};
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -127,7 +141,7 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
 {
     sim_solver_t solver_name = plan->sim_solver;
 
-    void *args;
+    void *args = NULL;
 
     switch (solver_name)
     {
@@ -149,7 +163,14 @@ void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, voi
 
 int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 {
-    sim_solver_config fcn_ptrs;
+    sim_solver_config fcn_ptrs = {
+        .fun = NULL,
+        .opts_calculate_size = NULL,
+        .opts_assign = NULL,
+        .opts_initialize_default = NULL,
+        .memory_calculate_size = NULL,
+        .memory_assign = NULL,
+        .workspace_calculate_size = NULL};
 
     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -175,8 +196,6 @@ int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
 sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-
-    sim_rk_opts *args = (sim_rk_opts *)args_;
 
     sim_solver *solver = (sim_solver *) c_ptr;
     c_ptr += sizeof(sim_solver);

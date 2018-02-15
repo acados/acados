@@ -19,10 +19,6 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-if(NOT (SWIG_MATLAB OR SWIG_PYTHON))
-    return()
-endif()
-
 find_package(SWIG REQUIRED)
 include(UseSWIGMOD)
 
@@ -31,7 +27,10 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-field-initializers -Wno-deprecated-register") # for SWIG
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags") # for CasADi
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation -Wno-missing-field-initializers -Wno-sign-compare")
+    if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 5)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation")
+    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-maybe-uninitialized -Wno-missing-field-initializers -Wno-sign-compare")
 endif()
 
 # SWIG does not support target_include_directories()
@@ -41,12 +40,10 @@ include_directories("${PROJECT_SOURCE_DIR}/interfaces")
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-find_package(Matlab)
-if(SWIG_MATLAB AND MATLAB_FOUND)
+if(SWIG_MATLAB)
     add_subdirectory(matlab)
 endif()
 
-find_package(PythonInterp 3)
-if(SWIG_PYTHON AND PYTHONINTERP_FOUND)
+if(SWIG_PYTHON)
     add_subdirectory(python)
 endif()

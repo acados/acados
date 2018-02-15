@@ -23,8 +23,36 @@
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
 #include "blasfeo_d_aux.h"
-// qpoases
-#include "qpOASES_e.h"
+
+/* Ignore compiler warnings from qpOASES */
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wunused-function"
+#include "qpOASES_e/QProblemB.h"
+#include "qpOASES_e/QProblem.h"
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+    #if __GNUC__ >= 6
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
+        #pragma GCC diagnostic ignored "-Wunused-parameter"
+        #pragma GCC diagnostic ignored "-Wunused-function"
+        #include "qpOASES_e/QProblemB.h"
+        #include "qpOASES_e/QProblem.h"
+        #pragma GCC diagnostic pop
+    #else
+        #pragma GCC diagnostic ignored "-Wunused-parameter"
+        #pragma GCC diagnostic ignored "-Wunused-function"
+        #include "qpOASES_e/QProblemB.h"
+        #include "qpOASES_e/QProblem.h"
+    #endif
+#else
+    #include "qpOASES_e/QProblemB.h"
+    #include "qpOASES_e/QProblem.h"
+#endif
+
 // acados
 #include "acados/dense_qp/dense_qp_qpoases.h"
 #include "acados/dense_qp/dense_qp_common.h"
@@ -200,11 +228,8 @@ int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void
 
     // extract dense qp size
     int nvd = qp_in->dim->nv;
-    int ned = qp_in->dim->ne;
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
-
-    assert(ned == 0 && "ned != 0 not supported yet");
 
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);
