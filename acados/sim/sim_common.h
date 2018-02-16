@@ -35,6 +35,7 @@ typedef struct
     int num_stages;
     int nx;
     int nu;
+    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
 } sim_dims;
 
 
@@ -42,7 +43,7 @@ typedef struct
 typedef struct
 {
 
-    sim_dims *dims;	
+    sim_dims *dims;
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     double *x;  // x[NX]
@@ -99,7 +100,7 @@ typedef struct
     bool sens_adj;
     bool sens_hess;
 
-    // for explicit integrators: newton_iter == 0 && scheme == NULL 
+    // for explicit integrators: newton_iter == 0 && scheme == NULL
     // && jac_reuse=false
     int newton_iter;
     bool jac_reuse;

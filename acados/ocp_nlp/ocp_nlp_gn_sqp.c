@@ -202,7 +202,7 @@ int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args
 
     for (ii = 0; ii < N+1; ii++)
     {
-        size += 1*blasfeo_memsize_dvec(ny[ii]); // tmp_ny ls_res
+        size += 1*blasfeo_memsize_dvec(ny[ii]); // ls_res
         size += 1*blasfeo_memsize_dmat(ny[ii], ny[ii]); // W_chol
     }
 
@@ -322,6 +322,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
     sim_dims sim_dims;
 
+    size += N*sizeof(sim_dims);
     size += N*sizeof(sim_in *);
     size += N*sizeof(sim_out *);
     size += N*sizeof(void *);  // sim_work
@@ -350,10 +351,8 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 		size += 1*(ny[ii]+ny[ii]*nv[ii])*sizeof(double); // ls_cost_jac_out
     }
 
-    size += 8; // blasfeo_struct align
-    size += 64; // blasfeo_mem align
-
-//    make_int_multiple_of(64, &size);
+    size += 8;  // blasfeo_struct align
+    size += 64;  // blasfeo_mem align
 
     return size;
 }
@@ -415,7 +414,8 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     c_ptr += args->qp_solver->workspace_calculate_size(&qp_dims, args->qp_solver_args);
 
     // set up integrators
-    sim_dims sim_dims;
+    work->sim_dims = (sim_dims *) c_ptr;
+    c_ptr += mem->dims->N*sizeof(sim_dims);
 
     work->sim_in = (sim_in **) c_ptr;
     c_ptr += mem->dims->N*sizeof(sim_in *);
@@ -431,12 +431,12 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
 
     for (int ii = 0; ii < mem->dims->N; ii++)
     {
-        cast_nlp_dims_to_sim_dims(&sim_dims, mem->dims, ii);
+        cast_nlp_dims_to_sim_dims(&work->sim_dims[ii], mem->dims, ii);
 
-        work->sim_in[ii] = sim_in_assign(&sim_dims, c_ptr, config->sim_solvers[ii]);
-        c_ptr += sim_in_calculate_size(&sim_dims, config->sim_solvers[ii]);
-        work->sim_out[ii] = sim_out_assign(&sim_dims, c_ptr);
-        c_ptr += sim_out_calculate_size(&sim_dims);
+        work->sim_in[ii] = sim_in_assign(&work->sim_dims[ii], c_ptr, config->sim_solvers[ii]);
+        c_ptr += sim_in_calculate_size(&work->sim_dims[ii], config->sim_solvers[ii]);
+        work->sim_out[ii] = sim_out_assign(&work->sim_dims[ii], c_ptr);
+        c_ptr += sim_out_calculate_size(&work->sim_dims[ii]);
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }

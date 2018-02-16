@@ -64,8 +64,8 @@
 // process box constraints as general constraints
 #define BC_AS_GC
 
-// dynamics: 0 erk, 1 lifter_irk, 2 irk
-#define DYNAMICS 1
+// dynamics: 0 erk, 1 lifted_irk, 2 irk
+#define DYNAMICS 2
 
 
 enum sensitivities_scheme {
@@ -112,7 +112,7 @@ static void print_problem_info(enum sensitivities_scheme sensitivities_type,
 // example of hand-generated external function
 void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 {
-	
+
 	int ii;
 
 	int nv = 21;
@@ -122,13 +122,13 @@ void ls_cost_jac_nm4(external_function_generic *fun, double *in, double *out)
 	for (ii=0; ii<nv; ii++)
 		d_ptr[ii] = in[ii];
 	d_ptr += nv;
-	
+
 	for (ii=0; ii<nv*nv; ii++)
 		d_ptr[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		d_ptr[ii*(nv+1)] = 1.0;
 	d_ptr += nv;
-	
+
 	return;
 
 }
@@ -510,13 +510,13 @@ int main() {
 	for (int ii=0; ii<NN; ii++)
 		sim_erk_config_initialize_default(&config_sim[ii]);
 #elif DYNAMICS==1
-	// irk
-	for (int ii=0; ii<NN; ii++)
-		sim_irk_config_initialize_default(&config_sim[ii]);
-#else
 	// lifted irk
 	for (int ii=0; ii<NN; ii++)
 		sim_lifted_irk_config_initialize_default(&config_sim[ii]);
+#else
+	// irk
+	for (int ii=0; ii<NN; ii++)
+		sim_irk_config_initialize_default(&config_sim[ii]);
 #endif
 	nlp_config.sim_solvers = config_sim_ptrs;
 
@@ -897,9 +897,18 @@ int main() {
     * free memory
     ************************************************/
 
+#if DYNAMICS==0 | DYNAMICS==1
 	free_array_external_function_casadi(NN, forw_vde_casadi);
 	free_array_external_function_casadi(NN, jac_ode_casadi);
 	free_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
+#else
+	free_array_external_function_casadi(NN, impl_ode_casadi);
+	free_array_external_function_casadi(NN, impl_jac_x_casadi);
+	free_array_external_function_casadi(NN, impl_jac_xdot_casadi);
+	free_array_external_function_casadi(NN, impl_jac_u_casadi);
+#endif
+
+
 
 	free(cost_dims_mem);
 	free(dims_mem);

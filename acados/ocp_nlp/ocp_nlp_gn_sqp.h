@@ -81,7 +81,7 @@ typedef struct
 	// nlp memory
 	ocp_nlp_mem *nlp_mem;
 
-	
+
 	struct blasfeo_dmat *W_chol; // cholesky factor of weight matrix
     struct blasfeo_dvec *ls_res; // least-squares residual r(x)
 
@@ -109,6 +109,7 @@ typedef struct
     void *qp_work;
 
     // integrators
+    sim_dims *sim_dims;
     sim_in **sim_in;
     sim_out **sim_out;
     void **sim_solvers_work;
