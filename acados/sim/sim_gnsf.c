@@ -407,18 +407,17 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
         blasfeo_dgemm_nn(nK1, dims->nu,  nff, -1.0, &fix->KKf, 0, 0, &J_r_x1u, 0, dims->nx1, 1.0, &fix->KKu, 0, 0, &dK1_du , 0, 0);
 
         blasfeo_dgemm_nn(nZ, dims->nx1, nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, 0,         1.0, &fix->ZZx, 0, 0, &dZ_dx1, 0, 0);
-        blasfeo_dgemm_nn(nZ, dims->nu, nff, -1.0,  &fix->ZZf, 0, 0, &J_r_x1u, 0, dims->nx1, 1.0, &fix->ZZu, 0, 0, &dZ_du, 0, 0);
+        blasfeo_dgemm_nn(nZ, dims->nu , nff, -1.0, &fix->ZZf, 0, 0, &J_r_x1u, 0, dims->nx1, 1.0, &fix->ZZu, 0, 0, &dZ_du, 0, 0);
 
         // printf("dK1_dx1 = \n");
         // blasfeo_print_exp_dmat(nK1, dims->nx1, &dK1_dx1, 0, 0);
         // printf("dK1_du = \n");
         // blasfeo_print_exp_dmat(nK1, dims->nu, &dK1_du, 0, 0);
 
-        // printf("dZ_dx1 = \n");
-        // blasfeo_print_exp_dmat(nZ, dims->nx1, &dZ_dx1, 0, 0);
-        // printf("dZ_du = \n"); // TODO: check this out, is it wrong?! error w.r.t. matlab solution is E-9, actually i double checked...
-
-
+        printf("dZ_dx1 = \n");
+        blasfeo_print_exp_dmat(nZ, dims->nx1, &dZ_dx1, 0, 0);
+        printf("dZ_du = \n");
+        blasfeo_print_exp_dmat(nZ, dims->nu, &dZ_du, 0, 0);
 
     }
     // printf("x0_traj 1st:\n");

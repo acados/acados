@@ -52,8 +52,6 @@ typedef struct {
     double *u_0;
 } gnsf_res_in;
 
-// TODO
-
 typedef struct {
     double *xf; //TODO
 } gnsf_out;
