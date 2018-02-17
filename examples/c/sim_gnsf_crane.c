@@ -42,7 +42,6 @@ int main() {
 
     gnsf_dims dims;
     gnsf_fixed fix;
-    sim_rk_opts opts;
     // opts.A_mat = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double));
     // *opts.A_mat = 1;
     
@@ -75,6 +74,10 @@ int main() {
     // print_gnsf_res_out( dims, res_out );
 
     gnsf_in in;
+    gnsf_opts opts;
+    opts.sens_forw = (bool) calloc(1, sizeof(bool));
+    opts.sens_forw = 1;
+
     in.res_inc_Jff = res_inc_Jff_fun;
     in.f_LO_inc_J_x1k1uz = f_LO_inc_J_x1k1uz_fun;
     in.jac_res_ffx1u = jac_res_ffx1u_fun;
@@ -96,7 +99,7 @@ int main() {
     in.u[1] = -50.446662212534974;
     printf("test\n");
     gnsf_get_butcher(&dims, &fix, Butcher_fun);
-    gnsf_simulate( &dims, &fix, &in, &out );
+    gnsf_simulate( &dims, &fix, &in, &out, &opts);
     // blasfeo_free_dmat( &fix.ALO);
 
     return 0;

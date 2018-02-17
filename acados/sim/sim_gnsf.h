@@ -134,7 +134,7 @@ typedef struct {
     bool sens_hess;
     int newton_iter;
    // Newton_scheme *scheme;
-} sim_gnsf_opts;
+} gnsf_opts;
 
 void print_gnsf_dims(gnsf_dims* dims);
 void print_gnsf_res_in( gnsf_dims* dims, double* res_in );
@@ -145,7 +145,7 @@ void gnsf_get_KK_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t KK_mat_
 void gnsf_get_ZZ_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t ZZ_mat_fun);
 void gnsf_get_ALO_M2_dK2dx2(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t ALO_M2_dK2dx2_fun);
 void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butcher_fun);
-void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, gnsf_out* out);
+void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, gnsf_out* out, gnsf_opts* opts);
 void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 /*
 typedef struct {
