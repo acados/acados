@@ -184,7 +184,7 @@ void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butche
     d_print_e_mat(dims->num_stages, dims->num_stages, fix->A_dt, dims->num_stages);
 }
 
-void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
+void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out *out)
 {
     printf("GENERALIZED NONLINEAR STATIC FEEDBACK (GNSF) SIMULATION \n");
     print_gnsf_dims(dims);
@@ -227,7 +227,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     struct blasfeo_dmat J_G2_K1;
     struct blasfeo_dmat dK2_dwn;
     struct blasfeo_dmat dxf_dwn;
-
+    struct blasfeo_dmat S_forw;
+    struct blasfeo_dmat S_forw_new; // used to avoid side effects
 
     struct blasfeo_dmat f_LO_jac[dims->num_steps];
 
@@ -256,7 +257,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     blasfeo_allocate_dmat(nK2, nK1,  &J_G2_K1); //    J_G2_K1
     blasfeo_allocate_dmat(nK2, dims->nx + dims->nu,  &dK2_dwn); //    J_G2_K1
     blasfeo_allocate_dmat(dims->nx, dims->nx + dims->nu,  &dxf_dwn); //    dxf_dwn
-
+    blasfeo_allocate_dmat(dims->nx, dims->nx + dims->nu,  &S_forw); //    S_forw
+    blasfeo_allocate_dmat(dims->nx, dims->nx + dims->nu,  &S_forw_new); //    S_forw
 
     blasfeo_allocate_dvec(nff, &res_val);   //res_val
     blasfeo_allocate_dvec(dims->nu, &u0); // u0
@@ -269,10 +271,9 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
     
     blasfeo_pack_dvec(dims->nx, &in->x[0], &x0_traj, 0);
 
-    // printf("x0_1 = \n");
-    // blasfeo_print_dvec(dims->nx1, &x0_1, 0);
-    // printf("x0_2 = \n");
-    // blasfeo_print_dvec(dims->nx2, &x0_2, 0);
+    blasfeo_pack_dmat(dims->nx, dims->nx + dims->nu, &in->S_forw[0], dims->nx, &S_forw, 0, 0);
+    printf("S_forw = \n");
+    blasfeo_print_dmat(dims->nx, dims->nx + dims->nu, &S_forw, 0, 0);
 
     for (int ss = 0; ss < dims->num_steps; ss++) {
         blasfeo_allocate_dvec(nK1, &K1_val[ss]);
@@ -283,7 +284,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
         blasfeo_allocate_dmat(nK2, 2*dims->nx1 + dims->nu + dims->nz,  &f_LO_jac[ss]);
     }
 
-    for (int ss = 0; ss < 1; ss++) { // TODO: replace 1 with dim num_steps
+    for (int ss = 0; ss < dims->num_steps; ss++) { // TODO: replace 1 with dim num_steps
         // todo: usage of x0_1/ x0_2 can be avoided  % Initialization inside
         blasfeo_daxpy(dims->nx1, 0.0, &x0_traj, 0, &x0_traj, dims->nx * ss, &x0_1, 0);
         blasfeo_daxpy(dims->nx2, 0.0, &x0_traj, 0, &x0_traj, dims->nx * ss + dims->nx1, &x0_2, 0);
@@ -470,14 +471,15 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, gnsf_out out)
             blasfeo_dgead(dims->nx2, dims->nu, fix->b_dt[ii], &dK2_dwn, ii * dims->nx2, dims->nx, &dxf_dwn, dims->nx1, dims->nx);
         }
 
-
-
         printf("dxf_dwn = \n");
         blasfeo_print_exp_dmat(dims->nx, dims->nx + dims->nu, &dxf_dwn, 0, 0);
 
-        
-
+    // D <= beta * C + alpha * A * B
+        blasfeo_dgemm_nn(dims->nx, dims->nx, dims->nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, 0, 0.0, &S_forw_new, 0, 0, &S_forw_new, 0, 0);
+        blasfeo_dgemm_nn(dims->nx, dims->nu, dims->nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, dims->nx, 1.0, &dxf_dwn, 0, dims->nx, &S_forw_new, 0, dims->nx);
+        blasfeo_dgecp(dims->nx, dims->nx +dims->nu, &S_forw_new, 0, 0, &S_forw, 0, 0);
     }
+    blasfeo_print_exp_dmat(dims->nx, dims->nx + dims->nu, &S_forw, 0, 0);
     // printf("x0_traj 1st:\n");
     // blasfeo_print_exp_dvec(dims->nx , &x0_traj, dims->nx);
     // printf("x0_traj last:\n");

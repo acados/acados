@@ -82,13 +82,21 @@ int main() {
     fix.A_dt = (double*) calloc(dims.num_stages * dims.num_stages, sizeof(double)); // TODO write allocate gnsf_in fcn
     in.u = (double*) calloc(dims.nu, sizeof(double));
     in.x = (double*) calloc(dims.nx, sizeof(double));
+    in.S_forw = (double*) calloc(dims.nx * (dims.nx + dims.nu), sizeof(double));
+    out.S_forw = (double*) calloc(dims.nx * (dims.nx + dims.nu), sizeof(double));
+
+    for (int ii = 0; ii < dims.nx; ii++) {
+        in.S_forw[ii+ ii*dims.nx] = 1.0;
+    }
+
+    out.xf = (double*) calloc(dims.nx, sizeof(double));
 
     in.x[2] = 0.8;
     in.u[0] = 40.108149413030752;
     in.u[1] = -50.446662212534974;
     printf("test\n");
     gnsf_get_butcher(&dims, &fix, Butcher_fun);
-    gnsf_simulate( &dims, &fix, &in, out );
+    gnsf_simulate( &dims, &fix, &in, &out );
     // blasfeo_free_dmat( &fix.ALO);
 
     return 0;
