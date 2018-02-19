@@ -633,10 +633,16 @@ void print_colmaj_ocp_qp_out(char *filename, colmaj_ocp_qp_in *qp, colmaj_ocp_qp
 void print_dense_qp_in(dense_qp_in *qp_in)
 {
     int nv = qp_in->dim->nv;
+    int ne = qp_in->dim->ne;
 
     printf("H =\n");
     blasfeo_print_dmat(nv, nv, qp_in->Hv, 0, 0);
-    // TODO(dimitris): print all data
+    printf("g =\n");
+    blasfeo_print_dvec(nv, qp_in->g, 0);
+    printf("A =\n");
+    blasfeo_print_dmat(ne, nv, qp_in->A, 0, 0);
+    printf("b =\n");
+    blasfeo_print_dvec(ne, qp_in->b, 0);
 }
 
 

@@ -75,9 +75,13 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 #         add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
 #     endif()
 
-#     add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-#     target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-#     add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+    add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+    target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+    add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+
+    add_executable(ocp_qp ocp_qp.c)
+    target_link_libraries(ocp_qp acados)
+    add_test(ocp_qp ocp_qp)
 
 # # add_executable(mass_spring_partial_tightening_example
 # #    mass_spring_partial_tightening.c

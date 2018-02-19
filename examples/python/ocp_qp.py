@@ -6,7 +6,7 @@ from acados import ocp_qp
 qp = ocp_qp(N=5, nx=2, nu=1)
 
 # specify OCP
-qp.set('A', array([[0, 1], [0, 0]]))
+qp.set('A', array([[1, 1], [0, 1]]))
 qp.set('B', array([[0], [1]]))
 qp.set('Q', diag([1, 1]))
 qp.set('R', diag([1]))

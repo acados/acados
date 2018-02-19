@@ -496,17 +496,15 @@ int main() {
 
     /* box constraints */
 
-	// idxb0
+    // idxb0
     int idxb0[nb[0]];
-    for (int i = 0; i < nb[0]; i++)
-        idxb0[i] = i;
+    for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
 
 	// idxb1
 	int idxb1[nb[1]];
-    for (int i = 0; i < NU; i++)
-        idxb1[i] = i;
-    for (int i = 0; i < NMF; i++)
-        idxb1[NU+i] = NU + 6*i + 1;
+    for (int i = 0; i < NU; i++) idxb1[i] = i;
+
+    for (int i = 0; i < NMF; i++) idxb1[NU+i] = NU + 6*i + 1;
 
 	// idxbN
 	int idxbN[nb[NN]];
@@ -589,8 +587,8 @@ int main() {
     ************************************************/
 
     // choose QP solver
-    ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
-//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
+    // ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
+    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
 
     // set up args with nested structs
     sim_solver_t sim_solver_names[NN];
