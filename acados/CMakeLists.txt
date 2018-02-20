@@ -97,7 +97,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 endif()
 
 if(ACADOS_WITH_HPMPC)
-    target_compile_definitions(acados PRIVATE ACADOS_WITH_HPMPC)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_HPMPC)
 endif()
 
 if(ACADOS_WITH_QORE)
