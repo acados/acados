@@ -26,6 +26,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+#include "acados/sim/sim_common.h"
+
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -52,11 +54,13 @@ typedef struct {
     double *u_0;
 } gnsf_res_in;
 
-typedef struct {
-    double *xf; //TODO
-    double *S_forw;  // S_forw[NX*(NX+NU)]
-    double *S_adj;   //
-} gnsf_out;
+// typedef struct {
+//     double *xf; //TODO
+//     double *S_forw;  // S_forw[NX*(NX+NU)]
+//     double *S_adj;   //
+
+//     sim_info *info;
+// } gnsf_out;
 
 typedef struct {
     double *A_dt;
@@ -104,6 +108,14 @@ typedef struct {
     double dt;
 
 } gnsf_fixed;
+
+typedef struct {
+    double *res_in;
+    double *res_out;
+    double *f_LO_in;
+    double *f_LO_out;
+
+} gnsf_workspace;
 /*
 typedef struct {
     double CPUtime;
@@ -145,7 +157,8 @@ void gnsf_get_KK_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t KK_mat_
 void gnsf_get_ZZ_mat(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t ZZ_mat_fun);
 void gnsf_get_ALO_M2_dK2dx2(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t ALO_M2_dK2dx2_fun);
 void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butcher_fun);
-void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, gnsf_out* out, gnsf_opts* opts);
+void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, sim_out* out, gnsf_opts* opts, void *work_);
+
 void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 /*
 typedef struct {
