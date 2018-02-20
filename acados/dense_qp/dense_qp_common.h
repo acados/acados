@@ -41,13 +41,13 @@ typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 
 
 typedef struct {
-    int (*fun) (dense_qp_in *qp_in, dense_qp_out *qp_out, void *args, void *mem, void *work);
-    int (*opts_calculate_size) (dense_qp_dims *dims);
-    void *(*opts_assign) (dense_qp_dims *dims, void *raw_memory);
-    void (*opts_initialize_default) (void *args);
-    int (*memory_calculate_size) (dense_qp_dims *dims, void *args);
-    void *(*memory_assign) (dense_qp_dims *dims, void *args, void *raw_memory);
-    int (*workspace_calculate_size) (dense_qp_dims *dims, void *args);
+    int (*evaluate) (void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *args, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, dense_qp_dims *dims);
+    void *(*opts_assign) (void *config, dense_qp_dims *dims, void *raw_memory);
+    void (*opts_initialize_default) (void *config, void *args);
+    int (*memory_calculate_size) (void *config, dense_qp_dims *dims, void *args);
+    void *(*memory_assign) (void *config, dense_qp_dims *dims, void *args, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, dense_qp_dims *dims, void *args);
 } dense_qp_solver_config;
 
 

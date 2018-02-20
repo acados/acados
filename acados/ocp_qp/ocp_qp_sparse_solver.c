@@ -29,87 +29,95 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
+
+int ocp_qp_sparse_solver_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
-    ocp_qp_solver_config *solver = (ocp_qp_solver_config *)solver_;
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
 
     int size = 0;
-    size += sizeof(ocp_qp_sparse_solver_args);
-    size += sizeof(ocp_qp_solver_config);
+    size += sizeof(ocp_qp_sparse_solver_opts);
 
     size += ocp_qp_partial_condensing_calculate_args_size(dims);
-    size += solver->opts_calculate_size(dims);
+    size += qp_solver->opts_calculate_size(qp_solver, dims);
 
     return size;
 }
 
 
 
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
+void *ocp_qp_sparse_solver_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
-    ocp_qp_solver_config *solver = (ocp_qp_solver_config *)solver_;
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
 
     char *c_ptr = (char *) raw_memory;
 
-    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) c_ptr;
-    c_ptr += sizeof(ocp_qp_sparse_solver_args);
-
-    args->solver = (ocp_qp_solver_config*) c_ptr;
-    c_ptr += sizeof(ocp_qp_solver_config);
-
-    *args->solver = *solver;
+    ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *) c_ptr;
+    c_ptr += sizeof(ocp_qp_sparse_solver_opts);
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    args->pcond_args = ocp_qp_partial_condensing_assign_args(dims, c_ptr);
+    args->pcond_opts = ocp_qp_partial_condensing_assign_args(dims, c_ptr);
     c_ptr += ocp_qp_partial_condensing_calculate_args_size(dims);
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    args->solver_args = args->solver->opts_assign(dims, c_ptr);
-    c_ptr += args->solver->opts_calculate_size(dims);
+    args->qp_solver_opts = qp_solver->opts_assign(qp_solver, dims, c_ptr);
+    c_ptr += qp_solver->opts_calculate_size(qp_solver, dims);
 
-    assert((char*)raw_memory + ocp_qp_sparse_solver_calculate_args_size(dims, solver) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_sparse_solver_opts_calculate_size(config_, dims) == c_ptr);
 
     return (void*)args;
 }
 
 
 
-void ocp_qp_sparse_solver_initialize_default_args(void *args_)
+void ocp_qp_sparse_solver_opts_initialize_default(void *config_, void *opts_)
 {
-    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;
-    ocp_qp_partial_condensing_initialize_default_args(args->pcond_args);
-    args->solver->opts_initialize_default(args->solver_args);
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
+
+	// sparse solver opts
+    ocp_qp_sparse_solver_opts *opts = (ocp_qp_sparse_solver_opts *)opts_;
+	// partial condensing opts
+    ocp_qp_partial_condensing_initialize_default_args(opts->pcond_opts);
+	ocp_qp_partial_condensing_args *pcond_opts = opts->pcond_opts;
+	pcond_opts->N2 = config->N2;
+	// qp solver opts
+    qp_solver->opts_initialize_default(qp_solver, opts->qp_solver_opts);
 }
 
 
 
-int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_)
+int ocp_qp_sparse_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
+
+    ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *)args_;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_memory);
 
     // set up dimesions of partially condensed qp
     ocp_qp_dims *pcond_dims;
-    if (args->pcond_args->N2 < dims->N)
+    if (args->pcond_opts->N2 < dims->N)
     {
-        pcond_dims = args->pcond_args->pcond_dims;
+        pcond_dims = args->pcond_opts->pcond_dims;
     }
 	else
     {
         pcond_dims = dims;
     }
 
-    if (args->pcond_args->N2 < dims->N) {
-        size += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_args);
+    if (args->pcond_opts->N2 < dims->N) {
+        size += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_opts);
     }
 
-    size += args->solver->memory_calculate_size(pcond_dims, args->solver_args);
+    size += qp_solver->memory_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 
-    if (args->pcond_args->N2 < dims->N) {
+    if (args->pcond_opts->N2 < dims->N) {
         size += ocp_qp_in_calculate_size(pcond_dims);
         size += ocp_qp_out_calculate_size(pcond_dims);
     }
@@ -119,20 +127,23 @@ int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 
 
 
-void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
+void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
-    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
 
-    assert(args->pcond_args->N2 > 0 && "N2 must be positive!");
-    assert(args->pcond_args->N2 <= dims->N && "N2 cannot be bigger than N!");
+    ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *)args_;
+
+    assert(args->pcond_opts->N2 > 0 && "N2 must be positive!");
+    assert(args->pcond_opts->N2 <= dims->N && "N2 cannot be bigger than N!");
 
     char *c_ptr = (char *)raw_memory;
 
     // set up dimesions of partially condensed qp
     ocp_qp_dims *pcond_dims;
-    if (args->pcond_args->N2 < dims->N)
+    if (args->pcond_opts->N2 < dims->N)
     {
-        pcond_dims = args->pcond_args->pcond_dims;
+        pcond_dims = args->pcond_opts->pcond_dims;
     }
 	else
     {
@@ -144,9 +155,9 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    if (args->pcond_args->N2 < dims->N) {
-        mem->pcond_memory = ocp_qp_partial_condensing_assign_memory(dims, args->pcond_args, c_ptr);
-        c_ptr += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_args);
+    if (args->pcond_opts->N2 < dims->N) {
+        mem->pcond_memory = ocp_qp_partial_condensing_assign_memory(dims, args->pcond_opts, c_ptr);
+        c_ptr += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_opts);
     }
 	else
     {
@@ -155,10 +166,10 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    mem->solver_memory = args->solver->memory_assign(pcond_dims, args->solver_args, c_ptr);
-    c_ptr += args->solver->memory_calculate_size(pcond_dims, args->solver_args);
+    mem->solver_memory = qp_solver->memory_assign(qp_solver, pcond_dims, args->qp_solver_opts, c_ptr);
+    c_ptr += qp_solver->memory_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 
-    if (args->pcond_args->N2 < dims->N) {
+    if (args->pcond_opts->N2 < dims->N) {
         mem->pcond_qp_in = assign_ocp_qp_in(pcond_dims, c_ptr);
         c_ptr += ocp_qp_in_calculate_size(pcond_dims);
     }
@@ -167,7 +178,7 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
         mem->pcond_qp_in = NULL;
     }
 
-    if (args->pcond_args->N2 < dims->N) {
+    if (args->pcond_opts->N2 < dims->N) {
         mem->pcond_qp_out = assign_ocp_qp_out(pcond_dims, c_ptr);
         c_ptr += ocp_qp_out_calculate_size(pcond_dims);
     }
@@ -176,45 +187,51 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
         mem->pcond_qp_out = NULL;
     }
 
-    assert((char *) raw_memory + ocp_qp_sparse_solver_calculate_memory_size(dims, args_) == c_ptr);
+    assert((char *) raw_memory + ocp_qp_sparse_solver_memory_calculate_size(config_, dims, args_) == c_ptr);
 
     return mem;
 }
 
 
 
-int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+int ocp_qp_sparse_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
+
+    ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *)args_;
 
     int size = sizeof(ocp_qp_sparse_solver_workspace);
-    size += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
+    size += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_opts);
 
     // set up dimesions of partially condensed qp
     ocp_qp_dims *pcond_dims;
-    if (args->pcond_args->N2 < dims->N)
+    if (args->pcond_opts->N2 < dims->N)
     {
-        pcond_dims = args->pcond_args->pcond_dims;
+        pcond_dims = args->pcond_opts->pcond_dims;
     }
 	else
     {
         pcond_dims = dims;
     }
 
-    size += args->solver->workspace_calculate_size(pcond_dims, args->solver_args);
+    size += qp_solver->workspace_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 
     return size;
 }
 
 
 
-static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, ocp_qp_sparse_solver_memory *mem, ocp_qp_sparse_solver_workspace *work)
+static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_sparse_solver_opts *args, ocp_qp_sparse_solver_memory *mem, ocp_qp_sparse_solver_workspace *work)
 {
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
+
     // set up dimesions of partially condensed qp
     ocp_qp_dims *pcond_dims;
-    if (args->pcond_args->N2 < dims->N)
+    if (args->pcond_opts->N2 < dims->N)
     {
-        pcond_dims = args->pcond_args->pcond_dims;
+        pcond_dims = args->pcond_opts->pcond_dims;
     }
 	else
     {
@@ -226,31 +243,34 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, o
     c_ptr += sizeof(ocp_qp_sparse_solver_workspace);
 
     work->pcond_work = c_ptr;
-    c_ptr += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
+    c_ptr += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_opts);
 
     work->solver_work = c_ptr;
-    c_ptr += args->solver->workspace_calculate_size(pcond_dims, args->solver_args);
+    c_ptr += qp_solver->workspace_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 }
 
 
 
-int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
+int ocp_qp_sparse_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
+	ocp_qp_xcond_solver_config *config = config_;
+	ocp_qp_solver_config *qp_solver = config->qp_solver;
+
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     acados_timer tot_timer, cond_timer;
     acados_tic(&tot_timer);
 
     // cast data structures
-    ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) args_;
+    ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *) args_;
     ocp_qp_sparse_solver_memory *memory = (ocp_qp_sparse_solver_memory *) mem_;
     ocp_qp_sparse_solver_workspace *work = (ocp_qp_sparse_solver_workspace *) work_;
 
     // cast workspace
-    cast_workspace(qp_in->dim, args, memory, work);
+    cast_workspace(config_, qp_in->dim, args, memory, work);
 
-    if (args->pcond_args->N2 < qp_in->dim->N) {  // condensing
+    if (args->pcond_opts->N2 < qp_in->dim->N) {  // condensing
         acados_tic(&cond_timer);
-        ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory, work->pcond_work);
+        ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_opts, memory->pcond_memory, work->pcond_work);
         info->condensing_time = acados_toc(&cond_timer);
     } else {
         memory->pcond_qp_in = qp_in;
@@ -261,15 +281,15 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     // solve qp
     int solver_status;
     if (memory->solver_memory != NULL) {
-        solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
+        solver_status = qp_solver->evaluate(qp_solver, memory->pcond_qp_in, memory->pcond_qp_out, args->qp_solver_opts, memory->solver_memory, work->solver_work);
     } else {
         solver_status = ACADOS_FAILURE;
     }
 
     // expand
-    if (args->pcond_args->N2 < qp_in->dim->N) {
+    if (args->pcond_opts->N2 < qp_in->dim->N) {
         acados_tic(&cond_timer);
-        ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory, work->pcond_work);
+        ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_opts, memory->pcond_memory, work->pcond_work);
         info->condensing_time += acados_toc(&cond_timer);
     }
 
@@ -279,4 +299,23 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     info->num_iter = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->num_iter;
 
     return solver_status;
+}
+
+
+
+void ocp_qp_sparse_solver_config_initialize_default(void *config_)
+{
+
+	ocp_qp_xcond_solver_config *config = config_;
+
+	config->opts_calculate_size = &ocp_qp_sparse_solver_opts_calculate_size;
+	config->opts_assign = &ocp_qp_sparse_solver_opts_assign;
+	config->opts_initialize_default = &ocp_qp_sparse_solver_opts_initialize_default;
+	config->memory_calculate_size = &ocp_qp_sparse_solver_memory_calculate_size;
+	config->memory_assign = &ocp_qp_sparse_solver_memory_assign;
+	config->workspace_calculate_size = &ocp_qp_sparse_solver_workspace_calculate_size;
+	config->evaluate = &ocp_qp_sparse_solver;
+
+	return;
+
 }

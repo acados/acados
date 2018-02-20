@@ -21,17 +21,25 @@
 // external
 #include <stdio.h>
 #include <stdlib.h>
+
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
+
 // acados
 #include "acados/utils/math.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
+
 // acados_c
+#ifdef ACADOS_WITH_C_INTERFACE
 #include <acados_c/ocp_qp.h>
+#endif
+
 
 
 /*****************************************************************************************
@@ -40,7 +48,7 @@
 * masses. The system is sampled with sampling time Ts.
 ******************************************************************************************/
 
-void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b) {
+static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b) {
 
     int nx2 = nx * nx;
 
@@ -470,7 +478,14 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
     dims.nbu = nbu_vec;
     dims.nbx = nbx_vec;
 
+#ifdef ACADOS_WITH_C_INTERFACE
     ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
+#else // ! ACADOS_WITH_C_INTERFACE 
+	int qp_in_size = ocp_qp_in_calculate_size(&dims);
+	void *qp_in_mem = malloc(qp_in_size);
+	ocp_qp_in *qp_in = assign_ocp_qp_in(&dims, qp_in_mem);
+#endif
+
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
 
     // free objective

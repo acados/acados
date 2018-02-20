@@ -32,6 +32,8 @@
 #include "hpipm/include/hpipm_d_cond.h"
 #include "hpipm/include/hpipm_d_part_cond.h"
 
+
+
 int ocp_qp_partial_condensing_calculate_args_size(ocp_qp_dims *dims)
 {
     int size = 0;
