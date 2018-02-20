@@ -113,15 +113,22 @@ bool set_option_int(void *args_, const char *option, const int value)
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *) sparse_args->solver_args;
             ocp_qp_partial_condensing_args *pcond_args = (ocp_qp_partial_condensing_args *) sparse_args->pcond_args;
-            if (!strcmp(token, "print_level"))
+            if (!strcmp(token, "print_level")) {
                 args->options.printLevel = value;
-            else if (!strcmp(token, "warm_start"))
+            } else if (!strcmp(token, "warm_start")) {
                 args->warmstart = value;
-            else if (!strcmp(token, "max_iter"))
+            } else if (!strcmp(token, "max_iter")) {
                 args->options.maxIter = value;
-            else if (!strcmp(token, "N2"))
+            } else if (!strcmp(token, "N2")) {
                 pcond_args->N2 = value;
-            else return false;
+            } else if (!strcmp(token, "clipping")) {
+                if (value == 1)
+                    args->stageQpSolver = QPDUNES_WITH_CLIPPING;
+                else
+                    args->stageQpSolver = QPDUNES_WITH_QPOASES;
+            } else {
+                return false;
+            }
 #endif
 #ifdef ACADOS_WITH_QORE
         } else if (!strcmp(token, "qore")) {
