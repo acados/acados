@@ -32,9 +32,9 @@ EXAMPLES += mass_spring_fcond_hpipm_split
 EXAMPLES += nonlinear_chain_ocp_nlp
 EXAMPLES += sim_erk_wt
 EXAMPLES += sim_gnsf_crane
+# EXAMPLES += blasfeo_bug_minimal_example
 
 examples: $(EXAMPLES)
-
 
 
 RUN_EXAMPLES =
@@ -83,10 +83,7 @@ sim_erk_wt: $(WT_OBJS)
 CRANE_GNSF_OBJS =
 CRANE_GNSF_OBJS += gnsf_crane_model/res_inc_Jff_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/KKmat_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/ZZmat_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/Butcher_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/ALO_M2_dK2dx2_fun.o
+CRANE_GNSF_OBJS += gnsf_crane_model/But_KK_ZZ_LO_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/f_LO_inc_J_x1k1uz_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/jac_res_ffx1u_fun.o
 CRANE_GNSF_OBJS += sim_gnsf_crane.o
@@ -96,6 +93,16 @@ sim_gnsf_crane: $(CRANE_GNSF_OBJS)
 	@echo
 	@echo " Example sim_gnsf_crane build complete."
 	@echo
+
+
+# BLASFEO_BUG_OBJ =
+# BLASFEO_BUG_OBJ += blasfeo_bug_minimal_example.o
+
+# blasfeo_bug_minimal_example: $(BLASFEO_BUG_OBJ)
+# 	$(CCC) -o blasfeo_bug_minimal_example.out  $(BLASFEO_BUG_OBJ) $(LDFLAGS) $(LIBS)
+# 	@echo
+# 	@echo " Example blasfeo_bug_minimal_example build complete."
+# 	@echo
 
 # sim_irk_crane_yt: $(CRANE_OBJS)
 # 	$(CCC) -o sim_irk_crane_yt.out  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)

@@ -29,8 +29,6 @@
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_gnsf.h"
-//#include "acados/sim/sim_erk_integrator.h"
-//#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_gnsf_casadi_wrapper.h"
 
 #include "blasfeo/include/blasfeo_target.h"
@@ -42,9 +40,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 
 
-
-
-void print_gnsf_dims( gnsf_dims *dims)
+void print_gnsf_dims( gnsf_dims *dims )
 {
     printf("\n");
     printf("nx          = %d \n", dims->nx);
@@ -103,90 +99,198 @@ void gnsf_get_dims( gnsf_dims *dims, casadi_function_t get_ints_fun)
     dims->n_out = (int) ints_out[7];
 }
 
-void gnsf_get_KK_mat(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun)
+
+void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_LO_fun)
 {
-    int nK1 = dims->nx1 * dims->num_stages;
-    int nff = dims->num_stages * dims->n_out;
-    double *out;
-    out = (double*) calloc((nK1) * (nff + dims->nx1 + dims->nu),sizeof(double));
-    // export_from_ML_wrapped(fix->KKf, fix->KKf, KK_mat_fun);
-    export_from_ML_wrapped(out, out, KK_mat_fun);
-    // for (int i=0; i<dims->nx1 *dims->num_stages*nff; i++)
-    // fix->KKf[i] = out[i];
-    // fix->KKf = &out[0];
-    // printf("test\n");
-    blasfeo_allocate_dmat(nK1, nff, &fix->KKf);
-    blasfeo_allocate_dmat(nK1, dims->nx1, &fix->KKx);
-    blasfeo_allocate_dmat(nK1, dims->nu , &fix->KKu);
-    // fix->KKx = &out[dims->nx1 *dims->num_stages*nff];
-    // fix->KKu = &out[(dims->nx1 *dims->num_stages)*(nff + dims->nx1)];
-    blasfeo_pack_dmat(nK1, nff, out                                                        , dims->num_stages * dims->nx1, &fix->KKf, 0, 0);
-    blasfeo_pack_dmat(nK1, dims->nx1, out + dims->nx1 *dims->num_stages*nff                , dims->num_stages * dims->nx1, &fix->KKx, 0, 0);
-    blasfeo_pack_dmat(nK1, dims->nu, out + (dims->nx1 *dims->num_stages)*(nff + dims->nx1) , dims->num_stages * dims->nx1, &fix->KKu, 0, 0);
-    printf("KKf Mat\n");
-    blasfeo_print_dmat(nK1, nff, &fix->KKf, 0,0);
-    printf("KKx Mat\n");
-    blasfeo_print_dmat(nK1, dims->nx1, &fix->KKx, 0,0);
-    printf("KKu Mat \n");
-    blasfeo_print_dmat(nK1, dims->nu , &fix->KKu, 0,0);
+    int nx  = dims->nx;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int num_stages = dims->num_stages;
+    int num_steps = dims->num_steps;
+
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
+    int nff = n_out * num_stages;
+
+    // double *out;
+    int exported_doubles = 0;
+    exported_doubles += num_stages * (num_stages +2); // Butcher matrices
+    exported_doubles += nK1 * (nff + nx1 + nu); //KK* matrices
+    exported_doubles += nZ * (nff + nx1 + nu); //ZZ* matrices
+    exported_doubles += nK2 * (nK2 + nx2) + nx2 * nx2; //LO matrices
+
+    double *export_out = (double*) malloc(exported_doubles*sizeof(double));
+    export_from_ML_wrapped(export_out, export_out, But_KK_ZZ_LO_fun);
+    double *read_mem = export_out;
+
+    // IMPORT BUTCHER
+    for (int ii = 0; ii < num_stages*num_stages; ii++) {
+        fix->A_dt[ii] = read_mem[ii];
+    }
+    read_mem += num_stages*num_stages;
+
+    for (int ii = 0; ii < num_stages; ii++) {
+        fix->b_dt[ii] = read_mem[ii];
+    }
+    read_mem += num_stages;
+
+    for (int ii = 0; ii < num_stages; ii++) {
+        fix->c[ii] = read_mem[ii];
+    }
+    read_mem += num_stages;
+
+    // IMPORT KKmat
+    blasfeo_pack_dmat(nK1, nff, read_mem, nK1, &fix->KKf, 0, 0);
+    read_mem += nK1 * nff;
+    blasfeo_pack_dmat(nK1, nx1, read_mem, nK1, &fix->KKx, 0, 0);
+    read_mem += nK1 * nx1;
+    blasfeo_pack_dmat(nK1, nu,  read_mem, nK1, &fix->KKu, 0, 0);
+    read_mem += nK1 * nu;
+
+    // IMPORT ZZmat
+    blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &fix->ZZf, 0, 0);
+    read_mem += nZ * nff;
+    blasfeo_pack_dmat(nZ, nx1, read_mem, nZ, &fix->ZZx, 0, 0);
+    read_mem += nZ * nx1;
+    blasfeo_pack_dmat(nZ, nu,  read_mem, nZ, &fix->ZZu, 0, 0);
+    read_mem += nZ * nu;
+
+    // IMPORT LO matrices
+    blasfeo_pack_dmat(nx2, nx2, read_mem, nx2, &fix->ALO, 0, 0);
+    read_mem += nx2 * nx2;
+    blasfeo_pack_dmat(nK2, nK2, read_mem, nK2, &fix->M2inv, 0, 0);
+    read_mem += nK2 * nK2;
+    blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &fix->dK2_dx2, 0, 0);
+    read_mem += nK2 * nx2;
+
+    // d_print_e_mat(num_stages, num_stages, fix->A_dt, num_stages);
+    // d_print_e_mat(num_stages, 1, fix->b_dt, num_stages);
+    // d_print_e_mat(num_stages, 1, fix->c, num_stages);
+
+    // printf("KKf Mat\n");
+    // blasfeo_print_exp_dmat(nK1, nff, &fix->KKf, 0,0);
     // printf("KKx Mat\n");
-    // d_print_mat(dims->num_stages* dims->nx1, dims->nx1, fix->KKx, dims->nx1 *dims->num_stages);
+    // blasfeo_print_exp_dmat(nK1, nx1, &fix->KKx, 0,0);
+    // printf("KKu Mat \n");
+    // blasfeo_print_exp_dmat(nK1, nu , &fix->KKu, 0,0);
+
+    // printf("ZZf Mat\n");
+    // blasfeo_print_exp_dmat(nZ, nff, &fix->ZZf, 0,0);
+    // printf("ZZx Mat\n");
+    // blasfeo_print_exp_dmat(nZ, nx1, &fix->ZZx, 0,0);
+    // printf("ZZu Mat \n");
+    // blasfeo_print_exp_dmat(nZ, nu , &fix->ZZu, 0,0);
+
+    // printf("ALO Mat\n");
+    // blasfeo_print_dmat(dims->nx2, dims->nx2, &fix->ALO, 0,0);
+    // printf("M2inv\n");
+    // blasfeo_print_dmat(nK2, nK2, &fix->M2inv, 0,0);
+    // printf("dK2_dx2 \n");
+    // blasfeo_print_dmat(nK2, dims->nx2 , &fix->dK2_dx2, 0,0);
+
+
+    free(export_out);
 }
 
-void gnsf_get_ZZ_mat(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t KK_mat_fun)
+int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts)
 {
-    int nZ = dims->nz * dims->num_stages;
-    int nff = dims->num_stages * dims->n_out;
-    double *out;
-    out = (double*) calloc((nZ) * (nff + dims->nx1 + dims->nu),sizeof(double));
-    // export_from_ML_wrapped(fix->KKf, fix->KKf, KK_mat_fun);
-    export_from_ML_wrapped(out, out, KK_mat_fun);
-    blasfeo_allocate_dmat(nZ, nff      , &fix->ZZf);
-    blasfeo_allocate_dmat(nZ, dims->nx1, &fix->ZZx);
-    blasfeo_allocate_dmat(nZ, dims->nu , &fix->ZZu);
-    blasfeo_pack_dmat(nZ, nff, out                                                        , nZ, &fix->ZZf, 0, 0);
-    blasfeo_pack_dmat(nZ, dims->nx1, out + dims->nx1 *dims->num_stages*nff                , nZ, &fix->ZZx, 0, 0);
-    blasfeo_pack_dmat(nZ, dims->nu, out + (dims->nx1 *dims->num_stages)*(nff + dims->nx1) , nZ, &fix->ZZu, 0, 0);
-    printf("ZZf Mat\n");
-    blasfeo_print_dmat(nZ, nff, &fix->ZZf, 0,0);
-    printf("ZZx Mat\n");
-    blasfeo_print_dmat(nZ, dims->nx1, &fix->ZZx, 0,0);
-    printf("ZZu Mat \n");
-    blasfeo_print_dmat(nZ, dims->nu , &fix->ZZu, 0,0);
+    int nx  = dims->nx;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int num_stages = dims->num_stages;
+    int num_steps = dims->num_steps;
+
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
+    int nff = n_out * num_stages;
+
+    int size = sizeof(gnsf_fixed);
+    size += num_stages * (num_stages + 2) * sizeof(double); // A_dt, b_dt, c_butcher;
+    size += sizeof(double); // dt
+
+	size += 9*sizeof(struct blasfeo_dmat); // 3 * KK*, 3* ZZ*, 3* LO_mat
+
+    size += blasfeo_memsize_dmat(nK1, nff); // KKf
+    size += blasfeo_memsize_dmat(nK1, nx1); // KKx
+    size += blasfeo_memsize_dmat(nK1, nu ); // KKu
+
+    size += blasfeo_memsize_dmat(nZ, nff); // ZZf
+    size += blasfeo_memsize_dmat(nZ, nx1); // ZZx
+    size += blasfeo_memsize_dmat(nZ, nu ); // ZZu
+
+    size += blasfeo_memsize_dmat(nx2, nx2); // ALO
+    size += blasfeo_memsize_dmat(nK2, nK2); // M2inv
+    size += blasfeo_memsize_dmat(nK2, nx2); // dK2_dx2
+    printf("gnsf_fixed_size = %d \n", size);
+
+    return size;
 }
 
-void gnsf_get_ALO_M2_dK2dx2(gnsf_dims *dims, gnsf_fixed *fix, casadi_function_t ALO_M2_dK2dx2_fun)
+gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory)
 {
-    int nK2 = dims->nx2 * dims->num_stages;
-    int nff = dims->num_stages * dims->n_out;
-    double *out;
-    out = (double*) calloc(nK2 * (nK2 + dims->nx2) + dims->nx2 * dims->nx2, sizeof(double));
-    export_from_ML_wrapped(out, out, ALO_M2_dK2dx2_fun);
-    blasfeo_allocate_dmat(dims->nx2, dims->nx2    , &fix->ALO);
-    blasfeo_allocate_dmat( nK2, nK2, &fix->M2inv);
-    blasfeo_allocate_dmat( nK2, dims->nx2 , &fix->dK2_dx2);
-    blasfeo_pack_dmat(dims->nx2, dims->nx2 , &out[0], dims->nx2, &fix->ALO, 0, 0);
-    blasfeo_pack_dmat( nK2, nK2, &out[dims->nx2 *dims->nx2], nK2, &fix->M2inv, 0, 0);
-    blasfeo_pack_dmat( nK2, dims->nx2, &out[dims->nx2 *dims->nx2 + nK2*nK2] , nK2, &fix->dK2_dx2, 0, 0);
-    printf("ALO Mat\n");
-    blasfeo_print_dmat(dims->nx2, dims->nx2, &fix->ALO, 0,0);
-    printf("M2inv\n");
-    blasfeo_print_dmat(nK2, nK2, &fix->M2inv, 0,0);
-    printf("dK2_dx2 \n");
-    blasfeo_print_dmat(nK2, dims->nx2 , &fix->dK2_dx2, 0,0);
-}
+    char *c_ptr = (char *) raw_memory;
 
-void gnsf_get_butcher(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t Butcher_fun)
-{
-    double *out;
-    out = (double*) calloc(dims->num_stages * (2+ dims->num_stages),sizeof(double));
-    export_from_ML_wrapped(out, out, Butcher_fun);
-    fix->A_dt = &out[0];
-    fix->b_dt = &out[dims->num_stages * dims->num_stages];
-    fix->c    = &out[dims->num_stages * (dims->num_stages+1)];
-    d_print_e_mat(dims->num_stages, dims->num_stages, fix->A_dt, dims->num_stages);
-}
+	// extract sizes
+    int nx  = dims->nx;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int num_stages = dims->num_stages;
+    int num_steps = dims->num_steps;
 
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
+    int nff = n_out * num_stages;
+
+	// initial align
+	align_char_to(8, &c_ptr);
+
+	// struct
+    gnsf_fixed *fix = (gnsf_fixed *) c_ptr;
+    c_ptr += sizeof(gnsf_fixed);
+
+    // assign butcher
+    assign_double(num_stages * num_stages, &fix->A_dt, &c_ptr);
+    assign_double(num_stages, &fix->b_dt, &c_ptr);
+    assign_double(num_stages, &fix->c,    &c_ptr);
+
+	// blasfeo_mem align
+	align_char_to(64, &c_ptr);
+
+    // blasfeo_dmat_mem
+    assign_blasfeo_dmat_mem(nK1, nff, &fix->KKf, &c_ptr);
+    assign_blasfeo_dmat_mem(nK1, nx1, &fix->KKx, &c_ptr);
+    assign_blasfeo_dmat_mem(nK1, nu,  &fix->KKu, &c_ptr);
+
+    assign_blasfeo_dmat_mem(nZ,  nff, &fix->ZZf, &c_ptr);
+    assign_blasfeo_dmat_mem(nZ,  nx1, &fix->ZZx, &c_ptr);
+    assign_blasfeo_dmat_mem(nZ,  nu,  &fix->ZZu, &c_ptr);
+
+    assign_blasfeo_dmat_mem(nx2, nx2, &fix->ALO, &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nK2, &fix->M2inv, &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nx2, &fix->dK2_dx2, &c_ptr);
+	// KKf // ONLY NEEDED FOR ARRAYS of dmat..
+	// assign_blasfeo_dmat_structs(1, &fix->KKf, &c_ptr);
+
+	// nls_jac
+	// cost->nls_jac = (external_function_generic **) c_ptr;
+	// c_ptr += (N+1)*sizeof(external_function_generic *);
+
+	// // assert
+    // assert((char *) raw_memory + cost->memsize >= c_ptr);
+	return fix;
+}
 
 int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts)
 {
