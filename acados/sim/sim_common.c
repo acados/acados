@@ -64,7 +64,7 @@ int sim_in_calculate_size(sim_dims *dims, sim_solver_config *config)
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += (nx + nu) * sizeof(double);  // S_adj
 
-	size += config->model_calculate_size(dims);
+	size += config->model_calculate_size(config, dims);
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -94,8 +94,8 @@ sim_in *sim_in_assign(sim_dims *dims, void *raw_memory, sim_solver_config *confi
     assign_double(nx * NF, &in->S_forw, &c_ptr);
     assign_double(NF, &in->S_adj, &c_ptr);
 
-	in->model = config->model_assign(dims, c_ptr);
-	c_ptr += config->model_calculate_size(dims);
+	in->model = config->model_assign(config, dims, c_ptr);
+	c_ptr += config->model_calculate_size(config, dims);
 
     assert((char*)raw_memory + sim_in_calculate_size(dims, config) >= c_ptr);
 

@@ -362,10 +362,10 @@ int main() {
 * sim opts
 ************************************************/
 
-	int opts_size = config.opts_calculate_size(dims);
+	int opts_size = config.opts_calculate_size(&config, dims);
 	void *opts_mem = malloc(opts_size);
-	sim_rk_opts *opts = config.opts_assign(dims, opts_mem);
-	config.opts_initialize_default(dims, opts);
+	sim_rk_opts *opts = config.opts_assign(&config, dims, opts_mem);
+	config.opts_initialize_default(&config, dims, opts);
 
 	opts->sens_adj = true;
 	
@@ -373,15 +373,15 @@ int main() {
 * sim memory
 ************************************************/
 
-	int mem_size = config.memory_calculate_size(dims, opts);
+	int mem_size = config.memory_calculate_size(&config, dims, opts);
 	void *mem_mem = malloc(mem_size);
-	void *mem = config.memory_assign(dims, opts, mem_mem);
+	void *mem = config.memory_assign(&config, dims, opts, mem_mem);
 
 /************************************************
 * sim workspace
 ************************************************/
 
-	int work_size = config.workspace_calculate_size(dims, opts);
+	int work_size = config.workspace_calculate_size(&config, dims, opts);
 	void *work = malloc(work_size);
 
 /************************************************
@@ -434,7 +434,7 @@ int main() {
     acados_tic(&timer);
 
     for (ii=0;ii<NREP;ii++)
-		config.fun(in, out, opts, mem, work);
+		config.evaluate(&config, in, out, opts, mem, work);
 
     Time1 = acados_toc(&timer)/NREP;
 

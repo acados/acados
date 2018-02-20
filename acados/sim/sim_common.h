@@ -115,16 +115,16 @@ typedef struct
 
 typedef struct
 {
-    int (*fun) (sim_in *in, sim_out *out, void *args, void *mem, void *work);
-    int (*opts_calculate_size) (sim_dims *dims);
-    void *(*opts_assign) (sim_dims *dims, void *raw_memory);
-    void (*opts_initialize_default) (sim_dims *dims, void *args);
-    int (*memory_calculate_size) (sim_dims *dims, void *args);
-    void *(*memory_assign) (sim_dims *dims, void *args, void *raw_memory);
-    int (*workspace_calculate_size) (sim_dims *dims, void *args);
-    int (*model_calculate_size) (sim_dims *dims);
-    void *(*model_assign) (sim_dims *dims, void *raw_memory);
-    void (*config_initialize_default) (void *);
+    int (*evaluate) (void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, sim_dims *dims);
+    void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
+    void (*opts_initialize_default) (void *config, sim_dims *dims, void *args);
+    int (*memory_calculate_size) (void *config, sim_dims *dims, void *args);
+    void *(*memory_assign) (void *config, sim_dims *dims, void *args, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, sim_dims *dims, void *args);
+    int (*model_calculate_size) (void *config, sim_dims *dims);
+    void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
+    void (*config_initialize_default) (void *config);
 } sim_solver_config;
 
 
