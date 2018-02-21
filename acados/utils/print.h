@@ -30,6 +30,13 @@ extern "C" {
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/utils/types.h"
 
+#ifdef MATLAB
+    #include "mex.h"
+    #define acados_printf mexPrintf
+#else
+    #define acados_printf printf
+#endif
+
 void print_matrix(char *file_name, const real_t *matrix, const int_t nrows, const int_t ncols);
 
 void print_matrix_name(char *file_name, char *name, const real_t *matrix,

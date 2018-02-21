@@ -19,7 +19,6 @@
 
 // external
 #include <assert.h>
-#include <stdio.h>
 // acados
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"

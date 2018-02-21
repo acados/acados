@@ -89,7 +89,7 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->warm_start = value;
             else if (!strcmp(token, "out_iter"))
                 args->out_iter = value;
-            else if (!strcmp(option, "N2"))
+            else if (!strcmp(token, "N2"))
                 args->N2 = value;
             // partial tightening
             else if (!strcmp(token, "N"))
