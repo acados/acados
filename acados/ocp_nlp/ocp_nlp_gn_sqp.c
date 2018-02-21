@@ -332,8 +332,8 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
     for (ii = 0; ii < N; ii++)
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-        size += sim_in_calculate_size(&sim_dims, config->sim_solvers[ii]);
-        size += sim_out_calculate_size(&sim_dims);
+        size += sim_in_calculate_size(config->sim_solvers[ii], &sim_dims);
+        size += sim_out_calculate_size(config->sim_solvers[ii], &sim_dims);
     }
 
 
@@ -433,10 +433,10 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
     {
         cast_nlp_dims_to_sim_dims(&work->sim_dims[ii], mem->dims, ii);
 
-        work->sim_in[ii] = sim_in_assign(&work->sim_dims[ii], c_ptr, config->sim_solvers[ii]);
-        c_ptr += sim_in_calculate_size(&work->sim_dims[ii], config->sim_solvers[ii]);
-        work->sim_out[ii] = sim_out_assign(&work->sim_dims[ii], c_ptr);
-        c_ptr += sim_out_calculate_size(&work->sim_dims[ii]);
+        work->sim_in[ii] = sim_in_assign(config->sim_solvers[ii], &work->sim_dims[ii], c_ptr);
+        c_ptr += sim_in_calculate_size(config->sim_solvers[ii], &work->sim_dims[ii]);
+        work->sim_out[ii] = sim_out_assign(config->sim_solvers[ii], &work->sim_dims[ii], c_ptr);
+        c_ptr += sim_out_calculate_size(config->sim_solvers[ii], &work->sim_dims[ii]);
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }

@@ -436,9 +436,9 @@ int main() {
 * sim in
 ************************************************/
 
-	int in_size = sim_in_calculate_size(dims, &config);
+	int in_size = sim_in_calculate_size(&config, dims);
 	void *in_mem = malloc(in_size);
-	sim_in *in = sim_in_assign(dims, in_mem, &config);
+	sim_in *in = sim_in_assign(&config, dims, in_mem);
 
     in->T = T;
 
@@ -473,9 +473,9 @@ int main() {
 * sim out
 ************************************************/
 
-	int out_size = sim_out_calculate_size(dims);
+	int out_size = sim_out_calculate_size(&config, dims);
 	void *out_mem = malloc(out_size);
-	sim_out *out = sim_out_assign(dims, out_mem);
+	sim_out *out = sim_out_assign(&config, dims, out_mem);
 
 /************************************************
 * sim solver

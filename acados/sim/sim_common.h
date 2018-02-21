@@ -133,12 +133,12 @@ int sim_dims_calculate_size();
 
 sim_dims *sim_dims_assign(void *raw_memory);
 
-int sim_in_calculate_size(sim_dims *dims, sim_solver_config *config);
+int sim_in_calculate_size(void *config, sim_dims *dims);
 
-sim_in *sim_in_assign(sim_dims *dims, void *raw_memory, sim_solver_config *config);
+sim_in *sim_in_assign(void *config, sim_dims *dims, void *raw_memory);
 
-int sim_out_calculate_size(sim_dims *dims);
+int sim_out_calculate_size(void *config, sim_dims *dims);
 
-sim_out *sim_out_assign(sim_dims *dims, void *raw_memory);
+sim_out *sim_out_assign(void *config, sim_dims *dims, void *raw_memory);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_
