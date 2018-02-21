@@ -118,8 +118,8 @@ int ocp_qp_sparse_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims,
     size += qp_solver->memory_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 
     if (args->pcond_opts->N2 < dims->N) {
-        size += ocp_qp_in_calculate_size(pcond_dims);
-        size += ocp_qp_out_calculate_size(pcond_dims);
+        size += ocp_qp_in_calculate_size(NULL, pcond_dims);
+        size += ocp_qp_out_calculate_size(NULL, pcond_dims);
     }
 
     return size;
@@ -170,8 +170,8 @@ void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void 
     c_ptr += qp_solver->memory_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 
     if (args->pcond_opts->N2 < dims->N) {
-        mem->pcond_qp_in = assign_ocp_qp_in(pcond_dims, c_ptr);
-        c_ptr += ocp_qp_in_calculate_size(pcond_dims);
+        mem->pcond_qp_in = ocp_qp_in_assign(NULL, pcond_dims, c_ptr);
+        c_ptr += ocp_qp_in_calculate_size(NULL, pcond_dims);
     }
 	else
     {
@@ -179,8 +179,8 @@ void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void 
     }
 
     if (args->pcond_opts->N2 < dims->N) {
-        mem->pcond_qp_out = assign_ocp_qp_out(pcond_dims, c_ptr);
-        c_ptr += ocp_qp_out_calculate_size(pcond_dims);
+        mem->pcond_qp_out = ocp_qp_out_assign(NULL, pcond_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(NULL, pcond_dims);
     }
 	else
 	{

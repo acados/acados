@@ -81,27 +81,27 @@ typedef struct {
 //
 int ocp_qp_dims_calculate_size(int N);
 //
-ocp_qp_dims *assign_ocp_qp_dims(int N, void *raw_memory);
+ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
 //
-int ocp_qp_in_calculate_size(ocp_qp_dims *dims);
+int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims);
 //
-ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
 //
-int ocp_qp_out_calculate_size(ocp_qp_dims *dims);
+int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims);
 //
-ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
 //
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_res *assign_ocp_qp_res(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-int ocp_qp_res_ws_calculate_size(ocp_qp_dims *dims);
+int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
+void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
 //
-void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4]);
+void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
 
 #ifdef __cplusplus
 } /* extern "C" */

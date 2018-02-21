@@ -316,8 +316,8 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 
     size += sizeof(ocp_nlp_gn_sqp_work);
 
-    size += ocp_qp_in_calculate_size(&qp_dims);
-    size += ocp_qp_out_calculate_size(&qp_dims);
+    size += ocp_qp_in_calculate_size(NULL, &qp_dims);
+    size += ocp_qp_out_calculate_size(NULL, &qp_dims);
     size += args->qp_solver->workspace_calculate_size(NULL, &qp_dims, args->qp_solver_args);
 
     sim_dims sim_dims;
@@ -405,10 +405,10 @@ void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_mem
         assign_blasfeo_dvec_mem(nb[ii]+ng[ii], work->tmp_nbg+ii, &c_ptr);
 
     // set up QP solver
-    work->qp_in = assign_ocp_qp_in(&qp_dims, c_ptr);
-    c_ptr += ocp_qp_in_calculate_size(&qp_dims);
-    work->qp_out = assign_ocp_qp_out(&qp_dims, c_ptr);
-    c_ptr += ocp_qp_out_calculate_size(&qp_dims);
+    work->qp_in = ocp_qp_in_assign(NULL, &qp_dims, c_ptr);
+    c_ptr += ocp_qp_in_calculate_size(NULL, &qp_dims);
+    work->qp_out = ocp_qp_out_assign(NULL, &qp_dims, c_ptr);
+    c_ptr += ocp_qp_out_calculate_size(NULL, &qp_dims);
 
     work->qp_work = (void *)c_ptr;
     c_ptr += args->qp_solver->workspace_calculate_size(NULL, &qp_dims, args->qp_solver_args);
