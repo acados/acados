@@ -234,6 +234,8 @@ void ocp_qp::squeeze_dimensions() {
                                       reinterpret_cast<int *>(nb.at("x").data()),
                                       qp.get());
 
+    needs_initializing = true;
+
     for (string bound : {"x", "u"}) {
         for (uint stage = 0; stage <= N; ++stage) {
             set("lb" + bound, stage, lb.at(bound).at(stage));
@@ -270,6 +272,8 @@ void ocp_qp::expand_dimensions() {
 
     d_change_bounds_dimensions_ocp_qp(qp->dim->nu, qp->dim->nx, qp.get());
 
+    needs_initializing = true;
+
     for (uint i = 0; i < N; ++i) {
         std::vector<uint> idx_states(dimensions()["nx"].at(i));
         std::iota(std::begin(idx_states), std::end(idx_states), 0);
@@ -282,8 +286,6 @@ void ocp_qp::expand_dimensions() {
     std::vector<uint> idx_states(dimensions()["nx"].at(N));
     std::iota(std::begin(idx_states), std::end(idx_states), 0);
     set_bounds_indices("x", N, idx_states);
-
-    needs_initializing = true;
 
     for (string bound : {"x", "u"}) {
         for (uint stage = 0; stage <= N; ++stage) {
