@@ -38,14 +38,16 @@ public:
 
     std::pair<uint, uint> dimensions(std::string field, uint stage);
 
-    void bounds_indices(std::string name, uint stage, std::vector<uint> v);
+    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
 
     std::vector<std::vector<uint>> bounds_indices(std::string name);
 
     const uint N;
 
 private:
-    
+
+    std::vector<uint> squeezed_bounds_indices(const std::string bound, uint stage);
+
     void squeeze_dimensions();
 
     void expand_dimensions();
@@ -67,6 +69,8 @@ private:
     std::unique_ptr<ocp_qp_solver> solver;
 
     std::string cached_solver;
+
+    bool needs_initializing = true;
 
     static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 
