@@ -107,11 +107,47 @@ typedef struct {
 
 } gnsf_fixed;
 
-typedef struct {
+typedef struct { //workspace
     double *res_in;
     double *res_out;
     double *f_LO_in;
     double *f_LO_out;
+
+    struct blasfeo_dmat J_r_ff;
+    struct blasfeo_dmat J_r_x1u; 
+    
+    struct blasfeo_dmat dK1_dx1;
+    struct blasfeo_dmat dK1_du;
+    struct blasfeo_dmat dZ_dx1;
+    struct blasfeo_dmat dZ_du;
+    struct blasfeo_dmat aux_G2_x1;
+    struct blasfeo_dmat aux_G2_u;
+    struct blasfeo_dmat J_G2_K1;
+    
+    struct blasfeo_dmat dK2_dx1;
+    struct blasfeo_dmat dK2_du;
+    struct blasfeo_dmat dK2_dff;
+    struct blasfeo_dmat dxf_dwn;
+    struct blasfeo_dmat S_forw_new;
+    struct blasfeo_dmat S_forw;
+
+    struct blasfeo_dvec K2_val;
+    struct blasfeo_dvec x0_traj;
+    struct blasfeo_dvec res_val;
+    struct blasfeo_dvec u0;
+
+    struct blasfeo_dmat aux_G2_ff;
+    struct blasfeo_dmat dPsi_dff;
+    struct blasfeo_dmat dPsi_dx;
+    struct blasfeo_dmat dPsi_du;
+
+    struct blasfeo_dvec *K1_val;
+    struct blasfeo_dvec *x1_val;
+    struct blasfeo_dvec *ff_val;
+    struct blasfeo_dvec *Z_val;
+    struct blasfeo_dvec *f_LO_val;
+
+    struct blasfeo_dmat *f_LO_jac;
 
 } gnsf_workspace;
 /*

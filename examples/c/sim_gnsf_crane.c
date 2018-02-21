@@ -58,7 +58,6 @@ int main() {
     void *raw_memory_ptr = malloc(gnsf_fixed_size);
 
     gnsf_fixed fix = *gnsf_fixed_assign(&dims, raw_memory_ptr);
-
     gnsf_import(&dims, &fix, But_KK_ZZ_LO_fun);
     printf("left_import \n");
 
@@ -74,10 +73,9 @@ int main() {
     in.jac_res_ffx1u = jac_res_ffx1u_fun;
     sim_out* out;
 
-    void* cptr;
     int sim_out_size = sim_out_calculate_size(&simdim);
-    cptr = (void*) calloc(sim_out_size, sizeof(double));
-    out = assign_sim_out(&simdim, cptr);
+    void* sim_out_ptr = (void*) calloc(sim_out_size, sizeof(double));
+    out = assign_sim_out(&simdim, sim_out_ptr);
     
     in.u = (double*) calloc(dims.nu, sizeof(double));
     in.x = (double*) calloc(dims.nx, sizeof(double));
@@ -90,7 +88,9 @@ int main() {
     in.u[0] = 40.108149413030752;
     in.u[1] = -50.446662212534974;
 
-    void* work_ = (void*) calloc(8, sizeof(double));
+    int gnsf_workspace_size = gnsf_calculate_workspace_size(&dims, &opts);
+    void *work_ = malloc(gnsf_workspace_size);
+    // void* work_ = (void*) calloc(8, sizeof(double));
 
     printf("test\n");
     int num_executions = 100;
@@ -105,6 +105,11 @@ int main() {
     casadi_time = casadi_time/num_executions;
     printf("\n gnsf _time =  %f \n", gnsf_time);
     printf("casadi_time =  %f \n", casadi_time);
+
+    free(work_);
+    // free(dims);
+    free(raw_memory_ptr);
+    free(sim_out_ptr);
 
     return 0;
 }
