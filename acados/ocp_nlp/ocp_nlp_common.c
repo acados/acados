@@ -473,7 +473,7 @@ int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims)
 }
 
 
-
+// TODO(dimitris): decide whether we cast it to void here
 ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;

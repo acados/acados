@@ -459,7 +459,7 @@ int main() {
 
 	// cost: least squares
 	nlp_config.cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
-	nlp_config.cost_assign = &ocp_nlp_cost_ls_assign;
+	nlp_config.cost_assign = (void *(*)(ocp_nlp_cost_ls_dims *, void *)) &ocp_nlp_cost_ls_assign;
 
 #if DYNAMICS==0
 	// dynamics: ERK
@@ -483,8 +483,8 @@ int main() {
 #else
 	// dynamics: IRK
 	nlp_config.dynamics_calculate_size = &ocp_nlp_dynamics_irk_calculate_size;
-	nlp_config.dynamics_assign = &ocp_nlp_dynamics_irk_assign;
-	nlp_config.dynamics_to_sim_in = &ocp_nlp_dynamics_irk_to_sim_in;
+	nlp_config.dynamics_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_dynamics_irk_assign;
+	nlp_config.dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = IRK;
@@ -493,7 +493,7 @@ int main() {
 
 	// constraitns
 	nlp_config.constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
-	nlp_config.constraints_assign = &ocp_nlp_constraints_assign;
+	nlp_config.constraints_assign = (void *(*)(ocp_nlp_dims *, void *))&ocp_nlp_constraints_assign;
 
 	// qp solver
 	ocp_qp_xcond_solver_config config_qp;
