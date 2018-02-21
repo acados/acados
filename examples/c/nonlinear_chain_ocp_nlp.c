@@ -464,8 +464,8 @@ int main() {
 #if DYNAMICS==0
 	// dynamics: ERK
 	nlp_config.dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
-	nlp_config.dynamics_assign = &ocp_nlp_dynamics_erk_assign;
-	nlp_config.dynamics_to_sim_in = &ocp_nlp_dynamics_erk_to_sim_in;
+	nlp_config.dynamics_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_dynamics_erk_assign;
+	nlp_config.dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_erk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = ERK;
@@ -474,8 +474,8 @@ int main() {
 #elif DYNAMICS==1
 	// dynamics: lifted IRK
 	nlp_config.dynamics_calculate_size = &ocp_nlp_dynamics_lifted_irk_calculate_size;
-	nlp_config.dynamics_assign = &ocp_nlp_dynamics_lifted_irk_assign;
-	nlp_config.dynamics_to_sim_in = &ocp_nlp_dynamics_lifted_irk_to_sim_in;
+	nlp_config.dynamics_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_dynamics_lifted_irk_assign;
+	nlp_config.dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_lifted_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
         sim_solver_names[ii] = LIFTED_IRK;
