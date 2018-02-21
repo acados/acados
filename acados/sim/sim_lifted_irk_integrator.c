@@ -36,7 +36,7 @@
 
 
 
-int sim_lifted_irk_model_calculate_size(sim_dims *dims)
+int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims)
 {
 
 	int size = 0;
@@ -49,7 +49,7 @@ int sim_lifted_irk_model_calculate_size(sim_dims *dims)
 
 
 
-void *sim_lifted_irk_model_assign(sim_dims *dims, void *raw_memory)
+void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
@@ -63,7 +63,7 @@ void *sim_lifted_irk_model_assign(sim_dims *dims, void *raw_memory)
 
 
 
-int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
+int sim_lifted_irk_opts_calculate_size(void *config, sim_dims *dims)
 {
 
 	// extract ds
@@ -104,7 +104,7 @@ int sim_lifted_irk_opts_calculate_size(sim_dims *dims)
 
 
 // TODO return pointer to sim_rk_opts instead
-void *sim_lifted_irk_opts_assign(sim_dims *dims, void *raw_memory)
+void *sim_lifted_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -141,14 +141,14 @@ void *sim_lifted_irk_opts_assign(sim_dims *dims, void *raw_memory)
 	opts->work = c_ptr;
 	c_ptr += work_size;
 
-    assert((char*)raw_memory + sim_lifted_irk_opts_calculate_size(dims) >= c_ptr);
+    assert((char*)raw_memory + sim_lifted_irk_opts_calculate_size(config, dims) >= c_ptr);
 
     return (void *)opts;
 }
 
 
 
-void sim_lifted_irk_opts_initialize_default(sim_dims *dims, void *opts_)
+void sim_lifted_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
 {
 	// cast opts
     sim_rk_opts *opts = (sim_rk_opts*) opts_;
@@ -184,7 +184,7 @@ void sim_lifted_irk_opts_initialize_default(sim_dims *dims, void *opts_)
 
 
 
-int sim_lifted_irk_memory_calculate_size(sim_dims *dims, void *opts_) {
+int sim_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_) {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
@@ -261,7 +261,7 @@ int sim_lifted_irk_memory_calculate_size(sim_dims *dims, void *opts_) {
 
 
 
-void *sim_lifted_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory) {
+void *sim_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory) {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
@@ -358,7 +358,7 @@ void *sim_lifted_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory
     }
 #endif  // !TRIPLE_LOOP
 
-    assert((char*)raw_memory + sim_lifted_irk_memory_calculate_size(dims, opts) >= c_ptr);
+    assert((char*)raw_memory + sim_lifted_irk_memory_calculate_size(config, dims, opts) >= c_ptr);
 
     // initialize
     for (int i = 0; i < num_steps * num_stages * nx; ++i)
@@ -384,7 +384,7 @@ void *sim_lifted_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory
 
 
 
-int sim_lifted_irk_workspace_calculate_size(sim_dims *dims, void *args) {
+int sim_lifted_irk_workspace_calculate_size(void *config, sim_dims *dims, void *args) {
     int nx = dims->nx;
     int nu = dims->nu;
     sim_rk_opts *opts = (sim_rk_opts *)args;
@@ -445,7 +445,7 @@ int sim_lifted_irk_workspace_calculate_size(sim_dims *dims, void *args) {
 
 
 
-static void sim_lifted_irk_workspace_cast(sim_lifted_irk_workspace *work, const sim_in *in, void *args)
+static void sim_lifted_irk_workspace_cast(void *config, sim_lifted_irk_workspace *work, const sim_in *in, void *args)
 {
     int nx = in->dims->nx;
     int nu = in->dims->nu;
@@ -923,7 +923,7 @@ void form_linear_system_matrix(int istep, const sim_in *in, void *args,
 
 
 
-int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
+int sim_lifted_irk(void *config, sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
 {
 
     int nx = in->dims->nx;
@@ -934,7 +934,7 @@ int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem_, void *work_
     int i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
-    sim_lifted_irk_workspace_cast(work, in, args);
+    sim_lifted_irk_workspace_cast(config, work, in, args);
     real_t H_INT = in->T/opts->num_steps;
     int NF = opts->num_forw_sens;
 
@@ -1470,7 +1470,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->fun = &sim_lifted_irk;
+	config->evaluate = &sim_lifted_irk;
 	config->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
 	config->opts_assign = &sim_lifted_irk_opts_assign;
 	config->opts_initialize_default = &sim_lifted_irk_opts_initialize_default;

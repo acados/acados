@@ -21,17 +21,25 @@
 // external
 #include <stdio.h>
 #include <stdlib.h>
+
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
+
 // hpipm
 #include "hpipm/include/hpipm_d_ocp_qp.h"
+
 // acados
 #include "acados/utils/math.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
+
 // acados_c
+#ifdef ACADOS_WITH_C_INTERFACE
 #include <acados_c/ocp_qp.h>
+#endif
+
 
 
 /*****************************************************************************************
@@ -40,7 +48,7 @@
 * masses. The system is sampled with sampling time Ts.
 ******************************************************************************************/
 
-void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b) {
+static void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double *b) {
 
     int nx2 = nx * nx;
 
@@ -113,24 +121,8 @@ void mass_spring_system(double Ts, int nx, int nu, double *A, double *B, double 
 
 
 
-ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
-
-    int nx_ = 8;   // number of states (it has to be even for the mass-spring system test problem)
-
-    int nu_ = 3;   // number of inputs (controllers) (it has to be at least 1 and
-                   // at most nx_/2 for the mass-spring system test problem)
-
-    int N = 15;    // horizon length
-    int nb_ = 11;  // number of box constrained inputs and states
-    int ng_ = 0;   // 4;  // number of general constraints
-
-    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
-
-    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-    int ngN = num_of_stages_equal_to_zero;  // number of general constraints at the last stage
-    #else
-    int ngN = 0;
-    #endif
+ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+{
 
 #if defined(ELIMINATE_X0)
 	int nbu = nu_<nb_ ? nu_ : nb_;
@@ -175,9 +167,153 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
         ns[ii] = 0;
     }
 
-    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
-    printf("MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box "
-           "constraints, %d two-sided general constraints.\n\n", nx_, nu_, N, nb_, ng_);
+
+
+    int jj_end;
+
+    int *idxb0;
+    int_zeros(&idxb0, nb[0], 1);
+#if defined(ELIMINATE_X0)
+    for (int jj = 0; jj < nb[0]; jj++) {
+        idxb0[jj] = jj;
+    }
+#else
+    jj_end = nu[0] < nb[0] ? nu[0] : nb[0];
+    for (int jj = 0; jj < jj_end; jj++) {
+        idxb0[jj] = jj;
+    }
+    for (int jj = jj_end; jj < nb[0]; jj++) {
+        idxb0[jj] = jj;
+    }
+#endif
+
+    int *idxb1;
+    int_zeros(&idxb1, nb[1], 1);
+    jj_end = nu[1] < nb[1] ? nu[1] : nb[1];
+    for (int jj = 0; jj < jj_end; jj++) {
+        idxb1[jj] = jj;
+    }
+    for (int jj = jj_end; jj < nb[1]; jj++) {
+        idxb1[jj] = jj;
+    }
+
+    int *idxbN;
+    int_zeros(&idxbN, nb[N], 1);
+    jj_end = nu[N] < nb[N] ? nu[N] : nb[N];
+    for (int jj = 0; jj < jj_end; jj++) {
+        idxbN[jj] = jj;
+    }
+    for (int jj = jj_end; jj < nb[N]; jj++)
+    {
+        idxbN[jj] = jj;
+    }
+
+    #ifndef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+    for (int jj = nu[N]; jj < ngN; jj++)
+    {
+        idxbN[jj] = jj;
+    }
+    #endif
+
+    int *hidxb[N+1];
+    hidxb[0] = idxb0;
+    for (int ii = 1; ii < N; ii++) {
+        hidxb[ii] = idxb1;
+    }
+    hidxb[N] = idxbN;
+
+
+    int nbx_vec[N+1];
+    int nbu_vec[N+1];
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        nbx_vec[ii] = 0;
+        nbu_vec[ii] = 0;
+        for (int jj = 0; jj < nb[ii]; jj++)
+            {
+            if (hidxb[ii][jj] < nu[ii])
+                {
+                nbu_vec[ii]++;
+                }
+            else
+                {
+                nbx_vec[ii]++;
+                }
+            }
+    }
+
+	// dims
+	int dims_size = ocp_qp_dims_calculate_size(N);
+	void *dims_mem = malloc(dims_size);
+	ocp_qp_dims *dims = ocp_qp_dims_assign(N, dims_mem);
+
+	dims->N = N;
+	for (int ii=0; ii<=N; ii++)
+	{
+		dims->nx[ii] = nx[ii];
+		dims->nu[ii] = nu[ii];
+		dims->nb[ii] = nb[ii];
+		dims->ng[ii] = ng[ii];
+		dims->ns[ii] = ns[ii];
+		dims->nbu[ii] = nbu_vec[ii];
+		dims->nbx[ii] = nbx_vec[ii];
+	}
+
+	return dims;
+
+}
+
+
+
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN)
+{
+
+#if defined(ELIMINATE_X0)
+	int nbu = nu_<nb_ ? nu_ : nb_;
+#endif
+    int nbx = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
+
+    int nx[N+1];
+#if defined(ELIMINATE_X0)
+    nx[0] = 0;
+#else
+    nx[0] = nx_;
+#endif
+    for (int ii = 1; ii <= N; ii++) {
+        nx[ii] = nx_;
+    }
+
+    int nu[N+1];
+    for (int ii = 0; ii < N; ii++) {
+        nu[ii] = nu_;
+    }
+    nu[N] = 0;
+
+    int nb[N+1];
+#if defined(ELIMINATE_X0)
+    nb[0] = nbu;
+#else
+    nb[0] = nb_;
+#endif
+    for (int ii = 1; ii < N; ii++) {
+        nb[ii] = nb_;
+    }
+    nb[N] = nbx;
+
+    int ng[N+1];
+    for (int ii = 0; ii < N; ii++) {
+        ng[ii] = ng_;
+    }
+    ng[N] = ngN;
+
+	int ns[N+1];
+	for (int ii = 0; ii <= N; ii++) {
+        ns[ii] = 0;
+    }
+
+//    printf("Test problem: mass-spring system with %d masses and %d controls.\n\n", nx_ / 2, nu_);
+//   printf("MPC problem size: %d states, %d inputs, %d horizon length, %d two-sided box "
+//           "constraints, %d two-sided general constraints.\n\n", nx_, nu_, N, nb_, ng_);
 
     /************************************************
     * dynamical system
@@ -296,7 +432,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
     }
 
     #ifndef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-    for (int jj = nu[N]; jj < num_of_stages_equal_to_zero; jj++)
+    for (int jj = nu[N]; jj < ngN; jj++)
     {
         lbN[jj] = 0.0;
         ubN[jj] = 0.0;
@@ -470,7 +606,14 @@ ocp_qp_in *create_ocp_qp_in_mass_spring( ) {
     dims.nbu = nbu_vec;
     dims.nbx = nbx_vec;
 
+#ifdef ACADOS_WITH_C_INTERFACE
     ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
+#else // ! ACADOS_WITH_C_INTERFACE 
+	int qp_in_size = ocp_qp_in_calculate_size(config, &dims);
+	void *qp_in_mem = malloc(qp_in_size);
+	ocp_qp_in *qp_in = ocp_qp_in_assign(config, &dims, qp_in_mem);
+#endif
+
 	d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
 
     // free objective

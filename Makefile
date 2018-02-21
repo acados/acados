@@ -67,7 +67,7 @@ endif
 
 
 
-all: acados_c_static
+all: acados_static acados_c_static
 
 acados_static: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
@@ -128,6 +128,7 @@ qpdunes_static:
 	cp $(QPDUNES_PATH)/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
 
 acados_c_static: acados_static
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
 	mkdir -p include/acados_c
 	mkdir -p include/acados_c/dense_qp
@@ -143,6 +144,7 @@ acados_c_static: acados_static
 	cp -r interfaces/acados_c/ocp_qp/*.h include/acados_c/ocp_qp
 	cp -r interfaces/acados_c/sim/*.h include/acados_c/sim
 	mv interfaces/acados_c/libacados_c.a lib
+endif
 
 examples_c: acados_c_static
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )

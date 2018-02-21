@@ -31,7 +31,7 @@
 
 
 
-int sim_erk_model_calculate_size(sim_dims *dims)
+int sim_erk_model_calculate_size(void *config, sim_dims *dims)
 {
 
 	int size = 0;
@@ -44,7 +44,7 @@ int sim_erk_model_calculate_size(sim_dims *dims)
 
 
 
-void *sim_erk_model_assign(sim_dims *dims, void *raw_memory)
+void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
@@ -58,7 +58,7 @@ void *sim_erk_model_assign(sim_dims *dims, void *raw_memory)
 
 
 
-int sim_erk_opts_calculate_size(sim_dims *dims)
+int sim_erk_opts_calculate_size(void *config, sim_dims *dims)
 {
 
     int size = sizeof(sim_rk_opts);
@@ -76,7 +76,7 @@ int sim_erk_opts_calculate_size(sim_dims *dims)
 
 
 
-void *sim_erk_opts_assign(sim_dims *dims, void *raw_memory)
+void *sim_erk_opts_assign(void *config, sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -92,7 +92,7 @@ void *sim_erk_opts_assign(sim_dims *dims, void *raw_memory)
     assign_double(ns, &opts->b_vec, &c_ptr);
     assign_double(ns, &opts->c_vec, &c_ptr);
 
-    assert((char*)raw_memory + sim_erk_opts_calculate_size(dims) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_opts_calculate_size(config, dims) >= c_ptr);
 
     opts->newton_iter = 0;
     opts->scheme = NULL;
@@ -103,7 +103,7 @@ void *sim_erk_opts_assign(sim_dims *dims, void *raw_memory)
 
 
 
-void sim_erk_opts_initialize_default(sim_dims *dims, void *opts_)
+void sim_erk_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
     int ns = opts->num_stages;
@@ -126,21 +126,21 @@ void sim_erk_opts_initialize_default(sim_dims *dims, void *opts_)
 
 
 
-int sim_erk_memory_calculate_size(sim_dims *dims, void *opts_)
+int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
     return 0;
 }
 
 
 
-void *sim_erk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-int sim_erk_workspace_calculate_size(sim_dims *dims, void *opts_)
+int sim_erk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
@@ -183,7 +183,7 @@ int sim_erk_workspace_calculate_size(sim_dims *dims, void *opts_)
 
 
 
-void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
+static void *sim_erk_cast_workspace(void *config, sim_dims *dims, void *opts_, void *raw_memory)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
@@ -227,18 +227,18 @@ void *sim_erk_cast_workspace(sim_dims *dims, void *opts_, void *raw_memory)
         assign_double(num_stages*(nx+nu), &workspace->adj_traj, &c_ptr);
     }
 
-    assert((char*)raw_memory + sim_erk_workspace_calculate_size(dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_workspace_calculate_size(config, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }
 
 
 
-int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
+int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
     sim_dims *dims = in->dims;
-    sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(dims, opts, work_);
+    sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(config, dims, opts, work_);
 
     int i, j, s, istep;
     double a = 0, b =0; // temp values of A_mat and b_vec
@@ -452,7 +452,7 @@ void sim_erk_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->fun = &sim_erk;
+	config->evaluate = &sim_erk;
 	config->opts_calculate_size = &sim_erk_opts_calculate_size;
 	config->opts_assign = &sim_erk_opts_assign;
 	config->opts_initialize_default = &sim_erk_opts_initialize_default;

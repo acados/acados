@@ -6,49 +6,60 @@ include ../../Makefile.rule
 
 
 
-LIBS = -lacados_c -lacore -lhpipm -lqpOASES_e
+LIBS =
+
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
+LIBS += -lacados_c
+endif
+
+LIBS = -lacore -lhpipm -lqpOASES_e
 
 ifeq ($(ACADOS_WITH_HPMPC), 1)
-LIBS+=-lhpmpc
+LIBS += -lhpmpc
 endif
+
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 CCC = $(CXX)
-LIBS+= -lqpdunes -lqpOASES
+LIBS += -lqpdunes -lqpOASES
 else
 CCC = $(CC)
 endif
+
 ifeq ($(ACADOS_WITH_QORE), 1)
-LIBS+=-lqore_dense
+LIBS += -lqore_dense
 endif
-LIBS+=-lblasfeo -lm -lblas
+
+LIBS += -lblasfeo -lm -lblas
+
+
 
 # Comment this out to enable using gprof
 # CFLAGS  += -pg
 # LDFLAGS += -pg
 
 EXAMPLES =
-EXAMPLES += mass_spring_example
 EXAMPLES += sim_erk_crane
 EXAMPLES += sim_irk_crane
 EXAMPLES += sim_lifted_irk_crane
-EXAMPLES += mass_spring_pcond_hpipm_split
-EXAMPLES += mass_spring_fcond_hpipm_split
-EXAMPLES += mass_spring_offline_fcond_qpoases_split
-EXAMPLES += nonlinear_chain_ocp_nlp
+EXAMPLES += mass_spring_example
+#EXAMPLES += mass_spring_pcond_hpipm_split
+#EXAMPLES += mass_spring_fcond_hpipm_split
+#EXAMPLES += mass_spring_offline_fcond_qpoases_split
+#EXAMPLES += nonlinear_chain_ocp_nlp
 
 examples: $(EXAMPLES)
 
 
 
 RUN_EXAMPLES =
-RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_sim_erk_crane
 RUN_EXAMPLES += run_sim_irk_crane
 RUN_EXAMPLES += run_sim_lifted_irk_crane
-RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
-RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
-RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+RUN_EXAMPLES += run_mass_spring_example
+#RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
+#RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
+#RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
+#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -88,9 +99,12 @@ sim_lifted_irk_crane: $(CRANE_OBJS) sim_lifted_irk_crane.o
 	@echo
 
 
+MASS_SPRING_OBJS = 
+MASS_SPRING_OBJS += mass_spring.o
+MASS_SPRING_OBJS += mass_spring_example.o
 
-mass_spring_example: mass_spring_example.o
-	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) $(LIBS)
+mass_spring_example: $(MASS_SPRING_OBJS) 
+	$(CCC) -o mass_spring_example.out $(MASS_SPRING_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_example build complete."
 	@echo

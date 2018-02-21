@@ -30,11 +30,11 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
-typedef struct ocp_qp_sparse_solver_args_ {
-    ocp_qp_partial_condensing_args *pcond_args;
-    ocp_qp_solver_config *solver;
-    void *solver_args;
-} ocp_qp_sparse_solver_args;
+typedef struct ocp_qp_sparse_solver_opts_ {
+    ocp_qp_partial_condensing_args *pcond_opts;
+    ocp_qp_solver_config *solver; // TODO remove !!!
+    void *qp_solver_opts;
+} ocp_qp_sparse_solver_opts;
 
 
 
@@ -57,20 +57,21 @@ typedef struct ocp_qp_sparse_solver_workspace_ {
 
 
 //
-int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_);
+int ocp_qp_sparse_solver_opts_calculate_size(void *config, ocp_qp_dims *dims);
 //
-void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory);
+void *ocp_qp_sparse_solver_opts_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_sparse_solver_initialize_default_args(void *args_);
+void ocp_qp_sparse_solver_opts_initialize_default(void *config, void *args_);
 //
-int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_sparse_solver_calculate_memory_size(void *config, ocp_qp_dims *dims, void *args_);
 //
-void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_sparse_solver_memory_assign(void *config, ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_sparse_solver_workspace_calculate_size(void *config, ocp_qp_dims *dims, void *args_);
 //
-int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
-
+int ocp_qp_sparse_solver(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+//
+void ocp_qp_sparse_solver_config_initialize_default(void *config_);
 
 
 #ifdef __cplusplus
