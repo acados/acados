@@ -22,7 +22,7 @@ using std::vector;
 
 namespace acados {
 
-ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, 
+ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx,
              std::vector<uint> nbu, std::vector<uint> ng) : N(nx.size()-1), qp(nullptr), solver(nullptr) {
 
     if (N <= 0) throw std::invalid_argument("Number of stages must be positive");
@@ -128,7 +128,7 @@ void ocp_qp::set(string field, vector<double> v) {
     uint last_stage = N;
     if (field == "A" || field == "B" || field == "b")
         last_stage = N-1;
-    
+
     for (uint stage = 0; stage <= last_stage; ++stage)
         set(field, stage, v);
 }
@@ -139,7 +139,7 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
     cached_solver = solver_name;
     ocp_qp_solver_plan plan = string_to_plan(solver_name);
     std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_create_args(&plan, qp->dim), std::free);
-    
+
     map<string, option_t *> solver_options;
     auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
     solver_options[solver_name] = nested_options.get();
@@ -163,7 +163,7 @@ void ocp_qp::squeeze_dimensions() {
     auto all_ubx = extract("ubx");
     auto all_lbu = extract("lbu");
     auto all_ubu = extract("ubu");
-    
+
     // States
     vector<int> nbx;
     vector<vector<uint>> idxbx;
@@ -217,7 +217,7 @@ void ocp_qp::squeeze_dimensions() {
         bounds_indices("u", stage, idxbu.at(stage));
     }
     // Re-assign the memory, because the internal structure depends on the dimensions.
-    solver->fcn_ptrs->assign_memory(qp->dim, solver->args, solver->mem);
+    solver->fcn_ptrs->memory_assign(qp->dim, solver->args, solver->mem);
 }
 
 void ocp_qp::expand_dimensions() {
@@ -279,7 +279,7 @@ void ocp_qp::expand_dimensions() {
     }
 
     d_change_bounds_dimensions_ocp_qp(qp->dim->nu, qp->dim->nx, qp.get());
-    
+
     for (uint stage = 0; stage <= N; ++stage) {
         set("lbx", stage, lower_boundx.at(stage));
         set("ubx", stage, upper_boundx.at(stage));
@@ -333,7 +333,7 @@ void ocp_qp::flatten(map<string, option_t *>& input, map<string, option_t *>& ou
 }
 
 vector<vector<uint>> ocp_qp::bounds_indices(string name) {
-    
+
     vector<vector<uint>> idxb;
     if (name == "x") {
         for (uint stage = 0; stage <= N; ++stage) {
@@ -361,7 +361,7 @@ void ocp_qp::bounds_indices(string name, uint stage, vector<uint> v) {
         nb_bounds = qp->dim->nbu[stage];
     else
         throw std::invalid_argument("Can only set bounds on x and u, you gave: '" + name + "'.");
-    
+
     if (nb_bounds != v.size())
         throw std::invalid_argument("I need " + std::to_string(nb_bounds) + " indices, you gave " + std::to_string(v.size()) + ".");
     for (uint i = 0; i < nb_bounds; ++i)

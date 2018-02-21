@@ -88,11 +88,11 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 
 
 // TODO(dimitris): NUM_STAGES NOT NEEDED ANY MORE
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages)
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, ocp_nlp_solver_config *config)
 {
-    int size = ocp_nlp_in_calculate_size(dims);
+    int size = ocp_nlp_in_calculate_size(dims, config);
     void *ptr = acados_malloc(size, 1);
-    ocp_nlp_in *nlp_in = assign_ocp_nlp_in(dims, num_stages, ptr);
+    ocp_nlp_in *nlp_in = assign_ocp_nlp_in(dims, num_stages, ptr, config);
     return nlp_in;
 }
 
@@ -110,7 +110,7 @@ ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims)
 
 ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)
 {
-    ocp_qp_xcond_solver_fcn_ptrs qp_solver;
+    ocp_qp_xcond_solver_config qp_solver;
     module_fcn_ptrs solver_funs;
     qp_solver.qp_solver = &solver_funs;
 
@@ -119,7 +119,7 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solve
     set_ocp_qp_xcond_solver_fcn_ptrs(&qp_plan, &qp_solver);
 
     int return_value = ACADOS_SUCCESS;
-    sim_solver_fcn_ptrs *sim_solvers = acados_malloc(sizeof(sim_solver_fcn_ptrs), dims->N);
+    sim_solver_config *sim_solvers = acados_malloc(sizeof(sim_solver_config), dims->N);
     sim_solver_plan sim_plan;
 
     for (int ii = 0; ii < dims->N; ii++)
@@ -137,14 +137,14 @@ ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solve
     ocp_nlp_gn_sqp_args *args = ocp_nlp_gn_sqp_assign_args(dims, &qp_solver, sim_solvers, ptr);
 
     // TODO(dimitris): nest in initialize default args of SQP solver!
-    args->qp_solver->initialize_default_args(args->qp_solver_args);
+    args->qp_solver->opts_initialize_default(args->qp_solver_args);
     args->maxIter = 30;
 
     sim_dims sim_dims;
     for (int ii = 0; ii < dims->N; ii++)
     {
         cast_nlp_dims_to_sim_dims(&sim_dims, dims, ii);
-        args->sim_solvers[ii]->initialize_default_args(&sim_dims, args->sim_solvers_args[ii]);
+        args->sim_solvers[ii]->opts_initialize_default(&sim_dims, args->sim_solvers_args[ii]);
     }
 
     free(sim_solvers);
@@ -160,4 +160,19 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_
     void *ptr = acados_malloc(size, 1);
     ocp_nlp_gn_sqp_memory *mem = ocp_nlp_gn_sqp_assign_memory(dims, args, ptr);
     return mem;
+}
+
+
+
+sim_rk_opts *create_sim_irk_opts(sim_dims *dims)
+{
+    int size = sim_irk_opts_calculate_size(dims);
+
+    void *ptr = acados_malloc(size, 1);
+
+    sim_rk_opts *opts = sim_irk_opts_assign(dims, ptr);
+
+    sim_irk_opts_initialize_default(dims, opts);
+
+    return opts;
 }

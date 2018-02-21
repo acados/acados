@@ -28,7 +28,9 @@
 #endif
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
+#ifdef ACADOS_WITH_HPMPC
 #include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#endif
 #ifdef ACADOS_WITH_OOQP
 #include "acados/ocp_qp/ocp_qp_ooqp.h"
 #endif
@@ -53,7 +55,8 @@ bool set_option_int(void *args_, const char *option, const int value)
     token = strsep(&option_cpy, ".");
     while (token) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm")) {
+        if (!strcmp(token, "sparse_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
@@ -62,7 +65,9 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_args->stat_max = value;
             else return false;
-        } else if (!strcmp(token, "condensing_hpipm")) {
+        }
+		else if (!strcmp(token, "condensing_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) sparse_args->solver_args;
@@ -71,7 +76,10 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_args->stat_max = value;
             else return false;
-        } else if (!strcmp(token, "hpmpc")) {
+        }
+#ifdef ACADOS_WITH_HPMPC
+		else if (!strcmp(token, "hpmpc"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
@@ -89,6 +97,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "M"))
                 args->M = value;
             else return false;
+#endif
 #ifdef ACADOS_WITH_OOQP
         } else if (!strcmp(token, "ooqp")) {
             token = strsep(&option_cpy, ".");
@@ -195,7 +204,8 @@ bool set_option_double(void *args_, const char *option, const double value)
     strcpy(option_cpy, option);
     while ((token = strsep(&option_cpy, "."))) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm")) {
+        if (!strcmp(token, "sparse_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
@@ -212,7 +222,9 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
-        } else if (!strcmp(token, "condensing_hpipm")) {
+        }
+		else if (!strcmp(token, "condensing_hpipm"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) sparse_args->solver_args;
@@ -229,7 +241,10 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
-        } else if (!strcmp(token, "hpmpc")) {
+        }
+#ifdef ACADOS_WITH_HPMPC
+		else if (!strcmp(token, "hpmpc"))
+		{
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
@@ -241,6 +256,7 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "sigma_mu"))
                 args->sigma_mu = value;
             else return false;
+#endif
 #ifdef ACADOS_WITH_QPDUNES
         } else if (!strcmp(token, "qpdunes")) {
             token = strsep(&option_cpy, ".");

@@ -59,6 +59,8 @@ void *ocp_qp_hpipm_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+//
+void ocp_qp_hpipm_config_initialize_default(void *config_);
 
 
 

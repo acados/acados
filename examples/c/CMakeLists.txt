@@ -42,6 +42,18 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_hess_chain_nm2.c
     chain_model/vde_hess_chain_nm3.c
     chain_model/vde_hess_chain_nm4.c
+    implicit_chain_model/impl_jacFun_u_chain_nm2.c
+    implicit_chain_model/impl_jacFun_u_chain_nm3.c
+    implicit_chain_model/impl_jacFun_u_chain_nm4.c
+    implicit_chain_model/impl_jacFun_x_chain_nm2.c
+    implicit_chain_model/impl_jacFun_x_chain_nm3.c
+    implicit_chain_model/impl_jacFun_x_chain_nm4.c
+    implicit_chain_model/impl_jacFun_xdot_chain_nm2.c
+    implicit_chain_model/impl_jacFun_xdot_chain_nm3.c
+    implicit_chain_model/impl_jacFun_xdot_chain_nm4.c
+    implicit_chain_model/impl_odeFun_chain_nm2.c
+    implicit_chain_model/impl_odeFun_chain_nm3.c
+    implicit_chain_model/impl_odeFun_chain_nm4.c
 )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
