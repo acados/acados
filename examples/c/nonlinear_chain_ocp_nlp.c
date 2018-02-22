@@ -44,8 +44,8 @@
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
 
 // c interface
-#include <acados_c/legacy_create.h>
-#include <acados_c/external_function_generic.h>
+#include "acados_c/legacy_create.h"
+#include "acados_c/external_function_generic.h"
 
 
 // temp
