@@ -38,28 +38,34 @@ LIBS += -lblasfeo -lm -lblas
 # LDFLAGS += -pg
 
 EXAMPLES =
-EXAMPLES += sim_erk_crane
-EXAMPLES += sim_irk_crane
-EXAMPLES += sim_lifted_irk_crane
-EXAMPLES += mass_spring_example
+#EXAMPLES += sim_erk_crane
+#EXAMPLES += sim_irk_crane
+#EXAMPLES += sim_lifted_irk_crane
+#EXAMPLES += mass_spring_example
 #EXAMPLES += mass_spring_pcond_hpipm_split
 #EXAMPLES += mass_spring_fcond_hpipm_split
 #EXAMPLES += mass_spring_offline_fcond_qpoases_split
-EXAMPLES += nonlinear_chain_ocp_nlp
+#EXAMPLES += nonlinear_chain_ocp_nlp
+EXAMPLES += sim_crane_no_interface
+EXAMPLES += mass_spring_example_no_interface
+EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 
 examples: $(EXAMPLES)
 
 
 
 RUN_EXAMPLES =
-RUN_EXAMPLES += run_sim_erk_crane
-RUN_EXAMPLES += run_sim_irk_crane
-RUN_EXAMPLES += run_sim_lifted_irk_crane
-RUN_EXAMPLES += run_mass_spring_example
+#RUN_EXAMPLES += run_sim_erk_crane
+#RUN_EXAMPLES += run_sim_irk_crane
+#RUN_EXAMPLES += run_sim_lifted_irk_crane
+#RUN_EXAMPLES += run_mass_spring_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+RUN_EXAMPLES += run_sim_crane_no_interface
+RUN_EXAMPLES += run_mass_spring_example_no_interface
+RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -76,21 +82,23 @@ CRANE_OBJS += crane_model/impl_jac_x.o
 CRANE_OBJS += crane_model/impl_jac_xdot.o
 CRANE_OBJS += crane_model/impl_jac_u.o
 
+sim_crane_no_interface: $(CRANE_OBJS) sim_crane_no_interface.o
+	$(CCC) -o sim_crane_no_interface.out sim_crane_no_interface.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_crane_no_interface build complete."
+	@echo
+
 sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
 	$(CCC) -o sim_erk_crane.out sim_erk_crane.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
 
-
-
 sim_irk_crane: $(CRANE_OBJS) sim_irk_crane.o
 	$(CCC) -o sim_irk_crane.out  sim_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_irk_crane build complete."
 	@echo
-
-
 
 sim_lifted_irk_crane: $(CRANE_OBJS) sim_lifted_irk_crane.o
 	$(CCC) -o sim_lifted_irk_crane.out  sim_lifted_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
@@ -99,17 +107,21 @@ sim_lifted_irk_crane: $(CRANE_OBJS) sim_lifted_irk_crane.o
 	@echo
 
 
+
 MASS_SPRING_OBJS = 
 MASS_SPRING_OBJS += mass_spring.o
-MASS_SPRING_OBJS += mass_spring_example.o
 
-mass_spring_example: $(MASS_SPRING_OBJS) 
-	$(CCC) -o mass_spring_example.out $(MASS_SPRING_OBJS) $(LDFLAGS) $(LIBS)
+mass_spring_example_no_interface: $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o
+	$(CCC) -o mass_spring_example_no_interface.out $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example mass_spring_example_no_interface build complete."
+	@echo
+
+mass_spring_example: $(MASS_SPRING_OBJS) mass_spring_example.o
+	$(CCC) -o mass_spring_example.out $(MASS_SPRING_OBJS) mass_spring_example.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_example build complete."
 	@echo
-
-
 
 mass_spring_pcond_hpipm_split: mass_spring_pcond_hpipm_split.o
 	$(CCC) -o mass_spring_pcond_hpipm_split.out mass_spring_pcond_hpipm_split.o $(LDFLAGS) $(LIBS)
@@ -117,14 +129,11 @@ mass_spring_pcond_hpipm_split: mass_spring_pcond_hpipm_split.o
 	@echo " Example mass_spring_pcond_hpipm_split build complete."
 	@echo
 
-
-
 mass_spring_fcond_hpipm_split: mass_spring_fcond_hpipm_split.o
 	$(CCC) -o mass_spring_fcond_hpipm_split.out mass_spring_fcond_hpipm_split.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_fcond_hpipm_split build complete."
 	@echo
-
 
 mass_spring_offline_fcond_qpoases_split: mass_spring_offline_fcond_qpoases_split.o
 	$(CCC) -o mass_spring_offline_fcond_qpoases_split.out mass_spring_offline_fcond_qpoases_split.o $(LDFLAGS) $(LIBS)
@@ -133,8 +142,8 @@ mass_spring_offline_fcond_qpoases_split: mass_spring_offline_fcond_qpoases_split
 	@echo
 
 
+
 CHAIN_OBJS =
-CHAIN_OBJS += nonlinear_chain_ocp_nlp.o
 ### explicit ###
 # 2 masses
 CHAIN_OBJS += chain_model/vde_chain_nm2.o
@@ -174,11 +183,22 @@ CHAIN_OBJS += implicit_chain_model/impl_jacFun_x_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_jacFun_xdot_chain_nm4.o
 CHAIN_OBJS += implicit_chain_model/impl_jacFun_u_chain_nm4.o
 
-nonlinear_chain_ocp_nlp: $(CHAIN_OBJS)
-	$(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) $(LDFLAGS) $(LIBS)
+nonlinear_chain_ocp_nlp_no_interface: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o
+	$(CCC) -o nonlinear_chain_ocp_nlp_no_interface.out $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example nonlinear_chain_ocp_nlp_no_interface build complete."
+	@echo
+
+nonlinear_chain_ocp_nlp: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp.o
+	$(CCC) -o nonlinear_chain_ocp_nlp.out $(CHAIN_OBJS) nonlinear_chain_ocp_nlp.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example nonlinear_chain_ocp_nlp build complete."
 	@echo
+
+
+
+run_sim_crane_no_interface:
+	./sim_crane_no_interface.out
 
 
 
@@ -194,6 +214,11 @@ run_sim_irk_crane:
 
 run_sim_lifted_irk_crane:
 	./sim_lifted_irk_crane.out
+
+
+
+run_mass_spring_example_no_interface:
+	./mass_spring_example_no_interface.out
 
 
 
@@ -214,6 +239,11 @@ run_mass_spring_fcond_hpipm_split:
 
 run_mass_spring_offline_fcond_qpoases_split:
 	./mass_spring_offline_fcond_qpoases_split.out
+
+
+
+run_nonlinear_chain_ocp_nlp_no_interface:
+	./nonlinear_chain_ocp_nlp_no_interface.out
 
 
 
