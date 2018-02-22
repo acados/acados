@@ -7,6 +7,7 @@ find_program(CMAKE_C_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/mccppc.exe)
 find_program(CMAKE_CXX_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/cccppc.exe)
 find_program(CMAKE_ASM_COMPILER NAMES ${DSPACE_PPCTOOLS}/bin/asmppc.exe)
 find_program(CMAKE_AR NAMES ${DSPACE_PPCTOOLS}/bin/cccppc.exe)
+set(CMAKE_RANLIB ":")
 
 set(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> <OBJECTS> -o <TARGET>")
 set(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> <OBJECTS> -o <TARGET>")

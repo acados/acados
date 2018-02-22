@@ -40,7 +40,7 @@ typedef struct dense_qp_qore_args_ {
     int warm_start;     // warm start with updated matrices H and C
     int warm_strategy;  // 0: ramp-up from zero homotopy; 1: setup homotopy from the previous solution
     int hot_start;      // hot start with unchanged matrices H and C
-    int dummy;          // NOTE(dimitris): needed to make struct multiple of 8 bytes!
+    int max_iter;       // maximum number of iterations
 } dense_qp_qore_args;
 
 
@@ -82,6 +82,8 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
 int dense_qp_qore_calculate_workspace_size(dense_qp_dims *dims, void *args_);
 //
 int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_);
+//
+void dense_qp_qore_config_initialize_default(void *config_);
 
 
 #ifdef __cplusplus

@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_UTILS_EXTERNAL_FUNCTION_H_
-#define ACADOS_UTILS_EXTERNAL_FUNCTION_H_
+#ifndef ACADOS_UTILS_EXTERNAL_FUNCTION_GENERIC_H_
+#define ACADOS_UTILS_EXTERNAL_FUNCTION_GENERIC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +47,7 @@ typedef struct
 typedef struct
 {
 	void (* evaluate) (void *, double *, double *);
+	void *ptr_ext_mem; // pointer to external memory
 	int (*casadi_fun) (const double **, double **, int *, double *, int);
 	int (*casadi_work) (int *, int *, int *, int *);
 	const int * (*casadi_sparsity_in) (int);
@@ -78,4 +79,4 @@ void external_function_casadi_wrapper(void *self, double *in, double *out);
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_UTILS_EXTERNAL_FUNCTION_H_
+#endif  // ACADOS_UTILS_EXTERNAL_FUNCTION_GENERIC_H_

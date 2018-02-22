@@ -36,6 +36,7 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
+#include "acados/utils/mem.h"
 
 
 int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
@@ -176,15 +177,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
-
     acados_tic(&tot_timer);
-    acados_tic(&interface_timer);
-
-    // initialize return code
-    int acados_status = ACADOS_SUCCESS;
-
-    // loop index
-    int ii, jj;
 
     // extract input struct members
     int N = qp_in->dim->N;
@@ -243,8 +236,10 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     struct blasfeo_dvec hsdt[N+1];
     struct blasfeo_dvec hslamt[N+1];  // to be checked
 
+    acados_tic(&interface_timer);
+
 	// qp_in loop
-    for ( ii = 0; ii < N; ii++ ) {
+    for (int ii = 0; ii < N; ++ii) {
 
         blasfeo_create_dmat(nu[ii]+nx[ii]+1, nx[ii+1], &hsBAbt[ii], qp_in->BAbt[ii].pA);
         blasfeo_create_dvec(nx[ii+1], &hsb[ii], qp_in->b[ii].pa);
@@ -256,8 +251,8 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 		blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 		blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
     }
-   
-    ii = N;
+
+    int ii = N;
 	// ocp_in loop
     blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsRSQrq[ii], qp_in->RSQrq[ii].pA);
     blasfeo_create_dvec(nu[ii]+nx[ii], &hsrq[ii], qp_in->rq[ii].pa);
@@ -266,22 +261,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 	// temporarily invert sign of upper bounds
 	blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
-   	
-	// dmat loop	
-	for ( ii = 0; ii < N; ii++ ) {
 
-        /* blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory); */
-		assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-        /* ptr_memory += (&hsL[ii])->memsize; */
-    }
-   
+	// dmat loop
+	for ( ii = 0; ii < N; ii++ )
+		assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], &ptr_memory);
+
     ii = N;
 	// dmat loop
-	/* blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory); */
-	assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
-	/* ptr_memory += (&hsL[ii])->memsize; */
-   	
-	// dvec loop	
+	assign_blasfeo_dmat_mem(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], &ptr_memory);
+
+	// dvec loop
 	for ( ii = 0; ii < N; ii++ ) {
 
         // initialize hsdux to primal input later usx will be subtracted
@@ -324,7 +313,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     }
 
     ii = N;
-	// dvec loop	
+	// dvec loop
 	// initialize hsdux to primal input later usx will be subtracted
     blasfeo_create_dvec(nu[ii]+nx[ii], &hsdux[ii], ptr_memory);
     blasfeo_pack_dvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &hsdux[ii], 0);
@@ -358,7 +347,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hsdt[ii], ptr_memory);
     ptr_memory += (&hsdt[ii])->memsize;
 
-    
+
 	real_t sigma_mu = hpmpc_args->sigma_mu;
 
     int nuM;
@@ -479,10 +468,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
     hpmpc_args->out_iter = kk;
 
-    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
-    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
-
-
 	// restore sign of upper bounds
 	for(int jj = 0; jj <=N; jj++) {
 		blasfeo_dvecsc(nb[jj], -1.0, &hsd[jj], nb[jj] + ng[jj]);
@@ -493,6 +478,28 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = kk;
 
-	// return
+    int acados_status = hpmpc_status;
+    if (hpmpc_status == 0) acados_status = ACADOS_SUCCESS;
+    if (hpmpc_status == 1) acados_status = ACADOS_MAXITER;
+    if (hpmpc_status == 2) acados_status = ACADOS_MINSTEP;
     return acados_status;
+}
+
+
+
+void ocp_qp_hpmpc_config_initialize_default(void *config_)
+{
+
+	ocp_qp_solver_config *config = config_;
+
+	config->opts_calculate_size = &ocp_qp_hpmpc_calculate_args_size;
+	config->opts_assign = &ocp_qp_hpmpc_assign_args;
+	config->opts_initialize_default = &ocp_qp_hpmpc_initialize_default_args;
+	config->memory_calculate_size = &ocp_qp_hpmpc_calculate_memory_size;
+	config->memory_assign = &ocp_qp_hpmpc_assign_memory;
+	config->workspace_calculate_size = &ocp_qp_hpmpc_calculate_workspace_size;
+	config->fun = &ocp_qp_hpmpc;
+
+	return;
+
 }

@@ -145,7 +145,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default args
     qpdunes_options_t opts = QPDUNES_NONLINEAR_MPC;
 
-    args->stageQpSolver = QPDUNES_WITH_CLIPPING;
+    args->stageQpSolver = QPDUNES_WITH_QPOASES;
 
     args->options = qpDUNES_setupDefaultOptions();
     args->isLinearMPC = 0;
@@ -188,7 +188,6 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     // initialize memory
     int N, nx, nu;
     uint *nD_ptr = 0;
-    return_t return_value;
 
     N = dims->N;
     nx = dims->nx[0];
@@ -201,13 +200,14 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     mem->nDmax = get_maximum_number_of_inequality_constraints(dims);
 
     // Check for constant dimensions
+    // TODO(roversch): Move this up the call stack?
     for (int kk = 1; kk < N; kk++)
     {
-        assert(dims->nx[kk] == nx && "qpDUNES does not support varying dimensions");
-        assert(dims->nu[kk] == nu && "qpDUNES does not support varying dimensions");
+        if (dims->nx[kk] != nx || dims->nu[kk] != nu)
+            return NULL;
     }
-    assert(dims->nx[N] == nx && "qpDUNES does not support varying dimensions");
-    assert(dims->nu[N] == 0 && "qpDUNES does not support nu > 0 on terminal stage");
+    if (dims->nx[N] != nx || dims->nu[N] != 0)
+        return NULL;
 
     if (args->stageQpSolver == QPDUNES_WITH_QPOASES)
     {
@@ -227,8 +227,9 @@ void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_mem
     }
 
     // qpDUNES memory allocation
-    return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
-    assert(return_value == QPDUNES_OK && "Setup of the QP solver failed\n");
+    return_t return_value = qpDUNES_setup(&(mem->qpData), N, nx, nu, nD_ptr, &(args->options));
+    if (return_value != QPDUNES_OK)
+        return NULL;
 
     return mem;
 }
@@ -364,28 +365,12 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int n
 
     for (ii = 0; ii < ng; ii++) uc[ii] = -uc[ii];
 
-    // printf("acados [D'; C'] (nx = %d, nu = %d)\n", nx, nu);
-    // blasfeo_print_dmat(sDCt->m, sDCt->n, sDCt, 0, 0);
-    // printf("qpDUNES C:\n");
-    // d_print_mat(nx, ng, &Ct[0], nx+nu);
-    // printf("qpDUNES D:\n");
-    // d_print_mat(nu, ng, &Ct[nx], nx+nu);
-    // printf("acados d (nx = %d, nu = %d)\n", nx, nu);
-    // blasfeo_print_tran_dvec(sd->m, sd, 0);
-    // printf("qpDUNES lc':\n");
-    // d_print_mat(1, ng, lc, 1);
-    // printf("qpDUNES uc':\n");
-    // d_print_mat(1, ng, uc, 1);
-    // printf("********************************************\n\n");
 }
 
 
 
 int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
-
-    int N = dims->N;
     int nx = dims->nx[0];
     int nu = dims->nu[0];
     int nDmax = get_maximum_number_of_inequality_constraints(dims);
@@ -450,24 +435,19 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
 
     // coldstart
     if (args->warmstart == 0)
-    {
         for (int ii = 0; ii < N; ii++)
-        {
             for (int jj = 0; jj < nx; jj++)
-            {
                 mem->qpData.lambda.data[ii*nx+jj] = 0.0;
-            }
-        }
-    }
+
+    mem->qpData.options.maxIter = args->options.maxIter;
 
     if (mem->firstRun == 1)
     {
         // check if qpDUNES will detect clipping or qpOASES
         stageQps = check_stage_qp_solver(args, in);
 
-        // if user specified clipping but problem requires qpOASES, throw error
-        assert(!((args->stageQpSolver == QPDUNES_WITH_CLIPPING)
-            && (stageQps == QPDUNES_WITH_QPOASES)) && "Cannot use clipping for this QP");
+        if (args->stageQpSolver == QPDUNES_WITH_CLIPPING && stageQps == QPDUNES_WITH_QPOASES)
+            return QPDUNES_ERR_INVALID_ARGUMENT;  // user specified clipping but problem requires qpOASES
 
         // if user specified qpOASES but clipping is detected, trick qpDUNES to detect qpOASES
         // NOTE(dimitris): also needed when partial condensing is used because qpDUNES detects
@@ -664,45 +644,55 @@ void ocp_qp_qpdunes_free_memory(void *mem_)
 
 int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_)
 {
-    ocp_qp_info *info = (ocp_qp_info *) out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer;
 
+    acados_timer tot_timer, qp_timer, interface_timer;
+    ocp_qp_info *info = (ocp_qp_info *) out->misc;
     acados_tic(&tot_timer);
-    acados_tic(&interface_timer);
 
     // cast data structures
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
 
-    return_t return_value;
-    // printf("$$ FIRST RUN FLAG %d\n", mem->firstRun);
-
-    cast_workspace(work, mem);
-
-    // TODO(dimitris): move blasfeo conversions from update_memory before this timer?
-    info->interface_time = acados_toc(&interface_timer);
-    acados_tic(&qp_timer);
-
-    update_memory(in, args, mem, work);
-
-    return_value = qpDUNES_solve(&(mem->qpData));
-
-    info->solve_QP_time = acados_toc(&qp_timer);
     acados_tic(&interface_timer);
+    cast_workspace(work, mem);
+    return_t qpdunes_status = update_memory(in, args, mem, work);
+    if (qpdunes_status != QPDUNES_OK)
+        return qpdunes_status;
+    info->interface_time = acados_toc(&interface_timer);
 
-    if (return_value != QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND)
-    {
-        printf("qpDUNES failed to solve the QP. Error code: %d\n", return_value);
-        return (int)return_value;
-    }
-
+    acados_tic(&qp_timer);
+    qpdunes_status = qpDUNES_solve(&(mem->qpData));
+    info->solve_QP_time = acados_toc(&qp_timer);
+    
+    acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);
-
     info->interface_time += acados_toc(&interface_timer);
+
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = mem->qpData.log.numIter;
+    
+    int acados_status = qpdunes_status;
+    if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
+    if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;
+    return acados_status;
+}
 
-    // TODO(dimitris): use acados return value
-    return 0;
+
+
+void ocp_qp_qpdunes_config_initialize_default(void *config_)
+{
+
+	ocp_qp_solver_config *config = config_;
+
+	config->opts_calculate_size = &ocp_qp_qpdunes_calculate_args_size;
+	config->opts_assign = &ocp_qp_qpdunes_assign_args;
+	config->opts_initialize_default = &ocp_qp_qpdunes_initialize_default_args;
+	config->memory_calculate_size = &ocp_qp_qpdunes_calculate_memory_size;
+	config->memory_assign = &ocp_qp_qpdunes_assign_memory;
+	config->workspace_calculate_size = &ocp_qp_qpdunes_calculate_workspace_size;
+	config->fun = &ocp_qp_qpdunes;
+
+	return;
+
 }

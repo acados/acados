@@ -25,7 +25,7 @@ ExternalProject_Add(
     DEPENDS ma27
     PREFIX "${PROJECT_BINARY_DIR}/external/OOQP"
     DOWNLOAD_COMMAND ""
-    CONFIGURE_COMMAND ./configure "--prefix=${PROJECT_BINARY_DIR}/external/OOQP/" "${HOST_FLAG}"
+    CONFIGURE_COMMAND ./configure "-q" "--prefix=${PROJECT_BINARY_DIR}/external/OOQP/" "${HOST_FLAG}"
                                   "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-O2 -fPIC" "CC=${CMAKE_C_COMPILER}"
                                   "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"

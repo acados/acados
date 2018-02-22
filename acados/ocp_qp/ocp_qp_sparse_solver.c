@@ -19,7 +19,6 @@
 
 // external
 #include <assert.h>
-#include <stdio.h>
 // acados
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
@@ -31,14 +30,14 @@
 
 int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 {
-    ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
+    ocp_qp_solver_config *solver = (ocp_qp_solver_config *)solver_;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_args);
-    size += sizeof(ocp_qp_solver_fcn_ptrs);
+    size += sizeof(ocp_qp_solver_config);
 
     size += ocp_qp_partial_condensing_calculate_args_size(dims);
-    size += solver->calculate_args_size(dims);
+    size += solver->opts_calculate_size(dims);
 
     return size;
 }
@@ -47,15 +46,15 @@ int ocp_qp_sparse_solver_calculate_args_size(ocp_qp_dims *dims, void *solver_)
 
 void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *raw_memory)
 {
-    ocp_qp_solver_fcn_ptrs *solver = (ocp_qp_solver_fcn_ptrs *)solver_;
+    ocp_qp_solver_config *solver = (ocp_qp_solver_config *)solver_;
 
     char *c_ptr = (char *) raw_memory;
 
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_sparse_solver_args);
 
-    args->solver = (ocp_qp_solver_fcn_ptrs*) c_ptr;
-    c_ptr += sizeof(ocp_qp_solver_fcn_ptrs);
+    args->solver = (ocp_qp_solver_config*) c_ptr;
+    c_ptr += sizeof(ocp_qp_solver_config);
 
     *args->solver = *solver;
 
@@ -66,8 +65,8 @@ void *ocp_qp_sparse_solver_assign_args(ocp_qp_dims *dims, void *solver_, void *r
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    args->solver_args = args->solver->assign_args(dims, c_ptr);
-    c_ptr += args->solver->calculate_args_size(dims);
+    args->solver_args = args->solver->opts_assign(dims, c_ptr);
+    c_ptr += args->solver->opts_calculate_size(dims);
 
     assert((char*)raw_memory + ocp_qp_sparse_solver_calculate_args_size(dims, solver) == c_ptr);
 
@@ -80,7 +79,7 @@ void ocp_qp_sparse_solver_initialize_default_args(void *args_)
 {
     ocp_qp_sparse_solver_args *args = (ocp_qp_sparse_solver_args *)args_;
     ocp_qp_partial_condensing_initialize_default_args(args->pcond_args);
-    args->solver->initialize_default_args(args->solver_args);
+    args->solver->opts_initialize_default(args->solver_args);
 }
 
 
@@ -107,7 +106,7 @@ int ocp_qp_sparse_solver_calculate_memory_size(ocp_qp_dims *dims, void *args_)
         size += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_args);
     }
 
-    size += args->solver->calculate_memory_size(pcond_dims, args->solver_args);
+    size += args->solver->memory_calculate_size(pcond_dims, args->solver_args);
 
     if (args->pcond_args->N2 < dims->N) {
         size += ocp_qp_in_calculate_size(pcond_dims);
@@ -155,8 +154,8 @@ void *ocp_qp_sparse_solver_assign_memory(ocp_qp_dims *dims, void *args_, void *r
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    mem->solver_memory = args->solver->assign_memory(pcond_dims, args->solver_args, c_ptr);
-    c_ptr += args->solver->calculate_memory_size(pcond_dims, args->solver_args);
+    mem->solver_memory = args->solver->memory_assign(pcond_dims, args->solver_args, c_ptr);
+    c_ptr += args->solver->memory_calculate_size(pcond_dims, args->solver_args);
 
     if (args->pcond_args->N2 < dims->N) {
         mem->pcond_qp_in = assign_ocp_qp_in(pcond_dims, c_ptr);
@@ -201,7 +200,7 @@ int ocp_qp_sparse_solver_calculate_workspace_size(ocp_qp_dims *dims, void *args_
         pcond_dims = dims;
     }
 
-    size += args->solver->calculate_workspace_size(pcond_dims, args->solver_args);
+    size += args->solver->workspace_calculate_size(pcond_dims, args->solver_args);
 
     return size;
 }
@@ -229,7 +228,7 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_sparse_solver_args *args, o
     c_ptr += ocp_qp_partial_condensing_calculate_workspace_size(dims, args->pcond_args);
 
     work->solver_work = c_ptr;
-    c_ptr += args->solver->calculate_workspace_size(pcond_dims, args->solver_args);
+    c_ptr += args->solver->workspace_calculate_size(pcond_dims, args->solver_args);
 }
 
 
@@ -248,32 +247,35 @@ int ocp_qp_sparse_solver(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void
     // cast workspace
     cast_workspace(qp_in->dim, args, memory, work);
 
-    // condense
-    acados_tic(&cond_timer);
-    if (args->pcond_args->N2 < qp_in->dim->N) {
+    if (args->pcond_args->N2 < qp_in->dim->N) {  // condensing
+        acados_tic(&cond_timer);
         ocp_qp_partial_condensing(qp_in, memory->pcond_qp_in, args->pcond_args, memory->pcond_memory, work->pcond_work);
-    }
-	else
-	{
+        info->condensing_time = acados_toc(&cond_timer);
+    } else {
         memory->pcond_qp_in = qp_in;
         memory->pcond_qp_out = qp_out;
+        info->condensing_time = 0;
     }
-    info->condensing_time = acados_toc(&cond_timer);
 
     // solve qp
-    int solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
+    int solver_status;
+    if (memory->solver_memory != NULL) {
+        solver_status = args->solver->fun(memory->pcond_qp_in, memory->pcond_qp_out, args->solver_args, memory->solver_memory, work->solver_work);
+    } else {
+        solver_status = ACADOS_FAILURE;
+    }
 
     // expand
-    acados_tic(&cond_timer);
     if (args->pcond_args->N2 < qp_in->dim->N) {
+        acados_tic(&cond_timer);
         ocp_qp_partial_expansion(memory->pcond_qp_out, qp_out, args->pcond_args, memory->pcond_memory, work->pcond_work);
+        info->condensing_time += acados_toc(&cond_timer);
     }
-    info->condensing_time += acados_toc(&cond_timer);
 
     info->total_time = acados_toc(&tot_timer);
     info->solve_QP_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->solve_QP_time;
     info->interface_time = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->interface_time;
     info->num_iter = ((ocp_qp_info *)(memory->pcond_qp_out->misc))->num_iter;
-    // return
+
     return solver_status;
 }

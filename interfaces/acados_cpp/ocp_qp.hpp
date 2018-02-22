@@ -13,57 +13,70 @@
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
 
-using std::vector;
-using std::string;
-using std::map;
-
 namespace acados {
 
 class ocp_qp {
 
 public:
 
-    ocp_qp(vector<uint> nx, vector<uint> nu, vector<uint> nbx, vector<uint> nbu, vector<uint> ng);
+    ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx, std::vector<uint> nbu, std::vector<uint> ng);
 
-    ocp_qp(map<string, vector<uint>>);
+    ocp_qp(std::map<std::string, std::vector<uint>>);
 
     ocp_qp(uint N, uint nx, uint nu, uint nbx = 0, uint nbu = 0, uint ng = 0);
 
-    void update(string field, uint stage, vector<double> v);
-    void update(string field, vector<double> v);
+    void set(std::string field, uint stage, std::vector<double> v);
+    void set(std::string field, std::vector<double> v);
 
-    ocp_qp_solution solve(string solver_name, map<string, option_t> options = {});
+    void initialize_solver(std::string solver_name, std::map<std::string, option_t *> options = {});
 
-    vector< vector<double> > extract(string field);
+    ocp_qp_solution solve();
 
-    const map<string, vector<uint>> dimensions() const;
+    std::vector< std::vector<double> > extract(std::string field);
 
-    std::pair<uint, uint> dimensions(string field, uint stage);
+    std::map<std::string, std::vector<uint>> dimensions();
 
-    void state_bounds_indices(uint stage, vector<uint> v);
-    void control_bounds_indices(uint stage, vector<uint> v);
+    std::pair<uint, uint> dimensions(std::string field, uint stage);
+
+    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
+
+    std::vector<std::vector<uint>> bounds_indices(std::string name);
 
     const uint N;
 
 private:
-    
-    void check_range(string field, uint stage);
-    
-    void check_nb_elements(string, uint stage, uint nb_elems);
 
-    vector<uint> nx() const;
-    vector<uint> nu() const;
-    vector<uint> nbx() const;
-    vector<uint> nbu() const;
-    vector<uint> ng() const;
+    vector<uint> idxb(vector<double> lower_bound, vector<double> upper_bound);
+
+    void fill_in_bounds();
+
+    void squeeze_dimensions();
+
+    void expand_dimensions();
+
+    void check_range(std::string field, uint stage);
+    
+    void check_num_elements(std::string, uint stage, uint nb_elems);
+
+    void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);
+
+    std::vector<uint> nx();
+    std::vector<uint> nu();
+    std::vector<uint> nbx();
+    std::vector<uint> nbu();
+    std::vector<uint> ng();
+
+    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
 
-    std::unique_ptr<ocp_qp_dims> dim;
+    std::string cached_solver;
 
-    static std::map<string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
+    bool needs_initializing = true;
+
+    static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 
     friend std::ostream& operator<<(std::ostream& oss, const ocp_qp& qp);
 

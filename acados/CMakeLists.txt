@@ -39,6 +39,18 @@ if(NOT ACADOS_WITH_OOQP)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
 endif()
 
+if(NOT ACADOS_WITH_QORE)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_qore.c")
+endif()
+
+if(NOT ACADOS_WITH_QPOASES)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_qpoases.c")
+endif()
+
+if(NOT ACADOS_WITH_QPDUNES)
+    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_qpdunes.c")
+endif()
+
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/sim/sim_discrete_model.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sm_gn.c")
@@ -51,23 +63,54 @@ target_include_directories(acados
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}> # to be able to include "acados/header.h"
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPSOLVER_DENSE/source>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/include>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/KKTPACK_DENSE/source>
+        $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore/QPCORE/include>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}/qore>
         $<BUILD_INTERFACE:${EXTERNAL_SRC_DIR}>
         $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/interfaces>
-        $<INSTALL_INTERFACE:include>)
+        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/blasfeo/include>)
 
 # HPMPC must come before BLASFEO!
 if(ACADOS_WITH_HPMPC)
     target_link_libraries(acados PUBLIC hpmpc)
 endif()
-target_link_libraries(acados PUBLIC hpipm qpOASES_e qore blasfeo qpdunes)
+
+if(ACADOS_WITH_QORE)
+    target_link_libraries(acados PUBLIC qore)
+endif()
+
+if(ACADOS_WITH_QPOASES)
+    target_link_libraries(acados PUBLIC qpOASES_e)
+endif()
+
+if(ACADOS_WITH_QPDUNES)
+    target_link_libraries(acados PUBLIC qpdunes)
+endif()
+
+target_link_libraries(acados PUBLIC hpipm blasfeo)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(acados PRIVATE DEBUG)
 endif()
 
 if(ACADOS_WITH_HPMPC)
-    target_compile_definitions(acados PRIVATE ACADOS_WITH_HPMPC)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_HPMPC)
+endif()
+
+if(ACADOS_WITH_QORE)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_QORE)
+endif()
+
+if(ACADOS_WITH_QPOASES)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_QPOASES)
+endif()
+
+if(ACADOS_WITH_QPDUNES)
+    target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
+    target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES) # Needed for qpDUNES
 endif()
 
 if(ACADOS_WITH_OOQP)
@@ -76,12 +119,21 @@ if(ACADOS_WITH_OOQP)
 endif()
 
 # Enable or disable timings
-if(NOT ACADOS_NO_TIMINGS)
+if(NOT CMAKE_BUILD_TYPE MATCHES "Debug" AND NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 
+if(SWIG_MATLAB)
+    find_package(Matlab COMPONENTS MX_LIBRARY REQUIRED)
+    target_compile_definitions(acados PUBLIC MATLAB)
+    target_include_directories(acados PUBLIC ${Matlab_INCLUDE_DIRS})
+    target_link_libraries(acados PUBLIC ${Matlab_MEX_LIBRARY})
+endif()
+
 add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
-add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+    add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+endif()
 
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
@@ -93,8 +145,6 @@ if(COVERAGE MATCHES "lcov")
 endif()
 
 target_compile_definitions(acados PRIVATE ALIGNMENT=64)
-target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
-target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES) # Needed for qpDUNES
 
 install(TARGETS acados EXPORT acadosTargets
     LIBRARY DESTINATION lib

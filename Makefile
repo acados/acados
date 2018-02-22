@@ -11,7 +11,6 @@ OBJS =
 
 # ocp nlp
 OBJS += acados/ocp_nlp/ocp_nlp_common.o
-# OBJS += acados/ocp_nlp/ocp_nlp_sm_gn.o
 OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
@@ -35,9 +34,9 @@ OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
 # sim
-OBJS += acados/sim/sim_casadi_wrapper.o
-OBJS += acados/sim/sim_collocation.o
+OBJS += acados/sim/sim_collocation_utils.o
 OBJS += acados/sim/sim_erk_integrator.o
+OBJS += acados/sim/sim_irk_integrator.o
 OBJS += acados/sim/sim_lifted_irk_integrator.o
 OBJS += acados/sim/sim_common.o
 OBJS += acados/sim/sim_gnsf.o
@@ -116,6 +115,10 @@ qore_static: blasfeo_static
 	mkdir -p lib
 	cp $(QORE_PATH)/qp_types.h include/qore/include
 	cp $(QORE_PATH)/QPSOLVER_DENSE/include/*.h include/qore/include
+	cp $(QORE_PATH)/QPSOLVER_DENSE/source/*.h include/qore/include
+	cp $(QORE_PATH)/KKTPACK_DENSE/source/*.h include/qore/include
+	cp $(QORE_PATH)/KKTPACK_DENSE/include/*.h include/qore/include
+	cp $(QORE_PATH)/QPCORE/include/*.h include/qore/include
 	cp $(QORE_PATH)/bin/libqore_dense.a lib
 
 qpdunes_static:

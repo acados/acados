@@ -31,9 +31,9 @@ extern "C" {
 #include "acados_c/common.h"
 
 typedef enum {
-    PREVIOUS,
     ERK,
-    LIFTED_IRK
+    LIFTED_IRK,
+    IRK
 } sim_solver_t;
 
 typedef struct {
@@ -41,7 +41,7 @@ typedef struct {
 } sim_solver_plan;
 
 typedef struct {
-    sim_solver_fcn_ptrs *fcn_ptrs;
+    sim_solver_config *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
@@ -52,7 +52,7 @@ typedef struct {
 //
 sim_dims *create_sim_dims();
 //
-sim_in *create_sim_in(sim_dims *dims);
+sim_in *create_sim_in(sim_dims *dims, sim_solver_config *config);
 //
 sim_out *create_sim_out(sim_dims *dims);
 //
@@ -76,7 +76,7 @@ int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out);
 
 // EXPERT INTERFACE
 //
-int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_fcn_ptrs *fcn_ptrs);
+int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_config *fcn_ptrs);
 
 
 

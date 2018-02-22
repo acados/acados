@@ -40,7 +40,7 @@ typedef struct {
 } dense_qp_solver_plan;
 
 typedef struct {
-    dense_qp_solver_fcn_ptrs *fcn_ptrs;
+    dense_qp_solver_config *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
@@ -75,7 +75,7 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 
 // EXPERT INTERFACE
 //
-int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_fcn_ptrs *fcn_ptrs);
+int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_config *fcn_ptrs);
 
 #ifdef __cplusplus
 } /* extern "C" */

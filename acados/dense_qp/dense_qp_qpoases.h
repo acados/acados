@@ -25,37 +25,6 @@
 extern "C" {
 #endif
 
-/* Ignore compiler warnings from qpOASES */
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wunused-function"
-#include "qpOASES_e/QProblemB.h"
-#include "qpOASES_e/QProblem.h"
-#pragma clang diagnostic pop
-#elif defined(__GNUC__)
-    #if __GNUC__ >= 6
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wunused-but-set-parameter"
-        #pragma GCC diagnostic ignored "-Wunused-parameter"
-        #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/QProblemB.h"
-        #include "qpOASES_e/QProblem.h"
-        #pragma GCC diagnostic pop
-    #else
-        #pragma GCC diagnostic ignored "-Wunused-parameter"
-        #pragma GCC diagnostic ignored "-Wunused-function"
-        #include "qpOASES_e/QProblemB.h"
-        #include "qpOASES_e/QProblem.h"
-    #endif
-#else
-    #include "qpOASES_e/QProblemB.h"
-    #include "qpOASES_e/QProblem.h"
-#endif
-
-// qpoases
-#include "qpOASES_e.h"
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
@@ -67,6 +36,8 @@ typedef struct dense_qp_qpoases_args_ {
     double max_cputime;  // maximum cpu time in seconds
     int max_nwsr;        // maximum number of working set recalculations
     int warm_start;      // warm start with dual_sol in memory
+	int use_precomputed_cholesky;
+	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities) 
 } dense_qp_qpoases_args;
 
 
@@ -91,6 +62,7 @@ typedef struct dense_qp_qpoases_memory_ {
     void *QP;                  // NOTE(giaf): cast to QProblem to use
     double cputime;            // cputime of qpoases
     int nwsr;                  // performed number of working set recalculations
+	int first_it;              // to be used with hotstart
 } dense_qp_qpoases_memory;
 
 
@@ -108,6 +80,8 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
 int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_);
 //
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_);
+//
+void dense_qp_qpoases_config_initialize_default(void *config_);
 
 
 #ifdef __cplusplus

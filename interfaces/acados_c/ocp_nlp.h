@@ -38,6 +38,7 @@ typedef enum {
 typedef struct {
     ocp_qp_solver_plan *ocp_qp_solver_plan;
     sim_solver_plan **sim_solver_plan;
+	// TODO add ocp_nlp_solver_t
 } ocp_nlp_solver_plan;
 
 typedef struct {

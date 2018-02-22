@@ -32,6 +32,10 @@ extern "C" {
 
 
 /************************************************
+* structures
+************************************************/
+
+/************************************************
 * dims
 ************************************************/
 
@@ -53,16 +57,9 @@ typedef struct
 	int memsize;
 } ocp_nlp_dims;
 
-//
-int ocp_nlp_dims_calculate_size(int N);
-//
-ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
-//
-void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *ocp_nlp_cost_dims, ocp_nlp_dims *dims);
-
-
-
 /* ocp_nlp_cost_ls */
+
+// TODO do ocp_nlp_cost instread ???
 
 typedef struct
 {
@@ -72,18 +69,13 @@ typedef struct
 	int memsize;
 } ocp_nlp_cost_ls_dims;
 
-//
-int ocp_nlp_cost_ls_dims_calculate_size(int N);
-//
-ocp_nlp_cost_ls_dims *ocp_nlp_cost_ls_dims_assign(int N, void *raw_memory);
-//
-void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
-
 
 
 /************************************************
 * cost
 ************************************************/
+
+/* least squares */
 
 typedef struct
 {
@@ -93,35 +85,58 @@ typedef struct
 	struct blasfeo_dmat *W;
     struct blasfeo_dvec *y_ref;
 	int *nls_mask; // nonlinear least squares mask
-	int memsize;
 } ocp_nlp_cost_ls;
-
-//
-int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims);
-//
-ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_memory);
 
 
 
 /************************************************
-* model
+* dynamics
 ************************************************/
 
-/* explicit ODEs */
+/* ERK */
 
 typedef struct
 {
-	ocp_nlp_dims *dims; // TODO model dims ???
-    casadi_function_t *vde;
-    casadi_function_t *vde_adj;
-    casadi_function_t *jac;
-	int memsize;
-} ocp_nlp_model_expl;
+	ocp_nlp_dims *dims; // TODO dynamics dims ???
+	external_function_generic **forw_vde;
+	external_function_generic **adj_vde;
+	external_function_generic **jac_ode;
+} ocp_nlp_dynamics_erk;
 
-//
-int ocp_nlp_model_expl_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_model_expl *ocp_nlp_model_expl_assign(ocp_nlp_dims *dims, void *raw_memory);
+/* IRK */
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO dynamics dims ???
+	external_function_generic **ode;
+	external_function_generic **jac_x;
+	external_function_generic **jac_xdot;
+	external_function_generic **jac_u;
+} ocp_nlp_dynamics_irk;
+
+/* lifted IRK */
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO dynamics dims ???
+	external_function_generic **forw_vde;
+	external_function_generic **jac_ode;
+} ocp_nlp_dynamics_lifted_irk;
+
+
+
+/************************************************
+* constraints
+************************************************/
+
+typedef struct
+{
+	ocp_nlp_dims *dims; // TODO constraints dims ???
+    int **idxb;
+	struct blasfeo_dvec *d;
+	struct blasfeo_dmat *DCt;
+}
+ocp_nlp_constraints;
 
 
 
@@ -133,28 +148,20 @@ typedef struct
 {
     ocp_nlp_dims *dims;
 
-    int **idxb;
-	struct blasfeo_dvec *d;
-	struct blasfeo_dmat *DCt;
-
-    double **lh;
-    double **uh;
+    // double **lh;
+    // double **uh;
     // ocp_nlp_function *h;  // nonlinear path constraints
 
 	// TODO array of structures or structures of arrays ???
 	// void **cost; // ???
     void *cost;
-	void *model;
+	void *dynamics;
+	void *constraints;
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
     bool freezeSens;  // TODO(dimitris): shouldn't this be in the integrator args?
 } ocp_nlp_in;
-
-//
-int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory);
 
 
 
@@ -172,11 +179,6 @@ typedef struct
 	int memsize;
 } ocp_nlp_out;
 
-//
-int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
-
 
 
 /************************************************
@@ -193,12 +195,6 @@ typedef struct
 	struct blasfeo_dvec *ineq_adj;
 	int memsize;
 } ocp_nlp_mem;
-
-
-//
-int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory);
 
 
 
@@ -220,6 +216,152 @@ typedef struct
 	int memsize;
 } ocp_nlp_res;
 
+
+
+/************************************************
+* function pointers
+************************************************/
+
+typedef struct
+{
+	// cost
+	int (*cost_calculate_size) (ocp_nlp_cost_ls_dims *); // TODO ocp_nlp_cost_dims
+	void *(*cost_assign) (ocp_nlp_cost_ls_dims *, void *); // TODO ocp_nlp_dims
+
+	// dynamics
+	int (*dynamics_calculate_size) (ocp_nlp_dims *); // calculate size
+	void *(*dynamics_assign) (ocp_nlp_dims *, void *); // assign
+	void (*dynamics_to_sim_in) (void *, sim_in **);
+
+	// constraints
+	int (*constraints_calculate_size) (ocp_nlp_dims *); // calculate size
+	void *(*constraints_assign) (ocp_nlp_dims *, void *); // assign
+
+	// all the others
+    int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
+    int (*calculate_args_size)(ocp_nlp_dims *dims, void *solver_);
+    void *(*assign_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory);
+    void *(*copy_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory, void *source_);
+    void (*initialize_default_args)(void *args);
+    int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
+    void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
+    int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
+    ocp_qp_xcond_solver_config *qp_solver;
+    sim_solver_config **sim_solvers;
+} ocp_nlp_solver_config;
+
+
+
+
+
+/************************************************
+* headers
+************************************************/
+
+/************************************************
+* dims
+************************************************/
+
+/* ocp_nlp */
+
+//
+int ocp_nlp_dims_calculate_size(int N);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
+//
+void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *ocp_nlp_cost_dims, ocp_nlp_dims *dims);
+
+/* ocp_nlp_cost_ls */
+
+//
+int ocp_nlp_cost_ls_dims_calculate_size(int N);
+//
+ocp_nlp_cost_ls_dims *ocp_nlp_cost_ls_dims_assign(int N, void *raw_memory);
+//
+void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
+
+/************************************************
+* cost
+************************************************/
+
+/* least squares */
+
+//
+int ocp_nlp_cost_ls_calculate_size(ocp_nlp_cost_ls_dims *dims);
+//
+ocp_nlp_cost_ls *ocp_nlp_cost_ls_assign(ocp_nlp_cost_ls_dims *dims, void *raw_memory);
+
+/************************************************
+* dynamics
+************************************************/
+
+/* ERK */
+
+//
+int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_erk_to_sim_in(ocp_nlp_dynamics_erk *dynamics, sim_in **sim);
+
+/* IRK */
+
+//
+int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_irk_to_sim_in(ocp_nlp_dynamics_irk *dynamics, sim_in **sim);
+
+/* lifted IRK */
+
+//
+int ocp_nlp_dynamics_lifted_irk_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_dynamics_lifted_irk *ocp_nlp_dynamics_lifted_irk_assign(ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_dynamics_lifted_irk_to_sim_in(ocp_nlp_dynamics_lifted_irk *dynamics, sim_in **sim);
+
+/************************************************
+* constraints
+************************************************/
+
+//
+int ocp_nlp_constraints_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_memory);
+
+/************************************************
+* in
+************************************************/
+
+//
+int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_config *config);
+//
+ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory, ocp_nlp_solver_config *config);
+
+/************************************************
+* out
+************************************************/
+
+//
+int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
+
+/************************************************
+* memory
+************************************************/
+
+//
+int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims);
+//
+ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory);
+
+/************************************************
+* residuals
+************************************************/
+
 //
 int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
@@ -229,23 +371,15 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
 
 
 
+
+
+
+
+
+
 /************************************************
 * ?????
 ************************************************/
-
-typedef struct {
-    int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
-    int (*calculate_args_size)(ocp_nlp_dims *dims, void *solver_);
-    void *(*assign_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory);
-    void *(*copy_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory, void *source_);
-    void (*initialize_default_args)(void *args);
-    int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
-    void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
-    int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
-    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
-    sim_solver_fcn_ptrs **sim_solvers;
-    // TODO(nielsvd): add cost and nonlinear constraints
-} ocp_nlp_solver_fcn_ptrs;
 
 int number_of_primal_vars(ocp_nlp_dims *dims);
 

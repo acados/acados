@@ -27,11 +27,35 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
 
+
+typedef struct
+{
+	/* external functions */
+	// explicit ode
+	external_function_generic *ode_expl;
+	// jacobian explicit ode
+	external_function_generic *jac_ode_expl;
+	// hessian explicit ode
+	external_function_generic *hess_ode_expl;
+	// forward explicit vde
+	external_function_generic *forw_vde_expl;
+	// adjoint explicit vde
+	external_function_generic *adj_vde_expl;
+
+} erk_model;
+
+
+
+typedef struct
+{
+	// no memory
 } sim_erk_memory;
 
-typedef struct {
+
+
+typedef struct
+{
 
     double *rhs_forw_in;  // x + S + p
 
@@ -44,21 +68,29 @@ typedef struct {
 
 } sim_erk_workspace;
 
+
+
+//
+int sim_erk_model_calculate_size(sim_dims *dims);
+//
+void *sim_erk_model_assign(sim_dims *dims, void *raw_memory);
+
 int sim_erk_opts_calculate_size(sim_dims *dims);
 
-void *sim_erk_assign_opts(sim_dims *dims, void *raw_memory);
+void *sim_erk_opts_assign(sim_dims *dims, void *raw_memory);
 
-void sim_erk_initialize_default_args(sim_dims *dims, void *opts_);
+void sim_erk_opts_initialize_default(sim_dims *dims, void *opts_);
 
-int sim_erk_calculate_memory_size(sim_dims *dims, void *opts_);
+int sim_erk_memory_calculate_size(sim_dims *dims, void *opts_);
 
-void *sim_erk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
-
-void *sim_erk_create_memory(sim_dims *dims, void *opts_);
+void *sim_erk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory);
 
 int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 
-int sim_erk_calculate_workspace_size(sim_dims *dims, void *opts_);
+int sim_erk_workspace_calculate_size(sim_dims *dims, void *opts_);
+
+void sim_erk_config_initialize_default(void *config);
+
 
 #ifdef __cplusplus
 } /* extern "C" */

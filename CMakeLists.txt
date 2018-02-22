@@ -26,18 +26,8 @@ endif()
 
 project(acados LANGUAGES C CXX)
 
-# if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION MATCHES "5")
-#     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
-# endif()
-
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-set(CMAKE_VERBOSE_MAKEFILE ON)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-
-if(CMAKE_SYSTEM MATCHES "Windows")		
-    set(CMAKE_FIND_LIBRARY_PREFIXES "lib" CACHE INTERNAL "Library prefix")		
-    set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll" CACHE INTERNAL "Library suffix")		
-endif()
 
 # Set up build type
 if(NOT CMAKE_BUILD_TYPE)
@@ -50,8 +40,8 @@ message(STATUS "Build type is ${CMAKE_BUILD_TYPE}")
 enable_testing(true)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fdiagnostics-show-option")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fdiagnostics-show-option")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Werror -Wall -fdiagnostics-show-option")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Werror -Wall -fdiagnostics-show-option")
 endif()
 
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
@@ -60,14 +50,27 @@ message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_MACOSX_RPATH TRUE)
 # set(CMAKE_INSTALL_RPATH "\$ORIGIN")
 # SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs)
+if(NOT CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    set(ACADOS_WITH_HPMPC ON CACHE BOOL "Add HPMPC solver")
+endif()
+
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/OOQP AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs AND NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
     set(ACADOS_WITH_OOQP ON CACHE BOOL "Add OOQP solver")
 endif()
 
-set(CMAKE_MACOSX_RPATH TRUE)
+if(EXISTS ${PROJECT_SOURCE_DIR}/external/qore AND NOT CMAKE_BUILD_TYPE MATCHES NoExternalLibs AND NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+    set(ACADOS_WITH_QORE ON CACHE BOOL "Add QORE solver")
+endif()
+
+if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+    set(ACADOS_WITH_QPOASES ON CACHE BOOL "Add qpOASES solver")
+    set(ACADOS_WITH_QPDUNES ON CACHE BOOL "Add qpDUNES solver")
+endif()
+
 set(EXTERNAL_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
 # Configure acados
 add_subdirectory(acados)
@@ -101,8 +104,4 @@ add_custom_target(uninstall
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake")
 
 # Cpplint
-if (NOT (CMAKE_SYSTEM_NAME MATCHES "dSpace" OR CMAKE_GENERATOR MATCHES "MinGW Makefiles" OR CMAKE_CXX_COMPILER_ID MATCHES "MSVC"))
-include(lint)
-else()
-message(STATUS "Skipping lint (python not found).")
-endif()
+include(Lint)

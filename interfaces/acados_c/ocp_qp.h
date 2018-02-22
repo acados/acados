@@ -24,10 +24,8 @@
 extern "C" {
 #endif
 
-// acados
-#include <acados/ocp_qp/ocp_qp_common.h>
-#include <acados/ocp_qp/ocp_qp_common_frontend.h>
-// acados_c
+#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_common_frontend.h"
 #include "acados_c/common.h"
 
 typedef enum {
@@ -45,7 +43,7 @@ typedef struct {
 } ocp_qp_solver_plan;
 
 typedef struct {
-    ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs;
+    ocp_qp_xcond_solver_config *fcn_ptrs;
     void *dims;
     void *args;
     void *mem;
@@ -82,7 +80,7 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 //
 int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs);
 //
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs);
+int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_config *fcn_ptrs);
 
 
 

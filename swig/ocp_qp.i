@@ -9,27 +9,10 @@
 #include "acados_c/ocp_qp.h"
 #include "acados_cpp/ocp_qp.hpp"
 #include "acados_cpp/ocp_qp_solution.hpp"
+#include "acados_cpp/options.hpp"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
-
-// void acados_OcpQp_A_sequence_set(acados::OcpQp *qp, LangObject *input) {
-//     for (int i = 0; i < qp->N; i++) {
-//         int nbElems = numRows(input) * numColumns(input);
-//         std::vector<double> tmp(nbElems);
-//         std::copy_n(asDoublePointer(input), nbElems, tmp.begin());
-//         qp->update(qp->A, tmp);
-//     }
-// }
-
-// LangObject *acados_OcpQp_A_sequence_get(acados::OcpQp *qp) {
-//     std::vector<LangObject *> list_of_matrices;
-//     for (int i = 0; i < qp->N; i++) {
-//         int dims[2] = {qp->numRowsA(i), qp->numColsA(i)};
-//         list_of_matrices.push_back(new_matrix(dims, qp->getA(i).data()));
-//     }
-//     return swig::from(list_of_matrices);
-// }
 
 bool is_valid_ocp_dimensions_map(const LangObject *input) {
     if (!is_map(input))
@@ -112,12 +95,11 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 
 %}
 
+%ignore operator<<;
 %include "acados_cpp/options.hpp"
 
 %rename("$ignore", %$isconstructor) ocp_qp_solution;
 %include "acados_cpp/ocp_qp_solution.hpp"
-
-%ignore make_dimensions_ptr;
 %ignore extract;
 %rename("$ignore", %$isconstructor) ocp_qp;
 %include "acados_cpp/ocp_qp.hpp"
@@ -125,40 +107,26 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %rename("%s", %$isconstructor) ocp_qp;
 %rename("%s") extract;
 
-%{
-using std::vector;
-using std::string;
-%}
-
 %extend acados::ocp_qp {
 
-    ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint nbx = 0, uint nbu = 0, uint ng = 0, bool fix_x0 = true) {
-        if (fix_x0 == false)
-            return new acados::ocp_qp(N, nx, nu, nbx, nbu, ng);
-        vector<uint> nbx_v(N+1, 0);
-        nbx_v.at(0) = nx;
-        acados::ocp_qp *qp = new acados::ocp_qp(vector<uint>(N+1, nx), vector<uint>(N+1, nu), nbx_v,
-                                  vector<uint>(N+1, nbu), vector<uint>(N+1, ng));
-        std::vector<uint> idx(nx);
-        std::iota(std::begin(idx), std::end(idx), 0);
-        qp->state_bounds_indices(0, idx);
-        return qp;
+    ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint ng = 0, bool fix_x0 = true) {
+        return new acados::ocp_qp(N, nx, nu, nx, nu, ng);
     }
 
-    LangObject *extract(string field) {
-        vector<vector<double>> tmp = $self->extract(field);
-        vector<LangObject *> result;
+    LangObject *extract(std::string field) {
+        std::vector<std::vector<double>> tmp = $self->extract(field);
+        std::vector<LangObject *> result;
         for (int i = 0; i < tmp.size(); ++i)
             result.push_back(new_matrix($self->dimensions(field, i), tmp.at(i).data()));
         return swig::from(result);
     }
 
-    vector<string> fields() {
-        return vector<string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
+    std::vector<std::string> fields() {
+        return std::vector<std::string>({"Q", "S", "R", "q", "r", "A", "B", "b", "lbx", "ubx", "lbu", "ubu", "C", "D", "lg", "ug"});
     }
 
     char *__str__() {
-        static char tmp[10000];
+        static char tmp[1000000];
         std::ostringstream stream;
         stream << *($self);
         std::string a = stream.str();
@@ -166,11 +134,3 @@ using std::string;
         return tmp;
     }
 }
-
-// %include "hpipm/include/hpipm_d_ocp_qp_sol.h"
-
-// %include "acados/ocp_qp/ocp_qp_common.h"
-
-%ignore ocp_qp_solve;
-%ignore ocp_qp_solver;
-%include "acados_c/ocp_qp.h"

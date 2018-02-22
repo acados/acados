@@ -9,7 +9,7 @@ ExternalProject_Add(
     ma27_project
     PREFIX "${PROJECT_BINARY_DIR}/external/ma27/"
     DOWNLOAD_COMMAND ""
-    CONFIGURE_COMMAND sh "${EXTERNAL_SRC_DIR}/coinhsl/configure" "--prefix=${PROJECT_BINARY_DIR}/external/ma27/" "${HOST_FLAG}" "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FCFLAGS=-O2 -fPIC"
+    CONFIGURE_COMMAND sh "${EXTERNAL_SRC_DIR}/coinhsl/configure" "-q" "--prefix=${PROJECT_BINARY_DIR}/external/ma27/" "${HOST_FLAG}" "CC=${CMAKE_C_COMPILER}" "CFLAGS=-O2 -fPIC" "FCFLAGS=-O2 -fPIC"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/coinhsl"
     BUILD_COMMAND make clean all
     INSTALL_COMMAND make install
