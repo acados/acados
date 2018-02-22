@@ -171,7 +171,7 @@ typedef struct {
     bool sens_forw;
     bool sens_adj;
     bool sens_hess;
-    int newton_iter;
+    int  newton_max;
    // Newton_scheme *scheme;
 } gnsf_opts;
 
@@ -196,6 +196,9 @@ gnsf_dims *assign_gnsf_dims(void *raw_memory);
 
 int gnsf_in_calculate_size(gnsf_dims *dims);
 gnsf_in *assign_gnsf_in(gnsf_dims *dims, void *raw_memory);
+
+int gnsf_opts_calculate_size(gnsf_dims *dims);
+gnsf_opts *assign_gnsf_opts(gnsf_dims *dims, void *raw_memory);
 
 /*
 typedef struct {
