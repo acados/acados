@@ -60,10 +60,13 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
+            ocp_qp_partial_condensing_args *pcond_args = (ocp_qp_partial_condensing_args *) sparse_args->pcond_args;
             if (!strcmp(token, "max_iter"))
                 args->hpipm_args->iter_max = value;
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_args->stat_max = value;
+            else if (!strcmp(token, "N2"))
+                pcond_args->N2 = value;
             else return false;
         }
 		else if (!strcmp(token, "condensing_hpipm"))
@@ -83,14 +86,16 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
+            ocp_qp_partial_condensing_args *pcond_args = (ocp_qp_partial_condensing_args *) sparse_args->pcond_args;
             if (!strcmp(token, "max_iter"))
                 args->max_iter = value;
             else if (!strcmp(token, "warm_start"))
                 args->warm_start = value;
             else if (!strcmp(token, "out_iter"))
                 args->out_iter = value;
+            // NOTE(dimitris): HPMPC partial condesing has a bug, using hpipm partial condensing instead
             else if (!strcmp(token, "N2"))
-                args->N2 = value;
+                pcond_args->N2 = value;
             // partial tightening
             else if (!strcmp(token, "N"))
                 args->N = value;
