@@ -246,8 +246,8 @@ void gauss_nodes(int ns, double *nodes, void *work)
     }
     for (int i = 0; i < N1; i++)
         nodes[i] = (a*(1-y[i]) + 0.5*b*(1+y[i]));
-
-	return;
+        
+    return;
 
 }
 

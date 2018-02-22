@@ -48,8 +48,8 @@
 
 // c interface
 #ifdef ACADOS_WITH_C_INTERFACE
-#include <acados_c/legacy_create.h>
-#include <acados_c/external_function_generic.h>
+#include "acados_c/legacy_create.h"
+#include "acados_c/external_function_generic.h"
 #endif
 
 

@@ -110,20 +110,7 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
 %extend acados::ocp_qp {
 
     ocp_qp(uint N = 10, uint nx = 2, uint nu = 1, uint ng = 0, bool fix_x0 = true) {
-
-        auto qp = new acados::ocp_qp(N, nx, nu, nx, nu, ng);
-
-        std::vector<uint> idx_states(nx);
-        std::iota(std::begin(idx_states), std::end(idx_states), 0);
-        for (int i = 0; i <= N; ++i)
-            qp->bounds_indices("x", i, idx_states);
-
-        std::vector<uint> idx_controls(nu);
-        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
-        for (int i = 0; i < N; ++i)
-            qp->bounds_indices("u", i, idx_controls);
-
-        return qp;
+        return new acados::ocp_qp(N, nx, nu, nx, nu, ng);
     }
 
     LangObject *extract(std::string field) {
