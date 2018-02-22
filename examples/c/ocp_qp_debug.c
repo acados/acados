@@ -8,6 +8,11 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp.h"
 
+// TODOS!
+// STORE OPTIMAL SOLUTION FROM MATLAB (and DEFINE with SOLVER)
+// RUN CLOSED LOOP SIMULATION AND PRINT NITER, CPU_TIME, ERROR
+// NREP TO TAKE MINIMUM TIME
+
 void load_ptr(void *lib, char *data_string, void **ptr)
 {
     *ptr = dlsym(lib, data_string);
@@ -25,8 +30,7 @@ int main() {
     ************************************************/
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
-
+    plan.qp_solver = FULL_CONDENSING_QPOASES;
 
     /************************************************
     * load dynamic library
@@ -94,47 +98,31 @@ int main() {
     }
 
     /************************************************
-    * set up dynamics
+    * set up solver and input/output
     ************************************************/
 
-    int indx = 0;
+    void *args = ocp_qp_create_args(&plan, &dims);
 
+    ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
+
+    ocp_qp_out *qp_out = create_ocp_qp_out(&dims);
+
+    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, &dims, args);
+
+    /************************************************
+    * define pointers to be used in closed loop
+    ************************************************/
+
+    // dynamics
     double **hA = malloc(N*sizeof(double *));
     double **hB = malloc(N*sizeof(double *));
     double **hb = malloc(N*sizeof(double *));
 
     double *Av, *Bv, *b;
 
-    snprintf(str, sizeof(str), "Av_%d", indx);
-    load_ptr(lib, str, (void **)&Av);
+    int sum_A, sum_B, sum_b;
 
-    snprintf(str, sizeof(str), "Bv_%d", indx);
-    load_ptr(lib, str, (void **)&Bv);
-
-    snprintf(str, sizeof(str), "b_%d", indx);
-    load_ptr(lib, str, (void **)&b);
-
-    int sum_A = 0;
-    int sum_B = 0;
-    int sum_b = 0;
-
-    for (int ii = 0; ii < N; ii++)
-    {
-        // TODO(dimitris): test for varying dimensions
-        hA[ii] = &Av[sum_A];
-        sum_A += dims.nx[ii+1]*dims.nx[ii];
-
-        hB[ii] = &Bv[sum_B];
-        sum_B += dims.nx[ii+1]*dims.nu[ii];
-
-        hb[ii] = &b[sum_b];
-        sum_b += dims.nx[ii+1];
-    }
-
-    /************************************************
-    * set up objective
-    ************************************************/
-
+    // objective
     double **hQ = malloc((N+1)*sizeof(double *));
     double **hR = malloc((N+1)*sizeof(double *));
     double **hS = malloc((N+1)*sizeof(double *));
@@ -143,49 +131,9 @@ int main() {
 
     double *Qv, *Rv, *Sv, *q, *r;
 
-    snprintf(str, sizeof(str), "Qv_%d", indx);
-    load_ptr(lib, str, (void **)&Qv);
+    int sum_Q, sum_R, sum_S, sum_q, sum_r;
 
-    snprintf(str, sizeof(str), "Rv_%d", indx);
-    load_ptr(lib, str, (void **)&Rv);
-
-    snprintf(str, sizeof(str), "Sv_%d", indx);
-    load_ptr(lib, str, (void **)&Sv);
-
-    snprintf(str, sizeof(str), "q_%d", indx);
-    load_ptr(lib, str, (void **)&q);
-
-    snprintf(str, sizeof(str), "r_%d", indx);
-    load_ptr(lib, str, (void **)&r);
-
-    int sum_Q = 0;
-    int sum_R = 0;
-    int sum_S = 0;
-    int sum_q = 0;
-    int sum_r = 0;
-
-    for (int ii = 0; ii < N+1; ii++)
-    {
-        hQ[ii] = &Qv[sum_Q];
-        sum_Q += dims.nx[ii]*dims.nx[ii];
-
-        hR[ii] = &Rv[sum_R];
-        sum_R += dims.nu[ii]*dims.nu[ii];
-
-        hS[ii] = &Sv[sum_S];
-        sum_S += dims.nx[ii]*dims.nu[ii];
-
-        hq[ii] = &q[sum_q];
-        sum_q += dims.nx[ii];
-
-        hr[ii] = &r[sum_r];
-        sum_r += dims.nu[ii];
-    }
-
-    /************************************************
-    * set up constraints
-    ************************************************/
-
+    // constraints
     double **hlb = malloc((N+1)*sizeof(double *));
     double **hub = malloc((N+1)*sizeof(double *));
     double **hC = malloc((N+1)*sizeof(double *));
@@ -195,42 +143,131 @@ int main() {
 
     double *lb, *ub;
 
-    snprintf(str, sizeof(str), "lb_%d", indx);
-    load_ptr(lib, str, (void **)&lb);
-
-    snprintf(str, sizeof(str), "ub_%d", indx);
-    load_ptr(lib, str, (void **)&ub);
-
     int sum_nb = 0;
 
-    for (int ii = 0; ii < N+1; ii++)
+    // info
+    ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+
+    for (int indx = 0; indx < 5; indx++)
     {
-        hlb[ii] = &lb[sum_nb];
-        hub[ii] = &ub[sum_nb];
-        sum_nb += dims.nb[ii];
+
+        /************************************************
+        * set up dynamics
+        ************************************************/
+
+        snprintf(str, sizeof(str), "Av_%d", indx);
+        load_ptr(lib, str, (void **)&Av);
+
+        snprintf(str, sizeof(str), "Bv_%d", indx);
+        load_ptr(lib, str, (void **)&Bv);
+
+        snprintf(str, sizeof(str), "b_%d", indx);
+        load_ptr(lib, str, (void **)&b);
+
+        sum_A = 0;
+        sum_B = 0;
+        sum_b = 0;
+
+        for (int ii = 0; ii < N; ii++)
+        {
+            // TODO(dimitris): test for varying dimensions
+            hA[ii] = &Av[sum_A];
+            sum_A += dims.nx[ii+1]*dims.nx[ii];
+
+            hB[ii] = &Bv[sum_B];
+            sum_B += dims.nx[ii+1]*dims.nu[ii];
+
+            hb[ii] = &b[sum_b];
+            sum_b += dims.nx[ii+1];
+        }
+
+        /************************************************
+        * set up objective
+        ************************************************/
+
+        snprintf(str, sizeof(str), "Qv_%d", indx);
+        load_ptr(lib, str, (void **)&Qv);
+
+        snprintf(str, sizeof(str), "Rv_%d", indx);
+        load_ptr(lib, str, (void **)&Rv);
+
+        snprintf(str, sizeof(str), "Sv_%d", indx);
+        load_ptr(lib, str, (void **)&Sv);
+
+        snprintf(str, sizeof(str), "q_%d", indx);
+        load_ptr(lib, str, (void **)&q);
+
+        snprintf(str, sizeof(str), "r_%d", indx);
+        load_ptr(lib, str, (void **)&r);
+
+        sum_Q = 0;
+        sum_R = 0;
+        sum_S = 0;
+        sum_q = 0;
+        sum_r = 0;
+
+        for (int ii = 0; ii < N+1; ii++)
+        {
+            hQ[ii] = &Qv[sum_Q];
+            sum_Q += dims.nx[ii]*dims.nx[ii];
+
+            hR[ii] = &Rv[sum_R];
+            sum_R += dims.nu[ii]*dims.nu[ii];
+
+            hS[ii] = &Sv[sum_S];
+            sum_S += dims.nx[ii]*dims.nu[ii];
+
+            hq[ii] = &q[sum_q];
+            sum_q += dims.nx[ii];
+
+            hr[ii] = &r[sum_r];
+            sum_r += dims.nu[ii];
+        }
+
+        /************************************************
+        * set up constraints
+        ************************************************/
+
+        snprintf(str, sizeof(str), "lb_%d", indx);
+        load_ptr(lib, str, (void **)&lb);
+
+        snprintf(str, sizeof(str), "ub_%d", indx);
+        load_ptr(lib, str, (void **)&ub);
+
+        sum_nb = 0;
+
+        for (int ii = 0; ii < N+1; ii++)
+        {
+            hlb[ii] = &lb[sum_nb];
+            hub[ii] = &ub[sum_nb];
+            sum_nb += dims.nb[ii];
+        }
+
+        /************************************************
+        * convert data and solve qp
+        ************************************************/
+
+        d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
+
+        // print_ocp_qp_in(qp_in);
+
+        int acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+
+        // print_ocp_qp_out(qp_out);
+
+        if (acados_return != ACADOS_SUCCESS)
+        {
+            printf("QP SOLVER FAILED WITH FLAG %d\n", acados_return);
+            return -1;
+        }
+
+        printf("\n--> problem %d solved in %d iterations\n\n", indx, info->num_iter);
+
     }
 
-    ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
-
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
-
-    // print_ocp_qp_in(qp_in);
-
-    void *args = ocp_qp_create_args(&plan, &dims);
-
-    ocp_qp_out *qp_out = create_ocp_qp_out(&dims);
-
-    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, &dims, args);
-
-    int acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
-
-    print_ocp_qp_out(qp_out);
-
-    if (acados_return != ACADOS_SUCCESS)
-    {
-        printf("QP SOLVER FAILED WITH FLAG %d\n", acados_return);
-        return -1;
-    }
+    /************************************************
+    * free memory
+    ************************************************/
 
     free(hA);
     free(hB);
@@ -249,6 +286,10 @@ int main() {
     free(hD);
     free(hlg);
     free(hug);
+
+    free(qp_in);
+    free(qp_out);
+    free(qp_solver);
 
     return 0;
 }
