@@ -21,11 +21,23 @@ x0 = array([1, 1])
 qp.set('lbx', 0, x0)
 qp.set('ubx', 0, x0)
 
+qp.initialize_solver("sparse_hpipm")
+
+output = qp.solve()
+print(output.states())
+
+
+qp.set("lbx", 3, array([1.0, 1.0]))
+qp.set("ubx", 3, array([2.0, +inf]))
+
+output = qp.solve()
+print(output.states())
+
 # solve QP and print solution
-for solver_name in ("sparse_hpipm", "condensing_hpipm", "hpmpc", "qpdunes", "qore", "qpoases"):
-    print(solver_name + ": ")
-    qp.initialize_solver(solver_name)
-    output = qp.solve()
-    print(output.states())
-    print(output.info())
-    print()
+# for solver_name in ("sparse_hpipm", "condensing_hpipm", "hpmpc", "qpdunes", "qore", "qpoases"):
+#     print(solver_name + ": ")
+#     qp.initialize_solver(solver_name)
+#     output = qp.solve()
+#     print(output.states())
+#     print(output.info())
+#     print()

@@ -46,7 +46,9 @@ public:
 
 private:
 
-    std::vector<uint> squeezed_bounds_indices(const std::string bound, uint stage);
+    vector<uint> idxb(vector<double> lower_bound, vector<double> upper_bound);
+
+    void fill_in_bounds();
 
     void squeeze_dimensions();
 
@@ -54,7 +56,7 @@ private:
 
     void check_range(std::string field, uint stage);
     
-    void check_nb_elements(std::string, uint stage, uint nb_elems);
+    void check_num_elements(std::string, uint stage, uint nb_elems);
 
     void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);
 
@@ -63,6 +65,8 @@ private:
     std::vector<uint> nbx();
     std::vector<uint> nbu();
     std::vector<uint> ng();
+
+    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
 
     std::unique_ptr<ocp_qp_in> qp;
 
