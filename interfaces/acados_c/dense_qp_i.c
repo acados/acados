@@ -144,7 +144,7 @@ void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *
 {
     dense_qp_solver_t solver_name = plan->qp_solver;
 
-    void *args;
+    void *args = NULL;
 
     switch (solver_name)
     {
