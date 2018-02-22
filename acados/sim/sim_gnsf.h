@@ -53,30 +53,13 @@ typedef struct {
     double *u_0;
 } gnsf_res_in;
 
-// typedef struct {
-//     double *xf; //TODO
-//     double *S_forw;  // S_forw[NX*(NX+NU)]
-//     double *S_adj;   //
-
-//     sim_info *info;
-// } gnsf_out;
 
 typedef struct {
     double *x;
     double *u;
-
     double *S_forw;  // forward seed
     // double *S_adj;   // backward seed
 
-    // casadi_functions
-    casadi_function_t jac_res_ffx1u;
-    void (*jac_res_ffx1u_wrapped)(const int, const int, const double *, double *, casadi_function_t);
-
-    casadi_function_t res_inc_Jff;
-    void (*res_inc_Jff_wrapped)(const int, const int, const double *, double *, casadi_function_t);
-    
-    casadi_function_t f_LO_inc_J_x1k1uz;
-    void (*f_LO_inc_J_x1k1uz_wrapped)(const int, const int, const double *, double *, casadi_function_t);
 } gnsf_in;
 
 typedef struct {
@@ -96,6 +79,12 @@ typedef struct {
     double* b_dt;
     double* c;
     double dt;
+
+    // external functions
+    external_function_generic *res_inc_Jff;
+    external_function_generic *jac_res_ffx1u;
+    external_function_generic *f_LO_inc_J_x1k1uz;
+
 
 } gnsf_fixed;
 

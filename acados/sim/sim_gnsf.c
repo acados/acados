@@ -613,7 +613,13 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
             }
             // evaluate residual and neccessary jacobians & pack into blasfeo mat/vec         
             acados_tic(&casadi_timer);
-            res_inc_Jff_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->res_inc_Jff);
+            fix->res_inc_Jff->evaluate(fix->res_inc_Jff, res_in, res_out);
+            // printf("res_out_newstyle = \n");
+            // print_gnsf_res_out( dims, res_out );
+            // res_inc_Jff_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->res_inc_Jff);
+            // printf("res_out_newstyle = \n");
+            // print_gnsf_res_out( dims, res_out );
+
             out->info->ADtime += acados_toc(&casadi_timer);
 
             blasfeo_pack_dvec(nff, &res_out[0], &res_val, 0);
@@ -649,7 +655,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
             // printf("f_LO_in = \n");
             // d_print_mat(f_LO_in_size, 1, &f_LO_in[0], f_LO_in_size);
             acados_tic(&casadi_timer);
-            f_LO_inc_J_x1k1uz_wrapped(nx1, nz, f_LO_in, f_LO_out, in->f_LO_inc_J_x1k1uz);
+            fix->f_LO_inc_J_x1k1uz->evaluate(fix->f_LO_inc_J_x1k1uz, f_LO_in, f_LO_out);
+            // f_LO_inc_J_x1k1uz_wrapped(nx1, nz, f_LO_in, f_LO_out, in->f_LO_inc_J_x1k1uz);
             out->info->ADtime += acados_toc(&casadi_timer);
             // printf("f_LO_out= \n");
             // d_print_mat(f_LO_out_size,1, &f_LO_out[0],f_LO_out_size);
@@ -680,7 +687,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
         }
         if (opts->sens_forw) {
             acados_tic(&casadi_timer);
-            jac_res_ffx1u_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->jac_res_ffx1u);
+            fix->jac_res_ffx1u->evaluate(fix->jac_res_ffx1u, res_in, res_out);
+            // jac_res_ffx1u_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->jac_res_ffx1u);
             out->info->ADtime += acados_toc(&casadi_timer);
             blasfeo_pack_dmat(nff, nff, &res_out[0], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
             blasfeo_pack_dmat(nff, nx1+ nu, &res_out[nff*nff], nff, &J_r_x1u, 0, 0); // pack residual result into blasfeo struct
@@ -771,7 +779,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
                 blasfeo_dgead(nx2, nu, fix->b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
             }
             acados_tic(&casadi_timer);
-            jac_res_ffx1u_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->jac_res_ffx1u);
+            fix->jac_res_ffx1u->evaluate(fix->jac_res_ffx1u, res_in, res_out);
             out->info->ADtime += acados_toc(&casadi_timer);
             blasfeo_pack_dmat(nff, nff, &res_out[0], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
             blasfeo_pack_dmat(nff, nx1+ nu, &res_out[nff*nff], nff, &J_r_x1u, 0, 0); // pack residual result into blasfeo struct

@@ -40,7 +40,7 @@ static const int CASADI_PREFIX(s1)[5] = {1, 1, 0, 1, 0};
 #define s1 CASADI_PREFIX(s1)
 static const int CASADI_PREFIX(s2)[6] = {2, 1, 0, 2, 0, 1};
 #define s2 CASADI_PREFIX(s2)
-static const int CASADI_PREFIX(s3)[43] = {1, 20, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const int CASADI_PREFIX(s3)[26] = {1, 20, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 0, 0, 0};
 #define s3 CASADI_PREFIX(s3)
 /* f_LO_inc_J_x1k1uz_fun */
 int f_LO_inc_J_x1k1uz_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
@@ -50,28 +50,10 @@ int f_LO_inc_J_x1k1uz_fun(const real_t** arg, real_t** res, int* iw, real_t* w, 
   real_t a3=sq(a2);
   a1=(a1+a3);
   if (res[0]!=0) res[0][0]=a1;
-  a1=0.;
-  if (res[0]!=0) res[0][1]=a1;
-  if (res[0]!=0) res[0][2]=a1;
   a2=(a2+a2);
-  if (res[0]!=0) res[0][3]=a2;
-  if (res[0]!=0) res[0][4]=a1;
-  if (res[0]!=0) res[0][5]=a1;
-  if (res[0]!=0) res[0][6]=a1;
-  if (res[0]!=0) res[0][7]=a1;
-  if (res[0]!=0) res[0][8]=a1;
-  if (res[0]!=0) res[0][9]=a1;
-  if (res[0]!=0) res[0][10]=a1;
-  if (res[0]!=0) res[0][11]=a1;
-  if (res[0]!=0) res[0][12]=a1;
-  if (res[0]!=0) res[0][13]=a1;
-  if (res[0]!=0) res[0][14]=a1;
-  if (res[0]!=0) res[0][15]=a1;
-  if (res[0]!=0) res[0][16]=a1;
-  if (res[0]!=0) res[0][17]=a1;
+  if (res[0]!=0) res[0][1]=a2;
   a0=(a0+a0);
-  if (res[0]!=0) res[0][18]=a0;
-  if (res[0]!=0) res[0][19]=a1;
+  if (res[0]!=0) res[0][2]=a0;
   return 0;
 }
 
