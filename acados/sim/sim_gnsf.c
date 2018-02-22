@@ -83,6 +83,21 @@ void print_gnsf_res_out( gnsf_dims *dims, double *res_out )
     }
 }
 
+int gnsf_dims_calculate_size()
+{
+    int size = sizeof(gnsf_dims);
+    return size;
+}
+
+gnsf_dims *assign_gnsf_dims(void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+    gnsf_dims *dims = (gnsf_dims *) c_ptr;
+    c_ptr += sizeof(gnsf_dims);
+    assert((char *) raw_memory + gnsf_dims_calculate_size() == c_ptr);
+    return dims;
+}
+
 void gnsf_get_dims( gnsf_dims *dims, casadi_function_t get_ints_fun)
 {
     double *ints_out;
@@ -97,6 +112,46 @@ void gnsf_get_dims( gnsf_dims *dims, casadi_function_t get_ints_fun)
     dims->num_stages = (int) ints_out[5];
     dims->num_steps = (int) ints_out[6];
     dims->n_out = (int) ints_out[7];
+}
+
+int gnsf_in_calculate_size(gnsf_dims *dims)
+{
+    int size = sizeof(gnsf_in);
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    size += nx * sizeof(double);  // x
+    size += nu * sizeof(double);  // u
+    size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
+    // size += (nx + nu) * sizeof(double);  // S_adj
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 16;
+    return size;
+}
+
+
+gnsf_in *assign_gnsf_in(gnsf_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+    printf("address c_ptr : %p\n",c_ptr);
+    gnsf_in *in = (gnsf_in *) c_ptr;
+    c_ptr += sizeof(gnsf_in);
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    align_char_to(8, &c_ptr);
+
+    assign_double(nx, &in->x, &c_ptr);
+    printf("address in_x : %p\n",in->x);
+    assign_double(nu, &in->u, &c_ptr);
+    assign_double(nx * (nx+nu), &in->S_forw, &c_ptr);
+    assert((char*)raw_memory + gnsf_in_calculate_size(dims) >= c_ptr);
+
+    printf("address c_ptr : %p\n",c_ptr);
+    return in;
 }
 
 
@@ -125,9 +180,13 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
     exported_doubles += nZ * (nff + nx1 + nu); //ZZ* matrices
     exported_doubles += nK2 * (nK2 + nx2) + nx2 * nx2; //LO matrices
 
-    double *export_out = (double*) malloc(exported_doubles*sizeof(double));
-    export_from_ML_wrapped(export_out, export_out, But_KK_ZZ_LO_fun);
-    double *read_mem = export_out;
+    // printf("exported_%d \n",exported_doubles);
+    double *export_in  = (double*) malloc(1*sizeof(double));
+    double *exp_out = (double*) malloc(exported_doubles*sizeof(double));
+    export_from_ML_wrapped(export_in, exp_out, But_KK_ZZ_LO_fun);
+
+    // printf("\n adress \n%p",(void*)&exp_out);
+    double *read_mem = exp_out;
 
     // IMPORT BUTCHER
     for (int ii = 0; ii < num_stages*num_stages; ii++) {
@@ -169,6 +228,9 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
     blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &fix->dK2_dx2, 0, 0);
     read_mem += nK2 * nx2;
 
+    free(exp_out);
+    free(export_in);
+
     // d_print_e_mat(num_stages, num_stages, fix->A_dt, num_stages);
     // d_print_e_mat(num_stages, 1, fix->b_dt, num_stages);
     // d_print_e_mat(num_stages, 1, fix->c, num_stages);
@@ -193,9 +255,6 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
     // blasfeo_print_dmat(nK2, nK2, &fix->M2inv, 0,0);
     // printf("dK2_dx2 \n");
     // blasfeo_print_dmat(nK2, dims->nx2 , &fix->dK2_dx2, 0,0);
-
-    printf("import_time = %f \n", acados_toc(&atimer));
-    free(export_out);
 }
 
 int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts)
@@ -214,11 +273,12 @@ int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts)
     int nZ  = num_stages * nz;
     int nff = n_out * num_stages;
 
-    int size = sizeof(gnsf_fixed);
-    size += num_stages * (num_stages + 2) * sizeof(double); // A_dt, b_dt, c_butcher;
-    size += sizeof(double); // dt
+    int size = 8;
+    size += sizeof(gnsf_fixed);
 
-	size += 9*sizeof(struct blasfeo_dmat); // 3 * KK*, 3* ZZ*, 3* LO_mat
+    size += num_stages * (num_stages + 2) * sizeof(double); // A_dt, b_dt, c_butcher;
+
+	size += 9*sizeof(struct blasfeo_dmat); // 3 * KK*, 3* ZZ*, 3* LO_mat // TODO: maybe not needed
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
@@ -239,7 +299,7 @@ int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts)
     return size;
 }
 
-gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory)
+gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory, int memsize)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -260,6 +320,7 @@ gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory)
 
 	// initial align
 	align_char_to(8, &c_ptr);
+    printf("\n adress of cptr fixed %p\n",(void*)c_ptr);
 
 	// struct
     gnsf_fixed *fix = (gnsf_fixed *) c_ptr;
@@ -275,6 +336,7 @@ gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory)
 
     // blasfeo_dmat_mem
     assign_blasfeo_dmat_mem(nK1, nff, &fix->KKf, &c_ptr);
+    printf("\n adress of KKf %p\n",(void*)&fix->KKf);
     assign_blasfeo_dmat_mem(nK1, nx1, &fix->KKx, &c_ptr);
     assign_blasfeo_dmat_mem(nK1, nu,  &fix->KKu, &c_ptr);
 
@@ -285,15 +347,9 @@ gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory)
     assign_blasfeo_dmat_mem(nx2, nx2, &fix->ALO, &c_ptr);
     assign_blasfeo_dmat_mem(nK2, nK2, &fix->M2inv, &c_ptr);
     assign_blasfeo_dmat_mem(nK2, nx2, &fix->dK2_dx2, &c_ptr);
-	// KKf // ONLY NEEDED FOR ARRAYS of dmat..
-	// assign_blasfeo_dmat_structs(1, &fix->KKf, &c_ptr);
-
-	// nls_jac
-	// cost->nls_jac = (external_function_generic **) c_ptr;
-	// c_ptr += (N+1)*sizeof(external_function_generic *);
 
 	// // assert
-    // assert((char *) raw_memory + cost->memsize >= c_ptr);
+    assert((char *) raw_memory + memsize >= c_ptr);
 	return fix;
 }
 
@@ -314,7 +370,9 @@ int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts)
     int nZ  = num_stages * nz;
 
     int size = sizeof(gnsf_workspace);
-    printf("workspace size = %d \n", size);
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
 
     int res_in_size = nff + nx1 + nu;
     int res_out_size = nff * (nff + nx1 + nu); // size(out_res_inc_Jff) = nff* (1+nff), size(out_jac_res_ffx1u) = nff(nff+nx1+nu)

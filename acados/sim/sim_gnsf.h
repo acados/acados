@@ -63,19 +63,13 @@ typedef struct {
 // } gnsf_out;
 
 typedef struct {
-    double *A_dt;
-    double *b_dt;
-    double *c_butcher;
-
     double *x;
     double *u;
 
-    double *KKf; //etc...
-
     double *S_forw;  // forward seed
-    double *S_adj;   // backward seed
+    // double *S_adj;   // backward seed
 
-        // casadi_functions
+    // casadi_functions
     casadi_function_t jac_res_ffx1u;
     void (*jac_res_ffx1u_wrapped)(const int, const int, const double *, double *, casadi_function_t);
 
@@ -84,7 +78,6 @@ typedef struct {
     
     casadi_function_t f_LO_inc_J_x1k1uz;
     void (*f_LO_inc_J_x1k1uz_wrapped)(const int, const int, const double *, double *, casadi_function_t);
-
 } gnsf_in;
 
 typedef struct {
@@ -190,13 +183,20 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
 
 void *gnsf_cast_workspace(gnsf_dims* dims, void *raw_memory);
 int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts);
-int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts);
-gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory);
 
+int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts);
+void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
+gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory, int memsize);
 
 void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, sim_out* out, gnsf_opts* opts, void *work_);
 
-void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
+
+int gnsf_dims_calculate_size();
+gnsf_dims *assign_gnsf_dims(void *raw_memory);
+
+int gnsf_in_calculate_size(gnsf_dims *dims);
+gnsf_in *assign_gnsf_in(gnsf_dims *dims, void *raw_memory);
+
 /*
 typedef struct {
     int (*fun)(sim_in *in, sim_out *out, void *args, void *mem, void *work);
