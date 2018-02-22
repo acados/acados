@@ -36,13 +36,13 @@ int main() {
     // set up gnsf_dims
     int dims_size = gnsf_dims_calculate_size();
     void *dims_memory = malloc(dims_size);
-    gnsf_dims *dims = assign_gnsf_dims(dims_memory);
+    gnsf_dims *dims = gnsf_dims_assign(dims_memory);
     gnsf_get_dims(dims, get_ints_fun);
 
     // set up sim_dims
     int sim_dims_size = sim_dims_calculate_size();
     void *sim_dims_mem = malloc(sim_dims_size);
-    sim_dims *simdim = assign_sim_dims(sim_dims_mem);
+    sim_dims *simdim = sim_dims_assign(sim_dims_mem);
     simdim->nx = 9;
     simdim->nu = 2;
     simdim->num_stages = 4;
@@ -50,7 +50,7 @@ int main() {
     // set up gnsf_in
     int gnsf_in_size = gnsf_in_calculate_size(dims);
     void *gnsf_in_mem = malloc(gnsf_in_size);
-    gnsf_in *in = assign_gnsf_in(dims, gnsf_in_mem);
+    gnsf_in *in = gnsf_in_assign(dims, gnsf_in_mem);
     in->res_inc_Jff = res_inc_Jff_fun;
     in->f_LO_inc_J_x1k1uz = f_LO_inc_J_x1k1uz_fun;
     in->jac_res_ffx1u = jac_res_ffx1u_fun;    
@@ -68,7 +68,7 @@ int main() {
     // set up gnsf_opts
     int gnsf_opts_size = gnsf_opts_calculate_size(dims);
     void *gnsf_opts_mem = malloc(gnsf_opts_size);
-    gnsf_opts *opts = assign_gnsf_opts(dims, gnsf_opts_mem);
+    gnsf_opts *opts = gnsf_opts_assign(dims, gnsf_opts_mem);
     opts->sens_forw = 1;
     opts->sens_adj = 1;
     opts->newton_max = 10;
@@ -82,7 +82,7 @@ int main() {
     // set up sm_out
     int sim_out_size = sim_out_calculate_size(simdim);
     void* sim_out_ptr = (void*) malloc(sim_out_size);
-    sim_out* out = assign_sim_out(simdim, sim_out_ptr);
+    sim_out* out = sim_out_assign(simdim, sim_out_ptr);
 
     // setup workspace
     int gnsf_workspace_size = gnsf_calculate_workspace_size(dims, opts);

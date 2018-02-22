@@ -22,7 +22,6 @@
 
 #include <stdbool.h>
 
-#include "acados/sim/sim_collocation.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
@@ -192,13 +191,13 @@ void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, sim_out* out,
 
 
 int gnsf_dims_calculate_size();
-gnsf_dims *assign_gnsf_dims(void *raw_memory);
+gnsf_dims *gnsf_dims_assign(void *raw_memory);
 
 int gnsf_in_calculate_size(gnsf_dims *dims);
-gnsf_in *assign_gnsf_in(gnsf_dims *dims, void *raw_memory);
+gnsf_in *gnsf_in_assign(gnsf_dims *dims, void *raw_memory);
 
 int gnsf_opts_calculate_size(gnsf_dims *dims);
-gnsf_opts *assign_gnsf_opts(gnsf_dims *dims, void *raw_memory);
+gnsf_opts *gnsf_opts_assign(gnsf_dims *dims, void *raw_memory);
 
 /*
 typedef struct {

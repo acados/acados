@@ -89,7 +89,7 @@ int gnsf_dims_calculate_size()
     return size;
 }
 
-gnsf_dims *assign_gnsf_dims(void *raw_memory)
+gnsf_dims *gnsf_dims_assign(void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
     gnsf_dims *dims = (gnsf_dims *) c_ptr;
@@ -132,7 +132,7 @@ int gnsf_in_calculate_size(gnsf_dims *dims)
 }
 
 
-gnsf_in *assign_gnsf_in(gnsf_dims *dims, void *raw_memory)
+gnsf_in *gnsf_in_assign(gnsf_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
     // printf("address c_ptr : %p\n",c_ptr);
@@ -163,7 +163,7 @@ int gnsf_opts_calculate_size(gnsf_dims *dims)
 }
 
 
-gnsf_opts *assign_gnsf_opts(gnsf_dims *dims, void *raw_memory)
+gnsf_opts *gnsf_opts_assign(gnsf_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
     gnsf_opts *in = (gnsf_opts *) c_ptr;

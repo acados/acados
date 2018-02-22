@@ -61,9 +61,9 @@ file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
 
-add_executable(sim_erk_wt sim_erk_wt.c)
-target_link_libraries(sim_erk_wt acados)
-add_test(sim_erk_wt sim_erk_wt)
+# add_executable(sim_erk_wt sim_erk_wt.c)
+# target_link_libraries(sim_erk_wt acados)
+# add_test(sim_erk_wt sim_erk_wt)
 
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

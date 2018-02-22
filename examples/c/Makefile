@@ -35,7 +35,7 @@ EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
 EXAMPLES += mass_spring_offline_fcond_qpoases_split
 EXAMPLES += nonlinear_chain_ocp_nlp
-EXAMPLES += sim_erk_wt
+# EXAMPLES += sim_erk_wt
 EXAMPLES += sim_gnsf_crane
 # EXAMPLES += blasfeo_bug_minimal_example
 
@@ -76,19 +76,19 @@ sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
 	@echo
 	
 
-WT_OBJS =
-WT_OBJS += simple_wt_model/jac_model.o
-WT_OBJS += simple_wt_model/ode_model.o
-WT_OBJS += simple_wt_model/vde_adj_model.o
-WT_OBJS += simple_wt_model/vde_forw_model.o
-WT_OBJS += simple_wt_model/vde_hess_model.o
-WT_OBJS += sim_erk_wt.o
+# WT_OBJS =
+# WT_OBJS += simple_wt_model/jac_model.o
+# WT_OBJS += simple_wt_model/ode_model.o
+# WT_OBJS += simple_wt_model/vde_adj_model.o
+# WT_OBJS += simple_wt_model/vde_forw_model.o
+# WT_OBJS += simple_wt_model/vde_hess_model.o
+# WT_OBJS += sim_erk_wt.o
 
-sim_erk_wt: $(WT_OBJS)
-	$(CCC) -o sim_erk_wt.out  $(WT_OBJS) $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example sim_erk_wt build complete."
-	@echo
+# sim_erk_wt: $(WT_OBJS)
+# 	$(CCC) -o sim_erk_wt.out  $(WT_OBJS) $(LDFLAGS) $(LIBS)
+# 	@echo
+# 	@echo " Example sim_erk_wt build complete."
+# 	@echo
 
 
 CRANE_GNSF_OBJS =
