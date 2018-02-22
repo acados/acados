@@ -173,7 +173,6 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_full_condensing_solver_args
 {
     dense_qp_dims *ddims = mem->qpd_in->dim;
 
-
     char *c_ptr = (char *) work;
 
     c_ptr += sizeof(ocp_qp_full_condensing_solver_workspace);
@@ -183,6 +182,8 @@ static void cast_workspace(ocp_qp_dims *dims, ocp_qp_full_condensing_solver_args
 
     work->solver_workspace = c_ptr;
     c_ptr += args->solver->workspace_calculate_size(ddims, args->solver_args);
+
+    assert((char *) work + ocp_qp_full_condensing_solver_calculate_workspace_size(dims, args) == c_ptr);
 }
 
 
