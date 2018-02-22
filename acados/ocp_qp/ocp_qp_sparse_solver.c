@@ -94,31 +94,32 @@ int ocp_qp_sparse_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims,
 	ocp_qp_xcond_solver_config *config = config_;
 	ocp_qp_solver_config *qp_solver = config->qp_solver;
 
-    ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *)args_;
+    ocp_qp_sparse_solver_opts *opts = (ocp_qp_sparse_solver_opts *)args_;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_memory);
 
     // set up dimesions of partially condensed qp
     ocp_qp_dims *pcond_dims;
-    if (args->pcond_opts->N2 < dims->N)
+    if (opts->pcond_opts->N2 < dims->N)
     {
-        pcond_dims = args->pcond_opts->pcond_dims;
+        pcond_dims = opts->pcond_opts->pcond_dims;
     }
 	else
     {
         pcond_dims = dims;
     }
 
-    if (args->pcond_opts->N2 < dims->N) {
-        size += ocp_qp_partial_condensing_calculate_memory_size(dims, args->pcond_opts);
+    if (opts->pcond_opts->N2 < dims->N)
+	{
+        size += ocp_qp_partial_condensing_calculate_memory_size(dims, opts->pcond_opts);
     }
 
-    size += qp_solver->memory_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
+    size += qp_solver->memory_calculate_size(qp_solver, pcond_dims, opts->qp_solver_opts);
 
-    if (args->pcond_opts->N2 < dims->N) {
-        size += ocp_qp_in_calculate_size(NULL, pcond_dims);
-        size += ocp_qp_out_calculate_size(NULL, pcond_dims);
+    if (opts->pcond_opts->N2 < dims->N) {
+        size += ocp_qp_in_calculate_size(qp_solver, pcond_dims);
+        size += ocp_qp_out_calculate_size(qp_solver, pcond_dims);
     }
 
     return size;
@@ -169,8 +170,8 @@ void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void 
     c_ptr += qp_solver->memory_calculate_size(qp_solver, pcond_dims, args->qp_solver_opts);
 
     if (args->pcond_opts->N2 < dims->N) {
-        mem->pcond_qp_in = ocp_qp_in_assign(NULL, pcond_dims, c_ptr);
-        c_ptr += ocp_qp_in_calculate_size(NULL, pcond_dims);
+        mem->pcond_qp_in = ocp_qp_in_assign(qp_solver, pcond_dims, c_ptr);
+        c_ptr += ocp_qp_in_calculate_size(qp_solver, pcond_dims);
     }
 	else
     {
@@ -178,8 +179,8 @@ void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void 
     }
 
     if (args->pcond_opts->N2 < dims->N) {
-        mem->pcond_qp_out = ocp_qp_out_assign(NULL, pcond_dims, c_ptr);
-        c_ptr += ocp_qp_out_calculate_size(NULL, pcond_dims);
+        mem->pcond_qp_out = ocp_qp_out_assign(qp_solver, pcond_dims, c_ptr);
+        c_ptr += ocp_qp_out_calculate_size(qp_solver, pcond_dims);
     }
 	else
 	{
@@ -314,6 +315,7 @@ void ocp_qp_sparse_solver_config_initialize_default(void *config_)
 	config->memory_assign = &ocp_qp_sparse_solver_memory_assign;
 	config->workspace_calculate_size = &ocp_qp_sparse_solver_workspace_calculate_size;
 	config->evaluate = &ocp_qp_sparse_solver;
+//	configi->N2 = dims->N; // default: no partial condensing // TODO uncomment when dims are part of config !!!
 
 	return;
 

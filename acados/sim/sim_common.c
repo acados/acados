@@ -29,6 +29,41 @@
 
 
 
+/************************************************
+* config
+************************************************/
+
+int sim_solver_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(sim_solver_config);
+
+	return size;
+
+}
+
+
+
+sim_solver_config *sim_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	sim_solver_config *config = (sim_solver_config *) c_ptr;
+	c_ptr += sizeof(sim_solver_config);
+
+	return config;
+
+}
+
+
+
+/************************************************
+* dims
+************************************************/
+
 int sim_dims_calculate_size()
 {
     int size = sizeof(sim_dims);
@@ -51,6 +86,10 @@ sim_dims *sim_dims_assign(void *raw_memory)
 }
 
 
+
+/************************************************
+* in
+************************************************/
 
 int sim_in_calculate_size(void *config_, sim_dims *dims)
 {
@@ -108,6 +147,10 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 
 
+
+/************************************************
+* out
+************************************************/
 
 int sim_out_calculate_size(void *config_, sim_dims *dims)
 {

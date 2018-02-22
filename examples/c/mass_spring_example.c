@@ -158,7 +158,7 @@ int main() {
 	int qp_out_size = ocp_qp_out_calculate_size(qp_dims);
 	void *qp_out_mem = malloc(qp_out_size);
 	ocp_qp_out *qp_out = assign_ocp_qp_out(qp_dims, qp_out_mem);
-#endif
+#endif // ACADOS_WITH_C_INTERFACE 
 
 
 
@@ -320,8 +320,9 @@ int main() {
         {
             int N2 = N2_values[jj];
 
-			ocp_qp_solver_config solver_config;
-			ocp_qp_xcond_solver_config xcond_solver_config;
+			int config_size = ocp_qp_xcond_solver_config_calculate_size();
+			void *config_mem = malloc(config_size);
+			ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(config_mem);
 
 			int solver_opts_size;
 			void *solver_opts_mem;
@@ -341,17 +342,16 @@ int main() {
                     printf("\nHPIPM\n\n");
 
 					// config
-					ocp_qp_hpipm_config_initialize_default(&solver_config);
-					ocp_qp_sparse_solver_config_initialize_default(&xcond_solver_config);
-					xcond_solver_config.qp_solver = &solver_config;
-					xcond_solver_config.N2 = N; // full horizon
+					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
+					solver_config->N2 = N; // full horizon
 
 					// opts
-					solver_opts_size = xcond_solver_config.opts_calculate_size(&xcond_solver_config, qp_dims);
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
 //					printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = xcond_solver_config.opts_assign(&xcond_solver_config, qp_dims, solver_opts_mem);
-					xcond_solver_config.opts_initialize_default(&xcond_solver_config, solver_opts);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
 					sparse_solver_opts = solver_opts;
 					hpipm_opts = sparse_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
@@ -362,17 +362,16 @@ int main() {
                     printf("\nPARTIAL_CONDENSING_HPIPM, N2 = %d\n\n", N2);
 
 					// config
-					ocp_qp_hpipm_config_initialize_default(&solver_config);
-					ocp_qp_sparse_solver_config_initialize_default(&xcond_solver_config);
-					xcond_solver_config.qp_solver = &solver_config;
-					xcond_solver_config.N2 = N2;
+					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
+					solver_config->N2 = N2;
 
 					// opts
-					solver_opts_size = xcond_solver_config.opts_calculate_size(&xcond_solver_config, qp_dims);
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
 //					printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = xcond_solver_config.opts_assign(&xcond_solver_config, qp_dims, solver_opts_mem);
-					xcond_solver_config.opts_initialize_default(&xcond_solver_config, solver_opts);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
 					sparse_solver_opts = solver_opts;
 					hpipm_opts = sparse_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
@@ -383,16 +382,15 @@ int main() {
                     printf("\nFULL_CONDENSING_HPIPM\n\n");
 
 					// config
-					dense_qp_hpipm_config_initialize_default(&solver_config);
-					ocp_qp_full_condensing_solver_config_initialize_default(&xcond_solver_config);
-					xcond_solver_config.qp_solver = &solver_config;
+					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+					dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 
 					// opts
-					solver_opts_size = xcond_solver_config.opts_calculate_size(&xcond_solver_config, qp_dims);
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
 //					printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = xcond_solver_config.opts_assign(&xcond_solver_config, qp_dims, solver_opts_mem);
-					xcond_solver_config.opts_initialize_default(&xcond_solver_config, solver_opts);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
 					sparse_solver_opts = solver_opts;
 					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
 					dense_hpipm_opts->hpipm_opts->iter_max = 30;
@@ -403,16 +401,15 @@ int main() {
                     printf("\nFULL_CONDENSING_QPOASES\n\n");
 
 					// config
-					dense_qp_qpoases_config_initialize_default(&solver_config);
-					ocp_qp_full_condensing_solver_config_initialize_default(&xcond_solver_config);
-					xcond_solver_config.qp_solver = &solver_config;
+					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+					dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
 
 					// opts
-					solver_opts_size = xcond_solver_config.opts_calculate_size(&xcond_solver_config, qp_dims);
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
 //					printf("\nopts size = %d\n", solver_opts_size);
 					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = xcond_solver_config.opts_assign(&xcond_solver_config, qp_dims, solver_opts_mem);
-					xcond_solver_config.opts_initialize_default(&xcond_solver_config, solver_opts);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
 //					sparse_solver_opts = solver_opts;
 //					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
 //					dense_hpipm_opts->hpipm_opts->iter_max = 30;
@@ -428,31 +425,31 @@ int main() {
 			 * ocp qp in
 			 ************************************************/
 
-			ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(&xcond_solver_config, N, nx_, nu_, nb_, ng_, ngN);
+			ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(solver_config, N, nx_, nu_, nb_, ng_, ngN);
 
 			/************************************************
 			 * ocp qp out
 			 ************************************************/
 
-			int qp_out_size = ocp_qp_out_calculate_size(&xcond_solver_config, qp_dims);
+			int qp_out_size = ocp_qp_out_calculate_size(solver_config, qp_dims);
 			void *qp_out_mem = malloc(qp_out_size);
-			ocp_qp_out *qp_out = ocp_qp_out_assign(&xcond_solver_config, qp_dims, qp_out_mem);
+			ocp_qp_out *qp_out = ocp_qp_out_assign(solver_config, qp_dims, qp_out_mem);
 
 
             /************************************************
             * memory
             ************************************************/
 
-			solver_mem_size = xcond_solver_config.memory_calculate_size(&xcond_solver_config, qp_dims, solver_opts);
+			solver_mem_size = solver_config->memory_calculate_size(solver_config, qp_dims, solver_opts);
 //			printf("\nmem size = %d\n", solver_mem_size);
 			solver_mem_mem = malloc(solver_mem_size);
-			solver_mem = xcond_solver_config.memory_assign(&xcond_solver_config, qp_dims, solver_opts, solver_mem_mem);
+			solver_mem = solver_config->memory_assign(solver_config, qp_dims, solver_opts, solver_mem_mem);
 
             /************************************************
             * workspace
             ************************************************/
 
-			solver_work_size = xcond_solver_config.workspace_calculate_size(&xcond_solver_config, qp_dims, solver_opts);
+			solver_work_size = solver_config->workspace_calculate_size(solver_config, qp_dims, solver_opts);
 //			printf("\nwork size = %d\n", solver_work_size);
 			solver_work = malloc(solver_work_size);
 
@@ -460,7 +457,7 @@ int main() {
             * solve
             ************************************************/
 
-			xcond_solver_config.evaluate(&xcond_solver_config, qp_in, qp_out, solver_opts, solver_mem, solver_work);
+			solver_config->evaluate(solver_config, qp_in, qp_out, solver_opts, solver_mem, solver_work);
 
             /************************************************
             * info
@@ -526,6 +523,7 @@ int main() {
             ************************************************/
 
 			// TODO
+			free(config_mem);
 
 
 

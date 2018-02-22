@@ -37,6 +37,73 @@
 
 
 
+/************************************************
+* config
+************************************************/
+
+int ocp_qp_solver_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_solver_config);
+
+	return size;
+
+}
+
+
+
+ocp_qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_solver_config *config = (ocp_qp_solver_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_solver_config);
+
+	return config;
+
+}
+
+
+
+int ocp_qp_xcond_solver_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_xcond_solver_config);
+
+	size += ocp_qp_solver_config_calculate_size(); // qp solver
+
+	return size;
+
+}
+
+
+
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_xcond_solver_config *config = (ocp_qp_xcond_solver_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_xcond_solver_config);
+
+	config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
+	c_ptr += ocp_qp_solver_config_calculate_size();
+
+	return config;
+
+}
+
+
+
+/************************************************
+* dims
+************************************************/
+
 int ocp_qp_dims_calculate_size(int N)
 {
     int size = sizeof(ocp_qp_dims);
@@ -64,6 +131,10 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 }
 
 
+
+/************************************************
+* in
+************************************************/
 
 int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
 {
@@ -109,6 +180,10 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 }
 
 
+
+/************************************************
+* out
+************************************************/
 
 int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
 {
@@ -158,6 +233,12 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 }
 
 
+
+/************************************************
+* res
+************************************************/
+
+// TODO add config !!!
 
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
@@ -333,25 +414,3 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
 	return;
 
 }
-
-
-
-// void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
-// {
-//     for (int ii = 0; ii < N+1; ii++)
-//     {
-//         nbu[ii] = 0;
-//         nbx[ii] = 0;
-//         for (int jj = 0; jj < nb[ii]; jj++)
-//         {
-//             if (idxb_rev[ii][jj] < nx[ii])
-//             {
-//                 nbx[ii]++;
-//             }
-//             else
-//             {
-//                 nbu[ii]++;
-//             }
-//         }
-//     }
-// }

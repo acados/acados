@@ -50,17 +50,15 @@ typedef struct
 	double min_res_d;
 	double min_res_m;
     // QP solver
-    ocp_qp_xcond_solver_config *qp_solver;
-    void *qp_solver_args;
+    void *qp_solver_opts;
     // integrators
-    sim_solver_config **sim_solvers;
-    void **sim_solvers_args;
-} ocp_nlp_gn_sqp_args;
+    void **sim_solvers_opts;
+} ocp_nlp_gn_sqp_opts;
 
 //
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_config *qp_solver, sim_solver_config *sim_solvers);
+int ocp_nlp_gn_sqp_opts_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_config *qp_solver, sim_solver_config *sim_solvers, void *raw_memory);
+ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_opts_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
 
 
@@ -79,7 +77,7 @@ typedef struct
 	ocp_nlp_res *nlp_res;
 
 	// nlp memory
-	ocp_nlp_mem *nlp_mem;
+	ocp_nlp_memory *nlp_mem;
 
 
 	struct blasfeo_dmat *W_chol; // cholesky factor of weight matrix
@@ -90,9 +88,9 @@ typedef struct
 } ocp_nlp_gn_sqp_memory;
 
 //
-int ocp_nlp_gn_sqp_calculate_memory_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+int ocp_nlp_gn_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args);
 //
-ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_assign_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, void *raw_memory);
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args, void *raw_memory);
 
 
 
@@ -128,7 +126,7 @@ typedef struct
 } ocp_nlp_gn_sqp_work;
 
 //
-int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, ocp_nlp_solver_config *config);
+int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args);
 
 
 
@@ -137,7 +135,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 ************************************************/
 
 //
-int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_, ocp_nlp_solver_config *config);
+int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
 
 
 

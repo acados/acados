@@ -390,9 +390,11 @@ int main() {
 * sim config
 ************************************************/
 
-	sim_solver_config config;
+	int config_size = sim_solver_config_calculate_size();
+	void *config_mem = malloc(config_size);
+	sim_solver_config *config = sim_solver_config_assign(config_mem);
 
-	sim_irk_config_initialize_default(&config);
+	sim_irk_config_initialize_default(config);
 
 /************************************************
 * sim dims
@@ -410,10 +412,10 @@ int main() {
 * sim opts
 ************************************************/
 
-	int opts_size = config.opts_calculate_size(&config, dims);
+	int opts_size = config->opts_calculate_size(config, dims);
 	void *opts_mem = malloc(opts_size);
-	sim_rk_opts *opts = config.opts_assign(&config, dims, opts_mem);
-	config.opts_initialize_default(&config, dims, opts);
+	sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
+	config->opts_initialize_default(config, dims, opts);
 
 	opts->sens_adj = true;
 
@@ -421,24 +423,24 @@ int main() {
 * sim memory
 ************************************************/
 
-	int mem_size = config.memory_calculate_size(&config, dims, opts);
+	int mem_size = config->memory_calculate_size(config, dims, opts);
 	void *mem_mem = malloc(mem_size);
-	void *mem = config.memory_assign(&config, dims, opts, mem_mem);
+	void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
 /************************************************
 * sim workspace
 ************************************************/
 
-	int work_size = config.workspace_calculate_size(&config, dims, opts);
+	int work_size = config->workspace_calculate_size(config, dims, opts);
 	void *work = malloc(work_size);
 
 /************************************************
 * sim in
 ************************************************/
 
-	int in_size = sim_in_calculate_size(&config, dims);
+	int in_size = sim_in_calculate_size(config, dims);
 	void *in_mem = malloc(in_size);
-	sim_in *in = sim_in_assign(&config, dims, in_mem);
+	sim_in *in = sim_in_assign(config, dims, in_mem);
 
     in->T = T;
 
@@ -473,9 +475,9 @@ int main() {
 * sim out
 ************************************************/
 
-	int out_size = sim_out_calculate_size(&config, dims);
+	int out_size = sim_out_calculate_size(config, dims);
 	void *out_mem = malloc(out_size);
-	sim_out *out = sim_out_assign(&config, dims, out_mem);
+	sim_out *out = sim_out_assign(config, dims, out_mem);
 
 /************************************************
 * sim solver
@@ -484,7 +486,7 @@ int main() {
     acados_tic(&timer);
 
     for (ii=0;ii<NREP;ii++)
-		config.evaluate(&config, in, out, opts, mem, work);
+		config->evaluate(config, in, out, opts, mem, work);
 
     Time1 = acados_toc(&timer)/NREP;
 
@@ -574,6 +576,7 @@ int main() {
 	free(jac_xdot_ode_mem);
 	free(jac_u_ode_mem);
 
+	free(config_mem);
 	free(dims_mem);
 	free(opts_mem);
 	free(mem_mem);

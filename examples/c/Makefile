@@ -45,7 +45,7 @@ EXAMPLES += mass_spring_example
 #EXAMPLES += mass_spring_pcond_hpipm_split
 #EXAMPLES += mass_spring_fcond_hpipm_split
 #EXAMPLES += mass_spring_offline_fcond_qpoases_split
-#EXAMPLES += nonlinear_chain_ocp_nlp
+EXAMPLES += nonlinear_chain_ocp_nlp
 
 examples: $(EXAMPLES)
 
@@ -59,7 +59,7 @@ RUN_EXAMPLES += run_mass_spring_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
-#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 
 run_examples: $(RUN_EXAMPLES)
 

@@ -62,7 +62,7 @@ typedef struct {
     int (*memory_calculate_size) (void *config, ocp_qp_dims *dims, void *args);
     void *(*memory_assign) (void *config, ocp_qp_dims *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size) (void *config, ocp_qp_dims *dims, void *args);
-    void *qp_solver;
+    void *qp_solver; // either ocp_qp_solver or dense_solver
 	int N2;
 } ocp_qp_xcond_solver_config;
 
@@ -78,6 +78,14 @@ typedef struct {
 } ocp_qp_info;
 
 
+//
+int ocp_qp_solver_config_calculate_size();
+//
+ocp_qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory);
+//
+int ocp_qp_xcond_solver_config_calculate_size();
+//
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory);
 //
 int ocp_qp_dims_calculate_size(int N);
 //
