@@ -1,12 +1,22 @@
 
-#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
+#include <unistd.h>  // NOTE(dimitris): to read current directory
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp.h"
 
-// QP data printed e.g. from matlab
-#include "./ocp_qp_bugs/ocp_qp_data.c"
+void load_ptr(void *lib, char *data_string, void **ptr)
+{
+    *ptr = dlsym(lib, data_string);
+    if (ptr == NULL)
+    {
+        printf("dlsym failed: %s\n", dlerror());
+        exit(1);
+    }
+}
 
 int main() {
 
@@ -17,28 +27,92 @@ int main() {
     ocp_qp_solver_plan plan;
     plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
 
+
+    /************************************************
+    * load dynamic library
+    ************************************************/
+
+    char str[256];
+
+    // TODO(dimitris): currently assuming we run it from build dir
+    snprintf(str, sizeof(str), "../examples/c/ocp_qp_bugs/ocp_qp_data.so");
+
+    void *lib = dlopen(str, RTLD_NOW);
+    if (lib == NULL) {
+        printf("dlopen failed: %s\n", dlerror());
+        exit(1);
+    }
+
     /************************************************
     * set up dims struct
     ************************************************/
 
     ocp_qp_dims dims;
 
+    int N, *N_ptr;
+
+    snprintf(str, sizeof(str), "N");
+    load_ptr(lib, str, (void **)&N_ptr);
+
+    N = *N_ptr;
     dims.N = N;
-    dims.nx = nx;
-    dims.nu = nu;
-    dims.nb = nb;
-    dims.ng = ng;
-    dims.ns = ns;
-    dims.nbx = nbx;
-    dims.nbu = nbu;
+
+    snprintf(str, sizeof(str), "nx");
+    load_ptr(lib, str, (void **)&dims.nx);
+
+    snprintf(str, sizeof(str), "nu");
+    load_ptr(lib, str, (void **)&dims.nu);
+
+    snprintf(str, sizeof(str), "nb");
+    load_ptr(lib, str, (void **)&dims.nb);
+
+    snprintf(str, sizeof(str), "nbu");
+    load_ptr(lib, str, (void **)&dims.nbu);
+
+    snprintf(str, sizeof(str), "nbx");
+    load_ptr(lib, str, (void **)&dims.nbx);
+
+    snprintf(str, sizeof(str), "ng");
+    load_ptr(lib, str, (void **)&dims.ng);
+
+    snprintf(str, sizeof(str), "ns");
+    load_ptr(lib, str, (void **)&dims.ns);
+
+    int **hidxb = malloc((N+1)*sizeof(int *));
+
+    int *idxb;
+
+    snprintf(str, sizeof(str), "idxb");
+    load_ptr(lib, str, (void **)&idxb);
+
+    int sum_idxb = 0;
+
+    for (int ii = 0; ii < N+1; ii++)
+    {
+        hidxb[ii] = &idxb[sum_idxb];
+        sum_idxb += dims.nb[ii];
+    }
 
     /************************************************
     * set up dynamics
     ************************************************/
 
+    int indx = 0;
+
     double **hA = malloc(N*sizeof(double *));
     double **hB = malloc(N*sizeof(double *));
     double **hb = malloc(N*sizeof(double *));
+
+    double *Av, *Bv, *b;
+
+    snprintf(str, sizeof(str), "Av_%d", indx);
+    load_ptr(lib, str, (void **)&Av);
+
+    snprintf(str, sizeof(str), "Bv_%d", indx);
+    load_ptr(lib, str, (void **)&Bv);
+
+    snprintf(str, sizeof(str), "b_%d", indx);
+    load_ptr(lib, str, (void **)&b);
 
     int sum_A = 0;
     int sum_B = 0;
@@ -61,17 +135,34 @@ int main() {
     * set up objective
     ************************************************/
 
-    int sum_Q = 0;
-    int sum_R = 0;
-    int sum_S = 0;
-    int sum_q = 0;
-    int sum_r = 0;
-
     double **hQ = malloc((N+1)*sizeof(double *));
     double **hR = malloc((N+1)*sizeof(double *));
     double **hS = malloc((N+1)*sizeof(double *));
     double **hq = malloc((N+1)*sizeof(double *));
     double **hr = malloc((N+1)*sizeof(double *));
+
+    double *Qv, *Rv, *Sv, *q, *r;
+
+    snprintf(str, sizeof(str), "Qv_%d", indx);
+    load_ptr(lib, str, (void **)&Qv);
+
+    snprintf(str, sizeof(str), "Rv_%d", indx);
+    load_ptr(lib, str, (void **)&Rv);
+
+    snprintf(str, sizeof(str), "Sv_%d", indx);
+    load_ptr(lib, str, (void **)&Sv);
+
+    snprintf(str, sizeof(str), "q_%d", indx);
+    load_ptr(lib, str, (void **)&q);
+
+    snprintf(str, sizeof(str), "r_%d", indx);
+    load_ptr(lib, str, (void **)&r);
+
+    int sum_Q = 0;
+    int sum_R = 0;
+    int sum_S = 0;
+    int sum_q = 0;
+    int sum_r = 0;
 
     for (int ii = 0; ii < N+1; ii++)
     {
@@ -95,7 +186,6 @@ int main() {
     * set up constraints
     ************************************************/
 
-    int **hidxb = malloc((N+1)*sizeof(int *));
     double **hlb = malloc((N+1)*sizeof(double *));
     double **hub = malloc((N+1)*sizeof(double *));
     double **hC = malloc((N+1)*sizeof(double *));
@@ -103,11 +193,18 @@ int main() {
     double **hlg = malloc((N+1)*sizeof(double *));
     double **hug = malloc((N+1)*sizeof(double *));
 
+    double *lb, *ub;
+
+    snprintf(str, sizeof(str), "lb_%d", indx);
+    load_ptr(lib, str, (void **)&lb);
+
+    snprintf(str, sizeof(str), "ub_%d", indx);
+    load_ptr(lib, str, (void **)&ub);
+
     int sum_nb = 0;
 
     for (int ii = 0; ii < N+1; ii++)
     {
-        hidxb[ii] = &idxb[sum_nb];
         hlb[ii] = &lb[sum_nb];
         hub[ii] = &ub[sum_nb];
         sum_nb += dims.nb[ii];
@@ -144,7 +241,6 @@ int main() {
     free(hS);
     free(hq);
     free(hr);
-
 
     free(hidxb);
     free(hlb);
