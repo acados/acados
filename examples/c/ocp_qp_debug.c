@@ -2,11 +2,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
-#include <unistd.h>  // NOTE(dimitris): to read current directory
+// #include <unistd.h>  // NOTE(dimitris): to read current directory
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp.h"
+
+// needed for casting args
+#include "acados/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_qpoases.h"
+
+#ifdef ACADOS_WITH_HPMPC
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
+#endif
+
+#ifdef ACADOS_WITH_QPDUNES
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
+#endif
+
+#ifdef ACADOS_WITH_QORE
+#include "acados/dense_qp/dense_qp_qore.h"
+#endif
 
 // TODOS!
 // STORE OPTIMAL SOLUTION FROM MATLAB (and DEFINE with SOLVER)
@@ -25,12 +44,7 @@ void load_ptr(void *lib, char *data_string, void **ptr)
 
 int main() {
 
-    /************************************************
-    * choose solver
-    ************************************************/
-
-    ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_QPOASES;
+    int n_problems = 5;
 
     /************************************************
     * load dynamic library
@@ -101,7 +115,61 @@ int main() {
     * set up solver and input/output
     ************************************************/
 
+    ocp_qp_solver_plan plan;
+    plan.qp_solver = FULL_CONDENSING_QPOASES;
+
     void *args = ocp_qp_create_args(&plan, &dims);
+
+    int N2 = dims.N;
+
+    switch (plan.qp_solver)
+    {
+    case PARTIAL_CONDENSING_HPIPM:
+        printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
+        ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+        ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 30;
+        break;
+    case PARTIAL_CONDENSING_HPMPC:
+#ifdef ACADOS_WITH_HPMPC
+        printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
+        ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+        ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
+#endif
+        break;
+    case PARTIAL_CONDENSING_QPDUNES:
+#ifdef ACADOS_WITH_QPDUNES
+        printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
+        #ifdef ELIMINATE_X0
+        assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
+        #endif
+        ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
+        ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
+        #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+        qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
+        #endif
+        qpdunes_args->warmstart = 0;
+        ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+#endif
+        break;
+    case FULL_CONDENSING_HPIPM:
+        printf("\nFull condensing + HPIPM:\n\n");
+        // default options
+        break;
+    case FULL_CONDENSING_QORE:
+#ifdef ACADOS_WITH_QORE
+        printf("\nFull condensing + QORE:\n\n");
+        // default options
+        break;
+#endif
+    case FULL_CONDENSING_QPOASES:
+        printf("\nFull condensing + QPOASES:\n\n");
+        ((dense_qp_qpoases_args *)((ocp_qp_full_condensing_solver_args *)args)->solver_args)->warm_start = 1;
+
+        // default options
+        break;
+    case PARTIAL_CONDENSING_OOQP:
+        break;
+    }
 
     ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
 
@@ -148,7 +216,7 @@ int main() {
     // info
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
 
-    for (int indx = 0; indx < 5; indx++)
+    for (int indx = 0; indx < n_problems; indx++)
     {
 
         /************************************************
