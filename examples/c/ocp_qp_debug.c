@@ -89,8 +89,8 @@ void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_
 
 
 int main() {
-    int n_rep = 2;  // TODO number of runs (taking minimum time)
-    int n_problems = 24;  // number of MPC problems stored in shared library
+    int n_rep = 5;  // TODO number of runs (taking minimum time)
+    int n_problems = 25;  // number of MPC problems stored in shared library
 
     bool auto_choose_acados_solver = true;  // choose acados solver based on lib name
 
@@ -100,9 +100,16 @@ int main() {
 
     char lib_str[256];
 
+    char solver_in[256] = "qpDUNES_B0";
+    int N_in = 10;
+    int nmasses_in = 4;
+    int warmstart_in = 1;
+
     // TODO(dimitris): currently assuming we run it from build dir
     // snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B10.so");
-    snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_nsteps_20_solver_qpDUNES_B0_warmstart_1.so");
+    snprintf(lib_str, sizeof(lib_str),
+        "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_%d_nsteps_%d_solver_%s_warmstart_%d.so",
+        nmasses_in, N_in, solver_in, warmstart_in);
 
     void *lib = dlopen(lib_str, RTLD_NOW);
     if (lib == NULL) {
