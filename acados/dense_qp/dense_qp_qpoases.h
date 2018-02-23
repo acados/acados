@@ -69,19 +69,19 @@ typedef struct dense_qp_qpoases_memory_ {
 
 
 
-int dense_qp_qpoases_calculate_args_size(dense_qp_dims *dims);
+int dense_qp_qpoases_opts_calculate_size(void *config, dense_qp_dims *dims);
 //
-void *dense_qp_qpoases_assign_args(dense_qp_dims *dims, void *raw_memory);
+void *dense_qp_qpoases_opts_assign(void *config, dense_qp_dims *dims, void *raw_memory);
 //
-void dense_qp_qpoases_initialize_default_args(void *args_);
+void dense_qp_qpoases_opts_initialize_default(void *config, void *args_);
 //
-int dense_qp_qpoases_calculate_memory_size(dense_qp_dims *dims, void *args_);
+int dense_qp_qpoases__memorycalculate_size(void *config, dense_qp_dims *dims, void *args_);
 //
-void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory);
+void *dense_qp_qpoases__memoryassign(void *config, dense_qp_dims *dims, void *args_, void *raw_memory);
 //
-int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_);
+int dense_qp_qpoases__workspacecalculate_size(void *config, dense_qp_dims *dims, void *args_);
 //
-int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_);
+int dense_qp_qpoases(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_);
 //
 void dense_qp_qpoases_config_initialize_default(void *config_);
 

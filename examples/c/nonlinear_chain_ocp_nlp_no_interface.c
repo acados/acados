@@ -46,11 +46,6 @@
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
 
-// c interface
-#ifdef ACADOS_WITH_C_INTERFACE
-#include "acados_c/legacy_create.h"
-#include "acados_c/external_function_generic.h"
-#endif
 
 
 // temp
@@ -452,20 +447,6 @@ int main() {
     * config
     ************************************************/
 
-#ifdef ACADOS_WITH_C_INTERFACE
-
-    // choose QP solver
-    ocp_qp_solver_t qp_solver_name = PARTIAL_CONDENSING_HPIPM;
-//    ocp_qp_solver_t qp_solver_name = FULL_CONDENSING_HPIPM;
-
-    // set up args with nested structs
-    sim_solver_t sim_solver_names[NN];
-
-	// set up function pointers struct
-	ocp_nlp_solver_config nlp_config;
-
-#else // ! ACADOS_WITH_C_INTERFACE
-
 	int config_size = ocp_nlp_solver_config_calculate_size(NN);
 	void *config_mem = malloc(config_size);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(NN, config_mem);
@@ -474,7 +455,6 @@ int main() {
 	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 	config->qp_solver->N2 = NN; // full horizon
 
-#endif // ACADOS_WITH_C_INTERFACE
 
 	// cost: least squares
 	config->cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
@@ -487,11 +467,7 @@ int main() {
 	config->dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_erk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
-#ifdef ACADOS_WITH_C_INTERFACE
-        sim_solver_names[ii] = ERK;
-#else // ! ACADOS_WITH_C_INTERFACE 
 		sim_erk_config_initialize_default(config->sim_solvers[ii]);
-#endif // ACADOS_WITH_C_INTERFACE 
     }
 
 #elif DYNAMICS==1
@@ -501,11 +477,7 @@ int main() {
 	config->dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_lifted_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
-#ifdef ACADOS_WITH_C_INTERFACE
-        sim_solver_names[ii] = LIFTED_IRK;
-#else // ! ACADOS_WITH_C_INTERFACE 
 		sim_lifted_irk_config_initialize_default(config->sim_solvers[ii]);
-#endif // ACADOS_WITH_C_INTERFACE 
     }
 #else
 	// dynamics: IRK
@@ -514,44 +486,13 @@ int main() {
 	config->dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
-#ifdef ACADOS_WITH_C_INTERFACE
-        sim_solver_names[ii] = IRK;
-#else // ! ACADOS_WITH_C_INTERFACE 
 		sim_irk_config_initialize_default(config->sim_solvers[ii]);
-#endif // ACADOS_WITH_C_INTERFACE 
     }
 #endif
 
 	// constraitns
 	config->constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
 	config->constraints_assign = (void *(*)(ocp_nlp_dims *, void *))&ocp_nlp_constraints_assign;
-
-#if 0
-	// qp solver
-	ocp_qp_xcond_solver_config config_qp;
-	ocp_qp_hpipm_config_initialize_default(&config_qp);
-	config->qp_solver = &config_qp;
-
-	// sim
-	sim_solver_config *config_sim_ptrs[NN];
-	sim_solver_config config_sim[NN];
-	for (int ii=0; ii<NN; ii++)
-		config_sim_ptrs[ii] = config_sim+ii;
-#if DYNAMICS==0
-	// erk
-	for (int ii=0; ii<NN; ii++)
-		sim_erk_config_initialize_default(&config_sim[ii]);
-#elif DYNAMICS==1
-	// lifted irk
-	for (int ii=0; ii<NN; ii++)
-		sim_lifted_irk_config_initialize_default(&config_sim[ii]);
-#else
-	// irk
-	for (int ii=0; ii<NN; ii++)
-		sim_irk_config_initialize_default(&config_sim[ii]);
-#endif
-	config->sim_solvers = config_sim_ptrs;
-#endif
 
     /************************************************
     * ocp_nlp_dims
@@ -593,10 +534,6 @@ int main() {
 	char *c_ptr;
 #if DYNAMICS==0 | DYNAMICS==1
 
-#ifdef ACADOS_WITH_C_INTERFACE
-	create_array_external_function_casadi(NN, forw_vde_casadi);
-	create_array_external_function_casadi(NN, jac_ode_casadi);
-#else // ! ACADOS_WITH_C_INTERFACE
 	// forw_vde
 	tmp_size = 0;
 	for (int ii=0; ii<NN; ii++)
@@ -623,16 +560,9 @@ int main() {
 		external_function_casadi_assign(jac_ode_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
 	}
-#endif // ACADOS_WITH_C_INTERFACE
 	
 #else // DYNAMICS==2
 
-#ifdef ACADOS_WITH_C_INTERFACE
-	create_array_external_function_casadi(NN, impl_ode_casadi);
-	create_array_external_function_casadi(NN, impl_jac_x_casadi);
-	create_array_external_function_casadi(NN, impl_jac_xdot_casadi);
-	create_array_external_function_casadi(NN, impl_jac_u_casadi);
-#else // ! ACADOS_WITH_C_INTERFACE
 	// impl_ode
 	tmp_size = 0;
 	for (int ii=0; ii<NN; ii++)
@@ -685,7 +615,6 @@ int main() {
 		external_function_casadi_assign(impl_jac_u_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(impl_jac_u_casadi+ii);
 	}
-#endif // ACADOS_WITH_C_INTERFACE
 
 #endif // DYNAMICS
 
@@ -697,9 +626,6 @@ int main() {
 
 	select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
 
-#ifdef ACADOS_WITH_C_INTERFACE
-	create_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
-#else // ! ACADOS_WITH_C_INTERFACE
 	// ls_cost_jac
 	tmp_size = 0;
 	for (int ii=0; ii<=NN; ii++)
@@ -713,20 +639,15 @@ int main() {
 		external_function_casadi_assign(ls_cost_jac_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
 	}
-#endif
 
     /************************************************
     * nlp_in (wip)
     ************************************************/
 
     // TODO(dimitris): clean up integrators inside
-#ifdef ACADOS_WITH_C_INTERFACE
-    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d, config);
-#else // ! ACADOS_WITH_C_INTERFACE
 	tmp_size = ocp_nlp_in_calculate_size(config, dims);
 	void *nlp_in_mem = malloc(tmp_size);
 	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, d, nlp_in_mem); // TODO remove d !!!
-#endif // ACADOS_WITH_C_INTERFACE
 
 //	ocp_nlp_dims_print(nlp_in->dims);
 
@@ -947,15 +868,11 @@ int main() {
 
     nlp_in->dims->num_stages = num_stages;
 
-#ifdef ACADOS_WITH_C_INTERFACE
-    ocp_nlp_gn_sqp_opts *nlp_opts = ocp_nlp_gn_sqp_create_args(nlp_in->dims, qp_solver_name, sim_solver_names);
-#else // ! ACADOS_WITH_C_INTERFACE
 	tmp_size = ocp_nlp_gn_sqp_opts_calculate_size(config, dims);
 	void *nlp_opts_mem = malloc(tmp_size);
 	ocp_nlp_gn_sqp_opts *nlp_opts = ocp_nlp_gn_sqp_opts_assign(config, dims, nlp_opts_mem);
 
 	ocp_nlp_gn_sqp_opts_initialize_default(config, dims, nlp_opts);
-#endif // ACADOS_WITH_C_INTERFACE
 
     for (int i = 0; i < NN; ++i) {
         sim_rk_opts *sim_opts = nlp_opts->sim_solvers_opts[i];
@@ -984,13 +901,9 @@ int main() {
     * ocp_nlp out
     ************************************************/
 
-#ifdef ACADOS_WITH_C_INTERFACE
-    ocp_nlp_out *nlp_out = create_ocp_nlp_out(nlp_in->dims);
-#else // ! ACADOS_WITH_C_INTERFACE
 	tmp_size = ocp_nlp_out_calculate_size(config, dims);
 	void *nlp_out_mem = malloc(tmp_size);
 	ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
-#endif // ACADOS_WITH_C_INTERFACE
 
 //	ocp_nlp_dims_print(nlp_out->dims);
 
@@ -998,13 +911,9 @@ int main() {
     * gn_sqp memory
     ************************************************/
 
-#ifdef ACADOS_WITH_C_INTERFACE
-    ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_create_memory(nlp_in->dims, nlp_opts);
-#else // ! ACADOS_WITH_C_INTERFACE
 	tmp_size = ocp_nlp_gn_sqp_memory_calculate_size(config, dims, nlp_opts);
 	void *nlp_mem_mem = malloc(tmp_size);
 	ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
-#endif // ACADOS_WITH_C_INTERFACE
 
 
     /************************************************
@@ -1063,40 +972,18 @@ int main() {
 
 #if DYNAMICS==0 | DYNAMICS==1
 
-#ifdef ACADOS_WITH_C_INTERFACE
-	free_array_external_function_casadi(NN, forw_vde_casadi);
-	free_array_external_function_casadi(NN, jac_ode_casadi);
-#else // ! ACADOS_WITH_C_INTERFACE
 	free(forw_vde_casadi_mem);
 	free(jac_ode_casadi_mem);
-#endif // ACADOS_WITH_C_INTERFACE
 
 #else // DYNAMICS==2
 
-#ifdef ACADOS_WITH_C_INTERFACE
-	free_array_external_function_casadi(NN, impl_ode_casadi);
-	free_array_external_function_casadi(NN, impl_jac_x_casadi);
-	free_array_external_function_casadi(NN, impl_jac_xdot_casadi);
-	free_array_external_function_casadi(NN, impl_jac_u_casadi);
-#else // ! ACADOS_WITH_C_INTERFACE
 	free(impl_ode_casadi_mem);
 	free(impl_jac_x_casadi_mem);
 	free(impl_jac_xdot_casadi_mem);
 	free(impl_jac_u_casadi_mem);
-#endif // ACADOS_WITH_C_INTERFACE
 
 #endif // DYNAMICS
 
-#ifdef ACADOS_WITH_C_INTERFACE
-	free_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
-	free(cost_dims_mem);
-	free(dims_mem);
-    free(nlp_in);
-    free(nlp_out);
-    free(nlp_work);
-    free(nlp_mem);
-    free(nlp_opts);
-#else // ! ACADOS_WITH_C_INTERFACE
 	free(config_mem);
 	free(ls_cost_jac_casadi_mem);
 	free(cost_dims_mem);
@@ -1106,7 +993,12 @@ int main() {
     free(nlp_work);
     free(nlp_mem_mem);
     free(nlp_opts_mem);
-#endif // ACADOS_WITH_C_INTERFACE
+
+/************************************************
+* return
+************************************************/
+	
+	printf("\nsuccess!\n\n");
 
 	return 0;
 

@@ -176,7 +176,6 @@ typedef struct
 	struct blasfeo_dvec *pi;
 	struct blasfeo_dvec *lam;
 	struct blasfeo_dvec *t;
-	int memsize;
 } ocp_nlp_out;
 
 
@@ -193,8 +192,7 @@ typedef struct
 	struct blasfeo_dvec *dyn_adj;
 	struct blasfeo_dvec *ineq_fun;
 	struct blasfeo_dvec *ineq_adj;
-	int memsize;
-} ocp_nlp_mem;
+} ocp_nlp_memory;
 
 
 
@@ -257,6 +255,15 @@ typedef struct
 /************************************************
 * headers
 ************************************************/
+
+/************************************************
+* dims
+************************************************/
+
+//
+int ocp_nlp_solver_config_calculate_size(int N);
+//
+ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
 
 /************************************************
 * dims
@@ -336,27 +343,27 @@ ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_me
 ************************************************/
 
 //
-int ocp_nlp_in_calculate_size(ocp_nlp_dims *dims, ocp_nlp_solver_config *config);
+int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-ocp_nlp_in *assign_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, void *raw_memory, ocp_nlp_solver_config *config);
+ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, int num_stages, void *raw_memory);
 
 /************************************************
 * out
 ************************************************/
 
 //
-int ocp_nlp_out_calculate_size(ocp_nlp_dims *dims);
+int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-ocp_nlp_out *assign_ocp_nlp_out(ocp_nlp_dims *dims, void *raw_memory);
+ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
 /************************************************
 * memory
 ************************************************/
 
 //
-int ocp_nlp_mem_calculate_size(ocp_nlp_dims *dims);
+int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-ocp_nlp_mem *ocp_nlp_mem_assign(ocp_nlp_dims *dims, void *raw_memory);
+ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
 
 /************************************************
 * residuals
@@ -367,7 +374,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
-void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_mem *mem); //ocp_nlp_res_workspace *work);
+void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_memory *mem); //ocp_nlp_res_workspace *work);
 
 
 

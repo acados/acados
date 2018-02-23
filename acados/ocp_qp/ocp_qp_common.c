@@ -37,6 +37,73 @@
 
 
 
+/************************************************
+* config
+************************************************/
+
+int ocp_qp_solver_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_solver_config);
+
+	return size;
+
+}
+
+
+
+ocp_qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_solver_config *config = (ocp_qp_solver_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_solver_config);
+
+	return config;
+
+}
+
+
+
+int ocp_qp_xcond_solver_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_xcond_solver_config);
+
+	size += ocp_qp_solver_config_calculate_size(); // qp solver
+
+	return size;
+
+}
+
+
+
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_xcond_solver_config *config = (ocp_qp_xcond_solver_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_xcond_solver_config);
+
+	config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
+	c_ptr += ocp_qp_solver_config_calculate_size();
+
+	return config;
+
+}
+
+
+
+/************************************************
+* dims
+************************************************/
+
 int ocp_qp_dims_calculate_size(int N)
 {
     int size = sizeof(ocp_qp_dims);
@@ -48,7 +115,7 @@ int ocp_qp_dims_calculate_size(int N)
 
 
 
-ocp_qp_dims *assign_ocp_qp_dims(int N, void *raw_memory)
+ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -65,7 +132,11 @@ ocp_qp_dims *assign_ocp_qp_dims(int N, void *raw_memory)
 
 
 
-int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
+/************************************************
+* in
+************************************************/
+
+int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
@@ -75,7 +146,7 @@ int ocp_qp_in_calculate_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -85,7 +156,7 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_ocp_qp(dims);
 
-    ocp_qp_dims *dims_copy = assign_ocp_qp_dims(dims->N, c_ptr);
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
 
     dims_copy->N = dims->N;
@@ -103,14 +174,18 @@ ocp_qp_in *assign_ocp_qp_in(ocp_qp_dims *dims, void *raw_memory)
 
     qp_in->dim = dims_copy;
 
-    assert((char*) raw_memory + ocp_qp_in_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_in_calculate_size(config, dims) == c_ptr);
 
     return qp_in;
 }
 
 
 
-int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
+/************************************************
+* out
+************************************************/
+
+int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
@@ -121,7 +196,7 @@ int ocp_qp_out_calculate_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -134,7 +209,7 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(ocp_qp_info);
 
-    ocp_qp_dims *dims_copy = assign_ocp_qp_dims(dims->N, c_ptr);
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);
     c_ptr += ocp_qp_dims_calculate_size(dims->N);
 
     dims_copy->N = dims->N;
@@ -152,12 +227,18 @@ ocp_qp_out *assign_ocp_qp_out(ocp_qp_dims *dims, void *raw_memory)
 
     qp_out->dim = dims_copy;
 
-    assert((char*) raw_memory + ocp_qp_out_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_out_calculate_size(config, dims) == c_ptr);
 
     return qp_out;
 }
 
 
+
+/************************************************
+* res
+************************************************/
+
+// TODO add config !!!
 
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 {
@@ -168,7 +249,7 @@ int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_res *assign_ocp_qp_res(ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -185,7 +266,7 @@ ocp_qp_res *assign_ocp_qp_res(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-int ocp_qp_res_ws_calculate_size(ocp_qp_dims *dims)
+int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_res_ws);
     size += d_memsize_ocp_qp_res_workspace(dims);
@@ -194,7 +275,7 @@ int ocp_qp_res_ws_calculate_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory)
+ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -204,14 +285,14 @@ ocp_qp_res_ws *assign_ocp_qp_res_ws(ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp_res_workspace(dims, qp_res_ws, c_ptr);
     c_ptr += d_memsize_ocp_qp_res_workspace(dims);
 
-    assert((char*) raw_memory + ocp_qp_res_ws_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + ocp_qp_res_workspace_calculate_size(dims) == c_ptr);
 
     return qp_res_ws;
 }
 
 
 
-void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws)
+void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws)
 {
     // loop index
 	int ii;
@@ -258,7 +339,7 @@ void compute_ocp_qp_res(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
 
 
 
-void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
+void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
 {
     // loop index
 	int ii;
@@ -333,25 +414,3 @@ void compute_ocp_qp_res_nrm_inf(ocp_qp_res *qp_res, double res[4])
 	return;
 
 }
-
-
-
-// void form_nbu_nbx_rev(int N, int *nbu, int *nbx, int *nb, int* nx, int *nu, int **idxb_rev)
-// {
-//     for (int ii = 0; ii < N+1; ii++)
-//     {
-//         nbu[ii] = 0;
-//         nbx[ii] = 0;
-//         for (int jj = 0; jj < nb[ii]; jj++)
-//         {
-//             if (idxb_rev[ii][jj] < nx[ii])
-//             {
-//                 nbx[ii]++;
-//             }
-//             else
-//             {
-//                 nbu[ii]++;
-//             }
-//         }
-//     }
-// }

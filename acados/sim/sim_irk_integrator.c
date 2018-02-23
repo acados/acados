@@ -19,7 +19,7 @@
 
 
 
-int sim_irk_model_calculate_size(sim_dims *dims)
+int sim_irk_model_calculate_size(void *config, sim_dims *dims)
 {
 
 	int size = 0;
@@ -32,7 +32,7 @@ int sim_irk_model_calculate_size(sim_dims *dims)
 
 
 
-void *sim_irk_model_assign(sim_dims *dims, void *raw_memory)
+void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 {
 
 	char *c_ptr = (char *) raw_memory;
@@ -46,7 +46,7 @@ void *sim_irk_model_assign(sim_dims *dims, void *raw_memory)
 
 
 
-int sim_irk_opts_calculate_size(sim_dims *dims)
+int sim_irk_opts_calculate_size(void *config, sim_dims *dims)
 {
 
 	// extract ds
@@ -73,7 +73,7 @@ int sim_irk_opts_calculate_size(sim_dims *dims)
 
 
 
-void *sim_irk_opts_assign(sim_dims *dims, void *raw_memory)
+void *sim_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -96,51 +96,22 @@ void *sim_irk_opts_assign(sim_dims *dims, void *raw_memory)
 	opts->work = c_ptr;
 	c_ptr += work_size;
 
-    assert((char*)raw_memory + sim_irk_opts_calculate_size(dims) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_opts_calculate_size(config, dims) >= c_ptr);
 
     return (void *)opts;
 }
 
 
 
-void sim_irk_opts_initialize_default(sim_dims *dims, void *opts_)
+void sim_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
-
-#if 0
-    int ns = opts->num_stages;
-
-	// XXX only 3-stages IRK implemented ATM
-    assert(ns == 3 && "only number of stages = 3 implemented!");
-
-	// XXX hard-coded butcher tableau ATM
-	double A3[] = { 0.1389,  0.3003,  0.2680,
-	               -0.0360,  0.2222,  0.4804,
-	                0.0098, -0.0225,  0.1389};
-
-	double b3[] = { 0.2778,  0.4444,  0.2778};
-
-	double c3[] = { 0.1127,  0.5000,  0.8873};
-
-	// copy butcher tableau
-	for (ii=0; ii<ns*ns; ii++)
-		opts->A_mat[ii] = A3[ii];
-
-	for (ii=0; ii<ns; ii++)
-		opts->b_vec[ii] = b3[ii];
-
-	for (ii=0; ii<ns; ii++)
-		opts->c_vec[ii] = c3[ii];
-
-#else
 
 	// gauss collocation nodes
     gauss_nodes(opts->num_stages, opts->c_vec, opts->work);
 
 	// butcher tableau
     butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
-
-#endif
 
 	// default options
     opts->newton_iter = 3;
@@ -157,21 +128,21 @@ void sim_irk_opts_initialize_default(sim_dims *dims, void *opts_)
 
 
 
-int sim_irk_memory_calculate_size(sim_dims *dims, void *opts_)
+int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
     return 0;
 }
 
 
 
-void *sim_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory)
+void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
 {
     return NULL;
 }
 
 
 
-int sim_irk_workspace_calculate_size(sim_dims *dims, void *opts_)
+int sim_irk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
@@ -218,7 +189,7 @@ int sim_irk_workspace_calculate_size(sim_dims *dims, void *opts_)
 
 
 
-void *sim_irk_workspace_cast(sim_dims *dims, void *opts_, void *raw_memory)
+static void *sim_irk_workspace_cast(void *config, sim_dims *dims, void *opts_, void *raw_memory)
 {
 
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
@@ -301,21 +272,21 @@ void *sim_irk_workspace_cast(sim_dims *dims, void *opts_, void *raw_memory)
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
-    assert((char*)raw_memory + sim_irk_workspace_calculate_size(dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_workspace_calculate_size(config, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }
 
 
 
-int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
+int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
     // sim_irk_memory *mem = (sim_irk_memory *) mem_;
 
     sim_dims *dims = in->dims;
-    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(dims, opts, work_);
+    sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
 
     int ii, jj, iter, kk, ss;
     double a;
@@ -692,7 +663,7 @@ void sim_irk_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->fun = &sim_irk;
+	config->evaluate = &sim_irk;
 	config->opts_calculate_size = &sim_irk_opts_calculate_size;
 	config->opts_assign = &sim_irk_opts_assign;
 	config->opts_initialize_default = &sim_irk_opts_initialize_default;
