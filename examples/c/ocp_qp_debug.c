@@ -326,7 +326,7 @@ int main() {
 
     // logs
     int nvars = 0;
-    for (int ii = 0; ii < dims.N; ii++)
+    for (int ii = 0; ii < dims.N+1; ii++)
         nvars += dims.nx[ii] + dims.nu[ii];
 
     double *acado_sol;
