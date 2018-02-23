@@ -33,6 +33,7 @@ void *dense_qp_qpoases_copy_args(dense_qp_dims *dims, void *raw_memory, void *so
     dest->max_nwsr = source->max_nwsr;
     dest->use_precomputed_cholesky = source->use_precomputed_cholesky;
     dest->hotstart = source->hotstart;
+    dest->set_acado_opts = source->set_acado_opts;
 
     return (void *)dest;
 }
