@@ -49,6 +49,7 @@ EXAMPLES += sim_irk_crane2
 # EXAMPLES += nonlinear_chain_ocp_nlp
 # EXAMPLES += sim_erk_wt
 EXAMPLES += sim_gnsf_crane
+EXAMPLES += sim_gnsf_crane_empty_z
 # EXAMPLES += blasfeo_bug_minimal_example
 EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
@@ -125,6 +126,21 @@ sim_gnsf_crane: $(CRANE_GNSF_OBJS)
 	$(CCC) -o sim_gnsf_crane.out  $(CRANE_GNSF_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_gnsf_crane build complete."
+	@echo
+
+
+CRANE_GNSF_EZ_OBJS =
+CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/res_inc_Jff_fun.o
+CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/get_ints_fun.o
+CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/But_KK_ZZ_LO_fun.o
+CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/f_LO_inc_J_x1k1uz_fun.o
+CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/jac_res_ffx1u_fun.o
+CRANE_GNSF_EZ_OBJS += sim_gnsf_crane.o
+
+sim_gnsf_crane_empty_z: $(CRANE_GNSF_EZ_OBJS)
+	$(CCC) -o sim_gnsf_crane_empty_z.out  $(CRANE_GNSF_EZ_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_gnsf_crane_empty_z build complete."
 	@echo
 
 
