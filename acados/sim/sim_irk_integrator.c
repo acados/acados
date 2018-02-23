@@ -208,7 +208,7 @@ int sim_irk_workspace_calculate_size(sim_dims *dims, void *opts_)
     size += (2*nx + nu) * sizeof(double); // ode_args
     size += (nx+nu) * sizeof(double); // S_adj_w
 
-    size += nx *ns * (steps+1) * sizeof(int); // ipiv
+    size += nx *ns * sizeof(int); // ipiv
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
@@ -297,7 +297,7 @@ void *sim_irk_workspace_cast(sim_dims *dims, void *opts_, void *raw_memory)
     assign_double(2*nx + nu, &workspace->ode_args, &c_ptr);
     assign_double(nx + nu, &workspace->S_adj_w, &c_ptr);
 
-    assign_int(nx * ns* (steps+1) , &workspace->ipiv, &c_ptr);
+    assign_int(nx * ns , &workspace->ipiv, &c_ptr);
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
@@ -544,9 +544,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
             } // end ii
 
             // factorize JGK
-            blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv+(ss+1)*ns*nx);
-            for (jj=0;jj<nx*ns;jj++)
-                ipiv[jj] = ipiv[(ss+1)*ns*nx + jj];
+            blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
 
             if (opts->sens_adj)
 			{ // store the factorization and permutation
@@ -656,7 +654,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
                 } // end ii
 
                 // factorize JGK
-                blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv+(ss+1)*ns*nx); //
+                blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv); //
             }// else if/else
 
 			for(jj=0; jj<ns; jj++)
@@ -666,7 +664,7 @@ int sim_irk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 
             blasfeo_dtrsv_ltu(nx*ns, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
-            blasfeo_dvecpei(nx*ns, ipiv+(ss+1)*ns*nx, lambdaK, 0);
+            blasfeo_dvecpei(nx*ns, ipiv, lambdaK, 0);
 
             blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
         }
