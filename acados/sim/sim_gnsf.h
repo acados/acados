@@ -93,6 +93,7 @@ typedef struct { //workspace
     double *res_out;
     double *f_LO_in;
     double *f_LO_out;
+    double *Z_out;
 
     int *ipiv; // index of pivot vector
 
@@ -179,6 +180,8 @@ void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory, int memsize);
 
 void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, sim_out* out, gnsf_opts* opts, void *work_);
+
+void gnsf_neville(double *out, double xx, int n, double *x, double *Q);
 
 
 int gnsf_dims_calculate_size();

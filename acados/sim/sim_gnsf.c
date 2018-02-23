@@ -396,6 +396,8 @@ int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts)
 
     size += (res_in_size + res_out_size + f_LO_in_size + f_LO_out_size) * sizeof(double); // input and outputs of residual and LO-fcn;
 
+    size += nz; //Z_out
+
     size += 5 *num_steps * sizeof(struct blasfeo_dvec); // K1_val, x1_val, ff_val, Z_val, f_LO_val
 	size += num_steps * sizeof(struct blasfeo_dmat); // f_LO_jac
 
@@ -474,6 +476,8 @@ void *gnsf_cast_workspace(gnsf_dims* dims, void *raw_memory)
     assign_double(f_LO_in_size, &workspace->f_LO_in, &c_ptr);
     assign_double(f_LO_out_size, &workspace->f_LO_out, &c_ptr);
 
+    assign_double(nz, &workspace->Z_out, &c_ptr);
+
     assign_int(nff, &workspace->ipiv, &c_ptr);
 
     assign_blasfeo_dmat_structs(num_steps, &workspace->f_LO_jac, &c_ptr);
@@ -528,6 +532,17 @@ void *gnsf_cast_workspace(gnsf_dims* dims, void *raw_memory)
     return (void *)workspace;
 }
 
+void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
+// writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated at xx into out
+        for (int i = n; i>0; i--) {
+            for (int j = 0; j < i; j++) {
+                Q[j] = (xx-x[j]) * Q[j+1] - (xx - x[j+n-i+1]) * Q[j]; // 0 is where we want the approximation of z
+                Q[j] = Q[j]/( x[j+n-i+1] - x[j]);
+            }
+        }
+        out[0] = Q[0];
+}
+
 void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, gnsf_opts *opts, void *work_)
 {
     acados_timer tot_timer, casadi_timer;
@@ -557,6 +572,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     double *res_out = workspace->res_out;
     double *f_LO_in = workspace->f_LO_in;
     double *f_LO_out = workspace->f_LO_out;
+
+    double *Z_out = workspace->Z_out; // TODO, remove when this is part of output
 
     struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
     int *ipiv = workspace->ipiv;
@@ -594,11 +611,13 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     struct blasfeo_dmat dPsi_dx   = workspace->dPsi_dx;
     struct blasfeo_dmat dPsi_du   = workspace->dPsi_du;
 
-    blasfeo_pack_dvec(nu, in->u, &u0, 0);    
+    blasfeo_pack_dvec(nu, in->u, &u0, 0);
     blasfeo_pack_dvec(nx, &in->x[0], &x0_traj, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
     out->info->ADtime = 0;
+    out->info->LAtime = 0;
+    out->info->CPUtime = 0;
 
     for (int ss = 0; ss < num_steps; ss++) {
         for (int iter = 0; iter < newton_max; iter++) { // NEWTON-ITERATION
@@ -735,6 +754,13 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
             blasfeo_dgemm_nn(nx, nu, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, nx, 1.0, &dxf_dwn, 0, nx, &S_forw_new, 0, nx);
             blasfeo_dgecp(nx, nx +nu, &S_forw_new, 0, 0, &S_forw, 0, 0);
         }
+    }
+    // get output value for algebraic states z
+    for (int ii = 0; ii < nz; ii++) {
+        for (int jj = 0; jj < num_stages; jj++) {
+            f_LO_in[jj] = blasfeo_dvecex1(&Z_val[0], nz*ii+jj); //values of Z_ii in first step, use f_LO_in just to need no extra vector
+        }
+        gnsf_neville(&Z_out[ii], 0.0, num_stages-1, fix->c, f_LO_in);
     }
     if (opts->sens_adj) {
         // ADJOINT SENSITIVITY PROPAGATION:
