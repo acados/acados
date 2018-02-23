@@ -563,6 +563,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     double *f_LO_out = workspace->f_LO_out;
 
     struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
+    // int *ipiv = workspace->ipiv;
     struct blasfeo_dmat J_r_x1u = workspace->J_r_x1u;  // needed for sensitivity propagation
 
     struct blasfeo_dmat dK1_dx1    = workspace->dK1_dx1;
