@@ -43,7 +43,7 @@
 
 static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args)
 {
-	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+	/* ocp_qp_xcond_solver_config *qp_solver = config->qp_solver; */
 	sim_solver_config **sim_solvers = config->sim_solvers;
 
     sim_dims sim_dims;
@@ -803,7 +803,7 @@ static void update_variables(const ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *ar
 int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *args, ocp_nlp_gn_sqp_memory *mem, void *work_)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+	/* sim_solver_config **sim_solvers = config->sim_solvers; */
 
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) work_;
     ocp_nlp_gn_sqp_cast_workspace(config, work, mem, args);

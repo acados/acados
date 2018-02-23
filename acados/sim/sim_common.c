@@ -154,7 +154,7 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 int sim_out_calculate_size(void *config_, sim_dims *dims)
 {
-	sim_solver_config *config = config_;
+	/* sim_solver_config *config = config_; */
 
     int size = sizeof(sim_out);
 
@@ -179,7 +179,7 @@ int sim_out_calculate_size(void *config_, sim_dims *dims)
 
 sim_out *sim_out_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
+	/* sim_solver_config *config = config_; */
 
     char *c_ptr = (char *) raw_memory;
 

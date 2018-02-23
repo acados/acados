@@ -113,7 +113,7 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_args *args
 
 
 
-int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_qpdunes_calculate_args_size(void *config_, ocp_qp_dims *dims)
 {
     int size = 0;
     size += sizeof(ocp_qp_qpdunes_args);
@@ -122,7 +122,7 @@ int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims)
 
 
 
-void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_qpdunes_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
     ocp_qp_qpdunes_args *args;
 
@@ -138,7 +138,7 @@ void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory)
 
 
 
-void ocp_qp_qpdunes_initialize_default_args(void *args_)
+void ocp_qp_qpdunes_initialize_default_args(void *config_, void *args_)
 {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
@@ -185,7 +185,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
 
 
 
-int ocp_qp_qpdunes_calculate_memory_size(ocp_qp_dims *dims, void *args_)
+int ocp_qp_qpdunes_calculate_memory_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
     // NOTE(dimitris): calculate size does NOT include the memory required by qpDUNES
     int size = 0;
@@ -195,7 +195,7 @@ int ocp_qp_qpdunes_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 
 
 
-void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
+void *ocp_qp_qpdunes_assign_memory(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
     ocp_qp_qpdunes_memory *mem;
@@ -390,7 +390,7 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int n
 
 
 
-int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
+int ocp_qp_qpdunes_calculate_workspace_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
     int nx = dims->nx[0];
     int nu = dims->nu[0];
@@ -712,7 +712,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
 	config->memory_calculate_size = &ocp_qp_qpdunes_calculate_memory_size;
 	config->memory_assign = &ocp_qp_qpdunes_assign_memory;
 	config->workspace_calculate_size = &ocp_qp_qpdunes_calculate_workspace_size;
-	config->fun = &ocp_qp_qpdunes;
+	/* config->fun = &ocp_qp_qpdunes; */
 
 	return;
 

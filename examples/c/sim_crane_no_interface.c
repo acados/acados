@@ -18,6 +18,10 @@
  */
 
 // external
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +55,8 @@ int main()
 
     int NREP = 500;
     acados_timer timer;
-    double Time1, Time2, Time3;
+
+	/* double Time1, Time2, Time3; */
 
     int ii;
     int jj;
@@ -328,7 +333,7 @@ int main()
 		for (ii=0;ii<NREP;ii++)
 			config->evaluate(config, in, out, opts, mem, work);
 
-		Time1 = acados_toc(&timer)/NREP;
+		/* Time1 = acados_toc(&timer)/NREP; */
 
 		double *xn = out->xn;
 
@@ -342,6 +347,7 @@ int main()
 		printf("\n");
 
 		double *S_forw_out;
+		S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");

@@ -130,9 +130,11 @@ if(SWIG_MATLAB)
     target_link_libraries(acados PUBLIC ${Matlab_MEX_LIBRARY})
 endif()
 
-add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
-if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
-    add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+if(ACADOS_WITH_C_INTERFACES)
+	add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
+	if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+		add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+	endif()
 endif()
 
 # Only test acados library for coverage
