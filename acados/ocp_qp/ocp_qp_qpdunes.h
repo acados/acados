@@ -78,17 +78,17 @@ typedef struct ocp_qp_qpdunes_workspace_ {
 
 
 //
-int ocp_qp_qpdunes_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_qpdunes_calculate_args_size(void *config_, ocp_qp_dims *dims);
 //
-void *ocp_qp_qpdunes_assign_args(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_qpdunes_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_qpdunes_initialize_default_args(void *args_);
+void ocp_qp_qpdunes_initialize_default_args(void *config_, void *args_);
 //
-int ocp_qp_qpdunes_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_qpdunes_calculate_memory_size(void *config_, ocp_qp_dims *dims, void *args_);
 //
-void *ocp_qp_qpdunes_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_qpdunes_assign_memory(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_qpdunes_calculate_workspace_size(void *config_, ocp_qp_dims *dims, void *args_);
 //
 int ocp_qp_qpdunes(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *memory_, void *work_);
 //
