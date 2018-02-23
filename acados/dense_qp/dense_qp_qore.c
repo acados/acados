@@ -33,35 +33,37 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 
-int dense_qp_qore_calculate_args_size(dense_qp_dims *dims)
+
+
+int dense_qp_qore_opts_calculate_size(void *config_, dense_qp_dims *dims)
 {
     int size = 0;
-    size += sizeof(dense_qp_qore_args);
+    size += sizeof(dense_qp_qore_opts);
 
     return size;
 }
 
 
 
-void *dense_qp_qore_assign_args(dense_qp_dims *dims, void *raw_memory)
+void *dense_qp_qore_opts_assign(void *config_, dense_qp_dims *dims, void *raw_memory)
 {
-    dense_qp_qore_args *args;
+    dense_qp_qore_opts *args;
 
     char *c_ptr = (char *) raw_memory;
 
-    args = (dense_qp_qore_args *) c_ptr;
-    c_ptr += sizeof(dense_qp_qore_args);
+    args = (dense_qp_qore_opts *) c_ptr;
+    c_ptr += sizeof(dense_qp_qore_opts);
 
-    assert((char*)raw_memory + dense_qp_qore_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + dense_qp_qore_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *)args;
 }
 
 
 
-void dense_qp_qore_initialize_default_args(void *args_)
+void dense_qp_qore_opts_initialize_default(void *config_, void *args_)
 {
-    dense_qp_qore_args *args = (dense_qp_qore_args *)args_;
+    dense_qp_qore_opts *args = (dense_qp_qore_opts *)args_;
 
     args->print_freq = -1;
     args->warm_start = 0;
@@ -73,9 +75,9 @@ void dense_qp_qore_initialize_default_args(void *args_)
 
 
 
-int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_)
+int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void *args_)
 {
-    dense_qp_qore_args *args = (dense_qp_qore_args *) args_;
+    dense_qp_qore_opts *args = (dense_qp_qore_opts *) args_;
 
     int nvd = dims->nv;
     int ned = dims->ne;
@@ -106,10 +108,10 @@ int dense_qp_qore_calculate_memory_size(dense_qp_dims *dims, void *args_)
 
 
 
-void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory)
+void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *args_, void *raw_memory)
 {
     dense_qp_qore_memory *mem;
-    dense_qp_qore_args *args = (dense_qp_qore_args *) args_;
+    dense_qp_qore_opts *args = (dense_qp_qore_opts *) args_;
 
     int nvd = dims->nv;
     int ned = dims->ne;
@@ -151,21 +153,21 @@ void *dense_qp_qore_assign_memory(dense_qp_dims *dims, void *args_, void *raw_me
     // int stuff
     assign_int(nbd, &mem->idxb, &c_ptr);
 
-    assert((char *)raw_memory + dense_qp_qore_calculate_memory_size(dims, args_) >= c_ptr);
+    assert((char *)raw_memory + dense_qp_qore_memory_calculate_size(config_, dims, args_) >= c_ptr);
 
     return mem;
 }
 
 
 
-int dense_qp_qore_calculate_workspace_size(dense_qp_dims *dims, void *args_)
+int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
+int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_)
 {
     dense_qp_info *info = (dense_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
@@ -173,7 +175,7 @@ int dense_qp_qore(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *m
     acados_tic(&tot_timer);
 
     // cast structures
-    dense_qp_qore_args *args = (dense_qp_qore_args *)args_;
+    dense_qp_qore_opts *args = (dense_qp_qore_opts *)args_;
     dense_qp_qore_memory *memory = (dense_qp_qore_memory *)memory_;
 
     // extract qpoases data
@@ -295,13 +297,13 @@ void dense_qp_qore_config_initialize_default(void *config_)
 
 	dense_qp_solver_config *config = config_;
 
-	config->fun = &dense_qp_qore;
-	config->opts_calculate_size = &dense_qp_qore_calculate_args_size;
-	config->opts_assign = &dense_qp_qore_assign_args;
-	config->opts_initialize_default = &dense_qp_qore_initialize_default_args;
-	config->memory_calculate_size = &dense_qp_qore_calculate_memory_size;
-	config->memory_assign = &dense_qp_qore_assign_memory;
-	config->workspace_calculate_size = &dense_qp_qore_calculate_workspace_size;
+	config->evaluate = &dense_qp_qore;
+	config->opts_calculate_size = &dense_qp_qore_opts_calculate_size;
+	config->opts_assign = &dense_qp_qore_opts_assign;
+	config->opts_initialize_default = &dense_qp_qore_opts_initialize_default;
+	config->memory_calculate_size = &dense_qp_qore_memory_calculate_size;
+	config->memory_assign = &dense_qp_qore_memory_assign;
+	config->workspace_calculate_size = &dense_qp_qore_workspace_calculate_size;
 
 	return;
 
