@@ -41,6 +41,11 @@ int main() {
     gnsf_dims *dims = gnsf_dims_assign(dims_memory);
     gnsf_get_dims(dims, get_ints_fun);
 
+    // set up sim config
+    int config_size = sim_solver_config_calculate_size();
+    void *config_mem = malloc(config_size);
+    sim_solver_config *config = sim_solver_config_assign(config_mem);
+
     // set up sim_dims
     int sim_dims_size = sim_dims_calculate_size();
     void *sim_dims_mem = malloc(sim_dims_size);
@@ -116,9 +121,9 @@ int main() {
     fix->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
 
     // set up sim_out
-    int sim_out_size = sim_out_calculate_size(simdim);
+    int sim_out_size = sim_out_calculate_size(config, simdim);
     void* sim_out_ptr = (void*) malloc(sim_out_size);
-    sim_out* out = sim_out_assign(simdim, sim_out_ptr);
+    sim_out* out = sim_out_assign(config, simdim, sim_out_ptr);
 
     // setup workspace
     int gnsf_workspace_size = gnsf_calculate_workspace_size(dims, opts);
