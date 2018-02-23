@@ -116,56 +116,98 @@ int main() {
     ************************************************/
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_QPOASES;
+    plan.qp_solver = FULL_CONDENSING_QORE;
 
     void *args = ocp_qp_create_args(&plan, &dims);
 
     int N2 = dims.N;
 
+    ocp_qp_full_condensing_solver_args *fcond_solver_args = NULL;
+    ocp_qp_sparse_solver_args *pcond_solver_args = NULL;
+    pcond_solver_args++;
+    fcond_solver_args++;
+
     switch (plan.qp_solver)
     {
     case PARTIAL_CONDENSING_HPIPM:
         printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
-        ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-        ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 30;
+        pcond_solver_args = (ocp_qp_sparse_solver_args *)args;
+        ocp_qp_partial_condensing_args *hpipm_pcond_args = (ocp_qp_partial_condensing_args *)pcond_solver_args->pcond_args;
+        ocp_qp_hpipm_args *hpipm_solver_args = (ocp_qp_hpipm_args *)pcond_solver_args->solver_args;
+
+        hpipm_pcond_args->N2 = N2;
+        hpipm_solver_args->hpipm_args->iter_max = 1000;
+        hpipm_solver_args->hpipm_args->warm_start = 1;  // // TODO(dimitris): ONLY WORKS ONLY WITH WARM_START!
+        // hpipm_solver_args->hpipm_args->mu0 = 1e6;
+        // hpipm_solver_args->hpipm_args->tol = 1e-12;
+
         break;
     case PARTIAL_CONDENSING_HPMPC:
 #ifdef ACADOS_WITH_HPMPC
         printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
-        ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-        ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
+        pcond_solver_args = (ocp_qp_sparse_solver_args *)args;
+        ocp_qp_partial_condensing_args *hpmpc_pcond_args = (ocp_qp_partial_condensing_args *)pcond_solver_args->pcond_args;
+        ocp_qp_hpmpc_args *hpmpc_solver_args = (ocp_qp_hpmpc_args *)pcond_solver_args->solver_args;
+
+        hpmpc_pcond_args->N2 = N2;
+
+        hpmpc_solver_args->max_iter = 1000;
+        hpmpc_solver_args->tol = 1e-12;
 #endif
         break;
     case PARTIAL_CONDENSING_QPDUNES:
 #ifdef ACADOS_WITH_QPDUNES
         printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
-        #ifdef ELIMINATE_X0
-        assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
-        #endif
-        ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
-        ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
-        #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-        qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
-        #endif
-        qpdunes_args->warmstart = 0;
-        ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+        pcond_solver_args = (ocp_qp_sparse_solver_args *)args;
+        ocp_qp_partial_condensing_args *qpdunes_pcond_args = (ocp_qp_partial_condensing_args *)pcond_solver_args->pcond_args;
+        ocp_qp_qpdunes_args *qpdunes_solver_args = (ocp_qp_qpdunes_args *)pcond_solver_args->solver_args;
+
+        qpdunes_pcond_args->N2 = N2;  // NOTE(dimitris): only change N2 above, not here!
+
+        qpdunes_solver_args->warmstart = 1;
+
+        if (N2 == dims.N)
+        {
+            qpdunes_solver_args->stageQpSolver = QPDUNES_WITH_CLIPPING;
+            qpdunes_solver_args->options.lsType = QPDUNES_LS_ACCELERATED_GRADIENT_BISECTION_LS;
+            // NOTE(dimitris): these two options should always change together
+        } else
+        {
+            qpdunes_solver_args->stageQpSolver = QPDUNES_WITH_QPOASES;
+            qpdunes_solver_args->options.lsType = QPDUNES_LS_HOMOTOPY_GRID_SEARCH;
+        }
 #endif
         break;
     case FULL_CONDENSING_HPIPM:
         printf("\nFull condensing + HPIPM:\n\n");
-        // default options
+        fcond_solver_args = (ocp_qp_full_condensing_solver_args *)args;
+        dense_qp_hpipm_args *dense_hpipm_solver_args = (dense_qp_hpipm_args *)fcond_solver_args->solver_args;
+
+        dense_hpipm_solver_args->hpipm_args->iter_max = 1000;
+        dense_hpipm_solver_args->hpipm_args->warm_start = 0;
+
         break;
     case FULL_CONDENSING_QORE:
 #ifdef ACADOS_WITH_QORE
         printf("\nFull condensing + QORE:\n\n");
-        // default options
+        fcond_solver_args = (ocp_qp_full_condensing_solver_args *)args;
+        dense_qp_qore_args *qore_solver_args = (dense_qp_qore_args *)fcond_solver_args->solver_args;
+
+        qore_solver_args->max_iter = 1000;
+        qore_solver_args->warm_start = 0;  // TODO(dimitris): ONLY WORKS COLD STARTED
+
+        if (qore_solver_args->warm_start)
+            qore_solver_args->warm_strategy = 0;
+
         break;
 #endif
     case FULL_CONDENSING_QPOASES:
         printf("\nFull condensing + QPOASES:\n\n");
-        ((dense_qp_qpoases_args *)((ocp_qp_full_condensing_solver_args *)args)->solver_args)->warm_start = 1;
+        fcond_solver_args = (ocp_qp_full_condensing_solver_args *)args;
+        dense_qp_qpoases_args *qpoases_solver_args = (dense_qp_qpoases_args *)fcond_solver_args->solver_args;
 
-        // default options
+        qpoases_solver_args->warm_start = 1;
+
         break;
     case PARTIAL_CONDENSING_OOQP:
         break;
