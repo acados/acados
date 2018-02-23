@@ -315,7 +315,7 @@ int main() {
 
 
 
-			if (ii==0 | ii==2 | ii==3)
+			if ((ii==0)|(ii==2)|(ii==3))
 				break;
 		
 		}
