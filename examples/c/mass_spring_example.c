@@ -127,10 +127,10 @@ int main() {
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
 		PARTIAL_CONDENSING_HPIPM,
-        #if ACADOS_WITH_HPMPC
+        #ifdef ACADOS_WITH_HPMPC
         PARTIAL_CONDENSING_HPMPC,
         #endif
-        #if ACADOS_WITH_QPDUNES
+        #ifdef ACADOS_WITH_QPDUNES
         PARTIAL_CONDENSING_QPDUNES,
         #endif
         FULL_CONDENSING_HPIPM,

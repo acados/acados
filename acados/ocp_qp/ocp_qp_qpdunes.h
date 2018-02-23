@@ -48,7 +48,7 @@ typedef struct ocp_qp_qpdunes_args_ {
     qpdunes_stage_qp_solver_t stageQpSolver;
     int warmstart;  // warmstart = 0: all multipliers set to zero, warmstart = 1: use previous mult.
     bool isLinearMPC;
-} ocp_qp_qpdunes_args;
+} ocp_qp_qpdunes_opts;
 
 
 typedef struct ocp_qp_qpdunes_memory_ {
@@ -78,19 +78,19 @@ typedef struct ocp_qp_qpdunes_workspace_ {
 
 
 //
-int ocp_qp_qpdunes_calculate_args_size(void *config_, ocp_qp_dims *dims);
+int ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims);
 //
-void *ocp_qp_qpdunes_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_qpdunes_initialize_default_args(void *config_, void *args_);
+void ocp_qp_qpdunes_opts_initialize_default(void *config_, void *args_);
 //
-int ocp_qp_qpdunes_calculate_memory_size(void *config_, ocp_qp_dims *dims, void *args_);
+int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *args_);
 //
-void *ocp_qp_qpdunes_assign_memory(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory);
 //
-int ocp_qp_qpdunes_calculate_workspace_size(void *config_, ocp_qp_dims *dims, void *args_);
+int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *args_);
 //
-int ocp_qp_qpdunes(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *memory_, void *work_);
+int ocp_qp_qpdunes(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *memory_, void *work_);
 //
 void ocp_qp_qpdunes_free_memory(void *mem_);
 //

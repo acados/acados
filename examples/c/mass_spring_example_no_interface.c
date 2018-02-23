@@ -99,7 +99,8 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-	int ii_max = 4; // HPIPM
+	// number of tested solver configurations
+	int ii_max = 7;
 
     for (int ii = 0; ii < ii_max; ii++)
     {
@@ -204,9 +205,88 @@ int main() {
 
 					break;
 
+				case 4: // FULL_CONDENSING_QORE
+#ifdef ACADOS_WITH_QORE
+                    printf("\nFULL_CONDENSING_QORE\n\n");
+
+					// config
+					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
+					dense_qp_qore_config_initialize_default(solver_config->qp_solver);
+
+					// opts
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
+//					printf("\nopts size = %d\n", solver_opts_size);
+					solver_opts_mem = malloc(solver_opts_size);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
+//					sparse_solver_opts = solver_opts;
+//					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					dense_hpipm_opts->hpipm_opts->iter_max = 30;
+#endif
+
+					break;
+
+				case 5: // PARTIAL_CONDENSING_HPMPC
+#ifdef ACADOS_WITH_HPMPC
+                    printf("\nPARTIAL_CONDENSING_HPMPC, N2 = %d\n\n", N2);
+
+					// config
+					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
+					solver_config->N2 = N2;
+
+					// opts
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
+//					printf("\nopts size = %d\n", solver_opts_size);
+					solver_opts_mem = malloc(solver_opts_size);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
+//					sparse_solver_opts = solver_opts;
+//					hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					hpipm_opts->hpipm_opts->iter_max = 30;
+#endif
+
+					break;
+
+				case 6: // PARTIAL_CONDENSING_QPDUNES
+#ifdef ACADOS_WITH_QPDUNES
+                    printf("\nPARTIAL_CONDENSING_QPDUNES, N2 = %d\n\n", N2);
+
+					// config
+					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
+					solver_config->N2 = N2;
+
+					// opts
+					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
+//					printf("\nopts size = %d\n", solver_opts_size);
+					solver_opts_mem = malloc(solver_opts_size);
+					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
+					solver_config->opts_initialize_default(solver_config, solver_opts);
+//					sparse_solver_opts = solver_opts;
+//					hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					hpipm_opts->hpipm_opts->iter_max = 30;
+#endif
+
+					break;
+
 				default:
 					printf("\nWrong solver name!!!\n\n");
 			}
+
+			// break if there is no solver
+#ifndef ACADOS_WITH_QORE
+			if (ii==4)
+				break;
+#endif
+#ifndef ACADOS_WITH_HPMPC
+			if (ii==5)
+				break;
+#endif
+#ifndef ACADOS_WITH_QPDUNES
+			if (ii==6)
+				break;
+#endif
 
 
 			/************************************************
@@ -315,7 +395,8 @@ int main() {
 
 
 
-			if ((ii==0)|(ii==2)|(ii==3))
+			// just one run if there is not partial condensing
+			if ((ii==0) | (ii==2) | (ii==3) | (ii==4))
 				break;
 		
 		}

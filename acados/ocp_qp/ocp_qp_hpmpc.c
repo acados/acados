@@ -39,21 +39,21 @@
 #include "acados/utils/mem.h"
 
 
-int ocp_qp_hpmpc_calculate_args_size(void *config_, ocp_qp_dims *dims)
+int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
     int_t N = dims->N;
-    int_t size = sizeof(ocp_qp_hpmpc_args);
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
+    int_t size = sizeof(ocp_qp_hpmpc_opts);
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->ux0));
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->pi0));
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->lam0));
+    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->t0));
     for (int_t i = 0; i <= N; i++) {
-        size += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
-        if (i > 0) size += (dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
-        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
-        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+        size += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->ux0));
+        if (i > 0) size += (dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->pi0));
+        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->lam0));
+        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->t0));
     }
-    size += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+    size += 5 * sizeof(*(((ocp_qp_hpmpc_opts *)0)->inf_norm_res));
     size = (size + 63) / 64 * 64;   // make multiple of typical cache line size
     size += 1 * 64;                 // align once to typical cache line size
     return size;
@@ -61,12 +61,12 @@ int ocp_qp_hpmpc_calculate_args_size(void *config_, ocp_qp_dims *dims)
 
 
 
-void *ocp_qp_hpmpc_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
-    ocp_qp_hpmpc_args *args;
+    ocp_qp_hpmpc_opts *args;
     char *c_ptr = (char *) raw_memory;
-    args = (ocp_qp_hpmpc_args *) c_ptr;
-    // ocp_qp_hpmpc_args **args = (ocp_qp_hpmpc_args **) args_;
+    args = (ocp_qp_hpmpc_opts *) c_ptr;
+    // ocp_qp_hpmpc_opts **args = (ocp_qp_hpmpc_opts **) args_;
     int_t N = dims->N;
 
     args->N = dims->N;
@@ -74,19 +74,19 @@ void *ocp_qp_hpmpc_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memor
     args->N2 = dims->N;
 
 
-    c_ptr += sizeof(ocp_qp_hpmpc_args);
+    c_ptr += sizeof(ocp_qp_hpmpc_opts);
 
     args->ux0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->ux0));
 
     args->pi0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->pi0));
 
     args->lam0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->lam0));
 
     args->t0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
+    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_opts *)0)->t0));
 
     // align memory to typical cache line size
     size_t s_ptr = (size_t) c_ptr;
@@ -95,30 +95,30 @@ void *ocp_qp_hpmpc_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memor
 
     for (int_t i = 0; i <= N; i++) {
         args->ux0[i] = (real_t *) c_ptr;
-        c_ptr += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
+        c_ptr += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->ux0));
     }
     for (int_t i = 1; i <= N; i++) {
         args->pi0[i] = (real_t *) c_ptr;
-        c_ptr += dims->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
+        c_ptr += dims->nx[i] * sizeof(**(((ocp_qp_hpmpc_opts *)0)->pi0));
     }
     for (int_t i = 0; i <= N; i++) {
         args->lam0[i] = (real_t *) c_ptr;
-        c_ptr += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
+        c_ptr += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->lam0));
     }
     for (int_t i = 0; i <= N; i++) {
         args->t0[i] = (real_t *) c_ptr;
-        c_ptr += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
+        c_ptr += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_opts *)0)->t0));
     }
     args->inf_norm_res = (real_t *) c_ptr;
-    c_ptr += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
+    c_ptr += 5 * sizeof(*(((ocp_qp_hpmpc_opts *)0)->inf_norm_res));
     return (void *)args;
 }
 
 
 
-void ocp_qp_hpmpc_initialize_default_args(void *config_, void *args_)
+void ocp_qp_hpmpc_opts_initialize_default(void *config_, void *args_)
 {
-    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
+    ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)args_;
     args->tol = 1e-8;
     args->max_iter = 100;
     args->mu0 = 1e3;
@@ -130,9 +130,9 @@ void ocp_qp_hpmpc_initialize_default_args(void *config_, void *args_)
 
 
 
-int ocp_qp_hpmpc_calculate_memory_size(void *config_, ocp_qp_dims *dims, void *args_)
+int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
+    ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts*) args_;
 
     int N = dims->N;
     int *nx = (int *) dims->nx;
@@ -158,23 +158,23 @@ int ocp_qp_hpmpc_calculate_memory_size(void *config_, ocp_qp_dims *dims, void *a
 
 
 
-void *ocp_qp_hpmpc_assign_memory(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
+void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
     return raw_memory;
 }
 
 
 
-int ocp_qp_hpmpc_calculate_workspace_size(void *config_, ocp_qp_dims *dims, void *args_)
+int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
     return 0;
 }
 
 
 
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
+int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
-    ocp_qp_hpmpc_args *hpmpc_args = (ocp_qp_hpmpc_args*) args_;
+    ocp_qp_hpmpc_opts *hpmpc_args = (ocp_qp_hpmpc_opts*) args_;
     ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
     acados_timer tot_timer, qp_timer, interface_timer;
     acados_tic(&tot_timer);
@@ -492,13 +492,13 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
 
 	ocp_qp_solver_config *config = config_;
 
-	config->opts_calculate_size = &ocp_qp_hpmpc_calculate_args_size;
-	config->opts_assign = &ocp_qp_hpmpc_assign_args;
-	config->opts_initialize_default = &ocp_qp_hpmpc_initialize_default_args;
-	config->memory_calculate_size = &ocp_qp_hpmpc_calculate_memory_size;
-	config->memory_assign = &ocp_qp_hpmpc_assign_memory;
-	config->workspace_calculate_size = &ocp_qp_hpmpc_calculate_workspace_size;
-	/* config->fun = &ocp_qp_hpmpc; */
+	config->evaluate = &ocp_qp_hpmpc;
+	config->opts_calculate_size = &ocp_qp_hpmpc_opts_calculate_size;
+	config->opts_assign = &ocp_qp_hpmpc_opts_assign;
+	config->opts_initialize_default = &ocp_qp_hpmpc_opts_initialize_default;
+	config->memory_calculate_size = &ocp_qp_hpmpc_memory_calculate_size;
+	config->memory_assign = &ocp_qp_hpmpc_memory_assign;
+	config->workspace_calculate_size = &ocp_qp_hpmpc_workspace_calculate_size;
 
 	return;
 

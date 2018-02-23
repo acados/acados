@@ -49,7 +49,7 @@ static int get_maximum_number_of_inequality_constraints(ocp_qp_dims *dims)
 
 
 
-static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_args *args, ocp_qp_in *qp_in)
+static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *args, ocp_qp_in *qp_in)
 {
     int N = qp_in->dim->N;
     int nx = qp_in->dim->nx[0];
@@ -113,34 +113,34 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_args *args
 
 
 
-int ocp_qp_qpdunes_calculate_args_size(void *config_, ocp_qp_dims *dims)
+int ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
     int size = 0;
-    size += sizeof(ocp_qp_qpdunes_args);
+    size += sizeof(ocp_qp_qpdunes_opts);
     return size;
 }
 
 
 
-void *ocp_qp_qpdunes_assign_args(void *config_, ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
-    ocp_qp_qpdunes_args *args;
+    ocp_qp_qpdunes_opts *args;
 
     char *c_ptr = (char *) raw_memory;
 
-    args = (ocp_qp_qpdunes_args *) c_ptr;
-    c_ptr += sizeof(ocp_qp_qpdunes_args);
+    args = (ocp_qp_qpdunes_opts *) c_ptr;
+    c_ptr += sizeof(ocp_qp_qpdunes_opts);
 
-    assert((char*)raw_memory + ocp_qp_qpdunes_calculate_args_size(config_, dims) >= c_ptr);
+    assert((char*)raw_memory + ocp_qp_qpdunes_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *)args;
 }
 
 
 
-void ocp_qp_qpdunes_initialize_default_args(void *config_, void *args_)
+void ocp_qp_qpdunes_opts_initialize_default(void *config_, void *args_)
 {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
+    ocp_qp_qpdunes_opts *args = (ocp_qp_qpdunes_opts *)args_;
 
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default args
     qpdunes_options_t opts = QPDUNES_ACADO_SETTINGS;
@@ -185,7 +185,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *config_, void *args_)
 
 
 
-int ocp_qp_qpdunes_calculate_memory_size(void *config_, ocp_qp_dims *dims, void *args_)
+int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
     // NOTE(dimitris): calculate size does NOT include the memory required by qpDUNES
     int size = 0;
@@ -195,9 +195,9 @@ int ocp_qp_qpdunes_calculate_memory_size(void *config_, ocp_qp_dims *dims, void 
 
 
 
-void *ocp_qp_qpdunes_assign_memory(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
+void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
+    ocp_qp_qpdunes_opts *args = (ocp_qp_qpdunes_opts *)args_;
     ocp_qp_qpdunes_memory *mem;
 
     // char pointer
@@ -390,7 +390,7 @@ static void form_inequalities(double *Ct, double *lc, double *uc, int nx,  int n
 
 
 
-int ocp_qp_qpdunes_calculate_workspace_size(void *config_, ocp_qp_dims *dims, void *args_)
+int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
     int nx = dims->nx[0];
     int nu = dims->nu[0];
@@ -441,7 +441,7 @@ static void cast_workspace(ocp_qp_qpdunes_workspace *work, ocp_qp_qpdunes_memory
 
 
 
-static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdunes_memory *mem,
+static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *args, ocp_qp_qpdunes_memory *mem,
     ocp_qp_qpdunes_workspace *work)
 {
     boolean_t isLTI;  // TODO(dimitris): use isLTI flag for LTI systems
@@ -663,7 +663,7 @@ void ocp_qp_qpdunes_free_memory(void *mem_)
 
 
 
-int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_)
+int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void *work_)
 {
 
     acados_timer tot_timer, qp_timer, interface_timer;
@@ -671,7 +671,7 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
     acados_tic(&tot_timer);
 
     // cast data structures
-    ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
+    ocp_qp_qpdunes_opts *args = (ocp_qp_qpdunes_opts *)args_;
     ocp_qp_qpdunes_memory *mem = (ocp_qp_qpdunes_memory *)mem_;
     ocp_qp_qpdunes_workspace *work = (ocp_qp_qpdunes_workspace *)work_;
 
@@ -706,13 +706,13 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
 
 	ocp_qp_solver_config *config = config_;
 
-	config->opts_calculate_size = &ocp_qp_qpdunes_calculate_args_size;
-	config->opts_assign = &ocp_qp_qpdunes_assign_args;
-	config->opts_initialize_default = &ocp_qp_qpdunes_initialize_default_args;
-	config->memory_calculate_size = &ocp_qp_qpdunes_calculate_memory_size;
-	config->memory_assign = &ocp_qp_qpdunes_assign_memory;
-	config->workspace_calculate_size = &ocp_qp_qpdunes_calculate_workspace_size;
-	/* config->fun = &ocp_qp_qpdunes; */
+	config->evaluate = &ocp_qp_qpdunes;
+	config->opts_calculate_size = &ocp_qp_qpdunes_opts_calculate_size;
+	config->opts_assign = &ocp_qp_qpdunes_opts_assign;
+	config->opts_initialize_default = &ocp_qp_qpdunes_opts_initialize_default;
+	config->memory_calculate_size = &ocp_qp_qpdunes_memory_calculate_size;
+	config->memory_assign = &ocp_qp_qpdunes_memory_assign;
+	config->workspace_calculate_size = &ocp_qp_qpdunes_workspace_calculate_size;
 
 	return;
 
