@@ -86,26 +86,47 @@ double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double 
 
 
 
-void choose_solver(char *lib_str, int *N2, ocp_qp_solver_t *qp_solver)
+void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver)
 {
     char *solver_str = strstr(lib_str, "solver");
     char *N2_str_full = strstr(solver_str, "_B");
+    char *warm_str_full = strstr(solver_str, "warmstart_");
 
     if (strstr(solver_str, "HPMPC") != NULL)
     {
-        printf("HPMPC\tdetected\n");
+        printf("HPMPC\t\tdetected\n");
         *qp_solver = PARTIAL_CONDENSING_HPMPC;
 
-        if (N2_str_full != NULL)
-        {
-            int N2_len = strlen(N2_str_full) - strlen("_B.so");
-            char *N2_str = strndup(N2_str_full+2, N2_len);
-            *N2 = 0;
-            for (int ii = 0; ii < N2_len; ii++)
-                *N2 += (N2_str[N2_len-ii-1] - '0')*pow(10,ii);
-            printf("N2 = %d\tdetected\n", *N2);
-        }
     }
+    if (strstr(solver_str, "qpOASES") != NULL)
+    {
+        printf("qpOASES\t\tdetected\n");
+        *qp_solver = FULL_CONDENSING_QPOASES;
+        *N2 = 0;
+    }
+    if (N2_str_full != NULL)
+    {
+        int N2_len = strlen(N2_str_full) - strlen("_B.so");
+        char *N2_str = strndup(N2_str_full+2, N2_len);
+        *N2 = 0;
+        for (int ii = 0; ii < N2_len; ii++)
+            *N2 += (N2_str[N2_len-ii-1] - '0')*pow(10,ii);
+        printf("N2 = %d\t\tdetected\n", *N2);
+    } else
+    {
+        *N2 = 0;
+        printf("N2 \t\tnot detected (setting to 0)\n");
+    }
+    if (warm_str_full != NULL)
+    {
+        *warm_start = warm_str_full[10] - '0';
+        printf("warmstart = %d\tdetected\n", *warm_start);
+    } else
+    {
+        printf("warmstart \tnot detected (setting to 0)\n");
+        *warm_start = 0;
+    }
+    // exit(1);
 }
 
 
@@ -123,7 +144,8 @@ int main() {
     char lib_str[256];
 
     // TODO(dimitris): currently assuming we run it from build dir
-    snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B10.so");
+    // snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B10.so");
+    snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_qpOASES_e_N2_warmstart_0.so");
 
     void *lib = dlopen(lib_str, RTLD_NOW);
     if (lib == NULL) {
@@ -189,14 +211,18 @@ int main() {
 
     ocp_qp_solver_plan plan;
     int N2 = -1;
+    int warmstart = -1;
 
     if (auto_choose_acados_solver == false)
     {
+        // choose custom values
         N2 = dims.N;
-        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+        plan.qp_solver = FULL_CONDENSING_QPOASES;
+        warmstart = 1;
     } else
     {
-        choose_solver(lib_str, &N2, &plan.qp_solver);
+        // infer values from libname
+        choose_solver(lib_str, &N2, &warmstart, &plan.qp_solver);
         if (N2 == 0) N2 = dims.N;
     }
 
@@ -542,9 +568,21 @@ int main() {
     free(qp_in);
     free(qp_out);
 
-    write_double_vector_to_txt(min_cpu_times, n_problems, "tmp_cpu_times.txt");
-    write_double_vector_to_txt(sol_error, n_problems, "tmp_sol_error.txt");
-    write_int_vector_to_txt(iters, n_problems, "tmp_iters.txt");
+    if (auto_choose_acados_solver)
+    {
+        char *tmp_str_1 = strstr(lib_str, "ocp_qp_data_");
+        char save_str[256];
+
+        int tmp_str_len = strlen(tmp_str_1) - strlen(".so");
+        char *tmp_str_2 = strndup(tmp_str_1, tmp_str_len);
+
+        snprintf(save_str, sizeof(save_str), "%s_cpu_times.txt", tmp_str_2);
+        write_double_vector_to_txt(min_cpu_times, n_problems, save_str);
+        snprintf(save_str, sizeof(save_str), "%s_iters.txt", tmp_str_2);
+        write_int_vector_to_txt(iters, n_problems, save_str);
+        snprintf(save_str, sizeof(save_str), "%s_sol_error.txt", tmp_str_2);
+        write_double_vector_to_txt(sol_error, n_problems, save_str);
+    }
 
     free(min_cpu_times);
     free(sol_error);
