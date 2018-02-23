@@ -31,8 +31,9 @@ extern "C" {
 
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
-    QPDUNES_LINEAR_MPC,    // TODO(dimitris): implement
-    QPDUNES_NONLINEAR_MPC  // TODO(dimitris): implement
+    QPDUNES_LINEAR_MPC,    // TODO(dimitris): partly implemented
+    QPDUNES_NONLINEAR_MPC,  // TODO(dimitris): not implemented yet
+    QPDUNES_ACADO_SETTINGS
 } qpdunes_options_t;
 
 

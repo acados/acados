@@ -197,6 +197,8 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_full_condens
 
     work->solver_workspace = c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, ddims, args->solver_args);
+
+    assert((char *) work + ocp_qp_full_condensing_solver_workspace_calculate_size(config_, dims, args) >= c_ptr);
 }
 
 

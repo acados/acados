@@ -143,7 +143,7 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     ocp_qp_qpdunes_args *args = (ocp_qp_qpdunes_args *)args_;
 
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default args
-    qpdunes_options_t opts = QPDUNES_NONLINEAR_MPC;
+    qpdunes_options_t opts = QPDUNES_ACADO_SETTINGS;
 
     args->stageQpSolver = QPDUNES_WITH_QPOASES;
 
@@ -153,10 +153,31 @@ void ocp_qp_qpdunes_initialize_default_args(void *args_)
     args->options.stationarityTolerance = 1e-12;
     args->warmstart = 1;
 
-    if (opts == QPDUNES_DEFAULT_ARGUMENTS) {
-    } else if (opts == QPDUNES_NONLINEAR_MPC) {
-    } else if (opts == QPDUNES_LINEAR_MPC) {
+    if (opts == QPDUNES_DEFAULT_ARGUMENTS)
+    {
+        // keep default options
+    } else if (opts == QPDUNES_NONLINEAR_MPC)
+    {
+        // not implemented yet
+    } else if (opts == QPDUNES_LINEAR_MPC)
+    {
         args->isLinearMPC = 1;
+    } else if (opts == QPDUNES_ACADO_SETTINGS)
+    {
+        args->options.maxIter = 1000;
+        args->options.printLevel = 0;
+        args->options.stationarityTolerance = 1.e-6;
+        args->options.regParam = 1.e-6;
+        args->options.newtonHessDiagRegTolerance = 1.e-8;
+        if (args->stageQpSolver == QPDUNES_WITH_QPOASES)
+            args->options.lsType = QPDUNES_LS_HOMOTOPY_GRID_SEARCH;
+        else if (args->stageQpSolver == QPDUNES_WITH_CLIPPING)
+            args->options.lsType = QPDUNES_LS_ACCELERATED_GRADIENT_BISECTION_LS;
+        args->options.lineSearchReductionFactor	= 0.1;
+        args->options.lineSearchMaxStepSize	= 1.;
+        args->options.maxNumLineSearchIterations = 25;
+        args->options.maxNumLineSearchRefinementIterations = 25;
+        args->options.regType = QPDUNES_REG_LEVENBERG_MARQUARDT;
     } else {
         printf("\nUnknown option (%d) for qpDUNES!\n", opts);
     }
@@ -664,14 +685,14 @@ int ocp_qp_qpdunes(ocp_qp_in *in, ocp_qp_out *out, void *args_, void *mem_, void
     acados_tic(&qp_timer);
     qpdunes_status = qpDUNES_solve(&(mem->qpData));
     info->solve_QP_time = acados_toc(&qp_timer);
-    
+
     acados_tic(&interface_timer);
     fill_in_qp_out(in, out, mem);
     info->interface_time += acados_toc(&interface_timer);
 
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = mem->qpData.log.numIter;
-    
+
     int acados_status = qpdunes_status;
     if (qpdunes_status == QPDUNES_SUCC_OPTIMAL_SOLUTION_FOUND) acados_status = ACADOS_SUCCESS;
     if (qpdunes_status == QPDUNES_ERR_ITERATION_LIMIT_REACHED) acados_status = ACADOS_MAXITER;

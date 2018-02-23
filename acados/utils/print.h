@@ -86,6 +86,9 @@ void print_dense_qp_in(dense_qp_in *qp_in);
 
 void print_ocp_qp_info(ocp_qp_info *info);
 
+// blasfeo
+void print_blasfeo_target();
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
