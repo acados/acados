@@ -661,3 +661,18 @@ void print_ocp_qp_info(ocp_qp_info *info)
     printf("QP iter \t=\t%7d\n", info->num_iter);
     printf("***************************************************************\n\n");
 }
+
+
+
+void print_blasfeo_target()
+{
+    printf("\n");
+    #if defined(LA_HIGH_PERFORMANCE)
+    printf("blasfeo compiled with LA = HIGH_PERFORMANCE\n");
+    #elif defined(LA_REFERENCE)
+    printf("blasfeo compiled with LA = REFERENCE\n");
+    #elif defined(LA_BLAS)
+    printf("blasfeo compiled with LA = BLAS\n");
+    #endif
+    printf("\n");
+}
