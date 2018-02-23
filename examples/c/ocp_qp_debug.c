@@ -8,6 +8,10 @@
 #include "acados/utils/print.h"
 #include "acados_c/ocp_qp.h"
 
+#include "blasfeo_target.h"
+#include "blasfeo_common.h"
+#include "blasfeo_d_aux.h"
+
 // needed for casting args
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
@@ -27,10 +31,13 @@
 #include "acados/dense_qp/dense_qp_qore.h"
 #endif
 
+#include <assert.h>
+
 // TODOS!
 // PROPER NAMING OF LIB
 // STORE OPTIMAL SOLUTION FROM MATLAB (and DEFINE with SOLVER)
 // CALC ERROR IN SOLUTION OF EACH PROBLEM
+// FIX ASSERT ONCE AND FOR ALL!!!
 
 void load_ptr(void *lib, char *data_string, void **ptr)
 {
@@ -42,10 +49,48 @@ void load_ptr(void *lib, char *data_string, void **ptr)
     }
 }
 
-int main() {
 
+
+void convert_strvecs_to_single_vec(int n, struct blasfeo_dvec sv[], double *v)
+{
+    int ind = 0;
+    for (int i = 0; i < n; i++)
+    {
+        blasfeo_unpack_dvec(sv[i].m, &sv[i], 0, &v[ind]);
+        ind += sv[i].m;
+    }
+}
+
+
+
+double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double *acado_sol)
+{
+    double *acados_sol = malloc(nvars*sizeof(double));
+
+    convert_strvecs_to_single_vec(N+1, qp_out->ux, acados_sol);
+
+    double error = 0;
+    double diff;
+
+    for (int ii = 0; ii < nvars; ii++)
+    {
+        diff = acado_sol[ii] - acados_sol[ii];
+        if (diff < 0) diff = - diff;
+
+        if (diff > error) error = diff;
+        // printf(" %2.5e\t %2.5e\n", acado_sol[ii], acados_sol[ii]);
+    }
+
+    free(acados_sol);
+
+    return error;
+}
+
+
+
+int main() {
     int n_rep = 2;  // TODO number of runs (taking minimum time)
-    int n_problems = 5;  // number of MPC problems stored in shared library
+    int n_problems = 24;  // number of MPC problems stored in shared library
 
     /************************************************
     * load dynamic library
@@ -54,7 +99,7 @@ int main() {
     char str[256];
 
     // TODO(dimitris): currently assuming we run it from build dir
-    snprintf(str, sizeof(str), "../examples/c/ocp_qp_bugs/ocp_qp_data.so");
+    snprintf(str, sizeof(str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B0.so");
 
     void *lib = dlopen(str, RTLD_NOW);
     if (lib == NULL) {
@@ -117,7 +162,7 @@ int main() {
     ************************************************/
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_QPOASES;
+    plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
 
     void *args = ocp_qp_create_args(&plan, &dims);
 
@@ -154,6 +199,7 @@ int main() {
 
         hpmpc_solver_args->max_iter = 1000;
         hpmpc_solver_args->tol = 1e-12;
+        hpmpc_solver_args->warm_start = 0;
 #endif
         break;
     case PARTIAL_CONDENSING_QPDUNES:
@@ -255,6 +301,14 @@ int main() {
     int sum_nb = 0;
 
     // logs
+    int nvars = 0;
+    for (int ii = 0; ii < dims.N; ii++)
+        nvars += dims.nx[ii] + dims.nu[ii];
+
+    double *acado_sol;
+
+    int *acado_iter_ptr;
+
     double *min_cpu_times = malloc(n_problems*sizeof(double));
     double *sol_error = malloc(n_problems*sizeof(double));
     int *iters = malloc(n_problems*sizeof(int));
@@ -368,6 +422,16 @@ int main() {
             }
 
             /************************************************
+            * get acado stats
+            ************************************************/
+
+            snprintf(str, sizeof(str), "acado_iter_%d", indx);
+            load_ptr(lib, str, (void **)&acado_iter_ptr);
+
+            snprintf(str, sizeof(str), "acado_sol_%d", indx);
+            load_ptr(lib, str, (void **)&acado_sol);
+
+            /************************************************
             * convert data and solve qp
             ************************************************/
 
@@ -380,6 +444,8 @@ int main() {
 
             // print_ocp_qp_out(qp_out);
 
+            sol_error[indx] = compare_with_acado_solution(N, nvars, qp_out, acado_sol);
+
             if (acados_return != ACADOS_SUCCESS)
             {
                 printf("QP SOLVER FAILED WITH FLAG %d\n", acados_return);
@@ -390,8 +456,11 @@ int main() {
             * print and save results
             ************************************************/
 
-            printf("\n--> problem %d solved in %d iterations and %f ms\n\n",
+            printf("\n--> problem %d solved with acados in %d iterations and %f ms",
                 indx, info->num_iter, info->total_time*1000);
+
+            printf("\n--> problem %d solved with ACADO  in %d iterations and error is solution is %e\n\n",
+                indx, *acado_iter_ptr, sol_error[indx]);
 
             if (irun == 0)
             {
@@ -399,8 +468,11 @@ int main() {
                 iters[indx] = info->num_iter;
             } else
             {
-                assert(iters(indx) == info->num_iter-1 &&
-                    "inconsistent number of iterations between runs");
+                if(iters[indx] != info->num_iter)
+                {
+                    printf("inconsistent number of iterations between runs\n");
+                    exit(1);
+                }
                 if (min_cpu_times[indx] > info->total_time)
                     min_cpu_times[indx] = info->total_time;
             }
@@ -435,11 +507,8 @@ int main() {
     free(qp_in);
     free(qp_out);
 
-    printf("min times-iters\n");
-    for (int ii = 0; ii < n_problems; ii++) printf("%f - %d\t", 1000*min_cpu_times[ii], iters[ii]);
-    printf("\nok\n");
-
     write_double_vector_to_txt(min_cpu_times, n_problems, "tmp_cpu_times.txt");
+    write_double_vector_to_txt(sol_error, n_problems, "tmp_sol_error.txt");
     write_int_vector_to_txt(iters, n_problems, "tmp_iters.txt");
 
     free(min_cpu_times);
