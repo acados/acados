@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
+#include <string.h>
+#include <math.h>
+
 // #include <unistd.h>  // NOTE(dimitris): to read current directory
 
 #include "acados/ocp_qp/ocp_qp_common.h"
@@ -13,6 +16,7 @@
 #include "blasfeo_d_aux.h"
 
 // needed for casting args
+// TODO(dimitris): use options_i instead
 #include "acados/ocp_qp/ocp_qp_sparse_solver.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
@@ -32,12 +36,6 @@
 #endif
 
 #include <assert.h>
-
-// TODOS!
-// PROPER NAMING OF LIB
-// STORE OPTIMAL SOLUTION FROM MATLAB (and DEFINE with SOLVER)
-// CALC ERROR IN SOLUTION OF EACH PROBLEM
-// FIX ASSERT ONCE AND FOR ALL!!!
 
 void load_ptr(void *lib, char *data_string, void **ptr)
 {
@@ -88,20 +86,46 @@ double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double 
 
 
 
+void choose_solver(char *lib_str, int *N2, ocp_qp_solver_t *qp_solver)
+{
+    char *solver_str = strstr(lib_str, "solver");
+    char *N2_str_full = strstr(solver_str, "_B");
+
+    if (strstr(solver_str, "HPMPC") != NULL)
+    {
+        printf("HPMPC\tdetected\n");
+        *qp_solver = PARTIAL_CONDENSING_HPMPC;
+
+        if (N2_str_full != NULL)
+        {
+            int N2_len = strlen(N2_str_full) - strlen("_B.so");
+            char *N2_str = strndup(N2_str_full+2, N2_len);
+            *N2 = 0;
+            for (int ii = 0; ii < N2_len; ii++)
+                *N2 += (N2_str[N2_len-ii-1] - '0')*pow(10,ii);
+            printf("N2 = %d\tdetected\n", *N2);
+        }
+    }
+}
+
+
+
 int main() {
     int n_rep = 2;  // TODO number of runs (taking minimum time)
     int n_problems = 24;  // number of MPC problems stored in shared library
+
+    bool auto_choose_acados_solver = true;  // choose acados solver based on lib name
 
     /************************************************
     * load dynamic library
     ************************************************/
 
-    char str[256];
+    char lib_str[256];
 
     // TODO(dimitris): currently assuming we run it from build dir
-    snprintf(str, sizeof(str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B0.so");
+    snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B10.so");
 
-    void *lib = dlopen(str, RTLD_NOW);
+    void *lib = dlopen(lib_str, RTLD_NOW);
     if (lib == NULL) {
         printf("dlopen failed: %s\n", dlerror());
         exit(1);
@@ -110,6 +134,8 @@ int main() {
     /************************************************
     * set up dims struct
     ************************************************/
+
+    char str[256];
 
     ocp_qp_dims dims;
 
@@ -162,11 +188,20 @@ int main() {
     ************************************************/
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    int N2 = -1;
+
+    if (auto_choose_acados_solver == false)
+    {
+        N2 = dims.N;
+        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+    } else
+    {
+        choose_solver(lib_str, &N2, &plan.qp_solver);
+        if (N2 == 0) N2 = dims.N;
+    }
 
     void *args = ocp_qp_create_args(&plan, &dims);
 
-    int N2 = dims.N;
 
     ocp_qp_full_condensing_solver_args *fcond_solver_args = NULL;
     ocp_qp_sparse_solver_args *pcond_solver_args = NULL;
@@ -514,6 +549,8 @@ int main() {
     free(min_cpu_times);
     free(sol_error);
     free(iters);
+
+    printf("\nacados runs with N2 = %d\n", N2);
 
     return 0;
 }
