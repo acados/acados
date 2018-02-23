@@ -69,8 +69,8 @@ int main() {
     void *gnsf_opts_mem = malloc(gnsf_opts_size);
     gnsf_opts *opts = gnsf_opts_assign(dims, gnsf_opts_mem);
     opts->sens_forw = 1;
-    opts->sens_adj = 1;
-    opts->newton_max = 10;
+    opts->sens_adj = 0;
+    opts->newton_max = 3;
 
     // set up gnsf_fixed
     int gnsf_fixed_size = gnsf_fixed_calculate_size(dims, opts);
@@ -124,7 +124,8 @@ int main() {
     int gnsf_workspace_size = gnsf_calculate_workspace_size(dims, opts);
     void *work_ = malloc(gnsf_workspace_size);
 
-    int num_executions = 10000;
+    printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
+    int num_executions = 1000;
     double gnsf_time = 0;
     double casadi_time = 0;
     for (int i = 0; i < num_executions; i++) {

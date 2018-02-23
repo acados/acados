@@ -30,6 +30,7 @@ EXAMPLES =
 EXAMPLES += mass_spring_example
 EXAMPLES += sim_erk_crane
 EXAMPLES += sim_irk_crane
+EXAMPLES += sim_irk_crane2
 EXAMPLES += sim_lifted_irk_crane
 EXAMPLES += mass_spring_pcond_hpipm_split
 EXAMPLES += mass_spring_fcond_hpipm_split
@@ -103,6 +104,18 @@ sim_gnsf_crane: $(CRANE_GNSF_OBJS)
 	$(CCC) -o sim_gnsf_crane.out  $(CRANE_GNSF_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_gnsf_crane build complete."
+	@echo
+
+
+ANOTHER_CRANE_OBJS =
+ANOTHER_CRANE_OBJS += crane_model_2/impl_ode.o
+ANOTHER_CRANE_OBJS += crane_model_2/impl_jac_x.o
+ANOTHER_CRANE_OBJS += crane_model_2/impl_jac_xdot.o
+ANOTHER_CRANE_OBJS += crane_model_2/impl_jac_u.o
+sim_irk_crane2: $(ANOTHER_CRANE_OBJS) sim_irk_crane2.o
+	$(CCC) -o sim_irk_crane2.out  sim_irk_crane2.o $(ANOTHER_CRANE_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_irk_crane2 build complete."
 	@echo
 
 

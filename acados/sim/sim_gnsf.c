@@ -536,7 +536,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
 {
     acados_timer tot_timer, casadi_timer;
     acados_tic(&tot_timer);
-    printf("GENERALIZED NONLINEAR STATIC FEEDBACK (GNSF) SIMULATION \n");
+    // printf("GENERALIZED NONLINEAR STATIC FEEDBACK (GNSF) SIMULATION \n");
     // print_gnsf_dims(dims);
 
     gnsf_workspace *workspace = (gnsf_workspace *) gnsf_cast_workspace(dims, work_);
@@ -789,7 +789,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
         }
     }
     out->info->CPUtime = acados_toc(&tot_timer);
-    printf("tot_time = %f\n", out->info->CPUtime);
+    // printf("tot_time = %f\n", out->info->CPUtime);
     blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn); //TODO pack everythin in out
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);
 }
