@@ -468,6 +468,7 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_erk_config_initialize_default(config->sim_solvers[ii]);
+		config->sim_solvers[ii]->ns = 4;
     }
 
 #elif DYNAMICS==1
@@ -478,6 +479,7 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_lifted_irk_config_initialize_default(config->sim_solvers[ii]);
+		config->sim_solvers[ii]->ns = 2;
     }
 #else
 	// dynamics: IRK
@@ -487,6 +489,7 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_irk_config_initialize_default(config->sim_solvers[ii]);
+		config->sim_solvers[ii]->ns = 2;
     }
 #endif
 

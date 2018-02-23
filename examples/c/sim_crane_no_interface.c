@@ -196,16 +196,19 @@ int main()
 			case 0: // erk
 				printf("\n\nsim solver: ERK\n");
 				sim_erk_config_initialize_default(config);
+				config->ns = 4;
 				break;
 
 			case 1: // irk
 				printf("\n\nsim solver: IRK\n");
 				sim_irk_config_initialize_default(config);
+				config->ns = 2;
 				break;
 
 			case 2: // lifted_irk
 				printf("\n\nsim solver: Lifted_IRK\n");
 				sim_lifted_irk_config_initialize_default(config);
+				config->ns = 2;
 				break;
 
 			default :
@@ -222,7 +225,6 @@ int main()
 		void *dims_mem = malloc(dims_size);
 		sim_dims *dims = sim_dims_assign(dims_mem);
 
-		dims->num_stages = num_stages;
 		dims->nx = nx;
 		dims->nu = nu;
 

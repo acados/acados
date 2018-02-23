@@ -32,10 +32,9 @@
 
 typedef struct
 {
-    int num_stages;
     int nx;
     int nu;
-    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
+//    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
 } sim_dims;
 
 
@@ -87,7 +86,6 @@ typedef struct
 {
 
     double interval;
-    int num_stages;
 
     int num_steps;
     int num_forw_sens;
@@ -125,6 +123,7 @@ typedef struct
     int (*model_calculate_size) (void *config, sim_dims *dims);
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
     void (*config_initialize_default) (void *config);
+	int ns; // number of stages
 } sim_solver_config;
 
 

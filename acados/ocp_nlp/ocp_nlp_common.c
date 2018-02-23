@@ -1146,7 +1146,7 @@ void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int s
 {
     sim_dims->nx = nlp_dims->nx[stage];
     sim_dims->nu = nlp_dims->nu[stage];
-    sim_dims->num_stages = nlp_dims->num_stages[stage];
+//    sim_dims->num_stages = nlp_dims->num_stages[stage];
 }
 
 

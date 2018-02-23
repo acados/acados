@@ -46,11 +46,12 @@ void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
-int sim_irk_opts_calculate_size(void *config, sim_dims *dims)
+int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 {
 
-	// extract ds
-    int ns = dims->num_stages;
+	sim_solver_config *config = config_;
+
+    int ns = config->ns;
 
     int size = 0;
 
@@ -73,15 +74,16 @@ int sim_irk_opts_calculate_size(void *config, sim_dims *dims)
 
 
 
-void *sim_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory)
+void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
+	sim_solver_config *config = config_;
+
+    int ns = config->ns;
+
     char *c_ptr = (char *) raw_memory;
 
     sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
     c_ptr += sizeof(sim_rk_opts);
-
-    int ns = dims->num_stages;
-    opts->num_stages = ns;
 
     align_char_to(8, &c_ptr);
 
@@ -103,15 +105,19 @@ void *sim_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
-void sim_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
+void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
+	sim_solver_config *config = config_;
+
+    int ns = config->ns;
+
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
 	// gauss collocation nodes
-    gauss_nodes(opts->num_stages, opts->c_vec, opts->work);
+    gauss_nodes(ns, opts->c_vec, opts->work);
 
 	// butcher tableau
-    butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
 	// default options
     opts->newton_iter = 3;
@@ -142,14 +148,17 @@ void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 
 
 
-int sim_irk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_)
+int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
+	sim_solver_config *config = config_;
+
+    int ns = config->ns;
+
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
 
-    int ns = opts->num_stages; // number of stages
     int steps = opts->num_steps;
 
     int size = sizeof(sim_irk_workspace);
@@ -189,15 +198,18 @@ int sim_irk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_)
 
 
 
-static void *sim_irk_workspace_cast(void *config, sim_dims *dims, void *opts_, void *raw_memory)
+static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
+
+	sim_solver_config *config = config_;
+
+    int ns = config->ns;
 
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
 
     int nx = dims->nx;
     int nu = dims->nu;
 
-    int ns = opts->num_stages;
     int steps = opts->num_steps;
 
     char *c_ptr = (char *)raw_memory;
@@ -279,8 +291,12 @@ static void *sim_irk_workspace_cast(void *config, sim_dims *dims, void *opts_, v
 
 
 
-int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
+int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
+
+	sim_solver_config *config = config_;
+
+    int ns = config->ns;
 
     sim_rk_opts *opts = (sim_rk_opts *) opts_;
     // sim_irk_memory *mem = (sim_irk_memory *) mem_;
@@ -297,7 +313,6 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
 	double *u = in->u;
     double *S_forw_in = in->S_forw;
 
-    int ns = opts->num_stages;
     int newton_iter = opts->newton_iter;
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
@@ -672,6 +687,7 @@ void sim_irk_config_initialize_default(void *config_)
 	config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_irk_model_calculate_size;
 	config->model_assign = &sim_irk_model_assign;
+	config->ns = 3;
 
 	return;
 

@@ -44,6 +44,7 @@ extern "C" {
 typedef struct
 {
 	void *cost_dims;
+//	void **dyn_dims;
     int *nx;
     int *nu;
     int *nb;  // nbx + nbu
