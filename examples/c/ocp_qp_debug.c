@@ -85,50 +85,7 @@ double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double 
 }
 
 
-
-void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver)
-{
-    char *solver_str = strstr(lib_str, "solver");
-    char *N2_str_full = strstr(solver_str, "_B");
-    char *warm_str_full = strstr(solver_str, "warmstart_");
-
-    if (strstr(solver_str, "HPMPC") != NULL)
-    {
-        printf("HPMPC\t\tdetected\n");
-        *qp_solver = PARTIAL_CONDENSING_HPMPC;
-
-    }
-    if (strstr(solver_str, "qpOASES") != NULL)
-    {
-        printf("qpOASES\t\tdetected\n");
-        *qp_solver = FULL_CONDENSING_QPOASES;
-        *N2 = 0;
-    }
-    if (N2_str_full != NULL)
-    {
-        int N2_len = strlen(N2_str_full) - strlen("_B.so");
-        char *N2_str = strndup(N2_str_full+2, N2_len);
-        *N2 = 0;
-        for (int ii = 0; ii < N2_len; ii++)
-            *N2 += (N2_str[N2_len-ii-1] - '0')*pow(10,ii);
-        printf("N2 = %d\t\tdetected\n", *N2);
-    } else
-    {
-        *N2 = 0;
-        printf("N2 \t\tnot detected (setting to 0)\n");
-    }
-    if (warm_str_full != NULL)
-    {
-        *warm_start = warm_str_full[10] - '0';
-        printf("warmstart = %d\tdetected\n", *warm_start);
-    } else
-    {
-        printf("warmstart \tnot detected (setting to 0)\n");
-        *warm_start = 0;
-    }
-    // exit(1);
-}
-
+void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver);
 
 
 int main() {
@@ -145,7 +102,7 @@ int main() {
 
     // TODO(dimitris): currently assuming we run it from build dir
     // snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B10.so");
-    snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_qpOASES_e_N2_warmstart_0.so");
+    snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_nsteps_20_solver_qpDUNES_B0_warmstart_1.so");
 
     void *lib = dlopen(lib_str, RTLD_NOW);
     if (lib == NULL) {
@@ -228,7 +185,6 @@ int main() {
 
     void *args = ocp_qp_create_args(&plan, &dims);
 
-
     ocp_qp_full_condensing_solver_args *fcond_solver_args = NULL;
     ocp_qp_sparse_solver_args *pcond_solver_args = NULL;
     pcond_solver_args++;
@@ -244,7 +200,7 @@ int main() {
 
         hpipm_pcond_args->N2 = N2;
         hpipm_solver_args->hpipm_args->iter_max = 1000;
-        hpipm_solver_args->hpipm_args->warm_start = 1;  // // TODO(dimitris): ONLY WORKS ONLY WITH WARM_START!
+        hpipm_solver_args->hpipm_args->warm_start = warmstart;  // TODO(dimitris): ONLY WORKS ONLY WITH WARM_START!
         // hpipm_solver_args->hpipm_args->mu0 = 1e6;
         // hpipm_solver_args->hpipm_args->tol = 1e-12;
 
@@ -260,7 +216,7 @@ int main() {
 
         hpmpc_solver_args->max_iter = 1000;
         hpmpc_solver_args->tol = 1e-12;
-        hpmpc_solver_args->warm_start = 0;
+        hpmpc_solver_args->warm_start = warmstart;
 #endif
         break;
     case PARTIAL_CONDENSING_QPDUNES:
@@ -272,7 +228,7 @@ int main() {
 
         qpdunes_pcond_args->N2 = N2;  // NOTE(dimitris): only change N2 above, not here!
 
-        qpdunes_solver_args->warmstart = 1;
+        qpdunes_solver_args->warmstart = warmstart;
 
         if (N2 == dims.N)
         {
@@ -292,7 +248,7 @@ int main() {
         dense_qp_hpipm_args *dense_hpipm_solver_args = (dense_qp_hpipm_args *)fcond_solver_args->solver_args;
 
         dense_hpipm_solver_args->hpipm_args->iter_max = 1000;
-        dense_hpipm_solver_args->hpipm_args->warm_start = 0;
+        dense_hpipm_solver_args->hpipm_args->warm_start = warmstart;
 
         break;
     case FULL_CONDENSING_QORE:
@@ -302,7 +258,7 @@ int main() {
         dense_qp_qore_args *qore_solver_args = (dense_qp_qore_args *)fcond_solver_args->solver_args;
 
         qore_solver_args->max_iter = 1000;
-        qore_solver_args->warm_start = 0;  // TODO(dimitris): ONLY WORKS COLD STARTED
+        qore_solver_args->warm_start = warmstart;  // TODO(dimitris): ONLY WORKS COLD STARTED
 
         if (qore_solver_args->warm_start)
             qore_solver_args->warm_strategy = 0;
@@ -314,7 +270,7 @@ int main() {
         fcond_solver_args = (ocp_qp_full_condensing_solver_args *)args;
         dense_qp_qpoases_args *qpoases_solver_args = (dense_qp_qpoases_args *)fcond_solver_args->solver_args;
 
-        qpoases_solver_args->warm_start = 1;
+        qpoases_solver_args->warm_start = warmstart;
 
         break;
     case PARTIAL_CONDENSING_OOQP:
@@ -576,9 +532,9 @@ int main() {
         int tmp_str_len = strlen(tmp_str_1) - strlen(".so");
         char *tmp_str_2 = strndup(tmp_str_1, tmp_str_len);
 
-        snprintf(save_str, sizeof(save_str), "%s_cpu_times.txt", tmp_str_2);
+        snprintf(save_str, sizeof(save_str), "%s_acados_cpu_times.txt", tmp_str_2);
         write_double_vector_to_txt(min_cpu_times, n_problems, save_str);
-        snprintf(save_str, sizeof(save_str), "%s_iters.txt", tmp_str_2);
+        snprintf(save_str, sizeof(save_str), "%s_acados_iters.txt", tmp_str_2);
         write_int_vector_to_txt(iters, n_problems, save_str);
         snprintf(save_str, sizeof(save_str), "%s_sol_error.txt", tmp_str_2);
         write_double_vector_to_txt(sol_error, n_problems, save_str);
@@ -591,4 +547,51 @@ int main() {
     printf("\nacados runs with N2 = %d\n", N2);
 
     return 0;
+}
+
+void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver)
+{
+    char *solver_str = strstr(lib_str, "solver");
+    char *N2_str_full = strstr(solver_str, "_B");
+    char *warm_str_full = strstr(solver_str, "warmstart_");
+
+    if (strstr(solver_str, "HPMPC") != NULL)
+    {
+        printf("HPMPC\t\tdetected\n");
+        *qp_solver = PARTIAL_CONDENSING_HPMPC;
+    }
+    if (strstr(solver_str, "qpOASES") != NULL)
+    {
+        printf("qpOASES\t\tdetected\n");
+        *qp_solver = FULL_CONDENSING_QPOASES;
+    }
+    if (strstr(solver_str, "qpDUNES") != NULL)
+    {
+        printf("qpDUNES\t\tdetected\n");
+        *qp_solver = PARTIAL_CONDENSING_QPDUNES;
+    }
+
+    if (N2_str_full != NULL)
+    {
+        int N2_len = strlen(N2_str_full) - strlen("_B_warmstart_X.so");
+        char *N2_str = strndup(N2_str_full+2, N2_len);
+        *N2 = 0;
+        for (int ii = 0; ii < N2_len; ii++)
+            *N2 += (N2_str[N2_len-ii-1] - '0')*pow(10,ii);
+        printf("N2 = %d\t\tdetected\n", *N2);
+    } else
+    {
+        *N2 = 0;
+        printf("N2 \t\tnot detected (setting to 0)\n");
+    }
+    if (warm_str_full != NULL)
+    {
+        *warm_start = warm_str_full[10] - '0';
+        printf("warmstart = %d\tdetected\n", *warm_start);
+    } else
+    {
+        printf("warmstart \tnot detected (setting to 0)\n");
+        *warm_start = 0;
+    }
+    // exit(1);
 }

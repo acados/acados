@@ -1,6 +1,7 @@
 
 dynamic_library:
-	gcc -shared -o ocp_qp_data_nmasses_4_solver_HPMPC_B0.so ocp_qp_data_nmasses_4_solver_HPMPC_B0.c
-	gcc -shared -o ocp_qp_data_nmasses_4_solver_HPMPC_B5.so ocp_qp_data_nmasses_4_solver_HPMPC_B5.c
-	gcc -shared -o ocp_qp_data_nmasses_4_solver_HPMPC_B10.so ocp_qp_data_nmasses_4_solver_HPMPC_B10.c
-	gcc -shared -o ocp_qp_data_nmasses_4_solver_qpOASES_e_N2_warmstart_0.so ocp_qp_data_nmasses_4_solver_qpOASES_e_N2_warmstart_0.c
+	gcc -shared -o ocp_qp_data_nmasses_4_nsteps_20_solver_qpOASES_e_N2_warmstart_1.so ocp_qp_data_nmasses_4_nsteps_20_solver_qpOASES_e_N2_warmstart_1.c
+	gcc -shared -o ocp_qp_data_nmasses_4_nsteps_20_solver_qpDUNES_B0_warmstart_1.so ocp_qp_data_nmasses_4_nsteps_20_solver_qpDUNES_B0_warmstart_1.c
+
+clean:
+	rm -rf *.so
