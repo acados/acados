@@ -28,9 +28,9 @@
 #endif
 
 // TODOS!
+// PROPER NAMING OF LIB
 // STORE OPTIMAL SOLUTION FROM MATLAB (and DEFINE with SOLVER)
-// RUN CLOSED LOOP SIMULATION AND PRINT NITER, CPU_TIME, ERROR
-// NREP TO TAKE MINIMUM TIME
+// CALC ERROR IN SOLUTION OF EACH PROBLEM
 
 void load_ptr(void *lib, char *data_string, void **ptr)
 {
@@ -44,7 +44,8 @@ void load_ptr(void *lib, char *data_string, void **ptr)
 
 int main() {
 
-    int n_problems = 5;
+    int n_rep = 2;  // TODO number of runs (taking minimum time)
+    int n_problems = 5;  // number of MPC problems stored in shared library
 
     /************************************************
     * load dynamic library
@@ -112,11 +113,11 @@ int main() {
     }
 
     /************************************************
-    * set up solver and input/output
+    * set up solver args and input/output
     ************************************************/
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = FULL_CONDENSING_QORE;
+    plan.qp_solver = FULL_CONDENSING_QPOASES;
 
     void *args = ocp_qp_create_args(&plan, &dims);
 
@@ -217,8 +218,6 @@ int main() {
 
     ocp_qp_out *qp_out = create_ocp_qp_out(&dims);
 
-    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, &dims, args);
-
     /************************************************
     * define pointers to be used in closed loop
     ************************************************/
@@ -255,124 +254,160 @@ int main() {
 
     int sum_nb = 0;
 
+    // logs
+    double *min_cpu_times = malloc(n_problems*sizeof(double));
+    double *sol_error = malloc(n_problems*sizeof(double));
+    int *iters = malloc(n_problems*sizeof(int));
+
     // info
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
 
-    for (int indx = 0; indx < n_problems; indx++)
+    /************************************************
+    * closed loop simulation
+    ************************************************/
+
+    ocp_qp_solver *qp_solver;
+
+    for (int irun = 0; irun < n_rep; irun++)
     {
+        qp_solver = ocp_qp_create(&plan, &dims, args);
 
-        /************************************************
-        * set up dynamics
-        ************************************************/
-
-        snprintf(str, sizeof(str), "Av_%d", indx);
-        load_ptr(lib, str, (void **)&Av);
-
-        snprintf(str, sizeof(str), "Bv_%d", indx);
-        load_ptr(lib, str, (void **)&Bv);
-
-        snprintf(str, sizeof(str), "b_%d", indx);
-        load_ptr(lib, str, (void **)&b);
-
-        sum_A = 0;
-        sum_B = 0;
-        sum_b = 0;
-
-        for (int ii = 0; ii < N; ii++)
+        for (int indx = 0; indx < n_problems; indx++)
         {
-            // TODO(dimitris): test for varying dimensions
-            hA[ii] = &Av[sum_A];
-            sum_A += dims.nx[ii+1]*dims.nx[ii];
 
-            hB[ii] = &Bv[sum_B];
-            sum_B += dims.nx[ii+1]*dims.nu[ii];
+            /************************************************
+            * set up dynamics
+            ************************************************/
 
-            hb[ii] = &b[sum_b];
-            sum_b += dims.nx[ii+1];
+            snprintf(str, sizeof(str), "Av_%d", indx);
+            load_ptr(lib, str, (void **)&Av);
+
+            snprintf(str, sizeof(str), "Bv_%d", indx);
+            load_ptr(lib, str, (void **)&Bv);
+
+            snprintf(str, sizeof(str), "b_%d", indx);
+            load_ptr(lib, str, (void **)&b);
+
+            sum_A = 0;
+            sum_B = 0;
+            sum_b = 0;
+
+            for (int ii = 0; ii < N; ii++)
+            {
+                // TODO(dimitris): test for varying dimensions
+                hA[ii] = &Av[sum_A];
+                sum_A += dims.nx[ii+1]*dims.nx[ii];
+
+                hB[ii] = &Bv[sum_B];
+                sum_B += dims.nx[ii+1]*dims.nu[ii];
+
+                hb[ii] = &b[sum_b];
+                sum_b += dims.nx[ii+1];
+            }
+
+            /************************************************
+            * set up objective
+            ************************************************/
+
+            snprintf(str, sizeof(str), "Qv_%d", indx);
+            load_ptr(lib, str, (void **)&Qv);
+
+            snprintf(str, sizeof(str), "Rv_%d", indx);
+            load_ptr(lib, str, (void **)&Rv);
+
+            snprintf(str, sizeof(str), "Sv_%d", indx);
+            load_ptr(lib, str, (void **)&Sv);
+
+            snprintf(str, sizeof(str), "q_%d", indx);
+            load_ptr(lib, str, (void **)&q);
+
+            snprintf(str, sizeof(str), "r_%d", indx);
+            load_ptr(lib, str, (void **)&r);
+
+            sum_Q = 0;
+            sum_R = 0;
+            sum_S = 0;
+            sum_q = 0;
+            sum_r = 0;
+
+            for (int ii = 0; ii < N+1; ii++)
+            {
+                hQ[ii] = &Qv[sum_Q];
+                sum_Q += dims.nx[ii]*dims.nx[ii];
+
+                hR[ii] = &Rv[sum_R];
+                sum_R += dims.nu[ii]*dims.nu[ii];
+
+                hS[ii] = &Sv[sum_S];
+                sum_S += dims.nx[ii]*dims.nu[ii];
+
+                hq[ii] = &q[sum_q];
+                sum_q += dims.nx[ii];
+
+                hr[ii] = &r[sum_r];
+                sum_r += dims.nu[ii];
+            }
+
+            /************************************************
+            * set up constraints
+            ************************************************/
+
+            snprintf(str, sizeof(str), "lb_%d", indx);
+            load_ptr(lib, str, (void **)&lb);
+
+            snprintf(str, sizeof(str), "ub_%d", indx);
+            load_ptr(lib, str, (void **)&ub);
+
+            sum_nb = 0;
+
+            for (int ii = 0; ii < N+1; ii++)
+            {
+                hlb[ii] = &lb[sum_nb];
+                hub[ii] = &ub[sum_nb];
+                sum_nb += dims.nb[ii];
+            }
+
+            /************************************************
+            * convert data and solve qp
+            ************************************************/
+
+            d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub,
+                hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
+
+            // print_ocp_qp_in(qp_in);
+
+            int acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
+
+            // print_ocp_qp_out(qp_out);
+
+            if (acados_return != ACADOS_SUCCESS)
+            {
+                printf("QP SOLVER FAILED WITH FLAG %d\n", acados_return);
+                return -1;
+            }
+
+            /************************************************
+            * print and save results
+            ************************************************/
+
+            printf("\n--> problem %d solved in %d iterations and %f ms\n\n",
+                indx, info->num_iter, info->total_time*1000);
+
+            if (irun == 0)
+            {
+                min_cpu_times[indx] = info->total_time;
+                iters[indx] = info->num_iter;
+            } else
+            {
+                assert(iters(indx) == info->num_iter-1 &&
+                    "inconsistent number of iterations between runs");
+                if (min_cpu_times[indx] > info->total_time)
+                    min_cpu_times[indx] = info->total_time;
+            }
+
         }
-
-        /************************************************
-        * set up objective
-        ************************************************/
-
-        snprintf(str, sizeof(str), "Qv_%d", indx);
-        load_ptr(lib, str, (void **)&Qv);
-
-        snprintf(str, sizeof(str), "Rv_%d", indx);
-        load_ptr(lib, str, (void **)&Rv);
-
-        snprintf(str, sizeof(str), "Sv_%d", indx);
-        load_ptr(lib, str, (void **)&Sv);
-
-        snprintf(str, sizeof(str), "q_%d", indx);
-        load_ptr(lib, str, (void **)&q);
-
-        snprintf(str, sizeof(str), "r_%d", indx);
-        load_ptr(lib, str, (void **)&r);
-
-        sum_Q = 0;
-        sum_R = 0;
-        sum_S = 0;
-        sum_q = 0;
-        sum_r = 0;
-
-        for (int ii = 0; ii < N+1; ii++)
-        {
-            hQ[ii] = &Qv[sum_Q];
-            sum_Q += dims.nx[ii]*dims.nx[ii];
-
-            hR[ii] = &Rv[sum_R];
-            sum_R += dims.nu[ii]*dims.nu[ii];
-
-            hS[ii] = &Sv[sum_S];
-            sum_S += dims.nx[ii]*dims.nu[ii];
-
-            hq[ii] = &q[sum_q];
-            sum_q += dims.nx[ii];
-
-            hr[ii] = &r[sum_r];
-            sum_r += dims.nu[ii];
-        }
-
-        /************************************************
-        * set up constraints
-        ************************************************/
-
-        snprintf(str, sizeof(str), "lb_%d", indx);
-        load_ptr(lib, str, (void **)&lb);
-
-        snprintf(str, sizeof(str), "ub_%d", indx);
-        load_ptr(lib, str, (void **)&ub);
-
-        sum_nb = 0;
-
-        for (int ii = 0; ii < N+1; ii++)
-        {
-            hlb[ii] = &lb[sum_nb];
-            hub[ii] = &ub[sum_nb];
-            sum_nb += dims.nb[ii];
-        }
-
-        /************************************************
-        * convert data and solve qp
-        ************************************************/
-
-        d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
-
-        // print_ocp_qp_in(qp_in);
-
-        int acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
-
-        // print_ocp_qp_out(qp_out);
-
-        if (acados_return != ACADOS_SUCCESS)
-        {
-            printf("QP SOLVER FAILED WITH FLAG %d\n", acados_return);
-            return -1;
-        }
-
-        printf("\n--> problem %d solved in %d iterations\n\n", indx, info->num_iter);
-
+        printf("\n------ end of run #%d---------\n", irun+1);
+        free(qp_solver);
     }
 
     /************************************************
@@ -399,7 +434,17 @@ int main() {
 
     free(qp_in);
     free(qp_out);
-    free(qp_solver);
+
+    printf("min times-iters\n");
+    for (int ii = 0; ii < n_problems; ii++) printf("%f - %d\t", 1000*min_cpu_times[ii], iters[ii]);
+    printf("\nok\n");
+
+    write_double_vector_to_txt(min_cpu_times, n_problems, "tmp_cpu_times.txt");
+    write_int_vector_to_txt(iters, n_problems, "tmp_iters.txt");
+
+    free(min_cpu_times);
+    free(sol_error);
+    free(iters);
 
     return 0;
 }
