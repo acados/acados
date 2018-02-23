@@ -127,10 +127,14 @@ bool set_option_int(void *args_, const char *option, const int value)
             } else if (!strcmp(token, "N2")) {
                 pcond_args->N2 = value;
             } else if (!strcmp(token, "clipping")) {
-                if (value == 1)
+                if (value == 1) {
                     args->stageQpSolver = QPDUNES_WITH_CLIPPING;
-                else
+                    args->options.lsType = QPDUNES_LS_ACCELERATED_GRADIENT_BISECTION_LS;
+                }
+                else {
                     args->stageQpSolver = QPDUNES_WITH_QPOASES;
+                    args->options.lsType = QPDUNES_LS_HOMOTOPY_GRID_SEARCH;
+                }
             } else {
                 return false;
             }
