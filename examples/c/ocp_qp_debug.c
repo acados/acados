@@ -101,12 +101,11 @@ int main() {
     char lib_str[256];
 
     char solver_in[256] = "qpDUNES_B0";
-    int N_in = 10;
+    int N_in = 20;
     int nmasses_in = 4;
     int warmstart_in = 1;
 
     // TODO(dimitris): currently assuming we run it from build dir
-    // snprintf(lib_str, sizeof(lib_str), "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_4_solver_HPMPC_B10.so");
     snprintf(lib_str, sizeof(lib_str),
         "../examples/c/ocp_qp_bugs/ocp_qp_data_nmasses_%d_nsteps_%d_solver_%s_warmstart_%d.so",
         nmasses_in, N_in, solver_in, warmstart_in);
@@ -533,17 +532,14 @@ int main() {
 
     if (auto_choose_acados_solver)
     {
-        char *tmp_str_1 = strstr(lib_str, "ocp_qp_data_");
         char save_str[256];
+        char *lib_str_no_ext = strndup(lib_str, strlen(lib_str) - strlen(".so"));
 
-        int tmp_str_len = strlen(tmp_str_1) - strlen(".so");
-        char *tmp_str_2 = strndup(tmp_str_1, tmp_str_len);
-
-        snprintf(save_str, sizeof(save_str), "%s_acados_cpu_times.txt", tmp_str_2);
+        snprintf(save_str, sizeof(save_str), "%s_acados_cpu_times.txt", lib_str_no_ext);
         write_double_vector_to_txt(min_cpu_times, n_problems, save_str);
-        snprintf(save_str, sizeof(save_str), "%s_acados_iters.txt", tmp_str_2);
+        snprintf(save_str, sizeof(save_str), "%s_acados_iters.txt", lib_str_no_ext);
         write_int_vector_to_txt(iters, n_problems, save_str);
-        snprintf(save_str, sizeof(save_str), "%s_sol_error.txt", tmp_str_2);
+        snprintf(save_str, sizeof(save_str), "%s_sol_error.txt", lib_str_no_ext);
         write_double_vector_to_txt(sol_error, n_problems, save_str);
     }
 
@@ -555,6 +551,8 @@ int main() {
 
     return 0;
 }
+
+
 
 void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver)
 {
