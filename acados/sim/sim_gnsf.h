@@ -94,6 +94,8 @@ typedef struct { //workspace
     double *f_LO_in;
     double *f_LO_out;
 
+    int *ipiv; // index of pivot vector
+
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u; 
     

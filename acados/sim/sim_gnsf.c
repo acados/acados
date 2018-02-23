@@ -169,9 +169,6 @@ gnsf_opts *gnsf_opts_assign(gnsf_dims *dims, void *raw_memory)
     gnsf_opts *in = (gnsf_opts *) c_ptr;
     c_ptr += sizeof(gnsf_opts);
 
-    int nx = dims->nx;
-    int nu = dims->nu;
-
     align_char_to(8, &c_ptr);
     assert((char*)raw_memory + gnsf_opts_calculate_size(dims) == c_ptr);
     return in;
@@ -182,14 +179,12 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
 {
     acados_timer atimer;
     acados_tic(&atimer);
-    int nx  = dims->nx;
     int nu  = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
     int nz = dims->nz;
     int n_out = dims->n_out;
     int num_stages = dims->num_stages;
-    int num_steps = dims->num_steps;
 
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
@@ -282,14 +277,12 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
 
 int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts)
 {
-    int nx  = dims->nx;
     int nu  = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
     int nz = dims->nz;
     int n_out = dims->n_out;
     int num_stages = dims->num_stages;
-    int num_steps = dims->num_steps;
 
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
@@ -334,7 +327,6 @@ gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory, int memsize)
     int nz = dims->nz;
     int n_out = dims->n_out;
     int num_stages = dims->num_stages;
-    int num_steps = dims->num_steps;
 
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
@@ -406,6 +398,8 @@ int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts)
 
     size += 5 *num_steps * sizeof(struct blasfeo_dvec); // K1_val, x1_val, ff_val, Z_val, f_LO_val
 	size += num_steps * sizeof(struct blasfeo_dmat); // f_LO_jac
+
+    size += nff * sizeof(int); // ipiv
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
@@ -479,6 +473,8 @@ void *gnsf_cast_workspace(gnsf_dims* dims, void *raw_memory)
     assign_double(res_out_size, &workspace->res_out, &c_ptr);
     assign_double(f_LO_in_size, &workspace->f_LO_in, &c_ptr);
     assign_double(f_LO_out_size, &workspace->f_LO_out, &c_ptr);
+
+    assign_int(nff, &workspace->ipiv, &c_ptr);
 
     assign_blasfeo_dmat_structs(num_steps, &workspace->f_LO_jac, &c_ptr);
 
@@ -563,7 +559,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     double *f_LO_out = workspace->f_LO_out;
 
     struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
-    // int *ipiv = workspace->ipiv;
+    int *ipiv = workspace->ipiv;
     struct blasfeo_dmat J_r_x1u = workspace->J_r_x1u;  // needed for sensitivity propagation
 
     struct blasfeo_dmat dK1_dx1    = workspace->dK1_dx1;
@@ -620,12 +616,12 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
             // res_inc_Jff_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->res_inc_Jff);
             // printf("res_out_newstyle = \n");
             // print_gnsf_res_out( dims, res_out );
-
             out->info->ADtime += acados_toc(&casadi_timer);
 
             blasfeo_pack_dvec(nff, &res_out[0], &res_val, 0);
             blasfeo_pack_dmat(nff, nff, &res_out[nff], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
-            blasfeo_dgetrf_nopivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0); // factorize J_r_ff
+            blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
+            blasfeo_dvecpe(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_unn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
             blasfeo_dtrsv_lnu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
             blasfeo_daxpy(nff, -1.0, &res_val, 0, &ff_val[ss], 0, &ff_val[ss], 0);
@@ -694,7 +690,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
             blasfeo_pack_dmat(nff, nff, &res_out[0], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
             blasfeo_pack_dmat(nff, nx1+ nu, &res_out[nff*nff], nff, &J_r_x1u, 0, 0); // pack residual result into blasfeo struct
 
-            blasfeo_dgetrf_nopivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0); // factorize J_r_ff
+            blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
+            blasfeo_drowpe(nff, ipiv, &J_r_x1u); // permute also rhs
             blasfeo_dtrsm_lunn(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
             blasfeo_dtrsm_llnu(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
 
