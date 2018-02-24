@@ -52,11 +52,11 @@ static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dim
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        // sim_in_size = sim_in_calculate_size(dims->dynamics_dims[ii]);
+        // sim_in_size = sim_in_calculate_size(dims->sim[ii]);
         // if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
-        // sim_out_size = sim_out_calculate_size(dims->dynamics_dims[ii]);
+        // sim_out_size = sim_out_calculate_size(dims->sim[ii]);
         // if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
-        sim_work_size = sim_solvers[ii]->workspace_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii], args->sim_solvers_opts[ii]);
+        sim_work_size = sim_solvers[ii]->workspace_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
         if (sim_work_size > max_sim_work_size) max_sim_work_size = sim_work_size;
     }
     return max_sim_work_size;
@@ -87,7 +87,7 @@ int ocp_nlp_gn_sqp_opts_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_di
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        size += sim_solvers[ii]->opts_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii]);
+        size += sim_solvers[ii]->opts_calculate_size(sim_solvers[ii], dims->sim[ii]);
     }
 
     return size;
@@ -118,8 +118,8 @@ ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_opts_assign(ocp_nlp_solver_config *config, o
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        opts->sim_solvers_opts[ii] = sim_solvers[ii]->opts_assign(sim_solvers[ii], dims->dynamics_dims[ii], c_ptr);
-        c_ptr += sim_solvers[ii]->opts_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii]);
+        opts->sim_solvers_opts[ii] = sim_solvers[ii]->opts_assign(sim_solvers[ii], dims->sim[ii], c_ptr);
+        c_ptr += sim_solvers[ii]->opts_calculate_size(sim_solvers[ii], dims->sim[ii]);
     }
 
     assert((char*)raw_memory + ocp_nlp_gn_sqp_opts_calculate_size(config, dims) >= c_ptr);
@@ -146,7 +146,7 @@ void ocp_nlp_gn_sqp_opts_initialize_default(ocp_nlp_solver_config *config, ocp_n
 
 	for (ii=0; ii<N; ii++)
 	{
-		config->sim_solvers[ii]->opts_initialize_default(config->sim_solvers[ii], dims->dynamics_dims[ii], opts->sim_solvers_opts[ii]);
+		config->sim_solvers[ii]->opts_initialize_default(config->sim_solvers[ii], dims->sim[ii], opts->sim_solvers_opts[ii]);
 	}
 
 	return;
@@ -188,7 +188,7 @@ int ocp_nlp_gn_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
 
     for (int ii = 0; ii < N; ii++)
     {
-        size += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii], args->sim_solvers_opts[ii]);
+        size += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
     }
 
 	// nlp res
@@ -252,8 +252,8 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *confi
 
     for (ii = 0; ii < N; ii++)
     {
-        mem->sim_solvers_mem[ii] = sim_solvers[ii]->memory_assign(sim_solvers[ii], dims->dynamics_dims[ii], args->sim_solvers_opts[ii], c_ptr);
-        c_ptr += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii], args->sim_solvers_opts[ii]);
+        mem->sim_solvers_mem[ii] = sim_solvers[ii]->memory_assign(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii], c_ptr);
+        c_ptr += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
     }
 
 	// nlp res
@@ -338,8 +338,8 @@ int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_n
 
     for (ii = 0; ii < N; ii++)
     {
-        size += sim_in_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii]);
-        size += sim_out_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii]);
+        size += sim_in_calculate_size(sim_solvers[ii], dims->sim[ii]);
+        size += sim_out_calculate_size(sim_solvers[ii], dims->sim[ii]);
     }
 
 
@@ -454,10 +454,10 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        work->sim_in[ii] = sim_in_assign(sim_solvers[ii], dims->dynamics_dims[ii], c_ptr);
-        c_ptr += sim_in_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii]);
-        work->sim_out[ii] = sim_out_assign(sim_solvers[ii], dims->dynamics_dims[ii], c_ptr);
-        c_ptr += sim_out_calculate_size(sim_solvers[ii], dims->dynamics_dims[ii]);
+        work->sim_in[ii] = sim_in_assign(sim_solvers[ii], dims->sim[ii], c_ptr);
+        c_ptr += sim_in_calculate_size(sim_solvers[ii], dims->sim[ii]);
+        work->sim_out[ii] = sim_out_assign(sim_solvers[ii], dims->sim[ii], c_ptr);
+        c_ptr += sim_out_calculate_size(sim_solvers[ii], dims->sim[ii]);
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }

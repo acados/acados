@@ -155,12 +155,12 @@ ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory)
 	c_ptr += sizeof(ocp_nlp_dims);
 
 	// dynamics dims
-	dims->dynamics_dims = (sim_dims **) c_ptr;
+	dims->sim = (sim_dims **) c_ptr;
 	c_ptr += N*sizeof(sim_dims *);
 
 	for (ii=0; ii<N; ii++)
 	{
-		dims->dynamics_dims[ii] = sim_dims_assign(c_ptr);
+		dims->sim[ii] = sim_dims_assign(c_ptr);
 		c_ptr += sim_dims_calculate_size();
 	}
 
@@ -231,8 +231,8 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int 
 	// TODO sim dims initialize ???
 	for (ii=0; ii<N; ii++)
 	{
-		dims->dynamics_dims[ii]->nx = nx[ii];
-		dims->dynamics_dims[ii]->nu = nu[ii];
+		dims->sim[ii]->nx = nx[ii];
+		dims->sim[ii]->nu = nu[ii];
 	}
 
 	// TODO cost dims initialize ???
@@ -366,7 +366,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 	size += N*sizeof(void *);
 	for (ii=0; ii<N; ii++)
 	{
-		size += config->sim_solvers[ii]->model_calculate_size(config->sim_solvers[ii], dims->dynamics_dims[ii]);
+		size += config->sim_solvers[ii]->model_calculate_size(config->sim_solvers[ii], dims->sim[ii]);
 	}
 
 	// cost
@@ -415,8 +415,8 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 	c_ptr += N*sizeof(void *);
 	for (ii=0; ii<N; ii++)
 	{
-		in->dynamics[ii] = config->sim_solvers[ii]->model_assign(config->sim_solvers[ii], dims->dynamics_dims[ii], c_ptr);
-		c_ptr += config->sim_solvers[ii]->model_calculate_size(config->sim_solvers[ii], dims->dynamics_dims[ii]);
+		in->dynamics[ii] = config->sim_solvers[ii]->model_assign(config->sim_solvers[ii], dims->sim[ii], c_ptr);
+		c_ptr += config->sim_solvers[ii]->model_calculate_size(config->sim_solvers[ii], dims->sim[ii]);
 	}
 
 	// cost

@@ -50,8 +50,8 @@ typedef struct
     int *ng;  // number of general linear constraints
 //    int *nh;  // number of path constraints - ONLY difference with ocp_qp_dims atm
     int *ns;  // number of soft constraints
-	ocp_nlp_cost_dims **cost; // TODO rename cost
-	sim_dims **dynamics_dims; // rename sim or dynamics
+	ocp_nlp_cost_dims **cost;
+	sim_dims **sim;
     int N;
 } ocp_nlp_dims;
 
