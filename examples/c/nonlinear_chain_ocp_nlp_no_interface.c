@@ -462,40 +462,31 @@ int main() {
 
 #if DYNAMICS==0
 	// dynamics: ERK
-	config->dynamics_calculate_size = &ocp_nlp_dynamics_erk_calculate_size;
-	config->dynamics_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_dynamics_erk_assign;
-	config->dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_erk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_erk_config_initialize_default(config->sim_solvers[ii]);
-		config->sim_solvers[ii]->ns = 4;
+		config->sim_solvers[ii]->ns = 4; // number of integration stages
     }
 
 #elif DYNAMICS==1
 	// dynamics: lifted IRK
-	config->dynamics_calculate_size = &ocp_nlp_dynamics_lifted_irk_calculate_size;
-	config->dynamics_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_dynamics_lifted_irk_assign;
-	config->dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_lifted_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_lifted_irk_config_initialize_default(config->sim_solvers[ii]);
-		config->sim_solvers[ii]->ns = 2;
+		config->sim_solvers[ii]->ns = 2; // number of integration stages
     }
 #else
 	// dynamics: IRK
-	config->dynamics_calculate_size = &ocp_nlp_dynamics_irk_calculate_size;
-	config->dynamics_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_dynamics_irk_assign;
-	config->dynamics_to_sim_in = (void (*)(void *, sim_in **)) &ocp_nlp_dynamics_irk_to_sim_in;
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_irk_config_initialize_default(config->sim_solvers[ii]);
-		config->sim_solvers[ii]->ns = 2;
+		config->sim_solvers[ii]->ns = 2; // number of integration stages
     }
 #endif
 
 	// constraitns
 	config->constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
-	config->constraints_assign = (void *(*)(ocp_nlp_dims *, void *))&ocp_nlp_constraints_assign;
+	config->constraints_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_constraints_assign;
 
     /************************************************
     * ocp_nlp_dims
@@ -737,29 +728,30 @@ int main() {
 
 
 
-	/* explicit ode */
+	/* dynamics */
 #if DYNAMICS==0
-	ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) nlp_in->dynamics;
 	for (int i=0; i<NN; i++)
-		dynamics->forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
-	for (int i=0; i<NN; i++)
-		dynamics->jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
+	{
+		erk_model *model = (erk_model *) nlp_in->dynamics[i];
+		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
+		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+	}
 #elif DYNAMICS==1
-	ocp_nlp_dynamics_lifted_irk *dynamics = (ocp_nlp_dynamics_lifted_irk *) nlp_in->dynamics;
 	for (int i=0; i<NN; i++)
-		dynamics->forw_vde[i] = (external_function_generic *) &forw_vde_casadi[i];
-	for (int i=0; i<NN; i++)
-		dynamics->jac_ode[i] = (external_function_generic *) &jac_ode_casadi[i];
+	{
+		lifted_irk_model *model = (lifted_irk_model *) nlp_in->dynamics[i];
+		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
+		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+	}
 #else
-	ocp_nlp_dynamics_irk *dynamics = (ocp_nlp_dynamics_irk *) nlp_in->dynamics;
 	for (int i=0; i<NN; i++)
-		dynamics->ode[i] = (external_function_generic *) &impl_ode_casadi[i];
-	for (int i=0; i<NN; i++)
-		dynamics->jac_x[i] = (external_function_generic *) &impl_jac_x_casadi[i];
-	for (int i=0; i<NN; i++)
-		dynamics->jac_xdot[i] = (external_function_generic *) &impl_jac_xdot_casadi[i];
-	for (int i=0; i<NN; i++)
-		dynamics->jac_u[i] = (external_function_generic *) &impl_jac_u_casadi[i];
+	{
+		irk_model *model = (irk_model *) nlp_in->dynamics[i];
+		model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
+		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
+		model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
+		model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
+	}
 #endif
 
 

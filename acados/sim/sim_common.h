@@ -121,7 +121,7 @@ typedef struct
     int (*model_calculate_size) (void *config, sim_dims *dims);
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
     void (*config_initialize_default) (void *config);
-	int ns; // number of stages
+	int ns; // number of integration stages
 } sim_solver_config;
 
 

@@ -156,7 +156,7 @@ typedef struct
 	// TODO array of structures or structures of arrays ???
 	// void **cost; // ???
     void *cost;
-	void *dynamics;
+	void **dynamics;
 	void *constraints;
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
@@ -218,7 +218,7 @@ typedef struct
 
 
 /************************************************
-* function pointers
+* config
 ************************************************/
 
 typedef struct
@@ -228,11 +228,6 @@ typedef struct
 	// cost
 	int (*cost_calculate_size) (ocp_nlp_cost_ls_dims *); // TODO ocp_nlp_cost_dims
 	void *(*cost_assign) (ocp_nlp_cost_ls_dims *, void *); // TODO ocp_nlp_dims
-
-	// dynamics
-	int (*dynamics_calculate_size) (ocp_nlp_dims *); // calculate size
-	void *(*dynamics_assign) (ocp_nlp_dims *, void *); // assign
-	void (*dynamics_to_sim_in) (void *, sim_in **);
 
 	// constraints
 	int (*constraints_calculate_size) (ocp_nlp_dims *); // calculate size

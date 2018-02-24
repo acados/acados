@@ -254,6 +254,7 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *nbx, int *nbu, int *ng, int 
 	for (int ii = 0; ii < N+1; ii++)
 		dims->ns[ii] = ns[ii];
 	
+	// TODO sim dims initialize
 	for (ii=0; ii<N; ii++)
 	{
 		dims->dynamics_dims[ii]->nx = nx[ii];
@@ -264,242 +265,6 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *nbx, int *nbu, int *ng, int 
 	dims->cost_dims = cost_dims;
 
 	return;
-}
-
-
-
-/************************************************
-* dynamics
-************************************************/
-
-/* ERK */
-
-int ocp_nlp_dynamics_erk_calculate_size(ocp_nlp_dims *dims)
-{
-
-	// extract dims
-	int N = dims->N;
-
-	int size = 0;
-
-	size += sizeof(ocp_nlp_dynamics_erk);
-
-	size += 3*N*sizeof(external_function_generic *); // forw_vde, adj_vde, jac_ode
-
-	size += 8; // initial align
-
-//	make_int_multiple_of(64, &size);
-
-	return size;
-
-}
-
-
-
-ocp_nlp_dynamics_erk *ocp_nlp_dynamics_erk_assign(ocp_nlp_dims *dims, void *raw_memory)
-{
-
-    char *c_ptr = (char *) raw_memory;
-
-	// extract sizes
-    int N = dims->N;
-
-	// struct
-    ocp_nlp_dynamics_erk *dynamics = (ocp_nlp_dynamics_erk *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_dynamics_erk);
-
-	// dims
-	dynamics->dims = dims;
-
-	// dynamics
-	// forw_vde
-	dynamics->forw_vde = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-	// adj_vde
-	dynamics->adj_vde = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-	// jac_ode
-	dynamics->jac_ode = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-
-    assert((char *) raw_memory + ocp_nlp_dynamics_erk_calculate_size(dims) >= c_ptr);
-
-	return dynamics;
-
-}
-
-
-
-void ocp_nlp_dynamics_erk_to_sim_in(ocp_nlp_dynamics_erk *dynamics, sim_in **sim)
-{
-	int N = dynamics->dims->N;
-
-	for (int ii = 0; ii < N; ii++)
-	{
-		erk_model *model = sim[ii]->model;
-
-		model->forw_vde_expl = dynamics->forw_vde[ii];
-		model->adj_vde_expl = dynamics->adj_vde[ii];
-		model->jac_ode_expl = dynamics->jac_ode[ii];
-	}
-
-	return;
-
-}
-
-
-
-/* IRK */
-
-int ocp_nlp_dynamics_irk_calculate_size(ocp_nlp_dims *dims)
-{
-	// extract dims
-	int N = dims->N;
-
-	int size = 0;
-
-	size += sizeof(ocp_nlp_dynamics_irk);
-
-	size += 4*N*sizeof(external_function_generic *); // ode, jac_x, jac_xdot, jac_u
-
-	size += 8; // initial align
-
-//	make_int_multiple_of(64, &size);
-
-	return size;
-
-}
-
-
-
-ocp_nlp_dynamics_irk *ocp_nlp_dynamics_irk_assign(ocp_nlp_dims *dims, void *raw_memory)
-{
-
-    char *c_ptr = (char *) raw_memory;
-
-	// extract sizes
-    int N = dims->N;
-
-	// struct
-    ocp_nlp_dynamics_irk *dynamics = (ocp_nlp_dynamics_irk *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_dynamics_irk);
-
-	// dims
-	dynamics->dims = dims;
-
-	// dynamics
-	// jac_u
-	dynamics->ode = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-	// jac_x
-	dynamics->jac_x = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-	// jac_xdot
-	dynamics->jac_xdot = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-	// jac_u
-	dynamics->jac_u = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-
-    assert((char *) raw_memory + ocp_nlp_dynamics_irk_calculate_size(dims) >= c_ptr);
-
-	return dynamics;
-
-}
-
-
-
-void ocp_nlp_dynamics_irk_to_sim_in(ocp_nlp_dynamics_irk *dynamics, sim_in **sim)
-{
-	int N = dynamics->dims->N;
-
-	for (int ii=0; ii<N; ii++)
-	{
-		irk_model *model = sim[ii]->model;
-
-		model->ode_impl = dynamics->ode[ii];
-		model->jac_x_ode_impl = dynamics->jac_x[ii];
-		model->jac_xdot_ode_impl = dynamics->jac_xdot[ii];
-		model->jac_u_ode_impl = dynamics->jac_u[ii];
-	}
-
-	return;
-
-}
-
-
-
-/* lifted IRK */
-
-int ocp_nlp_dynamics_lifted_irk_calculate_size(ocp_nlp_dims *dims)
-{
-	// extract dims
-	int N = dims->N;
-
-	int size = 0;
-
-	size += sizeof(ocp_nlp_dynamics_lifted_irk);
-
-	size += 2*N*sizeof(external_function_generic *); // forw_vde, jac_ode
-
-	size += 8; // initial align
-
-//	make_int_multiple_of(64, &size);
-
-	return size;
-
-}
-
-
-
-ocp_nlp_dynamics_lifted_irk *ocp_nlp_dynamics_lifted_irk_assign(ocp_nlp_dims *dims, void *raw_memory)
-{
-
-    char *c_ptr = (char *) raw_memory;
-
-	// extract sizes
-    int N = dims->N;
-
-	// struct
-    ocp_nlp_dynamics_lifted_irk *dynamics = (ocp_nlp_dynamics_lifted_irk *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_dynamics_lifted_irk);
-
-	// dims
-	dynamics->dims = dims;
-
-	// dynamics
-	// forw_vde
-	dynamics->forw_vde = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-	// adj_vde
-//	dynamics->adj_vde = (external_function_generic **) c_ptr;
-//	c_ptr += N*sizeof(external_function_generic *);
-	// jac_ode
-	dynamics->jac_ode = (external_function_generic **) c_ptr;
-	c_ptr += N*sizeof(external_function_generic *);
-
-    assert((char *) raw_memory + ocp_nlp_dynamics_lifted_irk_calculate_size(dims) >= c_ptr);
-
-	return dynamics;
-
-}
-
-
-
-void ocp_nlp_dynamics_lifted_irk_to_sim_in(ocp_nlp_dynamics_lifted_irk *dynamics, sim_in **sim)
-{
-	int N = dynamics->dims->N;
-
-	for (int ii = 0; ii < N; ii++)
-	{
-		lifted_irk_model *model = sim[ii]->model;
-
-		model->forw_vde_expl = dynamics->forw_vde[ii];
-		model->jac_ode_expl = dynamics->jac_ode[ii];
-	}
-
-	return;
-
 }
 
 
@@ -709,6 +474,8 @@ ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_me
 int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
 
+	int ii;
+
 	int N = dims->N;
 
     int size = sizeof(ocp_nlp_in);
@@ -718,7 +485,12 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
     // TODO(dimitris): check arguments for cost type
 	size += config->cost_calculate_size(dims->cost_dims); // cost
 
-	size += config->dynamics_calculate_size(dims); // dynamics
+	// dynamics
+	size += N*sizeof(void *);
+	for (ii=0; ii<N; ii++)
+	{
+		size += config->sim_solvers[ii]->model_calculate_size(config->sim_solvers[ii], dims->dynamics_dims[ii]);
+	}
 
 	size += config->constraints_calculate_size(dims); // constraints
 
@@ -734,6 +506,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 // TODO(dimitris): move num_stages inside args, as nested integrator args
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, int num_stages, void *raw_memory)
 {
+
+	int ii;
 
 	int N = dims->N;
 
@@ -759,8 +533,13 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 	c_ptr += config->cost_calculate_size(dims->cost_dims);
 
 	// dynamics
-	in->dynamics = config->dynamics_assign(dims, c_ptr);
-	c_ptr += config->dynamics_calculate_size(dims);
+	in->dynamics = (void **) c_ptr;
+	c_ptr += N*sizeof(void *);
+	for (ii=0; ii<N; ii++)
+	{
+		in->dynamics[ii] = config->sim_solvers[ii]->model_assign(config->sim_solvers[ii], dims->dynamics_dims[ii], c_ptr);
+		c_ptr += config->sim_solvers[ii]->model_calculate_size(config->sim_solvers[ii], dims->dynamics_dims[ii]);
+	}
 
 	// constraints
 	in->constraints = config->constraints_assign(dims, c_ptr);

@@ -764,13 +764,13 @@ static void update_variables(const ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *ar
 
 
 // Simple fixed-step Gauss-Newton based SQP routine
-int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *args, ocp_nlp_gn_sqp_memory *mem, void *work_)
+int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *opts, ocp_nlp_gn_sqp_memory *mem, void *work_)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
 	/* sim_solver_config **sim_solvers = config->sim_solvers; */
 
     ocp_nlp_gn_sqp_work *work = (ocp_nlp_gn_sqp_work*) work_;
-    ocp_nlp_gn_sqp_cast_workspace(config, dims, work, mem, args);
+    ocp_nlp_gn_sqp_cast_workspace(config, dims, work, mem, opts);
 
     int N = dims->N;
     int *nx = dims->nx;
@@ -780,12 +780,11 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
     // set up integrators
 
-	// copy function pointers
-	config->dynamics_to_sim_in(nlp_in->dynamics, work->sim_in);
-
     for (int ii = 0; ii < N; ii++)
     {
-        sim_opts = args->sim_solvers_opts[ii];
+		work->sim_in[ii]->model = nlp_in->dynamics[ii];
+
+        sim_opts = opts->sim_solvers_opts[ii];
         work->sim_in[ii]->T = nlp_in->Ts[ii];
 
         // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!
@@ -799,7 +798,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
             // work->sim_in[ii]->grad_K[jj] = 0.0;
     }
 
-    initialize_objective(nlp_in, args, mem, work);
+    initialize_objective(nlp_in, opts, mem, work);
 
     initialize_constraints(nlp_in, mem, work);
 
@@ -809,24 +808,24 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     acados_tic(&timer);
 
 	// main sqp loop
-    int max_sqp_iterations =  args->maxIter;
+    int max_sqp_iterations =  opts->maxIter;
 	int sqp_iter = 0;
     for ( ; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
 
-        linearize_update_qp_matrices(config, nlp_in, nlp_out, args, mem, work);
+        linearize_update_qp_matrices(config, nlp_in, nlp_out, opts, mem, work);
 
 		// update QP rhs for SQP (step prim var, abs dual var)
-        sqp_update_qp_vectors(nlp_in, nlp_out, args, mem, work);
+        sqp_update_qp_vectors(nlp_in, nlp_out, opts, mem, work);
 
 		// compute nlp residuals
 		ocp_nlp_res_compute(nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
 
 		// TODO exit conditions on residuals
-		if( (mem->nlp_res->inf_norm_res_g < args->min_res_g) &
-			(mem->nlp_res->inf_norm_res_b < args->min_res_b) &
-			(mem->nlp_res->inf_norm_res_d < args->min_res_d) &
-			(mem->nlp_res->inf_norm_res_m < args->min_res_m) )
+		if( (mem->nlp_res->inf_norm_res_g < opts->min_res_g) &
+			(mem->nlp_res->inf_norm_res_b < opts->min_res_b) &
+			(mem->nlp_res->inf_norm_res_d < opts->min_res_d) &
+			(mem->nlp_res->inf_norm_res_m < opts->min_res_m) )
 		{
 
 			// save sqp iterations number
@@ -843,7 +842,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 //exit(1);
 
         int_t qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out,
-            args->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
+            opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
 //print_ocp_qp_out(work->qp_out);
 //exit(1);
@@ -854,7 +853,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
             return -1;
         }
 
-        update_variables(nlp_out, args, mem, work);
+        update_variables(nlp_out, opts, mem, work);
 
 //ocp_nlp_dims_print(nlp_out->dims);
 //ocp_nlp_out_print(nlp_out);
@@ -862,13 +861,13 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
         for (int_t i = 0; i < N; i++)
         {
-            sim_rk_opts *opts = (sim_rk_opts*) args->sim_solvers_opts[i];
-            if (opts->scheme == NULL)
+            sim_rk_opts *rk_opts = (sim_rk_opts*) opts->sim_solvers_opts[i];
+            if (rk_opts->scheme == NULL)
                 continue;
-            opts->sens_adj = (opts->scheme->type != exact);
+            rk_opts->sens_adj = (rk_opts->scheme->type != exact);
             if (nlp_in->freezeSens) {
                 // freeze inexact sensitivities after first SQP iteration !!
-                opts->scheme->freeze = true;
+                rk_opts->scheme->freeze = true;
             }
         }
 
