@@ -54,13 +54,16 @@ QORE_PATH = $(EXT_PATH)/qore
 QPDUNES_PATH = $(EXT_PATH)/qpdunes
 
 # include HPMPC
-ACADOS_WITH_HPMPC = 1
+ACADOS_WITH_QPOASES = 0
+
+# include HPMPC
+ACADOS_WITH_HPMPC = 0
 
 # include QPDUNES
-ACADOS_WITH_QPDUNES = 1
+ACADOS_WITH_QPDUNES = 0
 
 # include QORE
-ACADOS_WITH_QORE = 1
+ACADOS_WITH_QORE = 0
 
 # C interface
 ACADOS_WITH_C_INTERFACE = 0
@@ -78,6 +81,9 @@ CFLAGS =
 # debugging flags
 CFLAGS  += #-g -Wall -pedantic -Wfloat-equal #-pg
 
+ifeq ($(ACADOS_WITH_QPOASES), 1)
+CFLAGS += -DACADOS_WITH_QPOASES
+endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
 CFLAGS += -DACADOS_WITH_HPMPC
 endif

@@ -33,7 +33,9 @@
 #include <acados/ocp_qp/ocp_qp_qpdunes.h>
 #endif
 #include <acados/dense_qp/dense_qp_hpipm.h>
+#ifdef ACADOS_WITH_QPOASES
 #include <acados/dense_qp/dense_qp_qpoases.h>
+#endif
 #ifdef ACADOS_WITH_QORE
 #include <acados/dense_qp/dense_qp_qore.h>
 #endif
@@ -187,6 +189,7 @@ int main() {
 					break;
 
 				case 3: // FULL_CONDENSING_QPOASES
+#ifdef ACADOS_WITH_QPOASES
                     printf("\nFULL_CONDENSING_QPOASES\n\n");
 
 					// config
@@ -202,6 +205,7 @@ int main() {
 //					sparse_solver_opts = solver_opts;
 //					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
 //					dense_hpipm_opts->hpipm_opts->iter_max = 30;
+#endif
 
 					break;
 
@@ -275,6 +279,10 @@ int main() {
 			}
 
 			// break if there is no solver
+#ifndef ACADOS_WITH_QPOASES
+			if (ii==3)
+				break;
+#endif
 #ifndef ACADOS_WITH_QORE
 			if (ii==4)
 				break;

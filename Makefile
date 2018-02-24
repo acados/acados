@@ -15,7 +15,9 @@ OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
 OBJS += acados/dense_qp/dense_qp_hpipm.o
+ifeq ($(ACADOS_WITH_QPOASES), 1)
 OBJS += acados/dense_qp/dense_qp_qpoases.o
+endif
 ifeq ($(ACADOS_WITH_QORE), 1)
 OBJS += acados/dense_qp/dense_qp_qore.o
 endif
@@ -50,8 +52,12 @@ OBJS += acados/utils/external_function_generic.o
 
 
 # acados dependencies
-STATIC_DEPS = blasfeo_static hpipm_static qpoases_static
-CLEAN_DEPS = blasfeo_clean hpipm_clean qpoases_clean
+STATIC_DEPS = blasfeo_static hpipm_static
+CLEAN_DEPS = blasfeo_clean hpipm_clean
+ifeq ($(ACADOS_WITH_QPOASES), 1)
+STATIC_DEPS += qpoases_static
+CLEAN_DEPS += qpoases_clean
+endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
 STATIC_DEPS += hpmpc_static
 CLEAN_DEPS += hpmpc_clean

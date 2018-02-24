@@ -12,7 +12,11 @@ ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 LIBS += -lacados_c
 endif
 
-LIBS = -lacore -lhpipm -lqpOASES_e
+LIBS = -lacore -lhpipm
+
+ifeq ($(ACADOS_WITH_QPOASES), 1)
+LIBS += -lqpOASES_e
+endif
 
 ifeq ($(ACADOS_WITH_HPMPC), 1)
 LIBS += -lhpmpc
