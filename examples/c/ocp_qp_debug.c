@@ -100,10 +100,16 @@ int main() {
 
     char lib_str[256];
 
-    char solver_in[256] = "qpDUNES_B0";
-    int N_in = 20;
-    int nmasses_in = 4;
+    char solver_in[256] = "qpOASES_e_N2";
+    int nmasses_in = 7;
     int warmstart_in = 1;
+
+    int N_ins[] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+    int N_in;
+
+    for (int jj = 0; jj < 10; jj++)
+    {
+    N_in = N_ins[jj];
 
     // TODO(dimitris): currently assuming we run it from build dir
     snprintf(lib_str, sizeof(lib_str),
@@ -548,6 +554,8 @@ int main() {
     free(iters);
 
     printf("\nacados runs with N2 = %d\n", N2);
+
+    }  // end of loop over N_ins
 
     return 0;
 }
