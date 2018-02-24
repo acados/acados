@@ -506,14 +506,14 @@ int main() {
 	int cost_dims_size = ocp_nlp_cost_ls_dims_calculate_size(NN);
 	void *cost_dims_mem = malloc(cost_dims_size);
 	ocp_nlp_cost_ls_dims *cost_dims = ocp_nlp_cost_ls_dims_assign(NN, cost_dims_mem);
-	ocp_nlp_cost_ls_dims_init(nv, ny, cost_dims);
+	ocp_nlp_cost_ls_dims_initialize(nv, ny, cost_dims);
 
 	/* ocp_nlp_dims */
 
 	int dims_size = ocp_nlp_dims_calculate_size(NN);
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-	ocp_nlp_dims_init(nx, nu, nbx, nbu, ng, nh, ns, cost_dims, dims);
+	ocp_nlp_dims_initialize(nx, nu, nbx, nbu, ng, nh, ns, cost_dims, dims);
 
 //	ocp_nlp_dims_print(dims);
 
@@ -952,7 +952,7 @@ int main() {
 		}
 
 		// call nlp solver
-        status = ocp_nlp_gn_sqp(config, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        status = ocp_nlp_gn_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     }
 
     double time = acados_toc(&timer)/NREP;

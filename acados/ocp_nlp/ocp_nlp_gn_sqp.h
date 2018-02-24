@@ -71,7 +71,7 @@ void ocp_nlp_gn_sqp_opts_initialize_default(ocp_nlp_solver_config *config, ocp_n
 
 typedef struct
 {
-    ocp_nlp_dims *dims;
+//    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
     void **sim_solvers_mem;
@@ -110,7 +110,6 @@ typedef struct
     void *qp_work;
 
     // integrators
-    sim_dims *sim_dims;
     sim_in **sim_in;
     sim_out **sim_out;
     void **sim_solvers_work;
@@ -138,7 +137,7 @@ int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_n
 ************************************************/
 
 //
-int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
+int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
 
 
 

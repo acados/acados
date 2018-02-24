@@ -43,8 +43,6 @@ extern "C" {
 
 typedef struct
 {
-	void *cost_dims;
-//	void **dyn_dims;
     int *nx;
     int *nu;
     int *nb;  // nbx + nbu
@@ -55,7 +53,8 @@ typedef struct
     int *ns;  // number of soft constraints
     int *num_stages;
     int N;
-	int memsize;
+	void *cost_dims;
+	sim_dims **dynamics_dims;
 } ocp_nlp_dims;
 
 /* ocp_nlp_cost_ls */
@@ -67,7 +66,6 @@ typedef struct
 	int *nv; // number of variables
 	int *ny; // number of outputs
     int N;
-	int memsize;
 } ocp_nlp_cost_ls_dims;
 
 
@@ -225,6 +223,8 @@ typedef struct
 
 typedef struct
 {
+	int N; // number of stages
+
 	// cost
 	int (*cost_calculate_size) (ocp_nlp_cost_ls_dims *); // TODO ocp_nlp_cost_dims
 	void *(*cost_assign) (ocp_nlp_cost_ls_dims *, void *); // TODO ocp_nlp_dims
@@ -260,7 +260,7 @@ typedef struct
 ************************************************/
 
 /************************************************
-* dims
+* config
 ************************************************/
 
 //
@@ -279,7 +279,7 @@ int ocp_nlp_dims_calculate_size(int N);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
 //
-void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *ocp_nlp_cost_dims, ocp_nlp_dims *dims);
+void ocp_nlp_dims_initialize(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *ocp_nlp_cost_dims, ocp_nlp_dims *dims);
 
 /* ocp_nlp_cost_ls */
 
@@ -288,7 +288,7 @@ int ocp_nlp_cost_ls_dims_calculate_size(int N);
 //
 ocp_nlp_cost_ls_dims *ocp_nlp_cost_ls_dims_assign(int N, void *raw_memory);
 //
-void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
+void ocp_nlp_cost_ls_dims_initialize(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims);
 
 /************************************************
 * cost

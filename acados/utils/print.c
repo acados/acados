@@ -159,7 +159,6 @@ void ocp_nlp_dims_print(ocp_nlp_dims *dims)
             dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->nh[kk], dims->ns[kk]);
     }
 
-    printf("\nmemsize = %d\n", dims->memsize);
 }
 
 
@@ -176,7 +175,6 @@ void print_ocp_qp_dims(ocp_qp_dims *dims)
             dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
     }
 
-    printf("\nmemsize = %d\n", dims->memsize);
 }
 
 

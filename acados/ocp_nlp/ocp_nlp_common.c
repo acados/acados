@@ -76,6 +76,8 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory)
 	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) c_ptr;
 	c_ptr += sizeof(ocp_nlp_solver_config);
 
+	config->N = N;
+
 	config->qp_solver = ocp_qp_xcond_solver_config_assign(c_ptr);
 	c_ptr += ocp_qp_xcond_solver_config_calculate_size();
 
@@ -132,15 +134,12 @@ ocp_nlp_cost_ls_dims *ocp_nlp_cost_ls_dims_assign(int N, void *raw_memory)
 	// N
 	dims->N = N;
 
-	// memsize
-	dims->memsize = ocp_nlp_cost_ls_dims_calculate_size(N);
-
 	return dims;
 }
 
 
 
-void ocp_nlp_cost_ls_dims_init(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims)
+void ocp_nlp_cost_ls_dims_initialize(int *nv, int *ny, ocp_nlp_cost_ls_dims *dims)
 {
 	int N = dims->N;
 
@@ -165,6 +164,10 @@ int ocp_nlp_dims_calculate_size(int N)
     size += sizeof(ocp_nlp_dims);
     size += 8*(N+1)*sizeof(int);
 
+	// dynamics_dims
+	size += N*sizeof(sim_dims *);
+	size += N*sim_dims_calculate_size();
+
 	size += 8; // initial align
 
 	return size;
@@ -174,6 +177,8 @@ int ocp_nlp_dims_calculate_size(int N)
 
 ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory)
 {
+	int ii;
+
     char *c_ptr = (char *) raw_memory;
 
 	// initial align
@@ -182,6 +187,16 @@ ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory)
 	// struct
 	ocp_nlp_dims *dims = (ocp_nlp_dims *) c_ptr;
 	c_ptr += sizeof(ocp_nlp_dims);
+
+	// dynamics dims
+	dims->dynamics_dims = (sim_dims **) c_ptr;
+	c_ptr += N*sizeof(sim_dims *);
+
+	for (ii=0; ii<N; ii++)
+	{
+		dims->dynamics_dims[ii] = sim_dims_assign(c_ptr);
+		c_ptr += sim_dims_calculate_size();
+	}
 
 	// nx
     assign_int(N+1, &dims->nx, &c_ptr);
@@ -203,16 +218,15 @@ ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory)
 	// N
 	dims->N = N;
 
-	// memsize
-	dims->memsize = ocp_nlp_dims_calculate_size(N);
-
 	return dims;
 }
 
 
 
-void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *cost_dims, ocp_nlp_dims *dims)
+void ocp_nlp_dims_initialize(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, int *ns, void *cost_dims, ocp_nlp_dims *dims)
 {
+	int ii;
+
 	int N = dims->N;
 
 	// nx
@@ -239,6 +253,12 @@ void ocp_nlp_dims_init(int *nx, int *nu, int *nbx, int *nbu, int *ng, int *nh, i
 	// ns
 	for (int ii = 0; ii < N+1; ii++)
 		dims->ns[ii] = ns[ii];
+	
+	for (ii=0; ii<N; ii++)
+	{
+		dims->dynamics_dims[ii]->nx = nx[ii];
+		dims->dynamics_dims[ii]->nu = nu[ii];
+	}
 
 	// cost
 	dims->cost_dims = cost_dims;
@@ -1149,16 +1169,5 @@ void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims)
     // TODO(dimitris): probably redundant (can also remove hpipm header)
     qp_dims->memsize = d_memsize_ocp_qp_dim(qp_dims->N);
 }
-
-
-
-void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage)
-{
-    sim_dims->nx = nlp_dims->nx[stage];
-    sim_dims->nu = nlp_dims->nu[stage];
-//    sim_dims->num_stages = nlp_dims->num_stages[stage];
-}
-
-
 
 
