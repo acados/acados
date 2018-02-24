@@ -11,6 +11,7 @@ OBJS =
 
 # ocp nlp
 OBJS += acados/ocp_nlp/ocp_nlp_common.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost.o
 OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o

@@ -42,6 +42,7 @@
 #include "acados/utils/external_function_generic.h"
 
 #include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_cost.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -402,7 +403,6 @@ int main() {
     int nb[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
-    int nh[NN+1] = {0};
 	int nv[NN+1] = {0};
 	int ny[NN+1] = {0};
 
@@ -457,11 +457,15 @@ int main() {
 
 
 	// cost: least squares
-	config->cost_calculate_size = &ocp_nlp_cost_ls_calculate_size;
-	config->cost_assign = (void *(*)(ocp_nlp_cost_ls_dims *, void *)) &ocp_nlp_cost_ls_assign;
+    for (int ii = 0; ii <= NN; ii++)
+    {
+		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
+    }
 
+
+		// 4th order schemes
 #if DYNAMICS==0
-	// dynamics: ERK
+	// dynamics: ERK 4
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_erk_config_initialize_default(config->sim_solvers[ii]);
@@ -469,14 +473,14 @@ int main() {
     }
 
 #elif DYNAMICS==1
-	// dynamics: lifted IRK
+	// dynamics: lifted IRK GL2
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_lifted_irk_config_initialize_default(config->sim_solvers[ii]);
 		config->sim_solvers[ii]->ns = 2; // number of integration stages
     }
 #else
-	// dynamics: IRK
+	// dynamics: IRK GL2
     for (int ii = 0; ii < NN; ii++)
     {
 		sim_irk_config_initialize_default(config->sim_solvers[ii]);
@@ -492,19 +496,10 @@ int main() {
     * ocp_nlp_dims
     ************************************************/
 
-	/* ocp_nlp_cost_ls_dims */
-
-	int cost_dims_size = ocp_nlp_cost_ls_dims_calculate_size(NN);
-	void *cost_dims_mem = malloc(cost_dims_size);
-	ocp_nlp_cost_ls_dims *cost_dims = ocp_nlp_cost_ls_dims_assign(NN, cost_dims_mem);
-	ocp_nlp_cost_ls_dims_initialize(nv, ny, cost_dims);
-
-	/* ocp_nlp_dims */
-
 	int dims_size = ocp_nlp_dims_calculate_size(NN);
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-	ocp_nlp_dims_initialize(nx, nu, nbx, nbu, ng, nh, ns, cost_dims, dims);
+	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, ns, dims);
 
 //	ocp_nlp_dims_print(dims);
 
@@ -674,13 +669,13 @@ int main() {
 
     /* least-squares cost */
 
-    ocp_nlp_cost_ls *cost_ls = nlp_in->cost;
+    ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
 
 	// output definition: y = [x; u]
 
 	// nls_jac
 	for (int i=0; i<=NN; i++)
-		cost_ls->nls_jac[i] = (external_function_generic *) &ls_cost_jac_casadi[i];
+		cost_ls[i]->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
 #if 0
 	// replace with hand-written external functions
 	external_function_generic ls_cost_jac_generic[NN];
@@ -697,33 +692,33 @@ int main() {
 
 	// nls mask
 	for (int i=0; i<=NN; i++)
-		cost_ls->nls_mask[i] = 1;
+		cost_ls[i]->nls_mask = 1;
 
 	// W
 	for (int i=0; i<=NN; i++)
 	{
-		blasfeo_dgese(ny[i], ny[i], 0.0, cost_ls->W+i, 0, 0);
+		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(cost_ls->W+i, j, j) = diag_cost_x[j];
+            DMATEL_LIBSTR(&cost_ls[i]->W, j, j) = diag_cost_x[j];
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(cost_ls->W+i, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+            DMATEL_LIBSTR(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 	}
 
 	// Cyt
 	for (int i=0; i<=NN; i++)
 	{
-		blasfeo_dgese(nv[i], ny[i], 0.0, cost_ls->Cyt+i, 0, 0);
+		blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(cost_ls->Cyt+i, j, nx[i]+j) = 1.0;
+            DMATEL_LIBSTR(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(cost_ls->Cyt+i, nu[i]+j, j) = 1.0;
+            DMATEL_LIBSTR(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
 	}
 
 	// y_ref
     for (int i = 0; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nx[i], xref, cost_ls->y_ref+i, 0);
-		blasfeo_pack_dvec(nu[i], uref, cost_ls->y_ref+i, nx[i]);
+		blasfeo_pack_dvec(nx[i], xref, &cost_ls[i]->y_ref, 0);
+		blasfeo_pack_dvec(nu[i], uref, &cost_ls[i]->y_ref, nx[i]);
     }
 
 
@@ -856,21 +851,6 @@ int main() {
     * gn_sqp opts
     ************************************************/
 
-    int num_stages[NN];
-    for (int ii = 0; ii < NN; ii++)
-    {
-		// 4th order schemes
-#if DYNAMICS==0
-		// ERK4
-        num_stages[ii] = 4;
-#else
-		// GL2: 2 stages Gauss-Legendre
-        num_stages[ii] = 2;
-#endif
-    }
-
-    nlp_in->dims->num_stages = num_stages;
-
 	tmp_size = ocp_nlp_gn_sqp_opts_calculate_size(config, dims);
 	void *nlp_opts_mem = malloc(tmp_size);
 	ocp_nlp_gn_sqp_opts *nlp_opts = ocp_nlp_gn_sqp_opts_assign(config, dims, nlp_opts_mem);
@@ -988,7 +968,6 @@ int main() {
 
 	free(config_mem);
 	free(ls_cost_jac_casadi_mem);
-	free(cost_dims_mem);
 	free(dims_mem);
     free(nlp_in_mem);
     free(nlp_out_mem);

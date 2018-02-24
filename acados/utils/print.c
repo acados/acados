@@ -151,12 +151,12 @@ void ocp_nlp_dims_print(ocp_nlp_dims *dims)
 {
     int N = dims->N;
 
-    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\ths\tns\n");
+    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
 
     for (int kk = 0; kk < N+1; kk++)
     {
-        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
-            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->nh[kk], dims->ns[kk]);
+        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
+            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
     }
 
 }
