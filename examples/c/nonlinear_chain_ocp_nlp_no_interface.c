@@ -462,7 +462,6 @@ int main() {
 		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
     }
 
-
 		// 4th order schemes
 #if DYNAMICS==0
 	// dynamics: ERK 4
@@ -489,8 +488,10 @@ int main() {
 #endif
 
 	// constraitns
-	config->constraints_calculate_size = &ocp_nlp_constraints_calculate_size;
-	config->constraints_assign = (void *(*)(ocp_nlp_dims *, void *)) &ocp_nlp_constraints_assign;
+    for (int ii = 0; ii <= NN; ii++)
+    {
+		ocp_nlp_constraints_config_initialize_default(config->constraints[ii]);
+    }
 
     /************************************************
     * ocp_nlp_dims
@@ -759,7 +760,7 @@ int main() {
 
     /* box constraints */
 
-	ocp_nlp_constraints *constraints = nlp_in->constraints;
+	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
 	// idxb0
     int idxb0[nb[0]];
@@ -808,18 +809,18 @@ int main() {
     }
 
 	// stage-wise
-	blasfeo_pack_dvec(nb[0], lb0, constraints->d+0, 0);
-	blasfeo_pack_dvec(nb[0], ub0, constraints->d+0, nb[0]+ng[0]);
-    constraints->idxb[0] = idxb0;
+	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
+	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+    constraints[0]->idxb = idxb0;
     for (int i = 1; i < NN; i++)
 	{
-		blasfeo_pack_dvec(nb[i], lb1, constraints->d+i, 0);
-		blasfeo_pack_dvec(nb[i], ub1, constraints->d+i, nb[i]+ng[i]);
-        constraints->idxb[i] = idxb1;
+		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
+		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+        constraints[i]->idxb = idxb1;
     }
-	blasfeo_pack_dvec(nb[NN], lbN, constraints->d+NN, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, constraints->d+NN, nb[NN]+ng[NN]);
-    constraints->idxb[NN] = idxbN;
+	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
+	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+    constraints[NN]->idxb = idxbN;
 
 
 	// General constraints
@@ -833,10 +834,10 @@ int main() {
 		for (int ii=0; ii<nx[0]; ii++)
 			Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
 
-		blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], constraints->DCt+0, 0, 0);
-		blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], constraints->DCt+0, nu[0], 0);
-		blasfeo_pack_dvec(ng[0], lb0, constraints->d+0, nb[0]);
-		blasfeo_pack_dvec(ng[0], ub0, constraints->d+0, 2*nb[0]+ng[0]);
+		blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
+		blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
+		blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
+		blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
 
 		d_free(Cu0);
 		d_free(Cx0);

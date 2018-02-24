@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_COST_H_
-#define ACADOS_OCP_NLP_OCP_NLP_COST_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_H_
+#define ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +30,8 @@ extern "C" {
 // acados
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
+//#include "acados/utils/external_function_generic.h"
+
 
 
 /************************************************
@@ -38,15 +40,19 @@ extern "C" {
 
 typedef struct
 {
-	int nx; // number of states
-	int nu; // number of inputs
-	int ny; // number of outputs
-} ocp_nlp_cost_dims;
+    int nx;
+    int nu;
+    int nb;  // nbx + nbu
+    int nbx;
+    int nbu;
+    int ng;  // number of general linear constraints
+    int ns;  // number of soft constraints
+} ocp_nlp_constraints_dims;
 
 //
-int ocp_nlp_cost_dims_calculate_size();
+int ocp_nlp_constraints_dims_calculate_size();
 //
-ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory);
+ocp_nlp_constraints_dims *ocp_nlp_constraints_dims_assign(void *raw_memory);
 
 
 
@@ -56,41 +62,39 @@ ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory);
 
 typedef struct
 {
-	int (*model_calculate_size) (void *config, ocp_nlp_cost_dims *dims);
-	void *(*model_assign) (void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+	int (*model_calculate_size) (void *config, ocp_nlp_constraints_dims *dims);
+	void *(*model_assign) (void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
 	void (*config_initialize_default) (void *config);
-} ocp_nlp_cost_config;
+} ocp_nlp_constraints_config;
 
 //
-int ocp_nlp_cost_config_calculate_size();
+int ocp_nlp_constraints_config_calculate_size();
 //
-ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
+ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 
 
 
 /************************************************
-* least squares model
+* model
 ************************************************/
-
-/* least squares */
 
 typedef struct
 {
-	ocp_nlp_cost_dims *dims;
-	external_function_generic *nls_jac; // evaluation and jacobian of ls residuals
-	struct blasfeo_dmat Cyt;
-	struct blasfeo_dmat W;
-    struct blasfeo_dvec y_ref;
-	int nls_mask; // nonlinear least squares mask TODO lin and nonlin models instead
-} ocp_nlp_cost_ls_model;
+	ocp_nlp_constraints_dims *dims;
+    int *idxb;
+	struct blasfeo_dvec d;
+	struct blasfeo_dmat DCt;
+}
+ocp_nlp_constraints_model;
 
 //
-int ocp_nlp_cost_ls_model_calculate_size(void *config, ocp_nlp_cost_dims *dims);
+int ocp_nlp_constraints_model_calculate_size(void *config, ocp_nlp_constraints_dims *dims);
 //
-void *ocp_nlp_cost_ls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+void *ocp_nlp_constraints_model_assign(void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
 //
-void ocp_nlp_cost_ls_config_initialize_default(void *config);
+void ocp_nlp_constraints_config_initialize_default(void *config);
 
 
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_COST_H_
+
+#endif // ACADOS_OCP_NLP_OCP_NLP_CONSTRAINTS_H_

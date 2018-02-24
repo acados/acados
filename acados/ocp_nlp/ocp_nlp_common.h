@@ -26,6 +26,7 @@ extern "C" {
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost.h"
+#include "acados/ocp_nlp/ocp_nlp_constraints.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
@@ -48,27 +49,13 @@ typedef struct
     int *nbx;
     int *nbu;
     int *ng;  // number of general linear constraints
-//    int *nh;  // number of path constraints - ONLY difference with ocp_qp_dims atm
     int *ns;  // number of soft constraints
+	// TODO remove all of the above ???
 	ocp_nlp_cost_dims **cost;
 	sim_dims **sim;
+	ocp_nlp_constraints_dims **constraints;
     int N;
 } ocp_nlp_dims;
-
-
-
-/************************************************
-* constraints
-************************************************/
-
-typedef struct
-{
-	ocp_nlp_dims *dims; // TODO constraints dims ???
-    int **idxb;
-	struct blasfeo_dvec *d;
-	struct blasfeo_dmat *DCt;
-}
-ocp_nlp_constraints;
 
 
 
@@ -82,14 +69,9 @@ typedef struct
 
 	double *Ts; // length of sampling intervals
 
-    // double **lh;
-    // double **uh;
-    // ocp_nlp_function *h;  // nonlinear path constraints
-
-	// TODO array of structures or structures of arrays ???
     void **cost;
 	void **dynamics;
-	void *constraints;
+	void **constraints;
 
     // TODO(rien): what about invariants, e.g., algebraic constraints?
 
@@ -157,10 +139,6 @@ typedef struct
 {
 	int N; // number of stages
 
-	// constraints
-	int (*constraints_calculate_size) (ocp_nlp_dims *); // calculate size
-	void *(*constraints_assign) (ocp_nlp_dims *, void *); // assign
-
 	// all the others
     int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
     int (*calculate_args_size)(ocp_nlp_dims *dims, void *solver_);
@@ -173,6 +151,7 @@ typedef struct
     ocp_qp_xcond_solver_config *qp_solver;
     sim_solver_config **sim_solvers;
 	ocp_nlp_cost_config **cost;
+	ocp_nlp_constraints_config **constraints;
 } ocp_nlp_solver_config;
 
 
@@ -196,23 +175,12 @@ ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
 * dims
 ************************************************/
 
-/* ocp_nlp */
-
 //
 int ocp_nlp_dims_calculate_size(int N);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
 //
 void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *ns, ocp_nlp_dims *dims);
-
-/************************************************
-* constraints
-************************************************/
-
-//
-int ocp_nlp_constraints_calculate_size(ocp_nlp_dims *dims);
-//
-ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_memory);
 
 /************************************************
 * in
@@ -264,11 +232,11 @@ void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp
 * ?????
 ************************************************/
 
-int number_of_primal_vars(ocp_nlp_dims *dims);
+//int number_of_primal_vars(ocp_nlp_dims *dims);
 
 void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
 
-void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
+//void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
 
 
 #ifdef __cplusplus

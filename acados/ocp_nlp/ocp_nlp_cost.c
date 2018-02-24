@@ -93,14 +93,14 @@ ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory)
 
 
 /************************************************
-* least squares
+* least squares model
 ************************************************/
 
 
 
 int ocp_nlp_cost_ls_model_calculate_size(void *config, ocp_nlp_cost_dims *dims)
 {
-
+	// extract dims
 	int nx = dims->nx;
 	int nu = dims->nu;
 	int ny = dims->ny;
@@ -139,10 +139,13 @@ void *ocp_nlp_cost_ls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
+	// blasfeo_dmat
 	// W
 	assign_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
 	// Cyt
 	assign_blasfeo_dmat_mem(nx+nu, ny, &model->Cyt, &c_ptr);
+
+	// blasfeo_dvec
 	// y_ref
 	assign_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
 
