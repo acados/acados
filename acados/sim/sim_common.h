@@ -85,8 +85,6 @@ typedef struct
 typedef struct
 {
 
-    double interval;
-
     int num_steps;
     int num_forw_sens;
 

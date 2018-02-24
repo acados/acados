@@ -822,7 +822,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_in *nlp_in, ocp_nlp_ou
     for (int ii = 0; ii < N; ii++)
     {
         sim_opts = args->sim_solvers_opts[ii];
-        work->sim_in[ii]->T = sim_opts->interval;
+        work->sim_in[ii]->T = nlp_in->Ts[ii];
 
         // TODO(dimitris): REVISE IF THIS IS CORRECT FOR VARYING DIMENSIONS!
         for (int jj = 0; jj < nx[ii+1] * (nx[ii] + nu[ii]); jj++)

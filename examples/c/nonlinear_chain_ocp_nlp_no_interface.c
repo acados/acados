@@ -652,6 +652,14 @@ int main() {
 	void *nlp_in_mem = malloc(tmp_size);
 	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, d, nlp_in_mem); // TODO remove d !!!
 
+
+	// sampling times
+	for (int ii=0; ii<NN; ii++)
+		nlp_in->Ts[ii] = TF/NN;
+
+
+
+
 //	ocp_nlp_dims_print(nlp_in->dims);
 
     // NOTE(dimitris): use nlp_in->dims instead of &dims from now on since nb is filled with nbx+nbu!
@@ -879,7 +887,6 @@ int main() {
 
     for (int i = 0; i < NN; ++i) {
         sim_rk_opts *sim_opts = nlp_opts->sim_solvers_opts[i];
-        sim_opts->interval = TF/NN;
 #if DYNAMICS==2
 		sim_opts->jac_reuse = true;
 #endif

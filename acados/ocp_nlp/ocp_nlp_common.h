@@ -149,6 +149,8 @@ typedef struct
 {
     ocp_nlp_dims *dims;
 
+	double *Ts; // length of sampling intervals
+
     // double **lh;
     // double **uh;
     // ocp_nlp_function *h;  // nonlinear path constraints

@@ -689,7 +689,11 @@ ocp_nlp_constraints *ocp_nlp_constraints_assign(ocp_nlp_dims *dims, void *raw_me
 int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
 
+	int N = dims->N;
+
     int size = sizeof(ocp_nlp_in);
+
+	size += N*sizeof(double); // Ts
 
     // TODO(dimitris): check arguments for cost type
 	size += config->cost_calculate_size(dims->cost_dims); // cost
@@ -711,6 +715,8 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, int num_stages, void *raw_memory)
 {
 
+	int N = dims->N;
+
     char *c_ptr = (char *) raw_memory;
 
 	// initial align
@@ -722,6 +728,10 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 
 	// dims
 	in->dims = dims;
+
+	// Ts
+	in->Ts = (double *) c_ptr;
+	c_ptr += N*sizeof(double);
 
 	// cost
     // TODO(dimitris): check arguments for cost type
