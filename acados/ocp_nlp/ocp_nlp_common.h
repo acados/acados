@@ -43,17 +43,10 @@ extern "C" {
 
 typedef struct
 {
-    int *nx;
-    int *nu;
-    int *nb;  // nbx + nbu
-    int *nbx;
-    int *nbu;
-    int *ng;  // number of general linear constraints
-    int *ns;  // number of soft constraints
-	// TODO remove all of the above ???
 	ocp_nlp_cost_dims **cost;
 	sim_dims **sim;
 	ocp_nlp_constraints_dims **constraints;
+	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
     int N;
 } ocp_nlp_dims;
 
@@ -218,25 +211,8 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 //
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
-void ocp_nlp_res_compute(ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_memory *mem); //ocp_nlp_res_workspace *work);
+void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_memory *mem); //ocp_nlp_res_workspace *work);
 
-
-
-
-
-
-
-
-
-/************************************************
-* ?????
-************************************************/
-
-//int number_of_primal_vars(ocp_nlp_dims *dims);
-
-void cast_nlp_dims_to_qp_dims(ocp_qp_dims *qp_dims, ocp_nlp_dims *nlp_dims);
-
-//void cast_nlp_dims_to_sim_dims(sim_dims *sim_dims, ocp_nlp_dims *nlp_dims, int stage);
 
 
 #ifdef __cplusplus
