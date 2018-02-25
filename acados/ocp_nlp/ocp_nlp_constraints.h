@@ -57,25 +57,7 @@ ocp_nlp_constraints_dims *ocp_nlp_constraints_dims_assign(void *raw_memory);
 
 
 /************************************************
-* config
-************************************************/
-
-typedef struct
-{
-	int (*model_calculate_size) (void *config, ocp_nlp_constraints_dims *dims);
-	void *(*model_assign) (void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
-	void (*config_initialize_default) (void *config);
-} ocp_nlp_constraints_config;
-
-//
-int ocp_nlp_constraints_config_calculate_size();
-//
-ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
-
-
-
-/************************************************
-* model
+* constraints
 ************************************************/
 
 typedef struct
@@ -92,8 +74,28 @@ int ocp_nlp_constraints_model_calculate_size(void *config, ocp_nlp_constraints_d
 //
 void *ocp_nlp_constraints_model_assign(void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
 //
+void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, int *idxb, struct blasfeo_dmat *DCt, void *mem, void *work); // TODO mem and work if needed
+//
 void ocp_nlp_constraints_config_initialize_default(void *config);
 
+
+
+/************************************************
+* config
+************************************************/
+
+typedef struct
+{
+	int (*model_calculate_size) (void *config, ocp_nlp_constraints_dims *dims);
+	void *(*model_assign) (void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
+	void (*initialize_qp) (void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, int *idxb, struct blasfeo_dmat *DCt, void *mem, void *work);
+	void (*config_initialize_default) (void *config);
+} ocp_nlp_constraints_config;
+
+//
+int ocp_nlp_constraints_config_calculate_size();
+//
+ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 
 
 

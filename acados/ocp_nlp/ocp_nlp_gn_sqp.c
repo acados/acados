@@ -491,45 +491,6 @@ static void initialize_objective(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp
 
 
 
-static void initialize_constraints(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
-{
-
-	// loop index
-	int i, j;
-
-    int N = nlp_in->dims->N;
-	int nx, nu, nb, ng;
-
-	struct blasfeo_dmat *DCt = work->qp_in->DCt;
-	int **idxb = work->qp_in->idxb;
-
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
-
-	// initialize idxb
-	for (i=0; i<=N; i++)
-	{
-		nb = dims->constraints[i]->nb;
-		for (j=0; j<nb; j++)
-		{
-			idxb[i][j] = constraints[i]->idxb[j];
-		}
-	}
-
-	// initialize general constraints matrix
-    for (i=0; i<=N; i++)
-	{
-		nx = dims->constraints[i]->nx;
-		nu = dims->constraints[i]->nu;
-		ng = dims->constraints[i]->ng;
-		blasfeo_dgecp(nu+nx, ng, &constraints[i]->DCt, 0, 0, DCt+i, 0, 0);
-	}
-
-	return;
-
-}
-
-
-
 static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_opts *args, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_work *work)
 {
 
@@ -826,7 +787,9 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
     initialize_objective(dims, nlp_in, opts, mem, work);
 
-    initialize_constraints(dims, nlp_in, mem, work);
+	// initialize constraints
+	for (int ii=0; ii<=N; ii++)
+		config->constraints[ii]->initialize_qp(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], work->qp_in->idxb[ii], work->qp_in->DCt+ii, NULL, NULL);
 
 	// start timer
     acados_timer timer;

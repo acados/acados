@@ -93,7 +93,7 @@ ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory)
 
 
 /************************************************
-* least squares model
+* least squares
 ************************************************/
 
 

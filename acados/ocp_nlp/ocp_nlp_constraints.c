@@ -93,7 +93,7 @@ ocp_nlp_constraints_dims *ocp_nlp_constraints_dims_assign(void *raw_memory)
 
 
 /************************************************
-* model
+* constraints
 ************************************************/
 
 int ocp_nlp_constraints_model_calculate_size(void *config, ocp_nlp_constraints_dims *dims)
@@ -158,6 +158,34 @@ void *ocp_nlp_constraints_model_assign(void *config, ocp_nlp_constraints_dims *d
 
 
 
+// TODO mem and work if needed
+void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, int *idxb, struct blasfeo_dmat *DCt, void *mem, void *work)
+{
+
+	// loop index
+	int i, j;
+
+	int nx, nu, nb, ng;
+
+	nx = dims->nx;
+	nu = dims->nu;
+	nb = dims->nb;
+	ng = dims->ng;
+
+	// initialize idxb
+	for (j=0; j<nb; j++)
+	{
+		idxb[j] = model->idxb[j];
+	}
+
+	// initialize general constraints matrix
+	blasfeo_dgecp(nu+nx, ng, &model->DCt, 0, 0, DCt, 0, 0);
+
+	return;
+
+}
+
+
 
 void ocp_nlp_constraints_config_initialize_default(void *config_)
 {
@@ -165,6 +193,7 @@ void ocp_nlp_constraints_config_initialize_default(void *config_)
 
 	config->model_calculate_size = &ocp_nlp_constraints_model_calculate_size;
 	config->model_assign = &ocp_nlp_constraints_model_assign;
+	config->initialize_qp = &ocp_nlp_constraints_initialize_qp;
 	config->config_initialize_default = &ocp_nlp_constraints_config_initialize_default;
 
 	return;
