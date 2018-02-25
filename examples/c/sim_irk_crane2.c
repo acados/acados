@@ -146,7 +146,7 @@ int main() {
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
 
-	opts->sens_adj = false;
+	opts->sens_adj = true;
     // d_print_e_mat(num_stages, num_stages, opts->A_mat, num_stages);
     // d_print_e_mat(1, num_stages, opts->b_vec, 1);
     // d_print_e_mat(1, num_stages, opts->c_vec, 1);

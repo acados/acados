@@ -14,7 +14,8 @@
  *    You should have received a copy of the GNU Lesser General Public
  *    License along with acados; if not, write to the Free Software Foundation,
  *    Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
- *
+ *  
+ *    Author: Jonathan Frey
  */
 
 // standard
@@ -125,7 +126,7 @@ int gnsf_in_calculate_size(gnsf_dims *dims)
     size += nx * sizeof(double);  // x
     size += nu * sizeof(double);  // u
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
-    // size += (nx + nu) * sizeof(double);  // S_adj
+    size += (nx + nu) * sizeof(double);  // S_adj
 
     make_int_multiple_of(8, &size);
     return size;
@@ -148,6 +149,7 @@ gnsf_in *gnsf_in_assign(gnsf_dims *dims, void *raw_memory)
     // printf("address in_x : %p\n",in->x);
     assign_double(nu, &in->u, &c_ptr);
     assign_double(nx * (nx+nu), &in->S_forw, &c_ptr);
+    assign_double(nx+nu, &in->S_adj, &c_ptr);
     assert((char*)raw_memory + gnsf_in_calculate_size(dims) == c_ptr);
 
     // printf("address c_ptr : %p\n",c_ptr);
@@ -432,6 +434,8 @@ int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts)
     size += blasfeo_memsize_dvec(nx*(num_steps+1)); // x0_traj
     size += blasfeo_memsize_dvec(nff); // res_val
     size += blasfeo_memsize_dvec(nu); // u0
+    size += blasfeo_memsize_dvec(nx+nu); // lambda
+    size += blasfeo_memsize_dvec(nx+nu); // lambda_old
 
     size += blasfeo_memsize_dmat(nK2,nff); // aux_G2_ff
     size += blasfeo_memsize_dmat(nx, nff); // dPsi_dff
@@ -523,6 +527,8 @@ void *gnsf_cast_workspace(gnsf_dims* dims, void *raw_memory)
     assign_blasfeo_dvec_mem((num_steps+1)*nx, &workspace->x0_traj, &c_ptr);
     assign_blasfeo_dvec_mem(nff, &workspace->res_val, &c_ptr);
     assign_blasfeo_dvec_mem(nu, &workspace->u0, &c_ptr);
+    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda, &c_ptr);
+    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda_old, &c_ptr);
 
     assign_blasfeo_dmat_mem(nK2, nff, &workspace->aux_G2_ff, &c_ptr);
     assign_blasfeo_dmat_mem(nx, nff, &workspace->dPsi_dff , &c_ptr);
@@ -605,6 +611,8 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     struct blasfeo_dvec x0_traj = workspace->x0_traj;
     struct blasfeo_dvec res_val = workspace->res_val;
     struct blasfeo_dvec u0      = workspace->u0;
+    struct blasfeo_dvec lambda  = workspace->lambda;
+    struct blasfeo_dvec lambda_old  = workspace->lambda_old;
 
     struct blasfeo_dmat aux_G2_ff = workspace->aux_G2_ff;
     struct blasfeo_dmat dPsi_dff  = workspace->dPsi_dff;
@@ -613,6 +621,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
 
     blasfeo_pack_dvec(nu, in->u, &u0, 0);
     blasfeo_pack_dvec(nx, &in->x[0], &x0_traj, 0);
+    blasfeo_pack_dvec(nx+nu, &in->S_adj[0], &lambda, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
     out->info->ADtime = 0;
@@ -764,7 +773,7 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     }
     if (opts->sens_adj) {
         // ADJOINT SENSITIVITY PROPAGATION:
-        for (int ss = num_steps-1; ss >= num_steps-1; ss--) {
+        for (int ss = num_steps-1; ss >= 0; ss--) {
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_dgemm_nn(nx2, nff      , nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZf, ii* nz, 0, 0.0, &fix->ZZf, 0, 0, &aux_G2_ff, ii * nx2, 0);
                 blasfeo_dgemm_nn(nx2, nx1, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZx, ii* nz, 0, 0.0, &fix->ZZx, 0, 0, &aux_G2_x1, ii * nx2, 0);
@@ -795,25 +804,48 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_dgead(nx1, nff, fix->b_dt[ii], &fix->KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
                 blasfeo_dgead(nx1, nx1, fix->b_dt[ii], &fix->KKx, ii*nx1, 0, &dPsi_dx, 0, 0);
-                blasfeo_dgead(nx1, nu, fix->b_dt[ii], &fix->KKu, ii*nx1, 0, &dPsi_du, 0, 0);
+                blasfeo_dgead(nx1, nu,  fix->b_dt[ii], &fix->KKu, ii*nx1, 0, &dPsi_du, 0, 0);
                 
                 blasfeo_dgead(nx2, nff, fix->b_dt[ii], &dK2_dff, ii*nx2, 0, &dPsi_dff, nx1, 0);
                 blasfeo_dgead(nx2, nx1, fix->b_dt[ii], &dK2_dx1, ii*nx2, 0, &dPsi_dx, nx1, 0);
                 blasfeo_dgead(nx2, nx2, fix->b_dt[ii], &fix->dK2_dx2, ii*nx2, 0, &dPsi_dx, nx1, nx1);
-                blasfeo_dgead(nx2, nu, fix->b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
+                blasfeo_dgead(nx2, nu,  fix->b_dt[ii], &dK2_du, ii*nx2, 0, &dPsi_du, nx1, 0);            
+            }
+            blasfeo_unpack_dvec(nff, &ff_val[ss], 0, &res_in[0]);
+            blasfeo_unpack_dvec(nx1, &x0_traj, nx * ss, &res_in[nff]);
+            for (int i = 0; i<nu; i++) {
+                res_in[i+nff+nx1] = in->u[i];
             }
             acados_tic(&casadi_timer);
             fix->jac_res_ffx1u->evaluate(fix->jac_res_ffx1u, res_in, res_out);
             out->info->ADtime += acados_toc(&casadi_timer);
             blasfeo_pack_dmat(nff, nff, &res_out[0], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
             blasfeo_pack_dmat(nff, nx1+ nu, &res_out[nff*nff], nff, &J_r_x1u, 0, 0); // pack residual result into blasfeo struct
+            
+            blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
 
-            blasfeo_dgetrf_nopivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0); // factorize J_r_ff
-            blasfeo_dtrsm_lunn(nff, nx1 + nu, 1.0, &J_r_ff, 0, 0, &J_r_x1u, 0, 0, &J_r_x1u, 0, 0);
+            blasfeo_dgemv_t(nff, nx, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
+
+            blasfeo_dvecpei(nff, ipiv, &res_val, 0); // permute r.h.s.
+            blasfeo_dtrsv_utn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+            blasfeo_dtrsv_ltu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
+            // printf("-lambda_ff = \n");
+            // blasfeo_print_exp_dvec(nff, &res_val, 0); // res_val now contains -lambda_ff;
+
+            blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
+            blasfeo_dgemv_t(nx, nu, 1.0, &dPsi_du, 0, 0, &lambda_old, 0, 1.0, &lambda_old, nx, &lambda, nx); // update lambda_u
+            // printf("dPsi_dx = \n");
+            // blasfeo_print_exp_dmat(nx, nx, &dPsi_dx, 0, 0);
+            // blasfeo_print_exp_dvec(nx + nu, &lambda, 0);
+            blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &res_in, 0, &lambda, 0); // recheck!
+            blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
+            blasfeo_dgemv_t(nff, nx1, -1.0, &J_r_x1u, 0  , 0, &res_val, 0, 1.0, &lambda_old, 0, &lambda, 0);
+            blasfeo_dgemv_t(nff, nu, -1.0, &J_r_x1u, 0, nx1, &res_val, 0, 1.0, &lambda_old, nx, &lambda, nx);
         }
     }
     out->info->CPUtime = acados_toc(&tot_timer);
     // printf("tot_time = %f\n", out->info->CPUtime);
-    blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn); //TODO pack everythin in out
+    blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn);
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);
+    blasfeo_unpack_dvec(nx+nu, &lambda, 0, out->S_adj);
 }

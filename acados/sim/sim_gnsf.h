@@ -58,7 +58,7 @@ typedef struct {
     double *x;
     double *u;
     double *S_forw;  // forward seed
-    // double *S_adj;   // backward seed
+    double *S_adj;   // backward seed
 
 } gnsf_in;
 
@@ -119,6 +119,8 @@ typedef struct { //workspace
     struct blasfeo_dvec x0_traj;
     struct blasfeo_dvec res_val;
     struct blasfeo_dvec u0;
+    struct blasfeo_dvec lambda;
+    struct blasfeo_dvec lambda_old;
 
     struct blasfeo_dmat aux_G2_ff;
     struct blasfeo_dmat dPsi_dff;
@@ -163,6 +165,7 @@ typedef struct {
     bool sens_adj;
     bool sens_hess;
     int  newton_max;
+    bool jac_reuse;
    // Newton_scheme *scheme;
 } gnsf_opts;
 
