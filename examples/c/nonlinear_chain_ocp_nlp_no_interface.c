@@ -451,9 +451,16 @@ int main() {
 	void *config_mem = malloc(config_size);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(NN, config_mem);
 
+#if 1
+	// partial condensing HPIPM
 	ocp_qp_sparse_solver_config_initialize_default(config->qp_solver);
 	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 	config->qp_solver->N2 = NN; // full horizon
+#else
+	// full condensing HPIPM
+	ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
+	dense_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
+#endif
 
 
 	// cost: least squares
@@ -467,23 +474,26 @@ int main() {
 	// dynamics: ERK 4
     for (int ii = 0; ii < NN; ii++)
     {
-		sim_erk_config_initialize_default(config->sim_solvers[ii]);
-		config->sim_solvers[ii]->ns = 4; // number of integration stages
+		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		sim_erk_config_initialize_default(config->dynamics[ii]->sim_solver);
+		config->dynamics[ii]->sim_solver->ns = 4; // number of integration stages
     }
 
 #elif DYNAMICS==1
 	// dynamics: lifted IRK GL2
     for (int ii = 0; ii < NN; ii++)
     {
-		sim_lifted_irk_config_initialize_default(config->sim_solvers[ii]);
-		config->sim_solvers[ii]->ns = 2; // number of integration stages
+		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+		config->dynamics[ii]->sim_solver->ns = 2; // number of integration stages
     }
 #else
 	// dynamics: IRK GL2
     for (int ii = 0; ii < NN; ii++)
     {
-		sim_irk_config_initialize_default(config->sim_solvers[ii]);
-		config->sim_solvers[ii]->ns = 2; // number of integration stages
+		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+		config->dynamics[ii]->sim_solver->ns = 2; // number of integration stages
     }
 #endif
 
@@ -501,9 +511,6 @@ int main() {
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
 	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, ns, dims);
-
-//	ocp_nlp_dims_print(dims);
-
 
     /************************************************
     * dynamics
@@ -728,21 +735,24 @@ int main() {
 #if DYNAMICS==0
 	for (int i=0; i<NN; i++)
 	{
-		erk_model *model = (erk_model *) nlp_in->dynamics[i];
+		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		erk_model *model = dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
 	}
 #elif DYNAMICS==1
 	for (int i=0; i<NN; i++)
 	{
-		lifted_irk_model *model = (lifted_irk_model *) nlp_in->dynamics[i];
+		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		lifted_irk_model *model = dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
 	}
 #else
 	for (int i=0; i<NN; i++)
 	{
-		irk_model *model = (irk_model *) nlp_in->dynamics[i];
+		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		irk_model *model = dynamics->sim_model;
 		model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
 		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
 		model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];

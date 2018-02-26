@@ -44,7 +44,7 @@
 static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args)
 {
 	/* ocp_qp_xcond_solver_config *qp_solver = config->qp_solver; */
-	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
     int sim_work_size;
 
@@ -56,7 +56,7 @@ static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dim
         // if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
         // sim_out_size = sim_out_calculate_size(dims->sim[ii]);
         // if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
-        sim_work_size = sim_solvers[ii]->workspace_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
+        sim_work_size = dynamics[ii]->sim_solver->workspace_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, args->sim_solvers_opts[ii]);
         if (sim_work_size > max_sim_work_size) max_sim_work_size = sim_work_size;
     }
     return max_sim_work_size;
@@ -73,7 +73,8 @@ static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dim
 int ocp_nlp_gn_sqp_opts_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+//	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
     int size = 0;
 
@@ -85,7 +86,7 @@ int ocp_nlp_gn_sqp_opts_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_di
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        size += sim_solvers[ii]->opts_calculate_size(sim_solvers[ii], dims->sim[ii]);
+        size += dynamics[ii]->sim_solver->opts_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim);
     }
 
     return size;
@@ -96,7 +97,8 @@ int ocp_nlp_gn_sqp_opts_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_di
 ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_opts_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+//	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
     ocp_nlp_gn_sqp_opts *opts;
 
@@ -113,8 +115,8 @@ ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_opts_assign(ocp_nlp_solver_config *config, o
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        opts->sim_solvers_opts[ii] = sim_solvers[ii]->opts_assign(sim_solvers[ii], dims->sim[ii], c_ptr);
-        c_ptr += sim_solvers[ii]->opts_calculate_size(sim_solvers[ii], dims->sim[ii]);
+        opts->sim_solvers_opts[ii] = dynamics[ii]->sim_solver->opts_assign(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, c_ptr);
+        c_ptr += dynamics[ii]->sim_solver->opts_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim);
     }
 
     assert((char*)raw_memory + ocp_nlp_gn_sqp_opts_calculate_size(config, dims) >= c_ptr);
@@ -127,6 +129,9 @@ ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_opts_assign(ocp_nlp_solver_config *config, o
 void ocp_nlp_gn_sqp_opts_initialize_default(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *opts)
 {
 
+	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
+
 	int ii;
 
 	int N = dims->N;
@@ -137,11 +142,11 @@ void ocp_nlp_gn_sqp_opts_initialize_default(ocp_nlp_solver_config *config, ocp_n
 	opts->min_res_d = 1e-12;
 	opts->min_res_m = 1e-12;
 
-	config->qp_solver->opts_initialize_default(config->qp_solver, opts->qp_solver_opts);
+	qp_solver->opts_initialize_default(qp_solver, opts->qp_solver_opts);
 
 	for (ii=0; ii<N; ii++)
 	{
-		config->sim_solvers[ii]->opts_initialize_default(config->sim_solvers[ii], dims->sim[ii], opts->sim_solvers_opts[ii]);
+		dynamics[ii]->sim_solver->opts_initialize_default(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, opts->sim_solvers_opts[ii]);
 	}
 
 	return;
@@ -159,7 +164,8 @@ void ocp_nlp_gn_sqp_opts_initialize_default(ocp_nlp_solver_config *config, ocp_n
 int ocp_nlp_gn_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+//	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
 	// loop index
 	int ii;
@@ -179,7 +185,7 @@ int ocp_nlp_gn_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
 
     for (int ii = 0; ii < N; ii++)
     {
-        size += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
+        size += dynamics[ii]->sim_solver->memory_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, args->sim_solvers_opts[ii]);
     }
 
 	// nlp res
@@ -213,7 +219,8 @@ int ocp_nlp_gn_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
 ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args, void *raw_memory)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+//	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -240,8 +247,10 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *confi
 
     for (ii = 0; ii < N; ii++)
     {
-        mem->sim_solvers_mem[ii] = sim_solvers[ii]->memory_assign(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii], c_ptr);
-        c_ptr += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
+//        mem->sim_solvers_mem[ii] = sim_solvers[ii]->memory_assign(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii], c_ptr);
+//        c_ptr += sim_solvers[ii]->memory_calculate_size(sim_solvers[ii], dims->sim[ii], args->sim_solvers_opts[ii]);
+        mem->sim_solvers_mem[ii] = dynamics[ii]->sim_solver->memory_assign(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, args->sim_solvers_opts[ii], c_ptr);
+        c_ptr += dynamics[ii]->sim_solver->memory_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, args->sim_solvers_opts[ii]);
     }
 
 	// nlp res
@@ -294,7 +303,8 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *confi
 int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+//	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
 	// loop index
 	int ii;
@@ -320,8 +330,8 @@ int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_n
 
     for (ii = 0; ii < N; ii++)
     {
-        size += sim_in_calculate_size(sim_solvers[ii], dims->sim[ii]);
-        size += sim_out_calculate_size(sim_solvers[ii], dims->sim[ii]);
+        size += sim_in_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim);
+        size += sim_out_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim);
     }
 
 
@@ -354,7 +364,8 @@ int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_n
 static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_work *work, ocp_nlp_gn_sqp_memory *mem, ocp_nlp_gn_sqp_opts *args)
 {
 	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
-	sim_solver_config **sim_solvers = config->sim_solvers;
+//	sim_solver_config **sim_solvers = config->sim_solvers;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
     char *c_ptr = (char *)work;
     c_ptr += sizeof(ocp_nlp_gn_sqp_work);
@@ -434,10 +445,10 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp
 
     for (int ii = 0; ii < dims->N; ii++)
     {
-        work->sim_in[ii] = sim_in_assign(sim_solvers[ii], dims->sim[ii], c_ptr);
-        c_ptr += sim_in_calculate_size(sim_solvers[ii], dims->sim[ii]);
-        work->sim_out[ii] = sim_out_assign(sim_solvers[ii], dims->sim[ii], c_ptr);
-        c_ptr += sim_out_calculate_size(sim_solvers[ii], dims->sim[ii]);
+        work->sim_in[ii] = sim_in_assign(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, c_ptr);
+        c_ptr += sim_in_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim);
+        work->sim_out[ii] = sim_out_assign(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, c_ptr);
+        c_ptr += sim_out_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim);
 
         if (ii > 0) work->sim_solvers_work[ii] = work->sim_solvers_work[0];
     }
@@ -541,7 +552,7 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 			blasfeo_unpack_dvec(nx, nlp_out->ux+i, nu, work->sim_in[i]->x);
 
 			// call integrator
-			config->sim_solvers[i]->evaluate(config->sim_solvers[i], work->sim_in[i], work->sim_out[i], args->sim_solvers_opts[i],
+			config->dynamics[i]->sim_solver->evaluate(config->dynamics[i]->sim_solver, work->sim_in[i], work->sim_out[i], args->sim_solvers_opts[i],
 				mem->sim_solvers_mem[i], work->sim_solvers_work[i]);
 
 			// TODO(rien): transition functions for changing dimensions not yet implemented!
@@ -769,7 +780,8 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 		nx1 = dims->constraints[ii+1]->nx;
 		nu = dims->constraints[ii]->nu;
 
-		work->sim_in[ii]->model = nlp_in->dynamics[ii];
+		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[ii];
+		work->sim_in[ii]->model = dynamics->sim_model;
 
         sim_opts = opts->sim_solvers_opts[ii];
         work->sim_in[ii]->T = nlp_in->Ts[ii];

@@ -384,7 +384,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     // start the loop
     acados_tic(&timer);
-    for(ss=0; ss<num_steps; ss++){
+    for(ss=0; ss<num_steps; ss++)
+	{
 
         //  obtain Kn
 		// TODO add exit condition on residuals ???

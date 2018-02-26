@@ -27,6 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
@@ -44,7 +45,8 @@ extern "C" {
 typedef struct
 {
 	ocp_nlp_cost_dims **cost;
-	sim_dims **sim;
+//	sim_dims **sim;
+	ocp_nlp_dynamics_dims **dynamics;
 	ocp_nlp_constraints_dims **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
     int N;
@@ -142,7 +144,8 @@ typedef struct
     void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);
     int (*calculate_workspace_size)(ocp_nlp_dims *dims, void *args);
     ocp_qp_xcond_solver_config *qp_solver;
-    sim_solver_config **sim_solvers;
+//    sim_solver_config **sim_solvers;
+    ocp_nlp_dynamics_config **dynamics;
 	ocp_nlp_cost_config **cost;
 	ocp_nlp_constraints_config **constraints;
 } ocp_nlp_solver_config;
