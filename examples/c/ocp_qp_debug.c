@@ -203,9 +203,19 @@ int main() {
     if (auto_choose_acados_solver == false)
     {
         // choose custom values
+
+        // N2 = dims.N;
+        // plan.qp_solver = FULL_CONDENSING_QPOASES;
+        // warmstart = 1;
+
         N2 = dims.N;
-        plan.qp_solver = FULL_CONDENSING_QPOASES;
-        warmstart = 1;
+        plan.qp_solver = FULL_CONDENSING_HPIPM;
+        warmstart = 0;
+
+        // N2 = dims.N;
+        // plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+        // warmstart = 0;
+
     } else
     {
         // infer values from libname
@@ -230,7 +240,7 @@ int main() {
 
         hpipm_pcond_args->N2 = N2;
         hpipm_solver_args->hpipm_args->iter_max = 1000;
-        hpipm_solver_args->hpipm_args->warm_start = warmstart;  // TODO(dimitris): ONLY WORKS ONLY WITH WARM_START!
+        hpipm_solver_args->hpipm_args->warm_start = warmstart;
         // hpipm_solver_args->hpipm_args->mu0 = 1e6;
         // hpipm_solver_args->hpipm_args->tol = 1e-12;
 

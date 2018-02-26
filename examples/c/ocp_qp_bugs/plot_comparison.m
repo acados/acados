@@ -1,5 +1,11 @@
 
-function plot_comparison(nmasses, solver, warmstart)
+function plot_comparison(nmasses, solver, warmstart, second_solver)
+
+if nargin < 4
+    second_solver = [];
+end
+
+XLIM = [10 80];
 
 % XXX: horizon length
 % YYY: ACADO or acados and cpu_times or iters (or sol_error)
@@ -9,9 +15,12 @@ N_values = 10:10:100;
 
 acados_cpu_times = [];
 ACADO_cpu_times = [];
+second_acados_cpu_times = [];
 acados_iters = [];
+second_acados_iters = [];
 ACADO_iters = [];
 errors = [];
+second_errors = [];
 
 for ii = 1:length(N_values)
     
@@ -26,6 +35,16 @@ for ii = 1:length(N_values)
  
     fclose(fhandle_acados_cpu_times);
 
+    
+    if ~isempty(second_solver)
+        % load second acados_timings
+        fhandle_second_acados_cpu_times = fopen(strrep(filename_with_N, 'YYY', sprintf('acados_%s_cpu_times', second_solver)), 'r');
+
+        second_acados_cpu_times = [second_acados_cpu_times; fscanf(fhandle_second_acados_cpu_times, '%f')'];
+
+        fclose(fhandle_second_acados_cpu_times);
+    end
+    
     % load ACADO timings
     fhandle_ACADO_cpu_times = fopen(strrep(filename_with_N, 'YYY', 'ACADO_cpu_times'), 'r');
     
@@ -54,7 +73,14 @@ for ii = 1:length(N_values)
     errors = [errors; fscanf(fhandle_errors, '%f')'];
     
     fclose(fhandle_errors);
-       
+    
+    if ~isempty(second_solver)
+        fhandle_second_errors = fopen(strrep(filename_with_N, 'YYY', sprintf('%s_sol_error', second_solver)), 'r');
+
+        second_errors = [second_errors; fscanf(fhandle_second_errors, '%f')'];
+
+        fclose(fhandle_second_errors);
+    end
 end
 
 acados_cpu_times(isnan(ACADO_cpu_times)) = NaN;
@@ -65,44 +91,118 @@ max_ACADO_iters      = nan(length(N_values),1);
 max_acados_iters     = nan(length(N_values),1);
 max_error            = nan(length(N_values),1);
 
+if ~isempty(second_solver)
+    max_second_acados_cpu_times = nan(length(N_values),1);
+    max_second_error            = nan(length(N_values),1);
+end
+
 for ii = 1:length(N_values)
     % find worst-time execution time with ACADO
     [max_ACADO_cpu_times(ii), worst_time_pos] = max(ACADO_cpu_times(ii,:));
     % find corresponding time with acados
     max_acados_cpu_times(ii) = acados_cpu_times(ii, worst_time_pos);
+    if ~isempty(second_solver)
+        max_second_acados_cpu_times(ii) = second_acados_cpu_times(ii, worst_time_pos);
+    end
     % find number of iterations
     max_ACADO_iters(ii) = ACADO_iters(ii, worst_time_pos);
     max_acados_iters(ii) = acados_iters(ii, worst_time_pos);
     % find error of same problem instance
     max_error(ii) = errors(ii, worst_time_pos);
+    if ~isempty(second_solver)
+        max_second_error(ii) = second_errors(ii, worst_time_pos);   
+    end
 end
 
 close all
 
-subplot(3,1,1)
+FHANDLE = figure;
+
+yyaxis left
+
+h(1) = subplot(3,1,1)
 plot(N_values, 1000*max_ACADO_cpu_times, '-ob', 'linewidth', 1.5)
 hold on
 plot(N_values, 1000*max_acados_cpu_times, '-or', 'linewidth', 1.5)
+if ~isempty(second_solver)
 hold on
-plotyy(N_values, nan(size(max_acados_cpu_times)), N_values, [max_ACADO_cpu_times./max_acados_cpu_times ones(size(max_acados_cpu_times))])
-xlabel('N');
+plot(N_values, 1000*max_second_acados_cpu_times, '-om', 'linewidth', 1.5)
+end
 ylabel('cpu time [ms]')
-legend('ACADO', 'acados')
-title(solver)
 
-subplot(3,1,2)
+set(gca, 'fontsize',18);
+
+yyaxis right
+
+plot(N_values, max_ACADO_cpu_times./max_ACADO_cpu_times, '--b');
+hold on
+plot(N_values, max_ACADO_cpu_times./max_acados_cpu_times, '--r');
+if ~isempty(second_solver)
+    hold on
+    plot(N_values, max_ACADO_cpu_times./max_second_acados_cpu_times, '--m');
+end
+xlim(XLIM);
+
+ylabel('speedup')
+
+if ~isempty(second_solver)
+    solver_name = second_solver;
+    solver_name(solver_name == '_') = ' ';
+    legend('ACADO', 'acados', solver_name)
+else
+    legend('ACADO', 'acados')
+end
+
+solver_name = solver;
+solver_name(solver_name == '_') = ' ';
+title(solver_name)
+
+h(2) = subplot(3,1,2);
 
 % stairs(N_values, max_ACADO_iters, '-ob', 'linewidth', 1.5)
 % hold on
 % stairs(N_values, max_acados_iters, '-or', 'linewidth', 1.5)
 % legend('ACADO', 'acados')
 % ylabel('iterations')
-stairs(N_values, max_acados_iters - max_ACADO_iters, '-ob', 'linewidth', 1.5)
-xlabel('N');
-ylabel('iteration error (acados-acado)')
+plot(N_values, max_acados_iters - max_ACADO_iters, 'ob', 'linewidth', 1.5)
+hold on
+plot(N_values, zeros(size(max_ACADO_iters)), '--r', 'linewidth', 1.5)
+xlim(XLIM);
 
-subplot(3,1,3)
+% xlabel('N');
+ylabel('iter. error')
+title('acados iter. - acado iter')
+set(gca, 'fontsize',18);
+
+h(3) = subplot(3,1,3);
 semilogy(N_values, max_error, '-ob', 'linewidth', 1.5)
-ylabel('error')
+xlim(XLIM);
+
+set(gca, 'fontsize',18);
+
+if ~isempty(second_solver)
+    hold on
+    semilogy(N_values, max_second_error, '-om', 'linewidth', 1.5)
+end
+ylabel('sol. error')
+xlabel('N');
+
+
+% [x, y, w, h]
+% keyboard
+
+hpos = cell(3);
+hpos{1} = get(h(1), 'position');
+hpos{2} = get(h(2), 'position');
+hpos{3} = get(h(3), 'position');
+
+% set(h(1), 'position', hpos{1}.*[1 1 1 2]);
+% set(h(2), 'position', hpos{2}.*[1 1 1 0.5]);
+
+set(h(1), 'position', hpos{1}.*[1 0.7 1 2]);
+set(h(2), 'position', hpos{2}.*[1 0.7 1 0.5]);
+set(h(3), 'position', hpos{3}.*[1 1 1 0.5]);
+
+FHANDLE.Position = [100 300 600 500];
 
 end
