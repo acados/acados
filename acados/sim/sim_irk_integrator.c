@@ -168,7 +168,7 @@ int sim_irk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_)
 
     size += 2*blasfeo_memsize_dvec(nx*ns); // rG, K
     size += 2*blasfeo_memsize_dvec(nx); // xt, x
-    size += blasfeo_memsize_dvec(nx+nu); // lambda
+    size += 2*blasfeo_memsize_dvec(nx+nu); // lambda, lambda_old
     size += blasfeo_memsize_dvec(nx*ns); // lambdaK
     size += steps * blasfeo_memsize_dvec(nx); // for xn_traj
     size += steps * blasfeo_memsize_dvec(nx*ns); // for K_traj
@@ -257,6 +257,7 @@ static void *sim_irk_workspace_cast(void *config, sim_dims *dims, void *opts_, v
     assign_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
     assign_blasfeo_dvec_mem(nx+nu, workspace->lambda, &c_ptr);
     assign_blasfeo_dvec_mem(nx*ns, workspace->lambdaK, &c_ptr);
+    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda_old, &c_ptr);
     for (int i=0;i<steps;i++){
         assign_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
         assign_blasfeo_dvec_mem(nx*ns, &workspace->K_traj[i], &c_ptr);
@@ -319,6 +320,7 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
     struct blasfeo_dmat *S_forw = workspace->S_forw;
 
     // for adjoint
+    struct blasfeo_dvec lambda_old = workspace->lambda_old;
     struct blasfeo_dvec *lambda = workspace->lambda;
     struct blasfeo_dvec *lambdaK = workspace->lambdaK;
     struct blasfeo_dvec *xn_traj = workspace->xn_traj;
@@ -636,8 +638,10 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
             blasfeo_dtrsv_ltu(nx*ns, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
             blasfeo_dvecpei(nx*ns, ipiv, lambdaK, 0);
+            
+            blasfeo_dveccp(nx +nu, lambda, 0, &lambda_old, 0);
 
-            blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
+            blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, &lambda_old, 0, lambda, 0);
         }
     }
 
