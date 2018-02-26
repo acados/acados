@@ -576,8 +576,6 @@ int main() {
     free(qp_in);
     free(qp_out);
 
-    if (auto_choose_acados_solver)
-    {
         char save_str[256];
         char *lib_str_no_ext = strndup(lib_str, strlen(lib_str) - strlen(".so"));
 
