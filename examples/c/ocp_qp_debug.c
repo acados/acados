@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <string.h>
 #include <math.h>
+#include <xmmintrin.h>
 
 // #include <unistd.h>  // NOTE(dimitris): to read current directory
 
@@ -89,6 +90,9 @@ void choose_solver(int N, char *lib_str, int *N2, int *warm_start, ocp_qp_solver
 
 
 int main() {
+    // Uncomment to detect NaNs
+    // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+
     int n_rep = 5;  // TODO number of runs (taking minimum time)
     int n_problems = 25;  // number of MPC problems stored in shared library
 
