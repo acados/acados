@@ -564,10 +564,10 @@ int main() {
 
 
 
-void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver)
+void choose_solver(int N, char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver)
 {
     char *solver_str = strstr(lib_str, "solver");
-    char *N2_str_full = strstr(solver_str, "_B");
+    char *B_str_full = strstr(solver_str, "_B");
     char *warm_str_full = strstr(solver_str, "warmstart_");
 
     if (strstr(solver_str, "HPMPC") != NULL)
