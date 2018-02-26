@@ -83,6 +83,8 @@ subplot(3,1,1)
 plot(N_values, 1000*max_ACADO_cpu_times, '-ob', 'linewidth', 1.5)
 hold on
 plot(N_values, 1000*max_acados_cpu_times, '-or', 'linewidth', 1.5)
+hold on
+plotyy(N_values, nan(size(max_acados_cpu_times)), N_values, [max_ACADO_cpu_times./max_acados_cpu_times ones(size(max_acados_cpu_times))])
 xlabel('N');
 ylabel('cpu time [ms]')
 legend('ACADO', 'acados')
