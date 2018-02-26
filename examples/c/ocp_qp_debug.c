@@ -287,6 +287,14 @@ int main() {
         dense_hpipm_solver_args->hpipm_args->iter_max = 1000;
         dense_hpipm_solver_args->hpipm_args->warm_start = warmstart;
 
+        // dense_hpipm_solver_args->hpipm_args->mu0 = 1e6;
+        // dense_hpipm_solver_args->hpipm_args->res_g_max = 1e-6;  // < 1e-8 breaks hpipm
+        // dense_hpipm_solver_args->hpipm_args->res_b_max = 1e-8;
+        dense_hpipm_solver_args->hpipm_args->res_d_max = 1e-7;  // < 1e-7 breaks hpipm
+        // dense_hpipm_solver_args->hpipm_args->res_m_max = 1e-8;
+        // dense_hpipm_solver_args->hpipm_args->alpha_min = 1e-10;
+        // dense_hpipm_solver_args->hpipm_args->cond_pred_corr = 1;
+
         break;
     case FULL_CONDENSING_QORE:
 #ifdef ACADOS_WITH_QORE
