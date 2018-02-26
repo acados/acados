@@ -581,12 +581,26 @@ int main() {
         char save_str[256];
         char *lib_str_no_ext = strndup(lib_str, strlen(lib_str) - strlen(".so"));
 
+    if (auto_choose_acados_solver)
+    {
         snprintf(save_str, sizeof(save_str), "%s_acados_cpu_times.txt", lib_str_no_ext);
         write_double_vector_to_txt(min_cpu_times, n_problems, save_str);
         snprintf(save_str, sizeof(save_str), "%s_acados_iters.txt", lib_str_no_ext);
         write_int_vector_to_txt(iters, n_problems, save_str);
         snprintf(save_str, sizeof(save_str), "%s_sol_error.txt", lib_str_no_ext);
         write_double_vector_to_txt(sol_error, n_problems, save_str);
+    } else
+    {
+        #if 0  // to enable comparison with other solvers
+        char custom_str[256] = "dense_hpipm";
+
+        snprintf(save_str, sizeof(save_str), "%s_acados_%s_cpu_times.txt", lib_str_no_ext, custom_str);
+        write_double_vector_to_txt(min_cpu_times, n_problems, save_str);
+        snprintf(save_str, sizeof(save_str), "%s_acados_%s_iters.txt", lib_str_no_ext, custom_str);
+        write_int_vector_to_txt(iters, n_problems, save_str);
+        snprintf(save_str, sizeof(save_str), "%s_%s_sol_error.txt", lib_str_no_ext, custom_str);
+        write_double_vector_to_txt(sol_error, n_problems, save_str);
+        #endif
     }
 
     free(min_cpu_times);
