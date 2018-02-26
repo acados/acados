@@ -510,7 +510,14 @@ int main() {
 
             if (acados_return != ACADOS_SUCCESS)
             {
-                printf("QP SOLVER FAILED WITH FLAG %d\n", acados_return);
+                if (acados_return == ACADOS_MINSTEP)
+                    printf("QP SOLVER RETURNED MIN STEP STATUS (%d)\n", acados_return);
+                else if (acados_return == ACADOS_MAXITER)
+                    printf("QP SOLVER RETURNED MAX ITER STATUS (%d)\n", acados_return);
+                else if (acados_return == ACADOS_FAILURE)
+                    printf("QP SOLVER FAILED\n");
+                else
+                    printf("QP SOLVER RETURNED UNKNOWN FLAG\n");
                 return -1;
             }
 
