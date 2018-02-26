@@ -85,7 +85,7 @@ double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double 
 }
 
 
-void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver);
+void choose_solver(int N, char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_solver);
 
 
 int main() {
@@ -191,7 +191,7 @@ int main() {
     } else
     {
         // infer values from libname
-        choose_solver(lib_str, &N2, &warmstart, &plan.qp_solver);
+        choose_solver(N, lib_str, &N2, &warmstart, &plan.qp_solver);
         if (N2 == 0) N2 = dims.N;
     }
 
@@ -241,6 +241,8 @@ int main() {
         qpdunes_pcond_args->N2 = N2;  // NOTE(dimitris): only change N2 above, not here!
 
         qpdunes_solver_args->warmstart = warmstart;
+
+        qpdunes_solver_args->options.maxIter = 1000;
 
         if (N2 == dims.N)
         {
@@ -584,13 +586,14 @@ void choose_solver(char *lib_str, int *N2, int *warm_start, ocp_qp_solver_t *qp_
         *qp_solver = PARTIAL_CONDENSING_QPDUNES;
     }
 
-    if (N2_str_full != NULL)
+    if (B_str_full != NULL)
     {
-        int N2_len = strlen(N2_str_full) - strlen("_B_warmstart_X.so");
-        char *N2_str = strndup(N2_str_full+2, N2_len);
-        *N2 = 0;
-        for (int ii = 0; ii < N2_len; ii++)
-            *N2 += (N2_str[N2_len-ii-1] - '0')*pow(10,ii);
+        int B_len = strlen(B_str_full) - strlen("_B_warmstart_X.so");
+        char *B_str = strndup(B_str_full+2, B_len);
+        int B = 0;
+        for (int ii = 0; ii < B_len; ii++)
+            B += (B_str[B_len-ii-1] - '0')*pow(10,ii);
+        *N2 = B > 0 ? N/B : 0;
         printf("N2 = %d\t\tdetected\n", *N2);
     } else
     {
