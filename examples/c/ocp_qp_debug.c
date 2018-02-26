@@ -78,6 +78,11 @@ double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double 
 
         if (diff > error) error = diff;
         // printf(" %2.5e\t %2.5e\n", acado_sol[ii], acados_sol[ii]);
+        if isnan(acados_sol[ii])
+        {
+            printf("nans detected in acados solution.\n");
+            exit(-1);
+    }
     }
 
     free(acados_sol);
