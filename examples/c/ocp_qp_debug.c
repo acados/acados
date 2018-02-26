@@ -94,13 +94,22 @@ int main() {
 
     bool auto_choose_acados_solver = true;  // choose acados solver based on lib name
 
+    bool eliminate_x0 = false;
+
+    char suffix[256];
+
+    if (eliminate_x0)
+        snprintf(suffix, sizeof(suffix), "_new");
+    else
+        snprintf(suffix, sizeof(suffix), "");
+
     /************************************************
     * load dynamic library
     ************************************************/
 
     char lib_str[256];
 
-    char solver_in[256] = "qpOASES_e_N2";
+    char solver_in[256] = "qpDUNES_B0";
     int nmasses_in = 7;
     int warmstart_in = 1;
 
@@ -138,19 +147,19 @@ int main() {
     N = *N_ptr;
     dims.N = N;
 
-    snprintf(str, sizeof(str), "nx");
+    snprintf(str, sizeof(str), "nx%s", suffix);
     load_ptr(lib, str, (void **)&dims.nx);
 
     snprintf(str, sizeof(str), "nu");
     load_ptr(lib, str, (void **)&dims.nu);
 
-    snprintf(str, sizeof(str), "nb");
+    snprintf(str, sizeof(str), "nb%s", suffix);
     load_ptr(lib, str, (void **)&dims.nb);
 
     snprintf(str, sizeof(str), "nbu");
     load_ptr(lib, str, (void **)&dims.nbu);
 
-    snprintf(str, sizeof(str), "nbx");
+    snprintf(str, sizeof(str), "nbx%s", suffix);
     load_ptr(lib, str, (void **)&dims.nbx);
 
     snprintf(str, sizeof(str), "ng");
@@ -163,7 +172,7 @@ int main() {
 
     int *idxb;
 
-    snprintf(str, sizeof(str), "idxb");
+    snprintf(str, sizeof(str), "idxb%s", suffix);
     load_ptr(lib, str, (void **)&idxb);
 
     int sum_idxb = 0;
@@ -253,6 +262,11 @@ int main() {
         {
             qpdunes_solver_args->stageQpSolver = QPDUNES_WITH_QPOASES;
             qpdunes_solver_args->options.lsType = QPDUNES_LS_HOMOTOPY_GRID_SEARCH;
+        }
+        if (eliminate_x0)
+        {
+            printf("qpDUNES does not support elimination of x0, turn off flag.\n\n");
+            exit(-1);
         }
 #endif
         break;
@@ -364,13 +378,13 @@ int main() {
             * set up dynamics
             ************************************************/
 
-            snprintf(str, sizeof(str), "Av_%d", indx);
+            snprintf(str, sizeof(str), "Av%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&Av);
 
             snprintf(str, sizeof(str), "Bv_%d", indx);
             load_ptr(lib, str, (void **)&Bv);
 
-            snprintf(str, sizeof(str), "b_%d", indx);
+            snprintf(str, sizeof(str), "b%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&b);
 
             sum_A = 0;
@@ -394,19 +408,19 @@ int main() {
             * set up objective
             ************************************************/
 
-            snprintf(str, sizeof(str), "Qv_%d", indx);
+            snprintf(str, sizeof(str), "Qv%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&Qv);
 
             snprintf(str, sizeof(str), "Rv_%d", indx);
             load_ptr(lib, str, (void **)&Rv);
 
-            snprintf(str, sizeof(str), "Sv_%d", indx);
+            snprintf(str, sizeof(str), "Sv%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&Sv);
 
-            snprintf(str, sizeof(str), "q_%d", indx);
+            snprintf(str, sizeof(str), "q%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&q);
 
-            snprintf(str, sizeof(str), "r_%d", indx);
+            snprintf(str, sizeof(str), "r%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&r);
 
             sum_Q = 0;
@@ -437,10 +451,10 @@ int main() {
             * set up constraints
             ************************************************/
 
-            snprintf(str, sizeof(str), "lb_%d", indx);
+            snprintf(str, sizeof(str), "lb%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&lb);
 
-            snprintf(str, sizeof(str), "ub_%d", indx);
+            snprintf(str, sizeof(str), "ub%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&ub);
 
             sum_nb = 0;
@@ -459,7 +473,7 @@ int main() {
             snprintf(str, sizeof(str), "acado_iter_%d", indx);
             load_ptr(lib, str, (void **)&acado_iter_ptr);
 
-            snprintf(str, sizeof(str), "acado_sol_%d", indx);
+            snprintf(str, sizeof(str), "acado_sol%s_%d", suffix, indx);
             load_ptr(lib, str, (void **)&acado_sol);
 
             /************************************************
