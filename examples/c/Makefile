@@ -50,7 +50,7 @@ EXAMPLES += sim_irk_crane2
 # EXAMPLES += sim_erk_wt
 EXAMPLES += sim_gnsf_crane
 EXAMPLES += sim_gnsf_crane_empty_z
-# EXAMPLES += blasfeo_bug_minimal_example
+EXAMPLES += blasfeo_bug_minimal_example
 EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
@@ -156,14 +156,14 @@ sim_irk_crane2: $(ANOTHER_CRANE_OBJS) sim_irk_crane2.o
 	@echo
 
 
-# BLASFEO_BUG_OBJ =
-# BLASFEO_BUG_OBJ += blasfeo_bug_minimal_example.o
+BLASFEO_BUG_OBJ =
+BLASFEO_BUG_OBJ += blasfeo_bug_minimal_example.o
 
-# blasfeo_bug_minimal_example: $(BLASFEO_BUG_OBJ)
-# 	$(CCC) -o blasfeo_bug_minimal_example.out  $(BLASFEO_BUG_OBJ) $(LDFLAGS) $(LIBS)
-# 	@echo
-# 	@echo " Example blasfeo_bug_minimal_example build complete."
-# 	@echo
+blasfeo_bug_minimal_example: $(BLASFEO_BUG_OBJ)
+	$(CCC) -o blasfeo_bug_minimal_example.out  $(BLASFEO_BUG_OBJ) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example blasfeo_bug_minimal_example build complete."
+	@echo
 
 sim_irk_crane: $(CRANE_OBJS) sim_irk_crane.o
 	$(CCC) -o sim_irk_crane.out  sim_irk_crane.o $(CRANE_OBJS) $(LDFLAGS) $(LIBS)

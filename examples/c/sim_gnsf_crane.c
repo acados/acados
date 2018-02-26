@@ -65,7 +65,7 @@ int main() {
         in->S_forw[ii+ ii*dims->nx] = 1.0;
         in->x[ii] = 0.0;
     }
-    for (int ii = 0; ii < dims->nx + dims->nu; ii++) {
+    for (int ii = 0; ii < dims->nx; ii++) {
         in->S_adj[ii] = 1.0;
         in->x[ii] = 0.0;
     }

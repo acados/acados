@@ -199,7 +199,7 @@ int main() {
         in->S_forw[ii * (nx + 1)] = 1.0;
 
 	// seeds adj
-    for (ii = 0; ii < nx; ii++)
+    for (ii = 0; ii < nx + nu; ii++)
         in->S_adj[ii] = 1.0;
 
 /************************************************
@@ -240,14 +240,14 @@ int main() {
         d_print_e_mat(dims->nx, dims->nx + dims->nu, out->S_forw, dims->nx);
     }
 
+    struct blasfeo_dvec sz;
+    blasfeo_allocate_dvec(nx+nu, &sz);
+
     double *S_adj_out;
     if(opts->sens_adj){
-        S_adj_out = out->S_adj;
-        printf("\nS_adj_out: \n");
-        for (ii=0;ii<nx+nu;ii++){
-            printf("%8.5f ", S_adj_out[ii]);
-        }
-        printf("\n");
+        printf("adjoint_result = \n");
+        blasfeo_pack_dvec(dims->nx +dims->nu, out->S_adj, &sz, 0);
+        blasfeo_print_exp_tran_dvec( nx + nu, &sz, 0);
     }
 
     double *S_hess_out;
@@ -283,12 +283,14 @@ int main() {
 
         struct blasfeo_dvec sz;
 		blasfeo_allocate_dvec(nx+nu, &sz);
+        struct blasfeo_dvec dummy;
+		blasfeo_allocate_dvec(nx+nu, &dummy);
 //		blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
 //		blasfeo_print_tran_dvec(nx, &sx, 0);
-        blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+        blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &dummy, 0, &sz, 0);
 
         printf("\nJac times lambdaX:\n");
-        blasfeo_print_tran_dvec(nx+nu, &sz, 0);
+        blasfeo_print_exp_tran_dvec(nx+nu, &sz, 0);
 
 		blasfeo_free_dmat(&sA);
 		blasfeo_free_dvec(&sx);
