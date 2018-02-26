@@ -350,10 +350,10 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
 
     blasfeo_dvecse(nx*ns, 0.0, lambdaK, 0);
 
-    for(kk=0;kk<nx;kk++)
+    for(kk=0;kk<nx+nu;kk++)
         S_adj_in[kk] = in->S_adj[kk];
-    for(kk=0;kk<nu;kk++)
-        S_adj_in[nx+kk] = 0.0;
+    // for(kk=0;kk<nu;kk++)
+    //     S_adj_in[nx+kk] = 0.0;
     blasfeo_pack_dvec(nx+nu, S_adj_in, lambda, 0);
 
     for (kk=0;kk<2*nx;kk++) //initialize x,xdot with zeros
