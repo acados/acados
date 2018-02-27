@@ -46,7 +46,7 @@ typedef enum {
 typedef struct ocp_qp_qpdunes_args_ {
     qpOptions_t options;
     qpdunes_stage_qp_solver_t stageQpSolver;
-    int warmstart;  // warmstart = 0: all multipliers set to zero, warmstart = 1: use previous mult.
+    int warmstart;  // warmstart = 0: all multipliers set to zero, warmstart = 1: use previous mult., warmstart = 2: shift multipliers
     bool isLinearMPC;
 } ocp_qp_qpdunes_args;
 

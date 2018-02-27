@@ -456,9 +456,16 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_args *args, ocp_qp_qpdune
 
     // coldstart
     if (args->warmstart == 0)
+    {
         for (int ii = 0; ii < N; ii++)
             for (int jj = 0; jj < nx; jj++)
                 mem->qpData.lambda.data[ii*nx+jj] = 0.0;
+    } else if (args->warmstart == 2)
+    {
+        for (int ii = 0; ii < N-1; ii++)
+            for (int jj = 0; jj < nx; jj++)
+                mem->qpData.lambda.data[ii*nx+jj] = mem->qpData.lambda.data[(ii+1)*nx+jj];
+    }
 
     mem->qpData.options.maxIter = args->options.maxIter;
 
