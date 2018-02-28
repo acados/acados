@@ -199,7 +199,7 @@ int main() {
         in->S_forw[ii * (nx + 1)] = 1.0;
 
 	// seeds adj
-    for (ii = 0; ii < nx + nu; ii++)
+    for (ii = 0; ii < nx; ii++)
         in->S_adj[ii] = 1.0;
 
 /************************************************
@@ -215,7 +215,6 @@ int main() {
 ************************************************/
 
     acados_tic(&timer);
-
     for (ii=0;ii<NREP;ii++)
         config->evaluate(config, in, out, opts, mem, work);
 

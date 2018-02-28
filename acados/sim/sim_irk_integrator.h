@@ -60,8 +60,6 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dvec lambda_old; // adjoint seed (nx+nu)
-
     struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
     struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);

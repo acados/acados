@@ -366,7 +366,6 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
 
-
     // start the loop
     acados_tic(&timer);
     for(ss=0; ss<num_steps; ss++){
@@ -436,6 +435,7 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
                 }
             } // end ii
 
+
             //DGETRF computes an LU factorization of a general M-by-N matrix A
             //using partial pivoting with row interchanges.
 			if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
@@ -465,7 +465,6 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
         // evaluate forward sensitivities
         if (opts->sens_forw)
 		{
-
             // evaluate JGK(xn,Kn)
             for(ii=0; ii<ns; ii++)
 			{
@@ -521,7 +520,6 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
 			{ // store the factorization and permutation
                 blasfeo_dgecp(nx*ns, nx*ns, JGK, 0, 0, &JG_traj[ss], 0, 0);
             }
-
             // obtain JKf
 			// TODO add the option to use VDE instead of dgemm ???
             blasfeo_dgemm_nn(nx*ns, nx, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
@@ -550,7 +548,6 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
 		{
 
             blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
-
             if (opts->sens_forw)
 			{ // evalute JGf and extract factorization
 
@@ -637,10 +634,9 @@ int sim_irk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, voi
 
             blasfeo_dvecpei(nx*ns, ipiv, lambdaK, 0);
             
-            blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, &lambda, 0, lambda, 0);
+            blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
         }
     }
-
     // extract output
 
     blasfeo_unpack_dvec(nx, xn, 0, x_out);
