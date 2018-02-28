@@ -27,13 +27,7 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-#include "blasfeo/include/blasfeo_target.h"
-#include "blasfeo/include/blasfeo_common.h"
-#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_blas.h"
-#include "blasfeo/include/blasfeo_d_kernel.h"
-#include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
-#include "blasfeo/include/blasfeo_d_aux.h"
+
 
 typedef struct
 {
@@ -60,7 +54,6 @@ typedef struct
 
 typedef struct
 {
-    struct blasfeo_dvec lambda_old; // adjoint seed (nx+nu)
 
     struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
     struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
