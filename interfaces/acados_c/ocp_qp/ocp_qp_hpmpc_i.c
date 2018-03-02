@@ -37,6 +37,7 @@ void *ocp_qp_hpmpc_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
     dest->N2 = source->N2;
     dest->out_iter = source->out_iter;
     dest->sigma_mu = source->sigma_mu;
+    dest->alpha_min = source->alpha_min;
     dest->N = source->N;
     dest->M = source->M;
 
