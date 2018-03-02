@@ -59,7 +59,7 @@
 #define TF 3.0
 #define Ns 2
 #define MAX_SQP_ITERS 10
-#define NREP 1
+#define NREP 10
 
 
 // process box constraints as general constraints
@@ -1017,11 +1017,14 @@ int main() {
     for (int rep = 0; rep < NREP; rep++)
     {
 		// warm start output initial guess of solution
-		for (int i=0; i<=NN; i++)
-		{
-			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
-		}
+//		if (rep==0)
+//		{
+			for (int i=0; i<=NN; i++)
+			{
+				blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
+				blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+			}
+//		}
 
 		// call nlp solver
         status = ocp_nlp_gn_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
