@@ -165,14 +165,14 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm2_work;
 				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm2_sparsity_in;
 				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm2_sparsity_out;
-				impl_jac_x[ii].casadi_fun = &impl_jacFun_xdot_chain_nm2;
-				impl_jac_x[ii].casadi_work = &impl_jacFun_xdot_chain_nm2_work;
-				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm2_sparsity_in;
-				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm2_sparsity_out;
-				impl_jac_x[ii].casadi_fun = &impl_jacFun_u_chain_nm2;
-				impl_jac_x[ii].casadi_work = &impl_jacFun_u_chain_nm2_work;
-				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm2_sparsity_in;
-				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm2_sparsity_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm2;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm2_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm2_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm2_sparsity_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm2;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm2_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm2_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm2_sparsity_out;
 #endif
 			}
 			break;
@@ -197,14 +197,14 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm3_work;
 				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm3_sparsity_in;
 				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm3_sparsity_out;
-				impl_jac_x[ii].casadi_fun = &impl_jacFun_xdot_chain_nm3;
-				impl_jac_x[ii].casadi_work = &impl_jacFun_xdot_chain_nm3_work;
-				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm3_sparsity_in;
-				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm3_sparsity_out;
-				impl_jac_x[ii].casadi_fun = &impl_jacFun_u_chain_nm3;
-				impl_jac_x[ii].casadi_work = &impl_jacFun_u_chain_nm3_work;
-				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm3_sparsity_in;
-				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm3_sparsity_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm3;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm3_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm3_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm3_sparsity_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm3;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm3_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm3_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm3_sparsity_out;
 #endif
 			}
 			break;
@@ -237,6 +237,69 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm4_work;
 				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm4_sparsity_in;
 				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm4_sparsity_out;
+#endif
+			}
+			break;
+		case 4:
+			for (ii = 0; ii < N; ii++)
+			{
+#if DYNAMICS==0 | DYNAMICS==1
+				forw_vde[ii].casadi_fun = &vde_chain_nm5;
+				forw_vde[ii].casadi_work = &vde_chain_nm5_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm5_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm5_sparsity_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm5;
+				jac_ode[ii].casadi_work = &jac_chain_nm5_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm5_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm5_sparsity_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm5;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm5_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm5_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm5_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm5;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm5_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm5_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm5_sparsity_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm5;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm5_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm5_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm5_sparsity_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm5;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm5_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm5_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm5_sparsity_out;
+#endif
+			}
+		case 5:
+			for (ii = 0; ii < N; ii++)
+			{
+#if DYNAMICS==0 | DYNAMICS==1
+				forw_vde[ii].casadi_fun = &vde_chain_nm6;
+				forw_vde[ii].casadi_work = &vde_chain_nm6_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm6_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm6_sparsity_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm6;
+				jac_ode[ii].casadi_work = &jac_chain_nm6_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm6_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm6_sparsity_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm6;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm6_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm6_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm6_sparsity_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm6;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm6_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm6_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm6_sparsity_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm6;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm6_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm6_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm6_sparsity_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm6;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm6_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm6_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm6_sparsity_out;
 #endif
 			}
 			break;
@@ -297,6 +360,32 @@ static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_funct
 			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm4_sparsity_in;
 			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm4_sparsity_out;
 			break;
+		case 4:
+			for (ii = 0; ii < N; ii++)
+			{
+				ls_cost_jac[ii].casadi_fun = &ls_cost_nm5;
+				ls_cost_jac[ii].casadi_work = &ls_cost_nm5_work;
+				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm5_sparsity_in;
+				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm5_sparsity_out;
+			}
+			ls_cost_jac[N].casadi_fun = &ls_costN_nm5;
+			ls_cost_jac[N].casadi_work = &ls_costN_nm5_work;
+			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm5_sparsity_in;
+			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm5_sparsity_out;
+			break;
+		case 5:
+			for (ii = 0; ii < N; ii++)
+			{
+				ls_cost_jac[ii].casadi_fun = &ls_cost_nm6;
+				ls_cost_jac[ii].casadi_work = &ls_cost_nm6_work;
+				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm6_sparsity_in;
+				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm6_sparsity_out;
+			}
+			ls_cost_jac[N].casadi_fun = &ls_costN_nm6;
+			ls_cost_jac[N].casadi_work = &ls_costN_nm6_work;
+			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm6_sparsity_in;
+			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm6_sparsity_out;
+			break;
 		default:
 			printf("Problem size not available\n");
 			exit(1);
@@ -322,12 +411,12 @@ void read_initial_state(const int nx, const int num_free_masses, double *x0)
         case 3:
             initial_states_file = fopen(X0_NM4_FILE, "r");
             break;
-        // case 4:
-        //     initial_states_file = fopen(X0_NM5_FILE, "r");
-        //     break;
-        // case 5:
-        //     initial_states_file = fopen(X0_NM6_FILE, "r");
-        //     break;
+        case 4:
+            initial_states_file = fopen(X0_NM5_FILE, "r");
+            break;
+        case 5:
+            initial_states_file = fopen(X0_NM6_FILE, "r");
+            break;
         // case 6:
         //     initial_states_file = fopen(X0_NM7_FILE, "r");
         //     break;
@@ -359,12 +448,12 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
         case 3:
             final_state_file = fopen(XN_NM4_FILE, "r");
             break;
-        // case 4:
-        //     final_state_file = fopen(XN_NM5_FILE, "r");
-        //     break;
-        // case 5:
-        //     final_state_file = fopen(XN_NM6_FILE, "r");
-        //     break;
+        case 4:
+            final_state_file = fopen(XN_NM5_FILE, "r");
+            break;
+        case 5:
+            final_state_file = fopen(XN_NM6_FILE, "r");
+            break;
         // case 6:
         //     final_state_file = fopen(XN_NM7_FILE, "r");
         //     break;
