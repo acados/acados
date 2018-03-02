@@ -82,7 +82,7 @@ double compare_with_acado_solution(int N, int nvars, ocp_qp_out *qp_out, double 
         {
             printf("nans detected in acados solution.\n");
             exit(-1);
-    }
+        }
     }
 
     free(acados_sol);
@@ -98,10 +98,10 @@ int main() {
     // Uncomment to detect NaNs
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-    int n_rep = 5;  // TODO number of runs (taking minimum time)
+    int n_rep = 5;
     int n_problems = 25;  // number of MPC problems stored in shared library
 
-    bool auto_choose_acados_solver = true;  // choose acados solver based on lib name
+    bool auto_choose_acados_solver = false;  // choose acados solver based on lib name
 
     bool eliminate_x0 = false;
 
@@ -118,9 +118,9 @@ int main() {
 
     char lib_str[256];
 
-    char solver_in[256] = "qpDUNES_B0";
+    char solver_in[256] = "HPMPC_B10";
     int nmasses_in = 7;
-    int warmstart_in = 1;
+    int warmstart_in = 0;
 
     int N_ins[] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
     int N_in;
@@ -208,13 +208,25 @@ int main() {
         // plan.qp_solver = FULL_CONDENSING_QPOASES;
         // warmstart = 1;
 
-        N2 = dims.N;
-        plan.qp_solver = FULL_CONDENSING_HPIPM;
-        warmstart = 0;
+        // N2 = dims.N;
+        // plan.qp_solver = FULL_CONDENSING_HPIPM;
+        // warmstart = 0;
 
         // N2 = dims.N;
         // plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
         // warmstart = 0;
+
+        N2 = 10;
+        plan.qp_solver = PARTIAL_CONDENSING_HPMPC;
+        warmstart = 0;
+
+        // N2 = dims.N;
+        // plan.qp_solver = FULL_CONDENSING_QORE;
+        // warmstart = 1;
+
+        // N2 = dims.N;
+        // plan.qp_solver = PARTIAL_CONDENSING_QPDUNES;
+        // warmstart = 2;
 
     } else
     {
@@ -241,8 +253,7 @@ int main() {
         hpipm_pcond_args->N2 = N2;
         hpipm_solver_args->hpipm_args->iter_max = 1000;
         hpipm_solver_args->hpipm_args->warm_start = warmstart;
-        // hpipm_solver_args->hpipm_args->mu0 = 1e6;
-        // hpipm_solver_args->hpipm_args->tol = 1e-12;
+        hpipm_solver_args->hpipm_args->res_d_max = 1e-7;
 
         break;
     case PARTIAL_CONDENSING_HPMPC:
@@ -252,8 +263,18 @@ int main() {
         ocp_qp_partial_condensing_args *hpmpc_pcond_args = (ocp_qp_partial_condensing_args *)pcond_solver_args->pcond_args;
         ocp_qp_hpmpc_args *hpmpc_solver_args = (ocp_qp_hpmpc_args *)pcond_solver_args->solver_args;
 
-        hpmpc_pcond_args->N2 = N2;
+        bool use_internal_condensing = false;
 
+        if (use_internal_condensing)
+        {
+            hpmpc_pcond_args->N2 = N;
+            hpmpc_solver_args->N2 = N2;
+        } else
+        {   // TODO(dimitris): find bug in hpmpc interface in combination with partial condensing
+            hpmpc_pcond_args->N2 = N2;
+        }
+
+        hpmpc_solver_args->mu0 = 1e6;
         hpmpc_solver_args->max_iter = 1000;
         hpmpc_solver_args->tol = 1e-12;
         hpmpc_solver_args->warm_start = warmstart;
@@ -527,7 +548,7 @@ int main() {
                 else if (acados_return == ACADOS_FAILURE)
                     printf("QP SOLVER FAILED\n");
                 else
-                    printf("QP SOLVER RETURNED UNKNOWN FLAG\n");
+                    printf("QP SOLVER RETURNED UNKNOWN FLAG (%d)\n", acados_return);
                 return -1;
             }
 
@@ -586,8 +607,8 @@ int main() {
     free(qp_in);
     free(qp_out);
 
-        char save_str[256];
-        char *lib_str_no_ext = strndup(lib_str, strlen(lib_str) - strlen(".so"));
+    char save_str[256];
+    char *lib_str_no_ext = strndup(lib_str, strlen(lib_str) - strlen(".so"));
 
     if (auto_choose_acados_solver)
     {
@@ -600,7 +621,7 @@ int main() {
     } else
     {
         #if 0  // to enable comparison with other solvers
-        char custom_str[256] = "dense_hpipm";
+        char custom_str[256] = "hpmpc_ext_cond";
 
         snprintf(save_str, sizeof(save_str), "%s_acados_%s_cpu_times.txt", lib_str_no_ext, custom_str);
         write_double_vector_to_txt(min_cpu_times, n_problems, save_str);

@@ -72,6 +72,20 @@ T.String = 'qpDUNES (clipping) - warmstart vs coldstart';
 
 % exportfig('~/Desktop/ski_retreat/figures/qpDUNES_B0_cold.pdf')
 
+%% qpDUNES B0 - shifting
+
+close all
+
+nmasses = 7;
+solver = 'qpDUNES_B0';
+warmstart = 1;
+
+T = plot_comparison(nmasses, solver, warmstart, 'qpdunes_shift');
+T.Interpreter = 'latex';
+T.String = 'qpDUNES (clipping) - warmstart vs shifting';
+
+% exportfig('~/Desktop/ski_retreat/figures/qpDUNES_B0_shift.pdf')
+
 %% qpDUNES B10
 
 close all
@@ -105,4 +119,17 @@ solver = 'HPMPC_B10';
 warmstart = 0;
 plot_comparison(nmasses, solver, warmstart)
 % exportfig('~/Desktop/ski_retreat/figures/HPMPC_B10_internal_cond.pdf')
+
+
+%% HPMPC_B10 with acados condensing
+
+close all
+
+nmasses = 7;
+solver = 'HPMPC_B10';
+warmstart = 0;
+
+T = plot_comparison(nmasses, solver, warmstart, 'hpmpc_ext_cond');
+T.Interpreter = 'latex';
+T.String = 'qpDUNES (clipping) - warmstart vs coldstart';
 
