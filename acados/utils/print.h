@@ -50,8 +50,9 @@ void print_int_array(char *file_name, const int_t *array, int_t size);
 
 void read_matrix(const char *file_name, real_t *array, const int_t nrows, const int_t ncols);
 
-void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
+int_t write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 
+int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname);
 
 // ocp nlp
 void ocp_nlp_dims_print(ocp_nlp_dims *dims);

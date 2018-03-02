@@ -147,6 +147,52 @@ void read_matrix(const char *file_name, real_t *array, const int_t nrows,
 
 
 
+int_t write_double_vector_to_txt(real_t *vec, int_t n, const char *fname) {
+    int_t i, status;
+    FILE *myFile;
+
+    myFile = fopen(fname, "wr");
+
+    if (myFile == NULL) {
+        printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", fname);
+        return -1;
+    }
+
+    for (i = 0; i < n; i++) {
+        status = fprintf(myFile, "%.16e\n", vec[i]);
+        assert(status >= 0);
+    }
+
+    fclose(myFile);
+
+    return 0;
+}
+
+
+
+int_t write_int_vector_to_txt(int_t *vec, int_t n, const char *fname) {
+    int_t i, status;
+    FILE *myFile;
+
+    myFile = fopen(fname, "wr");
+
+    if (myFile == NULL) {
+        printf("Error opening file %s ! ! ! ! ! ! ! ! !\n", fname);
+        return -1;
+    }
+
+    for (i = 0; i < n; i++) {
+        status = fprintf(myFile, "%d\n", vec[i]);
+        assert(status >= 0);
+    }
+
+    fclose(myFile);
+
+    return 0;
+}
+
+
+
 void ocp_nlp_dims_print(ocp_nlp_dims *dims)
 {
     int N = dims->N;
