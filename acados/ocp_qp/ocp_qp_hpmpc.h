@@ -37,12 +37,16 @@ typedef struct ocp_qp_hpmpc_args_ {
     //  double min_step;
     double mu0;
     //  double sigma_min;
+    double alpha_min;
     int warm_start;
     int N2;  // horizion length of the partially condensed problem
     double **ux0;
     double **pi0;
     double **lam0;
     double **t0;
+
+    // TODO(dimitris): out_iter should just be in output and inf_norm_res prob. in memory
+
     int out_iter;          // number of performed iterations
     double *inf_norm_res;  // array of size 5, returning inf norm res
 
@@ -54,7 +58,9 @@ typedef struct ocp_qp_hpmpc_args_ {
 
 // struct of the solver memory
 typedef struct ocp_qp_hpmpc_memory_ {
-    void *mem;
+    struct blasfeo_dvec *hpi;
+    double *stats;
+    void *hpmpc_work;
 } ocp_qp_hpmpc_memory;
 
 
