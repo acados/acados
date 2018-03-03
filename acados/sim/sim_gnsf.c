@@ -250,31 +250,6 @@ void gnsf_import(gnsf_dims* dims, gnsf_fixed *fix, casadi_function_t But_KK_ZZ_L
 
     free(exp_out);
     free(export_in);
-
-    // d_print_e_mat(num_stages, num_stages, fix->A_dt, num_stages);
-    // d_print_e_mat(num_stages, 1, fix->b_dt, num_stages);
-    // d_print_e_mat(num_stages, 1, fix->c, num_stages);
-
-    // printf("KKf Mat\n");
-    // blasfeo_print_exp_dmat(nK1, nff, &fix->KKf, 0,0);
-    // printf("KKx Mat\n");
-    // blasfeo_print_exp_dmat(nK1, nx1, &fix->KKx, 0,0);
-    // printf("KKu Mat \n");
-    // blasfeo_print_exp_dmat(nK1, nu , &fix->KKu, 0,0);
-
-    // printf("ZZf Mat\n");
-    // blasfeo_print_exp_dmat(nZ, nff, &fix->ZZf, 0,0);
-    // printf("ZZx Mat\n");
-    // blasfeo_print_exp_dmat(nZ, nx1, &fix->ZZx, 0,0);
-    // printf("ZZu Mat \n");
-    // blasfeo_print_exp_dmat(nZ, nu , &fix->ZZu, 0,0);
-
-    // printf("ALO Mat\n");
-    // blasfeo_print_dmat(dims->nx2, dims->nx2, &fix->ALO, 0,0);
-    // printf("M2inv\n");
-    // blasfeo_print_dmat(nK2, nK2, &fix->M2inv, 0,0);
-    // printf("dK2_dx2 \n");
-    // blasfeo_print_dmat(nK2, dims->nx2 , &fix->dK2_dx2, 0,0);
 }
 
 int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts)
@@ -547,6 +522,18 @@ void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Nevil
             }
         }
         out[0] = Q[0];
+}
+
+double minimum_of_doubles(double *x, int n){
+    double min = x[0];
+    for (int c = 1 ; c < n ; c++ ) 
+    {
+        if ( x[c] < min ) 
+        {
+           min = x[c];
+        }
+    }
+    return min;
 }
 
 void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, gnsf_opts *opts, void *work_)
@@ -848,4 +835,23 @@ void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out,
     blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn);
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);
     blasfeo_unpack_dvec(nx+nu, &lambda, 0, out->S_adj);
+}
+
+void sim_gnsf_config_initialize_default(void *config_)
+{
+
+	sim_solver_config *config = config_;
+
+	config->evaluate = &gnsf_simulate;
+	config->opts_calculate_size = &gnsf_opts_calculate_size;
+	config->opts_assign = &gnsf_opts_assign;
+	// config->opts_initialize_default = &sim_irk_opts_initialize_default; TODO
+	// config->memory_calculate_size = &sim_irk_memory_calculate_size; TODO
+	// config->memory_assign = &sim_irk_memory_assign;  TODO
+	config->workspace_calculate_size = &gnsf_calculate_workspace_size;
+	// config->model_calculate_size = &sim_irk_model_calculate_size; TODO
+	// config->model_assign = &sim_irk_model_assign; TODO
+
+	return;
+
 }

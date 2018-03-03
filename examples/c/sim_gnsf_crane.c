@@ -133,14 +133,20 @@ int main() {
     void *work_ = malloc(gnsf_workspace_size);
 
     printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
-    int num_executions = 1;
-    double gnsf_time = 0;
-    double casadi_time = 0;
+    int num_executions = 4;
+    double casadi_times[num_executions];
+    double gnsf_times[num_executions];
+
     for (int i = 0; i < num_executions; i++) {
         gnsf_simulate( dims, fix, in, out, opts, work_);
-        gnsf_time += out->info->CPUtime;
-        casadi_time += out->info->ADtime;
+
+        casadi_times[i] = out->info->ADtime;
+        gnsf_times[i] = out->info->CPUtime;
     }
+    double casadi_time = minimum_of_doubles(casadi_times, num_executions);
+    double gnsf_time = minimum_of_doubles(gnsf_times, num_executions);
+
+
     printf("xf =\n");
     d_print_e_mat(1, dims->nx, out->xn, 1);
     printf("forw_Sensitivities = \n");
@@ -148,8 +154,6 @@ int main() {
     printf("adj Sensitivities =\n");
     d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
     
-    gnsf_time = gnsf_time/num_executions;
-    casadi_time = casadi_time/num_executions;
     printf("gnsf _time  =  %f [ms] \n", gnsf_time*1000);
     printf("casadi_time =  %f  [ms]\n", casadi_time*1000);
 
@@ -161,6 +165,7 @@ int main() {
     free(gnsf_fixed_mem);
     free(sim_out_ptr);
     free(work_);
+    free(config_mem);
 
     free(jac_res_ffx1u_mem);
     free(f_LO_inc_J_x1k1uz_mem);

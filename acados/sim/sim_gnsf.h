@@ -185,7 +185,7 @@ gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory, int memsize);
 void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, sim_out* out, gnsf_opts* opts, void *work_);
 
 void gnsf_neville(double *out, double xx, int n, double *x, double *Q);
-
+double minimum_of_doubles(double *x, int n);
 
 int gnsf_dims_calculate_size();
 gnsf_dims *gnsf_dims_assign(void *raw_memory);
