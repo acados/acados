@@ -32,7 +32,7 @@
 int ocp_qp_sparse_solver_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     int size = 0;
     size += sizeof(ocp_qp_sparse_solver_opts);
@@ -48,7 +48,7 @@ int ocp_qp_sparse_solver_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 void *ocp_qp_sparse_solver_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -75,7 +75,7 @@ void *ocp_qp_sparse_solver_opts_assign(void *config_, ocp_qp_dims *dims, void *r
 void ocp_qp_sparse_solver_opts_initialize_default(void *config_, void *opts_)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
 	// sparse solver opts
     ocp_qp_sparse_solver_opts *opts = (ocp_qp_sparse_solver_opts *)opts_;
@@ -92,7 +92,7 @@ void ocp_qp_sparse_solver_opts_initialize_default(void *config_, void *opts_)
 int ocp_qp_sparse_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_sparse_solver_opts *opts = (ocp_qp_sparse_solver_opts *)args_;
 
@@ -130,7 +130,7 @@ int ocp_qp_sparse_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims,
 void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *)args_;
 
@@ -197,7 +197,7 @@ void *ocp_qp_sparse_solver_memory_assign(void *config_, ocp_qp_dims *dims, void 
 int ocp_qp_sparse_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *args_)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_sparse_solver_opts *args = (ocp_qp_sparse_solver_opts *)args_;
 
@@ -225,7 +225,7 @@ int ocp_qp_sparse_solver_workspace_calculate_size(void *config_, ocp_qp_dims *di
 static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_sparse_solver_opts *args, ocp_qp_sparse_solver_memory *mem, ocp_qp_sparse_solver_workspace *work)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     // set up dimesions of partially condensed qp
     ocp_qp_dims *pcond_dims;
@@ -254,7 +254,7 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_sparse_solve
 int ocp_qp_sparse_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
 	ocp_qp_xcond_solver_config *config = config_;
-	ocp_qp_solver_config *qp_solver = config->qp_solver;
+	qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     acados_timer tot_timer, cond_timer;

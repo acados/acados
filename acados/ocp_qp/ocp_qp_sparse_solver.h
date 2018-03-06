@@ -32,7 +32,6 @@ extern "C" {
 
 typedef struct ocp_qp_sparse_solver_opts_ {
     ocp_qp_partial_condensing_args *pcond_opts;
-    ocp_qp_solver_config *solver; // TODO remove !!!
     void *qp_solver_opts;
 } ocp_qp_sparse_solver_opts;
 

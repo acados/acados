@@ -33,7 +33,6 @@ extern "C" {
 
 typedef struct ocp_qp_full_condensing_solver_args_ {
     ocp_qp_full_condensing_args *cond_args;
-    dense_qp_solver_config *solver; // TODO remove !!!
     void *solver_args;
 } ocp_qp_full_condensing_solver_args;
 

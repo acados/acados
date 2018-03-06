@@ -222,7 +222,7 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
     double *stat = (double*)ptr_memory;
     ptr_memory+=sizeof(double)*k_max*6;
 	align_char_to(64, &ptr_memory);
-	ptr_memory = (double *)ptr_memory;
+//	ptr_memory = (double *)ptr_memory;
 	int compute_mult = 1;
 
 
@@ -522,15 +522,15 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
 void ocp_qp_hpmpc_config_initialize_default(void *config_)
 {
 
-	ocp_qp_solver_config *config = config_;
+	qp_solver_config *config = config_;
 
-	config->evaluate = &ocp_qp_hpmpc;
-	config->opts_calculate_size = &ocp_qp_hpmpc_opts_calculate_size;
-	config->opts_assign = &ocp_qp_hpmpc_opts_assign;
+	config->opts_calculate_size = ( int (*) (void *, void *)) &ocp_qp_hpmpc_opts_calculate_size;
+	config->opts_assign = ( void* (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_assign;
 	config->opts_initialize_default = &ocp_qp_hpmpc_opts_initialize_default;
-	config->memory_calculate_size = &ocp_qp_hpmpc_memory_calculate_size;
-	config->memory_assign = &ocp_qp_hpmpc_memory_assign;
-	config->workspace_calculate_size = &ocp_qp_hpmpc_workspace_calculate_size;
+	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_memory_calculate_size;
+	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &ocp_qp_hpmpc_memory_assign;
+	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_workspace_calculate_size;
+	config->evaluate = ( int (*) (void *, void *, void *, void *, void *, void *)) &ocp_qp_hpmpc;
 
 	return;
 

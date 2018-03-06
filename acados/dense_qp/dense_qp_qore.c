@@ -295,15 +295,15 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 void dense_qp_qore_config_initialize_default(void *config_)
 {
 
-	dense_qp_solver_config *config = config_;
+	qp_solver_config *config = config_;
 
-	config->evaluate = &dense_qp_qore;
-	config->opts_calculate_size = &dense_qp_qore_opts_calculate_size;
-	config->opts_assign = &dense_qp_qore_opts_assign;
+	config->opts_calculate_size = ( int (*) (void *, void *)) &dense_qp_qore_opts_calculate_size;
+	config->opts_assign = ( void* (*) (void *, void *, void *)) &dense_qp_qore_opts_assign;
 	config->opts_initialize_default = &dense_qp_qore_opts_initialize_default;
-	config->memory_calculate_size = &dense_qp_qore_memory_calculate_size;
-	config->memory_assign = &dense_qp_qore_memory_assign;
-	config->workspace_calculate_size = &dense_qp_qore_workspace_calculate_size;
+	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qore_memory_calculate_size;
+	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &dense_qp_qore_memory_assign;
+	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qore_workspace_calculate_size;
+	config->evaluate = ( int (*) (void *, void *, void *, void *, void *, void *)) &dense_qp_qore;
 
 	return;
 
