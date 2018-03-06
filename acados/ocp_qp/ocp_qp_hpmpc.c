@@ -152,33 +152,34 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 	for (ii = 0; ii <= N; ii++)
         ws_size += blasfeo_memsize_dvec(nx[ii]);  //hpi
 
-    ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu, nb, dims->nbx, dims->nbu, ng, N2);
+    ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu, 
+			nb, dims->nbx, dims->nbu, ng, N2);
 
     // TODO(dimitris): only calculate sizes below when partial tightenging is used
-    #if 0
-    int ii;
-    int M = args->M;
+    if (args->M < args->N) {
+		int ii;
+		int M = args->M;
 
-	for ( ii = 0; ii < N; ii++ ) {
-		ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  // L
-		ws_size += sizeof(double)*(nu[ii]+nx[ii]);  // dux
-        ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  // dlam, dt, lamt
-        ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  // tinv
-        ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  // Qx, qx
-		ws_size += sizeof(double)*(nx[ii+1]);  // Pb
+		for ( ii = 0; ii < N; ii++ ) {
+			ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  	// L
+			ws_size += sizeof(double)*(nu[ii]+nx[ii]);  					// dux
+			ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  				// dlam, dt, lamt
+			ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  				// tinv
+			ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  					// Qx, qx
+			ws_size += sizeof(double)*(nx[ii+1]);  							// Pb
+		}
+		// TODO(dimitris): put in loop
+		ii = N;
+		ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  		// L
+		ws_size += sizeof(double)*(nu[ii]+nx[ii]);  						// dux
+		ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  					// dlam, dt, lamt
+		ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  					// tinv
+		ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  						// Qx, qx
+		ws_size += sizeof(double)*(nx[ii+1]);  								// Pb
+
+		ws_size += d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
+		ws_size += 2*sizeof(double)*(nx[M]+1)*nx[M];  						// LxM, PpM
 	}
-    // TODO(dimitris): put in loop
-    ii = N;
-	ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  // L
-    ws_size += sizeof(double)*(nu[ii]+nx[ii]);  // dux
-    ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  // dlam, dt, lamt
-    ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  // tinv
-    ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  // Qx, qx
-    ws_size += sizeof(double)*(nx[ii+1]);  // Pb
-
-	ws_size += d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
-    ws_size += 2*sizeof(double)*(nx[M]+1)*nx[M];  // LxM, PpM
-    #endif
 
     ws_size += 2*64;
 
