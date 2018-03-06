@@ -168,15 +168,15 @@ int dense_qp_hpipm(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
 void dense_qp_hpipm_config_initialize_default(void *config_)
 {
 
-	dense_qp_solver_config *config = config_;
+	qp_solver_config *config = config_;
 
-	config->evaluate = &dense_qp_hpipm;
-	config->opts_calculate_size = &dense_qp_hpipm_opts_calculate_size;
-	config->opts_assign = &dense_qp_hpipm_opts_assign;
+	config->opts_calculate_size = ( int (*) (void *, void *)) &dense_qp_hpipm_opts_calculate_size;
+	config->opts_assign = ( void* (*) (void *, void *, void *)) &dense_qp_hpipm_opts_assign;
 	config->opts_initialize_default = &dense_qp_hpipm_opts_initialize_default;
-	config->memory_calculate_size = &dense_qp_hpipm_memory_calculate_size;
-	config->memory_assign = &dense_qp_hpipm_memory_assign;
-	config->workspace_calculate_size = &dense_qp_hpipm_workspace_calculate_size;
+	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_hpipm_memory_calculate_size;
+	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &dense_qp_hpipm_memory_assign;
+	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_hpipm_workspace_calculate_size;
+	config->evaluate = ( int (*) (void *, void *, void *, void *, void *, void *)) &dense_qp_hpipm;
 
 	return;
 

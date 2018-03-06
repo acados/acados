@@ -15,7 +15,7 @@ OBJS += ocp_qp_qpdunes.o
 endif
 OBJS += ocp_qp_partial_condensing.o
 OBJS += ocp_qp_full_condensing.o
-OBJS += ocp_qp_sparse_solver.o
+OBJS += ocp_qp_partial_condensing_solver.o
 OBJS += ocp_qp_full_condensing_solver.o
 
 obj: $(OBJS)

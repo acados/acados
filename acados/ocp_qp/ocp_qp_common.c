@@ -46,7 +46,7 @@ int ocp_qp_solver_config_calculate_size()
 
 	int size = 0;
 
-	size += sizeof(ocp_qp_solver_config);
+	size += sizeof(qp_solver_config);
 
 	return size;
 
@@ -54,13 +54,13 @@ int ocp_qp_solver_config_calculate_size()
 
 
 
-ocp_qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
+qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
 {
 
 	char *c_ptr = raw_memory;
 
-	ocp_qp_solver_config *config = (ocp_qp_solver_config *) c_ptr;
-	c_ptr += sizeof(ocp_qp_solver_config);
+	qp_solver_config *config = (qp_solver_config *) c_ptr;
+	c_ptr += sizeof(qp_solver_config);
 
 	return config;
 

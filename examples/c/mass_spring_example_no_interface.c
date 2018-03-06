@@ -23,7 +23,7 @@
 
 // acados
 #include <acados/utils/print.h>
-#include <acados/ocp_qp/ocp_qp_sparse_solver.h>
+#include <acados/ocp_qp/ocp_qp_partial_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
 #ifdef ACADOS_WITH_HPMPC
@@ -118,7 +118,7 @@ int main() {
 			int solver_opts_size;
 			void *solver_opts_mem;
 			void *solver_opts = NULL;
-			ocp_qp_sparse_solver_opts *sparse_solver_opts;
+			ocp_qp_partial_condensing_solver_opts *partial_condensing_solver_opts;
 			ocp_qp_hpipm_opts *hpipm_opts;
 			int solver_mem_size;
 			void *solver_mem_mem;
@@ -133,7 +133,7 @@ int main() {
                     printf("\nHPIPM\n\n");
 
 					// config
-					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 					solver_config->N2 = N; // full horizon
 
@@ -143,8 +143,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-					sparse_solver_opts = solver_opts;
-					hpipm_opts = sparse_solver_opts->qp_solver_opts;
+					partial_condensing_solver_opts = solver_opts;
+					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
 
 					break;
@@ -153,7 +153,7 @@ int main() {
                     printf("\nPARTIAL_CONDENSING_HPIPM, N2 = %d\n\n", N2);
 
 					// config
-					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 					solver_config->N2 = N2;
 
@@ -163,8 +163,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-					sparse_solver_opts = solver_opts;
-					hpipm_opts = sparse_solver_opts->qp_solver_opts;
+					partial_condensing_solver_opts = solver_opts;
+					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
 
 					break;
@@ -182,8 +182,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-					sparse_solver_opts = solver_opts;
-					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
+					partial_condensing_solver_opts = solver_opts;
+					dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 					dense_hpipm_opts->hpipm_opts->iter_max = 30;
 
 					break;
@@ -202,8 +202,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					sparse_solver_opts = solver_opts;
-//					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					partial_condensing_solver_opts = solver_opts;
+//					dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 //					dense_hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
@@ -223,8 +223,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					sparse_solver_opts = solver_opts;
-//					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					partial_condensing_solver_opts = solver_opts;
+//					dense_hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 //					dense_hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
@@ -235,7 +235,7 @@ int main() {
                     printf("\nPARTIAL_CONDENSING_HPMPC, N2 = %d\n\n", N2);
 
 					// config
-					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
 					solver_config->N2 = N2;
 
@@ -245,8 +245,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					sparse_solver_opts = solver_opts;
-//					hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					partial_condensing_solver_opts = solver_opts;
+//					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 //					hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 
@@ -257,7 +257,7 @@ int main() {
                     printf("\nPARTIAL_CONDENSING_QPDUNES, N2 = %d\n\n", N2);
 
 					// config
-					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
 					solver_config->N2 = N2;
 
@@ -267,8 +267,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					sparse_solver_opts = solver_opts;
-//					hpipm_opts = sparse_solver_opts->qp_solver_opts;
+//					partial_condensing_solver_opts = solver_opts;
+//					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 //					hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
 

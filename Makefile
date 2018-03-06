@@ -36,7 +36,7 @@ OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
-OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
+OBJS += acados/ocp_qp/ocp_qp_partial_condensing_solver.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
 # sim
 OBJS += acados/sim/sim_collocation_utils.o
