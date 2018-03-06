@@ -62,7 +62,7 @@ typedef struct {
     double *S_forw;  // forward seed
     double *S_adj;   // backward seed
 
-} gnsf_in;
+} gnsf2_in;
 
 typedef struct {
     struct blasfeo_dmat KKf;
@@ -109,10 +109,62 @@ typedef struct
     double *ALO;
 } gnsf2_model;
 
+typedef struct {
+//    double interval;
+//    int num_stages;
+    int num_steps;
+//    int num_forw_sens;
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+    int  newton_max;
+    bool jac_reuse;
+   // Newton_scheme *scheme;
+} gnsf2_opts;
+
+typedef struct {
+    struct blasfeo_dmat KKf;
+    struct blasfeo_dmat KKx;
+    struct blasfeo_dmat KKu;
+
+    struct blasfeo_dmat YYf;
+    struct blasfeo_dmat YYx;
+    struct blasfeo_dmat YYu;
+
+    struct blasfeo_dmat ZZf;
+    struct blasfeo_dmat ZZx;
+    struct blasfeo_dmat ZZu;
+
+    struct blasfeo_dmat ALO;
+    struct blasfeo_dmat M2inv;
+    struct blasfeo_dmat dK2_dx2;
+
+    double* A_dt;
+    double* b_dt;
+    double* c;
+    double dt;
+
+    // external functions
+    external_function_generic *res_inc_Jff;
+    external_function_generic *jac_res_ffx1u;
+    external_function_generic *f_LO_inc_J_x1k1uz;
+
+} gnsf2_fixed;
+
 int gnsf2_dims_calculate_size();
 gnsf2_dims *gnsf2_dims_assign(void *raw_memory);
 
+int gnsf2_in_calculate_size(gnsf2_dims *dims);
+gnsf2_in *gnsf2_in_assign(gnsf2_dims *dims, void *raw_memory);
+
 void gnsf2_get_dims( gnsf2_dims* dims, casadi_function_t get_ints_fun);
+
+int gnsf2_opts_calculate_size(gnsf2_dims *dims);
+gnsf2_opts *gnsf2_opts_assign(gnsf2_dims *dims, void *raw_memory);
+
+int gnsf2_fixed_calculate_size(gnsf2_dims *dims, gnsf2_opts* opts);
+gnsf2_fixed *gnsf2_fixed_assign(gnsf2_dims *dims, void *raw_memory, int memsize);
+void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_YY_ZZ_LO_fun);
 
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

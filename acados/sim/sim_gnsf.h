@@ -160,7 +160,7 @@ void *gnsf_cast_workspace(gnsf_dims* dims, void *raw_memory);
 int gnsf_calculate_workspace_size(gnsf_dims *dims, gnsf_opts* opts);
 
 int gnsf_fixed_calculate_size(gnsf_dims *dims, gnsf_opts* opts);
-void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
+// void gnsf_allocate_fixed( gnsf_dims *dims, gnsf_fixed *fix);
 gnsf_fixed *gnsf_fixed_assign(gnsf_dims *dims, void *raw_memory, int memsize);
 
 void gnsf_simulate( gnsf_dims* dims, gnsf_fixed* fix, gnsf_in* in, sim_out* out, gnsf_opts* opts, void *work_);

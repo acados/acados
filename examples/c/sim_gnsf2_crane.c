@@ -41,10 +41,11 @@ int main() {
     gnsf2_dims *dims = gnsf2_dims_assign(dims_memory);
     gnsf2_get_dims(dims, get_ints_fun);
 
+    printf("n_in = %d \n", dims->n_in);
     // set up sim config
-    int config_size = sim_solver_config_calculate_size();
-    void *config_mem = malloc(config_size);
-    sim_solver_config *config = sim_solver_config_assign(config_mem);
+    // int config_size = sim_solver_config_calculate_size();
+    // void *config_mem = malloc(config_size);
+    // sim_solver_config *config = sim_solver_config_assign(config_mem);
 
     // // set up sim_dims
     // int sim_dims_size = sim_dims_calculate_size();
@@ -55,36 +56,38 @@ int main() {
     // simdim->num_stages = 4;
 
     // // set up gnsf_in
-    // int gnsf_in_size = gnsf_in_calculate_size(dims);
-    // void *gnsf_in_mem = malloc(gnsf_in_size);
-    // gnsf_in *in = gnsf_in_assign(dims, gnsf_in_mem); 
-    // for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
-    //     in->S_forw[ii] = 0.0;
-    // }
-    // for (int ii = 0; ii < dims->nx; ii++) {
-    //     in->S_forw[ii+ ii*dims->nx] = 1.0;
-    //     in->x[ii] = 0.0;
-    // }
-    // for (int ii = 0; ii < dims->nx; ii++) {
-    //     in->S_adj[ii] = 1.0;
-    // }
-    // in->x[2] = 0.8;
-    // in->u[0] = 40.108149413030752;
-    // in->u[1] = -50.446662212534974;
+    int gnsf2_in_size = gnsf2_in_calculate_size(dims);
+    void *gnsf2_in_mem = malloc(gnsf2_in_size);
+    gnsf2_in *in = gnsf2_in_assign(dims, gnsf2_in_mem);
 
-    // // set up gnsf_opts
-    // int gnsf_opts_size = gnsf_opts_calculate_size(dims);
-    // void *gnsf_opts_mem = malloc(gnsf_opts_size);
-    // gnsf_opts *opts = gnsf_opts_assign(dims, gnsf_opts_mem);
-    // opts->sens_forw = 1;
-    // opts->sens_adj = 1;
-    // opts->newton_max = 3;
 
-    // // set up gnsf_fixed
-    // int gnsf_fixed_size = gnsf_fixed_calculate_size(dims, opts);
-    // void *gnsf_fixed_mem = malloc(gnsf_fixed_size);
-    // gnsf_fixed* fix = gnsf_fixed_assign(dims, gnsf_fixed_mem, gnsf_fixed_size);
-    // gnsf_import(dims, fix, But_KK_ZZ_LO_fun);
+    for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
+        in->S_forw[ii] = 0.0;
+    }
+    for (int ii = 0; ii < dims->nx; ii++) {
+        in->S_forw[ii+ ii*dims->nx] = 1.0;
+        in->x[ii] = 0.0;
+    }
+    for (int ii = 0; ii < dims->nx; ii++) {
+        in->S_adj[ii] = 1.0;
+    }
+    in->x[2] = 0.8;
+    in->u[0] = 40.108149413030752;
+    in->u[1] = -50.446662212534974;
+
+    // set up gnsf_opts
+    int gnsf2_opts_size = gnsf2_opts_calculate_size(dims);
+    void *gnsf2_opts_mem = malloc(gnsf2_opts_size);
+    gnsf2_opts *opts = gnsf2_opts_assign(dims, gnsf2_opts_mem);
+    opts->sens_forw = 1;
+    opts->sens_adj = 1;
+    opts->newton_max = 3;
+
+    // set up gnsf_fixed
+    int gnsf2_fixed_size = gnsf2_fixed_calculate_size(dims, opts);
+    void *gnsf2_fixed_mem = malloc(gnsf2_fixed_size);
+    gnsf2_fixed* fix = gnsf2_fixed_assign(dims, gnsf2_fixed_mem, gnsf2_fixed_size);
+    gnsf2_import(dims, fix, But_KK_YY_ZZ_LO_fun);
 
     // // NEW STYLE CASADI FCNZ:::
     //     // res_inc_Jff
@@ -160,7 +163,7 @@ int main() {
     
     free(dims_memory);
     // free(sim_dims_mem);
-    // free(gnsf_in_mem);
+    free(gnsf2_in_mem);
     // free(gnsf_opts_mem);
     // free(gnsf_fixed_mem);
     // free(sim_out_ptr);
