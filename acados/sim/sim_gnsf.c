@@ -99,6 +99,8 @@ gnsf_dims *gnsf_dims_assign(void *raw_memory)
     return dims;
 }
 
+
+
 void gnsf_get_dims( gnsf_dims *dims, casadi_function_t get_ints_fun)
 {
     double *ints_out;
@@ -152,7 +154,6 @@ gnsf_in *gnsf_in_assign(gnsf_dims *dims, void *raw_memory)
     assign_double(nx+nu, &in->S_adj, &c_ptr);
     assert((char*)raw_memory + gnsf_in_calculate_size(dims) == c_ptr);
 
-    // printf("address c_ptr : %p\n",c_ptr);
     return in;
 }
 
@@ -168,12 +169,12 @@ int gnsf_opts_calculate_size(gnsf_dims *dims)
 gnsf_opts *gnsf_opts_assign(gnsf_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-    gnsf_opts *in = (gnsf_opts *) c_ptr;
+    gnsf_opts *opts = (gnsf_opts *) c_ptr;
     c_ptr += sizeof(gnsf_opts);
 
     align_char_to(8, &c_ptr);
     assert((char*)raw_memory + gnsf_opts_calculate_size(dims) == c_ptr);
-    return in;
+    return opts;
 }
 
 
@@ -536,7 +537,7 @@ double minimum_of_doubles(double *x, int n){
     return min;
 }
 
-void gnsf_simulate( gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, gnsf_opts *opts, void *work_)
+void gnsf_simulate(gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, gnsf_opts *opts, void *work_)
 {
     acados_timer tot_timer, casadi_timer;
     acados_tic(&tot_timer);
@@ -853,5 +854,4 @@ void sim_gnsf_config_initialize_default(void *config_)
 	// config->model_assign = &sim_irk_model_assign; TODO
 
 	return;
-
 }

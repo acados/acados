@@ -53,7 +53,6 @@ typedef struct {
     double *u_0;
 } gnsf_res_in;
 
-
 typedef struct {
     double *x;
     double *u;
@@ -84,7 +83,6 @@ typedef struct {
     external_function_generic *res_inc_Jff;
     external_function_generic *jac_res_ffx1u;
     external_function_generic *f_LO_inc_J_x1k1uz;
-
 
 } gnsf_fixed;
 
@@ -136,24 +134,7 @@ typedef struct { //workspace
     struct blasfeo_dmat *f_LO_jac;
 
 } gnsf_workspace;
-/*
-typedef struct {
-    double CPUtime;
-    double LAtime;
-    double ADtime;
-} sim_info; */
 
-
-/*typedef struct {
-    double *xn;      // xn[NX]
-    double *S_forw;  // S_forw[NX*(NX+NU)]
-    double *S_adj;   //
-  //  double *S_hess;  //
-
-//    double *grad;  // gradient correction
-
-//    sim_info *info;
-} sim_out; */
 
 
 typedef struct {
@@ -195,6 +176,9 @@ gnsf_in *gnsf_in_assign(gnsf_dims *dims, void *raw_memory);
 
 int gnsf_opts_calculate_size(gnsf_dims *dims);
 gnsf_opts *gnsf_opts_assign(gnsf_dims *dims, void *raw_memory);
+
+
+
 
 /*
 typedef struct {
