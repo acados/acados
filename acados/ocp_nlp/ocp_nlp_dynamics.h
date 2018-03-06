@@ -91,6 +91,8 @@ ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory);
 //
 void ocp_nlp_dynamics_config_initialize_default(void *config);
 
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_H_

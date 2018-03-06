@@ -71,7 +71,7 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory)
 int ocp_nlp_constraints_dims_calculate_size()
 {
     int size = sizeof(ocp_nlp_constraints_dims);
-    
+
     return size;
 }
 
@@ -163,7 +163,7 @@ void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *d
 {
 
 	// loop index
-	int i, j;
+	int j;
 
 	int nx, nu, nb, ng;
 
