@@ -37,7 +37,7 @@ int main() {
 
     // set up gnsf_dims
     int gnsf2_dims_size = gnsf2_dims_calculate_size();
-    void *dims_memory = malloc(dims_size);
+    void *dims_memory = malloc(gnsf2_dims_size);
     gnsf2_dims *dims = gnsf2_dims_assign(dims_memory);
     gnsf2_get_dims(dims, get_ints_fun);
 

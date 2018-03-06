@@ -11,6 +11,7 @@ OBJS += sim_lifted_irk_integrator.o
 OBJS += sim_irk_integrator.o
 OBJS += sim_gnsf.o
 OBJS += sim_gnsf_casadi_wrapper.o
+OBJS += sim_gnsf2.o
 
 obj: $(OBJS)
 

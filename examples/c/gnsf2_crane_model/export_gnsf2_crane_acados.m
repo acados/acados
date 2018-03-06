@@ -154,7 +154,8 @@ get_ints_fun = Function('get_ints_fun',{x},{[s.nx, s.nu, s.nz, s.nx1, s.nx2, q, 
 get_ints_fun.generate('get_ints_fun', casadi_opts);
 
 % get matrices - for use in final version
-model_matrices = [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
+model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
+    [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
 get_matrices_fun = Function('get_matrices_fun', {x}, {model_matrices(:)});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 

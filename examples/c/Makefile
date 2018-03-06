@@ -54,6 +54,7 @@ EXAMPLES += blasfeo_bug_minimal_example
 EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
+EXAMPLES += sim_gnsf2_crane
 
 examples: $(EXAMPLES)
 
@@ -135,12 +136,26 @@ CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/get_ints_fun.o
 CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/But_KK_ZZ_LO_fun.o
 CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/f_LO_inc_J_x1k1uz_fun.o
 CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/jac_res_ffx1u_fun.o
-CRANE_GNSF_EZ_OBJS += sim_gnsf_crane.o
+CRANE_GNSF_EZ_OBJS += sim_gnsf_crane.o # TODO oops
 
 sim_gnsf_crane_empty_z: $(CRANE_GNSF_EZ_OBJS)
 	$(CCC) -o sim_gnsf_crane_empty_z.out  $(CRANE_GNSF_EZ_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example sim_gnsf_crane_empty_z build complete."
+	@echo
+
+CRANE_GNSF2_OBJS =
+CRANE_GNSF2_OBJS += gnsf2_crane_model/But_KK_YY_ZZ_LO_fun.o
+CRANE_GNSF2_OBJS += gnsf2_crane_model/f_LO_inc_J_x1k1uz_fun.o
+CRANE_GNSF2_OBJS += gnsf2_crane_model/get_ints_fun.o
+CRANE_GNSF2_OBJS += gnsf2_crane_model/get_matrices_fun.o
+CRANE_GNSF2_OBJS += gnsf2_crane_model/Phi_inc_dy_fun.o
+CRANE_GNSF2_OBJS += sim_gnsf2_crane.o
+
+sim_gnsf2_crane: $(CRANE_GNSF2_OBJS)
+	$(CCC) -o sim_gnsf2_crane.out  $(CRANE_GNSF2_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_gnsf2_crane build complete."
 	@echo
 
 

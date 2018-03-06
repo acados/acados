@@ -29,7 +29,7 @@
 #include "acados/utils/timing.h"
 
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_gnsf.h"
+#include "acados/sim/sim_gnsf2.h"
 #include "acados/sim/sim_gnsf_casadi_wrapper.h"
 
 #include "blasfeo/include/blasfeo_target.h"
@@ -53,7 +53,7 @@ gnsf2_dims *gnsf2_dims_assign(void *raw_memory)
     char *c_ptr = (char *) raw_memory;
     gnsf2_dims *dims = (gnsf2_dims *) c_ptr;
     c_ptr += sizeof(gnsf2_dims);
-    assert((char *) raw_memory + gnsf_dims_calculate_size() == c_ptr);
+    assert((char *) raw_memory + gnsf2_dims_calculate_size() == c_ptr);
     return dims;
 }
 
@@ -85,7 +85,7 @@ void sim_gnsf2_config_initialize_default(void *config_)
 	// config->opts_initialize_default = &sim_irk_opts_initialize_default; TODO
 	// config->memory_calculate_size = &sim_irk_memory_calculate_size; TODO
 	// config->memory_assign = &sim_irk_memory_assign;  TODO
-	config->workspace_calculate_size = &gnsf_calculate_workspace_size;
+	// config->workspace_calculate_size = &gnsf_calculate_workspace_size;
 	// config->model_calculate_size = &gnsf2_model_calculate_size;
 	// config->model_assign = &gnsf2_model_assign;
 

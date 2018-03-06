@@ -9,6 +9,7 @@ extern "C" {
 
 // used to import integers & double matrices
 int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int get_matrices_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int But_KK_YY_ZZ_LO_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 // Phi_inc_dy_fun
