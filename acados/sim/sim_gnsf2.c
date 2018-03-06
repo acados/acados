@@ -302,8 +302,6 @@ void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_Y
     read_mem += nyy * nx1;
     blasfeo_pack_dmat(nyy, nu,  read_mem, nyy, &fix->YYu, 0, 0);
     read_mem += nyy * nu;
-    printf("YYu = \n");
-    blasfeo_print_exp_dmat(nyy, nu, &fix->YYu, 0, 0);
 
     // IMPORT ZZmat
     blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &fix->ZZf, 0, 0);
@@ -323,6 +321,173 @@ void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_Y
 
     free(exp_out);
     free(export_in);
+}
+
+int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
+{
+    int nx  = dims->nx;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int num_stages = dims->num_stages;
+    int num_steps = dims->num_steps;
+
+    int nff = n_out * num_stages;
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
+
+    int size = sizeof(gnsf2_workspace);
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+
+    int res_in_size = nff + nx1 + nu;
+    int res_out_size = nff * (nff + nx1 + nu); // size(out_res_inc_Jff) = nff* (1+nff), size(out_jac_res_ffx1u) = nff(nff+nx1+nu)
+    int f_LO_in_size = 2*nx1 + nu + nz;
+    int f_LO_out_size = nx2 * (1 + 2*nx1 + nu + nz);
+
+    size += (res_in_size + res_out_size + f_LO_in_size + f_LO_out_size) * sizeof(double); // input and outputs of residual and LO-fcn;
+
+    size += nz; //Z_out
+
+    size += 5 *num_steps * sizeof(struct blasfeo_dvec); // K1_val, x1_val, ff_val, Z_val, f_LO_val
+	size += num_steps * sizeof(struct blasfeo_dmat); // f_LO_jac
+
+    size += nff * sizeof(int); // ipiv
+
+    make_int_multiple_of(64, &size);
+    size += 1 * 64;
+
+    size += num_steps * blasfeo_memsize_dmat(nK2, 2*nx1 +nu +nz); //f_LO_jac
+    size += 2* num_steps * blasfeo_memsize_dvec(nK1); //K1_val, x1_val
+    size += num_steps * blasfeo_memsize_dvec(nff); // ff_val
+    size += num_steps * blasfeo_memsize_dvec(nZ); // Z_val
+    size += num_steps * blasfeo_memsize_dvec(nK2); // f_LO_val
+
+    size += blasfeo_memsize_dmat(nff, nff); // J_r_ff
+    size += blasfeo_memsize_dmat(nff, nx1+nu); // J_r_x1u
+
+    size += blasfeo_memsize_dmat(nK1, nx1); // dK1_dx1
+    size += blasfeo_memsize_dmat(nK1, nu ); // dK1_du
+    size += blasfeo_memsize_dmat(nZ, nx1); // dZ_dx1
+    size += blasfeo_memsize_dmat(nZ, nu); // dZ_du
+    size += blasfeo_memsize_dmat(nK2, nx1); // aux_G2_x1
+    size += blasfeo_memsize_dmat(nK2, nu); // aux_G2_u
+    size += blasfeo_memsize_dmat(nK2, nK1); // J_G2_K1
+    size += blasfeo_memsize_dmat(nK2, nx1); // dK2_dx1
+    size += blasfeo_memsize_dmat(nK2, nu); // dK2_du
+    size += blasfeo_memsize_dmat(nK2, nff); // dK2_dff
+    size += blasfeo_memsize_dmat(nx, nx + nu); // dxf_dwn
+    size += 2*blasfeo_memsize_dmat(nx, nx + nu); // S_forw_new, S_forw
+
+    size += blasfeo_memsize_dvec(nK2); // K2_val
+    size += blasfeo_memsize_dvec(nx*(num_steps+1)); // x0_traj
+    size += blasfeo_memsize_dvec(nff); // res_val
+    size += blasfeo_memsize_dvec(nu); // u0
+    size += blasfeo_memsize_dvec(nx+nu); // lambda
+    size += blasfeo_memsize_dvec(nx+nu); // lambda_old
+
+    size += blasfeo_memsize_dmat(nK2,nff); // aux_G2_ff
+    size += blasfeo_memsize_dmat(nx, nff); // dPsi_dff
+    size += blasfeo_memsize_dmat(nx, nx ); // dPsi_dx
+    size += blasfeo_memsize_dmat(nx, nu ); // dPsi_du
+
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+    // printf("workspace size = %d \n", size);
+    return size;
+}
+
+void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
+{
+    int nx  = dims->nx;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int num_stages = dims->num_stages;
+    int num_steps = dims->num_steps;
+
+    int nff = n_out * num_stages;
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
+
+    int res_in_size = nff + nx1 + nu;
+    int res_out_size = nff * (nff + nx1 + nu); // size(out_res_inc_Jff) = nff* (1+nff), size(out_jac_res_ffx1u) = nff(nff+nx1+nu)
+    int f_LO_in_size = 2*nx1 + nu + nz;
+    int f_LO_out_size = nx2 * (1 + 2*nx1 + nu + nz);
+
+    char *c_ptr = (char *)raw_memory;
+    gnsf2_workspace *workspace = (gnsf2_workspace *) c_ptr;
+    c_ptr += sizeof(gnsf2_workspace);
+    align_char_to(8, &c_ptr);
+
+    assign_double(res_in_size, &workspace->res_in, &c_ptr);
+    assign_double(res_out_size, &workspace->res_out, &c_ptr);
+    assign_double(f_LO_in_size, &workspace->f_LO_in, &c_ptr);
+    assign_double(f_LO_out_size, &workspace->f_LO_out, &c_ptr);
+
+    assign_double(nz, &workspace->Z_out, &c_ptr);
+
+    assign_int(nff, &workspace->ipiv, &c_ptr);
+
+    assign_blasfeo_dmat_structs(num_steps, &workspace->f_LO_jac, &c_ptr);
+
+    assign_blasfeo_dvec_structs(num_steps, &workspace->K1_val, &c_ptr);
+    assign_blasfeo_dvec_structs(num_steps, &workspace->x1_val, &c_ptr);
+    assign_blasfeo_dvec_structs(num_steps, &workspace->ff_val, &c_ptr);
+    assign_blasfeo_dvec_structs(num_steps, &workspace->Z_val, &c_ptr);
+    assign_blasfeo_dvec_structs(num_steps, &workspace->f_LO_val, &c_ptr);
+
+    // blasfeo_mem align
+	align_char_to(64, &c_ptr);
+    for (int ii=0; ii<num_steps; ii++){
+        assign_blasfeo_dmat_mem(nK2, 2*nx1+nu+nz, workspace->f_LO_jac+ii, &c_ptr);     // f_LO_jac
+
+        assign_blasfeo_dvec_mem(nK1, workspace->K1_val+ii, &c_ptr);     // K1_val
+        assign_blasfeo_dvec_mem(nK1, workspace->x1_val+ii, &c_ptr);     // x1_val
+        assign_blasfeo_dvec_mem(nff, workspace->ff_val+ii, &c_ptr);     // ff_val
+        assign_blasfeo_dvec_mem(nZ , workspace->Z_val+ii, &c_ptr);     // Z_val
+        assign_blasfeo_dvec_mem(nK2, workspace->f_LO_val+ii, &c_ptr);     // Z_val
+    }
+
+    assign_blasfeo_dmat_mem(nff, nx1+nu, &workspace->J_r_x1u , &c_ptr);
+
+    assign_blasfeo_dmat_mem(nff, nff, &workspace->J_r_ff , &c_ptr);
+    assign_blasfeo_dmat_mem(nK1, nx1, &workspace->dK1_dx1 , &c_ptr);
+    assign_blasfeo_dmat_mem(nK1, nu , &workspace->dK1_du  , &c_ptr);
+    assign_blasfeo_dmat_mem(nZ, nx1, &workspace->dZ_dx1 , &c_ptr);
+    assign_blasfeo_dmat_mem(nZ, nu , &workspace->dZ_du  , &c_ptr);
+
+    assign_blasfeo_dmat_mem(nK2, nx1, &workspace->aux_G2_x1, &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nu , &workspace->aux_G2_u , &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nK1 , &workspace->J_G2_K1 , &c_ptr);
+
+    assign_blasfeo_dmat_mem(nK2, nx1, &workspace->dK2_dx1 , &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nu, &workspace->dK2_du , &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nff, &workspace->dK2_dff, &c_ptr);
+    assign_blasfeo_dmat_mem(nx, nx+nu, &workspace->dxf_dwn , &c_ptr);
+    assign_blasfeo_dmat_mem(nx, nx+nu, &workspace->S_forw_new , &c_ptr);
+    assign_blasfeo_dmat_mem(nx, nx+nu, &workspace->S_forw, &c_ptr);
+
+    assign_blasfeo_dvec_mem(nK2, &workspace->K2_val, &c_ptr);
+    assign_blasfeo_dvec_mem((num_steps+1)*nx, &workspace->x0_traj, &c_ptr);
+    assign_blasfeo_dvec_mem(nff, &workspace->res_val, &c_ptr);
+    assign_blasfeo_dvec_mem(nu, &workspace->u0, &c_ptr);
+    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda, &c_ptr);
+    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda_old, &c_ptr);
+
+    assign_blasfeo_dmat_mem(nK2, nff, &workspace->aux_G2_ff, &c_ptr);
+    assign_blasfeo_dmat_mem(nx, nff, &workspace->dPsi_dff , &c_ptr);
+    assign_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx , &c_ptr);
+    assign_blasfeo_dmat_mem(nx, nu, &workspace->dPsi_du, &c_ptr);
+
+    return (void *)workspace;
 }
 
 

@@ -43,17 +43,17 @@ int main() {
 
     printf("n_in = %d \n", dims->n_in);
     // set up sim config
-    // int config_size = sim_solver_config_calculate_size();
-    // void *config_mem = malloc(config_size);
-    // sim_solver_config *config = sim_solver_config_assign(config_mem);
+    int config_size = sim_solver_config_calculate_size();
+    void *config_mem = malloc(config_size);
+    sim_solver_config *config = sim_solver_config_assign(config_mem);
 
-    // // set up sim_dims
-    // int sim_dims_size = sim_dims_calculate_size();
-    // void *sim_dims_mem = malloc(sim_dims_size);
-    // sim_dims *simdim = sim_dims_assign(sim_dims_mem);
-    // simdim->nx = 9;
-    // simdim->nu = 2;
-    // simdim->num_stages = 4;
+    // set up sim_dims
+    int sim_dims_size = sim_dims_calculate_size();
+    void *sim_dims_mem = malloc(sim_dims_size);
+    sim_dims *simdim = sim_dims_assign(sim_dims_mem);
+    simdim->nx = 9;
+    simdim->nu = 2;
+    simdim->num_stages = 4;
 
     // // set up gnsf_in
     int gnsf2_in_size = gnsf2_in_calculate_size(dims);
@@ -89,56 +89,44 @@ int main() {
     gnsf2_fixed* fix = gnsf2_fixed_assign(dims, gnsf2_fixed_mem, gnsf2_fixed_size);
     gnsf2_import(dims, fix, But_KK_YY_ZZ_LO_fun);
 
-    // // NEW STYLE CASADI FCNZ:::
-    //     // res_inc_Jff
-    // external_function_casadi res_inc_Jff;
-    // res_inc_Jff.casadi_fun = &res_inc_Jff_fun;
-    // res_inc_Jff.casadi_work = &res_inc_Jff_fun_work;
-    // res_inc_Jff.casadi_sparsity_in  = &res_inc_Jff_fun_sparsity_in;
-    // res_inc_Jff.casadi_sparsity_out = &res_inc_Jff_fun_sparsity_out;
+    // NEW STYLE CASADI FCNZ:::
+        // res_inc_Jff
+    external_function_casadi Phi_inc_dy;
+    Phi_inc_dy.casadi_fun = &Phi_inc_dy_fun;
+    Phi_inc_dy.casadi_work = &Phi_inc_dy_fun_work;
+    Phi_inc_dy.casadi_sparsity_in  = &Phi_inc_dy_fun_sparsity_in;
+    Phi_inc_dy.casadi_sparsity_out = &Phi_inc_dy_fun_sparsity_out;
 
-    // int res_inc_Jff_size = external_function_casadi_calculate_size(&res_inc_Jff);
-    // void *res_inc_Jff_mem = malloc(res_inc_Jff_size);
-    // external_function_casadi_assign(&res_inc_Jff, res_inc_Jff_mem);
-    // fix->res_inc_Jff = (external_function_generic *) &res_inc_Jff;
+    int Phi_inc_dy_size = external_function_casadi_calculate_size(&Phi_inc_dy);
+    void *Phi_inc_dy_mem = malloc(Phi_inc_dy_size);
+    external_function_casadi_assign(&Phi_inc_dy, Phi_inc_dy_mem);
+    fix->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
 
-    //     // jac_res_ffx1u
-    // external_function_casadi jac_res_ffx1u;
-    // jac_res_ffx1u.casadi_fun = &jac_res_ffx1u_fun;
-    // jac_res_ffx1u.casadi_work = &jac_res_ffx1u_fun_work;
-    // jac_res_ffx1u.casadi_sparsity_in  = &jac_res_ffx1u_fun_sparsity_in;
-    // jac_res_ffx1u.casadi_sparsity_out = &jac_res_ffx1u_fun_sparsity_out;
+    // f_LO_inc_J_x1k1uz
+    external_function_casadi f_LO_inc_J_x1k1uz;
+    f_LO_inc_J_x1k1uz.casadi_fun = &f_LO_inc_J_x1k1uz_fun;
+    f_LO_inc_J_x1k1uz.casadi_work = &f_LO_inc_J_x1k1uz_fun_work;
+    f_LO_inc_J_x1k1uz.casadi_sparsity_in  = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
+    f_LO_inc_J_x1k1uz.casadi_sparsity_out = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
 
-    // int jac_res_ffx1u_size = external_function_casadi_calculate_size(&jac_res_ffx1u);
-    // void *jac_res_ffx1u_mem = malloc(jac_res_ffx1u_size);
-    // external_function_casadi_assign(&jac_res_ffx1u, jac_res_ffx1u_mem);
-    // fix->jac_res_ffx1u = (external_function_generic *) &jac_res_ffx1u;
-
-    //         // f_LO_inc_J_x1k1uz
-    // external_function_casadi f_LO_inc_J_x1k1uz;
-    // f_LO_inc_J_x1k1uz.casadi_fun = &f_LO_inc_J_x1k1uz_fun;
-    // f_LO_inc_J_x1k1uz.casadi_work = &f_LO_inc_J_x1k1uz_fun_work;
-    // f_LO_inc_J_x1k1uz.casadi_sparsity_in  = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
-    // f_LO_inc_J_x1k1uz.casadi_sparsity_out = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
-
-    // int f_LO_inc_J_x1k1uz_size = external_function_casadi_calculate_size(&f_LO_inc_J_x1k1uz);
-    // void *f_LO_inc_J_x1k1uz_mem = malloc(f_LO_inc_J_x1k1uz_size);
-    // external_function_casadi_assign(&f_LO_inc_J_x1k1uz, f_LO_inc_J_x1k1uz_mem);
-    // fix->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
+    int f_LO_inc_J_x1k1uz_size = external_function_casadi_calculate_size(&f_LO_inc_J_x1k1uz);
+    void *f_LO_inc_J_x1k1uz_mem = malloc(f_LO_inc_J_x1k1uz_size);
+    external_function_casadi_assign(&f_LO_inc_J_x1k1uz, f_LO_inc_J_x1k1uz_mem);
+    fix->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
 
     // // set up sim_out
-    // int sim_out_size = sim_out_calculate_size(config, simdim);
-    // void* sim_out_ptr = (void*) malloc(sim_out_size);
-    // sim_out* out = sim_out_assign(config, simdim, sim_out_ptr);
+    int sim_out_size = sim_out_calculate_size(config, simdim);
+    void* sim_out_ptr = (void*) malloc(sim_out_size);
+    sim_out* out = sim_out_assign(config, simdim, sim_out_ptr);
 
-    // // setup workspace
-    // int gnsf_workspace_size = gnsf_calculate_workspace_size(dims, opts);
-    // void *work_ = malloc(gnsf_workspace_size);
+    // setup workspace
+    int gnsf2_workspace_size = gnsf2_calculate_workspace_size(dims, opts);
+    void *work_ = malloc(gnsf2_workspace_size);
 
-    // printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
-    // int num_executions = 4;
-    // double casadi_times[num_executions];
-    // double gnsf_times[num_executions];
+    printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
+    int num_executions = 4;
+    double casadi_times[num_executions];
+    double gnsf_times[num_executions];
 
     // for (int i = 0; i < num_executions; i++) {
     //     gnsf_simulate( dims, fix, in, out, opts, work_);

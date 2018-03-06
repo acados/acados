@@ -145,11 +145,62 @@ typedef struct {
     double dt;
 
     // external functions
-    external_function_generic *res_inc_Jff;
-    external_function_generic *jac_res_ffx1u;
+    external_function_generic *Phi_inc_dy;
     external_function_generic *f_LO_inc_J_x1k1uz;
 
 } gnsf2_fixed;
+
+typedef struct { //workspace
+    double *res_in;
+    double *res_out;
+    double *f_LO_in;
+    double *f_LO_out;
+    double *Z_out;
+
+    int *ipiv; // index of pivot vector
+
+    struct blasfeo_dmat J_r_ff;
+    struct blasfeo_dmat J_r_x1u; 
+    
+    struct blasfeo_dmat dK1_dx1;
+    struct blasfeo_dmat dK1_du;
+    struct blasfeo_dmat dZ_dx1;
+    struct blasfeo_dmat dZ_du;
+    struct blasfeo_dmat aux_G2_x1;
+    struct blasfeo_dmat aux_G2_u;
+    struct blasfeo_dmat J_G2_K1;
+    
+    struct blasfeo_dmat dK2_dx1;
+    struct blasfeo_dmat dK2_du;
+    struct blasfeo_dmat dK2_dff;
+    struct blasfeo_dmat dxf_dwn;
+    struct blasfeo_dmat S_forw_new;
+    struct blasfeo_dmat S_forw;
+
+    struct blasfeo_dvec K2_val;
+    struct blasfeo_dvec x0_traj;
+    struct blasfeo_dvec res_val;
+    struct blasfeo_dvec u0;
+    struct blasfeo_dvec lambda;
+    struct blasfeo_dvec lambda_old;
+
+    struct blasfeo_dmat aux_G2_ff;
+    struct blasfeo_dmat dPsi_dff;
+    struct blasfeo_dmat dPsi_dx;
+    struct blasfeo_dmat dPsi_du;
+
+    struct blasfeo_dvec *K1_val;
+    struct blasfeo_dvec *x1_val;
+    struct blasfeo_dvec *ff_val;
+    struct blasfeo_dvec *Z_val;
+    struct blasfeo_dvec *f_LO_val;
+
+    struct blasfeo_dmat *f_LO_jac;
+
+} gnsf2_workspace;
+
+void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory);
+int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts);
 
 int gnsf2_dims_calculate_size();
 gnsf2_dims *gnsf2_dims_assign(void *raw_memory);
