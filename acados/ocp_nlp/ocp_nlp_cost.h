@@ -92,5 +92,8 @@ void *ocp_nlp_cost_ls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *
 void ocp_nlp_cost_ls_config_initialize_default(void *config);
 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif // ACADOS_OCP_NLP_OCP_NLP_COST_H_

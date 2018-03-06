@@ -156,7 +156,7 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *a
 	ws_size += d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
 
 	// extra variables for partial tightening
-	for ( ii = 0; ii < N; ii++ ) { 
+	for ( ii = 0; ii < N; ii++ ) {
 		ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);
 		ws_size += sizeof(double)*(nx[ii+1]);
 	}
@@ -164,7 +164,7 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *a
     ii = N;
 	ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);
 	ws_size += sizeof(double)*(nx[ii+1]);
-    
+
     ws_size += 2*sizeof(double)*(nx[M]+1)*nx[M];
 
     return ws_size;
@@ -226,7 +226,7 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
 	int compute_mult = 1;
 
 
-	// common to all implementations (as opposed to 
+	// common to all implementations (as opposed to
 	// partial-tigthening specific below)
 	struct blasfeo_dmat *hsmatdummy = NULL;
     struct blasfeo_dvec *hsvecdummy = NULL;
@@ -281,9 +281,9 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
 	// temporarily invert sign of upper bounds
 	blasfeo_dvecsc(nb[ii], -1.0, &hsd[ii], nb[ii] + ng[ii]);
 	blasfeo_dvecsc(ng[ii], -1.0, &hsd[ii], 2*nb[ii] + ng[ii]);
-  
-	// dmat loop	
-	for ( ii = 0; ii < N; ii++ ) { 
+
+	// dmat loop
+	for ( ii = 0; ii < N; ii++ ) {
 		// partial tightening-specific
 		blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
 		ptr_memory += (&hsL[ii])->memsize;
@@ -294,8 +294,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
 	// partial tightening-specific
 	blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &hsL[ii], ptr_memory);
 	ptr_memory += (&hsL[ii])->memsize;
-	
-	// dvec loop	
+
+	// dvec loop
 	for ( ii = 0; ii < N; ii++ ) {
 
         // initialize hsdux to primal input later usx will be subtracted
@@ -333,8 +333,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
         ptr_memory += (&hsdt[ii])->memsize;
         blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &hslamt[ii], ptr_memory);
         ptr_memory += (&hslamt[ii])->memsize;
-	
-		// partial tightening specific	
+
+		// partial tightening specific
 		blasfeo_create_dvec(nx[ii+1], &hsPb[ii+1], ptr_memory);
 		ptr_memory += (&hsPb[ii+1])->memsize;
     }
@@ -497,7 +497,7 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args
 
 	// for (ii=0; ii<N; ii++)
 	// 	blasfeo_print_tran_dvec(nx[ii+1], &qp_out->pi[ii], 0);
-    
+
 	hpmpc_args->out_iter = kk;
 
 	// restore sign of upper bounds

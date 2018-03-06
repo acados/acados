@@ -117,7 +117,7 @@ int main() {
 
 			int solver_opts_size;
 			void *solver_opts_mem;
-			void *solver_opts;
+			void *solver_opts = NULL;
 			ocp_qp_partial_condensing_solver_opts *partial_condensing_solver_opts;
 			ocp_qp_hpipm_opts *hpipm_opts;
 			int solver_mem_size;
@@ -406,7 +406,7 @@ int main() {
 			// just one run if there is not partial condensing
 			if ((ii==0) | (ii==2) | (ii==3) | (ii==4))
 				break;
-		
+
 		}
 
 	}
@@ -414,7 +414,7 @@ int main() {
 /************************************************
 * return
 ************************************************/
-	
+
 	printf("\nsuccess!\n\n");
 
     return 0;

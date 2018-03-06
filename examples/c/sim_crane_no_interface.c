@@ -66,7 +66,7 @@ int main()
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
-    int num_stages = 4;
+    // int num_stages = 4;
     double *xref;
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
@@ -238,7 +238,7 @@ int main()
 		config->opts_initialize_default(config, dims, opts);
 
 		opts->sens_adj = true;
-	
+
 /************************************************
 * sim memory
 ************************************************/
@@ -418,7 +418,7 @@ int main()
 /************************************************
 * free
 ************************************************/
-	
+
 		free(config_mem);
 		free(dims_mem);
 		free(opts_mem);
@@ -426,7 +426,7 @@ int main()
 		free(work);
 		free(in_mem);
 		free(out_mem);
-	
+
 	}
 
 	// explicit model
@@ -442,7 +442,7 @@ int main()
 /************************************************
 * return
 ************************************************/
-	
+
 	printf("\nsuccess!\n\n");
 
     return 0;
