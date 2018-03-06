@@ -70,7 +70,7 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
         set_bounds_indices("x", i, idx_states);
 
         std::vector<uint> idx_controls(nu.at(i));
-        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);        
+        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
         set_bounds_indices("u", i, idx_controls);
     }
     std::vector<uint> idx_states(nx.at(N));
@@ -157,9 +157,8 @@ static ocp_qp_solver_plan string_to_plan(string solver);
 
 void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
 
-    std::cout << *this;
-
-    std::cout << "----------------------------------------------------------\n\n";
+    // std::cout << *this;
+    // std::cout << "----------------------------------------------------------\n\n";
 
     squeeze_dimensions();
     cached_solver = solver_name;
@@ -189,11 +188,11 @@ vector<uint> ocp_qp::idxb(vector<double> lower_bound, vector<double> upper_bound
     vector<uint> bound_indices;
     if (lower_bound.size() != upper_bound.size())
         throw std::invalid_argument("Lower bound must have same shape as upper bound.");
-    
+
     for (uint idx = 0; idx < lower_bound.size(); ++idx)
         if (lower_bound.at(idx) != -INFINITY || upper_bound.at(idx) != +INFINITY)
             bound_indices.push_back(idx); // there is a double-sided bound at this index
-    
+
     return bound_indices;
 }
 
@@ -256,7 +255,7 @@ void ocp_qp::expand_dimensions() {
         set_bounds_indices("x", i, idx_states);
 
         std::vector<uint> idx_controls(dimensions()["nu"].at(i));
-        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);        
+        std::iota(std::begin(idx_controls), std::end(idx_controls), 0);
         set_bounds_indices("u", i, idx_controls);
     }
     std::vector<uint> idx_states(dimensions()["nx"].at(N));
@@ -270,7 +269,7 @@ void ocp_qp::fill_in_bounds() {
             auto idxb_stage = bounds_indices(std::string(1, it.first.back())).at(stage);
             auto stage_bound = it.second.at(stage);
             vector<double> new_bound;
-            std::cout << "stage_bound: " << std::to_string(stage_bound);
+            // std::cout << "stage_bound: " << std::to_string(stage_bound);
             for (uint idx = 0; idx < idxb_stage.size(); ++idx) {
                 if (it.first.front() == 'l')
                     new_bound.push_back(std::isfinite(stage_bound.at(idxb_stage.at(idx))) ? stage_bound.at(idxb_stage.at(idx)) : ACADOS_NEG_INFTY);
@@ -298,7 +297,7 @@ ocp_qp_solution ocp_qp::solve() {
 
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(qp->dim));
 
-    std::cout << *this;
+    // std::cout << *this;
 
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
 
