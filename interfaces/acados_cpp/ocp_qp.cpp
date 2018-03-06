@@ -156,6 +156,11 @@ void ocp_qp::set(string field, vector<double> v) {
 static ocp_qp_solver_plan string_to_plan(string solver);
 
 void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
+
+    std::cout << *this;
+
+    std::cout << "----------------------------------------------------------\n\n";
+
     squeeze_dimensions();
     cached_solver = solver_name;
     ocp_qp_solver_plan plan = string_to_plan(solver_name);
@@ -265,11 +270,12 @@ void ocp_qp::fill_in_bounds() {
             auto idxb_stage = bounds_indices(std::string(1, it.first.back())).at(stage);
             auto stage_bound = it.second.at(stage);
             vector<double> new_bound;
+            std::cout << "stage_bound: " << std::to_string(stage_bound);
             for (uint idx = 0; idx < idxb_stage.size(); ++idx) {
                 if (it.first.front() == 'l')
-                    new_bound.push_back(std::isfinite(stage_bound.at(idx)) ? stage_bound.at(idx) : ACADOS_NEG_INFTY);
+                    new_bound.push_back(std::isfinite(stage_bound.at(idxb_stage.at(idx))) ? stage_bound.at(idxb_stage.at(idx)) : ACADOS_NEG_INFTY);
                 else if (it.first.front() == 'u')
-                    new_bound.push_back(std::isfinite(stage_bound.at(idx)) ? stage_bound.at(idx) : ACADOS_POS_INFTY);
+                    new_bound.push_back(std::isfinite(stage_bound.at(idxb_stage.at(idx))) ? stage_bound.at(idxb_stage.at(idx)) : ACADOS_POS_INFTY);
             }
             if (it.first == "lbx")
                 d_cvt_colmaj_to_ocp_qp_lbx(stage, new_bound.data(), qp.get());
@@ -291,6 +297,8 @@ ocp_qp_solution ocp_qp::solve() {
     fill_in_bounds();
 
     auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(qp->dim));
+
+    std::cout << *this;
 
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
 

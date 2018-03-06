@@ -222,7 +222,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     double *stat = (double*)ptr_memory;
     ptr_memory+=sizeof(double)*k_max*6;
 	align_char_to(64, &ptr_memory);
-	ptr_memory = (double *)ptr_memory;
 	int compute_mult = 1;
 
 
