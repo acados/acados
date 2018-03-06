@@ -123,17 +123,17 @@ int main() {
     int gnsf2_workspace_size = gnsf2_calculate_workspace_size(dims, opts);
     void *work_ = malloc(gnsf2_workspace_size);
 
-    printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
+    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_max, dims->num_steps);
     int num_executions = 4;
     double casadi_times[num_executions];
     double gnsf_times[num_executions];
 
-    // for (int i = 0; i < num_executions; i++) {
-    //     gnsf_simulate( dims, fix, in, out, opts, work_);
+    for (int i = 0; i < num_executions; i++) {
+        gnsf2_simulate( dims, fix, in, out, opts, work_);
 
-    //     casadi_times[i] = out->info->ADtime;
-    //     gnsf_times[i] = out->info->CPUtime;
-    // }
+        casadi_times[i] = out->info->ADtime;
+        gnsf_times[i] = out->info->CPUtime;
+    }
     // double casadi_time = minimum_of_doubles(casadi_times, num_executions);
     // double gnsf_time = minimum_of_doubles(gnsf_times, num_executions);
 
