@@ -29,7 +29,7 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -542,7 +542,7 @@ int main() {
 
 #if 1
 	// partial condensing HPIPM
-	ocp_qp_sparse_solver_config_initialize_default(config->qp_solver);
+	ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
 	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 	config->qp_solver->N2 = NN; // full horizon
 #else
