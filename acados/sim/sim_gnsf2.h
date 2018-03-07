@@ -151,8 +151,8 @@ typedef struct {
 } gnsf2_fixed;
 
 typedef struct { //workspace
-    double *res_in;
-    double *res_out;
+    double *phi_in;
+    double *phi_out;
     double *f_LO_in;
     double *f_LO_out;
     double *Z_out;
@@ -184,6 +184,9 @@ typedef struct { //workspace
     struct blasfeo_dvec lambda;
     struct blasfeo_dvec lambda_old;
 
+    struct blasfeo_dvec yyu;
+    struct blasfeo_dvec yyss;
+
     struct blasfeo_dmat aux_G2_ff;
     struct blasfeo_dmat dPsi_dff;
     struct blasfeo_dmat dPsi_dx;
@@ -192,6 +195,7 @@ typedef struct { //workspace
     struct blasfeo_dvec *K1_val;
     struct blasfeo_dvec *x1_val;
     struct blasfeo_dvec *ff_val;
+    struct blasfeo_dvec *yy_val;
     struct blasfeo_dvec *Z_val;
     struct blasfeo_dvec *f_LO_val;
 

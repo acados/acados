@@ -124,7 +124,7 @@ int main() {
     void *work_ = malloc(gnsf2_workspace_size);
 
     printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_max, dims->num_steps);
-    int num_executions = 4;
+    int num_executions = 1;
     double casadi_times[num_executions];
     double gnsf_times[num_executions];
 

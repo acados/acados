@@ -128,7 +128,7 @@ gnsf2_opts *gnsf2_opts_assign(gnsf2_dims *dims, void *raw_memory)
     c_ptr += sizeof(gnsf2_opts);
 
     align_char_to(8, &c_ptr);
-    assert((char*)raw_memory + gnsf_opts_calculate_size(dims) == c_ptr);
+    assert((char*)raw_memory + gnsf2_opts_calculate_size(dims) == c_ptr);
     return opts;
 }
 
@@ -183,7 +183,7 @@ gnsf2_fixed *gnsf2_fixed_assign(gnsf2_dims *dims, void *raw_memory, int memsize)
     char *c_ptr = (char *) raw_memory;
 
 	// extract sizes
-    int nx  = dims->nx;
+    // int nx  = dims->nx;
     int nu  = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
@@ -331,10 +331,12 @@ int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
     int nx2 = dims->nx2;
     int nz = dims->nz;
     int n_out = dims->n_out;
+    int n_in = dims->n_in;
     int num_stages = dims->num_stages;
     int num_steps = dims->num_steps;
 
     int nff = n_out * num_stages;
+    int nyy = n_in  * num_stages;
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
@@ -344,16 +346,15 @@ int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
-    int res_in_size = nff + nx1 + nu;
-    int res_out_size = nff * (nff + nx1 + nu); // size(out_res_inc_Jff) = nff* (1+nff), size(out_jac_res_ffx1u) = nff(nff+nx1+nu)
+    int phi_out_size = n_out * (1 + n_in); // size(out_res_inc_Jff) = nff* (1+nff), size(out_jac_res_ffx1u) = nff(nff+nx1+nu)
     int f_LO_in_size = 2*nx1 + nu + nz;
     int f_LO_out_size = nx2 * (1 + 2*nx1 + nu + nz);
 
-    size += (res_in_size + res_out_size + f_LO_in_size + f_LO_out_size) * sizeof(double); // input and outputs of residual and LO-fcn;
+    size += (n_in + phi_out_size + f_LO_in_size + f_LO_out_size) * sizeof(double); // input and outputs of phi and LO-fcn;
 
     size += nz; //Z_out
 
-    size += 5 *num_steps * sizeof(struct blasfeo_dvec); // K1_val, x1_val, ff_val, Z_val, f_LO_val
+    size += 6 * num_steps * sizeof(struct blasfeo_dvec); // K1_val, x1_val, ff_val, Z_val, f_LO_val, yy_val
 	size += num_steps * sizeof(struct blasfeo_dmat); // f_LO_jac
 
     size += nff * sizeof(int); // ipiv
@@ -364,6 +365,7 @@ int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
     size += num_steps * blasfeo_memsize_dmat(nK2, 2*nx1 +nu +nz); //f_LO_jac
     size += 2* num_steps * blasfeo_memsize_dvec(nK1); //K1_val, x1_val
     size += num_steps * blasfeo_memsize_dvec(nff); // ff_val
+    size += num_steps * blasfeo_memsize_dvec(nyy); // yy_val
     size += num_steps * blasfeo_memsize_dvec(nZ); // Z_val
     size += num_steps * blasfeo_memsize_dvec(nK2); // f_LO_val
 
@@ -390,6 +392,8 @@ int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
     size += blasfeo_memsize_dvec(nx+nu); // lambda
     size += blasfeo_memsize_dvec(nx+nu); // lambda_old
 
+    size += 2*blasfeo_memsize_dvec(nyy); //yyu, yyss
+
     size += blasfeo_memsize_dmat(nK2,nff); // aux_G2_ff
     size += blasfeo_memsize_dmat(nx, nff); // dPsi_dff
     size += blasfeo_memsize_dmat(nx, nx ); // dPsi_dx
@@ -409,16 +413,17 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     int nx2 = dims->nx2;
     int nz = dims->nz;
     int n_out = dims->n_out;
+    int n_in = dims->n_in;
     int num_stages = dims->num_stages;
     int num_steps = dims->num_steps;
-
+    // printf("dimz numsteps %d\n", dims->num_steps);
     int nff = n_out * num_stages;
     int nK1 = num_stages * nx1;
     int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
+    int nyy = num_stages * n_in;
 
-    int res_in_size = nff + nx1 + nu;
-    int res_out_size = nff * (nff + nx1 + nu); // size(out_res_inc_Jff) = nff* (1+nff), size(out_jac_res_ffx1u) = nff(nff+nx1+nu)
+    int phi_out_size = n_out * (n_in + 1);
     int f_LO_in_size = 2*nx1 + nu + nz;
     int f_LO_out_size = nx2 * (1 + 2*nx1 + nu + nz);
 
@@ -427,8 +432,8 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     c_ptr += sizeof(gnsf2_workspace);
     align_char_to(8, &c_ptr);
 
-    assign_double(res_in_size, &workspace->res_in, &c_ptr);
-    assign_double(res_out_size, &workspace->res_out, &c_ptr);
+    assign_double(n_in, &workspace->phi_in, &c_ptr);
+    assign_double(phi_out_size, &workspace->phi_out, &c_ptr);
     assign_double(f_LO_in_size, &workspace->f_LO_in, &c_ptr);
     assign_double(f_LO_out_size, &workspace->f_LO_out, &c_ptr);
 
@@ -443,17 +448,18 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     assign_blasfeo_dvec_structs(num_steps, &workspace->ff_val, &c_ptr);
     assign_blasfeo_dvec_structs(num_steps, &workspace->Z_val, &c_ptr);
     assign_blasfeo_dvec_structs(num_steps, &workspace->f_LO_val, &c_ptr);
+    assign_blasfeo_dvec_structs(num_steps, &workspace->yy_val, &c_ptr);
 
     // blasfeo_mem align
 	align_char_to(64, &c_ptr);
     for (int ii=0; ii<num_steps; ii++){
         assign_blasfeo_dmat_mem(nK2, 2*nx1+nu+nz, workspace->f_LO_jac+ii, &c_ptr);     // f_LO_jac
-
         assign_blasfeo_dvec_mem(nK1, workspace->K1_val+ii, &c_ptr);     // K1_val
         assign_blasfeo_dvec_mem(nK1, workspace->x1_val+ii, &c_ptr);     // x1_val
         assign_blasfeo_dvec_mem(nff, workspace->ff_val+ii, &c_ptr);     // ff_val
         assign_blasfeo_dvec_mem(nZ , workspace->Z_val+ii, &c_ptr);     // Z_val
-        assign_blasfeo_dvec_mem(nK2, workspace->f_LO_val+ii, &c_ptr);     // Z_val
+        assign_blasfeo_dvec_mem(nK2, workspace->f_LO_val+ii, &c_ptr);     // f_LO_val
+        assign_blasfeo_dvec_mem(nyy, workspace->yy_val+ii, &c_ptr);     // yy_val
     }
 
     assign_blasfeo_dmat_mem(nff, nx1+nu, &workspace->J_r_x1u , &c_ptr);
@@ -482,6 +488,9 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda, &c_ptr);
     assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda_old, &c_ptr);
 
+    assign_blasfeo_dvec_mem(nyy, &workspace->yyu, &c_ptr);
+    assign_blasfeo_dvec_mem(nyy, &workspace->yyss, &c_ptr);
+
     assign_blasfeo_dmat_mem(nK2, nff, &workspace->aux_G2_ff, &c_ptr);
     assign_blasfeo_dmat_mem(nx, nff, &workspace->dPsi_dff , &c_ptr);
     assign_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx , &c_ptr);
@@ -492,33 +501,34 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
 
 void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_)
 {
-    // acados_timer tot_timer, casadi_timer;
-    // acados_tic(&tot_timer);
-    // // printf("GENERALIZED NONLINEAR STATIC FEEDBACK (GNSF) SIMULATION \n");
-    // // print_gnsf_dims(dims);
+    acados_timer tot_timer, casadi_timer;
+    acados_tic(&tot_timer);
+    // printf("GENERALIZED NONLINEAR STATIC FEEDBACK V2 (GNSF-2) SIMULATION \n");
+    // print_gnsf_dims(dims);
+    gnsf2_workspace *workspace = (gnsf2_workspace *) gnsf2_cast_workspace(dims, work_);
+    // helpful integers
+    int nx  = dims->nx;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int n_in = dims->n_in;
+    int num_stages = dims->num_stages;
+    int num_steps = dims->num_steps;
 
-    // gnsf_workspace *workspace = (gnsf_workspace *) gnsf_cast_workspace(dims, work_);
-    // // helpful integers
-    // int nx  = dims->nx;
-    // int nu  = dims->nu;
-    // int nx1 = dims->nx1;
-    // int nx2 = dims->nx2;
-    // int nz = dims->nz;
-    // int n_out = dims->n_out;
-    // int num_stages = dims->num_stages;
-    // int num_steps = dims->num_steps;
+    int nff = n_out * num_stages;
+    int nyy = n_in * num_stages;
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
 
-    // int nff = n_out * num_stages;
-    // int nK1 = num_stages * nx1;
-    // int nK2 = num_stages * nx2;
-    // int nZ  = num_stages * nz;
+    int newton_max = opts->newton_max;
 
-    // int newton_max = opts->newton_max;
-
-    // double *res_in = workspace->res_in;
-    // double *res_out = workspace->res_out;
-    // double *f_LO_in = workspace->f_LO_in;
-    // double *f_LO_out = workspace->f_LO_out;
+    double *phi_in = workspace->phi_in;
+    double *phi_out = workspace->phi_out;
+    double *f_LO_in = workspace->f_LO_in;
+    double *f_LO_out = workspace->f_LO_out;
 
     // double *Z_out = workspace->Z_out; // TODO, remove when this is part of output
 
@@ -542,16 +552,21 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
 
     // struct blasfeo_dmat *f_LO_jac = workspace->f_LO_jac;
 
-    // struct blasfeo_dvec *ff_val  = workspace->ff_val; 
+    struct blasfeo_dvec *ff_val  = workspace->ff_val; 
+    struct blasfeo_dvec *yy_val  = workspace->yy_val; 
     // struct blasfeo_dvec *K1_val  = workspace->K1_val; 
     // struct blasfeo_dvec *x1_val  = workspace->x1_val; 
     // struct blasfeo_dvec *Z_val   = workspace->Z_val;
     // struct blasfeo_dvec *f_LO_val= workspace->f_LO_val;
 
+    struct blasfeo_dvec yyu  = workspace->yyu;
+    struct blasfeo_dvec yyss = workspace->yyss;
+
+
     // struct blasfeo_dvec K2_val  = workspace->K2_val;
-    // struct blasfeo_dvec x0_traj = workspace->x0_traj;
+    struct blasfeo_dvec x0_traj = workspace->x0_traj;
     // struct blasfeo_dvec res_val = workspace->res_val;
-    // struct blasfeo_dvec u0      = workspace->u0;
+    struct blasfeo_dvec u0      = workspace->u0;
     // struct blasfeo_dvec lambda  = workspace->lambda;
     // struct blasfeo_dvec lambda_old  = workspace->lambda_old;
 
@@ -560,23 +575,28 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     // struct blasfeo_dmat dPsi_dx   = workspace->dPsi_dx;
     // struct blasfeo_dmat dPsi_du   = workspace->dPsi_du;
 
-    // blasfeo_pack_dvec(nu, in->u, &u0, 0);
-    // blasfeo_pack_dvec(nx, &in->x[0], &x0_traj, 0);
+    blasfeo_pack_dvec(nu, in->u, &u0, 0);
+    blasfeo_pack_dvec(nx, &in->x[0], &x0_traj, 0);
+    for (int ss = 0; ss < 1; ss++){  
+        blasfeo_dvecse(nff, 0, &ff_val[ss],0);
+    }
     // blasfeo_pack_dvec(nx+nu, &in->S_adj[0], &lambda, 0);
     // blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
     // out->info->ADtime = 0;
     // out->info->LAtime = 0;
     // out->info->CPUtime = 0;
+    blasfeo_dgemv_n(nyy, nu , 1.0, &fix->YYu, 0, 0, &u0, 0, 0.0, &yyu, 0, &yyu, 0);
+    for (int ss = 0; ss < 1; ss++) { // TODO end at num_steps
+        blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, 0, 1.0, &yyu, 0, &yyss, 0);
+        for (int iter = 0; iter < 1; iter++) { // NEWTON-ITERATION //TODO put newton_max
+            // evaluate residual function
+            blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, 0, &yy_val[ss], 0);
+            blasfeo_print_exp_dvec(nyy, &yy_val[ss], 0);
+            blasfeo_unpack_dvec(n_in, &yy_val[ss], 0, &phi_in[0]);
+            // acados_tic(&casadi_timer);
+            // fix->res_inc_Jff->evaluate(fix->res_inc_Jff, res_in, res_out);
 
-    // for (int ss = 0; ss < num_steps; ss++) {
-    //     for (int iter = 0; iter < newton_max; iter++) { // NEWTON-ITERATION
-    //         // set input for residual function
-    //         blasfeo_unpack_dvec(nff, &ff_val[ss], 0, &res_in[0]);
-    //         blasfeo_unpack_dvec(nx1, &x0_traj, ss*nx, &res_in[nff]);
-    //         for (int i = 0; i<nu; i++) {
-    //             res_in[i+nff+nx1] = in->u[i];
-    //         }
     //         // evaluate residual and neccessary jacobians & pack into blasfeo mat/vec         
     //         acados_tic(&casadi_timer);
     //         fix->res_inc_Jff->evaluate(fix->res_inc_Jff, res_in, res_out);
@@ -703,8 +723,8 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     //         blasfeo_dgemm_nn(nx, nx, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, 0, 0.0, &S_forw_new, 0, 0, &S_forw_new, 0, 0);
     //         blasfeo_dgemm_nn(nx, nu, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, nx, 1.0, &dxf_dwn, 0, nx, &S_forw_new, 0, nx);
     //         blasfeo_dgecp(nx, nx +nu, &S_forw_new, 0, 0, &S_forw, 0, 0);
-    //     }
-    // }
+        }
+    }
     // // get output value for algebraic states z
     // for (int ii = 0; ii < nz; ii++) {
     //     for (int jj = 0; jj < num_stages; jj++) {
