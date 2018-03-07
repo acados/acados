@@ -32,10 +32,13 @@ extern "C" {
 * generic external function
 ************************************************/
 
+// prototype of an external function
 typedef struct
 {
-	void (* evaluate) (void *, double *, double *); // has to be in the first position
-	// other members
+	// public members (have to be before private ones)
+	void (* evaluate) (void *, double *, double *);
+	// private members
+	// .....
 } external_function_generic;
 
 
@@ -46,7 +49,9 @@ typedef struct
 
 typedef struct
 {
+	// public members (have to be the same as in the prototype, and before the private ones)
 	void (* evaluate) (void *, double *, double *);
+	// private members
 	void *ptr_ext_mem; // pointer to external memory
 	int (*casadi_fun) (const double **, double **, int *, double *, int);
 	int (*casadi_work) (int *, int *, int *, int *);

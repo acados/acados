@@ -420,6 +420,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
                 model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+
+//exit(1);
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 

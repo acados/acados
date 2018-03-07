@@ -594,7 +594,6 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 
 
         // cost
-		// general Cyt
 
 		if (cost[i]->nls_mask==0) // linear ls
 		{
