@@ -589,17 +589,17 @@ void gnsf_simulate(gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, 
 
     struct blasfeo_dmat *f_LO_jac = workspace->f_LO_jac;
 
-    struct blasfeo_dvec *ff_val  = workspace->ff_val; 
-    struct blasfeo_dvec *K1_val  = workspace->K1_val; 
-    struct blasfeo_dvec *x1_val  = workspace->x1_val; 
-    struct blasfeo_dvec *Z_val   = workspace->Z_val;
-    struct blasfeo_dvec *f_LO_val= workspace->f_LO_val;
+    struct blasfeo_dvec *ff_val   = workspace->ff_val; 
+    struct blasfeo_dvec *K1_val   = workspace->K1_val; 
+    struct blasfeo_dvec *x1_val   = workspace->x1_val; 
+    struct blasfeo_dvec *Z_val    = workspace->Z_val;
+    struct blasfeo_dvec *f_LO_val = workspace->f_LO_val;
 
-    struct blasfeo_dvec K2_val  = workspace->K2_val;
-    struct blasfeo_dvec x0_traj = workspace->x0_traj;
-    struct blasfeo_dvec res_val = workspace->res_val;
-    struct blasfeo_dvec u0      = workspace->u0;
-    struct blasfeo_dvec lambda  = workspace->lambda;
+    struct blasfeo_dvec K2_val      = workspace->K2_val;
+    struct blasfeo_dvec x0_traj     = workspace->x0_traj;
+    struct blasfeo_dvec res_val     = workspace->res_val;
+    struct blasfeo_dvec u0          = workspace->u0;
+    struct blasfeo_dvec lambda      = workspace->lambda;
     struct blasfeo_dvec lambda_old  = workspace->lambda_old;
 
     struct blasfeo_dmat aux_G2_ff = workspace->aux_G2_ff;
@@ -692,13 +692,14 @@ void gnsf_simulate(gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, 
             blasfeo_daxpy(nx2, fix->b_dt[ii], &K2_val    , ii*nx2, &x0_traj, nx1 + nx * (ss+1),  &x0_traj, nx1 + nx * (ss+1));
         }
         // blasfeo_print_exp_dvec(nx, &x0_traj, (ss+1) * nx);
-        // set input for residual function
-        blasfeo_unpack_dvec(nff, &ff_val[ss], 0, &res_in[0]);
-        blasfeo_unpack_dvec(nx1, &x0_traj, nx * ss, &res_in[nff]);
-        for (int i = 0; i<nu; i++) {
-            res_in[i+nff+nx1] = in->u[i];
-        }
+
         if (opts->sens_forw) {
+            // set input for residual function
+            blasfeo_unpack_dvec(nff, &ff_val[ss], 0, &res_in[0]);
+            blasfeo_unpack_dvec(nx1, &x0_traj, nx * ss, &res_in[nff]);
+            for (int i = 0; i<nu; i++) {
+                res_in[i+nff+nx1] = in->u[i];
+            }
             acados_tic(&casadi_timer);
             fix->jac_res_ffx1u->evaluate(fix->jac_res_ffx1u, res_in, res_out);
             // jac_res_ffx1u_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->jac_res_ffx1u);

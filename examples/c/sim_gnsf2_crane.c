@@ -138,8 +138,8 @@ int main() {
     // double gnsf_time = minimum_of_doubles(gnsf_times, num_executions);
 
 
-    // printf("xf =\n");
-    // d_print_e_mat(1, dims->nx, out->xn, 1);
+    printf("xf =\n");
+    d_print_e_mat(1, dims->nx, out->xn, 1);
     // printf("forw_Sensitivities = \n");
     // d_print_e_mat(dims->nx, dims->nx + dims->nu, out->S_forw, dims->nx);
     // printf("adj Sensitivities =\n");
