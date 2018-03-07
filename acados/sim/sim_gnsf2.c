@@ -536,7 +536,7 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
 
     // double *Z_out = workspace->Z_out; // TODO, remove when this is part of output
 
-    // struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
+    struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
     // int *ipiv = workspace->ipiv;
     // struct blasfeo_dmat J_r_x1u = workspace->J_r_x1u;  // needed for sensitivity propagation
 
@@ -598,6 +598,12 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
             blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, 0, &yy_val[ss], 0);
             // blasfeo_print_exp_dvec(nyy, &yy_val[ss], 0);
             // acados_tic(&casadi_timer);
+
+            // set J_r_ff to unit matrix
+            blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
+            for (int ii = 0; ii < nff; ii++) {
+                blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
+            }
             for (int ii = 0; ii < num_stages; ii++) { //
                 // printf("phi_in = \n");
                 // blasfeo_print_exp_dvec(n_in, &yy_val[ss], ii*n_in);
@@ -605,15 +611,18 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
                 fix->Phi_inc_dy->evaluate(fix->Phi_inc_dy, phi_in, phi_out);
                 blasfeo_pack_dvec(n_out, &phi_out[0], &res_val, ii*n_out);
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[n_out], n_out, &dPHI_dy, ii*n_out, 0);
-                printf("dphi_dy = \n");
-                blasfeo_print_exp_dmat(n_out, n_in, &dPHI_dy, ii*n_out, 0);
+                // blasfeo_dgemv_n(n_out, nff, -1.0, &dPHI_dy, ii*n_out, 0, struct blasfeo_dvec *sx, int xi, double beta, struct blasfeo_dvec *sy, int yi, struct blasfeo_dvec *sz, int zi);
+                blasfeo_dgemm_nn(n_out, nff, n_in, -1.0, &dPHI_dy, ii*n_out, 0, &fix->YYf, ii*n_in, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);                
             }
             blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0);
             blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0);
             blasfeo_print_exp_dvec(nff, &res_val, 0);
-            printf("dPhi_dy = \n");
-            blasfeo_print_exp_dmat(nff, n_in, &dPHI_dy, 0, 0);
-            // fix->res_inc_Jff->evaluate(fix->res_inc_Jff, res_in, res_out);
+
+            blasfeo_print_exp_dmat(nff, nff,  &J_r_ff, 0, 0);
+            // printf("dPhi_dy = \n");
+            // blasfeo_print_exp_dmat(nff, n_in, &dPHI_dy, 0, 0);
+            // blasfeo_pack_dmat(nff, nff, &res_out[nff], nff, &J_r_ff, 0, 0); // pack residual result into blasfeo struct
+
 
     //         // evaluate residual and neccessary jacobians & pack into blasfeo mat/vec         
     //         acados_tic(&casadi_timer);
