@@ -192,6 +192,8 @@ typedef struct { //workspace
     struct blasfeo_dmat dPsi_dx;
     struct blasfeo_dmat dPsi_du;
 
+    struct blasfeo_dmat dPHI_dy;
+
     struct blasfeo_dvec *K1_val;
     struct blasfeo_dvec *x1_val;
     struct blasfeo_dvec *ff_val;

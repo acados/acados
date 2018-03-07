@@ -372,6 +372,8 @@ int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
     size += blasfeo_memsize_dmat(nff, nff); // J_r_ff
     size += blasfeo_memsize_dmat(nff, nx1+nu); // J_r_x1u
 
+    size += blasfeo_memsize_dmat(nff, n_in);// dPHI_dy
+
     size += blasfeo_memsize_dmat(nK1, nx1); // dK1_dx1
     size += blasfeo_memsize_dmat(nK1, nu ); // dK1_du
     size += blasfeo_memsize_dmat(nZ, nx1); // dZ_dx1
@@ -474,6 +476,8 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     assign_blasfeo_dmat_mem(nK2, nu , &workspace->aux_G2_u , &c_ptr);
     assign_blasfeo_dmat_mem(nK2, nK1 , &workspace->J_G2_K1 , &c_ptr);
 
+    assign_blasfeo_dmat_mem(nff, n_in, &workspace->dPHI_dy, &c_ptr);
+
     assign_blasfeo_dmat_mem(nK2, nx1, &workspace->dK2_dx1 , &c_ptr);
     assign_blasfeo_dmat_mem(nK2, nu, &workspace->dK2_du , &c_ptr);
     assign_blasfeo_dmat_mem(nK2, nff, &workspace->dK2_dff, &c_ptr);
@@ -561,11 +565,11 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
 
     struct blasfeo_dvec yyu  = workspace->yyu;
     struct blasfeo_dvec yyss = workspace->yyss;
-
+    struct blasfeo_dmat dPHI_dy = workspace->dPHI_dy;
 
     // struct blasfeo_dvec K2_val  = workspace->K2_val;
     struct blasfeo_dvec x0_traj = workspace->x0_traj;
-    // struct blasfeo_dvec res_val = workspace->res_val;
+    struct blasfeo_dvec res_val = workspace->res_val;
     struct blasfeo_dvec u0      = workspace->u0;
     // struct blasfeo_dvec lambda  = workspace->lambda;
     // struct blasfeo_dvec lambda_old  = workspace->lambda_old;
@@ -592,9 +596,23 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
         for (int iter = 0; iter < 1; iter++) { // NEWTON-ITERATION //TODO put newton_max
             // evaluate residual function
             blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, 0, &yy_val[ss], 0);
-            blasfeo_print_exp_dvec(nyy, &yy_val[ss], 0);
-            blasfeo_unpack_dvec(n_in, &yy_val[ss], 0, &phi_in[0]);
+            // blasfeo_print_exp_dvec(nyy, &yy_val[ss], 0);
             // acados_tic(&casadi_timer);
+            for (int ii = 0; ii < num_stages; ii++) { //
+                // printf("phi_in = \n");
+                // blasfeo_print_exp_dvec(n_in, &yy_val[ss], ii*n_in);
+                blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
+                fix->Phi_inc_dy->evaluate(fix->Phi_inc_dy, phi_in, phi_out);
+                blasfeo_pack_dvec(n_out, &phi_out[0], &res_val, ii*n_out);
+                blasfeo_pack_dmat(n_out, n_in, &phi_out[n_out], n_out, &dPHI_dy, ii*n_out, 0);
+                printf("dphi_dy = \n");
+                blasfeo_print_exp_dmat(n_out, n_in, &dPHI_dy, ii*n_out, 0);
+            }
+            blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0);
+            blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0);
+            blasfeo_print_exp_dvec(nff, &res_val, 0);
+            printf("dPhi_dy = \n");
+            blasfeo_print_exp_dmat(nff, n_in, &dPHI_dy, 0, 0);
             // fix->res_inc_Jff->evaluate(fix->res_inc_Jff, res_in, res_out);
 
     //         // evaluate residual and neccessary jacobians & pack into blasfeo mat/vec         
