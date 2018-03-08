@@ -17,16 +17,14 @@
  *
  */
 
-#ifndef ACADOS_C_DENSE_QP_H_
-#define ACADOS_C_DENSE_QP_H_
+#ifndef ACADOS_C_OCP_QP_INTERFACE_H_
+#define ACADOS_C_OCP_QP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// acados
-#include <acados/dense_qp/dense_qp_common.h>
-// acados_c
+#include "acados/dense_qp/dense_qp_common.h"
 #include "acados_c/common.h"
 
 typedef enum {
@@ -40,45 +38,38 @@ typedef struct {
 } dense_qp_solver_plan;
 
 typedef struct {
-    dense_qp_solver_config *fcn_ptrs;
+    qp_solver_config *config;
     void *dims;
-    void *args;
+    void *opts;
     void *mem;
     void *work;
 } dense_qp_solver;
 
-// INPUT, OUTPUT AND OPTIONS
+// TODO(dimitris): remove N2
+qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan);
 //
-dense_qp_dims *create_dense_qp_dims();
+dense_qp_dims *dense_qp_dims_create();
 //
-dense_qp_in *create_dense_qp_in(dense_qp_dims *dims);
+dense_qp_in *dense_qp_in_create(qp_solver_config *config, dense_qp_dims *dims);
 //
-dense_qp_out *create_dense_qp_out(dense_qp_dims *dims);
+dense_qp_out *dense_qp_out_create(qp_solver_config *config, dense_qp_dims *dims);
 //
-int dense_qp_calculate_args_size(dense_qp_solver_plan *plan, dense_qp_dims *dims);
+void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims);
 //
-void *dense_qp_assign_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory);
+int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_);
 //
-void *dense_qp_create_args(dense_qp_solver_plan *plan, dense_qp_dims *dims);
+dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_, void *raw_memory);
 //
-void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory, void *source);
-
-// BASIC INTERFACE
-//
-int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_);
-//
-dense_qp_solver *dense_qp_assign(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_, void *raw_memory);
-//
-dense_qp_solver *dense_qp_create(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_);
+dense_qp_solver *dense_qp_create(qp_solver_config *config, dense_qp_dims *dims, void *opts_);
 //
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
-
-// EXPERT INTERFACE
 //
-int set_dense_qp_solver_fcn_ptrs(dense_qp_solver_plan *plan, dense_qp_solver_config *fcn_ptrs);
+void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out, double *res);
+//
+void dense_qp_free(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_DENSE_QP_H_
+#endif  // ACADOS_C_OCP_QP_INTERFACE_H_

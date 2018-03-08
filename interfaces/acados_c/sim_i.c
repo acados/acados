@@ -32,242 +32,242 @@
 
 
 
-void sim_copy_dims(sim_dims *dest, sim_dims *src)
-{
-    dest->num_stages = src->num_stages;
+// void sim_copy_dims(sim_dims *dest, sim_dims *src)
+// {
+//     dest->num_stages = src->num_stages;
 
-    dest->nx = src->nx;
+//     dest->nx = src->nx;
 
-    dest->nu = src->nu;
-}
+//     dest->nu = src->nu;
+// }
 
 
 
-sim_dims *create_sim_dims()
-{
-    int bytes = sim_dims_calculate_size();
+// sim_dims *create_sim_dims()
+// {
+//     int bytes = sim_dims_calculate_size();
 
-    void *ptr = malloc(bytes);
+//     void *ptr = malloc(bytes);
 
-    sim_dims *dims = sim_dims_assign(ptr);
+//     sim_dims *dims = sim_dims_assign(ptr);
 
-    return dims;
-}
+//     return dims;
+// }
 
 
 
-sim_in *create_sim_in(sim_dims *dims, sim_solver_config *config)
-{
-    int bytes = sim_in_calculate_size(dims, config);
+// sim_in *create_sim_in(sim_dims *dims, sim_solver_config *config)
+// {
+//     int bytes = sim_in_calculate_size(dims, config);
 
-    void *ptr = acados_malloc(bytes, 1);
+//     void *ptr = acados_malloc(bytes, 1);
 
-    sim_in *in = sim_in_assign(dims, ptr, config);
+//     sim_in *in = sim_in_assign(dims, ptr, config);
 
-    return in;
-}
+//     return in;
+// }
 
 
 
-sim_out *create_sim_out(sim_dims *dims)
-{
-    int bytes = sim_out_calculate_size(dims);
+// sim_out *create_sim_out(sim_dims *dims)
+// {
+//     int bytes = sim_out_calculate_size(dims);
 
-    void *ptr = malloc(bytes);
+//     void *ptr = malloc(bytes);
 
-    sim_out *out = sim_out_assign(dims, ptr);
+//     sim_out *out = sim_out_assign(dims, ptr);
 
-    return out;
-}
+//     return out;
+// }
 
 
 
-int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
-{
-    sim_solver_config fcn_ptrs = {
-        .fun = NULL,
-        .opts_calculate_size = NULL,
-        .opts_assign = NULL,
-        .opts_initialize_default = NULL,
-        .memory_calculate_size = NULL,
-        .memory_assign = NULL,
-        .workspace_calculate_size = NULL};
+// int sim_calculate_args_size(sim_solver_plan *plan, sim_dims *dims)
+// {
+//     sim_solver_config fcn_ptrs = {
+//         .fun = NULL,
+//         .opts_calculate_size = NULL,
+//         .opts_assign = NULL,
+//         .opts_initialize_default = NULL,
+//         .memory_calculate_size = NULL,
+//         .memory_assign = NULL,
+//         .workspace_calculate_size = NULL};
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+//     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    int size = fcn_ptrs.opts_calculate_size(dims);
+//     int size = fcn_ptrs.opts_calculate_size(dims);
 
-    return size;
-}
+//     return size;
+// }
 
 
 
-void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
-{
-    sim_solver_config fcn_ptrs = {
-        .fun = NULL,
-        .opts_calculate_size = NULL,
-        .opts_assign = NULL,
-        .opts_initialize_default = NULL,
-        .memory_calculate_size = NULL,
-        .memory_assign = NULL,
-        .workspace_calculate_size = NULL};
+// void *sim_assign_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory)
+// {
+//     sim_solver_config fcn_ptrs = {
+//         .fun = NULL,
+//         .opts_calculate_size = NULL,
+//         .opts_assign = NULL,
+//         .opts_initialize_default = NULL,
+//         .memory_calculate_size = NULL,
+//         .memory_assign = NULL,
+//         .workspace_calculate_size = NULL};
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+//     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    void *args = fcn_ptrs.opts_assign(dims, raw_memory);
+//     void *args = fcn_ptrs.opts_assign(dims, raw_memory);
 
-    fcn_ptrs.opts_initialize_default(dims, args);
+//     fcn_ptrs.opts_initialize_default(dims, args);
 
-    return args;
-}
+//     return args;
+// }
 
 
 
-void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
-{
-    int bytes = sim_calculate_args_size(plan, dims);
+// void *sim_create_args(sim_solver_plan *plan, sim_dims *dims)
+// {
+//     int bytes = sim_calculate_args_size(plan, dims);
 
-    void *ptr = malloc(bytes);
+//     void *ptr = malloc(bytes);
 
-    void *args = sim_assign_args(plan, dims, ptr);
+//     void *args = sim_assign_args(plan, dims, ptr);
 
-    return args;
-}
+//     return args;
+// }
 
 
 
-void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
-{
-    sim_solver_t solver_name = plan->sim_solver;
+// void *sim_copy_args(sim_solver_plan *plan, sim_dims *dims, void *raw_memory, void *source)
+// {
+//     sim_solver_t solver_name = plan->sim_solver;
 
-    void *args = NULL;
+//     void *args = NULL;
 
-    switch (solver_name)
-    {
-        case ERK:
-            args = sim_erk_copy_opts(dims, raw_memory, source);
-            break;
-        case IRK:
-            // TODO(dimitris): NOT IMPLEMENTED YET
-            exit(1);
-            // args = sim_irk_copy_opts(dims, raw_memory, source);
-            break;
-        case LIFTED_IRK:
-            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
-            break;
-//		TODO
-//        case IRK:
-//            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
-    }
+//     switch (solver_name)
+//     {
+//         case ERK:
+//             args = sim_erk_copy_opts(dims, raw_memory, source);
+//             break;
+//         case IRK:
+//             // TODO(dimitris): NOT IMPLEMENTED YET
+//             exit(1);
+//             // args = sim_irk_copy_opts(dims, raw_memory, source);
+//             break;
+//         case LIFTED_IRK:
+//             args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
+//             break;
+// //		TODO
+// //        case IRK:
+// //            args = sim_lifted_irk_copy_opts(dims, raw_memory, source);
+//     }
 
-    return args;
-}
+//     return args;
+// }
 
 
 
-int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
-{
-    sim_solver_config fcn_ptrs = {
-        .fun = NULL,
-        .opts_calculate_size = NULL,
-        .opts_assign = NULL,
-        .opts_initialize_default = NULL,
-        .memory_calculate_size = NULL,
-        .memory_assign = NULL,
-        .workspace_calculate_size = NULL};
+// int sim_calculate_size(sim_solver_plan *plan, sim_dims *dims, void *args_)
+// {
+//     sim_solver_config fcn_ptrs = {
+//         .fun = NULL,
+//         .opts_calculate_size = NULL,
+//         .opts_assign = NULL,
+//         .opts_initialize_default = NULL,
+//         .memory_calculate_size = NULL,
+//         .memory_assign = NULL,
+//         .workspace_calculate_size = NULL};
 
-    set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
+//     set_sim_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    int bytes = 0;
+//     int bytes = 0;
 
-    bytes += sizeof(sim_solver);
+//     bytes += sizeof(sim_solver);
 
-    bytes += sizeof(sim_solver_config);
+//     bytes += sizeof(sim_solver_config);
 
-    bytes += sim_dims_calculate_size();
+//     bytes += sim_dims_calculate_size();
 
-    bytes += fcn_ptrs.opts_calculate_size(dims);
+//     bytes += fcn_ptrs.opts_calculate_size(dims);
 
-    bytes += fcn_ptrs.memory_calculate_size(dims, args_);
+//     bytes += fcn_ptrs.memory_calculate_size(dims, args_);
 
-    bytes += fcn_ptrs.workspace_calculate_size(dims, args_);
+//     bytes += fcn_ptrs.workspace_calculate_size(dims, args_);
 
-    return bytes;
-}
+//     return bytes;
+// }
 
 
 
-sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
+// sim_solver *sim_assign(sim_solver_plan *plan, sim_dims *dims, void *args_, void *raw_memory)
+// {
+//     char *c_ptr = (char *) raw_memory;
 
-    sim_solver *solver = (sim_solver *) c_ptr;
-    c_ptr += sizeof(sim_solver);
+//     sim_solver *solver = (sim_solver *) c_ptr;
+//     c_ptr += sizeof(sim_solver);
 
-    solver->fcn_ptrs = (sim_solver_config *) c_ptr;
-    c_ptr += sizeof(sim_solver_config);
-    set_sim_solver_fcn_ptrs(plan, solver->fcn_ptrs);
+//     solver->fcn_ptrs = (sim_solver_config *) c_ptr;
+//     c_ptr += sizeof(sim_solver_config);
+//     set_sim_solver_fcn_ptrs(plan, solver->fcn_ptrs);
 
-    solver->dims = sim_dims_assign(c_ptr);
-    c_ptr += sim_dims_calculate_size();
-    sim_copy_dims(solver->dims, dims);
+//     solver->dims = sim_dims_assign(c_ptr);
+//     c_ptr += sim_dims_calculate_size();
+//     sim_copy_dims(solver->dims, dims);
 
-    solver->args = sim_copy_args(plan, dims, c_ptr, args_);
-    c_ptr += solver->fcn_ptrs->opts_calculate_size(dims);
+//     solver->args = sim_copy_args(plan, dims, c_ptr, args_);
+//     c_ptr += solver->fcn_ptrs->opts_calculate_size(dims);
 
-    solver->mem = solver->fcn_ptrs->memory_assign(dims, args_, c_ptr);
-    c_ptr += solver->fcn_ptrs->memory_calculate_size(dims, args_);
+//     solver->mem = solver->fcn_ptrs->memory_assign(dims, args_, c_ptr);
+//     c_ptr += solver->fcn_ptrs->memory_calculate_size(dims, args_);
 
-    solver-> work = (void *) c_ptr;
-    c_ptr += solver->fcn_ptrs->workspace_calculate_size(dims, args_);
+//     solver-> work = (void *) c_ptr;
+//     c_ptr += solver->fcn_ptrs->workspace_calculate_size(dims, args_);
 
-    assert((char*)raw_memory + sim_calculate_size(plan, dims, args_) == c_ptr);
+//     assert((char*)raw_memory + sim_calculate_size(plan, dims, args_) == c_ptr);
 
-    return solver;
-}
+//     return solver;
+// }
 
 
 
-sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_)
-{
-    int bytes = sim_calculate_size(plan, dims, args_);
+// sim_solver *sim_create(sim_solver_plan *plan, sim_dims *dims, void *args_)
+// {
+//     int bytes = sim_calculate_size(plan, dims, args_);
 
-    void *ptr = malloc(bytes);
+//     void *ptr = malloc(bytes);
 
-    sim_solver *solver = sim_assign(plan, dims, args_, ptr);
+//     sim_solver *solver = sim_assign(plan, dims, args_, ptr);
 
-    return solver;
-}
+//     return solver;
+// }
 
 
 
-int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
-{
-    return solver->fcn_ptrs->fun(qp_in, qp_out, solver->args, solver->mem, solver->work);
-}
+// int sim_solve(sim_solver *solver, sim_in *qp_in, sim_out *qp_out)
+// {
+//     return solver->fcn_ptrs->fun(qp_in, qp_out, solver->args, solver->mem, solver->work);
+// }
 
 
 
-int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_config *fcn_ptrs)
-{
-    int return_value = ACADOS_SUCCESS;
-    sim_solver_t solver_name = plan->sim_solver;
+// int set_sim_solver_fcn_ptrs(sim_solver_plan *plan, sim_solver_config *fcn_ptrs)
+// {
+//     int return_value = ACADOS_SUCCESS;
+//     sim_solver_t solver_name = plan->sim_solver;
 
-    switch (solver_name)
-    {
-        case ERK:
-			sim_erk_config_initialize_default(fcn_ptrs);
-            break;
-        case LIFTED_IRK:
-			sim_lifted_irk_config_initialize_default(fcn_ptrs);
-            break;
-        case IRK:
-			sim_irk_config_initialize_default(fcn_ptrs);
-            break;
-        default:
-            return_value = ACADOS_FAILURE;
-    }
+//     switch (solver_name)
+//     {
+//         case ERK:
+// 			sim_erk_config_initialize_default(fcn_ptrs);
+//             break;
+//         case LIFTED_IRK:
+// 			sim_lifted_irk_config_initialize_default(fcn_ptrs);
+//             break;
+//         case IRK:
+// 			sim_irk_config_initialize_default(fcn_ptrs);
+//             break;
+//         default:
+//             return_value = ACADOS_FAILURE;
+//     }
 
-    return return_value;
-}
+//     return return_value;
+// }

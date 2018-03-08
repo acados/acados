@@ -9,7 +9,7 @@
 #include <vector>
 #include <utility>
 
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
 
@@ -55,7 +55,7 @@ private:
     void expand_dimensions();
 
     void check_range(std::string field, uint stage);
-    
+
     void check_num_elements(std::string, uint stage, uint nb_elems);
 
     void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);

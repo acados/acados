@@ -35,14 +35,14 @@ extern "C" {
 
 
 
-typedef struct dense_qp_hpipm_args_ 
+typedef struct dense_qp_hpipm_opts_
 {
     struct d_dense_qp_ipm_arg *hpipm_opts;
 } dense_qp_hpipm_opts;
 
 
 
-typedef struct dense_qp_hpipm_memory_ 
+typedef struct dense_qp_hpipm_memory_
 {
     struct d_dense_qp_ipm_workspace *hpipm_workspace;
 } dense_qp_hpipm_memory;

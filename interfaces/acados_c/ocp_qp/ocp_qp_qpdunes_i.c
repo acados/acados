@@ -23,10 +23,10 @@
 
 void *ocp_qp_qpdunes_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
 {
-    ocp_qp_qpdunes_args *source = (ocp_qp_qpdunes_args *) source_;
-    ocp_qp_qpdunes_args *dest;
+    ocp_qp_qpdunes_opts *source = (ocp_qp_qpdunes_opts *) source_;
+    ocp_qp_qpdunes_opts *dest;
 
-    dest = (ocp_qp_qpdunes_args *) ocp_qp_qpdunes_assign_args(dims, raw_memory);
+    dest = (ocp_qp_qpdunes_opts *) ocp_qp_qpdunes_assign_args(dims, raw_memory);
 
     dest->options = source->options;
     dest->stageQpSolver = source->stageQpSolver;

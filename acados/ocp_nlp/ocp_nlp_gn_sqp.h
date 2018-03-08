@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 // acados_c
-// #include <acados_c/ocp_qp.h>
+// #include <acados_c/ocp_qp_interface.h>
 // #include <acados_c/sim.h>
 
 // acados

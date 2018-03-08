@@ -29,7 +29,7 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_sparse_solver.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -470,7 +470,7 @@ int main() {
 	void *config_mem = malloc(config_size);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(NN, config_mem);
 
-	ocp_qp_sparse_solver_config_initialize_default(config->qp_solver);
+	ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
 	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 	config->qp_solver->N2 = NN; // full horizon
 
@@ -489,9 +489,9 @@ int main() {
     {
 #ifdef ACADOS_WITH_C_INTERFACE
         sim_solver_names[ii] = ERK;
-#else // ! ACADOS_WITH_C_INTERFACE 
+#else // ! ACADOS_WITH_C_INTERFACE
 		sim_erk_config_initialize_default(config->sim_solvers[ii]);
-#endif // ACADOS_WITH_C_INTERFACE 
+#endif // ACADOS_WITH_C_INTERFACE
     }
 
 #elif DYNAMICS==1
@@ -503,9 +503,9 @@ int main() {
     {
 #ifdef ACADOS_WITH_C_INTERFACE
         sim_solver_names[ii] = LIFTED_IRK;
-#else // ! ACADOS_WITH_C_INTERFACE 
+#else // ! ACADOS_WITH_C_INTERFACE
 		sim_lifted_irk_config_initialize_default(config->sim_solvers[ii]);
-#endif // ACADOS_WITH_C_INTERFACE 
+#endif // ACADOS_WITH_C_INTERFACE
     }
 #else
 	// dynamics: IRK
@@ -516,9 +516,9 @@ int main() {
     {
 #ifdef ACADOS_WITH_C_INTERFACE
         sim_solver_names[ii] = IRK;
-#else // ! ACADOS_WITH_C_INTERFACE 
+#else // ! ACADOS_WITH_C_INTERFACE
 		sim_irk_config_initialize_default(config->sim_solvers[ii]);
-#endif // ACADOS_WITH_C_INTERFACE 
+#endif // ACADOS_WITH_C_INTERFACE
     }
 #endif
 
@@ -624,7 +624,7 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
 	}
 #endif // ACADOS_WITH_C_INTERFACE
-	
+
 #else // DYNAMICS==2
 
 #ifdef ACADOS_WITH_C_INTERFACE
@@ -721,11 +721,11 @@ int main() {
 
     // TODO(dimitris): clean up integrators inside
 #ifdef ACADOS_WITH_C_INTERFACE
-    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d, config);
+    ocp_nlp_in *nlp_in = create_ocp_nlp_in(config, dims);
 #else // ! ACADOS_WITH_C_INTERFACE
 	tmp_size = ocp_nlp_in_calculate_size(config, dims);
 	void *nlp_in_mem = malloc(tmp_size);
-	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, d, nlp_in_mem); // TODO remove d !!!
+	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, nlp_in_mem);
 #endif // ACADOS_WITH_C_INTERFACE
 
 //	ocp_nlp_dims_print(nlp_in->dims);

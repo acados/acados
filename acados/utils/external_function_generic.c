@@ -208,7 +208,7 @@ void external_function_casadi_wrapper(void *self, double *in, double *out)
 	// loop index
 	int ii, jj;
 
-	char *c_ptr;
+	// char *c_ptr;
 
 	// in as args
 	// TODO implement sparsify of input instead of copying them
@@ -231,7 +231,7 @@ void external_function_casadi_wrapper(void *self, double *in, double *out)
 		sparsity = fun->casadi_sparsity_out(ii);
 		nrow = sparsity[0];
 		ncol = sparsity[1];
-		casadi_densify(fun->res[ii], ptr_out, sparsity); 
+		casadi_densify(fun->res[ii], ptr_out, sparsity);
 		ptr_out += nrow*ncol;
 	}
 

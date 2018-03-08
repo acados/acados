@@ -17,20 +17,22 @@
  *
  */
 
-#ifndef ACADOS_C_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
-#define ACADOS_C_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
+#include "acados_c/ocp_qp/ocp_qp_partial_condensing_solver.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "acados_c/ocp_qp/ocp_qp_partial_condensing.h"
 
-#include <acados/ocp_qp/ocp_qp_sparse_solver.h>
 
-//
-void *ocp_qp_sparse_solver_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+void *ocp_qp_partial_condensing_solver_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
+{
+    ocp_qp_partial_condensing_solver_opts *source = (ocp_qp_partial_condensing_solver_opts *) source_;
+    ocp_qp_partial_condensing_solver_opts *dest;
 
-#endif  // ACADOS_C_OCP_QP_OCP_QP_SPARSE_SOLVER_H_
+    dest = ocp_qp_partial_condensing_solver_assign_args(dims, source->solver, raw_memory);
+
+    ocp_qp_partial_condensing_copy_args(dims, dest->pcond_opts, source->pcond_opts);
+
+    // dest->solver->copy_args(dims, dest->qp_solver_opts, source->qp_solver_opts);
+
+    return (void *) dest;
+}

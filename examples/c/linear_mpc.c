@@ -136,7 +136,7 @@ int main() {
 
     ocp_qp_out *qp_out = create_ocp_qp_out(NN, nx, nu, nb, nc);
 
-    ocp_qp_qpdunes_args *args = ocp_qp_qpdunes_create_arguments(QPDUNES_LINEAR_MPC);
+    ocp_qp_qpdunes_opts *args = ocp_qp_qpdunes_create_arguments(QPDUNES_LINEAR_MPC);
 
     int_t work_space_size = ocp_qp_qpdunes_calculate_workspace_size(qp_in, args);
     void *work = (void *)malloc(work_space_size);

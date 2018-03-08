@@ -23,7 +23,7 @@
 
 // acados
 #include <acados/utils/print.h>
-#include <acados/ocp_qp/ocp_qp_sparse_solver.h>
+#include <acados/ocp_qp/ocp_qp_partial_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
 #include <acados/ocp_qp/ocp_qp_hpipm.h>
 #ifdef ACADOS_WITH_HPMPC
@@ -40,7 +40,7 @@
 
 // c interface
 #ifdef ACADOS_WITH_C_INTERFACE
-#include <acados_c/ocp_qp.h>
+#include <acados_c/ocp_qp_interface.h>
 #include <acados_c/options.h>
 #include <acados_c/legacy_create.h>
 #endif
@@ -146,7 +146,7 @@ int main() {
      * ocp qp in
      ************************************************/
 
-    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
+    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
 
     /************************************************
      * ocp qp out
@@ -154,11 +154,11 @@ int main() {
 
 #ifdef ACADOS_WITH_C_INTERFACE
     ocp_qp_out *qp_out = create_ocp_qp_out(qp_dims);
-#else // ! ACADOS_WITH_C_INTERFACE 
+#else // ! ACADOS_WITH_C_INTERFACE
 	int qp_out_size = ocp_qp_out_calculate_size(qp_dims);
 	void *qp_out_mem = malloc(qp_out_size);
 	ocp_qp_out *qp_out = assign_ocp_qp_out(qp_dims, qp_out_mem);
-#endif // ACADOS_WITH_C_INTERFACE 
+#endif // ACADOS_WITH_C_INTERFACE
 
 
 
@@ -178,14 +178,14 @@ int main() {
             {
                 case PARTIAL_CONDENSING_HPIPM:
                     printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-                    ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 30;
+                    ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)args)->pcond_opts)->N2 = N2;
+                    ((ocp_qp_hpipm_opts *)((ocp_qp_partial_condensing_solver_opts *)args)->qp_solver_opts)->hpipm_opts->iter_max = 30;
                     break;
                 case PARTIAL_CONDENSING_HPMPC:
 #ifdef ACADOS_WITH_HPMPC
                     printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-                    ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
+                    ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)args)->pcond_opts)->N2 = N2;
+                    ((ocp_qp_hpmpc_opts *)((ocp_qp_partial_condensing_solver_opts *)args)->qp_solver_opts)->max_iter = 30;
 #endif
                     break;
                 case PARTIAL_CONDENSING_QPDUNES:
@@ -194,13 +194,13 @@ int main() {
                     #ifdef ELIMINATE_X0
                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
                     #endif
-                    ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
-                    ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
+                    ocp_qp_partial_condensing_solver_opts *solver_args = (ocp_qp_partial_condensing_solver_opts *)args;
+                    ocp_qp_qpdunes_opts *qpdunes_args = (ocp_qp_qpdunes_opts *)solver_args->qp_solver_opts;
                     #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
                     qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
                     #endif
                     qpdunes_args->warmstart = 0;
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+                    ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)args)->pcond_opts)->N2 = N2;
 #endif
                     break;
                 case FULL_CONDENSING_HPIPM:
@@ -262,7 +262,7 @@ int main() {
 
             ocp_qp_res *qp_res = create_ocp_qp_res(qp_dims);
             ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_dims);
-            compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+            ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
             /************************************************
              * print solution
@@ -281,7 +281,7 @@ int main() {
              ************************************************/
 
             double res[4];
-            compute_ocp_qp_res_nrm_inf(qp_res, res);
+            ocp_qp_res_compute_nrm_inf(qp_res, res);
             double max_res = 0.0;
             for (int ii = 0; ii < 4; ii++)
                 max_res = (res[ii] > max_res) ? res[ii] : max_res;
@@ -307,7 +307,7 @@ int main() {
 
 
 
-#else // ! ACADOS_WITH_C_INTERFACE 
+#else // ! ACADOS_WITH_C_INTERFACE
 
 
 
@@ -326,8 +326,8 @@ int main() {
 
 			int solver_opts_size;
 			void *solver_opts_mem;
-			void *solver_opts;
-			ocp_qp_sparse_solver_opts *sparse_solver_opts;
+			void *solver_opts = NULL;
+			ocp_qp_partial_condensing_solver_opts *sparse_solver_opts;
 			ocp_qp_hpipm_opts *hpipm_opts;
 			int solver_mem_size;
 			void *solver_mem_mem;
@@ -342,7 +342,7 @@ int main() {
                     printf("\nHPIPM\n\n");
 
 					// config
-					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 					solver_config->N2 = N; // full horizon
 
@@ -362,7 +362,7 @@ int main() {
                     printf("\nPARTIAL_CONDENSING_HPIPM, N2 = %d\n\n", N2);
 
 					// config
-					ocp_qp_sparse_solver_config_initialize_default(solver_config);
+					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
 					solver_config->N2 = N2;
 
@@ -529,7 +529,7 @@ int main() {
 
 			if (ii==0 | ii==2 | ii==3)
 				break;
-		
+
 		}
 
 	}
