@@ -545,14 +545,14 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
     struct blasfeo_dvec *tmp_ny = work->tmp_ny;
     struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
 
-    struct blasfeo_dmat *BAbt = work->qp_in->BAbt;
-    struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
-	struct blasfeo_dmat *DCt = work->qp_in->DCt;
-
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+	ocp_qp_in_stage *qp_in_stage;
 
     for (i = 0; i <= N; i++)
     {
+		qp_in_stage = work->qp_in_stage[i];
+
 		nv = dims->cost[i]->nx + dims->cost[i]->nu;
 		ny = dims->cost[i]->ny;
 		nx = dims->constraints[i]->nx;
@@ -581,16 +581,16 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 			// TODO(rien): transition functions for changing dimensions not yet implemented!
 
 			// B
-			blasfeo_pack_tran_dmat(nx1, nu, &work->sim_out[i]->S_forw[nx1*nx], nx1, &BAbt[i], 0, 0);
+			blasfeo_pack_tran_dmat(nx1, nu, &work->sim_out[i]->S_forw[nx1*nx], nx1, qp_in_stage->BAbt, 0, 0);
 			// A
-			blasfeo_pack_tran_dmat(nx1, nx, &work->sim_out[i]->S_forw[0], nx1, &BAbt[i], nu, 0);
+			blasfeo_pack_tran_dmat(nx1, nx, &work->sim_out[i]->S_forw[0], nx1, qp_in_stage->BAbt, nu, 0);
 
 			// nlp mem: dyn_fun
 			blasfeo_pack_dvec(nx1, work->sim_out[i]->xn, nlp_mem->dyn_fun+i, 0);
 			blasfeo_daxpy(nx1, -1.0, nlp_out->ux+i+1, nu1, nlp_mem->dyn_fun+i, 0, nlp_mem->dyn_fun+i, 0);
 			// nlp mem: dyn_adj
 			// TODO unless already computed in the simulation
-			blasfeo_dgemv_n(nu+nx, nx1, -1.0, BAbt+i, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
+			blasfeo_dgemv_n(nu+nx, nx1, -1.0, qp_in_stage->BAbt, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
 		}
 
 		// nlp mem: dyn_adj
@@ -604,7 +604,7 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 
 		// nlp_mem: ineq_fun
 		blasfeo_dvecex_sp(nb, 1.0, constraints[i]->idxb, nlp_out->ux+i, 0, tmp_nbg+i, 0);
-		blasfeo_dgemv_t(nu+nx, ng, 1.0, DCt+i, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb, tmp_nbg+i, nb);
+		blasfeo_dgemv_t(nu+nx, ng, 1.0, qp_in_stage->DCt, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb, tmp_nbg+i, nb);
 		blasfeo_daxpy(nb+ng, -1.0, tmp_nbg+i, 0, &constraints[i]->d, 0, nlp_mem->ineq_fun+i, 0);
 		blasfeo_daxpy(nb+ng, -1.0, &constraints[i]->d, nb+ng, tmp_nbg+i, 0, nlp_mem->ineq_fun+i, nb+ng);
 
@@ -612,7 +612,7 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 		blasfeo_dvecse(nu+nx, 0.0, nlp_mem->ineq_adj+i, 0);
 		blasfeo_daxpy(nb+ng, -1.0, nlp_out->lam+i, nb+ng, nlp_out->lam+i, 0, tmp_nbg+i, 0);
 		blasfeo_dvecad_sp(nb, 1.0, tmp_nbg+i, 0, constraints[i]->idxb, nlp_mem->ineq_adj+i, 0);
-		blasfeo_dgemv_n(nu+nx, ng, 1.0, DCt+i, 0, 0, tmp_nbg+i, nb, 1.0, nlp_mem->ineq_adj+i, 0, nlp_mem->ineq_adj+i, 0);
+		blasfeo_dgemv_n(nu+nx, ng, 1.0, qp_in_stage->DCt, 0, 0, tmp_nbg+i, nb, 1.0, nlp_mem->ineq_adj+i, 0, nlp_mem->ineq_adj+i, 0);
 
 
 
@@ -642,7 +642,7 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 			blasfeo_daxpy(ny, -1.0, &cost[i]->y_ref, 0, ls_res+i, 0, ls_res+i, 0);
 
 			blasfeo_dtrmm_rlnn(nv, ny, 1.0, W_chol+i, 0, 0, &cost[i]->Cyt, 0, 0, work->tmp_nv_ny+i, 0, 0);
-			blasfeo_dsyrk_ln(nv, ny, 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, RSQrq+i, 0, 0, RSQrq+i, 0, 0);
+			blasfeo_dsyrk_ln(nv, ny, 1.0, work->tmp_nv_ny+i, 0, 0, work->tmp_nv_ny+i, 0, 0, 0.0, qp_in_stage->RSQrq, 0, 0, qp_in_stage->RSQrq, 0, 0);
 		}
 
 		// nlp_mem: cost_grad
@@ -683,41 +683,42 @@ static void sqp_update_qp_vectors(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nl
     int N = nlp_in->dims->N;
 	int nx, nu, nb, ng, nx1;
 
-    struct blasfeo_dmat *RSQrq = work->qp_in->RSQrq;
-    struct blasfeo_dvec *rq = work->qp_in->rq;
-    struct blasfeo_dmat *BAbt = work->qp_in->BAbt;
-    struct blasfeo_dvec *b = work->qp_in->b;
-    struct blasfeo_dvec *d = work->qp_in->d;
-
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+	ocp_qp_in_stage *qp_in_stage;
 
 	// g
 	for (i=0; i<=N; i++)
 	{
+		qp_in_stage = work->qp_in_stage[i];
 
-		nx = dims->constraints[i]->nx;
-		nu = dims->constraints[i]->nu;
-		blasfeo_dveccp(nu+nx, nlp_mem->cost_grad+i, 0, rq+i, 0);
-        blasfeo_drowin(nu+nx, 1.0, rq+i, 0, RSQrq+i, nu+nx, 0); // XXX needed ???
+		nx = dims->cost[i]->nx;
+		nu = dims->cost[i]->nu;
+		blasfeo_dveccp(nu+nx, nlp_mem->cost_grad+i, 0, qp_in_stage->rq, 0);
+        blasfeo_drowin(nu+nx, 1.0, qp_in_stage->rq, 0, qp_in_stage->RSQrq, nu+nx, 0); // XXX needed ???
 
 	}
 
 	// b
 	for (i=0; i<N; i++)
 	{
-		nx = dims->constraints[i]->nx;
-		nu = dims->constraints[i]->nu;
-		nx1 = dims->constraints[i+1]->nx;
-		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, b+i, 0);
-		blasfeo_drowin(nx1, 1.0, b+i, 0, BAbt+i, nu+nx, 0); // XXX needed ???
+		qp_in_stage = work->qp_in_stage[i];
+
+		nx = dims->dynamics[i]->nx;
+		nu = dims->dynamics[i]->nu;
+		nx1 = dims->dynamics[i]->nx1;
+		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, qp_in_stage->b, 0);
+		blasfeo_drowin(nx1, 1.0, qp_in_stage->b, 0, qp_in_stage->BAbt, nu+nx, 0); // XXX needed ???
 	}
 
 	// d
 	for (i=0; i<=N; i++)
 	{
+		qp_in_stage = work->qp_in_stage[i];
+
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
-		blasfeo_dveccp(2*nb+2*ng, nlp_mem->ineq_fun+i, 0, d+i, 0);
+		blasfeo_dveccp(2*nb+2*ng, nlp_mem->ineq_fun+i, 0, qp_in_stage->d, 0);
 	}
 
 	return;
