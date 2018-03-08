@@ -87,12 +87,11 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 
 
 
-// TODO(dimitris): NUM_STAGES NOT NEEDED ANY MORE
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, int num_stages)
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
     int size = ocp_nlp_in_calculate_size(config, dims);
     void *ptr = acados_malloc(size, 1);
-    ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, num_stages, ptr);
+    ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
     return nlp_in;
 }
 

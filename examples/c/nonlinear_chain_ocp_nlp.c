@@ -721,11 +721,11 @@ int main() {
 
     // TODO(dimitris): clean up integrators inside
 #ifdef ACADOS_WITH_C_INTERFACE
-    ocp_nlp_in *nlp_in = create_ocp_nlp_in(dims, d, config);
+    ocp_nlp_in *nlp_in = create_ocp_nlp_in(config, dims);
 #else // ! ACADOS_WITH_C_INTERFACE
 	tmp_size = ocp_nlp_in_calculate_size(config, dims);
 	void *nlp_in_mem = malloc(tmp_size);
-	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, d, nlp_in_mem); // TODO remove d !!!
+	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, nlp_in_mem);
 #endif // ACADOS_WITH_C_INTERFACE
 
 //	ocp_nlp_dims_print(nlp_in->dims);
