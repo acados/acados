@@ -98,10 +98,10 @@ typedef struct
 {
     ocp_nlp_dims *dims;
 	struct blasfeo_dvec *cost_grad;
-	struct blasfeo_dvec *dyn_fun;
-	struct blasfeo_dvec *dyn_adj;
 	struct blasfeo_dvec *ineq_fun;
 	struct blasfeo_dvec *ineq_adj;
+	struct blasfeo_dvec *dyn_adj;
+	ocp_nlp_dynamics_memory **dynamics;
 } ocp_nlp_memory;
 
 

@@ -63,8 +63,7 @@ typedef struct
 	ocp_nlp_dynamics_dims *dims;
 	void *sim_model;
 //	double *state_transition; // TODO
-}
-ocp_nlp_dynamics_model;
+} ocp_nlp_dynamics_model;
 
 //
 int ocp_nlp_dynamics_model_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
@@ -74,6 +73,21 @@ void *ocp_nlp_dynamics_model_assign(void *config, ocp_nlp_dynamics_dims *dims, v
 
 
 /************************************************
+* memory
+************************************************/
+
+typedef struct
+{
+	struct blasfeo_dvec dyn_fun;
+//	struct blasfeo_dvec dyn_adj;
+} ocp_nlp_dynamics_memory;
+
+//
+int ocp_nlp_dynamics_memory_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
+//
+void *ocp_nlp_dynamics_memory_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+
+/************************************************
 * config
 ************************************************/
 
@@ -81,6 +95,8 @@ typedef struct
 {
 	int (*model_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
 	void *(*model_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+	int (*memory_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
+	void *(*memory_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
 	void (*config_initialize_default) (void *config);
     sim_solver_config *sim_solver;
 } ocp_nlp_dynamics_config;

@@ -586,8 +586,8 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 			blasfeo_pack_tran_dmat(nx1, nx, &work->sim_out[i]->S_forw[0], nx1, qp_in_stage->BAbt, nu, 0);
 
 			// nlp mem: dyn_fun
-			blasfeo_pack_dvec(nx1, work->sim_out[i]->xn, nlp_mem->dyn_fun+i, 0);
-			blasfeo_daxpy(nx1, -1.0, nlp_out->ux+i+1, nu1, nlp_mem->dyn_fun+i, 0, nlp_mem->dyn_fun+i, 0);
+			blasfeo_pack_dvec(nx1, work->sim_out[i]->xn, &nlp_mem->dynamics[i]->dyn_fun, 0);
+			blasfeo_daxpy(nx1, -1.0, nlp_out->ux+i+1, nu1, &nlp_mem->dynamics[i]->dyn_fun, 0, &nlp_mem->dynamics[i]->dyn_fun, 0);
 			// nlp mem: dyn_adj
 			// TODO unless already computed in the simulation
 			blasfeo_dgemv_n(nu+nx, nx1, -1.0, qp_in_stage->BAbt, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
@@ -707,7 +707,7 @@ static void sqp_update_qp_vectors(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nl
 		nx = dims->dynamics[i]->nx;
 		nu = dims->dynamics[i]->nu;
 		nx1 = dims->dynamics[i]->nx1;
-		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, qp_in_stage->b, 0);
+		blasfeo_dveccp(nx1, &nlp_mem->dynamics[i]->dyn_fun, 0, qp_in_stage->b, 0);
 		blasfeo_drowin(nx1, 1.0, qp_in_stage->b, 0, qp_in_stage->BAbt, nu+nx, 0); // XXX needed ???
 	}
 

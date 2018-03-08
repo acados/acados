@@ -104,6 +104,66 @@ ocp_nlp_dynamics_dims *ocp_nlp_dynamics_dims_assign(void *raw_memory)
 
 
 /************************************************
+* memory
+************************************************/
+
+int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims)
+{
+	ocp_nlp_dynamics_config *config = config_;
+
+	// loop index
+	int ii;
+
+	// extract dims
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int nx1 = dims->nx1;
+
+	int size = 0;
+
+    size += sizeof(ocp_nlp_dynamics_model);
+
+//	size += 1*blasfeo_memsize_dvec(nu+nx); // dyn_adj
+	size += 1*blasfeo_memsize_dvec(nx1); // dyn_fun
+
+	size += 64; // blasfeo_mem align
+
+	return size;
+}
+
+
+
+void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *raw_memory)
+{
+	ocp_nlp_dynamics_config *config = config_;
+
+	char *c_ptr = (char *) raw_memory;
+
+	// extract dims
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int nx1 = dims->nx1;
+
+	// struct
+    ocp_nlp_dynamics_memory *memory = (ocp_nlp_dynamics_memory *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_memory);
+
+	// blasfeo_mem align
+	align_char_to(64, &c_ptr);
+
+	// dyn_adj
+//	assign_blasfeo_dvec_mem(nu+nx, &memory->dyn_adj, &c_ptr);
+	// dyn_fun
+	assign_blasfeo_dvec_mem(nx1, &memory->dyn_fun, &c_ptr);
+
+    assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config, dims) >= c_ptr);
+
+	return memory;
+}
+
+
+
+/************************************************
 * dynamics
 ************************************************/
 
@@ -159,6 +219,8 @@ void ocp_nlp_dynamics_config_initialize_default(void *config_)
 
 	config->model_calculate_size = &ocp_nlp_dynamics_model_calculate_size;
 	config->model_assign = &ocp_nlp_dynamics_model_assign;
+	config->memory_calculate_size = &ocp_nlp_dynamics_memory_calculate_size;
+	config->memory_assign = &ocp_nlp_dynamics_memory_assign;
 	config->config_initialize_default = &ocp_nlp_dynamics_config_initialize_default;
 
 	return;
