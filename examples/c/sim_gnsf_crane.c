@@ -77,7 +77,7 @@ int main() {
     void *gnsf_opts_mem = malloc(gnsf_opts_size);
     gnsf_opts *opts = gnsf_opts_assign(dims, gnsf_opts_mem);
     opts->sens_forw = 1;
-    opts->sens_adj = 1;
+    opts->sens_adj = 0;
     opts->newton_max = 3;
 
     // set up gnsf_fixed
@@ -133,7 +133,7 @@ int main() {
     void *work_ = malloc(gnsf_workspace_size);
 
     printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
-    int num_executions = 4;
+    int num_executions = 10000;
     double casadi_times[num_executions];
     double gnsf_times[num_executions];
 
@@ -154,8 +154,8 @@ int main() {
     printf("adj Sensitivities =\n");
     d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
     
-    printf("gnsf _time  =  %f [ms] \n", gnsf_time*1000);
-    printf("casadi_time =  %f  [ms]\n", casadi_time*1000);
+    printf("gnsf _time  =  %f [ms]\n", gnsf_time*1000);
+    printf("casadi_time =  %f [ms]\n", casadi_time*1000);
 
     
     free(dims_memory);

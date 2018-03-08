@@ -225,6 +225,7 @@ gnsf2_fixed *gnsf2_fixed_assign(gnsf2_dims *dims, void *raw_memory, int memsize)
 void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_YY_ZZ_LO_fun);
 
 void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_);
+double minimum_of_doubles(double *x, int n);
 
 
 // double minimum_of_doubles(double *x, int n);

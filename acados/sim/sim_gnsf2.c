@@ -40,6 +40,17 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 
+// double minimum_of_doubles(double *x, int n){
+//     double min = x[0];
+//     for (int c = 1 ; c < n ; c++ ) 
+//     {
+//         if ( x[c] < min ) 
+//         {
+//            min = x[c];
+//         }
+//     }
+//     return min;
+// }
 
 int gnsf2_dims_calculate_size()
 {
@@ -587,9 +598,9 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     // blasfeo_pack_dvec(nx+nu, &in->S_adj[0], &lambda, 0);
     blasfeo_pack_dmat(nx, nx + nu, &in->S_forw[0], nx, &S_forw, 0, 0);
 
-    // out->info->ADtime = 0;
-    // out->info->LAtime = 0;
-    // out->info->CPUtime = 0;
+    out->info->ADtime = 0;
+    out->info->LAtime = 0;
+    out->info->CPUtime = 0;
     blasfeo_dgemv_n(nyy, nu , 1.0, &fix->YYu, 0, 0, &u0, 0, 0.0, &yyu, 0, &yyu, 0);
     for (int ss = 0; ss < num_steps; ss++) { //
         blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, ss*nx, 1.0, &yyu, 0, &yyss, 0);
@@ -698,7 +709,7 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
                 blasfeo_dgemm_nn(n_out, nx1, n_in, -1.0, &dPHI_dy, ii*n_out, 0, &fix->YYx, ii*n_in, 0, 0.0, &J_r_x1u, ii*n_out, 0, &J_r_x1u, ii*n_out, 0);
                 blasfeo_dgemm_nn(n_out, nu,  n_in, -1.0, &dPHI_dy, ii*n_out, 0, &fix->YYu, ii*n_in, 0, 0.0, &J_r_x1u, ii*n_out, nx1, &J_r_x1u, ii*n_out, nx1);
         }
-            blasfeo_print_exp_dmat(nff, nx1+nu, &J_r_x1u, 0, 0);
+            // blasfeo_print_exp_dmat(nff, nx1+nu, &J_r_x1u, 0, 0);
             // blasfeo_print_exp_dmat(nyy, nx1, &fix->YYx, 0, 0);
 
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
@@ -826,7 +837,7 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     //         blasfeo_dgemv_t(nff, nu, -1.0, &J_r_x1u, 0, nx1, &res_val, 0, 1.0, &lambda_old, nx, &lambda, nx);
     //     }
     // }
-    // out->info->CPUtime = acados_toc(&tot_timer);
+    out->info->CPUtime = acados_toc(&tot_timer);
     // // printf("tot_time = %f\n", out->info->CPUtime);
     blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn);
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);

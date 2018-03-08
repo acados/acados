@@ -8,6 +8,7 @@
 // #include "interfaces/acados_c/legacy_create.h"
 
 #include "acados/sim/sim_common.h"
+#include "acados/sim/sim_gnsf2.h"
 #include "acados/sim/sim_irk_integrator.h"
 //#include "acados/sim/sim_casadi_wrapper.h"
 
@@ -41,7 +42,7 @@ int main() {
 * bla bla bla
 ************************************************/
 
-    int NREP = 1000;
+    int NREP = 10000;
     acados_timer timer;
     double Time1, Time2, Time3;
 
@@ -146,7 +147,7 @@ int main() {
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
 
-	opts->sens_adj = true;
+	opts->sens_adj = false;
     // d_print_e_mat(num_stages, num_stages, opts->A_mat, num_stages);
     // d_print_e_mat(1, num_stages, opts->b_vec, 1);
     // d_print_e_mat(1, num_stages, opts->c_vec, 1);
@@ -213,14 +214,17 @@ int main() {
 /************************************************
 * sim solver
 ************************************************/
-
+    double irk_times[NREP];
     acados_tic(&timer);
-    for (ii=0;ii<NREP;ii++)
+    for (ii=0;ii<NREP;ii++){
         config->evaluate(config, in, out, opts, mem, work);
+        irk_times[ii] = out->info->CPUtime;
 
+    }
 
     Time1 = acados_toc(&timer)/NREP;
-
+    double IRK_time = minimum_of_doubles(irk_times, NREP);
+    printf("time = %f [ms]", IRK_time*1000);
     double *xn = out->xn;
 
 /************************************************

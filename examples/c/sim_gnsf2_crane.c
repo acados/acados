@@ -41,7 +41,6 @@ int main() {
     gnsf2_dims *dims = gnsf2_dims_assign(dims_memory);
     gnsf2_get_dims(dims, get_ints_fun);
 
-    printf("n_in = %d \n", dims->n_in);
     // set up sim config
     int config_size = sim_solver_config_calculate_size();
     void *config_mem = malloc(config_size);
@@ -136,7 +135,7 @@ int main() {
     void *work_ = malloc(gnsf2_workspace_size);
 
     printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_max, dims->num_steps);
-    int num_executions = 1;
+    int num_executions = 10000;
     double casadi_times[num_executions];
     double gnsf_times[num_executions];
 
@@ -146,8 +145,8 @@ int main() {
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
     }
-    // double casadi_time = minimum_of_doubles(casadi_times, num_executions);
-    // double gnsf_time = minimum_of_doubles(gnsf_times, num_executions);
+    double casadi_time = minimum_of_doubles(casadi_times, num_executions);
+    double gnsf_time = minimum_of_doubles(gnsf_times, num_executions);
 
 
     printf("xf =\n");
@@ -157,8 +156,8 @@ int main() {
     // printf("adj Sensitivities =\n");
     // d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
     
-    // printf("gnsf _time  =  %f [ms] \n", gnsf_time*1000);
-    // printf("casadi_time =  %f  [ms]\n", casadi_time*1000);
+    printf("gnsf2_time  =  %f [ms]\n", gnsf_time*1000);
+    printf("casadi_time =  %f [ms]\n", casadi_time*1000);
 
     
     free(dims_memory);
