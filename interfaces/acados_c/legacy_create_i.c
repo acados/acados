@@ -25,23 +25,23 @@
 
 
 
-ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims)
-{
-    int size = ocp_qp_res_calculate_size(dims);
-    void *ptr = acados_malloc(size, 1);
-    ocp_qp_res *qp_res = ocp_qp_res_assign(dims, ptr);
-    return qp_res;
-}
+// ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims)
+// {
+//     int size = ocp_qp_res_calculate_size(dims);
+//     void *ptr = acados_malloc(size, 1);
+//     ocp_qp_res *qp_res = ocp_qp_res_assign(dims, ptr);
+//     return qp_res;
+// }
 
 
 
-ocp_qp_res_ws *create_ocp_qp_res_ws(ocp_qp_dims *dims)
-{
-    int size = ocp_qp_res_workspace_calculate_size(dims);
-    void *ptr = acados_malloc(size, 1);
-    ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(dims, ptr);
-    return res_ws;
-}
+// ocp_qp_res_ws *create_ocp_qp_res_ws(ocp_qp_dims *dims)
+// {
+//     int size = ocp_qp_res_workspace_calculate_size(dims);
+//     void *ptr = acados_malloc(size, 1);
+//     ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(dims, ptr);
+//     return res_ws;
+// }
 
 
 

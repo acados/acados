@@ -24,6 +24,9 @@
 #include <assert.h>
 #include <string.h>
 //acados_c
+
+#include "acados/utils/mem.h"
+
 #include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados_c/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados_c/dense_qp/dense_qp_hpipm.h"
@@ -223,3 +226,36 @@ void ocp_qp_free(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
     free(solver);
 }
 
+
+
+static ocp_qp_res *ocp_qp_res_create(ocp_qp_dims *dims)
+{
+    int size = ocp_qp_res_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    ocp_qp_res *qp_res = ocp_qp_res_assign(dims, ptr);
+    return qp_res;
+}
+
+
+
+static ocp_qp_res_ws *ocp_qp_res_workspace_create(ocp_qp_dims *dims)
+{
+    int size = ocp_qp_res_workspace_calculate_size(dims);
+    void *ptr = acados_malloc(size, 1);
+    ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(dims, ptr);
+    return res_ws;
+}
+
+
+
+// TODO(dimitris): better name for this wrapper?
+void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, double *res)
+{
+    // double *residuals = malloc(4*sizeof(double));
+    ocp_qp_res *qp_res = ocp_qp_res_create(dims);
+    ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_create(dims);
+    ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
+    ocp_qp_res_compute_nrm_inf(qp_res, res);
+    free(qp_res);
+    free(res_ws);
+}

@@ -24,7 +24,7 @@ int main() {
     int idxb0[] = {1, 2};
 
     ocp_qp_solver_plan plan;
-    plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+    plan.qp_solver = FULL_CONDENSING_HPIPM;
 
     ocp_qp_xcond_solver_config *config = ocp_qp_config_create(&plan, QP_HORIZON);
 
@@ -90,6 +90,17 @@ int main() {
         return -1;
 
     print_ocp_qp_out(qp_out);
+
+    /************************************************
+     * compute inf norm of residuals
+     ************************************************/
+
+    double res[4];
+    ocp_qp_inf_norm_residuals(dims, qp_in, qp_out, res);
+    printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
+
+    // ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+    // print_ocp_qp_info(info);
 
     ocp_qp_free(qp_solver, qp_in, qp_out);
 }
