@@ -44,6 +44,24 @@ const int *impl_odeFun_chain_nm7_sparsity_out(int);
 const int *impl_odeFun_chain_nm8_sparsity_out(int);
 const int *impl_odeFun_chain_nm9_sparsity_out(int);
 
+int impl_odeFun_chain_nm2_n_in();
+int impl_odeFun_chain_nm3_n_in();
+int impl_odeFun_chain_nm4_n_in();
+int impl_odeFun_chain_nm5_n_in();
+int impl_odeFun_chain_nm6_n_in();
+int impl_odeFun_chain_nm7_n_in();
+int impl_odeFun_chain_nm8_n_in();
+int impl_odeFun_chain_nm9_n_in();
+
+int impl_odeFun_chain_nm2_n_out();
+int impl_odeFun_chain_nm3_n_out();
+int impl_odeFun_chain_nm4_n_out();
+int impl_odeFun_chain_nm5_n_out();
+int impl_odeFun_chain_nm6_n_out();
+int impl_odeFun_chain_nm7_n_out();
+int impl_odeFun_chain_nm8_n_out();
+int impl_odeFun_chain_nm9_n_out();
+
 // jac_x implicit ODE
 int impl_jacFun_x_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int impl_jacFun_x_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
@@ -80,6 +98,24 @@ const int *impl_jacFun_x_chain_nm6_sparsity_out(int);
 const int *impl_jacFun_x_chain_nm7_sparsity_out(int);
 const int *impl_jacFun_x_chain_nm8_sparsity_out(int);
 const int *impl_jacFun_x_chain_nm9_sparsity_out(int);
+
+int impl_jacFun_x_chain_nm2_n_in();
+int impl_jacFun_x_chain_nm3_n_in();
+int impl_jacFun_x_chain_nm4_n_in();
+int impl_jacFun_x_chain_nm5_n_in();
+int impl_jacFun_x_chain_nm6_n_in();
+int impl_jacFun_x_chain_nm7_n_in();
+int impl_jacFun_x_chain_nm8_n_in();
+int impl_jacFun_x_chain_nm9_n_in();
+
+int impl_jacFun_x_chain_nm2_n_out();
+int impl_jacFun_x_chain_nm3_n_out();
+int impl_jacFun_x_chain_nm4_n_out();
+int impl_jacFun_x_chain_nm5_n_out();
+int impl_jacFun_x_chain_nm6_n_out();
+int impl_jacFun_x_chain_nm7_n_out();
+int impl_jacFun_x_chain_nm8_n_out();
+int impl_jacFun_x_chain_nm9_n_out();
 
 // jax_xdot implicit ODE
 int impl_jacFun_xdot_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
@@ -118,6 +154,24 @@ const int *impl_jacFun_xdot_chain_nm7_sparsity_out(int);
 const int *impl_jacFun_xdot_chain_nm8_sparsity_out(int);
 const int *impl_jacFun_xdot_chain_nm9_sparsity_out(int);
 
+int impl_jacFun_xdot_chain_nm2_n_in();
+int impl_jacFun_xdot_chain_nm3_n_in();
+int impl_jacFun_xdot_chain_nm4_n_in();
+int impl_jacFun_xdot_chain_nm5_n_in();
+int impl_jacFun_xdot_chain_nm6_n_in();
+int impl_jacFun_xdot_chain_nm7_n_in();
+int impl_jacFun_xdot_chain_nm8_n_in();
+int impl_jacFun_xdot_chain_nm9_n_in();
+
+int impl_jacFun_xdot_chain_nm2_n_out();
+int impl_jacFun_xdot_chain_nm3_n_out();
+int impl_jacFun_xdot_chain_nm4_n_out();
+int impl_jacFun_xdot_chain_nm5_n_out();
+int impl_jacFun_xdot_chain_nm6_n_out();
+int impl_jacFun_xdot_chain_nm7_n_out();
+int impl_jacFun_xdot_chain_nm8_n_out();
+int impl_jacFun_xdot_chain_nm9_n_out();
+
 // jax_u implicit ODE
 int impl_jacFun_u_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int impl_jacFun_u_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
@@ -154,6 +208,24 @@ const int *impl_jacFun_u_chain_nm6_sparsity_out(int);
 const int *impl_jacFun_u_chain_nm7_sparsity_out(int);
 const int *impl_jacFun_u_chain_nm8_sparsity_out(int);
 const int *impl_jacFun_u_chain_nm9_sparsity_out(int);
+
+int impl_jacFun_u_chain_nm2_n_in();
+int impl_jacFun_u_chain_nm3_n_in();
+int impl_jacFun_u_chain_nm4_n_in();
+int impl_jacFun_u_chain_nm5_n_in();
+int impl_jacFun_u_chain_nm6_n_in();
+int impl_jacFun_u_chain_nm7_n_in();
+int impl_jacFun_u_chain_nm8_n_in();
+int impl_jacFun_u_chain_nm9_n_in();
+
+int impl_jacFun_u_chain_nm2_n_out();
+int impl_jacFun_u_chain_nm3_n_out();
+int impl_jacFun_u_chain_nm4_n_out();
+int impl_jacFun_u_chain_nm5_n_out();
+int impl_jacFun_u_chain_nm6_n_out();
+int impl_jacFun_u_chain_nm7_n_out();
+int impl_jacFun_u_chain_nm8_n_out();
+int impl_jacFun_u_chain_nm9_n_out();
 
 #ifdef __cplusplus
 } /* extern "C" */

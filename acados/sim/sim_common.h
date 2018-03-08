@@ -35,6 +35,7 @@ typedef struct
     int nx;
     int nu;
 //    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
+	// TODO have nx np nf instead !!!
 } sim_dims;
 
 

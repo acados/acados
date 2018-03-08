@@ -106,6 +106,9 @@ int external_function_casadi_calculate_size(external_function_casadi *fun)
 
 	fun->casadi_work(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
 
+	fun->in_num = fun->casadi_n_in();
+	fun->out_num = fun->casadi_n_out();
+
 	// args
 	fun->args_size_tot = 0;
 	for (ii=0; ii<fun->args_num; ii++)
@@ -128,7 +131,7 @@ int external_function_casadi_calculate_size(external_function_casadi *fun)
 	size += fun->iw_size*sizeof(int); // iw
 
 	// doubles
-//	size += fun->args_size_tot*sizeof(double); // args // XXX needed when implementing sparsify of input
+	size += fun->args_size_tot*sizeof(double); // args
 	size += fun->res_size_tot*sizeof(double); // res
 	size += fun->w_size*sizeof(double); // w
 
@@ -179,9 +182,9 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 	// align to double
     align_char_to(8, &c_ptr);
 
-	// args XXX needed when implementing sparsify of input
-//	for (ii=0; ii<fun->args_num; ii++)
-//		assign_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
+	// args
+	for (ii=0; ii<fun->args_num; ii++)
+		assign_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
 	// res
 	for (ii=0; ii<fun->res_num; ii++)
 		assign_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
@@ -203,15 +206,19 @@ void external_function_casadi_wrapper(void *self, double *in, double *out)
 	external_function_casadi *fun = self;
 
 	// loop index
-	int ii;
+	int ii, jj;
 
 	char *c_ptr;
 
 	// in as args
-	// TODO remove when implementing sparsify of input
-	c_ptr = (char *) in;
-	for (ii=0; ii<fun->args_num; ii++)
-		assign_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
+	// TODO implement sparsify of input instead of copying them
+	double *d_ptr = in;
+	for (ii=0; ii<fun->in_num; ii++)
+	{
+		for (jj=0; jj<fun->args_size[ii]; jj++)
+			fun->args[ii][jj] = d_ptr[jj];
+		d_ptr += fun->args_size[ii];
+	}
 
 	// call casadi function
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
@@ -219,7 +226,7 @@ void external_function_casadi_wrapper(void *self, double *in, double *out)
 	const int *sparsity;
 	int nrow, ncol;
 	double *ptr_out = out;
-	for (ii=0; ii<fun->res_num; ii++)
+	for (ii=0; ii<fun->out_num; ii++)
 	{
 		sparsity = fun->casadi_sparsity_out(ii);
 		nrow = sparsity[0];

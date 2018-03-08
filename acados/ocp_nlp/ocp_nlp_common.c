@@ -260,6 +260,7 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int 
 		dims->dynamics[ii]->nx = nx[ii];
 		dims->dynamics[ii]->nu = nu[ii];
 		dims->dynamics[ii]->nx1 = nx[ii+1];
+		dims->dynamics[ii]->nu1 = nu[ii+1];
 		dims->dynamics[ii]->sim->nx = nx[ii];
 		dims->dynamics[ii]->sim->nu = nu[ii];
 	}
@@ -347,7 +348,7 @@ int ocp_nlp_in_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
 
 
-ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, int num_stages, void *raw_memory)
+ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory)
 {
 
 	int ii;
