@@ -210,3 +210,16 @@ int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem, solver->work);
 }
+
+
+
+void ocp_qp_free(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
+{
+    free(qp_in);
+    free(qp_out);
+    free(solver->dims);
+    free(solver->config);
+    free(solver->opts);
+    free(solver);
+}
+

@@ -50,7 +50,6 @@ typedef struct {
     void *work;
 } ocp_qp_solver;
 
-// INPUT, OUTPUT AND OPTIONS
 // TODO(dimitris): remove N2
 ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan, int N2);
 //
@@ -62,10 +61,6 @@ ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *d
 //
 void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
-// void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source);
-
-// BASIC INTERFACE
-//
 int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
 //
 ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_, void *raw_memory);
@@ -73,6 +68,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
+//
+void ocp_qp_free(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */
