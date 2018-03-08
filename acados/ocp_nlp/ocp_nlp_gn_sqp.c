@@ -319,7 +319,12 @@ int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_n
     size += sizeof(ocp_nlp_gn_sqp_work);
 
     size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+	size += (N+1)*sizeof(ocp_qp_in_stage *);
+	for (ii=0; ii<=N; ii++)
+		size += ocp_qp_in_stage_calculate_size(qp_solver, NULL); // TODO qp dims stage
+
     size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
+
     size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, args->qp_solver_opts);
 
     size += N*sizeof(sim_in *);
@@ -425,6 +430,24 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp
     // set up QP solver
     work->qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
+	work->qp_in_stage = (ocp_qp_in_stage **) c_ptr;
+	c_ptr += (N+1)*sizeof(ocp_qp_in_stage *);
+	for (int ii=0; ii<=N; ii++)
+	{
+		work->qp_in_stage[ii] = ocp_qp_in_stage_assign(qp_solver, NULL, c_ptr); // TODO qp dims stage
+		c_ptr += ocp_qp_in_stage_calculate_size(qp_solver, NULL); // TODO qp dims stage
+		// alias qp in
+		work->qp_in_stage[ii]->BAbt = work->qp_in->BAbt+ii;
+		work->qp_in_stage[ii]->b = work->qp_in->b+ii;
+		work->qp_in_stage[ii]->RSQrq = work->qp_in->RSQrq+ii;
+		work->qp_in_stage[ii]->rq = work->qp_in->rq+ii;
+		work->qp_in_stage[ii]->DCt = work->qp_in->DCt+ii;
+		work->qp_in_stage[ii]->d = work->qp_in->d+ii;
+		work->qp_in_stage[ii]->Z = work->qp_in->Z+ii;
+		work->qp_in_stage[ii]->z = work->qp_in->z+ii;
+		work->qp_in_stage[ii]->idxb = work->qp_in->idxb+ii;
+	}
+
     work->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
@@ -800,7 +823,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
 	// initialize constraints
 	for (int ii=0; ii<=N; ii++)
-		config->constraints[ii]->initialize_qp(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], work->qp_in->idxb[ii], work->qp_in->DCt+ii, NULL, NULL);
+		config->constraints[ii]->initialize_qp(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], work->qp_in_stage[ii], NULL, NULL);
 
 	// start timer
     acados_timer timer;
@@ -840,7 +863,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
 //print_ocp_qp_in(work->qp_in);
 //exit(1);
-
+		
         int_t qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out,
             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 

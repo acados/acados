@@ -30,7 +30,7 @@ extern "C" {
 // acados
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
-//#include "acados/utils/external_function_generic.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 
 
 
@@ -74,7 +74,7 @@ int ocp_nlp_constraints_model_calculate_size(void *config, ocp_nlp_constraints_d
 //
 void *ocp_nlp_constraints_model_assign(void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
 //
-void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, int *idxb, struct blasfeo_dmat *DCt, void *mem, void *work); // TODO mem and work if needed
+void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, ocp_qp_in_stage *qp_in_stage, void *mem, void *work); // TODO mem and work if needed
 
 
 
@@ -86,7 +86,7 @@ typedef struct
 {
 	int (*model_calculate_size) (void *config, ocp_nlp_constraints_dims *dims);
 	void *(*model_assign) (void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
-	void (*initialize_qp) (void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, int *idxb, struct blasfeo_dmat *DCt, void *mem, void *work);
+	void (*initialize_qp) (void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, ocp_qp_in_stage *qp_in_stage, void *mem, void *work);
 	void (*config_initialize_default) (void *config);
 } ocp_nlp_constraints_config;
 
