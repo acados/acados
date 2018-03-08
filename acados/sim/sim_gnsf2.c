@@ -534,7 +534,7 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     double *f_LO_in = workspace->f_LO_in;
     double *f_LO_out = workspace->f_LO_out;
 
-    // double *Z_out = workspace->Z_out; // TODO, remove when this is part of output
+    double *Z_out = workspace->Z_out; // TODO, remove when this is part of output
 
     struct blasfeo_dmat J_r_ff = workspace->J_r_ff; // store the the jacobian of the residual w.r.t. ff
     int *ipiv = workspace->ipiv;
@@ -624,7 +624,7 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
             blasfeo_daxpy(nff, -1.0, &res_val, 0, &ff_val[ss], 0, &ff_val[ss], 0);
         } // end newton iteration
         // blasfeo_print_exp_dvec(nff, &ff_val[ss], 0); // TODO recheck something might be wrong!!!
-    //     // K1_val = s.KKf * fftraj(:,ss) + s.KKu * u0 + s.KKx * x0_1;
+        //     // K1_val = s.KKf * fftraj(:,ss) + s.KKu * u0 + s.KKx * x0_1;
         blasfeo_dgemv_n(nK1, nff,       1.0, &fix->KKf, 0, 0, &ff_val[ss], 0, 0.0, &K1_val[ss], 0, &K1_val[ss], 0);
         blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0        , 0, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);     // TODO this could be done just once
         blasfeo_dgemv_n(nK1, nx1, 1.0, &fix->KKx, 0, 0, &x0_traj, ss*nx, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
@@ -674,13 +674,26 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
             blasfeo_daxpy(nx2, fix->b_dt[ii], &K2_val    , ii*nx2, &x0_traj, nx1 + nx * (ss+1),  &x0_traj, nx1 + nx * (ss+1));
         }
     //     // blasfeo_print_exp_dvec(nx, &x0_traj, (ss+1) * nx);
-        // if (opts->sens_forw) {
-        //     // set input for residual function
-        //     blasfeo_unpack_dvec(nff, &ff_val[ss], 0, &res_in[0]);
-        //     blasfeo_unpack_dvec(nx1, &x0_traj, nx * ss, &res_in[nff]);
-        //     for (int i = 0; i<nu; i++) {
-        //         res_in[i+nff+nx1] = in->u[i];
-        //     }
+        if (opts->sens_forw) {
+            // evaluate residual function and jacobian
+            // update yy
+            blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, 0, &yy_val[ss], 0);
+            // set J_r_ff to unit matrix
+            blasfeo_dgese(nff, nff, 0.0, &J_r_ff, 0, 0);
+            for (int ii = 0; ii < nff; ii++) {
+                blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
+            }
+            for (int ii = 0; ii < num_stages; ii++) { //
+                // printf("phi_in = \n");
+                // blasfeo_print_exp_dvec(n_in, &yy_val[ss], ii*n_in);
+                blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
+                acados_tic(&casadi_timer);
+                fix->jac_Phi_y->evaluate(fix->jac_Phi_y, phi_in, phi_out);
+                out->info->ADtime += acados_toc(&casadi_timer);
+                blasfeo_pack_dmat(n_out, n_in, &phi_out[0], n_out, &dPHI_dy, ii*n_out, 0);
+                // blasfeo_dgemv_n(n_out, nff, -1.0, &dPHI_dy, ii*n_out, 0, struct blasfeo_dvec *sx, int xi, double beta, struct blasfeo_dvec *sy, int yi, struct blasfeo_dvec *sz, int zi);
+                blasfeo_dgemm_nn(n_out, nff, n_in, -1.0, &dPHI_dy, ii*n_out, 0, &fix->YYf, ii*n_in, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0); // calculate J_r_ff               
+            }
     //         acados_tic(&casadi_timer);
     //         fix->jac_res_ffx1u->evaluate(fix->jac_res_ffx1u, res_in, res_out);
     //         // jac_res_ffx1u_wrapped(nx1, nu, n_out, num_stages, res_in, res_out, in->jac_res_ffx1u);
@@ -732,15 +745,15 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     //         blasfeo_dgemm_nn(nx, nx, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, 0, 0.0, &S_forw_new, 0, 0, &S_forw_new, 0, 0);
     //         blasfeo_dgemm_nn(nx, nu, nx, 1.0, &dxf_dwn, 0, 0, &S_forw, 0, nx, 1.0, &dxf_dwn, 0, nx, &S_forw_new, 0, nx);
     //         blasfeo_dgecp(nx, nx +nu, &S_forw_new, 0, 0, &S_forw, 0, 0);
-        // }
+        }
     }
-    // // get output value for algebraic states z
-    // for (int ii = 0; ii < nz; ii++) {
-    //     for (int jj = 0; jj < num_stages; jj++) {
-    //         f_LO_in[jj] = blasfeo_dvecex1(&Z_val[0], nz*ii+jj); //values of Z_ii in first step, use f_LO_in just to need no extra vector
-    //     }
-    //     gnsf_neville(&Z_out[ii], 0.0, num_stages-1, fix->c, f_LO_in);
-    // }
+    // get output value for algebraic states z
+    for (int ii = 0; ii < nz; ii++) {
+        for (int jj = 0; jj < num_stages; jj++) {
+            f_LO_in[jj] = blasfeo_dvecex1(&Z_val[0], nz*ii+jj); //values of Z_ii in first step, use f_LO_in just to need no extra vector
+        }
+        gnsf_neville(&Z_out[ii], 0.0, num_stages-1, fix->c, f_LO_in);
+    }
     // if (opts->sens_adj) {
     //     // ADJOINT SENSITIVITY PROPAGATION:
     //     for (int ss = num_steps-1; ss >= 0; ss--) {

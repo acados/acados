@@ -90,7 +90,7 @@ int main() {
     gnsf2_import(dims, fix, But_KK_YY_ZZ_LO_fun);
 
     // NEW STYLE CASADI FCNZ:::
-        // res_inc_Jff
+    // Phi_inc_dy
     external_function_casadi Phi_inc_dy;
     Phi_inc_dy.casadi_fun = &Phi_inc_dy_fun;
     Phi_inc_dy.casadi_work = &Phi_inc_dy_fun_work;
@@ -101,6 +101,18 @@ int main() {
     void *Phi_inc_dy_mem = malloc(Phi_inc_dy_size);
     external_function_casadi_assign(&Phi_inc_dy, Phi_inc_dy_mem);
     fix->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
+
+    // jac_Phi_y_fun
+    external_function_casadi jac_Phi_y;
+    jac_Phi_y.casadi_fun = &jac_Phi_y_fun;
+    jac_Phi_y.casadi_work = &jac_Phi_y_fun_work;
+    jac_Phi_y.casadi_sparsity_in  = &jac_Phi_y_fun_sparsity_in;
+    jac_Phi_y.casadi_sparsity_out = &jac_Phi_y_fun_sparsity_out;
+
+    int jac_Phi_y_size = external_function_casadi_calculate_size(&jac_Phi_y);
+    void *jac_Phi_y_mem = malloc(jac_Phi_y_size);
+    external_function_casadi_assign(&jac_Phi_y, jac_Phi_y_mem);
+    fix->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
 
     // f_LO_inc_J_x1k1uz
     external_function_casadi f_LO_inc_J_x1k1uz;

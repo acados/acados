@@ -146,6 +146,7 @@ typedef struct {
 
     // external functions
     external_function_generic *Phi_inc_dy;
+    external_function_generic *jac_Phi_y;
     external_function_generic *f_LO_inc_J_x1k1uz;
 
 } gnsf2_fixed;

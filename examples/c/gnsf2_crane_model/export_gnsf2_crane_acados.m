@@ -5,7 +5,7 @@ close all;
 % addpath('../../external/casadi-octave-v3.2.2')
 import casadi.*
 
-%% Parameters (taken from Riens ACADO model)
+%% Parameters (taken from Rien Quirynens ACADO model)
 tau1 = 0.012790605943772;   a1   = 0.047418203070092;
 tau2 = 0.024695192379264;   a2   = 0.034087337273386;
 g = 9.81;
@@ -13,25 +13,17 @@ g = 9.81;
 %% Set up States & Controls
 xC = SX.sym('xC');     %States  
 vC = SX.sym('vC');
-xL = SX.sym('xL');
+xL = SX.sym('xL');     
 vL = SX.sym('vL');
 uC = SX.sym('uC');
 uL = SX.sym('uL');
 theta = SX.sym('theta');
-omega = SX.sym('omega');
-uCR = SX.sym('uCR');  %Controls
+omega = SX.sym('omega'); 
+uCR = SX.sym('uCR');  % Controls
 uLR = SX.sym('uLR');
+q = SX.sym('q'); % a quadrature state
 
-q = SX.sym('q');
-x = vertcat(xC, vC, xL, vL, uC, uL, theta, omega, q);
-u = vertcat(uCR, uLR);
-
-x1 = vertcat(xC, vC, xL, vL, uC, uL, theta, omega);
-x2 = q; % some quadrature state
-
-z = SX.sym('z'); % define an algebraic state
-nz = length(z);
-
+%% explicit ODE formulation
 f_expl = vertcat(vC, ...
                   - 1/tau1 * (vC - a1 * uC), ...
                   vL,...
@@ -42,6 +34,20 @@ f_expl = vertcat(vC, ...
                   - (a1 * uCR * cos(theta) + g* sin(theta) + 2*vL*omega) / xL, ...
                   uCR^2 + xL^2); % dynamics of quadrature state x2;
 
+%% Generalized nonlinear static feedback formulation (GNSF)
+
+
+x = vertcat(xC, vC, xL, vL, uC, uL, theta, omega, q);
+u = vertcat(uCR, uLR);
+
+x1 = vertcat(xC, vC, xL, vL, uC, uL, theta, omega);
+x2 = q; % Linear output/quadrature state
+
+z = SX.sym('z'); % define an algebraic state;
+% here z is just added to the ODE to have some algebraic states
+% z = (theta^2)/8
+nz = length(z);
+
 f = uCR^2 + xL^2;
 
 nx1 = length(x1);
@@ -50,8 +56,6 @@ nx2 = length(x2);
 nx = nx1 + nx2;
 
 x1_dot = SX.sym('x1_dot',nx1,1);
-
-opts = struct('mex', false);
 
 %% structured
 tic
@@ -150,18 +154,21 @@ casadi_opts = struct('mex', false);
 dummy = SX.sym('dummy');
 
 % get ints
-get_ints_fun = Function('get_ints_fun',{x},{[s.nx, s.nu, s.nz, s.nx1, s.nx2, q, n_steps, s.n_out, s.n_in]});
+get_ints_fun = Function('get_ints_fun',{dummy},{[s.nx, s.nu, s.nz, s.nx1, s.nx2, q, n_steps, s.n_out, s.n_in]});
 get_ints_fun.generate('get_ints_fun', casadi_opts);
 
 % get matrices - for use in final version
 model_matrices = SX.zeros(size([A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)])) + ...
     [A(:); B(:); C(:); E(:); L_x(:); L_xdot(:); L_z(:); L_u(:); ALO(:)];
-get_matrices_fun = Function('get_matrices_fun', {x}, {model_matrices(:)});
+get_matrices_fun = Function('get_matrices_fun', {dummy}, {model_matrices(:)});
 get_matrices_fun.generate('get_matrices_fun', casadi_opts);
 
 % generate Phi, f_LO
 f_LO_inc_J_x1k1uz_fun.generate(['f_LO_inc_J_x1k1uz_fun'], casadi_opts);
 Phi_inc_dy_fun.generate(['Phi_inc_dy_fun'], casadi_opts);
+
+jac_Phi_y_fun = Function('jac_Phi_y_fun', {y}, {[jac_Phi_y]});
+jac_Phi_y_fun.generate('jac_Phi_y_fun', casadi_opts);
 
 %% generate fat matrices
 %generate submatrices
@@ -224,7 +231,8 @@ M2inv = M2^-1;
 KKmatrices = SX.zeros( nx1 * q, n_out * q + nu + nx1 );
 KKmatrices = KKmatrices + [KKf, KKx, KKu];
 
-YYmatrices = SX.zeros( n_in*q, n_out*q + nx1 +nu) + [YYf, YYx, YYu];
+YYmatrices = SX.zeros( n_in*q, n_out*q + nx1 +nu);
+YYmatrices = YYmatrices + [YYf, YYx, YYu];
 
 ZZmatrices = SX.zeros( nz * q, n_out * q + nu + nx1 );
 ZZmatrices = ZZmatrices + [ZZf, ZZx, ZZu];

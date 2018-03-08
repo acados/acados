@@ -150,6 +150,7 @@ CRANE_GNSF2_OBJS += gnsf2_crane_model/f_LO_inc_J_x1k1uz_fun.o
 CRANE_GNSF2_OBJS += gnsf2_crane_model/get_ints_fun.o
 CRANE_GNSF2_OBJS += gnsf2_crane_model/get_matrices_fun.o
 CRANE_GNSF2_OBJS += gnsf2_crane_model/Phi_inc_dy_fun.o
+CRANE_GNSF2_OBJS += gnsf2_crane_model/jac_Phi_y_fun.o
 CRANE_GNSF2_OBJS += sim_gnsf2_crane.o
 
 sim_gnsf2_crane: $(CRANE_GNSF2_OBJS)

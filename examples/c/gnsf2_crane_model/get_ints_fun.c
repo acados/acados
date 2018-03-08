@@ -34,7 +34,7 @@ real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
 real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
 #define sign(x) CASADI_PREFIX(sign)(x)
 
-static const int CASADI_PREFIX(s0)[13] = {9, 1, 0, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+static const int CASADI_PREFIX(s0)[5] = {1, 1, 0, 1, 0};
 #define s0 CASADI_PREFIX(s0)
 static const int CASADI_PREFIX(s1)[21] = {1, 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 #define s1 CASADI_PREFIX(s1)
