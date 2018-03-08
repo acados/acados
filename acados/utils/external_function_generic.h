@@ -57,6 +57,8 @@ typedef struct
 	int (*casadi_work) (int *, int *, int *, int *);
 	const int * (*casadi_sparsity_in) (int);
 	const int * (*casadi_sparsity_out) (int);
+	int (*casadi_n_in) ();
+	int (*casadi_n_out) ();
 	double **args;
 	double **res;
 	double *w;
@@ -67,6 +69,8 @@ typedef struct
 	int args_size_tot; // total size of args arrays
 	int res_num; // number of res arrays
 	int res_size_tot; // total size of res arrays
+	int in_num; // number of input arrays
+	int out_num; // number of output arrays
 	int iw_size; // number of ints for worksapce
 	int w_size; // number of dobules for workspace
 } external_function_casadi;
