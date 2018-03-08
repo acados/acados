@@ -37,7 +37,7 @@
 
 // acados_c
 #ifdef ACADOS_WITH_C_INTERFACE
-#include <acados_c/ocp_qp.h>
+#include <acados_c/ocp_qp_interface.h>
 #endif
 
 
@@ -608,7 +608,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
 
 #ifdef ACADOS_WITH_C_INTERFACE
     ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
-#else // ! ACADOS_WITH_C_INTERFACE 
+#else // ! ACADOS_WITH_C_INTERFACE
 	int qp_in_size = ocp_qp_in_calculate_size(config, &dims);
 	void *qp_in_mem = malloc(qp_in_size);
 	ocp_qp_in *qp_in = ocp_qp_in_assign(config, &dims, qp_in_mem);

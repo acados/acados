@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_qp_interface.h"
 
 namespace acados {
 

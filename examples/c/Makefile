@@ -112,7 +112,7 @@ sim_lifted_irk_crane: $(CRANE_OBJS) sim_lifted_irk_crane.o
 
 
 
-MASS_SPRING_OBJS = 
+MASS_SPRING_OBJS =
 MASS_SPRING_OBJS += mass_spring.o
 
 mass_spring_example_no_interface: $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o

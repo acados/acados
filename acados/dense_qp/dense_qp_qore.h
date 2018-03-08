@@ -31,7 +31,7 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct dense_qp_qore_args_ {
+typedef struct dense_qp_qore_opts_ {
     int nsmax;          // maximum size of Schur complement
     int print_freq;     // print frequency,
                         // prtfreq  < 0: disable printing;

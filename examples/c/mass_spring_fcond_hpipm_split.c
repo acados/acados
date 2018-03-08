@@ -67,8 +67,8 @@ int main() {
 
     dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
 
-    ocp_qp_full_condensing_args *cond_args = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_args);
+    ocp_qp_full_condensing_args *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
+    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
 
     /************************************************
     * ocp qp solution
@@ -100,11 +100,11 @@ int main() {
 
 	for(int rep = 0; rep < NREP; rep++) {
 
-        ocp_qp_full_condensing(qp_in, qpd_in, cond_args, cond_memory, NULL);
+        ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
 
         acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 
-        ocp_qp_full_expansion(qpd_out, qp_out, cond_args, cond_memory, NULL);
+        ocp_qp_full_expansion(qpd_out, qp_out, cond_opts, cond_memory, NULL);
     }
 
     real_t time = acados_toc(&timer)/NREP;
@@ -126,14 +126,14 @@ int main() {
 
     ocp_qp_res *qp_res = create_ocp_qp_res(dims);
     ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
-    compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+    ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
 
     /************************************************
     * compute infinity norm of residuals
     ************************************************/
 
     double res[4];
-    compute_ocp_qp_res_nrm_inf(qp_res, res);
+    ocp_qp_res_compute_nrm_inf(qp_res, res);
     double max_res = 0.0;
     for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
     assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
@@ -156,7 +156,7 @@ int main() {
 
     // NOTE(nielsvd): how can we improve/generalize this?
     dense_qp_hpipm_memory *mem = (dense_qp_hpipm_memory *)(qp_solver->mem);
-    
+
     printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
@@ -176,7 +176,7 @@ int main() {
     free(res_ws);
     free(argd);
     free(cond_memory);
-    free(cond_args);
+    free(cond_opts);
 
 	return 0;
 }

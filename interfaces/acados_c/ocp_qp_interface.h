@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_C_OCP_QP_H_
-#define ACADOS_C_OCP_QP_H_
+#ifndef ACADOS_C_OCP_QP_INTERFACE_H_
+#define ACADOS_C_OCP_QP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,49 +43,39 @@ typedef struct {
 } ocp_qp_solver_plan;
 
 typedef struct {
-    ocp_qp_xcond_solver_config *fcn_ptrs;
+    ocp_qp_xcond_solver_config *config;
     void *dims;
-    void *args;
+    void *opts;
     void *mem;
     void *work;
 } ocp_qp_solver;
 
 // INPUT, OUTPUT AND OPTIONS
+// TODO(dimitris): remove N2
+ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan, int N2);
 //
-ocp_qp_dims *create_ocp_qp_dims(int N);
+ocp_qp_dims *ocp_qp_dims_create(int N);
 //
-ocp_qp_in *create_ocp_qp_in(ocp_qp_dims *dims);
+ocp_qp_in *ocp_qp_in_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
-ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims);
+ocp_qp_out *ocp_qp_out_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
-int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims);
+void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims);
 //
-void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory);
-//
-void *ocp_qp_create_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims);
-//
-void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source);
+// void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory, void *source);
 
 // BASIC INTERFACE
 //
-int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_);
+int ocp_qp_calculate_size(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
 //
-ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_, void *raw_memory);
+ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-ocp_qp_solver *ocp_qp_create(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_);
+ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_);
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
-
-// EXPERT INTERFACE
-//
-int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs);
-//
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_config *fcn_ptrs);
-
-
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_OCP_QP_H_
+#endif  // ACADOS_C_OCP_QP_INTERFACE_H_

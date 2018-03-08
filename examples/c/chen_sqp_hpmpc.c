@@ -291,7 +291,7 @@ int main() {
      ************************************************/
 
     // solver arguments
-    ocp_qp_hpmpc_args hpmpc_args;
+    ocp_qp_hpmpc_opts hpmpc_args;
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = 10;
     hpmpc_args.mu0 = 0.1;

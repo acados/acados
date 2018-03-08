@@ -6,7 +6,7 @@
 #include <sstream>
 #include <vector>
 
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp.hpp"
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"

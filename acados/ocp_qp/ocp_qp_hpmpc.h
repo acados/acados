@@ -31,7 +31,7 @@ typedef enum hpmpc_options_t_ {
     HPMPC_DEFAULT_ARGUMENTS  // TODO(Andrea): need to implement other options
 } hpmpc_options_t;
 
-typedef struct ocp_qp_hpmpc_args_ {
+typedef struct ocp_qp_hpmpc_opts_ {
     double tol;
     int max_iter;
     //  double min_step;

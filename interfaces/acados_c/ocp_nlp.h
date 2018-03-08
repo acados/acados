@@ -28,7 +28,7 @@ extern "C" {
 #include <acados/ocp_nlp/ocp_nlp_common.h>
 // acados_c
 #include "acados_c/common.h"
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim.h"
 
 typedef enum {

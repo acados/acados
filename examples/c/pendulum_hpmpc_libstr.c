@@ -397,7 +397,7 @@ int main() {
      ************************************************/
 
     // solver arguments
-    ocp_qp_hpmpc_args hpmpc_args;
+    ocp_qp_hpmpc_opts hpmpc_args;
     hpmpc_args.tol = TOL;
     hpmpc_args.max_iter = MAX_IP_ITER;
     //  hpmpc_args.min_step = MINSTEP;

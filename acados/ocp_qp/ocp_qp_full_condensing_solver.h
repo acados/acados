@@ -31,10 +31,10 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
-typedef struct ocp_qp_full_condensing_solver_args_ {
-    ocp_qp_full_condensing_args *cond_args;
-    void *solver_args;
-} ocp_qp_full_condensing_solver_args;
+typedef struct ocp_qp_full_condensing_solver_opts_ {
+    ocp_qp_full_condensing_args *cond_opts;
+    void *qp_solver_opts;
+} ocp_qp_full_condensing_solver_opts;
 
 
 

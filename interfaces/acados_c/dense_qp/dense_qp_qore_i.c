@@ -23,10 +23,10 @@
 
 void *dense_qp_qore_copy_args(dense_qp_dims *dims, void *raw_memory, void *source_)
 {
-    dense_qp_qore_args *source = (dense_qp_qore_args *)source_;
-    dense_qp_qore_args *dest;
+    dense_qp_qore_opts *source = (dense_qp_qore_opts *)source_;
+    dense_qp_qore_opts *dest;
 
-    dest = (dense_qp_qore_args *) dense_qp_qore_assign_args(dims, raw_memory);
+    dest = (dense_qp_qore_opts *) dense_qp_qore_assign_args(dims, raw_memory);
 
     dest->print_freq = source->print_freq;
     dest->warm_start = source->warm_start;

@@ -37,7 +37,7 @@ int_t main( ) {
     ocp_qp_condensing_qpoases_args args;
     args.dummy = 42;
     #elif SOLVER == 3
-    ocp_qp_hpmpc_args args;
+    ocp_qp_hpmpc_opts args;
     args.tol = 1e-8;
     args.max_iter = 20;
     args.mu0 = 0.0;

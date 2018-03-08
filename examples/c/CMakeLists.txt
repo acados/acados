@@ -81,10 +81,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- mass_spring
 
-    if(ACADOS_WITH_C_INTERFACES)
-        add_executable(mass_spring_example mass_spring_example.c)
-        target_link_libraries(mass_spring_example acados)
-        add_test(mass_spring_example mass_spring_example)
+    if(ACADOS_WITH_C_INTERFACE)
+        # add_executable(mass_spring_example mass_spring_example.c)
+        # target_link_libraries(mass_spring_example acados)
+        # add_test(mass_spring_example mass_spring_example)
     else()
         add_executable(
             mass_spring_example_no_interface
@@ -134,10 +134,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- nonlinear_chain
 
-    if(ACADOS_WITH_C_INTERFACES)
-        add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-        target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-        add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+    if(ACADOS_WITH_C_INTERFACE)
+        # add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+        # target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+        # add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
     else()
         add_executable(
             nonlinear_chain_ocp_nlp_no_interface_example
@@ -162,7 +162,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- sim_crane
 
-    if(ACADOS_WITH_C_INTERFACES)
+    if(ACADOS_WITH_C_INTERFACE)
     else()
         add_executable(
             sim_crane_no_interface_example
@@ -181,9 +181,9 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- ocp_qp
 
-    # add_executable(ocp_qp ocp_qp.c)
-    # target_link_libraries(ocp_qp acados)
-    # add_test(ocp_qp ocp_qp)
+    add_executable(ocp_qp ocp_qp.c)
+    target_link_libraries(ocp_qp acados)
+    add_test(ocp_qp ocp_qp)
 
     # -------------------- chen
 
@@ -221,4 +221,3 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     #   COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH} ./pendulum_hpmpc_libstr_example)
 
 endif()
-

@@ -32,6 +32,8 @@ extern "C" {
 #include <acados/ocp_qp/ocp_qp_partial_condensing.h>
 #include <acados/sim/sim_irk_integrator.h>
 // acados_c
+#include "acados_c/ocp_qp_interface.h"
+#include "acados_c/sim.h"
 #include "acados_c/common.h"
 
 ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims);
@@ -46,13 +48,13 @@ ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_create_arguments(ocp_q
 
 ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
 
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_dims *dims, int num_stages, ocp_nlp_solver_config *config);
+ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, int num_stages);
 
-ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_dims *dims);
+ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
+ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
 
-ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args);
 
 sim_rk_opts *create_sim_irk_opts(sim_dims *dims);
 

@@ -17,7 +17,7 @@ OBJS += ocp_qp/ocp_qp_partial_condensing_i.o
 ifeq ($(ACADOS_WITH_QPDUNES), 1)
 OBJS += ocp_qp/ocp_qp_qpdunes_i.o
 endif
-OBJS += ocp_qp/ocp_qp_sparse_solver_i.o
+OBJS += ocp_qp/ocp_qp_partial_condensing_solver_i.o
 OBJS += sim/sim_erk_integrator_i.o
 OBJS += sim/sim_lifted_irk_integrator_i.o
 OBJS += dense_qp_i.o

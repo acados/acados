@@ -23,12 +23,12 @@
 
 void *ocp_qp_hpipm_copy_args(ocp_qp_dims *dims, void *raw_memory, void *source_)
 {
-    ocp_qp_hpipm_args *source = (ocp_qp_hpipm_args *) source_;
-    ocp_qp_hpipm_args *dest;
+    ocp_qp_hpipm_opts *source = (ocp_qp_hpipm_opts *) source_;
+    ocp_qp_hpipm_opts *dest;
 
-    dest = (ocp_qp_hpipm_args *) ocp_qp_hpipm_assign_args(dims, raw_memory);
+    dest = (ocp_qp_hpipm_opts *) ocp_qp_hpipm_assign_args(dims, raw_memory);
 
-    *dest->hpipm_args = *source->hpipm_args;
+    *dest->hpipm_opts = *source->hpipm_opts;
 
     return (void *)dest;
 }
