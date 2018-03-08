@@ -185,6 +185,12 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_link_libraries(ocp_qp acados)
     add_test(ocp_qp ocp_qp)
 
+    # -------------------- dense_qp
+
+    add_executable(dense_qp dense_qp.c)
+    target_link_libraries(dense_qp acados)
+    add_test(dense_qp dense_qp)
+
     # -------------------- chen
 
     # add_executable(chen_nmpc_qpoases_example

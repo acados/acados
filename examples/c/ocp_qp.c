@@ -28,31 +28,26 @@ int main() {
 
     ocp_qp_xcond_solver_config *config = ocp_qp_config_create(&plan, QP_HORIZON);
 
-    ocp_qp_dims *dims = ocp_qp_dims_create(QP_HORIZON);
+    ocp_qp_dims dims;
 
-    dims->N = QP_HORIZON;
+    int nx[] = {2, 2, 2, 2, 2, 2};
+    int nu[] = {1, 1, 1, 1, 1, 0};
+    int nb[] = {2, 0, 0, 0, 0, 0};
+    int ng[] = {0, 0, 0, 0, 0, 0};
+    int ns[] = {0, 0, 0, 0, 0, 0};
+    int nbx[] = {2, 0, 0, 0, 0, 0};
+    int nbu[] = {0, 0, 0, 0, 0, 0};
 
-    for (int ii = 0; ii <= dims->N; ii++)
-    {
-        dims->nx[ii] = 2;
-        dims->ng[ii] = 0;
-        dims->ns[ii] = 0;
-        dims->nbu[ii] = 0;
+    dims.N = QP_HORIZON;
+    dims.nx = nx;
+    dims.nu = nu;
+    dims.nb = nb;
+    dims.ng = ng;
+    dims.ns = ns;
+    dims.nbx = nbx;
+    dims.nbu = nbu;
 
-        if (ii == 0)
-            dims->nbx[ii] = 2;
-        else
-            dims->nbx[ii] = 0;
-
-        dims->nb[ii] =  dims->nbx[ii] +  dims->nbu[ii];
-
-        if (ii < dims->N)
-            dims->nu[ii] = 1;
-        else
-            dims->nu[ii] = 0;
-    }
-
-    ocp_qp_in *qp_in = ocp_qp_in_create(config, dims);
+    ocp_qp_in *qp_in = ocp_qp_in_create(config, &dims);
 
     double *hA[] = {A, A, A, A, A};
     double *hB[] = {B, B, B, B, B};
@@ -74,15 +69,15 @@ int main() {
 
     print_ocp_qp_in(qp_in);
 
-    void *opts = ocp_qp_opts_create(config, dims);
+    void *opts = ocp_qp_opts_create(config, &dims);
 
-    ocp_qp_out *qp_out = ocp_qp_out_create(config, dims);
+    ocp_qp_out *qp_out = ocp_qp_out_create(config, &dims);
 
     // TODO(dimitris): only have N2 in one place!!
     // printf("N2 in config = %d\n", config->N2);
     // printf("N2 in opts = %d\n", ((ocp_qp_partial_condensing_args *)(((ocp_qp_partial_condensing_solver_opts *)opts)->pcond_opts))->N2);
 
-    ocp_qp_solver *qp_solver = ocp_qp_create(config, dims, opts);
+    ocp_qp_solver *qp_solver = ocp_qp_create(config, &dims, opts);
 
     int acados_return = ocp_qp_solve(qp_solver, qp_in, qp_out);
 
@@ -96,11 +91,15 @@ int main() {
      ************************************************/
 
     double res[4];
-    ocp_qp_inf_norm_residuals(dims, qp_in, qp_out, res);
+    ocp_qp_inf_norm_residuals(&dims, qp_in, qp_out, res);
     printf("\ninf norm res: %e, %e, %e, %e\n\n", res[0], res[1], res[2], res[3]);
 
     // ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     // print_ocp_qp_info(info);
 
-    ocp_qp_free(qp_solver, qp_in, qp_out);
+    free(config);
+    free(opts);
+    free(qp_in);
+    free(qp_out);
+    free(qp_solver);
 }

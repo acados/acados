@@ -25,8 +25,6 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_common_frontend.h"
-#include "acados_c/common.h"
 
 typedef enum {
     PARTIAL_CONDENSING_HPIPM,
@@ -69,13 +67,7 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 //
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 //
-// ocp_qp_res *ocp_qp_res_create(ocp_qp_dims *dims);
-//
-// ocp_qp_res_ws *ocp_qp_res_workspace_create(ocp_qp_dims *dims);
-//
 void ocp_qp_inf_norm_residuals(ocp_qp_dims *dims, ocp_qp_in *qp_in, ocp_qp_out *qp_out, double *res);
-//
-void ocp_qp_free(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

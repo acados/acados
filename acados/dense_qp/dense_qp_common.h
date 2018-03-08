@@ -44,6 +44,7 @@ typedef struct d_dense_qp_res_workspace dense_qp_res_ws;
 #define QP_SOLVER_CONFIG_
 
 typedef struct {
+    // TODO(dimitris): pass dims to evaluate?
     int (*evaluate) (void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
     int (*opts_calculate_size) (void *config, void *dims);
     void *(*opts_assign) (void *config, void *dims, void *raw_memory);
@@ -64,31 +65,34 @@ typedef struct {
     int    num_iter;
 } dense_qp_info;
 
-
+//
+int dense_qp_solver_config_calculate_size();
+//
+qp_solver_config *dense_qp_solver_config_assign(void *raw_memory);
 //
 int dense_qp_dims_calculate_size();
 //
-dense_qp_dims *assign_dense_qp_dims(void *raw_memory);
+dense_qp_dims *dense_qp_dims_assign(void *raw_memory);
 //
-int dense_qp_in_calculate_size(dense_qp_dims *dims);
+int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims);
 //
-dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory);
+dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_memory);
 //
-int dense_qp_out_calculate_size(dense_qp_dims *dims);
+int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims);
 //
-dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory);
+dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_memory);
 //
 int dense_qp_res_calculate_size(dense_qp_dims *dims);
 //
-dense_qp_res *assign_dense_qp_res(dense_qp_dims *dims, void *raw_memory);
+dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory);
 //
-int dense_qp_res_ws_calculate_size(dense_qp_dims *dims);
+int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims);
 //
-dense_qp_res_ws *assign_dense_qp_res_ws(dense_qp_dims *dims, void *raw_memory);
+dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_memory);
 //
-void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
+void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws);
 //
-void compute_dense_qp_res_nrm_inf(dense_qp_res *qp_res, double res[4]);
+void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4]);
 //
 
 #ifdef __cplusplus

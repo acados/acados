@@ -27,19 +27,19 @@
 
 #include "acados/utils/mem.h"
 
-#include "acados_c/ocp_qp/ocp_qp_full_condensing_solver.h"
-#include "acados_c/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados_c/dense_qp/dense_qp_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
 #ifdef ACADOS_WITH_QORE
-#include "acados_c/dense_qp/dense_qp_qore.h"
+#include "acados/dense_qp/dense_qp_qore.h"
 #endif
-#include "acados_c/dense_qp/dense_qp_qpoases.h"
-#include "acados_c/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
-#include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
+#include "acados/ocp_qp/ocp_qp_hpmpc.h"
 #endif
 #ifdef ACADOS_WITH_QPDUNES
-#include "acados_c/ocp_qp/ocp_qp_qpdunes.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
 
 // TODO(dimitris): remove N2
@@ -212,18 +212,6 @@ ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 int ocp_qp_solve(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
 {
     return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem, solver->work);
-}
-
-
-
-void ocp_qp_free(ocp_qp_solver *solver, ocp_qp_in *qp_in, ocp_qp_out *qp_out)
-{
-    free(qp_in);
-    free(qp_out);
-    free(solver->dims);
-    free(solver->config);
-    free(solver->opts);
-    free(solver);
 }
 
 
