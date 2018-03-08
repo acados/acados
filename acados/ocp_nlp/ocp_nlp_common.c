@@ -260,6 +260,7 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int 
 		dims->dynamics[ii]->nx = nx[ii];
 		dims->dynamics[ii]->nu = nu[ii];
 		dims->dynamics[ii]->nx1 = nx[ii+1];
+		dims->dynamics[ii]->nu1 = nu[ii+1];
 		dims->dynamics[ii]->sim->nx = nx[ii];
 		dims->dynamics[ii]->sim->nu = nu[ii];
 	}

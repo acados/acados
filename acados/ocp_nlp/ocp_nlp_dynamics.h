@@ -44,6 +44,7 @@ typedef struct
     int nx; // number of states at the current stage
     int nu; // number of inputs at the current stage
 	int nx1; // number of states at the next stage
+	int nu1; // number of inputes at the next stage
 } ocp_nlp_dynamics_dims;
 
 //
@@ -61,7 +62,7 @@ typedef struct
 {
 	ocp_nlp_dynamics_dims *dims;
 	void *sim_model;
-//	double *seeds; // TODO
+//	double *state_transition; // TODO
 }
 ocp_nlp_dynamics_model;
 

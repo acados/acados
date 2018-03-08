@@ -544,8 +544,8 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 
 		if (i<N)
 		{
-			nx1 = dims->constraints[i+1]->nx;
-			nu1 = dims->constraints[i+1]->nu;
+			nx1 = dims->dynamics[i]->nx1;
+			nu1 = dims->dynamics[i]->nu1;
 
 			// pass state and control to integrator
 			blasfeo_unpack_dvec(nu, nlp_out->ux+i, 0, work->sim_in[i]->u);
