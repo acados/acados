@@ -152,8 +152,8 @@ int main() {
 
     printf("xf =\n");
     d_print_e_mat(1, dims->nx, out->xn, 1);
-    // printf("forw_Sensitivities = \n");
-    // d_print_e_mat(dims->nx, dims->nx + dims->nu, out->S_forw, dims->nx);
+    printf("forw_Sensitivities = \n");
+    d_print_e_mat(dims->nx, dims->nx + dims->nu, out->S_forw, dims->nx);
     // printf("adj Sensitivities =\n");
     // d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
     
