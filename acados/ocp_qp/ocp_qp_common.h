@@ -41,10 +41,34 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 
 
 
+typedef struct
+{
+	// TODO
+} ocp_qp_dims_stage;
+
+
+
+typedef struct
+{
+	struct blasfeo_dmat *BAbt;
+	struct blasfeo_dvec *b;
+	struct blasfeo_dmat *RSQrq;
+	struct blasfeo_dvec *rq;
+	struct blasfeo_dmat *DCt;
+	struct blasfeo_dvec *d;
+	struct blasfeo_dvec *Z;
+	struct blasfeo_dvec *z;
+	int **idxb;
+	int **idxs;
+} ocp_qp_in_stage;
+
+
+
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
 
-typedef struct {
+typedef struct
+{
     int (*evaluate) (void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
     int (*opts_calculate_size) (void *config, void *dims);
     void *(*opts_assign) (void *config, void *dims, void *raw_memory);
@@ -58,7 +82,8 @@ typedef struct {
 
 
 
-typedef struct {
+typedef struct
+{
     int (*evaluate) (void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
     int (*opts_calculate_size) (void *config, ocp_qp_dims *dims);
     void *(*opts_assign) (void *config, ocp_qp_dims *dims, void *raw_memory);
@@ -74,7 +99,8 @@ typedef struct {
 
 
 
-typedef struct {
+typedef struct
+{
     double solve_QP_time;
     double condensing_time;
     double interface_time;
@@ -96,9 +122,17 @@ int ocp_qp_dims_calculate_size(int N);
 //
 ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
 //
+int ocp_qp_dims_stage_calculate_size();
+//
+ocp_qp_dims_stage *ocp_qp_dims_stage_assign(void *raw_memory);
+//
 int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims);
 //
 ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_in_stage_calculate_size(void *config, ocp_qp_dims_stage *dims);
+//
+ocp_qp_in_stage *ocp_qp_in_stage_assign(void *config, ocp_qp_dims_stage *dims, void *raw_memory);
 //
 int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims);
 //

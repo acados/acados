@@ -30,6 +30,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
 
 
 
@@ -159,7 +160,7 @@ void *ocp_nlp_constraints_model_assign(void *config, ocp_nlp_constraints_dims *d
 
 
 // TODO mem and work if needed
-void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, int *idxb, struct blasfeo_dmat *DCt, void *mem, void *work)
+void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, ocp_nlp_constraints_model *model, ocp_qp_in_stage *qp_in_stage, void *mem, void *work)
 {
 
 	// loop index
@@ -175,11 +176,11 @@ void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *d
 	// initialize idxb
 	for (j=0; j<nb; j++)
 	{
-		idxb[j] = model->idxb[j];
+		qp_in_stage->idxb[0][j] = model->idxb[j];
 	}
 
 	// initialize general constraints matrix
-	blasfeo_dgecp(nu+nx, ng, &model->DCt, 0, 0, DCt, 0, 0);
+	blasfeo_dgecp(nu+nx, ng, &model->DCt, 0, 0, qp_in_stage->DCt, 0, 0);
 
 	return;
 
