@@ -19,7 +19,7 @@
 
 // external
 #ifndef M_PI
-#define M_PI           3.14159265358979323846
+#define M_PI 3.14159265358979323846
 #endif
 
 #include <math.h>
@@ -27,12 +27,14 @@
 #include <stdlib.h>
 
 // acados
+// TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/external_function_generic.h"
 
+#include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
 // crane model
@@ -56,7 +58,6 @@ int main()
 ************************************************/
 
     int NREP = 500;
-    acados_timer timer;
 
 	/* double Time1, Time2, Time3; */
 
@@ -73,9 +74,9 @@ int main()
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
 
-/************************************************
-* external functions (explicit model)
-************************************************/
+	/************************************************
+	* external functions (explicit model)
+	************************************************/
 
 	// forward explicit VDE
 
@@ -86,10 +87,8 @@ int main()
 	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
 	exfun_forw_vde.casadi_n_in = &vdeFun_n_in;
 	exfun_forw_vde.casadi_n_out = &vdeFun_n_out;
+	external_function_casadi_create(&exfun_forw_vde);
 
-	int forw_vde_size = external_function_casadi_calculate_size(&exfun_forw_vde);
-	void *forw_vde_mem = malloc(forw_vde_size);
-	external_function_casadi_assign(&exfun_forw_vde, forw_vde_mem);
 
 	// adjoint explicit VDE
 
@@ -100,10 +99,8 @@ int main()
 	exfun_adj_vde.casadi_sparsity_out = &adjFun_sparsity_out;
 	exfun_adj_vde.casadi_n_in = &adjFun_n_in;
 	exfun_adj_vde.casadi_n_out = &adjFun_n_out;
+	external_function_casadi_create(&exfun_adj_vde);
 
-	int adj_vde_size = external_function_casadi_calculate_size(&exfun_adj_vde);
-	void *adj_vde_mem = malloc(adj_vde_size);
-	external_function_casadi_assign(&exfun_adj_vde, adj_vde_mem);
 
 	// jacobian explicit ODE
 
@@ -114,10 +111,8 @@ int main()
 	exfun_jac.casadi_sparsity_out = &jacFun_sparsity_out;
 	exfun_jac.casadi_n_in = &jacFun_n_in;
 	exfun_jac.casadi_n_out = &jacFun_n_out;
+	external_function_casadi_create(&exfun_jac);
 
-	int jac_size = external_function_casadi_calculate_size(&exfun_jac);
-	void *jac_mem = malloc(jac_size);
-	external_function_casadi_assign(&exfun_jac, jac_mem);
 
 	// hessian explicit ODE
 
@@ -128,14 +123,12 @@ int main()
 	exfun_hess_ode.casadi_sparsity_out = &hessFun_sparsity_out;
 	exfun_hess_ode.casadi_n_in = &hessFun_n_in;
 	exfun_hess_ode.casadi_n_out = &hessFun_n_out;
+	external_function_casadi_create(&exfun_hess_ode);
 
-	int hess_ode_size = external_function_casadi_calculate_size(&exfun_hess_ode);
-	void *hess_ode_mem = malloc(hess_ode_size);
-	external_function_casadi_assign(&exfun_hess_ode, hess_ode_mem);
 
-/************************************************
-* external functions (implicit model)
-************************************************/
+	/************************************************
+	* external functions (implicit model)
+	************************************************/
 
 	// implicit ODE
 
@@ -146,10 +139,8 @@ int main()
 	exfun_ode.casadi_sparsity_out = &impl_odeFun_sparsity_out;
 	exfun_ode.casadi_n_in = &impl_odeFun_n_in;
 	exfun_ode.casadi_n_out = &impl_odeFun_n_out;
-
-	int ode_size = external_function_casadi_calculate_size(&exfun_ode);
-	void *ode_mem = malloc(ode_size);
-	external_function_casadi_assign(&exfun_ode, ode_mem);
+	external_function_casadi_create(&exfun_ode);
+	// TODO(dimitris): HOW DO WE FREE THIS MEMORY?
 
 	// jac_x implicit ODE
 
@@ -160,10 +151,7 @@ int main()
 	exfun_jac_x_ode.casadi_sparsity_out = &impl_jacFun_x_sparsity_out;
 	exfun_jac_x_ode.casadi_n_in = &impl_jacFun_x_n_in;
 	exfun_jac_x_ode.casadi_n_out = &impl_jacFun_x_n_out;
-
-	int jac_x_ode_size = external_function_casadi_calculate_size(&exfun_jac_x_ode);
-	void *jac_x_ode_mem = malloc(jac_x_ode_size);
-	external_function_casadi_assign(&exfun_jac_x_ode, jac_x_ode_mem);
+	external_function_casadi_create(&exfun_jac_x_ode);
 
 	// jac_xdot implicit ODE
 
@@ -174,10 +162,7 @@ int main()
 	exfun_jac_xdot_ode.casadi_sparsity_out = &impl_jacFun_xdot_sparsity_out;
 	exfun_jac_xdot_ode.casadi_n_in = &impl_jacFun_xdot_n_in;
 	exfun_jac_xdot_ode.casadi_n_out = &impl_jacFun_xdot_n_out;
-
-	int jac_xdot_ode_size = external_function_casadi_calculate_size(&exfun_jac_xdot_ode);
-	void *jac_xdot_ode_mem = malloc(jac_xdot_ode_size);
-	external_function_casadi_assign(&exfun_jac_xdot_ode, jac_xdot_ode_mem);
+	external_function_casadi_create(&exfun_jac_xdot_ode);
 
 	// jac_u implicit ODE
 
@@ -188,44 +173,42 @@ int main()
 	exfun_jac_u_ode.casadi_sparsity_out = &impl_jacFun_u_sparsity_out;
 	exfun_jac_u_ode.casadi_n_in = &impl_jacFun_u_n_in;
 	exfun_jac_u_ode.casadi_n_out = &impl_jacFun_u_n_out;
-
-	int jac_u_ode_size = external_function_casadi_calculate_size(&exfun_jac_u_ode);
-	void *jac_u_ode_mem = malloc(jac_u_ode_size);
-	external_function_casadi_assign(&exfun_jac_u_ode, jac_u_ode_mem);
-
+	external_function_casadi_create(&exfun_jac_u_ode);
 
 
 	int number_sim_solvers = 3;
 	int nss;
-	for (nss=0; nss<number_sim_solvers; nss++)
+	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
+		/************************************************
+		* sim config
+		************************************************/
 
-/************************************************
-* sim config
-************************************************/
-
-		int config_size = sim_solver_config_calculate_size();
-		void *config_mem = malloc(config_size);
-		sim_solver_config *config = sim_solver_config_assign(config_mem);
+		sim_solver_plan plan;
+		sim_solver_config *config;
 
 		switch (nss)
 		{
 
-			case 0: // erk
+			case 0:
 				printf("\n\nsim solver: ERK\n");
-				sim_erk_config_initialize_default(config);
+				plan.sim_solver = ERK;
+				config = sim_config_create(&plan);
+				// TODO(dimitris): move back to opts and then only create config outside switch once
 				config->ns = 4;
 				break;
 
-			case 1: // irk
+			case 1:
 				printf("\n\nsim solver: IRK\n");
-				sim_irk_config_initialize_default(config);
+				plan.sim_solver = IRK;
+				config = sim_config_create(&plan);
 				config->ns = 2;
 				break;
 
-			case 2: // lifted_irk
+			case 2:
 				printf("\n\nsim solver: Lifted_IRK\n");
-				sim_lifted_irk_config_initialize_default(config);
+				plan.sim_solver = LIFTED_IRK;
+				config = sim_config_create(&plan);
 				config->ns = 2;
 				break;
 
@@ -235,57 +218,36 @@ int main()
 
 		}
 
-/************************************************
-* sim dims
-************************************************/
+		/************************************************
+		* sim dims
+		************************************************/
 
-		int dims_size = sim_dims_calculate_size();
-		void *dims_mem = malloc(dims_size);
-		sim_dims *dims = sim_dims_assign(dims_mem);
+		sim_dims *dims = sim_dims_create();
 
 		dims->nx = nx;
 		dims->nu = nu;
 
-/************************************************
-* sim opts
-************************************************/
+		/************************************************
+		* sim opts
+		************************************************/
 
-		int opts_size = config->opts_calculate_size(config, dims);
-		void *opts_mem = malloc(opts_size);
-		sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
-		config->opts_initialize_default(config, dims, opts);
+		sim_rk_opts *opts = sim_opts_create(config, dims);
 
 		opts->sens_adj = true;
 
-/************************************************
-* sim memory
-************************************************/
+		/************************************************
+		* sim in / out
+		************************************************/
 
-		int mem_size = config->memory_calculate_size(config, dims, opts);
-		void *mem_mem = malloc(mem_size);
-		void *mem = config->memory_assign(config, dims, opts, mem_mem);
-
-/************************************************
-* sim workspace
-************************************************/
-
-		int work_size = config->workspace_calculate_size(config, dims, opts);
-		void *work = malloc(work_size);
-
-/************************************************
-* sim in
-************************************************/
-
-		int in_size = sim_in_calculate_size(config, dims);
-		void *in_mem = malloc(in_size);
-		sim_in *in = sim_in_assign(config, dims, in_mem);
+		sim_in *in = sim_in_create(config, dims);
+		sim_out *out = sim_out_create(config, dims);
 
 		in->T = T;
 
 		// external functions
 		switch (nss)
 		{
-			case 0: // erk
+			case 0:
 			{
 				erk_model *model = in->model;
 				model->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
@@ -293,7 +255,7 @@ int main()
 				model->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
 				break;
 			}
-			case 1: // irk
+			case 1:
 			{
 				irk_model *model = in->model;
 				model->ode_impl = (external_function_generic *) &exfun_ode;
@@ -302,7 +264,7 @@ int main()
 				model->jac_u_ode_impl = (external_function_generic *) &exfun_jac_u_ode;
 				break;
 			}
-			case 2: // lifted_irk
+			case 2:
 			{
 				lifted_irk_model *model = in->model;
 				model->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
@@ -317,14 +279,12 @@ int main()
 		}
 
 		// x
-		for (ii = 0; ii < nx; ii++) {
+		for (ii = 0; ii < nx; ii++)
 			in->x[ii] = xref[ii];
-		}
 
 		// p
-		for (ii = 0;ii < nu; ii++){
+		for (ii = 0;ii < nu; ii++)
 			in->u[ii] = 1.0;
-		}
 
 		// seeds forw
 		for (ii = 0; ii < nx * NF; ii++)
@@ -336,30 +296,27 @@ int main()
 		for (ii = 0; ii < nx; ii++)
 			in->S_adj[ii] = 1.0;
 
-/************************************************
-* sim out
-************************************************/
+		/************************************************
+		* sim solver
+		************************************************/
 
-		int out_size = sim_out_calculate_size(config, dims);
-		void *out_mem = malloc(out_size);
-		sim_out *out = sim_out_assign(config, dims, out_mem);
+		sim_solver *sim_solver = sim_create(config, dims, opts);
 
-/************************************************
-* sim solver
-************************************************/
+		int acados_return;
 
-		acados_tic(&timer);
+    	// acados_timer timer;
+		// acados_tic(&timer);
 
 		for (ii=0;ii<NREP;ii++)
-			config->evaluate(config, in, out, opts, mem, work);
+		    acados_return = sim_solve(sim_solver, in, out);
 
-		/* Time1 = acados_toc(&timer)/NREP; */
+		// double cpu_time = acados_toc(&timer)/NREP;
 
 		double *xn = out->xn;
 
-/************************************************
-* printing
-************************************************/
+		/************************************************
+		* printing
+		************************************************/
 
 		printf("\nxn: \n");
 		for (ii=0;ii<nx;ii++)
@@ -379,7 +336,8 @@ int main()
 		}
 
 		double *S_adj_out;
-		if(opts->sens_adj){
+		if(opts->sens_adj)
+		{
 			S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
 			for (ii=0;ii<nx+nu;ii++){
@@ -389,7 +347,8 @@ int main()
 		}
 
 		double *S_hess_out;
-		if(opts->sens_hess){
+		if(opts->sens_hess)
+		{
 			double zero = 0.0;
 			S_hess_out = out->S_hess;
 			printf("\nS_hess_out: \n");
@@ -405,12 +364,12 @@ int main()
 			}
 		}
 
-
 		printf("\n");
 		printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
 		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 
-		if(opts->sens_adj){
+		if(opts->sens_adj)
+		{
 			struct blasfeo_dmat sA;
 			blasfeo_allocate_dmat(nx, nx+nu, &sA);
 			blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
@@ -421,8 +380,8 @@ int main()
 
 			struct blasfeo_dvec sz;
 			blasfeo_allocate_dvec(nx+nu, &sz);
-//			blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
-//			blasfeo_print_tran_dvec(nx, &sx, 0);
+			// blasfeo_print_dmat(nx, nx+nu, &sA, 0, 0);
+			// blasfeo_print_tran_dvec(nx, &sx, 0);
 			blasfeo_dgemv_t(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
 
 			printf("\nJac times lambdaX:\n");
@@ -432,36 +391,19 @@ int main()
 			blasfeo_free_dvec(&sx);
 			blasfeo_free_dvec(&sz);
 		}
+		free(sim_solver);
+		free(in);
+		free(out);
 
-/************************************************
-* free
-************************************************/
-
-		free(config_mem);
-		free(dims_mem);
-		free(opts_mem);
-		free(mem_mem);
-		free(work);
-		free(in_mem);
-		free(out_mem);
-
+		free(opts);
+		free(config);
 	}
 
-	// explicit model
-	free(forw_vde_mem);
-	free(adj_vde_mem);
-	free(hess_ode_mem);
-	// implicit model
-	free(ode_mem);
-	free(jac_x_ode_mem);
-	free(jac_xdot_ode_mem);
-	free(jac_u_ode_mem);
+	/************************************************
+	* return
+	************************************************/
 
-/************************************************
-* return
-************************************************/
-
-	printf("\nsuccess!\n\n");
+	printf("\nsuccess! (RESULT NOT CHECKED) \n\n");
 
     return 0;
 }

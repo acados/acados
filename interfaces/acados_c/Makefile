@@ -26,8 +26,8 @@ OBJS += legacy_create_i.o
 # OBJS += ocp_nlp.o
 OBJS += ocp_qp_interface.o
 OBJS += options_i.o
-OBJS += sim_i.o
-OBJS += external_function_generic.o
+OBJS += sim_interface.o
+OBJS += external_function_interface.o
 
 static_library: $(OBJS)
 	ar rcs libacados_c.a $(OBJS)

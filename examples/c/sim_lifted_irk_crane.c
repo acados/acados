@@ -92,7 +92,7 @@ int main() {
 	exfun_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
 	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
 
-	create_external_function_casadi(&exfun_forw_vde);
+	external_function_casadi_create(&exfun_forw_vde);
 
 	// jacobian explicit ODE
 
@@ -102,7 +102,7 @@ int main() {
 	exfun_jac.casadi_sparsity_in = &jacFun_sparsity_in;
 	exfun_jac.casadi_sparsity_out = &jacFun_sparsity_out;
 
-	create_external_function_casadi(&exfun_jac);
+	external_function_casadi_create(&exfun_jac);
 
 /************************************************
 * bla bla bla
@@ -293,8 +293,8 @@ int main() {
 * free
 ************************************************/
 
-	free_external_function_casadi(&exfun_forw_vde);
-	free_external_function_casadi(&exfun_jac);
+	external_function_casadi_free(&exfun_forw_vde);
+	external_function_casadi_free(&exfun_jac);
 
     free(xref);
 	free(sim_opts_mem);
@@ -369,7 +369,7 @@ int main() {
 	config->opts_initialize_default(config, dims, opts);
 
 	opts->sens_adj = true;
-	
+
 /************************************************
 * sim memory
 ************************************************/
@@ -519,7 +519,7 @@ int main() {
 /************************************************
 * free
 ************************************************/
-	
+
 	free(forw_vde_mem);
 	free(jac_mem);
 
