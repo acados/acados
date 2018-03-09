@@ -40,7 +40,7 @@ extern "C" {
 
 
 /************************************************
-* arguments
+* options
 ************************************************/
 
 typedef struct
@@ -53,7 +53,8 @@ typedef struct
     // QP solver
     void *qp_solver_opts;
     // integrators
-    void **sim_solvers_opts;
+//    void **sim_solvers_opts;
+	void **dynamics_opts;
 } ocp_nlp_gn_sqp_opts;
 
 //

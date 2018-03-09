@@ -1036,8 +1036,10 @@ int main() {
 
 	ocp_nlp_gn_sqp_opts_initialize_default(config, dims, nlp_opts);
 
-    for (int i = 0; i < NN; ++i) {
-        sim_rk_opts *sim_opts = nlp_opts->sim_solvers_opts[i];
+    for (int i = 0; i < NN; ++i)
+	{
+		ocp_nlp_dynamics_opts *dynamics_opts = nlp_opts->dynamics_opts[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 #if DYNAMICS==2
 		sim_opts->jac_reuse = true;
 #endif
