@@ -49,13 +49,6 @@ typedef struct
 
 typedef struct
 {
-	// no memory
-} sim_erk_memory;
-
-
-
-typedef struct
-{
 
     double *rhs_forw_in;  // x + S + p
 

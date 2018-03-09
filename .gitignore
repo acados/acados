@@ -52,6 +52,20 @@ Thumbs.db
 *.blg
 *.synctex
 
+# dSpace #
+##########
+
+*.map
+*.sdf
+*.ppc
+*.trc
+*.trz
+*.tmw
+*.hex
+*.srec
+*.mk
+*.dsbuildinfo
+
 # External #
 ############
 *external/OOQP
@@ -87,3 +101,4 @@ cmakelint
 .vs
 examples/python/__pycache__/
 build*
+*rti1401

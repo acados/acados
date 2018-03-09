@@ -45,12 +45,6 @@ typedef struct
 
 
 
-typedef struct
-{
-	// no memory
-} sim_irk_memory;
-
-
 
 typedef struct
 {
