@@ -77,7 +77,7 @@ int main() {
     void *gnsf_opts_mem = malloc(gnsf_opts_size);
     gnsf_opts *opts = gnsf_opts_assign(dims, gnsf_opts_mem);
     opts->sens_forw = 1;
-    opts->sens_adj = 0;
+    opts->sens_adj = 1;
     opts->newton_max = 3;
 
     // set up gnsf_fixed
@@ -133,18 +133,18 @@ int main() {
     void *work_ = malloc(gnsf_workspace_size);
 
     printf("Newton_iter = %d \t, num_steps = %d \n", opts->newton_max, dims->num_steps);
-    int num_executions = 10000;
-    double casadi_times[num_executions];
-    double gnsf_times[num_executions];
+    int NREP = 10000;
+    double casadi_times[NREP];
+    double gnsf_times[NREP];
 
-    for (int i = 0; i < num_executions; i++) {
+    for (int i = 0; i < NREP; i++) {
         gnsf_simulate( dims, fix, in, out, opts, work_);
 
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
     }
-    double casadi_time = minimum_of_doubles(casadi_times, num_executions);
-    double gnsf_time = minimum_of_doubles(gnsf_times, num_executions);
+    double casadi_time = minimum_of_doubles(casadi_times, NREP);
+    double gnsf_time = minimum_of_doubles(gnsf_times, NREP);
 
 
     printf("xf =\n");

@@ -147,7 +147,7 @@ int main() {
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
 
-	opts->sens_adj = false;
+	opts->sens_adj = true;
     // d_print_e_mat(num_stages, num_stages, opts->A_mat, num_stages);
     // d_print_e_mat(1, num_stages, opts->b_vec, 1);
     // d_print_e_mat(1, num_stages, opts->c_vec, 1);
@@ -224,7 +224,6 @@ int main() {
 
     Time1 = acados_toc(&timer)/NREP;
     double IRK_time = minimum_of_doubles(irk_times, NREP);
-    printf("time = %f [ms]", IRK_time*1000);
     double *xn = out->xn;
 
 /************************************************
@@ -243,14 +242,14 @@ int main() {
         d_print_e_mat(dims->nx, dims->nx + dims->nu, out->S_forw, dims->nx);
     }
 
-    struct blasfeo_dvec sz;
-    blasfeo_allocate_dvec(nx+nu, &sz);
-
     double *S_adj_out;
     if(opts->sens_adj){
+        struct blasfeo_dvec sz;
+        blasfeo_allocate_dvec(nx+nu, &sz);
         printf("adjoint_result = \n");
         blasfeo_pack_dvec(dims->nx +dims->nu, out->S_adj, &sz, 0);
         blasfeo_print_exp_tran_dvec( nx + nu, &sz, 0);
+        blasfeo_free_dvec(&sz);
     }
 
     double *S_hess_out;
@@ -269,11 +268,12 @@ int main() {
             printf("\n");
         }
     }
+    printf("time = %f [ms]\n", IRK_time*1000);
 
 
-    printf("\n");
-    printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
-    printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
+    // printf("\n");
+    // printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
+    // printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
 
     if(opts->sens_adj){
         struct blasfeo_dmat sA;
@@ -292,22 +292,22 @@ int main() {
         struct blasfeo_dvec dummy;
 		blasfeo_allocate_dvec(nx+nu, &dummy);
 		// blasfeo_print_exp_dmat(nx+nu, nx+nu, &sA, 0, 0);
-        printf("S_adj_in=\n");
-		blasfeo_print_tran_dvec(nx+nu, &sx, 0);
+        // printf("S_adj_in=\n");
+		// blasfeo_print_tran_dvec(nx+nu, &sx, 0);
         blasfeo_dgemv_t(nx+nu, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &dummy, 0, &sz, 0);
 
-        printf("\nJac times lambdaX:\n");
-        blasfeo_print_exp_tran_dvec(nx+nu, &sz, 0);
+        // printf("\nJac times lambdaX:\n");
+        // blasfeo_print_exp_tran_dvec(nx+nu, &sz, 0);
 
 		blasfeo_free_dmat(&sA);
 		blasfeo_free_dvec(&sx);
 		blasfeo_free_dvec(&sz);
+        blasfeo_free_dvec(&dummy);
     }
 
 /************************************************
 * free
 ************************************************/
-	
 	free(ode_mem);
 	free(jac_x_ode_mem);
 	free(jac_xdot_ode_mem);
@@ -319,8 +319,8 @@ int main() {
 	free(work);
 	free(in_mem);
 	free(out_mem);
-
-
+    free(config_mem);
+    free(xref);
 
 #else
 
