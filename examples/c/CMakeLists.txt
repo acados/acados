@@ -81,10 +81,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- mass_spring
 
-    if(ACADOS_WITH_C_INTERFACE)
-        # add_executable(mass_spring_example mass_spring_example.c)
-        # target_link_libraries(mass_spring_example acados)
-        # add_test(mass_spring_example mass_spring_example)
+    if (0) #(ACADOS_WITH_C_INTERFACE)
+        add_executable(mass_spring_example mass_spring_example.c)
+        target_link_libraries(mass_spring_example acados)
+        add_test(mass_spring_example mass_spring_example)
     else()
         add_executable(
             mass_spring_example_no_interface

@@ -135,7 +135,6 @@ int main() {
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-					solver_config->N2 = N; // full horizon
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
@@ -146,7 +145,7 @@ int main() {
 					partial_condensing_solver_opts = solver_opts;
 					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
-
+					partial_condensing_solver_opts->pcond_opts->N2 = N;
 					break;
 
 				case 1: // PARTIAL_CONDENSING_HPIPM
@@ -155,7 +154,7 @@ int main() {
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-					solver_config->N2 = N2;
+					// solver_config->N2 = N2;
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
@@ -166,6 +165,7 @@ int main() {
 					partial_condensing_solver_opts = solver_opts;
 					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 					hpipm_opts->hpipm_opts->iter_max = 30;
+					partial_condensing_solver_opts->pcond_opts->N2 = N2;
 
 					break;
 
@@ -237,7 +237,6 @@ int main() {
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_hpmpc_config_initialize_default(solver_config->qp_solver);
-					solver_config->N2 = N2;
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
@@ -245,7 +244,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					partial_condensing_solver_opts = solver_opts;
+					partial_condensing_solver_opts = solver_opts;
+					partial_condensing_solver_opts->pcond_opts->N2 = N2;
 //					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 //					hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
@@ -259,7 +259,6 @@ int main() {
 					// config
 					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
 					ocp_qp_qpdunes_config_initialize_default(solver_config->qp_solver);
-					solver_config->N2 = N2;
 
 					// opts
 					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
@@ -267,7 +266,8 @@ int main() {
 					solver_opts_mem = malloc(solver_opts_size);
 					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
 					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					partial_condensing_solver_opts = solver_opts;
+					partial_condensing_solver_opts = solver_opts;
+					partial_condensing_solver_opts->pcond_opts->N2 = N2;
 //					hpipm_opts = partial_condensing_solver_opts->qp_solver_opts;
 //					hpipm_opts->hpipm_opts->iter_max = 30;
 #endif
