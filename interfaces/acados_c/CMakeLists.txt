@@ -1,8 +1,4 @@
 
-add_subdirectory(dense_qp)
-add_subdirectory(ocp_qp)
-add_subdirectory(sim)
-
 set(INTERFACES_ACADOS_C_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/external_function_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/dense_qp_interface.c
