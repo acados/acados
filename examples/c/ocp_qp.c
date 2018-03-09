@@ -26,7 +26,7 @@ int main() {
     ocp_qp_solver_plan plan;
     plan.qp_solver = FULL_CONDENSING_HPIPM;
 
-    ocp_qp_xcond_solver_config *config = ocp_qp_config_create(&plan, QP_HORIZON);
+    ocp_qp_xcond_solver_config *config = ocp_qp_config_create(&plan);
 
     ocp_qp_dims dims;
 

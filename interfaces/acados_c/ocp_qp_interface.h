@@ -48,8 +48,8 @@ typedef struct {
     void *work;
 } ocp_qp_solver;
 
-// TODO(dimitris): remove N2
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan, int N2);
+//
+ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan);
 //
 ocp_qp_dims *ocp_qp_dims_create(int N);
 //

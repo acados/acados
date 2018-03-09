@@ -36,7 +36,6 @@
 
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan)
 {
-
     int bytes = dense_qp_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     qp_solver_config *solver_config = dense_qp_solver_config_assign(ptr);

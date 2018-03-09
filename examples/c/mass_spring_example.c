@@ -17,54 +17,30 @@
  *
  */
 
+// TODO(dimitris): VALGRIND!!! (WITHOUT QPDUNES)
+
 // external
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 // acados
 #include <acados/utils/print.h>
-#include <acados/ocp_qp/ocp_qp_partial_condensing_solver.h>
-#include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
-#include <acados/ocp_qp/ocp_qp_hpipm.h>
-#ifdef ACADOS_WITH_HPMPC
-#include <acados/ocp_qp/ocp_qp_hpmpc.h>
-#endif
-#ifdef ACADOS_WITH_QPDUNES
-#include <acados/ocp_qp/ocp_qp_qpdunes.h>
-#endif
-#include <acados/dense_qp/dense_qp_hpipm.h>
-#include <acados/dense_qp/dense_qp_qpoases.h>
-#ifdef ACADOS_WITH_QORE
-#include <acados/dense_qp/dense_qp_qore.h>
-#endif
 
 // c interface
-#ifdef ACADOS_WITH_C_INTERFACE
 #include <acados_c/ocp_qp_interface.h>
 #include <acados_c/options.h>
-#include <acados_c/legacy_create.h>
-#endif
 
-// mass spring
+// mass spring helper functions
 ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
-
-
 
 #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
 #endif
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-
-
 #define NREP 100
-
-
-
-//#include "./mass_spring.c"
-
-
 
 int main() {
     printf("\n");
@@ -88,10 +64,9 @@ int main() {
     int nb_ = 11;  // number of box constrained inputs and states
     int ng_ = 0;   // 4;  // number of general constraints
 
-    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
-
     #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-    int ngN = num_of_stages_equal_to_zero;  // number of general constraints at the last stage
+    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
+    int ngN = num_of_stages_equal_to_zero;
     #else
     int ngN = 0;
     #endif
@@ -106,11 +81,8 @@ int main() {
     int num_N2_values = 3;
     int N2_values[3] = {15, 5, 3};
 
-#ifdef ACADOS_WITH_C_INTERFACE
-
-
-
     int ii_max = 6;
+
     #ifndef ACADOS_WITH_HPMPC
     ii_max--;
     #endif
@@ -120,7 +92,6 @@ int main() {
     #ifndef ACADOS_WITH_QORE
     ii_max--;
     #endif
-
 
 
     // choose ocp qp solvers
@@ -141,33 +112,29 @@ int main() {
     };
 
 
-
     /************************************************
-     * ocp qp in
+     * ocp qp in/out
      ************************************************/
 
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
+    ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims);
 
     /************************************************
-     * ocp qp out
+     * simulations
      ************************************************/
 
-#ifdef ACADOS_WITH_C_INTERFACE
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_dims);
-#else // ! ACADOS_WITH_C_INTERFACE
-	int qp_out_size = ocp_qp_out_calculate_size(qp_dims);
-	void *qp_out_mem = malloc(qp_out_size);
-	ocp_qp_out *qp_out = assign_ocp_qp_out(qp_dims, qp_out_mem);
-#endif // ACADOS_WITH_C_INTERFACE
-
-
+    ocp_qp_xcond_solver_config *config;
 
     for (int ii = 0; ii < ii_max; ii++)
     {
         ocp_qp_solver_plan plan;
         plan.qp_solver = ocp_qp_solvers[ii];
 
-        void *args = ocp_qp_create_args(&plan, qp_dims);
+        config = ocp_qp_config_create(&plan);
+
+
+        void *opts = ocp_qp_opts_create(config, qp_dims);
+        bool ok;
 
         for (int jj = 0; jj < num_N2_values; jj++)
         {
@@ -178,30 +145,52 @@ int main() {
             {
                 case PARTIAL_CONDENSING_HPIPM:
                     printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)args)->pcond_opts)->N2 = N2;
-                    ((ocp_qp_hpipm_opts *)((ocp_qp_partial_condensing_solver_opts *)args)->qp_solver_opts)->hpipm_opts->iter_max = 30;
+
+                    ok = set_option_int(opts, "sparse_hpipm.N2", N2);
+                    assert(ok = true && "specified option not found!");
+                    ok = set_option_int(opts, "sparse_hpipm.max_iter", 30);
+                    assert(ok = true && "specified option not found!");
+                    ok = set_option_double(opts, "sparse_hpipm.res_d_max", 1e-8);
+                    assert(ok = true && "specified option not found!");
+
                     break;
                 case PARTIAL_CONDENSING_HPMPC:
-#ifdef ACADOS_WITH_HPMPC
+                #ifdef ACADOS_WITH_HPMPC
                     printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)args)->pcond_opts)->N2 = N2;
-                    ((ocp_qp_hpmpc_opts *)((ocp_qp_partial_condensing_solver_opts *)args)->qp_solver_opts)->max_iter = 30;
-#endif
+
+                    ok = set_option_int(opts, "hpmpc.N2", N2);
+                    assert(ok = true && "specified option not found!");
+                    ok = set_option_int(opts, "hpmpc.max_iter", 30);
+                    assert(ok = true && "specified option not found!");
+                #endif
                     break;
                 case PARTIAL_CONDENSING_QPDUNES:
-#ifdef ACADOS_WITH_QPDUNES
+                #ifdef ACADOS_WITH_QPDUNES
                     printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
-                    #ifdef ELIMINATE_X0
+                #ifdef ELIMINATE_X0
                     assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
-                    #endif
-                    ocp_qp_partial_condensing_solver_opts *solver_args = (ocp_qp_partial_condensing_solver_opts *)args;
-                    ocp_qp_qpdunes_opts *qpdunes_args = (ocp_qp_qpdunes_opts *)solver_args->qp_solver_opts;
-                    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-                    qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
-                    #endif
-                    qpdunes_args->warmstart = 0;
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)args)->pcond_opts)->N2 = N2;
-#endif
+                #endif
+
+                #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+                    ok = set_option_int(opts, "qpdunes.clipping", 0);
+                    assert(ok = true && "specified option not found!");
+                #else
+                    if (N2 == N)
+                    {
+                        ok = set_option_int(opts, "qpdunes.clipping", 1);
+                        assert(ok = true && "specified option not found!");
+                    } else
+                    {
+                        ok = set_option_int(opts, "qpdunes.clipping", 0);
+                        assert(ok = true && "specified option not found!");
+                    }
+                #endif
+                    ok = set_option_int(opts, "qpdunes.warm_start", 0);
+                    assert(ok = true && "specified option not found!");
+
+                    ok = set_option_int(opts, "qpdunes.N2", N2);
+                    assert(ok = true && "specified option not found!");
+                #endif
                     break;
                 case FULL_CONDENSING_HPIPM:
                     printf("\nFull condensing + HPIPM:\n\n");
@@ -221,7 +210,7 @@ int main() {
                     break;
             }
 
-            ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
+            ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, opts);
 
             int acados_return = 0;
 
@@ -257,31 +246,18 @@ int main() {
             }
 
             /************************************************
-             * compute residuals
-             ************************************************/
-
-            ocp_qp_res *qp_res = create_ocp_qp_res(qp_dims);
-            ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_dims);
-            ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
-
-            /************************************************
              * print solution
              ************************************************/
 
-//			 print_ocp_qp_out(qp_out);
-
-            /************************************************
-             * print residuals
-             ************************************************/
-
-//			 print_ocp_qp_res(qp_res);
+			// print_ocp_qp_out(qp_out);
 
             /************************************************
              * compute infinity norm of residuals
              ************************************************/
 
             double res[4];
-            ocp_qp_res_compute_nrm_inf(qp_res, res);
+            ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
+
             double max_res = 0.0;
             for (int ii = 0; ii < 4; ii++)
                 max_res = (res[ii] > max_res) ? res[ii] : max_res;
@@ -294,247 +270,16 @@ int main() {
 
             print_ocp_qp_info(&min_info);
 
-            /************************************************
-             * free memory
-             ************************************************/
-
             free(qp_solver);
 
+            // NOTE(dimitris): run dense solver once (sparse solvers multiple times for N2 values)
             if (plan.qp_solver >= FULL_CONDENSING_HPIPM) break;
         }
-        free(args);
+        free(config);
+        free(opts);
     }
+    free(qp_in);
+    free(qp_out);
 
-
-
-#else // ! ACADOS_WITH_C_INTERFACE
-
-
-
-	int ii_max = 4; // HPIPM
-
-    for (int ii = 0; ii < ii_max; ii++)
-    {
-
-        for (int jj = 0; jj < num_N2_values; jj++)
-        {
-            int N2 = N2_values[jj];
-
-			int config_size = ocp_qp_xcond_solver_config_calculate_size();
-			void *config_mem = malloc(config_size);
-			ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(config_mem);
-
-			int solver_opts_size;
-			void *solver_opts_mem;
-			void *solver_opts = NULL;
-			ocp_qp_partial_condensing_solver_opts *sparse_solver_opts;
-			ocp_qp_hpipm_opts *hpipm_opts;
-			int solver_mem_size;
-			void *solver_mem_mem;
-			void *solver_mem;
-			int solver_work_size;
-			void *solver_work;
-			dense_qp_hpipm_opts *dense_hpipm_opts;
-
-			switch(ii)
-			{
-				case 0: // HPIPM
-                    printf("\nHPIPM\n\n");
-
-					// config
-					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
-					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-					solver_config->N2 = N; // full horizon
-
-					// opts
-					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
-					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
-					solver_config->opts_initialize_default(solver_config, solver_opts);
-					sparse_solver_opts = solver_opts;
-					hpipm_opts = sparse_solver_opts->qp_solver_opts;
-					hpipm_opts->hpipm_opts->iter_max = 30;
-
-					break;
-
-				case 1: // PARTIAL_CONDENSING_HPIPM
-                    printf("\nPARTIAL_CONDENSING_HPIPM, N2 = %d\n\n", N2);
-
-					// config
-					ocp_qp_partial_condensing_solver_config_initialize_default(solver_config);
-					ocp_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-					solver_config->N2 = N2;
-
-					// opts
-					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
-					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
-					solver_config->opts_initialize_default(solver_config, solver_opts);
-					sparse_solver_opts = solver_opts;
-					hpipm_opts = sparse_solver_opts->qp_solver_opts;
-					hpipm_opts->hpipm_opts->iter_max = 30;
-
-					break;
-
-				case 2: // FULL_CONDENSING_HPIPM
-                    printf("\nFULL_CONDENSING_HPIPM\n\n");
-
-					// config
-					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
-					dense_qp_hpipm_config_initialize_default(solver_config->qp_solver);
-
-					// opts
-					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
-					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
-					solver_config->opts_initialize_default(solver_config, solver_opts);
-					sparse_solver_opts = solver_opts;
-					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
-					dense_hpipm_opts->hpipm_opts->iter_max = 30;
-
-					break;
-
-				case 3: // FULL_CONDENSING_QPOASES
-                    printf("\nFULL_CONDENSING_QPOASES\n\n");
-
-					// config
-					ocp_qp_full_condensing_solver_config_initialize_default(solver_config);
-					dense_qp_qpoases_config_initialize_default(solver_config->qp_solver);
-
-					// opts
-					solver_opts_size = solver_config->opts_calculate_size(solver_config, qp_dims);
-//					printf("\nopts size = %d\n", solver_opts_size);
-					solver_opts_mem = malloc(solver_opts_size);
-					solver_opts = solver_config->opts_assign(solver_config, qp_dims, solver_opts_mem);
-					solver_config->opts_initialize_default(solver_config, solver_opts);
-//					sparse_solver_opts = solver_opts;
-//					dense_hpipm_opts = sparse_solver_opts->qp_solver_opts;
-//					dense_hpipm_opts->hpipm_opts->iter_max = 30;
-
-					break;
-
-				default:
-					printf("\nWrong solver name!!!\n\n");
-			}
-
-
-			/************************************************
-			 * ocp qp in
-			 ************************************************/
-
-			ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(solver_config, N, nx_, nu_, nb_, ng_, ngN);
-
-			/************************************************
-			 * ocp qp out
-			 ************************************************/
-
-			int qp_out_size = ocp_qp_out_calculate_size(solver_config, qp_dims);
-			void *qp_out_mem = malloc(qp_out_size);
-			ocp_qp_out *qp_out = ocp_qp_out_assign(solver_config, qp_dims, qp_out_mem);
-
-
-            /************************************************
-            * memory
-            ************************************************/
-
-			solver_mem_size = solver_config->memory_calculate_size(solver_config, qp_dims, solver_opts);
-//			printf("\nmem size = %d\n", solver_mem_size);
-			solver_mem_mem = malloc(solver_mem_size);
-			solver_mem = solver_config->memory_assign(solver_config, qp_dims, solver_opts, solver_mem_mem);
-
-            /************************************************
-            * workspace
-            ************************************************/
-
-			solver_work_size = solver_config->workspace_calculate_size(solver_config, qp_dims, solver_opts);
-//			printf("\nwork size = %d\n", solver_work_size);
-			solver_work = malloc(solver_work_size);
-
-            /************************************************
-            * solve
-            ************************************************/
-
-			solver_config->evaluate(solver_config, qp_in, qp_out, solver_opts, solver_mem, solver_work);
-
-            /************************************************
-            * info
-            ************************************************/
-
-            ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-            ocp_qp_info min_info;
-
-			min_info.num_iter = info->num_iter;
-			min_info.total_time = info->total_time;
-			min_info.condensing_time = info->condensing_time;
-			min_info.solve_QP_time = info->solve_QP_time;
-			min_info.interface_time = info->interface_time;
-
-            /************************************************
-            * print solution
-            ************************************************/
-
-//			 print_ocp_qp_out(qp_out);
-
-            /************************************************
-            * compute residuals
-            ************************************************/
-
-			int res_size = ocp_qp_res_calculate_size(qp_dims);
-//			printf("\nres size = %d\n", res_size);
-			void *res_mem = malloc(res_size);
-			ocp_qp_res *qp_res = ocp_qp_res_assign(qp_dims, res_mem);
-
-			int res_work_size = ocp_qp_res_workspace_calculate_size(qp_dims);
-//			printf("\nres work size = %d\n", res_work_size);
-			void *res_work_mem = malloc(res_work_size);
-			ocp_qp_res_ws *res_ws = ocp_qp_res_workspace_assign(qp_dims, res_work_mem);
-
-            ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
-
-            /************************************************
-             * print residuals
-             ************************************************/
-
-//			 print_ocp_qp_res(qp_res);
-
-            /************************************************
-            * compute infinity norm of residuals
-            ************************************************/
-
-            double res[4];
-            ocp_qp_res_compute_nrm_inf(qp_res, res);
-            double max_res = 0.0;
-            for (int ii = 0; ii < 4; ii++)
-                max_res = (res[ii] > max_res) ? res[ii] : max_res;
-
-            /************************************************
-            * print stats
-            ************************************************/
-
-            printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
-
-            print_ocp_qp_info(&min_info);
-
-            /************************************************
-            * free memory
-            ************************************************/
-
-			// TODO
-			free(config_mem);
-
-
-
-			if (ii==0 | ii==2 | ii==3)
-				break;
-
-		}
-
-	}
-
-#endif
-
-    return 0;
+    printf("\nsuccess!\n\n");
 }

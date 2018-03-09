@@ -38,7 +38,7 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     if (!is_valid_nu || nbx.size() != expected_size || !is_valid_nbu || ng.size() != expected_size)
         throw std::invalid_argument("All dimensions should have length N+1");
 
-    auto dim = std::unique_ptr<ocp_qp_dims>(create_ocp_qp_dims(N));
+    auto dim = std::unique_ptr<ocp_qp_dims>(ocp_qp_dims_create(N));
 
     // states
     std::copy_n(std::begin(nx), N+1, dim->nx);
@@ -62,7 +62,7 @@ ocp_qp::ocp_qp(std::vector<uint> nx, std::vector<uint> nu, std::vector<uint> nbx
     std::vector<uint> ns(N+1, 0);
     std::copy_n(std::begin(ns), N+1, dim->ns);
 
-    qp = std::unique_ptr<ocp_qp_in>(create_ocp_qp_in(dim.get()));
+    qp = std::unique_ptr<ocp_qp_in>(ocp_qp_in_create(NULL, dim.get()));
 
     for (uint i = 0; i < N; ++i) {
         std::vector<uint> idx_states(nx.at(i));
@@ -163,7 +163,10 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
     squeeze_dimensions();
     cached_solver = solver_name;
     ocp_qp_solver_plan plan = string_to_plan(solver_name);
-    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_create_args(&plan, qp->dim), std::free);
+
+    std::unique_ptr<ocp_qp_xcond_solver_config> config(ocp_qp_config_create(&plan));
+
+    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_opts_create(config.get(), qp->dim), std::free);
 
     map<string, option_t *> solver_options;
     auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
@@ -180,7 +183,7 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
         if (!found)
             throw std::invalid_argument("Option " + option_name + " not known.");
     }
-    solver.reset(ocp_qp_create(&plan, qp->dim, args.get()));
+    solver.reset(ocp_qp_create(config.get(), qp->dim, args.get()));
     needs_initializing = false;
 }
 
@@ -295,7 +298,7 @@ ocp_qp_solution ocp_qp::solve() {
 
     fill_in_bounds();
 
-    auto result = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(qp->dim));
+    auto result = std::unique_ptr<ocp_qp_out>(ocp_qp_out_create(NULL, qp->dim));
 
     // std::cout << *this;
 

@@ -78,7 +78,7 @@ int main() {
     * partially condensed ocp qp
     ************************************************/
 
-    ocp_qp_in *pcond_qp_in = create_ocp_qp_in(pcond_opts->pcond_dims);
+    ocp_qp_in *pcond_qp_in = ocp_qp_in_create(pcond_opts->pcond_dims);
 
     // print_ocp_qp_dims(qp_in->dim);
     // print_ocp_qp_dims(pcond_qp_in->dim);
@@ -87,13 +87,13 @@ int main() {
     * ocp qp solution
     ************************************************/
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_dims);
+    ocp_qp_out *qp_out = ocp_qp_out_create(qp_dims);
 
     /************************************************
     * partially condensed ocp qp solution
     ************************************************/
 
-    ocp_qp_out *pcond_qp_out = create_ocp_qp_out(pcond_qp_in->dim);
+    ocp_qp_out *pcond_qp_out = ocp_qp_out_create(pcond_qp_in->dim);
 
     /************************************************
     * ipm
@@ -102,7 +102,7 @@ int main() {
     ocp_qp_solver_plan plan;
     plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
-    void *arg = ocp_qp_create_args(&plan, qp_dims);
+    void *arg = ocp_qp_opts_create(&plan, qp_dims);
 
     // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
     ((ocp_qp_partial_condensing_args *)((ocp_qp_partial_condensing_solver_opts *)arg)->pcond_opts)->N2 = pcond_opts->N2;

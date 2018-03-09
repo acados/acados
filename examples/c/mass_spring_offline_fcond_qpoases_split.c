@@ -82,7 +82,7 @@ int main() {
     * ocp qp solution
     ************************************************/
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_in->dim);
+    ocp_qp_out *qp_out = ocp_qp_out_create(qp_in->dim);
 
     /************************************************
     * dense sol

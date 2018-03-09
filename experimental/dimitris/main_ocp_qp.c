@@ -39,7 +39,7 @@ int main() {
         nc[k] = NC;
     }
 
-    ocp_qp_in *qp_in = create_ocp_qp_in(N, nx, nu, nb, nc);
+    ocp_qp_in *qp_in = ocp_qp_in_create(N, nx, nu, nb, nc);
 
     printf("dimensions:\n");
     for (int_t k = 0; k < N+1; k++) {

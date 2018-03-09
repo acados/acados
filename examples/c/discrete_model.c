@@ -109,7 +109,7 @@ int main() {
     ocp_nlp_sqp_args *nlp_args = ocp_nlp_sqp_create_arguments();
     nlp_args->maxIter = num_sqp_iterations;
     nlp_args->sensitivity_method = &sensitivity_method;
-    ocp_qp_in *qp_in = create_ocp_qp_in(N, nx, nu, nb, ng);
+    ocp_qp_in *qp_in = ocp_qp_in_create(N, nx, nu, nb, ng);
     nlp_args->qp_solver = create_ocp_qp_solver(qp_in, "condensing_qpoases", NULL);
     ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_create_memory(&nlp, nlp_args);
     void *nlp_sqp_work = ocp_nlp_sqp_create_workspace(&nlp, nlp_args);

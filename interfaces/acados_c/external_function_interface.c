@@ -21,11 +21,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "acados_c/external_function_interface.h"
+
 #include "acados/utils/external_function_generic.h"
 
 
 
-void create_external_function_casadi(external_function_casadi *fun)
+void external_function_casadi_create(external_function_casadi *fun)
 {
 
 	int fun_size = external_function_casadi_calculate_size(fun);
@@ -38,7 +40,7 @@ void create_external_function_casadi(external_function_casadi *fun)
 
 
 
-void create_array_external_function_casadi(int size, external_function_casadi *funs)
+void external_function_casadi_create_array(int size, external_function_casadi *funs)
 {
 
 	// loop index
@@ -77,7 +79,7 @@ void create_array_external_function_casadi(int size, external_function_casadi *f
 
 
 
-void free_external_function_casadi(external_function_casadi *fun)
+void external_function_casadi_free(external_function_casadi *fun)
 {
 
 	free(fun->ptr_ext_mem);
@@ -88,7 +90,7 @@ void free_external_function_casadi(external_function_casadi *fun)
 
 
 
-void free_array_external_function_casadi(int size, external_function_casadi *funs)
+void external_function_casadi_free_array(int size, external_function_casadi *funs)
 {
 
 	free(funs[0].ptr_ext_mem);

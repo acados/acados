@@ -594,8 +594,8 @@ int main() {
 #if DYNAMICS==0 | DYNAMICS==1
 
 #ifdef ACADOS_WITH_C_INTERFACE
-	create_array_external_function_casadi(NN, forw_vde_casadi);
-	create_array_external_function_casadi(NN, jac_ode_casadi);
+	external_function_casadi_create_array(NN, forw_vde_casadi);
+	external_function_casadi_create_array(NN, jac_ode_casadi);
 #else // ! ACADOS_WITH_C_INTERFACE
 	// forw_vde
 	tmp_size = 0;
@@ -628,10 +628,10 @@ int main() {
 #else // DYNAMICS==2
 
 #ifdef ACADOS_WITH_C_INTERFACE
-	create_array_external_function_casadi(NN, impl_ode_casadi);
-	create_array_external_function_casadi(NN, impl_jac_x_casadi);
-	create_array_external_function_casadi(NN, impl_jac_xdot_casadi);
-	create_array_external_function_casadi(NN, impl_jac_u_casadi);
+	external_function_casadi_create_array(NN, impl_ode_casadi);
+	external_function_casadi_create_array(NN, impl_jac_x_casadi);
+	external_function_casadi_create_array(NN, impl_jac_xdot_casadi);
+	external_function_casadi_create_array(NN, impl_jac_u_casadi);
 #else // ! ACADOS_WITH_C_INTERFACE
 	// impl_ode
 	tmp_size = 0;
@@ -698,7 +698,7 @@ int main() {
 	select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
 
 #ifdef ACADOS_WITH_C_INTERFACE
-	create_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
+	external_function_casadi_create_array(NN+1, ls_cost_jac_casadi);
 #else // ! ACADOS_WITH_C_INTERFACE
 	// ls_cost_jac
 	tmp_size = 0;
@@ -1064,8 +1064,8 @@ int main() {
 #if DYNAMICS==0 | DYNAMICS==1
 
 #ifdef ACADOS_WITH_C_INTERFACE
-	free_array_external_function_casadi(NN, forw_vde_casadi);
-	free_array_external_function_casadi(NN, jac_ode_casadi);
+	external_function_casadi_free_array(NN, forw_vde_casadi);
+	external_function_casadi_free_array(NN, jac_ode_casadi);
 #else // ! ACADOS_WITH_C_INTERFACE
 	free(forw_vde_casadi_mem);
 	free(jac_ode_casadi_mem);
@@ -1074,10 +1074,10 @@ int main() {
 #else // DYNAMICS==2
 
 #ifdef ACADOS_WITH_C_INTERFACE
-	free_array_external_function_casadi(NN, impl_ode_casadi);
-	free_array_external_function_casadi(NN, impl_jac_x_casadi);
-	free_array_external_function_casadi(NN, impl_jac_xdot_casadi);
-	free_array_external_function_casadi(NN, impl_jac_u_casadi);
+	external_function_casadi_free_array(NN, impl_ode_casadi);
+	external_function_casadi_free_array(NN, impl_jac_x_casadi);
+	external_function_casadi_free_array(NN, impl_jac_xdot_casadi);
+	external_function_casadi_free_array(NN, impl_jac_u_casadi);
 #else // ! ACADOS_WITH_C_INTERFACE
 	free(impl_ode_casadi_mem);
 	free(impl_jac_x_casadi_mem);
@@ -1088,7 +1088,7 @@ int main() {
 #endif // DYNAMICS
 
 #ifdef ACADOS_WITH_C_INTERFACE
-	free_array_external_function_casadi(NN+1, ls_cost_jac_casadi);
+	external_function_casadi_free_array(NN+1, ls_cost_jac_casadi);
 	free(cost_dims_mem);
 	free(dims_mem);
     free(nlp_in);

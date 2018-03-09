@@ -93,7 +93,7 @@ int main() {
 	exfun_ode.casadi_sparsity_in = &impl_odeFun_sparsity_in;
 	exfun_ode.casadi_sparsity_out = &impl_odeFun_sparsity_out;
 
-	create_external_function_casadi(&exfun_ode);
+	external_function_casadi_create(&exfun_ode);
 
 	// jac_x implicit ODE
 
@@ -103,7 +103,7 @@ int main() {
 	exfun_jac_x_ode.casadi_sparsity_in = &impl_jacFun_x_sparsity_in;
 	exfun_jac_x_ode.casadi_sparsity_out = &impl_jacFun_x_sparsity_out;
 
-	create_external_function_casadi(&exfun_jac_x_ode);
+	external_function_casadi_create(&exfun_jac_x_ode);
 
 	// jac_xdot implicit ODE
 
@@ -113,7 +113,7 @@ int main() {
 	exfun_jac_xdot_ode.casadi_sparsity_in = &impl_jacFun_xdot_sparsity_in;
 	exfun_jac_xdot_ode.casadi_sparsity_out = &impl_jacFun_xdot_sparsity_out;
 
-	create_external_function_casadi(&exfun_jac_xdot_ode);
+	external_function_casadi_create(&exfun_jac_xdot_ode);
 
 	// jac_u implicit ODE
 
@@ -123,7 +123,7 @@ int main() {
 	exfun_jac_u_ode.casadi_sparsity_in = &impl_jacFun_u_sparsity_in;
 	exfun_jac_u_ode.casadi_sparsity_out = &impl_jacFun_u_sparsity_out;
 
-	create_external_function_casadi(&exfun_jac_u_ode);
+	external_function_casadi_create(&exfun_jac_u_ode);
 
 /************************************************
 * sim dims
@@ -317,10 +317,10 @@ int main() {
 * free
 ************************************************/
 
-	free_external_function_casadi(&exfun_ode);
-	free_external_function_casadi(&exfun_jac_x_ode);
-	free_external_function_casadi(&exfun_jac_xdot_ode);
-	free_external_function_casadi(&exfun_jac_u_ode);
+	external_function_casadi_free(&exfun_ode);
+	external_function_casadi_free(&exfun_jac_x_ode);
+	external_function_casadi_free(&exfun_jac_xdot_ode);
+	external_function_casadi_free(&exfun_jac_u_ode);
 
     free(xref);
     free(irk_opts);
@@ -570,7 +570,7 @@ int main() {
 /************************************************
 * free
 ************************************************/
-	
+
 	free(ode_mem);
 	free(jac_x_ode_mem);
 	free(jac_xdot_ode_mem);

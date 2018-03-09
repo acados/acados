@@ -42,8 +42,7 @@
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
 
-// TODO(dimitris): remove N2
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan, int N2)
+ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan)
 {
 
     int bytes = ocp_qp_xcond_solver_config_calculate_size();
@@ -95,8 +94,6 @@ ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan, int N
             #endif
             break;
     }
-
-    solver_config->N2 = N2;
 
     return solver_config;
 }

@@ -602,7 +602,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 
 	// extract sizes
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng;
 
 	// initial align
 	align_char_to(8, &c_ptr);

@@ -61,7 +61,7 @@ ocp_qp_dims *map_to_ocp_qp_dims(const LangObject *map) {
     }
 
     int_t N = int_from(map, "N");
-    ocp_qp_dims *qp_dims = create_ocp_qp_dims(N);
+    ocp_qp_dims *qp_dims = ocp_qp_dims_create(N);
     fill_array_from(map, "nx", qp_dims->nx, N+1);
     fill_array_from(map, "nu", qp_dims->nu, N+1);
     fill_array_from(map, "nb", qp_dims->nb, N+1);

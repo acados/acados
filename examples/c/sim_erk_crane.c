@@ -89,7 +89,7 @@ int main()
 	exfun_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
 	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
 
-	create_external_function_casadi(&exfun_forw_vde);
+	external_function_casadi_create(&exfun_forw_vde);
 
 	// adjoint explicit VDE
 
@@ -99,7 +99,7 @@ int main()
 	exfun_adj_vde.casadi_sparsity_in = &adjFun_sparsity_in;
 	exfun_adj_vde.casadi_sparsity_out = &adjFun_sparsity_out;
 
-	create_external_function_casadi(&exfun_adj_vde);
+	external_function_casadi_create(&exfun_adj_vde);
 
 	// hessian explicit ODE
 
@@ -109,7 +109,7 @@ int main()
 	exfun_hess_ode.casadi_sparsity_in = &hessFun_sparsity_in;
 	exfun_hess_ode.casadi_sparsity_out = &hessFun_sparsity_out;
 
-	create_external_function_casadi(&exfun_hess_ode);
+	external_function_casadi_create(&exfun_hess_ode);
 
 /************************************************
 * sim dims
@@ -132,7 +132,7 @@ int main()
 ************************************************/
 
     void *args = sim_create_args(&plan, &dims);
-    
+
     sim_rk_opts *erk_opts = (sim_rk_opts *) args;
     erk_opts->num_steps = 4;
     erk_opts->sens_forw = true;
@@ -273,9 +273,9 @@ int main()
 * free
 ************************************************/
 
-	free_external_function_casadi(&exfun_forw_vde);
-	free_external_function_casadi(&exfun_adj_vde);
-	free_external_function_casadi(&exfun_hess_ode);
+	external_function_casadi_free(&exfun_forw_vde);
+	external_function_casadi_free(&exfun_adj_vde);
+	external_function_casadi_free(&exfun_hess_ode);
 
     free(xref);
     free(in);
@@ -360,7 +360,7 @@ int main()
 	config->opts_initialize_default(config, dims, opts);
 
 	opts->sens_adj = true;
-	
+
 /************************************************
 * sim memory
 ************************************************/
@@ -511,7 +511,7 @@ int main()
 /************************************************
 * free
 ************************************************/
-	
+
 	free(forw_vde_mem);
 	free(adj_vde_mem);
 	free(hess_ode_mem);

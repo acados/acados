@@ -110,14 +110,11 @@ ocp_nlp_dynamics_dims *ocp_nlp_dynamics_dims_assign(void *raw_memory)
 
 int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims)
 {
-	ocp_nlp_dynamics_config *config = config_;
-
-	// loop index
-	int ii;
+	// ocp_nlp_dynamics_config *config = config_;
 
 	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
+	// int nx = dims->nx;
+	// int nu = dims->nu;
 	int nx1 = dims->nx1;
 
 	int size = 0;
@@ -141,8 +138,8 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
 	char *c_ptr = (char *) raw_memory;
 
 	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
+	// int nx = dims->nx;
+	// int nu = dims->nu;
 	int nx1 = dims->nx1;
 
 	// struct
