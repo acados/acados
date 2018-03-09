@@ -98,6 +98,3 @@ void external_function_casadi_free_array(int size, external_function_casadi *fun
 	return;
 
 }
-
-
-
