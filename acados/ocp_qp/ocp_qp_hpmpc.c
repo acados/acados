@@ -43,19 +43,6 @@ int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
 {
     int N = dims->N;
     int size = sizeof(ocp_qp_hpmpc_args);
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
-    size += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
-    for (int i = 0; i <= N; i++)
-    {
-        size += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
-        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
-        size += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
-        if (i > 0)  // TODO(dimitris) p0 is not loaded later
-            size += (dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
-    }
-    size += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
     size = (size + 63) / 64 * 64;   // make multiple of typical cache line size
     size += 1 * 64;                 // align once to typical cache line size
     return size;
@@ -75,46 +62,13 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
     args->M = dims->N;
     args->N2 = dims->N;
 
-
     c_ptr += sizeof(ocp_qp_hpmpc_args);
-
-    args->ux0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->ux0));
-
-    args->pi0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->pi0));
-
-    args->lam0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->lam0));
-
-    args->t0 = (real_t **) c_ptr;
-    c_ptr += (N + 1) * sizeof(*(((ocp_qp_hpmpc_args *)0)->t0));
-
+    
     // align memory to typical cache line size
     size_t s_ptr = (size_t) c_ptr;
     s_ptr = (s_ptr + 63) / 64 * 64;
     c_ptr = (char *) s_ptr;
 
-    for (int i = 0; i <= N; i++) {
-        args->ux0[i] = (real_t *) c_ptr;
-        c_ptr += (dims->nu[i] + dims->nx[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->ux0));
-    }
-    for (int i = 1; i <= N; i++) {
-        args->pi0[i] = (real_t *) c_ptr;
-        c_ptr += dims->nx[i] * sizeof(**(((ocp_qp_hpmpc_args *)0)->pi0));
-    }
-    for (int i = 0; i <= N; i++) {
-        args->lam0[i] = (real_t *) c_ptr;
-        c_ptr += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->lam0));
-    }
-    for (int i = 0; i <= N; i++) {
-        args->t0[i] = (real_t *) c_ptr;
-        c_ptr += (2 * dims->nb[i] + 2 * dims->ng[i]) * sizeof(**(((ocp_qp_hpmpc_args *)0)->t0));
-    }
-
-    // TODO(dimitris): is this even written somehwere?
-    args->inf_norm_res = (real_t *) c_ptr;
-    c_ptr += 5 * sizeof(*(((ocp_qp_hpmpc_args *)0)->inf_norm_res));
     return (void *)args;
 }
 
@@ -156,29 +110,26 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
     ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu, 
 			nb, dims->nbx, dims->nbu, ng, N2);
 
-    // TODO(dimitris): only calculate sizes below when partial tightenging is used
     if (M < N) {
-		int ii;
-
-		for ( ii = 0; ii < N; ii++ ) {
-			ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  	// L
+		for ( ii = 0; ii <= N; ii++ ) {
+            ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  	// L
+            ws_size += sizeof(struct blasfeo_dmat);
 			ws_size += sizeof(double)*(nu[ii]+nx[ii]);  					// dux
+            ws_size += sizeof(struct blasfeo_dvec);
 			ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  				// dlam, dt, lamt
+            ws_size += 3*sizeof(struct blasfeo_dvec);
 			ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  				// tinv
+            ws_size += sizeof(struct blasfeo_dvec);
 			ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  					// Qx, qx
+            ws_size += 2*sizeof(struct blasfeo_dvec);
 			ws_size += sizeof(double)*(nx[ii+1]);  							// Pb
+            ws_size += sizeof(struct blasfeo_dvec);
 		}
-		// TODO(dimitris): put in loop
-		ii = N;
-		ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  		// L
-		ws_size += sizeof(double)*(nu[ii]+nx[ii]);  						// dux
-		ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  					// dlam, dt, lamt
-		ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  					// tinv
-		ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  						// Qx, qx
-		ws_size += sizeof(double)*(nx[ii+1]);  								// Pb
+
+        ws_size += sizeof(double)*(nx[M]+1)*(nx[M]); // sLxM
+        ws_size += sizeof(double)*(nx[M]+1)*(nx[M]); // sPpM
 
 		ws_size += d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
-		ws_size += 2*sizeof(double)*(nx[M]+1)*nx[M];  						// LxM, PpM
 	}
 
     ws_size += 2*64;
@@ -219,15 +170,49 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 	int ii;
 	 
 	if (M < N) {
-		for (ii = 0; ii <= N; ii++)
+
+        assign_blasfeo_dmat_structs(N+1, &mem->hsL, &c_ptr);
+        assign_blasfeo_dmat_structs(1, &mem->sLxM, &c_ptr);
+        assign_blasfeo_dmat_structs(1, &mem->sPpM, &c_ptr);
+
+        assign_blasfeo_dvec_structs(N+1, &mem->hsQx, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsqx, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hstinv, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsrq, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsdux, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsdlam, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsdt, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hslamt, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsPb, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->ux0, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->lam0, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->pi0, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->t0, &c_ptr);
+		
+        for (ii = 0; ii <= N; ii++)
 		{
-			// partial tightening-specific
+            // partial tightening-specific
 			blasfeo_create_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &mem->hsL[ii], c_ptr);
 			c_ptr += (&mem->hsL[ii])->memsize;
-	
-			// initialize hsdux to primal input later usx will be subtracted
+        }	
+
+        blasfeo_create_dmat(nx[M]+1, nx[M], &mem->sLxM, c_ptr);
+        c_ptr += (&mem->sLxM)->memsize;
+        blasfeo_create_dmat(nx[M]+1, nx[M], &mem->sPpM, c_ptr);
+        c_ptr += (&mem->sPpM)->memsize;
+
+        for (ii = 0; ii <= N; ii++) {
+			blasfeo_create_dvec(nx[ii]+nu[ii], &mem->ux0[ii], c_ptr);
+			c_ptr += (&mem->ux0[ii])->memsize;
+			blasfeo_create_dvec(2*(nb[ii]+ng[ii]), &mem->lam0[ii], c_ptr);
+			c_ptr += (&mem->lam0[ii])->memsize;
+			blasfeo_create_dvec(2*(nb[ii]+ng[ii]), &mem->pi0[ii], c_ptr);
+			c_ptr += (&mem->pi0[ii])->memsize;
+			blasfeo_create_dvec(2*(nb[ii]+ng[ii]), &mem->t0[ii], c_ptr);
+			c_ptr += (&mem->t0[ii])->memsize;
+            
 			blasfeo_create_dvec(nu[ii]+nx[ii], &mem->hsdux[ii], c_ptr);
-			blasfeo_pack_dvec(nu[ii]+nx[ii], args->ux0[ii], &mem->hsdux[ii], 0);
+			blasfeo_pack_dvec(nu[ii]+nx[ii], &mem->ux0[ii], &mem->hsdux[ii], 0);
 			c_ptr += (&mem->hsdux[ii])->memsize;
 
 			blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &mem->hstinv[ii], c_ptr);
@@ -247,13 +232,9 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 			// partial tightening specific
 			blasfeo_create_dvec(nx[ii+1], &mem->hsPb[ii+1], c_ptr);
 			c_ptr += (&mem->hsPb[ii+1])->memsize;
+            
 			
 		}
-	
-		blasfeo_create_dmat(nx[M]+1, nx[M], &mem->sLxM, c_ptr);
-		c_ptr += (&mem->sLxM)->memsize;
-		blasfeo_create_dmat(nx[M]+1, nx[M], &mem->sPpM, c_ptr);
-		c_ptr += (&mem->sPpM)->memsize;
 	
 		mem->work_ric = c_ptr;
 		c_ptr+=d_back_ric_rec_work_space_size_bytes_libstr(args->N, 
@@ -325,18 +306,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 		blasfeo_dvecsc(ng[ii], -1.0, &qp_in->d[ii], 2*nb[ii] + ng[ii]);
     }
 
-	// dvec loop
-	for ( ii = 0; ii <= N; ii++ )
-    {
-        // TODO(dimitris): why do we _always_ take init. from args? what about warmstart?
-        // copy initialization, multipliers and slacks from hpmpc_args
-        blasfeo_pack_dvec(nu[ii]+nx[ii], hpmpc_args->ux0[ii], &qp_out->ux[ii], 0);
-        blasfeo_pack_dvec(2*nb[ii]+2*ng[ii], hpmpc_args->lam0[ii], &qp_out->lam[ii], 0);
-        blasfeo_pack_dvec(2*nb[ii]+2*ng[ii], hpmpc_args->t0[ii], &qp_out->t[ii], 0);
-        // TODO(dimitris): pi0 missing
-
-    }
-
 	real_t sigma_mu = hpmpc_args->sigma_mu;
 
     int nuM;
@@ -363,7 +332,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 				&qp_out->pi[M],  1, &mem->hsPb[M], &mem->hsL[M], mem->work_ric);
 
         // extract chol factor of [P p; p' *]
-        // TODO(Andrea): have m and n !!!!!
         blasfeo_dtrcp_l(nx[M], &mem->hsL[M], nu[M], nu[M], &mem->sLxM, 0, 0);
         blasfeo_dgecp(1, nx[M], &mem->hsL[M], nu[M]+nx[M], nu[M], &mem->sLxM, nx[M], 0);
 
@@ -439,7 +407,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     info->solve_QP_time = acados_toc(&qp_timer);
     acados_tic(&interface_timer);
 
-	hpmpc_args->out_iter = kk;  // TODO(dimitris): obsolete
+	mem->out_iter = kk;  // TODO(dimitris): obsolete
 
     // copy result to qp_out
     for ( ii = 0; ii < N; ii++ )
