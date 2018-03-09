@@ -41,18 +41,15 @@ int main() {
     gnsf2_dims *dims = gnsf2_dims_assign(dims_memory);
     gnsf2_get_dims(dims, get_ints_fun);
 
+    // set up sim_dims
+    sim_dims *simdim = (sim_dims *) dims; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+
     // set up sim config
     int config_size = sim_solver_config_calculate_size();
     void *config_mem = malloc(config_size);
     sim_solver_config *config = sim_solver_config_assign(config_mem);
+    sim_gnsf2_config_initialize_default(config);
 
-    // set up sim_dims
-    int sim_dims_size = sim_dims_calculate_size();
-    void *sim_dims_mem = malloc(sim_dims_size);
-    sim_dims *simdim = sim_dims_assign(sim_dims_mem);
-    simdim->nx = 9;
-    simdim->nu = 2;
-    simdim->num_stages = 4;
 
     // // set up gnsf_in
     int gnsf2_in_size = gnsf2_in_calculate_size(dims);
@@ -161,7 +158,6 @@ int main() {
 
     
     free(dims_memory);
-    free(sim_dims_mem);
     free(gnsf2_in_mem);
     free(gnsf2_fixed_mem);
     free(sim_out_ptr);

@@ -525,8 +525,9 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     return (void *)workspace;
 }
 
-void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_)
+int gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_)
 {
+    //     int (*evaluate) (void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work); TODO make this form
     acados_timer tot_timer, casadi_timer;
     acados_tic(&tot_timer);
     // printf("GENERALIZED NONLINEAR STATIC FEEDBACK V2 (GNSF-2) SIMULATION \n");
@@ -857,7 +858,7 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
             // printf("dPsi_dx = \n");
             // blasfeo_print_exp_dmat(nx, nx, &dPsi_dx, 0, 0);
             // blasfeo_print_exp_dvec(nx + nu, &lambda, 0);
-            blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &phi_in, 0, &lambda, 0); // recheck!
+            blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &res_val, 0, &lambda, 0); // recheck!
             blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
             blasfeo_dgemv_t(nff, nx1, -1.0, &J_r_x1u, 0  , 0, &res_val, 0, 1.0, &lambda_old, 0, &lambda, 0);
             blasfeo_dgemv_t(nff, nu, -1.0, &J_r_x1u, 0, nx1, &res_val, 0, 1.0, &lambda_old, nx, &lambda, nx);
@@ -868,6 +869,8 @@ void gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *o
     blasfeo_unpack_dvec(nx, &x0_traj, nx * num_steps, out->xn);
     blasfeo_unpack_dmat(nx, nx + nu, &S_forw, 0, 0, out->S_forw, nx);
     blasfeo_unpack_dvec(nx+nu, &lambda, 0, out->S_adj);
+
+    return 0;
 }
 
 // void gnsf_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme

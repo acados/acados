@@ -590,8 +590,8 @@ void gnsf_simulate(gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, 
     struct blasfeo_dmat *f_LO_jac = workspace->f_LO_jac;
 
     struct blasfeo_dvec *ff_val   = workspace->ff_val; 
-    struct blasfeo_dvec *K1_val   = workspace->K1_val; 
-    struct blasfeo_dvec *x1_val   = workspace->x1_val; 
+    struct blasfeo_dvec *K1_val   = workspace->K1_val;
+    struct blasfeo_dvec *x1_val   = workspace->x1_val;
     struct blasfeo_dvec *Z_val    = workspace->Z_val;
     struct blasfeo_dvec *f_LO_val = workspace->f_LO_val;
 
@@ -643,7 +643,7 @@ void gnsf_simulate(gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, 
             blasfeo_daxpy(nff, -1.0, &res_val, 0, &ff_val[ss], 0, &ff_val[ss], 0);
         }
         // K1_val = s.KKf * fftraj(:,ss) + s.KKu * u0 + s.KKx * x0_1;
-        blasfeo_dgemv_n(nK1, nff,       1.0, &fix->KKf, 0, 0, &ff_val[ss], 0, 0.0, &K1_val[ss], 0, &K1_val[ss], 0);
+        blasfeo_dgemv_n(nK1, nff, 1.0, &fix->KKf, 0, 0, &ff_val[ss], 0, 0.0, &K1_val[ss], 0, &K1_val[ss], 0);
         blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0        , 0, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
         blasfeo_dgemv_n(nK1, nx1, 1.0, &fix->KKx, 0, 0, &x0_traj, ss*nx, 1.0, &K1_val[ss], 0, &K1_val[ss], 0);
         // printf("\n K1_val =  \n");
