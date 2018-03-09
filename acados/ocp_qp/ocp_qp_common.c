@@ -58,6 +58,8 @@ ocp_qp_dims *assign_ocp_qp_dims(int N, void *raw_memory)
     d_create_ocp_qp_dim(N, dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_dim(N);
 
+    dims->N = N;
+
     assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
 
     return dims;

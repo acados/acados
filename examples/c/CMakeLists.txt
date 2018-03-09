@@ -71,6 +71,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_link_libraries(mass_spring_example acados)
     add_test(mass_spring_example mass_spring_example)
 
+    add_executable(mass_spring_example_i mass_spring_example_i.c)
+    target_link_libraries(mass_spring_example_i acados)
+    add_test(mass_spring_example_i mass_spring_example_i)
+
     # Remove from test because of weird GCC bug (Segfault)
     # add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
     # target_link_libraries(mass_spring_qpoases_example acados)
