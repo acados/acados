@@ -31,7 +31,7 @@ std::unique_ptr<ocp_qp_dims> make_dimensions_ptr(map<string, vector<uint>> dims)
 
     int N = dims["nx"].size() - 1;
 
-    auto dim = std::unique_ptr<ocp_qp_dims>(create_ocp_qp_dims(N));
+    auto dim = std::unique_ptr<ocp_qp_dims>(ocp_qp_dims_create(N));
 
     std::copy_n(std::begin(dims["nx"]), N+1, dim->nx);
     std::copy_n(std::begin(dims["nu"]), N+1, dim->nu);

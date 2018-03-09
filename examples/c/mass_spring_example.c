@@ -153,7 +153,7 @@ int main() {
      ************************************************/
 
 #ifdef ACADOS_WITH_C_INTERFACE
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_dims);
+    ocp_qp_out *qp_out = ocp_qp_out_create(qp_dims);
 #else // ! ACADOS_WITH_C_INTERFACE
 	int qp_out_size = ocp_qp_out_calculate_size(qp_dims);
 	void *qp_out_mem = malloc(qp_out_size);
@@ -167,7 +167,7 @@ int main() {
         ocp_qp_solver_plan plan;
         plan.qp_solver = ocp_qp_solvers[ii];
 
-        void *args = ocp_qp_create_args(&plan, qp_dims);
+        void *args = ocp_qp_opts_create(&plan, qp_dims);
 
         for (int jj = 0; jj < num_N2_values; jj++)
         {

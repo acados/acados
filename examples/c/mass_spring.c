@@ -607,7 +607,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
     dims.nbx = nbx_vec;
 
 #ifdef ACADOS_WITH_C_INTERFACE
-    ocp_qp_in *qp_in = create_ocp_qp_in(&dims);
+    ocp_qp_in *qp_in = ocp_qp_in_create(&dims);
 #else // ! ACADOS_WITH_C_INTERFACE
 	int qp_in_size = ocp_qp_in_calculate_size(config, &dims);
 	void *qp_in_mem = malloc(qp_in_size);

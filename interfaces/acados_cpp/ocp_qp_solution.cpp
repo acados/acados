@@ -24,8 +24,8 @@ ocp_qp_solution::ocp_qp_solution(ocp_qp_solution&& other) : N(other.N), qp_out(n
 
 
 ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution& other) : N(other.N), qp_out(nullptr) {
-    
-    auto dims = std::unique_ptr<ocp_qp_dims>(create_ocp_qp_dims(N));
+
+    auto dims = std::unique_ptr<ocp_qp_dims>(ocp_qp_dims_create(N));
 
     std::copy_n(other.qp_out->dim->nx, N+1, dims->nx);
     std::copy_n(other.qp_out->dim->nu, N+1, dims->nu);
@@ -35,7 +35,7 @@ ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution& other) : N(other.N), qp_
     std::copy_n(other.qp_out->dim->ng, N+1, dims->ng);
     std::copy_n(other.qp_out->dim->ns, N+1, dims->ns);
 
-    qp_out = std::unique_ptr<ocp_qp_out>(create_ocp_qp_out(dims.get()));
+    qp_out = std::unique_ptr<ocp_qp_out>(ocp_qp_out_create(NULL, dims.get()));
 
     for (int i = 0; i <= N; ++i) {
         blasfeo_dveccp(dims->nx[i]+dims->nu[i], &other.qp_out->ux[i], 0, &qp_out->ux[i], 0);
@@ -50,7 +50,7 @@ ocp_qp_solution::ocp_qp_solution(const ocp_qp_solution& other) : N(other.N), qp_
     info->condensing_time = ((ocp_qp_info *) other.qp_out->misc)->condensing_time;
     info->interface_time = ((ocp_qp_info *) other.qp_out->misc)->interface_time;
     info->total_time = ((ocp_qp_info *) other.qp_out->misc)->total_time;
-    
+
     qp_out->memsize = other.qp_out->memsize;
 }
 
@@ -72,7 +72,7 @@ vector<vector<double>> ocp_qp_solution::controls() {
         d_cvt_ocp_qp_sol_to_colmaj_u(qp_out.get(), tmp.data(), stage);
         result.push_back(tmp);
     }
-    return result;    
+    return result;
 }
 
 vector<vector<double>> ocp_qp_solution::lag_mul_dynamics() {
@@ -94,7 +94,7 @@ vector<vector<double>> ocp_qp_solution::lag_mul_bounds() {
         d_cvt_ocp_qp_sol_to_colmaj_lam_ub(qp_out.get(), tmp.data() + nb, stage);
         result.push_back(tmp);
     }
-    return result;    
+    return result;
 }
 
 vector<vector<double>> ocp_qp_solution::lag_mul_constraints() {
@@ -106,7 +106,7 @@ vector<vector<double>> ocp_qp_solution::lag_mul_constraints() {
         d_cvt_ocp_qp_sol_to_colmaj_lam_ug(qp_out.get(), tmp.data() + ng, stage);
         result.push_back(tmp);
     }
-    return result;    
+    return result;
 }
 
 ocp_qp_info ocp_qp_solution::info() {
