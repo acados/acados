@@ -100,11 +100,12 @@ void *ocp_nlp_dynamics_memory_assign(void *config, ocp_nlp_dynamics_dims *dims, 
 
 typedef struct
 {
-    sim_in **sim_in;
-    sim_out **sim_out;
+    sim_in *sim_in;
+    sim_out *sim_out;
+    void *sim_solver; // sim solver workspace
 } ocp_nlp_dynamics_workspace;
 
-int ocp_nlp_dynamics_workspace_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
+int ocp_nlp_dynamics_workspace_calculate_size(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
 
 
 /************************************************
@@ -116,6 +117,7 @@ typedef struct
 	ocp_nlp_dynamics_dims *dims;
 	void *sim_model;
 //	double *state_transition; // TODO
+	double T; // simulation time
 } ocp_nlp_dynamics_model;
 
 //
@@ -123,7 +125,7 @@ int ocp_nlp_dynamics_model_calculate_size(void *config, ocp_nlp_dynamics_dims *d
 //
 void *ocp_nlp_dynamics_model_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, ocp_nlp_dynamics_memory *mem, sim_in *sim_in, sim_out *sim_out, void *sim_opts, void *sim_mem, void *sim_work);
+void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, ocp_nlp_dynamics_memory *mem, void *opts, void *sim_mem, void *work_);
 
 
 
@@ -140,6 +142,7 @@ typedef struct
 	void (*opts_initialize_default) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
 	int (*memory_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
 	void *(*memory_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+	int (*workspace_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
 //	void *(update_qp_matrices) (void *config, ocp_nlp_dynamics_dims *dims, ocp_nlp_dynamics_memory *mem, sim_in *sim_in, sim_out *sim_out, void *sim_opts, void *sim_mem, void *sim_work); // TODO add once interface is fixed
 	void (*config_initialize_default) (void *config);
     sim_solver_config *sim_solver;

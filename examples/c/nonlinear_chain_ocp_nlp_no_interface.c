@@ -1038,7 +1038,7 @@ int main() {
 
     for (int i = 0; i < NN; ++i)
 	{
-		ocp_nlp_dynamics_opts *dynamics_opts = nlp_opts->dynamics_opts[i];
+		ocp_nlp_dynamics_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 #if DYNAMICS==2
 		sim_opts->jac_reuse = true;
