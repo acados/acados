@@ -25,7 +25,6 @@ extern "C" {
 #endif
 
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados_c/common.h"
 
 typedef enum {
     DENSE_QP_HPIPM,

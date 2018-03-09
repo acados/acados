@@ -33,8 +33,7 @@ extern "C" {
 #include <acados/sim/sim_irk_integrator.h>
 // acados_c
 #include "acados_c/ocp_qp_interface.h"
-#include "acados_c/sim.h"
-#include "acados_c/common.h"
+#include "acados_c/sim_interface.h"
 
 // ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims);
 
