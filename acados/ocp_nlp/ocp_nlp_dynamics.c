@@ -132,7 +132,7 @@ int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims 
 
 void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *raw_memory)
 {
-	ocp_nlp_dynamics_config *config = config_;
+	// ocp_nlp_dynamics_config *config = config_;
 
 	char *c_ptr = (char *) raw_memory;
 

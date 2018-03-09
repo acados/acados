@@ -35,10 +35,6 @@ extern "C" {
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
 
-// ocp_qp_res *create_ocp_qp_res(ocp_qp_dims *dims);
-
-// ocp_qp_res_ws *create_ocp_qp_res_ws(ocp_qp_dims *dims);
-
 ocp_qp_full_condensing_args *ocp_qp_full_condensing_create_arguments(ocp_qp_dims *dims);
 
 ocp_qp_full_condensing_memory *ocp_qp_full_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);

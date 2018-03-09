@@ -51,15 +51,7 @@ ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, i
 #endif
 #define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
 
-
-
 #define NREP 100
-
-
-
-//#include "./mass_spring.c"
-
-
 
 int main() {
     printf("\n");

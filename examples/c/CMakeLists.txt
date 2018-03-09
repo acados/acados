@@ -81,7 +81,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- mass_spring
 
-    add_executable(mass_spring_example mass_spring_example.c mass_spring.c)
+    add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
     target_link_libraries(mass_spring_example acados)
     add_test(mass_spring_example mass_spring_example)
 
@@ -89,7 +89,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_executable(
             mass_spring_example_no_interface
             mass_spring_example_no_interface.c
-            mass_spring.c
+            mass_spring_model/mass_spring_qp.c
         )
         target_link_libraries(
             mass_spring_example_no_interface
@@ -101,25 +101,9 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         )
     endif()
 
-    # add_executable(mass_spring_hpmpc_example mass_spring_hpmpc.c)
-    # target_link_libraries(mass_spring_hpmpc_example acados)
-    # add_test(mass_spring_hpmpc_example mass_spring_hpmpc_example)
-
-    # # Remove from test because of weird GCC bug (Segfault)
-    # add_executable(mass_spring_qpoases_example mass_spring_qpoases.c)
-    # target_link_libraries(mass_spring_qpoases_example acados)
-    # add_test(mass_spring_qpoases_example mass_spring_qpoases_example)
-
-    # add_executable(mass_spring_qpdunes_example mass_spring_qpdunes.c)
-    # target_link_libraries(mass_spring_qpdunes_example acados)
-    # target_compile_definitions(mass_spring_qpdunes_example PRIVATE USE_ACADOS_TYPES)
-    # add_test(mass_spring_qpdunes_example mass_spring_qpdunes_example)
-
-    # if(ACADOS_WITH_OOQP)
-    #   add_executable(mass_spring_ooqp_example mass_spring_ooqp.c)
-    #   target_link_libraries(mass_spring_ooqp_example acados)
-    #   add_test(mass_spring_ooqp_example mass_spring_ooqp_example)
-    # endif()
+    add_executable(mass_spring_fcond_split mass_spring_fcond_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_fcond_split acados)
+    add_test(mass_spring_fcond_split mass_spring_example)
 
     # add_executable(mass_spring_partial_tightening_example
     #   mass_spring_partial_tightening.c
@@ -130,7 +114,6 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     #   COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH}
     #   ./mass_spring_partial_tightening_example
     # )
-
 
     # -------------------- nonlinear_chain
 
@@ -153,12 +136,6 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
             nonlinear_chain_ocp_nlp_no_interface_example
         )
     endif()
-
-    # add_executable(nonlinear_chain_sqp_example
-    #   nonlinear_chain_sqp.c ${CHAIN_MODEL_SRC})
-    # target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
-    # target_link_libraries(nonlinear_chain_sqp_example acados)
-    # add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 
     # -------------------- sim_crane
 
