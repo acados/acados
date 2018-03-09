@@ -9,6 +9,8 @@
 #include <vector>
 #include <utility>
 
+#include "acados/ocp_qp/ocp_qp_common.h"
+
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
@@ -71,6 +73,12 @@ private:
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
+
+    std::unique_ptr<ocp_qp_xcond_solver_config> config;
+
+    // std::unique_ptr<ocp_qp_dims> dims;
+
+    // std::unique_ptr<void, decltype(&std::free)> args{nullptr, std::free};
 
     std::string cached_solver;
 
