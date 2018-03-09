@@ -140,7 +140,6 @@ int main()
 	exfun_ode.casadi_n_in = &impl_odeFun_n_in;
 	exfun_ode.casadi_n_out = &impl_odeFun_n_out;
 	external_function_casadi_create(&exfun_ode);
-	// TODO(dimitris): HOW DO WE FREE THIS MEMORY?
 
 	// jac_x implicit ODE
 
@@ -398,6 +397,9 @@ int main()
 		free(opts);
 		free(config);
 	}
+
+	// TODO(dimitris): free all external functions (or write a free_model)
+	external_function_casadi_free(&exfun_adj_vde);
 
 	/************************************************
 	* return
