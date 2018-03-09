@@ -85,7 +85,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_link_libraries(mass_spring_example acados)
     add_test(mass_spring_example mass_spring_example)
 
-    if (NOT ACADOS_WITH_C_INTERFACE)
+    if (1) #(NOT ACADOS_WITH_C_INTERFACE)
         add_executable(
             mass_spring_example_no_interface
             mass_spring_example_no_interface.c
@@ -161,6 +161,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 
     # -------------------- sim_crane
+
+    add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
+    target_link_libraries(sim_crane_example acados)
+    add_test(sim_crane_example sim_crane_no_interface_example)
 
     if(ACADOS_WITH_C_INTERFACE)
     else()
