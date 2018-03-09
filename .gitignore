@@ -86,3 +86,4 @@ cmakelint
 *.srctrlprj
 .vs
 examples/python/__pycache__/
+build*

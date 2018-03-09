@@ -19,7 +19,12 @@
 
 // external
 #include <assert.h>
-#include <stdio.h>
+#if defined(__DSPACE__)
+    #include <brtenv.h>
+    #define printf(...) msg_info_printf(MSG_SM_USER, 0, __VA_ARGS__); ds1401_tic_delay(0.01);
+#else
+    #include <stdio.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -200,7 +205,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
 
-#if 1
+#if 0
 	printf("BAbt =\n");
     for (int ii = 0; ii < N; ii++)
     {
@@ -245,7 +250,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 
 #else
 
-    for (int ii = 0; ii < N+1; ii++)
+    for (int ii = 0; ii <= N; ii++)
     {
         printf("k = %d\n\n", ii);
 

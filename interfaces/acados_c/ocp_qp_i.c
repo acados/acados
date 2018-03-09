@@ -30,7 +30,9 @@
 #ifdef ACADOS_WITH_QORE
 #include "acados_c/dense_qp/dense_qp_qore.h"
 #endif
+#ifdef ACADOS_WITH_QPOASES
 #include "acados_c/dense_qp/dense_qp_qpoases.h"
+#endif
 #include "acados_c/ocp_qp/ocp_qp_hpipm.h"
 #ifdef ACADOS_WITH_HPMPC
 #include "acados_c/ocp_qp/ocp_qp_hpmpc.h"
@@ -197,7 +199,9 @@ void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_me
             dense_qp_hpipm_copy_args((dense_qp_dims *)dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
             break;
         case FULL_CONDENSING_QPOASES:
+            #ifdef ACADOS_WITH_QPOASES
             dense_qp_qpoases_copy_args((dense_qp_dims *)dims, ((ocp_qp_full_condensing_solver_args *)args)->solver_args, ((ocp_qp_full_condensing_solver_args *)source)->solver_args);
+            #endif
             break;
         case FULL_CONDENSING_QORE:
             #ifdef ACADOS_WITH_QORE
@@ -374,6 +378,7 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_hpipm;
             break;
         case FULL_CONDENSING_QPOASES:
+            #ifdef ACADOS_WITH_QPOASES
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
                 &dense_qp_qpoases_calculate_args_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
@@ -387,6 +392,7 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
                 &dense_qp_qpoases_calculate_workspace_size;
             ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qpoases;
+            #endif
             break;
         case FULL_CONDENSING_QORE:
             #ifdef ACADOS_WITH_QORE

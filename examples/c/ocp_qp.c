@@ -34,7 +34,7 @@ int main() {
     int ns[] = {0, 0, 0, 0, 0, 0};
     int nbx[] = {2, 0, 0, 0, 0, 0};
     int nbu[] = {0, 0, 0, 0, 0, 0};
-    
+
     dims.N = QP_HORIZON;
     dims.nx = nx;
     dims.nu = nu;
@@ -57,12 +57,8 @@ int main() {
     int *hidxb[] = {idxb0};
     double *hlb[] = {x0};
     double *hub[] = {x0};
-    double *hC[] = {};
-    double *hD[] = {};
-    double *hlg[] = {};
-    double *hug[] = {};
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, hC, hD, hlg, hug, NULL, NULL, NULL, NULL, NULL, qp_in);
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 
     print_ocp_qp_in(qp_in);
 
