@@ -30,6 +30,7 @@
 #include "blasfeo/include/blasfeo_d_blas.h"
 // acados
 #include "acados/utils/mem.h"
+#include "acados/ocp_nlp/ocp_nlp_common.h" // XXX loop of include !!!
 
 
 
@@ -121,10 +122,10 @@ int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims 
 
 	int size = 0;
 
-    size += sizeof(ocp_nlp_dynamics_model);
+    size += sizeof(ocp_nlp_dynamics_memory);
 
-//	size += 1*blasfeo_memsize_dvec(nu+nx); // dyn_adj
-	size += 1*blasfeo_memsize_dvec(nx1); // dyn_fun
+	size += 1*blasfeo_memsize_dvec(nu+nx+nx1); // adj
+	size += 1*blasfeo_memsize_dvec(nx1); // fun
 
 	size += 64; // blasfeo_mem align
 
@@ -151,10 +152,10 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
-	// dyn_adj
-//	assign_blasfeo_dvec_mem(nu+nx, &memory->dyn_adj, &c_ptr);
-	// dyn_fun
-	assign_blasfeo_dvec_mem(nx1, &memory->dyn_fun, &c_ptr);
+	// adj
+	assign_blasfeo_dvec_mem(nu+nx+nx1, &memory->adj, &c_ptr);
+	// fun
+	assign_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
     assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config, dims) >= c_ptr);
 
@@ -209,6 +210,43 @@ void *ocp_nlp_dynamics_model_assign(void *config_, ocp_nlp_dynamics_dims *dims, 
     assert((char *) raw_memory + ocp_nlp_dynamics_model_calculate_size(config, dims) >= c_ptr);
 
 	return model;
+}
+
+
+
+void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, ocp_nlp_dynamics_memory *mem, ocp_nlp_out_stage *nlp_out_stage, ocp_nlp_out_stage *nlp_out_stage1, sim_in *sim_in, sim_out *sim_out, void *sim_opts, void *sim_mem, void *sim_work, ocp_qp_in_stage *qp_in_stage)
+{
+
+	ocp_nlp_dynamics_config *config = config_;
+
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int nx1 = dims->nx1;
+	int nu1 = dims->nu1;
+
+	// pass state and control to integrator
+	blasfeo_unpack_dvec(nu, nlp_out_stage->ux, 0, sim_in->u);
+	blasfeo_unpack_dvec(nx, nlp_out_stage->ux, nu, sim_in->x);
+
+	// call integrator
+	config->sim_solver->evaluate(config->sim_solver, sim_in, sim_out, sim_opts, sim_mem, sim_work);
+
+	// TODO(rien): transition functions for changing dimensions not yet implemented!
+
+	// B
+	blasfeo_pack_tran_dmat(nx1, nu, sim_out->S_forw+nx1*nx, nx1, qp_in_stage->BAbt, 0, 0);
+	// A
+	blasfeo_pack_tran_dmat(nx1, nx, sim_out->S_forw+0, nx1, qp_in_stage->BAbt, nu, 0);
+
+	// fun
+	blasfeo_pack_dvec(nx1, sim_out->xn, &mem->fun, 0);
+	blasfeo_daxpy(nx1, -1.0, nlp_out_stage1->ux, nu1, &mem->fun, 0, &mem->fun, 0);
+
+	// adj
+	blasfeo_dgemv_n(nu+nx, nx1, -1.0, qp_in_stage->BAbt, 0, 0, nlp_out_stage->pi, 0, 0.0, &mem->adj, 0, &mem->adj, 0);
+	blasfeo_dveccp(nx1, nlp_out_stage->pi, 0, &mem->adj, nu+nx);
+
+	return;
 }
 
 

@@ -325,6 +325,10 @@ int ocp_nlp_gn_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_n
 
     size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
+	size += (N+1)*sizeof(ocp_nlp_out_stage *);
+	for (ii=0; ii<=N; ii++)
+		size += ocp_nlp_out_stage_calculate_size(config, NULL); // TODO nlp dims stage
+
     size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, args->qp_solver_opts);
 
     size += N*sizeof(sim_in *);
@@ -451,6 +455,15 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp
     work->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
+	work->nlp_out_stage = (ocp_nlp_out_stage **) c_ptr;
+	c_ptr += (N+1)*sizeof(ocp_nlp_out_stage *);
+	for (int ii=0; ii<=N; ii++)
+	{
+		work->nlp_out_stage[ii] = ocp_nlp_out_stage_assign(config, NULL, c_ptr); // TODO qp dims stage
+		c_ptr += ocp_nlp_out_stage_calculate_size(config, NULL); // TODO qp dims stage
+	}
+
+
     work->qp_work = (void *)c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, args->qp_solver_opts);
 
@@ -549,6 +562,43 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 
 	ocp_qp_in_stage *qp_in_stage;
 
+
+	/* dynamics */
+
+	for (i=0; i<N; i++)
+		ocp_nlp_dynamics_update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_mem->dynamics[i], work->nlp_out_stage[i], work->nlp_out_stage[i+1], work->sim_in[i], work->sim_out[i], args->sim_solvers_opts[i], mem->sim_solvers_mem[i], work->sim_solvers_work[i], work->qp_in_stage[i]);
+
+	// nlp mem: dyn_fun
+	for (i=0; i<N; i++)
+	{
+		nx1 = dims->dynamics[i]->nx1;
+		blasfeo_dveccp(nx1, &nlp_mem->dynamics[i]->fun, 0, nlp_mem->dyn_fun+i, 0); 
+	}
+
+	// nlp mem: dyn_adj
+	for (i=0; i<N; i++)
+	{
+		nx = dims->dynamics[i]->nx;
+		nu = dims->dynamics[i]->nu;
+		blasfeo_dveccp(nu+nx, &nlp_mem->dynamics[i]->adj, 0, nlp_mem->dyn_adj+i, 0);
+	}
+
+	blasfeo_dvecse(dims->dynamics[N-1]->nu1+dims->dynamics[N-1]->nx1, 0.0, nlp_mem->dyn_adj+N, 0);
+
+	for (i=0; i<N; i++)
+	{
+		nx = dims->dynamics[i]->nx;
+		nu = dims->dynamics[i]->nu;
+		nx1 = dims->dynamics[i]->nx1;
+		nu1 = dims->dynamics[i]->nu1;
+		blasfeo_daxpy(nx1, 1.0, &nlp_mem->dynamics[i]->adj, nu+nx, nlp_mem->dyn_adj+i+1, nu1, nlp_mem->dyn_adj+i+1, nu1);
+	}
+
+
+
+
+	// TODO still to clean !!!!!!!!!!!!!
+
     for (i = 0; i <= N; i++)
     {
 		qp_in_stage = work->qp_in_stage[i];
@@ -560,57 +610,20 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
 
-		// dynamics
-
-		// nlp mem: dyn_adj
-		blasfeo_dvecse(nu+nx, 0.0, nlp_mem->dyn_adj+i, 0);
-
-		if (i<N)
-		{
-			nx1 = dims->dynamics[i]->nx1;
-			nu1 = dims->dynamics[i]->nu1;
-
-			// pass state and control to integrator
-			blasfeo_unpack_dvec(nu, nlp_out->ux+i, 0, work->sim_in[i]->u);
-			blasfeo_unpack_dvec(nx, nlp_out->ux+i, nu, work->sim_in[i]->x);
-
-			// call integrator
-			config->dynamics[i]->sim_solver->evaluate(config->dynamics[i]->sim_solver, work->sim_in[i], work->sim_out[i], args->sim_solvers_opts[i],
-				mem->sim_solvers_mem[i], work->sim_solvers_work[i]);
-
-			// TODO(rien): transition functions for changing dimensions not yet implemented!
-
-			// B
-			blasfeo_pack_tran_dmat(nx1, nu, &work->sim_out[i]->S_forw[nx1*nx], nx1, qp_in_stage->BAbt, 0, 0);
-			// A
-			blasfeo_pack_tran_dmat(nx1, nx, &work->sim_out[i]->S_forw[0], nx1, qp_in_stage->BAbt, nu, 0);
-
-			// nlp mem: dyn_fun
-			blasfeo_pack_dvec(nx1, work->sim_out[i]->xn, &nlp_mem->dynamics[i]->dyn_fun, 0);
-			blasfeo_daxpy(nx1, -1.0, nlp_out->ux+i+1, nu1, &nlp_mem->dynamics[i]->dyn_fun, 0, &nlp_mem->dynamics[i]->dyn_fun, 0);
-			// nlp mem: dyn_adj
-			// TODO unless already computed in the simulation
-			blasfeo_dgemv_n(nu+nx, nx1, -1.0, qp_in_stage->BAbt, 0, 0, nlp_out->pi+i, 0, 0.0, nlp_mem->dyn_adj+i, 0, nlp_mem->dyn_adj+i, 0);
-		}
-
-		// nlp mem: dyn_adj
-		if(i>0)
-			blasfeo_daxpy(nx, 1.0, nlp_out->pi+i-1, 0, nlp_mem->dyn_adj+i, nu, nlp_mem->dyn_adj+i, nu);
-
 
 
 		// constraints
 		// TODO merge dgemv_n and dgemv_t for general linear constraints
 
 		// nlp_mem: ineq_fun
-		blasfeo_dvecex_sp(nb, 1.0, constraints[i]->idxb, nlp_out->ux+i, 0, tmp_nbg+i, 0);
-		blasfeo_dgemv_t(nu+nx, ng, 1.0, qp_in_stage->DCt, 0, 0, nlp_out->ux+i, 0, 0.0, tmp_nbg+i, nb, tmp_nbg+i, nb);
+		blasfeo_dvecex_sp(nb, 1.0, constraints[i]->idxb, work->nlp_out_stage[i]->ux, 0, tmp_nbg+i, 0);
+		blasfeo_dgemv_t(nu+nx, ng, 1.0, qp_in_stage->DCt, 0, 0, work->nlp_out_stage[i]->ux, 0, 0.0, tmp_nbg+i, nb, tmp_nbg+i, nb);
 		blasfeo_daxpy(nb+ng, -1.0, tmp_nbg+i, 0, &constraints[i]->d, 0, nlp_mem->ineq_fun+i, 0);
 		blasfeo_daxpy(nb+ng, -1.0, &constraints[i]->d, nb+ng, tmp_nbg+i, 0, nlp_mem->ineq_fun+i, nb+ng);
 
 		// nlp_mem: ineq_adj
 		blasfeo_dvecse(nu+nx, 0.0, nlp_mem->ineq_adj+i, 0);
-		blasfeo_daxpy(nb+ng, -1.0, nlp_out->lam+i, nb+ng, nlp_out->lam+i, 0, tmp_nbg+i, 0);
+		blasfeo_daxpy(nb+ng, -1.0, work->nlp_out_stage[i]->lam, nb+ng, work->nlp_out_stage[i]->lam, 0, tmp_nbg+i, 0);
 		blasfeo_dvecad_sp(nb, 1.0, tmp_nbg+i, 0, constraints[i]->idxb, nlp_mem->ineq_adj+i, 0);
 		blasfeo_dgemv_n(nu+nx, ng, 1.0, qp_in_stage->DCt, 0, 0, tmp_nbg+i, nb, 1.0, nlp_mem->ineq_adj+i, 0, nlp_mem->ineq_adj+i, 0);
 
@@ -621,14 +634,14 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 		if (cost[i]->nls_mask==0) // linear ls
 		{
 
-			blasfeo_dgemv_t(nv, ny, 1.0, &cost[i]->Cyt, 0, 0, nlp_out->ux+i, 0, -1.0, &cost[i]->y_ref, 0, ls_res+i, 0);
+			blasfeo_dgemv_t(nv, ny, 1.0, &cost[i]->Cyt, 0, 0, work->nlp_out_stage[i]->ux, 0, -1.0, &cost[i]->y_ref, 0, ls_res+i, 0);
 
 		}
 		else // nonlinear ls
 		{
 			// unpack ls cost input
-			blasfeo_unpack_dvec(nu, nlp_out->ux+i, 0, work->ls_cost_in[i]+nx);
-			blasfeo_unpack_dvec(nx, nlp_out->ux+i, nu, work->ls_cost_in[i]);
+			blasfeo_unpack_dvec(nu, work->nlp_out_stage[i]->ux, 0, work->ls_cost_in[i]+nx);
+			blasfeo_unpack_dvec(nx, work->nlp_out_stage[i]->ux, nu, work->ls_cost_in[i]);
 
 			// evaluate external function (that assumes variables stacked as [x; u] )
 			cost[i]->nls_jac->evaluate(cost[i]->nls_jac, work->ls_cost_in[i], work->ls_cost_jac_out[i]);
@@ -707,7 +720,7 @@ static void sqp_update_qp_vectors(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nl
 		nx = dims->dynamics[i]->nx;
 		nu = dims->dynamics[i]->nu;
 		nx1 = dims->dynamics[i]->nx1;
-		blasfeo_dveccp(nx1, &nlp_mem->dynamics[i]->dyn_fun, 0, qp_in_stage->b, 0);
+		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, qp_in_stage->b, 0);
 		blasfeo_drowin(nx1, 1.0, qp_in_stage->b, 0, qp_in_stage->BAbt, nu+nx, 0); // XXX needed ???
 	}
 
@@ -794,6 +807,19 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 	int nx, nu, nx1;
 
     sim_rk_opts *sim_opts;
+
+	// alias nlp out
+	for (int ii=0; ii<=N; ii++)
+	{
+		work->nlp_out_stage[ii]->ux = nlp_out->ux+ii;
+		if (ii<N)
+			work->nlp_out_stage[ii]->pi = nlp_out->pi+ii;
+		else
+			work->nlp_out_stage[ii]->pi = NULL;
+		work->nlp_out_stage[ii]->lam = nlp_out->lam+ii;
+		work->nlp_out_stage[ii]->t = nlp_out->t+ii;
+	}
+
 
     // set up integrators
 

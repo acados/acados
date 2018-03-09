@@ -110,6 +110,8 @@ typedef struct
     ocp_qp_out *qp_out;
     void *qp_work;
 
+	ocp_nlp_out_stage **nlp_out_stage;
+
     // integrators
     sim_in **sim_in;
     sim_out **sim_out;

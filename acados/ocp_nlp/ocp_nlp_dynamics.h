@@ -31,6 +31,7 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/external_function_generic.h"
+//#include "acados/ocp_nlp/ocp_nlp_common.h" // XXX loop of include !!!
 
 
 
@@ -78,8 +79,8 @@ void *ocp_nlp_dynamics_model_assign(void *config, ocp_nlp_dynamics_dims *dims, v
 
 typedef struct
 {
-	struct blasfeo_dvec dyn_fun;
-//	struct blasfeo_dvec dyn_adj;
+	struct blasfeo_dvec fun;
+	struct blasfeo_dvec adj;
 } ocp_nlp_dynamics_memory;
 
 //
