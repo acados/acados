@@ -436,7 +436,7 @@ ocp_qp_in *read_ocp_qp_in(const char *fpath_, int_t BOUNDS, int_t INEQUALITIES, 
     if (INEQUALITIES) read_ocp_qp_in_nc(&nc, N, fpath);
     if (MPC && !BOUNDS) nb[0] = nx[0];
 
-    ocp_qp_in *in = create_ocp_qp_in(N, nx, nu, nb, nc);
+    ocp_qp_in *in = ocp_qp_in_create(N, nx, nu, nb, nc);
 
     read_ocp_qp_in_basic(in, fpath);
     if (BOUNDS) read_ocp_qp_in_bounds(in, fpath);

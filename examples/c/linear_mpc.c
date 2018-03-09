@@ -97,7 +97,7 @@ int main() {
         nc[k] = 0;
     }
 
-    ocp_qp_in *qp_in = create_ocp_qp_in(NN, nx, nu, nb, nc);
+    ocp_qp_in *qp_in = ocp_qp_in_create(NN, nx, nu, nb, nc);
 
     // Copy LTI dynamics and constraints to QP memory
     for (int_t k = 0; k < NN+1; k++) {
@@ -134,7 +134,7 @@ int main() {
         }
     }
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(NN, nx, nu, nb, nc);
+    ocp_qp_out *qp_out = ocp_qp_out_create(NN, nx, nu, nb, nc);
 
     ocp_qp_qpdunes_opts *args = ocp_qp_qpdunes_create_arguments(QPDUNES_LINEAR_MPC);
 
