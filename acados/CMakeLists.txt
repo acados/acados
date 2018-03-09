@@ -119,7 +119,7 @@ if(ACADOS_WITH_OOQP)
 endif()
 
 # Enable or disable timings
-if(NOT CMAKE_BUILD_TYPE MATCHES "Debug" AND NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 endif()
 

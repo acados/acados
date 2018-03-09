@@ -88,13 +88,13 @@ dense_qp_out *create_dense_qp_out(dense_qp_dims *dims)
 int dense_qp_calculate_args_size(dense_qp_solver_plan *plan, dense_qp_dims *dims)
 {
     dense_qp_solver_config fcn_ptrs = {
-        .fun = NULL,
-        .opts_calculate_size = NULL,
-        .opts_assign = NULL,
-        .opts_initialize_default = NULL,
-        .memory_calculate_size = NULL,
-        .memory_assign = NULL,
-        .workspace_calculate_size = NULL};
+        /*.fun = */ NULL,
+        /*.calculate_args_size = */ NULL,
+        /*.assign_args = */ NULL,
+        /*.initialize_default_args = */ NULL,
+        /*.calculate_memory_size = */ NULL,
+        /*.assign_memory = */ NULL,
+        /*.calculate_workspace_size = */ NULL};
 
     set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -108,13 +108,13 @@ int dense_qp_calculate_args_size(dense_qp_solver_plan *plan, dense_qp_dims *dims
 void *dense_qp_assign_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *raw_memory)
 {
     dense_qp_solver_config fcn_ptrs = {
-        .fun = NULL,
-        .opts_calculate_size = NULL,
-        .opts_assign = NULL,
-        .opts_initialize_default = NULL,
-        .memory_calculate_size = NULL,
-        .memory_assign = NULL,
-        .workspace_calculate_size = NULL};
+        /*.fun = */ NULL,
+        /*.calculate_args_size = */ NULL,
+        /*.assign_args = */ NULL,
+        /*.initialize_default_args = */ NULL,
+        /*.calculate_memory_size = */ NULL,
+        /*.assign_memory = */ NULL,
+        /*.calculate_workspace_size = */ NULL};
 
     set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
 
@@ -172,13 +172,13 @@ void *dense_qp_copy_args(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *
 int dense_qp_calculate_size(dense_qp_solver_plan *plan, dense_qp_dims *dims, void *args_)
 {
     dense_qp_solver_config fcn_ptrs = {
-        .fun = NULL,
-        .opts_calculate_size = NULL,
-        .opts_assign = NULL,
-        .opts_initialize_default = NULL,
-        .memory_calculate_size = NULL,
-        .memory_assign = NULL,
-        .workspace_calculate_size = NULL};
+        /*.fun = */ NULL,
+        /*.calculate_args_size = */ NULL,
+        /*.assign_args = */ NULL,
+        /*.initialize_default_args = */ NULL,
+        /*.calculate_memory_size = */ NULL,
+        /*.assign_memory = */ NULL,
+        /*.calculate_workspace_size = */ NULL};
 
     set_dense_qp_solver_fcn_ptrs(plan, &fcn_ptrs);
 

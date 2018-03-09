@@ -55,8 +55,7 @@ bool set_option_int(void *args_, const char *option, const int value)
     token = strsep(&option_cpy, ".");
     while (token) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm"))
-		{
+        if (!strcmp(token, "sparse_hpipm")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
@@ -68,9 +67,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "N2"))
                 pcond_args->N2 = value;
             else return false;
-        }
-		else if (!strcmp(token, "condensing_hpipm"))
-		{
+        } else if (!strcmp(token, "condensing_hpipm")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) sparse_args->solver_args;
@@ -79,10 +76,8 @@ bool set_option_int(void *args_, const char *option, const int value)
             else if (!strcmp(token, "max_stat"))
                 args->hpipm_args->stat_max = value;
             else return false;
-        }
 #ifdef ACADOS_WITH_HPMPC
-		else if (!strcmp(token, "hpmpc"))
-		{
+        } else if (!strcmp(token, "hpmpc")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
@@ -209,8 +204,7 @@ bool set_option_double(void *args_, const char *option, const double value)
     strcpy(option_cpy, option);
     while ((token = strsep(&option_cpy, "."))) {
         // Linear search since the number of options is small.
-        if (!strcmp(token, "sparse_hpipm"))
-		{
+        if (!strcmp(token, "sparse_hpipm")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpipm_args *args = (ocp_qp_hpipm_args *) sparse_args->solver_args;
@@ -227,9 +221,7 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
-        }
-		else if (!strcmp(token, "condensing_hpipm"))
-		{
+        } else if (!strcmp(token, "condensing_hpipm")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             dense_qp_hpipm_args *args = (dense_qp_hpipm_args *) sparse_args->solver_args;
@@ -246,10 +238,8 @@ bool set_option_double(void *args_, const char *option, const double value)
             else if (!strcmp(token, "mu0"))
                 args->hpipm_args->mu0 = value;
             else return false;
-        }
 #ifdef ACADOS_WITH_HPMPC
-		else if (!strcmp(token, "hpmpc"))
-		{
+        } else if (!strcmp(token, "hpmpc")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_sparse_solver_args *sparse_args = (ocp_qp_sparse_solver_args *) args_;
             ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *) sparse_args->solver_args;
