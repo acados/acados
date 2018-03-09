@@ -525,7 +525,7 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     return (void *)workspace;
 }
 
-int gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_)
+int gnsf2_simulate(void *config, gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_)
 {
     //     int (*evaluate) (void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work); TODO make this form
     acados_timer tot_timer, casadi_timer;

@@ -50,8 +50,12 @@ int main() {
     sim_solver_config *config = sim_solver_config_assign(config_mem);
     sim_gnsf2_config_initialize_default(config);
 
+    // set up sim_in
+    // int sim_in_size = sim_in_calculate_size(config, simdim);
+    // void *sim_in_mem = malloc(sim_in_size);
+    // sim_in *in_new = sim_in_assign(config, simdim, sim_in_mem);
 
-    // // set up gnsf_in
+    // set up gnsf2_in
     int gnsf2_in_size = gnsf2_in_calculate_size(dims);
     void *gnsf2_in_mem = malloc(gnsf2_in_size);
     gnsf2_in *in = gnsf2_in_assign(dims, gnsf2_in_mem);
@@ -137,7 +141,7 @@ int main() {
     double gnsf_times[NREP];
 
     for (int i = 0; i < NREP; i++) {
-        gnsf2_simulate( dims, fix, in, out, opts, work_);
+        gnsf2_simulate( config_mem, dims, fix, in, out, opts, work_);
 
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;

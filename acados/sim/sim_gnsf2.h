@@ -227,7 +227,7 @@ void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_Y
 
 void sim_gnsf2_config_initialize_default(void *config_);
 
-int gnsf2_simulate(gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_);
+int gnsf2_simulate(void *config, gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_);
 double minimum_of_doubles(double *x, int n);
 void gnsf2_neville(double *out, double xx, int n, double *x, double *Q);
 
