@@ -107,7 +107,7 @@ ocp_qp_out *create_ocp_qp_out(ocp_qp_dims *dims)
 
 int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_xcond_solver_config fcn_ptrs;
 
     module_fcn_ptrs submodule_fcn_ptrs;
 
@@ -118,7 +118,7 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 
     if (status == ACADOS_SUCCESS)
     {
-        size = fcn_ptrs.calculate_args_size(dims, fcn_ptrs.qp_solver);
+        size = fcn_ptrs.opts_calculate_size(dims, fcn_ptrs.qp_solver);
     }
     else
     {
@@ -132,7 +132,7 @@ int ocp_qp_calculate_args_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims)
 
 void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_memory)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_xcond_solver_config fcn_ptrs;
 
     module_fcn_ptrs submodule_fcn_ptrs;
 
@@ -140,9 +140,9 @@ void *ocp_qp_assign_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_
 
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, &fcn_ptrs);
 
-    void *args = fcn_ptrs.assign_args(dims, fcn_ptrs.qp_solver, raw_memory);
+    void *args = fcn_ptrs.opts_assign(dims, fcn_ptrs.qp_solver, raw_memory);
 
-    fcn_ptrs.initialize_default_args(args);
+    fcn_ptrs.opts_initialize_default(args);
 
     return args;
 }
@@ -217,7 +217,7 @@ void *ocp_qp_copy_args(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *raw_me
 
 int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *args_)
 {
-    ocp_qp_xcond_solver_fcn_ptrs fcn_ptrs;
+    ocp_qp_xcond_solver_config fcn_ptrs;
 
     module_fcn_ptrs submodule_fcn_ptrs;
 
@@ -229,17 +229,17 @@ int ocp_qp_calculate_size(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *arg
 
     bytes = sizeof(ocp_qp_solver);
 
-    bytes += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
+    bytes += sizeof(ocp_qp_xcond_solver_config);
 
     bytes += sizeof(module_fcn_ptrs);
 
     bytes += ocp_qp_dims_calculate_size(dims->N);
 
-    bytes += fcn_ptrs.calculate_args_size(dims, &submodule_fcn_ptrs);
+    bytes += fcn_ptrs.opts_calculate_size(dims, &submodule_fcn_ptrs);
 
-    bytes += fcn_ptrs.calculate_memory_size(dims, args_);
+    bytes += fcn_ptrs.memory_calculate_size(dims, args_);
 
-    bytes += fcn_ptrs.calculate_workspace_size(dims, args_);
+    bytes += fcn_ptrs.workspace_calculate_size(dims, args_);
 
     return bytes;
 }
@@ -253,8 +253,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
     ocp_qp_solver *solver = (ocp_qp_solver *) c_ptr;
     c_ptr += sizeof(ocp_qp_solver);
 
-    solver->fcn_ptrs = (ocp_qp_xcond_solver_fcn_ptrs *) c_ptr;
-    c_ptr += sizeof(ocp_qp_xcond_solver_fcn_ptrs);
+    solver->fcn_ptrs = (ocp_qp_xcond_solver_config *) c_ptr;
+    c_ptr += sizeof(ocp_qp_xcond_solver_config);
     solver->fcn_ptrs->qp_solver = (void *) c_ptr;
     c_ptr += sizeof(module_fcn_ptrs);
     set_ocp_qp_xcond_solver_fcn_ptrs(plan, solver->fcn_ptrs);
@@ -266,11 +266,11 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_solver_plan *plan, ocp_qp_dims *dims, void *
     solver->args = ocp_qp_copy_args(plan, dims, c_ptr, args_);
     c_ptr += ocp_qp_calculate_args_size(plan, dims);
 
-    solver->mem = solver->fcn_ptrs->assign_memory(dims, args_, c_ptr);
-    c_ptr += solver->fcn_ptrs->calculate_memory_size(dims, args_);
+    solver->mem = solver->fcn_ptrs->memory_assign(dims, args_, c_ptr);
+    c_ptr += solver->fcn_ptrs->memory_calculate_size(dims, args_);
 
     solver->work = (void *) c_ptr;
-    c_ptr += solver->fcn_ptrs->calculate_workspace_size(dims, args_);
+    c_ptr += solver->fcn_ptrs->workspace_calculate_size(dims, args_);
 
     assert((char*)raw_memory + ocp_qp_calculate_size(plan, dims, args_) == c_ptr);
 
@@ -307,35 +307,11 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
 
     switch (solver_name) {
         case PARTIAL_CONDENSING_HPIPM:
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &ocp_qp_hpipm_calculate_args_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &ocp_qp_hpipm_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &ocp_qp_hpipm_initialize_default_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &ocp_qp_hpipm_calculate_memory_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &ocp_qp_hpipm_assign_memory;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &ocp_qp_hpipm_calculate_workspace_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpipm;
+			ocp_qp_hpipm_config_initialize_default(fcn_ptrs);
             break;
         case PARTIAL_CONDENSING_HPMPC:
             #ifdef ACADOS_WITH_HPMPC
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &ocp_qp_hpmpc_calculate_args_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &ocp_qp_hpmpc_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &ocp_qp_hpmpc_initialize_default_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &ocp_qp_hpmpc_calculate_memory_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &ocp_qp_hpmpc_assign_memory;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &ocp_qp_hpmpc_calculate_workspace_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_hpmpc;
+			ocp_qp_hpmpc_config_initialize_default(fcn_ptrs);
             #else
             return_value = ACADOS_FAILURE;
             #endif
@@ -345,70 +321,22 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
             break;
         case PARTIAL_CONDENSING_QPDUNES:
             #ifdef ACADOS_WITH_QPDUNES
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &ocp_qp_qpdunes_calculate_args_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &ocp_qp_qpdunes_assign_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &ocp_qp_qpdunes_initialize_default_args;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &ocp_qp_qpdunes_calculate_memory_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &ocp_qp_qpdunes_assign_memory;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &ocp_qp_qpdunes_calculate_workspace_size;
-            ((ocp_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &ocp_qp_qpdunes;
+			ocp_qp_qpdunes_config_initialize_default(fcn_ptrs);
             #else
             return_value = ACADOS_FAILURE;
             #endif
             break;
         case FULL_CONDENSING_HPIPM:
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &dense_qp_hpipm_calculate_args_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &dense_qp_hpipm_assign_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &dense_qp_hpipm_initialize_default_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &dense_qp_hpipm_calculate_memory_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &dense_qp_hpipm_assign_memory;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &dense_qp_hpipm_calculate_workspace_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_hpipm;
+			dense_qp_hpipm_config_initialize_default(fcn_ptrs);
             break;
         case FULL_CONDENSING_QPOASES:
             #ifdef ACADOS_WITH_QPOASES
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &dense_qp_qpoases_calculate_args_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &dense_qp_qpoases_assign_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &dense_qp_qpoases_initialize_default_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &dense_qp_qpoases_calculate_memory_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &dense_qp_qpoases_assign_memory;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &dense_qp_qpoases_calculate_workspace_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qpoases;
+            dense_qp_qpoases_config_initialize_default(fcn_ptrs);
             #endif
             break;
         case FULL_CONDENSING_QORE:
             #ifdef ACADOS_WITH_QORE
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_args_size =
-                &dense_qp_qore_calculate_args_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_args =
-                &dense_qp_qore_assign_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->initialize_default_args =
-                &dense_qp_qore_initialize_default_args;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_memory_size =
-                &dense_qp_qore_calculate_memory_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->assign_memory =
-                &dense_qp_qore_assign_memory;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->calculate_workspace_size =
-                &dense_qp_qore_calculate_workspace_size;
-            ((dense_qp_solver_fcn_ptrs *) fcn_ptrs)->fun = &dense_qp_qore;
+			dense_qp_qore_config_initialize_default(fcn_ptrs);
             #else
             return_value = ACADOS_FAILURE;
             #endif
@@ -421,40 +349,40 @@ int set_qp_solver_fcn_ptrs(ocp_qp_solver_plan *plan, module_fcn_ptrs *fcn_ptrs)
 
 
 
-int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_fcn_ptrs *fcn_ptrs)
+int set_ocp_qp_xcond_solver_fcn_ptrs(ocp_qp_solver_plan *plan, ocp_qp_xcond_solver_config *fcn_ptrs)
 {
     ocp_qp_solver_t solver_name = plan->qp_solver;
 
-    if (solver_name < FULL_CONDENSING_HPIPM)
+    if (solver_name < FULL_CONDENSING_HPIPM) // part cond + ocp_qp
     {
-        fcn_ptrs->calculate_args_size =
+        fcn_ptrs->opts_calculate_size =
             &ocp_qp_sparse_solver_calculate_args_size;
-        fcn_ptrs->assign_args =
+        fcn_ptrs->opts_assign =
             &ocp_qp_sparse_solver_assign_args;
-        fcn_ptrs->initialize_default_args =
+        fcn_ptrs->opts_initialize_default =
             &ocp_qp_sparse_solver_initialize_default_args;
-        fcn_ptrs->calculate_memory_size =
+        fcn_ptrs->memory_calculate_size =
             &ocp_qp_sparse_solver_calculate_memory_size;
-        fcn_ptrs->assign_memory =
+        fcn_ptrs->memory_assign =
             &ocp_qp_sparse_solver_assign_memory;
-        fcn_ptrs->calculate_workspace_size =
+        fcn_ptrs->workspace_calculate_size =
             &ocp_qp_sparse_solver_calculate_workspace_size;
         fcn_ptrs->fun =
             &ocp_qp_sparse_solver;
     }
-    else
+    else // full cond + dense_qp
     {
-        fcn_ptrs->calculate_args_size =
+        fcn_ptrs->opts_calculate_size =
             &ocp_qp_full_condensing_solver_calculate_args_size;
-        fcn_ptrs->assign_args =
+        fcn_ptrs->opts_assign =
             &ocp_qp_full_condensing_solver_assign_args;
-        fcn_ptrs->initialize_default_args =
+        fcn_ptrs->opts_initialize_default =
             &ocp_qp_full_condensing_solver_initialize_default_args;
-        fcn_ptrs->calculate_memory_size =
+        fcn_ptrs->memory_calculate_size =
             &ocp_qp_full_condensing_solver_calculate_memory_size;
-        fcn_ptrs->assign_memory =
+        fcn_ptrs->memory_assign =
             &ocp_qp_full_condensing_solver_assign_memory;
-        fcn_ptrs->calculate_workspace_size =
+        fcn_ptrs->workspace_calculate_size =
             &ocp_qp_full_condensing_solver_calculate_workspace_size;
         fcn_ptrs->fun =
             &ocp_qp_full_condensing_solver;

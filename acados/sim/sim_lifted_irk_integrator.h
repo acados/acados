@@ -24,12 +24,26 @@
 extern "C" {
 #endif
 
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
+
+
+
+typedef struct
+{
+	/* external functions */
+	// jacobian explicit ode
+	external_function_generic *jac_ode_expl;
+	// forward explicit vde
+	external_function_generic *forw_vde_expl;
+
+} lifted_irk_model;
+
+
 
 typedef struct {
     real_t *rhs_in;
@@ -48,6 +62,8 @@ typedef struct {
 
     real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
+
+
 
 typedef struct {
 
@@ -74,32 +90,28 @@ typedef struct {
 
 } sim_lifted_irk_memory;
 
+
+//
+int sim_lifted_irk_model_calculate_size(sim_dims *dims);
+//
+void *sim_lifted_irk_model_assign(sim_dims *dims, void *raw_memory);
+
 int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
 
-void *sim_lifted_irk_assign_opts(sim_dims *dims, void *raw_memory);
+void *sim_lifted_irk_opts_assign(sim_dims *dims, void *raw_memory);
 
-void sim_lifted_irk_initialize_default_args(sim_dims *dims, void *opts_);
+void sim_lifted_irk_opts_initialize_default(sim_dims *dims, void *opts_);
 
-int sim_lifted_irk_calculate_memory_size(sim_dims *dims, void *opts);
+int sim_lifted_irk_memory_calculate_size(sim_dims *dims, void *opts);
 
-void *sim_lifted_irk_assign_memory(sim_dims *dims, void *opts_, void *raw_memory);
+void *sim_lifted_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory);
 
 int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem, void *work);
 
-int sim_lifted_irk_calculate_workspace_size(sim_dims *in, void *args);
+int sim_lifted_irk_workspace_calculate_size(sim_dims *in, void *args);
 
-void sim_irk_create_arguments(void *args, const int_t num_stages, const char* name);
+void sim_lifted_irk_config_initialize_default(void *config);
 
-void sim_lifted_irk_initialize(const sim_in *in, void *args_, void *mem_,
-                               void **work);
-void sim_lifted_irk_destroy(void *mem, void *work);
-
-void sim_irk_control_collocation(void *args, int_t num_stages,
-                                 const char *name);
-
-void sim_irk_create_Newton_scheme(void *args, int_t num_stages,
-                                  const char *name,
-                                  enum Newton_type_collocation type);
 
 #ifdef __cplusplus
 } /* extern "C" */

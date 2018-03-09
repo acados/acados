@@ -26,8 +26,6 @@
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 
 
 
@@ -40,7 +38,7 @@ int sim_dims_calculate_size()
 
 
 
-sim_dims *assign_sim_dims(void *raw_memory)
+sim_dims *sim_dims_assign(void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -54,7 +52,7 @@ sim_dims *assign_sim_dims(void *raw_memory)
 
 
 
-int sim_in_calculate_size(sim_dims *dims)
+int sim_in_calculate_size(sim_dims *dims, sim_solver_config *config)
 {
     int size = sizeof(sim_in);
 
@@ -66,6 +64,8 @@ int sim_in_calculate_size(sim_dims *dims)
     size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
     size += (nx + nu) * sizeof(double);  // S_adj
 
+	size += config->model_calculate_size(dims);
+
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
@@ -74,20 +74,18 @@ int sim_in_calculate_size(sim_dims *dims)
 
 
 
-sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
+sim_in *sim_in_assign(sim_dims *dims, void *raw_memory, sim_solver_config *config)
 {
     char *c_ptr = (char *) raw_memory;
 
     sim_in *in = (sim_in *) c_ptr;
     c_ptr += sizeof(sim_in);
 
+	in->dims = dims;
+
     int nx = dims->nx;
     int nu = dims->nu;
     int NF = nx+nu;
-
-    // TODO(dimitris): USE DIMS INSIDE SIM_IN INSTEAD!
-    in->nx = nx;
-    in->nu = nu;
 
     align_char_to(8, &c_ptr);
 
@@ -96,7 +94,10 @@ sim_in *assign_sim_in(sim_dims *dims, void *raw_memory)
     assign_double(nx * NF, &in->S_forw, &c_ptr);
     assign_double(NF, &in->S_adj, &c_ptr);
 
-    assert((char*)raw_memory + sim_in_calculate_size(dims) >= c_ptr);
+	in->model = config->model_assign(dims, c_ptr);
+	c_ptr += config->model_calculate_size(dims);
+
+    assert((char*)raw_memory + sim_in_calculate_size(dims, config) >= c_ptr);
 
     return in;
 }
@@ -127,7 +128,7 @@ int sim_out_calculate_size(sim_dims *dims)
 
 
 
-sim_out *assign_sim_out(sim_dims *dims, void *raw_memory)
+sim_out *sim_out_assign(sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 

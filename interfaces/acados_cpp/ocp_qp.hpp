@@ -38,21 +38,25 @@ public:
 
     std::pair<uint, uint> dimensions(std::string field, uint stage);
 
-    void bounds_indices(std::string name, uint stage, std::vector<uint> v);
+    void set_bounds_indices(std::string name, uint stage, std::vector<uint> v);
 
     std::vector<std::vector<uint>> bounds_indices(std::string name);
 
     const uint N;
 
 private:
-    
+
+    vector<uint> idxb(vector<double> lower_bound, vector<double> upper_bound);
+
+    void fill_in_bounds();
+
     void squeeze_dimensions();
 
     void expand_dimensions();
 
     void check_range(std::string field, uint stage);
     
-    void check_nb_elements(std::string, uint stage, uint nb_elems);
+    void check_num_elements(std::string, uint stage, uint nb_elems);
 
     void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);
 
@@ -62,11 +66,15 @@ private:
     std::vector<uint> nbu();
     std::vector<uint> ng();
 
+    std::map<std::string, std::vector<std::vector<double>>> cached_bounds;
+
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
 
     std::string cached_solver;
+
+    bool needs_initializing = true;
 
     static std::map<std::string, std::function<void(int, ocp_qp_in *, double *)>> extract_functions;
 

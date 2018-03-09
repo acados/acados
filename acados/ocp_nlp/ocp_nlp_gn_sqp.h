@@ -29,7 +29,7 @@ extern "C" {
 #include <acados_c/sim.h>
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/sim/sim_collocation.h"
+#include "acados/sim/sim_collocation_utils.h" // TODO remove ???
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 // blasfeo
@@ -50,17 +50,17 @@ typedef struct
 	double min_res_d;
 	double min_res_m;
     // QP solver
-    ocp_qp_xcond_solver_fcn_ptrs *qp_solver;
+    ocp_qp_xcond_solver_config *qp_solver;
     void *qp_solver_args;
     // integrators
-    sim_solver_fcn_ptrs **sim_solvers;
+    sim_solver_config **sim_solvers;
     void **sim_solvers_args;
 } ocp_nlp_gn_sqp_args;
 
 //
-int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers);
+int ocp_nlp_gn_sqp_calculate_args_size(ocp_nlp_dims *dims, ocp_qp_xcond_solver_config *qp_solver, sim_solver_config *sim_solvers);
 //
-ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_fcn_ptrs *qp_solver, sim_solver_fcn_ptrs *sim_solvers, void *raw_memory);
+ocp_nlp_gn_sqp_args *ocp_nlp_gn_sqp_assign_args(ocp_nlp_dims *dims, ocp_qp_xcond_solver_config *qp_solver, sim_solver_config *sim_solvers, void *raw_memory);
 
 
 
@@ -81,7 +81,7 @@ typedef struct
 	// nlp memory
 	ocp_nlp_mem *nlp_mem;
 
-	
+
 	struct blasfeo_dmat *W_chol; // cholesky factor of weight matrix
     struct blasfeo_dvec *ls_res; // least-squares residual r(x)
 
@@ -109,6 +109,7 @@ typedef struct
     void *qp_work;
 
     // integrators
+    sim_dims *sim_dims;
     sim_in **sim_in;
     sim_out **sim_out;
     void **sim_solvers_work;
@@ -127,7 +128,7 @@ typedef struct
 } ocp_nlp_gn_sqp_work;
 
 //
-int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args);
+int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_args *args, ocp_nlp_solver_config *config);
 
 
 
@@ -136,7 +137,7 @@ int ocp_nlp_gn_sqp_calculate_workspace_size(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_a
 ************************************************/
 
 //
-int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_);
+int ocp_nlp_gn_sqp(ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_gn_sqp_args *args, ocp_nlp_gn_sqp_memory *mem, void *work_, ocp_nlp_solver_config *config);
 
 
 

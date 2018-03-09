@@ -31,8 +31,9 @@ extern "C" {
 
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
-    QPDUNES_LINEAR_MPC,    // TODO(dimitris): implement
-    QPDUNES_NONLINEAR_MPC  // TODO(dimitris): implement
+    QPDUNES_LINEAR_MPC,    // TODO(dimitris): partly implemented
+    QPDUNES_NONLINEAR_MPC,  // TODO(dimitris): not implemented yet
+    QPDUNES_ACADO_SETTINGS
 } qpdunes_options_t;
 
 
@@ -92,6 +93,8 @@ int ocp_qp_qpdunes_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
 int ocp_qp_qpdunes(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *memory_, void *work_);
 //
 void ocp_qp_qpdunes_free_memory(void *mem_);
+//
+void ocp_qp_qpdunes_config_initialize_default(void *config_);
 
 #ifdef __cplusplus
 } /* extern "C" */

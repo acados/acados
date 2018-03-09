@@ -37,7 +37,9 @@ typedef struct dense_qp_qpoases_args_ {
     int max_nwsr;        // maximum number of working set recalculations
     int warm_start;      // warm start with dual_sol in memory
 	int use_precomputed_cholesky;
-	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities) 
+	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities)
+    int set_acado_opts;  // use same options as in acado code generation
+    int dummy;           // should not have odd number of ints in a struct
 } dense_qp_qpoases_args;
 
 
@@ -80,6 +82,8 @@ void *dense_qp_qpoases_assign_memory(dense_qp_dims *dims, void *args_, void *raw
 int dense_qp_qpoases_calculate_workspace_size(dense_qp_dims *dims, void *args_);
 //
 int dense_qp_qpoases(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *memory_, void *work_);
+//
+void dense_qp_qpoases_config_initialize_default(void *config_);
 
 
 #ifdef __cplusplus
