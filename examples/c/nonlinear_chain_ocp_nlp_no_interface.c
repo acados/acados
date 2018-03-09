@@ -624,7 +624,6 @@ int main() {
 	// partial condensing HPIPM
 	ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
 	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
-	config->qp_solver->N2 = NN; // full horizon
 #else
 	// full condensing HPIPM
 	ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
@@ -726,7 +725,7 @@ int main() {
 		external_function_casadi_assign(jac_ode_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
 	}
-	
+
 #else // DYNAMICS==2
 
 	// impl_ode
@@ -1161,7 +1160,7 @@ int main() {
 /************************************************
 * return
 ************************************************/
-	
+
 	printf("\nsuccess!\n\n");
 
 	return 0;
