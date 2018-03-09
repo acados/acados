@@ -81,8 +81,8 @@ void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config_, voi
     ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *)opts_;
 	// partial condensing opts
     ocp_qp_partial_condensing_initialize_default_args(opts->pcond_opts);
-	ocp_qp_partial_condensing_args *pcond_opts = opts->pcond_opts;
-	pcond_opts->N2 = config->N2;
+	// ocp_qp_partial_condensing_args *pcond_opts = opts->pcond_opts;
+	// pcond_opts->N2 = config->N2;
 	// qp solver opts
     qp_solver->opts_initialize_default(qp_solver, opts->qp_solver_opts);
 }
