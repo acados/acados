@@ -84,6 +84,20 @@ sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims)
 
 
 
+int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
+{
+    if (!strcmp(fun_type, "forward_vde"))
+        config->model_set_forward_vde(in, fun_ptr);
+    else if (!strcmp(fun_type, "adjoint_vde"))
+        config->model_set_adjoint_vde(in, fun_ptr);
+    else
+        return ACADOS_FAILURE;
+
+    return ACADOS_SUCCESS;
+}
+
+
+
 sim_out *sim_out_create(sim_solver_config *config, sim_dims *dims)
 {
     int bytes = sim_out_calculate_size(config, dims);

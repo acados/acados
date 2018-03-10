@@ -58,6 +58,22 @@ void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
+void sim_erk_model_set_forward_vde(sim_in *in, void *fun)
+{
+    erk_model *model = in->model;
+    model->forw_vde_expl = (external_function_generic *) fun;
+}
+
+
+
+void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
+{
+    erk_model *model = in->model;
+    model->adj_vde_expl = (external_function_generic *) fun;
+}
+
+
+
 int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 {
 
@@ -477,6 +493,8 @@ void sim_erk_config_initialize_default(void *config_)
 	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
 	config->model_calculate_size = &sim_erk_model_calculate_size;
 	config->model_assign = &sim_erk_model_assign;
+    config->model_set_forward_vde = &sim_erk_model_set_forward_vde;
+    config->model_set_adjoint_vde = &sim_erk_model_set_adjoint_vde;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
 	config->ns = 4;
 
