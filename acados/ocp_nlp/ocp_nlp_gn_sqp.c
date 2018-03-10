@@ -41,27 +41,27 @@
 
 
 
-static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *opts)
-{
-	/* ocp_qp_xcond_solver_config *qp_solver = config->qp_solver; */
-	ocp_nlp_dynamics_config **dynamics = config->dynamics;
+// static int get_max_sim_workspace_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *opts)
+// {
+// 	/* ocp_qp_xcond_solver_config *qp_solver = config->qp_solver; */
+// 	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 
-    int sim_work_size;
+//     int sim_work_size;
 
-    int max_sim_work_size = 0;
+//     int max_sim_work_size = 0;
 
-    for (int ii = 0; ii < dims->N; ii++)
-    {
-        // sim_in_size = sim_in_calculate_size(dims->sim[ii]);
-        // if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
-        // sim_out_size = sim_out_calculate_size(dims->sim[ii]);
-        // if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
-		ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[ii];
-        sim_work_size = dynamics[ii]->sim_solver->workspace_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, dynamics_opts->sim_solver);
-        if (sim_work_size > max_sim_work_size) max_sim_work_size = sim_work_size;
-    }
-    return max_sim_work_size;
-}
+//     for (int ii = 0; ii < dims->N; ii++)
+//     {
+//         // sim_in_size = sim_in_calculate_size(dims->sim[ii]);
+//         // if (sim_in_size > *max_sim_in_size) *max_sim_in_size = sim_in_size;
+//         // sim_out_size = sim_out_calculate_size(dims->sim[ii]);
+//         // if (sim_out_size > *max_sim_out_size) *max_sim_out_size = sim_out_size;
+// 		ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[ii];
+//         sim_work_size = dynamics[ii]->sim_solver->workspace_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, dynamics_opts->sim_solver);
+//         if (sim_work_size > max_sim_work_size) max_sim_work_size = sim_work_size;
+//     }
+//     return max_sim_work_size;
+// }
 
 
 
@@ -554,7 +554,7 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 	for (i=0; i<N; i++)
 	{
 		nx1 = dims->dynamics[i]->nx1;
-		blasfeo_dveccp(nx1, &nlp_mem->dynamics[i]->fun, 0, nlp_mem->dyn_fun+i, 0); 
+		blasfeo_dveccp(nx1, &nlp_mem->dynamics[i]->fun, 0, nlp_mem->dyn_fun+i, 0);
 	}
 
 	// nlp mem: dyn_adj
@@ -728,7 +728,7 @@ static void update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_nlp_g
 {
 
 	// loop index
-	int i, j;
+	int i;
 
 	// extract dims
     int N = nlp_out->dims->N;
@@ -882,7 +882,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 
 //print_ocp_qp_in(work->qp_in);
 //exit(1);
-		
+
         int_t qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out,
             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 

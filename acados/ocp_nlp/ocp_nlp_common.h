@@ -57,6 +57,7 @@ typedef struct
 typedef struct
 {
 	// TODO
+	int dummy;  // NOTE(dimitris): tmp field to fix cmake error on empty struct
 } ocp_nlp_dims_stage;
 
 
