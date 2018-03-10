@@ -21,107 +21,123 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
-// acados_c
-#include <acados_c/dense_qp.h>
-#include <acados_c/legacy_create.h>
-// acados
-#include <acados/ocp_qp/ocp_qp_full_condensing.h>
-// NOTE(nielsvd): required to cast memory etc. should go.
-#include <acados/ocp_qp/ocp_qp_full_condensing_solver.h>
-#include <acados/dense_qp/dense_qp_hpipm.h>
-#include <acados/dense_qp/dense_qp_qpoases.h>
 
-#define NREP 1
+// acados_c
+#include "acados_c/dense_qp_interface.h"
+#include "acados_c/legacy_create.h"
+
+// acados
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_common_frontend.h"
+
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+
+// NOTE(nielsvd): required to cast memory etc. should go.
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+#include "acados/dense_qp/dense_qp_hpipm.h"
+#include "acados/dense_qp/dense_qp_qpoases.h"
+
+#define NREP 1  // TODO(dimitris): are timings valid for NREP > 1?
 #define ELIMINATE_X0
 #define OFFLINE_CONDENSING 1
-#define BLASFEO_CHOLESKY 0
+#define BLASFEO_CHOLESKY 1
 
-#include "./mass_spring.c"
+// mass spring
+ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 
 int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-	if(OFFLINE_CONDENSING == 1) {
+	if(OFFLINE_CONDENSING == 1)
 		printf(" acados + offline condensing + qpoases + expansion\n");
-	} else {
+	else
 		printf(" acados + online condensing + qpoases + expansion\n");
-	}
-    printf("\n");
+	printf("\n");
     printf("\n");
     printf("\n");
 
     /************************************************
-    * ocp qp
-    ************************************************/
+     * set up dimensions
+     ************************************************/
 
-    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring();
+    int nx_ = 8;   // number of states (it has to be even for the mass-spring system test problem)
 
-    ocp_qp_dims *qp_dims = qp_in->dim;
+    int nu_ = 3;   // number of inputs (controllers) (it has to be at least 1 and
+                   // at most nx_/2 for the mass-spring system test problem)
 
-    int N = qp_dims->N;
-    int *nx = qp_dims->nx;
-    int *nu = qp_dims->nu;
-    int *nb = qp_dims->nb;
-    int *ng = qp_dims->ng;
+    int N = 15;    // horizon length
+    int nb_ = 11;  // number of box constrained inputs and states
+    int ng_ = 0;   // 4;  // number of general constraints
+
+    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+    int num_of_stages_equal_to_zero = 4;  // number of states to be enforced to zero at last stage
+    int ngN = num_of_stages_equal_to_zero;
+    #else
+    int ngN = 0;
+    #endif
+
+	ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
 
     /************************************************
-    * dense qp
+     * ocp qp in/out
+     ************************************************/
+
+    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
+    ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims);
+
+    /************************************************
+    * dense qp in/out
     ************************************************/
 
     dense_qp_dims ddims;
     compute_dense_qp_dims(qp_in->dim, &ddims);
 
-    dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
+    dense_qp_in *qpd_in = dense_qp_in_create(NULL, &ddims);
+    dense_qp_out *qpd_out = dense_qp_out_create(NULL, &ddims);
 
+    // TODO(dimitris): rename
     ocp_qp_full_condensing_args *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-	ocp_qp_full_condensing_opts_initialize_default(cond_opts);
-	ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
-
-    /************************************************
-    * ocp qp solution
-    ************************************************/
-
-    ocp_qp_out *qp_out = ocp_qp_out_create(qp_in->dim);
-
-    /************************************************
-    * dense sol
-    ************************************************/
-
-    dense_qp_out *qpd_out = create_dense_qp_out(&ddims);
+    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
 
     /************************************************
     * dense qpoases
     ************************************************/
 
     dense_qp_solver_plan plan;
-	plan.qp_solver = DENSE_QP_QPOASES;
+    plan.qp_solver = DENSE_QP_QPOASES;
 
-    void *argd = dense_qp_create_args(&plan, &ddims);
+    qp_solver_config *config = dense_qp_config_create(&plan);
 
-	dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)argd;
+    void *dopts = dense_qp_opts_create(config, &ddims);
 
-	if (BLASFEO_CHOLESKY == 1) {
+	dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)dopts;
+
+	if (BLASFEO_CHOLESKY == 1)
 		args->use_precomputed_cholesky = 1;
-	}
 
-	if (OFFLINE_CONDENSING == 1) {
+	if (OFFLINE_CONDENSING == 1)
 		args->hotstart = 1;
-	}
 
-	dense_qp_solver *qp_solver = dense_qp_create(&plan, &ddims, argd);
+	dense_qp_solver *qp_solver = dense_qp_create(config, &ddims, dopts);
 
-	int acados_return;  // 0 normal; 1 max iter
+	int acados_return;
 
 	int nvd = qpd_in->dim->nv;
 
 	ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
-	dense_qp_qpoases_memory *qpoases_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
 
 	struct blasfeo_dmat sR;
 	blasfeo_allocate_dmat(nvd, nvd, &sR);
 
-	if(OFFLINE_CONDENSING == 1) {
+	if(OFFLINE_CONDENSING == 1)
+    {
 		cond_opts->condense_rhs_only = 1;
 		cond_opts->expand_primal_sol_only = 1;
 
@@ -143,8 +159,10 @@ int main() {
 	acados_timer timer;
     acados_tic(&timer);
 
-	for(int rep = 0; rep < NREP; rep++) {
-		if(OFFLINE_CONDENSING == 0 && BLASFEO_CHOLESKY == 1) {
+	for (int rep = 0; rep < NREP; rep++)
+    {
+		if (OFFLINE_CONDENSING == 0 && BLASFEO_CHOLESKY == 1)
+        {
 			// cholesky factorization of H
 			dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
 			blasfeo_dpotrf_l(nvd, qpd_in->Hv, 0, 0, &sR, 0, 0);
@@ -177,29 +195,26 @@ int main() {
     convert_ocp_qp_out_to_colmaj(qp_out, sol);
 
     /************************************************
-    * compute residuals
-    ************************************************/
-
-    ocp_qp_res *qp_res = create_ocp_qp_res(dims);
-    ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(dims);
-    ocp_qp_res_compute(qp_in, qp_out, qp_res, res_ws);
-
-    /************************************************
-    * compute infinity norm of residuals
-    ************************************************/
+     * compute infinity norm of residuals
+     ************************************************/
 
     double res[4];
-    ocp_qp_res_compute_nrm_inf(qp_res, res);
+    ocp_qp_inf_norm_residuals(qp_dims, qp_in, qp_out, res);
+
     double max_res = 0.0;
-    for (int ii = 0; ii < 4; ii++) max_res = (res[ii] > max_res) ? res[ii] : max_res;
-    // assertion switched off when using primal-only expansion (no multipliers computed)
-	if (cond_opts->expand_primal_sol_only == 0) {
-		assert(max_res <= 1e6*ACADOS_EPS && "The largest KKT residual greater than 1e6*ACADOS_EPS");
-	}
+    for (int ii = 0; ii < 4; ii++)
+        max_res = (res[ii] > max_res) ? res[ii] : max_res;
+
+    assert(max_res <= ACADOS_EPS && "The largest KKT residual greater than ACADOS_EPS");
 
     /************************************************
     * print solution and stats
     ************************************************/
+
+    int *nx = qp_dims->nx;
+    int *nu = qp_dims->nu;
+    int *nb = qp_dims->nb;
+    int *ng = qp_dims->ng;
 
     printf("\nu = \n");
     for (int ii = 0; ii < N; ii++) d_print_mat(1, nu[ii], sol->u[ii], 1);
@@ -231,9 +246,7 @@ int main() {
     free(qpd_out);
     free(sol);
     free(qp_solver);
-    free(qp_res);
-    free(res_ws);
-    free(argd);
+    free(dopts);
     free(cond_memory);
     free(cond_opts);
 
