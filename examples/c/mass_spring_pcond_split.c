@@ -23,11 +23,12 @@
 #include <stdlib.h>
 
 // acados_c
-#include "acados_c/dense_qp_interface.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_c/legacy_create.h"
+#include "acados_c/options.h"
 
 // acados
-#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
 
 // blasfeo
@@ -45,7 +46,7 @@ int main()
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" acados + full condensing + dense solver + expansion\n");
+    printf(" acados + partial condensing + dense solver + expansion\n");
     printf("\n");
     printf("\n");
     printf("\n");
@@ -79,45 +80,57 @@ int main()
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
     ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims);
 
+
     /************************************************
-    * dense qp in/out
+    * partial condensing opts & memory
     ************************************************/
-
-    dense_qp_dims ddims;
-    compute_dense_qp_dims(qp_in->dim, &ddims);
-
-    dense_qp_in *qpd_in = dense_qp_in_create(NULL, &ddims);
-    dense_qp_out *qpd_out = dense_qp_out_create(NULL, &ddims);
 
     // TODO(dimitris): rename
-    ocp_qp_full_condensing_args *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
+
+    ocp_qp_partial_condensing_args *pcond_opts =
+        ocp_qp_partial_condensing_create_arguments(qp_in->dim);
+
+    pcond_opts->N2 = 4;
+
+    ocp_qp_partial_condensing_memory *pcond_memory =
+        ocp_qp_partial_condensing_create_memory(qp_in->dim, pcond_opts);
 
     /************************************************
-    * dense ipm
+    * partially condensed qp in/out
     ************************************************/
 
-    dense_qp_solver_plan plan;
-    plan.qp_solver = DENSE_QP_HPIPM;
+    // TODO(dimitris): can't I do the same for fcond?
+    ocp_qp_in *qpp_in = ocp_qp_in_create(NULL, pcond_opts->pcond_dims);
+    ocp_qp_out *qpp_out = ocp_qp_out_create(NULL, pcond_opts->pcond_dims);
 
-    qp_solver_config *config = dense_qp_config_create(&plan);
+    /************************************************
+    * sparse ipm
+    ************************************************/
 
-    void *dopts = dense_qp_opts_create(config, &ddims);
+    ocp_qp_solver_plan plan2;
+    plan2.qp_solver = PARTIAL_CONDENSING_HPIPM;  // UUUUUPSSSSS
 
-    dense_qp_solver *qp_solver = dense_qp_create(config, &ddims, dopts);
+    ocp_qp_xcond_solver_config *config = ocp_qp_config_create(&plan2);
 
-	int acados_return;  // 0 normal; 1 max iter
+    void *popts = ocp_qp_opts_create(config,  pcond_opts->pcond_dims);
+
+    // NOTE(dimitris): NOT TO DO A SECOND PCOND!
+    set_option_int(popts, "hpipm.N2", pcond_opts->pcond_dims->N);
+
+    ocp_qp_solver *qp_solver = ocp_qp_create(config, pcond_opts->pcond_dims, popts);
+
+    int acados_return;
 
     acados_timer timer;
     acados_tic(&timer);
 
 	for(int rep = 0; rep < NREP; rep++)
     {
-        ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
+        ocp_qp_partial_condensing(qp_in, qpp_in, pcond_opts, pcond_memory, NULL);
 
-        acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
+        acados_return = ocp_qp_solve(qp_solver, qpp_in, qpp_out);
 
-        ocp_qp_full_expansion(qpd_out, qp_out, cond_opts, cond_memory, NULL);
+        ocp_qp_partial_expansion(qpp_out, qp_out, pcond_opts, pcond_memory, NULL);
     }
 
     real_t time = acados_toc(&timer)/NREP;
@@ -169,7 +182,7 @@ int main()
 
     printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
 
-    dense_qp_info *info = (dense_qp_info *)qpd_out->misc;
+    ocp_qp_info *info = (ocp_qp_info *)qpp_out->misc;
 
     printf("\nSolution time for %d IPM iterations, averaged over %d runs: %5.2e seconds\n\n\n",
         info->num_iter, NREP, time);
@@ -180,15 +193,14 @@ int main()
 
     free(qp_dims);
     free(qp_in);
-    free(qpd_in);
-    free(qp_out);
-    free(qpd_out);
+    free(qpp_in);
+    free(qpp_out);
     free(sol);
-    free(dopts);
+    free(popts);
     free(config);
     free(qp_solver);
-    free(cond_memory);
-    free(cond_opts);
+    free(pcond_memory);
+    free(pcond_opts);
 
 	return 0;
 }

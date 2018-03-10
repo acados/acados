@@ -105,6 +105,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_link_libraries(mass_spring_fcond_split acados)
     add_test(mass_spring_fcond_split mass_spring_example)
 
+    add_executable(mass_spring_pcond_split mass_spring_pcond_split.c mass_spring_model/mass_spring_qp.c)
+    target_link_libraries(mass_spring_pcond_split acados)
+    add_test(mass_spring_pcond_split mass_spring_example)
+
     # add_executable(mass_spring_partial_tightening_example
     #   mass_spring_partial_tightening.c
     # )
