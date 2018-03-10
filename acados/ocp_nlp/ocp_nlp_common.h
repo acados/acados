@@ -120,7 +120,6 @@ typedef struct
 	struct blasfeo_dvec *ineq_adj;
 	struct blasfeo_dvec *dyn_fun;
 	struct blasfeo_dvec *dyn_adj;
-	ocp_nlp_dynamics_memory **dynamics;
 } ocp_nlp_memory;
 
 

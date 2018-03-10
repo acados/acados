@@ -85,12 +85,25 @@ typedef struct
 	struct blasfeo_dvec *ux1; // pointer to ux in nlp_out at next stage
 	struct blasfeo_dvec *pi; // pointer to pi in nlp_out at current stage
 	struct blasfeo_dmat *BAbt; // pointer to BAbt in qp_in
+	void *sim_solver; // sim solver memory
 } ocp_nlp_dynamics_memory;
 
 //
-int ocp_nlp_dynamics_memory_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
+int ocp_nlp_dynamics_memory_calculate_size(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
 //
-void *ocp_nlp_dynamics_memory_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+void *ocp_nlp_dynamics_memory_assign(void *config, ocp_nlp_dynamics_dims *dims, void *opts, void *raw_memory);
+//
+struct blasfeo_dvec *ocp_nlp_dynamics_memory_get_fun_ptr(void *memory);
+//
+struct blasfeo_dvec *ocp_nlp_dynamics_memory_get_adj_ptr(void *memory);
+//
+void ocp_nlp_dynamics_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory);
+//
+void ocp_nlp_dynamics_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory);
+//
+void ocp_nlp_dynamics_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
+//
+void ocp_nlp_dynamics_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
 
 
 
@@ -125,7 +138,7 @@ int ocp_nlp_dynamics_model_calculate_size(void *config, ocp_nlp_dynamics_dims *d
 //
 void *ocp_nlp_dynamics_model_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, ocp_nlp_dynamics_memory *mem, void *opts, void *sim_mem, void *work_);
+void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
 
 
 
@@ -140,10 +153,16 @@ typedef struct
 	int (*opts_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
 	void *(*opts_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
 	void (*opts_initialize_default) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
-	int (*memory_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
-	void *(*memory_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+	int (*memory_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+	void *(*memory_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *opts, void *raw_memory);
+	struct blasfeo_dvec *(*memory_get_fun_ptr) (void *memory_);
+	struct blasfeo_dvec *(*memory_get_adj_ptr) (void *memory_);
+	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory_);
+	void (*memory_set_ux1_ptr) (struct blasfeo_dvec *ux1, void *memory_);
+	void (*memory_set_pi_ptr) (struct blasfeo_dvec *pi, void *memory_);
+	void (*memory_set_BAbt_ptr) (struct blasfeo_dmat *BAbt, void *memory_);
 	int (*workspace_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
-//	void *(update_qp_matrices) (void *config, ocp_nlp_dynamics_dims *dims, ocp_nlp_dynamics_memory *mem, sim_in *sim_in, sim_out *sim_out, void *sim_opts, void *sim_mem, void *sim_work); // TODO add once interface is fixed
+	void (*update_qp_matrices) (void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
 	void (*config_initialize_default) (void *config);
     sim_solver_config *sim_solver;
 } ocp_nlp_dynamics_config;
