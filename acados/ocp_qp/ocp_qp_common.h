@@ -81,13 +81,13 @@ typedef struct
 typedef struct
 {
     // TODO(dimitris): pass dims to evaluate?
-    int (*evaluate) (void *config, void *qp_in, void *qp_out, void *args, void *mem, void *work);
+    int (*evaluate) (void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size) (void *config, void *dims);
     void *(*opts_assign) (void *config, void *dims, void *raw_memory);
-    void (*opts_initialize_default)(void *config, void *args);
-    int (*memory_calculate_size)(void *config, void *dims, void *args);
-    void *(*memory_assign)(void *config, void *dims, void *args, void *raw_memory);
-    int (*workspace_calculate_size)(void *config, void *dims, void *args);
+    void (*opts_initialize_default)(void *config, void *opts);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
 } qp_solver_config;
 
 #endif
@@ -96,15 +96,14 @@ typedef struct
 
 typedef struct
 {
-    int (*evaluate) (void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
+    int (*evaluate) (void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
     int (*opts_calculate_size) (void *config, ocp_qp_dims *dims);
     void *(*opts_assign) (void *config, ocp_qp_dims *dims, void *raw_memory);
-    // void *(*copy_args) (ocp_qp_dims *dims, void *raw_memory, void *source_); // ???
-    void (*opts_initialize_default) (void *config, void *args);
-    int (*memory_calculate_size) (void *config, ocp_qp_dims *dims, void *args);
-    void *(*memory_assign) (void *config, ocp_qp_dims *dims, void *args, void *raw_memory);
-    int (*workspace_calculate_size) (void *config, ocp_qp_dims *dims, void *args);
-    qp_solver_config *qp_solver; // either ocp_qp_solver or dense_solver
+    void (*opts_initialize_default) (void *config, void *opts);
+    int (*memory_calculate_size) (void *config, ocp_qp_dims *dims, void *opts);
+    void *(*memory_assign) (void *config, ocp_qp_dims *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, ocp_qp_dims *dims, void *opts);
+    qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
 } ocp_qp_xcond_solver_config;
 
 

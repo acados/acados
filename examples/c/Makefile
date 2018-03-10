@@ -113,7 +113,7 @@ sim_lifted_irk_crane: $(CRANE_OBJS) sim_lifted_irk_crane.o
 
 
 MASS_SPRING_OBJS =
-MASS_SPRING_OBJS += mass_spring.o
+MASS_SPRING_OBJS += mass_spring_model/mass_spring_qp.o
 
 mass_spring_example_no_interface: $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o
 	$(CCC) -o mass_spring_example_no_interface.out $(MASS_SPRING_OBJS) mass_spring_example_no_interface.o $(LDFLAGS) $(LIBS)

@@ -17,15 +17,14 @@
  *
  */
 
-#ifndef ACADOS_C_OCP_QP_INTERFACE_H_
-#define ACADOS_C_OCP_QP_INTERFACE_H_
+#ifndef ACADOS_C_DENSE_QP_INTERFACE_H_
+#define ACADOS_C_DENSE_QP_INTERFACE_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados_c/common.h"
 
 typedef enum {
     DENSE_QP_HPIPM,
@@ -45,7 +44,6 @@ typedef struct {
     void *work;
 } dense_qp_solver;
 
-// TODO(dimitris): remove N2
 qp_solver_config *dense_qp_config_create(dense_qp_solver_plan *plan);
 //
 dense_qp_dims *dense_qp_dims_create();
@@ -72,4 +70,4 @@ void dense_qp_free(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_C_OCP_QP_INTERFACE_H_
+#endif  // ACADOS_C_DENSE_QP_INTERFACE_H_
