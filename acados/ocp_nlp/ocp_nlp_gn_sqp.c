@@ -187,6 +187,17 @@ int ocp_nlp_gn_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
         size += dynamics[ii]->sim_solver->memory_calculate_size(dynamics[ii]->sim_solver, dims->dynamics[ii]->sim, dynamics_opts->sim_solver);
     }
 
+
+
+	// dynamics
+	size += N*sizeof(ocp_nlp_dynamics_memory *);
+	for (int ii=0; ii<N; ii++)
+	{
+		size += config->dynamics[ii]->memory_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+	}
+
+
+
 	// nlp res
 	size += ocp_nlp_res_calculate_size(dims);
 
@@ -280,6 +291,19 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *confi
 		ny = cost_dims[ii]->ny;
         assign_blasfeo_dvec_mem(ny, mem->ls_res+ii, &c_ptr);
 	}
+
+
+
+	// dynamics
+	mem->dynamics = (void **) c_ptr;
+	c_ptr += N*sizeof(void *);
+	for (int ii=0; ii<N; ii++)
+	{
+		mem->dynamics[ii] = config->dynamics[ii]->memory_assign(config->dynamics[ii], dims->dynamics[ii], c_ptr);
+		c_ptr += config->dynamics[ii]->memory_calculate_size(config->dynamics[ii], dims->dynamics[ii]);
+	}
+
+
 
 	// dims
 //    mem->dims = dims;
@@ -458,12 +482,12 @@ static void ocp_nlp_gn_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp
 
 	// dynamics
 
-    work->dynamics_work = (void **) c_ptr;
+    work->dynamics = (void **) c_ptr;
     c_ptr += dims->N*sizeof(ocp_nlp_dynamics_workspace *);
 
 	for (int ii=0; ii<N; ii++)
 	{
-		work->dynamics_work[ii] = c_ptr;
+		work->dynamics[ii] = c_ptr;
         c_ptr += dynamics[ii]->workspace_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
 	}
 
@@ -547,14 +571,15 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 
 	for (i=0; i<N; i++)
 	{
-		ocp_nlp_dynamics_update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i], nlp_mem->dynamics[i], opts->dynamics[i], mem->sim_solvers_mem[i], work->dynamics_work[i]);
+		ocp_nlp_dynamics_update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i], mem->dynamics[i], opts->dynamics[i], mem->sim_solvers_mem[i], work->dynamics[i]);
 	}
 
 	// nlp mem: dyn_fun
 	for (i=0; i<N; i++)
 	{
 		nx1 = dims->dynamics[i]->nx1;
-		blasfeo_dveccp(nx1, &nlp_mem->dynamics[i]->fun, 0, nlp_mem->dyn_fun+i, 0); 
+		struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
+		blasfeo_dveccp(nx1, dyn_fun, 0, nlp_mem->dyn_fun+i, 0); 
 	}
 
 	// nlp mem: dyn_adj
@@ -562,7 +587,8 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 	{
 		nx = dims->dynamics[i]->nx;
 		nu = dims->dynamics[i]->nu;
-		blasfeo_dveccp(nu+nx, &nlp_mem->dynamics[i]->adj, 0, nlp_mem->dyn_adj+i, 0);
+		struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
+		blasfeo_dveccp(nu+nx, dyn_adj, 0, nlp_mem->dyn_adj+i, 0);
 	}
 
 	blasfeo_dvecse(dims->dynamics[N-1]->nu1+dims->dynamics[N-1]->nx1, 0.0, nlp_mem->dyn_adj+N, 0);
@@ -573,7 +599,8 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 		nu = dims->dynamics[i]->nu;
 		nx1 = dims->dynamics[i]->nx1;
 		nu1 = dims->dynamics[i]->nu1;
-		blasfeo_daxpy(nx1, 1.0, &nlp_mem->dynamics[i]->adj, nu+nx, nlp_mem->dyn_adj+i+1, nu1, nlp_mem->dyn_adj+i+1, nu1);
+		struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
+		blasfeo_daxpy(nx1, 1.0, dyn_adj, nu+nx, nlp_mem->dyn_adj+i+1, nu1, nlp_mem->dyn_adj+i+1, nu1);
 	}
 
 
@@ -806,10 +833,13 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
 	// alias to dynamics_memory
 	for (int ii=0; ii<N; ii++)
 	{
-		mem->nlp_mem->dynamics[ii]->ux = nlp_out->ux+ii;
-		mem->nlp_mem->dynamics[ii]->ux1 = nlp_out->ux+ii+1;
-		mem->nlp_mem->dynamics[ii]->pi = nlp_out->pi+ii;
-		mem->nlp_mem->dynamics[ii]->BAbt = work->qp_in->BAbt+ii;
+		config->dynamics[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->dynamics[ii]);
+		config->dynamics[ii]->memory_set_ux1_ptr(nlp_out->ux+ii+1, mem->dynamics[ii]);
+		config->dynamics[ii]->memory_set_pi_ptr(nlp_out->pi+ii, mem->dynamics[ii]);
+		config->dynamics[ii]->memory_set_BAbt_ptr(work->qp_in->BAbt+ii, mem->dynamics[ii]);
+//		mem->dynamics[ii]->ux1 = nlp_out->ux+ii+1;
+//		mem->dynamics[ii]->pi = nlp_out->pi+ii;
+//		mem->dynamics[ii]->BAbt = work->qp_in->BAbt+ii;
 	}
 
 

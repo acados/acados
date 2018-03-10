@@ -212,6 +212,68 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
 
 
 
+struct blasfeo_dvec *ocp_nlp_dynamics_memory_get_fun_ptr(void *memory_)
+{
+	ocp_nlp_dynamics_memory *memory = memory_;
+
+	return &memory->fun;
+}
+
+
+
+struct blasfeo_dvec *ocp_nlp_dynamics_memory_get_adj_ptr(void *memory_)
+{
+	ocp_nlp_dynamics_memory *memory = memory_;
+
+	return &memory->adj;
+}
+
+
+
+void ocp_nlp_dynamics_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
+{
+	ocp_nlp_dynamics_memory *memory = memory_;
+
+	memory->ux = ux;
+
+	return;
+}
+
+
+
+void ocp_nlp_dynamics_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory_)
+{
+	ocp_nlp_dynamics_memory *memory = memory_;
+
+	memory->ux1 = ux1;
+
+	return;
+}
+
+
+
+void ocp_nlp_dynamics_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory_)
+{
+	ocp_nlp_dynamics_memory *memory = memory_;
+
+	memory->pi = pi;
+
+	return;
+}
+
+
+
+void ocp_nlp_dynamics_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory_)
+{
+	ocp_nlp_dynamics_memory *memory = memory_;
+
+	memory->BAbt = BAbt;
+
+	return;
+}
+
+
+
 /************************************************
 * workspace
 ************************************************/
@@ -380,6 +442,12 @@ void ocp_nlp_dynamics_config_initialize_default(void *config_)
 	config->opts_initialize_default = &ocp_nlp_dynamics_opts_initialize_default;
 	config->memory_calculate_size = &ocp_nlp_dynamics_memory_calculate_size;
 	config->memory_assign = &ocp_nlp_dynamics_memory_assign;
+	config->memory_get_fun_ptr = &ocp_nlp_dynamics_memory_get_fun_ptr;
+	config->memory_get_adj_ptr = &ocp_nlp_dynamics_memory_get_adj_ptr;
+	config->memory_set_ux_ptr = &ocp_nlp_dynamics_memory_set_ux_ptr;
+	config->memory_set_ux1_ptr = &ocp_nlp_dynamics_memory_set_ux1_ptr;
+	config->memory_set_pi_ptr = &ocp_nlp_dynamics_memory_set_pi_ptr;
+	config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_memory_set_BAbt_ptr;
 	config->workspace_calculate_size = &ocp_nlp_dynamics_workspace_calculate_size;
 	config->config_initialize_default = &ocp_nlp_dynamics_config_initialize_default;
 

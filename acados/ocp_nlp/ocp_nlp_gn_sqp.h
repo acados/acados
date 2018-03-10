@@ -50,10 +50,8 @@ typedef struct
 	double min_res_b;
 	double min_res_d;
 	double min_res_m;
-    // QP solver
     void *qp_solver_opts;
-    // integrators
-	void **dynamics;
+	void **dynamics; // dynamics_opts
 } ocp_nlp_gn_sqp_opts;
 
 //
@@ -75,6 +73,7 @@ typedef struct
     void *qp_solver_mem;
 
     void **sim_solvers_mem;
+    void **dynamics; // dynamics memory
 
     // residuals
 	ocp_nlp_res *nlp_res;
@@ -106,17 +105,13 @@ typedef struct
 
     // QP solver
     ocp_qp_in *qp_in;
-	ocp_qp_in_stage **qp_in_stage;
+	ocp_qp_in_stage **qp_in_stage; // TODO remove
     ocp_qp_out *qp_out;
     void *qp_work;
 
-	ocp_nlp_out_stage **nlp_out_stage;
+	ocp_nlp_out_stage **nlp_out_stage; // TODO remove
 
-    // integrators
-//    sim_in **sim_in;
-//    sim_out **sim_out;
-//    void **sim_solvers_work;
-    void **dynamics_work;
+    void **dynamics; // dynamics_workspace
 
 	// temporary stuff
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
