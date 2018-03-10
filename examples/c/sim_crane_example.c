@@ -29,7 +29,6 @@
 // acados
 // TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/external_function_generic.h"
@@ -248,10 +247,9 @@ int main()
 		{
 			case 0:
 			{
-				erk_model *model = in->model;
-				model->forw_vde_expl = (external_function_generic *) &exfun_forw_vde;
-				model->adj_vde_expl = (external_function_generic *) &exfun_adj_vde;
-				model->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
+				sim_set_model(config, in, "forward_vde", &exfun_forw_vde);
+				sim_set_model(config, in, "adjoint_vde", &exfun_adj_vde);
+				// model->hess_ode_expl = (external_function_generic *) &exfun_hess_ode;
 				break;
 			}
 			case 1:

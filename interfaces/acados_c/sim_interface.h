@@ -51,6 +51,8 @@ sim_dims *sim_dims_create();
 //
 sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims);
 //
+int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
+//
 sim_out *sim_out_create(sim_solver_config *config, sim_dims *dims);
 //
 void *sim_opts_create(sim_solver_config *config, sim_dims *dims);

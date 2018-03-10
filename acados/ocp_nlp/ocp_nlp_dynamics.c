@@ -295,8 +295,6 @@ int ocp_nlp_dynamics_workspace_calculate_size(void *config_, ocp_nlp_dynamics_di
 
     size += sizeof(ocp_nlp_dynamics_workspace);
 
-	sim_rk_opts *sim_opts = opts->sim_solver;
-
 	size += sim_in_calculate_size(config->sim_solver, dims->sim);
 	size += sim_out_calculate_size(config->sim_solver, dims->sim);
 	size += config->sim_solver->workspace_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);

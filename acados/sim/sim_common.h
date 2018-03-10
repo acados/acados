@@ -119,8 +119,11 @@ typedef struct
     int (*memory_calculate_size) (void *config, sim_dims *dims, void *args);
     void *(*memory_assign) (void *config, sim_dims *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size) (void *config, sim_dims *dims, void *args);
+    // TODO(dimitris): move all model-related function pointers to model_config?
     int (*model_calculate_size) (void *config, sim_dims *dims);
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
+    void (*model_set_forward_vde) (sim_in *in, void *fun);
+    void (*model_set_adjoint_vde) (sim_in *in, void *fun);
     void (*config_initialize_default) (void *config);
 	int ns; // number of integration stages
 } sim_solver_config;
