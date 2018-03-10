@@ -75,7 +75,7 @@ int main() {
     dense_qp_in *qpd_in = create_dense_qp_in(&ddims);
 
     ocp_qp_full_condensing_args *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-	ocp_qp_full_condensing_initialize_default_args(cond_opts);
+	ocp_qp_full_condensing_opts_initialize_default(cond_opts);
 	ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
 
     /************************************************

@@ -153,7 +153,7 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
 	// dyn_fun
 	assign_blasfeo_dvec_mem(nx1, &memory->dyn_fun, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config_, dims) >= c_ptr);
 
 	return memory;
 }
