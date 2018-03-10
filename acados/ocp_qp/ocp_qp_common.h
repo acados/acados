@@ -65,6 +65,16 @@ typedef struct
 
 
 
+typedef struct
+{
+	struct blasfeo_dvec *ux;
+	struct blasfeo_dvec *pi;
+	struct blasfeo_dvec *lam;
+	struct blasfeo_dvec *t;
+} ocp_qp_out_stage;
+
+
+
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
 
@@ -137,6 +147,10 @@ ocp_qp_in_stage *ocp_qp_in_stage_assign(void *config, ocp_qp_dims_stage *dims, v
 int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims);
 //
 ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_out_stage_calculate_size(void *config, ocp_qp_dims_stage *dims);
+//
+ocp_qp_out_stage *ocp_qp_out_stage_assign(void *config, ocp_qp_dims_stage *dims, void *raw_memory);
 //
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims);
 //

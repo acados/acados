@@ -54,6 +54,13 @@ typedef struct
 
 
 
+typedef struct
+{
+	// TODO
+} ocp_nlp_dims_stage;
+
+
+
 /************************************************
 * in
 ************************************************/
@@ -90,8 +97,18 @@ typedef struct
 
 
 
+typedef struct
+{
+	struct blasfeo_dvec *ux;
+	struct blasfeo_dvec *pi;
+	struct blasfeo_dvec *lam;
+	struct blasfeo_dvec *t;
+} ocp_nlp_out_stage;
+
+
+
 /************************************************
-* memory
+* memory TODO move to sqp ???
 ************************************************/
 
 typedef struct
@@ -100,6 +117,7 @@ typedef struct
 	struct blasfeo_dvec *cost_grad;
 	struct blasfeo_dvec *ineq_fun;
 	struct blasfeo_dvec *ineq_adj;
+	struct blasfeo_dvec *dyn_fun;
 	struct blasfeo_dvec *dyn_adj;
 	ocp_nlp_dynamics_memory **dynamics;
 } ocp_nlp_memory;
@@ -195,6 +213,10 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
+//
+int ocp_nlp_out_stage_calculate_size(void *config, ocp_nlp_dims_stage *dims);
+//
+ocp_nlp_out_stage *ocp_nlp_out_stage_assign(void *config, ocp_nlp_dims_stage *dims, void *raw_memory);
 
 /************************************************
 * memory

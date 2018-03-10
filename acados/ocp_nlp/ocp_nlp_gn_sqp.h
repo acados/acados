@@ -40,7 +40,7 @@ extern "C" {
 
 
 /************************************************
-* arguments
+* options
 ************************************************/
 
 typedef struct
@@ -53,7 +53,7 @@ typedef struct
     // QP solver
     void *qp_solver_opts;
     // integrators
-    void **sim_solvers_opts;
+	void **dynamics;
 } ocp_nlp_gn_sqp_opts;
 
 //
@@ -110,10 +110,13 @@ typedef struct
     ocp_qp_out *qp_out;
     void *qp_work;
 
+	ocp_nlp_out_stage **nlp_out_stage;
+
     // integrators
-    sim_in **sim_in;
-    sim_out **sim_out;
-    void **sim_solvers_work;
+//    sim_in **sim_in;
+//    sim_out **sim_out;
+//    void **sim_solvers_work;
+    void **dynamics_work;
 
 	// temporary stuff
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results

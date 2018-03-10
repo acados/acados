@@ -520,6 +520,29 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 
 
 
+int ocp_nlp_out_stage_calculate_size(void *config, ocp_nlp_dims_stage *dims)
+{
+    int size = sizeof(ocp_nlp_out_stage);
+
+    return size;
+}
+
+
+
+ocp_nlp_out_stage *ocp_nlp_out_stage_assign(void *config, ocp_nlp_dims_stage *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_out_stage *nlp_out = (ocp_nlp_out_stage *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_out_stage);
+
+    assert((char*) raw_memory + ocp_nlp_out_stage_calculate_size(config, dims) == c_ptr);
+
+    return nlp_out;
+}
+
+
+
 /************************************************
 * memory
 ************************************************/
@@ -533,6 +556,7 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *d
     int size = sizeof(ocp_nlp_memory);
 
 	size += 4*(N+1)*sizeof(struct blasfeo_dvec); // cost_grad ineq_fun ineq_adj dyn_adj
+	size += 1*N*sizeof(struct blasfeo_dvec); // dyn_fun
 
 	for (int ii = 0; ii < N; ii++)
 	{
@@ -542,6 +566,7 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *d
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
 		size += 3*blasfeo_memsize_dvec(nu+nx); // cost_grad ineq_adj dyn_adj
+		size += 1*blasfeo_memsize_dvec(nx1); // dyn_fun
 		size += 1*blasfeo_memsize_dvec(2*nb+2*ng); // ineq_fun
 	}
 	nx = dims->constraints[N]->nx;
@@ -577,7 +602,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 
 	// extract sizes
     int N = dims->N;
-	int nx, nu, nb, ng;
+	int nx, nu, nb, ng, nx1;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -598,6 +623,8 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 	assign_blasfeo_dvec_structs(N+1, &mem->ineq_fun, &c_ptr);
 	// ineq_adj
 	assign_blasfeo_dvec_structs(N+1, &mem->ineq_adj, &c_ptr);
+	// dyn_fun
+	assign_blasfeo_dvec_structs(N, &mem->dyn_fun, &c_ptr);
 	// dyn_adj
 	assign_blasfeo_dvec_structs(N+1, &mem->dyn_adj, &c_ptr);
 
@@ -625,11 +652,19 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 		nu = dims->constraints[ii]->nu;
 		assign_blasfeo_dvec_mem(nu+nx, mem->ineq_adj+ii, &c_ptr);
 	}
+	// dyn_fun
+	for (int ii = 0; ii < N; ii++)
+	{
+		nx1 = dims->dynamics[ii]->nx1;
+		assign_blasfeo_dvec_mem(nx1, mem->dyn_fun+ii, &c_ptr);
+	}
 	// dyn_adj
 	for (int ii = 0; ii <= N; ii++)
 	{
 		nx = dims->constraints[ii]->nx;
 		nu = dims->constraints[ii]->nu;
+//		nx = dims->dynamics[ii]->nx; // XXX not defined for N
+//		nu = dims->dynamics[ii]->nu; // XXX not defined for N
 		assign_blasfeo_dvec_mem(nu+nx, mem->dyn_adj+ii, &c_ptr);
 	}
 
@@ -790,7 +825,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 	for (int ii = 0; ii < N; ii++)
 	{
 		nx1 = dims->constraints[ii+1]->nx;
-		blasfeo_dveccp(nx1, &mem->dynamics[ii]->dyn_fun, 0, res->res_b+ii, 0);
+		blasfeo_dveccp(nx1, &mem->dynamics[ii]->fun, 0, res->res_b+ii, 0);
 		blasfeo_dvecnrm_inf(nx1, res->res_b+ii, 0, &tmp_res);
 		res->inf_norm_res_b = tmp_res>res->inf_norm_res_b ? tmp_res : res->inf_norm_res_b;
 	}
