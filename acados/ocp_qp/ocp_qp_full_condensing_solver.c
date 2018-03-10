@@ -43,7 +43,9 @@ int ocp_qp_full_condensing_solver_opts_calculate_size(void *config_, ocp_qp_dims
     dense_qp_dims ddims;
     compute_dense_qp_dims(dims, &ddims);
 
-    size += ocp_qp_full_condensing_calculate_args_size(dims);
+    size += ocp_qp_full_condensing_opts_calculate_size(dims);
+
+    // TODO(dimitris): shouldn't we pass config->qp_solver instead of config_ below?
     size += qp_solver->opts_calculate_size(config_, &ddims);
 
     return size;
@@ -67,7 +69,7 @@ void *ocp_qp_full_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
     args->cond_opts = ocp_qp_full_condensing_assign_args(dims, c_ptr);
-    c_ptr += ocp_qp_full_condensing_calculate_args_size(dims);
+    c_ptr += ocp_qp_full_condensing_opts_calculate_size(dims);
 
 	align_char_to(8, &c_ptr);
 

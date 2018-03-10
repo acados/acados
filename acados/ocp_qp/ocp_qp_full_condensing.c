@@ -41,7 +41,7 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims)
 
 
 
-int ocp_qp_full_condensing_calculate_args_size(ocp_qp_dims *dims)
+int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
 {
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_args);
@@ -57,7 +57,7 @@ ocp_qp_full_condensing_args *ocp_qp_full_condensing_assign_args(ocp_qp_dims *dim
     ocp_qp_full_condensing_args *args = (ocp_qp_full_condensing_args *) c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_args);
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_calculate_args_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_opts_calculate_size(dims) == c_ptr);
 
     return args;
 }
