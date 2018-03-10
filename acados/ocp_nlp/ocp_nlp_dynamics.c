@@ -159,9 +159,10 @@ void ocp_nlp_dynamics_opts_initialize_default(void *config_, ocp_nlp_dynamics_di
 * memory
 ************************************************/
 
-int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims)
+int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_)
 {
-	// ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_opts *opts = opts_;
 
 	// extract dims
 	int nx = dims->nx;
@@ -175,6 +176,8 @@ int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims 
 	size += 1*blasfeo_memsize_dvec(nu+nx+nx1); // adj
 	size += 1*blasfeo_memsize_dvec(nx1); // fun
 
+	size += config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
 	size += 64; // blasfeo_mem align
 
 	return size;
@@ -182,9 +185,10 @@ int ocp_nlp_dynamics_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims 
 
 
 
-void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *raw_memory)
+void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_, void *raw_memory)
 {
-	// ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_opts *opts = opts_;
 
 	char *c_ptr = (char *) raw_memory;
 
@@ -197,6 +201,10 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
     ocp_nlp_dynamics_memory *memory = (ocp_nlp_dynamics_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_memory);
 
+	// sim_solver
+	memory->sim_solver = config->sim_solver->memory_assign(config->sim_solver, dims->sim, opts->sim_solver, c_ptr);
+	c_ptr += config->sim_solver->memory_calculate_size(config->sim_solver, dims->sim, opts->sim_solver);
+
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
@@ -205,7 +213,7 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
 	// fun
 	assign_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
 	return memory;
 }
@@ -287,8 +295,6 @@ int ocp_nlp_dynamics_workspace_calculate_size(void *config_, ocp_nlp_dynamics_di
 
     size += sizeof(ocp_nlp_dynamics_workspace);
 
-//	ocp_nlp_dynamics_opts *dyn_opts = opts->dynamics[ii];
-//	sim_rk_opts *sim_opts = dyn_opts->sim_solver;
 	sim_rk_opts *sim_opts = opts->sim_solver;
 
 	size += sim_in_calculate_size(config->sim_solver, dims->sim);
@@ -378,13 +384,14 @@ void *ocp_nlp_dynamics_model_assign(void *config_, ocp_nlp_dynamics_dims *dims, 
 
 
 
-void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, ocp_nlp_dynamics_memory *mem, void *opts_, void *sim_mem, void *work_)
+void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_)
 {
 	ocp_nlp_dynamics_cast_workspace(config_, dims, opts_, work_);
 
 	ocp_nlp_dynamics_config *config = config_;
 	ocp_nlp_dynamics_opts *opts = opts_;
 	ocp_nlp_dynamics_workspace *work = work_;
+	ocp_nlp_dynamics_memory *mem = mem_;
 	ocp_nlp_dynamics_model *model = model_;
 
 	int nx = dims->nx;
@@ -409,7 +416,7 @@ void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *d
 		work->sim_in->S_adj[jj] = 0.0;
 
 	// call integrator
-	config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver, sim_mem, work->sim_solver);
+	config->sim_solver->evaluate(config->sim_solver, work->sim_in, work->sim_out, opts->sim_solver, mem->sim_solver, work->sim_solver);
 
 	// TODO(rien): transition functions for changing dimensions not yet implemented!
 
@@ -449,6 +456,7 @@ void ocp_nlp_dynamics_config_initialize_default(void *config_)
 	config->memory_set_pi_ptr = &ocp_nlp_dynamics_memory_set_pi_ptr;
 	config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_memory_set_BAbt_ptr;
 	config->workspace_calculate_size = &ocp_nlp_dynamics_workspace_calculate_size;
+	config->update_qp_matrices = &ocp_nlp_dynamics_update_qp_matrices;
 	config->config_initialize_default = &ocp_nlp_dynamics_config_initialize_default;
 
 	return;

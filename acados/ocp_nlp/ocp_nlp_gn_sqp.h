@@ -72,7 +72,7 @@ typedef struct
 //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
-    void **sim_solvers_mem;
+//    void **sim_solvers_mem;
     void **dynamics; // dynamics memory
 
     // residuals
