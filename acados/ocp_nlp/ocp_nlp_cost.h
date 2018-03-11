@@ -105,7 +105,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config);
 
 typedef struct
 {
-    int dummy; // XXX to make cmake happy
+    bool gauss_newton_hess; // gauss-newton hessian approximation
 } ocp_nlp_cost_ls_opts;
 
 //
@@ -189,7 +189,7 @@ void ocp_nlp_cost_nls_config_initialize_default(void *config);
 
 typedef struct
 {
-    int dummy; // XXX to make cmake happy
+    bool gauss_newton_hess; // gauss-newton hessian approximation
 } ocp_nlp_cost_nls_opts;
 
 //

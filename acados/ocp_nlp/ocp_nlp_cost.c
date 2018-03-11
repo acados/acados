@@ -191,6 +191,8 @@ void ocp_nlp_cost_ls_opts_initialize_default(void *config_, ocp_nlp_cost_dims *d
 	ocp_nlp_cost_config *config = config_;
 	ocp_nlp_cost_ls_opts *opts = opts_;
 
+	opts->gauss_newton_hess = 1;
+
 	return;
 
 }
@@ -352,6 +354,7 @@ void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void 
 {
 
     ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
     ocp_nlp_cost_ls_memory *memory= memory_;
     ocp_nlp_cost_ls_workspace *work= work_;
 
@@ -366,9 +369,20 @@ void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void 
 	// TODO recompute factorization only if W are re-tuned ???
 	blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-	// TODO avoid recomputing the Hessian if both W and Cyt do not change
-	blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
-	blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+	if (opts->gauss_newton_hess)
+	{
+
+		// TODO avoid recomputing the Hessian if both W and Cyt do not change
+		blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
+		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+
+	}
+	else
+	{
+
+		// TODO exact hessian of ls cost
+
+	}
 
 	return;
 
@@ -380,6 +394,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 {
 	
     ocp_nlp_cost_ls_model *model = model_;
+    ocp_nlp_cost_ls_opts *opts = opts_;
     ocp_nlp_cost_ls_memory *memory= memory_;
     ocp_nlp_cost_ls_workspace *work= work_;
 
@@ -389,12 +404,22 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 	int nu = dims->nu;
 	int ny = dims->ny;
 
+	if (opts->gauss_newton_hess)
+	{
+
 		blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
 
-	// TODO use lower triangular chol of W to save n_y^2 flops
-	blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
-	blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+		// TODO use lower triangular chol of W to save n_y^2 flops
+		blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+		blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
+	}
+	else
+	{
+
+		// TODO exact hessian of ls cost
+
+	}
 
 	return;
 
@@ -523,6 +548,8 @@ void ocp_nlp_cost_nls_opts_initialize_default(void *config_, ocp_nlp_cost_dims *
 {
 	ocp_nlp_cost_config *config = config_;
 	ocp_nlp_cost_nls_opts *opts = opts_;
+
+	opts->gauss_newton_hess = 1;
 
 	return;
 
@@ -705,8 +732,6 @@ void ocp_nlp_cost_nls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void
 	int nu = dims->nu;
 	int ny = dims->ny;
 
-	// general Cyt
-
 	// TODO recompute factorization only if W are re-tuned ???
 	blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
@@ -720,6 +745,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims,
 {
 	
     ocp_nlp_cost_nls_model *model = model_;
+    ocp_nlp_cost_nls_opts *opts = opts_;
     ocp_nlp_cost_nls_memory *memory= memory_;
     ocp_nlp_cost_nls_workspace *work= work_;
 
@@ -729,27 +755,38 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims,
 	int nu = dims->nu;
 	int ny = dims->ny;
 
-	// unpack ls cost input
-	blasfeo_unpack_dvec(nu, memory->ux, 0, work->nls_jac_in+nx);
-	blasfeo_unpack_dvec(nx, memory->ux, nu, work->nls_jac_in);
+	if (opts->gauss_newton_hess)
+	{
 
-	// evaluate external function (that assumes variables stacked as [x; u] )
-	model->nls_jac->evaluate(model->nls_jac, work->nls_jac_in, work->nls_jac_out);
+		// unpack ls cost input
+		blasfeo_unpack_dvec(nu, memory->ux, 0, work->nls_jac_in+nx);
+		blasfeo_unpack_dvec(nx, memory->ux, nu, work->nls_jac_in);
 
-	// pack residuals into res
-	blasfeo_pack_dvec(ny, work->nls_jac_out, &memory->res, 0);
-	// pack jacobian into Jt
-	blasfeo_pack_tran_dmat(ny, nx, work->nls_jac_out+ny, ny, &memory->Jt, nu, 0);
-	blasfeo_pack_tran_dmat(ny, nu, work->nls_jac_out+ny+ny*nx, ny, &memory->Jt, 0, 0);
+		// evaluate external function (that assumes variables stacked as [x; u] )
+		model->nls_jac->evaluate(model->nls_jac, work->nls_jac_in, work->nls_jac_out);
 
-	blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
+		// pack residuals into res
+		blasfeo_pack_dvec(ny, work->nls_jac_out, &memory->res, 0);
+		// pack jacobian into Jt
+		blasfeo_pack_tran_dmat(ny, nx, work->nls_jac_out+ny, ny, &memory->Jt, nu, 0);
+		blasfeo_pack_tran_dmat(ny, nu, work->nls_jac_out+ny+ny*nx, ny, &memory->Jt, 0, 0);
 
-	blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
-	blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+		blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
-	// TODO use lower triangular chol of W to save n_y^2 flops
-	blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
-	blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+		blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &memory->Jt, 0, 0, &work->tmp_nv_ny, 0, 0);
+		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+
+		// TODO use lower triangular chol of W to save n_y^2 flops
+		blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+		blasfeo_dgemv_n(nu+nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
+
+	}
+	else
+	{
+
+		// TODO exact hessian of ls cost
+
+	}
 
 	return;
 
