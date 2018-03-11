@@ -41,7 +41,7 @@
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
 
-#include "acados/ocp_nlp/ocp_nlp_gn_sqp.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost.h"
 
 #include "examples/c/chain_model/chain_model.h"
@@ -1046,14 +1046,14 @@ int main() {
 #endif
 
     /************************************************
-    * gn_sqp opts
+    * sqp opts
     ************************************************/
 
-	tmp_size = ocp_nlp_gn_sqp_opts_calculate_size(config, dims);
+	tmp_size = ocp_nlp_sqp_opts_calculate_size(config, dims);
 	void *nlp_opts_mem = malloc(tmp_size);
-	ocp_nlp_gn_sqp_opts *nlp_opts = ocp_nlp_gn_sqp_opts_assign(config, dims, nlp_opts_mem);
+	ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_sqp_opts_assign(config, dims, nlp_opts_mem);
 
-	ocp_nlp_gn_sqp_opts_initialize_default(config, dims, nlp_opts);
+	ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
 
     for (int i = 0; i < NN; ++i)
 	{
@@ -1090,23 +1090,23 @@ int main() {
 //	ocp_nlp_dims_print(nlp_out->dims);
 
     /************************************************
-    * gn_sqp memory
+    * sqp memory
     ************************************************/
 
-	tmp_size = ocp_nlp_gn_sqp_memory_calculate_size(config, dims, nlp_opts);
+	tmp_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts);
 	void *nlp_mem_mem = malloc(tmp_size);
-	ocp_nlp_gn_sqp_memory *nlp_mem = ocp_nlp_gn_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
+	ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
 
 
     /************************************************
-    * gn_sqp workspace
+    * sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_gn_sqp_workspace_calculate_size(config, nlp_in->dims, nlp_opts);
+    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, nlp_in->dims, nlp_opts);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
-    * gn_sqp solve
+    * sqp solve
     ************************************************/
 
     int status;
@@ -1127,7 +1127,7 @@ int main() {
 //		}
 
 		// call nlp solver
-        status = ocp_nlp_gn_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+        status = ocp_nlp_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
     }
 
     double time = acados_toc(&timer)/NREP;

@@ -24,59 +24,116 @@
 extern "C" {
 #endif
 
+// acados_c
+// #include <acados_c/ocp_qp_interface.h>
+// #include <acados_c/sim.h>
+
+// acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_sm_common.h"
-#include "acados/ocp_qp/ocp_qp_common.h"
+#include "acados/sim/sim_collocation_utils.h" // TODO remove ???
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
 
-typedef struct {
-    int_t maxIter;
-    ocp_qp_solver *qp_solver;
-    ocp_nlp_sm *sensitivity_method;
-    // char qp_solver_name[MAX_STR_LEN];
-    // char sm_method_name[MAX_STR_LEN];
-} ocp_nlp_sqp_args;
 
-typedef struct {
-    ocp_nlp_memory *common;
 
-    // TODO(nielsvd): qp solver and sensitivity method
-    //       could be automatically initialized for user
-    //       convenience, look into this!
-    ocp_nlp_sm_in *sm_in;
-    ocp_nlp_sm_out *sm_out;
-    // ocp_qp_solver *qp_solver;
-    // ocp_nlp_sm *sensitivity_method;
+/************************************************
+* options
+************************************************/
+
+typedef struct
+{
+    int maxIter;
+	double min_res_g;
+	double min_res_b;
+	double min_res_d;
+	double min_res_m;
+    void *qp_solver_opts;
+	void **dynamics; // dynamics_opts
+	void **cost; // cost_opts
+} ocp_nlp_sqp_opts;
+
+//
+int ocp_nlp_sqp_opts_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
+//
+ocp_nlp_sqp_opts *ocp_nlp_sqp_opts_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
+//
+void ocp_nlp_sqp_opts_initialize_default(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_opts *opts);
+
+
+
+/************************************************
+* memory
+************************************************/
+
+typedef struct
+{
+//    ocp_nlp_dims *dims;
+    void *qp_solver_mem;
+
+    void **dynamics; // dynamics memory
+	void **cost; // cost memory
+
+    // residuals
+	ocp_nlp_res *nlp_res;
+
+	// nlp memory
+	ocp_nlp_memory *nlp_mem;
+
+	int sqp_iter;
+
 } ocp_nlp_sqp_memory;
 
-typedef struct { int_t dummy; } ocp_nlp_sqp_workspace;
+//
+int ocp_nlp_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_opts *args);
+//
+ocp_nlp_sqp_memory *ocp_nlp_sqp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_opts *args, void *raw_memory);
 
-ocp_nlp_sqp_args *ocp_nlp_sqp_create_arguments();
 
-int_t ocp_nlp_sqp_calculate_memory_size(const ocp_nlp_in *nlp_in, void *args_);
 
-char *ocp_nlp_sqp_assign_memory(const ocp_nlp_in *nlp_in, void *args_,
-                                void **mem_, void *raw_memory);
+/************************************************
+* workspace
+************************************************/
 
-ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(const ocp_nlp_in *nlp_in,
-                                              void *args_);
+typedef struct
+{
 
-int_t ocp_nlp_sqp_calculate_workspace_size(const ocp_nlp_in *nlp_in,
-                                           void *args_);
+    // QP solver
+    ocp_qp_in *qp_in;
+	ocp_qp_in_stage **qp_in_stage; // TODO remove
+    ocp_qp_out *qp_out;
+    void *qp_work;
 
-char *ocp_nlp_sqp_assign_workspace(const ocp_nlp_in *nlp_in, void *args_,
-                                   void **work_, void *raw_memory);
+	ocp_nlp_out_stage **nlp_out_stage; // TODO remove
 
-ocp_nlp_sqp_workspace *ocp_nlp_sqp_create_workspace(const ocp_nlp_in *nlp_in,
-                                                    void *args_);
+    void **dynamics; // dynamics_workspace
+    void **cost; // cost_workspace
 
-int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
-                  void *memory_, void *workspace_);
+	// temporary stuff
+    // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
+    // not using max(nx+nu) for parallelization in the future
+	// XXX take Max instead ?????
+	struct blasfeo_dmat *tmp_nv_ny;
+	struct blasfeo_dvec *tmp_nbg;
+    struct blasfeo_dvec *tmp_ny;
 
-void ocp_nlp_sqp_initialize(const ocp_nlp_in *nlp_in, void *args_, void **mem_,
-                            void **work_);
+} ocp_nlp_sqp_work;
 
-void ocp_nlp_sqp_destroy(void *mem_, void *work_);
+//
+int ocp_nlp_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_sqp_opts *args);
+
+
+
+/************************************************
+* solver
+************************************************/
+
+//
+int ocp_nlp_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *args, ocp_nlp_sqp_memory *mem, void *work_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

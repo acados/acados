@@ -8,7 +8,7 @@ OBJS += ocp_nlp_common.o
 OBJS += ocp_nlp_cost.o
 OBJS += ocp_nlp_constraints.o
 OBJS += ocp_nlp_dynamics.o
-OBJS += ocp_nlp_gn_sqp.o
+OBJS += ocp_nlp_sqp.o
 
 obj: $(OBJS)
 
