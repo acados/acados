@@ -28,6 +28,7 @@ LIBS+=-lblasfeo -lm -lblas
 
 EXAMPLES =
 EXAMPLES += mass_spring_example
+EXAMPLES += mass_spring_part_tight_example
 EXAMPLES += sim_erk_crane
 EXAMPLES += sim_irk_crane
 EXAMPLES += sim_lifted_irk_crane
@@ -42,6 +43,7 @@ examples: $(EXAMPLES)
 
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_mass_spring_example
+RUN_EXAMPLES += run_mass_spring_part_tight_example
 RUN_EXAMPLES += run_sim_erk_crane
 RUN_EXAMPLES += run_sim_irk_crane
 RUN_EXAMPLES += run_sim_lifted_irk_crane
@@ -93,6 +95,14 @@ mass_spring_example: mass_spring_example.o
 	$(CCC) -o mass_spring_example.out mass_spring_example.o $(LDFLAGS) $(LIBS)
 	@echo
 	@echo " Example mass_spring_example build complete."
+	@echo
+
+
+
+mass_spring_part_tight_example: mass_spring_part_tight_example.o
+	$(CCC) -o mass_spring_part_tight_example.out mass_spring_part_tight_example.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example mass_spring_part_tight_example build complete."
 	@echo
 
 
@@ -185,6 +195,11 @@ run_sim_lifted_irk_crane:
 
 run_mass_spring_example:
 	./mass_spring_example.out
+
+
+
+run_mass_spring_part_tight_example:
+	./mass_spring_part_tight_example.out
 
 
 
