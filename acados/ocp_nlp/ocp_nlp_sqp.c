@@ -192,13 +192,10 @@ int ocp_nlp_sqp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dim
 	ocp_nlp_dynamics_config **dynamics = config->dynamics;
 	ocp_nlp_cost_config **cost = config->cost;
 
-	// loop index
-	int ii;
-
 	// extract dims
     int N = dims->N;
-	ocp_nlp_cost_dims **cost_dims = dims->cost;
-	int ny;
+	// ocp_nlp_cost_dims **cost_dims = dims->cost;
+	// int ny;
 
     int size = 0;
 
@@ -243,13 +240,10 @@ ocp_nlp_sqp_memory *ocp_nlp_sqp_memory_assign(ocp_nlp_solver_config *config, ocp
 
     char *c_ptr = (char *) raw_memory;
 
-	// loop index
-	int ii;
-
 	// extract dims
     int N = dims->N;
-	ocp_nlp_cost_dims **cost_dims = dims->cost;
-	int ny;
+	// ocp_nlp_cost_dims **cost_dims = dims->cost;
+	// int ny;
 
 	// initial align
     align_char_to(8, &c_ptr);
@@ -272,7 +266,7 @@ ocp_nlp_sqp_memory *ocp_nlp_sqp_memory_assign(ocp_nlp_solver_config *config, ocp
 	// dynamics
 	mem->dynamics = (void **) c_ptr;
 	c_ptr += N*sizeof(void *);
-	for (int ii=0; ii<N; ii++)
+	for (int ii = 0; ii < N; ii++)
 	{
 		mem->dynamics[ii] = dynamics[ii]->memory_assign(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii], c_ptr);
 		c_ptr += dynamics[ii]->memory_calculate_size(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
@@ -498,7 +492,7 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
     struct blasfeo_dmat *W_chol;
     struct blasfeo_dvec *ls_res;
 
-    struct blasfeo_dvec *tmp_ny = work->tmp_ny;
+    // struct blasfeo_dvec *tmp_ny = work->tmp_ny;
     struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -745,7 +739,7 @@ int ocp_nlp_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *n
     ocp_nlp_sqp_cast_workspace(config, dims, work, mem, opts);
 
     int N = dims->N;
-	int nx, nu, nx1;
+	// int nx, nu;, nx1;
 
 	// alias nlp out TODO remove
 	for (int ii=0; ii<=N; ii++)

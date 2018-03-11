@@ -27,7 +27,7 @@ extern "C" {
 
 // acados
 #include <acados/ocp_nlp/ocp_nlp_common.h>
-#include <acados/ocp_nlp/ocp_nlp_gn_sqp.h>
+#include <acados/ocp_nlp/ocp_nlp_sqp.h>
 #include <acados/ocp_qp/ocp_qp_full_condensing.h>
 #include <acados/ocp_qp/ocp_qp_partial_condensing.h>
 #include <acados/sim/sim_irk_integrator.h>
@@ -47,9 +47,9 @@ ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
 ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 
-ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
+ocp_nlp_sqp_opts *ocp_nlp_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names);
 
-ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_gn_sqp_opts *args);
+ocp_nlp_sqp_memory *ocp_nlp_sqp_create_memory(ocp_nlp_dims *dims, ocp_nlp_sqp_opts *args);
 
 sim_rk_opts *create_sim_irk_opts(sim_dims *dims);
 
