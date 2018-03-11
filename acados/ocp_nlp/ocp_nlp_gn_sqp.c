@@ -287,9 +287,6 @@ ocp_nlp_gn_sqp_memory *ocp_nlp_gn_sqp_memory_assign(ocp_nlp_solver_config *confi
 		c_ptr += cost[ii]->memory_calculate_size(cost[ii], dims->cost[ii], opts->cost[ii]);
 	}
 
-	// dims
-//    mem->dims = dims;
-
     assert((char *)raw_memory + ocp_nlp_gn_sqp_memory_calculate_size(config, dims, opts) >= c_ptr);
 
     return mem;
@@ -496,7 +493,6 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 	int nx, nu, nb, ng, nx1, nu1;
 	int nv, ny;
 
-    ocp_nlp_cost_nls_model **cost = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
     struct blasfeo_dmat *W_chol;
@@ -813,6 +809,7 @@ int ocp_nlp_gn_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in
     for ( ; sqp_iter < max_sqp_iterations; sqp_iter++)
     {
 
+		// linearizate NLP and update QP matrices
         linearize_update_qp_matrices(config, dims, nlp_in, nlp_out, opts, mem, work);
 
 		// update QP rhs for SQP (step prim var, abs dual var)

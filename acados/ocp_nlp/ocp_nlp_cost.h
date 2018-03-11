@@ -87,12 +87,9 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory);
 
 typedef struct
 {
-	ocp_nlp_cost_dims *dims;
-	external_function_generic *nls_jac; // evaluation and jacobian of ls residuals
 	struct blasfeo_dmat Cyt;
 	struct blasfeo_dmat W;
     struct blasfeo_dvec y_ref;
-	int nls_mask; // nonlinear least squares mask TODO lin and nonlin models instead
 } ocp_nlp_cost_ls_model;
 
 //
@@ -104,6 +101,67 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config);
 
 
 
+/* options */
+
+typedef struct
+{
+    int dummy; // XXX to make cmake happy
+} ocp_nlp_cost_ls_opts;
+
+//
+int ocp_nlp_cost_ls_opts_calculate_size(void *config, ocp_nlp_cost_dims *dims);
+//
+void *ocp_nlp_cost_ls_opts_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+//
+void ocp_nlp_cost_ls_opts_initialize_default(void *config, ocp_nlp_cost_dims *dims, void *opts);
+
+
+
+/* memory */
+
+typedef struct
+{
+	struct blasfeo_dmat W_chol; // cholesky factor of weight matrix
+    struct blasfeo_dvec res; // ls residual r(x)
+	struct blasfeo_dvec grad; // gradient of cost function
+	struct blasfeo_dvec *ux; // pointer to ux in nlp_out
+	struct blasfeo_dmat *RSQrq; // pointer to RSQrq in qp_in
+} ocp_nlp_cost_ls_memory;
+
+//
+int ocp_nlp_cost_ls_memory_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+//
+void *ocp_nlp_cost_ls_memory_assign(void *config, ocp_nlp_cost_dims *dims, void *opts, void *raw_memory);
+//
+struct blasfeo_dvec *ocp_nlp_cost_ls_memory_get_grad_ptr(void *memory_);
+//
+void ocp_nlp_cost_ls_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory);
+//
+void ocp_nlp_cost_ls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
+
+
+
+/* workspace */
+
+typedef struct
+{
+	struct blasfeo_dmat tmp_nv_ny;
+	struct blasfeo_dvec tmp_ny;
+} ocp_nlp_cost_ls_workspace;
+
+//
+int ocp_nlp_cost_ls_workspace_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+
+
+/* functions */
+
+//
+void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
+//
+void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_);
+
+
+
 /************************************************
 * nonlinear least squares
 ************************************************/
@@ -112,9 +170,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config);
 
 typedef struct
 {
-	ocp_nlp_cost_dims *dims;
 	external_function_generic *nls_jac; // evaluation and jacobian of ls residuals
-	struct blasfeo_dmat Cyt;
 	struct blasfeo_dmat W;
     struct blasfeo_dvec y_ref;
 	int nls_mask; // nonlinear least squares mask TODO lin and nonlin models instead
@@ -182,6 +238,7 @@ typedef struct
 
 //
 int ocp_nlp_cost_nls_workspace_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+
 
 
 /* functions */

@@ -65,8 +65,14 @@
 // process box constraints as general constraints
 #define BC_AS_GC
 
+
+
 // dynamics: 0 erk, 1 lifted_irk, 2 irk
 #define DYNAMICS 2
+
+// cost: 0 ls, 1 nls
+#define COST 1
+
 
 
 enum sensitivities_scheme {
@@ -634,7 +640,11 @@ int main() {
 	// cost: least squares
     for (int ii = 0; ii <= NN; ii++)
     {
+#if COST==0
+		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
+#else
 		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
+#endif
     }
 
 		// 4th order schemes
@@ -787,6 +797,7 @@ int main() {
     * nonlinear least squares
     ************************************************/
 
+#if COST==1
 	external_function_casadi ls_cost_jac_casadi[NN+1]; // XXX varible size array
 
 	select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
@@ -804,6 +815,7 @@ int main() {
 		external_function_casadi_assign(ls_cost_jac_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
 	}
+#endif
 
     /************************************************
     * nlp_in (wip)
@@ -845,9 +857,27 @@ int main() {
 
     /* least-squares cost */
 
-    ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
-
 	// output definition: y = [x; u]
+
+#if COST==0
+    /* linear ls */
+
+    ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
+
+	// Cyt
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
+        for (int j = 0; j < nu[i]; j++)
+            DMATEL_LIBSTR(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
+        for (int j = 0; j < nx[i]; j++)
+            DMATEL_LIBSTR(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
+	}
+
+#else
+    /* nonlinear ls */
+
+    ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
 	// nls_jac
 	for (int i=0; i<=NN; i++)
@@ -865,10 +895,9 @@ int main() {
 	}
 #endif
 
+#endif
 
-	// nls mask
-	for (int i=0; i<=NN; i++)
-		cost_ls[i]->nls_mask = 1;
+    /* common to linear and nonlinear ls */
 
 	// W
 	for (int i=0; i<=NN; i++)
@@ -878,16 +907,6 @@ int main() {
             DMATEL_LIBSTR(&cost_ls[i]->W, j, j) = diag_cost_x[j];
         for (int j = 0; j < nu[i]; j++)
             DMATEL_LIBSTR(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
-	}
-
-	// Cyt
-	for (int i=0; i<=NN; i++)
-	{
-		blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-        for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-        for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
 	}
 
 	// y_ref
@@ -1151,7 +1170,9 @@ int main() {
 #endif // DYNAMICS
 
 	free(config_mem);
+#if COST==1
 	free(ls_cost_jac_casadi_mem);
+#endif
 	free(dims_mem);
     free(nlp_in_mem);
     free(nlp_out_mem);
