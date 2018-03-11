@@ -189,6 +189,8 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
         assign_blasfeo_dvec_structs(N+1, &mem->pi0, &c_ptr);
         assign_blasfeo_dvec_structs(N+1, &mem->t0, &c_ptr);
 		
+        align_char_to(64, &c_ptr);
+
         for (ii = 0; ii <= N; ii++)
 		{
             // partial tightening-specific
@@ -236,6 +238,7 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 			
 		}
 	
+        align_char_to(64, &c_ptr);
 		mem->work_ric = c_ptr;
 		c_ptr+=d_back_ric_rec_work_space_size_bytes_libstr(args->N, 
 				dims->nx, dims->nu, dims->nb, dims->ng);
@@ -318,18 +321,21 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
     if (M < N)
     {
+        for (int ii = 0; ii <= N; ii++)
+            blasfeo_create_dvec(nu[ii]+nx[ii], &mem->hsrq[ii], qp_in->rq[ii].pa);
+
         // update cost function matrices and vectors (box constraints)
         d_update_hessian_gradient_mpc_hard_libstr(
-				N-M, &nx[M], &nu[M], &nb[M], &ng[M],  &qp_in->d[M],  
-				sigma_mu, &mem->t0[M], &mem->hstinv[M], &mem->lam0[M], 
-				&mem->hslamt[M], &mem->hsdlam[M], &mem->hsQx[M], &mem->hsqx[M]);
+		    N-M, &nx[M], &nu[M], &nb[M], &ng[M],  &qp_in->d[M],  
+			sigma_mu, &mem->t0[M], &mem->hstinv[M], &mem->lam0[M], 
+			&mem->hslamt[M], &mem->hsdlam[M], &mem->hsQx[M], &mem->hsqx[M]);
 
         // backward riccati factorization and solution at the end
         d_back_ric_rec_sv_back_libstr(
-				N-M, &nx[M], &nu[M], &nb[M], &qp_in->idxb[M], &ng[M], 0, 
-				&qp_in->BAbt[M], hsvecdummy, 1, &qp_in->RSQrq[M], &mem->hsrq[M], 
-				&qp_in->DCt[M], &mem->hsQx[M], &mem->hsqx[M], &qp_out->ux[M], 1, 
-				&qp_out->pi[M],  1, &mem->hsPb[M], &mem->hsL[M], mem->work_ric);
+			N-M, &nx[M], &nu[M], &nb[M], &qp_in->idxb[M], &ng[M], 0, 
+			&qp_in->BAbt[M], hsvecdummy, 1, &qp_in->RSQrq[M], &mem->hsrq[M], 
+			&qp_in->DCt[M], &mem->hsQx[M], &mem->hsqx[M], &qp_out->ux[M], 1, 
+			&qp_out->pi[M],  1, &mem->hsPb[M], &mem->hsL[M], mem->work_ric);
 
         // extract chol factor of [P p; p' *]
         blasfeo_dtrcp_l(nx[M], &mem->hsL[M], nu[M], nu[M], &mem->sLxM, 0, 0);
@@ -337,7 +343,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
         // recover [P p; p' *]
         blasfeo_dsyrk_ln_mn(nx[M]+1, nx[M], nx[M], 1.0, &mem->sLxM, 0, 0, &mem->sLxM, 0, 0, 0.0,
-          &mem->sPpM, 0, 0, &mem->sPpM, 0, 0);
+            &mem->sPpM, 0, 0, &mem->sPpM, 0, 0);
 
         // backup stage M
         nuM = nu[M];
@@ -352,10 +358,10 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
         // IPM at the beginning
         hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, 
-			hpmpc_args->alpha_min, warm_start, stat, M, nx, nu, nb, 
+			hpmpc_args->alpha_min, warm_start, mem->stats, M, nx, nu, nb, 
 			qp_in->idxb, ng, qp_in->BAbt, qp_in->RSQrq, qp_in->DCt,
           	qp_in->d, qp_out->ux, compute_mult, qp_out->pi, qp_out->lam, 
-			&mem->t0, mem->hpmpc_work);  // recover original stage M
+			mem->t0, mem->hpmpc_work);  // recover original stage M
 
         nu[M] = nuM;
         nb[M] = nbM;
@@ -367,7 +373,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 			&qp_in->idxb[M], &ng[M], 0, &qp_in->BAbt[M], hsvecdummy, 1, 
 			&qp_in->RSQrq[M], &mem->hsrq[M], hsmatdummy, &mem->hsQx[M], 
 			&mem->hsqx[M], &qp_out->ux[M], 1, &qp_out->pi[M], 1, 
-			&mem->hsPb[M], &mem->hsL[M], mem->hsric_work_mat);
+			&mem->hsPb[M], &mem->hsL[M], mem->work_ric);
 		
 		// compute alpha, dlam and dt real_t alpha = 1.0; 
 		// compute primal step hsdux for stages M to N
