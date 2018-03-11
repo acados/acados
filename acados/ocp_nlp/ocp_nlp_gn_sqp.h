@@ -82,10 +82,6 @@ typedef struct
 	// nlp memory
 	ocp_nlp_memory *nlp_mem;
 
-
-	struct blasfeo_dmat *W_chol; // cholesky factor of weight matrix
-    struct blasfeo_dvec *ls_res; // least-squares residual r(x)
-
 	int sqp_iter;
 
 } ocp_nlp_gn_sqp_memory;
@@ -122,9 +118,6 @@ typedef struct
 	struct blasfeo_dmat *tmp_nv_ny;
 	struct blasfeo_dvec *tmp_nbg;
     struct blasfeo_dvec *tmp_ny;
-
-	double **ls_cost_in;
-	double **ls_cost_jac_out;
 
 } ocp_nlp_gn_sqp_work;
 
