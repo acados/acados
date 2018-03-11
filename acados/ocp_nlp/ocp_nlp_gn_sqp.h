@@ -52,6 +52,7 @@ typedef struct
 	double min_res_m;
     void *qp_solver_opts;
 	void **dynamics; // dynamics_opts
+	void **cost; // cost_opts
 } ocp_nlp_gn_sqp_opts;
 
 //
@@ -72,8 +73,8 @@ typedef struct
 //    ocp_nlp_dims *dims;
     void *qp_solver_mem;
 
-//    void **sim_solvers_mem;
     void **dynamics; // dynamics memory
+	void **cost; // cost memory
 
     // residuals
 	ocp_nlp_res *nlp_res;
@@ -112,6 +113,7 @@ typedef struct
 	ocp_nlp_out_stage **nlp_out_stage; // TODO remove
 
     void **dynamics; // dynamics_workspace
+    void **cost; // cost_workspace
 
 	// temporary stuff
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results

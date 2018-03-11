@@ -634,7 +634,7 @@ int main() {
 	// cost: least squares
     for (int ii = 0; ii <= NN; ii++)
     {
-		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
+		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
     }
 
 		// 4th order schemes
@@ -845,7 +845,7 @@ int main() {
 
     /* least-squares cost */
 
-    ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
+    ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
 
 	// output definition: y = [x; u]
 

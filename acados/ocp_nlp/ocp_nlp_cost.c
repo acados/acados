@@ -93,10 +93,10 @@ ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory)
 
 
 /************************************************
-* least squares
+* linear least squares
 ************************************************/
 
-
+/* model */
 
 int ocp_nlp_cost_ls_model_calculate_size(void *config, ocp_nlp_cost_dims *dims)
 {
@@ -158,6 +158,8 @@ void *ocp_nlp_cost_ls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *
 
 
 
+/* config */
+
 void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 {
 	ocp_nlp_cost_config *config = config_;
@@ -165,6 +167,222 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 	config->model_calculate_size = &ocp_nlp_cost_ls_model_calculate_size;
 	config->model_assign = &ocp_nlp_cost_ls_model_assign;
 	config->config_initialize_default = &ocp_nlp_cost_ls_config_initialize_default;
+
+	return;
+
+}
+
+
+
+/************************************************
+* nonlinear least squares
+************************************************/
+
+/* model */
+
+int ocp_nlp_cost_nls_model_calculate_size(void *config, ocp_nlp_cost_dims *dims)
+{
+	// extract dims
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int ny = dims->ny;
+
+	int size = 0;
+
+	size += sizeof(ocp_nlp_cost_nls_model);
+
+	size += 64; // blasfeo_mem align
+
+	size += blasfeo_memsize_dmat(ny, ny); // W
+	size += blasfeo_memsize_dmat(nx+nu, ny); // Cyr
+	size += blasfeo_memsize_dvec(ny); // y_ref
+
+	return size;
+
+}
+
+
+
+void *ocp_nlp_cost_nls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+	int nx = dims->nx;
+	int nu = dims->nu;
+	int ny = dims->ny;
+
+	// struct
+    ocp_nlp_cost_nls_model *model = (ocp_nlp_cost_nls_model *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_nls_model);
+
+	// dims
+	model->dims = dims;
+
+	// blasfeo_mem align
+	align_char_to(64, &c_ptr);
+
+	// blasfeo_dmat
+	// W
+	assign_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
+	// Cyt
+	assign_blasfeo_dmat_mem(nx+nu, ny, &model->Cyt, &c_ptr);
+
+	// blasfeo_dvec
+	// y_ref
+	assign_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
+
+	// assert
+    assert((char *) raw_memory + ocp_nlp_cost_nls_model_calculate_size(config, dims) >= c_ptr);
+
+	return model;
+
+}
+
+
+
+/* options */
+
+int ocp_nlp_cost_nls_opts_calculate_size(void *config_, ocp_nlp_cost_dims *dims)
+{
+	ocp_nlp_cost_config *config = config_;
+
+    int size = 0;
+
+    size += sizeof(ocp_nlp_cost_nls_opts);
+
+    return size;
+}
+
+
+
+void *ocp_nlp_cost_nls_opts_assign(void *config_, ocp_nlp_cost_dims *dims, void *raw_memory)
+{
+	ocp_nlp_cost_config *config = config_;
+
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_cost_nls_opts *opts = (ocp_nlp_cost_nls_opts *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_nls_opts);
+
+    assert((char*)raw_memory + ocp_nlp_cost_nls_opts_calculate_size(config, dims) >= c_ptr);
+
+    return opts;
+}
+
+
+
+void ocp_nlp_cost_nls_opts_initialize_default(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+{
+	ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_nls_opts *opts = opts_;
+
+	return;
+
+}
+
+
+
+/* memory */
+
+int ocp_nlp_cost_nls_memory_calculate_size(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+{
+	ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_nls_opts *opts = opts_;
+
+	// extract dims
+	int nx = dims->nx;
+	int nu = dims->nu;
+
+	int size = 0;
+
+    size += sizeof(ocp_nlp_cost_nls_memory);
+
+//	size += 1*blasfeo_memsize_dvec(nu+nx+nx1); // adj
+
+	size += 64; // blasfeo_mem align
+
+	return size;
+}
+
+
+
+void *ocp_nlp_cost_nls_memory_assign(void *config_, ocp_nlp_cost_dims *dims, void *opts_, void *raw_memory)
+{
+	ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_nls_opts *opts = opts_;
+
+	char *c_ptr = (char *) raw_memory;
+
+	// extract dims
+	int nx = dims->nx;
+	int nu = dims->nu;
+
+	// struct
+    ocp_nlp_cost_nls_memory *memory = (ocp_nlp_cost_nls_memory *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_nls_memory);
+
+	// blasfeo_mem align
+	align_char_to(64, &c_ptr);
+
+	// adj
+//	assign_blasfeo_dvec_mem(nu+nx+nx1, &memory->adj, &c_ptr);
+
+    assert((char *) raw_memory + ocp_nlp_cost_nls_memory_calculate_size(config_, dims, opts_) >= c_ptr);
+
+	return memory;
+}
+
+
+
+/* workspace */
+
+int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+{
+	ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_nls_opts *opts = opts_;
+
+	int size = 0;
+
+    size += sizeof(ocp_nlp_cost_nls_workspace);
+
+	return size;
+
+}
+
+
+
+static void ocp_nlp_cost_nls_cast_workspace(void *config_, ocp_nlp_cost_dims *dims, void *opts_, void *work_)
+{
+
+	ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_nls_opts *opts = opts_;
+	ocp_nlp_cost_nls_workspace *work = work_;
+
+    char *c_ptr = (char *) work_;
+    c_ptr += sizeof(ocp_nlp_cost_nls_workspace);
+
+    assert((char *)work + ocp_nlp_cost_nls_workspace_calculate_size(config, dims, opts) >= c_ptr);
+
+	return;
+}
+
+
+
+/* config */
+
+void ocp_nlp_cost_nls_config_initialize_default(void *config_)
+{
+	ocp_nlp_cost_config *config = config_;
+
+	config->model_calculate_size = &ocp_nlp_cost_nls_model_calculate_size;
+	config->model_assign = &ocp_nlp_cost_nls_model_assign;
+	config->opts_calculate_size = &ocp_nlp_cost_nls_opts_calculate_size;
+	config->opts_assign = &ocp_nlp_cost_nls_opts_assign;
+	config->opts_initialize_default = &ocp_nlp_cost_nls_opts_initialize_default;
+	config->memory_calculate_size = &ocp_nlp_cost_nls_memory_calculate_size;
+	config->memory_assign = &ocp_nlp_cost_nls_memory_assign;
+	config->workspace_calculate_size = &ocp_nlp_cost_nls_workspace_calculate_size;
+	config->config_initialize_default = &ocp_nlp_cost_nls_config_initialize_default;
 
 	return;
 
