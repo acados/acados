@@ -28,15 +28,13 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef enum hpmpc_options_t_ {
-    HPMPC_DEFAULT_ARGUMENTS  // TODO(Andrea): need to implement other options
+    HPMPC_DEFAULT_ARGUMENTS  
 } hpmpc_options_t;
 
 typedef struct ocp_qp_hpmpc_args_ {
     double tol;
     int max_iter;
-    //  double min_step;
     double mu0;
-    //  double sigma_min;
     double alpha_min;
     int warm_start;
     int N2;  // horizion length of the partially condensed problem
@@ -61,7 +59,6 @@ typedef struct ocp_qp_hpmpc_memory_ {
     struct blasfeo_dvec *ux0; 
     struct blasfeo_dvec *pi0;     
     struct blasfeo_dvec *t0;
-
      
     // 2. workspace
     struct blasfeo_dmat *hsL;
@@ -80,14 +77,12 @@ typedef struct ocp_qp_hpmpc_memory_ {
 	struct blasfeo_dvec *hslamt; 
 
 	struct blasfeo_dvec *hsPb;
-    
 
     void *work_ric;
 
     int out_iter;
 
 } ocp_qp_hpmpc_memory;
-
 
 int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims);
 
@@ -105,11 +100,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
 void ocp_qp_hpmpc_config_initialize_default(void *config_);
 
-
-
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
 #endif  // ACADOS_OCP_QP_OCP_QP_HPMPC_H_

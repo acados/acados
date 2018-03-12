@@ -50,11 +50,15 @@
 
 #include "./mass_spring.c"
 
+#define LAM_INIT 1.0
+
+#define T_INIT 1.0
+
 int main() {
     printf("\n");
     printf("\n");
     printf("\n");
-    printf(" mass spring example: acados ocp_qp solvers\n");
+    printf(" mass spring partial tightening example: acados + HPMPC\n");
     printf("\n");
     printf("\n");
     printf("\n");
@@ -80,34 +84,16 @@ int main() {
     // choose ocp qp solvers
     ocp_qp_solver_t ocp_qp_solvers[] =
     {
-        // PARTIAL_CONDENSING_HPIPM,
-        #if ACADOS_WITH_HPMPC
         PARTIAL_CONDENSING_HPMPC,
-        #endif
-        #if ACADOS_WITH_QPDUNES
-        // PARTIAL_CONDENSING_QPDUNES,
-        #endif
-        // FULL_CONDENSING_HPIPM,
-        #ifdef ACADOS_WITH_QORE
-        // FULL_CONDENSING_QORE,
-        #endif
-        // FULL_CONDENSING_QPOASES,
     };
 
     // choose values for N2 in partial condensing solvers
     int num_N2_values = 1;
-    int N2_values[1] = {15};
+    int num_M_values = 1;
+    int N2_values[1]  = {15};
+    int M_values[1]   = {10};
 
-    int ii_max = 6;
-    #ifndef ACADOS_WITH_HPMPC
-    ii_max--;
-    #endif
-    #ifndef ACADOS_WITH_QPDUNES
-    ii_max--;
-    #endif
-    #ifndef ACADOS_WITH_QORE
-    ii_max--;
-    #endif
+    int ii_max = 1;
 
     for (int ii = 0; ii < ii_max; ii++)
     {
@@ -116,140 +102,109 @@ int main() {
 
         void *args = ocp_qp_create_args(&plan, qp_dims);
 
-        for (int jj = 0; jj < num_N2_values; jj++)
-        {
-            int N2 = N2_values[jj];
+        for (int jj = 0; jj < num_N2_values; jj++) {
+            for (int kk = 0; kk < num_M_values; kk++) {
+                int N2 = N2_values[jj];
+                int M = M_values[kk];
 
-            // NOTE(nielsvd): needs to be implemented using the acados_c/options.h interface
-            switch (plan.qp_solver)
-            {
-                case PARTIAL_CONDENSING_HPIPM:
-                    printf("\nPartial condensing + HPIPM (N2 = %d):\n\n", N2);
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-                    ((ocp_qp_hpipm_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->hpipm_args->iter_max = 30;
-                    break;
-                case PARTIAL_CONDENSING_HPMPC:
-#ifdef ACADOS_WITH_HPMPC
-                    printf("\nPartial condensing + HPMPC (N2 = %d):\n\n", N2);
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-                    ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
-                    ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->M = 10;
-#endif
-                    break;
-                case PARTIAL_CONDENSING_QPDUNES:
-#ifdef ACADOS_WITH_QPDUNES
-                    printf("\nPartial condensing + qpDUNES (N2 = %d):\n\n", N2);
-                    #ifdef ELIMINATE_X0
-                    assert(1==0 && "qpDUNES does not support ELIMINATE_X0 flag!");
-                    #endif
-                    ocp_qp_sparse_solver_args *solver_args = (ocp_qp_sparse_solver_args *)args;
-                    ocp_qp_qpdunes_args *qpdunes_args = (ocp_qp_qpdunes_args *)solver_args->solver_args;
-                    #ifdef GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
-                    qpdunes_args->stageQpSolver = QPDUNES_WITH_QPOASES;
-                    #endif
-                    qpdunes_args->warmstart = 0;
-                    ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
-#endif
-                    break;
-                case FULL_CONDENSING_HPIPM:
-                    printf("\nFull condensing + HPIPM:\n\n");
-                    // default options
-                    break;
-                case FULL_CONDENSING_QORE:
-#ifdef ACADOS_WITH_QORE
-                    printf("\nFull condensing + QORE:\n\n");
-                    // default options
-                    break;
-#endif
-                case FULL_CONDENSING_QPOASES:
-                    printf("\nFull condensing + QPOASES:\n\n");
-                    // default options
-                    break;
-                case PARTIAL_CONDENSING_OOQP:
-                    break;
-            }
+                printf("\nPartial condensing + partial tightening + HPMPC (N2 = %d, M = %d):\n\n", N2, M);
+                ((ocp_qp_partial_condensing_args *)((ocp_qp_sparse_solver_args *)args)->pcond_args)->N2 = N2;
+                ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->max_iter = 30;
+                ((ocp_qp_hpmpc_args *)((ocp_qp_sparse_solver_args *)args)->solver_args)->M = M;
+                
+                ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
 
-            ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
-
-            int acados_return = 0;
-
-            ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
-            ocp_qp_info min_info;
-
-            // run QP solver NREP times and record min timings
-            for (int rep = 0; rep < NREP; rep++)
-            {
-                acados_return += ocp_qp_solve(qp_solver, qp_in, qp_out);
-
-                if (rep == 0)
-                {
-                    min_info.num_iter = info->num_iter;
-                    min_info.total_time = info->total_time;
-                    min_info.condensing_time = info->condensing_time;
-                    min_info.solve_QP_time = info->solve_QP_time;
-                    min_info.interface_time = info->interface_time;
+                ocp_qp_hpmpc_memory *hpmpc_mem = (ocp_qp_hpmpc_memory *)((ocp_qp_sparse_solver_memory *)qp_solver->mem)->solver_memory;
+                
+                // initialize additional variables
+                for (int ii = 0; ii <= 15; ii++) {
+                    for (int jj = 0; jj < 2*(qp_dims->nb[ii] + qp_dims->ng[ii]); jj++) {
+                        hpmpc_mem->lam0[ii].pa[jj] = LAM_INIT; 
+                        hpmpc_mem->t0[ii].pa[jj] = T_INIT;
+                    }
                 }
-                else
-                {
-                    assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
+                
+                int acados_return = 0;
 
-                    if (info->total_time < min_info.total_time)
+                ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
+                ocp_qp_info min_info;
+
+                // run QP solver NREP times and record min timings
+                for (int rep = 0; rep < NREP; rep++)
+                {
+                    acados_return += ocp_qp_solve(qp_solver, qp_in, qp_out);
+
+                    if (rep == 0)
+                    {
+                        min_info.num_iter = info->num_iter;
                         min_info.total_time = info->total_time;
-                    if (info->condensing_time < min_info.condensing_time)
                         min_info.condensing_time = info->condensing_time;
-                    if (info->solve_QP_time < min_info.solve_QP_time)
                         min_info.solve_QP_time = info->solve_QP_time;
-                    if (info->interface_time < min_info.interface_time)
                         min_info.interface_time = info->interface_time;
+                    }
+                    else
+                    {
+                        assert(min_info.num_iter == info->num_iter && "QP solver not cold started!");
+
+                        if (info->total_time < min_info.total_time)
+                            min_info.total_time = info->total_time;
+                        if (info->condensing_time < min_info.condensing_time)
+                            min_info.condensing_time = info->condensing_time;
+                        if (info->solve_QP_time < min_info.solve_QP_time)
+                            min_info.solve_QP_time = info->solve_QP_time;
+                        if (info->interface_time < min_info.interface_time)
+                            min_info.interface_time = info->interface_time;
+                    }
                 }
+
+                /************************************************
+                 * compute residuals
+                 ************************************************/
+
+                ocp_qp_res *qp_res = create_ocp_qp_res(qp_dims);
+                ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_dims);
+                compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
+
+                /************************************************
+                 * print solution
+                 ************************************************/
+
+                 print_ocp_qp_out(qp_out);
+
+                /************************************************
+                 * print residuals
+                 ************************************************/
+
+    //			 print_ocp_qp_res(qp_res);
+
+                /************************************************
+                 * compute infinity norm of residuals
+                 ************************************************/
+
+                double res[4];
+                compute_ocp_qp_res_nrm_inf(qp_res, res);
+                double max_res = 0.0;
+                for (int ii = 0; ii < 4; ii++)
+                    max_res = (res[ii] > max_res) ? res[ii] : max_res;
+
+                /************************************************
+                 * print stats
+                 ************************************************/
+
+                printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
+
+                print_ocp_qp_info(&min_info);
+
+                /************************************************
+                 * free memory
+                 ************************************************/
+
+                free(qp_solver);
+
+                if (plan.qp_solver >= FULL_CONDENSING_HPIPM) break;
             }
-
-            /************************************************
-             * compute residuals
-             ************************************************/
-
-            ocp_qp_res *qp_res = create_ocp_qp_res(qp_dims);
-            ocp_qp_res_ws *res_ws = create_ocp_qp_res_ws(qp_dims);
-            compute_ocp_qp_res(qp_in, qp_out, qp_res, res_ws);
-
-            /************************************************
-             * print solution
-             ************************************************/
-
-			 print_ocp_qp_out(qp_out);
-
-            /************************************************
-             * print residuals
-             ************************************************/
-
-//			 print_ocp_qp_res(qp_res);
-
-            /************************************************
-             * compute infinity norm of residuals
-             ************************************************/
-
-            double res[4];
-            compute_ocp_qp_res_nrm_inf(qp_res, res);
-            double max_res = 0.0;
-            for (int ii = 0; ii < 4; ii++)
-                max_res = (res[ii] > max_res) ? res[ii] : max_res;
-
-            /************************************************
-             * print stats
-             ************************************************/
-
-            printf("\ninf norm res: %e, %e, %e, %e\n", res[0], res[1], res[2], res[3]);
-
-            print_ocp_qp_info(&min_info);
-
-            /************************************************
-             * free memory
-             ************************************************/
-
-            free(qp_solver);
-
-            if (plan.qp_solver >= FULL_CONDENSING_HPIPM) break;
         }
+
         free(args);
     }
 

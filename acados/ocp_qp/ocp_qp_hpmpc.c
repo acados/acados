@@ -38,7 +38,6 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
-
 int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
 {
     int N = dims->N;
@@ -47,8 +46,6 @@ int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims)
     size += 1 * 64;                 // align once to typical cache line size
     return size;
 }
-
-
 
 void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
 {
@@ -72,8 +69,6 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
     return (void *)args;
 }
 
-
-
 void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
@@ -83,8 +78,6 @@ void ocp_qp_hpmpc_initialize_default_args(void *args_)
     args->warm_start = 0;
     args->alpha_min = 1e-10;
 }
-
-
 
 int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
 {
@@ -137,8 +130,6 @@ int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
     return ws_size;
 }
 
-
-
 void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args*) args_;
@@ -158,7 +149,6 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 
     align_char_to(64, &c_ptr);
 
-    // TODO(dimitris): PUT ANY PARTIAL_TIGHTENING DMATS HERE (WITH IF M < N)
 	int M = args->M;
 	int N = args->N;
 	
@@ -235,7 +225,6 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 			blasfeo_create_dvec(nx[ii+1], &mem->hsPb[ii+1], c_ptr);
 			c_ptr += (&mem->hsPb[ii+1])->memsize;
             
-			
 		}
 	
         align_char_to(64, &c_ptr);
@@ -255,14 +244,10 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
     return raw_memory;
 }
 
-
-
 int ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_dims *dims, void *args_)
 {
     return 0;
 }
-
-
 
 int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_)
 {
@@ -276,7 +261,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     int ii;
 
     // extract input struct members
-    int N = qp_in->dim->N;
+    int N   = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
@@ -287,10 +272,10 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
     int M = hpmpc_args->M;
 
     // extract args from struct
-    double mu_tol = hpmpc_args->tol;
-    int k_max = hpmpc_args->max_iter;
-    double mu0 = hpmpc_args->mu0;
-    int warm_start = hpmpc_args->warm_start;
+    double mu_tol   = hpmpc_args->tol;
+    int k_max       = hpmpc_args->max_iter;
+    double mu0      = hpmpc_args->mu0;
+    int warm_start  = hpmpc_args->warm_start;
 
     //  other solver arguments
 	int compute_mult = 1;
@@ -301,7 +286,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 	struct blasfeo_dmat *hsmatdummy = NULL;
 	struct blasfeo_dvec *hsvecdummy = NULL;
 	
-
     for (int ii = 0; ii <= N; ++ii)
     {
 		// temporarily invert sign of upper bounds
@@ -397,9 +381,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
         d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
           &sigma_mu, mu_scal, alpha, &qp_out->ux[M], &mem->hsdux[M], &mem->t0[M], 
 		  &mem->hsdt[M], &qp_out->lam[M], &mem->hsdlam[M], &qp_out->pi[M], &qp_out->pi[M]);
-
-        // !!!! TODO(Andrea): equality multipliers are not being updated! Need to
-        // define and compute hsdpi (see function prototype).
     } else {
         
 		// IPM at the beginning
@@ -437,8 +418,6 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 
     return acados_status;
 }
-
-
 
 void ocp_qp_hpmpc_config_initialize_default(void *config_)
 {
