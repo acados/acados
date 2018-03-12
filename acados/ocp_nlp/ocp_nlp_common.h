@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_cost.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics.h"
 #include "acados/sim/sim_common.h"
