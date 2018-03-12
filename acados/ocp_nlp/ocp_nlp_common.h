@@ -54,14 +54,6 @@ typedef struct
 
 
 
-typedef struct
-{
-	// TODO
-	int dummy;  // NOTE(dimitris): tmp field to fix cmake error on empty struct
-} ocp_nlp_dims_stage;
-
-
-
 /************************************************
 * in
 ************************************************/
@@ -95,16 +87,6 @@ typedef struct
 	struct blasfeo_dvec *lam;
 	struct blasfeo_dvec *t;
 } ocp_nlp_out;
-
-
-
-typedef struct
-{
-	struct blasfeo_dvec *ux;
-	struct blasfeo_dvec *pi;
-	struct blasfeo_dvec *lam;
-	struct blasfeo_dvec *t;
-} ocp_nlp_out_stage;
 
 
 
@@ -193,7 +175,7 @@ int ocp_nlp_dims_calculate_size(int N);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
 //
-void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *ns, ocp_nlp_dims *dims);
+void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *ns, ocp_nlp_dims *dims);
 
 /************************************************
 * in
@@ -212,10 +194,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
 int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *raw_memory);
-//
-int ocp_nlp_out_stage_calculate_size(void *config, ocp_nlp_dims_stage *dims);
-//
-ocp_nlp_out_stage *ocp_nlp_out_stage_assign(void *config, ocp_nlp_dims_stage *dims, void *raw_memory);
 
 /************************************************
 * memory
