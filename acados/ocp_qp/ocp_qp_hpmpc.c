@@ -72,11 +72,11 @@ void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory)
 void ocp_qp_hpmpc_initialize_default_args(void *args_)
 {
     ocp_qp_hpmpc_args *args = (ocp_qp_hpmpc_args *)args_;
-    args->tol = 1e-6;
+    args->tol = 1e-8;
     args->max_iter = 100;
-    args->mu0 = 1e1;
+    args->mu0 = 1e3;
     args->warm_start = 0;
-    args->alpha_min = 1e-10;
+    args->alpha_min = 1e-8;
 }
 
 int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_)
