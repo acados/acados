@@ -41,22 +41,6 @@ typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 
 
 
-typedef struct
-{
-	struct blasfeo_dmat *BAbt;
-	struct blasfeo_dvec *b;
-	struct blasfeo_dmat *RSQrq;
-	struct blasfeo_dvec *rq;
-	struct blasfeo_dmat *DCt;
-	struct blasfeo_dvec *d;
-	struct blasfeo_dvec *Z;
-	struct blasfeo_dvec *z;
-	int **idxb;
-	int **idxs;
-} ocp_qp_in_stage;
-
-
-
 #ifndef QP_SOLVER_CONFIG_
 #define QP_SOLVER_CONFIG_
 
@@ -117,10 +101,6 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
 int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims);
 //
 ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
-//
-int ocp_qp_in_stage_calculate_size(void *config, void *dims);
-//
-ocp_qp_in_stage *ocp_qp_in_stage_assign(void *config, void *dims, void *raw_memory);
 //
 int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims);
 //

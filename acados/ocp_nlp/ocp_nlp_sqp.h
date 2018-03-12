@@ -104,21 +104,12 @@ typedef struct
 
     // QP solver
     ocp_qp_in *qp_in;
-	ocp_qp_in_stage **qp_in_stage; // TODO remove
     ocp_qp_out *qp_out;
     void *qp_work;
 
     void **dynamics; // dynamics_workspace
     void **cost; // cost_workspace
     void **constraints; // constraints_workspace
-
-	// temporary stuff
-    // N+1 vectors of dimension nx[i]+nu[i] to store interm. results
-    // not using max(nx+nu) for parallelization in the future
-	// XXX take Max instead ?????
-	struct blasfeo_dmat *tmp_nv_ny;
-	struct blasfeo_dvec *tmp_nbg;
-    struct blasfeo_dvec *tmp_ny;
 
 } ocp_nlp_sqp_work;
 
