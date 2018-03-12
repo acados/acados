@@ -53,6 +53,7 @@ typedef struct
     void *qp_solver_opts;
 	void **dynamics; // dynamics_opts
 	void **cost; // cost_opts
+	void **constraints; // constraints_opts
 } ocp_nlp_sqp_opts;
 
 //
@@ -75,6 +76,7 @@ typedef struct
 
     void **dynamics; // dynamics memory
 	void **cost; // cost memory
+	void **constraints; // constraints memory
 
     // residuals
 	ocp_nlp_res *nlp_res;
@@ -110,6 +112,7 @@ typedef struct
 
     void **dynamics; // dynamics_workspace
     void **cost; // cost_workspace
+    void **constraints; // constraints_workspace
 
 	// temporary stuff
     // N+1 vectors of dimension nx[i]+nu[i] to store interm. results

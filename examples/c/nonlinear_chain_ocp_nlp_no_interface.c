@@ -680,7 +680,7 @@ int main() {
 	// constraitns
     for (int ii = 0; ii <= NN; ii++)
     {
-		ocp_nlp_constraints_config_initialize_default(config->constraints[ii]);
+		ocp_nlp_constraints_linear_config_initialize_default(config->constraints[ii]);
     }
 
     /************************************************
@@ -959,7 +959,7 @@ int main() {
 
     /* box constraints */
 
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_linear_model **constraints = (ocp_nlp_constraints_linear_model **) nlp_in->constraints;
 
 	// idxb0
     int idxb0[nb[0]];
