@@ -79,6 +79,10 @@ file(GLOB CRANE_MODEL_SRC
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
+    add_executable(pendulum_scqp pendulum_scqp.cpp)
+    target_link_libraries(pendulum_scqp acados)
+    add_test(pendulum_scqp pendulum_scqp)
+
     # -------------------- mass_spring
     if(ACADOS_WITH_C_INTERFACE)
         add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)
