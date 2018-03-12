@@ -91,7 +91,7 @@ int main() {
     int num_N2_values = 1;
     int num_M_values = 1;
     int N2_values[1]  = {15};
-    int M_values[1]   = {10};
+    int M_values[1]   = {0};
 
     int ii_max = 1;
 
@@ -114,7 +114,8 @@ int main() {
                 
                 ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, args);
 
-                ocp_qp_hpmpc_memory *hpmpc_mem = (ocp_qp_hpmpc_memory *)((ocp_qp_sparse_solver_memory *)qp_solver->mem)->solver_memory;
+                ocp_qp_hpmpc_memory *hpmpc_mem = (ocp_qp_hpmpc_memory *)((ocp_qp_sparse_solver_memory *)
+                    qp_solver->mem)->solver_memory;
                 
                 // initialize additional variables
                 for (int ii = 0; ii <= 15; ii++) {
