@@ -579,8 +579,8 @@ int main() {
     int nbu[NN + 1] = {0};
     int nb[NN + 1] = {0};
     int ng[NN + 1] = {0};
+    int nh[NN + 1] = {0};
     int ns[NN+1] = {0};
-	// int nv[NN+1] = {0};
 	int ny[NN+1] = {0};
 
     nx[0] = NX;
@@ -596,7 +596,7 @@ int main() {
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 #endif
-	// nv[0] = nx[0]+nu[0];
+	nh[0] = 0;
 	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
@@ -607,7 +607,7 @@ int main() {
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
-		// nv[i] = nx[i]+nu[i];
+		nh[i] = 0;
 		ny[i] = nx[i]+nu[i];
     }
 
@@ -617,7 +617,7 @@ int main() {
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
-	// nv[NN] = nx[NN]+nu[NN];
+	nh[NN] = 0;
 	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************
@@ -690,7 +690,7 @@ int main() {
 	int dims_size = ocp_nlp_dims_calculate_size(NN);
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, ns, dims);
+	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, nh, ns, dims);
 
     /************************************************
     * dynamics

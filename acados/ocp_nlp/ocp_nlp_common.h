@@ -194,7 +194,7 @@ int ocp_nlp_dims_calculate_size(int N);
 //
 ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
 //
-void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *ns, ocp_nlp_dims *dims);
+void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *ns, ocp_nlp_dims *dims);
 
 /************************************************
 * in

@@ -47,6 +47,7 @@ typedef struct
     int nbu;
     int ng;  // number of general linear constraints
     int ns;  // number of soft constraints
+	int nh;  // number of nonlinear path constraints
 } ocp_nlp_constraints_dims;
 
 //

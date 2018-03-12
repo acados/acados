@@ -52,9 +52,9 @@ if(NOT ACADOS_WITH_QPDUNES)
 endif()
 
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/sim/sim_discrete_model.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sm_gn.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sqp_bkp.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_qp_ooqp.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_nlp_sm_gn.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_nlp_sqp_bkp.c")
 
 # Define acados library
 add_library(acados ${ACADOS_SRC})
