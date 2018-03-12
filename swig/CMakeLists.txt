@@ -40,10 +40,10 @@ include_directories("${PROJECT_SOURCE_DIR}/interfaces")
 # SWIG typemaps debug flag
 # set(CMAKE_SWIG_FLAGS "-debug-tmused")
 
-if(SWIG_MATLAB)
+if(SWIG_MATLAB AND ACADOS_WITH_C_INTERFACE)
     add_subdirectory(matlab)
 endif()
 
-if(SWIG_PYTHON)
+if(SWIG_PYTHON AND ACADOS_WITH_C_INTERFACE)
     add_subdirectory(python)
 endif()
