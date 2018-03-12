@@ -356,13 +356,13 @@ int ocp_nlp_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
 
     size += sizeof(ocp_nlp_sqp_work);
 
+	// qp in
     size += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
-	size += (N+1)*sizeof(ocp_qp_in_stage *);
-	for (ii=0; ii<=N; ii++)
-		size += ocp_qp_in_stage_calculate_size(qp_solver, NULL); // TODO qp dims stage
 
+	// qp out
     size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
+	// qp solver
     size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
 	// dynamics
@@ -406,27 +406,11 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp_di
 	int nb, ng;
 	int nv, ny;
 
-    // set up QP solver
+	// qp in
     work->qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_in_calculate_size(qp_solver, dims->qp_solver);
-	work->qp_in_stage = (ocp_qp_in_stage **) c_ptr;
-	c_ptr += (N+1)*sizeof(ocp_qp_in_stage *);
-	for (int ii=0; ii<=N; ii++)
-	{
-		work->qp_in_stage[ii] = ocp_qp_in_stage_assign(qp_solver, NULL, c_ptr); // TODO qp dims stage
-		c_ptr += ocp_qp_in_stage_calculate_size(qp_solver, NULL); // TODO qp dims stage
-		// alias qp in
-		work->qp_in_stage[ii]->BAbt = work->qp_in->BAbt+ii;
-		work->qp_in_stage[ii]->b = work->qp_in->b+ii;
-		work->qp_in_stage[ii]->RSQrq = work->qp_in->RSQrq+ii;
-		work->qp_in_stage[ii]->rq = work->qp_in->rq+ii;
-		work->qp_in_stage[ii]->DCt = work->qp_in->DCt+ii;
-		work->qp_in_stage[ii]->d = work->qp_in->d+ii;
-		work->qp_in_stage[ii]->Z = work->qp_in->Z+ii;
-		work->qp_in_stage[ii]->z = work->qp_in->z+ii;
-		work->qp_in_stage[ii]->idxb = work->qp_in->idxb+ii;
-	}
 
+	// qp out
     work->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
@@ -622,8 +606,11 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 
 
 // update QP rhs for SQP (step prim var, abs dual var)
-static void sqp_update_qp_vectors(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *args, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
+// TODO move in dynamics, cost, constraints modules ???
+static void sqp_update_qp_vectors(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
 {
+
+    ocp_nlp_sqp_cast_workspace(config, dims, work, mem, opts);
 
 	// loop index
 	int i;
@@ -634,40 +621,32 @@ static void sqp_update_qp_vectors(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nl
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
-	ocp_qp_in_stage *qp_in_stage;
-
 	// g
 	for (i=0; i<=N; i++)
 	{
-		qp_in_stage = work->qp_in_stage[i];
-
 		nx = dims->cost[i]->nx;
 		nu = dims->cost[i]->nu;
-		blasfeo_dveccp(nu+nx, nlp_mem->cost_grad+i, 0, qp_in_stage->rq, 0);
-        blasfeo_drowin(nu+nx, 1.0, qp_in_stage->rq, 0, qp_in_stage->RSQrq, nu+nx, 0); // XXX needed ???
+		blasfeo_dveccp(nu+nx, nlp_mem->cost_grad+i, 0, work->qp_in->rq+i, 0);
+        blasfeo_drowin(nu+nx, 1.0, work->qp_in->rq+i, 0, work->qp_in->RSQrq+i, nu+nx, 0); // XXX needed ???
 
 	}
 
 	// b
 	for (i=0; i<N; i++)
 	{
-		qp_in_stage = work->qp_in_stage[i];
-
 		nx = dims->dynamics[i]->nx;
 		nu = dims->dynamics[i]->nu;
 		nx1 = dims->dynamics[i]->nx1;
-		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, qp_in_stage->b, 0);
-		blasfeo_drowin(nx1, 1.0, qp_in_stage->b, 0, qp_in_stage->BAbt, nu+nx, 0); // XXX needed ???
+		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, work->qp_in->b+i, 0);
+		blasfeo_drowin(nx1, 1.0, work->qp_in->b+i, 0, work->qp_in->BAbt+i, nu+nx, 0); // XXX needed ???
 	}
 
 	// d
 	for (i=0; i<=N; i++)
 	{
-		qp_in_stage = work->qp_in_stage[i];
-
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
-		blasfeo_dveccp(2*nb+2*ng, nlp_mem->ineq_fun+i, 0, qp_in_stage->d, 0);
+		blasfeo_dveccp(2*nb+2*ng, nlp_mem->ineq_fun+i, 0, work->qp_in->d+i, 0);
 	}
 
 	return;
@@ -676,7 +655,7 @@ static void sqp_update_qp_vectors(ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nl
 
 
 
-static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *args, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
+static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
 {
 
 	// loop index
@@ -797,7 +776,7 @@ int ocp_nlp_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *n
 
 
 		// update QP rhs for SQP (step prim var, abs dual var)
-        sqp_update_qp_vectors(dims, nlp_in, nlp_out, opts, mem, work);
+        sqp_update_qp_vectors(config, dims, nlp_in, nlp_out, opts, mem, work);
 
 
 		// compute nlp residuals

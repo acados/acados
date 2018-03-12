@@ -181,29 +181,6 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 
 
 
-int ocp_qp_in_stage_calculate_size(void *config, void *dims)
-{
-    int size = sizeof(ocp_qp_in_stage);
-
-    return size;
-}
-
-
-
-ocp_qp_in_stage *ocp_qp_in_stage_assign(void *config, void *dims, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_qp_in_stage *qp_in = (ocp_qp_in_stage *) c_ptr;
-    c_ptr += sizeof(ocp_qp_in_stage);
-
-    assert((char*) raw_memory + ocp_qp_in_stage_calculate_size(config, dims) == c_ptr);
-
-    return qp_in;
-}
-
-
-
 /************************************************
 * out
 ************************************************/

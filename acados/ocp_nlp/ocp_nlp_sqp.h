@@ -104,7 +104,6 @@ typedef struct
 
     // QP solver
     ocp_qp_in *qp_in;
-	ocp_qp_in_stage **qp_in_stage; // TODO remove
     ocp_qp_out *qp_out;
     void *qp_work;
 
