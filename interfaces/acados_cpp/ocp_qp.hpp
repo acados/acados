@@ -76,9 +76,7 @@ private:
 
     std::unique_ptr<ocp_qp_xcond_solver_config> config;
 
-    // std::unique_ptr<ocp_qp_dims> dims;
-
-    // std::unique_ptr<void, decltype(&std::free)> args{nullptr, std::free};
+    std::unique_ptr<void, void (*)(void *)> args {nullptr, std::free};
 
     std::string cached_solver;
 

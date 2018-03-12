@@ -157,16 +157,13 @@ static ocp_qp_solver_plan string_to_plan(string solver);
 
 void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> options) {
 
-    // std::cout << *this;
-    // std::cout << "----------------------------------------------------------\n\n";
-
     squeeze_dimensions();
     cached_solver = solver_name;
     ocp_qp_solver_plan plan = string_to_plan(solver_name);
 
     config.reset(ocp_qp_config_create(&plan));
 
-    std::unique_ptr<void, decltype(&std::free)> args(ocp_qp_opts_create(config.get(), qp->dim), std::free);
+    args.reset(ocp_qp_opts_create(config.get(), qp->dim));
 
     map<string, option_t *> solver_options;
     auto nested_options = std::make_unique<option<map<string, option_t *>>>(options);
@@ -299,8 +296,6 @@ ocp_qp_solution ocp_qp::solve() {
     fill_in_bounds();
 
     auto result = std::unique_ptr<ocp_qp_out>(ocp_qp_out_create(NULL, qp->dim));
-
-    // std::cout << *this;
 
     int_t return_code = ocp_qp_solve(solver.get(), qp.get(), result.get());
 

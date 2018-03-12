@@ -30,6 +30,7 @@ print(output.states())
 qp.set("lbx", 3, array([1.0, 1.0]))
 qp.set("ubx", 3, array([2.0, +inf]))
 
+qp.initialize_solver("sparse_hpipm")
 output = qp.solve()
 print(output.states())
 
