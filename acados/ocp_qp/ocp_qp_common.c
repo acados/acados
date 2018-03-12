@@ -132,29 +132,6 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
 
 
 
-int ocp_qp_dims_stage_calculate_size()
-{
-    int size = sizeof(ocp_qp_dims_stage);
-
-    return size;
-}
-
-
-
-ocp_qp_dims_stage *ocp_qp_dims_stage_assign(void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_qp_dims_stage *dims = (ocp_qp_dims_stage *) c_ptr;
-    c_ptr += sizeof(ocp_qp_dims_stage);
-
-    assert((char *) raw_memory + ocp_qp_dims_stage_calculate_size() == c_ptr);
-
-    return dims;
-}
-
-
-
 /************************************************
 * in
 ************************************************/
@@ -204,7 +181,7 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
 
 
 
-int ocp_qp_in_stage_calculate_size(void *config, ocp_qp_dims_stage *dims)
+int ocp_qp_in_stage_calculate_size(void *config, void *dims)
 {
     int size = sizeof(ocp_qp_in_stage);
 
@@ -213,7 +190,7 @@ int ocp_qp_in_stage_calculate_size(void *config, ocp_qp_dims_stage *dims)
 
 
 
-ocp_qp_in_stage *ocp_qp_in_stage_assign(void *config, ocp_qp_dims_stage *dims, void *raw_memory)
+ocp_qp_in_stage *ocp_qp_in_stage_assign(void *config, void *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -274,29 +251,6 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     qp_out->dim = dims_copy;
 
     assert((char*) raw_memory + ocp_qp_out_calculate_size(config, dims) == c_ptr);
-
-    return qp_out;
-}
-
-
-
-int ocp_qp_out_stage_calculate_size(void *config, ocp_qp_dims_stage *dims)
-{
-    int size = sizeof(ocp_qp_out_stage);
-
-    return size;
-}
-
-
-
-ocp_qp_out_stage *ocp_qp_out_stage_assign(void *config, ocp_qp_dims_stage *dims, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_qp_out_stage *qp_out = (ocp_qp_out_stage *) c_ptr;
-    c_ptr += sizeof(ocp_qp_out_stage);
-
-    assert((char*) raw_memory + ocp_qp_out_stage_calculate_size(config, dims) == c_ptr);
 
     return qp_out;
 }

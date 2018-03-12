@@ -108,8 +108,6 @@ typedef struct
     ocp_qp_out *qp_out;
     void *qp_work;
 
-	ocp_nlp_out_stage **nlp_out_stage; // TODO remove
-
     void **dynamics; // dynamics_workspace
     void **cost; // cost_workspace
     void **constraints; // constraints_workspace

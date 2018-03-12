@@ -363,10 +363,6 @@ int ocp_nlp_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
 
     size += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
-	size += (N+1)*sizeof(ocp_nlp_out_stage *);
-	for (ii=0; ii<=N; ii++)
-		size += ocp_nlp_out_stage_calculate_size(config, NULL); // TODO nlp dims stage
-
     size += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
 	// dynamics
@@ -484,15 +480,7 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp_di
     work->qp_out = ocp_qp_out_assign(qp_solver, dims->qp_solver, c_ptr);
     c_ptr += ocp_qp_out_calculate_size(qp_solver, dims->qp_solver);
 
-	work->nlp_out_stage = (ocp_nlp_out_stage **) c_ptr;
-	c_ptr += (N+1)*sizeof(ocp_nlp_out_stage *);
-	for (int ii=0; ii<=N; ii++)
-	{
-		work->nlp_out_stage[ii] = ocp_nlp_out_stage_assign(config, NULL, c_ptr); // TODO qp dims stage
-		c_ptr += ocp_nlp_out_stage_calculate_size(config, NULL); // TODO qp dims stage
-	}
-
-
+	// qp solver
     work->qp_work = (void *)c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
@@ -802,18 +790,6 @@ int ocp_nlp_sqp(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, ocp_nlp_in *n
     ocp_nlp_sqp_cast_workspace(config, dims, work, mem, opts);
 
     int N = dims->N;
-
-	// alias nlp out TODO remove
-	for (int ii=0; ii<=N; ii++)
-	{
-		work->nlp_out_stage[ii]->ux = nlp_out->ux+ii;
-		if (ii<N)
-			work->nlp_out_stage[ii]->pi = nlp_out->pi+ii;
-		else
-			work->nlp_out_stage[ii]->pi = NULL;
-		work->nlp_out_stage[ii]->lam = nlp_out->lam+ii;
-		work->nlp_out_stage[ii]->t = nlp_out->t+ii;
-	}
 
 	// alias to dynamics_memory
 	for (int ii=0; ii<N; ii++)

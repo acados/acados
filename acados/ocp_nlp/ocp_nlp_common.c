@@ -484,29 +484,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 
 
 
-int ocp_nlp_out_stage_calculate_size(void *config, ocp_nlp_dims_stage *dims)
-{
-    int size = sizeof(ocp_nlp_out_stage);
-
-    return size;
-}
-
-
-
-ocp_nlp_out_stage *ocp_nlp_out_stage_assign(void *config, ocp_nlp_dims_stage *dims, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_out_stage *nlp_out = (ocp_nlp_out_stage *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_out_stage);
-
-    assert((char*) raw_memory + ocp_nlp_out_stage_calculate_size(config, dims) == c_ptr);
-
-    return nlp_out;
-}
-
-
-
 /************************************************
 * memory
 ************************************************/
