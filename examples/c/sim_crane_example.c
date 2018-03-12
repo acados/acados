@@ -305,8 +305,11 @@ int main()
 		// acados_tic(&timer);
 
 		for (ii=0;ii<NREP;ii++)
+		{
 		    acados_return = sim_solve(sim_solver, in, out);
-
+			if (acados_return != 0)
+            	printf("error in sim solver\n");
+		}
 		// double cpu_time = acados_toc(&timer)/NREP;
 
 		double *xn = out->xn;

@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_cost.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics.h"
 #include "acados/sim/sim_common.h"
@@ -156,7 +156,6 @@ typedef struct
     int (*fun)(ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *args, void *mem, void *work);
     int (*calculate_args_size)(ocp_nlp_dims *dims, void *solver_);
     void *(*assign_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory);
-    void *(*copy_args)(ocp_nlp_dims *dims, void *solver_, void *raw_memory, void *source_);
     void (*initialize_default_args)(void *args);
     int (*calculate_memory_size)(ocp_nlp_dims *dims, void *args);
     void *(*assign_memory)(ocp_nlp_dims *dims, void *args, void *raw_memory);

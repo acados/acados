@@ -19,7 +19,9 @@
 
 cmake_minimum_required(VERSION 3.0)
 
-set(ACADOS_WITH_C_INTERFACE ON CACHE BOOL "Add OOQP solver")
+set(ACADOS_WITH_WERROR ON CACHE BOOL "acados with Werror")
+
+set(ACADOS_WITH_C_INTERFACE ON CACHE BOOL "acados with c interface")
 
 if(CMAKE_MAKE_PROGRAM)
     file(TO_CMAKE_PATH ${CMAKE_MAKE_PROGRAM} CMAKE_MAKE_PROGRAM)
@@ -44,6 +46,10 @@ enable_testing(true)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fdiagnostics-show-option")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -fdiagnostics-show-option")
+endif()
+
+if (ACADOS_WITH_WERROR)
+    add_compile_options(-Werror)
 endif()
 
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")

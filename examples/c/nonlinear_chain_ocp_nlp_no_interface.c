@@ -42,7 +42,9 @@
 #include "acados/utils/external_function_generic.h"
 
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
-#include "acados/ocp_nlp/ocp_nlp_cost.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_common.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -282,6 +284,93 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 #endif
 			}
 			break;
+		case 4:
+			for (ii = 0; ii < N; ii++)
+			{
+#if DYNAMICS==0 | DYNAMICS==1
+				forw_vde[ii].casadi_fun = &vde_chain_nm5;
+				forw_vde[ii].casadi_work = &vde_chain_nm5_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm5_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm5_sparsity_out;
+				forw_vde[ii].casadi_n_in = &vde_chain_nm5_n_in;
+				forw_vde[ii].casadi_n_out = &vde_chain_nm5_n_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm5;
+				jac_ode[ii].casadi_work = &jac_chain_nm5_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm5_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm5_sparsity_out;
+				jac_ode[ii].casadi_n_in = &jac_chain_nm5_n_in;
+				jac_ode[ii].casadi_n_out = &jac_chain_nm5_n_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm5;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm5_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm5_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm5_sparsity_out;
+				impl_ode[ii].casadi_n_in = &impl_odeFun_chain_nm5_n_in;
+				impl_ode[ii].casadi_n_out = &impl_odeFun_chain_nm5_n_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm5;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm5_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm5_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm5_sparsity_out;
+				impl_jac_x[ii].casadi_n_in = &impl_jacFun_x_chain_nm5_n_in;
+				impl_jac_x[ii].casadi_n_out = &impl_jacFun_x_chain_nm5_n_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm5;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm5_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm5_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm5_sparsity_out;
+				impl_jac_xdot[ii].casadi_n_in = &impl_jacFun_xdot_chain_nm5_n_in;
+				impl_jac_xdot[ii].casadi_n_out = &impl_jacFun_xdot_chain_nm5_n_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm5;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm5_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm5_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm5_sparsity_out;
+				impl_jac_u[ii].casadi_n_in = &impl_jacFun_u_chain_nm5_n_in;
+				impl_jac_u[ii].casadi_n_out = &impl_jacFun_u_chain_nm5_n_out;
+#endif
+			}
+		case 5:
+			for (ii = 0; ii < N; ii++)
+			{
+#if DYNAMICS==0 | DYNAMICS==1
+				forw_vde[ii].casadi_fun = &vde_chain_nm6;
+				forw_vde[ii].casadi_work = &vde_chain_nm6_work;
+				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm6_sparsity_in;
+				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm6_sparsity_out;
+				forw_vde[ii].casadi_n_in = &vde_chain_nm6_n_in;
+				forw_vde[ii].casadi_n_out = &vde_chain_nm6_n_out;
+				jac_ode[ii].casadi_fun = &jac_chain_nm6;
+				jac_ode[ii].casadi_work = &jac_chain_nm6_work;
+				jac_ode[ii].casadi_sparsity_in = &jac_chain_nm6_sparsity_in;
+				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm6_sparsity_out;
+				jac_ode[ii].casadi_n_in = &jac_chain_nm6_n_in;
+				jac_ode[ii].casadi_n_out = &jac_chain_nm6_n_out;
+#else
+				impl_ode[ii].casadi_fun = &impl_odeFun_chain_nm6;
+				impl_ode[ii].casadi_work = &impl_odeFun_chain_nm6_work;
+				impl_ode[ii].casadi_sparsity_in = &impl_odeFun_chain_nm6_sparsity_in;
+				impl_ode[ii].casadi_sparsity_out = &impl_odeFun_chain_nm6_sparsity_out;
+				impl_ode[ii].casadi_n_in = &impl_odeFun_chain_nm6_n_in;
+				impl_ode[ii].casadi_n_out = &impl_odeFun_chain_nm6_n_out;
+				impl_jac_x[ii].casadi_fun = &impl_jacFun_x_chain_nm6;
+				impl_jac_x[ii].casadi_work = &impl_jacFun_x_chain_nm6_work;
+				impl_jac_x[ii].casadi_sparsity_in = &impl_jacFun_x_chain_nm6_sparsity_in;
+				impl_jac_x[ii].casadi_sparsity_out = &impl_jacFun_x_chain_nm6_sparsity_out;
+				impl_jac_x[ii].casadi_n_in = &impl_jacFun_x_chain_nm6_n_in;
+				impl_jac_x[ii].casadi_n_out = &impl_jacFun_x_chain_nm6_n_out;
+				impl_jac_xdot[ii].casadi_fun = &impl_jacFun_xdot_chain_nm6;
+				impl_jac_xdot[ii].casadi_work = &impl_jacFun_xdot_chain_nm6_work;
+				impl_jac_xdot[ii].casadi_sparsity_in = &impl_jacFun_xdot_chain_nm6_sparsity_in;
+				impl_jac_xdot[ii].casadi_sparsity_out = &impl_jacFun_xdot_chain_nm6_sparsity_out;
+				impl_jac_xdot[ii].casadi_n_in = &impl_jacFun_xdot_chain_nm6_n_in;
+				impl_jac_xdot[ii].casadi_n_out = &impl_jacFun_xdot_chain_nm6_n_out;
+				impl_jac_u[ii].casadi_fun = &impl_jacFun_u_chain_nm6;
+				impl_jac_u[ii].casadi_work = &impl_jacFun_u_chain_nm6_work;
+				impl_jac_u[ii].casadi_sparsity_in = &impl_jacFun_u_chain_nm6_sparsity_in;
+				impl_jac_u[ii].casadi_sparsity_out = &impl_jacFun_u_chain_nm6_sparsity_out;
+				impl_jac_u[ii].casadi_n_in = &impl_jacFun_u_chain_nm6_n_in;
+				impl_jac_u[ii].casadi_n_out = &impl_jacFun_u_chain_nm6_n_out;
+#endif
+			}
+			break;
 		default:
 			printf("Problem size not available\n");
 			exit(1);
@@ -350,6 +439,40 @@ static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_funct
 			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm4_sparsity_out;
 			ls_cost_jac[N].casadi_n_in = &ls_costN_nm4_n_in;
 			ls_cost_jac[N].casadi_n_out = &ls_costN_nm4_n_out;
+			break;
+		case 4:
+			for (ii = 0; ii < N; ii++)
+			{
+				ls_cost_jac[ii].casadi_fun = &ls_cost_nm5;
+				ls_cost_jac[ii].casadi_work = &ls_cost_nm5_work;
+				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm5_sparsity_in;
+				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm5_sparsity_out;
+				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm5_n_in;
+				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm5_n_out;
+			}
+			ls_cost_jac[N].casadi_fun = &ls_costN_nm5;
+			ls_cost_jac[N].casadi_work = &ls_costN_nm5_work;
+			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm5_sparsity_in;
+			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm5_sparsity_out;
+			ls_cost_jac[N].casadi_n_in = &ls_costN_nm5_n_in;
+			ls_cost_jac[N].casadi_n_out = &ls_costN_nm5_n_out;
+			break;
+		case 5:
+			for (ii = 0; ii < N; ii++)
+			{
+				ls_cost_jac[ii].casadi_fun = &ls_cost_nm6;
+				ls_cost_jac[ii].casadi_work = &ls_cost_nm6_work;
+				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm6_sparsity_in;
+				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm6_sparsity_out;
+				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm6_n_in;
+				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm6_n_out;
+			}
+			ls_cost_jac[N].casadi_fun = &ls_costN_nm6;
+			ls_cost_jac[N].casadi_work = &ls_costN_nm6_work;
+			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm6_sparsity_in;
+			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm6_sparsity_out;
+			ls_cost_jac[N].casadi_n_in = &ls_costN_nm6_n_in;
+			ls_cost_jac[N].casadi_n_out = &ls_costN_nm6_n_out;
 			break;
 		default:
 			printf("Problem size not available\n");
@@ -457,7 +580,7 @@ int main() {
     int nb[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
-	int nv[NN+1] = {0};
+	// int nv[NN+1] = {0};
 	int ny[NN+1] = {0};
 
     nx[0] = NX;
@@ -473,7 +596,7 @@ int main() {
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 #endif
-	nv[0] = nx[0]+nu[0];
+	// nv[0] = nx[0]+nu[0];
 	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
@@ -484,7 +607,7 @@ int main() {
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
-		nv[i] = nx[i]+nu[i];
+		// nv[i] = nx[i]+nu[i];
 		ny[i] = nx[i]+nu[i];
     }
 
@@ -494,7 +617,7 @@ int main() {
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
-	nv[NN] = nx[NN]+nu[NN];
+	// nv[NN] = nx[NN]+nu[NN];
 	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************

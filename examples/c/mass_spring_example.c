@@ -134,7 +134,8 @@ int main() {
 
 
         void *opts = ocp_qp_opts_create(config, qp_dims);
-        bool ok;
+        bool ok = false;
+        if (ok == true) config++; // dummy command to shut up Werror in Release
 
         for (int jj = 0; jj < num_N2_values; jj++)
         {
