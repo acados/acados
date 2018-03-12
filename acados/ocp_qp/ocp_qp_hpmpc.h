@@ -53,8 +53,7 @@ typedef struct ocp_qp_hpmpc_memory_ {
     // workspace
     void *hpmpc_work; //raw workspace
     
-    // partial tightening-specific
-    // 1. initialization of extra variables
+    // partial tightening-specific (init of extra variables)
     struct blasfeo_dvec *lam0; 
     struct blasfeo_dvec *ux0; 
     struct blasfeo_dvec *pi0;     
@@ -74,6 +73,7 @@ typedef struct ocp_qp_hpmpc_memory_ {
 
 	struct blasfeo_dvec *hsdlam;  
 	struct blasfeo_dvec *hsdt;
+    struct blasfeo_dvec *hsdpi; 
 	struct blasfeo_dvec *hslamt; 
 
 	struct blasfeo_dvec *hsPb;

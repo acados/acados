@@ -171,6 +171,7 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
         assign_blasfeo_dvec_structs(N+1, &mem->hsrq, &c_ptr);
         assign_blasfeo_dvec_structs(N+1, &mem->hsdux, &c_ptr);
         assign_blasfeo_dvec_structs(N+1, &mem->hsdlam, &c_ptr);
+        assign_blasfeo_dvec_structs(N+1, &mem->hsdpi, &c_ptr);
         assign_blasfeo_dvec_structs(N+1, &mem->hsdt, &c_ptr);
         assign_blasfeo_dvec_structs(N+1, &mem->hslamt, &c_ptr);
         assign_blasfeo_dvec_structs(N+1, &mem->hsPb, &c_ptr);
@@ -216,6 +217,8 @@ void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memor
 
 			blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &mem->hsdlam[ii], c_ptr);
 			c_ptr += (&mem->hsdlam[ii])->memsize;
+			blasfeo_create_dvec(nx[ii], &mem->hsdpi[ii], c_ptr);
+			c_ptr += (&mem->hsdpi[ii])->memsize;
 			blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &mem->hsdt[ii], c_ptr);
 			c_ptr += (&mem->hsdt[ii])->memsize;
 			blasfeo_create_dvec(2*nb[ii]+2*ng[ii], &mem->hslamt[ii], c_ptr);
@@ -319,15 +322,16 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 			N-M, &nx[M], &nu[M], &nb[M], &qp_in->idxb[M], &ng[M], 0, 
 			&qp_in->BAbt[M], hsvecdummy, 1, &qp_in->RSQrq[M], &mem->hsrq[M], 
 			&qp_in->DCt[M], &mem->hsQx[M], &mem->hsqx[M], &qp_out->ux[M], 1, 
-			&qp_out->pi[M],  1, &mem->hsPb[M], &mem->hsL[M], mem->work_ric);
+			&mem->hsdpi[M],  1, &mem->hsPb[M], &mem->hsL[M], mem->work_ric);
 
         // extract chol factor of [P p; p' *]
         blasfeo_dtrcp_l(nx[M], &mem->hsL[M], nu[M], nu[M], &mem->sLxM, 0, 0);
-        blasfeo_dgecp(1, nx[M], &mem->hsL[M], nu[M]+nx[M], nu[M], &mem->sLxM, nx[M], 0);
+        blasfeo_dgecp(1, nx[M], &mem->hsL[M], nu[M]+nx[M], nu[M], &mem->sLxM, 
+            nx[M], 0);
 
         // recover [P p; p' *]
-        blasfeo_dsyrk_ln_mn(nx[M]+1, nx[M], nx[M], 1.0, &mem->sLxM, 0, 0, &mem->sLxM, 0, 0, 0.0,
-            &mem->sPpM, 0, 0, &mem->sPpM, 0, 0);
+        blasfeo_dsyrk_ln_mn(nx[M]+1, nx[M], nx[M], 1.0, &mem->sLxM, 0, 0, 
+            &mem->sLxM, 0, 0, 0.0, &mem->sPpM, 0, 0, &mem->sPpM, 0, 0);
 
         // backup stage M
         nuM = nu[M];
@@ -344,7 +348,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
         hpmpc_status = d_ip2_res_mpc_hard_libstr(&kk, k_max, mu0, mu_tol, 
 			hpmpc_args->alpha_min, warm_start, mem->stats, M, nx, nu, nb, 
 			qp_in->idxb, ng, qp_in->BAbt, qp_in->RSQrq, qp_in->DCt,
-          	qp_in->d, qp_out->ux, compute_mult, qp_out->pi, qp_out->lam, 
+          	qp_in->d, qp_out->ux, compute_mult, mem->hpi, qp_out->lam, 
 			mem->t0, mem->hpmpc_work);  // recover original stage M
 
         nu[M] = nuM;
@@ -356,7 +360,7 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
         d_back_ric_rec_sv_forw_libstr(N-M, &nx[M], &nu[M], &nb[M], 
 			&qp_in->idxb[M], &ng[M], 0, &qp_in->BAbt[M], hsvecdummy, 1, 
 			&qp_in->RSQrq[M], &mem->hsrq[M], hsmatdummy, &mem->hsQx[M], 
-			&mem->hsqx[M], &qp_out->ux[M], 1, &qp_out->pi[M], 1, 
+			&mem->hsqx[M], &qp_out->ux[M], 1, &mem->hpi[M], 1, 
 			&mem->hsPb[M], &mem->hsL[M], mem->work_ric);
 		
 		// compute alpha, dlam and dt real_t alpha = 1.0; 
@@ -373,14 +377,14 @@ int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, 
 		double alpha;
         d_compute_alpha_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], 
 			&qp_in->idxb[M], &ng[M], &alpha, &mem->t0[M], &mem->hsdt[M], 
-			&qp_out->lam[M], &mem->hsdlam[M], &mem->hslamt[M],&mem->hsdux[M], 
+			&qp_out->lam[M], &mem->hsdlam[M], &mem->hslamt[M], &mem->hsdux[M], 
 			&qp_in->DCt[M], &qp_in->d[M]);
 
         // update stages M to N
         double mu_scal = 0.0;
         d_update_var_mpc_hard_libstr(N-M, &nx[M], &nu[M], &nb[M], &ng[M],
           &sigma_mu, mu_scal, alpha, &qp_out->ux[M], &mem->hsdux[M], &mem->t0[M], 
-		  &mem->hsdt[M], &qp_out->lam[M], &mem->hsdlam[M], &qp_out->pi[M], &qp_out->pi[M]);
+		  &mem->hsdt[M], &qp_out->lam[M], &mem->hsdlam[M], &mem->hpi[M], &mem->hsdpi[M]);
     } else {
         
 		// IPM at the beginning
