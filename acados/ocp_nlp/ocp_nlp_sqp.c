@@ -386,24 +386,6 @@ int ocp_nlp_sqp_workspace_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_
         size += constraints[ii]->workspace_calculate_size(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
 	}
 
-	// temporary stuff
-    size += 2*(N+1)*sizeof(struct blasfeo_dvec); // tmp_ny, tmp_nbg
-    size += 1*(N+1)*sizeof(struct blasfeo_dmat); // tmp_nv_ny
-
-    for (ii = 0; ii < N+1; ii++)
-    {
-		nb = dims->constraints[ii]->nb;
-		ng = dims->constraints[ii]->ng;
-		nv = dims->cost[ii]->nx + dims->cost[ii]->nu;
-		ny = dims->cost[ii]->ny;
-        size += 1*blasfeo_memsize_dvec(ny); // tmp_ny
-        size += 1*blasfeo_memsize_dvec(nb+ng); // tmp_nbg
-        size += 1*blasfeo_memsize_dmat(nv, ny); // tmp_nv_ny
-    }
-
-    size += 8;  // blasfeo_struct align
-    size += 64;  // blasfeo_mem align
-
     return size;
 }
 
@@ -423,38 +405,6 @@ static void ocp_nlp_sqp_cast_workspace(ocp_nlp_solver_config *config, ocp_nlp_di
     int N = dims->N;
 	int nb, ng;
 	int nv, ny;
-
-	// blasfeo_struct align
-    align_char_to(8, &c_ptr);
-
-    // set up local SQP data
-    assign_blasfeo_dvec_structs(N+1, &work->tmp_ny, &c_ptr);
-    assign_blasfeo_dvec_structs(N+1, &work->tmp_nbg, &c_ptr);
-    assign_blasfeo_dmat_structs(N+1, &work->tmp_nv_ny, &c_ptr);
-
-	// blasfeo_mem align
-    align_char_to(64, &c_ptr);
-
-	// tmp_nv_ny
-    for (int ii = 0; ii <= N; ii++)
-	{
-		nv = dims->cost[ii]->nx + dims->cost[ii]->nu;
-		ny = dims->cost[ii]->ny;
-        assign_blasfeo_dmat_mem(nv, ny, work->tmp_nv_ny+ii, &c_ptr);
-	}
-	// tmp_ny
-    for (int ii = 0; ii <= N; ii++)
-	{
-		ny = dims->cost[ii]->ny;
-        assign_blasfeo_dvec_mem(ny, work->tmp_ny+ii, &c_ptr);
-	}
-	// tmp_nbg
-    for (int ii = 0; ii <= N; ii++)
-	{
-		nb = dims->constraints[ii]->nb;
-		ng = dims->constraints[ii]->ng;
-        assign_blasfeo_dvec_mem(nb+ng, work->tmp_nbg+ii, &c_ptr);
-	}
 
     // set up QP solver
     work->qp_in = ocp_qp_in_assign(qp_solver, dims->qp_solver, c_ptr);
