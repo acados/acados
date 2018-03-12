@@ -130,6 +130,9 @@ int main()
 
         acados_return = ocp_qp_solve(qp_solver, qpp_in, qpp_out);
 
+        if (acados_return != 0)
+            printf("error with ocp qp solution\n");
+
         ocp_qp_partial_expansion(qpp_out, qp_out, pcond_opts, pcond_memory, NULL);
     }
 

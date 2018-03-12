@@ -485,12 +485,12 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
 	// extract dims
     int N = nlp_in->dims->N;
 	int nx, nu, nb, ng, nx1, nu1;
-	int nv, ny;
+	// int nv, ny;
 
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
-    struct blasfeo_dmat *W_chol;
-    struct blasfeo_dvec *ls_res;
+    // struct blasfeo_dmat *W_chol;
+    // struct blasfeo_dvec *ls_res;
 
     // struct blasfeo_dvec *tmp_ny = work->tmp_ny;
     struct blasfeo_dvec *tmp_nbg = work->tmp_nbg;
@@ -565,17 +565,17 @@ static void linearize_update_qp_matrices(ocp_nlp_solver_config *config, ocp_nlp_
     {
 		qp_in_stage = work->qp_in_stage[i];
 
-		nv = dims->cost[i]->nx + dims->cost[i]->nu;
-		ny = dims->cost[i]->ny;
+		// nv = dims->cost[i]->nx + dims->cost[i]->nu;
+		// ny = dims->cost[i]->ny;
 		nx = dims->constraints[i]->nx;
 		nu = dims->constraints[i]->nu;
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
 
 
-		ocp_nlp_cost_nls_memory *cost_mem = mem->cost[i];
-		W_chol = &cost_mem->W_chol;
-		ls_res = &cost_mem->res;
+		// ocp_nlp_cost_nls_memory *cost_mem = mem->cost[i];
+		// W_chol = &cost_mem->W_chol;
+		// ls_res = &cost_mem->res;
 
 
 

@@ -578,7 +578,7 @@ int main() {
     int nb[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int ns[NN+1] = {0};
-	int nv[NN+1] = {0};
+	// int nv[NN+1] = {0};
 	int ny[NN+1] = {0};
 
     nx[0] = NX;
@@ -594,7 +594,7 @@ int main() {
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 #endif
-	nv[0] = nx[0]+nu[0];
+	// nv[0] = nx[0]+nu[0];
 	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
@@ -605,7 +605,7 @@ int main() {
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
-		nv[i] = nx[i]+nu[i];
+		// nv[i] = nx[i]+nu[i];
 		ny[i] = nx[i]+nu[i];
     }
 
@@ -615,7 +615,7 @@ int main() {
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
-	nv[NN] = nx[NN]+nu[NN];
+	// nv[NN] = nx[NN]+nu[NN];
 	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************

@@ -178,6 +178,9 @@ int main() {
 
         acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 
+        if (acados_return != 0)
+            printf("error with dense qp solution\n");
+
         ocp_qp_full_expansion(qpd_out, qp_out, cond_opts, cond_memory, NULL);
     }
 
