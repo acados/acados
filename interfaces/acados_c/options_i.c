@@ -91,9 +91,6 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->max_iter = value;
             else if (!strcmp(token, "warm_start"))
                 args->warm_start = value;
-            else if (!strcmp(token, "out_iter"))
-                args->out_iter = value;
-            // NOTE(dimitris): HPMPC partial condesing has a bug, using hpipm partial condensing instead
             else if (!strcmp(token, "N2"))
                 pcond_args->N2 = value;
             // partial tightening
@@ -257,6 +254,8 @@ bool set_option_double(void *args_, const char *option, const double value)
                 args->tol = value;
             else if (!strcmp(token, "mu0"))
                 args->mu0 = value;
+            else if (!strcmp(token, "alpha_min"))
+                args->alpha_min = value;
             // partial tightening
             else if (!strcmp(token, "sigma_mu"))
                 args->sigma_mu = value;
