@@ -63,7 +63,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
         // Constraints
         for (int i = 0; i <= N; ++i)
-		    ocp_nlp_constraints_linear_config_initialize_default(config->constraints[i]);
+		    ocp_nlp_constraints_config_initialize_default(config->constraints[i]);
     }
     else
     {

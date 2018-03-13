@@ -134,7 +134,7 @@ int main() {
     nlp_in->freezeSens = false;
 
 	// NLP constraints
-	ocp_nlp_constraints_linear_model **constraints = (ocp_nlp_constraints_linear_model **) nlp_in->constraints;
+	ocp_nlp_constraints **constraints = (ocp_nlp_constraints **) nlp_in->constraints;
 
 	// bounds
     constraints[0]->idxb = idxb_0.data();
