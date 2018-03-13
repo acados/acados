@@ -27,10 +27,10 @@ extern "C" {
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-typedef struct ocp_qp_partial_condensing_args_ {
+typedef struct ocp_qp_partial_condensing_opts_ {
     int N2;
-    ocp_qp_dims *pcond_dims;
-} ocp_qp_partial_condensing_args;
+    ocp_qp_dims *pcond_dims; // TODO why in opts??? move in memory on in dims ???
+} ocp_qp_partial_condensing_opts;
 
 
 
@@ -45,19 +45,19 @@ typedef struct ocp_qp_partial_condensing_memory_ {
 //
 int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
+ocp_qp_partial_condensing_opts *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_partial_condensing_args *args);
+void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts);
 //
-int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
+int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts);
 //
-ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args, void *raw_memory);
+ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_memory_assign(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts, void *raw_memory);
 //
-int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
+int ocp_qp_partial_condensing_workspace_calculate_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts);
 //
-void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_args *args, ocp_qp_partial_condensing_memory *mem, void *work);
+void ocp_qp_partial_condensing(ocp_qp_in *in, ocp_qp_in *out, ocp_qp_partial_condensing_opts *opts, ocp_qp_partial_condensing_memory *mem, void *work);
 //
-void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_args *args, ocp_qp_partial_condensing_memory *mem, void *work);
+void ocp_qp_partial_expansion(ocp_qp_out *in, ocp_qp_out *out, ocp_qp_partial_condensing_opts *opts, ocp_qp_partial_condensing_memory *mem, void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

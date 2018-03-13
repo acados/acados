@@ -30,6 +30,9 @@
 
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+
+#include "acados/dense_qp/dense_qp_hpipm.h"
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -74,6 +77,9 @@
 
 // cost: 0 ls, 1 nls
 #define COST 1
+
+// xcond: 0 no condensing, 1 part condensing, 2 full condensing
+#define XCOND 1
 
 
 
@@ -628,14 +634,14 @@ int main() {
 	void *config_mem = malloc(config_size);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(NN, config_mem);
 
-#if 1
-	// partial condensing HPIPM
-	ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
-	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
-#else
+#if XCOND==2
 	// full condensing HPIPM
 	ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
 	dense_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
+#else
+	// no condensing or partial condensing HPIPM
+	ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
+	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
 #endif
 
 
@@ -1056,6 +1062,11 @@ int main() {
 	ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_sqp_opts_assign(config, dims, nlp_opts_mem);
 
 	ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
+#if XCOND==1
+	// partial condensing
+	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
+	pcond_solver_opts->pcond_opts->N2 = 5; // set partial condensing horizon
+#endif
 
     for (int i = 0; i < NN; ++i)
 	{

@@ -31,7 +31,7 @@ extern "C" {
 
 
 typedef struct ocp_qp_partial_condensing_solver_opts_ {
-    ocp_qp_partial_condensing_args *pcond_opts;
+    ocp_qp_partial_condensing_opts *pcond_opts;
     void *qp_solver_opts;
 } ocp_qp_partial_condensing_solver_opts;
 
@@ -60,15 +60,15 @@ int ocp_qp_partial_condensing_solver_opts_calculate_size(void *config, ocp_qp_di
 //
 void *ocp_qp_partial_condensing_solver_opts_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config, void *args_);
+void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_partial_condensing_solver_calculate_memory_size(void *config, ocp_qp_dims *dims, void *args_);
+int ocp_qp_partial_condensing_solver_calculate_memory_size(void *config, ocp_qp_dims *dims, void *opts_);
 //
-void *ocp_qp_partial_condensing_solver_memory_assign(void *config, ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_partial_condensing_solver_memory_assign(void *config, ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config, ocp_qp_dims *dims, void *args_);
+int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_partial_condensing_solver(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+int ocp_qp_partial_condensing_solver(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_);
 
