@@ -299,7 +299,7 @@ void dense_qp_qore_config_initialize_default(void *config_)
 
 	config->opts_calculate_size = ( int (*) (void *, void *)) &dense_qp_qore_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &dense_qp_qore_opts_assign;
-	config->opts_initialize_default = &dense_qp_qore_opts_initialize_default;
+	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &dense_qp_qore_opts_initialize_default;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qore_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &dense_qp_qore_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qore_workspace_calculate_size;

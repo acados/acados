@@ -143,7 +143,7 @@ void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, vo
     ocp_qp_qpdunes_opts *opts = (ocp_qp_qpdunes_opts *)opts_;
 
     // TODO(dimitris): this should be type for all QP solvers and be passed in init. default opts
-    qpdunes_options_t opts = QPDUNES_ACADO_SETTINGS;
+    qpdunes_options_t qpdunes_opts = QPDUNES_ACADO_SETTINGS;
 
     opts->stageQpSolver = QPDUNES_WITH_QPOASES;
 
@@ -153,16 +153,16 @@ void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, vo
     opts->options.stationarityTolerance = 1e-12;
     opts->warmstart = 1;
 
-    if (opts == QPDUNES_DEFAULT_ARGUMENTS)
+    if (qpdunes_opts == QPDUNES_DEFAULT_ARGUMENTS)
     {
         // keep default options
-    } else if (opts == QPDUNES_NONLINEAR_MPC)
+    } else if (qpdunes_opts == QPDUNES_NONLINEAR_MPC)
     {
         // not implemented yet
-    } else if (opts == QPDUNES_LINEAR_MPC)
+    } else if (qpdunes_opts == QPDUNES_LINEAR_MPC)
     {
         opts->isLinearMPC = 1;
-    } else if (opts == QPDUNES_ACADO_SETTINGS)
+    } else if (qpdunes_opts == QPDUNES_ACADO_SETTINGS)
     {
         opts->options.maxIter = 1000;
         opts->options.printLevel = 0;
@@ -179,7 +179,7 @@ void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, vo
         opts->options.maxNumLineSearchRefinementIterations = 25;
         opts->options.regType = QPDUNES_REG_LEVENBERG_MARQUARDT;
     } else {
-        printf("\nUnknown option (%d) for qpDUNES!\n", opts);
+        printf("\nUnknown option (%d) for qpDUNES!\n", qpdunes_opts);
     }
 }
 
@@ -708,7 +708,7 @@ void ocp_qp_qpdunes_config_initialize_default(void *config_)
 
 	config->opts_calculate_size = ( int (*) (void *, void *)) &ocp_qp_qpdunes_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &ocp_qp_qpdunes_opts_assign;
-	config->opts_initialize_default = &ocp_qp_qpdunes_opts_initialize_default;
+	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &ocp_qp_qpdunes_opts_initialize_default;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_qpdunes_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &ocp_qp_qpdunes_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_qpdunes_workspace_calculate_size;

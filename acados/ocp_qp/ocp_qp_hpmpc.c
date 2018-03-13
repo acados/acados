@@ -526,7 +526,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
 
 	config->opts_calculate_size = ( int (*) (void *, void *)) &ocp_qp_hpmpc_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_assign;
-	config->opts_initialize_default = &ocp_qp_hpmpc_opts_initialize_default;
+	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_initialize_default;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &ocp_qp_hpmpc_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_workspace_calculate_size;
