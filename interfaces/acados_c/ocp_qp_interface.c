@@ -42,14 +42,14 @@
 #include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #endif
 
-ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan *plan)
+ocp_qp_xcond_solver_config *ocp_qp_config_create(ocp_qp_solver_plan plan)
 {
 
     int bytes = ocp_qp_xcond_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     ocp_qp_xcond_solver_config *solver_config = ocp_qp_xcond_solver_config_assign(ptr);
 
-    ocp_qp_solver_t solver_name = plan->qp_solver;
+    ocp_qp_solver_t solver_name = plan.qp_solver;
 
     if (solver_name < FULL_CONDENSING_HPIPM)
     {

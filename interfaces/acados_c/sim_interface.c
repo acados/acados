@@ -31,13 +31,13 @@
 
 #include "acados/utils/mem.h"
 
-sim_solver_config *sim_config_create(sim_solver_plan *plan)
+sim_solver_config *sim_config_create(sim_solver_plan plan)
 {
     int bytes = sim_solver_config_calculate_size();
     void *ptr = calloc(1, bytes);
     sim_solver_config *solver_config = sim_solver_config_assign(ptr);
 
-    sim_solver_t solver_name = plan->sim_solver;
+    sim_solver_t solver_name = plan.sim_solver;
 
     // TODO(dimitris): cath error if solver not compiled
     // printf("\n\nSpecified solver interface not compiled with acados!\n\n");

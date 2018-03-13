@@ -130,7 +130,7 @@ int main() {
         ocp_qp_solver_plan plan;
         plan.qp_solver = ocp_qp_solvers[ii];
 
-        config = ocp_qp_config_create(&plan);
+        config = ocp_qp_config_create(plan);
 
 
         void *opts = ocp_qp_opts_create(config, qp_dims);

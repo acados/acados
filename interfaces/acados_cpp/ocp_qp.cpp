@@ -161,7 +161,7 @@ void ocp_qp::initialize_solver(string solver_name, map<string, option_t *> optio
     cached_solver = solver_name;
     ocp_qp_solver_plan plan = string_to_plan(solver_name);
 
-    config.reset(ocp_qp_config_create(&plan));
+    config.reset(ocp_qp_config_create(plan));
 
     args.reset(ocp_qp_opts_create(config.get(), qp->dim));
 

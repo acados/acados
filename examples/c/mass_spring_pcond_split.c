@@ -110,7 +110,7 @@ int main()
     ocp_qp_solver_plan plan2;
     plan2.qp_solver = PARTIAL_CONDENSING_HPIPM;  // UUUUUPSSSSS
 
-    ocp_qp_xcond_solver_config *config = ocp_qp_config_create(&plan2);
+    ocp_qp_xcond_solver_config *config = ocp_qp_config_create(plan2);
 
     void *popts = ocp_qp_opts_create(config,  pcond_opts->pcond_dims);
 
