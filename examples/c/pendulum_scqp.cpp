@@ -20,16 +20,15 @@
 #include <cmath>
 #include <vector>
 
-#include "acados/ocp_nlp/ocp_nlp_common.h"
-#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_sqp.h"
-
-#include "acados/ocp_qp/ocp_qp_hpipm.h"
+#include "acados/utils/print.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-
+#include "acados/ocp_nlp/ocp_nlp_constraints.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/sim/sim_erk_integrator.h"
 
-#include "acados/utils/print.h"
+#include "acados_c/ocp_nlp_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 
@@ -45,7 +44,7 @@ int main() {
 
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
-		nb(N+1, 0), ng(N+1, 0), ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
+		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
 
 	nbx.at(0) = num_states;
 	nb.at(0) = num_states;
@@ -56,35 +55,20 @@ int main() {
 	nv.at(N) = 4;
 	ny.at(N) = 4;
 
-	int config_size = ocp_nlp_solver_config_calculate_size(N);
-	void *config_mem = calloc(1, config_size);
-	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
+	// Make plan
 
-	// QP solver: partial condensing HPIPM
-	ocp_qp_partial_condensing_solver_config_initialize_default(config->qp_solver);
-	ocp_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
+	ocp_qp_solver_plan qp_plan = {PARTIAL_CONDENSING_HPIPM};
+	std::vector<sim_solver_plan> sim_plan(N, {ERK});
 
-	// NLP cost: least squares
-    for (int i = 0; i <= N; ++i)
-		ocp_nlp_cost_ls_config_initialize_default(config->cost[i]);
+	ocp_nlp_solver_plan plan = {
+		qp_plan,
+		sim_plan.data(),
+		SQP_GN
+	};
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
 
-	// NLP dynamics: ERK 4
-    for (int i = 0; i < N; ++i) {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[i]);
-		sim_erk_config_initialize_default(config->dynamics[i]->sim_solver);
-		config->dynamics[i]->sim_solver->ns = 4; // number of integration stages
-    }
-
-	// NLP constraints
-    for (int i = 0; i <= N; ++i)
-		ocp_nlp_constraints_config_initialize_default(config->constraints[i]);
-
-	// NLP dimensions
-	int dims_size = ocp_nlp_dims_calculate_size(N);
-	void *dims_mem = calloc(1, dims_size);
-	ocp_nlp_dims *dims = ocp_nlp_dims_assign(N, dims_mem);
-	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), ns.data(), dims);
-
+	ocp_nlp_dims *dims = ocp_nlp_dims_create(N);
+	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), ns.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -107,9 +91,7 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+i);
 	}
 
-	int ocp_nlp_size = ocp_nlp_in_calculate_size(config, dims);
-	void *nlp_in_mem = calloc(1, ocp_nlp_size);
-	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, nlp_in_mem);
+	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, dims);
 
 	for (int i = 0; i < N; ++i)
 		nlp_in->Ts[i] = Tf/N;
@@ -152,7 +134,7 @@ int main() {
     nlp_in->freezeSens = false;
 
 	// NLP constraints
-	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	ocp_nlp_constraints_linear_model **constraints = (ocp_nlp_constraints_linear_model **) nlp_in->constraints;
 
 	// bounds
     constraints[0]->idxb = idxb_0.data();
@@ -166,53 +148,34 @@ int main() {
 	// general constraints
 	// TODO(roversch): figure out how to deal with nonlinear inequalities
 
-	// SQP options
-	int options_size = ocp_nlp_sqp_opts_calculate_size(config, dims);
-	void *nlp_opts_mem = calloc(1, options_size);
-	ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_sqp_opts_assign(config, dims, nlp_opts_mem);
+	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
-	ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
+	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
+    sqp_opts->maxIter = max_num_sqp_iterations;
+    sqp_opts->min_res_g = 1e-9;
+    sqp_opts->min_res_b = 1e-9;
+    sqp_opts->min_res_d = 1e-9;
+    sqp_opts->min_res_m = 1e-9;
+	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
 
-    nlp_opts->maxIter = max_num_sqp_iterations;
-    nlp_opts->min_res_g = 1e-9;
-    nlp_opts->min_res_b = 1e-9;
-    nlp_opts->min_res_d = 1e-9;
-    nlp_opts->min_res_m = 1e-9;
-	((ocp_qp_partial_condensing_solver_opts *) nlp_opts->qp_solver_opts)->pcond_opts->N2 = N;
-
-	// NLP solution
-	int nlp_out_size = ocp_nlp_out_calculate_size(config, dims);
-	void *nlp_out_mem = calloc(1, nlp_out_size);
-	ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, nlp_out_mem);
-
-	// SQP memory
-	int nlp_memory_size = ocp_nlp_sqp_memory_calculate_size(config, dims, nlp_opts);
-	void *nlp_mem_mem = calloc(1, nlp_memory_size);
-	ocp_nlp_sqp_memory *nlp_mem = ocp_nlp_sqp_memory_assign(config, dims, nlp_opts, nlp_mem_mem);
-
-	// SQP workspace
-    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, nlp_in->dims, nlp_opts);
-    void *nlp_work = calloc(1, workspace_size);
-
+	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)
 		blasfeo_dvecse(nu[i]+nx[i], 1.0, nlp_out->ux+i, 0);
+
+	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
 	// NLP solution
     acados_timer timer;
     acados_tic(&timer);
 
-	int solver_status = ocp_nlp_sqp(config, dims, nlp_in, nlp_out, nlp_opts, nlp_mem, nlp_work);
+	int solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
     double elapsed_time = acados_toc(&timer);
-
-	printf("\nresiduals\n");
-	ocp_nlp_res_print(nlp_mem->nlp_res);
 
 	printf("\nsolution\n");
 	ocp_nlp_out_print(nlp_out);
 
-    printf("\n\nstatus = %i, iterations = %d/%d, total time = %f ms\n\n",
-		solver_status, nlp_mem->sqp_iter, max_num_sqp_iterations, elapsed_time*1e3);
+    printf("\n\nstatus = %i, total time = %f ms\n\n", solver_status, elapsed_time*1e3);
 
 	return solver_status;
 }

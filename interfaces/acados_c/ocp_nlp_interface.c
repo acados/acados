@@ -25,17 +25,26 @@
 #include <stdlib.h>
 
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
+#include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
-ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N)
+ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 {
     int bytes = ocp_nlp_solver_config_calculate_size(N);
 	void *config_mem = calloc(1, bytes);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(N, config_mem);
 
-    if (plan->nlp_solver == SQP_GN)
+    if (plan.nlp_solver == SQP_GN)
     {
+        config->evaluate = &ocp_nlp_sqp;
+        config->opts_calculate_size = &ocp_nlp_sqp_opts_calculate_size;
+        config->opts_assign = &ocp_nlp_sqp_opts_assign;
+        config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
+        config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
+        config->memory_assign = &ocp_nlp_sqp_memory_assign;
+        config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
+
         // QP solver
-        config->qp_solver = ocp_qp_config_create(plan->ocp_qp_solver_plan);
+        config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
         
         // LS cost
         for (int i = 0; i <= N; ++i)
@@ -49,7 +58,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N)
         for (int i = 0; i < N; ++i)
         {
 		    ocp_nlp_dynamics_config_initialize_default(config->dynamics[i]);
-		    config->dynamics[i]->sim_solver = sim_config_create(plan->sim_solver_plan[i]);
+		    config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
         }
 
         // Constraints
@@ -113,7 +122,7 @@ void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
 	void *opts = config->opts_assign(config, dims, ptr);
 
-    config->opts_initialize_default(config, opts);
+    config->opts_initialize_default(config, dims, opts);
 
     return opts;
 }
@@ -169,5 +178,5 @@ ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 
 int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return solver->config->evaluate(solver->config, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
+    return solver->config->evaluate(solver->config, nlp_in->dims, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }
