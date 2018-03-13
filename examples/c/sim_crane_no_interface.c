@@ -208,29 +208,24 @@ int main()
 
 		switch (nss)
 		{
-
 			case 0: // erk
 				printf("\n\nsim solver: ERK\n");
 				sim_erk_config_initialize_default(config);
-				config->ns = 4;
 				break;
 
 			case 1: // irk
 				printf("\n\nsim solver: IRK\n");
 				sim_irk_config_initialize_default(config);
-				config->ns = 2;
 				break;
 
 			case 2: // lifted_irk
 				printf("\n\nsim solver: Lifted_IRK\n");
 				sim_lifted_irk_config_initialize_default(config);
-				config->ns = 2;
 				break;
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
-
 		}
 
 /************************************************
@@ -253,7 +248,30 @@ int main()
 		sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
 		config->opts_initialize_default(config, dims, opts);
 
-		opts->sens_adj = true;
+		switch (nss)
+		{
+			case 0: // erk
+				opts->ns = 4;
+				opts->sens_adj = true;
+				break;
+
+			case 1: // irk
+				opts->ns = 2;
+				opts->sens_adj = true;
+				break;
+
+			case 2: // lifted_irk
+				opts->ns = 2;
+				opts->sens_adj = true;
+				break;
+
+			default :
+				printf("\nnot enough sim solvers implemented!\n");
+				exit(1);
+		}
+		// recompute Butcher tableau after selecting ns
+		config->opts_update_tableau(config, dims, opts);
+
 
 /************************************************
 * sim memory

@@ -185,7 +185,7 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
 	opts->min_res_d = 1e-12;
 	opts->min_res_m = 1e-12;
 
-	qp_solver->opts_initialize_default(qp_solver, opts->qp_solver_opts);
+	qp_solver->opts_initialize_default(qp_solver, dims->qp_solver, opts->qp_solver_opts);
 
 	// dynamics
 	for (ii=0; ii<N; ii++)

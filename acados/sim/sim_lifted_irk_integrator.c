@@ -68,30 +68,30 @@ int sim_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims)
 
 	sim_solver_config *config = config_;
 
-    int ns = config->ns;
+	int ns_max = 15;
 
     int size = 0;
 
     size += sizeof(sim_rk_opts);
 
-    size += ns * ns * sizeof(double);  // A_mat
-    size += ns * sizeof(double);  // b_vec
-    size += ns * sizeof(double);  // c_vec
+    size += ns_max * ns_max * sizeof(double);  // A_mat
+    size += ns_max * sizeof(double);  // b_vec
+    size += ns_max * sizeof(double);  // c_vec
 
     size += sizeof(Newton_scheme);
 
     make_int_multiple_of(8, &size);
 
-    size += ns * sizeof(double);  // eig
+    size += ns_max * sizeof(double);  // eig
 
-    size += ns*ns * sizeof(double);  // transf1
-    size += ns*ns * sizeof(double);  // transf2
-    size += ns*ns * sizeof(double);  // transf1_T
-    size += ns*ns * sizeof(double);  // transf2_T
+    size += ns_max*ns_max * sizeof(double);  // transf1
+    size += ns_max*ns_max * sizeof(double);  // transf2
+    size += ns_max*ns_max * sizeof(double);  // transf1_T
+    size += ns_max*ns_max * sizeof(double);  // transf2_T
 
-	int tmp0 = gauss_nodes_work_calculate_size(ns);
-	int tmp1 = butcher_table_work_calculate_size(ns);
-	int tmp2 = gauss_simplified_work_calculate_size(ns);
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
+	int tmp2 = gauss_simplified_work_calculate_size(ns_max);
 	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
 	work_size = tmp2>work_size ? tmp2 : work_size;
 	size += work_size; // work
@@ -109,7 +109,7 @@ void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory
 {
 	sim_solver_config *config = config_;
 
-    int ns = config->ns;
+	int ns_max = 15;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -118,26 +118,26 @@ void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns*ns, &opts->A_mat, &c_ptr);
-    assign_double(ns, &opts->b_vec, &c_ptr);
-    assign_double(ns, &opts->c_vec, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_double(ns_max, &opts->c_vec, &c_ptr);
 
     opts->scheme = (Newton_scheme *) c_ptr;
     c_ptr += sizeof(Newton_scheme);
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns, &opts->scheme->eig, &c_ptr);
+    assign_double(ns_max, &opts->scheme->eig, &c_ptr);
 
-    assign_double(ns*ns, &opts->scheme->transf1, &c_ptr);
-    assign_double(ns*ns, &opts->scheme->transf2, &c_ptr);
-    assign_double(ns*ns, &opts->scheme->transf1_T, &c_ptr);
-    assign_double(ns*ns, &opts->scheme->transf2_T, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->scheme->transf1, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->scheme->transf2, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->scheme->transf1_T, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->scheme->transf2_T, &c_ptr);
 
 	// work
-	int tmp0 = gauss_nodes_work_calculate_size(ns);
-	int tmp1 = butcher_table_work_calculate_size(ns);
-	int tmp2 = gauss_simplified_work_calculate_size(ns);
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
+	int tmp2 = gauss_simplified_work_calculate_size(ns_max);
 	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
 	work_size = tmp2>work_size ? tmp2 : work_size;
 	opts->work = c_ptr;
@@ -153,11 +153,12 @@ void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory
 void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
 	sim_solver_config *config = config_;
+    sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+	opts->ns = 3; // GL 3
+    int ns = opts->ns;
 
-	// cast opts
-    sim_rk_opts *opts = (sim_rk_opts*) opts_;
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
 
     enum Newton_type_collocation type = exact;
     opts->scheme->type = type;
@@ -190,13 +191,44 @@ void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void 
 
 
 
+void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+{
+
+	sim_solver_config *config = config_;
+    sim_rk_opts *opts = opts_;
+
+    int ns = opts->ns;
+
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// gauss collocation nodes
+    gauss_nodes(ns, opts->c_vec, opts->work);
+
+	// butcher tableau
+    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+
+	// ???
+    enum Newton_type_collocation type = exact;
+    if (ns <= 15 && (type == simplified_in || type == simplified_inis))
+	{
+        gauss_simplified(ns, opts->scheme, opts->work);
+    }
+	else
+	{
+        opts->scheme->type = exact;
+    }
+
+	return;
+}
+
+
+
 int sim_lifted_irk_memory_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -274,10 +306,9 @@ int sim_lifted_irk_memory_calculate_size(void *config_, sim_dims *dims, void *op
 void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -398,15 +429,15 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
 
 
 
-int sim_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *args)
+int sim_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
     int NF = opts->num_forw_sens;
     //    int num_sys = ceil(ns/2.0);
     int dim_sys = ns * nx;
@@ -463,15 +494,15 @@ int sim_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void 
 
 
 
-static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspace *work, const sim_in *in, void *args)
+static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspace *work, const sim_in *in, void *opts_)
 {
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+    int ns = opts->ns;
 
     int nx = in->dims->nx;
     int nu = in->dims->nu;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
     int NF = opts->num_forw_sens;
     //    int num_sys = ceil(ns/2.0);
     int dim_sys = ns * nx;
@@ -819,15 +850,15 @@ void destruct_subsystems(double *mat, double **mat2, const int stages,
 
 
 
-static void form_linear_system_matrix(void *config_, int istep, const sim_in *in, void *args, sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work, double *sys_mat, double **sys_mat2, double timing_ad)
+static void form_linear_system_matrix(void *config_, int istep, const sim_in *in, void *opts_, sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work, double *sys_mat, double **sys_mat2, double timing_ad)
 {
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+    int ns = opts->ns;
 
     int nx = in->dims->nx;
     int nu = in->dims->nu;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
     double H_INT = in->T/opts->num_steps;
     double *A_mat = opts->A_mat;
     double *c_vec = opts->c_vec;
@@ -944,21 +975,21 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
 
 
 
-int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *args, void *mem_, void *work_)
+int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+    int ns = opts->ns;
 
     int nx = in->dims->nx;
     int nu = in->dims->nu;
-    sim_rk_opts *opts = (sim_rk_opts *)args;
     int dim_sys = ns * nx;
     int i, s1, s2, j, istep;
     sim_lifted_irk_memory *mem = (sim_lifted_irk_memory *)mem_;
     sim_lifted_irk_workspace *work = (sim_lifted_irk_workspace *)work_;
-    sim_lifted_irk_workspace_cast(config, work, in, args);
+    sim_lifted_irk_workspace_cast(config, work, in, opts);
     double H_INT = in->T/opts->num_steps;
     int NF = opts->num_forw_sens;
 
@@ -1167,7 +1198,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *args, void *me
     for (istep = 0; istep < opts->num_steps; istep++) {
         // form linear system matrix (explicit ODE case):
 
-        form_linear_system_matrix(config_, istep, in, args, mem, work, sys_mat, sys_mat2, timing_ad);
+        form_linear_system_matrix(config_, istep, in, opts, mem, work, sys_mat, sys_mat2, timing_ad);
 
         int idx;
         if (opts->scheme->type == exact || (istep == 0 && !opts->scheme->freeze)) {
@@ -1498,12 +1529,12 @@ void sim_lifted_irk_config_initialize_default(void *config_)
 	config->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
 	config->opts_assign = &sim_lifted_irk_opts_assign;
 	config->opts_initialize_default = &sim_lifted_irk_opts_initialize_default;
+	config->opts_update_tableau = &sim_lifted_irk_opts_update_tableau;
 	config->memory_calculate_size = &sim_lifted_irk_memory_calculate_size;
 	config->memory_assign = &sim_lifted_irk_memory_assign;
 	config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_lifted_irk_model_assign;
-	config->ns = 3;
 
 	return;
 
