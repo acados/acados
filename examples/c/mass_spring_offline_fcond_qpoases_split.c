@@ -103,7 +103,7 @@ int main() {
     dense_qp_out *qpd_out = dense_qp_out_create(NULL, &ddims);
 
     // TODO(dimitris): rename
-    ocp_qp_full_condensing_args *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
+    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
     ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
 
     /************************************************
@@ -117,7 +117,7 @@ int main() {
 
     void *dopts = dense_qp_opts_create(config, &ddims);
 
-	dense_qp_qpoases_args *args = (dense_qp_qpoases_args *)dopts;
+	dense_qp_qpoases_opts *args = (dense_qp_qpoases_opts *)dopts;
 
 	if (BLASFEO_CHOLESKY == 1)
 		args->use_precomputed_cholesky = 1;

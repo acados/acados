@@ -87,7 +87,7 @@ int main()
 
     // TODO(dimitris): rename
 
-    ocp_qp_partial_condensing_args *pcond_opts =
+    ocp_qp_partial_condensing_opts *pcond_opts =
         ocp_qp_partial_condensing_create_arguments(qp_in->dim);
 
     pcond_opts->N2 = 4;

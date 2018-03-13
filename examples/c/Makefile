@@ -33,7 +33,7 @@ ifeq ($(ACADOS_WITH_QORE), 1)
 LIBS += -lqore_dense
 endif
 
-LIBS += -lblasfeo -lm -lblas
+LIBS += -lblasfeo -lm -lblas -llapack
 
 
 

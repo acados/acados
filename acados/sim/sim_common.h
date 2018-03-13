@@ -30,6 +30,11 @@
 
 
 
+// maximum number of integration stages
+#define NS_MAX 15
+
+
+
 typedef struct
 {
     int nx;
@@ -85,6 +90,7 @@ typedef struct
 
 typedef struct
 {
+	int ns; // number of integration stages
 
     int num_steps;
     int num_forw_sens;
@@ -116,6 +122,7 @@ typedef struct
     int (*opts_calculate_size) (void *config, sim_dims *dims);
     void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
     void (*opts_initialize_default) (void *config, sim_dims *dims, void *args);
+    void (*opts_update_tableau) (void *config, sim_dims *dims, void *args);
     int (*memory_calculate_size) (void *config, sim_dims *dims, void *args);
     void *(*memory_assign) (void *config, sim_dims *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size) (void *config, sim_dims *dims, void *args);
@@ -125,7 +132,6 @@ typedef struct
     void (*model_set_forward_vde) (sim_in *in, void *fun);
     void (*model_set_adjoint_vde) (sim_in *in, void *fun);
     void (*config_initialize_default) (void *config);
-	int ns; // number of integration stages
 } sim_solver_config;
 
 

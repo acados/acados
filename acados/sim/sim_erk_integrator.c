@@ -76,16 +76,13 @@ void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
 
 int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 {
-
-	sim_solver_config *config = config_;
-
-    int ns = config->ns;
+	int ns_max = NS_MAX;
 
     int size = sizeof(sim_rk_opts);
 
-    size += ns * ns * sizeof(double);  // A_mat
-    size += ns * sizeof(double);  // b_vec
-    size += ns * sizeof(double);  // c_vec
+    size += ns_max * ns_max * sizeof(double);  // A_mat
+    size += ns_max * sizeof(double);  // b_vec
+    size += ns_max * sizeof(double);  // c_vec
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -97,9 +94,7 @@ int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 
 void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
-
-    int ns = config->ns;
+	int ns_max = NS_MAX;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -108,11 +103,11 @@ void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns*ns, &opts->A_mat, &c_ptr);
-    assign_double(ns, &opts->b_vec, &c_ptr);
-    assign_double(ns, &opts->c_vec, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_double(ns_max, &opts->c_vec, &c_ptr);
 
-    assert((char*)raw_memory + sim_erk_opts_calculate_size(config, dims) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
 
     opts->newton_iter = 0;
     opts->scheme = NULL;
@@ -125,11 +120,10 @@ void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
+    sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+	opts->ns = 4; // ERK 4
+    int ns = opts->ns;
 
     assert(ns == 4 && "only number of stages = 4 implemented!");
 
@@ -145,6 +139,28 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
+}
+
+
+
+void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+{
+    sim_rk_opts *opts = opts_;
+
+    int ns = opts->ns;
+
+    assert(ns == 4 && "only number of stages = 4 implemented!");
+
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+    memcpy(opts->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
+        sizeof(*opts->A_mat) * (ns * ns));
+    memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
+        sizeof(*opts->b_vec) * (ns));
+    memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
+        sizeof(*opts->c_vec) * (ns));
+
+	return;
 }
 
 
@@ -165,11 +181,9 @@ void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 
 int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -211,11 +225,9 @@ int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
 static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
-	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -256,7 +268,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_double(ns*(nx+nu), &workspace->adj_traj, &c_ptr);
     }
 
-    assert((char*)raw_memory + sim_erk_workspace_calculate_size(config, dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }
@@ -266,10 +278,10 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+    int ns = opts->ns;
 
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
     sim_dims *dims = in->dims;
     sim_erk_workspace *workspace = (sim_erk_workspace *) sim_erk_cast_workspace(config, dims, opts, work_);
 
@@ -488,6 +500,7 @@ void sim_erk_config_initialize_default(void *config_)
 	config->opts_calculate_size = &sim_erk_opts_calculate_size;
 	config->opts_assign = &sim_erk_opts_assign;
 	config->opts_initialize_default = &sim_erk_opts_initialize_default;
+	config->opts_update_tableau = &sim_erk_opts_update_tableau;
 	config->memory_calculate_size = &sim_erk_memory_calculate_size;
 	config->memory_assign = &sim_erk_memory_assign;
 	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
@@ -496,7 +509,6 @@ void sim_erk_config_initialize_default(void *config_)
     config->model_set_forward_vde = &sim_erk_model_set_forward_vde;
     config->model_set_adjoint_vde = &sim_erk_model_set_adjoint_vde;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
-	config->ns = 4;
 
 	return;
 

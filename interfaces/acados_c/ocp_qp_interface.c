@@ -148,7 +148,7 @@ void *ocp_qp_opts_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims)
 
     void *opts = config->opts_assign(config, dims, ptr);
 
-    config->opts_initialize_default(config, opts);
+    config->opts_initialize_default(config, dims, opts);
 
     return opts;
 }

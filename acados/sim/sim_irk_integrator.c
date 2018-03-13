@@ -48,21 +48,18 @@ void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 {
-
-	sim_solver_config *config = config_;
-
-    int ns = config->ns;
+	int ns_max = NS_MAX;
 
     int size = 0;
 
     size += sizeof(sim_rk_opts);
 
-    size += ns * ns * sizeof(double);  // A_mat
-    size += ns * sizeof(double);  // b_vec
-    size += ns * sizeof(double);  // c_vec
+    size += ns_max * ns_max * sizeof(double);  // A_mat
+    size += ns_max * sizeof(double);  // b_vec
+    size += ns_max * sizeof(double);  // c_vec
 
-	int tmp0 = gauss_nodes_work_calculate_size(ns);
-	int tmp1 = butcher_table_work_calculate_size(ns);
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
 	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
 	size += work_size; // work
 
@@ -76,9 +73,7 @@ int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 
 void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
-
-    int ns = config->ns;
+	int ns_max = NS_MAX;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -87,18 +82,18 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns*ns, &opts->A_mat, &c_ptr);
-    assign_double(ns, &opts->b_vec, &c_ptr);
-    assign_double(ns, &opts->c_vec, &c_ptr);
+    assign_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_double(ns_max, &opts->c_vec, &c_ptr);
 
 	// work
-	int tmp0 = gauss_nodes_work_calculate_size(ns);
-	int tmp1 = butcher_table_work_calculate_size(ns);
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
 	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
 	opts->work = c_ptr;
 	c_ptr += work_size;
 
-    assert((char*)raw_memory + sim_irk_opts_calculate_size(config, dims) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *)opts;
 }
@@ -107,11 +102,12 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
+    sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
+	opts->ns = 3; // GL 3
+    int ns = opts->ns;
 
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
 
 	// gauss collocation nodes
     gauss_nodes(ns, opts->c_vec, opts->work);
@@ -134,6 +130,25 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
+void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+{
+    sim_rk_opts *opts = opts_;
+
+    int ns = opts->ns;
+
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// gauss collocation nodes
+    gauss_nodes(ns, opts->c_vec, opts->work);
+
+	// butcher tableau
+    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+
+	return;
+}
+
+
+
 int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
     return 0;
@@ -150,11 +165,9 @@ void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 
 int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -200,12 +213,9 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
 static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
+	sim_rk_opts *opts = opts_;
 
-	sim_solver_config *config = config_;
-
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+    int ns = opts->ns;
 
     int nx = dims->nx;
     int nu = dims->nu;
@@ -284,7 +294,7 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
-    assert((char*)raw_memory + sim_irk_workspace_calculate_size(config, dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }
@@ -295,11 +305,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 {
 
 	sim_solver_config *config = config_;
+	sim_rk_opts *opts = opts_;
 
-    int ns = config->ns;
-
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
-    // sim_irk_memory *mem = (sim_irk_memory *) mem_;
+    int ns = opts->ns;
 
     sim_dims *dims = in->dims;
     sim_irk_workspace *workspace = (sim_irk_workspace *) sim_irk_workspace_cast(config, dims, opts, work_);
@@ -684,12 +692,12 @@ void sim_irk_config_initialize_default(void *config_)
 	config->opts_calculate_size = &sim_irk_opts_calculate_size;
 	config->opts_assign = &sim_irk_opts_assign;
 	config->opts_initialize_default = &sim_irk_opts_initialize_default;
+	config->opts_update_tableau = &sim_irk_opts_update_tableau;
 	config->memory_calculate_size = &sim_irk_memory_calculate_size;
 	config->memory_assign = &sim_irk_memory_assign;
 	config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_irk_model_calculate_size;
 	config->model_assign = &sim_irk_model_assign;
-	config->ns = 3;
 
 	return;
 
