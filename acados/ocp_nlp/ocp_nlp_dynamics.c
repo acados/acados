@@ -209,9 +209,9 @@ void *ocp_nlp_dynamics_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims,
 	align_char_to(64, &c_ptr);
 
 	// adj
-	assign_blasfeo_dvec_mem(nu+nx+nx1, &memory->adj, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(nu+nx+nx1, &memory->adj, &c_ptr);
 	// fun
-	assign_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(nx1, &memory->fun, &c_ptr);
 
     assert((char *) raw_memory + ocp_nlp_dynamics_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 

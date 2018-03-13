@@ -506,7 +506,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nx1, nu1;
+	int nx, nu, nb, ng, nh, nx1, nu1;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
@@ -577,8 +577,9 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 	{
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
+		nh = dims->constraints[i]->nh;
 		struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-		blasfeo_dveccp(2*nb+2*ng, ineq_fun, 0, nlp_mem->ineq_fun+i, 0);
+		blasfeo_dveccp(2*nb+2*ng+2*nh, ineq_fun, 0, nlp_mem->ineq_fun+i, 0);
 	}
 
 	// nlp mem: ineq_adj
@@ -633,7 +634,7 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
 	// extract dims
     int N = nlp_in->dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nx1, nh;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
@@ -662,7 +663,8 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 	{
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
-		blasfeo_dveccp(2*nb+2*ng, nlp_mem->ineq_fun+i, 0, work->qp_in->d+i, 0);
+		nh = dims->constraints[i]->nh;
+		blasfeo_dveccp(2*nb+2*ng+2*nh, nlp_mem->ineq_fun+i, 0, work->qp_in->d+i, 0);
 	}
 
 	return;
@@ -810,6 +812,9 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 			(mem->nlp_res->inf_norm_res_m < opts->min_res_m) )
 		{
 
+			printf("%d sqp iterations\n", sqp_iter);
+			print_ocp_qp_in(work->qp_in);
+
 			// save sqp iterations number
 			mem->sqp_iter = sqp_iter;
 
@@ -820,18 +825,15 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 		}
 
-//print_ocp_qp_in(work->qp_in);
-//exit(1);
-
         int qp_status = qp_solver->evaluate(qp_solver, work->qp_in, work->qp_out,
             opts->qp_solver_opts, mem->qp_solver_mem, work->qp_work);
 
-//print_ocp_qp_out(work->qp_out);
-//exit(1);
 
         if (qp_status != 0)
         {
-            printf("QP solver returned error status %d\n", qp_status);
+			print_ocp_qp_in(work->qp_in);
+		
+            printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
             return -1;
         }
 
@@ -865,6 +867,9 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 	// save sqp iterations number
 	mem->sqp_iter = sqp_iter;
+
+	printf("%d sqp iterations\n", sqp_iter);
+	print_ocp_qp_in(work->qp_in);
 
 	// maximum number of iterations reached
     return 1;

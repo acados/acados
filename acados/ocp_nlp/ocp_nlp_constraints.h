@@ -101,6 +101,7 @@ typedef struct
     int *idxb;
 	struct blasfeo_dvec d;
 	struct blasfeo_dmat DCt;
+	external_function_generic *h;
 } ocp_nlp_constraints;
 
 //
@@ -161,6 +162,8 @@ void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_);
 typedef struct
 {
 	struct blasfeo_dvec tmp_nbg;
+	double *nl_constraint_input;
+	double *nl_constraint_output;
 } ocp_nlp_constraints_workspace;
 
 //

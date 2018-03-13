@@ -32,14 +32,20 @@
 
 #include "blasfeo/include/blasfeo_d_aux.h"
 
-#include "pendulum_model/vde_forw_pendulum.c"
+#include "pendulum_model/vde_forw_pendulum.h"
+#include "pendulum_model/jac_constraint.h"
 
 int main() {
 
 	int num_states = 4, num_controls = 1, N = 50;
 	double Tf = 5.0, Q = 1e-4, R = 1e-4, QN = 1e-4;
 	std::vector<int> idxb_0 {1, 2, 3, 4}, idxb_N {0, 1, 2, 3};
-	std::vector<double> x0 {0, M_PI, 0, 0}, xN {0, 0, 0, 0};
+	std::vector<double> x0 {0, M_PI, 0, 0},
+		xN_lo {-1, -1, -10, -10},
+		xN_hi {+1, +1, +10, +10},		
+		pN_lo {-1, -1},
+		pN_hi {+1, +1},
+		xN {0, 0, 0, 0};
 	int max_num_sqp_iterations = 1000;
 
 
@@ -54,6 +60,7 @@ int main() {
 	nu.at(N) = 0;
 	nv.at(N) = 4;
 	ny.at(N) = 4;
+	nh.at(N) = 2;
 
 	// Make plan
 
@@ -136,14 +143,29 @@ int main() {
 	// NLP constraints
 	ocp_nlp_constraints **constraints = (ocp_nlp_constraints **) nlp_in->constraints;
 
+	external_function_casadi nonlinear_constraint;
+	nonlinear_constraint.casadi_fun = &jac_constraint;
+	nonlinear_constraint.casadi_n_in = &jac_constraint_n_in;
+	nonlinear_constraint.casadi_n_out = &jac_constraint_n_out;
+	nonlinear_constraint.casadi_sparsity_in = &jac_constraint_sparsity_in;
+	nonlinear_constraint.casadi_sparsity_out = &jac_constraint_sparsity_out;
+	nonlinear_constraint.casadi_work = &jac_constraint_work;
+
+	int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
+	void *ptr = malloc(constraint_size);
+	external_function_casadi_assign(&nonlinear_constraint, ptr);
+	
 	// bounds
     constraints[0]->idxb = idxb_0.data();
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
 
     constraints[N]->idxb = idxb_N.data();
-	blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, 0);
-	blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, nb[N]+ng[N]);
+	blasfeo_pack_dvec(nb[N], xN_lo.data(), &constraints[N]->d, 0);
+	blasfeo_pack_dvec(nh[N], pN_lo.data(), &constraints[N]->d, nb[N]+ng[N]);
+	blasfeo_pack_dvec(nb[N], xN_hi.data(), &constraints[N]->d, nb[N]+ng[N]+nh[N]);
+	blasfeo_pack_dvec(nh[N], pN_hi.data(), &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
+	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
 
 	// general constraints
 	// TODO(roversch): figure out how to deal with nonlinear inequalities
