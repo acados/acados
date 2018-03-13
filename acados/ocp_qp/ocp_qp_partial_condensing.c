@@ -62,7 +62,7 @@ ocp_qp_partial_condensing_opts *ocp_qp_partial_condensing_opts_assign(ocp_qp_dim
     d_create_ocp_qp_dim(dims->N, opts->pcond_dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_dim(dims->N);
 
-    assert((char*)raw_memory + ocp_qp_partial_condensing_opts_calculate_size(dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_partial_condensing_opts_calculate_size(dims) >= c_ptr);
 
     return opts;
 }
@@ -115,7 +115,7 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_memory_assign(ocp_qp
 
     mem->qp_in = NULL;  // initialized when partial condensing routine is called
 
-    assert((char*)raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_partial_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
 }

@@ -63,7 +63,7 @@ void *ocp_qp_hpipm_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memor
     d_create_ocp_qp_ipm_arg(dims, opts->hpipm_opts, c_ptr);
     c_ptr += d_memsize_ocp_qp_ipm_arg(dims);
 
-    assert((char*)raw_memory + ocp_qp_hpipm_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_hpipm_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *)opts;
 }
@@ -128,7 +128,7 @@ void *ocp_qp_hpipm_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
     d_create_ocp_qp_ipm(dims, opts->hpipm_opts, ipm_workspace, c_ptr);
     c_ptr += ipm_workspace->memsize;
 
-    assert((char *)raw_memory + ocp_qp_hpipm_memory_calculate_size(config_, dims, opts_) == c_ptr);
+    assert((char *)raw_memory + ocp_qp_hpipm_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return mem;
 }
