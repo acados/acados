@@ -34,33 +34,35 @@ extern "C" {
 
 // TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of arguments to the solver
-typedef struct ocp_qp_hpipm_args_ {
-    struct d_ocp_qp_ipm_arg *hpipm_args;
-} ocp_qp_hpipm_args;
+typedef struct ocp_qp_hpipm_opts_
+{
+    struct d_ocp_qp_ipm_arg *hpipm_opts;
+} ocp_qp_hpipm_opts;
 
 
 // TODO(roversch): why not make this a typedef of the underlying struct?
 // struct of the solver memory
-typedef struct ocp_qp_hpipm_memory_ {
+typedef struct ocp_qp_hpipm_memory_
+{
     struct d_ocp_qp_ipm_workspace *hpipm_workspace;
 } ocp_qp_hpipm_memory;
 
 //
-int ocp_qp_hpipm_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_hpipm_opts_calculate_size(void *config, ocp_qp_dims *dims);
 //
-void *ocp_qp_hpipm_assign_args(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_hpipm_opts_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_hpipm_initialize_default_args(void *args_);
+void ocp_qp_hpipm_opts_initialize_default(void *config, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpipm_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_hpipm_memory_calculate_size(void *config, ocp_qp_dims *dims, void *opts_);
 //
-void *ocp_qp_hpipm_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_hpipm_memory_assign(void *config, ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_hpipm_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_hpipm_workspace_calculate_size(void *config, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpipm(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+int ocp_qp_hpipm(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 //
-void ocp_qp_hpipm_config_initialize_default(void *config_);
+void ocp_qp_hpipm_config_initialize_default(void *config);
 
 
 

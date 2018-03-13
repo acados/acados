@@ -40,5 +40,8 @@ qp.set('ubx', 0, x0)
 
 # qp.set("lbx", 2, array([-inf, -10.0]))
 # qp.set("ubx", 2, array([+inf, +10.0]))
+qp.initialize_solver("sparse_hpipm")
+output = qp.solve()
+print(output.states())
 
 solve(qp)

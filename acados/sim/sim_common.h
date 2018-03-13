@@ -30,12 +30,17 @@
 
 
 
+// maximum number of integration stages
+#define NS_MAX 15
+
+
+
 typedef struct
 {
-    int num_stages;
     int nx;
     int nu;
-    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
+//    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
+	// TODO have nx np nf instead !!!
 } sim_dims;
 
 
@@ -85,9 +90,7 @@ typedef struct
 
 typedef struct
 {
-
-    double interval;
-    int num_stages;
+	int ns; // number of integration stages
 
     int num_steps;
     int num_forw_sens;
@@ -115,30 +118,38 @@ typedef struct
 
 typedef struct
 {
-    int (*fun) (sim_in *in, sim_out *out, void *args, void *mem, void *work);
-    int (*opts_calculate_size) (sim_dims *dims);
-    void *(*opts_assign) (sim_dims *dims, void *raw_memory);
-    void (*opts_initialize_default) (sim_dims *dims, void *args);
-    int (*memory_calculate_size) (sim_dims *dims, void *args);
-    void *(*memory_assign) (sim_dims *dims, void *args, void *raw_memory);
-    int (*workspace_calculate_size) (sim_dims *dims, void *args);
-    int (*model_calculate_size) (sim_dims *dims);
-    void *(*model_assign) (sim_dims *dims, void *raw_memory);
-    void (*config_initialize_default) (void *);
+    int (*evaluate) (void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, sim_dims *dims);
+    void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
+    void (*opts_initialize_default) (void *config, sim_dims *dims, void *args);
+    void (*opts_update_tableau) (void *config, sim_dims *dims, void *args);
+    int (*memory_calculate_size) (void *config, sim_dims *dims, void *args);
+    void *(*memory_assign) (void *config, sim_dims *dims, void *args, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, sim_dims *dims, void *args);
+    // TODO(dimitris): move all model-related function pointers to model_config?
+    int (*model_calculate_size) (void *config, sim_dims *dims);
+    void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
+    void (*model_set_forward_vde) (sim_in *in, void *fun);
+    void (*model_set_adjoint_vde) (sim_in *in, void *fun);
+    void (*config_initialize_default) (void *config);
 } sim_solver_config;
 
 
-
+//
+int sim_solver_config_calculate_size();
+//
+sim_solver_config *sim_solver_config_assign(void *raw_memory);
+//
 int sim_dims_calculate_size();
-
+//
 sim_dims *sim_dims_assign(void *raw_memory);
-
-int sim_in_calculate_size(sim_dims *dims, sim_solver_config *config);
-
-sim_in *sim_in_assign(sim_dims *dims, void *raw_memory, sim_solver_config *config);
-
-int sim_out_calculate_size(sim_dims *dims);
-
-sim_out *sim_out_assign(sim_dims *dims, void *raw_memory);
+//
+int sim_in_calculate_size(void *config, sim_dims *dims);
+//
+sim_in *sim_in_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+int sim_out_calculate_size(void *config, sim_dims *dims);
+//
+sim_out *sim_out_assign(void *config, sim_dims *dims, void *raw_memory);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

@@ -92,24 +92,26 @@ typedef struct {
 
 
 //
-int sim_lifted_irk_model_calculate_size(sim_dims *dims);
+int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
 //
-void *sim_lifted_irk_model_assign(sim_dims *dims, void *raw_memory);
-
-int sim_lifted_irk_opts_calculate_size(sim_dims *dims);
-
-void *sim_lifted_irk_opts_assign(sim_dims *dims, void *raw_memory);
-
-void sim_lifted_irk_opts_initialize_default(sim_dims *dims, void *opts_);
-
-int sim_lifted_irk_memory_calculate_size(sim_dims *dims, void *opts);
-
-void *sim_lifted_irk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory);
-
-int sim_lifted_irk(sim_in *in, sim_out *out, void *args, void *mem, void *work);
-
-int sim_lifted_irk_workspace_calculate_size(sim_dims *in, void *args);
-
+void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+int sim_lifted_irk_opts_calculate_size(void *config, sim_dims *dims);
+//
+void *sim_lifted_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+void sim_lifted_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
+//
+void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_);
+//
+int sim_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts);
+//
+void *sim_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
+//
+int sim_lifted_irk_workspace_calculate_size(void *config, sim_dims *in, void *args);
+//
+int sim_lifted_irk(void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work);
+//
 void sim_lifted_irk_config_initialize_default(void *config);
 
 

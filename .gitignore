@@ -102,3 +102,4 @@ examples/python/__pycache__/
 build*
 *rti1401
 *.asv
+*.swo

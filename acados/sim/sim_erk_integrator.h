@@ -49,6 +49,14 @@ typedef struct
 
 typedef struct
 {
+	// no memory
+	void *dummy;
+} sim_erk_memory;
+
+
+
+typedef struct
+{
 
     double *rhs_forw_in;  // x + S + p
 
@@ -64,24 +72,30 @@ typedef struct
 
 
 //
-int sim_erk_model_calculate_size(sim_dims *dims);
+int sim_erk_model_calculate_size(void *config, sim_dims *dims);
 //
-void *sim_erk_model_assign(sim_dims *dims, void *raw_memory);
-
-int sim_erk_opts_calculate_size(sim_dims *dims);
-
-void *sim_erk_opts_assign(sim_dims *dims, void *raw_memory);
-
-void sim_erk_opts_initialize_default(sim_dims *dims, void *opts_);
-
-int sim_erk_memory_calculate_size(sim_dims *dims, void *opts_);
-
-void *sim_erk_memory_assign(sim_dims *dims, void *opts_, void *raw_memory);
-
-int sim_erk(sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
-
-int sim_erk_workspace_calculate_size(sim_dims *dims, void *opts_);
-
+void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+void sim_erk_model_set_forward_vde(sim_in *in, void *fun);
+//
+void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun);
+//
+int sim_erk_opts_calculate_size(void *config, sim_dims *dims);
+//
+void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_);
+//
+void *sim_erk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+void sim_erk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
+//
+int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
+//
+void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
+//
+int sim_erk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_);
+//
+int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
+//
 void sim_erk_config_initialize_default(void *config);
 
 

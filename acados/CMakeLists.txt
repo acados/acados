@@ -35,9 +35,9 @@ if(NOT ACADOS_WITH_HPMPC)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_hpmpc.c")
 endif()
 
-if(NOT ACADOS_WITH_OOQP)
-    list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
-endif()
+# if(NOT ACADOS_WITH_OOQP)
+#     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
+# endif()
 
 if(NOT ACADOS_WITH_QORE)
     list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/dense_qp/dense_qp_qore.c")
@@ -52,9 +52,9 @@ if(NOT ACADOS_WITH_QPDUNES)
 endif()
 
 list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/sim/sim_discrete_model.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_qp/ocp_qp_ooqp.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sm_gn.c")
-list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/ocp_nlp/ocp_nlp_sqp.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_nlp_sm_gn.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_nlp_sqp_bkp.c")
+list(REMOVE_ITEM ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/broken_src/ocp_qp_ooqp.c")
 
 # Define acados library
 add_library(acados ${ACADOS_SRC})
@@ -130,9 +130,11 @@ if(SWIG_MATLAB)
     target_link_libraries(acados PUBLIC ${Matlab_MEX_LIBRARY})
 endif()
 
-add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
-if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
-    add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+if(ACADOS_WITH_C_INTERFACE)
+	add_subdirectory(../interfaces/acados_c acados/interfaces/acados_c)
+	if(NOT CMAKE_SYSTEM_NAME MATCHES "dSpace")
+		add_subdirectory(../interfaces/acados_cpp acados/interfaces/acados_cpp)
+	endif()
 endif()
 
 # Only test acados library for coverage

@@ -31,7 +31,7 @@ typedef enum hpmpc_options_t_ {
     HPMPC_DEFAULT_ARGUMENTS  // TODO(Andrea): need to implement other options
 } hpmpc_options_t;
 
-typedef struct ocp_qp_hpmpc_args_ {
+typedef struct ocp_qp_hpmpc_opts_ {
     double tol;
     int max_iter;
     //  double min_step;
@@ -50,7 +50,7 @@ typedef struct ocp_qp_hpmpc_args_ {
     double sigma_mu;
     int N;
     int M;
-} ocp_qp_hpmpc_args;
+} ocp_qp_hpmpc_opts;
 
 // struct of the solver memory
 typedef struct ocp_qp_hpmpc_memory_ {
@@ -59,19 +59,19 @@ typedef struct ocp_qp_hpmpc_memory_ {
 
 
 
-int ocp_qp_hpmpc_calculate_args_size(ocp_qp_dims *dims);
+int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims);
 //
-void *ocp_qp_hpmpc_assign_args(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_hpmpc_initialize_default_args(void *args_);
+void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpmpc_calculate_memory_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-void *ocp_qp_hpmpc_assign_memory(ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_hpmpc_calculate_workspace_size(ocp_qp_dims *dims, void *args_);
+int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpmpc(ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_hpmpc_config_initialize_default(void *config_);
 

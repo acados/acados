@@ -62,6 +62,24 @@ const int* vde_chain_nm7_sparsity_out(int i);
 const int* vde_chain_nm8_sparsity_out(int i);
 const int* vde_chain_nm9_sparsity_out(int i);
 
+int vde_chain_nm2_n_in();
+int vde_chain_nm3_n_in();
+int vde_chain_nm4_n_in();
+int vde_chain_nm5_n_in();
+int vde_chain_nm6_n_in();
+int vde_chain_nm7_n_in();
+int vde_chain_nm8_n_in();
+int vde_chain_nm9_n_in();
+
+int vde_chain_nm2_n_out();
+int vde_chain_nm3_n_out();
+int vde_chain_nm4_n_out();
+int vde_chain_nm5_n_out();
+int vde_chain_nm6_n_out();
+int vde_chain_nm7_n_out();
+int vde_chain_nm8_n_out();
+int vde_chain_nm9_n_out();
+
 /* jacobian ode */
 int jac_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 int jac_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -98,6 +116,24 @@ const int* jac_chain_nm6_sparsity_out(int i);
 const int* jac_chain_nm7_sparsity_out(int i);
 const int* jac_chain_nm8_sparsity_out(int i);
 const int* jac_chain_nm9_sparsity_out(int i);
+
+int jac_chain_nm2_n_in();
+int jac_chain_nm3_n_in();
+int jac_chain_nm4_n_in();
+int jac_chain_nm5_n_in();
+int jac_chain_nm6_n_in();
+int jac_chain_nm7_n_in();
+int jac_chain_nm8_n_in();
+int jac_chain_nm9_n_in();
+
+int jac_chain_nm2_n_out();
+int jac_chain_nm3_n_out();
+int jac_chain_nm4_n_out();
+int jac_chain_nm5_n_out();
+int jac_chain_nm6_n_out();
+int jac_chain_nm7_n_out();
+int jac_chain_nm8_n_out();
+int jac_chain_nm9_n_out();
 
 /* adjoint vde */
 int vde_adj_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -156,6 +192,24 @@ const int* ls_cost_nm7_sparsity_out(int i);
 const int* ls_cost_nm8_sparsity_out(int i);
 const int* ls_cost_nm9_sparsity_out(int i);
 
+int ls_cost_nm2_n_in();
+int ls_cost_nm3_n_in();
+int ls_cost_nm4_n_in();
+int ls_cost_nm5_n_in();
+int ls_cost_nm6_n_in();
+int ls_cost_nm7_n_in();
+int ls_cost_nm8_n_in();
+int ls_cost_nm9_n_in();
+
+int ls_cost_nm2_n_out();
+int ls_cost_nm3_n_out();
+int ls_cost_nm4_n_out();
+int ls_cost_nm5_n_out();
+int ls_cost_nm6_n_out();
+int ls_cost_nm7_n_out();
+int ls_cost_nm8_n_out();
+int ls_cost_nm9_n_out();
+
 /* ls cost N */
 int ls_costN_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 int ls_costN_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
@@ -192,6 +246,25 @@ const int* ls_costN_nm6_sparsity_out(int i);
 const int* ls_costN_nm7_sparsity_out(int i);
 const int* ls_costN_nm8_sparsity_out(int i);
 const int* ls_costN_nm9_sparsity_out(int i);
+
+int ls_costN_nm2_n_in();
+int ls_costN_nm3_n_in();
+int ls_costN_nm4_n_in();
+int ls_costN_nm5_n_in();
+int ls_costN_nm6_n_in();
+int ls_costN_nm7_n_in();
+int ls_costN_nm8_n_in();
+int ls_costN_nm9_n_in();
+
+int ls_costN_nm2_n_out();
+int ls_costN_nm3_n_out();
+int ls_costN_nm4_n_out();
+int ls_costN_nm5_n_out();
+int ls_costN_nm6_n_out();
+int ls_costN_nm7_n_out();
+int ls_costN_nm8_n_out();
+int ls_costN_nm9_n_out();
+
 
 int pathcon_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 int pathcon_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);

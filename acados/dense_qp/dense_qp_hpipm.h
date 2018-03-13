@@ -33,28 +33,34 @@ extern "C" {
 #include "acados/dense_qp/dense_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef struct dense_qp_hpipm_args_ {
-    struct d_dense_qp_ipm_arg *hpipm_args;
-} dense_qp_hpipm_args;
 
-typedef struct dense_qp_hpipm_memory_ {
+
+typedef struct dense_qp_hpipm_opts_
+{
+    struct d_dense_qp_ipm_arg *hpipm_opts;
+} dense_qp_hpipm_opts;
+
+
+
+typedef struct dense_qp_hpipm_memory_
+{
     struct d_dense_qp_ipm_workspace *hpipm_workspace;
 } dense_qp_hpipm_memory;
 
 //
-int dense_qp_hpipm_calculate_args_size(dense_qp_dims *dims);
+int dense_qp_hpipm_opts_calculate_size(void *config, dense_qp_dims *dims);
 //
-void dense_qp_hpipm_initialize_default_args(void *args_);
+void *dense_qp_hpipm_opts_assign(void *config, dense_qp_dims *dims, void *raw_memory);
 //
-void *dense_qp_hpipm_assign_args(dense_qp_dims *dims, void *raw_memory);
+void dense_qp_hpipm_opts_initialize_default(void *config, dense_qp_dims *dims, void *opts_);
 //
-int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *args_);
+int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *opts_);
 //
-void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *args_, void *raw_memory);
+void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int dense_qp_hpipm_calculate_workspace_size(dense_qp_dims *dims, void *args_);
+int dense_qp_hpipm_calculate_workspace_size(dense_qp_dims *dims, void *opts_);
 //
-int dense_qp_hpipm(dense_qp_in *qp_in, dense_qp_out *qp_out, void *args_, void *mem_, void *work_);
+int dense_qp_hpipm(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_hpipm_config_initialize_default(void *config_);
 

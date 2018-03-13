@@ -11,11 +11,18 @@ OBJS =
 
 # ocp nlp
 OBJS += acados/ocp_nlp/ocp_nlp_common.o
-OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_common.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_ls.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_nls.o
+OBJS += acados/ocp_nlp/ocp_nlp_constraints.o
+OBJS += acados/ocp_nlp/ocp_nlp_dynamics.o
+OBJS += acados/ocp_nlp/ocp_nlp_sqp.o
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
 OBJS += acados/dense_qp/dense_qp_hpipm.o
+ifeq ($(ACADOS_WITH_QPOASES), 1)
 OBJS += acados/dense_qp/dense_qp_qpoases.o
+endif
 ifeq ($(ACADOS_WITH_QORE), 1)
 OBJS += acados/dense_qp/dense_qp_qore.o
 endif
@@ -31,7 +38,7 @@ OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
-OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
+OBJS += acados/ocp_qp/ocp_qp_partial_condensing_solver.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
 # sim
 OBJS += acados/sim/sim_collocation_utils.o
@@ -50,8 +57,12 @@ OBJS += acados/utils/external_function_generic.o
 
 
 # acados dependencies
-STATIC_DEPS = blasfeo_static hpipm_static qpoases_static
-CLEAN_DEPS = blasfeo_clean hpipm_clean qpoases_clean
+STATIC_DEPS = blasfeo_static hpipm_static
+CLEAN_DEPS = blasfeo_clean hpipm_clean
+ifeq ($(ACADOS_WITH_QPOASES), 1)
+STATIC_DEPS += qpoases_static
+CLEAN_DEPS += qpoases_clean
+endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
 STATIC_DEPS += hpmpc_static
 CLEAN_DEPS += hpmpc_clean
@@ -67,7 +78,7 @@ endif
 
 
 
-all: acados_c_static
+all: acados_static acados_c_static
 
 acados_static: $(STATIC_DEPS)
 	( cd acados; $(MAKE) obj TOP=$(TOP) )
@@ -128,6 +139,7 @@ qpdunes_static:
 	cp $(QPDUNES_PATH)/externals/qpOASES-3.0beta/bin/libqpOASES.a lib
 
 acados_c_static: acados_static
+ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
 	mkdir -p include/acados_c
 	mkdir -p include/acados_c/dense_qp
@@ -143,6 +155,7 @@ acados_c_static: acados_static
 	cp -r interfaces/acados_c/ocp_qp/*.h include/acados_c/ocp_qp
 	cp -r interfaces/acados_c/sim/*.h include/acados_c/sim
 	mv interfaces/acados_c/libacados_c.a lib
+endif
 
 examples_c: acados_c_static
 	( cd examples/c; $(MAKE) examples TOP=$(TOP) )

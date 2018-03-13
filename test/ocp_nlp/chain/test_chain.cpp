@@ -543,8 +543,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 qp_solver.fun = &ocp_qp_qpdunes;
                 qp_solver.initialize = &ocp_qp_qpdunes_initialize;
                 qp_solver.destroy = &ocp_qp_qpdunes_destroy;
-                qp_solver.qp_in = create_ocp_qp_in(N, nx, nu, nb, ng);
-                qp_solver.qp_out = create_ocp_qp_out(N, nx, nu, nb, ng);
+                qp_solver.qp_in = ocp_qp_in_create(N, nx, nu, nb, ng);
+                qp_solver.qp_out = ocp_qp_out_create(N, nx, nu, nb, ng);
                 // TODO(nielsvd): lines below should go
                 int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
                 for (int_t i = 0; i <= N; i++)
