@@ -657,29 +657,26 @@ int main() {
 
 		// 4th order schemes
 #if DYNAMICS==0
-	// dynamics: ERK 4
+	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
 		sim_erk_config_initialize_default(config->dynamics[ii]->sim_solver);
-		config->dynamics[ii]->sim_solver->ns = 4; // number of integration stages
     }
 
 #elif DYNAMICS==1
-	// dynamics: lifted IRK GL2
+	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
-		config->dynamics[ii]->sim_solver->ns = 2; // number of integration stages
     }
 #else
-	// dynamics: IRK GL2
+	// dynamics: IRK
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
-		config->dynamics[ii]->sim_solver->ns = 2; // number of integration stages
     }
 #endif
 
@@ -1072,9 +1069,19 @@ int main() {
 	{
 		ocp_nlp_dynamics_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
-#if DYNAMICS==2
+#if DYNAMICS==0
+		// dynamics: ERK 4
+		sim_opts->ns = 4;
+#elif DYNAMICS==1
+		// dynamics: lifted IRK GL2
+		sim_opts->ns = 2;
+#else // DYNAMICS==2
+		// dynamics: IRK GL2
+		sim_opts->ns = 2;
 		sim_opts->jac_reuse = true;
 #endif
+		// recompute Butcher tableau after selecting ns
+		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
     }
 
 
