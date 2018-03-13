@@ -60,7 +60,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args = (ocp_qp_partial_condensing_solver_opts *) args_;
             ocp_qp_hpipm_opts *args = (ocp_qp_hpipm_opts *) sparse_args->qp_solver_opts;
-            ocp_qp_partial_condensing_args *pcond_opts = (ocp_qp_partial_condensing_args *) sparse_args->pcond_opts;
+            ocp_qp_partial_condensing_opts *pcond_opts = (ocp_qp_partial_condensing_opts *) sparse_args->pcond_opts;
             if (!strcmp(token, "max_iter"))
                 args->hpipm_opts->iter_max = value;
             else if (!strcmp(token, "max_stat"))
@@ -86,7 +86,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args = (ocp_qp_partial_condensing_solver_opts *) args_;
             ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *) sparse_args->qp_solver_opts;
-            ocp_qp_partial_condensing_args *pcond_opts = (ocp_qp_partial_condensing_args *) sparse_args->pcond_opts;
+            ocp_qp_partial_condensing_opts *pcond_opts = (ocp_qp_partial_condensing_opts *) sparse_args->pcond_opts;
             if (!strcmp(token, "max_iter"))
                 args->max_iter = value;
             else if (!strcmp(token, "warm_start"))
@@ -119,7 +119,7 @@ bool set_option_int(void *args_, const char *option, const int value)
             token = strsep(&option_cpy, ".");
             ocp_qp_partial_condensing_solver_opts *sparse_args = (ocp_qp_partial_condensing_solver_opts *) args_;
             ocp_qp_qpdunes_opts *args = (ocp_qp_qpdunes_opts *) sparse_args->qp_solver_opts;
-            ocp_qp_partial_condensing_args *pcond_opts = (ocp_qp_partial_condensing_args *) sparse_args->pcond_opts;
+            ocp_qp_partial_condensing_opts *pcond_opts = (ocp_qp_partial_condensing_opts *) sparse_args->pcond_opts;
             if (!strcmp(token, "print_level")) {
                 args->options.printLevel = value;
             } else if (!strcmp(token, "warm_start")) {
@@ -166,7 +166,7 @@ bool set_option_int(void *args_, const char *option, const int value)
         else if (!strcmp(token, "qpoases")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_opts *cond_opts = (ocp_qp_full_condensing_solver_opts *) args_;
-            dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) cond_opts->qp_solver_opts;
+            dense_qp_qpoases_opts *args = (dense_qp_qpoases_opts *) cond_opts->qp_solver_opts;
             if (!strcmp(token, "max_iter"))
                 args->max_nwsr = value;
             else if (!strcmp(token, "warm_start"))
@@ -282,7 +282,7 @@ bool set_option_double(void *args_, const char *option, const double value)
         else if (!strcmp(token, "qpoases")) {
             token = strsep(&option_cpy, ".");
             ocp_qp_full_condensing_solver_opts *cond_opts = (ocp_qp_full_condensing_solver_opts *) args_;
-            dense_qp_qpoases_args *args = (dense_qp_qpoases_args *) cond_opts->qp_solver_opts;
+            dense_qp_qpoases_opts *args = (dense_qp_qpoases_opts *) cond_opts->qp_solver_opts;
             if (!strcmp(option, "max_cputime"))
                 args->max_cputime = value;
             else return false;

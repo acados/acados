@@ -98,6 +98,9 @@ dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
 
 
 
+/************************************************
+* in
+************************************************/
 
 int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims)
 {
@@ -137,6 +140,10 @@ dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_mem
 
 
 
+/************************************************
+* out
+************************************************/
+
 int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_out);
@@ -168,6 +175,10 @@ dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_m
 }
 
 
+
+/************************************************
+* res
+************************************************/
 
 int dense_qp_res_calculate_size(dense_qp_dims *dims)
 {

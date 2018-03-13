@@ -45,17 +45,17 @@
 
 
 
-ocp_qp_full_condensing_args *ocp_qp_full_condensing_create_arguments(ocp_qp_dims *dims)
+ocp_qp_full_condensing_opts *ocp_qp_full_condensing_create_arguments(ocp_qp_dims *dims)
 {
     int size = ocp_qp_full_condensing_opts_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_full_condensing_args *args = ocp_qp_full_condensing_opts_assign(dims, ptr);
+    ocp_qp_full_condensing_opts *args = ocp_qp_full_condensing_opts_assign(dims, ptr);
     return args;
 }
 
 
 
-ocp_qp_full_condensing_memory *ocp_qp_full_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args)
+ocp_qp_full_condensing_memory *ocp_qp_full_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *args)
 {
     int size = ocp_qp_full_condensing_memory_calculate_size(dims, args);
     void *ptr = acados_malloc(size, 1);
@@ -65,19 +65,19 @@ ocp_qp_full_condensing_memory *ocp_qp_full_condensing_create_memory(ocp_qp_dims 
 
 
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_create_arguments(ocp_qp_dims *dims)
+ocp_qp_partial_condensing_opts *ocp_qp_partial_condensing_create_arguments(ocp_qp_dims *dims)
 {
     int size = ocp_qp_partial_condensing_opts_calculate_size(dims);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_partial_condensing_args *args = ocp_qp_partial_condensing_opts_assign(dims, ptr);
-    ocp_qp_partial_condensing_opts_initialize_default(args);
+    ocp_qp_partial_condensing_opts *args = ocp_qp_partial_condensing_opts_assign(dims, ptr);
+    ocp_qp_partial_condensing_opts_initialize_default(dims, args);
     return args;
 }
 
 
 
 ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp_dims *dims,
-    ocp_qp_partial_condensing_args *args)
+    ocp_qp_partial_condensing_opts *args)
 {
     int size = ocp_qp_partial_condensing_memory_calculate_size(dims, args);
     void *ptr = acados_malloc(size, 1);

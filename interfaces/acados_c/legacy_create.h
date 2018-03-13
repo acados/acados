@@ -35,13 +35,13 @@ extern "C" {
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/sim_interface.h"
 
-ocp_qp_full_condensing_args *ocp_qp_full_condensing_create_arguments(ocp_qp_dims *dims);
+ocp_qp_full_condensing_opts *ocp_qp_full_condensing_create_arguments(ocp_qp_dims *dims);
 
-ocp_qp_full_condensing_memory *ocp_qp_full_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_full_condensing_args *args);
+ocp_qp_full_condensing_memory *ocp_qp_full_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *args);
 
-ocp_qp_partial_condensing_args *ocp_qp_partial_condensing_create_arguments(ocp_qp_dims *dims);
+ocp_qp_partial_condensing_opts *ocp_qp_partial_condensing_create_arguments(ocp_qp_dims *dims);
 
-ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_args *args);
+ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *args);
 
 ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 

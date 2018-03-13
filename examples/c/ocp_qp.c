@@ -75,7 +75,7 @@ int main() {
 
     // TODO(dimitris): only have N2 in one place!!
     // printf("N2 in config = %d\n", config->N2);
-    // printf("N2 in opts = %d\n", ((ocp_qp_partial_condensing_args *)(((ocp_qp_partial_condensing_solver_opts *)opts)->pcond_opts))->N2);
+    // printf("N2 in opts = %d\n", ((ocp_qp_partial_condensing_opts *)(((ocp_qp_partial_condensing_solver_opts *)opts)->pcond_opts))->N2);
 
     ocp_qp_solver *qp_solver = ocp_qp_create(config, &dims, opts);
 

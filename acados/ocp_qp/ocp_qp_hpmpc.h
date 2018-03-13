@@ -63,15 +63,15 @@ int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims);
 //
 void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_hpmpc_opts_initialize_default(void *config_, void *args_);
+void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *args_);
+int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *args_, void *raw_memory);
+void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *args_);
+int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args_, void *mem_, void *work_);
+int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_hpmpc_config_initialize_default(void *config_);
 
