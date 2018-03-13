@@ -81,7 +81,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, ocp_nlp_cost_dims *dims, void 
 
 	// blasfeo_dvec
 	// y_ref
-	assign_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(ny, &model->y_ref, &c_ptr);
 
 	// assert
     assert((char *) raw_memory + ocp_nlp_cost_ls_model_calculate_size(config_, dims) >= c_ptr);
@@ -174,9 +174,9 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, ocp_nlp_cost_dims *dims, void
 	// W_chol
 	assign_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
 	// res
-	assign_blasfeo_dvec_mem(ny, &memory->res, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(ny, &memory->res, &c_ptr);
 	// grad
-	assign_blasfeo_dvec_mem(nu+nx, &memory->grad, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(nu+nx, &memory->grad, &c_ptr);
 
     assert((char *) raw_memory + ocp_nlp_cost_ls_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
@@ -255,7 +255,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, ocp_nlp_cost_dims *dim
 	assign_blasfeo_dmat_mem(nu+nx, ny, &work->tmp_nv_ny, &c_ptr);
 
 	// tmp_ny
-	assign_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);
 
     assert((char *)work + ocp_nlp_cost_ls_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 

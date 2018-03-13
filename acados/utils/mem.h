@@ -88,7 +88,7 @@ void assign_double(int n, double **v, char **ptr);
 
 
 // allocate strvec and advance pointer
-void assign_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **ptr);
+void assign_and_advance_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **ptr);
 
 
 // allocate strmat and advance pointer

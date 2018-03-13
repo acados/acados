@@ -273,15 +273,15 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
         assign_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     }
 
-    assign_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
-    assign_blasfeo_dvec_mem(nx*ns, workspace->K, &c_ptr);
-    assign_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
-    assign_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
-    assign_blasfeo_dvec_mem(nx+nu, workspace->lambda, &c_ptr);
-    assign_blasfeo_dvec_mem(nx*ns, workspace->lambdaK, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->K, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx+nu, workspace->lambda, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->lambdaK, &c_ptr);
     for (int i=0;i<steps;i++){
-        assign_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
-        assign_blasfeo_dvec_mem(nx*ns, &workspace->K_traj[i], &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx, &workspace->xn_traj[i], &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(nx*ns, &workspace->K_traj[i], &c_ptr);
     }
 
     assign_double(nx, &workspace->rGt, &c_ptr);

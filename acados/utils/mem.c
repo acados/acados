@@ -168,7 +168,7 @@ void assign_double(int n, double **v, char **ptr)
 
 
 
-void assign_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **ptr)
+void assign_and_advance_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **ptr)
 {
     assert((size_t)*ptr % 8 == 0 && "strvec not 8-byte aligned!");
 
