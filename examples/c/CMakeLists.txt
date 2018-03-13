@@ -30,9 +30,13 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/ls_cost_nm2.c
     chain_model/ls_cost_nm3.c
     chain_model/ls_cost_nm4.c
+    chain_model/ls_cost_nm5.c
+    chain_model/ls_cost_nm6.c
     chain_model/ls_costN_nm2.c
     chain_model/ls_costN_nm3.c
     chain_model/ls_costN_nm4.c
+    chain_model/ls_costN_nm5.c
+    chain_model/ls_costN_nm6.c
     chain_model/pathcon_nm2.c
     chain_model/pathcon_nm3.c
     chain_model/pathcon_nm4.c
@@ -45,15 +49,23 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_jacFun_u_chain_nm2.c
     implicit_chain_model/impl_jacFun_u_chain_nm3.c
     implicit_chain_model/impl_jacFun_u_chain_nm4.c
+    implicit_chain_model/impl_jacFun_u_chain_nm5.c
+    implicit_chain_model/impl_jacFun_u_chain_nm6.c
     implicit_chain_model/impl_jacFun_x_chain_nm2.c
     implicit_chain_model/impl_jacFun_x_chain_nm3.c
     implicit_chain_model/impl_jacFun_x_chain_nm4.c
+    implicit_chain_model/impl_jacFun_x_chain_nm5.c
+    implicit_chain_model/impl_jacFun_x_chain_nm6.c
     implicit_chain_model/impl_jacFun_xdot_chain_nm2.c
     implicit_chain_model/impl_jacFun_xdot_chain_nm3.c
     implicit_chain_model/impl_jacFun_xdot_chain_nm4.c
+    implicit_chain_model/impl_jacFun_xdot_chain_nm5.c
+    implicit_chain_model/impl_jacFun_xdot_chain_nm6.c
     implicit_chain_model/impl_odeFun_chain_nm2.c
     implicit_chain_model/impl_odeFun_chain_nm3.c
     implicit_chain_model/impl_odeFun_chain_nm4.c
+    implicit_chain_model/impl_odeFun_chain_nm5.c
+    implicit_chain_model/impl_odeFun_chain_nm6.c
 )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)

@@ -35,14 +35,14 @@ typedef enum {
 } ocp_nlp_solver_t;
 
 typedef struct {
-    
+
     ocp_qp_solver_plan *ocp_qp_solver_plan;
     sim_solver_plan **sim_solver_plan;
 	ocp_nlp_solver_t nlp_solver;
 } ocp_nlp_solver_plan;
 
 typedef struct {
-    ocp_nlp_solver_config *fcn_ptrs;
+    ocp_nlp_solver_config *config;
     void *dims;
     void *opts;
     void *mem;
@@ -55,9 +55,9 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N);
 //
 ocp_nlp_dims *ocp_nlp_dims_create(int N);
 //
-ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_dims *dims);
+ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
-ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_dims *dims);
+ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *plan, ocp_nlp_dims *dims);
 //

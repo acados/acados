@@ -20,8 +20,11 @@
 #include "acados_c/ocp_nlp_interface.h"
 
 //external
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N)
 {
@@ -63,40 +66,106 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N)
 
 ocp_nlp_dims *ocp_nlp_dims_create(int N)
 {
-    return NULL;
+    int bytes = ocp_nlp_dims_calculate_size(N);
+
+	void *ptr = calloc(1, bytes);
+
+	ocp_nlp_dims *dims = ocp_nlp_dims_assign(N, ptr);
+
+    return dims;
 }
 
 
 
-ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_dims *dims)
+ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
-    return NULL;
+	int bytes = ocp_nlp_in_calculate_size(config, dims);
+
+	void *ptr = calloc(1, bytes);
+
+	ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
+
+    return nlp_in;
 }
 
 
 
-ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_dims *dims)
+ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
-    return NULL;
+	int bytes = ocp_nlp_out_calculate_size(config, dims);
+
+	void *ptr = calloc(1, bytes);
+	
+    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
+
+    return nlp_out;
 }
 
 
 
-void *ocp_nlp_opts_create(ocp_nlp_solver_config *plan, ocp_nlp_dims *dims)
+void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
-    return NULL;
+    int bytes = config->opts_calculate_size(config, dims);
+
+	void *ptr = calloc(1, bytes);
+
+	void *opts = config->opts_assign(config, dims, ptr);
+
+    config->opts_initialize_default(config, opts);
+
+    return opts;
 }
 
 
 
-ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *plan, ocp_nlp_dims *dims, void *opts_)
+int ocp_nlp_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
 {
-    return NULL;
+    int bytes = sizeof(ocp_nlp_solver);
+
+    bytes += config->memory_calculate_size(config, dims, opts_);
+    bytes += config->workspace_calculate_size(config, dims, opts_);
+
+    return bytes;
+}
+
+
+ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_solver *solver = (ocp_nlp_solver *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_solver);
+
+    solver->config = config;
+    solver->dims = dims;
+    solver->opts = opts_;
+
+    solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
+    c_ptr += config->memory_calculate_size(config, dims, opts_);
+
+    solver->work = (void *) c_ptr;
+    c_ptr += config->workspace_calculate_size(config, dims, opts_);
+
+    assert((char *) raw_memory + ocp_nlp_calculate_size(config, dims, opts_) == c_ptr);
+
+    return solver;
+}
+
+
+ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
+{
+    int bytes = ocp_nlp_calculate_size(config, dims, opts_);
+
+    void *ptr = calloc(1, bytes);
+
+    ocp_nlp_solver *solver = ocp_nlp_assign(config, dims, opts_, ptr);
+
+    return solver;
 }
 
 
 
-int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out)
+int ocp_nlp_solve(ocp_nlp_solver *solver, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out)
 {
-    return 0;
+    return solver->config->evaluate(solver->config, nlp_in, nlp_out, solver->opts, solver->mem, solver->work);
 }

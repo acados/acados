@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "acados/ocp_nlp/ocp_nlp_common.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
