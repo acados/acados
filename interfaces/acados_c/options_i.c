@@ -86,8 +86,6 @@ bool set_option_int(void *args_, const char *option, const int value)
                 args->max_iter = value;
             else if (!strcmp(token, "warm_start"))
                 args->warm_start = value;
-            else if (!strcmp(token, "out_iter"))
-                args->out_iter = value;
             // NOTE(dimitris): HPMPC partial condesing has a bug, using hpipm partial condensing instead
             else if (!strcmp(token, "N2"))
                 pcond_opts->N2 = value;
