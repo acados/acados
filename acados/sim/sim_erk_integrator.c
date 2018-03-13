@@ -76,9 +76,6 @@ void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
 
 int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 {
-
-	sim_solver_config *config = config_;
-
 	int ns_max = NS_MAX;
 
     int size = sizeof(sim_rk_opts);
@@ -97,8 +94,6 @@ int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 
 void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
-
 	int ns_max = NS_MAX;
 
     char *c_ptr = (char *) raw_memory;
@@ -112,7 +107,7 @@ void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
     assign_double(ns_max, &opts->b_vec, &c_ptr);
     assign_double(ns_max, &opts->c_vec, &c_ptr);
 
-    assert((char*)raw_memory + sim_erk_opts_calculate_size(config, dims) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
 
     opts->newton_iter = 0;
     opts->scheme = NULL;
@@ -125,7 +120,6 @@ void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
 	opts->ns = 4; // ERK 4
@@ -151,8 +145,6 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 {
-
-	sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -189,7 +181,6 @@ void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 
 int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -234,7 +225,6 @@ int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
 static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -278,7 +268,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_double(ns*(nx+nu), &workspace->adj_traj, &c_ptr);
     }
 
-    assert((char*)raw_memory + sim_erk_workspace_calculate_size(config, dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }

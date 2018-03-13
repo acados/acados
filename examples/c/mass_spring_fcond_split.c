@@ -90,7 +90,7 @@ int main()
     dense_qp_out *qpd_out = dense_qp_out_create(NULL, &ddims);
 
     // TODO(dimitris): rename
-    ocp_qp_full_condensing_args *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
+    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
     ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
 
     /************************************************

@@ -112,7 +112,7 @@ void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims)
 
     void *opts = config->opts_assign(config, dims, ptr);
 
-    config->opts_initialize_default(config, opts);
+    config->opts_initialize_default(config, dims, opts);
 
     return opts;
 }

@@ -48,9 +48,6 @@ void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 {
-
-	sim_solver_config *config = config_;
-
 	int ns_max = NS_MAX;
 
     int size = 0;
@@ -76,8 +73,6 @@ int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 
 void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
-
 	int ns_max = NS_MAX;
 
     char *c_ptr = (char *) raw_memory;
@@ -98,7 +93,7 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 	opts->work = c_ptr;
 	c_ptr += work_size;
 
-    assert((char*)raw_memory + sim_irk_opts_calculate_size(config, dims) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *)opts;
 }
@@ -107,7 +102,6 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
 	opts->ns = 3; // GL 3
@@ -138,7 +132,6 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -172,7 +165,6 @@ void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 
 int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -221,8 +213,6 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
 static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
-
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -304,7 +294,7 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
-    assert((char*)raw_memory + sim_irk_workspace_calculate_size(config, dims, opts_) >= c_ptr);
+    assert((char*)raw_memory + sim_irk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
 }

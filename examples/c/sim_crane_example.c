@@ -192,22 +192,18 @@ int main()
 				printf("\n\nsim solver: ERK\n");
 				plan.sim_solver = ERK;
 				config = sim_config_create(plan);
-				// TODO(dimitris): move back to opts and then only create config outside switch once
-				config->ns = 4;
 				break;
 
 			case 1:
 				printf("\n\nsim solver: IRK\n");
 				plan.sim_solver = IRK;
 				config = sim_config_create(plan);
-				config->ns = 2;
 				break;
 
 			case 2:
 				printf("\n\nsim solver: Lifted_IRK\n");
 				plan.sim_solver = LIFTED_IRK;
 				config = sim_config_create(plan);
-				config->ns = 2;
 				break;
 
 			default :

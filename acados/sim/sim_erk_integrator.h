@@ -50,6 +50,7 @@ typedef struct
 typedef struct
 {
 	// no memory
+	void *dummy;
 } sim_erk_memory;
 
 

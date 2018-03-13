@@ -66,8 +66,6 @@ void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory
 int sim_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims)
 {
 
-	sim_solver_config *config = config_;
-
 	int ns_max = 15;
 
     int size = 0;
@@ -107,8 +105,6 @@ int sim_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims)
 // TODO return pointer to sim_rk_opts instead
 void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
-
 	int ns_max = 15;
 
     char *c_ptr = (char *) raw_memory;
@@ -143,7 +139,7 @@ void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory
 	opts->work = c_ptr;
 	c_ptr += work_size;
 
-    assert((char*)raw_memory + sim_lifted_irk_opts_calculate_size(config, dims) >= c_ptr);
+    assert((char*)raw_memory + sim_lifted_irk_opts_calculate_size(config_, dims) >= c_ptr);
 
     return (void *)opts;
 }
@@ -152,7 +148,6 @@ void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory
 
 void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
 	opts->ns = 3; // GL 3
@@ -193,8 +188,6 @@ void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void 
 
 void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 {
-
-	sim_solver_config *config = config_;
     sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -225,7 +218,6 @@ void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opt
 
 int sim_lifted_irk_memory_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -305,7 +297,6 @@ int sim_lifted_irk_memory_calculate_size(void *config_, sim_dims *dims, void *op
 
 void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, void *raw_memory)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -403,7 +394,7 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
     }
 #endif  // !TRIPLE_LOOP
 
-    assert((char*)raw_memory + sim_lifted_irk_memory_calculate_size(config, dims, opts) >= c_ptr);
+    assert((char*)raw_memory + sim_lifted_irk_memory_calculate_size(config_, dims, opts) >= c_ptr);
 
     // initialize
     for (int i = 0; i < num_steps * ns * nx; ++i)
@@ -431,7 +422,6 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
 
 int sim_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -496,7 +486,6 @@ int sim_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void 
 
 static void sim_lifted_irk_workspace_cast(void *config_, sim_lifted_irk_workspace *work, const sim_in *in, void *opts_)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
@@ -852,7 +841,6 @@ void destruct_subsystems(double *mat, double **mat2, const int stages,
 
 static void form_linear_system_matrix(void *config_, int istep, const sim_in *in, void *opts_, sim_lifted_irk_memory *mem, sim_lifted_irk_workspace *work, double *sys_mat, double **sys_mat2, double timing_ad)
 {
-	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
     int ns = opts->ns;
