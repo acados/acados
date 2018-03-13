@@ -41,6 +41,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N)
         for (int i = 0; i <= N; ++i)
         {
             ocp_nlp_cost_ls_config_initialize_default(config->cost[i]);
+			// NOTE(giaf) it should be something like: (we may need to add the config_initialize_default in some modules)
+            // plan->cost[i]->config_initialize_default(config->cost[i]);
         }
 
         // Dynamics
@@ -52,7 +54,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan *plan, int N)
 
         // Constraints
         for (int i = 0; i <= N; ++i)
-		    ocp_nlp_constraints_config_initialize_default(config->constraints[i]);
+		    ocp_nlp_constraints_linear_config_initialize_default(config->constraints[i]);
     }
     else
     {

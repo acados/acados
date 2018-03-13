@@ -32,6 +32,8 @@
 // acados
 #include "acados/utils/mem.h"
 
+
+
 /* model */
 
 int ocp_nlp_cost_ls_model_calculate_size(void *config_, ocp_nlp_cost_dims *dims)
