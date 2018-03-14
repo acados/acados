@@ -962,7 +962,7 @@ int main() {
 
     /* box constraints */
 
-	ocp_nlp_constraints **constraints = (ocp_nlp_constraints **) nlp_in->constraints;
+	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
 	// idxb0
     int idxb0[nb[0]];

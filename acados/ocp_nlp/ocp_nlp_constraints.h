@@ -102,7 +102,7 @@ typedef struct
 	struct blasfeo_dvec d;
 	struct blasfeo_dmat DCt;
 	external_function_generic *h;
-} ocp_nlp_constraints;
+} ocp_nlp_constraints_model;
 
 //
 int ocp_nlp_constraints_calculate_size(void *config, ocp_nlp_constraints_dims *dims);

@@ -135,7 +135,7 @@ int main() {
     nlp_in->freezeSens = false;
 
 	// NLP constraints
-	ocp_nlp_constraints **constraints = (ocp_nlp_constraints **) nlp_in->constraints;
+	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
 	external_function_casadi nonlinear_constraint;
 	nonlinear_constraint.casadi_fun = &jac_constraint;
