@@ -103,9 +103,9 @@ void *sim_erk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
-    assign_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_double(ns_max, &opts->c_vec, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     assert((char*)raw_memory + sim_erk_opts_calculate_size(config_, dims) >= c_ptr);
 
@@ -244,28 +244,28 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
 
     align_char_to(8, &c_ptr);
 
-    assign_double(nX + nu, &workspace->rhs_forw_in, &c_ptr);
+    assign_and_advance_double(nX + nu, &workspace->rhs_forw_in, &c_ptr);
 
     if(opts->sens_adj)
     {
-        assign_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
-        assign_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
+        assign_and_advance_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
+        assign_and_advance_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
     } else
     {
-        assign_double(ns*nX, &workspace->K_traj, &c_ptr);
-        assign_double(nX, &workspace->out_forw_traj, &c_ptr);
+        assign_and_advance_double(ns*nX, &workspace->K_traj, &c_ptr);
+        assign_and_advance_double(nX, &workspace->out_forw_traj, &c_ptr);
     }
 
     if (opts->sens_hess && opts->sens_adj)
     {
-        assign_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
-        assign_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
-        assign_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
+        assign_and_advance_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
+        assign_and_advance_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
+        assign_and_advance_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
     } else if (opts->sens_adj)
     {
-        assign_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
-        assign_double(nx+nu, &workspace->out_adj_tmp, &c_ptr);
-        assign_double(ns*(nx+nu), &workspace->adj_traj, &c_ptr);
+        assign_and_advance_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
+        assign_and_advance_double(nx+nu, &workspace->out_adj_tmp, &c_ptr);
+        assign_and_advance_double(ns*(nx+nu), &workspace->adj_traj, &c_ptr);
     }
 
     assert((char*)raw_memory + sim_erk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);

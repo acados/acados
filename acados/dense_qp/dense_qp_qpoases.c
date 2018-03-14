@@ -152,20 +152,20 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    assign_double(nvd*nvd, &mem->H, &c_ptr);
-    assign_double(nvd*nvd, &mem->R, &c_ptr);
-    assign_double(nvd*ned, &mem->A, &c_ptr);
-    assign_double(nvd*ngd, &mem->C, &c_ptr);
-    assign_double(nvd, &mem->g, &c_ptr);
-    assign_double(ned, &mem->b, &c_ptr);
-    assign_double(nbd, &mem->d_lb0, &c_ptr);
-    assign_double(nbd, &mem->d_ub0, &c_ptr);
-    assign_double(nvd, &mem->d_lb, &c_ptr);
-    assign_double(nvd, &mem->d_ub, &c_ptr);
-    assign_double(ngd, &mem->d_lg, &c_ptr);
-    assign_double(ngd, &mem->d_ug, &c_ptr);
-    assign_double(nvd, &mem->prim_sol, &c_ptr);
-    assign_double(nvd+ngd, &mem->dual_sol, &c_ptr);
+    assign_and_advance_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_and_advance_double(nvd*nvd, &mem->R, &c_ptr);
+    assign_and_advance_double(nvd*ned, &mem->A, &c_ptr);
+    assign_and_advance_double(nvd*ngd, &mem->C, &c_ptr);
+    assign_and_advance_double(nvd, &mem->g, &c_ptr);
+    assign_and_advance_double(ned, &mem->b, &c_ptr);
+    assign_and_advance_double(nbd, &mem->d_lb0, &c_ptr);
+    assign_and_advance_double(nbd, &mem->d_ub0, &c_ptr);
+    assign_and_advance_double(nvd, &mem->d_lb, &c_ptr);
+    assign_and_advance_double(nvd, &mem->d_ub, &c_ptr);
+    assign_and_advance_double(ngd, &mem->d_lg, &c_ptr);
+    assign_and_advance_double(ngd, &mem->d_ug, &c_ptr);
+    assign_and_advance_double(nvd, &mem->prim_sol, &c_ptr);
+    assign_and_advance_double(nvd+ngd, &mem->dual_sol, &c_ptr);
 
     // TODO(dimitris): update assign syntax in qpOASES
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
@@ -178,10 +178,10 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
         c_ptr += QProblemB_calculateMemorySize(nvd);
     }
 
-    assign_int(nbd, &mem->idxb, &c_ptr);
+    assign_and_advance_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qpoases_memory_calculate_size(config_, dims, opts_) >= c_ptr);
-	
+
 	// assign default values to fields stored in the memory
 	mem->first_it = 1; // only used if hotstart (only constant data matrices) is enabled
 

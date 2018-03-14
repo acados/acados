@@ -439,13 +439,13 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 
 	// blasfeo_dvec_struct
 	// ux
-	assign_blasfeo_dvec_structs(N+1, &out->ux, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &out->ux, &c_ptr);
 	// pi
-	assign_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N, &out->pi, &c_ptr);
 	// lam
-	assign_blasfeo_dvec_structs(N+1, &out->lam, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &out->lam, &c_ptr);
 	// t
-	assign_blasfeo_dvec_structs(N+1, &out->t, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &out->t, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
@@ -555,15 +555,15 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 	align_char_to(8, &c_ptr);
 
 	// cost_grad
-	assign_blasfeo_dvec_structs(N+1, &mem->cost_grad, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &mem->cost_grad, &c_ptr);
 	// ineq_fun
-	assign_blasfeo_dvec_structs(N+1, &mem->ineq_fun, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &mem->ineq_fun, &c_ptr);
 	// ineq_adj
-	assign_blasfeo_dvec_structs(N+1, &mem->ineq_adj, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &mem->ineq_adj, &c_ptr);
 	// dyn_fun
-	assign_blasfeo_dvec_structs(N, &mem->dyn_fun, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N, &mem->dyn_fun, &c_ptr);
 	// dyn_adj
-	assign_blasfeo_dvec_structs(N+1, &mem->dyn_adj, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &mem->dyn_adj, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
@@ -679,13 +679,13 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 	align_char_to(8, &c_ptr);
 
 	// res_g
-	assign_blasfeo_dvec_structs(N+1, &res->res_g, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &res->res_g, &c_ptr);
 	// res_b
-	assign_blasfeo_dvec_structs(N, &res->res_b, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N, &res->res_b, &c_ptr);
 	// res_d
-	assign_blasfeo_dvec_structs(N+1, &res->res_d, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &res->res_d, &c_ptr);
 	// res_m
-	assign_blasfeo_dvec_structs(N+1, &res->res_m, &c_ptr);
+	assign_and_advance_blasfeo_dvec_structs(N+1, &res->res_m, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);

@@ -368,23 +368,23 @@ char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, vo
     c_ptr += sizeof(colmaj_ocp_qp_res);
 
     // assign double pointers
-    assign_double_ptrs(N+1, &(*qp_res)->res_r,    &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_q,    &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_ls,   &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_us,   &c_ptr);
-    assign_double_ptrs(N,   &(*qp_res)->res_b,    &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_d_lb, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_d_ub, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_d_lg, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_d_ug, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_d_ls, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_d_us, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_m_lb, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_m_ub, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_m_lg, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_m_ug, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_m_ls, &c_ptr);
-    assign_double_ptrs(N+1, &(*qp_res)->res_m_us, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_r,    &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_q,    &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_ls,   &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_us,   &c_ptr);
+    assign_and_advance_double_ptrs(N,   &(*qp_res)->res_b,    &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_d_lb, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_d_ub, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_d_lg, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_d_ug, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_d_ls, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_d_us, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_m_lb, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_m_ub, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_m_lg, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_m_ug, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_m_ls, &c_ptr);
+    assign_and_advance_double_ptrs(N+1, &(*qp_res)->res_m_us, &c_ptr);
 
     // align data
     align_char_to(8, &c_ptr);
@@ -392,29 +392,29 @@ char *assign_colmaj_ocp_qp_res(ocp_qp_dims *dims, colmaj_ocp_qp_res **qp_res, vo
     // assign pointers to QP solution
     for (int k = 0; k < N+1; k++) {
 
-        assign_double(nu[k], &(*qp_res)->res_r[k], &c_ptr);
-        assign_double(nx[k], &(*qp_res)->res_q[k], &c_ptr);
-        assign_double(ns[k], &(*qp_res)->res_ls[k], &c_ptr);
-        assign_double(ns[k], &(*qp_res)->res_us[k], &c_ptr);
+        assign_and_advance_double(nu[k], &(*qp_res)->res_r[k], &c_ptr);
+        assign_and_advance_double(nx[k], &(*qp_res)->res_q[k], &c_ptr);
+        assign_and_advance_double(ns[k], &(*qp_res)->res_ls[k], &c_ptr);
+        assign_and_advance_double(ns[k], &(*qp_res)->res_us[k], &c_ptr);
 
         if (k < N)
         {
-            assign_double(nx[k+1], &(*qp_res)->res_b[k], &c_ptr);
+            assign_and_advance_double(nx[k+1], &(*qp_res)->res_b[k], &c_ptr);
         }
 
-        assign_double(nb[k], &(*qp_res)->res_d_lb[k], &c_ptr);
-        assign_double(nb[k], &(*qp_res)->res_d_ub[k], &c_ptr);
-        assign_double(ng[k], &(*qp_res)->res_d_lg[k], &c_ptr);
-        assign_double(ng[k], &(*qp_res)->res_d_ug[k], &c_ptr);
-        assign_double(ns[k], &(*qp_res)->res_d_ls[k], &c_ptr);
-        assign_double(ns[k], &(*qp_res)->res_d_us[k], &c_ptr);
+        assign_and_advance_double(nb[k], &(*qp_res)->res_d_lb[k], &c_ptr);
+        assign_and_advance_double(nb[k], &(*qp_res)->res_d_ub[k], &c_ptr);
+        assign_and_advance_double(ng[k], &(*qp_res)->res_d_lg[k], &c_ptr);
+        assign_and_advance_double(ng[k], &(*qp_res)->res_d_ug[k], &c_ptr);
+        assign_and_advance_double(ns[k], &(*qp_res)->res_d_ls[k], &c_ptr);
+        assign_and_advance_double(ns[k], &(*qp_res)->res_d_us[k], &c_ptr);
 
-        assign_double(nb[k], &(*qp_res)->res_m_lb[k], &c_ptr);
-        assign_double(nb[k], &(*qp_res)->res_m_ub[k], &c_ptr);
-        assign_double(ng[k], &(*qp_res)->res_m_lg[k], &c_ptr);
-        assign_double(ng[k], &(*qp_res)->res_m_ug[k], &c_ptr);
-        assign_double(ns[k], &(*qp_res)->res_m_ls[k], &c_ptr);
-        assign_double(ns[k], &(*qp_res)->res_m_us[k], &c_ptr);
+        assign_and_advance_double(nb[k], &(*qp_res)->res_m_lb[k], &c_ptr);
+        assign_and_advance_double(nb[k], &(*qp_res)->res_m_ub[k], &c_ptr);
+        assign_and_advance_double(ng[k], &(*qp_res)->res_m_lg[k], &c_ptr);
+        assign_and_advance_double(ng[k], &(*qp_res)->res_m_ug[k], &c_ptr);
+        assign_and_advance_double(ns[k], &(*qp_res)->res_m_ls[k], &c_ptr);
+        assign_and_advance_double(ns[k], &(*qp_res)->res_m_us[k], &c_ptr);
     }
 
     return c_ptr;
