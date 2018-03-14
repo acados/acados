@@ -586,6 +586,7 @@ int main() {
     int nb[NN + 1] = {0};
     int ng[NN + 1] = {0};
     int nh[NN + 1] = {0};
+    int nq[NN + 1] = {0};
     int ns[NN+1] = {0};
 	int ny[NN+1] = {0};
 
@@ -693,7 +694,7 @@ int main() {
 	int dims_size = ocp_nlp_dims_calculate_size(NN);
 	void *dims_mem = malloc(dims_size);
 	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, nh, ns, dims);
+	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
 
     /************************************************
     * dynamics

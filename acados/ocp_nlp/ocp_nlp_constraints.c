@@ -301,6 +301,15 @@ void ocp_nlp_constraints_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memo
 
 
 
+void ocp_nlp_constraints_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
+{
+	ocp_nlp_constraints_memory *memory = memory_;
+
+	memory->RSQrq = RSQrq;
+}
+
+
+
 void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_)
 {
 	ocp_nlp_constraints_memory *memory = memory_;
@@ -320,6 +329,7 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config_, ocp_nlp_constrai
 	int nb = dims->nb;
 	int ng = dims->ng;
 	int nh = dims->nh;
+	int nq = dims->nq;
 
 	int size = 0;
 
@@ -327,9 +337,13 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config_, ocp_nlp_constrai
 
 	size += 1*blasfeo_memsize_dvec(nb+ng+nh);  // tmp_nbg
 	size += (nx+nu)*sizeof(double);  // nl_constraint_input
-	size += nh*sizeof(double);  // nl_constraint_output
+	size += nh*(1+nx+nu)*sizeof(double);  // nl_constraint_output
+	if (nq > 0) {
+		size += nq*(nx+nu)*sizeof(double);
+		size += 1*blasfeo_memsize_dmat(nx+nu, nq);
+	}
 
-	size += 1*64;  // blasfeo_mem align
+	size += 2*64;  // blasfeo_mem align
 
 	return size;
 
@@ -347,6 +361,7 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, ocp_nlp_constraint
 	int nb = dims->nb;
 	int ng = dims->ng;
 	int nh = dims->nh;
+	int nq = dims->nq;
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_constraints_workspace);
@@ -359,7 +374,12 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, ocp_nlp_constraint
 	work->nl_constraint_input = (double *) c_ptr;
 	c_ptr += (nx+nu)*sizeof(double);
 	work->nl_constraint_output = (double *) c_ptr;
-	c_ptr += nh*sizeof(double);
+	c_ptr += nh*(1+nx+nu)*sizeof(double);
+	if (nq > 0) {
+		c_ptr += nq*(nx+nu)*sizeof(double);
+		align_char_to(64, &c_ptr);
+		assign_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);	
+	}
 
     assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
@@ -414,11 +434,11 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 	int nb = dims->nb;
 	int ng = dims->ng;
 	int nh = dims->nh;
+	int nq = dims->nq;
 
 	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_nbg, 0);
 	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_nbg, nb, &work->tmp_nbg, nb);
 
-//	if (model->h)
 	if (nh>0)
 	{
 		blasfeo_unpack_dvec(nx, memory->ux, nu, work->nl_constraint_input);
@@ -427,9 +447,21 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 		model->h->evaluate(model->h, work->nl_constraint_input, work->nl_constraint_output);
 
 		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbg, nb+ng);
-//		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, ng+nu, 0); // NOTE(giaf) I think wrong
 		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, ng, nu);
 		blasfeo_pack_tran_dmat(nh, nu, work->nl_constraint_output+nh+nx*nh, nh, memory->DCt, ng, 0);
+	}
+
+	if (nq>0)
+	{
+		double lam = blasfeo_dvecex1(memory->lam, 1) - blasfeo_dvecex1(memory->lam, 0);
+		blasfeo_pack_tran_dmat(nq, nx+nu, work->nl_constraint_output+nh*(1+nx+nu), nq, &work->jacobian_quadratic, 0, 0);
+		blasfeo_dsyrk_ln(nx+nu, nq, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
+			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+
+		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 0, 0) + 1e-10, memory->RSQrq, 0, 0);
+		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 1, 1) + 1e-10, memory->RSQrq, 1, 1);
+		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 2, 2) + 1e-10, memory->RSQrq, 2, 2);
+		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 3, 3) + 1e-10, memory->RSQrq, 3, 3);
 	}
 
 	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_nbg, 0, &model->d, 0, &memory->fun, 0);
@@ -464,6 +496,7 @@ void ocp_nlp_constraints_config_initialize_default(void *config_)
 	config->memory_set_ux_ptr = &ocp_nlp_constraints_memory_set_ux_ptr;
 	config->memory_set_lam_ptr = &ocp_nlp_constraints_memory_set_lam_ptr;
 	config->memory_set_DCt_ptr = &ocp_nlp_constraints_memory_set_DCt_ptr;
+	config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_memory_set_RSQrq_ptr;
 	config->memory_set_idxb_ptr = &ocp_nlp_constraints_memory_set_idxb_ptr;
 	config->workspace_calculate_size = &ocp_nlp_constraints_workspace_calculate_size;
 	config->initialize_qp = &ocp_nlp_constraints_initialize_qp;

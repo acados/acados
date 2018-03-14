@@ -765,6 +765,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 		config->constraints[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->constraints[ii]);
 		config->constraints[ii]->memory_set_lam_ptr(nlp_out->lam+ii, mem->constraints[ii]);
 		config->constraints[ii]->memory_set_DCt_ptr(work->qp_in->DCt+ii, mem->constraints[ii]);
+		config->constraints[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->constraints[ii]);
 		config->constraints[ii]->memory_set_idxb_ptr(work->qp_in->idxb[ii], mem->constraints[ii]);
 	}
 
@@ -837,7 +838,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
         if (qp_status != 0)
         {
-			// print_ocp_qp_in(work->qp_in);
+			print_ocp_qp_in(work->qp_in);
 		
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
             return -1;

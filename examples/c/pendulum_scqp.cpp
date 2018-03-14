@@ -42,11 +42,12 @@ int main() {
 	std::vector<int> idxb_0 {1, 2, 3, 4}, idxb_N {0, 1, 2, 3};
 	std::vector<double> x0 {0, 0, M_PI, 0};
 
-	double radius2 = 100, neg_inf = -10;
+	double radius2 = 1, neg_inf = -1000000;
 	int max_num_sqp_iterations = 100;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
-		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
+		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), nq(N+1, 0),
+		ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
 
 	nbx.at(0) = num_states;
 	nb.at(0) = num_states;
@@ -55,6 +56,7 @@ int main() {
 	nv.at(N) = 4;
 	ny.at(N) = 4;
 	nh.at(N) = 1;
+	nq.at(N) = 2;
 
 	// Make plan
 
@@ -69,7 +71,7 @@ int main() {
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(N);
-	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), ns.data(), dims);
+	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -159,9 +161,6 @@ int main() {
 	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
 	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
 
-	// general constraints
-	// TODO(roversch): figure out how to deal with nonlinear inequalities
-
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
 	ocp_nlp_sqp_opts *sqp_opts = (ocp_nlp_sqp_opts *) nlp_opts;
@@ -174,7 +173,7 @@ int main() {
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)
-		blasfeo_dvecse(nu[i]+nx[i], 1.0, nlp_out->ux+i, 0);
+		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 

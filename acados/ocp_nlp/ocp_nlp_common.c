@@ -214,7 +214,7 @@ ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory)
 
 
 
-void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *ns, ocp_nlp_dims *dims)
+void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *nq, int *ns, ocp_nlp_dims *dims)
 {
 	int ii;
 
@@ -249,6 +249,7 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int 
 		dims->constraints[ii]->nb = nbx[ii]+nbu[ii];
 		dims->constraints[ii]->ng = ng[ii];
 		dims->constraints[ii]->nh = nh[ii];
+		dims->constraints[ii]->nq = nq[ii];
 		dims->constraints[ii]->ns = ns[ii];
 	}
 
