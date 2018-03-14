@@ -379,7 +379,7 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 {
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
     int size = sizeof(ocp_nlp_out);
 
@@ -393,16 +393,18 @@ int ocp_nlp_out_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 		nu = dims->constraints[ii]->nu;
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
+		nh = dims->constraints[ii]->nh;
 		size += 1*blasfeo_memsize_dvec(nu+nx); // ux
 		size += 1*blasfeo_memsize_dvec(nx1); // pi
-		size += 2*blasfeo_memsize_dvec(2*nb+2*ng); // lam t
+		size += 2*blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // lam t
     }
 	nx = dims->constraints[N]->nx;
 	nu = dims->constraints[N]->nu;
 	nb = dims->constraints[N]->nb;
 	ng = dims->constraints[N]->ng;
+	nh = dims->constraints[N]->nh;
 	size += 1*blasfeo_memsize_dvec(nu+nx); // ux
-	size += 2*blasfeo_memsize_dvec(2*nb+2*ng); // lam t
+	size += 2*blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // lam t
 
 	size += 8; // initial align
 	size += 8; // blasfeo_struct align
@@ -420,7 +422,7 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 
 	// extract sizes
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -467,7 +469,8 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng, out->lam+ii, &c_ptr);
+		nh = dims->constraints[ii]->nh;
+		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh, out->lam+ii, &c_ptr);
 	}
 	// t
     for (int ii = 0; ii <= N; ++ii)

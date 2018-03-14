@@ -40,10 +40,8 @@ static const int CASADI_PREFIX(s0)[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 #define s0 CASADI_PREFIX(s0)
 static const int CASADI_PREFIX(s1)[5] = {1, 1, 0, 1, 0};
 #define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[6] = {2, 1, 0, 2, 0, 1};
+static const int CASADI_PREFIX(s2)[11] = {1, 4, 0, 1, 2, 3, 4, 0, 0, 0, 0};
 #define s2 CASADI_PREFIX(s2)
-static const int CASADI_PREFIX(s3)[15] = {2, 4, 0, 2, 4, 6, 8, 0, 1, 0, 1, 0, 1, 0, 1};
-#define s3 CASADI_PREFIX(s3)
 /* jac_constraint */
 int jac_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   real_t a0=arg[0] ? arg[0][2] : 0;
@@ -53,27 +51,28 @@ int jac_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   real_t a3=arg[0] ? arg[0][0] : 0;
   a3=(a3-a1);
   a3=(a3-a2);
-  if (res[0]!=0) res[0][0]=a3;
-  a3=cos(a0);
-  a3=(a2*a3);
-  a3=(a3-a2);
-  if (res[0]!=0) res[0][1]=a3;
-  a3=1.;
+  a1=sq(a3);
+  real_t a4=cos(a0);
+  a4=(a2*a4);
+  a4=(a4-a2);
+  real_t a5=sq(a4);
+  a1=(a1+a5);
+  if (res[0]!=0) res[0][0]=a1;
+  a3=(a3+a3);
   if (res[1]!=0) res[1][0]=a3;
-  a3=0.;
-  if (res[1]!=0) res[1][1]=a3;
-  if (res[1]!=0) res[1][2]=a3;
-  if (res[1]!=0) res[1][3]=a3;
-  a1=cos(a0);
-  a1=(a2*a1);
-  a1=(-a1);
-  if (res[1]!=0) res[1][4]=a1;
+  a1=0.;
+  if (res[1]!=0) res[1][1]=a1;
+  a5=cos(a0);
+  a5=(a2*a5);
+  a3=(a3*a5);
+  a4=(a4+a4);
   a0=sin(a0);
   a2=(a2*a0);
-  a2=(-a2);
-  if (res[1]!=0) res[1][5]=a2;
-  if (res[1]!=0) res[1][6]=a3;
-  if (res[1]!=0) res[1][7]=a3;
+  a4=(a4*a2);
+  a3=(a3+a4);
+  a3=(-a3);
+  if (res[1]!=0) res[1][2]=a3;
+  if (res[1]!=0) res[1][3]=a1;
   return 0;
 }
 
@@ -113,8 +112,8 @@ const int* jac_constraint_sparsity_in(int i) {
 
 const int* jac_constraint_sparsity_out(int i) {
   switch (i) {
-    case 0: return s2;
-    case 1: return s3;
+    case 0: return s1;
+    case 1: return s2;
     default: return 0;
   }
 }
@@ -123,7 +122,7 @@ int jac_constraint_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 4;
+  if (sz_w) *sz_w = 6;
   return 0;
 }
 

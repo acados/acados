@@ -347,7 +347,7 @@ void ocp_nlp_out_print(ocp_nlp_out *nlp_out)
 	ocp_nlp_dims *dims = nlp_out->dims;
 
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
 #if 1
 
@@ -372,7 +372,8 @@ void ocp_nlp_out_print(ocp_nlp_out *nlp_out)
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-        blasfeo_print_tran_dvec(2*nb+2*ng, &nlp_out->lam[ii], 0);
+		nh = dims->constraints[ii]->nh;
+        blasfeo_print_tran_dvec(2*nb+2*ng+2*nh, &nlp_out->lam[ii], 0);
 	}
 
 //	printf("t =\n");

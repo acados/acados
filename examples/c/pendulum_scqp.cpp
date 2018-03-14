@@ -37,17 +37,13 @@
 
 int main() {
 
-	int num_states = 4, num_controls = 1, N = 50;
-	double Tf = 5.0, Q = 1e-4, R = 1e-4, QN = 1e-4;
+	int num_states = 4, num_controls = 1, N = 20;
+	double Tf = 1.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
 	std::vector<int> idxb_0 {1, 2, 3, 4}, idxb_N {0, 1, 2, 3};
-	std::vector<double> x0 {0, 0, M_PI, 0},
-		// xN_lo {-1, -1, -10, -10},
-		// xN_hi {+1, +1, +10, +10},		
-		// pN_lo {-1, -1},
-		// pN_hi {+1, +1},
-		xN {0, 0, 0, 0};
-	int max_num_sqp_iterations = 1;
+	std::vector<double> x0 {0, 0, M_PI, 0};
 
+	double radius2 = 100, neg_inf = -10;
+	int max_num_sqp_iterations = 100;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
 		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), ns(N+1, 0), nv(N+1, num_states+num_controls), ny(N+1, num_states+num_controls);
@@ -55,12 +51,10 @@ int main() {
 	nbx.at(0) = num_states;
 	nb.at(0) = num_states;
 
-	nbx.at(N) = num_states;
-	nb.at(N) = num_states;
 	nu.at(N) = 0;
 	nv.at(N) = 4;
 	ny.at(N) = 4;
-	nh.at(N) = 0;
+	nh.at(N) = 1;
 
 	// Make plan
 
@@ -161,11 +155,9 @@ int main() {
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
 
     constraints[N]->idxb = idxb_N.data();
-	blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, 0);
-	// blasfeo_pack_dvec(nh[N], pN_lo.data(), &constraints[N]->d, nb[N]+ng[N]);
-	blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, nb[N]+ng[N]+nh[N]);
-	// blasfeo_pack_dvec(nh[N], pN_hi.data(), &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
-	// constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
+	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
+	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
+	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
 
 	// general constraints
 	// TODO(roversch): figure out how to deal with nonlinear inequalities
@@ -182,7 +174,7 @@ int main() {
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)
-		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
+		blasfeo_dvecse(nu[i]+nx[i], 1.0, nlp_out->ux+i, 0);
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
