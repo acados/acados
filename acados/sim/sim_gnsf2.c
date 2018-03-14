@@ -96,45 +96,7 @@ void gnsf2_get_dims( gnsf2_dims *dims, casadi_function_t get_ints_fun)
     free(ints_out);
 }
 
-int gnsf2_in_calculate_size(gnsf2_dims *dims)
-{
-    int size = sizeof(gnsf2_in);
-
-    int nx = dims->nx;
-    int nu = dims->nu;
-
-    size += nx * sizeof(double);  // x
-    size += nu * sizeof(double);  // u
-    size += nx * (nx+nu) * sizeof(double);  // S_forw (max dimension)
-    size += (nx + nu) * sizeof(double);  // S_adj
-
-    make_int_multiple_of(8, &size);
-    return size;
-}
-
-gnsf2_in *gnsf2_in_assign(gnsf2_dims *dims, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-    // printf("address c_ptr : %p\n",c_ptr);
-    gnsf2_in *in = (gnsf2_in *) c_ptr;
-    c_ptr += sizeof(gnsf2_in);
-
-    int nx = dims->nx;
-    int nu = dims->nu;
-
-    align_char_to(8, &c_ptr);
-
-    assign_double(nx, &in->x, &c_ptr);
-    // printf("address in_x : %p\n",in->x);
-    assign_double(nu, &in->u, &c_ptr);
-    assign_double(nx * (nx+nu), &in->S_forw, &c_ptr);
-    assign_double(nx+nu, &in->S_adj, &c_ptr);
-    assert((char*)raw_memory + gnsf2_in_calculate_size(dims) == c_ptr);
-
-    return in;
-}
-
-int gnsf2_opts_calculate_size(gnsf2_dims *dims)
+int gnsf2_opts_calculate_size(void *config, sim_dims *dims)
 {
     int size = sizeof(gnsf2_opts);
     make_int_multiple_of(8, &size);
@@ -142,19 +104,21 @@ int gnsf2_opts_calculate_size(gnsf2_dims *dims)
 }
 
 
-gnsf2_opts *gnsf2_opts_assign(gnsf2_dims *dims, void *raw_memory)
+void *gnsf2_opts_assign(void *config, sim_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-    gnsf2_opts *opts = (gnsf2_opts *) c_ptr;
+    // gnsf2_opts *opts = (gnsf2_opts *) c_ptr;
     c_ptr += sizeof(gnsf2_opts);
 
     align_char_to(8, &c_ptr);
-    assert((char*)raw_memory + gnsf2_opts_calculate_size(dims) == c_ptr);
-    return opts;
+    assert((char*)raw_memory + gnsf2_opts_calculate_size(config, dims) == c_ptr);
+    return raw_memory;
 }
 
-int gnsf2_fixed_calculate_size(gnsf2_dims *dims, gnsf2_opts* opts)
+int sim_gnsf2_model_calculate_size(void *config, sim_dims *dim_in)
 {
+    gnsf2_dims *dims = (gnsf2_dims *) dim_in; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+
     int nu  = dims->nu;
     int nx1 = dims->nx1;
     int nx2 = dims->nx2;
@@ -170,15 +134,16 @@ int gnsf2_fixed_calculate_size(gnsf2_dims *dims, gnsf2_opts* opts)
     int nyy = n_in  * num_stages;
 
     int size = 8;
-    size += sizeof(gnsf2_fixed);
-
+    size += sizeof(gnsf2_model);
+    // model defining matrices
     size += num_stages * (num_stages + 2) * sizeof(double); // A_dt, b_dt, c_butcher;
-
-	// size += 9*sizeof(struct blasfeo_dmat); // 3 * KK*, 3* ZZ*, 3* LO_mat // not needed because KK*,... are part of gnsf_fixed
+    size += (nx1+nz) * ( nx1 + nu + n_out + (nx1+nz)) * sizeof(double); // A,B,C,E
+    size += n_in * (2*nx1+nz+nu); // L_x, L_xdot, L_z, L_u
+    size += nx2*nx2; // A_LO
 
     make_int_multiple_of(64, &size);
     size += 1 * 64;
-
+    // precomputed matrices
     size += blasfeo_memsize_dmat(nK1, nff); // KKf
     size += blasfeo_memsize_dmat(nK1, nx1); // KKx
     size += blasfeo_memsize_dmat(nK1, nu ); // KKu
@@ -194,15 +159,15 @@ int gnsf2_fixed_calculate_size(gnsf2_dims *dims, gnsf2_opts* opts)
     size += blasfeo_memsize_dmat(nx2, nx2); // ALO
     size += blasfeo_memsize_dmat(nK2, nK2); // M2inv
     size += blasfeo_memsize_dmat(nK2, nx2); // dK2_dx2
-    // printf("gnsf_fixed_size = %d \n", size);
+    // printf("gnsf_model_size = %d \n", size);
 
     return size;
 }
 
-gnsf2_fixed *gnsf2_fixed_assign(gnsf2_dims *dims, void *raw_memory, int memsize)
+void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
-
+    gnsf2_dims *dims = (gnsf2_dims *) dim_in; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
 	// extract sizes
     // int nx  = dims->nx;
     int nu  = dims->nu;
@@ -224,41 +189,55 @@ gnsf2_fixed *gnsf2_fixed_assign(gnsf2_dims *dims, void *raw_memory, int memsize)
     // printf("\n adress of cptr fixed %p\n",(void*)c_ptr);
 
 	// struct
-    gnsf2_fixed *fix = (gnsf2_fixed *) c_ptr;
-    c_ptr += sizeof(gnsf2_fixed);
+    gnsf2_model *model = (gnsf2_model *) c_ptr;
+    c_ptr += sizeof(gnsf2_model);
 
     // assign butcher
-    assign_double(num_stages * num_stages, &fix->A_dt, &c_ptr);
-    assign_double(num_stages, &fix->b_dt, &c_ptr);
-    assign_double(num_stages, &fix->c,    &c_ptr);
+    assign_double(num_stages * num_stages, &model->A_dt, &c_ptr);
+    assign_double(num_stages, &model->b_dt, &c_ptr);
+    assign_double(num_stages, &model->c,    &c_ptr);
+
+    // assign model matrices
+    assign_double((nx1+nz)*nx1     , &model->A, &c_ptr);
+    assign_double((nx1+nz)*nu      , &model->B, &c_ptr);
+    assign_double((nx1+nz)*n_out   , &model->C, &c_ptr);
+    assign_double((nx1+nz)*(nx1+nz), &model->E, &c_ptr);
+
+    assign_double(n_in*nx1, &model->L_x, &c_ptr);
+    assign_double(n_in*nx1, &model->L_xdot, &c_ptr);
+    assign_double(n_in*nz , &model->L_z, &c_ptr);
+    assign_double(n_in*nu , &model->L_u, &c_ptr);
+
+    assign_double(n_out*n_out,  &model->A_LO, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
     // blasfeo_dmat_mem
-    assign_blasfeo_dmat_mem(nK1, nff, &fix->KKf, &c_ptr);
-    // printf("\n adress of KKf %p\n",(void*)&fix->KKf);
-    assign_blasfeo_dmat_mem(nK1, nx1, &fix->KKx, &c_ptr);
-    assign_blasfeo_dmat_mem(nK1, nu,  &fix->KKu, &c_ptr);
+    assign_blasfeo_dmat_mem(nK1, nff, &model->KKf, &c_ptr);
+    // printf("\n adress of KKf %p\n",(void*)&model->KKf);
+    assign_blasfeo_dmat_mem(nK1, nx1, &model->KKx, &c_ptr);
+    assign_blasfeo_dmat_mem(nK1, nu,  &model->KKu, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nyy,  nff, &fix->YYf, &c_ptr);
-    assign_blasfeo_dmat_mem(nyy,  nx1, &fix->YYx, &c_ptr);
-    assign_blasfeo_dmat_mem(nyy,  nu,  &fix->YYu, &c_ptr);
+    assign_blasfeo_dmat_mem(nyy,  nff, &model->YYf, &c_ptr);
+    assign_blasfeo_dmat_mem(nyy,  nx1, &model->YYx, &c_ptr);
+    assign_blasfeo_dmat_mem(nyy,  nu,  &model->YYu, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nZ,  nff, &fix->ZZf, &c_ptr);
-    assign_blasfeo_dmat_mem(nZ,  nx1, &fix->ZZx, &c_ptr);
-    assign_blasfeo_dmat_mem(nZ,  nu,  &fix->ZZu, &c_ptr);
+    assign_blasfeo_dmat_mem(nZ,  nff, &model->ZZf, &c_ptr);
+    assign_blasfeo_dmat_mem(nZ,  nx1, &model->ZZx, &c_ptr);
+    assign_blasfeo_dmat_mem(nZ,  nu,  &model->ZZu, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx2, nx2, &fix->ALO, &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nK2, &fix->M2inv, &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nx2, &fix->dK2_dx2, &c_ptr);
+    assign_blasfeo_dmat_mem(nx2, nx2, &model->ALO, &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nK2, &model->M2inv, &c_ptr);
+    assign_blasfeo_dmat_mem(nK2, nx2, &model->dK2_dx2, &c_ptr);
 
 	// // assert
     // assert((char *) raw_memory + memsize == c_ptr); TODO recheck..
-	return fix;
+	return model;
 }
 
-void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_YY_ZZ_LO_fun)
+
+void gnsf2_import_precomputed(gnsf2_dims* dims, gnsf2_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun)
 {
     acados_timer atimer;
     acados_tic(&atimer);
@@ -294,58 +273,60 @@ void gnsf2_import(gnsf2_dims* dims, gnsf2_fixed *fix, casadi_function_t But_KK_Y
 
     // IMPORT BUTCHER
     for (int ii = 0; ii < num_stages*num_stages; ii++) {
-        fix->A_dt[ii] = read_mem[ii];
+        model->A_dt[ii] = read_mem[ii];
     }
     read_mem += num_stages*num_stages;
 
     for (int ii = 0; ii < num_stages; ii++) {
-        fix->b_dt[ii] = read_mem[ii];
+        model->b_dt[ii] = read_mem[ii];
     }
     read_mem += num_stages;
 
     for (int ii = 0; ii < num_stages; ii++) {
-        fix->c[ii] = read_mem[ii];
+        model->c[ii] = read_mem[ii];
     }
     read_mem += num_stages;
 
     // IMPORT KKmat
-    blasfeo_pack_dmat(nK1, nff, read_mem, nK1, &fix->KKf, 0, 0);
+    blasfeo_pack_dmat(nK1, nff, read_mem, nK1, &model->KKf, 0, 0);
     read_mem += nK1 * nff;
-    blasfeo_pack_dmat(nK1, nx1, read_mem, nK1, &fix->KKx, 0, 0);
+    blasfeo_pack_dmat(nK1, nx1, read_mem, nK1, &model->KKx, 0, 0);
     read_mem += nK1 * nx1;
-    blasfeo_pack_dmat(nK1, nu,  read_mem, nK1, &fix->KKu, 0, 0);
+    blasfeo_pack_dmat(nK1, nu,  read_mem, nK1, &model->KKu, 0, 0);
     read_mem += nK1 * nu;
 
     // IMPORT YYmat
-    blasfeo_pack_dmat(nyy, nff, read_mem, nyy, &fix->YYf, 0, 0);
+    blasfeo_pack_dmat(nyy, nff, read_mem, nyy, &model->YYf, 0, 0);
     read_mem += nyy * nff;
-    blasfeo_pack_dmat(nyy, nx1, read_mem, nyy, &fix->YYx, 0, 0);
+    blasfeo_pack_dmat(nyy, nx1, read_mem, nyy, &model->YYx, 0, 0);
     read_mem += nyy * nx1;
-    blasfeo_pack_dmat(nyy, nu,  read_mem, nyy, &fix->YYu, 0, 0);
+    blasfeo_pack_dmat(nyy, nu,  read_mem, nyy, &model->YYu, 0, 0);
     read_mem += nyy * nu;
 
     // IMPORT ZZmat
-    blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &fix->ZZf, 0, 0);
+    blasfeo_pack_dmat(nZ, nff, read_mem, nZ, &model->ZZf, 0, 0);
     read_mem += nZ * nff;
-    blasfeo_pack_dmat(nZ, nx1, read_mem, nZ, &fix->ZZx, 0, 0);
+    blasfeo_pack_dmat(nZ, nx1, read_mem, nZ, &model->ZZx, 0, 0);
     read_mem += nZ * nx1;
-    blasfeo_pack_dmat(nZ, nu,  read_mem, nZ, &fix->ZZu, 0, 0);
+    blasfeo_pack_dmat(nZ, nu,  read_mem, nZ, &model->ZZu, 0, 0);
     read_mem += nZ * nu;
 
     // IMPORT LO matrices
-    blasfeo_pack_dmat(nx2, nx2, read_mem, nx2, &fix->ALO, 0, 0);
+    blasfeo_pack_dmat(nx2, nx2, read_mem, nx2, &model->ALO, 0, 0);
     read_mem += nx2 * nx2;
-    blasfeo_pack_dmat(nK2, nK2, read_mem, nK2, &fix->M2inv, 0, 0);
+    blasfeo_pack_dmat(nK2, nK2, read_mem, nK2, &model->M2inv, 0, 0);
     read_mem += nK2 * nK2;
-    blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &fix->dK2_dx2, 0, 0);
+    blasfeo_pack_dmat(nK2, nx2, read_mem, nx2, &model->dK2_dx2, 0, 0);
     read_mem += nK2 * nx2;
 
     free(exp_out);
     free(export_in);
 }
 
-int gnsf2_calculate_workspace_size(gnsf2_dims *dims, gnsf2_opts* opts)
+int gnsf2_workspace_calculate_size(void *config, sim_dims *dim_in, void *args)
 {
+    gnsf2_dims *dims = (gnsf2_dims *) dim_in; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+    // gnsf2_opts *opts = (gnsf2_opts *) args;
     int nx  = dims->nx;
     int nu  = dims->nu;
     int nx1 = dims->nx1;
@@ -525,13 +506,15 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     return (void *)workspace;
 }
 
-int gnsf2_simulate(void *config, gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *in, sim_out *out, gnsf2_opts *opts, void *work_)
+int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work_)
 {
-    //     int (*evaluate) (void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work); TODO make this form
     acados_timer tot_timer, casadi_timer;
     acados_tic(&tot_timer);
-    // printf("GENERALIZED NONLINEAR STATIC FEEDBACK V2 (GNSF-2) SIMULATION \n");
-    // print_gnsf_dims(dims);
+
+    gnsf2_opts *opts = (gnsf2_opts *) args;
+    gnsf2_dims *dims = (gnsf2_dims *) in->dims; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+    gnsf2_model *fix = in->model;
+
     gnsf2_workspace *workspace = (gnsf2_workspace *) gnsf2_cast_workspace(dims, work_);
     // helpful integers
     int nx  = dims->nx;
@@ -896,20 +879,54 @@ int gnsf2_simulate(void *config, gnsf2_dims *dims, gnsf2_fixed *fix, gnsf2_in *i
 //     return min;
 // }
 
+int sim_gnsf2_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
+{
+    return 0;
+}
+
+
+
+void *sim_gnsf2_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
+{
+    return NULL;
+}
+
+
+void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
+{   // copied from IRK
+    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+
+	// gauss collocation nodes
+    gauss_nodes(opts->num_stages, opts->c_vec, opts->work);
+
+	// butcher tableau
+    butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+
+	// default options
+    opts->newton_iter = 3;
+    opts->scheme = NULL;
+    opts->num_steps = 2;
+    opts->num_forw_sens = dims->nx + dims->nu;
+    opts->sens_forw = true;
+    opts->sens_adj = false;
+    opts->sens_hess = false;
+    opts->jac_reuse = false;
+
+	return;
+}
 
 void sim_gnsf2_config_initialize_default(void *config_)
 {
 	sim_solver_config *config = config_;
-// TODO:!!
-	// config->evaluate = &gnsf2_simulate;
-	// config->opts_calculate_size = &gnsf2_opts_calculate_size;
-	// config->opts_assign = &gnsf2_opts_assign;
-	// config->opts_initialize_default = &sim_irk_opts_initialize_default; TODO
-	// config->memory_calculate_size = &sim_irk_memory_calculate_size; TODO
-	// config->memory_assign = &sim_irk_memory_assign;  TODO
-	// config->workspace_calculate_size = &gnsf_calculate_workspace_size;
-	// config->model_calculate_size = &gnsf2_model_calculate_size;
-	// config->model_assign = &gnsf2_model_assign;
+	config->evaluate = &gnsf2_simulate;
+	config->opts_calculate_size = &gnsf2_opts_calculate_size;
+	config->opts_assign = &gnsf2_opts_assign;
+	config->opts_initialize_default = &sim_gnsf2_opts_initialize_default;
+	config->memory_calculate_size = &sim_gnsf2_memory_calculate_size;
+	config->memory_assign = &sim_gnsf2_memory_assign;
+	config->workspace_calculate_size = &gnsf2_workspace_calculate_size;
+	config->model_calculate_size = &sim_gnsf2_model_calculate_size;
+	config->model_assign = &sim_gnsf2_model_assign;
 
 	return;
 }
