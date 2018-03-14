@@ -46,7 +46,7 @@ static const int CASADI_PREFIX(s3)[15] = {2, 4, 0, 2, 4, 6, 8, 0, 1, 0, 1, 0, 1,
 #define s3 CASADI_PREFIX(s3)
 /* jac_constraint */
 int jac_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t a0=arg[0] ? arg[0][1] : 0;
+  real_t a0=arg[0] ? arg[0][2] : 0;
   real_t a1=sin(a0);
   real_t a2=8.0000000000000004e-01;
   a1=(a2*a1);
@@ -62,16 +62,16 @@ int jac_constraint(const real_t** arg, real_t** res, int* iw, real_t* w, int mem
   if (res[1]!=0) res[1][0]=a3;
   a3=0.;
   if (res[1]!=0) res[1][1]=a3;
+  if (res[1]!=0) res[1][2]=a3;
+  if (res[1]!=0) res[1][3]=a3;
   a1=cos(a0);
   a1=(a2*a1);
   a1=(-a1);
-  if (res[1]!=0) res[1][2]=a1;
+  if (res[1]!=0) res[1][4]=a1;
   a0=sin(a0);
   a2=(a2*a0);
   a2=(-a2);
-  if (res[1]!=0) res[1][3]=a2;
-  if (res[1]!=0) res[1][4]=a3;
-  if (res[1]!=0) res[1][5]=a3;
+  if (res[1]!=0) res[1][5]=a2;
   if (res[1]!=0) res[1][6]=a3;
   if (res[1]!=0) res[1][7]=a3;
   return 0;

@@ -232,7 +232,7 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 	}
 
 	for (int ii = 0; ii <= dims->N; ii++)
-        assign_blasfeo_dvec_mem(dims->nx[ii], &mem->hpi[ii], &c_ptr);
+        assign_and_advance_blasfeo_dvec_mem(dims->nx[ii], &mem->hpi[ii], &c_ptr);
 
     align_char_to(64, &c_ptr);
 
@@ -400,7 +400,7 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
         blasfeo_dveccp(nx[ii+1], &mem->hpi[ii+1], 0, &qp_out->pi[ii], 0);
 
 	// restore sign of upper bounds
-	for(int jj = 0; jj <=N; jj++)
+    for(int jj = 0; jj <=N; jj++)
     {
 		blasfeo_dvecsc(nb[jj], -1.0, &qp_in->d[jj], nb[jj] + ng[jj]);
 		blasfeo_dvecsc(ng[jj], -1.0, &qp_in->d[jj], 2*nb[jj] + ng[jj]);

@@ -134,7 +134,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
     memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
         sizeof(*opts->c_vec) * (ns));
 
-    opts->num_steps = 2;
+    opts->num_steps = 1;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
