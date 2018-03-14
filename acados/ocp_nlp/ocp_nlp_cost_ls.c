@@ -75,9 +75,9 @@ void *ocp_nlp_cost_ls_model_assign(void *config_, ocp_nlp_cost_dims *dims, void 
 
 	// blasfeo_dmat
 	// W
-	assign_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
 	// Cyt
-	assign_blasfeo_dmat_mem(nx+nu, ny, &model->Cyt, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(nx+nu, ny, &model->Cyt, &c_ptr);
 
 	// blasfeo_dvec
 	// y_ref
@@ -172,7 +172,7 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, ocp_nlp_cost_dims *dims, void
 	align_char_to(64, &c_ptr);
 
 	// W_chol
-	assign_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
 	// res
 	assign_and_advance_blasfeo_dvec_mem(ny, &memory->res, &c_ptr);
 	// grad
@@ -252,7 +252,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, ocp_nlp_cost_dims *dim
 	align_char_to(64, &c_ptr);
 
 	// tmp_nv_ny
-	assign_blasfeo_dmat_mem(nu+nx, ny, &work->tmp_nv_ny, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(nu+nx, ny, &work->tmp_nv_ny, &c_ptr);
 
 	// tmp_ny
 	assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);

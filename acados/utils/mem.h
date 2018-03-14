@@ -60,31 +60,31 @@ void *acados_malloc(size_t nitems, size_t size);
 
 
 // allocate vector of pointers to vectors of doubles and advance pointer
-void assign_double_ptrs(int n, double ***v, char **ptr);
+void assign_and_advance_double_ptrs(int n, double ***v, char **ptr);
 
 
 // allocate vector of pointers to vectors of ints and advance pointer
-void assign_int_ptrs(int n, int ***v, char **ptr);
+void assign_and_advance_int_ptrs(int n, int ***v, char **ptr);
 
 
 // allocate vector of pointers to strvecs and advance pointer
-void assign_blasfeo_dvec_structs(int n, struct blasfeo_dvec **sv, char **ptr);
+void assign_and_advance_blasfeo_dvec_structs(int n, struct blasfeo_dvec **sv, char **ptr);
 
 
 // allocate vector of pointers to strmats and advance pointer
-void assign_blasfeo_dmat_structs(int n, struct blasfeo_dmat **sm, char **ptr);
+void assign_and_advance_blasfeo_dmat_structs(int n, struct blasfeo_dmat **sm, char **ptr);
 
 
 // allocate vector of pointers to vector of pointers to strmats and advance pointer
-void assign_blasfeo_dmat_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr);
+void assign_and_advance_blasfeo_dmat_ptrs(int n, struct blasfeo_dmat ***sm, char **ptr);
 
 
 // allocate vector of ints and advance pointer
-void assign_int(int n, int **v, char **ptr);
+void assign_and_advance_int(int n, int **v, char **ptr);
 
 
 // allocate vector of doubles and advance pointer
-void assign_double(int n, double **v, char **ptr);
+void assign_and_advance_double(int n, double **v, char **ptr);
 
 
 // allocate strvec and advance pointer
@@ -92,7 +92,7 @@ void assign_and_advance_blasfeo_dvec_mem(int n, struct blasfeo_dvec *sv, char **
 
 
 // allocate strmat and advance pointer
-void assign_blasfeo_dmat_mem(int m, int n, struct blasfeo_dmat *sA, char **ptr);
+void assign_and_advance_blasfeo_dmat_mem(int m, int n, struct blasfeo_dmat *sA, char **ptr);
 
 
 #ifdef __cplusplus

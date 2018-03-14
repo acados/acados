@@ -158,22 +158,22 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 
 	if (M < N) {
 
-        assign_blasfeo_dmat_structs(N+1, &mem->hsL, &c_ptr);
+        assign_and_advance_blasfeo_dmat_structs(N+1, &mem->hsL, &c_ptr);
 
-        assign_blasfeo_dvec_structs(N+1, &mem->hsQx, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsqx, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hstinv, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsrq, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsdux, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsdlam, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsdpi, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsdt, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hslamt, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->hsPb, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->ux0, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->lam0, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->pi0, &c_ptr);
-        assign_blasfeo_dvec_structs(N+1, &mem->t0, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsQx, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsqx, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hstinv, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsrq, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsdux, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsdlam, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsdpi, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsdt, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hslamt, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->hsPb, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->ux0, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->lam0, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->pi0, &c_ptr);
+        assign_and_advance_blasfeo_dvec_structs(N+1, &mem->t0, &c_ptr);
 
         align_char_to(64, &c_ptr);
 

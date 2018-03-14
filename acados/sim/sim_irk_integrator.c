@@ -82,9 +82,9 @@ void *sim_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
-    assign_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_double(ns_max, &opts->c_vec, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
 	// work
 	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
@@ -227,7 +227,7 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     sim_irk_workspace *workspace = (sim_irk_workspace *) c_ptr;
     c_ptr += sizeof(sim_irk_workspace);
 
-    assign_blasfeo_dmat_structs(steps, &workspace->JG_traj, &c_ptr);
+    assign_and_advance_blasfeo_dmat_structs(steps, &workspace->JG_traj, &c_ptr);
 
     workspace->JGK = (struct blasfeo_dmat *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
@@ -242,8 +242,8 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     c_ptr += sizeof(struct blasfeo_dmat);
 
 
-    assign_blasfeo_dvec_structs(steps, &workspace->xn_traj, &c_ptr);
-    assign_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(steps, &workspace->xn_traj, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
 
     workspace->rG = (struct blasfeo_dvec *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
@@ -265,12 +265,12 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
 
     align_char_to(64, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx*ns, nx*ns, workspace->JGK, &c_ptr);
-    assign_blasfeo_dmat_mem(nx*ns, nx+nu, workspace->JGf, &c_ptr);
-    assign_blasfeo_dmat_mem(nx*ns, nx+nu, workspace->JKf, &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, workspace->JGK, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, workspace->JGf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, workspace->JKf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw, &c_ptr);
     for (int i=0;i<steps;i++){
-        assign_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     }
 
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
@@ -284,13 +284,13 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_blasfeo_dvec_mem(nx*ns, &workspace->K_traj[i], &c_ptr);
     }
 
-    assign_double(nx, &workspace->rGt, &c_ptr);
-    assign_double(nx * (2*nx+nu), &workspace->jac_out, &c_ptr);
-    assign_double(nx * nx, &workspace->Jt, &c_ptr);
-    assign_double(2*nx + nu, &workspace->ode_args, &c_ptr);
-    assign_double(nx + nu, &workspace->S_adj_w, &c_ptr);
+    assign_and_advance_double(nx, &workspace->rGt, &c_ptr);
+    assign_and_advance_double(nx * (2*nx+nu), &workspace->jac_out, &c_ptr);
+    assign_and_advance_double(nx * nx, &workspace->Jt, &c_ptr);
+    assign_and_advance_double(2*nx + nu, &workspace->ode_args, &c_ptr);
+    assign_and_advance_double(nx + nu, &workspace->S_adj_w, &c_ptr);
 
-    assign_int(nx * ns , &workspace->ipiv, &c_ptr);
+    assign_and_advance_int(nx * ns , &workspace->ipiv, &c_ptr);
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 

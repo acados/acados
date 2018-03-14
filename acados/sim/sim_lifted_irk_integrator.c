@@ -114,21 +114,21 @@ void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
-    assign_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_double(ns_max, &opts->c_vec, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
     opts->scheme = (Newton_scheme *) c_ptr;
     c_ptr += sizeof(Newton_scheme);
 
     align_char_to(8, &c_ptr);
 
-    assign_double(ns_max, &opts->scheme->eig, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->scheme->eig, &c_ptr);
 
-    assign_double(ns_max*ns_max, &opts->scheme->transf1, &c_ptr);
-    assign_double(ns_max*ns_max, &opts->scheme->transf2, &c_ptr);
-    assign_double(ns_max*ns_max, &opts->scheme->transf1_T, &c_ptr);
-    assign_double(ns_max*ns_max, &opts->scheme->transf2_T, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->scheme->transf1, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->scheme->transf2, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->scheme->transf1_T, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->scheme->transf2_T, &c_ptr);
 
 	// work
 	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
@@ -314,39 +314,39 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
 
     align_char_to(8, &c_ptr);
 
-    assign_double_ptrs(num_steps * ns, &memory->jac_traj, &c_ptr);
-    assign_double_ptrs(num_sys, &memory->sys_mat2, &c_ptr);
-    assign_int_ptrs(num_sys, &memory->ipiv2, &c_ptr);
-    assign_double_ptrs(num_sys, &memory->sys_sol2, &c_ptr);
-    assign_blasfeo_dmat_ptrs(num_sys, &memory->str_mat2, &c_ptr);
-    assign_blasfeo_dmat_ptrs(num_sys, &memory->str_sol2, &c_ptr);
+    assign_and_advance_double_ptrs(num_steps * ns, &memory->jac_traj, &c_ptr);
+    assign_and_advance_double_ptrs(num_sys, &memory->sys_mat2, &c_ptr);
+    assign_and_advance_int_ptrs(num_sys, &memory->ipiv2, &c_ptr);
+    assign_and_advance_double_ptrs(num_sys, &memory->sys_sol2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_ptrs(num_sys, &memory->str_mat2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_ptrs(num_sys, &memory->str_sol2, &c_ptr);
 
     align_char_to(8, &c_ptr);
 
-    assign_double(nf, &memory->grad_correction, &c_ptr);
-    assign_double(nx * ns, &memory->grad_K, &c_ptr);
+    assign_and_advance_double(nf, &memory->grad_correction, &c_ptr);
+    assign_and_advance_double(nx * ns, &memory->grad_K, &c_ptr);
 
-    assign_double(num_steps * ns * nx, &memory->K_traj, &c_ptr);
-    assign_double(num_steps * ns * nx * nf, &memory->DK_traj, &c_ptr);
-    assign_double(num_steps * ns * nx, &memory->mu_traj, &c_ptr);
-    assign_double(nx, &memory->x, &c_ptr);
-    assign_double(nu, &memory->u, &c_ptr);
+    assign_and_advance_double(num_steps * ns * nx, &memory->K_traj, &c_ptr);
+    assign_and_advance_double(num_steps * ns * nx * nf, &memory->DK_traj, &c_ptr);
+    assign_and_advance_double(num_steps * ns * nx, &memory->mu_traj, &c_ptr);
+    assign_and_advance_double(nx, &memory->x, &c_ptr);
+    assign_and_advance_double(nu, &memory->u, &c_ptr);
 
     if (opts->scheme->type == simplified_inis)
-        assign_double(num_steps * ns * nx * nf, &memory->delta_DK_traj, &c_ptr);
+        assign_and_advance_double(num_steps * ns * nx * nf, &memory->delta_DK_traj, &c_ptr);
 
     if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
-        assign_double(num_steps * ns * nx, &memory->adj_traj, &c_ptr);
+        assign_and_advance_double(num_steps * ns * nx, &memory->adj_traj, &c_ptr);
         for (int i = 0; i < num_steps * ns; ++i)
-            assign_double(nx * nx, &memory->jac_traj[i], &c_ptr);
+            assign_and_advance_double(nx * nx, &memory->jac_traj[i], &c_ptr);
     }
 
     if (opts->scheme->type == simplified_in || opts->scheme->type == simplified_inis) {
         int dim_sys = 2 * nx;
         for (int i = 0; i < num_sys; ++i) {
-            assign_double(dim_sys * dim_sys, &memory->sys_mat2[i], &c_ptr);
-            assign_double(dim_sys, &memory->sys_mat2[i], &c_ptr);
-            assign_double(dim_sys * (1 + nf), &memory->sys_mat2[i], &c_ptr);
+            assign_and_advance_double(dim_sys * dim_sys, &memory->sys_mat2[i], &c_ptr);
+            assign_and_advance_double(dim_sys, &memory->sys_mat2[i], &c_ptr);
+            assign_and_advance_double(dim_sys * (1 + nf), &memory->sys_mat2[i], &c_ptr);
 
             for (int j = 0; j < dim_sys * dim_sys; ++j)
                 memory->sys_mat2[i][j] = 0.0;
@@ -356,9 +356,9 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
         }
         if (num_sys != floor(ns / 2.0)) // odd number of stages
             dim_sys = nx;
-        assign_double(dim_sys * dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
-        assign_double(dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
-        assign_double(dim_sys * (1 + nf), &memory->sys_mat2[num_sys], &c_ptr);
+        assign_and_advance_double(dim_sys * dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
+        assign_and_advance_double(dim_sys, &memory->sys_mat2[num_sys], &c_ptr);
+        assign_and_advance_double(dim_sys * (1 + nf), &memory->sys_mat2[num_sys], &c_ptr);
 
         for (int j = 0; j < dim_sys * dim_sys; ++j)
             memory->sys_mat2[num_sys][j] = 0.0;
@@ -377,16 +377,16 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
             dim_sys = nx;
 
 #if defined(LA_HIGH_PERFORMANCE)
-        assign_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
-        assign_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], &c_ptr);
+        assign_and_advance_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], &c_ptr);
 #elif defined(LA_REFERENCE)
-        assign_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
-        assign_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
+        assign_and_advance_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_and_advance_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
         d_cast_diag_mat2strmat((double *) c_ptr, memory->str_mat2[i]);
         c_ptr += dim_sys * sizeof(double);
 #else  // LA_BLAS
-        assign_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
-        assign_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
+        assign_and_advance_blasfeo_dmat_mem(dim_sys, dim_sys, memory->str_mat2[i], memory->sys_mat2[i]);
+        assign_and_advance_blasfeo_dmat_mem(dim_sys, 1 + nf, memory->str_sol2[i], memory->sys_sol2[i]);
 #endif  // LA_HIGH_PERFORMANCE
         blasfeo_dgesc(dim_sys, dim_sys, 0.0, memory->str_mat2[i], 0, 0);
         blasfeo_dgesc(dim_sys, 1 + nf, 0.0, memory->str_sol2[i], 0, 0);

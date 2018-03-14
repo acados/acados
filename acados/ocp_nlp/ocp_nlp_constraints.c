@@ -113,7 +113,7 @@ int ocp_nlp_constraints_calculate_size(void *config, ocp_nlp_constraints_dims *d
 
 	size += sizeof(int)*nb;  // idxb
 	size += blasfeo_memsize_dvec(2*nb+2*ng); // d
-	size += blasfeo_memsize_dmat(nu+nx, ng); // DCt 
+	size += blasfeo_memsize_dmat(nu+nx, ng); // DCt
 
 	size += 64; // blasfeo_mem align
 
@@ -144,14 +144,14 @@ void *ocp_nlp_constraints_assign(void *config, ocp_nlp_constraints_dims *dims, v
 
 	// blasfeo_dmat
 	// DCt
-	assign_blasfeo_dmat_mem(nu+nx, ng, &model->DCt, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(nu+nx, ng, &model->DCt, &c_ptr);
 
 	// blasfeo_dvec
 	// d
 	assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng, &model->d, &c_ptr);
 
     // idxb
-    assign_int(dims->nbx+dims->nbu, &model->idxb, &c_ptr);
+    assign_and_advance_int(dims->nbx+dims->nbu, &model->idxb, &c_ptr);
 
 	// h
 	model->h = NULL;

@@ -73,7 +73,7 @@ void *ocp_nlp_cost_nls_model_assign(void *config, ocp_nlp_cost_dims *dims, void 
 
 	// blasfeo_dmat
 	// W
-	assign_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(ny, ny, &model->W, &c_ptr);
 
 	// blasfeo_dvec
 	// y_ref
@@ -179,9 +179,9 @@ void *ocp_nlp_cost_nls_memory_assign(void *config_, ocp_nlp_cost_dims *dims, voi
 	align_char_to(64, &c_ptr);
 
 	// W_chol
-	assign_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
 	// Jt
-	assign_blasfeo_dmat_mem(nu+nx, ny, &memory->Jt, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(nu+nx, ny, &memory->Jt, &c_ptr);
 	// res
 	assign_and_advance_blasfeo_dvec_mem(ny, &memory->res, &c_ptr);
 	// grad
@@ -271,15 +271,15 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, ocp_nlp_cost_dims *di
     c_ptr += sizeof(ocp_nlp_cost_nls_workspace);
 
 	// nls_jac_in
-	assign_double(nu+nx, &work->nls_jac_in, &c_ptr);
+	assign_and_advance_double(nu+nx, &work->nls_jac_in, &c_ptr);
 	// nls_jac_out
-	assign_double(ny+ny*(nu+nx), &work->nls_jac_out, &c_ptr);
+	assign_and_advance_double(ny+ny*(nu+nx), &work->nls_jac_out, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
 	// tmp_nv_ny
-	assign_blasfeo_dmat_mem(nu+nx, ny, &work->tmp_nv_ny, &c_ptr);
+	assign_and_advance_blasfeo_dmat_mem(nu+nx, ny, &work->tmp_nv_ny, &c_ptr);
 
 	// tmp_ny
 	assign_and_advance_blasfeo_dvec_mem(ny, &work->tmp_ny, &c_ptr);

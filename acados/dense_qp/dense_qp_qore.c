@@ -127,22 +127,22 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    assign_double(nvd*nvd, &mem->H, &c_ptr);
-    assign_double(nvd*ned, &mem->A, &c_ptr);
-    assign_double(nvd*ngd, &mem->C, &c_ptr);
-    assign_double(nvd*ngd, &mem->Ct, &c_ptr);
-    assign_double(nvd, &mem->g, &c_ptr);
-    assign_double(ned, &mem->b, &c_ptr);
-    assign_double(nbd, &mem->d_lb0, &c_ptr);
-    assign_double(nbd, &mem->d_ub0, &c_ptr);
-    assign_double(nvd, &mem->d_lb, &c_ptr);
-    assign_double(nvd, &mem->d_ub, &c_ptr);
-    assign_double(ngd, &mem->d_lg, &c_ptr);
-    assign_double(ngd, &mem->d_ug, &c_ptr);
-    assign_double(nvd+ngd, &mem->lb, &c_ptr);
-    assign_double(nvd+ngd, &mem->ub, &c_ptr);
-    assign_double(nvd+ngd, &mem->prim_sol, &c_ptr);
-    assign_double(nvd+ngd, &mem->dual_sol, &c_ptr);
+    assign_and_advance_double(nvd*nvd, &mem->H, &c_ptr);
+    assign_and_advance_double(nvd*ned, &mem->A, &c_ptr);
+    assign_and_advance_double(nvd*ngd, &mem->C, &c_ptr);
+    assign_and_advance_double(nvd*ngd, &mem->Ct, &c_ptr);
+    assign_and_advance_double(nvd, &mem->g, &c_ptr);
+    assign_and_advance_double(ned, &mem->b, &c_ptr);
+    assign_and_advance_double(nbd, &mem->d_lb0, &c_ptr);
+    assign_and_advance_double(nbd, &mem->d_ub0, &c_ptr);
+    assign_and_advance_double(nvd, &mem->d_lb, &c_ptr);
+    assign_and_advance_double(nvd, &mem->d_ub, &c_ptr);
+    assign_and_advance_double(ngd, &mem->d_lg, &c_ptr);
+    assign_and_advance_double(ngd, &mem->d_ug, &c_ptr);
+    assign_and_advance_double(nvd+ngd, &mem->lb, &c_ptr);
+    assign_and_advance_double(nvd+ngd, &mem->ub, &c_ptr);
+    assign_and_advance_double(nvd+ngd, &mem->prim_sol, &c_ptr);
+    assign_and_advance_double(nvd+ngd, &mem->dual_sol, &c_ptr);
 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
@@ -151,7 +151,7 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
     c_ptr += QPDenseSize(nvd,ngd,nsmax);
 
     // int stuff
-    assign_int(nbd, &mem->idxb, &c_ptr);
+    assign_and_advance_int(nbd, &mem->idxb, &c_ptr);
 
     assert((char *)raw_memory + dense_qp_qore_memory_calculate_size(config_, dims, opts_) >= c_ptr);
 
