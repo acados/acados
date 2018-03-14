@@ -812,8 +812,8 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 			(mem->nlp_res->inf_norm_res_m < opts->min_res_m) )
 		{
 
-			printf("%d sqp iterations\n", sqp_iter);
-			print_ocp_qp_in(work->qp_in);
+//			printf("%d sqp iterations\n", sqp_iter);
+//			print_ocp_qp_in(work->qp_in);
 
 			// save sqp iterations number
 			mem->sqp_iter = sqp_iter;
@@ -831,7 +831,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
         if (qp_status != 0)
         {
-			print_ocp_qp_in(work->qp_in);
+//			print_ocp_qp_in(work->qp_in);
 		
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
             return -1;
@@ -868,8 +868,8 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 	// save sqp iterations number
 	mem->sqp_iter = sqp_iter;
 
-	printf("%d sqp iterations\n", sqp_iter);
-	print_ocp_qp_in(work->qp_in);
+//	printf("%d sqp iterations\n", sqp_iter);
+//	print_ocp_qp_in(work->qp_in);
 
 	// maximum number of iterations reached
     return 1;
