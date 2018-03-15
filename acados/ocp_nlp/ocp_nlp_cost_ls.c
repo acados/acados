@@ -328,6 +328,8 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 		blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 		blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
+		blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
+		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 	}
 	else
 	{

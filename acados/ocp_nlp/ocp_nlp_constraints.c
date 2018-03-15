@@ -378,7 +378,7 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, ocp_nlp_constraint
 	if (nq > 0) {
 		c_ptr += nq*(nx+nu)*sizeof(double);
 		align_char_to(64, &c_ptr);
-		assign_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);	
+		assign_and_advance_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);	
 	}
 
     assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
@@ -453,26 +453,24 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 
 	if (nq>0)
 	{
-		double lam = blasfeo_dvecex1(memory->lam, 1) - blasfeo_dvecex1(memory->lam, 0);
+		if (nh != 1) {
+			printf("Not implemented");
+			exit(1);
+		}
+		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
 		blasfeo_pack_tran_dmat(nq, nx+nu, work->nl_constraint_output+nh*(1+nx+nu), nq, &work->jacobian_quadratic, 0, 0);
 		blasfeo_dsyrk_ln(nx+nu, nq, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
 			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
-
-		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 0, 0) + 1e-10, memory->RSQrq, 0, 0);
-		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 1, 1) + 1e-10, memory->RSQrq, 1, 1);
-		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 2, 2) + 1e-10, memory->RSQrq, 2, 2);
-		blasfeo_dgein1(blasfeo_dgeex1(memory->RSQrq, 3, 3) + 1e-10, memory->RSQrq, 3, 3);
 	}
 
 	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_nbg, 0, &model->d, 0, &memory->fun, 0);
 	blasfeo_daxpy(nb+ng+nh, -1.0, &model->d, nb+ng+nh, &work->tmp_nbg, 0, &memory->fun, nb+ng+nh);
 
 	// nlp_mem: ineq_adj
-	// TODO(robin?) fix in case of nh>0
 	blasfeo_dvecse(nu+nx, 0.0, &memory->adj, 0);
-	blasfeo_daxpy(nb+ng, -1.0, memory->lam, nb+ng, memory->lam, 0, &work->tmp_nbg, 0);
+	blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb+ng+nh, memory->lam, 0, &work->tmp_nbg, 0);
 	blasfeo_dvecad_sp(nb, 1.0, &work->tmp_nbg, 0, model->idxb, &memory->adj, 0);
-	blasfeo_dgemv_n(nu+nx, ng, 1.0, memory->DCt, 0, 0, &work->tmp_nbg, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
+	blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_nbg, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
 
 	return;
 
