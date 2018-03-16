@@ -19,6 +19,10 @@
 
 
 
+/************************************************
+* model
+************************************************/
+
 int sim_irk_model_calculate_size(void *config, sim_dims *dims)
 {
 
@@ -40,11 +44,17 @@ void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 	irk_model *data = (irk_model *) c_ptr;
 	c_ptr += sizeof(irk_model);
 
+    assert((char*)raw_memory + sim_irk_model_calculate_size(config, dims) >= c_ptr);
+
 	return data;
 
 }
 
 
+
+/************************************************
+* opts
+************************************************/
 
 int sim_irk_opts_calculate_size(void *config_, sim_dims *dims)
 {
@@ -149,6 +159,10 @@ void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 
 
 
+/************************************************
+* memory
+************************************************/
+
 int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
     return 0;
@@ -162,6 +176,10 @@ void *sim_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 }
 
 
+
+/************************************************
+* workspace
+************************************************/
 
 int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
@@ -300,6 +318,10 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
 }
 
 
+
+/************************************************
+* functions
+************************************************/
 
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {

@@ -54,6 +54,8 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 	sim_solver_config *config = (sim_solver_config *) c_ptr;
 	c_ptr += sizeof(sim_solver_config);
 
+    assert((char*)raw_memory + sim_solver_config_calculate_size() >= c_ptr);
+
 	return config;
 
 }
@@ -80,7 +82,7 @@ sim_dims *sim_dims_assign(void *raw_memory)
     sim_dims *dims = (sim_dims *) c_ptr;
     c_ptr += sizeof(sim_dims);
 
-    assert((char *) raw_memory + sim_dims_calculate_size() == c_ptr);
+    assert((char *) raw_memory + sim_dims_calculate_size() >= c_ptr);
 
     return dims;
 }

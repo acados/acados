@@ -348,6 +348,7 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 				impl_jac_u[ii].casadi_n_out = &impl_jacFun_u_chain_nm5_n_out;
 #endif
 			}
+			break;
 		case 5:
 			for (ii = 0; ii < N; ii++)
 			{
