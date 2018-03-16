@@ -69,6 +69,7 @@ void ocp_nlp_cost_ls_opts_initialize_default(void *config, ocp_nlp_cost_dims *di
 
 typedef struct
 {
+	struct blasfeo_dmat hess; // hessian of cost function
 	struct blasfeo_dmat W_chol; // cholesky factor of weight matrix
     struct blasfeo_dvec res; // ls residual r(x)
 	struct blasfeo_dvec grad; // gradient of cost function

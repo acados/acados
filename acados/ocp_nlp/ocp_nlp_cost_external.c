@@ -297,10 +297,6 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, ocp_nlp_cost_dims *
 	blasfeo_pack_tran_dmat(nu, nx, d_ptr+nx, nx+nu, memory->RSQrq, nu, 0); // S
 	blasfeo_pack_dmat(nu, nu, d_ptr+nx*(nu+nx+1), nx+nu, memory->RSQrq, 0, 0); // R
 
-//	blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
-//	blasfeo_print_tran_dvec(nu+nx, &memory->grad, 0);
-//	exit(1);
-
 	return;
 
 }

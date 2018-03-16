@@ -485,6 +485,9 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
 	}
 
 
+	// initialize dynamics
+
+
 	// initialize constraints
 	for (int ii=0; ii<=N; ii++)
 	{
@@ -509,6 +512,23 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 	int nx, nu, nb, ng, nh, nx1, nu1;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
+
+
+	/* cost */
+
+	for (i=0; i<=N; i++)
+	{
+		config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+	}
+
+	// nlp mem: cost_grad
+	for (i=0; i<=N; i++)
+	{
+		nx = dims->cost[i]->nx;
+		nu = dims->cost[i]->nu;
+		struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
+		blasfeo_dveccp(nu+nx, cost_grad, 0, nlp_mem->cost_grad+i, 0);
+	}
 
 
 	/* dynamics */
@@ -545,23 +565,6 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 		nu1 = dims->dynamics[i]->nu1;
 		struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
 		blasfeo_daxpy(nx1, 1.0, dyn_adj, nu+nx, nlp_mem->dyn_adj+i+1, nu1, nlp_mem->dyn_adj+i+1, nu1);
-	}
-
-
-	/* cost */
-
-	for (i=0; i<=N; i++)
-	{
-		config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
-	}
-
-	// nlp mem: cost_grad
-	for (i=0; i<=N; i++)
-	{
-		nx = dims->cost[i]->nx;
-		nu = dims->cost[i]->nu;
-		struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
-		blasfeo_dveccp(nu+nx, cost_grad, 0, nlp_mem->cost_grad+i, 0);
 	}
 
 
@@ -838,7 +841,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
         if (qp_status != 0)
         {
-			print_ocp_qp_in(work->qp_in);
+//			print_ocp_qp_in(work->qp_in);
 		
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
             return -1;

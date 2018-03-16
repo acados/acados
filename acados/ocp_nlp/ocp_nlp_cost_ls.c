@@ -144,6 +144,7 @@ int ocp_nlp_cost_ls_memory_calculate_size(void *config_, ocp_nlp_cost_dims *dims
 
     size += sizeof(ocp_nlp_cost_ls_memory);
 
+	size += 1*blasfeo_memsize_dmat(nu+nx, nu+nx);  // hess
 	size += 1*blasfeo_memsize_dmat(ny, ny);  // W_chol
 	size += 1*blasfeo_memsize_dvec(ny);  // res
 	size += 1*blasfeo_memsize_dvec(nu+nx);  // grad
@@ -171,6 +172,8 @@ void *ocp_nlp_cost_ls_memory_assign(void *config_, ocp_nlp_cost_dims *dims, void
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
+	// hess
+	assign_and_advance_blasfeo_dmat_mem(nu+nx, nu+nx, &memory->hess, &c_ptr);
 	// W_chol
 	assign_and_advance_blasfeo_dmat_mem(ny, ny, &memory->W_chol, &c_ptr);
 	// res
@@ -289,7 +292,7 @@ void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void 
 
 		// TODO avoid recomputing the Hessian if both W and Cyt do not change
 		blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
-		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
 
 	}
 	else
@@ -322,15 +325,16 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 	if (opts->gauss_newton_hess)
 	{
 
+		// initialize hessian of lagrangian with hessian of cost
+		blasfeo_dgecp(nu+nx, nu+nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+
+		// compute gradient
 		blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
 
 		// TODO use lower triangular chol of W to save n_y^2 flops
 		blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 		blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
-		// NOTE(giaf) this should not be recomputed here, since all quantities do not change in the SQP loop
-		blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
-		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 	}
 	else
 	{

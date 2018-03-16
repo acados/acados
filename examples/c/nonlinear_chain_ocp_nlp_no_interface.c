@@ -638,6 +638,82 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 // hand-generated external function for externally provided hessian and gradient
+void ext_cost_nm2(void *fun, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 6;
+
+	int nv = nu+nx;
+
+	// ref
+	double ref[nu+nx];
+	for (ii=0; ii<nx; ii++)
+		ref[ii] = xN_nm2[ii];
+	for (ii=0; ii<nu; ii++)
+		ref[nx+ii] = 0.0;
+
+	// Hessian
+	double *hess = out+nv;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
+	for (; ii<nx+nu; ii++)
+		hess[ii*(nv+1)] = 1.0;
+	
+	// gradient
+	double *xu= in;
+	double *grad = out;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = 0.0;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+	
+	return;
+
+}
+
+void ext_cost_nm3(void *fun, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 12;
+
+	int nv = nu+nx;
+
+	// ref
+	double ref[nu+nx];
+	for (ii=0; ii<nx; ii++)
+		ref[ii] = xN_nm3[ii];
+	for (ii=0; ii<nu; ii++)
+		ref[nx+ii] = 0.0;
+
+	// Hessian
+	double *hess = out+nv;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
+	for (; ii<nx+nu; ii++)
+		hess[ii*(nv+1)] = 1.0;
+	
+	// gradient
+	double *xu= in;
+	double *grad = out;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = 0.0;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+	
+	return;
+
+}
+
 void ext_cost_nm4(void *fun, double *in, double *out)
 {
 
@@ -676,13 +752,89 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 
 }
 
+void ext_cost_nm5(void *fun, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 24;
+
+	int nv = nu+nx;
+
+	// ref
+	double ref[nu+nx];
+	for (ii=0; ii<nx; ii++)
+		ref[ii] = xN_nm5[ii];
+	for (ii=0; ii<nu; ii++)
+		ref[nx+ii] = 0.0;
+
+	// Hessian
+	double *hess = out+nv;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
+	for (; ii<nx+nu; ii++)
+		hess[ii*(nv+1)] = 1.0;
+	
+	// gradient
+	double *xu= in;
+	double *grad = out;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = 0.0;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+	
+	return;
+
+}
+
+void ext_cost_nm6(void *fun, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 30;
+
+	int nv = nu+nx;
+
+	// ref
+	double ref[nu+nx];
+	for (ii=0; ii<nx; ii++)
+		ref[ii] = xN_nm6[ii];
+	for (ii=0; ii<nu; ii++)
+		ref[nx+ii] = 0.0;
+
+	// Hessian
+	double *hess = out+nv;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
+	for (; ii<nx+nu; ii++)
+		hess[ii*(nv+1)] = 1.0;
+	
+	// gradient
+	double *xu= in;
+	double *grad = out;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = 0.0;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+	
+	return;
+
+}
+
 
 
 int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
-    const int NMF = 3;  // number of free masses
+    const int NMF = 4;  // number of free masses
     const int d = 0;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
@@ -952,12 +1104,26 @@ int main() {
 	external_function_generic ext_cost_generic;
 
 	// TODO the others !!!
-	if (NMF==3)
-		ext_cost_generic.evaluate = &ext_cost_nm4;
-	else
+	switch(NMF)
 	{
-		printf("\next cost not implemented for this numer of masses\n\n");
-		exit(1);
+		case 1:
+			ext_cost_generic.evaluate = &ext_cost_nm2;
+			break;
+		case 2:
+			ext_cost_generic.evaluate = &ext_cost_nm3;
+			break;
+		case 3:
+			ext_cost_generic.evaluate = &ext_cost_nm4;
+			break;
+		case 4:
+			ext_cost_generic.evaluate = &ext_cost_nm5;
+			break;
+		case 5:
+			ext_cost_generic.evaluate = &ext_cost_nm6;
+			break;
+		default:
+			printf("\next cost not implemented for this numer of masses\n\n");
+			exit(1);
 	}
 #endif
 
