@@ -109,6 +109,7 @@ typedef struct
     double* b_dt;
     double* c;
     double dt;
+    
 } gnsf2_model;
 
 typedef struct { //workspace
