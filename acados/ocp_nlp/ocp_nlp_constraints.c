@@ -459,6 +459,7 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 		}
 		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
 		blasfeo_pack_tran_dmat(nq, nx+nu, work->nl_constraint_output+nh*(1+nx+nu), nq, &work->jacobian_quadratic, 0, 0);
+		// NOTE(giaf) here the Hessian in overwritten, not updated. Is this correct?
 		blasfeo_dsyrk_ln(nx+nu, nq, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
 			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 	}
