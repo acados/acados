@@ -48,9 +48,24 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
+#include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
+
+// x0
+#include "examples/c/chain_model/x0_nm2.c"
+#include "examples/c/chain_model/x0_nm3.c"
+#include "examples/c/chain_model/x0_nm4.c"
+#include "examples/c/chain_model/x0_nm5.c"
+#include "examples/c/chain_model/x0_nm6.c"
+
+// xN
+#include "examples/c/chain_model/xN_nm2.c"
+#include "examples/c/chain_model/xN_nm3.c"
+#include "examples/c/chain_model/xN_nm4.c"
+#include "examples/c/chain_model/xN_nm5.c"
+#include "examples/c/chain_model/xN_nm6.c"
 
 
 
@@ -75,8 +90,8 @@
 // dynamics: 0 erk, 1 lifted_irk, 2 irk
 #define DYNAMICS 2
 
-// cost: 0 ls, 1 nls
-#define COST 1
+// cost: 0 ls, 1 nls, 2 external
+#define COST 2
 
 // xcond: 0 no condensing, 1 part condensing, 2 full condensing
 #define XCOND 1
@@ -493,6 +508,33 @@ static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_funct
 
 void read_initial_state(const int nx, const int num_free_masses, double *x0)
 {
+#if 1
+	double *ptr;
+    switch (num_free_masses)
+    {
+        case 1:
+            ptr = x0_nm2;
+            break;
+        case 2:
+            ptr = x0_nm3;
+            break;
+        case 3:
+            ptr = x0_nm4;
+            break;
+        case 4:
+            ptr = x0_nm5;
+            break;
+        case 5:
+            ptr = x0_nm6;
+            break;
+        default:
+            printf("\nwrong number of free masses\n");
+			exit(1);
+            break;
+    }
+    for (int i = 0; i < nx; i++)
+		x0[i] = ptr[i];
+#else
     FILE *initial_states_file;
     switch (num_free_masses)
     {
@@ -525,12 +567,40 @@ void read_initial_state(const int nx, const int num_free_masses, double *x0)
         if (!fscanf(initial_states_file, "%lf", &x0[i]))
             break;
     fclose(initial_states_file);
+#endif
 }
 
 
 
 void read_final_state(const int nx, const int num_free_masses, double *xN)
 {
+#if 1
+	double *ptr;
+    switch (num_free_masses)
+    {
+        case 1:
+            ptr = xN_nm2;
+            break;
+        case 2:
+            ptr = xN_nm3;
+            break;
+        case 3:
+            ptr = xN_nm4;
+            break;
+        case 4:
+            ptr = xN_nm5;
+            break;
+        case 5:
+            ptr = xN_nm6;
+            break;
+        default:
+            printf("\nwrong number of free masses\n");
+			exit(1);
+            break;
+    }
+    for (int i = 0; i < nx; i++)
+		xN[i] = ptr[i];
+#else
     FILE *final_state_file;
     switch (num_free_masses) {
         case 1:
@@ -562,6 +632,48 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
         if (!fscanf(final_state_file, "%lf", &xN[i]))
             break;
     fclose(final_state_file);
+#endif
+}
+
+
+
+// hand-generated external function for externally provided hessian and gradient
+void ext_cost_nm4(void *fun, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 18;
+
+	int nv = nu+nx;
+
+	// ref
+	double ref[nu+nx];
+	for (ii=0; ii<nx; ii++)
+		ref[ii] = xN_nm4[ii];
+	for (ii=0; ii<nu; ii++)
+		ref[nx+ii] = 0.0;
+
+	// Hessian
+	double *hess = out+nv;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
+	for (; ii<nx+nu; ii++)
+		hess[ii*(nv+1)] = 1.0;
+	
+	// gradient
+	double *xu= in;
+	double *grad = out;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = 0.0;
+	for (ii=0; ii<nv; ii++)
+		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+	
+	return;
+
 }
 
 
@@ -647,14 +759,27 @@ int main() {
 
 
 	// cost: least squares
+#if COST==0
     for (int ii = 0; ii <= NN; ii++)
     {
-#if COST==0
+		// linear ls
 		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
-#else
-		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
-#endif
     }
+#elif COST==1
+    for (int ii = 0; ii <= NN; ii++)
+    {
+		// nonlinear ls
+		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
+    }
+#else
+    for (int ii = 0; ii < NN; ii++)
+    {
+		// external cost
+		ocp_nlp_cost_external_config_initialize_default(config->cost[ii]);
+    }
+	// linear ls
+	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN]);
+#endif
 
 		// 4th order schemes
 #if DYNAMICS==0
@@ -823,6 +948,19 @@ int main() {
 	}
 #endif
 
+#if COST==2
+	external_function_generic ext_cost_generic;
+
+	// TODO the others !!!
+	if (NMF==3)
+		ext_cost_generic.evaluate = &ext_cost_nm4;
+	else
+	{
+		printf("\next cost not implemented for this numer of masses\n\n");
+		exit(1);
+	}
+#endif
+
     /************************************************
     * nlp_in (wip)
     ************************************************/
@@ -866,6 +1004,7 @@ int main() {
 	// output definition: y = [x; u]
 
 #if COST==0
+
     /* linear ls */
 
     ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
@@ -873,14 +1012,34 @@ int main() {
 	// Cyt
 	for (int i=0; i<=NN; i++)
 	{
-		blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
+		blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
         for (int j = 0; j < nu[i]; j++)
             DMATEL_LIBSTR(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
         for (int j = 0; j < nx[i]; j++)
             DMATEL_LIBSTR(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
 	}
 
-#else
+	// W
+	for (int i=0; i<=NN; i++)
+	{
+		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
+        for (int j = 0; j < nx[i]; j++)
+            DMATEL_LIBSTR(&cost_ls[i]->W, j, j) = diag_cost_x[j];
+        for (int j = 0; j < nu[i]; j++)
+            DMATEL_LIBSTR(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+	}
+
+	// y_ref
+    for (int i=0; i<=NN; i++)
+	{
+		blasfeo_pack_dvec(nx[i], xref, &cost_ls[i]->y_ref, 0);
+		blasfeo_pack_dvec(nu[i], uref, &cost_ls[i]->y_ref, nx[i]);
+    }
+
+
+
+#elif COST==1
+
     /* nonlinear ls */
 
     ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
@@ -901,10 +1060,6 @@ int main() {
 	}
 #endif
 
-#endif
-
-    /* common to linear and nonlinear ls */
-
 	// W
 	for (int i=0; i<=NN; i++)
 	{
@@ -916,11 +1071,48 @@ int main() {
 	}
 
 	// y_ref
-    for (int i = 0; i < NN; i++)
+    for (int i=0; i<=NN; i++)
 	{
 		blasfeo_pack_dvec(nx[i], xref, &cost_ls[i]->y_ref, 0);
 		blasfeo_pack_dvec(nu[i], uref, &cost_ls[i]->y_ref, nx[i]);
     }
+
+#else
+	/* external cost */
+
+    ocp_nlp_cost_external_model **cost_external = (ocp_nlp_cost_external_model **) nlp_in->cost;
+
+	// ext_cost
+	for (int i=0; i<NN; i++)
+		cost_external[i]->ext_cost = &ext_cost_generic;
+
+    /* linear ls */
+
+    ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
+
+	// last stage
+
+	// Cyt
+	blasfeo_dgese(nu[NN]+nx[NN], ny[NN], 0.0, &cost_ls[NN]->Cyt, 0, 0);
+	for (int j = 0; j < nu[NN]; j++)
+		DMATEL_LIBSTR(&cost_ls[NN]->Cyt, j, nx[NN]+j) = 1.0;
+	for (int j = 0; j < nx[NN]; j++)
+		DMATEL_LIBSTR(&cost_ls[NN]->Cyt, nu[NN]+j, j) = 1.0;
+
+	// W
+	blasfeo_dgese(ny[NN], ny[NN], 0.0, &cost_ls[NN]->W, 0, 0);
+	for (int j = 0; j < nx[NN]; j++)
+		DMATEL_LIBSTR(&cost_ls[NN]->W, j, j) = diag_cost_x[j];
+	for (int j = 0; j < nu[NN]; j++)
+		DMATEL_LIBSTR(&cost_ls[NN]->W, nx[NN]+j, nx[NN]+j) = diag_cost_u[j];
+
+	// y_ref
+	blasfeo_pack_dvec(nx[NN], xref, &cost_ls[NN]->y_ref, 0);
+	blasfeo_pack_dvec(nu[NN], uref, &cost_ls[NN]->y_ref, nx[NN]);
+
+
+
+#endif
 
 
 

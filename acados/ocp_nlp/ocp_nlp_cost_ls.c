@@ -338,6 +338,10 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 		// TODO exact hessian of ls cost
 
 	}
+//	blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
+//	blasfeo_print_tran_dvec(nu+nx, &memory->grad, 0);
+//	exit(1);
+
 
 	return;
 
