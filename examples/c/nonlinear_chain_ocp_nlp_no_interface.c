@@ -834,7 +834,7 @@ int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
-    const int NMF = 4;  // number of free masses
+    const int NMF = 3;  // number of free masses
     const int d = 0;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
