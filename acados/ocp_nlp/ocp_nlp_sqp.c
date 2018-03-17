@@ -478,17 +478,17 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
 
     int N = dims->N;
 
-	// initialize objective
+	/* cost */
 	for (int ii=0; ii<=N; ii++)
 	{
 		config->cost[ii]->initialize_qp(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
 	}
 
 
-	// initialize dynamics
+	/* dynamics */
 
 
-	// initialize constraints
+	/* constraints */
 	for (int ii=0; ii<=N; ii++)
 	{
 		config->constraints[ii]->initialize_qp(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
@@ -773,8 +773,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 	}
 
 
-    // set up integrators
-
+	// copy sampling times into dynamics
     for (int ii = 0; ii < N; ii++)
     {
 		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[ii];

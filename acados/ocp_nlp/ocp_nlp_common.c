@@ -718,12 +718,10 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res, ocp_nlp_memory *mem) //, ocp_nlp_res_workspace *work)
 {
-	// TODO pass as argument ???
-//	ocp_nlp_dims *dims = in->dims;
 
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
 	double tmp_res;
 
@@ -731,8 +729,8 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 	res->inf_norm_res_g = 0.0;
 	for (int ii = 0; ii <= N; ii++)
 	{
-		nx = dims->constraints[ii]->nx;
-		nu = dims->constraints[ii]->nu;
+		nx = dims->cost[ii]->nx;
+		nu = dims->cost[ii]->nu;
 		blasfeo_daxpy(nu+nx, -1.0, mem->dyn_adj+ii, 0, mem->cost_grad+ii, 0, res->res_g+ii, 0);
 		blasfeo_daxpy(nu+nx, -1.0, mem->ineq_adj+ii, 0, res->res_g+ii, 0, res->res_g+ii, 0);
 		blasfeo_dvecnrm_inf(nu+nx, res->res_g+ii, 0, &tmp_res);
@@ -743,7 +741,7 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 	res->inf_norm_res_b = 0.0;
 	for (int ii = 0; ii < N; ii++)
 	{
-		nx1 = dims->constraints[ii+1]->nx;
+		nx1 = dims->dynamics[ii]->nx1;
 		blasfeo_dveccp(nx1, mem->dyn_fun+ii, 0, res->res_b+ii, 0);
 		blasfeo_dvecnrm_inf(nx1, res->res_b+ii, 0, &tmp_res);
 		res->inf_norm_res_b = tmp_res>res->inf_norm_res_b ? tmp_res : res->inf_norm_res_b;
@@ -755,20 +753,21 @@ void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, o
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-		blasfeo_daxpy(2*nb+2*ng, 1.0, out->t+ii, 0, mem->ineq_fun+ii, 0, res->res_d+ii, 0);
-		blasfeo_dvecnrm_inf(2*nb+2*ng, res->res_d+ii, 0, &tmp_res);
+		nh = dims->constraints[ii]->nh;
+		blasfeo_daxpy(2*nb+2*ng+2*nh, 1.0, out->t+ii, 0, mem->ineq_fun+ii, 0, res->res_d+ii, 0);
+		blasfeo_dvecnrm_inf(2*nb+2*ng+2*nh, res->res_d+ii, 0, &tmp_res);
 		res->inf_norm_res_d = tmp_res>res->inf_norm_res_d ? tmp_res : res->inf_norm_res_d;
 	}
 
 	// res_m
-	// TODO(giaf): add blasfeo_dvecmul
 	res->inf_norm_res_m = 0.0;
 	for (int ii = 0; ii <= N; ii++)
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-		// tmp = blasfeo_dvecmuldot(2*nb[ii]+2*ng[ii], out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
-		blasfeo_dvecnrm_inf(2*nb+2*ng, res->res_m+ii, 0, &tmp_res);
+		nh = dims->constraints[ii]->nh;
+		blasfeo_dvecmul(2*nb+2*ng+2*nh, out->lam+ii, 0, out->t+ii, 0, res->res_m+ii, 0);
+		blasfeo_dvecnrm_inf(2*nb+2*ng+2*nh, res->res_m+ii, 0, &tmp_res);
 		res->inf_norm_res_m = tmp_res>res->inf_norm_res_m ? tmp_res : res->inf_norm_res_m;
 	}
 
