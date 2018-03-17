@@ -89,18 +89,16 @@ int main() {
     sim_dims *dims = (sim_dims *) gnsf2_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
 
     // set up gnsf2_opts
-    int gnsf2_opts_size = config->opts_calculate_size(config, dims);
-    void *opts_mem = malloc(gnsf2_opts_size);
-    gnsf2_opts *opts = config->opts_assign(config, dims, opts_mem);
-    opts->sens_forw = 1;
-    opts->sens_adj = 1;
-    opts->newton_max = 3;
+    int opts_size = config->opts_calculate_size(config, dims);
+	void *opts_mem = malloc(opts_size);
+    sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
+    config->opts_initialize_default(config, dims, opts);
+    opts->sens_adj = true;
 
     // set up sim_in
     int in_size = sim_in_calculate_size(config, dims);
     void *in_mem = malloc(in_size);
     sim_in *in = sim_in_assign(config, dims, in_mem);
-    printf("herer?");
     for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
         in->S_forw[ii] = 0.0;
     }
@@ -114,7 +112,10 @@ int main() {
     in->x[2] = 0.8;
     in->u[0] = 40.108149413030752;
     in->u[1] = -50.446662212534974;
-    printf("herer?");
+
+    // set up workspace
+    int gnsf2_workspace_size = config->workspace_calculate_size(config, dims, opts);
+    void *work_ = malloc(gnsf2_workspace_size);
 
     // set up gnsf2_model
     gnsf2_model *model = in->model;
@@ -122,6 +123,8 @@ int main() {
     model->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
     model->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
     model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
+    // gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
+    // gnsf2_precompute(gnsf2_dim, model, opts);
     gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out
@@ -129,22 +132,18 @@ int main() {
     void* sim_out_ptr = (void*) malloc(sim_out_size);
     sim_out* out = sim_out_assign(config, dims, sim_out_ptr);
 
-    // set up workspace
-    int gnsf2_workspace_size = config->workspace_calculate_size(config, dims, opts);
-    void *work_ = malloc(gnsf2_workspace_size);
-
     // set up memory
     int mem_size = config->memory_calculate_size(config, dims, opts);
     void *mem_mem = malloc(mem_size);
     void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
-    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_max, gnsf2_dim->num_steps);
-    int NREP = 10000;
+    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf2_dim->num_steps);
+    int NREP = 1;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 
     for (int i = 0; i < NREP; i++) {
-        gnsf2_simulate( config_mem, in, out, opts, mem, work_);
+        gnsf2_simulate( config_mem, in, out, opts_mem, mem, work_);
 
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
@@ -165,11 +164,12 @@ int main() {
 
     free(config_mem);
     free(dims_memory);
-    free(opts_mem);
     free(in_mem);
     free(sim_out_ptr);
     free(work_);
     free(mem_mem);
+
+    free(opts_mem);
 
     free(jac_Phi_y_mem);
     free(Phi_inc_dy_mem);

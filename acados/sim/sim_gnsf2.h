@@ -56,18 +56,6 @@ typedef struct {
     double *u_0;
 } gnsf_res_in;
 
-typedef struct {
-//    double interval;
-//    int num_stages;
-    int num_steps;
-//    int num_forw_sens;
-    bool sens_forw;
-    bool sens_adj;
-    bool sens_hess;
-    int  newton_max;
-    bool jac_reuse;
-   // Newton_scheme *scheme;
-} gnsf2_opts;
 
 typedef struct
 {
@@ -98,6 +86,7 @@ typedef struct
     double *B;
     double *C;
     double *E;
+    
     double *L_x;
     double *L_xdot;
     double *L_z;
@@ -111,6 +100,34 @@ typedef struct
     double dt;
     
 } gnsf2_model;
+
+typedef struct {
+    struct blasfeo_dmat E11;
+    struct blasfeo_dmat E12;
+    struct blasfeo_dmat E21;
+    struct blasfeo_dmat E22;
+
+    struct blasfeo_dmat A1;
+    struct blasfeo_dmat A2;
+    struct blasfeo_dmat B1;
+    struct blasfeo_dmat B2;
+    struct blasfeo_dmat C1;
+    struct blasfeo_dmat C2;
+
+    struct blasfeo_dmat AA1;
+    struct blasfeo_dmat AA2;
+    struct blasfeo_dmat BB1;
+    struct blasfeo_dmat BB2;
+    struct blasfeo_dmat CC1;
+    struct blasfeo_dmat CC2;
+    struct blasfeo_dmat DD1;
+    struct blasfeo_dmat DD2;
+    struct blasfeo_dmat EE1;
+    struct blasfeo_dmat EE2;
+
+    struct blasfeo_dmat PP1;
+    struct blasfeo_dmat PP2;
+} gnsf2_pre_workspace;
 
 typedef struct { //workspace
     double *phi_in;
@@ -174,6 +191,9 @@ void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory);
 void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory);
 int gnsf2_workspace_calculate_size(void *config, sim_dims *dim_in, void *args);
 
+int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims);
+void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory);
+
 int gnsf2_dims_calculate_size();
 gnsf2_dims *gnsf2_dims_assign(void *raw_memory);
 
@@ -181,11 +201,14 @@ int sim_gnsf2_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
 void *sim_gnsf2_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
 
 void gnsf2_get_dims( gnsf2_dims* dims, casadi_function_t get_ints_fun);
-
-int gnsf2_opts_calculate_size(void *config, sim_dims *dims);
-void *gnsf2_opts_assign(void *config, sim_dims *dims, void *raw_memory);
-
+void gnsf2_import_matrices(gnsf2_dims* dims, gnsf2_model *model, casadi_function_t get_matrices_fun);
 void gnsf2_import_precomputed(gnsf2_dims* dims, gnsf2_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
+
+
+int sim_gnsf2_opts_calculate_size(void *config, sim_dims *dims);
+void *sim_gnsf2_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+
+void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts);
 
 void sim_gnsf2_config_initialize_default(void *config_);
 
