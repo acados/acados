@@ -331,9 +331,6 @@ ocp_nlp_in *ocp_nlp_in_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims,
     ocp_nlp_in *in = (ocp_nlp_in *) c_ptr;
     c_ptr += sizeof(ocp_nlp_in);
 
-	// dims
-	in->dims = dims;
-
 	// Ts
 	in->Ts = (double *) c_ptr;
 	c_ptr += N*sizeof(double);
@@ -432,8 +429,6 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 
     ocp_nlp_out *out = (ocp_nlp_out *)c_ptr;
     c_ptr += sizeof(ocp_nlp_out);
-
-	out->dims = dims;
 
 	// blasfeo_struct align
 	align_char_to(8, &c_ptr);
@@ -548,9 +543,6 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 	// struct
     ocp_nlp_memory *mem = (ocp_nlp_memory *) c_ptr;
     c_ptr += sizeof(ocp_nlp_memory);
-
-	// dims
-	mem->dims = dims;
 
 	// blasfeo_struct align
 	align_char_to(8, &c_ptr);
@@ -672,9 +664,6 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 	// struct
     ocp_nlp_res *res = (ocp_nlp_res *) c_ptr;
     c_ptr += sizeof(ocp_nlp_res);
-
-	// dims
-	res->dims = dims;
 
 	// blasfeo_struct align
 	align_char_to(8, &c_ptr);

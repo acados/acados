@@ -636,7 +636,7 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 	int i;
 
 	// extract dims
-    int N = nlp_in->dims->N;
+    int N = dims->N;
 	int nx, nu, nb, ng, nx1, nh;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -683,7 +683,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 	int i;
 
 	// extract dims
-    int N = nlp_out->dims->N;
+    int N = dims->N;
 	int nx, nu, nb, ng, nh, nx1;
 
 // TODO fix and move where appropriate

@@ -339,12 +339,10 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
 
 
 
-void ocp_nlp_out_print(ocp_nlp_out *nlp_out)
+void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 {
 
 	int ii;
-
-	ocp_nlp_dims *dims = nlp_out->dims;
 
     int N = dims->N;
 	int nx, nu, nb, ng, nh, nx1;
@@ -406,12 +404,10 @@ void ocp_nlp_out_print(ocp_nlp_out *nlp_out)
 
 
 
-void ocp_nlp_res_print(ocp_nlp_res *nlp_res)
+void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 {
 
 	int ii;
-
-	ocp_nlp_dims *dims = nlp_res->dims;
 
     int N = dims->N;
 	int nx, nu, nb, ng, nx1;

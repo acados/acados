@@ -45,7 +45,6 @@ extern "C" {
 typedef struct
 {
 	ocp_nlp_cost_dims **cost;
-//	sim_dims **sim;
 	ocp_nlp_dynamics_dims **dynamics;
 	ocp_nlp_constraints_dims **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
@@ -60,8 +59,6 @@ typedef struct
 
 typedef struct
 {
-    ocp_nlp_dims *dims;
-
 	double *Ts; // length of sampling intervals
 
     void **cost;
@@ -81,7 +78,6 @@ typedef struct
 
 typedef struct
 {
-    ocp_nlp_dims *dims;
 	struct blasfeo_dvec *ux;
 	struct blasfeo_dvec *pi;
 	struct blasfeo_dvec *lam;
@@ -96,7 +92,6 @@ typedef struct
 
 typedef struct
 {
-    ocp_nlp_dims *dims;
 	struct blasfeo_dvec *cost_grad;
 	struct blasfeo_dvec *ineq_fun;
 	struct blasfeo_dvec *ineq_adj;
@@ -112,7 +107,6 @@ typedef struct
 
 typedef struct
 {
-    ocp_nlp_dims *dims;
 	struct blasfeo_dvec *res_g; // stationarity
 	struct blasfeo_dvec *res_b; // dynamics
 	struct blasfeo_dvec *res_d; // inequality constraints

@@ -56,9 +56,9 @@ void write_double_vector_to_txt(real_t *vec, int_t n, const char *fname);
 // ocp nlp
 void ocp_nlp_dims_print(ocp_nlp_dims *dims);
 
-void ocp_nlp_out_print(ocp_nlp_out *nlp_out);
+void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out);
 
-void ocp_nlp_res_print(ocp_nlp_res *nlp_res);
+void ocp_nlp_res_print(ocp_nlp_dims*dims, ocp_nlp_res *nlp_res);
 
 
 // ocp qp

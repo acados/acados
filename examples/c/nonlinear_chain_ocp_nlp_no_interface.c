@@ -1482,7 +1482,7 @@ int main() {
     * sqp workspace
     ************************************************/
 
-    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, nlp_in->dims, nlp_opts);
+    int workspace_size = ocp_nlp_sqp_workspace_calculate_size(config, dims, nlp_opts);
     void *nlp_work = acados_malloc(workspace_size, 1);
 
     /************************************************
@@ -1513,10 +1513,10 @@ int main() {
     double time = acados_toc(&timer)/NREP;
 
 	printf("\nresiduals\n");
-	ocp_nlp_res_print(nlp_mem->nlp_res);
+	ocp_nlp_res_print(dims, nlp_mem->nlp_res);
 
 	printf("\nsolution\n");
-	ocp_nlp_out_print(nlp_out);
+	ocp_nlp_out_print(dims, nlp_out);
 
     printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, nlp_mem->sqp_iter, time*1e3);
 
