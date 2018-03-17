@@ -473,7 +473,8 @@ ocp_nlp_out *ocp_nlp_out_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng, out->t+ii, &c_ptr);
+		nh = dims->constraints[ii]->nh;
+		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh, out->t+ii, &c_ptr);
 	}
 
     assert((char *) raw_memory + ocp_nlp_out_calculate_size(config, dims) >= c_ptr);
@@ -491,7 +492,7 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *d
 {
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
     int size = sizeof(ocp_nlp_memory);
 
@@ -505,16 +506,18 @@ int ocp_nlp_memory_calculate_size(ocp_nlp_solver_config *config, ocp_nlp_dims *d
 		nu = dims->constraints[ii]->nu;
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
+		nh = dims->constraints[ii]->nh;
 		size += 3*blasfeo_memsize_dvec(nu+nx); // cost_grad ineq_adj dyn_adj
 		size += 1*blasfeo_memsize_dvec(nx1); // dyn_fun
-		size += 1*blasfeo_memsize_dvec(2*nb+2*ng); // ineq_fun
+		size += 1*blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // ineq_fun
 	}
 	nx = dims->constraints[N]->nx;
 	nu = dims->constraints[N]->nu;
 	nb = dims->constraints[N]->nb;
 	ng = dims->constraints[N]->ng;
+	nh = dims->constraints[N]->nh;
 	size += 3*blasfeo_memsize_dvec(nu+nx); // cost_grad ineq_adj dyn_adj
-	size += 1*blasfeo_memsize_dvec(2*nb+2*ng); // ineq_fun
+	size += 1*blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // ineq_fun
 
 
 	size += 8; // initial align
@@ -535,7 +538,7 @@ ocp_nlp_memory *ocp_nlp_memory_assign(ocp_nlp_solver_config *config, ocp_nlp_dim
 
 	// extract sizes
     int N = dims->N;
-	int nx, nu, nb, ng, nx1, nh;
+	int nx, nu, nb, ng, nh, nx1;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -613,7 +616,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 {
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
     int size = sizeof(ocp_nlp_res);
 
@@ -627,16 +630,18 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims)
 		nu = dims->constraints[ii]->nu;
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
+		nh = dims->constraints[ii]->nh;
 		size += 1*blasfeo_memsize_dvec(nu+nx); // res_g
 		size += 1*blasfeo_memsize_dvec(nx1); // res_b
-		size += 2*blasfeo_memsize_dvec(2*nb+2*ng); // res_d res_m
+		size += 2*blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // res_d res_m
 	}
 	nx = dims->constraints[N]->nx;
 	nu = dims->constraints[N]->nu;
 	nb = dims->constraints[N]->nb;
 	ng = dims->constraints[N]->ng;
+	nh = dims->constraints[N]->nh;
 	size += 1*blasfeo_memsize_dvec(nu+nx); // res_g
-	size += 2*blasfeo_memsize_dvec(2*nb+2*ng); // res_d res_m
+	size += 2*blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // res_d res_m
 
 	size += 8; // initial align
 	size += 8; // blasfeo_struct align
@@ -656,7 +661,7 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 
 	// extract sizes
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
 	// initial align
 	align_char_to(8, &c_ptr);
@@ -683,14 +688,14 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 	// res_g
 	for (int ii = 0; ii <= N; ii++)
 	{
-		nx = dims->constraints[ii]->nx;
-		nu = dims->constraints[ii]->nu;
+		nx = dims->cost[ii]->nx;
+		nu = dims->cost[ii]->nu;
 		assign_and_advance_blasfeo_dvec_mem(nu+nx, res->res_g+ii, &c_ptr);
 	}
 	// res_b
 	for (int ii = 0; ii < N; ii++)
 	{
-		nx1 = dims->constraints[ii+1]->nx;
+		nx1 = dims->dynamics[ii]->nx1;
 		assign_and_advance_blasfeo_dvec_mem(nx1, res->res_b+ii, &c_ptr);
 	}
 	// res_d
@@ -698,14 +703,16 @@ ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory)
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng, res->res_d+ii, &c_ptr);
+		nh = dims->constraints[ii]->nh;
+		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh, res->res_d+ii, &c_ptr);
 	}
 	// res_m
 	for (int ii = 0; ii <= N; ii++)
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng, res->res_m+ii, &c_ptr);
+		nh = dims->constraints[ii]->nh;
+		assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh, res->res_m+ii, &c_ptr);
 	}
 
 	res->memsize = ocp_nlp_res_calculate_size(dims);

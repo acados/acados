@@ -410,7 +410,7 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 	int ii;
 
     int N = dims->N;
-	int nx, nu, nb, ng, nx1;
+	int nx, nu, nb, ng, nh, nx1;
 
 	printf("res_g =\n");
 	for (ii=0; ii<=N; ii++)
@@ -432,7 +432,8 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-        blasfeo_print_exp_tran_dvec(2*nb+2*ng, &nlp_res->res_d[ii], 0);
+		nh = dims->constraints[ii]->nh;
+        blasfeo_print_exp_tran_dvec(2*nb+2*ng+2*nh, &nlp_res->res_d[ii], 0);
 	}
 
 	printf("res_m =\n");
@@ -440,7 +441,8 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 	{
 		nb = dims->constraints[ii]->nb;
 		ng = dims->constraints[ii]->ng;
-        blasfeo_print_exp_tran_dvec(2*nb+2*ng, &nlp_res->res_m[ii], 0);
+		nh = dims->constraints[ii]->nh;
+        blasfeo_print_exp_tran_dvec(2*nb+2*ng+2*nh, &nlp_res->res_m[ii], 0);
 	}
 
 	return;

@@ -723,6 +723,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 	{
 		nb = dims->constraints[i]->nb;
 		ng = dims->constraints[i]->ng;
+		nh = dims->constraints[i]->nh;
 		blasfeo_dveccp(2*nb+2*ng+2*nh, work->qp_out->t+i, 0, nlp_out->t+i, 0);
 	}
 

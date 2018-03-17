@@ -82,16 +82,14 @@
 #define NREP 10
 
 
-// process box constraints as general constraints
-#define BC_AS_GC
-
-
-
 // dynamics: 0 erk, 1 lifted_irk, 2 irk
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
 #define COST 2
+
+// constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
+#define CONSTRAINTS 2
 
 // xcond: 0 no condensing, 1 part condensing, 2 full condensing
 #define XCOND 1
@@ -831,6 +829,36 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 
 
 
+// hand-wirtten box constraints on states as nonlinra constraints
+void nonlin_constr_nm4(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 18;
+
+	int nv = nu+nx;
+	int nh = nx;
+
+	// fun
+	double *fun = out;
+	for (ii=0; ii<nx; ii++)
+		fun[ii] = in[ii]; // x
+	
+	// jacobian
+	double *jac = out+nh;
+	for (ii=0; ii<nv*nh; ii++)
+		jac[ii] = 0.0;
+	for (ii=0; ii<nh; ii++)
+		jac[ii*(nh+1)] = 1.0;
+	
+	return;
+
+}
+
+
+
 int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
@@ -857,18 +885,25 @@ int main() {
 
     nx[0] = NX;
     nu[0] = NU;
-#ifdef BC_AS_GC
-    nbx[0] = 0;
-    nbu[0] = 0;
-	nb[0] = 0;
-    ng[0] = nu[0]+nx[0];
-#else
+#if CONSTRAINTS==0 // box
     nbx[0] = nx[0];
     nbu[0] = nu[0];
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
-#endif
 	nh[0] = 0;
+#elif CONSTRAINTS==1 // general
+    nbx[0] = 0;
+    nbu[0] = 0;
+	nb[0] = 0;
+    ng[0] = nu[0]+nx[0];
+	nh[0] = 0;
+#else // general+nonlinear constraints
+    nbx[0] = 0;
+    nbu[0] = 0;
+	nb[0] = 0;
+    ng[0] = nu[0];
+	nh[0] = nx[0];
+#endif
 	ny[0] = nx[0]+nu[0];
 
     for (int i = 1; i < NN; i++)
@@ -1129,6 +1164,25 @@ int main() {
 #endif
 
     /************************************************
+    * nonlinear constraints
+    ************************************************/
+
+#if CONSTRAINTS==2
+	external_function_generic nonlin_constr_generic;
+
+	// TODO the others !!!
+	switch(NMF)
+	{
+		case 3:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
+			break;
+		default:
+			printf("\nnonlin constr not implemented for this numer of masses\n\n");
+			exit(1);
+	}
+#endif
+
+    /************************************************
     * nlp_in (wip)
     ************************************************/
 
@@ -1371,9 +1425,41 @@ int main() {
     }
 
 	// stage-wise
+
+	// fist stage
+#if CONSTRAINTS==0 // box constraints
 	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
     constraints[0]->idxb = idxb0;
+#elif CONSTRAINTS==1 // general constraints
+	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
+	for (int ii=0; ii<nu[0]; ii++)
+		Cu0[ii*(ng[0]+1)] = 1.0;
+
+	double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
+	for (int ii=0; ii<nx[0]; ii++)
+		Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
+
+	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
+	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
+	blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
+	blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
+
+	d_free(Cu0);
+	d_free(Cx0);
+#else // general+nonlinear constraints
+	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
+	for (int ii=0; ii<ng[0]; ii++)
+		DMATEL_LIBSTR(&constraints[0]->DCt, ii, ii) = 1.0;
+	
+    ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
+	nl_constr[0]->h = &nonlin_constr_generic;
+
+	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
+	blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
+#endif
+
+	// other stages
     for (int i = 1; i < NN; i++)
 	{
 		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
@@ -1384,30 +1470,13 @@ int main() {
 	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
     constraints[NN]->idxb = idxbN;
 
-
-	// General constraints
-	if (ng[0]>0)
-	{
-		double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
-		for (int ii=0; ii<nu[0]; ii++)
-			Cu0[ii*(ng[0]+1)] = 1.0;
-
-		double *Cx0; d_zeros(&Cx0, ng[0], nx[0]);
-		for (int ii=0; ii<nx[0]; ii++)
-			Cx0[nu[0]+ii*(ng[0]+1)] = 1.0;
-
-		blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
-		blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
-		blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
-		blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
-
-		d_free(Cu0);
-		d_free(Cx0);
-	}
 #if 0
-	blasfeo_print_dmat(nu[0]+nx[0], ng[0], constraints->DCt+0, 0, 0);
-	blasfeo_print_tran_dvec(2*nb[0]+2*ng[0], constraints->d+0, 0);
-//	exit(1);
+	for (int ii=0; ii<=NN; ii++)
+	{
+		blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &constraints[ii]->DCt, 0, 0);
+		blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii]+2*nh[ii], &constraints[ii]->d, 0);
+	}
+	exit(1);
 #endif
 
     /************************************************

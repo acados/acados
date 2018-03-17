@@ -106,13 +106,14 @@ int ocp_nlp_constraints_calculate_size(void *config, ocp_nlp_constraints_dims *d
 	int nu = dims->nu;
 	int nb = dims->nb;
 	int ng = dims->ng;
+	int nh = dims->nh;
 
 	int size = 0;
 
     size += sizeof(ocp_nlp_constraints_model);
 
 	size += sizeof(int)*nb;  // idxb
-	size += blasfeo_memsize_dvec(2*nb+2*ng); // d
+	size += blasfeo_memsize_dvec(2*nb+2*ng+2*nh); // d
 	size += blasfeo_memsize_dmat(nu+nx, ng); // DCt
 
 	size += 64; // blasfeo_mem align
@@ -131,6 +132,7 @@ void *ocp_nlp_constraints_assign(void *config, ocp_nlp_constraints_dims *dims, v
 	int nu = dims->nu;
 	int nb = dims->nb;
 	int ng = dims->ng;
+	int nh = dims->nh;
 
 	// struct
     ocp_nlp_constraints_model *model = (ocp_nlp_constraints_model *) c_ptr;
@@ -148,13 +150,13 @@ void *ocp_nlp_constraints_assign(void *config, ocp_nlp_constraints_dims *dims, v
 
 	// blasfeo_dvec
 	// d
-	assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng, &model->d, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh, &model->d, &c_ptr);
 
     // idxb
     assign_and_advance_int(dims->nbx+dims->nbu, &model->idxb, &c_ptr);
 
 	// h
-	model->h = NULL;
+//	model->h = NULL;
 
 	// assert
     assert((char *) raw_memory + ocp_nlp_constraints_calculate_size(config, dims) >= c_ptr);
@@ -335,7 +337,7 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config_, ocp_nlp_constrai
 
     size += sizeof(ocp_nlp_constraints_workspace);
 
-	size += 1*blasfeo_memsize_dvec(nb+ng+nh);  // tmp_nbg
+	size += 1*blasfeo_memsize_dvec(nb+ng+nh);  // tmp_nbgh
 	size += (nx+nu)*sizeof(double);  // nl_constraint_input
 	size += nh*(1+nx+nu)*sizeof(double);  // nl_constraint_output
 	if (nq > 0) {
@@ -369,8 +371,8 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, ocp_nlp_constraint
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
-	// tmp_nbg
-	assign_and_advance_blasfeo_dvec_mem(nb+ng+nh, &work->tmp_nbg, &c_ptr);
+	// tmp_nbgh
+	assign_and_advance_blasfeo_dvec_mem(nb+ng+nh, &work->tmp_nbgh, &c_ptr);
 	work->nl_constraint_input = (double *) c_ptr;
 	c_ptr += (nx+nu)*sizeof(double);
 	work->nl_constraint_output = (double *) c_ptr;
@@ -436,8 +438,8 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 	int nh = dims->nh;
 	int nq = dims->nq;
 
-	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_nbg, 0);
-	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_nbg, nb, &work->tmp_nbg, nb);
+	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_nbgh, 0);
+	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_nbgh, nb, &work->tmp_nbgh, nb);
 
 	if (nh>0)
 	{
@@ -446,9 +448,9 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 
 		model->h->evaluate(model->h, work->nl_constraint_input, work->nl_constraint_output);
 
-		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbg, nb+ng);
-		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, ng, nu);
-		blasfeo_pack_tran_dmat(nh, nu, work->nl_constraint_output+nh+nx*nh, nh, memory->DCt, ng, 0);
+		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbgh, nb+ng);
+		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, nu, ng);
+		blasfeo_pack_tran_dmat(nh, nu, work->nl_constraint_output+nh+nx*nh, nh, memory->DCt, 0, ng);
 	}
 
 	if (nq>0)
@@ -464,14 +466,14 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_d
 			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 	}
 
-	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_nbg, 0, &model->d, 0, &memory->fun, 0);
-	blasfeo_daxpy(nb+ng+nh, -1.0, &model->d, nb+ng+nh, &work->tmp_nbg, 0, &memory->fun, nb+ng+nh);
+	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_nbgh, 0, &model->d, 0, &memory->fun, 0);
+	blasfeo_daxpy(nb+ng+nh, -1.0, &model->d, nb+ng+nh, &work->tmp_nbgh, 0, &memory->fun, nb+ng+nh);
 
 	// nlp_mem: ineq_adj
 	blasfeo_dvecse(nu+nx, 0.0, &memory->adj, 0);
-	blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb+ng+nh, memory->lam, 0, &work->tmp_nbg, 0);
-	blasfeo_dvecad_sp(nb, 1.0, &work->tmp_nbg, 0, model->idxb, &memory->adj, 0);
-	blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_nbg, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
+	blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb+ng+nh, memory->lam, 0, &work->tmp_nbgh, 0);
+	blasfeo_dvecad_sp(nb, 1.0, &work->tmp_nbgh, 0, model->idxb, &memory->adj, 0);
+	blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_nbgh, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
 
 	return;
 
