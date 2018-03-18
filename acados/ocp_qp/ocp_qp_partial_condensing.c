@@ -40,7 +40,8 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
     size += sizeof(ocp_qp_partial_condensing_opts);
     size += sizeof(ocp_qp_dims);
     size += d_memsize_ocp_qp_dim(dims->N);  // worst-case size of new QP
-    size += 1 * 8;
+	size += (dims->N+1)*sizeof(int); // block size
+    size += 1*8;
     return size;
 }
 
@@ -55,6 +56,9 @@ ocp_qp_partial_condensing_opts *ocp_qp_partial_condensing_opts_assign(ocp_qp_dim
 
     opts->pcond_dims = (ocp_qp_dims *)c_ptr;
     c_ptr += sizeof(ocp_qp_dims);
+
+	// block size
+	assign_and_advance_int(dims->N+1, &opts->block_size, &c_ptr);
 
     align_char_to(8, &c_ptr);
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
@@ -83,11 +87,13 @@ int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_pa
 
     // populate dimensions of new ocp_qp based on N2
     opts->pcond_dims->N = opts->N2;
-    d_compute_qp_dim_ocp2ocp(dims, opts->pcond_dims);
+	d_compute_block_size_cond_qp_ocp2ocp(dims->N, opts->N2, opts->block_size); // TODO user-defined block size ???
+
+    d_compute_qp_dim_ocp2ocp(dims, opts->block_size, opts->pcond_dims);
 
     size += sizeof(ocp_qp_partial_condensing_memory);
     size += sizeof(struct d_cond_qp_ocp2ocp_workspace);
-    size += d_memsize_cond_qp_ocp2ocp(dims, opts->pcond_dims);
+    size += d_memsize_cond_qp_ocp2ocp(dims, opts->block_size, opts->pcond_dims);
 
     size += 1 * 8;
     return size;
@@ -110,7 +116,7 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_memory_assign(ocp_qp
     align_char_to(8, &c_ptr);
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
-    d_create_cond_qp_ocp2ocp(dims, opts->pcond_dims, mem->hpipm_workspace, c_ptr);
+    d_create_cond_qp_ocp2ocp(dims, opts->block_size, opts->pcond_dims, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
     mem->qp_in = NULL;  // initialized when partial condensing routine is called
