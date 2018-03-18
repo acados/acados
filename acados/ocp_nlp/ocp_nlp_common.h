@@ -44,6 +44,7 @@ extern "C" {
 
 typedef struct
 {
+	// NOTE(giaf) add some (arrays of) int to work outside (and independent of) sub-modules? e.g. nv, ne, nc (variables, equality-constraints, inequality-constraints
 	ocp_nlp_cost_dims **cost;
 	ocp_nlp_dynamics_dims **dynamics;
 	ocp_nlp_constraints_dims **constraints;

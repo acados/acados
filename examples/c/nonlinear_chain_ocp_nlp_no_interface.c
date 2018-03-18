@@ -830,6 +830,60 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 
 
 // hand-wirtten box constraints on states as nonlinra constraints
+void nonlin_constr_nm2(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 6;
+
+	int nv = nu+nx;
+	int nh = nx;
+
+	// fun
+	double *fun = out;
+	for (ii=0; ii<nx; ii++)
+		fun[ii] = in[ii]; // x
+	
+	// jacobian
+	double *jac = out+nh;
+	for (ii=0; ii<nv*nh; ii++)
+		jac[ii] = 0.0;
+	for (ii=0; ii<nh; ii++)
+		jac[ii*(nh+1)] = 1.0;
+	
+	return;
+
+}
+
+void nonlin_constr_nm3(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 12;
+
+	int nv = nu+nx;
+	int nh = nx;
+
+	// fun
+	double *fun = out;
+	for (ii=0; ii<nx; ii++)
+		fun[ii] = in[ii]; // x
+	
+	// jacobian
+	double *jac = out+nh;
+	for (ii=0; ii<nv*nh; ii++)
+		jac[ii] = 0.0;
+	for (ii=0; ii<nh; ii++)
+		jac[ii*(nh+1)] = 1.0;
+	
+	return;
+
+}
+
 void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 {
 
@@ -857,7 +911,65 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 
 }
 
+void nonlin_constr_nm5(void *evaluate, double *in, double *out)
+{
 
+	int ii;
+
+	int nu = 3;
+	int nx = 24;
+
+	int nv = nu+nx;
+	int nh = nx;
+
+	// fun
+	double *fun = out;
+	for (ii=0; ii<nx; ii++)
+		fun[ii] = in[ii]; // x
+	
+	// jacobian
+	double *jac = out+nh;
+	for (ii=0; ii<nv*nh; ii++)
+		jac[ii] = 0.0;
+	for (ii=0; ii<nh; ii++)
+		jac[ii*(nh+1)] = 1.0;
+	
+	return;
+
+}
+
+void nonlin_constr_nm6(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 30;
+
+	int nv = nu+nx;
+	int nh = nx;
+
+	// fun
+	double *fun = out;
+	for (ii=0; ii<nx; ii++)
+		fun[ii] = in[ii]; // x
+	
+	// jacobian
+	double *jac = out+nh;
+	for (ii=0; ii<nv*nh; ii++)
+		jac[ii] = 0.0;
+	for (ii=0; ii<nh; ii++)
+		jac[ii*(nh+1)] = 1.0;
+	
+	return;
+
+}
+
+
+
+/************************************************
+* main
+************************************************/
 
 int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
@@ -1170,11 +1282,22 @@ int main() {
 #if CONSTRAINTS==2
 	external_function_generic nonlin_constr_generic;
 
-	// TODO the others !!!
 	switch(NMF)
 	{
+		case 1:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
+			break;
+		case 2:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
+			break;
 		case 3:
 			nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
+			break;
+		case 4:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
+			break;
+		case 5:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
 			break;
 		default:
 			printf("\nnonlin constr not implemented for this numer of masses\n\n");
