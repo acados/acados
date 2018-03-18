@@ -105,23 +105,23 @@ int main() {
 	for (int i = 0; i <= N; ++i) {
 		blasfeo_dgese(nv[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
+            BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
+            BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
 	}
 
 	// W
 	for (int i = 0; i < N; ++i) {
 		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->W, j, j) = Q;
+            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = Q;
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R;
+            BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = R;
 	}
 	// WN
 	blasfeo_dgese(ny[N], ny[N], 0.0, &cost_ls[N]->W, 0, 0);
 	for (int j = 0; j < nx[N]; j++)
-		DMATEL_LIBSTR(&cost_ls[N]->W, j, j) = QN;
+		BLASFEO_DMATEL(&cost_ls[N]->W, j, j) = QN;
 
 	// y_ref
     for (int i = 0; i <= N; ++i)

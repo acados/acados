@@ -82,10 +82,10 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     for (int_t i = 0; i <= dims->N; i++) {
         states_copy[i] = (real_t *) calloc(dims->nx[i], sizeof(real_t));
         for (int_t j = 0; j < dims->nx[i]; j++)
-            states_copy[i][j] = DVECEL_LIBSTR(out->ux, dims->nu[i] + j);
+            states_copy[i][j] = BLASFEO_DVECEL(out->ux, dims->nu[i] + j);
         controls_copy[i] = (real_t *) calloc(dims->nu[i], sizeof(real_t));
         for (int_t j = 0; j < dims->nu[i]; j++)
-            controls_copy[i][j] = DVECEL_LIBSTR(out->ux, j);
+            controls_copy[i][j] = BLASFEO_DVECEL(out->ux, j);
     }
 
     LangObject *x_star = new_sequence_from(states_copy, dims->N+1, dims->nx);

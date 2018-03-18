@@ -69,7 +69,7 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *opts
         {
             for (int jj = 0; jj < nu; jj++)
             {
-                if (DMATEL_LIBSTR(&qp_in->RSQrq[kk], ii+nu, jj) != 0)
+                if (BLASFEO_DMATEL(&qp_in->RSQrq[kk], ii+nu, jj) != 0)
                 {
                     stageQpSolver = QPDUNES_WITH_QPOASES;
                 }
@@ -86,7 +86,7 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *opts
         {
             for (int jj = 0; jj < nx; jj++)
             {
-                if ((ii != jj) && (DMATEL_LIBSTR(&qp_in->RSQrq[kk], ii+nu_k, jj+nu_k) != 0))
+                if ((ii != jj) && (BLASFEO_DMATEL(&qp_in->RSQrq[kk], ii+nu_k, jj+nu_k) != 0))
                 {
                     stageQpSolver = QPDUNES_WITH_QPOASES;
                 }
@@ -101,7 +101,7 @@ static qpdunes_stage_qp_solver_t check_stage_qp_solver(ocp_qp_qpdunes_opts *opts
         {
             for (int jj = 0; jj < nu; jj++)
             {
-                if ((ii != jj) && (DMATEL_LIBSTR(&qp_in->RSQrq[kk], ii, jj) != 0))
+                if ((ii != jj) && (BLASFEO_DMATEL(&qp_in->RSQrq[kk], ii, jj) != 0))
                 {
                     stageQpSolver = QPDUNES_WITH_QPOASES;
                 }
@@ -358,12 +358,12 @@ static void form_bounds(double *zLow, double *zUpp, int nx, int nu, int nb, int 
     {
         if (idxb[ii] < nu)
         {  // input bound
-            zLow[idxb[ii] + nx] = DVECEL_LIBSTR(sd, ii);  // lb[ii]
-            zUpp[idxb[ii] + nx] = -DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
+            zLow[idxb[ii] + nx] = BLASFEO_DVECEL(sd, ii);  // lb[ii]
+            zUpp[idxb[ii] + nx] = -BLASFEO_DVECEL(sd, ii + nb + ng);  // ub[ii]
         } else
         {  // state bounds
-            zLow[idxb[ii] - nu] = DVECEL_LIBSTR(sd, ii);  // lb[ii]
-            zUpp[idxb[ii] - nu] = -DVECEL_LIBSTR(sd, ii + nb + ng);  // ub[ii]
+            zLow[idxb[ii] - nu] = BLASFEO_DVECEL(sd, ii);  // lb[ii]
+            zUpp[idxb[ii] - nu] = -BLASFEO_DVECEL(sd, ii + nb + ng);  // ub[ii]
         }
     }
 }
@@ -476,8 +476,8 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
         if (opts->stageQpSolver == QPDUNES_WITH_QPOASES)
         {
             // make Q[N] non diagonal
-            DMATEL_LIBSTR(&in->RSQrq[N], 0, 1) += 1e-8;
-            DMATEL_LIBSTR(&in->RSQrq[N], 1, 0) += 1e-8;
+            BLASFEO_DMATEL(&in->RSQrq[N], 0, 1) += 1e-8;
+            BLASFEO_DMATEL(&in->RSQrq[N], 1, 0) += 1e-8;
         }
 
         // setup of intervals

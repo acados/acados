@@ -610,9 +610,9 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 //			if (opts->scheme != NULL && opts->scheme->type != exact)
 //			{
 //				for (int_t j = 0; j < nx; j++)
-//					DVECEL_LIBSTR(nlp_mem->cost_grad+i, nu+j) += work->sim_out[i]->grad[j];
+//					BLASFEO_DVECEL(nlp_mem->cost_grad+i, nu+j) += work->sim_out[i]->grad[j];
 //				for (int_t j = 0; j < nu; j++)
-//					DVECEL_LIBSTR(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
+//					BLASFEO_DVECEL(nlp_mem->cost_grad+i, j) += work->sim_out[i]->grad[nx+j];
 //			}
 //		}
 
@@ -692,7 +692,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 //		nx1 = dims->constraints[i+1]->nx;
 //        for (j = 0; j < nx1; j++)
 //        {
-//            work->sim_in[i]->S_adj[j] = -DVECEL_LIBSTR(&work->qp_out->pi[i], j);
+//            work->sim_in[i]->S_adj[j] = -BLASFEO_DVECEL(&work->qp_out->pi[i], j);
 //        }
 //    }
 

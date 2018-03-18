@@ -1358,9 +1358,9 @@ int main() {
 	{
 		blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
+            BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
+            BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
 	}
 
 	// W
@@ -1368,9 +1368,9 @@ int main() {
 	{
 		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->W, j, j) = diag_cost_x[j];
+            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = diag_cost_x[j];
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+            BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 	}
 
 	// y_ref
@@ -1409,9 +1409,9 @@ int main() {
 	{
 		blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->W, j, j) = diag_cost_x[j];
+            BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = diag_cost_x[j];
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+            BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 	}
 
 	// y_ref
@@ -1439,16 +1439,16 @@ int main() {
 	// Cyt
 	blasfeo_dgese(nu[NN]+nx[NN], ny[NN], 0.0, &cost_ls[NN]->Cyt, 0, 0);
 	for (int j = 0; j < nu[NN]; j++)
-		DMATEL_LIBSTR(&cost_ls[NN]->Cyt, j, nx[NN]+j) = 1.0;
+		BLASFEO_DMATEL(&cost_ls[NN]->Cyt, j, nx[NN]+j) = 1.0;
 	for (int j = 0; j < nx[NN]; j++)
-		DMATEL_LIBSTR(&cost_ls[NN]->Cyt, nu[NN]+j, j) = 1.0;
+		BLASFEO_DMATEL(&cost_ls[NN]->Cyt, nu[NN]+j, j) = 1.0;
 
 	// W
 	blasfeo_dgese(ny[NN], ny[NN], 0.0, &cost_ls[NN]->W, 0, 0);
 	for (int j = 0; j < nx[NN]; j++)
-		DMATEL_LIBSTR(&cost_ls[NN]->W, j, j) = diag_cost_x[j];
+		BLASFEO_DMATEL(&cost_ls[NN]->W, j, j) = diag_cost_x[j];
 	for (int j = 0; j < nu[NN]; j++)
-		DMATEL_LIBSTR(&cost_ls[NN]->W, nx[NN]+j, nx[NN]+j) = diag_cost_u[j];
+		BLASFEO_DMATEL(&cost_ls[NN]->W, nx[NN]+j, nx[NN]+j) = diag_cost_u[j];
 
 	// y_ref
 	blasfeo_pack_dvec(nx[NN], xref, &cost_ls[NN]->y_ref, 0);
@@ -1573,7 +1573,7 @@ int main() {
 #else // general+nonlinear constraints
 	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
 	for (int ii=0; ii<ng[0]; ii++)
-		DMATEL_LIBSTR(&constraints[0]->DCt, ii, ii) = 1.0;
+		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
 	
     ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;

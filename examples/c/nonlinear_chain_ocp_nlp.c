@@ -781,9 +781,9 @@ int main() {
 	{
 		blasfeo_dgese(ny[i], ny[i], 0.0, cost_ls->W+i, 0, 0);
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(cost_ls->W+i, j, j) = diag_cost_x[j];
+            BLASFEO_DMATEL(cost_ls->W+i, j, j) = diag_cost_x[j];
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(cost_ls->W+i, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+            BLASFEO_DMATEL(cost_ls->W+i, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 	}
 
 	// Cyt
@@ -791,9 +791,9 @@ int main() {
 	{
 		blasfeo_dgese(nv[i], ny[i], 0.0, cost_ls->Cyt+i, 0, 0);
         for (int j = 0; j < nu[i]; j++)
-            DMATEL_LIBSTR(cost_ls->Cyt+i, j, nx[i]+j) = 1.0;
+            BLASFEO_DMATEL(cost_ls->Cyt+i, j, nx[i]+j) = 1.0;
         for (int j = 0; j < nx[i]; j++)
-            DMATEL_LIBSTR(cost_ls->Cyt+i, nu[i]+j, j) = 1.0;
+            BLASFEO_DMATEL(cost_ls->Cyt+i, nu[i]+j, j) = 1.0;
 	}
 
 	// y_ref
