@@ -143,18 +143,8 @@ acados_c_static: acados_static
 ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
 	mkdir -p include/acados_c
-	mkdir -p include/acados_c/dense_qp
-	# mkdir -p include/acados_c/ocp_lin
-	# mkdir -p include/acados_c/ocp_nlp
-	mkdir -p include/acados_c/ocp_qp
-	mkdir -p include/acados_c/sim
 	mkdir -p lib
 	cp -r interfaces/acados_c/*.h include/acados_c
-	cp -r interfaces/acados_c/dense_qp/*.h include/acados_c/dense_qp
-	# cp -r interfaces/acados_c/ocp_lin/*.h include/acados_c/ocp_lin
-	# cp -r interfaces/acados_c/ocp_nlp/*.h include/acados_c/ocp_nlp
-	cp -r interfaces/acados_c/ocp_qp/*.h include/acados_c/ocp_qp
-	cp -r interfaces/acados_c/sim/*.h include/acados_c/sim
 	mv interfaces/acados_c/libacados_c.a lib
 endif
 
