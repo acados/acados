@@ -271,7 +271,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, ocp_nlp_cost_dims *
 {
 
     ocp_nlp_cost_external_model *model = model_;
-    ocp_nlp_cost_external_opts *opts = opts_;
+    // ocp_nlp_cost_external_opts *opts = opts_;
     ocp_nlp_cost_external_memory *memory= memory_;
     ocp_nlp_cost_external_workspace *work= work_;
 

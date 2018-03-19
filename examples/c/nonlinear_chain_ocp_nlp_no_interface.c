@@ -86,7 +86,7 @@
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 2
+#define COST 1
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -662,7 +662,7 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1e-2;
 	for (; ii<nx+nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
-	
+
 	// gradient
 	double *xu= in;
 	double *grad = out;
@@ -670,7 +670,7 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
-	
+
 	return;
 
 }
@@ -700,7 +700,7 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1e-2;
 	for (; ii<nx+nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
-	
+
 	// gradient
 	double *xu= in;
 	double *grad = out;
@@ -708,7 +708,7 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
-	
+
 	return;
 
 }
@@ -738,7 +738,7 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1e-2;
 	for (; ii<nx+nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
-	
+
 	// gradient
 	double *xu= in;
 	double *grad = out;
@@ -746,7 +746,7 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
-	
+
 	return;
 
 }
@@ -776,7 +776,7 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1e-2;
 	for (; ii<nx+nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
-	
+
 	// gradient
 	double *xu= in;
 	double *grad = out;
@@ -784,7 +784,7 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
-	
+
 	return;
 
 }
@@ -814,7 +814,7 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1e-2;
 	for (; ii<nx+nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
-	
+
 	// gradient
 	double *xu= in;
 	double *grad = out;
@@ -822,7 +822,7 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
-	
+
 	return;
 
 }
@@ -845,14 +845,14 @@ void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 	double *fun = out;
 	for (ii=0; ii<nx; ii++)
 		fun[ii] = in[ii]; // x
-	
+
 	// jacobian
 	double *jac = out+nh;
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
 		jac[ii*(nh+1)] = 1.0;
-	
+
 	return;
 
 }
@@ -872,14 +872,14 @@ void nonlin_constr_nm3(void *evaluate, double *in, double *out)
 	double *fun = out;
 	for (ii=0; ii<nx; ii++)
 		fun[ii] = in[ii]; // x
-	
+
 	// jacobian
 	double *jac = out+nh;
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
 		jac[ii*(nh+1)] = 1.0;
-	
+
 	return;
 
 }
@@ -899,14 +899,14 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 	double *fun = out;
 	for (ii=0; ii<nx; ii++)
 		fun[ii] = in[ii]; // x
-	
+
 	// jacobian
 	double *jac = out+nh;
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
 		jac[ii*(nh+1)] = 1.0;
-	
+
 	return;
 
 }
@@ -926,14 +926,14 @@ void nonlin_constr_nm5(void *evaluate, double *in, double *out)
 	double *fun = out;
 	for (ii=0; ii<nx; ii++)
 		fun[ii] = in[ii]; // x
-	
+
 	// jacobian
 	double *jac = out+nh;
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
 		jac[ii*(nh+1)] = 1.0;
-	
+
 	return;
 
 }
@@ -953,14 +953,14 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 	double *fun = out;
 	for (ii=0; ii<nx; ii++)
 		fun[ii] = in[ii]; // x
-	
+
 	// jacobian
 	double *jac = out+nh;
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
 		jac[ii*(nh+1)] = 1.0;
-	
+
 	return;
 
 }
@@ -1574,7 +1574,7 @@ int main() {
 	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
 	for (int ii=0; ii<ng[0]; ii++)
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
-	
+
     ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 

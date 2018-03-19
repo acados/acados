@@ -150,7 +150,7 @@ int main() {
 	int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
 	void *ptr = malloc(constraint_size);
 	external_function_casadi_assign(&nonlinear_constraint, ptr);
-	
+
 	// bounds
     constraints[0]->idxb = idxb_0.data();
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
@@ -186,7 +186,7 @@ int main() {
     double elapsed_time = acados_toc(&timer);
 
 	printf("\nsolution\n");
-	ocp_nlp_out_print(nlp_out);
+	ocp_nlp_out_print(dims, nlp_out);
 
     printf("\n\nstatus = %i, total time = %f ms\n\n", solver_status, elapsed_time*1e3);
 
