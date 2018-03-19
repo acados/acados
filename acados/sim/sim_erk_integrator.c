@@ -27,9 +27,11 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 
-//#include "acados/sim/sim_casadi_wrapper.h"
 
 
+/************************************************
+* model
+************************************************/
 
 int sim_erk_model_calculate_size(void *config, sim_dims *dims)
 {
@@ -73,6 +75,10 @@ void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
 }
 
 
+
+/************************************************
+* opts
+************************************************/
 
 int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 {
@@ -127,6 +133,9 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
     assert(ns == 4 && "only number of stages = 4 implemented!");
 
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
     memcpy(opts->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
         sizeof(*opts->A_mat) * (ns * ns));
     memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
@@ -149,9 +158,14 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 
     int ns = opts->ns;
 
+	opts->tableau_size = opts->ns;
+
     assert(ns == 4 && "only number of stages = 4 implemented!");
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// set tableau size
+	opts->tableau_size = opts->ns;
 
     memcpy(opts->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
         sizeof(*opts->A_mat) * (ns * ns));
@@ -164,6 +178,10 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 }
 
 
+
+/************************************************
+* memory
+************************************************/
 
 int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
@@ -178,6 +196,10 @@ void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 }
 
 
+
+/************************************************
+* workspace
+************************************************/
 
 int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
@@ -197,19 +219,25 @@ int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
     size += (nX + nu) * sizeof(double); // rhs_forw_in
 
-    if(opts->sens_adj){
+    if(opts->sens_adj)
+	{
         size += num_steps * ns * nX * sizeof(double); // K_traj
         size += (num_steps + 1) * nX *sizeof(double); // out_forw_traj
-    }else{
+    }
+	else
+	{
         size += ns * nX * sizeof(double); // K_traj
         size += nX *sizeof(double); // out_forw_traj
     }
 
-    if (opts->sens_hess && opts->sens_adj){
+    if (opts->sens_hess && opts->sens_adj)
+	{
         size += (nx + nX + nu) * sizeof(double); //rhs_adj_in
         size += (nx + nu + nhess) * sizeof(double); //out_adj_tmp
         size += ns * (nx + nu + nhess) * sizeof(double); //adj_traj
-    }else if (opts->sens_adj){
+    }
+	else if (opts->sens_adj)
+	{
         size += (nx * 2 + nu) * sizeof(double); //rhs_adj_in
         size += (nx + nu)* sizeof(double); //out_adj_tmp
         size += ns * (nx + nu) * sizeof(double); //adj_traj
@@ -250,7 +278,8 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
     {
         assign_and_advance_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
-    } else
+    } 
+	else
     {
         assign_and_advance_double(ns*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double(nX, &workspace->out_forw_traj, &c_ptr);
@@ -261,7 +290,8 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
         assign_and_advance_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
-    } else if (opts->sens_adj)
+    } 
+	else if (opts->sens_adj)
     {
         assign_and_advance_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu, &workspace->out_adj_tmp, &c_ptr);
@@ -275,10 +305,16 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
 
 
 
+/************************************************
+* functions
+************************************************/
+
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
+
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
 
     int ns = opts->ns;
 

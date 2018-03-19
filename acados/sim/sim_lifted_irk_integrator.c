@@ -36,6 +36,10 @@
 
 
 
+/************************************************
+* model
+************************************************/
+
 int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims)
 {
 
@@ -62,6 +66,10 @@ void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory
 }
 
 
+
+/************************************************
+* opts
+************************************************/
 
 int sim_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims)
 {
@@ -155,6 +163,9 @@ void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void 
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
     enum Newton_type_collocation type = exact;
     opts->scheme->type = type;
     opts->scheme->freeze = false;
@@ -194,6 +205,9 @@ void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opt
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
 	// gauss collocation nodes
     gauss_nodes(ns, opts->c_vec, opts->work);
 
@@ -215,6 +229,10 @@ void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opt
 }
 
 
+
+/************************************************
+* memory
+************************************************/
 
 int sim_lifted_irk_memory_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
@@ -419,6 +437,10 @@ void *sim_lifted_irk_memory_assign(void *config_, sim_dims *dims, void *opts_, v
 }
 
 
+
+/************************************************
+* workspace
+************************************************/
 
 int sim_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
@@ -635,6 +657,10 @@ double LU_system_ACADO(double *const A, int *const perm, int dim) {
 }
 
 
+
+/************************************************
+* functions
+************************************************/
 
 double solve_system_ACADO(double *const A, double *const b, int *const perm,
                           int dim, int dim2) {
@@ -968,6 +994,8 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
 
 	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
+
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
 
     int ns = opts->ns;
 

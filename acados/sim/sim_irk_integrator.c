@@ -119,6 +119,9 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
 	// gauss collocation nodes
     gauss_nodes(ns, opts->c_vec, opts->work);
 
@@ -147,6 +150,9 @@ void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
     int ns = opts->ns;
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// set tableau size
+	opts->tableau_size = opts->ns;
 
 	// gauss collocation nodes
     gauss_nodes(ns, opts->c_vec, opts->work);
@@ -328,6 +334,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
+
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
 
     int ns = opts->ns;
 

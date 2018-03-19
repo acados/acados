@@ -166,6 +166,9 @@ sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *opts_, v
 
 sim_solver *sim_create(sim_solver_config *config, sim_dims *dims, void *opts_)
 {
+	// update Butcher tableau (needed if the user changed ns)
+	config->opts_update_tableau(config, dims, opts_);
+
     int bytes = sim_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);

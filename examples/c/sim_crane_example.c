@@ -179,11 +179,11 @@ int main()
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
 		/************************************************
-		* sim config
+		* sim plan & config
 		************************************************/
 
+		// choose plan
 		sim_solver_plan plan;
-		sim_solver_config *config;
 
 		switch (nss)
 		{
@@ -191,19 +191,16 @@ int main()
 			case 0:
 				printf("\n\nsim solver: ERK\n");
 				plan.sim_solver = ERK;
-				config = sim_config_create(plan);
 				break;
 
 			case 1:
 				printf("\n\nsim solver: IRK\n");
 				plan.sim_solver = IRK;
-				config = sim_config_create(plan);
 				break;
 
 			case 2:
 				printf("\n\nsim solver: Lifted_IRK\n");
 				plan.sim_solver = LIFTED_IRK;
-				config = sim_config_create(plan);
 				break;
 
 			default :
@@ -211,6 +208,9 @@ int main()
 				exit(1);
 
 		}
+
+		// create correct config based on plan
+		sim_solver_config *config = sim_config_create(plan);
 
 		/************************************************
 		* sim dims
@@ -227,6 +227,8 @@ int main()
 
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
+		opts->ns = 4; // number of stages in rk integrator
+//		opts->num_steps = 4; // number of integration steps
 		opts->sens_adj = true;
 
 		/************************************************
