@@ -26,6 +26,48 @@
 
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
+#include "acados/utils/mem.h"
+
+
+int ocp_nlp_plan_calculate_size(int N)
+{
+    int bytes = sizeof(ocp_nlp_solver_plan);
+    bytes += N*sizeof(sim_solver_plan);
+
+    return bytes;
+}
+
+
+
+ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_solver_plan *plan = (ocp_nlp_solver_plan *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_solver_plan);
+
+    plan->sim_solver_plan = (sim_solver_plan *) c_ptr;
+    c_ptr += N*sizeof(sim_solver_plan);
+
+    // TODO
+    // assert( 0 == 0);
+
+    return plan;
+}
+
+
+
+ocp_nlp_solver_plan *ocp_nlp_plan_create(int N)
+{
+    int bytes = ocp_nlp_plan_calculate_size(N);
+    void *ptr = acados_malloc(bytes, 1);
+
+	ocp_nlp_solver_plan *plan = ocp_nlp_plan_assign(N, ptr);
+
+    return plan;
+}
+
+
 
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 {
@@ -45,7 +87,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
         // QP solver
         config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
-        
+
         // LS cost
         for (int i = 0; i <= N; ++i)
         {
@@ -106,7 +148,7 @@ ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dim
 	int bytes = ocp_nlp_out_calculate_size(config, dims);
 
 	void *ptr = calloc(1, bytes);
-	
+
     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
 
     return nlp_out;
