@@ -62,11 +62,13 @@ int main() {
 
 	ocp_qp_solver_plan qp_plan = {PARTIAL_CONDENSING_HPIPM};
 	std::vector<sim_solver_plan> sim_plan(N, {ERK});
+	std::vector<ocp_nlp_cost_t> cost_plan(N+1, LINEAR_LS);
 
 	ocp_nlp_solver_plan plan = {
 		qp_plan,
 		sim_plan.data(),
-		SQP_GN
+		SQP_GN,
+		cost_plan.data()
 	};
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
 
