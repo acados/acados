@@ -80,7 +80,7 @@
 #define NREP 10
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 0
+#define COST 2
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -957,37 +957,27 @@ int main() {
 
 	// TODO(dimitris): implement different plan for user defined Hessian
 	plan->nlp_solver = SQP_GN;
+	for (int i = 0; i <= NN; i++)
+	{
+		// TODO(dimitris): try mixed costs
+		if (cost_type == 0)
+			plan->nlp_cost[i] = LINEAR_LS;
+		if (cost_type == 1)
+			plan->nlp_cost[i] = NONLINEAR_LS;
+		if (cost_type == 2)
+		{
+			if ( i < NN)
+				plan->nlp_cost[i] = EXTERNALLY_PROVIDED;
+			else
+				plan->nlp_cost[i] = LINEAR_LS;
+		}
+	}
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 	for (int i = 0; i < NN; i++)
 		plan->sim_solver_plan[i].sim_solver = ERK;
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
-	// ocp_nlp_solver_config *config = ocp_nlp_config_create(plan_tmp, NN);
-
-	// TODO(dimitris): ADD COST TYPE IN INTERFACE!!!!!!!
-	// #if COST==0
-	//     for (int ii = 0; ii <= NN; ii++)
-	//     {
-	// 		// linear ls
-	// 		ocp_nlp_cost_ls_config_initialize_default(config->cost[ii]);
-	//     }
-	// #elif COST==1
-	//     for (int ii = 0; ii <= NN; ii++)
-	//     {
-	// 		// nonlinear ls
-	// 		ocp_nlp_cost_nls_config_initialize_default(config->cost[ii]);
-	//     }
-	// #else
-	//     for (int ii = 0; ii < NN; ii++)
-	//     {
-	// 		// external cost
-	// 		ocp_nlp_cost_external_config_initialize_default(config->cost[ii]);
-	//     }
-	// 	// linear ls
-	// 	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN]);
-	// #endif
-
 
     /************************************************
     * ocp_nlp_dims

@@ -34,12 +34,21 @@ typedef enum {
     SQP_GN
 } ocp_nlp_solver_t;
 
-typedef struct {
 
+typedef enum {
+    LINEAR_LS,
+    NONLINEAR_LS,
+    EXTERNALLY_PROVIDED
+} ocp_nlp_cost_t;
+
+
+typedef struct {
     ocp_qp_solver_plan ocp_qp_solver_plan;
     sim_solver_plan *sim_solver_plan;
 	ocp_nlp_solver_t nlp_solver;
+    ocp_nlp_cost_t *nlp_cost;
 } ocp_nlp_solver_plan;
+
 
 typedef struct {
     ocp_nlp_solver_config *config;
@@ -49,7 +58,6 @@ typedef struct {
     void *work;
 } ocp_nlp_solver;
 
-// INPUT, OUTPUT AND OPTIONS
 //
 ocp_nlp_solver_plan *ocp_nlp_plan_create(int N);
 //
