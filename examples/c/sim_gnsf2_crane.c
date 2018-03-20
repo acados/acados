@@ -146,7 +146,7 @@ int main() {
     void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
     printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf2_dim->num_steps);
-    int NREP = 1;
+    int NREP = 10000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 

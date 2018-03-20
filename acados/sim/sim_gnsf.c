@@ -826,7 +826,7 @@ void gnsf_simulate(gnsf_dims *dims, gnsf_fixed *fix, gnsf_in *in, sim_out *out, 
             // printf("dPsi_dx = \n");
             // blasfeo_print_exp_dmat(nx, nx, &dPsi_dx, 0, 0);
             // blasfeo_print_exp_dvec(nx + nu, &lambda, 0);
-            blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &res_in, 0, &lambda, 0); // recheck!
+            blasfeo_dgemv_t(nx, nx, 1.0, &dPsi_dx, 0, 0, &lambda_old, 0, 0.0, &res_val, 0, &lambda, 0); // recheck!
             blasfeo_dveccp(nx +nu, &lambda, 0, &lambda_old, 0);
             blasfeo_dgemv_t(nff, nx1, -1.0, &J_r_x1u, 0  , 0, &res_val, 0, 1.0, &lambda_old, 0, &lambda, 0);
             blasfeo_dgemv_t(nff, nu, -1.0, &J_r_x1u, 0, nx1, &res_val, 0, 1.0, &lambda_old, nx, &lambda, nx);
@@ -844,13 +844,13 @@ void sim_gnsf_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->evaluate = &gnsf_simulate;
-	config->opts_calculate_size = &gnsf_opts_calculate_size;
-	config->opts_assign = &gnsf_opts_assign;
+	// config->evaluate = &gnsf_simulate;
+	// config->opts_calculate_size = &gnsf_opts_calculate_size;
+	// config->opts_assign = &gnsf_opts_assign;
 	// config->opts_initialize_default = &sim_irk_opts_initialize_default; TODO
 	// config->memory_calculate_size = &sim_irk_memory_calculate_size; TODO
 	// config->memory_assign = &sim_irk_memory_assign;  TODO
-	config->workspace_calculate_size = &gnsf_calculate_workspace_size;
+	// config->workspace_calculate_size = &gnsf_calculate_workspace_size;
 	// config->model_calculate_size = &sim_irk_model_calculate_size; TODO
 	// config->model_assign = &sim_irk_model_assign; TODO
 
