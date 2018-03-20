@@ -53,7 +53,7 @@ void *ocp_nlp_cost_ls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *
 
 typedef struct
 {
-    bool gauss_newton_hess; // gauss-newton hessian approximation
+	int dummy;
 } ocp_nlp_cost_ls_opts;
 
 //

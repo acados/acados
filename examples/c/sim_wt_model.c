@@ -29,6 +29,7 @@
 // acados
 // TODO(dimitris): remove most includes
 #include "acados/sim/sim_common.h"
+#include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/external_function_generic.h"
@@ -47,6 +48,9 @@
 #include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
 #include <blasfeo/include/blasfeo_d_blas.h>
 
+// x0 and u for simulation
+#include "examples/c/wt_model_nx3/u_x0.c"
+
 
 
 int main()
@@ -56,10 +60,6 @@ int main()
 * bla bla bla
 ************************************************/
 
-    int NREP = 500;
-
-	/* double Time1, Time2, Time3; */
-
     int ii;
     int jj;
 
@@ -68,14 +68,25 @@ int main()
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05; // simulation time
-    // int num_stages = 4;
-    double *xref;
-    xref = (double*)calloc(nx, sizeof(double));
-    xref[1] = M_PI;
+
+	double x_sim[nx*(nsim+1)];
+	for (ii=0; ii<nx; ii++)
+		x_sim[ii] = x0[ii];
 
 /************************************************
 * external functions (explicit model)
 ************************************************/
+
+	// explicit ODE
+
+	external_function_casadi expl_ode;
+	expl_ode.casadi_fun = &ode_energy_balanced_model;
+	expl_ode.casadi_work = &ode_energy_balanced_model_work;
+	expl_ode.casadi_sparsity_in = &ode_energy_balanced_model_sparsity_in;
+	expl_ode.casadi_sparsity_out = &ode_energy_balanced_model_sparsity_out;
+	expl_ode.casadi_n_in = &ode_energy_balanced_model_n_in;
+	expl_ode.casadi_n_out = &ode_energy_balanced_model_n_out;
+	external_function_casadi_create(&expl_ode);
 
 	// forward explicit VDE
 
@@ -225,7 +236,33 @@ int main()
 
 //		opts->ns = 4; // number of stages in rk integrator
 //		opts->num_steps = 5; // number of integration steps
-		opts->sens_adj = true;
+		opts->sens_adj = false;
+		opts->sens_forw = false;
+
+		switch (nss)
+		{
+
+			case 0:
+				// ERK
+				opts->ns = 4; // number of stages in rk integrator
+				break;
+
+			case 1:
+				// IRK
+				opts->ns = 2; // number of stages in rk integrator
+				break;
+
+			case 2:
+				// lifted IRK
+				opts->ns = 2; // number of stages in rk integrator
+				break;
+
+			default :
+				printf("\nnot enough sim solvers implemented!\n");
+				exit(1);
+
+		}
+
 
 		/************************************************
 		* sim in / out
@@ -241,6 +278,8 @@ int main()
 		{
 			case 0:
 			{
+				erk_model *model = in->model;
+				model->ode_expl = (external_function_generic *) &expl_ode;
 				sim_set_model(config, in, "forward_vde", &expl_forw_vde);
 				sim_set_model(config, in, "adjoint_vde", &expl_adj_vde);
 				// model->hess_ode_expl = (external_function_generic *) &expl_hess_ode;
@@ -269,14 +308,6 @@ int main()
 			}
 		}
 
-		// x
-		for (ii = 0; ii < nx; ii++)
-			in->x[ii] = xref[ii];
-
-		// p
-		for (ii = 0;ii < nu; ii++)
-			in->u[ii] = 1.0;
-
 		// seeds forw
 		for (ii = 0; ii < nx * NF; ii++)
 			in->S_forw[ii] = 0.0;
@@ -298,25 +329,47 @@ int main()
     	acados_timer timer;
 		acados_tic(&timer);
 
-		for (ii=0;ii<NREP;ii++)
+		int nsim0 = nsim;
+
+//		for (ii=0; ii<nsim; ii++)
+		for (ii=0; ii<nsim0; ii++)
 		{
+			// x
+			for (jj = 0; jj < nx; jj++)
+				in->x[jj] = x_sim[ii*nx+jj];
+
+			// p
+			for (jj = 0; jj < 2; jj++)
+				in->u[jj] = u_sim[ii*2+jj];
+			for (jj = 0; jj < nu; jj++)
+				in->u[2+jj] = 0.1;
+
+//			d_print_mat(1, nx, in->x, 1);
+//			d_print_mat(1, nu, in->u, 1);
+
 		    acados_return = sim_solve(sim_solver, in, out);
 			if (acados_return != 0)
             	printf("error in sim solver\n");
-		}
-		double cpu_time = acados_toc(&timer)/NREP;
 
-		double *xn = out->xn;
+//			d_print_mat(1, nx, out->xn, 1);
+
+			// x_out
+			for (jj = 0; jj < nx; jj++)
+				x_sim[(ii+1)*nx+jj] = out->xn[jj];
+
+		}
+		double cpu_time = acados_toc(&timer);
 
 		/************************************************
 		* printing
 		************************************************/
 
 		printf("\nxn: \n");
-		for (ii=0;ii<nx;ii++)
-			printf("%8.5f ",xn[ii]);
+		for (ii=0; ii<nx; ii++)
+			printf("%8.5f ", x_sim[nsim0*nx+ii]);
 		printf("\n");
 
+#if 0
 		double *S_forw_out;
 		S_forw_out = NULL;
 		if(opts->sens_forw){
@@ -385,8 +438,9 @@ int main()
 			blasfeo_free_dvec(&sx);
 			blasfeo_free_dvec(&sz);
 		}
+#endif
 
-		printf("average time over %d runs: %f ms \n\n", NREP, 1e3*cpu_time);
+		printf("time for %d simulation steps: %f ms \n\n", nsim, 1e3*cpu_time);
 
 		free(sim_solver);
 		free(in);

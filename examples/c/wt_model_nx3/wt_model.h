@@ -9,6 +9,13 @@ extern "C" {
 
 /* explicit ODE */
 
+// explicit ODE
+int ode_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int ode_energy_balanced_model_work(int *, int *, int *, int *);
+const int *ode_energy_balanced_model_sparsity_in(int);
+const int *ode_energy_balanced_model_sparsity_out(int);
+int ode_energy_balanced_model_n_in();
+int ode_energy_balanced_model_n_out();
 // forward explicit VDE
 int vde_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int vde_energy_balanced_model_work(int *, int *, int *, int *);
