@@ -94,6 +94,7 @@ int main() {
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
     opts->sens_adj = true;
+    opts->interval = 0.1;
 
     // set up sim_in
     int in_size = sim_in_calculate_size(config, dims);
@@ -123,8 +124,9 @@ int main() {
     model->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
     model->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
     model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
-    // gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
-    // gnsf2_precompute(gnsf2_dim, model, opts);
+    gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
+
+    gnsf2_precompute(gnsf2_dim, model, opts);
     gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out

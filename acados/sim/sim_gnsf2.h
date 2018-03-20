@@ -127,6 +127,14 @@ typedef struct {
 
     struct blasfeo_dmat PP1;
     struct blasfeo_dmat PP2;
+
+    struct blasfeo_dmat LLZ;
+    struct blasfeo_dmat LLx;
+    struct blasfeo_dmat LLK;
+    struct blasfeo_dmat LLu;
+
+
+    int *ipiv; // index of pivot vector
 } gnsf2_pre_workspace;
 
 typedef struct { //workspace

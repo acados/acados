@@ -242,12 +242,12 @@ int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims)
     // int nx2 = dims->nx2;
     int nz = dims->nz;
     int n_out = dims->n_out;
-    // int n_in = dims->n_in;
+    int n_in = dims->n_in;
     int num_stages = dims->num_stages;
     // int num_steps = dims->num_steps;
 
     int nff = n_out * num_stages;
-    // int nyy = n_in  * num_stages;
+    int nyy = n_in  * num_stages;
     int nK1 = num_stages * nx1;
     // int nK2 = num_stages * nx2;
     int nZ  = num_stages * nz;
@@ -257,29 +257,32 @@ int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims)
     make_int_multiple_of(8, &size);
     size += 1 * 8;
 
+    int nz_nx1_max = nz>nx1 ? nz : nx1;
+    size += nz_nx1_max * num_stages * sizeof(int);//ipiv
+
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
     size += blasfeo_memsize_dmat(nx1, nx1); // E11
-    size += blasfeo_memsize_dmat(nx1, nz); // E12
+    size += blasfeo_memsize_dmat(nx1, nz);  // E12
     size += blasfeo_memsize_dmat(nz , nx1); // E21
-    size += blasfeo_memsize_dmat(nz , nz); // E22
+    size += blasfeo_memsize_dmat(nz , nz);  // E22
 
-    size += blasfeo_memsize_dmat(nx1, nx1);// A1
-    size += blasfeo_memsize_dmat(nz , nx1);// A2
-    size += blasfeo_memsize_dmat(nx1, nu);// B1
-    size += blasfeo_memsize_dmat(nz , nu);// B2
-    size += blasfeo_memsize_dmat(nx1, n_out);// C1
-    size += blasfeo_memsize_dmat(nz , n_out);// C2
+    size += blasfeo_memsize_dmat(nx1, nx1);   // A1
+    size += blasfeo_memsize_dmat(nz , nx1);   // A2
+    size += blasfeo_memsize_dmat(nx1, nu);    // B1
+    size += blasfeo_memsize_dmat(nz , nu);    // B2
+    size += blasfeo_memsize_dmat(nx1, n_out); // C1
+    size += blasfeo_memsize_dmat(nz , n_out); // C2
 
     size += blasfeo_memsize_dmat(nK1, nx1); // AA1
     size += blasfeo_memsize_dmat(nZ , nx1); // AA2
-    size += blasfeo_memsize_dmat(nK1, nu); // BB1
-    size += blasfeo_memsize_dmat(nZ , nu); // BB2
+    size += blasfeo_memsize_dmat(nK1, nu);  // BB1
+    size += blasfeo_memsize_dmat(nZ , nu);  // BB2
 
     size += blasfeo_memsize_dmat(nK1, nff); // CC1
     size += blasfeo_memsize_dmat(nZ , nff); // CC2
-    size += blasfeo_memsize_dmat(nK1, nZ); // DD1
+    size += blasfeo_memsize_dmat(nK1, nZ);  // DD1
     size += blasfeo_memsize_dmat(nZ , nK1); // DD2
 
     size += blasfeo_memsize_dmat(nK1, nK1); // EE1
@@ -287,6 +290,12 @@ int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims)
 
     size += blasfeo_memsize_dmat(nK1, nK1); // PP1
     size += blasfeo_memsize_dmat(nK1, nZ ); // PP2
+
+    size += blasfeo_memsize_dmat(nyy, nZ ); // LLZ
+    size += blasfeo_memsize_dmat(nyy, nx1); // LLx
+    size += blasfeo_memsize_dmat(nyy, nK1); // LLK
+    size += blasfeo_memsize_dmat(nyy, nu ); // LLu
+
 
     make_int_multiple_of(8, &size);
     size += 1 * 8;
@@ -300,7 +309,7 @@ void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory){
     int nz = dims->nz;
     int n_out = dims->n_out;
     int num_stages = dims->num_stages;
-    // int n_in = dims->n_in;
+    int n_in = dims->n_in;
 
     char *c_ptr = (char *)raw_memory;
     align_char_to(8, &c_ptr);
@@ -308,6 +317,9 @@ void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory){
 	// struct
     gnsf2_pre_workspace *work = (gnsf2_pre_workspace *) c_ptr;
     c_ptr += sizeof(gnsf2_pre_workspace);
+
+    int nz_nx1_max = nz>nx1 ? nz : nx1;
+    assign_int(nz_nx1_max *num_stages, &work->ipiv, &c_ptr);
 
     align_char_to(64, &c_ptr);
 
@@ -339,38 +351,147 @@ void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory){
     assign_blasfeo_dmat_mem(nx1 * num_stages, nx1 * num_stages, &work->PP1, &c_ptr);
     assign_blasfeo_dmat_mem(nx1 * num_stages, nz  * num_stages, &work->PP2, &c_ptr);
 
+    assign_blasfeo_dmat_mem(n_in, nz  * num_stages, &work->LLZ, &c_ptr);
+    assign_blasfeo_dmat_mem(n_in, nx1 , &work->LLx, &c_ptr);
+    assign_blasfeo_dmat_mem(n_in, nx1 * num_stages, &work->LLK, &c_ptr);
+    assign_blasfeo_dmat_mem(n_in, nu, &work->LLu, &c_ptr);
+
     return (void *) work;
 }
 
 
 
 void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts){
-    // int nu  = dims->nu;
-    // int nx1 = dims->nx1;
-    // int nx2 = dims->nx2;
-    // int nz = dims->nz;
-    // int n_out = dims->n_out;
-    // int n_in = dims->n_in;
-    // int num_stages = dims->num_stages;
+    int nu  = dims->nu;
+    int nx1 = dims->nx1;
+    int nx2 = dims->nx2;
+    int nz = dims->nz;
+    int n_out = dims->n_out;
+    int n_in = dims->n_in;
+    int num_stages = dims->num_stages;
 
-    // int pre_workspace_size = gnsf2_pre_workspace_calculate_size(dims);
-    // void *pre_work_ = malloc(pre_workspace_size);
-    // gnsf2_pre_workspace *work = (gnsf2_pre_workspace *) gnsf2_cast_pre_workspace(dims, pre_work_);
+    int nK1 = num_stages * nx1;
+    int nK2 = num_stages * nx2;
+    int nZ  = num_stages * nz;
+    int nff = n_out * num_stages;
+    int nyy = n_in  * num_stages;
 
-    // struct blasfeo_dmat E11 = work->E11;
-    // struct blasfeo_dmat E12 = work->E12;
-    // struct blasfeo_dmat E21 = work->E21;
-    // struct blasfeo_dmat E22 = work->E22;
+    int pre_workspace_size = gnsf2_pre_workspace_calculate_size(dims);
+    void *pre_work_ = malloc(pre_workspace_size);
+    gnsf2_pre_workspace *work = (gnsf2_pre_workspace *) gnsf2_cast_pre_workspace(dims, pre_work_);
 
-    // blasfeo_pack_dmat(nx1, nx1, model->E, nx1+nz, &E11, 0, 0);
-    // blasfeo_pack_dmat(nx1, nz , model->E, nx1+nz, &E12, 0, 0); //?!
-    // printf("in precompute");
-    // for (int ii = 0; ii < num_stages; ii++) {
-    //     // void blasfeo_pack_dmat(int m, int n, double *A, int lda, struct blasfeo_dmat *sB, int bi, int bj);
+    int num_steps = opts->num_steps;
+    double dt = opts->interval/num_steps;
 
+    double *A_mat = opts->A_mat;
+    double *b_vec = opts->b_vec;
+    double *c_vec = opts->c_vec;
+
+    double *c = model->c;
+    double *b_dt  = model->b_dt;
+    double *A_dt  = model->A_dt;
+
+    int *ipiv = work->ipiv;
+
+    struct blasfeo_dmat E11 = work->E11;
+    struct blasfeo_dmat E12 = work->E12;
+    struct blasfeo_dmat E21 = work->E21;
+    struct blasfeo_dmat E22 = work->E22;
+
+    struct blasfeo_dmat A1 = work->A1;
+    struct blasfeo_dmat A2 = work->A2;
+    struct blasfeo_dmat B1 = work->B1;
+    struct blasfeo_dmat B2 = work->B2;
+    struct blasfeo_dmat C1 = work->C1;
+    struct blasfeo_dmat C2 = work->C2;
+
+    struct blasfeo_dmat AA1 = work->AA1;
+    struct blasfeo_dmat AA2 = work->AA2;
+    struct blasfeo_dmat BB1 = work->BB1;
+    struct blasfeo_dmat BB2 = work->BB2;
+    struct blasfeo_dmat CC1 = work->CC1;
+    struct blasfeo_dmat CC2 = work->CC2;
+
+    struct blasfeo_dmat DD1 = work->DD1;
+    struct blasfeo_dmat DD2 = work->DD2;
+    struct blasfeo_dmat EE1 = work->EE1;
+    struct blasfeo_dmat EE2 = work->EE2;
+
+    struct blasfeo_dmat LLZ = work->LLZ;
+    struct blasfeo_dmat LLx = work->LLx;
+    struct blasfeo_dmat LLK = work->LLK;
+    struct blasfeo_dmat LLu = work->LLu;
+
+    printf("in precompute\n");
+
+    blasfeo_pack_dmat(nx1, nx1, model->E, nx1+nz, &E11, 0, 0);
+    blasfeo_pack_dmat(nx1, nz , model->E, nx1+nz, &E12, 0, 0);
+    blasfeo_pack_dmat(nz, nx1, &model->E[nx1], nx1+nz, &E21, 0, 0);
+    blasfeo_pack_dmat(nz, nz , &model->E[nx1+ (nx1+nz)*nx1], nx1+nz, &E22, 0, 0);
+
+    blasfeo_pack_dmat(nx1, nx1, model->A, nx1+nz, &A1, 0, 0);
+    blasfeo_pack_dmat(nz , nx1, &model->A[nx1], nx1+nz, &A2, 0, 0);
+
+    blasfeo_pack_dmat(nx1, nu, model->B, nx1+nz, &B1, 0, 0);
+    blasfeo_pack_dmat(nz , nu, &model->B[nx1], nx1+nz, &B2, 0, 0);
+
+    blasfeo_pack_dmat(nx1, n_out, model->C, nx1+nz, &C1, 0, 0);
+    blasfeo_pack_dmat(nz , n_out, &model->C[nx1], nx1+nz, &C2, 0, 0);
+    // blasfeo_print_dmat(nz, nx1,&E21,0,0);
+    // blasfeo_print_exp_dmat(nx1, nx1 ,&A1,0,0);
+
+    for (int ii = 0; ii < num_stages*num_stages; ii++) {
+        A_dt[ii] = A_mat[ii] * dt;
+    }
+    for (int ii = 0; ii < num_stages; ii++) {
+        b_dt[ii] = b_vec[ii] * dt;
+        c[ii] = c_vec[ii];
+    }
+
+    for (int ii = 0; ii < num_stages; ii++) {
+        // void blasfeo_dgecp(int m, int n, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sB, int bi, int bj);
+        blasfeo_dgecp(nx1, nx1, &A1, 0, 0, &AA1, ii*nx1, 0);
+        blasfeo_dgecp(nz , nx1, &A2, 0, 0, &AA2, ii*nz , 0);
+        blasfeo_dgecp(nx1, nu , &B1, 0, 0, &BB1, ii*nx1, 0);
+        blasfeo_dgecp(nz , nu , &B2, 0, 0, &BB2, ii*nz, 0);
+
+        blasfeo_dgecp(nx1 , n_out , &C1, 0, 0, &CC1, ii*nx1, ii*n_out);
+        blasfeo_dgecp(nz , n_out , &C2, 0, 0, &CC2, ii*nz, ii*n_out);
+
+        blasfeo_dgecpsc(nx1 , nz , -1.0, &E12, 0, 0, &DD1, ii*nx1, ii*nz);
+        blasfeo_dgecpsc(nz ,  nx1, -1.0, &E21, 0, 0, &DD2, ii*nz, ii*nx1); //Todo: add opts.dt * kron(opts.A_butcher, A2)
         
-    // }
-    // free(pre_work_);
+        blasfeo_dgecp(nx1 , nx1 , &E11, 0, 0, &EE1, ii*nx1, ii*nx1);
+        blasfeo_dgecp(nz ,   nz , &E22, 0, 0, &EE2, ii*nz , ii*nz );
+
+        blasfeo_pack_dmat(n_in, nz, model->L_z, n_in, &LLZ, ii*n_in, ii*nz);
+        blasfeo_pack_dmat(n_in, nx1, model->L_x, n_in, &LLx, ii*n_in, 0);
+        blasfeo_pack_dmat(n_in, nx1, model->L_xdot, n_in, &LLK, ii*n_in, ii*nx1);
+        blasfeo_pack_dmat(n_in, nu , model->L_u, n_in, &LLu, ii*n_in, 0);
+    }
+    for (int ii = 0; ii < num_stages; ii++) {
+        //void blasfeo_dgead(int m, int n, double alpha, struct blasfeo_dmat *sA, int ai, int aj, struct blasfeo_dmat *sC, int yi, int cj);
+        for (int jj = 0; jj < num_stages; jj++){
+            blasfeo_dgead(nz, nx1, A_dt[ii*num_stages+jj], &A2, 0, 0, &DD2, jj*nz, ii*nx1);
+            blasfeo_dgead(nx1, nx1, -A_dt[ii*num_stages+jj], &A1, 0, 0, &EE1, jj*nx1, ii*nx1);
+            blasfeo_dgead(n_in, nx1, A_dt[ii*num_stages+jj], &LLx, 0, 0, &LLK, jj*n_in, ii*nx1);
+        }
+    }
+    /************************************************
+    * TODO: Compute PP1,2; KK*, ZZ*, YY*
+    ************************************************/
+    // blasfeo_dgetrf_rowpivot(nK1, nK1, &EE1, 0, 0, &EE1, 0, 0, ipiv); // factorize EE1
+    // blasfeo_drowpe(nff, ipiv, &J_r_x1u); // permute also rhs
+    d_print_mat(n_in, nx1, model->L_x, n_in);
+    blasfeo_print_dmat(nyy, nx1, &LLx,0,0);
+    // blasfeo_print_dmat(nyy, nK1, &LLK,0,0);
+    // blasfeo_print_dmat(nyy, nu , &LLu,0,0);
+    
+
+
+
+
+    free(pre_work_);
 
 }
 
