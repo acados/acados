@@ -31,10 +31,10 @@
 #include "acados_c/ocp_nlp_interface.h"
 
 // TODO REMOVE!!
-#include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
-#include "acados/dense_qp/dense_qp_hpipm.h"
+// #include "acados/ocp_qp/ocp_qp_common.h"
+// #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+// #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
+// #include "acados/dense_qp/dense_qp_hpipm.h"
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -54,9 +54,6 @@
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
-
-// temp
-#include "acados/ocp_qp/ocp_qp_hpipm.h"
 
 // x0
 #include "examples/c/chain_model/x0_nm2.c"
@@ -1192,6 +1189,45 @@ int main() {
 
 	// output definition: y = [x; u]
 
+	// ocp_nlp_cost_ls_model *stage_cost_ls;
+
+	// for (int i = 0; i <= NN; i++)
+	// {
+	// 	switch (plan->nlp_cost[i])
+	// 	{
+	// 		case LINEAR_LS:
+
+	// 			stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
+
+	// 			// Cyt
+	// 			blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
+	// 				for (int j = 0; j < nu[i]; j++)
+	// 			BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
+	// 				for (int j = 0; j < nx[i]; j++)
+	// 			BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
+
+	// 			// W
+	// 			blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
+	// 				for (int j = 0; j < nx[i]; j++)
+	// 			BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
+	// 				for (int j = 0; j < nu[i]; j++)
+	// 			BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+
+	// 			// y_ref
+	// 			blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
+	// 			blasfeo_pack_dvec(nu[i], uref, &stage_cost_ls->y_ref, nx[i]);
+	// 			break;
+
+	// 		case NONLINEAR_LS:
+
+	// 			break;
+
+	// 		case EXTERNALLY_PROVIDED:
+
+	// 			break;
+	// 	}
+	// }
+
 	if (cost_type == 0)
 	{
 		/* linear ls */
@@ -1540,7 +1576,10 @@ int main() {
 	* return
 	************************************************/
 
-	printf("\nsuccess!\n\n");
+	if (status == 0)
+		printf("\nsuccess! (%d iter) \n\n", ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
+	else
+		printf("\nfailure!\n\n");
 
 	return 0;
 }
