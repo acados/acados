@@ -17,6 +17,7 @@
  *
  */
 
+#include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,13 +29,10 @@
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 
+#include "acados_c/external_function_interface.h"
 #include "acados_c/ocp_nlp_interface.h"
 
-// TODO REMOVE!!
-// #include "acados/ocp_qp/ocp_qp_common.h"
-// #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
-// #include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
-// #include "acados/dense_qp/dense_qp_hpipm.h"
+// TODO(dimitris): use only the strictly necessary includes here
 
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -44,7 +42,6 @@
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
-#include "acados/utils/external_function_generic.h"
 
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
@@ -69,15 +66,11 @@
 #include "examples/c/chain_model/xN_nm5.c"
 #include "examples/c/chain_model/xN_nm6.c"
 
-
 #define NN 15
 #define TF 3.0
 #define Ns 2
 #define MAX_SQP_ITERS 10
 #define NREP 10
-
-// cost: 0 ls, 1 nls, 2 external
-#define COST 1
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -490,12 +483,13 @@ static void select_ls_stage_cost_jac_casadi(int indx, int N, int num_free_masses
 }
 
 
-
+#if 0
 static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_function_casadi *ls_cost_jac)
 {
 	for (int ii = 0; ii <= N; ii++)
 		select_ls_stage_cost_jac_casadi(ii, N, num_free_masses, &ls_cost_jac[ii]);
 }
+#endif
 
 
 
@@ -903,8 +897,6 @@ int main() {
     const int NMF = 3;  // number of free masses
     const int d = 0;  // number of stages in integrator
 
-	int cost_type = COST;
-
     print_problem_info(scheme, NMF, d);
 
     // dimensions
@@ -974,20 +966,15 @@ int main() {
 
 	// TODO(dimitris): implement different plan for user defined Hessian
 	plan->nlp_solver = SQP_GN;
+	// NOTE(dimitris): switching between different objectives on each stage
 	for (int i = 0; i <= NN; i++)
 	{
-		// TODO(dimitris): try mixed costs
-		if (cost_type == 0)
+		if (i < 3)
+			plan->nlp_cost[i] = EXTERNALLY_PROVIDED;
+		else if (i%2 == 0)
 			plan->nlp_cost[i] = LINEAR_LS;
-		if (cost_type == 1)
+		else if (i%2 == 1)
 			plan->nlp_cost[i] = NONLINEAR_LS;
-		if (cost_type == 2)
-		{
-			if ( i < NN)
-				plan->nlp_cost[i] = EXTERNALLY_PROVIDED;
-			else
-				plan->nlp_cost[i] = LINEAR_LS;
-		}
 	}
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
@@ -1106,7 +1093,7 @@ int main() {
     ************************************************/
 
 	external_function_casadi ls_cost_jac_casadi[NN+1]; // XXX varible size array
-	external_function_generic ext_cost_generic;
+	external_function_generic ext_cost_generic[NN];
 
 	for (int i = 0; i <= NN; i++)
 	{
@@ -1117,56 +1104,34 @@ int main() {
 				break;
 
 			case NONLINEAR_LS:
-
+				select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
+				external_function_casadi_create(&ls_cost_jac_casadi[i]);
 				break;
 
 			case EXTERNALLY_PROVIDED:
-
+				// TODO(dimitris): move inside select_ls_stage_cost_jac_casadi
+				switch(NMF)
+				{
+					case 1:
+						ext_cost_generic[i].evaluate = &ext_cost_nm2;
+						break;
+					case 2:
+						ext_cost_generic[i].evaluate = &ext_cost_nm3;
+						break;
+					case 3:
+						ext_cost_generic[i].evaluate = &ext_cost_nm4;
+						break;
+					case 4:
+						ext_cost_generic[i].evaluate = &ext_cost_nm5;
+						break;
+					case 5:
+						ext_cost_generic[i].evaluate = &ext_cost_nm6;
+						break;
+					default:
+						printf("\next cost not implemented for this numer of masses\n\n");
+						exit(1);
+				}
 				break;
-		}
-	}
-
-
-	if (cost_type == 1)
-	{
-		select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
-
-		// ls_cost_jac
-		tmp_size = 0;
-		for (int ii=0; ii<=NN; ii++)
-		{
-			tmp_size += external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
-		}
-		void *ls_cost_jac_casadi_mem = malloc(tmp_size);
-		c_ptr = ls_cost_jac_casadi_mem;
-		for (int ii=0; ii<=NN; ii++)
-		{
-			external_function_casadi_assign(ls_cost_jac_casadi+ii, c_ptr);
-			c_ptr += external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
-		}
-	}
-	else if (cost_type == 2)
-	{
-		switch(NMF)
-		{
-			case 1:
-				ext_cost_generic.evaluate = &ext_cost_nm2;
-				break;
-			case 2:
-				ext_cost_generic.evaluate = &ext_cost_nm3;
-				break;
-			case 3:
-				ext_cost_generic.evaluate = &ext_cost_nm4;
-				break;
-			case 4:
-				ext_cost_generic.evaluate = &ext_cost_nm5;
-				break;
-			case 5:
-				ext_cost_generic.evaluate = &ext_cost_nm6;
-				break;
-			default:
-				printf("\next cost not implemented for this numer of masses\n\n");
-				exit(1);
 		}
 	}
 
@@ -1280,36 +1245,12 @@ int main() {
 
 			case EXTERNALLY_PROVIDED:
 
-				// TODO(dimitris): WHY DOES IT ALSO WORK WHEN i < NN??
-				if (i <= NN)
-				{
 				stage_cost_external = (ocp_nlp_cost_external_model *) nlp_in->cost[i];
 
-				stage_cost_external->ext_cost = &ext_cost_generic;
-				}
-				// TODO(dimitris): why linear cost at the end?
-				// else
-				// {
-				// 	stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
+				stage_cost_external->ext_cost = &ext_cost_generic[i];
 
-				// 	// Cyt
-				// 	blasfeo_dgese(nu[NN]+nx[NN], ny[NN], 0.0, &stage_cost_ls->Cyt, 0, 0);
-				// 	for (int j = 0; j < nu[NN]; j++)
-				// 		BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[NN]+j) = 1.0;
-				// 	for (int j = 0; j < nx[NN]; j++)
-				// 		BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[NN]+j, j) = 1.0;
+				assert(i < NN && "externally provided cost not implemented for last stage!");
 
-				// 	// W
-				// 	blasfeo_dgese(ny[NN], ny[NN], 0.0, &stage_cost_ls->W, 0, 0);
-				// 	for (int j = 0; j < nx[NN]; j++)
-				// 		BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
-				// 	for (int j = 0; j < nu[NN]; j++)
-				// 		BLASFEO_DMATEL(&stage_cost_ls->W, nx[NN]+j, nx[NN]+j) = diag_cost_u[j];
-
-				// 	// y_ref
-				// 	blasfeo_pack_dvec(nx[NN], xref, &stage_cost_ls->y_ref, 0);
-				// 	blasfeo_pack_dvec(nu[NN], uref, &stage_cost_ls->y_ref, nx[NN]);
-				// }
 				break;
 		}
 	}
