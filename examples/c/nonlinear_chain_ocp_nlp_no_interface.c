@@ -1756,7 +1756,10 @@ int main() {
 * return
 ************************************************/
 
-	printf("\nsuccess!\n\n");
+	if (status == 0)
+		printf("\nsuccess!\n\n");
+	else
+		printf("\nfailure!\n\n");
 
 	return 0;
 
