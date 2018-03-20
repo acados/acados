@@ -967,6 +967,98 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 
 
 
+void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 6;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 12;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 18;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 24;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm6(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 30;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+
+
 /************************************************
 * main
 ************************************************/
@@ -1246,7 +1338,34 @@ int main() {
 		external_function_casadi_assign(ls_cost_jac_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
 	}
+
+
+	external_function_generic ls_cost_hess_generic;
+
+	// TODO the others !!!
+	switch(NMF)
+	{
+		case 1:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm2;
+			break;
+		case 2:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm3;
+			break;
+		case 3:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm4;
+			break;
+		case 4:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm5;
+			break;
+		case 5:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm6;
+			break;
+		default:
+			printf("\nls cost hess not implemented for this numer of masses\n\n");
+			exit(1);
+	}
 #endif
+
 
 #if COST==2
 	external_function_generic ext_cost_generic;
@@ -1391,6 +1510,9 @@ int main() {
 	// nls_jac
 	for (int i=0; i<=NN; i++)
 		cost_ls[i]->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+
+	// nls_hess at first stage
+	cost_ls[0]->nls_hess = &ls_cost_hess_generic;
 #if 0
 	// replace with hand-written external functions
 	external_function_generic ls_cost_jac_generic[NN];
@@ -1637,6 +1759,15 @@ int main() {
     }
 
 
+
+#if COST==1
+	// exact hessian of cost function at first stage
+	ocp_nlp_cost_nls_opts *cost_opts = nlp_opts->cost[0];
+	cost_opts->gauss_newton_hess = 1;
+#endif
+
+
+
 	// XXX hack: overwrite config with hand-setted one
 //	nlp_opts->qp_solver = &config_qp;
 //	nlp_opts->sim_solvers = config_sim_ptrs;
@@ -1756,7 +1887,10 @@ int main() {
 * return
 ************************************************/
 
-	printf("\nsuccess!\n\n");
+	if (status == 0)
+		printf("\nsuccess!\n\n");
+	else
+		printf("\nfailure!\n\n");
 
 	return 0;
 

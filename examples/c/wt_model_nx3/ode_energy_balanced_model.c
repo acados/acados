@@ -219,7 +219,7 @@ static int casadi_f1(const casadi_real** arg, casadi_real** res, int* iw, casadi
   return 0;
 }
 
-/* fcn_ode:(i0[3],i1[4])->(o0[3]) */
+/* ode_energy_balanced_model:(i0[3],i1[4])->(o0[3]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem) {
   casadi_real **res1=res+1, *rr, *ss;
   const casadi_real **arg1=arg+2;
@@ -430,21 +430,21 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT int fcn_ode(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem){
+CASADI_SYMBOL_EXPORT int ode_energy_balanced_model(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem){
   return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void fcn_ode_incref(void) {
+CASADI_SYMBOL_EXPORT void ode_energy_balanced_model_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void fcn_ode_decref(void) {
+CASADI_SYMBOL_EXPORT void ode_energy_balanced_model_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int fcn_ode_n_in(void) { return 2;}
+CASADI_SYMBOL_EXPORT int ode_energy_balanced_model_n_in(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT int fcn_ode_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT int ode_energy_balanced_model_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* fcn_ode_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* ode_energy_balanced_model_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -452,14 +452,14 @@ CASADI_SYMBOL_EXPORT const char* fcn_ode_name_in(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* fcn_ode_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* ode_energy_balanced_model_name_out(int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* fcn_ode_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* ode_energy_balanced_model_sparsity_in(int i) {
   switch (i) {
     case 0: return casadi_s4;
     case 1: return casadi_s5;
@@ -467,14 +467,14 @@ CASADI_SYMBOL_EXPORT const int* fcn_ode_sparsity_in(int i) {
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* fcn_ode_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* ode_energy_balanced_model_sparsity_out(int i) {
   switch (i) {
     case 0: return casadi_s4;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int fcn_ode_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int ode_energy_balanced_model_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 10;

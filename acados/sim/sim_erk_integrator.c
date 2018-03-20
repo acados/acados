@@ -27,9 +27,11 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 
-//#include "acados/sim/sim_casadi_wrapper.h"
 
 
+/************************************************
+* model
+************************************************/
 
 int sim_erk_model_calculate_size(void *config, sim_dims *dims)
 {
@@ -73,6 +75,10 @@ void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
 }
 
 
+
+/************************************************
+* opts
+************************************************/
 
 int sim_erk_opts_calculate_size(void *config_, sim_dims *dims)
 {
@@ -125,16 +131,59 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 	opts->ns = 4; // ERK 4
     int ns = opts->ns;
 
-    assert(ns == 4 && "only number of stages = 4 implemented!");
+	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
 
-    memcpy(opts->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
-        sizeof(*opts->A_mat) * (ns * ns));
-    memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
-        sizeof(*opts->b_vec) * (ns));
-    memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
-        sizeof(*opts->c_vec) * (ns));
+	// set tableau size
+	opts->tableau_size = opts->ns;
 
-    opts->num_steps = 1;
+	double *A = opts->A_mat;
+	double *b = opts->b_vec;
+	double *c = opts->c_vec;
+
+	switch(ns)
+	{
+		case 1:
+		{
+			// A
+			A[0+ns*0] = 0.0;
+			// b
+			b[0] = 1.0;
+			// c
+			c[0] = 0.0;
+			break;
+		}
+		case 2:
+		{
+			// A
+			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0;
+			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0;
+			// b
+			b[0] = 0.0; b[1] = 1.0;
+			// c
+			c[0] = 0.0; c[1] = 0.5;
+			break;
+		}
+		case 4:
+		{
+			// A
+			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0; A[0+ns*2] = 0.0; A[0+ns*3] = 0.0;
+			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0; A[1+ns*2] = 0.0; A[1+ns*3] = 0.0;
+			A[2+ns*0] = 0.0; A[2+ns*1] = 0.5; A[2+ns*2] = 0.0; A[2+ns*3] = 0.0;
+			A[3+ns*0] = 0.0; A[3+ns*1] = 0.0; A[3+ns*2] = 1.0; A[3+ns*3] = 0.0;
+			// b
+			b[0] = 1.0/6.0; b[1] = 1.0/3.0; b[2] = 1.0/3.0; b[3] = 1.0/6.0;
+			// c
+			c[0] = 0.0; c[1] = 0.5; c[2] = 0.5; c[3] = 1.0;
+			break;
+		}
+		default:
+		{
+			// impossible
+			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+		}
+	}
+
+    opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;
@@ -149,21 +198,70 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 
     int ns = opts->ns;
 
-    assert(ns == 4 && "only number of stages = 4 implemented!");
+	opts->tableau_size = opts->ns;
+
+	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
-    memcpy(opts->A_mat,((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
-        sizeof(*opts->A_mat) * (ns * ns));
-    memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
-        sizeof(*opts->b_vec) * (ns));
-    memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
-        sizeof(*opts->c_vec) * (ns));
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
+	double *A = opts->A_mat;
+	double *b = opts->b_vec;
+	double *c = opts->c_vec;
+
+	switch(ns)
+	{
+		case 1:
+		{
+			// A
+			A[0+ns*0] = 0.0;
+			// b
+			b[0] = 1.0;
+			// c
+			c[0] = 0.0;
+			break;
+		}
+		case 2:
+		{
+			// A
+			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0;
+			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0;
+			// b
+			b[0] = 0.0; b[1] = 1.0;
+			// c
+			c[0] = 0.0; c[1] = 0.5;
+			break;
+		}
+		case 4:
+		{	
+			// A
+			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0; A[0+ns*2] = 0.0; A[0+ns*3] = 0.0;
+			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0; A[1+ns*2] = 0.0; A[1+ns*3] = 0.0;
+			A[2+ns*0] = 0.0; A[2+ns*1] = 0.5; A[2+ns*2] = 0.0; A[2+ns*3] = 0.0;
+			A[3+ns*0] = 0.0; A[3+ns*1] = 0.0; A[3+ns*2] = 1.0; A[3+ns*3] = 0.0;
+			// b
+			b[0] = 1.0/6.0; b[1] = 1.0/3.0; b[2] = 1.0/3.0; b[3] = 1.0/6.0;
+			// c
+			c[0] = 0.0; c[1] = 0.5; c[2] = 0.5; c[3] = 1.0;
+			break;
+		}
+		default:
+		{
+			// impossible
+			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+		}
+	}
 
 	return;
 }
 
 
+
+/************************************************
+* memory
+************************************************/
 
 int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
@@ -178,6 +276,10 @@ void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw
 }
 
 
+
+/************************************************
+* workspace
+************************************************/
 
 int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 {
@@ -197,19 +299,25 @@ int sim_erk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
     size += (nX + nu) * sizeof(double); // rhs_forw_in
 
-    if(opts->sens_adj){
+    if(opts->sens_adj)
+	{
         size += num_steps * ns * nX * sizeof(double); // K_traj
         size += (num_steps + 1) * nX *sizeof(double); // out_forw_traj
-    }else{
+    }
+	else
+	{
         size += ns * nX * sizeof(double); // K_traj
         size += nX *sizeof(double); // out_forw_traj
     }
 
-    if (opts->sens_hess && opts->sens_adj){
+    if (opts->sens_hess && opts->sens_adj)
+	{
         size += (nx + nX + nu) * sizeof(double); //rhs_adj_in
         size += (nx + nu + nhess) * sizeof(double); //out_adj_tmp
         size += ns * (nx + nu + nhess) * sizeof(double); //adj_traj
-    }else if (opts->sens_adj){
+    }
+	else if (opts->sens_adj)
+	{
         size += (nx * 2 + nu) * sizeof(double); //rhs_adj_in
         size += (nx + nu)* sizeof(double); //out_adj_tmp
         size += ns * (nx + nu) * sizeof(double); //adj_traj
@@ -250,7 +358,8 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
     {
         assign_and_advance_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
-    } else
+    } 
+	else
     {
         assign_and_advance_double(ns*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double(nX, &workspace->out_forw_traj, &c_ptr);
@@ -261,7 +370,8 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
         assign_and_advance_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
-    } else if (opts->sens_adj)
+    } 
+	else if (opts->sens_adj)
     {
         assign_and_advance_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu, &workspace->out_adj_tmp, &c_ptr);
@@ -275,10 +385,16 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
 
 
 
+/************************************************
+* functions
+************************************************/
+
 int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
 	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
+
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
 
     int ns = opts->ns;
 
@@ -369,7 +485,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
 
             acados_tic(&timer_ad);
-            model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			if (opts->sens_forw) // simulation + forward sensitivities
+				model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			else // simulation only
+				model->ode_expl->evaluate(model->ode_expl, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < ns; s++)

@@ -119,6 +119,9 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
+	// set tableau size
+	opts->tableau_size = opts->ns;
+
 	// gauss collocation nodes
     gauss_nodes(ns, opts->c_vec, opts->work);
 
@@ -147,6 +150,9 @@ void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
     int ns = opts->ns;
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// set tableau size
+	opts->tableau_size = opts->ns;
 
 	// gauss collocation nodes
     gauss_nodes(ns, opts->c_vec, opts->work);
@@ -329,6 +335,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
+    assert(opts->ns == opts->tableau_size && "the Butcher tableau size does not match ns");
+
     int ns = opts->ns;
 
     sim_dims *dims = in->dims;
@@ -410,6 +418,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         jac_out[kk] = 0.0;
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
+	
+//	double inf_norm_K;
+//	double tol_inf_norm_K = 1e-6;
 
 
     // start the loop
@@ -419,6 +430,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
         //  obtain Kn
 		// TODO add exit condition on residuals ???
+//		inf_norm_K = 1.0;
+//        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         for(iter=0; iter<newton_iter; iter++)
 		{
 
@@ -449,7 +462,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
+				acados_tic(&timer_ad);
                 model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+				timing_ad += acados_toc(&timer_ad);
 
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
@@ -502,6 +517,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dtrsv_unn(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
             blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
+
+			// inf norm of K
+//			blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }// end iter
 
         if (opts->sens_adj)
