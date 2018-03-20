@@ -37,9 +37,9 @@
 
 typedef struct
 {
-    int num_stages;
     int nx;
     int nu;
+    int num_stages;
     int nz;
     int nx1;
     int nx2;

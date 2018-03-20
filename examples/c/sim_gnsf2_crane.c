@@ -37,23 +37,27 @@ int main() {
 /************************************************
 *   external functions
 ************************************************/
+
     // Phi_inc_dy
     external_function_casadi Phi_inc_dy;
     Phi_inc_dy.casadi_fun = &Phi_inc_dy_fun;
     Phi_inc_dy.casadi_work = &Phi_inc_dy_fun_work;
     Phi_inc_dy.casadi_sparsity_in  = &Phi_inc_dy_fun_sparsity_in;
     Phi_inc_dy.casadi_sparsity_out = &Phi_inc_dy_fun_sparsity_out;
+    Phi_inc_dy.casadi_n_in = &Phi_inc_dy_fun_n_in;
+    Phi_inc_dy.casadi_n_out = &Phi_inc_dy_fun_n_out;
 
     int Phi_inc_dy_size = external_function_casadi_calculate_size(&Phi_inc_dy);
     void *Phi_inc_dy_mem = malloc(Phi_inc_dy_size);
     external_function_casadi_assign(&Phi_inc_dy, Phi_inc_dy_mem);
-
     // jac_Phi_y_fun
     external_function_casadi jac_Phi_y;
     jac_Phi_y.casadi_fun = &jac_Phi_y_fun;
     jac_Phi_y.casadi_work = &jac_Phi_y_fun_work;
     jac_Phi_y.casadi_sparsity_in  = &jac_Phi_y_fun_sparsity_in;
     jac_Phi_y.casadi_sparsity_out = &jac_Phi_y_fun_sparsity_out;
+    jac_Phi_y.casadi_n_in = &jac_Phi_y_fun_n_in;
+    jac_Phi_y.casadi_n_out = &jac_Phi_y_fun_n_out;
 
     int jac_Phi_y_size = external_function_casadi_calculate_size(&jac_Phi_y);
     void *jac_Phi_y_mem = malloc(jac_Phi_y_size);
@@ -65,6 +69,8 @@ int main() {
     f_LO_inc_J_x1k1uz.casadi_work = &f_LO_inc_J_x1k1uz_fun_work;
     f_LO_inc_J_x1k1uz.casadi_sparsity_in  = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
     f_LO_inc_J_x1k1uz.casadi_sparsity_out = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
+    f_LO_inc_J_x1k1uz.casadi_n_in = &f_LO_inc_J_x1k1uz_fun_n_in;
+    f_LO_inc_J_x1k1uz.casadi_n_out = &f_LO_inc_J_x1k1uz_fun_n_out;
 
     int f_LO_inc_J_x1k1uz_size = external_function_casadi_calculate_size(&f_LO_inc_J_x1k1uz);
     void *f_LO_inc_J_x1k1uz_mem = malloc(f_LO_inc_J_x1k1uz_size);
@@ -94,7 +100,7 @@ int main() {
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
     opts->sens_adj = true;
-    opts->interval = 0.1;
+    // opts->interval = 0.1;
 
     // set up sim_in
     int in_size = sim_in_calculate_size(config, dims);
@@ -126,7 +132,7 @@ int main() {
     model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
     gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
 
-    gnsf2_precompute(gnsf2_dim, model, opts);
+    // gnsf2_precompute(gnsf2_dim, model, opts);
     gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out
@@ -152,7 +158,6 @@ int main() {
     }
     double casadi_time = minimum_of_doubles(casadi_times, NREP);
     double gnsf_time = minimum_of_doubles(gnsf_times, NREP);
-
 
     printf("xf =\n");
     d_print_e_mat(1, dims->nx, out->xn, 1);

@@ -53,7 +53,7 @@ EXAMPLES += sim_crane_example
 #EXAMPLES += mass_spring_offline_fcond_qpoases_split
 #EXAMPLES += nonlinear_chain_ocp_nlp
 EXAMPLES += sim_crane_no_interface
-EXAMPLES += mass_spring_example_no_interface
+# EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 EXAMPLES += sim_gnsf2_crane
 

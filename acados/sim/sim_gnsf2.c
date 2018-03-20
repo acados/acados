@@ -190,42 +190,42 @@ void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
     c_ptr += sizeof(gnsf2_model);
 
     // assign butcher
-    assign_double(num_stages * num_stages, &model->A_dt, &c_ptr);
-    assign_double(num_stages, &model->b_dt, &c_ptr);
-    assign_double(num_stages, &model->c,    &c_ptr);
+    assign_and_advance_double(num_stages * num_stages, &model->A_dt, &c_ptr);
+    assign_and_advance_double(num_stages, &model->b_dt, &c_ptr);
+    assign_and_advance_double(num_stages, &model->c,    &c_ptr);
 
     // assign model matrices
-    assign_double((nx1+nz)*nx1     , &model->A, &c_ptr);
-    assign_double((nx1+nz)*nu      , &model->B, &c_ptr);
-    assign_double((nx1+nz)*n_out   , &model->C, &c_ptr);
-    assign_double((nx1+nz)*(nx1+nz), &model->E, &c_ptr);
+    assign_and_advance_double((nx1+nz)*nx1     , &model->A, &c_ptr);
+    assign_and_advance_double((nx1+nz)*nu      , &model->B, &c_ptr);
+    assign_and_advance_double((nx1+nz)*n_out   , &model->C, &c_ptr);
+    assign_and_advance_double((nx1+nz)*(nx1+nz), &model->E, &c_ptr);
 
-    assign_double(n_in*nx1, &model->L_x, &c_ptr);
-    assign_double(n_in*nx1, &model->L_xdot, &c_ptr);
-    assign_double(n_in*nz , &model->L_z, &c_ptr);
-    assign_double(n_in*nu , &model->L_u, &c_ptr);
-
-    assign_double(nx2 * nx2,  &model->A_LO, &c_ptr);
+    assign_and_advance_double(n_in*nx1, &model->L_x, &c_ptr);
+    assign_and_advance_double(n_in*nx1, &model->L_xdot, &c_ptr);
+    assign_and_advance_double(n_in*nz , &model->L_z, &c_ptr);
+    assign_and_advance_double(n_in*nu , &model->L_u, &c_ptr);
+    
+    assign_and_advance_double(nx2 * nx2,  &model->A_LO, &c_ptr);
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
 
     // blasfeo_dmat_mem
-    assign_blasfeo_dmat_mem(nK1, nff, &model->KKf, &c_ptr);
-    assign_blasfeo_dmat_mem(nK1, nx1, &model->KKx, &c_ptr);
-    assign_blasfeo_dmat_mem(nK1, nu,  &model->KKu, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nff, &model->KKf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nx1, &model->KKx, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nu,  &model->KKu, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nyy,  nff, &model->YYf, &c_ptr);
-    assign_blasfeo_dmat_mem(nyy,  nx1, &model->YYx, &c_ptr);
-    assign_blasfeo_dmat_mem(nyy,  nu,  &model->YYu, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nyy,  nff, &model->YYf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nyy,  nx1, &model->YYx, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nyy,  nu,  &model->YYu, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nZ,  nff, &model->ZZf, &c_ptr);
-    assign_blasfeo_dmat_mem(nZ,  nx1, &model->ZZx, &c_ptr);
-    assign_blasfeo_dmat_mem(nZ,  nu,  &model->ZZu, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ,  nff, &model->ZZf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ,  nx1, &model->ZZx, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ,  nu,  &model->ZZu, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx2, nx2, &model->ALO, &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nK2, &model->M2inv, &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nx2, &model->dK2_dx2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx2, nx2, &model->ALO, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nK2, &model->M2inv, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nx2, &model->dK2_dx2, &c_ptr);
 
 	// assert
     assert((char *) raw_memory + sim_gnsf2_model_calculate_size(config, dim_in) >= c_ptr);
@@ -319,42 +319,42 @@ void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory){
     c_ptr += sizeof(gnsf2_pre_workspace);
 
     int nz_nx1_max = nz>nx1 ? nz : nx1;
-    assign_int(nz_nx1_max *num_stages, &work->ipiv, &c_ptr);
+    assign_and_advance_int(nz_nx1_max *num_stages, &work->ipiv, &c_ptr);
 
     align_char_to(64, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx1, nx1, &work->E11, &c_ptr);
-    assign_blasfeo_dmat_mem(nx1, nz , &work->E12, &c_ptr);
-    assign_blasfeo_dmat_mem(nz , nx1, &work->E21, &c_ptr);
-    assign_blasfeo_dmat_mem(nz , nz , &work->E22, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1, nx1, &work->E11, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1, nz , &work->E12, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz , nx1, &work->E21, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz , nz , &work->E22, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx1, nx1, &work->A1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz , nx1, &work->A2, &c_ptr);
-    assign_blasfeo_dmat_mem(nx1, nu , &work->B1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz , nu , &work->B2, &c_ptr);
-    assign_blasfeo_dmat_mem(nx1, n_out, &work->C1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz , n_out, &work->C2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1, nx1, &work->A1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz , nx1, &work->A2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1, nu , &work->B1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz , nu , &work->B2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1, n_out, &work->C1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz , n_out, &work->C2, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx1 * num_stages, nx1, &work->AA1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz  * num_stages, nx1, &work->AA2, &c_ptr);
-    assign_blasfeo_dmat_mem(nx1 * num_stages, nu , &work->BB2, &c_ptr);
-    assign_blasfeo_dmat_mem(nz  * num_stages, nu , &work->BB1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, nx1, &work->AA1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz  * num_stages, nx1, &work->AA2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, nu , &work->BB2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz  * num_stages, nu , &work->BB1, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx1 * num_stages, n_out * num_stages, &work->CC1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz  * num_stages, n_out * num_stages, &work->CC2, &c_ptr);
-    assign_blasfeo_dmat_mem(nx1 * num_stages, nz * num_stages, &work->DD1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz  * num_stages, nx1 * num_stages, &work->DD2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, n_out * num_stages, &work->CC1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz  * num_stages, n_out * num_stages, &work->CC2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, nz * num_stages, &work->DD1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz  * num_stages, nx1 * num_stages, &work->DD2, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx1 * num_stages, nx1 * num_stages, &work->EE1, &c_ptr);
-    assign_blasfeo_dmat_mem(nz  * num_stages, nz  * num_stages, &work->EE2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, nx1 * num_stages, &work->EE1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nz  * num_stages, nz  * num_stages, &work->EE2, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nx1 * num_stages, nx1 * num_stages, &work->PP1, &c_ptr);
-    assign_blasfeo_dmat_mem(nx1 * num_stages, nz  * num_stages, &work->PP2, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, nx1 * num_stages, &work->PP1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx1 * num_stages, nz  * num_stages, &work->PP2, &c_ptr);
 
-    assign_blasfeo_dmat_mem(n_in, nz  * num_stages, &work->LLZ, &c_ptr);
-    assign_blasfeo_dmat_mem(n_in, nx1 , &work->LLx, &c_ptr);
-    assign_blasfeo_dmat_mem(n_in, nx1 * num_stages, &work->LLK, &c_ptr);
-    assign_blasfeo_dmat_mem(n_in, nu, &work->LLu, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(n_in, nz  * num_stages, &work->LLZ, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(n_in, nx1 , &work->LLx, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(n_in, nx1 * num_stages, &work->LLK, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(n_in, nu, &work->LLu, &c_ptr);
 
     return (void *) work;
 }
@@ -375,13 +375,14 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts){
     int nZ  = num_stages * nz;
     int nff = n_out * num_stages;
     int nyy = n_in  * num_stages;
+    double T = 1; // TODO change this
 
     int pre_workspace_size = gnsf2_pre_workspace_calculate_size(dims);
     void *pre_work_ = malloc(pre_workspace_size);
     gnsf2_pre_workspace *work = (gnsf2_pre_workspace *) gnsf2_cast_pre_workspace(dims, pre_work_);
 
     int num_steps = opts->num_steps;
-    double dt = opts->interval/num_steps;
+    double dt = T/num_steps;// opts->interval/num_steps;
 
     double *A_mat = opts->A_mat;
     double *b_vec = opts->b_vec;
@@ -768,71 +769,71 @@ void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory)
     c_ptr += sizeof(gnsf2_workspace);
     align_char_to(8, &c_ptr);
 
-    assign_double(n_in, &workspace->phi_in, &c_ptr);
-    assign_double(phi_out_size, &workspace->phi_out, &c_ptr);
-    assign_double(f_LO_in_size, &workspace->f_LO_in, &c_ptr);
-    assign_double(f_LO_out_size, &workspace->f_LO_out, &c_ptr);
+    assign_and_advance_double(n_in, &workspace->phi_in, &c_ptr);
+    assign_and_advance_double(phi_out_size, &workspace->phi_out, &c_ptr);
+    assign_and_advance_double(f_LO_in_size, &workspace->f_LO_in, &c_ptr);
+    assign_and_advance_double(f_LO_out_size, &workspace->f_LO_out, &c_ptr);
 
-    assign_double(nz, &workspace->Z_out, &c_ptr);
+    assign_and_advance_double(nz, &workspace->Z_out, &c_ptr);
 
-    assign_int(nff, &workspace->ipiv, &c_ptr);
+    assign_and_advance_int(nff, &workspace->ipiv, &c_ptr);
 
-    assign_blasfeo_dmat_structs(num_steps, &workspace->f_LO_jac, &c_ptr);
+    assign_and_advance_blasfeo_dmat_structs(num_steps, &workspace->f_LO_jac, &c_ptr);
 
-    assign_blasfeo_dvec_structs(num_steps, &workspace->K1_val, &c_ptr);
-    assign_blasfeo_dvec_structs(num_steps, &workspace->x1_val, &c_ptr);
-    assign_blasfeo_dvec_structs(num_steps, &workspace->ff_val, &c_ptr);
-    assign_blasfeo_dvec_structs(num_steps, &workspace->Z_val, &c_ptr);
-    assign_blasfeo_dvec_structs(num_steps, &workspace->f_LO_val, &c_ptr);
-    assign_blasfeo_dvec_structs(num_steps, &workspace->yy_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(num_steps, &workspace->K1_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(num_steps, &workspace->x1_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(num_steps, &workspace->ff_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(num_steps, &workspace->Z_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(num_steps, &workspace->f_LO_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_structs(num_steps, &workspace->yy_val, &c_ptr);
 
     // blasfeo_mem align
 	align_char_to(64, &c_ptr);
     for (int ii=0; ii<num_steps; ii++){
-        assign_blasfeo_dmat_mem(nK2, 2*nx1+nu+nz, workspace->f_LO_jac+ii, &c_ptr);     // f_LO_jac
-        assign_blasfeo_dvec_mem(nK1, workspace->K1_val+ii, &c_ptr);     // K1_val
-        assign_blasfeo_dvec_mem(nK1, workspace->x1_val+ii, &c_ptr);     // x1_val
-        assign_blasfeo_dvec_mem(nff, workspace->ff_val+ii, &c_ptr);     // ff_val
-        assign_blasfeo_dvec_mem(nZ , workspace->Z_val+ii , &c_ptr);     // Z_val
-        assign_blasfeo_dvec_mem(nK2, workspace->f_LO_val+ii, &c_ptr);   // f_LO_val
-        assign_blasfeo_dvec_mem(nyy, workspace->yy_val+ii, &c_ptr);     // yy_val
+        assign_and_advance_blasfeo_dmat_mem(nK2, 2*nx1+nu+nz, workspace->f_LO_jac+ii, &c_ptr);     // f_LO_jac
+        assign_and_advance_blasfeo_dvec_mem(nK1, workspace->K1_val+ii, &c_ptr);     // K1_val
+        assign_and_advance_blasfeo_dvec_mem(nK1, workspace->x1_val+ii, &c_ptr);     // x1_val
+        assign_and_advance_blasfeo_dvec_mem(nff, workspace->ff_val+ii, &c_ptr);     // ff_val
+        assign_and_advance_blasfeo_dvec_mem(nZ , workspace->Z_val+ii , &c_ptr);     // Z_val
+        assign_and_advance_blasfeo_dvec_mem(nK2, workspace->f_LO_val+ii, &c_ptr);   // f_LO_val
+        assign_and_advance_blasfeo_dvec_mem(nyy, workspace->yy_val+ii, &c_ptr);     // yy_val
     }
 
-    assign_blasfeo_dmat_mem(nff, nx1+nu, &workspace->J_r_x1u , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nff, nx1+nu, &workspace->J_r_x1u , &c_ptr);
 
-    assign_blasfeo_dmat_mem(nff, nff, &workspace->J_r_ff , &c_ptr);
-    assign_blasfeo_dmat_mem(nK1, nx1, &workspace->dK1_dx1 , &c_ptr);
-    assign_blasfeo_dmat_mem(nK1, nu , &workspace->dK1_du  , &c_ptr);
-    assign_blasfeo_dmat_mem(nZ, nx1, &workspace->dZ_dx1 , &c_ptr);
-    assign_blasfeo_dmat_mem(nZ, nu , &workspace->dZ_du  , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nff, nff, &workspace->J_r_ff , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nx1, &workspace->dK1_dx1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nu , &workspace->dK1_du  , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ, nx1, &workspace->dZ_dx1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ, nu , &workspace->dZ_du  , &c_ptr);
 
-    assign_blasfeo_dmat_mem(nK2, nx1, &workspace->aux_G2_x1, &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nu , &workspace->aux_G2_u , &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nK1 , &workspace->J_G2_K1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nx1, &workspace->aux_G2_x1, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nu , &workspace->aux_G2_u , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nK1 , &workspace->J_G2_K1 , &c_ptr);
 
-    assign_blasfeo_dmat_mem(nff, n_in, &workspace->dPHI_dy, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nff, n_in, &workspace->dPHI_dy, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nK2, nx1, &workspace->dK2_dx1 , &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nu, &workspace->dK2_du , &c_ptr);
-    assign_blasfeo_dmat_mem(nK2, nff, &workspace->dK2_dff, &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nx+nu, &workspace->dxf_dwn , &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nx+nu, &workspace->S_forw_new , &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nx+nu, &workspace->S_forw, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nx1, &workspace->dK2_dx1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nu, &workspace->dK2_du , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nff, &workspace->dK2_dff, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, &workspace->dxf_dwn , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, &workspace->S_forw_new , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, &workspace->S_forw, &c_ptr);
 
-    assign_blasfeo_dvec_mem(nK2, &workspace->K2_val, &c_ptr);
-    assign_blasfeo_dvec_mem((num_steps+1)*nx, &workspace->x0_traj, &c_ptr);
-    assign_blasfeo_dvec_mem(nff, &workspace->res_val, &c_ptr);
-    assign_blasfeo_dvec_mem(nu, &workspace->u0, &c_ptr);
-    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda, &c_ptr);
-    assign_blasfeo_dvec_mem(nx+nu, &workspace->lambda_old, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nK2, &workspace->K2_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem((num_steps+1)*nx, &workspace->x0_traj, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nff, &workspace->res_val, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nu, &workspace->u0, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx+nu, &workspace->lambda, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nx+nu, &workspace->lambda_old, &c_ptr);
 
-    assign_blasfeo_dvec_mem(nyy, &workspace->yyu, &c_ptr);
-    assign_blasfeo_dvec_mem(nyy * num_steps, &workspace->yyss, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nyy, &workspace->yyu, &c_ptr);
+    assign_and_advance_blasfeo_dvec_mem(nyy * num_steps, &workspace->yyss, &c_ptr);
 
-    assign_blasfeo_dmat_mem(nK2, nff, &workspace->aux_G2_ff, &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nff, &workspace->dPsi_dff , &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx , &c_ptr);
-    assign_blasfeo_dmat_mem(nx, nu, &workspace->dPsi_du, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nff, &workspace->aux_G2_ff, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nff, &workspace->dPsi_dff , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->dPsi_dx , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->dPsi_du, &c_ptr);
 
     return (void *)workspace;
 }
@@ -1194,19 +1195,18 @@ void *sim_gnsf2_memory_assign(void *config, sim_dims *dims, void *opts_, void *r
 int sim_gnsf2_opts_calculate_size(void *config, sim_dims *dims)
 {
 
-	// extract ds
-    int ns = dims->num_stages;
+	int ns_max = NS_MAX;
 
     int size = 0;
 
     size += sizeof(sim_rk_opts);
 
-    size += ns * ns * sizeof(double);  // A_mat
-    size += ns * sizeof(double);  // b_vec
-    size += ns * sizeof(double);  // c_vec
+    size += ns_max * ns_max * sizeof(double);  // A_mat
+    size += ns_max * sizeof(double);  // b_vec
+    size += ns_max * sizeof(double);  // c_vec
 
-	int tmp0 = gauss_nodes_work_calculate_size(ns);
-	int tmp1 = butcher_table_work_calculate_size(ns);
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
 	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
 	size += work_size; // work
 
@@ -1218,53 +1218,56 @@ int sim_gnsf2_opts_calculate_size(void *config, sim_dims *dims)
 
 
 
-void *sim_gnsf2_opts_assign(void *config, sim_dims *dims, void *raw_memory)
+void *sim_gnsf2_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
+	int ns_max = NS_MAX;
+
     char *c_ptr = (char *) raw_memory;
 
     sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
     c_ptr += sizeof(sim_rk_opts);
 
-    int ns = dims->num_stages;
-    opts->num_stages = ns;
-
     align_char_to(8, &c_ptr);
 
-    assign_double(ns*ns, &opts->A_mat, &c_ptr);
-    assign_double(ns, &opts->b_vec, &c_ptr);
-    assign_double(ns, &opts->c_vec, &c_ptr);
+    assign_and_advance_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
+    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
 
 	// work
-	int tmp0 = gauss_nodes_work_calculate_size(ns);
-	int tmp1 = butcher_table_work_calculate_size(ns);
+	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
+	int tmp1 = butcher_table_work_calculate_size(ns_max);
 	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
 	opts->work = c_ptr;
 	c_ptr += work_size;
-    // printf("size = %p\n", (char*)raw_memory + sim_gnsf2_opts_calculate_size(config, dims));
-    // printf("size = %p\n", c_ptr);
 
-    assert((char*)raw_memory + sim_gnsf2_opts_calculate_size(config, dims) >= c_ptr);
-    // printf("opts_assign:\n");
-    // printf("size = %p", (char*)raw_memory + sim_gnsf2_opts_calculate_size(config, dims));
+    assert((char*)raw_memory + sim_gnsf2_opts_calculate_size(config_, dims) >= c_ptr);
+
     return (void *)opts;
 }
 
 void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
 {   // copied from IRK
-    sim_rk_opts *opts = (sim_rk_opts *) opts_;
+     sim_rk_opts *opts = opts_;
+
+	opts->ns = 3; // GL 3
+    int ns = opts->ns;
+
+    assert(ns <= NS_MAX && "ns > NS_MAX!");
+
+	// set tableau size
+	opts->tableau_size = opts->ns;
 
 	// gauss collocation nodes
-    gauss_nodes(opts->num_stages, opts->c_vec, opts->work);
+    gauss_nodes(ns, opts->c_vec, opts->work);
 
 	// butcher tableau
-    butcher_table(opts->num_stages, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
+    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
 	// default options
     opts->newton_iter = 3;
     opts->scheme = NULL;
     opts->num_steps = 2;
     opts->num_forw_sens = dims->nx + dims->nu;
-    // printf("num_forw_sens = %d \n", opts->num_forw_sens);
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;

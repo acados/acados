@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 // acados
-#include <acados_c/sim.h>
+// #include <acados_c/sim.h>
 #include <acados_c/options.h>
 // #include "interfaces/acados_c/legacy_create.h"
 
@@ -28,7 +28,7 @@
 #include "external/blasfeo/include/blasfeo_d_blas.h"
 
 // c interface
-#include <acados_c/external_function_generic.h>
+// #include <acados_c/external_function_generic.h>
 
 
 
@@ -134,7 +134,7 @@ int main() {
 	void *dims_mem = malloc(dims_size);
 	sim_dims *dims = sim_dims_assign(dims_mem);
 
-    dims->num_stages = num_stages;
+    // dims->num_stages = num_stages;
     dims->nx = nx;
     dims->nu = nu;
 

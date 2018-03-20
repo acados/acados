@@ -52,7 +52,7 @@ int main() {
     sim_dims *simdim = sim_dims_assign(sim_dims_mem);
     simdim->nx = 9;
     simdim->nu = 2;
-    simdim->num_stages = 4;
+    // simdim->num_stages = 4;
 
     // set up gnsf_in
     int gnsf_in_size = gnsf_in_calculate_size(dims);
@@ -93,6 +93,8 @@ int main() {
     res_inc_Jff.casadi_work = &res_inc_Jff_fun_work;
     res_inc_Jff.casadi_sparsity_in  = &res_inc_Jff_fun_sparsity_in;
     res_inc_Jff.casadi_sparsity_out = &res_inc_Jff_fun_sparsity_out;
+    res_inc_Jff.casadi_n_in = &res_inc_Jff_fun_n_in;
+    res_inc_Jff.casadi_n_out = &res_inc_Jff_fun_n_out;
 
     int res_inc_Jff_size = external_function_casadi_calculate_size(&res_inc_Jff);
     void *res_inc_Jff_mem = malloc(res_inc_Jff_size);
@@ -105,6 +107,8 @@ int main() {
     jac_res_ffx1u.casadi_work = &jac_res_ffx1u_fun_work;
     jac_res_ffx1u.casadi_sparsity_in  = &jac_res_ffx1u_fun_sparsity_in;
     jac_res_ffx1u.casadi_sparsity_out = &jac_res_ffx1u_fun_sparsity_out;
+    jac_res_ffx1u.casadi_n_in  = &jac_res_ffx1u_fun_n_in;
+    jac_res_ffx1u.casadi_n_out = &jac_res_ffx1u_fun_n_out;
 
     int jac_res_ffx1u_size = external_function_casadi_calculate_size(&jac_res_ffx1u);
     void *jac_res_ffx1u_mem = malloc(jac_res_ffx1u_size);
@@ -117,6 +121,8 @@ int main() {
     f_LO_inc_J_x1k1uz.casadi_work = &f_LO_inc_J_x1k1uz_fun_work;
     f_LO_inc_J_x1k1uz.casadi_sparsity_in  = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
     f_LO_inc_J_x1k1uz.casadi_sparsity_out = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
+    f_LO_inc_J_x1k1uz.casadi_n_in  = &f_LO_inc_J_x1k1uz_fun_n_in;
+    f_LO_inc_J_x1k1uz.casadi_n_out = &f_LO_inc_J_x1k1uz_fun_n_out;
 
     int f_LO_inc_J_x1k1uz_size = external_function_casadi_calculate_size(&f_LO_inc_J_x1k1uz);
     void *f_LO_inc_J_x1k1uz_mem = malloc(f_LO_inc_J_x1k1uz_size);
