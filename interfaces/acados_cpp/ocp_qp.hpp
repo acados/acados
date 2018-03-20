@@ -9,7 +9,9 @@
 #include <vector>
 #include <utility>
 
-#include "acados_c/ocp_qp.h"
+#include "acados/ocp_qp/ocp_qp_common.h"
+
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
 
@@ -55,7 +57,7 @@ private:
     void expand_dimensions();
 
     void check_range(std::string field, uint stage);
-    
+
     void check_num_elements(std::string, uint stage, uint nb_elems);
 
     void flatten(std::map<std::string, option_t *>& input, std::map<std::string, option_t *>& output);
@@ -71,6 +73,10 @@ private:
     std::unique_ptr<ocp_qp_in> qp;
 
     std::unique_ptr<ocp_qp_solver> solver;
+
+    std::unique_ptr<ocp_qp_xcond_solver_config> config;
+
+    std::unique_ptr<void, void (*)(void *)> args {nullptr, std::free};
 
     std::string cached_solver;
 

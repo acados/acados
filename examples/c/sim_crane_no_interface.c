@@ -18,6 +18,10 @@
  */
 
 // external
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,7 +55,8 @@ int main()
 
     int NREP = 500;
     acados_timer timer;
-    double Time1, Time2, Time3;
+
+	/* double Time1, Time2, Time3; */
 
     int ii;
     int jj;
@@ -61,7 +66,7 @@ int main()
     int NF = nx + nu; // columns of forward seed
 
     double T = 0.05;
-    int num_stages = 4;
+    // int num_stages = 4;
     double *xref;
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = M_PI;
@@ -77,6 +82,8 @@ int main()
 	exfun_forw_vde.casadi_work = &vdeFun_work;
 	exfun_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
 	exfun_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
+	exfun_forw_vde.casadi_n_in = &vdeFun_n_in;
+	exfun_forw_vde.casadi_n_out = &vdeFun_n_out;
 
 	int forw_vde_size = external_function_casadi_calculate_size(&exfun_forw_vde);
 	void *forw_vde_mem = malloc(forw_vde_size);
@@ -89,6 +96,8 @@ int main()
 	exfun_adj_vde.casadi_work = &adjFun_work;
 	exfun_adj_vde.casadi_sparsity_in = &adjFun_sparsity_in;
 	exfun_adj_vde.casadi_sparsity_out = &adjFun_sparsity_out;
+	exfun_adj_vde.casadi_n_in = &adjFun_n_in;
+	exfun_adj_vde.casadi_n_out = &adjFun_n_out;
 
 	int adj_vde_size = external_function_casadi_calculate_size(&exfun_adj_vde);
 	void *adj_vde_mem = malloc(adj_vde_size);
@@ -101,6 +110,8 @@ int main()
 	exfun_jac.casadi_work = &jacFun_work;
 	exfun_jac.casadi_sparsity_in = &jacFun_sparsity_in;
 	exfun_jac.casadi_sparsity_out = &jacFun_sparsity_out;
+	exfun_jac.casadi_n_in = &jacFun_n_in;
+	exfun_jac.casadi_n_out = &jacFun_n_out;
 
 	int jac_size = external_function_casadi_calculate_size(&exfun_jac);
 	void *jac_mem = malloc(jac_size);
@@ -113,6 +124,8 @@ int main()
 	exfun_hess_ode.casadi_work = &hessFun_work;
 	exfun_hess_ode.casadi_sparsity_in = &hessFun_sparsity_in;
 	exfun_hess_ode.casadi_sparsity_out = &hessFun_sparsity_out;
+	exfun_hess_ode.casadi_n_in = &hessFun_n_in;
+	exfun_hess_ode.casadi_n_out = &hessFun_n_out;
 
 	int hess_ode_size = external_function_casadi_calculate_size(&exfun_hess_ode);
 	void *hess_ode_mem = malloc(hess_ode_size);
@@ -129,6 +142,8 @@ int main()
 	exfun_ode.casadi_work = &impl_odeFun_work;
 	exfun_ode.casadi_sparsity_in = &impl_odeFun_sparsity_in;
 	exfun_ode.casadi_sparsity_out = &impl_odeFun_sparsity_out;
+	exfun_ode.casadi_n_in = &impl_odeFun_n_in;
+	exfun_ode.casadi_n_out = &impl_odeFun_n_out;
 
 	int ode_size = external_function_casadi_calculate_size(&exfun_ode);
 	void *ode_mem = malloc(ode_size);
@@ -141,6 +156,8 @@ int main()
 	exfun_jac_x_ode.casadi_work = &impl_jacFun_x_work;
 	exfun_jac_x_ode.casadi_sparsity_in = &impl_jacFun_x_sparsity_in;
 	exfun_jac_x_ode.casadi_sparsity_out = &impl_jacFun_x_sparsity_out;
+	exfun_jac_x_ode.casadi_n_in = &impl_jacFun_x_n_in;
+	exfun_jac_x_ode.casadi_n_out = &impl_jacFun_x_n_out;
 
 	int jac_x_ode_size = external_function_casadi_calculate_size(&exfun_jac_x_ode);
 	void *jac_x_ode_mem = malloc(jac_x_ode_size);
@@ -153,6 +170,8 @@ int main()
 	exfun_jac_xdot_ode.casadi_work = &impl_jacFun_xdot_work;
 	exfun_jac_xdot_ode.casadi_sparsity_in = &impl_jacFun_xdot_sparsity_in;
 	exfun_jac_xdot_ode.casadi_sparsity_out = &impl_jacFun_xdot_sparsity_out;
+	exfun_jac_xdot_ode.casadi_n_in = &impl_jacFun_xdot_n_in;
+	exfun_jac_xdot_ode.casadi_n_out = &impl_jacFun_xdot_n_out;
 
 	int jac_xdot_ode_size = external_function_casadi_calculate_size(&exfun_jac_xdot_ode);
 	void *jac_xdot_ode_mem = malloc(jac_xdot_ode_size);
@@ -165,6 +184,8 @@ int main()
 	exfun_jac_u_ode.casadi_work = &impl_jacFun_u_work;
 	exfun_jac_u_ode.casadi_sparsity_in = &impl_jacFun_u_sparsity_in;
 	exfun_jac_u_ode.casadi_sparsity_out = &impl_jacFun_u_sparsity_out;
+	exfun_jac_u_ode.casadi_n_in = &impl_jacFun_u_n_in;
+	exfun_jac_u_ode.casadi_n_out = &impl_jacFun_u_n_out;
 
 	int jac_u_ode_size = external_function_casadi_calculate_size(&exfun_jac_u_ode);
 	void *jac_u_ode_mem = malloc(jac_u_ode_size);
@@ -187,7 +208,6 @@ int main()
 
 		switch (nss)
 		{
-
 			case 0: // erk
 				printf("\n\nsim solver: ERK\n");
 				sim_erk_config_initialize_default(config);
@@ -206,7 +226,6 @@ int main()
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
-
 		}
 
 /************************************************
@@ -217,7 +236,6 @@ int main()
 		void *dims_mem = malloc(dims_size);
 		sim_dims *dims = sim_dims_assign(dims_mem);
 
-		dims->num_stages = num_stages;
 		dims->nx = nx;
 		dims->nu = nu;
 
@@ -230,8 +248,31 @@ int main()
 		sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
 		config->opts_initialize_default(config, dims, opts);
 
-		opts->sens_adj = true;
-	
+		switch (nss)
+		{
+			case 0: // erk
+				opts->ns = 4;
+				opts->sens_adj = true;
+				break;
+
+			case 1: // irk
+				opts->ns = 2;
+				opts->sens_adj = true;
+				break;
+
+			case 2: // lifted_irk
+				opts->ns = 2;
+				opts->sens_adj = true;
+				break;
+
+			default :
+				printf("\nnot enough sim solvers implemented!\n");
+				exit(1);
+		}
+		// recompute Butcher tableau after selecting ns
+		config->opts_update_tableau(config, dims, opts);
+
+
 /************************************************
 * sim memory
 ************************************************/
@@ -328,7 +369,7 @@ int main()
 		for (ii=0;ii<NREP;ii++)
 			config->evaluate(config, in, out, opts, mem, work);
 
-		Time1 = acados_toc(&timer)/NREP;
+		/* Time1 = acados_toc(&timer)/NREP; */
 
 		double *xn = out->xn;
 
@@ -342,6 +383,7 @@ int main()
 		printf("\n");
 
 		double *S_forw_out;
+		S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
@@ -410,7 +452,7 @@ int main()
 /************************************************
 * free
 ************************************************/
-	
+
 		free(config_mem);
 		free(dims_mem);
 		free(opts_mem);
@@ -418,7 +460,7 @@ int main()
 		free(work);
 		free(in_mem);
 		free(out_mem);
-	
+
 	}
 
 	// explicit model
@@ -434,7 +476,7 @@ int main()
 /************************************************
 * return
 ************************************************/
-	
+
 	printf("\nsuccess!\n\n");
 
     return 0;

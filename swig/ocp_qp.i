@@ -6,7 +6,7 @@
 #include <sstream>
 #include <vector>
 
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_cpp/ocp_qp.hpp"
 #include "acados_cpp/ocp_qp_solution.hpp"
 #include "acados_cpp/options.hpp"
@@ -61,7 +61,7 @@ ocp_qp_dims *map_to_ocp_qp_dims(const LangObject *map) {
     }
 
     int_t N = int_from(map, "N");
-    ocp_qp_dims *qp_dims = create_ocp_qp_dims(N);
+    ocp_qp_dims *qp_dims = ocp_qp_dims_create(N);
     fill_array_from(map, "nx", qp_dims->nx, N+1);
     fill_array_from(map, "nu", qp_dims->nu, N+1);
     fill_array_from(map, "nb", qp_dims->nb, N+1);
@@ -82,10 +82,10 @@ LangObject *ocp_qp_output(const ocp_qp_in *in, const ocp_qp_out *out) {
     for (int_t i = 0; i <= dims->N; i++) {
         states_copy[i] = (real_t *) calloc(dims->nx[i], sizeof(real_t));
         for (int_t j = 0; j < dims->nx[i]; j++)
-            states_copy[i][j] = DVECEL_LIBSTR(out->ux, dims->nu[i] + j);
+            states_copy[i][j] = BLASFEO_DVECEL(out->ux, dims->nu[i] + j);
         controls_copy[i] = (real_t *) calloc(dims->nu[i], sizeof(real_t));
         for (int_t j = 0; j < dims->nu[i]; j++)
-            controls_copy[i][j] = DVECEL_LIBSTR(out->ux, j);
+            controls_copy[i][j] = BLASFEO_DVECEL(out->ux, j);
     }
 
     LangObject *x_star = new_sequence_from(states_copy, dims->N+1, dims->nx);

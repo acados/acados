@@ -53,6 +53,17 @@
             return (real_t)duration / 1e9;
         }
 
+    #elif(defined __DSPACE__)
+
+        void acados_tic(acados_timer* t) {
+            ds1401_tic_start();
+            t->time = ds1401_tic_read();
+        }
+
+        real_t acados_toc(acados_timer* t) {
+            return ds1401_tic_read() - t->time;
+        }
+
     #else
 
         #if __STDC_VERSION__ >= 199901L  // C99 Mode

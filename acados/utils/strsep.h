@@ -22,7 +22,7 @@
   #define STD(x) x
 #endif
 
-char* strsep( char** stringp, const char* delim )
+char* strsep_acados( char** stringp, const char* delim )
   {
   char* result;
 

@@ -5,10 +5,13 @@ include ../../Makefile.rule
 OBJS =
 
 OBJS += ocp_nlp_common.o
-# OBJS += ocp_nlp_common_ext_dep.o
-# OBJS += ocp_nlp_sm_gn.o
-OBJS += ocp_nlp_gn_sqp.o
-# OBJS += ocp_nlp_sqp_ext_dep.o
+OBJS += ocp_nlp_cost_common.o
+OBJS += ocp_nlp_cost_ls.o
+OBJS += ocp_nlp_cost_nls.o
+OBJS += ocp_nlp_cost_external.o
+OBJS += ocp_nlp_constraints.o
+OBJS += ocp_nlp_dynamics.o
+OBJS += ocp_nlp_sqp.o
 
 obj: $(OBJS)
 

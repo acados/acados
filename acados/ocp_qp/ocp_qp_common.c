@@ -46,7 +46,7 @@ int ocp_qp_solver_config_calculate_size()
 
 	int size = 0;
 
-	size += sizeof(ocp_qp_solver_config);
+	size += sizeof(qp_solver_config);
 
 	return size;
 
@@ -54,13 +54,13 @@ int ocp_qp_solver_config_calculate_size()
 
 
 
-ocp_qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
+qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
 {
 
 	char *c_ptr = raw_memory;
 
-	ocp_qp_solver_config *config = (ocp_qp_solver_config *) c_ptr;
-	c_ptr += sizeof(ocp_qp_solver_config);
+	qp_solver_config *config = (qp_solver_config *) c_ptr;
+	c_ptr += sizeof(qp_solver_config);
 
 	return config;
 
@@ -125,6 +125,8 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
     d_create_ocp_qp_dim(N, dims, c_ptr);
     c_ptr += d_memsize_ocp_qp_dim(N);
 
+    dims->N = N;
+
     assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
 
     return dims;
@@ -140,7 +142,7 @@ int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
-    size += ocp_qp_dims_calculate_size(dims->N);
+    size += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
     return size;
 }
 
@@ -156,8 +158,8 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     d_create_ocp_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_ocp_qp(dims);
 
-    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);
-    c_ptr += ocp_qp_dims_calculate_size(dims->N);
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr); // TODO remove !!!
+    c_ptr += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
 
     dims_copy->N = dims->N;
 
@@ -189,7 +191,7 @@ int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
-    size += ocp_qp_dims_calculate_size(dims->N);
+    size += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
     size += sizeof(ocp_qp_info);
     return size;
 }
@@ -209,8 +211,8 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(ocp_qp_info);
 
-    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);
-    c_ptr += ocp_qp_dims_calculate_size(dims->N);
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr); // TODO remove !!!
+    c_ptr += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
 
     dims_copy->N = dims->N;
 

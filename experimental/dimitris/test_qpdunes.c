@@ -25,7 +25,7 @@ int main(int argc, char const *argv[]) {
     ocp_qp_in qp_in;
     ocp_qp_out qp_out_qpdunes, qp_out_ooqp;
 
-    ocp_qp_qpdunes_args qpdunes_args;
+    ocp_qp_qpdunes_opts qpdunes_args;
     ocp_qp_qpdunes_memory qpdunes_mem;
     int_t qpdunes_workspace_size;
     void *qpdunes_work;

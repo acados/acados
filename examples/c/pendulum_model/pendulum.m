@@ -2,7 +2,7 @@ clc;
 clear all;
 close all;
 
-addpath('../../external/casadi-octave-v3.2.2')
+addpath('../../../external/casadi-octave-v3.2.3')
 import casadi.*
 
 % constants
@@ -19,7 +19,7 @@ dtheta = SX.sym('dtheta');
 
 F = SX.sym('F');
 
-x = [x1; theta; v1; dtheta];
+x = [x1; v1; theta; dtheta];
 u = F;
 
 nx = length(x);
@@ -31,12 +31,18 @@ nu = length(u);
 %              dot(v1) == (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
 %              dot(dtheta) == (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
 
-f_expl = [   v1; ...
-             dtheta; ...
-             (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
-             (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
+% f_expl1 = [   v1; ...
+            %  dtheta; ...
+            %  (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
+            %  (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
 
          
+denominator = M + m - m*cos(theta)*cos(theta);
+f_expl = [  v1; ...
+            (-m*l*sin(theta)*dtheta*dtheta + m*g*cos(theta)*sin(theta)+F)/denominator; ...
+            dtheta; ...
+            (-m*l*cos(theta)*sin(theta)*dtheta*dtheta + F*cos(theta)+(M+m)*g*sin(theta))/(l*denominator)];
+
 Sx = SX.sym('Sx',nx,nx);
 Sp = SX.sym('Sp',nx,nu);
 lambdaX = SX.sym('lambdaX',nx,1);
@@ -67,9 +73,13 @@ end
 
 hessFun = Function('adjFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
 
-opts = struct('mex', false);
+opts = struct('mex', false, 'with_header', true, 'with_export', false);
 vdeFun.generate(['vde_forw_pendulum'], opts);
 jacFun.generate(['jac_pendulum'], opts);
 adjFun.generate(['vde_adj_pendulum'], opts);
 hessFun.generate(['vde_hess_pendulum'], opts);
 
+p = vertcat(x1-l*sin(theta) - l, l*cos(theta) - l);
+c = p.T * p;
+jac_constraint = Function('jac_constraint', {x, u}, {c, SX.zeros(1, 4) + jacobian(c, x), SX.zeros(2, 4) + jacobian(p, x)});
+jac_constraint.generate('jac_constraint', opts);

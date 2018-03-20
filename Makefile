@@ -11,11 +11,19 @@ OBJS =
 
 # ocp nlp
 OBJS += acados/ocp_nlp/ocp_nlp_common.o
-OBJS += acados/ocp_nlp/ocp_nlp_gn_sqp.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_common.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_ls.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_nls.o
+OBJS += acados/ocp_nlp/ocp_nlp_cost_external.o
+OBJS += acados/ocp_nlp/ocp_nlp_constraints.o
+OBJS += acados/ocp_nlp/ocp_nlp_dynamics.o
+OBJS += acados/ocp_nlp/ocp_nlp_sqp.o
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
 OBJS += acados/dense_qp/dense_qp_hpipm.o
+ifeq ($(ACADOS_WITH_QPOASES), 1)
 OBJS += acados/dense_qp/dense_qp_qpoases.o
+endif
 ifeq ($(ACADOS_WITH_QORE), 1)
 OBJS += acados/dense_qp/dense_qp_qore.o
 endif
@@ -31,7 +39,7 @@ OBJS += acados/ocp_qp/ocp_qp_qpdunes.o
 endif
 OBJS += acados/ocp_qp/ocp_qp_partial_condensing.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing.o
-OBJS += acados/ocp_qp/ocp_qp_sparse_solver.o
+OBJS += acados/ocp_qp/ocp_qp_partial_condensing_solver.o
 OBJS += acados/ocp_qp/ocp_qp_full_condensing_solver.o
 # sim
 OBJS += acados/sim/sim_collocation_utils.o
@@ -53,8 +61,12 @@ OBJS += acados/utils/external_function_generic.o
 
 
 # acados dependencies
-STATIC_DEPS = blasfeo_static hpipm_static qpoases_static
-CLEAN_DEPS = blasfeo_clean hpipm_clean qpoases_clean
+STATIC_DEPS = blasfeo_static hpipm_static
+CLEAN_DEPS = blasfeo_clean hpipm_clean
+ifeq ($(ACADOS_WITH_QPOASES), 1)
+STATIC_DEPS += qpoases_static
+CLEAN_DEPS += qpoases_clean
+endif
 ifeq ($(ACADOS_WITH_HPMPC), 1)
 STATIC_DEPS += hpmpc_static
 CLEAN_DEPS += hpmpc_clean
@@ -134,18 +146,8 @@ acados_c_static: acados_static
 ifeq ($(ACADOS_WITH_C_INTERFACE), 1)
 	( cd interfaces/acados_c; $(MAKE) static_library CC=$(CC) TOP=$(TOP) )
 	mkdir -p include/acados_c
-	mkdir -p include/acados_c/dense_qp
-	# mkdir -p include/acados_c/ocp_lin
-	# mkdir -p include/acados_c/ocp_nlp
-	mkdir -p include/acados_c/ocp_qp
-	mkdir -p include/acados_c/sim
 	mkdir -p lib
 	cp -r interfaces/acados_c/*.h include/acados_c
-	cp -r interfaces/acados_c/dense_qp/*.h include/acados_c/dense_qp
-	# cp -r interfaces/acados_c/ocp_lin/*.h include/acados_c/ocp_lin
-	# cp -r interfaces/acados_c/ocp_nlp/*.h include/acados_c/ocp_nlp
-	cp -r interfaces/acados_c/ocp_qp/*.h include/acados_c/ocp_qp
-	cp -r interfaces/acados_c/sim/*.h include/acados_c/sim
 	mv interfaces/acados_c/libacados_c.a lib
 endif
 

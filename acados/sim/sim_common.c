@@ -54,6 +54,8 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 	sim_solver_config *config = (sim_solver_config *) c_ptr;
 	c_ptr += sizeof(sim_solver_config);
 
+    assert((char*)raw_memory + sim_solver_config_calculate_size() >= c_ptr);
+
 	return config;
 
 }
@@ -67,7 +69,7 @@ sim_solver_config *sim_solver_config_assign(void *raw_memory)
 int sim_dims_calculate_size()
 {
     int size = sizeof(sim_dims);
-    
+
     return size;
 }
 
@@ -80,7 +82,7 @@ sim_dims *sim_dims_assign(void *raw_memory)
     sim_dims *dims = (sim_dims *) c_ptr;
     c_ptr += sizeof(sim_dims);
 
-    assert((char *) raw_memory + sim_dims_calculate_size() == c_ptr);
+    assert((char *) raw_memory + sim_dims_calculate_size() >= c_ptr);
 
     return dims;
 }
@@ -132,10 +134,10 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(nx, &in->x, &c_ptr);
-    assign_double(nu, &in->u, &c_ptr);
-    assign_double(nx * NF, &in->S_forw, &c_ptr);
-    assign_double(NF, &in->S_adj, &c_ptr);
+    assign_and_advance_double(nx, &in->x, &c_ptr);
+    assign_and_advance_double(nu, &in->u, &c_ptr);
+    assign_and_advance_double(nx * NF, &in->S_forw, &c_ptr);
+    assign_and_advance_double(NF, &in->S_adj, &c_ptr);
 
 	in->model = config->model_assign(config, dims, c_ptr);
 	c_ptr += config->model_calculate_size(config, dims);
@@ -154,7 +156,7 @@ sim_in *sim_in_assign(void *config_, sim_dims *dims, void *raw_memory)
 
 int sim_out_calculate_size(void *config_, sim_dims *dims)
 {
-	sim_solver_config *config = config_;
+	/* sim_solver_config *config = config_; */
 
     int size = sizeof(sim_out);
 
@@ -179,7 +181,7 @@ int sim_out_calculate_size(void *config_, sim_dims *dims)
 
 sim_out *sim_out_assign(void *config_, sim_dims *dims, void *raw_memory)
 {
-	sim_solver_config *config = config_;
+	/* sim_solver_config *config = config_; */
 
     char *c_ptr = (char *) raw_memory;
 
@@ -195,11 +197,11 @@ sim_out *sim_out_assign(void *config_, sim_dims *dims, void *raw_memory)
 
     align_char_to(8, &c_ptr);
 
-    assign_double(nx, &out->xn, &c_ptr);
-    assign_double(nx * NF, &out->S_forw, &c_ptr);
-    assign_double(nx + nu, &out->S_adj, &c_ptr);
-    assign_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
-    assign_double(NF, &out->grad, &c_ptr);
+    assign_and_advance_double(nx, &out->xn, &c_ptr);
+    assign_and_advance_double(nx * NF, &out->S_forw, &c_ptr);
+    assign_and_advance_double(nx + nu, &out->S_adj, &c_ptr);
+    assign_and_advance_double((NF + 1) * NF / 2, &out->S_hess, &c_ptr);
+    assign_and_advance_double(NF, &out->grad, &c_ptr);
 
     assert((char*)raw_memory + sim_out_calculate_size(config_, dims) >= c_ptr);
 

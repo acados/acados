@@ -37,6 +37,39 @@
 #include "acados/dense_qp/dense_qp_common.h"
 
 
+/************************************************
+* config
+************************************************/
+
+int dense_qp_solver_config_calculate_size()
+{
+	int size = 0;
+
+	size += sizeof(qp_solver_config);
+
+	return size;
+}
+
+
+
+qp_solver_config *dense_qp_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	qp_solver_config *config = (qp_solver_config *) c_ptr;
+	c_ptr += sizeof(qp_solver_config);
+
+	return config;
+
+}
+
+
+/************************************************
+* dims
+************************************************/
+
+
 int dense_qp_dims_calculate_size()
 {
     int size = sizeof(dense_qp_dims);
@@ -48,7 +81,7 @@ int dense_qp_dims_calculate_size()
 
 
 
-dense_qp_dims *assign_dense_qp_dims(void *raw_memory)
+dense_qp_dims *dense_qp_dims_assign(void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -65,8 +98,11 @@ dense_qp_dims *assign_dense_qp_dims(void *raw_memory)
 
 
 
+/************************************************
+* in
+************************************************/
 
-int dense_qp_in_calculate_size(dense_qp_dims *dims)
+int dense_qp_in_calculate_size(void *config, dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_in);
     size += sizeof(dense_qp_dims);
@@ -76,7 +112,7 @@ int dense_qp_in_calculate_size(dense_qp_dims *dims)
 
 
 
-dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory)
+dense_qp_in *dense_qp_in_assign(void *config, dense_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *)raw_memory;
 
@@ -97,14 +133,18 @@ dense_qp_in *assign_dense_qp_in(dense_qp_dims *dims, void *raw_memory)
     qp_in->dim->ng = dims->ng;
     qp_in->dim->ns = dims->ns;
 
-    assert((char*)raw_memory + dense_qp_in_calculate_size(dims) == c_ptr);
+    assert((char*)raw_memory + dense_qp_in_calculate_size(config, dims) == c_ptr);
 
     return qp_in;
 }
 
 
 
-int dense_qp_out_calculate_size(dense_qp_dims *dims)
+/************************************************
+* out
+************************************************/
+
+int dense_qp_out_calculate_size(void *config, dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_out);
     size += d_memsize_dense_qp_sol(dims);
@@ -114,7 +154,7 @@ int dense_qp_out_calculate_size(dense_qp_dims *dims)
 
 
 
-dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory)
+dense_qp_out *dense_qp_out_assign(void *config, dense_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -129,12 +169,16 @@ dense_qp_out *assign_dense_qp_out(dense_qp_dims *dims, void *raw_memory)
     qp_out->misc = (void *) c_ptr;
     c_ptr += sizeof(dense_qp_info);
 
-    assert((char*)raw_memory + dense_qp_out_calculate_size(dims) == c_ptr);
+    assert((char*)raw_memory + dense_qp_out_calculate_size(config, dims) == c_ptr);
 
     return qp_out;
 }
 
 
+
+/************************************************
+* res
+************************************************/
 
 int dense_qp_res_calculate_size(dense_qp_dims *dims)
 {
@@ -145,7 +189,7 @@ int dense_qp_res_calculate_size(dense_qp_dims *dims)
 
 
 
-dense_qp_res *assign_dense_qp_res(dense_qp_dims *dims, void *raw_memory)
+dense_qp_res *dense_qp_res_assign(dense_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -162,7 +206,7 @@ dense_qp_res *assign_dense_qp_res(dense_qp_dims *dims, void *raw_memory)
 
 
 
-int dense_qp_res_ws_calculate_size(dense_qp_dims *dims)
+int dense_qp_res_workspace_calculate_size(dense_qp_dims *dims)
 {
     int size = sizeof(dense_qp_res_ws);
     size += d_memsize_dense_qp_res_workspace(dims);
@@ -171,7 +215,7 @@ int dense_qp_res_ws_calculate_size(dense_qp_dims *dims)
 
 
 
-dense_qp_res_ws *assign_dense_qp_res_ws(dense_qp_dims *dims, void *raw_memory)
+dense_qp_res_ws *dense_qp_res_workspace_assign(dense_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -181,14 +225,14 @@ dense_qp_res_ws *assign_dense_qp_res_ws(dense_qp_dims *dims, void *raw_memory)
     d_create_dense_qp_res_workspace(dims, res_ws, c_ptr);
     c_ptr += d_memsize_dense_qp_res_workspace(dims);
 
-    assert((char*) raw_memory + dense_qp_res_ws_calculate_size(dims) == c_ptr);
+    assert((char*) raw_memory + dense_qp_res_workspace_calculate_size(dims) == c_ptr);
 
     return res_ws;
 }
 
 
 
-void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws)
+void dense_qp_res_compute(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res *qp_res, dense_qp_res_ws *res_ws)
 {
     int nvd = qp_in->dim->nv;
     // int ned = qp_in->dim->ne;
@@ -214,7 +258,7 @@ void compute_dense_qp_res(dense_qp_in *qp_in, dense_qp_out *qp_out, dense_qp_res
 
 
 
-void compute_dense_qp_res_nrm_inf(dense_qp_res *qp_res, double res[4])
+void dense_qp_res_compute_nrm_inf(dense_qp_res *qp_res, double res[4])
 {
     int nv = qp_res->dim->nv;
     int nb = qp_res->dim->nb;

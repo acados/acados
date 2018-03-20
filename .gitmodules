@@ -5,7 +5,6 @@
 [submodule "blasfeo"]
 	path = external/blasfeo
 	url = https://github.com/giaf/blasfeo.git
-	branch = stable
 [submodule "qpdunes"]
 	path = external/qpdunes
 	url = https://github.com/acados/qpDUNES-dev.git
