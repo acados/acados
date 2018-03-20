@@ -994,9 +994,12 @@ int main() {
     * dynamics
     ************************************************/
 
+	// TODO(dimitris): 	USE EXTERNAL FUNCTION INTERFACE TO CREATE AND FREE THOSE
+	// 					REMOVE VARIABLE SIZE ARRAYS
+
 	// explicit
-	external_function_casadi forw_vde_casadi[NN]; // XXX varible size array
-	external_function_casadi jac_ode_casadi[NN]; // XXX varible size array
+	external_function_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_casadi));
+	external_function_casadi *jac_ode_casadi = malloc(NN*sizeof(external_function_casadi));
 	// implicit
 	external_function_casadi impl_ode_casadi[NN]; // XXX varible size array
 	external_function_casadi impl_jac_x_casadi[NN]; // XXX varible size array
@@ -1009,31 +1012,9 @@ int main() {
 	char *c_ptr;
 
 	// forw_vde
-	tmp_size = 0;
-	for (int ii=0; ii<NN; ii++)
-	{
-		tmp_size += external_function_casadi_calculate_size(forw_vde_casadi+ii);
-	}
-	void *forw_vde_casadi_mem = malloc(tmp_size);
-	c_ptr = forw_vde_casadi_mem;
-	for (int ii=0; ii<NN; ii++)
-	{
-		external_function_casadi_assign(forw_vde_casadi+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+ii);
-	}
+	external_function_casadi_create_array(NN, forw_vde_casadi);
 	// jac_ode
-	tmp_size = 0;
-	for (int ii=0; ii<NN; ii++)
-	{
-		tmp_size += external_function_casadi_calculate_size(jac_ode_casadi+ii);
-	}
-	void *jac_ode_casadi_mem = malloc(tmp_size);
-	c_ptr = jac_ode_casadi_mem;
-	for (int ii=0; ii<NN; ii++)
-	{
-		external_function_casadi_assign(jac_ode_casadi+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
-	}
+	external_function_casadi_create_array(NN, jac_ode_casadi);
 
 	// impl_ode
 	tmp_size = 0;
@@ -1489,6 +1470,10 @@ int main() {
     ************************************************/
 
 	// TODO(dimitris): FREE COST, DYNAMICS, SOLVER, IN, OUT, ETC
+ 	external_function_casadi_free(forw_vde_casadi);
+	external_function_casadi_free(jac_ode_casadi);
+	free(forw_vde_casadi);
+	free(jac_ode_casadi);
 
 	/************************************************
 	* return
