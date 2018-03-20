@@ -418,6 +418,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         jac_out[kk] = 0.0;
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
+	
+//	double inf_norm_K;
+//	double tol_inf_norm_K = 1e-6;
 
 
     // start the loop
@@ -427,6 +430,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
         //  obtain Kn
 		// TODO add exit condition on residuals ???
+//		inf_norm_K = 1.0;
+//        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         for(iter=0; iter<newton_iter; iter++)
 		{
 
@@ -510,6 +515,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dtrsv_unn(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
             blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
+
+			// inf norm of K
+//			blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }// end iter
 
         if (opts->sens_adj)
