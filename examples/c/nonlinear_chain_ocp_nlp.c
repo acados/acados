@@ -77,7 +77,7 @@
 #define NREP 10
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 2
+#define COST 1
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -376,97 +376,109 @@ static void select_dynamics_casadi(int N, int num_free_masses, external_function
 
 
 
-static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_function_casadi *ls_cost_jac)
+static void select_ls_stage_cost_jac_casadi(int indx, int N, int num_free_masses, external_function_casadi *ls_cost_jac)
 {
-	// loop index
-	int ii;
-
 	switch (num_free_masses)
 	{
 		case 1:
-			for (ii = 0; ii < N; ii++)
+			if (indx < N)
 			{
-				ls_cost_jac[ii].casadi_fun = &ls_cost_nm2;
-				ls_cost_jac[ii].casadi_work = &ls_cost_nm2_work;
-				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm2_sparsity_in;
-				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm2_sparsity_out;
-				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm2_n_in;
-				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm2_n_out;
+				ls_cost_jac->casadi_fun = &ls_cost_nm2;
+				ls_cost_jac->casadi_work = &ls_cost_nm2_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_cost_nm2_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_cost_nm2_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_cost_nm2_n_in;
+				ls_cost_jac->casadi_n_out = &ls_cost_nm2_n_out;
 			}
-			ls_cost_jac[N].casadi_fun = &ls_costN_nm2;
-			ls_cost_jac[N].casadi_work = &ls_costN_nm2_work;
-			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm2_sparsity_in;
-			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm2_sparsity_out;
-			ls_cost_jac[N].casadi_n_in = &ls_costN_nm2_n_in;
-			ls_cost_jac[N].casadi_n_out = &ls_costN_nm2_n_out;
+			else
+			{
+				ls_cost_jac->casadi_fun = &ls_costN_nm2;
+				ls_cost_jac->casadi_work = &ls_costN_nm2_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_costN_nm2_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_costN_nm2_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_costN_nm2_n_in;
+				ls_cost_jac->casadi_n_out = &ls_costN_nm2_n_out;
+			}
 			break;
 		case 2:
-			for (ii = 0; ii < N; ii++)
+			if (indx < N)
 			{
-				ls_cost_jac[ii].casadi_fun = &ls_cost_nm3;
-				ls_cost_jac[ii].casadi_work = &ls_cost_nm3_work;
-				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm3_sparsity_in;
-				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm3_sparsity_out;
-				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm3_n_in;
-				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm3_n_out;
+				ls_cost_jac->casadi_fun = &ls_cost_nm3;
+				ls_cost_jac->casadi_work = &ls_cost_nm3_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_cost_nm3_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_cost_nm3_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_cost_nm3_n_in;
+				ls_cost_jac->casadi_n_out = &ls_cost_nm3_n_out;
 			}
-			ls_cost_jac[N].casadi_fun = &ls_costN_nm3;
-			ls_cost_jac[N].casadi_work = &ls_costN_nm3_work;
-			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm3_sparsity_in;
-			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm3_sparsity_out;
-			ls_cost_jac[N].casadi_n_in = &ls_costN_nm3_n_in;
-			ls_cost_jac[N].casadi_n_out = &ls_costN_nm3_n_out;
+			else
+			{
+				ls_cost_jac->casadi_fun = &ls_costN_nm3;
+				ls_cost_jac->casadi_work = &ls_costN_nm3_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_costN_nm3_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_costN_nm3_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_costN_nm3_n_in;
+				ls_cost_jac->casadi_n_out = &ls_costN_nm3_n_out;
+			}
 			break;
 		case 3:
-			for (ii = 0; ii < N; ii++)
+			if (indx < N)
 			{
-				ls_cost_jac[ii].casadi_fun = &ls_cost_nm4;
-				ls_cost_jac[ii].casadi_work = &ls_cost_nm4_work;
-				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm4_sparsity_in;
-				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm4_sparsity_out;
-				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm4_n_in;
-				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm4_n_out;
+				ls_cost_jac->casadi_fun = &ls_cost_nm4;
+				ls_cost_jac->casadi_work = &ls_cost_nm4_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_cost_nm4_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_cost_nm4_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_cost_nm4_n_in;
+				ls_cost_jac->casadi_n_out = &ls_cost_nm4_n_out;
 			}
-			ls_cost_jac[N].casadi_fun = &ls_costN_nm4;
-			ls_cost_jac[N].casadi_work = &ls_costN_nm4_work;
-			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm4_sparsity_in;
-			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm4_sparsity_out;
-			ls_cost_jac[N].casadi_n_in = &ls_costN_nm4_n_in;
-			ls_cost_jac[N].casadi_n_out = &ls_costN_nm4_n_out;
+			else
+			{
+				ls_cost_jac->casadi_fun = &ls_costN_nm4;
+				ls_cost_jac->casadi_work = &ls_costN_nm4_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_costN_nm4_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_costN_nm4_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_costN_nm4_n_in;
+				ls_cost_jac->casadi_n_out = &ls_costN_nm4_n_out;
+			}
 			break;
 		case 4:
-			for (ii = 0; ii < N; ii++)
+			if (indx < N)
 			{
-				ls_cost_jac[ii].casadi_fun = &ls_cost_nm5;
-				ls_cost_jac[ii].casadi_work = &ls_cost_nm5_work;
-				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm5_sparsity_in;
-				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm5_sparsity_out;
-				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm5_n_in;
-				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm5_n_out;
+				ls_cost_jac->casadi_fun = &ls_cost_nm5;
+				ls_cost_jac->casadi_work = &ls_cost_nm5_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_cost_nm5_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_cost_nm5_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_cost_nm5_n_in;
+				ls_cost_jac->casadi_n_out = &ls_cost_nm5_n_out;
 			}
-			ls_cost_jac[N].casadi_fun = &ls_costN_nm5;
-			ls_cost_jac[N].casadi_work = &ls_costN_nm5_work;
-			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm5_sparsity_in;
-			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm5_sparsity_out;
-			ls_cost_jac[N].casadi_n_in = &ls_costN_nm5_n_in;
-			ls_cost_jac[N].casadi_n_out = &ls_costN_nm5_n_out;
+			else
+			{
+				ls_cost_jac->casadi_fun = &ls_costN_nm5;
+				ls_cost_jac->casadi_work = &ls_costN_nm5_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_costN_nm5_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_costN_nm5_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_costN_nm5_n_in;
+				ls_cost_jac->casadi_n_out = &ls_costN_nm5_n_out;
+			}
 			break;
 		case 5:
-			for (ii = 0; ii < N; ii++)
+			if (indx < N)
 			{
-				ls_cost_jac[ii].casadi_fun = &ls_cost_nm6;
-				ls_cost_jac[ii].casadi_work = &ls_cost_nm6_work;
-				ls_cost_jac[ii].casadi_sparsity_in = &ls_cost_nm6_sparsity_in;
-				ls_cost_jac[ii].casadi_sparsity_out = &ls_cost_nm6_sparsity_out;
-				ls_cost_jac[ii].casadi_n_in = &ls_cost_nm6_n_in;
-				ls_cost_jac[ii].casadi_n_out = &ls_cost_nm6_n_out;
+				ls_cost_jac->casadi_fun = &ls_cost_nm6;
+				ls_cost_jac->casadi_work = &ls_cost_nm6_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_cost_nm6_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_cost_nm6_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_cost_nm6_n_in;
+				ls_cost_jac->casadi_n_out = &ls_cost_nm6_n_out;
 			}
-			ls_cost_jac[N].casadi_fun = &ls_costN_nm6;
-			ls_cost_jac[N].casadi_work = &ls_costN_nm6_work;
-			ls_cost_jac[N].casadi_sparsity_in = &ls_costN_nm6_sparsity_in;
-			ls_cost_jac[N].casadi_sparsity_out = &ls_costN_nm6_sparsity_out;
-			ls_cost_jac[N].casadi_n_in = &ls_costN_nm6_n_in;
-			ls_cost_jac[N].casadi_n_out = &ls_costN_nm6_n_out;
+			else
+			{
+				ls_cost_jac->casadi_fun = &ls_costN_nm6;
+				ls_cost_jac->casadi_work = &ls_costN_nm6_work;
+				ls_cost_jac->casadi_sparsity_in = &ls_costN_nm6_sparsity_in;
+				ls_cost_jac->casadi_sparsity_out = &ls_costN_nm6_sparsity_out;
+				ls_cost_jac->casadi_n_in = &ls_costN_nm6_n_in;
+				ls_cost_jac->casadi_n_out = &ls_costN_nm6_n_out;
+			}
 			break;
 		default:
 			printf("Problem size not available\n");
@@ -475,6 +487,14 @@ static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_funct
 	}
 
 	return;
+}
+
+
+
+static void select_ls_cost_jac_casadi(int N, int num_free_masses, external_function_casadi *ls_cost_jac)
+{
+	for (int ii = 0; ii <= N; ii++)
+		select_ls_stage_cost_jac_casadi(ii, N, num_free_masses, &ls_cost_jac[ii]);
 }
 
 
@@ -1088,6 +1108,25 @@ int main() {
 	external_function_casadi ls_cost_jac_casadi[NN+1]; // XXX varible size array
 	external_function_generic ext_cost_generic;
 
+	for (int i = 0; i <= NN; i++)
+	{
+		switch (plan->nlp_cost[i])
+		{
+			case LINEAR_LS:
+				// do nothing
+				break;
+
+			case NONLINEAR_LS:
+
+				break;
+
+			case EXTERNALLY_PROVIDED:
+
+				break;
+		}
+	}
+
+
 	if (cost_type == 1)
 	{
 		select_ls_cost_jac_casadi(NN, NMF, ls_cost_jac_casadi);
@@ -1189,152 +1228,90 @@ int main() {
 
 	// output definition: y = [x; u]
 
-	// ocp_nlp_cost_ls_model *stage_cost_ls;
+	ocp_nlp_cost_ls_model *stage_cost_ls;
+	ocp_nlp_cost_nls_model *stage_cost_nls;
+	ocp_nlp_cost_external_model *stage_cost_external;
 
-	// for (int i = 0; i <= NN; i++)
-	// {
-	// 	switch (plan->nlp_cost[i])
-	// 	{
-	// 		case LINEAR_LS:
-
-	// 			stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
-
-	// 			// Cyt
-	// 			blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
-	// 				for (int j = 0; j < nu[i]; j++)
-	// 			BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
-	// 				for (int j = 0; j < nx[i]; j++)
-	// 			BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
-
-	// 			// W
-	// 			blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
-	// 				for (int j = 0; j < nx[i]; j++)
-	// 			BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
-	// 				for (int j = 0; j < nu[i]; j++)
-	// 			BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
-
-	// 			// y_ref
-	// 			blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
-	// 			blasfeo_pack_dvec(nu[i], uref, &stage_cost_ls->y_ref, nx[i]);
-	// 			break;
-
-	// 		case NONLINEAR_LS:
-
-	// 			break;
-
-	// 		case EXTERNALLY_PROVIDED:
-
-	// 			break;
-	// 	}
-	// }
-
-	if (cost_type == 0)
+	for (int i = 0; i <= NN; i++)
 	{
-		/* linear ls */
-
-		ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-
-		// Cyt
-		for (int i=0; i<=NN; i++)
+		switch (plan->nlp_cost[i])
 		{
-			blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &cost_ls[i]->Cyt, 0, 0);
-			for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&cost_ls[i]->Cyt, j, nx[i]+j) = 1.0;
-			for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&cost_ls[i]->Cyt, nu[i]+j, j) = 1.0;
-		}
+			case LINEAR_LS:
 
-		// W
-		for (int i=0; i<=NN; i++)
-		{
-			blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
-			for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = diag_cost_x[j];
-			for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
-		}
+				stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
 
-		// y_ref
-		for (int i=0; i<=NN; i++)
-		{
-			blasfeo_pack_dvec(nx[i], xref, &cost_ls[i]->y_ref, 0);
-			blasfeo_pack_dvec(nu[i], uref, &cost_ls[i]->y_ref, nx[i]);
-		}
+				// Cyt
+				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
+					for (int j = 0; j < nu[i]; j++)
+				BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
+					for (int j = 0; j < nx[i]; j++)
+				BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
 
-	}
-	else if (cost_type == 1)
-	{
-		/* nonlinear ls */
+				// W
+				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
+					for (int j = 0; j < nx[i]; j++)
+				BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
+					for (int j = 0; j < nu[i]; j++)
+				BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 
-		ocp_nlp_cost_nls_model **cost_ls = (ocp_nlp_cost_nls_model **) nlp_in->cost;
+				// y_ref
+				blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
+				blasfeo_pack_dvec(nu[i], uref, &stage_cost_ls->y_ref, nx[i]);
+				break;
 
-		// nls_jac
-		for (int i=0; i<=NN; i++)
-			cost_ls[i]->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+			case NONLINEAR_LS:
 
-		#if 0
-			// replace with hand-written external functions
-			external_function_generic ls_cost_jac_generic[NN];
-			if (NMF==3)
-			{
-				for (int i=0; i<NN; i++)
+				stage_cost_nls = (ocp_nlp_cost_nls_model *) nlp_in->cost[i];
+
+				// nls_jac
+				stage_cost_nls->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+
+				// W
+				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_nls->W, 0, 0);
+				for (int j = 0; j < nx[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_nls->W, j, j) = diag_cost_x[j];
+				for (int j = 0; j < nu[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_nls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+
+				// y_ref
+				blasfeo_pack_dvec(nx[i], xref, &stage_cost_nls->y_ref, 0);
+				blasfeo_pack_dvec(nu[i], uref, &stage_cost_nls->y_ref, nx[i]);
+				break;
+
+			case EXTERNALLY_PROVIDED:
+
+				// TODO(dimitris): WHY DOES IT ALSO WORK WHEN i < NN??
+				if (i <= NN)
 				{
-					ls_cost_jac_generic[i].evaluate = &ls_cost_jac_nm4;
-					cost_ls->nls_jac[i] = &ls_cost_jac_generic[i];
+				stage_cost_external = (ocp_nlp_cost_external_model *) nlp_in->cost[i];
+
+				stage_cost_external->ext_cost = &ext_cost_generic;
 				}
-			}
-		#endif
+				// TODO(dimitris): why linear cost at the end?
+				// else
+				// {
+				// 	stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
 
-		// W
-		for (int i=0; i<=NN; i++)
-		{
-			blasfeo_dgese(ny[i], ny[i], 0.0, &cost_ls[i]->W, 0, 0);
-			for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&cost_ls[i]->W, j, j) = diag_cost_x[j];
-			for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&cost_ls[i]->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+				// 	// Cyt
+				// 	blasfeo_dgese(nu[NN]+nx[NN], ny[NN], 0.0, &stage_cost_ls->Cyt, 0, 0);
+				// 	for (int j = 0; j < nu[NN]; j++)
+				// 		BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[NN]+j) = 1.0;
+				// 	for (int j = 0; j < nx[NN]; j++)
+				// 		BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[NN]+j, j) = 1.0;
+
+				// 	// W
+				// 	blasfeo_dgese(ny[NN], ny[NN], 0.0, &stage_cost_ls->W, 0, 0);
+				// 	for (int j = 0; j < nx[NN]; j++)
+				// 		BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
+				// 	for (int j = 0; j < nu[NN]; j++)
+				// 		BLASFEO_DMATEL(&stage_cost_ls->W, nx[NN]+j, nx[NN]+j) = diag_cost_u[j];
+
+				// 	// y_ref
+				// 	blasfeo_pack_dvec(nx[NN], xref, &stage_cost_ls->y_ref, 0);
+				// 	blasfeo_pack_dvec(nu[NN], uref, &stage_cost_ls->y_ref, nx[NN]);
+				// }
+				break;
 		}
-
-		// y_ref
-		for (int i=0; i<=NN; i++)
-		{
-			blasfeo_pack_dvec(nx[i], xref, &cost_ls[i]->y_ref, 0);
-			blasfeo_pack_dvec(nu[i], uref, &cost_ls[i]->y_ref, nx[i]);
-		}
-	}
-	else
-	{
-		/* external cost */
-
-		ocp_nlp_cost_external_model **cost_external = (ocp_nlp_cost_external_model **) nlp_in->cost;
-
-		// ext_cost
-		for (int i=0; i<NN; i++)
-			cost_external[i]->ext_cost = &ext_cost_generic;
-
-		/* linear ls */
-
-		ocp_nlp_cost_ls_model **cost_ls = (ocp_nlp_cost_ls_model **) nlp_in->cost;
-
-		// last stage
-
-		// Cyt
-		blasfeo_dgese(nu[NN]+nx[NN], ny[NN], 0.0, &cost_ls[NN]->Cyt, 0, 0);
-		for (int j = 0; j < nu[NN]; j++)
-			BLASFEO_DMATEL(&cost_ls[NN]->Cyt, j, nx[NN]+j) = 1.0;
-		for (int j = 0; j < nx[NN]; j++)
-			BLASFEO_DMATEL(&cost_ls[NN]->Cyt, nu[NN]+j, j) = 1.0;
-
-		// W
-		blasfeo_dgese(ny[NN], ny[NN], 0.0, &cost_ls[NN]->W, 0, 0);
-		for (int j = 0; j < nx[NN]; j++)
-			BLASFEO_DMATEL(&cost_ls[NN]->W, j, j) = diag_cost_x[j];
-		for (int j = 0; j < nu[NN]; j++)
-			BLASFEO_DMATEL(&cost_ls[NN]->W, nx[NN]+j, nx[NN]+j) = diag_cost_u[j];
-
-		// y_ref
-		blasfeo_pack_dvec(nx[NN], xref, &cost_ls[NN]->y_ref, 0);
-		blasfeo_pack_dvec(nu[NN], uref, &cost_ls[NN]->y_ref, nx[NN]);
 	}
 
 	/* dynamics */
