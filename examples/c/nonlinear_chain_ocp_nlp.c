@@ -1339,8 +1339,8 @@ int main() {
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
 	// idxb0
-    int idxb0[nb[0]];
-    for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
+    // int idxb0[nb[0]];
+    // for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
 
 	// idxb1
 	int idxb1[nb[1]];

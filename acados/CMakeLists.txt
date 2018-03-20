@@ -22,9 +22,9 @@ set(PACKAGE_SO_VERSION "0.1")
 include(CMakePackageConfigHelpers)
 
 if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    set(ACADOS_WITH_HPMPC OFF)
+    set(ACADOS_WITH_HPMPC OFF CACHE BOOL "")
 else()
-    set(ACADOS_WITH_HPMPC ON)
+    set(ACADOS_WITH_HPMPC ON CACHE BOOL "")
 endif()
 
 # Build list with all source files to go into the acados library
