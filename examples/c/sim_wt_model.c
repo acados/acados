@@ -449,7 +449,7 @@ int main()
 #endif
 
 //		printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
-		printf("time for %d simulation steps: %f ms (AD time: %f ms (%5.2f \%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
+		printf("time for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
 
 		free(sim_solver);
 		free(in);
