@@ -462,7 +462,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
+				acados_tic(&timer_ad);
                 model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+				timing_ad += acados_toc(&timer_ad);
 
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);

@@ -331,6 +331,10 @@ int main()
 
 		int nsim0 = nsim;
 
+		double cpu_time = 0.0;
+		double la_time = 0.0;
+		double ad_time = 0.0;
+
 //		for (ii=0; ii<nsim; ii++)
 		for (ii=0; ii<nsim0; ii++)
 		{
@@ -351,6 +355,10 @@ int main()
 			if (acados_return != 0)
             	printf("error in sim solver\n");
 
+			cpu_time += out->info->CPUtime;
+			la_time += out->info->LAtime;
+			ad_time += out->info->ADtime;
+
 //			d_print_mat(1, nx, out->xn, 1);
 
 			// x_out
@@ -358,7 +366,7 @@ int main()
 				x_sim[(ii+1)*nx+jj] = out->xn[jj];
 
 		}
-		double cpu_time = acados_toc(&timer);
+		double total_cpu_time = acados_toc(&timer);
 
 		/************************************************
 		* printing
@@ -440,7 +448,8 @@ int main()
 		}
 #endif
 
-		printf("time for %d simulation steps: %f ms \n\n", nsim, 1e3*cpu_time);
+//		printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
+		printf("time for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
 
 		free(sim_solver);
 		free(in);
