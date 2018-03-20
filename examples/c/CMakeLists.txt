@@ -88,6 +88,18 @@ file(GLOB CRANE_MODEL_SRC
     crane_model/vde_hess_model.c
 )
 
+file(GLOB WT_MODEL_SRC
+    wt_model_nx3/ode_energy_balanced_model.c
+    wt_model_nx3/jac_energy_balanced_model.c
+    wt_model_nx3/vde_adj_energy_balanced_model.c
+    wt_model_nx3/vde_energy_balanced_model.c
+    wt_model_nx3/vde_hess_energy_balanced_model.c
+    wt_model_nx3/impl_odeFun_energy_balanced_model.c
+    wt_model_nx3/impl_jacFun_x_energy_balanced_model.c
+    wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.c
+    wt_model_nx3/impl_jacFun_u_energy_balanced_model.c
+)
+
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
@@ -164,7 +176,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(ACADOS_WITH_C_INTERFACE)
         add_executable(sim_crane_example sim_crane_example.c ${CRANE_MODEL_SRC})
         target_link_libraries(sim_crane_example acados)
-        add_test(sim_crane_example sim_crane_no_interface_example)
+        add_test(sim_crane_example sim_crane_example)
     endif()
 
     add_executable(
@@ -180,6 +192,13 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         sim_crane_no_interface_example
         sim_crane_no_interface_example
     )
+
+    # -------------------- sim_wt
+    if(ACADOS_WITH_C_INTERFACE)
+        add_executable(sim_wt_model sim_wt_model.c ${WT_MODEL_SRC})
+        target_link_libraries(sim_wt_model acados)
+        add_test(sim_wt_model sim_wt_model)
+    endif()
 
     # -------------------- ocp_qp
     if(ACADOS_WITH_C_INTERFACE)

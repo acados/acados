@@ -56,8 +56,7 @@ int main()
 * bla bla bla
 ************************************************/
 
-    int NREP = 1;//500;
-    acados_timer timer;
+    int NREP = 500;
 
 	/* double Time1, Time2, Time3; */
 
@@ -296,8 +295,8 @@ int main()
 
 		int acados_return;
 
-    	// acados_timer timer;
-		// acados_tic(&timer);
+    	acados_timer timer;
+		acados_tic(&timer);
 
 		for (ii=0;ii<NREP;ii++)
 		{
@@ -305,7 +304,7 @@ int main()
 			if (acados_return != 0)
             	printf("error in sim solver\n");
 		}
-		// double cpu_time = acados_toc(&timer)/NREP;
+		double cpu_time = acados_toc(&timer)/NREP;
 
 		double *xn = out->xn;
 
@@ -386,6 +385,9 @@ int main()
 			blasfeo_free_dvec(&sx);
 			blasfeo_free_dvec(&sz);
 		}
+
+		printf("average time over %d runs: %f ms \n\n", NREP, 1e3*cpu_time);
+
 		free(sim_solver);
 		free(in);
 		free(out);
