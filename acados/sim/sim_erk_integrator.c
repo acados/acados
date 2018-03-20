@@ -485,7 +485,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
 
             acados_tic(&timer_ad);
-            model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			if (opts->sens_forw) // simulation + forward sensitivities
+				model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			else // simulation only
+				model->ode_expl->evaluate(model->ode_expl, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < ns; s++)
