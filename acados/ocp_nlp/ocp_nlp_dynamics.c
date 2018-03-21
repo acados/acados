@@ -382,6 +382,17 @@ void *ocp_nlp_dynamics_model_assign(void *config_, ocp_nlp_dynamics_dims *dims, 
 
 
 
+void ocp_nlp_dynamics_model_set_T(double T, void *model_)
+{
+	ocp_nlp_dynamics_model *model = model_;
+
+	model->T = T;
+
+	return;
+}
+
+
+
 void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_)
 {
 	ocp_nlp_dynamics_cast_workspace(config_, dims, opts_, work_);
@@ -442,6 +453,7 @@ void ocp_nlp_dynamics_config_initialize_default(void *config_)
 
 	config->model_calculate_size = &ocp_nlp_dynamics_model_calculate_size;
 	config->model_assign = &ocp_nlp_dynamics_model_assign;
+	config->model_set_T = &ocp_nlp_dynamics_model_set_T;
 	config->opts_calculate_size = &ocp_nlp_dynamics_opts_calculate_size;
 	config->opts_assign = &ocp_nlp_dynamics_opts_assign;
 	config->opts_initialize_default = &ocp_nlp_dynamics_opts_initialize_default;

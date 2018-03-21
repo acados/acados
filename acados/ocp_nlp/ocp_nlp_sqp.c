@@ -773,12 +773,10 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 		config->constraints[ii]->memory_set_idxb_ptr(work->qp_in->idxb[ii], mem->constraints[ii]);
 	}
 
-
-	// copy sampling times into dynamics
+	// copy sampling times into dynamics model
     for (int ii = 0; ii < N; ii++)
     {
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[ii];
-        dynamics->T = nlp_in->Ts[ii];
+		config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
     }
 
 
@@ -855,18 +853,18 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 //exit(1);
 
 		// ??? @rien
-        for (int_t i = 0; i < N; i++)
-        {
-			ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
-            sim_rk_opts *rk_opts = dynamics_opts->sim_solver;
-            if (rk_opts->scheme == NULL)
-                continue;
-            rk_opts->sens_adj = (rk_opts->scheme->type != exact);
-            if (nlp_in->freezeSens) {
-                // freeze inexact sensitivities after first SQP iteration !!
-                rk_opts->scheme->freeze = true;
-            }
-        }
+//        for (int_t i = 0; i < N; i++)
+//        {
+//			ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
+//            sim_rk_opts *rk_opts = dynamics_opts->sim_solver;
+//            if (rk_opts->scheme == NULL)
+//                continue;
+//            rk_opts->sens_adj = (rk_opts->scheme->type != exact);
+//            if (nlp_in->freezeSens) {
+//                // freeze inexact sensitivities after first SQP iteration !!
+//                rk_opts->scheme->freeze = true;
+//            }
+//        }
 
     }
 

@@ -17,6 +17,7 @@ OBJS += acados/ocp_nlp/ocp_nlp_cost_nls.o
 OBJS += acados/ocp_nlp/ocp_nlp_cost_external.o
 OBJS += acados/ocp_nlp/ocp_nlp_constraints.o
 OBJS += acados/ocp_nlp/ocp_nlp_dynamics.o
+OBJS += acados/ocp_nlp/ocp_nlp_dynamics_disc.o
 OBJS += acados/ocp_nlp/ocp_nlp_sqp.o
 # dense qp
 OBJS += acados/dense_qp/dense_qp_common.o
