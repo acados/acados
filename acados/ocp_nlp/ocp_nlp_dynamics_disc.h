@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_DM_H_
-#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_DM_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_DISC_H_
+#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_DISC_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,7 +30,7 @@ extern "C" {
 // acados
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 
 
 
@@ -129,5 +129,4 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, ocp_nlp_dynamics_di
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DM_H_
-
+#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_DISC_H_

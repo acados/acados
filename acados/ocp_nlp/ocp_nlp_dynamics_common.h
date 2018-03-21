@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_H_
-#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_COMMON_H_
+#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -181,4 +181,4 @@ void ocp_nlp_dynamics_config_initialize_default(void *config);
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_H_
+#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_
