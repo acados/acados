@@ -86,14 +86,16 @@ sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims)
 
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
+    int status = ACADOS_SUCCESS;
+
     if (!strcmp(fun_type, "forward_vde"))
-        config->model_set_forward_vde(in, fun_ptr);
+        status = config->model_set_function(in, EXPLICIT_VDE_FORWARD, fun_ptr);
     else if (!strcmp(fun_type, "adjoint_vde"))
-        config->model_set_adjoint_vde(in, fun_ptr);
+        status = config->model_set_function(in, EXPLICIT_VDE_ADJOINT, fun_ptr);
     else
         return ACADOS_FAILURE;
 
-    return ACADOS_SUCCESS;
+    return status;
 }
 
 

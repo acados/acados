@@ -60,18 +60,21 @@ void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
-void sim_erk_model_set_forward_vde(sim_in *in, void *fun)
+int sim_erk_model_set_function(sim_in *in, sim_function_t fun_type, void *fun)
 {
     erk_model *model = in->model;
-    model->forw_vde_expl = (external_function_generic *) fun;
-}
-
-
-
-void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
-{
-    erk_model *model = in->model;
-    model->adj_vde_expl = (external_function_generic *) fun;
+    switch (fun_type)
+    {
+        case EXPLICIT_VDE_FORWARD:
+            model->forw_vde_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_VDE_ADJOINT:
+            model->adj_vde_expl = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
 }
 
 
@@ -235,7 +238,7 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 			break;
 		}
 		case 4:
-		{	
+		{
 			// A
 			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0; A[0+ns*2] = 0.0; A[0+ns*3] = 0.0;
 			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0; A[1+ns*2] = 0.0; A[1+ns*3] = 0.0;
@@ -358,7 +361,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
     {
         assign_and_advance_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
-    } 
+    }
 	else
     {
         assign_and_advance_double(ns*nX, &workspace->K_traj, &c_ptr);
@@ -370,7 +373,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
         assign_and_advance_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
-    } 
+    }
 	else if (opts->sens_adj)
     {
         assign_and_advance_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
@@ -625,8 +628,7 @@ void sim_erk_config_initialize_default(void *config_)
 	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
 	config->model_calculate_size = &sim_erk_model_calculate_size;
 	config->model_assign = &sim_erk_model_assign;
-    config->model_set_forward_vde = &sim_erk_model_set_forward_vde;
-    config->model_set_adjoint_vde = &sim_erk_model_set_adjoint_vde;
+    config->model_set_function = &sim_erk_model_set_function;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
 
 	return;

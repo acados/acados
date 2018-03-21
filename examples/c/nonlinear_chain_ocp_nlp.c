@@ -68,7 +68,6 @@
 
 #define NN 15
 #define TF 3.0
-#define Ns 2
 #define MAX_SQP_ITERS 10
 #define NREP 10
 
@@ -1344,13 +1343,11 @@ int main() {
 
     for (int i = 0; i < NN; ++i)
 	{
-		ocp_nlp_dynamics_opts *dynamics_opts = sqp_opts->dynamics[i];
-		// TODO(dimtiris): NOT MANY?? NOW USING SAME OPTS FOR ALL THREE TYPES??
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+		ocp_nlp_dynamics_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
 
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
-			// dynamics: ERK 4
 			sim_opts->ns = 4;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
@@ -1428,6 +1425,7 @@ int main() {
     * free memory
     ************************************************/
 
+	// TODO(dimitris): VALGRIND!
  	external_function_casadi_free(forw_vde_casadi);
 	external_function_casadi_free(jac_ode_casadi);
 	free(forw_vde_casadi);
