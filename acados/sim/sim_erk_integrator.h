@@ -76,7 +76,7 @@ int sim_erk_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory);
 //
-int sim_erk_model_set_function(sim_in *in, sim_function_t fun_type, void *fun);
+int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
 //
 int sim_erk_opts_calculate_size(void *config, sim_dims *dims);
 //

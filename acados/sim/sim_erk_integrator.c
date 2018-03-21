@@ -60,11 +60,21 @@ void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
-int sim_erk_model_set_function(sim_in *in, sim_function_t fun_type, void *fun)
+int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
-    erk_model *model = in->model;
+    erk_model *model = model_;
+
     switch (fun_type)
     {
+        case EXPLICIT_ODE:
+            model->ode_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_ODE_JACOBIAN:
+            model->jac_ode_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_ODE_HESSIAN:
+            model->hess_ode_expl = (external_function_generic *) fun;
+            break;
         case EXPLICIT_VDE_FORWARD:
             model->forw_vde_expl = (external_function_generic *) fun;
             break;

@@ -67,6 +67,8 @@ ocp_nlp_dims *ocp_nlp_dims_create(int N);
 //
 ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
+int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage, const char *fun_type, void *fun_ptr);
+//
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);
 //
 void *ocp_nlp_opts_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims);

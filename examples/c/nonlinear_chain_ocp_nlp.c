@@ -1199,13 +1199,8 @@ int main() {
 	{
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
-			// TODO(dimitris): write nlp_set_model similar to sim
-			// sim_set_model(config->dynamics[i]->sim_solver, ((ocp_nlp_dynamics_model *)nlp_in->dynamics[i])->sim_model, "forward_vde", &forw_vde_casadi[i]);
-			// sim_set_model(config->dynamics[i]->sim_solver, ((ocp_nlp_dynamics_model *)nlp_in->dynamics[i])->sim_model, "adjoint_vde", &jac_ode_casadi[i]);
-			ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
-			erk_model *model = dynamics->sim_model;
-			model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
-			model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+			nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
+			nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{

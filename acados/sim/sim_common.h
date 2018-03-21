@@ -142,7 +142,7 @@ typedef struct
     int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);
     int (*model_calculate_size) (void *config, sim_dims *dims);
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
-    int (*model_set_function) (sim_in *in, sim_function_t fun_type, void *fun);
+    int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default) (void *config);
 } sim_solver_config;
 

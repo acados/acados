@@ -174,6 +174,18 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
 
 
+int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage, const char *fun_type, void *fun_ptr)
+{
+    sim_solver_config *sim_config = config->dynamics[stage]->sim_solver;
+    ocp_nlp_dynamics_model *dynamics = in->dynamics[stage];
+
+    int status = sim_set_model_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
+
+    return status;
+}
+
+
+
 ocp_nlp_out *ocp_nlp_out_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 {
 	int bytes = ocp_nlp_out_calculate_size(config, dims);
