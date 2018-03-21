@@ -100,6 +100,29 @@ int main() {
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
     config->opts_initialize_default(config, dims, opts);
     opts->sens_adj = true;
+    opts->A_mat[0] = 8.696121837661337e-02;
+    opts->A_mat[1] = 1.881133909077607e-01;
+    opts->A_mat[2] = 1.671849744614559e-01;
+    opts->A_mat[3] = 1.774751870097904e-01;
+    opts->A_mat[4] = -2.660256900501954e-02;
+    opts->A_mat[5] = 1.630292692796755e-01;
+    opts->A_mat[6] = 3.539526857259798e-01;
+    opts->A_mat[7] = 3.134484623618029e-01;
+    opts->A_mat[8] = 1.262633154623132e-02;
+    opts->A_mat[9] = -2.787789181794523e-02;
+    opts->A_mat[10] = 1.630455246283593e-01;
+    opts->A_mat[11] = 3.526773629130557e-01;
+    opts->A_mat[12] = -3.554980917825141e-03;
+    opts->A_mat[13] = 6.735231630508876e-03;
+    opts->A_mat[14] = -1.419318481579561e-02;
+    opts->A_mat[15] = 8.695898771535188e-02;
+
+    opts->b_vec[0] =     1.739190668368515e-01;
+    opts->b_vec[1] =     3.260788016404259e-01;
+    opts->b_vec[2] =     3.260666571808232e-01;
+    opts->b_vec[3] =     1.739354743418989e-01;
+    
+
     // opts->interval = 0.1;
 
     // set up sim_in
@@ -132,7 +155,7 @@ int main() {
     model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
     gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
 
-    // gnsf2_precompute(gnsf2_dim, model, opts);
+    gnsf2_precompute(gnsf2_dim, model, opts);
     gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out
@@ -145,7 +168,6 @@ int main() {
     void *mem_mem = malloc(mem_size);
     void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
-    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf2_dim->num_steps);
     int NREP = 10000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
@@ -159,6 +181,8 @@ int main() {
     double casadi_time = minimum_of_doubles(casadi_times, NREP);
     double gnsf_time = minimum_of_doubles(gnsf_times, NREP);
 
+    // PRINTING
+    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf2_dim->num_steps);
     printf("xf =\n");
     d_print_e_mat(1, dims->nx, out->xn, 1);
     printf("forw_Sensitivities = \n");

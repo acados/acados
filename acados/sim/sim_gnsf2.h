@@ -125,16 +125,18 @@ typedef struct {
     struct blasfeo_dmat EE1;
     struct blasfeo_dmat EE2;
 
-    struct blasfeo_dmat PP1;
-    struct blasfeo_dmat PP2;
+    struct blasfeo_dmat QQ1;
+    struct blasfeo_dmat QQ2;
+    // struct blasfeo_dmat PP3;
 
     struct blasfeo_dmat LLZ;
     struct blasfeo_dmat LLx;
     struct blasfeo_dmat LLK;
     struct blasfeo_dmat LLu;
 
-
-    int *ipiv; // index of pivot vector
+    int *ipivEE1; // index of pivot vector
+    int *ipivEE2; // index of pivot vector
+    int *ipivQQ1; // index of pivot vector
 } gnsf2_pre_workspace;
 
 typedef struct { //workspace

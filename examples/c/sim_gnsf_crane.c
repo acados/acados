@@ -142,6 +142,8 @@ int main() {
     int NREP = 10000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
+    int num_stages = dims->num_stages;
+    d_print_e_mat(num_stages, num_stages, fix->A_dt, num_stages);
 
     for (int i = 0; i < NREP; i++) {
         gnsf_simulate( dims, fix, in, out, opts, work_);
