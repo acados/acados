@@ -86,14 +86,32 @@ sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims)
 
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
-    if (!strcmp(fun_type, "forward_vde"))
-        config->model_set_forward_vde(in, fun_ptr);
+    int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
+
+    return status;
+}
+
+
+
+// NOTE(dimitris) not exposed to user, used by NLP interface too
+int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type, void *fun_ptr)
+{
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(fun_type, "explicit_ode"))
+        status = config->model_set_function(model, EXPLICIT_ODE, fun_ptr);
+    else if (!strcmp(fun_type, "explicit_jacobian"))
+        status = config->model_set_function(model, EXPLICIT_ODE_JACOBIAN, fun_ptr);
+    else if (!strcmp(fun_type, "explicit_hessian"))
+        status = config->model_set_function(model, EXPLICIT_ODE_HESSIAN, fun_ptr);
+    else if (!strcmp(fun_type, "forward_vde"))
+        status = config->model_set_function(model, EXPLICIT_VDE_FORWARD, fun_ptr);
     else if (!strcmp(fun_type, "adjoint_vde"))
-        config->model_set_adjoint_vde(in, fun_ptr);
+        status = config->model_set_function(model, EXPLICIT_VDE_ADJOINT, fun_ptr);
     else
         return ACADOS_FAILURE;
 
-    return ACADOS_SUCCESS;
+    return status;
 }
 
 

@@ -33,6 +33,19 @@
 // maximum number of integration stages
 #define NS_MAX 15
 
+typedef enum {
+    // ERK and LIFTED_ERK
+    EXPLICIT_ODE,
+    EXPLICIT_ODE_JACOBIAN,
+    EXPLICIT_ODE_HESSIAN,
+    EXPLICIT_VDE_FORWARD,
+    EXPLICIT_VDE_ADJOINT,
+    // IRK
+    IMPLICIT_ODE,
+    IMPLICIT_ODE_JACOBIAN_X,
+    IMPLICIT_ODE_JACOBIAN_XDOT,
+    IMPLICIT_ODE_JACOBIAN_U,
+} sim_function_t;
 
 
 typedef struct
@@ -127,11 +140,9 @@ typedef struct
     int (*memory_calculate_size) (void *config, sim_dims *dims, void *opts);
     void *(*memory_assign) (void *config, sim_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);
-    // TODO(dimitris): move all model-related function pointers to model_config?
     int (*model_calculate_size) (void *config, sim_dims *dims);
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
-    void (*model_set_forward_vde) (sim_in *in, void *fun);
-    void (*model_set_adjoint_vde) (sim_in *in, void *fun);
+    int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default) (void *config);
 } sim_solver_config;
 

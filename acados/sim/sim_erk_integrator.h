@@ -76,9 +76,7 @@ int sim_erk_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory);
 //
-void sim_erk_model_set_forward_vde(sim_in *in, void *fun);
-//
-void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun);
+int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
 //
 int sim_erk_opts_calculate_size(void *config, sim_dims *dims);
 //
