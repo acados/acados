@@ -104,6 +104,28 @@ collfun = simpleColl_Kform_GL8(dae,tau_root,T/(Ns*N));
 % collfun = simpleColl(dae,tau_root,T/(Ns*N));
 collfun = collfun.expand();
 
+%% casadi RK integrator (to implement discrete model in acados)
+
+% Fixed step Runge-Kutta 4 integrator
+
+M   = 4; % RK4 steps per interval
+DT  = T/N/M;
+FUN = Function('f', {dae.x, dae.p}, {dae.ode});
+X0  = MX.sym('X0', nx);
+U   = MX.sym('U', nu);
+X   = X0;
+for j=1:M
+   k1 = FUN(X, U);
+   k2 = FUN(X + DT/2 * k1, U);
+   k3 = FUN(X + DT/2 * k2, U);
+   k4 = FUN(X + DT * k3, U);
+   X  = X+DT/6*(k1 +2*k2 +2*k3 +k4);
+end
+
+RK_FUN = Function(['casadi_erk4_chain_nm' num2str(Nm)], {X0, U}, {X, jacobian(X, vertcat(X0, U))}, {'x0','p'}, {'xf', 'sensxu'});
+
+RK_FUN.generate(['casadi_erk4_chain_nm' num2str(Nm)]);
+
 %% Find rest position
 Xpoints = linspace(0,1,Nm);
 x0_guess = [Xpoints(2:end);zeros(5,Nm-1)];
@@ -197,12 +219,12 @@ end
 % x0_init
 err_rest = norm(full(out))
 
-fid = fopen(['x0_nm' num2str(Nm) '.txt'],'wt');  
-fprintf(fid,'%e\n',x0_init);  
+fid = fopen(['x0_nm' num2str(Nm) '.txt'],'wt');
+fprintf(fid,'%e\n',x0_init);
 fclose(fid);
 
-fid = fopen(['xN_nm' num2str(Nm) '.txt'],'wt');  
-fprintf(fid,'%e\n',xN_term);  
+fid = fopen(['xN_nm' num2str(Nm) '.txt'],'wt');
+fprintf(fid,'%e\n',xN_term);
 fclose(fid);
 
 x0_mat = [zeros(6,1) reshape(x0_init,6,Nm-1)];
@@ -275,7 +297,7 @@ V = {};
 for k=1:N
   % Add decision variables
   V = {V{:} casadi_vec(V_block,'X',Xs{k},'XC',XCs{k},'U',Us{k})};
-  
+
   if k==1
     % Bounds at t=0
     x_lb = x0_init;
@@ -303,7 +325,7 @@ for k=1:N
     g = {g{:} coll_out{2}};         % collocation constraints
   end
   g = {g{:} Xs{k+1}-Xcur}; % gap closing
-  
+
 %   coll_out = collfun({Xs{k},XCs{k},Us{k}});
 
 %   g = {g{:} coll_out{2}};         % collocation constraints
@@ -346,11 +368,11 @@ struct_res = res;
 
 mu = [];
 for k = 1:N
-   mu = [mu; full(res.lam_g((k-1)*(Ns*nx*d+nx)+1:(k-1)*(Ns*nx*d+nx)+Ns*nx*d))]; 
+   mu = [mu; full(res.lam_g((k-1)*(Ns*nx*d+nx)+1:(k-1)*(Ns*nx*d+nx)+Ns*nx*d))];
 end
 lam = [];
 for k = 1:N
-   lam = [lam; full(res.lam_g((k-1)*(Ns*nx*d+nx)+Ns*nx*d+1:k*(Ns*nx*d+nx)))]; 
+   lam = [lam; full(res.lam_g((k-1)*(Ns*nx*d+nx)+Ns*nx*d+1:k*(Ns*nx*d+nx)))];
 end
 
 disp('LAAAAAAAAM')
@@ -363,7 +385,7 @@ res_U = {}; resK = [];
 for r=res_split(1:end-1)
     rs = casadi_vec2struct(V_block,r{1});
     res_U = {res_U{:} rs.U};
-    
+
     k_mat = full(rs.XC);
     for i = 1:Ns
         resK = [resK; k_mat(:,1+(i-1)*d:i*d)];

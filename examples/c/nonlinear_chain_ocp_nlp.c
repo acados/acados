@@ -889,6 +889,8 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 * main
 ************************************************/
 
+// TODO(dimitris): compile on windows
+
 int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
@@ -1000,6 +1002,34 @@ int main() {
     /************************************************
     * dynamics
     ************************************************/
+
+	#if 0
+	// NOTE(dimitris): temp code to test casadi integrator
+	int integrator_nx = 6;
+	int integrator_nu = 3;
+
+	double *integrator_in = malloc(sizeof(double)*integrator_nx*integrator_nu);
+	double *integrator_out = malloc(sizeof(double)*(integrator_nx + integrator_nx*integrator_nx*integrator_nu));
+
+	external_function_casadi casadi_integrator;
+	casadi_integrator.casadi_fun = &casadi_erk4_chain_nm2;
+	casadi_integrator.casadi_work = &casadi_erk4_chain_nm2_work;
+	casadi_integrator.casadi_sparsity_in = &casadi_erk4_chain_nm2_sparsity_in;
+	casadi_integrator.casadi_sparsity_out = &casadi_erk4_chain_nm2_sparsity_out;
+	casadi_integrator.casadi_n_in = &casadi_erk4_chain_nm2_n_in;
+	casadi_integrator.casadi_n_out = &casadi_erk4_chain_nm2_n_out;
+	external_function_casadi_create(&casadi_integrator);
+
+	casadi_integrator.evaluate(&casadi_integrator.evaluate, integrator_in, integrator_out);
+
+	d_print_mat(1, integrator_nx, integrator_out, 1);
+
+	d_print_mat(integrator_nx, integrator_nx + integrator_nu, integrator_out+integrator_nx, integrator_nx);
+
+	free(integrator_in);
+	free(integrator_out);
+	exit(1);
+	#endif
 
 	// explicit
 	external_function_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_casadi));
@@ -1195,12 +1225,16 @@ int main() {
 	}
 
 	/* dynamics */
+	int set_fun_status;
+
 	for (int i=0; i<NN; i++)
 	{
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
-			nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
-			nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
+			if (set_fun_status != 0) exit(1);
+			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
+			if (set_fun_status != 0) exit(1);
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
