@@ -27,6 +27,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/mem.h"
 
@@ -130,7 +131,8 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
         // Dynamics
         for (int i = 0; i < N; ++i)
         {
-		    ocp_nlp_dynamics_config_initialize_default(config->dynamics[i]);
+			// TODO cont vs disc model dynamcis
+		    ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
 		    config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
         }
 
@@ -177,7 +179,7 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage, const char *fun_type, void *fun_ptr)
 {
     sim_solver_config *sim_config = config->dynamics[stage]->sim_solver;
-    ocp_nlp_dynamics_model *dynamics = in->dynamics[stage];
+    ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
 
     int status = sim_set_model_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
 

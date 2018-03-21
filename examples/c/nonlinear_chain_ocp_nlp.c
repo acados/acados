@@ -48,6 +48,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -67,7 +68,7 @@
 #include "examples/c/chain_model/xN_nm6.c"
 
 #define NN 15
-#define TF 3.0
+#define TF 3.75
 #define MAX_SQP_ITERS 10
 #define NREP 10
 
@@ -885,6 +886,7 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 }
 
 
+
 /************************************************
 * main
 ************************************************/
@@ -1005,20 +1007,24 @@ int main() {
 
 	#if 0
 	// NOTE(dimitris): temp code to test casadi integrator
-	int integrator_nx = 6;
+	int integrator_nx = 12;
 	int integrator_nu = 3;
 
-	double *integrator_in = malloc(sizeof(double)*integrator_nx*integrator_nu);
-	double *integrator_out = malloc(sizeof(double)*(integrator_nx + integrator_nx*integrator_nx*integrator_nu));
+	double *integrator_in = malloc(sizeof(double)*(integrator_nx+integrator_nu));
+	double *integrator_out = malloc(sizeof(double)*(integrator_nx + integrator_nx*(integrator_nx+integrator_nu)));
+
+	integrator_in[0] = 0.1;
 
 	external_function_casadi casadi_integrator;
-	casadi_integrator.casadi_fun = &casadi_erk4_chain_nm2;
-	casadi_integrator.casadi_work = &casadi_erk4_chain_nm2_work;
-	casadi_integrator.casadi_sparsity_in = &casadi_erk4_chain_nm2_sparsity_in;
-	casadi_integrator.casadi_sparsity_out = &casadi_erk4_chain_nm2_sparsity_out;
-	casadi_integrator.casadi_n_in = &casadi_erk4_chain_nm2_n_in;
-	casadi_integrator.casadi_n_out = &casadi_erk4_chain_nm2_n_out;
+	casadi_integrator.casadi_fun = &casadi_erk4_chain_nm3;
+	casadi_integrator.casadi_work = &casadi_erk4_chain_nm3_work;
+	casadi_integrator.casadi_sparsity_in = &casadi_erk4_chain_nm3_sparsity_in;
+	casadi_integrator.casadi_sparsity_out = &casadi_erk4_chain_nm3_sparsity_out;
+	casadi_integrator.casadi_n_in = &casadi_erk4_chain_nm3_n_in;
+	casadi_integrator.casadi_n_out = &casadi_erk4_chain_nm3_n_out;
 	external_function_casadi_create(&casadi_integrator);
+
+	d_print_mat(1, integrator_nx+integrator_nu, integrator_in, 1);
 
 	casadi_integrator.evaluate(&casadi_integrator.evaluate, integrator_in, integrator_out);
 
@@ -1238,14 +1244,14 @@ int main() {
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
-			ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 			lifted_irk_model *model = dynamics->sim_model;
 			model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 			model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 			irk_model *model = dynamics->sim_model;
 			model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
 			model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
@@ -1372,7 +1378,7 @@ int main() {
 
     for (int i = 0; i < NN; ++i)
 	{
-		ocp_nlp_dynamics_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
+		ocp_nlp_dynamics_cont_opts *dynamics_stage_opts = sqp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_stage_opts->sim_solver;
 
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
@@ -1450,6 +1456,8 @@ int main() {
     printf("x[N] = \n");
 	blasfeo_print_tran_dvec(nx[NN], nlp_out->ux+NN, nu[NN]);
 
+	int check_sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
+
     /************************************************
     * free memory
     ************************************************/
@@ -1485,7 +1493,7 @@ int main() {
 	************************************************/
 
 	if (status == 0)
-		printf("\nsuccess! (%d iter) \n\n", ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
+		printf("\nsuccess! (%d iter) \n\n", check_sqp_iter);
 	else
 		printf("\nfailure!\n\n");
 
