@@ -984,6 +984,7 @@ int main() {
 	// NOTE(dimitris): switching between different integrators on each stage to test everything
 	for (int i = 0; i < NN; i++)
 	{
+		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 		if (i < 3)
 			plan->sim_solver_plan[i].sim_solver = LIFTED_IRK;
 		else if (i%2 == 0)
@@ -1235,28 +1236,39 @@ int main() {
 
 	for (int i=0; i<NN; i++)
 	{
-		if (plan->sim_solver_plan[i].sim_solver == ERK)
+		switch (plan->nlp_dynamics[i])
 		{
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
-			if (set_fun_status != 0) exit(1);
-			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
-			if (set_fun_status != 0) exit(1);
-		}
-		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
-		{
-			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
-			lifted_irk_model *model = dynamics->sim_model;
-			model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
-			model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
-		}
-		else if (plan->sim_solver_plan[i].sim_solver == IRK)
-		{
-			ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
-			irk_model *model = dynamics->sim_model;
-			model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
-			model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
-			model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
-			model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
+			case CONTINUOUS_MODEL:
+
+				if (plan->sim_solver_plan[i].sim_solver == ERK)
+				{
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
+					if (set_fun_status != 0) exit(1);
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
+					if (set_fun_status != 0) exit(1);
+				}
+				else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
+				{
+					ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+					lifted_irk_model *model = dynamics->sim_model;
+					model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
+					model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+				}
+				else if (plan->sim_solver_plan[i].sim_solver == IRK)
+				{
+					ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+					irk_model *model = dynamics->sim_model;
+					model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
+					model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
+					model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
+					model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
+				}
+				break;
+
+			case DISCRETE_MODEL:
+				
+				// TODO
+				break;
 		}
 	}
 
