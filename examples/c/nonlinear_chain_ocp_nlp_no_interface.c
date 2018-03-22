@@ -49,6 +49,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -76,14 +77,14 @@
 
 
 #define NN 15
-#define TF 3.0
+#define TF 3.75
 #define Ns 2
 #define MAX_SQP_ITERS 10
 #define NREP 10
 
 
-// dynamics: 0 erk, 1 lifted_irk, 2 irk
-#define DYNAMICS 2
+// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
+#define DYNAMICS 3
 
 // cost: 0 ls, 1 nls, 2 external
 #define COST 1
@@ -1173,7 +1174,6 @@ int main() {
 	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN]);
 #endif
 
-		// 4th order schemes
 #if DYNAMICS==0
 	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
@@ -1189,12 +1189,18 @@ int main() {
 		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
-#else
+#elif DYNAMICS==2
 	// dynamics: IRK
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+    }
+#else
+	// dynamics: discrete model
+    for (int ii = 0; ii < NN; ii++)
+    {
+		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
     }
 #endif
 
@@ -1225,6 +1231,8 @@ int main() {
 	external_function_casadi impl_jac_x_casadi[NN]; // XXX varible size array
 	external_function_casadi impl_jac_xdot_casadi[NN]; // XXX varible size array
 	external_function_casadi impl_jac_u_casadi[NN]; // XXX varible size array
+	// casadi erk
+	external_function_casadi erk4_casadi[NN]; // XXX varible size array
 
 	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi, impl_ode_casadi, impl_jac_x_casadi, impl_jac_xdot_casadi, impl_jac_u_casadi);
 
@@ -1259,7 +1267,7 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
 	}
 
-#else // DYNAMICS==2
+#elif DYNAMICS==2
 
 	// impl_ode
 	tmp_size = 0;
@@ -1314,6 +1322,85 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(impl_jac_u_casadi+ii);
 	}
 
+#else // DYNAMCS==3
+
+	// TODO others
+	switch(NMF)
+	{
+		case 1:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm2;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm2_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm2_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm2_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm2_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm2_n_out;
+			}
+			break;
+		case 2:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm3;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm3_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm3_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm3_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm3_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm3_n_out;
+			}
+			break;
+		case 3:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm4;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm4_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm4_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm4_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm4_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm4_n_out;
+			}
+			break;
+		case 4:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
+			}
+			break;
+		case 5:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
+			}
+			break;
+		default:
+			printf("\ncasadi erk4 not implemented for this numer of masses\n\n");
+			exit(1);
+	}
+
+	// impl_ode
+	tmp_size = 0;
+	for (int ii=0; ii<NN; ii++)
+	{
+		tmp_size += external_function_casadi_calculate_size(erk4_casadi+ii);
+	}
+	void *erk4_casadi_mem = malloc(tmp_size);
+	c_ptr = erk4_casadi_mem;
+	for (int ii=0; ii<NN; ii++)
+	{
+		external_function_casadi_assign(erk4_casadi+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(erk4_casadi+ii);
+	}
+
 #endif // DYNAMICS
 
     /************************************************
@@ -1342,7 +1429,6 @@ int main() {
 
 	external_function_generic ls_cost_hess_generic;
 
-	// TODO the others !!!
 	switch(NMF)
 	{
 		case 1:
@@ -1370,7 +1456,6 @@ int main() {
 #if COST==2
 	external_function_generic ext_cost_generic;
 
-	// TODO the others !!!
 	switch(NMF)
 	{
 		case 1:
@@ -1599,7 +1684,7 @@ int main() {
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
 	}
-#else
+#elif DYNAMICS==2
 	for (int i=0; i<NN; i++)
 	{
 		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
@@ -1608,6 +1693,12 @@ int main() {
 		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
 		model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
 		model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
+	}
+#else
+	for (int i=0; i<NN; i++)
+	{
+		ocp_nlp_dynamics_disc_model *dynamics = nlp_in->dynamics[i];
+		dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
 	}
 #endif
 
@@ -1741,21 +1832,32 @@ int main() {
 
     for (int i = 0; i < NN; ++i)
 	{
-		ocp_nlp_dynamics_opts *dynamics_opts = nlp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 #if DYNAMICS==0
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: ERK 4
 		sim_opts->ns = 4;
-#elif DYNAMICS==1
-		// dynamics: lifted IRK GL2
-		sim_opts->ns = 2;
-#else // DYNAMICS==2
-		// dynamics: IRK GL2
-		sim_opts->ns = 2;
-		sim_opts->jac_reuse = true;
-#endif
+//		sim_opts->num_steps = 1;
 		// recompute Butcher tableau after selecting ns
 		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
+#elif DYNAMICS==1
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+		// dynamics: lifted IRK GL2
+		sim_opts->ns = 2;
+		// recompute Butcher tableau after selecting ns
+		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
+#elif DYNAMICS==2
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+		// dynamics: discrete model
+		sim_opts->ns = 2;
+		sim_opts->jac_reuse = true;
+		// recompute Butcher tableau after selecting ns
+		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
+#else // DYNAMICS==3
+		// no options
+#endif
     }
 
 
@@ -1863,12 +1965,16 @@ int main() {
 	free(forw_vde_casadi_mem);
 	free(jac_ode_casadi_mem);
 
-#else // DYNAMICS==2
+#elif DYNAMICS==2
 
 	free(impl_ode_casadi_mem);
 	free(impl_jac_x_casadi_mem);
 	free(impl_jac_xdot_casadi_mem);
 	free(impl_jac_u_casadi_mem);
+
+#else // DYNAMICS==3
+
+	free(erk4_casadi_mem);
 
 #endif // DYNAMICS
 

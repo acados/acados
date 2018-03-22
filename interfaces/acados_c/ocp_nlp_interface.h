@@ -42,11 +42,18 @@ typedef enum {
 } ocp_nlp_cost_t;
 
 
+typedef enum {
+    CONTINUOUS_MODEL,
+    DISCRETE_MODEL
+} ocp_nlp_dynamics_t;
+
+
 typedef struct {
     ocp_qp_solver_plan ocp_qp_solver_plan;
     sim_solver_plan *sim_solver_plan;
 	ocp_nlp_solver_t nlp_solver;
     ocp_nlp_cost_t *nlp_cost;
+    ocp_nlp_dynamics_t *nlp_dynamics;
 } ocp_nlp_solver_plan;
 
 

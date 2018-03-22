@@ -17,8 +17,8 @@
  *
  */
 
-#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_H_
-#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_H_
+#ifndef ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_COMMON_H_
+#define ACADOS_OCP_NLP_OCP_NLP_DYNAMICSS_COMMON_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,93 +56,6 @@ ocp_nlp_dynamics_dims *ocp_nlp_dynamics_dims_assign(void *raw_memory);
 
 
 /************************************************
-* options
-************************************************/
-
-typedef struct
-{
-    void *sim_solver;
-} ocp_nlp_dynamics_opts;
-
-//
-int ocp_nlp_dynamics_opts_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
-//
-void *ocp_nlp_dynamics_opts_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
-//
-void ocp_nlp_dynamics_opts_initialize_default(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
-
-
-
-/************************************************
-* memory
-************************************************/
-
-typedef struct
-{
-	struct blasfeo_dvec fun;
-	struct blasfeo_dvec adj;
-	struct blasfeo_dvec *ux; // pointer to ux in nlp_out at current stage
-	struct blasfeo_dvec *ux1; // pointer to ux in nlp_out at next stage
-	struct blasfeo_dvec *pi; // pointer to pi in nlp_out at current stage
-	struct blasfeo_dmat *BAbt; // pointer to BAbt in qp_in
-	void *sim_solver; // sim solver memory
-} ocp_nlp_dynamics_memory;
-
-//
-int ocp_nlp_dynamics_memory_calculate_size(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
-//
-void *ocp_nlp_dynamics_memory_assign(void *config, ocp_nlp_dynamics_dims *dims, void *opts, void *raw_memory);
-//
-struct blasfeo_dvec *ocp_nlp_dynamics_memory_get_fun_ptr(void *memory);
-//
-struct blasfeo_dvec *ocp_nlp_dynamics_memory_get_adj_ptr(void *memory);
-//
-void ocp_nlp_dynamics_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory);
-//
-void ocp_nlp_dynamics_memory_set_ux1_ptr(struct blasfeo_dvec *ux1, void *memory);
-//
-void ocp_nlp_dynamics_memory_set_pi_ptr(struct blasfeo_dvec *pi, void *memory);
-//
-void ocp_nlp_dynamics_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *memory);
-
-
-
-/************************************************
-* workspace
-************************************************/
-
-typedef struct
-{
-    sim_in *sim_in;
-    sim_out *sim_out;
-    void *sim_solver; // sim solver workspace
-} ocp_nlp_dynamics_workspace;
-
-int ocp_nlp_dynamics_workspace_calculate_size(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
-
-
-/************************************************
-* dynamics
-************************************************/
-
-typedef struct
-{
-	ocp_nlp_dynamics_dims *dims;
-	void *sim_model;
-//	double *state_transition; // TODO
-	double T; // simulation time
-} ocp_nlp_dynamics_model;
-
-//
-int ocp_nlp_dynamics_model_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
-//
-void *ocp_nlp_dynamics_model_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
-//
-void ocp_nlp_dynamics_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
-
-
-
-/************************************************
 * config
 ************************************************/
 
@@ -150,6 +63,7 @@ typedef struct
 {
 	int (*model_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
 	void *(*model_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+	void (*model_set_T) (double T, void *model);
 	int (*opts_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims);
 	void *(*opts_assign) (void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
 	void (*opts_initialize_default) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
@@ -171,11 +85,9 @@ typedef struct
 int ocp_nlp_dynamics_config_calculate_size();
 //
 ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory);
-//
-void ocp_nlp_dynamics_config_initialize_default(void *config);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_H_
+#endif // ACADOS_OCP_NLP_OCP_NLP_DYNAMICS_COMMON_H_

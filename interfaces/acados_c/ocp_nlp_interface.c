@@ -27,6 +27,8 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/utils/mem.h"
 
@@ -36,6 +38,7 @@ int ocp_nlp_plan_calculate_size(int N)
     int bytes = sizeof(ocp_nlp_solver_plan);
     bytes += N*sizeof(sim_solver_plan);
     bytes += (N+1)*sizeof(ocp_nlp_cost_t);
+    bytes += N*sizeof(ocp_nlp_dynamics_t);
     return bytes;
 }
 
@@ -53,6 +56,9 @@ ocp_nlp_solver_plan *ocp_nlp_plan_assign(int N, void *raw_memory)
 
     plan->nlp_cost = (ocp_nlp_cost_t *) c_ptr;
     c_ptr += (N+1)*sizeof(ocp_nlp_cost_t);
+
+    plan->nlp_dynamics = (ocp_nlp_dynamics_t *) c_ptr;
+    c_ptr += (N+1)*sizeof(ocp_nlp_dynamics_t);
 
     // TODO
     // assert( 0 == 0);
@@ -110,7 +116,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
         // QP solver
         config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);
 
-        // LS cost
+        // cost
         for (int i = 0; i <= N; ++i)
         {
             switch (plan.nlp_cost[i])
@@ -124,14 +130,28 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
                 case EXTERNALLY_PROVIDED:
                     ocp_nlp_cost_external_config_initialize_default(config->cost[i]);
                     break;
+				default:
+					printf("Cost not available!\n");
+					exit(1);
             }
         }
 
         // Dynamics
         for (int i = 0; i < N; ++i)
         {
-		    ocp_nlp_dynamics_config_initialize_default(config->dynamics[i]);
-		    config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
+			switch(plan.nlp_dynamics[i])
+			{
+				case CONTINUOUS_MODEL:
+					ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[i]);
+					config->dynamics[i]->sim_solver = sim_config_create(plan.sim_solver_plan[i]);
+					break;
+				case DISCRETE_MODEL:
+					ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[i]);
+					break;
+				default:
+					printf("Dynamics not available!\n");
+					exit(1);
+			}
         }
 
         // Constraints
@@ -176,8 +196,9 @@ ocp_nlp_in *ocp_nlp_in_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
 
 int nlp_set_model_in_stage(ocp_nlp_solver_config *config, ocp_nlp_in *in, int stage, const char *fun_type, void *fun_ptr)
 {
+	// NOTE(giaf) @dimitris, how do we do it with discrete model dynamics ?
     sim_solver_config *sim_config = config->dynamics[stage]->sim_solver;
-    ocp_nlp_dynamics_model *dynamics = in->dynamics[stage];
+    ocp_nlp_dynamics_cont_model *dynamics = in->dynamics[stage];
 
     int status = sim_set_model_internal(sim_config, dynamics->sim_model, fun_type, fun_ptr);
 
