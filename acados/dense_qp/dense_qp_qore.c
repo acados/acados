@@ -35,6 +35,10 @@
 
 
 
+/************************************************
+* opts
+************************************************/
+
 int dense_qp_qore_opts_calculate_size(void *config_, dense_qp_dims *dims)
 {
     int size = 0;
@@ -71,9 +75,24 @@ void dense_qp_qore_opts_initialize_default(void *config_, dense_qp_dims *dims, v
     opts->nsmax = 400;
     opts->hot_start = 0;
     opts->max_iter = 100;
+
+	return;
 }
 
 
+
+void dense_qp_qore_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
+{
+//    dense_qp_qore_opts *opts = (dense_qp_qore_opts *)opts_;
+
+	return;
+}
+
+
+
+/************************************************
+* memory
+************************************************/
 
 int dense_qp_qore_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
@@ -160,12 +179,20 @@ void *dense_qp_qore_memory_assign(void *config_, dense_qp_dims *dims, void *opts
 
 
 
+/************************************************
+* workspace
+************************************************/
+
 int dense_qp_qore_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
     return 0;
 }
 
 
+
+/************************************************
+* functions
+************************************************/
 
 int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_)
 {
@@ -300,6 +327,7 @@ void dense_qp_qore_config_initialize_default(void *config_)
 	config->opts_calculate_size = ( int (*) (void *, void *)) &dense_qp_qore_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &dense_qp_qore_opts_assign;
 	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &dense_qp_qore_opts_initialize_default;
+	config->opts_update = ( void (*) (void *, void *, void *)) &dense_qp_qore_opts_update;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qore_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &dense_qp_qore_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qore_workspace_calculate_size;

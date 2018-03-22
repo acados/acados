@@ -1824,6 +1824,7 @@ int main() {
 	ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_sqp_opts_assign(config, dims, nlp_opts_mem);
 
 	ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
+
 #if XCOND==1
 	// partial condensing
 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
@@ -1883,6 +1884,9 @@ int main() {
     nlp_opts->min_res_b = 1e-9;
     nlp_opts->min_res_d = 1e-9;
     nlp_opts->min_res_m = 1e-9;
+
+	// update after user-defined options
+	ocp_nlp_sqp_opts_update(config, dims, nlp_opts);
 
     /************************************************
     * ocp_nlp out

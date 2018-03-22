@@ -79,6 +79,9 @@ CFLAGS =
 # optimization flags
 CFLAGS += -O2 -fPIC
 
+# turn off assert
+#CFLAGS += -DNDEBUG
+
 # debugging flags
 CFLAGS  += #-g -Wall -pedantic -Wfloat-equal #-pg
 

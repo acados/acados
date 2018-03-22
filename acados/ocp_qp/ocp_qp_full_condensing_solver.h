@@ -64,6 +64,8 @@ void *ocp_qp_full_condensing_solver_opts_assign(void *config, ocp_qp_dims *dims,
 //
 void ocp_qp_full_condensing_solver_opts_initialize_default(void *config, ocp_qp_dims *dims, void *opts_);
 //
+void ocp_qp_full_condensing_solver_opts_update(void *config, ocp_qp_dims *dims, void *opts_);
+//
 int ocp_qp_full_condensing_solver_memory_calculate_size(void *config, ocp_qp_dims *dims, void *opts_);
 //
 void *ocp_qp_full_condensing_solver_memory_assign(void *config, ocp_qp_dims *dims, void *opts_, void *raw_memory);

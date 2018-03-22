@@ -270,7 +270,7 @@ int main()
 				exit(1);
 		}
 		// recompute Butcher tableau after selecting ns
-		config->opts_update_tableau(config, dims, opts);
+		config->opts_update(config, dims, opts);
 
 
 /************************************************

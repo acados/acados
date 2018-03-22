@@ -205,7 +205,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
-void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -628,17 +628,17 @@ void sim_erk_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->evaluate = &sim_erk;
 	config->opts_calculate_size = &sim_erk_opts_calculate_size;
 	config->opts_assign = &sim_erk_opts_assign;
 	config->opts_initialize_default = &sim_erk_opts_initialize_default;
-	config->opts_update_tableau = &sim_erk_opts_update_tableau;
+	config->opts_update = &sim_erk_opts_update;
 	config->memory_calculate_size = &sim_erk_memory_calculate_size;
 	config->memory_assign = &sim_erk_memory_assign;
 	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
 	config->model_calculate_size = &sim_erk_model_calculate_size;
 	config->model_assign = &sim_erk_model_assign;
     config->model_set_function = &sim_erk_model_set_function;
+	config->evaluate = &sim_erk;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
 
 	return;

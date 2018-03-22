@@ -75,6 +75,8 @@ void *dense_qp_qpoases_opts_assign(void *config, dense_qp_dims *dims, void *raw_
 //
 void dense_qp_qpoases_opts_initialize_default(void *config, dense_qp_dims *dims, void *opts_);
 //
+void dense_qp_qpoases_opts_update(void *config, dense_qp_dims *dims, void *opts_);
+//
 int dense_qp_qpoases__memorycalculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
 void *dense_qp_qpoases__memoryassign(void *config, dense_qp_dims *dims, void *opts_, void *raw_memory);

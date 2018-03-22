@@ -105,13 +105,7 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
     if (plan.nlp_solver == SQP_GN)
     {
-        config->evaluate = &ocp_nlp_sqp;
-        config->opts_calculate_size = &ocp_nlp_sqp_opts_calculate_size;
-        config->opts_assign = &ocp_nlp_sqp_opts_assign;
-        config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
-        config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
-        config->memory_assign = &ocp_nlp_sqp_memory_assign;
-        config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
+		ocp_nlp_sqp_config_initialize_default(config);
 
         // QP solver
         config->qp_solver = ocp_qp_config_create(plan.ocp_qp_solver_plan);

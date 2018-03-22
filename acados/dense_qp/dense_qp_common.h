@@ -49,6 +49,7 @@ typedef struct {
     int (*opts_calculate_size) (void *config, void *dims);
     void *(*opts_assign) (void *config, void *dims, void *raw_memory);
     void (*opts_initialize_default) (void *config, void *dims, void *args);
+    void (*opts_update) (void *config, void *dims, void *args);
     int (*memory_calculate_size) (void *config, void *dims, void *args);
     void *(*memory_assign) (void *config, void *dims, void *args, void *raw_memory);
     int (*workspace_calculate_size) (void *config, void *dims, void *args);
