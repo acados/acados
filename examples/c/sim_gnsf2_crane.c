@@ -142,6 +142,7 @@ int main() {
     in->x[2] = 0.8;
     in->u[0] = 40.108149413030752;
     in->u[1] = -50.446662212534974;
+    in->T = 0.1;
 
     // set up workspace
     int gnsf2_workspace_size = config->workspace_calculate_size(config, dims, opts);
@@ -155,8 +156,10 @@ int main() {
     model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
     gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
 
-    gnsf2_precompute(gnsf2_dim, model, opts);
-    gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
+    gnsf2_precompute(gnsf2_dim, model, opts, in);
+
+    // gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
+
     // set up sim_out
     int sim_out_size = sim_out_calculate_size(config, dims);
     void* sim_out_ptr = (void*) malloc(sim_out_size);
@@ -167,7 +170,7 @@ int main() {
     void *mem_mem = malloc(mem_size);
     void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
-    int NREP = 10000;
+    int NREP = 1;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 
@@ -191,7 +194,7 @@ int main() {
     d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
     
     printf("gnsf2_time  =  %f [ms]\n", gnsf_time*1000);
-    printf("casadi_time =  %f [ms]\n", casadi_time*1000);
+    printf("casadi_time =  %f [ms]\t minimum of %d executions \n", casadi_time*1000, NREP);
 
     free(config_mem);
     free(dims_memory);

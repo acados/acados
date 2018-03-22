@@ -99,6 +99,7 @@ typedef struct
     double* c;
     double dt;
     
+    int* ipivM2;
 } gnsf2_model;
 
 typedef struct {
@@ -133,6 +134,9 @@ typedef struct {
     struct blasfeo_dmat LLx;
     struct blasfeo_dmat LLK;
     struct blasfeo_dmat LLu;
+
+    struct blasfeo_dmat M2;
+    struct blasfeo_dmat dK2_dx2_work;
 
     int *ipivEE1; // index of pivot vector
     int *ipivEE2; // index of pivot vector
@@ -219,7 +223,7 @@ void gnsf2_import_precomputed(gnsf2_dims* dims, gnsf2_model *model, casadi_funct
 int sim_gnsf2_opts_calculate_size(void *config, sim_dims *dims);
 void *sim_gnsf2_opts_assign(void *config, sim_dims *dims, void *raw_memory);
 
-void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts);
+void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, sim_in *in);
 
 void sim_gnsf2_config_initialize_default(void *config_);
 
