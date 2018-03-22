@@ -126,7 +126,7 @@ typedef struct {
     struct blasfeo_dmat EE2;
 
     struct blasfeo_dmat QQ1;
-    struct blasfeo_dmat QQ2;
+    struct blasfeo_dmat PP1;
     // struct blasfeo_dmat PP3;
 
     struct blasfeo_dmat LLZ;
@@ -137,6 +137,7 @@ typedef struct {
     int *ipivEE1; // index of pivot vector
     int *ipivEE2; // index of pivot vector
     int *ipivQQ1; // index of pivot vector
+    int *ipivPP1; // index of pivot vector
 } gnsf2_pre_workspace;
 
 typedef struct { //workspace

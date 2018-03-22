@@ -157,7 +157,6 @@ int main() {
 
     gnsf2_precompute(gnsf2_dim, model, opts);
     gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
-
     // set up sim_out
     int sim_out_size = sim_out_calculate_size(config, dims);
     void* sim_out_ptr = (void*) malloc(sim_out_size);
@@ -173,11 +172,12 @@ int main() {
     double gnsf_times[NREP];
 
     for (int i = 0; i < NREP; i++) {
+        // config->evaluate(config_mem, in, out, opts_mem, mem, work_);
         gnsf2_simulate( config_mem, in, out, opts_mem, mem, work_);
-
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
     }
+
     double casadi_time = minimum_of_doubles(casadi_times, NREP);
     double gnsf_time = minimum_of_doubles(gnsf_times, NREP);
 

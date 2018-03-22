@@ -158,7 +158,7 @@ CRANE_GNSF2_OBJS += gnsf2_crane_model/jac_Phi_y_fun.o
 CRANE_GNSF2_OBJS += sim_gnsf2_crane.o
 
 sim_gnsf2_crane: $(CRANE_GNSF2_OBJS)
-	$(CCC) -o sim_gnsf2_crane.out  $(CRANE_GNSF2_OBJS) $(LDFLAGS) $(LIBS)
+	$(CCC) -o sim_gnsf2_crane.out  $(CRANE_GNSF2_OBJS) $(LDFLAGS) $(LIBS) #/opt/openblas/lib/libopenblas.a -pthread -lgfortran -lm
 	@echo
 	@echo " Example sim_gnsf2_crane build complete."
 	@echo
