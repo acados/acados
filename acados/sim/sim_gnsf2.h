@@ -152,6 +152,29 @@ typedef struct { //workspace
 
     int *ipiv; // index of pivot vector
 
+    struct blasfeo_dvec K2_val;
+    struct blasfeo_dvec x0_traj;
+    struct blasfeo_dvec res_val;
+    struct blasfeo_dvec u0;
+    struct blasfeo_dvec lambda;
+    struct blasfeo_dvec lambda_old;
+
+    struct blasfeo_dvec yyu;
+    struct blasfeo_dvec yyss;
+
+    struct blasfeo_dvec *K1_val;
+    struct blasfeo_dvec *x1_val;
+    struct blasfeo_dvec *ff_val;
+    struct blasfeo_dvec *yy_val;
+    struct blasfeo_dvec *Z_val;
+    struct blasfeo_dvec *f_LO_val;
+
+    struct blasfeo_dvec K1u;
+    struct blasfeo_dvec Zu;
+    struct blasfeo_dvec ALOtimesx02;
+
+    struct blasfeo_dmat *f_LO_jac;
+
     struct blasfeo_dmat J_r_ff;
     struct blasfeo_dmat J_r_x1u; 
     
@@ -170,16 +193,6 @@ typedef struct { //workspace
     struct blasfeo_dmat S_forw_new;
     struct blasfeo_dmat S_forw;
 
-    struct blasfeo_dvec K2_val;
-    struct blasfeo_dvec x0_traj;
-    struct blasfeo_dvec res_val;
-    struct blasfeo_dvec u0;
-    struct blasfeo_dvec lambda;
-    struct blasfeo_dvec lambda_old;
-
-    struct blasfeo_dvec yyu;
-    struct blasfeo_dvec yyss;
-
     struct blasfeo_dmat aux_G2_ff;
     struct blasfeo_dmat dPsi_dff;
     struct blasfeo_dmat dPsi_dx;
@@ -187,22 +200,13 @@ typedef struct { //workspace
 
     struct blasfeo_dmat dPHI_dy;
 
-    struct blasfeo_dvec *K1_val;
-    struct blasfeo_dvec *x1_val;
-    struct blasfeo_dvec *ff_val;
-    struct blasfeo_dvec *yy_val;
-    struct blasfeo_dvec *Z_val;
-    struct blasfeo_dvec *f_LO_val;
-
-    struct blasfeo_dmat *f_LO_jac;
-
 } gnsf2_workspace;
 
 int sim_gnsf2_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory);
 
-void *gnsf2_cast_workspace(gnsf2_dims* dims, void *raw_memory);
+void *gnsf2_cast_workspace(void *config, gnsf2_dims* dims, void *raw_memory, void *args);
 int gnsf2_workspace_calculate_size(void *config, sim_dims *dim_in, void *args);
 
 int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims);
