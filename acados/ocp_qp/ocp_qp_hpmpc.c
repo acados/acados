@@ -38,6 +38,12 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
+
+
+/************************************************
+* opts
+************************************************/
+
 int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_hpmpc_opts);
@@ -45,6 +51,8 @@ int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
     size += 1 * 64;                 // align once to typical cache line size
     return size;
 }
+
+
 
 void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
@@ -66,6 +74,8 @@ void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memor
     return (void *)args;
 }
 
+
+
 void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
@@ -74,7 +84,24 @@ void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void
     args->mu0 = 1e3;
     args->warm_start = 0;
     args->alpha_min = 1e-8;
+
+	return;
 }
+
+
+
+void ocp_qp_hpmpc_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
+{
+//    ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
+
+	return;
+}
+
+
+
+/************************************************
+* memory
+************************************************/
 
 int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -126,6 +153,8 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *o
 
     return ws_size;
 }
+
+
 
 void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -242,10 +271,22 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
     return raw_memory;
 }
 
+
+
+/************************************************
+* workspace
+************************************************/
+
 int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     return 0;
 }
+
+
+
+/************************************************
+* functions
+************************************************/
 
 int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_)
 {
@@ -418,6 +459,8 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     return acados_status;
 }
 
+
+
 void ocp_qp_hpmpc_config_initialize_default(void *config_)
 {
 
@@ -426,6 +469,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
 	config->opts_calculate_size = ( int (*) (void *, void *)) &ocp_qp_hpmpc_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_assign;
 	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_initialize_default;
+	config->opts_update = ( void (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_update;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &ocp_qp_hpmpc_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_workspace_calculate_size;

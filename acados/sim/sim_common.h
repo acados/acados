@@ -136,7 +136,7 @@ typedef struct
     int (*opts_calculate_size) (void *config, sim_dims *dims);
     void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
     void (*opts_initialize_default) (void *config, sim_dims *dims, void *opts);
-    void (*opts_update_tableau) (void *config, sim_dims *dims, void *opts);
+    void (*opts_update) (void *config, sim_dims *dims, void *opts);
     int (*memory_calculate_size) (void *config, sim_dims *dims, void *opts);
     void *(*memory_assign) (void *config, sim_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);

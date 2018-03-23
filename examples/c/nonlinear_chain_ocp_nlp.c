@@ -1406,8 +1406,6 @@ int main() {
 			sim_opts->ns = 2;
 			sim_opts->jac_reuse = true;
 		}
-		// recompute Butcher tableau after selecting ns
-		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
     }
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
@@ -1415,6 +1413,9 @@ int main() {
     sqp_opts->min_res_b = 1e-9;
     sqp_opts->min_res_d = 1e-9;
     sqp_opts->min_res_m = 1e-9;
+
+	// update after user-defined opts
+	config->opts_update(config, dims, nlp_opts); // TODO ocp_nlp_opts_update
 
     /************************************************
     * ocp_nlp out

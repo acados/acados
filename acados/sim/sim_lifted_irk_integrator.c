@@ -197,7 +197,7 @@ void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void 
 
 
 
-void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+void sim_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -1545,7 +1545,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
 	config->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
 	config->opts_assign = &sim_lifted_irk_opts_assign;
 	config->opts_initialize_default = &sim_lifted_irk_opts_initialize_default;
-	config->opts_update_tableau = &sim_lifted_irk_opts_update_tableau;
+	config->opts_update = &sim_lifted_irk_opts_update;
 	config->memory_calculate_size = &sim_lifted_irk_memory_calculate_size;
 	config->memory_assign = &sim_lifted_irk_memory_assign;
 	config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;

@@ -49,6 +49,8 @@ int ocp_nlp_dynamics_disc_opts_calculate_size(void *config, ocp_nlp_dynamics_dim
 void *ocp_nlp_dynamics_disc_opts_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
 //
 void ocp_nlp_dynamics_disc_opts_initialize_default(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+//
+void ocp_nlp_dynamics_disc_opts_update(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
 
 
 

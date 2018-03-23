@@ -62,6 +62,8 @@ int ocp_nlp_cost_ls_opts_calculate_size(void *config, ocp_nlp_cost_dims *dims);
 void *ocp_nlp_cost_ls_opts_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
 //
 void ocp_nlp_cost_ls_opts_initialize_default(void *config, ocp_nlp_cost_dims *dims, void *opts);
+//
+void ocp_nlp_cost_ls_opts_update(void *config, ocp_nlp_cost_dims *dims, void *opts);
 
 
 
