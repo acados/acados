@@ -131,6 +131,8 @@ void ocp_nlp_dynamics_cont_model_set_T(double T, void *model);
 //
 void ocp_nlp_dynamics_cont_config_initialize_default(void *config);
 //
+void ocp_nlp_dynamics_cont_initialize(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
+//
 void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
 
 #ifdef __cplusplus

@@ -110,7 +110,7 @@ int ocp_nlp_cost_ls_workspace_calculate_size(void *config, ocp_nlp_cost_dims *di
 //
 void ocp_nlp_cost_ls_config_initialize_default(void *config);
 //
-void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
+void ocp_nlp_cost_ls_initialize(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
 //
 void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_);
 

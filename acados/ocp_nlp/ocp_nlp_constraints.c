@@ -402,7 +402,7 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, ocp_nlp_constraint
 
 /* functions */
 
-void ocp_nlp_constraints_initialize_qp(void *config_, ocp_nlp_constraints_dims *dims, void *model_, void *opts, void *memory_, void *work_)
+void ocp_nlp_constraints_initialize(void *config_, ocp_nlp_constraints_dims *dims, void *model_, void *opts, void *memory_, void *work_)
 {
 
 	ocp_nlp_constraints_model *model = model_;
@@ -511,7 +511,7 @@ void ocp_nlp_constraints_config_initialize_default(void *config_)
 	config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_memory_set_RSQrq_ptr;
 	config->memory_set_idxb_ptr = &ocp_nlp_constraints_memory_set_idxb_ptr;
 	config->workspace_calculate_size = &ocp_nlp_constraints_workspace_calculate_size;
-	config->initialize_qp = &ocp_nlp_constraints_initialize_qp;
+	config->initialize = &ocp_nlp_constraints_initialize;
 	config->update_qp_matrices = &ocp_nlp_constraints_update_qp_matrices;
 	config->config_initialize_default = &ocp_nlp_constraints_config_initialize_default;
 

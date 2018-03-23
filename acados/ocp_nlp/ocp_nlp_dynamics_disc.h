@@ -125,6 +125,8 @@ void ocp_nlp_dynamics_disc_model_set_T(double T, void *model);
 //
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config);
 //
+void ocp_nlp_dynamics_disc_initialize(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
+//
 void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
 
 #ifdef __cplusplus

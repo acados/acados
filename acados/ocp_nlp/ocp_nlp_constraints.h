@@ -80,7 +80,7 @@ typedef struct
 	void (*memory_set_idxb_ptr) (int *idxb, void *memory);
 	void *(*memory_assign) (void *config, ocp_nlp_constraints_dims *dims, void *opts, void *raw_memory);
 	int (*workspace_calculate_size) (void *config, ocp_nlp_constraints_dims *dims, void *opts);
-	void (*initialize_qp) (void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
+	void (*initialize) (void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
 	void (*update_qp_matrices) (void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
 	void (*config_initialize_default) (void *config);
 } ocp_nlp_constraints_config;
@@ -184,7 +184,7 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config, ocp_nlp_constrain
 //
 void ocp_nlp_constraints_config_initialize_default(void *config);
 //
-void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
+void ocp_nlp_constraints_initialize(void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
 //
 void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_dims *dims, void *model_, void *opts_, void *memory_, void *work_);
 

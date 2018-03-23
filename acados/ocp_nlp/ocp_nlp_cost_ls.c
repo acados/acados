@@ -277,7 +277,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, ocp_nlp_cost_dims *dim
 
 /* functions */
 
-void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_ls_initialize(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_model *model = model_;
     // ocp_nlp_cost_ls_opts *opts = opts_;
@@ -358,7 +358,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 	config->memory_set_ux_ptr = &ocp_nlp_cost_ls_memory_set_ux_ptr;
 	config->memory_set_RSQrq_ptr = &ocp_nlp_cost_ls_memory_set_RSQrq_ptr;
 	config->workspace_calculate_size = &ocp_nlp_cost_ls_workspace_calculate_size;
-	config->initialize_qp = &ocp_nlp_cost_ls_initialize_qp;
+	config->initialize = &ocp_nlp_cost_ls_initialize;
 	config->update_qp_matrices = &ocp_nlp_cost_ls_update_qp_matrices;
 	config->config_initialize_default = &ocp_nlp_cost_ls_config_initialize_default;
 

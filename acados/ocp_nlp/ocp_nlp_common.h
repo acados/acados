@@ -49,6 +49,9 @@ typedef struct
 	ocp_nlp_dynamics_dims **dynamics;
 	ocp_nlp_constraints_dims **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
+//	int *nv; // number of variables
+//	int *ne; // number of equality constraints
+//	int *ni; // number of inequality constraints
     int N;
 } ocp_nlp_dims;
 
