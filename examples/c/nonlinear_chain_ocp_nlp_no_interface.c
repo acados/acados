@@ -1175,7 +1175,6 @@ int main() {
 	ocp_nlp_cost_ls_config_initialize_default(config->cost[NN]);
 #endif
 
-		// 4th order schemes
 #if DYNAMICS==0
 	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
@@ -1427,64 +1426,6 @@ int main() {
 		external_function_casadi_assign(ls_cost_jac_casadi+ii, c_ptr);
 		c_ptr += external_function_casadi_calculate_size(ls_cost_jac_casadi+ii);
 	}
-#endif
-
-#if COST==2
-	external_function_generic ext_cost_generic;
-
-	// TODO the others !!!
-	switch(NMF)
-	{
-		case 1:
-			ext_cost_generic.evaluate = &ext_cost_nm2;
-			break;
-		case 2:
-			ext_cost_generic.evaluate = &ext_cost_nm3;
-			break;
-		case 3:
-			ext_cost_generic.evaluate = &ext_cost_nm4;
-			break;
-		case 4:
-			ext_cost_generic.evaluate = &ext_cost_nm5;
-			break;
-		case 5:
-			ext_cost_generic.evaluate = &ext_cost_nm6;
-			break;
-		default:
-			printf("\next cost not implemented for this numer of masses\n\n");
-			exit(1);
-	}
-#endif
-
-    /************************************************
-    * nonlinear constraints
-    ************************************************/
-
-#if CONSTRAINTS==2
-	external_function_generic nonlin_constr_generic;
-
-	switch(NMF)
-	{
-		case 1:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
-			break;
-		case 2:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
-			break;
-		case 3:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
-			break;
-		case 4:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
-			break;
-		case 5:
-			nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
-			break;
-		default:
-			printf("\nnonlin constr not implemented for this numer of masses\n\n");
-			exit(1);
-	}
-#endif
 
 
 	external_function_generic ls_cost_hess_generic;
