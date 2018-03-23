@@ -68,7 +68,7 @@ typedef struct
 	void (*memory_set_RSQrq_ptr) (struct blasfeo_dmat *RSQrq, void *memory);
 	void *(*memory_assign) (void *config, ocp_nlp_cost_dims *dims, void *opts, void *raw_memory);
 	int (*workspace_calculate_size) (void *config, ocp_nlp_cost_dims *dims, void *opts);
-	void (*initialize_qp) (void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
+	void (*initialize) (void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
 	void (*update_qp_matrices) (void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
 	void (*config_initialize_default) (void *config);
 } ocp_nlp_cost_config;

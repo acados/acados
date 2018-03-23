@@ -77,6 +77,7 @@ typedef struct
 	void (*memory_set_pi_ptr) (struct blasfeo_dvec *pi, void *memory_);
 	void (*memory_set_BAbt_ptr) (struct blasfeo_dmat *BAbt, void *memory_);
 	int (*workspace_calculate_size) (void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+	void (*initialize) (void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
 	void (*update_qp_matrices) (void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
 	void (*config_initialize_default) (void *config);
     sim_solver_config *sim_solver;

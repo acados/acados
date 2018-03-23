@@ -341,6 +341,13 @@ void ocp_nlp_dynamics_cont_model_set_T(double T, void *model_)
 * functions
 ************************************************/
 
+void ocp_nlp_dynamics_cont_initialize(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_)
+{
+	return;
+}
+
+
+
 void ocp_nlp_dynamics_cont_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_)
 {
 	ocp_nlp_dynamics_cont_cast_workspace(config_, dims, opts_, work_);
@@ -415,6 +422,7 @@ void ocp_nlp_dynamics_cont_config_initialize_default(void *config_)
 	config->memory_set_pi_ptr = &ocp_nlp_dynamics_cont_memory_set_pi_ptr;
 	config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_cont_memory_set_BAbt_ptr;
 	config->workspace_calculate_size = &ocp_nlp_dynamics_cont_workspace_calculate_size;
+	config->initialize = &ocp_nlp_dynamics_cont_initialize;
 	config->update_qp_matrices = &ocp_nlp_dynamics_cont_update_qp_matrices;
 	config->config_initialize_default = &ocp_nlp_dynamics_cont_config_initialize_default;
 

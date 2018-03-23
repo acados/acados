@@ -516,23 +516,26 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
 {
 	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
+	// loop index
+	int ii;
+
+	// extract dims
     int N = dims->N;
 
-	/* cost */
-	for (int ii=0; ii<=N; ii++)
+	for (ii=0; ii<N; ii++)
 	{
-		config->cost[ii]->initialize_qp(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
+		// cost
+		config->cost[ii]->initialize(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
+		// dynamics
+		config->dynamics[ii]->initialize(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], opts->dynamics[ii], mem->dynamics[ii], work->dynamics[ii]);
+		// constraints
+		config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
 	}
-
-
-	/* dynamics */
-
-
-	/* constraints */
-	for (int ii=0; ii<=N; ii++)
-	{
-		config->constraints[ii]->initialize_qp(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
-	}
+	ii = N;
+	// cost
+	config->cost[ii]->initialize(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
+	// constraints
+	config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
 
 	return;
 
@@ -554,12 +557,26 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
 
-	/* cost */
+	/* stage-wise multiple shooting lagrangian evaluation */
 
-	for (i=0; i<=N; i++)
+	for (i=0; i<N; i++)
 	{
+		// cost
 		config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+		// dynamics
+		config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+		// constraints
+		config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
 	}
+	i = N;
+	// cost
+	config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+	// constraints
+	config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+
+
+
+	/* collect stage-wise evaluations */
 
 	// nlp mem: cost_grad
 	for (i=0; i<=N; i++)
@@ -568,14 +585,6 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 		nu = dims->cost[i]->nu;
 		struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
 		blasfeo_dveccp(nu+nx, cost_grad, 0, nlp_mem->cost_grad+i, 0);
-	}
-
-
-	/* dynamics */
-
-	for (i=0; i<N; i++)
-	{
-		config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
 	}
 
 	// nlp mem: dyn_fun
@@ -607,14 +616,6 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 		blasfeo_daxpy(nx1, 1.0, dyn_adj, nu+nx, nlp_mem->dyn_adj+i+1, nu1, nlp_mem->dyn_adj+i+1, nu1);
 	}
 
-
-	/* constraints */
-
-	for (i=0; i<=N; i++)
-	{
-		config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
-	}
-
 	// nlp mem: ineq_fun
 	for (i=0; i<=N; i++)
 	{
@@ -633,6 +634,12 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 		struct blasfeo_dvec *ineq_adj = config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
 		blasfeo_dveccp(nu+nx, ineq_adj, 0, nlp_mem->ineq_adj+i, 0);
 	}
+
+
+
+
+
+
 
 
 
