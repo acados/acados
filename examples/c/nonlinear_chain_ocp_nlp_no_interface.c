@@ -49,6 +49,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 
 #include "examples/c/chain_model/chain_model.h"
@@ -84,7 +85,7 @@
 
 
 // dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
-#define DYNAMICS 3
+#define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
 #define COST 1
@@ -1178,7 +1179,7 @@ int main() {
 	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_erk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 
@@ -1186,14 +1187,14 @@ int main() {
 	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #elif DYNAMICS==2
 	// dynamics: IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #else
@@ -1671,7 +1672,7 @@ int main() {
 #if DYNAMICS==0
 	for (int i=0; i<NN; i++)
 	{
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		erk_model *model = dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
@@ -1679,7 +1680,7 @@ int main() {
 #elif DYNAMICS==1
 	for (int i=0; i<NN; i++)
 	{
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		lifted_irk_model *model = dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
@@ -1687,7 +1688,7 @@ int main() {
 #elif DYNAMICS==2
 	for (int i=0; i<NN; i++)
 	{
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		irk_model *model = dynamics->sim_model;
 		model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
 		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
@@ -1839,23 +1840,17 @@ int main() {
 		// dynamics: ERK 4
 		sim_opts->ns = 4;
 //		sim_opts->num_steps = 1;
-		// recompute Butcher tableau after selecting ns
-		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
 #elif DYNAMICS==1
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: lifted IRK GL2
 		sim_opts->ns = 2;
-		// recompute Butcher tableau after selecting ns
-		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
 #elif DYNAMICS==2
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: discrete model
 		sim_opts->ns = 2;
 		sim_opts->jac_reuse = true;
-		// recompute Butcher tableau after selecting ns
-		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
 #else // DYNAMICS==3
 		// no options
 #endif
