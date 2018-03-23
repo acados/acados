@@ -1118,7 +1118,7 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
             blasfeo_unpack_dvec(nx1, &x1_val[ss], ii*nx1, &f_LO_in[0]);
             blasfeo_unpack_dvec(nx1, &K1_val[ss], ii*nx1, &f_LO_in[nx1]);
             blasfeo_unpack_dvec(nz,  &Z_val[ss] , ii*nz , &f_LO_in[2*nx1]);
-            blasfeo_unpack_dvec(nu,  &u0        ,  0          , &f_LO_in[2*nx1 +nz]);
+            blasfeo_unpack_dvec(nu,  &u0        ,  0    , &f_LO_in[2*nx1 +nz]);
             acados_tic(&casadi_timer);
             fix->f_LO_inc_J_x1k1uz->evaluate(fix->f_LO_inc_J_x1k1uz, f_LO_in, f_LO_out);
             out->info->ADtime += acados_toc(&casadi_timer);

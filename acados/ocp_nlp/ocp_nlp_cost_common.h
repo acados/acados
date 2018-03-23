@@ -61,6 +61,7 @@ typedef struct
 	int (*opts_calculate_size) (void *config, ocp_nlp_cost_dims *dims);
 	void *(*opts_assign) (void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
 	void (*opts_initialize_default) (void *config, ocp_nlp_cost_dims *dims, void *opts);
+	void (*opts_update) (void *config, ocp_nlp_cost_dims *dims, void *opts);
 	int (*memory_calculate_size) (void *config, ocp_nlp_cost_dims *dims, void *opts);
 	struct blasfeo_dvec *(*memory_get_grad_ptr) (void *memory);
 	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory);

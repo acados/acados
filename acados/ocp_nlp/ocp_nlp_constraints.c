@@ -203,6 +203,16 @@ void ocp_nlp_constraints_opts_initialize_default(void *config_, ocp_nlp_constrai
 
 
 
+void ocp_nlp_constraints_opts_update(void *config_, ocp_nlp_constraints_dims *dims, void *opts_)
+{
+//	ocp_nlp_constraints_opts *opts = opts_;
+
+	return;
+
+}
+
+
+
 /* memory */
 
 int ocp_nlp_constraints_memory_calculate_size(void *config_, ocp_nlp_constraints_dims *dims, void *opts_)
@@ -490,6 +500,7 @@ void ocp_nlp_constraints_config_initialize_default(void *config_)
 	config->opts_calculate_size = &ocp_nlp_constraints_opts_calculate_size;
 	config->opts_assign = &ocp_nlp_constraints_opts_assign;
 	config->opts_initialize_default = &ocp_nlp_constraints_opts_initialize_default;
+	config->opts_update = &ocp_nlp_constraints_opts_update;
 	config->memory_calculate_size = &ocp_nlp_constraints_memory_calculate_size;
 	config->memory_assign = &ocp_nlp_constraints_memory_assign;
 	config->memory_get_fun_ptr = &ocp_nlp_constraints_memory_get_fun_ptr;
@@ -507,7 +518,3 @@ void ocp_nlp_constraints_config_initialize_default(void *config_)
 	return;
 
 }
-
-
-
-

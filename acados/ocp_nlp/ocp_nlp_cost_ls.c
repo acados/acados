@@ -121,9 +121,17 @@ void *ocp_nlp_cost_ls_opts_assign(void *config_, ocp_nlp_cost_dims *dims, void *
 
 void ocp_nlp_cost_ls_opts_initialize_default(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
 {
-	ocp_nlp_cost_ls_opts *opts = opts_;
+//	ocp_nlp_cost_ls_opts *opts = opts_;
 
-	opts->gauss_newton_hess = 1;
+	return;
+
+}
+
+
+
+void ocp_nlp_cost_ls_opts_update(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+{
+//	ocp_nlp_cost_ls_opts *opts = opts_;
 
 	return;
 
@@ -272,7 +280,7 @@ static void ocp_nlp_cost_ls_cast_workspace(void *config_, ocp_nlp_cost_dims *dim
 void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_)
 {
     ocp_nlp_cost_ls_model *model = model_;
-    ocp_nlp_cost_ls_opts *opts = opts_;
+    // ocp_nlp_cost_ls_opts *opts = opts_;
     ocp_nlp_cost_ls_memory *memory= memory_;
     ocp_nlp_cost_ls_workspace *work= work_;
 
@@ -287,20 +295,9 @@ void ocp_nlp_cost_ls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void 
 	// TODO recompute factorization only if W are re-tuned ???
 	blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-	if (opts->gauss_newton_hess)
-	{
-
 		// TODO avoid recomputing the Hessian if both W and Cyt do not change
-		blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
-		blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
-
-	}
-	else
-	{
-
-		// TODO exact hessian of ls cost
-
-	}
+	blasfeo_dtrmm_rlnn(nu+nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny, 0, 0);
+	blasfeo_dsyrk_ln(nu+nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0, &memory->hess, 0, 0, &memory->hess, 0, 0);
 
 	return;
 
@@ -312,7 +309,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 {
 
     ocp_nlp_cost_ls_model *model = model_;
-    ocp_nlp_cost_ls_opts *opts = opts_;
+    // ocp_nlp_cost_ls_opts *opts = opts_;
     ocp_nlp_cost_ls_memory *memory= memory_;
     ocp_nlp_cost_ls_workspace *work= work_;
 
@@ -322,26 +319,16 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, 
 	int nu = dims->nu;
 	int ny = dims->ny;
 
-	if (opts->gauss_newton_hess)
-	{
+	// initialize hessian of lagrangian with hessian of cost
+	blasfeo_dgecp(nu+nx, nu+nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
 
-		// initialize hessian of lagrangian with hessian of cost
-		blasfeo_dgecp(nu+nx, nu+nx, &memory->hess, 0, 0, memory->RSQrq, 0, 0);
+	// compute gradient
+	blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
 
-		// compute gradient
-		blasfeo_dgemv_t(nu+nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0, &memory->res, 0);
+	// TODO use lower triangular chol of W to save n_y^2 flops
+	blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
+	blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
-		// TODO use lower triangular chol of W to save n_y^2 flops
-		blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
-		blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
-
-	}
-	else
-	{
-
-		// TODO exact hessian of ls cost
-
-	}
 //	blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
 //	blasfeo_print_tran_dvec(nu+nx, &memory->grad, 0);
 //	exit(1);
@@ -364,6 +351,7 @@ void ocp_nlp_cost_ls_config_initialize_default(void *config_)
 	config->opts_calculate_size = &ocp_nlp_cost_ls_opts_calculate_size;
 	config->opts_assign = &ocp_nlp_cost_ls_opts_assign;
 	config->opts_initialize_default = &ocp_nlp_cost_ls_opts_initialize_default;
+	config->opts_update = &ocp_nlp_cost_ls_opts_update;
 	config->memory_calculate_size = &ocp_nlp_cost_ls_memory_calculate_size;
 	config->memory_assign = &ocp_nlp_cost_ls_memory_assign;
 	config->memory_get_grad_ptr = &ocp_nlp_cost_ls_memory_get_grad_ptr;

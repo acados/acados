@@ -27,11 +27,15 @@ extern "C" {
 // acados
 #include "acados/ocp_qp/ocp_qp_common.h"
 
+
+
 typedef struct ocp_qp_partial_condensing_opts_
 {
+    struct d_cond_qp_ocp2ocp_arg *hpipm_opts;
     ocp_qp_dims *pcond_dims; // TODO why in opts??? move in memory on in dims ???
 	int *block_size;
     int N2;
+    int N2_bkp;
 } ocp_qp_partial_condensing_opts;
 
 
@@ -51,6 +55,8 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims);
 ocp_qp_partial_condensing_opts *ocp_qp_partial_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
 //
 void ocp_qp_partial_condensing_opts_initialize_default(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts);
+//
+void ocp_qp_partial_condensing_opts_update(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts);
 //
 int ocp_qp_partial_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_partial_condensing_opts *opts);
 //

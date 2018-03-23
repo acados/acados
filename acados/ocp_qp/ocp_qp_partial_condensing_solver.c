@@ -29,6 +29,10 @@
 
 
 
+/************************************************
+* opts
+************************************************/
+
 int ocp_qp_partial_condensing_solver_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
 	ocp_qp_xcond_solver_config *config = config_;
@@ -88,6 +92,27 @@ void ocp_qp_partial_condensing_solver_opts_initialize_default(void *config_, ocp
 }
 
 
+
+void ocp_qp_partial_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
+{
+	ocp_qp_xcond_solver_config *config = config_;
+	qp_solver_config *qp_solver = config->qp_solver;
+
+	// partial_condensing solver opts
+    ocp_qp_partial_condensing_solver_opts *opts = (ocp_qp_partial_condensing_solver_opts *) opts_;
+	// partial condensing opts
+    ocp_qp_partial_condensing_opts_update(dims, opts->pcond_opts);
+	// ocp_qp_partial_condensing_opts *pcond_opts = opts->pcond_opts;
+	// pcond_opts->N2 = config->N2;
+	// qp solver opts
+    qp_solver->opts_update(qp_solver, dims, opts->qp_solver_opts);
+}
+
+
+
+/************************************************
+* memory
+************************************************/
 
 int ocp_qp_partial_condensing_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -194,6 +219,10 @@ void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_dims 
 
 
 
+/************************************************
+* workspace
+************************************************/
+
 int ocp_qp_partial_condensing_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
 	ocp_qp_xcond_solver_config *config = config_;
@@ -250,6 +279,10 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_partial_cond
 }
 
 
+
+/************************************************
+* functions
+************************************************/
 
 int ocp_qp_partial_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_)
 {
@@ -311,11 +344,11 @@ void ocp_qp_partial_condensing_solver_config_initialize_default(void *config_)
 	config->opts_calculate_size = &ocp_qp_partial_condensing_solver_opts_calculate_size;
 	config->opts_assign = &ocp_qp_partial_condensing_solver_opts_assign;
 	config->opts_initialize_default = &ocp_qp_partial_condensing_solver_opts_initialize_default;
+	config->opts_update = &ocp_qp_partial_condensing_solver_opts_update;
 	config->memory_calculate_size = &ocp_qp_partial_condensing_solver_memory_calculate_size;
 	config->memory_assign = &ocp_qp_partial_condensing_solver_memory_assign;
 	config->workspace_calculate_size = &ocp_qp_partial_condensing_solver_workspace_calculate_size;
 	config->evaluate = &ocp_qp_partial_condensing_solver;
-//	configi->N2 = dims->N; // default: no partial condensing // TODO uncomment when dims are part of config !!!
 
 	return;
 

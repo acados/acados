@@ -93,7 +93,7 @@ void *sim_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
 //
 void sim_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
 //
-void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_);
+void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_);
 //
 int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
 //

@@ -54,6 +54,8 @@ void *dense_qp_hpipm_opts_assign(void *config, dense_qp_dims *dims, void *raw_me
 //
 void dense_qp_hpipm_opts_initialize_default(void *config, dense_qp_dims *dims, void *opts_);
 //
+void dense_qp_hpipm_opts_update(void *config, dense_qp_dims *dims, void *opts_);
+//
 int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *opts_);
 //
 void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *opts_, void *raw_memory);

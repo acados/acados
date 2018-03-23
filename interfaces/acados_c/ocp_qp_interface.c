@@ -195,6 +195,8 @@ ocp_qp_solver *ocp_qp_assign(ocp_qp_xcond_solver_config *config, ocp_qp_dims *di
 
 ocp_qp_solver *ocp_qp_create(ocp_qp_xcond_solver_config *config, ocp_qp_dims *dims, void *opts_)
 {
+	config->opts_update(config, dims, opts_);
+
     int bytes = ocp_qp_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);

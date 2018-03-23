@@ -27,7 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
@@ -132,13 +132,15 @@ typedef struct
 	int N; // number of stages
 
 	// all the others
-    int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *opts_, void *mem, void *work);
     int (*opts_calculate_size)(void *config, ocp_nlp_dims *dims);
     void *(*opts_assign)(void *config, ocp_nlp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_nlp_dims *dims, void *opts_);
+    void (*opts_update)(void *config, ocp_nlp_dims *dims, void *opts_);
     int (*memory_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
     void *(*memory_assign)(void *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
+    int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *opts_, void *mem, void *work);
+    void (*config_initialize_default)(void *config);
     ocp_qp_xcond_solver_config *qp_solver;
 //    sim_solver_config **sim_solvers;
     ocp_nlp_dynamics_config **dynamics;

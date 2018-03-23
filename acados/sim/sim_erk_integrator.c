@@ -60,18 +60,31 @@ void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
-void sim_erk_model_set_forward_vde(sim_in *in, void *fun)
+int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
-    erk_model *model = in->model;
-    model->forw_vde_expl = (external_function_generic *) fun;
-}
+    erk_model *model = model_;
 
-
-
-void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
-{
-    erk_model *model = in->model;
-    model->adj_vde_expl = (external_function_generic *) fun;
+    switch (fun_type)
+    {
+        case EXPLICIT_ODE:
+            model->ode_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_ODE_JACOBIAN:
+            model->jac_ode_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_ODE_HESSIAN:
+            model->hess_ode_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_VDE_FORWARD:
+            model->forw_vde_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_VDE_ADJOINT:
+            model->adj_vde_expl = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
 }
 
 
@@ -192,7 +205,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
-void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -235,7 +248,7 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 			break;
 		}
 		case 4:
-		{	
+		{
 			// A
 			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0; A[0+ns*2] = 0.0; A[0+ns*3] = 0.0;
 			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0; A[1+ns*2] = 0.0; A[1+ns*3] = 0.0;
@@ -358,7 +371,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
     {
         assign_and_advance_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
-    } 
+    }
 	else
     {
         assign_and_advance_double(ns*nX, &workspace->K_traj, &c_ptr);
@@ -370,7 +383,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
         assign_and_advance_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
-    } 
+    }
 	else if (opts->sens_adj)
     {
         assign_and_advance_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
@@ -485,7 +498,10 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
 
             acados_tic(&timer_ad);
-            model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			if (opts->sens_forw) // simulation + forward sensitivities
+				model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			else // simulation only
+				model->ode_expl->evaluate(model->ode_expl, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < ns; s++)
@@ -612,18 +628,17 @@ void sim_erk_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->evaluate = &sim_erk;
 	config->opts_calculate_size = &sim_erk_opts_calculate_size;
 	config->opts_assign = &sim_erk_opts_assign;
 	config->opts_initialize_default = &sim_erk_opts_initialize_default;
-	config->opts_update_tableau = &sim_erk_opts_update_tableau;
+	config->opts_update = &sim_erk_opts_update;
 	config->memory_calculate_size = &sim_erk_memory_calculate_size;
 	config->memory_assign = &sim_erk_memory_assign;
 	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
 	config->model_calculate_size = &sim_erk_model_calculate_size;
 	config->model_assign = &sim_erk_model_assign;
-    config->model_set_forward_vde = &sim_erk_model_set_forward_vde;
-    config->model_set_adjoint_vde = &sim_erk_model_set_adjoint_vde;
+    config->model_set_function = &sim_erk_model_set_function;
+	config->evaluate = &sim_erk;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
 
 	return;

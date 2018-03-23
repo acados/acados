@@ -46,6 +46,7 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_hess_chain_nm2.c
     chain_model/vde_hess_chain_nm3.c
     chain_model/vde_hess_chain_nm4.c
+    chain_model/casadi_erk4_chain_nm2.c
     implicit_chain_model/impl_jacFun_u_chain_nm2.c
     implicit_chain_model/impl_jacFun_u_chain_nm3.c
     implicit_chain_model/impl_jacFun_u_chain_nm4.c
@@ -99,10 +100,6 @@ file(GLOB WT_MODEL_SRC
     wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.c
     wt_model_nx3/impl_jacFun_u_energy_balanced_model.c
 )
-
-# add_executable(sim_erk_wt sim_erk_wt.c)
-# target_link_libraries(sim_erk_wt acados)
-# add_test(sim_erk_wt sim_erk_wt)
 
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

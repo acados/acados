@@ -49,6 +49,8 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_nls.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_disc.h"
 
 #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/implicit_chain_model/chain_model_impl.h"
@@ -76,13 +78,13 @@
 
 
 #define NN 15
-#define TF 3.0
+#define TF 3.75
 #define Ns 2
 #define MAX_SQP_ITERS 10
 #define NREP 10
 
 
-// dynamics: 0 erk, 1 lifted_irk, 2 irk
+// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
@@ -967,6 +969,98 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 
 
 
+void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 6;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 12;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 18;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 24;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+void ls_cost_hess_nm6(void *evaluate, double *in, double *out)
+{
+
+	int ii;
+
+	int nu = 3;
+	int nx = 30;
+
+	int nv = nu+nx;
+
+	double *hess = out;
+	for (ii=0; ii<nv*nv; ii++)
+		hess[ii] = 0.0;
+
+	return;
+
+}
+
+
+
 /************************************************
 * main
 ************************************************/
@@ -1086,7 +1180,7 @@ int main() {
 	// dynamics: ERK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_erk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 
@@ -1094,15 +1188,21 @@ int main() {
 	// dynamics: lifted IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
-#else
+#elif DYNAMICS==2
 	// dynamics: IRK
     for (int ii = 0; ii < NN; ii++)
     {
-		ocp_nlp_dynamics_config_initialize_default(config->dynamics[ii]);
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+    }
+#else
+	// dynamics: discrete model
+    for (int ii = 0; ii < NN; ii++)
+    {
+		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
     }
 #endif
 
@@ -1133,6 +1233,8 @@ int main() {
 	external_function_casadi impl_jac_x_casadi[NN]; // XXX varible size array
 	external_function_casadi impl_jac_xdot_casadi[NN]; // XXX varible size array
 	external_function_casadi impl_jac_u_casadi[NN]; // XXX varible size array
+	// casadi erk
+	external_function_casadi erk4_casadi[NN]; // XXX varible size array
 
 	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi, impl_ode_casadi, impl_jac_x_casadi, impl_jac_xdot_casadi, impl_jac_u_casadi);
 
@@ -1167,7 +1269,7 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
 	}
 
-#else // DYNAMICS==2
+#elif DYNAMICS==2
 
 	// impl_ode
 	tmp_size = 0;
@@ -1222,6 +1324,85 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(impl_jac_u_casadi+ii);
 	}
 
+#else // DYNAMCS==3
+
+	// TODO others
+	switch(NMF)
+	{
+		case 1:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm2;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm2_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm2_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm2_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm2_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm2_n_out;
+			}
+			break;
+		case 2:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm3;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm3_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm3_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm3_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm3_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm3_n_out;
+			}
+			break;
+		case 3:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm4;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm4_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm4_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm4_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm4_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm4_n_out;
+			}
+			break;
+		case 4:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm5;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm5_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm5_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm5_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm5_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm5_n_out;
+			}
+			break;
+		case 5:
+			for (int ii=0; ii<NN; ii++)
+			{
+				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm6;
+				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm6_work;
+				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm6_sparsity_in;
+				erk4_casadi[ii].casadi_sparsity_out = &casadi_erk4_chain_nm6_sparsity_out;
+				erk4_casadi[ii].casadi_n_in = &casadi_erk4_chain_nm6_n_in;
+				erk4_casadi[ii].casadi_n_out = &casadi_erk4_chain_nm6_n_out;
+			}
+			break;
+		default:
+			printf("\ncasadi erk4 not implemented for this numer of masses\n\n");
+			exit(1);
+	}
+
+	// impl_ode
+	tmp_size = 0;
+	for (int ii=0; ii<NN; ii++)
+	{
+		tmp_size += external_function_casadi_calculate_size(erk4_casadi+ii);
+	}
+	void *erk4_casadi_mem = malloc(tmp_size);
+	c_ptr = erk4_casadi_mem;
+	for (int ii=0; ii<NN; ii++)
+	{
+		external_function_casadi_assign(erk4_casadi+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(erk4_casadi+ii);
+	}
+
 #endif // DYNAMICS
 
     /************************************************
@@ -1252,6 +1433,89 @@ int main() {
 	external_function_generic ext_cost_generic;
 
 	// TODO the others !!!
+	switch(NMF)
+	{
+		case 1:
+			ext_cost_generic.evaluate = &ext_cost_nm2;
+			break;
+		case 2:
+			ext_cost_generic.evaluate = &ext_cost_nm3;
+			break;
+		case 3:
+			ext_cost_generic.evaluate = &ext_cost_nm4;
+			break;
+		case 4:
+			ext_cost_generic.evaluate = &ext_cost_nm5;
+			break;
+		case 5:
+			ext_cost_generic.evaluate = &ext_cost_nm6;
+			break;
+		default:
+			printf("\next cost not implemented for this numer of masses\n\n");
+			exit(1);
+	}
+#endif
+
+    /************************************************
+    * nonlinear constraints
+    ************************************************/
+
+#if CONSTRAINTS==2
+	external_function_generic nonlin_constr_generic;
+
+	switch(NMF)
+	{
+		case 1:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm2;
+			break;
+		case 2:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm3;
+			break;
+		case 3:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm4;
+			break;
+		case 4:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm5;
+			break;
+		case 5:
+			nonlin_constr_generic.evaluate = &nonlin_constr_nm6;
+			break;
+		default:
+			printf("\nnonlin constr not implemented for this numer of masses\n\n");
+			exit(1);
+	}
+#endif
+
+
+	external_function_generic ls_cost_hess_generic;
+
+	switch(NMF)
+	{
+		case 1:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm2;
+			break;
+		case 2:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm3;
+			break;
+		case 3:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm4;
+			break;
+		case 4:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm5;
+			break;
+		case 5:
+			ls_cost_hess_generic.evaluate = &ls_cost_hess_nm6;
+			break;
+		default:
+			printf("\nls cost hess not implemented for this numer of masses\n\n");
+			exit(1);
+	}
+#endif
+
+
+#if COST==2
+	external_function_generic ext_cost_generic;
+
 	switch(NMF)
 	{
 		case 1:
@@ -1391,6 +1655,9 @@ int main() {
 	// nls_jac
 	for (int i=0; i<=NN; i++)
 		cost_ls[i]->nls_jac = (external_function_generic *) &ls_cost_jac_casadi[i];
+
+	// nls_hess at first stage
+	cost_ls[0]->nls_hess = &ls_cost_hess_generic;
 #if 0
 	// replace with hand-written external functions
 	external_function_generic ls_cost_jac_generic[NN];
@@ -1464,7 +1731,7 @@ int main() {
 #if DYNAMICS==0
 	for (int i=0; i<NN; i++)
 	{
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		erk_model *model = dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
@@ -1472,20 +1739,26 @@ int main() {
 #elif DYNAMICS==1
 	for (int i=0; i<NN; i++)
 	{
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		lifted_irk_model *model = dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
 	}
-#else
+#elif DYNAMICS==2
 	for (int i=0; i<NN; i++)
 	{
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		irk_model *model = dynamics->sim_model;
 		model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
 		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
 		model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
 		model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
+	}
+#else
+	for (int i=0; i<NN; i++)
+	{
+		ocp_nlp_dynamics_disc_model *dynamics = nlp_in->dynamics[i];
+		dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
 	}
 #endif
 
@@ -1611,6 +1884,7 @@ int main() {
 	ocp_nlp_sqp_opts *nlp_opts = ocp_nlp_sqp_opts_assign(config, dims, nlp_opts_mem);
 
 	ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
+
 #if XCOND==1
 	// partial condensing
 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
@@ -1619,22 +1893,36 @@ int main() {
 
     for (int i = 0; i < NN; ++i)
 	{
-		ocp_nlp_dynamics_opts *dynamics_opts = nlp_opts->dynamics[i];
-        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 #if DYNAMICS==0
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: ERK 4
 		sim_opts->ns = 4;
+//		sim_opts->num_steps = 1;
 #elif DYNAMICS==1
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: lifted IRK GL2
 		sim_opts->ns = 2;
-#else // DYNAMICS==2
-		// dynamics: IRK GL2
+#elif DYNAMICS==2
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+		// dynamics: discrete model
 		sim_opts->ns = 2;
 		sim_opts->jac_reuse = true;
+#else // DYNAMICS==3
+		// no options
 #endif
-		// recompute Butcher tableau after selecting ns
-		config->dynamics[i]->sim_solver->opts_update_tableau(config->dynamics[i]->sim_solver, dims->dynamics[i]->sim, sim_opts);
     }
+
+
+
+#if COST==1
+	// exact hessian of cost function at first stage
+	ocp_nlp_cost_nls_opts *cost_opts = nlp_opts->cost[0];
+	cost_opts->gauss_newton_hess = 1;
+#endif
+
 
 
 	// XXX hack: overwrite config with hand-setted one
@@ -1650,6 +1938,9 @@ int main() {
     nlp_opts->min_res_b = 1e-9;
     nlp_opts->min_res_d = 1e-9;
     nlp_opts->min_res_m = 1e-9;
+
+	// update after user-defined options
+	ocp_nlp_sqp_opts_update(config, dims, nlp_opts);
 
     /************************************************
     * ocp_nlp out
@@ -1732,12 +2023,16 @@ int main() {
 	free(forw_vde_casadi_mem);
 	free(jac_ode_casadi_mem);
 
-#else // DYNAMICS==2
+#elif DYNAMICS==2
 
 	free(impl_ode_casadi_mem);
 	free(impl_jac_x_casadi_mem);
 	free(impl_jac_xdot_casadi_mem);
 	free(impl_jac_u_casadi_mem);
+
+#else // DYNAMICS==3
+
+	free(erk4_casadi_mem);
 
 #endif // DYNAMICS
 

@@ -38,6 +38,12 @@
 #include "acados/utils/types.h"
 #include "acados/utils/mem.h"
 
+
+
+/************************************************
+* opts
+************************************************/
+
 int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
     int size = sizeof(ocp_qp_hpmpc_opts);
@@ -45,6 +51,8 @@ int ocp_qp_hpmpc_opts_calculate_size(void *config_, ocp_qp_dims *dims)
     size += 1 * 64;                 // align once to typical cache line size
     return size;
 }
+
+
 
 void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
 {
@@ -66,6 +74,8 @@ void *ocp_qp_hpmpc_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memor
     return (void *)args;
 }
 
+
+
 void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
@@ -74,7 +84,61 @@ void ocp_qp_hpmpc_opts_initialize_default(void *config_, ocp_qp_dims *dims, void
     args->mu0 = 1e3;
     args->warm_start = 0;
     args->alpha_min = 1e-8;
+
+	return;
 }
+
+    int ii;
+    int ws_size = sizeof(ocp_qp_hpmpc_memory);
+
+    ws_size += 6*args->max_iter*sizeof(double);  // stats
+
+    ws_size += (N+1)*sizeof(struct blasfeo_dvec);  //hpi
+	for (ii = 0; ii <= N; ii++)
+        ws_size += blasfeo_memsize_dvec(nx[ii]);  //hpi
+
+    ws_size += hpmpc_d_ip_ocp_hard_tv_work_space_size_bytes_noidxb(N, nx, nu,
+			nb, dims->nbx, dims->nbu, ng, N2);
+
+    if (M < N) {
+		for ( ii = 0; ii <= N; ii++ ) {
+            ws_size += sizeof(double)*(nu[ii]+nx[ii]+1)*(nu[ii]+nx[ii]);  	// L
+            ws_size += sizeof(struct blasfeo_dmat);
+			ws_size += sizeof(double)*(nu[ii]+nx[ii]);  					// dux
+            ws_size += sizeof(struct blasfeo_dvec);
+			ws_size += 3*sizeof(double)*(2*nb[ii]+2*ng[ii]);  				// dlam, dt, lamt
+            ws_size += 3*sizeof(struct blasfeo_dvec);
+			ws_size += sizeof(double)*(2*nb[ii]+2*ng[ii]);  				// tinv
+            ws_size += sizeof(struct blasfeo_dvec);
+			ws_size += 2*sizeof(double)*(nb[ii]+ng[ii]);  					// Qx, qx
+            ws_size += 2*sizeof(struct blasfeo_dvec);
+			ws_size += sizeof(double)*(nx[ii+1]);  							// Pb
+            ws_size += sizeof(struct blasfeo_dvec);
+		}
+        // TODO: CHANGE ALL INSTANCES!
+        ws_size += blasfeo_memsize_dmat(nx[M]+1, nx[M]);  // sLxM
+        ws_size += sizeof(double)*(nx[M]+1)*(nx[M]); // sPpM
+
+		ws_size += d_back_ric_rec_work_space_size_bytes_libstr(N, nx, nu, nb, ng);
+	}
+
+    ws_size += 2*64;
+
+    return ws_size;
+}
+
+void ocp_qp_hpmpc_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
+{
+//    ocp_qp_hpmpc_opts *args = (ocp_qp_hpmpc_opts *)opts_;
+
+	return;
+}
+
+
+
+/************************************************
+* memory
+************************************************/
 
 int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -126,6 +190,9 @@ int ocp_qp_hpmpc_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *o
 
     return ws_size;
 }
+
+    mem->hpmpc_work = (void *) c_ptr;
+
 
 void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
@@ -242,10 +309,22 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
     return raw_memory;
 }
 
+
+
+/************************************************
+* workspace
+************************************************/
+
 int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     return 0;
 }
+
+
+
+/************************************************
+* functions
+************************************************/
 
 int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_)
 {
@@ -426,6 +505,7 @@ void ocp_qp_hpmpc_config_initialize_default(void *config_)
 	config->opts_calculate_size = ( int (*) (void *, void *)) &ocp_qp_hpmpc_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_assign;
 	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_initialize_default;
+	config->opts_update = ( void (*) (void *, void *, void *)) &ocp_qp_hpmpc_opts_update;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &ocp_qp_hpmpc_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpmpc_workspace_calculate_size;

@@ -32,6 +32,10 @@
 
 
 
+/************************************************
+* opts
+************************************************/
+
 int ocp_qp_hpipm_opts_calculate_size(void *config_, ocp_qp_dims *dims)
 {
     int size = 0;
@@ -84,9 +88,24 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, ocp_qp_dims *dims, void
     opts->hpipm_opts->stat_max = 50;
     opts->hpipm_opts->alpha_min = 1e-8;
     opts->hpipm_opts->mu0 = 1;
+
+	return;
 }
 
 
+
+void ocp_qp_hpipm_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
+{
+//    ocp_qp_hpipm_opts *opts = (ocp_qp_hpipm_opts *)opts_;
+
+	return;
+}
+
+
+
+/************************************************
+* memory
+************************************************/
 
 int ocp_qp_hpipm_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
@@ -135,12 +154,20 @@ void *ocp_qp_hpipm_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 
 
 
+/************************************************
+* workspace
+************************************************/
+
 int ocp_qp_hpipm_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
 {
     return 0;
 }
 
 
+
+/************************************************
+* functions
+************************************************/
 
 int ocp_qp_hpipm(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_)
 {
@@ -179,6 +206,7 @@ void ocp_qp_hpipm_config_initialize_default(void *config_)
 	config->opts_calculate_size = ( int (*) (void *, void *)) &ocp_qp_hpipm_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &ocp_qp_hpipm_opts_assign;
 	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &ocp_qp_hpipm_opts_initialize_default;
+	config->opts_update = ( void (*) (void *, void *, void *)) &ocp_qp_hpipm_opts_update;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpipm_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &ocp_qp_hpipm_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &ocp_qp_hpipm_workspace_calculate_size;

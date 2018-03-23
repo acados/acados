@@ -37,6 +37,7 @@ extern "C" {
 typedef struct
 {
 	external_function_generic *nls_jac; // evaluation and jacobian of ls residuals
+	external_function_generic *nls_hess; // hessian*seeds of ls residuals
 	struct blasfeo_dmat W;
     struct blasfeo_dvec y_ref;
 	int nls_mask; // nonlinear least squares mask TODO lin and nonlin models instead
@@ -64,6 +65,8 @@ int ocp_nlp_cost_nls_opts_calculate_size(void *config, ocp_nlp_cost_dims *dims);
 void *ocp_nlp_cost_nls_opts_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
 //
 void ocp_nlp_cost_nls_opts_initialize_default(void *config, ocp_nlp_cost_dims *dims, void *opts);
+//
+void ocp_nlp_cost_nls_opts_update(void *config, ocp_nlp_cost_dims *dims, void *opts);
 
 
 
@@ -98,8 +101,10 @@ typedef struct
 {
 	struct blasfeo_dmat tmp_nv_ny;
 	struct blasfeo_dvec tmp_ny;
-	double *nls_jac_in;
-	double *nls_jac_out;
+	double *nls_jac_in; // [x; u]
+	double *nls_jac_out; // [res; jac]
+	double *nls_hess_in; // [x; u; W*res]
+	double *nls_hess_out; // [hess_tensor*(W*res)]
 } ocp_nlp_cost_nls_workspace;
 
 //

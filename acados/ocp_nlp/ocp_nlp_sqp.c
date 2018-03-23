@@ -211,6 +211,46 @@ void ocp_nlp_sqp_opts_initialize_default(void *config_, ocp_nlp_dims *dims, void
 
 
 
+void ocp_nlp_sqp_opts_update(void *config_, ocp_nlp_dims *dims, void *opts_)
+{
+	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+	ocp_nlp_sqp_opts *opts = (ocp_nlp_sqp_opts *) opts_;
+
+	ocp_qp_xcond_solver_config *qp_solver = config->qp_solver;
+	ocp_nlp_dynamics_config **dynamics = config->dynamics;
+	ocp_nlp_cost_config **cost = config->cost;
+	ocp_nlp_constraints_config **constraints = config->constraints;
+
+	int ii;
+
+	int N = dims->N;
+
+	qp_solver->opts_update(qp_solver, dims->qp_solver, opts->qp_solver_opts);
+
+	// dynamics
+	for (ii=0; ii<N; ii++)
+	{
+		dynamics[ii]->opts_update(dynamics[ii], dims->dynamics[ii], opts->dynamics[ii]);
+	}
+
+	// cost
+	for (ii=0; ii<=N; ii++)
+	{
+		cost[ii]->opts_update(cost[ii], dims->cost[ii], opts->cost[ii]);
+	}
+
+	// constraints
+	for (ii=0; ii<=N; ii++)
+	{
+		constraints[ii]->opts_update(constraints[ii], dims->constraints[ii], opts->constraints[ii]);
+	}
+
+	return;
+
+}
+
+
+
 /************************************************
 * memory
 ************************************************/
@@ -773,12 +813,10 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 		config->constraints[ii]->memory_set_idxb_ptr(work->qp_in->idxb[ii], mem->constraints[ii]);
 	}
 
-
-	// copy sampling times into dynamics
+	// copy sampling times into dynamics model
     for (int ii = 0; ii < N; ii++)
     {
-		ocp_nlp_dynamics_model *dynamics = nlp_in->dynamics[ii];
-        dynamics->T = nlp_in->Ts[ii];
+		config->dynamics[ii]->model_set_T(nlp_in->Ts[ii], nlp_in->dynamics[ii]);
     }
 
 
@@ -855,18 +893,18 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 //exit(1);
 
 		// ??? @rien
-        for (int_t i = 0; i < N; i++)
-        {
-			ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
-            sim_rk_opts *rk_opts = dynamics_opts->sim_solver;
-            if (rk_opts->scheme == NULL)
-                continue;
-            rk_opts->sens_adj = (rk_opts->scheme->type != exact);
-            if (nlp_in->freezeSens) {
-                // freeze inexact sensitivities after first SQP iteration !!
-                rk_opts->scheme->freeze = true;
-            }
-        }
+//        for (int_t i = 0; i < N; i++)
+//        {
+//			ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
+//            sim_rk_opts *rk_opts = dynamics_opts->sim_solver;
+//            if (rk_opts->scheme == NULL)
+//                continue;
+//            rk_opts->sens_adj = (rk_opts->scheme->type != exact);
+//            if (nlp_in->freezeSens) {
+//                // freeze inexact sensitivities after first SQP iteration !!
+//                rk_opts->scheme->freeze = true;
+//            }
+//        }
 
     }
 
@@ -883,5 +921,26 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 	// maximum number of iterations reached
     return 1;
+
+}
+
+
+
+void ocp_nlp_sqp_config_initialize_default(void *config_)
+{
+
+	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
+
+	config->opts_calculate_size = &ocp_nlp_sqp_opts_calculate_size;
+	config->opts_assign = &ocp_nlp_sqp_opts_assign;
+	config->opts_initialize_default = &ocp_nlp_sqp_opts_initialize_default;
+	config->opts_update = &ocp_nlp_sqp_opts_update;
+	config->memory_calculate_size = &ocp_nlp_sqp_memory_calculate_size;
+	config->memory_assign = &ocp_nlp_sqp_memory_assign;
+	config->workspace_calculate_size = &ocp_nlp_sqp_workspace_calculate_size;
+	config->evaluate = &ocp_nlp_sqp;
+	config->config_initialize_default = &ocp_nlp_sqp_config_initialize_default;
+
+	return;
 
 }

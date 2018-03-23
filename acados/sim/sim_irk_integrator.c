@@ -143,7 +143,7 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
-void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -418,6 +418,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         jac_out[kk] = 0.0;
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
+	
+//	double inf_norm_K;
+//	double tol_inf_norm_K = 1e-6;
 
     // start the loop
     acados_tic(&timer);
@@ -426,6 +429,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
         //  obtain Kn
 		// TODO add exit condition on residuals ???
+//		inf_norm_K = 1.0;
+//        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         for(iter=0; iter<newton_iter; iter++)
 		{
 
@@ -456,7 +461,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
+				acados_tic(&timer_ad);
                 model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+				timing_ad += acados_toc(&timer_ad);
 
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
                 blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
@@ -510,6 +517,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dtrsv_unn(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
             // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
             blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
+
+			// inf norm of K
+//			blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
         }// end iter
 
         if (opts->sens_adj)
@@ -717,7 +727,7 @@ void sim_irk_config_initialize_default(void *config_)
 	config->opts_calculate_size = &sim_irk_opts_calculate_size;
 	config->opts_assign = &sim_irk_opts_assign;
 	config->opts_initialize_default = &sim_irk_opts_initialize_default;
-	config->opts_update_tableau = &sim_irk_opts_update_tableau;
+	config->opts_update = &sim_irk_opts_update;
 	config->memory_calculate_size = &sim_irk_memory_calculate_size;
 	config->memory_assign = &sim_irk_memory_assign;
 	config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
