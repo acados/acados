@@ -98,8 +98,6 @@ typedef struct
     double* b_dt;
     double* c;
     double dt;
-    
-    int* ipivM2;
 } gnsf2_model;
 
 typedef struct {
@@ -142,6 +140,7 @@ typedef struct {
     int *ipivEE2; // index of pivot vector
     int *ipivQQ1; // index of pivot vector
     int *ipivPP1; // index of pivot vector
+    int* ipivM2;
 } gnsf2_pre_workspace;
 
 typedef struct { //workspace

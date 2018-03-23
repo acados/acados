@@ -123,7 +123,7 @@ int main() {
     opts->b_vec[3] =     1.739354743418989e-01;
     
 
-    // opts->interval = 0.1;
+    opts->ns = gnsf2_dim->num_stages;
 
     // set up sim_in
     int in_size = sim_in_calculate_size(config, dims);
@@ -155,7 +155,6 @@ int main() {
     model->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
     model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
     gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
-
     gnsf2_precompute(gnsf2_dim, model, opts, in);
 
     // gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
@@ -170,13 +169,13 @@ int main() {
     void *mem_mem = malloc(mem_size);
     void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
-    int NREP = 1;
+    int NREP = 10000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 
     for (int i = 0; i < NREP; i++) {
-        // config->evaluate(config_mem, in, out, opts_mem, mem, work_);
-        gnsf2_simulate( config_mem, in, out, opts_mem, mem, work_);
+        config->evaluate(config_mem, in, out, opts_mem, mem, work_);
+        // gnsf2_simulate( config_mem, in, out, opts_mem, mem, work_);
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
     }
