@@ -67,37 +67,3 @@ ocp_nlp_dynamics_config *ocp_nlp_dynamics_config_assign(void *raw_memory)
 
 }
 
-
-
-/************************************************
-* dims
-************************************************/
-
-int ocp_nlp_dynamics_dims_calculate_size()
-{
-    int size = 0;
-
-	size += sizeof(ocp_nlp_dynamics_dims);
-
-	size += sim_dims_calculate_size();
-
-    return size;
-}
-
-
-
-ocp_nlp_dynamics_dims *ocp_nlp_dynamics_dims_assign(void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_dynamics_dims *dims = (ocp_nlp_dynamics_dims *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_dynamics_dims);
-
-	dims->sim = sim_dims_assign(c_ptr);
-	c_ptr += sim_dims_calculate_size();
-
-    assert((char *) raw_memory + ocp_nlp_dynamics_dims_calculate_size() >= c_ptr);
-
-    return dims;
-}
-

@@ -162,13 +162,17 @@ ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 
 
 
-ocp_nlp_dims *ocp_nlp_dims_create(int N)
+ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 {
-    int bytes = ocp_nlp_dims_calculate_size(N);
+	ocp_nlp_solver_config *config = config_;
+
+	int N = config->N;
+
+    int bytes = ocp_nlp_dims_calculate_size(config);
 
 	void *ptr = calloc(1, bytes);
 
-	ocp_nlp_dims *dims = ocp_nlp_dims_assign(N, ptr);
+	ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, ptr);
 
     return dims;
 }

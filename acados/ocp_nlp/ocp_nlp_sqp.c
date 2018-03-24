@@ -601,7 +601,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 		blasfeo_dveccp(nu[i]+nx[i], dyn_adj, 0, nlp_mem->dyn_adj+i, 0);
 	}
 
-	blasfeo_dvecse(dims->dynamics[N-1]->nu1+dims->dynamics[N-1]->nx1, 0.0, nlp_mem->dyn_adj+N, 0);
+	blasfeo_dvecse(nu[N]+nx[N], 0.0, nlp_mem->dyn_adj+N, 0);
 
 	for (i=0; i<N; i++)
 	{
