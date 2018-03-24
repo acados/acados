@@ -134,6 +134,9 @@ int ocp_nlp_dims_calculate_size(int N)
 
     size += sizeof(ocp_nlp_dims);
 
+	// nlp sizes
+	size += 3*(N+1)*sizeof(int); // nx, nu, ni
+
 	// dynamics_dims
 	size += N*sizeof(ocp_nlp_dynamics_dims *);
 	size += N*ocp_nlp_dynamics_dims_calculate_size();
@@ -168,6 +171,13 @@ ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory)
 	// struct
 	ocp_nlp_dims *dims = (ocp_nlp_dims *) c_ptr;
 	c_ptr += sizeof(ocp_nlp_dims);
+
+	// nx
+	assign_and_advance_int(N+1, &dims->nx, &c_ptr);
+	// nu
+	assign_and_advance_int(N+1, &dims->nu, &c_ptr);
+	// ni
+	assign_and_advance_int(N+1, &dims->ni, &c_ptr);
 
 	// dynamics
 	dims->dynamics = (ocp_nlp_dynamics_dims **) c_ptr;
@@ -220,6 +230,14 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int 
 
 	int N = dims->N;
 
+	// nlp dims
+	for (ii=0; ii<=N; ii++)
+	{
+		dims->nx[ii] = nx[ii];
+		dims->nu[ii] = nu[ii];
+		dims->ni[ii] = nbx[ii]+nbu[ii]+ng[ii]+nh[ii];
+	}
+
 	// TODO dynamics and sim dims initialize ???
 	for (ii=0; ii<N; ii++)
 	{
@@ -239,7 +257,7 @@ void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int 
 		dims->cost[ii]->ny = ny[ii];
 	}
 
-	// TODO cost dims initialize ???
+	// TODO constraints dims initialize ???
 	for (ii=0; ii<=N; ii++)
 	{
 		dims->constraints[ii]->nx = nx[ii];
