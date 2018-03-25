@@ -32,9 +32,50 @@
 // acados
 #include "acados/utils/mem.h"
 
-/* model */
+/************************************************
+* dims
+************************************************/
 
-int ocp_nlp_cost_external_model_calculate_size(void *config, ocp_nlp_cost_dims *dims)
+int ocp_nlp_cost_external_dims_calculate_size(void *config_)
+{
+    int size = sizeof(ocp_nlp_cost_external_dims);
+
+    return size;
+}
+
+
+
+void *ocp_nlp_cost_external_dims_assign(void *config_, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_cost_external_dims *dims = (ocp_nlp_cost_external_dims *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_cost_external_dims);
+
+    assert((char *) raw_memory + ocp_nlp_cost_external_dims_calculate_size(config_) >= c_ptr);
+
+    return dims;
+}
+
+
+
+void ocp_nlp_cost_external_dims_initialize(void *config_, void *dims_, int nx, int nu, int ny)
+{
+	ocp_nlp_cost_external_dims *dims = dims_;
+
+	dims->nx = nx;
+	dims->nu = nu;
+
+	return;
+}
+
+
+
+/************************************************
+* model
+************************************************/
+
+int ocp_nlp_cost_external_model_calculate_size(void *config_, void *dims_)
 {
 	// extract dims
 	// int nx = dims->nx;
@@ -51,7 +92,7 @@ int ocp_nlp_cost_external_model_calculate_size(void *config, ocp_nlp_cost_dims *
 
 
 
-void *ocp_nlp_cost_external_model_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory)
+void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -64,16 +105,18 @@ void *ocp_nlp_cost_external_model_assign(void *config, ocp_nlp_cost_dims *dims, 
     c_ptr += sizeof(ocp_nlp_cost_external_model);
 
 	// assert
-    assert((char *) raw_memory + ocp_nlp_cost_external_model_calculate_size(config, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_cost_external_model_calculate_size(config_, dims_) >= c_ptr);
 
 	return model;
 
 }
 
 
-/* options */
+/************************************************
+* options
+************************************************/
 
-int ocp_nlp_cost_external_opts_calculate_size(void *config_, ocp_nlp_cost_dims *dims)
+int ocp_nlp_cost_external_opts_calculate_size(void *config_, void *dims_)
 {
 	// ocp_nlp_cost_config *config = config_;
 
@@ -86,7 +129,7 @@ int ocp_nlp_cost_external_opts_calculate_size(void *config_, ocp_nlp_cost_dims *
 
 
 
-void *ocp_nlp_cost_external_opts_assign(void *config_, ocp_nlp_cost_dims *dims, void *raw_memory)
+void *ocp_nlp_cost_external_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
 	// ocp_nlp_cost_config *config = config_;
 
@@ -95,14 +138,14 @@ void *ocp_nlp_cost_external_opts_assign(void *config_, ocp_nlp_cost_dims *dims, 
     ocp_nlp_cost_external_opts *opts = (ocp_nlp_cost_external_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_cost_external_opts);
 
-    assert((char*)raw_memory + ocp_nlp_cost_external_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char*)raw_memory + ocp_nlp_cost_external_opts_calculate_size(config_, dims_) >= c_ptr);
 
     return opts;
 }
 
 
 
-void ocp_nlp_cost_external_opts_initialize_default(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+void ocp_nlp_cost_external_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
 	// ocp_nlp_cost_config *config = config_;
 //	ocp_nlp_cost_external_opts *opts = opts_;
@@ -115,7 +158,7 @@ void ocp_nlp_cost_external_opts_initialize_default(void *config_, ocp_nlp_cost_d
 
 
 
-void ocp_nlp_cost_external_opts_update(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+void ocp_nlp_cost_external_opts_update(void *config_, void *dims_, void *opts_)
 {
 	// ocp_nlp_cost_config *config = config_;
 //	ocp_nlp_cost_external_opts *opts = opts_;
@@ -128,11 +171,14 @@ void ocp_nlp_cost_external_opts_update(void *config_, ocp_nlp_cost_dims *dims, v
 
 
 
-/* memory */
+/************************************************
+* memory
+************************************************/
 
-int ocp_nlp_cost_external_memory_calculate_size(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+int ocp_nlp_cost_external_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
 	// ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_external_dims *dims = dims_;
 	// ocp_nlp_cost_external_opts *opts = opts_;
 
 	// extract dims
@@ -153,9 +199,10 @@ int ocp_nlp_cost_external_memory_calculate_size(void *config_, ocp_nlp_cost_dims
 
 
 
-void *ocp_nlp_cost_external_memory_assign(void *config_, ocp_nlp_cost_dims *dims, void *opts_, void *raw_memory)
+void *ocp_nlp_cost_external_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 	// ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_external_dims *dims = dims_;
 	// ocp_nlp_cost_external_opts *opts = opts_;
 
 	char *c_ptr = (char *) raw_memory;
@@ -213,11 +260,14 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 
 
-/* workspace */
+/************************************************
+* workspace
+************************************************/
 
-int ocp_nlp_cost_external_workspace_calculate_size(void *config_, ocp_nlp_cost_dims *dims, void *opts_)
+int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
 	// ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_external_dims *dims = dims_;
 	// ocp_nlp_cost_external_opts *opts = opts_;
 
 	// extract dims
@@ -237,10 +287,11 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, ocp_nlp_cost_d
 
 
 
-static void ocp_nlp_cost_external_cast_workspace(void *config_, ocp_nlp_cost_dims *dims, void *opts_, void *work_)
+static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, void *opts_, void *work_)
 {
 
 	// ocp_nlp_cost_config *config = config_;
+	ocp_nlp_cost_external_dims *dims = dims_;
 	// ocp_nlp_cost_external_opts *opts = opts_;
 	ocp_nlp_cost_external_workspace *work = work_;
 
@@ -263,9 +314,11 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, ocp_nlp_cost_dim
 
 
 
-/* functions */
+/************************************************
+* functions
+************************************************/
 
-void ocp_nlp_cost_external_initialize(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_external_initialize(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
 
 //    ocp_nlp_cost_external_model *model = model_;
@@ -280,9 +333,10 @@ void ocp_nlp_cost_external_initialize(void *config_, ocp_nlp_cost_dims *dims, vo
 
 
 
-void ocp_nlp_cost_external_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_)
+void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
 {
 
+	ocp_nlp_cost_external_dims *dims = dims_;
     ocp_nlp_cost_external_model *model = model_;
     // ocp_nlp_cost_external_opts *opts = opts_;
     ocp_nlp_cost_external_memory *memory= memory_;
@@ -322,6 +376,9 @@ void ocp_nlp_cost_external_config_initialize_default(void *config_)
 {
 	ocp_nlp_cost_config *config = config_;
 
+	config->dims_calculate_size = &ocp_nlp_cost_external_dims_calculate_size;
+	config->dims_assign = &ocp_nlp_cost_external_dims_assign;
+	config->dims_initialize = &ocp_nlp_cost_external_dims_initialize;
 	config->model_calculate_size = &ocp_nlp_cost_external_model_calculate_size;
 	config->model_assign = &ocp_nlp_cost_external_model_assign;
 	config->opts_calculate_size = &ocp_nlp_cost_external_opts_calculate_size;

@@ -149,8 +149,9 @@ int ocp_nlp_dims_calculate_size(void *config_)
 		size += N*config->dynamics[ii]->dims_calculate_size(config->dynamics[ii]);
 
 	// cost_dims
-	size += (N+1)*sizeof(ocp_nlp_cost_dims *);
-	size += (N+1)*ocp_nlp_cost_dims_calculate_size();
+	size += (N+1)*sizeof(void *);
+	for (ii=0; ii<N; ii++)
+		size += N*config->cost[ii]->dims_calculate_size(config->cost[ii]);
 
 	// constraints_dims
 	size += (N+1)*sizeof(ocp_nlp_constraints_dims *);
@@ -201,13 +202,13 @@ ocp_nlp_dims *ocp_nlp_dims_assign(void *config_, void *raw_memory)
 	}
 
 	// cost
-	dims->cost = (ocp_nlp_cost_dims **) c_ptr;
-	c_ptr += (N+1)*sizeof(ocp_nlp_cost_dims *);
+	dims->cost = (void **) c_ptr;
+	c_ptr += (N+1)*sizeof(void *);
 
 	for (ii=0; ii<=N; ii++)
 	{
-		dims->cost[ii] = ocp_nlp_cost_dims_assign(c_ptr);
-		c_ptr += ocp_nlp_cost_dims_calculate_size();
+		dims->cost[ii] = config->cost[ii]->dims_assign(config->cost[ii], c_ptr);
+		c_ptr += config->cost[ii]->dims_calculate_size(config->cost[ii]);
 	}
 
 	// constraints
@@ -257,12 +258,9 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
 		config->dynamics[ii]->dims_initialize(config->dynamics[ii], dims->dynamics[ii], nx[ii], nu[ii], nx[ii+1], nu[ii+1]);
 	}
 
-	// TODO cost dims initialize ???
 	for (ii=0; ii<=N; ii++)
 	{
-		dims->cost[ii]->nx = nx[ii];
-		dims->cost[ii]->nu = nu[ii];
-		dims->cost[ii]->ny = ny[ii];
+		config->cost[ii]->dims_initialize(config->cost[ii], dims->cost[ii], nx[ii], nu[ii], ny[ii]);
 	}
 
 	// TODO constraints dims initialize ???
