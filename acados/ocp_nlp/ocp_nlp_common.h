@@ -42,7 +42,7 @@ typedef struct
 {
 	void **cost;
 	void **dynamics;
-	ocp_nlp_constraints_dims **constraints;
+	void **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
 	int *nx; // number of states
 	int *nu; // number of inputs
