@@ -48,21 +48,21 @@ typedef struct dense_qp_hpipm_memory_
 } dense_qp_hpipm_memory;
 
 //
-int dense_qp_hpipm_opts_calculate_size(void *config, dense_qp_dims *dims);
+int dense_qp_hpipm_opts_calculate_size(void *config, void *dims);
 //
-void *dense_qp_hpipm_opts_assign(void *config, dense_qp_dims *dims, void *raw_memory);
+void *dense_qp_hpipm_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void dense_qp_hpipm_opts_initialize_default(void *config, dense_qp_dims *dims, void *opts_);
+void dense_qp_hpipm_opts_initialize_default(void *config, void *dims, void *opts_);
 //
-void dense_qp_hpipm_opts_update(void *config, dense_qp_dims *dims, void *opts_);
+void dense_qp_hpipm_opts_update(void *config, void *dims, void *opts_);
 //
-int dense_qp_hpipm_calculate_memory_size(dense_qp_dims *dims, void *opts_);
+int dense_qp_hpipm_calculate_memory_size(void *dims, void *opts_);
 //
-void *dense_qp_hpipm_assign_memory(dense_qp_dims *dims, void *opts_, void *raw_memory);
+void *dense_qp_hpipm_assign_memory(void *dims, void *opts_, void *raw_memory);
 //
-int dense_qp_hpipm_calculate_workspace_size(dense_qp_dims *dims, void *opts_);
+int dense_qp_hpipm_calculate_workspace_size(void *dims, void *opts_);
 //
-int dense_qp_hpipm(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *mem_, void *work_);
+int dense_qp_hpipm(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void dense_qp_hpipm_config_initialize_default(void *config_);
 
