@@ -34,10 +34,6 @@
 
 // TODO(dimitris): use only the strictly necessary includes here
 
-#include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -1066,6 +1062,7 @@ int main()
 			plan->sim_solver_plan[i].sim_solver = ERK;
 	}
 
+	// TODO(dimitris): fix minor memory leak here
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
     /************************************************
@@ -1154,7 +1151,6 @@ int main()
 
 			case NONLINEAR_LS:
 				select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
-				// TODO(dimitris): free those
 				external_function_casadi_create(&ls_cost_jac_casadi[i]);
 				break;
 
@@ -1448,7 +1444,6 @@ int main()
     for (int rep = 0; rep < NREP; rep++)
     {
 		// warm start output initial guess of solution
-		// TODO(dimitris): why nans when we don't warmstart? (even get status 0 with nans multipliers)
 		for (int i=0; i<=NN; i++)
 		{
 			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
@@ -1514,6 +1509,18 @@ int main()
 
 	free(xref);
 	free(diag_cost_x);
+
+		for (int i = 0; i <= NN; i++)
+	{
+		switch (plan->nlp_cost[i])
+		{
+			case NONLINEAR_LS:
+				external_function_casadi_free(&ls_cost_jac_casadi[i]);
+				break;
+			default:
+				break;
+		}
+	}
 
 	/************************************************
 	* return
