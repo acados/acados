@@ -79,7 +79,7 @@ void *ocp_qp_hpipm_opts_assign(void *config_, void *dims_, void *raw_memory)
 
 void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
-	ocp_qp_dims *dims = dims_;
+	// ocp_qp_dims *dims = dims_;
     ocp_qp_hpipm_opts *opts = opts_;
 
     d_set_default_ocp_qp_ipm_arg(opts->hpipm_opts);

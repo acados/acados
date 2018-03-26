@@ -166,7 +166,7 @@ ocp_nlp_dims *ocp_nlp_dims_create(void *config_)
 {
 	ocp_nlp_solver_config *config = config_;
 
-	int N = config->N;
+	// int N = config->N;
 
     int bytes = ocp_nlp_dims_calculate_size(config);
 

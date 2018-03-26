@@ -96,7 +96,7 @@ int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, void *dims_)
 void *ocp_nlp_dynamics_disc_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
 //	ocp_nlp_dynamics_config *config = config_;
-	ocp_nlp_dynamics_disc_dims *config = dims_;
+	// ocp_nlp_dynamics_disc_dims *dims = dims_;
 
     char *c_ptr = (char *) raw_memory;
 
@@ -373,9 +373,9 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 {
 	ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
 
-	ocp_nlp_dynamics_config *config = config_;
+	// ocp_nlp_dynamics_config *config = config_;
 	ocp_nlp_dynamics_disc_dims *dims = dims_;
-	ocp_nlp_dynamics_disc_opts *opts = opts_;
+	// ocp_nlp_dynamics_disc_opts *opts = opts_;
 	ocp_nlp_dynamics_disc_workspace *work = work_;
 	ocp_nlp_dynamics_disc_memory *mem = mem_;
 	ocp_nlp_dynamics_disc_model *model = model_;

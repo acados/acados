@@ -72,8 +72,8 @@ int main() {
 	};
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
 
-	ocp_nlp_dims *dims = ocp_nlp_dims_create(N);
-	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
+	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {

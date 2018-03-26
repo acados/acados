@@ -1234,6 +1234,7 @@ int main() {
 	external_function_casadi impl_jac_u_casadi[NN]; // XXX varible size array
 	// casadi erk
 	external_function_casadi erk4_casadi[NN]; // XXX varible size array
+	void *tmp = (void *) erk4_casadi; tmp++;  // NOTE(dimitris): dummy command for Werror in cmake
 
 	select_dynamics_casadi(NN, NMF, forw_vde_casadi, jac_ode_casadi, impl_ode_casadi, impl_jac_x_casadi, impl_jac_xdot_casadi, impl_jac_u_casadi);
 
