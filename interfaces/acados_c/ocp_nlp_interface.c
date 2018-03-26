@@ -96,7 +96,7 @@ ocp_nlp_solver_plan *ocp_nlp_plan_create(int N)
 }
 
 
-
+// TODO(dimitris): this leaks memory! Either provide free config or calculate size should be nested
 ocp_nlp_solver_config *ocp_nlp_config_create(ocp_nlp_solver_plan plan, int N)
 {
     int bytes = ocp_nlp_solver_config_calculate_size(N);

@@ -34,10 +34,6 @@
 
 // TODO(dimitris): use only the strictly necessary includes here
 
-#include "acados/sim/sim_common.h"
-#include "acados/sim/sim_erk_integrator.h"
-#include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -893,16 +889,20 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 
 // TODO(dimitris): compile on windows
 
-int main() {
+int main()
+{
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
 	const int NMF = 3;  // number of free masses
 
     print_problem_info(NMF);
 
-    // dimensions
     int NX = 6 * NMF;
     int NU = 3;
+
+    /************************************************
+    * problem dimensions
+    ************************************************/
 
     int nx[NN + 1] = {0};
     int nu[NN + 1] = {0};
@@ -960,6 +960,75 @@ int main() {
 	ny[NN] = nx[NN]+nu[NN];
 
     /************************************************
+    * problem data
+    ************************************************/
+
+    double wall_pos = -0.01;
+    double UMAX = 10;
+
+	double x_pos_inf = +1e4;
+	double x_neg_inf = -1e4;
+
+    double *xref = malloc(NX*sizeof(double));
+    read_final_state(NX, NMF, xref);
+
+    double uref[3] = {0.0, 0.0, 0.0};
+
+    double *diag_cost_x = malloc(NX*sizeof(double));
+
+    for (int i = 0; i < NX; i++)
+        diag_cost_x[i] = 1e-2;
+
+    double diag_cost_u[3] = {1.0, 1.0, 1.0};
+
+
+	// idxb0
+    int idxb0[nb[0]];
+    for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
+
+	// idxb1
+	int idxb1[nb[1]];
+    for (int i = 0; i < NU; i++) idxb1[i] = i;
+
+    for (int i = 0; i < NMF; i++) idxb1[NU+i] = NU + 6*i + 1;
+
+	// idxbN
+	int idxbN[nb[NN]];
+    for (int i = 0; i < nb[NN]; i++)
+        idxbN[i] = i;
+
+	// lb0, ub0
+    double lb0[NX+NU], ub0[NX+NU];
+    for (int i = 0; i < NU; i++)
+	{
+        lb0[i] = -UMAX;
+        ub0[i] = +UMAX;
+    }
+    read_initial_state(NX, NMF, lb0+NU);
+    read_initial_state(NX, NMF, ub0+NU);
+
+	// lb1, ub1
+    double lb1[NMF+NU], ub1[NMF+NU];
+    for (int j = 0; j < NU; j++)
+	{
+        lb1[j] = -UMAX;  // umin
+        ub1[j] = +UMAX;  // umax
+    }
+    for (int j = 0; j < NMF; j++)
+	{
+        lb1[NU+j] = wall_pos;  // wall position
+        ub1[NU+j] = x_pos_inf;
+    }
+
+	// lbN, ubN
+    double lbN[NX], ubN[NX];
+    for (int i = 0; i < NX; i++)
+	{
+        lbN[i] = x_neg_inf;
+        ubN[i] = x_pos_inf;
+    }
+
+    /************************************************
     * plan + config
     ************************************************/
 
@@ -993,6 +1062,7 @@ int main() {
 			plan->sim_solver_plan[i].sim_solver = ERK;
 	}
 
+	// TODO(dimitris): fix minor memory leak here
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
 
     /************************************************
@@ -1041,6 +1111,7 @@ int main() {
 	// explicit
 	external_function_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_casadi));
 	external_function_casadi *jac_ode_casadi = malloc(NN*sizeof(external_function_casadi));
+
 	// implicit
 	external_function_casadi *impl_ode_casadi = malloc(NN*sizeof(external_function_casadi));
 	external_function_casadi *impl_jac_x_casadi = malloc(NN*sizeof(external_function_casadi));
@@ -1080,7 +1151,6 @@ int main() {
 
 			case NONLINEAR_LS:
 				select_ls_stage_cost_jac_casadi(i, NN, NMF, &ls_cost_jac_casadi[i]);
-				// TODO(dimitris): free those
 				external_function_casadi_create(&ls_cost_jac_casadi[i]);
 				break;
 
@@ -1151,24 +1221,9 @@ int main() {
 	for (int ii=0; ii<NN; ii++)
 		nlp_in->Ts[ii] = TF/NN;
 
-    // Problem data
-    double wall_pos = -0.01;
-    double UMAX = 10;
-
-	double x_pos_inf = +1e4;
-	double x_neg_inf = -1e4;
-
-    double xref[NX];
-    read_final_state(NX, NMF, xref);
-    double uref[3] = {0.0, 0.0, 0.0};
-    double diag_cost_x[NX];
-    for (int i = 0; i < NX; i++)
-        diag_cost_x[i] = 1e-2;
-    double diag_cost_u[3] = {1.0, 1.0, 1.0};
-
-
 	// output definition: y = [x; u]
 
+	/* cost */
 	ocp_nlp_cost_ls_model *stage_cost_ls;
 	ocp_nlp_cost_nls_model *stage_cost_nls;
 	ocp_nlp_cost_external_model *stage_cost_external;
@@ -1249,25 +1304,26 @@ int main() {
 				}
 				else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 				{
-					ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
-					lifted_irk_model *model = dynamics->sim_model;
-					model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
-					model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
+					if (set_fun_status != 0) exit(1);
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
+					if (set_fun_status != 0) exit(1);
 				}
 				else if (plan->sim_solver_plan[i].sim_solver == IRK)
 				{
-					ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
-					irk_model *model = dynamics->sim_model;
-					model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
-					model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
-					model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
-					model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "implicit_ode", &impl_ode_casadi[i]);
+					if (set_fun_status != 0) exit(1);
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "implicit_jacobian_x", &impl_jac_x_casadi[i]);
+					if (set_fun_status != 0) exit(1);
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "implicit_jacobian_xdot", &impl_jac_xdot_casadi[i]);
+					if (set_fun_status != 0) exit(1);
+					set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "implicit_jacobian_u", &impl_jac_u_casadi[i]);
+					if (set_fun_status != 0) exit(1);
 				}
 				break;
 
 			case DISCRETE_MODEL:
-				
-				// TODO
+				// TODO(dimitris): add some discrete model instances to test
 				break;
 		}
 	}
@@ -1276,57 +1332,8 @@ int main() {
 	// if (scheme > 2)
     //     nlp_in->freezeSens = true;
 
-    /* box constraints */
-
+    /* constraints */
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
-
-	// idxb0
-    int idxb0[nb[0]];
-    for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
-
-	// idxb1
-	int idxb1[nb[1]];
-    for (int i = 0; i < NU; i++) idxb1[i] = i;
-
-    for (int i = 0; i < NMF; i++) idxb1[NU+i] = NU + 6*i + 1;
-
-	// idxbN
-	int idxbN[nb[NN]];
-    for (int i = 0; i < nb[NN]; i++)
-        idxbN[i] = i;
-
-	// lb0, ub0
-    double lb0[NX+NU], ub0[NX+NU];
-    for (int i = 0; i < NU; i++)
-	{
-        lb0[i] = -UMAX;
-        ub0[i] = +UMAX;
-    }
-    read_initial_state(NX, NMF, lb0+NU);
-    read_initial_state(NX, NMF, ub0+NU);
-
-	// lb1, ub1
-    double lb1[NMF+NU], ub1[NMF+NU];
-    for (int j = 0; j < NU; j++)
-	{
-        lb1[j] = -UMAX;  // umin
-        ub1[j] = +UMAX;  // umax
-    }
-    for (int j = 0; j < NMF; j++)
-	{
-        lb1[NU+j] = wall_pos;  // wall position
-        ub1[NU+j] = x_pos_inf;
-    }
-
-	// lbN, ubN
-    double lbN[NX], ubN[NX];
-    for (int i = 0; i < NX; i++)
-	{
-        lbN[i] = x_neg_inf;
-        ubN[i] = x_pos_inf;
-    }
-
-	// stage-wise
 
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
@@ -1349,7 +1356,7 @@ int main() {
 
 	d_free(Cu0);
 	d_free(Cx0);
-#else // general+nonlinear constraints
+#else // general + nonlinear constraints
 	blasfeo_dgese(nu[0]+nx[0], ng[0], 0.0, &constraints[0]->DCt, 0, 0);
 	for (int ii=0; ii<ng[0]; ii++)
 		BLASFEO_DMATEL(&constraints[0]->DCt, ii, ii) = 1.0;
@@ -1437,7 +1444,6 @@ int main() {
     for (int rep = 0; rep < NREP; rep++)
     {
 		// warm start output initial guess of solution
-		// TODO(dimitris): why nans when we don't warmstart? (even get status 0 with nans multipliers)
 		for (int i=0; i<=NN; i++)
 		{
 			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
@@ -1500,6 +1506,21 @@ int main() {
 	free(dims);
 	free(config);
 	free(plan);
+
+	free(xref);
+	free(diag_cost_x);
+
+		for (int i = 0; i <= NN; i++)
+	{
+		switch (plan->nlp_cost[i])
+		{
+			case NONLINEAR_LS:
+				external_function_casadi_free(&ls_cost_jac_casadi[i]);
+				break;
+			default:
+				break;
+		}
+	}
 
 	/************************************************
 	* return

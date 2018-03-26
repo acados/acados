@@ -58,10 +58,10 @@ typedef struct
     struct blasfeo_dvec *K; // internal variables (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
     struct blasfeo_dvec *xn; // x at each integration step
-    
+
     struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
     struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
-    
+
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
     double *Jt; // temporary Jacobian of ode (nx, nx)
@@ -81,6 +81,8 @@ typedef struct
 int sim_irk_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 //
 int sim_irk_opts_calculate_size(void *config, sim_dims *dims);
 //
