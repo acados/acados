@@ -24,7 +24,8 @@
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/sim/sim_erk_integrator.h"
 
@@ -59,18 +60,15 @@ int main() {
 	nq.at(N) = 2;
 
 	// Make plan
+	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
+	plan->nlp_solver = SQP_GN;
+	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+	for (int i = 0; i <= N; i++)
+		plan->nlp_cost[i] = LINEAR_LS;
+	for (int i = 0; i < N; i++)
+		plan->sim_solver_plan[i].sim_solver = ERK;
 
-	ocp_qp_solver_plan qp_plan = {PARTIAL_CONDENSING_HPIPM};
-	std::vector<sim_solver_plan> sim_plan(N, {ERK});
-	std::vector<ocp_nlp_cost_t> cost_plan(N+1, LINEAR_LS);
-
-	ocp_nlp_solver_plan plan = {
-		qp_plan,
-		sim_plan.data(),
-		SQP_GN,
-		cost_plan.data()
-	};
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
@@ -131,7 +129,7 @@ int main() {
 
 	// NLP dynamics
 	for (int i = 0; i < N; ++i) {
-		ocp_nlp_dynamics_model *dynamics = (ocp_nlp_dynamics_model *) nlp_in->dynamics[i];
+		ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
 		erk_model *model = (erk_model *) dynamics->sim_model;
 		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 	}
