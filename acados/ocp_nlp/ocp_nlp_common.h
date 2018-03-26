@@ -35,25 +35,27 @@ extern "C" {
 
 
 /************************************************
-* structures
-************************************************/
-
-/************************************************
 * dims
 ************************************************/
 
 typedef struct
 {
-	// NOTE(giaf) add some (arrays of) int to work outside (and independent of) sub-modules? e.g. nv, ne, nc (variables, equality-constraints, inequality-constraints
-	ocp_nlp_cost_dims **cost;
-	ocp_nlp_dynamics_dims **dynamics;
-	ocp_nlp_constraints_dims **constraints;
+	void **cost;
+	void **dynamics;
+	void **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
-//	int *nv; // number of variables
-//	int *ne; // number of equality constraints
-//	int *ni; // number of inequality constraints
+	int *nx; // number of states
+	int *nu; // number of inputs
+	int *ni; // number of inequality constraints
     int N;
 } ocp_nlp_dims;
+
+//
+int ocp_nlp_dims_calculate_size(void *config);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *nq, int *ns, ocp_nlp_dims *dims);
 
 
 
@@ -167,17 +169,6 @@ typedef struct
 int ocp_nlp_solver_config_calculate_size(int N);
 //
 ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
-
-/************************************************
-* dims
-************************************************/
-
-//
-int ocp_nlp_dims_calculate_size(int N);
-//
-ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
-//
-void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *nq, int *ns, ocp_nlp_dims *dims);
 
 /************************************************
 * in

@@ -999,8 +999,8 @@ int main() {
     * ocp_nlp_dims
     ************************************************/
 
-	ocp_nlp_dims *dims = ocp_nlp_dims_create(NN);
-	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
+	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
 
     /************************************************
     * dynamics

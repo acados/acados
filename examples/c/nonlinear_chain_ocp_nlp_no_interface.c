@@ -1215,10 +1215,10 @@ int main() {
     * ocp_nlp_dims
     ************************************************/
 
-	int dims_size = ocp_nlp_dims_calculate_size(NN);
+	int dims_size = ocp_nlp_dims_calculate_size(config);
 	void *dims_mem = malloc(dims_size);
-	ocp_nlp_dims *dims = ocp_nlp_dims_assign(NN, dims_mem);
-	ocp_nlp_dims_initialize(nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
+	ocp_nlp_dims *dims = ocp_nlp_dims_assign(config, dims_mem);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
 
     /************************************************
     * dynamics
