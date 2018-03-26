@@ -108,6 +108,14 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, EXPLICIT_VDE_FORWARD, fun_ptr);
     else if (!strcmp(fun_type, "adjoint_vde"))
         status = config->model_set_function(model, EXPLICIT_VDE_ADJOINT, fun_ptr);
+    else if (!strcmp(fun_type, "implicit_ode"))
+        status = config->model_set_function(model, IMPLICIT_ODE, fun_ptr);
+    else if (!strcmp(fun_type, "implicit_jacobian_x"))
+        status = config->model_set_function(model, IMPLICIT_ODE_JACOBIAN_X, fun_ptr);
+    else if (!strcmp(fun_type, "implicit_jacobian_xdot"))
+        status = config->model_set_function(model, IMPLICIT_ODE_JACOBIAN_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "implicit_jacobian_u"))
+        status = config->model_set_function(model, IMPLICIT_ODE_JACOBIAN_U, fun_ptr);
     else
         return ACADOS_FAILURE;
 
