@@ -37,9 +37,6 @@
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
-// wt model
-#include "examples/c/wt_model_nx3/wt_model.h"
-
 // blasfeo
 #include <blasfeo/include/blasfeo_target.h>
 #include <blasfeo/include/blasfeo_common.h>
@@ -48,8 +45,11 @@
 #include <blasfeo/include/blasfeo_v_aux_ext_dep.h>
 #include <blasfeo/include/blasfeo_d_blas.h>
 
+// wt model
+#include "examples/c/wt_model_nx6_expl/wt_model.h"
+
 // x0 and u for simulation
-#include "examples/c/wt_model_nx3/u_x0.c"
+#include "examples/c/wt_model_nx6_expl/u_x0.c"
 
 
 
@@ -63,15 +63,15 @@ int main()
     int ii;
     int jj;
 
-    int nx = 3;
-    int nu = 4;
+    int nx = 6;
+    int nu = 3;
     int NF = nx + nu; // columns of forward seed
 
-    double T = 0.05; // simulation time
+    double Ts = 0.2; // simulation time
 
 	double x_sim[nx*(nsim+1)];
 	for (ii=0; ii<nx; ii++)
-		x_sim[ii] = x0[ii];
+		x_sim[ii] = x_ref[ii];
 
 /************************************************
 * external functions (explicit model)
@@ -79,26 +79,27 @@ int main()
 
 	// explicit ODE
 
-	external_function_casadi expl_ode;
-	expl_ode.casadi_fun = &ode_energy_balanced_model;
-	expl_ode.casadi_work = &ode_energy_balanced_model_work;
-	expl_ode.casadi_sparsity_in = &ode_energy_balanced_model_sparsity_in;
-	expl_ode.casadi_sparsity_out = &ode_energy_balanced_model_sparsity_out;
-	expl_ode.casadi_n_in = &ode_energy_balanced_model_n_in;
-	expl_ode.casadi_n_out = &ode_energy_balanced_model_n_out;
-	external_function_casadi_create(&expl_ode);
+	external_function_casadi expl_ode_fun;
+	expl_ode_fun.casadi_fun = &expl_ode;
+	expl_ode_fun.casadi_work = &expl_ode_work;
+	expl_ode_fun.casadi_sparsity_in = &expl_ode_sparsity_in;
+	expl_ode_fun.casadi_sparsity_out = &expl_ode_sparsity_out;
+	expl_ode_fun.casadi_n_in = &expl_ode_n_in;
+	expl_ode_fun.casadi_n_out = &expl_ode_n_out;
+	external_function_casadi_create(&expl_ode_fun);
 
 	// forward explicit VDE
 
-	external_function_casadi expl_forw_vde;
-	expl_forw_vde.casadi_fun = &vde_energy_balanced_model;
-	expl_forw_vde.casadi_work = &vde_energy_balanced_model_work;
-	expl_forw_vde.casadi_sparsity_in = &vde_energy_balanced_model_sparsity_in;
-	expl_forw_vde.casadi_sparsity_out = &vde_energy_balanced_model_sparsity_out;
-	expl_forw_vde.casadi_n_in = &vde_energy_balanced_model_n_in;
-	expl_forw_vde.casadi_n_out = &vde_energy_balanced_model_n_out;
-	external_function_casadi_create(&expl_forw_vde);
+	external_function_casadi expl_forw_vde_fun;
+	expl_forw_vde_fun.casadi_fun = &expl_forw_vde;
+	expl_forw_vde_fun.casadi_work = &expl_forw_vde_work;
+	expl_forw_vde_fun.casadi_sparsity_in = &expl_forw_vde_sparsity_in;
+	expl_forw_vde_fun.casadi_sparsity_out = &expl_forw_vde_sparsity_out;
+	expl_forw_vde_fun.casadi_n_in = &expl_forw_vde_n_in;
+	expl_forw_vde_fun.casadi_n_out = &expl_forw_vde_n_out;
+	external_function_casadi_create(&expl_forw_vde_fun);
 
+#if 0
 	// adjoint explicit VDE
 
 	external_function_casadi expl_adj_vde;
@@ -131,11 +132,13 @@ int main()
 	expl_hess_ode.casadi_n_in = &vde_hess_energy_balanced_model_n_in;
 	expl_hess_ode.casadi_n_out = &vde_hess_energy_balanced_model_n_out;
 	external_function_casadi_create(&expl_hess_ode);
+#endif
 
 /************************************************
 * external functions (implicit model)
 ************************************************/
 
+#if 0
 	// implicit ODE
 
 	external_function_casadi impl_ode;
@@ -179,9 +182,10 @@ int main()
 	impl_jac_u_ode.casadi_n_in = &impl_jacFun_u_energy_balanced_model_n_in;
 	impl_jac_u_ode.casadi_n_out = &impl_jacFun_u_energy_balanced_model_n_out;
 	external_function_casadi_create(&impl_jac_u_ode);
+#endif
 
 
-	int number_sim_solvers = 3;
+	int number_sim_solvers = 1;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -245,6 +249,7 @@ int main()
 			case 0:
 				// ERK
 				opts->ns = 4; // number of stages in rk integrator
+				opts->num_steps = 10; // number of integrationsteps
 				break;
 
 			case 1:
@@ -271,7 +276,7 @@ int main()
 		sim_in *in = sim_in_create(config, dims);
 		sim_out *out = sim_out_create(config, dims);
 
-		in->T = T;
+		in->T = Ts;
 
 		// external functions
 		switch (nss)
@@ -279,26 +284,26 @@ int main()
 			case 0:
 			{
 				erk_model *model = in->model;
-				model->ode_expl = (external_function_generic *) &expl_ode;
-				sim_set_model(config, in, "forward_vde", &expl_forw_vde);
-				sim_set_model(config, in, "adjoint_vde", &expl_adj_vde);
+				model->ode_expl = (external_function_generic *) &expl_ode_fun;
+				sim_set_model(config, in, "forward_vde", &expl_forw_vde_fun);
+//				sim_set_model(config, in, "adjoint_vde", &expl_adj_vde);
 				// model->hess_ode_expl = (external_function_generic *) &expl_hess_ode;
 				break;
 			}
 			case 1:
 			{
 				irk_model *model = in->model;
-				model->ode_impl = (external_function_generic *) &impl_ode;
-				model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_ode;
-				model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_ode;
-				model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_ode;
+//				model->ode_impl = (external_function_generic *) &impl_ode;
+//				model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_ode;
+//				model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_ode;
+//				model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_ode;
 				break;
 			}
 			case 2:
 			{
 				lifted_irk_model *model = in->model;
-				model->forw_vde_expl = (external_function_generic *) &expl_forw_vde;
-				model->jac_ode_expl = (external_function_generic *) &expl_jac;
+//				model->forw_vde_expl = (external_function_generic *) &expl_forw_vde;
+//				model->jac_ode_expl = (external_function_generic *) &expl_jac;
 				break;
 			}
 			default :
@@ -335,22 +340,31 @@ int main()
 		double la_time = 0.0;
 		double ad_time = 0.0;
 
-//		for (ii=0; ii<nsim; ii++)
-		for (ii=0; ii<nsim0; ii++)
+		// to avoid unstable behavior introduce a small pi-controller for rotor speed tracking 
+		double uctrl = 0.0;
+		double uctrlI = 0.0;
+		double kI = 1e-1;
+		double kP = 10;
+		double tmp, ctrlErr;
+
+		for (ii=0; ii<nsim; ii++)
 		{
-			// x
+//			printf("\nii = %d\n", ii);
+
+			// update initial state
 			for (jj = 0; jj < nx; jj++)
 				in->x[jj] = x_sim[ii*nx+jj];
 
-			// p
-			for (jj = 0; jj < 2; jj++)
-				in->u[jj] = u_sim[ii*2+jj];
+			// compute inputs
 			for (jj = 0; jj < nu; jj++)
-				in->u[2+jj] = 0.1;
+				in->u[jj] = u_sim[ii*nu+jj];
+			tmp = in->u[1] - uctrl;
+			in->u[1] = tmp>0.0 ? tmp : 0.0;
 
 //			d_print_mat(1, nx, in->x, 1);
 //			d_print_mat(1, nu, in->u, 1);
 
+			// execute simulation step with current input and state
 		    acados_return = sim_solve(sim_solver, in, out);
 			if (acados_return != 0)
             	printf("error in sim solver\n");
@@ -361,9 +375,14 @@ int main()
 
 //			d_print_mat(1, nx, out->xn, 1);
 
-			// x_out
+			// extract state at next time step
 			for (jj = 0; jj < nx; jj++)
 				x_sim[(ii+1)*nx+jj] = out->xn[jj];
+
+			// update PI-controller
+			ctrlErr = x_ref[0+nx*(ii+1)] - x_sim[0+nx*(ii+1)];
+			uctrlI = uctrlI + kI*ctrlErr*Ts;
+			uctrl = kP*ctrlErr + uctrlI;
 
 		}
 		double total_cpu_time = acados_toc(&timer);
@@ -461,15 +480,16 @@ int main()
 
 	// TODO(dimitris): free all external functions (or write a free_model)
 	// explicit model
-	external_function_casadi_free(&expl_forw_vde);
-	external_function_casadi_free(&expl_adj_vde);
-	external_function_casadi_free(&expl_jac);
-	external_function_casadi_free(&expl_hess_ode);
+	external_function_casadi_free(&expl_ode_fun);
+	external_function_casadi_free(&expl_forw_vde_fun);
+//	external_function_casadi_free(&expl_adj_vde);
+//	external_function_casadi_free(&expl_jac);
+//	external_function_casadi_free(&expl_hess_ode);
 	// implicit model
-	external_function_casadi_free(&impl_ode);
-	external_function_casadi_free(&impl_jac_x_ode);
-	external_function_casadi_free(&impl_jac_xdot_ode);
-	external_function_casadi_free(&impl_jac_u_ode);
+//	external_function_casadi_free(&impl_ode);
+//	external_function_casadi_free(&impl_jac_x_ode);
+//	external_function_casadi_free(&impl_jac_xdot_ode);
+//	external_function_casadi_free(&impl_jac_u_ode);
 
 	/************************************************
 	* return
