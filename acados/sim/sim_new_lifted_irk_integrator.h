@@ -49,13 +49,9 @@ typedef struct
 typedef struct
 {
 
-    struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
-    struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
-    struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
     struct blasfeo_dmat *S_forw; // forward sensitivities
 
     struct blasfeo_dvec *rG; // residuals of G (nx*ns)
-    struct blasfeo_dvec *K; // internal variables (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
     struct blasfeo_dvec *xn; // x at each integration step
     
@@ -73,9 +69,21 @@ typedef struct
     struct blasfeo_dvec *K_traj;  // K trajectory
     struct blasfeo_dmat *JG_traj; // JGK trajectory
 
+    // additional workspace for lifted integrators
+
 } sim_new_lifted_irk_workspace;
 
 
+typedef struct
+{
+    // memory for lifted integrators
+    struct blasfeo_dmat *JGK; // jacobian of G over K (nx*ns, nx*ns)
+    struct blasfeo_dmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
+    struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
+
+    struct blasfeo_dvec *K; // internal variables (nx*ns)
+
+} sim_new_lifted_irk_memory;
 
 //
 int sim_new_lifted_irk_model_calculate_size(void *config, sim_dims *dims);

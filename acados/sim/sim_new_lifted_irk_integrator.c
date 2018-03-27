@@ -171,14 +171,71 @@ void sim_new_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
 
 int sim_new_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_)
 {
-    return 0;
+	sim_rk_opts *opts = opts_;
+
+    int ns = opts->ns;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    int steps = opts->num_steps;
+
+    int size = sizeof(sim_new_lifted_irk_memory);
+    
+    size += 3*sizeof(struct blasfeo_dmat); // JGK, JGf, JKf
+    size += 1*sizeof(struct blasfeo_dvec); // K
+    
+    size += blasfeo_memsize_dmat(nx*ns, nx*ns); // JGK
+    size += 2*blasfeo_memsize_dmat(nx*ns, nx+nu); // JGf, JKf
+    size += 1*blasfeo_memsize_dvec(nx*ns); // K
+
+    make_int_multiple_of(64, &size);
+    size += 1 * 64;
+
+    return size;
 }
 
 
 
 void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory)
 {
-    return NULL;
+    char *c_ptr = (char *)raw_memory;
+
+	sim_rk_opts *opts = opts_;
+
+    int ns = opts->ns;
+
+    int nx = dims->nx;
+    int nu = dims->nu;
+
+    int steps = opts->num_steps;
+
+    sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) c_ptr;
+    c_ptr += sizeof(sim_new_lifted_irk_memory);
+
+    memory->JGK = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
+
+    memory->JGf = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
+
+    memory->JKf = (struct blasfeo_dmat *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dmat);
+
+    memory->K = (struct blasfeo_dvec *)c_ptr;
+    c_ptr += sizeof(struct blasfeo_dvec);
+
+    align_char_to(64, &c_ptr);
+
+    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, memory->JGK, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, memory->JGf, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, memory->JKf, &c_ptr);
+
+    assign_and_advance_blasfeo_dvec_mem(nx*ns, memory->K, &c_ptr);
+
+    assert((char*)raw_memory + sim_new_lifted_irk_memory_calculate_size(config, dims, opts_) >= c_ptr);
+
+    return (void *)memory;
 }
 
 
@@ -200,19 +257,17 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, v
 
     int size = sizeof(sim_new_lifted_irk_workspace);
 
-    size += 4*sizeof(struct blasfeo_dmat); // JGK, JGf, JKf, S_forw
+    size += 1*sizeof(struct blasfeo_dmat); // S_forw
     size += steps*sizeof(struct blasfeo_dmat); // JG_traj
 
-    size += 4*sizeof(struct blasfeo_dvec); // rG, K, xt, xn
+    size += 3*sizeof(struct blasfeo_dvec); // rG, xt, xn
     size += 2*sizeof(struct blasfeo_dvec); // lambda,lambdaK
     size += 2*steps*sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj;
 
-    size += blasfeo_memsize_dmat(nx*ns, nx*ns); // JGK
-    size += 2*blasfeo_memsize_dmat(nx*ns, nx+nu); // JGf, JKf
     size += blasfeo_memsize_dmat(nx, nx+nu); // S_forw
     size += steps * blasfeo_memsize_dmat(nx*ns, nx*ns); // for JG_traj
 
-    size += 2*blasfeo_memsize_dvec(nx*ns); // rG, K
+    size += 1*blasfeo_memsize_dvec(nx*ns); // K
     size += 2*blasfeo_memsize_dvec(nx); // xt, x
     size += blasfeo_memsize_dvec(nx+nu); // lambda
     size += blasfeo_memsize_dvec(nx*ns); // lambdaK
@@ -253,15 +308,6 @@ static void *sim_new_lifted_irk_workspace_cast(void *config_, sim_dims *dims, vo
 
     assign_and_advance_blasfeo_dmat_structs(steps, &workspace->JG_traj, &c_ptr);
 
-    workspace->JGK = (struct blasfeo_dmat *)c_ptr;
-    c_ptr += sizeof(struct blasfeo_dmat);
-
-    workspace->JGf = (struct blasfeo_dmat *)c_ptr;
-    c_ptr += sizeof(struct blasfeo_dmat);
-
-    workspace->JKf = (struct blasfeo_dmat *)c_ptr;
-    c_ptr += sizeof(struct blasfeo_dmat);
-
     workspace->S_forw = (struct blasfeo_dmat *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dmat);
 
@@ -270,9 +316,6 @@ static void *sim_new_lifted_irk_workspace_cast(void *config_, sim_dims *dims, vo
     assign_and_advance_blasfeo_dvec_structs(steps, &workspace->K_traj, &c_ptr);
 
     workspace->rG = (struct blasfeo_dvec *)c_ptr;
-    c_ptr += sizeof(struct blasfeo_dvec);
-
-    workspace->K = (struct blasfeo_dvec *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
     workspace->xt = (struct blasfeo_dvec *)c_ptr;
@@ -289,16 +332,12 @@ static void *sim_new_lifted_irk_workspace_cast(void *config_, sim_dims *dims, vo
 
     align_char_to(64, &c_ptr);
 
-    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, workspace->JGK, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, workspace->JGf, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, workspace->JKf, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nx, nx+nu, workspace->S_forw, &c_ptr);
     for (int i=0;i<steps;i++){
         assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     }
 
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
-    assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->K, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx+nu, workspace->lambda, &c_ptr);
@@ -341,6 +380,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
     sim_dims *dims = in->dims;
     sim_new_lifted_irk_workspace *workspace = (sim_new_lifted_irk_workspace *) sim_new_lifted_irk_workspace_cast(config, dims, opts, work_);
+    sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
 
     int ii, jj, iter, kk, ss;
     double a;
@@ -362,11 +402,11 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     double *Jt = workspace->Jt;
     double *ode_args = workspace->ode_args;
     int *ipiv = workspace->ipiv;
-	struct blasfeo_dmat *JGK = workspace->JGK;
+	struct blasfeo_dmat *JGK = memory->JGK;
 	struct blasfeo_dvec *rG = workspace->rG;
-    struct blasfeo_dvec *K = workspace->K;
-    struct blasfeo_dmat *JGf = workspace->JGf;
-    struct blasfeo_dmat *JKf = workspace->JKf;
+    struct blasfeo_dvec *K = memory->K;
+    struct blasfeo_dmat *JGf = memory->JGf;
+    struct blasfeo_dmat *JKf = memory->JKf;
     struct blasfeo_dvec *xt = workspace->xt;
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
@@ -581,7 +621,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
             // factorize JGK
             blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
-
             if (opts->sens_adj)
 			{ // store the factorization and permutation
                 blasfeo_dgecp(nx*ns, nx*ns, JGK, 0, 0, &JG_traj[ss], 0, 0);
