@@ -292,18 +292,18 @@ int main()
 			}
 			case 1:
 			{
-				irk_model *model = in->model;
-//				model->ode_impl = (external_function_generic *) &impl_ode;
-//				model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_ode;
-//				model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_ode;
-//				model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_ode;
+				// irk_model *model = in->model;
+				// model->ode_impl = (external_function_generic *) &impl_ode;
+				// model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_ode;
+				// model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_ode;
+				// model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_ode;
 				break;
 			}
 			case 2:
 			{
-				lifted_irk_model *model = in->model;
-//				model->forw_vde_expl = (external_function_generic *) &expl_forw_vde;
-//				model->jac_ode_expl = (external_function_generic *) &expl_jac;
+				// lifted_irk_model *model = in->model;
+				// model->forw_vde_expl = (external_function_generic *) &expl_forw_vde;
+				// model->jac_ode_expl = (external_function_generic *) &expl_jac;
 				break;
 			}
 			default :
@@ -340,7 +340,7 @@ int main()
 		double la_time = 0.0;
 		double ad_time = 0.0;
 
-		// to avoid unstable behavior introduce a small pi-controller for rotor speed tracking 
+		// to avoid unstable behavior introduce a small pi-controller for rotor speed tracking
 		double uctrl = 0.0;
 		double uctrlI = 0.0;
 		double kI = 1e-1;
