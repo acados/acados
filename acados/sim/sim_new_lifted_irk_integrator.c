@@ -232,6 +232,9 @@ void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_
     assign_and_advance_blasfeo_dmat_mem(nx*ns, nx+nu, memory->JKf, &c_ptr);
 
     assign_and_advance_blasfeo_dvec_mem(nx*ns, memory->K, &c_ptr);
+    
+    // TODO(andrea): need to move this to options.
+    memory->update_sens = 1;
 
     assert((char*)raw_memory + sim_new_lifted_irk_memory_calculate_size(config, dims, opts_) >= c_ptr);
 
@@ -254,7 +257,7 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, v
     int nu = dims->nu;
 
     int steps = opts->num_steps;
-
+    
     int size = sizeof(sim_new_lifted_irk_workspace);
 
     size += 1*sizeof(struct blasfeo_dmat); // S_forw
@@ -396,6 +399,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     double *b_vec = opts->b_vec;
     int num_steps = opts->num_steps;
     double step = in->T/num_steps;
+    int update_sens = memory->update_sens;
 
 	double *rGt = workspace->rGt;
 	double *jac_out = workspace->jac_out;
@@ -472,98 +476,110 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 		// TODO add exit condition on residuals ???
 //		inf_norm_K = 1.0;
 //        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
-        for(iter=0; iter<newton_iter; iter++)
-		{
 
-            if (opts->sens_adj)
-			{
-                blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
-            }
-
-            for(ii=0; ii<ns; ii++) // ii-th row of tableau
-			{
-
-                // take x(n); copy a strvec into a strvec
-                blasfeo_dveccp(nx, xn, 0, xt, 0);
-
-                for(jj=0; jj<ns; jj++)
-				{ // jj-th col of tableau
-                    a = A_mat[ii+ns*jj];
-                    if(a!=0)
-					{           // xt = xt + T_int * a[i,j]*K_j
-						a *= step;
-                        blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
-                    }
-                }
-                // put xn+sum kj into first nx elements of ode_arg
-                blasfeo_unpack_dvec(nx, xt, 0, ode_args);
-
-                // put ki into the next nx elements of ode_args
-                blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
-
-                // compute the residual of implicit ode at time t_ii, store value in rGt
-				acados_tic(&timer_ad);
-                model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
-				timing_ad += acados_toc(&timer_ad);
-
-                // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
-                blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
-
-                if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
-				{
-                    // compute the jacobian of implicit ode
-                    acados_tic(&timer_ad);
-                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
-                    model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
-                    timing_ad += acados_toc(&timer_ad);
-
-                    // compute the blocks of JGK
-                    for (jj=0; jj<ns; jj++)
-					{ //compute the block (ii,jj)th block = Jt
-                        a = A_mat[ii + ns*jj];
-                        if (a!=0)
-						{
-                            a *= step;
-                            for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] = a * jac_out[kk];
-                        }
-                        if(jj==ii)
-						{
-                            for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] += jac_out[nx*nx+kk];
-                        }
-                        // fill in the ii-th, jj-th block of JGK
-                        blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
-                    } // end jj
-                }
-            } // end ii
-
-            //DGETRF computes an LU factorization of a general M-by-N matrix A
-            //using partial pivoting with row interchanges.
-			if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
-			{
-                blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
-            }
-
-            // permute also the r.h.s
-            blasfeo_dvecpe(nx*ns, ipiv, rG, 0);
-
-            // solve JGK * y = rG, JGK on the (l)eft, (l)ower-trian, (n)o-trans
-            //                    (u)nit trian
-            blasfeo_dtrsv_lnu(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
-
-            // solve JGK * x = rG, JGK on the (l)eft, (u)pper-trian, (n)o-trans
-            //                    (n)o unit trian , and store x in rG
-            blasfeo_dtrsv_unn(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
-            // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
-            blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
-
-			// inf norm of K
-//			blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
-        }// end iter
+    // TODO(andrea): polish this: single Newton iteration.
+    // for(iter=0; iter<newton_iter; iter++)
+    // {
 
         if (opts->sens_adj)
+        {
+            blasfeo_dveccp(nx, xn, 0, &xn_traj[ss], 0);
+        }
+
+        for(ii=0; ii<ns; ii++) // ii-th row of tableau
+        {
+
+            // take x(n); copy a strvec into a strvec
+            blasfeo_dveccp(nx, xn, 0, xt, 0);
+
+            for(jj=0; jj<ns; jj++)
+            { // jj-th col of tableau
+                a = A_mat[ii+ns*jj];
+                if(a!=0)
+                {           // xt = xt + T_int * a[i,j]*K_j
+                    a *= step;
+                    blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
+                }
+            }
+            // put xn+sum kj into first nx elements of ode_arg
+            blasfeo_unpack_dvec(nx, xt, 0, ode_args);
+
+            // put ki into the next nx elements of ode_args
+            blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
+
+            // compute the residual of implicit ode at time t_ii, store value in rGt
+            acados_tic(&timer_ad);
+            model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+            timing_ad += acados_toc(&timer_ad);
+
+            // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
+            blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
+
+            if ( update_sens )
+            {
+                // compute the jacobian of implicit ode
+                acados_tic(&timer_ad);
+                model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                timing_ad += acados_toc(&timer_ad);
+
+                // compute the blocks of JGK
+                for (jj=0; jj<ns; jj++)
+                { //compute the block (ii,jj)th block = Jt
+                    a = A_mat[ii + ns*jj];
+                    if (a!=0)
+                    {
+                        a *= step;
+                        for (kk=0; kk<nx*nx; kk++)
+                            Jt[kk] = a * jac_out[kk];
+                    }
+                    if(jj==ii)
+                    {
+                        for (kk=0; kk<nx*nx; kk++)
+                            Jt[kk] += jac_out[nx*nx+kk];
+                    }
+                    // fill in the ii-th, jj-th block of JGK
+                    blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
+                } // end jj
+            }
+        } // end ii
+
+        //DGETRF computes an LU factorization of a general M-by-N matrix A
+        //using partial pivoting with row interchanges.
+
+        // TODO(andrea): polish this - no need to re-factorize the 
+        // Jacobian in lifted integrators.
+        
+        // if ( ... )
+        // {
+        //     blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
+        // }
+
+        // permute also the r.h.s
+        blasfeo_dvecpe(nx*ns, ipiv, rG, 0);
+
+        // solve JGK * y = rG, JGK on the (l)eft, (l)ower-trian, (n)o-trans
+        //                    (u)nit trian
+        blasfeo_dtrsv_lnu(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
+
+        // solve JGK * x = rG, JGK on the (l)eft, (u)pper-trian, (n)o-trans
+        //                    (n)o unit trian , and store x in rG
+        blasfeo_dtrsv_unn(nx*ns, JGK, 0, 0, rG, 0, rG, 0);
+        // scale and add a generic strmat into a generic strmat // K = K - rG, where rG is DeltaK
+        blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
+
+        // inf norm of K
+//			blasfeo_dvecnrm_inf(nx*ns, K, 0, &inf_norm_K);
+        
+        // TODO(andrea): polish this - single Newton iteration.
+        // }// end iter
+
+        // TODO(andrea): need to add adjoints at some point
+        
+        if (opts->sens_adj)
 		{
+            printf("NOT IMPLEMENTED YET - EXITING.");
+            exit(1);
             blasfeo_dveccp(nx*ns, K, 0, &K_traj[ss], 0);
         }
 
@@ -646,10 +662,13 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
     }// end int step ss
 
+    // TODO(andrea): need to add adjoints at some point
+
     // evaluate backwards
     if (opts->sens_adj)
 	{
-
+        printf("NOT IMPLEMENTED YET - EXITING.");
+        exit(1);
         for(ss=num_steps-1;ss>-1;ss--)
 		{
 

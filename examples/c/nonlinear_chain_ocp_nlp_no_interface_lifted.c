@@ -37,6 +37,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_new_lifted_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -77,24 +78,24 @@
 
 
 
-#define NN 15
+#define NN 100
 #define TF 3.75
 #define Ns 2
 #define MAX_SQP_ITERS 10
-#define NREP 10
+#define NREP 1
 
 
-// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
+// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model, 4 new lifted integrators
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
 #define COST 1
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
-#define CONSTRAINTS 2
+#define CONSTRAINTS 0
 
-// xcond: 0 no condensing, 1 part condensing, 2 full condensing
-#define XCOND 1
+// xcond: 0 hpipm no condensing, 1 hpipm part condensing, 2 hpipm full condensing
+#define QPSOLVER 1
 
 
 
@@ -831,7 +832,7 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 
 
 
-// hand-wirtten box constraints on states as nonlinra constraints
+// hand-written box constraints on states as nonlinear constraints
 void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 {
 
@@ -1142,7 +1143,7 @@ int main() {
 	void *config_mem = malloc(config_size);
 	ocp_nlp_solver_config *config = ocp_nlp_solver_config_assign(NN, config_mem);
 
-#if XCOND==2
+#if QPSOLVER==2
 	// full condensing HPIPM
 	ocp_qp_full_condensing_solver_config_initialize_default(config->qp_solver);
 	dense_qp_hpipm_config_initialize_default(config->qp_solver->qp_solver);
@@ -1198,15 +1199,22 @@ int main() {
 		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
 		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
-#else
+#elif DYNAMICS==3
 	// dynamics: discrete model
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
     }
+#else
+	// dynamics: new lifted IRK
+    for (int ii = 0; ii < NN; ii++)
+    {
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		sim_new_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+    }
 #endif
 
-	// constraitns
+	// constraints
     for (int ii = 0; ii <= NN; ii++)
     {
 		ocp_nlp_constraints_config_initialize_default(config->constraints[ii]);
@@ -1270,7 +1278,7 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
 	}
 
-#elif DYNAMICS==2
+#elif DYNAMICS==2 | DYNAMICS==4
 
 	// impl_ode
 	tmp_size = 0;
@@ -1534,7 +1542,8 @@ int main() {
     // NOTE(dimitris): use nlp_in->dims instead of &dims from now on since nb is filled with nbx+nbu!
 
     // Problem data
-    double wall_pos = -0.01;
+    // double wall_pos = -0.01;
+    double wall_pos = -1;
     double UMAX = 10;
 
 	double x_pos_inf = +1e4;
@@ -1691,17 +1700,28 @@ int main() {
 	for (int i=0; i<NN; i++)
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+		// new_lifted_irk_model *model = dynamics->sim_model;
 		irk_model *model = dynamics->sim_model;
 		model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
 		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
 		model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
 		model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
 	}
-#else
+#elif DYNAMICS==3
 	for (int i=0; i<NN; i++)
 	{
 		ocp_nlp_dynamics_disc_model *dynamics = nlp_in->dynamics[i];
 		dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
+	}
+#else
+	for (int i=0; i<NN; i++)
+	{
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+		new_lifted_irk_model *model = dynamics->sim_model;
+		model->ode_impl = (external_function_generic *) &impl_ode_casadi[i];
+		model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_casadi[i];
+		model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_casadi[i];
+		model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_casadi[i];
 	}
 #endif
 
@@ -1828,7 +1848,7 @@ int main() {
 
 	ocp_nlp_sqp_opts_initialize_default(config, dims, nlp_opts);
 
-#if XCOND==1
+#if QPSOLVER==1
 	// partial condensing
 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = nlp_opts->qp_solver_opts;
 	pcond_solver_opts->pcond_opts->N2 = 5; // set partial condensing horizon
@@ -1853,8 +1873,14 @@ int main() {
 		// dynamics: discrete model
 		sim_opts->ns = 2;
 		sim_opts->jac_reuse = true;
-#else // DYNAMICS==3
+#elif DYNAMICS==3
 		// no options
+#else 
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+		// dynamics: discrete model
+		sim_opts->ns = 2;
+		sim_opts->jac_reuse = true;
 #endif
     }
 
@@ -1973,10 +1999,16 @@ int main() {
 	free(impl_jac_xdot_casadi_mem);
 	free(impl_jac_u_casadi_mem);
 
-#else // DYNAMICS==3
+#elif DYNAMICS==3
 
 	free(erk4_casadi_mem);
 
+#else // DYNAMICS==4
+
+	free(impl_ode_casadi_mem);
+	free(impl_jac_x_casadi_mem);
+	free(impl_jac_xdot_casadi_mem);
+	free(impl_jac_u_casadi_mem);
 #endif // DYNAMICS
 
 	free(config_mem);

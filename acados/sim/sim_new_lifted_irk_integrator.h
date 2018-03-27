@@ -82,6 +82,8 @@ typedef struct
     struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
 
     struct blasfeo_dvec *K; // internal variables (nx*ns)
+    
+    int update_sens;
 
 } sim_new_lifted_irk_memory;
 
