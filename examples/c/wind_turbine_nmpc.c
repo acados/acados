@@ -277,9 +277,14 @@ int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
+#ifdef WT_MODEL
+	// TODO(eco4wind): ACADO formulation has 8 states with control of input rates
+	int NX = 6;
+#else
 	const int NMF = 3;  // number of free masses
-
     int NX = 6 * NMF;
+#endif
+
     int NU = 3;
 
     /************************************************
@@ -297,25 +302,40 @@ int main()
     int ns[NN+1] = {0};
 	int ny[NN+1] = {0};
 
+	// TODO(eco4wind): setup number of bounds on states and control
     nx[0] = NX;
     nu[0] = NU;
     nbx[0] = nx[0];
     nbu[0] = nu[0];
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
+
+	// TODO(eco4wind): add bilinear constraints in nh
 	nh[0] = 0;
+#ifdef WT_MODEL
+	ny[0] = 2;
+#else
 	ny[0] = nx[0]+nu[0];
+#endif
 
     for (int i = 1; i < NN; i++)
     {
         nx[i] = NX;
         nu[i] = NU;
+#ifdef WT_MODEL
+        nbx[i] = NX;
+#else
         nbx[i] = NMF;
+#endif
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
 		nh[i] = 0;
+#ifdef WT_MODEL
+		ny[i] = 2;
+#else
 		ny[i] = nx[i]+nu[i];
+#endif
     }
 
     nx[NN] = NX;
@@ -325,8 +345,11 @@ int main()
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
 	nh[NN] = 0;
+#ifdef WT_MODEL
+	ny[NN] = 2;
+#else
 	ny[NN] = nx[NN]+nu[NN];
-
+#endif
     /************************************************
     * problem data
     ************************************************/
@@ -334,11 +357,17 @@ int main()
     double *x_end = malloc(sizeof(double)*NX);
     double *u_end = malloc(sizeof(double)*NU);
 
+	// value of last stage when shifting states and controls
 	for (int i = 0; i < NX; i++) x_end[i] = 0;
 	for (int i = 0; i < NU; i++) u_end[i] = 0;
 
+#ifdef WT_MODEL
+	// TODO(eco4wind): setup bounds on controls
+    double UMAX = 5;
+#else
     double wall_pos = -0.01;
     double UMAX = 10;
+#endif
 
 	double x_pos_inf = +1e4;
 	double x_neg_inf = -1e4;
@@ -348,13 +377,14 @@ int main()
 #ifdef WT_MODEL
     read_final_state_wt(NX, xref);
     double uref[3] = {0.0, 0.0, 0.0};
-
+	// NOTE(dimitris): following values do not give nans at first iteration, so the problem must be
+	// the correct xref/uref values that are missing
+	// read_initial_state_wt(NX, xref);
+	// double uref[3] = {8.169651470932033e+00, 4.024634365037572e+00, 1.399449920654297e+01};
 #else
     read_final_state_chain(NX, NMF, xref);
 
     double uref[3] = {0.0, 0.0, 0.0};
-
-#endif
 
     double *diag_cost_x = malloc(NX*sizeof(double));
 
@@ -363,6 +393,7 @@ int main()
 
     double diag_cost_u[3] = {1.0, 1.0, 1.0};
 
+#endif
 
 	// idxb0
     int idxb0[nb[0]];
@@ -371,8 +402,11 @@ int main()
 	// idxb1
 	int idxb1[nb[1]];
     for (int i = 0; i < NU; i++) idxb1[i] = i;
-
+#ifdef WT_MODEL
+    for (int i = 0; i < NX; i++) idxb1[NU+i] = NU + i;
+#else
     for (int i = 0; i < NMF; i++) idxb1[NU+i] = NU + 6*i + 1;
+#endif
 
 	// idxbN
 	int idxbN[nb[NN]];
@@ -395,17 +429,31 @@ int main()
 #endif
 
 	// lb1, ub1
+#ifdef WT_MODEL
+    double lb1[NX+NU], ub1[NX+NU];
+#else
     double lb1[NMF+NU], ub1[NMF+NU];
+#endif
+
     for (int j = 0; j < NU; j++)
 	{
         lb1[j] = -UMAX;  // umin
         ub1[j] = +UMAX;  // umax
     }
+
+#ifdef WT_MODEL
+    for (int j = 0; j < NX; j++)
+	{
+        lb1[NU+j] = x_neg_inf;
+        ub1[NU+j] = x_pos_inf;
+    }
+#else
     for (int j = 0; j < NMF; j++)
 	{
         lb1[NU+j] = wall_pos;  // wall position
         ub1[NU+j] = x_pos_inf;
     }
+#endif
 
 	// lbN, ubN
     double lbN[NX], ubN[NX];
@@ -485,23 +533,42 @@ int main()
 
 				stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
 
+#ifdef WT_MODEL
+				// TODO(eco4wind): set Cyt, W, y_ref for WT_MODEL
+
 				// Cyt
 				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
-					for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
-					for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
+				// penalize only 1st and 5th state
+				BLASFEO_DMATEL(&stage_cost_ls->Cyt, 0, 0) = 1.0;
+				BLASFEO_DMATEL(&stage_cost_ls->Cyt, 4, 1) = 1.0;
 
 				// W
 				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
-					for (int j = 0; j < nx[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
-					for (int j = 0; j < nu[i]; j++)
-				BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
+
+				BLASFEO_DMATEL(&stage_cost_ls->W, 0, 0) = 1.5114;
+				BLASFEO_DMATEL(&stage_cost_ls->W, 0, 1) = -0.0649;
+				BLASFEO_DMATEL(&stage_cost_ls->W, 1, 0) = -0.0649;
+				BLASFEO_DMATEL(&stage_cost_ls->W, 1, 1) = 0.0180;
+
+#else
+				// Cyt
+				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
+				for (int j = 0; j < nu[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
+				for (int j = 0; j < nx[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
+
+				// W
+				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
+				for (int j = 0; j < nx[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
+				for (int j = 0; j < nu[i]; j++)
+					BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
 
 				// y_ref
 				blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
 				blasfeo_pack_dvec(nu[i], uref, &stage_cost_ls->y_ref, nx[i]);
+#endif
 				break;
 			default:
 				break;
@@ -520,8 +587,6 @@ int main()
 	}
 
     nlp_in->freezeSens = false;
-	// if (scheme > 2)
-    //     nlp_in->freezeSens = true;
 
     /* constraints */
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
@@ -542,14 +607,7 @@ int main()
 	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
     constraints[NN]->idxb = idxbN;
 
-#if 0
-	for (int ii=0; ii<=NN; ii++)
-	{
-		blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &constraints[ii]->DCt, 0, 0);
-		blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii]+2*nh[ii], &constraints[ii]->d, 0);
-	}
-	exit(1);
-#endif
+	// TODO(eco4wind): setup bilinear constraint
 
     /************************************************
     * sqp opts
@@ -585,7 +643,7 @@ int main()
     sqp_opts->min_res_m = 1e-9;
 
 	// update after user-defined opts
-	config->opts_update(config, dims, nlp_opts); // TODO ocp_nlp_opts_update
+	config->opts_update(config, dims, nlp_opts);
 
     /************************************************
     * ocp_nlp out
@@ -599,7 +657,7 @@ int main()
     * sqp solve
     ************************************************/
 
-	int nmpc_problems = 100;
+	int nmpc_problems = 3;
 
     int status;
 
@@ -615,12 +673,21 @@ int main()
 			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
 		}
 
+#ifdef WT_MODEL
+		for (int i = 0; i <= NN; i++)
+		{
+			stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
+
+			// set up y_ref
+			// TODO(eco4wind): load from c file
+			BLASFEO_DVECEL(&stage_cost_ls->y_ref, 0) = xref[0];
+			BLASFEO_DVECEL(&stage_cost_ls->y_ref, 1) = xref[4];
+		}
+#endif
+
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
         	status = ocp_nlp_solve(solver, nlp_in, nlp_out);
-
-			// TODO(dimitris): why nbu[0] is 0??
-			// printf("NU = %d %d\n", NU, dims->qp_solver->nbu[0]);
 
 			// TODO(dimitris): simulate system instead of passing x[1] as next state
 			blasfeo_unpack_dvec(dims->nx[1], &nlp_out->ux[1], dims->nu[1], lb0+NU);
@@ -665,7 +732,9 @@ int main()
 	free(plan);
 
 	free(xref);
+#ifndef WT_MODEL
 	free(diag_cost_x);
+#endif
 
 	free(x_end);
 	free(u_end);
