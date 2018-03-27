@@ -114,9 +114,9 @@ file(GLOB WT_MODEL_SRC
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
-    add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
-    target_link_libraries(pendulum_scqp acados)
-    add_test(pendulum_scqp pendulum_scqp)
+    # add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
+    # target_link_libraries(pendulum_scqp acados)
+    # add_test(pendulum_scqp pendulum_scqp)
 
     # -------------------- mass_spring
     if(ACADOS_WITH_C_INTERFACE)
@@ -180,6 +180,20 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         )
         add_test(
             nonlinear_chain_ocp_nlp_no_interface_example
+            nonlinear_chain_ocp_nlp_no_interface_example
+        )
+
+    add_executable(
+            nonlinear_chain_ocp_nlp_no_interface_lifted_example
+            nonlinear_chain_ocp_nlp_no_interface_lifted.c
+            ${CHAIN_MODEL_SRC}
+        )
+        target_link_libraries(
+            nonlinear_chain_ocp_nlp_no_interface_lifted_example
+            acados
+        )
+        add_test(
+            nonlinear_chain_ocp_nlp_no_interface_lifted_example
             nonlinear_chain_ocp_nlp_no_interface_example
         )
 
