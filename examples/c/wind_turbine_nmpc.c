@@ -51,7 +51,7 @@
 
 #define NN 40
 
-#define MAX_SQP_ITERS 50
+#define MAX_SQP_ITERS 10
 #define NREP 1
 
 
@@ -94,7 +94,7 @@ static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
 
 static void read_initial_state_wt(const int nx, double *x0)
 {
-	double *ptr = x0_in;
+	double *ptr = x0_ref;
 
     for (int i = 0; i < nx; i++)
 		x0[i] = ptr[i];
@@ -113,8 +113,9 @@ int main()
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
 	// TODO(eco4wind): ACADO formulation has 8 states with control of input rates
-	int NX = 6;
-    int NU = 3;
+	int nx_ = 8;
+    int nu_ = 3;
+	int ny_ = 5;
 
     /************************************************
     * problem dimensions
@@ -132,34 +133,34 @@ int main()
 	int ny[NN+1] = {0};
 
 	// TODO(eco4wind): setup number of bounds on states and control
-    nx[0] = NX;
-    nu[0] = NU;
-    nbx[0] = nx[0];
-    nbu[0] = nu[0];
+    nx[0] = nx_;
+    nu[0] = nu_;
+    nbx[0] = nx_;
+    nbu[0] = nu_;
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 
 	// TODO(eco4wind): add bilinear constraints in nh
 	nh[0] = 0;
-	ny[0] = 5;
+	ny[0] = 5; // ny_
 
 	// TODO(dimitris): BOUNDS ON STATES AND CONTROLS NOT CORRECT YET!
 
     for (int i = 1; i < NN; i++)
     {
-        nx[i] = NX;
-        nu[i] = NU;
-        nbx[i] = NX;
-        nbu[i] = NU;
+        nx[i] = nx_;
+        nu[i] = nu_;
+        nbx[i] = 3;
+        nbu[i] = nu_;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
 		nh[i] = 0;
-		ny[i] = 5;
+		ny[i] = 5; // ny_
     }
 
-    nx[NN] = NX;
+    nx[NN] = nx_;
     nu[NN] = 0;
-    nbx[NN] = NX;
+    nbx[NN] = 0; // TODO
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
@@ -170,78 +171,171 @@ int main()
     * problem data
     ************************************************/
 
-    double *x_end = malloc(sizeof(double)*NX);
-    double *u_end = malloc(sizeof(double)*NU);
+    double *x_end = malloc(sizeof(double)*nx_);
+    double *u_end = malloc(sizeof(double)*nu_);
 
 	// value of last stage when shifting states and controls
-	for (int i = 0; i < NX; i++) x_end[i] = 0;
-	for (int i = 0; i < NU; i++) u_end[i] = 0;
+	for (int i = 0; i < nx_; i++) x_end[i] = 0.0;
+	for (int i = 0; i < nu_; i++) u_end[i] = 0.0;
 
-	// TODO(eco4wind): setup bounds on controls
-    double UMAX = 5;
 
-	double x_pos_inf = +1e4;
-	double x_neg_inf = -1e4;
 
-    double *xref = malloc(NX*sizeof(double));
+	/* box constraints */
 
-    double uref[3] = {0.0, 0.0, 0.0};
-	uref[2] = wind0[0];
+	// acados inf
+	double acados_inf = 1e8;
 
-	// idxb0
+	// pitch angle rate
+	double dbeta_min = - 8.0;
+	double dbeta_max =   8.0;
+	// generator torque
+	double dM_gen_min = - 1.0;
+	double dM_gen_max =   1.0;
+	// generator angular velocity
+	double OmegaR_min =  6.0/60*2*3.14159265359;
+	double OmegaR_max = 13.0/60*2*3.14159265359;
+	// pitch angle
+	double beta_min =  0.0;
+	double beta_max = 35.0;
+	// generator torque
+	double M_gen_min = 0.0;
+	double M_gen_max = 5.0;
+
+	// first stage
 	int *idxb0 = malloc(nb[0]*sizeof(int));
+	double *lb0 = malloc((nb[0])*sizeof(double));
+	double *ub0 = malloc((nb[0])*sizeof(double));
 
-    for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
+	// pitch angle rate
+	idxb0[0] = 0;
+	lb0[0] = dbeta_min;
+	ub0[0] = dbeta_max;
 
-	// idxb1
+	// generator torque
+	idxb0[1] = 1;
+	lb0[1] = dM_gen_min;
+	ub0[1] = dM_gen_max;
+
+	// disturbance as input
+	idxb0[2] = 2;
+	lb0[2] = 12.0; // XXX dummy
+	ub0[2] = 12.0; // XXX dummy
+
+	// dummy state bounds
+	for (int ii=0; ii<nbx[0]; ii++)
+	{
+		idxb0[nbu[0]+ii] = nbu[0]+ii;
+		lb0[nbu[0]+ii] = - acados_inf;
+		ub0[nbu[0]+ii] =   acados_inf;
+	}
+
+
+	// middle stages
 	int *idxb1 = malloc(nb[1]*sizeof(int));
+	double *lb1 = malloc((nb[1])*sizeof(double));
+	double *ub1 = malloc((nb[1])*sizeof(double));
 
-    for (int i = 0; i < NU; i++) idxb1[i] = i;
-    for (int i = 0; i < NX; i++) idxb1[NU+i] = NU + i;
+	// pitch angle rate
+	idxb1[0] = 0;
+	lb1[0] = dbeta_min;
+	ub1[0] = dbeta_max;
 
-	// idxbN
+	// generator torque rate
+	idxb1[1] = 1;
+	lb1[1] = dM_gen_min;
+	ub1[1] = dM_gen_max;
+
+	// disturbance as input
+	idxb1[2] = 2;
+	lb1[2] = 12.0; // XXX dummy
+	ub1[2] = 12.0; // XXX dummy
+
+	// dummy state bounds
+//	for (int ii=0; ii<nbx[1]; ii++)
+//	{
+//		idxb1[nbu[1]+ii] = nbu[1]+ii;
+//		lb1[nbu[1]+ii] = - acados_inf;
+//		ub1[nbu[1]+ii] =   acados_inf;
+//	}
+
+	// generator angular velociry
+	idxb1[3] = 3;
+	lb1[3] = OmegaR_min;
+	ub1[3] = OmegaR_max;
+
+	// pitch angle
+	idxb1[4] = 9;
+	lb1[4] = beta_min;
+	ub1[4] = beta_max;
+
+	// generator torque
+	idxb1[5] = 10;
+	lb1[5] = M_gen_min;
+	ub1[5] = M_gen_max;
+
+	// last stage
 	int *idxbN = malloc(nb[NN]*sizeof(int));
+	double *lbN = malloc((nb[NN])*sizeof(double));
+	double *ubN = malloc((nb[NN])*sizeof(double));
 
-    for (int i = 0; i < nb[NN]; i++)
-        idxbN[i] = i;
-
-	// lb0, ub0
-	double *lb0 = malloc((NX+NU)*sizeof(double));
-	double *ub0 = malloc((NX+NU)*sizeof(double));
-
-    for (int i = 0; i < NU; i++)
+	// dummy state bounds
+	for (int ii=0; ii<nbx[NN]; ii++)
 	{
-        lb0[i] = -UMAX;
-        ub0[i] = +UMAX;
-    }
-    read_initial_state_wt(NX, lb0+NU);
-    read_initial_state_wt(NX, ub0+NU);
+		idxbN[nbu[NN]+ii] = nbu[NN]+ii;
+		lbN[nbu[NN]+ii] = - acados_inf;
+		ubN[nbu[NN]+ii] =   acados_inf;
+	}
 
-	// lb1, ub1
-	double *lb1 = malloc((NX+NU)*sizeof(double));
-	double *ub1 = malloc((NX+NU)*sizeof(double));
 
-    for (int j = 0; j < NU; j++)
-	{
-        lb1[j] = -UMAX;  // umin
-        ub1[j] = +UMAX;  // umax
-    }
+#if 0
+	int_print_mat(1, nb[0], idxb0, 1);
+	d_print_mat(1, nb[0], lb0, 1);
+	d_print_mat(1, nb[0], ub0, 1);
+	int_print_mat(1, nb[1], idxb1, 1);
+	d_print_mat(1, nb[1], lb1, 1);
+	d_print_mat(1, nb[1], ub1, 1);
+	int_print_mat(1, nb[NN], idxbN, 1);
+	d_print_mat(1, nb[NN], lbN, 1);
+	d_print_mat(1, nb[NN], ubN, 1);
+	exit(1);
+#endif
 
-    for (int j = 0; j < NX; j++)
-	{
-        lb1[NU+j] = x_neg_inf;
-        ub1[NU+j] = x_pos_inf;
-    }
+	/* linear least squares */
 
-	// lbN, ubN
-	double *lbN = malloc(NX*sizeof(double));
-	double *ubN = malloc(NX*sizeof(double));
+	// output definition
+	// y = {x[0], x[4]; u[0]; u[1]; u[2]};
+	//   = Vx * x + Vu * u
 
-    for (int i = 0; i < NX; i++)
-	{
-        lbN[i] = x_neg_inf;
-        ubN[i] = x_pos_inf;
-    }
+	double *Vx = malloc((ny_*nx_)*sizeof(double));
+	for (int ii=0; ii<ny_*nx_; ii++)
+		Vx[ii] = 0.0;
+	Vx[0+ny_*0] = 1.0;
+	Vx[1+ny_*4] = 1.0;
+
+	double *Vu = malloc((ny_*nu_)*sizeof(double));
+	for (int ii=0; ii<ny_*nu_; ii++)
+		Vu[ii] = 0.0;
+	Vu[2+ny_*0] = 1.0;
+	Vu[3+ny_*1] = 1.0;
+	Vu[4+ny_*2] = 1.0;
+
+	double *W = malloc((ny_*ny_)*sizeof(double));
+	for (int ii=0; ii<ny_*ny_; ii++)
+		W[ii] = 0.0;
+	W[0+ny_*0] = 1.5114;
+	W[1+ny_*0] = -0.0649;
+	W[0+ny_*1] = -0.0649;
+	W[1+ny_*1] = 0.0180;
+	W[2+ny_*2] = 0.01;
+	W[3+ny_*3] = 0.01;
+	W[4+ny_*4] = 0.0001;
+
+#if 0
+	d_print_mat(ny_, nx_, Vx, ny_);
+	d_print_mat(ny_, nu_, Vu, ny_);
+	d_print_mat(ny_, ny_, W, ny_);
+//	exit(1);
+#endif
 
     /************************************************
     * plan + config
@@ -307,30 +401,14 @@ int main()
 				stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
 
 				// Cyt
-				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
-				// penalize only 1st and 5th state as well as controls
-				BLASFEO_DMATEL(&stage_cost_ls->Cyt, 0, 0) = 1.0;
-				BLASFEO_DMATEL(&stage_cost_ls->Cyt, 4, 1) = 1.0;
-				if (i < NN)
-				{
-					BLASFEO_DMATEL(&stage_cost_ls->Cyt, 6, 2) = 1.0;
-					BLASFEO_DMATEL(&stage_cost_ls->Cyt, 7, 3) = 1.0;
-					BLASFEO_DMATEL(&stage_cost_ls->Cyt, 8, 4) = 1.0;
-				}
+				blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &stage_cost_ls->Cyt, 0, 0);
+				blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &stage_cost_ls->Cyt, nu[i], 0);
 
 				// W
-				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
+				blasfeo_pack_dmat(ny[i], ny[i], W, ny_, &stage_cost_ls->W, 0, 0);
 
-				BLASFEO_DMATEL(&stage_cost_ls->W, 0, 0) = 1.5114;
-				BLASFEO_DMATEL(&stage_cost_ls->W, 0, 1) = -0.0649;
-				BLASFEO_DMATEL(&stage_cost_ls->W, 1, 0) = -0.0649;
-				BLASFEO_DMATEL(&stage_cost_ls->W, 1, 1) = 0.0180;
-				if (i < NN)
-				{
-					BLASFEO_DMATEL(&stage_cost_ls->W, 2, 2) = 0.01;
-					BLASFEO_DMATEL(&stage_cost_ls->W, 3, 3) = 0.01;
-					BLASFEO_DMATEL(&stage_cost_ls->W, 4, 4) = 0.0001;
-				}
+//				blasfeo_print_dmat(nu[i]+nx[i], ny[i], &stage_cost_ls->Cyt, 0, 0);
+//				blasfeo_print_dmat(ny[i], ny[i], &stage_cost_ls->W, 0, 0);
 				break;
 			default:
 				break;
@@ -356,18 +434,18 @@ int main()
 	// fist stage
 	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
-    constraints[0]->idxb = idxb0;
-
-	// other stages
+    for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
+	// middle stages
     for (int i = 1; i < NN; i++)
 	{
 		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
 		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
-        constraints[i]->idxb = idxb1;
+		for (int ii=0; ii<nb[i]; ii++) constraints[i]->idxb[ii] = idxb1[ii];
     }
+	// last stage
 	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
 	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
-    constraints[NN]->idxb = idxbN;
+    for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
 
 	// TODO(eco4wind): setup bilinear constraint
 
@@ -399,10 +477,10 @@ int main()
     }
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-9;
-    sqp_opts->min_res_b = 1e-9;
-    sqp_opts->min_res_d = 1e-9;
-    sqp_opts->min_res_m = 1e-9;
+    sqp_opts->min_res_g = 1e-8;
+    sqp_opts->min_res_b = 1e-8;
+    sqp_opts->min_res_d = 1e-8;
+    sqp_opts->min_res_m = 1e-8;
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
@@ -419,7 +497,7 @@ int main()
     * sqp solve
     ************************************************/
 
-	int nmpc_problems = 10;
+	int nmpc_problems = 40;
 
     int status;
 
@@ -431,12 +509,28 @@ int main()
 		// warm start output initial guess of solution
 		for (int i=0; i<=NN; i++)
 		{
-			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-			blasfeo_pack_dvec(nx[i], x0_in, nlp_out->ux+i, nu[i]);
+			blasfeo_pack_dvec(2, u0_ref, nlp_out->ux+i, 0);
+			blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
+			blasfeo_pack_dvec(nx[i], x0_ref, nlp_out->ux+i, nu[i]);
+//			blasfeo_print_tran_dvec(nu[i]+nx[i], nlp_out->ux+i, 0);
 		}
+
+		// update x0 as box constraint
+		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nbu[0]);
+		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nb[0]+ng[0]+nbu[0]);
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
+
+			// update wind disturbance as box constraint
+			for (int ii=0; ii<=NN; ii++)
+			{
+				BLASFEO_DVECEL(&constraints[ii]->d, 2) = wind0_ref[idx + ii];
+				BLASFEO_DVECEL(&constraints[ii]->d, nb[ii]+ng[ii]+2) = wind0_ref[idx + ii];
+//				blasfeo_print_tran_dvec(nb[ii], &constraints[ii]->d, 0);
+//				blasfeo_print_tran_dvec(nb[ii], &constraints[ii]->d, nb[ii]+ng[ii]);
+			}
+
 			// update reference
 			for (int i = 0; i <= NN; i++)
 			{
@@ -448,24 +542,31 @@ int main()
 				{
 					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 2) = y_ref[(idx + i)*4+2];
 					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 3) = y_ref[(idx + i)*4+3];
-					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 4) = wind0[idx + i];
+					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 4) = wind0_ref[idx + i];
 				}
+//				blasfeo_print_tran_dvec(ny[i], &stage_cost_ls->y_ref, 0);
 			}
+//			exit(1);
 
 			// solve NLP
         	status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
 			// update initial condition
+//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, 0);
+//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, nb[0]+ng[0]);
 
 			// TODO(dimitris): simulate system instead of passing x[1] as next state
-			blasfeo_unpack_dvec(dims->nx[1], &nlp_out->ux[1], dims->nu[1], lb0+NU);
-			blasfeo_unpack_dvec(dims->nx[1], &nlp_out->ux[1], dims->nu[1], ub0+NU);
+			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]);
+			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]+nb[0]+ng[0]);
 
-			blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-			blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, 0);
+//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, nb[0]+ng[0]);
+
+//			if(idx==1)
+//			exit(1);
 
 			// shift trajectories
-			if (true)
+			if (false)
 			{
 				blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
 				blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);
@@ -480,15 +581,22 @@ int main()
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
 			}
+
+			if(status!=0)
+			{
+				printf("\nresiduals\n");
+				ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
+				exit(1);
+			}
+
 		}
+
     }
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\ntotal time = %f ms\n\n", time*1e3);
+    printf("\n\ntotal time = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/nmpc_problems);
 
-	// printf("\nresiduals\n");
-	// ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
 
     /************************************************
     * free memory
@@ -505,8 +613,6 @@ int main()
 	free(dims);
 	free(config);
 	free(plan);
-
-	free(xref);
 
 	free(lb0);
 	free(ub0);

@@ -63,19 +63,19 @@ myfile = fopen("setup.c", "w");
 
 fprintf(myfile, "int nsim = %d;\n", nsim);
 
-% x0
+% x0_ref
 fprintf(myfile, "\n");
-fprintf(myfile, "double x0[] = {\n");
+fprintf(myfile, "double x0_ref[] = {\n");
 fprintf(myfile, "%1.15e, %1.15e, %1.15e, %1.15e, %1.15e, %1.15e, %1.15e, %1.15e\n", X0(1), X0(2), X0(3), X0(4), X0(5), X0(6), X0(7), X0(8));
 fprintf(myfile, "};\n");
 
 % u0
 fprintf(myfile, "\n");
-fprintf(myfile, "double u0[] = {0, 0};\n");
+fprintf(myfile, "double u0_ref[] = {0, 0};\n");
 
 % wind
 fprintf(myfile, "\n");
-fprintf(myfile, "double wind0[] = {\n");
+fprintf(myfile, "double wind0_ref[] = {\n");
 for ii=1:nsim
 	fprintf(myfile, "%1.15e,\n", VwindSim(ii));
 end

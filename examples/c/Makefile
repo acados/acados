@@ -53,6 +53,7 @@ EXAMPLES += nonlinear_chain_ocp_nlp
 EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
+EXAMPLES += wind_turbine_nmpc
 
 examples: $(EXAMPLES)
 
@@ -70,6 +71,7 @@ RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 RUN_EXAMPLES += run_sim_crane_no_interface
 RUN_EXAMPLES += run_mass_spring_example_no_interface
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
+RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -118,14 +120,7 @@ run_sim_crane_example:
 
 WT_NX6_OBJS =
 WT_NX6_OBJS += wt_model_nx6_expl/expl_ode.o
-#WT_NX6_OBJS += wt_model_nx3/jac_energy_balanced_model.o
-#WT_NX6_OBJS += wt_model_nx3/vde_adj_energy_balanced_model.o
 WT_NX6_OBJS += wt_model_nx6_expl/expl_forw_vde.o
-#WT_NX6_OBJS += wt_model_nx3/vde_hess_energy_balanced_model.o
-#WT_NX6_OBJS += wt_model_nx3/impl_odeFun_energy_balanced_model.o
-#WT_NX6_OBJS += wt_model_nx3/impl_jacFun_x_energy_balanced_model.o
-#WT_NX6_OBJS += wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.o
-#WT_NX6_OBJS += wt_model_nx3/impl_jacFun_u_energy_balanced_model.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)
@@ -135,6 +130,21 @@ sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 
 run_sim_wt_model_nx6:
 	./sim_wt_model_nx6.out
+
+
+
+WT_NX6P2_OBJS =
+WT_NX6P2_OBJS += wt_model_nx6_expl/nx6p2/expl_ode.o
+WT_NX6P2_OBJS += wt_model_nx6_expl/nx6p2/expl_forw_vde.o
+
+wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
+	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example wind_turbine_nmpc build complete."
+	@echo
+
+run_wind_turbine_nmpc:
+	./wind_turbine_nmpc.out
 
 
 
