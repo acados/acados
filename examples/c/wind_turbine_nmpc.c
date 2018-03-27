@@ -376,11 +376,12 @@ int main()
 
 #ifdef WT_MODEL
     read_final_state_wt(NX, xref);
-    double uref[3] = {0.0, 0.0, 0.0};
+    // double uref[3] = {0.0, 0.0, 0.0};
+
 	// NOTE(dimitris): following values do not give nans at first iteration, so the problem must be
 	// the correct xref/uref values that are missing
-	// read_initial_state_wt(NX, xref);
-	// double uref[3] = {8.169651470932033e+00, 4.024634365037572e+00, 1.399449920654297e+01};
+	read_initial_state_wt(NX, xref);
+	double uref[3] = {8.169651470932033e+00, 4.024634365037572e+00, 1.399449920654297e+01};
 #else
     read_final_state_chain(NX, NMF, xref);
 
@@ -396,11 +397,13 @@ int main()
 #endif
 
 	// idxb0
-    int idxb0[nb[0]];
+	int *idxb0 = malloc(nb[0]*sizeof(int));
+
     for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
 
 	// idxb1
-	int idxb1[nb[1]];
+	int *idxb1 = malloc(nb[1]*sizeof(int));
+
     for (int i = 0; i < NU; i++) idxb1[i] = i;
 #ifdef WT_MODEL
     for (int i = 0; i < NX; i++) idxb1[NU+i] = NU + i;
@@ -409,12 +412,15 @@ int main()
 #endif
 
 	// idxbN
-	int idxbN[nb[NN]];
+	int *idxbN = malloc(nb[NN]*sizeof(int));
+
     for (int i = 0; i < nb[NN]; i++)
         idxbN[i] = i;
 
 	// lb0, ub0
-    double lb0[NX+NU], ub0[NX+NU];
+	double *lb0 = malloc((NX+NU)*sizeof(double));
+	double *ub0 = malloc((NX+NU)*sizeof(double));
+
     for (int i = 0; i < NU; i++)
 	{
         lb0[i] = -UMAX;
@@ -430,9 +436,11 @@ int main()
 
 	// lb1, ub1
 #ifdef WT_MODEL
-    double lb1[NX+NU], ub1[NX+NU];
+	double *lb1 = malloc((NX+NU)*sizeof(double));
+	double *ub1 = malloc((NX+NU)*sizeof(double));
 #else
-    double lb1[NMF+NU], ub1[NMF+NU];
+	double *lb1 = malloc((NMF+NU)*sizeof(double));
+	double *ub1 = malloc((NMF+NU)*sizeof(double));
 #endif
 
     for (int j = 0; j < NU; j++)
@@ -456,7 +464,9 @@ int main()
 #endif
 
 	// lbN, ubN
-    double lbN[NX], ubN[NX];
+	double *lbN = malloc(NX*sizeof(double));
+	double *ubN = malloc(NX*sizeof(double));
+
     for (int i = 0; i < NX; i++)
 	{
         lbN[i] = x_neg_inf;
@@ -534,7 +544,6 @@ int main()
 				stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
 
 #ifdef WT_MODEL
-				// TODO(eco4wind): set Cyt, W, y_ref for WT_MODEL
 
 				// Cyt
 				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
@@ -673,21 +682,23 @@ int main()
 			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
 		}
 
-#ifdef WT_MODEL
-		for (int i = 0; i <= NN; i++)
-		{
-			stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
-
-			// set up y_ref
-			// TODO(eco4wind): load from c file
-			BLASFEO_DVECEL(&stage_cost_ls->y_ref, 0) = xref[0];
-			BLASFEO_DVECEL(&stage_cost_ls->y_ref, 1) = xref[4];
-		}
-#endif
-
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
+#ifdef WT_MODEL
+			// update reference
+			for (int i = 0; i <= NN; i++)
+			{
+				stage_cost_ls = nlp_in->cost[i];
+
+				// TODO(eco4wind): load from c file
+				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 0) = xref[0];
+				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 1) = xref[4];
+			}
+#endif
+			// solve NLP
         	status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+
+			// update initial condition
 
 			// TODO(dimitris): simulate system instead of passing x[1] as next state
 			blasfeo_unpack_dvec(dims->nx[1], &nlp_out->ux[1], dims->nu[1], lb0+NU);
@@ -696,8 +707,12 @@ int main()
 			blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
 			blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
 
+			// shift trajectories
 			if (true)
 			{
+				blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
+				blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);
+
 				shift_states(dims, nlp_out, x_end);
 				shift_controls(dims, nlp_out, u_end);
 			}
@@ -735,6 +750,15 @@ int main()
 #ifndef WT_MODEL
 	free(diag_cost_x);
 #endif
+	free(lb0);
+	free(ub0);
+	free(lb1);
+	free(ub1);
+	free(lbN);
+	free(ubN);
+	free(idxb0);
+	free(idxb1);
+	free(idxbN);
 
 	free(x_end);
 	free(u_end);

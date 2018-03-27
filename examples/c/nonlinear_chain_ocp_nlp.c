@@ -564,7 +564,8 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+	double *ref = malloc((nu+nx)*sizeof(double));
+
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm2[ii];
 	for (ii=0; ii<nu; ii++)
@@ -587,8 +588,7 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	return;
-
+	free(ref);
 }
 
 void ext_cost_nm3(void *fun, double *in, double *out)
@@ -602,7 +602,8 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+	double *ref = malloc((nu+nx)*sizeof(double));
+
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm3[ii];
 	for (ii=0; ii<nu; ii++)
@@ -625,8 +626,7 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	return;
-
+	free(ref);
 }
 
 void ext_cost_nm4(void *fun, double *in, double *out)
@@ -640,7 +640,8 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+	double *ref = malloc((nu+nx)*sizeof(double));
+
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm4[ii];
 	for (ii=0; ii<nu; ii++)
@@ -663,8 +664,7 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	return;
-
+	free(ref);
 }
 
 void ext_cost_nm5(void *fun, double *in, double *out)
@@ -678,7 +678,8 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+	double *ref = malloc((nu+nx)*sizeof(double));
+
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm5[ii];
 	for (ii=0; ii<nu; ii++)
@@ -701,8 +702,7 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	return;
-
+	free(ref);
 }
 
 void ext_cost_nm6(void *fun, double *in, double *out)
@@ -716,7 +716,8 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+	double *ref = malloc((nu+nx)*sizeof(double));
+
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm6[ii];
 	for (ii=0; ii<nu; ii++)
@@ -739,8 +740,7 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	return;
-
+	free(ref);
 }
 
 
@@ -983,22 +983,25 @@ int main()
 
 
 	// idxb0
-    int idxb0[nb[0]];
+	int *idxb0 = malloc(nb[0]*sizeof(int));
+
     for (int i = 0; i < nb[0]; i++) idxb0[i] = i;
 
 	// idxb1
-	int idxb1[nb[1]];
+	int *idxb1 = malloc(nb[1]*sizeof(int));
     for (int i = 0; i < NU; i++) idxb1[i] = i;
 
     for (int i = 0; i < NMF; i++) idxb1[NU+i] = NU + 6*i + 1;
 
 	// idxbN
-	int idxbN[nb[NN]];
+	int *idxbN = malloc(nb[NN]*sizeof(int));
     for (int i = 0; i < nb[NN]; i++)
         idxbN[i] = i;
 
 	// lb0, ub0
-    double lb0[NX+NU], ub0[NX+NU];
+	double *lb0 = malloc((NX+NU)*sizeof(double));
+	double *ub0 = malloc((NX+NU)*sizeof(double));
+
     for (int i = 0; i < NU; i++)
 	{
         lb0[i] = -UMAX;
@@ -1008,7 +1011,9 @@ int main()
     read_initial_state(NX, NMF, ub0+NU);
 
 	// lb1, ub1
-    double lb1[NMF+NU], ub1[NMF+NU];
+	double *lb1 = malloc((NMF+NU)*sizeof(double));
+	double *ub1 = malloc((NMF+NU)*sizeof(double));
+
     for (int j = 0; j < NU; j++)
 	{
         lb1[j] = -UMAX;  // umin
@@ -1021,7 +1026,9 @@ int main()
     }
 
 	// lbN, ubN
-    double lbN[NX], ubN[NX];
+	double *lbN = malloc(NX*sizeof(double));
+	double *ubN = malloc(NX*sizeof(double));
+
     for (int i = 0; i < NX; i++)
 	{
         lbN[i] = x_neg_inf;
@@ -1509,6 +1516,15 @@ int main()
 
 	free(xref);
 	free(diag_cost_x);
+	free(lb0);
+	free(ub0);
+	free(lb1);
+	free(ub1);
+	free(lbN);
+	free(ubN);
+	free(idxb0);
+	free(idxb1);
+	free(idxbN);
 
 		for (int i = 0; i <= NN; i++)
 	{
