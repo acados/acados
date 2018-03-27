@@ -225,6 +225,13 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_test(dense_qp dense_qp)
     endif()
 
+    # -------------------- wind turbine nmpc
+    if(ACADOS_WITH_C_INTERFACE)
+        add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${CHAIN_MODEL_SRC})
+        target_link_libraries(wind_turbine_nmpc_example acados)
+        add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
+    endif()
+
     # -------------------- chen
 
     # add_executable(chen_nmpc_qpoases_example
