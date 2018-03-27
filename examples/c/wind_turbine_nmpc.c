@@ -92,27 +92,14 @@ static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
 
 
 
-static void read_initial_state_wt(const int nx, double *x0)
-{
-	double *ptr = x0_ref;
-
-    for (int i = 0; i < nx; i++)
-		x0[i] = ptr[i];
-}
-
-
-
 /************************************************
 * main
 ************************************************/
-
-// TODO(dimitris): compile on windows
 
 int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-	// TODO(eco4wind): ACADO formulation has 8 states with control of input rates
 	int nx_ = 8;
     int nu_ = 3;
 	int ny_ = 5;
@@ -132,7 +119,7 @@ int main()
     int ns[NN+1] = {0};
 	int ny[NN+1] = {0};
 
-	// TODO(eco4wind): setup number of bounds on states and control
+	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
     nu[0] = nu_;
     nbx[0] = nx_;
@@ -140,11 +127,9 @@ int main()
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
 
-	// TODO(eco4wind): add bilinear constraints in nh
+	// TODO(dimitris): add bilinear constraints later
 	nh[0] = 0;
 	ny[0] = 5; // ny_
-
-	// TODO(dimitris): BOUNDS ON STATES AND CONTROLS NOT CORRECT YET!
 
     for (int i = 1; i < NN; i++)
     {
@@ -447,8 +432,6 @@ int main()
 	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
     for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
 
-	// TODO(eco4wind): setup bilinear constraint
-
     /************************************************
     * sqp opts
     ************************************************/
@@ -546,27 +529,22 @@ int main()
 				}
 //				blasfeo_print_tran_dvec(ny[i], &stage_cost_ls->y_ref, 0);
 			}
-//			exit(1);
 
 			// solve NLP
         	status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
 			// update initial condition
-//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, 0);
-//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, nb[0]+ng[0]);
-
-			// TODO(dimitris): simulate system instead of passing x[1] as next state
+			// TODO(dimitris): maybe simulate system instead of passing x[1] as next state
+			// blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, 0);
+			// blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, nb[0]+ng[0]);
 			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]);
 			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]+nb[0]+ng[0]);
 
-//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, 0);
-//			blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, nb[0]+ng[0]);
-
-//			if(idx==1)
-//			exit(1);
+			// blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, 0);
+			// blasfeo_print_tran_dvec(nb[0], &constraints[0]->d, nb[0]+ng[0]);
 
 			// shift trajectories
-			if (false)
+			if (true)
 			{
 				blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
 				blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);

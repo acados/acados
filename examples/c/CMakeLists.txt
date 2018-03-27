@@ -112,8 +112,8 @@ file(GLOB WT_MODEL_SRC
 )
 
 file(GLOB WT_MODEL_NX6_SRC
-    wt_model_nx6_expl/expl_ode.c
-    wt_model_nx6_expl/expl_forw_vde.c
+    wt_model_nx6_expl/nx6p2/expl_ode.c
+    wt_model_nx6_expl/nx6p2/expl_forw_vde.c
 )
 
 # Define examples

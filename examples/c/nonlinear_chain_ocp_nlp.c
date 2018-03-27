@@ -887,8 +887,6 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 * main
 ************************************************/
 
-// TODO(dimitris): compile on windows
-
 int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
