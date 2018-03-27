@@ -43,6 +43,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 
 EXAMPLES =
 EXAMPLES += sim_wt_model
+EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 #EXAMPLES += mass_spring_pcond_hpipm_split
@@ -59,6 +60,7 @@ examples: $(EXAMPLES)
 
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_sim_wt_model
+RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_mass_spring_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
@@ -107,6 +109,32 @@ sim_crane_example: $(CRANE_OBJS) sim_crane_example.o
 
 run_sim_crane_example:
 	./sim_crane_example.out
+
+
+
+#################################################
+# wind turbine model with 6 states
+#################################################
+
+WT_NX6_OBJS =
+WT_NX6_OBJS += wt_model_nx6_expl/expl_ode.o
+#WT_NX6_OBJS += wt_model_nx3/jac_energy_balanced_model.o
+#WT_NX6_OBJS += wt_model_nx3/vde_adj_energy_balanced_model.o
+WT_NX6_OBJS += wt_model_nx6_expl/expl_forw_vde.o
+#WT_NX6_OBJS += wt_model_nx3/vde_hess_energy_balanced_model.o
+#WT_NX6_OBJS += wt_model_nx3/impl_odeFun_energy_balanced_model.o
+#WT_NX6_OBJS += wt_model_nx3/impl_jacFun_x_energy_balanced_model.o
+#WT_NX6_OBJS += wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.o
+#WT_NX6_OBJS += wt_model_nx3/impl_jacFun_u_energy_balanced_model.o
+
+sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
+	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_wt_model_nx6 build complete."
+	@echo
+
+run_sim_wt_model_nx6:
+	./sim_wt_model_nx6.out
 
 
 
