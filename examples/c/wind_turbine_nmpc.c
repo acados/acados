@@ -46,40 +46,11 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
-#define WT_MODEL
-
-#ifdef WT_MODEL
-
 #include "examples/c/wt_model_nx6_expl/wt_model.h"
 #include "examples/c/wt_model_nx6_expl/setup.c"
 
-#else
-
-#include "examples/c/chain_model/chain_model.h"
-
-// x0
-#include "examples/c/chain_model/x0_nm2.c"
-#include "examples/c/chain_model/x0_nm3.c"
-#include "examples/c/chain_model/x0_nm4.c"
-#include "examples/c/chain_model/x0_nm5.c"
-#include "examples/c/chain_model/x0_nm6.c"
-
-// xN
-#include "examples/c/chain_model/xN_nm2.c"
-#include "examples/c/chain_model/xN_nm3.c"
-#include "examples/c/chain_model/xN_nm4.c"
-#include "examples/c/chain_model/xN_nm5.c"
-#include "examples/c/chain_model/xN_nm6.c"
-
-#endif
-
-#ifdef WT_MODEL
 #define NN 40
-#else
-#define NN 15
-#endif
 
-#define TF 3.75
 #define MAX_SQP_ITERS 50
 #define NREP 1
 
@@ -105,7 +76,6 @@ static void shift_controls(ocp_nlp_dims *dims, ocp_nlp_out *out, double *u_end)
 }
 
 
-#ifdef WT_MODEL
 
 static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
 {
@@ -132,146 +102,6 @@ static void read_initial_state_wt(const int nx, double *x0)
 
 
 
-// static void read_final_state_wt(const int nx, double *xN)
-// {
-// 	// TODO
-//     for (int i = 0; i < nx; i++)
-// 		xN[i] = 0.0;
-// }
-
-#else
-
-static void select_dynamics_chain_casadi(int N, int num_free_masses, external_function_casadi *forw_vde)
-{
-	switch (num_free_masses)
-	{
-		case 1:
-			for (int ii = 0; ii < N; ii++)
-			{
-				forw_vde[ii].casadi_fun = &vde_chain_nm2;
-				forw_vde[ii].casadi_work = &vde_chain_nm2_work;
-				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm2_sparsity_in;
-				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm2_sparsity_out;
-				forw_vde[ii].casadi_n_in = &vde_chain_nm2_n_in;
-				forw_vde[ii].casadi_n_out = &vde_chain_nm2_n_out;
-			}
-			break;
-		case 2:
-			for (int ii = 0; ii < N; ii++)
-			{
-				forw_vde[ii].casadi_fun = &vde_chain_nm3;
-				forw_vde[ii].casadi_work = &vde_chain_nm3_work;
-				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm3_sparsity_in;
-				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm3_sparsity_out;
-				forw_vde[ii].casadi_n_in = &vde_chain_nm3_n_in;
-				forw_vde[ii].casadi_n_out = &vde_chain_nm3_n_out;
-			}
-			break;
-		case 3:
-			for (int ii = 0; ii < N; ii++)
-			{
-				forw_vde[ii].casadi_fun = &vde_chain_nm4;
-				forw_vde[ii].casadi_work = &vde_chain_nm4_work;
-				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm4_sparsity_in;
-				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm4_sparsity_out;
-				forw_vde[ii].casadi_n_in = &vde_chain_nm4_n_in;
-				forw_vde[ii].casadi_n_out = &vde_chain_nm4_n_out;
-			}
-			break;
-		case 4:
-			for (int ii = 0; ii < N; ii++)
-			{
-				forw_vde[ii].casadi_fun = &vde_chain_nm5;
-				forw_vde[ii].casadi_work = &vde_chain_nm5_work;
-				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm5_sparsity_in;
-				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm5_sparsity_out;
-				forw_vde[ii].casadi_n_in = &vde_chain_nm5_n_in;
-				forw_vde[ii].casadi_n_out = &vde_chain_nm5_n_out;
-			}
-			break;
-		case 5:
-			for (int ii = 0; ii < N; ii++)
-			{
-				forw_vde[ii].casadi_fun = &vde_chain_nm6;
-				forw_vde[ii].casadi_work = &vde_chain_nm6_work;
-				forw_vde[ii].casadi_sparsity_in = &vde_chain_nm6_sparsity_in;
-				forw_vde[ii].casadi_sparsity_out = &vde_chain_nm6_sparsity_out;
-				forw_vde[ii].casadi_n_in = &vde_chain_nm6_n_in;
-				forw_vde[ii].casadi_n_out = &vde_chain_nm6_n_out;
-			}
-			break;
-		default:
-			printf("Problem size not available\n");
-			exit(1);
-			break;
-	}
-	return;
-}
-
-static void read_initial_state_chain(const int nx, const int num_free_masses, double *x0)
-{
-	double *ptr;
-    switch (num_free_masses)
-    {
-        case 1:
-            ptr = x0_nm2;
-            break;
-        case 2:
-            ptr = x0_nm3;
-            break;
-        case 3:
-            ptr = x0_nm4;
-            break;
-        case 4:
-            ptr = x0_nm5;
-            break;
-        case 5:
-            ptr = x0_nm6;
-            break;
-        default:
-            printf("\nwrong number of free masses\n");
-			exit(1);
-            break;
-    }
-    for (int i = 0; i < nx; i++)
-		x0[i] = ptr[i];
-}
-
-
-
-void read_final_state_chain(const int nx, const int num_free_masses, double *xN)
-{
-	double *ptr;
-    switch (num_free_masses)
-    {
-        case 1:
-            ptr = xN_nm2;
-            break;
-        case 2:
-            ptr = xN_nm3;
-            break;
-        case 3:
-            ptr = xN_nm4;
-            break;
-        case 4:
-            ptr = xN_nm5;
-            break;
-        case 5:
-            ptr = xN_nm6;
-            break;
-        default:
-            printf("\nwrong number of free masses\n");
-			exit(1);
-            break;
-    }
-    for (int i = 0; i < nx; i++)
-		xN[i] = ptr[i];
-}
-
-
-#endif
-
-
 /************************************************
 * main
 ************************************************/
@@ -282,14 +112,8 @@ int main()
 {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
-#ifdef WT_MODEL
 	// TODO(eco4wind): ACADO formulation has 8 states with control of input rates
 	int NX = 6;
-#else
-	const int NMF = 3;  // number of free masses
-    int NX = 6 * NMF;
-#endif
-
     int NU = 3;
 
     /************************************************
@@ -317,30 +141,20 @@ int main()
 
 	// TODO(eco4wind): add bilinear constraints in nh
 	nh[0] = 0;
-#ifdef WT_MODEL
 	ny[0] = 5;
-#else
-	ny[0] = nx[0]+nu[0];
-#endif
+
+	// TODO(dimitris): BOUNDS ON STATES AND CONTROLS NOT CORRECT YET!
 
     for (int i = 1; i < NN; i++)
     {
         nx[i] = NX;
         nu[i] = NU;
-#ifdef WT_MODEL
         nbx[i] = NX;
-#else
-        nbx[i] = NMF;
-#endif
         nbu[i] = NU;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
 		nh[i] = 0;
-#ifdef WT_MODEL
 		ny[i] = 5;
-#else
-		ny[i] = nx[i]+nu[i];
-#endif
     }
 
     nx[NN] = NX;
@@ -350,11 +164,8 @@ int main()
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
 	nh[NN] = 0;
-#ifdef WT_MODEL
 	ny[NN] = 2;
-#else
-	ny[NN] = nx[NN]+nu[NN];
-#endif
+
     /************************************************
     * problem data
     ************************************************/
@@ -366,37 +177,16 @@ int main()
 	for (int i = 0; i < NX; i++) x_end[i] = 0;
 	for (int i = 0; i < NU; i++) u_end[i] = 0;
 
-#ifdef WT_MODEL
 	// TODO(eco4wind): setup bounds on controls
     double UMAX = 5;
-#else
-    double wall_pos = -0.01;
-    double UMAX = 10;
-#endif
 
 	double x_pos_inf = +1e4;
 	double x_neg_inf = -1e4;
 
     double *xref = malloc(NX*sizeof(double));
 
-#ifdef WT_MODEL
     double uref[3] = {0.0, 0.0, 0.0};
-
 	uref[2] = wind0[0];
-
-#else
-    read_final_state_chain(NX, NMF, xref);
-
-    double uref[3] = {0.0, 0.0, 0.0};
-
-    double *diag_cost_x = malloc(NX*sizeof(double));
-
-    for (int i = 0; i < NX; i++)
-        diag_cost_x[i] = 1e-2;
-
-    double diag_cost_u[3] = {1.0, 1.0, 1.0};
-
-#endif
 
 	// idxb0
 	int *idxb0 = malloc(nb[0]*sizeof(int));
@@ -407,11 +197,7 @@ int main()
 	int *idxb1 = malloc(nb[1]*sizeof(int));
 
     for (int i = 0; i < NU; i++) idxb1[i] = i;
-#ifdef WT_MODEL
     for (int i = 0; i < NX; i++) idxb1[NU+i] = NU + i;
-#else
-    for (int i = 0; i < NMF; i++) idxb1[NU+i] = NU + 6*i + 1;
-#endif
 
 	// idxbN
 	int *idxbN = malloc(nb[NN]*sizeof(int));
@@ -428,22 +214,12 @@ int main()
         lb0[i] = -UMAX;
         ub0[i] = +UMAX;
     }
-#ifdef WT_MODEL
     read_initial_state_wt(NX, lb0+NU);
     read_initial_state_wt(NX, ub0+NU);
-#else
-    read_initial_state_chain(NX, NMF, lb0+NU);
-    read_initial_state_chain(NX, NMF, ub0+NU);
-#endif
 
 	// lb1, ub1
-#ifdef WT_MODEL
 	double *lb1 = malloc((NX+NU)*sizeof(double));
 	double *ub1 = malloc((NX+NU)*sizeof(double));
-#else
-	double *lb1 = malloc((NMF+NU)*sizeof(double));
-	double *ub1 = malloc((NMF+NU)*sizeof(double));
-#endif
 
     for (int j = 0; j < NU; j++)
 	{
@@ -451,19 +227,11 @@ int main()
         ub1[j] = +UMAX;  // umax
     }
 
-#ifdef WT_MODEL
     for (int j = 0; j < NX; j++)
 	{
         lb1[NU+j] = x_neg_inf;
         ub1[NU+j] = x_pos_inf;
     }
-#else
-    for (int j = 0; j < NMF; j++)
-	{
-        lb1[NU+j] = wall_pos;  // wall position
-        ub1[NU+j] = x_pos_inf;
-    }
-#endif
 
 	// lbN, ubN
 	double *lbN = malloc(NX*sizeof(double));
@@ -509,11 +277,8 @@ int main()
 
 	external_function_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_casadi));
 
-#ifdef WT_MODEL
 	select_dynamics_wt_casadi(NN, forw_vde_casadi);
-#else
-	select_dynamics_chain_casadi(NN, NMF, forw_vde_casadi);
-#endif
+
 	external_function_casadi_create_array(NN, forw_vde_casadi);
 
     /************************************************
@@ -525,11 +290,7 @@ int main()
 	// sampling times
 	for (int ii=0; ii<NN; ii++)
 	{
-#ifdef WT_MODEL
     	nlp_in->Ts[ii] = 0.2;
-#else
-		nlp_in->Ts[ii] = TF/NN;
-#endif
 	}
 
 	// output definition: y = [x; u]
@@ -544,8 +305,6 @@ int main()
 			case LINEAR_LS:
 
 				stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
-
-#ifdef WT_MODEL
 
 				// Cyt
 				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
@@ -572,25 +331,6 @@ int main()
 					BLASFEO_DMATEL(&stage_cost_ls->W, 3, 3) = 0.01;
 					BLASFEO_DMATEL(&stage_cost_ls->W, 4, 4) = 0.0001;
 				}
-#else
-				// Cyt
-				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
-				for (int j = 0; j < nu[i]; j++)
-					BLASFEO_DMATEL(&stage_cost_ls->Cyt, j, nx[i]+j) = 1.0;
-				for (int j = 0; j < nx[i]; j++)
-					BLASFEO_DMATEL(&stage_cost_ls->Cyt, nu[i]+j, j) = 1.0;
-
-				// W
-				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
-				for (int j = 0; j < nx[i]; j++)
-					BLASFEO_DMATEL(&stage_cost_ls->W, j, j) = diag_cost_x[j];
-				for (int j = 0; j < nu[i]; j++)
-					BLASFEO_DMATEL(&stage_cost_ls->W, nx[i]+j, nx[i]+j) = diag_cost_u[j];
-
-				// y_ref
-				blasfeo_pack_dvec(nx[i], xref, &stage_cost_ls->y_ref, 0);
-				blasfeo_pack_dvec(nu[i], uref, &stage_cost_ls->y_ref, nx[i]);
-#endif
 				break;
 			default:
 				break;
@@ -697,7 +437,6 @@ int main()
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
-#ifdef WT_MODEL
 			// update reference
 			for (int i = 0; i <= NN; i++)
 			{
@@ -712,7 +451,7 @@ int main()
 					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 4) = wind0[idx + i];
 				}
 			}
-#endif
+
 			// solve NLP
         	status = ocp_nlp_solve(solver, nlp_in, nlp_out);
 
@@ -751,7 +490,6 @@ int main()
 	// printf("\nresiduals\n");
 	// ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
 
-
     /************************************************
     * free memory
     ************************************************/
@@ -769,9 +507,7 @@ int main()
 	free(plan);
 
 	free(xref);
-#ifndef WT_MODEL
-	free(diag_cost_x);
-#endif
+
 	free(lb0);
 	free(ub0);
 	free(lb1);

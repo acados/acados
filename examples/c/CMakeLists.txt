@@ -138,14 +138,14 @@ else()
             add_test(
                 nonlinear_chain_ocp_nlp_no_interface_example
                 nonlinear_chain_ocp_nlp_no_interface_example
-            )        
-    endif()            
+            )
+    endif()
 endif()
 
 # -------------------- wind turbine nmpc
 
 if(ACADOS_WITH_C_INTERFACE)
-    add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${CHAIN_MODEL_SRC} ${WT_MODEL_NX6_SRC})
+    add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6_SRC})
     target_link_libraries(wind_turbine_nmpc_example acados)
     add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 endif()
@@ -157,7 +157,7 @@ if(ACADOS_WITH_C_INTERFACE)
     target_link_libraries(sim_wt_model_nx6 acados)
     add_test(sim_wt_model_nx6 sim_wt_model_nx6)
 endif()
-    
+
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
