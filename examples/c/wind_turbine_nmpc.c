@@ -46,12 +46,12 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
-// #define WT_MODEL
+#define WT_MODEL
 
 #ifdef WT_MODEL
 
 #include "examples/c/wt_model_nx6_expl/wt_model.h"
-#include "examples/c/wt_model_nx6_expl/u_x0.c"
+#include "examples/c/wt_model_nx6_expl/setup.c"
 
 #else
 
@@ -73,9 +73,14 @@
 
 #endif
 
+#ifdef WT_MODEL
+#define NN 40
+#else
 #define NN 15
+#endif
+
 #define TF 3.75
-#define MAX_SQP_ITERS 10
+#define MAX_SQP_ITERS 50
 #define NREP 1
 
 
@@ -119,7 +124,7 @@ static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
 
 static void read_initial_state_wt(const int nx, double *x0)
 {
-	double *ptr = x_ref;
+	double *ptr = x0_in;
 
     for (int i = 0; i < nx; i++)
 		x0[i] = ptr[i];
@@ -127,12 +132,12 @@ static void read_initial_state_wt(const int nx, double *x0)
 
 
 
-static void read_final_state_wt(const int nx, double *xN)
-{
-	// TODO
-    for (int i = 0; i < nx; i++)
-		xN[i] = 0.0;
-}
+// static void read_final_state_wt(const int nx, double *xN)
+// {
+// 	// TODO
+//     for (int i = 0; i < nx; i++)
+// 		xN[i] = 0.0;
+// }
 
 #else
 
@@ -313,7 +318,7 @@ int main()
 	// TODO(eco4wind): add bilinear constraints in nh
 	nh[0] = 0;
 #ifdef WT_MODEL
-	ny[0] = 2;
+	ny[0] = 5;
 #else
 	ny[0] = nx[0]+nu[0];
 #endif
@@ -332,7 +337,7 @@ int main()
 		ng[i] = 0;
 		nh[i] = 0;
 #ifdef WT_MODEL
-		ny[i] = 2;
+		ny[i] = 5;
 #else
 		ny[i] = nx[i]+nu[i];
 #endif
@@ -375,13 +380,10 @@ int main()
     double *xref = malloc(NX*sizeof(double));
 
 #ifdef WT_MODEL
-    read_final_state_wt(NX, xref);
-    // double uref[3] = {0.0, 0.0, 0.0};
+    double uref[3] = {0.0, 0.0, 0.0};
 
-	// NOTE(dimitris): following values do not give nans at first iteration, so the problem must be
-	// the correct xref/uref values that are missing
-	read_initial_state_wt(NX, xref);
-	double uref[3] = {8.169651470932033e+00, 4.024634365037572e+00, 1.399449920654297e+01};
+	uref[2] = wind0[0];
+
 #else
     read_final_state_chain(NX, NMF, xref);
 
@@ -547,9 +549,15 @@ int main()
 
 				// Cyt
 				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
-				// penalize only 1st and 5th state
+				// penalize only 1st and 5th state as well as controls
 				BLASFEO_DMATEL(&stage_cost_ls->Cyt, 0, 0) = 1.0;
 				BLASFEO_DMATEL(&stage_cost_ls->Cyt, 4, 1) = 1.0;
+				if (i < NN)
+				{
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, 6, 2) = 1.0;
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, 7, 3) = 1.0;
+					BLASFEO_DMATEL(&stage_cost_ls->Cyt, 8, 4) = 1.0;
+				}
 
 				// W
 				blasfeo_dgese(ny[i], ny[i], 0.0, &stage_cost_ls->W, 0, 0);
@@ -558,7 +566,12 @@ int main()
 				BLASFEO_DMATEL(&stage_cost_ls->W, 0, 1) = -0.0649;
 				BLASFEO_DMATEL(&stage_cost_ls->W, 1, 0) = -0.0649;
 				BLASFEO_DMATEL(&stage_cost_ls->W, 1, 1) = 0.0180;
-
+				if (i < NN)
+				{
+					BLASFEO_DMATEL(&stage_cost_ls->W, 2, 2) = 0.01;
+					BLASFEO_DMATEL(&stage_cost_ls->W, 3, 3) = 0.01;
+					BLASFEO_DMATEL(&stage_cost_ls->W, 4, 4) = 0.0001;
+				}
 #else
 				// Cyt
 				blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
@@ -666,7 +679,7 @@ int main()
     * sqp solve
     ************************************************/
 
-	int nmpc_problems = 3;
+	int nmpc_problems = 10;
 
     int status;
 
@@ -679,7 +692,7 @@ int main()
 		for (int i=0; i<=NN; i++)
 		{
 			blasfeo_pack_dvec(nu[i], uref, nlp_out->ux+i, 0);
-			blasfeo_pack_dvec(nx[i], xref, nlp_out->ux+i, nu[i]);
+			blasfeo_pack_dvec(nx[i], x0_in, nlp_out->ux+i, nu[i]);
 		}
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
@@ -690,9 +703,14 @@ int main()
 			{
 				stage_cost_ls = nlp_in->cost[i];
 
-				// TODO(eco4wind): load from c file
-				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 0) = xref[0];
-				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 1) = xref[4];
+				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 0) = y_ref[(idx + i)*4+0];
+				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 1) = y_ref[(idx + i)*4+1];
+				if (i < NN)
+				{
+					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 2) = y_ref[(idx + i)*4+2];
+					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 3) = y_ref[(idx + i)*4+3];
+					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 4) = wind0[idx + i];
+				}
 			}
 #endif
 			// solve NLP
@@ -729,6 +747,10 @@ int main()
     double time = acados_toc(&timer)/NREP;
 
     printf("\n\ntotal time = %f ms\n\n", time*1e3);
+
+	// printf("\nresiduals\n");
+	// ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
+
 
     /************************************************
     * free memory
