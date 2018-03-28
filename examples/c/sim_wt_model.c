@@ -229,7 +229,7 @@ int main()
 		/************************************************
 		* sim plan & config
 		************************************************/
-
+		// printf("using solver no. %d\n",nss);
 		// choose plan
 		sim_solver_plan plan;
 
@@ -334,9 +334,9 @@ int main()
 				model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_ode;
 				model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_ode;
 
-				// model->impl_ode_inc_J_xxdot = (external_function_generic *) &impl_ode_inc_J_xxdot;
-				// model->impl_ode_J_xu = (external_function_generic *) &impl_ode_J_xu;
-				// model->impl_ode_J_xxdotu = (external_function_generic *) &impl_ode_J_xxdotu;
+				model->impl_ode_inc_J_xxdot = (external_function_generic *) &impl_ode_inc_J_xxdot;
+				model->impl_ode_J_xu = (external_function_generic *) &impl_ode_J_xu;
+				model->impl_ode_J_xxdotu = (external_function_generic *) &impl_ode_J_xxdotu;
 				break;
 			}
 			case 2:
@@ -515,6 +515,11 @@ int main()
 	external_function_casadi_free(&impl_jac_x_ode);
 	external_function_casadi_free(&impl_jac_xdot_ode);
 	external_function_casadi_free(&impl_jac_u_ode);
+	// gathered functions
+	external_function_casadi_free(&impl_ode_inc_J_xxdot);
+	external_function_casadi_free(&impl_ode_J_xu);
+	external_function_casadi_free(&impl_ode_J_xxdotu);
+	
 
 	/************************************************
 	* return
