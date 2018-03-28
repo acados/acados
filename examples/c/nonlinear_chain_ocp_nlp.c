@@ -994,7 +994,7 @@ int main()
 	// idxbN
 	int *idxbN = malloc(nb[NN]*sizeof(int));
     for (int i = 0; i < nb[NN]; i++)
-        idxbN[i] = i;
+		idxbN[i] = i;
 
 	// lb0, ub0
 	double *lb0 = malloc((NX+NU)*sizeof(double));
