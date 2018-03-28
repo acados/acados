@@ -341,4 +341,7 @@ clean:
 
 deep_clean: clean
 	rm -f chain_model/*.o
+	rm -f wt_model_nx3/*.o
+	rm -f wt_model_nx6_expl/*.o
+	rm -f wt_model_nx6_expl/nx6p2/*.o
 
