@@ -556,9 +556,12 @@ int main()
 
 			if (status!=0)
 			{
-				printf("\nresiduals\n");
-				ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
-				exit(1);
+				if (!(status == 1 && MAX_SQP_ITERS == 1))  // if not RTI
+				{
+					printf("\nresiduals\n");
+					ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
+					exit(1);
+				}
 			}
 
 		}
@@ -605,7 +608,7 @@ int main()
 
 	int check_sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
 
-	if (status == 0)
+	if (status == 0 || (status == 1 && MAX_SQP_ITERS == 1))
 		printf("\nsuccess! (%d iter) \n\n", check_sqp_iter);
 	else
 		printf("\nfailure!\n\n");
