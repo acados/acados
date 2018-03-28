@@ -39,6 +39,8 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
+#include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
+
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
@@ -93,6 +95,47 @@ static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
 
 
 /************************************************
+* nonlinear constraint
+************************************************/
+
+void ext_fun_h1(void *fun, double *in, double *out)
+{
+	
+	int ii;
+
+	int nu = 3;
+	int nx = 8;
+	int nh = 1;
+
+//printf("\nin h\n");
+//d_print_mat(1, nu+nx, in, 1);
+
+	// x
+	double *x = in+0;
+	// u
+	double *u = in+nx;
+
+	// scaling
+	double alpha = 0.944*97/100;
+
+	// h
+	double *h = out+0;
+	h[0] = alpha * x[0] * x[5];
+
+	// J
+	double *J = out+nh;
+	for (ii=0; ii<nh*(nu+nx); ii++)
+		J[ii] = 0.0;
+	J[0] = alpha * x[5];
+	J[5] = alpha * x[0];
+
+	return;
+
+}
+
+
+
+/************************************************
 * main
 ************************************************/
 
@@ -139,7 +182,7 @@ int main()
         nbu[i] = nu_;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
-		nh[i] = 0;
+		nh[i] = 0; // 1;
 		ny[i] = 5; // ny_
     }
 
@@ -165,10 +208,7 @@ int main()
 
 
 
-	/* box constraints */
-
-	// acados inf
-	double acados_inf = 1e8;
+	/* constraints */
 
 	// pitch angle rate
 	double dbeta_min = - 8.0;
@@ -185,6 +225,14 @@ int main()
 	// generator torque
 	double M_gen_min = 0.0;
 	double M_gen_max = 5.0;
+	// electric power
+	double Pel_min = -10000.0;
+	double Pel_max = 10000.0;
+
+	/* box constraints */
+
+	// acados inf
+	double acados_inf = 1e8;
 
 	// first stage
 	int *idxb0 = malloc(nb[0]*sizeof(int));
@@ -284,6 +332,28 @@ int main()
 	exit(1);
 #endif
 
+
+
+	/* nonlinear constraints */
+
+	// middle stages
+	external_function_generic h1;
+	double *lh1;
+	double *uh1;
+	if (nh[1]>0)
+	{
+		h1.evaluate = &ext_fun_h1;
+
+		lh1 = malloc((nh[1])*sizeof(double));
+		uh1 = malloc((nh[1])*sizeof(double));
+
+		// electric power
+		lh1[0] = Pel_min;
+		uh1[0] = Pel_max;
+	}
+
+
+
 	/* linear least squares */
 
 	// output definition
@@ -333,6 +403,7 @@ int main()
 		plan->nlp_cost[i] = LINEAR_LS;
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
 
 	for (int i = 0; i < NN; i++)
 	{
@@ -400,6 +471,7 @@ int main()
 	}
 
 	/* dynamics */
+
 	int set_fun_status;
 
 	for (int i=0; i<NN; i++)
@@ -413,23 +485,39 @@ int main()
     nlp_in->freezeSens = false;
 
     /* constraints */
+
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
+
+	/* box constraints */
 
 	// fist stage
 	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
+	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]+nh[0]);
     for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
     for (int i = 1; i < NN; i++)
 	{
 		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
+		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]+nh[i]);
 		for (int ii=0; ii<nb[i]; ii++) constraints[i]->idxb[ii] = idxb1[ii];
     }
 	// last stage
 	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
+	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]+nh[NN]);
     for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
+
+	/* nonlinear constraints */
+
+	// middle stages
+    for (int i = 1; i < NN; i++)
+	{
+		if(nh[i]>0)
+		{
+			blasfeo_pack_dvec(nh[i], lh1, &constraints[i]->d, nb[i]+ng[i]);
+			blasfeo_pack_dvec(nh[i], uh1, &constraints[i]->d, 2*nb[i]+2*ng[i]+nh[i]);
+			constraints[i]->h = &h1;
+		}
+    }
 
     /************************************************
     * sqp opts
@@ -446,6 +534,7 @@ int main()
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
 			sim_opts->ns = 4;
+//			sim_opts->num_steps = 2;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
@@ -463,6 +552,14 @@ int main()
     sqp_opts->min_res_b = 1e-8;
     sqp_opts->min_res_d = 1e-8;
     sqp_opts->min_res_m = 1e-8;
+
+	// partial condensing
+	if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_HPIPM)
+	{
+		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+//		pcond_solver_opts->pcond_opts->N2 = 10;
+	}
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
