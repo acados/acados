@@ -144,7 +144,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 	opts->ns = 4; // ERK 4
     int ns = opts->ns;
 
-	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+	assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 
 	// set tableau size
 	opts->tableau_size = opts->ns;
@@ -192,7 +192,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 		default:
 		{
 			// impossible
-			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+			assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 		}
 	}
 
@@ -213,7 +213,7 @@ void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 
 	opts->tableau_size = opts->ns;
 
-	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+	assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
@@ -263,7 +263,7 @@ void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 		default:
 		{
 			// impossible
-			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+			assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 		}
 	}
 
