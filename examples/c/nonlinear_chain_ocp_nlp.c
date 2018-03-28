@@ -1053,7 +1053,9 @@ int main()
 			plan->nlp_cost[i] = NONLINEAR_LS;  // also implements linear LS for this example
 	}
 
-	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+//	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
+//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 
 	// NOTE(dimitris): switching between different integrators on each stage to test everything
 	for (int i = 0; i < NN; i++)
