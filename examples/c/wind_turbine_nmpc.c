@@ -606,10 +606,8 @@ int main()
 	* return
 	************************************************/
 
-	int check_sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
-
 	if (status == 0 || (status == 1 && MAX_SQP_ITERS == 1))
-		printf("\nsuccess! (%d iter) \n\n", check_sqp_iter);
+		printf("\nsuccess!\n\n");
 	else
 		printf("\nfailure!\n\n");
 
