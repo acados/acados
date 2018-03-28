@@ -40,6 +40,10 @@ typedef struct
 	external_function_generic *jac_xdot_ode_impl;
 	// jac_u implicit ode
 	external_function_generic *jac_u_ode_impl;
+    //gathered functions
+    external_function_generic *impl_ode_inc_J_xxdot;
+    external_function_generic *impl_ode_J_xu;
+    external_function_generic *impl_ode_J_xxdotu;
 
 } irk_model;
 
