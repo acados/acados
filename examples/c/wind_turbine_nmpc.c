@@ -100,20 +100,17 @@ static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
 
 void ext_fun_h1(void *fun, double *in, double *out)
 {
-	
+
 	int ii;
 
 	int nu = 3;
 	int nx = 8;
 	int nh = 1;
 
-//printf("\nin h\n");
-//d_print_mat(1, nu+nx, in, 1);
-
 	// x
 	double *x = in+0;
 	// u
-	double *u = in+nx;
+	// double *u = in+nx;
 
 	// scaling
 	double alpha = 0.944*97/100;
@@ -226,8 +223,8 @@ int main()
 	double M_gen_min = 0.0;
 	double M_gen_max = 5.0;
 	// electric power
-	double Pel_min = -10000.0;
-	double Pel_max = 10000.0;
+	double Pel_min = 0.0;
+	double Pel_max = 5.0;
 
 	/* box constraints */
 
@@ -553,13 +550,13 @@ int main()
     sqp_opts->min_res_d = 1e-8;
     sqp_opts->min_res_m = 1e-8;
 
-	// partial condensing
-	if (plan->ocp_qp_solver_plan.qp_solver==PARTIAL_CONDENSING_HPIPM)
-	{
-		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-//		pcond_solver_opts->pcond_opts->N2 = 10;
-	}
+	// // partial condensing
+	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	// {
+	// 	ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+	// 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+	// 	pcond_solver_opts->pcond_opts->N2 = 10;
+	// }
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
