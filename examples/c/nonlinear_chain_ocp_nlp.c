@@ -1501,16 +1501,12 @@ int main()
 	free(impl_jac_xdot_casadi);
 	free(impl_jac_u_casadi);
 
-	free(ls_cost_jac_casadi);
-	free(ext_cost_generic);
-
 	free(nlp_opts);
 	free(nlp_in);
 	free(nlp_out);
 	free(solver);
 	free(dims);
 	free(config);
-	free(plan);
 
 	free(xref);
 	free(diag_cost_x);
@@ -1524,7 +1520,7 @@ int main()
 	free(idxb1);
 	free(idxbN);
 
-		for (int i = 0; i <= NN; i++)
+	for (int i = 0; i <= NN; i++)
 	{
 		switch (plan->nlp_cost[i])
 		{
@@ -1535,6 +1531,12 @@ int main()
 				break;
 		}
 	}
+
+
+	free(ls_cost_jac_casadi);
+	free(ext_cost_generic);
+
+	free(plan);
 
 	/************************************************
 	* return
