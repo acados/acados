@@ -281,6 +281,8 @@ int ocp_nlp_cost_external_workspace_calculate_size(void *config_, void *dims_, v
 	size += 1*(nu+nx)*sizeof(double); // ext_cost_in
 	size += 1*((nu+nx)+(nu+nx)*(nu+nx))*sizeof(double); // ext_cost_out
 
+	size += 8;
+
 	return size;
 
 }
@@ -301,6 +303,8 @@ static void ocp_nlp_cost_external_cast_workspace(void *config_, void *dims_, voi
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_cost_external_workspace);
+
+    align_char_to(8, &c_ptr);
 
 	// external_jac_in
 	assign_and_advance_double(nu+nx, &work->ext_cost_in, &c_ptr);
