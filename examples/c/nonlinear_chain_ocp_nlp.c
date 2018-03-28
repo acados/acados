@@ -994,7 +994,7 @@ int main()
 	// idxbN
 	int *idxbN = malloc(nb[NN]*sizeof(int));
     for (int i = 0; i < nb[NN]; i++)
-        idxbN[i] = i;
+		idxbN[i] = i;
 
 	// lb0, ub0
 	double *lb0 = malloc((NX+NU)*sizeof(double));
@@ -1467,7 +1467,9 @@ int main()
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter, time*1e3);
+	int sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
+
+    printf("\n\nstatus = %i, iterations (max %d) = %d, total time = %f ms\n\n", status, MAX_SQP_ITERS, sqp_iter, time*1e3);
 
     for (int k =0; k < 3; k++) {
         printf("u[%d] = \n", k);
@@ -1479,8 +1481,6 @@ int main()
 	blasfeo_print_tran_dvec(nu[NN-1], nlp_out->ux+NN-1, 0);
     printf("x[N] = \n");
 	blasfeo_print_tran_dvec(nx[NN], nlp_out->ux+NN, nu[NN]);
-
-	int check_sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
 
     /************************************************
     * free memory
@@ -1541,7 +1541,7 @@ int main()
 	************************************************/
 
 	if (status == 0)
-		printf("\nsuccess! (%d iter) \n\n", check_sqp_iter);
+		printf("\nsuccess! (%d iter) \n\n", sqp_iter);
 	else
 		printf("\nfailure!\n\n");
 

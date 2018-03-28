@@ -145,7 +145,7 @@ int main()
 
     nx[NN] = nx_;
     nu[NN] = 0;
-    nbx[NN] = 0; // TODO
+    nbx[NN] = 3;
     nbu[NN] = 0;
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
@@ -231,19 +231,12 @@ int main()
 	ub1[1] = dM_gen_max;
 
 	// disturbance as input
+	// TODO(dimitris): isn't this replaced online anyway?
 	idxb1[2] = 2;
 	lb1[2] = 12.0; // XXX dummy
 	ub1[2] = 12.0; // XXX dummy
 
-	// dummy state bounds
-//	for (int ii=0; ii<nbx[1]; ii++)
-//	{
-//		idxb1[nbu[1]+ii] = nbu[1]+ii;
-//		lb1[nbu[1]+ii] = - acados_inf;
-//		ub1[nbu[1]+ii] =   acados_inf;
-//	}
-
-	// generator angular velociry
+	// generator angular velocity
 	idxb1[3] = 3;
 	lb1[3] = OmegaR_min;
 	ub1[3] = OmegaR_max;
@@ -263,14 +256,20 @@ int main()
 	double *lbN = malloc((nb[NN])*sizeof(double));
 	double *ubN = malloc((nb[NN])*sizeof(double));
 
-	// dummy state bounds
-	for (int ii=0; ii<nbx[NN]; ii++)
-	{
-		idxbN[nbu[NN]+ii] = nbu[NN]+ii;
-		lbN[nbu[NN]+ii] = - acados_inf;
-		ubN[nbu[NN]+ii] =   acados_inf;
-	}
+	// generator angular velocity
+	idxbN[0] = 0;
+	lbN[0] = OmegaR_min;
+	ubN[0] = OmegaR_max;
 
+	// pitch angle
+	idxbN[1] = 6;
+	lbN[1] = beta_min;
+	ubN[1] = beta_max;
+
+	// generator torque
+	idxbN[2] = 7;
+	lbN[2] = M_gen_min;
+	ubN[2] = M_gen_max;
 
 #if 0
 	int_print_mat(1, nb[0], idxb0, 1);
@@ -312,8 +311,8 @@ int main()
 	W[0+ny_*1] = -0.0649;
 	W[1+ny_*1] = 0.0180;
 	W[2+ny_*2] = 0.01;
-	W[3+ny_*3] = 0.01;
-	W[4+ny_*4] = 0.0001;
+	W[3+ny_*3] = 0.001;
+	W[4+ny_*4] = 0.00001;  // small weight on wind speed to ensure pos. definiteness
 
 #if 0
 	d_print_mat(ny_, nx_, Vx, ny_);
@@ -495,7 +494,6 @@ int main()
 			blasfeo_pack_dvec(2, u0_ref, nlp_out->ux+i, 0);
 			blasfeo_pack_dvec(1, wind0_ref+i, nlp_out->ux+i, 2);
 			blasfeo_pack_dvec(nx[i], x0_ref, nlp_out->ux+i, nu[i]);
-//			blasfeo_print_tran_dvec(nu[i]+nx[i], nlp_out->ux+i, 0);
 		}
 
 		// update x0 as box constraint
@@ -504,14 +502,11 @@ int main()
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
-
 			// update wind disturbance as box constraint
-			for (int ii=0; ii<=NN; ii++)
+			for (int ii=0; ii<NN; ii++)
 			{
 				BLASFEO_DVECEL(&constraints[ii]->d, 2) = wind0_ref[idx + ii];
 				BLASFEO_DVECEL(&constraints[ii]->d, nb[ii]+ng[ii]+2) = wind0_ref[idx + ii];
-//				blasfeo_print_tran_dvec(nb[ii], &constraints[ii]->d, 0);
-//				blasfeo_print_tran_dvec(nb[ii], &constraints[ii]->d, nb[ii]+ng[ii]);
 			}
 
 			// update reference
@@ -527,7 +522,6 @@ int main()
 					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 3) = y_ref[(idx + i)*4+3];
 					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 4) = wind0_ref[idx + i];
 				}
-//				blasfeo_print_tran_dvec(ny[i], &stage_cost_ls->y_ref, 0);
 			}
 
 			// solve NLP
@@ -560,11 +554,14 @@ int main()
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
 			}
 
-			if(status!=0)
+			if (status!=0)
 			{
-				printf("\nresiduals\n");
-				ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
-				exit(1);
+				if (!(status == 1 && MAX_SQP_ITERS == 1))  // if not RTI
+				{
+					printf("\nresiduals\n");
+					ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
+					exit(1);
+				}
 			}
 
 		}
@@ -573,7 +570,7 @@ int main()
 
     double time = acados_toc(&timer)/NREP;
 
-    printf("\n\ntotal time = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/nmpc_problems);
+    printf("\n\ntotal time (including printing) = %f ms (time per SQP = %f)\n\n", time*1e3, time*1e3/nmpc_problems);
 
 
     /************************************************
@@ -609,10 +606,8 @@ int main()
 	* return
 	************************************************/
 
-	int check_sqp_iter = ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter;
-
-	if (status == 0)
-		printf("\nsuccess! (%d iter) \n\n", check_sqp_iter);
+	if (status == 0 || (status == 1 && MAX_SQP_ITERS == 1))
+		printf("\nsuccess!\n\n");
 	else
 		printf("\nfailure!\n\n");
 

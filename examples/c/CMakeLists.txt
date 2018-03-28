@@ -112,6 +112,11 @@ file(GLOB WT_MODEL_SRC
 )
 
 file(GLOB WT_MODEL_NX6_SRC
+    wt_model_nx6_expl/expl_ode.c
+    wt_model_nx6_expl/expl_forw_vde.c
+)
+
+file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6_expl/nx6p2/expl_ode.c
     wt_model_nx6_expl/nx6p2/expl_forw_vde.c
 )
@@ -145,7 +150,7 @@ endif()
 # -------------------- wind turbine nmpc
 
 if(ACADOS_WITH_C_INTERFACE)
-    add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6_SRC})
+    add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
     target_link_libraries(wind_turbine_nmpc_example acados)
     add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
 endif()
