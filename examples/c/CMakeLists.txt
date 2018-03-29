@@ -57,6 +57,10 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_hess_chain_nm5.c
     chain_model/vde_hess_chain_nm6.c
     chain_model/casadi_erk4_chain_nm2.c
+    chain_model/casadi_erk4_chain_nm3.c
+    chain_model/casadi_erk4_chain_nm4.c
+    # chain_model/casadi_erk4_chain_nm5.c
+    # chain_model/casadi_erk4_chain_nm6.c
     implicit_chain_model/impl_jacFun_u_chain_nm2.c
     implicit_chain_model/impl_jacFun_u_chain_nm3.c
     implicit_chain_model/impl_jacFun_u_chain_nm4.c
