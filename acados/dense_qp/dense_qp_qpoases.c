@@ -442,7 +442,7 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 	if (opts->compute_t)
 	{
 		blasfeo_dvecex_sp(nbd, 1.0, qp_in->idxb, qp_out->v, 0, qp_out->t, nbd+ngd);
-		blasfeo_dgemv_n(ngd, nvd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 0.0, qp_out->t, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
+		blasfeo_dgemv_t(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 0.0, qp_out->t, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
 		blasfeo_dveccpsc(nbd+ngd, -1.0, qp_out->t, nbd+ngd, qp_out->t, 0);
 		blasfeo_daxpy(2*nbd+2*ngd, -1.0, qp_in->d, 0, qp_out->t, 0, qp_out->t, 0);
 	}
