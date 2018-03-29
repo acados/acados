@@ -276,6 +276,8 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
 	size += (nx+nu)*sizeof(double); // discrete_model_in
 	size += (nx1+nx1*(nx+nu))*sizeof(double); // discrete_model_out
 
+	size += 8;
+	
 	return size;
 
 }
@@ -297,6 +299,8 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_workspace);
 
+	align_char_to(8, &c_ptr);
+	
 	// discrete_model_in
 	assign_and_advance_double(nx+nu, &work->discrete_model_in, &c_ptr);
 	// discrete_model_out
