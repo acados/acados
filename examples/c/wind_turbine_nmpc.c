@@ -401,6 +401,7 @@ int main()
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 //	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_HPIPM;
+//	plan->ocp_qp_solver_plan.qp_solver = FULL_CONDENSING_QPOASES;
 
 	for (int i = 0; i < NN; i++)
 	{
@@ -531,7 +532,7 @@ int main()
 		if (plan->sim_solver_plan[i].sim_solver == ERK)
 		{
 			sim_opts->ns = 4;
-//			sim_opts->num_steps = 2;
+			sim_opts->num_steps = 10;
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == LIFTED_IRK)
 		{
@@ -545,10 +546,10 @@ int main()
     }
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
-    sqp_opts->min_res_g = 1e-8;
-    sqp_opts->min_res_b = 1e-8;
-    sqp_opts->min_res_d = 1e-8;
-    sqp_opts->min_res_m = 1e-8;
+    sqp_opts->min_res_g = 1e-6;
+    sqp_opts->min_res_b = 1e-6;
+    sqp_opts->min_res_d = 1e-6;
+    sqp_opts->min_res_m = 1e-6;
 
 	// // partial condensing
 	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)

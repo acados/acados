@@ -40,11 +40,13 @@ typedef struct dense_qp_qpoases_opts_ {
 	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities)
     int set_acado_opts;  // use same options as in acado code generation
     int dummy;           // should not have odd number of ints in a struct
+	int compute_t;
 } dense_qp_qpoases_opts;
 
 
 
-typedef struct dense_qp_qpoases_memory_ {
+typedef struct dense_qp_qpoases_memory_
+{
     double *H;
     double *R;
     double *g;
