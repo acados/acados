@@ -222,7 +222,7 @@ int main()
 	external_function_casadi_create(&impl_ode_J_xxdotu);
 
 
-	int number_sim_solvers = 3;
+	int number_sim_solvers = 2;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -277,7 +277,7 @@ int main()
 
 //		opts->ns = 4; // number of stages in rk integrator
 //		opts->num_steps = 5; // number of integration steps
-		opts->sens_adj = false;
+		opts->sens_adj = true;
 		opts->sens_forw = true;
 
 		switch (nss)
@@ -422,7 +422,6 @@ int main()
 			printf("%8.5f ", x_sim[nsim0*nx+ii]);
 		printf("\n");
 
-#if 0
 		double *S_forw_out;
 		S_forw_out = NULL;
 		if(opts->sens_forw){
@@ -445,6 +444,8 @@ int main()
 			}
 			printf("\n");
 		}
+
+#if 0
 
 		double *S_hess_out;
 		if(opts->sens_hess)
