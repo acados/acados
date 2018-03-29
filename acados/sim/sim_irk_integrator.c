@@ -673,16 +673,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    // model->impl_ode_J_xu->evaluate(model->impl_ode_J_xu, ode_args, jac_out);
-                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-                    // blasfeo_pack_dmat(nx, nu, jac_out+nx*nx, nx, JGf, ii*nx, nx);
-
-                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    model->impl_ode_J_xu->evaluate(model->impl_ode_J_xu, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    timing_ad += acados_toc(&timer_ad);
+
+                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+
+					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    // timing_ad += acados_toc(&timer_ad);
                 }
 
             }
@@ -705,16 +705,16 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    // model->impl_ode_J_xxdotu->evaluate(model->impl_ode_J_xxdotu, ode_args, jac_out);
-                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    model->impl_ode_J_xxdotu->evaluate(model->impl_ode_J_xxdotu, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-                    model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
+                    // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
                     for (jj=0;jj<ns;jj++)
 					{
