@@ -273,6 +273,8 @@ ocp_nlp_solver *ocp_nlp_assign(ocp_nlp_solver_config *config, ocp_nlp_dims *dims
 
 ocp_nlp_solver *ocp_nlp_create(ocp_nlp_solver_config *config, ocp_nlp_dims *dims, void *opts_)
 {
+    config->opts_update(config, dims, opts_);
+
     int bytes = ocp_nlp_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);
