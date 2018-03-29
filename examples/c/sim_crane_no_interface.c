@@ -137,59 +137,59 @@ int main()
 
 	// implicit ODE
 
-	external_function_casadi exfun_ode;
-	exfun_ode.casadi_fun = &impl_odeFun;
-	exfun_ode.casadi_work = &impl_odeFun_work;
-	exfun_ode.casadi_sparsity_in = &impl_odeFun_sparsity_in;
-	exfun_ode.casadi_sparsity_out = &impl_odeFun_sparsity_out;
-	exfun_ode.casadi_n_in = &impl_odeFun_n_in;
-	exfun_ode.casadi_n_out = &impl_odeFun_n_out;
+	external_function_casadi impl_ode_fun;
+	impl_ode_fun.casadi_fun = &casadi_impl_ode_fun;
+	impl_ode_fun.casadi_work = &casadi_impl_ode_fun_work;
+	impl_ode_fun.casadi_sparsity_in = &casadi_impl_ode_fun_sparsity_in;
+	impl_ode_fun.casadi_sparsity_out = &casadi_impl_ode_fun_sparsity_out;
+	impl_ode_fun.casadi_n_in = &casadi_impl_ode_fun_n_in;
+	impl_ode_fun.casadi_n_out = &casadi_impl_ode_fun_n_out;
 
-	int ode_size = external_function_casadi_calculate_size(&exfun_ode);
-	void *ode_mem = malloc(ode_size);
-	external_function_casadi_assign(&exfun_ode, ode_mem);
+	int impl_ode_fun_size = external_function_casadi_calculate_size(&impl_ode_fun);
+	void *impl_ode_fun_mem = malloc(impl_ode_fun_size);
+	external_function_casadi_assign(&impl_ode_fun, impl_ode_fun_mem);
 
-	// jac_x implicit ODE
+	//
 
-	external_function_casadi exfun_jac_x_ode;
-	exfun_jac_x_ode.casadi_fun = &impl_jacFun_x;
-	exfun_jac_x_ode.casadi_work = &impl_jacFun_x_work;
-	exfun_jac_x_ode.casadi_sparsity_in = &impl_jacFun_x_sparsity_in;
-	exfun_jac_x_ode.casadi_sparsity_out = &impl_jacFun_x_sparsity_out;
-	exfun_jac_x_ode.casadi_n_in = &impl_jacFun_x_n_in;
-	exfun_jac_x_ode.casadi_n_out = &impl_jacFun_x_n_out;
+	external_function_casadi impl_ode_fun_jac_x_xdot;
+	impl_ode_fun_jac_x_xdot.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
+	impl_ode_fun_jac_x_xdot.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
+	impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_sparsity_in;
+	impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_sparsity_out;
+	impl_ode_fun_jac_x_xdot.casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_n_in;
+	impl_ode_fun_jac_x_xdot.casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_n_out;
 
-	int jac_x_ode_size = external_function_casadi_calculate_size(&exfun_jac_x_ode);
-	void *jac_x_ode_mem = malloc(jac_x_ode_size);
-	external_function_casadi_assign(&exfun_jac_x_ode, jac_x_ode_mem);
+	int impl_ode_fun_jac_x_xdot_size = external_function_casadi_calculate_size(&impl_ode_fun_jac_x_xdot);
+	void *impl_ode_fun_jac_x_xdot_mem = malloc(impl_ode_fun_jac_x_xdot_size);
+	external_function_casadi_assign(&impl_ode_fun_jac_x_xdot, impl_ode_fun_jac_x_xdot_mem);
 
-	// jac_xdot implicit ODE
+	//
 
-	external_function_casadi exfun_jac_xdot_ode;
-	exfun_jac_xdot_ode.casadi_fun = &impl_jacFun_xdot;
-	exfun_jac_xdot_ode.casadi_work = &impl_jacFun_xdot_work;
-	exfun_jac_xdot_ode.casadi_sparsity_in = &impl_jacFun_xdot_sparsity_in;
-	exfun_jac_xdot_ode.casadi_sparsity_out = &impl_jacFun_xdot_sparsity_out;
-	exfun_jac_xdot_ode.casadi_n_in = &impl_jacFun_xdot_n_in;
-	exfun_jac_xdot_ode.casadi_n_out = &impl_jacFun_xdot_n_out;
+	external_function_casadi impl_ode_jac_x_xdot_u;
+	impl_ode_jac_x_xdot_u.casadi_fun = &casadi_impl_ode_jac_x_xdot_u;
+	impl_ode_jac_x_xdot_u.casadi_work = &casadi_impl_ode_jac_x_xdot_u_work;
+	impl_ode_jac_x_xdot_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_sparsity_in;
+	impl_ode_jac_x_xdot_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_sparsity_out;
+	impl_ode_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
+	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
 
-	int jac_xdot_ode_size = external_function_casadi_calculate_size(&exfun_jac_xdot_ode);
-	void *jac_xdot_ode_mem = malloc(jac_xdot_ode_size);
-	external_function_casadi_assign(&exfun_jac_xdot_ode, jac_xdot_ode_mem);
+	int impl_ode_jac_x_xdot_u_size = external_function_casadi_calculate_size(&impl_ode_jac_x_xdot_u);
+	void *impl_ode_jac_x_xdot_u_mem = malloc(impl_ode_jac_x_xdot_u_size);
+	external_function_casadi_assign(&impl_ode_jac_x_xdot_u, impl_ode_jac_x_xdot_u_mem);
 
-	// jac_u implicit ODE
+	//
 
-	external_function_casadi exfun_jac_u_ode;
-	exfun_jac_u_ode.casadi_fun = &impl_jacFun_u;
-	exfun_jac_u_ode.casadi_work = &impl_jacFun_u_work;
-	exfun_jac_u_ode.casadi_sparsity_in = &impl_jacFun_u_sparsity_in;
-	exfun_jac_u_ode.casadi_sparsity_out = &impl_jacFun_u_sparsity_out;
-	exfun_jac_u_ode.casadi_n_in = &impl_jacFun_u_n_in;
-	exfun_jac_u_ode.casadi_n_out = &impl_jacFun_u_n_out;
+	external_function_casadi impl_ode_jac_x_u;
+	impl_ode_jac_x_u.casadi_fun = &casadi_impl_ode_jac_x_u;
+	impl_ode_jac_x_u.casadi_work = &casadi_impl_ode_jac_x_u_work;
+	impl_ode_jac_x_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
+	impl_ode_jac_x_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
+	impl_ode_jac_x_u.casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
+	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
 
-	int jac_u_ode_size = external_function_casadi_calculate_size(&exfun_jac_u_ode);
-	void *jac_u_ode_mem = malloc(jac_u_ode_size);
-	external_function_casadi_assign(&exfun_jac_u_ode, jac_u_ode_mem);
+	int impl_ode_jac_x_u_size = external_function_casadi_calculate_size(&impl_ode_jac_x_u);
+	void *impl_ode_jac_x_u_mem = malloc(impl_ode_jac_x_u_size);
+	external_function_casadi_assign(&impl_ode_jac_x_u, impl_ode_jac_x_u_mem);
 
 
 
@@ -312,10 +312,10 @@ int main()
 			case 1: // irk
 			{
 				irk_model *model = in->model;
-				model->ode_impl = (external_function_generic *) &exfun_ode;
-				model->jac_x_ode_impl = (external_function_generic *) &exfun_jac_x_ode;
-				model->jac_xdot_ode_impl = (external_function_generic *) &exfun_jac_xdot_ode;
-				model->jac_u_ode_impl = (external_function_generic *) &exfun_jac_u_ode;
+				model->impl_ode_fun = (external_function_generic *) &impl_ode_fun;
+				model->impl_ode_fun_jac_x_xdot = (external_function_generic *) &impl_ode_fun_jac_x_xdot;
+				model->impl_ode_jac_x_xdot_u = (external_function_generic *) &impl_ode_jac_x_xdot_u;
+				model->impl_ode_jac_x_u = (external_function_generic *) &impl_ode_jac_x_u;
 				break;
 			}
 			case 2: // lifted_irk
@@ -468,10 +468,10 @@ int main()
 	free(adj_vde_mem);
 	free(hess_ode_mem);
 	// implicit model
-	free(ode_mem);
-	free(jac_x_ode_mem);
-	free(jac_xdot_ode_mem);
-	free(jac_u_ode_mem);
+	free(impl_ode_fun_mem);
+	free(impl_ode_fun_jac_x_xdot_mem);
+	free(impl_ode_jac_x_xdot_u_mem);
+	free(impl_ode_jac_x_u_mem);
 
 /************************************************
 * return
