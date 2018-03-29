@@ -39,8 +39,7 @@ typedef struct dense_qp_qpoases_opts_ {
 	int use_precomputed_cholesky;
 	int hotstart; 		 // this option requires constant data matrices! (eg linear MPC, inexact schemes with frozen sensitivities)
     int set_acado_opts;  // use same options as in acado code generation
-    int dummy;           // should not have odd number of ints in a struct
-	int compute_t;
+	int compute_t;       // compute t in qp_out (to have correct residuals in NLP)
 } dense_qp_qpoases_opts;
 
 
