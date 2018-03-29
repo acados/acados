@@ -245,7 +245,7 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
     size += steps * blasfeo_memsize_dvec(nx*ns); // for K_traj
 
     size += nx * sizeof(double); //  rGt
-    size += nx * (2*nx+nu) * sizeof(double); // jac_out
+    size += nx * (2*nx+nu+1) * sizeof(double); // jac_out
     size += nx * nx * sizeof(double); // Jt
     size += (2*nx + nu) * sizeof(double); // ode_args
     size += (nx+nu) * sizeof(double); // S_adj_w
@@ -334,7 +334,7 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     }
 
     assign_and_advance_double(nx, &workspace->rGt, &c_ptr);
-    assign_and_advance_double(nx * (2*nx+nu), &workspace->jac_out, &c_ptr);
+    assign_and_advance_double(nx * (2*nx+nu+1), &workspace->jac_out, &c_ptr);
     assign_and_advance_double(nx * nx, &workspace->Jt, &c_ptr);
     assign_and_advance_double(2*nx + nu, &workspace->ode_args, &c_ptr);
     assign_and_advance_double(nx + nu, &workspace->S_adj_w, &c_ptr);
@@ -487,20 +487,30 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 // compute the residual of implicit ode at time t_ii, store value in rGt
-				acados_tic(&timer_ad);
-                model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
-				timing_ad += acados_toc(&timer_ad);
+                if ( !((opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse)) )
+                { // otherwise eval the ode together with the jacobians within next if
+                    acados_tic(&timer_ad);
+                    model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+                    timing_ad += acados_toc(&timer_ad);
+                    // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
+                    blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
+                }
+				// acados_tic(&timer_ad);
+                // model->ode_impl->evaluate(model->ode_impl, ode_args, rGt); // TODO: 
+				// timing_ad += acados_toc(&timer_ad);
 
                 // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
-                blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
+                // blasfeo_pack_dvec(nx, rGt, rG, ii*nx);
 
                 if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
 				{
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
-                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
-                    model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                    model->impl_ode_inc_J_xxdot->evaluate(model->impl_ode_inc_J_xxdot, ode_args, jac_out);
+                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
+                    blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
 
                     // compute the blocks of JGK
                     for (jj=0; jj<ns; jj++)
@@ -510,12 +520,12 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 						{
                             a *= step;
                             for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] = a * jac_out[kk];
+                                Jt[kk] = a * jac_out[kk+nx];
                         }
                         if(jj==ii)
 						{
                             for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] += jac_out[nx*nx+kk];
+                                Jt[kk] += jac_out[nx*(nx+1)+kk];
                         }
                         // fill in the ii-th, jj-th block of JGK
                         blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
