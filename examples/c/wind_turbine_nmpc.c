@@ -79,7 +79,7 @@ static void shift_controls(ocp_nlp_dims *dims, ocp_nlp_out *out, double *u_end)
 
 
 
-static void select_dynamics_wt_casadi(int N, external_function_casadi *forw_vde)
+static void select_dynamics_wt_casadi(int N, external_function_param_casadi *forw_vde)
 {
 	for (int ii = 0; ii < N; ii++)
 	{
@@ -103,7 +103,7 @@ void ext_fun_h1(void *fun, double *in, double *out)
 
 	int ii;
 
-	int nu = 3;
+	int nu = 2;
 	int nx = 8;
 	int nh = 1;
 
@@ -141,8 +141,8 @@ int main()
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
 	int nx_ = 8;
-    int nu_ = 3;
-	int ny_ = 5;
+    int nu_ = 2;
+	int ny_ = 4;
 
     /************************************************
     * problem dimensions
@@ -169,7 +169,7 @@ int main()
 
 	// TODO(dimitris): add bilinear constraints later
 	nh[0] = 0;
-	ny[0] = 5; // ny_
+	ny[0] = 4; // ny_
 
     for (int i = 1; i < NN; i++)
     {
@@ -179,8 +179,8 @@ int main()
         nbu[i] = nu_;
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
-		nh[i] = 0; // 1;
-		ny[i] = 5; // ny_
+		nh[i] = 1;
+		ny[i] = 4; // ny_
     }
 
     nx[NN] = nx_;
@@ -224,7 +224,7 @@ int main()
 	double M_gen_max = 5.0;
 	// electric power
 	double Pel_min = 0.0;
-	double Pel_max = 5.0;
+	double Pel_max = 5.7;
 
 	/* box constraints */
 
@@ -245,11 +245,6 @@ int main()
 	idxb0[1] = 1;
 	lb0[1] = dM_gen_min;
 	ub0[1] = dM_gen_max;
-
-	// disturbance as input
-	idxb0[2] = 2;
-	lb0[2] = 12.0; // XXX dummy
-	ub0[2] = 12.0; // XXX dummy
 
 	// dummy state bounds
 	for (int ii=0; ii<nbx[0]; ii++)
@@ -275,26 +270,20 @@ int main()
 	lb1[1] = dM_gen_min;
 	ub1[1] = dM_gen_max;
 
-	// disturbance as input
-	// TODO(dimitris): isn't this replaced online anyway?
-	idxb1[2] = 2;
-	lb1[2] = 12.0; // XXX dummy
-	ub1[2] = 12.0; // XXX dummy
-
 	// generator angular velocity
-	idxb1[3] = 3;
-	lb1[3] = OmegaR_min;
-	ub1[3] = OmegaR_max;
+	idxb1[2] = 2;
+	lb1[2] = OmegaR_min;
+	ub1[2] = OmegaR_max;
 
 	// pitch angle
-	idxb1[4] = 9;
-	lb1[4] = beta_min;
-	ub1[4] = beta_max;
+	idxb1[3] = 8;
+	lb1[3] = beta_min;
+	ub1[3] = beta_max;
 
 	// generator torque
-	idxb1[5] = 10;
-	lb1[5] = M_gen_min;
-	ub1[5] = M_gen_max;
+	idxb1[4] = 9;
+	lb1[4] = M_gen_min;
+	ub1[4] = M_gen_max;
 
 	// last stage
 	int *idxbN = malloc(nb[NN]*sizeof(int));
@@ -368,7 +357,6 @@ int main()
 		Vu[ii] = 0.0;
 	Vu[2+ny_*0] = 1.0;
 	Vu[3+ny_*1] = 1.0;
-	Vu[4+ny_*2] = 1.0;
 
 	double *W = malloc((ny_*ny_)*sizeof(double));
 	for (int ii=0; ii<ny_*ny_; ii++)
@@ -379,7 +367,6 @@ int main()
 	W[1+ny_*1] = 0.0180;
 	W[2+ny_*2] = 0.01;
 	W[3+ny_*3] = 0.001;
-	W[4+ny_*4] = 0.00001;  // small weight on wind speed to ensure pos. definiteness
 
 #if 0
 	d_print_mat(ny_, nx_, Vx, ny_);
@@ -422,11 +409,13 @@ int main()
     * dynamics
     ************************************************/
 
-	external_function_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_casadi));
+	int np = 1; // number of local parametrs for each dynamics model function
+
+	external_function_param_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_param_casadi));
 
 	select_dynamics_wt_casadi(NN, forw_vde_casadi);
 
-	external_function_casadi_create_array(NN, forw_vde_casadi);
+	external_function_param_casadi_create_array(NN, forw_vde_casadi, np);
 
     /************************************************
     * nlp_in
@@ -551,13 +540,13 @@ int main()
     sqp_opts->min_res_d = 1e-6;
     sqp_opts->min_res_m = 1e-6;
 
-	// // partial condensing
-	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
-	// {
-	// 	ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-	// 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-	// 	pcond_solver_opts->pcond_opts->N2 = 10;
-	// }
+	// partial condensing
+	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	{
+		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+		pcond_solver_opts->pcond_opts->N2 = 10;
+	}
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
@@ -593,15 +582,14 @@ int main()
 
 		// update x0 as box constraint
 		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nbu[0]);
-		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nb[0]+ng[0]+nbu[0]);
+		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nb[0]+ng[0]+nh[0]+nbu[0]);
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
-			// update wind disturbance as box constraint
+			// update wind distrurbance as external function parameter
 			for (int ii=0; ii<NN; ii++)
 			{
-				BLASFEO_DVECEL(&constraints[ii]->d, 2) = wind0_ref[idx + ii];
-				BLASFEO_DVECEL(&constraints[ii]->d, nb[ii]+ng[ii]+2) = wind0_ref[idx + ii];
+				forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, wind0_ref+idx+ii);
 			}
 
 			// update reference
@@ -647,6 +635,7 @@ int main()
 				printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
+				printf("electrical power %f \n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7)); 
 			}
 
 			if (status!=0)
@@ -673,7 +662,7 @@ int main()
     ************************************************/
 
 	// TODO(dimitris): VALGRIND!
- 	external_function_casadi_free(forw_vde_casadi);
+ 	external_function_param_casadi_free(forw_vde_casadi);
 	free(forw_vde_casadi);
 
 	free(nlp_opts);
