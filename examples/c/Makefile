@@ -65,15 +65,15 @@ examples: $(EXAMPLES)
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_sim_wt_model
 RUN_EXAMPLES += run_sim_wt_model_nx6
-RUN_EXAMPLES += run_sim_crane_example
-RUN_EXAMPLES += run_mass_spring_example
+# RUN_EXAMPLES += run_sim_crane_example
+# RUN_EXAMPLES += run_mass_spring_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
-RUN_EXAMPLES += run_sim_crane_no_interface
-RUN_EXAMPLES += run_mass_spring_example_no_interface
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
+# RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+# RUN_EXAMPLES += run_sim_crane_no_interface
+# RUN_EXAMPLES += run_mass_spring_example_no_interface
+# RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
@@ -429,10 +429,6 @@ run_nonlinear_chain_ocp_nlp:
 run_sim_erk_wt:
 	./sim_erk_wt.out
 
-
-#################################################
-# clean
-#################################################
 
 #################################################
 # clean
