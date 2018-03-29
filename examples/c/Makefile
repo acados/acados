@@ -46,6 +46,7 @@ EXAMPLES += sim_gnsf_crane
 EXAMPLES += sim_gnsf_crane_empty_z
 EXAMPLES += sim_irk_crane2
 EXAMPLES += sim_wt_model
+EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 #EXAMPLES += mass_spring_pcond_hpipm_split
@@ -56,12 +57,14 @@ EXAMPLES += sim_crane_no_interface
 # EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 EXAMPLES += sim_gnsf2_crane
+EXAMPLES += wind_turbine_nmpc
 
 examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_sim_wt_model
+RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_mass_spring_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
@@ -71,6 +74,7 @@ RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 RUN_EXAMPLES += run_sim_crane_no_interface
 RUN_EXAMPLES += run_mass_spring_example_no_interface
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
+RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -200,6 +204,40 @@ run_sim_crane_example:
 
 run_sim_crane_example:
 	./sim_crane_example.out
+
+
+
+#################################################
+# wind turbine model with 6 states
+#################################################
+
+WT_NX6_OBJS =
+WT_NX6_OBJS += wt_model_nx6_expl/expl_ode.o
+WT_NX6_OBJS += wt_model_nx6_expl/expl_forw_vde.o
+
+sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
+	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example sim_wt_model_nx6 build complete."
+	@echo
+
+run_sim_wt_model_nx6:
+	./sim_wt_model_nx6.out
+
+
+
+WT_NX6P2_OBJS =
+WT_NX6P2_OBJS += wt_model_nx6_expl/nx6p2/expl_ode.o
+WT_NX6P2_OBJS += wt_model_nx6_expl/nx6p2/expl_forw_vde.o
+
+wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
+	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example wind_turbine_nmpc build complete."
+	@echo
+
+run_wind_turbine_nmpc:
+	./wind_turbine_nmpc.out
 
 
 
@@ -403,3 +441,7 @@ clean:
 
 deep_clean: clean
 	rm -f chain_model/*.o
+	rm -f wt_model_nx3/*.o
+	rm -f wt_model_nx6_expl/*.o
+	rm -f wt_model_nx6_expl/nx6p2/*.o
+

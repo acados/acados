@@ -96,6 +96,8 @@ int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory);
 //
+int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
+//
 int sim_lifted_irk_opts_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_lifted_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory);

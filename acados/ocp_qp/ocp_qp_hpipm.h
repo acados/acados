@@ -51,21 +51,21 @@ typedef struct ocp_qp_hpipm_memory_
 
 
 //
-int ocp_qp_hpipm_opts_calculate_size(void *config, ocp_qp_dims *dims);
+int ocp_qp_hpipm_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_qp_hpipm_opts_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_hpipm_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_qp_hpipm_opts_initialize_default(void *config, ocp_qp_dims *dims, void *opts_);
+void ocp_qp_hpipm_opts_initialize_default(void *config, void *dims, void *opts_);
 //
-void ocp_qp_hpipm_opts_update(void *config, ocp_qp_dims *dims, void *opts_);
+void ocp_qp_hpipm_opts_update(void *config, void *dims, void *opts_);
 //
-int ocp_qp_hpipm_memory_calculate_size(void *config, ocp_qp_dims *dims, void *opts_);
+int ocp_qp_hpipm_memory_calculate_size(void *config, void *dims, void *opts_);
 //
-void *ocp_qp_hpipm_memory_assign(void *config, ocp_qp_dims *dims, void *opts_, void *raw_memory);
+void *ocp_qp_hpipm_memory_assign(void *config, void *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_hpipm_workspace_calculate_size(void *config, ocp_qp_dims *dims, void *opts_);
+int ocp_qp_hpipm_workspace_calculate_size(void *config, void *dims, void *opts_);
 //
-int ocp_qp_hpipm(void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
+int ocp_qp_hpipm(void *config, void *qp_in, void *qp_out, void *opts_, void *mem_, void *work_);
 //
 void ocp_qp_hpipm_config_initialize_default(void *config);
 

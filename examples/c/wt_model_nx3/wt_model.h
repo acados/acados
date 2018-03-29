@@ -1,5 +1,5 @@
-#ifndef EXAMPLES_C_WT_MODEL_CRANE_MODEL_H_
-#define EXAMPLES_C_WT_MODEL_CRANE_MODEL_H_
+#ifndef EXAMPLES_C_WT_MODEL_NX3_H_
+#define EXAMPLES_C_WT_MODEL_NX3_H_
 
 #include "acados/utils/types.h"
 
@@ -85,5 +85,5 @@ int impl_jacFun_u_energy_balanced_model_n_out();
 } /* extern "C" */
 #endif
 
-#endif  // EXAMPLES_C_WT_MODEL_CRANE_MODEL_H_
+#endif  // EXAMPLES_C_WT_MODEL_NX3_H_
 

@@ -21,12 +21,6 @@ set(PACKAGE_SO_VERSION "0.1")
 
 include(CMakePackageConfigHelpers)
 
-if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    set(ACADOS_WITH_HPMPC OFF)
-else()
-    set(ACADOS_WITH_HPMPC ON)
-endif()
-
 # Build list with all source files to go into the acados library
 file(GLOB_RECURSE ACADOS_SRC "${PROJECT_SOURCE_DIR}/acados/*.c")
 

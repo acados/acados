@@ -144,7 +144,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 	opts->ns = 4; // ERK 4
     int ns = opts->ns;
 
-	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+	assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 
 	// set tableau size
 	opts->tableau_size = opts->ns;
@@ -192,7 +192,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 		default:
 		{
 			// impossible
-			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+			assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 		}
 	}
 
@@ -213,7 +213,7 @@ void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 
 	opts->tableau_size = opts->ns;
 
-	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+	assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
@@ -263,7 +263,7 @@ void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 		default:
 		{
 			// impossible
-			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+			assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 		}
 	}
 
@@ -424,7 +424,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         nf = 0;
 
     int nhess = (nf + 1) * nf / 2;
-    int nX = nx * (1 + nf);
+    int nX = nx + nx*nf;
 
     double *x = in->x;
     double *u = in->u;
@@ -490,7 +490,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             for (j = 0; j < s; j++)
 			{
                 a = A_mat[j * ns + s];
-                if (a!=0){
+                if (a!=0)
+				{
                     a *= step;
                     for (i = 0; i < nX; i++)
                         rhs_forw_in[i] += a * K_traj[j * nX + i];
@@ -554,7 +555,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 		{
             K_traj = workspace->K_traj + istep * ns * nX;
             forw_traj = workspace->out_forw_traj + (istep+1) * nX;
-            for (s = ns - 1; s > -1; s--) {
+            for (s = ns - 1; s > -1; s--)
+			{
                 // forward variables:
                 for (i = 0; i < nForw; i++)
                     rhs_adj_in[i] = forw_traj[i]; // extract x trajectory

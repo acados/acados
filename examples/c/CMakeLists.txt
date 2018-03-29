@@ -24,9 +24,13 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/jac_chain_nm2.c
     chain_model/jac_chain_nm3.c
     chain_model/jac_chain_nm4.c
+    chain_model/jac_chain_nm5.c
+    chain_model/jac_chain_nm6.c
     chain_model/vde_chain_nm2.c
     chain_model/vde_chain_nm3.c
     chain_model/vde_chain_nm4.c
+    chain_model/vde_chain_nm5.c
+    chain_model/vde_chain_nm6.c
     chain_model/ls_cost_nm2.c
     chain_model/ls_cost_nm3.c
     chain_model/ls_cost_nm4.c
@@ -40,13 +44,23 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/pathcon_nm2.c
     chain_model/pathcon_nm3.c
     chain_model/pathcon_nm4.c
+    chain_model/pathcon_nm5.c
+    chain_model/pathcon_nm6.c
     chain_model/pathconN_nm2.c
     chain_model/pathconN_nm3.c
     chain_model/pathconN_nm4.c
+    chain_model/pathconN_nm5.c
+    chain_model/pathconN_nm6.c
     chain_model/vde_hess_chain_nm2.c
     chain_model/vde_hess_chain_nm3.c
     chain_model/vde_hess_chain_nm4.c
+    chain_model/vde_hess_chain_nm5.c
+    chain_model/vde_hess_chain_nm6.c
     chain_model/casadi_erk4_chain_nm2.c
+    chain_model/casadi_erk4_chain_nm3.c
+    chain_model/casadi_erk4_chain_nm4.c
+    # chain_model/casadi_erk4_chain_nm5.c
+    # chain_model/casadi_erk4_chain_nm6.c
     implicit_chain_model/impl_jacFun_u_chain_nm2.c
     implicit_chain_model/impl_jacFun_u_chain_nm3.c
     implicit_chain_model/impl_jacFun_u_chain_nm4.c
@@ -101,7 +115,58 @@ file(GLOB WT_MODEL_SRC
     wt_model_nx3/impl_jacFun_u_energy_balanced_model.c
 )
 
+file(GLOB WT_MODEL_NX6_SRC
+    wt_model_nx6_expl/expl_ode.c
+    wt_model_nx6_expl/expl_forw_vde.c
+)
+
+file(GLOB WT_MODEL_NX6P2_SRC
+    wt_model_nx6_expl/nx6p2/expl_ode.c
+    wt_model_nx6_expl/nx6p2/expl_forw_vde.c
+)
+
 # Define examples
+
+# -------------------- nonlinear_chain
+
+if(ACADOS_WITH_C_INTERFACE)
+    add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
+    target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
+    add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
+else()
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+        add_executable(
+                nonlinear_chain_ocp_nlp_no_interface_example
+                nonlinear_chain_ocp_nlp_no_interface.c
+                ${CHAIN_MODEL_SRC}
+            )
+            target_link_libraries(
+                nonlinear_chain_ocp_nlp_no_interface_example
+                acados
+            )
+            add_test(
+                nonlinear_chain_ocp_nlp_no_interface_example
+                nonlinear_chain_ocp_nlp_no_interface_example
+            )
+    endif()
+endif()
+
+# -------------------- wind turbine nmpc
+
+if(ACADOS_WITH_C_INTERFACE)
+    add_executable(wind_turbine_nmpc_example wind_turbine_nmpc.c ${WT_MODEL_NX6P2_SRC})
+    target_link_libraries(wind_turbine_nmpc_example acados)
+    add_test(wind_turbine_nmpc_example wind_turbine_nmpc_example)
+endif()
+
+# -------------------- sim_wt_nx6
+
+if(ACADOS_WITH_C_INTERFACE)
+    add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
+    target_link_libraries(sim_wt_model_nx6 acados)
+    add_test(sim_wt_model_nx6 sim_wt_model_nx6)
+endif()
+
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
@@ -151,27 +216,6 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     #   ./mass_spring_partial_tightening_example
     # )
 
-    # -------------------- nonlinear_chain
-
-    if(ACADOS_WITH_C_INTERFACE)
-        add_executable(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp.c ${CHAIN_MODEL_SRC})
-        target_link_libraries(nonlinear_chain_ocp_nlp_example acados)
-        add_test(nonlinear_chain_ocp_nlp_example nonlinear_chain_ocp_nlp_example)
-    endif()
-
-    add_executable(
-            nonlinear_chain_ocp_nlp_no_interface_example
-            nonlinear_chain_ocp_nlp_no_interface.c
-            ${CHAIN_MODEL_SRC}
-        )
-        target_link_libraries(
-            nonlinear_chain_ocp_nlp_no_interface_example
-            acados
-        )
-        add_test(
-            nonlinear_chain_ocp_nlp_no_interface_example
-            nonlinear_chain_ocp_nlp_no_interface_example
-        )
 
     # -------------------- sim_crane
     if(ACADOS_WITH_C_INTERFACE)

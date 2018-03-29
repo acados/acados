@@ -67,6 +67,26 @@ void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory
 
 
 
+int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+{
+    lifted_irk_model *model = model_;
+
+    switch (fun_type)
+    {
+        case EXPLICIT_ODE_JACOBIAN:
+            model->jac_ode_expl = (external_function_generic *) fun;
+            break;
+        case EXPLICIT_VDE_FORWARD:
+            model->forw_vde_expl = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
+}
+
+
+
 /************************************************
 * opts
 ************************************************/
@@ -1551,6 +1571,7 @@ void sim_lifted_irk_config_initialize_default(void *config_)
 	config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_lifted_irk_model_assign;
+    config->model_set_function = &sim_lifted_irk_model_set_function;
 
 	return;
 

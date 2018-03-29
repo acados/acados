@@ -34,12 +34,55 @@
 
 
 /************************************************
+* dims
+************************************************/
+
+int ocp_nlp_dynamics_disc_dims_calculate_size(void *config_)
+{
+    int size = 0;
+
+	size += sizeof(ocp_nlp_dynamics_disc_dims);
+
+    return size;
+}
+
+
+
+void *ocp_nlp_dynamics_disc_dims_assign(void *config_, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_nlp_dynamics_disc_dims *dims = (ocp_nlp_dynamics_disc_dims *) c_ptr;
+    c_ptr += sizeof(ocp_nlp_dynamics_disc_dims);
+
+    assert((char *) raw_memory + ocp_nlp_dynamics_disc_dims_calculate_size(config_) >= c_ptr);
+
+    return dims;
+}
+
+
+
+void ocp_nlp_dynamics_disc_dims_initialize(void *config_, void *dims_, int nx, int nu, int nx1, int nu1)
+{
+	ocp_nlp_dynamics_disc_dims *dims = dims_;
+
+	dims->nx = nx;
+	dims->nu = nu;
+	dims->nx1 = nx1;
+	dims->nu1 = nu1;
+
+	return;
+}
+
+
+/************************************************
 * options
 ************************************************/
 
-int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims)
+int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, void *dims_)
 {
 //	ocp_nlp_dynamics_config *config = config_;
+//	ocp_nlp_dynamics_disc_dims *config = dims_;
 
     int size = 0;
 
@@ -50,23 +93,24 @@ int ocp_nlp_dynamics_disc_opts_calculate_size(void *config_, ocp_nlp_dynamics_di
 
 
 
-void *ocp_nlp_dynamics_disc_opts_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *raw_memory)
+void *ocp_nlp_dynamics_disc_opts_assign(void *config_, void *dims_, void *raw_memory)
 {
 //	ocp_nlp_dynamics_config *config = config_;
+	// ocp_nlp_dynamics_disc_dims *dims = dims_;
 
     char *c_ptr = (char *) raw_memory;
 
     ocp_nlp_dynamics_disc_opts *opts = (ocp_nlp_dynamics_disc_opts *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_opts);
 
-    assert((char*)raw_memory + ocp_nlp_dynamics_disc_opts_calculate_size(config_, dims) >= c_ptr);
+    assert((char*)raw_memory + ocp_nlp_dynamics_disc_opts_calculate_size(config_, dims_) >= c_ptr);
 
     return opts;
 }
 
 
 
-void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_)
+void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, void *dims_, void *opts_)
 {
 //	ocp_nlp_dynamics_config *config = config_;
 //	ocp_nlp_dynamics_disc_opts *opts = opts_;
@@ -77,7 +121,7 @@ void ocp_nlp_dynamics_disc_opts_initialize_default(void *config_, ocp_nlp_dynami
 
 
 
-void ocp_nlp_dynamics_disc_opts_update(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_)
+void ocp_nlp_dynamics_disc_opts_update(void *config_, void *dims_, void *opts_)
 {
 //	ocp_nlp_dynamics_config *config = config_;
 //	ocp_nlp_dynamics_disc_opts *opts = opts_;
@@ -92,9 +136,10 @@ void ocp_nlp_dynamics_disc_opts_update(void *config_, ocp_nlp_dynamics_dims *dim
 * memory
 ************************************************/
 
-int ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_)
+int ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, void *dims_, void *opts_)
 {
 //	ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_disc_dims *dims = dims_;
 //	ocp_nlp_dynamics_disc_opts *opts = opts_;
 
 	// extract dims
@@ -116,9 +161,10 @@ int ocp_nlp_dynamics_disc_memory_calculate_size(void *config_, ocp_nlp_dynamics_
 
 
 
-void *ocp_nlp_dynamics_disc_memory_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_, void *raw_memory)
+void *ocp_nlp_dynamics_disc_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
 {
 //	ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_disc_dims *dims = dims_;
 //	ocp_nlp_dynamics_disc_opts *opts = opts_;
 
 	char *c_ptr = (char *) raw_memory;
@@ -213,9 +259,10 @@ void ocp_nlp_dynamics_disc_memory_set_BAbt_ptr(struct blasfeo_dmat *BAbt, void *
 * workspace
 ************************************************/
 
-int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_)
+int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, void *opts_)
 {
 //	ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_disc_dims *dims = dims_;
 //	ocp_nlp_dynamics_disc_opts *opts = opts_;
 
 	int nx = dims->nx;
@@ -235,10 +282,11 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, ocp_nlp_dynami
 
 
 
-static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, ocp_nlp_dynamics_dims *dims, void *opts_, void *work_)
+static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, void *opts_, void *work_)
 {
 
 //	ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_disc_dims *dims = dims_;
 //	ocp_nlp_dynamics_disc_opts *opts = opts_;
 	ocp_nlp_dynamics_disc_workspace *work = work_;
 
@@ -265,7 +313,7 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, ocp_nlp_dynamics
 * model
 ************************************************/
 
-int ocp_nlp_dynamics_disc_model_calculate_size(void *config_, ocp_nlp_dynamics_dims *dims)
+int ocp_nlp_dynamics_disc_model_calculate_size(void *config_, void *dims_)
 {
 //	ocp_nlp_dynamics_config *config = config_;
 
@@ -282,7 +330,7 @@ int ocp_nlp_dynamics_disc_model_calculate_size(void *config_, ocp_nlp_dynamics_d
 
 
 
-void *ocp_nlp_dynamics_disc_model_assign(void *config_, ocp_nlp_dynamics_dims *dims, void *raw_memory)
+void *ocp_nlp_dynamics_disc_model_assign(void *config_, void *dims_, void *raw_memory)
 {
 //	ocp_nlp_dynamics_config *config = config_;
 
@@ -296,7 +344,7 @@ void *ocp_nlp_dynamics_disc_model_assign(void *config_, ocp_nlp_dynamics_dims *d
     ocp_nlp_dynamics_disc_model *model = (ocp_nlp_dynamics_disc_model *) c_ptr;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_model);
 
-    assert((char *) raw_memory + ocp_nlp_dynamics_disc_model_calculate_size(config_, dims) >= c_ptr);
+    assert((char *) raw_memory + ocp_nlp_dynamics_disc_model_calculate_size(config_, dims_) >= c_ptr);
 
 	return model;
 }
@@ -314,12 +362,20 @@ void ocp_nlp_dynamics_disc_model_set_T(double T, void *model_)
 * functions
 ************************************************/
 
-void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts_, void *mem_, void *work_)
+void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
 {
-	ocp_nlp_dynamics_disc_cast_workspace(config_, dims, opts_, work_);
+	return;
+}
 
-	ocp_nlp_dynamics_config *config = config_;
-	ocp_nlp_dynamics_disc_opts *opts = opts_;
+
+
+void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_, void *mem_, void *work_)
+{
+	ocp_nlp_dynamics_disc_cast_workspace(config_, dims_, opts_, work_);
+
+	// ocp_nlp_dynamics_config *config = config_;
+	ocp_nlp_dynamics_disc_dims *dims = dims_;
+	// ocp_nlp_dynamics_disc_opts *opts = opts_;
 	ocp_nlp_dynamics_disc_workspace *work = work_;
 	ocp_nlp_dynamics_disc_memory *mem = mem_;
 	ocp_nlp_dynamics_disc_model *model = model_;
@@ -358,6 +414,9 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
 {
 	ocp_nlp_dynamics_config *config = config_;
 
+	config->dims_calculate_size = &ocp_nlp_dynamics_disc_dims_calculate_size;
+	config->dims_assign = &ocp_nlp_dynamics_disc_dims_assign;
+	config->dims_initialize = &ocp_nlp_dynamics_disc_dims_initialize;
 	config->model_calculate_size = &ocp_nlp_dynamics_disc_model_calculate_size;
 	config->model_assign = &ocp_nlp_dynamics_disc_model_assign;
 	config->model_set_T = &ocp_nlp_dynamics_disc_model_set_T;
@@ -374,6 +433,7 @@ void ocp_nlp_dynamics_disc_config_initialize_default(void *config_)
 	config->memory_set_pi_ptr = &ocp_nlp_dynamics_disc_memory_set_pi_ptr;
 	config->memory_set_BAbt_ptr = &ocp_nlp_dynamics_disc_memory_set_BAbt_ptr;
 	config->workspace_calculate_size = &ocp_nlp_dynamics_disc_workspace_calculate_size;
+	config->initialize = &ocp_nlp_dynamics_disc_initialize;
 	config->update_qp_matrices = &ocp_nlp_dynamics_disc_update_qp_matrices;
 	config->config_initialize_default = &ocp_nlp_dynamics_disc_config_initialize_default;
 

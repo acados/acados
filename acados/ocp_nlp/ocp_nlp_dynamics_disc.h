@@ -35,6 +35,27 @@ extern "C" {
 
 
 /************************************************
+* dims
+************************************************/
+
+typedef struct
+{
+    int nx; // number of states at the current stage
+    int nu; // number of inputs at the current stage
+	int nx1; // number of states at the next stage
+	int nu1; // number of inputes at the next stage
+} ocp_nlp_dynamics_disc_dims;
+
+//
+int ocp_nlp_dynamics_disc_dims_calculate_size(void *config);
+//
+void *ocp_nlp_dynamics_disc_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_dynamics_disc_dims_initialize(void *config, void *dims, int nx, int nu, int nx1, int nu1);
+
+
+
+/************************************************
 * options
 ************************************************/
 
@@ -44,13 +65,13 @@ typedef struct
 } ocp_nlp_dynamics_disc_opts;
 
 //
-int ocp_nlp_dynamics_disc_opts_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
+int ocp_nlp_dynamics_disc_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_dynamics_disc_opts_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+void *ocp_nlp_dynamics_disc_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_dynamics_disc_opts_initialize_default(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+void ocp_nlp_dynamics_disc_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_dynamics_disc_opts_update(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+void ocp_nlp_dynamics_disc_opts_update(void *config, void *dims, void *opts);
 
 
 
@@ -69,9 +90,9 @@ typedef struct
 } ocp_nlp_dynamics_disc_memory;
 
 //
-int ocp_nlp_dynamics_disc_memory_calculate_size(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+int ocp_nlp_dynamics_disc_memory_calculate_size(void *config, void *dims, void *opts);
 //
-void *ocp_nlp_dynamics_disc_memory_assign(void *config, ocp_nlp_dynamics_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_dynamics_disc_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
 struct blasfeo_dvec *ocp_nlp_dynamics_disc_memory_get_fun_ptr(void *memory);
 //
@@ -97,7 +118,7 @@ typedef struct
 	double *discrete_model_out;
 } ocp_nlp_dynamics_disc_workspace;
 
-int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, ocp_nlp_dynamics_dims *dims, void *opts);
+int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config, void *dims, void *opts);
 
 
 /************************************************
@@ -110,9 +131,9 @@ typedef struct
 } ocp_nlp_dynamics_disc_model;
 
 //
-int ocp_nlp_dynamics_disc_model_calculate_size(void *config, ocp_nlp_dynamics_dims *dims);
+int ocp_nlp_dynamics_disc_model_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_dynamics_disc_model_assign(void *config, ocp_nlp_dynamics_dims *dims, void *raw_memory);
+void *ocp_nlp_dynamics_disc_model_assign(void *config, void *dims, void *raw_memory);
 //
 void ocp_nlp_dynamics_disc_model_set_T(double T, void *model);
 
@@ -125,7 +146,11 @@ void ocp_nlp_dynamics_disc_model_set_T(double T, void *model);
 //
 void ocp_nlp_dynamics_disc_config_initialize_default(void *config);
 //
-void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, ocp_nlp_dynamics_dims *dims, void *model_, void *opts, void *mem, void *work_);
+void ocp_nlp_dynamics_disc_initialize(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+//
+void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims, void *model_, void *opts, void *mem, void *work_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

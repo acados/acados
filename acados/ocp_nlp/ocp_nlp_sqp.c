@@ -507,7 +507,7 @@ static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nl
 
 
 /************************************************
-* solver
+* functions
 ************************************************/
 
 
@@ -516,23 +516,26 @@ static void initialize_qp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
 {
 	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
 
+	// loop index
+	int ii;
+
+	// extract dims
     int N = dims->N;
 
-	/* cost */
-	for (int ii=0; ii<=N; ii++)
+	for (ii=0; ii<N; ii++)
 	{
-		config->cost[ii]->initialize_qp(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
+		// cost
+		config->cost[ii]->initialize(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
+		// dynamics
+		config->dynamics[ii]->initialize(config->dynamics[ii], dims->dynamics[ii], nlp_in->dynamics[ii], opts->dynamics[ii], mem->dynamics[ii], work->dynamics[ii]);
+		// constraints
+		config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
 	}
-
-
-	/* dynamics */
-
-
-	/* constraints */
-	for (int ii=0; ii<=N; ii++)
-	{
-		config->constraints[ii]->initialize_qp(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
-	}
+	ii = N;
+	// cost
+	config->cost[ii]->initialize(config->cost[ii], dims->cost[ii], nlp_in->cost[ii], opts->cost[ii], mem->cost[ii], work->cost[ii]);
+	// constraints
+	config->constraints[ii]->initialize(config->constraints[ii], dims->constraints[ii], nlp_in->constraints[ii], opts->constraints[ii], mem->constraints[ii], work->constraints[ii]);
 
 	return;
 
@@ -549,90 +552,82 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nh, nx1, nu1;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *ni = dims->ni;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
 
-	/* cost */
+	/* stage-wise multiple shooting lagrangian evaluation */
 
-	for (i=0; i<=N; i++)
+	for (i=0; i<N; i++)
 	{
+		// cost
 		config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+		// dynamics
+		config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+		// constraints
+		config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
 	}
+	i = N;
+	// cost
+	config->cost[i]->update_qp_matrices(config->cost[i], dims->cost[i], nlp_in->cost[i], opts->cost[i], mem->cost[i], work->cost[i]);
+	// constraints
+	config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+
+
+
+	/* collect stage-wise evaluations */
 
 	// nlp mem: cost_grad
 	for (i=0; i<=N; i++)
 	{
-		nx = dims->cost[i]->nx;
-		nu = dims->cost[i]->nu;
 		struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
-		blasfeo_dveccp(nu+nx, cost_grad, 0, nlp_mem->cost_grad+i, 0);
-	}
-
-
-	/* dynamics */
-
-	for (i=0; i<N; i++)
-	{
-		config->dynamics[i]->update_qp_matrices(config->dynamics[i], dims->dynamics[i], nlp_in->dynamics[i], opts->dynamics[i], mem->dynamics[i], work->dynamics[i]);
+		blasfeo_dveccp(nu[i]+nx[i], cost_grad, 0, nlp_mem->cost_grad+i, 0);
 	}
 
 	// nlp mem: dyn_fun
 	for (i=0; i<N; i++)
 	{
-		nx1 = dims->dynamics[i]->nx1;
 		struct blasfeo_dvec *dyn_fun = config->dynamics[i]->memory_get_fun_ptr(mem->dynamics[i]);
-		blasfeo_dveccp(nx1, dyn_fun, 0, nlp_mem->dyn_fun+i, 0);
+		blasfeo_dveccp(nx[i+1], dyn_fun, 0, nlp_mem->dyn_fun+i, 0);
 	}
 
 	// nlp mem: dyn_adj
 	for (i=0; i<N; i++)
 	{
-		nx = dims->dynamics[i]->nx;
-		nu = dims->dynamics[i]->nu;
 		struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
-		blasfeo_dveccp(nu+nx, dyn_adj, 0, nlp_mem->dyn_adj+i, 0);
+		blasfeo_dveccp(nu[i]+nx[i], dyn_adj, 0, nlp_mem->dyn_adj+i, 0);
 	}
 
-	blasfeo_dvecse(dims->dynamics[N-1]->nu1+dims->dynamics[N-1]->nx1, 0.0, nlp_mem->dyn_adj+N, 0);
+	blasfeo_dvecse(nu[N]+nx[N], 0.0, nlp_mem->dyn_adj+N, 0);
 
 	for (i=0; i<N; i++)
 	{
-		nx = dims->dynamics[i]->nx;
-		nu = dims->dynamics[i]->nu;
-		nx1 = dims->dynamics[i]->nx1;
-		nu1 = dims->dynamics[i]->nu1;
 		struct blasfeo_dvec *dyn_adj = config->dynamics[i]->memory_get_adj_ptr(mem->dynamics[i]);
-		blasfeo_daxpy(nx1, 1.0, dyn_adj, nu+nx, nlp_mem->dyn_adj+i+1, nu1, nlp_mem->dyn_adj+i+1, nu1);
-	}
-
-
-	/* constraints */
-
-	for (i=0; i<=N; i++)
-	{
-		config->constraints[i]->update_qp_matrices(config->constraints[i], dims->constraints[i], nlp_in->constraints[i], opts->constraints[i], mem->constraints[i], work->constraints[i]);
+		blasfeo_daxpy(nx[i+1], 1.0, dyn_adj, nu[i]+nx[i], nlp_mem->dyn_adj+i+1, nu[i+1], nlp_mem->dyn_adj+i+1, nu[i+1]);
 	}
 
 	// nlp mem: ineq_fun
 	for (i=0; i<=N; i++)
 	{
-		nb = dims->constraints[i]->nb;
-		ng = dims->constraints[i]->ng;
-		nh = dims->constraints[i]->nh;
 		struct blasfeo_dvec *ineq_fun = config->constraints[i]->memory_get_fun_ptr(mem->constraints[i]);
-		blasfeo_dveccp(2*nb+2*ng+2*nh, ineq_fun, 0, nlp_mem->ineq_fun+i, 0);
+		blasfeo_dveccp(2*ni[i], ineq_fun, 0, nlp_mem->ineq_fun+i, 0);
 	}
 
 	// nlp mem: ineq_adj
 	for (i=0; i<=N; i++)
 	{
-		nx = dims->constraints[i]->nx;
-		nu = dims->constraints[i]->nu;
 		struct blasfeo_dvec *ineq_adj = config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
-		blasfeo_dveccp(nu+nx, ineq_adj, 0, nlp_mem->ineq_adj+i, 0);
+		blasfeo_dveccp(nu[i]+nx[i], ineq_adj, 0, nlp_mem->ineq_adj+i, 0);
 	}
+
+
+
+
+
+
 
 
 
@@ -677,37 +672,31 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nx1, nh;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *ni = dims->ni;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
 
 	// g
 	for (i=0; i<=N; i++)
 	{
-		nx = dims->cost[i]->nx;
-		nu = dims->cost[i]->nu;
-		blasfeo_dveccp(nu+nx, nlp_mem->cost_grad+i, 0, work->qp_in->rq+i, 0);
-        blasfeo_drowin(nu+nx, 1.0, work->qp_in->rq+i, 0, work->qp_in->RSQrq+i, nu+nx, 0); // XXX needed ???
+		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, work->qp_in->rq+i, 0);
+        blasfeo_drowin(nu[i]+nx[i], 1.0, work->qp_in->rq+i, 0, work->qp_in->RSQrq+i, nu[i]+nx[i], 0); // XXX needed ???
 
 	}
 
 	// b
 	for (i=0; i<N; i++)
 	{
-		nx = dims->dynamics[i]->nx;
-		nu = dims->dynamics[i]->nu;
-		nx1 = dims->dynamics[i]->nx1;
-		blasfeo_dveccp(nx1, nlp_mem->dyn_fun+i, 0, work->qp_in->b+i, 0);
-		blasfeo_drowin(nx1, 1.0, work->qp_in->b+i, 0, work->qp_in->BAbt+i, nu+nx, 0); // XXX needed ???
+		blasfeo_dveccp(nx[i+1], nlp_mem->dyn_fun+i, 0, work->qp_in->b+i, 0);
+		blasfeo_drowin(nx[i+1], 1.0, work->qp_in->b+i, 0, work->qp_in->BAbt+i, nu[i]+nx[i], 0); // XXX needed ???
 	}
 
 	// d
 	for (i=0; i<=N; i++)
 	{
-		nb = dims->constraints[i]->nb;
-		ng = dims->constraints[i]->ng;
-		nh = dims->constraints[i]->nh;
-		blasfeo_dveccp(2*nb+2*ng+2*nh, nlp_mem->ineq_fun+i, 0, work->qp_in->d+i, 0);
+		blasfeo_dveccp(2*ni[i], nlp_mem->ineq_fun+i, 0, work->qp_in->d+i, 0);
 	}
 
 	return;
@@ -724,7 +713,9 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 
 	// extract dims
     int N = dims->N;
-	int nx, nu, nb, ng, nh, nx1;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *ni = dims->ni;
 
 // TODO fix and move where appropriate
 //    for (i = 0; i < N; i++)
@@ -739,32 +730,23 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 	// (full) step in primal variables
 	for (i=0; i<=N; i++)
 	{
-		nx = dims->constraints[i]->nx;
-		nu = dims->constraints[i]->nu;
-		blasfeo_daxpy(nu+nx, 1.0, work->qp_out->ux+i, 0, nlp_out->ux+i, 0, nlp_out->ux+i, 0);
+		blasfeo_daxpy(nu[i]+nx[i], 1.0, work->qp_out->ux+i, 0, nlp_out->ux+i, 0, nlp_out->ux+i, 0);
 	}
 
 	// absolute in dual variables
 	for (i=0; i<N; i++)
 	{
-		nx1 = dims->constraints[i+1]->nx;
-		blasfeo_dveccp(nx1, work->qp_out->pi+i, 0, nlp_out->pi+i, 0);
+		blasfeo_dveccp(nx[i+1], work->qp_out->pi+i, 0, nlp_out->pi+i, 0);
 	}
 
 	for (i=0; i<=N; i++)
 	{
-		nb = dims->constraints[i]->nb;
-		ng = dims->constraints[i]->ng;
-		nh = dims->constraints[i]->nh;
-		blasfeo_dveccp(2*nb+2*ng+2*nh, work->qp_out->lam+i, 0, nlp_out->lam+i, 0);
+		blasfeo_dveccp(2*ni[i], work->qp_out->lam+i, 0, nlp_out->lam+i, 0);
 	}
 
 	for (i=0; i<=N; i++)
 	{
-		nb = dims->constraints[i]->nb;
-		ng = dims->constraints[i]->ng;
-		nh = dims->constraints[i]->nh;
-		blasfeo_dveccp(2*nb+2*ng+2*nh, work->qp_out->t+i, 0, nlp_out->t+i, 0);
+		blasfeo_dveccp(2*ni[i], work->qp_out->t+i, 0, nlp_out->t+i, 0);
 	}
 
 	return;

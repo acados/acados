@@ -33,7 +33,28 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 
 
-/* model */
+/************************************************
+* dims
+************************************************/
+
+typedef struct
+{
+	int nx; // number of states
+	int nu; // number of inputs
+} ocp_nlp_cost_external_dims;
+
+//
+int ocp_nlp_cost_external_dims_calculate_size(void *config);
+//
+void *ocp_nlp_cost_external_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx, int nu, int ny); 
+
+
+
+/************************************************
+* model
+************************************************/
 
 typedef struct
 {
@@ -41,13 +62,15 @@ typedef struct
 } ocp_nlp_cost_external_model;
 
 //
-int ocp_nlp_cost_external_model_calculate_size(void *config, ocp_nlp_cost_dims *dims);
+int ocp_nlp_cost_external_model_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_cost_external_model_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+void *ocp_nlp_cost_external_model_assign(void *config, void *dims, void *raw_memory);
 
 
 
-/* options */
+/************************************************
+* options
+************************************************/
 
 typedef struct
 {
@@ -55,17 +78,19 @@ typedef struct
 } ocp_nlp_cost_external_opts;
 
 //
-int ocp_nlp_cost_external_opts_calculate_size(void *config, ocp_nlp_cost_dims *dims);
+int ocp_nlp_cost_external_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_cost_external_opts_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+void *ocp_nlp_cost_external_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_cost_external_opts_initialize_default(void *config, ocp_nlp_cost_dims *dims, void *opts);
+void ocp_nlp_cost_external_opts_initialize_default(void *config, void *dims, void *opts);
 //
-void ocp_nlp_cost_external_opts_update(void *config, ocp_nlp_cost_dims *dims, void *opts);
+void ocp_nlp_cost_external_opts_update(void *config, void *dims, void *opts);
 
 
 
-/* memory */
+/************************************************
+* memory
+************************************************/
 
 typedef struct
 {
@@ -75,9 +100,9 @@ typedef struct
 } ocp_nlp_cost_external_memory;
 
 //
-int ocp_nlp_cost_external_memory_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+int ocp_nlp_cost_external_memory_calculate_size(void *config, void *dims, void *opts);
 //
-void *ocp_nlp_cost_external_memory_assign(void *config, ocp_nlp_cost_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_cost_external_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
 struct blasfeo_dvec *ocp_nlp_cost_external_memory_get_grad_ptr(void *memory_);
 //
@@ -87,7 +112,9 @@ void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memo
 
 
 
-/* workspace */
+/************************************************
+* workspace
+************************************************/
 
 typedef struct
 {
@@ -96,18 +123,22 @@ typedef struct
 } ocp_nlp_cost_external_workspace;
 
 //
-int ocp_nlp_cost_external_workspace_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+int ocp_nlp_cost_external_workspace_calculate_size(void *config, void *dims, void *opts);
 
 
 
-/* functions */
+/************************************************
+* functions
+************************************************/
 
 //
 void ocp_nlp_cost_external_config_initialize_default(void *config);
 //
-void ocp_nlp_cost_external_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
+void ocp_nlp_cost_external_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_cost_external_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

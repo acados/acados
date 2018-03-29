@@ -52,6 +52,31 @@ void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
+int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+{
+    irk_model *model = model_;
+
+    switch (fun_type)
+    {
+        case IMPLICIT_ODE:
+            model->ode_impl = (external_function_generic *) fun;
+            break;
+        case IMPLICIT_ODE_JACOBIAN_X:
+            model->jac_x_ode_impl = (external_function_generic *) fun;
+            break;
+        case IMPLICIT_ODE_JACOBIAN_XDOT:
+            model->jac_xdot_ode_impl = (external_function_generic *) fun;
+            break;
+        case IMPLICIT_ODE_JACOBIAN_U:
+            model->jac_u_ode_impl = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
+}
+
+
 /************************************************
 * opts
 ************************************************/
@@ -418,7 +443,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         jac_out[kk] = 0.0;
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
-	
+
 //	double inf_norm_K;
 //	double tol_inf_norm_K = 1e-6;
 
@@ -733,6 +758,7 @@ void sim_irk_config_initialize_default(void *config_)
 	config->workspace_calculate_size = &sim_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_irk_model_calculate_size;
 	config->model_assign = &sim_irk_model_assign;
+    config->model_set_function = &sim_irk_model_set_function;
 
 	return;
 

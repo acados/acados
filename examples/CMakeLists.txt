@@ -22,7 +22,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -DEXT_DEP -fdiagnostics-show-option")
 endif()
 
-if (ACADOS_WITH_WERROR)
+if (ACADOS_WITH_WERROR AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_compile_options(-Werror)
 endif()
 

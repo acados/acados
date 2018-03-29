@@ -64,27 +64,3 @@ ocp_nlp_cost_config *ocp_nlp_cost_config_assign(void *raw_memory)
 
 
 
-/************************************************
-* dims
-************************************************/
-
-int ocp_nlp_cost_dims_calculate_size()
-{
-    int size = sizeof(ocp_nlp_cost_dims);
-
-    return size;
-}
-
-
-
-ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_cost_dims *dims = (ocp_nlp_cost_dims *) c_ptr;
-    c_ptr += sizeof(ocp_nlp_cost_dims);
-
-    assert((char *) raw_memory + ocp_nlp_cost_dims_calculate_size() >= c_ptr);
-
-    return dims;
-}
