@@ -43,17 +43,17 @@ LIBS += -lblasfeo -lm -lblas -llapack
 
 EXAMPLES =
 EXAMPLES += sim_wt_model
-EXAMPLES += sim_wt_model_nx6
-EXAMPLES += sim_crane_example
+#EXAMPLES += sim_wt_model_nx6
+#EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 #EXAMPLES += mass_spring_pcond_hpipm_split
 #EXAMPLES += mass_spring_fcond_hpipm_split
 #EXAMPLES += mass_spring_offline_fcond_qpoases_split
-EXAMPLES += nonlinear_chain_ocp_nlp
-EXAMPLES += sim_crane_no_interface
+#EXAMPLES += nonlinear_chain_ocp_nlp
+#EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
-EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
-EXAMPLES += wind_turbine_nmpc
+#EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
+#EXAMPLES += wind_turbine_nmpc
 
 examples: $(EXAMPLES)
 
@@ -61,17 +61,17 @@ examples: $(EXAMPLES)
 
 RUN_EXAMPLES =
 RUN_EXAMPLES += run_sim_wt_model
-RUN_EXAMPLES += run_sim_wt_model_nx6
-RUN_EXAMPLES += run_sim_crane_example
+#RUN_EXAMPLES += run_sim_wt_model_nx6
+#RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_mass_spring_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
-RUN_EXAMPLES += run_sim_crane_no_interface
+#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
+#RUN_EXAMPLES += run_sim_crane_no_interface
 RUN_EXAMPLES += run_mass_spring_example_no_interface
-RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
-RUN_EXAMPLES += run_wind_turbine_nmpc
+#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
+#RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -162,9 +162,9 @@ WT_OBJS += wt_model_nx3/impl_odeFun_energy_balanced_model.o
 WT_OBJS += wt_model_nx3/impl_jacFun_x_energy_balanced_model.o
 WT_OBJS += wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.o
 WT_OBJS += wt_model_nx3/impl_jacFun_u_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_ode_inc_J_xxdot_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_ode_J_xu_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_ode_J_xxdotu_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/impl_ode_inc_J_x_xdot_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/impl_ode_J_x_u_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/impl_ode_J_x_xdot_u_energy_balanced_model.o
 
 sim_wt_model: $(WT_OBJS) sim_wt_model.o
 	$(CCC) -o sim_wt_model.out sim_wt_model.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)

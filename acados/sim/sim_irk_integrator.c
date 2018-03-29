@@ -61,15 +61,15 @@ int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
         case IMPLICIT_ODE:
             model->ode_impl = (external_function_generic *) fun;
             break;
-        case IMPLICIT_ODE_JACOBIAN_X:
-            model->jac_x_ode_impl = (external_function_generic *) fun;
-            break;
-        case IMPLICIT_ODE_JACOBIAN_XDOT:
-            model->jac_xdot_ode_impl = (external_function_generic *) fun;
-            break;
-        case IMPLICIT_ODE_JACOBIAN_U:
-            model->jac_u_ode_impl = (external_function_generic *) fun;
-            break;
+//        case IMPLICIT_ODE_JACOBIAN_X:
+//            model->jac_x_ode_impl = (external_function_generic *) fun;
+//            break;
+//        case IMPLICIT_ODE_JACOBIAN_XDOT:
+//            model->jac_xdot_ode_impl = (external_function_generic *) fun;
+//            break;
+//        case IMPLICIT_ODE_JACOBIAN_U:
+//            model->jac_u_ode_impl = (external_function_generic *) fun;
+//            break;
         default:
             return ACADOS_FAILURE;
     }
@@ -506,7 +506,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 				{
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
-                    model->impl_ode_inc_J_xxdot->evaluate(model->impl_ode_inc_J_xxdot, ode_args, jac_out);
+                    model->impl_ode_inc_J_x_xdot->evaluate(model->impl_ode_inc_J_x_xdot, ode_args, jac_out);
                     // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
                     // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
@@ -585,7 +585,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
 
                 acados_tic(&timer_ad);
-                model->impl_ode_J_xxdotu->evaluate(model->impl_ode_J_xxdotu, ode_args, jac_out);
+                model->impl_ode_J_x_xdot_u->evaluate(model->impl_ode_J_x_xdot_u, ode_args, jac_out);
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                 
@@ -673,7 +673,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    model->impl_ode_J_xu->evaluate(model->impl_ode_J_xu, ode_args, jac_out);
+                    model->impl_ode_J_x_u->evaluate(model->impl_ode_J_x_u, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
@@ -705,7 +705,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    model->impl_ode_J_xxdotu->evaluate(model->impl_ode_J_xxdotu, ode_args, jac_out);
+                    model->impl_ode_J_x_xdot_u->evaluate(model->impl_ode_J_x_xdot_u, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                     // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);

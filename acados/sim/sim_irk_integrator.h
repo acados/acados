@@ -35,15 +35,17 @@ typedef struct
 	// implicit ode
 	external_function_generic *ode_impl;
 	// jac_x implicit ode
-	external_function_generic *jac_x_ode_impl;
+//	external_function_generic *jac_x_ode_impl;
 	// jac_xdot implicit ode
-	external_function_generic *jac_xdot_ode_impl;
+//	external_function_generic *jac_xdot_ode_impl;
 	// jac_u implicit ode
-	external_function_generic *jac_u_ode_impl;
-    //gathered functions
-    external_function_generic *impl_ode_inc_J_xxdot;
-    external_function_generic *impl_ode_J_xu;
-    external_function_generic *impl_ode_J_xxdotu;
+//	external_function_generic *jac_u_ode_impl;
+    // implicit ode (included) & jac_x & jax_xdot
+    external_function_generic *impl_ode_inc_J_x_xdot;
+	// jax_x & jac_u implicit ode
+    external_function_generic *impl_ode_J_x_u;
+	// jax_x & jac_xdot & jac_u implicit ode
+    external_function_generic *impl_ode_J_x_xdot_u;
 
 } irk_model;
 
