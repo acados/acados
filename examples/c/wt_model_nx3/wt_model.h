@@ -79,6 +79,31 @@ const int *impl_jacFun_u_energy_balanced_model_sparsity_out(int);
 int impl_jacFun_u_energy_balanced_model_n_in();
 int impl_jacFun_u_energy_balanced_model_n_out();
 
+// implicit ODE including Jac_xxdot
+int        impl_ode_inc_J_xxdot_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int        impl_ode_inc_J_xxdot_energy_balanced_model_work(int *, int *, int *, int *);
+const int *impl_ode_inc_J_xxdot_energy_balanced_model_sparsity_in(int);
+const int *impl_ode_inc_J_xxdot_energy_balanced_model_sparsity_out(int);
+int        impl_ode_inc_J_xxdot_energy_balanced_model_n_in();
+int        impl_ode_inc_J_xxdot_energy_balanced_model_n_out();
+
+// implicit ODE - Jacobian w.r.t x,u
+int        impl_ode_J_xu_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int        impl_ode_J_xu_energy_balanced_model_work(int *, int *, int *, int *);
+const int *impl_ode_J_xu_energy_balanced_model_sparsity_in(int);
+const int *impl_ode_J_xu_energy_balanced_model_sparsity_out(int);
+int        impl_ode_J_xu_energy_balanced_model_n_in();
+int        impl_ode_J_xu_energy_balanced_model_n_out();
+
+// implicit ODE - Jacobian w.r.t x,xdot,u
+int        impl_ode_J_xxdotu_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int        impl_ode_J_xxdotu_energy_balanced_model_work(int *, int *, int *, int *);
+const int *impl_ode_J_xxdotu_energy_balanced_model_sparsity_in(int);
+const int *impl_ode_J_xxdotu_energy_balanced_model_sparsity_out(int);
+int        impl_ode_J_xxdotu_energy_balanced_model_n_in();
+int        impl_ode_J_xxdotu_energy_balanced_model_n_out();
+
+
 
 
 #ifdef __cplusplus

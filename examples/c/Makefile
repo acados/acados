@@ -255,6 +255,9 @@ WT_OBJS += wt_model_nx3/impl_odeFun_energy_balanced_model.o
 WT_OBJS += wt_model_nx3/impl_jacFun_x_energy_balanced_model.o
 WT_OBJS += wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.o
 WT_OBJS += wt_model_nx3/impl_jacFun_u_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/impl_ode_inc_J_xxdot_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/impl_ode_J_xu_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/impl_ode_J_xxdotu_energy_balanced_model.o
 
 sim_wt_model: $(WT_OBJS) sim_wt_model.o
 	$(CCC) -o sim_wt_model.out sim_wt_model.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
