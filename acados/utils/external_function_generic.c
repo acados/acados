@@ -250,8 +250,11 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
 	// loop index
 	int ii;
 
-	// casadi wrapper as evaluate
+	// casadi wrapper as evaluate function
 	fun->evaluate = &external_function_param_casadi_wrapper;
+
+	// set param function
+	fun->set_param = &external_function_param_casadi_set_param;
 
 	// set number of parameters
 	fun->np = np;
@@ -376,11 +379,14 @@ void external_function_param_casadi_wrapper(void *self, double *in, double *out)
 		d_ptr += fun->args_size[ii];
 	}
 	// copy parametrs vector as last arg
-	ii = fun->in_num;
+//	d_print_mat(1, fun->np, fun->p, 1);
+	ii = fun->in_num-1;
 	for (jj=0; jj<fun->np; jj++)
-		fun->args[ii][jj] = d_ptr[jj];
+		fun->args[ii][jj] = fun->p[jj];
 	d_ptr += fun->np;
 
+//d_print_mat(1, fun->args_size_tot, fun->args[0], 1);
+//exit(1);
 	// call casadi function
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
 
@@ -395,6 +401,23 @@ void external_function_param_casadi_wrapper(void *self, double *in, double *out)
 		casadi_densify(fun->res[ii], ptr_out, sparsity);
 		ptr_out += nrow*ncol;
 	}
+
+	return;
+
+}
+
+
+void external_function_param_casadi_set_param(void *self, double *p)
+{
+
+	// cast into external casadi function
+	external_function_param_casadi *fun = self;
+
+	// loop index
+	int ii;
+
+	for (ii=0; ii<fun->np; ii++)
+		fun->p[ii] = p[ii];
 
 	return;
 
