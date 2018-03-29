@@ -240,4 +240,165 @@ void external_function_casadi_wrapper(void *self, double *in, double *out)
 }
 
 
+/************************************************
+* casadi external parametric function
+************************************************/
+
+int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
+{
+
+	// loop index
+	int ii;
+
+	// casadi wrapper as evaluate
+	fun->evaluate = &external_function_param_casadi_wrapper;
+
+	// set number of parameters
+	fun->np = np;
+
+	fun->casadi_work(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
+
+	fun->in_num = fun->casadi_n_in();
+	fun->out_num = fun->casadi_n_out();
+
+	// args
+	fun->args_size_tot = 0;
+	for (ii=0; ii<fun->args_num; ii++)
+		fun->args_size_tot += casadi_nnz(fun->casadi_sparsity_in(ii));
+
+	// res
+	fun->res_size_tot = 0;
+	for (ii=0; ii<fun->res_num; ii++)
+		fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
+
+	int size = 0;
+
+	// double pointers
+	size += fun->args_num*sizeof(double *); // args
+	size += fun->res_num*sizeof(double *); // res
+
+	// ints
+	size += fun->args_num*sizeof(int); // args_size
+	size += fun->res_num*sizeof(int); // res_size
+	size += fun->iw_size*sizeof(int); // iw
+
+	// doubles
+	size += fun->args_size_tot*sizeof(double); // args
+	size += fun->res_size_tot*sizeof(double); // res
+	size += fun->w_size*sizeof(double); // w
+	size += fun->np*sizeof(double); // p
+
+    size += 8; // initial align
+    size += 8; // align to double
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+void external_function_param_casadi_assign(external_function_param_casadi *fun, void *raw_memory)
+{
+
+	// loop index
+	int ii;
+
+	// save initial pointer to external memory
+	fun->ptr_ext_mem = raw_memory;
+
+	// char pointer for byte advances
+	char *c_ptr = raw_memory;
+
+	// double pointers
+
+	// initial align
+    align_char_to(8, &c_ptr);
+
+	// args
+	assign_and_advance_double_ptrs(fun->args_num, &fun->args, &c_ptr);
+	// res
+	assign_and_advance_double_ptrs(fun->res_num, &fun->res, &c_ptr);
+
+	// args_size
+	assign_and_advance_int(fun->args_num, &fun->args_size, &c_ptr);
+	for (ii=0; ii<fun->args_num; ii++)
+		fun->args_size[ii] = casadi_nnz(fun->casadi_sparsity_in(ii));
+	// res_size
+	assign_and_advance_int(fun->res_num, &fun->res_size, &c_ptr);
+	for (ii=0; ii<fun->res_num; ii++)
+		fun->res_size[ii] = casadi_nnz(fun->casadi_sparsity_out(ii));
+	// iw
+	assign_and_advance_int(fun->iw_size, &fun->iw, &c_ptr);
+
+	// align to double
+    align_char_to(8, &c_ptr);
+
+	// args
+	for (ii=0; ii<fun->args_num; ii++)
+		assign_and_advance_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
+	// res
+	for (ii=0; ii<fun->res_num; ii++)
+		assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
+	// w
+	assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
+	// p
+	assign_and_advance_double(fun->np, &fun->p, &c_ptr);
+
+    assert((char *) raw_memory + external_function_param_casadi_calculate_size(fun, fun->np) >= c_ptr);
+
+	return;
+
+}
+
+
+
+void external_function_param_casadi_wrapper(void *self, double *in, double *out)
+{
+
+	// cast into external casadi function
+	external_function_param_casadi *fun = self;
+
+	// loop index
+	int ii, jj;
+
+	// char *c_ptr;
+
+	// in as args
+	// TODO implement sparsify of input instead of copying them
+	double *d_ptr = in;
+	// skip last argument (that is the parameters vector)
+	for (ii=0; ii<fun->in_num-1; ii++)
+	{
+		for (jj=0; jj<fun->args_size[ii]; jj++)
+			fun->args[ii][jj] = d_ptr[jj];
+		d_ptr += fun->args_size[ii];
+	}
+	// copy parametrs vector as last arg
+	ii = fun->in_num;
+	for (jj=0; jj<fun->np; jj++)
+		fun->args[ii][jj] = d_ptr[jj];
+	d_ptr += fun->np;
+
+	// call casadi function
+	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
+
+	const int *sparsity;
+	int nrow, ncol;
+	double *ptr_out = out;
+	for (ii=0; ii<fun->out_num; ii++)
+	{
+		sparsity = fun->casadi_sparsity_out(ii);
+		nrow = sparsity[0];
+		ncol = sparsity[1];
+		casadi_densify(fun->res[ii], ptr_out, sparsity);
+		ptr_out += nrow*ncol;
+	}
+
+	return;
+
+}
+
+
 
