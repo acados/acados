@@ -38,7 +38,7 @@ dotGEN_Dyn_TrqAct = dx(6);
 %% Control inputs 
 
 % Control inputs 
-u = MX.sym('u',3); 
+u = MX.sym('u',2); 
 
 % Desired pitch angle for Blade ( rad ) 
 BLD_agPtchDes = u(1);
@@ -47,7 +47,9 @@ GEN_trqDes = u(2);
 
 %% Disturbance 
 
+p = MX.sym('p',1); 
+
 % Far upstream effective wind velocity ( m/s ) 
-ENV_velEffWnd = u(3);
+ENV_velEffWnd = p(1);
 
 

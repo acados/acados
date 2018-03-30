@@ -9,21 +9,31 @@ myfile = fopen("u_x0.c", "w");
 
 %fprintf(myfile, "\n");
 
-% u
+% nsim
 fprintf(myfile, "int nsim = %d;\n", size(Usim,1));
 fprintf(myfile, "\n");
+
+% u
 fprintf(myfile, "double u_sim[] = {\n");
 for ii=1:size(Usim,1)-1
-	fprintf(myfile, "%1.15e, %1.15e, %1.15e,\n", Usim(ii,1), Usim(ii,2), Usim(ii,3));
+	fprintf(myfile, "%1.15e, %1.15e,\n", Usim(ii,1), Usim(ii,2));
 end
 ii = size(Usim,1);
-fprintf(myfile, "%1.15e, %1.15e, %1.15e\n", Usim(ii,1), Usim(ii,2), Usim(ii,3));
+fprintf(myfile, "%1.15e, %1.15e\n", Usim(ii,1), Usim(ii,2));
 fprintf(myfile, "};\n");
+fprintf(myfile, "\n");
 
+% p
+fprintf(myfile, "double p_sim[] = {\n");
+for ii=1:size(Usim,1)-1
+	fprintf(myfile, "%1.15e,\n", Usim(ii,3));
+end
+ii = size(Usim,1);
+fprintf(myfile, "%1.15e\n", Usim(ii,3));
+fprintf(myfile, "};\n");
 fprintf(myfile, "\n");
 
 % x_ref
-fprintf(myfile, "\n");
 fprintf(myfile, "double x_ref[] = {\n");
 for ii=1:size(Usim,1)-1
 	fprintf(myfile, "%1.15e, %1.15e, %1.15e, %1.15e, %1.15e, %1.15e,\n", statesFAST(ii,1), statesFAST(ii,2), statesFAST(ii,3), statesFAST(ii,4), statesFAST(ii,5), statesFAST(ii,6));
@@ -31,6 +41,7 @@ end
 ii = size(Usim,1);
 fprintf(myfile, "%1.15e, %1.15e, %1.15e, %1.15e, %1.15e, %1.15e\n", statesFAST(ii,1), statesFAST(ii,2), statesFAST(ii,3), statesFAST(ii,4), statesFAST(ii,5), statesFAST(ii,6));
 fprintf(myfile, "};\n");
+fprintf(myfile, "\n");
 
 % close file
 fclose(myfile);

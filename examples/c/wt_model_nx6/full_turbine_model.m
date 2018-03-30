@@ -29,18 +29,18 @@ S04_SetupNonlinearStateSpaceDynamics;
 
 %% generate casadi C functions
 nx = 6;
-nu = 3;
+nu = 2;
 
 % ODE
-odeFun = Function('expl_ode', {x, u}, {f});
-odeFun.generate('expl_ode');
+odeFun = Function('casadi_expl_ode_fun', {x, u, p}, {f});
+odeFun.generate('expl_ode_fun');
 
 % jac x
-jac_x_odeFun = Function('expl_ode_jac_x', {x, u}, {jacobian(f, x)});
+jac_x_odeFun = Function('casadi_expl_ode_jac_x', {x, u, p}, {jacobian(f, x)});
 jac_x_odeFun.generate('expl_ode_jac_x');
 
 % jac u
-jac_u_odeFun = Function('expl_ode_jac_u', {x, u}, {jacobian(f, u)});
+jac_u_odeFun = Function('casadi_expl_ode_jac_u', {x, u, p}, {jacobian(f, u)});
 jac_u_odeFun.generate('expl_ode_jac_u');
 
 % forward VDE
@@ -53,8 +53,16 @@ vdeX = MX.zeros(nx, nx) + jacobian(f, x)*Sx;
 %vdeU = MX.zeros(nx, nu) + jtimes(f, x, Su) + jacobian(f, u);
 vdeU = MX.zeros(nx, nu) + jacobian(f, x)*Su + jacobian(f, u);
 
-forw_vdeFun = Function('expl_forw_vde', {x, Sx, Su, u}, {f, vdeX, vdeU});
-forw_vdeFun.generate('expl_forw_vde');
+forw_vdeFun = Function('casadi_expl_vde_for', {x, Sx, Su, u, p}, {f, vdeX, vdeU});
+forw_vdeFun.generate('expl_vde_for');
+
+return
+
+
+
+
+
+
 
 %% create an ODE casadi object
 ode = struct('x',x,'p',u,'ode',f);

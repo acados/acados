@@ -46,10 +46,10 @@
 #include <blasfeo/include/blasfeo_d_blas.h>
 
 // wt model
-#include "examples/c/wt_model_nx6_expl/wt_model.h"
+#include "examples/c/wt_model_nx6/wt_model.h"
 
 // x0 and u for simulation
-#include "examples/c/wt_model_nx6_expl/u_x0.c"
+#include "examples/c/wt_model_nx6/u_x0.c"
 
 
 
@@ -63,7 +63,9 @@ int main()
     int ii, jj;
 
     int nx = 6;
-    int nu = 3;
+    int nu = 2;
+	int np = 1;
+
     int NF = nx + nu; // columns of forward seed
 
     double Ts = 0.2; // simulation time
@@ -78,24 +80,24 @@ int main()
 	************************************************/
 
 	// explicit ODE
-	external_function_casadi expl_ode_fun;
-	expl_ode_fun.casadi_fun = &expl_ode;
-	expl_ode_fun.casadi_work = &expl_ode_work;
-	expl_ode_fun.casadi_sparsity_in = &expl_ode_sparsity_in;
-	expl_ode_fun.casadi_sparsity_out = &expl_ode_sparsity_out;
-	expl_ode_fun.casadi_n_in = &expl_ode_n_in;
-	expl_ode_fun.casadi_n_out = &expl_ode_n_out;
-	external_function_casadi_create(&expl_ode_fun);
+	external_function_param_casadi expl_ode_fun;
+	expl_ode_fun.casadi_fun = &casadi_expl_ode_fun;
+	expl_ode_fun.casadi_work = &casadi_expl_ode_fun_work;
+	expl_ode_fun.casadi_sparsity_in = &casadi_expl_ode_fun_sparsity_in;
+	expl_ode_fun.casadi_sparsity_out = &casadi_expl_ode_fun_sparsity_out;
+	expl_ode_fun.casadi_n_in = &casadi_expl_ode_fun_n_in;
+	expl_ode_fun.casadi_n_out = &casadi_expl_ode_fun_n_out;
+	external_function_param_casadi_create(&expl_ode_fun, np);
 
 	// forward explicit VDE
-	external_function_casadi expl_forw_vde_fun;
-	expl_forw_vde_fun.casadi_fun = &expl_forw_vde;
-	expl_forw_vde_fun.casadi_work = &expl_forw_vde_work;
-	expl_forw_vde_fun.casadi_sparsity_in = &expl_forw_vde_sparsity_in;
-	expl_forw_vde_fun.casadi_sparsity_out = &expl_forw_vde_sparsity_out;
-	expl_forw_vde_fun.casadi_n_in = &expl_forw_vde_n_in;
-	expl_forw_vde_fun.casadi_n_out = &expl_forw_vde_n_out;
-	external_function_casadi_create(&expl_forw_vde_fun);
+	external_function_param_casadi expl_vde_for;
+	expl_vde_for.casadi_fun = &casadi_expl_vde_for;
+	expl_vde_for.casadi_work = &casadi_expl_vde_for_work;
+	expl_vde_for.casadi_sparsity_in = &casadi_expl_vde_for_sparsity_in;
+	expl_vde_for.casadi_sparsity_out = &casadi_expl_vde_for_sparsity_out;
+	expl_vde_for.casadi_n_in = &casadi_expl_vde_for_n_in;
+	expl_vde_for.casadi_n_out = &casadi_expl_vde_for_n_out;
+	external_function_param_casadi_create(&expl_vde_for, np);
 
 	/************************************************
 	* sim plan & config
@@ -141,9 +143,8 @@ int main()
 	in->T = Ts;
 
 	// external functions
-	erk_model *model = in->model;
-	model->ode_expl = (external_function_generic *) &expl_ode_fun;
-	sim_set_model(config, in, "forward_vde", &expl_forw_vde_fun);
+	sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
+	sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
 
 	// seeds forw
 	for (ii = 0; ii < nx * NF; ii++)
@@ -191,6 +192,11 @@ int main()
 		tmp = in->u[1] - uctrl;
 		in->u[1] = tmp>0.0 ? tmp : 0.0;
 
+		// update parameters
+		expl_ode_fun.set_param(&expl_ode_fun, p_sim+ii*np);
+		expl_vde_for.set_param(&expl_vde_for, p_sim+ii*np);
+
+
 		// d_print_mat(1, nx, in->x, 1);
 		// d_print_mat(1, nu, in->u, 1);
 
@@ -232,7 +238,6 @@ int main()
 		printf("%8.5f ", x_sim[nsim0*nx+ii]);
 	printf("\n");
 
-#if 0
 	double *S_forw_out;
 	S_forw_out = NULL;
 	if(opts->sens_forw){
@@ -245,6 +250,7 @@ int main()
 		}
 	}
 
+#if 0
 	printf("\n");
 	printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
 	printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
@@ -265,8 +271,8 @@ int main()
 	free(opts);
 	free(config);
 
-	external_function_casadi_free(&expl_ode_fun);
-	external_function_casadi_free(&expl_forw_vde_fun);
+	external_function_param_casadi_free(&expl_ode_fun);
+	external_function_param_casadi_free(&expl_vde_for);
 
 	free(x_sim);
 
