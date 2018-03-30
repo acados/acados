@@ -53,7 +53,7 @@ EXAMPLES += nonlinear_chain_ocp_nlp
 EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
 EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
-#EXAMPLES += wind_turbine_nmpc
+EXAMPLES += wind_turbine_nmpc
 
 examples: $(EXAMPLES)
 
@@ -71,7 +71,7 @@ RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 RUN_EXAMPLES += run_sim_crane_no_interface
 RUN_EXAMPLES += run_mass_spring_example_no_interface
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
-#RUN_EXAMPLES += run_wind_turbine_nmpc
+RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -145,7 +145,7 @@ run_sim_wt_model_nx6:
 
 WT_NX6P2_OBJS =
 WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_ode_fun.o
-WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_forw_vde.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_vde_for.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)

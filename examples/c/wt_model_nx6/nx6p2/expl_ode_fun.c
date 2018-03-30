@@ -9,7 +9,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) expl_ode_ ## ID
+  #define CASADI_PREFIX(ID) expl_ode_fun_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>
@@ -207,8 +207,8 @@ static int CASADI_PREFIX(f0)(const real_t** arg, real_t** res, int* iw, real_t* 
 
 #define f0(arg, res, iw, w, mem) CASADI_PREFIX(f0)(arg, res, iw, w, mem)
 
-/* expl_ode */
-CASADI_SYMBOL_EXPORT int expl_ode(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+/* casadi_expl_ode_fun */
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   const real_t **arg1=arg+3;
   real_t **res1=res+1, *rr, *ss;
   real_t *w0=w+14, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, *w11=w+32, w12, w13;
@@ -462,17 +462,17 @@ CASADI_SYMBOL_EXPORT int expl_ode(const real_t** arg, real_t** res, int* iw, rea
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void expl_ode_incref(void) {
+CASADI_SYMBOL_EXPORT void casadi_expl_ode_fun_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void expl_ode_decref(void) {
+CASADI_SYMBOL_EXPORT void casadi_expl_ode_fun_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int expl_ode_n_in(void) { return 3;}
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun_n_in(void) { return 3;}
 
-CASADI_SYMBOL_EXPORT int expl_ode_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* expl_ode_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_expl_ode_fun_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -481,14 +481,14 @@ CASADI_SYMBOL_EXPORT const char* expl_ode_name_in(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* expl_ode_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_expl_ode_fun_name_out(int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* expl_ode_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_expl_ode_fun_sparsity_in(int i) {
   switch (i) {
     case 0: return s4;
     case 1: return s5;
@@ -497,14 +497,14 @@ CASADI_SYMBOL_EXPORT const int* expl_ode_sparsity_in(int i) {
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* expl_ode_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_expl_ode_fun_sparsity_out(int i) {
   switch (i) {
     case 0: return s4;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int expl_ode_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 5;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 10;

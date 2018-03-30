@@ -9,7 +9,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) expl_forw_vde_ ## ID
+  #define CASADI_PREFIX(ID) expl_vde_for_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>
@@ -358,8 +358,8 @@ static int CASADI_PREFIX(f1)(const real_t** arg, real_t** res, int* iw, real_t* 
 
 #define f1(arg, res, iw, w, mem) CASADI_PREFIX(f1)(arg, res, iw, w, mem)
 
-/* expl_forw_vde */
-CASADI_SYMBOL_EXPORT int expl_forw_vde(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+/* casadi_expl_vde_for */
+CASADI_SYMBOL_EXPORT int casadi_expl_vde_for(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   const int *cii;
   const real_t **arg1=arg+5, *cs;
   int i;
@@ -1637,17 +1637,17 @@ CASADI_SYMBOL_EXPORT int expl_forw_vde(const real_t** arg, real_t** res, int* iw
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void expl_forw_vde_incref(void) {
+CASADI_SYMBOL_EXPORT void casadi_expl_vde_for_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void expl_forw_vde_decref(void) {
+CASADI_SYMBOL_EXPORT void casadi_expl_vde_for_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int expl_forw_vde_n_in(void) { return 5;}
+CASADI_SYMBOL_EXPORT int casadi_expl_vde_for_n_in(void) { return 5;}
 
-CASADI_SYMBOL_EXPORT int expl_forw_vde_n_out(void) { return 3;}
+CASADI_SYMBOL_EXPORT int casadi_expl_vde_for_n_out(void) { return 3;}
 
-CASADI_SYMBOL_EXPORT const char* expl_forw_vde_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_expl_vde_for_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -1658,7 +1658,7 @@ CASADI_SYMBOL_EXPORT const char* expl_forw_vde_name_in(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* expl_forw_vde_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_expl_vde_for_name_out(int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -1667,7 +1667,7 @@ CASADI_SYMBOL_EXPORT const char* expl_forw_vde_name_out(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* expl_forw_vde_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_expl_vde_for_sparsity_in(int i) {
   switch (i) {
     case 0: return s21;
     case 1: return s16;
@@ -1678,7 +1678,7 @@ CASADI_SYMBOL_EXPORT const int* expl_forw_vde_sparsity_in(int i) {
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* expl_forw_vde_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_expl_vde_for_sparsity_out(int i) {
   switch (i) {
     case 0: return s21;
     case 1: return s16;
@@ -1687,7 +1687,7 @@ CASADI_SYMBOL_EXPORT const int* expl_forw_vde_sparsity_out(int i) {
   }
 }
 
-CASADI_SYMBOL_EXPORT int expl_forw_vde_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int casadi_expl_vde_for_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 13;
   if (sz_res) *sz_res = 8;
   if (sz_iw) *sz_iw = 10;

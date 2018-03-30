@@ -48,8 +48,8 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
-#include "examples/c/wt_model_nx6_expl/wt_model.h"
-#include "examples/c/wt_model_nx6_expl/setup.c"
+#include "examples/c/wt_model_nx6/wt_model.h"
+#include "examples/c/wt_model_nx6/setup.c"
 
 #define NN 40
 
@@ -79,16 +79,16 @@ static void shift_controls(ocp_nlp_dims *dims, ocp_nlp_out *out, double *u_end)
 
 
 
-static void select_dynamics_wt_casadi(int N, external_function_param_casadi *forw_vde)
+static void select_dynamics_wt_casadi(int N, external_function_param_casadi *expl_vde_for)
 {
 	for (int ii = 0; ii < N; ii++)
 	{
-		forw_vde[ii].casadi_fun = &expl_forw_vde;
-		forw_vde[ii].casadi_work = &expl_forw_vde_work;
-		forw_vde[ii].casadi_sparsity_in = &expl_forw_vde_sparsity_in;
-		forw_vde[ii].casadi_sparsity_out = &expl_forw_vde_sparsity_out;
-		forw_vde[ii].casadi_n_in = &expl_forw_vde_n_in;
-		forw_vde[ii].casadi_n_out = &expl_forw_vde_n_out;
+		expl_vde_for[ii].casadi_fun = &casadi_expl_vde_for;
+		expl_vde_for[ii].casadi_work = &casadi_expl_vde_for_work;
+		expl_vde_for[ii].casadi_sparsity_in = &casadi_expl_vde_for_sparsity_in;
+		expl_vde_for[ii].casadi_sparsity_out = &casadi_expl_vde_for_sparsity_out;
+		expl_vde_for[ii].casadi_n_in = &casadi_expl_vde_for_n_in;
+		expl_vde_for[ii].casadi_n_out = &casadi_expl_vde_for_n_out;
 	}
 }
 
@@ -411,11 +411,11 @@ int main()
 
 	int np = 1; // number of local parametrs for each dynamics model function
 
-	external_function_param_casadi *forw_vde_casadi = malloc(NN*sizeof(external_function_param_casadi));
+	external_function_param_casadi *expl_vde_for = malloc(NN*sizeof(external_function_param_casadi));
 
-	select_dynamics_wt_casadi(NN, forw_vde_casadi);
+	select_dynamics_wt_casadi(NN, expl_vde_for);
 
-	external_function_param_casadi_create_array(NN, forw_vde_casadi, np);
+	external_function_param_casadi_create_array(NN, expl_vde_for, np);
 
     /************************************************
     * nlp_in
@@ -463,7 +463,7 @@ int main()
 
 	for (int i=0; i<NN; i++)
 	{
-		set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "forward_vde", &forw_vde_casadi[i]);
+		set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
 		if (set_fun_status != 0) exit(1);
 		// set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "explicit_jacobian", &jac_ode_casadi[i]);
 		// if (set_fun_status != 0) exit(1);
@@ -589,7 +589,7 @@ int main()
 			// update wind distrurbance as external function parameter
 			for (int ii=0; ii<NN; ii++)
 			{
-				forw_vde_casadi[ii].set_param(forw_vde_casadi+ii, wind0_ref+idx+ii);
+				expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 			}
 
 			// update reference
@@ -662,8 +662,8 @@ int main()
     ************************************************/
 
 	// TODO(dimitris): VALGRIND!
- 	external_function_param_casadi_free(forw_vde_casadi);
-	free(forw_vde_casadi);
+ 	external_function_param_casadi_free(expl_vde_for);
+	free(expl_vde_for);
 
 	free(nlp_opts);
 	free(nlp_in);

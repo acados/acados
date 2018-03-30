@@ -56,8 +56,8 @@ BLD3_frTanAero = p_2*BLD3_velEff^p_1*splineCMBL([BLD3_agPtch,BLD3_velTipRat]) ;
 
 
 
-%% Nonlinear State-Space Model
- f = [ ... 
+%% Explicit Nonlinear State-Space Model
+ fe = [ ... 
 % Drivetrain angular acceleration ( rad/s^2 ) 
  (DT_agTorsSt*p_14+DT_agvelTorsSt*p_13-GEN_trqActSt*p_12)/(p_10+p_11);
 % Drivetrain torsional angular acceleration ( rad/s^2 ) 
@@ -75,6 +75,11 @@ BLD3_frTanAero = p_2*BLD3_velEff^p_1*splineCMBL([BLD3_agPtch,BLD3_velTipRat]) ;
 % Generator torque integrator( Nm/s^2 ) 
  GEN_trqGradDes;
  ];
+
+
+
+%% Implicit Nonlinear State-Space Model
+fi = dx - fe;
 
 
 
