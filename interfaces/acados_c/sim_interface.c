@@ -98,24 +98,30 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
 {
     int status = ACADOS_SUCCESS;
 
-    if (!strcmp(fun_type, "explicit_ode"))
-        status = config->model_set_function(model, EXPLICIT_ODE, fun_ptr);
-    else if (!strcmp(fun_type, "explicit_jacobian"))
-        status = config->model_set_function(model, EXPLICIT_ODE_JACOBIAN, fun_ptr);
-    else if (!strcmp(fun_type, "explicit_hessian"))
-        status = config->model_set_function(model, EXPLICIT_ODE_HESSIAN, fun_ptr);
-    else if (!strcmp(fun_type, "forward_vde"))
-        status = config->model_set_function(model, EXPLICIT_VDE_FORWARD, fun_ptr);
-    else if (!strcmp(fun_type, "adjoint_vde"))
-        status = config->model_set_function(model, EXPLICIT_VDE_ADJOINT, fun_ptr);
-    else if (!strcmp(fun_type, "implicit_ode"))
-        status = config->model_set_function(model, IMPLICIT_ODE, fun_ptr);
-    else if (!strcmp(fun_type, "implicit_jacobian_x"))
-        status = config->model_set_function(model, IMPLICIT_ODE_JACOBIAN_X, fun_ptr);
-    else if (!strcmp(fun_type, "implicit_jacobian_xdot"))
-        status = config->model_set_function(model, IMPLICIT_ODE_JACOBIAN_XDOT, fun_ptr);
-    else if (!strcmp(fun_type, "implicit_jacobian_u"))
-        status = config->model_set_function(model, IMPLICIT_ODE_JACOBIAN_U, fun_ptr);
+    if (!strcmp(fun_type, "expl_ode_fun"))
+        status = config->model_set_function(model, EXPL_ODE_FUN, fun_ptr);
+    else if (!strcmp(fun_type, "expl_ode_jac"))
+        status = config->model_set_function(model, EXPL_ODE_JAC, fun_ptr);
+    else if (!strcmp(fun_type, "expl_ode_hes"))
+        status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
+    else if (!strcmp(fun_type, "expl_vde_for"))
+        status = config->model_set_function(model, EXPL_VDE_FOR, fun_ptr);
+    else if (!strcmp(fun_type, "expl_vde_adj"))
+        status = config->model_set_function(model, EXPL_VDE_ADJ, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_fun"))
+        status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_X, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_xdot"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_u"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_U, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
+        status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_u"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_X_U, fun_ptr);
     else
         return ACADOS_FAILURE;
 
