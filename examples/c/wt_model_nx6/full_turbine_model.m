@@ -31,30 +31,69 @@ S04_SetupNonlinearStateSpaceDynamics;
 nx = 6;
 nu = 2;
 
-% ODE
-odeFun = Function('casadi_expl_ode_fun', {x, u, p}, {f});
-odeFun.generate('expl_ode_fun');
 
-% jac x
-jac_x_odeFun = Function('casadi_expl_ode_jac_x', {x, u, p}, {jacobian(f, x)});
-jac_x_odeFun.generate('expl_ode_jac_x');
+% expl_ode_fun
 
-% jac u
-jac_u_odeFun = Function('casadi_expl_ode_jac_u', {x, u, p}, {jacobian(f, u)});
-jac_u_odeFun.generate('expl_ode_jac_u');
+expl_ode_fun = Function('casadi_expl_ode_fun', {x, u, p}, {fe});
+expl_ode_fun.generate('expl_ode_fun');
 
-% forward VDE
+
+% expl_vde_for
+
 Sx = MX.sym('Sx', nx, nx);
 Su = MX.sym('Su', nx, nu);
 
-%vdeX = MX.zeros(nx, nx) + jtimes(f, x, Sx);
-vdeX = MX.zeros(nx, nx) + jacobian(f, x)*Sx;
+%vdeX = MX.zeros(nx, nx) + jtimes(fe, x, Sx);
+vdeX = MX.zeros(nx, nx) + jacobian(fe, x)*Sx;
 
-%vdeU = MX.zeros(nx, nu) + jtimes(f, x, Su) + jacobian(f, u);
-vdeU = MX.zeros(nx, nu) + jacobian(f, x)*Su + jacobian(f, u);
+%vdeU = MX.zeros(nx, nu) + jtimes(fe, x, Su) + jacobian(fe, u);
+vdeU = MX.zeros(nx, nu) + jacobian(fe, x)*Su + jacobian(fe, u);
 
-forw_vdeFun = Function('casadi_expl_vde_for', {x, Sx, Su, u, p}, {f, vdeX, vdeU});
-forw_vdeFun.generate('expl_vde_for');
+expl_vde_for = Function('casadi_expl_vde_for', {x, Sx, Su, u, p}, {fe, vdeX, vdeU});
+expl_vde_for.generate('expl_vde_for');
+
+
+% impl_ode_fun
+
+impl_ode_fun = Function('casadi_impl_ode_fun', {x, dx, u, p}, {fi});
+impl_ode_fun.generate('impl_ode_fun');
+
+
+% impl_ode_jac_x
+
+impl_ode_jac_x = Function('casadi_impl_ode_jac_x', {x, dx, u, p}, {jacobian(fi, x)});
+impl_ode_jac_x.generate('impl_ode_jac_x');
+
+
+% impl_ode_jac_xdot
+
+impl_ode_jac_xdot = Function('casadi_impl_ode_jac_xdot', {x, dx, u, p}, {jacobian(fi, dx)});
+impl_ode_jac_xdot.generate('impl_ode_jac_xdot');
+
+
+% impl_ode_jac_u
+
+impl_ode_jac_u = Function('casadi_impl_ode_jac_u', {x, dx, u, p}, {jacobian(fi, u)});
+impl_ode_jac_u.generate('impl_ode_jac_u');
+
+
+% impl_ode_fun_jac_x_xdot
+
+impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, dx, u, p}, {fi, jacobian(fi, x), jacobian(fi, dx)});
+impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot');
+
+
+% impl_ode_jac_x_xdot_u
+
+impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, dx, u, p}, {jacobian(fi, x), jacobian(fi, dx), jacobian(fi, u)});
+impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_u');
+
+
+% impl_ode_jac_x_u
+
+impl_ode_jac_x_u = Function('casadi_impl_ode_jac_x_u', {x, dx, u, p}, {jacobian(fi, x), jacobian(fi, u)});
+impl_ode_jac_x_u.generate('impl_ode_jac_x_u');
+
 
 return
 
@@ -65,7 +104,7 @@ return
 
 
 %% create an ODE casadi object
-ode = struct('x',x,'p',u,'ode',f);
+ode = struct('x',x,'p',u,'ode',fe);
 %% Instantiate casadi integrator object -> using fixed-step Runge Kutta of order 4
 Ts = 0.2;
 nbrIntermedSamples = 10;

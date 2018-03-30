@@ -54,8 +54,10 @@ BLD2_frTanAero = p_2*BLD2_velEff^p_1*splineCMBL([BLD2_agPtch,BLD2_velTipRat]) ;
  % Tangential aerodynamic force on Blade 3 ( N ) 
 BLD3_frTanAero = p_2*BLD3_velEff^p_1*splineCMBL([BLD3_agPtch,BLD3_velTipRat]) ;
 
-%% Nonlinear State-Space Model
- f = [ ... 
+
+
+%% Explicit Nonlinear State-Space Model
+ fe = [ ... 
 % Drivetrain angular acceleration ( rad/s^2 ) 
  (DT_agTorsSt*p_14+DT_agvelTorsSt*p_13-GEN_trqActSt*p_12)/(p_10+p_11);
 % Drivetrain torsional angular acceleration ( rad/s^2 ) 
@@ -69,3 +71,8 @@ BLD3_frTanAero = p_2*BLD3_velEff^p_1*splineCMBL([BLD3_agPtch,BLD3_velTipRat]) ;
 % Generator torque PT-1 ( Nm/s ) 
  p_16*(-GEN_trqActSt+GEN_trqDes);
  ];
+ 
+
+
+%% Implicit Nonlinear State-Space Model
+fi = dx - fe;

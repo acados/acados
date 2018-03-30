@@ -124,6 +124,13 @@ run_sim_crane_example:
 WT_NX6_OBJS =
 WT_NX6_OBJS += wt_model_nx6/expl_ode_fun.o
 WT_NX6_OBJS += wt_model_nx6/expl_vde_for.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_fun.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_xdot.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_u.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)
