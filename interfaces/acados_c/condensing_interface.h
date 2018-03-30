@@ -52,6 +52,8 @@ condensing_module *condensing_assign(condensing_config *config, void *dims_, voi
 condensing_module *condensing_create(condensing_config *config, void *dims_, void *opts_);
 //
 int condense(condensing_module *module, void *qp_in, void *qp_out);
+//
+int expand(condensing_module *module, void *qp_in, void *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */
