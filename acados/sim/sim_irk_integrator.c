@@ -170,7 +170,7 @@ void sim_irk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
     opts->sens_forw = true;
     opts->sens_adj = false;
     opts->sens_hess = false;
-    opts->jac_reuse = false;
+    opts->jac_reuse = true;
 
 	return;
 }
