@@ -87,23 +87,23 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 
 
 
-ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
-{
-    int size = ocp_nlp_in_calculate_size(config, dims);
-    void *ptr = acados_malloc(size, 1);
-    ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
-    return nlp_in;
-}
+// ocp_nlp_in *create_ocp_nlp_in(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+// {
+//     int size = ocp_nlp_in_calculate_size(config, dims);
+//     void *ptr = acados_malloc(size, 1);
+//     ocp_nlp_in *nlp_in = ocp_nlp_in_assign(config, dims, ptr);
+//     return nlp_in;
+// }
 
 
 
-ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
-{
-    int size = ocp_nlp_out_calculate_size(config, dims);
-    void *ptr = acados_malloc(size, 1);
-    ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
-    return nlp_out;
-}
+// ocp_nlp_out *create_ocp_nlp_out(ocp_nlp_solver_config *config, ocp_nlp_dims *dims)
+// {
+//     int size = ocp_nlp_out_calculate_size(config, dims);
+//     void *ptr = acados_malloc(size, 1);
+//     ocp_nlp_out *nlp_out = ocp_nlp_out_assign(config, dims, ptr);
+//     return nlp_out;
+// }
 
 
 // ocp_nlp_gn_sqp_opts *ocp_nlp_gn_sqp_create_args(ocp_nlp_dims *dims, ocp_qp_solver_t qp_solver_name, sim_solver_t *sim_solver_names)

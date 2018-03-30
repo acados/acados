@@ -30,6 +30,7 @@
 // acados
 #include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
+#include "acados/utils/timing.h"
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
