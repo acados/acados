@@ -52,7 +52,7 @@ EXAMPLES += mass_spring_example
 EXAMPLES += nonlinear_chain_ocp_nlp
 EXAMPLES += sim_crane_no_interface
 EXAMPLES += mass_spring_example_no_interface
-#EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
+EXAMPLES += nonlinear_chain_ocp_nlp_no_interface
 #EXAMPLES += wind_turbine_nmpc
 
 examples: $(EXAMPLES)
@@ -70,7 +70,7 @@ RUN_EXAMPLES += run_mass_spring_example
 RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 RUN_EXAMPLES += run_sim_crane_no_interface
 RUN_EXAMPLES += run_mass_spring_example_no_interface
-#RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
+RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
 #RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
@@ -88,9 +88,9 @@ CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
 CRANE_OBJS += crane_model/impl_ode.o
-#CRANE_OBJS += crane_model/impl_jac_x.o
-#CRANE_OBJS += crane_model/impl_jac_xdot.o
-#CRANE_OBJS += crane_model/impl_jac_u.o
+CRANE_OBJS += crane_model/impl_ode_jac_x.o
+CRANE_OBJS += crane_model/impl_ode_jac_xdot.o
+CRANE_OBJS += crane_model/impl_ode_jac_u.o
 CRANE_OBJS += crane_model/impl_ode_inc_J_x_xdot.o
 CRANE_OBJS += crane_model/impl_ode_J_x_u.o
 CRANE_OBJS += crane_model/impl_ode_J_x_xdot_u.o

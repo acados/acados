@@ -9,7 +9,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) impl_ode_inc_J_x_xdot_ ## ID
+  #define CASADI_PREFIX(ID) impl_ode_fun_jac_x_xdot_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>

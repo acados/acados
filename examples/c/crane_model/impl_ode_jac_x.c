@@ -9,7 +9,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) impl_ode_J_x_u_ ## ID
+  #define CASADI_PREFIX(ID) impl_ode_jac_x_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>
@@ -53,10 +53,10 @@ static const int CASADI_PREFIX(s0)[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 #define s0 CASADI_PREFIX(s0)
 static const int CASADI_PREFIX(s1)[5] = {1, 1, 0, 1, 0};
 #define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[48] = {4, 9, 0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
+static const int CASADI_PREFIX(s2)[23] = {4, 4, 0, 4, 8, 12, 16, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3};
 #define s2 CASADI_PREFIX(s2)
-/* casadi_impl_ode_jac_x_u */
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+/* casadi_impl_ode_jac_x */
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   real_t a0=0.;
   if (res[0]!=0) res[0][0]=a0;
   if (res[0]!=0) res[0][1]=a0;
@@ -173,45 +173,20 @@ CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_u(const real_t** arg, real_t** re
   a2=(a2/a12);
   a2=(-a2);
   if (res[0]!=0) res[0][15]=a2;
-  a2=1.;
-  if (res[0]!=0) res[0][16]=a2;
-  if (res[0]!=0) res[0][17]=a0;
-  if (res[0]!=0) res[0][18]=a0;
-  if (res[0]!=0) res[0][19]=a0;
-  if (res[0]!=0) res[0][20]=a0;
-  if (res[0]!=0) res[0][21]=a2;
-  if (res[0]!=0) res[0][22]=a0;
-  if (res[0]!=0) res[0][23]=a0;
-  if (res[0]!=0) res[0][24]=a0;
-  if (res[0]!=0) res[0][25]=a0;
-  if (res[0]!=0) res[0][26]=a2;
-  if (res[0]!=0) res[0][27]=a0;
-  if (res[0]!=0) res[0][28]=a0;
-  if (res[0]!=0) res[0][29]=a0;
-  if (res[0]!=0) res[0][30]=a0;
-  if (res[0]!=0) res[0][31]=a2;
-  if (res[0]!=0) res[0][32]=a0;
-  if (res[0]!=0) res[0][33]=a0;
-  a9=(1./a9);
-  a9=(-a9);
-  if (res[0]!=0) res[0][34]=a9;
-  a8=(a8/a12);
-  a8=(-a8);
-  if (res[0]!=0) res[0][35]=a8;
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_x_u_incref(void) {
+CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_x_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_x_u_decref(void) {
+CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_x_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_u_n_in(void) { return 3;}
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_n_in(void) { return 3;}
 
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_u_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_x_u_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_x_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -220,14 +195,14 @@ CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_x_u_name_in(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_x_u_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_x_name_out(int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_x_u_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_x_sparsity_in(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s0;
@@ -236,14 +211,14 @@ CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_x_u_sparsity_in(int i) {
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_x_u_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_x_sparsity_out(int i) {
   switch (i) {
     case 0: return s2;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_u_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_x_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 3;
   if (sz_res) *sz_res = 1;
   if (sz_iw) *sz_iw = 0;

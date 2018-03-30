@@ -9,7 +9,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) impl_jac_u_ ## ID
+  #define CASADI_PREFIX(ID) impl_ode_jac_u_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>
@@ -53,8 +53,8 @@ static const int CASADI_PREFIX(s0)[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 #define s0 CASADI_PREFIX(s0)
 static const int CASADI_PREFIX(s1)[5] = {1, 1, 0, 1, 0};
 #define s1 CASADI_PREFIX(s1)
-/* impl_jacFun_u */
-CASADI_SYMBOL_EXPORT int impl_jacFun_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+/* casadi_impl_ode_jac_u */
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
   real_t a0=0.;
   if (res[0]!=0) res[0][0]=a0;
   if (res[0]!=0) res[0][1]=a0;
@@ -81,17 +81,17 @@ CASADI_SYMBOL_EXPORT int impl_jacFun_u(const real_t** arg, real_t** res, int* iw
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void impl_jacFun_u_incref(void) {
+CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_u_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void impl_jacFun_u_decref(void) {
+CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_u_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int impl_jacFun_u_n_in(void) { return 3;}
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_u_n_in(void) { return 3;}
 
-CASADI_SYMBOL_EXPORT int impl_jacFun_u_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_u_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* impl_jacFun_u_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_u_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -100,14 +100,14 @@ CASADI_SYMBOL_EXPORT const char* impl_jacFun_u_name_in(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* impl_jacFun_u_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_u_name_out(int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* impl_jacFun_u_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_u_sparsity_in(int i) {
   switch (i) {
     case 0: return s0;
     case 1: return s0;
@@ -116,14 +116,14 @@ CASADI_SYMBOL_EXPORT const int* impl_jacFun_u_sparsity_in(int i) {
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* impl_jacFun_u_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_u_sparsity_out(int i) {
   switch (i) {
     case 0: return s0;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int impl_jacFun_u_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_u_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
   if (sz_arg) *sz_arg = 3;
   if (sz_res) *sz_res = 1;
   if (sz_iw) *sz_iw = 0;

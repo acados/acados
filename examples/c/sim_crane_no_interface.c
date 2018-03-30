@@ -151,6 +151,48 @@ int main()
 
 	//
 
+	external_function_casadi impl_ode_jac_x;
+	impl_ode_jac_x.casadi_fun = &casadi_impl_ode_jac_x;
+	impl_ode_jac_x.casadi_work = &casadi_impl_ode_jac_x_work;
+	impl_ode_jac_x.casadi_sparsity_in = &casadi_impl_ode_jac_x_sparsity_in;
+	impl_ode_jac_x.casadi_sparsity_out = &casadi_impl_ode_jac_x_sparsity_out;
+	impl_ode_jac_x.casadi_n_in = &casadi_impl_ode_jac_x_n_in;
+	impl_ode_jac_x.casadi_n_out = &casadi_impl_ode_jac_x_n_out;
+
+	int impl_ode_jac_x_size = external_function_casadi_calculate_size(&impl_ode_jac_x);
+	void *impl_ode_jac_x_mem = malloc(impl_ode_jac_x_size);
+	external_function_casadi_assign(&impl_ode_jac_x, impl_ode_jac_x_mem);
+
+	//
+
+	external_function_casadi impl_ode_jac_xdot;
+	impl_ode_jac_xdot.casadi_fun = &casadi_impl_ode_jac_xdot;
+	impl_ode_jac_xdot.casadi_work = &casadi_impl_ode_jac_xdot_work;
+	impl_ode_jac_xdot.casadi_sparsity_in = &casadi_impl_ode_jac_xdot_sparsity_in;
+	impl_ode_jac_xdot.casadi_sparsity_out = &casadi_impl_ode_jac_xdot_sparsity_out;
+	impl_ode_jac_xdot.casadi_n_in = &casadi_impl_ode_jac_xdot_n_in;
+	impl_ode_jac_xdot.casadi_n_out = &casadi_impl_ode_jac_xdot_n_out;
+
+	int impl_ode_jac_xdot_size = external_function_casadi_calculate_size(&impl_ode_jac_xdot);
+	void *impl_ode_jac_xdot_mem = malloc(impl_ode_jac_xdot_size);
+	external_function_casadi_assign(&impl_ode_jac_xdot, impl_ode_jac_xdot_mem);
+
+	//
+
+	external_function_casadi impl_ode_jac_u;
+	impl_ode_jac_u.casadi_fun = &casadi_impl_ode_jac_u;
+	impl_ode_jac_u.casadi_work = &casadi_impl_ode_jac_u_work;
+	impl_ode_jac_u.casadi_sparsity_in = &casadi_impl_ode_jac_u_sparsity_in;
+	impl_ode_jac_u.casadi_sparsity_out = &casadi_impl_ode_jac_u_sparsity_out;
+	impl_ode_jac_u.casadi_n_in = &casadi_impl_ode_jac_u_n_in;
+	impl_ode_jac_u.casadi_n_out = &casadi_impl_ode_jac_u_n_out;
+
+	int impl_ode_jac_u_size = external_function_casadi_calculate_size(&impl_ode_jac_u);
+	void *impl_ode_jac_u_mem = malloc(impl_ode_jac_u_size);
+	external_function_casadi_assign(&impl_ode_jac_u, impl_ode_jac_u_mem);
+
+	//
+
 	external_function_casadi impl_ode_fun_jac_x_xdot;
 	impl_ode_fun_jac_x_xdot.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
 	impl_ode_fun_jac_x_xdot.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
@@ -311,6 +353,9 @@ int main()
 			case 1: // irk
 			{
 				config->model_set_function(in->model, IMPL_ODE_FUN, &impl_ode_fun);
+				config->model_set_function(in->model, IMPL_ODE_JAC_X, &impl_ode_jac_x);
+				config->model_set_function(in->model, IMPL_ODE_JAC_XDOT, &impl_ode_jac_xdot);
+				config->model_set_function(in->model, IMPL_ODE_JAC_U, &impl_ode_jac_u);
 				config->model_set_function(in->model, IMPL_ODE_FUN_JAC_X_XDOT, &impl_ode_fun_jac_x_xdot);
 				config->model_set_function(in->model, IMPL_ODE_JAC_X_XDOT_U, &impl_ode_jac_x_xdot_u);
 				config->model_set_function(in->model, IMPL_ODE_JAC_X_U, &impl_ode_jac_x_u);
@@ -466,6 +511,9 @@ int main()
 	free(hess_ode_mem);
 	// implicit model
 	free(impl_ode_fun_mem);
+	free(impl_ode_jac_x_mem);
+	free(impl_ode_jac_xdot_mem);
+	free(impl_ode_jac_u_mem);
 	free(impl_ode_fun_jac_x_xdot_mem);
 	free(impl_ode_jac_x_xdot_u_mem);
 	free(impl_ode_jac_x_u_mem);
