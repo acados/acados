@@ -31,6 +31,23 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 
+#ifndef CONDENSING_CONFIG_
+#define CONDENSING_CONFIG_
+
+typedef struct
+{
+    int (*condensing) (void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*expansion) (void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, void *dims);
+    void *(*opts_assign) (void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *opts);
+    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+} condensing_config;
+
+#endif
 
 typedef struct ocp_qp_full_condensing_opts_
 {

@@ -3,6 +3,7 @@ set(INTERFACES_ACADOS_C_SRC
     ${CMAKE_CURRENT_SOURCE_DIR}/dense_qp_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_nlp_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/ocp_qp_interface.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/condensing_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/options_i.c
     ${CMAKE_CURRENT_SOURCE_DIR}/sim_interface.c
     ${CMAKE_CURRENT_SOURCE_DIR}/legacy_create_i.c)

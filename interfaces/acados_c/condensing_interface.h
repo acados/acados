@@ -24,6 +24,9 @@
 extern "C" {
 #endif
 
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+
 typedef enum {
     PARTIAL_CONDENSING,
     FULL_CONDENSING,
