@@ -584,8 +584,8 @@ int main()
 		}
 		else if (plan->sim_solver_plan[i].sim_solver == IRK)
 		{
-			sim_opts->ns = 5;
-			sim_opts->num_steps = 1;
+			sim_opts->ns = 3;
+			sim_opts->num_steps = 2;
 			sim_opts->jac_reuse = true;
 		}
     }
