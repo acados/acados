@@ -129,16 +129,18 @@ file(GLOB CRANE_MODEL_SRC
     crane_model/vde_hess_model.c
 )
 
-file(GLOB WT_MODEL_SRC
-    wt_model_nx3/ode_energy_balanced_model.c
-    wt_model_nx3/jac_energy_balanced_model.c
-    wt_model_nx3/vde_adj_energy_balanced_model.c
-    wt_model_nx3/vde_energy_balanced_model.c
-    wt_model_nx3/vde_hess_energy_balanced_model.c
-    wt_model_nx3/impl_odeFun_energy_balanced_model.c
-    wt_model_nx3/impl_ode_inc_J_x_xdot_energy_balanced_model.c
-    wt_model_nx3/impl_ode_J_x_u_energy_balanced_model.c
-    wt_model_nx3/impl_ode_J_x_xdot_u_energy_balanced_model.c
+file(GLOB WT_MODEL_NX3_SRC
+    wt_model_nx3/expl_ode_fun.c
+    wt_model_nx3/expl_ode_jac.c
+    wt_model_nx3/expl_vde_for.c
+    wt_model_nx3/expl_vde_adj.c
+    wt_model_nx3/impl_ode_fun.c
+    wt_model_nx3/impl_ode_jac_x.c
+    wt_model_nx3/impl_ode_jac_xdot.c
+    wt_model_nx3/impl_ode_jac_u.c
+    wt_model_nx3/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx3/impl_ode_jac_x_xdot_u.c
+    wt_model_nx3/impl_ode_jac_x_u.c
 )
 
 file(GLOB WT_MODEL_NX6_SRC
@@ -280,9 +282,9 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- sim_wt
     if(ACADOS_WITH_C_INTERFACE)
-        add_executable(sim_wt_model sim_wt_model.c ${WT_MODEL_SRC})
-        target_link_libraries(sim_wt_model acados)
-        add_test(sim_wt_model sim_wt_model)
+        add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
+        target_link_libraries(sim_wt_model_nx3 acados)
+        add_test(sim_wt_model_nx3 sim_wt_model_nx3)
     endif()
 
     # -------------------- ocp_qp
