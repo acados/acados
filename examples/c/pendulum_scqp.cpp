@@ -132,7 +132,7 @@ int main() {
 	for (int i = 0; i < N; ++i) {
 		ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
 		erk_model *model = (erk_model *) dynamics->sim_model;
-		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
+		model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
 	}
 
     nlp_in->freezeSens = false;
