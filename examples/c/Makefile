@@ -87,13 +87,13 @@ CRANE_OBJS += crane_model/jac_model.o
 CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
-CRANE_OBJS += crane_model/impl_ode.o
+CRANE_OBJS += crane_model/impl_ode_fun.o
 CRANE_OBJS += crane_model/impl_ode_jac_x.o
 CRANE_OBJS += crane_model/impl_ode_jac_xdot.o
 CRANE_OBJS += crane_model/impl_ode_jac_u.o
-CRANE_OBJS += crane_model/impl_ode_inc_J_x_xdot.o
-CRANE_OBJS += crane_model/impl_ode_J_x_u.o
-CRANE_OBJS += crane_model/impl_ode_J_x_xdot_u.o
+CRANE_OBJS += crane_model/impl_ode_fun_jac_x_xdot.o
+CRANE_OBJS += crane_model/impl_ode_jac_x_u.o
+CRANE_OBJS += crane_model/impl_ode_jac_x_xdot_u.o
 
 sim_crane_no_interface: $(CRANE_OBJS) sim_crane_no_interface.o
 	$(CCC) -o sim_crane_no_interface.out sim_crane_no_interface.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
