@@ -1,5 +1,5 @@
-#ifndef EXAMPLES_C_WT_MODEL_NX3_H_
-#define EXAMPLES_C_WT_MODEL_NX3_H_
+#ifndef EXAMPLES_C_WT_MODEL_NX6_H_
+#define EXAMPLES_C_WT_MODEL_NX6_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -87,5 +87,4 @@ int casadi_impl_ode_jac_x_u_n_out();
 } /* extern "C" */
 #endif
 
-#endif  // EXAMPLES_C_WT_MODEL_NX3_H_
-
+#endif  // EXAMPLES_C_WT_MODEL_NX6_H_

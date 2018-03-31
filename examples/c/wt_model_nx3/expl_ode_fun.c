@@ -9,7 +9,7 @@ extern "C" {
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
 #else /* CODEGEN_PREFIX */
-  #define CASADI_PREFIX(ID) impl_odeFun_energy_balanced_model_ ## ID
+  #define CASADI_PREFIX(ID) expl_ode_fun_ ## ID
 #endif /* CODEGEN_PREFIX */
 
 #include <math.h>
@@ -205,12 +205,11 @@ static int CASADI_PREFIX(f0)(const real_t** arg, real_t** res, int* iw, real_t* 
 
 #define f0(arg, res, iw, w, mem) CASADI_PREFIX(f0)(arg, res, iw, w, mem)
 
-/* impl_odeFun_energy_balanced_model */
-CASADI_SYMBOL_EXPORT int impl_odeFun_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  const real_t **arg1=arg+3, *cs;
-  int i;
+/* casadi_expl_ode_fun */
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
+  const real_t **arg1=arg+2;
   real_t **res1=res+1, *rr, *ss;
-  real_t *w0=w+14, w1, w2, w3, w4, w5, *w6=w+22, w7, w8, *w9=w+28, w10, w11, w12, *w13=w+33;
+  real_t *w0=w+14, w1, w2, w3, w4, w5, *w6=w+22, w7, w8, *w9=w+28, w10, w11, w12;
   /* #0: @0 = input[0][0] */
   copy(arg[0], 3, w0);
   /* #1: @1 = @0[0] */
@@ -235,8 +234,8 @@ CASADI_SYMBOL_EXPORT int impl_odeFun_energy_balanced_model(const real_t** arg, r
   w5 = 1.4000000000000001e-01;
   /* #11: @4 = pow(@4,@5) */
   w4  = pow(w4,w5);
-  /* #12: @6 = input[2][0] */
-  copy(arg[2], 4, w6);
+  /* #12: @6 = input[1][0] */
+  copy(arg[1], 4, w6);
   /* #13: @5 = @6[3] */
   for (rr=(&w5), ss=w6+3; ss!=w6+4; ss+=1) *rr++ = *ss;
   /* #14: @7 = sin(@3) */
@@ -406,69 +405,62 @@ CASADI_SYMBOL_EXPORT int impl_odeFun_energy_balanced_model(const real_t** arg, r
   w3 = 4.0705235443999998e+07;
   /* #92: @4 = (@4/@3) */
   w4 /= w3;
-  /* #93: @3 = 0 */
-  w3 = 0.;
-  /* #94: @0 = vertcat(@4, @1, @3) */
-  rr=w0;
-  *rr++ = w4;
-  *rr++ = w1;
-  *rr++ = w3;
-  /* #95: @13 = input[1][0] */
-  copy(arg[1], 3, w13);
-  /* #96: @13 = (@13-@0) */
-  for (i=0, rr=w13, cs=w0; i<3; ++i) (*rr++) -= (*cs++);
-  /* #97: output[0][0] = @13 */
-  copy(w13, 3, res[0]);
+  /* #93: output[0][0] = @4 */
+  if (res[0]) res[0][0] = w4;
+  /* #94: output[0][1] = @1 */
+  if (res[0]) res[0][1] = w1;
+  /* #95: @1 = 0 */
+  w1 = 0.;
+  /* #96: output[0][2] = @1 */
+  if (res[0]) res[0][2] = w1;
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void impl_odeFun_energy_balanced_model_incref(void) {
+CASADI_SYMBOL_EXPORT void casadi_expl_ode_fun_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT void impl_odeFun_energy_balanced_model_decref(void) {
+CASADI_SYMBOL_EXPORT void casadi_expl_ode_fun_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int impl_odeFun_energy_balanced_model_n_in(void) { return 3;}
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun_n_in(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT int impl_odeFun_energy_balanced_model_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun_n_out(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* impl_odeFun_energy_balanced_model_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_expl_ode_fun_name_in(int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
-    case 2: return "i2";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* impl_odeFun_energy_balanced_model_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_expl_ode_fun_name_out(int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* impl_odeFun_energy_balanced_model_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_expl_ode_fun_sparsity_in(int i) {
   switch (i) {
     case 0: return s4;
-    case 1: return s4;
-    case 2: return s5;
+    case 1: return s5;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* impl_odeFun_energy_balanced_model_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const int* casadi_expl_ode_fun_sparsity_out(int i) {
   switch (i) {
     case 0: return s4;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int impl_odeFun_energy_balanced_model_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
-  if (sz_arg) *sz_arg = 6;
+CASADI_SYMBOL_EXPORT int casadi_expl_ode_fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+  if (sz_arg) *sz_arg = 4;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 10;
-  if (sz_w) *sz_w = 36;
+  if (sz_w) *sz_w = 33;
   return 0;
 }
 

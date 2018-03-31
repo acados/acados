@@ -42,7 +42,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
-EXAMPLES += sim_wt_model
+EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
@@ -60,7 +60,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
-RUN_EXAMPLES += run_sim_wt_model
+RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_mass_spring_example
@@ -91,9 +91,9 @@ CRANE_OBJS += crane_model/impl_ode.o
 CRANE_OBJS += crane_model/impl_ode_jac_x.o
 CRANE_OBJS += crane_model/impl_ode_jac_xdot.o
 CRANE_OBJS += crane_model/impl_ode_jac_u.o
-CRANE_OBJS += crane_model/impl_ode_inc_J_x_xdot.o
-CRANE_OBJS += crane_model/impl_ode_J_x_u.o
-CRANE_OBJS += crane_model/impl_ode_J_x_xdot_u.o
+CRANE_OBJS += crane_model/impl_ode_fun_jac_x_xdot.o
+CRANE_OBJS += crane_model/impl_ode_jac_x_u.o
+CRANE_OBJS += crane_model/impl_ode_jac_x_xdot_u.o
 
 sim_crane_no_interface: $(CRANE_OBJS) sim_crane_no_interface.o
 	$(CCC) -o sim_crane_no_interface.out sim_crane_no_interface.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
@@ -170,27 +170,26 @@ run_wind_turbine_nmpc:
 #################################################
 
 WT_OBJS =
-WT_OBJS += wt_model_nx3/ode_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/jac_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/vde_adj_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/vde_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/vde_hess_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_odeFun_energy_balanced_model.o
-#WT_OBJS += wt_model_nx3/impl_jacFun_x_energy_balanced_model.o
-#WT_OBJS += wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.o
-#WT_OBJS += wt_model_nx3/impl_jacFun_u_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_ode_inc_J_x_xdot_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_ode_J_x_u_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_ode_J_x_xdot_u_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/expl_ode_fun.o
+WT_OBJS += wt_model_nx3/expl_ode_jac.o
+WT_OBJS += wt_model_nx3/expl_vde_for.o
+WT_OBJS += wt_model_nx3/expl_vde_adj.o
+WT_OBJS += wt_model_nx3/impl_ode_fun.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_x.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_xdot.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_u.o
+WT_OBJS += wt_model_nx3/impl_ode_fun_jac_x_xdot.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_x_u.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_x_xdot_u.o
 
-sim_wt_model: $(WT_OBJS) sim_wt_model.o
-	$(CCC) -o sim_wt_model.out sim_wt_model.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
+sim_wt_model_nx3: $(WT_OBJS) sim_wt_model_nx3.o
+	$(CCC) -o sim_wt_model_nx3.out sim_wt_model_nx3.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example sim_wt_model build complete."
+	@echo " Example sim_wt_model_nx3 build complete."
 	@echo
 
-run_sim_wt_model:
-	./sim_wt_model.out
+run_sim_wt_model_nx3:
+	./sim_wt_model_nx3.out
 
 
 
@@ -374,9 +373,13 @@ clean:
 	rm -f *.o
 	rm -f *.out
 
-deep_clean: clean
+clean_models:
 	rm -f chain_model/*.o
+	rm -f implicit_chain_model/*.o
+	rm -f crane/*.o
 	rm -f wt_model_nx3/*.o
 	rm -f wt_model_nx6/*.o
 	rm -f wt_model_nx6/nx6p2/*.o
+
+deep_clean: clean clean_models
 

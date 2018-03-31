@@ -73,116 +73,126 @@ int main()
 	for (ii=0; ii<nx; ii++)
 		x_sim[ii] = x0[ii];
 
-/************************************************
-* external functions (explicit model)
-************************************************/
+	/************************************************
+	* external functions (explicit model)
+	************************************************/
 
-	// explicit ODE
-
+	// expl_ode_fun
 	external_function_casadi expl_ode_fun;
-	expl_ode_fun.casadi_fun = &ode_energy_balanced_model;
-	expl_ode_fun.casadi_work = &ode_energy_balanced_model_work;
-	expl_ode_fun.casadi_sparsity_in = &ode_energy_balanced_model_sparsity_in;
-	expl_ode_fun.casadi_sparsity_out = &ode_energy_balanced_model_sparsity_out;
-	expl_ode_fun.casadi_n_in = &ode_energy_balanced_model_n_in;
-	expl_ode_fun.casadi_n_out = &ode_energy_balanced_model_n_out;
+	expl_ode_fun.casadi_fun = &casadi_expl_ode_fun;
+	expl_ode_fun.casadi_work = &casadi_expl_ode_fun_work;
+	expl_ode_fun.casadi_sparsity_in = &casadi_expl_ode_fun_sparsity_in;
+	expl_ode_fun.casadi_sparsity_out = &casadi_expl_ode_fun_sparsity_out;
+	expl_ode_fun.casadi_n_in = &casadi_expl_ode_fun_n_in;
+	expl_ode_fun.casadi_n_out = &casadi_expl_ode_fun_n_out;
 	external_function_casadi_create(&expl_ode_fun);
 
-	// forward explicit VDE
-
-	external_function_casadi expl_vde_for;
-	expl_vde_for.casadi_fun = &vde_energy_balanced_model;
-	expl_vde_for.casadi_work = &vde_energy_balanced_model_work;
-	expl_vde_for.casadi_sparsity_in = &vde_energy_balanced_model_sparsity_in;
-	expl_vde_for.casadi_sparsity_out = &vde_energy_balanced_model_sparsity_out;
-	expl_vde_for.casadi_n_in = &vde_energy_balanced_model_n_in;
-	expl_vde_for.casadi_n_out = &vde_energy_balanced_model_n_out;
-	external_function_casadi_create(&expl_vde_for);
-
-	// adjoint explicit VDE
-
-	external_function_casadi expl_vde_adj;
-	expl_vde_adj.casadi_fun = &vde_adj_energy_balanced_model;
-	expl_vde_adj.casadi_work = &vde_adj_energy_balanced_model_work;
-	expl_vde_adj.casadi_sparsity_in = &vde_adj_energy_balanced_model_sparsity_in;
-	expl_vde_adj.casadi_sparsity_out = &vde_adj_energy_balanced_model_sparsity_out;
-	expl_vde_adj.casadi_n_in = &vde_adj_energy_balanced_model_n_in;
-	expl_vde_adj.casadi_n_out = &vde_adj_energy_balanced_model_n_out;
-	external_function_casadi_create(&expl_vde_adj);
-
-	// jacobian explicit ODE
-
+	// expl_ode_jac
 	external_function_casadi expl_ode_jac;
-	expl_ode_jac.casadi_fun = &jac_energy_balanced_model;
-	expl_ode_jac.casadi_work = &jac_energy_balanced_model_work;
-	expl_ode_jac.casadi_sparsity_in = &jac_energy_balanced_model_sparsity_in;
-	expl_ode_jac.casadi_sparsity_out = &jac_energy_balanced_model_sparsity_out;
-	expl_ode_jac.casadi_n_in = &jac_energy_balanced_model_n_in;
-	expl_ode_jac.casadi_n_out = &jac_energy_balanced_model_n_out;
+	expl_ode_jac.casadi_fun = &casadi_expl_ode_jac;
+	expl_ode_jac.casadi_work = &casadi_expl_ode_jac_work;
+	expl_ode_jac.casadi_sparsity_in = &casadi_expl_ode_jac_sparsity_in;
+	expl_ode_jac.casadi_sparsity_out = &casadi_expl_ode_jac_sparsity_out;
+	expl_ode_jac.casadi_n_in = &casadi_expl_ode_jac_n_in;
+	expl_ode_jac.casadi_n_out = &casadi_expl_ode_jac_n_out;
 	external_function_casadi_create(&expl_ode_jac);
 
-	// hessian explicit ODE
+	// expl_vde_for
+	external_function_casadi expl_vde_for;
+	expl_vde_for.casadi_fun = &casadi_expl_vde_for;
+	expl_vde_for.casadi_work = &casadi_expl_vde_for_work;
+	expl_vde_for.casadi_sparsity_in = &casadi_expl_vde_for_sparsity_in;
+	expl_vde_for.casadi_sparsity_out = &casadi_expl_vde_for_sparsity_out;
+	expl_vde_for.casadi_n_in = &casadi_expl_vde_for_n_in;
+	expl_vde_for.casadi_n_out = &casadi_expl_vde_for_n_out;
+	external_function_casadi_create(&expl_vde_for);
 
-	external_function_casadi expl_hess_ode;
-	expl_hess_ode.casadi_fun = &vde_hess_energy_balanced_model;
-	expl_hess_ode.casadi_work = &vde_hess_energy_balanced_model_work;
-	expl_hess_ode.casadi_sparsity_in = &vde_hess_energy_balanced_model_sparsity_in;
-	expl_hess_ode.casadi_sparsity_out = &vde_hess_energy_balanced_model_sparsity_out;
-	expl_hess_ode.casadi_n_in = &vde_hess_energy_balanced_model_n_in;
-	expl_hess_ode.casadi_n_out = &vde_hess_energy_balanced_model_n_out;
-	external_function_casadi_create(&expl_hess_ode);
+	// expl_vde_adj
+	external_function_casadi expl_vde_adj;
+	expl_vde_adj.casadi_fun = &casadi_expl_vde_adj;
+	expl_vde_adj.casadi_work = &casadi_expl_vde_adj_work;
+	expl_vde_adj.casadi_sparsity_in = &casadi_expl_vde_adj_sparsity_in;
+	expl_vde_adj.casadi_sparsity_out = &casadi_expl_vde_adj_sparsity_out;
+	expl_vde_adj.casadi_n_in = &casadi_expl_vde_adj_n_in;
+	expl_vde_adj.casadi_n_out = &casadi_expl_vde_adj_n_out;
+	external_function_casadi_create(&expl_vde_adj);
 
-/************************************************
-* external functions (implicit model)
-************************************************/
+	/************************************************
+	* external functions (implicit model)
+	************************************************/
 
-	// implicit ODE
+	// impl_ode_fun
+	external_function_casadi impl_ode_fun;
+	impl_ode_fun.casadi_fun = &casadi_impl_ode_fun;
+	impl_ode_fun.casadi_work = &casadi_impl_ode_fun_work;
+	impl_ode_fun.casadi_sparsity_in = &casadi_impl_ode_fun_sparsity_in;
+	impl_ode_fun.casadi_sparsity_out = &casadi_impl_ode_fun_sparsity_out;
+	impl_ode_fun.casadi_n_in = &casadi_impl_ode_fun_n_in;
+	impl_ode_fun.casadi_n_out = &casadi_impl_ode_fun_n_out;
+	external_function_casadi_create(&impl_ode_fun);
 
-	external_function_casadi impl_ode;
-	impl_ode.casadi_fun = &impl_odeFun_energy_balanced_model;
-	impl_ode.casadi_work = &impl_odeFun_energy_balanced_model_work;
-	impl_ode.casadi_sparsity_in = &impl_odeFun_energy_balanced_model_sparsity_in;
-	impl_ode.casadi_sparsity_out = &impl_odeFun_energy_balanced_model_sparsity_out;
-	impl_ode.casadi_n_in = &impl_odeFun_energy_balanced_model_n_in;
-	impl_ode.casadi_n_out = &impl_odeFun_energy_balanced_model_n_out;
-	external_function_casadi_create(&impl_ode);
+	// impl_ode_jac_x
+	external_function_casadi impl_ode_jac_x;
+	impl_ode_jac_x.casadi_fun = &casadi_impl_ode_jac_x;
+	impl_ode_jac_x.casadi_work = &casadi_impl_ode_jac_x_work;
+	impl_ode_jac_x.casadi_sparsity_in = &casadi_impl_ode_jac_x_sparsity_in;
+	impl_ode_jac_x.casadi_sparsity_out = &casadi_impl_ode_jac_x_sparsity_out;
+	impl_ode_jac_x.casadi_n_in = &casadi_impl_ode_jac_x_n_in;
+	impl_ode_jac_x.casadi_n_out = &casadi_impl_ode_jac_x_n_out;
+	external_function_casadi_create(&impl_ode_jac_x);
 
-	// implicit ODE including jacobian w.r.t. x, xdot
+	// impl_ode_jac_xdot
+	external_function_casadi impl_ode_jac_xdot;
+	impl_ode_jac_xdot.casadi_fun = &casadi_impl_ode_jac_xdot;
+	impl_ode_jac_xdot.casadi_work = &casadi_impl_ode_jac_xdot_work;
+	impl_ode_jac_xdot.casadi_sparsity_in = &casadi_impl_ode_jac_xdot_sparsity_in;
+	impl_ode_jac_xdot.casadi_sparsity_out = &casadi_impl_ode_jac_xdot_sparsity_out;
+	impl_ode_jac_xdot.casadi_n_in = &casadi_impl_ode_jac_xdot_n_in;
+	impl_ode_jac_xdot.casadi_n_out = &casadi_impl_ode_jac_xdot_n_out;
+	external_function_casadi_create(&impl_ode_jac_xdot);
 
+	// impl_ode_jac_u
+	external_function_casadi impl_ode_jac_u;
+	impl_ode_jac_u.casadi_fun = &casadi_impl_ode_jac_u;
+	impl_ode_jac_u.casadi_work = &casadi_impl_ode_jac_u_work;
+	impl_ode_jac_u.casadi_sparsity_in = &casadi_impl_ode_jac_u_sparsity_in;
+	impl_ode_jac_u.casadi_sparsity_out = &casadi_impl_ode_jac_u_sparsity_out;
+	impl_ode_jac_u.casadi_n_in = &casadi_impl_ode_jac_u_n_in;
+	impl_ode_jac_u.casadi_n_out = &casadi_impl_ode_jac_u_n_out;
+	external_function_casadi_create(&impl_ode_jac_u);
+
+	// impl_ode_fun_jac_x_xdot
 	external_function_casadi impl_ode_fun_jac_x_xdot;
-	impl_ode_fun_jac_x_xdot.casadi_fun = &impl_ode_inc_J_x_xdot_energy_balanced_model;
-	impl_ode_fun_jac_x_xdot.casadi_work = &impl_ode_inc_J_x_xdot_energy_balanced_model_work;
-	impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &impl_ode_inc_J_x_xdot_energy_balanced_model_sparsity_in;
-	impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &impl_ode_inc_J_x_xdot_energy_balanced_model_sparsity_out;
-	impl_ode_fun_jac_x_xdot.casadi_n_in = &impl_ode_inc_J_x_xdot_energy_balanced_model_n_in;
-	impl_ode_fun_jac_x_xdot.casadi_n_out = &impl_ode_inc_J_x_xdot_energy_balanced_model_n_out;
+	impl_ode_fun_jac_x_xdot.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
+	impl_ode_fun_jac_x_xdot.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
+	impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_sparsity_in;
+	impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_sparsity_out;
+	impl_ode_fun_jac_x_xdot.casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_n_in;
+	impl_ode_fun_jac_x_xdot.casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_n_out;
 	external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
 
-	// jacobian of implicit ODE w.r.t. x, u
+	// impl_ode_jac_x_xdot_u
+	external_function_casadi impl_ode_jac_x_xdot_u;
+	impl_ode_jac_x_xdot_u.casadi_fun = &casadi_impl_ode_jac_x_xdot_u;
+	impl_ode_jac_x_xdot_u.casadi_work = &casadi_impl_ode_jac_x_xdot_u_work;
+	impl_ode_jac_x_xdot_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_sparsity_in;
+	impl_ode_jac_x_xdot_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_sparsity_out;
+	impl_ode_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
+	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
+	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
 
+	// impl_ode_jac_x_u
 	external_function_casadi impl_ode_jac_x_u;
-	impl_ode_jac_x_u.casadi_fun = &impl_ode_J_x_u_energy_balanced_model;
-	impl_ode_jac_x_u.casadi_work = &impl_ode_J_x_u_energy_balanced_model_work;
-	impl_ode_jac_x_u.casadi_sparsity_in = &impl_ode_J_x_u_energy_balanced_model_sparsity_in;
-	impl_ode_jac_x_u.casadi_sparsity_out = &impl_ode_J_x_u_energy_balanced_model_sparsity_out;
-	impl_ode_jac_x_u.casadi_n_in = &impl_ode_J_x_u_energy_balanced_model_n_in;
-	impl_ode_jac_x_u.casadi_n_out = &impl_ode_J_x_u_energy_balanced_model_n_out;
+	impl_ode_jac_x_u.casadi_fun = &casadi_impl_ode_jac_x_u;
+	impl_ode_jac_x_u.casadi_work = &casadi_impl_ode_jac_x_u_work;
+	impl_ode_jac_x_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
+	impl_ode_jac_x_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
+	impl_ode_jac_x_u.casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
+	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
 	external_function_casadi_create(&impl_ode_jac_x_u);
 
 
-	// jacobian of implicit ODE w.r.t. x, xdot, u
-
-	external_function_casadi impl_ode_jac_x_xdot_u;
-	impl_ode_jac_x_xdot_u.casadi_fun = &impl_ode_J_x_xdot_u_energy_balanced_model;
-	impl_ode_jac_x_xdot_u.casadi_work = &impl_ode_J_x_xdot_u_energy_balanced_model_work;
-	impl_ode_jac_x_xdot_u.casadi_sparsity_in = &impl_ode_J_x_xdot_u_energy_balanced_model_sparsity_in;
-	impl_ode_jac_x_xdot_u.casadi_sparsity_out = &impl_ode_J_x_xdot_u_energy_balanced_model_sparsity_out;
-	impl_ode_jac_x_xdot_u.casadi_n_in = &impl_ode_J_x_xdot_u_energy_balanced_model_n_in;
-	impl_ode_jac_x_xdot_u.casadi_n_out = &impl_ode_J_x_xdot_u_energy_balanced_model_n_out;
-	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
-
-
-	int number_sim_solvers = 2;
+	int number_sim_solvers = 3;
 	int nss;
 	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
@@ -286,7 +296,7 @@ int main()
 			}
 			case 1:
 			{
-				sim_set_model(config, in, "impl_ode_fun", &impl_ode);
+				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				sim_set_model(config, in, "impl_ode_jac_x_u", &impl_ode_jac_x_u);
@@ -462,13 +472,11 @@ int main()
 	external_function_casadi_free(&expl_vde_for);
 	external_function_casadi_free(&expl_vde_adj);
 	external_function_casadi_free(&expl_ode_jac);
-	external_function_casadi_free(&expl_hess_ode);
 	// implicit model
-	external_function_casadi_free(&impl_ode);
-//	external_function_casadi_free(&impl_jac_x_ode);
-//	external_function_casadi_free(&impl_jac_xdot_ode);
-//	external_function_casadi_free(&impl_jac_u_ode);
-	// gathered functions
+	external_function_casadi_free(&impl_ode_fun);
+	external_function_casadi_free(&impl_ode_jac_x);
+	external_function_casadi_free(&impl_ode_jac_xdot);
+	external_function_casadi_free(&impl_ode_jac_u);
 	external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
 	external_function_casadi_free(&impl_ode_jac_x_u);
 	external_function_casadi_free(&impl_ode_jac_x_xdot_u);
