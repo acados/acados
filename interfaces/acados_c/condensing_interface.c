@@ -33,7 +33,7 @@ condensing_config *condensing_config_create(condensing_plan *plan)
 {
     // int bytes = condensing_module_config_calculate_size();
     // void *ptr = calloc(1, bytes);
-    // condensing_config *solver_config = dense_condensing_config_assign(ptr);
+    condensing_config *config = NULL; // = dense_condensing_config_assign(ptr);
 
     // dense_qp_solver_t solver_name = plan->qp_solver;
 
@@ -55,7 +55,7 @@ condensing_config *condensing_config_create(condensing_plan *plan)
     //         #endif
     //         break;
     // }
-    // return condensing_config;
+    return config;
 }
 
 
@@ -128,5 +128,12 @@ condensing_module *condensing_create(condensing_config *config, void *dims_, voi
 
 int condense(condensing_module *module, void *qp_in, void *qp_out)
 {
-    return solver->config->evaluate(solver->config, qp_in, qp_out, solver->opts, solver->mem, solver->work);
+    return module->config->condensing(module->config, qp_in, qp_out, module->opts, module->mem, module->work);
+}
+
+
+
+int epxand(condensing_module *module, void *qp_in, void *qp_out)
+{
+    return module->config->expansion(module->config, qp_in, qp_out, module->opts, module->mem, module->work);
 }
