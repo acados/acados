@@ -66,20 +66,20 @@ int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 
     switch (fun_type)
     {
-        case EXPLICIT_ODE:
-            model->ode_expl = (external_function_generic *) fun;
+        case EXPL_ODE_FUN:
+            model->expl_ode_fun = (external_function_generic *) fun;
             break;
-        case EXPLICIT_ODE_JACOBIAN:
-            model->jac_ode_expl = (external_function_generic *) fun;
+        case EXPL_ODE_JAC:
+            model->expl_ode_jac = (external_function_generic *) fun;
             break;
-        case EXPLICIT_ODE_HESSIAN:
-            model->hess_ode_expl = (external_function_generic *) fun;
+        case EXPL_ODE_HES:
+            model->expl_ode_hes = (external_function_generic *) fun;
             break;
-        case EXPLICIT_VDE_FORWARD:
-            model->forw_vde_expl = (external_function_generic *) fun;
+        case EXPL_VDE_FOR:
+            model->expl_vde_for = (external_function_generic *) fun;
             break;
-        case EXPLICIT_VDE_ADJOINT:
-            model->adj_vde_expl = (external_function_generic *) fun;
+        case EXPL_VDE_ADJ:
+            model->expl_vde_adj = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -500,9 +500,9 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             acados_tic(&timer_ad);
 			if (opts->sens_forw) // simulation + forward sensitivities
-				model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+				model->expl_vde_for->evaluate(model->expl_vde_for, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
 			else // simulation only
-				model->ode_expl->evaluate(model->ode_expl, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
+				model->expl_ode_fun->evaluate(model->expl_ode_fun, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < ns; s++)
@@ -585,11 +585,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 acados_tic(&timer_ad);
                 if (opts->sens_hess)
 				{
-                    model->hess_ode_expl->evaluate(model->hess_ode_expl, rhs_adj_in, adj_traj+s*nAdj);
+                    model->expl_ode_hes->evaluate(model->expl_ode_hes, rhs_adj_in, adj_traj+s*nAdj);
                 }
 				else
 				{
-                    model->adj_vde_expl->evaluate(model->adj_vde_expl, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
+                    model->expl_vde_adj->evaluate(model->expl_vde_adj, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
 

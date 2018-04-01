@@ -33,15 +33,15 @@ typedef struct
 {
 	/* external functions */
 	// explicit ode
-	external_function_generic *ode_expl;
+	external_function_generic *expl_ode_fun;
 	// jacobian explicit ode
-	external_function_generic *jac_ode_expl;
+	external_function_generic *expl_ode_jac;
 	// hessian explicit ode
-	external_function_generic *hess_ode_expl;
+	external_function_generic *expl_ode_hes;
 	// forward explicit vde
-	external_function_generic *forw_vde_expl;
+	external_function_generic *expl_vde_for;
 	// adjoint explicit vde
-	external_function_generic *adj_vde_expl;
+	external_function_generic *expl_vde_adj;
 
 } erk_model;
 

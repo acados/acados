@@ -79,38 +79,38 @@ int main()
 
 	// forward explicit VDE
 
-	external_function_casadi expl_forw_vde;
-	expl_forw_vde.casadi_fun = &vdeFun;
-	expl_forw_vde.casadi_work = &vdeFun_work;
-	expl_forw_vde.casadi_sparsity_in = &vdeFun_sparsity_in;
-	expl_forw_vde.casadi_sparsity_out = &vdeFun_sparsity_out;
-	expl_forw_vde.casadi_n_in = &vdeFun_n_in;
-	expl_forw_vde.casadi_n_out = &vdeFun_n_out;
-	external_function_casadi_create(&expl_forw_vde);
+	external_function_casadi expl_vde_for;
+	expl_vde_for.casadi_fun = &vdeFun;
+	expl_vde_for.casadi_work = &vdeFun_work;
+	expl_vde_for.casadi_sparsity_in = &vdeFun_sparsity_in;
+	expl_vde_for.casadi_sparsity_out = &vdeFun_sparsity_out;
+	expl_vde_for.casadi_n_in = &vdeFun_n_in;
+	expl_vde_for.casadi_n_out = &vdeFun_n_out;
+	external_function_casadi_create(&expl_vde_for);
 
 
 	// adjoint explicit VDE
 
-	external_function_casadi expl_adj_vde;
-	expl_adj_vde.casadi_fun = &adjFun;
-	expl_adj_vde.casadi_work = &adjFun_work;
-	expl_adj_vde.casadi_sparsity_in = &adjFun_sparsity_in;
-	expl_adj_vde.casadi_sparsity_out = &adjFun_sparsity_out;
-	expl_adj_vde.casadi_n_in = &adjFun_n_in;
-	expl_adj_vde.casadi_n_out = &adjFun_n_out;
-	external_function_casadi_create(&expl_adj_vde);
+	external_function_casadi expl_vde_adj;
+	expl_vde_adj.casadi_fun = &adjFun;
+	expl_vde_adj.casadi_work = &adjFun_work;
+	expl_vde_adj.casadi_sparsity_in = &adjFun_sparsity_in;
+	expl_vde_adj.casadi_sparsity_out = &adjFun_sparsity_out;
+	expl_vde_adj.casadi_n_in = &adjFun_n_in;
+	expl_vde_adj.casadi_n_out = &adjFun_n_out;
+	external_function_casadi_create(&expl_vde_adj);
 
 
 	// jacobian explicit ODE
 
-	external_function_casadi expl_jac;
-	expl_jac.casadi_fun = &jacFun;
-	expl_jac.casadi_work = &jacFun_work;
-	expl_jac.casadi_sparsity_in = &jacFun_sparsity_in;
-	expl_jac.casadi_sparsity_out = &jacFun_sparsity_out;
-	expl_jac.casadi_n_in = &jacFun_n_in;
-	expl_jac.casadi_n_out = &jacFun_n_out;
-	external_function_casadi_create(&expl_jac);
+	external_function_casadi expl_ode_jac;
+	expl_ode_jac.casadi_fun = &jacFun;
+	expl_ode_jac.casadi_work = &jacFun_work;
+	expl_ode_jac.casadi_sparsity_in = &jacFun_sparsity_in;
+	expl_ode_jac.casadi_sparsity_out = &jacFun_sparsity_out;
+	expl_ode_jac.casadi_n_in = &jacFun_n_in;
+	expl_ode_jac.casadi_n_out = &jacFun_n_out;
+	external_function_casadi_create(&expl_ode_jac);
 
 
 	// hessian explicit ODE
@@ -131,15 +131,49 @@ int main()
 
 	// implicit ODE
 
-	external_function_casadi impl_ode;
-	impl_ode.casadi_fun = &impl_odeFun;
-	impl_ode.casadi_work = &impl_odeFun_work;
-	impl_ode.casadi_sparsity_in = &impl_odeFun_sparsity_in;
-	impl_ode.casadi_sparsity_out = &impl_odeFun_sparsity_out;
-	impl_ode.casadi_n_in = &impl_odeFun_n_in;
-	impl_ode.casadi_n_out = &impl_odeFun_n_out;
-	external_function_casadi_create(&impl_ode);
+	external_function_casadi impl_ode_fun;
+	impl_ode_fun.casadi_fun = &casadi_impl_ode_fun;
+	impl_ode_fun.casadi_work = &casadi_impl_ode_fun_work;
+	impl_ode_fun.casadi_sparsity_in = &casadi_impl_ode_fun_sparsity_in;
+	impl_ode_fun.casadi_sparsity_out = &casadi_impl_ode_fun_sparsity_out;
+	impl_ode_fun.casadi_n_in = &casadi_impl_ode_fun_n_in;
+	impl_ode_fun.casadi_n_out = &casadi_impl_ode_fun_n_out;
+	external_function_casadi_create(&impl_ode_fun);
 
+	//
+
+	external_function_casadi impl_ode_fun_jac_x_xdot;
+	impl_ode_fun_jac_x_xdot.casadi_fun = &casadi_impl_ode_fun_jac_x_xdot;
+	impl_ode_fun_jac_x_xdot.casadi_work = &casadi_impl_ode_fun_jac_x_xdot_work;
+	impl_ode_fun_jac_x_xdot.casadi_sparsity_in = &casadi_impl_ode_fun_jac_x_xdot_sparsity_in;
+	impl_ode_fun_jac_x_xdot.casadi_sparsity_out = &casadi_impl_ode_fun_jac_x_xdot_sparsity_out;
+	impl_ode_fun_jac_x_xdot.casadi_n_in = &casadi_impl_ode_fun_jac_x_xdot_n_in;
+	impl_ode_fun_jac_x_xdot.casadi_n_out = &casadi_impl_ode_fun_jac_x_xdot_n_out;
+	external_function_casadi_create(&impl_ode_fun_jac_x_xdot);
+
+	//
+
+	external_function_casadi impl_ode_jac_x_xdot_u;
+	impl_ode_jac_x_xdot_u.casadi_fun = &casadi_impl_ode_jac_x_xdot_u;
+	impl_ode_jac_x_xdot_u.casadi_work = &casadi_impl_ode_jac_x_xdot_u_work;
+	impl_ode_jac_x_xdot_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_xdot_u_sparsity_in;
+	impl_ode_jac_x_xdot_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_xdot_u_sparsity_out;
+	impl_ode_jac_x_xdot_u.casadi_n_in = &casadi_impl_ode_jac_x_xdot_u_n_in;
+	impl_ode_jac_x_xdot_u.casadi_n_out = &casadi_impl_ode_jac_x_xdot_u_n_out;
+	external_function_casadi_create(&impl_ode_jac_x_xdot_u);
+
+	//
+
+	external_function_casadi impl_ode_jac_x_u;
+	impl_ode_jac_x_u.casadi_fun = &casadi_impl_ode_jac_x_u;
+	impl_ode_jac_x_u.casadi_work = &casadi_impl_ode_jac_x_u_work;
+	impl_ode_jac_x_u.casadi_sparsity_in = &casadi_impl_ode_jac_x_u_sparsity_in;
+	impl_ode_jac_x_u.casadi_sparsity_out = &casadi_impl_ode_jac_x_u_sparsity_out;
+	impl_ode_jac_x_u.casadi_n_in = &casadi_impl_ode_jac_x_u_n_in;
+	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
+	external_function_casadi_create(&impl_ode_jac_x_u);
+
+#if 0
 	// jac_x implicit ODE
 
 	external_function_casadi impl_jac_x_ode;
@@ -172,6 +206,7 @@ int main()
 	impl_jac_u_ode.casadi_n_in = &impl_jacFun_u_n_in;
 	impl_jac_u_ode.casadi_n_out = &impl_jacFun_u_n_out;
 	external_function_casadi_create(&impl_jac_u_ode);
+#endif
 
 
 	int number_sim_solvers = 3;
@@ -245,25 +280,22 @@ int main()
 		{
 			case 0:
 			{
-				sim_set_model(config, in, "forward_vde", &expl_forw_vde);
-				sim_set_model(config, in, "adjoint_vde", &expl_adj_vde);
-				// model->hess_ode_expl = (external_function_generic *) &expl_hess_ode;
+				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+				sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
 				break;
 			}
 			case 1:
 			{
-				irk_model *model = in->model;
-				model->ode_impl = (external_function_generic *) &impl_ode;
-				model->jac_x_ode_impl = (external_function_generic *) &impl_jac_x_ode;
-				model->jac_xdot_ode_impl = (external_function_generic *) &impl_jac_xdot_ode;
-				model->jac_u_ode_impl = (external_function_generic *) &impl_jac_u_ode;
+				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
+				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
+				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
+				sim_set_model(config, in, "impl_ode_jac_x_u", &impl_ode_jac_x_u);
 				break;
 			}
 			case 2:
 			{
-				lifted_irk_model *model = in->model;
-				model->forw_vde_expl = (external_function_generic *) &expl_forw_vde;
-				model->jac_ode_expl = (external_function_generic *) &expl_jac;
+				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+				sim_set_model(config, in, "expl_ode_jac", &expl_ode_jac);
 				break;
 			}
 			default :
@@ -399,15 +431,15 @@ int main()
 
 	// TODO(dimitris): free all external functions (or write a free_model)
 	// explicit model
-	external_function_casadi_free(&expl_forw_vde);
-	external_function_casadi_free(&expl_adj_vde);
-	external_function_casadi_free(&expl_jac);
+	external_function_casadi_free(&expl_vde_for);
+	external_function_casadi_free(&expl_vde_adj);
+	external_function_casadi_free(&expl_ode_jac);
 	external_function_casadi_free(&expl_hess_ode);
 	// implicit model
-	external_function_casadi_free(&impl_ode);
-	external_function_casadi_free(&impl_jac_x_ode);
-	external_function_casadi_free(&impl_jac_xdot_ode);
-	external_function_casadi_free(&impl_jac_u_ode);
+	external_function_casadi_free(&impl_ode_fun);
+	external_function_casadi_free(&impl_ode_fun_jac_x_xdot);
+	external_function_casadi_free(&impl_ode_jac_x_xdot_u);
+	external_function_casadi_free(&impl_ode_jac_x_u);
 
 	/************************************************
 	* return
