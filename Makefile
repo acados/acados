@@ -189,3 +189,6 @@ deep_clean: clean $(CLEAN_DEPS)
 	( cd examples/c; $(MAKE) deep_clean )
 	rm -rf include
 	rm -rf lib
+
+clean_models:
+	( cd examples/c; $(MAKE) clean_models )

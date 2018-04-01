@@ -37,9 +37,9 @@ typedef struct
 {
 	/* external functions */
 	// jacobian explicit ode
-	external_function_generic *jac_ode_expl;
+	external_function_generic *expl_ode_jac;
 	// forward explicit vde
-	external_function_generic *forw_vde_expl;
+	external_function_generic *expl_vde_for;
 
 } lifted_irk_model;
 

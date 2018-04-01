@@ -21,66 +21,89 @@ configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_mo
 
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC
-    chain_model/jac_chain_nm2.c
-    chain_model/jac_chain_nm3.c
-    chain_model/jac_chain_nm4.c
-    chain_model/jac_chain_nm5.c
-    chain_model/jac_chain_nm6.c
+    ### explicit ###
+    # 2 masses
     chain_model/vde_chain_nm2.c
-    chain_model/vde_chain_nm3.c
-    chain_model/vde_chain_nm4.c
-    chain_model/vde_chain_nm5.c
-    chain_model/vde_chain_nm6.c
+    chain_model/jac_chain_nm2.c
+    chain_model/vde_adj_chain_nm2.c
+    #chain_model/vde_hess_chain_nm2.c
     chain_model/ls_cost_nm2.c
-    chain_model/ls_cost_nm3.c
-    chain_model/ls_cost_nm4.c
-    chain_model/ls_cost_nm5.c
-    chain_model/ls_cost_nm6.c
     chain_model/ls_costN_nm2.c
-    chain_model/ls_costN_nm3.c
-    chain_model/ls_costN_nm4.c
-    chain_model/ls_costN_nm5.c
-    chain_model/ls_costN_nm6.c
-    chain_model/pathcon_nm2.c
-    chain_model/pathcon_nm3.c
-    chain_model/pathcon_nm4.c
-    chain_model/pathcon_nm5.c
-    chain_model/pathcon_nm6.c
-    chain_model/pathconN_nm2.c
-    chain_model/pathconN_nm3.c
-    chain_model/pathconN_nm4.c
-    chain_model/pathconN_nm5.c
-    chain_model/pathconN_nm6.c
-    chain_model/vde_hess_chain_nm2.c
-    chain_model/vde_hess_chain_nm3.c
-    chain_model/vde_hess_chain_nm4.c
-    chain_model/vde_hess_chain_nm5.c
-    chain_model/vde_hess_chain_nm6.c
     chain_model/casadi_erk4_chain_nm2.c
+    # 3 masses
+    chain_model/vde_chain_nm3.c
+    chain_model/jac_chain_nm3.c
+    chain_model/vde_adj_chain_nm3.c
+    #chain_model/vde_hess_chain_nm3.c
+    chain_model/ls_cost_nm3.c
+    chain_model/ls_costN_nm3.c
     chain_model/casadi_erk4_chain_nm3.c
+    # 4 masses
+    chain_model/vde_chain_nm4.c
+    chain_model/jac_chain_nm4.c
+    chain_model/vde_adj_chain_nm4.c
+    #chain_model/vde_hess_chain_nm4.c
+    chain_model/ls_cost_nm4.c
+    chain_model/ls_costN_nm4.c
     chain_model/casadi_erk4_chain_nm4.c
+    # 5 masses
+    chain_model/vde_chain_nm5.c
+    chain_model/jac_chain_nm5.c
+    chain_model/vde_adj_chain_nm5.c
+    #chain_model/vde_hess_chain_nm5.c
+    chain_model/ls_cost_nm5.c
+    chain_model/ls_costN_nm5.c
     # chain_model/casadi_erk4_chain_nm5.c
+    # 6 masses
+    chain_model/vde_chain_nm6.c
+    chain_model/jac_chain_nm6.c
+    chain_model/vde_adj_chain_nm6.c
+    #chain_model/vde_hess_chain_nm6.c
+    chain_model/ls_cost_nm6.c
+    chain_model/ls_costN_nm6.c
     # chain_model/casadi_erk4_chain_nm6.c
-    implicit_chain_model/impl_jacFun_u_chain_nm2.c
-    implicit_chain_model/impl_jacFun_u_chain_nm3.c
-    implicit_chain_model/impl_jacFun_u_chain_nm4.c
-    implicit_chain_model/impl_jacFun_u_chain_nm5.c
-    implicit_chain_model/impl_jacFun_u_chain_nm6.c
-    implicit_chain_model/impl_jacFun_x_chain_nm2.c
-    implicit_chain_model/impl_jacFun_x_chain_nm3.c
-    implicit_chain_model/impl_jacFun_x_chain_nm4.c
-    implicit_chain_model/impl_jacFun_x_chain_nm5.c
-    implicit_chain_model/impl_jacFun_x_chain_nm6.c
-    implicit_chain_model/impl_jacFun_xdot_chain_nm2.c
-    implicit_chain_model/impl_jacFun_xdot_chain_nm3.c
-    implicit_chain_model/impl_jacFun_xdot_chain_nm4.c
-    implicit_chain_model/impl_jacFun_xdot_chain_nm5.c
-    implicit_chain_model/impl_jacFun_xdot_chain_nm6.c
-    implicit_chain_model/impl_odeFun_chain_nm2.c
-    implicit_chain_model/impl_odeFun_chain_nm3.c
-    implicit_chain_model/impl_odeFun_chain_nm4.c
-    implicit_chain_model/impl_odeFun_chain_nm5.c
-    implicit_chain_model/impl_odeFun_chain_nm6.c
+
+    ### implicit ###
+    # 2 masses
+    implicit_chain_model/impl_ode_fun_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_x_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_xdot_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_u_chain_nm2.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm2.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm2.c
+    # 3 masses
+    implicit_chain_model/impl_ode_fun_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_x_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_xdot_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_u_chain_nm3.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm3.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm3.c
+    # 4 masses
+    implicit_chain_model/impl_ode_fun_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_x_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_xdot_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_u_chain_nm4.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm4.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm4.c
+    # 5 masses
+    implicit_chain_model/impl_ode_fun_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_x_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_xdot_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_u_chain_nm5.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm5.c
+    # 6 masses
+    implicit_chain_model/impl_ode_fun_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_x_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_xdot_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_u_chain_nm6.c
+    implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.c
+    implicit_chain_model/impl_ode_jac_x_u_chain_nm6.c
 )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
@@ -92,10 +115,13 @@ file(GLOB PENDULUM_MODEL_SRC
 )
 
 file(GLOB CRANE_MODEL_SRC
-    crane_model/impl_jac_u.c
-    crane_model/impl_jac_x.c
-    crane_model/impl_jac_xdot.c
-    crane_model/impl_ode.c
+    crane_model/impl_ode_fun.c
+    crane_model/impl_ode_jac_x.c
+    crane_model/impl_ode_jac_xdot.c
+    crane_model/impl_ode_jac_u.c
+    crane_model/impl_ode_fun_jac_x_xdot.c
+    crane_model/impl_ode_jac_x_u.c
+    crane_model/impl_ode_jac_x_xdot_u.c
     crane_model/jac_model.c
     crane_model/ode_model.c
     crane_model/vde_adj_model.c
@@ -103,26 +129,42 @@ file(GLOB CRANE_MODEL_SRC
     crane_model/vde_hess_model.c
 )
 
-file(GLOB WT_MODEL_SRC
-    wt_model_nx3/ode_energy_balanced_model.c
-    wt_model_nx3/jac_energy_balanced_model.c
-    wt_model_nx3/vde_adj_energy_balanced_model.c
-    wt_model_nx3/vde_energy_balanced_model.c
-    wt_model_nx3/vde_hess_energy_balanced_model.c
-    wt_model_nx3/impl_odeFun_energy_balanced_model.c
-    wt_model_nx3/impl_jacFun_x_energy_balanced_model.c
-    wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.c
-    wt_model_nx3/impl_jacFun_u_energy_balanced_model.c
+file(GLOB WT_MODEL_NX3_SRC
+    wt_model_nx3/expl_ode_fun.c
+    wt_model_nx3/expl_ode_jac.c
+    wt_model_nx3/expl_vde_for.c
+    wt_model_nx3/expl_vde_adj.c
+    wt_model_nx3/impl_ode_fun.c
+    wt_model_nx3/impl_ode_jac_x.c
+    wt_model_nx3/impl_ode_jac_xdot.c
+    wt_model_nx3/impl_ode_jac_u.c
+    wt_model_nx3/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx3/impl_ode_jac_x_xdot_u.c
+    wt_model_nx3/impl_ode_jac_x_u.c
 )
 
 file(GLOB WT_MODEL_NX6_SRC
-    wt_model_nx6_expl/expl_ode.c
-    wt_model_nx6_expl/expl_forw_vde.c
+    wt_model_nx6/expl_ode_fun.c
+    wt_model_nx6/expl_vde_for.c
+    wt_model_nx6/impl_ode_fun.c
+    wt_model_nx6/impl_ode_jac_x.c
+    wt_model_nx6/impl_ode_jac_xdot.c
+    wt_model_nx6/impl_ode_jac_u.c
+    wt_model_nx6/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx6/impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/impl_ode_jac_x_u.c
 )
 
 file(GLOB WT_MODEL_NX6P2_SRC
-    wt_model_nx6_expl/nx6p2/expl_ode.c
-    wt_model_nx6_expl/nx6p2/expl_forw_vde.c
+    wt_model_nx6/nx6p2/expl_ode_fun.c
+    wt_model_nx6/nx6p2/expl_vde_for.c
+    wt_model_nx6/nx6p2/impl_ode_fun.c
+    wt_model_nx6/nx6p2/impl_ode_jac_x.c
+    wt_model_nx6/nx6p2/impl_ode_jac_xdot.c
+    wt_model_nx6/nx6p2/impl_ode_jac_u.c
+    wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.c
+    wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.c
+    wt_model_nx6/nx6p2/impl_ode_jac_x_u.c
 )
 
 # Define examples
@@ -240,9 +282,9 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
     # -------------------- sim_wt
     if(ACADOS_WITH_C_INTERFACE)
-        add_executable(sim_wt_model sim_wt_model.c ${WT_MODEL_SRC})
-        target_link_libraries(sim_wt_model acados)
-        add_test(sim_wt_model sim_wt_model)
+        add_executable(sim_wt_model_nx3 sim_wt_model_nx3.c ${WT_MODEL_NX3_SRC})
+        target_link_libraries(sim_wt_model_nx3 acados)
+        add_test(sim_wt_model_nx3 sim_wt_model_nx3)
     endif()
 
     # -------------------- ocp_qp
