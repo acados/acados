@@ -42,7 +42,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
-EXAMPLES += sim_wt_model
+EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
@@ -60,7 +60,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
-RUN_EXAMPLES += run_sim_wt_model
+RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_mass_spring_example
@@ -87,10 +87,13 @@ CRANE_OBJS += crane_model/jac_model.o
 CRANE_OBJS += crane_model/vde_adj_model.o
 CRANE_OBJS += crane_model/vde_forw_model.o
 CRANE_OBJS += crane_model/vde_hess_model.o
-CRANE_OBJS += crane_model/impl_ode.o
-CRANE_OBJS += crane_model/impl_jac_x.o
-CRANE_OBJS += crane_model/impl_jac_xdot.o
-CRANE_OBJS += crane_model/impl_jac_u.o
+CRANE_OBJS += crane_model/impl_ode_fun.o
+CRANE_OBJS += crane_model/impl_ode_jac_x.o
+CRANE_OBJS += crane_model/impl_ode_jac_xdot.o
+CRANE_OBJS += crane_model/impl_ode_jac_u.o
+CRANE_OBJS += crane_model/impl_ode_fun_jac_x_xdot.o
+CRANE_OBJS += crane_model/impl_ode_jac_x_u.o
+CRANE_OBJS += crane_model/impl_ode_jac_x_xdot_u.o
 
 sim_crane_no_interface: $(CRANE_OBJS) sim_crane_no_interface.o
 	$(CCC) -o sim_crane_no_interface.out sim_crane_no_interface.o  $(CRANE_OBJS) $(LDFLAGS) $(LIBS)
@@ -119,8 +122,15 @@ run_sim_crane_example:
 #################################################
 
 WT_NX6_OBJS =
-WT_NX6_OBJS += wt_model_nx6_expl/expl_ode.o
-WT_NX6_OBJS += wt_model_nx6_expl/expl_forw_vde.o
+WT_NX6_OBJS += wt_model_nx6/expl_ode_fun.o
+WT_NX6_OBJS += wt_model_nx6/expl_vde_for.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_fun.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_xdot.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_u.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
+WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)
@@ -134,8 +144,15 @@ run_sim_wt_model_nx6:
 
 
 WT_NX6P2_OBJS =
-WT_NX6P2_OBJS += wt_model_nx6_expl/nx6p2/expl_ode.o
-WT_NX6P2_OBJS += wt_model_nx6_expl/nx6p2/expl_forw_vde.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/expl_vde_for.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_xdot.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_fun_jac_x_xdot.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_xdot_u.o
+WT_NX6P2_OBJS += wt_model_nx6/nx6p2/impl_ode_jac_x_u.o
 
 wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 	$(CCC) -o wind_turbine_nmpc.out wind_turbine_nmpc.o  $(WT_NX6P2_OBJS) $(LDFLAGS) $(LIBS)
@@ -149,28 +166,30 @@ run_wind_turbine_nmpc:
 
 
 #################################################
-# wind turbine model
+# wind turbine model with 3 states
 #################################################
 
 WT_OBJS =
-WT_OBJS += wt_model_nx3/ode_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/jac_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/vde_adj_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/vde_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/vde_hess_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_odeFun_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_jacFun_x_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_jacFun_xdot_energy_balanced_model.o
-WT_OBJS += wt_model_nx3/impl_jacFun_u_energy_balanced_model.o
+WT_OBJS += wt_model_nx3/expl_ode_fun.o
+WT_OBJS += wt_model_nx3/expl_ode_jac.o
+WT_OBJS += wt_model_nx3/expl_vde_for.o
+WT_OBJS += wt_model_nx3/expl_vde_adj.o
+WT_OBJS += wt_model_nx3/impl_ode_fun.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_x.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_xdot.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_u.o
+WT_OBJS += wt_model_nx3/impl_ode_fun_jac_x_xdot.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_x_u.o
+WT_OBJS += wt_model_nx3/impl_ode_jac_x_xdot_u.o
 
-sim_wt_model: $(WT_OBJS) sim_wt_model.o
-	$(CCC) -o sim_wt_model.out sim_wt_model.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
+sim_wt_model_nx3: $(WT_OBJS) sim_wt_model_nx3.o
+	$(CCC) -o sim_wt_model_nx3.out sim_wt_model_nx3.o  $(WT_OBJS) $(LDFLAGS) $(LIBS)
 	@echo
-	@echo " Example sim_wt_model build complete."
+	@echo " Example sim_wt_model_nx3 build complete."
 	@echo
 
-run_sim_wt_model:
-	./sim_wt_model.out
+run_sim_wt_model_nx3:
+	./sim_wt_model_nx3.out
 
 
 
@@ -284,30 +303,45 @@ CHAIN_OBJS += chain_model/ls_costN_nm6.o
 CHAIN_OBJS += chain_model/casadi_erk4_chain_nm6.o
 ### implicit ###
 # 2 masses
-CHAIN_OBJS += implicit_chain_model/impl_odeFun_chain_nm2.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_x_chain_nm2.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_xdot_chain_nm2.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_u_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm2.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm2.o
 # 3 masses
-CHAIN_OBJS += implicit_chain_model/impl_odeFun_chain_nm3.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_x_chain_nm3.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_xdot_chain_nm3.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_u_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm3.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm3.o
 # 4 masses
-CHAIN_OBJS += implicit_chain_model/impl_odeFun_chain_nm4.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_x_chain_nm4.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_xdot_chain_nm4.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_u_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm4.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm4.o
 # 5 masses
-CHAIN_OBJS += implicit_chain_model/impl_odeFun_chain_nm5.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_x_chain_nm5.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_xdot_chain_nm5.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_u_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm5.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm5.o
 # 6 masses
-CHAIN_OBJS += implicit_chain_model/impl_odeFun_chain_nm6.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_x_chain_nm6.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_xdot_chain_nm6.o
-CHAIN_OBJS += implicit_chain_model/impl_jacFun_u_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_xdot_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_u_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_fun_jac_x_xdot_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_xdot_u_chain_nm6.o
+CHAIN_OBJS += implicit_chain_model/impl_ode_jac_x_u_chain_nm6.o
 
 nonlinear_chain_ocp_nlp_no_interface: $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o
 	$(CCC) -o nonlinear_chain_ocp_nlp_no_interface.out $(CHAIN_OBJS) nonlinear_chain_ocp_nlp_no_interface.o $(LDFLAGS) $(LIBS)
@@ -339,9 +373,13 @@ clean:
 	rm -f *.o
 	rm -f *.out
 
-deep_clean: clean
+clean_models:
 	rm -f chain_model/*.o
+	rm -f implicit_chain_model/*.o
+	rm -f crane/*.o
 	rm -f wt_model_nx3/*.o
-	rm -f wt_model_nx6_expl/*.o
-	rm -f wt_model_nx6_expl/nx6p2/*.o
+	rm -f wt_model_nx6/*.o
+	rm -f wt_model_nx6/nx6p2/*.o
+
+deep_clean: clean clean_models
 

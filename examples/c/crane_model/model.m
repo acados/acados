@@ -31,7 +31,7 @@ f_expl = [   v1; ...
              (- l*m*sin(theta)*dtheta^2 + F + g*m*cos(theta)*sin(theta))/(M + m - m*cos(theta)^2); ...
              (- l*m*cos(theta)*sin(theta)*dtheta^2 + F*cos(theta) + g*m*sin(theta) + M*g*sin(theta))/(l*(M + m - m*cos(theta)^2)) ];
         
-odeFun = Function('odeFun',{x,u},{f_expl});
+ode_fun = Function('ode_fun',{x,u},{f_expl});
 % 
 % Sx = SX.sym('Sx',nx,nx);
 % Sp = SX.sym('Sp',nx,nu);
@@ -46,7 +46,7 @@ odeFun = Function('odeFun',{x,u},{f_expl});
 % vdeFun = Function('vdeFun',{x,Sx,Sp,u},{f_expl,vdeX,vdeP});
 % 
 % jacX = SX.zeros(nx,nx) + jacobian(f_expl,x);
-% jacFun = Function('jacFun',{x,u},{f_expl,jacX});
+% ode_jac = Function('ode_jac',{x,u},{f_expl,jacX});
 % 
 % adj = jtimes(f_expl,[x;u],lambdaX,true);
 % % adj = jtimes(f_expl,[u;x],lambdaX,true);
@@ -65,39 +65,45 @@ odeFun = Function('odeFun',{x,u},{f_expl});
 % hessFun = Function('hessFun',{x,Sx,Sp,lambdaX,u},{adj,hess2});
 % 
 % opts = struct('mex', false);
-% odeFun.generate(['ode_model'], opts);
+% ode_fun.generate(['ode_model'], opts);
 % vdeFun.generate(['vde_forw_model'], opts);
-% jacFun.generate(['jac_model'], opts);
+% ode_jac.generate(['jac_model'], opts);
 % adjFun.generate(['vde_adj_model'], opts);
 % hessFun.generate(['vde_hess_model'], opts);
 
 x_dot = SX.sym('x_dot',nx,1);         
 f_impl = SX.zeros(nx,1)+(x_dot - f_expl); %% add SX.zeros to densify the output
 
-impl_odeFun = Function('impl_odeFun',{x,x_dot,u},{f_impl});
+impl_ode_fun = Function('casadi_impl_ode_fun',{x,x_dot,u},{f_impl});
 jac_x = SX.zeros(nx,nx) + jacobian(f_impl,x);
 jac_xdot = SX.zeros(nx,nx) + jacobian(f_impl,x_dot);
 jac_u = SX.zeros(nx,nu) + jacobian(f_impl,u);
 
-impl_jacFun_x = Function('impl_jacFun_x',{x,x_dot,u},{jac_x});
-impl_jacFun_xdot = Function('impl_jacFun_xdot',{x,x_dot,u},{jac_xdot});
-impl_jacFun_u = Function('impl_jacFun_u',{x,x_dot,u},{jac_u});
+impl_ode_jac_x = Function('casadi_impl_ode_jac_x',{x,x_dot,u},{jac_x});
+impl_ode_jac_xdot = Function('casadi_impl_ode_jac_xdot',{x,x_dot,u},{jac_xdot});
+impl_ode_jac_u = Function('casadi_impl_ode_jac_u',{x,x_dot,u},{jac_u});
+impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, x_dot, u}, {[f_impl, jac_x, jac_xdot]});
+impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, x_dot, u}, {[jac_x, jac_xdot, jac_u]});
+impl_ode_jac_x_u = Function('casadi_impl_ode_jac_x_u', {x, x_dot, u}, {[jac_x, jac_xdot, jac_u]});
 
 opts = struct('mex', false);
-% 
-% impl_odeFun.generate(['impl_ode'],opts);
-% impl_jacFun_x.generate(['impl_jac_x'],opts);
-% impl_jacFun_xdot.generate(['impl_jac_xdot'],opts);
-% impl_jacFun_u.generate(['impl_jac_u'],opts);
+ 
+impl_ode_fun.generate(['impl_ode_fun'],opts);
+impl_ode_jac_x.generate(['impl_ode_jac_x'],opts);
+impl_ode_jac_xdot.generate(['impl_ode_jac_xdot'],opts);
+impl_ode_jac_u.generate(['impl_ode_jac_u'],opts);
+impl_ode_fun_jac_x_xdot.generate('impl_ode_fun_jac_x_xdot', opts);
+impl_ode_jac_x_xdot_u.generate('impl_ode_jac_x_xdot_u', opts);
+impl_ode_jac_x_u.generate('impl_ode_jac_x_u', opts);
 
 x0 = [0;3.14;0;0];
 u0 = 0;
 k0 = 0*ones(4,1);
 
-% odeFun(x0,u0)
+% ode_fun(x0,u0)
 
-impl_odeFun(x0,k0,u0)
+impl_ode_fun(x0,k0,u0)
 
-impl_jacFun_x(x0,k0,u0)
-impl_jacFun_xdot(x0,k0,u0)
-impl_jacFun_u(x0,k0,u0)
+impl_ode_jac_x(x0,k0,u0)
+impl_ode_jac_xdot(x0,k0,u0)
+impl_ode_jac_u(x0,k0,u0)
