@@ -44,8 +44,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 EXAMPLES =
 EXAMPLES += sim_gnsf_crane
 EXAMPLES += sim_gnsf_crane_empty_z
-EXAMPLES += sim_irk_crane2
-EXAMPLES += sim_wt_model
+# EXAMPLES += sim_irk_crane2
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
@@ -225,6 +224,9 @@ WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
+WT_NX6_OBJS += wt_model_nx6/phi_fun_jac_y.o
+WT_NX6_OBJS += wt_model_nx6/phi_jac_y.o
+WT_NX6_OBJS += wt_model_nx6/f_LO_inc_J_x1k1uz_fun.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)

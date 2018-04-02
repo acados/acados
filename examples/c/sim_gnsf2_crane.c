@@ -153,7 +153,7 @@ int main() {
     // set external functions
     model->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
     model->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
-    model->jac_Phi_y = (external_function_generic *) &jac_Phi_y;
+    model->Phi_jac_y = (external_function_generic *) &jac_Phi_y;
     gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
     gnsf2_precompute(gnsf2_dim, model, opts, in);
 

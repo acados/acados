@@ -32,6 +32,8 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#include <acados/sim/sim_gnsf2.h>
+
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
@@ -173,8 +175,39 @@ int main()
 	impl_ode_jac_x_u.casadi_n_out = &casadi_impl_ode_jac_x_u_n_out;
 	external_function_param_casadi_create(&impl_ode_jac_x_u, np);
 
+	/************************************************
+	* external functions (Generalized Nonlinear Static Feedback 2 (GNSF2) model)
+	************************************************/
 
+	// Phi - gnsf2
+	external_function_param_casadi phi_fun_jac_y;
+	phi_fun_jac_y.casadi_fun = &casadi_phi_fun_jac_y;
+	phi_fun_jac_y.casadi_work = &casadi_phi_fun_jac_y_work;
+	phi_fun_jac_y.casadi_sparsity_in = &casadi_phi_fun_jac_y_sparsity_in;
+	phi_fun_jac_y.casadi_sparsity_out = &casadi_phi_fun_jac_y_sparsity_out;
+	phi_fun_jac_y.casadi_n_in = &casadi_phi_fun_jac_y_n_in;
+	phi_fun_jac_y.casadi_n_out = &casadi_phi_fun_jac_y_n_out;
+	external_function_param_casadi_create(&phi_fun_jac_y, np);
 
+	// Phi - gnsf
+	external_function_param_casadi phi_jac_y;
+	phi_jac_y.casadi_fun = &casadi_phi_jac_y;
+	phi_jac_y.casadi_work = &casadi_phi_jac_y_work;
+	phi_jac_y.casadi_sparsity_in = &casadi_phi_jac_y_sparsity_in;
+	phi_jac_y.casadi_sparsity_out = &casadi_phi_jac_y_sparsity_out;
+	phi_jac_y.casadi_n_in = &casadi_phi_jac_y_n_in;
+	phi_jac_y.casadi_n_out = &casadi_phi_jac_y_n_out;
+	external_function_param_casadi_create(&phi_jac_y, np);	
+
+	// f - Linear Output System
+	external_function_param_casadi f_LO_inc_J_x1k1uz_fun;
+	f_LO_inc_J_x1k1uz_fun.casadi_fun = &casadi_f_LO_inc_J_x1k1uz_fun;
+	f_LO_inc_J_x1k1uz_fun.casadi_work = &casadi_f_LO_inc_J_x1k1uz_fun_work;
+	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_in = &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in;
+	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_out = &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_out;
+	f_LO_inc_J_x1k1uz_fun.casadi_n_in = &casadi_f_LO_inc_J_x1k1uz_fun_n_in;
+	f_LO_inc_J_x1k1uz_fun.casadi_n_out = &casadi_f_LO_inc_J_x1k1uz_fun_n_out;
+	external_function_param_casadi_create(&f_LO_inc_J_x1k1uz_fun, np);
 
 	int number_sim_solvers = 3;
 	int nss;
@@ -197,6 +230,8 @@ int main()
 			case 2:
 				plan.sim_solver = IRK;
 				break;
+			case 3:
+				plan.sim_solver = GNSF2;
 
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
@@ -211,8 +246,14 @@ int main()
 		/************************************************
 		* sim dims
 		************************************************/
-
-		sim_dims *dims = sim_dims_create();
+		sim_dims *dims; // OJ: declaration in if causes error
+		if (nss == 3){
+			gnsf2_dims *gnsf2_dim = gnsf2_dims_create();
+    		sim_dims *dims = (sim_dims *) gnsf2_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+		}
+		else {
+			sim_dims *dims = sim_dims_create();
+		}
 
 		dims->nx = nx;
 		dims->nu = nu;
@@ -247,6 +288,11 @@ int main()
 				opts->num_steps = 1; // number of integration steps
 				break;
 
+			case 3: //GNSF2
+				opts->ns = 8; // number of stages in rk integrator
+				opts->num_steps = 1; // number of integration steps
+				break;
+
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
@@ -272,12 +318,19 @@ int main()
 				break;
 			}
 			case 1:
-			case 2:
+			case 2: // IRK
 			{
 				sim_set_model(config, in, "impl_ode_fun", &impl_ode_fun);
 				sim_set_model(config, in, "impl_ode_fun_jac_x_xdot", &impl_ode_fun_jac_x_xdot);
 				sim_set_model(config, in, "impl_ode_jac_x_xdot_u", &impl_ode_jac_x_xdot_u);
 				sim_set_model(config, in, "impl_ode_jac_x_u", &impl_ode_jac_x_u);
+				break;
+			}
+			case 3: // GNSF2
+			{
+				sim_set_model(config, in, "Phi_inc_dy_fun", &phi_fun_jac_y);
+				sim_set_model(config, in, "Phi_jac_y_fun", &phi_jac_y);
+				sim_set_model(config, in, "f_LO_inc_J_x1k1uz_fun", &f_LO_inc_J_x1k1uz_fun);
 				break;
 			}
 			default :
@@ -313,7 +366,11 @@ int main()
 			case 1:
 			case 2:
 				printf("\n\nsim solver: IRK, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
-				plan.sim_solver = IRK;
+				plan.sim_solver = IRK; // unnecessary(?!), see second switch
+				break;
+			case 3:
+				printf("\n\nsim solver: GNSF2, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
+				// plan.sim_solver = IRK; 
 				break;
 
 			default :

@@ -83,6 +83,37 @@ const int *casadi_impl_ode_jac_x_u_sparsity_out(int);
 int casadi_impl_ode_jac_x_u_n_in();
 int casadi_impl_ode_jac_x_u_n_out();
 
+/* GNSF2 Functions */
+// used to import integers & double matrices
+int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int get_matrices_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+// int But_KK_YY_ZZ_LO_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+
+// Phi_inc_dy_fun
+int casadi_phi_fun_jac_y(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_phi_fun_jac_y_work(int *, int *, int *, int *);
+const int *casadi_phi_fun_jac_y_sparsity_in(int);
+const int *casadi_phi_fun_jac_y_sparsity_out(int);
+int casadi_phi_fun_jac_y_n_in();
+int casadi_phi_fun_jac_y_n_out();
+
+
+//Phi_jac_y_fun
+int casadi_phi_jac_y(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_phi_jac_y_work(int *, int *, int *, int *);
+const int *casadi_phi_jac_y_sparsity_in(int);
+const int *casadi_phi_jac_y_sparsity_out(int);
+int casadi_phi_jac_y_n_in();
+int casadi_phi_jac_y_n_out();
+
+// f_LO_inc_J_x1k1uz_fun
+int casadi_f_LO_inc_J_x1k1uz_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_f_LO_inc_J_x1k1uz_fun_work(int *, int *, int *, int *);
+const int *casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in(int);
+const int *casadi_f_LO_inc_J_x1k1uz_fun_sparsity_out(int);
+int casadi_f_LO_inc_J_x1k1uz_fun_n_in();
+int casadi_f_LO_inc_J_x1k1uz_fun_n_out();
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
