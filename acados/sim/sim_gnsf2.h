@@ -61,7 +61,7 @@ typedef struct
 {
     // external functions
     external_function_generic *Phi_inc_dy;
-    external_function_generic *jac_Phi_y;
+    external_function_generic *Phi_jac_y;
     external_function_generic *f_LO_inc_J_x1k1uz;
 
     // precomputed matrices
@@ -205,6 +205,8 @@ typedef struct { //workspace
 int sim_gnsf2_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory);
+int sim_gnsf2_model_set_function(void *model_, sim_function_t fun_type, void *fun);
+
 
 void *gnsf2_cast_workspace(void *config, gnsf2_dims* dims, void *raw_memory, void *args);
 int gnsf2_workspace_calculate_size(void *config, sim_dims *dim_in, void *args);
@@ -214,6 +216,7 @@ void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory);
 
 int gnsf2_dims_calculate_size();
 gnsf2_dims *gnsf2_dims_assign(void *raw_memory);
+gnsf2_dims *gnsf2_dims_create();
 
 int sim_gnsf2_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
 void *sim_gnsf2_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);

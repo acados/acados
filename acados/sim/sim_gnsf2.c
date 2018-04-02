@@ -60,6 +60,17 @@ int gnsf2_dims_calculate_size()
     return size;
 }
 
+gnsf2_dims *gnsf2_dims_create()
+{
+    int bytes = gnsf2_dims_calculate_size();
+
+    void *ptr = calloc(1, bytes);
+
+    gnsf2_dims *dims = gnsf2_dims_assign(ptr);
+
+    return dims;
+}
+
 
 gnsf2_dims *gnsf2_dims_assign(void *raw_memory)
 {
@@ -211,6 +222,26 @@ void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
 	// assert
     assert((char *) raw_memory + sim_gnsf2_model_calculate_size(config, dim_in) >= c_ptr);
 	return model;
+}
+
+int sim_gnsf2_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+{
+    gnsf2_model *model = model_;
+
+    switch (fun_type)
+    {
+        case PHI_INC_DY_FUN:
+            model->Phi_inc_dy = (external_function_generic *) fun;
+            break;
+        case PHI_JAC_Y_FUN:
+            model->Phi_jac_y = (external_function_generic *) fun;
+            break;
+        case LO_FUN:
+            model->f_LO_inc_J_x1k1uz = (external_function_generic *) fun;
+            break;
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
 }
 
 int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims)
@@ -1151,7 +1182,7 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
             for (int ii = 0; ii < num_stages; ii++) { //
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
                 acados_tic(&casadi_timer);
-                fix->jac_Phi_y->evaluate(fix->jac_Phi_y, phi_in, phi_out);
+                fix->Phi_jac_y->evaluate(fix->Phi_jac_y, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[0], n_out, &dPHI_dy, ii*n_out, 0);
                 // build J_r_ff
@@ -1264,7 +1295,7 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
                 acados_tic(&casadi_timer);
-                fix->jac_Phi_y->evaluate(fix->jac_Phi_y, phi_in, phi_out);
+                fix->Phi_jac_y->evaluate(fix->Phi_jac_y, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[0], n_out, &dPHI_dy, ii*n_out, 0);
                 // build J_r_ff
@@ -1364,8 +1395,8 @@ void *sim_gnsf2_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
 }
 
 void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
-{   // copied from IRK
-     sim_rk_opts *opts = opts_;
+{   // copied from IRK -- TODO: one could avoid this, check!
+    sim_rk_opts *opts = opts_;
 
 	opts->ns = 4; // GL 3
     int ns = opts->ns;
