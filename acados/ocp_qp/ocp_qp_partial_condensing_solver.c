@@ -181,7 +181,7 @@ void *ocp_qp_partial_condensing_solver_memory_assign(void *config_, ocp_qp_dims 
     assert((size_t)c_ptr % 8 == 0 && "double not 8-byte aligned!");
 
     if (opts->pcond_opts->N2 < dims->N) {
-        mem->pcond_memory = ocp_qp_partial_condensing_memory_assign(dims, opts->pcond_opts, c_ptr);
+        mem->pcond_memory = (ocp_qp_partial_condensing_memory *) ocp_qp_partial_condensing_memory_assign(dims, opts->pcond_opts, c_ptr);
         c_ptr += ocp_qp_partial_condensing_memory_calculate_size(dims, opts->pcond_opts);
     }
 	else

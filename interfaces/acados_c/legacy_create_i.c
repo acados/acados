@@ -81,7 +81,7 @@ ocp_qp_partial_condensing_memory *ocp_qp_partial_condensing_create_memory(ocp_qp
 {
     int size = ocp_qp_partial_condensing_memory_calculate_size(dims, args);
     void *ptr = acados_malloc(size, 1);
-    ocp_qp_partial_condensing_memory *mem = ocp_qp_partial_condensing_memory_assign(dims, args, ptr);
+    ocp_qp_partial_condensing_memory *mem = (ocp_qp_partial_condensing_memory *) ocp_qp_partial_condensing_memory_assign(dims, args, ptr);
     return mem;
 }
 

@@ -29,38 +29,27 @@
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/utils/mem.h"
 
-condensing_config *condensing_config_create(condensing_plan *plan)
+ocp_qp_condensing_config *condensing_config_create(condensing_plan *plan)
 {
-    // int bytes = condensing_module_config_calculate_size();
-    // void *ptr = calloc(1, bytes);
-    condensing_config *config = NULL; // = dense_condensing_config_assign(ptr);
+    int bytes = ocp_qp_condensing_config_calculate_size();
+    void *ptr = calloc(1, bytes);
+    ocp_qp_condensing_config *config = ocp_qp_condensing_config_assign(ptr);
 
-    // dense_qp_solver_t solver_name = plan->qp_solver;
-
-    // // TODO(dimitris): cath error if solver not compiled
-    // // printf("\n\nSpecified solver interface not compiled with acados!\n\n");
-    // switch (solver_name)
-    // {
-    //     case DENSE_QP_HPIPM:
-    //         dense_qp_hpipm_config_initialize_default(solver_config);
-    //         break;
-    //     case DENSE_QP_QPOASES:
-    //         #ifdef ACADOS_WITH_QPOASES
-    //         dense_qp_qpoases_config_initialize_default(solver_config);
-    //         #endif
-    //         break;
-    //     case DENSE_QP_QORE:
-    //         #ifdef ACADOS_WITH_QORE
-    //         dense_qp_qore_config_initialize_default(solver_config);
-    //         #endif
-    //         break;
-    // }
+    switch (plan->condensing_type)
+    {
+        case PARTIAL_CONDENSING:
+            ocp_qp_partial_condensing_config_initialize_default(config);
+            break;
+        case FULL_CONDENSING:
+            ocp_qp_full_condensing_config_initialize_default(config);
+            break;
+    }
     return config;
 }
 
 
 
-void *condensing_opts_create(condensing_config *config, void *dims_)
+void *condensing_opts_create(ocp_qp_condensing_config *config, void *dims_)
 {
     // int bytes = config->opts_calculate_size(config, dims);
 
@@ -71,11 +60,12 @@ void *condensing_opts_create(condensing_config *config, void *dims_)
     // config->opts_initialize_default(config, dims, opts);
 
     // return opts;
+    return NULL;
 }
 
 
 
-int condensing_calculate_size(condensing_config *config, void *dims_, void *opts_)
+int condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_)
 {
     // int bytes = sizeof(dense_qp_solver);
 
@@ -83,11 +73,12 @@ int condensing_calculate_size(condensing_config *config, void *dims_, void *opts
     // bytes += config->workspace_calculate_size(config, dims, opts_);
 
     // return bytes;
+    return -1;
 }
 
 
 
-condensing_module *condensing_assign(condensing_config *config, void *dims_, void *opts_, void *raw_memory)
+condensing_module *condensing_assign(ocp_qp_condensing_config *config, void *dims_, void *opts_, void *raw_memory)
 {
     // char *c_ptr = (char *) raw_memory;
 
@@ -109,11 +100,12 @@ condensing_module *condensing_assign(condensing_config *config, void *dims_, voi
     // assert((char*)raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
 
     // return solver;
+    return NULL;
 }
 
 
 
-condensing_module *condensing_create(condensing_config *config, void *dims_, void *opts_)
+condensing_module *condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_)
 {
     // int bytes = dense_qp_calculate_size(config, dims, opts_);
 
@@ -122,18 +114,19 @@ condensing_module *condensing_create(condensing_config *config, void *dims_, voi
     // dense_qp_solver *solver = dense_qp_assign(config, dims, opts_, ptr);
 
     // return solver;
+    return NULL;
 }
 
 
 
 int condense(condensing_module *module, void *qp_in, void *qp_out)
 {
-    return module->config->condensing(module->config, qp_in, qp_out, module->opts, module->mem, module->work);
+    return module->config->condensing(qp_in, qp_out, module->opts, module->mem, module->work);
 }
 
 
 
 int epxand(condensing_module *module, void *qp_in, void *qp_out)
 {
-    return module->config->expansion(module->config, qp_in, qp_out, module->opts, module->mem, module->work);
+    return module->config->expansion(qp_in, qp_out, module->opts, module->mem, module->work);
 }

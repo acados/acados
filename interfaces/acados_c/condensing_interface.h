@@ -37,22 +37,22 @@ typedef struct {
 } condensing_plan;
 
 typedef struct {
-    condensing_config *config;  // TODO
+    ocp_qp_condensing_config *config;  // TODO
     void *dims_;
     void *opts;
     void *mem;
     void *work;
 } condensing_module;
 
-condensing_config *condensing_config_create(condensing_plan *plan);
+ocp_qp_condensing_config *condensing_config_create(condensing_plan *plan);
 //
-void *condensing_opts_create(condensing_config *config, void *dims_);
+void *condensing_opts_create(ocp_qp_condensing_config *config, void *dims_);
 //
-int condensing_calculate_size(condensing_config *config, void *dims_, void *opts_);
+int condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_);
 //
-condensing_module *condensing_assign(condensing_config *config, void *dims_, void *opts_, void *raw_memory);
+condensing_module *condensing_assign(ocp_qp_condensing_config *config, void *dims_, void *opts_, void *raw_memory);
 //
-condensing_module *condensing_create(condensing_config *config, void *dims_, void *opts_);
+condensing_module *condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_);
 //
 int condense(condensing_module *module, void *qp_in, void *qp_out);
 //
