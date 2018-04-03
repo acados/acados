@@ -51,70 +51,64 @@ ocp_qp_condensing_config *condensing_config_create(condensing_plan *plan)
 
 void *condensing_opts_create(ocp_qp_condensing_config *config, void *dims_)
 {
-    // int bytes = config->opts_calculate_size(config, dims);
+    int bytes = config->opts_calculate_size(dims_);
 
-    // void *ptr = calloc(1, bytes);
+    void *ptr = calloc(1, bytes);
 
-    // void *opts = config->opts_assign(config, dims, ptr);
+    void *opts = config->opts_assign(dims_, ptr);
 
-    // config->opts_initialize_default(config, dims, opts);
+    config->opts_initialize_default(dims_, opts);
 
-    // return opts;
-    return NULL;
+    return opts;
 }
 
 
 
 int condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_)
 {
-    // int bytes = sizeof(dense_qp_solver);
+    int bytes = sizeof(condensing_module);
 
-    // bytes += config->memory_calculate_size(config, dims, opts_);
-    // bytes += config->workspace_calculate_size(config, dims, opts_);
+    bytes += config->memory_calculate_size(dims_, opts_);
+    bytes += config->workspace_calculate_size(dims_, opts_);
 
-    // return bytes;
-    return -1;
+    return bytes;
 }
 
 
 
 condensing_module *condensing_assign(ocp_qp_condensing_config *config, void *dims_, void *opts_, void *raw_memory)
 {
-    // char *c_ptr = (char *) raw_memory;
+    char *c_ptr = (char *) raw_memory;
 
-    // dense_qp_solver *solver = (dense_qp_solver *) c_ptr;
-    // c_ptr += sizeof(dense_qp_solver);
+    condensing_module *module = (condensing_module *) c_ptr;
+    c_ptr += sizeof(condensing_module);
 
-    // solver->config = config;
-    // solver->dims = dims;
-    // solver->opts = opts_;
+    module->config = config;
+    module->dims = dims_;
+    module->opts = opts_;
 
-    // // TODO(dimitris): CHECK ALIGNMENT!
+    module->mem = config->memory_assign(dims_, opts_, c_ptr);
+    c_ptr += config->memory_calculate_size(dims_, opts_);
 
-    // solver->mem = config->memory_assign(config, dims, opts_, c_ptr);
-    // c_ptr += config->memory_calculate_size(config, dims, opts_);
+    module->work = (void *) c_ptr;
+    c_ptr += config->workspace_calculate_size(dims_, opts_);
 
-    // solver->work = (void *) c_ptr;
-    // c_ptr += config->workspace_calculate_size(config, dims, opts_);
+    assert((char*)raw_memory + condensing_calculate_size(config, dims_, opts_) == c_ptr);
 
-    // assert((char*)raw_memory + dense_qp_calculate_size(config, dims, opts_) == c_ptr);
-
-    // return solver;
-    return NULL;
+    return module;
 }
 
 
 
 condensing_module *condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_)
 {
-    // int bytes = dense_qp_calculate_size(config, dims, opts_);
+    int bytes = condensing_calculate_size(config, dims_, opts_);
 
-    // void *ptr = calloc(1, bytes);
+    void *ptr = calloc(1, bytes);
 
-    // dense_qp_solver *solver = dense_qp_assign(config, dims, opts_, ptr);
+    condensing_module *module = condensing_assign(config, dims_, opts_, ptr);
 
-    // return solver;
-    return NULL;
+    return module;
 }
 
 

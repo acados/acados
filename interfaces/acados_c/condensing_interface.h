@@ -38,7 +38,7 @@ typedef struct {
 
 typedef struct {
     ocp_qp_condensing_config *config;  // TODO
-    void *dims_;
+    void *dims;
     void *opts;
     void *mem;
     void *work;
