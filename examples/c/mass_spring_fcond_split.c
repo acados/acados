@@ -97,11 +97,11 @@ int main()
     condensing_plan cond_plan;
     cond_plan.condensing_type = FULL_CONDENSING;
 
-    ocp_qp_condensing_config *cond_config = condensing_config_create(&cond_plan);
+    ocp_qp_condensing_config *cond_config = ocp_qp_condensing_config_create(&cond_plan);
 
-    ocp_qp_full_condensing_opts *cond_opts = condensing_opts_create(cond_config, qp_in->dim);
+    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_condensing_opts_create(cond_config, qp_in->dim);
 
-    condensing_module *cond_module = condensing_create(cond_config, qp_in->dim, cond_opts);
+    condensing_module *cond_module = ocp_qp_condensing_create(cond_config, qp_in->dim, cond_opts);
 
     /************************************************
     * dense ipm
@@ -123,14 +123,14 @@ int main()
 
 	for(int rep = 0; rep < NREP; rep++)
     {
-        condense(cond_module, qp_in, qpd_in);
+        ocp_qp_condense(cond_module, qp_in, qpd_in);
 
         acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 
         if (acados_return != 0)
             printf("error with dense qp solution\n");
 
-        expand(cond_module, qpd_out, qp_out);
+        ocp_qp_expand(cond_module, qpd_out, qp_out);
     }
 
     real_t time = acados_toc(&timer)/NREP;
