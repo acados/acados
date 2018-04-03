@@ -24,7 +24,6 @@
 
 // acados_c
 #include "acados_c/dense_qp_interface.h"
-#include "acados_c/legacy_create.h"
 #include "acados_c/dense_qp_interface.h"
 #include "acados_c/ocp_qp_interface.h"
 #include "acados_c/condensing_interface.h"
