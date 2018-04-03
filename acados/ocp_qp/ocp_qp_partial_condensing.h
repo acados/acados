@@ -30,7 +30,7 @@ extern "C" {
 typedef struct ocp_qp_partial_condensing_opts_
 {
     struct d_cond_qp_ocp2ocp_arg *hpipm_opts;
-    ocp_qp_dims *pcond_dims; // TODO why in opts??? move in memory on in dims ???
+    ocp_qp_dims *pcond_dims; // TODO why in opts??? move in memory or in dims ??? Dimitris: I'd say dims
 	int *block_size;
     int N2;
     int N2_bkp;

@@ -93,7 +93,7 @@ condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, vo
     module->work = (void *) c_ptr;
     c_ptr += config->workspace_calculate_size(dims_, opts_);
 
-    assert((char*)raw_memory + condensing_calculate_size(config, dims_, opts_) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_condensing_calculate_size(config, dims_, opts_) == c_ptr);
 
     return module;
 }
@@ -102,6 +102,7 @@ condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, vo
 
 condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_)
 {
+    config->opts_update(dims_, opts_);
     int bytes = ocp_qp_condensing_calculate_size(config, dims_, opts_);
 
     void *ptr = calloc(1, bytes);
