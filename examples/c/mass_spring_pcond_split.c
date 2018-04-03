@@ -208,9 +208,9 @@ int main()
     free(config);
     free(qp_solver);
 
-    free(cond_module);
     free(cond_opts);
     free(cond_config);
+    free(cond_module);
 
 	return 0;
 }
