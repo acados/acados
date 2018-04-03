@@ -120,7 +120,7 @@ int condense(condensing_module *module, void *qp_in, void *qp_out)
 
 
 
-int epxand(condensing_module *module, void *qp_in, void *qp_out)
+int expand(condensing_module *module, void *qp_in, void *qp_out)
 {
     return module->config->expansion(qp_in, qp_out, module->opts, module->mem, module->work);
 }
