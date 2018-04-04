@@ -85,10 +85,10 @@
 
 
 // dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
-#define DYNAMICS 2
+#define DYNAMICS 3
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 1
+#define COST 2
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -809,7 +809,7 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 // hand-generated external function for externally provided hessian and gradient
-void ext_cost_nm2(void *fun, double *in, double *out)
+void ext_cost_nm2(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -827,7 +827,7 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -836,8 +836,8 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
@@ -847,7 +847,7 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 
 }
 
-void ext_cost_nm3(void *fun, double *in, double *out)
+void ext_cost_nm3(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -865,7 +865,7 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -874,8 +874,8 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
@@ -885,7 +885,7 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 
 }
 
-void ext_cost_nm4(void *fun, double *in, double *out)
+void ext_cost_nm4(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -903,7 +903,7 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -912,8 +912,8 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
@@ -923,7 +923,7 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 
 }
 
-void ext_cost_nm5(void *fun, double *in, double *out)
+void ext_cost_nm5(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -941,7 +941,7 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -950,8 +950,8 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
@@ -961,7 +961,7 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 
 }
 
-void ext_cost_nm6(void *fun, double *in, double *out)
+void ext_cost_nm6(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -979,7 +979,7 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -988,8 +988,8 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
@@ -1002,7 +1002,7 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 
 
 // hand-wirtten box constraints on states as nonlinra constraints
-void nonlin_constr_nm2(void *evaluate, double *in, double *out)
+void nonlin_constr_nm2(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1014,12 +1014,12 @@ void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -1029,7 +1029,7 @@ void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm3(void *evaluate, double *in, double *out)
+void nonlin_constr_nm3(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1041,12 +1041,12 @@ void nonlin_constr_nm3(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -1056,7 +1056,7 @@ void nonlin_constr_nm3(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm4(void *evaluate, double *in, double *out)
+void nonlin_constr_nm4(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1068,12 +1068,12 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -1083,7 +1083,7 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm5(void *evaluate, double *in, double *out)
+void nonlin_constr_nm5(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1095,12 +1095,12 @@ void nonlin_constr_nm5(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -1110,7 +1110,7 @@ void nonlin_constr_nm5(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm6(void *evaluate, double *in, double *out)
+void nonlin_constr_nm6(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1122,12 +1122,12 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -1139,7 +1139,7 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 
 
 
-void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm2(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1149,7 +1149,7 @@ void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
 
 	int nv = nu+nx;
 
-	double *hess = out;
+	double *hess = out[0];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 
@@ -1157,7 +1157,7 @@ void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
 
 }
 
-void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm3(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1167,7 +1167,7 @@ void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
 
 	int nv = nu+nx;
 
-	double *hess = out;
+	double *hess = out[0];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 
@@ -1175,7 +1175,7 @@ void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
 
 }
 
-void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm4(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1185,7 +1185,7 @@ void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
 
 	int nv = nu+nx;
 
-	double *hess = out;
+	double *hess = out[0];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 
@@ -1193,7 +1193,7 @@ void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
 
 }
 
-void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm5(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1203,7 +1203,7 @@ void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
 
 	int nv = nu+nx;
 
-	double *hess = out;
+	double *hess = out[0];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 
@@ -1211,7 +1211,7 @@ void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
 
 }
 
-void ls_cost_hess_nm6(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm6(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1221,7 +1221,7 @@ void ls_cost_hess_nm6(void *evaluate, double *in, double *out)
 
 	int nv = nu+nx;
 
-	double *hess = out;
+	double *hess = out[0];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 
@@ -1420,14 +1420,14 @@ int main() {
 	tmp_size = 0;
 	for (int ii=0; ii<NN; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(exlp_vde_for+ii);
+		tmp_size += external_function_casadi_calculate_size(expl_vde_for+ii);
 	}
 	void *forw_vde_casadi_mem = malloc(tmp_size);
 	c_ptr = forw_vde_casadi_mem;
 	for (int ii=0; ii<NN; ii++)
 	{
-		external_function_casadi_assign(exlp_vde_for+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(exlp_vde_for+ii);
+		external_function_casadi_assign(expl_vde_for+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(expl_vde_for+ii);
 	}
 	// jac_ode
 	tmp_size = 0;
@@ -1824,7 +1824,7 @@ int main() {
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		erk_model *model = dynamics->sim_model;
-		model->expl_vde_for = (external_function_generic *) &exlp_vde_for[i];
+		model->expl_vde_for = (external_function_generic *) &expl_vde_for[i];
 		model->expl_ode_jac = (external_function_generic *) &expl_ode_jac[i];
 	}
 #elif DYNAMICS==1
@@ -1832,7 +1832,7 @@ int main() {
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		lifted_irk_model *model = dynamics->sim_model;
-		model->expl_vde_for = (external_function_generic *) &exlp_vde_for[i];
+		model->expl_vde_for = (external_function_generic *) &expl_vde_for[i];
 		model->expl_ode_jac = (external_function_generic *) &expl_ode_jac[i];
 	}
 #elif DYNAMICS==2

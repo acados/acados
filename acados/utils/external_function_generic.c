@@ -199,7 +199,7 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 
 
 
-void external_function_casadi_wrapper(void *self, double *in, double *out)
+void external_function_casadi_wrapper(void *self, double **in, double **out)
 {
 
 	// cast into external casadi function
@@ -212,27 +212,20 @@ void external_function_casadi_wrapper(void *self, double *in, double *out)
 
 	// in as args
 	// TODO implement sparsify of input instead of copying them
-	double *d_ptr = in;
 	for (ii=0; ii<fun->in_num; ii++)
 	{
 		for (jj=0; jj<fun->args_size[ii]; jj++)
-			fun->args[ii][jj] = d_ptr[jj];
-		d_ptr += fun->args_size[ii];
+			fun->args[ii][jj] = in[ii][jj];
 	}
 
 	// call casadi function
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
 
 	const int *sparsity;
-	int nrow, ncol;
-	double *ptr_out = out;
 	for (ii=0; ii<fun->out_num; ii++)
 	{
 		sparsity = fun->casadi_sparsity_out(ii);
-		nrow = sparsity[0];
-		ncol = sparsity[1];
-		casadi_densify(fun->res[ii], ptr_out, sparsity);
-		ptr_out += nrow*ncol;
+		casadi_densify(fun->res[ii], out[ii], sparsity);
 	}
 
 	return;
@@ -357,7 +350,7 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
 
 
 
-void external_function_param_casadi_wrapper(void *self, double *in, double *out)
+void external_function_param_casadi_wrapper(void *self, double **in, double **out)
 {
 
 	// cast into external casadi function
@@ -370,20 +363,17 @@ void external_function_param_casadi_wrapper(void *self, double *in, double *out)
 
 	// in as args
 	// TODO implement sparsify of input instead of copying them
-	double *d_ptr = in;
 	// skip last argument (that is the parameters vector)
 	for (ii=0; ii<fun->in_num-1; ii++)
 	{
 		for (jj=0; jj<fun->args_size[ii]; jj++)
-			fun->args[ii][jj] = d_ptr[jj];
-		d_ptr += fun->args_size[ii];
+			fun->args[ii][jj] = in[ii][jj];
 	}
 	// copy parametrs vector as last arg
 //	d_print_mat(1, fun->np, fun->p, 1);
 	ii = fun->in_num-1;
 	for (jj=0; jj<fun->np; jj++)
 		fun->args[ii][jj] = fun->p[jj];
-	d_ptr += fun->np;
 
 //d_print_mat(1, fun->args_size_tot, fun->args[0], 1);
 //exit(1);
@@ -391,15 +381,10 @@ void external_function_param_casadi_wrapper(void *self, double *in, double *out)
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
 
 	const int *sparsity;
-	int nrow, ncol;
-	double *ptr_out = out;
 	for (ii=0; ii<fun->out_num; ii++)
 	{
 		sparsity = fun->casadi_sparsity_out(ii);
-		nrow = sparsity[0];
-		ncol = sparsity[1];
-		casadi_densify(fun->res[ii], ptr_out, sparsity);
-		ptr_out += nrow*ncol;
+		casadi_densify(fun->res[ii], out[ii], sparsity);
 	}
 
 	return;

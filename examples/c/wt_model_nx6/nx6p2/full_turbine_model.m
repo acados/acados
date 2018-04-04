@@ -42,11 +42,11 @@ expl_ode_fun.generate('expl_ode_fun');
 Sx = MX.sym('Sx', nx, nx);
 Su = MX.sym('Su', nx, nu);
 
-%vdeX = MX.zeros(nx, nx) + jtimes(fe, x, Sx);
-vdeX = MX.zeros(nx, nx) + jacobian(fe, x)*Sx;
+vdeX = MX.zeros(nx, nx) + jtimes(fe, x, Sx);
+%vdeX = MX.zeros(nx, nx) + jacobian(fe, x)*Sx;
 
-%vdeU = MX.zeros(nx, nu) + jtimes(fe, x, Su) + jacobian(fe, u);
-vdeU = MX.zeros(nx, nu) + jacobian(fe, x)*Su + jacobian(fe, u);
+vdeU = MX.zeros(nx, nu) + jtimes(fe, x, Su) + jacobian(fe, u);
+%vdeU = MX.zeros(nx, nu) + jacobian(fe, x)*Su + jacobian(fe, u);
 
 expl_vde_for = Function('casadi_expl_vde_for', {x, Sx, Su, u, p}, {fe, vdeX, vdeU});
 expl_vde_for.generate('expl_vde_for');

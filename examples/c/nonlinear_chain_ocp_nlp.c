@@ -724,7 +724,7 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 // hand-generated external function for externally provided hessian and gradient
-void ext_cost_nm2(void *fun, double *in, double *out)
+void ext_cost_nm2(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -735,15 +735,14 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double *ref = malloc((nu+nx)*sizeof(double));
-
+	double ref[nu+nx];
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm2[ii];
 	for (ii=0; ii<nu; ii++)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -752,17 +751,18 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	free(ref);
+	return;
+
 }
 
-void ext_cost_nm3(void *fun, double *in, double *out)
+void ext_cost_nm3(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -773,15 +773,14 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double *ref = malloc((nu+nx)*sizeof(double));
-
+	double ref[nu+nx];
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm3[ii];
 	for (ii=0; ii<nu; ii++)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -790,17 +789,18 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	free(ref);
+	return;
+
 }
 
-void ext_cost_nm4(void *fun, double *in, double *out)
+void ext_cost_nm4(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -811,15 +811,14 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double *ref = malloc((nu+nx)*sizeof(double));
-
+	double ref[nu+nx];
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm4[ii];
 	for (ii=0; ii<nu; ii++)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -828,17 +827,18 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	free(ref);
+	return;
+
 }
 
-void ext_cost_nm5(void *fun, double *in, double *out)
+void ext_cost_nm5(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -849,15 +849,14 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double *ref = malloc((nu+nx)*sizeof(double));
-
+	double ref[nu+nx];
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm5[ii];
 	for (ii=0; ii<nu; ii++)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -866,17 +865,18 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	free(ref);
+	return;
+
 }
 
-void ext_cost_nm6(void *fun, double *in, double *out)
+void ext_cost_nm6(void *fun, double **in, double **out)
 {
 
 	int ii;
@@ -887,15 +887,14 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 	int nv = nu+nx;
 
 	// ref
-	double *ref = malloc((nu+nx)*sizeof(double));
-
+	double ref[nu+nx];
 	for (ii=0; ii<nx; ii++)
 		ref[ii] = xN_nm6[ii];
 	for (ii=0; ii<nu; ii++)
 		ref[nx+ii] = 0.0;
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -904,20 +903,21 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 		hess[ii*(nv+1)] = 1.0;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *xu = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
 
-	free(ref);
+	return;
+
 }
 
 
 
 // hand-wirtten box constraints on states as nonlinear constraints
-void nonlin_constr_nm2(void *evaluate, double *in, double *out)
+void nonlin_constr_nm2(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -929,12 +929,12 @@ void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -944,7 +944,7 @@ void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm3(void *evaluate, double *in, double *out)
+void nonlin_constr_nm3(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -956,12 +956,12 @@ void nonlin_constr_nm3(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -971,7 +971,7 @@ void nonlin_constr_nm3(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm4(void *evaluate, double *in, double *out)
+void nonlin_constr_nm4(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -983,12 +983,12 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -998,7 +998,7 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm5(void *evaluate, double *in, double *out)
+void nonlin_constr_nm5(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1010,12 +1010,12 @@ void nonlin_constr_nm5(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)
@@ -1025,7 +1025,7 @@ void nonlin_constr_nm5(void *evaluate, double *in, double *out)
 
 }
 
-void nonlin_constr_nm6(void *evaluate, double *in, double *out)
+void nonlin_constr_nm6(void *evaluate, double **in, double **out)
 {
 
 	int ii;
@@ -1037,12 +1037,12 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 	int nh = nx;
 
 	// fun
-	double *fun = out;
+	double *fun = out[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+		fun[ii] = in[0][ii]; // x
 
 	// jacobian
-	double *jac = out+nh;
+	double *jac = out[1];
 	for (ii=0; ii<nv*nh; ii++)
 		jac[ii] = 0.0;
 	for (ii=0; ii<nh; ii++)

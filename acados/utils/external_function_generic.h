@@ -36,7 +36,7 @@ extern "C" {
 typedef struct
 {
 	// public members (have to be before private ones)
-	void (* evaluate) (void *, double *, double *);
+	void (* evaluate) (void *, double **, double **);
 	// private members
 	// .....
 } external_function_generic;
@@ -50,7 +50,7 @@ typedef struct
 typedef struct
 {
 	// public members (have to be the same as in the prototype, and before the private ones)
-	void (* evaluate) (void *, double *, double *);
+	void (* evaluate) (void *, double **, double **);
 	// private members
 	void *ptr_ext_mem; // pointer to external memory
 	int (*casadi_fun) (const double **, double **, int *, double *, int);
@@ -80,7 +80,7 @@ int external_function_casadi_calculate_size(external_function_casadi *fun);
 //
 void external_function_casadi_assign(external_function_casadi *fun, void *mem);
 //
-void external_function_casadi_wrapper(void *self, double *in, double *out);
+void external_function_casadi_wrapper(void *self, double **in, double **out);
 
 
 
@@ -91,7 +91,7 @@ void external_function_casadi_wrapper(void *self, double *in, double *out);
 typedef struct
 {
 	// public members (have to be the same as in the prototype, and before the private ones)
-	void (* evaluate) (void *, double *, double *);
+	void (* evaluate) (void *, double **, double **);
 	// private members
 	void (* set_param) (void *, double *);
 	void *ptr_ext_mem; // pointer to external memory
@@ -124,7 +124,7 @@ int external_function_param_casadi_calculate_size(external_function_param_casadi
 //
 void external_function_param_casadi_assign(external_function_param_casadi *fun, void *mem);
 //
-void external_function_param_casadi_wrapper(void *self, double *in, double *out);
+void external_function_param_casadi_wrapper(void *self, double **in, double **out);
 //
 void external_function_param_casadi_set_param(void *self, double *p);
 
