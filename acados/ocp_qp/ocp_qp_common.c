@@ -36,7 +36,6 @@
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 
-
 /************************************************
 * config
 ************************************************/
@@ -93,6 +92,33 @@ ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
 
 	config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
 	c_ptr += ocp_qp_solver_config_calculate_size();
+
+	return config;
+
+}
+
+
+
+int ocp_qp_condensing_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_condensing_config);
+
+	return size;
+
+}
+
+
+
+ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_condensing_config *config = (ocp_qp_condensing_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_condensing_config);
 
 	return config;
 
@@ -335,7 +361,7 @@ void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res
     }
 
     d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
-	
+
 	return;
 }
 
@@ -355,7 +381,7 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
     int *ns = qp_res->dim->ns;
 
 #if 1
-	
+
 	double tmp;
 
 	res[0] = 0.0;
@@ -364,28 +390,28 @@ void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
 		blasfeo_dvecnrm_inf(nx[ii]+nu[ii]+2*ns[ii], &qp_res->res_g[ii], 0, &tmp);
 		res[0] = tmp > res[0] ? tmp : res[0];
 	}
-		
+
 	res[1] = 0.0;
 	for (ii=0; ii<N; ii++)
 	{
 		blasfeo_dvecnrm_inf(nx[ii+1], &qp_res->res_b[ii], 0, &tmp);
 		res[1] = tmp > res[1] ? tmp : res[1];
 	}
-		
+
 	res[2] = 0.0;
 	for (ii=0; ii<=N; ii++)
 	{
 		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_res->res_d[ii], 0, &tmp);
 		res[2] = tmp > res[2] ? tmp : res[2];
 	}
-		
+
 	res[3] = 0.0;
 	for (ii=0; ii<=N; ii++)
 	{
 		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_res->res_m[ii], 0, &tmp);
 		res[3] = tmp > res[3] ? tmp : res[3];
 	}
-		
+
 
 #else
 

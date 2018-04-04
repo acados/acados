@@ -162,7 +162,7 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *di
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    mem->cond_memory = ocp_qp_full_condensing_memory_assign(dims, opts->cond_opts, c_ptr);
+    mem->cond_memory = (ocp_qp_full_condensing_memory *) ocp_qp_full_condensing_memory_assign(dims, opts->cond_opts, c_ptr);
     c_ptr += ocp_qp_full_condensing_memory_calculate_size(dims, opts->cond_opts);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
