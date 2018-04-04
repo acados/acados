@@ -53,9 +53,9 @@ static const int CASADI_PREFIX(s0)[10] = {6, 1, 0, 6, 0, 1, 2, 3, 4, 5};
 #define s0 CASADI_PREFIX(s0)
 static const int CASADI_PREFIX(s1)[4] = {0, 1, 0, 0};
 #define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[7] = {3, 1, 0, 3, 0, 1, 2};
+static const int CASADI_PREFIX(s2)[6] = {2, 1, 0, 2, 0, 1};
 #define s2 CASADI_PREFIX(s2)
-static const int CASADI_PREFIX(s3)[18] = {0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const int CASADI_PREFIX(s3)[17] = {0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 #define s3 CASADI_PREFIX(s3)
 /* casadi_f_LO_inc_J_x1k1uz_fun */
 CASADI_SYMBOL_EXPORT int casadi_f_LO_inc_J_x1k1uz_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {

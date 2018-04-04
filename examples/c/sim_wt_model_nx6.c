@@ -34,6 +34,8 @@
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include <acados/sim/sim_gnsf2.h>
 
+#include <xmmintrin.h> // for debugging
+
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
@@ -58,10 +60,12 @@
 int main()
 {
 
+    // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+
 	/************************************************
 	* initialization
 	************************************************/
-
+// int nsim = 1; // OJ: added; todo: where is this initially defined?!
     int ii, jj;
 
     int nx = 6;
@@ -71,11 +75,11 @@ int main()
     int NF = nx + nu; // columns of forward seed
 
     double Ts = 0.2; // simulation time
-
 	double *x_sim = malloc(sizeof(double)*nx*(nsim+1));
-
 	for (ii=0; ii<nx; ii++)
 		x_sim[ii] = x_ref[ii];
+	printf("x_ref = \n");
+	d_print_mat(1, nx, x_ref, 1);
 
 	/************************************************
 	* external functions (explicit model)
@@ -178,9 +182,9 @@ int main()
 	/************************************************
 	* external functions (Generalized Nonlinear Static Feedback 2 (GNSF2) model)
 	************************************************/
-
 	// Phi - gnsf2
 	external_function_param_casadi phi_fun_jac_y;
+	// external_function_casadi phi_fun_jac_y;
 	phi_fun_jac_y.casadi_fun = &casadi_phi_fun_jac_y;
 	phi_fun_jac_y.casadi_work = &casadi_phi_fun_jac_y_work;
 	phi_fun_jac_y.casadi_sparsity_in = &casadi_phi_fun_jac_y_sparsity_in;
@@ -188,9 +192,11 @@ int main()
 	phi_fun_jac_y.casadi_n_in = &casadi_phi_fun_jac_y_n_in;
 	phi_fun_jac_y.casadi_n_out = &casadi_phi_fun_jac_y_n_out;
 	external_function_param_casadi_create(&phi_fun_jac_y, np);
+	// external_function_casadi_create(&phi_fun_jac_y);
 
 	// Phi - gnsf
 	external_function_param_casadi phi_jac_y;
+	// external_function_casadi phi_jac_y;
 	phi_jac_y.casadi_fun = &casadi_phi_jac_y;
 	phi_jac_y.casadi_work = &casadi_phi_jac_y_work;
 	phi_jac_y.casadi_sparsity_in = &casadi_phi_jac_y_sparsity_in;
@@ -198,9 +204,11 @@ int main()
 	phi_jac_y.casadi_n_in = &casadi_phi_jac_y_n_in;
 	phi_jac_y.casadi_n_out = &casadi_phi_jac_y_n_out;
 	external_function_param_casadi_create(&phi_jac_y, np);	
+	// external_function_casadi_create(&phi_jac_y);
 
 	// f - Linear Output System
 	external_function_param_casadi f_LO_inc_J_x1k1uz_fun;
+	// external_function_casadi f_LO_inc_J_x1k1uz_fun;
 	f_LO_inc_J_x1k1uz_fun.casadi_fun = &casadi_f_LO_inc_J_x1k1uz_fun;
 	f_LO_inc_J_x1k1uz_fun.casadi_work = &casadi_f_LO_inc_J_x1k1uz_fun_work;
 	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_in = &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in;
@@ -208,10 +216,11 @@ int main()
 	f_LO_inc_J_x1k1uz_fun.casadi_n_in = &casadi_f_LO_inc_J_x1k1uz_fun_n_in;
 	f_LO_inc_J_x1k1uz_fun.casadi_n_out = &casadi_f_LO_inc_J_x1k1uz_fun_n_out;
 	external_function_param_casadi_create(&f_LO_inc_J_x1k1uz_fun, np);
+	// external_function_casadi_create(&f_LO_inc_J_x1k1uz_fun);
 
-	int number_sim_solvers = 3;
+	int number_sim_solvers = 4;
 	int nss;
-	for (nss = 0; nss < number_sim_solvers; nss++)
+	for (nss = 2; nss < number_sim_solvers; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -221,7 +230,6 @@ int main()
 		sim_solver_plan plan;
 		switch (nss)
 		{
-
 			case 0:
 				plan.sim_solver = ERK;
 				break;
@@ -232,14 +240,12 @@ int main()
 				break;
 			case 3:
 				plan.sim_solver = GNSF2;
-
+				break;
 			default :
 				printf("\nnot enough sim solvers implemented!\n");
 				exit(1);
 
 		}
-
-
 		// create correct config based on plan
 		sim_solver_config *config = sim_config_create(plan);
 
@@ -247,28 +253,54 @@ int main()
 		* sim dims
 		************************************************/
 		sim_dims *dims; // OJ: declaration in if causes error
-		if (nss == 3){
-			gnsf2_dims *gnsf2_dim = gnsf2_dims_create();
-    		sim_dims *dims = (sim_dims *) gnsf2_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
-		}
-		else {
-			sim_dims *dims = sim_dims_create();
-		}
+		// gnsf2_dims *gnsf2_dim;
+		// if (nss == 3){
+		// 	gnsf2_dims *gnsf2_dim = gnsf2_dims_create();
+		// 	printf("\n adress of dims %p\n",(void*)gnsf2_dim);
+    	// 	dims = (sim_dims *) gnsf2_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+		// 	gnsf2_dim->nx = nx;
+		// 	gnsf2_dim->nu = nu;
+		// 	gnsf2_dim->nx1= nx;
+		// 	gnsf2_dim->nx2= 0;
+		// 	gnsf2_dim->n_in = nx + nu;
+		// 	gnsf2_dim->n_out = 1;
+		// 	gnsf2_dim->num_stages = 8;
+		// 	printf("gnsf2: n_in = %d \n", gnsf2_dim->n_in);
+		// 	printf("\n adress of dims %p\n",(void*)gnsf2_dim);
+		// }
+		// else {
+		// 	dims = sim_dims_create();
+		// 	dims->nx = nx;
+		// 	dims->nu = nu;
+		// }
 
-		dims->nx = nx;
-		dims->nu = nu;
+		gnsf2_dims *gnsf2_dim = gnsf2_dims_create();
+		// printf("\n adress of dims %p\n",(void*)gnsf2_dim);
+		dims = (sim_dims *) gnsf2_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+		gnsf2_dim->nx = nx;
+		gnsf2_dim->nu = nu;
+		gnsf2_dim->nx1= nx;
+		gnsf2_dim->nx2= 0;
+		gnsf2_dim->n_in = nx + nu;
+		gnsf2_dim->n_out = 1;
+		gnsf2_dim->num_stages = 8;
+		// printf("gnsf2: n_in = %d \n", gnsf2_dim->n_in);
+
+		// dims = sim_dims_create();
+		// dims->nx = nx;
+		// dims->nu = nu;
+
+
 
 		/************************************************
 		* sim opts
 		************************************************/
-
 		sim_rk_opts *opts = sim_opts_create(config, dims);
 
 	//		opts->ns = 4; // number of stages in rk integrator
 	//		opts->num_steps = 5; // number of integration steps
 		opts->sens_adj = false;
 		opts->sens_forw = true;
-
 
 		switch (nss)
 		{
@@ -290,7 +322,9 @@ int main()
 
 			case 3: //GNSF2
 				opts->ns = 8; // number of stages in rk integrator
+				gnsf2_dim->num_stages = 8;
 				opts->num_steps = 1; // number of integration steps
+				gnsf2_dim->num_steps = 1;
 				break;
 
 			default :
@@ -304,6 +338,8 @@ int main()
 		************************************************/
 
 		sim_in *in = sim_in_create(config, dims);
+		// printf("dimz in main2: \t \t %d \t %d \t%d \t %d \t%d \t%d \t  \n", gnsf2_dim->nu, gnsf2_dim->nx1, gnsf2_dim->nx2,gnsf2_dim->nz, gnsf2_dim->n_out, gnsf2_dim->n_in);
+		// printf("dimz: %d \t %d \t%d \t %d \t%d \t%d \t  \n", nu, nx1, nx2,nz, n_out, n_in);
 		sim_out *out = sim_out_create(config, dims);
 
 		in->T = Ts;
@@ -331,6 +367,11 @@ int main()
 				sim_set_model(config, in, "Phi_inc_dy_fun", &phi_fun_jac_y);
 				sim_set_model(config, in, "Phi_jac_y_fun", &phi_jac_y);
 				sim_set_model(config, in, "f_LO_inc_J_x1k1uz_fun", &f_LO_inc_J_x1k1uz_fun);
+				// import & precompute matrices, TODO: do this through interface? would need some modification..
+				// printf("functions set\n");
+				gnsf2_import_matrices(gnsf2_dim, in->model, get_matrices_fun);
+				// printf("imported matrices\n");
+				// printf("model set\n");
 				break;
 			}
 			default :
@@ -355,6 +396,7 @@ int main()
 		************************************************/
 
 		// print solver info
+		printf("\n ===  USING SOLVER NUMBER %d === \n",nss);
 		switch (nss)
 		{
 
@@ -370,7 +412,7 @@ int main()
 				break;
 			case 3:
 				printf("\n\nsim solver: GNSF2, ns=%d, num_steps=%d\n", opts->ns, opts->num_steps);
-				// plan.sim_solver = IRK; 
+				plan.sim_solver = GNSF2;
 				break;
 
 			default :
@@ -380,8 +422,14 @@ int main()
 		}
 
 		sim_solver *sim_solver = sim_create(config, dims, opts);
-
+		// printf("SOLVER CREATED\n");
 		int acados_return;
+
+		if (nss == 3)
+			gnsf2_precompute(gnsf2_dim, in->model, opts, in);
+
+		// printf("USED TABLEAU = \n");
+    	// d_print_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
 
 		acados_timer timer;
 		acados_tic(&timer);
@@ -399,8 +447,11 @@ int main()
 		double kP = 10;
 		double tmp, ctrlErr;
 
+
+
 		for (ii=0; ii<nsim; ii++)
 		{
+			// printf("n_sim = %d, ii = %d \n", nsim, ii);
 			// update initial state
 			for (jj = 0; jj < nx; jj++)
 				in->x[jj] = x_sim[ii*nx+jj];
@@ -427,6 +478,12 @@ int main()
 					impl_ode_fun_jac_x_xdot.set_param(&impl_ode_fun_jac_x_xdot, p_sim+ii*np);
 					impl_ode_jac_x_xdot_u.set_param(&impl_ode_jac_x_xdot_u, p_sim+ii*np);
 					impl_ode_jac_x_u.set_param(&impl_ode_jac_x_u, p_sim+ii*np);
+					break;
+				}
+				case 3: {
+					phi_fun_jac_y.set_param(&phi_fun_jac_y, p_sim+ii*np);
+					phi_jac_y.set_param(&phi_jac_y, p_sim+ii*np);
+					f_LO_inc_J_x1k1uz_fun.set_param(&f_LO_inc_J_x1k1uz_fun, p_sim+ii*np);
 					break;
 				}
 				default :
@@ -473,7 +530,6 @@ int main()
 		/************************************************
 		* printing
 		************************************************/
-
 		printf("\nxn: \n");
 		for (ii=0; ii<nx; ii++)
 			printf("%8.5f ", x_sim[nsim0*nx+ii]);
@@ -484,11 +540,12 @@ int main()
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			for (ii=0;ii<nx;ii++){
-				for (jj=0;jj<NF;jj++)
-					printf("%8.5f ", S_forw_out[jj*nx+ii]);
-				printf("\n");
-			}
+			d_print_mat(nx, NF, S_forw_out, nx);
+			// for (ii=0;ii<nx;ii++){
+			// 	for (jj=0;jj<NF;jj++)
+			// 		printf("%8.5f ", S_forw_out[jj*nx+ii]);
+			// 	printf("\n");
+			// }
 		}
 
 	#if 0
@@ -500,6 +557,7 @@ int main()
 
 		// printf("time split: %f ms CPU, %f ms LA, %f ms AD\n\n", cpu_time, la_time, ad_time);
 		printf("\n\ntime for %d simulation steps: %f ms (AD time: %f ms (%5.2f%%))\n\n", nsim, 1e3*total_cpu_time, 1e3*ad_time, 1e2*ad_time/cpu_time);
+		printf("time spent in integrator outside of casADi %f \n", 1e3*(total_cpu_time-ad_time));
 
 		/************************************************
 		* free memory
@@ -508,9 +566,10 @@ int main()
 		free(sim_solver);
 		free(in);
 		free(out);
-
 		free(opts);
 		free(config);
+
+		free(gnsf2_dim);
 
 	}
 
@@ -527,7 +586,10 @@ int main()
 	external_function_param_casadi_free(&impl_ode_fun_jac_x_xdot);
 	external_function_param_casadi_free(&impl_ode_jac_x_xdot_u);
 	external_function_param_casadi_free(&impl_ode_jac_x_u);
-
+	// gnsf2 functions:
+	external_function_param_casadi_free(&f_LO_inc_J_x1k1uz_fun);
+	external_function_param_casadi_free(&phi_fun_jac_y);
+	external_function_param_casadi_free(&phi_jac_y);
 	printf("\nsuccess!\n\n");
 
     return 0;

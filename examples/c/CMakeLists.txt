@@ -157,6 +157,7 @@ file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/phi_fun_jac_y.c
     wt_model_nx6/phi_jac_y.c
     wt_model_nx6/f_LO_inc_Jx1k1uz_fun.c
+    wt_model_nx6/get_matrices_fun.c
 
 )
 

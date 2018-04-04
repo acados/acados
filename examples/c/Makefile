@@ -63,7 +63,7 @@ examples: $(EXAMPLES)
 
 
 RUN_EXAMPLES =
-RUN_EXAMPLES += run_sim_wt_model_nx3
+# RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 # RUN_EXAMPLES += run_sim_crane_example
 # RUN_EXAMPLES += run_mass_spring_example
@@ -74,7 +74,7 @@ RUN_EXAMPLES += run_sim_wt_model_nx6
 # RUN_EXAMPLES += run_sim_crane_no_interface
 # RUN_EXAMPLES += run_mass_spring_example_no_interface
 # RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp_no_interface
-RUN_EXAMPLES += run_wind_turbine_nmpc
+# RUN_EXAMPLES += run_wind_turbine_nmpc
 
 run_examples: $(RUN_EXAMPLES)
 
@@ -201,13 +201,9 @@ sim_crane_example: $(CRANE_OBJS) sim_crane_example.o
 	@echo " Example sim_crane_example build complete."
 	@echo
 
-run_sim_crane_example:
-	./sim_crane_example.out
-
 
 run_sim_crane_example:
 	./sim_crane_example.out
-
 
 
 #################################################
@@ -227,6 +223,7 @@ WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
 WT_NX6_OBJS += wt_model_nx6/phi_fun_jac_y.o
 WT_NX6_OBJS += wt_model_nx6/phi_jac_y.o
 WT_NX6_OBJS += wt_model_nx6/f_LO_inc_J_x1k1uz_fun.o
+WT_NX6_OBJS += wt_model_nx6/get_matrices_fun.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o
 	$(CCC) -o sim_wt_model_nx6.out sim_wt_model_nx6.o  $(WT_NX6_OBJS) $(LDFLAGS) $(LIBS)

@@ -46,7 +46,6 @@ typedef struct
     int num_steps;
     int n_out;
     int n_in;
-    
 } gnsf2_dims;
 
 

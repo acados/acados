@@ -492,6 +492,14 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, s
     struct blasfeo_dmat dK2_dx2 = model->dK2_dx2;
     struct blasfeo_dmat dK2_dx2_work = work->dK2_dx2_work;
 
+    // set memory to zeros
+    blasfeo_dgese(nK1, nff, 0.0, &CC1, 0, 0);
+    blasfeo_dgese(nZ , nff, 0.0, &CC2, 0, 0);
+    blasfeo_dgese(nK1, nZ , 0.0, &DD1, 0, 0);
+    blasfeo_dgese(nZ , nK1, 0.0, &DD2, 0, 0);
+    blasfeo_dgese(nK1, nK1, 0.0, &EE1, 0, 0);
+    blasfeo_dgese(nZ , nZ , 0.0, &EE2, 0, 0);
+
     blasfeo_pack_dmat(nx1, nx1, model->E, nx1+nz, &E11, 0, 0);
 
     blasfeo_pack_dmat(nx1, nz , &model->E[(nx1+nz)*nx1], nx1+nz, &E12, 0, 0);
@@ -509,7 +517,6 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, s
 
     blasfeo_pack_dmat(nx2, nx2, A_LO, nx2, &ALO, 0, 0);
 
-
     for (int ii = 0; ii < num_stages*num_stages; ii++) {
         A_dt[ii] = A_mat[ii] * dt;
     }
@@ -517,6 +524,7 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, s
         b_dt[ii] = b_vec[ii] * dt;
         c[ii] = c_vec[ii];
     }
+
     // Build fat matrices AA1, AA2, ... , EE2, LLx, ..., LLZ
     for (int ii = 0; ii < num_stages; ii++) { //num_stages
         blasfeo_dgecp(nx1, nx1, &A1, 0, 0, &AA1, ii*nx1, 0);
@@ -547,6 +555,7 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, s
             blasfeo_dgead(n_in, nx1, A_dt[ii*num_stages+jj], &LLx, 0, 0, &LLK, jj*n_in, ii*nx1);
         }
     }
+
     /************************************************
     *   Compute QQ1 KK*, ZZ* via QQ1
     ************************************************/
@@ -617,13 +626,14 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, s
     blasfeo_dgemm_nn(nK1, nff, nZ, 1.0, &DD1, 0, 0, &ZZf, 0, 0, 1.0, &CC1, 0, 0, &KKf, 0, 0); // KKf = DD1 * ZZf + CC1
     blasfeo_dgemm_nn(nK1, nu , nZ, 1.0, &DD1, 0, 0, &ZZu, 0, 0, 1.0, &BB1, 0, 0, &KKu, 0, 0); // KKu = DD1 * ZZu + BB1
     blasfeo_dgemm_nn(nK1, nx1, nZ, 1.0, &DD1, 0, 0, &ZZx, 0, 0, 1.0, &AA1, 0, 0, &KKx, 0, 0); // KKx = DD1 * ZZx + AA1
-
 // build YYx
     blasfeo_dgemm_nn(nyy, nx1, nK1, 1.0, &LLK, 0, 0, &KKx, 0, 0, 1.0, &LLx, 0, 0, &YYx, 0, 0);
     blasfeo_dgemm_nn(nyy, nx1, nZ , 1.0, &LLZ, 0, 0, &ZZx, 0, 0, 1.0, &YYx, 0, 0, &YYx, 0, 0);
 // build YYu
     blasfeo_dgemm_nn(nyy, nu, nK1, 1.0, &LLK, 0, 0, &KKu, 0, 0, 1.0, &LLu, 0, 0, &YYu, 0, 0);
     blasfeo_dgemm_nn(nyy, nu, nZ , 1.0, &LLZ, 0, 0, &ZZu, 0, 0, 1.0, &YYu, 0, 0, &YYu, 0, 0);
+    // printf("YYu = (in precompute) \n");
+    // blasfeo_print_dmat(nyy, nu, &YYu, 0, 0);
 // build YYf
     blasfeo_dgemm_nn(nyy, nff, nK1, 1.0, &LLK, 0, 0, &KKf, 0, 0, 0.0, &LLx, 0, 0, &YYf, 0, 0);
     blasfeo_dgemm_nn(nyy, nff, nZ , 1.0, &LLZ, 0, 0, &ZZf, 0, 0, 1.0, &YYf, 0, 0, &YYf, 0, 0);
@@ -849,6 +859,9 @@ int gnsf2_workspace_calculate_size(void *config, sim_dims *dim_in, void *args)
 
     size += nff * sizeof(int); // ipiv
 
+    make_int_multiple_of(8, &size);
+    size += 1 * 8;
+
     size += 2* num_steps * blasfeo_memsize_dvec(nK1); //K1_val, x1_val
     size += num_steps * blasfeo_memsize_dvec(nff); // ff_val
     size += num_steps * blasfeo_memsize_dvec(nyy); // yy_val
@@ -938,6 +951,8 @@ void *gnsf2_cast_workspace(void *config, gnsf2_dims* dims, void *raw_memory, voi
     assign_and_advance_double(nz, &workspace->Z_out, &c_ptr);
 
     assign_and_advance_int(nff, &workspace->ipiv, &c_ptr);
+
+	align_char_to(8, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_structs(num_steps, &workspace->f_LO_jac, &c_ptr);
 
@@ -1107,10 +1122,16 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
 
     // precompute YYu * u
     blasfeo_dgemv_n(nyy, nu , 1.0, &fix->YYu, 0, 0, &u0, 0, 0.0, &yyu, 0, &yyu, 0);
+    // printf("yyu = \n");
+    // blasfeo_print_tran_dvec(nyy, &yyu, 0);
+    // printf("YYu = \n");
+    // blasfeo_print_dmat(nyy, nu, &fix->YYu, 0, 0);
     blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0, 0, 0.0, &K1_val[0], 0, &K1u, 0);
     blasfeo_dgemv_n(nZ , nu , 1.0, &fix->ZZu, 0, 0, &u0, 0, 0.0, &Z_val[0] , 0, &Zu, 0);
     for (int ss = 0; ss < num_steps; ss++) { // STEP LOOP
         blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, ss*nx, 1.0, &yyu, 0, &yyss, nyy*ss);
+        // printf("yyss = \n");
+        // blasfeo_print_tran_dvec(nyy, &yyss, 0);
         for (int iter = 0; iter < newton_max; iter++) { // NEWTON-ITERATION
             // evaluate residual function and jacobian
             blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, nyy*ss, &yy_val[ss], 0);
@@ -1121,19 +1142,15 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
             }
             for (int ii = 0; ii < num_stages; ii++) { //
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
+                // printf("phi_in = \n");
+                // blasfeo_print_tran_dvec(n_in, &yy_val[ss], ii*n_in);
                 acados_tic(&casadi_timer);
                 fix->Phi_inc_dy->evaluate(fix->Phi_inc_dy, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
                 blasfeo_pack_dvec(n_out, &phi_out[0], &res_val, ii*n_out);
-
-                // printf("phi_out = \n");
-                // d_print_mat(n_out, n_out, phi_out, n_out);
-
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[n_out], n_out, &dPHI_dy, ii*n_out, 0);
                 blasfeo_dgemm_nn(n_out, nff, n_in, -1.0, &dPHI_dy, ii*n_out, 0, &fix->YYf, ii*n_in, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);                
             }
-            // printf("res_val = \n");
-            // blasfeo_print_tran_dvec(nff, &res_val, 0);
             blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0);
             blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0);
             // solve linear system and update ff
@@ -1414,7 +1431,7 @@ void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_
 {   // copied from IRK -- TODO: one could avoid this, check!
     sim_rk_opts *opts = opts_;
 
-	opts->ns = 4; // GL 3
+	opts->ns = 3; // GL 3
     int ns = opts->ns;
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
@@ -1428,6 +1445,8 @@ void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_
 	// butcher tableau
     butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
 
+    // printf("initialized TABLEAU = \n");
+    // d_print_mat(ns, ns, opts->A_mat, ns);
 	// default options
     opts->newton_iter = 3;
     opts->scheme = NULL;
