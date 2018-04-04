@@ -21,6 +21,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_gnsf2.h"
 
 #include "acados_c/sim_interface.h"
 
@@ -210,7 +211,6 @@ sim_solver *sim_create(sim_solver_config *config, sim_dims *dims, void *opts_)
 {
 	// update Butcher tableau (needed if the user changed ns)
 	config->opts_update(config, dims, opts_);
-
     int bytes = sim_calculate_size(config, dims, opts_);
 
     void *ptr = calloc(1, bytes);

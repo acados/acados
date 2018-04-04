@@ -76,16 +76,12 @@ int main() {
 /************************************************
 * Set up sim_gnsf2 structs
 ************************************************/
-    // set up sim config
-    int config_size = sim_solver_config_calculate_size();
-    void *config_mem = malloc(config_size);
-    sim_solver_config *config = sim_solver_config_assign(config_mem);
-    sim_gnsf2_config_initialize_default(config);
 
-    // set up gnsf2_dims
-    int gnsf2_dims_size = gnsf2_dims_calculate_size();  // different than in Gianlucas integrator example
-    void *dims_memory = malloc(gnsf2_dims_size);
-    gnsf2_dims *gnsf2_dim = gnsf2_dims_assign(dims_memory);
+    sim_solver_plan plan;
+    plan.sim_solver = GNSF2;
+    sim_solver_config *config = sim_config_create(plan);
+
+    gnsf2_dims *gnsf2_dim = gnsf2_dims_create();
     gnsf2_get_dims(gnsf2_dim, get_ints_fun);
 
     // set up sim_dims
@@ -119,13 +115,9 @@ int main() {
     opts->b_vec[2] =     3.260666571808232e-01;
     opts->b_vec[3] =     1.739354743418989e-01;
     
-
     opts->ns = gnsf2_dim->num_stages;
+    sim_in *in = sim_in_create(config, dims);
 
-    // set up sim_in
-    int in_size = sim_in_calculate_size(config, dims);
-    void *in_mem = malloc(in_size);
-    sim_in *in = sim_in_assign(config, dims, in_mem);
     for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
         in->S_forw[ii] = 0.0;
     }
@@ -141,10 +133,6 @@ int main() {
     in->u[1] = -50.446662212534974;
     in->T = 0.1;
 
-    // set up workspace
-    int gnsf2_workspace_size = config->workspace_calculate_size(config, dims, opts);
-    void *work_ = malloc(gnsf2_workspace_size);
-
     // set up gnsf2_model
     gnsf2_model *model = in->model;
     // set external functions
@@ -157,22 +145,15 @@ int main() {
     // gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out
-    int sim_out_size = sim_out_calculate_size(config, dims);
-    void* sim_out_ptr = (void*) malloc(sim_out_size);
-    sim_out* out = sim_out_assign(config, dims, sim_out_ptr);
-
-    // set up memory
-    int mem_size = config->memory_calculate_size(config, dims, opts);
-    void *mem_mem = malloc(mem_size);
-    void *mem = config->memory_assign(config, dims, opts, mem_mem);
+    sim_out *out = sim_out_create(config, dims);
+    sim_solver *sim_solver = sim_create(config, dims, opts);
 
     int NREP = 1;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 
     for (int i = 0; i < NREP; i++) {
-        config->evaluate(config_mem, in, out, opts_mem, mem, work_);
-        // gnsf2_simulate( config_mem, in, out, opts_mem, mem, work_);
+        int acados_return = sim_solve(sim_solver, in, out);
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
     }
@@ -192,14 +173,12 @@ int main() {
     printf("gnsf2_time  =  %f [ms]\n", gnsf_time*1000);
     printf("casadi_time =  %f [ms]\t minimum of %d executions \n", casadi_time*1000, NREP);
 
-    free(config_mem);
-    free(dims_memory);
-    free(in_mem);
-    free(sim_out_ptr);
-    free(work_);
-    free(mem_mem);
-
+    free(config);
+    free(gnsf2_dim);
+    free(in);
+    free(out);
     free(opts_mem);
+    free(sim_solver);
 
 	external_function_casadi_free(&phi_fun_jac_y);
 	external_function_casadi_free(&f_LO_inc_J_x1k1uz);
