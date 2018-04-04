@@ -31,6 +31,9 @@
 #include <acados/sim/sim_gnsf_casadi_wrapper.h> // todo remove
 #include "acados/utils/external_function_generic.h"
 
+#include "acados_c/external_function_interface.h"
+#include "acados_c/sim_interface.h"
+
 #include "examples/c/gnsf2_crane_model/gnsf2_crane_model.h"
 
 int main() {
@@ -39,17 +42,15 @@ int main() {
 ************************************************/
 
     // Phi_inc_dy
-    external_function_casadi Phi_inc_dy;
-    Phi_inc_dy.casadi_fun = &Phi_inc_dy_fun;
-    Phi_inc_dy.casadi_work = &Phi_inc_dy_fun_work;
-    Phi_inc_dy.casadi_sparsity_in  = &Phi_inc_dy_fun_sparsity_in;
-    Phi_inc_dy.casadi_sparsity_out = &Phi_inc_dy_fun_sparsity_out;
-    Phi_inc_dy.casadi_n_in = &Phi_inc_dy_fun_n_in;
-    Phi_inc_dy.casadi_n_out = &Phi_inc_dy_fun_n_out;
+    external_function_casadi phi_fun_jac_y;
+    phi_fun_jac_y.casadi_fun = &Phi_inc_dy_fun;
+    phi_fun_jac_y.casadi_work = &Phi_inc_dy_fun_work;
+    phi_fun_jac_y.casadi_sparsity_in  = &Phi_inc_dy_fun_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out = &Phi_inc_dy_fun_sparsity_out;
+    phi_fun_jac_y.casadi_n_in = &Phi_inc_dy_fun_n_in;
+    phi_fun_jac_y.casadi_n_out = &Phi_inc_dy_fun_n_out;
+	external_function_casadi_create(&phi_fun_jac_y);
 
-    int Phi_inc_dy_size = external_function_casadi_calculate_size(&Phi_inc_dy);
-    void *Phi_inc_dy_mem = malloc(Phi_inc_dy_size);
-    external_function_casadi_assign(&Phi_inc_dy, Phi_inc_dy_mem);
     // jac_Phi_y_fun
     external_function_casadi jac_Phi_y;
     jac_Phi_y.casadi_fun = &jac_Phi_y_fun;
@@ -59,9 +60,7 @@ int main() {
     jac_Phi_y.casadi_n_in = &jac_Phi_y_fun_n_in;
     jac_Phi_y.casadi_n_out = &jac_Phi_y_fun_n_out;
 
-    int jac_Phi_y_size = external_function_casadi_calculate_size(&jac_Phi_y);
-    void *jac_Phi_y_mem = malloc(jac_Phi_y_size);
-    external_function_casadi_assign(&jac_Phi_y, jac_Phi_y_mem);
+	external_function_casadi_create(&jac_Phi_y);
 
     // f_LO_inc_J_x1k1uz
     external_function_casadi f_LO_inc_J_x1k1uz;
@@ -72,9 +71,7 @@ int main() {
     f_LO_inc_J_x1k1uz.casadi_n_in = &f_LO_inc_J_x1k1uz_fun_n_in;
     f_LO_inc_J_x1k1uz.casadi_n_out = &f_LO_inc_J_x1k1uz_fun_n_out;
 
-    int f_LO_inc_J_x1k1uz_size = external_function_casadi_calculate_size(&f_LO_inc_J_x1k1uz);
-    void *f_LO_inc_J_x1k1uz_mem = malloc(f_LO_inc_J_x1k1uz_size);
-    external_function_casadi_assign(&f_LO_inc_J_x1k1uz, f_LO_inc_J_x1k1uz_mem);
+	external_function_casadi_create(&f_LO_inc_J_x1k1uz);
 
 /************************************************
 * Set up sim_gnsf2 structs
@@ -152,7 +149,7 @@ int main() {
     gnsf2_model *model = in->model;
     // set external functions
     model->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
-    model->Phi_inc_dy = (external_function_generic *) &Phi_inc_dy;
+    model->Phi_inc_dy = (external_function_generic *) &phi_fun_jac_y;
     model->Phi_jac_y = (external_function_generic *) &jac_Phi_y;
     gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
     gnsf2_precompute(gnsf2_dim, model, opts, in);
@@ -169,7 +166,7 @@ int main() {
     void *mem_mem = malloc(mem_size);
     void *mem = config->memory_assign(config, dims, opts, mem_mem);
 
-    int NREP = 10000;
+    int NREP = 1;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 
@@ -204,9 +201,9 @@ int main() {
 
     free(opts_mem);
 
-    free(jac_Phi_y_mem);
-    free(Phi_inc_dy_mem);
-    free(f_LO_inc_J_x1k1uz_mem);
+	external_function_casadi_free(&phi_fun_jac_y);
+	external_function_casadi_free(&f_LO_inc_J_x1k1uz);
+	external_function_casadi_free(&jac_Phi_y);
 
     return 0;
 }
