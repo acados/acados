@@ -135,6 +135,144 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
 
 
 
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dmat *out)
+{
+	int ii, jj, idx;
+
+    int nrow = sparsity_in[0];
+    int ncol = sparsity_in[1];
+    int dense = sparsity_in[2];
+
+    if (dense)
+	{
+		blasfeo_pack_dmat(nrow, ncol, in, nrow, out, 0, 0);
+    }
+	else
+	{
+        double *ptr = in;
+        int *idxcol = sparsity_in + 2;
+		int *row = sparsity_in + ncol + 3;
+        // Fill with zeros
+		blasfeo_dgese(nrow, ncol, 0.0, out, 0, 0);
+        // Copy nonzeros
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                BLASFEO_DMATEL(out, row[idx], jj) = ptr[0];
+				ptr++;
+			}
+		}
+    }
+
+	return;
+}
+
+
+
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *sparsity_out)
+{
+	int ii, jj, idx;
+
+    int nrow = sparsity_out[0];
+    int ncol = sparsity_out[1];
+    int dense = sparsity_out[2];
+
+    if (dense)
+	{
+		blasfeo_unpack_dmat(nrow, ncol, in, 0, 0, out, nrow);
+    }
+	else
+	{
+        double *ptr = out;
+        int *idxcol = sparsity_out + 2;
+		int *row = sparsity_out + ncol + 3;
+        // Copy nonzeros
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                ptr[0] = BLASFEO_DMATEL(in, row[idx], nrow);
+				ptr++;
+			}
+		}
+    }
+
+	return;
+}
+
+
+
+// column vector: assume sparsity_in[1] = 1 !!!
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out)
+{
+	int ii, jj, idx;
+
+	assert( sparsity_in[1]==1 );
+
+    int n = sparsity_in[0];
+    int dense = sparsity_in[2];
+
+    if (dense)
+	{
+		blasfeo_pack_dvec(n, in, out, 0);
+    }
+	else
+	{
+        double *ptr = in;
+        int *idxcol = sparsity_in + 2;
+		int *row = sparsity_in + 1 + 3;
+        // Fill with zeros
+		blasfeo_dvecse(n, 0.0, out, 0);
+        // Copy nonzeros
+		for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+		{
+			BLASFEO_DVECEL(out, row[idx]) = ptr[0];
+			ptr++;
+		}
+    }
+
+	return;
+}
+
+
+
+// column vector: assume sparsity_in[1] = 1 !!!
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out)
+{
+	int ii, jj, idx;
+
+	assert( sparsity_out[1]==1 );
+
+    int n = sparsity_out[0];
+    int dense = sparsity_out[2];
+
+    if (dense)
+	{
+		blasfeo_unpack_dvec(n, in, 0, out);
+    }
+	else
+	{
+        double *ptr = out;
+        int *idxcol = sparsity_out + 2;
+		int *row = sparsity_out + 1 + 3;
+        // Copy nonzeros
+		for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+		{
+			ptr[0] = BLASFEO_DVECEL(in, row[idx]);
+			ptr++;
+		}
+    }
+
+	return;
+}
+
+
+
 /************************************************
 * casadi external function
 ************************************************/
