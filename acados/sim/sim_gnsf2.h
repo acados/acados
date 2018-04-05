@@ -210,8 +210,8 @@ int sim_gnsf2_model_set_function(void *model_, sim_function_t fun_type, void *fu
 void *gnsf2_cast_workspace(void *config, gnsf2_dims* dims, void *raw_memory, void *args);
 int gnsf2_workspace_calculate_size(void *config, sim_dims *dim_in, void *args);
 
-int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims);
-void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory);
+int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims, sim_rk_opts *opts);
+void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, sim_rk_opts *opts, void *raw_memory);
 
 int gnsf2_dims_calculate_size();
 gnsf2_dims *gnsf2_dims_assign(void *raw_memory);
@@ -224,16 +224,12 @@ void gnsf2_get_dims( gnsf2_dims* dims, casadi_function_t get_ints_fun);
 void gnsf2_import_matrices(gnsf2_dims* dims, gnsf2_model *model, casadi_function_t get_matrices_fun);
 void gnsf2_import_precomputed(gnsf2_dims* dims, gnsf2_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
 
-
 int sim_gnsf2_opts_calculate_size(void *config, sim_dims *dims);
 void *sim_gnsf2_opts_assign(void *config, sim_dims *dims, void *raw_memory);
 
 void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, sim_in *in);
 
 void sim_gnsf2_config_initialize_default(void *config_);
-
-void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
-
 
 int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *opts, void *mem_, void *work_);
 double minimum_of_doubles(double *x, int n);

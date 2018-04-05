@@ -284,13 +284,10 @@ int main()
 		gnsf2_dim->n_in = nx + nu;
 		gnsf2_dim->n_out = 1;
 		gnsf2_dim->num_stages = 8;
-		// printf("gnsf2: n_in = %d \n", gnsf2_dim->n_in);
 
 		// dims = sim_dims_create();
 		// dims->nx = nx;
 		// dims->nu = nu;
-
-
 
 		/************************************************
 		* sim opts
@@ -343,7 +340,6 @@ int main()
 		sim_out *out = sim_out_create(config, dims);
 
 		in->T = Ts;
-
 		// external functions
 		switch (nss)
 		{

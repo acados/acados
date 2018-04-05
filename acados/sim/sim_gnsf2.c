@@ -173,16 +173,13 @@ void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
     int nZ  = num_stages * nz;
     int nff = n_out * num_stages;
     int nyy = n_in  * num_stages;
-    // printf("dimz in model assign:\t %d \t %d \t%d \t %d \t%d \t%d \t  \n", nu, nx1, nx2,nz, n_out, n_in);
-    // printf("nx = %d\n",nx);
+
 	// initial align
 	align_char_to(8, &c_ptr);
-    // printf("\n adress of cptr fixed %p\n",(void*)c_ptr);
 
 	// struct
     gnsf2_model *model = (gnsf2_model *) c_ptr;
     c_ptr += sizeof(gnsf2_model);
-    // printf("dimz: %d \t %d \t%d \t %d \t%d \t%d \t  \n", nu, nx1, nx2,nz, n_out, n_in);
 
     // assign butcher
     assign_and_advance_double(num_stages * num_stages, &model->A_dt, &c_ptr);
@@ -194,8 +191,6 @@ void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
     assign_and_advance_double((nx1+nz)*nu      , &model->B, &c_ptr);
     assign_and_advance_double((nx1+nz)*n_out   , &model->C, &c_ptr);
     assign_and_advance_double((nx1+nz)*(nx1+nz), &model->E, &c_ptr);
-    // printf("\n adress of A %p\n",(void*)model->A);
-    // printf("\n adress of B %p\n",(void*)model->B);
 
     assign_and_advance_double(n_in*nx1, &model->L_x, &c_ptr);
     assign_and_advance_double(n_in*nx1, &model->L_xdot, &c_ptr);
@@ -250,19 +245,16 @@ int sim_gnsf2_model_set_function(void *model_, sim_function_t fun_type, void *fu
     return ACADOS_SUCCESS;
 }
 
-int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims)
+int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims, sim_rk_opts *opts)
 {
     // gnsf2_dims *dims = (gnsf2_dims *) dim_in; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
-    // gnsf2_opts *opts = (gnsf2_opts *) args;
-    // int nx  = dims->nx;
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int n_in = dims->n_in;
-    int num_stages = dims->num_stages;
-    // int num_steps = dims->num_steps;
+    int nu         = dims->nu;
+    int nx1        = dims->nx1;
+    int nx2        = dims->nx2;
+    int nz         = dims->nz;
+    int n_out      = dims->n_out;
+    int n_in       = dims->n_in;
+    int num_stages = opts->ns;
 
     int nff = n_out * num_stages;
     int nyy = n_in  * num_stages;
@@ -322,14 +314,14 @@ int gnsf2_pre_workspace_calculate_size(gnsf2_dims *dims)
     return size;
 }
 
-void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory){
-    int nu  = dims->nu;
-    int nx1 = dims->nx1;
-    int nx2 = dims->nx2;
-    int nz = dims->nz;
-    int n_out = dims->n_out;
-    int num_stages = dims->num_stages;
-    int n_in = dims->n_in;
+void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, sim_rk_opts *opts, void *raw_memory){
+    int nu         = dims->nu;
+    int nx1        = dims->nx1;
+    int nx2        = dims->nx2;
+    int nz         = dims->nz;
+    int n_out      = dims->n_out;
+    int n_in       = dims->n_in;
+    int num_stages = opts->ns;
 
     int nyy = n_in  * num_stages;
     int nK1 = nx1   * num_stages;
@@ -389,10 +381,7 @@ void *gnsf2_cast_pre_workspace(gnsf2_dims* dims, void *raw_memory){
     assign_and_advance_blasfeo_dmat_mem(nK2, nK2, &work->M2, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nK2, nx2, &work->dK2_dx2_work, &c_ptr);
 
-    // printf("\n adress of cptr pre_work %p\n",(void*)c_ptr);
-    // printf("\n adress of cptr upper bound %p\n",(char*)raw_memory + gnsf2_pre_workspace_calculate_size(dims) );
-
-    assert((char*)raw_memory + gnsf2_pre_workspace_calculate_size(dims) >= c_ptr);
+    assert((char*)raw_memory + gnsf2_pre_workspace_calculate_size(dims, opts) >= c_ptr);
     return (void *) work;
 }
 
@@ -420,9 +409,9 @@ void gnsf2_precompute(gnsf2_dims* dims, gnsf2_model *model, sim_rk_opts *opts, s
     double T = in->T;
 
     // set up precomputation workspace
-    int pre_workspace_size = gnsf2_pre_workspace_calculate_size(dims);
+    int pre_workspace_size = gnsf2_pre_workspace_calculate_size(dims, opts);
     void *pre_work_ = malloc(pre_workspace_size);
-    gnsf2_pre_workspace *work = (gnsf2_pre_workspace *) gnsf2_cast_pre_workspace(dims, pre_work_);
+    gnsf2_pre_workspace *work = (gnsf2_pre_workspace *) gnsf2_cast_pre_workspace(dims, opts, pre_work_);
 
     double dt = T/num_steps;
 
@@ -1044,6 +1033,7 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
     int n_in = dims->n_in;
     int num_stages = dims->num_stages;
     int num_steps = dims->num_steps;
+    assert(dims->num_stages == opts->ns && "dims->num_stages not equal opts->ns, check initialization!!!");
 
     int nff = n_out * num_stages;
     int nyy = n_in * num_stages;
@@ -1120,12 +1110,8 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
     out->info->LAtime = 0;
     out->info->CPUtime = 0;
 
-    // precompute YYu * u
+    // precompute YYu * u, KKu * u, ZZu * u;
     blasfeo_dgemv_n(nyy, nu , 1.0, &fix->YYu, 0, 0, &u0, 0, 0.0, &yyu, 0, &yyu, 0);
-    // printf("yyu = \n");
-    // blasfeo_print_tran_dvec(nyy, &yyu, 0);
-    // printf("YYu = \n");
-    // blasfeo_print_dmat(nyy, nu, &fix->YYu, 0, 0);
     blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0, 0, 0.0, &K1_val[0], 0, &K1u, 0);
     blasfeo_dgemv_n(nZ , nu , 1.0, &fix->ZZu, 0, 0, &u0, 0, 0.0, &Z_val[0] , 0, &Zu, 0);
     for (int ss = 0; ss < num_steps; ss++) { // STEP LOOP
@@ -1140,10 +1126,8 @@ int gnsf2_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem
             for (int ii = 0; ii < nff; ii++) {
                 blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
             }
-            for (int ii = 0; ii < num_stages; ii++) { //
+            for (int ii = 0; ii < num_stages; ii++) { // eval phi
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
-                // printf("phi_in = \n");
-                // blasfeo_print_tran_dvec(n_in, &yy_val[ss], ii*n_in);
                 acados_tic(&casadi_timer);
                 fix->Phi_inc_dy->evaluate(fix->Phi_inc_dy, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
@@ -1427,67 +1411,13 @@ void *sim_gnsf2_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
     return (void *)opts;
 }
 
-void sim_gnsf2_opts_initialize_default(void *config, sim_dims *dims, void *opts_)
-{   // copied from IRK -- TODO: one could avoid this, check!
-    sim_rk_opts *opts = opts_;
-
-	opts->ns = 3; // GL 3
-    int ns = opts->ns;
-
-    assert(ns <= NS_MAX && "ns > NS_MAX!");
-
-	// set tableau size
-	opts->tableau_size = opts->ns;
-
-	// gauss collocation nodes
-    gauss_nodes(ns, opts->c_vec, opts->work);
-
-	// butcher tableau
-    butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
-
-    // printf("initialized TABLEAU = \n");
-    // d_print_mat(ns, ns, opts->A_mat, ns);
-	// default options
-    opts->newton_iter = 3;
-    opts->scheme = NULL;
-    opts->num_steps = 2;
-    opts->num_forw_sens = dims->nx + dims->nu;
-    opts->sens_forw = true;
-    opts->sens_adj = false;
-    opts->sens_hess = false;
-    opts->jac_reuse = false;
-
-	return;
-}
-
-// void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_) // copied from IRK
-// {
-//     sim_rk_opts *opts = opts_;
-
-//     int ns = opts->ns;
-
-//     assert(ns <= NS_MAX && "ns > NS_MAX!");
-
-// 	// set tableau size
-// 	opts->tableau_size = opts->ns;
-
-// 	// gauss collocation nodes
-//     gauss_nodes(ns, opts->c_vec, opts->work);
-
-// 	// butcher tableau
-//     butcher_table(ns, opts->c_vec, opts->b_vec, opts->A_mat, opts->work);
-
-// 	return;
-// }
-
-
 void sim_gnsf2_config_initialize_default(void *config_)
 {
 	sim_solver_config *config = config_;
 	config->evaluate = &gnsf2_simulate;
 	config->opts_calculate_size = &sim_gnsf2_opts_calculate_size;
 	config->opts_assign = &sim_gnsf2_opts_assign;
-	config->opts_initialize_default = &sim_gnsf2_opts_initialize_default;
+    config->opts_initialize_default = &sim_irk_opts_initialize_default;
     config->opts_update = &sim_irk_opts_update;
 	config->memory_calculate_size = &sim_gnsf2_memory_calculate_size;
 	config->memory_assign = &sim_gnsf2_memory_assign;
