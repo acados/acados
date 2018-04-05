@@ -417,21 +417,27 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 	int nu = dims->nu;
 	int ny = dims->ny;
 
-	double *ext_fun_in[3]; // XXX large enough ?
-	double *ext_fun_out[3]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_in[3];
+	void *ext_fun_in[3]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[3];
+	void *ext_fun_out[3]; // XXX large enough ?
 
 	// unpack input
 	blasfeo_unpack_dvec(nu, memory->ux, 0, work->nls_jac_in+nx);
 	blasfeo_unpack_dvec(nx, memory->ux, nu, work->nls_jac_in);
 
+	ext_fun_type_in[0] = COLMAJ;
 	ext_fun_in[0] = work->nls_jac_in+0; // x: nx
+	ext_fun_type_in[1] = COLMAJ;
 	ext_fun_in[1] = work->nls_jac_in+nx; // u: nu
 
+	ext_fun_type_out[0] = COLMAJ;
 	ext_fun_out[0] = work->nls_jac_out+0; // fun: ny
+	ext_fun_type_out[1] = COLMAJ;
 	ext_fun_out[1] = work->nls_jac_out+ny; // jac: ny*(nx+nu)
 
 	// evaluate external function (that assumes variables stacked as [x; u] )
-	model->nls_jac->evaluate(model->nls_jac, ext_fun_in, ext_fun_out);
+	model->nls_jac->evaluate(model->nls_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 	// pack residuals into res
 	blasfeo_pack_dvec(ny, work->nls_jac_out, &memory->res, 0);
@@ -467,14 +473,18 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 		blasfeo_unpack_dvec(nx, memory->ux, nu, work->nls_hess_in);
 		blasfeo_unpack_dvec(ny, &work->tmp_ny, 0, work->nls_hess_in+nx+nu);
 
+		ext_fun_type_in[0] = COLMAJ;
 		ext_fun_in[0] = work->nls_hess_in+0; // x: nx
+		ext_fun_type_in[1] = COLMAJ;
 		ext_fun_in[1] = work->nls_hess_in+nx; // u: nu
+		ext_fun_type_in[2] = COLMAJ;
 		ext_fun_in[2] = work->nls_hess_in+nx+nu; // fun: ny
 
+		ext_fun_type_out[0] = COLMAJ;
 		ext_fun_out[0] = work->nls_hess_out+0; // hess: (nx+nu)*(nx+nu)
 
 		// evaluate external function (that assumes variables stacked as [x; u] )
-		model->nls_hess->evaluate(model->nls_hess, ext_fun_in, ext_fun_out);
+		model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 		// pack hessian
 		blasfeo_pack_dmat(nx, nx, work->nls_hess_out, nx+nu, memory->RSQrq, nu, nu); // Q

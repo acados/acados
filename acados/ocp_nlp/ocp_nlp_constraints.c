@@ -479,8 +479,10 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 	int nh = dims->nh;
 	int nq = dims->nq;
 
-	double *ext_fun_in[2]; // XXX large enough ?
-	double *ext_fun_out[2]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_in[2];
+	void *ext_fun_in[2]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[2];
+	void *ext_fun_out[2]; // XXX large enough ?
 
 	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_nbgh, 0);
 	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_nbgh, nb, &work->tmp_nbgh, nb);
@@ -490,13 +492,17 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 		blasfeo_unpack_dvec(nx, memory->ux, nu, work->nl_constraint_input);
 		blasfeo_unpack_dvec(nu, memory->ux, 0, work->nl_constraint_input+nx);
 
+		ext_fun_type_in[0] = COLMAJ;
 		ext_fun_in[0] = work->nl_constraint_input+0; // x: nx
+		ext_fun_type_in[1] = COLMAJ;
 		ext_fun_in[1] = work->nl_constraint_input+nx; // u: nu
 
+		ext_fun_type_out[0] = COLMAJ;
 		ext_fun_out[0] = work->nl_constraint_output+0; // fun: nh
+		ext_fun_type_out[1] = COLMAJ;
 		ext_fun_out[1] = work->nl_constraint_output+nh; // jac: nh*(nx+nu)
 
-		model->h->evaluate(model->h, ext_fun_in, ext_fun_out);
+		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbgh, nb+ng);
 		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, nu, ng);

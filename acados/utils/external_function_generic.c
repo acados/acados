@@ -381,7 +381,7 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 
 
 
-void external_function_casadi_wrapper(void *self, double **in, double **out)
+void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	// cast into external casadi function
@@ -393,7 +393,18 @@ void external_function_casadi_wrapper(void *self, double **in, double **out)
 	// in as args
 	for (ii=0; ii<fun->in_num; ii++)
 	{
-		d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+		switch(type_in[ii])
+		{
+		case COLMAJ:
+			d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		case BLASFEO_MAT:
+		case BLASFEO_VEC:
+		default:
+			printf("\nUnknown external function argument type\n");
+			exit(1);
+		}
 	}
 
 	// call casadi function
@@ -401,7 +412,18 @@ void external_function_casadi_wrapper(void *self, double **in, double **out)
 
 	for (ii=0; ii<fun->out_num; ii++)
 	{
-		d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+		switch(type_out[ii])
+		{
+		case COLMAJ:
+			d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case BLASFEO_MAT:
+		case BLASFEO_VEC:
+		default:
+			printf("\nUnknown external function argument type\n");
+			exit(1);
+		}
 	}
 
 	return;
@@ -526,7 +548,7 @@ void external_function_param_casadi_assign(external_function_param_casadi *fun, 
 
 
 
-void external_function_param_casadi_wrapper(void *self, double **in, double **out)
+void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	// cast into external casadi function
@@ -539,7 +561,18 @@ void external_function_param_casadi_wrapper(void *self, double **in, double **ou
 	// skip last argument (that is the parameters vector)
 	for (ii=0; ii<fun->in_num-1; ii++)
 	{
-		d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+		switch(type_in[ii])
+		{
+		case COLMAJ:
+			d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		case BLASFEO_MAT:
+		case BLASFEO_VEC:
+		default:
+			printf("\nUnknown external function argument type\n");
+			exit(1);
+		}
 	}
 	// copy parametrs vector as last arg
 	ii = fun->in_num-1;
@@ -551,7 +584,18 @@ void external_function_param_casadi_wrapper(void *self, double **in, double **ou
 
 	for (ii=0; ii<fun->out_num; ii++)
 	{
-		d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+		switch(type_out[ii])
+		{
+		case COLMAJ:
+			d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case BLASFEO_MAT:
+		case BLASFEO_VEC:
+		default:
+			printf("\nUnknown external function argument type\n");
+			exit(1);
+		}
 	}
 
 	return;

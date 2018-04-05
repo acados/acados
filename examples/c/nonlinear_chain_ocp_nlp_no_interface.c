@@ -809,7 +809,7 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 // hand-generated external function for externally provided hessian and gradient
-void ext_cost_nm2(void *fun, double **in, double **out)
+void ext_cost_nm2(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -847,7 +847,7 @@ void ext_cost_nm2(void *fun, double **in, double **out)
 
 }
 
-void ext_cost_nm3(void *fun, double **in, double **out)
+void ext_cost_nm3(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -885,7 +885,7 @@ void ext_cost_nm3(void *fun, double **in, double **out)
 
 }
 
-void ext_cost_nm4(void *fun, double **in, double **out)
+void ext_cost_nm4(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -923,7 +923,7 @@ void ext_cost_nm4(void *fun, double **in, double **out)
 
 }
 
-void ext_cost_nm5(void *fun, double **in, double **out)
+void ext_cost_nm5(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -961,7 +961,7 @@ void ext_cost_nm5(void *fun, double **in, double **out)
 
 }
 
-void ext_cost_nm6(void *fun, double **in, double **out)
+void ext_cost_nm6(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1001,8 +1001,8 @@ void ext_cost_nm6(void *fun, double **in, double **out)
 
 
 
-// hand-wirtten box constraints on states as nonlinra constraints
-void nonlin_constr_nm2(void *evaluate, double **in, double **out)
+// hand-wirtten box constraints on states as nonlinear constraints
+void nonlin_constr_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1015,8 +1015,9 @@ void nonlin_constr_nm2(void *evaluate, double **in, double **out)
 
 	// fun
 	double *fun = out[0];
+	double *x = in[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[0][ii]; // x
+		fun[ii] = x[ii]; // x
 
 	// jacobian
 	double *jac = out[1];
@@ -1029,7 +1030,7 @@ void nonlin_constr_nm2(void *evaluate, double **in, double **out)
 
 }
 
-void nonlin_constr_nm3(void *evaluate, double **in, double **out)
+void nonlin_constr_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1042,8 +1043,9 @@ void nonlin_constr_nm3(void *evaluate, double **in, double **out)
 
 	// fun
 	double *fun = out[0];
+	double *x = in[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[0][ii]; // x
+		fun[ii] = x[ii]; // x
 
 	// jacobian
 	double *jac = out[1];
@@ -1056,7 +1058,7 @@ void nonlin_constr_nm3(void *evaluate, double **in, double **out)
 
 }
 
-void nonlin_constr_nm4(void *evaluate, double **in, double **out)
+void nonlin_constr_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1069,8 +1071,9 @@ void nonlin_constr_nm4(void *evaluate, double **in, double **out)
 
 	// fun
 	double *fun = out[0];
+	double *x = in[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[0][ii]; // x
+		fun[ii] = x[ii]; // x
 
 	// jacobian
 	double *jac = out[1];
@@ -1083,7 +1086,7 @@ void nonlin_constr_nm4(void *evaluate, double **in, double **out)
 
 }
 
-void nonlin_constr_nm5(void *evaluate, double **in, double **out)
+void nonlin_constr_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1096,8 +1099,9 @@ void nonlin_constr_nm5(void *evaluate, double **in, double **out)
 
 	// fun
 	double *fun = out[0];
+	double *x = in[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[0][ii]; // x
+		fun[ii] = x[ii]; // x
 
 	// jacobian
 	double *jac = out[1];
@@ -1110,7 +1114,7 @@ void nonlin_constr_nm5(void *evaluate, double **in, double **out)
 
 }
 
-void nonlin_constr_nm6(void *evaluate, double **in, double **out)
+void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1123,8 +1127,9 @@ void nonlin_constr_nm6(void *evaluate, double **in, double **out)
 
 	// fun
 	double *fun = out[0];
+	double *x = in[0];
 	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[0][ii]; // x
+		fun[ii] = x[ii]; // x
 
 	// jacobian
 	double *jac = out[1];
@@ -1139,7 +1144,7 @@ void nonlin_constr_nm6(void *evaluate, double **in, double **out)
 
 
 
-void ls_cost_hess_nm2(void *evaluate, double **in, double **out)
+void ls_cost_hess_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1157,7 +1162,7 @@ void ls_cost_hess_nm2(void *evaluate, double **in, double **out)
 
 }
 
-void ls_cost_hess_nm3(void *evaluate, double **in, double **out)
+void ls_cost_hess_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1175,7 +1180,7 @@ void ls_cost_hess_nm3(void *evaluate, double **in, double **out)
 
 }
 
-void ls_cost_hess_nm4(void *evaluate, double **in, double **out)
+void ls_cost_hess_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1193,7 +1198,7 @@ void ls_cost_hess_nm4(void *evaluate, double **in, double **out)
 
 }
 
-void ls_cost_hess_nm5(void *evaluate, double **in, double **out)
+void ls_cost_hess_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1211,7 +1216,7 @@ void ls_cost_hess_nm5(void *evaluate, double **in, double **out)
 
 }
 
-void ls_cost_hess_nm6(void *evaluate, double **in, double **out)
+void ls_cost_hess_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;

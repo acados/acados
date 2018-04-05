@@ -132,7 +132,7 @@ static void select_dynamics_wt_casadi(int N,
 * nonlinear constraint
 ************************************************/
 
-void ext_fun_h1(void *fun, double **in, double **out)
+void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
