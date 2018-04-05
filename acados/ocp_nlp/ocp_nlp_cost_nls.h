@@ -129,10 +129,6 @@ typedef struct
 {
 	struct blasfeo_dmat tmp_nv_ny;
 	struct blasfeo_dvec tmp_ny;
-	double *nls_jac_in; // [x; u]
-	double *nls_jac_out; // [res; jac]
-	double *nls_hess_in; // [x; u; W*res]
-	double *nls_hess_out; // [hess_tensor*(W*res)]
 } ocp_nlp_cost_nls_workspace;
 
 //

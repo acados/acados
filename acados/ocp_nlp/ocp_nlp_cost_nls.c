@@ -313,14 +313,6 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *
 	size += 1*blasfeo_memsize_dmat(nu+nx, ny); // tmp_nv_ny
 	size += 1*blasfeo_memsize_dvec(ny); // tmp_ny
 
-	size += 1*(nu+nx)*sizeof(double); // nls_jac_in
-	size += 1*(ny+ny*(nu+nx))*sizeof(double); // nls_jac_out
-	if (!opts->gauss_newton_hess)
-	{
-		size += 1*(nu+nx+ny)*sizeof(double); // nls_hess_in
-		size += 1*((nu+nx)*(nu+nx))*sizeof(double); // nls_hess_out
-	}
-
 	size += 64; // blasfeo_mem align
 	size += 8;
 	return size;
@@ -346,18 +338,6 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
     c_ptr += sizeof(ocp_nlp_cost_nls_workspace);
 
 	align_char_to(8, &c_ptr);
-
-	// nls_jac_in
-	assign_and_advance_double(nu+nx, &work->nls_jac_in, &c_ptr);
-	// nls_jac_out
-	assign_and_advance_double(ny+ny*(nu+nx), &work->nls_jac_out, &c_ptr);
-	if (!opts->gauss_newton_hess)
-	{
-		// nls_hess_in
-		assign_and_advance_double(nu+nx+ny, &work->nls_hess_in, &c_ptr);
-		// nls_hess_out
-		assign_and_advance_double((nu+nx)*(nu+nx), &work->nls_hess_out, &c_ptr);
-	}
 
 	// blasfeo_mem align
 	align_char_to(64, &c_ptr);
