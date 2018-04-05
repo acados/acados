@@ -88,7 +88,7 @@
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 1
+#define COST 2
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -821,27 +821,27 @@ void ext_cost_nm2(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm2[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm2[ii];
 
 	// Hessian
 	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu = in[0];
+	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
@@ -859,27 +859,27 @@ void ext_cost_nm3(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm3[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm3[ii];
 
 	// Hessian
 	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu = in[0];
+	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
@@ -897,27 +897,27 @@ void ext_cost_nm4(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm4[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm4[ii];
 
 	// Hessian
 	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu = in[0];
+	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
@@ -935,27 +935,27 @@ void ext_cost_nm5(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm5[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm5[ii];
 
 	// Hessian
 	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu = in[0];
+	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
@@ -973,27 +973,27 @@ void ext_cost_nm6(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm6[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm6[ii];
 
 	// Hessian
 	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu = in[0];
+	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 

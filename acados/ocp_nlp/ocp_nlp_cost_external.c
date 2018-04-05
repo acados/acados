@@ -351,37 +351,31 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 	int nx = dims->nx;
 	int nu = dims->nu;
 
+	// XXX large enough ?
 	ext_fun_arg_t ext_fun_type_in[3];
-	void *ext_fun_in[3]; // XXX large enough ?
+	void *ext_fun_in[3];
 	ext_fun_arg_t ext_fun_type_out[3];
-	void *ext_fun_out[3]; // XXX large enough ?
+	void *ext_fun_out[3];
 
 	// unpack ls cost input
-	blasfeo_unpack_dvec(nu, memory->ux, 0, work->ext_cost_in+nx);
-	blasfeo_unpack_dvec(nx, memory->ux, nu, work->ext_cost_in);
+	blasfeo_unpack_dvec(nu+nx, memory->ux, 0, work->ext_cost_in);
 
 	ext_fun_type_in[0] = COLMAJ;
-	ext_fun_in[0] = work->ext_cost_in+0; // x: nx
-	ext_fun_type_in[1] = COLMAJ;
-	ext_fun_in[1] = work->ext_cost_in+nx; // u: nu
+	ext_fun_in[0] = work->ext_cost_in+0; // ux: nu+nx
 
 	ext_fun_type_out[0] = COLMAJ;
-	ext_fun_out[0] = work->ext_cost_out+0; // grad: nx+nu
+	ext_fun_out[0] = work->ext_cost_out+0; // grad: nu+nx
 	ext_fun_type_out[1] = COLMAJ;
-	ext_fun_out[1] = work->ext_cost_out+nx+nu; // hess: (nx+nu)*(nx+nu)
+	ext_fun_out[1] = work->ext_cost_out+nx+nu; // hess: (nu+nx) * (nu+nx)
 
 	// evaluate external function (that assumes variables stacked as [x; u] )
 	model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 	// pack gradient
-	blasfeo_pack_dvec(nx, work->ext_cost_out, &memory->grad, nu); // q
-	blasfeo_pack_dvec(nu, work->ext_cost_out+nx, &memory->grad, 0); // r
+	blasfeo_pack_dvec(nu+nx, ext_fun_out[0], &memory->grad, 0); // rq
 
 	// pack Hessian
-	double *d_ptr = work->ext_cost_out+nu+nx;
-	blasfeo_pack_dmat(nx, nx, d_ptr, nx+nu, memory->RSQrq, nu, nu); // Q
-	blasfeo_pack_tran_dmat(nu, nx, d_ptr+nx, nx+nu, memory->RSQrq, nu, 0); // S
-	blasfeo_pack_dmat(nu, nu, d_ptr+nx*(nu+nx+1), nx+nu, memory->RSQrq, 0, 0); // R
+	blasfeo_pack_dmat(nu+nx, nu+nx, ext_fun_out[1], nx+nu, memory->RSQrq, 0, 0); // RSQrq
 
 	return;
 
