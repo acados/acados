@@ -184,7 +184,6 @@ int main()
 	************************************************/
 	// Phi - gnsf2
 	external_function_param_casadi phi_fun_jac_y;
-	// external_function_casadi phi_fun_jac_y;
 	phi_fun_jac_y.casadi_fun = &casadi_phi_fun_jac_y;
 	phi_fun_jac_y.casadi_work = &casadi_phi_fun_jac_y_work;
 	phi_fun_jac_y.casadi_sparsity_in = &casadi_phi_fun_jac_y_sparsity_in;
@@ -192,11 +191,9 @@ int main()
 	phi_fun_jac_y.casadi_n_in = &casadi_phi_fun_jac_y_n_in;
 	phi_fun_jac_y.casadi_n_out = &casadi_phi_fun_jac_y_n_out;
 	external_function_param_casadi_create(&phi_fun_jac_y, np);
-	// external_function_casadi_create(&phi_fun_jac_y);
 
-	// Phi - gnsf
+	// Phi - gnsf2
 	external_function_param_casadi phi_jac_y;
-	// external_function_casadi phi_jac_y;
 	phi_jac_y.casadi_fun = &casadi_phi_jac_y;
 	phi_jac_y.casadi_work = &casadi_phi_jac_y_work;
 	phi_jac_y.casadi_sparsity_in = &casadi_phi_jac_y_sparsity_in;
@@ -204,11 +201,9 @@ int main()
 	phi_jac_y.casadi_n_in = &casadi_phi_jac_y_n_in;
 	phi_jac_y.casadi_n_out = &casadi_phi_jac_y_n_out;
 	external_function_param_casadi_create(&phi_jac_y, np);	
-	// external_function_casadi_create(&phi_jac_y);
 
 	// f - Linear Output System
 	external_function_param_casadi f_LO_inc_J_x1k1uz_fun;
-	// external_function_casadi f_LO_inc_J_x1k1uz_fun;
 	f_LO_inc_J_x1k1uz_fun.casadi_fun 			= &casadi_f_LO_inc_J_x1k1uz_fun;
 	f_LO_inc_J_x1k1uz_fun.casadi_work 			= &casadi_f_LO_inc_J_x1k1uz_fun_work;
 	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_in 	= &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in;
@@ -216,7 +211,6 @@ int main()
 	f_LO_inc_J_x1k1uz_fun.casadi_n_in 			= &casadi_f_LO_inc_J_x1k1uz_fun_n_in;
 	f_LO_inc_J_x1k1uz_fun.casadi_n_out 			= &casadi_f_LO_inc_J_x1k1uz_fun_n_out;
 	external_function_param_casadi_create(&f_LO_inc_J_x1k1uz_fun, np);
-	// external_function_casadi_create(&f_LO_inc_J_x1k1uz_fun);
 
 	int number_sim_solvers = 4;
 	int nss;
@@ -424,8 +418,10 @@ int main()
 		if (nss == 3)
 			gnsf2_precompute(gnsf2_dim, in->model, opts, in);
 
-		// printf("USED TABLEAU = \n");
-    	// d_print_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
+		// printf("USED TABLEAU: A = \n");
+    	// d_print_e_mat(opts->ns, opts->ns, opts->A_mat, opts->ns);
+		// printf("b = \n");
+    	// d_print_e_mat(1, opts->ns, opts->b_vec, 1);
 
 		acados_timer timer;
 		acados_tic(&timer);
@@ -531,7 +527,7 @@ int main()
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			d_print_mat(nx, NF, S_forw_out, nx);
+			d_print_e_mat(nx, NF, S_forw_out, nx);
 			// for (ii=0;ii<nx;ii++){
 			// 	for (jj=0;jj<NF;jj++)
 			// 		printf("%8.5f ", S_forw_out[jj*nx+ii]);
