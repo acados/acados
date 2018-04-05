@@ -390,8 +390,6 @@ static void *sim_new_lifted_irk_workspace_cast(void *config_, sim_dims *dims, vo
 
     assign_and_advance_int(nx * ns , &workspace->ipiv, &c_ptr);
 
-    // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_new_lifted_irk_calculate_workspace_size(dims, opts_));
-
     assert((char*)raw_memory + sim_new_lifted_irk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
 
     return (void *)workspace;
@@ -502,10 +500,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
 	
-//	double inf_norm_K;
-//	double tol_inf_norm_K = 1e-6;
-
-
     // start the loop
     acados_tic(&timer);
     for(ss=0; ss<num_steps; ss++)
@@ -684,12 +678,6 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                     model->impl_ode_jac_x_u->evaluate(model->impl_ode_jac_x_u, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
-                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
-                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    // timing_ad += acados_toc(&timer_ad);
                 }
 
             }
