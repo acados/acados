@@ -299,7 +299,7 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *
 {
 	// ocp_nlp_cost_config *config = config_;
 	ocp_nlp_cost_nls_dims *dims = dims_;
-	ocp_nlp_cost_nls_opts *opts = opts_;
+	// ocp_nlp_cost_nls_opts *opts = opts_;
 
 	// extract dims
 	int nx = dims->nx;
@@ -326,7 +326,7 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
 
 	// ocp_nlp_cost_config *config = config_;
 	ocp_nlp_cost_nls_dims *dims = dims_;
-	ocp_nlp_cost_nls_opts *opts = opts_;
+	// ocp_nlp_cost_nls_opts *opts = opts_;
 	ocp_nlp_cost_nls_workspace *work = work_;
 
 	// extract dims

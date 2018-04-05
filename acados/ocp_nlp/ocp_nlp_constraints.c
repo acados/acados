@@ -364,8 +364,8 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config_, void *dims_, voi
 	ocp_nlp_constraints_dims *dims = dims_;
 
 	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
+	// int nx = dims->nx;
+	// int nu = dims->nu;
 	int nb = dims->nb;
 	int ng = dims->ng;
 	int nh = dims->nh;
@@ -395,8 +395,8 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void 
 	ocp_nlp_constraints_workspace *work = work_;
 
 	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
+	// int nx = dims->nx;
+	// int nu = dims->nu;
 	int nb = dims->nb;
 	int ng = dims->ng;
 	int nh = dims->nh;
@@ -413,7 +413,7 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void 
 	if (nq > 0) {
 //		c_ptr += nq*(nx+nu)*sizeof(double);
 //		align_char_to(64, &c_ptr);
-//		assign_and_advance_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);	
+//		assign_and_advance_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);
 	}
 
     assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >= c_ptr);

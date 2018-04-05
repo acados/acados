@@ -80,7 +80,7 @@ static void shift_controls(ocp_nlp_dims *dims, ocp_nlp_out *out, double *u_end)
 
 
 
-static void select_dynamics_wt_casadi(int N, 
+static void select_dynamics_wt_casadi(int N,
 	external_function_param_casadi *expl_vde_for,
 	external_function_param_casadi *impl_ode_fun,
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot,
@@ -134,9 +134,6 @@ static void select_dynamics_wt_casadi(int N,
 
 void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
-
-	int ii;
-
 	int nu = 2;
 	int nx = 8;
 	int nh = 1;
@@ -693,7 +690,7 @@ int main()
 				printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
-				printf("electrical power %f \n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7)); 
+				printf("electrical power %f \n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
 			}
 
 			if (status!=0)

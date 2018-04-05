@@ -138,7 +138,7 @@ static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dmat *out)
 {
-	int ii, jj, idx;
+	int jj, idx;
 
     int nrow = sparsity_in[0];
     int ncol = sparsity_in[1];
@@ -174,7 +174,7 @@ static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dm
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *sparsity_out)
 {
-	int ii, jj, idx;
+	int jj, idx;
 
     int nrow = sparsity_out[0];
     int ncol = sparsity_out[1];
@@ -209,7 +209,7 @@ static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *spar
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out)
 {
-	int ii, jj, idx;
+	int idx;
 
 	assert( sparsity_in[1]==1 );
 
@@ -244,7 +244,7 @@ static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dv
 // TODO detect if dense from number of elements per column !!!
 static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out)
 {
-	int ii, jj, idx;
+	int idx;
 
 	assert( sparsity_out[1]==1 );
 
@@ -388,7 +388,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 	external_function_casadi *fun = self;
 
 	// loop index
-	int ii, jj;
+	int ii;
 
 	// in as args
 	for (ii=0; ii<fun->in_num; ii++)
