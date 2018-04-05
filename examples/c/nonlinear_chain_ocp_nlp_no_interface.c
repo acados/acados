@@ -88,7 +88,7 @@
 #define DYNAMICS 3
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 2
+#define COST 1
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -1144,6 +1144,7 @@ void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 
 
 
+// ls hessian
 void ls_cost_hess_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
@@ -1152,11 +1153,8 @@ void ls_cost_hess_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun
 	int nu = 3;
 	int nx = 6;
 
-	int nv = nu+nx;
-
-	double *hess = out[0];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
@@ -1170,11 +1168,8 @@ void ls_cost_hess_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun
 	int nu = 3;
 	int nx = 12;
 
-	int nv = nu+nx;
-
-	double *hess = out[0];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
@@ -1188,11 +1183,8 @@ void ls_cost_hess_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun
 	int nu = 3;
 	int nx = 18;
 
-	int nv = nu+nx;
-
-	double *hess = out[0];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
@@ -1206,11 +1198,8 @@ void ls_cost_hess_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun
 	int nu = 3;
 	int nx = 24;
 
-	int nv = nu+nx;
-
-	double *hess = out[0];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
@@ -1224,11 +1213,8 @@ void ls_cost_hess_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun
 	int nu = 3;
 	int nx = 30;
 
-	int nv = nu+nx;
-
-	double *hess = out[0];
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 

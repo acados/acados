@@ -400,9 +400,16 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 			break;
 
 		case BLASFEO_MAT:
+			d_cvt_dmat_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
 		case BLASFEO_VEC:
+			d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
 		default:
-			printf("\nUnknown external function argument type\n");
+		printf("\ntype in %d\n", type_in[ii]);
+			printf("\nUnknown external function argument type\n\n");
 			exit(1);
 		}
 	}
@@ -419,9 +426,16 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 			break;
 
 		case BLASFEO_MAT:
+			d_cvt_casadi_to_dmat((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
 		case BLASFEO_VEC:
+			d_cvt_casadi_to_dvec((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
 		default:
-			printf("\nUnknown external function argument type\n");
+		printf("\ntype out %d\n", type_out[ii]);
+			printf("\nUnknown external function argument type\n\n");
 			exit(1);
 		}
 	}
@@ -568,9 +582,15 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
 			break;
 
 		case BLASFEO_MAT:
+			d_cvt_dmat_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
 		case BLASFEO_VEC:
+			d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
 		default:
-			printf("\nUnknown external function argument type\n");
+			printf("\nUnknown external function argument type\n\n");
 			exit(1);
 		}
 	}
@@ -591,9 +611,15 @@ void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, 
 			break;
 
 		case BLASFEO_MAT:
+			d_cvt_casadi_to_dmat((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
 		case BLASFEO_VEC:
+			d_cvt_casadi_to_dvec((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
 		default:
-			printf("\nUnknown external function argument type\n");
+			printf("\nUnknown external function argument type\n\n");
 			exit(1);
 		}
 	}
