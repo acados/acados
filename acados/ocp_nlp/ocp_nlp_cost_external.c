@@ -351,12 +351,21 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 	int nx = dims->nx;
 	int nu = dims->nu;
 
+	double *ext_fun_in[3]; // XXX large enough ?
+	double *ext_fun_out[3]; // XXX large enough ?
+
 	// unpack ls cost input
 	blasfeo_unpack_dvec(nu, memory->ux, 0, work->ext_cost_in+nx);
 	blasfeo_unpack_dvec(nx, memory->ux, nu, work->ext_cost_in);
 
+	ext_fun_in[0] = work->ext_cost_in+0; // x: nx
+	ext_fun_in[1] = work->ext_cost_in+nx; // u: nu
+
+	ext_fun_out[0] = work->ext_cost_out+0; // grad: nx+nu
+	ext_fun_out[1] = work->ext_cost_out+nx+nu; // hess: (nx+nu)*(nx+nu)
+
 	// evaluate external function (that assumes variables stacked as [x; u] )
-	model->ext_cost->evaluate(model->ext_cost, work->ext_cost_in, work->ext_cost_out);
+	model->ext_cost->evaluate(model->ext_cost, ext_fun_in, ext_fun_out);
 
 	// pack gradient
 	blasfeo_pack_dvec(nx, work->ext_cost_out, &memory->grad, nu); // q
