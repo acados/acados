@@ -209,12 +209,12 @@ int main()
 	// f - Linear Output System
 	external_function_param_casadi f_LO_inc_J_x1k1uz_fun;
 	// external_function_casadi f_LO_inc_J_x1k1uz_fun;
-	f_LO_inc_J_x1k1uz_fun.casadi_fun = &casadi_f_LO_inc_J_x1k1uz_fun;
-	f_LO_inc_J_x1k1uz_fun.casadi_work = &casadi_f_LO_inc_J_x1k1uz_fun_work;
-	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_in = &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in;
-	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_out = &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_out;
-	f_LO_inc_J_x1k1uz_fun.casadi_n_in = &casadi_f_LO_inc_J_x1k1uz_fun_n_in;
-	f_LO_inc_J_x1k1uz_fun.casadi_n_out = &casadi_f_LO_inc_J_x1k1uz_fun_n_out;
+	f_LO_inc_J_x1k1uz_fun.casadi_fun 			= &casadi_f_LO_inc_J_x1k1uz_fun;
+	f_LO_inc_J_x1k1uz_fun.casadi_work 			= &casadi_f_LO_inc_J_x1k1uz_fun_work;
+	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_in 	= &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in;
+	f_LO_inc_J_x1k1uz_fun.casadi_sparsity_out 	= &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_out;
+	f_LO_inc_J_x1k1uz_fun.casadi_n_in 			= &casadi_f_LO_inc_J_x1k1uz_fun_n_in;
+	f_LO_inc_J_x1k1uz_fun.casadi_n_out 			= &casadi_f_LO_inc_J_x1k1uz_fun_n_out;
 	external_function_param_casadi_create(&f_LO_inc_J_x1k1uz_fun, np);
 	// external_function_casadi_create(&f_LO_inc_J_x1k1uz_fun);
 
@@ -281,7 +281,7 @@ int main()
 		gnsf2_dim->nu = nu;
 		gnsf2_dim->nx1= nx;
 		gnsf2_dim->nx2= 0;
-		gnsf2_dim->n_in = nx + nu;
+		gnsf2_dim->n_in = nx;//nx + nu;
 		gnsf2_dim->n_out = 1;
 		gnsf2_dim->num_stages = 8;
 
@@ -561,7 +561,6 @@ int main()
 		free(config);
 
 		free(gnsf2_dim);
-
 	}
 
 	free(x_sim);
