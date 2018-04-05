@@ -538,18 +538,18 @@ int main()
 
 	// fist stage
 	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]+nh[0]);
+	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+nh[0]+ng[0]);
     for (int ii=0; ii<nb[0]; ii++) constraints[0]->idxb[ii] = idxb0[ii];
 	// middle stages
     for (int i = 1; i < NN; i++)
 	{
 		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]+nh[i]);
+		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+nh[i]+ng[i]);
 		for (int ii=0; ii<nb[i]; ii++) constraints[i]->idxb[ii] = idxb1[ii];
     }
 	// last stage
 	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]+nh[NN]);
+	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+nh[NN]+ng[NN]);
     for (int ii=0; ii<nb[NN]; ii++) constraints[NN]->idxb[ii] = idxbN[ii];
 
 	/* nonlinear constraints */
@@ -559,8 +559,8 @@ int main()
 	{
 		if(nh[i]>0)
 		{
-			blasfeo_pack_dvec(nh[i], lh1, &constraints[i]->d, nb[i]+ng[i]);
-			blasfeo_pack_dvec(nh[i], uh1, &constraints[i]->d, 2*nb[i]+2*ng[i]+nh[i]);
+			blasfeo_pack_dvec(nh[i], lh1, &constraints[i]->d, nb[i]);
+			blasfeo_pack_dvec(nh[i], uh1, &constraints[i]->d, 2*nb[i]+nh[i]+ng[i]);
 			constraints[i]->h = &h1;
 		}
     }
@@ -638,7 +638,7 @@ int main()
 
 		// update x0 as box constraint
 		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nbu[0]);
-		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nb[0]+ng[0]+nh[0]+nbu[0]);
+		blasfeo_pack_dvec(nx[0], x0_ref, &constraints[0]->d, nb[0]+nh[0]+ng[0]+nbu[0]);
 
    	 	for (int idx = 0; idx < nmpc_problems; idx++)
 		{
@@ -679,7 +679,7 @@ int main()
 			// update initial condition
 			// TODO(dimitris): maybe simulate system instead of passing x[1] as next state
 			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]);
-			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]+nb[0]+ng[0]);
+			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]+ng[0]+nb[0]);
 
 			// shift trajectories
 			if (true)
