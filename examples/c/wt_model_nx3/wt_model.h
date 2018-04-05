@@ -1,89 +1,107 @@
-#ifndef EXAMPLES_C_WT_MODEL_CRANE_MODEL_H_
-#define EXAMPLES_C_WT_MODEL_CRANE_MODEL_H_
 
-#include "acados/utils/types.h"
+#ifndef EXAMPLES_C_WT_MODEL_NX3_H_
+#define EXAMPLES_C_WT_MODEL_NX3_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 /* explicit ODE */
 
 // explicit ODE
-int ode_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int ode_energy_balanced_model_work(int *, int *, int *, int *);
-const int *ode_energy_balanced_model_sparsity_in(int);
-const int *ode_energy_balanced_model_sparsity_out(int);
-int ode_energy_balanced_model_n_in();
-int ode_energy_balanced_model_n_out();
-// forward explicit VDE
-int vde_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int vde_energy_balanced_model_work(int *, int *, int *, int *);
-const int *vde_energy_balanced_model_sparsity_in(int);
-const int *vde_energy_balanced_model_sparsity_out(int);
-int vde_energy_balanced_model_n_in();
-int vde_energy_balanced_model_n_out();
-// adjoing explicit VDE
-int vde_adj_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int vde_adj_energy_balanced_model_work(int *, int *, int *, int *);
-const int *vde_adj_energy_balanced_model_sparsity_in(int);
-const int *vde_adj_energy_balanced_model_sparsity_out(int);
-int vde_adj_energy_balanced_model_n_in();
-int vde_adj_energy_balanced_model_n_out();
-// hessian explicit ODE
-int vde_hess_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int vde_hess_energy_balanced_model_work(int *, int *, int *, int *);
-const int *vde_hess_energy_balanced_model_sparsity_in(int);
-const int *vde_hess_energy_balanced_model_sparsity_out(int);
-int vde_hess_energy_balanced_model_n_in();
-int vde_hess_energy_balanced_model_n_out();
-// hessian explicit ODE
-int jac_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int jac_energy_balanced_model_work(int *, int *, int *, int *);
-const int *jac_energy_balanced_model_sparsity_in(int);
-const int *jac_energy_balanced_model_sparsity_out(int);
-int jac_energy_balanced_model_n_in();
-int jac_energy_balanced_model_n_out();
+int casadi_expl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_expl_ode_fun_work(int *, int *, int *, int *);
+const int *casadi_expl_ode_fun_sparsity_in(int);
+const int *casadi_expl_ode_fun_sparsity_out(int);
+int casadi_expl_ode_fun_n_in();
+int casadi_expl_ode_fun_n_out();
+
+// explicit forward VDE
+int casadi_expl_vde_for(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_expl_vde_for_work(int *, int *, int *, int *);
+const int *casadi_expl_vde_for_sparsity_in(int);
+const int *casadi_expl_vde_for_sparsity_out(int);
+int casadi_expl_vde_for_n_in();
+int casadi_expl_vde_for_n_out();
+
+// explicit adjoint VDE
+int casadi_expl_vde_adj(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_expl_vde_adj_work(int *, int *, int *, int *);
+const int *casadi_expl_vde_adj_sparsity_in(int);
+const int *casadi_expl_vde_adj_sparsity_out(int);
+int casadi_expl_vde_adj_n_in();
+int casadi_expl_vde_adj_n_out();
+
+// explicit adjoint VDE
+int casadi_expl_ode_jac(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_expl_ode_jac_work(int *, int *, int *, int *);
+const int *casadi_expl_ode_jac_sparsity_in(int);
+const int *casadi_expl_ode_jac_sparsity_out(int);
+int casadi_expl_ode_jac_n_in();
+int casadi_expl_ode_jac_n_out();
+
 
 /* implicit ODE */
 
 // implicit ODE
-int impl_odeFun_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_odeFun_energy_balanced_model_work(int *, int *, int *, int *);
-const int *impl_odeFun_energy_balanced_model_sparsity_in(int);
-const int *impl_odeFun_energy_balanced_model_sparsity_out(int);
-int impl_odeFun_energy_balanced_model_n_in();
-int impl_odeFun_energy_balanced_model_n_out();
+int casadi_impl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_fun_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_fun_sparsity_in(int);
+const int *casadi_impl_ode_fun_sparsity_out(int);
+int casadi_impl_ode_fun_n_in();
+int casadi_impl_ode_fun_n_out();
 
-// jac_x implicit ODE
-int impl_jacFun_x_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_x_energy_balanced_model_work(int *, int *, int *, int *);
-const int *impl_jacFun_x_energy_balanced_model_sparsity_in(int);
-const int *impl_jacFun_x_energy_balanced_model_sparsity_out(int);
-int impl_jacFun_x_energy_balanced_model_n_in();
-int impl_jacFun_x_energy_balanced_model_n_out();
+// implicit ODE
+int casadi_impl_ode_jac_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_x_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_x_sparsity_in(int);
+const int *casadi_impl_ode_jac_x_sparsity_out(int);
+int casadi_impl_ode_jac_x_n_in();
+int casadi_impl_ode_jac_x_n_out();
 
-// jax_xdot implicit ODE
-int impl_jacFun_xdot_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_xdot_energy_balanced_model_work(int *, int *, int *, int *);
-const int *impl_jacFun_xdot_energy_balanced_model_sparsity_in(int);
-const int *impl_jacFun_xdot_energy_balanced_model_sparsity_out(int);
-int impl_jacFun_xdot_energy_balanced_model_n_in();
-int impl_jacFun_xdot_energy_balanced_model_n_out();
+// implicit ODE
+int casadi_impl_ode_jac_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_xdot_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_xdot_sparsity_in(int);
+const int *casadi_impl_ode_jac_xdot_sparsity_out(int);
+int casadi_impl_ode_jac_xdot_n_in();
+int casadi_impl_ode_jac_xdot_n_out();
 
-// jax_u implicit ODE
-int impl_jacFun_u_energy_balanced_model(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_u_energy_balanced_model_work(int *, int *, int *, int *);
-const int *impl_jacFun_u_energy_balanced_model_sparsity_in(int);
-const int *impl_jacFun_u_energy_balanced_model_sparsity_out(int);
-int impl_jacFun_u_energy_balanced_model_n_in();
-int impl_jacFun_u_energy_balanced_model_n_out();
+// implicit ODE
+int casadi_impl_ode_jac_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_u_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_u_sparsity_in(int);
+const int *casadi_impl_ode_jac_u_sparsity_out(int);
+int casadi_impl_ode_jac_u_n_in();
+int casadi_impl_ode_jac_u_n_out();
 
+// implicit ODE
+int casadi_impl_ode_fun_jac_x_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_fun_jac_x_xdot_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_fun_jac_x_xdot_sparsity_in(int);
+const int *casadi_impl_ode_fun_jac_x_xdot_sparsity_out(int);
+int casadi_impl_ode_fun_jac_x_xdot_n_in();
+int casadi_impl_ode_fun_jac_x_xdot_n_out();
 
+// implicit ODE
+int casadi_impl_ode_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_x_xdot_u_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_x_xdot_u_sparsity_in(int);
+const int *casadi_impl_ode_jac_x_xdot_u_sparsity_out(int);
+int casadi_impl_ode_jac_x_xdot_u_n_in();
+int casadi_impl_ode_jac_x_xdot_u_n_out();
+
+// implicit ODE
+int casadi_impl_ode_jac_x_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_x_u_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_x_u_sparsity_in(int);
+const int *casadi_impl_ode_jac_x_u_sparsity_out(int);
+int casadi_impl_ode_jac_x_u_n_in();
+int casadi_impl_ode_jac_x_u_n_out();
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // EXAMPLES_C_WT_MODEL_CRANE_MODEL_H_
-
+#endif  // EXAMPLES_C_WT_MODEL_NX3_H_

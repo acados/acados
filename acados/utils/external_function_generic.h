@@ -84,6 +84,52 @@ void external_function_casadi_wrapper(void *self, double *in, double *out);
 
 
 
+/************************************************
+* casadi external parametric function
+************************************************/
+
+typedef struct
+{
+	// public members (have to be the same as in the prototype, and before the private ones)
+	void (* evaluate) (void *, double *, double *);
+	// private members
+	void (* set_param) (void *, double *);
+	void *ptr_ext_mem; // pointer to external memory
+	int (*casadi_fun) (const double **, double **, int *, double *, int);
+	int (*casadi_work) (int *, int *, int *, int *);
+	const int * (*casadi_sparsity_in) (int);
+	const int * (*casadi_sparsity_out) (int);
+	int (*casadi_n_in) ();
+	int (*casadi_n_out) ();
+	double **args;
+	double **res;
+	double *w;
+	double *p; // parameters
+	int *iw;
+	int *args_size; // size of args[i]
+	int *res_size; // size of res[i]
+	int args_num; // number of args arrays
+	int args_size_tot; // total size of args arrays
+	int res_num; // number of res arrays
+	int res_size_tot; // total size of res arrays
+	int in_num; // number of input arrays
+	int out_num; // number of output arrays
+	int iw_size; // number of ints for worksapce
+	int w_size; // number of dobules for workspace
+	int np; // number of parameters
+} external_function_param_casadi;
+
+//
+int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
+//
+void external_function_param_casadi_assign(external_function_param_casadi *fun, void *mem);
+//
+void external_function_param_casadi_wrapper(void *self, double *in, double *out);
+//
+void external_function_param_casadi_set_param(void *self, double *p);
+
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

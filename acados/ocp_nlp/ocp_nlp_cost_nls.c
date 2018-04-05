@@ -322,7 +322,7 @@ int ocp_nlp_cost_nls_workspace_calculate_size(void *config_, void *dims_, void *
 	}
 
 	size += 64; // blasfeo_mem align
-
+	size += 8;
 	return size;
 
 }
@@ -344,6 +344,8 @@ static void ocp_nlp_cost_nls_cast_workspace(void *config_, void *dims_, void *op
 
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_cost_nls_workspace);
+
+	align_char_to(8, &c_ptr);
 
 	// nls_jac_in
 	assign_and_advance_double(nu+nx, &work->nls_jac_in, &c_ptr);

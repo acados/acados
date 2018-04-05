@@ -87,7 +87,7 @@ typedef struct
 	ocp_nlp_memory *nlp_mem;
 
 	int sqp_iter;
-
+	int dummy;  // NOTE(dimitris): make struct size multiple of 8
 } ocp_nlp_sqp_memory;
 
 //

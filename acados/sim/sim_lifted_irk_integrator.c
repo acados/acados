@@ -73,11 +73,11 @@ int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, voi
 
     switch (fun_type)
     {
-        case EXPLICIT_ODE_JACOBIAN:
-            model->jac_ode_expl = (external_function_generic *) fun;
+        case EXPL_ODE_JAC:
+            model->expl_ode_jac = (external_function_generic *) fun;
             break;
-        case EXPLICIT_VDE_FORWARD:
-            model->forw_vde_expl = (external_function_generic *) fun;
+        case EXPL_VDE_FOR:
+            model->expl_vde_for = (external_function_generic *) fun;
             break;
         default:
             return ACADOS_FAILURE;
@@ -956,7 +956,7 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
             }
         }
         acados_tic(&timer_ad);
-        model->jac_ode_expl->evaluate(model->jac_ode_expl, rhs_in, jac_tmp);  // k evaluation
+        model->expl_ode_jac->evaluate(model->expl_ode_jac, rhs_in, jac_tmp);  // k evaluation
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme->type == simplified_in ||
@@ -1305,7 +1305,7 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
             rhs_in[nx*(1+NF)+nu] = ((double) istep+c_vec[s1])/((double) opts->num_steps);  // time
 
             acados_tic(&timer_ad);
-            model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_in, VDE_tmp[s1]);  // k evaluation
+            model->expl_vde_for->evaluate(model->expl_vde_for, rhs_in, VDE_tmp[s1]);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:

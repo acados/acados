@@ -31,7 +31,6 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 
 
-
 typedef struct ocp_qp_full_condensing_opts_
 {
     struct d_cond_qp_ocp2dense_arg *hpipm_opts;
@@ -55,22 +54,23 @@ void compute_dense_qp_dims(ocp_qp_dims *dims, dense_qp_dims *ddims);
 //
 int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims);
 //
-ocp_qp_full_condensing_opts *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
+void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory);
 //
-void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts);
+void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_);
 //
-void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts);
+void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts);
+int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_);
 //
-ocp_qp_full_condensing_memory *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts, void *raw_memory);
+void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory);
 //
-int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts);
+int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_);
 //
 void ocp_qp_full_condensing(ocp_qp_in *in, dense_qp_in *out, ocp_qp_full_condensing_opts *opts, ocp_qp_full_condensing_memory *mem, void *work);
 //
 void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_condensing_opts *opts, ocp_qp_full_condensing_memory *mem, void *work);
-
+//
+void ocp_qp_full_condensing_config_initialize_default(void *config_);
 
 #ifdef __cplusplus
 } /* extern "C" */
