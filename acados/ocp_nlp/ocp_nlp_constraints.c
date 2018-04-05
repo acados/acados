@@ -446,7 +446,6 @@ void ocp_nlp_constraints_initialize(void *config_, void *dims_, void *model_, vo
 	int nu = dims->nu;
 	int nb = dims->nb;
 	int ng = dims->ng;
-	int nh = dims->nh;
 
 	// initialize idxb
 	for (j=0; j<nb; j++)
@@ -455,7 +454,7 @@ void ocp_nlp_constraints_initialize(void *config_, void *dims_, void *model_, vo
 	}
 
 	// initialize general constraints matrix
-	blasfeo_dgecp(nu+nx, ng, &model->DCt, 0, 0, memory->DCt, 0, nh);
+	blasfeo_dgecp(nu+nx, ng, &model->DCt, 0, 0, memory->DCt, 0, 0);
 
 	return;
 
@@ -486,7 +485,7 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 	void *ext_fun_out[2]; // XXX large enough ?
 
 	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_nbgh, 0);
-	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, nh, memory->ux, 0, 0.0, &work->tmp_nbgh, nb+nh, &work->tmp_nbgh, nb+nh);
+	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_nbgh, nb, &work->tmp_nbgh, nb);
 
 	if (nh>0)
 	{
@@ -505,9 +504,9 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 
 		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbgh, nb);
-		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, nu, 0);
-		blasfeo_pack_tran_dmat(nh, nu, work->nl_constraint_output+nh+nx*nh, nh, memory->DCt, 0, 0);
+		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbgh, nb+ng);
+		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, nu, ng);
+		blasfeo_pack_tran_dmat(nh, nu, work->nl_constraint_output+nh+nx*nh, nh, memory->DCt, 0, ng);
 	}
 
 	if (nq>0)

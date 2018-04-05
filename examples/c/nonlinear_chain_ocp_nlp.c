@@ -1541,7 +1541,7 @@ int main()
 	// fist stage
 #if CONSTRAINTS==0 // box constraints
 	blasfeo_pack_dvec(nb[0], lb0, &constraints[0]->d, 0);
-	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+nh[0]+ng[0]);
+	blasfeo_pack_dvec(nb[0], ub0, &constraints[0]->d, nb[0]+ng[0]);
     constraints[0]->idxb = idxb0;
 #elif CONSTRAINTS==1 // general constraints
 	double *Cu0; d_zeros(&Cu0, ng[0], nu[0]);
@@ -1555,7 +1555,7 @@ int main()
 	blasfeo_pack_tran_dmat(ng[0], nu[0], Cu0, ng[0], &constraints[0]->DCt, 0, 0);
 	blasfeo_pack_tran_dmat(ng[0], nx[0], Cx0, ng[0], &constraints[0]->DCt, nu[0], 0);
 	blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]);
-	blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+nh[0]+ng[0]);
+	blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]);
 
 	d_free(Cu0);
 	d_free(Cx0);
@@ -1567,23 +1567,19 @@ int main()
     ocp_nlp_constraints_model **nl_constr = (ocp_nlp_constraints_model **) nlp_in->constraints;
 	nl_constr[0]->h = &nonlin_constr_generic;
 
-	// state constraints as nonlinear constraints
-	blasfeo_pack_dvec(nh[0], lb0+NU, &constraints[0]->d, nb[0]);
-	blasfeo_pack_dvec(nh[0], ub0+NU, &constraints[0]->d, 2*nb[0]+nh[0]+ng[0]);
-	// input constraints as general constraints
-	blasfeo_pack_dvec(ng[0], lb0, &constraints[0]->d, nb[0]+nh[0]);
-	blasfeo_pack_dvec(ng[0], ub0, &constraints[0]->d, 2*nb[0]+2*nh[0]+ng[0]);
+	blasfeo_pack_dvec(ng[0]+nh[0], lb0, &constraints[0]->d, nb[0]);
+	blasfeo_pack_dvec(ng[0]+nh[0], ub0, &constraints[0]->d, 2*nb[0]+ng[0]+nh[0]);
 #endif
 
 	// other stages
     for (int i = 1; i < NN; i++)
 	{
 		blasfeo_pack_dvec(nb[i], lb1, &constraints[i]->d, 0);
-		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+nh[i]+ng[i]);
+		blasfeo_pack_dvec(nb[i], ub1, &constraints[i]->d, nb[i]+ng[i]);
         constraints[i]->idxb = idxb1;
     }
 	blasfeo_pack_dvec(nb[NN], lbN, &constraints[NN]->d, 0);
-	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+nh[NN]+ng[NN]);
+	blasfeo_pack_dvec(nb[NN], ubN, &constraints[NN]->d, nb[NN]+ng[NN]);
     constraints[NN]->idxb = idxbN;
 
 #if 0
