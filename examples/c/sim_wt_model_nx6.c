@@ -489,8 +489,6 @@ int main()
 				}
 			}
 
-
-
 			// d_print_mat(1, nx, in->x, 1);
 			// d_print_mat(1, nu, in->u, 1);
 
@@ -505,9 +503,6 @@ int main()
 			cpu_time += out->info->CPUtime;
 			la_time += out->info->LAtime;
 			ad_time += out->info->ADtime;
-
-			// d_print_mat(1, nx, out->xn, 1);
-			// d_print_mat(1, nx, x_ref+ii*nx, 1);
 
 			// extract state at next time step
 			for (jj = 0; jj < nx; jj++)

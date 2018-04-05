@@ -148,12 +148,17 @@ int main() {
     sim_out *out = sim_out_create(config, dims);
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    int NREP = 1;
+    int NREP = 10000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
 
     for (int i = 0; i < NREP; i++) {
         int acados_return = sim_solve(sim_solver, in, out);
+        if (acados_return != 0)
+        {
+            printf("error in sim solver\n");
+            return ACADOS_FAILURE;
+        }
         casadi_times[i] = out->info->ADtime;
         gnsf_times[i] = out->info->CPUtime;
     }
