@@ -376,11 +376,9 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config_, void *dims_, voi
     size += sizeof(ocp_nlp_constraints_workspace);
 
 	size += 1*blasfeo_memsize_dvec(nb+ng+nh);  // tmp_nbgh
-	size += (nx+nu)*sizeof(double);  // nl_constraint_input
-	size += nh*(1+nx+nu)*sizeof(double);  // nl_constraint_output
 	if (nq > 0) {
-		size += nq*(nx+nu)*sizeof(double);
-		size += 1*blasfeo_memsize_dmat(nx+nu, nq);
+//		size += nq*(nx+nu)*sizeof(double);
+//		size += 1*blasfeo_memsize_dmat(nx+nu, nq);
 	}
 
 	size += 2*64;  // blasfeo_mem align
@@ -412,14 +410,10 @@ static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void 
 
 	// tmp_nbgh
 	assign_and_advance_blasfeo_dvec_mem(nb+ng+nh, &work->tmp_nbgh, &c_ptr);
-	work->nl_constraint_input = (double *) c_ptr;
-	c_ptr += (nx+nu)*sizeof(double);
-	work->nl_constraint_output = (double *) c_ptr;
-	c_ptr += nh*(1+nx+nu)*sizeof(double);
 	if (nq > 0) {
-		c_ptr += nq*(nx+nu)*sizeof(double);
-		align_char_to(64, &c_ptr);
-		assign_and_advance_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);	
+//		c_ptr += nq*(nx+nu)*sizeof(double);
+//		align_char_to(64, &c_ptr);
+//		assign_and_advance_blasfeo_dmat_mem(nx+nu, nq, &work->jacobian_quadratic, &c_ptr);	
 	}
 
     assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
@@ -489,37 +483,36 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 
 	if (nh>0)
 	{
-		blasfeo_unpack_dvec(nx, memory->ux, nu, work->nl_constraint_input);
-		blasfeo_unpack_dvec(nu, memory->ux, 0, work->nl_constraint_input+nx);
+		// XXX DANGER !!! DO NOT TRY THIS AT HOME !!!
+		// Cast of BLASFEO internals, only if you know what is happening !!!
+		work->tmp_h = work->tmp_nbgh;
+		work->tmp_h.pa = &(BLASFEO_DVECEL(&work->tmp_nbgh, nb+ng));
+		work->tmp_Jht = memory->DCt[0];
+		work->tmp_Jht.pA = &(BLASFEO_DMATEL(memory->DCt, 0, ng)); // only works for col offsets !!!
 
-		ext_fun_type_in[0] = COLMAJ;
-		ext_fun_in[0] = work->nl_constraint_input+0; // x: nx
-		ext_fun_type_in[1] = COLMAJ;
-		ext_fun_in[1] = work->nl_constraint_input+nx; // u: nu
+		ext_fun_type_in[0] = BLASFEO_VEC;
+		ext_fun_in[0] = memory->ux; // ux: nu+nx
 
-		ext_fun_type_out[0] = COLMAJ;
-		ext_fun_out[0] = work->nl_constraint_output+0; // fun: nh
-		ext_fun_type_out[1] = COLMAJ;
-		ext_fun_out[1] = work->nl_constraint_output+nh; // jac: nh*(nx+nu)
+		ext_fun_type_out[0] = BLASFEO_VEC;
+		ext_fun_out[0] = &work->tmp_h; // fun: nh
+		ext_fun_type_out[1] = BLASFEO_MAT;
+		ext_fun_out[1] = &work->tmp_Jht; // jac': (nx+nu) * nh
 
 		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-		blasfeo_pack_dvec(nh, work->nl_constraint_output, &work->tmp_nbgh, nb+ng);
-		blasfeo_pack_tran_dmat(nh, nx, work->nl_constraint_output+nh, nh, memory->DCt, nu, ng);
-		blasfeo_pack_tran_dmat(nh, nu, work->nl_constraint_output+nh+nx*nh, nh, memory->DCt, 0, ng);
 	}
 
 	if (nq>0)
 	{
-		if (nh != 1) {
+//		if (nh != 1) {
 			printf("Not implemented");
 			exit(1);
-		}
-		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
-		blasfeo_pack_tran_dmat(nq, nx+nu, work->nl_constraint_output+nh*(1+nx+nu), nq, &work->jacobian_quadratic, 0, 0);
+//		}
+//		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
+//		blasfeo_pack_tran_dmat(nq, nx+nu, work->nl_constraint_output+nh*(1+nx+nu), nq, &work->jacobian_quadratic, 0, 0);
 		// NOTE(giaf) here the Hessian in overwritten, not updated. Is this correct?
-		blasfeo_dsyrk_ln(nx+nu, nq, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
-			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+//		blasfeo_dsyrk_ln(nx+nu, nq, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
+//			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
 	}
 
 	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_nbgh, 0, &model->d, 0, &memory->fun, 0);

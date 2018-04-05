@@ -925,21 +925,18 @@ void nonlin_constr_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 	int nu = 3;
 	int nx = 6;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out[0];
-	double *x = in[0];
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = x[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out[1];
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
@@ -953,21 +950,18 @@ void nonlin_constr_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 	int nu = 3;
 	int nx = 12;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out[0];
-	double *x = in[0];
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = x[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out[1];
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
@@ -981,21 +975,18 @@ void nonlin_constr_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 	int nu = 3;
 	int nx = 18;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out[0];
-	double *x = in[0];
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = x[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out[1];
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
@@ -1009,21 +1000,18 @@ void nonlin_constr_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 	int nu = 3;
 	int nx = 24;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out[0];
-	double *x = in[0];
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = x[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out[1];
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
@@ -1037,21 +1025,18 @@ void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fu
 	int nu = 3;
 	int nx = 30;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out[0];
-	double *x = in[0];
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = x[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out[1];
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 

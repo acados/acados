@@ -141,24 +141,21 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
 	int nx = 8;
 	int nh = 1;
 
-	// x
-	double *x = in[0];
-	// u
-	// double *u = in[1];
-
 	// scaling
 	double alpha = 0.944*97/100;
 
-	// h
-	double *h = out[0];
-	h[0] = alpha * x[0] * x[5];
+	// ux
+	struct blasfeo_dvec *ux = in[0];
 
-	// J
-	double *J = out[1];
-	for (ii=0; ii<nh*(nu+nx); ii++)
-		J[ii] = 0.0;
-	J[0] = alpha * x[5];
-	J[5] = alpha * x[0];
+	// h
+	struct blasfeo_dvec *h = out[0];
+	BLASFEO_DVECEL(h, 0) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+
+	// jac
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
+	BLASFEO_DMATEL(jac, nu+0, 0) = alpha * BLASFEO_DVECEL(ux, nu+5);
+	BLASFEO_DMATEL(jac, nu+5, 0) = alpha * BLASFEO_DVECEL(ux, nu+0);
 
 	return;
 
