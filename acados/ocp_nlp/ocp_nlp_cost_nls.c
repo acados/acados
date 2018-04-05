@@ -445,7 +445,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 		ext_fun_type_out[0] = BLASFEO_MAT;
 		ext_fun_out[0] = memory->RSQrq; // hess: (nx+nu) * (nx+nu)
 
-		// evaluate external function (that assumes variables stacked as [x; u] )
+		// evaluate external function
 		model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 		// gauss-newton component update

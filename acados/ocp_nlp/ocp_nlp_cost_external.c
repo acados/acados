@@ -368,7 +368,7 @@ void ocp_nlp_cost_external_update_qp_matrices(void *config_, void *dims_, void *
 	ext_fun_type_out[1] = COLMAJ;
 	ext_fun_out[1] = work->ext_cost_out+nx+nu; // hess: (nu+nx) * (nu+nx)
 
-	// evaluate external function (that assumes variables stacked as [x; u] )
+	// evaluate external function
 	model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 	// pack gradient
