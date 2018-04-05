@@ -33,7 +33,7 @@
 
 
 /************************************************
-* casadi external function
+* casadi utils
 ************************************************/
 
 static int casadi_nnz(const int *sparsity)
@@ -50,10 +50,10 @@ static int casadi_nnz(const int *sparsity)
         }
 		else
 		{
-            const int *colind = sparsity + 2;
+            const int *idxcol = sparsity + 2;
             for (int i = 0; i < ncol; ++i)
 			{
-                nnz += colind[i + 1] - colind[i];
+                nnz += idxcol[i + 1] - idxcol[i];
             }
         }
     }
@@ -63,37 +63,81 @@ static int casadi_nnz(const int *sparsity)
 
 
 
-static void casadi_densify(const double *sparse_in, double *dense_out, const int *sparsity)
+static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out)
 {
-    const int_t nrow = sparsity[0];
-    const int_t ncol = sparsity[1];
-    const int_t dense = sparsity[2];
+	int ii, jj, idx;
+
+    int nrow = sparsity_in[0];
+    int ncol = sparsity_in[1];
+    int dense = sparsity_in[2];
 
     if (dense)
 	{
-        for (int_t i = 0; i < ncol * nrow; i++)
-			dense_out[i] = sparse_in[i];
+        for (ii = 0; ii < ncol*nrow; ii++)
+			out[ii] = in[ii];
     }
 	else
 	{
+        double *ptr = in;
+        int *idxcol = sparsity_in + 2;
+		int *row = sparsity_in + ncol + 3;
         // Fill with zeros
-        for (int i = 0; i < ncol; i++)
-            for (int j = 0; j < nrow; j++)
-				dense_out[i * nrow + j] = 0.0;
-        // Additional data
-        const double *x = sparse_in;
-        const int *colind = sparsity + 2;
-		const int *row = sparsity + ncol + 3;
+        for (jj = 0; jj < ncol; jj++)
+            for (ii = 0; ii < nrow; ii++)
+				out[ii + jj*nrow] = 0.0;
         // Copy nonzeros
-        for (int i = 0; i < ncol; ++i)
-            for (int el = colind[i]; el != colind[i + 1]; ++el)
-                dense_out[row[el] + i * nrow] = *x++;
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                out[row[idx] + jj*nrow] = ptr[0];
+				ptr++;
+			}
+		}
     }
 
 	return;
 }
 
 
+
+static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
+{
+	int ii, jj, idx;
+
+    int nrow = sparsity_out[0];
+    int ncol = sparsity_out[1];
+    int dense = sparsity_out[2];
+
+    if (dense)
+	{
+        for (ii = 0; ii < ncol*nrow; ii++)
+			out[ii] = in[ii];
+    }
+	else
+	{
+        double *ptr = out;
+        int *idxcol = sparsity_out + 2;
+		int *row = sparsity_out + ncol + 3;
+        // Copy nonzeros
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                ptr[0] = in[row[idx] + jj*nrow];
+				ptr++;
+			}
+		}
+    }
+
+	return;
+}
+
+
+
+/************************************************
+* casadi external function
+************************************************/
 
 int external_function_casadi_calculate_size(external_function_casadi *fun)
 {
@@ -208,24 +252,18 @@ void external_function_casadi_wrapper(void *self, double **in, double **out)
 	// loop index
 	int ii, jj;
 
-	// char *c_ptr;
-
 	// in as args
-	// TODO implement sparsify of input instead of copying them
 	for (ii=0; ii<fun->in_num; ii++)
 	{
-		for (jj=0; jj<fun->args_size[ii]; jj++)
-			fun->args[ii][jj] = in[ii][jj];
+		d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
 	}
 
 	// call casadi function
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
 
-	const int *sparsity;
 	for (ii=0; ii<fun->out_num; ii++)
 	{
-		sparsity = fun->casadi_sparsity_out(ii);
-		casadi_densify(fun->res[ii], out[ii], sparsity);
+		d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
 	}
 
 	return;
@@ -359,32 +397,23 @@ void external_function_param_casadi_wrapper(void *self, double **in, double **ou
 	// loop index
 	int ii, jj;
 
-	// char *c_ptr;
-
 	// in as args
-	// TODO implement sparsify of input instead of copying them
 	// skip last argument (that is the parameters vector)
 	for (ii=0; ii<fun->in_num-1; ii++)
 	{
-		for (jj=0; jj<fun->args_size[ii]; jj++)
-			fun->args[ii][jj] = in[ii][jj];
+		d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
 	}
 	// copy parametrs vector as last arg
-//	d_print_mat(1, fun->np, fun->p, 1);
 	ii = fun->in_num-1;
 	for (jj=0; jj<fun->np; jj++)
 		fun->args[ii][jj] = fun->p[jj];
 
-//d_print_mat(1, fun->args_size_tot, fun->args[0], 1);
-//exit(1);
 	// call casadi function
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
 
-	const int *sparsity;
 	for (ii=0; ii<fun->out_num; ii++)
 	{
-		sparsity = fun->casadi_sparsity_out(ii);
-		casadi_densify(fun->res[ii], out[ii], sparsity);
+		d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
 	}
 
 	return;
