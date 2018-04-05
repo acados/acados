@@ -52,6 +52,38 @@ void *sim_new_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_me
 
 
 
+int sim_new_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+{
+    new_lifted_irk_model *model = model_;
+
+    switch (fun_type)
+    {
+        case IMPL_ODE_FUN:
+            model->impl_ode_fun = (external_function_generic *) fun;
+            break;
+        case IMPL_ODE_JAC_X:
+            model->impl_ode_jac_x = (external_function_generic *) fun;
+            break;
+        case IMPL_ODE_JAC_XDOT:
+            model->impl_ode_jac_xdot = (external_function_generic *) fun;
+            break;
+        case IMPL_ODE_JAC_U:
+            model->impl_ode_jac_u = (external_function_generic *) fun;
+            break;
+        case IMPL_ODE_FUN_JAC_X_XDOT:
+            model->impl_ode_fun_jac_x_xdot = (external_function_generic *) fun;
+            break;
+        case IMPL_ODE_JAC_X_XDOT_U:
+            model->impl_ode_jac_x_xdot_u = (external_function_generic *) fun;
+            break;
+        case IMPL_ODE_JAC_X_U:
+            model->impl_ode_jac_x_u = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
+}
 /************************************************
 * opts
 ************************************************/
@@ -509,7 +541,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
             // compute the residual of implicit ode at time t_ii, store value in rGt
             acados_tic(&timer_ad);
-            model->ode_impl->evaluate(model->ode_impl, ode_args, rGt);
+            model->impl_ode_fun->evaluate(model->impl_ode_fun, ode_args, rGt);
             timing_ad += acados_toc(&timer_ad);
 
             // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
@@ -519,9 +551,9 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
             {
                 // compute the jacobian of implicit ode
                 acados_tic(&timer_ad);
-                model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
-                model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, ode_args, jac_out);
                 timing_ad += acados_toc(&timer_ad);
+                blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
 
                 // compute the blocks of JGK
                 for (jj=0; jj<ns; jj++)
@@ -536,7 +568,8 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                     if(jj==ii)
                     {
                         for (kk=0; kk<nx*nx; kk++)
-                            Jt[kk] += jac_out[nx*nx+kk];
+                            Jt[kk] += jac_out[nx*(nx+1)+kk];
+                            // Jt[kk] += jac_out[nx*nx+kk];
                     }
                     // fill in the ii-th, jj-th block of JGK
                     blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
@@ -544,16 +577,15 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
             }
         } // end ii
 
+		// blasfeo_print_dmat(nx*nx, nx*ns, JGK, 0, 0);
+        
         //DGETRF computes an LU factorization of a general M-by-N matrix A
         //using partial pivoting with row interchanges.
 
-        // TODO(andrea): polish this - no need to re-factorize the 
-        // Jacobian in lifted integrators.
-        
-        // if ( ... )
-        // {
-        //     blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
-        // }
+        if ( update_sens )
+        {
+            blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
+        }
 
         // permute also the r.h.s
         blasfeo_dvecpe(nx*ns, ipiv, rG, 0);
@@ -607,13 +639,17 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
                 acados_tic(&timer_ad);
 
-                model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                // model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ode_args, jac_out);
+                // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+
+                model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ode_args, jac_out);
+                // model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-                model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-
-				model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+				// model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
 
                 timing_ad += acados_toc(&timer_ad);
 
@@ -693,12 +729,15 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    model->impl_ode_jac_x_u->evaluate(model->impl_ode_jac_x_u, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    timing_ad += acados_toc(&timer_ad);
+                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+
+					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    // timing_ad += acados_toc(&timer_ad);
                 }
 
             }
@@ -721,13 +760,17 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                     blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
                     acados_tic(&timer_ad);
-                    model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+
+                    model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ode_args, jac_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
                     blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
 
-                    model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
+                    // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
                     for (jj=0;jj<ns;jj++)
 					{
@@ -796,6 +839,7 @@ void sim_new_lifted_irk_config_initialize_default(void *config_)
 	config->workspace_calculate_size = &sim_new_lifted_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_new_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_new_lifted_irk_model_assign;
+    config->model_set_function = &sim_new_lifted_irk_model_set_function;
 
 	return;
 

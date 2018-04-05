@@ -33,15 +33,35 @@ typedef struct
 {
 	/* external functions */
 	// implicit ode
-	external_function_generic *ode_impl;
+	external_function_generic *impl_ode_fun;
 	// jac_x implicit ode
-	external_function_generic *jac_x_ode_impl;
+	external_function_generic *impl_ode_jac_x;
 	// jac_xdot implicit ode
-	external_function_generic *jac_xdot_ode_impl;
+	external_function_generic *impl_ode_jac_xdot;
 	// jac_u implicit ode
-	external_function_generic *jac_u_ode_impl;
+	external_function_generic *impl_ode_jac_u;
+    // implicit ode (included) & jac_x & jax_xdot
+    external_function_generic *impl_ode_fun_jac_x_xdot;
+	// jax_x & jac_u implicit ode
+    external_function_generic *impl_ode_jac_x_u;
+	// jax_x & jac_xdot & jac_u implicit ode
+    external_function_generic *impl_ode_jac_x_xdot_u;
 
 } new_lifted_irk_model;
+
+// typedef struct
+// {
+// 	/* external functions */
+// 	// implicit ode
+// 	external_function_generic *ode_impl;
+// 	// jac_x implicit ode
+// 	external_function_generic *jac_x_ode_impl;
+// 	// jac_xdot implicit ode
+// 	external_function_generic *jac_xdot_ode_impl;
+// 	// jac_u implicit ode
+// 	external_function_generic *jac_u_ode_impl;
+
+// } new_lifted_irk_model;
 
 
 
@@ -109,6 +129,8 @@ int sim_new_lifted_irk(void *config, sim_in *in, sim_out *out, void *opts_, void
 int sim_new_lifted_irk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_);
 //
 void sim_new_lifted_irk_config_initialize_default(void *config);
+//
+int sim_new_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
 
 
 
