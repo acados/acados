@@ -409,7 +409,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 	ext_fun_type_out[0] = BLASFEO_VEC;
 	ext_fun_out[0] = &memory->res; // fun: ny
 	ext_fun_type_out[1] = BLASFEO_MAT;
-	ext_fun_out[1] = &memory->Jt; // jac': (nx+nu) * ny
+	ext_fun_out[1] = &memory->Jt; // jac': (nu+nx) * ny
 
 	// evaluate external function
 	model->nls_jac->evaluate(model->nls_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -443,7 +443,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 		ext_fun_in[1] = &work->tmp_ny; // fun: ny
 
 		ext_fun_type_out[0] = BLASFEO_MAT;
-		ext_fun_out[0] = memory->RSQrq; // hess: (nx+nu) * (nx+nu)
+		ext_fun_out[0] = memory->RSQrq; // hess: (nu+nx) * (nu+nx)
 
 		// evaluate external function
 		model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
