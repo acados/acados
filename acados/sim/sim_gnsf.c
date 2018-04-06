@@ -735,7 +735,6 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, casadi_function_t 
     // printf("\n adress of read mem %p\n",(void*)read_mem);
     // printf("\n adress of exp out %p\n",(void*)export_out);
     free(export_in);
-    // printf("SEGFAULT HUNTER export-out free\n");
     free(export_out);
 }
 
