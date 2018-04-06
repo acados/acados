@@ -45,7 +45,7 @@ int main() {
 	std::vector<int> idxb_0 {1, 2, 3, 4};
 	std::vector<double> x0 {0, 0, M_PI, 0};
 
-	double radius2 = 1, neg_inf = -1000000;
+	double radius2 = 0.04, neg_inf = -1000000;
 	int max_num_sqp_iterations = 100;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
@@ -176,6 +176,9 @@ int main() {
 	for (int i = 0; i <= N; ++i)
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
+	// for (int i = 0; i <= N; ++i)
+		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
+
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
 	// NLP solution
@@ -189,7 +192,7 @@ int main() {
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-    printf("\n\nstatus = %i, total time = %f ms\n\n", solver_status, elapsed_time*1e3);
+    printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, elapsed_time, nlp_out->sqp_iter);
 
 	return solver_status;
 }
