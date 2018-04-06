@@ -84,6 +84,8 @@ void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_mem
 //
 void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_);
 //
+void ocp_qp_qpdunes_opts_update(void *config_, ocp_qp_dims *dims, void *opts_);
+//
 int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
 void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory);

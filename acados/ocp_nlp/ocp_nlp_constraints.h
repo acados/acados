@@ -47,14 +47,16 @@ typedef struct
     int nbu;
     int ng;  // number of general linear constraints
 	int nh;  // number of nonlinear path constraints
-	int nq;  // number of quadratic_over_nonlinear constraints
-    int ns;  // number of soft constraints
+	int nq;  // number of quadratic_over_nonlinear constraints TODO
+    int ns;  // number of soft constraints TODO
 } ocp_nlp_constraints_dims;
 
 //
-int ocp_nlp_constraints_dims_calculate_size();
+int ocp_nlp_constraints_dims_calculate_size(void *config);
 //
-ocp_nlp_constraints_dims *ocp_nlp_constraints_dims_assign(void *raw_memory);
+void *ocp_nlp_constraints_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_constraints_dims_initialize(void *config, void *dims, int nx, int nu, int nbx, int nbu, int ng, int nh, int nq, int ns);
 
 
 
@@ -64,12 +66,16 @@ ocp_nlp_constraints_dims *ocp_nlp_constraints_dims_assign(void *raw_memory);
 
 typedef struct
 {
-	int (*model_calculate_size) (void *config, ocp_nlp_constraints_dims *dims);
-	void *(*model_assign) (void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
-	int (*opts_calculate_size) (void *config, ocp_nlp_constraints_dims *dims);
-	void *(*opts_assign) (void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
-	void (*opts_initialize_default) (void *config, ocp_nlp_constraints_dims *dims, void *opts);
-	int (*memory_calculate_size) (void *config, ocp_nlp_constraints_dims *dims, void *opts);
+	int (*dims_calculate_size) (void *config);
+	void *(*dims_assign) (void *config, void *raw_memory);
+	void (*dims_initialize) (void *config, void *dims, int nx, int nu, int nbx, int nbu, int ng, int nh, int nq, int ns);
+	int (*model_calculate_size) (void *config, void *dims);
+	void *(*model_assign) (void *config, void *dims, void *raw_memory);
+	int (*opts_calculate_size) (void *config, void *dims);
+	void *(*opts_assign) (void *config, void *dims, void *raw_memory);
+	void (*opts_initialize_default) (void *config, void *dims, void *opts);
+	void (*opts_update) (void *config, void *dims, void *opts);
+	int (*memory_calculate_size) (void *config, void *dims, void *opts);
 	struct blasfeo_dvec *(*memory_get_fun_ptr) (void *memory);
 	struct blasfeo_dvec *(*memory_get_adj_ptr) (void *memory);
 	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory);
@@ -77,10 +83,10 @@ typedef struct
 	void (*memory_set_DCt_ptr) (struct blasfeo_dmat *DCt, void *memory);
 	void (*memory_set_RSQrq_ptr) (struct blasfeo_dmat *RSQrq, void *memory);
 	void (*memory_set_idxb_ptr) (int *idxb, void *memory);
-	void *(*memory_assign) (void *config, ocp_nlp_constraints_dims *dims, void *opts, void *raw_memory);
-	int (*workspace_calculate_size) (void *config, ocp_nlp_constraints_dims *dims, void *opts);
-	void (*initialize_qp) (void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
-	void (*update_qp_matrices) (void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
+	void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
+	int (*workspace_calculate_size) (void *config, void *dims, void *opts);
+	void (*initialize) (void *config, void *dims, void *model, void *opts, void *mem, void *work);
+	void (*update_qp_matrices) (void *config, void *dims, void *model, void *opts, void *mem, void *work);
 	void (*config_initialize_default) (void *config);
 } ocp_nlp_constraints_config;
 
@@ -99,7 +105,7 @@ ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory);
 
 typedef struct
 {
-	ocp_nlp_constraints_dims *dims;
+//	ocp_nlp_constraints_dims *dims;
     int *idxb;
 	struct blasfeo_dvec d;
 	struct blasfeo_dmat DCt;
@@ -108,9 +114,9 @@ typedef struct
 } ocp_nlp_constraints_model;
 
 //
-int ocp_nlp_constraints_calculate_size(void *config, ocp_nlp_constraints_dims *dims);
+int ocp_nlp_constraints_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_constraints_assign(void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
+void *ocp_nlp_constraints_assign(void *config, void *dims, void *raw_memory);
 
 
 
@@ -122,11 +128,13 @@ typedef struct
 } ocp_nlp_constraints_opts;
 
 //
-int ocp_nlp_constraints_opts_calculate_size(void *config, ocp_nlp_constraints_dims *dims);
+int ocp_nlp_constraints_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_constraints_opts_assign(void *config, ocp_nlp_constraints_dims *dims, void *raw_memory);
+void *ocp_nlp_constraints_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_constraints_opts_initialize_default(void *config, ocp_nlp_constraints_dims *dims, void *opts);
+void ocp_nlp_constraints_opts_initialize_default(void *config, void *dims, void *opts);
+//
+void ocp_nlp_constraints_opts_update(void *config, void *dims, void *opts);
 
 
 
@@ -144,9 +152,9 @@ typedef struct
 } ocp_nlp_constraints_memory;
 
 //
-int ocp_nlp_constraints_memory_calculate_size(void *config, ocp_nlp_constraints_dims *dims, void *opts);
+int ocp_nlp_constraints_memory_calculate_size(void *config, void *dims, void *opts);
 //
-void *ocp_nlp_constraints_memory_assign(void *config, ocp_nlp_constraints_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_constraints_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
 struct blasfeo_dvec *ocp_nlp_constraints_memory_get_fun_ptr(void *memory_);
 //
@@ -165,14 +173,14 @@ void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_);
 
 typedef struct
 {
+	struct blasfeo_dvec tmp_h;
+	struct blasfeo_dmat tmp_Jht;
 	struct blasfeo_dvec tmp_nbgh;
-	struct blasfeo_dmat jacobian_quadratic;
-	double *nl_constraint_input;
-	double *nl_constraint_output;
+//	struct blasfeo_dmat jacobian_quadratic;
 } ocp_nlp_constraints_workspace;
 
 //
-int ocp_nlp_constraints_workspace_calculate_size(void *config, ocp_nlp_constraints_dims *dims, void *opts);
+int ocp_nlp_constraints_workspace_calculate_size(void *config, void *dims, void *opts);
 
 
 
@@ -181,9 +189,9 @@ int ocp_nlp_constraints_workspace_calculate_size(void *config, ocp_nlp_constrain
 //
 void ocp_nlp_constraints_config_initialize_default(void *config);
 //
-void ocp_nlp_constraints_initialize_qp(void *config, ocp_nlp_constraints_dims *dims, void *model, void *opts, void *mem, void *work);
+void ocp_nlp_constraints_initialize(void *config, void *dims, void *model, void *opts, void *mem, void *work);
 //
-void ocp_nlp_constraints_update_qp_matrices(void *config_, ocp_nlp_constraints_dims *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 
 
 #ifdef __cplusplus

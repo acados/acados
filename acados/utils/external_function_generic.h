@@ -32,11 +32,21 @@ extern "C" {
 * generic external function
 ************************************************/
 
+// type of arguments
+typedef enum
+{
+	COLMAJ,
+	BLASFEO_MAT,
+	BLASFEO_VEC,
+} ext_fun_arg_t;
+
+
+
 // prototype of an external function
 typedef struct
 {
 	// public members (have to be before private ones)
-	void (* evaluate) (void *, double *, double *);
+	void (* evaluate) (void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
 	// private members
 	// .....
 } external_function_generic;
@@ -50,7 +60,7 @@ typedef struct
 typedef struct
 {
 	// public members (have to be the same as in the prototype, and before the private ones)
-	void (* evaluate) (void *, double *, double *);
+	void (* evaluate) (void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
 	// private members
 	void *ptr_ext_mem; // pointer to external memory
 	int (*casadi_fun) (const double **, double **, int *, double *, int);
@@ -80,7 +90,53 @@ int external_function_casadi_calculate_size(external_function_casadi *fun);
 //
 void external_function_casadi_assign(external_function_casadi *fun, void *mem);
 //
-void external_function_casadi_wrapper(void *self, double *in, double *out);
+void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out);
+
+
+
+/************************************************
+* casadi external parametric function
+************************************************/
+
+typedef struct
+{
+	// public members (have to be the same as in the prototype, and before the private ones)
+	void (* evaluate) (void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
+	// private members
+	void (* set_param) (void *, double *);
+	void *ptr_ext_mem; // pointer to external memory
+	int (*casadi_fun) (const double **, double **, int *, double *, int);
+	int (*casadi_work) (int *, int *, int *, int *);
+	const int * (*casadi_sparsity_in) (int);
+	const int * (*casadi_sparsity_out) (int);
+	int (*casadi_n_in) ();
+	int (*casadi_n_out) ();
+	double **args;
+	double **res;
+	double *w;
+	double *p; // parameters
+	int *iw;
+	int *args_size; // size of args[i]
+	int *res_size; // size of res[i]
+	int args_num; // number of args arrays
+	int args_size_tot; // total size of args arrays
+	int res_num; // number of res arrays
+	int res_size_tot; // total size of res arrays
+	int in_num; // number of input arrays
+	int out_num; // number of output arrays
+	int iw_size; // number of ints for worksapce
+	int w_size; // number of dobules for workspace
+	int np; // number of parameters
+} external_function_param_casadi;
+
+//
+int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np);
+//
+void external_function_param_casadi_assign(external_function_param_casadi *fun, void *mem);
+//
+void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out);
+//
+void external_function_param_casadi_set_param(void *self, double *p);
 
 
 

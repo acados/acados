@@ -41,36 +41,60 @@ int jacFun_n_out();
 /* implicit ODE */
 
 // implicit ODE
-int impl_odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_odeFun_work(int *, int *, int *, int *);
-const int *impl_odeFun_sparsity_in(int);
-const int *impl_odeFun_sparsity_out(int);
-int impl_odeFun_n_in();
-int impl_odeFun_n_out();
+int casadi_impl_ode_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_fun_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_fun_sparsity_in(int);
+const int *casadi_impl_ode_fun_sparsity_out(int);
+int casadi_impl_ode_fun_n_in();
+int casadi_impl_ode_fun_n_out();
+
+//
+int casadi_impl_ode_fun_jac_x_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_fun_jac_x_xdot_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_fun_jac_x_xdot_sparsity_in(int);
+const int *casadi_impl_ode_fun_jac_x_xdot_sparsity_out(int);
+int casadi_impl_ode_fun_jac_x_xdot_n_in();
+int casadi_impl_ode_fun_jac_x_xdot_n_out();
+
+//
+int casadi_impl_ode_jac_x_xdot_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_x_xdot_u_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_x_xdot_u_sparsity_in(int);
+const int *casadi_impl_ode_jac_x_xdot_u_sparsity_out(int);
+int casadi_impl_ode_jac_x_xdot_u_n_in();
+int casadi_impl_ode_jac_x_xdot_u_n_out();
+
+//
+int casadi_impl_ode_jac_x_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_x_u_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_x_u_sparsity_in(int);
+const int *casadi_impl_ode_jac_x_u_sparsity_out(int);
+int casadi_impl_ode_jac_x_u_n_in();
+int casadi_impl_ode_jac_x_u_n_out();
 
 // jac_x implicit ODE
-int impl_jacFun_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_x_work(int *, int *, int *, int *);
-const int *impl_jacFun_x_sparsity_in(int);
-const int *impl_jacFun_x_sparsity_out(int);
-int impl_jacFun_x_n_in();
-int impl_jacFun_x_n_out();
+int casadi_impl_ode_jac_x(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_x_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_x_sparsity_in(int);
+const int *casadi_impl_ode_jac_x_sparsity_out(int);
+int casadi_impl_ode_jac_x_n_in();
+int casadi_impl_ode_jac_x_n_out();
 
 // jax_xdot implicit ODE
-int impl_jacFun_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_xdot_work(int *, int *, int *, int *);
-const int *impl_jacFun_xdot_sparsity_in(int);
-const int *impl_jacFun_xdot_sparsity_out(int);
-int impl_jacFun_xdot_n_in();
-int impl_jacFun_xdot_n_out();
+int casadi_impl_ode_jac_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_xdot_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_xdot_sparsity_in(int);
+const int *casadi_impl_ode_jac_xdot_sparsity_out(int);
+int casadi_impl_ode_jac_xdot_n_in();
+int casadi_impl_ode_jac_xdot_n_out();
 
 // jax_u implicit ODE
-int impl_jacFun_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int impl_jacFun_u_work(int *, int *, int *, int *);
-const int *impl_jacFun_u_sparsity_in(int);
-const int *impl_jacFun_u_sparsity_out(int);
-int impl_jacFun_u_n_in();
-int impl_jacFun_u_n_out();
+int casadi_impl_ode_jac_u(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int casadi_impl_ode_jac_u_work(int *, int *, int *, int *);
+const int *casadi_impl_ode_jac_u_sparsity_in(int);
+const int *casadi_impl_ode_jac_u_sparsity_out(int);
+int casadi_impl_ode_jac_u_n_in();
+int casadi_impl_ode_jac_u_n_out();
 
 
 

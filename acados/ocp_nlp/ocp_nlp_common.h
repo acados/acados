@@ -27,7 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_common.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
@@ -35,22 +35,27 @@ extern "C" {
 
 
 /************************************************
-* structures
-************************************************/
-
-/************************************************
 * dims
 ************************************************/
 
 typedef struct
 {
-	// NOTE(giaf) add some (arrays of) int to work outside (and independent of) sub-modules? e.g. nv, ne, nc (variables, equality-constraints, inequality-constraints
-	ocp_nlp_cost_dims **cost;
-	ocp_nlp_dynamics_dims **dynamics;
-	ocp_nlp_constraints_dims **constraints;
+	void **cost;
+	void **dynamics;
+	void **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
+	int *nx; // number of states
+	int *nu; // number of inputs
+	int *ni; // number of inequality constraints
     int N;
 } ocp_nlp_dims;
+
+//
+int ocp_nlp_dims_calculate_size(void *config);
+//
+ocp_nlp_dims *ocp_nlp_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_dims_initialize(void *config, int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *nq, int *ns, ocp_nlp_dims *dims);
 
 
 
@@ -135,13 +140,15 @@ typedef struct
 	int N; // number of stages
 
 	// all the others
-    int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *opts_, void *mem, void *work);
     int (*opts_calculate_size)(void *config, ocp_nlp_dims *dims);
     void *(*opts_assign)(void *config, ocp_nlp_dims *dims, void *raw_memory);
     void (*opts_initialize_default)(void *config, ocp_nlp_dims *dims, void *opts_);
+    void (*opts_update)(void *config, ocp_nlp_dims *dims, void *opts_);
     int (*memory_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
     void *(*memory_assign)(void *config, ocp_nlp_dims *dims, void *opts_, void *raw_memory);
     int (*workspace_calculate_size)(void *config, ocp_nlp_dims *dims, void *opts_);
+    int (*evaluate)(void *config, ocp_nlp_dims *dims, ocp_nlp_in *qp_in, ocp_nlp_out *qp_out, void *opts_, void *mem, void *work);
+    void (*config_initialize_default)(void *config);
     ocp_qp_xcond_solver_config *qp_solver;
 //    sim_solver_config **sim_solvers;
     ocp_nlp_dynamics_config **dynamics;
@@ -165,17 +172,6 @@ typedef struct
 int ocp_nlp_solver_config_calculate_size(int N);
 //
 ocp_nlp_solver_config *ocp_nlp_solver_config_assign(int N, void *raw_memory);
-
-/************************************************
-* dims
-************************************************/
-
-//
-int ocp_nlp_dims_calculate_size(int N);
-//
-ocp_nlp_dims *ocp_nlp_dims_assign(int N, void *raw_memory);
-//
-void ocp_nlp_dims_initialize(int *nx, int *nu, int *ny, int *nbx, int *nbu, int *ng, int *nh, int *nq, int *ns, ocp_nlp_dims *dims);
 
 /************************************************
 * in

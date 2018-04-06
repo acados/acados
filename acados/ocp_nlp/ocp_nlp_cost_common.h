@@ -33,42 +33,28 @@ extern "C" {
 
 
 /************************************************
-* dims
-************************************************/
-
-typedef struct
-{
-	int nx; // number of states
-	int nu; // number of inputs
-	int ny; // number of outputs
-} ocp_nlp_cost_dims;
-
-//
-int ocp_nlp_cost_dims_calculate_size();
-//
-ocp_nlp_cost_dims *ocp_nlp_cost_dims_assign(void *raw_memory);
-
-
-
-/************************************************
 * config
 ************************************************/
 
 typedef struct
 {
-	int (*model_calculate_size) (void *config, ocp_nlp_cost_dims *dims);
-	void *(*model_assign) (void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
-	int (*opts_calculate_size) (void *config, ocp_nlp_cost_dims *dims);
-	void *(*opts_assign) (void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
-	void (*opts_initialize_default) (void *config, ocp_nlp_cost_dims *dims, void *opts);
-	int (*memory_calculate_size) (void *config, ocp_nlp_cost_dims *dims, void *opts);
+	int (*dims_calculate_size) (void *config);
+	void *(*dims_assign) (void *config, void *raw_memory);
+	void (*dims_initialize) (void *config, void *dims, int nx, int nu, int ny); 
+	int (*model_calculate_size) (void *config, void *dims);
+	void *(*model_assign) (void *config, void *dims, void *raw_memory);
+	int (*opts_calculate_size) (void *config, void *dims);
+	void *(*opts_assign) (void *config, void *dims, void *raw_memory);
+	void (*opts_initialize_default) (void *config, void *dims, void *opts);
+	void (*opts_update) (void *config, void *dims, void *opts);
+	int (*memory_calculate_size) (void *config, void *dims, void *opts);
 	struct blasfeo_dvec *(*memory_get_grad_ptr) (void *memory);
 	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory);
 	void (*memory_set_RSQrq_ptr) (struct blasfeo_dmat *RSQrq, void *memory);
-	void *(*memory_assign) (void *config, ocp_nlp_cost_dims *dims, void *opts, void *raw_memory);
-	int (*workspace_calculate_size) (void *config, ocp_nlp_cost_dims *dims, void *opts);
-	void (*initialize_qp) (void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
-	void (*update_qp_matrices) (void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
+	void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
+	int (*workspace_calculate_size) (void *config, void *dims, void *opts);
+	void (*initialize) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
+	void (*update_qp_matrices) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 	void (*config_initialize_default) (void *config);
 } ocp_nlp_cost_config;
 

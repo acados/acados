@@ -60,18 +60,31 @@ void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory)
 
 
 
-void sim_erk_model_set_forward_vde(sim_in *in, void *fun)
+int sim_erk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
 {
-    erk_model *model = in->model;
-    model->forw_vde_expl = (external_function_generic *) fun;
-}
+    erk_model *model = model_;
 
-
-
-void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun)
-{
-    erk_model *model = in->model;
-    model->adj_vde_expl = (external_function_generic *) fun;
+    switch (fun_type)
+    {
+        case EXPL_ODE_FUN:
+            model->expl_ode_fun = (external_function_generic *) fun;
+            break;
+        case EXPL_ODE_JAC:
+            model->expl_ode_jac = (external_function_generic *) fun;
+            break;
+        case EXPL_ODE_HES:
+            model->expl_ode_hes = (external_function_generic *) fun;
+            break;
+        case EXPL_VDE_FOR:
+            model->expl_vde_for = (external_function_generic *) fun;
+            break;
+        case EXPL_VDE_ADJ:
+            model->expl_vde_adj = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
 }
 
 
@@ -131,7 +144,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 	opts->ns = 4; // ERK 4
     int ns = opts->ns;
 
-	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+	assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 
 	// set tableau size
 	opts->tableau_size = opts->ns;
@@ -179,7 +192,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 		default:
 		{
 			// impossible
-			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+			assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 		}
 	}
 
@@ -192,7 +205,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 
 
 
-void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -200,7 +213,7 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 
 	opts->tableau_size = opts->ns;
 
-	assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+	assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 
     assert(ns <= NS_MAX && "ns > NS_MAX!");
 
@@ -235,7 +248,7 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 			break;
 		}
 		case 4:
-		{	
+		{
 			// A
 			A[0+ns*0] = 0.0; A[0+ns*1] = 0.0; A[0+ns*2] = 0.0; A[0+ns*3] = 0.0;
 			A[1+ns*0] = 0.5; A[1+ns*1] = 0.0; A[1+ns*2] = 0.0; A[1+ns*3] = 0.0;
@@ -250,7 +263,7 @@ void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
 		default:
 		{
 			// impossible
-			assert( (ns==1 | ns==2 | ns==4) && "only number of stages = {1,2,4} implemented!");
+			assert( (ns==1 || ns==2 || ns==4) && "only number of stages = {1,2,4} implemented!");
 		}
 	}
 
@@ -358,7 +371,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
     {
         assign_and_advance_double(ns*num_steps*nX, &workspace->K_traj, &c_ptr);
         assign_and_advance_double((num_steps + 1)*nX, &workspace->out_forw_traj, &c_ptr);
-    } 
+    }
 	else
     {
         assign_and_advance_double(ns*nX, &workspace->K_traj, &c_ptr);
@@ -370,7 +383,7 @@ static void *sim_erk_cast_workspace(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_double(nx+nX+nu, &workspace->rhs_adj_in, &c_ptr);
         assign_and_advance_double(nx+nu+nhess, &workspace->out_adj_tmp, &c_ptr);
         assign_and_advance_double(ns*(nx+nu+nhess), &workspace->adj_traj, &c_ptr);
-    } 
+    }
 	else if (opts->sens_adj)
     {
         assign_and_advance_double((nx*2+nu), &workspace->rhs_adj_in, &c_ptr);
@@ -411,7 +424,7 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         nf = 0;
 
     int nhess = (nf + 1) * nf / 2;
-    int nX = nx * (1 + nf);
+    int nX = nx + nx*nf;
 
     double *x = in->x;
     double *u = in->u;
@@ -437,6 +450,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *S_forw_out = out->S_forw;
     double *S_adj_out = out->S_adj;
     double *S_hess_out = out->S_hess;
+
+	ext_fun_arg_t ext_fun_type_in[5];
+	void *ext_fun_in[5]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[5];
+	void *ext_fun_out[5]; // XXX large enough ?
 
 	erk_model *model = in->model;
 
@@ -477,7 +495,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             for (j = 0; j < s; j++)
 			{
                 a = A_mat[j * ns + s];
-                if (a!=0){
+                if (a!=0)
+				{
                     a *= step;
                     for (i = 0; i < nX; i++)
                         rhs_forw_in[i] += a * K_traj[j * nX + i];
@@ -486,9 +505,37 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             acados_tic(&timer_ad);
 			if (opts->sens_forw) // simulation + forward sensitivities
-				model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			{
+				ext_fun_type_in[0] = COLMAJ;
+				ext_fun_in[0] = rhs_forw_in+0; // x: nx
+				ext_fun_type_in[1] = COLMAJ;
+				ext_fun_in[1] = rhs_forw_in+nx; // Sx: nx*nx
+				ext_fun_type_in[2] = COLMAJ;
+				ext_fun_in[2] = rhs_forw_in+nx+nx*nx; // Su: nx*nu
+				ext_fun_type_in[3] = COLMAJ;
+				ext_fun_in[3] = rhs_forw_in+nx+nx*nx+nx*nu; // u: nu
+
+				ext_fun_type_out[0] = COLMAJ;
+				ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+				ext_fun_type_out[1] = COLMAJ;
+				ext_fun_out[1] = K_traj+s*nX+nx; // Sx: nx*nx
+				ext_fun_type_out[2] = COLMAJ;
+				ext_fun_out[2] = K_traj+s*nX+nx+nx*nx; // Su: nx*nu
+
+				model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // forward VDE evaluation
+			}
 			else // simulation only
-				model->ode_expl->evaluate(model->ode_expl, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
+			{
+				ext_fun_type_in[0] = COLMAJ;
+				ext_fun_in[0] = rhs_forw_in+0; // x: nx
+				ext_fun_type_in[1] = COLMAJ;
+				ext_fun_in[1] = rhs_forw_in+nx; // u: nu
+
+				ext_fun_type_out[0] = COLMAJ;
+				ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+
+				model->expl_ode_fun->evaluate(model->expl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // ODE evaluation
+			}
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < ns; s++)
@@ -541,7 +588,8 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 		{
             K_traj = workspace->K_traj + istep * ns * nX;
             forw_traj = workspace->out_forw_traj + (istep+1) * nX;
-            for (s = ns - 1; s > -1; s--) {
+            for (s = ns - 1; s > -1; s--)
+			{
                 // forward variables:
                 for (i = 0; i < nForw; i++)
                     rhs_adj_in[i] = forw_traj[i]; // extract x trajectory
@@ -570,11 +618,37 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 acados_tic(&timer_ad);
                 if (opts->sens_hess)
 				{
-                    model->hess_ode_expl->evaluate(model->hess_ode_expl, rhs_adj_in, adj_traj+s*nAdj);
+					ext_fun_type_in[0] = COLMAJ;
+					ext_fun_in[0] = rhs_adj_in+0; // x: nx
+					ext_fun_type_in[1] = COLMAJ;
+					ext_fun_in[1] = rhs_adj_in+nx; // lam: nx
+					ext_fun_type_in[2] = COLMAJ;
+					ext_fun_in[2] = rhs_adj_in+nx+nx; // u: nu
+
+					ext_fun_type_out[0] = COLMAJ;
+					ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
+
+                    model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
                 }
 				else
 				{
-                    model->adj_vde_expl->evaluate(model->adj_vde_expl, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
+					ext_fun_type_in[0] = COLMAJ;
+					ext_fun_in[0] = rhs_adj_in+0; // x: nx
+					ext_fun_type_in[1] = COLMAJ;
+					ext_fun_in[1] = rhs_adj_in+nx; // Sx: nx*nx
+					ext_fun_type_in[2] = COLMAJ;
+					ext_fun_in[2] = rhs_adj_in+nx+nx*nx; // Su: nx*nu
+					ext_fun_type_in[3] = COLMAJ;
+					ext_fun_in[3] = rhs_adj_in+nx+nx*nx+nx*nu; // lam: nx
+					ext_fun_type_in[4] = COLMAJ;
+					ext_fun_in[4] = rhs_adj_in+nx+nx*nx+nx*nu+nx; // u: nu
+
+					ext_fun_type_out[0] = COLMAJ;
+					ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
+					ext_fun_type_out[1] = COLMAJ;
+					ext_fun_out[1] = adj_traj+s*nAdj+nx+nu; // hess: (nx+nu)*(nx+nu)
+
+                    model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out); // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
 
@@ -615,18 +689,17 @@ void sim_erk_config_initialize_default(void *config_)
 
 	sim_solver_config *config = config_;
 
-	config->evaluate = &sim_erk;
 	config->opts_calculate_size = &sim_erk_opts_calculate_size;
 	config->opts_assign = &sim_erk_opts_assign;
 	config->opts_initialize_default = &sim_erk_opts_initialize_default;
-	config->opts_update_tableau = &sim_erk_opts_update_tableau;
+	config->opts_update = &sim_erk_opts_update;
 	config->memory_calculate_size = &sim_erk_memory_calculate_size;
 	config->memory_assign = &sim_erk_memory_assign;
 	config->workspace_calculate_size = &sim_erk_workspace_calculate_size;
 	config->model_calculate_size = &sim_erk_model_calculate_size;
 	config->model_assign = &sim_erk_model_assign;
-    config->model_set_forward_vde = &sim_erk_model_set_forward_vde;
-    config->model_set_adjoint_vde = &sim_erk_model_set_adjoint_vde;
+    config->model_set_function = &sim_erk_model_set_function;
+	config->evaluate = &sim_erk;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
 
 	return;

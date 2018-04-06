@@ -63,8 +63,6 @@ dense_qp_solver *dense_qp_create(qp_solver_config *config, dense_qp_dims *dims, 
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
 //
 void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out, double *res);
-//
-void dense_qp_free(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
 
 #ifdef __cplusplus
 } /* extern "C" */

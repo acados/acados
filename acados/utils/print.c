@@ -156,12 +156,14 @@ void ocp_nlp_dims_print(ocp_nlp_dims *dims)
 {
     int N = dims->N;
 
-    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
+//    printf("k\tnx\tnu\tnb\tnbx\tnbu\tng\tns\n");
+    printf("k\tnx\tnu\tni\n");
 
     for (int kk = 0; kk < N+1; kk++)
     {
-        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->constraints[kk]->nx, dims->constraints[kk]->nu, dims->constraints[kk]->nb,
-            dims->constraints[kk]->nbx, dims->constraints[kk]->nbu, dims->constraints[kk]->ng, dims->constraints[kk]->ns);
+//        printf("%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t\n", kk, dims->nx[kk], dims->nu[kk], dims->nb[kk],
+//            dims->nbx[kk], dims->nbu[kk], dims->ng[kk], dims->ns[kk]);
+        printf("%d\t%d\t%d\t%d\n", kk, dims->nx[kk], dims->nu[kk], dims->ni[kk]);
     }
 
 }
@@ -345,7 +347,9 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 	int ii;
 
     int N = dims->N;
-	int nx, nu, nb, ng, nh, nx1;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *ni = dims->ni;
 
 #if 1
 
@@ -353,25 +357,19 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 	printf("ux =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-		nx = dims->constraints[ii]->nx;
-		nu = dims->constraints[ii]->nu;
-        blasfeo_print_tran_dvec(nu+nx, &nlp_out->ux[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &nlp_out->ux[ii], 0);
 	}
 
 	printf("pi =\n");
 	for (ii=0; ii<N; ii++)
 	{
-		nx1 = dims->constraints[ii+1]->nx;
-		blasfeo_print_tran_dvec(nx1, &nlp_out->pi[ii], 0);
+		blasfeo_print_tran_dvec(nx[ii+1], &nlp_out->pi[ii], 0);
 	}
 
 	printf("lam =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-		nb = dims->constraints[ii]->nb;
-		ng = dims->constraints[ii]->ng;
-		nh = dims->constraints[ii]->nh;
-        blasfeo_print_tran_dvec(2*nb+2*ng+2*nh, &nlp_out->lam[ii], 0);
+        blasfeo_print_tran_dvec(2*ni[ii], &nlp_out->lam[ii], 0);
 	}
 
 //	printf("t =\n");
@@ -410,39 +408,32 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 	int ii;
 
     int N = dims->N;
-	int nx, nu, nb, ng, nh, nx1;
+	int *nx = dims->nx;
+	int *nu = dims->nu;
+	int *ni = dims->ni;
 
 	printf("res_g =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-		nx = dims->constraints[ii]->nx;
-		nu = dims->constraints[ii]->nu;
-        blasfeo_print_exp_tran_dvec(nu+nx, &nlp_res->res_g[ii], 0);
+        blasfeo_print_exp_tran_dvec(nu[ii]+nx[ii], &nlp_res->res_g[ii], 0);
 	}
 
 	printf("res_b =\n");
 	for (ii=0; ii<N; ii++)
 	{
-		nx1 = dims->constraints[ii+1]->nx;
-		blasfeo_print_exp_tran_dvec(nx1, &nlp_res->res_b[ii], 0);
+		blasfeo_print_exp_tran_dvec(nx[ii+1], &nlp_res->res_b[ii], 0);
 	}
 
 	printf("res_d =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-		nb = dims->constraints[ii]->nb;
-		ng = dims->constraints[ii]->ng;
-		nh = dims->constraints[ii]->nh;
-        blasfeo_print_exp_tran_dvec(2*nb+2*ng+2*nh, &nlp_res->res_d[ii], 0);
+        blasfeo_print_exp_tran_dvec(2*ni[ii], &nlp_res->res_d[ii], 0);
 	}
 
 	printf("res_m =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-		nb = dims->constraints[ii]->nb;
-		ng = dims->constraints[ii]->ng;
-		nh = dims->constraints[ii]->nh;
-        blasfeo_print_exp_tran_dvec(2*nb+2*ng+2*nh, &nlp_res->res_m[ii], 0);
+        blasfeo_print_exp_tran_dvec(2*ni[ii], &nlp_res->res_m[ii], 0);
 	}
 
 	return;

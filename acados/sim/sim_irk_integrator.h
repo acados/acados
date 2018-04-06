@@ -33,13 +33,19 @@ typedef struct
 {
 	/* external functions */
 	// implicit ode
-	external_function_generic *ode_impl;
+	external_function_generic *impl_ode_fun;
 	// jac_x implicit ode
-	external_function_generic *jac_x_ode_impl;
+	external_function_generic *impl_ode_jac_x;
 	// jac_xdot implicit ode
-	external_function_generic *jac_xdot_ode_impl;
+	external_function_generic *impl_ode_jac_xdot;
 	// jac_u implicit ode
-	external_function_generic *jac_u_ode_impl;
+	external_function_generic *impl_ode_jac_u;
+    // implicit ode (included) & jac_x & jax_xdot
+    external_function_generic *impl_ode_fun_jac_x_xdot;
+	// jax_x & jac_u implicit ode
+    external_function_generic *impl_ode_jac_x_u;
+	// jax_x & jac_xdot & jac_u implicit ode
+    external_function_generic *impl_ode_jac_x_xdot_u;
 
 } irk_model;
 
@@ -58,10 +64,10 @@ typedef struct
     struct blasfeo_dvec *K; // internal variables (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
     struct blasfeo_dvec *xn; // x at each integration step
-    
+
     struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
     struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
-    
+
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
     double *Jt; // temporary Jacobian of ode (nx, nx)
@@ -82,13 +88,15 @@ int sim_irk_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_irk_model_assign(void *config, sim_dims *dims, void *raw_memory);
 //
+int sim_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun);
+//
 int sim_irk_opts_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_irk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
 //
 void sim_irk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
 //
-void sim_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_);
+void sim_irk_opts_update(void *config_, sim_dims *dims, void *opts_);
 //
 int sim_irk_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
 //

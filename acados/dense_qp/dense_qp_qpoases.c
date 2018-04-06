@@ -23,6 +23,7 @@
 #include "blasfeo_target.h"
 #include "blasfeo_common.h"
 #include "blasfeo_d_aux.h"
+#include "blasfeo_d_blas.h"
 
 /* Ignore compiler warnings from qpOASES */
 #if defined(__clang__)
@@ -60,6 +61,10 @@
 #include "acados/utils/timing.h"
 
 
+/************************************************
+* opts
+************************************************/
+
 int dense_qp_qpoases_opts_calculate_size(void *config_, dense_qp_dims *dims)
 {
     int size = 0;
@@ -96,9 +101,25 @@ void dense_qp_qpoases_opts_initialize_default(void *config_, dense_qp_dims *dims
 	opts->use_precomputed_cholesky = 0;
 	opts->hotstart = 0;
     opts->set_acado_opts = 1;
+	opts->compute_t = 1;
+
+	return;
 }
 
 
+
+void dense_qp_qpoases_opts_update(void *config_, dense_qp_dims *dims, void *opts_)
+{
+//    dense_qp_qpoases_opts *opts = (dense_qp_qpoases_opts *)opts_;
+
+	return;
+}
+
+
+
+/************************************************
+* memory
+************************************************/
 
 int dense_qp_qpoases_memory_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
@@ -190,12 +211,20 @@ void *dense_qp_qpoases_memory_assign(void *config_, dense_qp_dims *dims, void *o
 
 
 
+/************************************************
+* workspcae
+************************************************/
+
 int dense_qp_qpoases_workspace_calculate_size(void *config_, dense_qp_dims *dims, void *opts_)
 {
     return 0;
 }
 
 
+
+/************************************************
+* functions
+************************************************/
 
 int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_)
 {
@@ -409,6 +438,15 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     info->total_time = acados_toc(&tot_timer);
     info->num_iter = nwsr;
 
+	// compute slacks
+	if (opts->compute_t)
+	{
+		blasfeo_dvecex_sp(nbd, 1.0, qp_in->idxb, qp_out->v, 0, qp_out->t, nbd+ngd);
+		blasfeo_dgemv_t(nvd, ngd, 1.0, qp_in->Ct, 0, 0, qp_out->v, 0, 0.0, qp_out->t, 2*nbd+ngd, qp_out->t, 2*nbd+ngd);
+		blasfeo_dveccpsc(nbd+ngd, -1.0, qp_out->t, nbd+ngd, qp_out->t, 0);
+		blasfeo_daxpy(2*nbd+2*ngd, -1.0, qp_in->d, 0, qp_out->t, 0, qp_out->t, 0);
+	}
+
     int acados_status = qpoases_status;
     if (qpoases_status == SUCCESSFUL_RETURN) acados_status = ACADOS_SUCCESS;
     if (qpoases_status == RET_MAX_NWSR_REACHED) acados_status = ACADOS_MAXITER;
@@ -425,6 +463,7 @@ void dense_qp_qpoases_config_initialize_default(void *config_)
 	config->opts_calculate_size = ( int (*) (void *, void *)) &dense_qp_qpoases_opts_calculate_size;
 	config->opts_assign = ( void* (*) (void *, void *, void *)) &dense_qp_qpoases_opts_assign;
 	config->opts_initialize_default = ( void (*) (void *, void *, void *)) &dense_qp_qpoases_opts_initialize_default;
+	config->opts_update = ( void (*) (void *, void *, void *)) &dense_qp_qpoases_opts_update;
 	config->memory_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qpoases_memory_calculate_size;
 	config->memory_assign = ( void* (*) (void *, void *, void *, void *)) &dense_qp_qpoases_memory_assign;
 	config->workspace_calculate_size = ( int (*) (void *, void *, void *)) &dense_qp_qpoases_workspace_calculate_size;

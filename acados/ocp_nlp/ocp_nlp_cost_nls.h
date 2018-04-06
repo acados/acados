@@ -32,7 +32,29 @@ extern "C" {
 #include "acados/utils/types.h"
 #include "acados/utils/external_function_generic.h"
 
-/* model */
+/************************************************
+* dims
+************************************************/
+
+typedef struct
+{
+	int nx; // number of states
+	int nu; // number of inputs
+	int ny; // number of outputs
+} ocp_nlp_cost_nls_dims;
+
+//
+int ocp_nlp_cost_nls_dims_calculate_size(void *config);
+//
+void *ocp_nlp_cost_nls_dims_assign(void *config, void *raw_memory);
+//
+void ocp_nlp_cost_nls_dims_initialize(void *config, void *dims, int nx, int nu, int ny); 
+
+
+
+/************************************************
+* model
+************************************************/
 
 typedef struct
 {
@@ -44,15 +66,17 @@ typedef struct
 } ocp_nlp_cost_nls_model;
 
 //
-int ocp_nlp_cost_nls_model_calculate_size(void *config, ocp_nlp_cost_dims *dims);
+int ocp_nlp_cost_nls_model_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_cost_nls_model_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+void *ocp_nlp_cost_nls_model_assign(void *config, void *dims, void *raw_memory);
 //
 void ocp_nlp_cost_nls_config_initialize_default(void *config);
 
 
 
-/* options */
+/************************************************
+* options
+************************************************/
 
 typedef struct
 {
@@ -60,15 +84,19 @@ typedef struct
 } ocp_nlp_cost_nls_opts;
 
 //
-int ocp_nlp_cost_nls_opts_calculate_size(void *config, ocp_nlp_cost_dims *dims);
+int ocp_nlp_cost_nls_opts_calculate_size(void *config, void *dims);
 //
-void *ocp_nlp_cost_nls_opts_assign(void *config, ocp_nlp_cost_dims *dims, void *raw_memory);
+void *ocp_nlp_cost_nls_opts_assign(void *config, void *dims, void *raw_memory);
 //
-void ocp_nlp_cost_nls_opts_initialize_default(void *config, ocp_nlp_cost_dims *dims, void *opts);
+void ocp_nlp_cost_nls_opts_initialize_default(void *config, void *dims, void *opts);
+//
+void ocp_nlp_cost_nls_opts_update(void *config, void *dims, void *opts);
 
 
 
-/* memory */
+/************************************************
+* memory
+************************************************/
 
 typedef struct
 {
@@ -81,9 +109,9 @@ typedef struct
 } ocp_nlp_cost_nls_memory;
 
 //
-int ocp_nlp_cost_nls_memory_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+int ocp_nlp_cost_nls_memory_calculate_size(void *config, void *dims, void *opts);
 //
-void *ocp_nlp_cost_nls_memory_assign(void *config, ocp_nlp_cost_dims *dims, void *opts, void *raw_memory);
+void *ocp_nlp_cost_nls_memory_assign(void *config, void *dims, void *opts, void *raw_memory);
 //
 struct blasfeo_dvec *ocp_nlp_cost_nls_memory_get_grad_ptr(void *memory_);
 //
@@ -93,29 +121,29 @@ void ocp_nlp_cost_nls_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 
 
 
-/* workspace */
+/************************************************
+* workspace
+************************************************/
 
 typedef struct
 {
 	struct blasfeo_dmat tmp_nv_ny;
 	struct blasfeo_dvec tmp_ny;
-	double *nls_jac_in; // [x; u]
-	double *nls_jac_out; // [res; jac]
-	double *nls_hess_in; // [x; u; W*res]
-	double *nls_hess_out; // [hess_tensor*(W*res)]
 } ocp_nlp_cost_nls_workspace;
 
 //
-int ocp_nlp_cost_nls_workspace_calculate_size(void *config, ocp_nlp_cost_dims *dims, void *opts);
+int ocp_nlp_cost_nls_workspace_calculate_size(void *config, void *dims, void *opts);
 
 
 
-/* functions */
+/************************************************
+* functions
+************************************************/
 
 //
-void ocp_nlp_cost_nls_initialize_qp(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *mem_, void *work_);
+void ocp_nlp_cost_nls_initialize(void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);
 //
-void ocp_nlp_cost_nls_update_qp_matrices(void *config_, ocp_nlp_cost_dims *dims, void *model_, void *opts_, void *memory_, void *work_);
+void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims, void *model_, void *opts_, void *memory_, void *work_);
 
 
 

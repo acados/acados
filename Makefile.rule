@@ -54,8 +54,8 @@ QORE_PATH = $(EXT_PATH)/qore
 # QPDUNES path
 QPDUNES_PATH = $(EXT_PATH)/qpdunes
 
-# include HPMPC
-ACADOS_WITH_QPOASES = 0
+# include QPOASES
+ACADOS_WITH_QPOASES = 1
 
 # include HPMPC
 ACADOS_WITH_HPMPC = 0
@@ -78,6 +78,9 @@ CFLAGS =
 
 # optimization flags
 CFLAGS += -O2 -fPIC
+
+# turn off assert
+#CFLAGS += -DNDEBUG
 
 # debugging flags
 CFLAGS  += #-g -Wall -pedantic -Wfloat-equal #-pg

@@ -62,6 +62,8 @@ int ocp_nlp_sqp_opts_calculate_size(void *config, ocp_nlp_dims *dims);
 void *ocp_nlp_sqp_opts_assign(void *config, ocp_nlp_dims *dims, void *raw_memory);
 //
 void ocp_nlp_sqp_opts_initialize_default(void *config, ocp_nlp_dims *dims, void *opts);
+//
+void ocp_nlp_sqp_opts_update(void *config, ocp_nlp_dims *dims, void *opts);
 
 
 
@@ -85,7 +87,7 @@ typedef struct
 	ocp_nlp_memory *nlp_mem;
 
 	int sqp_iter;
-
+	int dummy;  // NOTE(dimitris): make struct size multiple of 8
 } ocp_nlp_sqp_memory;
 
 //
@@ -119,11 +121,13 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config, ocp_nlp_dims *dims, void 
 
 
 /************************************************
-* solver
+* functions
 ************************************************/
 
 //
 int ocp_nlp_sqp(void *config, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args, void *mem, void *work_);
+//
+void ocp_nlp_sqp_config_initialize_default(void *config_);
 
 
 

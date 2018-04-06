@@ -33,6 +33,22 @@
 // maximum number of integration stages
 #define NS_MAX 15
 
+typedef enum {
+    // ERK and LIFTED_ERK
+    EXPL_ODE_FUN,
+    EXPL_ODE_JAC, // TODO expl_ode_jac_x
+    EXPL_ODE_HES, // wrt x and u ???
+    EXPL_VDE_FOR,
+    EXPL_VDE_ADJ,
+    // IRK
+    IMPL_ODE_FUN,
+    IMPL_ODE_JAC_X,
+    IMPL_ODE_JAC_XDOT,
+    IMPL_ODE_JAC_U,
+    IMPL_ODE_FUN_JAC_X_XDOT,
+    IMPL_ODE_JAC_X_XDOT_U,
+    IMPL_ODE_JAC_X_U,
+} sim_function_t;
 
 
 typedef struct
@@ -123,15 +139,13 @@ typedef struct
     int (*opts_calculate_size) (void *config, sim_dims *dims);
     void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
     void (*opts_initialize_default) (void *config, sim_dims *dims, void *opts);
-    void (*opts_update_tableau) (void *config, sim_dims *dims, void *opts);
+    void (*opts_update) (void *config, sim_dims *dims, void *opts);
     int (*memory_calculate_size) (void *config, sim_dims *dims, void *opts);
     void *(*memory_assign) (void *config, sim_dims *dims, void *opts, void *raw_memory);
     int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);
-    // TODO(dimitris): move all model-related function pointers to model_config?
     int (*model_calculate_size) (void *config, sim_dims *dims);
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
-    void (*model_set_forward_vde) (sim_in *in, void *fun);
-    void (*model_set_adjoint_vde) (sim_in *in, void *fun);
+    int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default) (void *config);
 } sim_solver_config;
 

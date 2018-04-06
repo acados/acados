@@ -67,6 +67,26 @@ void *sim_lifted_irk_model_assign(void *config, sim_dims *dims, void *raw_memory
 
 
 
+int sim_lifted_irk_model_set_function(void *model_, sim_function_t fun_type, void *fun)
+{
+    lifted_irk_model *model = model_;
+
+    switch (fun_type)
+    {
+        case EXPL_ODE_JAC:
+            model->expl_ode_jac = (external_function_generic *) fun;
+            break;
+        case EXPL_VDE_FOR:
+            model->expl_vde_for = (external_function_generic *) fun;
+            break;
+        default:
+            return ACADOS_FAILURE;
+    }
+    return ACADOS_SUCCESS;
+}
+
+
+
 /************************************************
 * opts
 ************************************************/
@@ -197,7 +217,7 @@ void sim_lifted_irk_opts_initialize_default(void *config_, sim_dims *dims, void 
 
 
 
-void sim_lifted_irk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_)
+void sim_lifted_irk_opts_update(void *config_, sim_dims *dims, void *opts_)
 {
     sim_rk_opts *opts = opts_;
 
@@ -886,6 +906,11 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
     double **jac_traj = mem->jac_traj;
     double *K_traj = mem->K_traj;
 
+	ext_fun_arg_t ext_fun_type_in[5];
+	void *ext_fun_in[5]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[5];
+	void *ext_fun_out[5]; // XXX large enough ?
+
 	lifted_irk_model *model = in->model;
 
     int i, j, s1, s2;
@@ -936,7 +961,19 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
             }
         }
         acados_tic(&timer_ad);
-        model->jac_ode_expl->evaluate(model->jac_ode_expl, rhs_in, jac_tmp);  // k evaluation
+
+		ext_fun_type_in[0] = COLMAJ;
+		ext_fun_in[0] = rhs_in+0; // x: nx
+		ext_fun_type_in[1] = COLMAJ;
+		ext_fun_in[1] = rhs_in+nx; // u: nu
+
+		ext_fun_type_out[0] = COLMAJ;
+		ext_fun_out[0] = jac_tmp+0; // fun: nx
+		ext_fun_type_out[1] = COLMAJ;
+		ext_fun_out[1] = jac_tmp+nx; // jac_x: nx*nx
+
+        model->expl_ode_jac->evaluate(model->expl_ode_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // k evaluation
+
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme->type == simplified_in ||
@@ -1041,6 +1078,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     struct blasfeo_dmat *str_sol = work->str_sol;
     struct blasfeo_dmat **str_sol2 = mem->str_sol2;
 #endif  // !TRIPLE_LOOP
+
+	ext_fun_arg_t ext_fun_type_in[5];
+	void *ext_fun_in[5]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[5];
+	void *ext_fun_out[5]; // XXX large enough ?
 
 	lifted_irk_model *model = in->model;
 
@@ -1285,7 +1327,24 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
             rhs_in[nx*(1+NF)+nu] = ((double) istep+c_vec[s1])/((double) opts->num_steps);  // time
 
             acados_tic(&timer_ad);
-            model->forw_vde_expl->evaluate(model->forw_vde_expl, rhs_in, VDE_tmp[s1]);  // k evaluation
+
+			ext_fun_type_in[0] = COLMAJ;
+			ext_fun_in[0] = rhs_in+0; // x: nx
+			ext_fun_type_in[1] = COLMAJ;
+			ext_fun_in[1] = rhs_in+nx; // Sx: nx*nx
+			ext_fun_type_in[2] = COLMAJ;
+			ext_fun_in[2] = rhs_in+nx+nx*nx; // Su: nx*nu
+			ext_fun_type_in[3] = COLMAJ;
+			ext_fun_in[3] = rhs_in+nx+nx*nx+nx*nu; // u: nu
+
+			ext_fun_type_out[0] = COLMAJ;
+			ext_fun_out[0] = VDE_tmp[s1]+0; // fun: nx
+			ext_fun_type_out[1] = COLMAJ;
+			ext_fun_out[1] = VDE_tmp[s1]+nx; // Sx: nx*nx
+			ext_fun_type_out[2] = COLMAJ;
+			ext_fun_out[2] = VDE_tmp[s1]+nx+nx*nx; // Su: nx*nu
+
+            model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:
@@ -1545,12 +1604,13 @@ void sim_lifted_irk_config_initialize_default(void *config_)
 	config->opts_calculate_size = &sim_lifted_irk_opts_calculate_size;
 	config->opts_assign = &sim_lifted_irk_opts_assign;
 	config->opts_initialize_default = &sim_lifted_irk_opts_initialize_default;
-	config->opts_update_tableau = &sim_lifted_irk_opts_update_tableau;
+	config->opts_update = &sim_lifted_irk_opts_update;
 	config->memory_calculate_size = &sim_lifted_irk_memory_calculate_size;
 	config->memory_assign = &sim_lifted_irk_memory_assign;
 	config->workspace_calculate_size = &sim_lifted_irk_workspace_calculate_size;
 	config->model_calculate_size = &sim_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_lifted_irk_model_assign;
+    config->model_set_function = &sim_lifted_irk_model_set_function;
 
 	return;
 

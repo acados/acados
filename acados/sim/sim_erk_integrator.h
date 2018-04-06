@@ -33,15 +33,15 @@ typedef struct
 {
 	/* external functions */
 	// explicit ode
-	external_function_generic *ode_expl;
+	external_function_generic *expl_ode_fun;
 	// jacobian explicit ode
-	external_function_generic *jac_ode_expl;
+	external_function_generic *expl_ode_jac;
 	// hessian explicit ode
-	external_function_generic *hess_ode_expl;
+	external_function_generic *expl_ode_hes;
 	// forward explicit vde
-	external_function_generic *forw_vde_expl;
+	external_function_generic *expl_vde_for;
 	// adjoint explicit vde
-	external_function_generic *adj_vde_expl;
+	external_function_generic *expl_vde_adj;
 
 } erk_model;
 
@@ -76,13 +76,11 @@ int sim_erk_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory);
 //
-void sim_erk_model_set_forward_vde(sim_in *in, void *fun);
-//
-void sim_erk_model_set_adjoint_vde(sim_in *in, void *fun);
+int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
 //
 int sim_erk_opts_calculate_size(void *config, sim_dims *dims);
 //
-void sim_erk_opts_update_tableau(void *config_, sim_dims *dims, void *opts_);
+void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_);
 //
 void *sim_erk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
 //

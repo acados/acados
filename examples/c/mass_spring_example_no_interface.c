@@ -288,6 +288,8 @@ int main() {
 				break;
 #endif
 
+			// update after user-defined opts
+			solver_config->opts_update(solver_config, qp_dims, solver_opts);
 
 			/************************************************
 			 * ocp qp in

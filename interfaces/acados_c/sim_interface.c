@@ -86,14 +86,46 @@ sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims)
 
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr)
 {
-    if (!strcmp(fun_type, "forward_vde"))
-        config->model_set_forward_vde(in, fun_ptr);
-    else if (!strcmp(fun_type, "adjoint_vde"))
-        config->model_set_adjoint_vde(in, fun_ptr);
+    int status = sim_set_model_internal(config, in->model, fun_type, fun_ptr);
+
+    return status;
+}
+
+
+
+// NOTE(dimitris) not exposed to user, used by NLP interface too
+int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type, void *fun_ptr)
+{
+    int status = ACADOS_SUCCESS;
+
+    if (!strcmp(fun_type, "expl_ode_fun"))
+        status = config->model_set_function(model, EXPL_ODE_FUN, fun_ptr);
+    else if (!strcmp(fun_type, "expl_ode_jac"))
+        status = config->model_set_function(model, EXPL_ODE_JAC, fun_ptr);
+    else if (!strcmp(fun_type, "expl_ode_hes"))
+        status = config->model_set_function(model, EXPL_ODE_HES, fun_ptr);
+    else if (!strcmp(fun_type, "expl_vde_for"))
+        status = config->model_set_function(model, EXPL_VDE_FOR, fun_ptr);
+    else if (!strcmp(fun_type, "expl_vde_adj"))
+        status = config->model_set_function(model, EXPL_VDE_ADJ, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_fun"))
+        status = config->model_set_function(model, IMPL_ODE_FUN, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_X, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_xdot"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_u"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_U, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_fun_jac_x_xdot"))
+        status = config->model_set_function(model, IMPL_ODE_FUN_JAC_X_XDOT, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_xdot_u"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
+    else if (!strcmp(fun_type, "impl_ode_jac_x_u"))
+        status = config->model_set_function(model, IMPL_ODE_JAC_X_U, fun_ptr);
     else
         return ACADOS_FAILURE;
 
-    return ACADOS_SUCCESS;
+    return status;
 }
 
 
@@ -167,7 +199,7 @@ sim_solver *sim_assign(sim_solver_config *config, sim_dims *dims, void *opts_, v
 sim_solver *sim_create(sim_solver_config *config, sim_dims *dims, void *opts_)
 {
 	// update Butcher tableau (needed if the user changed ns)
-	config->opts_update_tableau(config, dims, opts_);
+	config->opts_update(config, dims, opts_);
 
     int bytes = sim_calculate_size(config, dims, opts_);
 

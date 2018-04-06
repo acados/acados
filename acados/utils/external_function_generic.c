@@ -33,7 +33,7 @@
 
 
 /************************************************
-* casadi external function
+* casadi utils
 ************************************************/
 
 static int casadi_nnz(const int *sparsity)
@@ -50,10 +50,10 @@ static int casadi_nnz(const int *sparsity)
         }
 		else
 		{
-            const int *colind = sparsity + 2;
+            const int *idxcol = sparsity + 2;
             for (int i = 0; i < ncol; ++i)
 			{
-                nnz += colind[i + 1] - colind[i];
+                nnz += idxcol[i + 1] - idxcol[i];
             }
         }
     }
@@ -63,37 +63,219 @@ static int casadi_nnz(const int *sparsity)
 
 
 
-static void casadi_densify(const double *sparse_in, double *dense_out, const int *sparsity)
+static void d_cvt_casadi_to_colmaj(double *in, int *sparsity_in, double *out)
 {
-    const int_t nrow = sparsity[0];
-    const int_t ncol = sparsity[1];
-    const int_t dense = sparsity[2];
+	int ii, jj, idx;
+
+    int nrow = sparsity_in[0];
+    int ncol = sparsity_in[1];
+    int dense = sparsity_in[2];
 
     if (dense)
 	{
-        for (int_t i = 0; i < ncol * nrow; i++)
-			dense_out[i] = sparse_in[i];
+        for (ii = 0; ii < ncol*nrow; ii++)
+			out[ii] = in[ii];
     }
 	else
 	{
+        double *ptr = in;
+        int *idxcol = sparsity_in + 2;
+		int *row = sparsity_in + ncol + 3;
         // Fill with zeros
-        for (int i = 0; i < ncol; i++)
-            for (int j = 0; j < nrow; j++)
-				dense_out[i * nrow + j] = 0.0;
-        // Additional data
-        const double *x = sparse_in;
-        const int *colind = sparsity + 2;
-		const int *row = sparsity + ncol + 3;
+        for (jj = 0; jj < ncol; jj++)
+            for (ii = 0; ii < nrow; ii++)
+				out[ii + jj*nrow] = 0.0;
         // Copy nonzeros
-        for (int i = 0; i < ncol; ++i)
-            for (int el = colind[i]; el != colind[i + 1]; ++el)
-                dense_out[row[el] + i * nrow] = *x++;
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                out[row[idx] + jj*nrow] = ptr[0];
+				ptr++;
+			}
+		}
     }
 
 	return;
 }
 
 
+
+static void d_cvt_colmaj_to_casadi(double *in, double *out, int *sparsity_out)
+{
+	int ii, jj, idx;
+
+    int nrow = sparsity_out[0];
+    int ncol = sparsity_out[1];
+    int dense = sparsity_out[2];
+
+    if (dense)
+	{
+        for (ii = 0; ii < ncol*nrow; ii++)
+			out[ii] = in[ii];
+    }
+	else
+	{
+        double *ptr = out;
+        int *idxcol = sparsity_out + 2;
+		int *row = sparsity_out + ncol + 3;
+        // Copy nonzeros
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                ptr[0] = in[row[idx] + jj*nrow];
+				ptr++;
+			}
+		}
+    }
+
+	return;
+}
+
+
+
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_casadi_to_dmat(double *in, int *sparsity_in, struct blasfeo_dmat *out)
+{
+	int jj, idx;
+
+    int nrow = sparsity_in[0];
+    int ncol = sparsity_in[1];
+    int dense = sparsity_in[2];
+
+    if (dense)
+	{
+		blasfeo_pack_dmat(nrow, ncol, in, nrow, out, 0, 0);
+    }
+	else
+	{
+        double *ptr = in;
+        int *idxcol = sparsity_in + 2;
+		int *row = sparsity_in + ncol + 3;
+        // Fill with zeros
+		blasfeo_dgese(nrow, ncol, 0.0, out, 0, 0);
+        // Copy nonzeros
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                BLASFEO_DMATEL(out, row[idx], jj) = ptr[0];
+				ptr++;
+			}
+		}
+    }
+
+	return;
+}
+
+
+
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_dmat_to_casadi(struct blasfeo_dmat *in, double *out, int *sparsity_out)
+{
+	int jj, idx;
+
+    int nrow = sparsity_out[0];
+    int ncol = sparsity_out[1];
+    int dense = sparsity_out[2];
+
+    if (dense)
+	{
+		blasfeo_unpack_dmat(nrow, ncol, in, 0, 0, out, nrow);
+    }
+	else
+	{
+        double *ptr = out;
+        int *idxcol = sparsity_out + 2;
+		int *row = sparsity_out + ncol + 3;
+        // Copy nonzeros
+        for (jj = 0; jj < ncol; jj++)
+		{
+            for (idx = idxcol[jj]; idx != idxcol[jj + 1]; idx++)
+			{
+                ptr[0] = BLASFEO_DMATEL(in, row[idx], nrow);
+				ptr++;
+			}
+		}
+    }
+
+	return;
+}
+
+
+
+// column vector: assume sparsity_in[1] = 1 !!!
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_casadi_to_dvec(double *in, int *sparsity_in, struct blasfeo_dvec *out)
+{
+	int idx;
+
+	assert( sparsity_in[1]==1 );
+
+    int n = sparsity_in[0];
+    int dense = sparsity_in[2];
+
+    if (dense)
+	{
+		blasfeo_pack_dvec(n, in, out, 0);
+    }
+	else
+	{
+        double *ptr = in;
+        int *idxcol = sparsity_in + 2;
+		int *row = sparsity_in + 1 + 3;
+        // Fill with zeros
+		blasfeo_dvecse(n, 0.0, out, 0);
+        // Copy nonzeros
+		for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+		{
+			BLASFEO_DVECEL(out, row[idx]) = ptr[0];
+			ptr++;
+		}
+    }
+
+	return;
+}
+
+
+
+// column vector: assume sparsity_in[1] = 1 !!!
+// TODO detect if dense from number of elements per column !!!
+static void d_cvt_dvec_to_casadi(struct blasfeo_dvec *in, double *out, int *sparsity_out)
+{
+	int idx;
+
+	assert( sparsity_out[1]==1 );
+
+    int n = sparsity_out[0];
+    int dense = sparsity_out[2];
+
+    if (dense)
+	{
+		blasfeo_unpack_dvec(n, in, 0, out);
+    }
+	else
+	{
+        double *ptr = out;
+        int *idxcol = sparsity_out + 2;
+		int *row = sparsity_out + 1 + 3;
+        // Copy nonzeros
+		for (idx = idxcol[0]; idx != idxcol[1]; idx++)
+		{
+			ptr[0] = BLASFEO_DVECEL(in, row[idx]);
+			ptr++;
+		}
+    }
+
+	return;
+}
+
+
+
+/************************************************
+* casadi external function
+************************************************/
 
 int external_function_casadi_calculate_size(external_function_casadi *fun)
 {
@@ -199,41 +381,265 @@ void external_function_casadi_assign(external_function_casadi *fun, void *raw_me
 
 
 
-void external_function_casadi_wrapper(void *self, double *in, double *out)
+void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	// cast into external casadi function
 	external_function_casadi *fun = self;
 
 	// loop index
-	int ii, jj;
-
-	// char *c_ptr;
+	int ii;
 
 	// in as args
-	// TODO implement sparsify of input instead of copying them
-	double *d_ptr = in;
 	for (ii=0; ii<fun->in_num; ii++)
 	{
-		for (jj=0; jj<fun->args_size[ii]; jj++)
-			fun->args[ii][jj] = d_ptr[jj];
-		d_ptr += fun->args_size[ii];
+		switch(type_in[ii])
+		{
+		case COLMAJ:
+			d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		case BLASFEO_MAT:
+			d_cvt_dmat_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		case BLASFEO_VEC:
+			d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		default:
+		printf("\ntype in %d\n", type_in[ii]);
+			printf("\nUnknown external function argument type\n\n");
+			exit(1);
+		}
 	}
 
 	// call casadi function
 	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
 
-	const int *sparsity;
-	int nrow, ncol;
-	double *ptr_out = out;
 	for (ii=0; ii<fun->out_num; ii++)
 	{
-		sparsity = fun->casadi_sparsity_out(ii);
-		nrow = sparsity[0];
-		ncol = sparsity[1];
-		casadi_densify(fun->res[ii], ptr_out, sparsity);
-		ptr_out += nrow*ncol;
+		switch(type_out[ii])
+		{
+		case COLMAJ:
+			d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case BLASFEO_MAT:
+			d_cvt_casadi_to_dmat((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case BLASFEO_VEC:
+			d_cvt_casadi_to_dvec((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		default:
+		printf("\ntype out %d\n", type_out[ii]);
+			printf("\nUnknown external function argument type\n\n");
+			exit(1);
+		}
 	}
+
+	return;
+
+}
+
+
+/************************************************
+* casadi external parametric function
+************************************************/
+
+int external_function_param_casadi_calculate_size(external_function_param_casadi *fun, int np)
+{
+
+	// loop index
+	int ii;
+
+	// casadi wrapper as evaluate function
+	fun->evaluate = &external_function_param_casadi_wrapper;
+
+	// set param function
+	fun->set_param = &external_function_param_casadi_set_param;
+
+	// set number of parameters
+	fun->np = np;
+
+	fun->casadi_work(&fun->args_num, &fun->res_num, &fun->iw_size, &fun->w_size);
+
+	fun->in_num = fun->casadi_n_in();
+	fun->out_num = fun->casadi_n_out();
+
+	// args
+	fun->args_size_tot = 0;
+	for (ii=0; ii<fun->args_num; ii++)
+		fun->args_size_tot += casadi_nnz(fun->casadi_sparsity_in(ii));
+
+	// res
+	fun->res_size_tot = 0;
+	for (ii=0; ii<fun->res_num; ii++)
+		fun->res_size_tot += casadi_nnz(fun->casadi_sparsity_out(ii));
+
+	int size = 0;
+
+	// double pointers
+	size += fun->args_num*sizeof(double *); // args
+	size += fun->res_num*sizeof(double *); // res
+
+	// ints
+	size += fun->args_num*sizeof(int); // args_size
+	size += fun->res_num*sizeof(int); // res_size
+	size += fun->iw_size*sizeof(int); // iw
+
+	// doubles
+	size += fun->args_size_tot*sizeof(double); // args
+	size += fun->res_size_tot*sizeof(double); // res
+	size += fun->w_size*sizeof(double); // w
+	size += fun->np*sizeof(double); // p
+
+    size += 8; // initial align
+    size += 8; // align to double
+
+//	make_int_multiple_of(64, &size);
+
+	return size;
+
+}
+
+
+
+void external_function_param_casadi_assign(external_function_param_casadi *fun, void *raw_memory)
+{
+
+	// loop index
+	int ii;
+
+	// save initial pointer to external memory
+	fun->ptr_ext_mem = raw_memory;
+
+	// char pointer for byte advances
+	char *c_ptr = raw_memory;
+
+	// double pointers
+
+	// initial align
+    align_char_to(8, &c_ptr);
+
+	// args
+	assign_and_advance_double_ptrs(fun->args_num, &fun->args, &c_ptr);
+	// res
+	assign_and_advance_double_ptrs(fun->res_num, &fun->res, &c_ptr);
+
+	// args_size
+	assign_and_advance_int(fun->args_num, &fun->args_size, &c_ptr);
+	for (ii=0; ii<fun->args_num; ii++)
+		fun->args_size[ii] = casadi_nnz(fun->casadi_sparsity_in(ii));
+	// res_size
+	assign_and_advance_int(fun->res_num, &fun->res_size, &c_ptr);
+	for (ii=0; ii<fun->res_num; ii++)
+		fun->res_size[ii] = casadi_nnz(fun->casadi_sparsity_out(ii));
+	// iw
+	assign_and_advance_int(fun->iw_size, &fun->iw, &c_ptr);
+
+	// align to double
+    align_char_to(8, &c_ptr);
+
+	// args
+	for (ii=0; ii<fun->args_num; ii++)
+		assign_and_advance_double(fun->args_size[ii], &fun->args[ii], &c_ptr);
+	// res
+	for (ii=0; ii<fun->res_num; ii++)
+		assign_and_advance_double(fun->res_size[ii], &fun->res[ii], &c_ptr);
+	// w
+	assign_and_advance_double(fun->w_size, &fun->w, &c_ptr);
+	// p
+	assign_and_advance_double(fun->np, &fun->p, &c_ptr);
+
+    assert((char *) raw_memory + external_function_param_casadi_calculate_size(fun, fun->np) >= c_ptr);
+
+	return;
+
+}
+
+
+
+void external_function_param_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
+{
+
+	// cast into external casadi function
+	external_function_param_casadi *fun = self;
+
+	// loop index
+	int ii, jj;
+
+	// in as args
+	// skip last argument (that is the parameters vector)
+	for (ii=0; ii<fun->in_num-1; ii++)
+	{
+		switch(type_in[ii])
+		{
+		case COLMAJ:
+			d_cvt_colmaj_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		case BLASFEO_MAT:
+			d_cvt_dmat_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		case BLASFEO_VEC:
+			d_cvt_dvec_to_casadi(in[ii], (double *) fun->args[ii], (int *) fun->casadi_sparsity_in(ii));
+			break;
+
+		default:
+			printf("\nUnknown external function argument type\n\n");
+			exit(1);
+		}
+	}
+	// copy parametrs vector as last arg
+	ii = fun->in_num-1;
+	for (jj=0; jj<fun->np; jj++)
+		fun->args[ii][jj] = fun->p[jj];
+
+	// call casadi function
+	fun->casadi_fun((const double **)fun->args, fun->res, fun->iw, fun->w, 0);
+
+	for (ii=0; ii<fun->out_num; ii++)
+	{
+		switch(type_out[ii])
+		{
+		case COLMAJ:
+			d_cvt_casadi_to_colmaj((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case BLASFEO_MAT:
+			d_cvt_casadi_to_dmat((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		case BLASFEO_VEC:
+			d_cvt_casadi_to_dvec((double *) fun->res[ii], (int *) fun->casadi_sparsity_out(ii), out[ii]);
+			break;
+
+		default:
+			printf("\nUnknown external function argument type\n\n");
+			exit(1);
+		}
+	}
+
+	return;
+
+}
+
+
+void external_function_param_casadi_set_param(void *self, double *p)
+{
+
+	// cast into external casadi function
+	external_function_param_casadi *fun = self;
+
+	// loop index
+	int ii;
+
+	for (ii=0; ii<fun->np; ii++)
+		fun->p[ii] = p[ii];
 
 	return;
 

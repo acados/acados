@@ -24,11 +24,12 @@
 
 // acados_c
 #include "acados_c/dense_qp_interface.h"
-#include "acados_c/legacy_create.h"
+#include "acados_c/ocp_qp_interface.h"
+#include "acados_c/condensing_interface.h"
 
 // acados
-#include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
+#include "acados/utils/timing.h"
 
 // blasfeo
 #include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
@@ -89,9 +90,18 @@ int main()
     dense_qp_in *qpd_in = dense_qp_in_create(NULL, &ddims);
     dense_qp_out *qpd_out = dense_qp_out_create(NULL, &ddims);
 
-    // TODO(dimitris): rename
-    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
+    /************************************************
+    * condensing
+    ************************************************/
+
+    condensing_plan cond_plan;
+    cond_plan.condensing_type = FULL_CONDENSING;
+
+    ocp_qp_condensing_config *cond_config = ocp_qp_condensing_config_create(&cond_plan);
+
+    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_condensing_opts_create(cond_config, qp_in->dim);
+
+    condensing_module *cond_module = ocp_qp_condensing_create(cond_config, qp_in->dim, cond_opts);
 
     /************************************************
     * dense ipm
@@ -113,14 +123,14 @@ int main()
 
 	for(int rep = 0; rep < NREP; rep++)
     {
-        ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
+        ocp_qp_condense(cond_module, qp_in, qpd_in);
 
         acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 
         if (acados_return != 0)
             printf("error with dense qp solution\n");
 
-        ocp_qp_full_expansion(qpd_out, qp_out, cond_opts, cond_memory, NULL);
+        ocp_qp_expand(cond_module, qpd_out, qp_out);
     }
 
     real_t time = acados_toc(&timer)/NREP;
@@ -190,8 +200,10 @@ int main()
     free(dopts);
     free(config);
     free(qp_solver);
-    free(cond_memory);
+
     free(cond_opts);
+    free(cond_config);
+    free(cond_module);
 
 	return 0;
 }

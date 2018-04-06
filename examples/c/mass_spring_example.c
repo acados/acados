@@ -92,6 +92,9 @@ int main() {
     #ifndef ACADOS_WITH_QORE
     ii_max--;
     #endif
+    #ifndef ACADOS_WITH_QPOASES
+    ii_max--;
+    #endif
 
 
     // choose ocp qp solvers
@@ -108,7 +111,9 @@ int main() {
         #ifdef ACADOS_WITH_QORE
         FULL_CONDENSING_QORE,
         #endif
+        #ifdef ACADOS_WITH_QPOASES
         FULL_CONDENSING_QPOASES,
+        #endif
     };
 
 
@@ -201,11 +206,13 @@ int main() {
 #ifdef ACADOS_WITH_QORE
                     printf("\nFull condensing + QORE:\n\n");
                     // default options
-                    break;
 #endif
+                    break;
                 case FULL_CONDENSING_QPOASES:
+        #ifdef ACADOS_WITH_QPOASES
                     printf("\nFull condensing + QPOASES:\n\n");
                     // default options
+#endif
                     break;
                 case PARTIAL_CONDENSING_OOQP:
                     break;
