@@ -42,12 +42,12 @@ int main() {
 
     // Phi_inc_dy
     external_function_casadi phi_fun_jac_y;
-    phi_fun_jac_y.casadi_fun = &Phi_inc_dy_fun;
-    phi_fun_jac_y.casadi_work = &Phi_inc_dy_fun_work;
-    phi_fun_jac_y.casadi_sparsity_in  = &Phi_inc_dy_fun_sparsity_in;
-    phi_fun_jac_y.casadi_sparsity_out = &Phi_inc_dy_fun_sparsity_out;
-    phi_fun_jac_y.casadi_n_in = &Phi_inc_dy_fun_n_in;
-    phi_fun_jac_y.casadi_n_out = &Phi_inc_dy_fun_n_out;
+    phi_fun_jac_y.casadi_fun            = &Phi_inc_dy_fun;
+    phi_fun_jac_y.casadi_work           = &Phi_inc_dy_fun_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &Phi_inc_dy_fun_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &Phi_inc_dy_fun_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &Phi_inc_dy_fun_n_in;
+    phi_fun_jac_y.casadi_n_out          = &Phi_inc_dy_fun_n_out;
 	external_function_casadi_create(&phi_fun_jac_y);
 
     // jac_Phi_y_fun
@@ -63,12 +63,12 @@ int main() {
 
     // f_LO_inc_J_x1k1uz
     external_function_casadi f_LO_inc_J_x1k1uz;
-    f_LO_inc_J_x1k1uz.casadi_fun = &f_LO_inc_J_x1k1uz_fun;
-    f_LO_inc_J_x1k1uz.casadi_work = &f_LO_inc_J_x1k1uz_fun_work;
-    f_LO_inc_J_x1k1uz.casadi_sparsity_in  = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
-    f_LO_inc_J_x1k1uz.casadi_sparsity_out = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
-    f_LO_inc_J_x1k1uz.casadi_n_in = &f_LO_inc_J_x1k1uz_fun_n_in;
-    f_LO_inc_J_x1k1uz.casadi_n_out = &f_LO_inc_J_x1k1uz_fun_n_out;
+    f_LO_inc_J_x1k1uz.casadi_fun            = &f_LO_inc_J_x1k1uz_fun;
+    f_LO_inc_J_x1k1uz.casadi_work           = &f_LO_inc_J_x1k1uz_fun_work;
+    f_LO_inc_J_x1k1uz.casadi_sparsity_in    = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
+    f_LO_inc_J_x1k1uz.casadi_sparsity_out   = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
+    f_LO_inc_J_x1k1uz.casadi_n_in           = &f_LO_inc_J_x1k1uz_fun_n_in;
+    f_LO_inc_J_x1k1uz.casadi_n_out          = &f_LO_inc_J_x1k1uz_fun_n_out;
 
 	external_function_casadi_create(&f_LO_inc_J_x1k1uz);
 
@@ -135,9 +135,9 @@ int main() {
     // set up gnsf_model
     gnsf_model *model = in->model;
     // set external functions
-    model->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
-    model->Phi_inc_dy = (external_function_generic *) &phi_fun_jac_y;
-    model->Phi_jac_y = (external_function_generic *) &jac_Phi_y;
+    model->f_lo_jac_x1_x1dot_u_z = (external_function_generic *) &f_LO_inc_J_x1k1uz;
+    model->phi_fun_jac_y = (external_function_generic *) &phi_fun_jac_y;
+    model->phi_jac_y = (external_function_generic *) &jac_Phi_y;
     gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
     gnsf_precompute(gnsf_dim, model, opts, in);
 

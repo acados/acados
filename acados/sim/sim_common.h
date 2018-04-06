@@ -49,8 +49,8 @@ typedef enum {
     IMPL_ODE_JAC_X_XDOT_U,
     IMPL_ODE_JAC_X_U,
     // gnsf
-    PHI_INC_DY_FUN,
-    PHI_JAC_Y_FUN,
+    PHI_FUN_JAC_Y,
+    PHI_JAC_Y,
     LO_FUN
 } sim_function_t;
 

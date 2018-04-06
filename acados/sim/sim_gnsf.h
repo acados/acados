@@ -59,9 +59,9 @@ typedef struct {
 typedef struct
 {
     // external functions
-    external_function_generic *Phi_inc_dy;
-    external_function_generic *Phi_jac_y;
-    external_function_generic *f_LO_inc_J_x1k1uz;
+    external_function_generic *phi_fun_jac_y;
+    external_function_generic *phi_jac_y;
+    external_function_generic *f_lo_jac_x1_x1dot_u_z;
 
     // precomputed matrices
     struct blasfeo_dmat KKf;

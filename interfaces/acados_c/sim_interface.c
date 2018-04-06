@@ -127,11 +127,11 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
     else if (!strcmp(fun_type, "impl_ode_jac_x_u"))
         status = config->model_set_function(model, IMPL_ODE_JAC_X_U, fun_ptr);
     // GNSF functions
-    else if (!strcmp(fun_type, "Phi_inc_dy_fun"))
-        status = config->model_set_function(model, PHI_INC_DY_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "Phi_jac_y_fun"))
-        status = config->model_set_function(model, PHI_JAC_Y_FUN, fun_ptr);
-    else if (!strcmp(fun_type, "f_LO_inc_J_x1k1uz_fun"))
+    else if (!strcmp(fun_type, "phi_fun_jac_y"))
+        status = config->model_set_function(model, PHI_FUN_JAC_Y, fun_ptr);
+    else if (!strcmp(fun_type, "phi_jac_y"))
+        status = config->model_set_function(model, PHI_JAC_Y, fun_ptr);
+    else if (!strcmp(fun_type, "f_lo_jac_x1_x1dot_u_z"))
         status = config->model_set_function(model, LO_FUN, fun_ptr);
     else
         return ACADOS_FAILURE;

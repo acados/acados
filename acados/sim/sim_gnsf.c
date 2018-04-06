@@ -245,14 +245,14 @@ int sim_gnsf_model_set_function(void *model_, sim_function_t fun_type, void *fun
 
     switch (fun_type)
     {
-        case PHI_INC_DY_FUN:
-            model->Phi_inc_dy = (external_function_generic *) fun;
+        case PHI_FUN_JAC_Y:
+            model->phi_fun_jac_y = (external_function_generic *) fun;
             break;
-        case PHI_JAC_Y_FUN:
-            model->Phi_jac_y = (external_function_generic *) fun;
+        case PHI_JAC_Y:
+            model->phi_jac_y = (external_function_generic *) fun;
             break;
         case LO_FUN:
-            model->f_LO_inc_J_x1k1uz = (external_function_generic *) fun;
+            model->f_lo_jac_x1_x1dot_u_z = (external_function_generic *) fun;
             break;
 
             return ACADOS_FAILURE;
@@ -1144,7 +1144,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             for (int ii = 0; ii < num_stages; ii++) { // eval phi
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
                 acados_tic(&casadi_timer);
-                fix->Phi_inc_dy->evaluate(fix->Phi_inc_dy, phi_in, phi_out);
+                fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
                 blasfeo_pack_dvec(n_out, &phi_out[0], &res_val, ii*n_out);
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[n_out], n_out, &dPHI_dy, ii*n_out, 0);
@@ -1183,7 +1183,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_unpack_dvec(nz,  &Z_val[ss] , ii*nz , &f_LO_in[2*nx1]);
                 blasfeo_unpack_dvec(nu,  &u0        ,  0    , &f_LO_in[2*nx1 +nz]);
                 acados_tic(&casadi_timer);
-                fix->f_LO_inc_J_x1k1uz->evaluate(fix->f_LO_inc_J_x1k1uz, f_LO_in, f_LO_out);
+                fix->f_lo_jac_x1_x1dot_u_z->evaluate(fix->f_lo_jac_x1_x1dot_u_z, f_LO_in, f_LO_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
 
                 blasfeo_pack_dvec(nx2, &f_LO_out[0], &f_LO_val[ss], nx2 * ii); //store f_LO_out  into f_LO_val[ss]
@@ -1214,7 +1214,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             for (int ii = 0; ii < num_stages; ii++) { //
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
                 acados_tic(&casadi_timer);
-                fix->Phi_jac_y->evaluate(fix->Phi_jac_y, phi_in, phi_out);
+                fix->phi_jac_y->evaluate(fix->phi_jac_y, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[0], n_out, &dPHI_dy, ii*n_out, 0);
                 // build J_r_ff
@@ -1328,7 +1328,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
                 acados_tic(&casadi_timer);
-                fix->Phi_jac_y->evaluate(fix->Phi_jac_y, phi_in, phi_out);
+                fix->phi_jac_y->evaluate(fix->phi_jac_y, phi_in, phi_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[0], n_out, &dPHI_dy, ii*n_out, 0);
                 // build J_r_ff
