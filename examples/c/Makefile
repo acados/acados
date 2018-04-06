@@ -42,9 +42,6 @@ LIBS += -lblasfeo -lm -lblas -llapack
 # LDFLAGS += -pg
 
 EXAMPLES =
-EXAMPLES += sim_gnsf_crane
-EXAMPLES += sim_gnsf_crane_empty_z
-# EXAMPLES += sim_irk_crane2
 EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
@@ -64,12 +61,12 @@ examples: $(EXAMPLES)
 
 RUN_EXAMPLES =
 # RUN_EXAMPLES += run_sim_wt_model_nx3
-RUN_EXAMPLES += run_sim_wt_model_nx6
+# RUN_EXAMPLES += run_sim_wt_model_nx6
 # RUN_EXAMPLES += run_sim_crane_example
 # RUN_EXAMPLES += run_mass_spring_example
-#RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
-#RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
-#RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
+# RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
+# RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
+# RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
 # RUN_EXAMPLES += run_nonlinear_chain_ocp_nlp
 # RUN_EXAMPLES += run_sim_crane_no_interface
 # RUN_EXAMPLES += run_mass_spring_example_no_interface
@@ -109,51 +106,6 @@ sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
 	@echo
 	@echo " Example sim_erk_crane build complete."
 	@echo
-	
-
-# WT_OBJS =
-# WT_OBJS += simple_wt_model/jac_model.o
-# WT_OBJS += simple_wt_model/ode_model.o
-# WT_OBJS += simple_wt_model/vde_adj_model.o
-# WT_OBJS += simple_wt_model/vde_forw_model.o
-# WT_OBJS += simple_wt_model/vde_hess_model.o
-# WT_OBJS += sim_erk_wt.o
-
-# sim_erk_wt: $(WT_OBJS)
-# 	$(CCC) -o sim_erk_wt.out  $(WT_OBJS) $(LDFLAGS) $(LIBS)
-# 	@echo
-# 	@echo " Example sim_erk_wt build complete."
-# 	@echo
-
-
-CRANE_GNSF_OBJS =
-CRANE_GNSF_OBJS += gnsf_crane_model/res_inc_Jff_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/But_KK_ZZ_LO_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/f_LO_inc_J_x1k1uz_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/jac_res_ffx1u_fun.o
-CRANE_GNSF_OBJS += sim_gnsf_crane.o
-
-sim_gnsf_crane: $(CRANE_GNSF_OBJS)
-	$(CCC) -o sim_gnsf_crane.out  $(CRANE_GNSF_OBJS) $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example sim_gnsf_crane build complete."
-	@echo
-
-
-CRANE_GNSF_EZ_OBJS =
-CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/res_inc_Jff_fun.o
-CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/get_ints_fun.o
-CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/But_KK_ZZ_LO_fun.o
-CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/f_LO_inc_J_x1k1uz_fun.o
-CRANE_GNSF_EZ_OBJS += gnsf_crane_model_empty_z/jac_res_ffx1u_fun.o
-CRANE_GNSF_EZ_OBJS += sim_gnsf_crane.o # TODO oops
-
-sim_gnsf_crane_empty_z: $(CRANE_GNSF_EZ_OBJS)
-	$(CCC) -o sim_gnsf_crane_empty_z.out  $(CRANE_GNSF_EZ_OBJS) $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example sim_gnsf_crane_empty_z build complete."
-	@echo
 
 CRANE_GNSF2_OBJS =
 CRANE_GNSF2_OBJS += gnsf2_crane_model/But_KK_YY_ZZ_LO_fun.o
@@ -169,19 +121,6 @@ sim_gnsf2_crane: $(CRANE_GNSF2_OBJS)
 	@echo
 	@echo " Example sim_gnsf2_crane build complete."
 	@echo
-
-
-ANOTHER_CRANE_OBJS =
-ANOTHER_CRANE_OBJS += crane_model_2/impl_ode.o
-ANOTHER_CRANE_OBJS += crane_model_2/impl_jac_x.o
-ANOTHER_CRANE_OBJS += crane_model_2/impl_jac_xdot.o
-ANOTHER_CRANE_OBJS += crane_model_2/impl_jac_u.o
-sim_irk_crane2: $(ANOTHER_CRANE_OBJS) sim_irk_crane2.o
-	$(CCC) -o sim_irk_crane2.out  sim_irk_crane2.o $(ANOTHER_CRANE_OBJS) $(LDFLAGS) $(LIBS)
-	@echo
-	@echo " Example sim_irk_crane2 build complete."
-	@echo
-
 
 BLASFEO_BUG_OBJ =
 BLASFEO_BUG_OBJ += blasfeo_bug_minimal_example.o
@@ -255,7 +194,6 @@ wind_turbine_nmpc: $(WT_NX6P2_OBJS) wind_turbine_nmpc.o
 
 run_wind_turbine_nmpc:
 	./wind_turbine_nmpc.out
-
 
 
 #################################################
