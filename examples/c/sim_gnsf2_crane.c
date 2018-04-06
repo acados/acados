@@ -28,7 +28,6 @@
 // #include <acados_c/options.h>
 #include <acados/sim/sim_gnsf2.h>
 #include <acados/sim/sim_common.h>
-#include <acados/sim/sim_gnsf_casadi_wrapper.h> // todo remove
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"

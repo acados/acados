@@ -31,9 +31,7 @@
 #include "acados/sim/sim_common.h"
 #include "acados/sim/sim_gnsf2.h"
 #include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_gnsf_casadi_wrapper.h"
 #include "acados/sim/sim_collocation_utils.h"
-
 
 #include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
@@ -43,6 +41,23 @@
 #include "blasfeo/include/blasfeo_i_aux_ext_dep.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 
+void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t import_doubles_fun){
+    
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    double *ints_out = out;
+
+    const double *casadi_arg[1];
+    double *casadi_res[1];
+
+    casadi_arg[0] = in;
+
+    casadi_res[0] = ints_out;
+
+    import_doubles_fun(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
 
 void gnsf2_neville(double *out, double xx, int n, double *x, double *Q){ // Neville scheme
 // writes value of interpolating polynom corresponding to the nodes x and Q evaluated evaluated at xx into out
@@ -1428,4 +1443,16 @@ void sim_gnsf2_config_initialize_default(void *config_)
     config->model_set_function = &sim_gnsf2_model_set_function;
 
 	return;
+}
+
+double minimum_of_doubles(double *x, int n){
+    double min = x[0];
+    for (int c = 1 ; c < n ; c++ ) 
+    {
+        if ( x[c] < min ) 
+        {
+           min = x[c];
+        }
+    }
+    return min;
 }

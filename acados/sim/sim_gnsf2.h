@@ -201,6 +201,8 @@ typedef struct { //workspace
 
 } gnsf2_workspace;
 
+void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t get_ints_fun);
+
 int sim_gnsf2_model_calculate_size(void *config, sim_dims *dims);
 //
 void *sim_gnsf2_model_assign(void *config, sim_dims *dim_in, void *raw_memory);
