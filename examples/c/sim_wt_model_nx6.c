@@ -214,7 +214,7 @@ int main()
 
 	int number_sim_solvers = 4;
 	int nss;
-	for (nss = 2; nss < number_sim_solvers; nss++)
+	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -522,8 +522,7 @@ int main()
 			printf("%8.5f ", x_sim[nsim0*nx+ii]);
 		printf("\n");
 
-		double *S_forw_out;
-		S_forw_out = NULL;
+		double *S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
@@ -534,6 +533,14 @@ int main()
 			// 	printf("\n");
 			// }
 		}
+
+// TODO: check, whats the problem here?
+		// double *S_adj_out = NULL;
+		// if(opts->sens_adj){
+		// 	S_forw_out = out->S_adj;
+		// 	printf("\nS_adj_out: \n");
+		// 	d_print_e_mat(1, nx, S_adj_out, 1);
+		// }
 
 	#if 0
 		printf("\n");

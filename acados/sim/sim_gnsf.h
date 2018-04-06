@@ -228,10 +228,6 @@ void *gnsf_cast_workspace(void *config, gnsf_dims* dims, void *raw_memory, void 
 int sim_gnsf_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
 void *sim_gnsf_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
 
-// opts - TODO: maybe remove & link to IRK
-int sim_gnsf_opts_calculate_size(void *config, sim_dims *dims);
-void *sim_gnsf_opts_assign(void *config, sim_dims *dims, void *raw_memory);
-
 // interface
 void sim_gnsf_config_initialize_default(void *config_);
 

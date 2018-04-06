@@ -599,7 +599,7 @@ void gnsf_precompute(gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, sim_
 
     // Build and factorize QQ1
     blasfeo_dgemm_nn(nZ, nZ, nK1, -1.0, &DD2, 0, 0, &DD1, 0, 0, 0.0, &QQ1, 0, 0, &QQ1, 0, 0); // QQ1 = -DD2*DD1
-    blasfeo_ddiare(nZ, 1.0, &QQ1,0,0); // add eye(nZ) to QQ1
+    blasfeo_ddiare(nZ, 1.0, &QQ1, 0, 0); // add eye(nZ) to QQ1
     blasfeo_dgetrf_rowpivot(nZ, nZ, &QQ1, 0, 0, &QQ1, 0, 0, ipivQQ1); // factorize QQ1
 
     // build ZZf
@@ -673,11 +673,11 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, casadi_function_t 
     int n_out = dims->n_out;
     int n_in = dims->n_in;
     int exported_doubles = 0;
+
     exported_doubles += (nx1 + nz) * (nx1 + nu + n_out + nx1+nz); // A, B, C, E;
     exported_doubles += (n_in) * (2*nx1 + nz + nu); // L_x, L_xdot, L_z, L_u;
     exported_doubles += nx2*nx2; // A_LO;
-    // exported_doubles += 50; // todo: why?
-    // printf("exported_doubles = %d\n",exported_doubles);
+
     double *export_in  = (double*) malloc(1*sizeof(double));
     double *export_out = (double*) malloc(exported_doubles*sizeof(double));
     export_from_ML_wrapped(export_in, export_out, get_matrices_fun);
@@ -688,9 +688,6 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, casadi_function_t 
     for (int ii = 0; ii < (nx1+nz)*nx1; ii++)
         model->A[ii] = read_mem[ii];
     read_mem += (nx1+nz)*nx1;
-    // printf("\n adress of A %p\n",(void*)model->A);
-    // printf("model A, elements: %d= \n",(nx1+nz)*nx1);
-    // d_print_mat(nx1, nx1, model->A, nx1);
 
     for (int ii = 0; ii < (nx1+nz)*nu; ii++) {
         model->B[ii] = read_mem[ii];
@@ -827,7 +824,6 @@ void gnsf_import_precomputed(gnsf_dims* dims, gnsf_model *model, casadi_function
 int gnsf_workspace_calculate_size(void *config, sim_dims *dim_in, void *args)
 {
     gnsf_dims *dims = (gnsf_dims *) dim_in; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
-    // gnsf_opts *opts = (gnsf_opts *) args;
     int nx  = dims->nx;
     int nu  = dims->nu;
     int nx1 = dims->nx1;
@@ -996,15 +992,15 @@ void *gnsf_cast_workspace(void *config, gnsf_dims* dims, void *raw_memory, void 
     }
 
     assign_and_advance_blasfeo_dmat_mem(nff, nx1+nu, &workspace->J_r_x1u , &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nff, nff, &workspace->J_r_ff , &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nK1, nx1, &workspace->dK1_dx1 , &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nK1, nu , &workspace->dK1_du  , &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nZ, nx1, &workspace->dZ_dx1 , &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nZ, nu , &workspace->dZ_du  , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nff, nff,    &workspace->J_r_ff , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nx1,    &workspace->dK1_dx1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK1, nu ,    &workspace->dK1_du  , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ, nx1,     &workspace->dZ_dx1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nZ, nu ,     &workspace->dZ_du  , &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nK2, nx1, &workspace->aux_G2_x1, &c_ptr);
     assign_and_advance_blasfeo_dmat_mem(nK2, nu , &workspace->aux_G2_u , &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nK2, nK1 , &workspace->J_G2_K1 , &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nK2, nK1 ,&workspace->J_G2_K1 , &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nff, n_in, &workspace->dPHI_dy, &c_ptr);
 
@@ -1292,7 +1288,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dgemm_nn(nK2, nx1, nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKx, 0, 0, 1.0, &aux_G2_x1, 0, 0, &aux_G2_x1, 0, 0);
             blasfeo_dgemm_nn(nK2, nu , nK1, 1.0, &J_G2_K1, 0, 0, &fix->KKu, 0, 0, 1.0, &aux_G2_u , 0, 0, &aux_G2_u , 0, 0);
 
-            blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac[ss], 0, 0, &aux_G2_x1, 0, 0); //check: stattdessen vorher kopieren und dann addieren oben möglich
+            blasfeo_dgead(nK2, nx1, -1.0, &f_LO_jac[ss], 0, 0, &aux_G2_x1, 0, 0);
             blasfeo_dgead(nK2, nu , -1.0, &f_LO_jac[ss], 0, 2*nx1 + nz, &aux_G2_u, 0, 0);
 
             blasfeo_dgemm_nn(nK2, nff, nK2, -1.0, &fix->M2inv, 0, 0, &aux_G2_ff, 0, 0, 0.0, &dK2_dff, 0, 0, &dK2_dff, 0, 0);
@@ -1302,9 +1298,8 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dgese(nx, nff, 0.0, &dPsi_dff, 0, 0); // initialize dPsi_d.. 
             blasfeo_dgese(nx, nx, 0.0, &dPsi_dx, 0, 0);
             blasfeo_dgese(nx, nu, 0.0, &dPsi_du, 0, 0);
-            for (int ii = 0; ii < nx; ii++) {
-                blasfeo_dgein1(1.0, &dPsi_dx, ii, ii);
-            }
+            blasfeo_ddiare(nx, 1.0, &dPsi_dx, 0, 0); //dPsi_dx is unit now
+
             // compute dPsi_d..
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_dgead(nx1, nff, fix->b_dt[ii], &fix->KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
@@ -1373,65 +1368,12 @@ void *sim_gnsf_memory_assign(void *config, sim_dims *dims, void *opts_, void *ra
     return NULL;
 }
 
-int sim_gnsf_opts_calculate_size(void *config, sim_dims *dims)
-{
-
-	int ns_max = NS_MAX;
-
-    int size = 0;
-
-    size += sizeof(sim_rk_opts);
-
-    size += ns_max * ns_max * sizeof(double);  // A_mat
-    size += ns_max * sizeof(double);  // b_vec
-    size += ns_max * sizeof(double);  // c_vec
-
-	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-	int tmp1 = butcher_table_work_calculate_size(ns_max);
-	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
-	size += work_size; // work
-
-    make_int_multiple_of(8, &size);
-    size += 1 * 8;
-
-    return size;
-}
-
-
-
-void *sim_gnsf_opts_assign(void *config_, sim_dims *dims, void *raw_memory)
-{
-	int ns_max = NS_MAX;
-
-    char *c_ptr = (char *) raw_memory;
-
-    sim_rk_opts *opts = (sim_rk_opts *) c_ptr;
-    c_ptr += sizeof(sim_rk_opts);
-
-    align_char_to(8, &c_ptr);
-
-    assign_and_advance_double(ns_max*ns_max, &opts->A_mat, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->b_vec, &c_ptr);
-    assign_and_advance_double(ns_max, &opts->c_vec, &c_ptr);
-
-	// work
-	int tmp0 = gauss_nodes_work_calculate_size(ns_max);
-	int tmp1 = butcher_table_work_calculate_size(ns_max);
-	int work_size = tmp0>tmp1 ? tmp0 : tmp1;
-	opts->work = c_ptr;
-	c_ptr += work_size;
-
-    assert((char*)raw_memory + sim_gnsf_opts_calculate_size(config_, dims) >= c_ptr);
-
-    return (void *)opts;
-}
-
 void sim_gnsf_config_initialize_default(void *config_)
 {
 	sim_solver_config *config = config_;
 	config->evaluate = &gnsf_simulate;
-	config->opts_calculate_size = &sim_gnsf_opts_calculate_size;
-	config->opts_assign = &sim_gnsf_opts_assign;
+	config->opts_calculate_size = &sim_irk_opts_calculate_size;
+	config->opts_assign = &sim_irk_opts_assign;
     config->opts_initialize_default = &sim_irk_opts_initialize_default;
     config->opts_update = &sim_irk_opts_update;
 	config->memory_calculate_size = &sim_gnsf_memory_calculate_size;
