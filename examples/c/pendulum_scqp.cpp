@@ -44,7 +44,7 @@ int main() {
 	std::vector<double> x0 {0, 0, M_PI, 0};
 
 	double radius2 = 0.04, neg_inf = -1000000;
-	int max_num_sqp_iterations = 1000;
+	int max_num_sqp_iterations = 100;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
 		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), nq(N+1, 0),
@@ -177,8 +177,8 @@ int main() {
 	for (int i = 0; i <= N; ++i)
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
-	for (int i = 0; i <= N; ++i)
-		BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
+	// for (int i = 0; i <= N; ++i)
+		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
