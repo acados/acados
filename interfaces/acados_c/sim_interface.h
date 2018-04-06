@@ -30,7 +30,7 @@ typedef enum {
     ERK,
     LIFTED_IRK,
     IRK,
-    GNSF2
+    GNSF
 } sim_solver_t;
 
 typedef struct {

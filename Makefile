@@ -49,7 +49,7 @@ OBJS += acados/sim/sim_erk_integrator.o
 OBJS += acados/sim/sim_irk_integrator.o
 OBJS += acados/sim/sim_lifted_irk_integrator.o
 OBJS += acados/sim/sim_common.o
-OBJS += acados/sim/sim_gnsf2.o
+OBJS += acados/sim/sim_gnsf.o
 # utils
 OBJS += acados/utils/math.o
 OBJS += acados/utils/copy.o

@@ -21,7 +21,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
-#include "acados/sim/sim_gnsf2.h"
+#include "acados/sim/sim_gnsf.h"
 
 #include "acados_c/sim_interface.h"
 
@@ -53,8 +53,8 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
         case IRK:
             sim_irk_config_initialize_default(solver_config);
             break;
-        case GNSF2:
-            sim_gnsf2_config_initialize_default(solver_config);
+        case GNSF:
+            sim_gnsf_config_initialize_default(solver_config);
             break;
     }
     return solver_config;
@@ -126,7 +126,7 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
         status = config->model_set_function(model, IMPL_ODE_JAC_X_XDOT_U, fun_ptr);
     else if (!strcmp(fun_type, "impl_ode_jac_x_u"))
         status = config->model_set_function(model, IMPL_ODE_JAC_X_U, fun_ptr);
-    // GNSF2 functions
+    // GNSF functions
     else if (!strcmp(fun_type, "Phi_inc_dy_fun"))
         status = config->model_set_function(model, PHI_INC_DY_FUN, fun_ptr);
     else if (!strcmp(fun_type, "Phi_jac_y_fun"))

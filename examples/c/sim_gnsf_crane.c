@@ -26,14 +26,14 @@
 // acados
 // #include <acados_c/sim.h>
 // #include <acados_c/options.h>
-#include <acados/sim/sim_gnsf2.h>
+#include <acados/sim/sim_gnsf.h>
 #include <acados/sim/sim_common.h>
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
-#include "examples/c/gnsf2_crane_model/gnsf2_crane_model.h"
+#include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
 int main() {
 /************************************************
@@ -73,20 +73,20 @@ int main() {
 	external_function_casadi_create(&f_LO_inc_J_x1k1uz);
 
 /************************************************
-* Set up sim_gnsf2 structs
+* Set up sim_gnsf structs
 ************************************************/
 
     sim_solver_plan plan;
-    plan.sim_solver = GNSF2;
+    plan.sim_solver = GNSF;
     sim_solver_config *config = sim_config_create(plan);
 
-    gnsf2_dims *gnsf2_dim = gnsf2_dims_create();
-    gnsf2_get_dims(gnsf2_dim, get_ints_fun);
+    gnsf_dims *gnsf_dim = gnsf_dims_create();
+    gnsf_get_dims(gnsf_dim, get_ints_fun);
 
     // set up sim_dims
-    sim_dims *dims = (sim_dims *) gnsf2_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+    sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
 
-    // set up gnsf2_opts
+    // set up gnsf_opts
     int opts_size = config->opts_calculate_size(config, dims);
 	void *opts_mem = malloc(opts_size);
     sim_rk_opts *opts = config->opts_assign(config, dims, opts_mem);
@@ -114,7 +114,7 @@ int main() {
     opts->b_vec[2] =     3.260666571808232e-01;
     opts->b_vec[3] =     1.739354743418989e-01;
     
-    opts->ns = gnsf2_dim->num_stages;
+    opts->ns = gnsf_dim->num_stages;
     sim_in *in = sim_in_create(config, dims);
 
     for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
@@ -132,16 +132,16 @@ int main() {
     in->u[1] = -50.446662212534974;
     in->T = 0.1;
 
-    // set up gnsf2_model
-    gnsf2_model *model = in->model;
+    // set up gnsf_model
+    gnsf_model *model = in->model;
     // set external functions
     model->f_LO_inc_J_x1k1uz = (external_function_generic *) &f_LO_inc_J_x1k1uz;
     model->Phi_inc_dy = (external_function_generic *) &phi_fun_jac_y;
     model->Phi_jac_y = (external_function_generic *) &jac_Phi_y;
-    gnsf2_import_matrices(gnsf2_dim, model, get_matrices_fun);
-    gnsf2_precompute(gnsf2_dim, model, opts, in);
+    gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
+    gnsf_precompute(gnsf_dim, model, opts, in);
 
-    // gnsf2_import_precomputed(gnsf2_dim, model, But_KK_YY_ZZ_LO_fun);
+    // gnsf_import_precomputed(gnsf_dim, model, But_KK_YY_ZZ_LO_fun);
 
     // set up sim_out
     sim_out *out = sim_out_create(config, dims);
@@ -166,7 +166,7 @@ int main() {
     double gnsf_time = minimum_of_doubles(gnsf_times, NREP);
 
     // PRINTING
-    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf2_dim->num_steps);
+    printf("Newton_iter = %d,\t num_steps = %d \n", opts->newton_iter, gnsf_dim->num_steps);
     printf("xf =\n");
     d_print_e_mat(1, dims->nx, out->xn, 1);
     printf("forw_Sensitivities = \n");
@@ -174,11 +174,11 @@ int main() {
     printf("adj Sensitivities =\n");
     d_print_e_mat(1, dims->nx + dims->nu, out->S_adj, 1);
     
-    printf("gnsf2_time  =  %f [ms]\n", gnsf_time*1000);
+    printf("gnsf_time  =  %f [ms]\n", gnsf_time*1000);
     printf("casadi_time =  %f [ms]\t minimum of %d executions \n", casadi_time*1000, NREP);
 
     free(config);
-    free(gnsf2_dim);
+    free(gnsf_dim);
     free(in);
     free(out);
     free(opts_mem);

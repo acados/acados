@@ -153,7 +153,7 @@ file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/impl_ode_fun_jac_x_xdot.c
     wt_model_nx6/impl_ode_jac_x_xdot_u.c
     wt_model_nx6/impl_ode_jac_x_u.c
-    # GNSF2 functions
+    # gnsf functions
     wt_model_nx6/phi_fun_jac_y.c
     wt_model_nx6/phi_jac_y.c
     wt_model_nx6/f_LO_inc_Jx1k1uz_fun.c

@@ -48,7 +48,7 @@ typedef enum {
     IMPL_ODE_FUN_JAC_X_XDOT,
     IMPL_ODE_JAC_X_XDOT_U,
     IMPL_ODE_JAC_X_U,
-    // GNSF2
+    // gnsf
     PHI_INC_DY_FUN,
     PHI_JAC_Y_FUN,
     LO_FUN

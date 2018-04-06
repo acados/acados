@@ -8,7 +8,7 @@
 // #include "interfaces/acados_c/legacy_create.h"
 
 #include "acados/sim/sim_common.h"
-#include "acados/sim/sim_gnsf2.h"
+#include "acados/sim/sim_gnsf.h"
 #include "acados/sim/sim_irk_integrator.h"
 //#include "acados/sim/sim_casadi_wrapper.h"
 

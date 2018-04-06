@@ -83,7 +83,7 @@ const int *casadi_impl_ode_jac_x_u_sparsity_out(int);
 int casadi_impl_ode_jac_x_u_n_in();
 int casadi_impl_ode_jac_x_u_n_out();
 
-/* GNSF2 Functions */
+/* GNSF Functions */
 // used to import integers & double matrices
 int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int get_matrices_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
