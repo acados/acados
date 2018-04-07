@@ -148,7 +148,7 @@ void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void 
     d_create_cond_qp_ocp2dense(dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
 }
