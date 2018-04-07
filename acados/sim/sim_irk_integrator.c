@@ -684,6 +684,8 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // obtain JKf
 			// TODO add the option to use VDE instead of dgemm ???
             blasfeo_dgemm_nn(nx*ns, nx, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
+            //TODO(andrea): shouldn't n be nx+nu?? (see below)
+            // blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
             blasfeo_dgemm_nn(nx*ns, nu, nx, 1.0, JGf, 0, 0, S_forw, 0, nx, 1.0, JGf, 0, nx, JKf, 0, nx);
             blasfeo_drowpe(nx*ns, ipiv, JKf);
             blasfeo_dtrsm_llnu(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);

@@ -190,6 +190,20 @@ else()
                 nonlinear_chain_ocp_nlp_no_interface_example
                 nonlinear_chain_ocp_nlp_no_interface_example
             )
+
+        add_executable(
+                nonlinear_chain_ocp_nlp_no_interface_lifted_example
+                nonlinear_chain_ocp_nlp_no_interface_lifted.c
+                ${CHAIN_MODEL_SRC}
+            )
+            target_link_libraries(
+                nonlinear_chain_ocp_nlp_no_interface_lifted_example
+                acados
+            )
+            add_test(
+                nonlinear_chain_ocp_nlp_no_interface_lifted_example
+                nonlinear_chain_ocp_nlp_no_interface_example
+            )
     endif()
 endif()
 
@@ -257,6 +271,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     #   COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH}
     #   ./mass_spring_partial_tightening_example
     # )
+
 
 
     # -------------------- sim_crane
