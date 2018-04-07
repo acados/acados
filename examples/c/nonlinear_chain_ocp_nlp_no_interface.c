@@ -87,7 +87,7 @@
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
-#define COST 1
+#define COST 2
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 2
@@ -808,7 +808,7 @@ void read_final_state(const int nx, const int num_free_masses, double *xN)
 
 
 // hand-generated external function for externally provided hessian and gradient
-void ext_cost_nm2(void *fun, double *in, double *out)
+void ext_cost_nm2(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -820,33 +820,33 @@ void ext_cost_nm2(void *fun, double *in, double *out)
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm2[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm2[ii];
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *ux = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
 }
 
-void ext_cost_nm3(void *fun, double *in, double *out)
+void ext_cost_nm3(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -858,33 +858,33 @@ void ext_cost_nm3(void *fun, double *in, double *out)
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm3[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm3[ii];
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *ux = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
 }
 
-void ext_cost_nm4(void *fun, double *in, double *out)
+void ext_cost_nm4(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -896,33 +896,33 @@ void ext_cost_nm4(void *fun, double *in, double *out)
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm4[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm4[ii];
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *ux = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
 }
 
-void ext_cost_nm5(void *fun, double *in, double *out)
+void ext_cost_nm5(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -934,33 +934,33 @@ void ext_cost_nm5(void *fun, double *in, double *out)
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm5[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm5[ii];
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *ux = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
 }
 
-void ext_cost_nm6(void *fun, double *in, double *out)
+void ext_cost_nm6(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -972,27 +972,27 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 
 	// ref
 	double ref[nu+nx];
-	for (ii=0; ii<nx; ii++)
-		ref[ii] = xN_nm6[ii];
 	for (ii=0; ii<nu; ii++)
-		ref[nx+ii] = 0.0;
+		ref[ii] = 0.0;
+	for (ii=0; ii<nx; ii++)
+		ref[nu+ii] = xN_nm6[ii];
 
 	// Hessian
-	double *hess = out+nv;
+	double *hess = out[1];
 	for (ii=0; ii<nv*nv; ii++)
 		hess[ii] = 0.0;
-	for (ii=0; ii<nx; ii++)
-		hess[ii*(nv+1)] = 1e-2;
-	for (; ii<nx+nu; ii++)
+	for (ii=0; ii<nu; ii++)
 		hess[ii*(nv+1)] = 1.0;
+	for (; ii<nu+nx; ii++)
+		hess[ii*(nv+1)] = 1e-2;
 
 	// gradient
-	double *xu= in;
-	double *grad = out;
+	double *ux = in[0];
+	double *grad = out[0];
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = 0.0;
 	for (ii=0; ii<nv; ii++)
-		grad[ii] = hess[ii*(nv+1)] * (xu[ii] - ref[ii]);
+		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
 	return;
 
@@ -1000,8 +1000,8 @@ void ext_cost_nm6(void *fun, double *in, double *out)
 
 
 
-// hand-wirtten box constraints on states as nonlinra constraints
-void nonlin_constr_nm2(void *evaluate, double *in, double *out)
+// hand-wirtten box constraints on states as nonlinear constraints
+void nonlin_constr_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1009,26 +1009,24 @@ void nonlin_constr_nm2(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 6;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out;
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out+nh;
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
 }
 
-void nonlin_constr_nm3(void *evaluate, double *in, double *out)
+void nonlin_constr_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1036,26 +1034,24 @@ void nonlin_constr_nm3(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 12;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out;
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out+nh;
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
 }
 
-void nonlin_constr_nm4(void *evaluate, double *in, double *out)
+void nonlin_constr_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1063,26 +1059,24 @@ void nonlin_constr_nm4(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 18;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out;
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out+nh;
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
 }
 
-void nonlin_constr_nm5(void *evaluate, double *in, double *out)
+void nonlin_constr_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1090,26 +1084,24 @@ void nonlin_constr_nm5(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 24;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out;
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out+nh;
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
 }
 
-void nonlin_constr_nm6(void *evaluate, double *in, double *out)
+void nonlin_constr_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1117,20 +1109,18 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 30;
 
-	int nv = nu+nx;
 	int nh = nx;
 
 	// fun
-	double *fun = out;
-	for (ii=0; ii<nx; ii++)
-		fun[ii] = in[ii]; // x
+	struct blasfeo_dvec *fun = out[0];
+	struct blasfeo_dvec *ux = in[0];
+	blasfeo_dveccp(nx, ux, nu, fun, 0);
 
 	// jacobian
-	double *jac = out+nh;
-	for (ii=0; ii<nv*nh; ii++)
-		jac[ii] = 0.0;
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
 	for (ii=0; ii<nh; ii++)
-		jac[ii*(nh+1)] = 1.0;
+		BLASFEO_DMATEL(jac, nu+ii, ii) = 1.0;
 
 	return;
 
@@ -1138,7 +1128,8 @@ void nonlin_constr_nm6(void *evaluate, double *in, double *out)
 
 
 
-void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
+// ls hessian
+void ls_cost_hess_nm2(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1146,17 +1137,14 @@ void ls_cost_hess_nm2(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 6;
 
-	int nv = nu+nx;
-
-	double *hess = out;
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
 }
 
-void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm3(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1164,17 +1152,14 @@ void ls_cost_hess_nm3(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 12;
 
-	int nv = nu+nx;
-
-	double *hess = out;
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
 }
 
-void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm4(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1182,17 +1167,14 @@ void ls_cost_hess_nm4(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 18;
 
-	int nv = nu+nx;
-
-	double *hess = out;
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
 }
 
-void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm5(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1200,17 +1182,14 @@ void ls_cost_hess_nm5(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 24;
 
-	int nv = nu+nx;
-
-	double *hess = out;
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
 }
 
-void ls_cost_hess_nm6(void *evaluate, double *in, double *out)
+void ls_cost_hess_nm6(void *evaluate, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
 
 	int ii;
@@ -1218,11 +1197,8 @@ void ls_cost_hess_nm6(void *evaluate, double *in, double *out)
 	int nu = 3;
 	int nx = 30;
 
-	int nv = nu+nx;
-
-	double *hess = out;
-	for (ii=0; ii<nv*nv; ii++)
-		hess[ii] = 0.0;
+	struct blasfeo_dmat *hess = out[0];
+	blasfeo_dgese(nu+nx, nu+nx, 0.0, hess, 0, 0);
 
 	return;
 
