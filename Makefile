@@ -183,9 +183,11 @@ qpdunes_clean:
 	( cd $(QPDUNES_PATH); $(MAKE) clean )
 
 deep_clean: clean $(CLEAN_DEPS)
-	( cd examples/c; $(MAKE) deep_clean )
-	rm -rf include
-	rm -rf lib
+	( cd examples/c; $(MAKE) clean )
 
 clean_models:
 	( cd examples/c; $(MAKE) clean_models )
+
+purge: deep_clean clean_models
+	rm -rf include
+	rm -rf lib
