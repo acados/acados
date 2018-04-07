@@ -38,6 +38,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
+#include "acados/sim/sim_new_lifted_irk_integrator.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
@@ -74,15 +75,13 @@
 // temp
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 
-
-
-
-#define NN 15
+#define NN 25
 #define TF 3.75
-#define Ns 2
-#define MAX_SQP_ITERS 10
-#define NREP 10
-
+// #define Ns 2 // TODO(andrea): unused
+#define MAX_SQP_ITERS 1000
+#define NREP 1
+#define NUM_FREE_MASSES 3
+#define NEW_LIFTED 1
 
 // dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
 #define DYNAMICS 2
@@ -1239,7 +1238,7 @@ int main() {
     // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
-    const int NMF = 3;  // number of free masses
+    const int NMF = NUM_FREE_MASSES;  // number of free masses
     const int d = 0;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
@@ -1365,7 +1364,11 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
-		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+		if (NEW_LIFTED) {
+            sim_new_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+        } else {
+            sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
+        }
     }
 #elif DYNAMICS==3
 	// dynamics: discrete model
@@ -1420,14 +1423,14 @@ int main() {
 	tmp_size = 0;
 	for (int ii=0; ii<NN; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(exlp_vde_for+ii);
+		tmp_size += external_function_casadi_calculate_size(expl_vde_for+ii);
 	}
 	void *forw_vde_casadi_mem = malloc(tmp_size);
 	c_ptr = forw_vde_casadi_mem;
 	for (int ii=0; ii<NN; ii++)
 	{
-		external_function_casadi_assign(exlp_vde_for+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(exlp_vde_for+ii);
+		external_function_casadi_assign(expl_vde_for+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(expl_vde_for+ii);
 	}
 	// jac_ode
 	tmp_size = 0;
@@ -1824,7 +1827,7 @@ int main() {
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		erk_model *model = dynamics->sim_model;
-		model->expl_vde_for = (external_function_generic *) &exlp_vde_for[i];
+		model->expl_vde_for = (external_function_generic *) &expl_vde_for[i];
 		model->expl_ode_jac = (external_function_generic *) &expl_ode_jac[i];
 	}
 #elif DYNAMICS==1
@@ -1832,7 +1835,7 @@ int main() {
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		lifted_irk_model *model = dynamics->sim_model;
-		model->expl_vde_for = (external_function_generic *) &exlp_vde_for[i];
+		model->expl_vde_for = (external_function_generic *) &expl_vde_for[i];
 		model->expl_ode_jac = (external_function_generic *) &expl_ode_jac[i];
 	}
 #elif DYNAMICS==2
@@ -2089,8 +2092,8 @@ int main() {
 
     double time = acados_toc(&timer)/NREP;
 
-	printf("\nresiduals\n");
-	ocp_nlp_res_print(dims, nlp_mem->nlp_res);
+	// printf("\nresiduals\n");
+	// ocp_nlp_res_print(dims, nlp_mem->nlp_res);
 
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);

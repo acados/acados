@@ -70,6 +70,7 @@ typedef struct
 {
 
     struct blasfeo_dmat *S_forw; // forward sensitivities
+    struct blasfeo_dmat *JG_traj; // JGK trajectory
 
     struct blasfeo_dvec *rG; // residuals of G (nx*ns)
     struct blasfeo_dvec *xt; // temporary x
@@ -78,6 +79,10 @@ typedef struct
     struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
     struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
     
+    struct blasfeo_dvec *xn_traj; // xn trajectory
+    struct blasfeo_dvec *K_traj;  // K trajectory
+    struct blasfeo_dvec *w;       // stacked x and u
+
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
     double *Jt; // temporary Jacobian of ode (nx, nx)
@@ -85,9 +90,6 @@ typedef struct
     double *S_adj_w;
     int *ipiv; // index of pivot vector
 
-    struct blasfeo_dvec *xn_traj; // xn trajectory
-    struct blasfeo_dvec *K_traj;  // K trajectory
-    struct blasfeo_dmat *JG_traj; // JGK trajectory
 
     // additional workspace for lifted integrators
 
@@ -102,6 +104,8 @@ typedef struct
     struct blasfeo_dmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
 
     struct blasfeo_dvec *K; // internal variables (nx*ns)
+    struct blasfeo_dvec *x; // states (nx) -- for expansion step
+    struct blasfeo_dvec *u; // controls (nu) -- for expansion step
     
     int update_sens;
 

@@ -79,21 +79,21 @@
 
 
 
-#define NN 100
+#define NN 25 
 #define TF 3.75
 #define Ns 2
 #define MAX_SQP_ITERS 100
-#define NREP 1
-
+#define NREP 10
+#define NUM_FREE_MASSES 3
 
 // dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model, 4 new lifted integrators
-#define DYNAMICS 4
+#define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
 #define COST 1
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
-#define CONSTRAINTS 0
+#define CONSTRAINTS 2
 
 // xcond: 0 hpipm no condensing, 1 hpipm part condensing, 2 hpipm full condensing
 #define QPSOLVER 1
@@ -1488,7 +1488,7 @@ int main() {
 
     enum sensitivities_scheme scheme = EXACT_NEWTON;
     /* enum sensitivities_scheme scheme = FROZEN_INEXACT_NEWTON; */
-    const int NMF = 3;  // number of free masses
+    const int NMF = NUM_FREE_MASSES;  // number of free masses
     const int d = 0;  // number of stages in integrator
 
     print_problem_info(scheme, NMF, d);
@@ -1677,27 +1677,27 @@ int main() {
 	tmp_size = 0;
 	for (int ii=0; ii<NN; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(forw_vde_casadi+ii);
+		tmp_size += external_function_casadi_calculate_size(expl_vde_for+ii);
 	}
 	void *forw_vde_casadi_mem = malloc(tmp_size);
 	c_ptr = forw_vde_casadi_mem;
 	for (int ii=0; ii<NN; ii++)
 	{
-		external_function_casadi_assign(forw_vde_casadi+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(forw_vde_casadi+ii);
+		external_function_casadi_assign(expl_vde_for+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(expl_vde_for+ii);
 	}
 	// jac_ode
 	tmp_size = 0;
 	for (int ii=0; ii<NN; ii++)
 	{
-		tmp_size += external_function_casadi_calculate_size(jac_ode_casadi+ii);
+		tmp_size += external_function_casadi_calculate_size(expl_ode_jac+ii);
 	}
 	void *jac_ode_casadi_mem = malloc(tmp_size);
 	c_ptr = jac_ode_casadi_mem;
 	for (int ii=0; ii<NN; ii++)
 	{
-		external_function_casadi_assign(jac_ode_casadi+ii, c_ptr);
-		c_ptr += external_function_casadi_calculate_size(jac_ode_casadi+ii);
+		external_function_casadi_assign(expl_ode_jac+ii, c_ptr);
+		c_ptr += external_function_casadi_calculate_size(expl_ode_jac+ii);
 	}
 
 #elif DYNAMICS==2 | DYNAMICS==4
@@ -2198,16 +2198,16 @@ int main() {
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		erk_model *model = dynamics->sim_model;
-		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
-		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+		model->expl_vde_for = (external_function_generic *) &expl_vde_for[i];
+		model->expl_ode_jac = (external_function_generic *) &expl_ode_jac[i];
 	}
 #elif DYNAMICS==1
 	for (int i=0; i<NN; i++)
 	{
 		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
 		lifted_irk_model *model = dynamics->sim_model;
-		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
-		model->jac_ode_expl = (external_function_generic *) &jac_ode_casadi[i];
+		model->expl_vde_for = (external_function_generic *) &expl_vde_for[i];
+		model->expl_ode_jac = (external_function_generic *) &expl_ode_jac[i];
 	}
 #elif DYNAMICS==2 | DYNAMICS==4
 	for (int i=0; i<NN; i++)
