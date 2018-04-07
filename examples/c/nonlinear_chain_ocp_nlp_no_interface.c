@@ -1988,17 +1988,17 @@ int main() {
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: ERK 4
 		sim_opts->ns = 4;
-		sim_opts->num_steps = 20;
+		sim_opts->num_steps = 10;
 #elif DYNAMICS==1
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: lifted IRK GL2
-		sim_opts->ns = 2;
+		sim_opts->ns = 3;
 #elif DYNAMICS==2
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: IRK GL2
-		sim_opts->ns = 8;
+		sim_opts->ns = 3;
 		sim_opts->jac_reuse = true;
 #elif DYNAMICS==3
 		// dynamics: discrete model
@@ -2007,7 +2007,7 @@ int main() {
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: new lifterd IRK GL2
-		sim_opts->ns = 8;
+		sim_opts->ns = 3;
 #endif
     }
 
