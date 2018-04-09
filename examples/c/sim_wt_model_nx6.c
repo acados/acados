@@ -214,7 +214,7 @@ int main()
 
 	int number_sim_solvers = 4;
 	int nss;
-	for (nss = 0; nss < number_sim_solvers; nss++)
+	for (nss = 2; nss < number_sim_solvers; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -290,7 +290,7 @@ int main()
 
 	//		opts->ns = 4; // number of stages in rk integrator
 	//		opts->num_steps = 5; // number of integration steps
-		opts->sens_adj = false;
+		opts->sens_adj = true;
 		opts->sens_forw = true;
 
 		switch (nss)
@@ -536,11 +536,11 @@ int main()
 
 // TODO: check, whats the problem here?
 		// double *S_adj_out = NULL;
-		// if(opts->sens_adj){
-		// 	S_forw_out = out->S_adj;
-		// 	printf("\nS_adj_out: \n");
-		// 	d_print_e_mat(1, nx, S_adj_out, 1);
-		// }
+		if(opts->sens_adj){
+			double *S_adj_out = out->S_adj;
+			printf("\nS_adj_out: \n");
+			d_print_e_mat(1, nx, S_adj_out, 1);
+		}
 
 	#if 0
 		printf("\n");
