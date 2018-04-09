@@ -11,7 +11,7 @@
 
 #include "simstruc.h"
 
-#include "acados_c/ocp_qp.h"
+#include "acados_c/ocp_qp_interface.h"
 #include "acados_c/options.h"
 #include "acados/utils/print.h"
 
@@ -60,7 +60,7 @@ static void mdlStart(SimStruct *S) {
     int nu = mxGetN(B);
     ssSetOutputPortWidth(S, 0, nu);
     
-    ocp_qp_dims *qp_dims = create_ocp_qp_dims(AC_HORIZON_LENGTH);
+    ocp_qp_dims *qp_dims = ocp_qp_dims_create(AC_HORIZON_LENGTH);
     qp_dims->nbx[0] = nx;
     qp_dims->nb[0] = nx;
     for (int i = 0; i < AC_HORIZON_LENGTH; ++i) {
@@ -69,7 +69,10 @@ static void mdlStart(SimStruct *S) {
     }
     qp_dims->nx[AC_HORIZON_LENGTH] = nx;
     
-    ocp_qp_in *qp_in = create_ocp_qp_in(qp_dims);
+    ocp_qp_solver_plan plan = {PARTIAL_CONDENSING_HPIPM};
+    ocp_qp_xcond_solver_config *config = ocp_qp_config_create(plan);
+
+    ocp_qp_in *qp_in = ocp_qp_in_create(config, qp_dims);
     for (int i = 0; i < nx; ++i)
         qp_in->idxb[0][i] = nu+i;
 
@@ -82,18 +85,17 @@ static void mdlStart(SimStruct *S) {
     d_cvt_colmaj_to_ocp_qp_Q(AC_HORIZON_LENGTH, (double *) mxGetData(Q), qp_in);
     d_cvt_colmaj_to_ocp_qp_R(AC_HORIZON_LENGTH, (double *) mxGetData(R), qp_in);
 
-    ocp_qp_out *qp_out = create_ocp_qp_out(qp_dims);
+    ocp_qp_out *qp_out = ocp_qp_out_create(config, qp_dims);
     
-    ocp_qp_solver_plan plan = {PARTIAL_CONDENSING_HPIPM};
-    void *qp_args = ocp_qp_create_args(&plan, qp_dims);
+    void *qp_opts = ocp_qp_opts_create(config, qp_dims);
     
     printf("mdlStart: Create acados solver");
-    ocp_qp_solver *qp_solver = ocp_qp_create(&plan, qp_dims, qp_args);
+    ocp_qp_solver *qp_solver = ocp_qp_create(config, qp_dims, qp_opts);
     
     ssGetPWork(S)[0] = (void *) qp_dims;
     ssGetPWork(S)[1] = (void *) qp_in;
     ssGetPWork(S)[2] = (void *) qp_out;
-    ssGetPWork(S)[3] = (void *) qp_args;
+    ssGetPWork(S)[3] = (void *) qp_opts;
     ssGetPWork(S)[4] = (void *) qp_solver;
 }
 

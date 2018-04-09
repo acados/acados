@@ -229,6 +229,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 #    target_link_libraries(pendulum_scqp acados)
 #    add_test(pendulum_scqp pendulum_scqp)
 
+    add_executable(pendulum_sqp pendulum_sqp_gn.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
+    target_link_libraries(pendulum_sqp acados)
+    add_test(pendulum_sqp pendulum_sqp)
+
     # -------------------- mass_spring
     if(ACADOS_WITH_C_INTERFACE)
         add_executable(mass_spring_example mass_spring_example.c mass_spring_model/mass_spring_qp.c)

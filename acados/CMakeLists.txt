@@ -100,11 +100,12 @@ endif()
 
 if(ACADOS_WITH_QPOASES)
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QPOASES)
+    target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
 endif()
 
 if(ACADOS_WITH_QPDUNES)
     target_compile_definitions(acados PUBLIC ACADOS_WITH_QPDUNES)
-    target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES) # Needed for qpDUNES
+    target_compile_definitions(acados PUBLIC USE_ACADOS_TYPES)
 endif()
 
 if(ACADOS_WITH_OOQP)

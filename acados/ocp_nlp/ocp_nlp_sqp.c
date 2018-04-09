@@ -21,6 +21,7 @@
 
 // external
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 // blasfeo
@@ -663,9 +664,6 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 // TODO move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work)
 {
-	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
-
-    ocp_nlp_sqp_cast_workspace(config, dims, work, mem, opts);
 
 	// loop index
 	int i;
@@ -826,6 +824,10 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 		// compute nlp residuals
 		ocp_nlp_res_compute(dims, nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
 
+		nlp_out->inf_norm_res = fmax(
+									fmax(mem->nlp_res->inf_norm_res_g, mem->nlp_res->inf_norm_res_b),
+									fmax(mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m)
+								);
 
 		// TODO exit conditions on residuals
 		if( (mem->nlp_res->inf_norm_res_g < opts->min_res_g) &
@@ -839,6 +841,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 			// save sqp iterations number
 			mem->sqp_iter = sqp_iter;
+			nlp_out->sqp_iter = sqp_iter;
 
 			// stop timer
 			total_time += acados_toc(&timer);
@@ -894,6 +897,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 	// save sqp iterations number
 	mem->sqp_iter = sqp_iter;
+	nlp_out->sqp_iter = sqp_iter;
 
 	// printf("%d sqp iterations\n", sqp_iter);
 	// print_ocp_qp_in(work->qp_in);
