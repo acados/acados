@@ -19,8 +19,6 @@
 
 cmake_minimum_required(VERSION 3.1)
 
-set(ACADOS_WITH_WERROR ON CACHE BOOL "acados with Werror")
-
 set(ACADOS_WITH_C_INTERFACE ON CACHE BOOL "acados with c interface")
 
 if(CMAKE_MAKE_PROGRAM)
@@ -49,10 +47,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-endif()
-
-if (ACADOS_WITH_WERROR AND NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_compile_options(-Werror)
 endif()
 
 message(STATUS "Installation directory is ${CMAKE_INSTALL_PREFIX}")
