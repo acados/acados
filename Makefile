@@ -48,6 +48,7 @@ OBJS += acados/sim/sim_collocation_utils.o
 OBJS += acados/sim/sim_erk_integrator.o
 OBJS += acados/sim/sim_irk_integrator.o
 OBJS += acados/sim/sim_lifted_irk_integrator.o
+OBJS += acados/sim/sim_new_lifted_irk_integrator.o
 OBJS += acados/sim/sim_common.o
 # utils
 OBJS += acados/utils/math.o
@@ -156,9 +157,6 @@ examples_c: acados_c_static
 run_examples_c: examples_c
 	( cd examples/c; $(MAKE) run_examples )
 
-run_example_chain:
-	( cd examples/c; $(MAKE) run_nonlinear_chain_ocp_nlp )
-
 clean:
 	( cd acados; $(MAKE) clean )
 	( cd examples/c; $(MAKE) clean )
@@ -183,9 +181,11 @@ qpdunes_clean:
 	( cd $(QPDUNES_PATH); $(MAKE) clean )
 
 deep_clean: clean $(CLEAN_DEPS)
-	( cd examples/c; $(MAKE) deep_clean )
-	rm -rf include
-	rm -rf lib
+	( cd examples/c; $(MAKE) clean )
 
 clean_models:
 	( cd examples/c; $(MAKE) clean_models )
+
+purge: deep_clean clean_models
+	rm -rf include
+	rm -rf lib

@@ -21,6 +21,7 @@
 #include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_lifted_irk_integrator.h"
 #include "acados/sim/sim_irk_integrator.h"
+#include "acados/sim/sim_new_lifted_irk_integrator.h"
 
 #include "acados_c/sim_interface.h"
 
@@ -51,6 +52,9 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
             break;
         case IRK:
             sim_irk_config_initialize_default(solver_config);
+            break;
+        case NEW_LIFTED_IRK:
+            sim_new_lifted_irk_config_initialize_default(solver_config);
             break;
     }
     return solver_config;

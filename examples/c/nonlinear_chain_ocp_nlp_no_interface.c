@@ -75,15 +75,16 @@
 // temp
 #include "acados/ocp_qp/ocp_qp_hpipm.h"
 
-#define NN 25
+#define NN 15
 #define TF 3.75
-// #define Ns 2 // TODO(andrea): unused
-#define MAX_SQP_ITERS 1000
+
+#define MAX_SQP_ITERS 10
 #define NREP 1
+
 #define NUM_FREE_MASSES 3
 #define NEW_LIFTED 1
 
-// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model
+// dynamics: 0 erk, 1 lifted_irk, 2 irk, 3 discrete_model, 4 new_lifted_irk
 #define DYNAMICS 2
 
 // cost: 0 ls, 1 nls, 2 external
@@ -199,7 +200,7 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm2_sparsity_out;
 				jac_ode[ii].casadi_n_in = &jac_chain_nm2_n_in;
 				jac_ode[ii].casadi_n_out = &jac_chain_nm2_n_out;
-#elif DYNAMICS == 2
+#elif DYNAMICS==2 | DYNAMICS==4
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm2;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm2_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm2_sparsity_in;
@@ -248,7 +249,7 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				impl_ode_jac_x_u[ii].casadi_sparsity_out = &casadi_impl_ode_jac_x_u_chain_nm2_sparsity_out;
 				impl_ode_jac_x_u[ii].casadi_n_in = &casadi_impl_ode_jac_x_u_chain_nm2_n_in;
 				impl_ode_jac_x_u[ii].casadi_n_out = &casadi_impl_ode_jac_x_u_chain_nm2_n_out;
-#elif DYNAMICS == 3
+#elif DYNAMICS==3
 				erk4_casadi[ii].casadi_fun = &casadi_erk4_chain_nm2;
 				erk4_casadi[ii].casadi_work = &casadi_erk4_chain_nm2_work;
 				erk4_casadi[ii].casadi_sparsity_in = &casadi_erk4_chain_nm2_sparsity_in;
@@ -275,7 +276,7 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm3_sparsity_out;
 				jac_ode[ii].casadi_n_in = &jac_chain_nm3_n_in;
 				jac_ode[ii].casadi_n_out = &jac_chain_nm3_n_out;
-#elif DYNAMICS == 2
+#elif DYNAMICS==2 | DYNAMICS==4
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm3;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm3_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm3_sparsity_in;
@@ -351,7 +352,7 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm4_sparsity_out;
 				jac_ode[ii].casadi_n_in = &jac_chain_nm4_n_in;
 				jac_ode[ii].casadi_n_out = &jac_chain_nm4_n_out;
-#elif DYNAMICS == 2
+#elif DYNAMICS==2 | DYNAMICS==4
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm4;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm4_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm4_sparsity_in;
@@ -427,7 +428,7 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm5_sparsity_out;
 				jac_ode[ii].casadi_n_in = &jac_chain_nm5_n_in;
 				jac_ode[ii].casadi_n_out = &jac_chain_nm5_n_out;
-#elif DYNAMICS == 2
+#elif DYNAMICS==2 | DYNAMICS==4
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm5;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm5_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm5_sparsity_in;
@@ -503,7 +504,7 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 				jac_ode[ii].casadi_sparsity_out = &jac_chain_nm6_sparsity_out;
 				jac_ode[ii].casadi_n_in = &jac_chain_nm6_n_in;
 				jac_ode[ii].casadi_n_out = &jac_chain_nm6_n_out;
-#elif DYNAMICS == 2
+#elif DYNAMICS==2 | DYNAMICS==4
 				impl_ode_fun[ii].casadi_fun = &casadi_impl_ode_fun_chain_nm6;
 				impl_ode_fun[ii].casadi_work = &casadi_impl_ode_fun_chain_nm6_work;
 				impl_ode_fun[ii].casadi_sparsity_in = &casadi_impl_ode_fun_chain_nm6_sparsity_in;
@@ -1340,17 +1341,20 @@ int main() {
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
-		if (NEW_LIFTED) {
-            sim_new_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
-        } else {
-            sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
-        }
+		sim_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #elif DYNAMICS==3
 	// dynamics: discrete model
     for (int ii = 0; ii < NN; ii++)
     {
 		ocp_nlp_dynamics_disc_config_initialize_default(config->dynamics[ii]);
+    }
+#elif DYNAMICS==4
+	// dynamics: new lifted IRK
+    for (int ii = 0; ii < NN; ii++)
+    {
+		ocp_nlp_dynamics_cont_config_initialize_default(config->dynamics[ii]);
+		sim_new_lifted_irk_config_initialize_default(config->dynamics[ii]->sim_solver);
     }
 #endif
 
@@ -1422,7 +1426,7 @@ int main() {
 		c_ptr += external_function_casadi_calculate_size(expl_ode_jac+ii);
 	}
 
-#elif DYNAMICS==2
+#elif DYNAMICS==2 |  DYNAMICS==4
 
 	// impl_ode
 	tmp_size = 0;
@@ -1833,6 +1837,19 @@ int main() {
 		ocp_nlp_dynamics_disc_model *dynamics = nlp_in->dynamics[i];
 		dynamics->discrete_model = (external_function_generic *) &erk4_casadi[i];
 	}
+#elif DYNAMICS==4
+	for (int i=0; i<NN; i++)
+	{
+		ocp_nlp_dynamics_cont_model *dynamics = nlp_in->dynamics[i];
+		irk_model *model = dynamics->sim_model;
+		model->impl_ode_fun = (external_function_generic *) &impl_ode_fun[i];
+		model->impl_ode_jac_x = (external_function_generic *) &impl_ode_jac_x[i];
+		model->impl_ode_jac_xdot = (external_function_generic *) &impl_ode_jac_xdot[i];
+		model->impl_ode_jac_u = (external_function_generic *) &impl_ode_jac_u[i];
+		model->impl_ode_fun_jac_x_xdot = (external_function_generic *) &impl_ode_fun_jac_x_xdot[i];
+		model->impl_ode_jac_x_xdot_u = (external_function_generic *) &impl_ode_jac_x_xdot_u[i];
+		model->impl_ode_jac_x_u = (external_function_generic *) &impl_ode_jac_x_u[i];
+	}
 #endif
 
 
@@ -1971,20 +1988,26 @@ int main() {
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: ERK 4
 		sim_opts->ns = 4;
-//		sim_opts->num_steps = 1;
+		sim_opts->num_steps = 10;
 #elif DYNAMICS==1
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
 		// dynamics: lifted IRK GL2
-		sim_opts->ns = 2;
+		sim_opts->ns = 3;
 #elif DYNAMICS==2
 		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
         sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
-		// dynamics: discrete model
-		sim_opts->ns = 2;
+		// dynamics: IRK GL2
+		sim_opts->ns = 3;
 		sim_opts->jac_reuse = true;
 #elif DYNAMICS==3
+		// dynamics: discrete model
 		// no options
+#elif DYNAMICS==4
+		ocp_nlp_dynamics_cont_opts *dynamics_opts = nlp_opts->dynamics[i];
+        sim_rk_opts *sim_opts = dynamics_opts->sim_solver;
+		// dynamics: new lifterd IRK GL2
+		sim_opts->ns = 3;
 #endif
     }
 
@@ -2096,12 +2119,15 @@ int main() {
 	free(forw_vde_casadi_mem);
 	free(jac_ode_casadi_mem);
 
-#elif DYNAMICS==2
+#elif DYNAMICS==2 | DYNAMICS==4
 
 	free(impl_ode_casadi_mem);
 	free(impl_jac_x_casadi_mem);
 	free(impl_jac_xdot_casadi_mem);
 	free(impl_jac_u_casadi_mem);
+	free(impl_ode_fun_jac_x_xdot_mem);
+	free(impl_ode_jac_x_xdot_u_mem);
+	free(impl_ode_jac_x_u_mem);
 
 #elif DYNAMICS==3
 
