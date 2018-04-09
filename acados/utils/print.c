@@ -258,7 +258,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
         blasfeo_print_dmat(nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
 
         printf("rq =\n");
-        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rqz[ii], 0);
 
 
         if (ii < N)
@@ -490,7 +490,7 @@ void print_ocp_qp_in_to_string(char *string_out, ocp_qp_in *qp_in)
         blasfeo_print_to_string_dmat(&string_out, nu[ii]+nx[ii]+1, nu[ii]+nx[ii], &qp_in->RSQrq[ii], 0 , 0);
 
         string_out += sprintf(string_out, "rq =\n");
-        blasfeo_print_to_string_tran_dvec(&string_out, nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+        blasfeo_print_to_string_tran_dvec(&string_out, nu[ii]+nx[ii], &qp_in->rqz[ii], 0);
 
 
         if (ii < N)
@@ -655,7 +655,7 @@ void print_dense_qp_in(dense_qp_in *qp_in)
     printf("H =\n");
     blasfeo_print_dmat(nv, nv, qp_in->Hv, 0, 0);
     printf("g =\n");
-    blasfeo_print_dvec(nv, qp_in->g, 0);
+    blasfeo_print_dvec(nv, qp_in->gz, 0);
     printf("A =\n");
     blasfeo_print_dmat(ne, nv, qp_in->A, 0, 0);
     printf("b =\n");

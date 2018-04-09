@@ -345,7 +345,7 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     if (M < N)
     {
         for (int ii = 0; ii <= N; ii++)
-            blasfeo_create_dvec(nu[ii]+nx[ii], &mem->hsrq[ii], qp_in->rq[ii].pa);
+            blasfeo_create_dvec(nu[ii]+nx[ii], &mem->hsrq[ii], qp_in->rqz[ii].pa);
 
         // update cost function matrices and vectors (box constraints)
         d_update_hessian_gradient_mpc_hard_libstr(

@@ -679,7 +679,7 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 	// g
 	for (i=0; i<=N; i++)
 	{
-		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, work->qp_in->rq+i, 0);
+		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, work->qp_in->rqz+i, 0);
 	}
 
 	// b
