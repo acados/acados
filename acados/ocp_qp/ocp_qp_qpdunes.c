@@ -506,7 +506,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
         // setup of intervals
         for (int kk = 0; kk < N; ++kk) {
             form_RSQ(work->R, work->S, work->Q, nx, nu, &in->RSQrq[kk]);
-            form_g(work->g, nx, nu, &in->rq[kk]);
+            form_g(work->g, nx, nu, &in->rqz[kk]);
             form_bounds(work->zLow, work->zUpp, nx, nu, nb[kk], ng[kk], in->idxb[kk],
             &in->d[kk], opts->options.QPDUNES_INFTY);
             form_dynamics(work->ABt, work->b, nx, nu, &in->BAbt[kk], &in->b[kk]);
@@ -539,7 +539,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
         form_bounds(work->zLow, work->zUpp, nx, 0, nb[N], ng[N], in->idxb[N],
             &in->d[N], opts->options.QPDUNES_INFTY);
         form_RSQ(work->R, work->S, work->Q, nx, 0, &in->RSQrq[N]);
-        form_g(work->g, nx, 0, &in->rq[N]);  // work->g = q
+        form_g(work->g, nx, 0, &in->rqz[N]);  // work->g = q
         if (ng[N] == 0) {
             value = qpDUNES_setupFinalInterval(
                 &(mem->qpData), mem->qpData.intervals[N], work->Q, work->g,
@@ -565,7 +565,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
         if (opts->isLinearMPC == 0) {
             for (int kk = 0; kk < N; kk++) {
                 form_H(work->H, nx, nu, &in->RSQrq[kk]);
-                form_g(work->g, nx, nu, &in->rq[kk]);
+                form_g(work->g, nx, nu, &in->rqz[kk]);
                 form_dynamics(work->ABt, work->b, nx, nu, &in->BAbt[kk], &in->b[kk]);
 
                 form_bounds(work->zLow, work->zUpp, nx, nu, nb[kk], ng[kk], in->idxb[kk],
@@ -591,7 +591,7 @@ static int update_memory(ocp_qp_in *in, ocp_qp_qpdunes_opts *opts, ocp_qp_qpdune
             form_bounds(work->zLow, work->zUpp, nx, 0, nb[N], ng[N], in->idxb[N],
                 &in->d[N], opts->options.QPDUNES_INFTY);
             form_RSQ(work->R, work->S, work->Q, nx, 0, &in->RSQrq[N]);
-            form_g(work->g, nx, 0, &in->rq[N]);  // work->g = q
+            form_g(work->g, nx, 0, &in->rqz[N]);  // work->g = q
             if (ng[N] == 0) {
                 value = qpDUNES_updateIntervalData(
                     &(mem->qpData), mem->qpData.intervals[N], work->Q,

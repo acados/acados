@@ -464,7 +464,7 @@ void convert_colmaj_to_ocp_qp_in(colmaj_ocp_qp_in *cm_qp_in, ocp_qp_in *qp_in)
         cm_qp_in->Q, cm_qp_in->S, cm_qp_in->R, cm_qp_in->q, cm_qp_in->r,
         qp_in->idxb, cm_qp_in->lb, cm_qp_in->ub,
         cm_qp_in->Cx, cm_qp_in->Cu, cm_qp_in->lc, cm_qp_in->uc,
-        NULL, NULL, NULL, NULL, NULL, qp_in);
+        NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 }
 
 
