@@ -641,6 +641,48 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                         // fill in the ii-th, jj-th block of JGK
                         blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
                     } // end jj
+
+
+                    blasfeo_dveccp(nx, xn, 0, xt, 0);
+                    for(jj=0; jj<ns; jj++)
+                    {
+                        a = A_mat[ii+ns*jj];
+                        if(a!=0)
+                        {
+                            a *= step;
+                            blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
+                        }
+                    }
+
+                    blasfeo_unpack_dvec(nx, xt, 0, ode_args);
+                    blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
+                    
+                    acados_tic(&timer_ad);
+                    
+                    ext_fun_type_in[0] = COLMAJ;
+                    ext_fun_in[0] = ode_args+0; // x: nx
+                    ext_fun_type_in[1] = COLMAJ;
+                    ext_fun_in[1] = ode_args+nx; // dx: nx
+                    ext_fun_type_in[2] = COLMAJ;
+                    ext_fun_in[2] = ode_args+nx+nx; // u: nu
+
+                    ext_fun_type_out[0] = COLMAJ;
+                    ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
+                    ext_fun_type_out[1] = COLMAJ;
+                    ext_fun_out[1] = jac_out+nx*nx; // jac_xdot: nx*nx
+                    ext_fun_type_out[2] = COLMAJ;
+                    ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
+
+                    model->impl_ode_jac_x_xdot_u->evaluate(
+                            model->impl_ode_jac_x_xdot_u, 
+                            ext_fun_type_in, ext_fun_in, 
+                            ext_fun_type_out, ext_fun_out);
+
+                    timing_ad += acados_toc(&timer_ad);
+                    // extract Jacobian of G wrt x
+                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);              
+                    // extract Jacobian of G wrt u
+                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);     
                 }
             } // end ii
         }
@@ -666,57 +708,19 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         blasfeo_daxpy(nx*ns, -1.0, rG, 0, K, 0, K, 0);
 
         // evaluate forward sensitivities
-        if (opts->sens_forw)
-		{
-            // evaluate JGK(xn,Kn)
-            for(ii=0; ii<ns; ii++)
-            {
-                acados_tic(&timer_ad);
-                ext_fun_type_in[0] = COLMAJ;
-                ext_fun_in[0] = ode_args+0; // x: nx
-                ext_fun_type_in[1] = COLMAJ;
-                ext_fun_in[1] = ode_args+nx; // dx: nx
-                ext_fun_type_in[2] = COLMAJ;
-                ext_fun_in[2] = ode_args+nx+nx; // u: nu
 
-                ext_fun_type_out[0] = COLMAJ;
-                ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
-                ext_fun_type_out[1] = COLMAJ;
-                ext_fun_out[1] = jac_out+nx*nx; // jac_xdot: nx*nx
-                ext_fun_type_out[2] = COLMAJ;
-                ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
+        // obtain JKf
+        blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
+        
+        blasfeo_dgead(nx*ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
 
-                model->impl_ode_jac_x_xdot_u->evaluate(
-                        model->impl_ode_jac_x_xdot_u, 
-                        ext_fun_type_in, ext_fun_in, 
-                        ext_fun_type_out, ext_fun_out);
+        blasfeo_drowpe(nx*ns, ipiv, JKf);
+        blasfeo_dtrsm_llnu(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);
+        blasfeo_dtrsm_lunn(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);
 
-                timing_ad += acados_toc(&timer_ad);
-                // extract Jacobian of G wrt x
-                blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);              
-                // extract Jacobian of G wrt u
-                blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);     
-
-            } // end ii
-            // obtain JKf
-			// TODO add the option to use VDE instead of dgemm ???
-            // blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
-            blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
-            
-            // blasfeo_dgemm_nn(nx*ns, nu, nx, 1.0, JGf, 0, 0, S_forw, 0, nx, 1.0, JGf, 0, nx, JKf, 0, nx);
-            
-            // either of the following two options below should be correct.
-            // blasfeo_dgemm_nn(nx*ns, nx+nu, nu, 1.0, JGf, 0, nx, S_forw, nx, 0, 1.0, JKf, 0, 0, JKf, 0, 0);
-            blasfeo_dgead(nx*ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
-
-            blasfeo_drowpe(nx*ns, ipiv, JKf);
-            blasfeo_dtrsm_llnu(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);
-            blasfeo_dtrsm_lunn(nx*ns, nx+nu, 1.0, JGK, 0, 0, JKf, 0, 0, JKf, 0, 0);
-
-            // update forward sensitivity
-			for(jj=0; jj<ns; jj++)
-				blasfeo_dgead(nx, nx+nu, -step*b_vec[jj], JKf, jj*nx, 0, S_forw, 0, 0);
-        }
+        // update forward sensitivity
+        for(jj=0; jj<ns; jj++)
+            blasfeo_dgead(nx, nx+nu, -step*b_vec[jj], JKf, jj*nx, 0, S_forw, 0, 0);
 
         // obtain x(n+1)
         for(ii=0;ii<ns;ii++)
