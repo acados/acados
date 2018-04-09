@@ -473,10 +473,11 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 	int nh = dims->nh;
 	int nq = dims->nq;
 
+	// XXX large enough ?
 	ext_fun_arg_t ext_fun_type_in[2];
-	void *ext_fun_in[2]; // XXX large enough ?
+	void *ext_fun_in[2]; 
 	ext_fun_arg_t ext_fun_type_out[2];
-	void *ext_fun_out[2]; // XXX large enough ?
+	void *ext_fun_out[2];
 
 	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_nbgh, 0);
 	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_nbgh, nb, &work->tmp_nbgh, nb);
@@ -496,7 +497,7 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 		ext_fun_type_out[0] = BLASFEO_VEC;
 		ext_fun_out[0] = &work->tmp_h; // fun: nh
 		ext_fun_type_out[1] = BLASFEO_MAT;
-		ext_fun_out[1] = &work->tmp_Jht; // jac': (nx+nu) * nh
+		ext_fun_out[1] = &work->tmp_Jht; // jac': (nu+nx) * nh
 
 		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
