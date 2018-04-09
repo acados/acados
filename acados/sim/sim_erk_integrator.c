@@ -451,6 +451,11 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     double *S_adj_out = out->S_adj;
     double *S_hess_out = out->S_hess;
 
+	ext_fun_arg_t ext_fun_type_in[5];
+	void *ext_fun_in[5]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[5];
+	void *ext_fun_out[5]; // XXX large enough ?
+
 	erk_model *model = in->model;
 
     acados_timer timer, timer_ad;
@@ -500,9 +505,37 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
             acados_tic(&timer_ad);
 			if (opts->sens_forw) // simulation + forward sensitivities
-				model->expl_vde_for->evaluate(model->expl_vde_for, rhs_forw_in, K_traj+s*nX);  // forward VDE evaluation
+			{
+				ext_fun_type_in[0] = COLMAJ;
+				ext_fun_in[0] = rhs_forw_in+0; // x: nx
+				ext_fun_type_in[1] = COLMAJ;
+				ext_fun_in[1] = rhs_forw_in+nx; // Sx: nx*nx
+				ext_fun_type_in[2] = COLMAJ;
+				ext_fun_in[2] = rhs_forw_in+nx+nx*nx; // Su: nx*nu
+				ext_fun_type_in[3] = COLMAJ;
+				ext_fun_in[3] = rhs_forw_in+nx+nx*nx+nx*nu; // u: nu
+
+				ext_fun_type_out[0] = COLMAJ;
+				ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+				ext_fun_type_out[1] = COLMAJ;
+				ext_fun_out[1] = K_traj+s*nX+nx; // Sx: nx*nx
+				ext_fun_type_out[2] = COLMAJ;
+				ext_fun_out[2] = K_traj+s*nX+nx+nx*nx; // Su: nx*nu
+
+				model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // forward VDE evaluation
+			}
 			else // simulation only
-				model->expl_ode_fun->evaluate(model->expl_ode_fun, rhs_forw_in, K_traj+s*nX);  // ODE evaluation
+			{
+				ext_fun_type_in[0] = COLMAJ;
+				ext_fun_in[0] = rhs_forw_in+0; // x: nx
+				ext_fun_type_in[1] = COLMAJ;
+				ext_fun_in[1] = rhs_forw_in+nx; // u: nu
+
+				ext_fun_type_out[0] = COLMAJ;
+				ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+
+				model->expl_ode_fun->evaluate(model->expl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // ODE evaluation
+			}
             timing_ad += acados_toc(&timer_ad);
         }
         for (s = 0; s < ns; s++)
@@ -585,11 +618,37 @@ int sim_erk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 acados_tic(&timer_ad);
                 if (opts->sens_hess)
 				{
-                    model->expl_ode_hes->evaluate(model->expl_ode_hes, rhs_adj_in, adj_traj+s*nAdj);
+					ext_fun_type_in[0] = COLMAJ;
+					ext_fun_in[0] = rhs_adj_in+0; // x: nx
+					ext_fun_type_in[1] = COLMAJ;
+					ext_fun_in[1] = rhs_adj_in+nx; // lam: nx
+					ext_fun_type_in[2] = COLMAJ;
+					ext_fun_in[2] = rhs_adj_in+nx+nx; // u: nu
+
+					ext_fun_type_out[0] = COLMAJ;
+					ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
+
+                    model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
                 }
 				else
 				{
-                    model->expl_vde_adj->evaluate(model->expl_vde_adj, rhs_adj_in, adj_traj+s*nAdj); // adjoint VDE evaluation
+					ext_fun_type_in[0] = COLMAJ;
+					ext_fun_in[0] = rhs_adj_in+0; // x: nx
+					ext_fun_type_in[1] = COLMAJ;
+					ext_fun_in[1] = rhs_adj_in+nx; // Sx: nx*nx
+					ext_fun_type_in[2] = COLMAJ;
+					ext_fun_in[2] = rhs_adj_in+nx+nx*nx; // Su: nx*nu
+					ext_fun_type_in[3] = COLMAJ;
+					ext_fun_in[3] = rhs_adj_in+nx+nx*nx+nx*nu; // lam: nx
+					ext_fun_type_in[4] = COLMAJ;
+					ext_fun_in[4] = rhs_adj_in+nx+nx*nx+nx*nu+nx; // u: nu
+
+					ext_fun_type_out[0] = COLMAJ;
+					ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
+					ext_fun_type_out[1] = COLMAJ;
+					ext_fun_out[1] = adj_traj+s*nAdj+nx+nu; // hess: (nx+nu)*(nx+nu)
+
+                    model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out); // adjoint VDE evaluation
                 }
                 timing_ad += acados_toc(&timer_ad);
 

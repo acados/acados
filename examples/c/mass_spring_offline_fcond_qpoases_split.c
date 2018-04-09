@@ -24,11 +24,14 @@
 
 // acados_c
 #include "acados_c/dense_qp_interface.h"
-#include "acados_c/legacy_create.h"
+#include "acados_c/dense_qp_interface.h"
+#include "acados_c/ocp_qp_interface.h"
+#include "acados_c/condensing_interface.h"
 
 // acados
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common_frontend.h"
+#include "acados/utils/timing.h"
 
 // blasfeo
 #include "blasfeo/include/blasfeo_target.h"
@@ -44,6 +47,8 @@
 
 #define NREP 1  // TODO(dimitris): are timings valid for NREP > 1?
 #define ELIMINATE_X0
+
+// TODO(dimitris): when switching this flag, first run gives sometimes a segfault
 #define OFFLINE_CONDENSING 1
 #define BLASFEO_CHOLESKY 1
 
@@ -102,9 +107,18 @@ int main() {
     dense_qp_in *qpd_in = dense_qp_in_create(NULL, &ddims);
     dense_qp_out *qpd_out = dense_qp_out_create(NULL, &ddims);
 
-    // TODO(dimitris): rename
-    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_full_condensing_create_arguments(qp_in->dim);
-    ocp_qp_full_condensing_memory *cond_memory = ocp_qp_full_condensing_create_memory(qp_in->dim, cond_opts);
+    /************************************************
+    * condensing
+    ************************************************/
+
+    condensing_plan cond_plan;
+    cond_plan.condensing_type = FULL_CONDENSING;
+
+    ocp_qp_condensing_config *cond_config = ocp_qp_condensing_config_create(&cond_plan);
+
+    ocp_qp_full_condensing_opts *cond_opts = ocp_qp_condensing_opts_create(cond_config, qp_in->dim);
+
+    condensing_module *cond_module = ocp_qp_condensing_create(cond_config, qp_in->dim, cond_opts);
 
     /************************************************
     * dense qpoases
@@ -131,7 +145,7 @@ int main() {
 
 	int nvd = qpd_in->dim->nv;
 
-	ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
+	ocp_qp_condense(cond_module, qp_in, qpd_in);
 
 	struct blasfeo_dmat sR;
 	blasfeo_allocate_dmat(nvd, nvd, &sR);
@@ -140,6 +154,12 @@ int main() {
     {
 		cond_opts->condense_rhs_only = 1;
 		cond_opts->expand_primal_sol_only = 1;
+
+        cond_opts->condense_rhs_only = 1;
+		cond_opts->expand_primal_sol_only = 1;
+
+        ocp_qp_full_condensing_opts_update(qp_in->dim, cond_opts);
+        ocp_qp_full_condensing_opts_update(qp_in->dim, cond_opts);
 
 		// cholesky factorization of H
 		dense_qp_qpoases_memory *qpoases_solver_mem = (dense_qp_qpoases_memory *)qp_solver->mem;
@@ -152,9 +172,9 @@ int main() {
 		blasfeo_unpack_dmat(nvd, nvd, &sR, 0, 0, qpoases_solver_mem->R, nvd);
 	}
 
-	ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
-
-	ocp_qp_full_expansion(qpd_out, qp_out, cond_opts, cond_memory, NULL);
+    ocp_qp_condense(cond_module, qp_in, qpd_in);
+    // TODO(dimitris): what is this (and the one above) doing here?
+    ocp_qp_expand(cond_module, qpd_out, qp_out);
 
 	acados_timer timer;
     acados_tic(&timer);
@@ -173,15 +193,14 @@ int main() {
 			// extract R
 			blasfeo_unpack_dmat(nvd, nvd, &sR, 0, 0, qpoases_solver_mem->R, nvd);
 		}
-
-        ocp_qp_full_condensing(qp_in, qpd_in, cond_opts, cond_memory, NULL);
+        ocp_qp_condense(cond_module, qp_in, qpd_in);
 
         acados_return = dense_qp_solve(qp_solver, qpd_in, qpd_out);
 
         if (acados_return != 0)
             printf("error with dense qp solution\n");
 
-        ocp_qp_full_expansion(qpd_out, qp_out, cond_opts, cond_memory, NULL);
+        ocp_qp_expand(cond_module, qpd_out, qp_out);
     }
 
     real_t time = acados_toc(&timer)/NREP;
@@ -250,8 +269,10 @@ int main() {
     free(sol);
     free(qp_solver);
     free(dopts);
-    free(cond_memory);
+
     free(cond_opts);
+    free(cond_config);
+    free(cond_module);
 
 	return 0;
 }

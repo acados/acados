@@ -415,5 +415,3 @@ clean_models:
 	rm -f wt_model_nx6/*.o
 	rm -f wt_model_nx6/nx6p2/*.o
 
-deep_clean: clean clean_models
-

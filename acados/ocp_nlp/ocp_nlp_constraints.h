@@ -173,10 +173,10 @@ void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_);
 
 typedef struct
 {
+	struct blasfeo_dvec tmp_h;
+	struct blasfeo_dmat tmp_Jht;
 	struct blasfeo_dvec tmp_nbgh;
-	struct blasfeo_dmat jacobian_quadratic;
-	double *nl_constraint_input;
-	double *nl_constraint_output;
+//	struct blasfeo_dmat jacobian_quadratic;
 } ocp_nlp_constraints_workspace;
 
 //

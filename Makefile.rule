@@ -25,6 +25,7 @@ EXT_PATH = $(TOP)/external
 
 ## BLASFEO path
 BLASFEO_PATH = $(EXT_PATH)/blasfeo
+#BLASFEO_PATH = /home/gianluca/blasfeo
 ## BLASFEO version
 # BLASFEO_VERSION = HIGH_PERFORMANCE
 BLASFEO_VERSION = REFERENCE
@@ -37,6 +38,7 @@ BLASFEO_TARGET = X64_INTEL_SANDY_BRIDGE
 
 ## HPIPM path
 HPIPM_PATH = $(EXT_PATH)/hpipm
+#HPIPM_PATH = /home/gianluca/hpipm
 ## HPIPM target
 HPIPM_TARGET = GENERIC
 

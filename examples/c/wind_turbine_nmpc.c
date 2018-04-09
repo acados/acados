@@ -80,7 +80,7 @@ static void shift_controls(ocp_nlp_dims *dims, ocp_nlp_out *out, double *u_end)
 
 
 
-static void select_dynamics_wt_casadi(int N, 
+static void select_dynamics_wt_casadi(int N,
 	external_function_param_casadi *expl_vde_for,
 	external_function_param_casadi *impl_ode_fun,
 	external_function_param_casadi *impl_ode_fun_jac_x_xdot,
@@ -132,33 +132,27 @@ static void select_dynamics_wt_casadi(int N,
 * nonlinear constraint
 ************************************************/
 
-void ext_fun_h1(void *fun, double *in, double *out)
+void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_out, void **out)
 {
-
-	int ii;
-
 	int nu = 2;
 	int nx = 8;
 	int nh = 1;
 
-	// x
-	double *x = in+0;
-	// u
-	// double *u = in+nx;
-
 	// scaling
 	double alpha = 0.944*97/100;
 
-	// h
-	double *h = out+0;
-	h[0] = alpha * x[0] * x[5];
+	// ux
+	struct blasfeo_dvec *ux = in[0];
 
-	// J
-	double *J = out+nh;
-	for (ii=0; ii<nh*(nu+nx); ii++)
-		J[ii] = 0.0;
-	J[0] = alpha * x[5];
-	J[5] = alpha * x[0];
+	// h
+	struct blasfeo_dvec *h = out[0];
+	BLASFEO_DVECEL(h, 0) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+
+	// jac
+	struct blasfeo_dmat *jac = out[1];
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
+	BLASFEO_DMATEL(jac, nu+0, 0) = alpha * BLASFEO_DVECEL(ux, nu+5);
+	BLASFEO_DMATEL(jac, nu+5, 0) = alpha * BLASFEO_DVECEL(ux, nu+0);
 
 	return;
 
@@ -596,13 +590,13 @@ int main()
     sqp_opts->min_res_d = 1e-6;
     sqp_opts->min_res_m = 1e-6;
 
-	// partial condensing
-	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
-	{
-		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-		pcond_solver_opts->pcond_opts->N2 = 10;
-	}
+	// // partial condensing
+	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	// {
+	// 	ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+	// 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+	// 	pcond_solver_opts->pcond_opts->N2 = 10;
+	// }
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
@@ -696,7 +690,7 @@ int main()
 				printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
-				printf("electrical power %f \n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7)); 
+				printf("electrical power %f \n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
 			}
 
 			if (status!=0)

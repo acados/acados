@@ -4,60 +4,84 @@
 extern "C" {
 #endif
 
+/* How to prefix internal symbols */
 #ifdef CODEGEN_PREFIX
   #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
-#else /* CODEGEN_PREFIX */
+#else
   #define CASADI_PREFIX(ID) impl_ode_jac_xdot_ ## ID
-#endif /* CODEGEN_PREFIX */
+#endif
 
 #include <math.h>
 
-#ifndef real_t
-#define real_t double
-#endif /* real_t */
+#ifndef casadi_real
+#define casadi_real double
+#endif
 
 #define to_double(x) (double) x
 #define to_int(x) (int) x
 #define CASADI_CAST(x,y) (x) y
+
 /* Pre-c99 compatibility */
 #if __STDC_VERSION__ < 199901L
-real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
-#define fmin(x,y) CASADI_PREFIX(fmin)(x,y)
-real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
-#define fmax(x,y) CASADI_PREFIX(fmax)(x,y)
+  #define fmin CASADI_PREFIX(fmin)
+  casadi_real fmin(casadi_real x, casadi_real y) { return x<y ? x : y;}
+  #define fmax CASADI_PREFIX(fmax)
+  casadi_real fmax(casadi_real x, casadi_real y) { return x>y ? x : y;}
 #endif
 
+/* CasADi extensions */
+#define sq CASADI_PREFIX(sq)
+casadi_real sq(casadi_real x) { return x*x;}
+#define sign CASADI_PREFIX(sign)
+casadi_real CASADI_PREFIX(sign)(casadi_real x) { return x<0 ? -1 : x>0 ? 1 : x;}
+#define twice CASADI_PREFIX(twice)
+casadi_real twice(casadi_real x) { return x+x;}
+#define if_else CASADI_PREFIX(if_else)
+casadi_real if_else(casadi_real c, casadi_real x, casadi_real y) { return c!=0 ? x : y;}
+
+/* Add prefix to internal symbols */
+#define casadi_copy CASADI_PREFIX(copy)
+#define casadi_f0 CASADI_PREFIX(f0)
+#define casadi_fill CASADI_PREFIX(fill)
+#define casadi_s0 CASADI_PREFIX(s0)
+#define casadi_s1 CASADI_PREFIX(s1)
+#define casadi_s2 CASADI_PREFIX(s2)
+#define casadi_s3 CASADI_PREFIX(s3)
+#define casadi_trans CASADI_PREFIX(trans)
+
+/* Printing routine */
 #define PRINTF printf
+
+/* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
-#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
-#if defined(STATIC_LINKED)
-#define CASADI_SYMBOL_EXPORT
-#else /* defined(STATIC_LINKED) */
-#define CASADI_SYMBOL_EXPORT __declspec(dllexport)
-#endif /* defined(STATIC_LINKED) */
-#elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
-#define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
-#else /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#define CASADI_SYMBOL_EXPORT
-#endif /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#endif /* CASADI_SYMBOL_EXPORT */
-real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
-#define sq(x) CASADI_PREFIX(sq)(x)
+  #if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+    #if defined(STATIC_LINKED)
+      #define CASADI_SYMBOL_EXPORT
+    #else
+      #define CASADI_SYMBOL_EXPORT __declspec(dllexport)
+    #endif
+  #elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+    #define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
+  #else
+    #define CASADI_SYMBOL_EXPORT
+  #endif
+#endif
 
-real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
-#define sign(x) CASADI_PREFIX(sign)(x)
+static const int casadi_s0[19] = {8, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7};
+static const int casadi_s1[12] = {8, 1, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7};
+static const int casadi_s2[6] = {2, 1, 0, 2, 0, 1};
+static const int casadi_s3[5] = {1, 1, 0, 1, 0};
 
-void CASADI_PREFIX(fill)(real_t* x, int n, real_t alpha) {
+void casadi_fill(casadi_real* x, int n, casadi_real alpha) {
   int i;
   if (x) {
     for (i=0; i<n; ++i) *x++ = alpha;
   }
 }
-#define fill(x, n, alpha) CASADI_PREFIX(fill)(x, n, alpha)
 
-void CASADI_PREFIX(trans)(const real_t* x, const int* sp_x, real_t* y, const int* sp_y, int* tmp) {
+void casadi_trans(const casadi_real* x, const int* sp_x, casadi_real* y, const int* sp_y, int* tmp) {
   int ncol_x = sp_x[1];
   int nnz_x = sp_x[2 + ncol_x];
   const int* row_x = sp_x + 2 + ncol_x+1;
@@ -69,9 +93,8 @@ void CASADI_PREFIX(trans)(const real_t* x, const int* sp_x, real_t* y, const int
     y[tmp[row_x[k]]++] = x[k];
   }
 }
-#define trans(x, sp_x, y, sp_y, tmp) CASADI_PREFIX(trans)(x, sp_x, y, sp_y, tmp)
 
-void CASADI_PREFIX(copy)(const real_t* x, int n, real_t* y) {
+void casadi_copy(const casadi_real* x, int n, casadi_real* y) {
   int i;
   if (y) {
     if (x) {
@@ -81,31 +104,26 @@ void CASADI_PREFIX(copy)(const real_t* x, int n, real_t* y) {
     }
   }
 }
-#define copy(x, n, y) CASADI_PREFIX(copy)(x, n, y)
 
-static const int CASADI_PREFIX(s0)[19] = {8, 8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 3, 4, 5, 6, 7};
-#define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[12] = {8, 1, 0, 8, 0, 1, 2, 3, 4, 5, 6, 7};
-#define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[6] = {2, 1, 0, 2, 0, 1};
-#define s2 CASADI_PREFIX(s2)
-static const int CASADI_PREFIX(s3)[5] = {1, 1, 0, 1, 0};
-#define s3 CASADI_PREFIX(s3)
-/* casadi_impl_ode_jac_xdot */
-CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_xdot(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t *rr, *ss;
-  real_t *w0=w+0, *w1=w+8;
+/* casadi_impl_ode_jac_xdot:(i0[8],i1[8],i2[2],i3)->(o0[8x8,8nz]) */
+static int casadi_f0(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem) {
+  casadi_real *rr, *ss;
+  casadi_real *w0=w+0, *w1=w+8;
   /* #0: @0 = zeros(8x8,8nz) */
-  fill(w0, 8, 0.);
+  casadi_fill(w0, 8, 0.);
   /* #1: @1 = ones(8x1) */
-  fill(w1, 8, 1.);
+  casadi_fill(w1, 8, 1.);
   /* #2: (@0[:8] = @1) */
   for (rr=w0+0, ss=w1; rr!=w0+8; rr+=1) *rr = *ss++;
   /* #3: @1 = @0' */
-  trans(w0, s0, w1, s0, iw);
+  casadi_trans(w0,casadi_s0, w1, casadi_s0, iw);
   /* #4: output[0][0] = @1 */
-  copy(w1, 8, res[0]);
+  casadi_copy(w1, 8, res[0]);
   return 0;
+}
+
+CASADI_SYMBOL_EXPORT int casadi_impl_ode_jac_xdot(const casadi_real** arg, casadi_real** res, int* iw, casadi_real* w, void* mem){
+  return casadi_f0(arg, res, iw, w, mem);
 }
 
 CASADI_SYMBOL_EXPORT void casadi_impl_ode_jac_xdot_incref(void) {
@@ -137,17 +155,17 @@ CASADI_SYMBOL_EXPORT const char* casadi_impl_ode_jac_xdot_name_out(int i){
 
 CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_xdot_sparsity_in(int i) {
   switch (i) {
-    case 0: return s1;
-    case 1: return s1;
-    case 2: return s2;
-    case 3: return s3;
+    case 0: return casadi_s1;
+    case 1: return casadi_s1;
+    case 2: return casadi_s2;
+    case 3: return casadi_s3;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT const int* casadi_impl_ode_jac_xdot_sparsity_out(int i) {
   switch (i) {
-    case 0: return s0;
+    case 0: return casadi_s0;
     default: return 0;
   }
 }

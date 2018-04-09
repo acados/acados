@@ -108,11 +108,11 @@ file(GLOB CHAIN_MODEL_SRC
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 
-file(GLOB PENDULUM_MODEL_SRC
-    pendulum_model/pendulum_model.c
-    pendulum_model/vde_forw_pendulum.c
-    pendulum_model/jac_pendulum.c
-)
+#file(GLOB PENDULUM_MODEL_SRC
+#    pendulum_model/pendulum_model.c
+#    pendulum_model/vde_forw_pendulum.c
+#    pendulum_model/jac_pendulum.c
+#)
 
 file(GLOB CRANE_MODEL_SRC
     crane_model/impl_ode_fun.c
@@ -217,9 +217,13 @@ endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
-    add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
-    target_link_libraries(pendulum_scqp acados)
-    add_test(pendulum_scqp pendulum_scqp)
+#    add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
+#    target_link_libraries(pendulum_scqp acados)
+#    add_test(pendulum_scqp pendulum_scqp)
+
+    add_executable(pendulum_sqp pendulum_sqp_gn.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
+    target_link_libraries(pendulum_sqp acados)
+    add_test(pendulum_sqp pendulum_sqp)
 
     # -------------------- mass_spring
     if(ACADOS_WITH_C_INTERFACE)

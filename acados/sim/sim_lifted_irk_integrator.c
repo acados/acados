@@ -906,6 +906,11 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
     double **jac_traj = mem->jac_traj;
     double *K_traj = mem->K_traj;
 
+	ext_fun_arg_t ext_fun_type_in[5];
+	void *ext_fun_in[5]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[5];
+	void *ext_fun_out[5]; // XXX large enough ?
+
 	lifted_irk_model *model = in->model;
 
     int i, j, s1, s2;
@@ -956,7 +961,19 @@ static void form_linear_system_matrix(void *config_, int istep, const sim_in *in
             }
         }
         acados_tic(&timer_ad);
-        model->expl_ode_jac->evaluate(model->expl_ode_jac, rhs_in, jac_tmp);  // k evaluation
+
+		ext_fun_type_in[0] = COLMAJ;
+		ext_fun_in[0] = rhs_in+0; // x: nx
+		ext_fun_type_in[1] = COLMAJ;
+		ext_fun_in[1] = rhs_in+nx; // u: nu
+
+		ext_fun_type_out[0] = COLMAJ;
+		ext_fun_out[0] = jac_tmp+0; // fun: nx
+		ext_fun_type_out[1] = COLMAJ;
+		ext_fun_out[1] = jac_tmp+nx; // jac_x: nx*nx
+
+        model->expl_ode_jac->evaluate(model->expl_ode_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // k evaluation
+
         timing_ad += acados_toc(&timer_ad);
         //                }
         if (opts->scheme->type == simplified_in ||
@@ -1061,6 +1078,11 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
     struct blasfeo_dmat *str_sol = work->str_sol;
     struct blasfeo_dmat **str_sol2 = mem->str_sol2;
 #endif  // !TRIPLE_LOOP
+
+	ext_fun_arg_t ext_fun_type_in[5];
+	void *ext_fun_in[5]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[5];
+	void *ext_fun_out[5]; // XXX large enough ?
 
 	lifted_irk_model *model = in->model;
 
@@ -1305,7 +1327,24 @@ int sim_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *m
             rhs_in[nx*(1+NF)+nu] = ((double) istep+c_vec[s1])/((double) opts->num_steps);  // time
 
             acados_tic(&timer_ad);
-            model->expl_vde_for->evaluate(model->expl_vde_for, rhs_in, VDE_tmp[s1]);  // k evaluation
+
+			ext_fun_type_in[0] = COLMAJ;
+			ext_fun_in[0] = rhs_in+0; // x: nx
+			ext_fun_type_in[1] = COLMAJ;
+			ext_fun_in[1] = rhs_in+nx; // Sx: nx*nx
+			ext_fun_type_in[2] = COLMAJ;
+			ext_fun_in[2] = rhs_in+nx+nx*nx; // Su: nx*nu
+			ext_fun_type_in[3] = COLMAJ;
+			ext_fun_in[3] = rhs_in+nx+nx*nx+nx*nu; // u: nu
+
+			ext_fun_type_out[0] = COLMAJ;
+			ext_fun_out[0] = VDE_tmp[s1]+0; // fun: nx
+			ext_fun_type_out[1] = COLMAJ;
+			ext_fun_out[1] = VDE_tmp[s1]+nx; // Sx: nx*nx
+			ext_fun_type_out[2] = COLMAJ;
+			ext_fun_out[2] = VDE_tmp[s1]+nx+nx*nx; // Su: nx*nu
+
+            model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);  // k evaluation
             timing_ad += acados_toc(&timer_ad);
 
             // put VDE_tmp in sys_sol:

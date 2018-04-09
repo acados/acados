@@ -17,36 +17,44 @@
  *
  */
 
-#include <stdio.h>
+#include <numeric>
 #include <cmath>
 #include <cstdlib>
+#include <fstream>
+#include <string>
 #include <vector>
 
 #include "acados/utils/print.h"
 #include "acados/ocp_qp/ocp_qp_partial_condensing_solver.h"
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
 #include "acados/ocp_nlp/ocp_nlp_cost_ls.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_common.h"
-#include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
+#include "acados/ocp_nlp/ocp_nlp_dynamics.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/sim/sim_erk_integrator.h"
 
 #include "acados_c/ocp_nlp_interface.h"
 
 #include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_aux_ext_dep.h"
 
 #include "pendulum_model/vde_forw_pendulum.h"
 #include "pendulum_model/jac_constraint.h"
 
+std::ostream& operator<<(std::ostream& strm, std::vector<double> v) {
+	for (auto e : v)
+		strm << std::scientific << std::showpos << e << " ";
+	strm << "\n";
+	return strm;
+}
+
 int main() {
 
-	int num_states = 4, num_controls = 1, N = 20;
-	double Tf = 1.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
-	std::vector<int> idxb_0 {1, 2, 3, 4};
-	std::vector<double> x0 {0, 0, M_PI, 0};
+	int num_states = 4, num_controls = 1, N = 40;
+	double Tf = 2.0, Q = 1e-10, R = 1e-4, QN = 1e-10;
+	std::vector<int> idxb_0 {1, 2, 3, 4}, idxb_N {0, 1, 2, 3};
+	std::vector<double> x0 {0, 0, M_PI, 0}, xN {0, 0, 0, 0};
 
-	double radius2 = 0.04, neg_inf = -1000000;
-	int max_num_sqp_iterations = 100;
+	int max_num_sqp_iterations = 1;
 
 	std::vector<int> nx(N+1, num_states), nu(N+1, num_controls), nbx(N+1, 0), nbu(N+1, 0),
 		nb(N+1, 0), ng(N+1, 0), nh(N+1, 0), nq(N+1, 0),
@@ -55,25 +63,28 @@ int main() {
 	nbx.at(0) = num_states;
 	nb.at(0) = num_states;
 
+	nbx.at(N) = 4;
+	nb.at(N) = 4;
 	nu.at(N) = 0;
 	nv.at(N) = 4;
 	ny.at(N) = 4;
-	nh.at(N) = 1;
-	nq.at(N) = 2;
 
 	// Make plan
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(N);
-	plan->nlp_solver = SQP_GN;
-	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
-	for (int i = 0; i <= N; i++)
-		plan->nlp_cost[i] = LINEAR_LS;
-	for (int i = 0; i < N; i++)
-		plan->sim_solver_plan[i].sim_solver = ERK;
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, N);
+	ocp_qp_solver_plan qp_plan = {FULL_CONDENSING_QPOASES};
+	std::vector<sim_solver_plan> sim_plan(N, {ERK});
+	std::vector<ocp_nlp_cost_t> cost_plan(N+1, LINEAR_LS);
 
-	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
+	ocp_nlp_solver_plan plan = {
+		qp_plan,
+		sim_plan.data(),
+		SQP_GN,
+		cost_plan.data()
+	};
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(plan, N);
+
+	ocp_nlp_dims *dims = ocp_nlp_dims_create(N);
+	ocp_nlp_dims_initialize(nx.data(), nu.data(), ny.data(), nbx.data(), nbu.data(), ng.data(), nh.data(), nq.data(), ns.data(), dims);
 
 	external_function_casadi forw_vde_casadi[N];
 	for (int i = 0; i < N; ++i) {
@@ -131,9 +142,9 @@ int main() {
 
 	// NLP dynamics
 	for (int i = 0; i < N; ++i) {
-		ocp_nlp_dynamics_cont_model *dynamics = (ocp_nlp_dynamics_cont_model *) nlp_in->dynamics[i];
+		ocp_nlp_dynamics_model *dynamics = (ocp_nlp_dynamics_model *) nlp_in->dynamics[i];
 		erk_model *model = (erk_model *) dynamics->sim_model;
-		model->expl_vde_for = (external_function_generic *) &forw_vde_casadi[i];
+		model->forw_vde_expl = (external_function_generic *) &forw_vde_casadi[i];
 	}
 
     nlp_in->freezeSens = false;
@@ -158,9 +169,9 @@ int main() {
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
 	blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
 
-	blasfeo_pack_dvec(nh[N], &neg_inf, &constraints[N]->d, nb[N]+ng[N]);
-	blasfeo_pack_dvec(nh[N], &radius2, &constraints[N]->d, 2*(nb[N]+ng[N])+nh[N]);
-	constraints[N]->h = (external_function_generic *) &nonlinear_constraint;
+    constraints[N]->idxb = idxb_N.data();
+	blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, 0);
+	blasfeo_pack_dvec(nb[N], xN.data(), &constraints[N]->d, nb[N]+ng[N]+nh[N]);
 
 	void *nlp_opts = ocp_nlp_opts_create(config, dims);
 
@@ -170,29 +181,64 @@ int main() {
     sqp_opts->min_res_b = 1e-9;
     sqp_opts->min_res_d = 1e-9;
     sqp_opts->min_res_m = 1e-9;
-	((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = N;
+	// ((ocp_qp_partial_condensing_solver_opts *) sqp_opts->qp_solver_opts)->pcond_opts->N2 = 10;
 
 	ocp_nlp_out *nlp_out = ocp_nlp_out_create(config, dims);
 	for (int i = 0; i <= N; ++i)
 		blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
-	// for (int i = 0; i <= N; ++i)
-		// BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
+	for (int i = 0; i <= N; ++i)
+		BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
 
 	ocp_nlp_solver *solver = ocp_nlp_create(config, dims, nlp_opts);
 
+	std::vector<std::vector<double>> MPC_log;
+	std::vector<double> timings;
+
 	// NLP solution
     acados_timer timer;
-    acados_tic(&timer);
+	double kkt_norm_inf = __builtin_inf(), elapsed_time;
+	
+	int solver_status = 0, iteration_number = 0;
+	// for (int j = 0; j < 100; ++j) {
+		// kkt_norm_inf = __builtin_inf(), elapsed_time = 0;
+		// solver_status = 0, iteration_number = 0;
+		// for (int i = 0; i <= N; ++i)
+			// blasfeo_dvecse(nu[i]+nx[i], 0.0, nlp_out->ux+i, 0);
 
-	int solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+		// for (int i = 0; i <= N; ++i)
+			// BLASFEO_DVECEL(nlp_out->ux+i, 3) = M_PI;
+		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, 0);
+		// blasfeo_pack_dvec(nb[0], x0.data(), &constraints[0]->d, nb[0]+ng[0]);
 
-    double elapsed_time = acados_toc(&timer);
+		while (kkt_norm_inf > 1e-9) {
+			acados_tic(&timer);
+			solver_status = ocp_nlp_solve(solver, nlp_in, nlp_out);
+			elapsed_time = acados_toc(&timer);
+			timings.push_back(elapsed_time);
+			kkt_norm_inf = nlp_out->inf_norm_res;
+			// printf(" iteration %d | time  %f |  ", iteration_number, elapsed_time);
+			// blasfeo_print_tran_dvec(nx.at(0)+nu.at(0), &nlp_out->ux[0], 0);
+			std::vector<double> ux0(nx[0]+nu[0]);
+			blasfeo_unpack_dvec(nx[0]+nu[0], &nlp_out->ux[0], 0, ux0.data());
+			MPC_log.push_back(ux0);
+			blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, 0);
+			blasfeo_dveccp(nb[0], &nlp_out->ux[1], nu.at(0), &constraints[0]->d, nb[0]+ng[0]);
+			iteration_number++;
+		}
+	// }
+
+	std::ofstream ostrm("states_controls.txt");
+	for (auto v : MPC_log)
+		ostrm << v;
+	
+	std::ofstream ostrm_timings("timings.txt");
+	ostrm_timings << timings;
 
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);
 
-    printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, elapsed_time, nlp_out->sqp_iter);
+    printf("\n\nstatus = %i, avg time = %f ms, iters = %d\n\n", solver_status, std::accumulate(std::begin(timings), std::end(timings), 0.0)/iteration_number, nlp_out->sqp_iter);
 
 	return solver_status;
 }

@@ -177,18 +177,6 @@ int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp
 
 
 
-void dense_qp_free(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out)
-{
-    free(qp_in);
-    free(qp_out);
-    free(solver->dims);
-    free(solver->config);
-    free(solver->opts);
-    free(solver);
-}
-
-
-
 static dense_qp_res *dense_qp_res_create(dense_qp_dims *dims)
 {
     int size = dense_qp_res_calculate_size(dims);

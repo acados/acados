@@ -66,7 +66,7 @@ int ocp_qp_full_condensing_opts_calculate_size(ocp_qp_dims *dims)
 
 
 
-ocp_qp_full_condensing_opts *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
+void *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dims, void *raw_memory)
 {
     char *c_ptr = (char *) raw_memory;
 
@@ -91,8 +91,9 @@ ocp_qp_full_condensing_opts *ocp_qp_full_condensing_opts_assign(ocp_qp_dims *dim
 
 
 
-void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts)
+void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, void *opts_)
 {
+    ocp_qp_full_condensing_opts *opts = opts_;
 
 	// condense both Hessian and gradient by default
 	opts->condense_rhs_only = 0;
@@ -104,7 +105,7 @@ void ocp_qp_full_condensing_opts_initialize_default(ocp_qp_dims *dims, ocp_qp_fu
 
 
 
-void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts)
+void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, void *opts_)
 {
 	return;
 }
@@ -115,8 +116,9 @@ void ocp_qp_full_condensing_opts_update(ocp_qp_dims *dims, ocp_qp_full_condensin
 * memory
 ************************************************/
 
-int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts)
+int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, void *opts_)
 {
+    ocp_qp_full_condensing_opts *opts = opts_;
     int size = 0;
 
     size += sizeof(ocp_qp_full_condensing_memory);
@@ -128,9 +130,10 @@ int ocp_qp_full_condensing_memory_calculate_size(ocp_qp_dims *dims, ocp_qp_full_
 
 
 
-ocp_qp_full_condensing_memory *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims,
-    ocp_qp_full_condensing_opts *opts, void *raw_memory)
+void *ocp_qp_full_condensing_memory_assign(ocp_qp_dims *dims, void *opts_, void *raw_memory)
 {
+    ocp_qp_full_condensing_opts *opts = opts_;
+
     char *c_ptr = (char *)raw_memory;
 
     ocp_qp_full_condensing_memory *mem = (ocp_qp_full_condensing_memory *) c_ptr;
@@ -145,14 +148,14 @@ ocp_qp_full_condensing_memory *ocp_qp_full_condensing_memory_assign(ocp_qp_dims 
     d_create_cond_qp_ocp2dense(dims, opts->hpipm_opts, mem->hpipm_workspace, c_ptr);
     c_ptr += mem->hpipm_workspace->memsize;
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) == c_ptr);
+    assert((char*)raw_memory + ocp_qp_full_condensing_memory_calculate_size(dims, opts) >= c_ptr);
 
     return mem;
 }
 
 
 
-int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, ocp_qp_full_condensing_opts *opts)
+int ocp_qp_full_condensing_workspace_calculate_size(ocp_qp_dims *dims, void *opts_)
 {
     return 0;
 }
@@ -196,4 +199,25 @@ void ocp_qp_full_expansion(dense_qp_out *in, ocp_qp_out *out, ocp_qp_full_conden
 		d_expand_sol_dense2ocp(mem->qp_in, in, out, opts->hpipm_opts, mem->hpipm_workspace);
 
 	}
+}
+
+
+
+void ocp_qp_full_condensing_config_initialize_default(void *config_)
+{
+	ocp_qp_condensing_config *config = config_;
+
+	config->opts_calculate_size = &ocp_qp_full_condensing_opts_calculate_size;
+	config->opts_assign = &ocp_qp_full_condensing_opts_assign;
+	config->opts_initialize_default = &ocp_qp_full_condensing_opts_initialize_default;
+	config->opts_update = &ocp_qp_full_condensing_opts_update;
+	config->memory_calculate_size = &ocp_qp_full_condensing_memory_calculate_size;
+	config->memory_assign = &ocp_qp_full_condensing_memory_assign;
+	config->workspace_calculate_size = &ocp_qp_full_condensing_workspace_calculate_size;
+    // TODO(dimitris): either do casting as below or void in defs, as above (also pass config or not?)
+	config->condensing = ( int (*) (void *, void *, void *, void *, void *)) &ocp_qp_full_condensing;
+	config->expansion = ( int (*) (void *, void *, void *, void *, void *)) &ocp_qp_full_expansion;
+
+	return;
+
 }

@@ -276,6 +276,8 @@ int ocp_nlp_dynamics_disc_workspace_calculate_size(void *config_, void *dims_, v
 	size += (nx+nu)*sizeof(double); // discrete_model_in
 	size += (nx1+nx1*(nx+nu))*sizeof(double); // discrete_model_out
 
+	size += 8;
+	
 	return size;
 
 }
@@ -297,6 +299,8 @@ static void ocp_nlp_dynamics_disc_cast_workspace(void *config_, void *dims_, voi
     char *c_ptr = (char *) work_;
     c_ptr += sizeof(ocp_nlp_dynamics_disc_workspace);
 
+	align_char_to(8, &c_ptr);
+	
 	// discrete_model_in
 	assign_and_advance_double(nx+nu, &work->discrete_model_in, &c_ptr);
 	// discrete_model_out
@@ -385,12 +389,27 @@ void ocp_nlp_dynamics_disc_update_qp_matrices(void *config_, void *dims_, void *
 	int nx1 = dims->nx1;
 	int nu1 = dims->nu1;
 
+	ext_fun_arg_t ext_fun_type_in[2];
+	void *ext_fun_in[2]; // XXX large enough ?
+	ext_fun_arg_t ext_fun_type_out[2];
+	void *ext_fun_out[2]; // XXX large enough ?
+
 	// pass state and control to integrator
 	blasfeo_unpack_dvec(nu, mem->ux, 0, work->discrete_model_in+nx);
 	blasfeo_unpack_dvec(nx, mem->ux, nu, work->discrete_model_in);
 
+	ext_fun_type_in[0] = COLMAJ;
+	ext_fun_in[0] = work->discrete_model_in+0; // x: nx
+	ext_fun_type_in[1] = COLMAJ;
+	ext_fun_in[1] = work->discrete_model_in+nx; // u: nu
+
+	ext_fun_type_out[0] = COLMAJ;
+	ext_fun_out[0] = work->discrete_model_out+0; // fun: nx1
+	ext_fun_type_out[1] = COLMAJ;
+	ext_fun_out[1] = work->discrete_model_out+nx1; // jac: nx1*(nx+nu)
+
 	// call external function
-	model->discrete_model->evaluate(model->discrete_model, work->discrete_model_in, work->discrete_model_out);
+	model->discrete_model->evaluate(model->discrete_model, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
 	// B
 	blasfeo_pack_tran_dmat(nx1, nu, work->discrete_model_out+nx1+nx1*nx, nx1, mem->BAbt, 0, 0);

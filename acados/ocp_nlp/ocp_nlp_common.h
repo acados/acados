@@ -90,6 +90,9 @@ typedef struct
 	struct blasfeo_dvec *pi;
 	struct blasfeo_dvec *lam;
 	struct blasfeo_dvec *t;
+
+	int sqp_iter;
+	double inf_norm_res;
 } ocp_nlp_out;
 
 

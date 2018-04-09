@@ -1,0 +1,258 @@
+/************************************************
+* ocp_nlp_cost_external
+************************************************/
+
+// ext cost
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = work->ext_cost_in+0; // ux: nu+nx
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = work->ext_cost_out+0; // grad: nu+nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = work->ext_cost_out+nx+nu; // hess: (nu+nx) * (nu+nx)
+
+model->ext_cost->evaluate(model->ext_cost, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+
+/************************************************
+* ocp_nlp_cost_nls
+************************************************/
+
+// nls_jac
+
+ext_fun_type_in[0] = BLASFEO_VEC;
+ext_fun_in[0] = memory->ux; // ux: nu+nx
+
+ext_fun_type_out[0] = BLASFEO_VEC;
+ext_fun_out[0] = &memory->res; // fun: ny
+ext_fun_type_out[1] = BLASFEO_MAT;
+ext_fun_out[1] = &memory->Jt; // jac': (nu+nx) * ny
+
+model->nls_jac->evaluate(model->nls_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// nls_jac
+
+ext_fun_type_in[0] = BLASFEO_VEC;
+ext_fun_in[0] = memory->ux; // ux: nu+nx
+ext_fun_type_in[1] = BLASFEO_VEC;
+ext_fun_in[1] = &work->tmp_ny; // fun: ny
+
+ext_fun_type_out[0] = BLASFEO_MAT;
+ext_fun_out[0] = memory->RSQrq; // hess: (nu+nx) * (nu+nx)
+
+model->nls_hess->evaluate(model->nls_hess, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+
+/************************************************
+* ocp_nlp_constraints
+************************************************/
+
+// h
+
+ext_fun_type_in[0] = BLASFEO_VEC;
+ext_fun_in[0] = memory->ux; // ux: nu+nx
+
+ext_fun_type_out[0] = BLASFEO_VEC;
+ext_fun_out[0] = &work->tmp_h; // fun: nh
+ext_fun_type_out[1] = BLASFEO_MAT;
+ext_fun_out[1] = &work->tmp_Jht; // jac': (nu+nx) * nh
+
+model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+
+/************************************************
+* sim_erk_integrator
+************************************************/
+
+// expl_vde_for
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = rhs_forw_in+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = rhs_forw_in+nx; // Sx: nx*nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = rhs_forw_in+nx+nx*nx; // Su: nx*nu
+ext_fun_type_in[3] = COLMAJ;
+ext_fun_in[3] = rhs_forw_in+nx+nx*nx+nx*nu; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = K_traj+s*nX+nx; // Sx: nx*nx
+ext_fun_type_out[2] = COLMAJ;
+ext_fun_out[2] = K_traj+s*nX+nx+nx*nx; // Su: nx*nu
+
+model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// expl_ode_fun
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = rhs_forw_in+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = rhs_forw_in+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = K_traj+s*nX+0; // fun: nx
+
+model->expl_ode_fun->evaluate(model->expl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// expl_ode_hess
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = rhs_adj_in+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = rhs_adj_in+nx; // lam: nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = rhs_adj_in+nx+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
+
+model->expl_ode_hes->evaluate(model->expl_ode_hes, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// expl_vde_adj
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = rhs_adj_in+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = rhs_adj_in+nx; // Sx: nx*nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = rhs_adj_in+nx+nx*nx; // Su: nx*nu
+ext_fun_type_in[3] = COLMAJ;
+ext_fun_in[3] = rhs_adj_in+nx+nx*nx+nx*nu; // lam: nx
+ext_fun_type_in[4] = COLMAJ;
+ext_fun_in[4] = rhs_adj_in+nx+nx*nx+nx*nu+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = adj_traj+s*nAdj+0; // adj: nx+nu
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = adj_traj+s*nAdj+nx+nu; // hess: (nx+nu)*(nx+nu)
+
+model->expl_vde_adj->evaluate(model->expl_vde_adj, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+
+
+/************************************************
+* sim_lifted_irk_integrator
+************************************************/
+
+// expl_ode_jac
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = rhs_in+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = rhs_in+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = jac_tmp+0; // fun: nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = jac_tmp+nx; // jac_x: nx*nx
+
+model->expl_ode_jac->evaluate(model->expl_ode_jac, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// expl_vde_for
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = rhs_in+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = rhs_in+nx; // Sx: nx*nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = rhs_in+nx+nx*nx; // Su: nx*nu
+ext_fun_type_in[3] = COLMAJ;
+ext_fun_in[3] = rhs_in+nx+nx*nx+nx*nu; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = VDE_tmp[s1]+0; // fun: nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = VDE_tmp[s1]+nx; // Sx: nx*nx
+ext_fun_type_out[2] = COLMAJ;
+ext_fun_out[2] = VDE_tmp[s1]+nx+nx*nx; // Su: nx*nu
+
+model->expl_vde_for->evaluate(model->expl_vde_for, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+
+/************************************************
+* sim_irk_integrator
+************************************************/
+
+// impl_ode_fun
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = ode_args+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = ode_args+nx; // dx: nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = ode_args+nx+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = rGt+0; // fun: nx
+
+model->impl_ode_fun->evaluate(model->impl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// impl_ode_fun_jac_x_xdot
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = ode_args+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = ode_args+nx; // dx: nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = ode_args+nx+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = jac_out+0; // fun: nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = jac_out+nx; // jac_x: nx*nx
+ext_fun_type_out[2] = COLMAJ;
+ext_fun_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
+
+model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// impl_ode_jac_x_xdot_u
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = ode_args+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = ode_args+nx; // dx: nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = ode_args+nx+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = jac_out+nx*nx; // jac_xdot: nx*nx
+ext_fun_type_out[2] = COLMAJ;
+ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
+
+model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
+// impl_ode_jac_x_u
+
+ext_fun_type_in[0] = COLMAJ;
+ext_fun_in[0] = ode_args+0; // x: nx
+ext_fun_type_in[1] = COLMAJ;
+ext_fun_in[1] = ode_args+nx; // dx: nx
+ext_fun_type_in[2] = COLMAJ;
+ext_fun_in[2] = ode_args+nx+nx; // u: nu
+
+ext_fun_type_out[0] = COLMAJ;
+ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
+ext_fun_type_out[1] = COLMAJ;
+ext_fun_out[1] = jac_out+nx*nx; // jac_u: nx*nu
+
+model->impl_ode_jac_x_u->evaluate(model->impl_ode_jac_x_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+
+
