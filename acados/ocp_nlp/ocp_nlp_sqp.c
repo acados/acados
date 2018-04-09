@@ -682,12 +682,14 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 	for (i=0; i<=N; i++)
 	{
 		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, work->qp_in->rq+i, 0);
+        blasfeo_drowin(nu[i]+nx[i], 1.0, work->qp_in->rq+i, 0, work->qp_in->RSQrq+i, nu[i]+nx[i], 0); // XXX needed ??? YES :)
 	}
 
 	// b
 	for (i=0; i<N; i++)
 	{
 		blasfeo_dveccp(nx[i+1], nlp_mem->dyn_fun+i, 0, work->qp_in->b+i, 0);
+        blasfeo_drowin(nx[i+1], 1.0, work->qp_in->b+i, 0, work->qp_in->BAbt+i, nu[i]+nx[i], 0); // XXX needed ??? YES :)
 	}
 
 	// d
