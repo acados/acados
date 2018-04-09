@@ -29,7 +29,8 @@ extern "C" {
 typedef enum {
     ERK,
     LIFTED_IRK,
-    IRK
+    IRK,
+    NEW_LIFTED_IRK
 } sim_solver_t;
 
 typedef struct {
