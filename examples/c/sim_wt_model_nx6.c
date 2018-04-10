@@ -290,7 +290,7 @@ int main()
 	//		opts->ns = 4; // number of stages in rk integrator
 	//		opts->num_steps = 5; // number of integration steps
 		opts->sens_adj = true;
-		opts->sens_forw = false;
+		opts->sens_forw = true;
 
 		switch (nss)
 		{
@@ -379,6 +379,8 @@ int main()
 		// seeds adj
 		for (ii = 0; ii < nx; ii++)
 			in->S_adj[ii] = 1.0;
+		for (ii = 0; ii < nu; ii++)
+			in->S_adj[ii+nx] = 0.0;
 
 		/************************************************
 		* sim solver
@@ -446,13 +448,17 @@ int main()
 			// update initial state
 			for (jj = 0; jj < nx; jj++)
 				in->x[jj] = x_sim[ii*nx+jj];
-
+			// printf("\n x_in =: \n");
+			// d_print_e_mat(1, nx, in->x, 1);	
+			// printf("p0 = %f\n", *p_sim);
 			// compute inputs
 			for (jj = 0; jj < nu; jj++)
 				in->u[jj] = u_sim[ii*nu+jj];
 			tmp = in->u[1] - uctrl;
 			in->u[1] = tmp>0.0 ? tmp : 0.0;
 
+			// printf("\n u_0 =: \n");
+			// d_print_e_mat(1, nu, in->u, 1);	
 			// update parameters
 			switch (nss)
 			{
@@ -536,37 +542,36 @@ int main()
 		if(opts->sens_adj){
 			double *S_adj_out = out->S_adj;
 			printf("\nS_adj_out: \n");
-			d_print_e_mat(1, nx, S_adj_out, 1);
-
-		// 	struct blasfeo_dmat S_forw_result;
-		// 	struct blasfeo_dvec adjoint_seed;
-		// 	struct blasfeo_dvec forw_times_seed;
-
-		// 	int Sf_mem_size = blasfeo_memsize_dmat(nx, nx+nu);
-		// 	int adj_s_mem_size = blasfeo_memsize_dvec(nx);
-		// 	int check_mem_size = blasfeo_memsize_dvec(nx+nu);
-		// 	void *Sf_mem = malloc(Sf_mem_size);
-		// 	void *seed_mem = malloc(adj_s_mem_size);
-		// 	void *check_mem = malloc(check_mem_size);
-
-		// 	blasfeo_create_dmat(nx, nu+nx, &S_forw_result, Sf_mem);
-		// 	blasfeo_create_dvec(nx, &adjoint_seed, seed_mem);
-		// 	blasfeo_create_dvec(nu+nx, &forw_times_seed, check_mem);
-
-		// 	blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
-		// 	blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
-
-		// 	blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
-		// 	printf("S_forw^T * adj_seed = \n");
-		// 	blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
-
-		// 	free(Sf_mem);
-		// 	free(seed_mem);
-		// 	free(check_mem);
+			d_print_e_mat(1, nx+nu, S_adj_out, 1);
 		}
 
+		// debug adjoints
+		// struct blasfeo_dmat S_forw_result;
+		// struct blasfeo_dvec adjoint_seed;
+		// struct blasfeo_dvec forw_times_seed;
 
+		// int Sf_mem_size = blasfeo_memsize_dmat(nx, nx+nu);
+		// int adj_s_mem_size = blasfeo_memsize_dvec(nx);
+		// int check_mem_size = blasfeo_memsize_dvec(nx+nu);
 
+		// void *Sf_mem = malloc(Sf_mem_size);
+		// void *seed_mem = malloc(adj_s_mem_size);
+		// void *check_mem = malloc(check_mem_size);
+
+		// blasfeo_create_dmat(nx, nu+nx, &S_forw_result, Sf_mem);
+		// blasfeo_create_dvec(nx, &adjoint_seed, seed_mem);
+		// blasfeo_create_dvec(nu+nx, &forw_times_seed, check_mem);
+
+		// blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
+		// blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
+
+		// blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
+		// printf("S_forw^T * adj_seed = \n");
+		// blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
+
+		// free(Sf_mem);
+		// free(seed_mem);
+		// free(check_mem);
 
 
 	#if 0

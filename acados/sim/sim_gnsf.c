@@ -1330,6 +1330,8 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dgese(nx, nu, 0.0, &dPsi_du, 0, 0);
             blasfeo_ddiare(nx, 1.0, &dPsi_dx, 0, 0); //dPsi_dx is unit now
 
+            // printf("dPsi_du = \n");
+            // blasfeo_print_dmat(nx, nu, &dPsi_du, 0, 0);
             // compute dPsi_d..
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_dgead(nx1, nff, fix->b_dt[ii], &fix->KKf, ii*nx1, 0, &dPsi_dff, 0, 0);
@@ -1371,7 +1373,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
 
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
 
-            blasfeo_dgemv_t(nff, nx, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
+            blasfeo_dgemv_t(nx, nff, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
+            // printf("dPsi_dff^T * lambda = \n");
+			// blasfeo_print_exp_tran_dvec(nff, &res_val, 0);
 
             blasfeo_dvecpei(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_utn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
