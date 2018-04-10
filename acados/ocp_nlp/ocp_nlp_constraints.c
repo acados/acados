@@ -484,23 +484,25 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 
 	if (nh>0)
 	{
-		// XXX DANGER !!! DO NOT TRY THIS AT HOME !!!
-		// Cast of BLASFEO internals, only if you know what is happening !!!
-		work->tmp_h = work->tmp_nbgh;
-		work->tmp_h.pa = &(BLASFEO_DVECEL(&work->tmp_nbgh, nb+ng));
-		work->tmp_Jht = memory->DCt[0];
-		work->tmp_Jht.pA = &(BLASFEO_DMATEL(memory->DCt, 0, ng)); // only works for col offsets !!!
-
-		ext_fun_type_in[0] = BLASFEO_VEC;
+		//
+		ext_fun_type_in[0] = BLASFEO_DVEC;
 		ext_fun_in[0] = memory->ux; // ux: nu+nx
 
-		ext_fun_type_out[0] = BLASFEO_VEC;
-		ext_fun_out[0] = &work->tmp_h; // fun: nh
-		ext_fun_type_out[1] = BLASFEO_MAT;
-		ext_fun_out[1] = &work->tmp_Jht; // jac': (nu+nx) * nh
+		//
+		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+		struct blasfeo_dvec_args h_args;
+		h_args.x = &work->tmp_nbgh;
+		h_args.xi = nb+ng;
+		ext_fun_out[0] = &h_args; // fun: nh
+		//
+		ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+		struct blasfeo_dmat_args Jht_args;
+		Jht_args.A = memory->DCt;
+		Jht_args.ai = 0;
+		Jht_args.aj = ng;
+		ext_fun_out[1] = &Jht_args; // jac': (nu+nx) * nh
 
 		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-
 	}
 
 	if (nq>0)

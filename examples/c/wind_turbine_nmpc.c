@@ -145,14 +145,19 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
 	struct blasfeo_dvec *ux = in[0];
 
 	// h
-	struct blasfeo_dvec *h = out[0];
-	BLASFEO_DVECEL(h, 0) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+	struct blasfeo_dvec_args *h_args = out[0];
+	struct blasfeo_dvec *h = h_args->x;
+	int xi = h_args->xi;
+	BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
 
 	// jac
-	struct blasfeo_dmat *jac = out[1];
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
-	BLASFEO_DMATEL(jac, nu+0, 0) = alpha * BLASFEO_DVECEL(ux, nu+5);
-	BLASFEO_DMATEL(jac, nu+5, 0) = alpha * BLASFEO_DVECEL(ux, nu+0);
+	struct blasfeo_dmat_args *jac_args = out[1];
+	struct blasfeo_dmat *jac = jac_args->A;
+	int ai = jac_args->ai;
+	int aj = jac_args->aj;
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
+	BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(ux, nu+5);
+	BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(ux, nu+0);
 
 	return;
 
