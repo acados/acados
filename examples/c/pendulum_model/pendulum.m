@@ -80,6 +80,5 @@ adjFun.generate(['vde_adj_pendulum'], opts);
 hessFun.generate(['vde_hess_pendulum'], opts);
 
 p = vertcat(x1-l*sin(theta) - l, l*cos(theta) - l);
-c = p.T * p;
-jac_constraint = Function('jac_constraint', {x, u}, {c, SX.zeros(1, 4) + jacobian(c, x), SX.zeros(2, 4) + jacobian(p, x)});
-jac_constraint.generate('jac_constraint', opts);
+quad_constraint = Function('quad_constraint', {vertcat(u, x)}, {p, jacobian(p, vertcat(u, x)).T});
+quad_constraint.generate('quad_constraint', opts);
