@@ -1142,11 +1142,14 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
             }
             for (int ii = 0; ii < num_stages; ii++) { // eval phi
-                blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
                 acados_tic(&casadi_timer);
-                // printf("function?!\n");
                 ext_fun_type_in[0] = COLMAJ;
                 ext_fun_in[0] = phi_in; // y: n_in
+                blasfeo_unpack_dvec(n_in, &yy_val[ss], ii*n_in, &phi_in[0]);
+
+                // ext_fun_type_in[0] = BLASFEO_VEC;
+                // ext_fun_in[0] = &(BLASFEO_DVECEL(&yy_val[ss], ii*n_in)); // y: n_in
+
                 ext_fun_type_out[0] = COLMAJ;
                 ext_fun_out[0] = phi_out; //
                 // fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, phi_in, phi_out);
@@ -1191,7 +1194,14 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 acados_tic(&casadi_timer);
 
                 ext_fun_type_in[0] = COLMAJ;
-                ext_fun_in[0] = f_LO_in; // y: n_in
+                ext_fun_type_in[1] = COLMAJ;
+                ext_fun_type_in[2] = COLMAJ;
+                ext_fun_type_in[3] = COLMAJ;
+                ext_fun_in[0] = f_LO_in; // x1
+                ext_fun_in[1] = &f_LO_in[nx1]; // K1
+                ext_fun_in[2] = &f_LO_in[2*nx1]; // z
+                ext_fun_in[3] = &f_LO_in[2*nx1+nz]; // u
+
                 ext_fun_type_out[0] = COLMAJ;
                 ext_fun_out[0] = f_LO_out; //
                 fix->f_lo_jac_x1_x1dot_u_z->evaluate(fix->f_lo_jac_x1_x1dot_u_z, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
@@ -1350,7 +1360,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 ext_fun_out[0] = phi_out; //
                 fix->phi_jac_y->evaluate(fix->phi_jac_y, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
-                
+
                 blasfeo_pack_dmat(n_out, n_in, &phi_out[0], n_out, &dPHI_dy, ii*n_out, 0);
                 // build J_r_ff
                 blasfeo_dgemm_nn(n_out, nff, n_in, -1.0, &dPHI_dy, ii*n_out, 0, &fix->YYf, ii*n_in, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);
