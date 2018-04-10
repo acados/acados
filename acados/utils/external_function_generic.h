@@ -36,9 +36,37 @@ extern "C" {
 typedef enum
 {
 	COLMAJ,
-	BLASFEO_MAT,
-	BLASFEO_VEC,
+	BLASFEO_DMAT,
+	BLASFEO_DVEC,
+	COLMAJ_ARGS,
+	BLASFEO_DMAT_ARGS,
+	BLASFEO_DVEC_ARGS
 } ext_fun_arg_t;
+
+
+
+struct colmaj_args
+{
+	double *A;
+	int lda;
+};
+
+
+
+struct blasfeo_dmat_args
+{
+	struct blasfeo_dmat *A;
+	int ai;
+	int aj;
+};
+
+
+
+struct blasfeo_dvec_args
+{
+	struct blasfeo_dvec *x;
+	int xi;
+};
 
 
 
