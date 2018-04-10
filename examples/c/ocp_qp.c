@@ -61,7 +61,7 @@ int main() {
     double *hlb[] = {x0};
     double *hub[] = {x0};
 
-    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
+    d_cvt_colmaj_to_ocp_qp(hA, hB, hb, hQ, hS, hR, hq, hr, hidxb, hlb, hub, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, qp_in);
 
     print_ocp_qp_in(qp_in);
 

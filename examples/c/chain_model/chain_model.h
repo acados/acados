@@ -26,14 +26,14 @@ extern "C" {
 #define XN_NM9_FILE "chain_model/xN_nm9.txt"
 
 /* forward vde */
-int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int vde_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int vde_chain_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
@@ -81,14 +81,14 @@ int vde_chain_nm8_n_out();
 int vde_chain_nm9_n_out();
 
 /* jacobian ode */
-int jac_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int jac_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int jac_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int jac_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int jac_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int jac_chain_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
@@ -136,34 +136,34 @@ int jac_chain_nm8_n_out();
 int jac_chain_nm9_n_out();
 
 /* adjoint vde */
-int vde_adj_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_adj_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_adj_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_adj_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 /* hessian vde (or ode???) */
-int vde_hess_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int vde_hess_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_hess_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int vde_hess_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 /* ls cost */
-int ls_cost_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_cost_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int ls_cost_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_cost_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int ls_cost_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int ls_cost_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
@@ -211,14 +211,14 @@ int ls_cost_nm8_n_out();
 int ls_cost_nm9_n_out();
 
 /* ls cost N */
-int ls_costN_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int ls_costN_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int ls_costN_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int ls_costN_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int ls_costN_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int ls_costN_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
@@ -266,14 +266,14 @@ int ls_costN_nm8_n_out();
 int ls_costN_nm9_n_out();
 
 
-int pathcon_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathcon_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int pathcon_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathcon_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int pathcon_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int pathcon_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
@@ -293,14 +293,14 @@ const int* pathcon_nm7_sparsity_out(int i);
 const int* pathcon_nm8_sparsity_out(int i);
 const int* pathcon_nm9_sparsity_out(int i);
 
-int pathconN_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int pathconN_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int pathconN_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int pathconN_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int pathconN_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int pathconN_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
@@ -321,14 +321,14 @@ const int* pathconN_nm8_sparsity_out(int i);
 const int* pathconN_nm9_sparsity_out(int i);
 
 /* casadi ERK integrator */
-int casadi_erk4_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
-int casadi_erk4_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int casadi_erk4_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm5(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm6(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm7(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm8(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
+int casadi_erk4_chain_nm9(const real_t **arg, real_t **res, int *iw, real_t *w, void *mem);
 
 int casadi_erk4_chain_nm2_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);
 int casadi_erk4_chain_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w);

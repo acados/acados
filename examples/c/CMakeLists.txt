@@ -196,6 +196,20 @@ else()
                 nonlinear_chain_ocp_nlp_no_interface_example
                 nonlinear_chain_ocp_nlp_no_interface_example
             )
+
+        add_executable(
+                nonlinear_chain_ocp_nlp_no_interface_lifted_example
+                nonlinear_chain_ocp_nlp_no_interface_lifted.c
+                ${CHAIN_MODEL_SRC}
+            )
+            target_link_libraries(
+                nonlinear_chain_ocp_nlp_no_interface_lifted_example
+                acados
+            )
+            add_test(
+                nonlinear_chain_ocp_nlp_no_interface_lifted_example
+                nonlinear_chain_ocp_nlp_no_interface_example
+            )
     endif()
 endif()
 
@@ -217,13 +231,9 @@ endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
-#    add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
-#    target_link_libraries(pendulum_scqp acados)
-#    add_test(pendulum_scqp pendulum_scqp)
-
-    add_executable(pendulum_sqp pendulum_sqp_gn.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
-    target_link_libraries(pendulum_sqp acados)
-    add_test(pendulum_sqp pendulum_sqp)
+    # add_executable(pendulum_sqp pendulum_sqp_gn.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/jac_constraint.c)
+    # target_link_libraries(pendulum_sqp acados)
+    # add_test(pendulum_sqp pendulum_sqp)
 
     # -------------------- mass_spring
     if(ACADOS_WITH_C_INTERFACE)
@@ -267,6 +277,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     #   COMMAND "${CMAKE_COMMAND}" -E chdir ${EXECUTABLE_OUTPUT_PATH}
     #   ./mass_spring_partial_tightening_example
     # )
+
 
 
     # -------------------- sim_crane

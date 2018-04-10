@@ -103,3 +103,4 @@ build*
 *rti1401
 *.asv
 *.swo
+*.autosave

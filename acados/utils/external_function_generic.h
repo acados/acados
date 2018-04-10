@@ -36,9 +36,37 @@ extern "C" {
 typedef enum
 {
 	COLMAJ,
-	BLASFEO_MAT,
-	BLASFEO_VEC,
+	BLASFEO_DMAT,
+	BLASFEO_DVEC,
+	COLMAJ_ARGS,
+	BLASFEO_DMAT_ARGS,
+	BLASFEO_DVEC_ARGS
 } ext_fun_arg_t;
+
+
+
+struct colmaj_args
+{
+	double *A;
+	int lda;
+};
+
+
+
+struct blasfeo_dmat_args
+{
+	struct blasfeo_dmat *A;
+	int ai;
+	int aj;
+};
+
+
+
+struct blasfeo_dvec_args
+{
+	struct blasfeo_dvec *x;
+	int xi;
+};
 
 
 
@@ -63,7 +91,7 @@ typedef struct
 	void (* evaluate) (void *, ext_fun_arg_t *, void **, ext_fun_arg_t *, void **);
 	// private members
 	void *ptr_ext_mem; // pointer to external memory
-	int (*casadi_fun) (const double **, double **, int *, double *, int);
+	int (*casadi_fun) (const double **, double **, int *, double *, void *);
 	int (*casadi_work) (int *, int *, int *, int *);
 	const int * (*casadi_sparsity_in) (int);
 	const int * (*casadi_sparsity_out) (int);
@@ -105,7 +133,7 @@ typedef struct
 	// private members
 	void (* set_param) (void *, double *);
 	void *ptr_ext_mem; // pointer to external memory
-	int (*casadi_fun) (const double **, double **, int *, double *, int);
+	int (*casadi_fun) (const double **, double **, int *, double *, void *);
 	int (*casadi_work) (int *, int *, int *, int *);
 	const int * (*casadi_sparsity_in) (int);
 	const int * (*casadi_sparsity_out) (int);

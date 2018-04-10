@@ -33,7 +33,16 @@ N = 20;
 nx = (Nm-1)*2*3;
 nu = 3;
 
-%opts = struct('mex', false);
+
+% casadi opts for code generation
+if CasadiMeta.version()=='3.4.0'
+	% casadi 3.4
+	opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+else
+	% old casadi versions
+	opts = struct('mex', false);
+end
+
 
 % Trivial LS cost function
 cost_x = SX.sym('x',nx);
@@ -125,7 +134,7 @@ end
 
 RK_FUN = Function(['casadi_erk4_chain_nm' num2str(Nm)], {X0, U}, {X, jacobian(X, vertcat(X0, U))}, {'x0','p'}, {'xf', 'sensxu'});
 
-RK_FUN.generate(['casadi_erk4_chain_nm' num2str(Nm)]);
+RK_FUN.generate(['casadi_erk4_chain_nm' num2str(Nm)], opts);
 
 %% Find rest position
 Xpoints = linspace(0,1,Nm);
@@ -149,14 +158,14 @@ vdeFun = Function(['vde_chain_nm' num2str(Nm)],{dae.x,Sx,Sp,dae.p},{dae.ode,vdeX
 jacX = SX.zeros(nx,nx) + jacobian(dae.ode,dae.x);
 jacFun = Function(['jac_chain_nm' num2str(Nm)],{dae.x,dae.p},{dae.ode,jacX});
 
-vdeFun.generate(['vde_chain_nm' num2str(Nm)]);
-jacFun.generate(['jac_chain_nm' num2str(Nm)]);
+vdeFun.generate(['vde_chain_nm' num2str(Nm)], opts);
+jacFun.generate(['jac_chain_nm' num2str(Nm)], opts);
 
 lambdaX = SX.sym('lambdaX', nx, 1);
 adj = jtimes(dae.ode, [dae.x; u], lambdaX, true);
 
 adjFun = Function(['vde_adj_chain_nm' num2str(Nm)], {dae.x, lambdaX, u}, {adj});
-adjFun.generate(['vde_adj_chain_nm' num2str(Nm)]);
+adjFun.generate(['vde_adj_chain_nm' num2str(Nm)], opts);
 
 S_forw = [Sx Sp; DM([zeros(nu,nx) eye(nu)])];
 hess = S_forw.' * jtimes(adj, [dae.x; u], S_forw);
@@ -168,13 +177,13 @@ for j = 1:nx+nu
 end
 
 hessFun = Function(['vde_hess_chain_nm' num2str(Nm)], {dae.x, Sx, Sp, lambdaX, u}, {adj, hess2});
-hessFun.generate(['vde_hess_chain_nm' num2str(Nm)]);
+hessFun.generate(['vde_hess_chain_nm' num2str(Nm)], opts);
 
 lambdaX = SX.sym('lambdaX', nx, 1);
 adj = jtimes(dae.ode, [dae.x; u], lambdaX, true);
 
 adjFun = Function(['vde_adj_chain_nm' num2str(Nm)], {dae.x, lambdaX, u}, {adj});
-adjFun.generate(['vde_adj_chain_nm' num2str(Nm)]);
+adjFun.generate(['vde_adj_chain_nm' num2str(Nm)], opts);
 
 S_forw = [Sx Sp; DM([zeros(nu,nx) eye(nu)])];
 hess = S_forw.' * jtimes(adj, [dae.x; u], S_forw);
@@ -186,7 +195,7 @@ for j = 1:nx+nu
 end
 
 hessFun = Function(['vde_hess_chain_nm' num2str(Nm)], {dae.x, Sx, Sp, lambdaX, u}, {adj, hess2});
-hessFun.generate(['vde_hess_chain_nm' num2str(Nm)]);
+hessFun.generate(['vde_hess_chain_nm' num2str(Nm)], opts);
 
 %
 %out = odeFun(x0_guess,u_guess);

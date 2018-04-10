@@ -145,14 +145,19 @@ void ext_fun_h1(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *typ
 	struct blasfeo_dvec *ux = in[0];
 
 	// h
-	struct blasfeo_dvec *h = out[0];
-	BLASFEO_DVECEL(h, 0) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
+	struct blasfeo_dvec_args *h_args = out[0];
+	struct blasfeo_dvec *h = h_args->x;
+	int xi = h_args->xi;
+	BLASFEO_DVECEL(h, xi) = alpha * BLASFEO_DVECEL(ux, nu+0) * BLASFEO_DVECEL(ux, nu+5);
 
 	// jac
-	struct blasfeo_dmat *jac = out[1];
-	blasfeo_dgese(nu+nx, nh, 0.0, jac, 0, 0);
-	BLASFEO_DMATEL(jac, nu+0, 0) = alpha * BLASFEO_DVECEL(ux, nu+5);
-	BLASFEO_DMATEL(jac, nu+5, 0) = alpha * BLASFEO_DVECEL(ux, nu+0);
+	struct blasfeo_dmat_args *jac_args = out[1];
+	struct blasfeo_dmat *jac = jac_args->A;
+	int ai = jac_args->ai;
+	int aj = jac_args->aj;
+	blasfeo_dgese(nu+nx, nh, 0.0, jac, ai, aj);
+	BLASFEO_DMATEL(jac, ai+nu+0, aj) = alpha * BLASFEO_DVECEL(ux, nu+5);
+	BLASFEO_DMATEL(jac, ai+nu+5, aj) = alpha * BLASFEO_DVECEL(ux, nu+0);
 
 	return;
 
@@ -424,7 +429,8 @@ int main()
 	{
 		plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
 //		plan->sim_solver_plan[i].sim_solver = ERK;
-		plan->sim_solver_plan[i].sim_solver = IRK;
+//		plan->sim_solver_plan[i].sim_solver = IRK;
+		plan->sim_solver_plan[i].sim_solver = NEW_LIFTED_IRK;
 	}
 
 	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NN);
@@ -509,7 +515,7 @@ int main()
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
 			if (set_fun_status != 0) exit(1);
 		}
-		else if (plan->sim_solver_plan[i].sim_solver == IRK)
+		else if (plan->sim_solver_plan[i].sim_solver == IRK | plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
 		{
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_fun", &impl_ode_fun[i]);
 			if (set_fun_status != 0) exit(1);
@@ -519,6 +525,11 @@ int main()
 			if (set_fun_status != 0) exit(1);
 			set_fun_status = nlp_set_model_in_stage(config, nlp_in, i, "impl_ode_jac_x_u", &impl_ode_jac_x_u[i]);
 			if (set_fun_status != 0) exit(1);
+		}
+		else
+		{
+			printf("\nWrong sim name\n\n");
+			exit(1);
 		}
 	}
 
@@ -582,6 +593,11 @@ int main()
 			sim_opts->num_steps = 2;
 			sim_opts->jac_reuse = true;
 		}
+		else if (plan->sim_solver_plan[i].sim_solver == NEW_LIFTED_IRK)
+		{
+			sim_opts->ns = 4;
+			sim_opts->num_steps = 1;
+		}
     }
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
@@ -643,12 +659,17 @@ int main()
 				{
 					expl_vde_for[ii].set_param(expl_vde_for+ii, wind0_ref+idx+ii);
 				}
-				else if (plan->sim_solver_plan[ii].sim_solver == IRK)
+				else if (plan->sim_solver_plan[ii].sim_solver == IRK | plan->sim_solver_plan[ii].sim_solver == NEW_LIFTED_IRK)
 				{
 					impl_ode_fun[ii].set_param(impl_ode_fun+ii, wind0_ref+idx+ii);
 					impl_ode_fun_jac_x_xdot[ii].set_param(impl_ode_fun_jac_x_xdot+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_xdot_u[ii].set_param(impl_ode_jac_x_xdot_u+ii, wind0_ref+idx+ii);
 					impl_ode_jac_x_u[ii].set_param(impl_ode_jac_x_u+ii, wind0_ref+idx+ii);
+				}
+				else
+				{
+					printf("\nWrong sim name\n\n");
+					exit(1);
 				}
 			}
 
