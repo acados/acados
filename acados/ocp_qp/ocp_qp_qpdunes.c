@@ -693,6 +693,18 @@ void ocp_qp_qpdunes_free_memory(void *mem_)
 int ocp_qp_qpdunes(void *config_, ocp_qp_in *in, ocp_qp_out *out, void *opts_, void *mem_, void *work_)
 {
 
+    int N   = in->dim->N;
+    int *ns = in->dim->ns;
+
+	for (int ii=0; ii<=N; ii++)
+	{
+		if (ns[ii]>0)
+		{
+			printf("\nqpDUNES interface can not handle ns>0 yet: what about implementing it? :)\n");
+			return ACADOS_FAILURE;
+		}
+	}
+
     acados_timer tot_timer, qp_timer, interface_timer;
     ocp_qp_info *info = (ocp_qp_info *) out->misc;
     acados_tic(&tot_timer);

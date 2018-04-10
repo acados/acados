@@ -293,18 +293,28 @@ int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts
     ocp_qp_hpmpc_opts *hpmpc_args = (ocp_qp_hpmpc_opts*) opts_;
     ocp_qp_hpmpc_memory *mem = (ocp_qp_hpmpc_memory*) mem_;
 
-    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
-    acados_timer tot_timer, qp_timer, interface_timer;
-    acados_tic(&tot_timer);
-
-    int ii;
-
-    // extract input struct members
     int N   = qp_in->dim->N;
     int *nx = qp_in->dim->nx;
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
+
+	for (int ii=0; ii<=N; ii++)
+	{
+		if (ns[ii]>0)
+		{
+			printf("\nHPMPC interface can not handle ns>0 yet: what about implementing it? :)\n");
+			return ACADOS_FAILURE;
+		}
+	}
+
+
+    ocp_qp_info *info = (ocp_qp_info *) qp_out->misc;
+    acados_timer tot_timer, qp_timer, interface_timer;
+    acados_tic(&tot_timer);
+
+    int ii;
 
     int hpmpc_status = -1;
 
