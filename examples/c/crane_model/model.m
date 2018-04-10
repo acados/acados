@@ -86,8 +86,17 @@ impl_ode_fun_jac_x_xdot = Function('casadi_impl_ode_fun_jac_x_xdot', {x, x_dot, 
 impl_ode_jac_x_xdot_u = Function('casadi_impl_ode_jac_x_xdot_u', {x, x_dot, u}, {[jac_x, jac_xdot, jac_u]});
 impl_ode_jac_x_u = Function('casadi_impl_ode_jac_x_u', {x, x_dot, u}, {[jac_x, jac_xdot, jac_u]});
 
-opts = struct('mex', false);
- 
+
+% casadi opts for code generation
+if CasadiMeta.version()=='3.4.0'
+	% casadi 3.4
+	opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+else
+	% old casadi versions
+	opts = struct('mex', false);
+end
+
+
 impl_ode_fun.generate(['impl_ode_fun'],opts);
 impl_ode_jac_x.generate(['impl_ode_jac_x'],opts);
 impl_ode_jac_xdot.generate(['impl_ode_jac_xdot'],opts);
