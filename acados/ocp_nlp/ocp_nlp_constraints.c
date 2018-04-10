@@ -484,11 +484,6 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 
 	if (nh>0)
 	{
-		// XXX DANGER !!! DO NOT TRY THIS AT HOME !!!
-		// Cast of BLASFEO internals, only if you know what is happening !!!
-		work->tmp_h = work->tmp_nbgh;
-		work->tmp_h.pa = &(BLASFEO_DVECEL(&work->tmp_nbgh, nb+ng));
-
 		//
 		ext_fun_type_in[0] = BLASFEO_DVEC;
 		ext_fun_in[0] = memory->ux; // ux: nu+nx
@@ -508,7 +503,6 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 		ext_fun_out[1] = &Jht_args; // jac': (nu+nx) * nh
 
 		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-
 	}
 
 	if (nq>0)
