@@ -147,9 +147,9 @@ static void select_dynamics_casadi(int N, int num_free_masses,
 	external_function_casadi *forw_vde,
 	external_function_casadi *jac_ode,
 	external_function_casadi *impl_ode_fun,
-	external_function_casadi *impl_ode_jac_x, 
-	external_function_casadi *impl_ode_jac_xdot, 
-	external_function_casadi *impl_ode_jac_u, 
+	external_function_casadi *impl_ode_jac_x,
+	external_function_casadi *impl_ode_jac_xdot,
+	external_function_casadi *impl_ode_jac_u,
 	external_function_casadi *impl_ode_fun_jac_x_xdot,
 	external_function_casadi *impl_ode_jac_x_xdot_u,
 	external_function_casadi *impl_ode_jac_x_u,
@@ -735,7 +735,7 @@ void ext_cost_nm2(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+	double *ref = calloc(nx+nu, sizeof(double));
 	for (ii=0; ii<nu; ii++)
 		ref[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -758,6 +758,7 @@ void ext_cost_nm2(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
+    free(ref);
 	return;
 
 }
@@ -773,7 +774,7 @@ void ext_cost_nm3(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+    double *ref = calloc(nx+nu, sizeof(double));
 	for (ii=0; ii<nu; ii++)
 		ref[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -796,6 +797,7 @@ void ext_cost_nm3(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
+    free(ref);
 	return;
 
 }
@@ -811,7 +813,7 @@ void ext_cost_nm4(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+    double *ref = calloc(nx+nu, sizeof(double));
 	for (ii=0; ii<nu; ii++)
 		ref[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -834,6 +836,7 @@ void ext_cost_nm4(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
+    free(ref);
 	return;
 
 }
@@ -849,7 +852,7 @@ void ext_cost_nm5(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+    double *ref = calloc(nx+nu, sizeof(double));
 	for (ii=0; ii<nu; ii++)
 		ref[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -872,6 +875,7 @@ void ext_cost_nm5(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
+    free(ref);
 	return;
 
 }
@@ -887,7 +891,7 @@ void ext_cost_nm6(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	int nv = nu+nx;
 
 	// ref
-	double ref[nu+nx];
+    double *ref = calloc(nx+nu, sizeof(double));
 	for (ii=0; ii<nu; ii++)
 		ref[ii] = 0.0;
 	for (ii=0; ii<nx; ii++)
@@ -910,6 +914,7 @@ void ext_cost_nm6(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *t
 	for (ii=0; ii<nv; ii++)
 		grad[ii] = hess[ii*(nv+1)] * (ux[ii] - ref[ii]);
 
+    free(ref);
 	return;
 
 }
