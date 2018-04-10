@@ -213,11 +213,11 @@ int sim_new_lifted_irk_memory_calculate_size(void *config, sim_dims *dims, void 
     // int steps = opts->num_steps;
 
     int size = sizeof(sim_new_lifted_irk_memory);
-    
+
     size += 3*sizeof(struct blasfeo_dmat); // JGK, JGf, JKf
     size += 1*sizeof(struct blasfeo_dvec); // K
-    size += 2*sizeof(struct blasfeo_dvec); // x, u 
-    
+    size += 2*sizeof(struct blasfeo_dvec); // x, u
+
     size += blasfeo_memsize_dmat(nx*ns, nx*ns); // JGK
     size += 2*blasfeo_memsize_dmat(nx*ns, nx+nu); // JGf, JKf
     size += 1*blasfeo_memsize_dvec(nx*ns); // K
@@ -262,7 +262,7 @@ void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_
 
     memory->x = (struct blasfeo_dvec *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
-    
+
     memory->u = (struct blasfeo_dvec *)c_ptr;
     c_ptr += sizeof(struct blasfeo_dvec);
 
@@ -279,7 +279,7 @@ void *sim_new_lifted_irk_memory_assign(void *config, sim_dims *dims, void *opts_
     blasfeo_dvecse(nx, 0.0, memory->x, 0);
     assign_and_advance_blasfeo_dvec_mem(nu, memory->u, &c_ptr);
     blasfeo_dvecse(nu, 0.0, memory->u, 0);
-    
+
     // TODO(andrea): need to move this to options.
     memory->update_sens = 1;
 
@@ -304,7 +304,7 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, v
     int nu = dims->nu;
 
     int steps = opts->num_steps;
-    
+
     int size = sizeof(sim_new_lifted_irk_workspace);
 
     size += 1*sizeof(struct blasfeo_dmat); // S_forw
@@ -313,7 +313,7 @@ int sim_new_lifted_irk_workspace_calculate_size(void *config_, sim_dims *dims, v
     size += 3*sizeof(struct blasfeo_dvec); // rG, xt, xn
     size += 2*sizeof(struct blasfeo_dvec); // lambda, lambdaK
     size += 2*steps*sizeof(struct blasfeo_dvec);  // **xn_traj, **K_traj;
-    size += 1*sizeof(struct blasfeo_dvec);  // w ([x; u]) 
+    size += 1*sizeof(struct blasfeo_dvec);  // w ([x; u])
 
     size += blasfeo_memsize_dmat(nx, nx+nu); // S_forw
     size += steps * blasfeo_memsize_dmat(nx*ns, nx*ns); // for JG_traj
@@ -391,7 +391,7 @@ static void *sim_new_lifted_irk_workspace_cast(void *config_, sim_dims *dims, vo
     for (int i=0;i<steps;i++){
         assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     }
-    
+
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xn, &c_ptr);
@@ -435,9 +435,9 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     int ns = opts->ns;
 
     sim_dims *dims = in->dims;
-    sim_new_lifted_irk_workspace *workspace = (sim_new_lifted_irk_workspace *) 
+    sim_new_lifted_irk_workspace *workspace = (sim_new_lifted_irk_workspace *)
         sim_new_lifted_irk_workspace_cast(config, dims, opts, work_);
-    
+
     sim_new_lifted_irk_memory *memory = (sim_new_lifted_irk_memory *) mem_;
 
     int ii, jj, kk, ss;
@@ -478,17 +478,17 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
     struct blasfeo_dvec *xn = workspace->xn;
 
     // for adjoint
-    struct blasfeo_dmat *JG_traj = workspace->JG_traj;
+    // struct blasfeo_dmat *JG_traj = workspace->JG_traj;
     struct blasfeo_dvec *lambda = workspace->lambda;
     struct blasfeo_dvec *lambdaK = workspace->lambdaK;
-    struct blasfeo_dvec *xn_traj = workspace->xn_traj;
-    struct blasfeo_dvec *K_traj = workspace->K_traj;
+    // struct blasfeo_dvec *xn_traj = workspace->xn_traj;
+    // struct blasfeo_dvec *K_traj = workspace->K_traj;
     struct blasfeo_dvec *w = workspace->w;
     double *S_adj_in = workspace->S_adj_w;
 
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
-    double *S_adj_out = out->S_adj;
+    // double *S_adj_out = out->S_adj;
 
 	ext_fun_arg_t ext_fun_type_in[5];
 	void *ext_fun_in[5]; // XXX large enough ?
@@ -505,11 +505,11 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         printf("NOT IMPLEMENTED YET - EXITING.");
         exit(1);
     }
-    
+
     // initialize
     blasfeo_dgese(nx*ns, nx*ns, 0.0, JGK, 0, 0);
     blasfeo_dgese(nx*ns, nx+nu, 0.0, JGf, 0, 0);
-    
+
     // TODO(dimitris): shouldn't this be NF instead of nx+nu??
     blasfeo_pack_dmat(nx, nx+nu, S_forw_in, nx, S_forw, 0, 0);
     // blasfeo_print_dmat(nx, nx+nu, S_forw, 0, 0);
@@ -536,7 +536,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         jac_out[kk] = 0.0;
     for (kk=0;kk<nx*nx;kk++)
         Jt[kk] = 0.0;
-	
+
     // start the loop
     acados_tic(&timer);
     for(ss=0; ss<num_steps; ss++)
@@ -549,13 +549,13 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
         blasfeo_daxpy(nx, -1.0, memory->x, 0, w, 0, w, 0);
         blasfeo_daxpy(nu, -1.0, memory->u, 0, w, nx, w, nx);
         blasfeo_dgemv_n(nx*ns, nx+nu, 1.0, JKf, 0, 0, w, 0, 1.0, K, 0, K, 0);
-        
+
         blasfeo_pack_dvec(nx, in->x, memory->x, 0);
         blasfeo_pack_dvec(nu, in->u, memory->u, 0);
-        
-        // reset value of JKf 
+
+        // reset value of JKf
         blasfeo_dgese(nx*ns, nx+nu, 0.0, JKf, 0, 0);
-        
+
         int iter;
         for(iter = 0; iter < newton_iter; iter++) {
             for(ii=0; ii<ns; ii++) // ii-th row of tableau
@@ -615,10 +615,10 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 					ext_fun_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
 
                     model->impl_ode_fun_jac_x_xdot->evaluate(
-                            model->impl_ode_fun_jac_x_xdot, 
-                            ext_fun_type_in, ext_fun_in, ext_fun_type_out, 
+                            model->impl_ode_fun_jac_x_xdot,
+                            ext_fun_type_in, ext_fun_in, ext_fun_type_out,
                             ext_fun_out);
-                    
+
                     timing_ad += acados_toc(&timer_ad);
                     blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
 
@@ -656,9 +656,9 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
                     blasfeo_unpack_dvec(nx, xt, 0, ode_args);
                     blasfeo_unpack_dvec(nx, K, ii*nx, ode_args+nx);
-                    
+
                     acados_tic(&timer_ad);
-                    
+
                     ext_fun_type_in[0] = COLMAJ;
                     ext_fun_in[0] = ode_args+0; // x: nx
                     ext_fun_type_in[1] = COLMAJ;
@@ -674,15 +674,15 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
                     ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
 
                     model->impl_ode_jac_x_xdot_u->evaluate(
-                            model->impl_ode_jac_x_xdot_u, 
-                            ext_fun_type_in, ext_fun_in, 
+                            model->impl_ode_jac_x_xdot_u,
+                            ext_fun_type_in, ext_fun_in,
                             ext_fun_type_out, ext_fun_out);
 
                     timing_ad += acados_toc(&timer_ad);
                     // extract Jacobian of G wrt x
-                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);              
+                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                     // extract Jacobian of G wrt u
-                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);     
+                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                 }
             } // end ii
         }
@@ -711,7 +711,7 @@ int sim_new_lifted_irk(void *config_, sim_in *in, sim_out *out, void *opts_, voi
 
         // obtain JKf
         blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
-        
+
         blasfeo_dgead(nx*ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);
 
         blasfeo_drowpe(nx*ns, ipiv, JKf);
