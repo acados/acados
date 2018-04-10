@@ -1,8 +1,19 @@
 clc;
 close all;
 
-addpath('../../../external/casadi-octave-v3.2.3')
+%addpath('../../../external/casadi-octave-v3.2.3')
 import casadi.*
+
+
+% casadi opts for code generation
+if CasadiMeta.version()=='3.4.0'
+	% casadi 3.4
+	opts = struct('mex', false, 'casadi_int', 'int', 'casadi_real', 'double');
+else
+	% old casadi versions
+	opts = struct('mex', false);
+end
+
 
 for Nm = 2:10
     
@@ -74,8 +85,6 @@ for Nm = 2:10
 	impl_ode_inc_J_x_xdot = Function(['casadi_impl_ode_fun_jac_x_xdot_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {[ode_impl, jac_x, jac_xdot]});
 	impl_ode_J_x_xdot_u = Function(['casadi_impl_ode_jac_x_xdot_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {[jac_x, jac_xdot, jac_u]});
 	impl_ode_J_x_u = Function(['casadi_impl_ode_jac_x_u_chain_nm',num2str(Nm)], {dae.x, dae.x_dot, dae.p}, {[jac_x, jac_xdot, jac_u]});
-    
-    opts = struct('mex', false);
     
     impl_ode_fun.generate(['impl_ode_fun_chain_nm' num2str(Nm)], opts);
     impl_ode_jac_x.generate(['impl_ode_jac_x_chain_nm' num2str(Nm)], opts);
