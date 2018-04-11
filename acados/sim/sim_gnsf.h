@@ -45,7 +45,8 @@ typedef struct
     int nx2;
     int num_steps;
     int n_out;
-    int n_in;
+    int ny;
+    int nuhat;
 } gnsf_dims;
 
 
@@ -59,9 +60,11 @@ typedef struct {
 typedef struct
 {
     // external functions
+    // phi: nonlinearity function
     external_function_generic *phi_fun_jac_y;
-    external_function_generic *phi_jac_y;
-    external_function_generic *f_lo_jac_x1_x1dot_u_z;
+    external_function_generic *phi_jac_y_uhat;
+    // f_lo: linear output function
+    external_function_generic *f_lo_fun_jac_x1_x1dot_u_z;
 
     // precomputed matrices
     struct blasfeo_dmat KKf;
@@ -79,6 +82,8 @@ typedef struct
     struct blasfeo_dmat ALO;
     struct blasfeo_dmat M2inv;
     struct blasfeo_dmat dK2_dx2;
+
+    struct blasfeo_dmat Lu;
 
     // model defining matrices
     double *A;
@@ -124,13 +129,10 @@ typedef struct {
     struct blasfeo_dmat EE2;
 
     struct blasfeo_dmat QQ1;
-    struct blasfeo_dmat PP1;
-    // struct blasfeo_dmat PP3;
 
     struct blasfeo_dmat LLZ;
     struct blasfeo_dmat LLx;
     struct blasfeo_dmat LLK;
-    struct blasfeo_dmat LLu;
 
     struct blasfeo_dmat M2;
     struct blasfeo_dmat dK2_dx2_work;
@@ -138,7 +140,6 @@ typedef struct {
     int *ipivEE1; // index of pivot vector
     int *ipivEE2; // index of pivot vector
     int *ipivQQ1; // index of pivot vector
-    int *ipivPP1; // index of pivot vector
     int* ipivM2;
 } gnsf_pre_workspace;
 
@@ -172,6 +173,8 @@ typedef struct { //workspace
     struct blasfeo_dvec Zu;
     struct blasfeo_dvec ALOtimesx02;
 
+    struct blasfeo_dvec uhat;
+
     struct blasfeo_dmat *f_LO_jac;
 
     struct blasfeo_dmat J_r_ff;
@@ -197,7 +200,7 @@ typedef struct { //workspace
     struct blasfeo_dmat dPsi_dx;
     struct blasfeo_dmat dPsi_du;
 
-    struct blasfeo_dmat dPHI_dy;
+    struct blasfeo_dmat dPHI_dyuhat;
 
 } gnsf_workspace;
 

@@ -10,32 +10,32 @@ extern "C" {
 // used to import integers & double matrices
 int get_ints_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int get_matrices_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int But_KK_YY_ZZ_LO_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+// int But_KK_YY_ZZ_LO_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
-// Phi_inc_dy_fun
-int Phi_inc_dy_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int Phi_inc_dy_fun_work(int *, int *, int *, int *);
-const int *Phi_inc_dy_fun_sparsity_in(int);
-const int *Phi_inc_dy_fun_sparsity_out(int);
-int Phi_inc_dy_fun_n_in();
-int Phi_inc_dy_fun_n_out();
+// phi_fun_jac_y
+int        phi_fun_jac_y(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int        phi_fun_jac_y_work(int *, int *, int *, int *);
+const int *phi_fun_jac_y_sparsity_in(int);
+const int *phi_fun_jac_y_sparsity_out(int);
+int        phi_fun_jac_y_n_in();
+int        phi_fun_jac_y_n_out();
 
 
-//jac_Phi_y_fun
-int jac_Phi_y_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int jac_Phi_y_fun_work(int *, int *, int *, int *);
-const int *jac_Phi_y_fun_sparsity_in(int);
-const int *jac_Phi_y_fun_sparsity_out(int);
-int jac_Phi_y_fun_n_in();
-int jac_Phi_y_fun_n_out();
+// phi_jac_y_uhat
+int        phi_jac_y_uhat(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int        phi_jac_y_uhat_work(int *, int *, int *, int *);
+const int *phi_jac_y_uhat_sparsity_in(int);
+const int *phi_jac_y_uhat_sparsity_out(int);
+int        phi_jac_y_uhat_n_in();
+int        phi_jac_y_uhat_n_out();
 
-// f_LO_inc_J_x1k1uz_fun
-int f_LO_inc_J_x1k1uz_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int f_LO_inc_J_x1k1uz_fun_work(int *, int *, int *, int *);
-const int *f_LO_inc_J_x1k1uz_fun_sparsity_in(int);
-const int *f_LO_inc_J_x1k1uz_fun_sparsity_out(int);
-int f_LO_inc_J_x1k1uz_fun_n_in();
-int f_LO_inc_J_x1k1uz_fun_n_out();
+// f_lo_fun_jac_x1k1uz
+int        f_lo_fun_jac_x1k1uz(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int        f_lo_fun_jac_x1k1uz_work(int *, int *, int *, int *);
+const int *f_lo_fun_jac_x1k1uz_sparsity_in(int);
+const int *f_lo_fun_jac_x1k1uz_sparsity_out(int);
+int        f_lo_fun_jac_x1k1uz_n_in();
+int        f_lo_fun_jac_x1k1uz_n_out();
 
 #ifdef __cplusplus
 } /* extern "C" */

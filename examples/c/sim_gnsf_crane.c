@@ -39,38 +39,37 @@ int main() {
 /************************************************
 *   external functions
 ************************************************/
-
     // Phi_inc_dy
     external_function_casadi phi_fun_jac_y;
-    phi_fun_jac_y.casadi_fun            = &Phi_inc_dy_fun;
-    phi_fun_jac_y.casadi_work           = &Phi_inc_dy_fun_work;
-    phi_fun_jac_y.casadi_sparsity_in    = &Phi_inc_dy_fun_sparsity_in;
-    phi_fun_jac_y.casadi_sparsity_out   = &Phi_inc_dy_fun_sparsity_out;
-    phi_fun_jac_y.casadi_n_in           = &Phi_inc_dy_fun_n_in;
-    phi_fun_jac_y.casadi_n_out          = &Phi_inc_dy_fun_n_out;
+    phi_fun_jac_y.casadi_fun            = &phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &phi_fun_jac_y_n_out;
 	external_function_casadi_create(&phi_fun_jac_y);
 
-    // jac_Phi_y_fun
-    external_function_casadi jac_Phi_y;
-    jac_Phi_y.casadi_fun = &jac_Phi_y_fun;
-    jac_Phi_y.casadi_work = &jac_Phi_y_fun_work;
-    jac_Phi_y.casadi_sparsity_in  = &jac_Phi_y_fun_sparsity_in;
-    jac_Phi_y.casadi_sparsity_out = &jac_Phi_y_fun_sparsity_out;
-    jac_Phi_y.casadi_n_in = &jac_Phi_y_fun_n_in;
-    jac_Phi_y.casadi_n_out = &jac_Phi_y_fun_n_out;
+    // phi_jac_y_uhat
+    external_function_casadi phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_fun                = &phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &phi_jac_y_uhat_n_out;
 
-	external_function_casadi_create(&jac_Phi_y);
+	external_function_casadi_create(&phi_jac_y_uhat);
 
-    // f_LO_inc_J_x1k1uz
-    external_function_casadi f_LO_inc_J_x1k1uz;
-    f_LO_inc_J_x1k1uz.casadi_fun            = &f_LO_inc_J_x1k1uz_fun;
-    f_LO_inc_J_x1k1uz.casadi_work           = &f_LO_inc_J_x1k1uz_fun_work;
-    f_LO_inc_J_x1k1uz.casadi_sparsity_in    = &f_LO_inc_J_x1k1uz_fun_sparsity_in;
-    f_LO_inc_J_x1k1uz.casadi_sparsity_out   = &f_LO_inc_J_x1k1uz_fun_sparsity_out;
-    f_LO_inc_J_x1k1uz.casadi_n_in           = &f_LO_inc_J_x1k1uz_fun_n_in;
-    f_LO_inc_J_x1k1uz.casadi_n_out          = &f_LO_inc_J_x1k1uz_fun_n_out;
+    // f_lo_fun_jac_x1k1uz
+    external_function_casadi f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &f_lo_fun_jac_x1k1uz_n_out;
 
-	external_function_casadi_create(&f_LO_inc_J_x1k1uz);
+	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
 
 /************************************************
 * Set up sim_gnsf structs
@@ -135,7 +134,7 @@ int main() {
     // set up gnsf_model
     gnsf_model *model = in->model;
     // set external functions
-    model->f_lo_jac_x1_x1dot_u_z = (external_function_generic *) &f_LO_inc_J_x1k1uz;
+    model->f_lo_fun_jac_x1k1uz = (external_function_generic *) &f_lo_fun_jac_x1k1uz;
     model->phi_fun_jac_y = (external_function_generic *) &phi_fun_jac_y;
     model->phi_jac_y = (external_function_generic *) &jac_Phi_y;
     gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
@@ -150,7 +149,7 @@ int main() {
     int NREP = 1;
     double casadi_times[NREP];
     double gnsf_times[NREP];
-    // printf("before sim solver\n");
+    printf("before sim solver\n");
     for (int i = 0; i < NREP; i++) {
         int acados_return = sim_solve(sim_solver, in, out);
         if (acados_return != 0)
