@@ -43,7 +43,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 
 EXAMPLES =
 EXAMPLES += sim_wt_model_nx3
-EXAMPLES += sim_wt_model_nx6
+# EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 #EXAMPLES += mass_spring_pcond_hpipm_split

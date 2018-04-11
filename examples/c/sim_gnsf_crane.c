@@ -70,6 +70,7 @@ int main() {
     f_lo_fun_jac_x1k1uz.casadi_n_out          = &f_lo_fun_jac_x1k1uz_n_out;
 
 	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
+    printf("All functions assigned\n");
 
 /************************************************
 * Set up sim_gnsf structs
@@ -77,13 +78,28 @@ int main() {
 
     sim_solver_plan plan;
     plan.sim_solver = GNSF;
+    printf("assigned plan");
     sim_solver_config *config = sim_config_create(plan);
 
+    printf("assigned plan, config");
+
     gnsf_dims *gnsf_dim = gnsf_dims_create();
-    gnsf_get_dims(gnsf_dim, get_ints_fun);
+    // gnsf_get_dims(gnsf_dim, get_ints_fun);
+    gnsf_dim->nx = 9;
+    gnsf_dim->nx1 = 8;
+    gnsf_dim->nx2 = 1;
+    gnsf_dim->nu = 2;
+    gnsf_dim->n_out = 2;
+    gnsf_dim->nz = 1;
+    gnsf_dim->ny = 4;
+    gnsf_dim->nuhat = 1;
+    gnsf_dim->num_stages = 4;
+
+    printf("assigned dim");
 
     // set up sim_dims
     sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
+    printf("assigned dim");
 
     // set up gnsf_opts
     int opts_size = config->opts_calculate_size(config, dims);
@@ -132,11 +148,12 @@ int main() {
     in->T = 0.1;
 
     // set up gnsf_model
+    printf("model set up");
     gnsf_model *model = in->model;
     // set external functions
-    model->f_lo_fun_jac_x1k1uz = (external_function_generic *) &f_lo_fun_jac_x1k1uz;
+    model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) &f_lo_fun_jac_x1k1uz;
     model->phi_fun_jac_y = (external_function_generic *) &phi_fun_jac_y;
-    model->phi_jac_y = (external_function_generic *) &jac_Phi_y;
+    model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
     gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
     gnsf_precompute(gnsf_dim, model, opts, in);
 
@@ -184,8 +201,8 @@ int main() {
     free(sim_solver);
 
 	external_function_casadi_free(&phi_fun_jac_y);
-	external_function_casadi_free(&f_LO_inc_J_x1k1uz);
-	external_function_casadi_free(&jac_Phi_y);
+	external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
+	external_function_casadi_free(&phi_jac_y_uhat);
 
     return 0;
 }

@@ -132,8 +132,8 @@ int sim_set_model_internal(sim_solver_config *config, void *model, const char *f
     // GNSF functions
     else if (!strcmp(fun_type, "phi_fun_jac_y"))
         status = config->model_set_function(model, PHI_FUN_JAC_Y, fun_ptr);
-    else if (!strcmp(fun_type, "phi_jac_y"))
-        status = config->model_set_function(model, PHI_JAC_Y, fun_ptr);
+    else if (!strcmp(fun_type, "phi_jac_y_uhat"))
+        status = config->model_set_function(model, PHI_JAC_Y_UHAT, fun_ptr);
     else if (!strcmp(fun_type, "f_lo_jac_x1_x1dot_u_z"))
         status = config->model_set_function(model, LO_FUN, fun_ptr);
     else
