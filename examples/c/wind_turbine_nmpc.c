@@ -183,16 +183,16 @@ int main()
     * problem dimensions
     ************************************************/
 
-    int nx[NN + 1] = {0};
-    int nu[NN + 1] = {0};
-    int nbx[NN + 1] = {0};
-    int nbu[NN + 1] = {0};
-    int nb[NN + 1] = {0};
-    int ng[NN + 1] = {0};
-    int nh[NN + 1] = {0};
-    int nq[NN + 1] = {0};
-    int ns[NN+1] = {0};
-	int ny[NN+1] = {0};
+    int nx[NN+1] = {};
+    int nu[NN+1] = {};
+    int nbx[NN+1] = {};
+    int nbu[NN+1] = {};
+    int nb[NN+1] = {};
+    int ng[NN+1] = {};
+    int nh[NN+1] = {};
+    int nq[NN+1] = {};
+    int ns[NN+1] = {};
+	int ny[NN+1] = {};
 
 	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -201,9 +201,9 @@ int main()
     nbu[0] = nu_;
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
-
 	// TODO(dimitris): add bilinear constraints later
 	nh[0] = 0;
+	ns[0] = 0;
 	ny[0] = 4; // ny_
 
     for (int i = 1; i < NN; i++)
@@ -215,6 +215,7 @@ int main()
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
 		nh[i] = 1;
+		ns[i] = 0;
 		ny[i] = 4; // ny_
     }
 
@@ -225,6 +226,7 @@ int main()
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
 	nh[NN] = 0;
+	ns[NN] = 0;
 	ny[NN] = 2;
 
     /************************************************
@@ -260,6 +262,25 @@ int main()
 	// electric power
 	double Pel_min = 0.0;
 	double Pel_max = 5.7;
+
+
+	/* soft constraints */
+
+	// first stage
+	int *idxs0 = malloc(ns[0]*sizeof(int));
+	double *ls0 = malloc((ns[0])*sizeof(double));
+	double *us0 = malloc((ns[0])*sizeof(double));
+
+	// middle stage
+	int *idxs1 = malloc(ns[1]*sizeof(int));
+	double *ls1 = malloc((ns[1])*sizeof(double));
+	double *us1 = malloc((ns[1])*sizeof(double));
+
+	// last stage
+	int *idxsN = malloc(ns[NN]*sizeof(int));
+	double *lsN = malloc((ns[NN])*sizeof(double));
+	double *usN = malloc((ns[NN])*sizeof(double));
+
 
 	/* box constraints */
 
@@ -372,6 +393,10 @@ int main()
 		lh1[0] = Pel_min;
 		uh1[0] = Pel_max;
 	}
+	// softed
+	idxs1[0] = nb[1]+ng[1];
+	ls1[0] = 0.0;
+	us1[0] = 0.0;
 
 
 
@@ -402,6 +427,30 @@ int main()
 	W[1+ny_*1] = 0.0180;
 	W[2+ny_*2] = 0.01;
 	W[3+ny_*3] = 0.001;
+
+	/* slacks */
+
+	// first stage
+	double *lZ0 = malloc(ns[0]*sizeof(double));
+	double *uZ0 = malloc(ns[0]*sizeof(double));
+	double *lz0 = malloc(ns[0]*sizeof(double));
+	double *uz0 = malloc(ns[0]*sizeof(double));
+
+	// middle stages
+	double *lZ1 = malloc(ns[1]*sizeof(double));
+	double *uZ1 = malloc(ns[1]*sizeof(double));
+	double *lz1 = malloc(ns[1]*sizeof(double));
+	double *uz1 = malloc(ns[1]*sizeof(double));
+	lZ1[0] = 1e6;
+	uZ1[0] = 1e3;
+	lz1[0] = 0e1;
+	uz1[0] = 0e1;
+
+	// final stage
+	double *lZN = malloc(ns[NN]*sizeof(double));
+	double *uZN = malloc(ns[NN]*sizeof(double));
+	double *lzN = malloc(ns[NN]*sizeof(double));
+	double *uzN = malloc(ns[NN]*sizeof(double));
 
 #if 0
 	d_print_mat(ny_, nx_, Vx, ny_);
@@ -479,6 +528,7 @@ int main()
 	// output definition: y = [x; u]
 
 	/* cost */
+
 	ocp_nlp_cost_ls_model *stage_cost_ls;
 
 	for (int i = 0; i <= NN; i++)
@@ -503,6 +553,17 @@ int main()
 				break;
 		}
 	}
+
+	// slacks (middle stages)
+	for (int ii=0; ii<NN; ii++)
+	{
+		blasfeo_pack_dvec(ns[ii], lZ1, &stage_cost_ls->Z, 0);
+		blasfeo_pack_dvec(ns[ii], uZ1, &stage_cost_ls->Z, ns[ii]);
+		blasfeo_pack_dvec(ns[ii], lz1, &stage_cost_ls->z, 0);
+		blasfeo_pack_dvec(ns[ii], uz1, &stage_cost_ls->z, ns[ii]);
+	}
+
+
 
 	/* dynamics */
 
@@ -534,6 +595,8 @@ int main()
 	}
 
     nlp_in->freezeSens = false;
+
+
 
     /* constraints */
 
@@ -567,6 +630,19 @@ int main()
 			blasfeo_pack_dvec(nh[i], lh1, &constraints[i]->d, nb[i]+ng[i]);
 			blasfeo_pack_dvec(nh[i], uh1, &constraints[i]->d, 2*nb[i]+2*ng[i]+nh[i]);
 			constraints[i]->h = &h1;
+		}
+    }
+
+	/* soft constraints */
+
+	// middle stages
+    for (int i = 1; i < NN; i++)
+	{
+		if(ns[i]>0)
+		{
+			blasfeo_pack_dvec(ns[i], ls1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]);
+			blasfeo_pack_dvec(ns[i], us1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]+ns[i]);
+			for (int ii=0; ii<ns[ii]; ii++) constraints[i]->idxs[ii] = idxs1[ii];
 		}
     }
 
@@ -766,6 +842,29 @@ int main()
 	free(idxb0);
 	free(idxb1);
 	free(idxbN);
+
+	free(ls0);
+	free(us0);
+	free(ls1);
+	free(us1);
+	free(lsN);
+	free(usN);
+	free(idxs0);
+	free(idxs1);
+	free(idxsN);
+
+	free(lZ0);
+	free(uZ0);
+	free(lz0);
+	free(uz0);
+	free(lZ1);
+	free(uZ1);
+	free(lz1);
+	free(uz1);
+	free(lZN);
+	free(uZN);
+	free(lzN);
+	free(uzN);
 
 	free(x_end);
 	free(u_end);
