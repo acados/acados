@@ -782,6 +782,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 	{
 		config->cost[ii]->memory_set_ux_ptr(nlp_out->ux+ii, mem->cost[ii]);
 		config->cost[ii]->memory_set_RSQrq_ptr(work->qp_in->RSQrq+ii, mem->cost[ii]);
+		config->cost[ii]->memory_set_Z_ptr(work->qp_in->Z+ii, mem->cost[ii]);
 	}
 
 	// alias to constraints_memory
