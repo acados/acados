@@ -489,7 +489,7 @@ int main()
     ************************************************/
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
 
     /************************************************
     * dynamics
@@ -682,13 +682,13 @@ int main()
     sqp_opts->min_res_d = 1e-6;
     sqp_opts->min_res_m = 1e-6;
 
-	// // partial condensing
-	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
-	// {
-	// 	ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-	// 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-	// 	pcond_solver_opts->pcond_opts->N2 = 10;
-	// }
+	// partial condensing
+	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	{
+		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+//		pcond_solver_opts->pcond_opts->N2 = 10;
+	}
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);

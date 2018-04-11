@@ -91,7 +91,7 @@ void ocp_qp_hpipm_opts_initialize_default(void *config_, void *dims_, void *opts
     opts->hpipm_opts->iter_max = 50;
     opts->hpipm_opts->stat_max = 50;
     opts->hpipm_opts->alpha_min = 1e-8;
-    opts->hpipm_opts->mu0 = 1;
+    opts->hpipm_opts->mu0 = 1e1;
 
 	return;
 }

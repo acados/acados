@@ -92,7 +92,7 @@ int ocp_nlp_cost_external_model_calculate_size(void *config_, void *dims_)
 
 	size += 1*64;  // blasfeo_mem align
 
-	size += 2*blasfeo_memsize_dvec(ns);  // Z, z
+	size += 2*blasfeo_memsize_dvec(2*ns);  // Z, z
 
 	return size;
 
@@ -120,9 +120,9 @@ void *ocp_nlp_cost_external_model_assign(void *config_, void *dims_, void *raw_m
 
 	// blasfeo_dvec
 	// Z
-	assign_and_advance_blasfeo_dvec_mem(ns, &model->Z, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(2*ns, &model->Z, &c_ptr);
 	// z
-	assign_and_advance_blasfeo_dvec_mem(ns, &model->z, &c_ptr);
+	assign_and_advance_blasfeo_dvec_mem(2*ns, &model->z, &c_ptr);
 
 	// assert
     assert((char *) raw_memory + ocp_nlp_cost_external_model_calculate_size(config_, dims_) >= c_ptr);

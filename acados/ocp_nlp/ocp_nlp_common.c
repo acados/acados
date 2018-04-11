@@ -269,7 +269,7 @@ void ocp_nlp_dims_initialize(void *config_, int *nx, int *nu, int *ny, int *nbx,
 
 	for (ii=0; ii<=N; ii++)
 	{
-		config->constraints[ii]->dims_initialize(config->constraints[ii], dims->constraints[ii], nx[ii], nu[ii], nbx[ii], nbu[ii], ng[ii], nh[ii], ns[ii], ns[ii]);
+		config->constraints[ii]->dims_initialize(config->constraints[ii], dims->constraints[ii], nx[ii], nu[ii], nbx[ii], nbu[ii], ng[ii], nh[ii], nq[ii], ns[ii]);
 	}
 
 	dims->qp_solver->N = N;
