@@ -42,6 +42,7 @@ typedef struct
 	int nx; // number of states
 	int nu; // number of inputs
 	int ny; // number of outputs
+	int ns; // number of slacks
 } ocp_nlp_cost_ls_dims;
 
 //
@@ -49,7 +50,7 @@ int ocp_nlp_cost_ls_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_ls_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny); 
+void ocp_nlp_cost_ls_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns); 
 
 
 

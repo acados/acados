@@ -44,9 +44,10 @@ typedef struct
 	void **dynamics;
 	void **constraints;
 	ocp_qp_dims *qp_solver; // xcond_solver instrad ???
+	int *nv; // number of primal variables (states+controls+slacks)
 	int *nx; // number of states
 	int *nu; // number of inputs
-	int *ni; // number of inequality constraints
+	int *ni; // number of two-sided inequality constraints TODO make one-sided ???
     int N;
 } ocp_nlp_dims;
 

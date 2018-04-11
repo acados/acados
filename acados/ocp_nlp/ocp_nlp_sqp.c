@@ -445,6 +445,7 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, ocp_nlp_dims *dims, void
 
 
 
+// TODO introduce member "memsize" in all structures to make on-line cast cheaper (i.e. avoid to calculate size on-line)
 static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nlp_sqp_work *work, ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts)
 {
 	ocp_nlp_solver_config *config = (ocp_nlp_solver_config *) config_;
@@ -553,6 +554,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 
 	// extract dims
     int N = dims->N;
+	int *nv = dims->nv;
 	int *nx = dims->nx;
 	int *nu = dims->nu;
 	int *ni = dims->ni;
@@ -585,7 +587,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 	for (i=0; i<=N; i++)
 	{
 		struct blasfeo_dvec *cost_grad = config->cost[i]->memory_get_grad_ptr(mem->cost[i]);
-		blasfeo_dveccp(nu[i]+nx[i], cost_grad, 0, nlp_mem->cost_grad+i, 0);
+		blasfeo_dveccp(nv[i], cost_grad, 0, nlp_mem->cost_grad+i, 0);
 	}
 
 	// nlp mem: dyn_fun
@@ -621,7 +623,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 	for (i=0; i<=N; i++)
 	{
 		struct blasfeo_dvec *ineq_adj = config->constraints[i]->memory_get_adj_ptr(mem->constraints[i]);
-		blasfeo_dveccp(nu[i]+nx[i], ineq_adj, 0, nlp_mem->ineq_adj+i, 0);
+		blasfeo_dveccp(nv[i], ineq_adj, 0, nlp_mem->ineq_adj+i, 0);
 	}
 
 
@@ -670,6 +672,7 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 
 	// extract dims
     int N = dims->N;
+	int *nv = dims->nv;
 	int *nx = dims->nx;
 	int *nu = dims->nu;
 	int *ni = dims->ni;
@@ -679,7 +682,7 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
 	// g
 	for (i=0; i<=N; i++)
 	{
-		blasfeo_dveccp(nu[i]+nx[i], nlp_mem->cost_grad+i, 0, work->qp_in->rqz+i, 0);
+		blasfeo_dveccp(nv[i], nlp_mem->cost_grad+i, 0, work->qp_in->rqz+i, 0);
 	}
 
 	// b
@@ -708,6 +711,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 
 	// extract dims
     int N = dims->N;
+	int *nv = dims->nv;
 	int *nx = dims->nx;
 	int *nu = dims->nu;
 	int *ni = dims->ni;
@@ -725,7 +729,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
 	// (full) step in primal variables
 	for (i=0; i<=N; i++)
 	{
-		blasfeo_daxpy(nu[i]+nx[i], 1.0, work->qp_out->ux+i, 0, nlp_out->ux+i, 0, nlp_out->ux+i, 0);
+		blasfeo_daxpy(nv[i], 1.0, work->qp_out->ux+i, 0, nlp_out->ux+i, 0, nlp_out->ux+i, 0);
 	}
 
 	// absolute in dual variables
