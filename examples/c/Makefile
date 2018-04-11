@@ -108,11 +108,10 @@ sim_erk_crane: $(CRANE_OBJS) sim_erk_crane.o
 	@echo
 
 CRANE_GNSF_OBJS =
-# CRANE_GNSF_OBJS += gnsf_crane_model/But_KK_YY_ZZ_LO_fun.o
+CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun_jac_y.o
 CRANE_GNSF_OBJS += gnsf_crane_model/f_lo_fun_jac_x1k1uz.o
 CRANE_GNSF_OBJS += gnsf_crane_model/get_ints_fun.o
 CRANE_GNSF_OBJS += gnsf_crane_model/get_matrices_fun.o
-CRANE_GNSF_OBJS += gnsf_crane_model/phi_fun_jac_y.o
 CRANE_GNSF_OBJS += gnsf_crane_model/phi_jac_y_uhat.o
 CRANE_GNSF_OBJS += sim_gnsf_crane.o
 

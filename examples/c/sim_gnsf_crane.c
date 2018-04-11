@@ -24,61 +24,62 @@
 #include <assert.h>
 
 // acados
-// #include <acados_c/sim.h>
-// #include <acados_c/options.h>
-#include <acados/sim/sim_gnsf.h>
 #include <acados/sim/sim_common.h>
+#include <acados/sim/sim_gnsf.h>
+
 #include "acados/utils/external_function_generic.h"
 
 #include "acados_c/external_function_interface.h"
 #include "acados_c/sim_interface.h"
 
+// model
 #include "examples/c/gnsf_crane_model/gnsf_crane_model.h"
 
 int main() {
 /************************************************
 *   external functions
 ************************************************/
+
     // Phi_inc_dy
     external_function_casadi phi_fun_jac_y;
-    phi_fun_jac_y.casadi_fun            = &phi_fun_jac_y;
-    phi_fun_jac_y.casadi_work           = &phi_fun_jac_y_work;
-    phi_fun_jac_y.casadi_sparsity_in    = &phi_fun_jac_y_sparsity_in;
-    phi_fun_jac_y.casadi_sparsity_out   = &phi_fun_jac_y_sparsity_out;
-    phi_fun_jac_y.casadi_n_in           = &phi_fun_jac_y_n_in;
-    phi_fun_jac_y.casadi_n_out          = &phi_fun_jac_y_n_out;
+    phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &casadi_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &casadi_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &casadi_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &casadi_phi_fun_jac_y_n_out;
 	external_function_casadi_create(&phi_fun_jac_y);
 
     // phi_jac_y_uhat
     external_function_casadi phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_fun                = &phi_jac_y_uhat;
-    phi_jac_y_uhat.casadi_work               = &phi_jac_y_uhat_work;
-    phi_jac_y_uhat.casadi_sparsity_in        = &phi_jac_y_uhat_sparsity_in;
-    phi_jac_y_uhat.casadi_sparsity_out       = &phi_jac_y_uhat_sparsity_out;
-    phi_jac_y_uhat.casadi_n_in               = &phi_jac_y_uhat_n_in;
-    phi_jac_y_uhat.casadi_n_out              = &phi_jac_y_uhat_n_out;
+    phi_jac_y_uhat.casadi_fun                = &casadi_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &casadi_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &casadi_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &casadi_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &casadi_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &casadi_phi_jac_y_uhat_n_out;
 
 	external_function_casadi_create(&phi_jac_y_uhat);
 
     // f_lo_fun_jac_x1k1uz
     external_function_casadi f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_fun            = &f_lo_fun_jac_x1k1uz;
-    f_lo_fun_jac_x1k1uz.casadi_work           = &f_lo_fun_jac_x1k1uz_work;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &f_lo_fun_jac_x1k1uz_sparsity_in;
-    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &f_lo_fun_jac_x1k1uz_sparsity_out;
-    f_lo_fun_jac_x1k1uz.casadi_n_in           = &f_lo_fun_jac_x1k1uz_n_in;
-    f_lo_fun_jac_x1k1uz.casadi_n_out          = &f_lo_fun_jac_x1k1uz_n_out;
-
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &casadi_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &casadi_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
 	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
-    printf("All functions assigned\n");
+    // printf("assigned casadi function \n");
 
 /************************************************
 * Set up sim_gnsf structs
 ************************************************/
 
     sim_solver_plan plan;
-    plan.sim_solver = GNSF;
+
     printf("assigned plan");
+    plan.sim_solver = GNSF;
     sim_solver_config *config = sim_config_create(plan);
 
     printf("assigned plan, config");
@@ -154,7 +155,7 @@ int main() {
     model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) &f_lo_fun_jac_x1k1uz;
     model->phi_fun_jac_y = (external_function_generic *) &phi_fun_jac_y;
     model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
-    gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
+    // gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
     gnsf_precompute(gnsf_dim, model, opts, in);
 
     // gnsf_import_precomputed(gnsf_dim, model, But_KK_YY_ZZ_LO_fun);
