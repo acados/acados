@@ -70,6 +70,16 @@ int main() {
     f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
     f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
 	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
+
+    // get_matrices_fun
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
     printf("assigned casadi function \n");
 
 /************************************************
@@ -157,7 +167,8 @@ int main() {
     model->f_lo_fun_jac_x1_x1dot_u_z = (external_function_generic *) &f_lo_fun_jac_x1k1uz;
     model->phi_fun_jac_y = (external_function_generic *) &phi_fun_jac_y;
     model->phi_jac_y_uhat = (external_function_generic *) &phi_jac_y_uhat;
-    // gnsf_import_matrices(gnsf_dim, model, get_matrices_fun);
+    external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+    gnsf_import_matrices(gnsf_dim, model, get_model_matrices);
     gnsf_precompute(gnsf_dim, model, opts, in);
 
     // gnsf_import_precomputed(gnsf_dim, model, But_KK_YY_ZZ_LO_fun);

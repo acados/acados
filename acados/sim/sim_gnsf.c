@@ -677,7 +677,7 @@ void gnsf_precompute(gnsf_dims* dims, gnsf_model *model, sim_rk_opts *opts, sim_
 }
 
 
-void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, casadi_function_t get_matrices_fun)
+void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun)
 {
     int nu  = dims->nu;
     int nx1 = dims->nx1;
@@ -695,7 +695,19 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, casadi_function_t 
 
     double *export_in  = (double*) malloc(1*sizeof(double));
     double *export_out = (double*) malloc(exported_doubles*sizeof(double));
-    export_from_ML_wrapped(export_in, export_out, get_matrices_fun);
+
+    // calling the external function
+    ext_fun_arg_t ext_fun_type_in[2];
+	void *ext_fun_in[2];
+    ext_fun_arg_t ext_fun_type_out[1];
+	void *ext_fun_out[1];
+
+    ext_fun_type_in[0] = COLMAJ;
+    ext_fun_in[0] = export_in; // x: 
+    ext_fun_type_out[0] = COLMAJ;
+    ext_fun_out[0] = export_out; // fun: nx
+
+    get_matrices_fun->evaluate(get_matrices_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
     double *read_mem = export_out;
 

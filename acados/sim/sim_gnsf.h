@@ -206,7 +206,7 @@ typedef struct { //workspace
 
 // import
 void export_from_ML_wrapped(const real_t *in, real_t *out, casadi_function_t get_ints_fun);
-void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, casadi_function_t get_matrices_fun);
+void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, external_function_generic *get_matrices_fun);
 void gnsf_import_precomputed(gnsf_dims* dims, gnsf_model *model, casadi_function_t But_KK_YY_ZZ_LO_fun);
 
 // gnsf2 dims
