@@ -363,7 +363,7 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
     int N = dims->N;
 	int *nv = dims->nv;
 	int *nx = dims->nx;
-	int *nu = dims->nu;
+	// int *nu = dims->nu;
 	int *ni = dims->ni;
 
 #if 1
@@ -425,7 +425,7 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
     int N = dims->N;
 	int *nv = dims->nv;
 	int *nx = dims->nx;
-	int *nu = dims->nu;
+	// int *nu = dims->nu;
 	int *ni = dims->ni;
 
 	printf("res_g =\n");

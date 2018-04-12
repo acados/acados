@@ -163,7 +163,7 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
 		grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // r
 	for (; ii<nu+nx; ii++)
 		grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // q
-		
+
 
 	return;
 
@@ -284,7 +284,7 @@ int main() {
 	int nb_ = nx_+nu_;
 	int ng_ = 0;
 	int nh_ = 0;
-	int ns_ = 0;
+	// int ns_ = 0;
 
 	int nbu_ = nu_<nb_ ? nu_ : nb_;
     int nbx_ = nb_ - nu_ > 0 ? nb_ - nu_ : 0;
@@ -493,7 +493,7 @@ int main() {
         idxbN[jj] = jj;
     }
 
-    
+
     /* soft constraints */
 
 	double *Zl0; d_zeros(&Zl0, ns[0], 1);

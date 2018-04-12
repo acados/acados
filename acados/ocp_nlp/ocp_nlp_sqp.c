@@ -674,7 +674,7 @@ static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in 
     int N = dims->N;
 	int *nv = dims->nv;
 	int *nx = dims->nx;
-	int *nu = dims->nu;
+	// int *nu = dims->nu;
 	int *ni = dims->ni;
 
 	ocp_nlp_memory *nlp_mem = mem->nlp_mem;
@@ -713,7 +713,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
     int N = dims->N;
 	int *nv = dims->nv;
 	int *nx = dims->nx;
-	int *nu = dims->nu;
+	// int *nu = dims->nu;
 	int *ni = dims->ni;
 
 // TODO fix and move where appropriate
@@ -869,7 +869,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
         if (qp_status != 0)
         {
 //			print_ocp_qp_in(work->qp_in);
-		
+
             printf("QP solver returned error status %d in iteration %d\n", qp_status, sqp_iter);
             return -1;
         }

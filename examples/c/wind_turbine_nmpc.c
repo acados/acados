@@ -678,13 +678,13 @@ int main()
     sqp_opts->min_res_d = 1e-8;
     sqp_opts->min_res_m = 1e-8;
 
-	// partial condensing
-	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
-	{
-		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-//		pcond_solver_opts->pcond_opts->N2 = 10;
-	}
+	// // partial condensing
+	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	// {
+	// 	ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+	// 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+	// 	pcond_solver_opts->pcond_opts->N2 = 10;
+	// }
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
