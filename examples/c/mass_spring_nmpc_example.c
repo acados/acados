@@ -51,8 +51,8 @@
 
 
 
-#define MAX_SQP_ITERS 1
-#define NREP 1
+#define MAX_SQP_ITERS 10
+#define NREP 10
 
 // constraints (at stage 0): 0 box, 1 general, 2 general+nonlinear
 #define CONSTRAINTS 0
@@ -160,9 +160,10 @@ void ext_cost(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type_
 	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nu; ii++)
-		grad[ii] = 0.2; // r
+		grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // r
 	for (; ii<nu+nx; ii++)
-		grad[ii] = 0.1; // q
+		grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // q
+		
 
 	return;
 
@@ -191,9 +192,9 @@ void ext_costN(void *fun, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *type
 	double *ux = in[0];
 	double *grad = out[0];
 	for (ii=0; ii<nu; ii++)
-		grad[ii] = 0.2; // r
+		grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // r
 	for (; ii<nu+nx; ii++)
-		grad[ii] = 0.1; // q
+		grad[ii] = 0.0 + hess[ii*(nv+1)]*ux[ii]; // q
 
 	return;
 
@@ -219,7 +220,7 @@ void disc_model(void *fun0, ext_fun_arg_t *type_in, void **in, ext_fun_arg_t *ty
     mass_spring_system(Ts, nx, nu, A, B, b);
 
     for (ii=0; ii<nx; ii++)
-		b[ii] = 0.1;
+		b[ii] = 0.0;
 
 	// extract input
 	double *x = in[0];
@@ -466,8 +467,8 @@ int main() {
         idxb1[jj] = jj;
     }
     for (int jj = jj_end; jj < nb[1]; jj++) {
-        lb1[jj] = -4.0;  // xmin
-        ub1[jj] = +4.0;  // xmax
+        lb1[jj] = -1.0;  // xmin
+        ub1[jj] = +1.0;  // xmax
         idxb1[jj] = jj;
     }
     //    int_print_mat(nb[1], 1, idxb1, nb[1]);
@@ -487,8 +488,8 @@ int main() {
     }
     for (int jj = jj_end; jj < nb[N]; jj++)
     {
-        lbN[jj] = -4.0;  // xmin
-        ubN[jj] = +4.0;  // xmax
+        lbN[jj] = -1.0;  // xmin
+        ubN[jj] = +1.0;  // xmax
         idxbN[jj] = jj;
     }
 
@@ -694,7 +695,7 @@ int main() {
 
 
     nlp_opts->maxIter = MAX_SQP_ITERS;
-    nlp_opts->min_res_g = 1e-9;
+    nlp_opts->min_res_g = 1e-6;
     nlp_opts->min_res_b = 1e-9;
     nlp_opts->min_res_d = 1e-9;
     nlp_opts->min_res_m = 1e-9;
@@ -755,8 +756,8 @@ int main() {
 
     double time = acados_toc(&timer)/NREP;
 
-	printf("\nresiduals\n");
-	ocp_nlp_res_print(dims, nlp_mem->nlp_res);
+	printf("\nresiduals (max = %e)\n", nlp_out->inf_norm_res);
+//	ocp_nlp_res_print(dims, nlp_mem->nlp_res);
 
 	printf("\nsolution\n");
 	ocp_nlp_out_print(dims, nlp_out);

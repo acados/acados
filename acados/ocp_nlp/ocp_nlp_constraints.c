@@ -558,8 +558,9 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 	blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
 	blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nh);
 
-	blasfeo_daxpy(ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
-	blasfeo_daxpy(ns, -1.0, &model->d, 2*nb+2*ng+2*nh+ns, memory->ux, nu+nx+ns, &memory->fun, 2*nb+2*ng+2*nh+ns);
+//	blasfeo_daxpy(ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
+//	blasfeo_daxpy(ns, -1.0, memory->ux, nu+nx+ns, &model->d, 2*nb+2*ng+2*nh+ns, &memory->fun, 2*nb+2*ng+2*nh+ns);
+	blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
 
 	// nlp_mem: ineq_adj
 	blasfeo_dvecse(nu+nx+2*ns, 0.0, &memory->adj, 0);

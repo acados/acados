@@ -809,7 +809,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 	// start timer
     acados_timer timer;
-    real_t total_time = 0;
+    double total_time = 0;
     acados_tic(&timer);
 
 	// main sqp loop
@@ -830,12 +830,12 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 		// compute nlp residuals
 		ocp_nlp_res_compute(dims, nlp_in, nlp_out, mem->nlp_res, mem->nlp_mem);
 
-		nlp_out->inf_norm_res = fmax(
-									fmax(mem->nlp_res->inf_norm_res_g, mem->nlp_res->inf_norm_res_b),
-									fmax(mem->nlp_res->inf_norm_res_d, mem->nlp_res->inf_norm_res_m)
-								);
+		nlp_out->inf_norm_res = mem->nlp_res->inf_norm_res_g;
+		nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_b > nlp_out->inf_norm_res) ? mem->nlp_res->inf_norm_res_b : nlp_out->inf_norm_res;
+		nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_d > nlp_out->inf_norm_res) ? mem->nlp_res->inf_norm_res_d : nlp_out->inf_norm_res;
+		nlp_out->inf_norm_res = (mem->nlp_res->inf_norm_res_m > nlp_out->inf_norm_res) ? mem->nlp_res->inf_norm_res_m : nlp_out->inf_norm_res;
 
-		// TODO exit conditions on residuals
+		// exit conditions on residuals
 		if( (mem->nlp_res->inf_norm_res_g < opts->min_res_g) &
 			(mem->nlp_res->inf_norm_res_b < opts->min_res_b) &
 			(mem->nlp_res->inf_norm_res_d < opts->min_res_d) &

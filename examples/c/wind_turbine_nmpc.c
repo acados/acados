@@ -394,9 +394,12 @@ int main()
 		uh1[0] = Pel_max;
 	}
 	// softed
-	idxs1[0] = nb[1]+ng[1];
-	ls1[0] = 0.0;
-	us1[0] = 0.0;
+	if (ns[1]>0)
+	{
+		idxs1[0] = nb[1]+ng[1];
+		ls1[0] = 0.0;
+		us1[0] = 0.0;
+	}
 
 
 
@@ -441,8 +444,8 @@ int main()
 	double *uZ1 = malloc(ns[1]*sizeof(double));
 	double *lz1 = malloc(ns[1]*sizeof(double));
 	double *uz1 = malloc(ns[1]*sizeof(double));
-	lZ1[0] = 1e6;
-	uZ1[0] = 1e3;
+	lZ1[0] = 1e1;
+	uZ1[0] = 1e1;
 	lz1[0] = 0e1;
 	uz1[0] = 0e1;
 

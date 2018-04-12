@@ -479,7 +479,14 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
 	}
 
+	// slacks
 	blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
+	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
+
+//	blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
+//	blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
+//	blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
+//	exit(1);
 
 	return;
 

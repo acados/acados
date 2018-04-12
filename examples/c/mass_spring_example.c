@@ -282,7 +282,7 @@ int main() {
              * print solution
              ************************************************/
 
-			print_ocp_qp_out(qp_out);
+//			print_ocp_qp_out(qp_out);
 
             /************************************************
              * compute infinity norm of residuals

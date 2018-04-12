@@ -421,12 +421,14 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
 	blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0, &work->tmp_ny, 0);
 	blasfeo_dgemv_n(nu+nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0, &memory->grad, 0);
 
+	// slacks
 	blasfeo_dveccp(2*ns, &model->z, 0, &memory->grad, nu+nx);
+	blasfeo_dvecmulacc(2*ns, &model->Z, 0, memory->ux, nu+nx, &memory->grad, nu+nx);
 
 //	blasfeo_print_dmat(nu+nx, nu+nx, memory->RSQrq, 0, 0);
-//	blasfeo_print_tran_dvec(nu+nx, &memory->grad, 0);
+//	blasfeo_print_tran_dvec(2*ns, memory->Z, 0);
+//	blasfeo_print_tran_dvec(nu+nx+2*ns, &memory->grad, 0);
 //	exit(1);
-
 
 	return;
 
