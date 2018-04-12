@@ -173,6 +173,14 @@ file(GLOB WT_MODEL_NX6P2_SRC
     wt_model_nx6/nx6p2/impl_ode_jac_x_u.c
 )
 
+file(GLOB GNSF_CRANE_SRC
+    gnsf_crane_model/phi_fun_jac_y.c
+    gnsf_crane_model/f_lo_fun_jac_x1k1uz.c
+    gnsf_crane_model/get_ints_fun.c
+    gnsf_crane_model/get_matrices_fun.c
+    gnsf_crane_model/phi_jac_y_uhat.c
+)
+
 # Define examples
 
 # -------------------- nonlinear_chain
@@ -223,10 +231,16 @@ endif()
 
 # -------------------- sim_wt_nx6
 
+# if(ACADOS_WITH_C_INTERFACE)
+#     add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
+#     target_link_libraries(sim_wt_model_nx6 acados)
+#     add_test(sim_wt_model_nx6 sim_wt_model_nx6)
+# endif()
+
 if(ACADOS_WITH_C_INTERFACE)
-    add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
-    target_link_libraries(sim_wt_model_nx6 acados)
-    add_test(sim_wt_model_nx6 sim_wt_model_nx6)
+    add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
+    target_link_libraries(sim_gnsf_crane acados)
+    add_test(sim_gnsf_crane sim_gnsf_crane)
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

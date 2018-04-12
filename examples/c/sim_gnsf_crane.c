@@ -70,7 +70,7 @@ int main() {
     f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
     f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
 	external_function_casadi_create(&f_lo_fun_jac_x1k1uz);
-    // printf("assigned casadi function \n");
+    printf("assigned casadi function \n");
 
 /************************************************
 * Set up sim_gnsf structs
@@ -95,6 +95,7 @@ int main() {
     gnsf_dim->ny = 4;
     gnsf_dim->nuhat = 1;
     gnsf_dim->num_stages = 4;
+    gnsf_dim->num_steps = 2;
 
     printf("assigned dim");
 
