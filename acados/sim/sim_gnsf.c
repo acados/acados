@@ -245,6 +245,12 @@ void *sim_gnsf_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &model->Lu, &c_ptr);
 
 	// assert
+    printf("assigned stuff: \n");
+    printf("A = \n");
+    d_print_e_mat(nx1+nz, nx1, model->A, nx1+nz);
+    printf("E = \n");
+    d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
+
     assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dim_in) >= c_ptr);
 	return model;
 }

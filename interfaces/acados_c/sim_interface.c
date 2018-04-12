@@ -56,6 +56,7 @@ sim_solver_config *sim_config_create(sim_solver_plan plan)
             break;
         case GNSF:
             sim_gnsf_config_initialize_default(solver_config);
+            break;
         case NEW_LIFTED_IRK:
             sim_new_lifted_irk_config_initialize_default(solver_config);
             break;

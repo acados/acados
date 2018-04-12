@@ -132,6 +132,7 @@ int main() {
     opts->b_vec[3] =     1.739354743418989e-01;
     
     opts->ns = gnsf_dim->num_stages;
+    printf("\nsim_in create\n");
     sim_in *in = sim_in_create(config, dims);
 
     for (int ii = 0; ii < dims->nx *(dims->nx +dims->nu); ii++) {
