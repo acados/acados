@@ -206,7 +206,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *ng = qp_in->dim->ng;
     int *ns = qp_in->dim->ns;
 
-#if 0
+#if 1
 	printf("BAbt =\n");
     for (int ii = 0; ii < N; ii++)
     {
@@ -228,7 +228,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 	printf("rq =\n");
     for (int ii = 0; ii < N+1; ii++)
 	{
-        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rqz[ii], 0);
 	}
 
 	printf("d =\n");
@@ -248,6 +248,22 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 	{
         blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &qp_in->DCt[ii], 0 , 0);
 	}
+
+	printf("d_s =\n");
+    for (int ii = 0; ii <= N; ii++)
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->d[ii], 2*nb[ii]+2*ng[ii]);
+
+	printf("idxs =\n");
+    for (int ii = 0; ii <= N; ii++)
+        int_print_mat(1, ns[ii], qp_in->idxs[ii], 1);
+
+	printf("Z =\n");
+    for (int ii = 0; ii <= N; ii++)
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->Z[ii], 0);
+
+	printf("z =\n");
+    for (int ii = 0; ii <= N; ii++)
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->rqz[ii], nu[ii]+nx[ii]);
 
 #else
 
@@ -310,12 +326,13 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
     int *nu = qp_out->dim->nu;
     int *nb = qp_out->dim->nb;
     int *ng = qp_out->dim->ng;
+    int *ns = qp_out->dim->ns;
 
 #if 1
 
 	printf("ux =\n");
 	for (ii=0; ii<=N; ii++)
-        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii]+2*ns[ii], &qp_out->ux[ii], 0);
 
 	printf("pi =\n");
 	for (ii=0; ii<N; ii++)
@@ -323,11 +340,11 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
 
 	printf("lam =\n");
 	for (ii=0; ii<=N; ii++)
-        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_out->lam[ii], 0);
 
 	printf("t =\n");
 	for (ii=0; ii<=N; ii++)
-        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->t[ii], 0);
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_out->t[ii], 0);
 
 #else
 

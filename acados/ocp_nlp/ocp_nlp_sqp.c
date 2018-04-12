@@ -864,6 +864,7 @@ int ocp_nlp_sqp(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in, ocp_nlp_o
 
 		// printf("\n------- qp_out (sqp iter %d) ---------\n", sqp_iter);
 //		print_ocp_qp_out(work->qp_out);
+//		if(sqp_iter==1)
 //		exit(1);
 
         if (qp_status != 0)
