@@ -134,7 +134,7 @@ f_fun = Function('f_los', {x1_dot,x1,z,u}, {f});
 % jac_Phi_u_fun = Function('jac_Phi_u_fun', {y,u},{jac_Phi_u});
 
 f_lo_fun_jac_x1k1uz = Function([casadi_export_prefix,'f_lo_fun_jac_x1k1uz'], {x1, x1_dot, z, u}, ...
-    {[f, jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
+    {f, [jac_f_x1, jac_f_k1, jac_f_z, jac_f_u]});
 
 % struct for matlab prototype
 s = struct('A', A, 'B', B, 'C', C, 'E', E, 'ALO',ALO, 'L_x', L_x, 'L_xdot', L_xdot, 'L_z', L_z, 'L_u', L_u, ...

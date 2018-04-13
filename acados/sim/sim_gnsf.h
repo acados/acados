@@ -144,8 +144,7 @@ typedef struct {
 } gnsf_pre_workspace;
 
 typedef struct { //workspace
-    double *f_LO_in;
-    double *f_LO_out;
+    double *Z_work; // used to perform computations to get Z_out
     double *Z_out;
 
     int *ipiv; // index of pivot vector
