@@ -260,6 +260,13 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
     int nvd = qp_in->dim->nv;
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
+    int nsd = qp_in->dim->ns;
+
+	if (nsd>0)
+	{
+		printf("\nqpOASES interface can not handle ns>0 yet: what about implementing it? :)\n");
+		return ACADOS_FAILURE;
+	}
 
     // fill in the upper triangular of H in dense_qp
     blasfeo_dtrtr_l(nvd, qp_in->Hv, 0, 0, qp_in->Hv, 0, 0);

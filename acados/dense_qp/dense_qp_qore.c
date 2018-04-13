@@ -227,6 +227,14 @@ int dense_qp_qore(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, void 
     int nvd = qp_in->dim->nv;
     int ngd = qp_in->dim->ng;
     int nbd = qp_in->dim->nb;
+    int nsd = qp_in->dim->ns;
+
+	if (nsd>0)
+	{
+		printf("\nQORE interface can not handle ns>0 yet: what about implementing it? :)\n");
+		return ACADOS_FAILURE;
+	}
+
 
     acados_tic(&interface_timer);
 

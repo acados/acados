@@ -40,7 +40,7 @@ typedef struct
 {
 	int (*dims_calculate_size) (void *config);
 	void *(*dims_assign) (void *config, void *raw_memory);
-	void (*dims_initialize) (void *config, void *dims, int nx, int nu, int ny); 
+	void (*dims_initialize) (void *config, void *dims, int nx, int nu, int ny, int ns); 
 	int (*model_calculate_size) (void *config, void *dims);
 	void *(*model_assign) (void *config, void *dims, void *raw_memory);
 	int (*opts_calculate_size) (void *config, void *dims);
@@ -51,6 +51,7 @@ typedef struct
 	struct blasfeo_dvec *(*memory_get_grad_ptr) (void *memory);
 	void (*memory_set_ux_ptr) (struct blasfeo_dvec *ux, void *memory);
 	void (*memory_set_RSQrq_ptr) (struct blasfeo_dmat *RSQrq, void *memory);
+	void (*memory_set_Z_ptr) (struct blasfeo_dvec *Z, void *memory);
 	void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
 	int (*workspace_calculate_size) (void *config, void *dims, void *opts);
 	void (*initialize) (void *config_, void *dims, void *model_, void *opts_, void *mem_, void *work_);

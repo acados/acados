@@ -41,6 +41,7 @@ typedef struct
 {
 	int nx; // number of states
 	int nu; // number of inputs
+	int ns; // number of slacks
 } ocp_nlp_cost_external_dims;
 
 //
@@ -48,7 +49,7 @@ int ocp_nlp_cost_external_dims_calculate_size(void *config);
 //
 void *ocp_nlp_cost_external_dims_assign(void *config, void *raw_memory);
 //
-void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx, int nu, int ny); 
+void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx, int nu, int ny, int ns); 
 
 
 
@@ -59,6 +60,8 @@ void ocp_nlp_cost_external_dims_initialize(void *config, void *dims, int nx, int
 typedef struct
 {
 	external_function_generic *ext_cost; // gradient and hessian
+	struct blasfeo_dvec Z;
+	struct blasfeo_dvec z;
 } ocp_nlp_cost_external_model;
 
 //
@@ -97,6 +100,7 @@ typedef struct
 	struct blasfeo_dvec grad; // gradient of cost function
 	struct blasfeo_dvec *ux; // pointer to ux in nlp_out
 	struct blasfeo_dmat *RSQrq; // pointer to RSQrq in qp_in
+	struct blasfeo_dvec *Z; // pointer to Z in qp_in
 } ocp_nlp_cost_external_memory;
 
 //
@@ -107,6 +111,8 @@ void *ocp_nlp_cost_external_memory_assign(void *config, void *dims, void *opts, 
 struct blasfeo_dvec *ocp_nlp_cost_external_memory_get_grad_ptr(void *memory_);
 //
 void ocp_nlp_cost_external_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory);
+//
+void ocp_nlp_cost_ls_memory_set_Z_ptr(struct blasfeo_dvec *Z, void *memory);
 //
 void ocp_nlp_cost_external_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_);
 
