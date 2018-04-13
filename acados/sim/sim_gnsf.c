@@ -1143,7 +1143,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
         blasfeo_dvecse(nff, 0, &ff_val[ss],0);
     }
 
-    /*  Set up function input & outputs */
+/************************************************
+* Set up function input & outputs
+************************************************/
     // PHI
     ext_fun_arg_t phi_type_in[2];
 	void         *phi_in[2];
@@ -1230,11 +1232,15 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     blasfeo_dgemv_n(nZ , nu , 1.0, &fix->ZZu, 0, 0, &u0, 0, 0.0, &Z_val[0] , 0, &Zu, 0);
     // compute uhat
     blasfeo_dgemv_n(nuhat, nu, 1.0, &fix->Lu, 0, 0, &u0, 0, 0.0, &uhat, 0, &uhat, 0); // calculate uhat
+
+/************************************************
+* FORWARD LOOP
+************************************************/    
     for (int ss = 0; ss < num_steps; ss++) { // STEP LOOP
         blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, ss*nx, 1.0, &yyu, 0, &yyss, nyy*ss);
 
         y_in.x = &yy_val[ss];
-
+        
         f_lo_in_x1.x = &x1_val[ss];
         f_lo_in_k1.x = &K1_val[ss];
         f_lo_in_z.x = &Z_val[ss];
@@ -1286,7 +1292,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             }
         }
         if (nx2){
-            // SIMULATE LINEAR OUTPUT SYSTEM
+/* SIMULATE LINEAR OUTPUT SYSTEM */
             blasfeo_dgemv_n(nx2, nx2, 1.0, &fix->ALO, 0, 0, &x0_traj, ss*nx+nx1, 0.0, &f_LO_val[ss], 0, &ALOtimesx02, 0);
             for (int ii = 0; ii < num_stages; ii++) { // Evaluate f_LO + jacobian and pack to blasfeo structs
                 f_lo_in_x1.xi = ii*nx1;
@@ -1306,7 +1312,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             // solve for K2
             blasfeo_dgemv_n( nK2, nK2, -1.0, &fix->M2inv, 0, 0, &f_LO_val[ss], 0, 0.0, &K2_val, 0, &K2_val, 0);
         }
-        // Get simulation result
+/* Get simulation result */
         blasfeo_daxpy(nx, 0.0, &x0_traj, 0, &x0_traj, nx * ss, &x0_traj, nx * (ss+1));
         for (int ii = 0; ii < num_stages; ii++) {
             blasfeo_daxpy(nx1, fix->b_dt[ii], &K1_val[ss], ii*nx1, &x0_traj, nx * (ss+1) , &x0_traj, nx * (ss+1));
@@ -1392,8 +1398,10 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
         }
         gnsf_neville(&Z_out[ii], 0.0, num_stages-1, fix->c, Z_work);
     }
+/************************************************
+* ADJOINT SENSITIVITY PROPAGATION
+************************************************/    
     if (opts->sens_adj) {
-        // ADJOINT SENSITIVITY PROPAGATION:
         for (int ss = num_steps-1; ss >= 0; ss--) {
             y_in.x = &yy_val[ss];
             for (int ii = 0; ii < num_stages; ii++) {
@@ -1460,8 +1468,6 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
 
             blasfeo_dgemv_t(nx, nff, 1.0, &dPsi_dff, 0, 0, &lambda, 0, 0.0, &res_val, 0, &res_val, 0); // use res_val to store lambda_ff
-            // printf("dPsi_dff^T * lambda = \n");
-			// blasfeo_print_exp_tran_dvec(nff, &res_val, 0);
 
             blasfeo_dvecpei(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_utn(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
