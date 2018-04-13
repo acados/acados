@@ -28,6 +28,7 @@ extern "C" {
 #define casadi_s0 CASADI_PREFIX(s0)
 #define casadi_s1 CASADI_PREFIX(s1)
 #define casadi_s2 CASADI_PREFIX(s2)
+#define casadi_s3 CASADI_PREFIX(s3)
 
 /* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
@@ -46,9 +47,10 @@ extern "C" {
 
 static const casadi_int casadi_s0[8] = {4, 1, 0, 4, 0, 1, 2, 3};
 static const casadi_int casadi_s1[5] = {1, 1, 0, 1, 0};
-static const casadi_int casadi_s2[14] = {2, 5, 0, 1, 2, 4, 5, 6, 0, 0, 0, 1, 0, 0};
+static const casadi_int casadi_s2[12] = {2, 4, 0, 1, 2, 4, 5, 0, 0, 0, 1, 0};
+static const casadi_int casadi_s3[5] = {2, 1, 0, 1, 0};
 
-/* casadi_phi_jac_y_uhat:(i0[4],i1)->(o0[2x5,6nz]) */
+/* casadi_phi_jac_y_uhat:(i0[4],i1)->(o0[2x4,5nz],o1[2x1,1nz]) */
 static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
   casadi_real a0, a1, a2, a3, a4, a5, a6, a7, a8, a9;
   a0=4.7418203070092001e-02;
@@ -93,7 +95,7 @@ static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw,
   a0=(a0*a3);
   a0=(a0/a9);
   a0=(-a0);
-  if (res[0]!=0) res[0][5]=a0;
+  if (res[1]!=0) res[1][0]=a0;
   return 0;
 }
 
@@ -109,7 +111,7 @@ CASADI_SYMBOL_EXPORT void casadi_phi_jac_y_uhat_decref(void) {
 
 CASADI_SYMBOL_EXPORT casadi_int casadi_phi_jac_y_uhat_n_in(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT casadi_int casadi_phi_jac_y_uhat_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int casadi_phi_jac_y_uhat_n_out(void) { return 2;}
 
 CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_in(casadi_int i){
   switch (i) {
@@ -122,6 +124,7 @@ CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_in(casadi_int i){
 CASADI_SYMBOL_EXPORT const char* casadi_phi_jac_y_uhat_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
+    case 1: return "o1";
     default: return 0;
   }
 }
@@ -137,13 +140,14 @@ CASADI_SYMBOL_EXPORT const casadi_int* casadi_phi_jac_y_uhat_sparsity_in(casadi_
 CASADI_SYMBOL_EXPORT const casadi_int* casadi_phi_jac_y_uhat_sparsity_out(casadi_int i) {
   switch (i) {
     case 0: return casadi_s2;
+    case 1: return casadi_s3;
     default: return 0;
   }
 }
 
 CASADI_SYMBOL_EXPORT int casadi_phi_jac_y_uhat_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 2;
-  if (sz_res) *sz_res = 1;
+  if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
   if (sz_w) *sz_w = 0;
   return 0;
