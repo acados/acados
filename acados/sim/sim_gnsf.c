@@ -245,11 +245,11 @@ void *sim_gnsf_model_assign(void *config, sim_dims *dim_in, void *raw_memory)
     assign_and_advance_blasfeo_dmat_mem(nuhat, nu, &model->Lu, &c_ptr);
 
 	// assert
-    printf("assigned stuff: \n");
-    printf("A = \n");
-    d_print_e_mat(nx1+nz, nx1, model->A, nx1+nz);
-    printf("E = \n");
-    d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
+    // printf("assigned stuff: \n");
+    // printf("A = \n");
+    // d_print_e_mat(nx1+nz, nx1, model->A, nx1+nz);
+    // printf("E = \n");
+    // d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
 
     assert((char *) raw_memory + sim_gnsf_model_calculate_size(config, dim_in) >= c_ptr);
 	return model;
@@ -758,6 +758,12 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, external_function_
         model->A_LO[ii] = read_mem[ii];
     }
     read_mem += nx2*nx2;
+
+    printf("assigned stuff: \n");
+    printf("A = \n");
+    d_print_e_mat(nx1+nz, nx1, model->A, nx1+nz);
+    printf("E = \n");
+    d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
     // printf("\n adress of read mem %p\n",(void*)read_mem);
     // printf("\n adress of exp out %p\n",(void*)export_out);
     free(export_in);
@@ -1167,11 +1173,15 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     blasfeo_dgemv_n(nK1, nu , 1.0, &fix->KKu, 0, 0, &u0, 0, 0.0, &K1_val[0], 0, &K1u, 0);
     blasfeo_dgemv_n(nZ , nu , 1.0, &fix->ZZu, 0, 0, &u0, 0, 0.0, &Z_val[0] , 0, &Zu, 0);
 
+               printf("YYx = \n");
+               blasfeo_print_dmat(nyy, nx1, &fix->YYx, 0,0);
+
+    blasfeo_dgemv_n(nuhat, nu, 1.0, &fix->Lu, 0, 0, &u0, 0, 0.0, &uhat, 0, &uhat, 0); // calculate uhat
     blasfeo_unpack_dvec(nuhat, &uhat, 0, &phi_in[ny]); // pack uhat
     for (int ss = 0; ss < num_steps; ss++) { // STEP LOOP
         blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, ss*nx, 1.0, &yyu, 0, &yyss, nyy*ss);
-        // printf("yyss = \n");
-        // blasfeo_print_tran_dvec(nyy, &yyss, 0);
+        printf("yyss = \n");
+        blasfeo_print_tran_dvec(nyy, &yyss, 0);
         for (int iter = 0; iter < newton_max; iter++) { // NEWTON-ITERATION
             // evaluate residual function and jacobian
             blasfeo_dgemv_n(nyy, nff, 1.0, &fix->YYf, 0, 0, &ff_val[ss], 0, 1.0, &yyss, nyy*ss, &yy_val[ss], 0);
@@ -1184,6 +1194,8 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 acados_tic(&casadi_timer);
                 ext_fun_type_in[0] = COLMAJ;
                 ext_fun_in[0] = phi_in; // y: n_in = ny + nuhat;
+                ext_fun_type_in[1] = COLMAJ;
+                ext_fun_in[1] = &phi_in[ny]; // y: n_in = ny + nuhat;
                 blasfeo_unpack_dvec(ny, &yy_val[ss], ii*ny, &phi_in[0]); // pack yy, 
 
                 // ext_fun_type_in[0] = BLASFEO_VEC;
@@ -1193,6 +1205,13 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 // fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, phi_in, phi_out);
                 fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
+
+                printf("phi_in = [ii = %d, iter = %d, ss = %d]\n", ii, iter, ss);
+                d_print_e_mat(1,ny+nuhat , phi_in, 1);
+
+                printf("phi_out = \n");
+                d_print_e_mat(n_out, ny+1, phi_out, n_out);
+
                 blasfeo_pack_dvec(n_out, &phi_out[0], &res_val, ii*n_out);
                 blasfeo_pack_dmat(n_out, ny+nuhat, &phi_out[n_out], n_out, &dPHI_dyuhat, ii*n_out, 0);
                 blasfeo_dgemm_nn(n_out, nff, ny, -1.0, &dPHI_dyuhat, ii*n_out, 0, &fix->YYf, ii*ny, 0, 1.0, &J_r_ff, ii*n_out, 0, &J_r_ff, ii*n_out, 0);                
@@ -1200,6 +1219,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             blasfeo_dveccpsc(nff, -1.0, &res_val, 0, &res_val, 0);
             blasfeo_dvecad(nff, 1.0, &ff_val[ss], 0, &res_val, 0);
             // solve linear system and update ff
+            // printf("J_r_ff = \n");
+            // blasfeo_print_dmat(nff, nff, &J_r_ff,0,0);
+
             blasfeo_dgetrf_rowpivot(nff, nff, &J_r_ff, 0, 0, &J_r_ff, 0, 0, ipiv); // factorize J_r_ff
             blasfeo_dvecpe(nff, ipiv, &res_val, 0); // permute r.h.s.
             blasfeo_dtrsv_lnu(nff, &J_r_ff, 0, 0, &res_val, 0, &res_val, 0);
