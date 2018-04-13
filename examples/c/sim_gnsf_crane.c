@@ -107,11 +107,8 @@ int main() {
     gnsf_dim->num_stages = 4;
     gnsf_dim->num_steps = 2;
 
-    printf("assigned dim");
-
     // set up sim_dims
     sim_dims *dims = (sim_dims *) gnsf_dim; // typecasting works as gnsf_dims has entries of sim_dims at the beginning
-    printf("assigned dim");
 
     // set up gnsf_opts
     int opts_size = config->opts_calculate_size(config, dims);
