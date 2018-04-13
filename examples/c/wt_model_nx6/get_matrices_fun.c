@@ -4,66 +4,60 @@
 extern "C" {
 #endif
 
+/* How to prefix internal symbols */
 #ifdef CODEGEN_PREFIX
   #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
-#else /* CODEGEN_PREFIX */
+#else
   #define CASADI_PREFIX(ID) get_matrices_fun_ ## ID
-#endif /* CODEGEN_PREFIX */
+#endif
 
 #include <math.h>
 
-#ifndef real_t
-#define real_t double
-#endif /* real_t */
-
-#define to_double(x) (double) x
-#define to_int(x) (int) x
-#define CASADI_CAST(x,y) (x) y
-/* Pre-c99 compatibility */
-#if __STDC_VERSION__ < 199901L
-real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
-#define fmin(x,y) CASADI_PREFIX(fmin)(x,y)
-real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
-#define fmax(x,y) CASADI_PREFIX(fmax)(x,y)
+#ifndef casadi_real
+#define casadi_real double
 #endif
 
-#define PRINTF printf
+#ifndef casadi_int
+#define casadi_int int
+#endif
+
+/* Add prefix to internal symbols */
+#define casadi_f0 CASADI_PREFIX(f0)
+#define casadi_s0 CASADI_PREFIX(s0)
+#define casadi_s1 CASADI_PREFIX(s1)
+
+/* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
-#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
-#if defined(STATIC_LINKED)
-#define CASADI_SYMBOL_EXPORT
-#else /* defined(STATIC_LINKED) */
-#define CASADI_SYMBOL_EXPORT __declspec(dllexport)
-#endif /* defined(STATIC_LINKED) */
-#elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
-#define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
-#else /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#define CASADI_SYMBOL_EXPORT
-#endif /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#endif /* CASADI_SYMBOL_EXPORT */
-real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
-#define sq(x) CASADI_PREFIX(sq)(x)
+  #if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+    #if defined(STATIC_LINKED)
+      #define CASADI_SYMBOL_EXPORT
+    #else
+      #define CASADI_SYMBOL_EXPORT __declspec(dllexport)
+    #endif
+  #elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+    #define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
+  #else
+    #define CASADI_SYMBOL_EXPORT
+  #endif
+#endif
 
-real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
-#define sign(x) CASADI_PREFIX(sign)(x)
+static const casadi_int casadi_s0[5] = {1, 1, 0, 1, 0};
+static const casadi_int casadi_s1[170] = {166, 1, 0, 166, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165};
 
-static const int CASADI_PREFIX(s0)[5] = {1, 1, 0, 1, 0};
-#define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[178] = {174, 1, 0, 174, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173};
-#define s1 CASADI_PREFIX(s1)
-/* get_matrices_fun */
-CASADI_SYMBOL_EXPORT int get_matrices_fun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t a0=0.;
+/* casadi_get_matrices_fun:(i0)->(o0[166]) */
+static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
+  casadi_real a0, a1, a2;
+  a0=0.;
   if (res[0]!=0) res[0][0]=a0;
   if (res[0]!=0) res[0][1]=a0;
-  real_t a1=1.;
+  a1=1.;
   if (res[0]!=0) res[0][2]=a1;
   if (res[0]!=0) res[0][3]=a0;
   if (res[0]!=0) res[0][4]=a0;
   if (res[0]!=0) res[0][5]=a0;
-  real_t a2=1.5311917180143535e+00;
+  a2=1.5311917180143535e+00;
   if (res[0]!=0) res[0][6]=a2;
   if (res[0]!=0) res[0][7]=a0;
   if (res[0]!=0) res[0][8]=a0;
@@ -226,64 +220,60 @@ CASADI_SYMBOL_EXPORT int get_matrices_fun(const real_t** arg, real_t** res, int*
   if (res[0]!=0) res[0][159]=a0;
   if (res[0]!=0) res[0][160]=a0;
   if (res[0]!=0) res[0][161]=a0;
-  if (res[0]!=0) res[0][162]=a0;
+  if (res[0]!=0) res[0][162]=a1;
   if (res[0]!=0) res[0][163]=a0;
   if (res[0]!=0) res[0][164]=a0;
-  if (res[0]!=0) res[0][165]=a0;
-  if (res[0]!=0) res[0][166]=a0;
-  if (res[0]!=0) res[0][167]=a0;
-  if (res[0]!=0) res[0][168]=a0;
-  if (res[0]!=0) res[0][169]=a0;
-  if (res[0]!=0) res[0][170]=a0;
-  if (res[0]!=0) res[0][171]=a0;
-  if (res[0]!=0) res[0][172]=a0;
-  if (res[0]!=0) res[0][173]=a0;
+  if (res[0]!=0) res[0][165]=a1;
   return 0;
 }
 
-CASADI_SYMBOL_EXPORT void get_matrices_fun_incref(void) {
+CASADI_SYMBOL_EXPORT int casadi_get_matrices_fun(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+  return casadi_f0(arg, res, iw, w, mem);
 }
 
-CASADI_SYMBOL_EXPORT void get_matrices_fun_decref(void) {
+CASADI_SYMBOL_EXPORT void casadi_get_matrices_fun_incref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int get_matrices_fun_n_in(void) { return 1;}
+CASADI_SYMBOL_EXPORT void casadi_get_matrices_fun_decref(void) {
+}
 
-CASADI_SYMBOL_EXPORT int get_matrices_fun_n_out(void) { return 1;}
+CASADI_SYMBOL_EXPORT casadi_int casadi_get_matrices_fun_n_in(void) { return 1;}
 
-CASADI_SYMBOL_EXPORT const char* get_matrices_fun_name_in(int i){
+CASADI_SYMBOL_EXPORT casadi_int casadi_get_matrices_fun_n_out(void) { return 1;}
+
+CASADI_SYMBOL_EXPORT const char* casadi_get_matrices_fun_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* get_matrices_fun_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* casadi_get_matrices_fun_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* get_matrices_fun_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* casadi_get_matrices_fun_sparsity_in(casadi_int i) {
   switch (i) {
-    case 0: return s0;
+    case 0: return casadi_s0;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* get_matrices_fun_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* casadi_get_matrices_fun_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return s1;
+    case 0: return casadi_s1;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int get_matrices_fun_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int casadi_get_matrices_fun_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 1;
   if (sz_res) *sz_res = 1;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 3;
+  if (sz_w) *sz_w = 0;
   return 0;
 }
 

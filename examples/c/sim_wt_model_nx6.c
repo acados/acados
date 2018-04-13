@@ -182,34 +182,55 @@ int main()
 	/************************************************
 	* external functions (Generalized Nonlinear Static Feedback (GNSF) model)
 	************************************************/
-	// Phi - gnsf
-	external_function_param_casadi phi_fun_jac_y;
-	phi_fun_jac_y.casadi_fun 			= &casadi_phi_fun_jac_y;
-	phi_fun_jac_y.casadi_work 			= &casadi_phi_fun_jac_y_work;
-	phi_fun_jac_y.casadi_sparsity_in 	= &casadi_phi_fun_jac_y_sparsity_in;
-	phi_fun_jac_y.casadi_sparsity_out 	= &casadi_phi_fun_jac_y_sparsity_out;
-	phi_fun_jac_y.casadi_n_in 			= &casadi_phi_fun_jac_y_n_in;
-	phi_fun_jac_y.casadi_n_out 			= &casadi_phi_fun_jac_y_n_out;
+    // Phi_inc_dy
+    external_function_param_casadi phi_fun_jac_y;
+    phi_fun_jac_y.casadi_fun            = &casadi_phi_fun_jac_y;
+    phi_fun_jac_y.casadi_work           = &casadi_phi_fun_jac_y_work;
+    phi_fun_jac_y.casadi_sparsity_in    = &casadi_phi_fun_jac_y_sparsity_in;
+    phi_fun_jac_y.casadi_sparsity_out   = &casadi_phi_fun_jac_y_sparsity_out;
+    phi_fun_jac_y.casadi_n_in           = &casadi_phi_fun_jac_y_n_in;
+    phi_fun_jac_y.casadi_n_out          = &casadi_phi_fun_jac_y_n_out;
 	external_function_param_casadi_create(&phi_fun_jac_y, np);
 
-	// Phi - gnsf
-	external_function_param_casadi phi_jac_y;
-	phi_jac_y.casadi_fun 				= &casadi_phi_jac_y;
-	phi_jac_y.casadi_work 				= &casadi_phi_jac_y_work;
-	phi_jac_y.casadi_sparsity_in 		= &casadi_phi_jac_y_sparsity_in;
-	phi_jac_y.casadi_sparsity_out 		= &casadi_phi_jac_y_sparsity_out;
-	phi_jac_y.casadi_n_in 				= &casadi_phi_jac_y_n_in;
-	phi_jac_y.casadi_n_out 				= &casadi_phi_jac_y_n_out;
-	external_function_param_casadi_create(&phi_jac_y, np);	
+    // phi_jac_y_uhat
+    external_function_param_casadi phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_fun                = &casadi_phi_jac_y_uhat;
+    phi_jac_y_uhat.casadi_work               = &casadi_phi_jac_y_uhat_work;
+    phi_jac_y_uhat.casadi_sparsity_in        = &casadi_phi_jac_y_uhat_sparsity_in;
+    phi_jac_y_uhat.casadi_sparsity_out       = &casadi_phi_jac_y_uhat_sparsity_out;
+    phi_jac_y_uhat.casadi_n_in               = &casadi_phi_jac_y_uhat_n_in;
+    phi_jac_y_uhat.casadi_n_out              = &casadi_phi_jac_y_uhat_n_out;
+
+	external_function_param_casadi_create(&phi_jac_y_uhat, np);
+
+    // f_lo_fun_jac_x1k1uz
+    external_function_param_casadi f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_fun            = &casadi_f_lo_fun_jac_x1k1uz;
+    f_lo_fun_jac_x1k1uz.casadi_work           = &casadi_f_lo_fun_jac_x1k1uz_work;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_in    = &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
+    f_lo_fun_jac_x1k1uz.casadi_sparsity_out   = &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
+    f_lo_fun_jac_x1k1uz.casadi_n_in           = &casadi_f_lo_fun_jac_x1k1uz_n_in;
+    f_lo_fun_jac_x1k1uz.casadi_n_out          = &casadi_f_lo_fun_jac_x1k1uz_n_out;
+	external_function_param_casadi_create(&f_lo_fun_jac_x1k1uz, np);
+
+    // get_matrices_fun
+    external_function_casadi get_matrices_fun;
+    get_matrices_fun.casadi_fun            = &casadi_get_matrices_fun;
+    get_matrices_fun.casadi_work           = &casadi_get_matrices_fun_work;
+    get_matrices_fun.casadi_sparsity_in    = &casadi_get_matrices_fun_sparsity_in;
+    get_matrices_fun.casadi_sparsity_out   = &casadi_get_matrices_fun_sparsity_out;
+    get_matrices_fun.casadi_n_in           = &casadi_get_matrices_fun_n_in;
+    get_matrices_fun.casadi_n_out          = &casadi_get_matrices_fun_n_out;
+	external_function_casadi_create(&get_matrices_fun);
 
 	// f - Linear Output System
 	external_function_param_casadi f_lo_jac_x1_x1dot_u_z;
-	f_lo_jac_x1_x1dot_u_z.casadi_fun 			= &casadi_f_LO_inc_J_x1k1uz_fun;
-	f_lo_jac_x1_x1dot_u_z.casadi_work 			= &casadi_f_LO_inc_J_x1k1uz_fun_work;
-	f_lo_jac_x1_x1dot_u_z.casadi_sparsity_in 	= &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_in;
-	f_lo_jac_x1_x1dot_u_z.casadi_sparsity_out 	= &casadi_f_LO_inc_J_x1k1uz_fun_sparsity_out;
-	f_lo_jac_x1_x1dot_u_z.casadi_n_in 			= &casadi_f_LO_inc_J_x1k1uz_fun_n_in;
-	f_lo_jac_x1_x1dot_u_z.casadi_n_out 			= &casadi_f_LO_inc_J_x1k1uz_fun_n_out;
+	f_lo_jac_x1_x1dot_u_z.casadi_fun 			= &casadi_f_lo_fun_jac_x1k1uz;
+	f_lo_jac_x1_x1dot_u_z.casadi_work 			= &casadi_f_lo_fun_jac_x1k1uz_work;
+	f_lo_jac_x1_x1dot_u_z.casadi_sparsity_in 	= &casadi_f_lo_fun_jac_x1k1uz_sparsity_in;
+	f_lo_jac_x1_x1dot_u_z.casadi_sparsity_out 	= &casadi_f_lo_fun_jac_x1k1uz_sparsity_out;
+	f_lo_jac_x1_x1dot_u_z.casadi_n_in 			= &casadi_f_lo_fun_jac_x1k1uz_n_in;
+	f_lo_jac_x1_x1dot_u_z.casadi_n_out 			= &casadi_f_lo_fun_jac_x1k1uz_n_out;
 	external_function_param_casadi_create(&f_lo_jac_x1_x1dot_u_z, np);
 
 	int number_sim_solvers = 4;
@@ -275,7 +296,8 @@ int main()
 		gnsf_dim->nu = nu;
 		gnsf_dim->nx1= nx;
 		gnsf_dim->nx2= 0;
-		gnsf_dim->n_in = nx;//nx + nu;
+		gnsf_dim->ny = nx;//nx + nu;
+		gnsf_dim->nuhat = 2;//nx + nu;		
 		gnsf_dim->n_out = 1;
 		gnsf_dim->num_stages = 8;
 		// dims = sim_dims_create();
@@ -289,7 +311,7 @@ int main()
 
 	//		opts->ns = 4; // number of stages in rk integrator
 	//		opts->num_steps = 5; // number of integration steps
-		opts->sens_adj = true;
+		// opts->sens_adj = true;
 		opts->sens_forw = true;
 
 		switch (nss)
@@ -306,15 +328,15 @@ int main()
 				break;
 
 			case 2:
-				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
+				opts->ns = 5; // number of stages in rk integrator
+				opts->num_steps = 2; // number of integration steps
 				break;
 
 			case 3: //gnsf
-				opts->ns = 8; // number of stages in rk integrator
-				gnsf_dim->num_stages = 8;
-				opts->num_steps = 1; // number of integration steps
-				gnsf_dim->num_steps = 1;
+				opts->ns = 5; // number of stages in rk integrator
+				gnsf_dim->num_stages = 5;
+				opts->num_steps = 2; // number of integration steps
+				gnsf_dim->num_steps = 2;
 				break;
 
 			default :
@@ -354,12 +376,12 @@ int main()
 			case 3: // gnsf
 			{
 				sim_set_model(config, in, "phi_fun_jac_y", &phi_fun_jac_y);
-				sim_set_model(config, in, "phi_jac_y", &phi_jac_y);
+				sim_set_model(config, in, "phi_jac_y_uhat", &phi_jac_y_uhat);
 				sim_set_model(config, in, "f_lo_jac_x1_x1dot_u_z", &f_lo_jac_x1_x1dot_u_z);
 				// import & precompute matrices, TODO: do this through interface? would need some modification..
 				// printf("functions set\n");
-				gnsf_import_matrices(gnsf_dim, in->model, get_matrices_fun);
-				// printf("imported matrices\n");
+				external_function_generic *get_model_matrices = (external_function_generic *) &get_matrices_fun;
+				gnsf_import_matrices(gnsf_dim, in->model, get_model_matrices);				// printf("imported matrices\n");
 				// printf("model set\n");
 				break;
 			}
@@ -479,7 +501,7 @@ int main()
 				}
 				case 3: {
 					phi_fun_jac_y.set_param(&phi_fun_jac_y, p_sim+ii*np);
-					phi_jac_y.set_param(&phi_jac_y, p_sim+ii*np);
+					phi_jac_y_uhat.set_param(&phi_jac_y_uhat, p_sim+ii*np);
 					f_lo_jac_x1_x1dot_u_z.set_param(&f_lo_jac_x1_x1dot_u_z, p_sim+ii*np);
 					break;
 				}
@@ -612,9 +634,11 @@ int main()
 	external_function_param_casadi_free(&impl_ode_jac_x_xdot_u);
 	external_function_param_casadi_free(&impl_ode_jac_x_u);
 	// gnsf functions:
-	external_function_param_casadi_free(&f_lo_jac_x1_x1dot_u_z);
+	external_function_param_casadi_free(&f_lo_fun_jac_x1k1uz);
 	external_function_param_casadi_free(&phi_fun_jac_y);
-	external_function_param_casadi_free(&phi_jac_y);
+	external_function_param_casadi_free(&phi_jac_y_uhat);
+
+	external_function_casadi_free(&get_matrices_fun);
 	printf("\nsuccess!\n\n");
 
     return 0;

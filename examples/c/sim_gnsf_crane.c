@@ -174,7 +174,7 @@ int main() {
     sim_out *out = sim_out_create(config, dims);
     sim_solver *sim_solver = sim_create(config, dims, opts);
 
-    int NREP = 1;
+    int NREP = 10000;
     double casadi_times[NREP];
     double gnsf_times[NREP];
     printf("before sim solver\n");
@@ -214,6 +214,7 @@ int main() {
 	external_function_casadi_free(&phi_fun_jac_y);
 	external_function_casadi_free(&f_lo_fun_jac_x1k1uz);
 	external_function_casadi_free(&phi_jac_y_uhat);
+	external_function_casadi_free(&get_matrices_fun);
 
     return 0;
 }

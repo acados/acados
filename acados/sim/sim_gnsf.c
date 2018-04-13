@@ -691,13 +691,13 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, external_function_
     exported_doubles += ny * (2*nx1 + nz); // L_x, L_xdot, L_z, L_u;
     exported_doubles += nuhat * nu; // L_u;
     exported_doubles += nx2*nx2; // A_LO;
-
+    printf("exported_doubles %d= \n",exported_doubles);
     double *export_in  = (double*) malloc(1*sizeof(double));
     double *export_out = (double*) malloc(exported_doubles*sizeof(double));
 
     // calling the external function
-    ext_fun_arg_t ext_fun_type_in[2];
-	void *ext_fun_in[2];
+    ext_fun_arg_t ext_fun_type_in[1];
+	void *ext_fun_in[1];
     ext_fun_arg_t ext_fun_type_out[1];
 	void *ext_fun_out[1];
 
@@ -758,15 +758,10 @@ void gnsf_import_matrices(gnsf_dims* dims, gnsf_model *model, external_function_
     }
     read_mem += nx2*nx2;
 
-    printf("assigned stuff: \n");
-    printf("A = \n");
-    d_print_e_mat(nx1+nz, nx1, model->A, nx1+nz);
-    printf("E = \n");
-    d_print_e_mat(nx1+nz, nx1+nz, model->E, nx1+nz);
     // printf("\n adress of read mem %p\n",(void*)read_mem);
     // printf("\n adress of exp out %p\n",(void*)export_out);
     free(export_in);
-    free(export_out);
+    free(export_out); // TODO problem here?!
 }
 
 
@@ -1240,7 +1235,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
         blasfeo_dgemv_n(nyy, nx1, 1.0, &fix->YYx, 0, 0, &x0_traj, ss*nx, 1.0, &yyu, 0, &yyss, nyy*ss);
 
         y_in.x = &yy_val[ss];
-        
+
         f_lo_in_x1.x = &x1_val[ss];
         f_lo_in_k1.x = &K1_val[ss];
         f_lo_in_z.x = &Z_val[ss];

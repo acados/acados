@@ -43,7 +43,7 @@ LIBS += -lblasfeo -lm -lblas -llapack
 
 EXAMPLES =
 EXAMPLES += sim_wt_model_nx3
-# EXAMPLES += sim_wt_model_nx6
+EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
 EXAMPLES += mass_spring_nmpc_example
@@ -161,8 +161,8 @@ WT_NX6_OBJS += wt_model_nx6/impl_ode_fun_jac_x_xdot.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_xdot_u.o
 WT_NX6_OBJS += wt_model_nx6/impl_ode_jac_x_u.o
 WT_NX6_OBJS += wt_model_nx6/phi_fun_jac_y.o
-WT_NX6_OBJS += wt_model_nx6/phi_jac_y.o
-WT_NX6_OBJS += wt_model_nx6/f_LO_inc_J_x1k1uz_fun.o
+WT_NX6_OBJS += wt_model_nx6/phi_jac_y_uhat.o
+WT_NX6_OBJS += wt_model_nx6/f_lo_fun_jac_x1k1uz.o
 WT_NX6_OBJS += wt_model_nx6/get_matrices_fun.o
 
 sim_wt_model_nx6: $(WT_NX6_OBJS) sim_wt_model_nx6.o

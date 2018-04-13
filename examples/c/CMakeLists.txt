@@ -155,8 +155,8 @@ file(GLOB WT_MODEL_NX6_SRC
     wt_model_nx6/impl_ode_jac_x_u.c
     # gnsf functions
     wt_model_nx6/phi_fun_jac_y.c
-    wt_model_nx6/phi_jac_y.c
-    wt_model_nx6/f_LO_inc_Jx1k1uz_fun.c
+    wt_model_nx6/phi_jac_y_uhat.c
+    wt_model_nx6/f_lo_fun_jac_x1k1uz.c
     wt_model_nx6/get_matrices_fun.c
 
 )
@@ -231,11 +231,11 @@ endif()
 
 # -------------------- sim_wt_nx6
 
-# if(ACADOS_WITH_C_INTERFACE)
-#     add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
-#     target_link_libraries(sim_wt_model_nx6 acados)
-#     add_test(sim_wt_model_nx6 sim_wt_model_nx6)
-# endif()
+if(ACADOS_WITH_C_INTERFACE)
+    add_executable(sim_wt_model_nx6 sim_wt_model_nx6.c ${WT_MODEL_NX6_SRC})
+    target_link_libraries(sim_wt_model_nx6 acados)
+    add_test(sim_wt_model_nx6 sim_wt_model_nx6)
+endif()
 
 if(ACADOS_WITH_C_INTERFACE)
     add_executable(sim_gnsf_crane sim_gnsf_crane.c ${GNSF_CRANE_SRC})
