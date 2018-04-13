@@ -144,8 +144,6 @@ typedef struct {
 } gnsf_pre_workspace;
 
 typedef struct { //workspace
-    double *phi_in;
-    double *phi_out;
     double *f_LO_in;
     double *f_LO_out;
     double *Z_out;
