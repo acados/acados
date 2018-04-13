@@ -1244,7 +1244,6 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
             }
             for (int ii = 0; ii < num_stages; ii++) { // eval phi
                 y_in.xi = ii*ny;
-                blasfeo_unpack_dvec(ny, &yy_val[ss], ii*ny, &phi_in[0]); // pack yy, 
 
                 acados_tic(&casadi_timer);
                 fix->phi_fun_jac_y->evaluate(fix->phi_fun_jac_y, phi_new_type_in, phi_new_in, phi_fun_type_out, phi_fun_out);
@@ -1320,9 +1319,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_dgein1(1.0, &J_r_ff, ii, ii);            
             }
             for (int ii = 0; ii < num_stages; ii++) { //
-                blasfeo_unpack_dvec(ny, &yy_val[ss], ii*ny, &phi_in[0]);
+                y_in.xi = ii*ny;
                 acados_tic(&casadi_timer);
-                fix->phi_jac_y_uhat->evaluate(fix->phi_jac_y_uhat, phi_fun_type_in, phi_fun_in, phi_fun_type_out, phi_fun_out);
+                fix->phi_jac_y_uhat->evaluate(fix->phi_jac_y_uhat, phi_new_type_in, phi_new_in, phi_fun_type_out, phi_fun_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
 
                 // printf("phi_out = \n");
@@ -1395,6 +1394,7 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
     if (opts->sens_adj) {
         // ADJOINT SENSITIVITY PROPAGATION:
         for (int ss = num_steps-1; ss >= 0; ss--) {
+            y_in.x = &yy_val[ss];
             for (int ii = 0; ii < num_stages; ii++) {
                 blasfeo_dgemm_nn(nx2, nff, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZf, ii* nz, 0, 0.0, &fix->ZZf, 0, 0, &aux_G2_ff, ii * nx2, 0);
                 blasfeo_dgemm_nn(nx2, nx1, nz, -1.0, &f_LO_jac[ss], nx2 * ii, 2*nx1, &fix->ZZx, ii* nz, 0, 0.0, &fix->ZZx, 0, 0, &aux_G2_x1, ii * nx2, 0);
@@ -1442,9 +1442,9 @@ int gnsf_simulate(void *config, sim_in *in, sim_out *out, void *args, void *mem,
                 blasfeo_dgein1(1.0, &J_r_ff, ii, ii);
             }
             for (int ii = 0; ii < num_stages; ii++) {
-                blasfeo_unpack_dvec(ny, &yy_val[ss], ii*ny, &phi_in[0]);
+                y_in.xi = ii*ny;
                 acados_tic(&casadi_timer);
-                fix->phi_jac_y_uhat->evaluate(fix->phi_jac_y_uhat, phi_fun_type_in, phi_fun_in, phi_fun_type_out, phi_fun_out);
+                fix->phi_jac_y_uhat->evaluate(fix->phi_jac_y_uhat, phi_new_type_in, phi_new_in, phi_fun_type_out, phi_fun_out);
                 out->info->ADtime += acados_toc(&casadi_timer);
 
                 blasfeo_pack_dmat(n_out, ny+nuhat, &phi_out[0], n_out, &dPHI_dyuhat, ii*n_out, 0);
