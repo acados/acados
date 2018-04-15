@@ -309,12 +309,12 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 				QProblemCON(QP, nvd, ngd, HST_POSDEF);
 				QProblem_setPrintLevel(QP, PL_MEDIUM);
 				// QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
-				QProblem_printProperties(QP);
-				// static Options options;
-
-				// Options_setToDefault( &options );
-				// options.initialStatusBounds = ST_INACTIVE;
-				// QProblem_setOptions( QP, options );
+                if (opts->set_acado_opts)
+                {
+                    static Options options;
+                    Options_setToMPC(&options);
+                    QProblem_setOptions(QP, options);
+                }
 				qpoases_status = QProblem_init(QP, H, g, C, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime );
 				memory->first_it = 0;
 
@@ -322,18 +322,21 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 				QProblem_getDualSolution(QP, dual_sol);
 			} else {
 				qpoases_status = QProblem_hotstart(QP, g, d_lb, d_ub, d_lg, d_ug, &nwsr, &cputime);
+				
+                QProblem_getPrimalSolution(QP, prim_sol);
+				QProblem_getDualSolution(QP, dual_sol);
 			}
 		} else {
 			if (memory->first_it == 1) {
 				QProblemBCON(QPB, nvd, HST_POSDEF);
 				QProblemB_setPrintLevel(QPB, PL_MEDIUM);
 				// QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER);
-				QProblemB_printProperties(QPB);
-				// static Options options;
-
-				// Options_setToDefault( &options );
-				// options.initialStatusBounds = ST_INACTIVE;
-				// QProblemB_setOptions( QPB, options );
+                if (opts->set_acado_opts)
+                {
+                    static Options options;
+                    Options_setToMPC(&options);
+                    QProblem_setOptions(QP, options);
+                }
 				QProblemB_init(QPB, H, g, d_lb, d_ub, &nwsr, &cputime);
 				memory->first_it = 0;
 
@@ -342,14 +345,17 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 
 			} else {
 				QProblemB_hotstart(QPB, g, d_lb, d_ub, &nwsr, &cputime);
+
+				QProblemB_getPrimalSolution(QPB, prim_sol);
+				QProblemB_getDualSolution(QPB, dual_sol);
 			}
 		}
 	} else {  // hotstart = 0
 		if (ngd > 0)
         {
 			QProblemCON(QP, nvd, ngd, HST_POSDEF);
-            QProblem_setPrintLevel(QP, PL_MEDIUM);
-            // QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
+            // QProblem_setPrintLevel(QP, PL_HIGH);
+            QProblem_setPrintLevel(QP, PL_DEBUG_ITER);
             QProblem_printProperties(QP);
 			if (opts->use_precomputed_cholesky == 1)
             {
@@ -385,8 +391,8 @@ int dense_qp_qpoases(void *config_, dense_qp_in *qp_in, dense_qp_out *qp_out, vo
 		} else
         {  // QProblemB
 			QProblemBCON(QPB, nvd, HST_POSDEF);
-            QProblemB_setPrintLevel(QPB, PL_MEDIUM);
-            // QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER);
+            // QProblemB_setPrintLevel(QPB, PL_MEDIUM);
+            QProblemB_setPrintLevel(QPB, PL_DEBUG_ITER);
             QProblemB_printProperties(QPB);
 			if (opts->use_precomputed_cholesky == 1)
             {
