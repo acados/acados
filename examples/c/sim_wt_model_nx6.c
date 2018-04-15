@@ -323,20 +323,20 @@ int main()
 				break;
 
 			case 1:
-				opts->ns = 2; // number of stages in rk integrator
-				opts->num_steps = 6; // number of integration steps
+				opts->ns = 1; // number of stages in rk integrator
+				opts->num_steps = 1; // number of integration steps
 				break;
 
 			case 2:
-				opts->ns = 5; // number of stages in rk integrator
-				opts->num_steps = 2; // number of integration steps
+				opts->ns = 8; // number of stages in rk integrator
+				opts->num_steps = 1; // number of integration steps
 				break;
 
 			case 3: //gnsf
-				opts->ns = 5; // number of stages in rk integrator
-				gnsf_dim->num_stages = 5;
-				opts->num_steps = 2; // number of integration steps
-				gnsf_dim->num_steps = 2;
+				opts->ns = 8; // number of stages in rk integrator
+				gnsf_dim->num_stages = 8;
+				opts->num_steps = 1; // number of integration steps
+				gnsf_dim->num_steps = 1;
 				break;
 
 			default :
