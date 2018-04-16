@@ -440,10 +440,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     blasfeo_dvecse(nx*ns, 0.0, lambdaK, 0);
 
-    for(kk=0;kk<nx;kk++)
+    for(kk=0;kk<nx+nu;kk++)
         S_adj_in[kk] = in->S_adj[kk];
-    for(kk=0;kk<nu;kk++)
-        S_adj_in[nx+kk] = 0.0;
+    // for(kk=0;kk<nu;kk++)
+    //     S_adj_in[nx+kk] = 0.0;
     blasfeo_pack_dvec(nx+nu, S_adj_in, lambda, 0);
 
     for (kk=0;kk<2*nx;kk++) //initialize x,xdot with zeros
@@ -460,7 +460,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 //	double inf_norm_K;
 //	double tol_inf_norm_K = 1e-6;
-
 
     // start the loop
     acados_tic(&timer);
@@ -574,6 +573,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 }
             } // end ii
 
+
             //DGETRF computes an LU factorization of a general M-by-N matrix A
             //using partial pivoting with row interchanges.
 			if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) )
@@ -606,7 +606,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         // evaluate forward sensitivities
         if (opts->sens_forw)
 		{
-
             // evaluate JGK(xn,Kn)
             for(ii=0; ii<ns; ii++)
 			{
@@ -676,11 +675,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // factorize JGK
             blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
 
-            if (opts->sens_adj)
-			{ // store the factorization and permutation
-                blasfeo_dgecp(nx*ns, nx*ns, JGK, 0, 0, &JG_traj[ss], 0, 0);
-            }
-
             // obtain JKf
 			// TODO add the option to use VDE instead of dgemm ???
             blasfeo_dgemm_nn(nx*ns, nx+nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0, JKf, 0, 0);
@@ -705,121 +699,71 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     // evaluate backwards
     if (opts->sens_adj)
 	{
-
         for(ss=num_steps-1;ss>-1;ss--)
 		{
-
-            blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
-
-            if (opts->sens_forw)
-			{ // evalute JGf and extract factorization
-
-                for(ii=0; ii<ns; ii++)
-				{
-
-                    for(jj=0; jj<ns; jj++)
-					{
-                        a = A_mat[ii+ns*jj];
-                        if(a!=0)
-						{
-                            a *= step;
-                            blasfeo_daxpy(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
-                        }
+            for(ii=0; ii<ns; ii++)
+            {
+                blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
+                for(jj=0; jj<ns; jj++)
+                {
+                    a = A_mat[ii+ns*jj];
+                    if(a!=0)
+                    {
+                        a *= step;
+                        blasfeo_daxpy(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
                     }
-                    blasfeo_unpack_dvec(nx, xt, 0, ode_args);
-                    blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
-
-                    acados_tic(&timer_ad);
-
-					ext_fun_type_in[0] = COLMAJ;
-					ext_fun_in[0] = ode_args+0; // x: nx
-					ext_fun_type_in[1] = COLMAJ;
-					ext_fun_in[1] = ode_args+nx; // dx: nx
-					ext_fun_type_in[2] = COLMAJ;
-					ext_fun_in[2] = ode_args+nx+nx; // u: nu
-
-					ext_fun_type_out[0] = COLMAJ;
-					ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
-					ext_fun_type_out[1] = COLMAJ;
-					ext_fun_out[1] = jac_out+nx*nx; // jac_u: nx*nu
-
-                    model->impl_ode_jac_x_u->evaluate(model->impl_ode_jac_x_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-
-                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
-                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
-                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    // timing_ad += acados_toc(&timer_ad);
                 }
+                blasfeo_unpack_dvec(nx, xt, 0, ode_args);
+                blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
 
-            }
-			else
-			{ // extract trajectory to evaluate JGf and JGK
+                acados_tic(&timer_ad);
 
-                for(ii=0; ii<ns; ii++)
-				{
+                ext_fun_type_in[0] = COLMAJ;
+                ext_fun_in[0] = ode_args+0; // x: nx
+                ext_fun_type_in[1] = COLMAJ;
+                ext_fun_in[1] = ode_args+nx; // dx: nx
+                ext_fun_type_in[2] = COLMAJ;
+                ext_fun_in[2] = ode_args+nx+nx; // u: nu
 
-                    for(jj=0; jj<ns; jj++)
-					{
-                        a = A_mat[ii+ns*jj];
-                        if(a!=0)
-						{
-                            a *= step;
-                            blasfeo_daxpy(nx, a, &K_traj[ss], jj*nx, xt, 0, xt, 0);
-                        }
+                ext_fun_type_out[0] = COLMAJ;
+                ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
+                ext_fun_type_out[1] = COLMAJ;
+                ext_fun_out[1] = jac_out+nx*nx; // jac_u: nx*nu
+                ext_fun_type_out[2] = COLMAJ;
+                ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
+
+                model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+                blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
+                // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
+                // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
+
+                // model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
+                // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
+
+                // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
+                timing_ad += acados_toc(&timer_ad);
+                for (jj=0;jj<ns;jj++)
+                {
+                    a = A_mat[ii+ns*jj];
+                    if (a!=0)
+                    {
+                        a *= step;
+                        for (kk=0;kk<nx*nx;kk++)
+                            Jt[kk] = a* jac_out[kk];
                     }
-                    blasfeo_unpack_dvec(nx, xt, 0, ode_args);
-                    blasfeo_unpack_dvec(nx, &K_traj[ss], ii*nx, ode_args+nx);
+                    if(jj==ii)
+                    {
+                        for (kk=0;kk<nx*nx;kk++)
+                            Jt[kk] += jac_out[nx*nx+kk];
+                    }
+                    blasfeo_pack_dmat(nx, nx, Jt, nx, &JG_traj[ss], ii*nx, jj*nx);
+                } // end jj
+            } // end ii
 
-                    acados_tic(&timer_ad);
-
-					ext_fun_type_in[0] = COLMAJ;
-					ext_fun_in[0] = ode_args+0; // x: nx
-					ext_fun_type_in[1] = COLMAJ;
-					ext_fun_in[1] = ode_args+nx; // dx: nx
-					ext_fun_type_in[2] = COLMAJ;
-					ext_fun_in[2] = ode_args+nx+nx; // u: nu
-
-					ext_fun_type_out[0] = COLMAJ;
-					ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
-					ext_fun_type_out[1] = COLMAJ;
-					ext_fun_out[1] = jac_out+nx*nx; // jac_u: nx*nu
-
-                    model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-                    blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-                    blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-                    // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
-                    // blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
-
-					// model->jac_u_ode_impl->evaluate(model->jac_u_ode_impl, ode_args, jac_out+2*nx*nx);
-                    // blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
-
-                    // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
-                    timing_ad += acados_toc(&timer_ad);
-                    for (jj=0;jj<ns;jj++)
-					{
-                        a = A_mat[ii+ns*jj];
-                        if (a!=0)
-						{
-                            a *= step;
-                            for (kk=0;kk<nx*nx;kk++)
-                                Jt[kk] = a* jac_out[kk];
-                        }
-                        if(jj==ii)
-						{
-                            for (kk=0;kk<nx*nx;kk++)
-                                Jt[kk] += jac_out[nx*nx+kk];
-                        }
-                        blasfeo_pack_dmat(nx, nx, Jt, nx, &JG_traj[ss], ii*nx, jj*nx);
-                    } // end jj
-                } // end ii
-
-                // factorize JGK
-                blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv); //
-            }// else if/else
+            // factorize JGK
+            blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, &JG_traj[ss], 0, 0, &JG_traj[ss], 0, 0, ipiv); //
 
 			for(jj=0; jj<ns; jj++)
 				blasfeo_dveccpsc(nx, -step*b_vec[jj], lambda, 0, lambdaK, jj*nx);
@@ -829,11 +773,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             blasfeo_dtrsv_ltu(nx*ns, &JG_traj[ss], 0, 0, lambdaK, 0, lambdaK, 0);
 
             blasfeo_dvecpei(nx*ns, ipiv, lambdaK, 0);
-
             blasfeo_dgemv_t(nx*ns, nx+nu, 1.0, JGf, 0, 0, lambdaK, 0, 1.0, lambda, 0, lambda, 0);
         }
     }
-
     // extract output
 
     blasfeo_unpack_dvec(nx, xn, 0, x_out);
