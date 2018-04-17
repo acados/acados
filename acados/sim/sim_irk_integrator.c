@@ -443,7 +443,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     impl_ode_fun_out[0] = &impl_ode_res_out;
 
-    //impl_ode_fun_jac_x_xdot
+    // impl_ode_fun_jac_x_xdot
 	ext_fun_arg_t impl_ode_fun_jac_x_xdot_type_out[3];
 	void *impl_ode_fun_jac_x_xdot_out[3];
     impl_ode_fun_jac_x_xdot_type_out[0] = BLASFEO_DVEC_ARGS;
@@ -454,7 +454,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     impl_ode_fun_jac_x_xdot_out[2] = &J_t_xdot; // jac_xdot: nx*nx
 
     // impl_ode_jac_x_xdot_u
-	ext_fun_arg_t impl_ode_jac_x_xdot_u_type_out[3]; // TODO (first use more blasfeo)
+	ext_fun_arg_t impl_ode_jac_x_xdot_u_type_out[3];
 	void *impl_ode_jac_x_xdot_u_out[3];
     impl_ode_jac_x_xdot_u_type_out[0] = BLASFEO_DMAT;
     impl_ode_jac_x_xdot_u_out[0] = &J_t_x;

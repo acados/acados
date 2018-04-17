@@ -75,9 +75,9 @@ typedef struct
     struct blasfeo_dvec *K_traj;  // K trajectory
     // struct blasfeo_dmat *JG_traj; // JGK trajectory
 
-    struct blasfeo_dmat J_t_x; // J_t_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
-    struct blasfeo_dmat J_t_xdot; // J_t_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
-    struct blasfeo_dmat J_t_u; // J_t_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
+    struct blasfeo_dmat J_t_x;    // J_t_blasfeo, temporary Jacobian of ode w.r.t x (nx, nx)
+    struct blasfeo_dmat J_t_xdot; // J_t_blasfeo, temporary Jacobian of ode w.r.t xdot (nx, nx)
+    struct blasfeo_dmat J_t_u;    // J_t_blasfeo, temporary Jacobian of ode w.r.t u (nx, nu)
 
 } sim_irk_workspace;
 
