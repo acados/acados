@@ -433,10 +433,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
 
     struct blasfeo_dvec_args impl_ode_xdot_in;
-    impl_ode_xdot_in.x = &K_traj[ss];
 
 
-    impl_ode_in[0] = &xt; // 1st input is always xt
+    impl_ode_in[0] = xt; // 1st input is always xt
     impl_ode_in[1] = &impl_ode_xdot_in; // 2nd input is part of K[ss], always update impl_ode_xdot_in
     impl_ode_in[2] = u; // 3rd input is u (always)
 
@@ -493,6 +492,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 		// TODO add exit condition on residuals ???
 //		inf_norm_K = 1.0;
 //        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
+        impl_ode_xdot_in.x = K;
         for(iter=0; iter<newton_iter; iter++)
 		{
 
@@ -516,6 +516,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                         blasfeo_daxpy(nx, a, K, jj*nx, xt, 0, xt, 0);
                     }
                 }
+                impl_ode_xdot_in.xi = ii*nx; // use k_i of K = (k_1,..., k_{ns})
                 // put xn+sum kj into first nx elements of ode_arg
                 blasfeo_unpack_dvec(nx, xt, 0, ode_args);
 
@@ -527,17 +528,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 { // otherwise eval the ode together with the jacobians within next if
                     acados_tic(&timer_ad);
 
-					ext_fun_type_in[0] = COLMAJ;
-					ext_fun_in[0] = ode_args+0; // x: nx
-					ext_fun_type_in[1] = COLMAJ;
-					ext_fun_in[1] = ode_args+nx; // dx: nx
-					ext_fun_type_in[2] = COLMAJ;
-					ext_fun_in[2] = ode_args+nx+nx; // u: nu
-
 					ext_fun_type_out[0] = COLMAJ;
 					ext_fun_out[0] = rGt+0; // fun: nx
 
-                    model->impl_ode_fun->evaluate(model->impl_ode_fun, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                    model->impl_ode_fun->evaluate(model->impl_ode_fun, impl_ode_type_in, impl_ode_in, ext_fun_type_out, ext_fun_out);
 
                     timing_ad += acados_toc(&timer_ad);
                     // fill in elements of rG  - store values rGt on (ii*nx)th position of rG
@@ -569,7 +563,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 					ext_fun_type_out[2] = COLMAJ;
 					ext_fun_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
 
-                    model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                    model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, impl_ode_type_in, impl_ode_in, ext_fun_type_out, ext_fun_out);
                     // model->jac_x_ode_impl->evaluate(model->jac_x_ode_impl, ode_args, jac_out);
                     // model->jac_xdot_ode_impl->evaluate(model->jac_xdot_ode_impl, ode_args, jac_out+nx*nx);
                     timing_ad += acados_toc(&timer_ad);
@@ -632,7 +626,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             // evaluate JGK(xn,Kn)
             for(ii=0; ii<ns; ii++)
 			{
-
+                impl_ode_xdot_in.xi = ii*nx;
                 blasfeo_dveccp(nx, xn, 0, xt, 0);
                 //compute xt = final x;
                 for(jj=0; jj<ns; jj++)
@@ -663,7 +657,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 				ext_fun_type_out[2] = COLMAJ;
 				ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
 
-                model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, impl_ode_type_in, impl_ode_in, ext_fun_type_out, ext_fun_out);
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
                 
@@ -725,8 +719,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	{
         for(ss=num_steps-1;ss>-1;ss--)
 		{
+            impl_ode_xdot_in.x = &K_traj[ss]; // use K values of step ss
             for(ii=0; ii<ns; ii++)
             {
+                impl_ode_xdot_in.xi = ii*nx; // use k_i of K = (k_1,..., k_{ns})
                 blasfeo_dveccp(nx, &xn_traj[ss], 0, xt, 0);
                 for(jj=0; jj<ns; jj++)
                 {
@@ -756,7 +752,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 ext_fun_type_out[2] = COLMAJ;
                 ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
 
-                model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+                model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, impl_ode_type_in, impl_ode_in, ext_fun_type_out, ext_fun_out);
                 blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
                 blasfeo_pack_dmat(nx, nu, jac_out+2*nx*nx, nx, JGf, ii*nx, nx);
 
