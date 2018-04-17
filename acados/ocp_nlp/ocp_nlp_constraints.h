@@ -48,7 +48,7 @@ typedef struct
     int ng;  // number of general linear constraints
 	int nh;  // number of nonlinear path constraints
 	int nq;  // number of quadratic_over_nonlinear constraints TODO
-    int ns;  // number of soft constraints TODO
+    int ns;  // number of soft constraints
 } ocp_nlp_constraints_dims;
 
 //
@@ -83,6 +83,7 @@ typedef struct
 	void (*memory_set_DCt_ptr) (struct blasfeo_dmat *DCt, void *memory);
 	void (*memory_set_RSQrq_ptr) (struct blasfeo_dmat *RSQrq, void *memory);
 	void (*memory_set_idxb_ptr) (int *idxb, void *memory);
+	void (*memory_set_idxs_ptr) (int *idxs, void *memory);
 	void *(*memory_assign) (void *config, void *dims, void *opts, void *raw_memory);
 	int (*workspace_calculate_size) (void *config, void *dims, void *opts);
 	void (*initialize) (void *config, void *dims, void *model, void *opts, void *mem, void *work);
@@ -107,6 +108,7 @@ typedef struct
 {
 //	ocp_nlp_constraints_dims *dims;
     int *idxb;
+    int *idxs;
 	struct blasfeo_dvec d;
 	struct blasfeo_dmat DCt;
 	external_function_generic *h;
@@ -149,6 +151,7 @@ typedef struct
 	struct blasfeo_dmat *DCt; // pointer to DCt in qp_in
 	struct blasfeo_dmat *RSQrq; // pointer to RSQrq in qp_in
 	int *idxb; // pointer to idxb[ii] in qp_in
+	int *idxs; // pointer to idxs[ii] in qp_in
 } ocp_nlp_constraints_memory;
 
 //
@@ -166,6 +169,8 @@ void ocp_nlp_constraints_memory_set_lam_ptr(struct blasfeo_dvec *lam, void *memo
 void ocp_nlp_constraints_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory);
 //
 void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_);
+//
+void ocp_nlp_constraints_memory_set_idxs_ptr(int *idxs, void *memory_);
 
 
 
@@ -173,7 +178,7 @@ void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_);
 
 typedef struct
 {
-	struct blasfeo_dvec tmp_nbgh;
+	struct blasfeo_dvec tmp_ni;
 //	struct blasfeo_dmat jacobian_quadratic;
 } ocp_nlp_constraints_workspace;
 

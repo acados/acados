@@ -46,6 +46,7 @@ EXAMPLES += sim_wt_model_nx3
 EXAMPLES += sim_wt_model_nx6
 EXAMPLES += sim_crane_example
 EXAMPLES += mass_spring_example
+EXAMPLES += mass_spring_nmpc_example
 #EXAMPLES += mass_spring_pcond_hpipm_split
 #EXAMPLES += mass_spring_fcond_hpipm_split
 #EXAMPLES += mass_spring_offline_fcond_qpoases_split
@@ -64,6 +65,7 @@ RUN_EXAMPLES += run_sim_wt_model_nx3
 RUN_EXAMPLES += run_sim_wt_model_nx6
 RUN_EXAMPLES += run_sim_crane_example
 RUN_EXAMPLES += run_mass_spring_example
+RUN_EXAMPLES += run_mass_spring_nmpc_example
 #RUN_EXAMPLES += run_mass_spring_pcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_fcond_hpipm_split
 #RUN_EXAMPLES += run_mass_spring_offline_fcond_qpoases_split
@@ -219,6 +221,17 @@ mass_spring_example: $(MASS_SPRING_OBJS) mass_spring_example.o
 
 run_mass_spring_example:
 	./mass_spring_example.out
+
+
+
+mass_spring_nmpc_example: $(MASS_SPRING_OBJS) mass_spring_nmpc_example.o
+	$(CCC) -o mass_spring_nmpc_example.out $(MASS_SPRING_OBJS) mass_spring_nmpc_example.o $(LDFLAGS) $(LIBS)
+	@echo
+	@echo " Example mass_spring_nmpc_example build complete."
+	@echo
+
+run_mass_spring_nmpc_example:
+	./mass_spring_nmpc_example.out
 
 
 

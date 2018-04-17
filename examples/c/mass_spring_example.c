@@ -32,13 +32,20 @@
 #include <acados_c/options.h>
 
 // mass spring helper functions
+// hard constraints
 ocp_qp_dims *create_ocp_qp_dims_mass_spring(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 ocp_qp_in *create_ocp_qp_in_mass_spring(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+// soft constraints
+ocp_qp_dims *create_ocp_qp_dims_mass_spring_soft_constr(int N, int nx_, int nu_, int nb_, int ng_, int ngN);
+ocp_qp_in *create_ocp_qp_in_mass_spring_soft_constr(void *config, int N, int nx_, int nu_, int nb_, int ng_, int ngN);
 
 #ifndef ACADOS_WITH_QPDUNES
 #define ELIMINATE_X0
 #endif
-#define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+
+//#define GENERAL_CONSTRAINT_AT_TERMINAL_STAGE
+
+//#define SOFT_CONSTRAINTS
 
 #define NREP 100
 
@@ -71,7 +78,11 @@ int main() {
     int ngN = 0;
     #endif
 
+#ifdef SOFT_CONSTRAINTS
+	ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring_soft_constr(N, nx_, nu_, nb_, ng_, ngN);
+#else
 	ocp_qp_dims *qp_dims = create_ocp_qp_dims_mass_spring(N, nx_, nu_, nb_, ng_, ngN);
+#endif
 
     /************************************************
      * ocp qp solvers
@@ -121,7 +132,11 @@ int main() {
      * ocp qp in/out
      ************************************************/
 
+#ifdef SOFT_CONSTRAINTS
+    ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring_soft_constr(NULL, N, nx_, nu_, nb_, ng_, ngN);
+#else
     ocp_qp_in *qp_in = create_ocp_qp_in_mass_spring(NULL, N, nx_, nu_, nb_, ng_, ngN);
+#endif
     ocp_qp_out *qp_out = ocp_qp_out_create(NULL, qp_dims);
 
     /************************************************
@@ -156,8 +171,18 @@ int main() {
                     assert(ok = true && "specified option not found!");
                     ok = set_option_int(opts, "sparse_hpipm.max_iter", 30);
                     assert(ok = true && "specified option not found!");
-                    ok = set_option_double(opts, "sparse_hpipm.res_d_max", 1e-8);
+//                    ok = set_option_double(opts, "sparse_hpipm.res_g_max", 1e-8);
+//                    assert(ok = true && "specified option not found!");
+//                    ok = set_option_double(opts, "sparse_hpipm.res_b_max", 1e-8);
+//                    assert(ok = true && "specified option not found!");
+//                    ok = set_option_double(opts, "sparse_hpipm.res_d_max", 1e-8);
+//                    assert(ok = true && "specified option not found!");
+//                    ok = set_option_double(opts, "sparse_hpipm.res_m_max", 1e-8);
+//                    assert(ok = true && "specified option not found!");
+#ifdef SOFT_CONSTRAINTS
+                    ok = set_option_double(opts, "sparse_hpipm.mu0", 1e2);
                     assert(ok = true && "specified option not found!");
+#endif
 
                     break;
                 case PARTIAL_CONDENSING_HPMPC:
@@ -257,7 +282,7 @@ int main() {
              * print solution
              ************************************************/
 
-			// print_ocp_qp_out(qp_out);
+//			print_ocp_qp_out(qp_out);
 
             /************************************************
              * compute infinity norm of residuals

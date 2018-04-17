@@ -204,8 +204,9 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
     int *nu = qp_in->dim->nu;
     int *nb = qp_in->dim->nb;
     int *ng = qp_in->dim->ng;
+    int *ns = qp_in->dim->ns;
 
-#if 0
+#if 1
 	printf("BAbt =\n");
     for (int ii = 0; ii < N; ii++)
     {
@@ -227,7 +228,7 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 	printf("rq =\n");
     for (int ii = 0; ii < N+1; ii++)
 	{
-        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rq[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_in->rqz[ii], 0);
 	}
 
 	printf("d =\n");
@@ -247,6 +248,22 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 	{
         blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &qp_in->DCt[ii], 0 , 0);
 	}
+
+	printf("d_s =\n");
+    for (int ii = 0; ii <= N; ii++)
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->d[ii], 2*nb[ii]+2*ng[ii]);
+
+	printf("idxs =\n");
+    for (int ii = 0; ii <= N; ii++)
+        int_print_mat(1, ns[ii], qp_in->idxs[ii], 1);
+
+	printf("Z =\n");
+    for (int ii = 0; ii <= N; ii++)
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->Z[ii], 0);
+
+	printf("z =\n");
+    for (int ii = 0; ii <= N; ii++)
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->rqz[ii], nu[ii]+nx[ii]);
 
 #else
 
@@ -278,6 +295,19 @@ void print_ocp_qp_in(ocp_qp_in *qp_in)
 
 		printf("DCt =\n");
         blasfeo_print_dmat(nu[ii]+nx[ii], ng[ii], &qp_in->DCt[ii], 0 , 0);
+
+        printf("d_s =\n");
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->d[ii], 2*nb[ii]+2*ng[ii]);
+
+        printf("idxs = (ns = %d)\n", qp_in->dim->ns[ii]);
+        int_print_mat(1, ns[ii], qp_in->idxs[ii], 1);
+
+        printf("Z =\n");
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->Z[ii], 0);
+
+        printf("z =\n");
+        blasfeo_print_tran_dvec(2*ns[ii], &qp_in->rqz[ii], nu[ii]+nx[ii]);
+
     }
 
 #endif
@@ -296,12 +326,13 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
     int *nu = qp_out->dim->nu;
     int *nb = qp_out->dim->nb;
     int *ng = qp_out->dim->ng;
+    int *ns = qp_out->dim->ns;
 
 #if 1
 
 	printf("ux =\n");
 	for (ii=0; ii<=N; ii++)
-        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &qp_out->ux[ii], 0);
+        blasfeo_print_tran_dvec(nu[ii]+nx[ii]+2*ns[ii], &qp_out->ux[ii], 0);
 
 	printf("pi =\n");
 	for (ii=0; ii<N; ii++)
@@ -309,11 +340,11 @@ void print_ocp_qp_out(ocp_qp_out *qp_out)
 
 	printf("lam =\n");
 	for (ii=0; ii<=N; ii++)
-        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->lam[ii], 0);
+        blasfeo_print_tran_dvec(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_out->lam[ii], 0);
 
 	printf("t =\n");
 	for (ii=0; ii<=N; ii++)
-        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii], &qp_out->t[ii], 0);
+        blasfeo_print_exp_tran_dvec(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_out->t[ii], 0);
 
 #else
 
@@ -347,17 +378,18 @@ void ocp_nlp_out_print(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out)
 	int ii;
 
     int N = dims->N;
+	int *nv = dims->nv;
 	int *nx = dims->nx;
-	int *nu = dims->nu;
+	// int *nu = dims->nu;
 	int *ni = dims->ni;
 
 #if 1
 
 	printf("\nN = %d\n", N);
-	printf("ux =\n");
+	printf("uxs =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-        blasfeo_print_tran_dvec(nu[ii]+nx[ii], &nlp_out->ux[ii], 0);
+        blasfeo_print_tran_dvec(nv[ii], &nlp_out->ux[ii], 0);
 	}
 
 	printf("pi =\n");
@@ -408,14 +440,15 @@ void ocp_nlp_res_print(ocp_nlp_dims *dims, ocp_nlp_res *nlp_res)
 	int ii;
 
     int N = dims->N;
+	int *nv = dims->nv;
 	int *nx = dims->nx;
-	int *nu = dims->nu;
+	// int *nu = dims->nu;
 	int *ni = dims->ni;
 
 	printf("res_g =\n");
 	for (ii=0; ii<=N; ii++)
 	{
-        blasfeo_print_exp_tran_dvec(nu[ii]+nx[ii], &nlp_res->res_g[ii], 0);
+        blasfeo_print_exp_tran_dvec(nv[ii], &nlp_res->res_g[ii], 0);
 	}
 
 	printf("res_b =\n");
@@ -667,7 +700,7 @@ void print_dense_qp_in(dense_qp_in *qp_in)
 void print_ocp_qp_info(ocp_qp_info *info)
 {
     double misc = info->total_time - info->condensing_time - info->solve_QP_time - info->interface_time;
-    assert((misc >= 0 || fabs(misc) <= ACADOS_EPS) && "sum of timings larger than total time!");
+//    assert((misc >= 0 || fabs(misc) <= ACADOS_EPS) && "sum of timings larger than total time!");
 
     printf("\n***************************************************************\n");
     printf("total time \t=\t%7.3f ms \t=\t %6.2f %%\n", 1000*info->total_time, 100.0);

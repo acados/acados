@@ -246,6 +246,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         add_executable(mass_spring_offline_fcond_qpoases_split mass_spring_offline_fcond_qpoases_split.c mass_spring_model/mass_spring_qp.c)
         target_link_libraries(mass_spring_offline_fcond_qpoases_split acados)
         add_test(mass_spring_offline_fcond_qpoases_split mass_spring_example)
+
+        add_executable(mass_spring_nmpc_example mass_spring_nmpc_example.c mass_spring_model/mass_spring_qp.c)
+        target_link_libraries(mass_spring_nmpc_example acados)
+        add_test(mass_spring_nmpc_example mass_spring_example)
     endif()
 
     add_executable(

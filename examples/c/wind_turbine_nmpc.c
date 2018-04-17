@@ -48,7 +48,7 @@
 #include "acados/ocp_nlp/ocp_nlp_cost_external.h"
 #include "acados/ocp_nlp/ocp_nlp_dynamics_cont.h"
 
-#include "examples/c/wt_model_nx6/wt_model.h"
+#include "examples/c/wt_model_nx6/nx6p2/wt_model.h"
 #include "examples/c/wt_model_nx6/setup.c"
 
 #define NN 40
@@ -183,16 +183,16 @@ int main()
     * problem dimensions
     ************************************************/
 
-    int nx[NN + 1] = {0};
-    int nu[NN + 1] = {0};
-    int nbx[NN + 1] = {0};
-    int nbu[NN + 1] = {0};
-    int nb[NN + 1] = {0};
-    int ng[NN + 1] = {0};
-    int nh[NN + 1] = {0};
-    int nq[NN + 1] = {0};
-    int ns[NN+1] = {0};
-	int ny[NN+1] = {0};
+    int nx[NN+1] = {};
+    int nu[NN+1] = {};
+    int nbx[NN+1] = {};
+    int nbu[NN+1] = {};
+    int nb[NN+1] = {};
+    int ng[NN+1] = {};
+    int nh[NN+1] = {};
+    int nq[NN+1] = {};
+    int ns[NN+1] = {};
+	int ny[NN+1] = {};
 
 	// TODO(dimitris): setup bounds on states and controls based on ACADO controller
     nx[0] = nx_;
@@ -201,9 +201,9 @@ int main()
     nbu[0] = nu_;
     nb[0] = nbu[0]+nbx[0];
 	ng[0] = 0;
-
 	// TODO(dimitris): add bilinear constraints later
 	nh[0] = 0;
+	ns[0] = 0;
 	ny[0] = 4; // ny_
 
     for (int i = 1; i < NN; i++)
@@ -215,6 +215,7 @@ int main()
 		nb[i] = nbu[i]+nbx[i];
 		ng[i] = 0;
 		nh[i] = 1;
+		ns[i] = 1;
 		ny[i] = 4; // ny_
     }
 
@@ -225,6 +226,7 @@ int main()
     nb[NN] = nbu[NN]+nbx[NN];
 	ng[NN] = 0;
 	nh[NN] = 0;
+	ns[NN] = 0;
 	ny[NN] = 2;
 
     /************************************************
@@ -259,7 +261,26 @@ int main()
 	double M_gen_max = 5.0;
 	// electric power
 	double Pel_min = 0.0;
-	double Pel_max = 5.7;
+	double Pel_max = 5.0;
+
+
+	/* soft constraints */
+
+	// first stage
+	int *idxs0 = malloc(ns[0]*sizeof(int));
+	double *ls0 = malloc((ns[0])*sizeof(double));
+	double *us0 = malloc((ns[0])*sizeof(double));
+
+	// middle stage
+	int *idxs1 = malloc(ns[1]*sizeof(int));
+	double *ls1 = malloc((ns[1])*sizeof(double));
+	double *us1 = malloc((ns[1])*sizeof(double));
+
+	// last stage
+	int *idxsN = malloc(ns[NN]*sizeof(int));
+	double *lsN = malloc((ns[NN])*sizeof(double));
+	double *usN = malloc((ns[NN])*sizeof(double));
+
 
 	/* box constraints */
 
@@ -372,6 +393,13 @@ int main()
 		lh1[0] = Pel_min;
 		uh1[0] = Pel_max;
 	}
+	// softed
+	if (ns[1]>0)
+	{
+		idxs1[0] = nb[1]+ng[1];
+		ls1[0] = 0.0;
+		us1[0] = 0.0;
+	}
 
 
 
@@ -402,6 +430,30 @@ int main()
 	W[1+ny_*1] = 0.0180;
 	W[2+ny_*2] = 0.01;
 	W[3+ny_*3] = 0.001;
+
+	/* slacks */
+
+	// first stage
+	double *lZ0 = malloc(ns[0]*sizeof(double));
+	double *uZ0 = malloc(ns[0]*sizeof(double));
+	double *lz0 = malloc(ns[0]*sizeof(double));
+	double *uz0 = malloc(ns[0]*sizeof(double));
+
+	// middle stages
+	double *lZ1 = malloc(ns[1]*sizeof(double));
+	double *uZ1 = malloc(ns[1]*sizeof(double));
+	double *lz1 = malloc(ns[1]*sizeof(double));
+	double *uz1 = malloc(ns[1]*sizeof(double));
+	lZ1[0] = 1e2;
+	uZ1[0] = 1e2;
+	lz1[0] = 0e1;
+	uz1[0] = 0e1;
+
+	// final stage
+	double *lZN = malloc(ns[NN]*sizeof(double));
+	double *uZN = malloc(ns[NN]*sizeof(double));
+	double *lzN = malloc(ns[NN]*sizeof(double));
+	double *uzN = malloc(ns[NN]*sizeof(double));
 
 #if 0
 	d_print_mat(ny_, nx_, Vx, ny_);
@@ -440,7 +492,7 @@ int main()
     ************************************************/
 
 	ocp_nlp_dims *dims = ocp_nlp_dims_create(config);
-	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, dims);
+	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, nq, ns, dims);
 
     /************************************************
     * dynamics
@@ -479,30 +531,32 @@ int main()
 	// output definition: y = [x; u]
 
 	/* cost */
-	ocp_nlp_cost_ls_model *stage_cost_ls;
+
+	// linear ls
+	ocp_nlp_cost_ls_model **cost = (ocp_nlp_cost_ls_model **) nlp_in->cost;
 
 	for (int i = 0; i <= NN; i++)
 	{
-		switch (plan->nlp_cost[i])
-		{
-			case LINEAR_LS:
+		// Cyt
+		blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &cost[i]->Cyt, 0, 0);
+		blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &cost[i]->Cyt, nu[i], 0);
 
-				stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
+		// W
+		blasfeo_pack_dmat(ny[i], ny[i], W, ny_, &cost[i]->W, 0, 0);
 
-				// Cyt
-				blasfeo_pack_tran_dmat(ny[i], nu[i], Vu, ny_, &stage_cost_ls->Cyt, 0, 0);
-				blasfeo_pack_tran_dmat(ny[i], nx[i], Vx, ny_, &stage_cost_ls->Cyt, nu[i], 0);
-
-				// W
-				blasfeo_pack_dmat(ny[i], ny[i], W, ny_, &stage_cost_ls->W, 0, 0);
-
-//				blasfeo_print_dmat(nu[i]+nx[i], ny[i], &stage_cost_ls->Cyt, 0, 0);
-//				blasfeo_print_dmat(ny[i], ny[i], &stage_cost_ls->W, 0, 0);
-				break;
-			default:
-				break;
-		}
+//		blasfeo_print_dmat(nu[i]+nx[i], ny[i], &cost[i]->Cyt, 0, 0);
+//		blasfeo_print_dmat(ny[i], ny[i], &cost[i]->W, 0, 0);
 	}
+
+	// slacks (middle stages)
+	for (int ii=1; ii<NN; ii++)
+	{
+		blasfeo_pack_dvec(ns[ii], lZ1, &cost[ii]->Z, 0);
+		blasfeo_pack_dvec(ns[ii], uZ1, &cost[ii]->Z, ns[ii]);
+		blasfeo_pack_dvec(ns[ii], lz1, &cost[ii]->z, 0);
+		blasfeo_pack_dvec(ns[ii], uz1, &cost[ii]->z, ns[ii]);
+	}
+
 
 	/* dynamics */
 
@@ -534,6 +588,8 @@ int main()
 	}
 
     nlp_in->freezeSens = false;
+
+
 
     /* constraints */
 
@@ -570,6 +626,22 @@ int main()
 		}
     }
 
+	/* soft constraints */
+
+	// middle stages
+    for (int i = 1; i < NN; i++)
+	{
+		if(ns[i]>0)
+		{
+			blasfeo_pack_dvec(ns[i], ls1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]);
+			blasfeo_pack_dvec(ns[i], us1, &constraints[i]->d, 2*nb[i]+2*ng[i]+2*nh[i]+ns[i]);
+			for (int ii=0; ii<ns[i]; ii++) constraints[i]->idxs[ii] = idxs1[ii];
+		}
+    }
+
+//    for (int i = 0; i <= NN; i++)
+//		int_print_mat(1, ns[i], constraints[i]->idxs, 1);
+
     /************************************************
     * sqp opts
     ************************************************/
@@ -602,17 +674,17 @@ int main()
 
     sqp_opts->maxIter = MAX_SQP_ITERS;
     sqp_opts->min_res_g = 1e-6;
-    sqp_opts->min_res_b = 1e-6;
-    sqp_opts->min_res_d = 1e-6;
-    sqp_opts->min_res_m = 1e-6;
+    sqp_opts->min_res_b = 1e-8;
+    sqp_opts->min_res_d = 1e-8;
+    sqp_opts->min_res_m = 1e-8;
 
-	// // partial condensing
-	// if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
-	// {
-	// 	ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
-	// 	ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
-	// 	pcond_solver_opts->pcond_opts->N2 = 10;
-	// }
+	// partial condensing
+	if (plan->ocp_qp_solver_plan.qp_solver == PARTIAL_CONDENSING_HPIPM)
+	{
+		ocp_nlp_sqp_opts *sqp_opts = nlp_opts;
+		ocp_qp_partial_condensing_solver_opts *pcond_solver_opts = sqp_opts->qp_solver_opts;
+		pcond_solver_opts->pcond_opts->N2 = 10;
+	}
 
 	// update after user-defined opts
 	config->opts_update(config, dims, nlp_opts);
@@ -672,19 +744,15 @@ int main()
 					exit(1);
 				}
 			}
-
 			// update reference
 			for (int i = 0; i <= NN; i++)
 			{
-				stage_cost_ls = nlp_in->cost[i];
-
-				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 0) = y_ref[(idx + i)*4+0];
-				BLASFEO_DVECEL(&stage_cost_ls->y_ref, 1) = y_ref[(idx + i)*4+1];
+				BLASFEO_DVECEL(&cost[i]->y_ref, 0) = y_ref[(idx + i)*4+0];
+				BLASFEO_DVECEL(&cost[i]->y_ref, 1) = y_ref[(idx + i)*4+1];
 				if (i < NN)
 				{
-					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 2) = y_ref[(idx + i)*4+2];
-					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 3) = y_ref[(idx + i)*4+3];
-					BLASFEO_DVECEL(&stage_cost_ls->y_ref, 4) = wind0_ref[idx + i];
+					BLASFEO_DVECEL(&cost[i]->y_ref, 2) = y_ref[(idx + i)*4+2];
+					BLASFEO_DVECEL(&cost[i]->y_ref, 3) = y_ref[(idx + i)*4+3];
 				}
 			}
 
@@ -696,22 +764,13 @@ int main()
 			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]);
 			blasfeo_dveccp(nx_, &nlp_out->ux[1], nu_, &constraints[0]->d, nbu[0]+nb[0]+ng[0]);
 
-			// shift trajectories
-			if (true)
-			{
-				blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
-				blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);
-
-				shift_states(dims, nlp_out, x_end);
-				shift_controls(dims, nlp_out, u_end);
-			}
 			// print info
 			if (true)
 			{
 				printf("\nproblem #%d, status %d, iters %d\n", idx, status, ((ocp_nlp_sqp_memory *)solver->mem)->sqp_iter);
 				printf("xsim = \n");
 				blasfeo_print_tran_dvec(dims->nx[0], &nlp_out->ux[0], dims->nu[0]);
-				printf("electrical power %f \n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
+				printf("electrical power = %f\n", 0.944*97/100*BLASFEO_DVECEL(&nlp_out->ux[0], 2)*BLASFEO_DVECEL(&nlp_out->ux[0], 7));
 			}
 
 			if (status!=0)
@@ -722,6 +781,16 @@ int main()
 					ocp_nlp_res_print(dims, ((ocp_nlp_sqp_memory *)solver->mem)->nlp_res);
 					exit(1);
 				}
+			}
+
+			// shift trajectories
+			if (true)
+			{
+				blasfeo_unpack_dvec(dims->nx[NN], &nlp_out->ux[NN-1], dims->nu[NN-1], x_end);
+				blasfeo_unpack_dvec(dims->nu[NN-1], &nlp_out->ux[NN-2], dims->nu[NN-2], u_end);
+
+				shift_states(dims, nlp_out, x_end);
+				shift_controls(dims, nlp_out, u_end);
 			}
 
 		}
@@ -766,6 +835,29 @@ int main()
 	free(idxb0);
 	free(idxb1);
 	free(idxbN);
+
+	free(ls0);
+	free(us0);
+	free(ls1);
+	free(us1);
+	free(lsN);
+	free(usN);
+	free(idxs0);
+	free(idxs1);
+	free(idxsN);
+
+	free(lZ0);
+	free(uZ0);
+	free(lz0);
+	free(uz0);
+	free(lZ1);
+	free(uZ1);
+	free(lz1);
+	free(uz1);
+	free(lZN);
+	free(uZN);
+	free(lzN);
+	free(uzN);
 
 	free(x_end);
 	free(u_end);
