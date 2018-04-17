@@ -36,7 +36,7 @@
 #include "blasfeo/include/blasfeo_d_aux.h"
 
 #include "pendulum_model/vde_forw_pendulum.h"
-#include "pendulum_model/jac_constraint.h"
+#include "pendulum_model/constraint.h"
 
 int main() {
 
@@ -142,12 +142,12 @@ int main() {
 	ocp_nlp_constraints_model **constraints = (ocp_nlp_constraints_model **) nlp_in->constraints;
 
 	external_function_casadi nonlinear_constraint;
-	nonlinear_constraint.casadi_fun = &jac_constraint;
-	nonlinear_constraint.casadi_n_in = &jac_constraint_n_in;
-	nonlinear_constraint.casadi_n_out = &jac_constraint_n_out;
-	nonlinear_constraint.casadi_sparsity_in = &jac_constraint_sparsity_in;
-	nonlinear_constraint.casadi_sparsity_out = &jac_constraint_sparsity_out;
-	nonlinear_constraint.casadi_work = &jac_constraint_work;
+	nonlinear_constraint.casadi_fun = &constraint;
+	nonlinear_constraint.casadi_n_in = &constraint_n_in;
+	nonlinear_constraint.casadi_n_out = &constraint_n_out;
+	nonlinear_constraint.casadi_sparsity_in = &constraint_sparsity_in;
+	nonlinear_constraint.casadi_sparsity_out = &constraint_sparsity_out;
+	nonlinear_constraint.casadi_work = &constraint_work;
 
 	int constraint_size = external_function_casadi_calculate_size(&nonlinear_constraint);
 	void *ptr = malloc(constraint_size);

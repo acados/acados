@@ -651,7 +651,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 			break;
 
 		default:
-		printf("\ntype in %d\n", type_in[ii]);
+			printf("\ntype in %d\n", type_in[ii]);
 			printf("\nUnknown external function argument type\n\n");
 			exit(1);
 		}
@@ -688,7 +688,7 @@ void external_function_casadi_wrapper(void *self, ext_fun_arg_t *type_in, void *
 			break;
 
 		default:
-		printf("\ntype out %d\n", type_out[ii]);
+			printf("\ntype out %d\n", type_out[ii]);
 			printf("\nUnknown external function argument type\n\n");
 			exit(1);
 		}
