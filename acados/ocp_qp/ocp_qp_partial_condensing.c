@@ -42,6 +42,7 @@ int ocp_qp_partial_condensing_opts_calculate_size(ocp_qp_dims *dims)
     size += d_memsize_ocp_qp_dim(dims->N);  // worst-case size of new QP
 	size += (dims->N+1)*sizeof(int); // block size
     size += 1*8;
+    make_int_multiple_of(8, &size);
     return size;
 }
 
