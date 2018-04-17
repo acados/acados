@@ -7,22 +7,12 @@
 #define printf(...) msg_info_printf(MSG_SM_USER, 0, __VA_ARGS__);
 #endif
 
-#define HORIZON_LENGTH 5
-#define TF 1.0
+// Fill in problem specific properties >>>>>
+#define NUM_STAGES 5
+#define HORIZON_LENGTH 1.0
 #define MODEL_NAME vdeFun
 #include "../examples/c/crane_model/crane_model.h"
-
-#define CASADI_WORK_FUNCTION_CAT(a) a##_work
-#define CASADI_SPARSITY_IN_FUNCTION_CAT(a) a##_sparsity_in
-#define CASADI_SPARSITY_OUT_FUNCTION_CAT(a) a##_sparsity_out
-#define CASADI_N_IN_FUNCTION_CAT(a) a##_n_in
-#define CASADI_N_OUT_FUNCTION_CAT(a) a##_n_out
-
-#define CASADI_WORK_FUNCTION(a) CASADI_WORK_FUNCTION_CAT(a)
-#define CASADI_SPARSITY_IN_FUNCTION(a) CASADI_SPARSITY_IN_FUNCTION_CAT(a)
-#define CASADI_SPARSITY_OUT_FUNCTION(a) CASADI_SPARSITY_OUT_FUNCTION_CAT(a)
-#define CASADI_N_IN_FUNCTION(a) CASADI_N_IN_FUNCTION_CAT(a)
-#define CASADI_N_OUT_FUNCTION(a) CASADI_N_OUT_FUNCTION_CAT(a)
+// <<<<< until here
 
 #include "simstruc.h"
 
@@ -36,6 +26,18 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 #include "acados_c/options.h"
+
+#define CASADI_WORK_FUNCTION_CAT(a) a##_work
+#define CASADI_SPARSITY_IN_FUNCTION_CAT(a) a##_sparsity_in
+#define CASADI_SPARSITY_OUT_FUNCTION_CAT(a) a##_sparsity_out
+#define CASADI_N_IN_FUNCTION_CAT(a) a##_n_in
+#define CASADI_N_OUT_FUNCTION_CAT(a) a##_n_out
+
+#define CASADI_WORK_FUNCTION(a) CASADI_WORK_FUNCTION_CAT(a)
+#define CASADI_SPARSITY_IN_FUNCTION(a) CASADI_SPARSITY_IN_FUNCTION_CAT(a)
+#define CASADI_SPARSITY_OUT_FUNCTION(a) CASADI_SPARSITY_OUT_FUNCTION_CAT(a)
+#define CASADI_N_IN_FUNCTION(a) CASADI_N_IN_FUNCTION_CAT(a)
+#define CASADI_N_OUT_FUNCTION(a) CASADI_N_OUT_FUNCTION_CAT(a)
 
 static void mdlInitializeSizes(SimStruct *S)
 {
@@ -82,11 +84,11 @@ static void mdlStart(SimStruct *S) {
     int num_controls = mxGetM(R);
     ssSetOutputPortWidth(S, 0, num_controls);
 
-    int nx[HORIZON_LENGTH+1], nu[HORIZON_LENGTH+1], ny[HORIZON_LENGTH+1], nb[HORIZON_LENGTH+1],
-        nbx[HORIZON_LENGTH+1], nbu[HORIZON_LENGTH+1], ng[HORIZON_LENGTH+1], nh[HORIZON_LENGTH+1], ns[HORIZON_LENGTH+1],
-        nq[HORIZON_LENGTH+1];
+    int nx[NUM_STAGES+1], nu[NUM_STAGES+1], ny[NUM_STAGES+1], nb[NUM_STAGES+1],
+        nbx[NUM_STAGES+1], nbu[NUM_STAGES+1], ng[NUM_STAGES+1], nh[NUM_STAGES+1], ns[NUM_STAGES+1],
+        nq[NUM_STAGES+1];
 
-    for (int i = 0; i < HORIZON_LENGTH; ++i) {
+    for (int i = 0; i < NUM_STAGES; ++i) {
         nx[i] = num_states;
         nu[i] = num_controls;
         ny[i] = num_states + num_controls;
@@ -102,36 +104,36 @@ static void mdlStart(SimStruct *S) {
     nbx[0] = num_states;
     nb[0] = nbx[0] + nbu[0];
 
-    nx[HORIZON_LENGTH] = num_states;
-    nu[HORIZON_LENGTH] = 0;
-    ny[HORIZON_LENGTH] = num_states;
-    nbx[HORIZON_LENGTH] = 0;
-    nbu[HORIZON_LENGTH] = 0;
-    ng[HORIZON_LENGTH] = 0;
-    nh[HORIZON_LENGTH] = 0;
-    ns[HORIZON_LENGTH] = 0;
-    nq[HORIZON_LENGTH] = 0;
+    nx[NUM_STAGES] = num_states;
+    nu[NUM_STAGES] = 0;
+    ny[NUM_STAGES] = num_states;
+    nbx[NUM_STAGES] = 0;
+    nbu[NUM_STAGES] = 0;
+    ng[NUM_STAGES] = 0;
+    nh[NUM_STAGES] = 0;
+    ns[NUM_STAGES] = 0;
+    nq[NUM_STAGES] = 0;
         
-	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(HORIZON_LENGTH);
+	ocp_nlp_solver_plan *plan = ocp_nlp_plan_create(NUM_STAGES);
     plan->nlp_solver = SQP_GN;
 
-    for (int i = 0; i < HORIZON_LENGTH; i++) {
+    for (int i = 0; i < NUM_STAGES; i++) {
 		plan->nlp_cost[i] = LINEAR_LS;
         plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
         plan->sim_solver_plan[i].sim_solver = ERK;
 	}
-    plan->nlp_cost[HORIZON_LENGTH] = LINEAR_LS;
+    plan->nlp_cost[NUM_STAGES] = LINEAR_LS;
 
 	plan->ocp_qp_solver_plan.qp_solver = PARTIAL_CONDENSING_HPIPM;
 
 
-	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, HORIZON_LENGTH);
+	ocp_nlp_solver_config *config = ocp_nlp_config_create(*plan, NUM_STAGES);
 
 	ocp_nlp_dims *nlp_dims = ocp_nlp_dims_create(config);
 	ocp_nlp_dims_initialize(config, nx, nu, ny, nbx, nbu, ng, nh, ns, nq, nlp_dims);
 
-	external_function_casadi *expl_vde_for = malloc(HORIZON_LENGTH*sizeof(external_function_casadi));
-    for (int i = 0; i < HORIZON_LENGTH; ++i) {
+	external_function_casadi *expl_vde_for = malloc(NUM_STAGES*sizeof(external_function_casadi));
+    for (int i = 0; i < NUM_STAGES; ++i) {
         expl_vde_for[i].casadi_fun = &MODEL_NAME;
         expl_vde_for[i].casadi_work = &CASADI_WORK_FUNCTION(MODEL_NAME);
         expl_vde_for[i].casadi_sparsity_in = &CASADI_SPARSITY_IN_FUNCTION(MODEL_NAME);
@@ -140,15 +142,15 @@ static void mdlStart(SimStruct *S) {
         expl_vde_for[i].casadi_n_out = &CASADI_N_OUT_FUNCTION(MODEL_NAME);
     }
 
-    external_function_casadi_create_array(HORIZON_LENGTH, expl_vde_for);
+    external_function_casadi_create_array(NUM_STAGES, expl_vde_for);
 
 	ocp_nlp_in *nlp_in = ocp_nlp_in_create(config, nlp_dims);
 
-	for (int i = 0; i < HORIZON_LENGTH; ++i)
-		nlp_in->Ts[i] = TF/HORIZON_LENGTH;
+	for (int i = 0; i < NUM_STAGES; ++i)
+		nlp_in->Ts[i] = HORIZON_LENGTH/NUM_STAGES;
 
 	ocp_nlp_cost_ls_model *stage_cost_ls;
-    for (int i = 0; i <= HORIZON_LENGTH; ++i) {
+    for (int i = 0; i <= NUM_STAGES; ++i) {
         stage_cost_ls = (ocp_nlp_cost_ls_model *) nlp_in->cost[i];
         // Cyt
         blasfeo_dgese(nu[i]+nx[i], ny[i], 0.0, &stage_cost_ls->Cyt, 0, 0);
@@ -167,7 +169,7 @@ static void mdlStart(SimStruct *S) {
         blasfeo_dvecse(nu[i], 0.0, &stage_cost_ls->y_ref, nx[i]);
     }
 
-    for (int i = 0; i < HORIZON_LENGTH; ++i) {
+    for (int i = 0; i < NUM_STAGES; ++i) {
         nlp_set_model_in_stage(config, nlp_in, i, "expl_vde_for", &expl_vde_for[i]);
     }
 
