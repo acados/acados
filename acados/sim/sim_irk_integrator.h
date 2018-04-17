@@ -68,19 +68,16 @@ typedef struct
     struct blasfeo_dvec *lambda; // adjoint seed (nx+nu)
     struct blasfeo_dvec *lambdaK; // auxiliary variable (nx*ns)
 
-    double *rGt; // temporary residuals of G (nx, 1)
-    double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
-    double *Jt; // temporary Jacobian of ode (nx, nx)
     double *S_adj_w;
     int *ipiv; // index of pivot vector
 
     struct blasfeo_dvec *xn_traj; // xn trajectory
     struct blasfeo_dvec *K_traj;  // K trajectory
-    struct blasfeo_dmat *JG_traj; // JGK trajectory
+    // struct blasfeo_dmat *JG_traj; // JGK trajectory
 
-    struct blasfeo_dmat Jt_blasfeo_x; // Jt_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
-    struct blasfeo_dmat Jt_blasfeo_xdot; // Jt_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
-    struct blasfeo_dmat Jt_blasfeo_u; // Jt_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
+    struct blasfeo_dmat J_t_x; // J_t_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
+    struct blasfeo_dmat J_t_xdot; // J_t_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
+    struct blasfeo_dmat J_t_u; // J_t_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
 
 } sim_irk_workspace;
 
