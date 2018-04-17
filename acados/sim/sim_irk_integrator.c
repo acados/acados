@@ -776,17 +776,19 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
                     acados_tic(&timer_ad);
 
-					ext_fun_type_in[0] = COLMAJ;
-					ext_fun_in[0] = ode_args+0; // x: nx
-					ext_fun_type_in[1] = COLMAJ;
-					ext_fun_in[1] = ode_args+nx; // dx: nx
-					ext_fun_type_in[2] = COLMAJ;
-					ext_fun_in[2] = ode_args+nx+nx; // u: nu
+                    ext_fun_type_in[0] = COLMAJ;
+                    ext_fun_in[0] = ode_args+0; // x: nx
+                    ext_fun_type_in[1] = COLMAJ;
+                    ext_fun_in[1] = ode_args+nx; // dx: nx
+                    ext_fun_type_in[2] = COLMAJ;
+                    ext_fun_in[2] = ode_args+nx+nx; // u: nu
 
-					ext_fun_type_out[0] = COLMAJ;
-					ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
-					ext_fun_type_out[1] = COLMAJ;
-					ext_fun_out[1] = jac_out+nx*nx; // jac_u: nx*nu
+                    ext_fun_type_out[0] = COLMAJ;
+                    ext_fun_out[0] = jac_out+0; // jac_x: nx*nx
+                    ext_fun_type_out[1] = COLMAJ;
+                    ext_fun_out[1] = jac_out+nx*nx; // jac_xdot: nx*nx
+                    ext_fun_type_out[2] = COLMAJ;
+                    ext_fun_out[2] = jac_out+nx*nx+nx*nx; // jac_u: nx*nu
 
                     model->impl_ode_jac_x_xdot_u->evaluate(model->impl_ode_jac_x_xdot_u, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
                     blasfeo_pack_dmat(nx, nx, jac_out, nx, JGf, ii*nx, 0);
