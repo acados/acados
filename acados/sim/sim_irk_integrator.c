@@ -260,6 +260,8 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
 
     size += nx *ns * sizeof(int); // ipiv
 
+    size += 2 * blasfeo_memsize_dmat(nx, nx); // Jt_blasfeo_x, Jt_blasfeo_xdot
+
     make_int_multiple_of(64, &size);
     size += 1 * 64;
 
@@ -348,6 +350,9 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
 
     assign_and_advance_int(nx * ns , &workspace->ipiv, &c_ptr);
 
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->Jt_blasfeo_x, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->Jt_blasfeo_xdot, &c_ptr);
+
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
     assert((char*)raw_memory + sim_irk_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
@@ -402,6 +407,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *xn = workspace->xn;
     struct blasfeo_dmat *S_forw = workspace->S_forw;
 
+    struct blasfeo_dmat Jt_blasfeo_x = workspace->Jt_blasfeo_x;
+    struct blasfeo_dmat Jt_blasfeo_xdot = workspace->Jt_blasfeo_xdot;
+
     // for adjoint
     struct blasfeo_dvec *lambda = workspace->lambda;
     struct blasfeo_dvec *lambdaK = workspace->lambdaK;
@@ -449,10 +457,15 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	void *impl_ode_fun_jac_x_xdot_out[3];
     impl_ode_fun_jac_x_xdot_type_out[0] = BLASFEO_DVEC_ARGS;
     impl_ode_fun_jac_x_xdot_out[0] = &impl_ode_res_out;
-    impl_ode_fun_jac_x_xdot_type_out[1] = COLMAJ;
-    impl_ode_fun_jac_x_xdot_out[1] = jac_out+nx;
-    impl_ode_fun_jac_x_xdot_type_out[2] = COLMAJ;
-    impl_ode_fun_jac_x_xdot_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
+    impl_ode_fun_jac_x_xdot_type_out[1] = BLASFEO_DMAT;
+    impl_ode_fun_jac_x_xdot_out[1] = &Jt_blasfeo_x;
+    impl_ode_fun_jac_x_xdot_type_out[2] = BLASFEO_DMAT;
+    impl_ode_fun_jac_x_xdot_out[2] = &Jt_blasfeo_xdot; // jac_xdot: nx*nx
+
+    // impl_ode_jac_x_xdot_u
+	ext_fun_arg_t impl_ode_jac_x_xdot_u_type_out[3]; // TODO (first use more blasfeo)
+	void *impl_ode_fun_jac_x_xdot_u_out[3];
+
 
 	irk_model *model = in->model;
 
@@ -500,6 +513,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
         impl_ode_xdot_in.x = K;
         for(iter=0; iter<newton_iter; iter++)
 		{
+            if ( (opts->jac_reuse & (ss==0) & (iter==0)) | (!opts->jac_reuse) ){
+                blasfeo_dgese(nx*ns, nx*ns, 0.0, JGK, 0, 0); // if new jacobian gets computed, initialize JGK with zeros
+            }
 
             if (opts->sens_adj)
 			{
@@ -552,22 +568,38 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
 
                     // compute the blocks of JGK
+                    // for (jj=0; jj<ns; jj++)
+					// { //compute the block (ii,jj)th block = Jt
+                    //     a = A_mat[ii + ns*jj];
+                    //     if (a!=0)
+					// 	{
+                    //         a *= step;
+                    //         for (kk=0; kk<nx*nx; kk++)
+                    //             Jt[kk] = a * jac_out[kk+nx];
+                    //     }
+                    //     if(jj==ii)
+					// 	{
+                    //         for (kk=0; kk<nx*nx; kk++)
+                    //             Jt[kk] += jac_out[nx*(nx+1)+kk];
+                    //     }
+                    //     // fill in the ii-th, jj-th block of JGK
+                    //     blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
+                    // } // end jj
+
+                    // compute the blocks of JGK
                     for (jj=0; jj<ns; jj++)
 					{ //compute the block (ii,jj)th block = Jt
                         a = A_mat[ii + ns*jj];
                         if (a!=0)
 						{
                             a *= step;
-                            for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] = a * jac_out[kk+nx];
+                            blasfeo_dgead(nx, nx, a, &Jt_blasfeo_x, 0, 0, JGK, ii*nx, jj*nx);
                         }
                         if(jj==ii)
 						{
-                            for (kk=0; kk<nx*nx; kk++)
-                                Jt[kk] += jac_out[nx*(nx+1)+kk];
+                            blasfeo_dgead(nx, nx, 1, &Jt_blasfeo_xdot, 0, 0, JGK, ii*nx, jj*nx);
                         }
-                        // fill in the ii-th, jj-th block of JGK
-                        blasfeo_pack_dmat(nx, nx, Jt, nx, JGK, ii*nx, jj*nx);
+
                     } // end jj
                 }
             } // end ii
