@@ -71,7 +71,6 @@ typedef struct
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
     double *Jt; // temporary Jacobian of ode (nx, nx)
-    double *ode_args; // pointer to ode args
     double *S_adj_w;
     int *ipiv; // index of pivot vector
 
