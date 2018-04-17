@@ -422,6 +422,29 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	ext_fun_arg_t ext_fun_type_out[5];
 	void *ext_fun_out[5]; // XXX large enough ?
 
+    ext_fun_arg_t impl_ode_type_in[3];
+	void *impl_ode_in[3];
+	ext_fun_arg_t impl_ode_type_out[1];
+	void *impl_ode_out[1];
+
+    impl_ode_type_in[0] = BLASFEO_DVEC; // xt
+    impl_ode_type_in[1] = BLASFEO_DVEC_ARGS; // k_i
+    impl_ode_type_in[2] = COLMAJ; // u
+
+
+    struct blasfeo_dvec_args impl_ode_xdot_in;
+    impl_ode_xdot_in.x = &K_traj[ss];
+
+
+    impl_ode_in[0] = &xt; // 1st input is always xt
+    impl_ode_in[1] = &impl_ode_xdot_in; // 2nd input is part of K[ss], always update impl_ode_xdot_in
+    impl_ode_in[2] = u; // 3rd input is u (always)
+
+
+    ext_fun_in[1] = ode_args+nx; // dx: nx
+    ext_fun_type_in[2] = COLMAJ;
+    ext_fun_in[2] = ode_args+nx+nx; // u: nu
+
 	irk_model *model = in->model;
 
     acados_timer timer, timer_ad;
@@ -672,8 +695,9 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                 } // end jj
             } // end ii
 
-            // factorize JGK
+            // factorize JGK 
             blasfeo_dgetrf_rowpivot(nx*ns, nx*ns, JGK, 0, 0, JGK, 0, 0, ipiv);
+            // NOTE: it is possible to store the factorization and permutation of JGK and reuse it in the adjoint propagation, but as in common MPC schemes only one of those is needed, this is omited for now
 
             // obtain JKf
 			// TODO add the option to use VDE instead of dgemm ???

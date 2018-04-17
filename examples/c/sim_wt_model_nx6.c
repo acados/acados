@@ -244,7 +244,7 @@ int main()
 
 			case 2:
 				opts->ns = 8; // number of stages in rk integrator
-				opts->num_steps = 1; // number of integration steps
+				opts->num_steps = 3; // number of integration steps
 				break;
 
 			default :
@@ -418,20 +418,22 @@ int main()
 		************************************************/
 
 		printf("\nxn: \n");
-		for (ii=0; ii<nx; ii++)
-			printf("%8.5f ", x_sim[nsim0*nx+ii]);
-		printf("\n");
+		// for (ii=0; ii<nx; ii++)
+		// 	printf("%8.5f ", x_sim[nsim0*nx+ii]);
+		// printf("\n");
+		d_print_e_mat(1, nx, &x_sim[nsim0*nx], 1);
 
 		double *S_forw_out;
 		S_forw_out = NULL;
 		if(opts->sens_forw){
 			S_forw_out = out->S_forw;
 			printf("\nS_forw_out: \n");
-			for (ii=0;ii<nx;ii++){
-				for (jj=0;jj<NF;jj++)
-					printf("%8.5f ", S_forw_out[jj*nx+ii]);
-				printf("\n");
-			}
+			d_print_e_mat(nx, NF, S_forw_out, nx);
+			// for (ii=0;ii<nx;ii++){
+			// 	for (jj=0;jj<NF;jj++)
+			// 		printf("%8.5f ", S_forw_out[jj*nx+ii]);
+			// 	printf("\n");
+			// }
 		}
 
 
