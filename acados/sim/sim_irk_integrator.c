@@ -253,8 +253,6 @@ int sim_irk_workspace_calculate_size(void *config_, sim_dims *dims, void *opts_)
     size += steps * blasfeo_memsize_dvec(nx); // for xn_traj
     size += steps * blasfeo_memsize_dvec(nx*ns); // for K_traj
 
-    size += (nx+nu) * sizeof(double); // S_adj_w
-
     size += nx *ns * sizeof(int); // ipiv
 
     size += 2 * blasfeo_memsize_dmat(nx, nx); // J_t_x, J_t_xdot
@@ -341,8 +339,6 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
         assign_and_advance_blasfeo_dvec_mem(nx*ns, &workspace->K_traj[i], &c_ptr);
     }
 
-    assign_and_advance_double(nx + nu, &workspace->S_adj_w, &c_ptr);
-
     assign_and_advance_int(nx * ns , &workspace->ipiv, &c_ptr);
 
     assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_x, &c_ptr);
@@ -359,12 +355,12 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
 
 
 /************************************************
-* functions
+* integrator
 ************************************************/
 
 int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_)
 {
-
+    /* INITIALIZE variables/pointers */
 	sim_solver_config *config = config_;
 	sim_rk_opts *opts = opts_;
 
@@ -410,7 +406,6 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     struct blasfeo_dvec *xn_traj = workspace->xn_traj;
     struct blasfeo_dvec *K_traj = workspace->K_traj;
     // struct blasfeo_dmat *JG_traj = workspace->JG_traj;
-    double *S_adj_in = workspace->S_adj_w;
 
     double *x_out = out->xn;
     double *S_forw_out = out->S_forw;
@@ -480,11 +475,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 
     blasfeo_dvecse(nx*ns, 0.0, lambdaK, 0);
 
-    for(kk=0;kk<nx+nu;kk++)
-        S_adj_in[kk] = in->S_adj[kk];
-    // for(kk=0;kk<nu;kk++)
-    //     S_adj_in[nx+kk] = 0.0;
-    blasfeo_pack_dvec(nx+nu, S_adj_in, lambda, 0);
+    blasfeo_pack_dvec(nx+nu, in->S_adj, lambda, 0);
 
 //	double inf_norm_K;
 //	double tol_inf_norm_K = 1e-6;
@@ -751,5 +742,4 @@ void sim_irk_config_initialize_default(void *config_)
     config->model_set_function = &sim_irk_model_set_function;
 
 	return;
-
 }
