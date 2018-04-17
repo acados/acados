@@ -449,6 +449,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
 	void *impl_ode_fun_jac_x_xdot_out[3];
     impl_ode_fun_jac_x_xdot_type_out[0] = BLASFEO_DVEC_ARGS;
     impl_ode_fun_jac_x_xdot_out[0] = &impl_ode_res_out;
+    impl_ode_fun_jac_x_xdot_type_out[1] = COLMAJ;
+    impl_ode_fun_jac_x_xdot_out[1] = jac_out+nx;
+    impl_ode_fun_jac_x_xdot_type_out[2] = COLMAJ;
+    impl_ode_fun_jac_x_xdot_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
 
 	irk_model *model = in->model;
 
@@ -542,17 +546,10 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
                     // compute the jacobian of implicit ode
                     acados_tic(&timer_ad);
 
-					ext_fun_type_out[0] = COLMAJ;
-					ext_fun_out[0] = jac_out+0; // fun: nx
-					ext_fun_type_out[1] = COLMAJ;
-					ext_fun_out[1] = jac_out+nx; // jac_x: nx*nx
-					ext_fun_type_out[2] = COLMAJ;
-					ext_fun_out[2] = jac_out+nx+nx*nx; // jac_xdot: nx*nx
-
-                    model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, impl_ode_type_in, impl_ode_in, ext_fun_type_out, ext_fun_out);
+                    model->impl_ode_fun_jac_x_xdot->evaluate(model->impl_ode_fun_jac_x_xdot, impl_ode_type_in, impl_ode_in, impl_ode_fun_jac_x_xdot_type_out, impl_ode_fun_jac_x_xdot_out);
 
                     timing_ad += acados_toc(&timer_ad);
-                    blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
+                    // blasfeo_pack_dvec(nx, jac_out, rG, ii*nx);
 
                     // compute the blocks of JGK
                     for (jj=0; jj<ns; jj++)
