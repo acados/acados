@@ -80,6 +80,7 @@ typedef struct
 
     struct blasfeo_dmat Jt_blasfeo_x; // Jt_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
     struct blasfeo_dmat Jt_blasfeo_xdot; // Jt_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
+    struct blasfeo_dmat Jt_blasfeo_u; // Jt_blasfeo, temporary Jacobian of ode (nx, nx) // todo remove Jt;
 
 } sim_irk_workspace;
 
