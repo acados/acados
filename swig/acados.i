@@ -17,46 +17,47 @@
  *
  */
 
-% module acados
+%module acados
 
 #if defined(SWIGMATLAB)
-    typedef mxArray LangObject;
-% {
-    typedef mxArray LangObject;
-    %
-}
+typedef mxArray LangObject;
+%{
+typedef mxArray LangObject;
+%}
 #define NONE NULL
 #elif defined(SWIGPYTHON)
-    typedef PyObject LangObject;
-% {
-    typedef PyObject LangObject;
-    %
-}
+typedef PyObject LangObject;
+%{
+typedef PyObject LangObject;
+%}
 #define NONE Py_None
 #endif
 
-% include "acados/utils/types.h"
+%include "acados/utils/types.h"
 
-    % include "std_string.i"
+%include "std_string.i"
 
-    % include "std_vector.i" namespace std {
-    % template(vector_i) vector<int>;
-    % template(vector_string) vector<string>;
-    % template(vector_O) vector<LangObject*>;
+%include "std_vector.i"
+namespace std {
+    %template(vector_i) vector<int>;
+    %template(vector_string) vector<string>;
+    %template(vector_O) vector<LangObject *>;
 };
 
-% include "std_pair.i" namespace std { % template(pair_ii) pair<uint, uint>; }
+%include "std_pair.i"
+namespace std {
+    %template(pair_ii) pair<uint, uint>;
+}
 
 #if defined(SWIGPYTHON)
-% {
+%{
 #define SWIG_FILE_WITH_INIT
-    %
-}
+%}
 #endif
 
-% include "exception.i"
+%include "exception.i"
 
-    % exception {
+%exception {
     try {
         $action
     } catch (const std::exception& e) {
@@ -64,21 +65,21 @@
     }
 }
 
-% include "conversions.i" % include "ocp_typemaps.i"
+%include "conversions.i"
+%include "ocp_typemaps.i"
 
-    % {
+%{
 // TODO(dimitris): support compilation with visual studio
 #if (defined _WIN32 || defined _WIN64 || defined __MINGW32__ || defined __MINGW64__)
 #include <windows.h>
-    char compiler[16] = "gcc";
+char compiler[16] = "gcc";
 #else
 #include <dlfcn.h>
-    char compiler[16] = "cc";
+char compiler[16] = "cc";
 #endif
-    // #include <xmmintrin.h>  // for floating point exceptions
-    // _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
-    %
-}
+// #include <xmmintrin.h>  // for floating point exceptions
+// _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~_MM_MASK_INVALID);
+%}
 
-% feature("autodoc", "3");
-% include "ocp_qp.i"
+%feature("autodoc", "3");
+%include "ocp_qp.i"

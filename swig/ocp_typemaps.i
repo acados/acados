@@ -17,9 +17,9 @@
  *
  */
 
-% include "std_map.i";
+%include "std_map.i";
 
-% typemap(in) std::map<std::string, acados::option_t *> {
+%typemap(in) std::map<std::string, acados::option_t *> {
     std::map<std::string, acados::option_t *> tmp;
 #if defined(SWIGMATLAB)
     for (int i = 0; i < num_elems($input); ++i) {
@@ -31,16 +31,19 @@
     PyObject *key, *value;
     Py_ssize_t pos = 0;
     while (PyDict_Next($input, &pos, &key, &value)) {
-        if (!PyUnicode_Check(key)) throw std::invalid_argument("Key must be a string");
+        if (!PyUnicode_Check(key))
+            throw std::invalid_argument("Key must be a string");
         tmp[std::string(PyUnicode_AsUTF8AndSize(key, NULL))] = acados::as_option_ptr(value);
     }
 #endif
     $1 = tmp;
 }
 
-% typemap(typecheck) std::map<std::string, acados::option_t *> { $1 = is_map($input) ? 1 : 0; }
+%typemap(typecheck) std::map<std::string, acados::option_t *> {
+    $1 = is_map($input) ? 1 : 0;
+}
 
-% typemap(typecheck, precedence = SWIG_TYPECHECK_INTEGER) uint {
+%typemap(typecheck, precedence=SWIG_TYPECHECK_INTEGER) uint {
 #if defined(SWIGMATLAB)
     $1 = mxIsScalar($input) ? 1 : 0;
 #elif defined(SWIGPYTHON)
@@ -48,7 +51,7 @@
 #endif
 }
 
-% typemap(in) uint {
+%typemap(in) uint {
 #if defined(SWIGMATLAB)
     $1 = static_cast<uint>(mxGetScalar($input));
 #elif defined(SWIGPYTHON)
@@ -56,7 +59,7 @@
 #endif
 }
 
-% typemap(in) std::vector<double> {
+%typemap(in) std::vector<double> {
     if (!is_matrix($input)) {
         SWIG_exception(SWIG_ValueError, "Input is not of valid matrix type.");
         SWIG_fail;
@@ -68,7 +71,7 @@
     $1 = tmp;
 }
 
-% typemap(typecheck, precedence = SWIG_TYPECHECK_POINTER) std::vector<double> {
+%typemap(typecheck, precedence=SWIG_TYPECHECK_POINTER) std::vector<double> {
 #if defined(SWIGMATLAB)
     $1 = (mxIsNumeric($input) ? 1 : 0);
 #elif defined(SWIGPYTHON)
@@ -76,16 +79,16 @@
 #endif
 }
 
-% typemap(out) std::vector<std::vector<double> > {
+%typemap(out) std::vector< std::vector<double> > {
     std::vector<LangObject *> tmp;
     for (int i = 0; i < $1.size(); ++i)
         tmp.push_back(new_matrix(std::make_pair($1.at(i).size(), 1), $1.at(i).data()));
     $result = swig::from(tmp);
 }
 
-% typemap(out) ocp_qp_info {
-    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time",
-                             "total_time"};
+
+%typemap(out) ocp_qp_info  {
+    const char *fields[5] = {"num_iter", "qp_solver_time", "condensing_time", "interface_time", "total_time"};
 #if defined(SWIGMATLAB)
     mxArray *mat_struct = mxCreateStructMatrix(1, 1, 5, fields);
     mxSetField(mat_struct, 0, fields[0], mxCreateDoubleScalar($1.num_iter));
@@ -105,204 +108,214 @@
 #endif
 }
 
-% typemap(in) int_t N {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) int_t N {
+    $1 = ($1_ltype) arg1->$1_name;
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of stages");
     SWIG_fail;
 }
 
-% typemap(out) int_t N { $result = to_scalar($1); }
+%typemap(out) int_t N {
+    $result = to_scalar($1);
+}
 
-% typemap(in) const int_t *nx {
+%typemap(in) const int_t * nx {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of state vector");
     SWIG_fail;
 }
 
-% typemap(out) const int_t *nx { $result = new_sequence_from($1, arg1->N + 1); }
+%typemap(out) const int_t * nx {
+    $result = new_sequence_from($1, arg1->N+1);
+}
 
-% typemap(in) const int_t *nu {
+%typemap(in) const int_t * nu {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change dimension of vector of controls");
     SWIG_fail;
 }
 
-% typemap(out) const int_t *nu { $result = new_sequence_from($1, arg1->N); }
+%typemap(out) const int_t * nu {
+    $result = new_sequence_from($1, arg1->N);
+}
 
-% typemap(in) const int_t *nb {
+%typemap(in) const int_t * nb {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of bounds");
     SWIG_fail;
 }
 
-% typemap(out) const int_t *nb { $result = new_sequence_from($1, arg1->N + 1); }
+%typemap(out) const int_t * nb {
+    $result = new_sequence_from($1, arg1->N+1);
+}
 
-% typemap(in) const int_t *nc {
+%typemap(in) const int_t * nc {
     SWIG_Error(SWIG_ValueError, "It's not allowed to change number of polytopic constraints");
     SWIG_fail;
 }
 
-% typemap(out) const int_t *nc { $result = new_sequence_from($1, arg1->N + 1); }
+%typemap(out) const int_t * nc {
+    $result = new_sequence_from($1, arg1->N+1);
+}
 
-% typemap(in) const real_t **B {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) const real_t ** B {
+    $1 = ($1_ltype) arg1->$1_name;
     fill_array_from($input, $1, arg1->N, &(arg1->nx[1]), &(arg1->nu[0]));
 }
 
-% typemap(out) const real_t **B {
+%typemap(out) const real_t ** B {
     const int_t *nb_rows = &arg1->nx[1];
     const int_t *nb_cols = &arg1->nu[0];
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N, nb_rows, nb_cols);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_rows, nb_cols);
 }
 
-% typemap(in) const real_t **b {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) const real_t ** b {
+    $1 = ($1_ltype) arg1->$1_name;
     fill_array_from($input, $1, arg1->N, &(arg1->nx[1]));
 }
 
-% typemap(out) const real_t **b {
+%typemap(out) const real_t ** b {
     const int_t *nb_elems = &(arg1->nx[1]);
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_elems);
 }
 
-% typemap(in) const real_t **Q {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nx, arg1->nx);
+%typemap(in) const real_t ** Q {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nx, arg1->nx);
 }
 
-% typemap(out) const real_t **Q {
+%typemap(out) const real_t ** Q {
     const int_t *nb_rows = arg1->nx;
     const int_t *nb_cols = arg1->nx;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_rows, nb_cols);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_rows, nb_cols);
 }
 
-% typemap(in) const real_t **S {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) const real_t ** S {
+    $1 = ($1_ltype) arg1->$1_name;
     fill_array_from($input, $1, arg1->N, arg1->nu, arg1->nx);
 }
 
-% typemap(out) const real_t **S {
+%typemap(out) const real_t ** S {
     const int_t *nb_rows = arg1->nu;
     const int_t *nb_cols = arg1->nx;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N, nb_rows, nb_cols);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_rows, nb_cols);
 }
 
-% typemap(in) const real_t **R {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) const real_t ** R {
+    $1 = ($1_ltype) arg1->$1_name;
     fill_array_from($input, $1, arg1->N, arg1->nu, arg1->nu);
 }
 
-% typemap(out) const real_t **R {
+%typemap(out) const real_t ** R {
     const int_t *nb_rows = arg1->nu;
     const int_t *nb_cols = arg1->nu;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N, nb_rows, nb_cols);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_rows, nb_cols);
 }
 
-% typemap(in) const real_t **q {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nx);
+%typemap(in) const real_t ** q {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nx);
 }
 
-% typemap(out) const real_t **q {
+%typemap(out) const real_t ** q {
     const int_t *nb_elems = arg1->nx;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **r {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) const real_t ** r {
+    $1 = ($1_ltype) arg1->$1_name;
     fill_array_from($input, $1, arg1->N, arg1->nu);
 }
 
-% typemap(out) const real_t **r {
+%typemap(out) const real_t ** r {
     const int_t *nb_elems = arg1->nu;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_elems);
 }
 
-% typemap(in) const int_t **idxb {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nb);
+%typemap(in) const int_t ** idxb {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nb);
 }
 
-% typemap(out) const int_t **idxb {
+%typemap(out) const int_t ** idxb {
     const int_t *nb_elems = arg1->nb;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **lb {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nb);
+%typemap(in) const real_t ** lb {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nb);
 }
 
-% typemap(out) const real_t **lb {
+%typemap(out) const real_t ** lb {
     const int_t *nb_elems = arg1->nb;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **ub {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nb);
+%typemap(in) const real_t ** ub {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nb);
 }
 
-% typemap(out) const real_t **ub {
+%typemap(out) const real_t ** ub {
     const int_t *nb_elems = arg1->nb;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **Cx {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nc, arg1->nx);
+%typemap(in) const real_t ** Cx {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nc, arg1->nx);
 }
 
-% typemap(out) const real_t **Cx {
+%typemap(out) const real_t ** Cx {
     const int_t *nb_rows = arg1->nc;
     const int_t *nb_cols = arg1->nx;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_rows, nb_cols);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_rows, nb_cols);
 }
 
-% typemap(in) const real_t **Cu {
-    $1 = ($1_ltype)arg1->$1_name;
+%typemap(in) const real_t ** Cu {
+    $1 = ($1_ltype) arg1->$1_name;
     fill_array_from($input, $1, arg1->N, arg1->nc, arg1->nu);
 }
 
-% typemap(out) const real_t **Cu {
+%typemap(out) const real_t ** Cu {
     const int_t *nb_rows = arg1->nc;
     const int_t *nb_cols = arg1->nu;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N, nb_rows, nb_cols);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N, nb_rows, nb_cols);
 }
 
-% typemap(in) const real_t **lc {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nc);
+%typemap(in) const real_t ** lc {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nc);
 }
 
-% typemap(out) const real_t **lc {
+%typemap(out) const real_t ** lc {
     const int_t *nb_elems = arg1->nc;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **uc {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->nc);
+%typemap(in) const real_t ** uc {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->nc);
 }
 
-% typemap(out) const real_t **uc {
+%typemap(out) const real_t ** uc {
     const int_t *nb_elems = arg1->nc;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **lg {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->ng);
+%typemap(in) const real_t ** lg {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->ng);
 }
 
-% typemap(out) const real_t **lg {
+%typemap(out) const real_t ** lg {
     const int_t *nb_elems = arg1->ng;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
 
-% typemap(in) const real_t **ug {
-    $1 = ($1_ltype)arg1->$1_name;
-    fill_array_from($input, $1, arg1->N + 1, arg1->ng);
+%typemap(in) const real_t ** ug {
+    $1 = ($1_ltype) arg1->$1_name;
+    fill_array_from($input, $1, arg1->N+1, arg1->ng);
 }
 
-% typemap(out) const real_t **ug {
+%typemap(out) const real_t ** ug {
     const int_t *nb_elems = arg1->ng;
-    $result = new_sequence_from<$1_basetype>(($1_type)$1, arg1->N + 1, nb_elems);
+    $result = new_sequence_from<$1_basetype>(($1_type) $1, arg1->N+1, nb_elems);
 }
