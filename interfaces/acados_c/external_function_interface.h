@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
 #define ACADOS_C_EXTERNAL_FUNCTION_INTERFACE_H_
 
@@ -28,8 +27,8 @@ extern "C" {
 #include "acados/utils/external_function_generic.h"
 
 /************************************************
-* casadi external function
-************************************************/
+ * casadi external function
+ ************************************************/
 
 //
 void external_function_casadi_create(external_function_casadi *fun);
@@ -40,22 +39,19 @@ void external_function_casadi_create_array(int size, external_function_casadi *f
 //
 void external_function_casadi_free_array(int size, external_function_casadi *funs);
 
-
-
 /************************************************
-* casadi external parametric function
-************************************************/
+ * casadi external parametric function
+ ************************************************/
 
 //
 void external_function_param_casadi_create(external_function_param_casadi *fun, int np);
 //
 void external_function_param_casadi_free(external_function_param_casadi *fun);
 //
-void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs, int np);
+void external_function_param_casadi_create_array(int size, external_function_param_casadi *funs,
+                                                 int np);
 //
 void external_function_param_casadi_free_array(int size, external_function_param_casadi *funs);
-
-
 
 #ifdef __cplusplus
 } /* extern "C" */

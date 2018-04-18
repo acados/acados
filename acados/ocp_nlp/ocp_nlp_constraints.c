@@ -19,185 +19,158 @@
 
 #include "acados/ocp_nlp/ocp_nlp_constraints.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 // blasfeo
-#include "blasfeo/include/blasfeo_target.h"
 #include "blasfeo/include/blasfeo_common.h"
 #include "blasfeo/include/blasfeo_d_aux.h"
 #include "blasfeo/include/blasfeo_d_blas.h"
+#include "blasfeo/include/blasfeo_target.h"
 // acados
-#include "acados/utils/mem.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-
-
-
-/************************************************
-* config
-************************************************/
-
-int ocp_nlp_constraints_config_calculate_size()
-{
-
-	int size = 0;
-
-	size += sizeof(ocp_nlp_constraints_config);
-
-	return size;
-
-}
-
-
-
-ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory)
-{
-
-	char *c_ptr = raw_memory;
-
-	ocp_nlp_constraints_config *config = (ocp_nlp_constraints_config *) c_ptr;
-	c_ptr += sizeof(ocp_nlp_constraints_config);
-
-	return config;
-
-}
-
-
+#include "acados/utils/mem.h"
 
 /************************************************
-* dims
-************************************************/
+ * config
+ ************************************************/
 
-int ocp_nlp_constraints_dims_calculate_size(void *config_)
-{
+int ocp_nlp_constraints_config_calculate_size() {
+    int size = 0;
+
+    size += sizeof(ocp_nlp_constraints_config);
+
+    return size;
+}
+
+ocp_nlp_constraints_config *ocp_nlp_constraints_config_assign(void *raw_memory) {
+    char *c_ptr = raw_memory;
+
+    ocp_nlp_constraints_config *config = (ocp_nlp_constraints_config *)c_ptr;
+    c_ptr += sizeof(ocp_nlp_constraints_config);
+
+    return config;
+}
+
+/************************************************
+ * dims
+ ************************************************/
+
+int ocp_nlp_constraints_dims_calculate_size(void *config_) {
     int size = sizeof(ocp_nlp_constraints_dims);
 
     return size;
 }
 
+void *ocp_nlp_constraints_dims_assign(void *config_, void *raw_memory) {
+    char *c_ptr = (char *)raw_memory;
 
-
-void *ocp_nlp_constraints_dims_assign(void *config_, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_constraints_dims *dims = (ocp_nlp_constraints_dims *) c_ptr;
+    ocp_nlp_constraints_dims *dims = (ocp_nlp_constraints_dims *)c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_dims);
 
-    assert((char *) raw_memory + ocp_nlp_constraints_dims_calculate_size(config_) >= c_ptr);
+    assert((char *)raw_memory + ocp_nlp_constraints_dims_calculate_size(config_) >= c_ptr);
 
     return dims;
 }
 
+void ocp_nlp_constraints_dims_initialize(void *config_, void *dims_, int nx, int nu, int nbx,
+                                         int nbu, int ng, int nh, int np, int ns) {
+    ocp_nlp_constraints_dims *dims = dims_;
 
+    dims->nx = nx;
+    dims->nu = nu;
+    dims->nbx = nbx;
+    dims->nbu = nbu;
+    dims->nb = nbx + nbu;
+    dims->ng = ng;
+    dims->nh = nh;
+    dims->np = np;
+    dims->ns = ns;
 
-void  ocp_nlp_constraints_dims_initialize(void *config_, void *dims_, int nx, int nu, int nbx, int nbu, int ng, int nh, int np, int ns)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
-
-	dims->nx = nx;
-	dims->nu = nu;
-	dims->nbx = nbx;
-	dims->nbu = nbu;
-	dims->nb = nbx+nbu;
-	dims->ng = ng;
-	dims->nh = nh;
-	dims->np = np;
-	dims->ns = ns;
-
-	return;
+    return;
 }
 
-
-
 /************************************************
-* linear constraints
-************************************************/
+ * linear constraints
+ ************************************************/
 
 /* model */
 
-int ocp_nlp_constraints_model_calculate_size(void *config, void *dims_)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
+int ocp_nlp_constraints_model_calculate_size(void *config, void *dims_) {
+    ocp_nlp_constraints_dims *dims = dims_;
 
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
 
-	int size = 0;
+    int size = 0;
 
     size += sizeof(ocp_nlp_constraints_model);
 
-	size += sizeof(int)*nb;  // idxb
-	size += sizeof(int)*ns;  // idxs
-	size += blasfeo_memsize_dvec(2*nb+2*ng+2*nh+2*ns); // d
-	size += blasfeo_memsize_dmat(nu+nx, ng); // DCt
+    size += sizeof(int) * nb;                                         // idxb
+    size += sizeof(int) * ns;                                         // idxs
+    size += blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nh + 2 * ns);  // d
+    size += blasfeo_memsize_dmat(nu + nx, ng);                        // DCt
 
-	size += 64; // blasfeo_mem align
+    size += 64;  // blasfeo_mem align
 
-	return size;
+    return size;
 }
 
+void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memory) {
+    ocp_nlp_constraints_dims *dims = dims_;
 
+    char *c_ptr = (char *)raw_memory;
 
-void *ocp_nlp_constraints_model_assign(void *config, void *dims_, void *raw_memory)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
+    // extract sizes
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
 
-	char *c_ptr = (char *) raw_memory;
-
-	// extract sizes
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
-
-	// struct
-    ocp_nlp_constraints_model *model = (ocp_nlp_constraints_model *) c_ptr;
+    // struct
+    ocp_nlp_constraints_model *model = (ocp_nlp_constraints_model *)c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_model);
 
-	// dims
-//	model->dims = dims;
+    // dims
+    //	model->dims = dims;
 
-	// blasfeo_mem align
-	align_char_to(64, &c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
-	// blasfeo_dmat
-	// DCt
-	assign_and_advance_blasfeo_dmat_mem(nu+nx, ng, &model->DCt, &c_ptr);
+    // blasfeo_dmat
+    // DCt
+    assign_and_advance_blasfeo_dmat_mem(nu + nx, ng, &model->DCt, &c_ptr);
 
-	// blasfeo_dvec
-	// d
-	assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh+2*ns, &model->d, &c_ptr);
+    // blasfeo_dvec
+    // d
+    assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nh + 2 * ns, &model->d, &c_ptr);
 
-	// int
+    // int
     // idxb
     assign_and_advance_int(nb, &model->idxb, &c_ptr);
     // idxs
     assign_and_advance_int(ns, &model->idxs, &c_ptr);
 
-	// h
-//	model->h = NULL;
+    // h
+    //	model->h = NULL;
 
-	// assert
-    assert((char *) raw_memory + ocp_nlp_constraints_model_calculate_size(config, dims) >= c_ptr);
+    // assert
+    assert((char *)raw_memory + ocp_nlp_constraints_model_calculate_size(config, dims) >= c_ptr);
 
-	return model;
+    return model;
 }
-
-
 
 /* options */
 
-int ocp_nlp_constraints_opts_calculate_size(void *config_, void *dims_)
-{
+int ocp_nlp_constraints_opts_calculate_size(void *config_, void *dims_) {
     int size = 0;
 
     size += sizeof(ocp_nlp_constraints_opts);
@@ -205,418 +178,361 @@ int ocp_nlp_constraints_opts_calculate_size(void *config_, void *dims_)
     return size;
 }
 
+void *ocp_nlp_constraints_opts_assign(void *config_, void *dims_, void *raw_memory) {
+    char *c_ptr = (char *)raw_memory;
 
-
-void *ocp_nlp_constraints_opts_assign(void *config_, void *dims_, void *raw_memory)
-{
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_nlp_constraints_opts *opts = (ocp_nlp_constraints_opts *) c_ptr;
+    ocp_nlp_constraints_opts *opts = (ocp_nlp_constraints_opts *)c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_opts);
 
-    assert((char*)raw_memory + ocp_nlp_constraints_opts_calculate_size(config_, dims_) >= c_ptr);
+    assert((char *)raw_memory + ocp_nlp_constraints_opts_calculate_size(config_, dims_) >= c_ptr);
 
     return opts;
 }
 
+void ocp_nlp_constraints_opts_initialize_default(void *config_, void *dims_, void *opts_) {
+    //	ocp_nlp_constraints_opts *opts = opts_;
 
-
-void ocp_nlp_constraints_opts_initialize_default(void *config_, void *dims_, void *opts_)
-{
-//	ocp_nlp_constraints_opts *opts = opts_;
-
-	return;
-
+    return;
 }
 
+void ocp_nlp_constraints_opts_update(void *config_, void *dims_, void *opts_) {
+    //	ocp_nlp_constraints_opts *opts = opts_;
 
-
-void ocp_nlp_constraints_opts_update(void *config_, void *dims_, void *opts_)
-{
-//	ocp_nlp_constraints_opts *opts = opts_;
-
-	return;
-
+    return;
 }
-
-
 
 /* memory */
 
-int ocp_nlp_constraints_memory_calculate_size(void *config_, void *dims_, void *opts_)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
+int ocp_nlp_constraints_memory_calculate_size(void *config_, void *dims_, void *opts_) {
+    ocp_nlp_constraints_dims *dims = dims_;
 
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
 
-	int size = 0;
+    int size = 0;
 
     size += sizeof(ocp_nlp_constraints_memory);
 
-	size += 1*blasfeo_memsize_dvec(2*nb+2*ng+2*nh+2*ns);  // fun
-	size += 1*blasfeo_memsize_dvec(nu+nx+2*ns);  // adj
+    size += 1 * blasfeo_memsize_dvec(2 * nb + 2 * ng + 2 * nh + 2 * ns);  // fun
+    size += 1 * blasfeo_memsize_dvec(nu + nx + 2 * ns);                   // adj
 
-	size += 1*64;  // blasfeo_mem align
+    size += 1 * 64;  // blasfeo_mem align
 
-	return size;
+    return size;
 }
 
+void *ocp_nlp_constraints_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory) {
+    ocp_nlp_constraints_dims *dims = dims_;
 
+    char *c_ptr = (char *)raw_memory;
 
-void *ocp_nlp_constraints_memory_assign(void *config_, void *dims_, void *opts_, void *raw_memory)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
 
-	char *c_ptr = (char *) raw_memory;
-
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
-
-	// struct
-    ocp_nlp_constraints_memory *memory = (ocp_nlp_constraints_memory *) c_ptr;
+    // struct
+    ocp_nlp_constraints_memory *memory = (ocp_nlp_constraints_memory *)c_ptr;
     c_ptr += sizeof(ocp_nlp_constraints_memory);
 
-	// blasfeo_mem align
-	align_char_to(64, &c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
-	// fun
-	assign_and_advance_blasfeo_dvec_mem(2*nb+2*ng+2*nh+2*ns, &memory->fun, &c_ptr);
-	// adj
-	assign_and_advance_blasfeo_dvec_mem(nu+nx+2*ns, &memory->adj, &c_ptr);
+    // fun
+    assign_and_advance_blasfeo_dvec_mem(2 * nb + 2 * ng + 2 * nh + 2 * ns, &memory->fun, &c_ptr);
+    // adj
+    assign_and_advance_blasfeo_dvec_mem(nu + nx + 2 * ns, &memory->adj, &c_ptr);
 
-    assert((char *) raw_memory + ocp_nlp_constraints_memory_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *)raw_memory + ocp_nlp_constraints_memory_calculate_size(config_, dims, opts_) >=
+           c_ptr);
 
-	return memory;
+    return memory;
 }
 
+struct blasfeo_dvec *ocp_nlp_constraints_memory_get_fun_ptr(void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-struct blasfeo_dvec *ocp_nlp_constraints_memory_get_fun_ptr(void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	return &memory->fun;
+    return &memory->fun;
 }
 
+struct blasfeo_dvec *ocp_nlp_constraints_memory_get_adj_ptr(void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-struct blasfeo_dvec *ocp_nlp_constraints_memory_get_adj_ptr(void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	return &memory->adj;
+    return &memory->adj;
 }
 
+void ocp_nlp_constraints_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-void ocp_nlp_constraints_memory_set_ux_ptr(struct blasfeo_dvec *ux, void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	memory->ux = ux;
+    memory->ux = ux;
 }
 
+void ocp_nlp_constraints_memory_set_lam_ptr(struct blasfeo_dvec *lam, void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-void ocp_nlp_constraints_memory_set_lam_ptr(struct blasfeo_dvec *lam, void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	memory->lam = lam;
+    memory->lam = lam;
 }
 
+void ocp_nlp_constraints_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-void ocp_nlp_constraints_memory_set_DCt_ptr(struct blasfeo_dmat *DCt, void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	memory->DCt = DCt;
+    memory->DCt = DCt;
 }
 
+void ocp_nlp_constraints_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-void ocp_nlp_constraints_memory_set_RSQrq_ptr(struct blasfeo_dmat *RSQrq, void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	memory->RSQrq = RSQrq;
+    memory->RSQrq = RSQrq;
 }
 
+void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-void ocp_nlp_constraints_memory_set_idxb_ptr(int *idxb, void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	memory->idxb = idxb;
+    memory->idxb = idxb;
 }
 
+void ocp_nlp_constraints_memory_set_idxs_ptr(int *idxs, void *memory_) {
+    ocp_nlp_constraints_memory *memory = memory_;
 
-
-void ocp_nlp_constraints_memory_set_idxs_ptr(int *idxs, void *memory_)
-{
-	ocp_nlp_constraints_memory *memory = memory_;
-
-	memory->idxs = idxs;
+    memory->idxs = idxs;
 }
-
-
 
 /* workspace */
 
-int ocp_nlp_constraints_workspace_calculate_size(void *config_, void *dims_, void *opts_)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
+int ocp_nlp_constraints_workspace_calculate_size(void *config_, void *dims_, void *opts_) {
+    ocp_nlp_constraints_dims *dims = dims_;
 
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
-	int np = dims->np;
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+    int np = dims->np;
 
-	int size = 0;
+    int size = 0;
 
     size += sizeof(ocp_nlp_constraints_workspace);
 
-	size += 1*blasfeo_memsize_dvec(nb+ng+nh+ns);  // tmp_ni
-	size += np*(nx+nu)*sizeof(double);
-	size += 1*blasfeo_memsize_dmat(nx+nu, np);
+    size += 1 * blasfeo_memsize_dvec(nb + ng + nh + ns);  // tmp_ni
+    size += np * (nx + nu) * sizeof(double);
+    size += 1 * blasfeo_memsize_dmat(nx + nu, np);
 
-	size += 2*64;  // blasfeo_mem align
+    size += 2 * 64;  // blasfeo_mem align
 
-	return size;
-
+    return size;
 }
 
+static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void *opts_,
+                                               void *work_) {
+    ocp_nlp_constraints_dims *dims = dims_;
+    ocp_nlp_constraints_workspace *work = work_;
 
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+    int np = dims->np;
 
-static void ocp_nlp_constraints_cast_workspace(void *config_, void *dims_, void *opts_, void *work_)
-{
-	ocp_nlp_constraints_dims *dims = dims_;
-	ocp_nlp_constraints_workspace *work = work_;
-
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
-	int np = dims->np;
-
-    char *c_ptr = (char *) work_;
+    char *c_ptr = (char *)work_;
     c_ptr += sizeof(ocp_nlp_constraints_workspace);
 
-	// blasfeo_mem align
-	align_char_to(64, &c_ptr);
+    // blasfeo_mem align
+    align_char_to(64, &c_ptr);
 
-	// tmp_ni
-	assign_and_advance_blasfeo_dvec_mem(nb+ng+nh+ns, &work->tmp_ni, &c_ptr);
-	c_ptr += np*(nx+nu)*sizeof(double);
-	align_char_to(64, &c_ptr);
-	assign_and_advance_blasfeo_dmat_mem(nx+nu, np, &work->jacobian_quadratic, &c_ptr);
+    // tmp_ni
+    assign_and_advance_blasfeo_dvec_mem(nb + ng + nh + ns, &work->tmp_ni, &c_ptr);
+    c_ptr += np * (nx + nu) * sizeof(double);
+    align_char_to(64, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx + nu, np, &work->jacobian_quadratic, &c_ptr);
 
-    assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >= c_ptr);
+    assert((char *)work + ocp_nlp_constraints_workspace_calculate_size(config_, dims, opts_) >=
+           c_ptr);
 
-	return;
+    return;
 }
-
-
 
 /* functions */
 
-void ocp_nlp_constraints_initialize(void *config_, void *dims_, void *model_, void *opts, void *memory_, void *work_)
-{
+void ocp_nlp_constraints_initialize(void *config_, void *dims_, void *model_, void *opts,
+                                    void *memory_, void *work_) {
+    ocp_nlp_constraints_dims *dims = dims_;
+    ocp_nlp_constraints_model *model = model_;
+    ocp_nlp_constraints_memory *memory = memory_;
 
-	ocp_nlp_constraints_dims *dims = dims_;
-	ocp_nlp_constraints_model *model = model_;
-	ocp_nlp_constraints_memory *memory = memory_;
+    // loop index
+    int j;
 
-	// loop index
-	int j;
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int ns = dims->ns;
 
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int ns = dims->ns;
+    // initialize idxb
+    for (j = 0; j < nb; j++) {
+        memory->idxb[j] = model->idxb[j];
+    }
 
-	// initialize idxb
-	for (j=0; j<nb; j++)
-	{
-		memory->idxb[j] = model->idxb[j];
-	}
+    // initialize idxs
+    for (j = 0; j < ns; j++) {
+        memory->idxs[j] = model->idxs[j];
+    }
 
-	// initialize idxs
-	for (j=0; j<ns; j++)
-	{
-		memory->idxs[j] = model->idxs[j];
-	}
+    // initialize general constraints matrix
+    blasfeo_dgecp(nu + nx, ng, &model->DCt, 0, 0, memory->DCt, 0, 0);
 
-	// initialize general constraints matrix
-	blasfeo_dgecp(nu+nx, ng, &model->DCt, 0, 0, memory->DCt, 0, 0);
-
-	return;
-
+    return;
 }
 
+void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_,
+                                            void *memory_, void *work_) {
+    ocp_nlp_constraints_dims *dims = dims_;
+    ocp_nlp_constraints_model *model = model_;
+    ocp_nlp_constraints_memory *memory = memory_;
+    ocp_nlp_constraints_workspace *work = work_;
 
-void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *model_, void *opts_, void *memory_, void *work_)
-{
+    ocp_nlp_constraints_cast_workspace(config_, dims, opts_, work_);
 
-	ocp_nlp_constraints_dims *dims = dims_;
-	ocp_nlp_constraints_model *model = model_;
-	ocp_nlp_constraints_memory *memory = memory_;
-	ocp_nlp_constraints_workspace *work = work_;
+    // extract dims
+    int nx = dims->nx;
+    int nu = dims->nu;
+    int nb = dims->nb;
+    int ng = dims->ng;
+    int nh = dims->nh;
+    int ns = dims->ns;
+    int np = dims->np;
 
-	ocp_nlp_constraints_cast_workspace(config_, dims, opts_, work_);
+    // XXX large enough ?
+    ext_fun_arg_t ext_fun_type_in[2];
+    void *ext_fun_in[2];
+    ext_fun_arg_t ext_fun_type_out[2];
+    void *ext_fun_out[2];
 
-	// extract dims
-	int nx = dims->nx;
-	int nu = dims->nu;
-	int nb = dims->nb;
-	int ng = dims->ng;
-	int nh = dims->nh;
-	int ns = dims->ns;
-	int np = dims->np;
+    // box
+    blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
 
-	// XXX large enough ?
-	ext_fun_arg_t ext_fun_type_in[2];
-	void *ext_fun_in[2]; 
-	ext_fun_arg_t ext_fun_type_out[2];
-	void *ext_fun_out[2];
+    // general linear
+    blasfeo_dgemv_t(nu + nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb,
+                    &work->tmp_ni, nb);
 
-	// box
-	blasfeo_dvecex_sp(nb, 1.0, model->idxb, memory->ux, 0, &work->tmp_ni, 0);
+    // nonlinear
+    if (nh > 0) {
+        //
+        ext_fun_type_in[0] = BLASFEO_DVEC;
+        ext_fun_in[0] = memory->ux;  // ux: nu+nx
 
-	// general linear
-	blasfeo_dgemv_t(nu+nx, ng, 1.0, memory->DCt, 0, 0, memory->ux, 0, 0.0, &work->tmp_ni, nb, &work->tmp_ni, nb);
+        //
+        ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
+        struct blasfeo_dvec_args h_args;
+        h_args.x = &work->tmp_ni;
+        h_args.xi = nb + ng;
+        ext_fun_out[0] = &h_args;  // fun: nh
+        //
+        ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+        struct blasfeo_dmat_args Jht_args;
+        Jht_args.A = memory->DCt;
+        Jht_args.ai = 0;
+        Jht_args.aj = ng;
+        ext_fun_out[1] = &Jht_args;  // jac': (nu+nx) * nh
 
-	// nonlinear
-	if (nh>0)
-	{
-		//
-		ext_fun_type_in[0] = BLASFEO_DVEC;
-		ext_fun_in[0] = memory->ux; // ux: nu+nx
+        model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+    }
 
-		//
-		ext_fun_type_out[0] = BLASFEO_DVEC_ARGS;
-		struct blasfeo_dvec_args h_args;
-		h_args.x = &work->tmp_ni;
-		h_args.xi = nb+ng;
-		ext_fun_out[0] = &h_args; // fun: nh
-		//
-		ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-		struct blasfeo_dmat_args Jht_args;
-		Jht_args.A = memory->DCt;
-		Jht_args.ai = 0;
-		Jht_args.aj = ng;
-		ext_fun_out[1] = &Jht_args; // jac': (nu+nx) * nh
+    if (np > 0) {
+        if (nh != 1) {
+            printf("Not implemented");
+            exit(1);
+        }
+        //
+        ext_fun_type_in[0] = BLASFEO_DVEC;
+        ext_fun_in[0] = memory->ux;  // ux: nu+nx
 
-		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-	}
+        //
+        ext_fun_type_out[0] = IGNORE;
+        //
+        ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+        struct blasfeo_dmat_args Jp_args;
+        Jp_args.A = &work->jacobian_quadratic;
+        Jp_args.ai = 0;
+        Jp_args.aj = 0;
+        ext_fun_out[1] = &Jp_args;  // jac': (nu+nx) * np
+        model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 
-	if (np>0)
-	{
-		if (nh != 1) {
-			printf("Not implemented");
-			exit(1);
-		}
-		//
-		ext_fun_type_in[0] = BLASFEO_DVEC;
-		ext_fun_in[0] = memory->ux; // ux: nu+nx
+        // SCQP Hessian
+        double lam = blasfeo_dvecex1(memory->lam, 2 * (nb + ng) + nh) -
+                     blasfeo_dvecex1(memory->lam, nb + ng);
 
-		//
-		ext_fun_type_out[0] = IGNORE;
-		//
-		ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
-		struct blasfeo_dmat_args Jp_args;
-		Jp_args.A = &work->jacobian_quadratic;
-		Jp_args.ai = 0;
-		Jp_args.aj = 0;
-		ext_fun_out[1] = &Jp_args; // jac': (nu+nx) * np
-		model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
-		
-		// SCQP Hessian
-		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
+        blasfeo_dsyrk_ln(nx + nu, np, 2 * lam, &work->jacobian_quadratic, 0, 0,
+                         &work->jacobian_quadratic, 0, 0, 1.0, memory->RSQrq, 0, 0, memory->RSQrq,
+                         0, 0);
+    }
 
-		blasfeo_dsyrk_ln(nx+nu, np, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
-			1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
-	}
+    blasfeo_daxpy(nb + ng + nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
+    blasfeo_daxpy(nb + ng + nh, -1.0, &model->d, nb + ng + nh, &work->tmp_ni, 0, &memory->fun,
+                  nb + ng + nh);
 
-	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
-	blasfeo_daxpy(nb+ng+nh, -1.0, &model->d, nb+ng+nh, &work->tmp_ni, 0, &memory->fun, nb+ng+nh);
+    // soft
+    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx, model->idxs, &memory->fun, 0);
+    blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu + nx + ns, model->idxs, &memory->fun, nb + ng + nh);
 
-	// soft
-	blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx, model->idxs, &memory->fun, 0);
-	blasfeo_dvecad_sp(ns, -1.0, memory->ux, nu+nx+ns, model->idxs, &memory->fun, nb+ng+nh);
+    blasfeo_daxpy(2 * ns, -1.0, memory->ux, nu + nx, &model->d, 2 * nb + 2 * ng + 2 * nh,
+                  &memory->fun, 2 * nb + 2 * ng + 2 * nh);
 
-	blasfeo_daxpy(2*ns, -1.0, memory->ux, nu+nx, &model->d, 2*nb+2*ng+2*nh, &memory->fun, 2*nb+2*ng+2*nh);
+    // nlp_mem: ineq_adj
+    blasfeo_dvecse(nu + nx + 2 * ns, 0.0, &memory->adj, 0);
+    blasfeo_daxpy(nb + ng + nh, -1.0, memory->lam, nb + ng + nh, memory->lam, 0, &work->tmp_ni, 0);
+    blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
+    blasfeo_dgemv_n(nu + nx, ng + nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj,
+                    0, &memory->adj, 0);
+    // soft
+    blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu + nx);
+    blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb + ng + nh, &memory->adj, nu + nx + ns);
+    blasfeo_daxpy(2 * ns, 1.0, memory->lam, 2 * nb + 2 * ng + 2 * nh, &memory->adj, nu + nx,
+                  &memory->adj, nu + nx);
 
-	// nlp_mem: ineq_adj
-	blasfeo_dvecse(nu+nx+2*ns, 0.0, &memory->adj, 0);
-	blasfeo_daxpy(nb+ng+nh, -1.0, memory->lam, nb+ng+nh, memory->lam, 0, &work->tmp_ni, 0);
-	blasfeo_dvecad_sp(nb, 1.0, &work->tmp_ni, 0, model->idxb, &memory->adj, 0);
-	blasfeo_dgemv_n(nu+nx, ng+nh, 1.0, memory->DCt, 0, 0, &work->tmp_ni, nb, 1.0, &memory->adj, 0, &memory->adj, 0);
-	// soft
-	blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, 0, &memory->adj, nu+nx);
-	blasfeo_dvecex_sp(ns, 1.0, model->idxs, memory->lam, nb+ng+nh, &memory->adj, nu+nx+ns);
-	blasfeo_daxpy(2*ns, 1.0, memory->lam, 2*nb+2*ng+2*nh, &memory->adj, nu+nx, &memory->adj, nu+nx);
-
-	return;
-
+    return;
 }
 
+void ocp_nlp_constraints_config_initialize_default(void *config_) {
+    ocp_nlp_constraints_config *config = config_;
 
+    config->dims_calculate_size = &ocp_nlp_constraints_dims_calculate_size;
+    config->dims_assign = &ocp_nlp_constraints_dims_assign;
+    config->dims_initialize = &ocp_nlp_constraints_dims_initialize;
+    config->model_calculate_size = &ocp_nlp_constraints_model_calculate_size;
+    config->model_assign = &ocp_nlp_constraints_model_assign;
+    config->opts_calculate_size = &ocp_nlp_constraints_opts_calculate_size;
+    config->opts_assign = &ocp_nlp_constraints_opts_assign;
+    config->opts_initialize_default = &ocp_nlp_constraints_opts_initialize_default;
+    config->opts_update = &ocp_nlp_constraints_opts_update;
+    config->memory_calculate_size = &ocp_nlp_constraints_memory_calculate_size;
+    config->memory_assign = &ocp_nlp_constraints_memory_assign;
+    config->memory_get_fun_ptr = &ocp_nlp_constraints_memory_get_fun_ptr;
+    config->memory_get_adj_ptr = &ocp_nlp_constraints_memory_get_adj_ptr;
+    config->memory_set_ux_ptr = &ocp_nlp_constraints_memory_set_ux_ptr;
+    config->memory_set_lam_ptr = &ocp_nlp_constraints_memory_set_lam_ptr;
+    config->memory_set_DCt_ptr = &ocp_nlp_constraints_memory_set_DCt_ptr;
+    config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_memory_set_RSQrq_ptr;
+    config->memory_set_idxb_ptr = &ocp_nlp_constraints_memory_set_idxb_ptr;
+    config->memory_set_idxs_ptr = &ocp_nlp_constraints_memory_set_idxs_ptr;
+    config->workspace_calculate_size = &ocp_nlp_constraints_workspace_calculate_size;
+    config->initialize = &ocp_nlp_constraints_initialize;
+    config->update_qp_matrices = &ocp_nlp_constraints_update_qp_matrices;
+    config->config_initialize_default = &ocp_nlp_constraints_config_initialize_default;
 
-void ocp_nlp_constraints_config_initialize_default(void *config_)
-{
-	ocp_nlp_constraints_config *config = config_;
-
-	config->dims_calculate_size = &ocp_nlp_constraints_dims_calculate_size;
-	config->dims_assign = &ocp_nlp_constraints_dims_assign;
-	config->dims_initialize = &ocp_nlp_constraints_dims_initialize;
-	config->model_calculate_size = &ocp_nlp_constraints_model_calculate_size;
-	config->model_assign = &ocp_nlp_constraints_model_assign;
-	config->opts_calculate_size = &ocp_nlp_constraints_opts_calculate_size;
-	config->opts_assign = &ocp_nlp_constraints_opts_assign;
-	config->opts_initialize_default = &ocp_nlp_constraints_opts_initialize_default;
-	config->opts_update = &ocp_nlp_constraints_opts_update;
-	config->memory_calculate_size = &ocp_nlp_constraints_memory_calculate_size;
-	config->memory_assign = &ocp_nlp_constraints_memory_assign;
-	config->memory_get_fun_ptr = &ocp_nlp_constraints_memory_get_fun_ptr;
-	config->memory_get_adj_ptr = &ocp_nlp_constraints_memory_get_adj_ptr;
-	config->memory_set_ux_ptr = &ocp_nlp_constraints_memory_set_ux_ptr;
-	config->memory_set_lam_ptr = &ocp_nlp_constraints_memory_set_lam_ptr;
-	config->memory_set_DCt_ptr = &ocp_nlp_constraints_memory_set_DCt_ptr;
-	config->memory_set_RSQrq_ptr = &ocp_nlp_constraints_memory_set_RSQrq_ptr;
-	config->memory_set_idxb_ptr = &ocp_nlp_constraints_memory_set_idxb_ptr;
-	config->memory_set_idxs_ptr = &ocp_nlp_constraints_memory_set_idxs_ptr;
-	config->workspace_calculate_size = &ocp_nlp_constraints_workspace_calculate_size;
-	config->initialize = &ocp_nlp_constraints_initialize;
-	config->update_qp_matrices = &ocp_nlp_constraints_update_qp_matrices;
-	config->config_initialize_default = &ocp_nlp_constraints_config_initialize_default;
-
-	return;
-
+    return;
 }
-
-
-
-

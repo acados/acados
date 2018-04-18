@@ -27,49 +27,37 @@ extern "C" {
 #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-
-
-typedef struct
-{
-	/* external functions */
-	// explicit ode
-	external_function_generic *expl_ode_fun;
-	// jacobian explicit ode
-	external_function_generic *expl_ode_jac;
-	// hessian explicit ode
-	external_function_generic *expl_ode_hes;
-	// forward explicit vde
-	external_function_generic *expl_vde_for;
-	// adjoint explicit vde
-	external_function_generic *expl_vde_adj;
+typedef struct {
+    /* external functions */
+    // explicit ode
+    external_function_generic *expl_ode_fun;
+    // jacobian explicit ode
+    external_function_generic *expl_ode_jac;
+    // hessian explicit ode
+    external_function_generic *expl_ode_hes;
+    // forward explicit vde
+    external_function_generic *expl_vde_for;
+    // adjoint explicit vde
+    external_function_generic *expl_vde_adj;
 
 } erk_model;
 
-
-
-typedef struct
-{
-	// no memory
-	void *dummy;
+typedef struct {
+    // no memory
+    void *dummy;
 } sim_erk_memory;
 
-
-
-typedef struct
-{
-
+typedef struct {
     double *rhs_forw_in;  // x + S + p
 
-    double *K_traj; // (stages *nX) or (steps*stages*nX) for adj
-    double *out_forw_traj; // S or (steps+1)*nX for adj
+    double *K_traj;         // (stages *nX) or (steps*stages*nX) for adj
+    double *out_forw_traj;  // S or (steps+1)*nX for adj
 
     double *rhs_adj_in;
     double *out_adj_tmp;
     double *adj_traj;
 
 } sim_erk_workspace;
-
-
 
 //
 int sim_erk_model_calculate_size(void *config, sim_dims *dims);
@@ -95,7 +83,6 @@ int sim_erk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_);
 int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
 //
 void sim_erk_config_initialize_default(void *config);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

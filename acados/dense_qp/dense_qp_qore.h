@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef ACADOS_DENSE_QP_DENSE_QP_QORE_H_
 #define ACADOS_DENSE_QP_DENSE_QP_QORE_H_
 
@@ -32,18 +31,18 @@ extern "C" {
 #include "acados/utils/types.h"
 
 typedef struct dense_qp_qore_opts_ {
-    int nsmax;          // maximum size of Schur complement
-    int print_freq;     // print frequency,
-                        // prtfreq  < 0: disable printing;
-                        // prtfreq == 0: print on each call and include working set changes;
-                        // prtfreq  > 0: print on every prtfreq seconds, but do not include working set changes;
-    int warm_start;     // warm start with updated matrices H and C
-    int warm_strategy;  // 0: ramp-up from zero homotopy; 1: setup homotopy from the previous solution
+    int nsmax;       // maximum size of Schur complement
+    int print_freq;  // print frequency,
+                     // prtfreq  < 0: disable printing;
+                     // prtfreq == 0: print on each call and include working set changes;
+                     // prtfreq  > 0: print on every prtfreq seconds, but do not include working set
+                     // changes;
+    int warm_start;  // warm start with updated matrices H and C
+    int warm_strategy;  // 0: ramp-up from zero homotopy; 1: setup homotopy from the previous
+                        // solution
     int hot_start;      // hot start with unchanged matrices H and C
     int max_iter;       // maximum number of iterations
 } dense_qp_qore_opts;
-
-
 
 typedef struct dense_qp_qore_memory_ {
     double *H;
@@ -67,8 +66,6 @@ typedef struct dense_qp_qore_memory_ {
     int num_iter;
 } dense_qp_qore_memory;
 
-
-
 int dense_qp_qore_opts_calculate_size(void *config, dense_qp_dims *dims);
 //
 void *dense_qp_qore_opts_assign(void *config, dense_qp_dims *dims, void *raw_memory);
@@ -83,10 +80,10 @@ void *dense_qp_qore_memory_assign(void *config, dense_qp_dims *dims, void *opts_
 //
 int dense_qp_qore_workspace_calculate_size(void *config, dense_qp_dims *dims, void *opts_);
 //
-int dense_qp_qore(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_, void *memory_, void *work_);
+int dense_qp_qore(void *config, dense_qp_in *qp_in, dense_qp_out *qp_out, void *opts_,
+                  void *memory_, void *work_);
 //
 void dense_qp_qore_config_initialize_default(void *config);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

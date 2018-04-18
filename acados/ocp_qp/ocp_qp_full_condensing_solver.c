@@ -22,24 +22,20 @@
 #include <stdio.h>
 // acados
 #include "acados/dense_qp/dense_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
-#include "acados/ocp_qp/ocp_qp_full_condensing.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/dense_qp/dense_qp_common.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_full_condensing_solver.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-
-
 /************************************************
-* opts
-************************************************/
+ * opts
+ ************************************************/
 
-int ocp_qp_full_condensing_solver_opts_calculate_size(void *config_, ocp_qp_dims *dims)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
+int ocp_qp_full_condensing_solver_opts_calculate_size(void *config_, ocp_qp_dims *dims) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
     int size = 0;
     size += sizeof(ocp_qp_full_condensing_solver_opts);
@@ -55,16 +51,14 @@ int ocp_qp_full_condensing_solver_opts_calculate_size(void *config_, ocp_qp_dims
     return size;
 }
 
+void *ocp_qp_full_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims,
+                                                void *raw_memory) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
+    char *c_ptr = (char *)raw_memory;
 
-void *ocp_qp_full_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
-
-    char *c_ptr = (char *) raw_memory;
-
-    ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *) c_ptr;
+    ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_solver_opts);
 
     dense_qp_dims ddims;
@@ -75,56 +69,51 @@ void *ocp_qp_full_condensing_solver_opts_assign(void *config_, ocp_qp_dims *dims
     opts->cond_opts = ocp_qp_full_condensing_opts_assign(dims, c_ptr);
     c_ptr += ocp_qp_full_condensing_opts_calculate_size(dims);
 
-	align_char_to(8, &c_ptr);
+    align_char_to(8, &c_ptr);
 
     opts->qp_solver_opts = qp_solver->opts_assign(qp_solver, &ddims, c_ptr);
     c_ptr += qp_solver->opts_calculate_size(qp_solver, &ddims);
 
-    assert((char*)raw_memory + ocp_qp_full_condensing_solver_opts_calculate_size(config_, dims) == c_ptr);
+    assert((char *)raw_memory + ocp_qp_full_condensing_solver_opts_calculate_size(config_, dims) ==
+           c_ptr);
 
-    return (void*)opts;
+    return (void *)opts;
 }
 
+void ocp_qp_full_condensing_solver_opts_initialize_default(void *config_, ocp_qp_dims *dims,
+                                                           void *opts_) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
-
-void ocp_qp_full_condensing_solver_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
-
-	// full cond solver
+    // full cond solver
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)opts_;
-	// full condensing
+    // full condensing
     ocp_qp_full_condensing_opts_initialize_default(dims, opts->cond_opts);
-	// qp solver
-    qp_solver->opts_initialize_default(qp_solver, NULL, opts->qp_solver_opts); // TODO pass dense_qp_dims ???
+    // qp solver
+    qp_solver->opts_initialize_default(qp_solver, NULL,
+                                       opts->qp_solver_opts);  // TODO pass dense_qp_dims ???
 }
 
+void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
-
-void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
-
-	// full cond solver
+    // full cond solver
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)opts_;
-	// full condensing
+    // full condensing
     ocp_qp_full_condensing_opts_update(dims, opts->cond_opts);
-	// qp solver
-    qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts); // TODO pass dense_qp_dims ???
+    // qp solver
+    qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO pass dense_qp_dims ???
 }
-
-
 
 /************************************************
-* memory
-************************************************/
+ * memory
+ ************************************************/
 
-int ocp_qp_full_condensing_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
+int ocp_qp_full_condensing_solver_memory_calculate_size(void *config_, ocp_qp_dims *dims,
+                                                        void *opts_) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)opts_;
 
@@ -143,12 +132,10 @@ int ocp_qp_full_condensing_solver_memory_calculate_size(void *config_, ocp_qp_di
     return size;
 }
 
-
-
-void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
+void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_,
+                                                  void *raw_memory) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)opts_;
 
@@ -157,12 +144,13 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *di
 
     char *c_ptr = (char *)raw_memory;
 
-    ocp_qp_full_condensing_solver_memory *mem = (ocp_qp_full_condensing_solver_memory *) c_ptr;
+    ocp_qp_full_condensing_solver_memory *mem = (ocp_qp_full_condensing_solver_memory *)c_ptr;
     c_ptr += sizeof(ocp_qp_full_condensing_solver_memory);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
 
-    mem->cond_memory = (ocp_qp_full_condensing_memory *) ocp_qp_full_condensing_memory_assign(dims, opts->cond_opts, c_ptr);
+    mem->cond_memory = (ocp_qp_full_condensing_memory *)ocp_qp_full_condensing_memory_assign(
+        dims, opts->cond_opts, c_ptr);
     c_ptr += ocp_qp_full_condensing_memory_calculate_size(dims, opts->cond_opts);
 
     assert((size_t)c_ptr % 8 == 0 && "memory not 8-byte aligned!");
@@ -180,21 +168,21 @@ void *ocp_qp_full_condensing_solver_memory_assign(void *config_, ocp_qp_dims *di
     mem->qpd_out = dense_qp_out_assign(qp_solver, &ddims, c_ptr);
     c_ptr += dense_qp_out_calculate_size(qp_solver, &ddims);
 
-    assert((char *) raw_memory + ocp_qp_full_condensing_solver_memory_calculate_size(config_, dims, opts_) == c_ptr);
+    assert((char *)raw_memory +
+               ocp_qp_full_condensing_solver_memory_calculate_size(config_, dims, opts_) ==
+           c_ptr);
 
     return mem;
 }
 
-
-
 /************************************************
-* workspac3
-************************************************/
+ * workspac3
+ ************************************************/
 
-int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
+int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config_, ocp_qp_dims *dims,
+                                                           void *opts_) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)opts_;
 
@@ -208,16 +196,16 @@ int ocp_qp_full_condensing_solver_workspace_calculate_size(void *config_, ocp_qp
     return size;
 }
 
-
-
-static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_full_condensing_solver_opts *opts, ocp_qp_full_condensing_solver_memory *mem, ocp_qp_full_condensing_solver_workspace *work)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
+static void cast_workspace(void *config_, ocp_qp_dims *dims,
+                           ocp_qp_full_condensing_solver_opts *opts,
+                           ocp_qp_full_condensing_solver_memory *mem,
+                           ocp_qp_full_condensing_solver_workspace *work) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
     dense_qp_dims *ddims = mem->qpd_in->dim;
 
-    char *c_ptr = (char *) work;
+    char *c_ptr = (char *)work;
 
     c_ptr += sizeof(ocp_qp_full_condensing_solver_workspace);
 
@@ -227,43 +215,48 @@ static void cast_workspace(void *config_, ocp_qp_dims *dims, ocp_qp_full_condens
     work->solver_workspace = c_ptr;
     c_ptr += qp_solver->workspace_calculate_size(qp_solver, ddims, opts->qp_solver_opts);
 
-    assert((char *) work + ocp_qp_full_condensing_solver_workspace_calculate_size(config_, dims, opts) >= c_ptr);
+    assert((char *)work +
+               ocp_qp_full_condensing_solver_workspace_calculate_size(config_, dims, opts) >=
+           c_ptr);
 }
 
-
-
 /************************************************
-* functions
-************************************************/
+ * functions
+ ************************************************/
 
-int ocp_qp_full_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_)
-{
-	ocp_qp_xcond_solver_config *config = config_;
-	qp_solver_config *qp_solver = config->qp_solver;
+int ocp_qp_full_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_,
+                                  void *mem_, void *work_) {
+    ocp_qp_xcond_solver_config *config = config_;
+    qp_solver_config *qp_solver = config->qp_solver;
 
     ocp_qp_info *info = (ocp_qp_info *)qp_out->misc;
     acados_timer tot_timer, cond_timer;
     acados_tic(&tot_timer);
 
     // cast data structures
-    ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *) opts_;
-    ocp_qp_full_condensing_solver_memory *memory = (ocp_qp_full_condensing_solver_memory *) mem_;
-    ocp_qp_full_condensing_solver_workspace *work = (ocp_qp_full_condensing_solver_workspace *) work_;
+    ocp_qp_full_condensing_solver_opts *opts = (ocp_qp_full_condensing_solver_opts *)opts_;
+    ocp_qp_full_condensing_solver_memory *memory = (ocp_qp_full_condensing_solver_memory *)mem_;
+    ocp_qp_full_condensing_solver_workspace *work =
+        (ocp_qp_full_condensing_solver_workspace *)work_;
 
     // cast workspace
     cast_workspace(config_, qp_in->dim, opts, memory, work);
 
     // condense
     acados_tic(&cond_timer);
-    ocp_qp_full_condensing(qp_in, memory->qpd_in, opts->cond_opts, memory->cond_memory, work->cond_work);
+    ocp_qp_full_condensing(qp_in, memory->qpd_in, opts->cond_opts, memory->cond_memory,
+                           work->cond_work);
     info->condensing_time = acados_toc(&cond_timer);
 
     // solve qp
-    int solver_status = qp_solver->evaluate(qp_solver, memory->qpd_in, memory->qpd_out, opts->qp_solver_opts, memory->solver_memory, work->solver_workspace);
+    int solver_status =
+        qp_solver->evaluate(qp_solver, memory->qpd_in, memory->qpd_out, opts->qp_solver_opts,
+                            memory->solver_memory, work->solver_workspace);
 
     // expand
     acados_tic(&cond_timer);
-    ocp_qp_full_expansion(memory->qpd_out, qp_out, opts->cond_opts, memory->cond_memory, work->cond_work);
+    ocp_qp_full_expansion(memory->qpd_out, qp_out, opts->cond_opts, memory->cond_memory,
+                          work->cond_work);
     info->condensing_time += acados_toc(&cond_timer);
 
     info->total_time = acados_toc(&tot_timer);
@@ -274,22 +267,17 @@ int ocp_qp_full_condensing_solver(void *config_, ocp_qp_in *qp_in, ocp_qp_out *q
     return solver_status;
 }
 
+void ocp_qp_full_condensing_solver_config_initialize_default(void *config_) {
+    ocp_qp_xcond_solver_config *config = config_;
 
+    config->opts_calculate_size = &ocp_qp_full_condensing_solver_opts_calculate_size;
+    config->opts_assign = &ocp_qp_full_condensing_solver_opts_assign;
+    config->opts_initialize_default = &ocp_qp_full_condensing_solver_opts_initialize_default;
+    config->opts_update = &ocp_qp_full_condensing_solver_opts_update;
+    config->memory_calculate_size = &ocp_qp_full_condensing_solver_memory_calculate_size;
+    config->memory_assign = &ocp_qp_full_condensing_solver_memory_assign;
+    config->workspace_calculate_size = &ocp_qp_full_condensing_solver_workspace_calculate_size;
+    config->evaluate = &ocp_qp_full_condensing_solver;
 
-void ocp_qp_full_condensing_solver_config_initialize_default(void *config_)
-{
-
-	ocp_qp_xcond_solver_config *config = config_;
-
-	config->opts_calculate_size = &ocp_qp_full_condensing_solver_opts_calculate_size;
-	config->opts_assign = &ocp_qp_full_condensing_solver_opts_assign;
-	config->opts_initialize_default = &ocp_qp_full_condensing_solver_opts_initialize_default;
-	config->opts_update = &ocp_qp_full_condensing_solver_opts_update;
-	config->memory_calculate_size = &ocp_qp_full_condensing_solver_memory_calculate_size;
-	config->memory_assign = &ocp_qp_full_condensing_solver_memory_assign;
-	config->workspace_calculate_size = &ocp_qp_full_condensing_solver_workspace_calculate_size;
-	config->evaluate = &ocp_qp_full_condensing_solver;
-
-	return;
-
+    return;
 }

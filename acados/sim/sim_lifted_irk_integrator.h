@@ -31,19 +31,14 @@ extern "C" {
 #define TRIPLE_LOOP 1
 #define CODE_GENERATION 0
 
-
-
-typedef struct
-{
-	/* external functions */
-	// jacobian explicit ode
-	external_function_generic *expl_ode_jac;
-	// forward explicit vde
-	external_function_generic *expl_vde_for;
+typedef struct {
+    /* external functions */
+    // jacobian explicit ode
+    external_function_generic *expl_ode_jac;
+    // forward explicit vde
+    external_function_generic *expl_vde_for;
 
 } lifted_irk_model;
-
-
 
 typedef struct {
     real_t *rhs_in;
@@ -63,10 +58,7 @@ typedef struct {
     real_t *out_adj_tmp;
 } sim_lifted_irk_workspace;
 
-
-
 typedef struct {
-
     double *grad_correction;
     double *grad_K;  // gradient correction
 
@@ -89,7 +81,6 @@ typedef struct {
     struct blasfeo_dmat **str_sol2;
 
 } sim_lifted_irk_memory;
-
 
 //
 int sim_lifted_irk_model_calculate_size(void *config, sim_dims *dims);
@@ -115,7 +106,6 @@ int sim_lifted_irk_workspace_calculate_size(void *config, sim_dims *in, void *ar
 int sim_lifted_irk(void *config, sim_in *in, sim_out *out, void *args, void *mem, void *work);
 //
 void sim_lifted_irk_config_initialize_default(void *config);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

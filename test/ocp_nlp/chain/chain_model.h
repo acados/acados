@@ -7,13 +7,13 @@ extern "C" {
 
 #include "acados/utils/types.h"
 
-int vde_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int vde_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int vde_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int vde_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int vde_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
-int jac_chain_nm2(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int jac_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
-int jac_chain_nm4(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int jac_chain_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int jac_chain_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
+int jac_chain_nm4(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 
 int ls_cost_nm2(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);
 int ls_cost_nm3(const real_t **arg, real_t **res, int *iw, real_t *w, int mem);

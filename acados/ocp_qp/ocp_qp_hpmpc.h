@@ -27,9 +27,7 @@ extern "C" {
 #include "acados/ocp_qp/ocp_qp_common.h"
 #include "acados/utils/types.h"
 
-typedef enum hpmpc_options_t_ {
-    HPMPC_DEFAULT_ARGUMENTS
-} hpmpc_options_t;
+typedef enum hpmpc_options_t_ { HPMPC_DEFAULT_ARGUMENTS } hpmpc_options_t;
 
 typedef struct ocp_qp_hpmpc_opts_ {
     double tol;
@@ -51,7 +49,7 @@ typedef struct ocp_qp_hpmpc_memory_ {
     double *stats;
 
     // workspace
-    void *hpmpc_work; //raw workspace
+    void *hpmpc_work;  // raw workspace
 
     // partial tightening-specific (init of extra variables)
     struct blasfeo_dvec *lam0;
@@ -71,12 +69,12 @@ typedef struct ocp_qp_hpmpc_memory_ {
     struct blasfeo_dvec *hsrq;
     struct blasfeo_dvec *hsdux;
 
-	struct blasfeo_dvec *hsdlam;
-	struct blasfeo_dvec *hsdt;
+    struct blasfeo_dvec *hsdlam;
+    struct blasfeo_dvec *hsdt;
     struct blasfeo_dvec *hsdpi;
-	struct blasfeo_dvec *hslamt;
+    struct blasfeo_dvec *hslamt;
 
-	struct blasfeo_dvec *hsPb;
+    struct blasfeo_dvec *hsPb;
 
     void *work_ric;
 
@@ -98,12 +96,10 @@ void *ocp_qp_hpmpc_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, 
 //
 int ocp_qp_hpmpc_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
 //
-int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_, void *work_);
+int ocp_qp_hpmpc(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *mem_,
+                 void *work_);
 //
 void ocp_qp_hpmpc_config_initialize_default(void *config_);
-
-
-
 
 #ifdef __cplusplus
 } /* extern "C" */

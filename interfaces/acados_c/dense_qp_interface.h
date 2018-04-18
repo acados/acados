@@ -26,11 +26,7 @@ extern "C" {
 
 #include "acados/dense_qp/dense_qp_common.h"
 
-typedef enum {
-    DENSE_QP_HPIPM,
-    DENSE_QP_QORE,
-    DENSE_QP_QPOASES
-} dense_qp_solver_t;
+typedef enum { DENSE_QP_HPIPM, DENSE_QP_QORE, DENSE_QP_QPOASES } dense_qp_solver_t;
 
 typedef struct {
     dense_qp_solver_t qp_solver;
@@ -56,13 +52,15 @@ void *dense_qp_opts_create(qp_solver_config *config, dense_qp_dims *dims);
 //
 int dense_qp_calculate_size(qp_solver_config *config, dense_qp_dims *dims, void *opts_);
 //
-dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_, void *raw_memory);
+dense_qp_solver *dense_qp_assign(qp_solver_config *config, dense_qp_dims *dims, void *opts_,
+                                 void *raw_memory);
 //
 dense_qp_solver *dense_qp_create(qp_solver_config *config, dense_qp_dims *dims, void *opts_);
 //
 int dense_qp_solve(dense_qp_solver *solver, dense_qp_in *qp_in, dense_qp_out *qp_out);
 //
-void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out, double *res);
+void dense_qp_inf_norm_residuals(dense_qp_dims *dims, dense_qp_in *qp_in, dense_qp_out *qp_out,
+                                 double *res);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -28,16 +28,14 @@
 
 #include "acados/utils/external_function_generic.h"
 
-
-
 // maximum number of integration stages
 #define NS_MAX 15
 
 typedef enum {
     // ERK and LIFTED_ERK
     EXPL_ODE_FUN,
-    EXPL_ODE_JAC, // TODO expl_ode_jac_x
-    EXPL_ODE_HES, // wrt x and u ???
+    EXPL_ODE_JAC,  // TODO expl_ode_jac_x
+    EXPL_ODE_HES,  // wrt x and u ???
     EXPL_VDE_FOR,
     EXPL_VDE_ADJ,
     // IRK
@@ -50,20 +48,14 @@ typedef enum {
     IMPL_ODE_JAC_X_U,
 } sim_function_t;
 
-
-typedef struct
-{
+typedef struct {
     int nx;
     int nu;
-//    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
-	// TODO have nx np nf instead !!!
+    //    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
+    // TODO have nx np nf instead !!!
 } sim_dims;
 
-
-
-typedef struct
-{
-
+typedef struct {
     sim_dims *dims;
 
     // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
@@ -75,23 +67,17 @@ typedef struct
 
     void *model;
 
-    double T; // simulation time
+    double T;  // simulation time
 
 } sim_in;
 
-
-
-typedef struct
-{
-    double CPUtime; // in seconds
-    double LAtime; // in seconds
-    double ADtime; // in seconds
+typedef struct {
+    double CPUtime;  // in seconds
+    double LAtime;   // in seconds
+    double ADtime;   // in seconds
 } sim_info;
 
-
-
-typedef struct
-{
+typedef struct {
     double *xn;      // xn[NX]
     double *S_forw;  // S_forw[NX*(NX+NU)]
     double *S_adj;   //
@@ -102,16 +88,13 @@ typedef struct
     sim_info *info;
 } sim_out;
 
-
-
-typedef struct
-{
-	int ns; // number of integration stages
+typedef struct {
+    int ns;  // number of integration stages
 
     int num_steps;
     int num_forw_sens;
 
-	int tableau_size; // check that is consistent with ns
+    int tableau_size;  // check that is consistent with ns
     double *A_mat;
     double *c_vec;
     double *b_vec;
@@ -131,24 +114,20 @@ typedef struct
 
 } sim_rk_opts;
 
-
-
-typedef struct
-{
-    int (*evaluate) (void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
-    int (*opts_calculate_size) (void *config, sim_dims *dims);
-    void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
-    void (*opts_initialize_default) (void *config, sim_dims *dims, void *opts);
-    void (*opts_update) (void *config, sim_dims *dims, void *opts);
-    int (*memory_calculate_size) (void *config, sim_dims *dims, void *opts);
-    void *(*memory_assign) (void *config, sim_dims *dims, void *opts, void *raw_memory);
-    int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);
-    int (*model_calculate_size) (void *config, sim_dims *dims);
-    void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
-    int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
-    void (*config_initialize_default) (void *config);
+typedef struct {
+    int (*evaluate)(void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size)(void *config, sim_dims *dims);
+    void *(*opts_assign)(void *config, sim_dims *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, sim_dims *dims, void *opts);
+    void (*opts_update)(void *config, sim_dims *dims, void *opts);
+    int (*memory_calculate_size)(void *config, sim_dims *dims, void *opts);
+    void *(*memory_assign)(void *config, sim_dims *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, sim_dims *dims, void *opts);
+    int (*model_calculate_size)(void *config, sim_dims *dims);
+    void *(*model_assign)(void *config, sim_dims *dims, void *raw_memory);
+    int (*model_set_function)(void *model, sim_function_t fun_type, void *fun);
+    void (*config_initialize_default)(void *config);
 } sim_solver_config;
-
 
 //
 int sim_solver_config_calculate_size();

@@ -26,12 +26,7 @@ extern "C" {
 
 #include "acados/sim/sim_common.h"
 
-typedef enum {
-    ERK,
-    LIFTED_IRK,
-    IRK,
-    NEW_LIFTED_IRK
-} sim_solver_t;
+typedef enum { ERK, LIFTED_IRK, IRK, NEW_LIFTED_IRK } sim_solver_t;
 
 typedef struct {
     sim_solver_t sim_solver;
@@ -54,7 +49,8 @@ sim_in *sim_in_create(sim_solver_config *config, sim_dims *dims);
 //
 int sim_set_model(sim_solver_config *config, sim_in *in, const char *fun_type, void *fun_ptr);
 //
-int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type, void *fun_ptr);
+int sim_set_model_internal(sim_solver_config *config, void *model, const char *fun_type,
+                           void *fun_ptr);
 //
 sim_out *sim_out_create(sim_solver_config *config, sim_dims *dims);
 //

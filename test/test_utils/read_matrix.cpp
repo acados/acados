@@ -30,18 +30,19 @@
 
 #include "catch/include/catch.hpp"
 
-#define MAXBUFSIZE  ((int) 1e6)
+#define MAXBUFSIZE ((int)1e6)
 
 // Trim from start (in place)
 static inline void ltrim(std::string *s) {
-    s->erase(s->begin(), std::find_if(s->begin(), s->end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s->erase(s->begin(),
+             std::find_if(s->begin(), s->end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 }
 
 // Trim from end (in place)
 static inline void rtrim(std::string *s) {
-    s->erase(std::find_if(s->rbegin(), s->rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s->end());
+    s->erase(std::find_if(s->rbegin(), s->rend(), std::not1(std::ptr_fun<int, int>(std::isspace)))
+                 .base(),
+             s->end());
 }
 
 // Trim from both ends (in place)
@@ -70,17 +71,14 @@ Eigen::MatrixXd readMatrix(const std::string &filename) {
         trim(&line);
         int temp_cols = 0;
         std::stringstream stream(line);
-        while (!stream.eof())
-            stream >> buff[cols*rows+temp_cols++];
+        while (!stream.eof()) stream >> buff[cols * rows + temp_cols++];
 
-        if (temp_cols == 0)
-            continue;
+        if (temp_cols == 0) continue;
 
-        if (cols == 0)
-            cols = temp_cols;
+        if (cols == 0) cols = temp_cols;
 
         rows++;
-        }
+    }
 
     infile.close();
 
@@ -89,8 +87,7 @@ Eigen::MatrixXd readMatrix(const std::string &filename) {
     // Populate matrix with numbers.
     Eigen::MatrixXd result(rows, cols);
     for (int i = 0; i < rows; i++)
-        for (int j = 0; j < cols; j++)
-            result(i, j) = buff[ cols*i+j ];
+        for (int j = 0; j < cols; j++) result(i, j) = buff[cols * i + j];
 
     return result;
 }

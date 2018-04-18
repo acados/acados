@@ -14,32 +14,33 @@
 
 */
 #ifdef __cplusplus
-  #include <cstring>
-  #define STD(x) std::x
-  namespace std {
+#include <cstring>
+#define STD(x) std::x
+namespace std {
 #else
-  #include <string.h>
-  #define STD(x) x
+#include <string.h>
+#define STD(x) x
 #endif
 
-char* strsep_acados( char** stringp, const char* delim )
-  {
-  char* result;
+char* strsep_acados(char** stringp, const char* delim) {
+    char* result;
 
-  if ((stringp == NULL) || (*stringp == NULL)) return NULL;
+    if ((stringp == NULL) || (*stringp == NULL)) return NULL;
 
-  result = *stringp;
+    result = *stringp;
 
-  while (**stringp && !STD(strchr)( delim, **stringp )) ++*stringp;
+    while (**stringp && !STD(strchr)(delim, **stringp)) ++*stringp;
 
-  if (**stringp) *(*stringp)++ = '\0';
-  else             *stringp    = NULL;
+    if (**stringp)
+        *(*stringp)++ = '\0';
+    else
+        *stringp = NULL;
 
-  return result;
-  }
+    return result;
+}
 
 #ifdef __cplusplus
-  } // namespace std;
+}  // namespace std;
 #endif
 
-#undef STD 
+#undef STD

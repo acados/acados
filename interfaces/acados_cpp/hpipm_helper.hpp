@@ -18,15 +18,15 @@
 
 #define num_elems_r(stage, dim) (dim->nu[stage])
 
-#define num_rows_A(stage, dim) (dim->nx[stage+1])
+#define num_rows_A(stage, dim) (dim->nx[stage + 1])
 
 #define num_cols_A(stage, dim) (dim->nx[stage])
 
-#define num_rows_B(stage, dim) (dim->nx[stage+1])
+#define num_rows_B(stage, dim) (dim->nx[stage + 1])
 
 #define num_cols_B(stage, dim) (dim->nu[stage])
 
-#define num_elems_b(stage, dim) (dim->nx[stage+1])
+#define num_elems_b(stage, dim) (dim->nx[stage + 1])
 
 #define num_elems_lbx(stage, dim) (dim->nbx[stage])
 

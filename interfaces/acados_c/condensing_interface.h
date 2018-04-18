@@ -24,8 +24,8 @@
 extern "C" {
 #endif
 
-#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 #include "acados/ocp_qp/ocp_qp_full_condensing.h"
+#include "acados/ocp_qp/ocp_qp_partial_condensing.h"
 
 typedef enum {
     PARTIAL_CONDENSING,
@@ -50,9 +50,11 @@ void *ocp_qp_condensing_opts_create(ocp_qp_condensing_config *config, void *dims
 //
 int ocp_qp_condensing_calculate_size(ocp_qp_condensing_config *config, void *dims_, void *opts_);
 //
-condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_, void *opts_, void *raw_memory);
+condensing_module *ocp_qp_condensing_assign(ocp_qp_condensing_config *config, void *dims_,
+                                            void *opts_, void *raw_memory);
 //
-condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_, void *opts_);
+condensing_module *ocp_qp_condensing_create(ocp_qp_condensing_config *config, void *dims_,
+                                            void *opts_);
 //
 int ocp_qp_condense(condensing_module *module, void *qp_in, void *qp_out);
 //
