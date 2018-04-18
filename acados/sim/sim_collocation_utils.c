@@ -169,7 +169,7 @@ void gauss_nodes(int ns, double *nodes, void *work) {
     double *der_lgvm = (double *)c_ptr;
     c_ptr += N1 * sizeof(double);
 
-    // TODO assert !!!
+    // TODO(all): assert !!!
 
     double a = 0.0;
     double b = 1.0;  // code for collocation interval [a,b]
@@ -241,7 +241,7 @@ void gauss_simplified(int ns, Newton_scheme *scheme, void *work) {
     int *perm = (int *)c_ptr;
     c_ptr += ns * sizeof(int);
 
-    // TODO assert !!!
+    // TODO(all): assert !!!
 
     char simplified[MAX_STR_LEN];
 
@@ -345,7 +345,7 @@ void butcher_table(int ns, double *nodes, double *b, double *A, void *work) {
     int *perm = (int *)c_ptr;
     c_ptr += ns * sizeof(int);
 
-    // TODO assert !!!
+    // TODO(all): assert !!!
 
     for (j = 0; j < ns; j++) {
         for (i = 0; i < ns; i++) can_vm[i + j * ns] = pow(nodes[i], j);

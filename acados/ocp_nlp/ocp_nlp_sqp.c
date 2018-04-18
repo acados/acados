@@ -33,7 +33,7 @@
 // acados
 #include "acados/ocp_nlp/ocp_nlp_common.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/sim/sim_collocation_utils.h"  // TODO remove ???
+#include "acados/sim/sim_collocation_utils.h"  // TODO(all): remove ???
 #include "acados/sim/sim_common.h"
 #include "acados/utils/mem.h"
 #include "acados/utils/print.h"
@@ -407,7 +407,7 @@ int ocp_nlp_sqp_workspace_calculate_size(void *config_, ocp_nlp_dims *dims, void
     return size;
 }
 
-// TODO introduce member "memsize" in all structures to make on-line cast cheaper (i.e. avoid to
+// TODO(all): introduce member "memsize" in all structures to make on-line cast cheaper (i.e. avoid to
 // calculate size on-line)
 static void ocp_nlp_sqp_cast_workspace(void *config_, ocp_nlp_dims *dims, ocp_nlp_sqp_work *work,
                                        ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_opts *opts) {
@@ -591,11 +591,11 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
         blasfeo_dveccp(nv[i], ineq_adj, 0, nlp_mem->ineq_adj + i, 0);
     }
 
-    // TODO still to clean !!!!!!!!!!!!!
+    // TODO(all): still to clean !!!!!!!!!!!!!
 
     for (i = 0; i <= N; i++) {
         // TODO(rien) where should the update happen??? move to qp update ???
-        // TODO fix and move where appropriate
+        // TODO(all): fix and move where appropriate
         // 	if(i<N)
         // 	{
         // 		ocp_nlp_dynamics_opts *dynamics_opts = opts->dynamics[i];
@@ -614,7 +614,7 @@ static void linearize_update_qp_matrices(void *config_, ocp_nlp_dims *dims, ocp_
 }
 
 // update QP rhs for SQP (step prim var, abs dual var)
-// TODO move in dynamics, cost, constraints modules ???
+// TODO(all): move in dynamics, cost, constraints modules ???
 static void sqp_update_qp_vectors(void *config_, ocp_nlp_dims *dims, ocp_nlp_in *nlp_in,
                                   ocp_nlp_out *nlp_out, ocp_nlp_sqp_opts *opts,
                                   ocp_nlp_sqp_memory *mem, ocp_nlp_sqp_work *work) {
@@ -660,7 +660,7 @@ static void sqp_update_variables(ocp_nlp_dims *dims, ocp_nlp_out *nlp_out, ocp_n
     // int *nu = dims->nu;
     int *ni = dims->ni;
 
-    // TODO fix and move where appropriate
+    // TODO(all): fix and move where appropriate
     //    for (i = 0; i < N; i++)
     //    {
     // 	nx1 = dims->constraints[i+1]->nx;

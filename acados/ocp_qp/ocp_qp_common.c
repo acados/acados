@@ -130,7 +130,7 @@ ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory) {
 int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims) {
     int size = sizeof(ocp_qp_in);
     size += d_memsize_ocp_qp(dims);
-    size += ocp_qp_dims_calculate_size(dims->N);  // TODO remove !!!
+    size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     return size;
 }
 
@@ -143,8 +143,8 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory) {
     d_create_ocp_qp(dims, qp_in, c_ptr);
     c_ptr += d_memsize_ocp_qp(dims);
 
-    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO remove !!!
-    c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO remove !!!
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
+    c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
     dims_copy->N = dims->N;
 
@@ -172,7 +172,7 @@ ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory) {
 int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims) {
     int size = sizeof(ocp_qp_out);
     size += d_memsize_ocp_qp_sol(dims);
-    size += ocp_qp_dims_calculate_size(dims->N);  // TODO remove !!!
+    size += ocp_qp_dims_calculate_size(dims->N);  // TODO(all): remove !!!
     size += sizeof(ocp_qp_info);
     return size;
 }
@@ -189,8 +189,8 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
     qp_out->misc = (void *)c_ptr;
     c_ptr += sizeof(ocp_qp_info);
 
-    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO remove !!!
-    c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO remove !!!
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr);  // TODO(all): remove !!!
+    c_ptr += ocp_qp_dims_calculate_size(dims->N);                 // TODO(all): remove !!!
 
     dims_copy->N = dims->N;
 
@@ -215,7 +215,7 @@ ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
  * res
  ************************************************/
 
-// TODO add config !!!
+// TODO(all): add config !!!
 
 int ocp_qp_res_calculate_size(ocp_qp_dims *dims) {
     int size = sizeof(ocp_qp_res);

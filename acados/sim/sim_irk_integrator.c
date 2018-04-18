@@ -418,7 +418,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
     acados_tic(&timer);
     for (ss = 0; ss < num_steps; ss++) {
         //  obtain Kn
-        // TODO add exit condition on residuals ???
+        // TODO(all): add exit condition on residuals ???
         // 	inf_norm_K = 1.0;
         //        for(iter=0; inf_norm_K>tol_inf_norm_K & iter<newton_iter; iter++)
         for (iter = 0; iter < newton_iter; iter++) {
@@ -615,7 +615,7 @@ int sim_irk(void *config_, sim_in *in, sim_out *out, void *opts_, void *mem_, vo
             }
 
             // obtain JKf
-            // TODO add the option to use VDE instead of dgemm ???
+            // TODO(all): add the option to use VDE instead of dgemm ???
             blasfeo_dgemm_nn(nx * ns, nx + nu, nx, 1.0, JGf, 0, 0, S_forw, 0, 0, 0.0, JKf, 0, 0,
                              JKf, 0, 0);
             blasfeo_dgead(nx * ns, nu, 1.0, JGf, 0, nx, JKf, 0, nx);

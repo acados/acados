@@ -318,10 +318,10 @@ void ocp_nlp_cost_ls_initialize(void *config_, void *dims_, void *model_, void *
 
     // general Cyt
 
-    // TODO recompute factorization only if W are re-tuned ???
+    // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
-    // TODO avoid recomputing the Hessian if both W and Cyt do not change
+    // TODO(all): avoid recomputing the Hessian if both W and Cyt do not change
     blasfeo_dtrmm_rlnn(nu + nx, ny, 1.0, &memory->W_chol, 0, 0, &model->Cyt, 0, 0, &work->tmp_nv_ny,
                        0, 0);
     blasfeo_dsyrk_ln(nu + nx, ny, 1.0, &work->tmp_nv_ny, 0, 0, &work->tmp_nv_ny, 0, 0, 0.0,
@@ -354,7 +354,7 @@ void ocp_nlp_cost_ls_update_qp_matrices(void *config_, void *dims_, void *model_
     blasfeo_dgemv_t(nu + nx, ny, 1.0, &model->Cyt, 0, 0, memory->ux, 0, -1.0, &model->y_ref, 0,
                     &memory->res, 0);
 
-    // TODO use lower triangular chol of W to save n_y^2 flops
+    // TODO(all): use lower triangular chol of W to save n_y^2 flops
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
                     &work->tmp_ny, 0);
     blasfeo_dgemv_n(nu + nx, ny, 1.0, &model->Cyt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,

@@ -110,7 +110,7 @@ int sim_lifted_irk_opts_calculate_size(void *config_, sim_dims *dims) {
     return size;
 }
 
-// TODO return pointer to sim_rk_opts instead
+// TODO(all): return pointer to sim_rk_opts instead
 void *sim_lifted_irk_opts_assign(void *config_, sim_dims *dims, void *raw_memory) {
     int ns_max = 15;
 

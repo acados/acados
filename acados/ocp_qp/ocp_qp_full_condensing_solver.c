@@ -91,7 +91,7 @@ void ocp_qp_full_condensing_solver_opts_initialize_default(void *config_, ocp_qp
     ocp_qp_full_condensing_opts_initialize_default(dims, opts->cond_opts);
     // qp solver
     qp_solver->opts_initialize_default(qp_solver, NULL,
-                                       opts->qp_solver_opts);  // TODO pass dense_qp_dims ???
+                                       opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims ???
 }
 
 void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims, void *opts_) {
@@ -103,7 +103,7 @@ void ocp_qp_full_condensing_solver_opts_update(void *config_, ocp_qp_dims *dims,
     // full condensing
     ocp_qp_full_condensing_opts_update(dims, opts->cond_opts);
     // qp solver
-    qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO pass dense_qp_dims ???
+    qp_solver->opts_update(qp_solver, NULL, opts->qp_solver_opts);  // TODO(all): pass dense_qp_dims ???
 }
 
 /************************************************

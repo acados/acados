@@ -193,7 +193,7 @@ int ocp_nlp_res_calculate_size(ocp_nlp_dims *dims);
 ocp_nlp_res *ocp_nlp_res_assign(ocp_nlp_dims *dims, void *raw_memory);
 //
 void ocp_nlp_res_compute(ocp_nlp_dims *dims, ocp_nlp_in *in, ocp_nlp_out *out, ocp_nlp_res *res,
-                         ocp_nlp_memory *mem);  // ocp_nlp_res_workspace *work);
+                         ocp_nlp_memory *mem);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -336,7 +336,7 @@ void ocp_nlp_cost_nls_initialize(void *config_, void *dims_, void *model_, void 
     int ny = dims->ny;
     int ns = dims->ns;
 
-    // TODO recompute factorization only if W are re-tuned ???
+    // TODO(all): recompute factorization only if W are re-tuned ???
     blasfeo_dpotrf_l(ny, &model->W, 0, 0, &memory->W_chol, 0, 0);
 
     blasfeo_dveccp(2 * ns, &model->Z, 0, memory->Z, 0);
@@ -381,7 +381,7 @@ void ocp_nlp_cost_nls_update_qp_matrices(void *config_, void *dims_, void *model
 
     blasfeo_daxpy(ny, -1.0, &model->y_ref, 0, &memory->res, 0, &memory->res, 0);
 
-    // TODO use lower triangular chol of W to save n_y^2 flops
+    // TODO(all): use lower triangular chol of W to save n_y^2 flops
     blasfeo_dsymv_l(ny, ny, 1.0, &model->W, 0, 0, &memory->res, 0, 0.0, &work->tmp_ny, 0,
                     &work->tmp_ny, 0);
     blasfeo_dgemv_n(nu + nx, ny, 1.0, &memory->Jt, 0, 0, &work->tmp_ny, 0, 0.0, &memory->grad, 0,
