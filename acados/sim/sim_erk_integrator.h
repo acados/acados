@@ -28,6 +28,11 @@ extern "C" {
 #include "acados/utils/types.h"
 
 
+typedef struct
+{
+    int nx;
+    int nu;
+} sim_erk_dims;
 
 typedef struct
 {
@@ -70,7 +75,10 @@ typedef struct
 } sim_erk_workspace;
 
 
-
+//
+int sim_erk_dims_calculate_size();
+//
+void *sim_erk_dims_assign(void* config_, void *raw_memory);
 //
 int sim_erk_model_calculate_size(void *config, sim_dims *dims);
 //
