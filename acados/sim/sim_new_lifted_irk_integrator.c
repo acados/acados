@@ -759,6 +759,8 @@ void sim_new_lifted_irk_config_initialize_default(void *config_)
 	config->model_calculate_size = &sim_new_lifted_irk_model_calculate_size;
 	config->model_assign = &sim_new_lifted_irk_model_assign;
     config->model_set_function = &sim_new_lifted_irk_model_set_function;
+    config->dims_calculate_size = &sim_dims_calculate_size;
+    config->dims_assign = &sim_dims_assign;
 
 	return;
 

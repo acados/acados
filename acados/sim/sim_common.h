@@ -147,6 +147,8 @@ typedef struct
     void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
     int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
     void (*config_initialize_default) (void *config);
+    int (*dims_calculate_size)(void *config);
+    void *(*dims_assign)(void *config, void *raw_memory);
 } sim_solver_config;
 
 

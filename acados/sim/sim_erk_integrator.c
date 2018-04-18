@@ -701,7 +701,8 @@ void sim_erk_config_initialize_default(void *config_)
     config->model_set_function = &sim_erk_model_set_function;
 	config->evaluate = &sim_erk;
 	config->config_initialize_default = &sim_erk_config_initialize_default;
-
+    config->dims_calculate_size = &sim_dims_calculate_size;
+    config->dims_assign = &sim_dims_assign;
 	return;
 
 }
