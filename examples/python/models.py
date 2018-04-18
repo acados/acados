@@ -1,15 +1,12 @@
 from casadi import cos, Function, sin, SX, vertcat
 
-def chen_model(implicit=False):
+def chen_model():
     """ The following ODE model comes from Chen1998. """
     nx, nu = (2, 1)
     x = SX.sym('x', nx)
     u = SX.sym('u', nu)
     mu = 0.5
     rhs = vertcat(x[1] + u*(mu + (1.-mu)*x[0]), x[0] + u*(mu - 4.*(1.-mu)*x[1]))
-    if implicit:
-        xdot = SX.sym('x', nx)
-        return Function('chen', [x, u, xdot], [xdot - rhs]), nx, nu
     return Function('chen', [x, u], [rhs]), nx, nu
 
 def pendulum_model():

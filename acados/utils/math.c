@@ -24,17 +24,15 @@
  *                                                                                                 *
  **************************************************************************************************/
 
-#include "acados/utils/math.h"
 
+// external
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+// acados
+#include "acados/utils/math.h"
 #include "acados/utils/types.h"
 
-/************************************************
- matrix-matrix multiplication
-************************************************/
 void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
                  double *C, int ldc) {
     int ii, jj, kk;
@@ -51,6 +49,8 @@ void dgemm_nn_3l(int m, int n, int k, double *A, int lda, double *B, int ldb,
     return;
 }
 
+
+
 void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
     int ii, jj;
 
@@ -63,6 +63,8 @@ void dgemv_n_3l(int m, int n, double *A, int lda, double *x, double *y) {
     return;
 }
 
+
+
 void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
     int ii, jj;
 
@@ -74,6 +76,8 @@ void dgemv_t_3l(int m, int n, double *A, int lda, double *x, double *y) {
 
     return;
 }
+
+
 
 void dcopy_3l(int n, double *x, int incx, double *y, int incy) {
     int ii;
@@ -91,12 +95,16 @@ void dcopy_3l(int n, double *x, int incx, double *y, int incy) {
     return;
 }
 
+
+
 void daxpy_3l(int n, double da, double *dx, double *dy) {
     int i;
     for (i = 0; i < n; i++) {
         dy[i] += da * dx[i];
     }
 }
+
+
 
 void dscal_3l(int n, double da, double *dx) {
     int i;
@@ -171,8 +179,7 @@ void dger_3l(int m, int n, double alpha, double *x, int incx, double *y,
     return;
 }
 
-#ifdef ACADOS_WITH_HPMPC
-#include "hpmpc/include/aux_d.h"
+
 
 void dgetf2_3l(int m, int n, double *A, int lda, int *ipiv, int *info) {
     if (m <= 0 || n <= 0) return;
@@ -261,7 +268,7 @@ void dlaswp_3l(int n, double *A, int lda, int k1, int k2, int *ipiv) {
 }
 
 // left lower no-transp unit
-void dtrsm_l_l_n_u_3l(int m, int n, double *A, int lda, double *B, int ldb) {
+void dtrsm_llnu_3l(int m, int n, double *A, int lda, double *B, int ldb) {
     if (m == 0 || n == 0) return;
 
     int i, j, k;
@@ -278,7 +285,7 @@ void dtrsm_l_l_n_u_3l(int m, int n, double *A, int lda, double *B, int ldb) {
 }
 
 // left upper no-transp non-unit
-void dtrsm_l_u_n_n_3l(int m, int n, double *A, int lda, double *B, int ldb) {
+void dtrsm_lunn_3l(int m, int n, double *A, int lda, double *B, int ldb) {
     if (m == 0 || n == 0) return;
 
     int i, j, k;
@@ -305,10 +312,10 @@ void dgetrs_3l(int n, int nrhs, double *A, int lda, int *ipiv, double *B,
     dlaswp_3l(nrhs, B, ldb, 0, n, ipiv);
 
     // solve L*X = B, overwriting B with X
-    dtrsm_l_l_n_u_3l(n, nrhs, A, lda, B, ldb);
+    dtrsm_llnu_3l(n, nrhs, A, lda, B, ldb);
 
     // solve U*X = B, overwriting B with X
-    dtrsm_l_u_n_n_3l(n, nrhs, A, lda, B, ldb);
+    dtrsm_lunn_3l(n, nrhs, A, lda, B, ldb);
 
     return;
 }
@@ -360,23 +367,23 @@ void padeapprox(int m, int row, double *A) {
     /*    double d1 = 1;*/
     /*    double dm1 = -1;*/
 
-    double *U;
-    d_zeros(&U, row, row);
-    double *V;
-    d_zeros(&V, row, row);
+    double *U = malloc(row*row*sizeof(double));
+	for(int ii=0; ii<row*row; ii++) U[ii] = 0.0;
+    double *V = malloc(row*row*sizeof(double));
+	for(int ii=0; ii<row*row; ii++) V[ii] = 0.0;
 
     if (m == 3) {
         double c[] = {120, 60, 12, 1};
-        double *A0;
-        d_eye(&A0, row);
-        double *A2;
-        d_zeros(&A2, row, row);
+        double *A0 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
+		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
+        double *A2 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
         dgemm_nn_3l(row, row, row, A, row, A, row, A2, row);
-        double *temp;
-        d_zeros(&temp, row, row);
+        double *temp = malloc(row*row*sizeof(double));
         //        dscal_(&row2, &d0, temp, &i1);
         dscal_3l(row2, 0, temp);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
@@ -397,12 +404,13 @@ void padeapprox(int m, int row, double *A) {
         free(temp);
     } else if (m == 5) {
         double c[] = {30240, 15120, 3360, 420, 30, 1};
-        double *A0;
-        d_eye(&A0, row);
-        double *A2;
-        d_zeros(&A2, row, row);
-        double *A4;
-        d_zeros(&A4, row, row);
+        double *A0 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
+		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
+        double *A2 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -411,8 +419,8 @@ void padeapprox(int m, int row, double *A) {
         //        &beta, A4, &row);
         dgemm_nn_3l(row, row, row, A2, row, A2, row, A4, row);
         dmcopy(row, row, A4, row, V, row);
-        double *temp;
-        d_zeros(&temp, row, row);
+        double *temp = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
         dmcopy(row, row, A4, row, temp, row);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
         daxpy_3l(row2, c[3], A2, temp);
@@ -433,14 +441,15 @@ void padeapprox(int m, int row, double *A) {
         free(temp);
     } else if (m == 7) {
         double c[] = {17297280, 8648640, 1995840, 277200, 25200, 1512, 56, 1};
-        double *A0;
-        d_eye(&A0, row);
-        double *A2;
-        d_zeros(&A2, row, row);
-        double *A4;
-        d_zeros(&A4, row, row);
-        double *A6;
-        d_zeros(&A6, row, row);
+        double *A0 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
+		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
+        double *A2 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
+        double *A6 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A6[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 1;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -451,8 +460,8 @@ void padeapprox(int m, int row, double *A) {
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A4, &row, A2, &row,
         //        &beta, A6, &row);
         dgemm_nn_3l(row, row, row, A4, row, A2, row, A6, row);
-        double *temp;
-        d_zeros(&temp, row, row);
+        double *temp = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
         //        dscal_(&row2, &d0, temp, &i1);
         dscal_3l(row2, 0, temp);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
@@ -484,16 +493,17 @@ void padeapprox(int m, int row, double *A) {
     } else if (m == 9) {
         double c[] = {17643225600, 8821612800, 2075673600, 302702400, 30270240,
                       2162160,     110880,     3960,       90,        1};
-        double *A0;
-        d_eye(&A0, row);
-        double *A2;
-        d_zeros(&A2, row, row);
-        double *A4;
-        d_zeros(&A4, row, row);
-        double *A6;
-        d_zeros(&A6, row, row);
-        double *A8;
-        d_zeros(&A8, row, row);
+        double *A0 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
+		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
+        double *A2 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
+        double *A6 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A6[ii] = 0.0;
+        double *A8 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A8[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -508,8 +518,8 @@ void padeapprox(int m, int row, double *A) {
         //        &beta, A8, &row);
         dgemm_nn_3l(row, row, row, A6, row, A2, row, A8, row);
         dmcopy(row, row, A8, row, V, row);
-        double *temp;
-        d_zeros(&temp, row, row);
+        double *temp = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
         dmcopy(row, row, A8, row, temp, row);
         //        daxpy_(&row2, &c[3], A2, &i1, temp, &i1);
         daxpy_3l(row2, c[3], A2, temp);
@@ -553,14 +563,15 @@ void padeapprox(int m, int row, double *A) {
                       16380,
                       182,
                       1};
-        double *A0;
-        d_eye(&A0, row);
-        double *A2;
-        d_zeros(&A2, row, row);
-        double *A4;
-        d_zeros(&A4, row, row);
-        double *A6;
-        d_zeros(&A6, row, row);
+        double *A0 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A0[ii] = 0.0;
+		for(int ii=0; ii<row; ii++) A0[ii*(row+1)] = 1.0;
+        double *A2 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A2[ii] = 0.0;
+        double *A4 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A4[ii] = 0.0;
+        double *A6 = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) A6[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         //        dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A, &row,
         //        &beta, A2, &row);
@@ -572,8 +583,8 @@ void padeapprox(int m, int row, double *A) {
         //        &beta, A6, &row);
         dgemm_nn_3l(row, row, row, A4, row, A2, row, A6, row);
         dmcopy(row, row, A2, row, U, row);
-        double *temp;
-        d_zeros(&temp, row, row);
+        double *temp = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
         //        dscal_(&row2, &c[9], U, &i1);
         dscal_3l(row2, c[9], U);
         //        daxpy_(&row2, &c[11], A4, &i1, U, &i1);
@@ -621,8 +632,8 @@ void padeapprox(int m, int row, double *A) {
         printf("%s\n", "Wrong Pade approximatin degree");
         exit(1);
     }
-    double *D;
-    d_zeros(&D, row, row);
+    double *D = malloc(row*row*sizeof(double));
+	for(int ii=0; ii<row*row; ii++) D[ii] = 0.0;
     //    dcopy_(&row2, V, &i1, A, &i1);
     dmcopy(row, row, V, row, A, row);
     //    daxpy_(&row2, &d1, U, &i1, A, &i1);
@@ -668,8 +679,8 @@ void expm(int row, double *A) {
         //        dscal_(&row2, &t, A, &i1);
         dscal_3l(row2, t, A);
         padeapprox(m_vals[4], row, A);
-        double *temp;
-        d_zeros(&temp, row, row);
+        double *temp = malloc(row*row*sizeof(double));
+		for(int ii=0; ii<row*row; ii++) temp[ii] = 0.0;
         //        char ta = 'n'; double alpha = 1; double beta = 0;
         for (i = 0; i < s; i++) {
             //            dgemm_(&ta, &ta, &row, &row, &row, &alpha, A, &row, A,
@@ -681,7 +692,6 @@ void expm(int row, double *A) {
     }
 }
 
-#endif
 
 
 // TODO(dimitris): move this to condensing module once implemented

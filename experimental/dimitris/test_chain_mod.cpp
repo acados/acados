@@ -332,7 +332,7 @@ int main() {
         }
         nlp_out.x[N] = (real_t *) malloc(sizeof(*nlp_out.x[N]) * (NX));
 
-        ocp_nlp_gn_sqp_args nlp_args;
+        ocp_nlp_gn_sqp_opts nlp_args;
         ocp_nlp_args nlp_common_args;
         nlp_args.common = &nlp_common_args;
         nlp_args.common->maxIter = max_sqp_iters;

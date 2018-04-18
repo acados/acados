@@ -24,29 +24,78 @@
 extern "C" {
 #endif
 
-#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
-typedef struct {
-    real_t *K_traj;
 
-    real_t *rhs_forw_in;
-    real_t *out_forw_traj;
 
-    real_t *adj_traj;
-    real_t *rhs_adj_in;
-    real_t *out_adj_tmp;
+typedef struct
+{
+	/* external functions */
+	// explicit ode
+	external_function_generic *expl_ode_fun;
+	// jacobian explicit ode
+	external_function_generic *expl_ode_jac;
+	// hessian explicit ode
+	external_function_generic *expl_ode_hes;
+	// forward explicit vde
+	external_function_generic *expl_vde_for;
+	// adjoint explicit vde
+	external_function_generic *expl_vde_adj;
+
+} erk_model;
+
+
+
+typedef struct
+{
+	// no memory
+	void *dummy;
+} sim_erk_memory;
+
+
+
+typedef struct
+{
+
+    double *rhs_forw_in;  // x + S + p
+
+    double *K_traj; // (stages *nX) or (steps*stages*nX) for adj
+    double *out_forw_traj; // S or (steps+1)*nX for adj
+
+    double *rhs_adj_in;
+    double *out_adj_tmp;
+    double *adj_traj;
+
 } sim_erk_workspace;
 
-int_t sim_erk(const sim_in *in, sim_out *out, void *args, void *mem,
-              void *work);
 
-int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
 
-void sim_erk_create_arguments(void *args, const int_t num_stages);
+//
+int sim_erk_model_calculate_size(void *config, sim_dims *dims);
+//
+void *sim_erk_model_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+int sim_erk_model_set_function(void *model, sim_function_t fun_type, void *fun);
+//
+int sim_erk_opts_calculate_size(void *config, sim_dims *dims);
+//
+void sim_erk_opts_update(void *config_, sim_dims *dims, void *opts_);
+//
+void *sim_erk_opts_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+void sim_erk_opts_initialize_default(void *config, sim_dims *dims, void *opts_);
+//
+int sim_erk_memory_calculate_size(void *config, sim_dims *dims, void *opts_);
+//
+void *sim_erk_memory_assign(void *config, sim_dims *dims, void *opts_, void *raw_memory);
+//
+int sim_erk_workspace_calculate_size(void *config, sim_dims *dims, void *opts_);
+//
+int sim_erk(void *config, sim_in *in, sim_out *out, void *opts_, void *mem_, void *work_);
+//
+void sim_erk_config_initialize_default(void *config);
 
-void sim_erk_initialize(const sim_in *in, void *args_, void **work);
-void sim_erk_destroy(void *work);
 
 #ifdef __cplusplus
 } /* extern "C" */

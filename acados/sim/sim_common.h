@@ -20,72 +20,151 @@
 #ifndef ACADOS_SIM_SIM_COMMON_H_
 #define ACADOS_SIM_SIM_COMMON_H_
 
+#include <stdbool.h>
+
+#include "acados/sim/sim_collocation_utils.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "acados/utils/external_function_generic.h"
 
-typedef struct {
-    int_t nx;   // NX
-    int_t nu;   // NU
-    int_t nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
-    real_t *x;  // x[NX]
-    real_t *u;  // u[NU]
 
-    real_t *S_forw;  // forward seed
-    real_t *S_adj;   // backward seed
 
-    bool sens_forw;
-    bool sens_adj;
-    bool sens_hess;
-    int_t num_forw_sens;
+// maximum number of integration stages
+#define NS_MAX 15
 
-    casadi_function_t vde;
-    void (*forward_vde_wrapper)(const int_t, const int_t, const real_t *, real_t *,
-                                casadi_function_t);
-    casadi_function_t jac;
-    void (*jacobian_wrapper)(const int_t, const real_t *, real_t *, casadi_function_t);
-    casadi_function_t vde_adj;
-    void (*adjoint_vde_wrapper)(const int_t, const int_t, const real_t *, real_t *,
-                                casadi_function_t);
-    casadi_function_t discrete_model;
+typedef enum {
+    // ERK and LIFTED_ERK
+    EXPL_ODE_FUN,
+    EXPL_ODE_JAC, // TODO expl_ode_jac_x
+    EXPL_ODE_HES, // wrt x and u ???
+    EXPL_VDE_FOR,
+    EXPL_VDE_ADJ,
+    // IRK
+    IMPL_ODE_FUN,
+    IMPL_ODE_JAC_X,
+    IMPL_ODE_JAC_XDOT,
+    IMPL_ODE_JAC_U,
+    IMPL_ODE_FUN_JAC_X_XDOT,
+    IMPL_ODE_JAC_X_XDOT_U,
+    IMPL_ODE_JAC_X_U,
+} sim_function_t;
 
-    real_t step;
-    uint num_steps;
 
-    real_t *grad_K;  // gradient correction
+typedef struct
+{
+    int nx;
+    int nu;
+//    int dummy;  // NOTE(dimitris): sizeof(struct) should always be multiple of 8
+	// TODO have nx np nf instead !!!
+} sim_dims;
+
+
+
+typedef struct
+{
+
+    sim_dims *dims;
+
+    // int nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
+    double *x;  // x[NX]
+    double *u;  // u[NU]
+
+    double *S_forw;  // forward seed
+    double *S_adj;   // backward seed
+
+    void *model;
+
+    double T; // simulation time
+
 } sim_in;
 
-typedef struct {
-    real_t CPUtime;
-    real_t LAtime;
-    real_t ADtime;
+
+
+typedef struct
+{
+    double CPUtime; // in seconds
+    double LAtime; // in seconds
+    double ADtime; // in seconds
 } sim_info;
 
-typedef struct {
-    real_t *xn;      // xn[NX]
-    real_t *S_forw;  // S_forw[NX*(NX+NU)]
-    real_t *S_adj;   //
-    real_t *S_hess;  //
 
-    real_t *grad;  // gradient correction
+
+typedef struct
+{
+    double *xn;      // xn[NX]
+    double *S_forw;  // S_forw[NX*(NX+NU)]
+    double *S_adj;   //
+    double *S_hess;  //
+
+    double *grad;  // gradient correction
 
     sim_info *info;
 } sim_out;
 
-typedef struct {
-    int_t (*fun)(const sim_in *, sim_out *, void *, void *, void *);
-    sim_in *in;
-    sim_out *out;
-    void *args;
-    void *mem;
-    void *work;
-} sim_solver;
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+
+typedef struct
+{
+	int ns; // number of integration stages
+
+    int num_steps;
+    int num_forw_sens;
+
+	int tableau_size; // check that is consistent with ns
+    double *A_mat;
+    double *c_vec;
+    double *b_vec;
+
+    bool sens_forw;
+    bool sens_adj;
+    bool sens_hess;
+
+    // for explicit integrators: newton_iter == 0 && scheme == NULL
+    // && jac_reuse=false
+    int newton_iter;
+    bool jac_reuse;
+    Newton_scheme *scheme;
+
+    // work space
+    void *work;
+
+} sim_rk_opts;
+
+
+
+typedef struct
+{
+    int (*evaluate) (void *config, sim_in *in, sim_out *out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, sim_dims *dims);
+    void *(*opts_assign) (void *config, sim_dims *dims, void *raw_memory);
+    void (*opts_initialize_default) (void *config, sim_dims *dims, void *opts);
+    void (*opts_update) (void *config, sim_dims *dims, void *opts);
+    int (*memory_calculate_size) (void *config, sim_dims *dims, void *opts);
+    void *(*memory_assign) (void *config, sim_dims *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, sim_dims *dims, void *opts);
+    int (*model_calculate_size) (void *config, sim_dims *dims);
+    void *(*model_assign) (void *config, sim_dims *dims, void *raw_memory);
+    int (*model_set_function) (void *model, sim_function_t fun_type, void *fun);
+    void (*config_initialize_default) (void *config);
+} sim_solver_config;
+
+
+//
+int sim_solver_config_calculate_size();
+//
+sim_solver_config *sim_solver_config_assign(void *raw_memory);
+//
+int sim_dims_calculate_size();
+//
+sim_dims *sim_dims_assign(void *raw_memory);
+//
+int sim_in_calculate_size(void *config, sim_dims *dims);
+//
+sim_in *sim_in_assign(void *config, sim_dims *dims, void *raw_memory);
+//
+int sim_out_calculate_size(void *config, sim_dims *dims);
+//
+sim_out *sim_out_assign(void *config, sim_dims *dims, void *raw_memory);
 
 #endif  // ACADOS_SIM_SIM_COMMON_H_

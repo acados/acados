@@ -30,7 +30,7 @@
 #include "acados/ocp_nlp/ocp_nlp_sm_gn.h"
 #include "acados/ocp_nlp/ocp_nlp_sqp.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
+#include "acados/ocp_qp/ocp_qp_qpdunes.h"
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 #include "acados/sim/sim_common.h"
@@ -58,8 +58,8 @@ using Eigen::VectorXd;
 TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
           "[nonlinear optimization]") {
     // TODO(nielsvd): re-implement (Frozen) IN/INIS
-    for (int INEXACT = 0; INEXACT < 1; INEXACT++) {
-        int d_start = 1;
+    for (int INEXACT = 0; INEXACT < 5; INEXACT++) {
+        int d_start = 0;
         if (INEXACT > 0) d_start = 2;
 
         for (int d = d_start; d < 4; d++) {  // RK4 in case d == 0
@@ -135,8 +135,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 ls_cost.W[N] = WN;
                 ls_cost.y_ref =
                     (real_t **)malloc(sizeof(*ls_cost.y_ref) * (N + 1));
-                ls_cost.linear_cost =
-                    (real_t **)malloc(sizeof(*ls_cost.linear_cost) * (N + 1));
                 ls_cost.fun =
                     (ocp_nlp_function **)malloc(sizeof(*ls_cost.fun) * (N + 1));
                 for (int_t i = 0; i < N; i++) {
@@ -183,8 +181,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
 
                     ls_cost.y_ref[i] =
                         (real_t *)malloc(sizeof(*ls_cost.y_ref[i]) * (NX + NU));
-                    ls_cost.linear_cost[i] =
-                        (real_t *)calloc((NX + NU), sizeof(*ls_cost.linear_cost[i]));
                     for (int_t j = 0; j < NX; j++)
                         ls_cost.y_ref[i][j] = xref[j];
                     for (int_t j = 0; j < NU; j++)
@@ -232,8 +228,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
 
                 ls_cost.y_ref[N] =
                     (real_t *)malloc(sizeof(*ls_cost.y_ref[N]) * (NX));
-                ls_cost.linear_cost[N] =
-                    (real_t *)calloc(NX, sizeof(*ls_cost.linear_cost[N]));
                 for (int_t j = 0; j < NX; j++) ls_cost.y_ref[N][j] = xref(j);
 
                 /************************************************
@@ -245,7 +239,7 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 sim_info info[N];
                 sim_solver *integrators[N];
 
-                sim_RK_opts rk_opts[N];
+                sim_rk_opts rk_opts[N];
                 void *sim_work = NULL;
                 sim_lifted_irk_memory irk_mem[N];
 
@@ -270,7 +264,6 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     sim_in[jj].step = Ts / sim_in[jj].num_steps;
                     sim_in[jj].nx = NX;
                     sim_in[jj].nu = NU;
-                    sim_in[jj].nz = 0;
 
                     sim_in[jj].sens_forw = true;
                     sim_in[jj].sens_adj = false;
@@ -280,21 +273,21 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     switch (NMF) {
                         case 1:
                             sim_in[jj].vde = &vde_chain_nm2;
-                            sim_in[jj].forward_vde_wrapper = &vde_impl_fun;
+                            sim_in[jj].forward_vde_wrapper = &vde_fun;
                             sim_in[jj].jac = &jac_chain_nm2;
-                            sim_in[jj].jacobian_wrapper = &jac_impl_fun;
+                            sim_in[jj].jacobian_wrapper = &jac_fun;
                             break;
                         case 2:
                             sim_in[jj].vde = &vde_chain_nm3;
-                            sim_in[jj].forward_vde_wrapper = &vde_impl_fun;
+                            sim_in[jj].forward_vde_wrapper = &vde_fun;
                             sim_in[jj].jac = &jac_chain_nm3;
-                            sim_in[jj].jacobian_wrapper = &jac_impl_fun;
+                            sim_in[jj].jacobian_wrapper = &jac_fun;
                             break;
                         case 3:
                             sim_in[jj].vde = &vde_chain_nm4;
-                            sim_in[jj].forward_vde_wrapper = &vde_impl_fun;
+                            sim_in[jj].forward_vde_wrapper = &vde_fun;
                             sim_in[jj].jac = &jac_chain_nm4;
-                            sim_in[jj].jacobian_wrapper = &jac_impl_fun;
+                            sim_in[jj].jacobian_wrapper = &jac_fun;
                             break;
                         default:
                             REQUIRE(1 == 0);
@@ -547,17 +540,17 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                  * QP solver
                  ************************************************/
                 ocp_qp_solver qp_solver;
-                qp_solver.fun = &ocp_qp_condensing_qpoases;
-                qp_solver.initialize = &ocp_qp_condensing_qpoases_initialize;
-                qp_solver.destroy = &ocp_qp_condensing_qpoases_destroy;
-                qp_solver.qp_in = create_ocp_qp_in(N, nx, nu, nb, ng);
-                qp_solver.qp_out = create_ocp_qp_out(N, nx, nu, nb, ng);
+                qp_solver.fun = &ocp_qp_qpdunes;
+                qp_solver.initialize = &ocp_qp_qpdunes_initialize;
+                qp_solver.destroy = &ocp_qp_qpdunes_destroy;
+                qp_solver.qp_in = ocp_qp_in_create(N, nx, nu, nb, ng);
+                qp_solver.qp_out = ocp_qp_out_create(N, nx, nu, nb, ng);
                 // TODO(nielsvd): lines below should go
                 int_t **idxb = (int_t **) qp_solver.qp_in->idxb;
                 for (int_t i = 0; i <= N; i++)
                     for (int_t j = 0; j < nb[i]; j++) idxb[i][j] = hidxb[i][j];
-                qp_solver.args =
-                    (void *)ocp_qp_condensing_qpoases_create_arguments(qp_solver.qp_in);
+                qp_solver.args = (void *)ocp_qp_qpdunes_create_arguments(
+                    QPDUNES_NONLINEAR_MPC);  // qp_solver.qp_in); //
 
                 /************************************************
                  * SQP method
@@ -631,10 +624,8 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                     ocp_nlp_sqp(&nlp_in, &nlp_out, nlp_args, nlp_mem, nlp_work);
                 REQUIRE(status == 0);
 
-                // real_t err_x[NX * (N + 1)];
-                // real_t err_u[NU * N];
-                real_t out_x[NX * (N + 1)];
-                real_t out_u[NU * N];
+                real_t out_x[NX * (N + 1)], err_x[NX * (N + 1)];
+                real_t out_u[NU * N], err_u[NU * N];
                 for (int_t i = 0; i < N; i++) {
                     for (int_t j = 0; j < NX; j++)
                         out_x[i * NX + j] = nlp_out.x[i][j];
@@ -644,34 +635,35 @@ TEST_CASE("GN-SQP for nonlinear optimal control of chain of masses",
                 for (int_t j = 0; j < NX; j++)
                     out_x[N * NX + j] = nlp_out.x[N][j];
 
-                // for (int_t i = 0; i < N; i++) {
-                //     for (int_t j = 0; j < NX; j++)
-                //         err_x[i * NX + j] =
-                //             fabs(out_x[i * NX + j] - resX(j, i));
-                //     for (int_t j = 0; j < NU; j++)
-                //         err_u[i * NU + j] =
-                //             fabs(out_u[i * NU + j] - resU(j, i));
-                // }
-                // for (int_t j = 0; j < NX; j++)
-                //     err_x[N * NX + j] = fabs(out_x[N * NX + j] - resX(j, N));
+                for (int_t i = 0; i < N; i++) {
+                    for (int_t j = 0; j < NX; j++)
+                        err_x[i * NX + j] =
+                            fabs(out_x[i * NX + j] - resX(j, i));
+                    for (int_t j = 0; j < NU; j++)
+                        err_u[i * NU + j] =
+                            fabs(out_u[i * NU + j] - resU(j, i));
+                }
+                for (int_t j = 0; j < NX; j++)
+                    err_x[N * NX + j] = fabs(out_x[N * NX + j] - resX(j, N));
 
                 // print_matrix_name((char*)"stdout", (char*)"out_x", out_x, NX,
                 // N+1);
                 // print_matrix_name((char*)"stdout", (char*)"out_u", out_u, NU,
                 // N);
 
-                // print_matrix_name((char *)"stdout", (char *)"err_x", err_x, NX,
-                //                   N + 1);
-                // print_matrix_name((char *)"stdout", (char *)"err_u", err_u, NU,
-                //                   N);
+                print_matrix_name((char *)"stdout", (char *)"err_x", err_x, NX,
+                                  N + 1);
+                print_matrix_name((char *)"stdout", (char *)"err_u", err_u, NU,
+                                  N);
 
-                // std::cout << "\nresX:" << std::endl;
-                // std::cout << resX << std::endl;
-                // std::cout << "\nresU:" << std::endl;
-                // std::cout << resU << std::endl;
+                std::cout << resX << std::endl;
+                std::cout << resU << std::endl;
 
                 MatrixXd SQP_x = Eigen::Map<MatrixXd>(&out_x[0], NX, N + 1);
                 MatrixXd SQP_u = Eigen::Map<MatrixXd>(&out_u[0], NU, N);
+
+                std::cout << "SQP_x:" << std::endl;
+                std::cout << SQP_x << std::endl;
 
                 REQUIRE(SQP_x.isApprox(resX, COMPARISON_TOLERANCE_IPOPT));
                 REQUIRE(SQP_u.isApprox(resU, COMPARISON_TOLERANCE_IPOPT));

@@ -8,7 +8,7 @@ for i=1:N
     ng{i} = 1;
 end
 ng{N+1} = 0;
-nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu, 'ng', {ng}));
+nlp = ocp_nlp(struct('N', N, 'nx', nx, 'nu', nu, 'ng', ng));
 
 % ODE Model
 step = 0.1;
@@ -24,19 +24,15 @@ f = ocp_nlp_function(Function('ls_cost', {x, u}, {vertcat(x, u)}));
 f_N = ocp_nlp_function(Function('ls_cost_N', {x, u_N}, {x}));
 cost_functions = cell(N+1, 1);
 cost_matrices = cell(N+1, 1);
-linear_cost = cell(N+1, 1);
 for i=1:N
     cost_functions{i} = f;
     cost_matrices{i} = blkdiag(Q, R);
-    linear_cost{i} = [0; 0; 0];
 end
 cost_functions{N+1} = f_N;
 cost_matrices{N+1} = Q;
-linear_cost{N+1} = [0; 0];
 
 ls_cost = ocp_nlp_ls_cost(N, cost_functions);
 ls_cost.ls_cost_matrix = cost_matrices;
-ls_cost.ls_linear_cost = linear_cost;
 nlp.set_cost(ls_cost);
 
 % Constraints

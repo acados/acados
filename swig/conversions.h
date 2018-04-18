@@ -38,9 +38,9 @@
     #define LANG_MAP_NAME "dictionary"
     #define LANG_MATRIX_NAME "ndarray"
 
-    #define PyArray_NewFromDataF(nd, dims, typenum, data) \
-            PyArray_New(&PyArray_Type, nd, dims, typenum, NULL, \
-                        data, 0, NPY_ARRAY_FARRAY, NULL)
+    #define PyArray_NewFromDataF(nd, dims, data) \
+            PyArray_New(&PyArray_Type, nd, dims, NPY_FLOAT64, NULL, \
+                        (void *) data, 0, NPY_ARRAY_FARRAY | NPY_ARRAY_OWNDATA, NULL)
 #endif
 
 #include "acados/utils/types.h"

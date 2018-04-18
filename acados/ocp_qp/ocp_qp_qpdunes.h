@@ -31,58 +31,72 @@ extern "C" {
 
 typedef enum qpdunes_options_t_ {
     QPDUNES_DEFAULT_ARGUMENTS,
-    QPDUNES_LINEAR_MPC,    // TODO(dimitris): implement
-    QPDUNES_NONLINEAR_MPC  // TODO(dimitris): implement
+    QPDUNES_LINEAR_MPC,    // TODO(dimitris): partly implemented
+    QPDUNES_NONLINEAR_MPC,  // TODO(dimitris): not implemented yet
+    QPDUNES_ACADO_SETTINGS
 } qpdunes_options_t;
+
 
 typedef enum {
     QPDUNES_WITH_QPOASES,
     QPDUNES_WITH_CLIPPING
 } qpdunes_stage_qp_solver_t;
 
-typedef struct ocp_qp_qpdunes_args_ {
+
+typedef struct ocp_qp_qpdunes_opts_ {
     qpOptions_t options;
+    qpdunes_stage_qp_solver_t stageQpSolver;
+    int warmstart;  // warmstart = 0: all multipliers set to zero, warmstart = 1: use previous mult.
     bool isLinearMPC;
-} ocp_qp_qpdunes_args;
+} ocp_qp_qpdunes_opts;
+
 
 typedef struct ocp_qp_qpdunes_memory_ {
-    int_t firstRun;
-    int_t dimA;
-    int_t dimB;
-    int_t dimC;    // maximum number of elements of matrix: [Cx Cu]
-    int_t maxDim;  // max(dimA+dimB, dimC) needed for scrap (to transpose
-                   // matrices)
-    int_t dimz;
-    int_t nDmax;
+    int firstRun;
+    int nx;
+    int nu;
+    int nz;
+    int nDmax;  // max(dims->ng)
     qpData_t qpData;
-    qpdunes_stage_qp_solver_t stageQpSolver;
 } ocp_qp_qpdunes_memory;
 
+
 typedef struct ocp_qp_qpdunes_workspace_ {
-    real_t *H;
-    real_t *g;
-    real_t *ABt;
-    real_t *Ct;
-    real_t *scrap;
-    real_t *zLow;
-    real_t *zUpp;
-    int tmp;  // TODO(dimitris): is this to make sizeof(struct) == 64??
+    double *H;
+    double *Q;
+    double *R;
+    double *S;
+    double *g;
+    double *ABt;
+    double *b;
+    double *Ct;
+    double *lc;
+    double *uc;
+    double *zLow;
+    double *zUpp;
 } ocp_qp_qpdunes_workspace;
 
-ocp_qp_qpdunes_args *ocp_qp_qpdunes_create_arguments(qpdunes_options_t opts);
 
-ocp_qp_qpdunes_memory *ocp_qp_qpdunes_create_memory(const ocp_qp_in *in, void *args_);
-
+//
+int ocp_qp_qpdunes_opts_calculate_size(void *config_, ocp_qp_dims *dims);
+//
+void *ocp_qp_qpdunes_opts_assign(void *config_, ocp_qp_dims *dims, void *raw_memory);
+//
+void ocp_qp_qpdunes_opts_initialize_default(void *config_, ocp_qp_dims *dims, void *opts_);
+//
+void ocp_qp_qpdunes_opts_update(void *config_, ocp_qp_dims *dims, void *opts_);
+//
+int ocp_qp_qpdunes_memory_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
+//
+void *ocp_qp_qpdunes_memory_assign(void *config_, ocp_qp_dims *dims, void *opts_, void *raw_memory);
+//
+int ocp_qp_qpdunes_workspace_calculate_size(void *config_, ocp_qp_dims *dims, void *opts_);
+//
+int ocp_qp_qpdunes(void *config_, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts_, void *memory_, void *work_);
+//
 void ocp_qp_qpdunes_free_memory(void *mem_);
-
-int_t ocp_qp_qpdunes_calculate_workspace_size(const ocp_qp_in *in, void *args_);
-
-int_t ocp_qp_qpdunes(const ocp_qp_in *input, ocp_qp_out *output, void *args_, void *memory_,
-                     void *work_);
-
-void ocp_qp_qpdunes_initialize(const ocp_qp_in *qp_in, void *args_, void **mem, void **work);
-
-void ocp_qp_qpdunes_destroy(void *mem, void *work);
+//
+void ocp_qp_qpdunes_config_initialize_default(void *config_);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -49,7 +49,7 @@ int_t main( ) {
     // define arguments for all solvers
     ocp_qp_ooqp_args ooqp_args;
     ocp_qp_condensing_qpoases_args qpoases_args;
-    ocp_qp_hpmpc_args hpmpc_args;
+    ocp_qp_hpmpc_opts hpmpc_args;
 
     ooqp_args.printLevel = 0;
     ooqp_args.fixHessian = 0;

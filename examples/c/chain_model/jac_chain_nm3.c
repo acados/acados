@@ -4,507 +4,361 @@
 extern "C" {
 #endif
 
+/* How to prefix internal symbols */
 #ifdef CODEGEN_PREFIX
   #define NAMESPACE_CONCAT(NS, ID) _NAMESPACE_CONCAT(NS, ID)
   #define _NAMESPACE_CONCAT(NS, ID) NS ## ID
   #define CASADI_PREFIX(ID) NAMESPACE_CONCAT(CODEGEN_PREFIX, ID)
-#else /* CODEGEN_PREFIX */
+#else
   #define CASADI_PREFIX(ID) jac_chain_nm3_ ## ID
-#endif /* CODEGEN_PREFIX */
+#endif
 
 #include <math.h>
 
-#ifndef real_t
-#define real_t double
-#endif /* real_t */
-
-#define to_double(x) (double) x
-#define to_int(x) (int) x
-#define CASADI_CAST(x,y) (x) y
-/* Pre-c99 compatibility */
-#if __STDC_VERSION__ < 199901L
-real_t CASADI_PREFIX(fmin)(real_t x, real_t y) { return x<y ? x : y;}
-#define fmin(x,y) CASADI_PREFIX(fmin)(x,y)
-real_t CASADI_PREFIX(fmax)(real_t x, real_t y) { return x>y ? x : y;}
-#define fmax(x,y) CASADI_PREFIX(fmax)(x,y)
+#ifndef casadi_real
+#define casadi_real double
 #endif
 
-#define PRINTF printf
+#ifndef casadi_int
+#define casadi_int int
+#endif
+
+/* Add prefix to internal symbols */
+#define casadi_f0 CASADI_PREFIX(f0)
+#define casadi_s0 CASADI_PREFIX(s0)
+#define casadi_s1 CASADI_PREFIX(s1)
+#define casadi_s2 CASADI_PREFIX(s2)
+#define casadi_sq CASADI_PREFIX(sq)
+
+/* Symbol visibility in DLLs */
 #ifndef CASADI_SYMBOL_EXPORT
-#if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
-#if defined(STATIC_LINKED)
-#define CASADI_SYMBOL_EXPORT
-#else /* defined(STATIC_LINKED) */
-#define CASADI_SYMBOL_EXPORT __declspec(dllexport)
-#endif /* defined(STATIC_LINKED) */
-#elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
-#define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
-#else /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#define CASADI_SYMBOL_EXPORT
-#endif /* defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) */
-#endif /* CASADI_SYMBOL_EXPORT */
-real_t CASADI_PREFIX(sq)(real_t x) { return x*x;}
-#define sq(x) CASADI_PREFIX(sq)(x)
+  #if defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__)
+    #if defined(STATIC_LINKED)
+      #define CASADI_SYMBOL_EXPORT
+    #else
+      #define CASADI_SYMBOL_EXPORT __declspec(dllexport)
+    #endif
+  #elif defined(__GNUC__) && defined(GCC_HASCLASSVISIBILITY)
+    #define CASADI_SYMBOL_EXPORT __attribute__ ((visibility ("default")))
+  #else
+    #define CASADI_SYMBOL_EXPORT
+  #endif
+#endif
 
-real_t CASADI_PREFIX(sign)(real_t x) { return x<0 ? -1 : x>0 ? 1 : x;}
-#define sign(x) CASADI_PREFIX(sign)(x)
+static const casadi_int casadi_s0[16] = {12, 1, 0, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+static const casadi_int casadi_s1[7] = {3, 1, 0, 3, 0, 1, 2};
+static const casadi_int casadi_s2[159] = {12, 12, 0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 
-static const int CASADI_PREFIX(s0)[28] = {24, 1, 0, 24, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
-#define s0 CASADI_PREFIX(s0)
-static const int CASADI_PREFIX(s1)[7] = {3, 1, 0, 3, 0, 1, 2};
-#define s1 CASADI_PREFIX(s1)
-static const int CASADI_PREFIX(s2)[16] = {12, 1, 0, 12, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-#define s2 CASADI_PREFIX(s2)
-static const int CASADI_PREFIX(s3)[315] = {12, 24, 0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144, 156, 168, 180, 192, 204, 216, 228, 240, 252, 264, 276, 288, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-#define s3 CASADI_PREFIX(s3)
-/* jac_chain_nm3 */
-CASADI_SYMBOL_EXPORT int jac_chain_nm3(const real_t** arg, real_t** res, int* iw, real_t* w, int mem) {
-  real_t a0=arg[0] ? arg[0][12] : 0;
-  real_t a1=arg[0] ? arg[0][3] : 0;
-  a0=(a0-a1);
+casadi_real casadi_sq(casadi_real x) { return x*x;}
+
+/* jac_chain_nm3:(i0[12],i1[3])->(o0[12],o1[12x12]) */
+static int casadi_f0(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem) {
+  casadi_real a0, a1, a10, a11, a12, a13, a14, a15, a16, a17, a18, a2, a3, a4, a5, a6, a7, a8, a9;
+  a0=arg[0] ? arg[0][3] : 0;
   if (res[0]!=0) res[0][0]=a0;
-  a0=arg[0] ? arg[0][13] : 0;
-  a1=arg[0] ? arg[0][4] : 0;
-  a0=(a0-a1);
+  a0=arg[0] ? arg[0][4] : 0;
   if (res[0]!=0) res[0][1]=a0;
-  a0=arg[0] ? arg[0][14] : 0;
-  a1=arg[0] ? arg[0][5] : 0;
-  a0=(a0-a1);
+  a0=arg[0] ? arg[0][5] : 0;
   if (res[0]!=0) res[0][2]=a0;
-  a0=arg[0] ? arg[0][6] : 0;
-  a1=arg[0] ? arg[0][0] : 0;
-  a0=(a0-a1);
-  real_t a2=sq(a0);
-  real_t a3=arg[0] ? arg[0][7] : 0;
-  real_t a4=arg[0] ? arg[0][1] : 0;
+  a0=3.3333333333333336e+01;
+  a1=1.;
+  a2=3.3000000000000002e-02;
+  a3=arg[0] ? arg[0][6] : 0;
+  a4=arg[0] ? arg[0][0] : 0;
   a3=(a3-a4);
-  real_t a5=sq(a3);
-  a2=(a2+a5);
-  a5=arg[0] ? arg[0][8] : 0;
-  real_t a6=arg[0] ? arg[0][2] : 0;
-  a5=(a5-a6);
-  real_t a7=sq(a5);
-  a2=(a2+a7);
-  a2=sqrt(a2);
-  a7=3.3000000000000002e-02;
-  real_t a8=(a7/a2);
-  real_t a9=1.;
-  real_t a10=(a9-a8);
-  real_t a11=(a10*a0);
-  real_t a12=sq(a1);
-  real_t a13=sq(a4);
-  a12=(a12+a13);
-  a13=sq(a6);
-  a12=(a12+a13);
-  a12=sqrt(a12);
-  a7=(a7/a12);
-  a13=(a9-a7);
-  real_t a14=(a13*a1);
-  a11=(a11-a14);
-  a14=3.3333333333333336e+01;
-  a11=(a14*a11);
-  real_t a15=arg[0] ? arg[0][15] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][3]=a15;
-  a15=(a10*a3);
-  a11=(a13*a4);
-  a15=(a15-a11);
-  a15=(a14*a15);
-  a11=arg[0] ? arg[0][16] : 0;
-  a11=(a11-a15);
-  if (res[0]!=0) res[0][4]=a11;
-  a11=(a10*a5);
-  a15=(a13*a6);
-  a11=(a11-a15);
-  a11=(a14*a11);
+  a5=casadi_sq(a3);
+  a6=arg[0] ? arg[0][7] : 0;
+  a7=arg[0] ? arg[0][1] : 0;
+  a6=(a6-a7);
+  a8=casadi_sq(a6);
+  a5=(a5+a8);
+  a8=arg[0] ? arg[0][8] : 0;
+  a9=arg[0] ? arg[0][2] : 0;
+  a8=(a8-a9);
+  a10=casadi_sq(a8);
+  a5=(a5+a10);
+  a5=sqrt(a5);
+  a10=(a2/a5);
+  a11=(a1-a10);
+  a12=(a11*a3);
+  a13=casadi_sq(a4);
+  a14=casadi_sq(a7);
+  a13=(a13+a14);
+  a14=casadi_sq(a9);
+  a13=(a13+a14);
+  a13=sqrt(a13);
+  a2=(a2/a13);
+  a14=(a1-a2);
+  a15=(a14*a4);
+  a12=(a12-a15);
+  a12=(a0*a12);
+  if (res[0]!=0) res[0][3]=a12;
+  a12=(a11*a6);
+  a15=(a14*a7);
+  a12=(a12-a15);
+  a12=(a0*a12);
+  if (res[0]!=0) res[0][4]=a12;
+  a12=(a11*a8);
+  a15=(a14*a9);
+  a12=(a12-a15);
+  a12=(a0*a12);
   a15=9.8100000000000005e+00;
-  a11=(a11-a15);
-  a15=arg[0] ? arg[0][17] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][5]=a15;
-  a15=arg[0] ? arg[0][18] : 0;
-  a11=arg[0] ? arg[0][9] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][6]=a15;
-  a15=arg[0] ? arg[0][19] : 0;
-  a11=arg[0] ? arg[0][10] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][7]=a15;
-  a15=arg[0] ? arg[0][20] : 0;
-  a11=arg[0] ? arg[0][11] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][8]=a15;
-  a15=arg[0] ? arg[0][21] : 0;
-  a11=arg[1] ? arg[1][0] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][9]=a15;
-  a15=arg[0] ? arg[0][22] : 0;
-  a11=arg[1] ? arg[1][1] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][10]=a15;
-  a15=arg[0] ? arg[0][23] : 0;
-  a11=arg[1] ? arg[1][2] : 0;
-  a15=(a15-a11);
-  if (res[0]!=0) res[0][11]=a15;
-  a15=0.;
-  if (res[1]!=0) res[1][0]=a15;
-  if (res[1]!=0) res[1][1]=a15;
-  if (res[1]!=0) res[1][2]=a15;
-  a11=(a14*a13);
-  real_t a16=(a1+a1);
-  a7=(a7/a12);
-  a1=(a14*a1);
-  a1=(a7*a1);
-  a12=(a12+a12);
-  a1=(a1/a12);
-  real_t a17=(a16*a1);
-  a11=(a11+a17);
-  a17=-3.3333333333333336e+01;
-  real_t a18=(a17*a10);
-  real_t a19=(a0+a0);
-  a8=(a8/a2);
-  a0=(a17*a0);
-  a0=(a8*a0);
-  a2=(a2+a2);
-  a0=(a0/a2);
-  real_t a20=(a19*a0);
-  a18=(a18+a20);
-  a11=(a11-a18);
-  if (res[1]!=0) res[1][3]=a11;
-  a11=(a14*a4);
-  a11=(a7*a11);
-  a11=(a11/a12);
-  a20=(a16*a11);
-  real_t a21=(a17*a3);
-  a21=(a8*a21);
-  a21=(a21/a2);
-  real_t a22=(a19*a21);
-  a20=(a20-a22);
-  if (res[1]!=0) res[1][4]=a20;
-  a20=(a14*a6);
-  a7=(a7*a20);
-  a7=(a7/a12);
-  a16=(a16*a7);
-  a12=(a17*a5);
-  a8=(a8*a12);
-  a8=(a8/a2);
-  a19=(a19*a8);
-  a16=(a16-a19);
-  if (res[1]!=0) res[1][5]=a16;
-  if (res[1]!=0) res[1][6]=a15;
-  if (res[1]!=0) res[1][7]=a15;
-  if (res[1]!=0) res[1][8]=a15;
-  if (res[1]!=0) res[1][9]=a15;
-  if (res[1]!=0) res[1][10]=a15;
-  if (res[1]!=0) res[1][11]=a15;
-  if (res[1]!=0) res[1][12]=a15;
-  if (res[1]!=0) res[1][13]=a15;
-  if (res[1]!=0) res[1][14]=a15;
-  a4=(a4+a4);
-  a16=(a4*a1);
-  a3=(a3+a3);
-  a2=(a3*a0);
-  a16=(a16-a2);
-  if (res[1]!=0) res[1][15]=a16;
-  a16=(a14*a13);
-  a12=(a4*a11);
-  a16=(a16+a12);
-  a12=(a17*a10);
-  a20=(a3*a21);
-  a12=(a12+a20);
-  a16=(a16-a12);
-  if (res[1]!=0) res[1][16]=a16;
-  a4=(a4*a7);
-  a3=(a3*a8);
-  a4=(a4-a3);
-  if (res[1]!=0) res[1][17]=a4;
-  if (res[1]!=0) res[1][18]=a15;
-  if (res[1]!=0) res[1][19]=a15;
-  if (res[1]!=0) res[1][20]=a15;
-  if (res[1]!=0) res[1][21]=a15;
-  if (res[1]!=0) res[1][22]=a15;
-  if (res[1]!=0) res[1][23]=a15;
-  if (res[1]!=0) res[1][24]=a15;
-  if (res[1]!=0) res[1][25]=a15;
-  if (res[1]!=0) res[1][26]=a15;
-  a6=(a6+a6);
-  a1=(a6*a1);
-  a5=(a5+a5);
-  a0=(a5*a0);
-  a1=(a1-a0);
-  if (res[1]!=0) res[1][27]=a1;
-  a11=(a6*a11);
-  a21=(a5*a21);
-  a11=(a11-a21);
-  if (res[1]!=0) res[1][28]=a11;
-  a14=(a14*a13);
-  a6=(a6*a7);
-  a14=(a14+a6);
-  a17=(a17*a10);
-  a5=(a5*a8);
-  a17=(a17+a5);
-  a14=(a14-a17);
-  if (res[1]!=0) res[1][29]=a14;
-  if (res[1]!=0) res[1][30]=a15;
-  if (res[1]!=0) res[1][31]=a15;
-  if (res[1]!=0) res[1][32]=a15;
-  if (res[1]!=0) res[1][33]=a15;
-  if (res[1]!=0) res[1][34]=a15;
-  if (res[1]!=0) res[1][35]=a15;
-  a14=-1.;
-  if (res[1]!=0) res[1][36]=a14;
-  if (res[1]!=0) res[1][37]=a15;
-  if (res[1]!=0) res[1][38]=a15;
-  if (res[1]!=0) res[1][39]=a15;
-  if (res[1]!=0) res[1][40]=a15;
-  if (res[1]!=0) res[1][41]=a15;
-  if (res[1]!=0) res[1][42]=a15;
-  if (res[1]!=0) res[1][43]=a15;
-  if (res[1]!=0) res[1][44]=a15;
-  if (res[1]!=0) res[1][45]=a15;
-  if (res[1]!=0) res[1][46]=a15;
-  if (res[1]!=0) res[1][47]=a15;
-  if (res[1]!=0) res[1][48]=a15;
-  if (res[1]!=0) res[1][49]=a14;
-  if (res[1]!=0) res[1][50]=a15;
-  if (res[1]!=0) res[1][51]=a15;
-  if (res[1]!=0) res[1][52]=a15;
-  if (res[1]!=0) res[1][53]=a15;
-  if (res[1]!=0) res[1][54]=a15;
-  if (res[1]!=0) res[1][55]=a15;
-  if (res[1]!=0) res[1][56]=a15;
-  if (res[1]!=0) res[1][57]=a15;
-  if (res[1]!=0) res[1][58]=a15;
-  if (res[1]!=0) res[1][59]=a15;
-  if (res[1]!=0) res[1][60]=a15;
-  if (res[1]!=0) res[1][61]=a15;
-  if (res[1]!=0) res[1][62]=a14;
-  if (res[1]!=0) res[1][63]=a15;
-  if (res[1]!=0) res[1][64]=a15;
-  if (res[1]!=0) res[1][65]=a15;
-  if (res[1]!=0) res[1][66]=a15;
-  if (res[1]!=0) res[1][67]=a15;
-  if (res[1]!=0) res[1][68]=a15;
-  if (res[1]!=0) res[1][69]=a15;
-  if (res[1]!=0) res[1][70]=a15;
-  if (res[1]!=0) res[1][71]=a15;
-  if (res[1]!=0) res[1][72]=a15;
-  if (res[1]!=0) res[1][73]=a15;
-  if (res[1]!=0) res[1][74]=a15;
-  if (res[1]!=0) res[1][75]=a18;
-  if (res[1]!=0) res[1][76]=a22;
-  if (res[1]!=0) res[1][77]=a19;
-  if (res[1]!=0) res[1][78]=a15;
-  if (res[1]!=0) res[1][79]=a15;
-  if (res[1]!=0) res[1][80]=a15;
-  if (res[1]!=0) res[1][81]=a15;
-  if (res[1]!=0) res[1][82]=a15;
-  if (res[1]!=0) res[1][83]=a15;
-  if (res[1]!=0) res[1][84]=a15;
-  if (res[1]!=0) res[1][85]=a15;
-  if (res[1]!=0) res[1][86]=a15;
-  if (res[1]!=0) res[1][87]=a2;
-  if (res[1]!=0) res[1][88]=a12;
-  if (res[1]!=0) res[1][89]=a3;
-  if (res[1]!=0) res[1][90]=a15;
-  if (res[1]!=0) res[1][91]=a15;
-  if (res[1]!=0) res[1][92]=a15;
-  if (res[1]!=0) res[1][93]=a15;
-  if (res[1]!=0) res[1][94]=a15;
-  if (res[1]!=0) res[1][95]=a15;
-  if (res[1]!=0) res[1][96]=a15;
-  if (res[1]!=0) res[1][97]=a15;
-  if (res[1]!=0) res[1][98]=a15;
-  if (res[1]!=0) res[1][99]=a0;
-  if (res[1]!=0) res[1][100]=a21;
-  if (res[1]!=0) res[1][101]=a17;
-  if (res[1]!=0) res[1][102]=a15;
-  if (res[1]!=0) res[1][103]=a15;
-  if (res[1]!=0) res[1][104]=a15;
-  if (res[1]!=0) res[1][105]=a15;
-  if (res[1]!=0) res[1][106]=a15;
-  if (res[1]!=0) res[1][107]=a15;
-  if (res[1]!=0) res[1][108]=a15;
-  if (res[1]!=0) res[1][109]=a15;
-  if (res[1]!=0) res[1][110]=a15;
-  if (res[1]!=0) res[1][111]=a15;
-  if (res[1]!=0) res[1][112]=a15;
-  if (res[1]!=0) res[1][113]=a15;
-  if (res[1]!=0) res[1][114]=a14;
-  if (res[1]!=0) res[1][115]=a15;
-  if (res[1]!=0) res[1][116]=a15;
-  if (res[1]!=0) res[1][117]=a15;
-  if (res[1]!=0) res[1][118]=a15;
-  if (res[1]!=0) res[1][119]=a15;
-  if (res[1]!=0) res[1][120]=a15;
-  if (res[1]!=0) res[1][121]=a15;
-  if (res[1]!=0) res[1][122]=a15;
-  if (res[1]!=0) res[1][123]=a15;
-  if (res[1]!=0) res[1][124]=a15;
-  if (res[1]!=0) res[1][125]=a15;
-  if (res[1]!=0) res[1][126]=a15;
-  if (res[1]!=0) res[1][127]=a14;
-  if (res[1]!=0) res[1][128]=a15;
-  if (res[1]!=0) res[1][129]=a15;
-  if (res[1]!=0) res[1][130]=a15;
-  if (res[1]!=0) res[1][131]=a15;
-  if (res[1]!=0) res[1][132]=a15;
-  if (res[1]!=0) res[1][133]=a15;
-  if (res[1]!=0) res[1][134]=a15;
-  if (res[1]!=0) res[1][135]=a15;
-  if (res[1]!=0) res[1][136]=a15;
-  if (res[1]!=0) res[1][137]=a15;
-  if (res[1]!=0) res[1][138]=a15;
-  if (res[1]!=0) res[1][139]=a15;
-  if (res[1]!=0) res[1][140]=a14;
-  if (res[1]!=0) res[1][141]=a15;
-  if (res[1]!=0) res[1][142]=a15;
-  if (res[1]!=0) res[1][143]=a15;
-  if (res[1]!=0) res[1][144]=a9;
-  if (res[1]!=0) res[1][145]=a15;
-  if (res[1]!=0) res[1][146]=a15;
-  if (res[1]!=0) res[1][147]=a15;
-  if (res[1]!=0) res[1][148]=a15;
-  if (res[1]!=0) res[1][149]=a15;
-  if (res[1]!=0) res[1][150]=a15;
-  if (res[1]!=0) res[1][151]=a15;
-  if (res[1]!=0) res[1][152]=a15;
-  if (res[1]!=0) res[1][153]=a15;
-  if (res[1]!=0) res[1][154]=a15;
-  if (res[1]!=0) res[1][155]=a15;
-  if (res[1]!=0) res[1][156]=a15;
-  if (res[1]!=0) res[1][157]=a9;
-  if (res[1]!=0) res[1][158]=a15;
-  if (res[1]!=0) res[1][159]=a15;
-  if (res[1]!=0) res[1][160]=a15;
-  if (res[1]!=0) res[1][161]=a15;
-  if (res[1]!=0) res[1][162]=a15;
-  if (res[1]!=0) res[1][163]=a15;
-  if (res[1]!=0) res[1][164]=a15;
-  if (res[1]!=0) res[1][165]=a15;
-  if (res[1]!=0) res[1][166]=a15;
-  if (res[1]!=0) res[1][167]=a15;
-  if (res[1]!=0) res[1][168]=a15;
-  if (res[1]!=0) res[1][169]=a15;
-  if (res[1]!=0) res[1][170]=a9;
-  if (res[1]!=0) res[1][171]=a15;
-  if (res[1]!=0) res[1][172]=a15;
-  if (res[1]!=0) res[1][173]=a15;
-  if (res[1]!=0) res[1][174]=a15;
-  if (res[1]!=0) res[1][175]=a15;
-  if (res[1]!=0) res[1][176]=a15;
-  if (res[1]!=0) res[1][177]=a15;
-  if (res[1]!=0) res[1][178]=a15;
-  if (res[1]!=0) res[1][179]=a15;
-  if (res[1]!=0) res[1][180]=a15;
-  if (res[1]!=0) res[1][181]=a15;
-  if (res[1]!=0) res[1][182]=a15;
-  if (res[1]!=0) res[1][183]=a9;
-  if (res[1]!=0) res[1][184]=a15;
-  if (res[1]!=0) res[1][185]=a15;
-  if (res[1]!=0) res[1][186]=a15;
-  if (res[1]!=0) res[1][187]=a15;
-  if (res[1]!=0) res[1][188]=a15;
-  if (res[1]!=0) res[1][189]=a15;
-  if (res[1]!=0) res[1][190]=a15;
-  if (res[1]!=0) res[1][191]=a15;
-  if (res[1]!=0) res[1][192]=a15;
-  if (res[1]!=0) res[1][193]=a15;
-  if (res[1]!=0) res[1][194]=a15;
-  if (res[1]!=0) res[1][195]=a15;
-  if (res[1]!=0) res[1][196]=a9;
-  if (res[1]!=0) res[1][197]=a15;
-  if (res[1]!=0) res[1][198]=a15;
-  if (res[1]!=0) res[1][199]=a15;
-  if (res[1]!=0) res[1][200]=a15;
-  if (res[1]!=0) res[1][201]=a15;
-  if (res[1]!=0) res[1][202]=a15;
-  if (res[1]!=0) res[1][203]=a15;
-  if (res[1]!=0) res[1][204]=a15;
-  if (res[1]!=0) res[1][205]=a15;
-  if (res[1]!=0) res[1][206]=a15;
-  if (res[1]!=0) res[1][207]=a15;
-  if (res[1]!=0) res[1][208]=a15;
-  if (res[1]!=0) res[1][209]=a9;
-  if (res[1]!=0) res[1][210]=a15;
-  if (res[1]!=0) res[1][211]=a15;
-  if (res[1]!=0) res[1][212]=a15;
-  if (res[1]!=0) res[1][213]=a15;
-  if (res[1]!=0) res[1][214]=a15;
-  if (res[1]!=0) res[1][215]=a15;
-  if (res[1]!=0) res[1][216]=a15;
-  if (res[1]!=0) res[1][217]=a15;
-  if (res[1]!=0) res[1][218]=a15;
-  if (res[1]!=0) res[1][219]=a15;
-  if (res[1]!=0) res[1][220]=a15;
-  if (res[1]!=0) res[1][221]=a15;
-  if (res[1]!=0) res[1][222]=a9;
-  if (res[1]!=0) res[1][223]=a15;
-  if (res[1]!=0) res[1][224]=a15;
-  if (res[1]!=0) res[1][225]=a15;
-  if (res[1]!=0) res[1][226]=a15;
-  if (res[1]!=0) res[1][227]=a15;
-  if (res[1]!=0) res[1][228]=a15;
-  if (res[1]!=0) res[1][229]=a15;
-  if (res[1]!=0) res[1][230]=a15;
-  if (res[1]!=0) res[1][231]=a15;
-  if (res[1]!=0) res[1][232]=a15;
-  if (res[1]!=0) res[1][233]=a15;
-  if (res[1]!=0) res[1][234]=a15;
-  if (res[1]!=0) res[1][235]=a9;
-  if (res[1]!=0) res[1][236]=a15;
-  if (res[1]!=0) res[1][237]=a15;
-  if (res[1]!=0) res[1][238]=a15;
-  if (res[1]!=0) res[1][239]=a15;
-  if (res[1]!=0) res[1][240]=a15;
-  if (res[1]!=0) res[1][241]=a15;
-  if (res[1]!=0) res[1][242]=a15;
-  if (res[1]!=0) res[1][243]=a15;
-  if (res[1]!=0) res[1][244]=a15;
-  if (res[1]!=0) res[1][245]=a15;
-  if (res[1]!=0) res[1][246]=a15;
-  if (res[1]!=0) res[1][247]=a15;
-  if (res[1]!=0) res[1][248]=a9;
-  if (res[1]!=0) res[1][249]=a15;
-  if (res[1]!=0) res[1][250]=a15;
-  if (res[1]!=0) res[1][251]=a15;
-  if (res[1]!=0) res[1][252]=a15;
-  if (res[1]!=0) res[1][253]=a15;
-  if (res[1]!=0) res[1][254]=a15;
-  if (res[1]!=0) res[1][255]=a15;
-  if (res[1]!=0) res[1][256]=a15;
-  if (res[1]!=0) res[1][257]=a15;
-  if (res[1]!=0) res[1][258]=a15;
-  if (res[1]!=0) res[1][259]=a15;
-  if (res[1]!=0) res[1][260]=a15;
-  if (res[1]!=0) res[1][261]=a9;
-  if (res[1]!=0) res[1][262]=a15;
-  if (res[1]!=0) res[1][263]=a15;
-  if (res[1]!=0) res[1][264]=a15;
-  if (res[1]!=0) res[1][265]=a15;
-  if (res[1]!=0) res[1][266]=a15;
-  if (res[1]!=0) res[1][267]=a15;
-  if (res[1]!=0) res[1][268]=a15;
-  if (res[1]!=0) res[1][269]=a15;
-  if (res[1]!=0) res[1][270]=a15;
-  if (res[1]!=0) res[1][271]=a15;
-  if (res[1]!=0) res[1][272]=a15;
-  if (res[1]!=0) res[1][273]=a15;
-  if (res[1]!=0) res[1][274]=a9;
-  if (res[1]!=0) res[1][275]=a15;
-  if (res[1]!=0) res[1][276]=a15;
-  if (res[1]!=0) res[1][277]=a15;
-  if (res[1]!=0) res[1][278]=a15;
-  if (res[1]!=0) res[1][279]=a15;
-  if (res[1]!=0) res[1][280]=a15;
-  if (res[1]!=0) res[1][281]=a15;
-  if (res[1]!=0) res[1][282]=a15;
-  if (res[1]!=0) res[1][283]=a15;
-  if (res[1]!=0) res[1][284]=a15;
-  if (res[1]!=0) res[1][285]=a15;
-  if (res[1]!=0) res[1][286]=a15;
-  if (res[1]!=0) res[1][287]=a9;
+  a12=(a12-a15);
+  if (res[0]!=0) res[0][5]=a12;
+  a12=arg[0] ? arg[0][9] : 0;
+  if (res[0]!=0) res[0][6]=a12;
+  a12=arg[0] ? arg[0][10] : 0;
+  if (res[0]!=0) res[0][7]=a12;
+  a12=arg[0] ? arg[0][11] : 0;
+  if (res[0]!=0) res[0][8]=a12;
+  a12=arg[1] ? arg[1][0] : 0;
+  if (res[0]!=0) res[0][9]=a12;
+  a12=arg[1] ? arg[1][1] : 0;
+  if (res[0]!=0) res[0][10]=a12;
+  a12=arg[1] ? arg[1][2] : 0;
+  if (res[0]!=0) res[0][11]=a12;
+  a12=0.;
+  if (res[1]!=0) res[1][0]=a12;
+  if (res[1]!=0) res[1][1]=a12;
+  if (res[1]!=0) res[1][2]=a12;
+  a10=(a10/a5);
+  a15=(a3/a5);
+  a15=(a10*a15);
+  a16=(a3*a15);
+  a16=(a16+a11);
+  a2=(a2/a13);
+  a17=(a4/a13);
+  a17=(a2*a17);
+  a18=(a4*a17);
+  a18=(a18+a14);
+  a16=(a16+a18);
+  a16=(a0*a16);
+  a16=(-a16);
+  if (res[1]!=0) res[1][3]=a16;
+  a16=(a6*a15);
+  a18=(a7*a17);
+  a16=(a16+a18);
+  a16=(a0*a16);
+  a16=(-a16);
+  if (res[1]!=0) res[1][4]=a16;
+  a15=(a8*a15);
+  a17=(a9*a17);
+  a15=(a15+a17);
+  a15=(a0*a15);
+  a15=(-a15);
+  if (res[1]!=0) res[1][5]=a15;
+  if (res[1]!=0) res[1][6]=a12;
+  if (res[1]!=0) res[1][7]=a12;
+  if (res[1]!=0) res[1][8]=a12;
+  if (res[1]!=0) res[1][9]=a12;
+  if (res[1]!=0) res[1][10]=a12;
+  if (res[1]!=0) res[1][11]=a12;
+  if (res[1]!=0) res[1][12]=a12;
+  if (res[1]!=0) res[1][13]=a12;
+  if (res[1]!=0) res[1][14]=a12;
+  a15=(a6/a5);
+  a15=(a10*a15);
+  a17=(a3*a15);
+  a16=(a7/a13);
+  a16=(a2*a16);
+  a18=(a4*a16);
+  a17=(a17+a18);
+  a17=(a0*a17);
+  a17=(-a17);
+  if (res[1]!=0) res[1][15]=a17;
+  a17=(a6*a15);
+  a17=(a17+a11);
+  a18=(a7*a16);
+  a18=(a18+a14);
+  a17=(a17+a18);
+  a17=(a0*a17);
+  a17=(-a17);
+  if (res[1]!=0) res[1][16]=a17;
+  a15=(a8*a15);
+  a16=(a9*a16);
+  a15=(a15+a16);
+  a15=(a0*a15);
+  a15=(-a15);
+  if (res[1]!=0) res[1][17]=a15;
+  if (res[1]!=0) res[1][18]=a12;
+  if (res[1]!=0) res[1][19]=a12;
+  if (res[1]!=0) res[1][20]=a12;
+  if (res[1]!=0) res[1][21]=a12;
+  if (res[1]!=0) res[1][22]=a12;
+  if (res[1]!=0) res[1][23]=a12;
+  if (res[1]!=0) res[1][24]=a12;
+  if (res[1]!=0) res[1][25]=a12;
+  if (res[1]!=0) res[1][26]=a12;
+  a15=(a8/a5);
+  a15=(a10*a15);
+  a16=(a3*a15);
+  a13=(a9/a13);
+  a2=(a2*a13);
+  a4=(a4*a2);
+  a16=(a16+a4);
+  a16=(a0*a16);
+  a16=(-a16);
+  if (res[1]!=0) res[1][27]=a16;
+  a16=(a6*a15);
+  a7=(a7*a2);
+  a16=(a16+a7);
+  a16=(a0*a16);
+  a16=(-a16);
+  if (res[1]!=0) res[1][28]=a16;
+  a15=(a8*a15);
+  a15=(a15+a11);
+  a9=(a9*a2);
+  a9=(a9+a14);
+  a15=(a15+a9);
+  a15=(a0*a15);
+  a15=(-a15);
+  if (res[1]!=0) res[1][29]=a15;
+  if (res[1]!=0) res[1][30]=a12;
+  if (res[1]!=0) res[1][31]=a12;
+  if (res[1]!=0) res[1][32]=a12;
+  if (res[1]!=0) res[1][33]=a12;
+  if (res[1]!=0) res[1][34]=a12;
+  if (res[1]!=0) res[1][35]=a12;
+  if (res[1]!=0) res[1][36]=a1;
+  if (res[1]!=0) res[1][37]=a12;
+  if (res[1]!=0) res[1][38]=a12;
+  if (res[1]!=0) res[1][39]=a12;
+  if (res[1]!=0) res[1][40]=a12;
+  if (res[1]!=0) res[1][41]=a12;
+  if (res[1]!=0) res[1][42]=a12;
+  if (res[1]!=0) res[1][43]=a12;
+  if (res[1]!=0) res[1][44]=a12;
+  if (res[1]!=0) res[1][45]=a12;
+  if (res[1]!=0) res[1][46]=a12;
+  if (res[1]!=0) res[1][47]=a12;
+  if (res[1]!=0) res[1][48]=a12;
+  if (res[1]!=0) res[1][49]=a1;
+  if (res[1]!=0) res[1][50]=a12;
+  if (res[1]!=0) res[1][51]=a12;
+  if (res[1]!=0) res[1][52]=a12;
+  if (res[1]!=0) res[1][53]=a12;
+  if (res[1]!=0) res[1][54]=a12;
+  if (res[1]!=0) res[1][55]=a12;
+  if (res[1]!=0) res[1][56]=a12;
+  if (res[1]!=0) res[1][57]=a12;
+  if (res[1]!=0) res[1][58]=a12;
+  if (res[1]!=0) res[1][59]=a12;
+  if (res[1]!=0) res[1][60]=a12;
+  if (res[1]!=0) res[1][61]=a12;
+  if (res[1]!=0) res[1][62]=a1;
+  if (res[1]!=0) res[1][63]=a12;
+  if (res[1]!=0) res[1][64]=a12;
+  if (res[1]!=0) res[1][65]=a12;
+  if (res[1]!=0) res[1][66]=a12;
+  if (res[1]!=0) res[1][67]=a12;
+  if (res[1]!=0) res[1][68]=a12;
+  if (res[1]!=0) res[1][69]=a12;
+  if (res[1]!=0) res[1][70]=a12;
+  if (res[1]!=0) res[1][71]=a12;
+  if (res[1]!=0) res[1][72]=a12;
+  if (res[1]!=0) res[1][73]=a12;
+  if (res[1]!=0) res[1][74]=a12;
+  a15=(a3/a5);
+  a15=(a10*a15);
+  a9=(a3*a15);
+  a9=(a9+a11);
+  a9=(a0*a9);
+  if (res[1]!=0) res[1][75]=a9;
+  a9=(a6*a15);
+  a9=(a0*a9);
+  if (res[1]!=0) res[1][76]=a9;
+  a15=(a8*a15);
+  a15=(a0*a15);
+  if (res[1]!=0) res[1][77]=a15;
+  if (res[1]!=0) res[1][78]=a12;
+  if (res[1]!=0) res[1][79]=a12;
+  if (res[1]!=0) res[1][80]=a12;
+  if (res[1]!=0) res[1][81]=a12;
+  if (res[1]!=0) res[1][82]=a12;
+  if (res[1]!=0) res[1][83]=a12;
+  if (res[1]!=0) res[1][84]=a12;
+  if (res[1]!=0) res[1][85]=a12;
+  if (res[1]!=0) res[1][86]=a12;
+  a15=(a6/a5);
+  a15=(a10*a15);
+  a9=(a3*a15);
+  a9=(a0*a9);
+  if (res[1]!=0) res[1][87]=a9;
+  a9=(a6*a15);
+  a9=(a9+a11);
+  a9=(a0*a9);
+  if (res[1]!=0) res[1][88]=a9;
+  a15=(a8*a15);
+  a15=(a0*a15);
+  if (res[1]!=0) res[1][89]=a15;
+  if (res[1]!=0) res[1][90]=a12;
+  if (res[1]!=0) res[1][91]=a12;
+  if (res[1]!=0) res[1][92]=a12;
+  if (res[1]!=0) res[1][93]=a12;
+  if (res[1]!=0) res[1][94]=a12;
+  if (res[1]!=0) res[1][95]=a12;
+  if (res[1]!=0) res[1][96]=a12;
+  if (res[1]!=0) res[1][97]=a12;
+  if (res[1]!=0) res[1][98]=a12;
+  a5=(a8/a5);
+  a10=(a10*a5);
+  a3=(a3*a10);
+  a3=(a0*a3);
+  if (res[1]!=0) res[1][99]=a3;
+  a6=(a6*a10);
+  a6=(a0*a6);
+  if (res[1]!=0) res[1][100]=a6;
+  a8=(a8*a10);
+  a8=(a8+a11);
+  a0=(a0*a8);
+  if (res[1]!=0) res[1][101]=a0;
+  if (res[1]!=0) res[1][102]=a12;
+  if (res[1]!=0) res[1][103]=a12;
+  if (res[1]!=0) res[1][104]=a12;
+  if (res[1]!=0) res[1][105]=a12;
+  if (res[1]!=0) res[1][106]=a12;
+  if (res[1]!=0) res[1][107]=a12;
+  if (res[1]!=0) res[1][108]=a12;
+  if (res[1]!=0) res[1][109]=a12;
+  if (res[1]!=0) res[1][110]=a12;
+  if (res[1]!=0) res[1][111]=a12;
+  if (res[1]!=0) res[1][112]=a12;
+  if (res[1]!=0) res[1][113]=a12;
+  if (res[1]!=0) res[1][114]=a1;
+  if (res[1]!=0) res[1][115]=a12;
+  if (res[1]!=0) res[1][116]=a12;
+  if (res[1]!=0) res[1][117]=a12;
+  if (res[1]!=0) res[1][118]=a12;
+  if (res[1]!=0) res[1][119]=a12;
+  if (res[1]!=0) res[1][120]=a12;
+  if (res[1]!=0) res[1][121]=a12;
+  if (res[1]!=0) res[1][122]=a12;
+  if (res[1]!=0) res[1][123]=a12;
+  if (res[1]!=0) res[1][124]=a12;
+  if (res[1]!=0) res[1][125]=a12;
+  if (res[1]!=0) res[1][126]=a12;
+  if (res[1]!=0) res[1][127]=a1;
+  if (res[1]!=0) res[1][128]=a12;
+  if (res[1]!=0) res[1][129]=a12;
+  if (res[1]!=0) res[1][130]=a12;
+  if (res[1]!=0) res[1][131]=a12;
+  if (res[1]!=0) res[1][132]=a12;
+  if (res[1]!=0) res[1][133]=a12;
+  if (res[1]!=0) res[1][134]=a12;
+  if (res[1]!=0) res[1][135]=a12;
+  if (res[1]!=0) res[1][136]=a12;
+  if (res[1]!=0) res[1][137]=a12;
+  if (res[1]!=0) res[1][138]=a12;
+  if (res[1]!=0) res[1][139]=a12;
+  if (res[1]!=0) res[1][140]=a1;
+  if (res[1]!=0) res[1][141]=a12;
+  if (res[1]!=0) res[1][142]=a12;
+  if (res[1]!=0) res[1][143]=a12;
   return 0;
+}
+
+CASADI_SYMBOL_EXPORT int jac_chain_nm3(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, void* mem){
+  return casadi_f0(arg, res, iw, w, mem);
 }
 
 CASADI_SYMBOL_EXPORT void jac_chain_nm3_incref(void) {
@@ -513,11 +367,11 @@ CASADI_SYMBOL_EXPORT void jac_chain_nm3_incref(void) {
 CASADI_SYMBOL_EXPORT void jac_chain_nm3_decref(void) {
 }
 
-CASADI_SYMBOL_EXPORT int jac_chain_nm3_n_in(void) { return 2;}
+CASADI_SYMBOL_EXPORT casadi_int jac_chain_nm3_n_in(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT int jac_chain_nm3_n_out(void) { return 2;}
+CASADI_SYMBOL_EXPORT casadi_int jac_chain_nm3_n_out(void) { return 2;}
 
-CASADI_SYMBOL_EXPORT const char* jac_chain_nm3_name_in(int i){
+CASADI_SYMBOL_EXPORT const char* jac_chain_nm3_name_in(casadi_int i){
   switch (i) {
     case 0: return "i0";
     case 1: return "i1";
@@ -525,7 +379,7 @@ CASADI_SYMBOL_EXPORT const char* jac_chain_nm3_name_in(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const char* jac_chain_nm3_name_out(int i){
+CASADI_SYMBOL_EXPORT const char* jac_chain_nm3_name_out(casadi_int i){
   switch (i) {
     case 0: return "o0";
     case 1: return "o1";
@@ -533,27 +387,27 @@ CASADI_SYMBOL_EXPORT const char* jac_chain_nm3_name_out(int i){
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* jac_chain_nm3_sparsity_in(int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* jac_chain_nm3_sparsity_in(casadi_int i) {
   switch (i) {
-    case 0: return s0;
-    case 1: return s1;
+    case 0: return casadi_s0;
+    case 1: return casadi_s1;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT const int* jac_chain_nm3_sparsity_out(int i) {
+CASADI_SYMBOL_EXPORT const casadi_int* jac_chain_nm3_sparsity_out(casadi_int i) {
   switch (i) {
-    case 0: return s2;
-    case 1: return s3;
+    case 0: return casadi_s0;
+    case 1: return casadi_s2;
     default: return 0;
   }
 }
 
-CASADI_SYMBOL_EXPORT int jac_chain_nm3_work(int *sz_arg, int* sz_res, int *sz_iw, int *sz_w) {
+CASADI_SYMBOL_EXPORT int jac_chain_nm3_work(casadi_int *sz_arg, casadi_int* sz_res, casadi_int *sz_iw, casadi_int *sz_w) {
   if (sz_arg) *sz_arg = 2;
   if (sz_res) *sz_res = 2;
   if (sz_iw) *sz_iw = 0;
-  if (sz_w) *sz_w = 23;
+  if (sz_w) *sz_w = 0;
   return 0;
 }
 

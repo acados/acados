@@ -26,30 +26,30 @@ import_array();
 #endif
 
 #if defined(SWIGPYTHON)
-%pythoncode %{
-from numpy import copy, copyto
+// %pythoncode %{
+// from numpy import copy, copyto
 
-class sequence_of_arrays(list):
-    def __init__(self):
-        super().__init__()
-    def __init__(self, iterable):
-        super().__init__(iterable)
-    def __getitem__(self, k):
-        return copy(super().__getitem__(k))
-    def __setitem__(self, k, v):
-        try:
-            indices_to_set = range(*k.indices(len(self)))
-        except AttributeError:
-            # k is probably an integer
-            try:
-                indices_to_set = [int(k)]
-            except TypeError:
-                # k is probably tuple
-                indices_to_set = k
-        for index in indices_to_set:
-            copyto(super().__getitem__(index), v)
+// class sequence_of_arrays(list):
+//     def __init__(self):
+//         super().__init__()
+//     def __init__(self, iterable):
+//         super().__init__(iterable)
+//     def __getitem__(self, k):
+//         return copy(super().__getitem__(k))
+//     def __setitem__(self, k, v):
+//         try:
+//             indices_to_set = range(*k.indices(len(self)))
+//         except AttributeError:
+//             # k is probably an integer
+//             try:
+//                 indices_to_set = [int(k)]
+//             except TypeError:
+//                 # k is probably tuple
+//                 indices_to_set = k
+//         for index in indices_to_set:
+//             copyto(super().__getitem__(index), v)
 
-%}
+// %}
 
 %{
 // Global variable for Python module
@@ -66,6 +66,7 @@ PyObject *copy_module = NULL;
 
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 #include <typeinfo>
 
 #if defined(SWIGMATLAB)
@@ -158,35 +159,61 @@ bool is_matrix(const LangObject *input) {
 #endif
 }
 
-bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_columns) {
+int numRows(const LangObject *input) {
     if (!is_matrix(input))
-        return false;
+        throw std::invalid_argument("Input is not a valid matrix.");
 #if defined(SWIGMATLAB)
     const mwSize *dims = mxGetDimensions(input);
-    int_t input_rows = dims[0], input_cols = dims[1];
-    if (input_rows != nb_rows || input_cols != nb_columns)
-        return false;
-    return true;
+    return dims[0];
+#elif defined(SWIGPYTHON)
+    npy_intp *dims = PyArray_DIMS((PyArrayObject *) input);
+    return dims[0];
+#endif
+}
+
+int numColumns(const LangObject *input) {
+    if (!is_matrix(input))
+        throw std::invalid_argument("Input is not a valid matrix.");
+#if defined(SWIGMATLAB)
+    const mwSize *dims = mxGetDimensions(input);
+    return dims[1];
 #elif defined(SWIGPYTHON)
     int nb_dims = PyArray_NDIM((PyArrayObject *) input);
     npy_intp *dims = PyArray_DIMS((PyArrayObject *) input);
-    if (dims[0] != nb_rows)
-        return false;
     if (nb_dims == 1) {
-        if (nb_columns != 1)
-            return false;
+        // column vector
+        return 1;
     } else {
-        if (dims[1] != nb_columns)
-            return false;
+        return dims[1];
     }
+#endif
+}
+
+bool is_matrix(const LangObject *input, const int_t nb_rows, const int_t nb_columns) {
+    if (!is_matrix(input))
+        return false;
+    if (nb_rows != numRows(input) || nb_columns != numColumns(input))
+        return false;
     return true;
+}
+
+double *asDoublePointer(LangObject *input) {
+    if (!is_matrix(input))
+        throw std::invalid_argument("Input is not of a valid matrix type.");
+#if defined(SWIGMATLAB)
+    return (double *) mxGetData(input);
+#elif defined(SWIGPYTHON)
+    PyObject *matrix = PyArray_FROM_OTF(input, NPY_FLOAT64, NPY_ARRAY_FARRAY_RO);
+    if (matrix == NULL)
+        throw std::runtime_error("Something went wrong while converting matrix");
+    return (double *) PyArray_DATA((PyArrayObject *) matrix);
 #endif
 }
 
 template<typename T>
-LangObject *new_matrix(const int_t *dims, const T *data) {
-    int_t nb_rows = dims[0];
-    int_t nb_cols = dims[1];
+LangObject *new_matrix(std::pair<int, int> dimensions, const T *data) {
+    int_t nb_rows = dimensions.first;
+    int_t nb_cols = dimensions.second;
 #if defined(SWIGMATLAB)
     mxArray *matrix = mxCreateNumericMatrix(nb_rows, nb_cols, get_numeric_type<T>(), mxREAL);
     T *new_array = (T *) mxCalloc(nb_rows*nb_cols, sizeof(T));
@@ -197,11 +224,15 @@ LangObject *new_matrix(const int_t *dims, const T *data) {
 #elif defined(SWIGPYTHON)
     PyObject *matrix = NULL;
     if (nb_cols == 1) {
+        T *data_copy = (T *) calloc(nb_rows, sizeof(T));
+        std::copy_n(data, nb_rows, data_copy);
         npy_intp npy_dims[1] = {nb_rows};
-        matrix = PyArray_NewFromDataF(1, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(1, npy_dims, data_copy);
     } else {
+        T *data_copy = (T *) calloc(nb_rows * nb_cols, sizeof(T));
+        std::copy_n(data, nb_rows * nb_cols, data_copy);
         npy_intp npy_dims[2] = {nb_rows, nb_cols};
-        matrix = PyArray_NewFromDataF(2, npy_dims, get_numeric_type<T>(), (void *) data);
+        matrix = PyArray_NewFromDataF(2, npy_dims, data_copy);
     }
     if (matrix == NULL)
         throw std::runtime_error("Something went wrong while copying array");
@@ -253,7 +284,7 @@ LangObject *new_sequence(const int_t length) {
 }
 
 template <typename T>
-LangObject *new_sequence_from(const T *array, const int_t length) {
+LangObject *new_sequence_from(T *array, const int_t length) {
     LangObject *sequence = new_sequence(length);
     for (int_t index = 0; index < length; index++) {
         if (typeid(T) == typeid(int_t))
@@ -294,6 +325,8 @@ bool is_map(const LangObject *object) {
 #if defined(SWIGMATLAB)
     if (!mxIsStruct(object))
         return false;
+    if (mxGetNumberOfElements(object) != 1)
+        return false;
 #elif defined(SWIGPYTHON)
     if (!PyDict_Check(object))
         return false;
@@ -310,6 +343,14 @@ bool has(const LangObject *map, const char *key) {
         return false;
 #endif
     return true;
+}
+
+int num_elems(const LangObject *map) {
+#if defined(SWIGMATLAB)
+    return mxGetNumberOfFields(map);
+#elif defined(SWIGPYTHON)
+    return PyDict_Size((PyObject *) map);
+#endif
 }
 
 LangObject *from(const LangObject *map, const char *key) {
@@ -353,6 +394,26 @@ real_t real_from(const LangObject *map, const char *key) {
 #elif defined(SWIGPYTHON)
     return (real_t) PyFloat_AsDouble(value);
 #endif
+}
+
+bool is_string(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsChar(input);
+#elif defined(SWIGPYTHON)
+    return PyUnicode_Check(input);
+#endif
+}
+
+bool is_boolean(LangObject *input) {
+#if defined(SWIGMATLAB)
+    return mxIsLogicalScalar(input);
+#elif defined(SWIGPYTHON)
+    return PyBool_Check(input);
+#endif
+}
+
+bool is_valid_option_type(LangObject *input) {
+    return is_integer(input) || is_real(input) || is_matrix(input) || is_map(input) || is_string(input) || is_boolean(input);
 }
 
 void to(LangObject *sequence, const int_t index, LangObject *item) {
@@ -418,12 +479,12 @@ LangObject *new_sequence_of_arrays(const int_t length) {
 }
 
 template<typename T>
-LangObject *new_sequence_from(const T **data, const int_t length,
+LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_rows, const int_t *nb_columns) {
 
     LangObject *sequence = new_sequence_of_arrays(length);
     for (int_t index = 0; index < length; index++) {
-        int_t dims[2] = {nb_rows[index], nb_columns[index]};
+        auto dims = std::make_pair(nb_rows[index], nb_columns[index]);
         LangObject *item = new_matrix<T>(dims, data[index]);
         to(sequence, index, item);
     }
@@ -431,13 +492,15 @@ LangObject *new_sequence_from(const T **data, const int_t length,
 }
 
 template<typename T>
-LangObject *new_sequence_from(const T **data, const int_t length,
+LangObject *new_sequence_from(T **data, const int_t length,
     const int_t *nb_elems) {
 
-    int_t nb_columns[length];
+    int_t *nb_columns = (int_t *) calloc(length, sizeof(int_t));
     for (int_t i = 0; i < length; i++)
         nb_columns[i] = 1;
-    return new_sequence_from(data, length, nb_elems, nb_columns);
+    LangObject *result = new_sequence_from(data, length, nb_elems, nb_columns);
+    free(nb_columns);
+    return result;
 }
 
 bool dimensions_match(const LangObject *matrix, const int_t *nb_rows, const int_t *nb_cols,
@@ -672,5 +735,27 @@ void fill_array_from(const LangObject *map, const char *key, int_t *array, int_t
         fill_array_from(item, array, array_length);
     }
 }
+
+#include "acados_cpp/options.hpp"
+
+namespace acados {
+
+template<typename T>
+option_t *as_option_ptr(T val) {
+    return new option<T>(val);
+}
+
+template<>
+option_t *as_option_ptr(LangObject *val) {
+    if (is_integer(val))
+        return new option<int>(int_from(val));
+    else if (is_real(val))
+        return new option<double>(real_from(val));
+    else if (is_boolean(val))
+        return new option<bool>(val);
+    else throw std::invalid_argument("Option does not have a valid type");
+}
+
+}  // namespace acados
 
 %}

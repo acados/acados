@@ -17,8 +17,6 @@
 #
 #
 
-find_package(Matlab REQUIRED)
-
 # Try to find Casadi root directory
 find_path(
     CASADI_MATLAB_ROOT

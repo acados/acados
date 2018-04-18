@@ -24,78 +24,123 @@
 extern "C" {
 #endif
 
+// hpipm
+#include "hpipm/include/hpipm_d_ocp_qp.h"
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp_res.h"
+// acados
 #include "acados/utils/types.h"
 
-typedef struct {
-    int_t N;
-    const int_t *nx;
-    const int_t *nu;
-    const int_t *nb;
-    const int_t *nc;
-    const real_t **A;
-    const real_t **B;
-    const real_t **b;
-    const real_t **Q;
-    const real_t **S;
-    const real_t **R;
-    const real_t **q;
-    const real_t **r;
-    const int_t **idxb;
-    const real_t **lb;
-    const real_t **ub;
-    const real_t **Cx;
-    const real_t **Cu;
-    const real_t **lc;
-    const real_t **uc;
-} ocp_qp_in;
 
-typedef struct {
-    real_t **x;
-    real_t **u;
-    real_t **pi;
-    real_t **lam;
-    real_t **t;  // TODO(roversch): remove!
-} ocp_qp_out;
+typedef struct d_ocp_qp_dim ocp_qp_dims;
+typedef struct d_ocp_qp ocp_qp_in;
+typedef struct d_ocp_qp_sol ocp_qp_out;
+typedef struct d_ocp_qp_res ocp_qp_res;
+typedef struct d_ocp_qp_res_workspace ocp_qp_res_ws;
 
-typedef struct {
-    int_t (*fun)(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
-    void (*initialize)(const ocp_qp_in *qp_in, void *args, void **mem, void **work);
-    void (*destroy)(void *mem, void *work);
-    ocp_qp_in *qp_in;
-    ocp_qp_out *qp_out;
-    void *args;
-    void *mem;
-    void *work;
-} ocp_qp_solver;
 
-int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                               const int_t *nc);
 
-char *assign_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                       const int_t *nc, ocp_qp_in **qp_in, void *ptr);
+#ifndef QP_SOLVER_CONFIG_
+#define QP_SOLVER_CONFIG_
 
-ocp_qp_in *create_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                            const int_t *nc);
+typedef struct
+{
+    // TODO(dimitris): pass dims to evaluate?
+    int (*evaluate) (void *config, void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, void *dims);
+    void *(*opts_assign) (void *config, void *dims, void *raw_memory);
+    void (*opts_initialize_default)(void *config, void *dims, void *opts);
+    void (*opts_update)(void *config, void *dims, void *opts);
+    int (*memory_calculate_size)(void *config, void *dims, void *opts);
+    void *(*memory_assign)(void *config, void *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(void *config, void *dims, void *opts);
+} qp_solver_config;
 
-int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                                const int_t *nc);
+#endif
 
-char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                        const int_t *nc, ocp_qp_out **qp_out, void *ptr);
 
-ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                              const int_t *nc);
 
-void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b, ocp_qp_in *qp_in,
-                             int_t stage);
+typedef struct
+{
+    int (*condensing) (void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*expansion) (void *qp_in, void *qp_out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size) (ocp_qp_dims *dims);
+    void *(*opts_assign) (ocp_qp_dims *dims, void *raw_memory);
+    void (*opts_initialize_default)(ocp_qp_dims *dims, void *opts);
+    void (*opts_update)(ocp_qp_dims *dims, void *opts);
+    int (*memory_calculate_size)(ocp_qp_dims *dims, void *opts);
+    void *(*memory_assign)(ocp_qp_dims *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size)(ocp_qp_dims *dims, void *opts);
+} ocp_qp_condensing_config;
 
-void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
-                              const real_t *r, ocp_qp_in *qp_in, int_t stage);
 
-ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *name, void *options);
+
+typedef struct
+{
+    int (*evaluate) (void *config, ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *opts, void *mem, void *work);
+    int (*opts_calculate_size) (void *config, ocp_qp_dims *dims);
+    void *(*opts_assign) (void *config, ocp_qp_dims *dims, void *raw_memory);
+    void (*opts_initialize_default) (void *config, ocp_qp_dims *dims, void *opts);
+    void (*opts_update) (void *config, ocp_qp_dims *dims, void *opts);
+    int (*memory_calculate_size) (void *config, ocp_qp_dims *dims, void *opts);
+    void *(*memory_assign) (void *config, ocp_qp_dims *dims, void *opts, void *raw_memory);
+    int (*workspace_calculate_size) (void *config, ocp_qp_dims *dims, void *opts);
+    qp_solver_config *qp_solver;  // either ocp_qp_solver or dense_solver
+} ocp_qp_xcond_solver_config;
+
+
+
+
+typedef struct
+{
+    double solve_QP_time;
+    double condensing_time;
+    double interface_time;
+    double total_time;
+    int    num_iter;
+} ocp_qp_info;
+
+
+//
+int ocp_qp_solver_config_calculate_size();
+//
+qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory);
+//
+int ocp_qp_xcond_solver_config_calculate_size();
+//
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory);
+//
+int ocp_qp_condensing_config_calculate_size();
+//
+ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory);
+//
+int ocp_qp_dims_calculate_size(int N);
+//
+ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory);
+//
+int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims);
+//
+ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims);
+//
+ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_res_calculate_size(ocp_qp_dims *dims);
+//
+ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory);
+//
+int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims);
+//
+ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory);
+//
+void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws);
+//
+void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4]);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif  // ACADOS_OCP_QP_OCP_QP_COMMON_H_
+#endif // ACADOS_OCP_QP_OCP_QP_COMMON_H_

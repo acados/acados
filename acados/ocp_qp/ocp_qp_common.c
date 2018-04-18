@@ -17,407 +17,428 @@
  *
  */
 
+// external
+#include <assert.h>
+// blasfeo
+#include "blasfeo/include/blasfeo_target.h"
+#include "blasfeo/include/blasfeo_common.h"
+#include "blasfeo/include/blasfeo_d_aux.h"
+#include "blasfeo/include/blasfeo_d_blas.h"
+// hpipm
+#include "hpipm/include/hpipm_d_ocp_qp.h"
+#include "hpipm/include/hpipm_d_ocp_qp_sol.h"
+#include "hpipm/include/hpipm_d_ocp_qp_dim.h"
+#include "hpipm/include/hpipm_d_ocp_qp_res.h"
+#include "hpipm/include/hpipm_d_ocp_qp_ipm.h"
+#include "hpipm/include/hpipm_d_ocp_qp_kkt.h"
+// acados
+#include "acados/utils/types.h"
 #include "acados/ocp_qp/ocp_qp_common.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
-#include <assert.h>
+/************************************************
+* config
+************************************************/
 
-#include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
-#include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
-#include "acados/ocp_qp/ocp_qp_hpipm.h"
-#ifdef ACADOS_WITH_HPMPC
-#include "acados/ocp_qp/ocp_qp_hpmpc.h"
-#endif
-#ifdef OOQP
-#include "acados/ocp_qp/ocp_qp_ooqp.h"
-#endif
-#include "acados/ocp_qp/ocp_qp_qpdunes.h"
-#include "acados/utils/types.h"
+int ocp_qp_solver_config_calculate_size()
+{
 
-int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                               const int_t *nc) {
+	int size = 0;
 
-    int_t bytes = sizeof(ocp_qp_in);
+	size += sizeof(qp_solver_config);
 
-    bytes += 4*(N+1)*sizeof(int_t);  // nx, nu, nb, nc
-    bytes += 3*N*sizeof(real_t *);  // A, B, b
-    bytes += 11*(N+1)*sizeof(real_t *);  // ...
-    bytes += 1*(N+1)*sizeof(int_t *);  // idxb
+	return size;
 
-    for (int_t k = 0; k < N+1; k++) {
-
-        if (k < N) {
-            bytes += nx[k+1]*nx[k]*sizeof(real_t);  // A
-            bytes += nx[k+1]*nu[k]*sizeof(real_t);  // B
-            bytes += nx[k+1]*sizeof(real_t);  // b
-        }
-
-        bytes += nx[k]*nx[k]*sizeof(real_t);  // Q
-        bytes += nu[k]*nx[k]*sizeof(real_t);  // S
-        bytes += nu[k]*nu[k]*sizeof(real_t);  // R
-        bytes += nx[k]*sizeof(real_t);  // q
-        bytes += nu[k]*sizeof(real_t);  // r
-        bytes += nb[k]*sizeof(int_t);  // idxb
-        bytes += 2*nb[k]*sizeof(real_t);  // lb, ub
-        bytes += nc[k]*nx[k]*sizeof(real_t);  // Cx
-        bytes += nc[k]*nu[k]*sizeof(real_t);  // Cu
-        bytes += 2*nc[k]*sizeof(real_t);  // lc, uc
-    }
-
-    bytes = (bytes+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
-    bytes += ALIGNMENT;
-
-    return bytes;
 }
 
 
-char *assign_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                       const int_t *nc, ocp_qp_in **qp_in, void *ptr) {
 
-    // pointer to initialize QP data to zero
-    char *c_ptr_QPdata;
+qp_solver_config *ocp_qp_solver_config_assign(void *raw_memory)
+{
 
-    // char pointer
-    char *c_ptr = (char *) ptr;
+	char *c_ptr = raw_memory;
 
-    *qp_in = (ocp_qp_in *) c_ptr;
+	qp_solver_config *config = (qp_solver_config *) c_ptr;
+	c_ptr += sizeof(qp_solver_config);
+
+	return config;
+
+}
+
+
+
+int ocp_qp_xcond_solver_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_xcond_solver_config);
+
+	size += ocp_qp_solver_config_calculate_size(); // qp solver
+
+	return size;
+
+}
+
+
+
+ocp_qp_xcond_solver_config *ocp_qp_xcond_solver_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_xcond_solver_config *config = (ocp_qp_xcond_solver_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_xcond_solver_config);
+
+	config->qp_solver = ocp_qp_solver_config_assign(c_ptr);
+	c_ptr += ocp_qp_solver_config_calculate_size();
+
+	return config;
+
+}
+
+
+
+int ocp_qp_condensing_config_calculate_size()
+{
+
+	int size = 0;
+
+	size += sizeof(ocp_qp_condensing_config);
+
+	return size;
+
+}
+
+
+
+ocp_qp_condensing_config *ocp_qp_condensing_config_assign(void *raw_memory)
+{
+
+	char *c_ptr = raw_memory;
+
+	ocp_qp_condensing_config *config = (ocp_qp_condensing_config *) c_ptr;
+	c_ptr += sizeof(ocp_qp_condensing_config);
+
+	return config;
+
+}
+
+
+
+/************************************************
+* dims
+************************************************/
+
+int ocp_qp_dims_calculate_size(int N)
+{
+    int size = sizeof(ocp_qp_dims);
+
+    size += d_memsize_ocp_qp_dim(N);
+
+    return size;
+}
+
+
+
+ocp_qp_dims *ocp_qp_dims_assign(int N, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_dims *dims = (ocp_qp_dims *) c_ptr;
+    c_ptr += sizeof(ocp_qp_dims);
+
+    d_create_ocp_qp_dim(N, dims, c_ptr);
+    c_ptr += d_memsize_ocp_qp_dim(N);
+
+    dims->N = N;
+
+    assert((char *) raw_memory + ocp_qp_dims_calculate_size(N) == c_ptr);
+
+    return dims;
+}
+
+
+
+/************************************************
+* in
+************************************************/
+
+int ocp_qp_in_calculate_size(void *config, ocp_qp_dims *dims)
+{
+    int size = sizeof(ocp_qp_in);
+    size += d_memsize_ocp_qp(dims);
+    size += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
+    return size;
+}
+
+
+
+ocp_qp_in *ocp_qp_in_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_in *qp_in = (ocp_qp_in *) c_ptr;
     c_ptr += sizeof(ocp_qp_in);
 
-    // copy dimensions to workspace
-    (*qp_in)->N = N;
+    d_create_ocp_qp(dims, qp_in, c_ptr);
+    c_ptr += d_memsize_ocp_qp(dims);
 
-    (*qp_in)->nx = (int_t *) c_ptr;
-    memcpy(c_ptr, nx, (N+1)*sizeof(int_t));
-    c_ptr += (N+1)*sizeof(int_t);
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr); // TODO remove !!!
+    c_ptr += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
 
-    (*qp_in)->nu = (int_t *) c_ptr;
-    memcpy(c_ptr, nu, (N+1)*sizeof(int_t));
-    c_ptr += (N+1)*sizeof(int_t);
+    dims_copy->N = dims->N;
 
-    (*qp_in)->nb = (int_t *) c_ptr;
-    memcpy(c_ptr, nb, (N+1)*sizeof(int_t));
-    c_ptr += (N+1)*sizeof(int_t);
-
-    (*qp_in)->nc = (int_t *) c_ptr;
-    memcpy(c_ptr, nc, (N+1)*sizeof(int_t));
-    c_ptr += (N+1)*sizeof(int_t);
-
-    // assign double pointers
-    (*qp_in)->A = (const real_t **) c_ptr;
-    c_ptr += N*sizeof(real_t *);
-
-    (*qp_in)->B = (const real_t **) c_ptr;
-    c_ptr += N*sizeof(real_t *);
-
-    (*qp_in)->b = (const real_t **) c_ptr;
-    c_ptr += N*sizeof(real_t *);
-
-    (*qp_in)->Q = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->S = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->R = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->q = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->r = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->idxb = (const int_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(int_t *);
-
-    (*qp_in)->lb = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->ub = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->Cx = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->Cu = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->lc = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    (*qp_in)->uc = (const real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
-
-    // assign pointers to ints
-    for (int_t k = 0; k < N+1; k++) {
-        (*qp_in)->idxb[k] = (int_t *) c_ptr;
-        c_ptr += nb[k]*sizeof(int_t);
+    for (int ii = 0; ii < dims->N+1; ii++)
+    {
+        dims_copy->nx[ii] = dims->nx[ii];
+        dims_copy->nu[ii] = dims->nu[ii];
+        dims_copy->nb[ii] = dims->nb[ii];
+        dims_copy->ng[ii] = dims->ng[ii];
+        dims_copy->ns[ii] = dims->ns[ii];
+        dims_copy->nbu[ii] = dims->nbu[ii];
+        dims_copy->nbx[ii] = dims->nbx[ii];
     }
 
-    // align data
-    size_t l_ptr = (size_t) c_ptr;
-    l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
-    c_ptr = (char *) l_ptr;
+    qp_in->dim = dims_copy;
 
-    // assign pointers to doubles
-    c_ptr_QPdata = c_ptr;
-
-    for (int_t k = 0; k < N+1; k++) {
-        // printf("%zu MODULO %d = %zu\n", (size_t)c_ptr, 8, (size_t)c_ptr % 8);
-        assert((size_t)c_ptr % 8 == 0);
-
-        if (k < N) {
-            (*qp_in)->A[k] = (real_t *) c_ptr;
-            c_ptr += nx[k+1]*nx[k]*sizeof(real_t);
-
-            (*qp_in)->B[k] = (real_t *) c_ptr;
-            c_ptr += nx[k+1]*nu[k]*sizeof(real_t);
-
-            (*qp_in)->b[k] = (real_t *) c_ptr;
-            c_ptr += nx[k+1]*sizeof(real_t);
-        }
-
-        (*qp_in)->Q[k] = (real_t *) c_ptr;
-        c_ptr += nx[k]*nx[k]*sizeof(real_t);
-
-        (*qp_in)->S[k] = (real_t *) c_ptr;
-        c_ptr += nu[k]*nx[k]*sizeof(real_t);
-
-        (*qp_in)->R[k] = (real_t *) c_ptr;
-        c_ptr += nu[k]*nu[k]*sizeof(real_t);
-
-        (*qp_in)->q[k] = (real_t *) c_ptr;
-        c_ptr += nx[k]*sizeof(real_t);
-
-        (*qp_in)->r[k] = (real_t *) c_ptr;
-        c_ptr += nu[k]*sizeof(real_t);
-
-        (*qp_in)->lb[k] = (real_t *) c_ptr;
-        c_ptr += nb[k]*sizeof(real_t);
-
-        (*qp_in)->ub[k] = (real_t *) c_ptr;
-        c_ptr += nb[k]*sizeof(real_t);
-
-        (*qp_in)->Cx[k] = (real_t *) c_ptr;
-        c_ptr += nc[k]*nx[k]*sizeof(real_t);
-
-        (*qp_in)->Cu[k] = (real_t *) c_ptr;
-        c_ptr += nc[k]*nu[k]*sizeof(real_t);
-
-        (*qp_in)->lc[k] = (real_t *) c_ptr;
-        c_ptr += nc[k]*sizeof(real_t);
-
-        (*qp_in)->uc[k] = (real_t *) c_ptr;
-        c_ptr += nc[k]*sizeof(real_t);
-    }
-
-    // set QP data to zero (mainly for valgrind)
-    for (char *idx = c_ptr_QPdata; idx < c_ptr; idx++)
-        *idx = 0;
-
-    return c_ptr;
-}
-
-
-ocp_qp_in *create_ocp_qp_in(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                            const int_t *nc) {
-
-    ocp_qp_in *qp_in;
-
-    int_t bytes = ocp_qp_in_calculate_size(N, nx, nu, nb, nc);
-
-    // TODO(dimitris): replace with acados_malloc to replace malloc at one place if not supported
-    void *ptr = malloc(bytes);
-
-    // // set a value for debugging
-    // char *c_ptr = (char *) ptr;
-    // for (int_t i = 0; i < bytes; i++) c_ptr[i] = 13;
-
-    char *ptr_end = assign_ocp_qp_in(N, nx, nu, nb, nc, &qp_in, ptr);
-    assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
-
-    // for (int_t i = 0; i < bytes; i++) printf("%d - ", c_ptr[i]);
-    // exit(1);
+    assert((char*) raw_memory + ocp_qp_in_calculate_size(config, dims) == c_ptr);
 
     return qp_in;
 }
 
 
-int_t ocp_qp_out_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                                const int_t *nc) {
 
-    int_t bytes = sizeof(ocp_qp_out);
+/************************************************
+* out
+************************************************/
 
-    bytes += 3*(N+1)*sizeof(real_t *);  // u, x, lam
-    bytes += N*sizeof(real_t *);  // pi
-
-    for (int_t k = 0; k < N+1; k++) {
-        bytes += (nx[k] + nu[k])*sizeof(real_t);  // u, x
-        if (k < N)
-            bytes += (nx[k+1])*sizeof(real_t);  // pi
-        bytes += 2*(nb[k] + nc[k])*sizeof(real_t);  // lam
-        }
-
-    bytes = (bytes+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
-    bytes += ALIGNMENT;
-
-    return bytes;
+int ocp_qp_out_calculate_size(void *config, ocp_qp_dims *dims)
+{
+    int size = sizeof(ocp_qp_out);
+    size += d_memsize_ocp_qp_sol(dims);
+    size += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
+    size += sizeof(ocp_qp_info);
+    return size;
 }
 
 
-char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                        const int_t *nc, ocp_qp_out **qp_out,
-    void *ptr) {
 
-    // char pointer
-    char *c_ptr = (char *) ptr;
+ocp_qp_out *ocp_qp_out_assign(void *config, ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
 
-    *qp_out = (ocp_qp_out *) c_ptr;
+    ocp_qp_out *qp_out = (ocp_qp_out *) c_ptr;
     c_ptr += sizeof(ocp_qp_out);
 
-    // assign double pointers
-    (*qp_out)->x = (real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
+    d_create_ocp_qp_sol(dims, qp_out, c_ptr);
+    c_ptr += d_memsize_ocp_qp_sol(dims);
 
-    (*qp_out)->u = (real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
+    qp_out->misc = (void *) c_ptr;
+    c_ptr += sizeof(ocp_qp_info);
 
-    (*qp_out)->pi = (real_t **) c_ptr;
-    c_ptr += N*sizeof(real_t *);
+    ocp_qp_dims *dims_copy = ocp_qp_dims_assign(dims->N, c_ptr); // TODO remove !!!
+    c_ptr += ocp_qp_dims_calculate_size(dims->N); // TODO remove !!!
 
-    (*qp_out)->lam = (real_t **) c_ptr;
-    c_ptr += (N+1)*sizeof(real_t *);
+    dims_copy->N = dims->N;
 
-    // align data
-    size_t l_ptr = (size_t) c_ptr;
-    l_ptr = (l_ptr+ALIGNMENT-1)/ALIGNMENT*ALIGNMENT;
-    c_ptr = (char *) l_ptr;
-
-    // NOTE(dimitris): splitted the loops below to be able to print primal/dual solution at once
-
-    // assign pointers to QP solution
-    for (int_t k = 0; k < N+1; k++) {
-        assert((size_t)c_ptr % 8 == 0);
-
-        (*qp_out)->x[k] = (real_t *) c_ptr;
-        c_ptr += nx[k]*sizeof(real_t);
-
-        (*qp_out)->u[k] = (real_t *) c_ptr;
-        c_ptr += nu[k]*sizeof(real_t);
+    for (int ii = 0; ii < dims->N+1; ii++)
+    {
+        dims_copy->nx[ii] = dims->nx[ii];
+        dims_copy->nu[ii] = dims->nu[ii];
+        dims_copy->nb[ii] = dims->nb[ii];
+        dims_copy->ng[ii] = dims->ng[ii];
+        dims_copy->ns[ii] = dims->ns[ii];
+        dims_copy->nbu[ii] = dims->nbu[ii];
+        dims_copy->nbx[ii] = dims->nbx[ii];
     }
 
-    for (int_t k = 0; k < N; k++) {
-        assert((size_t)c_ptr % 8 == 0);
-        (*qp_out)->pi[k] = (real_t *) c_ptr;
-        c_ptr += nx[k+1]*sizeof(real_t);
-    }
+    qp_out->dim = dims_copy;
 
-    for (int_t k = 0; k < N+1; k++) {
-        assert((size_t)c_ptr % 8 == 0);
-        (*qp_out)->lam[k] = (real_t *) c_ptr;
-        c_ptr += 2*(nb[k] + nc[k])*sizeof(real_t);
-    }
-    return c_ptr;
-}
-
-ocp_qp_out *create_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
-                              const int_t *nc) {
-
-    ocp_qp_out *qp_out;
-
-    int_t bytes = ocp_qp_out_calculate_size(N, nx, nu, nb, nc);
-    void *ptr = malloc(bytes);
-    char *ptr_end = assign_ocp_qp_out(N, nx, nu, nb, nc, &qp_out, ptr);
-    assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
+    assert((char*) raw_memory + ocp_qp_out_calculate_size(config, dims) == c_ptr);
 
     return qp_out;
 }
 
 
-void ocp_qp_in_copy_dynamics(const real_t *A, const real_t *B, const real_t *b,
-                             ocp_qp_in *qp_in, int_t stage) {
 
-    real_t **hA = (real_t **) qp_in->A;
-    real_t **hB = (real_t **) qp_in->B;
-    real_t **hb = (real_t **) qp_in->b;
+/************************************************
+* res
+************************************************/
 
-    memcpy(hA[stage], A, qp_in->nx[stage+1]*qp_in->nx[stage]*sizeof(real_t));
-    memcpy(hB[stage], B, qp_in->nx[stage+1]*qp_in->nu[stage]*sizeof(real_t));
-    memcpy(hb[stage], b, qp_in->nx[stage+1]*sizeof(real_t));
+// TODO add config !!!
+
+int ocp_qp_res_calculate_size(ocp_qp_dims *dims)
+{
+    int size = sizeof(ocp_qp_res);
+    size += d_memsize_ocp_qp_res(dims);
+    return size;
 }
 
-void ocp_qp_in_copy_objective(const real_t *Q, const real_t *S, const real_t *R, const real_t *q,
-                              const real_t *r, ocp_qp_in *qp_in, int_t stage) {
 
-        real_t **hQ = (real_t **) qp_in->Q;
-        real_t **hS = (real_t **) qp_in->S;
-        real_t **hR = (real_t **) qp_in->R;
-        real_t **hq = (real_t **) qp_in->q;
-        real_t **hr = (real_t **) qp_in->r;
 
-        memcpy(hQ[stage], Q, qp_in->nx[stage]*qp_in->nx[stage]*sizeof(real_t));
-        memcpy(hS[stage], S, qp_in->nu[stage]*qp_in->nx[stage]*sizeof(real_t));
-        memcpy(hR[stage], R, qp_in->nu[stage]*qp_in->nu[stage]*sizeof(real_t));
-        memcpy(hq[stage], q, qp_in->nx[stage]*sizeof(real_t));
-        memcpy(hr[stage], r, qp_in->nu[stage]*sizeof(real_t));
+ocp_qp_res *ocp_qp_res_assign(ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_res *qp_res = (ocp_qp_res *) c_ptr;
+    c_ptr += sizeof(ocp_qp_res);
+
+    d_create_ocp_qp_res(dims, qp_res, c_ptr);
+    c_ptr += d_memsize_ocp_qp_res(dims);
+
+    assert((char*) raw_memory + ocp_qp_res_calculate_size(dims) == c_ptr);
+
+    return qp_res;
 }
 
-ocp_qp_solver *create_ocp_qp_solver(const ocp_qp_in *qp_in, const char *solver_name,
-                                    void *solver_options) {
-    ocp_qp_solver *qp_solver = (ocp_qp_solver *) malloc(sizeof(ocp_qp_solver));
 
-    qp_solver->qp_in = (ocp_qp_in *) qp_in;
-    qp_solver->qp_out = create_ocp_qp_out(qp_in->N, qp_in->nx, qp_in->nu, qp_in->nb, qp_in->nc);
-    qp_solver->args = solver_options;
 
-    if (!strcmp(solver_name, "qpdunes")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_qpdunes_create_arguments(QPDUNES_NONLINEAR_MPC);
-        qp_solver->fun = &ocp_qp_qpdunes;
-        qp_solver->initialize = &ocp_qp_qpdunes_initialize;
-        qp_solver->destroy = &ocp_qp_qpdunes_destroy;
-#ifdef OOQP
-    } else if (!strcmp(solver_name, "ooqp")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_ooqp_create_arguments();
-        qp_solver->fun = &ocp_qp_ooqp;
-        qp_solver->initialize = &ocp_qp_ooqp_initialize;
-        qp_solver->destroy = &ocp_qp_ooqp_destroy;
-#endif
-    } else if (!strcmp(solver_name, "condensing_qpoases")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_condensing_qpoases_create_arguments(qp_in);
-        qp_solver->fun = &ocp_qp_condensing_qpoases;
-        qp_solver->initialize = &ocp_qp_condensing_qpoases_initialize;
-        qp_solver->destroy = &ocp_qp_condensing_qpoases_destroy;
-#ifdef ACADOS_WITH_HPMPC
-    } else if (!strcmp(solver_name, "hpmpc")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_hpmpc_create_arguments(qp_in, HPMPC_DEFAULT_ARGUMENTS);
-        qp_solver->fun = &ocp_qp_hpmpc;
-        qp_solver->initialize = &ocp_qp_hpmpc_initialize;
-        qp_solver->destroy = &ocp_qp_hpmpc_destroy;
-#endif
-    } else if (!strcmp(solver_name, "condensing_hpipm")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_condensing_hpipm_create_arguments(qp_in);
-        qp_solver->fun = &ocp_qp_condensing_hpipm;
-        qp_solver->initialize = &ocp_qp_condensing_hpipm_initialize;
-        qp_solver->destroy = &ocp_qp_condensing_hpipm_destroy;
-    } else if (!strcmp(solver_name, "hpipm")) {
-        if (qp_solver->args == NULL)
-            qp_solver->args = ocp_qp_hpipm_create_arguments(qp_in);
-        qp_solver->fun = &ocp_qp_hpipm;
-        qp_solver->initialize = &ocp_qp_hpipm_initialize;
-        qp_solver->destroy = &ocp_qp_hpipm_destroy;
-    } else {
-        printf("Chosen QP solver not available\n");
-        exit(1);
+int ocp_qp_res_workspace_calculate_size(ocp_qp_dims *dims)
+{
+    int size = sizeof(ocp_qp_res_ws);
+    size += d_memsize_ocp_qp_res_workspace(dims);
+    return size;
+}
+
+
+
+ocp_qp_res_ws *ocp_qp_res_workspace_assign(ocp_qp_dims *dims, void *raw_memory)
+{
+    char *c_ptr = (char *) raw_memory;
+
+    ocp_qp_res_ws *qp_res_ws = (ocp_qp_res_ws *) c_ptr;
+    c_ptr += sizeof(ocp_qp_res_ws);
+
+    d_create_ocp_qp_res_workspace(dims, qp_res_ws, c_ptr);
+    c_ptr += d_memsize_ocp_qp_res_workspace(dims);
+
+    assert((char*) raw_memory + ocp_qp_res_workspace_calculate_size(dims) == c_ptr);
+
+    return qp_res_ws;
+}
+
+
+
+void ocp_qp_res_compute(ocp_qp_in *qp_in, ocp_qp_out *qp_out, ocp_qp_res *qp_res, ocp_qp_res_ws *res_ws)
+{
+    // loop index
+	int ii;
+
+	//
+	int N = qp_in->dim->N;
+	int *nx = qp_in->dim->nx;
+	int *nu = qp_in->dim->nu;
+	int *nb = qp_in->dim->nb;
+    int *ng = qp_in->dim->ng;
+
+    struct blasfeo_dmat *DCt = qp_in->DCt;
+    struct blasfeo_dvec *d = qp_in->d;
+    int **idxb = qp_in->idxb;
+
+    struct blasfeo_dvec *ux = qp_out->ux;
+    struct blasfeo_dvec *t = qp_out->t;
+
+    struct blasfeo_dvec *tmp_nbgM = res_ws->tmp_nbgM;
+
+    int nx_i, nu_i, nb_i, ng_i;
+
+    for(ii=0; ii<=N; ii++)
+    {
+        nx_i = nx[ii];
+		nu_i = nu[ii];
+		nb_i = nb[ii];
+		ng_i = ng[ii];
+
+        // compute slacks for general constraints
+        blasfeo_dgemv_t(nu_i+nx_i, ng_i,  1.0, DCt+ii, 0, 0, ux+ii, 0, -1.0, d+ii, nb_i, t+ii, nb_i);
+        blasfeo_dgemv_t(nu_i+nx_i, ng_i, -1.0, DCt+ii, 0, 0, ux+ii, 0,  -1.0, d+ii, 2*nb_i+ng_i, t+ii, 2*nb_i+ng_i);
+
+        // compute slacks for bounds
+        blasfeo_dvecex_sp(nb_i, 1.0, idxb[ii], ux+ii, 0, tmp_nbgM+0, 0);
+        blasfeo_daxpby(nb_i,  1.0, tmp_nbgM+0, 0, -1.0, d+ii, 0, t+ii, 0);
+        blasfeo_daxpby(nb_i, -1.0, tmp_nbgM+0, 0, -1.0, d+ii, nb_i+ng_i, t+ii, nb_i+ng_i);
     }
-    qp_solver->initialize(qp_solver->qp_in, qp_solver->args, &qp_solver->mem, &qp_solver->work);
 
-    return qp_solver;
+    d_compute_res_ocp_qp(qp_in, qp_out, qp_res, res_ws);
+
+	return;
+}
+
+
+
+void ocp_qp_res_compute_nrm_inf(ocp_qp_res *qp_res, double res[4])
+{
+    // loop index
+	int ii;
+
+	// extract ocp qp size
+	int N = qp_res->dim->N;
+	int *nx = qp_res->dim->nx;
+	int *nu = qp_res->dim->nu;
+	int *nb = qp_res->dim->nb;
+	int *ng = qp_res->dim->ng;
+    int *ns = qp_res->dim->ns;
+
+#if 1
+
+	double tmp;
+
+	res[0] = 0.0;
+	for (ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecnrm_inf(nx[ii]+nu[ii]+2*ns[ii], &qp_res->res_g[ii], 0, &tmp);
+		res[0] = tmp > res[0] ? tmp : res[0];
+	}
+
+	res[1] = 0.0;
+	for (ii=0; ii<N; ii++)
+	{
+		blasfeo_dvecnrm_inf(nx[ii+1], &qp_res->res_b[ii], 0, &tmp);
+		res[1] = tmp > res[1] ? tmp : res[1];
+	}
+
+	res[2] = 0.0;
+	for (ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_res->res_d[ii], 0, &tmp);
+		res[2] = tmp > res[2] ? tmp : res[2];
+	}
+
+	res[3] = 0.0;
+	for (ii=0; ii<=N; ii++)
+	{
+		blasfeo_dvecnrm_inf(2*nb[ii]+2*ng[ii]+2*ns[ii], &qp_res->res_m[ii], 0, &tmp);
+		res[3] = tmp > res[3] ? tmp : res[3];
+	}
+
+
+#else
+
+	// XXX this should be avoided, since it does employ strucutre of the HPIPM core that may change !!!
+
+    // compute size of res_q, res_b, res_d and res_m
+    int nvt = 0;
+	int net = 0;
+    int nct = 0;
+
+    for(ii=0; ii<N; ii++)
+	{
+		nvt += nx[ii]+nu[ii]+2*ns[ii];
+		net += nx[ii+1];
+		nct += 2*nb[ii]+2*ng[ii]+2*ns[ii];
+	}
+	nvt += nx[ii]+nu[ii]+2*ns[ii];
+    nct += 2*nb[ii]+2*ng[ii]+2*ns[ii];
+
+    // compute infinity norms of residuals
+    blasfeo_dvecnrm_inf(nvt, qp_res->res_g, 0, &res[0]);
+	blasfeo_dvecnrm_inf(net, qp_res->res_b, 0, &res[1]);
+	blasfeo_dvecnrm_inf(nct, qp_res->res_d, 0, &res[2]);
+	blasfeo_dvecnrm_inf(nct, qp_res->res_m, 0, &res[3]);
+
+#endif
+
+	return;
+
 }

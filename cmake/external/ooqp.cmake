@@ -1,15 +1,12 @@
 include(ExternalProject)
 
+find_package(OpenBLAS REQUIRED)
+add_library(openblas UNKNOWN IMPORTED)
+set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
+
 find_package(FortranLibs REQUIRED)
 add_library(gfortran UNKNOWN IMPORTED)
 set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
-
-set(BLA_VENDOR OpenBLAS)
-# Kludge to make CMake find OpenBLAS:
-set(_libdir "/usr/local/opt/openblas/lib" CACHE INTERNAL "Blas location")
-find_package(BLAS REQUIRED)
-add_library(blas UNKNOWN IMPORTED)
-set_property(TARGET blas PROPERTY IMPORTED_LOCATION ${BLAS_LIBRARIES})
 
 include(external/ma27)
 
@@ -28,7 +25,7 @@ ExternalProject_Add(
     DEPENDS ma27
     PREFIX "${PROJECT_BINARY_DIR}/external/OOQP"
     DOWNLOAD_COMMAND ""
-    CONFIGURE_COMMAND ./configure "--prefix=${PROJECT_BINARY_DIR}/external/OOQP/" "${HOST_FLAG}"
+    CONFIGURE_COMMAND ./configure "-q" "--prefix=${PROJECT_BINARY_DIR}/external/OOQP/" "${HOST_FLAG}"
                                   "CXX=${CMAKE_CXX_COMPILER}" "CXXFLAGS=-O2 -fPIC" "CC=${CMAKE_C_COMPILER}"
                                   "CFLAGS=-O2 -fPIC" "FFLAGS=-O2 -fPIC" "LDFLAGS=${OOQP_LDFLAGS}"
     SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/OOQP"
@@ -62,7 +59,7 @@ target_link_libraries(ooqp INTERFACE
     ooqpgondzio
     ooqpbase
     ma27
-    blas
+    openblas
     gfortran
     m)
 
@@ -80,6 +77,7 @@ install(EXPORT ooqpConfig DESTINATION cmake)
 
 install(FILES
         ${CMAKE_CURRENT_LIST_DIR}/../FindFortranLibs.cmake
+        ${CMAKE_CURRENT_LIST_DIR}/../FindOpenBLAS.cmake
     DESTINATION cmake)
 
 install(DIRECTORY ${BINARY_DIR}/include/
