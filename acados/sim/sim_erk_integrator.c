@@ -196,7 +196,7 @@ void sim_erk_opts_initialize_default(void *config_, sim_dims *dims, void *opts_)
 		}
 	}
 
-    opts->num_steps = 2;
+    opts->num_steps = 1;
     opts->num_forw_sens = dims->nx + dims->nu;
     opts->sens_forw = true;
     opts->sens_adj = false;

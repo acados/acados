@@ -532,18 +532,33 @@ void ocp_nlp_constraints_update_qp_matrices(void *config_, void *dims_, void *mo
 		model->h->evaluate(model->h, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
 	}
 
-	// if (np>0)
-	// {
-		// if (nh != 1) {
-			// printf("Not implemented");
-			// exit(1);
-		// }
-//		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
-//		blasfeo_pack_tran_dmat(np, nx+nu, work->nl_constraint_output+nh*(1+nx+nu), np, &work->jacobian_quadratic, 0, 0);
-		// NOTE(giaf) here the Hessian in overwritten, not updated. Is this correct?
-//		blasfeo_dsyrk_ln(nx+nu, np, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
-//			0.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
-	// }
+	if (np>0)
+	{
+		if (nh != 1) {
+			printf("Not implemented");
+			exit(1);
+		}
+		//
+		ext_fun_type_in[0] = BLASFEO_DVEC;
+		ext_fun_in[0] = memory->ux; // ux: nu+nx
+
+		//
+		ext_fun_type_out[0] = IGNORE;
+		//
+		ext_fun_type_out[1] = BLASFEO_DMAT_ARGS;
+		struct blasfeo_dmat_args Jp_args;
+		Jp_args.A = &work->jacobian_quadratic;
+		Jp_args.ai = 0;
+		Jp_args.aj = 0;
+		ext_fun_out[1] = &Jp_args; // jac': (nu+nx) * np
+		model->p->evaluate(model->p, ext_fun_type_in, ext_fun_in, ext_fun_type_out, ext_fun_out);
+		
+		// SCQP Hessian
+		double lam = blasfeo_dvecex1(memory->lam, 2*(nb+ng)+nh) - blasfeo_dvecex1(memory->lam, nb+ng);
+
+		blasfeo_dsyrk_ln(nx+nu, np, 2*lam, &work->jacobian_quadratic, 0, 0, &work->jacobian_quadratic, 0, 0,
+			1.0, memory->RSQrq, 0, 0, memory->RSQrq, 0, 0);
+	}
 
 	blasfeo_daxpy(nb+ng+nh, -1.0, &work->tmp_ni, 0, &model->d, 0, &memory->fun, 0);
 	blasfeo_daxpy(nb+ng+nh, -1.0, &model->d, nb+ng+nh, &work->tmp_ni, 0, &memory->fun, nb+ng+nh);

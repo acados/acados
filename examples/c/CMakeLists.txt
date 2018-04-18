@@ -225,7 +225,10 @@ endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
-    add_executable(pendulum_scqp pendulum_scqp.cpp pendulum_model/vde_forw_pendulum.c pendulum_model/constraint.c)
+    add_executable(pendulum_scqp pendulum_scqp.cpp
+        pendulum_model/vde_forw_pendulum.c
+        pendulum_model/constraint.c
+        pendulum_model/position.c)
     target_link_libraries(pendulum_scqp acados)
     add_test(pendulum_scqp pendulum_scqp)
 
