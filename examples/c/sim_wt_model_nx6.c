@@ -99,6 +99,16 @@ int main()
 	expl_vde_for.casadi_n_out = &casadi_expl_vde_for_n_out;
 	external_function_param_casadi_create(&expl_vde_for, np);
 
+	// expl_vde_adj
+	external_function_param_casadi expl_vde_adj;
+	expl_vde_adj.casadi_fun = &casadi_expl_vde_adj;
+	expl_vde_adj.casadi_work = &casadi_expl_vde_adj_work;
+	expl_vde_adj.casadi_sparsity_in = &casadi_expl_vde_adj_sparsity_in;
+	expl_vde_adj.casadi_sparsity_out = &casadi_expl_vde_adj_sparsity_out;
+	expl_vde_adj.casadi_n_in = &casadi_expl_vde_adj_n_in;
+	expl_vde_adj.casadi_n_out = &casadi_expl_vde_adj_n_out;
+	external_function_param_casadi_create(&expl_vde_adj, np);
+
 	/************************************************
 	* external functions (implicit model)
 	************************************************/
@@ -178,7 +188,7 @@ int main()
 
 	int number_sim_solvers = 3;
 	int nss;
-	for (nss = 2; nss < number_sim_solvers; nss++)
+	for (nss = 0; nss < number_sim_solvers; nss++)
 	{
 		/************************************************
 		* sim plan & config
@@ -269,6 +279,7 @@ int main()
 			{
 				sim_set_model(config, in, "expl_ode_fun", &expl_ode_fun);
 				sim_set_model(config, in, "expl_vde_for", &expl_vde_for);
+				sim_set_model(config, in, "expl_vde_adj", &expl_vde_adj);
 				break;
 			}
 			case 1:
@@ -361,6 +372,7 @@ int main()
 				{
 					expl_ode_fun.set_param(&expl_ode_fun, p_sim+ii*np);
 					expl_vde_for.set_param(&expl_vde_for, p_sim+ii*np);
+					expl_vde_for.set_param(&expl_vde_adj, p_sim+ii*np);
 					break;
 				}
 				case 1:
@@ -443,37 +455,36 @@ int main()
 			d_print_e_mat(1, nx+nu, S_adj_out, 1);
 		}
 
-		if(opts->sens_forw){
-			// debug adjoints
-			struct blasfeo_dmat S_forw_result;
-			struct blasfeo_dvec adjoint_seed;
-			struct blasfeo_dvec forw_times_seed;
+if(opts->sens_forw){		// debug adjoints
+      struct blasfeo_dmat S_forw_result;
+      struct blasfeo_dvec adjoint_seed;
+      struct blasfeo_dvec forw_times_seed;
 
-			int Sf_mem_size = blasfeo_memsize_dmat(nx, nx+nu);
-			int adj_s_mem_size = blasfeo_memsize_dvec(nx);
-			int check_mem_size = blasfeo_memsize_dvec(nx+nu);
+      int Sf_mem_size = blasfeo_memsize_dmat(nx, nx+nu);
+      int adj_s_mem_size = blasfeo_memsize_dvec(nx);
+      int check_mem_size = blasfeo_memsize_dvec(nx+nu);
 
-			void *Sf_mem;
-			v_zeros_align(&Sf_mem, Sf_mem_size);
-			void *seed_mem = malloc(adj_s_mem_size);
-			void *check_mem = malloc(check_mem_size);
+      void *Sf_mem; v_zeros_align(&Sf_mem, Sf_mem_size);
+      void *seed_mem; v_zeros_align(&seed_mem, adj_s_mem_size);
+      void *check_mem; v_zeros_align(&check_mem, check_mem_size);
 
-			blasfeo_create_dmat(nx, nu+nx, &S_forw_result, Sf_mem);
-			blasfeo_create_dvec(nx, &adjoint_seed, seed_mem);
-			blasfeo_create_dvec(nu+nx, &forw_times_seed, check_mem);
+      blasfeo_create_dmat(nx, nu+nx, &S_forw_result, Sf_mem);
+      blasfeo_create_dvec(nx, &adjoint_seed, seed_mem);
+      blasfeo_create_dvec(nu+nx, &forw_times_seed, check_mem);
 
-			blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
-			blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
+      blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &S_forw_result, 0, 0);
+      blasfeo_pack_dvec(nx, in->S_adj, &adjoint_seed, 0);
 
-			blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
-			printf("S_forw^T * adj_seed = \n");
-			blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
+      blasfeo_dgemv_t(nx, nx+nu, 1.0, &S_forw_result, 0, 0, &adjoint_seed, 0, 0.0, &forw_times_seed, 0, &forw_times_seed, 0);
+      printf("S_forw^T * adj_seed = \n");
+      blasfeo_print_exp_tran_dvec(nx+nu, &forw_times_seed, 0);
 
-			v_free_align(Sf_mem);
-			free(seed_mem);
-			free(check_mem);
+      v_free_align(Sf_mem);
+      v_free_align(seed_mem);
+      v_free_align(check_mem);
 		}
-	#if 0
+
+    #if 0
 		printf("\n");
 		printf("cpt: %8.4f [ms]\n", 1000*out->info->CPUtime);
 		printf("AD cpt: %8.4f [ms]\n", 1000*out->info->ADtime);
@@ -501,6 +512,7 @@ int main()
 	// explicit model
 	external_function_param_casadi_free(&expl_ode_fun);
 	external_function_param_casadi_free(&expl_vde_for);
+	external_function_param_casadi_free(&expl_vde_adj);
 	// implicit model
 	external_function_param_casadi_free(&impl_ode_fun);
 	external_function_param_casadi_free(&impl_ode_jac_x);
