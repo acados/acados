@@ -328,6 +328,10 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     //     assign_and_advance_blasfeo_dmat_mem(nx*ns, nx*ns, &workspace->JG_traj[i], &c_ptr);
     // }
 
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_x, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_xdot, &c_ptr);
+    assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->J_t_u, &c_ptr);
+
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->rG, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx*ns, workspace->K, &c_ptr);
     assign_and_advance_blasfeo_dvec_mem(nx, workspace->xt, &c_ptr);
@@ -340,10 +344,6 @@ static void *sim_irk_workspace_cast(void *config_, sim_dims *dims, void *opts_, 
     }
 
     assign_and_advance_int(nx * ns , &workspace->ipiv, &c_ptr);
-
-    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_x, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nx, &workspace->J_t_xdot, &c_ptr);
-    assign_and_advance_blasfeo_dmat_mem(nx, nu, &workspace->J_t_u, &c_ptr);
 
     // printf("\npointer moved - size calculated = %d bytes\n", c_ptr- (char*)raw_memory - sim_irk_calculate_workspace_size(dims, opts_));
 
